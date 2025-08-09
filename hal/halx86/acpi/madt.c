@@ -14,7 +14,6 @@
 #undef ACPI_BIOS_ERROR
 #include <smp.h>
 
-#define NDEBUG
 #include <debug.h>
 
 // See HalpParseApicTables(). Only enable this to local-debug it.

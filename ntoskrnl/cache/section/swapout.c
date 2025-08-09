@@ -62,7 +62,6 @@ back into any address spaces required in the normal way.
 
 #include <ntoskrnl.h>
 #include "newmm.h"
-#define NDEBUG
 #include <debug.h>
 
 #define DPRINTC DPRINT

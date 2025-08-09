@@ -15,7 +15,6 @@
 
 #include "registry.h"
 
-#define NDEBUG
 #include <debug.h>
 
 // #define DUMP_PARTITION_TABLE

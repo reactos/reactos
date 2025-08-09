@@ -9,7 +9,6 @@
 
 #include <windows.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #ifdef _X86_

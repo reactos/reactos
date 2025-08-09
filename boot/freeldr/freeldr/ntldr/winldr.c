@@ -404,6 +404,19 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     TRACE("DriverPath: '%s', DllName: '%s', LPB\n", DriverPath, DllName);
 
+    /* With increased heap size (128MB), we can load all drivers
+     * Only skip truly problematic or unnecessary drivers */
+    {
+        /* Skip only known problematic drivers that might cause issues */
+        if (_stricmp(DllName, "nmidebug.sys") == 0 ||  /* NMI Debug driver - can cause issues */
+            _stricmp(DllName, "sacdrv.sys") == 0)       /* Special Admin Console - not needed */
+        {
+            TRACE("Skipping problematic driver %s\n", DllName);
+            *DriverDTE = NULL;
+            return TRUE;
+        }
+    }
+
     // Check if driver is already loaded
     Success = PeLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
     if (Success)

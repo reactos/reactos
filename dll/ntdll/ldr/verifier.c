@@ -10,7 +10,6 @@
 #include <ntdll.h>
 #include <reactos/verifier.h>
 
-#define NDEBUG
 #include <debug.h>
 
  /* heappage.c */

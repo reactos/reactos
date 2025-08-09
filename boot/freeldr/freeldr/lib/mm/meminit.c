@@ -155,8 +155,7 @@ AddMemoryDescriptor(
     while ((Index < MaxCount) && (List[Index].PageCount != 0) &&
            ((List[Index].BasePage + List[Index].PageCount) <= BasePage))
     {
-        TRACE("  Skip: Index=%lu, List[%lu].BasePage=0x%lx, PageCount=0x%lx\n",
-              (ULONG)Index, (ULONG)Index, (ULONG)List[Index].BasePage, (ULONG)List[Index].PageCount);
+        //TODO LOGS TEMP remove for not flodding logs TRACE("  Skip: Index=%lu, List[%lu].BasePage=0x%lx, PageCount=0x%lx\n",(ULONG)Index, (ULONG)Index, (ULONG)List[Index].BasePage, (ULONG)List[Index].PageCount);
         Index++;
         
         /* Prevent infinite loop */
@@ -416,6 +415,11 @@ BOOLEAN MmInitializeMemoryManager(VOID)
     FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress,
                                                         TotalPagesInLookupTable);
 
+    ERR("DEBUG: TotalPagesInLookupTable = 0x%lx (%lu MB)\n", 
+        TotalPagesInLookupTable, (TotalPagesInLookupTable * MM_PAGE_SIZE) / (1024 * 1024));
+    ERR("DEBUG: FreePagesInLookupTable = 0x%lx (%lu MB)\n", 
+        FreePagesInLookupTable, (FreePagesInLookupTable * MM_PAGE_SIZE) / (1024 * 1024));
+
     MmInitializeHeap(PageLookupTableAddress);
 
     TRACE("Memory Manager initialized. 0x%x pages available.\n", FreePagesInLookupTable);
@@ -440,6 +444,14 @@ PFN_NUMBER MmGetAddressablePageCountIncludingHoles(VOID)
     //
     while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
     {
+        /* Sanity check for corrupted descriptors */
+        if (MemoryDescriptor->PageCount > 0x100000) /* More than 4GB in pages? */
+        {
+            ERR("WARNING: Corrupted memory descriptor detected! BasePage=0x%lx PageCount=0x%lx Type=%d\n",
+                MemoryDescriptor->BasePage, MemoryDescriptor->PageCount, MemoryDescriptor->MemoryType);
+            continue; /* Skip this corrupted entry */
+        }
+        
         //
         // Check if we got a higher end page address
         //
@@ -524,6 +536,16 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
     PFN_NUMBER PageLookupTablePageCount;
 
     TRACE("MmInitPageLookupTable()\n");
+    
+    /* Sanity check for corrupted TotalPageCount */
+    if (TotalPageCount > 0x100000) /* More than 4GB in pages? */
+    {
+        ERR("FATAL: TotalPageCount is corrupted: 0x%lx\n", TotalPageCount);
+        /* Assume 2GB for now */
+        TotalPageCount = 0x80000; /* 2GB / 4KB = 524288 pages */
+        MmHighestPhysicalPage = 0x80000;
+        ERR("Using fallback TotalPageCount: 0x%lx\n", TotalPageCount);
+    }
 
     // Mark every page as allocated initially
     // We will go through and mark pages again according to the memory map

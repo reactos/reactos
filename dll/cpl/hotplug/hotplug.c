@@ -8,7 +8,6 @@
 
 #include "hotplug.h"
 
-#define NDEBUG
 #include <debug.h>
 
 // globals

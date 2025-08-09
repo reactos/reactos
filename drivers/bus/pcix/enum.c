@@ -10,7 +10,6 @@
 
 #include <pci.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/

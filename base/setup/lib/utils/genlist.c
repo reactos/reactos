@@ -11,7 +11,6 @@
 
 #include "genlist.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

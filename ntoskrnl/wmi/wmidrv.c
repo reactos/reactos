@@ -13,7 +13,6 @@
 #include <wmiioctl.h>
 #include "wmip.h"
 
-#define NDEBUG
 #include <debug.h>
 
 // FIXME: these should go to a shared header

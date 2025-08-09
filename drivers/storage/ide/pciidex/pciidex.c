@@ -7,7 +7,6 @@
 
 #include "pciidex.h"
 
-#define NDEBUG
 #include <debug.h>
 
 ULONG PciIdeControllerNumber = 0;

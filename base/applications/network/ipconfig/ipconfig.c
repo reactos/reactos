@@ -32,7 +32,6 @@
 
 #include "resource.h"
 
-#define NDEBUG
 #include <debug.h>
 
 typedef struct _RECORDTYPE

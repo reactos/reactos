@@ -8,7 +8,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define TAG_KS 'ssKK'

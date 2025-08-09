@@ -11,7 +11,6 @@
 #include "processr.h"
 
 #include <stdio.h>
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

@@ -14,7 +14,6 @@
 #include <kdbg/kdb.h>
 #endif
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

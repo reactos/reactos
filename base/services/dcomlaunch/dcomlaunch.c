@@ -16,7 +16,6 @@
 #include <winreg.h>
 #include <winsvc.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

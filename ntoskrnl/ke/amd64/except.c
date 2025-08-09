@@ -10,7 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 extern KI_INTERRUPT_DISPATCH_ENTRY KiUnexpectedRange[256];

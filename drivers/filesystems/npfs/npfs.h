@@ -18,7 +18,6 @@
 //#define UNIMPLEMENTED
 //#define DPRINT1 DbgPrint
 
-#define NDEBUG
 #include <debug.h>
 #define TRACE(...) /* DPRINT1("%s: ", __FUNCTION__); DbgPrint(__VA_ARGS__) */
 

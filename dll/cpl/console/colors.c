@@ -9,7 +9,6 @@
 
 #include "console.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static DWORD ActiveStaticControl = 0;

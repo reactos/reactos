@@ -11,7 +11,6 @@
 
 #include "scsiport.h"
 
-#define NDEBUG
 #include <debug.h>
 
 ULONG InternalDebugLevel = 0x00;

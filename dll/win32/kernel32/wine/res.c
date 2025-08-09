@@ -24,7 +24,6 @@
 
 #include <wine/list.h>
 
-#define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(resource);
 

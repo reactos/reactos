@@ -18,7 +18,6 @@
 #include <userenv.h>
 #include <strsafe.h>
 
-#define NDEBUG
 #include <debug.h>
 
 

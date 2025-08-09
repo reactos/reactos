@@ -11,7 +11,6 @@
 #include <ntoskrnl.h>
 #include <xmmintrin.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

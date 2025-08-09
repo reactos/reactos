@@ -16,7 +16,6 @@
 #include "amd64/ketypes.h"
 #endif
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/

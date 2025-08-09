@@ -116,6 +116,14 @@ UefiSetMemory(
     TRACE("UefiSetMemory: Entry - BaseAddress=0x%lx, SizeInPages=%lu, MemoryType=%d\n",
           (ULONG)BaseAddress, (ULONG)SizeInPages, MemoryType);
 
+    /* Sanity check for corrupted values */
+    if (SizeInPages > 0x100000 || BaseAddress > 0xFFFFFFFF)
+    {
+        ERR("UefiSetMemory: Corrupted descriptor! BaseAddress=0x%lx, SizeInPages=%lu - SKIPPING\n",
+            (ULONG)BaseAddress, (ULONG)SizeInPages);
+        return;
+    }
+
     BasePage = BaseAddress / EFI_PAGE_SIZE;
     PageCount = SizeInPages;
     
@@ -260,12 +268,12 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
         TRACE("  Type=%d, PhysAddr=0x%lx, Pages=%lu\n", 
               MapEntry->Type, (ULONG)MapEntry->PhysicalStart, (ULONG)MapEntry->NumberOfPages);
         
-        /* Skip AllocatePages for LoaderFree memory to avoid modifying memory map during iteration */
-        /* This was causing hangs as it could invalidate our iteration */
+        /* For LoaderFree memory, we don't need to call AllocatePages */
+        /* since it's already free memory - just track it properly */
         if (MemoryType == LoaderFree)
         {
-            /* Don't allocate during iteration - just mark it appropriately */
-            TRACE("  Skipping AllocatePages for LoaderFree memory\n");
+            /* LoaderFree memory should still be processed by UefiSetMemory below */
+            TRACE("  Processing LoaderFree memory (no allocation needed)\n");
         }
 
         /* Sometimes our loader can be loaded into higher memory than we ever allocate */
@@ -278,20 +286,13 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
             }
         }
 
-        /* We really don't want to touch these reserved spots at all */
-        if (MemoryType != LoaderReserve)
-        {
-            TRACE("  Calling UefiSetMemory with MemoryType=%d\n", MemoryType);
-            UefiSetMemory(FreeldrMem,
-                          MapEntry->PhysicalStart,
-                          MapEntry->NumberOfPages,
-                          MemoryType);
-            TRACE("  UefiSetMemory completed\n");
-        }
-        else
-        {
-            TRACE("  Skipping LoaderReserve memory\n");
-        }
+        /* Process all memory types including LoaderReserve */
+        TRACE("  Calling UefiSetMemory with MemoryType=%d\n", MemoryType);
+        UefiSetMemory(FreeldrMem,
+                      MapEntry->PhysicalStart,
+                      MapEntry->NumberOfPages,
+                      MemoryType);
+        TRACE("  UefiSetMemory completed\n");
 
         TRACE("  Moving to next descriptor. Current=%p, DescriptorSize=%lu\n", MapEntry, (ULONG)DescriptorSize);
         MapEntry = NEXT_MEMORY_DESCRIPTOR(MapEntry, DescriptorSize);

@@ -13,7 +13,6 @@
 
 #include "mswhelper.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define NSP_CALLID_DNS 0x0001

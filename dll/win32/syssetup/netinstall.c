@@ -12,7 +12,6 @@
 
 #include <rpc.h>
 
-#define NDEBUG
 #include <debug.h>
 
 typedef struct _COMPONENT_INFO

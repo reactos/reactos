@@ -7,7 +7,6 @@
  */
 
 #include <hal.h>
-#define NDEBUG
 #include <debug.h>
 #include <ndk/inbvfuncs.h>
 

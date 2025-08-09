@@ -27,7 +27,6 @@
 
 #include <ntddk.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"

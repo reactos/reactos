@@ -77,7 +77,6 @@ entry.
 #include <ntoskrnl.h>
 #include "newmm.h"
 #include <cache/newcc.h>
-#define NDEBUG
 #include <debug.h>
 #include <mm/ARM3/miarm.h>
 

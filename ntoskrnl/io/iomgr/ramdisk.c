@@ -11,7 +11,6 @@
 #include <ntoskrnl.h>
 #include <initguid.h>
 #include <ntddrdsk.h>
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

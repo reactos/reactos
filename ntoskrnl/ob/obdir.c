@@ -14,7 +14,6 @@
 /* INCLUDES ***************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 POBJECT_TYPE ObpDirectoryObjectType = NULL;

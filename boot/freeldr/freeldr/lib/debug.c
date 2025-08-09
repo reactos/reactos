@@ -21,9 +21,9 @@
 #include <debug.h>
 
 /* Force enable debug output for testing */
-#define FORCE_DEBUG_OUTPUT 1
+// #define FORCE_DEBUG_OUTPUT 1
 
-#if DBG || FORCE_DEBUG_OUTPUT
+#if DBG
 
 #define DEBUG_ALL
 // #define DEBUG_WARN
@@ -458,6 +458,13 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
     UNREFERENCED_PARAMETER(Mask);
     UNREFERENCED_PARAMETER(Buffer);
     UNREFERENCED_PARAMETER(Length);
+}
+
+#undef DebugDisableScreenPort
+VOID
+DebugDisableScreenPort(VOID)
+{
+    /* Stub implementation */
 }
 
 #undef DbgParseDebugChannels

@@ -10,7 +10,6 @@
 
 #include "reactos.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #ifndef WINE_SETUPAPI_CAB_EXTRACTION_IS_NOT_SLOW_ANYMORE

@@ -13,7 +13,6 @@
 
 #include "mpu401.h"
 
-#define NDEBUG
 #include <debug.h>
 #include "sbdebug.h"  // our own debug helper
 

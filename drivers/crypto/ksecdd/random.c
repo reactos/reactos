@@ -10,7 +10,6 @@
 
 #include "ksecdd.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

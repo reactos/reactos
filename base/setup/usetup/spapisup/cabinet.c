@@ -15,7 +15,6 @@
 #define Z_SOLO
 #include <zlib.h>
 
-#define NDEBUG
 #include <debug.h>
 
 

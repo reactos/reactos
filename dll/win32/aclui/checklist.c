@@ -33,7 +33,6 @@
 #include <tmschema.h>
 #endif
 
-#define NDEBUG
 #include <debug.h>
 
 static const WCHAR szCheckListWndClass[] = L"CHECKLIST_ACLUI";

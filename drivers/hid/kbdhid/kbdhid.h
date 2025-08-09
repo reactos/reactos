@@ -5,7 +5,6 @@
 #include <hidclass.h>
 #include <hidpddi.h>
 #include <hidpi.h>
-#define NDEBUG
 #include <debug.h>
 #include <kbdmou.h>
 //#include <kbd.h>

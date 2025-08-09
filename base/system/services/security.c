@@ -10,7 +10,6 @@
 
 #include "services.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static PSID pNullSid = NULL;

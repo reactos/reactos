@@ -1,6 +1,5 @@
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 LONG dll_refs = 0;

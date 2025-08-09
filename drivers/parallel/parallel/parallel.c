@@ -15,7 +15,6 @@
 
 #include "parallel.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

@@ -11,7 +11,6 @@
 #include <pci.h>
 #include <stdio.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

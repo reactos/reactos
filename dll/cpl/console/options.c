@@ -9,7 +9,6 @@
 
 #include "console.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define MAX_VALUE_NAME 16383

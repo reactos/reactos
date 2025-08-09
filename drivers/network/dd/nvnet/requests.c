@@ -9,7 +9,6 @@
 
 #include "nvnet.h"
 
-#define NDEBUG
 #include "debug.h"
 
 /* GLOBALS ********************************************************************/

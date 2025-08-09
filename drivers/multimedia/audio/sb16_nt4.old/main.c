@@ -9,7 +9,6 @@
         Compatible with NT4
 */
 
-#define NDEBUG
 #include <sndblst.h>
 
 

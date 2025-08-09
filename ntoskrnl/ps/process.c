@@ -10,7 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -728,14 +727,39 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);
+    
+    {
+        const char msg[] = "*** PS: After PspInitializeProcessSecurity, checking status ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    
     if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+
+    {
+        const char msg[] = "*** PS: Status check passed, setting priority class ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Set default priority class */
     Process->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
+    
+    {
+        const char msg[] = "*** PS: Priority class set successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Check if we have a parent */
     if (Parent)
     {
+        {
+            const char msg[] = "*** PS: Have parent, checking priority class ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        
         /* Check our priority class */
         if (Parent->PriorityClass == PROCESS_PRIORITY_CLASS_IDLE ||
             Parent->PriorityClass == PROCESS_PRIORITY_CLASS_BELOW_NORMAL)
@@ -744,17 +768,41 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             Process->PriorityClass = Parent->PriorityClass;
         }
 
+        {
+            const char msg[] = "*** PS: Calling ObInitProcess ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+
         /* Initialize object manager for the process */
         Status = ObInitProcess(Flags & PROCESS_CREATE_FLAGS_INHERIT_HANDLES ?
                                Parent : NULL,
                                Process);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        
+        {
+            const char msg[] = "*** PS: ObInitProcess completed successfully ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
     }
     else
     {
+        {
+            const char msg[] = "*** PS: No parent, calling MmInitializeHandBuiltProcess2 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        
         /* Do the second part of the boot process memory setup */
         Status = MmInitializeHandBuiltProcess2(Process);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        
+        {
+            const char msg[] = "*** PS: MmInitializeHandBuiltProcess2 completed successfully ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
     }
 
     /* Set success for now */

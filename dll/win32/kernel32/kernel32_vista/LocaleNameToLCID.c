@@ -8,7 +8,6 @@
 #include "k32_vista.h"
 #include <ndk/rtlfuncs.h>
 
-#define NDEBUG
 #include <debug.h>
 
 LCID

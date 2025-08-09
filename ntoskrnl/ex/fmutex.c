@@ -9,7 +9,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 /* Undefine some macros we implement here */

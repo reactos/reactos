@@ -11,7 +11,6 @@
 #include "diskpart.h"
 #include <ntddscsi.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\

@@ -12,7 +12,6 @@
 #include <ntoskrnl.h>
 #include <subsys/iolog/iolog.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* TYPES *********************************************************************/

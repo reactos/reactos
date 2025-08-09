@@ -26,7 +26,6 @@
 
 #include "usetup.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* HELPERS FOR DISK AND PARTITION DESCRIPTIONS ******************************/

@@ -10,7 +10,6 @@
 
 #include <ntoskrnl.h>
 #include <cache/section/newmm.h>
-#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3

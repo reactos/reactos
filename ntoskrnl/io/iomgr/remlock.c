@@ -11,7 +11,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK

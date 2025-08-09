@@ -8,7 +8,6 @@
 
 #include <battc.h>
 
-#define NDEBUG
 #include <debug.h>
 
 NTSTATUS

@@ -8,7 +8,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static RESOLVER_CACHE DnsCache;

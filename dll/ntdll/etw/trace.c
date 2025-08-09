@@ -7,7 +7,6 @@
 #include <wmistr.h>
 #include <evntrace.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define FIXME DPRINT1

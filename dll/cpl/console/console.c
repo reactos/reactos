@@ -9,7 +9,6 @@
 
 #include "console.h"
 
-#define NDEBUG
 #include <debug.h>
 
 INT_PTR CALLBACK OptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

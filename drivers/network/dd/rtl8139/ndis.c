@@ -21,7 +21,6 @@
 
 #include "nic.h"
 
-#define NDEBUG
 #include <debug.h>
 
 ULONG DebugTraceLevel = MIN_TRACE;

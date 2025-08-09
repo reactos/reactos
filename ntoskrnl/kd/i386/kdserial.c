@@ -10,7 +10,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 #if defined(SARCH_PC98)

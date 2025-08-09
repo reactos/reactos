@@ -11,7 +11,6 @@
 
 #include <ws2_32.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

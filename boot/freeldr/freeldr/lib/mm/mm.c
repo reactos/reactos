@@ -108,6 +108,8 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
         ERR("Memory allocation failed in MmAllocateMemoryAtAddress(). "
             "Not enough free memory to allocate %d bytes (requesting %d pages but have only %d). "
             "\n", MemorySize, PagesNeeded, FreePagesInLookupTable);
+        ERR("DEBUG: Requested address: %p, Total pages: %lu, Free pages: %lu\n",
+            DesiredAddress, TotalPagesInLookupTable, FreePagesInLookupTable);
         UiMessageBoxCritical("Memory allocation failed: out of memory.");
         return NULL;
     }
@@ -117,6 +119,8 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
         WARN("Memory allocation failed in MmAllocateMemoryAtAddress(). "
              "Not enough free memory to allocate %d bytes at address %p.\n",
              MemorySize, DesiredAddress);
+        WARN("DEBUG: Pages needed: %lu, Free pages: %lu, Total pages: %lu\n",
+             PagesNeeded, FreePagesInLookupTable, TotalPagesInLookupTable);
 
         // Don't tell this to user since caller should try to alloc this memory
         // at a different address

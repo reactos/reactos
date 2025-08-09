@@ -10,7 +10,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 #define KD_PRINT_MAX_BYTES 512

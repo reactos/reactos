@@ -31,7 +31,6 @@
 #include <blue/ntddblue.h>
 #include "keytrans.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* DATA **********************************************************************/

@@ -12,7 +12,6 @@
 #include "precomp.h"
 #include "infsupp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

@@ -35,7 +35,6 @@
 
 #include "pcnet.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* List of supported OIDs */

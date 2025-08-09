@@ -12,7 +12,6 @@
 #include "fltmgrint.h"
 #include "Registry.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

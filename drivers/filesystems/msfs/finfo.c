@@ -10,7 +10,6 @@
 
 #include "msfs.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #undef MAILSLOT_NO_MESSAGE

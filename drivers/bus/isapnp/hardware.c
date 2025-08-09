@@ -11,7 +11,6 @@
 
 #include "isapnp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #ifdef _MSC_VER

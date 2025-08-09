@@ -12,7 +12,6 @@
 
 #include "mmdrv.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #include "wave.h"

@@ -12,7 +12,6 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
-#define NDEBUG
 #include <debug.h>
 
 /* The following is a test mode that only works with modified filesystems.

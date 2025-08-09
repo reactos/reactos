@@ -24,7 +24,6 @@
 #include <winnls.h>
 #include <srrestoreptapi.h>
 
-#define NDEBUG
 #include <debug.h>
 
 BOOL

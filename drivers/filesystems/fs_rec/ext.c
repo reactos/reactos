@@ -12,7 +12,6 @@
 #include "fs_rec.h"
 #include "ext.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

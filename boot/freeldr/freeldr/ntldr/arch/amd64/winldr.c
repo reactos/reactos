@@ -34,6 +34,7 @@ PHARDWARE_PTE
 MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
 {
     PHARDWARE_PTE SubDir;
+    static ULONG AllocationFailures = 0;
 
     if (!PdeBase)
         return NULL;
@@ -42,7 +43,14 @@ MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
     {
         SubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
         if (!SubDir)
+        {
+            AllocationFailures++;
+            if (AllocationFailures < 10)  /* Only warn for first few failures */
+            {
+                TRACE("WARNING: Failed to allocate page table (failure #%lu)\n", AllocationFailures);
+            }
             return NULL;
+        }
         RtlZeroMemory(SubDir, PAGE_SIZE);
         PdeBase[Index].PageFrameNumber = PtrToPfn(SubDir);
         PdeBase[Index].Valid = 1;
@@ -307,10 +315,13 @@ WinLdrMapSpecialPages(VOID)
     
     /* Create PDPT and PD entries for first 16GB of PFN database 
      * Each PDPT entry covers 1GB, each PD entry covers 2MB */
+    TRACE("Starting PFN database page table creation loop\n");
     for (i = 0; i < 16; i++)  /* 16GB of VA space */
     {
         PHARDWARE_PTE CurrentPdeBase;
         ULONG j;
+        
+        TRACE("Creating PDPT entry %lu for PFN database\n", i);
         
         /* Get or create PDPT entry for this 1GB region */
         CurrentPdeBase = MempGetOrCreatePageDir(PpeBase, 
@@ -321,28 +332,29 @@ WinLdrMapSpecialPages(VOID)
             continue;
         }
         
-        /* For the first GB, create all PD entries (512 entries, each covering 2MB)
-         * This ensures we have page directories for at least 1GB of PFN database */
+        TRACE("PDPT entry %lu created successfully\n", i);
+        
+        /* For the first GB, create only essential PD entries
+         * The kernel will handle the rest on demand */
         if (i == 0)
         {
-            for (j = 0; j < 512; j++)
+            TRACE("Creating minimal PD entries for first GB\n");
+            /* Only create first few PD entries instead of all 512 */
+            for (j = 0; j < 16; j++)  /* Only 32MB worth initially */
             {
                 PHARDWARE_PTE PteBase;
                 
+                TRACE("Creating PD entry %lu/16\n", j);
+                
                 /* Create PD entry for each 2MB region */
                 PteBase = MempGetOrCreatePageDir(CurrentPdeBase, j);
-                
-                /* For the first few PD entries, also create PT entries
-                 * This pre-maps some of the PFN database space */
-                if (j < 8 && PteBase)  /* First 16MB of PFN database */
+                if (!PteBase)
                 {
-                    ULONG k;
-                    for (k = 0; k < 512; k++)
-                    {
-                        /* Create PT entry - these will be mapped on demand by the kernel */
-                        MempGetOrCreatePageDir(PteBase, k);
-                    }
+                    TRACE("Failed to create PD entry %lu, continuing\n", j);
+                    break;
                 }
+                
+                /* Skip PT entry creation - let kernel handle it */
             }
             TRACE("Created %lu PD entries for first GB of PFN database\n", j);
         }

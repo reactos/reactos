@@ -11,7 +11,6 @@
 
 #include "usbstor.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

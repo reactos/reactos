@@ -7,7 +7,6 @@
  */
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 typedef struct _WIN32_KERNEL_OBJECT_HEADER

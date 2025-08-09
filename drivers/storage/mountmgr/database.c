@@ -25,7 +25,6 @@
 
 #include "mntmgr.h"
 
-#define NDEBUG
 #include <debug.h>
 
 PWSTR DatabasePath = L"\\Registry\\Machine\\System\\MountedDevices";

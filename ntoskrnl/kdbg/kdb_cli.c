@@ -33,7 +33,6 @@
 #include "kdb.h"
 #include "../kd/kdterminal.h"
 
-#define NDEBUG
 #include "debug.h"
 
 /* DEFINES *******************************************************************/

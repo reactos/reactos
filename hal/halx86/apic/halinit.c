@@ -10,7 +10,6 @@
 #include <hal.h>
 #include "apicp.h"
 #include <smp.h>
-#define NDEBUG
 #include <debug.h>
 
 VOID

@@ -13,7 +13,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 extern ERESOURCE IopSecurityResource;

@@ -27,7 +27,6 @@
 #include <k32.h>
 #include "japanese.h"   /* Japanese eras */
 
-#define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(nls);
 

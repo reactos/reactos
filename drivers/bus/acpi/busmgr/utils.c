@@ -26,7 +26,6 @@
 #include <precomp.h>
 #include <ntstrsafe.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* Modified for ReactOS and latest ACPICA

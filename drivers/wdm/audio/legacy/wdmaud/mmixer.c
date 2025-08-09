@@ -10,7 +10,6 @@
 
 #include <mmixer.h>
 
-#define NDEBUG
 #include <debug.h>
 
 PVOID Alloc(ULONG NumBytes);

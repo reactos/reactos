@@ -11,7 +11,6 @@
 #include "kd.h"
 #include "kdterminal.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #undef KdD0Transition

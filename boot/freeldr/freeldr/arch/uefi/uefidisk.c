@@ -639,7 +639,7 @@ UefiDiskReadLogicalSectors(
     }
 
     UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
-    TRACE("UefiDiskReadLogicalSectors: DriveNumber: 0x%x -> UefiDriveNumber: %d\n", DriveNumber, UefiDriveNumber);
+    //TODO LOGS TEMP remove for not flodding logs TRACE("UefiDiskReadLogicalSectors: DriveNumber: 0x%x -> UefiDriveNumber: %d\n", DriveNumber, UefiDriveNumber);
     
     /* Validate UEFI drive number */
     if (handles == NULL || GlobalSystemTable == NULL || GlobalSystemTable->BootServices == NULL)

@@ -8,7 +8,6 @@
 
 #include "diskpart.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

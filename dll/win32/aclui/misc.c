@@ -28,7 +28,6 @@
 
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static PCWSTR ObjectPickerAttributes[] =

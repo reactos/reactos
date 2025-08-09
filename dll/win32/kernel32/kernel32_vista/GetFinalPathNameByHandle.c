@@ -9,7 +9,6 @@
 #include <winnls.h>
 #include <mountmgr.h>
 
-#define NDEBUG
 #include <debug.h>
 
 // Note: The wine implementation is broken and cannot be used.

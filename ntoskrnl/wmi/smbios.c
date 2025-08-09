@@ -15,7 +15,6 @@
 
 #include "wmip.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

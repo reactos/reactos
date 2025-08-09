@@ -23,7 +23,6 @@
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
 
-#define NDEBUG
 #include <debug.h>
 
 //DWORD WINAPI

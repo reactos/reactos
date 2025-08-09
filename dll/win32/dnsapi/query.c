@@ -13,7 +13,6 @@
 #include <iphlpapi.h>
 #include <strsafe.h>
 
-#define NDEBUG
 #include <debug.h>
 
 static

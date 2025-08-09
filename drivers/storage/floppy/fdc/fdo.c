@@ -11,7 +11,6 @@
 #include "fdc.h"
 
 #include <stdio.h>
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

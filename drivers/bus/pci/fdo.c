@@ -9,7 +9,6 @@
 
 #include "pci.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/

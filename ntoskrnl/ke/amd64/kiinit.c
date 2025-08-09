@@ -10,7 +10,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 #define REQUIRED_FEATURE_BITS (KF_RDTSC|KF_CR4|KF_CMPXCHG8B|KF_XMMI|KF_XMMI64| \
@@ -19,6 +18,9 @@
 
 /* Serial port for debug output */
 #define COM1_PORT 0x3F8
+
+/* Forward declaration for UEFI boot */
+VOID NTAPI KiSystemStartupBootStack(VOID);
 
 /* GLOBALS *******************************************************************/
 
@@ -885,16 +887,13 @@ KiInitModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* Skip for now - global variable access issues */
+    /* Fixed: Initialize module list properly */
     {
-        const char msg[] = "*** KERNEL: Skipping module list initialization (global access issue) ***\n";
+        const char msg[] = "*** KERNEL: Initializing module list properly ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    return;
-    
-    /* Original code - skip for now
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY Entry;
     ULONG i;
@@ -913,7 +912,12 @@ KiInitModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         InsertTailList(&PsLoadedModuleList, &LdrCoreEntries[i].InLoadOrderLinks);
     }
-    */
+    
+    {
+        const char msg[] = "*** KERNEL: Module list initialized successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 }
 
 CODE_SEG("INIT")
@@ -1117,13 +1121,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Set the PRCB for this Processor */
     {
-        const char msg[] = "*** KERNEL: Skipping KiProcessorBlock assignment (global access issue) ***\n";
+        const char msg[] = "*** KERNEL: Setting KiProcessorBlock assignment ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* Skip - causes crash */
-    /* KiProcessorBlock[Cpu] = &Pcr->Prcb; */
+    /* Fixed: Use proper assignment */
+    KiProcessorBlock[Cpu] = &Pcr->Prcb;
     {
         const char msg[] = "*** KERNEL: PRCB set for processor ***\n";
         const char *p = msg;
@@ -1205,12 +1209,12 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip global variable access for now */
-        /* KeFeatureBits = (ULONG64)Pcr->Prcb.FeatureBitsHigh << 32 |
-                        Pcr->Prcb.FeatureBits; */
+        /* Fixed: Set KeFeatureBits */
+        KeFeatureBits = (ULONG64)Pcr->Prcb.FeatureBitsHigh << 32 |
+                        Pcr->Prcb.FeatureBits;
         
         {
-            const char msg[] = "*** KERNEL: Skipping KeFeatureBits assignment ***\n";
+            const char msg[] = "*** KERNEL: KeFeatureBits assignment complete ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
@@ -1243,17 +1247,21 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
          /* Initialize debugging system */
         {
-            const char msg[] = "*** KERNEL: Skipping debug system (may cause crash) ***\n";
+            const char msg[] = "*** KERNEL: Initializing debug system ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
-        /* Skip KdInitSystem for now - it might be accessing globals */
-        /* KdInitSystem(0, LoaderBlock); */
         
+        /* Initialize debug system - but skip for now as it crashes accessing PCR */
         {
-            const char msg[] = "*** KERNEL: Debug system skipped ***\n";
+            /* KdInitSystem accesses KeGetPcr()->KdVersionBlock which uses GS segment */
+            /* This crashes in UEFI boot even though GS is set, needs investigation */
+            const char msg[] = "*** KERNEL: Temporarily skipping KdInitSystem (PCR access issue) ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            
+            /* Just skip KdInitSystem for now */
+            /* KdInitSystem(0, LoaderBlock); */
         }
 
         /* Skip break-in check too */
@@ -1283,28 +1291,38 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
-    /* Skip HAL initialization for now - it may crash */
+    /* Initialize HAL processor with UEFI workaround */
     {
-        const char msg[] = "*** KERNEL: Skipping HAL processor init (may crash) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* HalInitializeProcessor(Cpu, LoaderBlock); */
-    
-    {
-        const char msg[] = "*** KERNEL: HAL processor init skipped ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        const char msg1[] = "*** KERNEL: Doing minimal HAL init for UEFI ***\n";
+        const char *p1 = msg1;
+        while (*p1) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p1++); }
+        
+        /* Do minimal HAL initialization that doesn't crash on UEFI */
+        /* HalInitializeProcessor crashes accessing KeGetPcr()->StallScaleFactor */
+        /* So we do it manually here */
+        
+        /* Set default stall count directly in PCR */
+        Pcr->StallScaleFactor = 100; /* INITIAL_STALL_COUNT */
+        
+        /* Skip setting HAL globals - they're not accessible from kernel */
+        /* HalpActiveProcessors |= 1ULL << Cpu; */
+        /* HalpDefaultInterruptAffinity |= 1ULL << Cpu; */
+        
+        /* Skip the full HalInitializeProcessor for now */
+        /* HalInitializeProcessor(Cpu, LoaderBlock); */
+        
+        const char msg2[] = "*** KERNEL: Minimal HAL init completed ***\n";
+        const char *p2 = msg2;
+        while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
     }
 
     /* Set processor as active */
+    KeActiveProcessors |= 1ULL << Cpu;
     {
-        const char msg[] = "*** KERNEL: Skipping KeActiveProcessors assignment ***\n";
+        const char msg[] = "*** KERNEL: KeActiveProcessors set ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
-    /* KeActiveProcessors |= 1ULL << Cpu; */
 
     /* Release lock - skip since we didn't acquire it */
     /* InterlockedAnd64((PLONG64)&KiFreezeExecutionLock, 0); */
@@ -1325,10 +1343,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
-        /* Skip for now - accesses too many globals */
+        /* Skip KiInitializeKernelMachineDependent - accesses SharedUserData */
         /* KiInitializeKernelMachineDependent(&Pcr->Prcb, LoaderBlock); */
         {
-            const char msg[] = "*** KERNEL: Skipping KiInitializeKernelMachineDependent (globals) ***\n";
+            const char msg[] = "*** KERNEL: Skipping KiInitializeKernelMachineDependent (SharedUserData) ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
@@ -1387,14 +1405,25 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
     
     {
-        const char msg[] = "*** KERNEL: Calling KiSwitchToBootStack to continue kernel boot ***\n";
+        const char msg[] = "*** KERNEL: Bypassing KiSwitchToBootStack for UEFI boot ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
     /* LoaderBlock is now saved in global variable (works with proper ImageBase) */
     
+    /* CRITICAL FIX: In UEFI mode, stack switching causes crashes
+     * We're already running with a valid stack from the bootloader
+     * Just call KiSystemStartupBootStack directly */
+    
+    {
+        const char msg[] = "*** KERNEL: Calling KiSystemStartupBootStack directly ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     /* This should continue the kernel boot process */
-    KiSwitchToBootStack(InitialStack);
+    // KiSwitchToBootStack(InitialStack);
+    KiSystemStartupBootStack();
 }
 

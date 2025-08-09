@@ -4,7 +4,6 @@
 
 #include "mmdrv.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /*

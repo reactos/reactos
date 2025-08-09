@@ -13,7 +13,6 @@
 #include <ntoskrnl.h>
 #include <wmidata.h>
 #include <wmistr.h>
-#define NDEBUG
 #include <debug.h>
 
 /* The maximum size of an environment value (in bytes) */

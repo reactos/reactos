@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-#define NDEBUG
 #include <debug.h>
 
 CODE_SEG("INIT")

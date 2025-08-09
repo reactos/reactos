@@ -11,7 +11,6 @@
 #include "usbstor.h"
 #include <sptilib.h>
 
-#define NDEBUG
 #include <debug.h>
 
 // See CORE-10515 and CORE-10755

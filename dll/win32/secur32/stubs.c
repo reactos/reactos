@@ -1,6 +1,5 @@
 #include "precomp.h"
 
-#define NDEBUG
 #include <reactos/debug.h>
 
 #define SEC_ENTRY WINAPI

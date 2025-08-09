@@ -14,7 +14,6 @@
 #include <ntdddisk.h>
 #include <ntddcdrm.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

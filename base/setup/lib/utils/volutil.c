@@ -13,7 +13,6 @@
 #include "fsrec.h"
 #include "devutils.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

@@ -7,7 +7,6 @@
 
 #include "audiosrv.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /*

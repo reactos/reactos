@@ -11,7 +11,6 @@
 
 #include "usetup.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static PPROGRESSBAR ProgressBar = NULL;

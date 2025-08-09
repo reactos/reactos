@@ -24,7 +24,6 @@ extern BOOLEAN IsUnattendedSetup; // HACK
 
 #include "bootsup.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /*

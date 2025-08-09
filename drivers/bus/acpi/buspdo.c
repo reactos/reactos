@@ -4,7 +4,6 @@
 #include <initguid.h>
 #include <poclass.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #ifdef ALLOC_PRAGMA

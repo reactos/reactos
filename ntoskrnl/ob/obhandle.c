@@ -14,7 +14,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;

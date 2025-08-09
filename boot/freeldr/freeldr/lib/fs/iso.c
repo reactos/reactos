@@ -99,7 +99,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
             for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
                 Name[i] = Record->FileId[i];
             Name[i] = ANSI_NULL;
-            TRACE("Name '%s'\n", Name);
+            //TODO LOGS TEMP remove for not flodding logs TRACE("Name '%s'\n", Name);
 
             if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
             {

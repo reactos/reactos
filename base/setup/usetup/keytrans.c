@@ -28,7 +28,6 @@
 #include <usetup.h>
 #include "keytrans.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static WORD KeyTable[] = {

@@ -4,7 +4,6 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/iofuncs.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #undef FIXME

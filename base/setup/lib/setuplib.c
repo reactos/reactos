@@ -16,7 +16,6 @@
 
 #include "setuplib.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

@@ -12,7 +12,6 @@
 
 #include "mmdrv.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define MAX_WAVE_BUFFER_SIZE    65536

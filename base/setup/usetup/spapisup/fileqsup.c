@@ -31,7 +31,6 @@
 #include "usetup.h"
 #endif
 
-#define NDEBUG
 #include <debug.h>
 
 /* DEFINITIONS **************************************************************/

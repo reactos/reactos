@@ -10,7 +10,6 @@
 
 #include "eventlog.h"
 
-#define NDEBUG
 #include <debug.h>
 
 static LIST_ENTRY EventSourceListHead;

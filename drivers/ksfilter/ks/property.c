@@ -11,7 +11,6 @@
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-#define NDEBUG
 #include <debug.h>
 
 const GUID KSPROPTYPESETID_General = {0x97E99BA0L, 0xBDEA, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};

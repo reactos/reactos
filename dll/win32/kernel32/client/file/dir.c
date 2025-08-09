@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
-#define NDEBUG
 #include <debug.h>
 
 /* Short File Name length in chars (8.3) */

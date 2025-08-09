@@ -15,7 +15,6 @@
 // For Control Panel Applet
 #include <cpl.h>
 
-#define NDEBUG
 #include <debug.h>
 
 

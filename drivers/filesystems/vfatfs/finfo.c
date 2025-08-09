@@ -11,7 +11,6 @@
 
 #include "vfat.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define NASSERTS_RENAME

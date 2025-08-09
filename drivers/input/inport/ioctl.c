@@ -9,7 +9,6 @@
 
 #include "inport.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

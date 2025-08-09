@@ -10,7 +10,6 @@
 
 #include "vfat.h"
 
-#define NDEBUG
 #include <debug.h>
 
 extern VFAT_DISPATCH FatXDispatch;

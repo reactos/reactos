@@ -33,7 +33,6 @@
 #include <fslib/ext2lib.h>
 #include <fslib/cdfslib.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/

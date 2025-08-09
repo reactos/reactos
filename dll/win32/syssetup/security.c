@@ -15,7 +15,6 @@
 #include <ntsam.h>
 #include <sddl.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define TICKS_PER_DAY -864000000000LL

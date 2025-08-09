@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
 #include <debug.h>
 
 #define SEP_PRIVILEGE_SET_MAX_COUNT 60

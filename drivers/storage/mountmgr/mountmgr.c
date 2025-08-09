@@ -26,7 +26,6 @@
 
 #include "mntmgr.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* FIXME */

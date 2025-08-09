@@ -928,9 +928,10 @@ PeLdrLoadImageEx(
     }
     else
     {
-        /* For other modules, use the normal allocation */
+        /* For other modules, use the normal allocation 
+         * CRITICAL FIX: Use ULONG_PTR instead of ULONG to avoid truncating 64-bit ImageBase values */
         PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
-                           (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
+                           (PVOID)((ULONG_PTR)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
                            MemoryType);
     }
 #else

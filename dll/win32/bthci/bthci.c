@@ -13,7 +13,6 @@
 #include <winuser.h>
 #include <setupapi.h>
 
-#define NDEBUG
 #include <debug.h>
 
 

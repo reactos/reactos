@@ -19,7 +19,6 @@
 #include "arcname.h"
 #include "osdetect.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

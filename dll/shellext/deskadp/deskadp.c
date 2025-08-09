@@ -2,7 +2,6 @@
 
 #include <tchar.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #include "resource.h"

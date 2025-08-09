@@ -9,7 +9,6 @@
 #include <rosdhcp.h>
 #include <winsvc.h>
 
-#define NDEBUG
 #include <debug.h>
 
 static WCHAR ServiceName[] = L"DHCP";

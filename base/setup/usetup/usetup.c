@@ -33,7 +33,6 @@
 #include "devinst.h"
 #include "fmtchk.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

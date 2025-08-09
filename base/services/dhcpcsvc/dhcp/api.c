@@ -8,7 +8,6 @@
 
 #include <rosdhcp.h>
 
-#define NDEBUG
 #include <reactos/debug.h>
 
 static CRITICAL_SECTION ApiCriticalSection;

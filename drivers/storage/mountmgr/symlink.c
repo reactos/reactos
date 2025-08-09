@@ -25,7 +25,6 @@
 
 #include "mntmgr.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* Deprecated Windows 2000/XP versions of IOCTL_MOUNTDEV_LINK_[CREATED|DELETED]

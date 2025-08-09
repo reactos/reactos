@@ -27,7 +27,6 @@
 
 #define MAX_DEVICES 0x3E8 /* Matches 1000 devices */
 
-#define NDEBUG
 #include <debug.h>
 
 /*

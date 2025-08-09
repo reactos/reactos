@@ -12,7 +12,6 @@
 
 #include "fsrec.h"
 
-#define NDEBUG
 #include <debug.h>
 
 

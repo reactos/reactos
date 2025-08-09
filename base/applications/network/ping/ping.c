@@ -43,7 +43,6 @@
 
 #include "resource.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define SIZEOF_ICMP_ERROR 8

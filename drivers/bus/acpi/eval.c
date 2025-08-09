@@ -1,7 +1,6 @@
 #ifndef UNIT_TEST
 #include "precomp.h"
 
-#define NDEBUG
 #include <debug.h>
 #endif /* UNIT_TEST */
 

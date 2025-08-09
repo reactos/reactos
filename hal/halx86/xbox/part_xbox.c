@@ -11,7 +11,6 @@
 #include "halxbox.h"
 #include <internal/tag.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define XBOX_SIGNATURE_SECTOR 3

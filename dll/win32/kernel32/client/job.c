@@ -13,7 +13,6 @@
 #include <k32.h>
 #include <winspool.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

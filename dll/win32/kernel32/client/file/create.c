@@ -14,7 +14,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <k32.h>
-#define NDEBUG
 #include <debug.h>
 
 #if DBG

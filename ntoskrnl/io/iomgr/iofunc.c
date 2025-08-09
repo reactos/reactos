@@ -13,7 +13,6 @@
 
 #include <ntoskrnl.h>
 #include <ioevent.h>
-#define NDEBUG
 #include <debug.h>
 #include "internal/io_i.h"
 

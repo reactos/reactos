@@ -13,7 +13,6 @@
 
 #include <ndk/iotypes.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

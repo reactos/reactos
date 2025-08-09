@@ -14,7 +14,6 @@
 
 #include <ntoskrnl.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FIXME: This should be somewhere global instead of having 20 different versions */

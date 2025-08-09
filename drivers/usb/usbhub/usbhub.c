@@ -7,7 +7,6 @@
 
 #include "usbhub.h"
 
-#define NDEBUG
 #include <debug.h>
 
 #define NDEBUG_USBHUB_SCE

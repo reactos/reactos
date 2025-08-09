@@ -12,7 +12,6 @@
 
 #include <condrv/ntddcon.h>
 
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/

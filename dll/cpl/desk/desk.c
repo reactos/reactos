@@ -13,7 +13,6 @@
 #include <cplext.h>
 #include <winnls.h>
 
-#define NDEBUG
 #include <debug.h>
 
 

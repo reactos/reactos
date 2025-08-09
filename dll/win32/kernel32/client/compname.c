@@ -30,7 +30,6 @@
 #include <k32.h>
 #include <windns.h>
 
-#define NDEBUG
 #include <debug.h>
 
 typedef NTSTATUS (WINAPI *FN_DnsValidateName_W)(LPCWSTR, DNS_NAME_FORMAT);

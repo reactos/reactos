@@ -33,7 +33,6 @@
  */
 
 #define _USBD_
-#define NDEBUG
 #include <ntddk.h>
 #include <usbdi.h>
 #include <usbdlib.h>

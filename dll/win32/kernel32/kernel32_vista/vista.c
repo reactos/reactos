@@ -16,7 +16,6 @@
 // This is defined only in ntifs.h
 #define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
-#define NDEBUG
 #include <debug.h>
 
 /* PUBLIC FUNCTIONS ***********************************************************/

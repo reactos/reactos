@@ -12,7 +12,6 @@
 #include "services.h"
 #include <ntsecapi.h>
 
-#define NDEBUG
 #include <debug.h>
 
 struct ustring

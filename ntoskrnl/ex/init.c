@@ -13,7 +13,6 @@
 #include <reactos/buildno.h>
 #include "inbv/logo.h"
 
-#define NDEBUG
 #include <debug.h>
 
 /* For COM port debugging */

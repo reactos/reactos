@@ -12,7 +12,6 @@
 
 #include <ndk/dbgkfuncs.h>
 
-#define NDEBUG
 #include <debug.h>
 
 typedef struct _DBGSS_THREAD_DATA

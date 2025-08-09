@@ -118,7 +118,6 @@ extern "C" {
 
 #define PEXTENDED_IO_STACK_LOCATION  PIO_STACK_LOCATION
 
-#define NDEBUG
 #ifndef NDEBUG
 #define UDF_DBG
 #endif

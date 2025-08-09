@@ -18,7 +18,6 @@
 #include <ndk/exfuncs.h>
 #include <ntsecapi.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define SEED_BUFFER_SIZE 6
