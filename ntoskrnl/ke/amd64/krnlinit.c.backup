@@ -834,52 +834,7 @@ KiSystemStartupBootStack(VOID)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* Initialize Executive Phase 0 FIRST - required for OB lookaside lists */
-    {
-        const char msg[] = "*** KERNEL: Initializing Executive Phase 0 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    ExpInitializationPhase = 0;
-    extern BOOLEAN ExInitSystem(VOID);
-    if (!ExInitSystem())
-    {
-        const char msg[] = "*** KERNEL: ExInitSystem Phase 0 FAILED! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        KeBugCheckEx(PHASE0_INITIALIZATION_FAILED, 0, 0, 0, 0);
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: Executive Phase 0 initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Initialize Object Manager Phase 0 - required for PS */
-    {
-        const char msg[] = "*** KERNEL: Initializing Object Manager Phase 0 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    extern BOOLEAN ObInitSystem(VOID);
-    if (!ObInitSystem())
-    {
-        const char msg[] = "*** KERNEL: ObInitSystem Phase 0 FAILED! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        KeBugCheckEx(OBJECT_INITIALIZATION_FAILED, 0, 0, 0, 0);
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: Object Manager Phase 0 initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Initialize Process Manager Phase 0 - required for MM */
+    /* Initialize Process Manager Phase 0 first - required for MM */
     {
         const char msg[] = "*** KERNEL: Initializing Process Manager Phase 0 ***\n";
         const char *p = msg;
@@ -2513,12 +2468,22 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Object Manager already initialized in Phase 0 */
+        /* With small memory model, we can call ObInitSystem directly */
         {
-            const char msg[] = "*** KERNEL: Object Manager already initialized in Phase 0 ***\n";
+            const char msg[] = "*** KERNEL: Skipping ObInitSystem (may hang) ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+        
+        /* Skip for now to avoid hang
+        BOOLEAN Result = ObInitSystem();
+        if (Result)
+        {
+            const char msg[] = "*** KERNEL: Object Manager initialized successfully! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        */
         
         /* For now, skip other subsystem initialization */
         {

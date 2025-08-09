@@ -1131,20 +1131,53 @@ NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
                              IN PULONG_PTR DirectoryTableBase)
 {
+    /* Debug output */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** MM: MmInitializeHandBuiltProcess entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Share the directory base with the idle process */
     DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
     DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
 
+    {
+        const char msg[] = "*** MM: Initializing address space mutex ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Initialize the Addresss Space */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    
+    {
+        const char msg[] = "*** MM: Initializing hyperspace lock ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    
     KeInitializeSpinLock(&Process->HyperSpaceLock);
     Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
+    {
+        const char msg[] = "*** MM: Using idle process working set ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Use idle process Working set */
     Process->Vm.VmWorkingSetList = PsGetCurrentProcess()->Vm.VmWorkingSetList;
     Process->WorkingSetPage = PsGetCurrentProcess()->WorkingSetPage;
+
+    {
+        const char msg[] = "*** MM: MmInitializeHandBuiltProcess complete ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Done */
     Process->HasAddressSpace = TRUE;//??

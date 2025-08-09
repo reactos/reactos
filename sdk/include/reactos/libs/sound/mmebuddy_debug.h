@@ -9,6 +9,10 @@
 // FIXME: sdk\lib\...\mmebuddy compilation would fail: wsprintf() and MessageBoxW() are undefined!
 #if DBG && !defined(NDEBUG) // #if DBG
 
+    // Include necessary headers for MessageBoxW and wsprintf
+    #include <winuser.h>
+    #include <strsafe.h>
+
     // Helper for SND_ASSERT().
     #define POPUP(...) \
         { \

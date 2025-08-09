@@ -56,7 +56,11 @@ MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
-    // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
+    /* Bugcheck if memory area creation fails - critical for system stability */
+    if (!NT_SUCCESS(Status))
+    {
+        KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)BaseAddress, Size, 0);
+    }
 }
 
 CODE_SEG("INIT")

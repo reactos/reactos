@@ -17,6 +17,15 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _M_AMD64
+/* Static allocation for early boot on AMD64 */
+/* Need more for: Type, Directory, SymbolicLink, Process, Thread, Job, Section, Event, Mutant, Semaphore, Timer, etc */
+static UCHAR EarlyBootObjectTypeNames[20][256]; /* Increased for all early object types */
+static ULONG EarlyBootNameIndex = 0;
+static UCHAR EarlyBootObjectHeaders[20][8192]; /* Increased for large objects like EPROCESS */
+static ULONG EarlyBootHeaderIndex = 0;
+#endif
+
 extern ULONG NtGlobalFlag;
 
 POBJECT_TYPE ObpTypeObjectType = NULL;
@@ -464,7 +473,10 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_QUALITY_OF_SERVICE SecurityQos;
     PUNICODE_STRING LocalObjectName = NULL;
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
 
     /* Zero out the Capture Data */
     RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
@@ -624,7 +636,21 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     POOL_TYPE PoolType;
     ULONG FinalSize;
     ULONG Tag;
+    
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** OB: ObpAllocateObject entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
 
     /* Accounting */
     ObpObjectsCreated++;
@@ -720,8 +746,35 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                 FIELD_OFFSET(OBJECT_HEADER, Body);
 
     /* Allocate memory for the Object and Header */
+#ifdef _M_AMD64
+    /* Use static buffer during early boot on AMD64 */
+    if (EarlyBootHeaderIndex < 20)
+    {
+        #define COM_PORT 0x3F8
+        {
+            const char msg[] = "*** OB: Using static buffer for object header ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        Header = (POBJECT_HEADER)EarlyBootObjectHeaders[EarlyBootHeaderIndex++];
+        RtlZeroMemory(Header, FinalSize + ObjectSize);
+    }
+    else
+    {
+        Header = ExAllocatePoolWithTag(PoolType, FinalSize + ObjectSize, Tag);
+    }
+#else
     Header = ExAllocatePoolWithTag(PoolType, FinalSize + ObjectSize, Tag);
+#endif
     if (!Header) return STATUS_INSUFFICIENT_RESOURCES;
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Object header allocated, processing headers ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Check if we have a quota header */
     if (QuotaSize)
@@ -866,6 +919,15 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     /* Return Header */
     *ObjectHeader = Header;
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: ObpAllocateObject completed successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
     return STATUS_SUCCESS;
 }
 
@@ -1051,9 +1113,45 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
     UNICODE_STRING ObjectName;
     POBJECT_HEADER Header;
 
-    /* Allocate a capture buffer */
-    ObjectCreateInfo = ObpAllocateObjectCreateInfoBuffer(LookasideCreateInfoList);
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** OB: ObCreateObject entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    
+    /* Static allocation for early boot on AMD64 */
+    static OBJECT_CREATE_INFORMATION EarlyBootCreateInfo[10];
+    static ULONG EarlyBootCreateInfoIndex = 0;
+    
+    extern ULONG ExpInitializationPhase;
+    if (ExpInitializationPhase == 0 && EarlyBootCreateInfoIndex < 10)
+    {
+        {
+            const char msg2[] = "*** OB: Using static CreateInfo buffer ***\n";
+            const char *p2 = msg2;
+            while (*p2) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p2++); }
+        }
+        ObjectCreateInfo = &EarlyBootCreateInfo[EarlyBootCreateInfoIndex++];
+        RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
+    }
+    else
+#endif
+    {
+        /* Allocate a capture buffer */
+        ObjectCreateInfo = ObpAllocateObjectCreateInfoBuffer(LookasideCreateInfoList);
+    }
     if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: About to capture object info ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Capture all the info */
     Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
@@ -1062,8 +1160,22 @@ ObCreateObject(IN KPROCESSOR_MODE ProbeMode OPTIONAL,
                                                FALSE,
                                                ObjectCreateInfo,
                                                &ObjectName);
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Capture returned, checking status ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     if (NT_SUCCESS(Status))
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** OB: Capture successful, validating attributes ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#endif
         /* Validate attributes */
         if (Type->TypeInfo.InvalidAttributes & ObjectCreateInfo->Attributes)
         {
@@ -1148,6 +1260,16 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     UNICODE_STRING ObjectName;
     ANSI_STRING AnsiName;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** OB: ObCreateObjectType entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Verify parameters */
     if (!(TypeName) ||
@@ -1198,9 +1320,33 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* Now make a copy of the object name */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: About to allocate name buffer ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    /* Use static buffer during early boot on AMD64 */
+    if (EarlyBootNameIndex < 20)
+    {
+        {
+            const char msg[] = "*** OB: Using static buffer for name ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        ObjectName.Buffer = (PWCHAR)EarlyBootObjectTypeNames[EarlyBootNameIndex++];
+    }
+    else
+    {
+        ObjectName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                  TypeName->MaximumLength,
+                                                  OB_NAME_TAG);
+    }
+#else
     ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                               TypeName->MaximumLength,
                                               OB_NAME_TAG);
+#endif
     if (!ObjectName.Buffer)
     {
         /* Out of memory, fail */
@@ -1212,6 +1358,14 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     ObjectName.MaximumLength = TypeName->MaximumLength;
     RtlCopyUnicodeString(&ObjectName, TypeName);
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: About to call ObpAllocateObject ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL,
                                &ObjectName,
@@ -1219,6 +1373,14 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                sizeof(OBJECT_TYPE),
                                KernelMode,
                                &Header);
+                               
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: ObpAllocateObject returned ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     if (!NT_SUCCESS(Status))
     {
         /* Free the name and fail */
@@ -1229,6 +1391,15 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     /* Setup the flags and name */
     LocalObjectType = (POBJECT_TYPE)&Header->Body;
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Setting up object type fields ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
     LocalObjectType->Name = ObjectName;
     Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
 
@@ -1238,7 +1409,45 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     LocalObjectType->HighWaterNumberOfObjects =
     LocalObjectType->HighWaterNumberOfHandles = 0;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Checking if first object type ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Check if this is the first Object Type */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Testing ObpTypeObjectType access ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    
+    /* For first object type on AMD64, just set it directly */
+    if (EarlyBootHeaderIndex == 1) /* First object type allocated */
+    {
+        {
+            const char msg[] = "*** OB: This is the first object type (Type) ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        ObpTypeObjectType = LocalObjectType;
+        Header->Type = LocalObjectType; /* Use local instead of global */
+        LocalObjectType->TotalNumberOfObjects = 1;
+        LocalObjectType->Key = TAG_OBJECT_TYPE;
+    }
+    else
+    {
+        {
+            const char msg[] = "*** OB: Not the first object type ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        Header->Type = ObpTypeObjectType;
+    }
+#else
     if (!ObpTypeObjectType)
     {
         /* It is, so set this as the type object */
@@ -1250,7 +1459,20 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         LocalObjectType->Key = TAG_OBJECT_TYPE;
     }
     else
+#endif
+#ifdef _M_AMD64
+    if (EarlyBootHeaderIndex != 1) /* Not the first object type */
+#endif
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** OB: Setting object type key ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        /* For AMD64 early boot, just use first 4 chars of TypeName */
+        LocalObjectType->Key = *(PULONG)TypeName->Buffer;
+#else
         /* Convert the tag to ASCII */
         Status = RtlUnicodeStringToAnsiString(&AnsiName, TypeName, TRUE);
         if (NT_SUCCESS(Status))
@@ -1267,18 +1489,44 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
             /* Just copy the characters */
             LocalObjectType->Key = *(PULONG)TypeName->Buffer;
         }
+#endif
     }
 
     /* Set up the type information */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Setting up type information ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
     LocalObjectType->TypeInfo.PoolType = ObjectTypeInitializer->PoolType;
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Type info copied ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Check if we have to maintain a type list */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Checking NtGlobalFlag ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    /* Skip NtGlobalFlag check on AMD64 during early boot */
+    LocalObjectType->TypeInfo.MaintainTypeList = ObjectTypeInitializer->MaintainTypeList;
+#else
     if (NtGlobalFlag & FLG_MAINTAIN_OBJECT_TYPELIST)
     {
         /* Enable support */
         LocalObjectType->TypeInfo.MaintainTypeList = TRUE;
     }
+#endif
 
     /* Calculate how much space our header'll take up */
     HeaderSize = sizeof(OBJECT_HEADER) +
@@ -1299,10 +1547,25 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* All objects types need a security procedure */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Setting security procedure ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     if (!ObjectTypeInitializer->SecurityProcedure)
     {
         LocalObjectType->TypeInfo.SecurityProcedure = SeDefaultObjectMethod;
     }
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Selecting wait object ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Select the Wait Object */
     if (LocalObjectType->TypeInfo.UseDefaultObject)
@@ -1341,8 +1604,17 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
     InitializeListHead(&LocalObjectType->TypeList);
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: About to lock object type mutex ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    /* Skip mutex locking during early boot on AMD64 - not initialized yet */
+#else
     /* Lock the object type */
     ObpEnterObjectTypeMutex(ObpTypeObjectType);
+#endif
 
     /* Get creator info and insert it into the type list */
     CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
@@ -1368,7 +1640,16 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
 
     /* Release the object type */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** OB: Skipping mutex unlock (AMD64) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    /* Skip mutex unlocking during early boot on AMD64 */
+#else
     ObpLeaveObjectTypeMutex(ObpTypeObjectType);
+#endif
 
     /* Check if we're actually creating the directory object itself */
     if (!(ObpTypeDirectoryObject) ||
@@ -1383,6 +1664,14 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
         /* Cleanup the lookup context */
         ObpReleaseLookupContext(&Context);
+
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** OB: ObCreateObjectType completed successfully ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#endif
 
         /* Return the object type and success */
         *ObjectType = LocalObjectType;

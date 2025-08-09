@@ -690,6 +690,14 @@ ExpInitSystemPhase0(VOID)
     }
     ExpInitLookasideLists();
 
+    /* Initialize handle tables */
+    {
+        const char msg[] = "*** EX: Calling ExpInitializeHandleTables ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    ExpInitializeHandleTables();
+
     /* Initialize the Firmware Table resource and listhead */
     {
         const char msg[] = "*** EX: Initializing firmware table resources ***\n";

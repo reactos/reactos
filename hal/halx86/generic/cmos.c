@@ -162,8 +162,11 @@ HalpInitializeCmos(VOID)
     /* Set default century offset byte */
     HalpCmosCenturyOffset = 50;
 
+#ifndef _M_AMD64
     /* No support for EISA or MCA */
+    /* On AMD64, we skip setting HalpBusType so skip the assert */
     ASSERT(HalpBusType == MACHINE_TYPE_ISA);
+#endif
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

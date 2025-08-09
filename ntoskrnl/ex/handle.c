@@ -20,6 +20,13 @@ EX_PUSH_LOCK HandleTableListLock;
 #define SizeOfHandle(x) (sizeof(HANDLE) * (x))
 #define INDEX_TO_HANDLE_VALUE(x) ((x) << HANDLE_TAG_BITS)
 
+#ifdef _M_AMD64
+/* Static allocation for early boot on AMD64 */
+static HANDLE_TABLE EarlyBootHandleTables[5]; /* Multiple handle tables for kernel, idle process, etc */
+static UCHAR EarlyBootHandleTableEntries[5][PAGE_SIZE];
+static ULONG EarlyBootHandleTableIndex = 0;
+#endif
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 #ifdef _WIN64
@@ -110,8 +117,12 @@ ExpAllocateTablePagedPool(IN PEPROCESS Process OPTIONAL,
     PVOID Buffer;
     NTSTATUS Status;
 
-    /* Do the allocation */
+    /* Do the allocation - use NonPagedPool during early boot on AMD64 */
+#ifdef _M_AMD64
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_OBJECT_TABLE);
+#else
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
+#endif
     if (Buffer)
     {
         /* Clear the memory */
@@ -142,8 +153,38 @@ ExpAllocateTablePagedPoolNoZero(IN PEPROCESS Process OPTIONAL,
     PVOID Buffer;
     NTSTATUS Status;
 
-    /* Do the allocation */
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** EX: ExpAllocateTablePagedPoolNoZero entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
+    /* Do the allocation - use NonPagedPool during early boot on AMD64 */
+#ifdef _M_AMD64
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_OBJECT_TABLE);
+#else
     Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_OBJECT_TABLE);
+#endif
+    
+#ifdef _M_AMD64
+    if (Buffer)
+    {
+        const char msg[] = "*** EX: Pool allocation succeeded ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    else
+    {
+        const char msg[] = "*** EX: Pool allocation FAILED ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
     if (Buffer)
     {
         /* Check if we have a process to charge quota */
@@ -335,13 +376,72 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     PHANDLE_TABLE_ENTRY HandleTableTable, HandleEntry;
     ULONG i;
     NTSTATUS Status;
+    
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** EX: ExpAllocateHandleTable entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
 
-    /* Allocate the table */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: About to allocate handle table pool ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
+    /* Allocate the table - use static allocation for early tables on AMD64 */
+#ifdef _M_AMD64
+    if (EarlyBootHandleTableIndex < 5)
+    {
+        {
+            const char msg[] = "*** EX: Using early boot static allocation ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        HandleTable = &EarlyBootHandleTables[EarlyBootHandleTableIndex++];
+        RtlZeroMemory(HandleTable, sizeof(HANDLE_TABLE));
+    }
+    else
+    {
+        HandleTable = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(HANDLE_TABLE),
+                                            TAG_OBJECT_TABLE);
+    }
+#else
     HandleTable = ExAllocatePoolWithTag(PagedPool,
                                         sizeof(HANDLE_TABLE),
                                         TAG_OBJECT_TABLE);
-    if (!HandleTable) return NULL;
+#endif
+    if (!HandleTable) 
+    {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** EX: Failed to allocate handle table ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#endif
+        return NULL;
+    }
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: Handle table allocated successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Check if we have a process */
     if (Process)
@@ -356,12 +456,51 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
     }
 
     /* Clear the table */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: Clearing handle table memory ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     RtlZeroMemory(HandleTable, sizeof(HANDLE_TABLE));
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: About to allocate first level structures ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Now allocate the first level structures */
+#ifdef _M_AMD64
+    /* Use static buffer for early boot */
+    if (EarlyBootHandleTableIndex > 0 && EarlyBootHandleTableIndex <= 5)
+    {
+        {
+            const char msg[] = "*** EX: Using static buffer for first level structures ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+        HandleTableTable = (PHANDLE_TABLE_ENTRY)EarlyBootHandleTableEntries[EarlyBootHandleTableIndex - 1];
+    }
+    else
+    {
+        HandleTableTable = ExpAllocateTablePagedPoolNoZero(Process, PAGE_SIZE);
+    }
+#else
     HandleTableTable = ExpAllocateTablePagedPoolNoZero(Process, PAGE_SIZE);
+#endif
     if (!HandleTableTable)
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** EX: Failed to allocate first level structures ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#endif
         /* Failed, free the table */
         ExFreePoolWithTag(HandleTable, TAG_OBJECT_TABLE);
 
@@ -373,6 +512,14 @@ ExpAllocateHandleTable(IN PEPROCESS Process OPTIONAL,
 
         return NULL;
     }
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: First level structures allocated ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Write the pointer to our first level structures */
     HandleTable->TableCode = (ULONG_PTR)HandleTableTable;
@@ -801,22 +948,111 @@ NTAPI
 ExCreateHandleTable(IN PEPROCESS Process OPTIONAL)
 {
     PHANDLE_TABLE HandleTable;
+    
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** EX: ExCreateHandleTable entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: About to check PAGED_CODE ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: PAGED_CODE check bypassed (AMD64) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: About to call ExpAllocateHandleTable ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Allocate the handle table */
     HandleTable = ExpAllocateHandleTable(Process, TRUE);
-    if (!HandleTable) return NULL;
+    if (!HandleTable) 
+    {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** EX: ExpAllocateHandleTable returned NULL ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#endif
+        return NULL;
+    }
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: ExpAllocateHandleTable succeeded ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Acquire the handle table lock */
     KeEnterCriticalRegion();
+    
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: About to acquire pushlock ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     ExAcquirePushLockExclusive(&HandleTableListLock);
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: Pushlock acquired ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Insert it into the list */
     InsertTailList(&HandleTableListHead, &HandleTable->HandleTableList);
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: List insertion done ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Release the lock */
     ExReleasePushLockExclusive(&HandleTableListLock);
     KeLeaveCriticalRegion();
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** EX: ExCreateHandleTable completed ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Return the handle table */
     return HandleTable;

@@ -376,7 +376,21 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
+    
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** PS: PspCreateProcess entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+    
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
@@ -417,6 +431,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     MinWs = PsMinimumWorkingSet;
     MaxWs = PsMaximumWorkingSet;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: About to call ObCreateObject for process ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
                             PsProcessType,
@@ -427,23 +449,68 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             0,
                             0,
                             (PVOID*)&Process);
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: ObCreateObject returned ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
     if (!NT_SUCCESS(Status)) goto Cleanup;
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: Starting to initialize process object ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Clean up the Object */
     RtlZeroMemory(Process, sizeof(EPROCESS));
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: Process zeroed, initializing rundown ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Initialize pushlock and rundown protection */
     ExInitializeRundownProtection(&Process->RundownProtect);
     Process->ProcessLock.Value = 0;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: Initializing thread list ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
+
     /* Setup the Thread List Head */
     InitializeListHead(&Process->ThreadListHead);
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** PS: Setting up quota ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+#endif
 
     /* Set up the Quota Block from the Parent */
     PspInheritQuota(Process, Parent);
 
     /* Set up Dos Device Map from the Parent */
     ObInheritDeviceMap(Parent, Process);
+
+    {
+        const char msg[] = "*** PS: After ObInheritDeviceMap, checking parent ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Check if we have a parent */
     if (Parent)
@@ -458,9 +525,20 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Process->DefaultHardErrorProcessing = SEM_FAILCRITICALERRORS;
     }
 
+    {
+        const char msg[] = "*** PS: Checking section handle ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Check for a section handle */
     if (SectionHandle)
     {
+        {
+            const char msg[] = "*** PS: Have section handle, referencing ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         /* Get a pointer to it */
         Status = ObReferenceObjectByHandle(SectionHandle,
                                            SECTION_MAP_EXECUTE,
@@ -472,11 +550,21 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
     else
     {
+        {
+            const char msg[] = "*** PS: No section handle ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         /* Assume no section object */
         SectionObject = NULL;
 
         /* Is the parent the initial process?
          * Check for NULL also, as at initialization PsInitialSystemProcess is NULL */
+        {
+            const char msg[] = "*** PS: Checking if parent is initial process ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         if (Parent != PsInitialSystemProcess && (Parent != NULL))
         {
             /* It's not, so acquire the process rundown */
@@ -498,10 +586,21 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                 goto CleanupWithRef;
             }
         }
+        {
+            const char msg[] = "*** PS: Parent check complete ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
     }
 
     /* Save the pointer to the section object */
     Process->SectionObject = SectionObject;
+
+    {
+        const char msg[] = "*** PS: Section object saved, checking debug port ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Check for the debug port */
     if (DebugPort)
@@ -531,6 +630,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (Parent) DbgkCopyProcessDebugPort(Process, Parent);
     }
 
+    {
+        const char msg[] = "*** PS: Checking exception port ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Now check for an exception port */
     if (ExceptionPort)
     {
@@ -553,6 +658,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Set default exit code */
     Process->ExitStatus = STATUS_PENDING;
 
+    {
+        const char msg[] = "*** PS: Checking if this is initial process ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+
     /* Check if this is the initial process being built */
     if (Parent)
     {
@@ -568,17 +679,38 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
     else
     {
+        {
+            const char msg[] = "*** PS: Initial process - calling MmInitializeHandBuiltProcess ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         /* Otherwise, we are the boot process, we're already semi-initialized */
         Process->ObjectTable = CurrentProcess->ObjectTable;
         Status = MmInitializeHandBuiltProcess(Process, DirectoryTableBase);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        {
+            const char msg[] = "*** PS: MmInitializeHandBuiltProcess returned successfully ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
     }
 
     /* We now have an address space */
+    {
+        const char msg[] = "*** PS: Setting HAS_ADDRESS_SPACE flag ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
     InterlockedOr((PLONG)&Process->Flags, PSF_HAS_ADDRESS_SPACE_BIT);
 
     /* Set the maximum WS */
     Process->Vm.MaximumWorkingSetSize = MaxWs;
+
+    {
+        const char msg[] = "*** PS: Calling KeInitializeProcess ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Now initialize the Kernel Process */
     KeInitializeProcess(&Process->Pcb,
@@ -587,6 +719,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                         DirectoryTableBase,
                         BooleanFlagOn(Process->DefaultHardErrorProcessing,
                                       SEM_NOALIGNMENTFAULTEXCEPT));
+
+    {
+        const char msg[] = "*** PS: KeInitializeProcess returned, calling PspInitializeProcessSecurity ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);

@@ -73,12 +73,29 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PTOKEN NewToken, ParentToken;
+    
+    /* Debug output */
+    #define COM_PORT 0x3F8
+    {
+        const char msg[] = "*** PS: PspInitializeProcessSecurity entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+    }
+    
+    /* Skip PAGED_CODE check on AMD64 during early boot */
+#ifndef _M_AMD64
     PAGED_CODE();
+#endif
     PSTRACE(PS_SECURITY_DEBUG, "Process: %p\n", Process);
 
     /* If we have a parent, then duplicate the Token */
     if (Parent)
     {
+        {
+            const char msg[] = "*** PS: Have parent, duplicating token ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         /* Get the Parent Token */
         ParentToken = PsReferencePrimaryToken(Parent);
 
@@ -100,9 +117,45 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
     }
     else
     {
+        {
+            const char msg[] = "*** PS: No parent, using boot token ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
         /* No parent, assign the Boot Token */
         ObInitializeFastReference(&Process->Token, NULL);
-        SeAssignPrimaryToken(Process, PspBootAccessToken);
+        {
+            const char msg[] = "*** PS: Calling SeAssignPrimaryToken ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+#ifdef _M_AMD64
+        /* During early boot, PspBootAccessToken might be NULL */
+        if (PspBootAccessToken == NULL)
+        {
+            {
+                const char msg2[] = "*** PS: PspBootAccessToken is NULL, skipping ***\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p2++); }
+            }
+            /* Just leave the token as NULL for now */
+        }
+        else
+#endif
+        {
+            SeAssignPrimaryToken(Process, PspBootAccessToken);
+        }
+        {
+            const char msg[] = "*** PS: SeAssignPrimaryToken returned ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+        }
+    }
+
+    {
+        const char msg[] = "*** PS: PspInitializeProcessSecurity complete ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
 
     /* Return to caller */

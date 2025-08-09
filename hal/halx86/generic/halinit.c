@@ -27,25 +27,67 @@ VOID
 HalpGetParameters(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Make sure we have a loader block and command line */
-    if (LoaderBlock && LoaderBlock->LoadOptions)
+    /* Debug output */
+    #undef COM1_PORT
+    #define COM1_PORT 0x3F8
     {
-        /* Read the command line */
-        PCSTR CommandLine = LoaderBlock->LoadOptions;
+        const char msg[] = "*** HAL: HalpGetParameters entry ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Make sure we have a loader block and command line */
+    if (LoaderBlock)
+    {
+        {
+            const char msg[] = "*** HAL: LoaderBlock is valid ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        if (LoaderBlock->LoadOptions)
+        {
+            {
+                const char msg[] = "*** HAL: LoadOptions is valid ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+            
+            /* Read the command line */
+            PCSTR CommandLine = LoaderBlock->LoadOptions;
 
 //#ifdef CONFIG_SMP // FIXME: Reenable conditional once HAL is consistently compiled for SMP mode
-        /* Check whether we should only start one CPU */
-        if (strstr(CommandLine, "ONECPU"))
-            HalpOnlyBootProcessor = TRUE;
+            /* Check whether we should only start one CPU */
+            if (strstr(CommandLine, "ONECPU"))
+                HalpOnlyBootProcessor = TRUE;
 //#endif
 
-        /* Check if PCI is locked */
-        if (strstr(CommandLine, "PCILOCK"))
-            HalpPciLockSettings = TRUE;
+            /* Check if PCI is locked */
+            if (strstr(CommandLine, "PCILOCK"))
+                HalpPciLockSettings = TRUE;
 
-        /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK"))
-            DbgBreakPoint();
+            /* Check for initial breakpoint */
+            if (strstr(CommandLine, "BREAK"))
+                DbgBreakPoint();
+        }
+        else
+        {
+            const char msg[] = "*** HAL: LoadOptions is NULL ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+    }
+    else
+    {
+        const char msg[] = "*** HAL: LoaderBlock is NULL ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    {
+        const char msg[] = "*** HAL: HalpGetParameters exit ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 }
 
@@ -115,13 +157,27 @@ HalInitSystem(
         
         /* Save bus type */
         {
-            const char msg[] = "*** HAL: Skipping bus type - global var issue on AMD64 ***\n";
+            const char msg[] = "*** HAL: Setting bus type to ISA ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip setting HalpBusType - global variable access issue on AMD64 */
-        /* HalpBusType = MACHINE_TYPE_ISA; */
+#ifdef _M_AMD64
+        /* Skip setting bus type on AMD64 for now - causes hang */
+        {
+            const char msg[] = "*** HAL: Skipping bus type assignment on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        HalpBusType = MACHINE_TYPE_ISA;
+#endif
+
+        {
+            const char msg[] = "*** HAL: Bus type handling complete ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Get command-line parameters */
         {
@@ -164,75 +220,104 @@ HalInitSystem(
 
         /* Checked/free HAL requires checked/free kernel */
         {
-            const char msg[] = "*** HAL: Skipping build type check (global var issue) ***\n";
+            const char msg[] = "*** HAL: Checking build type ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip build type check - HalpBuildType global access issue on AMD64 */
-        /*
+#ifdef _M_AMD64
+        /* Skip build type check on AMD64 for now - causes hang */
+        {
+            const char msg[] = "*** HAL: Skipping build type check on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
         if (Prcb->BuildType != HalpBuildType)
         {
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
-        */
+#endif
 
         /* Initialize ACPI */
+#ifdef _M_AMD64
         {
-            const char msg[] = "*** HAL: Skipping ACPI (crashes on AMD64) ***\n";
+            const char msg[] = "*** HAL: Skipping ACPI for now on AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
-        
-        /* Skip ACPI for now - crashes on AMD64 */
-        /*
+        /* TODO: Fix ACPI initialization on AMD64 */
+        Status = STATUS_SUCCESS;
+#else
         Status = HalpSetupAcpiPhase0(LoaderBlock);
         if (!NT_SUCCESS(Status))
         {
             KeBugCheckEx(ACPI_BIOS_ERROR, Status, 0, 0, 0);
         }
-        */
-        Status = STATUS_SUCCESS;
+#endif
 
         /* Initialize the PICs */
         {
-            const char msg[] = "*** HAL: Skipping PIC initialization (crashes on AMD64) ***\n";
+            const char msg[] = "*** HAL: Initializing PICs ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip PIC initialization - crashes on AMD64 */
-        /* HalpInitializePICs(TRUE); */
+#ifdef _M_AMD64
+        /* TODO: Implement proper PIC initialization for AMD64 */
+        {
+            const char msg[] = "*** HAL: Skipping PIC init on AMD64 for now ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        HalpInitializePICs(TRUE);
+#endif
 
         /* Initialize CMOS lock */
         {
-            const char msg[] = "*** HAL: Skipping CMOS lock init (global var issue) ***\n";
+            const char msg[] = "*** HAL: Initializing CMOS hardware lock ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip KeInitializeSpinLock - global variable access issue on AMD64 */
-        /* KeInitializeSpinLock(&HalpSystemHardwareLock); */
+#ifdef _M_AMD64
+        /* On AMD64, the spinlock is already zero-initialized in BSS */
+        /* Skip explicit initialization to avoid global access issues */
+        {
+            const char msg[] = "*** HAL: CMOS lock already zero-initialized on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        KeInitializeSpinLock(&HalpSystemHardwareLock);
+#endif
 
         /* Initialize CMOS */
         {
-            const char msg[] = "*** HAL: Skipping CMOS init (global var issue) ***\n";
+            const char msg[] = "*** HAL: Initializing CMOS ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip HalpInitializeCmos - global variable access issue on AMD64 */
-        /* HalpInitializeCmos(); */
+        HalpInitializeCmos();
 
         /* Fill out the dispatch tables */
         {
-            const char msg[] = "*** HAL: Skipping dispatch table setup (global ptr issues) ***\n";
+            const char msg[] = "*** HAL: Setting up dispatch tables ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip dispatch table setup - global function pointer issues on AMD64 */
-        /*
+#ifdef _M_AMD64
+        /* On AMD64, skip dispatch table setup for now */
+        {
+            const char msg[] = "*** HAL: Skipping dispatch table setup on AMD64 for now ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        /* These macros resolve to HALDISPATCH->field which are complex to handle during early boot */
+#else
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
         HalInitPnpDriver = HaliInitPnpDriver;
@@ -241,49 +326,63 @@ HalInitSystem(
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
         HalResetDisplay = HalpBiosDisplayReset;
         HalHaltSystem = HaliHaltSystem;
-        */
+#endif
 
         /* Setup I/O space */
         {
-            const char msg[] = "*** HAL: Skipping I/O space setup (global issues) ***\n";
+            const char msg[] = "*** HAL: Setting up I/O address space ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip I/O space setup - global pointer issues */
-        /*
+#ifdef _M_AMD64
+        /* Skip I/O space setup on AMD64 - global struct field access causes issues */
+        {
+            const char msg[] = "*** HAL: Skipping I/O space setup on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;
-        */
+#endif
 
         /* Setup busy waiting */
         {
-            const char msg[] = "*** HAL: Skipping stall calibration (CMOS issue) ***\n";
+            const char msg[] = "*** HAL: Calibrating stall execution ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip HalpCalibrateStallExecution - uses CMOS which has issues on AMD64 */
-        /* HalpCalibrateStallExecution(); */
-        
-        /* Set a default stall scale factor */
-        {
-            const char msg[] = "*** HAL: Setting default stall scale factor ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
+#ifdef _M_AMD64
+        /* On AMD64, skip calibration for now and use default */
         KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
+        {
+            const char msg[] = "*** HAL: Using default stall factor on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        HalpCalibrateStallExecution();
+#endif
 
         /* Initialize the clock */
         {
-            const char msg[] = "*** HAL: Skipping clock init (global var issue) ***\n";
+            const char msg[] = "*** HAL: Initializing system clock ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip HalpInitializeClock - uses global variables which have issues on AMD64 */
-        /* HalpInitializeClock(); */
+#ifdef _M_AMD64
+        /* TODO: Implement proper clock initialization for AMD64 */
+        {
+            const char msg[] = "*** HAL: Skipping clock init on AMD64 for now ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        HalpInitializeClock();
+#endif
 
         /*
          * We could be rebooting with a pending profile interrupt,
@@ -305,13 +404,27 @@ HalInitSystem(
 
         /* Do some HAL-specific initialization */
         {
-            const char msg[] = "*** HAL: Skipping HalpInitPhase0 (global var issue) ***\n";
+            const char msg[] = "*** HAL: Running HalpInitPhase0 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Skip HalpInitPhase0 - uses global variables on AMD64 */
-        /* HalpInitPhase0(LoaderBlock); */
+#ifdef _M_AMD64
+        /* Skip HalpInitPhase0 on AMD64 - APIC initialization issues */
+        {
+            const char msg[] = "*** HAL: Skipping HalpInitPhase0 on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
+        HalpInitPhase0(LoaderBlock);
+#endif
+        
+        {
+            const char msg[] = "*** HAL: HalpInitPhase0 handling complete ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Initialize Phase 0 of the x86 emulator */
         {

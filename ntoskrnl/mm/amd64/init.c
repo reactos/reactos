@@ -376,13 +376,21 @@ MiBuildNonPagedPool(VOID)
     /* Calculate the nonpaged pool expansion start region */
     MmNonPagedPoolExpansionStart = (PCHAR)MmNonPagedPoolStart +
                                           MmSizeOfNonPagedPoolInBytes;
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart)); */
+    /* Verify alignment */
+    if (!IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart))
+    {
+        DPRINT1("WARNING: MmNonPagedPoolExpansionStart not page aligned: %p\n", 
+                MmNonPagedPoolExpansionStart);
+    }
 
     /* And this is where the none paged pool ends */
     MmNonPagedPoolEnd = (PCHAR)MmNonPagedPoolStart + MmMaximumNonPagedPoolInBytes;
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(MmNonPagedPoolEnd < (PVOID)MM_HAL_VA_START); */
+    /* Verify pool end is in valid range */
+    if (MmNonPagedPoolEnd >= (PVOID)MM_HAL_VA_START)
+    {
+        DPRINT1("WARNING: MmNonPagedPoolEnd exceeds HAL VA start: %p >= %p\n",
+                MmNonPagedPoolEnd, (PVOID)MM_HAL_VA_START);
+    }
 
     /* Map PPEs and PDEs for non paged pool (including expansion) */
     {
@@ -622,7 +630,7 @@ MiAddDescriptorToDatabase(
         while (PageCount--)
         {
             /* Add it to the free list */
-            Pfn->u3.e1.CacheAttribute = MiNonCached; // FIXME: Windows ASSERTs MiChached, but why not MiNotMapped?
+            Pfn->u3.e1.CacheAttribute = MiNonCached; /* Use non-cached for free pages initially */
             MiInsertPageInFreeList(BasePage + PageCount);
 
             /* Go to the previous page */
@@ -765,8 +773,25 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(MxPfnAllocation != 0); */
+    /* Initialize UEFI support if available */
+    {
+        extern NTSTATUS MmInitializeUefiSupport(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+        NTSTATUS UefiStatus = MmInitializeUefiSupport(LoaderBlock);
+        if (NT_SUCCESS(UefiStatus))
+        {
+            const char msg[] = "*** MM/AMD64: UEFI support initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+    }
+
+    /* Check that PFN allocation was successful */
+    if (MxPfnAllocation == 0)
+    {
+        const char msg[] = "*** MM/AMD64: WARNING - MxPfnAllocation is 0 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Set some hardcoded addresses */
     {
@@ -936,17 +961,15 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the balancer */
     MmInitializeBalancer((ULONG)MmAvailablePages, 0);
 
-    /* Make sure we have everything we need */
-    /* SKIP ASSERTs on AMD64 */
-    /* ASSERT(MmPfnDatabase);
-    ASSERT(MmNonPagedSystemStart);
-    ASSERT(MmNonPagedPoolStart);
-    ASSERT(MmSizeOfNonPagedPoolInBytes);
-    ASSERT(MmMaximumNonPagedPoolInBytes);
-    ASSERT(MmNonPagedPoolExpansionStart);
-    ASSERT(MmHyperSpaceEnd);
-    ASSERT(MmNumberOfSystemPtes);
-    ASSERT(MiAddressToPde(MmNonPagedPoolStart)->u.Hard.Valid); */
+    /* Verify we have everything we need */
+    if (!MmPfnDatabase || !MmNonPagedSystemStart || !MmNonPagedPoolStart ||
+        !MmSizeOfNonPagedPoolInBytes || !MmMaximumNonPagedPoolInBytes || 
+        !MmNonPagedPoolExpansionStart || !MmHyperSpaceEnd || !MmNumberOfSystemPtes)
+    {
+        const char msg[] = "*** MM/AMD64: WARNING - Some MM globals not initialized ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
     
     {
         const char msg[] = "*** MM/AMD64: MiInitMachineDependent returning SUCCESS ***\n";

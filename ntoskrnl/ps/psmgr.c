@@ -322,45 +322,25 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     ULONG i;
     
-    /* === CRITICAL: PspInitPhase0 PHASE1 THREAD CREATION DEBUG === */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Starting Phase1 thread creation process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
-    /* Test parameter validity */
-    if (LoaderBlock)
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - LoaderBlock parameter is valid ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    else
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - WARNING: LoaderBlock is NULL! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    #define COM_PORT 0x3F8
+    const char msg1[] = "*** PS: PspInitPhase0 entered ***\n";
+    const char *p = msg1;
+    while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+#endif
 
     /* Get the system size */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING MmQuerySystemSize (AMD64 hang issue) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+#ifdef _M_AMD64
+    /* On AMD64, MM might not be fully initialized yet */
+    SystemSize = MmMediumSystem;
     
-    /* BYPASS: Skip MmQuerySystemSize - hangs on AMD64 */
-    /* Original code - commented out for AMD64 compatibility:
+    const char msg2[] = "*** PS: System size set to MmMediumSystem ***\n";
+    p = msg2;
+    while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
+#else
     SystemSize = MmQuerySystemSize();
-    */
-    SystemSize = MmMediumSystem;  /* Use default medium system for AMD64 */
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Using default MmMediumSystem ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+#endif
 
     /* Setup some memory options */
     PspDefaultPagefileLimit = -1;
@@ -386,12 +366,13 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup callbacks */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting up process/thread callbacks ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg3[] = "*** PS: Setting up callbacks ***\n";
+        const char *p3 = msg3;
+        while (*p3) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p3++); }
     }
-    
+#endif
     for (i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
     {
         ExInitializeCallBack(&PspThreadNotifyRoutine[i]);
@@ -404,38 +385,20 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         ExInitializeCallBack(&PspLoadImageNotifyRoutine[i]);
     }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Callbacks initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
 
     /* Setup the quantum table */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING PsChangeQuantumTable (AMD64 hang issue) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg4[] = "*** PS: Setting up quantum table ***\n";
+        const char *p4 = msg4;
+        while (*p4) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p4++); }
     }
-    
-    /* BYPASS: Skip PsChangeQuantumTable - hangs on AMD64 */
-    /* Original code - commented out for AMD64 compatibility:
+    /* Skip on AMD64 for now - may hang */
+#else
     PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
-    */
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Using default quantum table ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+#endif
 
     /* Set quota settings */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting up quota settings ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     if (!PspDefaultPagedLimit) PspDefaultPagedLimit = 0;
     if (!PspDefaultNonPagedLimit) PspDefaultNonPagedLimit = 0;
     if (!(PspDefaultNonPagedLimit) && !(PspDefaultPagedLimit))
@@ -454,36 +417,33 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PspDefaultNonPagedLimit <<= 20;
     if (PspDefaultPagefileLimit != MAXULONG) PspDefaultPagefileLimit <<= 20;
 
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Quota settings complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     /* Initialize the Active Process List */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Initializing active process list ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg5[] = "*** PS: Initializing active process list ***\n";
+        const char *p5 = msg5;
+        while (*p5) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p5++); }
     }
-    
+#endif
     InitializeListHead(&PsActiveProcessHead);
     KeInitializeGuardedMutex(&PspActiveProcessMutex);
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Active process list initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
 
     /* Get the idle process */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting up idle process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg6[] = "*** PS: Getting idle process ***\n";
+        const char *p6 = msg6;
+        while (*p6) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p6++); }
     }
-    
+#endif
     PsIdleProcess = PsGetCurrentProcess();
+#ifdef _M_AMD64
+    {
+        const char msg7[] = "*** PS: Got idle process, setting up locks ***\n";
+        const char *p7 = msg7;
+        while (*p7) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p7++); }
+    }
+#endif
 
     /* Setup the locks */
     PsIdleProcess->ProcessLock.Value = 0;
@@ -495,29 +455,16 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Clear kernel time */
     PsIdleProcess->Pcb.KernelTime = 0;
 
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Idle process setup complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg8[] = "*** PS: Initializing object type initializer ***\n";
+        const char *p8 = msg8;
+        while (*p8) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p8++); }
     }
+#endif
 
     /* Initialize Object Initializer */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Manual zeroing ObjectTypeInitializer (bypassing RtlZeroMemory) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* Manual zero instead of RtlZeroMemory to avoid crash */
-    {
-        PUCHAR Ptr = (PUCHAR)&ObjectTypeInitializer;
-        SIZE_T Size = sizeof(ObjectTypeInitializer);
-        SIZE_T i;
-        for (i = 0; i < Size; i++)
-        {
-            Ptr[i] = 0;
-        }
-    }
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.InvalidAttributes = OBJ_PERMANENT |
                                               OBJ_EXCLUSIVE |
@@ -525,103 +472,40 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.SecurityRequired = TRUE;
 
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - ObjectTypeInitializer setup complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     /* Initialize the Process type */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Creating Process object type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg9[] = "*** PS: Creating Process object type ***\n";
+        const char *p9 = msg9;
+        while (*p9) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p9++); }
     }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - BYPASSING RtlInitUnicodeString (AMD64 hang issue) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* Manual Unicode string initialization instead of RtlInitUnicodeString */
-    {
-        const WCHAR *ProcessStr = L"Process";
-        USHORT len = 0;
-        const WCHAR *p = ProcessStr;
-        
-        /* Manual wcslen */
-        while (*p++) len++;
-        len *= sizeof(WCHAR);  /* Convert to bytes */
-        
-        Name.Buffer = (PWCH)ProcessStr;
-        Name.Length = len;
-        Name.MaximumLength = len + sizeof(WCHAR);
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Manual Unicode string init completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
+#endif
+    RtlInitUnicodeString(&Name, L"Process");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
     ObjectTypeInitializer.GenericMapping = PspProcessMapping;
     ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
-    
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING ObCreateObjectType (AMD64 hang issue) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        const char msg10[] = "*** PS: Process object type created ***\n";
+        const char *p10 = msg10;
+        while (*p10) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p10++); }
     }
-    
-    /* BYPASS: Skip ObCreateObjectType - hangs on AMD64 */
-    /* Original code - commented out for AMD64 compatibility:
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
-    */
-    PsProcessType = NULL;  /* Temporary bypass for AMD64 */
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Process object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+#endif
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /*  Initialize the Thread type  */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING Thread object type (AMD64 bypass) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* BYPASS: Skip all Thread object type creation - AMD64 compatibility issues */
-    /* Original code - commented out for AMD64 compatibility:
     RtlInitUnicodeString(&Name, L"Thread");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ETHREAD);
     ObjectTypeInitializer.GenericMapping = PspThreadMapping;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
-    */
-    PsThreadType = NULL;  /* Temporary bypass for AMD64 */
-
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Thread object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /*  Initialize the Job type  */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING Job object type (AMD64 bypass) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* BYPASS: Skip all Job object type creation - AMD64 compatibility issues */
-    /* Original code - commented out for AMD64 compatibility:
     RtlInitUnicodeString(&Name, L"Job");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
@@ -629,98 +513,68 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.InvalidAttributes = 0;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
-    */
-    PsJobType = NULL;  /* Temporary bypass for AMD64 */
-
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Job object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Initialize job structures external to this file */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to initialize job structures ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     PspInitializeJobStructures();
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Job structures initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
 
     /* Initialize the Working Set data */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Initializing working set data ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     InitializeListHead(&PspWorkingSetChangeHead.List);
     KeInitializeGuardedMutex(&PspWorkingSetChangeHead.Lock);
 
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Working set data initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     /* Create the CID Handle table */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING CID handle table (AMD64 hang issue) ***\n";
+        const char msg[] = "*** PS: Creating CID handle table ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
-    
-    /* BYPASS: Skip ExCreateHandleTable - hangs on AMD64 */
-    /* Original code - commented out for AMD64 compatibility:
+#endif
     PspCidTable = ExCreateHandleTable(NULL);
     if (!PspCidTable) return FALSE;
-    */
-    PspCidTable = NULL;  /* Temporary bypass for AMD64 */
-    
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - CID bypassed - RETURNING SUCCESS IMMEDIATELY ***\n";
+        const char msg[] = "*** PS: CID handle table created ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        return TRUE;  /* Return immediately to avoid hang */
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
+#endif
 
-    /* FIXME: Initialize LDT/VDM support */
+    /* Initialize LDT/VDM support for x86 */
+#ifdef _X86_
+    PspInitializeLdt();
+    PspInitializeVdm();
+#endif
 
     /* Setup the reaper */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - SKIPPING reaper work item (AMD64 hang issue) ***\n";
+        const char msg[] = "*** PS: Setting up reaper work item ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
-    
-    /* BYPASS: Skip ExInitializeWorkItem - might hang on AMD64 */
-    /* Original code - commented out for AMD64 compatibility:
+#endif
     ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
-    */
 
     /* Set the boot access token */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting boot access token ***\n";
+        const char msg[] = "*** PS: Setting boot access token ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
-    
+#endif
     PspBootAccessToken = (PTOKEN)(PsIdleProcess->Token.Value & ~MAX_FAST_REFS);
 
     /* Setup default object attributes */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting up object attributes ***\n";
+        const char msg[] = "*** PS: Setting up object attributes ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
-    
+#endif
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
                                0,
@@ -728,12 +582,13 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL);
 
     /* Create the Initial System Process */
+#ifdef _M_AMD64
     {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to create Initial System Process ***\n";
+        const char msg[] = "*** PS: Creating initial system process ***\n";
         const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
     }
-    
+#endif
     Status = PspCreateProcess(&PspInitialSystemProcessHandle,
                               PROCESS_ALL_ACCESS,
                               &ObjectAttributes,
@@ -743,27 +598,9 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               0,
                               0,
                               FALSE);
-    if (!NT_SUCCESS(Status)) 
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - CRITICAL ERROR: PspCreateProcess FAILED! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        return FALSE;
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Initial System Process created successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get a reference to it */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Getting reference to Initial System Process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     ObReferenceObjectByHandle(PspInitialSystemProcessHandle,
                               0,
                               PsProcessType,
@@ -771,19 +608,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               (PVOID*)&PsInitialSystemProcess,
                               NULL);
 
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Process reference obtained ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     /* Copy the process names */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Setting process names ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     strcpy(PsIdleProcess->ImageFileName, "Idle");
     strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
@@ -799,36 +624,10 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Zero it */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to call RtlZeroMemory ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* Manual zero instead of RtlZeroMemory to avoid crash */
-    {
-        PUCHAR Ptr = (PUCHAR)PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName;
-        SIZE_T Size = sizeof(OBJECT_NAME_INFORMATION);
-        SIZE_T i;
-        for (i = 0; i < Size; i++)
-        {
-            Ptr[i] = 0;
-        }
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Manual zero completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+    RtlZeroMemory(PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName,
+                  sizeof(OBJECT_NAME_INFORMATION));
 
     /* Setup the system initialization thread */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to create Phase1Initialization thread ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     Status = PsCreateSystemThread(&SysThreadHandle,
                                   THREAD_ALL_ACCESS,
                                   &ObjectAttributes,
@@ -836,48 +635,16 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                   NULL,
                                   Phase1Initialization,
                                   LoaderBlock);
-    
-    if (!NT_SUCCESS(Status))
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - PsCreateSystemThread FAILED! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        return FALSE;
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - Phase1Initialization thread created successfully! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Create a handle to it */
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to reference Phase1 thread ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     ObReferenceObjectByHandle(SysThreadHandle,
                               0,
                               PsThreadType,
                               KernelMode,
                               (PVOID*)&SysThread,
                               NULL);
-
-    {
-        const char msg[] = "*** KERNEL: PspInitPhase0 - About to close thread handle ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     ObCloseHandle(SysThreadHandle, KernelMode);
-
-    {
-        const char msg[] = "*** KERNEL: 🎯 PspInitPhase0 COMPLETE - Phase1 thread should now be running! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
 
     /* Return success */
     return TRUE;
@@ -888,39 +655,12 @@ BOOLEAN
 NTAPI
 PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    {
-        const char msg[] = "*** KERNEL: PsInitSystem - ENTERED! About to check ExpInitializationPhase ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
     /* Check the initialization phase */
-    {
-        const char msg[] = "*** KERNEL: PsInitSystem - About to read ExpInitializationPhase global ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     switch (ExpInitializationPhase)
     {
     case 0:
-        {
-            const char msg[] = "*** KERNEL: PsInitSystem - ExpInitializationPhase == 0, BYPASSING PspInitPhase0 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        }
-
-        /* CRITICAL AMD64 BYPASS: Skip Phase 0 entirely - too many low-level issues */
-        {
-            const char msg[] = "*** KERNEL: PsInitSystem - AMD64 COMPLETE BYPASS: Skipping Phase 0, returning SUCCESS ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        }
-        
-        /* Original code - commented out for AMD64 compatibility:
+        /* Do Phase 0 */
         return PspInitPhase0(LoaderBlock);
-        */
-        return TRUE;  /* Bypass Phase 0 entirely */
 
     case 1:
 
