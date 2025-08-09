@@ -607,19 +607,21 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
         {
             /* Set the Request Data */
             _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
-            WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
+            WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)(PtrToUlong(AdapterBaseVa) + FIELD_OFFSET(DMA1_CONTROL, Mode)), DmaMode.Byte);
 
             /* Unmask DMA Channel */
-            WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->SingleMask,
+            WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)(PtrToUlong(AdapterBaseVa) + FIELD_OFFSET(DMA1_CONTROL, SingleMask)),
                              AdapterObject->ChannelNumber | DMA_CLEARMASK);
         }
         else
         {
             /* Set the Request Data */
-            WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
+            WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)(PtrToUlong(AdapterBaseVa) + FIELD_OFFSET(DMA2_CONTROL, Mode)), DmaMode.Byte);
 
             /* Unmask DMA Channel */
-            WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterBaseVa)->SingleMask,
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
+            WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)(PtrToUlong(AdapterBaseVa) + FIELD_OFFSET(DMA2_CONTROL, SingleMask)),
                              AdapterObject->ChannelNumber | DMA_CLEARMASK);
         }
     }

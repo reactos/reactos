@@ -15,6 +15,11 @@
 Startup:
 
     cli
+    
+    /* Early serial output - send '!' to show we're starting */
+    mov dx, HEX(03F8)
+    mov al, '!'
+    out dx, al
 
     /* Setup real mode segment registers */
     xor ax, ax
@@ -97,6 +102,11 @@ Msg_LongModeSupported:
     /* Output status */
     mov si, offset Msg_SwitchToLongMode
     call writestr
+    
+    /* Send '@' to serial before jumping to long mode */
+    mov dx, HEX(03F8)
+    mov al, '@'
+    out dx, al
 
     jmp ExitToLongMode
 
@@ -269,6 +279,11 @@ RealModeEntryPoint:
 
 InRealMode:
 
+    /* Send 'R' to show we're back in real mode */
+    mov dx, HEX(03F8)
+    mov al, 'R'
+    out dx, al
+
 //    mov ax, HEX(0b800)
 //    mov es, ax
 //    mov word ptr es:[12], HEX(0e00) + '6'
@@ -301,6 +316,11 @@ InRealMode:
 ExitToLongMode:
     /* Disable interrupts */
     cli
+    
+    /* Send '#' to show we're in ExitToLongMode */
+    mov dx, HEX(03F8)
+    mov al, '#'
+    out dx, al
 
     /* Set correct segment registers */
     xor ax,ax
@@ -313,14 +333,29 @@ ExitToLongMode:
     /* Save current stack pointer */
     mov word ptr ds:[stack16], sp
 
+    /* Send '1' before setting CR4 */
+    mov dx, HEX(03F8)
+    mov al, '1'
+    out dx, al
+
     /* Set PAE and PGE: 10100000b */
     mov eax, cr4
     or eax, HEX(00A0)
     mov cr4, eax
 
+    /* Send '2' before setting CR3 */
+    mov dx, HEX(03F8)
+    mov al, '2'
+    out dx, al
+
     /* Point cr3 at the PML4 */
     mov eax, PML4_ADDRESS
     mov cr3, eax
+
+    /* Send '3' before enabling long mode */
+    mov dx, HEX(03F8)
+    mov al, '3'
+    out dx, al
 
     /* Enable long mode */
     mov ecx, MSR_EFER
@@ -328,11 +363,21 @@ ExitToLongMode:
     or eax, HEX(00000100)
     wrmsr
 
+    /* Send '4' before enabling paging */
+    mov dx, HEX(03F8)
+    mov al, '4'
+    out dx, al
+
     /* Activate long mode by enabling paging and protection simultaneously,
        skipping protected mode entirely */
     mov eax, cr0
     or eax, HEX(80000001)
     mov cr0, eax
+
+    /* Send '5' before long jump */
+    mov dx, HEX(03F8)
+    mov al, '5'
+    out dx, al
 
     /* Clear prefetch queue & correct CS */
     ljmp16 LMODE_CS, InLongMode

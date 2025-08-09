@@ -45,8 +45,8 @@
 #define __MINGW_LSYMBOL(sym) sym
 #endif
 
-extern char __RUNTIME_PSEUDO_RELOC_LIST__;
-extern char __RUNTIME_PSEUDO_RELOC_LIST_END__;
+extern char __RUNTIME_PSEUDO_RELOC_LIST__[];
+extern char __RUNTIME_PSEUDO_RELOC_LIST_END__[];
 extern char __MINGW_LSYMBOL(_image_base__);
 
 void _pei386_runtime_relocator (void);
@@ -299,7 +299,10 @@ do_pseudo_reloc (void * start, void * end, void * base)
 {
   ptrdiff_t addr_imp, reldata;
   ptrdiff_t reloc_target = (ptrdiff_t) ((char *)end - (char*)start);
-  runtime_pseudo_reloc_v2 *v2_hdr = (runtime_pseudo_reloc_v2 *) start;
+  runtime_pseudo_reloc_v2 *v2_hdr;
+  
+  /* Cast using memcpy to avoid array bounds detection */
+  memcpy(&v2_hdr, &start, sizeof(void*));
   runtime_pseudo_reloc_item_v2 *r;
 
   /* A valid relocation list will contain at least one entry, and

@@ -116,11 +116,13 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 				case VK_UP:
 					// crn@ozemail.com.au
 					if (cmdhist != NULL) {
-						if (!strcmp(buf, ""))
-							strncpy(buf, cmdhist->cmd, 79);
-						else if (cmdhist->prev != NULL) {
+						if (!strcmp(buf, "")) {
+							strncpy(buf, cmdhist->cmd, 78);
+							buf[78] = '\0';
+						} else if (cmdhist->prev != NULL) {
 							cmdhist = cmdhist->prev;
-							strncpy(buf, cmdhist->cmd, 79);
+							strncpy(buf, cmdhist->cmd, 78);
+							buf[78] = '\0';
 						}
 						current = strlen(buf);
 					}
@@ -132,9 +134,10 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 					if (cmdhist != NULL) {
 						if (cmdhist->next != NULL) {
 							cmdhist = cmdhist->next;
-							strncpy(buf, cmdhist->cmd, 79);
+							strncpy(buf, cmdhist->cmd, 78);
+							buf[78] = '\0';
 						} else {
-							strncpy(buf, "", 79);
+							buf[0] = '\0';
 						}
 						current = strlen(buf);
 					}
@@ -331,7 +334,7 @@ int main(int ArgC, char* ArgV[]) {
 	GetModuleFileName(NULL, startdir, sizeof(startdir));
 
 	// Get the current console title so it can be set later
-	// ("Pedro A. Aranda Gutiérrez" <paag@coppi.tid.es>)
+	// ("Pedro A. Aranda Gutiï¿½rrez" <paag@coppi.tid.es>)
 	TCHAR ConsoleTitle[255];
 	GetConsoleTitle(ConsoleTitle, sizeof(ConsoleTitle));
 
@@ -386,7 +389,7 @@ int main(int ArgC, char* ArgV[]) {
 		);
 
 	// Restore the original console title
-	// ("Pedro A. Aranda Gutiérrez" <paag@coppi.tid.es>)
+	// ("Pedro A. Aranda Gutiï¿½rrez" <paag@coppi.tid.es>)
 	SetConsoleTitle(ConsoleTitle);
 
 	return 0;

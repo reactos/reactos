@@ -99,16 +99,39 @@ LaunchSecondStageLoader(VOID)
     return (*EntryPoint)();
 }
 
+static inline void SerialPutChar(char c)
+{
+    WRITE_PORT_UCHAR((PUCHAR)0x3F8, c);
+}
+
+/* Define STANDALONE_BOOT to create a minimal FreeLoader for testing */
+/* #define STANDALONE_BOOT */
+
+/* With optimization disabled for critical files, we can try full boot */
+
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
+    /* Send 'M' to show we entered BootMain */
+    SerialPutChar('M');
+    
     /* Load the default settings from the command-line */
     LoadSettings(CmdLine);
+    
+    /* Send 'D' to show LoadSettings completed */
+    SerialPutChar('D');
 
-    /* Debugger pre-initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    /* Debugger pre-initialization - force COM1 output for debugging */
+    DebugInit("DEBUGPORT=COM1 BAUDRATE=115200");
+    
+    /* Send 'I' to show DebugInit completed */
+    SerialPutChar('I');
 
+    DbgPrint("FreeLoader: Starting BootMain()\n");
+    DbgPrint("FreeLoader: Command line: %s\n", CmdLine ? CmdLine : "(null)");
+    
     MachInit(CmdLine);
 
+    DbgPrint("FreeLoader: MachInit completed\n");
     TRACE("BootMain() called.\n");
 
 #ifndef UEFIBOOT
@@ -123,23 +146,54 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
+#ifdef STANDALONE_BOOT
+    /* Standalone boot - minimal initialization for testing */
+    DbgPrint("FreeLoader: Running in STANDALONE mode\n");
+    DbgPrint("FreeLoader: Skipping all subsystem initialization\n");
+    DbgPrint("FreeLoader: 64-bit mode successfully reached!\n");
+    DbgPrint("FreeLoader: Boot test completed successfully\n");
+    
+    SerialPutChar('S');
+    SerialPutChar('U');
+    SerialPutChar('C');
+    SerialPutChar('C');
+    SerialPutChar('E');
+    SerialPutChar('S');
+    SerialPutChar('S');
+    SerialPutChar('!');
+    SerialPutChar('\n');
+    
+    /* Halt the system */
+    for (;;) {
+        __asm__ __volatile__("hlt");
+    }
+#else
+    /* Normal boot path - full initialization */
+    
     /* Initialize memory manager */
+    DbgPrint("FreeLoader: Initializing memory manager...\n");
     if (!MmInitializeMemoryManager())
     {
+        DbgPrint("FreeLoader: ERROR - Unable to initialize memory manager\n");
         UiMessageBoxCritical("Unable to initialize memory manager.");
         goto Quit;
     }
+    DbgPrint("FreeLoader: Memory manager initialized successfully\n");
 
     /* Initialize I/O subsystem */
+    DbgPrint("FreeLoader: Initializing I/O subsystem...\n");
     FsInit();
 
     /* Initialize the module list */
+    DbgPrint("FreeLoader: Initializing module list...\n");
     if (!PeLdrInitializeModuleList())
     {
         UiMessageBoxCritical("Unable to initialize module list.");
         goto Quit;
     }
 
+    /* Initialize boot devices */
+    DbgPrint("FreeLoader: Detecting boot devices...\n");
     if (!MachInitializeBootDevices())
     {
         UiMessageBoxCritical("Error when detecting hardware.");
@@ -147,13 +201,16 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     }
 
     /* Launch second stage loader */
-    DbgPrint("Attempting to launch second stage loader...\n");
+    DbgPrint("FreeLoader: Attempting to launch second stage loader...\n");
+    DbgPrint("FreeLoader: Boot path: %s\n", FrLdrBootPath);
     ULONG Result = LaunchSecondStageLoader();
-    DbgPrint("LaunchSecondStageLoader returned: %lu\n", Result);
+    DbgPrint("FreeLoader: LaunchSecondStageLoader returned: %lu\n", Result);
     if (Result != ESUCCESS)
     {
+        DbgPrint("FreeLoader: ERROR - Failed to load second stage loader (error %lu)\n", Result);
         UiMessageBoxCritical("Unable to load second stage loader.");
     }
+#endif
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */

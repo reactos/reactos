@@ -630,6 +630,16 @@ typedef enum _MINIDUMP_CALLBACK_TYPE
     MemoryCallback,
 } MINIDUMP_CALLBACK_TYPE;
 
+/* FIXME: These structures have alignment warnings due to the CONTEXT member
+ * which is a large structure (716+ bytes) that may not be properly aligned
+ * within the packed structure. This is a Windows compatibility issue that
+ * needs careful review to ensure binary compatibility is maintained.
+ */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpacked-not-aligned"
+#endif
+
 typedef struct _MINIDUMP_THREAD_CALLBACK
 {
     ULONG                       ThreadId;
@@ -651,6 +661,10 @@ typedef struct _MINIDUMP_THREAD_EX_CALLBACK
     ULONG64                     BackingStoreBase;
     ULONG64                     BackingStoreEnd;
 } MINIDUMP_THREAD_EX_CALLBACK, *PMINIDUMP_THREAD_EX_CALLBACK;
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 typedef struct _MINIDUMP_INCLUDE_THREAD_CALLBACK
 {

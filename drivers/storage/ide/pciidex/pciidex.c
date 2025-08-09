@@ -108,18 +108,21 @@ NTSTATUS
 PciIdeXGetConfigurationInfo(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
-    UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, BaseClass)];
-    PPCI_COMMON_HEADER PciConfig = (PPCI_COMMON_HEADER)Buffer;
+    union {
+        UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, BaseClass)];
+        PCI_COMMON_HEADER PciHeader;
+    } PciData;
+    PPCI_COMMON_HEADER PciConfig = &PciData.PciHeader;
     ULONG BytesRead;
 
     PAGED_CODE();
 
     BytesRead = (*FdoExtension->BusInterface.GetBusData)(FdoExtension->BusInterface.Context,
                                                          PCI_WHICHSPACE_CONFIG,
-                                                         Buffer,
+                                                         PciData.Buffer,
                                                          0,
-                                                         sizeof(Buffer));
-    if (BytesRead != sizeof(Buffer))
+                                                         sizeof(PciData.Buffer));
+    if (BytesRead != sizeof(PciData.Buffer))
         return STATUS_IO_DEVICE_ERROR;
 
     FdoExtension->VendorId = PciConfig->VendorID;

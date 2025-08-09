@@ -70,9 +70,8 @@ PVOID MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType)
     FreePagesInLookupTable -= PagesNeeded;
     MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-    TRACE("Allocated %d bytes (%d pages) of memory (type %ld) starting at page 0x%lx.\n",
-          MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
-    TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
+    //TRACE("Allocated %d bytes (%d pages) of memory (type %ld) starting at page 0x%lx.\n", MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
+    //TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
     // Update LoaderPagesSpanned count
     if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)

@@ -26,7 +26,10 @@
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
 
-#if DBG
+/* Force enable debug output for testing */
+#define FORCE_DEBUG_OUTPUT 1
+
+#if DBG || FORCE_DEBUG_OUTPUT
 
 /* STATIC VARIABLES ***********************************************************/
 

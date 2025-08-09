@@ -43,6 +43,14 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                            IN PVOID StartContext,
                            IN PCONTEXT Context)
 {
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KERNEL: KiInitializeContextThread entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     PKSTART_FRAME StartFrame;
     PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
@@ -50,14 +58,43 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     PVOID InitialStack;
 
     /* Allocate space on the stack for the XSAVE area */
+    {
+        const char msg[] = "*** KERNEL: Allocating space for XSAVE area ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     InitialStack = (PUCHAR)Thread->InitialStack - KeXStateLength;
     InitialStack = ALIGN_DOWN_POINTER_BY(InitialStack, 64);
     Thread->InitialStack = InitialStack;
 
     /* Initialize the state save area */
+    {
+        const char msg[] = "*** KERNEL: Initializing state save area (RtlZeroMemory) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->StateSaveArea = InitialStack;
-    RtlZeroMemory(Thread->StateSaveArea, KeXStateLength);
+    
+    /* Manual zero memory to avoid RtlZeroMemory */
+    /* RtlZeroMemory(Thread->StateSaveArea, KeXStateLength); */
+    {
+        PUCHAR Ptr = (PUCHAR)Thread->StateSaveArea;
+        SIZE_T Size = KeXStateLength;
+        for (SIZE_T i = 0; i < Size; i++)
+        {
+            Ptr[i] = 0;
+        }
+    }
+    
     Thread->StateSaveArea->MxCsr = INITIAL_MXCSR;
+    
+    {
+        const char msg[] = "*** KERNEL: State save area initialized ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Special initialization for XSAVES */
     if (KeFeatureBits & KF_XSAVES)

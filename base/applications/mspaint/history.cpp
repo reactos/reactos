@@ -38,7 +38,13 @@ ImageModel::ImageModel()
     , m_undoSteps(0)
     , m_redoSteps(0)
 {
-    ZeroMemory(m_historyItems, sizeof(m_historyItems));
+    // FIXME: ZeroMemory on non-trivial type IMAGE_PART generates -Wclass-memaccess warning
+    // IMAGE_PART has a clear() method, so memset is technically incorrect
+    // Proper fix: Initialize each element properly
+    for (int i = 0; i < HISTORYSIZE; i++)
+    {
+        m_historyItems[i].clear();
+    }
 
     m_hbmMaster = CreateColorDIB(1, 1, RGB(255, 255, 255));
     m_hbmOld = ::SelectObject(m_hDrawingDC, m_hbmMaster);

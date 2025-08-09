@@ -1,0 +1,13 @@
+Warning: 'set logging on', an alias for the command 'set logging enabled', is deprecated.
+Use 'set logging enabled on'.
+
+The target architecture is set to "i386:x86-64".
+warning: No executable has been specified and target does not support
+determining executable automatically.  Try using the "file" command.
+0x000000000000fff0 in ?? ()
+Breakpoint 1 at 0xfffff80000200000
+[Inferior 1 (process 1) exited normally]
+
+=== CRASH POINT ===
+auto_debug.gdb:16: Error in sourced command file:
+The program has no registers now.

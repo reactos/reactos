@@ -270,7 +270,7 @@ typedef struct _BUS_HANDLER
 //
 #if !defined(_NTSYSTEM_) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_))
 extern NTSYSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
-#define HALPRIVATEDISPATCH ((PHAL_PRIVATE_DISPATCH)&HalPrivateDispatchTable)
+#define HALPRIVATEDISPATCH ((PHAL_PRIVATE_DISPATCH)HalPrivateDispatchTable)
 #else
 extern NTSYSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #define HALPRIVATEDISPATCH (&HalPrivateDispatchTable)

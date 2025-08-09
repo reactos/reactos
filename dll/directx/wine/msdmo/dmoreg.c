@@ -339,7 +339,9 @@ lend:
  *
  * Get DMO Name from the registry
  */
-HRESULT WINAPI DMOGetName(REFCLSID clsidDMO, WCHAR name[])
+/* FIXME: Array parameter mismatch - header declares WCHAR[80] but implementation uses WCHAR[]
+ * This is a Wine compatibility issue. The function expects exactly 80 WCHARs. */
+HRESULT WINAPI DMOGetName(REFCLSID clsidDMO, WCHAR name[80])
 {
     static const INT max_name_len = 80*sizeof(WCHAR);
     DWORD count = max_name_len;

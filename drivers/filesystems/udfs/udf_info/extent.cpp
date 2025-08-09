@@ -2271,7 +2271,7 @@ UDFResizeExtent(
 
     UDFCheckSpaceAllocation(Vcb, 0, ExtInfo->Mapping, AS_USED); // check if used
     if(ExtInfo->Offset) {
-        if(ExtInfo->Offset + Length <= LBS) {
+        if(ExtInfo->Offset + (uint64)Length <= LBS) {
             ExtPrint(("Resize IN-ICB\n"));
             ExtInfo->Length = Length;
             return STATUS_SUCCESS;
@@ -2501,7 +2501,7 @@ UDFResizeExtent(
             if(l < Length) {
                 // we get here if simple increasing of the last frag failed
                 AdPrint(("Resize add new frag (7)\n"));
-                if(l < LBS && Length >= LBS &&
+                if((uint64)l < LBS && (uint64)Length >= LBS &&
                    (ExtInfo->Flags & EXTENT_FLAG_ALLOC_MASK) == EXTENT_FLAG_ALLOC_SEQUENTIAL) {
                     AdPrint(("Resize tune for SEQUENTIAL i/o\n"));
                 }
@@ -2595,8 +2595,10 @@ tail_cached:;
         if(!AlwaysInIcb) {
             // remove 1st entry pointing to FileEntry
             s = UDFGetMappingLength(ExtInfo->Mapping);
-            RtlMoveMemory(&(ExtInfo->Mapping[0]), &(ExtInfo->Mapping[1]), s - sizeof(EXTENT_MAP));
-            if(!MyReallocPool__((int8*)(ExtInfo->Mapping), s,
+            if (s > sizeof(EXTENT_MAP)) {
+                RtlMoveMemory(&(ExtInfo->Mapping[0]), &(ExtInfo->Mapping[1]), s - sizeof(EXTENT_MAP));
+            }
+            if(s > sizeof(EXTENT_MAP) && !MyReallocPool__((int8*)(ExtInfo->Mapping), s,
                           (int8**)&(ExtInfo->Mapping), s - sizeof(EXTENT_MAP) )) {
                 // This must never happen on truncate !!!
                 AdPrint(("ResizeExtent: MyReallocPool__(10) failed\n"));
@@ -3041,7 +3043,7 @@ UDFReadExtent(
     OSSTATUS status;
     // prevent reading out of data space
     if(Offset > ExtInfo->Length) return STATUS_END_OF_FILE;
-    if(Offset+Length > ExtInfo->Length) Length = (uint32)(ExtInfo->Length - Offset);
+    if((uint64)Offset+Length > (uint64)ExtInfo->Length) Length = (uint32)(ExtInfo->Length - Offset);
     Offset += ExtInfo->Offset;               // used for in-ICB data
     // read maximal possible part of each frag of extent
     Lba = UDFExtentOffsetToLba(Vcb, Extent, Offset, &sect_offs, &to_read, &flags, &index);

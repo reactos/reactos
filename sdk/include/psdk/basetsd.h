@@ -68,7 +68,17 @@ typedef unsigned __int64 HANDLE_PTR;
 typedef unsigned int UHALF_PTR, *PUHALF_PTR;
 typedef int HALF_PTR, *PHALF_PTR;
 #define ADDRESS_TAG_BIT 0x40000000000UI64
+/* FIXME: This macro may cause pointer-to-int cast warnings on 64-bit
+ * when converting 32-bit handles to 64-bit. The cast chain is necessary
+ * for proper sign extension. Using pragma to suppress the warning (C only). */
+#if defined(__GNUC__) && !defined(__cplusplus)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#endif
 #define Handle32ToHandle( h ) ((HANDLE)(LONG_PTR)(LONG)(h))
+#if defined(__GNUC__) && !defined(__cplusplus)
+#pragma GCC diagnostic pop
+#endif
 #else /*  !_WIN64 */
 #define __int3264   __int32
 #define ADDRESS_TAG_BIT 0x80000000UL

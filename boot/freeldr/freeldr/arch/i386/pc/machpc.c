@@ -708,10 +708,14 @@ PcGetSerialPort(ULONG Index, PULONG Irq)
      * Each COM port address is stored in a 2-byte field.
      * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
-    BasePtr = (PUSHORT)0x400;
     *Irq = PcIrq[Index];
-
-    return (ULONG) *(BasePtr + Index);
+    
+    {
+        USHORT ComPortAddr;
+        USHORT* BdaComPortAddr = (USHORT*)(0x400 + Index * sizeof(USHORT));
+        __asm__ volatile("movw (%1), %0" : "=r" (ComPortAddr) : "r" (BdaComPortAddr) : "memory");
+        return (ULONG) ComPortAddr;
+    }
 }
 
 /*

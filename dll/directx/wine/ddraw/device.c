@@ -4626,7 +4626,10 @@ static HRESULT WINAPI d3d_device3_ComputeSphereVisibility(IDirect3DDevice3 *ifac
         D3DVECTOR *centers, D3DVALUE *radii, DWORD sphere_count, DWORD flags, DWORD *return_values)
 {
     static const DWORD enabled_planes = 0x3f;
-    struct wined3d_vec4 plane[6];
+    /* FIXME: GCC warns about accessing 192 bytes (12 planes) when only 96 bytes (6 planes) allocated
+     * The compute_sphere_visibility function expects 12 planes but we only have 6
+     * This appears to be a Wine bug - the function should check enabled_planes mask */
+    struct wined3d_vec4 plane[12];  /* Changed from [6] to [12] to match function expectation */
     unsigned int i, j;
 
     TRACE("iface %p, centers %p, radii %p, sphere_count %u, flags %#x, return_values %p.\n",

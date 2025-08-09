@@ -66,7 +66,14 @@ static void
 licence_generate_hwid(uint8 * hwid)
 {
 	buf_out_uint32(hwid, 2);
-	strncpy((char *) (hwid + 4), g_hostname, LICENCE_HWID_SIZE - 4);
+	/* Copy hostname into HWID, truncating if necessary to fit available space */
+	size_t hostname_space = LICENCE_HWID_SIZE - 4; /* 16 bytes available after the uint32 */
+	size_t copy_len = strlen(g_hostname);
+	if (copy_len >= hostname_space) {
+		copy_len = hostname_space - 1; /* Reserve space for null terminator */
+	}
+	memcpy((char *) (hwid + 4), g_hostname, copy_len);
+	((char *) (hwid + 4))[copy_len] = '\0';
 }
 
 /* Send a lincece info packet to server */

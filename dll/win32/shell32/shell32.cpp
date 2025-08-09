@@ -139,6 +139,11 @@ public:
     // IClassFactory
     STDMETHOD(CreateInstance)(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject) override;
     STDMETHOD(LockServer)(BOOL fLock) override;
+    
+    // FIXME: CComObject<IDefClFImpl>::CreateInstance hides virtual IClassFactory::CreateInstance
+    // These are different methods with different signatures, not an override
+    // The static CreateInstance from CComObject is for object creation
+    // The virtual CreateInstance from IClassFactory is for COM object instantiation
 
 BEGIN_COM_MAP(IDefClFImpl)
     COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
@@ -169,6 +174,8 @@ HRESULT IDefClFImpl::Initialize(LPFNCREATEINSTANCE lpfnCIx, PLONG pcRefDllx, con
 /******************************************************************************
  * IDefClF_fnCreateInstance
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppvObject)
 {
     TRACE("%p->(%p,%s,%p)\n", this, pUnkOuter, shdebugstr_guid(&riid), ppvObject);
@@ -183,6 +190,7 @@ HRESULT WINAPI IDefClFImpl::CreateInstance(IUnknown * pUnkOuter, REFIID riid, LP
     ERR("unknown IID requested %s\n", shdebugstr_guid(&riid));
     return E_NOINTERFACE;
 }
+#pragma GCC diagnostic pop
 
 /******************************************************************************
  * IDefClF_fnLockServer

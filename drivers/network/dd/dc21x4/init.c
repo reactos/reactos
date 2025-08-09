@@ -874,8 +874,11 @@ NDIS_STATUS
 DcRecognizeHardware(
     _In_ PDC21X4_ADAPTER Adapter)
 {
-    UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, CacheLineSize)];
-    PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)Buffer; // Partial PCI header
+    union {
+        UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, CacheLineSize)];
+        PCI_COMMON_CONFIG PciConfig;
+    } PciData;
+    PPCI_COMMON_CONFIG PciConfig = &PciData.PciConfig; // Partial PCI header
     PNDIS_TIMER_FUNCTION MediaMonitorRoutine;
     ULONG Bytes;
 
@@ -884,9 +887,9 @@ DcRecognizeHardware(
     Bytes = NdisReadPciSlotInformation(Adapter->AdapterHandle,
                                        0,
                                        FIELD_OFFSET(PCI_COMMON_CONFIG, VendorID),
-                                       Buffer,
-                                       sizeof(Buffer));
-    if (Bytes != sizeof(Buffer))
+                                       PciData.Buffer,
+                                       sizeof(PciData.Buffer));
+    if (Bytes != sizeof(PciData.Buffer))
         return NDIS_STATUS_FAILURE;
 
     Adapter->DeviceId = PciConfig->DeviceID;

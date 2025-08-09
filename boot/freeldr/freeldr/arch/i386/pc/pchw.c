@@ -189,8 +189,8 @@ static
 PVOID
 GetInt1eTable(VOID)
 {
-    PUSHORT SegPtr = (PUSHORT)0x7A;
-    PUSHORT OfsPtr = (PUSHORT)0x78;
+    volatile PUSHORT SegPtr = (volatile PUSHORT)0x7A;
+    volatile PUSHORT OfsPtr = (volatile PUSHORT)0x78;
 
     return (PVOID)((ULONG_PTR)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr));
 }

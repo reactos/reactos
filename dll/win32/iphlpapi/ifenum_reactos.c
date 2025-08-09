@@ -635,7 +635,10 @@ char *toIPAddressString(unsigned int addr, char string[16])
     iAddr.s_addr = addr;
 
     if (string)
-        strncpy(string, inet_ntoa(iAddr), 16);
+    {
+        strncpy(string, inet_ntoa(iAddr), 15);
+        string[15] = '\0';
+    }
 
     return inet_ntoa(iAddr);
 }

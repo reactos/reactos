@@ -124,7 +124,7 @@ extern void gl_vertex3f_nop( GLcontext *ctx, GLfloat x, GLfloat y, GLfloat z );
 extern void gl_vertex4f_nop( GLcontext *ctx,
                              GLfloat x, GLfloat y, GLfloat z, GLfloat w );
 
-extern void gl_vertex3fv_nop( GLcontext *ctx, const GLfloat *v );
+extern void gl_vertex3fv_nop( GLcontext *ctx, const GLfloat v[3] );
 
 
 

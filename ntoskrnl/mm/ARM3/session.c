@@ -465,7 +465,18 @@ MiSessionInitializeWorkingSetList(VOID)
     PMMPDE PointerPde;
     MMPTE TempPte;
     MMPDE TempPde;
-    ULONG Color, Index;
+    ULONG Color;
+    /* FIXME: Index variable set but not used - appears to be for future implementation
+     * Using pragma to suppress -Wunused-but-set-variable warning
+     * This variable should be used when session space is fully implemented */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
+    ULONG Index;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
     PFN_NUMBER PageFrameIndex;
     PMM_SESSION_SPACE SessionGlobal;
     BOOLEAN AllocatedPageTable;

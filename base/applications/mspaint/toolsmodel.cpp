@@ -22,6 +22,7 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
+    m_pToolObject = NULL;
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 
@@ -33,7 +34,10 @@ ToolsModel::~ToolsModel()
 
 ToolBase *ToolsModel::GetOrCreateTool(TOOLTYPE nTool)
 {
-    delete m_pToolObject;
+    if (m_pToolObject)
+    {
+        delete m_pToolObject;
+    }
     m_pToolObject = ToolBase::createToolObject(nTool);
     return m_pToolObject;
 }

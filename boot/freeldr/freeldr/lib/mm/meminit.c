@@ -19,6 +19,7 @@
  */
 
 #include <freeldr.h>
+#include <memops.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(MEMORY);
@@ -129,25 +130,59 @@ AddMemoryDescriptor(
 {
     ULONG Index, DescriptCount;
     PFN_NUMBER EndPage;
-    TRACE("AddMemoryDescriptor(0x%Ix, 0x%Ix, %u)\n",
-          BasePage, PageCount, MemoryType);
+    TRACE("AddMemoryDescriptor: Entry - BasePage=0x%lx, PageCount=0x%lx, MemoryType=%u\n",
+          (ULONG)BasePage, (ULONG)PageCount, MemoryType);
+    
+    /* Validate parameters */
+    if (List == NULL)
+    {
+        TRACE("AddMemoryDescriptor: ERROR - List is NULL\n");
+        return 0;
+    }
+    
+    if (MaxCount == 0 || MaxCount > 100000)
+    {
+        TRACE("AddMemoryDescriptor: ERROR - Invalid MaxCount=%lu\n", (ULONG)MaxCount);
+        return 0;
+    }
 
     EndPage = BasePage + PageCount;
+    TRACE("AddMemoryDescriptor: EndPage=0x%lx\n", (ULONG)EndPage);
 
     /* Skip over all descriptor below the new range */
     Index = 0;
-    while ((List[Index].PageCount != 0) &&
+    TRACE("AddMemoryDescriptor: Starting skip loop\n");
+    while ((Index < MaxCount) && (List[Index].PageCount != 0) &&
            ((List[Index].BasePage + List[Index].PageCount) <= BasePage))
     {
+        TRACE("  Skip: Index=%lu, List[%lu].BasePage=0x%lx, PageCount=0x%lx\n",
+              (ULONG)Index, (ULONG)Index, (ULONG)List[Index].BasePage, (ULONG)List[Index].PageCount);
         Index++;
+        
+        /* Prevent infinite loop */
+        if (Index >= MaxCount - 1)
+        {
+            TRACE("AddMemoryDescriptor: Index reached MaxCount during skip\n");
+            break;
+        }
     }
+    TRACE("AddMemoryDescriptor: Skip complete, Index=%lu\n", (ULONG)Index);
 
     /* Count the descriptors */
     DescriptCount = Index;
-    while (List[DescriptCount].PageCount != 0)
+    TRACE("AddMemoryDescriptor: Starting count loop from Index=%lu\n", (ULONG)Index);
+    while ((DescriptCount < MaxCount) && (List[DescriptCount].PageCount != 0))
     {
         DescriptCount++;
+        
+        /* Prevent infinite loop */
+        if (DescriptCount >= MaxCount)
+        {
+            TRACE("AddMemoryDescriptor: DescriptCount reached MaxCount\n");
+            break;
+        }
     }
+    TRACE("AddMemoryDescriptor: Count complete, DescriptCount=%lu\n", (ULONG)DescriptCount);
 
     /* Check if the existing range conflicts with the new range */
     while ((List[Index].PageCount != 0) &&
@@ -172,9 +207,9 @@ AddMemoryDescriptor(
             if (List[Index].BasePage + List[Index].PageCount > EndPage)
             {
                 /* Split the descriptor */
-                RtlMoveMemory(&List[Index + 1],
-                              &List[Index],
-                              (DescriptCount - Index) * sizeof(List[0]));
+                FrLdrMoveMemory(&List[Index + 1],
+                                &List[Index],
+                                (DescriptCount - Index) * sizeof(List[0]));
                 List[Index + 1].BasePage = EndPage;
                 List[Index + 1].PageCount = List[Index].BasePage +
                                             List[Index].PageCount -
@@ -196,9 +231,9 @@ AddMemoryDescriptor(
                  EndPage)
         {
             /* Delete this descriptor */
-            RtlMoveMemory(&List[Index],
-                          &List[Index + 1],
-                          (DescriptCount - Index) * sizeof(List[0]));
+            FrLdrMoveMemory(&List[Index],
+                            &List[Index + 1],
+                            (DescriptCount - Index) * sizeof(List[0]));
             DescriptCount--;
         }
         /* Otherwise the existing range ends after the new range (d) */
@@ -224,9 +259,9 @@ AddMemoryDescriptor(
     /* Insert the new descriptor */
     if (Index < DescriptCount)
     {
-        RtlMoveMemory(&List[Index + 1],
-                      &List[Index],
-                      (DescriptCount - Index) * sizeof(List[0]));
+        FrLdrMoveMemory(&List[Index + 1],
+                        &List[Index],
+                        (DescriptCount - Index) * sizeof(List[0]));
     }
 
     List[Index].BasePage = BasePage;
@@ -237,6 +272,7 @@ AddMemoryDescriptor(
 #if 0 // only enable on demand!
     DbgDumpMemoryMap(List);
 #endif
+    TRACE("AddMemoryDescriptor: Exit - returning DescriptCount=%lu\n", (ULONG)DescriptCount);
     return DescriptCount;
 }
 
@@ -620,7 +656,7 @@ PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount
     }
     else
     {
-        TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
+        //TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
         /* Allocate "low" pages */
         for (Index=1; Index < LastFreePageHint; Index++)
         {

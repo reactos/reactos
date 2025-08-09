@@ -215,7 +215,12 @@ PcMemCheckUsableMemorySize(VOID)
     /* Make sure the usable memory is large enough. To do this we check the 16
        bit value at address 0x413 inside the BDA, which gives us the usable size
        in KB */
-    Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
+    {
+        USHORT BdaMemSize;
+        USHORT* BdaMemSizeAddr = (USHORT*)0x413;
+        __asm__ volatile("movw (%1), %0" : "=r" (BdaMemSize) : "r" (BdaMemSizeAddr) : "memory");
+        Size = BdaMemSize * 1024;
+    }
     RequiredSize = FREELDR_BASE + FrLdrImageSize + PAGE_SIZE;
     if (Size < RequiredSize)
     {

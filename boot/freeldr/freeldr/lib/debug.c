@@ -20,7 +20,10 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#if DBG
+/* Force enable debug output for testing */
+#define FORCE_DEBUG_OUTPUT 1
+
+#if DBG || FORCE_DEBUG_OUTPUT
 
 #define DEBUG_ALL
 // #define DEBUG_WARN

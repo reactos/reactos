@@ -42,6 +42,9 @@ static ULONG DefaultLanguageIndex = 0;
 
 /* FUNCTIONS ****************************************************************/
 
+/* FIXME: IsAcpiComputer is only used when not compiling for AMD64
+ * On AMD64, we always use MP config by default */
+#ifndef _M_AMD64
 static
 BOOLEAN
 IsAcpiComputer(VOID)
@@ -207,6 +210,7 @@ cleanup:
         NtClose(hDeviceKey);
     return ret;
 }
+#endif /* !_M_AMD64 */
 
 static
 BOOLEAN

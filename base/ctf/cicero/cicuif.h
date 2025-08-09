@@ -570,7 +570,8 @@ public:
     STDMETHOD_(void, OnSetFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnKillFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
-    STDMETHOD_(void, OnTimer)(WPARAM wParam) { }
+    using CUIFObject::OnTimer;  // Bring base class OnTimer() into scope
+    STDMETHOD_(void, OnTimer)(WPARAM wParam) { }  // Overload for timer with ID
     STDMETHOD_(void, OnSysColorChange)() { }
     STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
     STDMETHOD_(void, OnKeyDown)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }

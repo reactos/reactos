@@ -1,7 +1,7 @@
 
 add_definitions(
     -DUNICODE -D_UNICODE)
-if(DBG)
+if(NOT DBG)
     add_compile_definitions(NDEBUG)
 endif()
 

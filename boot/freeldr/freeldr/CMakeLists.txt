@@ -53,6 +53,7 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/inifile/inifile.c
     lib/inifile/parse.c
     lib/mm/meminit.c
+    lib/mm/memops.c
     lib/mm/mm.c
     lib/mm/heap.c)
 

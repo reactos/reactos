@@ -13,6 +13,7 @@
 /* GLOBALS ********************************************************************/
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
+extern BOOLEAN UefiBootServicesExited;  /* Defined in uefimem.c */
 static unsigned CurrentCursorX = 0;
 static unsigned CurrentCursorY = 0;
 static unsigned CurrentAttr = 0x0f;
@@ -27,6 +28,10 @@ UefiConsPutChar(int c)
 {
     ULONG Width, Height, Unused;
     BOOLEAN NeedScroll;
+
+    /* Don't output to console after boot services have been exited */
+    if (UefiBootServicesExited)
+        return;
 
     UefiVideoGetDisplaySize(&Width, &Height, &Unused);
 
@@ -121,6 +126,10 @@ ConvertToBiosExtValue(UCHAR KeyIn)
 BOOLEAN
 UefiConsKbHit(VOID)
 {
+    /* No keyboard input after boot services have been exited */
+    if (UefiBootServicesExited)
+        return FALSE;
+        
     return (GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key) != EFI_NOT_READY);
 }
 
@@ -128,6 +137,10 @@ int
 UefiConsGetCh(VOID)
 {
     UCHAR KeyOutput = 0;
+
+    /* No keyboard input after boot services have been exited */
+    if (UefiBootServicesExited)
+        return 0;
 
     /* If an extended key press was detected the last time we were called
      * then return the scan code of that key. */

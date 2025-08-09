@@ -657,14 +657,34 @@ KeInitializeApc(IN PKAPC Apc,
                 IN KPROCESSOR_MODE Mode,
                 IN PVOID Context)
 {
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KERNEL: KeInitializeApc entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     /* Sanity check */
     ASSERT(TargetEnvironment <= InsertApcEnvironment);
 
     /* Set up the basic APC Structure Data */
+    {
+        const char msg[] = "*** KERNEL: Setting up APC structure ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Apc->Type = ApcObject;
     Apc->Size = sizeof(KAPC);
 
     /* Set the Environment */
+    {
+        const char msg[] = "*** KERNEL: Setting environment ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     if (TargetEnvironment == CurrentApcEnvironment)
     {
         /* Use the current one for the thread */
@@ -681,12 +701,24 @@ KeInitializeApc(IN PKAPC Apc,
     }
 
     /* Set the Thread and Routines */
+    {
+        const char msg[] = "*** KERNEL: Setting thread and routines ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Apc->Thread = Thread;
     Apc->KernelRoutine = KernelRoutine;
     Apc->RundownRoutine = RundownRoutine;
     Apc->NormalRoutine = NormalRoutine;
 
     /* Check if this is a special APC */
+    {
+        const char msg[] = "*** KERNEL: Checking if special APC ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     if (NormalRoutine)
     {
         /* It's a normal one. Set the context and mode */
@@ -702,6 +734,12 @@ KeInitializeApc(IN PKAPC Apc,
 
     /* The APC is not inserted */
     Apc->Inserted = FALSE;
+    
+    {
+        const char msg[] = "*** KERNEL: KeInitializeApc completed ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 }
 
 /*++

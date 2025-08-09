@@ -762,6 +762,14 @@ KeInitThread(IN OUT PKTHREAD Thread,
              IN PVOID Teb,
              IN PKPROCESS Process)
 {
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KERNEL: KeInitThread entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     BOOLEAN AllocatedStack = FALSE;
     ULONG i;
     PKWAIT_BLOCK TimerWaitBlock;
@@ -769,6 +777,12 @@ KeInitThread(IN OUT PKTHREAD Thread,
     NTSTATUS Status;
 
     /* Initialize the Dispatcher Header */
+    {
+        const char msg[] = "*** KERNEL: Initializing dispatcher header ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->Header.Type = ThreadObject;
     Thread->Header.ThreadControlFlags = 0;
     Thread->Header.DebugActive = FALSE;
@@ -776,9 +790,21 @@ KeInitThread(IN OUT PKTHREAD Thread,
     InitializeListHead(&(Thread->Header.WaitListHead));
 
     /* Initialize the Mutant List */
+    {
+        const char msg[] = "*** KERNEL: Initializing mutant list ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     InitializeListHead(&Thread->MutantListHead);
 
     /* Initialize the wait blocks */
+    {
+        const char msg[] = "*** KERNEL: Initializing wait blocks ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     for (i = 0; i< (THREAD_WAIT_OBJECTS + 1); i++)
     {
         /* Put our pointer */
@@ -786,6 +812,12 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
 
     /* Set swap settings */
+    {
+        const char msg[] = "*** KERNEL: Setting swap settings ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->EnableStackSwap = TRUE;
     Thread->IdealProcessor = 1;
     Thread->SwapBusy = FALSE;
@@ -793,22 +825,60 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->AdjustReason = AdjustNone;
 
     /* Initialize the lock */
+    {
+        const char msg[] = "*** KERNEL: Initializing thread lock ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeInitializeSpinLock(&Thread->ThreadLock);
 
     /* Setup the Service Descriptor Table for Native Calls */
+    {
+        const char msg[] = "*** KERNEL: Setting service table ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->ServiceTable = KeServiceDescriptorTable;
 
     /* Setup APC Fields */
+    {
+        const char msg[] = "*** KERNEL: Setting up APC fields ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);
     InitializeListHead(&Thread->ApcState.ApcListHead[UserMode]);
+    
+    {
+        const char msg[] = "*** KERNEL: APC lists initialized, setting Process ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->ApcState.Process = Process;
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
     Thread->ApcStateIndex = OriginalApcEnvironment;
     Thread->ApcQueueable = TRUE;
+    
+    {
+        const char msg[] = "*** KERNEL: Initializing APC queue lock ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeInitializeSpinLock(&Thread->ApcQueueLock);
 
     /* Initialize the Suspend APC */
+    {
+        const char msg[] = "*** KERNEL: Initializing suspend APC ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeInitializeApc(&Thread->SuspendApc,
                     Thread,
                     OriginalApcEnvironment,
@@ -817,13 +887,44 @@ KeInitThread(IN OUT PKTHREAD Thread,
                     KiSuspendThread,
                     KernelMode,
                     NULL);
+    
+    {
+        const char msg[] = "*** KERNEL: Suspend APC initialized ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Initialize the Suspend Semaphore */
+    {
+        const char msg[] = "*** KERNEL: Initializing suspend semaphore ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 2);
+    
+    {
+        const char msg[] = "*** KERNEL: Suspend semaphore initialized ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Setup the timer */
+    {
+        const char msg[] = "*** KERNEL: Setting up timer ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Timer = &Thread->Timer;
     KeInitializeTimer(Timer);
+    
+    {
+        const char msg[] = "*** KERNEL: Timer initialized, setting up timer wait block ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     TimerWaitBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
     TimerWaitBlock->Object = Timer;
     TimerWaitBlock->WaitKey = STATUS_TIMEOUT;
@@ -831,32 +932,93 @@ KeInitThread(IN OUT PKTHREAD Thread,
     TimerWaitBlock->NextWaitBlock = NULL;
 
     /* Link the two wait lists together */
+    {
+        const char msg[] = "*** KERNEL: Linking wait lists ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     TimerWaitBlock->WaitListEntry.Flink = &Timer->Header.WaitListHead;
     TimerWaitBlock->WaitListEntry.Blink = &Timer->Header.WaitListHead;
+    
+    {
+        const char msg[] = "*** KERNEL: Wait lists linked ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Set the TEB and process */
+    {
+        const char msg[] = "*** KERNEL: Setting TEB and process ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->Teb = Teb;
     Thread->Process = Process;
+    
+    {
+        const char msg[] = "*** KERNEL: TEB and process set ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Check if we have a kernel stack */
+    {
+        const char msg[] = "*** KERNEL: Checking kernel stack ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     if (!KernelStack)
     {
         /* We don't, allocate one */
+        {
+            const char msg[] = "*** KERNEL: No kernel stack, allocating one ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Remember for later */
         AllocatedStack = TRUE;
     }
+    else
+    {
+        const char msg[] = "*** KERNEL: Kernel stack already provided ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Set the Thread Stacks */
+    {
+        const char msg[] = "*** KERNEL: Setting thread stacks ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Thread->InitialStack = KernelStack;
     Thread->StackBase = KernelStack;
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
+    
+    {
+        const char msg[] = "*** KERNEL: Thread stacks set ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
+    
+    {
+        const char msg[] = "*** KERNEL: Calling KiInitializeContextThread ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     _SEH2_TRY
     {
         /* Initialize the Thread Context */
@@ -865,6 +1027,12 @@ KeInitThread(IN OUT PKTHREAD Thread,
                                   StartRoutine,
                                   StartContext,
                                   Context);
+        
+        {
+            const char msg[] = "*** KERNEL: KiInitializeContextThread completed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -883,6 +1051,13 @@ KeInitThread(IN OUT PKTHREAD Thread,
 
     /* Set the Thread to initialized */
     Thread->State = Initialized;
+    
+    {
+        const char msg[] = "*** KERNEL: KeInitThread completed successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     return Status;
 }
 

@@ -37,7 +37,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
     if (!AsyncData)
     {
         MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
-        return INVALID_SOCKET;
+        return SOCKET_ERROR; /* FIXME: Function returns INT, not SOCKET */
     }
 
     /* Change the Socket to Non Blocking */
@@ -786,7 +786,7 @@ WSPSendTo(SOCKET Handle,
         if (!BindAddress)
         {
             MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
-            return INVALID_SOCKET;
+            return SOCKET_ERROR; /* FIXME: Function returns INT, not SOCKET */
         }
 
         Socket->HelperData->WSHGetWildcardSockaddr(Socket->HelperContext,

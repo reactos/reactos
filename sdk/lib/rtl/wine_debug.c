@@ -71,7 +71,7 @@ static char *alloc_buffer(size_t size)
 static void free_buffers(void)
 {
     int slot = find_thread_slot();
-    if (slot != -1)
+    if (slot == -1)
     {
         return;
     }

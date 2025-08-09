@@ -386,7 +386,12 @@ sort_n_finish(this_dir)
 				rootname[5] = 0;
 		}
 		new_reclen = strlen(rootname);
-		sprintf(newname, "%s000%s%s",
+		/* FIXME: Ensure we don't overflow - truncate if needed */
+		if (new_reclen + strlen(extname) + 6 > sizeof(newname) - 1) {
+			rootname[sizeof(newname) - strlen(extname) - 7] = 0;
+			new_reclen = strlen(rootname);
+		}
+		snprintf(newname, sizeof(newname), "%s000%s%s",
 				rootname,
 				extname,
 				((s_entry->isorec.flags[0] & ISO_DIRECTORY) ||
@@ -2180,7 +2185,11 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 			nchar = -1;
 #endif
 			symlink_buff[nchar < 0 ? 0 : nchar] = 0;
-			sprintf(buffer, "L\t%s\t%s\n",
+			/* FIXME: Truncate symlink if too long to prevent overflow */
+			if (strlen(s_entry->name) + strlen((char*)symlink_buff) + 4 > sizeof(buffer)) {
+				symlink_buff[sizeof(buffer) - strlen(s_entry->name) - 5] = 0;
+			}
+			snprintf(buffer, sizeof(buffer), "L\t%s\t%s\n",
 				s_entry->name, symlink_buff);
 			break;
 #endif

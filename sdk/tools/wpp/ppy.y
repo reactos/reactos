@@ -3,6 +3,8 @@
  *
  * Copyright 1999-2000	Bertho A. Stultiens (BS)
  *
+ * FIXME: This parser has 10 shift/reduce conflicts that should be resolved
+ * to ensure unambiguous parsing. The conflicts are in expression precedence.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -83,6 +83,8 @@ public:
 
 #if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
     // IPropertyBag2 interface (stubs)
+    using IPropertyBag::Read;  // Bring IPropertyBag::Read into scope
+    using IPropertyBag::Write; // Bring IPropertyBag::Write into scope
     STDMETHODIMP Read(
         _In_ ULONG cProperties,
         _In_ PROPBAG2 *pPropBag,
@@ -95,7 +97,7 @@ public:
     STDMETHODIMP Write(
         _In_ ULONG cProperties,
         _In_ PROPBAG2 *pPropBag,
-        _In_ VARIANT *pvarValue)
+        _In_ VARIANT *pvarValue) override
     {
         return E_NOTIMPL;
     }

@@ -54,6 +54,7 @@
 #include <precomp.h>
 
 #include <stdlib.h>
+#include <stdint.h>  /* For intptr_t */
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -241,7 +242,7 @@ TIFFFdOpen(int ifd, const char* name, const char* mode)
 			break;
 		}
 	}
-	tif = TIFFClientOpen(name, mode, (thandle_t)ifd, /* FIXME: WIN64 cast to pointer warning */
+	tif = TIFFClientOpen(name, mode, (thandle_t)(intptr_t)ifd, /* FIXME: WIN64 cast to pointer via intptr_t */
 			_tiffReadProc, _tiffWriteProc,
 			_tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
 			fSuppressMap ? _tiffDummyMapProc : _tiffMapProc,
@@ -286,7 +287,7 @@ TIFFOpen(const char* name, const char* mode)
 		return ((TIFF *)0);
 	}
 
-	tif = TIFFFdOpen((int)fd, name, mode);   /* FIXME: WIN64 cast from pointer to int warning */
+	tif = TIFFFdOpen((intptr_t)fd, name, mode);   /* Use intptr_t for proper 64-bit compatibility */
 	if(!tif)
 		CloseHandle(fd);
 	return tif;
@@ -341,7 +342,7 @@ TIFFOpenW(const wchar_t* name, const char* mode)
 				    NULL, NULL);
 	}
 
-	tif = TIFFFdOpen((int)fd,    /* FIXME: WIN64 cast from pointer to int warning */
+	tif = TIFFFdOpen((intptr_t)fd,    /* Use intptr_t for proper 64-bit compatibility */
 			 (mbname != NULL) ? mbname : "<unknown>", mode);
 	if(!tif)
 		CloseHandle(fd);

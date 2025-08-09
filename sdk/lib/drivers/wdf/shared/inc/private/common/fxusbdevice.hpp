@@ -55,6 +55,12 @@ struct FxUsbDeviceControlContext : public FxUsbRequestContext {
         __in FxRequestBase* Request
         );
 
+    /* FIXME: This method hides the virtual base class method with different signature
+     * This is flagged by -Woverloaded-virtual warning
+     * The proper fix would be to bring the base class method into scope
+     * Using 'using' declaration to make both overloads visible */
+    using FxRequestContext::StoreAndReferenceMemory;
+    
     VOID
     StoreAndReferenceMemory(
         __in FxUsbDevice* Device,

@@ -6,6 +6,15 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wunused-result)
 endif()
 
+# Disable optimization for AMD64 kernel to fix global variable access issues
+if(ARCH STREQUAL "amd64")
+    # Remove -O2 optimization for kernel files that have issues with global variable access
+    set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -DNDEBUG")
+    # Use -O0 for no optimization to ensure globals work correctly
+    add_compile_options(-O0)
+endif()
+
 include(ntos.cmake)
 
 set(NTOSKRNL_SOURCE ${SOURCE})
@@ -42,7 +51,13 @@ add_executable(ntoskrnl
     ${PCH_SKIP_SOURCE}
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
-set_module_type(ntoskrnl kernel)
+# Set ImageBase to match where FreeLdr loads the kernel (0xFFFFF80000200000)
+# This ensures relocations are not needed and globals work correctly
+if(ARCH STREQUAL "amd64")
+    set_module_type(ntoskrnl kernel IMAGEBASE 0xFFFFF80000200000)
+else()
+    set_module_type(ntoskrnl kernel)
+endif()
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 

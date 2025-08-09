@@ -357,7 +357,7 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR szName, DWORD len, int* p
     else
         TRACE("-- not found\n");
 
-	return ret;
+    return ret;
 }
 
 #ifdef __REACTOS__

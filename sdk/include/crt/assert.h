@@ -3,6 +3,13 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+
+/* FIXME: This header generates -Wnonnull-compare warnings (8 instances)
+ * when assert() is used with parameters marked as _In_ (nonnull).
+ * The compiler knows these can't be NULL so the comparison is redundant.
+ * This is expected behavior for assert macros and can be safely ignored.
+ */
+
 #ifndef __ASSERT_H_
 #define __ASSERT_H_
 

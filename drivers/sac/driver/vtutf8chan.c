@@ -109,6 +109,7 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
 
             /* Create the escape sequence string */
             l = sprintf(LocalBuffer, "\x1B[%dm\x1B[%dm", Data[1], Data[0]);
+            
             ASSERT((l + 1)*sizeof(UCHAR) < SAC_VTUTF8_COL_WIDTH);
             ASSERT(LocalBuffer);
             Tmp = LocalBuffer;

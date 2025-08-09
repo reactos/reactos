@@ -26,6 +26,10 @@ EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
 
     DPRINT_RH("EHCI_RH_ChirpRootPort: Port - %x\n", Port);
     ASSERT(Port != 0);
+    
+    if (Port == 0) {
+        return MP_STATUS_FAILURE;
+    }
 
     PortStatusReg = &EhciExtension->OperationalRegs->PortControl[Port - 1].AsULONG;
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);

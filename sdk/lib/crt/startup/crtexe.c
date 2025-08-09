@@ -343,6 +343,8 @@ check_managed_app (void)
   mingw_initltssuo_force=1;
   mingw_initcharmax=1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
   pDOSHeader = (PIMAGE_DOS_HEADER) &__ImageBase;
   if (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)
     return 0;
@@ -364,6 +366,7 @@ check_managed_app (void)
 	return 0;
       return !! pNTHeader64->DataDirectory[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR].VirtualAddress;
     }
+#pragma GCC diagnostic pop
   return 0;
 }
 

@@ -412,7 +412,7 @@ static int EmptyCache( GLUtesselator *tess )
 
 
 void GLAPIENTRY
-gluTessVertex( GLUtesselator *tess, GLdouble coords[3], void *data )
+gluTessVertex( GLUtesselator *tess, GLdouble *coords, void *data )
 {
   int i, tooLarge = FALSE;
   GLdouble x, clamped[3];

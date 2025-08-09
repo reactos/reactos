@@ -1,0 +1,328 @@
+/* 
+ * BACKUP OF OUR CHANGES TO amd64.S
+ * Date: 2024-08-08
+ * 
+ * SUMMARY OF CHANGES:
+ * ===================
+ * We rewrote the long mode transition code to fix an infinite boot loop issue.
+ * The original code was causing triple faults with RSP=0 (null stack pointer).
+ * 
+ * KEY CHANGES MADE:
+ * 1. Simplified the mode transition sequence
+ * 2. Added proper page table setup for identity mapping first 1GB
+ * 3. Fixed GDT setup for 64-bit mode
+ * 4. Hardcoded entry point to 0x11900 to avoid relocation issues
+ * 5. Removed dynamic PE entry point calculation
+ * 
+ * RESULTS:
+ * - Fixed the infinite boot loop (system no longer restarts continuously)
+ * - System now hangs instead of looping (different issue)
+ * - Compilation successful with no relocation errors
+ * 
+ * ORIGINAL ISSUE:
+ * - Triple fault at mode transition
+ * - RSP was 0 when entering long mode
+ * - RIP was jumping to wrong address (0x422ac instead of 0x11900)
+ * 
+ * This version compiles and stops the boot loop but doesn't complete boot.
+ * Keeping for future reference as it solved the primary issue.
+ */
+
+#include <asm.inc>
+#include "../../include/arch/pc/x86common.h"
+
+#define IMAGE_DOS_HEADER_e_lfanew 60
+#define IMAGE_FILE_HEADER_SIZE 20
+#define IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint 16
+
+.code16
+
+/* FAT helper code */
+#include "fathelp.inc"
+
+.org 512
+Startup:
+    cli
+    
+    /* Setup real mode segment registers */
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    
+    /* Save boot drive and partition */
+    mov byte ptr ds:[BSS_BootDrive], dl
+    mov byte ptr ds:[BSS_BootPartition], dh
+    
+    /* Setup real mode stack */
+    mov sp, word ptr ds:[stack16]
+    
+    /* Enable A20 */
+    call EnableA20
+    
+    /* Check for 64-bit support */
+    call CheckFor64BitSupport
+    test al, al
+    jz .NoLongModeSupport
+    
+    /* Build page tables */
+    call BuildPageTables
+    
+    /* Store real mode entry point in BSS */
+    mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
+    
+    /* Switch to long mode */
+    call SwitchToLongMode
+    
+    /* Should never get here */
+    jmp Reboot
+
+.NoLongModeSupport:
+    mov si, offset Msg_NoLongMode
+    call writestr
+    int HEX(16)
+    jmp Reboot
+
+Msg_NoLongMode:
+    .ascii "64-bit CPU required!", CR, LF
+    .ascii "Press any key to reboot...", NUL
+
+/* Check for 64-bit CPU support */
+CheckFor64BitSupport:
+    pushad
+    
+    /* Check CPUID support */
+    pushfd
+    pop eax
+    mov ebx, eax
+    xor eax, HEX(00200000)
+    push eax
+    popfd
+    pushfd
+    pop eax
+    cmp eax, ebx
+    jz .NoCPUID
+    
+    /* Check for extended CPUID */
+    mov eax, HEX(80000000)
+    cpuid
+    cmp eax, HEX(80000001)
+    jb .NoLongMode
+    
+    /* Check for long mode */
+    mov eax, HEX(80000001)
+    cpuid
+    test edx, HEX(20000000)
+    jz .NoLongMode
+    
+    popad
+    mov al, 1
+    ret
+    
+.NoCPUID:
+.NoLongMode:
+    popad
+    xor al, al
+    ret
+
+/* Build identity-mapped page tables for first 1GB */
+BuildPageTables:
+    pusha
+    push es
+    
+    /* Clear page table area */
+    mov ax, PML4_ADDRESS / 16
+    mov es, ax
+    xor di, di
+    xor eax, eax
+    mov cx, 3 * 1024  /* 3 pages * 1024 dwords */
+    rep stosd
+    
+    /* PML4[0] -> PDP */
+    mov di, 0
+    mov eax, PDP_ADDRESS | HEX(03)  /* Present + RW */
+    stosd
+    
+    /* PDP[0] -> PD */
+    mov di, HEX(1000)
+    mov eax, PD_ADDRESS | HEX(03)   /* Present + RW */
+    stosd
+    
+    /* PD[0-511] -> 2MB pages */
+    mov di, HEX(2000)
+    mov eax, HEX(0083)  /* Present + RW + PS (2MB pages) */
+    mov cx, 512
+.FillPD:
+    stosd
+    add eax, HEX(200000)  /* Next 2MB */
+    xor edx, edx
+    stosd  /* High 32 bits = 0 */
+    loop .FillPD
+    
+    pop es
+    popa
+    ret
+
+/* Switch to long mode */
+SwitchToLongMode:
+    /* Disable interrupts */
+    cli
+    
+    /* Load GDT */
+    lgdt ds:[gdtptr]
+    
+    /* Enable PAE and PGE */
+    mov eax, cr4
+    or eax, HEX(00A0)
+    mov cr4, eax
+    
+    /* Load page table base */
+    mov eax, PML4_ADDRESS
+    mov cr3, eax
+    
+    /* Enable long mode in EFER */
+    mov ecx, HEX(C0000080)  /* EFER MSR */
+    rdmsr
+    or eax, HEX(0100)       /* LME bit */
+    wrmsr
+    
+    /* Enable paging and protection */
+    mov eax, cr0
+    or eax, HEX(80000001)
+    mov cr0, eax
+    
+    /* Jump to 64-bit code */
+    .byte 0xEA  /* Far jump opcode */
+    .long LongModeEntry
+    .word HEX(10)  /* 64-bit code selector */
+
+.code64
+LongModeEntry:
+    /* We're in 64-bit mode now! */
+    
+    /* Setup data segments */
+    mov ax, HEX(18)
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    
+    /* Setup stack */
+    mov rsp, STACKADDR
+    
+    /* Clear direction flag */
+    cld
+    
+    /* Jump to PE entry point - hardcode to avoid relocation issues */
+    /* The actual entry point will be at FREELDR_PE_BASE + entry offset */
+    /* For now, jump to a known good entry point */
+    mov rax, HEX(11900)  /* Known entry point */
+    jmp rax
+
+.code16
+
+/* These functions are defined in helpers.inc, so we just need stubs here */
+
+/* Data structures */
+.align 8
+
+/* GDT for long mode */
+gdt:
+    /* Null descriptor */
+    .quad 0
+    
+    /* 64-bit code segment (0x10) */
+    .word HEX(FFFF)     /* Limit low */
+    .word 0             /* Base low */
+    .byte 0             /* Base middle */
+    .byte HEX(9A)       /* Access: Present, Code, Readable */
+    .byte HEX(AF)       /* Flags: 64-bit, Granularity */
+    .byte 0             /* Base high */
+    
+    /* 64-bit data segment (0x18) */
+    .word HEX(FFFF)     /* Limit low */
+    .word 0             /* Base low */
+    .byte 0             /* Base middle */
+    .byte HEX(92)       /* Access: Present, Data, Writable */
+    .byte HEX(CF)       /* Flags: Granularity */
+    .byte 0             /* Base high */
+gdt_end:
+
+gdtptr:
+    .word gdt_end - gdt - 1
+    .long gdt
+
+/* Storage */
+stack16:
+    .word STACK16ADDR
+
+/* Real mode callback entry point */
+RealModeEntryPoint:
+    /* Disable long mode */
+    mov ecx, HEX(C0000080)  /* EFER MSR */
+    rdmsr
+    and eax, HEX(0FFFFFEFF) /* Clear LME bit */
+    wrmsr
+    
+    /* Disable PAE and PGE */
+    mov eax, cr4
+    and eax, HEX(0FFFFFF5F) /* Clear PAE and PGE */
+    mov cr4, eax
+    
+    /* Disable paging */
+    mov eax, cr0
+    and eax, HEX(7FFFFFFE)  /* Clear PG and PE */
+    mov cr0, eax
+    
+    /* Jump to real mode */
+    ljmp16 0, InRealMode
+
+InRealMode:
+    /* Setup real mode segments */
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    
+    /* Clear high 16 bits of ESP */
+    xor esp, esp
+    
+    /* Restore real mode stack */
+    mov sp, word ptr ds:[stack16]
+    
+    /* Do the callback, specified by bx */
+    shl bx, 1
+    call word ptr ds:CallbackTable[bx]
+    
+    /* Return to long mode */
+    jmp ExitToLongMode
+
+ExitToLongMode:
+    /* Re-enter long mode */
+    jmp SwitchToLongMode
+
+/* Callback table for real mode functions */
+CallbackTable:
+    .word Int386
+    .word Reboot
+    .word Relocator16Boot
+    .word PxeCallApi
+    .word PnpBiosGetDeviceNodeCount
+    .word PnpBiosGetDeviceNode
+    .word PnpBiosGetDockStationInformation
+
+#include "int386.inc"
+#include "helpers.inc"
+#include "pxe.inc"
+#include "pnp.inc"
+
+.org (FREELDR_PE_BASE - FREELDR_BASE - 1)
+.byte 0
+.endcode16
+
+END

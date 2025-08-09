@@ -1792,7 +1792,7 @@ LPITEMIDLIST _ILCreateDesktop(void)
     TRACE("()\n");
     ret = SHAlloc(2);
     if (ret)
-        ret->mkid.cb = 0;
+        *(WORD*)ret = 0;  /* Set terminator cb = 0 */
     return ret;
 }
 

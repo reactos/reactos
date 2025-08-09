@@ -509,17 +509,78 @@ VOID
 NTAPI
 PoInitializePrcb(IN PKPRCB Prcb)
 {
-    /* Initialize the Power State */
-    RtlZeroMemory(&Prcb->PowerState, sizeof(Prcb->PowerState));
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KERNEL: PoInitializePrcb entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Check Prcb pointer */
+    if (!Prcb)
+    {
+        const char msg[] = "*** KERNEL ERROR: Prcb is NULL in PoInitializePrcb! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        return;
+    }
+    
+    {
+        const char msg[] = "*** KERNEL: Zeroing PowerState structure ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Initialize the Power State - manual zero to avoid RtlZeroMemory issues */
+    volatile UCHAR *PowerStateBytes = (volatile UCHAR *)&Prcb->PowerState;
+    SIZE_T PowerStateSize = sizeof(Prcb->PowerState);
+    for (SIZE_T i = 0; i < PowerStateSize; i++)
+    {
+        PowerStateBytes[i] = 0;
+    }
+    
+    {
+        const char msg[] = "*** KERNEL: PowerState zeroed, setting fields ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     Prcb->PowerState.Idle0KernelTimeLimit = 0xFFFFFFFF;
     Prcb->PowerState.CurrentThrottle = 100;
     Prcb->PowerState.CurrentThrottleIndex = 0;
     Prcb->PowerState.IdleFunction = PopIdle0;
+    
+    {
+        const char msg[] = "*** KERNEL: PowerState fields set, initializing DPC ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Initialize the Perf DPC and Timer */
     KeInitializeDpc(&Prcb->PowerState.PerfDpc, PopPerfIdleDpc, Prcb);
+    
+    {
+        const char msg[] = "*** KERNEL: DPC initialized, setting target processor ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
+    
+    {
+        const char msg[] = "*** KERNEL: Target processor set, initializing timer ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     KeInitializeTimerEx(&Prcb->PowerState.PerfTimer, SynchronizationTimer);
+    
+    {
+        const char msg[] = "*** KERNEL: PoInitializePrcb completed successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -138,7 +138,8 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 #endif
     TCHAR StringQuote = _T('"');
     TCHAR CommandQuote = _T('\'');
-    LPTSTR Variables[32];
+    // TODO: Variables array appears to be unused - investigate if needed for future functionality
+    // LPTSTR Variables[32];
     PTCHAR Start, End;
     INT Ret = 0;
 
@@ -301,19 +302,12 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 #ifdef MSCMD_FOR_QUIRKS
     /* Windows' CMD compatibility: use the wrongly evaluated number of tokens */
     fc->varcount = NumTokens;
-    /* Allocate a large enough variables array if needed */
-    if (NumTokens <= ARRAYSIZE(Variables))
+    /* Always allocate on heap to avoid dangling pointer when function returns */
+    fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
+    if (!fc->values)
     {
-        fc->values = Variables;
-    }
-    else
-    {
-        fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
-        if (!fc->values)
-        {
-            error_out_of_memory();
-            return 1;
-        }
+        error_out_of_memory();
+        return 1;
     }
 #else
     /* Count how many variables will be set: one for each token,
@@ -321,7 +315,13 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     fc->varcount = NumTokens;
     for (NumTokens = 1; NumTokens < 32; ++NumTokens)
         fc->varcount += (TokensMask >> NumTokens) & 1;
-    fc->values = Variables;
+    /* Always allocate on heap to avoid dangling pointer when function returns */
+    fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
+    if (!fc->values)
+    {
+        error_out_of_memory();
+        return 1;
+    }
 #endif
 
     if (*List == StringQuote || *List == CommandQuote)
@@ -470,10 +470,9 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     }
 
 Quit:
-#ifdef MSCMD_FOR_QUIRKS
-    if (fc->values && (fc->values != Variables))
+    /* Always free the allocated values array */
+    if (fc->values)
         cmd_free(fc->values);
-#endif
 
     return Ret;
 }

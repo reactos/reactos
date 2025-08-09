@@ -28,15 +28,22 @@ _exituefi:
     /* Save the old stack */
     mov rbx, rsp
 
-    /* Load the new stack */
-    xor rbp, rbp
+    /* Load the new stack - check if it's valid first */
     mov rsp, qword ptr UefiServiceStack[rip]
+    test rsp, rsp
+    jnz .stack_ok
+    /* UefiServiceStack is NULL, use current stack */
+    mov rsp, rbx
+.stack_ok:
 
     /* Call the entry routine, passing the parameters */
     mov rax, UefiExitBootServices[rip]
+    test rax, rax
+    jz .skip_call
     call rax
+.skip_call:
 
-    /* Retore old stack */
+    /* Restore old stack */
     mov rsp, rbx
 
     /* Retore non-volatiles */
@@ -45,10 +52,14 @@ _exituefi:
     pop rsi
     pop rbp
 
+    /* Skip GDT loading for now - UEFI has set up its own GDT that we should keep using
+     * until we're ready to switch to our own memory layout */
+#if 0
 #ifdef _USE_ML
     lgdt fword ptr [_gdtptr]
 #else
     lgdt cs:[_gdtptr][rip] /* GAS isn't my friend - avoid letting it generate absolute addressing */
+#endif
 #endif
 
     /* All done */
@@ -57,10 +68,10 @@ _exituefi:
 // void _changestack(VOID)
 PUBLIC _changestack
 _changestack:
-    mov rax, rsp
-    mov rsp, BasicStack[rip]
-    push rax
-    call ExecuteLoaderCleanly[rip]
+    mov rdi, rsp                  /* Save old stack pointer as first argument */
+    mov rsp, BasicStack[rip]      /* Switch to new stack */
+    sub rsp, 8                    /* Align stack to 16 bytes (call will push 8 bytes) */
+    call ExecuteLoaderCleanly     /* Call the function directly */
     ret
 
 .align 8

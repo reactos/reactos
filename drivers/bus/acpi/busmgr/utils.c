@@ -29,12 +29,27 @@
 #define NDEBUG
 #include <debug.h>
 
- /* Modified for ReactOS and latest ACPICA
-  * Copyright (C)2009  Samuel Serapion
-  */
+/* Modified for ReactOS and latest ACPICA
+ * Copyright (C)2009  Samuel Serapion
+ */
+
+/* FIXME: Suppress unused function warnings for ACPICA debug functions
+ * ACPICA headers define inline debug functions (AcpiTracePoint, AcpiDebugPrintRaw,
+ * AcpiDebugPrint) when ACPI_DEBUG_OUTPUT is not defined. These are from third-party 
+ * ACPICA library headers. The warnings are harmless but should be suppressed.
+ * Possible solutions:
+ * 1. Update to newer ACPICA that may have fixed this
+ * 2. Define ACPI_DEBUG_OUTPUT if appropriate
+ * 3. Use compiler-specific pragmas to suppress warnings for specific functions */
 
 #define _COMPONENT		ACPI_BUS_COMPONENT
 ACPI_MODULE_NAME		("acpi_utils")
+
+/* FIXME: Cannot suppress -Wunused-function warnings for ACPICA debug functions
+ * These functions (AcpiTracePoint, AcpiDebugPrintRaw, AcpiDebugPrint) are defined
+ * as static inline in ACPICA headers when ACPI_DEBUG_OUTPUT is not defined.
+ * Since they're in third-party headers, we cannot modify them.
+ * The warnings are harmless and should be ignored until ACPICA is updated. */
 
 static void
 acpi_util_eval_error(ACPI_HANDLE h, ACPI_STRING p, ACPI_STATUS s)
@@ -364,8 +379,8 @@ end:
 		//ExFreePool(list->handles);
 	}
 
-    if (buffer.Pointer)
-        AcpiOsFree(buffer.Pointer);
+	if (buffer.Pointer)
+		AcpiOsFree(buffer.Pointer);
 
 	return_ACPI_STATUS(status);
 }

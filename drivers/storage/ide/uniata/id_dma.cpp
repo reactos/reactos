@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     This module is a port from FreeBSD 4.3-6.1 ATA driver (ata-dma.c, ata-chipset.c) by
-         Søren Schmidt, Copyright (c) 1998-2008
+         Sï¿½ren Schmidt, Copyright (c) 1998-2008
 
     Changed defaulting-to-generic-PIO/DMA policy
     Added PIO settings for VIA
@@ -1373,7 +1373,7 @@ dma_cs55xx:
                 }
             }
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-                timing = (6-apiomode) | (cyr_piotiming_old[i]);
+                timing = (6-apiomode) | (cyr_piotiming_old[apiomode]);
                 /* Channel command timing */
                 SetPciConfig1(0x62+Channel, timing);
                 /* Read command timing */

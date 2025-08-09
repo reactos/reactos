@@ -63,6 +63,11 @@ start:
 FatHelperEntryPoint:
     /* First save AX - the start cluster of freeldr.sys */
     push ax
+    
+    /* Send '*' to serial to show FAT helper started */
+    mov dx, HEX(03F8)
+    mov al, '*'
+    out dx, al
 
     /* Display "Loading FreeLoader..." message */
     mov si, offset msgLoading

@@ -1,5 +1,10 @@
 // sdkparse.cpp
 
+/* FIXME: This parser has 28 shift/reduce and 5 reduce/reduce conflicts
+ * that need to be resolved to ensure unambiguous parsing.
+ * These conflicts can lead to incorrect parsing of certain constructs.
+ */
+
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
 #endif//_MSC_VER

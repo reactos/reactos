@@ -1,0 +1,1 @@
+qemu-system-x86_64 -cdrom livecd.iso -m 256 -serial stdio -bios /usr/share/ovmf/OVMF.fd 

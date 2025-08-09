@@ -423,7 +423,7 @@ extern void gl_save_Vertex3f( GLcontext *ctx,
 extern void gl_save_Vertex4f( GLcontext *ctx,
                               GLfloat x, GLfloat y, GLfloat z, GLfloat w );
 
-extern void gl_save_Vertex3fv( GLcontext *ctx, const GLfloat *v );
+extern void gl_save_Vertex3fv( GLcontext *ctx, const GLfloat v[3] );
 
 extern void gl_save_Viewport( GLcontext *ctx, GLint x, GLint y,
                               GLsizei width, GLsizei height );

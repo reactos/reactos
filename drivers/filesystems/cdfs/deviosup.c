@@ -3837,7 +3837,10 @@ Return Value:
 
     ULONG BytesToCopy;
 
-    UCHAR LocalBuffer[FIELD_OFFSET( RAW_DIRENT, FileId ) + 12];
+    union {
+        UCHAR LocalBuffer[FIELD_OFFSET( RAW_DIRENT, FileId ) + 12];
+        RAW_PATH_ISO RawPath;
+    } Buffer;
 
     PAGED_CODE();
 
@@ -3857,9 +3860,9 @@ Return Value:
         //  Store a pseudo path entry in our local buffer.
         //
 
-        RawPath = (PRAW_PATH_ISO) LocalBuffer;
+        RawPath = &Buffer.RawPath;
 
-        RtlZeroMemory( RawPath, sizeof( LocalBuffer ));
+        RtlZeroMemory( RawPath, sizeof( Buffer.LocalBuffer ));
 
         RawPath->DirIdLen = 1;
         RawPath->ParentNum = 1;

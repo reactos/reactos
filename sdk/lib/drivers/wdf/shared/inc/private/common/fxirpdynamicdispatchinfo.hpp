@@ -16,7 +16,18 @@ struct FxIrpDynamicDispatchInfo : public FxStump {
         CxDeviceInfo(NULL)
     {
         InitializeListHead(&ListEntry);
+        /* FIXME: Using RtlZeroMemory on non-trivial type generates -Wclass-memaccess warning
+         * Info struct has a constructor, so memset is technically incorrect
+         * The proper fix would be to use value initialization: Dispatch{} in initializer list
+         * Using pragma to suppress -Wclass-memaccess warning */
+#ifdef __GNUC__
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
         RtlZeroMemory(Dispatch, sizeof(Dispatch));
+#ifdef __GNUC__
+        #pragma GCC diagnostic pop
+#endif
     }
 
     ~FxIrpDynamicDispatchInfo()

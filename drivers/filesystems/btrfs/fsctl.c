@@ -542,7 +542,7 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
         if (length < offsetof(btrfs_create_snapshot32, name) + bcs32->namelen)
             return STATUS_INVALID_PARAMETER;
 
-        subvolh = Handle32ToHandle(bcs32->subvol);
+        subvolh = (HANDLE)(ULONG_PTR)bcs32->subvol;
 
         nameus.Buffer = bcs32->name;
         nameus.Length = nameus.MaximumLength = bcs32->namelen;
