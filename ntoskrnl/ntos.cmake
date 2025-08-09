@@ -124,6 +124,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/bootanim.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbvport.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/viddata.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/adapter.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/arcname.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/bootlog.c
@@ -237,6 +238,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mmfault.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mminit.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/pagefile.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/pe_loader.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/region.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/rmap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/section.c
@@ -261,6 +263,8 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/job.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/kill.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process_loader.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process_real.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psnotify.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/query.c

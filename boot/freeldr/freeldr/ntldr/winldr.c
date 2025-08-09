@@ -101,6 +101,56 @@ AllocateAndInitLPB(
     Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
     Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
     Extension->MinorVersion = (VersionToBoot & 0xFF);
+    
+    /* Set boot type flags */
+#ifdef UEFIBOOT
+    /* Mark this as a UEFI boot and pass framebuffer info */
+    Extension->BootViaEFI = TRUE;
+    Extension->BootViaWinload = FALSE;
+    
+    /* Pass UEFI GOP framebuffer info if available */
+    {
+        /* The framebuffer struct is defined in uefildr.h for UEFI builds */
+        typedef struct {
+            ULONG_PTR BaseAddress;
+            ULONG BufferSize;
+            UINT32 ScreenWidth;
+            UINT32 ScreenHeight;
+            UINT32 PixelsPerScanLine;
+            UINT32 PixelFormat;
+        } REACTOS_INTERNAL_BGCONTEXT;
+        
+        /* These externs are only available in UEFI builds */
+        extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
+        extern BOOLEAN UefiVideoInitialized;
+        
+        if (UefiVideoInitialized)
+        {
+            /* Copy framebuffer information to loader extension */
+            Extension->UefiFramebuffer.FrameBufferBase.QuadPart = framebufferData.BaseAddress;
+            Extension->UefiFramebuffer.FrameBufferSize = framebufferData.BufferSize;
+            Extension->UefiFramebuffer.ScreenWidth = framebufferData.ScreenWidth;
+            Extension->UefiFramebuffer.ScreenHeight = framebufferData.ScreenHeight;
+            Extension->UefiFramebuffer.PixelsPerScanLine = framebufferData.PixelsPerScanLine;
+            Extension->UefiFramebuffer.PixelFormat = framebufferData.PixelFormat;
+            
+            /* Log framebuffer info for debugging */
+            TRACE("UEFI GOP initialized: %ux%u @ 0x%llx (size=%u)\n",
+                (unsigned int)framebufferData.ScreenWidth, 
+                (unsigned int)framebufferData.ScreenHeight,
+                (unsigned long long)framebufferData.BaseAddress, 
+                (unsigned int)framebufferData.BufferSize);
+        }
+        else
+        {
+            TRACE("UEFI video not initialized\n");
+        }
+    }
+#else
+    /* Legacy BIOS boot - no framebuffer info */
+    Extension->BootViaEFI = FALSE;
+    Extension->BootViaWinload = FALSE;
+#endif
 
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);

@@ -196,8 +196,35 @@ InbvDriverInitialize(
         ResetMode   = (CommandLine == NULL) || (strstr(CommandLine, "BOOTLOGO") == NULL);
     }
 
+    /* Check if this is UEFI boot */
+    BOOLEAN IsUefiBoot = FALSE;
+    if (LoaderBlock && LoaderBlock->Extension)
+    {
+        IsUefiBoot = LoaderBlock->Extension->BootViaEFI;
+        
+#ifdef _M_AMD64
+        /* For UEFI boot, pass framebuffer info to bootvid */
+        if (IsUefiBoot && LoaderBlock->Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
+        {
+            /* Export framebuffer info for bootvid driver */
+            extern PHYSICAL_ADDRESS VidpFrameBufferBase;
+            extern ULONG VidpFrameBufferSize;
+            extern ULONG VidpScreenWidth;
+            extern ULONG VidpScreenHeight;
+            extern ULONG VidpPixelsPerScanLine;
+            
+            VidpFrameBufferBase = LoaderBlock->Extension->UefiFramebuffer.FrameBufferBase;
+            VidpFrameBufferSize = LoaderBlock->Extension->UefiFramebuffer.FrameBufferSize;
+            VidpScreenWidth = LoaderBlock->Extension->UefiFramebuffer.ScreenWidth;
+            VidpScreenHeight = LoaderBlock->Extension->UefiFramebuffer.ScreenHeight;
+            VidpPixelsPerScanLine = LoaderBlock->Extension->UefiFramebuffer.PixelsPerScanLine;
+        }
+#endif
+    }
+    
     /* Initialize the video */
     InbvBootDriverInstalled = VidInitialize(ResetMode);
+    
     if (InbvBootDriverInstalled)
     {
         /* Find bitmap resources in the kernel */

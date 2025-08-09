@@ -8,16 +8,17 @@ endif()
 
 # AMD64 kernel requires special compiler flags for proper operation
 if(ARCH STREQUAL "amd64")
-    # Use large code model instead of kernel to avoid PIC incompatibility
-    # Large model allows code/data anywhere in 64-bit address space
-    # This is more compatible with various GCC builds
-    add_compile_options(-mcmodel=large)
-    
-    # Disable red zone for interrupt safety (required for AMD64 kernels)
+    # Fixed address kernel: no PIC, no PIE
+    add_compile_options(-fno-pic -fno-pie)
+
+    # Disable red zone for interrupt safety
     add_compile_options(-mno-red-zone)
-    
-    # Re-enable optimizations now that we have proper code model
-    # -O2 should work correctly with -mcmodel=large
+
+    # Use small model for AMD64 - Windows standard
+    # All kernel code/data within ±2GB window
+    add_compile_options(-mcmodel=small)
+
+    # Optimizations
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 endif()

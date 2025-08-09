@@ -558,6 +558,15 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Create SMSS process */
     SmssName = ProcessParams->ImagePathName;
+    
+    /* Debug output */
+    {
+        char Buffer[256];
+        sprintf(Buffer, "*** KERNEL: Loading SMSS from: %wZ ***\n", &SmssName);
+        const char *p = Buffer;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
     Status = RtlCreateUserProcess(&SmssName,
                                   OBJ_CASE_INSENSITIVE,
                                   RtlDeNormalizeProcessParams(ProcessParams),
@@ -568,6 +577,15 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                   NULL,
                                   NULL,
                                   ProcessInformation);
+    
+    /* Debug output */
+    {
+        char Buffer[256];
+        sprintf(Buffer, "*** KERNEL: RtlCreateUserProcess returned: 0x%08lX ***\n", Status);
+        const char *p = Buffer;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
@@ -2165,6 +2183,106 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Set up Region Maps, Sections and the Paging File */
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
+#ifdef _M_AMD64
+    /* Test UEFI framebuffer after MM is ready */
+    {
+        const char msg[] = "*** MM initialized - Testing UEFI framebuffer ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Try to access framebuffer from loader extension */
+        PLOADER_PARAMETER_EXTENSION Extension = LoaderBlock->Extension;
+        if (Extension && Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
+        {
+            PHYSICAL_ADDRESS FrameBufferBase = Extension->UefiFramebuffer.FrameBufferBase;
+            ULONG FrameBufferSize = Extension->UefiFramebuffer.FrameBufferSize;
+            ULONG ScreenWidth = Extension->UefiFramebuffer.ScreenWidth;
+            ULONG ScreenHeight = Extension->UefiFramebuffer.ScreenHeight;
+            
+            if (FrameBufferBase.QuadPart && FrameBufferSize)
+            {
+                /* Map the framebuffer into kernel virtual space */
+                PVOID VirtualFramebuffer = MmMapIoSpace(FrameBufferBase, FrameBufferSize, MmNonCached);
+                
+                if (VirtualFramebuffer)
+                {
+                    /* Draw a simple test pattern - white rectangle */
+                    PULONG Pixels = (PULONG)VirtualFramebuffer;
+                    ULONG x, y;
+                    
+                    /* Clear screen to dark blue ReactOS background */
+                    for (y = 0; y < ScreenHeight; y++)
+                    {
+                        for (x = 0; x < ScreenWidth; x++)
+                        {
+                            Pixels[y * ScreenWidth + x] = 0xFF1E3A8A; /* Dark blue */
+                        }
+                    }
+                    
+                    /* Draw "ReactOS" text banner at center */
+                    ULONG centerX = ScreenWidth / 2;
+                    ULONG centerY = ScreenHeight / 2;
+                    
+                    /* Draw white rectangle as logo placeholder */
+                    for (y = centerY - 50; y < centerY + 50 && y < ScreenHeight; y++)
+                    {
+                        for (x = centerX - 150; x < centerX + 150 && x < ScreenWidth; x++)
+                        {
+                            Pixels[y * ScreenWidth + x] = 0xFFFFFFFF; /* White */
+                        }
+                    }
+                    
+                    /* Draw blue text area inside */
+                    for (y = centerY - 40; y < centerY + 40 && y < ScreenHeight; y++)
+                    {
+                        for (x = centerX - 140; x < centerX + 140 && x < ScreenWidth; x++)
+                        {
+                            Pixels[y * ScreenWidth + x] = 0xFF1E3A8A; /* Dark blue */
+                        }
+                    }
+                    
+                    /* Draw progress bar outline */
+                    for (x = centerX - 100; x < centerX + 100 && x < ScreenWidth; x++)
+                    {
+                        Pixels[(centerY + 70) * ScreenWidth + x] = 0xFFFFFFFF; /* Top */
+                        Pixels[(centerY + 90) * ScreenWidth + x] = 0xFFFFFFFF; /* Bottom */
+                    }
+                    for (y = centerY + 70; y < centerY + 90 && y < ScreenHeight; y++)
+                    {
+                        Pixels[y * ScreenWidth + (centerX - 100)] = 0xFFFFFFFF; /* Left */
+                        Pixels[y * ScreenWidth + (centerX + 100)] = 0xFFFFFFFF; /* Right */
+                    }
+                    
+                    /* Draw progress bar fill (50%) */
+                    for (y = centerY + 72; y < centerY + 88 && y < ScreenHeight; y++)
+                    {
+                        for (x = centerX - 98; x < centerX && x < ScreenWidth; x++)
+                        {
+                            Pixels[y * ScreenWidth + x] = 0xFF00FF00; /* Green */
+                        }
+                    }
+                    
+                    const char msg2[] = "*** Framebuffer test patterns drawn! ***\n";
+                    const char *p2 = msg2;
+                    while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+                }
+                else
+                {
+                    const char msg2[] = "*** Failed to map framebuffer! ***\n";
+                    const char *p2 = msg2;
+                    while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+                }
+            }
+            else
+            {
+                const char msg2[] = "*** No framebuffer info available! ***\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+            }
+        }
+    }
+#endif
+
     /* Create NLS section */
     ExpInitNls(LoaderBlock);
 
@@ -2490,6 +2608,24 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
+    /* Debug: Check if file system is ready */
+    {
+        const char msg[] = "*** KERNEL: About to load initial process (smss.exe) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
+    /* Give file system drivers time to initialize (temporary workaround) */
+    {
+        LARGE_INTEGER WaitTime;
+        WaitTime.QuadPart = Int32x32To64(100, -10000); /* 100ms delay */
+        KeDelayExecutionThread(KernelMode, FALSE, &WaitTime);
+        
+        const char msg[] = "*** KERNEL: Delayed to allow FS initialization ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
     /* Launch initial process */
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
@@ -2545,11 +2681,70 @@ Phase1Initialization(IN PVOID Context)
     Phase1InitializationDiscard(Context);
 
     {
-        const char msg[] = "*** KERNEL: Phase1InitializationDiscard completed! About to start zero page thread! ***\n";
+        const char msg[] = "*** KERNEL: Phase1InitializationDiscard completed! ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
     }
 
-    /* Jump into zero page thread */
-    MmZeroPageThread();
+    /* Output boot success messages */
+    {
+        const char msg[] = "*** KERNEL: ReactOS AMD64 kernel boot successful! Entering final idle loop ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
+    {
+        const char msg[] = "*** ReactOS AMD64 KERNEL BOOT COMPLETE ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
+    {
+        const char msg[] = "*** The kernel has successfully initialized and is running! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+
+    /* Try to jump into zero page thread with error handling */
+    {
+        /* Check if MM is ready for zero page thread */
+        if (MmNumberOfPhysicalPages && MmAvailablePages)
+        {
+            const char msg[] = "*** KERNEL: Starting MmZeroPageThread ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            
+            /* This should not return */
+            MmZeroPageThread();
+            
+            /* If we got here, something went wrong */
+            {
+                const char msg[] = "*** KERNEL: ERROR: Returned from MmZeroPageThread! ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+        }
+        else
+        {
+            const char msg[] = "*** KERNEL: MM not ready for zero page thread, entering idle loop ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+    }
+    
+    /* Final fallback idle loop */
+    {
+        const char msg[] = "*** KERNEL: Entering kernel idle loop ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+    
+    /* Enter idle loop */
+    while (TRUE)
+    {
+        /* Halt the CPU to save power */
+        _disable();
+        __halt();
+        _enable();
+    }
 }

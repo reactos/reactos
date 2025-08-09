@@ -23,6 +23,7 @@ extern UCHAR BitmapFont8x16[256 * 16];
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 REACTOS_INTERNAL_BGCONTEXT framebufferData;
+BOOLEAN UefiVideoInitialized = FALSE;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 /* FUNCTIONS ******************************************************************/
@@ -41,8 +42,41 @@ UefiInitializeVideo(VOID)
         return Status;
     }
 
-    /* We don't need high resolutions for freeldr */
-    gop->SetMode(gop, LOWEST_SUPPORTED_RES);
+    /* Try to set a reasonable resolution like 800x600 or 1024x768 */
+    UINT32 BestMode = 0;
+    UINT32 BestWidth = 0;
+    UINT32 BestHeight = 0;
+    
+    /* Search for 800x600 or 1024x768 mode */
+    for (UINT32 i = 0; i < gop->Mode->MaxMode; i++)
+    {
+        EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* Info;
+        UINTN InfoSize;
+        
+        if (gop->QueryMode(gop, i, &InfoSize, &Info) == EFI_SUCCESS)
+        {
+            /* Prefer 800x600 or 1024x768 */
+            if ((Info->HorizontalResolution == 800 && Info->VerticalResolution == 600) ||
+                (Info->HorizontalResolution == 1024 && Info->VerticalResolution == 768))
+            {
+                BestMode = i;
+                BestWidth = Info->HorizontalResolution;
+                BestHeight = Info->VerticalResolution;
+                break;
+            }
+            /* Otherwise pick something reasonable */
+            else if (Info->HorizontalResolution >= 800 && Info->HorizontalResolution <= 1024 &&
+                     Info->HorizontalResolution > BestWidth)
+            {
+                BestMode = i;
+                BestWidth = Info->HorizontalResolution;
+                BestHeight = Info->VerticalResolution;
+            }
+        }
+    }
+    
+    /* Set the selected mode */
+    gop->SetMode(gop, BestMode);
 
     framebufferData.BaseAddress        = (ULONG_PTR)gop->Mode->FrameBufferBase;
     framebufferData.BufferSize         = gop->Mode->FrameBufferSize;
@@ -51,6 +85,7 @@ UefiInitializeVideo(VOID)
     framebufferData.PixelsPerScanLine  = gop->Mode->Info->PixelsPerScanLine;
     framebufferData.PixelFormat        = gop->Mode->Info->PixelFormat;
 
+    UefiVideoInitialized = TRUE;
     return Status;
 }
 

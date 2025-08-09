@@ -433,6 +433,17 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     //
     ULONG ResumePages;
     PVOID DumpHeader;
+    //
+    // ReactOS UEFI Extensions
+    //
+    struct {
+        PHYSICAL_ADDRESS FrameBufferBase;
+        ULONG FrameBufferSize;
+        ULONG ScreenWidth;
+        ULONG ScreenHeight;
+        ULONG PixelsPerScanLine;
+        ULONG PixelFormat;
+    } UefiFramebuffer;
 } LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
 
 //

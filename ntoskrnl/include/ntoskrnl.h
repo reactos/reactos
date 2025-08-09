@@ -140,7 +140,29 @@ C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 /* Kernel-safe memory operations for AMD64 */
 #ifdef _WIN64
 #include "internal/memops.h"
+
+/* Safe list initialization for AMD64 kernel - override any macro */
+#ifndef _NTOSKRNL_INITIALIZELIST_FIXED
+#define _NTOSKRNL_INITIALIZELIST_FIXED
+
+#ifdef InitializeListHead
+#undef InitializeListHead
 #endif
+
+static __inline VOID
+KrnlInitializeListHead(PLIST_ENTRY ListHead)
+{
+    /* Use volatile to prevent optimization issues */
+    volatile PLIST_ENTRY Head = ListHead;
+    Head->Flink = (PLIST_ENTRY)Head;
+    Head->Blink = (PLIST_ENTRY)Head;
+}
+
+#define InitializeListHead(ListHead) KrnlInitializeListHead(ListHead)
+
+#endif /* _NTOSKRNL_INITIALIZELIST_FIXED */
+
+#endif /* _WIN64 */
 
 #ifdef _MSC_VER
 # pragma section("INITDATA", read,write,discard)
