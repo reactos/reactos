@@ -102,12 +102,33 @@ DECLSPEC_NORETURN
 VOID
 KiIdleLoop(VOID)
 {
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KERNEL: KiIdleLoop entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD OldThread, NewThread;
+    
+    {
+        const char msg[] = "*** KERNEL: Got PRCB in idle loop ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Now loop forever */
     while (TRUE)
     {
+        /* Output idle heartbeat every iteration */
+        {
+            const char msg[] = ".";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         /* Start of the idle loop: disable interrupts */
         _enable();
         YieldProcessor();

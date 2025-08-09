@@ -673,6 +673,16 @@ KiInitializeP0BootStructures(
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
+    /* CRITICAL: Initialize the thread's ApcState.Process field */
+    /* This must be done for the thread to be properly associated with the process */
+    if (InitialThread)
+    {
+        InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
+        const char msg[] = "*** KERNEL: Thread->ApcState.Process initialized ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     if (LoaderBlock && LoaderBlock->KernelStack)
     {
         BootStack = (PVOID)LoaderBlock->KernelStack;

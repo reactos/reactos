@@ -19,7 +19,11 @@
 
 ULONG MmProcessColorSeed = 0x12345678;
 ULONG MmMaximumDeadKernelStacks = 5;
+#ifdef _WIN64
+DECLSPEC_ALIGN(16) SLIST_HEADER MmDeadStackSListHead;
+#else
 SLIST_HEADER MmDeadStackSListHead;
+#endif
 ULONG MmRotatingUniprocessorNumber = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/

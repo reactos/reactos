@@ -6,13 +6,20 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wunused-result)
 endif()
 
-# Disable optimization for AMD64 kernel to fix global variable access issues
+# AMD64 kernel requires special compiler flags for proper operation
 if(ARCH STREQUAL "amd64")
-    # Remove -O2 optimization for kernel files that have issues with global variable access
-    set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG")
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -DNDEBUG")
-    # Use -O0 for no optimization to ensure globals work correctly
-    add_compile_options(-O0)
+    # Use large code model instead of kernel to avoid PIC incompatibility
+    # Large model allows code/data anywhere in 64-bit address space
+    # This is more compatible with various GCC builds
+    add_compile_options(-mcmodel=large)
+    
+    # Disable red zone for interrupt safety (required for AMD64 kernels)
+    add_compile_options(-mno-red-zone)
+    
+    # Re-enable optimizations now that we have proper code model
+    # -O2 should work correctly with -mcmodel=large
+    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 endif()
 
 include(ntos.cmake)

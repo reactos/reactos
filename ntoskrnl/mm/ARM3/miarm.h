@@ -649,7 +649,11 @@ extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
 extern PVOID MiSessionSpaceWs;
 extern ULONG MmMaximumDeadKernelStacks;
+#ifdef _WIN64
+extern DECLSPEC_ALIGN(16) SLIST_HEADER MmDeadStackSListHead;
+#else
 extern SLIST_HEADER MmDeadStackSListHead;
+#endif
 extern MM_AVL_TABLE MmSectionBasedRoot;
 extern KGUARDED_MUTEX MmSectionBasedMutex;
 extern PVOID MmHighSectionBase;

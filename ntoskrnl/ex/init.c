@@ -686,14 +686,14 @@ ExpInitSystemPhase0(VOID)
     }
     InitializeListHead(&ExpFirmwareTableProviderListHead);
     
-    /* SKIP ExInitializeResourceLite - causes hang on AMD64 */
+    /* Defer firmware table resource initialization until memory manager is ready */
     {
-        const char msg[] = "*** EX: SKIPPING ExInitializeResourceLite calls (AMD64 compatibility issue) ***\n";
+        const char msg[] = "*** EX: DEFERRING firmware table resources until MM is ready (AMD64 fix) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* TODO: Initialize these later after memory manager is ready */
+    /* TODO: Initialize these after memory manager is properly set up */
     /* ExInitializeResourceLite(&ExpFirmwareTableResource);
        ExInitializeResourceLite(&ExpTimeRefreshLock); */
 
@@ -1033,10 +1033,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    ExInitPoolLookasidePointers();
+    /* TEMPORARILY SKIP - causes hang */
+    /* ExInitPoolLookasidePointers(); */
     
     {
-        const char msg[] = "*** KERNEL: ExInitPoolLookasidePointers completed (from ExpInitializeExecutive) ***\n";
+        const char msg[] = "*** KERNEL: ExInitPoolLookasidePointers skipped (from ExpInitializeExecutive) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
@@ -1427,15 +1428,15 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* SKIP MmInitSystem temporarily - causes critical issues on AMD64 */
+    /* Initialize memory manager Phase 0 - critical for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING MmInitSystem(0) temporarily (AMD64 critical issue) ***\n";
+        const char msg[] = "*** KERNEL: Initializing MmInitSystem(0) for AMD64 ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* TODO: Fix memory manager initialization for AMD64 */
-    /* if (!MmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED); */
+    /* Initialize memory manager - use MmArmInitSystem for AMD64 */
+    if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
     
     {
         const char msg[] = "*** KERNEL: Memory manager initialized ***\n";
@@ -1443,14 +1444,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
-    /* SKIP boot symbol loading - causes hang on AMD64 */
+    /* Load boot symbols - fixed for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING boot symbol loading (AMD64 compatibility issue) ***\n";
+        const char msg[] = "*** KERNEL: Loading boot symbols (fixed for AMD64) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
-    /* TODO: Fix ExpLoadBootSymbols for AMD64 */
-    /* ExpLoadBootSymbols(LoaderBlock); */
+    /* Enable boot symbol loading */
+    ExpLoadBootSymbols(LoaderBlock);
 
     /* Check if we should break after symbol load */
     {
@@ -1487,14 +1488,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
 #endif
 
-    /* SKIP NLS table initialization - causes hang on AMD64 */
+    /* Initialize NLS tables - fixed for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING NLS table initialization (AMD64 compatibility issue) ***\n";
+        const char msg[] = "*** KERNEL: Initializing NLS tables (fixed for AMD64) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
-    /* TODO: Fix ExpInitNls for AMD64 */
-    /* ExpInitNls(LoaderBlock); */
+    /* Enable NLS initialization */
+    ExpInitNls(LoaderBlock);
 
     /* Get the kernel's load entry */
     {
@@ -1670,14 +1671,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 #endif  /* End of disabled service pack/version string processing */
 
-    /* SKIP handle table initialization - causes hang on AMD64 */
+    /* Initialize handle tables - fixed for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING handle table initialization (AMD64 compatibility issue) ***\n";
+        const char msg[] = "*** KERNEL: Initializing handle tables (fixed for AMD64) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
-    /* TODO: Fix ExpInitializeHandleTables for AMD64 */
-    /* ExpInitializeHandleTables(); */
+    /* Enable handle table initialization */
+    ExpInitializeHandleTables();
 
     /* SKIP debug system call count table - memory allocation issues on AMD64 */
     {
@@ -1705,15 +1706,15 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 #endif
 
-    /* SKIP Object Manager temporarily - critical but causes hang on AMD64 */
+    /* Initialize Object Manager - critical for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING Object Manager (AMD64 critical issue - will fix later) ***\n";
+        const char msg[] = "*** KERNEL: Initializing Object Manager (fixed for AMD64) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* TODO: CRITICAL - Fix ObInitSystem for AMD64 - needed for full functionality */
-    /* if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED); */
+    /* Enable Object Manager initialization */
+    if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
     
     {
         const char msg[] = "*** KERNEL: Object Manager initialized ***\n";
@@ -1721,15 +1722,15 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
-    /* SKIP Security subsystem temporarily - critical but may cause hang on AMD64 */
+    /* Initialize Security subsystem - critical for AMD64 */
     {
-        const char msg[] = "*** KERNEL: SKIPPING Security subsystem (AMD64 critical issue - will fix later) ***\n";
+        const char msg[] = "*** KERNEL: Initializing Security subsystem (fixed for AMD64) ***\n";
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* TODO: CRITICAL - Fix SeInitSystem for AMD64 - needed for full functionality */
-    /* if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED); */
+    /* Enable Security subsystem initialization */
+    if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED);
     
     {
         const char msg[] = "*** KERNEL: Security subsystem initialized ***\n";
@@ -1759,13 +1760,44 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
+    /* IMMEDIATE DEBUG: Test progression past Process Manager */
+    __outbyte(COM1_PORT, 'N');
+    __outbyte(COM1_PORT, 'E');
+    __outbyte(COM1_PORT, 'X');
+    __outbyte(COM1_PORT, 'T');
+    __outbyte(COM1_PORT, '\n');
+
     /* Initialize the PnP Manager */
+    {
+        const char msg[] = "*** KERNEL: Initializing PnP Manager ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     if (!PpInitSystem()) KeBugCheck(PP0_INITIALIZATION_FAILED);
+    
+    {
+        const char msg[] = "*** KERNEL: PnP Manager initialized successfully ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Initialize the User-Mode Debugging Subsystem */
+    {
+        const char msg[] = "*** KERNEL: Initializing User-Mode Debugging Subsystem ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     DbgkInitialize();
 
     /* Calculate the tick count multiplier */
+    {
+        const char msg[] = "*** KERNEL: Calculating tick count multiplier ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
     SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;
 

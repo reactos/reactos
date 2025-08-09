@@ -532,13 +532,8 @@ PoInitializePrcb(IN PKPRCB Prcb)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
-    /* Initialize the Power State - manual zero to avoid RtlZeroMemory issues */
-    volatile UCHAR *PowerStateBytes = (volatile UCHAR *)&Prcb->PowerState;
-    SIZE_T PowerStateSize = sizeof(Prcb->PowerState);
-    for (SIZE_T i = 0; i < PowerStateSize; i++)
-    {
-        PowerStateBytes[i] = 0;
-    }
+    /* Initialize the Power State */
+    RtlZeroMemory(&Prcb->PowerState, sizeof(Prcb->PowerState));
     
     {
         const char msg[] = "*** KERNEL: PowerState zeroed, setting fields ***\n";

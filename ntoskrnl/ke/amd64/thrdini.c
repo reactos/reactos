@@ -82,9 +82,76 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     {
         PUCHAR Ptr = (PUCHAR)Thread->StateSaveArea;
         SIZE_T Size = KeXStateLength;
-        for (SIZE_T i = 0; i < Size; i++)
+        
+        /* Debug output for size and pointer */
         {
-            Ptr[i] = 0;
+            char msg[256];
+            char *p = msg;
+            const char prefix[] = "*** KERNEL: Zeroing ";
+            const char *pp = prefix;
+            while (*pp) *p++ = *pp++;
+            
+            /* Convert size to hex string */
+            ULONG64 val = Size;
+            char hex[17];
+            int j = 15;
+            hex[16] = 0;
+            for (j = 15; j >= 0; j--)
+            {
+                hex[j] = "0123456789ABCDEF"[val & 0xF];
+                val >>= 4;
+            }
+            for (j = 0; j < 16; j++) *p++ = hex[j];
+            
+            const char middle[] = " bytes at 0x";
+            pp = middle;
+            while (*pp) *p++ = *pp++;
+            
+            /* Convert pointer to hex string */
+            val = (ULONG64)Ptr;
+            for (j = 15; j >= 0; j--)
+            {
+                hex[j] = "0123456789ABCDEF"[val & 0xF];
+                val >>= 4;
+            }
+            for (j = 0; j < 16; j++) *p++ = hex[j];
+            
+            const char suffix[] = " ***\n";
+            pp = suffix;
+            while (*pp) *p++ = *pp++;
+            *p = '\0';
+            
+            p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* Check if pointers are valid */
+        if (!Ptr || Size > 0x10000)
+        {
+            const char msg[] = "*** KERNEL: Invalid pointer or size! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            Size = 512; /* Use default XSAVE_FORMAT size */
+        }
+        
+        /* Zero memory safely */
+        if (Ptr)
+        {
+            for (SIZE_T i = 0; i < Size; i++)
+            {
+                /* Add progress output every 64 bytes */
+                if ((i & 0x3F) == 0)
+                {
+                    const char msg[] = ".";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                }
+                Ptr[i] = 0;
+            }
+            
+            const char msg[] = "\n*** KERNEL: Memory zeroed successfully ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
     }
     

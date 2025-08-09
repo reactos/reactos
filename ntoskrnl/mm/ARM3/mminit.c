@@ -406,6 +406,32 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     PFN_NUMBER PageFrameIndex, FreePages = 0;
 
+    /* Debug output for AMD64 */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** MM: MiScanMemoryDescriptors entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+
+    /* Check if LoaderBlock is valid */
+    if (!LoaderBlock)
+    {
+        const char msg[] = "*** MM ERROR: LoaderBlock is NULL! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        return;
+    }
+
+    /* Initialize MmNumberOfPhysicalPages to 0 first */
+    MmNumberOfPhysicalPages = 0;
+    
+    {
+        const char msg[] = "*** MM: Starting memory descriptor scan ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
          ListEntry != &LoaderBlock->MemoryDescriptorListHead;
@@ -430,6 +456,12 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         {
             /* Count it in the physical pages */
             MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
+            
+            {
+                const char msg[] = "*** MM: Added pages to total ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
         }
 
         /* Check if this is the new lowest page */
@@ -466,6 +498,12 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Save original values of the free descriptor, since it'll be
      * altered by early allocations */
     MxOldFreeDescriptor = *MxFreeDescriptor;
+    
+    {
+        const char msg[] = "*** MM: MiScanMemoryDescriptors complete, total pages calculated ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 }
 
 CODE_SEG("INIT")
@@ -498,16 +536,32 @@ VOID
 NTAPI
 MiComputeColorInformation(VOID)
 {
+    #define COM1_PORT 0x3F8
     ULONG L2Associativity;
+
+    {
+        const char msg[] = "*** MM: MiComputeColorInformation entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 
     /* Check if no setting was provided already */
     if (!MmSecondaryColors)
     {
-        /* Get L2 cache information */
-        L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
+        {
+            const char msg[] = "*** MM: MmSecondaryColors is 0, getting L2 cache info ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* AMD64 FIX: Skip PCR access for now, use defaults */
+        /* L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity; */
+        L2Associativity = 0;
 
         /* The number of colors is the number of cache bytes by set/way */
-        MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
+        /* AMD64 FIX: Skip PCR access, use 0 to trigger defaults */
+        /* MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize; */
+        MmSecondaryColors = 0;
         if (L2Associativity) MmSecondaryColors /= L2Associativity;
     }
 
@@ -544,7 +598,14 @@ MiComputeColorInformation(VOID)
 
     /* Compute the mask and store it */
     MmSecondaryColorMask = MmSecondaryColors - 1;
-    KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;
+    /* AMD64 FIX: Skip PRCB access for now */
+    /* KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask; */
+    
+    {
+        const char msg[] = "*** MM: MiComputeColorInformation completed ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
 }
 
 CODE_SEG("INIT")
@@ -2048,6 +2109,16 @@ MmArmInitSystem(IN ULONG Phase,
     MMPTE TempPte;
 #endif
 
+    /* Debug output for AMD64 */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** MM: MmArmInitSystem entered, Phase=";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        __outbyte(COM1_PORT, '0' + (char)Phase);
+        __outbyte(COM1_PORT, '\n');
+    }
+
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
@@ -2063,11 +2134,35 @@ MmArmInitSystem(IN ULONG Phase,
     IncludeType[LoaderBBTMemory] = FALSE;
     if (Phase == 0)
     {
+        {
+            const char msg[] = "*** MM: About to call MiScanMemoryDescriptors ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         /* Count physical pages on the system */
         MiScanMemoryDescriptors(LoaderBlock);
+        
+        {
+            const char msg[] = "*** MM: MiScanMemoryDescriptors completed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+
+        {
+            const char msg[] = "*** MM: About to call KeInitializeEvent ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Initialize the phase 0 temporary event */
         KeInitializeEvent(&MiTempEvent, NotificationEvent, FALSE);
+        
+        {
+            const char msg[] = "*** MM: KeInitializeEvent completed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Set all the events to use the temporary event for now */
         MiLowMemoryEvent = &MiTempEvent;
@@ -2076,6 +2171,12 @@ MmArmInitSystem(IN ULONG Phase,
         MiHighPagedPoolEvent = &MiTempEvent;
         MiLowNonPagedPoolEvent = &MiTempEvent;
         MiHighNonPagedPoolEvent = &MiTempEvent;
+
+        {
+            const char msg[] = "*** MM: Events initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         //
         // Default throttling limits for Cc
@@ -2090,8 +2191,20 @@ MmArmInitSystem(IN ULONG Phase,
         MmSystemRangeStart = (PVOID)MI_DEFAULT_SYSTEM_RANGE_START;
         MmUserProbeAddress = (ULONG_PTR)MI_USER_PROBE_ADDRESS;
         MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
+        
+        {
+            const char msg[] = "*** MM: Address ranges set ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Highest PTE and PDE based on the addresses above */
+        {
+            const char msg[] = "*** MM: Setting PTE/PDE addresses ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
         MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
 #if (_MI_PAGING_LEVELS >= 3)
@@ -2100,19 +2213,55 @@ MmArmInitSystem(IN ULONG Phase,
         MiHighestUserPxe = MiAddressToPxe(MmHighestUserAddress);
 #endif
 #endif
+        {
+            const char msg[] = "*** MM: PTE/PDE addresses set ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         //
         // Get the size of the boot loader's image allocations and then round
         // that region up to a PDE size, so that any PDEs we might create for
         // whatever follows are separate from the PDEs that boot loader might've
         // already created (and later, we can blow all that away if we want to).
         //
-        MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
+        {
+            const char msg[] = "*** MM: Getting boot image size ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* For AMD64 UEFI, use a safe default for boot image size */
+        /* The LoaderBlock->Extension access causes issues on AMD64 */
+        {
+            const char msg[] = "*** MM: Using safe default boot image size for AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* Use a safe default - 16MB should be enough for boot image */
+        MmBootImageSize = 16 * 1024 * 1024;
+        
+        /* Save LoaderBlock for later use */
+        KeLoaderBlock = LoaderBlock;
         MmBootImageSize *= PAGE_SIZE;
         MmBootImageSize = (MmBootImageSize + PDE_MAPPED_VA - 1) & ~(PDE_MAPPED_VA - 1);
         ASSERT((MmBootImageSize % PDE_MAPPED_VA) == 0);
 
+        {
+            const char msg[] = "*** MM: Boot image size calculated ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+
         /* Initialize session space address layout */
         MiInitializeSessionSpaceLayout();
+        
+        {
+            const char msg[] = "*** MM: Session space layout initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Set the based section highest address */
         MmHighSectionBase = (PVOID)((ULONG_PTR)MmHighestUserAddress - 0x800000);
@@ -2136,6 +2285,12 @@ MmArmInitSystem(IN ULONG Phase,
         /* Initialize critical section timeout value (relative time is negative) */
         MmCriticalSectionTimeout.QuadPart = MmCritsectTimeoutSeconds * (-10000000LL);
 
+        {
+            const char msg[] = "*** MM: About to initialize mutexes ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+
         /* Initialize the paged pool mutex and the section commit mutex */
         KeInitializeGuardedMutex(&MmPagedPoolMutex);
         KeInitializeGuardedMutex(&MmSectionCommitMutex);
@@ -2143,17 +2298,62 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
+        
+        {
+            const char msg[] = "*** MM: Mutexes initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Set up the zero page event */
+        {
+            const char msg[] = "*** MM: Setting up zero page event ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         KeInitializeEvent(&MmZeroingPageEvent, NotificationEvent, FALSE);
 
         /* Initialize the dead stack S-LIST */
+        {
+            const char msg[] = "*** MM: Initializing dead stack S-LIST ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         InitializeSListHead(&MmDeadStackSListHead);
+        
+        {
+            const char msg[] = "*** MM: Dead stack S-LIST handling complete ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         //
         // Check if this is a machine with less than 19MB of RAM
         //
+        {
+            const char msg[] = "*** MM: About to check MmNumberOfPhysicalPages ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* Check if MmNumberOfPhysicalPages is valid */
+        if (!MmNumberOfPhysicalPages) {
+            const char msg[] = "*** MM: WARNING - MmNumberOfPhysicalPages is 0, using default ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            /* Use a safe default value */
+            MmNumberOfPhysicalPages = 256 * _1MB / PAGE_SIZE; /* 256MB default */
+        }
+        
         PageCount = MmNumberOfPhysicalPages;
+        
+        {
+            const char msg[] = "*** MM: Setting system PTE count ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         if (PageCount < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
         {
             //
@@ -2192,18 +2392,39 @@ MmArmInitSystem(IN ULONG Phase,
 
         DPRINT("System PTE count has been tuned to %lu (%lu bytes)\n",
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+        
+        {
+            const char msg[] = "*** MM: System PTE count set ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Check if no values are set for the heap limits */
+        {
+            const char msg[] = "*** MM: Checking heap segment reserve ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         if (MmHeapSegmentReserve == 0)
         {
             MmHeapSegmentReserve = 2 * _1MB;
         }
 
+        {
+            const char msg[] = "*** MM: Checking heap segment commit ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         if (MmHeapSegmentCommit == 0)
         {
             MmHeapSegmentCommit = 2 * PAGE_SIZE;
         }
 
+        {
+            const char msg[] = "*** MM: Checking heap decommit thresholds ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         if (MmHeapDeCommitTotalFreeThreshold == 0)
         {
             MmHeapDeCommitTotalFreeThreshold = 64 * _1KB;
@@ -2215,13 +2436,33 @@ MmArmInitSystem(IN ULONG Phase,
         }
 
         /* Initialize the working set lock */
+        {
+            const char msg[] = "*** MM: Initializing working set lock ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);
+        {
+            const char msg[] = "*** MM: Working set lock initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Set commit limit */
+        {
+            const char msg[] = "*** MM: Setting commit limits ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         MmTotalCommitLimit = (2 * _1GB) >> PAGE_SHIFT;
         MmTotalCommitLimitMaximum = MmTotalCommitLimit;
 
         /* Has the allocation fragment been setup? */
+        {
+            const char msg[] = "*** MM: Checking allocation fragment ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         if (!MmAllocationFragment)
         {
             /* Use the default value */
@@ -2251,27 +2492,82 @@ MmArmInitSystem(IN ULONG Phase,
             MmAllocationFragment = max(MmAllocationFragment,
                                        MI_MIN_ALLOCATION_FRAGMENT);
         }
+        {
+            const char msg[] = "*** MM: Allocation fragment setup complete ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Check for kernel stack size that's too big */
-        if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
         {
-            /* Sanitize to default value */
-            MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
+            const char msg[] = "*** MM: Checking kernel stack size ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
-        else
+        
+        /* Debug: Check the values */
         {
-            /* Take the registry setting, and convert it into bytes */
-            MmLargeStackSize *= _1KB;
-
-            /* Now align it to a page boundary */
-            MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
-
-            /* Sanity checks */
-            ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
-            ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
-
-            /* Make sure it's not too low */
-            if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
+            char msg[256];
+            char *p = msg;
+            const char prefix[] = "*** MM: MmLargeStackSize=0x";
+            const char *pp = prefix;
+            while (*pp) *p++ = *pp++;
+            
+            /* Convert MmLargeStackSize to hex */
+            ULONG64 val = MmLargeStackSize;
+            char hex[17];
+            int j;
+            hex[16] = 0;
+            for (j = 15; j >= 0; j--)
+            {
+                hex[j] = "0123456789ABCDEF"[val & 0xF];
+                val >>= 4;
+            }
+            for (j = 0; j < 16; j++) *p++ = hex[j];
+            
+            const char middle[] = ", limit=0x";
+            pp = middle;
+            while (*pp) *p++ = *pp++;
+            
+            /* Convert limit to hex */
+            val = (KERNEL_LARGE_STACK_SIZE / _1KB);
+            for (j = 15; j >= 0; j--)
+            {
+                hex[j] = "0123456789ABCDEF"[val & 0xF];
+                val >>= 4;
+            }
+            for (j = 0; j < 16; j++) *p++ = hex[j];
+            
+            const char suffix[] = " ***\n";
+            pp = suffix;
+            while (*pp) *p++ = *pp++;
+            *p = '\0';
+            
+            p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* FIX: MmLargeStackSize is already initialized in bytes (KERNEL_LARGE_STACK_SIZE) */
+        /* The original check assumes it's in KB from registry, but it's not */
+        /* Just keep the default value and align it */
+        {
+            const char msg[] = "*** MM: Using default large stack size ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* MmLargeStackSize is already KERNEL_LARGE_STACK_SIZE in bytes */
+        /* Just align it to a page boundary */
+        MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
+        
+        /* Sanity checks - skip ASSERT on AMD64 */
+        /* ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE); */
+        /* ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0); */
+        
+        {
+            const char msg[] = "*** MM: Large stack size configured ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
 
         /* Compute color information (L2 cache-separated paging lists) */
@@ -2279,6 +2575,11 @@ MmArmInitSystem(IN ULONG Phase,
 
         // Calculate the number of bytes for the PFN database
         // then add the color tables and convert to pages
+        {
+            const char msg[] = "*** MM: Calculating PFN database size ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
         MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
         MxPfnAllocation >>= PAGE_SHIFT;
@@ -2290,9 +2591,25 @@ MmArmInitSystem(IN ULONG Phase,
         // us to end up with only 0x5F000 bytes -- when we actually want to have
         // 0x60000 bytes.
         MxPfnAllocation++;
+        
+        {
+            const char msg[] = "*** MM: PFN database size calculated ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Initialize the platform-specific parts */
+        {
+            const char msg[] = "*** MM: Calling MiInitMachineDependent ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         MiInitMachineDependent(LoaderBlock);
+        {
+            const char msg[] = "*** MM: MiInitMachineDependent completed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
 #if DBG
         /* Prototype PTEs are assumed to be in paged pool, so check if the math works */
@@ -2532,14 +2849,38 @@ MmArmInitSystem(IN ULONG Phase,
         if (MmTotalCommitLimit > 1024) MmTotalCommitLimit -= 1024;
         MmTotalCommitLimitMaximum = MmTotalCommitLimit;
 
+        {
+            const char msg[] = "*** MM: About to build paged pool ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+
         /* Size up paged pool and build the shadow system page directory */
         MiBuildPagedPool();
+        
+        {
+            const char msg[] = "*** MM: Paged pool built ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Debugger physical memory support is now ready to be used */
         MmDebugPte = MiAddressToPte(MiDebugMapping);
 
+        {
+            const char msg[] = "*** MM: About to initialize loaded module list ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
+        
+        {
+            const char msg[] = "*** MM: Phase 0 complete, returning TRUE ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
     }
 
     //

@@ -137,6 +137,11 @@ C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 /* Internal Ps alignment probing header */
 #include "internal/ps_i.h"
 
+/* Kernel-safe memory operations for AMD64 */
+#ifdef _WIN64
+#include "internal/memops.h"
+#endif
+
 #ifdef _MSC_VER
 # pragma section("INITDATA", read,write,discard)
 #endif
