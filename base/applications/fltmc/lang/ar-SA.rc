@@ -1,0 +1,37 @@
+/*
+ * PROJECT:     ReactOS Filter Manager Control Program
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Arabic (Saudi Arabia) resource file
+ */
+
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nالأوامر الصالحة:\n\
+               load        تحميل برنامج تشغيل المرشح\n\
+               unload      إلغاء تحميل برنامج تشغيل المرشح\n\
+               filters     عرض قائمة المرشحات المسجلة حالياً في النظام\n\n\
+               volumes     عرض قائمة بجميع وحدات التخزين\n\n"
+
+    IDS_USAGE_LOAD      "تحميل برنامج تشغيل المرشح\n"
+    IDS_USAGE_UNLOAD    "إلغاء تحميل برنامج تشغيل المرشح\n"
+    IDS_USAGE_FILTERS   "عرض قائمة بجميع المرشحات المسجلة\n"
+    IDS_USAGE_VOLUMES   "عرض قائمة بجميع وحدات التخزين\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAY_FILTERS1    "اسم المرشح                      عدد النسخ        الارتفاع     الإطار\n"
+    IDS_DISPLAY_FILTERS2    "اسم المرشح                      عدد النسخ       الإطار\n"
+    IDS_DISPLAY_VOLUMES     "اسم دوس                         اسم وحدة التخزين                         نظام الملفات   الحالة\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_PRIV      "فشل تعيين امتياز تحميل برنامج التشغيل (0x%X)\n"
+    IDS_ERROR_FILTERS   "فشل عرض قائمة المرشحات (0x%X)\n"
+    IDS_ERROR_LOAD      "فشل تحميل المرشح (0x%X)\n"
+    IDS_ERROR_UNLOAD    "فشل إلغاء تحميل المرشح (0x%X)\n"
+    IDS_ERROR_VOLUMES   "فشل عرض قائمة وحدات التخزين (0x%X)\n"
+END 

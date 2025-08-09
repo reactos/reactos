@@ -1,0 +1,72 @@
+LANGUAGE LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "عرض أو تعديل قوائم التحكم في الوصول (ACLs) للملفات\n\n\
+CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
+               [/P user:perm [...]] [/D user [...]]\n\
+   filename      عرض قوائم التحكم في الوصول.\n\
+   /T            تغيير قوائم التحكم في الوصول للملفات المحددة\n\
+                 في المجلد الحالي وجميع المجلدات الفرعية.\n\
+   /E            تعديل قائمة التحكم في الوصول بدلاً من استبدالها.\n\
+   /C            الاستمرار عند حدوث أخطاء في الوصول المرفوض.\n\
+   /G user:perm  منح المستخدم المحدد حقوق الوصول.\n\
+                 يمكن أن تكون الصلاحيات: R  قراءة\n\
+                                        W  كتابة\n\
+                                        C  تغيير (كتابة)\n\
+                                        F  تحكم كامل\n\
+   /R user       إلغاء حقوق وصول المستخدم المحدد (صالح فقط مع /E).\n\
+   /P user:perm  استبدال حقوق وصول المستخدم المحدد.\n\
+                 يمكن أن تكون الصلاحيات: N  لا شيء\n\
+                                        R  قراءة\n\
+                                        W  كتابة\n\
+                                        C  تغيير (كتابة)\n\
+                                        F  تحكم كامل\n\
+   /D user       منع المستخدم المحدد من الوصول.\n\
+يمكن استخدام أحرف البدل لتحديد أكثر من ملف في الأمر.\n\
+يمكنك تحديد أكثر من مستخدم في الأمر.\n\n\
+الاختصارات:\n\
+   CI - وراثة الحاوية.\n\
+        سيتم توريث ACE بواسطة المجلدات.\n\
+   OI - وراثة الكائن.\n\
+        سيتم توريث ACE بواسطة الملفات.\n\
+   IO - الوراثة فقط.\n\
+        لا ينطبق ACE على الملف/المجلد الحالي.\n"
+    IDS_ABBR_CI "(CI)"
+    IDS_ABBR_OI "(OI)"
+    IDS_ABBR_IO "(IO)"
+    IDS_ABBR_FULL "F"
+    IDS_ABBR_READ "R"
+    IDS_ABBR_WRITE "W"
+    IDS_ABBR_CHANGE "C"
+    IDS_ABBR_NONE "N"
+    IDS_ALLOW ""
+    IDS_DENY "(منع)"
+    IDS_SPECIAL_ACCESS "(صلاحيات خاصة:)"
+    IDS_GENERIC_READ "قراءة_عامة"
+    IDS_GENERIC_WRITE "كتابة_عامة"
+    IDS_GENERIC_EXECUTE "تنفيذ_عام"
+    IDS_GENERIC_ALL "الكل_عام"
+    IDS_FILE_GENERIC_EXECUTE "تنفيذ_عام_للملف"
+    IDS_FILE_GENERIC_READ "قراءة_عامة_للملف"
+    IDS_FILE_GENERIC_WRITE "كتابة_عامة_للملف"
+    IDS_FILE_READ_DATA "قراءة_بيانات_الملف"
+    IDS_FILE_WRITE_DATA "كتابة_بيانات_الملف"
+    IDS_FILE_APPEND_DATA "إلحاق_بيانات_الملف"
+    IDS_FILE_READ_EA "قراءة_EA_الملف"
+    IDS_FILE_WRITE_EA "كتابة_EA_الملف"
+    IDS_FILE_EXECUTE "تنفيذ_الملف"
+    IDS_FILE_DELETE_CHILD "حذف_الملف_الفرعي"
+    IDS_FILE_READ_ATTRIBUTES "قراءة_سمات_الملف"
+    IDS_FILE_WRITE_ATTRIBUTES "كتابة_سمات_الملف"
+    IDS_MAXIMUM_ALLOWED "الحد_الأقصى_المسموح"
+    IDS_ACCESS_SYSTEM_SECURITY "الوصول_لأمن_النظام"
+    IDS_SPECIFIC_RIGHTS_ALL "كل_الصلاحيات_المحددة"
+    IDS_STANDARD_RIGHTS_REQUIRED "الصلاحيات_القياسية_المطلوبة"
+    IDS_SYNCHRONIZE "مزامنة"
+    IDS_WRITE_OWNER "كتابة_المالك"
+    IDS_WRITE_DAC "كتابة_DAC"
+    IDS_READ_CONTROL "التحكم_بالقراءة"
+    IDS_DELETE "حذف"
+    IDS_STANDARD_RIGHTS_ALL "كل_الصلاحيات_القياسية"
+END 
