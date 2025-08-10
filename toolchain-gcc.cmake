@@ -23,6 +23,8 @@ if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
         set(MINGW_TOOLCHAIN_PREFIX "x86_64-w64-mingw32-" CACHE STRING "MinGW Toolchain Prefix")
     elseif(ARCH STREQUAL "arm")
         set(MINGW_TOOLCHAIN_PREFIX "arm-mingw32ce-" CACHE STRING "MinGW Toolchain Prefix")
+    elseif(ARCH STREQUAL "arm64")
+        set(MINGW_TOOLCHAIN_PREFIX "aarch64-w64-mingw32-" CACHE STRING "MinGW Toolchain Prefix")
     endif()
 endif()
 
@@ -32,7 +34,19 @@ endif()
 
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
-set(CMAKE_SYSTEM_PROCESSOR i686)
+
+# Set processor architecture
+if(ARCH STREQUAL "i386")
+    set(CMAKE_SYSTEM_PROCESSOR i686)
+elseif(ARCH STREQUAL "amd64")
+    set(CMAKE_SYSTEM_PROCESSOR x86_64)
+elseif(ARCH STREQUAL "arm")
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+elseif(ARCH STREQUAL "arm64")
+    set(CMAKE_SYSTEM_PROCESSOR aarch64)
+else()
+    set(CMAKE_SYSTEM_PROCESSOR i686)
+endif()
 
 # Which tools to use
 require_program(CMAKE_C_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
@@ -45,10 +59,10 @@ require_program(CMAKE_DLLTOOL ${MINGW_TOOLCHAIN_PREFIX}dlltool)
 #set(CMAKE_AR ${MINGW_TOOLCHAIN_PREFIX}gcc-ar${MINGW_TOOLCHAIN_SUFFIX})
 require_program(CMAKE_OBJCOPY ${MINGW_TOOLCHAIN_PREFIX}objcopy)
 
-# FIXME: On amd64, archives lose their index when re-archived by AR after being created by dlltool
+# FIXME: On amd64 and arm64, archives lose their index when re-archived by AR after being created by dlltool
 # Use regular archives instead of thin archives (T flag) and always run ranlib
-if(ARCH STREQUAL "amd64")
-    # For amd64, we MUST run ranlib after every archive operation
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64")
+    # For amd64 and arm64, we MUST run ranlib after every archive operation
     set(CMAKE_C_CREATE_STATIC_LIBRARY 
         "<CMAKE_AR> cr <TARGET> <LINK_FLAGS> <OBJECTS>"
         "<CMAKE_RANLIB> <TARGET>")
@@ -80,8 +94,8 @@ set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 # This allows to have CMake test the compiler without linking
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-# Workaround for binutils linker segfault on amd64 with --enable-auto-image-base
-if(ARCH STREQUAL "amd64")
+# Workaround for binutils linker segfault on amd64 and arm64 with --enable-auto-image-base
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64")
     set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")
     set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")
     set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -Wl,--disable-auto-import")

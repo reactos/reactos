@@ -23,6 +23,29 @@ if(ARCH STREQUAL "amd64")
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 endif()
 
+# ARM64 kernel requires special compiler flags for proper operation
+if(ARCH STREQUAL "arm64")
+    # Fixed address kernel: no PIC, no PIE  
+    add_compile_options(-fno-pic -fno-pie)
+
+    # ARM64 specific optimizations
+    add_compile_options(-mcpu=generic)
+    add_compile_options(-mtune=generic)
+    
+    # Enable ARM64 specific features
+    add_compile_options(-march=armv8-a)
+    
+    # Kernel stack alignment (16 bytes for ARM64)
+    add_compile_options(-mstack-alignment=16)
+    
+    # Disable unaligned access for kernel safety
+    add_compile_options(-mstrict-align)
+
+    # Optimizations  
+    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
+endif()
+
 include(ntos.cmake)
 
 set(NTOSKRNL_SOURCE ${SOURCE})
@@ -59,10 +82,13 @@ add_executable(ntoskrnl
     ${PCH_SKIP_SOURCE}
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
-# Set ImageBase to match where FreeLdr loads the kernel (0xFFFFF80000200000)
+# Set ImageBase to match where FreeLdr loads the kernel
 # This ensures relocations are not needed and globals work correctly
 if(ARCH STREQUAL "amd64")
     set_module_type(ntoskrnl kernel IMAGEBASE 0xFFFFF80000200000)
+elseif(ARCH STREQUAL "arm64")
+    # ARM64 kernel base address - matches ARM64 virtual memory layout
+    set_module_type(ntoskrnl kernel IMAGEBASE 0xFFFF800000200000)
 else()
     set_module_type(ntoskrnl kernel)
 endif()
