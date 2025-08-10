@@ -223,12 +223,33 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     ULONG i, j;
     BOOLEAN ElcrFound;
 
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    DPRINT1("HalpInitializePICs: Entry on AMD64, EnableInterrupts=%d\n", EnableInterrupts);
+    
+    /* On AMD64 UEFI systems, there might not be legacy PICs */
+    /* Check if PICs are present by reading a known register */
+    UCHAR TestValue = __inbyte(PIC1_DATA_PORT);
+    if (TestValue == 0xFF)
+    {
+        /* No PIC present, probably using APIC only */
+        DPRINT1("HalpInitializePICs: No legacy PIC detected (read 0xFF), assuming APIC-only system\n");
+        /* Just return for now - APIC initialization handled elsewhere */
+        return;
+    }
+    DPRINT1("HalpInitializePICs: Legacy PIC detected (read 0x%02X)\n", TestValue);
+#endif
+
     /* Save EFlags and disable interrupts */
     EFlags = __readeflags();
     _disable();
 
+    DPRINT1("HalpInitializePICs: About to initialize legacy PICs\n");
+
     /* Initialize and mask the PIC */
     HalpInitializeLegacyPICs();
+
+    DPRINT1("HalpInitializePICs: Legacy PICs initialized, reading ELCR\n");
 
     /* Read EISA Edge/Level Register for master and slave */
     Elcr.Bits = (__inbyte(EISA_ELCR_SLAVE) << 8) | __inbyte(EISA_ELCR_MASTER);
