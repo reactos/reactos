@@ -553,9 +553,25 @@ FUNC KiFloatingErrorFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    UNIMPLEMENTED KiFloatingErrorFault
-    int 3
-
+    /* Clear the FPU exception state */
+    fnclex
+    
+    /* Call the C handler to handle the floating point exception */
+    mov rcx, rbp  /* Pass trap frame as parameter */
+    call KiFloatingErrorFaultHandler
+    
+    /* Check if we handled it successfully */
+    test eax, eax
+    jz FloatingErrorFaultHandled
+    
+    /* Not handled, dispatch exception */
+    mov eax, STATUS_FLOAT_INVALID_OPERATION
+    mov edx, 0    /* No parameters */
+    mov r9, 0
+    mov r10, 0
+    call InternalDispatchException
+    
+FloatingErrorFaultHandled:
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC

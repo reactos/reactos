@@ -744,6 +744,62 @@ KiSystemFatalException(IN ULONG ExceptionCode,
 
 NTSTATUS
 NTAPI
+KiFloatingErrorFaultHandler(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    ULONG MxCsr;
+    
+    /* Get current thread */
+    Thread = KeGetCurrentThread();
+    
+    /* Check if this is a kernel mode fault */
+    if (TrapFrame->SegCs & MODE_MASK)
+    {
+        /* User mode fault - we'll dispatch an exception */
+        return STATUS_FLOAT_INVALID_OPERATION;
+    }
+    
+    /* Kernel mode floating point error */
+    DPRINT1("Kernel mode floating point error at RIP=%p\n", TrapFrame->Rip);
+    
+    /* Read the MXCSR register to get SSE status */
+    __asm__ __volatile__("stmxcsr %0" : "=m"(MxCsr));
+    
+    /* Check for specific floating point exceptions */
+    if (MxCsr & 0x0001) /* Invalid operation */
+    {
+        DPRINT1("FPU: Invalid operation exception\n");
+        return STATUS_FLOAT_INVALID_OPERATION;
+    }
+    else if (MxCsr & 0x0004) /* Divide by zero */
+    {
+        DPRINT1("FPU: Divide by zero exception\n");
+        return STATUS_FLOAT_DIVIDE_BY_ZERO;
+    }
+    else if (MxCsr & 0x0008) /* Overflow */
+    {
+        DPRINT1("FPU: Overflow exception\n");
+        return STATUS_FLOAT_OVERFLOW;
+    }
+    else if (MxCsr & 0x0010) /* Underflow */
+    {
+        DPRINT1("FPU: Underflow exception\n");
+        return STATUS_FLOAT_UNDERFLOW;
+    }
+    else if (MxCsr & 0x0020) /* Precision */
+    {
+        DPRINT1("FPU: Precision exception\n");
+        return STATUS_FLOAT_INEXACT_RESULT;
+    }
+    
+    /* Unknown floating point error */
+    DPRINT1("FPU: Unknown floating point error, MXCSR=%08lx\n", MxCsr);
+    return STATUS_FLOAT_INVALID_OPERATION;
+}
+
+NTSTATUS
+NTAPI
 KiNpxNotAvailableFaultHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
