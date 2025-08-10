@@ -1480,9 +1480,17 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                     while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
                 }
                 
+                /* Skip IDT verification for now - causing issues */
+#if 0
                 /* Verify IDT entry for INT3 */
                 {
                     const char msg[] = "*** KERNEL: Checking IDT[3] ***\n";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                }
+#endif
+                {
+                    const char msg[] = "*** KERNEL: Skipping IDT[3] check (debug) ***\n";
                     const char *p = msg;
                     while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
                 }

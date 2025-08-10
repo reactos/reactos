@@ -27,30 +27,16 @@ HalpGetParameters(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Debug output */
-    #undef COM1_PORT
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** HAL: HalpGetParameters entry ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: HalpGetParameters entry\n");
     
     /* Make sure we have a loader block and command line */
     if (LoaderBlock)
     {
-        {
-            const char msg[] = "*** HAL: LoaderBlock is valid ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: LoaderBlock is valid\n");
         
         if (LoaderBlock->LoadOptions)
         {
-            {
-                const char msg[] = "*** HAL: LoadOptions is valid ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
+            DPRINT1("HAL: LoadOptions is valid\n");
             
             /* Read the command line */
             PCSTR CommandLine = LoaderBlock->LoadOptions;
@@ -71,23 +57,15 @@ HalpGetParameters(
         }
         else
         {
-            const char msg[] = "*** HAL: LoadOptions is NULL ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            DPRINT1("HAL: LoadOptions is NULL\n");
         }
     }
     else
     {
-        const char msg[] = "*** HAL: LoaderBlock is NULL ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        DPRINT1("HAL: LoaderBlock is NULL\n");
     }
     
-    {
-        const char msg[] = "*** HAL: HalpGetParameters exit ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: HalpGetParameters exit\n");
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -126,26 +104,13 @@ HalInitSystem(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Debug output */
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** HAL: HalInitSystem entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: HalInitSystem entered (Phase %lu)\n", BootPhase);
     
-    {
-        const char msg[] = "*** HAL: About to check BootPhase ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: About to check BootPhase\n");
     
 #ifdef _M_AMD64
     /* Skip PRCB access on AMD64 for now - might cause issues */
-    {
-        const char msg[] = "*** HAL: Skipping PRCB access on AMD64 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: Skipping PRCB access on AMD64\n");
     PKPRCB Prcb = NULL;
 #else
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -154,125 +119,67 @@ HalInitSystem(
     NTSTATUS Status;
 #endif
 
-    {
-        const char msg[] = "*** HAL: BootPhase parameter accessible ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: BootPhase parameter accessible\n");
 
 #ifdef _M_AMD64
     /* On AMD64, assume Phase 0 for now */
-    {
-        const char msg[] = "*** HAL: Assuming Phase 0 on AMD64 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HAL: Assuming Phase 0 on AMD64\n");
     if (1)  /* Always do Phase 0 on AMD64 */
 #else
     /* Check the boot phase */
     if (BootPhase == 0)
 #endif
     {
-        {
-            const char msg[] = "*** HAL: Phase 0 initialization ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Phase 0 initialization\n");
         
         /* Check LoaderBlock */
         if (!LoaderBlock)
         {
-            const char msg[] = "*** HAL ERROR: LoaderBlock is NULL! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            DPRINT1("HAL ERROR: LoaderBlock is NULL!\n");
             return FALSE;
         }
         
         /* Save bus type */
-        {
-            const char msg[] = "*** HAL: Setting bus type to ISA ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Setting bus type to ISA\n");
         
 #ifdef _M_AMD64
         /* Skip setting bus type on AMD64 for now - causes hang */
-        {
-            const char msg[] = "*** HAL: Skipping bus type assignment on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping bus type assignment on AMD64\n");
 #else
         HalpBusType = MACHINE_TYPE_ISA;
 #endif
 
-        {
-            const char msg[] = "*** HAL: Bus type handling complete ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Bus type handling complete\n");
 
         /* Get command-line parameters */
-        {
-            const char msg[] = "*** HAL: Getting parameters ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Getting parameters\n");
         
         HalpGetParameters(LoaderBlock);
         
-        {
-            const char msg[] = "*** HAL: Parameters obtained ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Parameters obtained\n");
 
         /* Check for PRCB version mismatch */
 #ifdef _M_AMD64
-        {
-            const char msg[] = "*** HAL: Skipping PRCB version check on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping PRCB version check on AMD64\n");
 #else
-        {
-            const char msg[] = "*** HAL: Checking PRCB version ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Checking PRCB version\n");
         
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
         {
             /* No match, bugcheck */
-            {
-                const char msg[] = "*** HAL ERROR: PRCB version mismatch! ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
+            DPRINT1("HAL ERROR: PRCB version mismatch!\n");
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, PRCB_MAJOR_VERSION, 0);
         }
         
-        {
-            const char msg[] = "*** HAL: PRCB version OK ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: PRCB version OK\n");
 #endif
 
         /* Checked/free HAL requires checked/free kernel */
 #ifdef _M_AMD64
         /* Skip build type check on AMD64 for now - no PRCB */
-        {
-            const char msg[] = "*** HAL: Skipping build type check on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping build type check on AMD64\n");
 #else
-        {
-            const char msg[] = "*** HAL: Checking build type ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Checking build type\n");
         
         if (Prcb->BuildType != HalpBuildType)
         {
@@ -282,11 +189,7 @@ HalInitSystem(
 
         /* Initialize ACPI */
 #ifdef _M_AMD64
-        {
-            const char msg[] = "*** HAL: Skipping ACPI for now on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping ACPI for now on AMD64\n");
         /* TODO: Fix ACPI initialization on AMD64 */
 #else
         Status = HalpSetupAcpiPhase0(LoaderBlock);
@@ -297,84 +200,44 @@ HalInitSystem(
 #endif
 
         /* Initialize the PICs */
-        {
-            const char msg[] = "*** HAL: Initializing PICs ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing PICs\n");
         
 #ifdef _M_AMD64
         /* Initialize PICs for AMD64 */
-        {
-            const char msg[] = "*** HAL: Initializing PICs for AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing PICs for AMD64\n");
         /* Call the PIC initialization with simplified parameters */
         extern VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
-        {
-            const char msg[] = "*** HAL: About to call HalpInitializePICs ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: About to call HalpInitializePICs\n");
         HalpInitializePICs(FALSE); /* Don't enable interrupts yet */
-        {
-            const char msg[] = "*** HAL: HalpInitializePICs returned ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: HalpInitializePICs returned\n");
 #else
         HalpInitializePICs(TRUE);
 #endif
 
         /* Initialize CMOS lock */
-        {
-            const char msg[] = "*** HAL: Initializing CMOS hardware lock ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing CMOS hardware lock\n");
         
 #ifdef _M_AMD64
         /* On AMD64, the spinlock is already zero-initialized in BSS */
         /* Skip explicit initialization to avoid global access issues */
-        {
-            const char msg[] = "*** HAL: CMOS lock already zero-initialized on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: CMOS lock already zero-initialized on AMD64\n");
 #else
         KeInitializeSpinLock(&HalpSystemHardwareLock);
 #endif
 
         /* Initialize CMOS */
-        {
-            const char msg[] = "*** HAL: Initializing CMOS ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing CMOS\n");
         
         HalpInitializeCmos();
         
-        {
-            const char msg[] = "*** HAL: CMOS initialized ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: CMOS initialized\n");
 
         /* Fill out the dispatch tables */
-        {
-            const char msg[] = "*** HAL: Setting up dispatch tables ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Setting up dispatch tables\n");
         
 #ifdef _M_AMD64
         /* On AMD64, skip dispatch table setup for now */
-        {
-            const char msg[] = "*** HAL: Skipping dispatch table setup on AMD64 for now ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping dispatch table setup on AMD64 for now\n");
         /* These macros resolve to HALDISPATCH->field which are complex to handle during early boot */
 #else
         HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -388,56 +251,32 @@ HalInitSystem(
 #endif
 
         /* Setup I/O space */
-        {
-            const char msg[] = "*** HAL: Setting up I/O address space ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Setting up I/O address space\n");
         
 #ifdef _M_AMD64
         /* Skip I/O space setup on AMD64 - global struct field access causes issues */
-        {
-            const char msg[] = "*** HAL: Skipping I/O space setup on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping I/O space setup on AMD64\n");
 #else
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;
 #endif
 
         /* Setup busy waiting */
-        {
-            const char msg[] = "*** HAL: Calibrating stall execution ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Calibrating stall execution\n");
         
 #ifdef _M_AMD64
         /* On AMD64, skip calibration and PCR access for now */
-        {
-            const char msg[] = "*** HAL: Skipping stall calibration on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping stall calibration on AMD64\n");
 #else
         HalpCalibrateStallExecution();
 #endif
 
         /* Initialize the clock */
-        {
-            const char msg[] = "*** HAL: Initializing system clock ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing system clock\n");
         
 #ifdef _M_AMD64
         /* Initialize clock for AMD64 */
-        {
-            const char msg[] = "*** HAL: Initializing clock for AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing clock for AMD64\n");
         extern VOID NTAPI HalpInitializeClock(VOID);
         HalpInitializeClock();
 #else
@@ -448,58 +287,30 @@ HalInitSystem(
          * We could be rebooting with a pending profile interrupt,
          * so clear it here before interrupts are enabled
          */
-        {
-            const char msg[] = "*** HAL: Stopping profile interrupt ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Stopping profile interrupt\n");
         
 #ifdef _M_AMD64
         /* Skip HalStopProfileInterrupt on AMD64 - spinlock issues during early boot */
-        {
-            const char msg[] = "*** HAL: Skipping HalStopProfileInterrupt on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Skipping HalStopProfileInterrupt on AMD64\n");
 #else
         HalStopProfileInterrupt(ProfileTime);
 #endif
         
-        {
-            const char msg[] = "*** HAL: Profile interrupt stopped ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Profile interrupt stopped\n");
 
         /* Do some HAL-specific initialization */
-        {
-            const char msg[] = "*** HAL: Running HalpInitPhase0 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Running HalpInitPhase0\n");
         
         HalpInitPhase0(LoaderBlock);
         
-        {
-            const char msg[] = "*** HAL: HalpInitPhase0 handling complete ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: HalpInitPhase0 handling complete\n");
 
         /* Initialize Phase 0 of the x86 emulator */
-        {
-            const char msg[] = "*** HAL: Initializing BIOS ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Initializing BIOS\n");
         
         HalInitializeBios(0, LoaderBlock);
         
-        {
-            const char msg[] = "*** HAL: Phase 0 initialization complete! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
+        DPRINT1("HAL: Phase 0 initialization complete!\n");
     }
     else if (BootPhase == 1)
     {

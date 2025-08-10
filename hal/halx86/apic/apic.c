@@ -529,12 +529,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     ULONG_PTR EFlags;
 
 #ifdef _M_AMD64
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** APIC: HalpInitializePICs entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: HalpInitializePICs entered\n");
 #endif
 
     /* Save EFlags and disable interrupts */
@@ -547,30 +542,18 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 #endif
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: About to call ApicInitializeIOApic ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: About to call ApicInitializeIOApic\n");
 #endif
 
     /* Initialize the I/O APIC */
     ApicInitializeIOApic();
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: ApicInitializeIOApic returned ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: ApicInitializeIOApic returned\n");
 #endif
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: About to reserve vectors ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: About to reserve vectors\n");
 #endif
 
     /* Manually reserve some vectors */
@@ -581,27 +564,15 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: Vectors reserved ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: Vectors reserved\n");
 #endif
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: About to register interrupt handlers ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: About to register interrupt handlers\n");
     
     /* On AMD64/UEFI, skip IDT handler registration for now - might cause issues */
     /* TODO: Properly implement interrupt handlers for AMD64 */
-    {
-        const char msg[] = "*** APIC: Skipping IDT handler registration on AMD64 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: Skipping IDT handler registration on AMD64\n");
 #else
     /* Set interrupt handlers in the IDT */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
@@ -611,18 +582,10 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 #endif
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: About to register vectors ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: About to register vectors\n");
     
     /* Skip HalpRegisterVector on AMD64 for now - might cause issues */
-    {
-        const char msg[] = "*** APIC: Skipping HalpRegisterVector on AMD64 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: Skipping HalpRegisterVector on AMD64\n");
 #else
     /* Register the vectors for APC and dispatch interrupts */
     HalpRegisterVector(IDT_INTERNAL, 0, APC_VECTOR, APC_LEVEL);
@@ -634,11 +597,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     __writeeflags(EFlags);
     
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** APIC: HalpInitializePICs completed successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("APIC: HalpInitializePICs completed successfully\n");
 #endif
 }
 

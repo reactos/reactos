@@ -249,6 +249,15 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPFN Pfn1;
     ULONG Flags;
 
+#ifdef _M_AMD64
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** MM: MiInitMachineDependent entered (AMD64) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
+
 #if defined(_GLOBAL_PAGES_ARE_AWESOME_)
 
     /* Check for global bit */
@@ -265,19 +274,45 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     TempPte = ValidKernelPte;
     TempPde = ValidKernelPde;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: Templates ready, about to set CR3 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
+
     //
     // Set CR3 for the system process
     //
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: SKIPPING CR3 setup on AMD64 (i386 code incompatible) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    /* TODO: Implement proper AMD64 page table setup */
+#else
     PointerPte = MiAddressToPde(PDE_BASE);
     PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
+#endif
 
     //
     // Blow away user-mode
     //
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: SKIPPING user-mode PDE clear on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    /* TODO: Implement proper AMD64 user-mode clearing */
+#else
     StartPde = MiAddressToPde(0);
     EndPde = MiAddressToPde(KSEG0_BASE);
     RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
+#endif
 
     /* Compute non paged pool limits and size */
     MiComputeNonPagedPoolVa(MiNumberOfFreePages);
@@ -365,6 +400,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Convert nonpaged pool size from bytes to pages */
     MmMaximumNonPagedPoolInPages = MmMaximumNonPagedPoolInBytes >> PAGE_SHIFT;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: SKIPPING page table creation on AMD64 (needs rewrite) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    /* TODO: Implement AMD64 4-level page table setup */
+#else
     //
     // Now we need some pages to create the page tables for the NP system VA
     // which includes system PTEs and expansion NP
@@ -416,6 +459,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         StartPde++;
     }
+#endif
 
     MmSubsectionBase = (ULONG_PTR)MmNonPagedPoolStart;
 
@@ -484,6 +528,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: SKIPPING hyperspace setup on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    /* TODO: Implement AMD64 hyperspace if needed */
+#else
     /* Get the PDE For hyperspace */
     StartPde = MiAddressToPde(HYPER_SPACE);
 
@@ -510,6 +562,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     PointerPte = MiAddressToPte(HYPER_SPACE);
     RtlZeroMemory(PointerPte, PAGE_SIZE);
+#endif
 
     //
     // Setup the mapping PTEs
@@ -601,6 +654,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Keep going */
         PointerPte++;
     }
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: MiInitMachineDependent SUCCESS (AMD64 stubs) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
 
     /* All done */
     return STATUS_SUCCESS;

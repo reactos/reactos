@@ -467,6 +467,50 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
 
+#ifdef _M_AMD64
+    #define COM1_PORT 0x3F8
+    /* Debug output for exception dispatch */
+    {
+        const char msg[] = "*** KiDispatchException: Entry, ExceptionCode=";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        
+        ULONG code = ExceptionRecord->ExceptionCode;
+        for (int k = 28; k >= 0; k -= 4)
+        {
+            int digit = (code >> k) & 0xF;
+            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+            __outbyte(COM1_PORT, c);
+        }
+        
+        const char msg2[] = "\n";
+        const char *p2 = msg2;
+        while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
+        
+        /* If it's a breakpoint, show the service code */
+        if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT && 
+            ExceptionRecord->NumberParameters >= 1)
+        {
+            const char msg3[] = "*** KiDispatchException: BreakpointType=";
+            const char *p3 = msg3;
+            while (*p3) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p3++); }
+            
+            ULONG_PTR type = ExceptionRecord->ExceptionInformation[0];
+            for (int k = 28; k >= 0; k -= 4)
+            {
+                int digit = (type >> k) & 0xF;
+                char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                __outbyte(COM1_PORT, c);
+            }
+            
+            const char msg4[] = "\n";
+            const char *p4 = msg4;
+            while (*p4) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p4++); }
+        }
+    }
+#endif
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -492,6 +536,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             {
                 /* Special breakpoint (PRINT, PROMPT, etc.) - KdpTrap will handle RIP adjustment */
                 /* KdpTrap knows the correct instruction size for each type */
+#ifdef _M_AMD64
+                {
+                    const char msg[] = "*** KiDispatchException: Special debug service, calling KdpTrap ***\n";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                }
+#endif
             }
             else
             {
@@ -518,6 +569,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Check if this is a first-chance exception */
         if (FirstChance)
         {
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KiDispatchException: About to call KiDebugRoutine (first chance) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+#endif
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
                                ExceptionFrame,
@@ -526,9 +584,23 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                                PreviousMode,
                                FALSE))
             {
+#ifdef _M_AMD64
+                {
+                    const char msg[] = "*** KiDispatchException: KiDebugRoutine handled the exception ***\n";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                }
+#endif
                 /* Exception was handled */
                 goto Handled;
             }
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KiDispatchException: KiDebugRoutine did not handle the exception ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+#endif
 
             /* If the Debugger couldn't handle it, dispatch the exception */
             if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
@@ -624,12 +696,26 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
 Handled:
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KiDispatchException: Reached Handled label, converting context back ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
     /* Convert the context back into Trap/Exception Frames */
     KeContextToTrapFrame(&Context,
                          ExceptionFrame,
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KiDispatchException: Context converted, returning ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
     return;
 }
 

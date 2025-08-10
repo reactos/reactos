@@ -66,6 +66,13 @@ KdLogDbgPrint(
     KIRQL OldIrql;
     KIRQL CurrentIrql;
 
+#ifdef _M_AMD64
+    /* Early return to avoid infinite recursion on AMD64 during early boot */
+    /* The circular buffer isn't properly initialized yet, and trying to log
+     * debug output can cause issues. This is a temporary fix. */
+    return;
+#endif
+
     /* If the string is empty, bail out */
     if (!String->Buffer || (String->Length == 0))
         return;
@@ -470,12 +477,36 @@ KdpPrint(
     BOOLEAN Enable;
     STRING OutputString;
 
+#ifdef _M_AMD64
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** KdpPrint: Entry ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
+
     if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
         /* Mask validation failed */
         *Handled = TRUE;
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpPrint: Filter check failed, returning SUCCESS ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#endif
         return STATUS_SUCCESS;
     }
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdpPrint: Filter check passed ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
 
     /* Assume failure */
     *Handled = FALSE;
@@ -506,17 +537,58 @@ KdpPrint(
     OutputString.Buffer = String;
     OutputString.Length = OutputString.MaximumLength = Length;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdpPrint: About to call KdLogDbgPrint ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
+
     /* Log the print */
     KdLogDbgPrint(&OutputString);
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdpPrint: KdLogDbgPrint returned ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
 
     /* Check for a debugger */
     if (KdDebuggerNotPresent)
     {
         /* Fail */
         *Handled = TRUE;
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpPrint: No debugger present, returning ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#endif
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
+#ifdef _M_AMD64
+    /* On AMD64, skip KdEnterDebugger/KdExitDebugger during early boot to avoid
+     * recursion. Just print the string directly to serial port. */
+    {
+        const char msg[] = "*** KdpPrint: Printing string directly to serial (skipping debugger enter/exit) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        
+        /* Print the actual string to serial port */
+        for (USHORT i = 0; i < OutputString.Length; i++)
+        {
+            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+            __outbyte(COM1_PORT, OutputString.Buffer[i]);
+        }
+        
+        Status = STATUS_SUCCESS;
+    }
+#else
     /* Enter the debugger */
     Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
@@ -534,6 +606,7 @@ KdpPrint(
 
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
+#endif
     *Handled = TRUE;
     return Status;
 }

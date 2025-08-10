@@ -103,12 +103,7 @@ HalpInitializeClock(VOID)
     UCHAR RegisterB;
 
 #ifdef _M_AMD64
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** HalpInitializeClock: entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HalpInitializeClock: entered\n");
 #endif
 
     /* Save EFlags and disable interrupts */
@@ -116,31 +111,19 @@ HalpInitializeClock(VOID)
     _disable();
 
 #ifdef _M_AMD64
-    {
-        const char msg[] = "*** HalpInitializeClock: interrupts disabled ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HalpInitializeClock: interrupts disabled\n");
 #endif
 
     // TODO: disable NMI
 
 #ifdef _M_AMD64
     /* On AMD64/UEFI, skip CMOS initialization for now - might cause issues */
-    {
-        const char msg[] = "*** HalpInitializeClock: Skipping CMOS init on AMD64/UEFI ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HalpInitializeClock: Skipping CMOS init on AMD64/UEFI\n");
     
     /* TODO: Implement proper timer initialization for UEFI */
     __writeeflags(EFlags);
     
-    {
-        const char msg[] = "*** HalpInitializeClock: completed (stub) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    DPRINT1("HalpInitializeClock: completed (stub)\n");
     return;
 #endif
 

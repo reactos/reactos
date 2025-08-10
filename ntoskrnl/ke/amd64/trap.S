@@ -11,6 +11,10 @@
 #include <ksamd64.inc>
 #include <trapamd64.inc>
 
+/* Debug definitions */
+.equ DEBUG_COM_PORT, 0x3F8
+.equ DEBUG_TIMEOUT, 1000
+
 EXTERN KiDispatchException:PROC
 EXTERN KeBugCheckWithTf:PROC
 EXTERN MmAccessFault:PROC
@@ -227,23 +231,45 @@ ENDFUNC
 PUBLIC KiBreakpointTrap
 FUNC KiBreakpointTrap
     /* Push pseudo error code */
+    EnterTrap TF_SAVE_ALL
+    
+#ifdef DBG
     /* Debug: Output '#' to serial port to show we reached INT3 handler */
     push rax
     push rdx
-    mov dx, 0x3F8 + 5  /* COM1 LSR */
-.wait_serial_bp:
-    in al, dx
-    test al, 0x20
-    jz .wait_serial_bp
-    mov al, '#'
-    mov dx, 0x3F8
+    
+    /* Check for serial port hardware presence */
+    mov dx, DEBUG_COM_PORT + 7
+    in  al, dx
+    mov ah, al
+    mov al, 0x55
     out dx, al
+    in  al, dx
+    cmp al, 0x55
+    jne .skip_serial
+    mov al, ah
+    out dx, al
+    
+    /* Poll serial port with timeout */
+    mov dx, DEBUG_COM_PORT + 5
+    mov ecx, DEBUG_TIMEOUT
+.wait:
+    in  al, dx
+    test al, 0x20
+    jnz .ready
+    loop .wait
+    jmp .skip_serial
+    
+.ready:
+    /* Output '#' character */
+    mov dx, DEBUG_COM_PORT
+    mov al, '#'
+    out dx, al
+    
+.skip_serial:
     pop rdx
     pop rax
-    
-    /* Note: IDT entry uses KGDT64_R0_CODE, so CPU will switch CS automatically */
-    
-    EnterTrap TF_SAVE_ALL
+#endif
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -604,18 +630,20 @@ FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
-    /* Check if this is BREAKPOINT_PRINT and adjust RIP BEFORE dispatch */
-    mov rax, [rbp+KTRAP_FRAME_Rax]
-    cmp rax, 1
-    jne .NoRipAdjust
+    /* Properly dispatch the debug service exception to KdpTrap */
+    /* The exception will be handled by KdpTrap which will:
+     * 1. Call KdpPrint for BREAKPOINT_PRINT (RAX=1)
+     * 2. Advance RIP by 2 bytes for INT 0x2D
+     * 3. Set return value in RAX
+     */
     
-    /* For BREAKPOINT_PRINT (INT 0x2D), advance RIP by 2 bytes BEFORE dispatch */
-    add qword ptr [rbp+KTRAP_FRAME_Rip], 2
-    
-.NoRipAdjust:
-    /* Dispatch the exception (Params = service, buffer, legth) */
+    /* Dispatch the exception with all parameters */
+    /* ExceptionInformation[0] = Service code (RAX) */
+    /* ExceptionInformation[1] = String pointer (RCX) */
+    /* ExceptionInformation[2] = String length (RDX) */
     DispatchException STATUS_BREAKPOINT, 3, [rbp+KTRAP_FRAME_Rax], [rbp+KTRAP_FRAME_Rcx], [rbp+KTRAP_FRAME_Rdx]
-    /* Return */
+    
+    /* Return - KdpTrap has handled everything including RIP adjustment */
     ExitTrap TF_SAVE_ALL
 ENDFUNC
 

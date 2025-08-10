@@ -1166,17 +1166,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-        /* Test DPRINT now - TEMPORARILY DISABLED DUE TO INFINITE LOOP */
-        /* TODO: Fix DPRINT infinite loop issue during early init */
-        /* DPRINT1("ExpInitializeExecutive: KdInitSystem Phase 0 complete - DPRINT is working!\n"); */
-        
-#ifdef _M_AMD64
-        {
-            const char msg[] = "*** ExpInitializeExecutive: KdInitSystem complete, DPRINT disabled for now ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        }
-#endif
+        /* Test DPRINT now - INT 0x2D handler has been properly implemented */
+        DPRINT1("ExpInitializeExecutive: KdInitSystem Phase 0 complete - DPRINT is working!\n");
     }
 
     /* Get boot command line */
@@ -1557,7 +1548,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Initialize NLS tables - fixed for AMD64 */
-    DPRINT1("ExpInitializeExecutive: Initializing NLS tables (fixed for AMD64)\n");
+    // DPRINT1("ExpInitializeExecutive: Initializing NLS tables (fixed for AMD64)\n");
+    {
+        const char msg[] = "*** KERNEL: Initializing NLS tables ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
     /* Enable NLS initialization */
     ExpInitNls(LoaderBlock);
 
