@@ -1722,6 +1722,16 @@ MmArmAccessFault(IN ULONG FaultCode,
     PMMPFN Pfn1;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
+#ifdef _M_AMD64
+    /* Check for NULL pointer access */
+    if ((ULONG_PTR)Address < PAGE_SIZE)
+    {
+        /* This is a NULL pointer dereference */
+        DPRINT1("NULL pointer access at %p - returning ACCESS_VIOLATION\n", Address);
+        return STATUS_ACCESS_VIOLATION;
+    }
+#endif
+
     /* Check for page fault on high IRQL */
     if (OldIrql > APC_LEVEL)
     {

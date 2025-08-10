@@ -1177,7 +1177,168 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
+#ifdef _M_AMD64
+    /* Check if LoaderBlock is valid before accessing it */
+    if (!LoaderBlock)
+    {
+        const char msg[] = "*** KERNEL: ERROR - LoaderBlock is NULL! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        CommandLine = NULL;
+    }
+    else if ((ULONG_PTR)LoaderBlock < 0x100000)
+    {
+        const char msg[] = "*** KERNEL: ERROR - LoaderBlock has invalid address! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        CommandLine = NULL;
+    }
+    else
+    {
+        /* Print LoaderBlock address */
+        {
+            const char msg[] = "*** KERNEL: LoaderBlock at: ";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            
+            /* Print hex address */
+            ULONG_PTR addr = (ULONG_PTR)LoaderBlock;
+            char hex[17] = "0x";
+            int i;
+            for (i = 15; i >= 0; i--)
+            {
+                ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
+                hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            }
+            for (i = 0; i < 18; i++)
+            {
+                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                __outbyte(COM1_PORT, hex[i]);
+            }
+            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+            __outbyte(COM1_PORT, '\n');
+        }
+        
+        /* Try to safely probe LoadOptions field */
+        {
+            const char msg[] = "*** KERNEL: Checking LoadOptions field ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        /* Use exception handling to safely access LoadOptions */
+        _SEH2_TRY
+        {
+            /* First check if we can read the LoadOptions pointer itself */
+            PVOID TestPtr = (PVOID)&(LoaderBlock->LoadOptions);
+            
+            {
+                const char msg[] = "*** KERNEL: LoadOptions field address: ";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                
+                /* Print hex address */
+                ULONG_PTR addr = (ULONG_PTR)TestPtr;
+                char hex[17] = "0x";
+                int i;
+                for (i = 15; i >= 0; i--)
+                {
+                    ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
+                    hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
+                }
+                for (i = 0; i < 18; i++)
+                {
+                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                    __outbyte(COM1_PORT, hex[i]);
+                }
+                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                __outbyte(COM1_PORT, '\n');
+            }
+            
+            /* Now try to read the actual LoadOptions value */
+            CommandLine = LoaderBlock->LoadOptions;
+            
+            /* Print the LoadOptions pointer value */
+            {
+                const char msg[] = "*** KERNEL: LoadOptions pointer value: ";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                
+                /* Print hex address */
+                ULONG_PTR addr = (ULONG_PTR)CommandLine;
+                char hex[17] = "0x";
+                int i;
+                for (i = 15; i >= 0; i--)
+                {
+                    ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
+                    hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
+                }
+                for (i = 0; i < 18; i++)
+                {
+                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                    __outbyte(COM1_PORT, hex[i]);
+                }
+                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                __outbyte(COM1_PORT, '\n');
+            }
+            
+            /* Check if the pointer looks valid */
+            if (!CommandLine)
+            {
+                const char msg[] = "*** KERNEL: LoadOptions is NULL, skipping ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+            else if ((ULONG_PTR)CommandLine < 0x1000)
+            {
+                const char msg[] = "*** KERNEL: LoadOptions points to low memory, invalid! ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                CommandLine = NULL;
+            }
+            else if ((ULONG_PTR)CommandLine >= 0xfffff80000000000ULL && 
+                     (ULONG_PTR)CommandLine < 0xfffff80100000000ULL)
+            {
+                /* The pointer is in kernel space but might not be mapped.
+                 * For AMD64 during early boot, the bootloader may have incorrectly
+                 * converted a physical address using PaToVa. We need to be careful here.
+                 */
+                const char msg[] = "*** KERNEL: LoadOptions in kernel space, attempting access ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                
+                /* Try to read the first character to see if it's accessible */
+                volatile char TestChar = *CommandLine;
+                
+                {
+                    const char msg2[] = "*** KERNEL: LoadOptions accessible, first char: ";
+                    const char *p2 = msg2;
+                    while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
+                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                    __outbyte(COM1_PORT, TestChar ? TestChar : '?');
+                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
+                    __outbyte(COM1_PORT, '\n');
+                }
+            }
+            else
+            {
+                const char msg[] = "*** KERNEL: LoadOptions has unexpected address range ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            const char msg[] = "*** KERNEL: EXCEPTION accessing LoadOptions! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            CommandLine = NULL;
+        }
+        _SEH2_END;
+    }
+#else
     CommandLine = LoaderBlock->LoadOptions;
+#endif
     if (CommandLine)
     {
         {
@@ -1186,6 +1347,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
+#ifdef _M_AMD64
+        /* Wrap command line processing in exception handler for safety */
+        _SEH2_TRY
+        {
+#endif
         /* Upcase it for comparison and check if we're in performance mode */
         {
             const char msg[] = "*** KERNEL: Upcasing command line (manual) ***\n";
@@ -1203,6 +1369,20 @@ ExpInitializeExecutive(IN ULONG Cpu,
                 p++;
             }
         }
+#ifdef _M_AMD64
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            const char msg[] = "*** KERNEL: EXCEPTION processing command line! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            CommandLine = NULL;
+        }
+        _SEH2_END;
+        
+        if (CommandLine)
+        {
+#endif
         
         {
             const char msg[] = "*** KERNEL: Command line upcased, searching for PERFMEM ***\n";
@@ -1240,6 +1420,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+#ifdef _M_AMD64
+        }  /* End of if (CommandLine) after exception handler */
+#endif
     }
     
     {
@@ -1248,14 +1431,47 @@ ExpInitializeExecutive(IN ULONG Cpu,
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
+#ifdef _M_AMD64
+    /* Wrap NLS data access in exception handler */
+    _SEH2_TRY
+    {
+#endif
     /* Setup NLS Base and offsets */
     NlsData = LoaderBlock->NlsData;
-    ExpNlsTableBase = NlsData->AnsiCodePageData;
-    ExpAnsiCodePageDataOffset = 0;
-    ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
-                                       (ULONG_PTR)NlsData->AnsiCodePageData);
-    ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
-                                            (ULONG_PTR)NlsData->AnsiCodePageData);
+    if (NlsData)
+    {
+        ExpNlsTableBase = NlsData->AnsiCodePageData;
+        ExpAnsiCodePageDataOffset = 0;
+        ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
+                                           (ULONG_PTR)NlsData->AnsiCodePageData);
+        ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
+                                                (ULONG_PTR)NlsData->AnsiCodePageData);
+    }
+    else
+    {
+        const char msg[] = "*** KERNEL: WARNING - NlsData is NULL! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        ExpNlsTableBase = NULL;
+        ExpAnsiCodePageDataOffset = 0;
+        ExpOemCodePageDataOffset = 0;
+        ExpUnicodeCaseTableDataOffset = 0;
+    }
+#ifdef _M_AMD64
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        const char msg[] = "*** KERNEL: EXCEPTION accessing NLS data! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        NlsData = NULL;
+        ExpNlsTableBase = NULL;
+        ExpAnsiCodePageDataOffset = 0;
+        ExpOemCodePageDataOffset = 0;
+        ExpUnicodeCaseTableDataOffset = 0;
+    }
+    _SEH2_END;
+#endif
 
     /* Initialize the NLS Tables */
     {
