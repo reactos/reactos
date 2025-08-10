@@ -1281,7 +1281,7 @@ SetDomainComboBox(
         lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)szComputerName);
     }
 
-    if (wcslen(pgContext->DomainName) != 0)
+    if (pgContext->DomainName[0])
     {
         lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->DomainName);
         if (lFindIndex == CB_ERR)
@@ -1451,8 +1451,8 @@ GUILoggedOutSAS(
         RegCloseKey(hKey);
     }
 
-    if (LegalNotice.pszCaption != NULL && wcslen(LegalNotice.pszCaption) != 0 &&
-        LegalNotice.pszText != NULL && wcslen(LegalNotice.pszText) != 0)
+    if (LegalNotice.pszCaption != NULL && LegalNotice.pszCaption[0] &&
+        LegalNotice.pszText != NULL && LegalNotice.pszText[0])
     {
         pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                 pgContext->hDllInstance,
