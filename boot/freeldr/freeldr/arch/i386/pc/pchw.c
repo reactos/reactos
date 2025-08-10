@@ -438,6 +438,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
 VOID
 FrLdrCheckCpuCompatibility(VOID)
 {
+#ifdef _M_AMD64
+    /* On AMD64, we already know the CPU is compatible */
+    return;
+#endif
+
     INT CpuInformation[4] = {-1};
     ULONG NumberOfIds;
 

@@ -26,6 +26,7 @@ EXTERN MmDeleteKernelStack:PROC
 EXTERN KdSetOwedBreakpoints:PROC
 EXTERN KeAcquireSpinLockAtDpcLevel:PROC
 EXTERN KeReleaseSpinLockFromDpcLevel:PROC
+EXTERN KiDebugServiceTrapDebug:PROC
 
 
 /* Helper Macros *************************************************************/
@@ -226,6 +227,22 @@ ENDFUNC
 PUBLIC KiBreakpointTrap
 FUNC KiBreakpointTrap
     /* Push pseudo error code */
+    /* Debug: Output '#' to serial port to show we reached INT3 handler */
+    push rax
+    push rdx
+    mov dx, 0x3F8 + 5  /* COM1 LSR */
+.wait_serial_bp:
+    in al, dx
+    test al, 0x20
+    jz .wait_serial_bp
+    mov al, '#'
+    mov dx, 0x3F8
+    out dx, al
+    pop rdx
+    pop rax
+    
+    /* Note: IDT entry uses KGDT64_R0_CODE, so CPU will switch CS automatically */
+    
     EnterTrap TF_SAVE_ALL
 
     /* Check if the frame was from kernelmode */
@@ -587,12 +604,17 @@ FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
-    /* Increase Rip to skip the int3 */
-    inc qword ptr [rbp + KTRAP_FRAME_Rip]
-
+    /* Check if this is BREAKPOINT_PRINT and adjust RIP BEFORE dispatch */
+    mov rax, [rbp+KTRAP_FRAME_Rax]
+    cmp rax, 1
+    jne .NoRipAdjust
+    
+    /* For BREAKPOINT_PRINT (INT 0x2D), advance RIP by 2 bytes BEFORE dispatch */
+    add qword ptr [rbp+KTRAP_FRAME_Rip], 2
+    
+.NoRipAdjust:
     /* Dispatch the exception (Params = service, buffer, legth) */
     DispatchException STATUS_BREAKPOINT, 3, [rbp+KTRAP_FRAME_Rax], [rbp+KTRAP_FRAME_Rcx], [rbp+KTRAP_FRAME_Rdx]
-
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC

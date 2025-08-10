@@ -126,20 +126,25 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     /* Send 'I' to show DebugInit completed */
     SerialPutChar('I');
 
-    DbgPrint("FreeLoader: Starting BootMain()\n");
-    DbgPrint("FreeLoader: Command line: %s\n", CmdLine ? CmdLine : "(null)");
+    //DbgPrint("FreeLoader: Starting BootMain()\n");
+    //DbgPrint("FreeLoader: Command line: %s\n", CmdLine ? CmdLine : "(null)");
     
+    SerialPutChar('C');
     MachInit(CmdLine);
+    SerialPutChar('H');
 
-    DbgPrint("FreeLoader: MachInit completed\n");
+    //DbgPrint("FreeLoader: MachInit completed\n");
     TRACE("BootMain() called.\n");
 
 #ifndef UEFIBOOT
     /* Check if the CPU is new enough */
+    SerialPutChar('P');
     FrLdrCheckCpuCompatibility(); // FIXME: Should be done inside MachInit!
+    SerialPutChar('U');
 #endif
 
     /* UI pre-initialization */
+    SerialPutChar('U');
     if (!UiInitialize(FALSE))
     {
         UiMessageBoxCritical("Unable to initialize UI.");
@@ -171,6 +176,7 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     /* Normal boot path - full initialization */
     
     /* Initialize memory manager */
+    SerialPutChar('M');
     DbgPrint("FreeLoader: Initializing memory manager...\n");
     if (!MmInitializeMemoryManager())
     {
@@ -178,21 +184,27 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         UiMessageBoxCritical("Unable to initialize memory manager.");
         goto Quit;
     }
+    SerialPutChar('O');
     DbgPrint("FreeLoader: Memory manager initialized successfully\n");
 
     /* Initialize I/O subsystem */
+    SerialPutChar('F');
     DbgPrint("FreeLoader: Initializing I/O subsystem...\n");
     FsInit();
+    SerialPutChar('S');
 
     /* Initialize the module list */
+    SerialPutChar('L');
     DbgPrint("FreeLoader: Initializing module list...\n");
     if (!PeLdrInitializeModuleList())
     {
         UiMessageBoxCritical("Unable to initialize module list.");
         goto Quit;
     }
+    SerialPutChar('E');
 
     /* Initialize boot devices */
+    SerialPutChar('B');
     DbgPrint("FreeLoader: Detecting boot devices...\n");
     if (!MachInitializeBootDevices())
     {
@@ -200,10 +212,15 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
-    /* Launch second stage loader */
-    DbgPrint("FreeLoader: Attempting to launch second stage loader...\n");
+    /* Launch second stage loader (rosload.exe) */
+    SerialPutChar('2');
     DbgPrint("FreeLoader: Boot path: %s\n", FrLdrBootPath);
+    DbgPrint("FreeLoader: Attempting to launch second stage loader...\n");
+    
+    SerialPutChar('S');
+    
     ULONG Result = LaunchSecondStageLoader();
+    SerialPutChar('T');
     DbgPrint("FreeLoader: LaunchSecondStageLoader returned: %lu\n", Result);
     if (Result != ESUCCESS)
     {

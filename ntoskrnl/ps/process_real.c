@@ -204,7 +204,7 @@ NTSTATUS PspCreatePeb(
     DebugPrint("*** MM: Creating PEB ***\n");
     
     /* PEB is in user space at a fixed address */
-    PVOID PebAddress = (PVOID)0x7FF7FFFE0000;  /* Standard PEB location for AMD64 */
+    /* PVOID PebAddress = (PVOID)0x7FF7FFFE0000; */  /* Standard PEB location for AMD64 - will be used later */
     
     /* Use static allocation for PEB since pool is not ready */
     static PEB StaticPebs[10];
@@ -251,7 +251,7 @@ NTSTATUS PspCreateTeb(
     DebugPrint("*** MM: Creating TEB ***\n");
     
     /* TEB is in user space, one per thread */
-    PVOID TebAddress = (PVOID)0x7FF7FF7DB000;  /* Standard TEB location */
+    /* PVOID TebAddress = (PVOID)0x7FF7FF7DB000; */  /* Standard TEB location - will be used later */
     
     /* Use static allocation for TEB since pool is not ready */
     static TEB StaticTebs[20];

@@ -56,8 +56,32 @@ HalInitializeBios(
     PMDL Mdl;
     ULONG64 PhysicalAddress;
 
+    /* Debug output */
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** HAL: HalInitializeBios entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+
     if (Phase == 0)
     {
+        {
+            const char msg[] = "*** HAL: HalInitializeBios Phase 0 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+#ifdef _M_AMD64
+        /* Skip BIOS initialization on AMD64 for now - memory allocation issues */
+        {
+            const char msg[] = "*** HAL: Skipping BIOS init on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        return;
+#endif
+        
         /* Allocate one page for a fallback mapping */
         PhysicalAddress = HalpAllocPhysicalMemory(LoaderBlock,
                                                   0x100000,

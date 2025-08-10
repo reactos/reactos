@@ -368,6 +368,26 @@ KdpSerialPrint(
     PCCH pch = String;
     KIRQL OldIrql;
 
+#ifdef _M_AMD64
+    /* Debug: Output directly to serial to confirm we're called */
+    {
+        const char msg[] = "*** KdpSerialPrint: Called! String='";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Output first few chars of the string */
+        for (ULONG i = 0; i < Length && i < 20 && String[i]; i++)
+        {
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, String[i]);
+        }
+        
+        const char msg2[] = "' ***\n";
+        p = msg2;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
+
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
 
@@ -392,28 +412,224 @@ KdpSerialInit(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
     _In_ ULONG BootPhase)
 {
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdpSerialInit: Entry ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
     if (!KdpDebugMode.Serial)
+    {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: Serial mode not enabled ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         return STATUS_PORT_DISCONNECTED;
+    }
 
     if (BootPhase == 0)
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: BootPhase 0 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdpSerialPrint;
 
         /* Initialize the Port */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: About to call KdPortInitializeEx ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        /* On AMD64, the serial port might already be initialized by the bootloader */
+        /* We can use it directly if we can write to it */
+        BOOLEAN PortInitialized = FALSE;
+        
+        /* Try to initialize the port */
+        if (!KdPortInitializeEx(&SerialPortInfo, SerialPortNumber))
+        {
+            const char msg[] = "*** KdpSerialInit: KdPortInitializeEx failed, trying direct use ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            
+            /* If we can already write to the serial port (as evidenced by our debug messages),
+             * just use it directly without initialization */
+            SerialPortInfo.Address = UlongToPtr(0x3F8); /* COM1 */
+            PortInitialized = TRUE; /* Mark as already initialized */
+        }
+        else
+        {
+            const char msg[] = "*** KdpSerialInit: KdPortInitializeEx succeeded ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            PortInitialized = TRUE;
+        }
+        
+        if (!PortInitialized)
+        {
+            const char msg[] = "*** KdpSerialInit: Port initialization completely failed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            KdpDebugMode.Serial = FALSE;
+            return STATUS_DEVICE_DOES_NOT_EXIST;
+        }
+#else
         if (!KdPortInitializeEx(&SerialPortInfo, SerialPortNumber))
         {
             KdpDebugMode.Serial = FALSE;
             return STATUS_DEVICE_DOES_NOT_EXIST;
         }
+#endif
         KdComPortInUse = SerialPortInfo.Address;
 
         /* Initialize spinlock */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: About to initialize spinlock ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         KeInitializeSpinLock(&KdpSerialSpinLock);
+        
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: Spinlock initialized, setting up provider ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
 
         /* Register for BootPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdpSerialInit;
+        
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: About to InsertTailList ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        /* Check if KdProviders list needs relocation on AMD64 */
+        {
+            ULONG_PTR FlinkAddr = (ULONG_PTR)KdProviders.Flink;
+            ULONG_PTR BlinkAddr = (ULONG_PTR)KdProviders.Blink;
+            
+            /* Check if addresses are in low memory (not relocated) */
+            if (FlinkAddr < 0xFFFF800000000000ULL || BlinkAddr < 0xFFFF800000000000ULL)
+            {
+                const char msg[] = "*** KdpSerialInit: KdProviders has unrelocated addresses, reinitializing ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+                
+                /* Reinitialize the list with proper addresses */
+                InitializeListHead(&KdProviders);
+                
+                {
+                    const char msg2[] = "*** KdpSerialInit: KdProviders reinitialized with kernel addresses ***\n";
+                    const char *p2 = msg2;
+                    while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+                }
+            }
+            else
+            {
+                const char msg[] = "*** KdpSerialInit: KdProviders already has kernel addresses ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+        }
+        
+        /* Try to insert without InitializeListHead on the entry */
+        {
+            const char msg[] = "*** KdpSerialInit: Checking DispatchTable pointer ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        if (DispatchTable == NULL)
+        {
+            const char msg[] = "*** KdpSerialInit: ERROR - DispatchTable is NULL! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            return STATUS_INVALID_PARAMETER;
+        }
+        
+        {
+            const char msg[] = "*** KdpSerialInit: DispatchTable is valid, checking KdProviders ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        /* Print addresses for debugging */
+        {
+            char msg[100];
+            int j = 0;
+            msg[j++] = '*'; msg[j++] = '*'; msg[j++] = '*';
+            msg[j++] = ' '; msg[j++] = 'K'; msg[j++] = 'd';
+            msg[j++] = 'P'; msg[j++] = 'r'; msg[j++] = 'o';
+            msg[j++] = 'v'; msg[j++] = 'i'; msg[j++] = 'd';
+            msg[j++] = 'e'; msg[j++] = 'r'; msg[j++] = 's';
+            msg[j++] = '.'; msg[j++] = 'B'; msg[j++] = 'l';
+            msg[j++] = 'i'; msg[j++] = 'n'; msg[j++] = 'k';
+            msg[j++] = '='; msg[j++] = '0'; msg[j++] = 'x';
+            
+            ULONG_PTR addr = (ULONG_PTR)KdProviders.Blink;
+            for (int k = 15; k >= 0; k--) {
+                ULONG_PTR nibble = (addr >> (k * 4)) & 0xF;
+                if (nibble < 10)
+                    msg[j++] = '0' + nibble;
+                else
+                    msg[j++] = 'A' + (nibble - 10);
+            }
+            msg[j++] = '\n';
+            msg[j] = '\0';
+            
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        /* Now do the actual list insertion */
+        {
+            const char msg[] = "*** KdpSerialInit: Performing InsertTailList ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        /* Insert the provider into the list */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+        
+        {
+            const char msg[] = "*** KdpSerialInit: InsertTailList succeeded! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        
+        {
+            const char msg[] = "*** KdpSerialInit: InsertTailList completed ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#else
+        InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+#endif
+        
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpSerialInit: Initialization complete, returning SUCCESS ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
     }
     else if (BootPhase == 1)
     {
@@ -515,16 +731,37 @@ KdpScreenInit(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
     _In_ ULONG BootPhase)
 {
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdpScreenInit: Entry ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
     if (!KdpDebugMode.Screen)
         return STATUS_PORT_DISCONNECTED;
 
     if (BootPhase == 0)
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpScreenInit: BootPhase 0 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdpScreenPrint;
 
         /* Register for BootPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdpScreenInit;
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdpScreenInit: About to InsertTailList ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
     else if (BootPhase == 1)
@@ -605,6 +842,27 @@ KdSendPacket(
     _Inout_ PKD_CONTEXT Context)
 {
     PDBGKD_DEBUG_IO DebugIo;
+
+#ifdef _M_AMD64
+    /* Debug: Track if KdSendPacket is being called */
+    {
+        const char msg[] = "*** KdSendPacket: Called with PacketType=";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Output packet type as hex */
+        for (int i = 7; i >= 0; i--) {
+            ULONG nibble = (PacketType >> (i * 4)) & 0xF;
+            char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, c);
+        }
+        
+        const char nl[] = " ***\n";
+        p = nl;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
 
     if (PacketType == PACKET_TYPE_KD_STATE_CHANGE32 ||
         PacketType == PACKET_TYPE_KD_STATE_CHANGE64)
@@ -695,7 +953,25 @@ extern VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
      * DebugIo.u.GetString.LengthOfPromptString */
 
     if (!KdpDebugMode.Value)
+    {
+#ifdef _M_AMD64
+        /* Debug: KdpDebugMode.Value is 0, output won't work */
+        {
+            const char msg[] = "*** KdSendPacket: KdpDebugMode.Value is 0, not printing! ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         return;
+    }
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdSendPacket: KdpDebugMode.Value is set, printing via KdIoPrintString ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
 
     /* Print the string proper */
     KdIoPrintString(MessageData->Buffer, MessageData->Length);

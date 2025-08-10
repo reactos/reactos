@@ -80,26 +80,33 @@ FrldrStartup:
     shr rcx, 3
     rep stosq
 
-    /* Pass the command line to BootMain */
-    mov rcx, offset cmdline
-    
-    /* Ensure RCX is valid */
-    test rcx, rcx
-    jnz .ValidCmdLine
-    xor rcx, rcx    /* Pass NULL if invalid */
-.ValidCmdLine:
+    /* Pass NULL command line for now to avoid crash */
+    xor rcx, rcx
 
     /* Write 'B' before calling BootMain */
     mov dx, HEX(3F8)
     mov al, 'B'
     out dx, al
     
+    /* Ensure interrupts are disabled */
+    cli
+    
     /* Ensure stack is aligned to 16 bytes before call */
     and rsp, HEX(0FFFFFFFFFFFFFFF0)
     sub rsp, HEX(20)    /* Shadow space for Windows x64 ABI */
 
-    /* GO! */
+    /* Write 'M' right before calling BootMain */
+    mov dx, HEX(3F8)
+    mov al, 'M'
+    out dx, al
+    
+    /* GO! Call BootMain */
     call BootMain
+    
+    /* Write 'X' if we return (shouldn't happen) */
+    mov dx, HEX(3F8)
+    mov al, 'X'
+    out dx, al
 
     /* We should never get here */
 stop:

@@ -64,6 +64,7 @@ KdLogDbgPrint(
 {
     SIZE_T Length, Remaining;
     KIRQL OldIrql;
+    KIRQL CurrentIrql;
 
     /* If the string is empty, bail out */
     if (!String->Buffer || (String->Length == 0))
@@ -73,8 +74,21 @@ KdLogDbgPrint(
     if (!KdPrintCircularBuffer /*|| (KdPrintBufferSize == 0)*/)
         return;
 
-    /* Acquire the log spinlock without waiting at raised IRQL */
-    OldIrql = KdpAcquireLock(&KdpPrintSpinLock);
+    /* Get current IRQL - if we're already at HIGH_LEVEL, we're likely in a
+     * recursive call from KdpAcquireLock or similar. Skip logging to avoid deadlock.
+     */
+    CurrentIrql = KeGetCurrentIrql();
+    if (CurrentIrql >= HIGH_LEVEL)
+        return;
+
+    /* Try to acquire the spinlock. If it's already held (possibly by us in a
+     * recursive call), skip logging to avoid deadlock.
+     */
+    if (!KeTryToAcquireSpinLockAtDpcLevel(&KdpPrintSpinLock))
+        return;
+
+    /* We got the lock, now raise IRQL to HIGH_LEVEL */
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     Length = min(String->Length, KdPrintBufferSize);
     Remaining = KdPrintCircularBuffer + KdPrintBufferSize - KdPrintWritePointer;
@@ -99,8 +113,9 @@ KdLogDbgPrint(
             ++KdPrintRolloverCount;
     }
 
-    /* Release the spinlock */
-    KdpReleaseLock(&KdpPrintSpinLock, OldIrql);
+    /* Release the spinlock and restore IRQL */
+    KiReleaseSpinLock(&KdpPrintSpinLock);
+    KeLowerIrql(OldIrql);
 }
 
 BOOLEAN
@@ -454,11 +469,21 @@ KdpPrint(
     NTSTATUS Status;
     BOOLEAN Enable;
     STRING OutputString;
+    static volatile LONG InKdpPrint = 0;
+    
+    /* Prevent recursive calls */
+    if (InterlockedCompareExchange(&InKdpPrint, 1, 0) != 0)
+    {
+        /* Already in KdpPrint, just return success to avoid recursion */
+        *Handled = TRUE;
+        return STATUS_SUCCESS;
+    }
 
     if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
         /* Mask validation failed */
         *Handled = TRUE;
+        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
         return STATUS_SUCCESS;
     }
 
@@ -476,14 +501,16 @@ KdpPrint(
          * can't use _alloca due to PSEH. So the buffer exists in this
          * helper function instead.
          */
-        return KdpPrintFromUser(ComponentId,
-                                Level,
-                                String,
-                                Length,
-                                PreviousMode,
-                                TrapFrame,
-                                ExceptionFrame,
-                                Handled);
+        Status = KdpPrintFromUser(ComponentId,
+                                  Level,
+                                  String,
+                                  Length,
+                                  PreviousMode,
+                                  TrapFrame,
+                                  ExceptionFrame,
+                                  Handled);
+        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
+        return Status;
     }
 
     /* Setup the output string */
@@ -498,6 +525,7 @@ KdpPrint(
     {
         /* Fail */
         *Handled = TRUE;
+        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
@@ -519,6 +547,8 @@ KdpPrint(
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
     *Handled = TRUE;
+    
+    InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
     return Status;
 }
 

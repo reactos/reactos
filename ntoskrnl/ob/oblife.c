@@ -1257,7 +1257,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     PWCHAR p;
     ULONG i;
     UNICODE_STRING ObjectName;
+#ifndef _M_AMD64
     ANSI_STRING AnsiName;
+#endif
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     
 #ifdef _M_AMD64

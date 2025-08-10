@@ -90,6 +90,30 @@ KdpPrintBanner(VOID)
 {
     SIZE_T MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
 
+#ifdef _M_AMD64
+    /* On AMD64 during early init, use direct serial output to avoid recursion */
+    {
+        const char msg1[] = "-----------------------------------------------------\n";
+        const char *p = msg1;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        const char msg2[] = "ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n";
+        p = msg2;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Format and output processor/memory info - simplified version */
+        const char msg3[] = "System Processor and Memory initialized\n";
+        p = msg3;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        if (KeLoaderBlock)
+        {
+            const char msg4[] = "Loader block present\n";
+            p = msg4;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+    }
+#else
     DPRINT1("-----------------------------------------------------\n");
     DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
     DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
@@ -101,6 +125,7 @@ KdpPrintBanner(VOID)
                 KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName,
                 KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
     }
+#endif
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -168,6 +193,15 @@ KdInitSystem(
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG i;
 
+#ifdef _M_AMD64
+    /* Debug output for AMD64 */
+    {
+        const char msg[] = "*** KdInitSystem: Entry ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
+
     /* Check if this is Phase 1 */
     if (BootPhase)
     {
@@ -218,7 +252,62 @@ KdInitSystem(
         KdVersionBlock.Unused[0] = 0;
 
         /* Link us in the KPCR */
+#ifdef _M_AMD64
+        /* On AMD64 during early boot, GS might not be fully set up yet */
+        /* Check if GS base is set by reading the MSR */
+        {
+            const char msg1[] = "*** KdInitSystem: About to read GS MSR ***\n";
+            const char *p1 = msg1;
+            while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
+            
+            PKPCR Pcr = NULL;
+            ULONG64 GsBase = __readmsr(0xC0000101); /* MSR_GS_BASE */
+            
+            const char msg2[] = "*** KdInitSystem: GS MSR read completed ***\n";
+            const char *p2 = msg2;
+            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+            
+            if (GsBase != 0)
+            {
+                /* GS is set, we can use it */
+                const char msg3[] = "*** KdInitSystem: Using GS base for PCR ***\n";
+                const char *p3 = msg3;
+                while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+                Pcr = (PKPCR)GsBase;
+            }
+            else if (LoaderBlock && LoaderBlock->Prcb)
+            {
+                /* GS not set up yet - use LoaderBlock */
+                const char msg4[] = "*** KdInitSystem: Using LoaderBlock for PCR ***\n";
+                const char *p4 = msg4;
+                while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
+                
+                ULONG_PTR PrcbAddr = LoaderBlock->Prcb;
+                if (PrcbAddr < 0xFFFF800000000000ULL)
+                {
+                    /* Convert physical to kernel VA */
+                    PrcbAddr = PrcbAddr + 0xFFFF800000000000ULL;
+                }
+                /* On AMD64, the PCR starts 0x180 bytes before the PRCB */
+                Pcr = (PKPCR)((ULONG_PTR)PrcbAddr - 0x180);
+            }
+            
+            if (Pcr)
+            {
+                const char msg5[] = "*** KdInitSystem: Setting KdVersionBlock in PCR ***\n";
+                const char *p5 = msg5;
+                while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
+                
+                Pcr->KdVersionBlock = &KdVersionBlock;
+                
+                const char msg6[] = "*** KdInitSystem: KdVersionBlock set ***\n";
+                const char *p6 = msg6;
+                while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
+            }
+        }
+#else
         KeGetPcr()->KdVersionBlock = &KdVersionBlock;
+#endif
     }
 
     /* Check if we have a loader block */
@@ -226,21 +315,119 @@ KdInitSystem(
     {
         PSTR CommandLine, DebugLine;
 
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Processing LoaderBlock ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
+
         /* Get the image entry */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Checking LoadOrderListHead ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            
+            if (LoaderBlock->LoadOrderListHead.Flink == NULL)
+            {
+                const char msg2[] = "*** KdInitSystem: ERROR - LoadOrderListHead.Flink is NULL! ***\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+                
+                /* Can't continue without module list */
+                return TRUE;
+            }
+            
+            const char msg3[] = "*** KdInitSystem: LoadOrderListHead.Flink is valid ***\n";
+            const char *p3 = msg3;
+            while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+        }
+#endif
         LdrEntry = CONTAINING_RECORD(LoaderBlock->LoadOrderListHead.Flink,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
 
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Got LdrEntry ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
+
         /* Save the Kernel Base */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: About to access LdrEntry->DllBase ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            
+            if (LdrEntry)
+            {
+                const char msg2[] = "*** KdInitSystem: LdrEntry is not NULL ***\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+                
+                /* Try to access DllBase */
+                PVOID DllBase = LdrEntry->DllBase;
+                
+                const char msg3[] = "*** KdInitSystem: DllBase accessed successfully ***\n";
+                const char *p3 = msg3;
+                while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+                
+                PsNtosImageBase = (ULONG_PTR)DllBase;
+                KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)DllBase;
+                
+                const char msg4[] = "*** KdInitSystem: Kernel base saved ***\n";
+                const char *p4 = msg4;
+                while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
+            }
+            else
+            {
+                const char msg2[] = "*** KdInitSystem: ERROR - LdrEntry is NULL! ***\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+            }
+        }
+#else
         PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
         KdVersionBlock.KernBase = (ULONG64)(LONG_PTR)LdrEntry->DllBase;
+#endif
 
         /* Check if we have a command line */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Checking LoadOptions ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         CommandLine = LoaderBlock->LoadOptions;
         if (CommandLine)
         {
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KdInitSystem: WARNING - Skipping command line processing on AMD64 ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+            /* On AMD64, LoadOptions might be in read-only memory from UEFI */
+            /* Skip command line processing for now - just enable KD */
+            EnableKd = TRUE;
+            goto SkipCommandLine;
+#else
             /* Upcase it */
             _strupr(CommandLine);
+#endif
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KdInitSystem: _strupr completed ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+#endif
 
             /* Assume we'll disable KD */
             EnableKd = FALSE;
@@ -359,15 +546,80 @@ KdInitSystem(
         EnableKd = TRUE;
     }
 
+#ifdef _M_AMD64
+SkipCommandLine:
+    {
+        const char msg[] = "*** KdInitSystem: Command line processing complete/skipped ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
+
     /* Set the Kernel Base in the Data Block */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdInitSystem: Setting KernBase in DataBlock ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
     KdDebuggerDataBlock.KernBase = (ULONG_PTR)KdVersionBlock.KernBase;
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdInitSystem: About to check EnableKd ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
+
     /* Initialize the debugger if requested */
+#ifdef _M_AMD64
+    {
+        const char msg1[] = "*** KdInitSystem: Checking EnableKd flag ***\n";
+        const char *p1 = msg1;
+        while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
+        
+        if (EnableKd)
+        {
+            const char msg2[] = "*** KdInitSystem: EnableKd is TRUE, calling KdDebuggerInitialize0 ***\n";
+            const char *p2 = msg2;
+            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+        }
+        else
+        {
+            const char msg2[] = "*** KdInitSystem: EnableKd is FALSE, skipping KdDebuggerInitialize0 ***\n";
+            const char *p2 = msg2;
+            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+        }
+    }
+#endif
     if (EnableKd && (NT_SUCCESS(KdDebuggerInitialize0(LoaderBlock))))
     {
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: KdDebuggerInitialize0 succeeded ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         /* Now set our real KD routine */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Setting KiDebugRoutine ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         KiDebugRoutine = KdpTrap;
 
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Checking KdpDebuggerStructuresInitialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         /* Check if we've already initialized our structures */
         if (!KdpDebuggerStructuresInitialized)
         {
@@ -375,6 +627,13 @@ KdInitSystem(
             KdpContext.KdpDefaultRetries = 20;
 
             /* Initialize breakpoints owed flag and table */
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KdInitSystem: Initializing breakpoints ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+#endif
             KdpOweBreakpoint = FALSE;
             for (i = 0; i < KD_BREAKPOINT_MAX; i++)
             {
@@ -384,9 +643,18 @@ KdInitSystem(
             }
 
             /* Initialize the Time Slip DPC */
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** KdInitSystem: SKIPPING DPC/Timer init on AMD64 (temporary) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+            /* Skip DPC/Timer initialization on AMD64 for now - causes crash */
+#else
             KeInitializeDpc(&KdpTimeSlipDpc, KdpTimeSlipDpcRoutine, NULL);
             KeInitializeTimer(&KdpTimeSlipTimer);
             ExInitializeWorkItem(&KdpTimeSlipWorkItem, KdpTimeSlipWork, NULL);
+#endif
 
             /* First-time initialization done! */
             KdpDebuggerStructuresInitialized = TRUE;
@@ -396,16 +664,38 @@ KdInitSystem(
         KdTimerStart.QuadPart = 0;
 
         /* Officially enable KD */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Enabling KD ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         KdPitchDebugger = FALSE;
         KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE; /* Debugger IS present */
 
         /* Let user-mode know that it's enabled as well */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Setting SharedUserData ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         SharedUserData->KdDebuggerEnabled = TRUE;
 
         /* Display separator + ReactOS version at the start of the debug log */
         KdpPrintBanner();
 
         /* Check if the debugger should be disabled initially */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: Checking DisableKdAfterInit ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+#endif
         if (DisableKdAfterInit)
         {
             /* Disable it */
@@ -420,6 +710,14 @@ KdInitSystem(
         }
 
         /* Check if we have a loader block */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** KdInitSystem: SKIPPING symbol loading on AMD64 (temporary) ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        }
+        /* Skip symbol loading on AMD64 for now */
+#else
         if (LoaderBlock)
         {
             PLIST_ENTRY NextEntry;
@@ -462,6 +760,7 @@ KdInitSystem(
              * if requested, see ex/init.c!ExpLoadBootSymbols() */
             KdBreakAfterSymbolLoad = KdPollBreakIn();
         }
+#endif /* _M_AMD64 */
     }
     else
     {
@@ -470,5 +769,12 @@ KdInitSystem(
     }
 
     /* Return initialized */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KdInitSystem: About to return TRUE ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+    }
+#endif
     return TRUE;
 }

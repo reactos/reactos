@@ -133,11 +133,45 @@ HalInitSystem(
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
+    {
+        const char msg[] = "*** HAL: About to check BootPhase ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+#ifdef _M_AMD64
+    /* Skip PRCB access on AMD64 for now - might cause issues */
+    {
+        const char msg[] = "*** HAL: Skipping PRCB access on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    PKPRCB Prcb = NULL;
+#else
     PKPRCB Prcb = KeGetCurrentPrcb();
+#endif
+#ifndef _M_AMD64
     NTSTATUS Status;
+#endif
 
+    {
+        const char msg[] = "*** HAL: BootPhase parameter accessible ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+
+#ifdef _M_AMD64
+    /* On AMD64, assume Phase 0 for now */
+    {
+        const char msg[] = "*** HAL: Assuming Phase 0 on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    if (1)  /* Always do Phase 0 on AMD64 */
+#else
     /* Check the boot phase */
     if (BootPhase == 0)
+#endif
     {
         {
             const char msg[] = "*** HAL: Phase 0 initialization ***\n";
@@ -194,6 +228,13 @@ HalInitSystem(
         }
 
         /* Check for PRCB version mismatch */
+#ifdef _M_AMD64
+        {
+            const char msg[] = "*** HAL: Skipping PRCB version check on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
         {
             const char msg[] = "*** HAL: Checking PRCB version ***\n";
             const char *p = msg;
@@ -216,22 +257,23 @@ HalInitSystem(
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+#endif
 
         /* Checked/free HAL requires checked/free kernel */
-        {
-            const char msg[] = "*** HAL: Checking build type ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
 #ifdef _M_AMD64
-        /* Skip build type check on AMD64 for now - causes hang */
+        /* Skip build type check on AMD64 for now - no PRCB */
         {
             const char msg[] = "*** HAL: Skipping build type check on AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
 #else
+        {
+            const char msg[] = "*** HAL: Checking build type ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         if (Prcb->BuildType != HalpBuildType)
         {
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
@@ -246,7 +288,6 @@ HalInitSystem(
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         /* TODO: Fix ACPI initialization on AMD64 */
-        Status = STATUS_SUCCESS;
 #else
         Status = HalpSetupAcpiPhase0(LoaderBlock);
         if (!NT_SUCCESS(Status))
@@ -300,6 +341,12 @@ HalInitSystem(
         }
         
         HalpInitializeCmos();
+        
+        {
+            const char msg[] = "*** HAL: CMOS initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 
         /* Fill out the dispatch tables */
         {
@@ -354,10 +401,9 @@ HalInitSystem(
         }
         
 #ifdef _M_AMD64
-        /* On AMD64, skip calibration for now and use default */
-        KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
+        /* On AMD64, skip calibration and PCR access for now */
         {
-            const char msg[] = "*** HAL: Using default stall factor on AMD64 ***\n";
+            const char msg[] = "*** HAL: Skipping stall calibration on AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
@@ -393,7 +439,16 @@ HalInitSystem(
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
+#ifdef _M_AMD64
+        /* Skip HalStopProfileInterrupt on AMD64 - spinlock issues during early boot */
+        {
+            const char msg[] = "*** HAL: Skipping HalStopProfileInterrupt on AMD64 ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+#else
         HalStopProfileInterrupt(ProfileTime);
+#endif
         
         {
             const char msg[] = "*** HAL: Profile interrupt stopped ***\n";

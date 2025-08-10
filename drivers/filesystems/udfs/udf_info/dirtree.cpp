@@ -1268,7 +1268,7 @@ UDFStoreDloc(
         UDFReleaseDloc(Vcb, Dloc);
 #if defined UDF_DBG && !defined _CONSOLE
         if(fi->Dloc->CommonFcb) {
-            ASSERT((uint32)(fi->Dloc->CommonFcb) != 0xDEADDA7A);
+            ASSERT((ULONG_PTR)(fi->Dloc->CommonFcb) != 0xDEADDA7A);
             ASSERT(fi->Dloc->CommonFcb->CommonFCBHeader.NodeTypeCode == UDF_NODE_TYPE_NT_REQ_FCB);
         }
 #endif // UDF_DBG

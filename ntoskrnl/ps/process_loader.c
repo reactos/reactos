@@ -43,8 +43,11 @@ NTSTATUS CreateSystemProcess(
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     CLIENT_ID ClientId;
+#if 0
+    /* These will be used when real process creation is implemented */
     CONTEXT ThreadContext = {0};
     INITIAL_TEB InitialTeb = {0};
+#endif
     
     DebugPrint("*** PROCESS_LOADER: Creating real process ***\n");
     
@@ -72,6 +75,7 @@ NTSTATUS CreateSystemProcess(
     NextThreadId += 4;
     
     Status = STATUS_SUCCESS;
+    (VOID)Status; /* Will be used when real implementation is done */
     
     /* Record in our process table */
     if (BootProcessCount < 10)

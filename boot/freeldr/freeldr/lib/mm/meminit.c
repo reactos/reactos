@@ -379,7 +379,10 @@ BOOLEAN MmInitializeMemoryManager(VOID)
     /* Check the freeldr binary */
     MmCheckFreeldrImageFile();
 
+    /* Output debug marker before GetMemoryMap */
+    WRITE_PORT_UCHAR((PUCHAR)0x3F8, 'G');
     BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
+    WRITE_PORT_UCHAR((PUCHAR)0x3F8, 'E');
 
 #if DBG
     // Dump the system memory map

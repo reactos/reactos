@@ -9,11 +9,12 @@
 
 #include "wdmaud.h"
 
-#include <samplerate.h>
-#include <float_cast.h>
-
 #include <debug.h>
 #include <mmebuddy_debug.h>
+
+/* Include samplerate headers after debug.h to avoid DbgPrint conflicts */
+#include <samplerate.h>
+#include <float_cast.h>
 
 extern HANDLE KernelHandle;
 

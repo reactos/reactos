@@ -52,6 +52,22 @@ KDESCRIPTOR KiIdtDescriptor = {{0}, sizeof(KiIdt) - 1, KiIdt};
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef _M_AMD64
+VOID
+NTAPI
+KiDebugServiceTrapDebug(VOID)
+{
+    /* Output to serial port directly */
+    const char msg[] = "*** KiDebugServiceTrap ENTERED! ***\n";
+    const char *p = msg;
+    while (*p) 
+    { 
+        while ((__inbyte(0x3F8 + 5) & 0x20) == 0); 
+        __outbyte(0x3F8, *p++); 
+    }
+}
+#endif
+
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -60,6 +76,53 @@ KeInitExceptions(VOID)
     int i, j;
 
     /* Initialize the Idt */
+#ifdef _M_AMD64
+    /* On AMD64, we need to fix up the addresses because the static table
+       has unrelocated addresses. The addresses in the table are RVAs (relative
+       virtual addresses) from the image base, not absolute addresses. */
+    
+    /* Get the actual kernel base. PsNtosImageBase is not initialized yet when
+       KeInitExceptions is called, so we calculate it from our own address. */
+    
+    /* Get current function address to determine kernel base */
+    ULONG64 CurrentFunc = (ULONG64)KeInitExceptions;
+    
+    /* The kernel is loaded at 0xFFFFF80006400000
+       KeInitExceptions is at 0xFFFFF80006B1CD04
+       So we need to mask to get 0xFFFFF80006400000 */
+    
+    /* Round down to nearest 0x400000 boundary (4MB) */
+    ULONG64 KernelBase = CurrentFunc & 0xFFFFFFFFFFC00000ULL;
+    
+    /* Adjust if we're not at a standard base */
+    if ((KernelBase & 0xFFFFFF) != 0x400000)
+    {
+        /* Try 1MB boundary */
+        KernelBase = CurrentFunc & 0xFFFFFFFFF0000000ULL;
+        /* Add the standard offset */
+        KernelBase = KernelBase + 0x06400000;
+    }
+    
+    /* Debug output */
+    {
+        const char msg1[] = "*** IDT Init: KernelBase=";
+        const char *p1 = msg1;
+        while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
+        
+        for (int k = 60; k >= 0; k -= 4)
+        {
+            int digit = (KernelBase >> k) & 0xF;
+            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, c);
+        }
+        
+        const char msg2[] = "\n";
+        const char *p2 = msg2;
+        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+    }
+#endif
+
     for (j = i = 0; i < 256; i++)
     {
         ULONG64 Offset;
@@ -67,6 +130,66 @@ KeInitExceptions(VOID)
         if (KiInterruptInitTable[j].InterruptId == i)
         {
             Offset = (ULONG64)KiInterruptInitTable[j].ServiceRoutine;
+#ifdef _M_AMD64
+            /* Debug output for 0x2D */
+            if (i == 0x2D)
+            {
+                const char msg1[] = "*** IDT[0x2D]: Raw offset=";
+                const char *p1 = msg1;
+                while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
+                
+                for (int k = 60; k >= 0; k -= 4)
+                {
+                    int digit = (Offset >> k) & 0xF;
+                    char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+                    while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+                    __outbyte(0x3F8, c);
+                }
+                
+                const char msg2[] = "\n";
+                const char *p2 = msg2;
+                while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+            }
+#endif
+#ifdef _M_AMD64
+            /* The addresses in the table are file offsets (unrelocated).
+               We need to convert them to kernel virtual addresses.
+               If the address is less than kernel space, it needs relocation. */
+            if (Offset < 0xFFFF000000000000ULL)
+            {
+                /* This is an unrelocated RVA. The offset is relative to the image base.
+                   The table contains addresses like 0x0CD04C4D which are offsets
+                   from the default image base (0x00400000 for executables).
+                   
+                   We need to convert: 0x0CD04C4D -> 0xFFFFF80006784C4D
+                   
+                   The calculation is:
+                   Real address = KernelBase + (RVA - DefaultImageBase)
+                   where DefaultImageBase = 0x00400000 for PE executables
+                   
+                   But actually, it seems the values are already RVAs from base 0,
+                   so we just add them to the kernel base. However, they seem
+                   to have an offset of 0x0C900000 built in.
+                   
+                   Let's subtract that offset and add to kernel base. */
+                   
+                /* It appears the offsets are from 0x0C000000 range, 
+                   but kernel functions start at 0x06000000 range in the loaded image.
+                   So we need to adjust: 0x0CD04C4D - 0x0C900000 + 0x06380000 = 0x06784C4D
+                   Then add kernel base. */
+                   
+                /* The raw offset is 0x0CD04C4D
+                   We need offset from kernel base: 0x00384C4D
+                   So we subtract: 0x0CD04C4D - 0x0C980000 = 0x00384C4D */
+                if (Offset > 0x0C000000)
+                {
+                    Offset = Offset - 0x0C980000;
+                }
+                
+                /* Now add the kernel base */
+                Offset = KernelBase + Offset;
+            }
+#endif
             KiIdt[i].Dpl = KiInterruptInitTable[j].Dpl;
             KiIdt[i].IstIndex = KiInterruptInitTable[j].IstIndex;
             j++;
@@ -74,10 +197,23 @@ KeInitExceptions(VOID)
         else
         {
             Offset = (ULONG64)&KiUnexpectedRange[i]._Op_push;
+#ifdef _M_AMD64
+            /* Check if this address needs relocation */
+            if (Offset < 0xFFFF000000000000ULL)
+            {
+                /* Same relocation as above */
+                if (Offset > 0x0C000000)
+                {
+                    Offset = Offset - 0x0C980000;
+                }
+                Offset = KernelBase + Offset;
+            }
+#endif
             KiIdt[i].Dpl = 0;
             KiIdt[i].IstIndex = 0;
         }
         KiIdt[i].OffsetLow = Offset & 0xffff;
+        /* Always use kernel CS for IDT entries - the interrupt gate will switch to it */
         KiIdt[i].Selector = KGDT64_R0_CODE;
         KiIdt[i].Type = 0x0e;
         KiIdt[i].Reserved0 = 0;
@@ -88,6 +224,85 @@ KeInitExceptions(VOID)
     }
 
     KeGetPcr()->IdtBase = KiIdt;
+    
+#ifdef _M_AMD64
+    /* Debug: Verify IDT entry 0x2D */
+    {
+        KIDTENTRY64 *Entry2D = &KiIdt[0x2D];
+        ULONG64 Handler = (ULONG64)Entry2D->OffsetLow | 
+                          ((ULONG64)Entry2D->OffsetMiddle << 16) | 
+                          ((ULONG64)Entry2D->OffsetHigh << 32);
+        
+        const char msg1[] = "*** IDT[0x2D]: Handler=";
+        const char *p1 = msg1;
+        while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
+        
+        /* Output handler address in hex */
+        for (int k = 60; k >= 0; k -= 4)
+        {
+            int digit = (Handler >> k) & 0xF;
+            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, c);
+        }
+        
+        const char msg2[] = " Expected=";
+        const char *p2 = msg2;
+        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+        
+        ULONG64 Expected = (ULONG64)KiDebugServiceTrap;
+        for (int k = 60; k >= 0; k -= 4)
+        {
+            int digit = (Expected >> k) & 0xF;
+            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, c);
+        }
+        
+        const char msg3[] = "\n*** IDT[0x2D]: Selector=";
+        const char *p3 = msg3;
+        while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+        
+        /* Output selector in hex */
+        USHORT sel = Entry2D->Selector;
+        for (int k = 12; k >= 0; k -= 4)
+        {
+            int digit = (sel >> k) & 0xF;
+            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
+            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+            __outbyte(0x3F8, c);
+        }
+        
+        const char msg4[] = " DPL=";
+        const char *p4 = msg4;
+        while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
+        
+        char dpl = '0' + Entry2D->Dpl;
+        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+        __outbyte(0x3F8, dpl);
+        
+        const char msg5[] = " Type=";
+        const char *p5 = msg5;
+        while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
+        
+        char type = Entry2D->Type < 10 ? '0' + Entry2D->Type : 'A' + Entry2D->Type - 10;
+        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+        __outbyte(0x3F8, type);
+        
+        const char msg6[] = " Present=";
+        const char *p6 = msg6;
+        while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
+        
+        char present = '0' + Entry2D->Present;
+        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
+        __outbyte(0x3F8, present);
+        
+        const char msg7[] = "\n";
+        const char *p7 = msg7;
+        while (*p7) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p7++); }
+    }
+#endif
+    
     __lidt(&KiIdtDescriptor.Limit);
 }
 
@@ -252,6 +467,48 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
 
+#ifdef _M_AMD64
+    /* Debug output to serial port */
+    {
+        const char msg[] = "*** KiDispatchException called ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Output exception code */
+        if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+        {
+            const char msg2[] = "*** Exception: STATUS_BREAKPOINT ***\n";
+            const char *p2 = msg2;
+            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+            
+            /* Check if it's a debug service */
+            if (ExceptionRecord->NumberParameters > 0)
+            {
+                const char msg3[] = "*** Has parameters, first param: ";
+                const char *p3 = msg3;
+                while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+                
+                /* Output first parameter value */
+                ULONG_PTR val = ExceptionRecord->ExceptionInformation[0];
+                char hex[17];
+                int i;
+                for (i = 15; i >= 0; i--)
+                {
+                    int digit = (val >> (i * 4)) & 0xF;
+                    hex[15-i] = digit < 10 ? '0' + digit : 'A' + digit - 10;
+                }
+                hex[16] = 0;
+                char *ph = hex;
+                while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
+                
+                const char msg4[] = " ***\n";
+                const char *p4 = msg4;
+                while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
+            }
+        }
+    }
+#endif
+
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
@@ -270,8 +527,18 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Breakpoint */
         case STATUS_BREAKPOINT:
 
-            /* Decrement RIP by one */
-            Context.Rip--;
+            /* Check if this is a special debug service (not a regular INT3) */
+            if (ExceptionRecord->NumberParameters >= 1 &&
+                ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK)
+            {
+                /* Special breakpoint (PRINT, PROMPT, etc.) - KdpTrap will handle RIP adjustment */
+                /* KdpTrap knows the correct instruction size for each type */
+            }
+            else
+            {
+                /* Regular INT3 breakpoint - decrement RIP by one */
+                Context.Rip--;
+            }
             break;
 
         /* Internal exception */
@@ -292,6 +559,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Check if this is a first-chance exception */
         if (FirstChance)
         {
+#ifdef _M_AMD64
+            {
+                const char msg[] = "*** Calling KiDebugRoutine (first chance) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+            }
+#endif
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
                                ExceptionFrame,
@@ -301,6 +575,13 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                                FALSE))
             {
                 /* Exception was handled */
+#ifdef _M_AMD64
+                {
+                    const char msg[] = "*** KiDispatchException: Exception handled, going to Handled label ***\n";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+                }
+#endif
                 goto Handled;
             }
 
@@ -398,12 +679,78 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
 Handled:
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** KiDispatchException: At Handled label, converting context back ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
+        
+        /* Show the RIP value that will be written back */
+        const char msg2[] = "*** KiDispatchException: Context.Rip = ";
+        const char *p2 = msg2;
+        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
+        
+        char hex[17];
+        ULONG_PTR rip = Context.Rip;
+        for (int i = 0; i < 16; i++) {
+            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
+            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+        }
+        hex[16] = 0;
+        char *ph = hex;
+        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
+        
+        const char msg3[] = " ***\n";
+        const char *p3 = msg3;
+        while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
+        
+        /* Show TrapFrame->Rip before KeContextToTrapFrame */
+        const char msg4[] = "*** TrapFrame->Rip BEFORE = ";
+        const char *p4 = msg4;
+        while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
+        
+        rip = TrapFrame->Rip;
+        for (int i = 0; i < 16; i++) {
+            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
+            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+        }
+        hex[16] = 0;
+        ph = hex;
+        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
+        
+        const char msg5[] = " ***\n";
+        const char *p5 = msg5;
+        while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
+    }
+#endif
     /* Convert the context back into Trap/Exception Frames */
     KeContextToTrapFrame(&Context,
                          ExceptionFrame,
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
+#ifdef _M_AMD64
+    {
+        /* Show TrapFrame->Rip after KeContextToTrapFrame */
+        const char msg6[] = "*** TrapFrame->Rip AFTER = ";
+        const char *p6 = msg6;
+        while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
+        
+        char hex[17];
+        ULONG_PTR rip = TrapFrame->Rip;
+        for (int i = 0; i < 16; i++) {
+            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
+            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+        }
+        hex[16] = 0;
+        char *ph = hex;
+        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
+        
+        const char msg7[] = " ***\n";
+        const char *p7 = msg7;
+        while (*p7) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p7++); }
+    }
+#endif
     return;
 }
 

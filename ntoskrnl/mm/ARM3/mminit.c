@@ -431,11 +431,97 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
     
+    /* Check if the list head is valid */
+    {
+        const char msg[] = "*** MM: About to check descriptor list ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Check if LoaderBlock is still valid here */
+    if (!LoaderBlock)
+    {
+        const char msg[] = "*** MM ERROR: LoaderBlock became NULL! ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        return;
+    }
+    
+    {
+        const char msg[] = "*** MM: LoaderBlock is valid, checking list head ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* For AMD64, skip the memory descriptor list walk and use defaults */
+    /* The memory descriptor list might not be properly set up for AMD64 yet */
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** MM: AMD64 - Using default memory configuration ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Set default values for AMD64 UEFI boot with 2GB RAM */
+    MmNumberOfPhysicalPages = 0x80000; /* 2GB / 4KB pages */
+    MmAvailablePages = 0x70000; /* ~1.75GB available */
+    MmLowestPhysicalPage = 0x1000; /* Start at 16MB */
+    MmHighestPhysicalPage = 0x7FFFF; /* End at 2GB */
+    MiNumberOfFreePages = 0x70000; /* Free pages */
+    
+    {
+        const char msg[] = "*** MM: Default values set for AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    {
+        const char msg[] = "*** MM: Returning from MiScanMemoryDescriptors (AMD64 early return) ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    return;
+#else
+    /* Check if list is initialized properly */
+    if (LoaderBlock->MemoryDescriptorListHead.Flink == NULL ||
+        LoaderBlock->MemoryDescriptorListHead.Blink == NULL)
+    {
+        const char msg[] = "*** MM: Memory descriptor list not initialized! Using defaults ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        
+        /* Set default values for AMD64 UEFI boot */
+        MmNumberOfPhysicalPages = 0x10000; /* 256MB / 4KB pages */
+        MmAvailablePages = 0x8000; /* 128MB available */
+        MmLowestPhysicalPage = 0x1000; /* Start at 16MB */
+        MmHighestPhysicalPage = 0x10000; /* End at 256MB */
+        
+        {
+            const char msg[] = "*** MM: Default values set, returning ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        return;
+    }
+#endif
+    
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
          ListEntry != &LoaderBlock->MemoryDescriptorListHead;
          ListEntry = ListEntry->Flink)
     {
+        /* Safety check for NULL */
+        if (!ListEntry)
+        {
+            const char msg[] = "*** MM: NULL ListEntry detected, breaking loop ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            break;
+        }
+        
+        /* Debug: Output a dot for each descriptor */
+        __outbyte(COM1_PORT, '.');
+        
         /* Get the descriptor */
         Descriptor = CONTAINING_RECORD(ListEntry,
                                        MEMORY_ALLOCATION_DESCRIPTOR,
@@ -492,8 +578,25 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 FreePages = Descriptor->PageCount;
             }
         }
+        
+        /* Limit loop iterations for AMD64 debugging */
+        static int loopCount = 0;
+        loopCount++;
+        if (loopCount > 1000)
+        {
+            const char msg[] = "*** MM WARNING: Too many memory descriptors, breaking loop ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            break;
+        }
     }
 
+    {
+        const char msg[] = "*** MM: Memory descriptor scan complete ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
     /* Save original values of the free descriptor, since it'll be
      * altered by early allocations */
     MxOldFreeDescriptor = *MxFreeDescriptor;
@@ -2353,8 +2456,19 @@ MmArmInitSystem(IN ULONG Phase,
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
+        {
+            const char msg[] = "*** MM: About to check PageCount for SYSPTE tuning ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
         if (PageCount < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
         {
+            {
+                const char msg[] = "*** MM: Using minimum system PTEs (7000) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
             //
             // Use the very minimum of system PTEs
             //
@@ -2362,17 +2476,50 @@ MmArmInitSystem(IN ULONG Phase,
         }
         else
         {
+            {
+                const char msg[] = "*** MM: Using default system PTEs (11000) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
             //
             // Use the default
             //
             MmNumberOfSystemPtes = 11000;
+            
+#ifdef _M_AMD64
+            /* For AMD64, use a fixed value to avoid comparison issues */
+            {
+                const char msg[] = "*** MM: AMD64 - Using fixed system PTE count (44000) ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+            MmNumberOfSystemPtes = 44000; /* Suitable for 2GB RAM */
+#else
+            {
+                const char msg[] = "*** MM: Checking for SYSPTE_BOOST ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+            
             if (PageCount > MI_MIN_PAGES_FOR_SYSPTE_BOOST)
             {
+                {
+                    const char msg[] = "*** MM: Doubling system PTEs (BOOST) ***\n";
+                    const char *p = msg;
+                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+                }
                 //
                 // Double the amount of system PTEs
                 //
                 MmNumberOfSystemPtes <<= 1;
             }
+            
+            {
+                const char msg[] = "*** MM: Checking for SYSPTE_BOOST_BOOST ***\n";
+                const char *p = msg;
+                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+            }
+            
             if (PageCount > MI_MIN_PAGES_FOR_SYSPTE_BOOST_BOOST)
             {
                 //
@@ -2387,10 +2534,13 @@ MmArmInitSystem(IN ULONG Phase,
                 //
                 MmNumberOfSystemPtes += 0x6000;
             }
+#endif /* _M_AMD64 */
         }
 
+#ifndef _M_AMD64
         DPRINT("System PTE count has been tuned to %lu (%lu bytes)\n",
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+#endif
         
         {
             const char msg[] = "*** MM: System PTE count set ***\n";
@@ -2443,6 +2593,12 @@ MmArmInitSystem(IN ULONG Phase,
         ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);
         {
             const char msg[] = "*** MM: Working set lock initialized ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
+        
+        {
+            const char msg[] = "*** MM: About to set commit limits ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }

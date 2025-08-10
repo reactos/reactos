@@ -701,7 +701,7 @@ ULONG
 PcGetSerialPort(ULONG Index, PULONG Irq)
 {
     static const ULONG PcIrq[MAX_COM_PORTS] = {4, 3, 4, 3};
-    PUSHORT BasePtr;
+    // PUSHORT BasePtr; // TODO: Remove unused variable - temporarily commented for build
 
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
@@ -1764,6 +1764,13 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
 VOID
 MachInit(const char *CmdLine)
 {
+#ifdef _M_AMD64
+    /* On AMD64, use our special long mode implementation */
+    extern VOID Amd64MachInit(const char *CmdLine);
+    Amd64MachInit(CmdLine);
+    return;
+#endif
+
     /* Setup vtbl */
     RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = PcConsPutChar;
