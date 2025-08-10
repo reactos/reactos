@@ -295,9 +295,12 @@ MmAccessFault(IN ULONG FaultCode,
             if (NullFaultCount > 5)
             {
                 /* Too many NULL faults, something is wrong */
-                DPRINT1("Too many NULL pointer faults, halting to prevent infinite loop\n");
+                DPRINT1("Too many NULL pointer faults, returning ACCESS_VIOLATION to stop infinite loop\n");
                 return STATUS_ACCESS_VIOLATION;
             }
+            /* For early NULL faults, also return ACCESS_VIOLATION to prevent infinite loops */
+            DPRINT1("NULL pointer access detected, returning ACCESS_VIOLATION\n");
+            return STATUS_ACCESS_VIOLATION;
         }
 #endif
         /* This is an ARM3 fault */
