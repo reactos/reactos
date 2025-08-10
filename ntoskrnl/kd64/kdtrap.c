@@ -139,7 +139,11 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         IN BOOLEAN SecondChanceException)
 {
     BOOLEAN Unload;
+#ifdef _M_AMD64
+    ULONG_PTR ProgramCounter __attribute__((unused)); /* TODO: Used in non-AMD64 path for RIP adjustment - keep for future unification */
+#else
     ULONG_PTR ProgramCounter;
+#endif
     BOOLEAN Handled;
     NTSTATUS ReturnStatus;
     USHORT ReturnLength;

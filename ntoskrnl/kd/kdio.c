@@ -64,6 +64,19 @@ KdbpAcquireLock(
     _In_ PKSPIN_LOCK SpinLock)
 {
     KIRQL OldIrql;
+    PKPRCB Prcb;
+    
+    /* Get current processor control block */
+    Prcb = KeGetCurrentPrcb();
+    
+    /* Check if this CPU already owns the spinlock (recursion detection) */
+    if (Prcb->DebugDpcTime != 0)
+    {
+        /* We're in a recursive call on the same CPU - this would deadlock!
+         * Return the current IRQL without trying to acquire the lock again.
+         * The caller should handle this case properly. */
+        return KeGetCurrentIrql();
+    }
 
     /* Acquire the spinlock without waiting at raised IRQL */
     while (TRUE)
@@ -367,7 +380,33 @@ KdpSerialPrint(
 {
     PCCH pch = String;
     KIRQL OldIrql;
+    PKPRCB Prcb;
 
+    /* Get the current processor control block for per-CPU data */
+    Prcb = KeGetCurrentPrcb();
+    
+    /* Check if we're already in KdpSerialPrint on this CPU.
+     * We use DebugDpcTime as a recursion counter since it's not used at runtime.
+     * This prevents deadlock when a nested call tries to acquire the same spinlock.
+     */
+    if (Prcb->DebugDpcTime != 0)
+    {
+        /* We're in a nested call - output directly without spinlock */
+        /* Output the string directly to serial port */
+        while (pch < String + Length && *pch)
+        {
+            if (*pch == '\n')
+            {
+                KdPortPutByteEx(&SerialPortInfo, '\r');
+            }
+            KdPortPutByteEx(&SerialPortInfo, *pch);
+            ++pch;
+        }
+        return;
+    }
+    
+    /* Mark that we're in KdpSerialPrint on this CPU */
+    Prcb->DebugDpcTime = 1;
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
@@ -385,6 +424,9 @@ KdpSerialPrint(
 
     /* Release the spinlock */
     KdbpReleaseLock(&KdpSerialSpinLock, OldIrql);
+    
+    /* Clear the recursion flag for this CPU */
+    Prcb->DebugDpcTime = 0;
 }
 
 NTSTATUS
