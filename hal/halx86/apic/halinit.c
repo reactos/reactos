@@ -38,7 +38,10 @@ HalpInitProcessor(
     HalInitializeProfiling();
 
     /* Initialize the timer */
-    //ApicInitializeTimer(ProcessorNumber);
+#ifdef _M_AMD64
+    DPRINT1("HalpInitProcessor: Initializing APIC timer for processor %lu\n", ProcessorNumber);
+#endif
+    ApicInitializeTimer(ProcessorNumber);
 }
 
 VOID
