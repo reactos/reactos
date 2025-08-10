@@ -469,21 +469,11 @@ KdpPrint(
     NTSTATUS Status;
     BOOLEAN Enable;
     STRING OutputString;
-    static volatile LONG InKdpPrint = 0;
-    
-    /* Prevent recursive calls */
-    if (InterlockedCompareExchange(&InKdpPrint, 1, 0) != 0)
-    {
-        /* Already in KdpPrint, just return success to avoid recursion */
-        *Handled = TRUE;
-        return STATUS_SUCCESS;
-    }
 
     if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
         /* Mask validation failed */
         *Handled = TRUE;
-        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
         return STATUS_SUCCESS;
     }
 
@@ -509,7 +499,6 @@ KdpPrint(
                                   TrapFrame,
                                   ExceptionFrame,
                                   Handled);
-        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
         return Status;
     }
 
@@ -525,7 +514,6 @@ KdpPrint(
     {
         /* Fail */
         *Handled = TRUE;
-        InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
@@ -547,8 +535,6 @@ KdpPrint(
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
     *Handled = TRUE;
-    
-    InterlockedExchange(&InKdpPrint, 0);  /* Clear the recursion flag */
     return Status;
 }
 

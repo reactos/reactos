@@ -368,25 +368,6 @@ KdpSerialPrint(
     PCCH pch = String;
     KIRQL OldIrql;
 
-#ifdef _M_AMD64
-    /* Debug: Output directly to serial to confirm we're called */
-    {
-        const char msg[] = "*** KdpSerialPrint: Called! String='";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        /* Output first few chars of the string */
-        for (ULONG i = 0; i < Length && i < 20 && String[i]; i++)
-        {
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, String[i]);
-        }
-        
-        const char msg2[] = "' ***\n";
-        p = msg2;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#endif
 
     /* Acquire the printing spinlock without waiting at raised IRQL */
     OldIrql = KdbpAcquireLock(&KdpSerialSpinLock);
@@ -843,26 +824,6 @@ KdSendPacket(
 {
     PDBGKD_DEBUG_IO DebugIo;
 
-#ifdef _M_AMD64
-    /* Debug: Track if KdSendPacket is being called */
-    {
-        const char msg[] = "*** KdSendPacket: Called with PacketType=";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        /* Output packet type as hex */
-        for (int i = 7; i >= 0; i--) {
-            ULONG nibble = (PacketType >> (i * 4)) & 0xF;
-            char c = (nibble < 10) ? ('0' + nibble) : ('A' + nibble - 10);
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, c);
-        }
-        
-        const char nl[] = " ***\n";
-        p = nl;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#endif
 
     if (PacketType == PACKET_TYPE_KD_STATE_CHANGE32 ||
         PacketType == PACKET_TYPE_KD_STATE_CHANGE64)
@@ -954,24 +915,9 @@ extern VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
     if (!KdpDebugMode.Value)
     {
-#ifdef _M_AMD64
-        /* Debug: KdpDebugMode.Value is 0, output won't work */
-        {
-            const char msg[] = "*** KdSendPacket: KdpDebugMode.Value is 0, not printing! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        }
-#endif
         return;
     }
 
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdSendPacket: KdpDebugMode.Value is set, printing via KdIoPrintString ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#endif
 
     /* Print the string proper */
     KdIoPrintString(MessageData->Buffer, MessageData->Length);

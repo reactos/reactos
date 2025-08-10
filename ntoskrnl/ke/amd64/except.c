@@ -467,47 +467,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
 
-#ifdef _M_AMD64
-    /* Debug output to serial port */
-    {
-        const char msg[] = "*** KiDispatchException called ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        /* Output exception code */
-        if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
-        {
-            const char msg2[] = "*** Exception: STATUS_BREAKPOINT ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-            
-            /* Check if it's a debug service */
-            if (ExceptionRecord->NumberParameters > 0)
-            {
-                const char msg3[] = "*** Has parameters, first param: ";
-                const char *p3 = msg3;
-                while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
-                
-                /* Output first parameter value */
-                ULONG_PTR val = ExceptionRecord->ExceptionInformation[0];
-                char hex[17];
-                int i;
-                for (i = 15; i >= 0; i--)
-                {
-                    int digit = (val >> (i * 4)) & 0xF;
-                    hex[15-i] = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                }
-                hex[16] = 0;
-                char *ph = hex;
-                while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
-                
-                const char msg4[] = " ***\n";
-                const char *p4 = msg4;
-                while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
-            }
-        }
-    }
-#endif
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -559,13 +518,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Check if this is a first-chance exception */
         if (FirstChance)
         {
-#ifdef _M_AMD64
-            {
-                const char msg[] = "*** Calling KiDebugRoutine (first chance) ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-            }
-#endif
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
                                ExceptionFrame,
@@ -575,13 +527,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                                FALSE))
             {
                 /* Exception was handled */
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KiDispatchException: Exception handled, going to Handled label ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-                }
-#endif
                 goto Handled;
             }
 
@@ -679,78 +624,12 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
 Handled:
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KiDispatchException: At Handled label, converting context back ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        /* Show the RIP value that will be written back */
-        const char msg2[] = "*** KiDispatchException: Context.Rip = ";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        
-        char hex[17];
-        ULONG_PTR rip = Context.Rip;
-        for (int i = 0; i < 16; i++) {
-            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
-            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
-        }
-        hex[16] = 0;
-        char *ph = hex;
-        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
-        
-        const char msg3[] = " ***\n";
-        const char *p3 = msg3;
-        while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
-        
-        /* Show TrapFrame->Rip before KeContextToTrapFrame */
-        const char msg4[] = "*** TrapFrame->Rip BEFORE = ";
-        const char *p4 = msg4;
-        while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
-        
-        rip = TrapFrame->Rip;
-        for (int i = 0; i < 16; i++) {
-            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
-            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
-        }
-        hex[16] = 0;
-        ph = hex;
-        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
-        
-        const char msg5[] = " ***\n";
-        const char *p5 = msg5;
-        while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
-    }
-#endif
     /* Convert the context back into Trap/Exception Frames */
     KeContextToTrapFrame(&Context,
                          ExceptionFrame,
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
-#ifdef _M_AMD64
-    {
-        /* Show TrapFrame->Rip after KeContextToTrapFrame */
-        const char msg6[] = "*** TrapFrame->Rip AFTER = ";
-        const char *p6 = msg6;
-        while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
-        
-        char hex[17];
-        ULONG_PTR rip = TrapFrame->Rip;
-        for (int i = 0; i < 16; i++) {
-            ULONG_PTR nibble = (rip >> (60 - i * 4)) & 0xF;
-            hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
-        }
-        hex[16] = 0;
-        char *ph = hex;
-        while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
-        
-        const char msg7[] = " ***\n";
-        const char *p7 = msg7;
-        while (*p7) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p7++); }
-    }
-#endif
     return;
 }
 

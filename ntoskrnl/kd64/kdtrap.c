@@ -152,28 +152,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
         (ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK))
     {
-#ifdef _M_AMD64
-        /* Debug: Show what service is being requested */
-        {
-            const char msg[] = "*** KdpTrap: Breakpoint service: ";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-            
-            char hex[17];
-            ULONG_PTR value = ExceptionRecord->ExceptionInformation[0];
-            for (int i = 0; i < 16; i++) {
-                ULONG_PTR nibble = (value >> (60 - i * 4)) & 0xF;
-                hex[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
-            }
-            hex[16] = 0;
-            char *ph = hex;
-            while (*ph) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *ph++); }
-            
-            const char msg2[] = " ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        }
-#endif
         /* Save Program Counter */
         ProgramCounter = KeGetContextPc(ContextRecord);
 
@@ -183,13 +161,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         {
             /* DbgPrint */
             case BREAKPOINT_PRINT:
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KdpTrap: About to call KdpPrint ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-                }
-#endif
                 /* Call the worker routine */
                 ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(ContextRecord),
                                         (ULONG)KdpGetParameterFour(ContextRecord),
@@ -200,13 +171,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                         ExceptionFrame,
                                         &Handled);
 
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KdpTrap: KdpPrint returned ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-                }
-#endif
 
                 /* Mark as handled - we processed the debug print */
                 Handled = TRUE;
@@ -306,23 +270,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Return TRUE or FALSE to caller */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdpTrap: Returning ";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        if (Handled) {
-            const char msg2[] = "TRUE (handled) ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        } else {
-            const char msg2[] = "FALSE (not handled) ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        }
-    }
-#endif
     return Handled;
 }
 
