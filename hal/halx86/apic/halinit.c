@@ -44,12 +44,43 @@ HalpInitProcessor(
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+#ifdef _M_AMD64
+    #define COM1_PORT 0x3F8
+    {
+        const char msg[] = "*** HalpInitPhase0: entered ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Skip DPRINT1 and HalpPrintApicTables on AMD64 - might cause issues */
+    {
+        const char msg[] = "*** HalpInitPhase0: Skipping DPRINT1 and ACPI table print on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#else
     DPRINT1("Using HAL: APIC %s %s\n",
             (HalpBuildType & PRCB_BUILD_UNIPROCESSOR) ? "UP" : "SMP",
             (HalpBuildType & PRCB_BUILD_DEBUG) ? "DBG" : "REL");
 
     HalpPrintApicTables();
+#endif
 
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** HalpInitPhase0: About to enable interrupt handlers ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    
+    /* Skip interrupt handler registration on AMD64 for now */
+    {
+        const char msg[] = "*** HalpInitPhase0: Skipping interrupt handler registration on AMD64 ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+    /* TODO: Properly implement interrupt handlers for AMD64 */
+#else
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,
                                0,
@@ -65,6 +96,15 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                APIC_PROFILE_LEVEL,
                                HalpProfileInterrupt,
                                Latched);
+#endif
+
+#ifdef _M_AMD64
+    {
+        const char msg[] = "*** HalpInitPhase0: completed ***\n";
+        const char *p = msg;
+        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+    }
+#endif
 }
 
 VOID

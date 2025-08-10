@@ -312,7 +312,17 @@ HalInitSystem(
         }
         /* Call the PIC initialization with simplified parameters */
         extern VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+        {
+            const char msg[] = "*** HAL: About to call HalpInitializePICs ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
         HalpInitializePICs(FALSE); /* Don't enable interrupts yet */
+        {
+            const char msg[] = "*** HAL: HalpInitializePICs returned ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
+        }
 #else
         HalpInitializePICs(TRUE);
 #endif
@@ -468,18 +478,7 @@ HalInitSystem(
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
-#ifdef _M_AMD64
-        /* Call HalpInitPhase0 for AMD64 */
-        {
-            const char msg[] = "*** HAL: Calling HalpInitPhase0 for AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        extern VOID HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock);
         HalpInitPhase0(LoaderBlock);
-#else
-        HalpInitPhase0(LoaderBlock);
-#endif
         
         {
             const char msg[] = "*** HAL: HalpInitPhase0 handling complete ***\n";

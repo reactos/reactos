@@ -23,9 +23,6 @@ if(ARCH STREQUAL "i386")
 
     list(APPEND HAL_GENERIC_ASM_SOURCE
         generic/v86.S)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND HAL_GENERIC_SOURCE
-        generic/halinit_amd64.c)
 endif()
 
 add_asm_files(lib_hal_generic_asm ${HAL_GENERIC_ASM_SOURCE})

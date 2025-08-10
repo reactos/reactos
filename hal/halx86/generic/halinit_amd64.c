@@ -10,7 +10,7 @@
 #include <hal.h>
 #include <debug.h>
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) && !defined(CONFIG_APIC)
 
 /* GLOBALS ******************************************************************/
 

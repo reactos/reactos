@@ -1145,7 +1145,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
         const char *p = msg;
         while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         
-        /* Test INT3 directly first */
+        /* Test INT3 directly first - TEMPORARILY DISABLED */
+#if 0
         {
             const char msg[] = "*** KERNEL: Testing INT3 breakpoint ***\n";
             const char *p = msg;
@@ -1157,6 +1158,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
             const char msg2[] = "*** KERNEL: Returned from INT3 ***\n";
             const char *p2 = msg2;
             while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
+        }
+#endif
+        {
+            const char msg[] = "*** KERNEL: Skipping INT3 test for now (hangs on AMD64) ***\n";
+            const char *p = msg;
+            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
         
         /* Test DPRINT now - TEMPORARILY DISABLED DUE TO INFINITE LOOP */
