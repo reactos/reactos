@@ -747,9 +747,60 @@ NTAPI
 KiNpxNotAvailableFaultHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
-    return -1;
+    PKTHREAD Thread;
+    ULONG64 Cr0;
+    
+    /* Get the current thread */
+    Thread = KeGetCurrentThread();
+    
+    /* Check if we have FPU state to restore */
+    if (!Thread)
+    {
+        /* No thread, this is fatal */
+        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
+        return STATUS_UNSUCCESSFUL;
+    }
+    
+    /* Get current CR0 */
+    Cr0 = __readcr0();
+    
+    /* Check if FPU is present but disabled */
+    if (Cr0 & CR0_EM)
+    {
+        /* FPU emulation not supported on AMD64 */
+        DPRINT1("FPU emulation requested but not supported on AMD64\n");
+        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, (ULONG_PTR)Cr0, 0, 2, TrapFrame);
+        return STATUS_UNSUCCESSFUL;
+    }
+    
+    /* Clear the TS flag to enable FPU access */
+    __writecr0(Cr0 & ~CR0_TS);
+    
+    /* Check if this thread has FPU state to restore */
+    if (Thread->StateSaveArea && Thread->NpxState != 0)
+    {
+        /* Restore FPU/XMM state using FXRSTOR */
+        KiRestoreXState(Thread->StateSaveArea, Thread->NpxState);
+    }
+    else
+    {
+        /* Initialize FPU for first use */
+        __asm__ __volatile__("fninit");
+        
+        /* Initialize MXCSR for SSE */
+        __asm__ __volatile__(
+            "push $0x1F80\n\t"
+            "ldmxcsr (%%rsp)\n\t"
+            "add $8, %%rsp\n\t"
+            ::: "memory"
+        );
+        
+        /* Mark thread as having FPU state (basic x87 + SSE) */
+        Thread->NpxState = 0x3; /* XSTATE_LEGACY_FLOATING_POINT | XSTATE_LEGACY_SSE */
+    }
+    
+    /* FPU is now available */
+    return STATUS_SUCCESS;
 }
 
 static
