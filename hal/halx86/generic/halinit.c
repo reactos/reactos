@@ -304,12 +304,15 @@ HalInitSystem(
         }
         
 #ifdef _M_AMD64
-        /* TODO: Implement proper PIC initialization for AMD64 */
+        /* Initialize PICs for AMD64 */
         {
-            const char msg[] = "*** HAL: Skipping PIC init on AMD64 for now ***\n";
+            const char msg[] = "*** HAL: Initializing PICs for AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+        /* Call the PIC initialization with simplified parameters */
+        extern VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+        HalpInitializePICs(FALSE); /* Don't enable interrupts yet */
 #else
         HalpInitializePICs(TRUE);
 #endif
@@ -419,12 +422,14 @@ HalInitSystem(
         }
         
 #ifdef _M_AMD64
-        /* TODO: Implement proper clock initialization for AMD64 */
+        /* Initialize clock for AMD64 */
         {
-            const char msg[] = "*** HAL: Skipping clock init on AMD64 for now ***\n";
+            const char msg[] = "*** HAL: Initializing clock for AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+        extern VOID NTAPI HalpInitializeClock(VOID);
+        HalpInitializeClock();
 #else
         HalpInitializeClock();
 #endif
@@ -464,12 +469,14 @@ HalInitSystem(
         }
         
 #ifdef _M_AMD64
-        /* Skip HalpInitPhase0 on AMD64 - APIC initialization issues */
+        /* Call HalpInitPhase0 for AMD64 */
         {
-            const char msg[] = "*** HAL: Skipping HalpInitPhase0 on AMD64 ***\n";
+            const char msg[] = "*** HAL: Calling HalpInitPhase0 for AMD64 ***\n";
             const char *p = msg;
             while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
+        extern VOID HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock);
+        HalpInitPhase0(LoaderBlock);
 #else
         HalpInitPhase0(LoaderBlock);
 #endif
