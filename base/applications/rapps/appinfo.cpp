@@ -376,7 +376,7 @@ CAvailableApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
 }
 
 static InstallerType
-GetInstallerTypeFromString(const CStringW Installer)
+GetInstallerTypeFromString(const CStringW &Installer)
 {
     if (Installer.CompareNoCase(L"Inno") == 0)
         return INSTALLER_INNO;

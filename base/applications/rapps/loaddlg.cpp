@@ -160,7 +160,7 @@ struct DownloadInfo
     DownloadType DLType;
     InstallerType IType;
     InstallerType IExecType = INSTALLER_UNKNOWN;
-    UINT Flags;
+    UINT Flags = 0;
     CStringW szUrl;
     CStringW szName;
     CStringW szSHA1;
