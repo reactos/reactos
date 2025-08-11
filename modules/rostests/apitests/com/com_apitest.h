@@ -41,6 +41,7 @@
 #include <htiface.h>
 #include <mshtml.h>
 #include <initguid.h>
+#include <apitest.h>
 
 typedef IUnknown *PUNKNOWN;
 
