@@ -1092,7 +1092,7 @@ run:
         if (Info.IType == INSTALLER_GENERATE)
         {
             params = L"/" CMD_KEY_GENINST + CStringW(bSilentInstall ? L" /S" : L"") +
-                     L" \"" + Info.szPackageName + L"\" \"" + CStringW(shExInfo.lpFile) + L"\"";
+                     L" \"" + Info.szPackageName + L"\" \"" + shExInfo.lpFile + L"\"";
             shExInfo.lpParameters = params;
             shExInfo.lpFile = app.GetBuffer(MAX_PATH);
             GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
