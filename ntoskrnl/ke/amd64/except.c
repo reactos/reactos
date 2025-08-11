@@ -357,9 +357,38 @@ KiDispatchExceptionToUser(
     _SEH2_EXCEPT((LocalExceptRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord),
                  EXCEPTION_EXECUTE_HANDLER)
     {
-        // FIXME: handle stack overflow
+        /* Check if this is a stack overflow exception */
+        if (LocalExceptRecord.ExceptionCode == STATUS_STACK_OVERFLOW)
+        {
+            /* We have exhausted the user stack, cannot dispatch to user mode */
+            DPRINT1("Stack overflow detected while dispatching exception to user mode\n");
+            DPRINT1("Original exception: %lx at %p\n", 
+                    ExceptionRecord->ExceptionCode, 
+                    ExceptionRecord->ExceptionAddress);
+            
+            /* Mark the thread as having a stack overflow */
+            PsGetCurrentThread()->ExceptionPort = NULL;
+            
+            /* Return failure to trigger second chance handling */
+            _disable();
+            return FALSE;
+        }
+        
+        /* Check if we got an access violation while touching user stack */
+        if (LocalExceptRecord.ExceptionCode == STATUS_ACCESS_VIOLATION)
+        {
+            /* The user stack is inaccessible */
+            DPRINT1("User stack inaccessible while dispatching exception\n");
+            DPRINT1("Failed at address: %p\n", LocalExceptRecord.ExceptionAddress);
+            
+            /* Return failure to trigger second chance handling */
+            _disable();
+            return FALSE;
+        }
 
-        /* Nothing we can do here */
+        /* Some other exception occurred - still can't dispatch */
+        DPRINT1("Exception %lx while dispatching to user mode\n", 
+                LocalExceptRecord.ExceptionCode);
         _disable();
         return FALSE;
     }
@@ -796,6 +825,71 @@ KiFloatingErrorFaultHandler(
     /* Unknown floating point error */
     DPRINT1("FPU: Unknown floating point error, MXCSR=%08lx\n", MxCsr);
     return STATUS_FLOAT_INVALID_OPERATION;
+}
+
+BOOLEAN
+NTAPI
+KiIsKernelStackOverflow(
+    IN ULONG_PTR FaultAddress,
+    IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    ULONG_PTR StackBase, StackLimit;
+    
+    /* Get the current thread */
+    Thread = KeGetCurrentThread();
+    if (!Thread) return FALSE;
+    
+    /* Get kernel stack bounds */
+    StackBase = Thread->InitialStack;
+    StackLimit = Thread->StackLimit;
+    
+    /* Check if we have valid stack bounds */
+    if (!StackBase || !StackLimit) return FALSE;
+    
+    /* Check if the fault address is below the stack limit (stack overflow) */
+    if (FaultAddress < StackLimit && FaultAddress >= (StackLimit - PAGE_SIZE))
+    {
+        /* This is likely a stack overflow */
+        DPRINT1("Kernel stack overflow detected!\n");
+        DPRINT1("Fault Address: %p, Stack Limit: %p, Stack Base: %p\n",
+                (PVOID)FaultAddress, (PVOID)StackLimit, (PVOID)StackBase);
+        DPRINT1("Thread: %p, Process: %p\n", Thread, Thread->Process);
+        
+        /* Check RSP to see how bad the overflow is */
+        if (TrapFrame)
+        {
+            ULONG_PTR Rsp = TrapFrame->Rsp;
+            DPRINT1("RSP: %p\n", (PVOID)Rsp);
+            
+            if (Rsp < StackLimit)
+            {
+                DPRINT1("Critical: RSP is already below stack limit by %lu bytes\n",
+                        StackLimit - Rsp);
+            }
+        }
+        
+        return TRUE;
+    }
+    
+    /* Not a stack overflow */
+    return FALSE;
+}
+
+NTSTATUS
+NTAPI
+KiHandleKernelStackOverflow(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    /* We can't recover from kernel stack overflow - bug check */
+    KeBugCheckEx(KERNEL_STACK_INPAGE_ERROR,
+                 0, /* Reserved */
+                 TrapFrame->Rsp,
+                 TrapFrame->Rip,
+                 (ULONG_PTR)TrapFrame);
+                 
+    /* Should never get here */
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
