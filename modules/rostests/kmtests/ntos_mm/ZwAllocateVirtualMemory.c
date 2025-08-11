@@ -322,9 +322,10 @@ StressTesting(ULONG AllocationType)
     SIZE_T RegionSize, basesSize;
 
 #ifdef _WIN64
-    // 128 TB total
-    basesSize = 16 * 1024 * 1024;
-    RegionSize = 8 * 1024 * 1024;
+    // 2 TB total
+    // Going too high causes the test to time out
+    basesSize = 2 * 1024 * 1024;
+    RegionSize = 1 * 1024 * 1024;
 #else
     // 5 GB total
     basesSize = 1024;
@@ -376,6 +377,47 @@ StressTesting(ULONG AllocationType)
 
     ExFreePoolWithTag(bases, 'stts');
     return ReturnStatus;
+}
+
+static
+VOID
+ZeroBitsTest(VOID)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PVOID Base = NULL;
+    SIZE_T RegionSize = 1;
+    ULONG_PTR MaxPtr = -1;
+
+    /* https://stackoverflow.com/a/50553691 */
+#ifdef _WIN64
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+    {
+        for (ULONG_PTR ZeroBits = MaxPtr; Status == STATUS_SUCCESS && ZeroBits > 32; ZeroBits >>= 1)
+        {
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, ZeroBits, &RegionSize, MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
+            trace("%p:%p - Status: %x\n", ZeroBits, Base, Status);
+            if ((ULONG_PTR)Base > ZeroBits)
+            {
+                ok_eq_pointer((ULONG_PTR)Base, (ZeroBits >> 16) << 16);
+            }
+            ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+            Base = NULL;
+            RegionSize = 1;
+        }
+        ok(Status == STATUS_SUCCESS || Status == STATUS_NO_MEMORY, "ZeroBits mask test failed\n");
+    }
+#endif
+
+    Status = STATUS_SUCCESS;
+    for (ULONG_PTR ZeroBits = 0; Status == STATUS_SUCCESS && ZeroBits <= 32; ZeroBits += 1)
+    {
+        Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, ZeroBits, &RegionSize, MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
+        ok_bool_true((ULONG_PTR)Base < (MaxPtr >> ZeroBits), "Base must be < (MaxPtr >> ZeroBits)\n");
+        ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
+        Base = NULL;
+        RegionSize = 1;
+    }
+    ok(Status == STATUS_SUCCESS || Status == STATUS_NO_MEMORY, "ZeroBits test failed\n");
 }
 
 
@@ -554,6 +596,8 @@ START_TEST(ZwAllocateVirtualMemory)
 #else
     ok_eq_hex(Status, STATUS_NO_MEMORY);
 #endif
+
+    ZeroBitsTest();
 
     SystemProcessTest();
 }
