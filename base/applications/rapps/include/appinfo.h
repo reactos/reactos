@@ -190,7 +190,7 @@ class CAvailableApplicationInfo : public CAppInfo
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
     virtual InstallerType
-    GetInstallerType(bool NestedType) const override;
+    GetInstallerType(bool NestedType = false) const override;
     virtual InstallerType
     GetInstallerInfo(CStringW &SilentParameters) const override;
     virtual BOOL
@@ -238,7 +238,7 @@ class CInstalledApplicationInfo : public CAppInfo
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
     virtual InstallerType
-    GetInstallerType(bool NestedType) const override;
+    GetInstallerType(bool NestedType = false) const override;
     virtual BOOL
     UninstallApplication(UninstallCommandFlags Flags) override;
 };
