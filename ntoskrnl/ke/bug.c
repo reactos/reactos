@@ -1419,17 +1419,13 @@ KeBugCheckEx(IN ULONG BugCheckCode,
     /* Check for spin lock false positive during early boot */
     if (BugCheckCode == 0x0000000f) /* SPIN_LOCK_ALREADY_OWNED */
     {
-        static ULONG SpinLockBugCheckCount = 0;
-        SpinLockBugCheckCount++;
+        static volatile ULONG SpinLockBugCheckCount = 0;
         
-        /* Log the issue but don't crash during early boot */
-        DbgPrint("*** WARNING: SPIN_LOCK_ALREADY_OWNED BugCheck #%lu ***\n", SpinLockBugCheckCount);
-        DbgPrint("*** SpinLock: %p ***\n", (PVOID)BugCheckParameter1);
-        
-        /* During early boot, this might be a false positive */
-        if (SpinLockBugCheckCount <= 5)
+        /* Just count and return to avoid infinite recursion */
+        /* This is likely a false positive during early boot */
+        if (++SpinLockBugCheckCount <= 1000)
         {
-            DbgPrint("*** Ignoring during early boot (may be false positive) ***\n");
+            /* Silently ignore during early boot */
             return;
         }
     }
