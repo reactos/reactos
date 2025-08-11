@@ -367,7 +367,7 @@ KiDispatchExceptionToUser(
                     ExceptionRecord->ExceptionAddress);
             
             /* Mark the thread as having a stack overflow */
-            PsGetCurrentThread()->ExceptionPort = NULL;
+            /* NOTE: ExceptionPort may not exist in all versions, skip this for now */
             
             /* Return failure to trigger second chance handling */
             _disable();
@@ -776,11 +776,7 @@ NTAPI
 KiFloatingErrorFaultHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    PKTHREAD Thread;
     ULONG MxCsr;
-    
-    /* Get current thread */
-    Thread = KeGetCurrentThread();
     
     /* Check if this is a kernel mode fault */
     if (TrapFrame->SegCs & MODE_MASK)
@@ -841,8 +837,8 @@ KiIsKernelStackOverflow(
     if (!Thread) return FALSE;
     
     /* Get kernel stack bounds */
-    StackBase = Thread->InitialStack;
-    StackLimit = Thread->StackLimit;
+    StackBase = (ULONG_PTR)Thread->InitialStack;
+    StackLimit = (ULONG_PTR)Thread->StackLimit;
     
     /* Check if we have valid stack bounds */
     if (!StackBase || !StackLimit) return FALSE;
@@ -1179,7 +1175,17 @@ KiGeneralProtectionFaultHandler(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    ASSERT(FALSE);
+    /* Log the unhandled GPF for debugging */
+    DPRINT1("Unhandled General Protection Fault!\n");
+    DPRINT1("RIP: %p, CS: %04x\n", TrapFrame->Rip, TrapFrame->SegCs);
+    DPRINT1("RSP: %p, SS: %04x\n", TrapFrame->Rsp, TrapFrame->SegSs);
+    DPRINT1("RAX: %p, RBX: %p\n", TrapFrame->Rax, TrapFrame->Rbx);
+    DPRINT1("RCX: %p, RDX: %p\n", TrapFrame->Rcx, TrapFrame->Rdx);
+    DPRINT1("Instruction bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+            Instructions[0], Instructions[1], Instructions[2], Instructions[3],
+            Instructions[4], Instructions[5], Instructions[6], Instructions[7]);
+    
+    /* For now, return unsuccessful to avoid reboot loop */
     return STATUS_UNSUCCESSFUL;
 }
 
