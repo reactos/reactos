@@ -1,3 +1,5 @@
+# This "example" CMakeLists.txt is not part of the build.
+
 cmake_minimum_required(VERSION 3.10)
 
 set (CMAKE_CONFIGURATION_TYPES "Debug;Release")
