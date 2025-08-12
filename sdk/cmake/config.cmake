@@ -67,8 +67,14 @@ set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
 If you don't use GDB, don't enable this.")
 
+if(MSVC_IDE)
+# HACK for MSVC_IDE.
+    set(DBG TRUE CACHE BOOL
+"Whether to compile for debugging.")
+else()
 cmake_dependent_option(DBG "Whether to compile for debugging." TRUE
                        "CMAKE_BUILD_TYPE STREQUAL Debug" FALSE)
+endif()
 
 if(MSVC)
     set(KDBG FALSE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
