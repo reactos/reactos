@@ -221,7 +221,7 @@ static void TEST_NumParts(void)
 
         if (!mod[m])
         {
-            // trace("No module for test %d\n", p.first); // Already reported by TEST_LocaleTests().
+            // Failure is already reported by TEST_LocaleTests().
             continue;
         }
 
@@ -236,20 +236,20 @@ static void TEST_NumParts(void)
     }
 }
 
-static BOOL LoadPart(_In_ int pn, _In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
+static BOOL LoadPart(_In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
 {
     auto s = parts[p->Num];
     E_MODULE m = s.eModule;
 
     if (!mod[m])
     {
-        // trace("No module for match test s%02d (pair %d)\n", p->Num, pn); // Already reported by TEST_LocaleTests().
+        // Failure is already reported by TEST_LocaleTests().
         return FALSE;
     }
 
     if (s.nParts != s.gotParts)
     {
-        // trace("Invalid data for match test s%02d (pair %d)\n", p->Num, pn); // Already reported by TEST_NumParts().
+        // Failure is already reported by TEST_NumParts().
         return FALSE;
     }
 
@@ -270,8 +270,8 @@ static void TEST_PartMatches(void)
     {
         WCHAR szP1[MAX_PATH], szP2[MAX_PATH];
 
-        if (!LoadPart(1, &match.p1, szP1, _countof(szP1)) ||
-            !LoadPart(2, &match.p2, szP2, _countof(szP2)))
+        if (!LoadPart(&match.p1, szP1, _countof(szP1)) ||
+            !LoadPart(&match.p2, szP2, _countof(szP2)))
         {
             // Failures are already reported.
             continue;
