@@ -1,8 +1,8 @@
 /*
  * PROJECT:     xml2sdb
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Implement platform agnostic read / write / allocation functions, parse commandline
- * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2025 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include "xml2sdb.h"
@@ -174,14 +174,20 @@ VOID NTAPI RtlSecondsSince1970ToTime(IN ULONG SecondsSince1970,
 }
 
 
-bool xml_2_db(const char* xml, const WCHAR* sdb);
-
-static bool run_one(std::string& input, std::string& output)
+static bool convert(const std::string& input, const std::string& output, PlatformType platform)
 {
     sdbstring outputW(output.begin(), output.end());
-    if (!xml_2_db(input.c_str(), outputW.c_str()))
+    Database db;
+    if (!db.fromXml(input.c_str(), platform))
+    {
+        printf("Failed to read XML file '%s'\n", input.c_str());
         return false;
-    input = output = "";
+    }
+    if (!db.toSdb(outputW.c_str()))
+    {
+        printf("Failed to write SDB file '%s'\n", output.c_str());
+        return false;
+    }
     return true;
 }
 
@@ -202,9 +208,16 @@ static void update_loglevel(int argc, char* argv[], int& i)
     g_ShimDebugLevel = strtoul(value.c_str(), NULL, 10);
 }
 
+static PlatformType
+parse_platform(const std::string &input)
+{
+    return (PlatformType)str_to_enum(input, platform_to_flag);
+}
+
 int main(int argc, char * argv[])
 {
     std::string input, output;
+    PlatformType platform = PLATFORM_ANY;
     srand(time(0));
 
     for (int i = 1; i < argc; ++i)
@@ -223,15 +236,25 @@ int main(int argc, char * argv[])
         case 'l':
             update_loglevel(argc, argv, i);
             break;
+        case 'p':
+            platform = parse_platform(get_strarg(argc, argv, i));
+            break;
         }
-        if (input.empty() || output.empty())
-            continue;
+    }
+    if (input.empty() || output.empty())
+    {
+        printf("Usage: %s -i <input.xml> -o <output.sdb> [-l <loglevel>] [-v <version>]\n", argv[0]);
+        printf("  -i <input.xml>   : Input XML file to convert\n");
+        printf("  -o <output.sdb>  : Output SDB file to create\n");
+        printf("  -l <loglevel>    : Set log level (1=ERR, 2=WARN, 3=INFO)\n");
+        printf("  -p <platform>    : Set the runtime platform (X86, AMD64, ANY)\n");
+        return 1;
+    }
 
-        if (!run_one(input, output))
-        {
-            printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
-            return 1;
-        }
+    if (!convert(input, output, platform))
+    {
+        printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
+        return 1;
     }
     return 0;
 }
