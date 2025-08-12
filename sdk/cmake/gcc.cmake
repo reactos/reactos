@@ -168,7 +168,11 @@ endif()
 add_compile_options(-march=${OARCH} -mtune=${TUNE})
 
 # Warnings, errors
-if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang" AND
+   NOT ARCH STREQUAL "amd64" AND
+   NOT CMAKE_BUILD_TYPE STREQUAL "Release" AND
+   NOT CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" AND
+   NOT CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     add_compile_options(-Werror)
 endif()
 
@@ -238,7 +242,6 @@ elseif(ARCH STREQUAL "amd64")
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-mpreferred-stack-boundary=4)
     endif()
-    add_compile_options(-Wno-error)
 endif()
 
 # Other
