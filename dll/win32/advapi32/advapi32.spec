@@ -28,13 +28,33 @@
 @ stdcall AddAuditAccessAce(ptr long long ptr long long)
 @ stdcall AddAuditAccessAceEx(ptr long long long ptr long long)
 @ stdcall AddAuditAccessObjectAce(ptr long long long ptr ptr ptr long long)
+@ stdcall -stub -version=0x600+ AddMandatoryAce(ptr long long long ptr)
 @ stdcall AddUsersToEncryptedFile(wstr ptr)
+@ stub -version=0x600+ AddUsersToEncryptedFileEx
 @ stdcall AdjustTokenGroups(long long ptr long ptr ptr)
 @ stdcall AdjustTokenPrivileges(long long ptr long ptr ptr)
 @ stdcall AllocateAndInitializeSid(ptr long long long long long long long long long ptr)
 @ stdcall AllocateLocallyUniqueId(ptr)
 @ stdcall AreAllAccessesGranted(long long)
 @ stdcall AreAnyAccessesGranted(long long)
+@ stdcall -stub -version=0x600+ AuditComputeEffectivePolicyBySid(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ AuditComputeEffectivePolicyByToken(long ptr long ptr)
+@ stdcall -stub -version=0x600+ AuditEnumerateCategories(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditEnumeratePerUserPolicy(ptr)
+@ stdcall -stub -version=0x600+ AuditEnumerateSubCategories(ptr long ptr ptr)
+@ stdcall -stub -version=0x600+ AuditFree(ptr)
+@ stdcall -stub -version=0x600+ AuditLookupCategoryGuidFromCategoryId(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditLookupCategoryIdFromCategoryGuid(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditLookupCategoryNameA(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditLookupCategoryNameW(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditLookupSubCategoryNameA(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditLookupSubCategoryNameW(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditQueryPerUserPolicy(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ AuditQuerySecurity(long ptr)
+@ stdcall -stub -version=0x600+ AuditQuerySystemPolicy(ptr long ptr)
+@ stdcall -stub -version=0x600+ AuditSetPerUserPolicy(ptr ptr long)
+@ stdcall -stub -version=0x600+ AuditSetSecurity(ptr ptr)
+@ stdcall -stub -version=0x600+ AuditSetSystemPolicy(ptr long)
 @ stdcall BackupEventLogA(long str)
 @ stdcall BackupEventLogW(long wstr)
 @ stdcall BuildExplicitAccessWithNameA(ptr str long long long)
@@ -58,6 +78,7 @@
 @ stdcall ChangeServiceConfig2W(long long ptr)
 @ stdcall ChangeServiceConfigA(long long long long wstr str ptr str str str str)
 @ stdcall ChangeServiceConfigW(long long long long wstr wstr ptr wstr wstr wstr wstr)
+@ stub -version=0x600 CheckAppInitBlockedServiceIdentity # 6.0 only
 @ stdcall CheckTokenMembership(long ptr ptr)
 @ stdcall ClearEventLogA(long str)
 @ stdcall ClearEventLogW(long wstr)
@@ -65,10 +86,13 @@
 @ stdcall CloseEncryptedFileRaw(ptr)
 @ stdcall CloseEventLog(long)
 @ stdcall CloseServiceHandle(long)
+@ stdcall -stub -version=0x600+ CloseThreadWaitChainSession(ptr)
 @ stub CloseTrace
 @ stdcall CommandLineFromMsiDescriptor(wstr ptr ptr)
 @ stub ComputeAccessTokenFromCodeAuthzLevel
 @ stdcall ControlService(long long ptr)
+@ stdcall -stub -version=0x600+ ControlServiceExA(ptr long long ptr)
+@ stdcall -stub -version=0x600+ ControlServiceExW(ptr long long ptr)
 @ stdcall -version=0x502 ControlTraceA(double str ptr long) ntdll.EtwControlTraceA
 @ stdcall -version=0x600+ ControlTraceA(double str ptr long) EtwControlTraceA
 @ stdcall -version=0x502 ControlTraceW(double wstr ptr long) ntdll.EtwControlTraceW
@@ -108,35 +132,50 @@
 @ stdcall CreateServiceW(long wstr wstr long long long long wstr wstr ptr wstr wstr wstr)
 @ stdcall CreateTraceInstanceId(ptr ptr) ntdll.EtwCreateTraceInstanceId
 @ stdcall CreateWellKnownSid(long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ CredBackupCredentials(ptr wstr ptr long long)
 @ stdcall CredDeleteA(str long long)
 @ stdcall CredDeleteW(wstr long long)
+@ stub -version=0x600+ CredEncryptAndMarshalBinaryBlob
 @ stdcall CredEnumerateA(str long ptr ptr)
 @ stdcall CredEnumerateW(wstr long ptr ptr)
+@ stdcall -stub -version=0x600+ CredFindBestCredentialA(str long long ptr)
+@ stdcall -stub -version=0x600+ CredFindBestCredentialW(wstr long long ptr)
 @ stdcall CredFree(ptr)
 @ stdcall CredGetSessionTypes(long ptr)
 @ stub CredGetTargetInfoA
 @ stub CredGetTargetInfoW
 @ stdcall CredIsMarshaledCredentialA(str)
 @ stdcall CredIsMarshaledCredentialW(wstr)
+@ stdcall -stub -version=0x600+ CredIsProtectedA(str ptr)
+@ stdcall -stub -version=0x600+ CredIsProtectedW(wstr ptr)
 @ stdcall CredMarshalCredentialA(long ptr str)
 @ stdcall CredMarshalCredentialW(long ptr wstr)
 @ stub CredProfileLoaded
+@ stdcall -stub -version=0x600+ CredProfileUnloaded()
+@ stdcall -stub -version=0x600+ CredProtectA(long str long str ptr ptr)
+@ stdcall -stub -version=0x600+ CredProtectW(long wstr long wstr ptr ptr)
 @ stdcall CredReadA(str long long ptr)
+@ stub -version=0x600+ CredReadByTokenHandle
 @ stdcall CredReadDomainCredentialsA(ptr long ptr ptr)
 @ stdcall CredReadDomainCredentialsW(ptr long ptr ptr)
 @ stdcall CredReadW(wstr long long ptr)
 @ stub CredRenameA
 @ stub CredRenameW
+@ stub -version=0x600+ CredRestoreCredentials
 @ stdcall CredUnmarshalCredentialA(str ptr ptr)
 @ stdcall CredUnmarshalCredentialW(wstr ptr ptr)
+@ stdcall -stub -version=0x600+ CredUnprotectA(long str long str ptr)
+@ stdcall -stub -version=0x600+ CredUnprotectW(long wstr long wstr ptr)
 @ stdcall CredWriteA(ptr long)
 @ stub CredWriteDomainCredentialsA
 @ stub CredWriteDomainCredentialsW
 @ stdcall CredWriteW(ptr long)
 @ stub CredpConvertCredential
+@ stub -version=0x600+ CredpConvertOneCredentialSize
 @ stub CredpConvertTargetInfo
 @ stub CredpDecodeCredential
 @ stub CredpEncodeCredential
+@ stub -version=0x600+ CredpEncodeSecret
 @ stdcall CryptAcquireContextA(ptr str str long long)
 @ stdcall CryptAcquireContextW(ptr wstr wstr long long)
 @ stdcall CryptContextAddRef(long ptr long)
@@ -208,6 +247,7 @@
 @ stdcall ElfReportEventW(long long long long ptr long long ptr ptr long ptr ptr)
 @ stdcall -version=0x502 EnableTrace(long long long ptr double) ntdll.EtwEnableTrace
 @ stdcall -version=0x600+ EnableTrace(long long long ptr double) EtwEnableTrace
+@ stdcall -stub -version=0x600+ EnableTraceEx(ptr ptr ptr long long double double long)
 @ stdcall EncryptFileA(str)
 @ stdcall EncryptFileW(wstr)
 @ stub EncryptedFileKeyInfo
@@ -221,17 +261,33 @@
 @ stdcall EnumServicesStatusW(long long long ptr long ptr ptr ptr)
 @ stdcall -version=0x502 EnumerateTraceGuids(ptr long ptr) ntdll.EtwEnumerateTraceGuids
 @ stdcall -stub -version=0x600+ EnumerateTraceGuids(ptr long ptr) # EtwEnumerateTraceGuids
+@ stdcall -stub -version=0x600+ EnumerateTraceGuidsEx(long ptr long ptr long ptr)
 @ stdcall EqualDomainSid(ptr ptr ptr)
 @ stdcall EqualPrefixSid(ptr ptr)
 @ stdcall EqualSid(ptr ptr)
+@ stdcall -stub -version=0x600+ EventAccessControl(ptr long ptr long long)
+@ stdcall -stub -version=0x600+ EventAccessQuery(ptr ptr ptr)
+@ stdcall -stub -version=0x600+ EventAccessRemove(ptr)
+@ stdcall -stub -version=0x600+ EventActivityIdControl(long ptr)
+@ stdcall -stub -version=0x600+ EventEnabled(ptr ptr)
+@ stdcall -stub -version=0x600+ EventProviderEnabled(ptr long int64)
+@ stdcall -stub -version=0x600+ EventRegister(ptr ptr ptr ptr)
+@ stdcall -stub -version=0x600+ EventUnregister(ptr)
+@ stdcall -stub -version=0x600+ EventWrite(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ EventWriteEndScenario(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ EventWriteStartScenario(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ EventWriteString(ptr long int64 ptr)
+@ stdcall -stub -version=0x600+ EventWriteTransfer(ptr ptr ptr ptr long ptr)
 @ stdcall FileEncryptionStatusA(str ptr)
 @ stdcall FileEncryptionStatusW(wstr ptr)
 @ stdcall FindFirstFreeAce(ptr ptr)
+@ stub -version=0x600+ FlushEfsCache
 @ stdcall -version=0x502 FlushTraceA(double str ptr) ntdll.EtwFlushTraceA
 @ stdcall -version=0x600+ FlushTraceA(double str ptr) EtwFlushTraceA
 @ stdcall -version=0x502 FlushTraceW(double wstr ptr) ntdll.EtwFlushTraceW
 @ stdcall -version=0x600+ FlushTraceW(double wstr ptr) EtwFlushTraceW
 @ stub FreeEncryptedFileKeyInfo
+@ stub -version=0x600+ FreeEncryptedFileMetadata
 @ stdcall FreeEncryptionCertificateHashList(ptr)
 @ stdcall FreeInheritedFromArray(ptr long ptr)
 @ stdcall FreeSid(ptr)
@@ -245,6 +301,7 @@
 @ stdcall GetCurrentHwProfileW(ptr)
 @ stdcall GetEffectiveRightsFromAclA(ptr ptr ptr)
 @ stdcall GetEffectiveRightsFromAclW(ptr ptr ptr)
+@ stub -version=0x600+ GetEncryptedFileMetadata
 @ stdcall GetEventLogInformation(long long ptr long ptr)
 @ stdcall GetExplicitEntriesFromAclA(ptr ptr ptr) advapi32.GetExplicitEntriesFromAclW
 @ stdcall GetExplicitEntriesFromAclW(ptr ptr ptr)
@@ -290,6 +347,7 @@
 @ stdcall GetSidLengthRequired(long)
 @ stdcall GetSidSubAuthority(ptr long)
 @ stdcall GetSidSubAuthorityCount(ptr)
+@ stdcall -stub -version=0x600+ GetThreadWaitChain(ptr ptr long long ptr ptr ptr)
 @ stdcall GetTokenInformation(long long ptr long ptr)
 @ stdcall GetTraceEnableFlags(double) ntdll.EtwGetTraceEnableFlags
 @ stdcall GetTraceEnableLevel(double) ntdll.EtwGetTraceEnableLevel
@@ -306,11 +364,12 @@
 @ stdcall I_QueryTagInformation(ptr long ptr)
 @ stdcall I_ScIsSecurityProcess()
 @ stdcall I_ScPnPGetServiceName(ptr wstr long)
-@ stdcall I_ScSendPnPMessage(ptr long long ptr)
+@ stub -version=0x600+ I_ScQueryServiceConfig
+@ stdcall I_ScSendPnPMessage(ptr long long ptr) # Vista+
 @ stub I_ScSendTSMessage
 @ stdcall I_ScSetServiceBitsA(ptr long long long str)
 @ stdcall I_ScSetServiceBitsW(ptr long long long wstr)
-@ stdcall I_ScValidatePnpService(wstr wstr ptr)
+@ stdcall I_ScValidatePnpService(wstr wstr ptr)  # Vista+
 @ stub IdentifyCodeAuthzLevelW
 @ stdcall ImpersonateAnonymousToken(ptr)
 @ stdcall ImpersonateLoggedOnUser(long)
@@ -319,6 +378,8 @@
 @ stdcall InitializeAcl(ptr long long)
 @ stdcall InitializeSecurityDescriptor(ptr long)
 @ stdcall InitializeSid(ptr ptr long)
+@ stdcall -version=0x600+ InitiateShutdownA(str str long long long)
+@ stdcall -version=0x600+ InitiateShutdownW(wstr wstr long long long)
 @ stdcall InitiateSystemShutdownA(str str long long long)
 @ stdcall InitiateSystemShutdownExA(str str long long long long)
 @ stdcall InitiateSystemShutdownExW(wstr wstr long long long long)
@@ -328,12 +389,14 @@
 @ stdcall IsTokenRestricted(long)
 @ stub IsTokenUntrusted
 @ stdcall IsValidAcl(ptr)
+@ stub -version=0x600+ IsValidRelativeSecurityDescriptor
 @ stdcall IsValidSecurityDescriptor(ptr)
 @ stdcall IsValidSid(ptr)
 @ stdcall IsWellKnownSid(ptr long)
 @ stdcall LockServiceDatabase(ptr)
 @ stdcall LogonUserA(str str str long long ptr)
 @ stdcall LogonUserExA(str str str long long ptr ptr ptr ptr ptr)
+@ stdcall -stub -version=0x600+ LogonUserExExW(wstr wstr wstr long long ptr ptr ptr ptr ptr ptr)
 @ stdcall LogonUserExW(wstr wstr wstr long long ptr ptr ptr ptr ptr)
 @ stdcall LogonUserW(wstr wstr wstr long long ptr)
 @ stdcall LookupAccountNameA(str str ptr ptr ptr ptr ptr)
@@ -380,6 +443,7 @@
 @ stdcall LsaLookupPrivilegeName(ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeValue(ptr ptr ptr)
 @ stdcall LsaLookupSids(ptr long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ LsaManageSidNameMapping(long ptr ptr)
 @ stdcall LsaNtStatusToWinError(long)
 @ stdcall LsaOpenAccount(ptr ptr long ptr)
 @ stdcall LsaOpenPolicy(ptr ptr long ptr)
@@ -429,6 +493,9 @@
 @ stdcall MapGenericMask(ptr ptr) ntdll.RtlMapGenericMask
 @ stdcall NotifyBootConfigStatus(long)
 @ stdcall NotifyChangeEventLog(long long)
+@ stdcall -stub -version=0x600+ NotifyServiceStatusChange(ptr long ptr)
+@ stdcall -stub -version=0x600+ NotifyServiceStatusChangeA(ptr long ptr)
+@ stdcall -stub -version=0x600+ NotifyServiceStatusChangeW(ptr long ptr)
 @ stdcall ObjectCloseAuditAlarmA(str ptr long)
 @ stdcall ObjectCloseAuditAlarmW(wstr ptr long)
 @ stdcall ObjectDeleteAuditAlarmA(str ptr long)
@@ -449,18 +516,44 @@
 @ stdcall OpenServiceA(long str long)
 @ stdcall OpenServiceW(long wstr long)
 @ stdcall OpenThreadToken(long long long ptr)
+@ stdcall -stub -version=0x600+ OpenThreadWaitChainSession(long ptr)
 @ stdcall -ret64 OpenTraceA(ptr)
 @ stdcall -ret64 OpenTraceW(ptr)
+@ stdcall -stub -version=0x600+ PerfAddCounters(ptr ptr long)
+@ stdcall -stub -version=0x600+ PerfCloseQueryHandle(ptr)
+@ stdcall -stub -version=0x600+ PerfCreateInstance(ptr ptr wstr long)
+@ stdcall -stub -version=0x600+ PerfDecrementULongCounterValue(ptr ptr long long)
+@ stdcall -stub -version=0x600+ PerfDecrementULongLongCounterValue(ptr ptr long int64)
+@ stdcall -stub -version=0x600+ PerfDeleteCounters(ptr ptr long)
+@ stdcall -stub -version=0x600+ PerfDeleteInstance(ptr ptr)
+@ stdcall -stub -version=0x600+ PerfEnumerateCounterSet(wstr ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfEnumerateCounterSetInstances(wstr ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfIncrementULongCounterValue(ptr ptr long long)
+@ stdcall -stub -version=0x600+ PerfIncrementULongLongCounterValue(ptr ptr long int64)
+@ stdcall -stub -version=0x600+ PerfOpenQueryHandle(wstr ptr)
+@ stdcall -stub -version=0x600+ PerfQueryCounterData(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfQueryCounterInfo(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfQueryCounterSetRegistrationInfo(wstr ptr long long ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfQueryInstance(ptr ptr wstr long)
+@ stdcall -stub -version=0x600+ PerfSetCounterRefValue(ptr ptr long ptr)
+@ stdcall -stub -version=0x600+ PerfSetCounterSetInfo(ptr ptr long)
+@ stdcall -stub -version=0x600+ PerfSetULongCounterValue(ptr ptr long long)
+@ stdcall -stub -version=0x600+ PerfSetULongLongCounterValue(ptr ptr long int64)
+@ stdcall -stub -version=0x600+ PerfStartProvider(ptr ptr ptr)
+@ stdcall -stub -version=0x600+ PerfStartProviderEx(ptr ptr ptr)
+@ stdcall -stub -version=0x600+ PerfStopProvider(ptr)
 @ stdcall PrivilegeCheck(ptr ptr ptr)
 @ stdcall PrivilegedServiceAuditAlarmA(str str long ptr long)
 @ stdcall PrivilegedServiceAuditAlarmW(wstr wstr long ptr long)
 @ stub ProcessIdleTasks
+@ stub -version=0x600+ ProcessIdleTasksW
 @ stdcall ProcessTrace(ptr long ptr ptr)
 @ stdcall -version=0x502 QueryAllTracesA(ptr long ptr) ntdll.EtwQueryAllTracesA
 @ stdcall -version=0x600+ QueryAllTracesA(ptr long ptr) EtwQueryAllTracesA
 @ stdcall -version=0x502 QueryAllTracesW(ptr long ptr) ntdll.EtwQueryAllTracesW
 @ stdcall -version=0x600+ QueryAllTracesW(ptr long ptr) EtwQueryAllTracesW
 @ stdcall QueryRecoveryAgentsOnEncryptedFile(wstr ptr)
+@ stdcall -version=0x600+ QuerySecurityAccessMask(long ptr)
 @ stdcall QueryServiceConfig2A(long long ptr long ptr)
 @ stdcall QueryServiceConfig2W(long long ptr long ptr)
 @ stdcall QueryServiceConfigA(long ptr long ptr)
@@ -488,16 +581,23 @@
 @ stdcall RegCreateKeyA(long str ptr)
 @ stdcall RegCreateKeyExA(long str long ptr long long ptr ptr ptr)
 @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ RegCreateKeyTransactedA(ptr str long str long long ptr ptr ptr ptr ptr)
+@ stdcall -stub -version=0x600+ RegCreateKeyTransactedW(ptr wstr long wstr long long ptr ptr ptr ptr ptr)
 @ stdcall RegCreateKeyW(long wstr ptr)
 @ stdcall RegDeleteKeyA(long str)
 @ stdcall RegDeleteKeyExA(long str long long)
 @ stdcall RegDeleteKeyExW(long wstr long long)
+@ stdcall -stub -version=0x600+ RegDeleteKeyTransactedA(ptr str long long ptr ptr)
+@ stdcall -stub -version=0x600+ RegDeleteKeyTransactedW(ptr wstr long long ptr ptr)
+@ stdcall -version=0x600+ RegDeleteKeyValueA(ptr str str)
+@ stdcall -version=0x600+ RegDeleteKeyValueW(ptr wstr wstr)
 @ stdcall RegDeleteKeyW(long wstr)
 @ stdcall -version=0x600+ RegDeleteTreeA(long str)
 @ stdcall -version=0x600+ RegDeleteTreeW(long wstr)
 @ stdcall RegDeleteValueA(long str)
 @ stdcall RegDeleteValueW(long wstr)
 @ stdcall RegDisablePredefinedCache()
+@ stdcall -version=0x600+ RegDisablePredefinedCacheEx()
 @ stdcall RegDisableReflectionKey(ptr)
 @ stdcall RegEnableReflectionKey(ptr)
 @ stdcall RegEnumKeyA(long long ptr long)
@@ -510,13 +610,19 @@
 @ stdcall RegGetKeySecurity(long long ptr ptr)
 @ stdcall RegGetValueA(long str str long ptr ptr ptr)
 @ stdcall RegGetValueW(long wstr wstr long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ RegLoadAppKeyA(str ptr long long long)
+@ stdcall -stub -version=0x600+ RegLoadAppKeyW(wstr ptr long long long)
 @ stdcall RegLoadKeyA(long str str)
 @ stdcall RegLoadKeyW(long wstr wstr)
+@ stdcall -version=0x600+ RegLoadMUIStringA(ptr str str long ptr long str) advapi32_vista.RegLoadMUIStringA
+@ stdcall -version=0x600+ RegLoadMUIStringW(ptr wstr wstr long ptr long wstr) advapi32_vista.RegLoadMUIStringW
 @ stdcall RegNotifyChangeKeyValue(long long long long long)
 @ stdcall RegOpenCurrentUser(long ptr)
 @ stdcall RegOpenKeyA(long str ptr)
 @ stdcall RegOpenKeyExA(long str long long ptr)
 @ stdcall RegOpenKeyExW(long wstr long long ptr)
+@ stdcall -stub -version=0x600+ RegOpenKeyTransactedA(ptr str long long ptr ptr ptr)
+@ stdcall -stub -version=0x600+ RegOpenKeyTransactedW(ptr wstr long long ptr ptr ptr)
 @ stdcall RegOpenKeyW(long wstr ptr)
 @ stdcall RegOpenUserClassesRoot(ptr long long ptr)
 @ stdcall RegOverridePredefKey(long long)
@@ -529,6 +635,7 @@
 @ stdcall RegQueryValueExA(long str ptr ptr ptr ptr)
 @ stdcall RegQueryValueExW(long wstr ptr ptr ptr ptr)
 @ stdcall RegQueryValueW(long wstr ptr ptr)
+@ stdcall -stub -version=0x600+ RegRenameKey(ptr wstr wstr)
 @ stdcall RegReplaceKeyA(long str str str)
 @ stdcall RegReplaceKeyW(long wstr wstr wstr)
 @ stdcall RegRestoreKeyA(long str long)
@@ -555,6 +662,7 @@
 @ stdcall RegisterServiceCtrlHandlerW(wstr ptr)
 @ stdcall RegisterTraceGuidsA(ptr ptr ptr long ptr str str ptr) ntdll.EtwRegisterTraceGuidsA
 @ stdcall RegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr) ntdll.EtwRegisterTraceGuidsW
+@ stdcall -stub -version=0x600+ RegisterWaitChainCOMCallback(ptr ptr)
 @ stub RemoveTraceCallback
 @ stdcall RemoveUsersFromEncryptedFile(wstr ptr)
 @ stdcall ReportEventA(long long long long ptr long long str ptr)
@@ -577,6 +685,7 @@
 @ stub SaferiReplaceProcessThreadTokens
 @ stub SaferiSearchMatchingHashRules
 @ stdcall SetAclInformation(ptr ptr long long)
+@ stub -version=0x600+ SetEncryptedFileMetadata
 @ stub SetEntriesInAccessListA
 @ stub SetEntriesInAccessListW
 @ stdcall SetEntriesInAclA(long ptr ptr ptr)
@@ -594,6 +703,7 @@
 @ stdcall SetNamedSecurityInfoW(wstr long ptr ptr ptr ptr ptr)
 @ stdcall SetPrivateObjectSecurity(long ptr ptr ptr long)
 @ stub SetPrivateObjectSecurityEx
+@ stdcall -version=0x600+ SetSecurityAccessMask(long ptr)
 @ stdcall SetSecurityDescriptorControl(ptr long long)
 @ stdcall SetSecurityDescriptorDacl(ptr long ptr long)
 @ stdcall SetSecurityDescriptorGroup(ptr ptr long)
@@ -610,6 +720,7 @@
 @ stdcall SetTokenInformation(long long ptr long)
 @ stub SetTraceCallback
 @ stub SetUserFileEncryptionKey
+@ stdcall -stub -version=0x600+ SetUserFileEncryptionKeyEx(ptr long long ptr)
 @ stdcall StartServiceA(long long ptr)
 @ stdcall StartServiceCtrlDispatcherA(ptr)
 @ stdcall StartServiceCtrlDispatcherW(ptr)
@@ -667,6 +778,8 @@
 @ stdcall TraceMessageVa() ntdll.EtwTraceMessageVa
 @ stdcall TreeResetNamedSecurityInfoA(str ptr ptr ptr ptr ptr ptr long ptr ptr ptr)
 @ stdcall TreeResetNamedSecurityInfoW(wstr long long ptr ptr ptr ptr long ptr long ptr)
+@ stdcall -stub -version=0x600+ TreeSetNamedSecurityInfoA(str long long ptr ptr ptr ptr long ptr long ptr)
+@ stdcall -stub -version=0x600+ TreeSetNamedSecurityInfoW(wstr long long ptr ptr ptr ptr long ptr long ptr)
 @ stub TrusteeAccessToObjectA
 @ stub TrusteeAccessToObjectW
 @ stub UninstallApplication
@@ -677,10 +790,12 @@
 @ stdcall -version=0x600+ UpdateTraceA(double str ptr) EtwUpdateTraceA
 @ stdcall -version=0x502 UpdateTraceW(double wstr ptr) ntdll.EtwUpdateTraceW
 @ stdcall -version=0x600+ UpdateTraceW(double wstr ptr) EtwUpdateTraceW
-@ stub WdmWmiServiceMain
+@ stub -version=0x600+ UsePinForEncryptedFilesA
+@ stub -version=0x600+ UsePinForEncryptedFilesW
+@ stub -version=0x502 WdmWmiServiceMain # Not in vista
 @ stub WmiCloseBlock
-@ stub WmiCloseTraceWithCursor
-@ stub WmiConvertTimestamp
+@ stub -version=0x502 WmiCloseTraceWithCursor # Not in vista
+@ stub -version=0x502 WmiConvertTimestamp # Not in vista
 @ stub WmiDevInstToInstanceNameA
 @ stub WmiDevInstToInstanceNameW
 @ stub WmiEnumerateGuids
@@ -689,9 +804,9 @@
 @ stub WmiFileHandleToInstanceNameA
 @ stub WmiFileHandleToInstanceNameW
 @ stub WmiFreeBuffer
-@ stub WmiGetFirstTraceOffset
-@ stub WmiGetNextEvent
-@ stub WmiGetTraceHeader
+@ stub -version=0x502 WmiGetFirstTraceOffset # Not in vista
+@ stub -version=0x502 WmiGetNextEvent # Not in vista
+@ stub -version=0x502 WmiGetTraceHeader # Not in vista
 @ stub WmiMofEnumerateResourcesA
 @ stub WmiMofEnumerateResourcesW
 @ stdcall -version=0x502 WmiNotificationRegistrationA(ptr long ptr long long) ntdll.EtwNotificationRegistrationA
@@ -699,8 +814,8 @@
 @ stdcall -version=0x502 WmiNotificationRegistrationW(ptr long ptr long long) ntdll.EtwNotificationRegistrationW
 @ stdcall -stub -version=0x600+ WmiNotificationRegistrationW(ptr long ptr long long) # EtwNotificationRegistrationW
 @ stub WmiOpenBlock
-@ stub WmiOpenTraceWithCursor
-@ stub WmiParseTraceEvent
+@ stub -version=0x502 WmiOpenTraceWithCursor # Not in vista
+@ stub -version=0x502 WmiParseTraceEvent # Not in vista
 @ stub WmiQueryAllDataA
 @ stub WmiQueryAllDataMultipleA
 @ stub WmiQueryAllDataMultipleW
@@ -720,5 +835,3 @@
 @ stub WmiSetSingleItemW
 @ stub Wow64Win32ApiEntry
 @ stdcall WriteEncryptedFileRaw(ptr ptr ptr)
-@ stdcall -version=0x600+ RegLoadMUIStringW(ptr wstr wstr long ptr long wstr) advapi32_vista.RegLoadMUIStringW
-@ stdcall -version=0x600+ RegLoadMUIStringA(ptr str str long ptr long str) advapi32_vista.RegLoadMUIStringA
