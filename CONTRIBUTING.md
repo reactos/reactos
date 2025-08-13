@@ -1,4 +1,4 @@
-# How To Contribute
+# How to contribute
 
 There are several ways to contribute to the development of ReactOS. The most often encountered problem is not knowing where to begin or what to do. If you are able to program or understand the technical information that is pertinent to this project, helping the development can be easy.
 
@@ -11,7 +11,7 @@ There are several ways to contribute to the development of ReactOS. The most oft
 >nor any Microsoft product that may be related to the proposed project that is under a license incompatible
 >with contribution to ReactOS, including but not limited to the leaked Windows 2000 source code and the Windows Research Kernel.
 
-## What To Do?
+## What to do?
 
 ### Fix bugs
 
@@ -43,7 +43,7 @@ There are some important points if you would like to help document ReactOS:
 2. Respect [clean room reverse engineering] practices.
 3. Add your knowledge to a place where the other developers can find it.
 
-## How To Contribute?
+## How to contribute?
 
 Your contribution can be of numerous forms. We currently accept two ways to contribute - Pull Requests and Patches.
 
@@ -79,7 +79,7 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 
 To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
 
-## Where To Start?
+## Where to start?
 
 Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:
 
