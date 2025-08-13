@@ -51,7 +51,8 @@ typedef struct _CLASS_AND_INTERFACES
     PCSTR name;
     struct
     {
-        LONG offset;
+        LONG offset32;
+        LONG offset64;
         const IID *iid;
     } ifaces[80];
     PCWSTR ThreadingModel;
@@ -65,6 +66,13 @@ TestClasses(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
     _In_ INT ExpectedInterfaceCount);
+
+VOID
+TestClassesEx(
+    _In_ PCWSTR ModuleName,
+    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
+    _In_ INT ExpectedInterfaceCount,
+    _In_ BOOL RunManualInstantiation);
 
 /* Indicate that the interface is implemented in another (probably aggregate) object,
  * so its offset varies and is "far away" */
