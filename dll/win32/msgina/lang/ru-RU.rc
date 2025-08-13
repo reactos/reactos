@@ -51,11 +51,11 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Выберите необходимое действие:", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "Заблокировать", IDC_SECURITY_LOCK, 7, 124, 84, 14
-    PUSHBUTTON "Завершение сеанса...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
-    PUSHBUTTON "Завершение работы...", IDC_SECURITY_SHUTDOWN, 184, 124, 84, 14
-    PUSHBUTTON "Смена пароля...", IDC_SECURITY_CHANGEPWD, 7, 143, 84, 14
-    PUSHBUTTON "Диспетчер задач", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
+    DEFPUSHBUTTON "За&блокировать", IDC_SECURITY_LOCK, 7, 124, 84, 14
+    PUSHBUTTON "Завершение &сеанса...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
+    PUSHBUTTON "Завершение &работы...", IDC_SECURITY_SHUTDOWN, 184, 124, 84, 14
+    PUSHBUTTON "Смена &пароля...", IDC_SECURITY_CHANGEPWD, 7, 143, 84, 14
+    PUSHBUTTON "&Диспетчер задач", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
     PUSHBUTTON "Отмена", IDCANCEL, 184, 143, 84, 14
 END
 

@@ -991,7 +991,6 @@ SecurityDialogProc(
             SetWelcomeText(hwndDlg);
 
             OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
-            SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
         }
 

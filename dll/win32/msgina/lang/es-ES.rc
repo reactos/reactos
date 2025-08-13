@@ -58,11 +58,11 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "¿Qué es lo que quiere hacer?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "Bloquear el equipo", IDC_SECURITY_LOCK, 7, 124, 80, 14
-    PUSHBUTTON "Cerrar sesión...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
-    PUSHBUTTON "Apagar...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
-    PUSHBUTTON "Cambiar contraseña...", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
-    PUSHBUTTON "Administrador de tareas", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
+    DEFPUSHBUTTON "&Bloquear el equipo", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    PUSHBUTTON "Cerrar &sesión...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
+    PUSHBUTTON "&Apagar...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
+    PUSHBUTTON "Cambiar &contraseña...", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
+    PUSHBUTTON "A&dministrador de tareas", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 188, 143, 80, 14
 END
 

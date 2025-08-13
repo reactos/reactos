@@ -49,7 +49,7 @@ BEGIN
     LTEXT "<Mensagem>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Data de início de sessão>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Que deseja fazer?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "&Bloquear o computador", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    DEFPUSHBUTTON "&Bloquear o computador", IDC_SECURITY_LOCK, 7, 124, 80, 14
     PUSHBUTTON "&Terminar sessão...", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
     PUSHBUTTON "&Desligar...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
     PUSHBUTTON "&Alterar Palavra-passe...", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14

@@ -49,7 +49,7 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Que voulez-vous faire ?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "&Verrouiller l'ordinateur", IDC_SECURITY_LOCK, 7, 124, 95, 14
+    DEFPUSHBUTTON "&Verrouiller l'ordinateur", IDC_SECURITY_LOCK, 7, 124, 95, 14
     PUSHBUTTON "&Déconnecter...", IDC_SECURITY_LOGOFF, 104, 124, 82, 14
     PUSHBUTTON "Ét&eindre...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
     PUSHBUTTON "&Changer le mot de passe...", IDC_SECURITY_CHANGEPWD, 7, 143, 95, 14

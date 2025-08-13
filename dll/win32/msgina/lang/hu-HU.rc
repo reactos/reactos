@@ -49,7 +49,7 @@ BEGIN
     LTEXT "<Üzenet>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Bejelentkezés dátuma>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Mit szeretne csinálni?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "Számítógép &zárolása", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    DEFPUSHBUTTON "Számítógép &zárolása", IDC_SECURITY_LOCK, 7, 124, 80, 14
     PUSHBUTTON "&Kijelentkezés...", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
     PUSHBUTTON "&Leállítás...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
     PUSHBUTTON "&Jelszó megváltoztatása...", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14

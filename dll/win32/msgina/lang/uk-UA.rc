@@ -57,11 +57,11 @@ BEGIN
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
     CTEXT "Що Ви хочете зробити?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "Блокування", IDC_SECURITY_LOCK, 7, 124, 84, 14
-    PUSHBUTTON "Вихід із системи...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
-    PUSHBUTTON "Завершення роботи...", IDC_SECURITY_SHUTDOWN, 184, 124, 84, 14
-    PUSHBUTTON "Змінити пароль...", IDC_SECURITY_CHANGEPWD, 7, 143, 84, 14
-    PUSHBUTTON "Диспетчер завдань", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
+    DEFPUSHBUTTON "&Блокування", IDC_SECURITY_LOCK, 7, 124, 84, 14
+    PUSHBUTTON "&Вихід із системи...", IDC_SECURITY_LOGOFF, 96, 124, 84, 14
+    PUSHBUTTON "Завершення &роботи...", IDC_SECURITY_SHUTDOWN, 184, 124, 84, 14
+    PUSHBUTTON "Змінити &пароль...", IDC_SECURITY_CHANGEPWD, 7, 143, 84, 14
+    PUSHBUTTON "&Диспетчер завдань", IDC_SECURITY_TASKMGR, 96, 143, 84, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 184, 143, 84, 14
 END
 
