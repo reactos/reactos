@@ -9,8 +9,10 @@ list(APPEND SOURCE
     netcfgx.c
     netshell.c
     ole32.c
+    prnfldr.c
     shdocvw.c
     shell32.c
+    windows_storage.c
     zipfldr.c)
 
 list(APPEND PCH_SKIP_SOURCE

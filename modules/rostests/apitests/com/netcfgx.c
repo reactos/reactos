@@ -15,17 +15,16 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_CNetCfg),
         {
-            {    0x0,   &IID_INetCfg },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_INetCfgLock },
-            {   0x10,   &IID_INetCfgPnpReconfigCallback },
+            {    0x0,    0x0,   &IID_INetCfg },
+            {    0x0,    0x0,       &IID_IUnknown },
+            {    0x4,    0x8,   &IID_INetCfgLock },
+            {   0x10,   0x20,   &IID_INetCfgPnpReconfigCallback },
         },
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
 START_TEST(netcfgx)
 {
-    TestClasses(L"netcfgx", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"netcfgx", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }

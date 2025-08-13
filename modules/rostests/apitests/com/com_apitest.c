@@ -15,6 +15,7 @@
 #include <ndk/rtlfuncs.h>
 
 #define NDEBUG
+#define GENERATE_TABLE_ENTRIES
 #include <debug.h>
 
 #define myskip(c, ...) ((c) ? 0 : (skip(__VA_ARGS__), 1))
@@ -306,7 +307,6 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IServiceProvider)                  },
     { ID_NAME(IID_IShellApp),                   TRUE },
     { ID_NAME(IID_IShellBrowser)                     },
-    { ID_NAME(IID_IShellBrowserService),        TRUE },
     { ID_NAME(IID_IShellChangeNotify),          TRUE },
     { ID_NAME(IID_IShellCopyHookA),             TRUE },
     { ID_NAME(IID_IShellCopyHookW),             TRUE },
@@ -474,7 +474,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IRootAndRelativeParsingFolder),TRUE },
     { ID_NAME(IID_IScope),                      TRUE },
     { ID_NAME(IID_IScopeItem),                  TRUE },
-    { ID_NAME(IID_IShellBrowserServce),         TRUE },
+    { ID_NAME(IID_IShellBrowserService),        TRUE },
+    { ID_NAME(IID_IShellBrowserService_Vista),  TRUE },
     { ID_NAME(IID_IShellFolder3),               TRUE },
     { ID_NAME(IID_ITaskCondition),              TRUE },
     { ID_NAME(IID_ITaskConditionCombiner),      TRUE },
@@ -598,15 +599,27 @@ TestModuleInterfaces(
             PCKNOWN_INTERFACE iface = FindInterface(class->ifaces[iIntf].iid);
             LONG offset = GetInterfaceOffset(pUnk, iface->iid);
             if (offset == INTF_NOT_EXPOSED)
-                ok(0, "%s is missing %s (offset %ld)\n", class->name, iface->name, class->ifaces[iIntf].offset);
-            else if (class->ifaces[iIntf].offset != FARAWY)
+#ifdef _WIN64
+                ok(0, "%s is missing %s (offset 0x%lx)\n", class->name, iface->name, class->ifaces[iIntf].offset64);
+            else if (class->ifaces[iIntf].offset64 != FARAWY)
             {
 #ifdef FAIL_WRONG_OFFSET
-                ok(offset == class->ifaces[iIntf].offset, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset);
+                ok(offset == class->ifaces[iIntf].offset64, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset64);
 #else
-                if (offset != class->ifaces[iIntf].offset)
-                    mytrace("%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset);
-#endif
+                if (offset != class->ifaces[iIntf].offset64)
+                    mytrace("%s, %s offset is %s0x%lx, expected %s0x%lx\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->ifaces[iIntf].offset64 < 0 ? "-" : "", class->ifaces[iIntf].offset64 < 0 ? -class->ifaces[iIntf].offset64 : class->ifaces[iIntf].offset64);
+#endif // FAIL_WRONG_OFFSET
+#else
+                ok(0, "%s is missing %s (offset 0x%lx)\n", class->name, iface->name, class->ifaces[iIntf].offset32);
+            else if (class->ifaces[iIntf].offset32 != FARAWY)
+            {
+#ifdef FAIL_WRONG_OFFSET
+                ok(offset == class->ifaces[iIntf].offset32, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset32);
+#else
+                if (offset != class->ifaces[iIntf].offset32)
+                    mytrace("%s, %s offset is %s0x%lx, expected %s0x%lx\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->ifaces[iIntf].offset32 < 0 ? "-" : "", class->ifaces[iIntf].offset32 < 0 ? -class->ifaces[iIntf].offset32 : class->ifaces[iIntf].offset32);
+#endif // FAIL_WRONG_OFFSET
+#endif // _WIN64
             }
         }
 
@@ -751,10 +764,11 @@ TestManualInstantiation(
 }
 
 VOID
-TestClasses(
+TestClassesEx(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ BOOL RunManualInstantiation)
 {
     HRESULT hr;
 
@@ -765,9 +779,19 @@ TestClasses(
 
     TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount);
     TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
-    TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
+    if (RunManualInstantiation)
+        TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
 
     CoUninitialize();
+}
+
+VOID
+TestClasses(
+    _In_ PCWSTR ModuleName,
+    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
+    _In_ INT ExpectedInterfaceCount)
+{
+    TestClassesEx(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, TRUE);
 }
 
 static

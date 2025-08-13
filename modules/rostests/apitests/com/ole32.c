@@ -15,16 +15,15 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_StdComponentCategoriesMgr),
         {
-            {    0x0,   &IID_IUnknown },
-            { FARAWY,   &IID_ICatRegister },
-            { FARAWY,   &IID_ICatInformation },
+            {    0x0,    0x0,   &IID_IUnknown },
+            { FARAWY, FARAWY,   &IID_ICatRegister },
+            { FARAWY, FARAWY,   &IID_ICatInformation },
         },
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
 START_TEST(ole32)
 {
-    TestClasses(L"ole32", ExpectedInterfaces, ExpectedInterfaceCount);
+    TestClasses(L"ole32", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }
