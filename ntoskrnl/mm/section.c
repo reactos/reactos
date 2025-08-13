@@ -3702,7 +3702,7 @@ MiRosUnmapViewOfSection(
         }
         DPRINT("One mapping less for %p\n", ImageSectionObject->FileObject->SectionObjectPointer);
         MapCount = InterlockedDecrement(&ImageSectionObject->MapCount);
-        if (MapCount == 0 && !SkipDebuggerNotify)
+        if (MapCount != 0 || !SkipDebuggerNotify)
             ImageBaseAddress = 0;
     }
     else
