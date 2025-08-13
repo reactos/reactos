@@ -376,7 +376,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
-    PEJOB Job;
+    PEJOB ParentJob;
 
     PAGED_CODE();
 
@@ -712,32 +712,41 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we need to audit */
     if (SeDetailedAuditingWithToken(NULL)) SeAuditProcessCreate(Process);
 
-    /* Check if the parent had a job */
-    if ((Parent) && (Parent->Job))
+    /*
+     * Attach the process to parent's job if:
+     *  a) parent exists,
+     *  b) parent has a job,
+     *  c) parent's job does NOT allow silent breakaway
+     */
+    if (Parent && Parent->Job &&
+        !(Parent->Job->LimitFlags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
     {
-        Job = Parent->Job;
+        ParentJob = Parent->Job;
 
-        if (!(Job->LimitFlags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
+        /* If caller explicitly requested breakaway from the job */
+        if (Flags & PROCESS_CREATE_FLAGS_BREAKAWAY)
         {
-            /* Requested to create it without a job */
-            if (Flags & PROCESS_CREATE_FLAGS_BREAKAWAY)
+            /* Deny if the job forbids breakaway */
+            if (!(ParentJob->LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK))
             {
-                /* Is this allowed? */
-                if (!(Job->LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK))
-                {
-                    Status = STATUS_ACCESS_DENIED;
-                    goto CleanupWithRef;
-                }
+                Status = STATUS_ACCESS_DENIED;
+                goto CleanupWithRef;
             }
-            else if (InterlockedCompareExchangePointer((PVOID)&Process->Job,
-                                                       Parent->Job,
-                                                       NULL) == NULL)
+        }
+        else
+        {
+            /* Under normal conditions, child should join a parent's job */
+
+            ObReferenceObject(ParentJob);
+
+            Process->Job = ParentJob;
+
+            Status = PspAssignProcessToJob(Process, ParentJob);
+            if (!NT_SUCCESS(Status))
             {
-                Status = PspAssignProcessToJob(Process, Parent->Job);
-                if (!NT_SUCCESS(Status))
-                {
-                    goto CleanupWithRef;
-                }
+                ObDereferenceObject(ParentJob);
+                Process->Job = NULL;
+                goto CleanupWithRef;
             }
         }
     }

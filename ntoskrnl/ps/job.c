@@ -322,26 +322,24 @@ PspAssignProcessToJob(
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Check if the job has a limit on the number of active processes */
-    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
+    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS &&
+        Job->ActiveProcesses > Job->ActiveProcessLimit)
     {
         /* Check if job limit on active processes has been reached */
-        if (Job->ActiveProcesses > Job->ActiveProcessLimit)
+        if (Job->CompletionPort)
         {
-            if (Job->CompletionPort)
-            {
-                /* If the job has a completion port, notify the job that the
-                   limit on the number of active processes has been exceeded */
-                IoSetIoCompletion(Job->CompletionPort,
-                                  Job->CompletionKey,
-                                  NULL,
-                                  STATUS_SUCCESS,
-                                  JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT,
-                                  TRUE);
-            }
-
-            Status = STATUS_QUOTA_EXCEEDED;
-            goto Exit;
+            /* If the job has a completion port, notify the job that the
+               limit on the number of active processes has been exceeded */
+            IoSetIoCompletion(Job->CompletionPort,
+                              Job->CompletionKey,
+                              NULL,
+                              STATUS_SUCCESS,
+                              JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT,
+                              TRUE);
         }
+
+        Status = STATUS_QUOTA_EXCEEDED;
+        goto Exit;
     }
 
     /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
@@ -353,8 +351,8 @@ PspAssignProcessToJob(
         goto Exit;
     }
 
-    /* Prevent processes from being added to the job if it is flagged for
-       closing and has a limit on process termination on closing */
+    /* Prevent processes from being added to the job if it is flagged
+       for closing and has a limit on process termination on closing */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE &&
         Job->JobFlags & JOB_OBJECT_CLOSE_DONE)
     {
@@ -362,7 +360,8 @@ PspAssignProcessToJob(
         goto Exit;
     }
 
-    /* Assign process to job object by inserting into the job's process list */
+    /* Assign the process to the job object by inserting into
+       the job's process list */
     InsertTailList(&Job->ProcessListHead, &Process->JobLinks);
 
     /* Increment the job's process counters */
@@ -416,7 +415,7 @@ PspRemoveProcessFromJob(
     /* Remove the process from the job's process list */
     RemoveEntryList(&Process->JobLinks);
 
-    /* Decrement the job's active process count if the process is still active*/
+    /* Decrement the job's active process count if it is still active */
     if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
     {
         /* Assert that the job's active process count does not underflow */
@@ -682,6 +681,7 @@ PspCloseJob(
         ASSERT(NT_SUCCESS(Status));
     }
 
+    /* Remove the reference to the completion port if associated */
     if (Job->CompletionPort)
     {
         ObDereferenceObject(Job->CompletionPort);
@@ -711,20 +711,18 @@ PspDeleteJob(_In_ PVOID ObjectBody)
     if (Job->CompletionPort != NULL)
     {
         ObDereferenceObject(Job->CompletionPort);
+        Job->CompletionPort = NULL;
     }
 
     /* TODO: Ensure that job sets are respected */
 
-    /* Unlink the job object */
-    if (Job->JobLinks.Flink != NULL)
-    {
-        ExAcquireFastMutex(&PsJobListLock);
+    /* Unlink the job object under lock */
+    ExAcquireFastMutex(&PsJobListLock);
 
-        /* Remove the job from the list */
-        RemoveEntryList(&Job->JobLinks);
+    ASSERT(!IsListEmpty(&Job->JobLinks));
+    RemoveEntryList(&Job->JobLinks);
 
-        ExReleaseFastMutex(&PsJobListLock);
-    }
+    ExReleaseFastMutex(&PsJobListLock);
 
     /* TODO: Clean up security information */
 
@@ -1380,8 +1378,10 @@ PsGetJobUIRestrictionsClass(PEJOB Job)
  */
 VOID
 NTAPI
-PsSetJobUIRestrictionsClass(PEJOB Job,
-    ULONG UIRestrictionsClass)
+PsSetJobUIRestrictionsClass(
+    PEJOB Job,
+    ULONG UIRestrictionsClass
+)
 {
     ASSERT(Job);
     (void)InterlockedExchangeUL(&Job->UIRestrictionsClass, UIRestrictionsClass);
@@ -1458,8 +1458,8 @@ NtCreateJobObject(
         InitializeListHead(&Job->JobSetLinks);
         InitializeListHead(&Job->ProcessListHead);
 
-        /* Make sure that early destruction doesn't attempt to remove the object
-           from the list before it even gets added */
+        /* Make sure that early destruction doesn't attempt to remove
+           the object from the list before it even gets added */
         InitializeListHead(&Job->JobLinks);
 
         /* Inherit the session ID from the caller */
@@ -1742,7 +1742,7 @@ NtIsProcessInJob(
     PAGED_CODE();
 
     /* Check if the process handle is the current process */
-    if (ProcessHandle == PsGetCurrentProcess())
+    if (ProcessHandle == NtCurrentProcess())
     {
         /* If so, directly use the current process object */
         Process = PsGetCurrentProcess();
@@ -1807,7 +1807,7 @@ NtIsProcessInJob(
     }
 
     /* Dereference the process object if it was referenced */
-    if (ProcessHandle != PsGetCurrentProcess())
+    if (ProcessHandle != NtCurrentProcess())
     {
         ObDereferenceObject(Process);
     }
