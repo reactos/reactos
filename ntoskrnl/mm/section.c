@@ -3632,7 +3632,7 @@ MiRosUnmapViewOfSection(
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
-    PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+    PMM_IMAGE_SECTION_OBJECT ImageSectionObject = { 0 };
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
            Process, BaseAddress);
