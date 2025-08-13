@@ -885,18 +885,15 @@ LogOffDialogProc(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDYES:
-                    EndDialog(hwndDlg, IDYES);
-                    return TRUE;
-
-                case IDNO:
-                    EndDialog(hwndDlg, IDNO);
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     return TRUE;
             }
             break;
 
         case WM_CLOSE:
-            EndDialog(hwndDlg, IDNO);
+            EndDialog(hwndDlg, IDCANCEL);
             return TRUE;
     }
 
@@ -1013,7 +1010,7 @@ SecurityDialogProc(
                             EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
                         }
                     }
-                    else if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    else if (OnLogOff(hwndDlg, pgContext) == IDOK)
                     {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     }
@@ -1407,9 +1404,6 @@ LegalNoticeDialogProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwndDlg, 0);
-                    return TRUE;
-
                 case IDCANCEL:
                     EndDialog(hwndDlg, 0);
                     return TRUE;
