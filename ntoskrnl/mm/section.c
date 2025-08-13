@@ -3632,6 +3632,7 @@ MiRosUnmapViewOfSection(
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
+    PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
            Process, BaseAddress);
@@ -3660,7 +3661,6 @@ MiRosUnmapViewOfSection(
     {
         ULONG i;
         ULONG NrSegments;
-        PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
         PMM_SECTION_SEGMENT SectionSegments;
         PMM_SECTION_SEGMENT Segment;
 
@@ -3770,7 +3770,8 @@ MiRosUnmapViewOfSection(
     }
 
     /* Notify debugger */
-    if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
+    if (ImageBaseAddress && !SkipDebuggerNotify && ImageSectionObject->MapCount == 0)
+         DbgkUnMapViewOfSection(ImageBaseAddress);
 
     return STATUS_SUCCESS;
 }
