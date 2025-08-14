@@ -793,6 +793,7 @@ ChangePasswordDialogProc(
                     }
                     else
                     {
+                        SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_OLDPWD, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NULL);
                         SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD), TRUE);
@@ -1364,7 +1365,14 @@ LogonDialogProc(
             {
                 case IDOK:
                     if (DoLogon(hwndDlg, pDlgData->pgContext))
+                    {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_LOGON_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -1625,7 +1633,14 @@ UnlockDialogProc(
             {
                 case IDOK:
                     if (DoUnlock(hwndDlg, pDlgData->pgContext, &result))
+                    {
                         EndDialog(hwndDlg, result);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_UNLOCK_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
