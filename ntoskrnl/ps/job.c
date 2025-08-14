@@ -549,7 +549,20 @@ PspTerminateProcessCallback(
             {
                 /* If so, notify anyone waiting for the job object
                    by signaling completion */
+
+                /* It is intended that the event is set to a signaled
+                   state only in the termination path */
                 KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+
+                if (Job->CompletionPort)
+                {
+                    IoSetIoCompletion(Job->CompletionPort,
+                                      Job->CompletionKey,
+                                      NULL,
+                                      STATUS_SUCCESS,
+                                      JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                                      FALSE);
+                }
             }
         }
     }
