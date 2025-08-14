@@ -780,7 +780,7 @@ ChangePasswordDialogProc(
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_SETCURSEL, 0, 0);
             SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_COMMAND:
@@ -795,7 +795,7 @@ ChangePasswordDialogProc(
                     {
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NULL);
-                        SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD), TRUE);
                     }
                     return TRUE;
 
@@ -1320,7 +1320,9 @@ LogonDialogProc(
 
             if (pDlgData->pgContext->bAutoAdminLogon ||
                 !pDlgData->pgContext->bDontDisplayLastUserName)
+            {
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pDlgData->pgContext->UserName);
+            }
 
             if (pDlgData->pgContext->bAutoAdminLogon)
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pDlgData->pgContext->Password);
@@ -1338,7 +1340,7 @@ LogonDialogProc(
             if (pDlgData->pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
 
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:
@@ -1589,18 +1591,18 @@ UnlockDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
+            DlgData_LoadBitmaps(pDlgData);
+
             SetWelcomeText(hwndDlg);
 
             SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pDlgData->pgContext);
-
             SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pDlgData->pgContext->UserName);
-            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
 
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            DlgData_LoadBitmaps(pDlgData);
-            return TRUE;
+            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:

@@ -1,5 +1,7 @@
 #pragma once
 
+#define IDC_STATIC  (-1)
+
 /* Icons */
 #define IDI_WINLOGON 4
 
