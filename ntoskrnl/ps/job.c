@@ -308,7 +308,7 @@ PspAssignProcessToJob(
 
     /* Check if the job has a limit on the number of active processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS &&
-        Job->ActiveProcesses > Job->ActiveProcessLimit)
+        Job->ActiveProcesses >= Job->ActiveProcessLimit)
     {
         /* Check if job limit on active processes has been reached */
         if (Job->CompletionPort)
@@ -1683,6 +1683,13 @@ NtAssignProcessToJobObject(
 
         /* Assign the process to the job */
         Status = PspAssignProcessToJob(Process, Job);
+
+        /* If the assignment causes the active process count to exceed
+           ActiveProcessLimit, the process is terminated */
+        if (Status == STATUS_QUOTA_EXCEEDED)
+        {
+            Status = PsTerminateProcess(Process, STATUS_QUOTA_EXCEEDED);
+        }
 
         /* TODO: UI restrictions class */
     }
