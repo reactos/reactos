@@ -3,6 +3,7 @@
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         COM interface test for shell32 classes
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  Carl Bialorucki <carl.bialorucki@reactos.org>
  */
 
 #include "com_apitest.h"

@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         COM interface test for ole32 classes
- * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ * PROJECT:         ReactOS API Tests
+ * LICENSE:         MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:         COM interface test for prnfldr server
+ * COPYRIGHT:       Copyright 2025 Carl Bialorucki <carl.bialorucki@reactos.org>
  */
 
 #include "com_apitest.h"
@@ -23,10 +23,10 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     },
 };
 
-START_TEST(ole32)
+START_TEST(combase)
 {
     if (GetNTVersion() <= _WIN32_WINNT_WIN7)
-        TestClasses(L"ole32", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
+        skip("No expected interfaces for combase on Windows 7 and older!\n");
     else
-        skip("No expected interfaces for ole32 on Windows 8+!\n");
+        TestClasses(L"combase", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }
