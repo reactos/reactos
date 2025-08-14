@@ -45,21 +45,29 @@
 
 typedef IUnknown *PUNKNOWN;
 
+/* Uncomment this if you want to log the offsets of COM interfaces. */
+// #define LOG_COM_INTERFACE_OFFSETS
+
+#define LATEST_NTDDI ((ULONG)-1)
+#define OLDEST_NTDDI ((ULONG)0)
+
 typedef struct _CLASS_AND_INTERFACES
 {
     const CLSID *clsid;
     PCSTR name;
+    ULONG MinClassNTDDIVersion;
+    ULONG MaxClassNTDDIVersion;
     struct
     {
-        LONG offset32;
-        LONG offset64;
+        ULONG MinInterfaceNTDDIVersion;
+        ULONG MaxInterfaceNTDDIVersion;
         const IID *iid;
     } ifaces[80];
     PCWSTR ThreadingModel;
 } CLASS_AND_INTERFACES;
 typedef const CLASS_AND_INTERFACES *PCCLASS_AND_INTERFACES;
 
-#define ID_NAME(c) &c, #c
+#define ID_NAME(c, minc, maxc) &c, #c, minc, maxc
 
 VOID
 TestClasses(
