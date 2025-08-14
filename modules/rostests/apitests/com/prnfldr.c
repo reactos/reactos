@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS API Tests
  * LICENSE:         MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:         COM interface test for prnfldr classes
+ * PURPOSE:         COM interface test for prnfldr server
  * COPYRIGHT:       Copyright 2025 Carl Bialorucki <carl.bialorucki@reactos.org>
  */
 

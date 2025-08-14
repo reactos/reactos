@@ -5,6 +5,7 @@ list(APPEND SOURCE
     browseui.c
     certmgr.c
     com_apitest.c
+    explorerframe.c
     ieframe.c
     netcfgx.c
     netshell.c

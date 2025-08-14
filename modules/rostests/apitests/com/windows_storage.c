@@ -13,6 +13,18 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces_Win10_1607[] =
 {
     {
+        ID_NAME(CLSID_MruLongList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_MyComputer),
         {
             {    0x0,    0x0,   &IID_IUnknown },
