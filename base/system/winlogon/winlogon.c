@@ -431,8 +431,6 @@ GinaLoadFailedWindowProc(
                 wsprintfW(text, templateText, (LPWSTR)lParam);
                 SetDlgItemTextW(hwndDlg, IDC_GINALOADFAILED, text);
             }
-
-            SetFocus(GetDlgItem(hwndDlg, IDOK));
             return TRUE;
         }
 

@@ -1122,8 +1122,8 @@ ShutdownComputerWindowProc(
         }
         case WM_INITDIALOG:
         {
-            RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
-            SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+            /* Remove the Close menu item */
+            DeleteMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
             return TRUE;
         }
     }
