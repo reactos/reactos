@@ -904,6 +904,19 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Vista[] =
         }
     },
     {
+        ID_NAME(CLSID_MruLongList),
+        {
+            {    0x0,    0x0,   &IID_IMruDataList },
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_MyComputer),
         {
             {    0x0,    0x0,   &IID_IUnknown },
@@ -1540,6 +1553,19 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win7[] =
         }
     },
     {
+        ID_NAME(CLSID_MruLongList),
+        {
+            {    0x0,    0x0,   &IID_IMruDataList },
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_MyComputer),
         {
             {    0x0,    0x0,   &IID_IUnknown },
@@ -2132,6 +2158,18 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win8[] =
         }
     },
     {
+        ID_NAME(CLSID_MruLongList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_MruPidlList),
+        {
+            {    0x0,    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_MyComputer),
         {
             {    0x0,    0x0,   &IID_IUnknown },
@@ -2263,6 +2301,17 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win8[] =
             {   0x14,   0x28,   &IID_IContextMenuCB },
             {   0x18,   0x30,   &IID_IFolderType },
             {   0x1c,   0x38,   &IID_IObjectWithBackReferences },
+        }
+    },
+    {
+        ID_NAME(CLSID_SearchBand),
+        {
+            {    0x0,    0x0,   &IID_IContextMenu },
+            {    0x0,    0x0,       &IID_IUnknown },
+            {    0x4,    0x8,   &IID_IShellExtInit },
+            {    0x8,   0x10,   &IID_IPersistPropertyBag },
+            {    0x8,   0x10,       &IID_IPersist },
+            {    0xc,   0x18,   &IID_IShellFolder },
         }
     },
     {
@@ -2810,6 +2859,17 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win10_1607[] =
             {   0x14,   0x28,   &IID_IContextMenuCB },
             {   0x18,   0x30,   &IID_IFolderType },
             {   0x1c,   0x38,   &IID_IObjectWithBackReferences },
+        }
+    },
+    {
+        ID_NAME(CLSID_SearchBand),
+        {
+            {    0x0,    0x0,   &IID_IContextMenu },
+            {    0x0,    0x0,       &IID_IUnknown },
+            {    0x4,    0x8,   &IID_IShellExtInit },
+            {    0x8,   0x10,   &IID_IPersistPropertyBag },
+            {    0x8,   0x10,       &IID_IPersist },
+            {    0xc,   0x18,   &IID_IShellFolder },
         }
     },
     {
