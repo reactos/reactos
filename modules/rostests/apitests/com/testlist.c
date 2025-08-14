@@ -4,6 +4,7 @@
 
 extern void func_browseui(void);
 extern void func_certmgr(void);
+extern void func_combase(void);
 extern void func_explorerframe(void);
 extern void func_ieframe(void);
 extern void func_interfaces(void);
@@ -20,6 +21,7 @@ const struct test winetest_testlist[] =
 {
     { "browseui", func_browseui },
     { "certmgr", func_certmgr },
+    { "combase", func_combase },
     { "explorerframe", func_explorerframe },
     { "ieframe", func_ieframe },
     { "interfaces", func_interfaces },

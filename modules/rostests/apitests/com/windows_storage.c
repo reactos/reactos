@@ -156,5 +156,5 @@ START_TEST(windows_storage)
     if (GetNTVersion() <= _WIN32_WINNT_WINBLUE)
         skip("No windows_storage class tests for Windows 8.1 and older!\n");
     else
-        TestClassesEx(L"windows.storage", ExpectedInterfaces_Win10_1607, RTL_NUMBER_OF(ExpectedInterfaces_Win10_1607), FALSE);
+        TestClasses(L"windows.storage", ExpectedInterfaces_Win10_1607, RTL_NUMBER_OF(ExpectedInterfaces_Win10_1607));
 }
