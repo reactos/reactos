@@ -128,21 +128,6 @@ typedef struct QUERY_JOB_PROCESS_ID_CONTEXT
     NTSTATUS Status;
 } QUERY_JOB_PROCESS_ID_CONTEXT, *PQUERY_JOB_PROCESS_ID_CONTEXT;
 
-/*!
- * Context structure used to associate a job object with a completion port.
- *
- * @param[in] CompletionPort
- *     A pointer to the I/O completion port.
- *
- * @param[in] CompletionKey
- *     A pointer to the key associated with the completion port.
- */
-typedef struct ASSOCIATE_COMPLETION_PORT_CONTEXT
-{
-    PVOID CompletionPort;
-    PVOID CompletionKey;
-} ASSOCIATE_COMPLETION_PORT_CONTEXT, *PASSOCIATE_COMPLETION_PORT_CONTEXT;
-
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -562,8 +547,8 @@ PspTerminateProcessCallback(
             /* Check if there are no active processes left in the job */
             if (Job->ActiveProcesses == 0)
             {
-                /* If so, notify anyone waiting for the job object by signaling
-                   completion */
+                /* If so, notify anyone waiting for the job object
+                   by signaling completion */
                 KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
             }
         }
@@ -973,15 +958,14 @@ PspAssociateCompletionPortCallback(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PASSOCIATE_COMPLETION_PORT_CONTEXT AssociateCpContext =
-        (PASSOCIATE_COMPLETION_PORT_CONTEXT)Context;
+    PEJOB Job = (PEJOB)Context;
 
     /* Ensure the process is active and has a valid unique process ID */
     if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE) &&
         Process->UniqueProcessId)
     {
-        Status = IoSetIoCompletion(AssociateCpContext->CompletionPort,
-                                   AssociateCpContext->CompletionKey,
+        Status = IoSetIoCompletion(Job->CompletionPort,
+                                   Job->CompletionKey,
                                    Process->UniqueProcessId,
                                    STATUS_SUCCESS,
                                    JOB_OBJECT_MSG_NEW_PROCESS,
@@ -1018,7 +1002,6 @@ PspAssociateCompletionPortWithJob(
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     HANDLE IoCompletion;
-    ASSOCIATE_COMPLETION_PORT_CONTEXT Context;
 
     if (!AssociateCpInfo->CompletionPort)
     {
@@ -1050,13 +1033,10 @@ PspAssociateCompletionPortWithJob(
     Job->CompletionKey = AssociateCpInfo->CompletionKey;
     Job->CompletionPort = IoCompletion;
 
-    Context.CompletionPort = Job->CompletionPort;
-    Context.CompletionKey = Job->CompletionKey;
-
     /* Inform all processes in the job about the association. */
     Status = PspEnumerateProcessesInJob(Job,
                                         PspAssociateCompletionPortCallback,
-                                        &Context,
+                                        &Job,
                                         FALSE);
 
     ExReleaseResourceLite(&Job->JobLock);
