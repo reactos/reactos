@@ -251,3 +251,14 @@ done:
 
     return ret;
 }
+
+/* Function 4 */
+DWORD
+__stdcall
+Server_RemoveDNSRegistrations(
+    _In_ PDHCP_SERVER_NAME ServerName)
+{
+    DPRINT1("Server_RemoveDNSRegistrations()\n");
+    /* FIXME: Call dnsapi.DnsRemoveRegistrations() */
+    return ERROR_SUCCESS;
+}

@@ -283,6 +283,32 @@ DhcpReleaseParameters(
     return ret;
 }
 
+/*!
+ * Removes all DNS Registrations which were added by the DHCP Client
+ *
+ * \return ERROR_SUCCESS on success
+ */
+DWORD
+WINAPI
+DhcpRemoveDNSRegistrations(VOID)
+{
+    DWORD ret;
+
+    DPRINT("DhcpRemoveDNSRegistrations()\n");
+
+    RpcTryExcept
+    {
+        ret = Client_RemoveDNSRegistrations(NULL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
 DWORD
 APIENTRY
 DhcpStaticRefreshParams(DWORD AdapterIndex,
