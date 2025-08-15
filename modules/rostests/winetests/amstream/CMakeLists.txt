@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_executable(amstream_winetest amstream.c testlist.c)
 target_link_libraries(amstream_winetest uuid)
 set_module_type(amstream_winetest win32cui)
