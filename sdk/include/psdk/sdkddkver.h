@@ -110,6 +110,7 @@ Abstract:
 #define NTDDI_WS08SP3                       NTDDI_WIN6SP3
 #define NTDDI_WS08SP4                       NTDDI_WIN6SP4
 #define NTDDI_WIN7                          0x06010000      // Windows 7
+#define NTDDI_WIN7SP1                       0x06010100
 #define NTDDI_WIN8                          0x06020000      // Windows 8
 #define NTDDI_WINBLUE                       0x06030000      // Windows 8.1
 #define NTDDI_WINTHRESHOLD                  0x0A000000      // Windows 10.0.10240 / 1507 / Threshold 1

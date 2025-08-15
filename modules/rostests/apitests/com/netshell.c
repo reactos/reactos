@@ -3,6 +3,7 @@
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         COM interface test for netshell classes
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
+ *                  Carl Bialorucki <carl.bialorucki@reactos.org>
  */
 
 #include "com_apitest.h"
@@ -10,389 +11,141 @@
 #define NDEBUG
 #include <debug.h>
 
-static const CLASS_AND_INTERFACES ExpectedInterfaces_WS03[] =
+static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
+    /* CLSID_ConnectionCommonUi has two entries here because the
+     * threading model changed between Windows versions. */
     {
-        ID_NAME(CLSID_ConnectionCommonUi),
+        ID_NAME(CLSID_ConnectionCommonUi, NTDDI_MIN, NTDDI_WS03),
         {
-            {    0x0,    0x0,   &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_NetworkConnections),
+        ID_NAME(CLSID_ConnectionCommonUi, NTDDI_VISTA, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IPersistFolder2 },
-            {    0x0,    0x0,       &IID_IPersistFolder },
-            {    0x0,    0x0,           &IID_IPersist },
-            {    0x0,    0x0,               &IID_IUnknown },
-            {    0x4,    0x8,   &IID_IShellExtInit },
-            {    0x8,   0x10,   &IID_IShellFolder2 },
-            {    0x8,   0x10,       &IID_IShellFolder },
-            {    0xc,   0x18,   &IID_IOleCommandTarget },
-            {   0x10,   0x20,   &IID_IShellFolderViewCB },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_ConnectionFolderEnum),
-        {
-            {    0x0,    0x0,   &IID_IEnumIDList },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-#if 0
-    {
-        ID_NAME(CLSID_ConnectionManager),
-        {
-            {    0x0,    0x0,   &IID_IUnknown },
-        }
-    },
-#endif
-    {
-        ID_NAME(CLSID_ConnectionTray),
-        {
-            {    0x0,    0x0,   &IID_IOleCommandTarget },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_DialupConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_DirectConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_InboundConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionPropertyUi2 },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_InternetConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_LanConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-            {   0x10,   0x20,   &IID_INetLanConnectionUiInfo },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_NetConnectionUiUtilities),
-        {
-            {    0x0,    0x0,   &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_SharedAccessConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_PPPoEUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_VpnConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-};
-
-static const CLASS_AND_INTERFACES ExpectedInterfaces_Vista[] =
-{
-    {
-        ID_NAME(CLSID_ConnectionCommonUi),
-        {
-            { FARAWY, FARAWY,   &IID_INetLanConnectionUiInfo },
-            {  -0xa0, -0x118,   &IID_IMarshal2 },
-            {  -0xa0, -0x118,       &IID_IMarshal },
-            {  -0x20,  -0x40,   &IID_IClientSecurity },
-            {  -0x18,  -0x30,   &IID_IRpcOptions },
-            {   -0xc,  -0x18,   &IID_ICallFactory },
-            {   -0x8,  -0x10,   &IID_IForegroundTransfer },
-            {    0x0,    0x0,   &IID_IMultiQI },
-            {    0x0,    0x0,       &IID_IUnknown },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_INetLanConnectionUiInfo },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IMarshal2 },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IMarshal },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IClientSecurity },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IRpcOptions },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_ICallFactory },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IForegroundTransfer },
+            { NTDDI_VISTA, NTDDI_MAX, &IID_IMultiQI },
+            { NTDDI_MIN,   NTDDI_MAX, &IID_IUnknown },
         },
         L"Free"
     },
     {
-        ID_NAME(CLSID_NetworkConnections),
+        ID_NAME(CLSID_NetworkConnections, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IPersistFolder2 },
-            {    0x0,    0x0,       &IID_IPersistFolder },
-            {    0x0,    0x0,           &IID_IPersist },
-            {    0x0,    0x0,               &IID_IUnknown },
-            {    0x4,    0x8,   &IID_IShellExtInit },
-            {    0x8,   0x10,   &IID_IShellFolder2 },
-            {    0x8,   0x10,       &IID_IShellFolder },
-            {    0xc,   0x18,   &IID_IOleCommandTarget },
-            {   0x10,   0x20,   &IID_IShellFolderViewCB },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IPersistFolder2 },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IPersistFolder },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IPersist },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IShellExtInit },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IShellFolder2 },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IShellFolder },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IOleCommandTarget },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IShellFolderViewCB },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_ConnectionFolderEnum),
+        ID_NAME(CLSID_ConnectionFolderEnum, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IEnumIDList },
-            {    0x0,    0x0,       &IID_IUnknown },
+            { NTDDI_MIN,  NTDDI_MAX, &IID_IEnumIDList },
+            { NTDDI_MIN,  NTDDI_MAX, &IID_IUnknown },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_ConnectionTray),
+        ID_NAME(CLSID_ConnectionTray, NTDDI_MIN, NTDDI_WIN7SP1),
         {
-            {    0x0,    0x0,   &IID_IOleCommandTarget },
-            {    0x0,    0x0,       &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_VISTASP4, &IID_IOleCommandTarget },
+            { NTDDI_MIN, NTDDI_MAX,      &IID_IUnknown },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_DialupConnectionUi),
+        ID_NAME(CLSID_DialupConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_InboundConnectionUi),
+        ID_NAME(CLSID_DirectConnectionUi, NTDDI_MIN, NTDDI_WS03SP2),
         {
-            {    0x0,    0x0,   &IID_INetConnectionPropertyUi2 },
-            {    0x0,    0x0,       &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_WS03SP2, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_WS03SP2, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_WS03SP2, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_InternetConnectionUi),
+        ID_NAME(CLSID_InboundConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_LanConnectionUi),
+        ID_NAME(CLSID_InternetConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-            {    0xc,   0x18,   &IID_INetLanConnectionUiInfo },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_NetConnectionUiUtilities),
+        ID_NAME(CLSID_LanConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetLanConnectionUiInfo },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_SharedAccessConnectionUi),
+        ID_NAME(CLSID_NetConnectionUiUtilities, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_PPPoEUi),
+        ID_NAME(CLSID_SharedAccessConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_VpnConnectionUi),
+        ID_NAME(CLSID_PPPoEUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-};
-
-static const CLASS_AND_INTERFACES ExpectedInterfaces_Win7[] =
-{
-    {
-        ID_NAME(CLSID_ConnectionCommonUi),
-        {
-            { FARAWY, FARAWY,   &IID_INetLanConnectionUiInfo },
-            {  -0xa0, -0x118,   &IID_IMarshal2 },
-            {  -0xa0, -0x118,       &IID_IMarshal },
-            {  -0x20,  -0x40,   &IID_IClientSecurity },
-            {  -0x18,  -0x30,   &IID_IRpcOptions },
-            {   -0xc,  -0x18,   &IID_ICallFactory },
-            {   -0x8,  -0x10,   &IID_IForegroundTransfer },
-            {    0x0,    0x0,   &IID_IMultiQI },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Free"
-    },
-    {
-        ID_NAME(CLSID_NetworkConnections),
-        {
-            {    0x0,    0x0,   &IID_IPersistFolder2 },
-            {    0x0,    0x0,       &IID_IPersistFolder },
-            {    0x0,    0x0,           &IID_IPersist },
-            {    0x0,    0x0,               &IID_IUnknown },
-            {    0x4,    0x8,   &IID_IShellExtInit },
-            {    0x8,   0x10,   &IID_IShellFolder2 },
-            {    0x8,   0x10,       &IID_IShellFolder },
-            {    0xc,   0x18,   &IID_IOleCommandTarget },
-            {   0x10,   0x20,   &IID_IShellFolderViewCB },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },
     {
-        ID_NAME(CLSID_ConnectionFolderEnum),
+        ID_NAME(CLSID_VpnConnectionUi, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IEnumIDList },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_ConnectionTray),
-        {
-            {    0x0,    0x0,   &IID_IOleCommandTarget },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_DialupConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_InboundConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionPropertyUi2 },
-            {    0x0,    0x0,       &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_InternetConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_LanConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-            {    0xc,   0x18,   &IID_INetLanConnectionUiInfo },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_NetConnectionUiUtilities),
-        {
-            {    0x0,    0x0,   &IID_IUnknown },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_SharedAccessConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            {    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_PPPoEUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
-        },
-        L"Both"
-    },
-    {
-        ID_NAME(CLSID_VpnConnectionUi),
-        {
-            {    0x0,    0x0,   &IID_INetConnectionConnectUi },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetConnectionPropertyUi2 },
-            //{    0x4,    0x8,       &IID_INetConnectionPropertyUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },
@@ -400,5 +153,5 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win7[] =
 
 START_TEST(netshell)
 {
-    TestClasses(L"netshell", ExpectedInterfaces_WS03, RTL_NUMBER_OF(ExpectedInterfaces_WS03));
+    TestClasses(L"netshell", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }

@@ -513,6 +513,11 @@ static KNOWN_INTERFACE KnownInterfaces[] =
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 
+#define ValidClassForVersion(pClass, version) \
+    (((pClass->MinClassNTDDIVersion) <= version) && ((pClass->MaxClassNTDDIVersion) >= version))
+#define ValidInterfaceForVersion(interface, version) \
+    (((interface.MinInterfaceNTDDIVersion) <= version) && ((interface.MaxInterfaceNTDDIVersion) >= version))
+
 static
 PCKNOWN_INTERFACE
 FindInterface(
@@ -531,12 +536,14 @@ static
 BOOLEAN
 IsInterfaceExpected(
     _In_ PCCLASS_AND_INTERFACES class,
-    _In_ const IID *iid)
+    _In_ const IID *iid,
+    _In_ ULONG NTDDIVersion)
 {
     INT i;
 
     for (i = 0; class->ifaces[i].iid; i++)
-        if (IsEqualIID(class->ifaces[i].iid, iid))
+        if (ValidInterfaceForVersion(class->ifaces[i], NTDDIVersion) &&
+            IsEqualIID(class->ifaces[i].iid, iid))
             return TRUE;
     return FALSE;
 }
@@ -568,7 +575,8 @@ static
 VOID
 TestModuleInterfaces(
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     HRESULT hr;
     PVOID pObj;
@@ -579,6 +587,8 @@ TestModuleInterfaces(
     for (iClass = 0; iClass < ExpectedInterfaceCount; iClass++)
     {
         class = &ExpectedInterfaces[iClass];
+        if (!ValidClassForVersion(class, NTDDIVersion))
+            continue;
         hr = CoCreateInstance(class->clsid,
                               NULL,
                               CLSCTX_INPROC_SERVER,
@@ -593,34 +603,19 @@ TestModuleInterfaces(
 
         pUnk = pObj;
 
-        /* Check that all expected interfaces are present and have the right offset */
+        /* Check that all expected interfaces are present */
         for (iIntf = 0; class->ifaces[iIntf].iid; iIntf++)
         {
+            if (!ValidInterfaceForVersion(class->ifaces[iIntf], NTDDIVersion))
+                continue;
             PCKNOWN_INTERFACE iface = FindInterface(class->ifaces[iIntf].iid);
             LONG offset = GetInterfaceOffset(pUnk, iface->iid);
             if (offset == INTF_NOT_EXPOSED)
-#ifdef _WIN64
-                ok(0, "%s is missing %s (offset 0x%lx)\n", class->name, iface->name, class->ifaces[iIntf].offset64);
-            else if (class->ifaces[iIntf].offset64 != FARAWY)
-            {
-#ifdef FAIL_WRONG_OFFSET
-                ok(offset == class->ifaces[iIntf].offset64, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset64);
-#else
-                if (offset != class->ifaces[iIntf].offset64)
-                    mytrace("%s, %s offset is %s0x%lx, expected %s0x%lx\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->ifaces[iIntf].offset64 < 0 ? "-" : "", class->ifaces[iIntf].offset64 < 0 ? -class->ifaces[iIntf].offset64 : class->ifaces[iIntf].offset64);
-#endif // FAIL_WRONG_OFFSET
-#else
-                ok(0, "%s is missing %s (offset 0x%lx)\n", class->name, iface->name, class->ifaces[iIntf].offset32);
-            else if (class->ifaces[iIntf].offset32 != FARAWY)
-            {
-#ifdef FAIL_WRONG_OFFSET
-                ok(offset == class->ifaces[iIntf].offset32, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset32);
-#else
-                if (offset != class->ifaces[iIntf].offset32)
-                    mytrace("%s, %s offset is %s0x%lx, expected %s0x%lx\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->ifaces[iIntf].offset32 < 0 ? "-" : "", class->ifaces[iIntf].offset32 < 0 ? -class->ifaces[iIntf].offset32 : class->ifaces[iIntf].offset32);
-#endif // FAIL_WRONG_OFFSET
-#endif // _WIN64
-            }
+                ok(0, "%s is missing %s\n", class->name, iface->name);
+#ifdef LOG_COM_INTERFACE_OFFSETS
+            else
+                mytrace("%s0x%lx, %s, %s\n", offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->name, iface->name);
+#endif
         }
 
         /* Check that none other than the expected interfaces are present */
@@ -628,14 +623,10 @@ TestModuleInterfaces(
         {
             PCKNOWN_INTERFACE iface = &KnownInterfaces[iIntf];
             LONG offset;
-            if (IsInterfaceExpected(class, iface->iid))
+            if (IsInterfaceExpected(class, iface->iid, NTDDIVersion))
                 continue;
             offset = GetInterfaceOffset(pUnk, iface->iid);
-#ifdef GENERATE_TABLE_ENTRIES
-            ok(offset == INTF_NOT_EXPOSED, "%s: { %s0x%lx,   &%s },\n", class->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, iface->name);
-#else
-            ok(offset == INTF_NOT_EXPOSED, "%s exposes %s (offset %ld), but shouldn't\n", class->name, iface->name, offset);
-#endif
+            ok(offset == INTF_NOT_EXPOSED, "%s exposes %s (offset %s0x%lx), but shouldn't\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset);
         }
 
         // TODO: do some aggregation
@@ -649,7 +640,8 @@ VOID
 TestModuleRegistry(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     INT iClass;
     PCCLASS_AND_INTERFACES class;
@@ -672,6 +664,8 @@ TestModuleRegistry(
             PCWSTR expectedThreadingModel;
 
             class = &ExpectedInterfaces[iClass];
+            if (!ValidClassForVersion(class, NTDDIVersion))
+                continue;
             status = RtlStringFromGUID(class->clsid, &clsid);
             ok(status == STATUS_SUCCESS, "Failed to convert guid to string for %s, status %lx\n", class->name, status);
             if (myskip(NT_SUCCESS(status), "No guid string\n"))
@@ -730,7 +724,8 @@ VOID
 TestManualInstantiation(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     INT iClass;
     PCCLASS_AND_INTERFACES class;
@@ -746,6 +741,8 @@ TestManualInstantiation(
         PVOID pv;
         HRESULT hr;
         class = &ExpectedInterfaces[iClass];
+        if (!ValidClassForVersion(class, NTDDIVersion))
+            continue;
         hr = DllGetClassObject(class->clsid, &IID_IClassFactory, &pv);
         ok(hr == S_OK, "DllGetClassObject failed for %s, hr = 0x%lx\n", class->name, hr);
         if (!myskip(SUCCEEDED(hr), "No class factory\n"))
@@ -764,34 +761,26 @@ TestManualInstantiation(
 }
 
 VOID
-TestClassesEx(
+TestClasses(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount,
-    _In_ BOOL RunManualInstantiation)
+    _In_ INT ExpectedInterfaceCount)
 {
     HRESULT hr;
+    ULONG NTDDIVer;
+
+    NTDDIVer = GetNTDDIVersion();
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     ok(hr == S_OK, "CoInitializeEx failed. hr=0x%lx\n", hr);
     if (myskip(SUCCEEDED(hr), "Failed to initialize COM. Cannot perform tests\n"))
         return;
 
-    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount);
-    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
-    if (RunManualInstantiation)
-        TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
+    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
+    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
+    TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
 
     CoUninitialize();
-}
-
-VOID
-TestClasses(
-    _In_ PCWSTR ModuleName,
-    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
-{
-    TestClassesEx(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, TRUE);
 }
 
 static
