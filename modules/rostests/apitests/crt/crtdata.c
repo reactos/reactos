@@ -232,7 +232,15 @@ void Test__aexit_rtn(void)
 {
     typedef void (*_exit_t)(int exitcode);
     _CRTIMP extern _exit_t _aexit_rtn;
-    ok_ptr(_aexit_rtn, _exit);
+    // On Vista and Win 7 the pointer is encoded
+    if ((GetNTVersion() >= 0x600) && (GetNTVersion() <= 0x601))
+    {
+        ok_ptr(_aexit_rtn, EncodePointer(_exit));
+    }
+    else
+    {
+        ok_ptr(_aexit_rtn, _exit);
+    }
 }
 
 void Test__commode(void)

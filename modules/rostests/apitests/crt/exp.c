@@ -27,17 +27,24 @@ static TESTENTRY_DBL s_exp_exact_tests[] =
     { 0x0000000000000000 /*  0.000000 */, 0x3ff0000000000000 /*  1.000000 */ },
     { 0x8000000000000000 /* -0.000000 */, 0x3ff0000000000000 /*  1.000000 */ },
     { 0x7ff0000000000000 /*  1.#INF00 */, 0x7ff0000000000000 /*  1.#INF00 */ },
-    { 0x7ff0000000000001 /*  1.#SNAN0 */, 0x7ff8000000000001 /*  1.#QNAN0 */ },
     { 0x7ff7ffffffffffff /*  1.#SNAN0 */, 0x7fffffffffffffff /*  1.#QNAN0 */ },
     { 0x7ff8000000000000 /*  1.#QNAN0 */, 0x7ff8000000000000 /*  1.#QNAN0 */ },
-    { 0x7ff8000000000001 /*  1.#QNAN0 */, 0x7ff8000000000001 /*  1.#QNAN0 */ },
     { 0x7fffffffffffffff /*  1.#QNAN0 */, 0x7fffffffffffffff /*  1.#QNAN0 */ },
     { 0xfff0000000000000 /* -1.#INF00 */, 0x0000000000000000 /*  0.000000 */ },
-    { 0xfff0000000000001 /* -1.#SNAN0 */, 0xfff8000000000001 /* -1.#QNAN0 */ },
     { 0xfff7ffffffffffff /* -1.#SNAN0 */, 0xffffffffffffffff /* -1.#QNAN0 */ },
     { 0xfff8000000000000 /* -1.#IND00 */, 0xfff8000000000000 /* -1.#IND00 */ },
-    { 0xfff8000000000001 /* -1.#QNAN0 */, 0xfff8000000000001 /* -1.#QNAN0 */ },
     { 0xffffffffffffffff /* -1.#QNAN0 */, 0xffffffffffffffff /* -1.#QNAN0 */ },
+#ifdef _M_IX86
+    { 0x7ff0000000000001 /*  1.#SNAN0 */, 0x7ff8000000000000 /*  1.#QNAN0 */ },
+    { 0x7ff8000000000001 /*  1.#QNAN0 */, 0x7ff8000000000000 /*  1.#QNAN0 */ },
+    { 0xfff0000000000001 /* -1.#SNAN0 */, 0xfff8000000000000 /* -1.#QNAN0 */ },
+    { 0xfff8000000000001 /* -1.#QNAN0 */, 0xfff8000000000000 /* -1.#QNAN0 */ },
+#else
+    { 0x7ff0000000000001 /*  1.#SNAN0 */, 0x7ff8000000000001 /*  1.#QNAN0 */ },
+    { 0x7ff8000000000001 /*  1.#QNAN0 */, 0x7ff8000000000001 /*  1.#QNAN0 */ },
+    { 0xfff0000000000001 /* -1.#SNAN0 */, 0xfff8000000000001 /* -1.#QNAN0 */ },
+    { 0xfff8000000000001 /* -1.#QNAN0 */, 0xfff8000000000001 /* -1.#QNAN0 */ },
+#endif
 };
 
 void Test_exp_exact(void)
