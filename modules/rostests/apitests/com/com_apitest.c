@@ -761,26 +761,44 @@ TestManualInstantiation(
 }
 
 VOID
-TestClasses(
+TestClassesEx(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG MinimumNTDDIVersion,
+    _In_ ULONG MaximumNTDDIVersion)
 {
     HRESULT hr;
-    ULONG NTDDIVer;
+    ULONG NTDDIVersion;
 
-    NTDDIVer = GetNTDDIVersion();
+    NTDDIVersion = GetNTDDIVersion();
+
+    if(NTDDIVersion < MinimumNTDDIVersion || NTDDIVersion > MaximumNTDDIVersion)
+    {
+        skip("Skipping test for module %S, NTDDI version (0x%08lx) is outside of the supported range (0x%08lx-0x%08lx).\n",
+             ModuleName, NTDDIVersion, MinimumNTDDIVersion, MaximumNTDDIVersion);
+        return;
+    }
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     ok(hr == S_OK, "CoInitializeEx failed. hr=0x%lx\n", hr);
     if (myskip(SUCCEEDED(hr), "Failed to initialize COM. Cannot perform tests\n"))
         return;
 
-    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
-    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
-    TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVer);
+    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
+    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
+    TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
 
     CoUninitialize();
+}
+
+VOID
+TestClasses(
+    _In_ PCWSTR ModuleName,
+    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
+    _In_ INT ExpectedInterfaceCount)
+{
+    TestClassesEx(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDI_MIN, NTDDI_MAX);
 }
 
 static

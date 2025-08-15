@@ -13,11 +13,11 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_StdComponentCategoriesMgr),
+        ID_NAME(CLSID_StdComponentCategoriesMgr, NTDDI_WIN8, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_IUnknown },
-            { FARAWY, FARAWY,   &IID_ICatRegister },
-            { FARAWY, FARAWY,   &IID_ICatInformation },
+            { NTDDI_WIN8, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_WIN8, NTDDI_MAX, &IID_ICatRegister },
+            { NTDDI_WIN8, NTDDI_MAX, &IID_ICatInformation },
         },
         L"Both"
     },
@@ -25,8 +25,5 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 
 START_TEST(combase)
 {
-    if (GetNTVersion() <= _WIN32_WINNT_WIN7)
-        skip("No expected interfaces for combase on Windows 7 and older!\n");
-    else
-        TestClasses(L"combase", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
+    TestClassesEx(L"combase", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces), NTDDI_WIN8, NTDDI_MAX);
 }

@@ -48,9 +48,6 @@ typedef IUnknown *PUNKNOWN;
 /* Uncomment this if you want to log the offsets of COM interfaces. */
 // #define LOG_COM_INTERFACE_OFFSETS
 
-#define LATEST_NTDDI ((ULONG)-1)
-#define OLDEST_NTDDI ((ULONG)0)
-
 typedef struct _CLASS_AND_INTERFACES
 {
     const CLSID *clsid;
@@ -80,7 +77,8 @@ TestClassesEx(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
     _In_ INT ExpectedInterfaceCount,
-    _In_ BOOL RunManualInstantiation);
+    _In_ ULONG MinimumNTDDIVersion,
+    _In_ ULONG MaximumNTDDIVersion);
 
 /* Indicate that the interface is implemented in another (probably aggregate) object,
  * so its offset varies and is "far away" */
