@@ -21,20 +21,16 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <tchar.h>
+#include <conutils.h>
+
+#include "resource.h"
 
 #define IPBUF 17
 #define IN_ADDR_OF(x) *((struct in_addr *)&(x))
 
 static int Usage()
 {
-    _ftprintf( stderr,
-               _T("route usage:\n")
-               _T("route print\n")
-               _T("  prints the route table\n")
-               _T("route add <target> [mask <mask>] <gw> [metric <m>]\n")
-               _T("  adds a route\n")
-               _T("route delete <target> <gw>\n")
-               _T("  deletes a route\n") );
+    ConResPrintf(StdErr, IDS_USAGE);
     return 1;
 }
 
@@ -45,7 +41,7 @@ static int PrintRoutes()
     ULONG Size = 0;
     DWORD Error = 0;
     ULONG adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
-    TCHAR DefGate[16];
+    WCHAR DefGate[16];
     TCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
     unsigned int i;
 
@@ -86,29 +82,20 @@ static int PrintRoutes()
                   _T("%s"),
 #endif
                   pAdapterInfo->GatewayList.IpAddress.String);
-        _tprintf(_T("===========================================================================\n"));
-        _tprintf(_T("Interface List\n"));
+        ConResPrintf(StdOut, IDS_SEPARATOR);
+        ConResPrintf(StdOut, IDS_INTERFACE_LIST);
         /* FIXME - sort by the index! */
         while (pAdapterInfo)
         {
-#ifdef UNICODE
-            _tprintf(_T("0x%lu ........................... %hs\n"),
-#else
-            _tprintf(_T("0x%lu ........................... %s\n"),
-#endif
-                     pAdapterInfo->Index, pAdapterInfo->Description);
+            ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterInfo->Index, pAdapterInfo->Description);
             pAdapterInfo = pAdapterInfo->Next;
         }
-        _tprintf(_T("===========================================================================\n"));
+        ConResPrintf(StdOut, IDS_SEPARATOR);
 
-        _tprintf(_T("===========================================================================\n"));
-        _tprintf(_T("Active Routes:\n"));
-        _tprintf( _T("%-27s%-17s%-14s%-11s%-10s\n"),
-                  _T("Network Destination"),
-                  _T("Netmask"),
-                  _T("Gateway"),
-                  _T("Interface"),
-                  _T("Metric") );
+        ConResPrintf(StdOut, IDS_IPV4_ROUTE_TABLE);
+        ConResPrintf(StdOut, IDS_SEPARATOR);
+        ConResPrintf(StdOut, IDS_ACTIVE_ROUTES);
+        ConResPrintf(StdOut, IDS_ROUTES_HEADER);
         for( i = 0; i < IpForwardTable->dwNumEntries; i++ )
         {
             _stprintf( Destination,
@@ -133,16 +120,18 @@ static int PrintRoutes()
 #endif
                        inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop) ) );
 
-            _tprintf( _T("%17s%17s%17s%16ld%9ld\n"),
-                      Destination,
-                      Netmask,
-                      Gateway,
-                      IpForwardTable->table[i].dwForwardIfIndex,
-                      IpForwardTable->table[i].dwForwardMetric1 );
+            ConResPrintf(StdOut, IDS_ROUTES_ENTRY,
+                         Destination,
+                         Netmask,
+                         Gateway,
+                         IpForwardTable->table[i].dwForwardIfIndex,
+                         IpForwardTable->table[i].dwForwardMetric1);
         }
-        _tprintf(_T("Default Gateway:%18s\n"), DefGate);
-        _tprintf(_T("===========================================================================\n"));
-        _tprintf(_T("Persistent Routes:\n"));
+        ConResPrintf(StdOut, IDS_DEFAULT_GATEWAY, DefGate);
+        ConResPrintf(StdOut, IDS_SEPARATOR);
+
+        ConResPrintf(StdOut, IDS_PERSISTENT_ROUTES);
+        ConResPrintf(StdOut, IDS_NONE);
 
         free(IpForwardTable);
         free(pAdapterInfo);
@@ -154,7 +143,7 @@ static int PrintRoutes()
 Error:
         if (pAdapterInfo) free(pAdapterInfo);
         if (IpForwardTable) free(IpForwardTable);
-        _ftprintf( stderr, _T("Route enumerate failed\n") );
+        ConResPrintf(StdErr, IDS_ROUTE_ENUM_ERROR);
         return Error;
     }
 }
@@ -216,21 +205,14 @@ static int add_route( int argc, TCHAR **argv ) {
 
     if( argc < 2 || !convert_add_cmd_line( &RowToAdd, argc, argv ) )
     {
-        _ftprintf( stderr,
-                   _T("route add usage:\n")
-                   _T("route add <target> [mask <mask>] <gw> [metric <m>]\n")
-                   _T("  Adds a route to the IP route table.\n")
-                   _T("  <target> is the network or host to add a route to.\n")
-                   _T("  <mask>   is the netmask to use (autodetected if unspecified)\n")
-                   _T("  <gw>     is the gateway to use to access the network\n")
-                   _T("  <m>      is the metric to use (lower is preferred)\n") );
+        ConResPrintf(StdErr, IDS_ROUTE_ADD_HELP);
         return 1;
     }
 
     if( (Error = CreateIpForwardEntry( &RowToAdd )) == ERROR_SUCCESS )
         return 0;
 
-    _ftprintf( stderr, _T("Route addition failed\n") );
+    ConResPrintf(StdErr, IDS_ROUTE_ADD_ERROR);
     return Error;
 }
 
@@ -241,24 +223,22 @@ static int del_route( int argc, TCHAR **argv )
 
     if( argc < 2 || !convert_add_cmd_line( &RowToDel, argc, argv ) )
     {
-        _ftprintf( stderr,
-                    _T("route delete usage:\n")
-                    _T("route delete <target> <gw>\n")
-                    _T("  Removes a route from the IP route table.\n")
-                    _T("  <target> is the network or host to add a route to.\n")
-                    _T("  <gw>     is the gateway to remove the route from.\n") );
+        ConResPrintf(StdErr, IDS_ROUTE_ADD_HELP);
         return 1;
     }
 
     if( (Error = DeleteIpForwardEntry( &RowToDel )) == ERROR_SUCCESS )
         return 0;
 
-    _ftprintf( stderr, _T("Route addition failed\n") );
+    ConResPrintf(StdErr, IDS_ROUTE_DEL_ERROR);
     return Error;
 }
 
 int _tmain( int argc, TCHAR **argv )
 {
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     if( argc < 2 )
         return Usage();
     else if ( !_tcscmp( argv[1], _T("print") ) )

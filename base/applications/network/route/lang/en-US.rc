@@ -1,0 +1,49 @@
+/*
+ * FILE:        base/applications/network/route/lang/en-US.rc
+ * PURPOSE:     English translations for ReactOS Route Command
+ * TRANSLATORS:
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\n\
+route usage:\n\
+route print\n\
+  prints the route table\n\
+route add <target> [mask <mask>] <gw> [metric <m>]\n\
+  adds a route\n\
+route delete <target> <gw>\n\
+  deletes a route\n"
+
+    IDS_ROUTE_ADD_HELP "\n\
+route add usage:\n\
+route add <target> [mask <mask>] <gw> [metric <m>]\n\
+  Adds a route to the IP route table.\n\
+  <target> is the network or host to add a route to.\n\
+  <mask>   is the netmask to use (autodetected if unspecified)\n\
+  <gw>     is the gateway to use to access the network\n\
+  <m>      is the metric to use (lower is preferred)\n"
+
+    IDS_ROUTE_DEL_HELP "\n\
+route delete usage:\n\
+route delete <target> <gw>\n\
+  Removes a route from the IP route table.\n\
+  <target> is the network or host to add a route to.\n\
+  <gw>     is the gateway to remove the route from.\n"
+
+    IDS_ROUTE_ADD_ERROR "Route addition failed\n"
+    IDS_ROUTE_DEL_ERROR "Route deletion failed\n"
+    IDS_ROUTE_ENUM_ERROR "Route enumeration failed\n"
+    IDS_SEPARATOR "===========================================================================\n"
+    IDS_INTERFACE_LIST "Interface List\n"
+    IDS_INTERFACE_ENTRY "0x%lu ........................... %hs\n"
+    IDS_IPV4_ROUTE_TABLE "\nIPv4 Route Table\n"
+    IDS_ACTIVE_ROUTES "Active Routes:\n"
+    IDS_ROUTES_ENTRY "%17s%17s%17s%16ld%9ld\n"
+    IDS_PERSISTENT_ROUTES "Persistent Routes:\n"
+    IDS_DEFAULT_GATEWAY "Default Gateway:%18s\n"
+    IDS_ROUTES_HEADER "Network Destination        Netmask          Gateway       Interface  Metric\n"
+    IDS_NONE "  None\n"
+END
