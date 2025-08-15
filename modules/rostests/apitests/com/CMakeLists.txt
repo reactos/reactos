@@ -5,18 +5,17 @@ list(APPEND SOURCE
     # browseui.c
     # certmgr.c
     com_apitest.c
-    # combase.c
-    # explorerframe.c
+    combase.c
+    explorerframe.c
     # ieframe.c
     # netcfgx.c
     netshell.c
     # ole32.c
-    # prnfldr.c
+    prnfldr.c
     # shdocvw.c
     # shell32.c
-    # windows_storage.c
-    # zipfldr.c
-)
+    windows_storage.c
+    zipfldr.c)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)

@@ -13,11 +13,11 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_StdComponentCategoriesMgr),
+        ID_NAME(CLSID_StdComponentCategoriesMgr, NTDDI_MIN, NTDDI_WIN7SP1),
         {
-            {    0x0,    0x0,   &IID_IUnknown },
-            { FARAWY, FARAWY,   &IID_ICatRegister },
-            { FARAWY, FARAWY,   &IID_ICatInformation },
+            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_ICatRegister },
+            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_ICatInformation },
         },
         L"Both"
     },
@@ -25,8 +25,5 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 
 START_TEST(ole32)
 {
-    if (GetNTVersion() <= _WIN32_WINNT_WIN7)
-        TestClasses(L"ole32", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
-    else
-        skip("No expected interfaces for ole32 on Windows 8+!\n");
+    TestClasses(L"ole32", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }
