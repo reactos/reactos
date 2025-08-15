@@ -10,9 +10,9 @@ list(APPEND SOURCE
     # ieframe.c
     # netcfgx.c
     netshell.c
-    # ole32.c
+    ole32.c
     prnfldr.c
-    # shdocvw.c
+    shdocvw.c
     # shell32.c
     windows_storage.c
     zipfldr.c)
