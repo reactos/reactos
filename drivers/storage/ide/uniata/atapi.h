@@ -34,7 +34,7 @@ Revision History:
          Mike Glass (MGlass)
 
     Some definitions were taken from FreeBSD 4.3-4.6 ATA driver by
-         Søren Schmidt, Copyright (c) 1998,1999,2000,2001
+         SÃ¸ren Schmidt, Copyright (c) 1998,1999,2000,2001
 
     Code was changed/updated by
          Alter, Copyright (c) 2002-20016
