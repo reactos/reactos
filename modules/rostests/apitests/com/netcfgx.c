@@ -13,12 +13,12 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_CNetCfg),
+        ID_NAME(CLSID_CNetCfg, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,    0x0,   &IID_INetCfg },
-            {    0x0,    0x0,       &IID_IUnknown },
-            {    0x4,    0x8,   &IID_INetCfgLock },
-            {   0x10,   0x20,   &IID_INetCfgPnpReconfigCallback },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetCfg },
+            { NTDDI_MIN, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetCfgLock },
+            { NTDDI_MIN, NTDDI_MAX, &IID_INetCfgPnpReconfigCallback },
         },
         L"Both"
     },
