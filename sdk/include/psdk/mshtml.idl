@@ -9284,8 +9284,10 @@ properties:
 methods:
     WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
 
+#ifndef __REACTOS__
     [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
     IDispatch* constructor();
+#endif
 
     [propput, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
     void shape(BSTR v);

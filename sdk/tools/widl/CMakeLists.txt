@@ -11,10 +11,11 @@ if(MSVC)
 endif()
 
 FLEX_TARGET(p_scanner parser.l ${CMAKE_CURRENT_BINARY_DIR}/parser.yy.c)
-BISON_TARGET(p_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-p parser_")
+BISON_TARGET(p_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c)
 ADD_FLEX_BISON_DEPENDENCY(p_scanner p_parser)
 
 list(APPEND SOURCE
+    attribute.c
     client.c
     expr.c
     hash.c
@@ -35,7 +36,8 @@ list(APPEND SOURCE
     ../port/getopt1.c
     ../port/mkstemps.c)
 
-add_definitions(-DINT16=SHORT -DLANG_SCOTTISH_GAELIC=0x91)
+add_definitions(-DINT16=SHORT -DLANG_SCOTTISH_GAELIC=0x91 -DINCLUDEDIR="unused" -DLIBDIR="unused")
+include_directories(${REACTOS_SOURCE_DIR}/sdk/tools/wpp/)
 add_host_tool(widl ${SOURCE})
 target_link_libraries(widl PRIVATE host_includes wpphost)
 
@@ -48,6 +50,9 @@ if(MSVC)
 
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
     target_compile_options(widl PRIVATE "/wd4244")
+
+    # Disable warning "warning C4090: 'function': different 'const' qualifiers"
+    target_compile_options(widl PRIVATE "/wd4090")
 
     target_compile_options(widl PRIVATE "-WX")
 endif()
