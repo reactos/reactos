@@ -55,9 +55,7 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
     KeQuerySystemTime(OldTime);
 
     /* Set the new system time (ordering of these operations is critical) */
-    SharedUserData->SystemTime.High2Time = NewTime->HighPart;
-    SharedUserData->SystemTime.LowPart = NewTime->LowPart;
-    SharedUserData->SystemTime.High1Time = NewTime->HighPart;
+    KiWriteSystemTime(&SharedUserData->SystemTime, *NewTime);
 
     /* Check if this was for the HAL and set the RTC time */
     if (HalTime) ExCmosClockIsSane = HalSetRealTimeClock(&TimeFields);
@@ -164,15 +162,7 @@ VOID
 NTAPI
 KeQueryTickCount(IN PLARGE_INTEGER TickCount)
 {
-    /* Loop until we get a perfect match */
-    for (;;)
-    {
-        /* Read the tick count value */
-        TickCount->HighPart = KeTickCount.High1Time;
-        TickCount->LowPart = KeTickCount.LowPart;
-        if (TickCount->HighPart == KeTickCount.High2Time) break;
-        YieldProcessor();
-    }
+    *TickCount = KiReadSystemTime(&KeTickCount);
 }
 
 #ifndef _M_AMD64
