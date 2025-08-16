@@ -9,10 +9,11 @@
 #define IDS_SEPARATOR             106
 #define IDS_INTERFACE_LIST        107
 #define IDS_INTERFACE_ENTRY       108
-#define IDS_IPV4_ROUTE_TABLE      109
-#define IDS_ACTIVE_ROUTES         110
-#define IDS_PERSISTENT_ROUTES     111
-#define IDS_ROUTES_ENTRY          112
-#define IDS_DEFAULT_GATEWAY       113
-#define IDS_ROUTES_HEADER         114
+#define IDS_ETHERNET_ENTRY        109
+#define IDS_IPV4_ROUTE_TABLE      110
+#define IDS_ACTIVE_ROUTES         111
+#define IDS_PERSISTENT_ROUTES     112
+#define IDS_ROUTES_ENTRY          113
+#define IDS_DEFAULT_GATEWAY       114
+#define IDS_ROUTES_HEADER         115
 #define IDS_NONE                  120

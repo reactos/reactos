@@ -34,7 +34,56 @@ static int Usage()
     return 1;
 }
 
-static int PrintRoutes()
+static
+BOOL
+MatchWildcard(
+    _In_ PWSTR Text,
+    _In_ PWSTR Pattern)
+{
+    size_t TextLength, PatternLength, TextIndex = 0, PatternIndex = 0;
+    size_t StartIndex = -1, MatchIndex = 0;
+
+    TextLength = wcslen(Text);
+    PatternLength = wcslen(Pattern);
+
+    while (TextIndex < TextLength)
+    {
+        if ((PatternIndex < PatternLength) &&
+            ((Pattern[PatternIndex] == L'?') ||
+             (towlower(Pattern[PatternIndex]) == towlower(Text[TextIndex]))))
+        {
+            TextIndex++;
+            PatternIndex++;
+        }
+        else if ((PatternIndex < PatternLength) &&
+                 (Pattern[PatternIndex] == L'*'))
+        {
+            StartIndex = PatternIndex;
+            MatchIndex = TextIndex;
+            PatternIndex++;
+        }
+        else if (StartIndex != -1)
+        {
+            PatternIndex = StartIndex + 1;
+            MatchIndex++;
+            TextIndex = MatchIndex;
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
+
+    while ((PatternIndex < PatternLength) &&
+           (Pattern[PatternIndex] == L'*'))
+    {
+        PatternIndex++;
+    }
+
+    return (PatternIndex == PatternLength);
+}
+
+static int PrintRoutes(PWSTR Filter)
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
@@ -44,6 +93,7 @@ static int PrintRoutes()
     WCHAR DefGate[16];
     WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
     unsigned int i;
+    BOOL EntriesFound;
 
     /* set required buffer size */
     pAdapterInfo = (IP_ADAPTER_INFO *) malloc( adaptOutBufLen );
@@ -82,7 +132,12 @@ static int PrintRoutes()
         /* FIXME - sort by the index! */
         while (pAdapterInfo)
         {
-            ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterInfo->Index, pAdapterInfo->Description);
+            if (pAdapterInfo->Type == MIB_IF_TYPE_ETHERNET)
+                ConResPrintf(StdOut, IDS_ETHERNET_ENTRY, pAdapterInfo->Index, pAdapterInfo->Address[0],
+                             pAdapterInfo->Address[1], pAdapterInfo->Address[2], pAdapterInfo->Address[3],
+                             pAdapterInfo->Address[4], pAdapterInfo->Address[5], pAdapterInfo->Description);
+            else
+                ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterInfo->Index, pAdapterInfo->Description);
             pAdapterInfo = pAdapterInfo->Next;
         }
         ConResPrintf(StdOut, IDS_SEPARATOR);
@@ -90,21 +145,31 @@ static int PrintRoutes()
         ConResPrintf(StdOut, IDS_IPV4_ROUTE_TABLE);
         ConResPrintf(StdOut, IDS_SEPARATOR);
         ConResPrintf(StdOut, IDS_ACTIVE_ROUTES);
-        ConResPrintf(StdOut, IDS_ROUTES_HEADER);
+        EntriesFound = FALSE;
         for( i = 0; i < IpForwardTable->dwNumEntries; i++ )
         {
             mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest)), IPBUF);
             mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
             mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop)), IPBUF);
 
-            ConResPrintf(StdOut, IDS_ROUTES_ENTRY,
-                         Destination,
-                         Netmask,
-                         Gateway,
-                         IpForwardTable->table[i].dwForwardIfIndex,
-                         IpForwardTable->table[i].dwForwardMetric1);
+            if ((Filter == NULL) || MatchWildcard(Destination, Filter))
+            {
+                if (EntriesFound == FALSE)
+                    ConResPrintf(StdOut, IDS_ROUTES_HEADER);
+                ConResPrintf(StdOut, IDS_ROUTES_ENTRY,
+                             Destination,
+                             Netmask,
+                             Gateway,
+                             IpForwardTable->table[i].dwForwardIfIndex,
+                             IpForwardTable->table[i].dwForwardMetric1);
+                EntriesFound = TRUE;
+            }
         }
-        ConResPrintf(StdOut, IDS_DEFAULT_GATEWAY, DefGate);
+
+        if (Filter == NULL)
+            ConResPrintf(StdOut, IDS_DEFAULT_GATEWAY, DefGate);
+        else if (EntriesFound == FALSE)
+            ConResPrintf(StdOut, IDS_NONE);
         ConResPrintf(StdOut, IDS_SEPARATOR);
 
         ConResPrintf(StdOut, IDS_PERSISTENT_ROUTES);
@@ -206,7 +271,7 @@ int wmain( int argc, WCHAR **argv )
     if( argc < 2 )
         return Usage();
     else if ( !_wcsicmp( argv[1], L"print" ) )
-        return PrintRoutes();
+        return PrintRoutes((argc > 2) ? argv[2] : NULL);
     else if( !_wcsicmp( argv[1], L"add" ) )
         return add_route( argc-2, argv+2 );
     else if( !_wcsicmp( argv[1], L"delete" ) )

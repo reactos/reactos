@@ -39,6 +39,7 @@ route delete <target> <gw>\n\
     IDS_SEPARATOR "===========================================================================\n"
     IDS_INTERFACE_LIST "Interface List\n"
     IDS_INTERFACE_ENTRY "0x%lu ........................... %hs\n"
+    IDS_ETHERNET_ENTRY "0x%lu ...%02x %02x %02x %02x %02x %02x ...... %hs\n"
     IDS_IPV4_ROUTE_TABLE "\nIPv4 Route Table\n"
     IDS_ACTIVE_ROUTES "Active Routes:\n"
     IDS_ROUTES_ENTRY "%17s%17s%17s%16ld%9ld\n"
