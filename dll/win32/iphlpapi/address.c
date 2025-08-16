@@ -391,7 +391,7 @@ GetAdaptersAddresses(
     {
         PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr;
         ULONG CurrentAASize = 0;
-        ULONG FriendlySize = 0;
+        ULONG FriendlySize = 0, DescriptionSize = 0;
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
         {
@@ -424,13 +424,18 @@ GetAdaptersAddresses(
             CurrentAASize += sizeof(WCHAR);
 
             /* Add the description. */
-            CurrentAASize += sizeof(WCHAR);
-
-            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
             {
-                /* Get the friendly name */
+                DescriptionSize = mbstowcs(NULL, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen) * sizeof(WCHAR);
+                CurrentAASize += DescriptionSize;
+            }
+            else
+            {
                 HKEY ConnectionKey;
                 CHAR KeyName[256];
+                CHAR InstanceID[128];
+                DWORD ValueType = 0;
+                DWORD ValueSize = 0;
 
                 snprintf(KeyName, 256,
                     "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
@@ -438,18 +443,66 @@ GetAdaptersAddresses(
 
                 if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
                 {
-                    DWORD ValueType;
-                    DWORD ValueSize = 0;
-
-                    if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
-                        ValueType == REG_SZ)
-                    {
-                        /* We remove the null char, it will be re-added after */
-                        FriendlySize = ValueSize - sizeof(WCHAR);
-                        CurrentAASize += FriendlySize;
-                    }
-
+                    ValueSize = 128;
+                    RegQueryValueExA(ConnectionKey, "PnpInstanceID", NULL, &ValueType, (LPBYTE)InstanceID, &ValueSize);
                     RegCloseKey(ConnectionKey);
+                }
+
+                if (ValueSize != 0)
+                {
+                    sprintf(KeyName, "SYSTEM\\CurrentControlSet\\Enum\\%s", InstanceID);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                    {
+                        ValueSize = 0;
+                        if (RegQueryValueExW(ConnectionKey, L"DeviceDesc", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DescriptionSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DescriptionSize;
+                        }
+
+                        RegCloseKey(ConnectionKey);
+                    }
+                }
+            }
+
+            /* We always make sure to have enough room for empty string */
+            CurrentAASize += sizeof(WCHAR);
+
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            {
+                if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
+                {
+                    FriendlySize = mbstowcs(NULL, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen) * sizeof(WCHAR);
+                    CurrentAASize += FriendlySize;
+                }
+                else
+                {
+                    /* Get the friendly name */
+                    HKEY ConnectionKey;
+                    CHAR KeyName[256];
+
+                    snprintf(KeyName, 256,
+                        "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                        Entry->if_descrlen, &Entry->if_descr[0]);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                    {
+                        DWORD ValueType;
+                        DWORD ValueSize = 0;
+
+                        if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            FriendlySize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += FriendlySize;
+                        }
+
+                        RegCloseKey(ConnectionKey);
+                    }
                 }
 
                 /* We always make sure to have enough room for empty string */
@@ -509,9 +562,70 @@ GetAdaptersAddresses(
 
                 /* The description */
                 CurrentAA->Description = (PWCHAR)Ptr;
-                CurrentAA->Description[0] = L'\0';
-                /* Next items */
-                Ptr = (BYTE*)(CurrentAA->Description + 1);
+
+                if (DescriptionSize != 0)
+                {
+                    if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
+                    {
+                        size_t size;
+                        size = mbstowcs((PWCHAR)Ptr, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen);
+                        CurrentAA->Description = (PWCHAR)Ptr;
+                        CurrentAA->Description[size] = '\0';
+                        /* Next items */
+                        Ptr = (BYTE*)(CurrentAA->Description + size + 1);
+                    }
+                    else
+                    {
+                        HKEY ConnectionKey;
+                        CHAR KeyName[256];
+                        CHAR InstanceID[128];
+                        DWORD ValueType = 0;
+                        DWORD ValueSize = 0;
+
+                        snprintf(KeyName, 256,
+                            "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                            Entry->if_descrlen, &Entry->if_descr[0]);
+
+                        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                        {
+                            ValueSize = 128;
+                            RegQueryValueExA(ConnectionKey, "PnpInstanceID", NULL, &ValueType, (LPBYTE)InstanceID, &ValueSize);
+                            RegCloseKey(ConnectionKey);
+                        }
+
+                        if (ValueSize != 0)
+                        {
+                            sprintf(KeyName, "SYSTEM\\CurrentControlSet\\Enum\\%s", InstanceID);
+
+                            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                            {
+                                ValueSize = DescriptionSize + sizeof(WCHAR);
+                                if (RegQueryValueExW(ConnectionKey, L"DeviceDesc", NULL, &ValueType, (LPBYTE)CurrentAA->Description, &ValueSize) == ERROR_SUCCESS &&
+                                    ValueType == REG_SZ && ValueSize == DescriptionSize + sizeof(WCHAR))
+                                {
+                                    /* We're done, next items */
+                                    Ptr = (BYTE*)(CurrentAA->Description + (ValueSize / sizeof(WCHAR)));
+                                }
+                                else
+                                {
+                                    /* Fail */
+                                    ERR("Description name changed after probe!\n");
+                                    DescriptionSize = 0;
+                                }
+
+                                RegCloseKey(ConnectionKey);
+                            }
+                        }
+                    }
+                }
+
+                /* In case of failure (or no name) */
+                if (DescriptionSize == 0)
+                {
+                    CurrentAA->Description[0] = L'\0';
+                    /* Next items */
+                    Ptr = (BYTE*)(CurrentAA->Description + 1);
+                }
 
                 /* The friendly name */
                 if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
@@ -521,37 +635,48 @@ GetAdaptersAddresses(
                     if (FriendlySize != 0)
                     {
                         /* Get the friendly name */
-                        HKEY ConnectionKey;
-                        CHAR KeyName[256];
-
-                        snprintf(KeyName, 256,
-                            "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
-                            Entry->if_descrlen, &Entry->if_descr[0]);
-
-                        if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
+                        if (Entry->if_type == IF_TYPE_SOFTWARE_LOOPBACK)
                         {
-                            DWORD ValueType;
-                            DWORD ValueSize = FriendlySize + sizeof(WCHAR);
+                            size_t size;
+                            size = mbstowcs(CurrentAA->FriendlyName, (PCSTR)&Entry->if_descr[0], Entry->if_descrlen);
+                            CurrentAA->FriendlyName[size] = '\0';
+                            /* Next items */
+                            Ptr = (BYTE*)(CurrentAA->FriendlyName + size + 1);
+                        }
+                        else
+                        {
+                            HKEY ConnectionKey;
+                            CHAR KeyName[256];
 
-                            if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, (LPBYTE)CurrentAA->FriendlyName, &ValueSize) == ERROR_SUCCESS &&
-                                ValueType == REG_SZ && ValueSize == FriendlySize + sizeof(WCHAR))
+                            snprintf(KeyName, 256,
+                                "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%*s\\Connection",
+                                Entry->if_descrlen, &Entry->if_descr[0]);
+
+                            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &ConnectionKey) == ERROR_SUCCESS)
                             {
-                                /* We're done, next items */
-                                Ptr = (BYTE*)(CurrentAA->FriendlyName + (ValueSize / sizeof(WCHAR)));
+                                DWORD ValueType;
+                                DWORD ValueSize = FriendlySize + sizeof(WCHAR);
+
+                                if (RegQueryValueExW(ConnectionKey, L"Name", NULL, &ValueType, (LPBYTE)CurrentAA->FriendlyName, &ValueSize) == ERROR_SUCCESS &&
+                                    ValueType == REG_SZ && ValueSize == FriendlySize + sizeof(WCHAR))
+                                {
+                                    /* We're done, next items */
+                                    Ptr = (BYTE*)(CurrentAA->FriendlyName + (ValueSize / sizeof(WCHAR)));
+                                }
+                                else
+                                {
+                                    /* Fail */
+                                    ERR("Friendly name changed after probe!\n");
+                                    FriendlySize = 0;
+                                }
+
+                                RegCloseKey(ConnectionKey);
                             }
                             else
                             {
                                 /* Fail */
-                                ERR("Friendly name changed after probe!\n");
                                 FriendlySize = 0;
                             }
-
-                            RegCloseKey(ConnectionKey);
-                        }
-                        else
-                        {
-                            /* Fail */
-                            FriendlySize = 0;
                         }
                     }
 
