@@ -13,6 +13,7 @@
 
 #define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <stdio.h>
@@ -20,7 +21,6 @@
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include <tchar.h>
 #include <conutils.h>
 
 #include "resource.h"
@@ -42,7 +42,7 @@ static int PrintRoutes()
     DWORD Error = 0;
     ULONG adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
     WCHAR DefGate[16];
-    TCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
+    WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
     unsigned int i;
 
     /* set required buffer size */
@@ -75,13 +75,8 @@ static int PrintRoutes()
     if (((Error = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen)) == NO_ERROR) &&
         ((Error = GetIpForwardTable(IpForwardTable, &Size, TRUE)) == NO_ERROR))
     {
-        _stprintf(DefGate,
-#ifdef UNICODE
-                  _T("%hs"),
-#else
-                  _T("%s"),
-#endif
-                  pAdapterInfo->GatewayList.IpAddress.String);
+        mbstowcs(DefGate, pAdapterInfo->GatewayList.IpAddress.String, 16);
+
         ConResPrintf(StdOut, IDS_SEPARATOR);
         ConResPrintf(StdOut, IDS_INTERFACE_LIST);
         /* FIXME - sort by the index! */
@@ -98,27 +93,9 @@ static int PrintRoutes()
         ConResPrintf(StdOut, IDS_ROUTES_HEADER);
         for( i = 0; i < IpForwardTable->dwNumEntries; i++ )
         {
-            _stprintf( Destination,
-#ifdef UNICODE
-                       _T("%hs"),
-#else
-                       _T("%s"),
-#endif
-                       inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest) ) );
-            _stprintf( Netmask,
-#ifdef UNICODE
-                       _T("%hs"),
-#else
-                       _T("%s"),
-#endif
-                       inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask) ) );
-            _stprintf( Gateway,
-#ifdef UNICODE
-                       _T("%hs"),
-#else
-                       _T("%s"),
-#endif
-                       inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop) ) );
+            mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest)), IPBUF);
+            mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
+            mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop)), IPBUF);
 
             ConResPrintf(StdOut, IDS_ROUTES_ENTRY,
                          Destination,
@@ -149,57 +126,44 @@ Error:
 }
 
 static int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
-              int argc, TCHAR **argv ) {
+              int argc, WCHAR **argv ) {
     int i;
-#ifdef UNICODE
     char addr[16];
-#endif
 
     if( argc > 1 )
     {
-#ifdef UNICODE
-        sprintf( addr, "%ls", argv[0] );
+        wcstombs(addr, argv[0], 16);
         RowToAdd->dwForwardDest = inet_addr( addr );
-#else
-        RowToAdd->dwForwardDest = inet_addr( argv[0] );
-#endif
     }
     else
         return FALSE;
+
     for( i = 1; i < argc; i++ )
     {
-        if( !_tcscmp( argv[i], _T("mask") ) )
+        if( !_wcsicmp( argv[i], L"mask" ) )
         {
             i++; if( i >= argc ) return FALSE;
-#ifdef UNICODE
-            sprintf( addr, "%ls", argv[i] );
+            wcstombs(addr, argv[i], 16);
             RowToAdd->dwForwardMask = inet_addr( addr );
-#else
-            RowToAdd->dwForwardMask = inet_addr( argv[i] );
-#endif
         }
-        else if( !_tcscmp( argv[i], _T("metric") ) )
+        else if( !_wcsicmp( argv[i], L"metric" ) )
         {
             i++;
             if( i >= argc )
                 return FALSE;
-            RowToAdd->dwForwardMetric1 = _ttoi( argv[i] );
+            RowToAdd->dwForwardMetric1 = _wtoi( argv[i] );
         }
         else
         {
-#ifdef UNICODE
-            sprintf( addr, "%ls", argv[i] );
+            wcstombs(addr, argv[i], 16);
             RowToAdd->dwForwardNextHop = inet_addr( addr );
-#else
-            RowToAdd->dwForwardNextHop = inet_addr( argv[i] );
-#endif
         }
     }
 
     return TRUE;
 }
 
-static int add_route( int argc, TCHAR **argv ) {
+static int add_route( int argc, WCHAR **argv ) {
     MIB_IPFORWARDROW RowToAdd = { 0 };
     DWORD Error;
 
@@ -216,7 +180,7 @@ static int add_route( int argc, TCHAR **argv ) {
     return Error;
 }
 
-static int del_route( int argc, TCHAR **argv )
+static int del_route( int argc, WCHAR **argv )
 {
     MIB_IPFORWARDROW RowToDel = { 0 };
     DWORD Error;
@@ -234,18 +198,18 @@ static int del_route( int argc, TCHAR **argv )
     return Error;
 }
 
-int _tmain( int argc, TCHAR **argv )
+int wmain( int argc, WCHAR **argv )
 {
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
     if( argc < 2 )
         return Usage();
-    else if ( !_tcscmp( argv[1], _T("print") ) )
+    else if ( !_wcsicmp( argv[1], L"print" ) )
         return PrintRoutes();
-    else if( !_tcscmp( argv[1], _T("add") ) )
+    else if( !_wcsicmp( argv[1], L"add" ) )
         return add_route( argc-2, argv+2 );
-    else if( !_tcscmp( argv[1], _T("delete") ) )
+    else if( !_wcsicmp( argv[1], L"delete" ) )
         return del_route( argc-2, argv+2 );
     else
         return Usage();
