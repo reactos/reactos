@@ -12,7 +12,7 @@ if(NOT DEFINED SEPARATE_DBG)
 endif()
 
 # Dwarf based builds (no rsym)
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set(NO_ROSSYM TRUE)
 elseif(NOT ARCH STREQUAL "i386")
     set(NO_ROSSYM TRUE)
@@ -153,7 +153,7 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # Debugging
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     if(SEPARATE_DBG)
         add_compile_options(-gdwarf-2 -ggdb)
     else()
@@ -194,6 +194,7 @@ elseif(ARCH STREQUAL "arm")
 endif()
 
 # Optimizations
+# TODO: Check/Document Debug, RelWithDebInfo and MinSizeRel cases.
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-O2 -DNDEBUG=)
