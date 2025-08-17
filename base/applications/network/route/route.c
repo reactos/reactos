@@ -30,7 +30,7 @@
 
 static int Usage()
 {
-    ConResPrintf(StdErr, IDS_USAGE);
+    ConResPrintf(StdErr, IDS_USAGE1);
     return 1;
 }
 
@@ -83,30 +83,42 @@ MatchWildcard(
     return (PatternIndex == PatternLength);
 }
 
+static
+VOID
+PrintMacAddress(
+    PBYTE Mac,
+    PWSTR Buffer)
+{
+    swprintf(Buffer, L"%02X %02X %02X %02X %02X %02X ",
+        Mac[0], Mac[1], Mac[2], Mac[3], Mac[4],  Mac[5]);
+}
+
 static int PrintRoutes(PWSTR Filter)
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
-    PIP_ADAPTER_INFO pAdapterInfo = NULL;
+    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL;
     ULONG Size = 0;
     DWORD Error = 0;
-    ULONG adaptOutBufLen = sizeof(IP_ADAPTER_INFO);
-    WCHAR DefGate[16];
+    ULONG adaptOutBufLen = 15000;
     WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
     unsigned int i;
     BOOL EntriesFound;
+    ULONG Flags = GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
+                  GAA_FLAG_SKIP_DNS_SERVER;
 
     /* set required buffer size */
-    pAdapterInfo = (IP_ADAPTER_INFO *) malloc( adaptOutBufLen );
-    if (pAdapterInfo == NULL)
+    pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
+    if (pAdapterAddresses == NULL)
     {
         Error = ERROR_NOT_ENOUGH_MEMORY;
         goto Error;
     }
-    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW)
+
+    if (GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW)
     {
-       free (pAdapterInfo);
-       pAdapterInfo = (IP_ADAPTER_INFO *) malloc (adaptOutBufLen);
-       if (pAdapterInfo == NULL)
+       free (pAdapterAddresses);
+       pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
+       if (pAdapterAddresses == NULL)
        {
            Error = ERROR_NOT_ENOUGH_MEMORY;
            goto Error;
@@ -122,23 +134,25 @@ static int PrintRoutes(PWSTR Filter)
         }
     }
 
-    if (((Error = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen)) == NO_ERROR) &&
+    if (((Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen)) == NO_ERROR) &&
         ((Error = GetIpForwardTable(IpForwardTable, &Size, TRUE)) == NO_ERROR))
     {
-        mbstowcs(DefGate, pAdapterInfo->GatewayList.IpAddress.String, 16);
-
         ConResPrintf(StdOut, IDS_SEPARATOR);
         ConResPrintf(StdOut, IDS_INTERFACE_LIST);
         /* FIXME - sort by the index! */
-        while (pAdapterInfo)
+        while (pAdapterAddresses)
         {
-            if (pAdapterInfo->Type == MIB_IF_TYPE_ETHERNET)
-                ConResPrintf(StdOut, IDS_ETHERNET_ENTRY, pAdapterInfo->Index, pAdapterInfo->Address[0],
-                             pAdapterInfo->Address[1], pAdapterInfo->Address[2], pAdapterInfo->Address[3],
-                             pAdapterInfo->Address[4], pAdapterInfo->Address[5], pAdapterInfo->Description);
+            if (pAdapterAddresses->IfType == IF_TYPE_ETHERNET_CSMACD)
+            {
+                WCHAR PhysicalAddress[20];
+                PrintMacAddress(pAdapterAddresses->PhysicalAddress, PhysicalAddress);
+                ConResPrintf(StdOut, IDS_ETHERNET_ENTRY, pAdapterAddresses->IfIndex, PhysicalAddress, pAdapterAddresses->Description);
+            }
             else
-                ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterInfo->Index, pAdapterInfo->Description);
-            pAdapterInfo = pAdapterInfo->Next;
+            {
+                ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterAddresses->IfIndex, pAdapterAddresses->Description);
+            }
+            pAdapterAddresses = pAdapterAddresses->Next;
         }
         ConResPrintf(StdOut, IDS_SEPARATOR);
 
@@ -167,7 +181,16 @@ static int PrintRoutes(PWSTR Filter)
         }
 
         if (Filter == NULL)
-            ConResPrintf(StdOut, IDS_DEFAULT_GATEWAY, DefGate);
+        {
+            for( i = 0; i < IpForwardTable->dwNumEntries; i++ )
+            {
+                if (IpForwardTable->table[i].dwForwardDest == 0)
+                {
+                    mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop)), IPBUF);
+                    ConResPrintf(StdOut, IDS_DEFAULT_GATEWAY, Gateway);
+                }
+            }
+        }
         else if (EntriesFound == FALSE)
             ConResPrintf(StdOut, IDS_NONE);
         ConResPrintf(StdOut, IDS_SEPARATOR);
@@ -176,14 +199,14 @@ static int PrintRoutes(PWSTR Filter)
         ConResPrintf(StdOut, IDS_NONE);
 
         free(IpForwardTable);
-        free(pAdapterInfo);
+        free(pAdapterAddresses);
 
         return ERROR_SUCCESS;
     }
     else
     {
 Error:
-        if (pAdapterInfo) free(pAdapterInfo);
+        if (pAdapterAddresses) free(pAdapterAddresses);
         if (IpForwardTable) free(IpForwardTable);
         ConResPrintf(StdErr, IDS_ROUTE_ENUM_ERROR);
         return Error;
@@ -234,7 +257,7 @@ static int add_route( int argc, WCHAR **argv ) {
 
     if( argc < 2 || !convert_add_cmd_line( &RowToAdd, argc, argv ) )
     {
-        ConResPrintf(StdErr, IDS_ROUTE_ADD_HELP);
+        ConResPrintf(StdErr, IDS_USAGE2);
         return 1;
     }
 
@@ -252,7 +275,7 @@ static int del_route( int argc, WCHAR **argv )
 
     if( argc < 2 || !convert_add_cmd_line( &RowToDel, argc, argv ) )
     {
-        ConResPrintf(StdErr, IDS_ROUTE_ADD_HELP);
+        ConResPrintf(StdErr, IDS_USAGE3);
         return 1;
     }
 

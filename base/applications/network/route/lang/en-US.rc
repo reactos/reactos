@@ -8,16 +8,22 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\n\
-route usage:\n\
-route print\n\
-  prints the route table\n\
-route add <target> [mask <mask>] <gw> [metric <m>]\n\
-  adds a route\n\
-route delete <target> <gw>\n\
-  deletes a route\n"
+    IDS_USAGE1 "\n\
+Manipulates the network routing tables.\n\n\
+ROUTE [command] [destination]\n\
+      [MASK netmask] [gateway] [METRIC metric]\n\n\
+  command      One of the following options:\n\
+                 PRINT   Prints the routes.\n\
+                 ADD     Add a new route.\n\
+                 DELETE  Deletes a route.\n\
+  destination  Specifies the Host.\n\
+  netmask      Specifies a network mask value for thei route entry.\n\
+               If not specified, it defaults to 255.255.255.255.\n\
+  gateway      Specifies the Gateway.\n\
+  metric       Specifies the Metric, ie. cost for the destination.\n\
+  interface    Specifies the interface number for the specifies route.\n"
 
-    IDS_ROUTE_ADD_HELP "\n\
+    IDS_USAGE2 "\n\
 route add usage:\n\
 route add <target> [mask <mask>] <gw> [metric <m>]\n\
   Adds a route to the IP route table.\n\
@@ -26,7 +32,7 @@ route add <target> [mask <mask>] <gw> [metric <m>]\n\
   <gw>     is the gateway to use to access the network\n\
   <m>      is the metric to use (lower is preferred)\n"
 
-    IDS_ROUTE_DEL_HELP "\n\
+    IDS_USAGE3 "\n\
 route delete usage:\n\
 route delete <target> <gw>\n\
   Removes a route from the IP route table.\n\
@@ -38,11 +44,11 @@ route delete <target> <gw>\n\
     IDS_ROUTE_ENUM_ERROR "Route enumeration failed\n"
     IDS_SEPARATOR "===========================================================================\n"
     IDS_INTERFACE_LIST "Interface List\n"
-    IDS_INTERFACE_ENTRY "0x%lu ........................... %hs\n"
-    IDS_ETHERNET_ENTRY "0x%lu ...%02x %02x %02x %02x %02x %02x ...... %hs\n"
+    IDS_INTERFACE_ENTRY "0x%-2lx ........................... %s\n"
+    IDS_ETHERNET_ENTRY "0x%-2lx ...%s...... %s\n"
     IDS_IPV4_ROUTE_TABLE "\nIPv4 Route Table\n"
     IDS_ACTIVE_ROUTES "Active Routes:\n"
-    IDS_ROUTES_ENTRY "%17s%17s%17s%16ld%9ld\n"
+    IDS_ROUTES_ENTRY "%17s%17s%17s%16ld%8ld\n"
     IDS_PERSISTENT_ROUTES "Persistent Routes:\n"
     IDS_DEFAULT_GATEWAY "Default Gateway:%18s\n"
     IDS_ROUTES_HEADER "Network Destination        Netmask          Gateway       Interface  Metric\n"

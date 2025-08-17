@@ -1,8 +1,8 @@
 #pragma once
 
-#define IDS_USAGE                 100
-#define IDS_ROUTE_ADD_HELP        101
-#define IDS_ROUTE_DEL_HELP        102
+#define IDS_USAGE1                100
+#define IDS_USAGE2                101
+#define IDS_USAGE3                102
 #define IDS_ROUTE_ADD_ERROR       103
 #define IDS_ROUTE_DEL_ERROR       104
 #define IDS_ROUTE_ENUM_ERROR      105
