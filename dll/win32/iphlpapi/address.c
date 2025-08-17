@@ -392,6 +392,7 @@ GetAdaptersAddresses(
         PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr;
         ULONG CurrentAASize = 0;
         ULONG FriendlySize = 0, DescriptionSize = 0;
+        ULONG DhcpDomainSize = 0, DomainSize = 0;
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
         {
@@ -421,6 +422,47 @@ GetAdaptersAddresses(
             CurrentAASize += Entry->if_descrlen + sizeof(CHAR);
 
             /* Add the DNS suffix */
+            if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+            {
+                HKEY InterfaceKey;
+                CHAR KeyName[256];
+                DWORD ValueType, ValueSize, Data;
+
+                snprintf(KeyName, 256,
+                    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                    Entry->if_descrlen, &Entry->if_descr[0]);
+
+                if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+                {
+                    ValueSize = sizeof(DWORD);
+                    if (RegQueryValueExW(InterfaceKey, L"EnableDHCP", NULL, &ValueType, (LPBYTE)&Data, &ValueSize) == ERROR_SUCCESS &&
+                        ValueType == REG_DWORD && Data == 1)
+                    {
+                        ValueSize = sizeof(DWORD);
+                        if (RegQueryValueExW(InterfaceKey, L"DhcpDomain", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DhcpDomainSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DhcpDomainSize;
+                        }
+                    }
+                    else
+                    {
+                        ValueSize = sizeof(DWORD);
+                        if (RegQueryValueExW(InterfaceKey, L"Domain", NULL, &ValueType, NULL, &ValueSize) == ERROR_SUCCESS &&
+                            ValueType == REG_SZ)
+                        {
+                            /* We remove the null char, it will be re-added after */
+                            DomainSize = ValueSize - sizeof(WCHAR);
+                            CurrentAASize += DomainSize;
+                        }
+                    }
+
+                    RegCloseKey(InterfaceKey);
+                }
+            }
+
             CurrentAASize += sizeof(WCHAR);
 
             /* Add the description. */
@@ -556,9 +598,64 @@ GetAdaptersAddresses(
 
                 /* The DNS suffix */
                 CurrentAA->DnsSuffix = (PWCHAR)Ptr;
-                CurrentAA->DnsSuffix[0] = L'\0';
-                /* Next items */
-                Ptr = (BYTE*)(CurrentAA->DnsSuffix + 1);
+
+                if (Entry->if_type != IF_TYPE_SOFTWARE_LOOPBACK)
+                {
+                    HKEY InterfaceKey;
+                    CHAR KeyName[256];
+                    DWORD ValueType, ValueSize;
+
+                    snprintf(KeyName, 256,
+                        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%*s",
+                        Entry->if_descrlen, &Entry->if_descr[0]);
+
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, KeyName, 0, KEY_READ, &InterfaceKey) == ERROR_SUCCESS)
+                    {
+                        if (DhcpDomainSize != 0)
+                        {
+                            ValueSize = DhcpDomainSize + sizeof(WCHAR);
+                            if (RegQueryValueExW(InterfaceKey, L"DhcpDomain", NULL, &ValueType, (LPBYTE)CurrentAA->DnsSuffix, &ValueSize) == ERROR_SUCCESS &&
+                                ValueType == REG_SZ && ValueSize == DhcpDomainSize + sizeof(WCHAR))
+                            {
+                                /* We're done, next items */
+                                Ptr = (BYTE*)(CurrentAA->DnsSuffix + (ValueSize / sizeof(WCHAR)));
+                            }
+                            else
+                            {
+                                /* Fail */
+                                ERR("DhcpDomain name changed after probe!\n");
+                                DhcpDomainSize = 0;
+                            }
+                        }
+
+                        if (DomainSize != 0)
+                        {
+                            ValueSize = DomainSize + sizeof(WCHAR);
+                            if (RegQueryValueExW(InterfaceKey, L"Domain", NULL, &ValueType, (LPBYTE)CurrentAA->DnsSuffix, &ValueSize) == ERROR_SUCCESS &&
+                                ValueType == REG_SZ && ValueSize == DomainSize + sizeof(WCHAR))
+                            {
+                                /* We're done, next items */
+                                Ptr = (BYTE*)(CurrentAA->DnsSuffix + (ValueSize / sizeof(WCHAR)));
+                            }
+                            else
+                            {
+                                /* Fail */
+                                ERR("Domain name changed after probe!\n");
+                                DomainSize = 0;
+                            }
+                        }
+
+                        RegCloseKey(InterfaceKey);
+                    }
+                }
+
+                /* In case of failure (or no name) */
+                if ((DhcpDomainSize == 0) && (DomainSize == 0))
+                {
+                    CurrentAA->DnsSuffix[0] = L'\0';
+                    /* Next items */
+                    Ptr = (BYTE*)(CurrentAA->DnsSuffix + 1);
+                }
 
                 /* The description */
                 CurrentAA->Description = (PWCHAR)Ptr;
