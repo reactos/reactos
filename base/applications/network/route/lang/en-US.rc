@@ -10,14 +10,16 @@ STRINGTABLE
 BEGIN
     IDS_USAGE1 "\n\
 Manipulates the network routing tables.\n\n\
-ROUTE [command] [destination]\n\
-      [MASK netmask] [gateway] [METRIC metric]\n\n\
+ROUTE [-f] [-p] command [destination]\n\
+                [MASK netmask] [gateway] [METRIC metric]\n\n\
+  -f           Not supported yet.\n\n\
+  -p           Not supported yet.\n\n\
   command      One of the following options:\n\
                  PRINT   Prints the routes.\n\
                  ADD     Add a new route.\n\
                  DELETE  Deletes a route.\n\
   destination  Specifies the Host.\n\
-  netmask      Specifies a network mask value for thei route entry.\n\
+  netmask      Specifies a network mask value for the route entry.\n\
                If not specified, it defaults to 255.255.255.255.\n\
   gateway      Specifies the Gateway.\n\
   metric       Specifies the Metric, ie. cost for the destination.\n\
@@ -33,11 +35,12 @@ route add <target> [mask <mask>] <gw> [metric <m>]\n\
   <m>      is the metric to use (lower is preferred)\n"
 
     IDS_USAGE3 "\n\
-route delete usage:\n\
-route delete <target> <gw>\n\
-  Removes a route from the IP route table.\n\
-  <target> is the network or host to add a route to.\n\
-  <gw>     is the gateway to remove the route from.\n"
+Examples:\n\
+    > route PRINT               ... prints all routes\n\
+    > route PRINT 156*          ... prints all routes that match 156*\n\
+    > route ADD 156.0.0.0 MASK 255.0.0.0 156.0.1.12 METRIC 5\n\
+             destination^       netmask^   gateway^  metric^\n\n\
+    > route DELETE 156.0.0.0    ... deletes a route\n"
 
     IDS_ROUTE_ADD_ERROR "Route addition failed\n"
     IDS_ROUTE_DEL_ERROR "Route deletion failed\n"
