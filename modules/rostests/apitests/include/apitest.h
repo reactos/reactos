@@ -64,7 +64,6 @@ static inline ULONG GetNTDDIVersion()
             default: Subversion = 0; break;     // Unknown build
         }
     }
-
     else
     {
         OSVERSIONINFOEXW OSVersion;
@@ -78,7 +77,6 @@ static inline ULONG GetNTDDIVersion()
             ServicePack = OSVersion.wServicePackMajor;
             Subversion = 0;
         }
-
         else 
         {
             trace("Failed to get OS version, assuming Server 2003 SP2.\n");
