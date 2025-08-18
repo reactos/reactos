@@ -118,7 +118,7 @@ typedef struct {
   ULONG ProcessHeapFlags;
   ULONG ProcessAffinityMask;
   USHORT CSDVersion;
-  USHORT Reserved1;
+  USHORT DependentLoadFlags;
   ULONG EditList;
   ULONG SecurityCookie;
   ULONG SEHandlerTable;
@@ -141,7 +141,7 @@ typedef struct {
   ULONGLONG ProcessAffinityMask;
   ULONG ProcessHeapFlags;
   USHORT CSDVersion;
-  USHORT Reserved1;
+  USHORT DependentLoadFlags;
   ULONGLONG EditList;
   ULONGLONG SecurityCookie;
   ULONGLONG SEHandlerTable;
