@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <stdio.h>
 #include <malloc.h>
 #define _INC_WINDOWS
@@ -88,6 +89,101 @@ PrintMacAddress(
 {
     swprintf(Buffer, L"%02X %02X %02X %02X %02X %02X ",
         Mac[0], Mac[1], Mac[2], Mac[3], Mac[4],  Mac[5]);
+}
+
+static
+int
+PrintPersistentRoutes(
+    _In_ int argc,
+    _In_ WCHAR **argv,
+    _In_ int start,
+    _In_ int flags)
+{
+    WCHAR szBuffer[64];
+    DWORD dwIndex = 0, dwBufferSize;
+    BOOL EntriesFound = FALSE;
+    PWSTR Filter = NULL;
+    HKEY hKey;
+    DWORD Error = ERROR_SUCCESS;
+    PWSTR Destination = NULL, Netmask = NULL, Gateway = NULL, Metric = NULL, Ptr;
+
+    if (argc > start)
+        Filter = argv[start];
+
+    ConResPrintf(StdOut, IDS_SEPARATOR);
+    ConResPrintf(StdOut, IDS_PERSISTENT_ROUTES);
+
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\PersistentRoutes",
+                          0,
+                          KEY_READ,
+                          &hKey);
+    if (Error == ERROR_SUCCESS)
+    {
+        for (;;)
+        {
+            dwBufferSize = 64;
+
+            Error = RegEnumValueW(hKey,
+                                  dwIndex,
+                                  szBuffer,
+                                  &dwBufferSize,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  NULL);
+            if (Error != ERROR_SUCCESS)
+            {
+                if (Error == ERROR_NO_MORE_ITEMS)
+                    Error = ERROR_SUCCESS;
+
+                break;
+            }
+
+            Destination = szBuffer;
+            Ptr = wcschr(Destination, L',');
+            if (Ptr)
+            {
+                *Ptr = L'\0';
+                Ptr++;
+            }
+
+            Netmask = Ptr;
+            Ptr = wcschr(Netmask, L',');
+            if (Ptr)
+            {
+                *Ptr = L'\0';
+                Ptr++;
+            }
+
+            Gateway = Ptr;
+            Ptr = wcschr(Gateway, L',');
+            if (Ptr)
+            {
+                *Ptr = L'\0';
+                Ptr++;
+            }
+
+            Metric = Ptr;
+
+            if ((Filter == NULL) || MatchWildcard(Destination, Filter))
+            {
+                if (EntriesFound == FALSE)
+                    ConResPrintf(StdOut, IDS_PERSISTENT_HEADER);
+                ConResPrintf(StdOut, IDS_PERSISTENT_ENTRY, Destination, Netmask, Gateway, Metric);
+                EntriesFound = TRUE;
+            }
+
+            dwIndex++;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    if (EntriesFound == FALSE)
+        ConResPrintf(StdOut, IDS_NONE);
+
+    return (Error == ERROR_SUCCESS) ? 0 : 2;
 }
 
 static
@@ -200,10 +296,6 @@ PrintRoutes(
         }
         else if (EntriesFound == FALSE)
             ConResPrintf(StdOut, IDS_NONE);
-        ConResPrintf(StdOut, IDS_SEPARATOR);
-
-        ConResPrintf(StdOut, IDS_PERSISTENT_ROUTES);
-        ConResPrintf(StdOut, IDS_NONE);
     }
 
 Error:
@@ -260,7 +352,53 @@ ConvertAddCmdLine(
         }
     }
 
+    /* Restrict metric value to range 1 to 9999 */
+    if (RowToAdd->dwForwardMetric1 == 0)
+        RowToAdd->dwForwardMetric1 = 1;
+    else if (RowToAdd->dwForwardMetric1 > 9999)
+        RowToAdd->dwForwardMetric1 = 9999;
+
     return TRUE;
+}
+
+static
+DWORD
+CreatePersistentIpForwardEntry(
+    _In_ PMIB_IPFORWARDROW RowToAdd)
+{
+    WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
+    WCHAR ValueName[64];
+    HKEY hKey;
+    DWORD Error = ERROR_SUCCESS;
+
+    mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(RowToAdd->dwForwardDest)), IPBUF);
+    mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(RowToAdd->dwForwardMask)), IPBUF);
+    mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(RowToAdd->dwForwardNextHop)), IPBUF);
+
+    swprintf(ValueName, L"%s,%s,%s,%ld", Destination, Netmask, Gateway, RowToAdd->dwForwardMetric1);
+
+    Error = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\PersistentRoutes",
+                            0,
+                            NULL,
+                            REG_OPTION_NON_VOLATILE,
+                            KEY_WRITE,
+                            NULL,
+                            &hKey,
+                            NULL);
+    if (Error == ERROR_SUCCESS)
+    {
+        Error = RegSetValueEx(hKey,
+                              ValueName,
+                              0,
+                              REG_SZ,
+                              (LPBYTE)L"",
+                              sizeof(WCHAR));
+
+        RegCloseKey(hKey);
+    }
+
+    return Error;
 }
 
 static
@@ -276,8 +414,11 @@ AddRoute(
 
     if ((argc <= start) || !ConvertAddCmdLine(&RowToAdd, argc, argv, start))
         return 1;
-
-    Error = CreateIpForwardEntry(&RowToAdd);
+    
+    if (flags & PERSISTENT_FLAG)
+        Error = CreatePersistentIpForwardEntry(&RowToAdd);
+    else
+        Error = CreateIpForwardEntry(&RowToAdd);
     if (Error != ERROR_SUCCESS)
     {
         ConResPrintf(StdErr, IDS_ROUTE_ADD_ERROR);
@@ -341,7 +482,11 @@ wmain(
         else
         {
             if (!_wcsicmp(argv[i], L"print"))
+            {
                 ret = PrintRoutes(argc, argv, i + 1, flags);
+                if (ret == 0)
+                    ret = PrintPersistentRoutes(argc, argv, i + 1, flags);
+            }
             else if (!_wcsicmp(argv[i], L"add"))
                 ret = AddRoute(argc, argv, i + 1, flags);
             else if (!_wcsicmp(argv[i], L"delete"))

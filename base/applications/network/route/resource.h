@@ -13,7 +13,9 @@
 #define IDS_IPV4_ROUTE_TABLE      110
 #define IDS_ACTIVE_ROUTES         111
 #define IDS_PERSISTENT_ROUTES     112
-#define IDS_ROUTES_ENTRY          113
-#define IDS_DEFAULT_GATEWAY       114
-#define IDS_ROUTES_HEADER         115
+#define IDS_PERSISTENT_ENTRY      113
+#define IDS_ROUTES_ENTRY          114
+#define IDS_DEFAULT_GATEWAY       115
+#define IDS_ROUTES_HEADER         116
+#define IDS_PERSISTENT_HEADER     117
 #define IDS_NONE                  120
