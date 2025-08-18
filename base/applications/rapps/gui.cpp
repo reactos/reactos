@@ -579,7 +579,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 {
                     if (!m_Selected.IsEmpty())
                     {
-                        if (DownloadListOfApplications(m_Selected, FALSE))
+                        if (DownloadListOfApplications(m_Selected))
                         {
                             m_Selected.RemoveAll();
                             UpdateApplicationsList(SelectedEnumType);
