@@ -3112,6 +3112,41 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             ObDereferenceObject(Thread);
             break;
 
+        case ThreadBreakOnTermination:
+
+            /* Set the return length */
+            Length = sizeof(ULONG);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               Access,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = Thread->BreakOnTermination;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+
         case ThreadIsTerminated:
 
             /* Set the return length*/
