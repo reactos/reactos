@@ -12,8 +12,12 @@ BEGIN
 Manipulates the network routing tables.\n\n\
 ROUTE [-f] [-p] command [destination]\n\
                 [MASK netmask] [gateway] [METRIC metric]\n\n\
-  -f           Not supported yet.\n\n\
-  -p           Not supported yet.\n\n\
+  -f           Cleans the routing table of all gateway entries prior to\n\
+               executing the command. Can be used with the ADD and\n\
+               DELETE command.\n\n\
+  -p           Makes a route persistent between boots of the system. By\n\
+               default, routes are not persistent when the system is\n\
+               restarted. Can be used with the ADD command.\n\n\
   command      One of the following options:\n\
                  PRINT   Prints the routes.\n\
                  ADD     Add a new route.\n\

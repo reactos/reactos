@@ -29,7 +29,7 @@
 #define IPBUF 17
 #define IN_ADDR_OF(x) *((struct in_addr *)&(x))
 
-#define FLUSH_FLAG        0x1
+#define DELETE_FLAG       0x1
 #define PERSISTENT_FLAG   0x2
 
 static
@@ -402,6 +402,51 @@ CreatePersistentIpForwardEntry(
 }
 
 static
+DWORD
+DeleteCustomRoutes(VOID)
+{
+    WCHAR Destination[IPBUF], Netmask[IPBUF];
+    PMIB_IPFORWARDTABLE IpForwardTable = NULL;
+    ULONG Size = 0;
+    DWORD Error = ERROR_SUCCESS;
+    ULONG i;
+
+    if ((GetIpForwardTable(NULL, &Size, TRUE)) == ERROR_INSUFFICIENT_BUFFER)
+    {
+        if (!(IpForwardTable = malloc(Size)))
+        {
+            Error = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    Error = GetIpForwardTable(IpForwardTable, &Size, TRUE);
+    if (Error != ERROR_SUCCESS)
+        goto done;
+
+    for (i = 0; i < IpForwardTable->dwNumEntries; i++)
+    {
+        mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest)), IPBUF);
+        mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
+
+        if ((wcscmp(Netmask, L"255.255.255.255") != 0) &&
+            ((wcscmp(Destination, L"127.0.0.0") != 0) || (wcscmp(Netmask, L"255.0.0.0") != 0)) &&
+            ((wcscmp(Destination, L"224.0.0.0") != 0) || (wcscmp(Netmask, L"240.0.0.0") != 0)))
+        {
+            Error = DeleteIpForwardEntry(&IpForwardTable->table[i]);
+            if (Error != ERROR_SUCCESS)
+                break;
+        }
+    }
+
+done:
+    if (IpForwardTable)
+        free(IpForwardTable);
+
+    return Error;
+}
+
+static
 int
 AddRoute(
     _In_ int argc,
@@ -414,7 +459,10 @@ AddRoute(
 
     if ((argc <= start) || !ConvertAddCmdLine(&RowToAdd, argc, argv, start))
         return 1;
-    
+
+    if (flags & DELETE_FLAG)
+        DeleteCustomRoutes();
+
     if (flags & PERSISTENT_FLAG)
         Error = CreatePersistentIpForwardEntry(&RowToAdd);
     else
@@ -440,6 +488,9 @@ DeleteRoute(
 
     if ((argc < start + 2) || !ConvertAddCmdLine(&RowToDel, argc, argv, start))
         return 1;
+
+    if (flags & DELETE_FLAG)
+        DeleteCustomRoutes();
 
     Error = DeleteIpForwardEntry(&RowToDel);
     if (Error != ERROR_SUCCESS)
@@ -467,7 +518,7 @@ wmain(
         {
             if (!_wcsicmp(&argv[i][1], L"f"))
             {
-                flags |= FLUSH_FLAG;
+                flags |= DELETE_FLAG;
             }
             else if (!_wcsicmp(&argv[i][1], L"p"))
             {
