@@ -26,6 +26,16 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+// Because ReactOS installs as Server by default, we ignore OS_SERVERADMINUI
+// in certain places to present a Client/Server hybrid UI.
+
+// Windows defaults to FVM_DETAILS for Administrators on OS_ANYSERVER (instead of FVM_ICON).
+#define ROSPOLICY_DESKTOPFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_DRIVESFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_CONTROLSFOLDER_DEFLARGEICONS 1
+
+#define ROSPOLICY_SHELL_NODEFKEYBOARDCUES 1
+
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 #define DBIMF_NOGRIPPER         0x0800
 #define DBIMF_ALWAYSGRIPPER     0x1000
