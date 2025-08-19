@@ -44,7 +44,8 @@ Examples:\n\
     > route PRINT 156*          ... prints all routes that match 156*\n\
     > route ADD 156.0.0.0 MASK 255.0.0.0 156.0.1.12 METRIC 5\n\
              destination^       netmask^   gateway^  metric^\n\n\
-    > route DELETE 156.0.0.0    ... deletes a route\n"
+    > route DELETE 156.0.0.0    ... deletes a route\n\
+    > route DELETE 156*         ... deletes all routes that match 156*\n"
 
     IDS_ROUTE_ADD_ERROR "Route addition failed\n"
     IDS_ROUTE_DEL_ERROR "Route deletion failed\n"

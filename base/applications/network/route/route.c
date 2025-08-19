@@ -41,6 +41,9 @@ MatchWildcard(
     size_t TextLength, PatternLength, TextIndex = 0, PatternIndex = 0;
     size_t StartIndex = -1, MatchIndex = 0;
 
+    if (Pattern == NULL)
+        return TRUE;
+
     TextLength = wcslen(Text);
     PatternLength = wcslen(Pattern);
 
@@ -83,6 +86,127 @@ MatchWildcard(
 
 static
 VOID
+ParsePersistentRouteValue(
+    _In_ PWSTR RouteValue,
+    _Out_ PWSTR *Destination,
+    _Out_ PWSTR *Netmask,
+    _Out_ PWSTR *Gateway,
+    _Out_ PWSTR *Metric)
+{
+    PWSTR Ptr, DestPtr;
+
+    if (Destination)
+        *Destination = NULL;
+
+    if (Netmask)
+        *Netmask = NULL;
+
+    if (Gateway)
+        *Gateway = NULL;
+
+    if (Metric)
+        *Metric = NULL;
+
+    DestPtr = RouteValue;
+    if (Destination)
+        *Destination = DestPtr;
+
+    Ptr = wcschr(DestPtr, L',');
+    if (Ptr == NULL)
+        return;
+
+    *Ptr = L'\0';
+    Ptr++;
+
+    DestPtr = Ptr;
+    if (Netmask)
+        *Netmask = DestPtr;
+
+    Ptr = wcschr(DestPtr, L',');
+    if (Ptr == NULL)
+        return;
+
+    *Ptr = L'\0';
+    Ptr++;
+
+    DestPtr = Ptr;
+    if (Gateway)
+        *Gateway = DestPtr;
+
+    Ptr = wcschr(DestPtr, L',');
+    if (Ptr == NULL)
+        return;
+
+    *Ptr = L'\0';
+    Ptr++;
+
+    if (Metric)
+        *Metric = Ptr;
+}
+
+static
+BOOL
+ParseCmdLine(
+    _In_ int argc,
+    _In_ WCHAR **argv,
+    _In_ int start,
+    _Out_ PWSTR *Destination,
+    _Out_ PWSTR *Netmask,
+    _Out_ PWSTR *Gateway,
+    _Out_ PWSTR *Metric)
+{
+    int i;
+
+    if (Destination)
+        *Destination = NULL;
+
+    if (Netmask)
+        *Netmask = NULL;
+
+    if (Gateway)
+        *Gateway = NULL;
+
+    if (Metric)
+        *Metric = NULL;
+
+    if (argc > start)
+    {
+        if (Destination)
+            *Destination = argv[start];
+    }
+    else
+        return FALSE;
+
+    for (i = start + 1; i < argc; i++)
+    {
+        if (!_wcsicmp(argv[i], L"mask"))
+        {
+            i++;
+            if (i >= argc)
+                return FALSE;
+            if (Netmask)
+                *Netmask = argv[i];
+        }
+        else if (!_wcsicmp(argv[i], L"metric"))
+        {
+            i++;
+            if (i >= argc) 
+                return FALSE;
+            if (Metric)
+                *Metric = argv[i];
+        }
+        else
+        {
+            if (Gateway)
+                *Gateway = argv[i];
+        }
+    }
+
+    return TRUE;
+}
+
+static
+VOID
 PrintMacAddress(
     _In_ PBYTE Mac,
     _In_ PWSTR Buffer)
@@ -92,23 +216,16 @@ PrintMacAddress(
 }
 
 static
-int
+DWORD
 PrintPersistentRoutes(
-    _In_ int argc,
-    _In_ WCHAR **argv,
-    _In_ int start,
-    _In_ int flags)
+    _In_ PWSTR Filter)
 {
     WCHAR szBuffer[64];
     DWORD dwIndex = 0, dwBufferSize;
     BOOL EntriesFound = FALSE;
-    PWSTR Filter = NULL;
     HKEY hKey;
     DWORD Error = ERROR_SUCCESS;
-    PWSTR Destination = NULL, Netmask = NULL, Gateway = NULL, Metric = NULL, Ptr;
-
-    if (argc > start)
-        Filter = argv[start];
+    PWSTR Destination, Netmask, Gateway, Metric;
 
     ConResPrintf(StdOut, IDS_SEPARATOR);
     ConResPrintf(StdOut, IDS_PERSISTENT_ROUTES);
@@ -140,33 +257,13 @@ PrintPersistentRoutes(
                 break;
             }
 
-            Destination = szBuffer;
-            Ptr = wcschr(Destination, L',');
-            if (Ptr)
-            {
-                *Ptr = L'\0';
-                Ptr++;
-            }
+            ParsePersistentRouteValue(szBuffer,
+                                      &Destination,
+                                      &Netmask,
+                                      &Gateway,
+                                      &Metric);
 
-            Netmask = Ptr;
-            Ptr = wcschr(Netmask, L',');
-            if (Ptr)
-            {
-                *Ptr = L'\0';
-                Ptr++;
-            }
-
-            Gateway = Ptr;
-            Ptr = wcschr(Gateway, L',');
-            if (Ptr)
-            {
-                *Ptr = L'\0';
-                Ptr++;
-            }
-
-            Metric = Ptr;
-
-            if ((Filter == NULL) || MatchWildcard(Destination, Filter))
+            if (MatchWildcard(Destination, Filter))
             {
                 if (EntriesFound == FALSE)
                     ConResPrintf(StdOut, IDS_PERSISTENT_HEADER);
@@ -183,16 +280,13 @@ PrintPersistentRoutes(
     if (EntriesFound == FALSE)
         ConResPrintf(StdOut, IDS_NONE);
 
-    return (Error == ERROR_SUCCESS) ? 0 : 2;
+    return Error;
 }
 
 static
-int
-PrintRoutes(
-    _In_ int argc,
-    _In_ WCHAR **argv,
-    _In_ int start,
-    _In_ int flags)
+DWORD
+PrintActiveRoutes(
+    _In_ PWSTR DestinationPattern)
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL;
@@ -204,10 +298,6 @@ PrintRoutes(
     BOOL EntriesFound;
     ULONG Flags = GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
                   GAA_FLAG_SKIP_DNS_SERVER;
-    PWSTR Filter = NULL;
-
-    if (argc > start)
-        Filter = argv[start];
 
     /* set required buffer size */
     pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
@@ -269,7 +359,7 @@ PrintRoutes(
             mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
             mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop)), IPBUF);
 
-            if ((Filter == NULL) || MatchWildcard(Destination, Filter))
+            if (MatchWildcard(Destination, DestinationPattern))
             {
                 if (EntriesFound == FALSE)
                     ConResPrintf(StdOut, IDS_ROUTES_HEADER);
@@ -283,7 +373,7 @@ PrintRoutes(
             }
         }
 
-        if (Filter == NULL)
+        if (DestinationPattern == NULL)
         {
             for (i = 0; i < IpForwardTable->dwNumEntries; i++)
             {
@@ -307,10 +397,33 @@ Error:
     if (Error != ERROR_SUCCESS)
         ConResPrintf(StdErr, IDS_ROUTE_ENUM_ERROR);
 
+    return Error;
+}
+
+static
+int
+PrintRoutes(
+    _In_ int argc,
+    _In_ WCHAR **argv,
+    _In_ int start,
+    _In_ int flags)
+{
+    PWSTR DestinationPattern = NULL;
+    DWORD Error;
+
+    if (argc > start)
+        ParseCmdLine(argc, argv, start, 
+                     &DestinationPattern, NULL, NULL, NULL);
+
+    Error = PrintActiveRoutes(DestinationPattern);
+    if (Error == ERROR_SUCCESS)
+        Error = PrintPersistentRoutes(DestinationPattern);
+
     return (Error == ERROR_SUCCESS) ? 0 : 2;
 }
 
-static int
+static
+BOOL
 ConvertAddCmdLine(
     _Out_ PMIB_IPFORWARDROW RowToAdd,
     _In_ int argc,
@@ -476,23 +589,133 @@ AddRoute(
     return 0;
 }
 
+static
+DWORD
+DeleteActiveRoutes(
+    PWSTR DestinationPattern)
+{
+    WCHAR Destination[IPBUF], Netmask[IPBUF];
+    PMIB_IPFORWARDTABLE IpForwardTable = NULL;
+    ULONG Size = 0;
+    DWORD Error = ERROR_SUCCESS;
+    ULONG i;
+
+    if ((GetIpForwardTable(NULL, &Size, TRUE)) == ERROR_INSUFFICIENT_BUFFER)
+    {
+        if (!(IpForwardTable = malloc(Size)))
+        {
+            Error = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+    }
+
+    Error = GetIpForwardTable(IpForwardTable, &Size, TRUE);
+    if (Error != ERROR_SUCCESS)
+        goto done;
+
+    for (i = 0; i < IpForwardTable->dwNumEntries; i++)
+    {
+        mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest)), IPBUF);
+        mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
+
+        if (MatchWildcard(Destination, DestinationPattern))
+        {
+            Error = DeleteIpForwardEntry(&IpForwardTable->table[i]);
+            if (Error != ERROR_SUCCESS)
+                break;
+        }
+    }
+
+done:
+    if (IpForwardTable)
+        free(IpForwardTable);
+
+    return Error;
+}
+
+static
+DWORD
+DeletePersistentRoutes(
+    PWSTR DestinationPattern)
+{
+
+    WCHAR szBuffer[64];
+    DWORD dwIndex = 0, dwBufferSize;
+    HKEY hKey;
+    DWORD Error = ERROR_SUCCESS;
+    PWSTR Destination = NULL;
+
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\PersistentRoutes",
+                          0,
+                          KEY_READ,
+                          &hKey);
+    if (Error == ERROR_SUCCESS)
+    {
+        for (;;)
+        {
+            dwBufferSize = 64;
+
+            Error = RegEnumValueW(hKey,
+                                  dwIndex,
+                                  szBuffer,
+                                  &dwBufferSize,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  NULL);
+            if (Error != ERROR_SUCCESS)
+            {
+                if (Error == ERROR_NO_MORE_ITEMS)
+                    Error = ERROR_SUCCESS;
+
+                break;
+            }
+
+            ParsePersistentRouteValue(szBuffer,
+                                      &Destination,
+                                      NULL,
+                                      NULL,
+                                      NULL);
+
+            if (MatchWildcard(Destination, DestinationPattern))
+            {
+                Error = RegDeleteValueW(hKey, szBuffer);
+                if (Error != ERROR_SUCCESS)
+                    break;
+            }
+
+            dwIndex++;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return Error;
+}
+
 static int
-DeleteRoute(
+DeleteRoutes(
     _In_ int argc,
     _In_ WCHAR **argv,
     _In_ int start,
     _In_ int flags)
 {
-    MIB_IPFORWARDROW RowToDel = { 0 };
+    PWSTR DestinationPattern = NULL;
     DWORD Error;
 
-    if ((argc < start + 2) || !ConvertAddCmdLine(&RowToDel, argc, argv, start))
+    if ((argc <= start) ||
+        !ParseCmdLine(argc, argv, start, 
+                      &DestinationPattern, NULL, NULL, NULL))
         return 1;
 
     if (flags & DELETE_FLAG)
         DeleteCustomRoutes();
 
-    Error = DeleteIpForwardEntry(&RowToDel);
+    Error = DeleteActiveRoutes(DestinationPattern);
+    if (Error == ERROR_SUCCESS)
+        Error = DeletePersistentRoutes(DestinationPattern);
+
     if (Error != ERROR_SUCCESS)
     {
         ConResPrintf(StdErr, IDS_ROUTE_DEL_ERROR);
@@ -533,15 +756,11 @@ wmain(
         else
         {
             if (!_wcsicmp(argv[i], L"print"))
-            {
                 ret = PrintRoutes(argc, argv, i + 1, flags);
-                if (ret == 0)
-                    ret = PrintPersistentRoutes(argc, argv, i + 1, flags);
-            }
             else if (!_wcsicmp(argv[i], L"add"))
                 ret = AddRoute(argc, argv, i + 1, flags);
             else if (!_wcsicmp(argv[i], L"delete"))
-                ret = DeleteRoute(argc, argv, i + 1, flags);
+                ret = DeleteRoutes(argc, argv, i + 1, flags);
             else
                 ret = 1;
 
