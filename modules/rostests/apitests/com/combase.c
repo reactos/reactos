@@ -25,5 +25,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 
 START_TEST(combase)
 {
-    TestClassesEx(L"combase", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces), NTDDI_WIN8, NTDDI_MAX);
+    TestClassesEx(L"combase",
+                  ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces),
+                  NTDDI_WIN8, NTDDI_MAX,
+                  FALSE);
 }

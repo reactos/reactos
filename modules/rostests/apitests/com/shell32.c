@@ -14,6 +14,54 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_ACLCustomMRU, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACList },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACLCustomMRU },
+        },
+    },
+    {
+        ID_NAME(CLSID_ACLHistory, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+        },
+    },
+    {
+        ID_NAME(CLSID_ACLMRU, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACList },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACLCustomMRU },
+        },
+    },
+    {
+        ID_NAME(CLSID_ACLMulti, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IObjMgr },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACList },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersist },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersistFolder },
+        }
+    },
+    {
+        ID_NAME(CLSID_ACListISF, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACList2 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IACList },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_ICurrentWorkingDirectory },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersistFolder },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersistIDList },
+        }
+    },
+    {
         ID_NAME(CLSID_ActiveDesktop, NTDDI_MIN, NTDDI_MAX),
         {
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IActiveDesktop },
@@ -21,6 +69,35 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IADesktopP2 },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IPropertyBag },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_AutoComplete, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IAutoComplete2 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IAutoComplete },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IAutoCompleteDropDown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IEnumString },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IAccessible },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IDispatch },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IShellService },
+        }
+    },
+    {
+        ID_NAME(CLSID_BackgroundTaskScheduler, NTDDI_WIN7, NTDDI_VISTASP4),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IShellTaskScheduler },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IMarshal },
+        }
+    },
+    {
+        ID_NAME(CLSID_BandProxy, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IObjectWithSite },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IServiceProvider },
         }
     },
     {
@@ -90,6 +167,15 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IObjectWithSite },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IShellExtInit },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_CRegTreeOptions, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_WIN7SP1,      &IID_IRegTreeOptions },
+
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IObjectWithSite },
         }
     },
     {
@@ -354,8 +440,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_MoveToMenu, NTDDI_MIN, NTDDI_MAX),
         {
-            { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IContextMenu3 },
-            { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IContextMenu2 },
+            { NTDDI_MIN,          NTDDI_VISTASP4,     &IID_IContextMenu3 },
+            { NTDDI_MIN,          NTDDI_VISTASP4,     &IID_IContextMenu2 },
 
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IContextMenu },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
@@ -430,8 +516,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IOleCommandTarget },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IItemNameLimits },
 
+            { NTDDI_VISTA,        NTDDI_VISTASP4,     &IID_IAliasRegistrationCallback },
+
             { NTDDI_VISTA,        NTDDI_WIN7SP1,      &IID_ILocalizableItemParent },
-            { NTDDI_VISTA,        NTDDI_WIN7SP1,      &IID_IAliasRegistrationCallback },
 
             { NTDDI_VISTA,        NTDDI_MAX,          &IID_IObjectWithSite },
             { NTDDI_VISTA,        NTDDI_MAX,          &IID_IPersistPropertyBag },
@@ -535,6 +622,18 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_ProgressDialog, NTDDI_VISTA, NTDDI_MAX),
+        {
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IProgressDialog },
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IOleWindow },
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IActionProgressDialog },
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IActionProgress },
+            { NTDDI_VISTA,        NTDDI_MAX,          &IID_IObjectWithSite },
+        },
+        L"Both"
+    },
+    {
         ID_NAME(CLSID_QueryAssociations, NTDDI_MIN, NTDDI_WINBLUE),
         {
             { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IAssociationArrayOld },
@@ -616,6 +715,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_WIN7,         NTDDI_MAX,          &IID_INamespaceWalkCB2 },
             { NTDDI_WIN7,         NTDDI_MAX,          &IID_INamespaceWalkCB },
             { NTDDI_WIN7,         NTDDI_MAX,          &IID_IMarshal },
+        }
+    },
+    {
+        ID_NAME(CLSID_SharedTaskScheduler, NTDDI_WIN7, NTDDI_WINBLUE),
+        {
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IShellTaskScheduler },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IMarshal},
         }
     },
     {
@@ -838,6 +945,22 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     },
 #endif
     {
+        ID_NAME(CLSID_ShellSearchExt, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IContextMenu },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IObjectWithSite },
+        }
+    },
+    {
+        ID_NAME(CLSID_ShellTaskScheduler, NTDDI_WIN7, NTDDI_WINBLUE),
+        {
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IShellTaskScheduler },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IMarshal},
+        },
+    },
+    {
         /* CLSID_StartMenu is also registered to shell32 on Windows Vista,
          * but it crashes the test on CoUninitialize. */
         ID_NAME(CLSID_StartMenu, NTDDI_MIN, NTDDI_WS03SP4),
@@ -865,7 +988,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 
             {NTDDI_VISTA,         NTDDI_VISTASP4,     &IID_IPinnedListOld},
 
-            {NTDDI_WIN7,          NTDDI_WINBLUE,      &IID_IPinnedListOld},
+            {NTDDI_WIN7,          NTDDI_WINBLUE,      &IID_IPinnedList},
         }
     },
     {
@@ -887,6 +1010,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IObjectWithSite },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IServiceProvider },
         }
+    },
+    {
+        ID_NAME(CLSID_UserAssist, NTDDI_WIN7, NTDDI_MAX),
+        {
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+        },
+        L"Both"
     },
     {
         ID_NAME(CLSID_UserNotification, NTDDI_MIN, NTDDI_MAX),

@@ -18,14 +18,6 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_AdminFolderShortcut, NTDDI_MIN, NTDDI_VISTASP4),
         {
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IShellFolder2 },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IShellFolder },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IUnknown },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder3 },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder2 },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersist },
-            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistPropertyBag },
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IShellLinkA },
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IShellLinkW },
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IPersistFile },
@@ -34,8 +26,20 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IPersistStream },
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IPersistStreamInit },
             { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IBrowserFrameOptions },
+
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IShellFolder2 },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IShellFolder },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IUnknown },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder3 },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder2 },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersist },
+            { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistPropertyBag },
+
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_IAliasRegistrationCallback },
+
             { NTDDI_VISTA, NTDDI_WIN7SP1,  &IID_ILocalizableItemParent },
+
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IObjectWithSite },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IShellIcon },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IShellIconOverlay },
@@ -61,7 +65,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistFolder },
             { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersist },
             { NTDDI_MIN,   NTDDI_MAX,      &IID_IPersistPropertyBag },
+
             { NTDDI_VISTA, NTDDI_WIN7SP1,  &IID_ILocalizableItemParent },
+
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IObjectWithSite },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IShellIcon },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IShellIconOverlay },
@@ -74,6 +80,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IRemoteComputer },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IFolderType },
             { NTDDI_VISTA, NTDDI_MAX,      &IID_IBackReferencedObject },
+
             { NTDDI_WIN7,  NTDDI_MAX,      &IID_IParentAndItem },
         },
         L"Both"
@@ -117,6 +124,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IPersistStreamInit },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IPersistPropertyBag },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IBrowserFrameOptions },
+
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_IFolderWithSearchRoot },
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_IShellIconOverlay },
         }
@@ -216,6 +224,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,   NTDDI_WIN7SP1, &IID_IShellExtInit },
             { NTDDI_MIN,   NTDDI_WIN7SP1, &IID_IPersistPropertyBag },
             { NTDDI_MIN,   NTDDI_WIN7SP1, &IID_IPersist },
+
             { NTDDI_VISTA, NTDDI_WIN7SP1, &IID_IShellFolder },
         }
     },
@@ -248,6 +257,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ShellShellNameSpace, NTDDI_MIN, NTDDI_VISTASP4),
         {
+            { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IShellChangeNotify },
+            { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_ISpecifyPropertyPages },
+            
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IShellNameSpace },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IShellFavoritesNameSpace },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IDispatch },
@@ -274,8 +286,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IWinEventHandler },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IShellBrowser },
             { NTDDI_MIN,   NTDDI_VISTASP4, &IID_IFolderFilterSite },
-            { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_IShellChangeNotify },
-            { NTDDI_MIN,   NTDDI_WS03SP4,  &IID_ISpecifyPropertyPages },
+
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_INewMenuClient },
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_IServiceProvider },
             { NTDDI_VISTA, NTDDI_VISTASP4, &IID_INameSpaceTreeControl },
