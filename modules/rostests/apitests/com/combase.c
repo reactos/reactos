@@ -15,9 +15,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_StdComponentCategoriesMgr, NTDDI_WIN8, NTDDI_MAX),
         {
-            { NTDDI_WIN8, NTDDI_MAX, &IID_IUnknown },
-            { NTDDI_WIN8, NTDDI_MAX, &IID_ICatRegister },
-            { NTDDI_WIN8, NTDDI_MAX, &IID_ICatInformation },
+            { NTDDI_WIN8,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN8,         NTDDI_MAX,          &IID_ICatRegister },
+            { NTDDI_WIN8,         NTDDI_MAX,          &IID_ICatInformation },
         },
         L"Both"
     },

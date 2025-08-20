@@ -15,17 +15,17 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win7[] =
     {
         ID_NAME(CLSID_Printers, NTDDI_WIN7, NTDDI_MAX),
         {
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IShellFolder2 },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IShellFolder },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IShellIconOverlay },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IUnknown },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IRemoteComputer },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IPersistFolder2 },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IPersistFolder },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IContextMenuCB },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IResolveShellLink },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IFolderType },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IObjectWithBackReferences },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IShellFolder2 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IShellFolder },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IShellIconOverlay },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IRemoteComputer },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersistFolder2 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IPersistFolder },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IContextMenuCB },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IResolveShellLink },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IFolderType },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IObjectWithBackReferences },
         }
     },
 };
