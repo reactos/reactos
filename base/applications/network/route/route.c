@@ -333,17 +333,26 @@ GetFirstIPv4AddressFromIndex(
 }
 
 static
+int
+CompareAdapters(
+    _In_ const void *elem1,
+    _In_ const void *elem2)
+{
+    return ((PIP_ADAPTER_ADDRESSES)elem2)->IfIndex - ((PIP_ADAPTER_ADDRESSES)elem1)->IfIndex;
+}
+
+static
 DWORD
 PrintActiveRoutes(
     _In_ PWSTR DestinationPattern)
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
-    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
+    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr, *pAdapterSortArray = NULL;
     ULONG Size = 0;
     DWORD Error = ERROR_SUCCESS;
     ULONG adaptOutBufLen = 15000;
     WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF], Interface[IPBUF];
-    unsigned int i;
+    unsigned int i, AdapterCount, AdapterIndex;
     BOOL EntriesFound;
     ULONG Flags = /*GAA_FLAG_SKIP_UNICAST |*/ GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
                   GAA_FLAG_SKIP_DNS_SERVER;
@@ -381,10 +390,36 @@ PrintActiveRoutes(
     {
         ConResPrintf(StdOut, IDS_SEPARATOR);
         ConResPrintf(StdOut, IDS_INTERFACE_LIST);
-        /* FIXME - sort by the index! */
+
+        AdapterCount = 0;
         Ptr = pAdapterAddresses;
         while (Ptr)
         {
+            AdapterCount++;
+            Ptr = Ptr->Next;
+        }
+
+        pAdapterSortArray = (PIP_ADAPTER_ADDRESSES*)malloc(AdapterCount * sizeof(PVOID));
+        if (pAdapterSortArray == NULL)
+        {
+            Error = ERROR_NOT_ENOUGH_MEMORY;
+            goto Error;
+        }
+
+        AdapterIndex = 0;
+        Ptr = pAdapterAddresses;
+        while (Ptr)
+        {
+            pAdapterSortArray[AdapterIndex] = Ptr;
+            AdapterIndex++;
+            Ptr = Ptr->Next;
+        }
+
+        qsort(pAdapterSortArray, AdapterCount, sizeof(PVOID), CompareAdapters);
+
+        for (AdapterIndex = 0; AdapterIndex < AdapterCount; AdapterIndex++)
+        {
+            Ptr = pAdapterSortArray[AdapterIndex];
             if (Ptr->IfType == IF_TYPE_ETHERNET_CSMACD)
             {
                 WCHAR PhysicalAddress[20];
@@ -395,8 +430,6 @@ PrintActiveRoutes(
             {
                 ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, Ptr->IfIndex, Ptr->Description);
             }
-
-            Ptr = Ptr->Next;
         }
         ConResPrintf(StdOut, IDS_SEPARATOR);
 
@@ -441,6 +474,8 @@ PrintActiveRoutes(
     }
 
 Error:
+    if (pAdapterSortArray)
+        free(pAdapterSortArray);
     if (pAdapterAddresses)
         free(pAdapterAddresses);
     if (IpForwardTable)
