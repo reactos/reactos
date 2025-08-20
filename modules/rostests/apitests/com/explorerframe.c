@@ -113,11 +113,11 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_TaskbarList, NTDDI_WIN7, NTDDI_MAX),
         {
-            { NTDDI_WIN7, NTDDI_MAX, &IID_ITaskbarList3 },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_ITaskbarList4 },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_ITaskbarList2 },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_ITaskbarList },
-            { NTDDI_WIN7, NTDDI_MAX, &IID_IUnknown },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_ITaskbarList3 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_ITaskbarList4 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_ITaskbarList2 },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_ITaskbarList },
+            { NTDDI_WIN7,         NTDDI_MAX,          &IID_IUnknown },
         }
     },
 };

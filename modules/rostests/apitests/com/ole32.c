@@ -15,9 +15,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_StdComponentCategoriesMgr, NTDDI_MIN, NTDDI_WIN7SP1),
         {
-            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_IUnknown },
-            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_ICatRegister },
-            { NTDDI_MIN, NTDDI_WIN7SP1, &IID_ICatInformation },
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_ICatRegister },
+            { NTDDI_MIN,          NTDDI_WIN7SP1,      &IID_ICatInformation },
         },
         L"Both"
     },
