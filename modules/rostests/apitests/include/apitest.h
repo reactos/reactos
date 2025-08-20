@@ -79,10 +79,10 @@ static inline ULONG GetNTDDIVersion(VOID)
         }
         else 
         {
-            trace("Failed to get OS version, assuming Server 2003 SP2.\n");
-            NTMajor = 5;
-            NTMinor = 2;
-            ServicePack = 2;
+            trace("Estimating an NTDDI value, GetVersionEx failed.\n");
+            NTMajor = GetMajorNTVersion();
+            NTMinor = GetMinorNTVersion();
+            ServicePack = 0;
             Subversion = 0;
         }
     }
