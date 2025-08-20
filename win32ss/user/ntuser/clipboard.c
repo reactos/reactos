@@ -1198,7 +1198,6 @@ NtUserConvertMemHandle(
     pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, TYPE_CLIPDATA, sizeof(CLIPBOARDDATA) + cbData);
     if (!pMemObj)
     {
-        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
         goto cleanup;
     }
 
@@ -1224,7 +1223,6 @@ NtUserConvertMemHandle(
     {
         UserDeleteObject(hMem, TYPE_CLIPDATA);
         hMem = NULL;
-        SetLastNtError(Status);
     }
 
 cleanup:
