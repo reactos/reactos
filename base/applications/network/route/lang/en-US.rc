@@ -56,11 +56,11 @@ Examples:\n\
     IDS_ETHERNET_ENTRY "0x%-2lx ...%s...... %s\n"
     IDS_IPV4_ROUTE_TABLE "\nIPv4 Route Table\n"
     IDS_ACTIVE_ROUTES "Active Routes:\n"
-    IDS_ROUTES_ENTRY "  %15s  %15s  %15s  %14ld%8ld\n"
+    IDS_ROUTES_ENTRY "  %15s  %15s  %15s  %15s  %6ld\n"
     IDS_PERSISTENT_ROUTES "Persistent Routes:\n"
     IDS_PERSISTENT_ENTRY "  %15s  %15s  %15s  %8s\n"
     IDS_DEFAULT_GATEWAY "Default Gateway:%18s\n"
-    IDS_ROUTES_HEADER "Network Destination        Netmask          Gateway       Interface  Metric\n"
+    IDS_ROUTES_HEADER "Network Destination        Netmask          Gateway        Interface  Metric\n"
     IDS_PERSISTENT_HEADER "Network Destination        Netmask          Gateway    Metric\n"
     IDS_NONE "  None\n"
 END

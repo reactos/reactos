@@ -22,6 +22,8 @@
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
+#include <ws2tcpip.h>
+#include <ip2string.h>
 #include <conutils.h>
 
 #include "resource.h"
@@ -284,19 +286,66 @@ PrintPersistentRoutes(
 }
 
 static
+VOID
+FormatIPv4Address(
+    _Out_ PWCHAR pBuffer,
+    _In_ PIP_ADAPTER_UNICAST_ADDRESS UnicastAddress,
+    _In_ DWORD IfIndex)
+{
+    PIP_ADAPTER_UNICAST_ADDRESS Ptr = UnicastAddress;
+
+    while (Ptr)
+    {
+        if (Ptr->Address.lpSockaddr->sa_family == AF_INET)
+        {
+            struct sockaddr_in *si = (struct sockaddr_in *)(Ptr->Address.lpSockaddr);
+            RtlIpv4AddressToStringW(&(si->sin_addr), pBuffer);
+            return;
+        }
+
+        Ptr = Ptr->Next;
+    }
+
+    swprintf(pBuffer, L"%lx", IfIndex);
+}
+
+static
+VOID
+GetFirstIPv4AddressFromIndex(
+    _Out_ PWSTR pBuffer,
+    _In_ PIP_ADAPTER_ADDRESSES pAdapterAddresses,
+    _In_ DWORD IfIndex)
+{
+    PIP_ADAPTER_ADDRESSES Ptr = pAdapterAddresses;
+
+    while (Ptr)
+    {
+        if (Ptr->IfIndex == IfIndex)
+        {
+            FormatIPv4Address(pBuffer, Ptr->FirstUnicastAddress, Ptr->IfIndex);
+            return;
+        }
+
+        Ptr = Ptr->Next;
+    }
+
+    swprintf(pBuffer, L"%lx", IfIndex);
+}
+
+static
 DWORD
 PrintActiveRoutes(
     _In_ PWSTR DestinationPattern)
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
-    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL;
+    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
     ULONG Size = 0;
     DWORD Error = ERROR_SUCCESS;
     ULONG adaptOutBufLen = 15000;
-    WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF];
+    WCHAR Destination[IPBUF], Gateway[IPBUF], Netmask[IPBUF], Interface[IPBUF];
     unsigned int i;
     BOOL EntriesFound;
-    ULONG Flags = GAA_FLAG_SKIP_UNICAST | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
+    ULONG Flags = /*GAA_FLAG_SKIP_UNICAST |*/ GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
                   GAA_FLAG_SKIP_DNS_SERVER;
 
     /* set required buffer size */
@@ -333,19 +382,21 @@ PrintActiveRoutes(
         ConResPrintf(StdOut, IDS_SEPARATOR);
         ConResPrintf(StdOut, IDS_INTERFACE_LIST);
         /* FIXME - sort by the index! */
-        while (pAdapterAddresses)
+        Ptr = pAdapterAddresses;
+        while (Ptr)
         {
-            if (pAdapterAddresses->IfType == IF_TYPE_ETHERNET_CSMACD)
+            if (Ptr->IfType == IF_TYPE_ETHERNET_CSMACD)
             {
                 WCHAR PhysicalAddress[20];
-                PrintMacAddress(pAdapterAddresses->PhysicalAddress, PhysicalAddress);
-                ConResPrintf(StdOut, IDS_ETHERNET_ENTRY, pAdapterAddresses->IfIndex, PhysicalAddress, pAdapterAddresses->Description);
+                PrintMacAddress(Ptr->PhysicalAddress, PhysicalAddress);
+                ConResPrintf(StdOut, IDS_ETHERNET_ENTRY, Ptr->IfIndex, PhysicalAddress, Ptr->Description);
             }
             else
             {
-                ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, pAdapterAddresses->IfIndex, pAdapterAddresses->Description);
+                ConResPrintf(StdOut, IDS_INTERFACE_ENTRY, Ptr->IfIndex, Ptr->Description);
             }
-            pAdapterAddresses = pAdapterAddresses->Next;
+
+            Ptr = Ptr->Next;
         }
         ConResPrintf(StdOut, IDS_SEPARATOR);
 
@@ -358,6 +409,7 @@ PrintActiveRoutes(
             mbstowcs(Destination, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest)), IPBUF);
             mbstowcs(Netmask, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask)), IPBUF);
             mbstowcs(Gateway, inet_ntoa(IN_ADDR_OF(IpForwardTable->table[i].dwForwardNextHop)), IPBUF);
+            GetFirstIPv4AddressFromIndex(Interface, pAdapterAddresses, IpForwardTable->table[i].dwForwardIfIndex);
 
             if (MatchWildcard(Destination, DestinationPattern))
             {
@@ -367,7 +419,7 @@ PrintActiveRoutes(
                              Destination,
                              Netmask,
                              Gateway,
-                             IpForwardTable->table[i].dwForwardIfIndex,
+                             Interface,
                              IpForwardTable->table[i].dwForwardMetric1);
                 EntriesFound = TRUE;
             }
