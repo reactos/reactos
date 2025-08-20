@@ -13,6 +13,19 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_Internet, NTDDI_WIN10, NTDDI_MAX),
+        {
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IObjectWithBackReferences },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IShellFolder2 },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IShellFolder },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IPersistFolder2 },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IPersistFolder },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IPersist },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IBrowserFrameOptions },
+            { NTDDI_WIN10, NTDDI_MAX, &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_MruLongList, NTDDI_WIN10, NTDDI_MAX),
         {
             { NTDDI_WIN10, NTDDI_MAX, &IID_IUnknown },
@@ -52,6 +65,14 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         {
             { NTDDI_WIN10, NTDDI_MAX, &IID_IUnknown },
             { NTDDI_WIN10, NTDDI_MAX, &IID_IQueryAssociations },
+        }
+    },
+    {
+        ID_NAME(CLSID_SharedTaskScheduler, NTDDI_WIN10, NTDDI_MAX),
+        {
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IShellTaskScheduler },
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IMarshal},
         }
     },
 #if 0 // This is correct for Windows 10 1607, but crashes the test when un-initializing it.
@@ -149,9 +170,20 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         },
         L"Both",
     },
+    {
+        ID_NAME(CLSID_ShellTaskScheduler, NTDDI_WIN10, NTDDI_MAX),
+        {
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IShellTaskScheduler },
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_WIN10,        NTDDI_MAX,          &IID_IMarshal},
+        },
+    },
 };
 
 START_TEST(windows_storage)
 {
-    TestClassesEx(L"windows.storage", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces), NTDDI_WIN10, NTDDI_MAX);
+    TestClassesEx(L"windows.storage",
+                  ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces),
+                  NTDDI_WIN10, NTDDI_MAX,
+                  TRUE);
 }

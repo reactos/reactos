@@ -26,5 +26,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 
 START_TEST(netcfgx)
 {
-    TestClasses(L"netcfgx", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
+    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+        TestClasses(L"netcfgx", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
+    else
+        TestClasses(L"NetSetupShim", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }

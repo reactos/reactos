@@ -78,7 +78,8 @@ TestClassesEx(
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
     _In_ INT ExpectedInterfaceCount,
     _In_ ULONG MinimumNTDDIVersion,
-    _In_ ULONG MaximumNTDDIVersion);
+    _In_ ULONG MaximumNTDDIVersion,
+    _In_ BOOLEAN IsWinRT);
 
 /* Indicate that the interface is implemented in another (probably aggregate) object,
  * so its offset varies and is "far away" */
@@ -234,7 +235,7 @@ DEFINE_GUID(IID_IImageList_mmc,            0x43136eb8, 0xd36c, 0x11cf, 0xad, 0xb
 DEFINE_GUID(IID_IConsoleVerb,              0xe49f7a60, 0x74af, 0x11d0, 0xa2, 0x86, 0x00, 0xc0, 0x4f, 0xd8, 0xfe, 0x93);
 DEFINE_GUID(IID_ISnapInAbout,              0x1245208c, 0xa151, 0x11d0, 0xa7, 0xd7, 0x00, 0xc0, 0x4f, 0xd9, 0x09, 0xdd);
 
-
+DEFINE_GUID(IID_INetConnectionCommonUi2,   0xC08956A6, 0x1CD3, 0x11D1, 0xB1, 0xC5, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E); // Same as IID_INetLanConnectionUiInfo
 
 #endif /* _COM_APITEST_H_ */
 

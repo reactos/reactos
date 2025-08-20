@@ -25,6 +25,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ConnectionCommonUi, NTDDI_VISTA, NTDDI_MAX),
         {
+            { NTDDI_MIN,   NTDDI_MAX, &IID_IUnknown },
+
             { NTDDI_VISTA, NTDDI_MAX, &IID_INetLanConnectionUiInfo },
             { NTDDI_VISTA, NTDDI_MAX, &IID_IMarshal2 },
             { NTDDI_VISTA, NTDDI_MAX, &IID_IMarshal },
@@ -33,7 +35,6 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_VISTA, NTDDI_MAX, &IID_ICallFactory },
             { NTDDI_VISTA, NTDDI_MAX, &IID_IForegroundTransfer },
             { NTDDI_VISTA, NTDDI_MAX, &IID_IMultiQI },
-            { NTDDI_MIN,   NTDDI_MAX, &IID_IUnknown },
         },
         L"Free"
     },
@@ -64,6 +65,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         ID_NAME(CLSID_ConnectionTray, NTDDI_MIN, NTDDI_WIN7SP1),
         {
             { NTDDI_MIN, NTDDI_VISTASP4, &IID_IOleCommandTarget },
+
             { NTDDI_MIN, NTDDI_MAX,      &IID_IUnknown },
         },
         L"Both"
@@ -78,11 +80,11 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         L"Both"
     },
     {
-        ID_NAME(CLSID_DirectConnectionUi, NTDDI_MIN, NTDDI_WS03SP2),
+        ID_NAME(CLSID_DirectConnectionUi, NTDDI_MIN, NTDDI_WS03SP4),
         {
-            { NTDDI_MIN, NTDDI_WS03SP2, &IID_INetConnectionConnectUi },
-            { NTDDI_MIN, NTDDI_WS03SP2, &IID_IUnknown },
-            { NTDDI_MIN, NTDDI_WS03SP2, &IID_INetConnectionPropertyUi2 },
+            { NTDDI_MIN, NTDDI_WS03SP4, &IID_INetConnectionConnectUi },
+            { NTDDI_MIN, NTDDI_WS03SP4, &IID_IUnknown },
+            { NTDDI_MIN, NTDDI_WS03SP4, &IID_INetConnectionPropertyUi2 },
         },
         L"Both"
     },

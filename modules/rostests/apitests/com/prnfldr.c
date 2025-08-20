@@ -32,5 +32,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces_Win7[] =
 
 START_TEST(prnfldr)
 {
-    TestClassesEx(L"prnfldr", ExpectedInterfaces_Win7, RTL_NUMBER_OF(ExpectedInterfaces_Win7), NTDDI_WIN7, NTDDI_MAX);
+    TestClassesEx(L"prnfldr",
+                  ExpectedInterfaces_Win7, RTL_NUMBER_OF(ExpectedInterfaces_Win7),
+                  NTDDI_WIN7, NTDDI_MAX,
+                  FALSE);
 }
