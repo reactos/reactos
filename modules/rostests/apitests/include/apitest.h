@@ -22,7 +22,7 @@
 #define NTDDI_MIN 0UL
 #define NTDDI_MAX 0xFFFFFFFFUL
 
-static inline ULONG GetNTDDIVersion()
+static inline ULONG GetNTDDIVersion(VOID)
 {
     ULONG NTBuildNo, NTMajor, NTMinor, ServicePack, Subversion;
 
@@ -68,7 +68,7 @@ static inline ULONG GetNTDDIVersion()
     {
         OSVERSIONINFOEXW OSVersion;
 
-        OSVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+        OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
 
         if (GetVersionExW((LPOSVERSIONINFOW)&OSVersion))
         {
