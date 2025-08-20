@@ -179,7 +179,12 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IEFrameAuto },
             { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IWebBrowserPriv2 },
 
+#ifdef _WIN64 // IID_IWebBrowserPriv is missing from this class on Vista x64
+            { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IWebBrowserPriv },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IWebBrowserPriv },
+#else
             { NTDDI_MIN,          NTDDI_WINBLUE,      &IID_IWebBrowserPriv },
+#endif
 
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersist },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IOleObject },
@@ -224,7 +229,12 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IEFrameAuto },
             { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IWebBrowserPriv2 },
 
+#ifdef _WIN64 // IID_IWebBrowserPriv is missing from this class on Vista x64
+            { NTDDI_MIN,          NTDDI_WS03SP4,      &IID_IWebBrowserPriv },
+            { NTDDI_WIN7,         NTDDI_WINBLUE,      &IID_IWebBrowserPriv },
+#else
             { NTDDI_MIN,          NTDDI_WINBLUE,      &IID_IWebBrowserPriv },
+#endif
 
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IPersist },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IOleObject },

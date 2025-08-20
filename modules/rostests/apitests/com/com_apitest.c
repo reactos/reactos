@@ -41,6 +41,7 @@ typedef const KNOWN_INTERFACE *PCKNOWN_INTERFACE;
 
 BOOLEAN RegisteredAlways(ULONG version)            { return TRUE; }
 BOOLEAN RegisteredNever(ULONG version)             { return FALSE; }
+BOOLEAN RegisteredOnWS03AndVista(ULONG version)    { return version >= NTDDI_WS03 && version < NTDDI_WIN7; }
 BOOLEAN RegisteredOnVistaOrNewer(ULONG version)    { return version >= NTDDI_VISTA; }
 BOOLEAN RegisteredOnVistaOnly(ULONG version)       { return version >= NTDDI_VISTA && version < NTDDI_WIN7; }
 BOOLEAN RegisteredOnVistaAndWin7(ULONG version)    { return version >= NTDDI_VISTA && version < NTDDI_WIN8; }
@@ -70,6 +71,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
                  IID_ITransferAdviseSink),         RegisteredOnWS03OrOlder },
     { ID_NAME_EX(IID_IDriveFolderExtOld,
                  IID_IDriveFolderExt),             RegisteredOnWS03OrOlder },
+
+    { ID_NAME(IID_IBandNavigate),                  RegisteredOnWS03AndVista },
 
     { ID_NAME(IID_IAccIdentity),                   RegisteredAlways },
     { ID_NAME(IID_IAccPropServer),                 RegisteredAlways },
@@ -292,7 +295,6 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IShellFolder3),                  RegisteredOnVistaOnly    },
     { ID_NAME_EX(IID_IShellBrowserService_Vista,
                  IID_IShellBrowserService),        RegisteredOnVistaOnly    },
-    { ID_NAME(IID_IBandNavigate),                  RegisteredOnVistaOnly    },
 
     { ID_NAME(IID_IDriveFolderExt),                RegisteredOnVistaOrNewer },
     { ID_NAME(IID_IFilter),                        RegisteredOnVistaOrNewer },
