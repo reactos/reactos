@@ -22,6 +22,11 @@ if(MSVC)
         /wd4146  # "unary minus operator applied to unsigned type, result still unsigned"
         /wd4244) # "'=': conversion from 'a' to 'b', possible loss of data"
 
+    if(ARCH STREQUAL "amd64")
+        # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+        add_compile_options(/wd4267)
+    endif()
+
 endif()
 
 if(CMAKE_CROSSCOMPILING)
