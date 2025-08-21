@@ -7996,6 +7996,11 @@ START_TEST(http)
 {
     HMODULE hdll;
 
+    if (!winetest_interactive)
+    {
+        win_skip("Skipping wininet:http due to hang ROSTESTS-357\n");
+        return;
+    }
 
     hdll = GetModuleHandleA("wininet.dll");
 

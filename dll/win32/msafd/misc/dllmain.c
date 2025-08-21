@@ -1977,8 +1977,7 @@ WSPConnect(SOCKET Handle,
     /* FIXME: Handle Async Connect */
     if (Socket->SharedData->NonBlocking)
     {
-        if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
-        return SOCKET_ERROR;
+        ERR("Async Connect UNIMPLEMENTED!\n");
     }
 
     /* Send IOCTL */
