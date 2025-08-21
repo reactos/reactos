@@ -68,7 +68,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     pJob->hPrintProcessor = hPrintProcessor;
 
     // Prepare the pDocumentName parameter.
-    cchPrinterName = wcslen(OpenData.pPrinterName);
+    cchPrinterName = (DWORD)wcslen(OpenData.pPrinterName);
     pwszPrinterAndJob = DllAllocSplMem((cchPrinterName + cchJobAppendix + cchMaxJobIdDigits + 1) * sizeof(WCHAR));
     if (!pwszPrinterAndJob)
     {

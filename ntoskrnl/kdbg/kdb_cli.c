@@ -539,7 +539,7 @@ KdbpPrintStructInternal
     ULONG i;
     ULONGLONG Result;
     PROSSYM_AGGREGATE_MEMBER Member;
-    ULONG IndentLen = strlen(Indent);
+    ULONG IndentLen = (ULONG)strlen(Indent);
     ROSSYM_AGGREGATE MemberAggregate = {0 };
 
     for (i = 0; i < Aggregate->NumElements; i++) {
@@ -646,7 +646,7 @@ KdbpCmdPrintStruct(
         DPRINT("Trying to get expression\n");
         for (i = 3; i < Argc - 1; i++)
         {
-            len = strlen(Argv[i]);
+            len = (ULONG)strlen(Argv[i]);
             Argv[i][len] = ' ';
         }
 

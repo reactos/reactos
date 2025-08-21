@@ -3075,7 +3075,7 @@ SetDefaultPrinterW(LPCWSTR pszPrinter)
             goto Cleanup;
         }
 
-        cchPrinter = wcslen(pszPrinter);
+        cchPrinter = (DWORD)wcslen(pszPrinter);
     }
     else
     {
