@@ -1297,24 +1297,38 @@ BOOL WINAPI WriteProfileStringW( LPCWSTR section, LPCWSTR entry,
 UINT WINAPI GetPrivateProfileIntW( LPCWSTR section, LPCWSTR entry,
                                    INT def_val, LPCWSTR filename )
 {
-    WCHAR buffer[30];
-    UNICODE_STRING bufferW;
-    ULONG result;
+    PROFILEKEY *key;
+    UINT result;
 
-    if (GetPrivateProfileStringW( section, entry, emptystringW,
-                                   buffer, sizeof(buffer)/sizeof(WCHAR),
-                                   filename ) == 0)
+    RtlEnterCriticalSection( &PROFILE_CritSect );
+
+    if (!PROFILE_Open( filename, FALSE ))
+    {
+        RtlLeaveCriticalSection( &PROFILE_CritSect );
         return def_val;
+    }
 
-    /* FIXME: if entry can be found but it's empty, then Win16 is
-     * supposed to return 0 instead of def_val ! Difficult/problematic
-     * to implement (every other failure also returns zero buffer),
-     * thus wait until testing framework avail for making sure nothing
-     * else gets broken that way. */
-    if (!buffer[0]) return (UINT)def_val;
+    key = PROFILE_Find( &CurProfile->section, section, entry, FALSE, FALSE);
 
-    RtlInitUnicodeString( &bufferW, buffer );
-    RtlUnicodeStringToInteger( &bufferW, 0, &result);
+    if (key && key->value) /* Key found, and it has a value string (even if empty) */
+    {
+        if (!*(key->value)) /* Value is empty string */
+        {
+            result = 0;
+        }
+        else
+        {
+            UNICODE_STRING bufferW;
+            RtlInitUnicodeString( &bufferW, key->value );
+            RtlUnicodeStringToInteger( &bufferW, 10, &result);
+        }
+    }
+    else /* Key not found */
+    {
+        result = def_val;
+    }
+
+    RtlLeaveCriticalSection( &PROFILE_CritSect );
     return result;
 }
 
