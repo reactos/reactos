@@ -101,17 +101,8 @@ KmtRunKernelTest(
 
     CallbackThread = CreateThread(NULL, 0, KmtUserCallbackThread, NULL, 0, NULL);
 
-    {
-        size_t testNameLen = strlen(TestName);
-        if (testNameLen > MAXDWORD)
-        {
-            error(ERROR_BUFFER_OVERFLOW);
-        }
-        else if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, (DWORD)testNameLen, NULL, 0, &BytesRead, NULL))
-        {
-            error(Error);
-        }
-    }
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, (DWORD)strlen(TestName), NULL, 0, &BytesRead, NULL))
+        error(Error);
 
     if (CallbackThread != NULL)
          CloseHandle(CallbackThread);
@@ -294,15 +285,10 @@ KmtSendStringToDriver(
     IN PCSTR String)
 {
     DWORD BytesRead;
-    size_t stringLen;
 
     assert(ControlCode < 0x400);
 
-    stringLen = strlen(String);
-    if (stringLen > MAXDWORD)
-        return ERROR_BUFFER_OVERFLOW;
-
-    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)stringLen, NULL, 0, &BytesRead, NULL))
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)strlen(String), NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
     return ERROR_SUCCESS;
@@ -324,18 +310,10 @@ KmtSendWStringToDriver(
     IN PCWSTR String)
 {
     DWORD BytesRead;
-    size_t stringLen;
-    size_t bufferSize;
 
     assert(ControlCode < 0x400);
 
-    stringLen = wcslen(String);
-    bufferSize = stringLen * sizeof(WCHAR);
-    
-    if (bufferSize > MAXDWORD)
-        return ERROR_BUFFER_OVERFLOW;
-
-    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)bufferSize, NULL, 0, &BytesRead, NULL))
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)(wcslen(String) * sizeof(WCHAR)), NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
     return ERROR_SUCCESS;
