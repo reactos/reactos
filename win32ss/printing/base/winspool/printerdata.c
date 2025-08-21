@@ -347,7 +347,7 @@ GetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, LPDWORD p
     if (pKeyName)
     {
         // Convert pKeyName to a Unicode string pwszKeyName
-        cch = strlen(pKeyName);
+        cch = (DWORD)strlen(pKeyName);
 
         pwszKeyName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszKeyName)
@@ -363,7 +363,7 @@ GetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, LPDWORD p
     if (pValueName)
     {
         // Convert pValueName to a Unicode string pwszValueName
-        cch = strlen(pValueName);
+        cch = (DWORD)strlen(pValueName);
 
         pwszValueName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszValueName)
@@ -561,7 +561,7 @@ SetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, DWORD Typ
     if (pKeyName)
     {
         // Convert pKeyName to a Unicode string pwszKeyName
-        cch = strlen(pKeyName);
+        cch = (DWORD)strlen(pKeyName);
 
         pwszKeyName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszKeyName)
@@ -577,7 +577,7 @@ SetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, DWORD Typ
     if (pValueName)
     {
         // Convert pValueName to a Unicode string pwszValueName
-        cch = strlen(pValueName);
+        cch = (DWORD)strlen(pValueName);
 
         pwszValueName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszValueName)

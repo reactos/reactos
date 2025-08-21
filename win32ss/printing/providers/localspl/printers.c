@@ -1465,7 +1465,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     if (pwszSecondParameter)
         cchFirstParameter = pwszSecondParameter - p;
     else
-        cchFirstParameter = wcslen(lpPrinterName);
+        cchFirstParameter = (DWORD)wcslen(lpPrinterName);
 
     // We must have at least one parameter.
     if (!cchFirstParameter && !pwszSecondParameter)

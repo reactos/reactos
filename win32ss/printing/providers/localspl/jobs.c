@@ -330,7 +330,7 @@ CreateJob(PLOCAL_PRINTER_HANDLE pPrinterHandle)
         goto Cleanup;
     }
 
-    cchMachineName = wcslen(pwszMachineName);
+    cchMachineName = (DWORD)wcslen(pwszMachineName);
     pJob->pwszMachineName = DllAllocSplMem((cchMachineName + cchDoubleBackslash + 1) * sizeof(WCHAR));
     CopyMemory(pJob->pwszMachineName, wszDoubleBackslash, cchDoubleBackslash * sizeof(WCHAR));
     CopyMemory(&pJob->pwszMachineName[cchDoubleBackslash], pwszMachineName, (cchMachineName + 1) * sizeof(WCHAR));

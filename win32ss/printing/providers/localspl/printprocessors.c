@@ -44,7 +44,7 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
     }
 
     // Construct the registry key of the demanded environment.
-    cchEnvironment = wcslen(pEnvironment);
+    cchEnvironment = (DWORD)wcslen(pEnvironment);
     pwszEnvironmentKey = DllAllocSplMem((cchEnvironmentsKey + cchEnvironment + 1) * sizeof(WCHAR));
     if (!pwszEnvironmentKey)
     {
