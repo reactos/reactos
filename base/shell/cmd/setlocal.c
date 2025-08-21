@@ -107,6 +107,8 @@ INT cmd_setlocal(LPTSTR param)
     return nErrorLevel;
 }
 
+extern BOOL fSingleCommand;
+
 INT cmd_endlocal(LPTSTR param)
 {
     LPTSTR Environ, Name, Value;
@@ -123,6 +125,9 @@ INT cmd_endlocal(LPTSTR param)
 
     /* Pop a SETLOCAL struct off of this batch context's stack */
     if (!bc || !(Saved = bc->setlocal))
+        return 0;
+
+    if (fSingleCommand)
         return 0;
     bc->setlocal = Saved->Prev;
 
