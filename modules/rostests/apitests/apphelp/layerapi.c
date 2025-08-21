@@ -58,7 +58,17 @@ static BOOL setLayerValue(BOOL bMachine, const char* valueName, const char* valu
     if (lstatus == ERROR_SUCCESS)
     {
         if (value)
-            lstatus = RegSetValueExA(key, valueName, 0, REG_SZ, (const BYTE*)value, (DWORD)strlen(value)+1);
+        {
+            size_t valueLen = strlen(value) + 1;
+            if (valueLen > MAXDWORD)
+            {
+                lstatus = ERROR_BUFFER_OVERFLOW;
+            }
+            else
+            {
+                lstatus = RegSetValueExA(key, valueName, 0, REG_SZ, (const BYTE*)value, (DWORD)valueLen);
+            }
+        }
         else
         {
             lstatus = RegDeleteValueA(key, valueName);

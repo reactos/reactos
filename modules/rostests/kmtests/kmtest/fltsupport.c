@@ -303,9 +303,16 @@ KmtFltSendStringToDriver(
     _In_ DWORD Message,
     _In_ PCSTR String)
 {
+    size_t stringLen;
+    
     assert(hPort);
     assert(String);
-    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)strlen(String), NULL, 0, NULL);
+    
+    stringLen = strlen(String);
+    if (stringLen > MAXDWORD)
+        return ERROR_BUFFER_OVERFLOW;
+        
+    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)stringLen, NULL, 0, NULL);
 }
 
 /**
@@ -328,7 +335,13 @@ KmtFltSendWStringToDriver(
     _In_ DWORD Message,
     _In_ PCWSTR String)
 {
-    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)wcslen(String) * sizeof(WCHAR), NULL, 0, NULL);
+    size_t stringLen = wcslen(String);
+    size_t bufferSize = stringLen * sizeof(WCHAR);
+    
+    if (bufferSize > MAXDWORD)
+        return ERROR_BUFFER_OVERFLOW;
+        
+    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)bufferSize, NULL, 0, NULL);
 }
 
 /**
