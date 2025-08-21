@@ -7936,7 +7936,6 @@ static void test_getaddrinfo(void)
     SOCKADDR_IN *sockaddr;
     CHAR name[256], *ip;
     DWORD size = sizeof(name);
-    SOCKET v6;
 
     if (!pgetaddrinfo || !pfreeaddrinfo)
     {
@@ -8105,69 +8104,60 @@ static void test_getaddrinfo(void)
     ok(result == NULL, "expected NULL, got %p\n", result);
 
     /* Test IPv6 address conversion */
-    v6 = socket(AF_INET6, SOCK_DGRAM, 0);
-    if (v6 == INVALID_SOCKET)
+    result = NULL;
+    SetLastError(0xdeadbeef);
+    ret = pgetaddrinfo("2a00:2039:dead:beef:cafe::6666", NULL, NULL, &result);
+
+    if (result != NULL)
     {
-        win_skip("IPv6 is not supported\n");
+        ok(!ret, "getaddrinfo failed with %d\n", ret);
+        verify_ipv6_addrinfo(result, "2a00:2039:dead:beef:cafe::6666");
+        pfreeaddrinfo(result);
+
+        /* Test IPv6 address conversion with brackets */
+        result = NULL;
+        ret = pgetaddrinfo("[beef::cafe]", NULL, NULL, &result);
+        ok(!ret, "getaddrinfo failed with %d\n", ret);
+        verify_ipv6_addrinfo(result, "beef::cafe");
+        pfreeaddrinfo(result);
+
+        /* Test IPv6 address conversion with brackets and hints */
+        memset(&hint, 0, sizeof(ADDRINFOA));
+        hint.ai_flags = AI_NUMERICHOST;
+        hint.ai_family = AF_INET6;
+        result = NULL;
+        ret = pgetaddrinfo("[beef::cafe]", NULL, &hint, &result);
+        ok(!ret, "getaddrinfo failed with %d\n", ret);
+        verify_ipv6_addrinfo(result, "beef::cafe");
+        pfreeaddrinfo(result);
+
+        memset(&hint, 0, sizeof(ADDRINFOA));
+        hint.ai_flags = AI_NUMERICHOST;
+        hint.ai_family = AF_INET;
+        result = NULL;
+        ret = pgetaddrinfo("[beef::cafe]", NULL, &hint, &result);
+        ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
+
+        /* Test IPv6 address conversion with brackets and port */
+        result = NULL;
+        ret = pgetaddrinfo("[beef::cafe]:10239", NULL, NULL, &result);
+        ok(!ret, "getaddrinfo failed with %d\n", ret);
+        verify_ipv6_addrinfo(result, "beef::cafe");
+        pfreeaddrinfo(result);
+
+        /* Test IPv6 address conversion with unmatched brackets */
+        result = NULL;
+        hint.ai_flags = AI_NUMERICHOST;
+        ret = pgetaddrinfo("[beef::cafe", NULL, &hint, &result);
+        ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
+
+        ret = pgetaddrinfo("beef::cafe]", NULL, &hint, &result);
+        ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
     }
     else
     {
-        closesocket(v6);
-        result = NULL;
-        SetLastError(0xdeadbeef);
-        ret = pgetaddrinfo("2a00:2039:dead:beef:cafe::6666", NULL, NULL, &result);
-
-        if (result != NULL)
-        {
-            ok(!ret, "getaddrinfo failed with %d\n", ret);
-            verify_ipv6_addrinfo(result, "2a00:2039:dead:beef:cafe::6666");
-            pfreeaddrinfo(result);
-
-            /* Test IPv6 address conversion with brackets */
-            result = NULL;
-            ret = pgetaddrinfo("[beef::cafe]", NULL, NULL, &result);
-            ok(!ret, "getaddrinfo failed with %d\n", ret);
-            verify_ipv6_addrinfo(result, "beef::cafe");
-            pfreeaddrinfo(result);
-
-            /* Test IPv6 address conversion with brackets and hints */
-            memset(&hint, 0, sizeof(ADDRINFOA));
-            hint.ai_flags = AI_NUMERICHOST;
-            hint.ai_family = AF_INET6;
-            result = NULL;
-            ret = pgetaddrinfo("[beef::cafe]", NULL, &hint, &result);
-            ok(!ret, "getaddrinfo failed with %d\n", ret);
-            verify_ipv6_addrinfo(result, "beef::cafe");
-            pfreeaddrinfo(result);
-
-            memset(&hint, 0, sizeof(ADDRINFOA));
-            hint.ai_flags = AI_NUMERICHOST;
-            hint.ai_family = AF_INET;
-            result = NULL;
-            ret = pgetaddrinfo("[beef::cafe]", NULL, &hint, &result);
-            ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
-
-            /* Test IPv6 address conversion with brackets and port */
-            result = NULL;
-            ret = pgetaddrinfo("[beef::cafe]:10239", NULL, NULL, &result);
-            ok(!ret, "getaddrinfo failed with %d\n", ret);
-            verify_ipv6_addrinfo(result, "beef::cafe");
-            pfreeaddrinfo(result);
-
-            /* Test IPv6 address conversion with unmatched brackets */
-            result = NULL;
-            hint.ai_flags = AI_NUMERICHOST;
-            ret = pgetaddrinfo("[beef::cafe", NULL, &hint, &result);
-            ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
-
-            ret = pgetaddrinfo("beef::cafe]", NULL, &hint, &result);
-            ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
-        }
-        else
-        {
-            ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
-            win_skip("getaddrinfo does not support IPV6\n");
-        }
+        ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", ret);
+        win_skip("getaddrinfo does not support IPV6\n");
     }
 
     hint.ai_flags = 0;
