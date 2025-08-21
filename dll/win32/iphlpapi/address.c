@@ -238,6 +238,8 @@ EnumerateServerName(
 {
     PIP_ADAPTER_DNS_SERVER_ADDRESS** Ptr = Data;
     PIP_ADAPTER_DNS_SERVER_ADDRESS ServerAddress = **Ptr;
+    PCWSTR Terminator;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(Interface);
 
@@ -245,15 +247,12 @@ EnumerateServerName(
     ServerAddress->Address.lpSockaddr = (PVOID)(ServerAddress + 1);
     ServerAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
 
+    ServerAddress->Address.lpSockaddr->sa_family = AF_INET;
+    ((LPSOCKADDR_IN)ServerAddress->Address.lpSockaddr)->sin_port = 0;
 
-    /* Get the address from the server name string */
-    //FIXME: Only ipv4 for now...
-    if (WSAStringToAddressW(
-        NameServer,
-        AF_INET,
-        NULL,
-        ServerAddress->Address.lpSockaddr,
-        &ServerAddress->Address.iSockaddrLength))
+    Status = RtlIpv4StringToAddressW(NameServer, FALSE, &Terminator, 
+                                     &((LPSOCKADDR_IN)ServerAddress->Address.lpSockaddr)->sin_addr);
+    if (!NT_SUCCESS(Status))
     {
         /* Pass along, name conversion failed */
         ERR("%S is not a valid IP address\n", NameServer);
@@ -308,6 +307,23 @@ QueryFlags(
     }
 
     // FIXME: handle 0x8 -> 0x20
+}
+
+static
+ULONG
+CountPrefixBits(
+    _In_ ULONG Netmask)
+{
+    ULONG i, BitCount = 0;
+
+    for (i = 0; i < sizeof(ULONG) * 8; i++)
+    {
+        if ((Netmask & (1 << i)) == 0)
+            break;
+        BitCount++;
+    }
+
+    return BitCount;
 }
 
 DWORD
@@ -949,12 +965,13 @@ GetAdaptersAddresses(
                         /* Set the address */
                         //FIXME: ipv4 only (again...)
                         Prefix->Address.lpSockaddr = (LPSOCKADDR)(Prefix + 1);
-                        Prefix->Address.iSockaddrLength = sizeof(AddrEntries[j].iae_mask);
+                        Prefix->Address.iSockaddrLength = sizeof(SOCKADDR);
                         Prefix->Address.lpSockaddr->sa_family = AF_INET;
-                        memcpy(Prefix->Address.lpSockaddr->sa_data, &AddrEntries[j].iae_mask, sizeof(AddrEntries[j].iae_mask));
+                        ((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_port = 0;
+                        memcpy(&((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_addr, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
 
                         /* Compute the prefix size */
-                        _BitScanReverse(&Prefix->PrefixLength, AddrEntries[j].iae_mask);
+                        Prefix->PrefixLength = CountPrefixBits(AddrEntries[j].iae_mask);
 
                         CurrentAA->FirstPrefix = Prefix;
                         Ptr += Size;
