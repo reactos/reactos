@@ -35,6 +35,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-deprecated-non-prototype)
 endif()
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    add_compile_options("/wd4267")
+endif()
+
 if(CMAKE_CROSSCOMPILING)
     add_library(zlib ${SOURCE} ${SOLO_SOURCE})
     target_link_libraries(zlib oldnames)
