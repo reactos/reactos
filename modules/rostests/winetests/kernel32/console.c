@@ -964,12 +964,6 @@ static void test_GetSetConsoleInputExeName(void)
 {
     BOOL ret;
     DWORD error;
-
-    if (!pGetConsoleInputExeNameA || !pSetConsoleInputExeNameA)
-    {
-        win_skip("GetConsoleInputExeNameA and/or SetConsoleInputExeNameA is not available\n");
-        return;
-    }
     char buffer[MAX_PATH], module[MAX_PATH], *p;
     static char input_exe[MAX_PATH] = "winetest.exe";
 
