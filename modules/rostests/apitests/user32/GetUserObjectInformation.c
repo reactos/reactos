@@ -76,21 +76,22 @@ CheckBuffer(
     {                                                                                                                                       \
         BOOLEAN _Check;                                                                                                                     \
         SIZE_T SizeOfString = wcslen(String) * sizeof(WCHAR) + sizeof(UNICODE_NULL);                                                         \
-        TestUserObjectInfo(Handle,  Index,     NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
-        TestUserObjectInfo(Handle,  Index,     UlongToPtr(1),    0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
+        DWORD DwordSizeOfString = (DWORD)SizeOfString;                                                                                     \
+        TestUserObjectInfo(Handle,  Index,     NULL,             0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, DwordSizeOfString);  \
+        TestUserObjectInfo(Handle,  Index,     UlongToPtr(1),    0,                       FALSE, ERROR_INSUFFICIENT_BUFFER, DwordSizeOfString);  \
         TestUserObjectInfo(Handle,  Index,     NULL,             1,                       FALSE, ERROR_NOACCESS,            NOTSET);        \
         TestUserObjectInfo(Handle,  Index,     UlongToPtr(1),    1,                       FALSE, ERROR_NOACCESS,            NOTSET);        \
         RtlFillMemory(Buffer, BufferSize, 0x55);                                                                                            \
-        TestUserObjectInfo(Handle,  Index,     Buffer,           SizeOfString - 2,        FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
+        TestUserObjectInfo(Handle,  Index,     Buffer,           (DWORD)(SizeOfString - 2),        FALSE, ERROR_INSUFFICIENT_BUFFER, DwordSizeOfString);  \
         _Check = CheckBuffer(Buffer, BufferSize, 0x55);                                                                                     \
         ok(_Check == TRUE, "CheckBuffer failed\n");                                                                                         \
         RtlFillMemory(Buffer, BufferSize, 0x55);                                                                                            \
-        TestUserObjectInfo(Handle,  Index,     Buffer,           SizeOfString - 1,        FALSE, ERROR_INSUFFICIENT_BUFFER, SizeOfString);  \
+        TestUserObjectInfo(Handle,  Index,     Buffer,           (DWORD)(SizeOfString - 1),        FALSE, ERROR_INSUFFICIENT_BUFFER, DwordSizeOfString);  \
         _Check = CheckBuffer(Buffer, BufferSize, 0x55);                                                                                     \
         ok(_Check == TRUE, "CheckBuffer failed\n");                                                                                         \
         RtlFillMemory(Buffer, BufferSize, 0x55);                                                                                            \
         Buffer[BufferSize / sizeof(WCHAR) - 1] = UNICODE_NULL;                                                                              \
-        TestUserObjectInfo(Handle,  Index,     Buffer,           SizeOfString,            TRUE,  0xdeadbeef,                SizeOfString);  \
+        TestUserObjectInfo(Handle,  Index,     Buffer,           (DWORD)SizeOfString,            TRUE,  0xdeadbeef,                DwordSizeOfString);  \
         ok(wcscmp(Buffer, String) == 0, "Buffer '%ls', expected '%ls'\n", Buffer, String);                                                  \
         _Check = CheckBuffer(Buffer + SizeOfString / sizeof(Buffer[0]), BufferSize - SizeOfString - sizeof(WCHAR), 0x55);                   \
         ok(_Check == TRUE, "CheckBuffer failed\n");                                                                                         \

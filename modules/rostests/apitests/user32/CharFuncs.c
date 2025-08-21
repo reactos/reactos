@@ -466,7 +466,7 @@ static void testCharPrevW(const TESTS_CHARPREV *pEntry, SIZE_T len, UINT i)
     }
     else
     {
-        b = pchW >= wszCurrent && pchW <= wszCurrent + wcslen(pEntry->lpszCurrent);
+        b = pchW >= wszCurrent && pchW <= wszCurrent + (int)wcslen(pEntry->lpszCurrent);
         if (iRealOffset >= 0)
             ok(b, "[%u] CharPrevW: pchW (0x%p) is expected to be within wszCurrent (0x%p)\n", i, pchW, wszCurrent);
         else
@@ -524,7 +524,7 @@ static void testCharPrevA(const TESTS_CHARPREV *pEntry, SIZE_T len, UINT i)
     }
     else
     {
-        b = pchA >= szCurrent && pchA <= szCurrent + wcslen(pEntry->lpszCurrent);
+        b = pchA >= szCurrent && pchA <= szCurrent + (int)wcslen(pEntry->lpszCurrent);
         if (iRealOffset >= 0)
             ok(b, "[%u] CharPrevA: pchA (0x%p) is expected to be within szCurrent (0x%p)\n", i, pchA, szCurrent);
         else
