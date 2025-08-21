@@ -96,25 +96,7 @@ ConSrvCloseHandle(IN PCONSOLE_IO_HANDLE Handle)
                  * even of the last buffer, but having to deal with a lack of
                  * any active buffer might be error-prone. */
                 if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
-                {
-                    PCONSRV_CONSOLE Console = (PCONSRV_CONSOLE)Buffer->Header.Console;
-                    if (Console->ActiveBuffer == Buffer)
-                    {
-                        /* The active screen buffer is being closed, switch to another one */
-                        PCONSOLE_SCREEN_BUFFER NewActiveBuffer =
-                            CONTAINING_RECORD(Console->ScreenBuffers.Flink,
-                                              CONSOLE_SCREEN_BUFFER, ListEntry);
-                        /* Make sure we don't switch to ourselves */
-                        if (NewActiveBuffer == Buffer)
-                        {
-                            NewActiveBuffer =
-                                CONTAINING_RECORD(NewActiveBuffer->ListEntry.Flink,
-                                                  CONSOLE_SCREEN_BUFFER, ListEntry);
-                        }
-                        ConDrvSetConsoleActiveScreenBuffer(Console, NewActiveBuffer);
-                    }
                     ConDrvDeleteScreenBuffer(Buffer);
-                }
             }
             else if (Object->Type == INPUT_BUFFER)
             {
