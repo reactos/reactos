@@ -532,7 +532,10 @@ NtGdiSetDIBitsToDeviceInternal(
     {
         ScanLines = min(abs(Height), ScanLines);
         if (YSrc > 0)
+        {
             ScanLines += YSrc;
+            YSrc = 0;
+        }
     }
     else
     {
@@ -582,7 +585,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
-    if (YDest >= 0 && YSrc > 0)
+    if (YDest >= 0 && YSrc >= 0)
     {
         ScanLines += YSrc;
     }
