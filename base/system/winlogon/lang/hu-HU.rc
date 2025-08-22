@@ -19,7 +19,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A Felhasználó beléptetését kezelő DLL (%s) nem tudott betöltődni.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Értesítse a rendszergazdát, hogy javítsa ki a DLL állományt.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Újraindítás", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Újraindítás", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -28,10 +28,10 @@ CAPTION "A rendszer leállítása"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A rendszer leállítását kezdeményezték. Kérjük mentse el az összes folyamatban lévő munkáját és jelentkezzen ki a munkamenetből. Minden nem mentett módosítás elvész.", -1, 38, 7, 135, 40
-    LTEXT "A rendszer ennyi idő múlva leáll:", -1, 38, 50, 90, 8
+    LTEXT "A rendszer leállítását kezdeményezték. Kérjük mentse el az összes folyamatban lévő munkáját és jelentkezzen ki a munkamenetből. Minden nem mentett módosítás elvész.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "A rendszer ennyi idő múlva leáll:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Üzenet:", -1, 38, 65, 135, 8
+    LTEXT "Üzenet:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -52,6 +52,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Hibernálás előkészítése..."
     IDS_SAVEYOURSETTINGS "Beállítások mentése..."
     IDS_REACTOSISSTARTINGUP "A ReactOS indul..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d nap"
 END

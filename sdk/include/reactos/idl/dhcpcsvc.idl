@@ -1,0 +1,61 @@
+/*
+ * DHCP Client service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle] wchar_t *PDHCP_SERVER_NAME;
+
+[
+    uuid(4D5839D6-01BC-559C-B2EC-7DF12EC1B7E6),
+    version(0.0),
+    pointer_default(unique),
+#ifdef __midl
+    ms_union,
+#endif
+    endpoint("ncacn_np:[\\pipe\\dhcpcsvc]")
+#ifndef __midl
+    ,explicit_handle
+#endif
+]
+interface dhcpcsvc
+{
+    /* Function 0 */
+    DWORD
+    __stdcall
+    AcquireParameters(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName,
+        [in, string] LPWSTR AdapterName);
+
+    /* Function 1 */
+    DWORD
+    __stdcall
+    ReleaseParameters(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName,
+        [in, string] LPWSTR AdapterName);
+
+    /* Function 2 */
+    DWORD
+    __stdcall
+    QueryHWInfo(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName,
+        [in] DWORD AdapterIndex,
+        [out] PDWORD MediaType,
+        [out] PDWORD Mtu,
+        [out] PDWORD Speed);
+
+    /* Function 3 */
+    DWORD
+    __stdcall
+    StaticRefreshParams(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName,
+        [in] DWORD AdapterIndex,
+        [in] DWORD Address,
+        [in] DWORD Netmask);
+
+    /* Function 4 */
+    DWORD
+    __stdcall
+    RemoveDNSRegistrations(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName);
+}

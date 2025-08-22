@@ -31,62 +31,121 @@ typedef struct
     BOOL expandPathOut2;
 } TEST_SHELL_LINK_DEF;
 
-static TEST_SHELL_LINK_DEF linkTestList[] =
+static TEST_SHELL_LINK_DEF linkTestList_WS03[] =
 {
     {
-        L"%comspec%",                                 S_OK,
-        L"%comspec%",             SLGP_SHORTPATH,     S_OK, TRUE,
-        L"%comspec%",             SLGP_RAWPATH,       S_OK, FALSE
+        L"%comspec%",                                                 S_OK,
+        L"%comspec%",                                 SLGP_SHORTPATH, S_OK, TRUE,
+        L"%comspec%",                                 SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"%anyvar%",                                  E_INVALIDARG,
-        L"",                      SLGP_SHORTPATH,     S_FALSE, FALSE,
-        L"",                      SLGP_RAWPATH,       S_FALSE, FALSE
+        L"%anyvar%",                                                  E_INVALIDARG,
+        L"",                                          SLGP_SHORTPATH, S_FALSE, FALSE,
+        L"",                                          SLGP_RAWPATH,   S_FALSE, FALSE
     },
     {
-        L"%anyvar%%comspec%",                         S_OK,
-        L"c:\\%anyvar%%comspec%", SLGP_SHORTPATH,     S_OK, TRUE,
-        L"%anyvar%%comspec%",     SLGP_RAWPATH,       S_OK, FALSE
+        L"%anyvar%%comspec%",                                         S_OK,
+        L"c:\\%anyvar%%comspec%",                     SLGP_SHORTPATH, S_OK, TRUE,
+        L"%anyvar%%comspec%",                         SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"%temp%",                                    S_OK,
-        L"%temp%",                SLGP_SHORTPATH,     S_OK, TRUE,
-        L"%temp%",                SLGP_RAWPATH,       S_OK, FALSE
+        L"%temp%",                                                    S_OK,
+        L"%temp%",                                    SLGP_SHORTPATH, S_OK, TRUE,
+        L"%temp%",                                    SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"%shell%",                                   S_OK,
-        L"%systemroot%\\system32\\%shell%",    SLGP_SHORTPATH,     S_OK, TRUE,
-        L"%shell%",               SLGP_RAWPATH,       S_OK, FALSE
+        L"%shell%",                                                   S_OK,
+        L"%systemroot%\\system32\\%shell%",           SLGP_SHORTPATH, S_OK, TRUE,
+        L"%shell%",                                   SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"u:\\anypath\\%anyvar%",                     S_OK,
-        L"u:\\anypath\\%anyvar%", SLGP_SHORTPATH,     S_OK, TRUE,
-        L"u:\\anypath\\%anyvar%", SLGP_RAWPATH,       S_OK, FALSE
+        L"u:\\anypath\\%anyvar%",                                     S_OK,
+        L"u:\\anypath\\%anyvar%",                     SLGP_SHORTPATH, S_OK, TRUE,
+        L"u:\\anypath\\%anyvar%",                     SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"c:\\temp",                                  S_OK,
-        L"c:\\temp",              SLGP_SHORTPATH,     S_OK, FALSE,
-        L"c:\\temp",              SLGP_RAWPATH,       S_OK, FALSE
+        L"c:\\temp",                                                  S_OK,
+        L"c:\\temp",                                  SLGP_SHORTPATH, S_OK, FALSE,
+        L"c:\\temp",                                  SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"cmd.exe",                                  S_OK,
-        L"%comspec%",             SLGP_SHORTPATH,    S_OK,  TRUE,
-        L"%comspec%",             SLGP_RAWPATH,      S_OK,  TRUE
+        L"cmd.exe",                                                   S_OK,
+        L"%comspec%",                                 SLGP_SHORTPATH, S_OK, TRUE,
+        L"%comspec%",                                 SLGP_RAWPATH,   S_OK, TRUE
     },
     {
-        L"%systemroot%\\non-existent-file", S_OK,
-        L"%systemroot%\\non-existent-file", SLGP_SHORTPATH, S_OK, TRUE,
-        L"%systemroot%\\non-existent-file", SLGP_RAWPATH,   S_OK, FALSE
+        L"%systemroot%\\non-existent-file",                           S_OK,
+        L"%systemroot%\\non-existent-file",           SLGP_SHORTPATH, S_OK, TRUE,
+        L"%systemroot%\\non-existent-file",           SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"c:\\non-existent-path\\non-existent-file", S_OK,
-        L"c:\\non-existent-path\\non-existent-file", SLGP_SHORTPATH, S_OK, FALSE,
-        L"c:\\non-existent-path\\non-existent-file", SLGP_RAWPATH,   S_OK, FALSE
+        L"c:\\non-existent-path\\non-existent-file",                  S_OK,
+        L"c:\\non-existent-path\\non-existent-file",  SLGP_SHORTPATH, S_OK, FALSE,
+        L"c:\\non-existent-path\\non-existent-file",  SLGP_RAWPATH,   S_OK, FALSE
     },
     {
-        L"non-existent-file",                        E_INVALIDARG,
-        L"",                      SLGP_SHORTPATH,    S_FALSE, FALSE,
-        L"",                      SLGP_RAWPATH,      S_FALSE, FALSE
+        L"non-existent-file",                                         E_INVALIDARG,
+        L"",                                          SLGP_SHORTPATH, S_FALSE, FALSE,
+        L"",                                          SLGP_RAWPATH,   S_FALSE, FALSE
+    },
+};
+
+static TEST_SHELL_LINK_DEF linkTestList_Vista[] =
+{
+    {
+        L"%comspec%",                                                 S_OK,
+        L"%comspec%",                                 SLGP_SHORTPATH, S_OK, TRUE,
+        L"%comspec%",                                 SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"%anyvar%",                                                  S_OK,
+        L"%USERPROFILE%\\Desktop\\%anyvar%",          SLGP_SHORTPATH, S_OK, TRUE,
+        L"%USERPROFILE%\\Desktop\\%anyvar%",          SLGP_RAWPATH,   S_OK, TRUE
+    },
+    {
+        L"%anyvar%%comspec%",                                         E_INVALIDARG,
+        L"",                                          SLGP_SHORTPATH, S_FALSE, TRUE,
+        L"%anyvar%%comspec%",                         SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"%temp%",                                                    S_OK,
+        L"%temp%",                                    SLGP_SHORTPATH, S_OK, TRUE,
+        L"%temp%",                                    SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"%shell%",                                                   S_OK,
+        L"%systemroot%\\system32\\%shell%",           SLGP_SHORTPATH, S_OK, TRUE,
+        L"%shell%",                                   SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"u:\\anypath\\%anyvar%",                                     S_OK,
+        L"u:\\anypath\\%anyvar%",                     SLGP_SHORTPATH, S_OK, TRUE,
+        L"u:\\anypath\\%anyvar%",                     SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"c:\\temp",                                                  S_OK,
+        L"c:\\temp",                                  SLGP_SHORTPATH, S_OK, FALSE,
+        L"c:\\temp",                                  SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"cmd.exe",                                                   S_OK,
+        L"%comspec%",                                 SLGP_SHORTPATH, S_OK,  TRUE,
+        L"%comspec%",                                 SLGP_RAWPATH,   S_OK,  TRUE
+    },
+    {
+        L"%systemroot%\\non-existent-file",                           S_OK,
+        L"%systemroot%\\non-existent-file",           SLGP_SHORTPATH, S_OK, TRUE,
+        L"%systemroot%\\non-existent-file",           SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"c:\\non-existent-path\\non-existent-file",                  S_OK,
+        L"c:\\non-existent-path\\non-existent-file",  SLGP_SHORTPATH, S_OK, FALSE,
+        L"c:\\non-existent-path\\non-existent-file",  SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
+        L"non-existent-file",                                         S_OK,
+        L"%USERPROFILE%\\Desktop\\non-existent-file", SLGP_SHORTPATH, S_OK, TRUE,
+        L"%USERPROFILE%\\Desktop\\non-existent-file", SLGP_RAWPATH,   S_OK, TRUE
     },
 };
 
@@ -158,15 +217,27 @@ static
 VOID
 TestShellLink(void)
 {
-    UINT i;
+    UINT i, TestListCnt;
+    TEST_SHELL_LINK_DEF* Test;
 
     /* Needed for test */
     SetEnvironmentVariableW(L"shell", L"cmd.exe");
 
-    for (i = 0; i < _countof(linkTestList); ++i)
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
     {
-        DPRINT("IShellLink-Test(%d): %S\n", i, linkTestList[i].pathIn);
-        test_checklinkpath(i, &linkTestList[i]);
+        Test = linkTestList_WS03;
+        TestListCnt = _countof(linkTestList_WS03);
+    }
+    else
+    {
+        Test = linkTestList_Vista;
+        TestListCnt = _countof(linkTestList_Vista);
+    }
+
+    for (i = 0; i < TestListCnt; ++i)
+    {
+        DPRINT("IShellLink-Test(%d): %S\n", i, Test[i].pathIn);
+        test_checklinkpath(i, &Test[i]);
     }
 
     SetEnvironmentVariableW(L"shell",NULL);

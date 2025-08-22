@@ -180,6 +180,16 @@ static const struct _StaticInvokeCommandMap_
     { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
 
+PCSTR MapFcidmCmdToVerb(_In_ UINT_PTR CmdId)
+{
+    for (SIZE_T i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
+    {
+        if (g_StaticInvokeCmdMap[i].IntVerb == CmdId && CmdId)
+            return g_StaticInvokeCmdMap[i].szStringVerb;
+    }
+    return NULL;
+}
+
 UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
 {
     for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
@@ -289,7 +299,7 @@ class CDefaultContextMenu :
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
         CComPtr<IDataObject> m_pDataObj;
-        HKEY* m_aKeys;
+        HKEY m_aKeys[16]; // This limit is documented for both the old API and for DEFCONTEXTMENU
         UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
@@ -377,8 +387,7 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_cidl(0),
     m_apidl(NULL),
     m_pDataObj(NULL),
-    m_aKeys(NULL),
-    m_cKeys(NULL),
+    m_cKeys(0),
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
     m_iIdQCMFirst(0),
@@ -407,7 +416,6 @@ CDefaultContextMenu::~CDefaultContextMenu()
 
     for (UINT i = 0; i < m_cKeys; i++)
         RegCloseKey(m_aKeys[i]);
-    HeapFree(GetProcessHeap(), 0, m_aKeys);
 
     if (m_pidlFolder)
         CoTaskMemFree(m_pidlFolder);
@@ -418,6 +426,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
 {
     TRACE("cidl %u\n", pdcm->cidl);
 
+    HRESULT hr = S_OK;
     if (!pdcm->pcmcb && !lpfn)
     {
         ERR("CDefaultContextMenu needs a callback!\n");
@@ -433,13 +442,14 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
     m_pfnmcb = lpfn;
     m_hwnd = pdcm->hwnd;
 
-    m_cKeys = pdcm->cKeys;
-    if (pdcm->cKeys)
+    for (UINT i = 0; i < pdcm->cKeys; ++i)
     {
-        m_aKeys = (HKEY*)HeapAlloc(GetProcessHeap(), 0, sizeof(HKEY) * pdcm->cKeys);
-        if (!m_aKeys)
-            return E_OUTOFMEMORY;
-        memcpy(m_aKeys, pdcm->aKeys, sizeof(HKEY) * pdcm->cKeys);
+        if (i >= _countof(m_aKeys))
+            hr = E_INVALIDARG;
+        else if ((m_aKeys[i] = SHRegDuplicateHKey(pdcm->aKeys[i])) != NULL)
+            m_cKeys++;
+        else
+            hr = E_OUTOFMEMORY;
     }
 
     m_psf->GetUIObjectOf(pdcm->hwnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &m_pDataObj));
@@ -459,7 +469,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
         TRACE("pidlFolder %p\n", m_pidlFolder);
     }
 
-    return S_OK;
+    return hr;
 }
 
 HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam)
@@ -1005,7 +1015,7 @@ CDefaultContextMenu::QueryContextMenu(
             return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
 
         /* Add the default part of the menu */
-        HMENU hmenuDefault = LoadMenuW(_AtlBaseModule.GetResourceInstance(), L"MENU_SHV_FILE");
+        HMENU hmenuDefault = LoadMenuW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(MENU_SHV_FILE));
 
         /* Remove uneeded entries */
         if (!(rfg & SFGAO_CANMOVE))
@@ -1560,12 +1570,11 @@ CDefaultContextMenu::InvokeRegVerb(
             hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARG(IDropTarget, &pDT));
         if (SUCCEEDED(hr))
         {
+            CScopedSetObjectWithSite site(pDT, static_cast<IContextMenu*>(this));
             CComPtr<IPropertyBag> pPB;
             SHCreatePropertyBagOnRegKey(VerbKey, NULL, STGM_READ, IID_PPV_ARG(IPropertyBag, &pPB));
-            IUnknown_SetSite(pDT, static_cast<IContextMenu*>(this));
             IUnknown_InitializeCommand(pDT, pEntry->Verb.GetString(), pPB);
             hr = SHSimulateDrop(pDT, m_pDataObj, KeyState, pPtl, NULL);
-            IUnknown_SetSite(pDT, NULL);
             return hr;
         }
     }

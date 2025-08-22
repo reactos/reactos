@@ -1235,12 +1235,16 @@ typedef struct tagIMEUI
     DWORD dwLastStatus;
 } IMEUI, *PIMEUI;
 
-/* Window Extra data container. */
-typedef struct _IMEWND
+typedef struct tagIMEWND
 {
     WND wnd;
     PIMEUI pimeui;
 } IMEWND, *PIMEWND;
+
+#define GWLP_IMEWND_PIMEUI 0
+
+/* IMEWND and GWLP_IMEWND_PIMEUI assume this alignment */
+C_ASSERT(sizeof(WND) % sizeof(PVOID) == 0);
 
 DWORD
 NTAPI
@@ -3623,20 +3627,20 @@ NtUserGetMonitorInfo(
 HMONITOR
 NTAPI
 NtUserMonitorFromPoint(
-    IN POINT point,
-    IN DWORD dwFlags);
+    _In_ POINT point,
+    _In_ DWORD dwFlags);
 
 HMONITOR
 NTAPI
 NtUserMonitorFromRect(
-    IN LPCRECT pRect,
-    IN DWORD dwFlags);
+    _In_ LPCRECT pRect,
+    _In_ DWORD dwFlags);
 
 HMONITOR
 NTAPI
 NtUserMonitorFromWindow(
-    IN HWND hWnd,
-    IN DWORD dwFlags);
+    _In_ HWND hWnd,
+    _In_ DWORD dwFlags);
 
 typedef struct _SETSCROLLBARINFO
 {

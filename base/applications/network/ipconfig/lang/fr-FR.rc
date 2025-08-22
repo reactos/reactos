@@ -5,136 +5,144 @@
  * TRANSLATORS: Copyright 2006 Sylvain Petreolle <spetreolle@yahoo.fr>
  *              Copyright 2009 Amine Khaldi <amine.khaldi@reactos.org>
  *              Copyright 2009 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nReactOS IP Configuration\n\n"
-    IDS_HOSTNAME            "\tHost Name . . . . . . . . . . . . : %hs\n"
-    IDS_PRIMARYDNSSUFFIX    "\tPrimary DNS Suffix. . . . . . . . : %hs\n"
-    IDS_NODETYPEBCAST       "\tNode Type . . . . . . . . . . . . : Broadcast\n"
-    IDS_NODETYPEP2P         "\tNode Type . . . . . . . . . . . . : Peer To Peer\n"
-    IDS_NODETYPEMIXED       "\tNode Type . . . . . . . . . . . . : Mixte\n"
-    IDS_NODETYPEHYBRID      "\tNode Type . . . . . . . . . . . . : Hybride\n"
-    IDS_NODETYPEUNKNOWN     "\tNode Type . . . . . . . . . . . . : Inconnu\n"
-    IDS_IPROUTINGNO         "\tIP Routing Enabled. . . . . . . . : No\n"
-    IDS_IPROUTINGYES        "\tIP Routing Enabled. . . . . . . . : Yes\n"
-    IDS_WINSPROXYNO         "\tWINS Proxy enabled. . . . . . . . : No\n"
-    IDS_WINSPROXYYES        "\tWINS Proxy enabled. . . . . . . . : Yes\n"
-    IDS_DNSSUFFIXLIST       "\tDNS Suffix Search List. . . . . . : %hs\n"
+    IDS_HEADER "\nConfiguration IP de ReactOS\n\n"
+    IDS_HOSTNAME            "\tNom d'hôte. . . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYDNSSUFFIX    "\tSuffixe DNS Primaire. . . . . . . : %hs\n"
+    IDS_NODETYPEBCAST       "\tType de noeud . . . . . . . . . . : Broadcast\n"
+    IDS_NODETYPEP2P         "\tType de noeud . . . . . . . . . . : Pair-à-pair\n"
+    IDS_NODETYPEMIXED       "\tType de noeud . . . . . . . . . . : Mixte\n"
+    IDS_NODETYPEHYBRID      "\tType de noeud . . . . . . . . . . : Hybride\n"
+    IDS_NODETYPEUNKNOWN     "\tType de noeud . . . . . . . . . . : Inconnu\n"
+    IDS_IPROUTINGNO         "\tRoutage IP activé . . . . . . . . : Non\n"
+    IDS_IPROUTINGYES        "\tRoutage IP activé . . . . . . . . : Oui\n"
+    IDS_WINSPROXYNO         "\tProxy WINS activé . . . . . . . . : Non\n"
+    IDS_WINSPROXYYES        "\tProxy WINS activé . . . . . . . . : Oui\n"
+    IDS_DNSSUFFIXLIST       "\tListe de recherche de suffixe DNS : %hs\n"
     IDS_EMPTYLINE           "\t                                    %hs\n"
-    IDS_MEDIADISCONNECTED   "\tMedia State . . . . . . . . . . . : Media disconnected\n"
-    IDS_CONNECTIONDNSSUFFIX "\tConnection-specific DNS Suffix. . : %hs\n"
+    IDS_MEDIADISCONNECTED   "\tStatut du média . . . . . . . . . : Média déconnecté\n"
+    IDS_CONNECTIONDNSSUFFIX "\tSuffixe DNS pour la connexion . . : %hs\n"
     IDS_DESCRIPTION         "\tDescription . . . . . . . . . . . : "
-    IDS_PHYSICALADDRESS     "\tPhysical Address. . . . . . . . . : %hs\n"
-    IDS_DHCPNO              "\tDHCP Enabled. . . . . . . . . . . : No\n"
-    IDS_DHCPYES             "\tDHCP Enabled. . . . . . . . . . . : Yes\n"
-    IDS_AUTOCONFIGNO        "\tAutoconfiguration Enabled . . . . : No\n"
-    IDS_AUTOCONFIGYES       "\tAutoconfiguration Enabled . . . . : Yes\n"
-    IDS_IPADDRESS           "\tIP Address. . . . . . . . . . . . : %hs\n"
-    IDS_SUBNETMASK          "\tSubnet Mask . . . . . . . . . . . : %hs\n"
-    IDS_DEFAULTGATEWAY      "\tDefault Gateway . . . . . . . . . : %hs\n"
-    IDS_DHCPSERVER          "\tDHCP Server . . . . . . . . . . . : %hs\n"
-    IDS_DNSSERVERS          "\tDNS Servers . . . . . . . . . . . : %hs\n"
-    IDS_PRIMARYWINSSERVER   "\tPrimary WINS Server . . . . . . . : %hs\n"
-    IDS_SECONDARYWINSSERVER "\tSecondary WINS Server . . . . . . : %hs\n"
-    IDS_LEASEOBTAINED       "\tLease Obtained. . . . . . . . . . : %s\n"
-    IDS_LEASEEXPIRES        "\tLease Expires . . . . . . . . . . : %s\n"
+    IDS_PHYSICALADDRESS     "\tAdresse physique. . . . . . . . . : %hs\n"
+    IDS_DHCPNO              "\tDHCP activé . . . . . . . . . . . : Non\n"
+    IDS_DHCPYES             "\tDHCP activé . . . . . . . . . . . : Oui\n"
+    IDS_AUTOCONFIGNO        "\tConfiguration automatique activée : Non\n"
+    IDS_AUTOCONFIGYES       "\tConfiguration automatique activée : Oui\n"
+    IDS_IPADDRESS           "\tAdresse IPv4. . . . . . . . . . . : %hs\n"
+    IDS_SUBNETMASK          "\tMasque de sous-réseau . . . . . . : %hs\n"
+    IDS_DEFAULTGATEWAY      "\tPasserelle par défaut . . . . . . : %hs\n"
+    IDS_DHCPSERVER          "\tServeur DHCP. . . . . . . . . . . : %hs\n"
+    IDS_DNSSERVERS          "\tServeurs DNS. . . . . . . . . . . : %hs\n"
+    IDS_PRIMARYWINSSERVER   "\tServeur WINS primaire . . . . . . : %hs\n"
+    IDS_SECONDARYWINSSERVER "\tServeur WINS secondaire . . . . . : %hs\n"
+    IDS_LEASEOBTAINED       "\tBail obtenu . . . . . . . . . . . : %s\n"
+    IDS_LEASEEXPIRES        "\tBail expirant . . . . . . . . . . : %s\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_UNKNOWNADAPTER "\nUnknown Adapter: %ls\n\n"
-    IDS_OTHER "\nAutre Type d'adapteur: %ls\n\n"
-    IDS_ETH "\nAdapteur Ethernet: %ls\n\n"
-    IDS_TOKEN "\nAdapteur Token Ring: %ls\n\n"
-    IDS_FDDI "\nAdapteur FDDI: %ls\n\n"
-    IDS_PPP "\nAdapteur PPP: %ls\n\n"
-    IDS_LOOP "\nAdapteur Loopback: %ls\n\n"
-    IDS_SLIP "\nAdapteur SLIP: %ls\n\n"
-    IDS_WIFI "\nWireless Network Adapter: %ls\n\n"
+    IDS_UNKNOWNADAPTER "\nAdaptateur inconnu : %ls\n\n"
+    IDS_OTHER "\nAutre type d'adaptateur : %ls\n\n"
+    IDS_ETH "\nAdaptateur Ethernet : %ls\n\n"
+    IDS_TOKEN "\nAdaptateur Token Ring : %ls\n\n"
+    IDS_FDDI "\nAdaptateur FDDI : %ls\n\n"
+    IDS_PPP "\nAdaptateur PPP : %ls\n\n"
+    IDS_LOOP "\nAdaptateur Loopback : %ls\n\n"
+    IDS_SLIP "\nAdaptateur SLIP : %ls\n\n"
+    IDS_WIFI "\nAdaptateur réseau sans-fil : %ls\n\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_DNSNAME              "\t%ls\n"
     IDS_DNSLINE              "\t----------------------------------------\n"
-    IDS_DNSRECORDNAME        "\tRecord Name . . . . . : %ls\n"
-    IDS_DNSRECORDTYPE        "\tRecord Type . . . . . : %hu\n"
-    IDS_DNSRECORDTTL         "\tTime To Live. . . . . : %lu\n"
-    IDS_DNSRECORDLENGTH      "\tData Length . . . . . : %hu\n"
-    IDS_DNSSECTIONQUESTION   "\tSection . . . . . . . : Question\n"
-    IDS_DNSSECTIONANSWER     "\tSection . . . . . . . : Answer\n"
-    IDS_DNSSECTIONAUTHORITY  "\tSection . . . . . . . : Authority\n"
-    IDS_DNSSECTIONADDITIONAL "\tSection . . . . . . . : Additional\n"
-    IDS_DNSTYPEA             "\tA (Host) Record . . . : %ls\n"
-    IDS_DNSTYPENS            "\tNS Record . . . . . . : %ls\n"
-    IDS_DNSTYPECNAME         "\tCNAME Record. . . . . : %ls\n"
-    IDS_DNSTYPESOA1          "\tSOA Record. . . . . . : %ls\n\t                        %ls\n\t                        %lu\n"
-    IDS_DNSTYPESOA2          "\t                        %lu\n\t                        %lu\n\t                        %lu\n\t                        %lu\n"
-    IDS_DNSTYPEPTR           "\tPTR Record. . . . . . : %ls\n"
-    IDS_DNSTYPEMX            "\tMX Record . . . . . . : %ls\n\t                        %hu\n\t                        %hu\n"
-    IDS_DNSTYPEAAAA          "\tAAAA Record . . . . . : %ls\n"
-    IDS_DNSTYPEATMA          "\tATMA Record . . . . . : \n"
-    IDS_DNSTYPESRV           "\tSRV Record. . . . . . : %ls\n\t                        %hu\n\t                        %hu\n\t                        %hu\n"
+    IDS_DNSRECORDNAME        "\tNom d'enregistrement. . : %ls\n"
+    IDS_DNSRECORDTYPE        "\tType d'enregistrement . : %hu\n"
+    IDS_DNSRECORDTTL         "\tDurée de vie. . . . . . : %lu\n"
+    IDS_DNSRECORDLENGTH      "\tTaille des données. . . : %hu\n"
+    IDS_DNSSECTIONQUESTION   "\tSection . . . . . . . . : Question\n"
+    IDS_DNSSECTIONANSWER     "\tSection . . . . . . . . : Réponse\n"
+    IDS_DNSSECTIONAUTHORITY  "\tSection . . . . . . . . : Autorité\n"
+    IDS_DNSSECTIONADDITIONAL "\tSection . . . . . . . . : Additionnel\n"
+    IDS_DNSTYPEA             "\tEnregistrement A (Hôte) : %ls\n"
+    IDS_DNSTYPENS            "\tEnregistrement NS . . . : %ls\n"
+    IDS_DNSTYPECNAME         "\tEnregistrement CNAME. . : %ls\n"
+    IDS_DNSTYPESOA1          "\tEnregistrement SOA. . . : %ls\n\t                          %ls\n\t                          %lu\n"
+    IDS_DNSTYPESOA2          "\t                          %lu\n\t                          %lu\n\t                          %lu\n\t                          %lu\n"
+    IDS_DNSTYPEPTR           "\tEnregistrement PTR. . . : %ls\n"
+    IDS_DNSTYPEMX            "\tEnregistrement MX . . . : %ls\n\t                          %hu\n\t                          %hu\n"
+    IDS_DNSTYPEAAAA          "\tEnregistrement AAAA . . : %ls\n"
+    IDS_DNSTYPEATMA          "\tEnregistrement ATMA . . : \n"
+    IDS_DNSTYPESRV           "\tEnregistrement SRV. . . : %ls\n\t                          %hu\n\t                          %hu\n\t                          %hu\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DNSNORECORD         "\tNo records of type %ls\n\n"
-    IDS_DNSNONAME           "\tName does not exist.\n\n"
-    IDS_DNSFLUSHERROR       "Could not flush the DNS Resolver Cache: "
-    IDS_DNSFLUSHSUCCESS     "Successfully flushed the DNS Resolver Cache.\n"
-    IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
-    IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
-    IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
-    IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
-    IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DNSNORECORD         "\tAucun enregistrement de type %ls\n\n"
+    IDS_DNSNONAME           "\tLe nom n'existe pas.\n\n"
+    IDS_DNSFLUSHERROR       "Impossible de vider le cache de résolution DNS : "
+    IDS_DNSFLUSHSUCCESS     "Le cache de résolution DNS a été vidé avec succès.\n"
+    IDS_DHCPNOTCONNECTED    "Aucune opération n'est possible sur %ls tant que son média est déconnecté.\n"
+    IDS_DHCPNOTENABLED      "L'adaptateur %ls n'est pas activé pour le DHCP.\n"
+    IDS_DHCPNOADAPTER       "L'opération a échoué car aucun adaptateur n'est dans l'état autorisé\npour cette opération.\n"
+    IDS_DHCPRELEASED        "L'adresse IP de l'adaptateur %ls a déjà été libérée.\n"
+    IDS_DHCPRELEASEERROR    "Une erreur est survenue lors de la libération de l'interface %ls : "
+    IDS_DHCPRENEWERROR      "Une erreur est survenue lors du renouvellement de l'interface %ls : "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nUSAGE:\n\
-        ipconfig [/? | /all | /renew [adapteur] | /release [adapteur] |\n\
-                  /flushdns | /displaydns | /registerdns |\n\
-                  /showclassid adapteur |\n\
-                  /setclassid adapteur [classid] ]\n\
+"\nUTILISATION :\n\
+    ipconfig [/? | /all | /renew [adaptateur] | /release [adaptateur] |\n\
+              /flushdns | /displaydns | /registerdns |\n\
+              /showclassid adaptateur |\n\
+              /setclassid adaptateur [classid] ]\n\
 \n\
-    où\n\
-        adapteur         Nom de Connection\n\
-                       (jokers * et ? autorisés, voir les exemples)\n\
+    où :\n\
+    adaptateur      Nom de connexion\n\
+                    (jokers * et ? autorisés, voir les exemples)\n\
 \n\
-        Options:\n\
-           /?           Affiche ce message d'aide\n\
-           /all         Affiche toutes les information de configuration.\n\
-           /release     Libère l'addresse IP pour l'adapteur spécifié.\n\
-           /renew       Renouvelle l'addresse IP pour l'adapteur spécifié.\n\
-           /flushdns    Purge le cache de résolution DNS.\n\
-           /registerdns Renouvelle tous les baux DHCP et réenregistre les noms DNS.\n\
-           /displaydns  Affiche le contentu du cache de résolution DNS.\n\
-           /showclassid Affiche tous les class IDs dhcp alloués pour l'adapteur.\n\
-           /setclassid  Modifie le class id dhcp.\n\
+Options :\n\
+    /?              Affiche ce message d'aide.\n\
+    /all            Affiche toutes les information de configuration.\n\
+    /release        Libère l'adresse IPv4 pour l'adaptateur spécifié.\n\
+    /renew          Renouvelle l'adresse IPv4 pour l'adaptateur spécifié.\n\
+    /flushdns       Purge le cache de résolution DNS.\n\
+    /registerdns    Renouvelle tous les baux DHCP et réenregistre les noms\n\
+                    DNS.\n\
+    /displaydns     Affiche le contenu du cache de résolution DNS.\n\
+    /showclassid    Affiche tous les IDs de classe DHCP alloués pour\n\
+                    l'adaptateur.\n\
+    /setclassid     Modifie l'ID de classe DHCP.\n\
 \n\
-    L'action par défaut est d'afficher seulement l'addresse IP, le masque de\n\
-    sous réseau et la passerelle par défaut de chaque adapteur lié à TCP/IP.\n\
+L'action par défaut est d'afficher seulement l'adresse IP, le masque de\n\
+sous réseau et la passerelle par défaut de chaque adaptateur lié à TCP/IP.\n\
 \n\
-    Pour Release et Renew, si aucun nom d'adapteur n'est spécifié, les baux d'addresse IP\n\
-    pour tous les adapteurs liés à TCP/IP seront libérés ou renouvelés.\n\
+Pour Release et Renew, si aucun nom d'adaptateur n'est spécifié, les baux\n\
+d'adresse IP pour tous les adaptateurs liés à TCP/IP seront libérés ou\n\
+renouvelés.\n\
 \n\
-    Pour Setclassid, si aucun ClassId n'est spécifié, le ClassId existant est enlevé.\n\
+Pour Setclassid, si aucun ClassId n'est spécifié, le ClassId existant est\n\
+retiré.\n\
 \n\
-    Exemples:\n\
-        > ipconfig                   ... Affiche les informations.\n\
-        > ipconfig /all              ... Affiche les informations detaillées\n\
-        > ipconfig /renew            ... Renouvelle tous les adapteurs\n\
-        > ipconfig /renew EL*        ... Renouvelle toute connection dont le nom\n\
-                                         commence par EL\n\
-        > ipconfig /release *Con*    ... Libère toutes les connections concernées,\n\
-                                         ex. ""Connection au réseau local 1"" ou\n\
-                                             ""Connection au réseau local 2""\n"
+Exemples :\n\
+    > ipconfig                   ... Affiche les informations.\n\
+    > ipconfig /all              ... Affiche les informations detaillées\n\
+    > ipconfig /renew            ... Renouvelle tous les adaptateurs\n\
+    > ipconfig /renew EL*        ... Renouvelle toute connexion dont le nom\n\
+                                     commence par EL\n\
+    > ipconfig /release *Con*    ... Libère toutes les connexions concernées,\n\
+                                     par ex. ""Connexion au réseau local 1""\n\
+                                         ou  ""Connexion au réseau local 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

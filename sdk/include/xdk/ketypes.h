@@ -84,12 +84,16 @@ typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
   RelationCache,
   RelationProcessorPackage,
   RelationGroup,
+  RelationProcessorDie,
+  RelationNumaNodeEx,
+  RelationProcessorModule,
   RelationAll = 0xffff
 } LOGICAL_PROCESSOR_RELATIONSHIP;
 
 typedef struct _PROCESSOR_RELATIONSHIP {
   UCHAR Flags;
-  UCHAR Reserved[21];
+  UCHAR EfficiencyClass;
+  UCHAR Reserved[20];
   USHORT GroupCount;
   _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
 } PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
@@ -119,6 +123,54 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
     GROUP_RELATIONSHIP Group;
   } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;
+
+typedef enum _CPU_SET_INFORMATION_TYPE
+{
+    CpuSetInformation
+} CPU_SET_INFORMATION_TYPE, *PCPU_SET_INFORMATION_TYPE;
+
+_Struct_size_bytes_(Size)
+typedef struct _SYSTEM_CPU_SET_INFORMATION
+{
+    ULONG Size;
+    CPU_SET_INFORMATION_TYPE Type;
+    union
+    {
+        struct
+        {
+            ULONG Id;
+            USHORT Group;
+            UCHAR LogicalProcessorIndex;
+            UCHAR CoreIndex;
+            UCHAR LastLevelCacheIndex;
+            UCHAR NumaNodeIndex;
+            UCHAR EfficiencyClass;
+            union
+            {
+                UCHAR AllFlags;
+                struct
+                {
+                    UCHAR Parked : 1;
+                    UCHAR Allocated : 1;
+                    UCHAR AllocatedToTargetProcess : 1;
+                    UCHAR RealTime : 1;
+                    UCHAR ReservedFlags : 4;
+                } DUMMYSTRUCTNAME;
+            } DUMMYUNIONNAME2;
+            union
+            {
+                ULONG Reserved;
+                UCHAR SchedulingClass;
+            };
+            ULONG64 AllocationTag;
+        } CpuSet;
+    } DUMMYUNIONNAME;
+} SYSTEM_CPU_SET_INFORMATION, *PSYSTEM_CPU_SET_INFORMATION;
+
+#define SYSTEM_CPU_SET_INFORMATION_PARKED 0x1
+#define SYSTEM_CPU_SET_INFORMATION_ALLOCATED 0x2
+#define SYSTEM_CPU_SET_INFORMATION_ALLOCATED_TO_TARGET_PROCESS 0x4
+#define SYSTEM_CPU_SET_INFORMATION_REALTIME 0x8
 
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA       0
@@ -964,10 +1016,12 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
   ULONG Cr0NpxState;
 #endif
 } XSAVE_FORMAT, *PXSAVE_FORMAT;
+typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 typedef struct DECLSPEC_ALIGN(8) _XSAVE_AREA_HEADER {
   ULONG64 Mask;
-  ULONG64 Reserved[7];
+  ULONG64 CompactionMask;
+  ULONG64 Reserved2[6];
 } XSAVE_AREA_HEADER, *PXSAVE_AREA_HEADER;
 
 typedef struct DECLSPEC_ALIGN(16) _XSAVE_AREA {
@@ -1137,6 +1191,75 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 
 $endif (_NTDDK_)
 $if (_NTDDK_ || _WINNT_)
+
+typedef union _ARM64_NT_NEON128
+{
+    struct
+    {
+        ULONGLONG Low;
+        LONGLONG High;
+    } DUMMYSTRUCTNAME;
+    double D[2];
+    float S[4];
+    USHORT H[8];
+    UCHAR B[16];
+} ARM64_NT_NEON128, *PARM64_NT_NEON128;
+
+#define ARM64_MAX_BREAKPOINTS 8
+#define ARM64_MAX_WATCHPOINTS 2
+
+typedef struct DECLSPEC_ALIGN(16) DECLSPEC_NOINITALL _ARM64_NT_CONTEXT
+{
+    ULONG ContextFlags;
+    ULONG Cpsr;
+    union
+    {
+        struct
+        {
+            ULONG64 X0;
+            ULONG64 X1;
+            ULONG64 X2;
+            ULONG64 X3;
+            ULONG64 X4;
+            ULONG64 X5;
+            ULONG64 X6;
+            ULONG64 X7;
+            ULONG64 X8;
+            ULONG64 X9;
+            ULONG64 X10;
+            ULONG64 X11;
+            ULONG64 X12;
+            ULONG64 X13;
+            ULONG64 X14;
+            ULONG64 X15;
+            ULONG64 X16;
+            ULONG64 X17;
+            ULONG64 X18;
+            ULONG64 X19;
+            ULONG64 X20;
+            ULONG64 X21;
+            ULONG64 X22;
+            ULONG64 X23;
+            ULONG64 X24;
+            ULONG64 X25;
+            ULONG64 X26;
+            ULONG64 X27;
+            ULONG64 X28;
+            ULONG64 Fp;
+            ULONG64 Lr;
+        } DUMMYSTRUCTNAME;
+        ULONG64 X[31];
+    } DUMMYUNIONNAME;
+    ULONG64 Sp;
+    ULONG64 Pc;
+    ARM64_NT_NEON128 V[32];
+    ULONG Fpcr;
+    ULONG Fpsr;
+    ULONG Bcr[ARM64_MAX_BREAKPOINTS];
+    ULONG64 Bvr[ARM64_MAX_BREAKPOINTS];
+    ULONG Wcr[ARM64_MAX_WATCHPOINTS];
+    ULONG64 Wvr[ARM64_MAX_WATCHPOINTS];
+} ARM64_NT_CONTEXT, *PARM64_NT_CONTEXT;
 
 #define XSTATE_LEGACY_FLOATING_POINT        0
 #define XSTATE_LEGACY_SSE                   1

@@ -4,7 +4,7 @@
  * PURPOSE:     Tests for shim-database api's
  * COPYRIGHT:   Copyright 2012 Detlef Riekenberg
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2025 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #include <ntstatus.h>
@@ -121,15 +121,16 @@
 #define TAG_DATA_BITS (0x5 | TAG_TYPE_BINARY)
 #define TAG_DATABASE_ID (0x7 | TAG_TYPE_BINARY)
 
+#define DB_INFO_FLAGS_VALID_GUID 1
 
 typedef struct _DB_INFORMATION
 {
-    DWORD dwSomething;
+    DWORD dwFlags;
     DWORD dwMajor;
     DWORD dwMinor;
     LPCWSTR Description;
     GUID Id;
-    /* Win10+ has an extra field here */
+    DWORD dwRuntimePlatform;
 } DB_INFORMATION, *PDB_INFORMATION;
 
 
@@ -206,7 +207,7 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
     ok(fResult, "SdbGetDatabaseInformation failed\n");
     if (fResult)
     {
-        ok_int(pInfo->dwSomething, 0);
+        ok_int(pInfo->dwFlags, 0);
         ok(IsEqualGUID(GUID_NULL, pInfo->Id), "expected guid to be empty(%s)\n", wine_dbgstr_guid(&pInfo->Id));
         ok(pInfo->Description == NULL, "Expected pInfo->Description to be NULL, was %s\n", wine_dbgstr_w(pInfo->Description));
 
@@ -216,7 +217,7 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
             ok(pInfo->dwMajor == 3, "Expected pInfo->dwMajor to be 3, was: %d\n", pInfo->dwMajor);
             ok(pInfo->dwMinor == 0, "Expected pInfo->dwMinor to be 0, was: %d\n", pInfo->dwMinor);
 
-            ok(pInfo[1].dwSomething == 0 || pInfo[1].dwSomething == 0xdededede, "Something amiss: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo[1].dwFlags == 0 || pInfo[1].dwFlags == 0xdededede, "Something amiss: 0x%x\n", pInfo[1].dwFlags);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
         else
@@ -234,7 +235,7 @@ static void test_GetDatabaseInformationEmpty(PDB pdb)
                 ok(pInfo->dwMinor == dwExpect, "Expected pInfo->dwMinor to be %d, was: %d\n", dwExpect, pInfo->dwMinor);
             }
 
-            ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo[1].dwFlags == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwFlags);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
 
@@ -346,7 +347,7 @@ static void test_Sdb(void)
 
         ok(pSdbReadStringTag(pdb, tagid, buffer, 6), "failed to write string to buffer\n");
         /* [Err ][SdbpReadTagData     ] Buffer too small. Avail: 6, Need: 10. */
-        ok(!pSdbReadStringTag(pdb, tagid, buffer, 3), "string was written to buffer, but failure was expected");
+        ok(pSdbReadStringTag(pdb, tagid, buffer, 3) == FALSE, "string was written to buffer, but failure was expected");
         ok(pSdbGetTagDataSize(pdb, tagid) == 5 * sizeof(WCHAR), "string has unexpected size\n");
 
         tagid = pSdbGetNextChild(pdb, ptagid, tagid);
@@ -497,7 +498,7 @@ static void test_write_ex(void)
     ptr = pSdbGetStringTagPtr(pdb, tagstr);
     ok(ptr != NULL, "Expected a valid pointer\n");
     if (ptr)
-        ok(!wcscmp(ptr, test1), "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test1), wine_dbgstr_w(ptr));
+        ok(wcscmp(ptr, test1) == 0, "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test1), wine_dbgstr_w(ptr));
 
     tagstr = pSdbGetNextChild(pdb, tagdb, tagstr);
     ok(tagstr == 70, "Expected string tag to be 70, was %u\n", tagstr);
@@ -508,7 +509,7 @@ static void test_write_ex(void)
     ptr = pSdbGetStringTagPtr(pdb, tagstr);
     ok(ptr != NULL, "Expected a valid pointer\n");
     if (ptr)
-        ok(!wcscmp(ptr, test2), "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test2), wine_dbgstr_w(ptr));
+        ok(wcscmp(ptr, test2) == 0, "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test2), wine_dbgstr_w(ptr));
 
     pSdbCloseDatabase(pdb);
 }
@@ -1066,7 +1067,7 @@ static void test_GetDatabaseInformation(PDB pdb)
     ok(fResult, "SdbGetDatabaseInformation failed\n");
     if (fResult)
     {
-        ok_int(pInfo->dwSomething, 1);
+        ok_int(pInfo->dwFlags, DB_INFO_FLAGS_VALID_GUID);
         ok(IsEqualGUID(GUID_DATABASE_TEST, pInfo->Id), "expected guids to be equal(%s:%s)\n",
            wine_dbgstr_guid(&GUID_DATABASE_TEST), wine_dbgstr_guid(&pInfo->Id));
         ok(wcscmp(pInfo->Description, L"apphelp_test1") == 0,
@@ -1078,7 +1079,8 @@ static void test_GetDatabaseInformation(PDB pdb)
             ok(pInfo->dwMajor == 3, "Expected pInfo->dwMajor to be 3, was: %d\n", pInfo->dwMajor);
             ok(pInfo->dwMinor == 0, "Expected pInfo->dwMinor to be 0, was: %d\n", pInfo->dwMinor);
 
-            ok(pInfo[1].dwSomething == 4 || pInfo[1].dwSomething == 0xdededede, "Something amiss: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo->dwRuntimePlatform == 4 || pInfo->dwRuntimePlatform == 0xdededede, "Something amiss: 0x%x\n",
+               pInfo->dwRuntimePlatform);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
         else
@@ -1086,7 +1088,7 @@ static void test_GetDatabaseInformation(PDB pdb)
             ok(pInfo->dwMajor == 2, "Expected pInfo->dwMajor to be 2, was: %d\n", pInfo->dwMajor);
             ok(pInfo->dwMinor == 1, "Expected pInfo->dwMinor to be 1, was: %d\n", pInfo->dwMinor);
 
-            ok(pInfo[1].dwSomething == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo[1].dwSomething);
+            ok(pInfo->dwRuntimePlatform == 0xdededede, "Cookie1 corrupt: 0x%x\n", pInfo->dwRuntimePlatform);
             ok(pInfo[1].dwMajor == 0xdededede, "Cookie2 corrupt: 0x%x\n", pInfo[1].dwMajor);
         }
 
@@ -1123,7 +1125,7 @@ static void test_CheckDatabaseManually(void)
     ret = pSdbGetDatabaseVersion(NULL, &ver_hi, &ver_lo);
     if (g_WinVersion >= WINVER_WIN10)
     {
-        ok(!ret, "Expected SdbGetDatabaseVersion to fail\n");
+        ok(ret == FALSE, "Expected SdbGetDatabaseVersion to fail\n");
         ok(ver_hi == 0, "Expected ver_hi to be 0, was: 0x%x\n", ver_hi);
         ok(ver_lo == 0, "Expected ver_lo to be 0, was: 0x%x\n", ver_lo);
     }
@@ -1138,7 +1140,7 @@ static void test_CheckDatabaseManually(void)
     ret = pSdbGetDatabaseVersion(path + 1, &ver_hi, &ver_lo);
     if (g_WinVersion >= WINVER_WIN10)
     {
-        ok(!ret, "Expected SdbGetDatabaseVersion to fail\n");
+        ok(ret == FALSE, "Expected SdbGetDatabaseVersion to fail\n");
         ok(ver_hi == 0, "Expected ver_hi to be 0, was: 0x%x\n", ver_hi);
         ok(ver_lo == 0, "Expected ver_lo to be 0, was: 0x%x\n", ver_lo);
     }
@@ -1214,7 +1216,6 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
     TAGID tagid;
     TAGREF trApphelp;
     DWORD expect_flags = 0, adwExeFlags_0, exe_count;
-    UNICODE_STRING exenameNT;
 
     memset(&query, 0xab, sizeof(query));
 
@@ -1361,7 +1362,9 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
     ok(tagid == 0, "Expected tagid to be set to 0, was: 0x%x\n", tagid);
 
 
-
+#if 0
+    UNICODE_STRING exenameNT;
+    // In Win10 this does seem to work sometimes, so disable it for now
     if (RtlDosPathNameToNtPathName_U(exename, &exenameNT, NULL, NULL))
     {
         /*
@@ -1369,10 +1372,11 @@ static void test_mode_generic(const WCHAR* workdir, HSDB hsdb, size_t cur)
         ERROR,AslPathBuildSignatureLongpath,1086,AslPathGetLongFileNameLongpath failed for \??\C:\Users\MARK~1.DEV\AppData\Local\Temp\apphelp_test\test_allow.exe [c0000001]
         */
         ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
-        ok(!ret, "SdbGetMatchingExe should not succeed for %d.\n", cur);
+        ok(ret == FALSE, "SdbGetMatchingExe should not succeed for %d.\n", cur);
 
         RtlFreeUnicodeString(&exenameNT);
     }
+#endif
 
     if (test_exedata[cur].extra_file)
         DeleteFileW(testfile);
@@ -1523,7 +1527,7 @@ static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
             if (Succeed)
                 ok(ret, "SdbGetMatchingExe should not fail for %s.\n", wine_dbgstr_w(TestName));
             else
-                ok(!ret, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
+                ok(ret == FALSE, "SdbGetMatchingExe should not succeed for %s.\n", wine_dbgstr_w(TestName));
 
             ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %s\n", exe_count, query.dwExeCount, wine_dbgstr_w(TestName));
         }
@@ -2125,15 +2129,11 @@ START_TEST(db)
     *(void**)&pSdbGetDatabaseInformation = (void *)GetProcAddress(hdll, "SdbGetDatabaseInformation");
     *(void**)&pSdbFreeDatabaseInformation = (void *)GetProcAddress(hdll, "SdbFreeDatabaseInformation");
 
-#ifndef _M_IX86
-    skip("FIXME: We need a new db test for non-x86!\n");
-    return;
-#endif
-
     test_Sdb();
     test_write_ex();
     test_stringtable();
     test_CheckDatabaseManually();
+#ifdef _M_IX86
     switch (validate_SDBQUERYRESULT_size())
     {
     case 1:
@@ -2148,6 +2148,9 @@ START_TEST(db)
         skip("Skipping tests with SDBQUERYRESULT due to a wrong size reported\n");
         break;
     }
+#else
+    skip("FIXME: We need a new db test for non-x86!\n");
+#endif
     test_TagRef();
     test_Data();
     skip("test_SecondaryDB()\n");

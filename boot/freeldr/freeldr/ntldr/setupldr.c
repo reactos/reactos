@@ -15,6 +15,17 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
+/* Architecture name suffixes for architecture-specific INF sections */
+#if defined(_M_IX86)
+#define INF_ARCH "x86"
+#elif defined(_M_AMD64)
+#define INF_ARCH "amd64"
+#elif defined(_M_ARM)
+#define INF_ARCH "arm"
+#elif defined(_M_ARM64)
+#define INF_ARCH "arm64"
+#endif
+
 // TODO: Move to .h
 VOID
 AllocateAndInitLPB(
@@ -143,14 +154,20 @@ SetupLdrScanBootDrivers(
     INFCONTEXT InfContext, dirContext;
     PCSTR Media, DriverName, dirIndex, ImagePath;
     BOOLEAN Success;
+    UINT8 Pass;
     WCHAR ImagePathW[MAX_PATH];
     WCHAR DriverNameW[256];
 
     UNREFERENCED_PARAMETER(SearchPath);
 
-    /* Open INF section */
-    if (!InfFindFirstLine(InfHandle, "SourceDisksFiles", NULL, &InfContext))
-        goto Quit;
+    /* Open the INF section, first the optional platform-specific one,
+     * then the generic section */
+    for (Pass = 0; Pass <= 1; ++Pass)
+    {
+    PCSTR pFilesSection[] = {"SourceDisksFiles." INF_ARCH, "SourceDisksFiles"};
+
+    if (!InfFindFirstLine(InfHandle, pFilesSection[Pass], NULL, &InfContext))
+        continue;
 
     /* Load all listed boot drivers */
     do
@@ -159,7 +176,7 @@ SetupLdrScanBootDrivers(
             InfGetDataField(&InfContext, 0, &DriverName) &&
             InfGetDataField(&InfContext, 13, &dirIndex))
         {
-            if ((strcmp(Media, "x") == 0) &&
+            if ((strcmp(Media, "x") == 0) && // HACK: ReactOS-specific
                 InfFindFirstLine(InfHandle, "Directories", dirIndex, &dirContext) &&
                 InfGetDataField(&dirContext, 1, &ImagePath))
             {
@@ -167,7 +184,7 @@ SetupLdrScanBootDrivers(
                 RtlStringCbPrintfW(ImagePathW, sizeof(ImagePathW),
                                    L"%S\\%S", ImagePath, DriverName);
 
-                /* Convert name to unicode and remove .sys extension */
+                /* Convert name to Unicode and remove .sys extension */
                 RtlStringCbPrintfW(DriverNameW, sizeof(DriverNameW),
                                    L"%S", DriverName);
                 DriverNameW[wcslen(DriverNameW) - 4] = UNICODE_NULL;
@@ -188,8 +205,8 @@ SetupLdrScanBootDrivers(
             }
         }
     } while (InfFindNextLine(&InfContext, &InfContext));
+    } // for (Pass...)
 
-Quit:
     /* Finally, add the boot filesystem driver to the list */
     if (BootFileSystem)
     {

@@ -1,6 +1,6 @@
 /*
- * ReactOS German Ristome ASCII Keyboard layout
- * Copyright (C) 2008 ReactOS
+ * ReactOS German ASCII Keyboard layout
+ * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -36,25 +36,25 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, VK_OEM_6,     VK_BACK,
+  VK_OEM_4, VK_OEM_6,  VK_BACK,
   /* - 0f - */
   /* First Letters Row */
-  VK_TAB,       'Q',          'P',          'R',
-  'O',          'C',          'B',          'T',
-  'D',          'W',          'J',
-  VK_OEM_3,     VK_OEM_PLUS,     VK_RETURN,
+  VK_TAB,       'Q',          'W',          'E',
+  'R',          'T',          'Z',          'U',
+  'I',          'O',          'P',
+  VK_OEM_1,     VK_OEM_PLUS,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
   VK_LCONTROL,
-  'Z',          'L',          'A',          'N',
-  'I',          'U',          'E',          'H',
-  'S',          'F',          'Y',     VK_OEM_5,
+  'A',          'S',          'D',          'F',
+  'G',          'H',          'J',          'K',
+  'L',          VK_OEM_3,     VK_OEM_7,     VK_OEM_5,
   VK_LSHIFT,    VK_OEM_2,
   /* - 2c - */
   /* Third letters row */
-  'X',          'V',          'G',          'M',
-  'K',          VK_OEM_7,     VK_OEM_1,     VK_OEM_4,
-  VK_OEM_COMMA, VK_OEM_PERIOD,VK_RSHIFT,
+  'Y',          'X',          'C',          'V',
+  'B',          'N',          'M',          VK_OEM_COMMA,
+  VK_OEM_PERIOD,VK_OEM_MINUS,     VK_RSHIFT,
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
@@ -165,10 +165,10 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 0xff,        0,      {'^', WCH_NONE} }, // FIXME - why doesn't this work?
   /* Normal vs Shifted */
   /* The numbers */
-  { '1',         0, {'1', '!'} },
+  { '1',         0,   {'1', '!'} },
   /* Ctrl-2 generates NUL */
-  { '4',         0, {'4', '$'} },
-  { '5',         0, {'5', '%'} },
+  { '4',         0,   {'4', '$'} },
+  { '5',         0,   {'5', '%'} },
 
   { VK_OEM_6,    0, {WCH_DEAD, WCH_DEAD} },
   { 0xff,        0, {0xb4, '`'} },
@@ -203,8 +203,8 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 'N',         CAPLOK,   {'n', 'N'} },
 
   /* Specials */
-  { VK_OEM_COMMA,  CAPLOK, {',', ';'} },
-  { VK_OEM_PERIOD, CAPLOK, {'.', ':'} },
+  { VK_OEM_COMMA,  0, {',', ';'} },
+  { VK_OEM_PERIOD, 0, {'.', ':'} },
   { VK_DECIMAL,    0, {',',','} },
   { VK_TAB,        0, {'\t', '\t'} },
   { VK_ADD,        0, {'+', '+'} },
@@ -215,14 +215,14 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  /* Normal, Shifted, Ctrl */
+  /* Normal, Shifted, Ctrl+Alt */
   /* Legacy (telnet-style) ascii escapes */
-  { '3', CAPLOK, {'3', 0xa7, 0xb3} },
-  { '7', CAPLOK, {'7', '/', '{'} },
-  { '8', CAPLOK, {'8', '(', '['} },
-  { '9', CAPLOK, {'9', ')', ']'} },
-  { '0', CAPLOK, {'0', '=', '}'} },
-  { VK_OEM_4, CAPLOK, {0xdf, '?', '\\'} },
+  { '3', 0, {'3', 0xa7, 0xb3} },
+  { '7', 0, {'7', '/', '{'} },
+  { '8', 0, {'8', '(', '['} },
+  { '9', 0, {'9', ')', ']'} },
+  { '0', 0, {'0', '=', '}'} },
+  { VK_OEM_4, 0, {0xdf, '?', '\\'} },
   { 'Q', CAPLOK, {'q', 'Q', '@'} },
   { 'E', CAPLOK, {'e', 'E', 0x20ac} },
   { 'M', CAPLOK, {'m', 'M', 0xb5} },
@@ -234,8 +234,8 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
   /* Legacy Ascii generators */
   { VK_OEM_1, CAPLOK, {0xfc, 0xdc, WCH_NONE, 0x1b} },
-  { VK_OEM_PLUS, CAPLOK, {'+', '*', '~', 0x1d} },
-  { VK_OEM_2, CAPLOK, {'#', '\'', WCH_NONE, 0x1c} },
+  { VK_OEM_PLUS, 0, {'+', '*', '~', 0x1d} },
+  { VK_OEM_2, 0, {'#', '\'', WCH_NONE, 0x1c} },
   { VK_BACK, 0, {'\b', '\b', WCH_NONE, 0x7f} },
   { VK_ESCAPE, 0, {0x1b, 0x1b, WCH_NONE, 0x1b} },
   { VK_RETURN, 0, {'\r', '\r', WCH_NONE, '\n'} },
@@ -246,8 +246,8 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
-  { '2', CAPLOK, {'2', '\"', 0xb2, WCH_NONE, 0x00} },
-  { '6', CAPLOK, {'6', '&', WCH_NONE, WCH_NONE, 0x1e} },
+  { '2', 0, {'2', '\"', 0xb2, WCH_NONE, 0x00} },
+  { '6', 0, {'6', '&', WCH_NONE, WCH_NONE, 0x1e} },
   { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, WCH_NONE, 0x1f} },
   { 0, 0 }
 };

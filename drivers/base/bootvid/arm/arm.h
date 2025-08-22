@@ -29,42 +29,19 @@ extern PUSHORT VgaArmBase;
 #define READ_REGISTER_USHORT(r) (*(volatile USHORT * const)(r))
 #define WRITE_REGISTER_USHORT(r, v) (*(volatile USHORT *)(r) = (v))
 
-FORCEINLINE
-USHORT
-VidpBuildColor(
-    _In_ UCHAR Color)
-{
-    UCHAR Red, Green, Blue;
-
-    /* Extract color components */
-    Red   = GetRValue(DefaultPalette[Color]) >> 3;
-    Green = GetGValue(DefaultPalette[Color]) >> 3;
-    Blue  = GetBValue(DefaultPalette[Color]) >> 3;
-
-    /* Build the 16-bit color mask */
-    return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
-}
-
 VOID
 InitPaletteWithTable(
     _In_ PULONG Table,
     _In_ ULONG Count);
 
-FORCEINLINE
+VOID
+PrepareForSetPixel(VOID);
+
 VOID
 SetPixel(
     _In_ ULONG Left,
     _In_ ULONG Top,
-    _In_ UCHAR Color)
-{
-    PUSHORT PixelPosition;
-
-    /* Calculate the pixel position */
-    PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
-
-    /* Set our color */
-    WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
-}
+    _In_ UCHAR Color);
 
 VOID
 PreserveRow(

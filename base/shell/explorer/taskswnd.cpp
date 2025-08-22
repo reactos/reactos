@@ -1957,20 +1957,18 @@ public:
         Data.pTray = m_Tray;
         ::EnumDisplayMonitors(NULL, NULL, FullScreenEnumProc, (LPARAM)&Data);
 
-        // Make the taskbar bottom or top
-        UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER;
-        HWND hwndTray = m_Tray->GetHWND();
-        ::SetWindowPos(hwndTray, (hwndRude ? HWND_BOTTOM : HWND_TOP), 0, 0, 0, 0, uFlags);
-
         if (hwndRude)
         {
+            // Make the taskbar bottom
+            UINT uFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER;
+            HWND hwndTray = m_Tray->GetHWND();
+            ::SetWindowPos(hwndTray, HWND_BOTTOM, 0, 0, 0, 0, uFlags);
+
+            // Switch to the rude app if necessary
             DWORD exstyle = (DWORD)::GetWindowLongPtrW(hwndRude, GWL_EXSTYLE);
             if (!(exstyle & WS_EX_TOPMOST) && !SHELL_IsRudeWindowActive(hwndRude))
                 ::SwitchToThisWindow(hwndRude, TRUE);
         }
-
-        // FIXME: NIN_BALLOONHIDE
-        // FIXME: NIN_POPUPCLOSE
     }
 
     HWND FindRudeApp(_In_opt_ HWND hwndFirstCheck)
@@ -2010,6 +2008,8 @@ public:
     // HSHELL_WINDOWDESTROYED
     void OnWindowDestroyed(_In_ HWND hwndTarget)
     {
+        if (!FindTaskItem(hwndTarget))
+            return;
         HWND hwndRude = FindRudeApp(hwndTarget);
         HandleFullScreenApp(hwndRude);
     }

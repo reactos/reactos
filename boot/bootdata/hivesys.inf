@@ -520,22 +520,26 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Text",0x00000000,%DANISH%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000406","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5007"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00030407","Layout File",0x00000000,"kbdgerg.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00030407","Layout Text",0x00000000,%GERMAN_ERGO%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00030407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout File",0x00000000,"kbdgerg.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Text",0x00000000,%GERMAN_ERGO%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00060407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020407","Layout File",0x00000000,"kbdgneo.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020407","Layout Text",0x00000000,%GERMAN_NEO%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00020407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5138"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout File",0x00000000,"kbdgneo.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout Text",0x00000000,%GERMAN_NEO%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5138"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout File",0x00000000,"kbdgr1.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout Id",  0x00000000,"0012"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout Text",0x00000000,%GERMAN_RISTOME%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5137"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout File",0x00000000,"kbdgrist.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout Id",  0x00000000,"0012"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout Text",0x00000000,%GERMAN_RISTOME%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00040407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5137"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000407","Layout File",0x00000000,"kbdgr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000407","Layout Text",0x00000000,%GERMAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5011"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout File",0x00000000,"kbdgr1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout Text",0x00000000,%GERMAN_IBM%
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010407","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5012"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout File",0x00000000,"kbdsg.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000807","Layout Text",0x00000000,%SWISS_GERMAN%
@@ -833,7 +837,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Displa
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout File",0x00000000,"kbdinmal.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Text",0x00000000,%MALAYALAM%
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5139"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5099"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout File",0x00000000,"kbdinasa.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000044d","Layout Text",0x00000000,%ASSAMESE%
@@ -1325,6 +1329,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000443",0x00000000,"6"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000843",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000444",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000445",0x00000000,"f"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000845",0x00000000,"f"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000455",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000456",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000048f",0x00000000,"1" ; tdd-Tale-CN, reserved
@@ -2348,6 +2353,7 @@ DUTCH = "Dutch"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estonian"
 GERMAN_ERGO = "German (de_ergo)"
+GERMAN_IBM = "German (IBM)"
 GERMAN_NEO = "German (NEO-1.1)"
 GERMAN_RISTOME = "German (RISTOME)"
 GERMAN = "German"
@@ -2504,6 +2510,7 @@ DUTCH = "Holandés"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estonio"
 GERMAN_ERGO = "Alemán (de_ergo)"
+GERMAN_IBM = "Alemán (IBM)"
 GERMAN_NEO = "Alemán (NEO-1.1)"
 GERMAN_RISTOME = "Alemán (RISTOME)"
 GERMAN = "Alemán"
@@ -2660,6 +2667,7 @@ DUTCH = "Holenderski"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estoński"
 GERMAN_ERGO = "Niemiecki (de_ergo)"
+GERMAN_IBM = "Niemiecki (IBM)"
 GERMAN_NEO = "Niemiecki (NEO-1.1)"
 GERMAN_RISTOME = "Niemiecki (RISTOME)"
 GERMAN = "Niemiecki"
@@ -2816,6 +2824,7 @@ DUTCH = "Holandês"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estonio"
 GERMAN_ERGO = "Alemão (de_ergo)"
+GERMAN_IBM = "Alemão (IBM)"
 GERMAN_NEO = "Alemão (NEO-1.1)"
 GERMAN_RISTOME = "Alemão (RISTOME)"
 GERMAN = "Alemão"
@@ -2969,6 +2978,7 @@ DUTCH = "Olandeză"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estonă"
 GERMAN_ERGO = "Germană (de_ergo)"
+GERMAN_IBM = "Germană (IBM)"
 GERMAN_NEO = "Germană (NEO-1.1)"
 GERMAN_RISTOME = "Germană (RISTOME)"
 GERMAN = "Germană"
@@ -3125,6 +3135,7 @@ DUTCH = "Голландская"
 ESPERANTO = "Эсперанто"
 ESTONIAN = "Эстонская"
 GERMAN_ERGO = "Немецкая (de_ergo)"
+GERMAN_IBM = "Немецкая (IBM)"
 GERMAN_NEO = "Немецкая (NEO-1.1)"
 GERMAN_RISTOME = "Немецкая (RISTOME)"
 GERMAN = "Немецкая"
@@ -3281,6 +3292,7 @@ DUTCH = "Hollandaca"
 ESPERANTO = "Esperanto"
 ESTONIAN = "Estonca"
 GERMAN_ERGO = "Almanca (de_ergo)"
+GERMAN_IBM = "Almanca (IBM)"
 GERMAN_NEO = "Almanca (NEO-1.1)"
 GERMAN_RISTOME = "Almanca (RISTOME)"
 GERMAN = "Almanca"

@@ -1076,7 +1076,9 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
         /* keep the focus rect, to paint the focus item after */
         if (i == descr->focus_item)
             focusRect = rect;
-    
+#ifdef __REACTOS__
+        rect.bottom = min(rect.bottom, descr->height);
+#endif
         LISTBOX_PaintItem( descr, hdc, &rect, i, ODA_DRAWENTIRE, TRUE );
         rect.top = rect.bottom;
 

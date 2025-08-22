@@ -179,7 +179,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Ağ Ayarları"
     IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve İnternet'e bağlanmak için kullanılacak ağ yazılımını kurar."
     IDS_NETWORKCOMPONENTTITLE "Ağ Bileşenleri"

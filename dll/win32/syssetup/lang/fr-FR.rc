@@ -112,9 +112,9 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Enregistrement des composants", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "Installation des éléments du menu Démarrer", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Enregistrement des paramètres", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Suppression des fichiers temporaires", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END

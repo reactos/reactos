@@ -257,7 +257,8 @@ START_TEST(ShellState)
     CHECK_REG_FLAG(fShowAllObjects);
     CHECK_REG_FLAG(fShowExtensions);
     CHECK_REG_FLAG(fNoConfirmRecycle);
-    CHECK_REG_FLAG(fShowSysFiles);    // No use
+    if (GetNTVersion() != _WIN32_WINNT_VISTA)
+        CHECK_REG_FLAG(fShowSysFiles);    // No use, test is broken on Vista
     CHECK_REG_FLAG(fShowCompColor);
     CHECK_REG_FLAG(fDoubleClickInWebView);
     CHECK_REG_FLAG(fDesktopHTML);

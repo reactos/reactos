@@ -15,6 +15,45 @@ PHYSICAL_ADDRESS VgaPhysical;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+FORCEINLINE
+USHORT
+VidpBuildColor(
+    _In_ UCHAR Color)
+{
+    UCHAR Red, Green, Blue;
+
+    /* Extract color components */
+    Red   = GetRValue(VidpDefaultPalette[Color]) >> 3;
+    Green = GetGValue(VidpDefaultPalette[Color]) >> 3;
+    Blue  = GetBValue(VidpDefaultPalette[Color]) >> 3;
+
+    /* Build the 16-bit color mask */
+    return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
+}
+
+VOID
+PrepareForSetPixel(VOID)
+{
+    /* Nothing to prepare */
+    NOTHING;
+}
+
+FORCEINLINE
+VOID
+SetPixel(
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ UCHAR Color)
+{
+    PUSHORT PixelPosition;
+
+    /* Calculate the pixel position */
+    PixelPosition = &VgaArmBase[Left + (Top * SCREEN_WIDTH)];
+
+    /* Set our color */
+    WRITE_REGISTER_USHORT(PixelPosition, VidpBuildColor(Color));
+}
+
 VOID
 DisplayCharacter(
     _In_ CHAR Character,

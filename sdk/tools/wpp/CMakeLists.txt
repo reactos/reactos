@@ -32,7 +32,7 @@ if(CMAKE_CROSSCOMPILING)
         -Dstrtoll=_strtoi64
         -Dopen=_open
         -Dclose=_close)
-    include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+    include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 endif()
 
 FLEX_TARGET(pp_scanner ppl.l ${CMAKE_CURRENT_BINARY_DIR}/ppl.yy.c)

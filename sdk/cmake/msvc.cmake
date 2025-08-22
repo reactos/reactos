@@ -40,6 +40,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
 endif()
 
+# Erase warning C4819 for Far East Asian: The file contains characters that cannot be displayed in the current code page
+add_compile_options(/wd4819)
+
 # Disable buffer security checks by default.
 add_compile_options(/GS-)
 
@@ -76,6 +79,14 @@ if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
         add_compile_options(/d2FH4-)
     endif()
     add_link_options(/d2:-FH4-)
+endif()
+
+# Workaround: Newer ARM64 builds do not inline interlocked functions by default.
+# A better fix would be to implement the interlocked functions in assembly.
+# See https://devblogs.microsoft.com/cppblog/introducing-the-forceinterlockedfunctions-switch-for-arm64/
+if(ARCH STREQUAL "arm64" AND MSVC_VERSION GREATER_EQUAL 1944)
+    message(STATUS "Forcing interlocked functions to be inlined for ARM64 builds")
+    add_compile_options("/forceInterlockedFunctions-")
 endif()
 
 # Generate Warnings Level 3

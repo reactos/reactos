@@ -28,7 +28,7 @@ START_TEST(PathMakeUniqueName)
     SetCurrentDirectoryW(szTempDir);
 
     if (pIsLFNDriveW)
-        bUseLong = pIsLFNDriveW(szTempDir) && IsWindowsVistaOrGreater();
+        bUseLong = pIsLFNDriveW(szTempDir) && (GetNTVersion() >= _WIN32_WINNT_WIN10);
     trace("bUseLong: %d\n", bUseLong);
 
     DeleteFileW(L"test.txt");

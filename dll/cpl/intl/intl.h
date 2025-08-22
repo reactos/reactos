@@ -46,7 +46,7 @@
 #define MAX_YEAR_EDIT           4
 
 #define MAX_MISCCOUNTRY        80
-#define MAX_MISCLANGUAGE       80
+#define MAX_MISCLANGUAGE        4
 
 #define MAX_GROUPINGFORMATS     3
 

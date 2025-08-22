@@ -2555,8 +2555,11 @@ AtapiChipInit(
                 * size goes below 32DW.  Setting it to 1 makes the watermark
                 * 64DW.
                 *
-                * https://jira.reactos.org/browse/CORE-5897
+                * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
                 */
+#ifdef __REACTOS__
+                // New URL is https://jira.reactos.org/browse/CORE-5897
+#endif
 
                 if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
                     KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));

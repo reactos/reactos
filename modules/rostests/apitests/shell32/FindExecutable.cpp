@@ -38,7 +38,7 @@ static const TEST_ENTRY s_entries[] =
 {
     { __LINE__, 0xBEEFCAFE, "notepad", DIR_0, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "notepad", DIR_1, s_sys_notepad },
-    { __LINE__, 0xBEEFCAFE, "notepad", DIR_2, s_sys_notepad },
+    // { __LINE__, 0xBEEFCAFE, "notepad", DIR_2, "notepad.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "notepad", DIR_3, s_win_notepad },
     { __LINE__, 0xBEEFCAFE, "notepad", DIR_4, s_sys_notepad },
     { __LINE__, SE_ERR_FNF, "  notepad", DIR_0, "" },
@@ -53,12 +53,12 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, SE_ERR_FNF, "notepad  ", DIR_4, "" },
     { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_0, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_1, s_sys_notepad },
-    { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_2, s_sys_notepad },
+    // { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_2, "notepad.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_3, s_win_notepad },
     { __LINE__, 0xBEEFCAFE, "\"notepad\"", DIR_4, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_0, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_1, s_sys_notepad },
-    { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_2, s_sys_notepad },
+    // { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_2, "notepad.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_3, s_win_notepad },
     { __LINE__, 0xBEEFCAFE, "notepad.exe", DIR_4, s_sys_notepad },
     { __LINE__, SE_ERR_FNF, "notepad.bat", DIR_0, "" },
@@ -88,7 +88,7 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0xBEEFCAFE, s_win_notepad, DIR_4, s_win_notepad },
     { __LINE__, 0xBEEFCAFE, "test program", DIR_0, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "test program", DIR_1, s_sys_test_exe },
-    { __LINE__, 0xBEEFCAFE, "test program", DIR_2, s_sys_test_exe },
+    // { __LINE__, 0xBEEFCAFE, "test program", DIR_2, "test program.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "test program", DIR_3, s_win_test_exe },
     { __LINE__, 0xBEEFCAFE, "test program", DIR_4, s_sys_test_exe },
     { __LINE__, SE_ERR_FNF, "  test program", DIR_0, "" },
@@ -103,17 +103,17 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, SE_ERR_FNF, "test program  ", DIR_4, "" },
     { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_0, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_1, s_sys_test_exe },
-    { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_2, s_sys_test_exe },
+    // { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_2, "test program.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_3, s_win_test_exe },
     { __LINE__, 0xBEEFCAFE, "\"test program\"", DIR_4, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_0, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_1, s_sys_test_exe },
-    { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_2, s_sys_test_exe },
+    // { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_2, "TESTPR~1.EXE" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_3, s_win_test_exe },
     { __LINE__, 0xBEEFCAFE, "test program.exe", DIR_4, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_0, s_sys_test_exe },
     { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_1, s_sys_test_exe },
-    { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_2, s_sys_test_exe },
+    // { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_2, "test program.exe" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_3, s_win_test_exe },
     { __LINE__, 0xBEEFCAFE, "\"test program.exe\"", DIR_4, s_sys_test_exe },
     { __LINE__, SE_ERR_NOASSOC, "\"test program.exe \"", DIR_0, "" },
@@ -128,7 +128,7 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, SE_ERR_FNF, "\" test program.exe\"", DIR_4, "" },
     { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_0, s_sys_bat_file },
     { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_1, s_sys_bat_file },
-    { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_2, s_sys_bat_file },
+    // { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_2, "TESTPR~1.BAT" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_3, s_win_bat_file },
     { __LINE__, 0xBEEFCAFE, "test program.bat", DIR_4, s_sys_bat_file },
     { __LINE__, SE_ERR_FNF, "  test program.bat  ", DIR_0, "" },
@@ -138,12 +138,12 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, SE_ERR_FNF, "  test program.bat  ", DIR_4, "" },
     { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_0, s_sys_bat_file },
     { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_1, s_sys_bat_file },
-    { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_2, s_sys_bat_file },
+    // { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_2, "test program.bat" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_3, s_win_bat_file },
     { __LINE__, 0xBEEFCAFE, "\"test program.bat\"", DIR_4, s_sys_bat_file },
     { __LINE__, 0xBEEFCAFE, "test file.txt", DIR_0, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "test file.txt", DIR_1, s_sys_notepad },
-    { __LINE__, 0xBEEFCAFE, "test file.txt", DIR_2, s_sys_notepad },
+    // { __LINE__, SE_ERR_NOASSOC, "test file.txt", DIR_2, "" }, // Results vary between Windows versions
     { __LINE__, 0xBEEFCAFE, "test file.txt", DIR_3, s_sys_notepad },
     { __LINE__, 0xBEEFCAFE, "test file.txt", DIR_4, s_sys_notepad },
     { __LINE__, SE_ERR_FNF, "invalid file.txt", DIR_0, "" },
@@ -196,19 +196,22 @@ START_TEST(FindExecutable)
 
     GetWindowsDirectoryA(s_win_test_exe, _countof(s_win_test_exe));
     PathAppendA(s_win_test_exe, "test program.exe");
+    SetFileAttributesA(s_win_test_exe, FILE_ATTRIBUTE_NORMAL); // If the file exists, strip the readonly flag
     BOOL ret = CopyFileA(s_win_notepad, s_win_test_exe, FALSE);
     if (!ret)
     {
-        skip("Please retry with admin rights\n");
+        skip("Cannot copy test files to the system root directory. (Error: %lu)\n", GetLastError());
         return;
     }
 
     GetSystemDirectoryA(s_sys_test_exe, _countof(s_sys_test_exe));
     PathAppendA(s_sys_test_exe, "test program.exe");
+    SetFileAttributesA(s_sys_test_exe, FILE_ATTRIBUTE_NORMAL); // If the file exists, strip the readonly flag
     ret = CopyFileA(s_win_notepad, s_sys_test_exe, FALSE);
     if (!ret)
     {
-        skip("Please retry with admin rights\n");
+        skip("Cannot copy test files to the system directory. (Error: %lu)\n", GetLastError());
+        DeleteFileA(s_win_test_exe);
         return;
     }
 
@@ -237,7 +240,13 @@ START_TEST(FindExecutable)
         DoTestEntry(&s_entries[iTest]);
     }
 
+    /* Cleanup:
+     * s_win_test_exe and s_sys_test_exe inherit the readonly flag,
+     * so we need to reset it before we can successfully delete it. 
+     */
+    SetFileAttributesA(s_win_test_exe, FILE_ATTRIBUTE_NORMAL);
     DeleteFileA(s_win_test_exe);
+    SetFileAttributesA(s_sys_test_exe, FILE_ATTRIBUTE_NORMAL);
     DeleteFileA(s_sys_test_exe);
     DeleteFileA(s_win_bat_file);
     DeleteFileA(s_sys_bat_file);

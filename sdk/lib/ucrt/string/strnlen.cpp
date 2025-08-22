@@ -21,14 +21,14 @@
 
 
 
-namespace
-{
+//namespace // clang doesn't like this!
+//{
     enum strnlen_mode
     {
         bounded,  // strnlen mode; maximum_count is respected
         unbounded, // strlen mode; maximum_count is ignored
     };
-}
+//}
 
 // This function returns true if we have reached the end of the range to be
 // searched for a terminator.  For the bounded strnlen functions, we must
@@ -78,16 +78,18 @@ static __forceinline size_t __cdecl common_strnlen_c(
 
 #ifdef _CRT_SIMD_SUPPORT_AVAILABLE
 
-_UCRT_ENABLE_EXTENDED_ISA
 
     template <strnlen_mode Mode, __crt_simd_isa Isa, typename Element>
     _Check_return_
     _When_(maximum_count > _String_length_(string), _Post_satisfies_(return == _String_length_(string)))
     _When_(maximum_count <= _String_length_(string), _Post_satisfies_(return == maximum_count))
-    static __inline size_t __cdecl common_strnlen_simd(
+    size_t __cdecl common_strnlen_simd(
         Element const* const string,
         size_t         const maximum_count
         ) throw()
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(_UCRT_BUILD_SSE2) && !defined(_UCRT_BUILD_AVX2)
+        ;
+#else
     {
         using traits = __crt_simd_traits<Isa, Element>;
 
@@ -170,9 +172,11 @@ _UCRT_ENABLE_EXTENDED_ISA
         return static_cast<size_t>(it - string);
     }
 
-_UCRT_RESTORE_DEFAULT_ISA
+#endif // (defined(__GNUC__) || defined(__clang__)) && !defined(_UCRT_BUILD_SSE2) && !defined(_UCRT_BUILD_AVX2)
 
 #endif // _CRT_SIMD_SUPPORT_AVAILABLE
+
+#if !defined(_UCRT_BUILD_SSE2) && !defined(_UCRT_BUILD_AVX2)
 
 template <strnlen_mode Mode, typename Element>
 _Check_return_
@@ -225,3 +229,4 @@ extern "C" size_t __cdecl wcslen(
 }
 
 #endif // _M_ARM64
+#endif // !defined(_UCRT_BUILD_SSE2) && !defined(_UCRT_BUILD_AVX2)

@@ -227,7 +227,9 @@ typedef struct _WLSESSION
     BOOL UtilManHotkey;
     HWND SASWindow;
     HWINSTA InteractiveWindowStation;
-    LPWSTR InteractiveWindowStationName;
+    PWSTR InteractiveWindowStationName;
+    PWSTR UserName;
+    PWSTR Domain;
     HDESK ApplicationDesktop;
     HDESK WinlogonDesktop;
     HDESK ScreenSaverDesktop;
@@ -254,7 +256,7 @@ typedef struct _WLSESSION
     /* Logon informations */
     DWORD Options;
     WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-    WLX_PROFILE_V2_0 *Profile;
+    PWLX_PROFILE_V2_0 Profile;
 } WLSESSION, *PWLSESSION;
 
 typedef enum _NOTIFICATION_TYPE
@@ -277,17 +279,19 @@ typedef enum _NOTIFICATION_TYPE
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
 
-#define WLX_SHUTTINGDOWN(Status) \
-  (((Status) == WLX_SAS_ACTION_SHUTDOWN) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_REBOOT) \
-  )
+#define WLX_LOGGINGOFF(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_LOGOFF) || \
+   ((wlxAction) == WLX_SAS_ACTION_FORCE_LOGOFF))
 
-#define WLX_SUSPENDING(Status) \
-  (((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
-   ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
-  )
+#define WLX_SHUTTINGDOWN(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_SHUTDOWN) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_REBOOT))
+
+#define WLX_SUSPENDING(wlxAction) \
+  (((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_SLEEP)  || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
+   ((wlxAction) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE))
 
 FORCEINLINE
 VOID
@@ -401,6 +405,10 @@ StartSystemShutdown(
     IN ULONG dwReason);
 
 /* winlogon.c */
+PWSTR
+WlStrDup(
+    _In_opt_ PCWSTR String);
+
 BOOL
 PlaySoundRoutine(IN LPCWSTR FileName,
                  IN UINT Logon,

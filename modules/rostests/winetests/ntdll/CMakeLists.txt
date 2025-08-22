@@ -1,5 +1,5 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 add_definitions(-D__WINESRC__ -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE

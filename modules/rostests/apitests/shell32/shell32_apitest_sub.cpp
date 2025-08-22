@@ -91,8 +91,8 @@ static BOOL InitSHCN(HWND hwnd)
     assert(s_iStage < NUM_STAGE);
 
     SHChangeNotifyEntry entry;
-    INT sources;
-    LONG events;
+    INT sources = 0;
+    LONG events = EVENTS;
     switch (s_iStage)
     {
         case 0:
@@ -176,11 +176,7 @@ static BOOL InitSHCN(HWND hwnd)
             events = EVENTS;
             break;
         }
-        default:
-        {
-            assert(0);
-            break;
-        }
+        DEFAULT_UNREACHABLE;
     }
 
     s_uRegID = SHChangeNotifyRegister(hwnd, sources, events, WM_SHELL_NOTIFY, 1, &entry);

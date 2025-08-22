@@ -1137,6 +1137,29 @@ KiConvertToGuiThreadFailed:
 
 ENDFUNC
 
+EXTERN KiGetTrapContextInternal:PROC
+
+/*
+ * VOID
+ * KiGetTrapContext(
+ *     _Out_ PKTRAP_FRAME TrapFrame,
+ *     _In_ PCONTEXT Context);
+ */
+PUBLIC KiGetTrapContext
+.PROC KiGetTrapContext
+
+    /* Generate a KEXCEPTION_FRAME on the stack */
+    GENERATE_EXCEPTION_FRAME
+
+    call KiGetTrapContextInternal
+
+    /* Restore the registers from the KEXCEPTION_FRAME */
+    RESTORE_EXCEPTION_STATE
+
+    /* Return */
+    ret
+
+.ENDP
 
 EXTERN KiSetTrapContextInternal:PROC
 

@@ -1,5 +1,13 @@
-// COPYRIGHT: aart3k <aart3k@gmail.com>
-//            2008-2011 Caemyr - Olaf Siejka
+/*
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2007 Artur Wiśniewski <aart3k@gmail.com>
+ *              Copyright 2008-2011 Olaf Siejka <caemyr@gmail.com> 
+ *              Copyright 2017-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -9,27 +17,27 @@ CAPTION "Schematy zasilania"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Wybierz schemat zasilana najbardziej pasujący do Twojego komputera. Miej na uwadze, że zmiany poniżej spowodują modyfikację wybranego schematu.", -1, 37, 6, 208, 36
+    LTEXT "Wybierz schemat zasilania najbardziej pasujący do Twojego komputera. Miej na uwadze, że zmiany poniżej spowodują modyfikację wybranego schematu.", -1, 37, 6, 208, 36
     GROUPBOX "&Schematy zasilania", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Zapisz jako...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "&Usuń", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
-    LTEXT "Kiedy komputer jest:", IDC_SAT, 12, 110, 60, 15
-    LTEXT "Podłączony", IDC_SAC, 100, 110, 50, 15
+    LTEXT "Kiedy komputer jest:", IDC_SAT, 13, 110, 68, 8
+    LTEXT "Podłączony", IDC_SAC, 100, 110, 40, 8
     ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
-    LTEXT "Zasilany akumulatorem", IDC_SDC, 173, 110, 50, 15
+    LTEXT "Zasilany akumulatorem", IDC_SDC, 173, 110, 46, 18
     ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
-    LTEXT "Wyłącz &monitor:", IDC_MONITOR, 13, 148, 85, 10
+    LTEXT "Wyłącz &monitor:", IDC_MONITOR, 13, 148, 85, 8
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Wyłącz &dysk twardy:", IDC_DISK, 13, 163, 85, 10
+    LTEXT "Wyłącz &dyski twarde:", IDC_DISK, 13, 163, 85, 8
     COMBOBOX IDC_DISKACLIST, 100, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "System w stan &czuwania:", IDC_STANDBY, 13, 178, 85, 10
+    LTEXT "System w stan &czuwania:", IDC_STANDBY, 13, 178, 85, 8
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "System &hibernuje:", IDC_HIBERNATE, 13, 193, 85, 10
+    LTEXT "System &hibernuje:", IDC_HIBERNATE, 13, 193, 85, 8
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_HIBERNATEDCLIST, 173, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -46,13 +54,13 @@ BEGIN
     PUSHBUTTON "&Zapisz jako...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "&Usuń", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
-    LTEXT "Wyłącz &monitor:", IDC_MONITOR, 13, 148, 85, 10
+    LTEXT "Wyłącz &monitor:", IDC_MONITOR, 13, 148, 85, 8
     COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Wyłącz &dysk twardy:", IDC_DISK, 13, 163, 85, 10
+    LTEXT "Wyłącz &dyski twarde:", IDC_DISK, 13, 163, 85, 8
     COMBOBOX IDC_DISKACLIST, 100, 160, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "System w stan &czuwania:", IDC_STANDBY, 13, 178, 85, 10
+    LTEXT "System w stan &czuwania:", IDC_STANDBY, 13, 178, 85, 8
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "System &hibernuje:", IDC_HIBERNATE, 13, 193, 85, 10
+    LTEXT "System &hibernuje:", IDC_HIBERNATE, 13, 193, 85, 8
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -93,15 +101,15 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Wybierz, których ustawień oszczędzania energii chcesz używać.", -1, 37, 6, 208, 20
     GROUPBOX "Opcje", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "&Zawsze pokazuj ikonę w zasobniku systemowym", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Przyciemniaj ekran, kiedy zasilanie z akumulatora", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Zawsze pokazuj ikonę na pasku zadań", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 8, WS_TABSTOP
+    AUTOCHECKBOX "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, 17, 60, 220, 8, WS_TABSTOP
+    AUTOCHECKBOX "&Przyciemnij ekran, kiedy komputer jest zasilany z baterii", IDC_VIDEODIMDISPLAY, 17, 78, 220, 8, WS_TABSTOP
     GROUPBOX "Przyciski zasilania", -1, 6, 101, 240, 110
-    LTEXT "&Kiedy zamykam mój komputer przenośny:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "&Kiedy pokrywa komputera przenośnego zostanie zamknięta:", IDC_SLIDCLOSE, 15, 115, 222, 8
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "K&iedy naciskam przycisk zasilania mojego komputera:", IDC_SPOWERBUTTON, 15, 145, 222, 10
+    LTEXT "K&iedy w komputerze zostanie naciśnięty przycisk zasilania:", IDC_SPOWERBUTTON, 15, 145, 222, 8
     COMBOBOX IDC_POWERBUTTON, 15, 157, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Ki&edy naciskam przycisk uśpienia:", IDC_SSLEEPBUTTON, 15, 175, 222, 10
+    LTEXT "Ki&edy w komputerze zostanie naciśnięty przycisk uśpienia:", IDC_SSLEEPBUTTON, 15, 175, 222, 8
     COMBOBOX IDC_SLEEPBUTTON, 15, 187, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -135,77 +143,77 @@ END
 
 IDD_PROPPAGEPOWERMETER DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Power Meter"
+CAPTION "Miernik energii"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "Show details for each &battery", IDC_SHOWDETAILS, 7, 10, 190, 10, WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Power status", -1, 7, 41, 240, 170
+    AUTOCHECKBOX "&Pokaż szczegóły dla każdej baterii", IDC_SHOWDETAILS, 7, 10, 190, 10, WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Stan zasilania", -1, 7, 41, 240, 170
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 23, 54, 21, 20
-    LTEXT "Current power source:", -1, 54, 54, 73, 10
-    LTEXT "AC power", IDC_POWERSOURCE, 140, 54, 60, 10
-    LTEXT "Total battery power remaining:", -1, 54, 64, 101, 10
-    LTEXT "100%", IDC_POWERSTATUS, 160, 64, 50, 10
+    LTEXT "Bieżące źródło zasilania:", -1, 54, 54, 78, 8
+    LTEXT "Prąd przemienny (AC)", IDC_POWERSOURCE, 140, 54, 75, 8
+    LTEXT "Całkowita pozostała moc baterii:", -1, 54, 64, 108, 8
+    LTEXT "100%", IDC_POWERSTATUS, 165, 64, 50, 8
 
-    LTEXT "#1", IDC_BATTERY0, 24, 113, 13, 10
+    LTEXT "#1", IDC_BATTERY0, 24, 113, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL0, 20, 124, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT0, 46, 127, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING0, 24, 142, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT0, 46, 127, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING0, 24, 142, 38, 8
 
-    LTEXT "#2", IDC_BATTERY1, 80, 113, 13, 10
+    LTEXT "#2", IDC_BATTERY1, 80, 113, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL1, 76, 124, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT1, 102, 127, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING1, 80, 142, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT1, 102, 127, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING1, 80, 142, 38, 8
 
-    LTEXT "#3", IDC_BATTERY2, 136, 113, 13, 10
+    LTEXT "#3", IDC_BATTERY2, 136, 113, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL2, 132, 124, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT2, 158, 127, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING2, 136, 142, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT2, 158, 127, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING2, 136, 142, 38, 8
 
-    LTEXT "#4", IDC_BATTERY3, 192, 113, 13, 10
+    LTEXT "#4", IDC_BATTERY3, 192, 113, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL3, 188, 124, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT3, 214, 127, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING3, 192, 142, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT3, 214, 127, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING3, 192, 142, 38, 8
 
-    LTEXT "#5", IDC_BATTERY4, 24, 169, 13, 10
+    LTEXT "#5", IDC_BATTERY4, 24, 169, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL4, 20, 180, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT4, 46, 183, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING4, 24, 198, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT4, 46, 183, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING4, 24, 198, 38, 8
 
-    LTEXT "#6", IDC_BATTERY5, 80, 169, 13, 10
+    LTEXT "#6", IDC_BATTERY5, 80, 169, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL5, 76, 180, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT5, 102, 183, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING5, 80, 198, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT5, 102, 183, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING5, 80, 198, 38, 8
 
-    LTEXT "#7", IDC_BATTERY6, 136, 169, 13, 10
+    LTEXT "#7", IDC_BATTERY6, 136, 169, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL6, 132, 180, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT6, 158, 183, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING6, 136, 198, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT6, 158, 183, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING6, 136, 198, 38, 8
 
-    LTEXT "#8", IDC_BATTERY7, 192, 169, 13, 10
+    LTEXT "#8", IDC_BATTERY7, 192, 169, 13, 8
     ICON IDI_HIBERNATE, IDI_BATTERYDETAIL7, 188, 180, 21, 20, SS_NOTIFY
-    LTEXT "100%", IDC_BATTERYPERCENT7, 214, 183, 21, 10
-    LTEXT "Charging", IDC_BATTERYCHARGING7, 192, 198, 38, 10
+    LTEXT "100%", IDC_BATTERYPERCENT7, 214, 183, 21, 8
+    LTEXT "Ładowanie", IDC_BATTERYCHARGING7, 192, 198, 38, 8
 
-    LTEXT "Click an individual battery icon for more information.", -1, 108, 230, 150, 10
+    LTEXT "Kliknij pojedynczą ikonę baterii, aby uzyskać więcej informacji.", -1, 108, 230, 150, 10
 END
 
 IDD_POWERMETERDETAILS DIALOGEX 0, 0, 263, 156
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Power Meter"
+CAPTION "Miernik energii"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Battery status", -1, 7, 7, 249, 120
-    LTEXT "Battery name: ", -1, 16, 22, 48, 8
+    GROUPBOX "Stan baterii", -1, 7, 7, 249, 120
+    LTEXT "Nazwa baterii: ", -1, 16, 22, 48, 8
     LTEXT "", IDC_BATTERYNAME, 66, 22, 179, 8
-    LTEXT "Unique ID: ", -1, 16, 35, 48, 8
+    LTEXT "Identyfikator: ", -1, 16, 35, 48, 8
     LTEXT "", IDC_BATTERYUNIQUEID, 66, 35, 179, 8
-    LTEXT "Chemistry: ", -1, 16, 48, 48, 8
+    LTEXT "Typ chem.: ", -1, 16, 48, 48, 8
     LTEXT "", IDC_BATTERYCHEMISTRY, 66, 48, 179, 8
-    LTEXT "Power state: ", -1, 16, 61, 48, 8
+    LTEXT "Stan zasilania: ", -1, 16, 61, 48, 8
     LTEXT "", IDC_BATTERYPOWERSTATE, 66, 61, 179, 8
-    LTEXT "Manufacturer: ", -1, 16, 74, 48, 8
+    LTEXT "Producent: ", -1, 16, 74, 48, 8
     LTEXT "", IDC_BATTERYMANUFACTURER, 66, 74, 179, 8
-    PUSHBUTTON "&Refresh", IDC_REFRESH, 16, 104, 50, 14
+    PUSHBUTTON "O&dśwież", IDC_REFRESH, 16, 104, 50, 14
     DEFPUSHBUTTON "&OK", IDOK, 206, 134, 50, 14
 END
 
@@ -247,9 +255,9 @@ BEGIN
     IDS_DEL_SCHEME "Czy na pewno chcesz skasować schemat oszczędzania energii: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Usuń schemat"
     IDS_DEL_SCHEME_ERROR "Nie można usunąć schematu oszczędzania energii"
-    IDS_CHARGING "Charging"
-    IDS_DISCHARGING "Discharging"
+    IDS_CHARGING "Ładowanie"
+    IDS_DISCHARGING "Rozładowywanie"
     IDS_ONLINE "Online"
     IDS_OFFLINE "Offline"
-    IDS_DETAILEDBATTERY "Detailed Information for Battery #%d"
+    IDS_DETAILEDBATTERY "Szczegółowe informacje dla baterii: #%d"
 END

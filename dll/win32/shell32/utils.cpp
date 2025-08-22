@@ -1698,8 +1698,7 @@ InvokeIExecuteCommand(
     if (!pEC)
         return E_INVALIDARG;
 
-    if (pSite)
-        IUnknown_SetSite(pEC, pSite);
+    CScopedSetObjectWithSite site(pEC, pSite);
     IUnknown_InitializeCommand(pEC, pszCommandName, pPB);
 
     CComPtr<IObjectWithSelection> pOWS;
@@ -1721,10 +1720,7 @@ InvokeIExecuteCommand(
     if (fMask & CMIC_MASK_PTINVOKE)
         pEC->SetPosition(pICI->ptInvoke);
 
-    HRESULT hr = pEC->Execute();
-    if (pSite)
-        IUnknown_SetSite(pEC, NULL);
-    return hr;
+    return pEC->Execute();
 }
 
 EXTERN_C HRESULT

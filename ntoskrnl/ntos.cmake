@@ -253,7 +253,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obsecure.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obwait.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/events.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/po/guid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/poshtdwn.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/povolume.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/po/power.c

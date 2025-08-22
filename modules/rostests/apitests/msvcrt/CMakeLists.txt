@@ -8,6 +8,8 @@ endif()
 
 list(APPEND SOURCE_CRT_TESTS
     ../crt/fpcontrol.c
+    ../crt/_finite.c
+    ../crt/_isnan.c
     ../crt/_mbsncmp.c
     ../crt/_mbsstr.c
     ../crt/_snprintf.c
@@ -17,15 +19,24 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
     ../crt/_wsystem.c
+    ../crt/acos.c
+    ../crt/asin.c
+    ../crt/atan.c
     ../crt/atexit.c
     ../crt/ceil.c
+    ../crt/cos.c
     ../crt/crtdata.c
+    ../crt/exp.c
     ../crt/fabs.c
     ../crt/floor.c
+    ../crt/log.c
+    ../crt/log10.c
     ../crt/mbstowcs.c
     ../crt/mbtowc.c
     ../crt/rand_s.c
     ../crt/setjmp.c
+    ../crt/sin.c
+    ../crt/sqrt.c
     ../crt/sprintf.c
     ../crt/static_construct.cpp
     ../crt/static_init.c
@@ -33,6 +44,7 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/strlen.c
     ../crt/strtoul.c
     ../crt/system.c
+    ../crt/tan.c
     ../crt/wcstombs.c
     ../crt/wcstoul.c
     ../crt/wctomb.c
@@ -42,6 +54,13 @@ if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_CRT_TESTS
         ../crt/__getmainargs.c # FIXME: Moved here because it doesn't work on x64
     )
+    list(APPEND ASM_SOURCE_CRT_TESTS
+        ../crt/i386/setjmp_helper.s
+    )
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE_CRT_TESTS
+        ../crt/amd64/setjmp_helper.s
+    )
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE_CRT_TESTS
         ../crt/__rt_div.c
@@ -49,9 +68,11 @@ elseif(ARCH STREQUAL "arm")
         ../crt/__64tof.c
     )
 endif()
+add_asm_files(crt_asm ${ASM_SOURCE_CRT_TESTS})
 
 list(APPEND SOURCE
     ${SOURCE_CRT_TESTS}
+    ${crt_asm}
     CommandLine.c
     ieee.c
     popen.c
@@ -59,6 +80,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(msvcrt_apitest ${SOURCE})
+add_dependencies(msvcrt_apitest asm)
 target_compile_definitions(msvcrt_apitest PRIVATE TEST_MSVCRT)
 target_link_libraries(msvcrt_apitest wine ${PSEH_LIB})
 set_module_type(msvcrt_apitest win32cui)

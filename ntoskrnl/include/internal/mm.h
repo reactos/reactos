@@ -109,8 +109,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define PAGE_WRITETHROUGH                   (1024)
 #define PAGE_SYSTEM                         (2048)
 
-#define SEC_PHYSICALMEMORY                  (0x80000000)
-
 #define MC_USER                             (0)
 #define MC_SYSTEM                           (1)
 #define MC_MAXIMUM                          (2)

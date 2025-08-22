@@ -8,6 +8,7 @@ add_definitions(
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    appcompat.c
     clist.c
     istream.c
     msgbox.c
@@ -39,7 +40,7 @@ add_library(shlwapi MODULE
 # our C++ atlbase.h conflicts with the one from wine, so only use wine includes for C
 # Unfortunately, we can't use different includes for C & C++ in VS generator, so use an object library to achieve this
 target_include_directories(shlwapi BEFORE PRIVATE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_library(shlwapi_autocomp OBJECT autocomp.cpp)
@@ -50,7 +51,7 @@ add_dependencies(shlwapi_autocomp psdk)
 
 set_module_type(shlwapi win32dll UNICODE)
 target_link_libraries(shlwapi uuid wine cpprt)
-add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
+add_delay_importlibs(shlwapi userenv oleaut32 ole32 comctl32 comdlg32 mpr mlang urlmon shell32 winmm version)
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
 add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)

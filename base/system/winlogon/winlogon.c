@@ -21,6 +21,27 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief
+ * Duplicates the given string, allocating a buffer on the heap.
+ **/
+PWSTR
+WlStrDup(
+    _In_opt_ PCWSTR String)
+{
+    PWSTR ptr;
+
+    if (!String)
+        return NULL;
+
+    ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                          (wcslen(String) + 1) * sizeof(WCHAR));
+    if (ptr)
+        wcscpy(ptr, String);
+    return ptr;
+}
+
+
 static
 BOOL
 StartServicesManager(VOID)
@@ -410,8 +431,6 @@ GinaLoadFailedWindowProc(
                 wsprintfW(text, templateText, (LPWSTR)lParam);
                 SetDlgItemTextW(hwndDlg, IDC_GINALOADFAILED, text);
             }
-
-            SetFocus(GetDlgItem(hwndDlg, IDOK));
             return TRUE;
         }
 
@@ -598,8 +617,6 @@ WinMain(
         PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
     }
 
-    (void)LoadLibraryW(L"sfc_os.dll");
-
     /* Tell kernel that CurrentControlSet is good (needed
      * to support Last good known configuration boot) */
     NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED | 1);
@@ -614,6 +631,7 @@ WinMain(
     CleanupNotifications();
 
     /* We never go there */
-
+    // TODO: Shutdown if we are in session 0, otherwise let the process terminate.
+    SleepEx(INFINITE, FALSE);
     return 0;
 }

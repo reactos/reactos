@@ -59,7 +59,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
 #ifdef __REACTOS__ /* FIXME: Inspect */
-BOOL WINAPI CancelIoEx(HANDLE handle, LPOVERLAPPED lpOverlapped)
+static BOOL WINAPI CancelIoEx_(HANDLE handle, LPOVERLAPPED lpOverlapped)
 {
      IO_STATUS_BLOCK    io_status;
 
@@ -71,6 +71,7 @@ BOOL WINAPI CancelIoEx(HANDLE handle, LPOVERLAPPED lpOverlapped)
     }
     return TRUE;
 }
+#define CancelIoEx CancelIoEx_
 #endif
 
 static RpcConnection *rpcrt4_spawn_connection(RpcConnection *old_connection);

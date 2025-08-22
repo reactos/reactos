@@ -2,7 +2,6 @@
 spec2def(shell32_apitest.exe shell32_apitest.spec)
 
 list(APPEND SOURCE
-    closewnd.cpp
     AddCommas.cpp
     CFSFolder.cpp
     CheckEscapes.cpp
