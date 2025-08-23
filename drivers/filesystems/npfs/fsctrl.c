@@ -363,7 +363,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
         return STATUS_PIPE_DISCONNECTED;
     }
 
-    if ((Type != NPFS_NTC_CCB) &&
+    if ((Type != NPFS_NTC_CCB) ||
         (OutputLength < FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data)))
     {
         return STATUS_INVALID_PARAMETER;
