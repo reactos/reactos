@@ -37,6 +37,7 @@ KeInitializeEvent(OUT PKEVENT Event,
                   IN BOOLEAN State)
 {
     /* Initialize the Dispatcher Header */
+    ASSERT((Type == NotificationEvent) || (Type == SynchronizationEvent));
     Event->Header.Type = Type;
     //Event->Header.Signalling = FALSE; // fails in kmtest
     Event->Header.Size = sizeof(KEVENT) / sizeof(ULONG);
