@@ -36,16 +36,10 @@ GetContextFullName(
 
 static
 VOID
-HelpContext(
-    PCONTEXT_ENTRY pContext)
+PrintCurrentContextHeader(
+    _In_ PCONTEXT_ENTRY pContext)
 {
-    PCONTEXT_ENTRY pSubContext;
-    PCOMMAND_ENTRY pCommand;
-    PCOMMAND_GROUP pGroup;
     WCHAR szBuffer[80];
-
-    if (pContext != pRootContext)
-        HelpContext(pContext->pParentContext);
 
     if (pContext == pCurrentContext)
     {
@@ -60,6 +54,16 @@ HelpContext(
         GetContextFullName(pContext, szBuffer, 80);
         ConPrintf(StdOut, L"\nCommands in the %s-context:\n", szBuffer);
     }
+}
+
+
+static
+VOID
+PrintShortCommands(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    PCOMMAND_ENTRY pCommand;
+    WCHAR szBuffer[80];
 
     pCommand = pContext->pCommandListHead;
     while (pCommand != NULL)
@@ -69,6 +73,16 @@ HelpContext(
         ConPrintf(StdOut, L"%-15s - %s\n", pCommand->pwszCmdToken, szBuffer);
         pCommand = pCommand->pNext;
     }
+}
+
+
+static
+VOID
+PrintShortGroups(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    PCOMMAND_GROUP pGroup;
+    WCHAR szBuffer[80];
 
     pGroup = pContext->pGroupListHead;
     while (pGroup != NULL)
@@ -78,6 +92,16 @@ HelpContext(
         ConPrintf(StdOut, L"%-15s - %s\n", pGroup->pwszCmdGroupToken, szBuffer);
         pGroup = pGroup->pNext;
     }
+}
+
+
+static
+VOID
+PrintShortSubContexts(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    PCONTEXT_ENTRY pSubContext;
+    WCHAR szBuffer[80];
 
     pSubContext = pContext->pSubContextHead;
     while (pSubContext != NULL)
@@ -88,26 +112,200 @@ HelpContext(
     }
 }
 
-
+static
 VOID
-HelpGroup(
-    PCOMMAND_GROUP pGroup)
+PrintShortGroupCommands(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ PCOMMAND_GROUP pGroup)
 {
     PCOMMAND_ENTRY pCommand;
-    WCHAR szBuffer[64];
-
-    ConResPrintf(StdOut, IDS_HELP_HEADER);
-
-    ConPrintf(StdOut, L"\nCommands in this context:\n");
+    WCHAR szBuffer1[64];
+    WCHAR szBuffer2[80];
 
     pCommand = pGroup->pCommandListHead;
     while (pCommand != NULL)
     {
-        swprintf(szBuffer, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
-        ConPrintf(StdOut, L"%-15s - ", szBuffer);
-        ConResPuts(StdOut, pCommand->dwShortCmdHelpToken);
+        swprintf(szBuffer1, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
+        LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer2, 80);
+
+        ConPrintf(StdOut, L"%-15s - %s\n", szBuffer1, szBuffer2);
         pCommand = pCommand->pNext;
     }
+}
+
+
+static
+VOID
+PrintLongCommand(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ PCOMMAND_ENTRY pCommand)
+{
+    WCHAR szBuffer[80];
+
+    LoadStringW(pContext->hModule, pCommand->dwCmdHlpToken, szBuffer, 80);
+    ConPrintf(StdOut, szBuffer);
+}
+
+
+static
+VOID
+PrintContext(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    DPRINT1("PrintContext()\n");
+
+    if (pContext != pRootContext)
+        PrintContext(pContext->pParentContext);
+
+    PrintCurrentContextHeader(pContext);
+
+    PrintShortCommands(pContext);
+
+    PrintShortGroups(pContext);
+
+    PrintShortSubContexts(pContext);
+}
+
+
+static
+VOID
+PrintGroup(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ LPWSTR pszGroupName,
+    _In_ BOOL bRecurse)
+{
+    PCOMMAND_GROUP pGroup;
+
+    if (bRecurse)
+    {
+        if (pContext != pRootContext)
+            PrintGroup(pContext->pParentContext, pszGroupName, bRecurse);
+    }
+
+    pGroup = pContext->pGroupListHead;
+    while (pGroup != NULL)
+    {
+        if (_wcsicmp(pszGroupName, pGroup->pwszCmdGroupToken) == 0)
+        {
+            PrintCurrentContextHeader(pContext);
+            PrintShortGroupCommands(pContext, pGroup);
+        }
+        pGroup = pGroup->pNext;
+    }
+}
+
+
+static
+VOID
+PrintSubcontexts(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    if (pCurrentContext->pSubContextHead != NULL)
+    {
+        ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
+        pContext = pCurrentContext->pSubContextHead;
+        while (pContext != NULL)
+        {
+            ConPrintf(StdOut, L" %s", pContext->pszContextName);
+            pContext = pContext->pNext;
+        }
+        ConPuts(StdOut, L"\n");
+    }
+}
+
+
+BOOL
+ProcessHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ DWORD dwArgCount,
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwHelpLevel)
+{
+    PCONTEXT_ENTRY pSubContext;
+    PCOMMAND_ENTRY pCommand;
+    PCOMMAND_GROUP pGroup;
+
+    DPRINT("ProcessHelp(dwCurrentIndex %lu  dwArgCount %lu  dwHelpLevel %lu)\n", dwCurrentIndex, dwArgCount, dwHelpLevel);
+
+    if (dwHelpLevel == dwCurrentIndex)
+    {
+        ConResPrintf(StdOut, IDS_HELP_HEADER);
+        PrintContext(pContext);
+        PrintSubcontexts(pContext);
+        ConResPrintf(StdOut, IDS_HELP_FOOTER);
+        return TRUE;
+    }
+
+    pCommand = pContext->pCommandListHead;
+    while (pCommand != NULL)
+    {
+        if (_wcsicmp(argv[dwCurrentIndex], pCommand->pwszCmdToken) == 0) 
+        {
+            if (dwHelpLevel == dwCurrentIndex + 1)
+            {
+                PrintLongCommand(pContext, pCommand);
+                return TRUE;
+            }
+        }
+
+        pCommand = pCommand->pNext;
+    }
+
+    pGroup = pContext->pGroupListHead;
+    while (pGroup != NULL)
+    {
+        if (_wcsicmp(argv[dwCurrentIndex], pGroup->pwszCmdGroupToken) == 0)
+        {
+            if (dwHelpLevel == dwCurrentIndex + 1)
+            {
+                ConResPrintf(StdOut, IDS_HELP_HEADER);
+                PrintGroup(pContext, argv[dwCurrentIndex], (dwHelpLevel == 1));
+                return TRUE;
+            }
+
+            pCommand = pGroup->pCommandListHead;
+            while (pCommand != NULL)
+            {
+                if ((dwArgCount > dwCurrentIndex + 1) && (_wcsicmp(argv[dwCurrentIndex + 1], pCommand->pwszCmdToken) == 0))
+                {
+                    if (dwHelpLevel == dwCurrentIndex + 2)
+                    {
+                        PrintLongCommand(pContext, pCommand);
+                        return TRUE;
+                    }
+                }
+
+                pCommand = pCommand->pNext;
+            }
+
+//            ConResPrintf(StdOut, IDS_HELP_HEADER);
+//            PrintGroup(pContext, pGroup);
+            return FALSE;
+        }
+
+        pGroup = pGroup->pNext;
+    }
+
+    if (pContext == pCurrentContext)
+    {
+        pSubContext = pContext->pSubContextHead;
+        while (pSubContext != NULL)
+        {
+            if (_wcsicmp(argv[dwCurrentIndex], pSubContext->pszContextName) == 0) 
+            {
+                return ProcessHelp(pSubContext,
+                                   dwArgCount,
+                                   argv,
+                                   dwCurrentIndex + 1,
+                                   dwHelpLevel);
+            }
+
+            pSubContext = pSubContext->pNext;
+        }
+    }
+
+    return FALSE;
 }
 
 
@@ -122,31 +320,5 @@ HelpCommand(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    PCONTEXT_ENTRY pContext;
-
-    ConResPrintf(StdOut, IDS_HELP_HEADER);
-
-    pContext = pCurrentContext;
-    if (pContext == NULL)
-    {
-        DPRINT1("HelpCommand: invalid context %p\n", pContext);
-        return 1;
-    }
-
-    HelpContext(pContext);
-
-    if (pCurrentContext->pSubContextHead != NULL)
-    {
-        ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
-        pContext = pCurrentContext->pSubContextHead;
-        while (pContext != NULL)
-        {
-            ConPrintf(StdOut, L" %s", pContext->pszContextName);
-            pContext = pContext->pNext;
-        }
-        ConPuts(StdOut, L"\n");
-    }
-    ConPuts(StdOut, L"\n");
-
     return ERROR_SUCCESS;
 }

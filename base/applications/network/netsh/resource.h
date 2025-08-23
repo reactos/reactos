@@ -16,7 +16,8 @@
 #define IDS_INVALID_SYNTAX       104
 
 #define IDS_HELP_HEADER          200
-#define IDS_SUBCONTEXT_HEADER    201
+#define IDS_HELP_FOOTER          201
+#define IDS_SUBCONTEXT_HEADER    202
 
 #define IDS_HLP_EXIT             300
 #define IDS_HLP_EXIT_EX          301
@@ -24,6 +25,10 @@
 #define IDS_HLP_HELP_EX          303
 #define IDS_HLP_UP               304
 #define IDS_HLP_UP_EX            305
+#define IDS_HLP_POPD             306
+#define IDS_HLP_POPD_EX          307
+#define IDS_HLP_PUSHD            308
+#define IDS_HLP_PUSHD_EX         309
 
 #define IDS_HLP_ADD_HELPER       310
 #define IDS_HLP_ADD_HELPER_EX    311
