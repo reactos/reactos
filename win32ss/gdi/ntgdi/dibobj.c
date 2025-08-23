@@ -519,7 +519,7 @@ NtGdiSetDIBitsToDeviceInternal(
     _SEH2_END;
 
     DPRINT("StartScan %d ScanLines %d Bits %p bmi %p ColorUse %d\n"
-           "    Height %d Width %d SizeImage %d\n"
+           "    Height %d Width %d biSizeImage %d\n"
            "    biHeight %d biWidth %d biBitCount %d\n"
            "    XSrc %d YSrc %d XDest %d YDest %d\n",
            StartScan, ScanLines, Bits, bmi, ColorUse,
