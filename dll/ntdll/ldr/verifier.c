@@ -42,8 +42,39 @@ typedef struct _VERIFIER_PROVIDER
     RTL_VERIFIER_NTDLLHEAPFREE_CALLBACK ProviderNtdllHeapFreeCallback;
 } VERIFIER_PROVIDER, *PVERIFIER_PROVIDER;
 
+/* ReactOS specific:
+We use some Wine code for usermode components, and Wine likes to static-initialize their critical sections.
+Because this trigggers avrf, we intercept the avrf functions, and fake a call to xxx when finding a statically initialized CS. */
 
 
+static ANSI_STRING RtlInitializeCriticalSectionName = RTL_CONSTANT_STRING("RtlInitializeCriticalSection");
+static ANSI_STRING RtlEnterCriticalSectionName = RTL_CONSTANT_STRING("RtlEnterCriticalSection");
+
+static NTSTATUS (NTAPI *vrf_RtlInitializeCriticalSection)(PRTL_CRITICAL_SECTION CriticalSection);
+static NTSTATUS (NTAPI *vrf_RtlEnterCriticalSection)(PRTL_CRITICAL_SECTION CriticalSection);
+
+static
+NTSTATUS
+NTAPI
+compat_RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
+{
+    if (CriticalSection && CriticalSection->DebugInfo && CriticalSection->DebugInfo != LongToPtr(-1))
+    {
+        PRTL_CRITICAL_SECTION_DEBUG DebugInfo = CriticalSection->DebugInfo;
+        SSIZE_T Diff = (SSIZE_T)((PBYTE)DebugInfo - (PBYTE)CriticalSection);
+        //__debugbreak();
+        if (Diff < 0)
+            Diff *= -1;
+        /* It needs to be statically allocated next to eachother,
+           and not be added to the process lock list yet */
+        if (Diff < 0x4000 && DebugInfo->ProcessLocksList.Flink == DebugInfo->ProcessLocksList.Blink)
+        {
+            DbgPrint( "RVRF: Statically initialized CS(%p), faking call to RtlInitializeCriticalSection\n", CriticalSection);
+            vrf_RtlInitializeCriticalSection(CriticalSection);
+        }
+    }
+    return vrf_RtlEnterCriticalSection(CriticalSection);
+}
 
 VOID
 NTAPI
@@ -200,7 +231,15 @@ AVrfpSnapDllImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
                             DbgPrint("AVRF: internal error: New thunk for %s is null.\n", ThunkDescriptor->ThunkName);
                             continue;
                         }
-                        FirstThunk->u1.Function = (SIZE_T)ThunkDescriptor->ThunkNewAddress;
+                        if (vrf_RtlEnterCriticalSection == ThunkDescriptor->ThunkNewAddress)
+                        {
+                            DbgPrint( "AVRF: Intercepting RtlEnterCriticalSection for static CS\n");
+                            FirstThunk->u1.Function = (SIZE_T)compat_RtlEnterCriticalSection;
+                        }
+                        else
+                        {
+                            FirstThunk->u1.Function = (SIZE_T)ThunkDescriptor->ThunkNewAddress;
+                        }
                         if (AVrfpDebug & RTL_VRF_DBG_SHOWSNAPS)
                             DbgPrint("AVRF: Snapped (%wZ: %s) with (%wZ: %p).\n",
                                         &LdrEntry->BaseDllName,
@@ -270,6 +309,18 @@ AvrfpResolveThunks(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
                     ANSI_STRING ThunkName;
 
                     RtlInitAnsiString(&ThunkName, ThunkDescriptor->ThunkName);
+
+                    /* If we did not have them yet, grab the verifier stubs (not the original functions!) */
+                    if (!vrf_RtlInitializeCriticalSection && RtlEqualString(&ThunkName, &RtlInitializeCriticalSectionName, FALSE))
+                    {
+                        vrf_RtlInitializeCriticalSection = ThunkDescriptor->ThunkNewAddress;
+                    }
+
+                    if (!vrf_RtlEnterCriticalSection && RtlEqualString(&ThunkName, &RtlEnterCriticalSectionName, FALSE))
+                    {
+                        vrf_RtlEnterCriticalSection = ThunkDescriptor->ThunkNewAddress;
+                    }
+
                     /* We cannot call the public api, because that would run init routines! */
                     if (NT_SUCCESS(LdrpGetProcedureAddress(LdrEntry->DllBase, &ThunkName, 0, &ThunkDescriptor->ThunkOldAddress, FALSE)))
                     {
@@ -503,6 +554,7 @@ AVrfpChainDuplicateThunks(VOID)
                         DbgPrint("AVRF: Chaining (%ws: %s) to %wZ\n", DllDescriptor->DllName, ThunkDescriptor->ThunkName, &Provider->DllName);
 
                     ThunkDescriptor->ThunkOldAddress = Ptr;
+                    // FIXME: Check if this is one of our stubs here!
                 }
             }
         }
