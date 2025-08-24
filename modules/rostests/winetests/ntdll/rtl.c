@@ -190,6 +190,13 @@ static void InitFunctionPtrs(void)
     }
     strcpy((char*)src_aligned_block, src_src);
     ok(strlen(src) == 15, "Source must be 16 bytes long!\n");
+#ifdef __REACTOS__
+    /* On older Windows versions, this function has a broken calling convention! */
+    if (_winver < _WIN32_WINNT_WIN10)
+    {
+        pRtlUlonglongByteSwap = NULL;
+    }
+#endif
 }
 
 static void test_RtlQueryProcessDebugInformation(void)
