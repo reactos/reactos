@@ -2034,6 +2034,14 @@ static void test_KiUserExceptionDispatcher(void)
         return;
     }
 
+#ifdef __REACTOS__ // This hangs on Windows 10 WOW64
+    if (is_wow64)
+    {
+        win_skip("Skipping test that hangs on WOW64\n");
+        return;
+    }
+#endif
+
     *(DWORD *)(except_code + 1) = (DWORD)&test_kiuserexceptiondispatcher_regs;
     *(DWORD *)(except_code + 0x1d) = (DWORD)&test_kiuserexceptiondispatcher_regs.new_eax;
 
@@ -11827,6 +11835,16 @@ static void test_context_exception_request(void)
 
     while (ReadAcquire( &p.sync ) != 5)
         SwitchToThread();
+
+#if defined(__REACTOS__) && defined(__i386__) && !defined(__GNUC__)
+    if (is_wow64)
+    {
+        win_skip("Skipping on WOW64 with MSVC builds, because it makes the test crash\n");
+        CloseHandle( thread );
+        CloseHandle( p.event );
+        return;
+    }
+#endif
 
     expected_flags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING;
 
