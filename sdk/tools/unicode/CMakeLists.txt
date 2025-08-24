@@ -96,4 +96,9 @@ if(MSVC)
 
     # Disable warning "conversion from 'const WCHAR' to 'char', possible loss of data"
     target_compile_options(unicode PRIVATE "/wd4244")
+    
+    if(ARCH STREQUAL "amd64")
+        # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+        target_compile_options(unicode PRIVATE "/wd4267")
+    endif()
 endif()

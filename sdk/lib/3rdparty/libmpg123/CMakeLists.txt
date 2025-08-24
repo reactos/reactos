@@ -46,6 +46,11 @@ add_library(libmpg123
     ${SOURCE}
     ${PCH_SKIP_SOURCE})
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    target_compile_options(libmpg123 PRIVATE "/wd4267")
+endif()
+
 target_link_libraries(libmpg123 oldnames)
 add_dependencies(libmpg123 psdk)
 add_pch(libmpg123 precomp.h "${PCH_SKIP_SOURCE}")

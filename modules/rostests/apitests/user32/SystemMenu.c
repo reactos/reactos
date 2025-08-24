@@ -158,7 +158,7 @@ static void add_message_(int line, const struct recvd_message *msg)
             sprintf(seq->output, "%s: %p %04x wp %08Ix lp %08Ix",
                     msg->descr, msg->hwnd, msg->message, msg->wParam, msg->lParam);
             if (msg->flags & (sent | posted | parent | defwinproc | beginpaint))
-                sprintf(seq->output + strlen(seq->output), " (flags %x)", msg->flags);
+                sprintf(seq->output + (DWORD)strlen(seq->output), " (flags %x)", msg->flags);
         }
     }
 }

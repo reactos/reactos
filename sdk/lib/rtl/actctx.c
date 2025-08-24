@@ -1272,7 +1272,7 @@ static BOOL set_error( xmlbuf_t *xmlbuf )
 
 static BOOL is_xmlns_attr( const struct xml_attr *attr )
 {
-    const int len = wcslen( xmlnsW );
+    const int len = (int)wcslen( xmlnsW );
     if (attr->name.len < len) return FALSE;
     if (wcsncmp( attr->name.ptr, xmlnsW, len )) return FALSE;
     return (attr->name.len == len || attr->name.ptr[len] == ':');
@@ -1280,7 +1280,7 @@ static BOOL is_xmlns_attr( const struct xml_attr *attr )
 
 static void push_xmlns( xmlbuf_t *xmlbuf, const struct xml_attr *attr )
 {
-    const int len = wcslen( xmlnsW );
+    const int len = (int)wcslen( xmlnsW );
     struct xml_attr *ns;
 
     if (xmlbuf->ns_pos == MAX_NAMESPACES - 1)
@@ -3789,7 +3789,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
                 struct entity *entity = &dll->entities.base[k];
                 if (entity->kind == ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION)
                 {
-                    int class_len = wcslen(entity->u.class.name) + 1;
+                    int class_len = (int)wcslen(entity->u.class.name) + 1;
                     int len;
 
                     /* each class entry needs index, data and string data */

@@ -28,5 +28,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(adns PRIVATE -Wno-unused-but-set-variable)
 endif()
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    target_compile_options(adns PRIVATE "/wd4267")
+endif()
+
 add_dependencies(adns psdk)
 add_pch(adns src/internal.h SOURCE)

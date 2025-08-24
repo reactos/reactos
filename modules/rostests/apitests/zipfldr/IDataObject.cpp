@@ -176,7 +176,7 @@ static void test_FileDescriptor(FILEGROUPDESCRIPTORW* Descriptor)
         ok_hex(FileDescriptor->ftLastWriteTime.dwHighDateTime, FileTime.dwHighDateTime);
         ok_hex(FileDescriptor->ftLastWriteTime.dwLowDateTime, FileTime.dwLowDateTime);
         ok_hex(FileDescriptor->nFileSizeHigh, 0);
-        ok_hex(FileDescriptor->nFileSizeLow, strlen(test_file_1_contents));
+        ok_hex(FileDescriptor->nFileSizeLow, (DWORD)(DWORD)strlen(test_file_1_contents));
         ok_wstr(FileDescriptor->cFileName, L"test_file_for_zip.txt");
     }
 }
@@ -213,7 +213,7 @@ static void test_FileDescriptor_Folder(FILEGROUPDESCRIPTORW* Descriptor)
             ok_hex(FileDescriptor->ftLastWriteTime.dwHighDateTime, FileTime.dwHighDateTime);
             ok_hex(FileDescriptor->ftLastWriteTime.dwLowDateTime, FileTime.dwLowDateTime);
             ok_hex(FileDescriptor->nFileSizeHigh, 0);
-            ok_hex(FileDescriptor->nFileSizeLow, strlen(test_file_2_contents));
+            ok_hex(FileDescriptor->nFileSizeLow, (DWORD)(DWORD)strlen(test_file_2_contents));
             ok_wstr(FileDescriptor->cFileName, L"folder_1\\test_file_for_zip.txt");
         }
     }
@@ -234,7 +234,7 @@ static void test_FileContents1(IStream* Stream)
 
         ok_wstr(statstg.pwcsName, L"test_file_for_zip.txt");
         ok_hex(statstg.type, STGTY_STREAM);
-        ok_int(statstg.cbSize.LowPart, strlen(test_file_1_contents));
+        ok_int(statstg.cbSize.LowPart, (DWORD)(DWORD)strlen(test_file_1_contents));
         ok_hex(statstg.cbSize.HighPart, 0);
         ok_hex(statstg.mtime.dwHighDateTime, FileTime.dwHighDateTime);
         ok_hex(statstg.mtime.dwLowDateTime, FileTime.dwLowDateTime);
@@ -260,14 +260,14 @@ static void test_FileContents1(IStream* Stream)
     ULONG cbRead;
     hr = Stream->Read(buf, sizeof(buf)-1, &cbRead);
     ok_hex(hr, S_FALSE);
-    ok_int(cbRead, strlen(test_file_1_contents));
+    ok_int(cbRead, (DWORD)(DWORD)strlen(test_file_1_contents));
     ok_str(buf, test_file_1_contents);
 
     hr = Stream->Seek(Offset, STREAM_SEEK_CUR, &NewPosition);
     ok_hex(hr, g_bOldZipfldr ? E_NOTIMPL : S_OK);
     ok_int(NewPosition.HighPart, 0);
     if (SUCCEEDED(hr))
-        ok_int(NewPosition.LowPart, strlen(test_file_1_contents));
+        ok_int(NewPosition.LowPart, (DWORD)(DWORD)strlen(test_file_1_contents));
 
     ULONG cbWritten;
     hr = Stream->Write("DUMMY", 5, &cbWritten);
@@ -291,7 +291,7 @@ static void test_FileContents1(IStream* Stream)
     ok_hex(hr, g_bOldZipfldr ? E_NOTIMPL : S_OK);
     if (SUCCEEDED(hr))
     {
-        ok_int(statstg.cbSize.LowPart, strlen(test_file_1_contents));
+        ok_int(statstg.cbSize.LowPart, (DWORD)strlen(test_file_1_contents));
         CoTaskMemFree(statstg.pwcsName);
     }
 
@@ -305,7 +305,7 @@ static void test_FileContents1(IStream* Stream)
         memset(buf, 0, sizeof(buf));
         hr = Stream->Read(buf, sizeof(buf)-1, &cbRead);
         ok_hex(hr, S_FALSE);
-        ok_int(cbRead, strlen(test_file_1_contents));
+        ok_int(cbRead, (DWORD)strlen(test_file_1_contents));
     }
 }
 
@@ -324,7 +324,7 @@ static void test_FileContents2(IStream* Stream)
 
         ok_wstr(statstg.pwcsName, L"test_file_for_zip.txt");
         ok_hex(statstg.type, STGTY_STREAM);
-        ok_int(statstg.cbSize.LowPart, strlen(test_file_2_contents));
+        ok_int(statstg.cbSize.LowPart, (DWORD)strlen(test_file_2_contents));
         ok_hex(statstg.cbSize.HighPart, 0);
         ok_hex(statstg.mtime.dwHighDateTime, FileTime.dwHighDateTime);
         ok_hex(statstg.mtime.dwLowDateTime, FileTime.dwLowDateTime);
@@ -350,14 +350,14 @@ static void test_FileContents2(IStream* Stream)
     ULONG cbRead;
     hr = Stream->Read(buf, sizeof(buf)-1, &cbRead);
     ok_hex(hr, S_FALSE);
-    ok_int(cbRead, strlen(test_file_2_contents));
+    ok_int(cbRead, (DWORD)strlen(test_file_2_contents));
     ok_str(buf, test_file_2_contents);
 
     hr = Stream->Seek(Offset, STREAM_SEEK_CUR, &NewPosition);
     ok_hex(hr, g_bOldZipfldr ? E_NOTIMPL : S_OK);
     ok_int(NewPosition.HighPart, 0);
     if (SUCCEEDED(hr))
-        ok_int(NewPosition.LowPart, strlen(test_file_2_contents));
+        ok_int(NewPosition.LowPart, (DWORD)strlen(test_file_2_contents));
 
     ULONG cbWritten;
     hr = Stream->Write("DUMMY", 5, &cbWritten);
@@ -381,7 +381,7 @@ static void test_FileContents2(IStream* Stream)
     ok_hex(hr, g_bOldZipfldr ? E_NOTIMPL : S_OK);
     if (SUCCEEDED(hr))
     {
-        ok_int(statstg.cbSize.LowPart, strlen(test_file_2_contents));
+        ok_int(statstg.cbSize.LowPart, (DWORD)strlen(test_file_2_contents));
         CoTaskMemFree(statstg.pwcsName);
     }
 
@@ -395,7 +395,7 @@ static void test_FileContents2(IStream* Stream)
         memset(buf, 0, sizeof(buf));
         hr = Stream->Read(buf, sizeof(buf)-1, &cbRead);
         ok_hex(hr, S_FALSE);
-        ok_int(cbRead, strlen(test_file_2_contents));
+        ok_int(cbRead, (DWORD)strlen(test_file_2_contents));
         ok_str(buf, test_file_2_contents);
     }
 }

@@ -6,6 +6,12 @@ set(LWIP_INCLUDE_DIRS
 )
 include(${LWIP_DIR}/src/Filelists.cmake)
 add_dependencies(lwipcore xdk)
+
+if(MSVC AND ARCH STREQUAL "amd64")
+    # lwip is 3rd party code - suppress C4267 warnings
+    target_compile_options(lwipcore PRIVATE "/wd4267")
+endif()
+
 add_subdirectory(ip)
 
 add_definitions(

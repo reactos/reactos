@@ -504,7 +504,7 @@ AddPrintMonitorList( LPCWSTR pName, LPWSTR DllName )
         goto Cleanup;
     }
 
-    cchPrintMonitorName = wcslen(pPrintMonitor->pwszName);
+    cchPrintMonitorName = (DWORD)wcslen(pPrintMonitor->pwszName);
 
     if ( DllName == NULL )
     {

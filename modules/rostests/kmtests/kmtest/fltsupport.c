@@ -305,6 +305,7 @@ KmtFltSendStringToDriver(
 {
     assert(hPort);
     assert(String);
+    
     return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)strlen(String), NULL, 0, NULL);
 }
 
@@ -328,7 +329,7 @@ KmtFltSendWStringToDriver(
     _In_ DWORD Message,
     _In_ PCWSTR String)
 {
-    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)wcslen(String) * sizeof(WCHAR), NULL, 0, NULL);
+    return KmtFltSendBufferToDriver(hPort, Message, (PVOID)String, (DWORD)(wcslen(String) * sizeof(WCHAR)), NULL, 0, NULL);
 }
 
 /**

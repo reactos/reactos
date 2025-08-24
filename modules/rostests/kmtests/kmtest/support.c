@@ -313,7 +313,7 @@ KmtSendWStringToDriver(
 
     assert(ControlCode < 0x400);
 
-    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)wcslen(String) * sizeof(WCHAR), NULL, 0, &BytesRead, NULL))
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)(wcslen(String) * sizeof(WCHAR)), NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
     return ERROR_SUCCESS;

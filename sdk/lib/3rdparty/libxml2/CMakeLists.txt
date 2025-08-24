@@ -69,6 +69,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(libxml2 PRIVATE "/wd4101")
     # Local variable initialized but not referenced
     remove_target_compile_option(libxml2 "/we4189")
+    
+    if(ARCH STREQUAL "amd64")
+        # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+        target_compile_options(libxml2 PRIVATE "/wd4267")
+    endif()
 else()
     target_compile_options(libxml2 PRIVATE "-w")
 endif()

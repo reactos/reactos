@@ -45,7 +45,7 @@ _GetNonspooledPortName(PCWSTR pwszPortNameWithoutColon, PWSTR* ppwszNonspooledPo
 {
     DWORD cchPortNameWithoutColon;
 
-    cchPortNameWithoutColon = wcslen(pwszPortNameWithoutColon);
+    cchPortNameWithoutColon = (DWORD)wcslen(pwszPortNameWithoutColon);
 
     *ppwszNonspooledPortName = DllAllocSplMem((cchNonspooledPrefix + cchPortNameWithoutColon + 1) * sizeof(WCHAR));
     if (!*ppwszNonspooledPortName)
@@ -192,7 +192,7 @@ _CreateNonspooledPort(PLOCALMON_PORT pPort)
         goto Cleanup;
     }
 
-    cchPortNameWithoutColon = wcslen(pwszPortNameWithoutColon);
+    cchPortNameWithoutColon = (DWORD)wcslen(pwszPortNameWithoutColon);
 
     // The spooler has usually remapped the legacy port to a named pipe of the format in wszSpoolerNamedPipe.
     // Construct the device name of this pipe.
