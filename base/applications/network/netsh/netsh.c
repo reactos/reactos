@@ -235,8 +235,19 @@ PrintMessageFromModule(
     _In_ DWORD  dwMsgId,
     ...)
 {
-    DPRINT1("PrintMessageFromModule()\n");
-    return 1;
+    WCHAR Buffer[256];
+    INT Length;
+    va_list ap;
+
+    Length = LoadStringW(hModule, dwMsgId, Buffer, 256);
+    if (Length == 0)
+        return 0;
+
+    va_start(ap, dwMsgId);
+    Length = ConPrintfV(StdOut, Buffer, ap);
+    va_end(ap);
+
+    return Length;
 }
 
 DWORD
