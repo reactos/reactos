@@ -1054,6 +1054,14 @@ static void test_exceptions(void)
     run_exception_test(dreg_handler, &dreg_test, &segfault_code, sizeof(segfault_code), 0);
     check_debug_registers(2, &dreg_test);
 
+#if defined(__REACTOS__) && defined(_WINKD_)
+    if (1)
+    {
+        skip("Skipping test of single stepping behavior and int3 handling with WinDbg\n");
+        return;
+    }
+#endif
+
     /* test single stepping behavior */
     got_exception = 0;
     run_exception_test(single_step_handler, NULL, &single_stepcode, sizeof(single_stepcode), 0);
@@ -2032,6 +2040,14 @@ static void test_KiUserExceptionDispatcher(void)
         win_skip("RtlUnwind is not available.\n");
         return;
     }
+
+#ifdef __REACTOS__ // This hangs on Windows 10 WOW64
+    if (is_wow64)
+    {
+        win_skip("Skipping test that hangs on WOW64\n");
+        return;
+    }
+#endif
 
     *(DWORD *)(except_code + 1) = (DWORD)&test_kiuserexceptiondispatcher_regs;
     *(DWORD *)(except_code + 0x1d) = (DWORD)&test_kiuserexceptiondispatcher_regs.new_eax;
@@ -11805,6 +11821,16 @@ static void test_context_exception_request(void)
     while (ReadAcquire( &p.sync ) != 5)
         SwitchToThread();
 
+#if defined(__REACTOS__) && defined(__i386__) && !defined(__GNUC__)
+    if (is_wow64)
+    {
+        win_skip("Skipping on WOW64 with MSVC builds, because it makes the test crash\n");
+        CloseHandle( thread );
+        CloseHandle( p.event );
+        return;
+    }
+#endif
+
     expected_flags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING;
 
     c.ContextFlags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST;
@@ -11819,6 +11845,7 @@ static void test_context_exception_request(void)
     ok( c.ContextFlags == expected_flags, "got %#lx.\n", c.ContextFlags );
 
     WriteRelease( &p.sync, 6 );
+
 
     if (is_wow64 && !old_wow64)
     {
@@ -12049,6 +12076,7 @@ START_TEST(exception)
     test_copy_context();
     test_set_live_context();
     test_hwbpt_in_syscall();
+    trace("### test_instrumentation_callback...\n");
     test_instrumentation_callback();
 
 #elif defined(__x86_64__)
