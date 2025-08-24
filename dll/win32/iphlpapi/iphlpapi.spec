@@ -12,6 +12,20 @@
 @ stdcall AllocateAndGetUdpTableFromStack(ptr long long long)
 @ stdcall CancelIPChangeNotify(ptr)
 @ stub CancelSecurityHealthChangeNotify
+@ stdcall -stub -version=0x600+ ConvertGuidToStringA(ptr ptr long)
+@ stdcall -stub -version=0x600+ ConvertGuidToStringW(ptr ptr long)
+@ stdcall -stub -version=0x600+ ConvertInterfaceAliasToLuid(wstr ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceGuidToLuid(ptr ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceIndexToLuid(long ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceLuidToAlias(ptr ptr long)
+@ stdcall -stub -version=0x600+ ConvertInterfaceLuidToGuid(ptr ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceLuidToIndex(ptr ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceLuidToNameA(ptr ptr long)
+@ stdcall -stub -version=0x600+ ConvertInterfaceLuidToNameW(ptr ptr long)
+@ stdcall -stub -version=0x600+ ConvertInterfaceNameToLuidA(str ptr)
+@ stdcall -stub -version=0x600+ ConvertInterfaceNameToLuidW(wstr ptr)
+@ stdcall -stub -version=0x600+ ConvertLengthToIpv4Mask(long ptr)
+@ stdcall -stub -version=0x600+ ConvertStringToGuidW(wstr ptr)
 @ stdcall CreateIpForwardEntry(ptr)
 @ stdcall CreateIpNetEntry(ptr)
 @ stdcall CreateProxyArpEntry(long long long)
@@ -23,6 +37,7 @@
 @ stdcall EnableRouter(ptr ptr)
 @ stdcall FlushIpNetTable(long)
 @ stub FlushIpNetTableFromStack
+@ stdcall -stub -version=0x600+ FreeMibTable(ptr)
 @ stdcall GetAdapterIndex(wstr ptr)
 @ stdcall GetAdapterOrderMap()
 @ stdcall GetAdaptersAddresses(long long ptr ptr ptr)
@@ -32,6 +47,7 @@
 @ stub GetBestInterfaceFromStack
 @ stdcall GetBestRoute(long long long)
 @ stub GetBestRouteFromStack
+@ stdcall -stub -version=0x600+ GetCurrentThreadCompartmentId()
 @ stdcall GetExtendedTcpTable(ptr ptr long long long long)
 @ stdcall GetExtendedUdpTable(ptr ptr long long long long)
 @ stdcall GetFriendlyIfIndex(long)
@@ -40,8 +56,12 @@
 @ stub GetIcmpStatsFromStack
 @ stub GetIcmpStatsFromStackEx
 @ stdcall GetIfEntry(ptr)
+@ stdcall -stub -version=0x600+ GetIfEntry2(ptr)
+@ stdcall -stub -version=0xA00+ GetIfEntry2Ex(long ptr)
 @ stub GetIfEntryFromStack
 @ stdcall GetIfTable(ptr ptr long)
+@ stdcall -stub -version=0x600+ GetIfTable2(ptr)
+@ stdcall -stub -version=0x600+ GetIfTable2Ex(long ptr)
 @ stub GetIfTableFromStack
 @ stub GetIgmpList
 @ stdcall GetInterfaceInfo(ptr ptr)
@@ -49,8 +69,10 @@
 @ stub GetIpAddrTableFromStack
 @ stdcall GetIpErrorString(long ptr ptr)
 @ stdcall GetIpForwardTable(ptr ptr long)
+@ stdcall -stub -version=0x600+ GetIpForwardTable2(long ptr)
 @ stub GetIpForwardTableFromStack
 @ stdcall GetIpNetTable(ptr ptr long)
+@ stdcall -stub -version=0x600+ GetIpNetTable2(long ptr)
 @ stub GetIpNetTableFromStack
 @ stdcall GetIpStatistics(ptr)
 @ stdcall GetIpStatisticsEx(ptr long)
@@ -78,6 +100,8 @@
 @ stub  GetUdpStatsFromStackEx
 @ stdcall GetUdpTable(ptr ptr long)
 @ stub GetUdpTableFromStack
+@ stdcall -stub -version=0x600+ GetUnicastIpAddressEntry(ptr)
+@ stdcall -stub -version=0x600+ GetUnicastIpAddressTable(long ptr)
 @ stdcall GetUniDirectionalAdapterInfo(ptr ptr)
 @ stdcall Icmp6CreateFile()
 @ stdcall Icmp6ParseReplies(ptr long)
@@ -87,6 +111,8 @@
 @ stdcall IcmpParseReplies(ptr long)
 @ stdcall IcmpSendEcho2(ptr ptr ptr ptr long ptr long ptr ptr long long)
 @ stdcall IcmpSendEcho(ptr long ptr long ptr ptr long long)
+@ stdcall -stub -version=0x600+ if_indextoname(long ptr)
+@ stdcall -stub -version=0x600+ if_nametoindex(str)
 @ stub InternalCreateIpForwardEntry
 @ stub InternalCreateIpNetEntry
 @ stub InternalDeleteIpForwardEntry
