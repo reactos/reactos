@@ -2482,6 +2482,14 @@ static void test_NtRegLoadKeyEx(void)
     UNICODE_STRING hivefile_pathW, key_pathW;
     HANDLE key = 0;
 
+#ifdef __REACTOS__
+    if (_winver < _WIN32_WINNT_VISTA)
+    {
+        win_skip("Skipping tests for NtLoadKeyEx on pre-NT6\n");
+        return;
+    }
+#endif
+
     GetTempPathW(ARRAY_SIZE(temp_path), temp_path);
     GetTempFileNameW(temp_path, L"key", 0, hivefile_path);
     DeleteFileW(hivefile_path);
