@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_executable(d3dx9_36_winetest
     asm.c
     core.c 

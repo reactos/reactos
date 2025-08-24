@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_executable(services_winetest service.c testlist.c)
 set_module_type(services_winetest win32cui)
 add_importlibs(services_winetest user32 advapi32 msvcrt kernel32)

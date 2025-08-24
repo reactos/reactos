@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(msrle32_winetest msrle.c testlist.c)
 set_module_type(msrle32_winetest win32cui)
