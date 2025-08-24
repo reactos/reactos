@@ -2578,7 +2578,14 @@ static void test_query_image_information(void)
 
     /* image mapping */
 
+#ifdef __REACTOS__
+    char path[MAX_PATH];
+    GetWindowsDirectoryA(path, MAX_PATH);
+    strcat(path, "\\system32\\kernel32.dll");
+    file = CreateFileA( path, GENERIC_READ, FILE_SHARE_READ, NULL,
+#else
     file = CreateFileA( "c:\\windows\\system32\\kernel32.dll", GENERIC_READ, FILE_SHARE_READ, NULL,
+#endif
                         OPEN_EXISTING, 0, 0 );
     mapping = CreateFileMappingA( file, NULL, SEC_IMAGE | PAGE_READONLY, 0, 0, NULL );
     ok( mapping != 0, "CreateFileMapping failed\n" );
@@ -2604,8 +2611,11 @@ static void test_query_image_information(void)
     NtUnmapViewOfSection( NtCurrentProcess(), ptr );
 
     /* partial image mapping */
-
+#ifdef __REACTOS__
+    file = CreateFileA( path, GENERIC_READ, FILE_SHARE_READ, NULL,
+#else
     file = CreateFileA( "c:\\windows\\system32\\kernel32.dll", GENERIC_READ, FILE_SHARE_READ, NULL,
+#endif
                         OPEN_EXISTING, 0, 0 );
     mapping = CreateFileMappingA( file, NULL, SEC_IMAGE | PAGE_READONLY, 0, 0x4000, NULL );
     ok( mapping != 0, "CreateFileMapping failed\n" );
@@ -2635,7 +2645,11 @@ static void test_query_image_information(void)
 
     NtUnmapViewOfSection( NtCurrentProcess(), ptr );
 
+#ifdef __REACTOS__
+    file = CreateFileA( path, GENERIC_READ, FILE_SHARE_READ, NULL,
+#else
     file = CreateFileA( "c:\\windows\\system32\\kernel32.dll", GENERIC_READ, FILE_SHARE_READ, NULL,
+#endif
                         OPEN_EXISTING, 0, 0 );
     mapping = CreateFileMappingA( file, NULL, SEC_IMAGE | PAGE_READONLY, 0, 0, NULL );
     ok( mapping != 0, "CreateFileMapping failed\n" );
