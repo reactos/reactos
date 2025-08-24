@@ -426,6 +426,17 @@ static void test_RtlByteSwap(void)
             "ntdll.RtlUlongByteSwap() returns %#lx\n", lresult );
     }
 
+#ifdef __REACTOS__
+    /* On older Windows versions, RtlUlonglongByteSwap has a broken calling convention! */
+    RTL_OSVERSIONINFOEXW verInfo = { sizeof(verInfo) };
+    RtlGetVersion(&verInfo);
+    if (verInfo.dwMajorVersion < 10)
+    {
+        skip("Skipping RtlUlonglongByteSwap test due to broken calling convention\n");
+        return;
+    }
+#endif
+
     ok( pRtlUlonglongByteSwap != NULL, "RtlUlonglongByteSwap is not available\n");
     if ( pRtlUlonglongByteSwap )
     {
