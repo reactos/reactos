@@ -94,7 +94,27 @@ TestHardError(
     CheckHardError(0x40000003,                  0, OptionOk,                STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);           // TODO: interactive on ROS
     }
 
-    CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseNotHandled,     0, 0);
+    // The return value is a random large value on Windows Server 2003
+    if (GetNTVersion() > _WIN32_WINNT_WS03)
+    {
+#if _WIN64
+        if (GetNTVersion() == _WIN32_WINNT_VISTA)
+        {
+            CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, 64,     0, 0);
+        }
+        else
+        {
+            CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseReturnToCaller,     0, 0);
+        }
+#else
+        // Return value is also a random large value on 32-bit 8+
+        if (GetNTVersion() < _WIN32_WINNT_WIN8)
+        {
+            CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseReturnToCaller,     0, 0);
+        }
+#endif
+    }
+
     if (InteractivePart1)
     {
     // TODO: these 2 are interactive on ROS
@@ -116,12 +136,12 @@ TestHardError(
     CheckHardError(0x40000013,                  0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseNo,             0, 0);                          // outputs a box :|
     CheckHardError(0x40000013,                  0, OptionYesNoCancel,       STATUS_SUCCESS,            ResponseCancel,         0, 0);                          // outputs a box :|
     }
-    CheckHardError(0x40000009,                  0, 9,                       STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000a,                  0, 10,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000b,                  0, 11,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000c,                  0, 12,                      STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000d,                  0, MAXULONG / 2 + 1,        STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
-    CheckHardError(0x4000000d,                  0, MAXULONG,                STATUS_SUCCESS,            ResponseNotHandled,     0, 0);
+    CheckHardError(0x40000009,                  0, 9,                       STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
+    CheckHardError(0x4000000a,                  0, 10,                      STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
+    CheckHardError(0x4000000b,                  0, 11,                      STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
+    CheckHardError(0x4000000c,                  0, 12,                      STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
+    CheckHardError(0x4000000d,                  0, MAXULONG / 2 + 1,        STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
+    CheckHardError(0x4000000d,                  0, MAXULONG,                STATUS_SUCCESS,            ResponseReturnToCaller,     0, 0);
 
     if (InteractivePart2)
     {
