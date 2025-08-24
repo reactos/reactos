@@ -4383,7 +4383,11 @@ static void test_continue(void)
 
 static void test_wow64_context(void)
 {
+#ifdef __REACTOS__
+    char appname[MAX_PATH];
+#else
     const char appname[] = "C:\\windows\\syswow64\\cmd.exe";
+#endif
     char cmdline[256];
     THREAD_BASIC_INFORMATION info;
     PROCESS_INFORMATION pi;
@@ -4407,6 +4411,9 @@ static void test_wow64_context(void)
         skip("RtlWow64Get/SetThreadContext not found\n");
         return;
     }
+
+    GetWindowsDirectoryA(appname, sizeof(appname));
+    strcat(appname, "\\syswow64\\cmd.exe");
 #endif
 
     memset(&ctx, 0x55, sizeof(ctx));
@@ -8519,7 +8526,11 @@ static void test_debug_registers(void)
 
 static void test_debug_registers_wow64(void)
 {
+#ifdef __REACTOS__
+    char cmdline[MAX_PATH];
+#else
     char cmdline[] = "C:\\windows\\syswow64\\msinfo32.exe";
+#endif
     PROCESS_INFORMATION pi;
     STARTUPINFOA si = {0};
     WOW64_CONTEXT wow64_ctx;
@@ -8535,6 +8546,9 @@ static void test_debug_registers_wow64(void)
         skip("RtlWow64Get/SetThreadContext not found\n");
         return;
     }
+
+    GetWindowsDirectoryA(cmdline, sizeof(cmdline));
+    strcat(cmdline, "\\syswow64\\msinfo32.exe");
 #endif
 
     si.cb = sizeof(si);
