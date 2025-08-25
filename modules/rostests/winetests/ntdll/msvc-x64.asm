@@ -44,4 +44,11 @@ __cld PROC
     ret
 __cld ENDP
 
+; void __set_r12(ULONG64 val);
+PUBLIC __set_r12
+__set_r12 PROC
+    mov r12, rcx
+    ret
+__set_r12 ENDP
+
 END
