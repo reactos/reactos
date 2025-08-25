@@ -77,213 +77,212 @@ NtGdiEscape(HDC  hDC,
 
 INT
 APIENTRY
-NtGdiExtEscape(
-   HDC    hDC,
-   IN OPTIONAL PWCHAR pDriver,
-   IN INT nDriver,
-   INT    Escape,
-   INT    InSize,
-   OPTIONAL LPSTR UnsafeInData,
-   INT    OutSize,
-   OPTIONAL LPSTR  UnsafeOutData)
+IntExtEscape(
+   HDC hdc,
+    INT    iEsc,
+    INT    cjIn,
+    LPSTR  pjIn,
+    INT    cjOut,
+    LPSTR  pjOut )
 {
-   LPVOID   SafeInData = NULL;
-   LPVOID   SafeOutData = NULL;
-   NTSTATUS Status = STATUS_SUCCESS;
-   INT      Result;
-   PPDEVOBJ ppdev;
-   PSURFACE psurf;
+    INT ret;
+    PPDEVOBJ ppdev;
+    SURFACE *psurf;
+    KFLOATING_SAVE TempBuffer;
 
-   if (hDC == NULL)
-   {
-      if (pDriver)
-      {
-         /* FIXME : Get the pdev from its name */
-         UNIMPLEMENTED;
-         return -1;
-      }
+    if (hdc == NULL)
+    {
+       ppdev = EngpGetPDEV(NULL);
+       if (!ppdev)
+       {
+          EngSetLastError(ERROR_BAD_DEVICE);
+          return -1;
+       }
 
-      ppdev = EngpGetPDEV(NULL);
-      if (!ppdev)
-      {
-         EngSetLastError(ERROR_BAD_DEVICE);
-         return -1;
-      }
+       /* We're using the primary surface of the pdev. Lock it */
+       EngAcquireSemaphore(ppdev->hsemDevLock);
 
-      /* We're using the primary surface of the pdev. Lock it */
-      EngAcquireSemaphore(ppdev->hsemDevLock);
+       psurf = ppdev->pSurface;
+       if (!psurf)
+       {
+          EngReleaseSemaphore(ppdev->hsemDevLock);
+          PDEVOBJ_vRelease(ppdev);
+          return 0;
+       }
+       SURFACE_ShareLockByPointer(psurf);
+    }
+    else
+    {
+       PDC pDC = DC_LockDc(hdc);
+       if ( pDC == NULL )
+       {
+          EngSetLastError(ERROR_INVALID_HANDLE);
+          return -1;
+       }
 
-      psurf = ppdev->pSurface;
-      if (!psurf)
-      {
-         EngReleaseSemaphore(ppdev->hsemDevLock);
-         PDEVOBJ_vRelease(ppdev);
-         return 0;
-      }
-      SURFACE_ShareLockByPointer(psurf);
-   }
-   else
-   {
-      PDC pDC = DC_LockDc(hDC);
-      if ( pDC == NULL )
-      {
-         EngSetLastError(ERROR_INVALID_HANDLE);
-         return -1;
-      }
+       /* Get the PDEV from the DC */
+       ppdev = pDC->ppdev;
+       PDEVOBJ_vReference(ppdev);
 
-      /* Get the PDEV from the DC */
-      ppdev = pDC->ppdev;
-      PDEVOBJ_vReference(ppdev);
+       /* Check if we have a surface */
+       psurf = pDC->dclevel.pSurface;
+       if (!psurf)
+       {
+          DC_UnlockDc(pDC);
+          PDEVOBJ_vRelease(ppdev);
+          return 0;
+       }
+       SURFACE_ShareLockByPointer(psurf);
 
-      /* Check if we have a surface */
-      psurf = pDC->dclevel.pSurface;
-      if (!psurf)
-      {
-         DC_UnlockDc(pDC);
-         PDEVOBJ_vRelease(ppdev);
-         return 0;
-      }
-      SURFACE_ShareLockByPointer(psurf);
+       /* We're done with the DC */
+       DC_UnlockDc(pDC);
+    }
 
-      /* We're done with the DC */
-      DC_UnlockDc(pDC);
-   }
+    ret = KeSaveFloatingPointState(&TempBuffer);
+    ret = ppdev->DriverFunctions.Escape( &psurf->SurfObj, iEsc, cjIn, pjIn, cjOut, pjOut );
+    KeRestoreFloatingPointState(&TempBuffer);
 
-   /* See if we actually have a driver function to call */
-   if (ppdev->DriverFunctions.Escape == NULL)
-   {
-      Result = 0;
-      goto Exit;
-   }
 
-   if ( InSize && UnsafeInData )
-   {
-      _SEH2_TRY
-      {
-        ProbeForRead(UnsafeInData,
-                     InSize,
-                     1);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
+    SURFACE_ShareUnlockSurface(psurf);
+    if (hdc == NULL)
+    {
+       EngReleaseSemaphore(ppdev->hsemDevLock);
+    }
+    PDEVOBJ_vRelease(ppdev);
 
-      if (!NT_SUCCESS(Status))
-      {
-         Result = -1;
-         goto Exit;
-      }
-
-      SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, GDITAG_TEMP );
-      if ( !SafeInData )
-      {
-         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         Result = -1;
-         goto Exit;
-      }
-
-      _SEH2_TRY
-      {
-        /* Pointers were already probed! */
-        RtlCopyMemory(SafeInData,
-                      UnsafeInData,
-                      InSize);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if ( !NT_SUCCESS(Status) )
-      {
-         SetLastNtError(Status);
-         Result = -1;
-         goto Exit;
-      }
-   }
-
-   if ( OutSize && UnsafeOutData )
-   {
-      _SEH2_TRY
-      {
-        ProbeForWrite(UnsafeOutData,
-                      OutSize,
-                      1);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         Result = -1;
-         goto Exit;
-      }
-
-      SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, GDITAG_TEMP );
-      if ( !SafeOutData )
-      {
-         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         Result = -1;
-         goto Exit;
-      }
-   }
-
-   /* Finally call the driver */
-   Result = ppdev->DriverFunctions.Escape(
-         &psurf->SurfObj,
-         Escape,
-         InSize,
-         SafeInData,
-         OutSize,
-         SafeOutData );
-
-Exit:
-   if (hDC == NULL)
-   {
-      EngReleaseSemaphore(ppdev->hsemDevLock);
-   }
-   SURFACE_ShareUnlockSurface(psurf);
-   PDEVOBJ_vRelease(ppdev);
-
-   if ( SafeInData )
-   {
-      ExFreePoolWithTag ( SafeInData ,GDITAG_TEMP );
-   }
-
-   if ( SafeOutData )
-   {
-      if (Result > 0)
-      {
-         _SEH2_TRY
-         {
-            /* Pointers were already probed! */
-            RtlCopyMemory(UnsafeOutData, SafeOutData, OutSize);
-         }
-         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-         {
-            Status = _SEH2_GetExceptionCode();
-         }
-         _SEH2_END;
-
-         if ( !NT_SUCCESS(Status) )
-         {
-            SetLastNtError(Status);
-            Result = -1;
-         }
-      }
-
-      ExFreePoolWithTag ( SafeOutData, GDITAG_TEMP );
-   }
-
-   return Result;
+    return ret;
 }
+
+INT
+APIENTRY
+IntNameExtEscape(
+    PWCHAR pDriver,
+    INT    iEsc,
+    INT    cjIn,
+    LPSTR  pjIn,
+    INT    cjOut,
+    LPSTR  pjOut )
+{
+    PPDEVOBJ ppdev;
+    UNICODE_STRING usDriver;
+    WCHAR awcBuffer[MAX_PATH];
+    RtlInitEmptyUnicodeString(&usDriver, awcBuffer, sizeof(awcBuffer));
+    RtlAppendUnicodeToString(&usDriver, L"\\SystemRoot\\System32\\");
+    RtlAppendUnicodeToString(&usDriver, pDriver);
+
+    ppdev = EngpGetPDEV(&usDriver);
+    if ( ppdev && ppdev->DriverFunctions.Escape )
+    {
+       return ppdev->DriverFunctions.Escape( &ppdev->pSurface->SurfObj, iEsc, cjIn, pjIn, cjOut, pjOut );
+    }
+    return 0;
+}
+
+INT
+APIENTRY
+NtGdiExtEscape(
+    _In_opt_ HDC hdc,
+    _In_reads_opt_(cwcDriver) PWCHAR pDriver,
+    _In_ INT cwcDriver,
+    _In_ INT iEsc,
+    _In_ INT cjIn,
+    _In_reads_bytes_opt_(cjIn) LPSTR pjIn,
+    _In_ INT cjOut,
+    _Out_writes_bytes_opt_(cjOut) LPSTR pjOut )
+{
+    LPSTR SafeInData = NULL;
+    LPSTR SafeOutData = NULL;
+    PWCHAR psafeDriver = NULL;
+    INT Ret = -1;
+    if (pDriver)
+    {
+       /* FIXME : Get the pdev from its name */
+       UNIMPLEMENTED;
+       return -1;
+    }
+    if ( pDriver )
+    {
+        psafeDriver = ExAllocatePoolWithTag( PagedPool, (cwcDriver + 1) * sizeof(WCHAR), GDITAG_TEMP );
+        RtlZeroMemory( psafeDriver, (cwcDriver + 1) * sizeof(WCHAR) );
+    }
+
+    if ( cjIn )
+    {
+       SafeInData = ExAllocatePoolWithTag( PagedPool, cjIn + 1, GDITAG_TEMP );
+    }
+
+    if ( cjOut )
+    {
+       SafeOutData = ExAllocatePoolWithTag( PagedPool, cjOut + 1, GDITAG_TEMP );
+    }
+
+    _SEH2_TRY
+    {
+        if ( psafeDriver )
+        {
+            ProbeForRead(pDriver, cwcDriver * sizeof(WCHAR), 1);
+            RtlCopyMemory(psafeDriver, pDriver, cwcDriver * sizeof(WCHAR));
+        }
+        if ( SafeInData )
+        {
+            ProbeForRead(pjIn, cjIn, 1);
+            RtlCopyMemory(SafeInData, pjIn, cjIn);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(goto Exit);
+    }
+    _SEH2_END;
+     
+    if ( SafeOutData )
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(pjOut, cjOut, 1);
+            RtlCopyMemory(pjOut, SafeOutData, cjOut);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+            Ret = -1;
+        }
+        _SEH2_END;
+    }
+
+
+    if ( pDriver )
+    {
+        Ret = IntNameExtEscape( psafeDriver, iEsc, cjIn, SafeInData, cjOut, SafeOutData );
+    }
+    else
+    {
+      
+            Ret = IntExtEscape( hdc, iEsc, cjIn, SafeInData, cjOut, SafeOutData );
+    }
+
+    if ( SafeOutData )
+    {
+        _SEH2_TRY
+        {
+            RtlCopyMemory(pjOut, SafeOutData, cjOut);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+            Ret = -1;
+        }
+        _SEH2_END;
+    }
+Exit:
+    if ( psafeDriver ) ExFreePoolWithTag ( psafeDriver, GDITAG_TEMP );
+    if ( SafeInData ) ExFreePoolWithTag ( SafeInData, GDITAG_TEMP );
+    if ( SafeOutData ) ExFreePoolWithTag ( SafeOutData, GDITAG_TEMP );
+
+    return Ret;
+}
+
 
 INT
 APIENTRY
