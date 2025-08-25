@@ -3214,7 +3214,7 @@ RtlLeaveCriticalSection(
 );
 
 NTSYSAPI
-BOOLEAN
+LOGICAL
 NTAPI
 RtlTryEnterCriticalSection(
     _In_ PRTL_CRITICAL_SECTION CriticalSection
