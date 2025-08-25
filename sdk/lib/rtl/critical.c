@@ -863,14 +863,14 @@ RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
     UNIMPLEMENTED;
 }
 
-ULONG
+LOGICAL
 NTAPI
 RtlIsCriticalSectionLocked(PRTL_CRITICAL_SECTION CriticalSection)
 {
     return CriticalSection->RecursionCount != 0;
 }
 
-ULONG
+LOGICAL
 NTAPI
 RtlIsCriticalSectionLockedByThread(PRTL_CRITICAL_SECTION CriticalSection)
 {
