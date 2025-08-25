@@ -44,6 +44,7 @@ USHORT __readsegfs(void);
 USHORT __readseggs(void);
 USHORT __readsegss(void);
 void __cld(void);
+void __set_r12(ULONG64 val);
 #endif // _M_AMD64
 #endif // __REACTOS__
 
@@ -1054,8 +1055,8 @@ static void test_exceptions(void)
     run_exception_test(dreg_handler, &dreg_test, &segfault_code, sizeof(segfault_code), 0);
     check_debug_registers(2, &dreg_test);
 
-#if defined(__REACTOS__) && defined(_WINKD_)
-    if (1)
+#if defined(__REACTOS__)
+    if (is_reactos())
     {
         skip("Skipping test of single stepping behavior and int3 handling with WinDbg\n");
         return;
@@ -3147,6 +3148,14 @@ static void test_exceptions(void)
         ok( got_exception == 4,"expected 4 exceptions, got %d\n", got_exception);
     }
 
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
+
     /* test single stepping behavior */
     SetUnhandledExceptionFilter( exc_filter );
     got_exception = 0;
@@ -3654,6 +3663,13 @@ static void run_rtlraiseexception_test(DWORD exceptioncode)
 
 static void test_rtlraiseexception(void)
 {
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
     if (!pRtlRaiseException)
     {
         skip("RtlRaiseException not found\n");
@@ -4367,7 +4383,11 @@ static void test_continue(void)
 
 static void test_wow64_context(void)
 {
+#ifdef __REACTOS__
+    char appname[MAX_PATH];
+#else
     const char appname[] = "C:\\windows\\syswow64\\cmd.exe";
+#endif
     char cmdline[256];
     THREAD_BASIC_INFORMATION info;
     PROCESS_INFORMATION pi;
@@ -4383,6 +4403,18 @@ static void test_wow64_context(void)
     BOOL r, got32, got64;
     unsigned int i, cs32, cs64;
     ULONG_PTR ecx, rcx;
+
+#ifdef __REACTOS__
+    if ((pRtlWow64GetThreadContext == NULL) ||
+        (pRtlWow64SetThreadContext == NULL))
+    {
+        skip("RtlWow64Get/SetThreadContext not found\n");
+        return;
+    }
+
+    GetWindowsDirectoryA(appname, sizeof(appname));
+    strcat(appname, "\\syswow64\\cmd.exe");
+#endif
 
     memset(&ctx, 0x55, sizeof(ctx));
     ctx.ContextFlags = WOW64_CONTEXT_ALL;
@@ -5054,6 +5086,8 @@ static void test_KiUserExceptionDispatcher(void)
 #ifdef __GNUC__
         /* Spoil r12 value to make sure it doesn't come from the current userspace registers. */
         __asm__ volatile("movq $0xdeadcafe, %%r12" : : : "%r12");
+#elif defined(__REACTOS__)
+        __set_r12(0xdeadcafe);
 #endif
         pNtRaiseException(&record, &ctx, TRUE);
         ok(0, "Shouldn't be reached.\n");
@@ -8490,7 +8524,11 @@ static void test_debug_registers(void)
 
 static void test_debug_registers_wow64(void)
 {
+#ifdef __REACTOS__
+    char cmdline[MAX_PATH];
+#else
     char cmdline[] = "C:\\windows\\syswow64\\msinfo32.exe";
+#endif
     PROCESS_INFORMATION pi;
     STARTUPINFOA si = {0};
     WOW64_CONTEXT wow64_ctx;
@@ -8498,6 +8536,18 @@ static void test_debug_registers_wow64(void)
     BOOL is_wow64;
     NTSTATUS ret;
     BOOL bret;
+
+#ifdef __REACTOS__
+    if ((pRtlWow64GetThreadContext == NULL) ||
+        (pRtlWow64SetThreadContext == NULL))
+    {
+        skip("RtlWow64Get/SetThreadContext not found\n");
+        return;
+    }
+
+    GetWindowsDirectoryA(cmdline, sizeof(cmdline));
+    strcat(cmdline, "\\syswow64\\msinfo32.exe");
+#endif
 
     si.cb = sizeof(si);
     bret = CreateProcessA(cmdline, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
@@ -9145,6 +9195,14 @@ static void test_breakpoint(DWORD numexc)
 {
     DWORD (CDECL *func)(void) = code_mem;
     void *vectored_handler;
+
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
 
     memcpy(code_mem, breakpoint_code, sizeof(breakpoint_code));
 #ifdef __arm__
