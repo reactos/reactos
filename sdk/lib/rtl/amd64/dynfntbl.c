@@ -154,6 +154,10 @@ RtlAddFunctionTable(
                                            FunctionTable[i].EndAddress);
     }
 
+    /* Adjust the margins to be absolute addresses */
+    dynamicTable->MinimumAddress += BaseAddress;
+    dynamicTable->MaximumAddress += BaseAddress;
+
     /* Insert the table into the list */
     RtlpInsertDynamicFunctionTable(dynamicTable);
 
@@ -277,6 +281,7 @@ RtlpLookupDynamicFunctionEntry(
     PDYNAMIC_FUNCTION_TABLE dynamicTable;
     PRUNTIME_FUNCTION functionTable, foundEntry = NULL;
     PGET_RUNTIME_FUNCTION_CALLBACK callback;
+    DWORD64 ipOffset;
     ULONG i;
 
     AcquireDynamicFunctionTableLockShared();
@@ -304,11 +309,12 @@ RtlpLookupDynamicFunctionEntry(
 
             /* Loop all entries in the function table */
             functionTable = dynamicTable->FunctionTable;
+            ipOffset = ControlPc - dynamicTable->BaseAddress;
             for (i = 0; i < dynamicTable->EntryCount; i++)
             {
                 /* Check if this entry contains the address */
-                if ((ControlPc >= functionTable[i].BeginAddress) &&
-                    (ControlPc < functionTable[i].EndAddress))
+                if ((ipOffset >= functionTable[i].BeginAddress) &&
+                    (ipOffset < functionTable[i].EndAddress))
                 {
                     foundEntry = &functionTable[i];
                     *ImageBase = dynamicTable->BaseAddress;

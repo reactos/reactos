@@ -36,6 +36,8 @@ NpDecodeFileObject(IN PFILE_OBJECT FileObject,
         switch (Node->NodeType)
         {
             case NPFS_NTC_VCB:
+                *Ccb = NULL;
+                if (PrimaryContext) *PrimaryContext = Node;
                 return NPFS_NTC_VCB;
 
             case NPFS_NTC_ROOT_DCB:
