@@ -2147,8 +2147,17 @@ int CDECL wctomb_s(int *len, char *mbchar, size_t size, wchar_t wch)
 int CDECL _wctomb_l(char *dst, wchar_t ch, _locale_t locale)
 {
     int len;
-
+#ifdef __REACTOS__
+    int maxlen;
+    if (locale)
+        maxlen = locale->locinfo->mb_cur_max;
+    else
+        maxlen = get_locinfo()->mb_cur_max;
+    if (_wctomb_s_l(&len, dst, maxlen, ch, locale) != 0)
+        return -1;
+#else
     _wctomb_s_l(&len, dst, dst ? MB_LEN_MAX : 0, ch, locale);
+#endif
     return len;
 }
 
