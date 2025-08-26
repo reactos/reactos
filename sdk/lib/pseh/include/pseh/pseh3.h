@@ -11,6 +11,7 @@
 #define _PSEH3_H_
 
 #include <excpt.h>
+#include <intrin.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -495,6 +496,14 @@ _Pragma("GCC diagnostic pop") \
 
 #define _SEH3_VOLATILE volatile
 
+int _setjmp3(jmp_buf env, int count, ...);
+void __stdcall _SEH3$_longjmp_unwind(_JUMP_BUFFER* _Buf);
+
+#undef setjmp
+#define setjmp(env) \
+    _setjmp3(env, 2, (const void*)_SEH3$_longjmp_unwind, _SEH3$_TryLevel)
+
+#define _INC_SETJMPEX
 
 #ifdef __cplusplus
 }; // extern "C"

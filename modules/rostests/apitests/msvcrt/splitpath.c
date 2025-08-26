@@ -18,9 +18,9 @@ START_TEST(splitpath)
     char dir[64];
     char fname[32];
     char ext[10];
-    DWORD Major;
+    DWORD version;
 
-    Major = (DWORD)(LOBYTE(LOWORD(GetVersion())));
+    version = GetNTVersion();
 
     drive[2] = 0xFF;
     _splitpath("c:\\dir1\\dir2\\file.ext", drive, dir, fname, ext);
@@ -34,7 +34,7 @@ START_TEST(splitpath)
     _splitpath("c:\\dir1\\dir2\\file.ext", 0, 0, 0, 0);
     ok_int(*_errno(), 0);
 
-    if (Major >= 6)
+    if (version >= _WIN32_WINNT_VISTA)
     {
         *_errno() = 0;
         _splitpath(0, drive, dir, fname, ext);
@@ -50,7 +50,7 @@ START_TEST(splitpath)
     }
 
     _splitpath("\\\\?\\c:\\dir1\\dir2\\file.ext", drive, dir, fname, ext);
-    if (Major >= 6)
+    if ((version >= _WIN32_WINNT_VISTA) && (version < 0xA00))
     {
         ok_str(drive, "c:");
         ok_str(dir, "\\dir1\\dir2\\");
@@ -76,7 +76,7 @@ START_TEST(splitpath)
     ok_str(ext, ".ext");
 
     _splitpath("\\\\?\\0:/dir1\\dir2/file.", drive, dir, fname, ext);
-    if (Major >= 6)
+    if ((version >= _WIN32_WINNT_VISTA) && (version < _WIN32_WINNT_WIN10))
     {
         ok_str(drive, "0:");
         ok_str(dir, "/dir1\\dir2/");
