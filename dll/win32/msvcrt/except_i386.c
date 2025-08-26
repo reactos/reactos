@@ -729,6 +729,7 @@ int CDECL _except_handler4_common( ULONG *cookie, void (*check_cookie)(void),
 }
 
 
+#ifndef __REACTOS__
 /*
  * setjmp/longjmp implementation
  */
@@ -837,6 +838,7 @@ void __cdecl longjmp(_JUMP_BUFFER *jmp, int retval)
 
     __wine_longjmp( (__wine_jmp_buf *)jmp, retval );
 }
+#endif // __REACTOS__
 
 /*********************************************************************
  *		_seh_longjmp_unwind (MSVCRT.@)
