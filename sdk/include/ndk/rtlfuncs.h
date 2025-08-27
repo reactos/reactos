@@ -676,7 +676,7 @@ NTSYSAPI
 LONG
 NTAPI
 RtlUnhandledExceptionFilter(
-    _In_ struct _EXCEPTION_POINTERS* ExceptionInfo
+    _In_ PEXCEPTION_POINTERS ExceptionInfo
 );
 
 __analysis_noreturn
