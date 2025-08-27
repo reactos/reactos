@@ -16,7 +16,7 @@ typedef struct
 {
     ULONG Version;                  /*!< Driver interface version */
     ULONG DriverVersion;            /*!< Driver version */
-    WCHAR DriverName[MAX_PATH+1];  /*!< Driver name */
+    WCHAR DriverName[MAX_PATH+1];   /*!< Driver name */
 } Drv_Opengl_Info, *pDrv_Opengl_Info;
 
 #ifndef OPENGL_GETINFO_DRVNAME
