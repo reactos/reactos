@@ -57,9 +57,9 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME "Solitaire"
     IDS_SOL_ABOUT "Solitaire, J Brown tarafından yazılmıştır.\nCardLib sürümü: 1.0"
-    IDS_SOL_QUIT "Şimdiki oyundan çıkılsın mı?"
+    IDS_SOL_QUIT "Şuanki oyundan çıkılsın mı?"
     IDS_SOL_WIN "Tebrikler, kazandınız!"
-    IDS_SOL_DEAL "Yeniden dağıtılsın mı?"
+    IDS_SOL_DEAL "Yeniden oynamak istermisiniz?"
     IDS_SOL_SCORE "Skor: %d"
     IDS_SOL_TIME "Süre: %d"
 END
