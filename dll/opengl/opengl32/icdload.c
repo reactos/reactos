@@ -11,16 +11,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
-/* based off https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/4305 */
+/* based off https://gitlab.freedesktop.org/mesa/mesa/-/blob/main/src/gallium/frontends/wgl/gldrv.h */
 typedef struct
 {
-    ULONG Version;                  /*!< Driver interface version */
-    ULONG DriverVersion;            /*!< Driver version */
-    WCHAR DriverName[MAX_PATH+1];  /*!< Driver name */
+    ULONG Version;                    /*!< Driver interface version */
+    ULONG DriverVersion;              /*!< Driver version */
+    WCHAR DriverName[MAX_PATH + 1];   /*!< Driver name */
 } Drv_Opengl_Info, *pDrv_Opengl_Info;
 
 #ifndef OPENGL_GETINFO_DRVNAME
-#define OPENGL_GETINFO_DRVNAME  0
+#define OPENGL_GETINFO_DRVNAME 0
 #endif
 
 typedef enum
