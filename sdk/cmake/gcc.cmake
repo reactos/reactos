@@ -184,12 +184,11 @@ add_compile_options(
     -Wno-unused-local-typedefs
     -Wno-deprecated
     -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
+    -Wno-format
     -Wno-maybe-uninitialized
 )
 
-if(ARCH STREQUAL "amd64")
-    add_compile_options(-Wno-format)
-elseif(ARCH STREQUAL "arm")
+if(ARCH STREQUAL "arm")
     add_compile_options(-Wno-attributes)
 endif()
 
