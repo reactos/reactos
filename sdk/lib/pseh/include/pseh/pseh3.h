@@ -112,6 +112,7 @@ void _SEH3$_UnregisterTryLevel(
 enum
 {
     _SEH3$_TryLevel = -1,
+    _SEH3$_InnerTryLevel = -1,
 };
 
 #ifndef __clang__
@@ -375,7 +376,7 @@ _Pragma("GCC diagnostic pop") \
 \
         /* Count the try level. Outside of any __try, _SEH3$_TryLevel is -1 */ \
         enum { \
-            _SEH3$_PreviousTryLevel = _SEH3$_TryLevel, \
+            _SEH3$_PreviousTryLevel = _SEH3$_InnerTryLevel, \
             _SEH3$_TryLevel = _SEH3$_PreviousTryLevel + 1, \
         }; \
 \
@@ -388,6 +389,11 @@ _Pragma("GCC diagnostic pop") \
         goto _SEH3$_l_BeforeTry; \
         { \
             __label__ _SEH3$_l_Leave; \
+\
+            enum { \
+                _SEH3$_InnerTryLevel = _SEH3$_TryLevel, \
+            }; \
+\
             _SEH3$_l_Leave: (void)0; \
         /* Silence warning */ goto _SEH3$_l_AfterTry; \
         /* Silence warning */ goto _SEH3$_l_Leave; \
