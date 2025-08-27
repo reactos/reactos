@@ -679,6 +679,14 @@ RtlUnhandledExceptionFilter(
     _In_ PEXCEPTION_POINTERS ExceptionInfo
 );
 
+NTSYSAPI
+LONG
+NTAPI
+RtlUnhandledExceptionFilter2(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo,
+    _In_ PCSTR Function
+);
+
 __analysis_noreturn
 NTSYSAPI
 VOID
