@@ -51,6 +51,7 @@ KMT_TESTFUNC Test_KeProcessor;
 KMT_TESTFUNC Test_KeSpinLock;
 KMT_TESTFUNC Test_KeTimer;
 KMT_TESTFUNC Test_KernelType;
+KMT_TESTFUNC Test_MmMapIoSpace;
 KMT_TESTFUNC Test_MmMdl;
 KMT_TESTFUNC Test_MmSection;
 KMT_TESTFUNC Test_MmReservedMapping;
@@ -138,6 +139,7 @@ const KMT_TEST TestList[] =
     { "KeSpinLock",                         Test_KeSpinLock },
     { "KeTimer",                            Test_KeTimer },
     { "-KernelType",                        Test_KernelType },
+    { "MmMapIoSpace",                       Test_MmMapIoSpace },
     { "MmMdl",                              Test_MmMdl },
     { "MmSection",                          Test_MmSection },
     { "MmReservedMapping",                  Test_MmReservedMapping },
