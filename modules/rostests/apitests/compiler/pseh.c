@@ -2972,7 +2972,52 @@ void Test_collided_unwind(void)
     ok(__readfsdword(0) == Registration, "SEH registration corrupted!\n");
     *(unsigned int*)NtCurrentTeb() = Registration;
 #endif
+}
 
+void Do_nested_from_except(void)
+{
+    volatile unsigned int Flags = 0;
+
+    _SEH2_TRY
+    {
+        RaiseException(0xDEADBEEF, 0, 0, NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_TRY
+        {
+            _SEH2_TRY
+            {
+                Flags |= 1;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Flags |= 2;
+            }
+            _SEH2_END;
+        }
+        _SEH2_FINALLY
+        {
+            Flags |= 4;
+        }
+        _SEH2_END;
+    }
+    _SEH2_END;
+
+    ok(Flags == (1 | 4), "Flags = %x\n", Flags);
+}
+
+void Test_nested_from_except(void)
+{
+    Do_nested_from_except();
+
+#ifdef _M_IX86
+    /* Temporarily remove the SEH registration (see CORE-20316) */
+    unsigned int Registration = __readfsdword(0);
+    *(unsigned int*)NtCurrentTeb() = -1;
+    Do_nested_from_except();
+    *(unsigned int*)NtCurrentTeb() = Registration;
+#endif
 }
 
 START_TEST(pseh)
@@ -2984,6 +3029,7 @@ START_TEST(pseh)
     Test_structs_seh_nested();
 #endif
     Test_collided_unwind();
+    Test_nested_from_except();
 
 	const struct subtest testsuite[] =
 	{
