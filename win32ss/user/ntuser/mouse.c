@@ -10,6 +10,9 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserInput);
 
+extern BOOLEAN RawInputEnabled;
+extern HANDLE ghMouseDevice;
+
 MOUSEMOVEPOINT gMouseHistoryOfMoves[64];
 INT gcMouseHistoryOfMoves = 0;
 
@@ -31,6 +34,74 @@ UserGetMouseButtonsState(VOID)
     return wRet;
 }
 
+VOID NTAPI
+UserRawInputMouseProcess(PMOUSE_INPUT_DATA mid)
+{
+    PUSER_MESSAGE_QUEUE pFocusQueue;
+    PTHREADINFO pti;
+    POINT ptCursor;
+
+    RAWMOUSE rm = {0};
+
+    /* Find the target thread whose locale is in effect */
+    pFocusQueue = IntGetFocusMessageQueue();
+    if ( pFocusQueue)
+    {
+        ptCursor = gpsi->ptCursor;
+        MSG Msg;
+        PWND pWnd = pFocusQueue->spwndFocus;
+        if (pWnd)
+        {
+            pti = pWnd->head.pti;
+            if (mid->LastX != 0 || mid->LastY != 0)
+            {
+                rm.usFlags |= MOUSE_MOVE_RELATIVE;
+            }
+
+            /* Flags for absolute move */
+            if (mid->Flags & MOUSE_MOVE_ABSOLUTE)
+                rm.usFlags |= MOUSE_MOVE_ABSOLUTE;
+            if (mid->Flags & MOUSE_VIRTUAL_DESKTOP)
+                rm.usFlags |= MOUSE_VIRTUAL_DESKTOP;
+
+            /* Left button */
+            if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
+                rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_DOWN;
+            if (mid->ButtonFlags & MOUSE_LEFT_BUTTON_UP)
+                rm.usButtonFlags |= RI_MOUSE_LEFT_BUTTON_UP;
+
+            /* Middle button */
+            if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN)
+                rm.usButtonFlags |= MOUSEEVENTF_MIDDLEDOWN;
+            if (mid->ButtonFlags & MOUSE_MIDDLE_BUTTON_UP)
+                rm.usButtonFlags |= MOUSEEVENTF_MIDDLEUP;
+
+            /* Right button */
+            if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN)
+                rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_DOWN;
+            if (mid->ButtonFlags & MOUSE_RIGHT_BUTTON_UP)
+                rm.usButtonFlags |= RI_MOUSE_RIGHT_BUTTON_UP;
+            rm.lLastX   = mid->LastX;
+            rm.lLastY   = mid->LastY;
+
+            PRAWINPUT rmInput =   EngAllocMem(0, sizeof(RAWINPUT), 'iwar');
+            rmInput->header.dwType = RIM_TYPEMOUSE;
+            rmInput->header.hDevice = (HANDLE)UlongToHandle((ULONG)ghMouseDevice); // Device handle, not used here
+            rmInput->header.wParam = mid->ExtraInformation;
+            rmInput->header.dwSize = sizeof(RAWINPUTHEADER) + sizeof(RAWMOUSE);
+            rmInput->data.mouse = rm;
+            Msg.wParam = RIM_INPUT;
+            Msg.lParam = (LPARAM)(rmInput);
+            Msg.pt = ptCursor;
+            //Msg.time = mid->time;
+            Msg.message = WM_INPUT;
+            //MessageQueue = pti->MessageQueue;
+
+            MsqPostMessage(pti, &Msg, TRUE, QS_RAWINPUT , 0, 0);
+        }
+    }
+
+}
 /*
  * UserProcessMouseInput
  *
@@ -48,7 +119,8 @@ UserProcessMouseInput(PMOUSE_INPUT_DATA mid)
     mi.dwFlags = 0;
     mi.time = 0;
     mi.dwExtraInfo = mid->ExtraInformation;
-
+    if (RawInputEnabled== TRUE)
+        UserRawInputMouseProcess(mid);
     /* Mouse position */
     if (mi.dx != 0 || mi.dy != 0)
         mi.dwFlags |= MOUSEEVENTF_MOVE;
