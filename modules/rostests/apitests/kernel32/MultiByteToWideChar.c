@@ -23,7 +23,7 @@ static const char SJIS_Japanese[] = "\x93\xFA\x96\x7B\x8C\xEA";
 #define MAX_BUFFER  10
 
 /* test entry */
-typedef struct ENTRY
+typedef struct _MB2WC_ENTRY
 {
     int LineNo;
     ULONG VersionRange[2];
@@ -37,9 +37,9 @@ typedef struct ENTRY
     WCHAR CheckDest[MAX_BUFFER];
     int CheckLen;
     BOOL SamePointer;
-} ENTRY;
+} MB2WC_ENTRY;
 
-static const ENTRY Entries[] =
+static const MB2WC_ENTRY Entries[] =
 {
     /* without buffer */
     { __LINE__, {0x000,0xA00}, 1, 0xBEAF, CP_UTF8, 0, "a", 1 },
@@ -223,7 +223,7 @@ static const ENTRY Entries[] =
     { __LINE__, {0x600,0xA00}, 0, ERROR_INSUFFICIENT_BUFFER, CP_UTF8, 0, "\xFF\xA3\xA3\xA3\xA3\xA3\xA3\xA3", 9, 8, {0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0x7F7F}, 9 },
 };
 
-static void TestEntry(const ENTRY *pEntry)
+static void TestEntry(const MB2WC_ENTRY *pEntry)
 {
     int ret, i;
     WCHAR Buffer[MAX_BUFFER];
@@ -239,6 +239,8 @@ static void TestEntry(const ENTRY *pEntry)
              OsVersion);
         return;
     }
+
+    //if (pEntry->LineNo == 148) __debugbreak();
 
     FillMemory(Buffer, sizeof(Buffer), 0x7F);
     SetLastError(0xBEAF);
@@ -296,6 +298,20 @@ START_TEST(MultiByteToWideChar)
 {
     RTL_OSVERSIONINFOW vi;
     size_t i;
+
+    //__debugbreak();
+#if 0
+    -> SetLastError(0)
+ # ChildEBP RetAddr      
+00 0012f868 7c67c6fc     kernel32!SetLastError+0x36 [C:\ReactOS\reactos\dll\win32\kernel32\client\except.c @ 1035] 
+01 0012f90c 7c6b156f     kernel32!CreateFileW+0x62c [C:\ReactOS\reactos\dll\win32\kernel32\client\file\create.c @ 358] 
+02 0012fc28 7c6b3520     kernel32!IntGetCodePageEntry+0x31f [C:\ReactOS\reactos\dll\win32\kernel32\winnls\string\nls.c @ 411] 
+03 0012fc60 7c6b4da7     kernel32!IntMultiByteToWideCharCP+0x20 [C:\ReactOS\reactos\dll\win32\kernel32\winnls\string\nls.c @ 677] 
+04 0012fc84 0043942f     kernel32!MultiByteToWideChar+0xf7 [C:\ReactOS\reactos\dll\win32\kernel32\winnls\string\nls.c @ 1818] 
+05 0012fce0 0043974c     kernel32_apitest!TestEntry+0xef [C:\ReactOS\reactos\modules\rostests\apitests\kernel32\MultiByteToWideChar.c @ 251] 
+06 0012fe14 0044444b     kernel32_apitest!func_MultiByteToWideChar+0xcc [C:\ReactOS\reactos\modules\rostests\apitests\kernel32\MultiByteToWideChar.c @ 317] 
+07 0012fe30 0044435b     kernel32_apitest!run_test+0xab [C:\ReactOS\reactos\sdk\include\wine\test.h @ 882] 
+#endif
 
     vi.dwOSVersionInfoSize = sizeof(vi);
     if (RtlGetVersion(&vi) < 0)
