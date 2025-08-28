@@ -63,7 +63,11 @@ START_TEST(tcstoul)
 
     StartSeh()
         Result = _tcstoul(NULL, NULL, 0);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+#ifdef TEST_CRTDLL
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
+    EndSeh(((GetNTVersion() >= _WIN32_WINNT_VISTA) || is_reactos()) ? 0 : STATUS_ACCESS_VIOLATION);
+#endif
 
     StartSeh()
         Result = _tcstoul(_T(""), NULL, 0);
