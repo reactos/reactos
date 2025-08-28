@@ -154,10 +154,20 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex64(CapturedContext.Legacy[7].Low, OriginalContext.Legacy[7].Low);
     ok_eq_hex64(CapturedContext.Legacy[7].High, OriginalContext.Legacy[7].High & 0xFF);
 #else
-    ok_eq_hex(CapturedContext.FltSave.ControlWord, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.StatusWord, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.TagWord, 0xcc);
-    ok_eq_hex(CapturedContext.FltSave.Reserved1, 0xcc);
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+    {
+        ok_eq_hex(CapturedContext.FltSave.ControlWord, 0x27f);
+        ok_eq_hex(CapturedContext.FltSave.StatusWord, 0x00);
+        ok_eq_hex(CapturedContext.FltSave.TagWord, 0x00);
+        ok_eq_hex(CapturedContext.FltSave.Reserved1, 0x00);
+    }
+    else
+    {
+        ok_eq_hex(CapturedContext.FltSave.ControlWord, 0xcccc);
+        ok_eq_hex(CapturedContext.FltSave.StatusWord, 0xcccc);
+        ok_eq_hex(CapturedContext.FltSave.TagWord, 0xcc);
+        ok_eq_hex(CapturedContext.FltSave.Reserved1, 0xcc);
+    }
     ok_eq_hex(CapturedContext.FltSave.MxCsr_Mask, 0xcccccccc);
     ok_eq_hex(CapturedContext.FltSave.ErrorOpcode, 0xcccc);
     ok_eq_hex(CapturedContext.FltSave.ErrorOffset, 0xcccccccc);
@@ -168,7 +178,10 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex(CapturedContext.FltSave.Reserved3, 0xcccc);
 
     /* We get the value from OriginalContext.MxCsr, since we set that later in the wrapper */
-    ok_eq_hex(CapturedContext.FltSave.MxCsr, 0xcccccccc);
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8)
+        ok_eq_hex(CapturedContext.FltSave.MxCsr, 0xffff);
+    else
+        ok_eq_hex(CapturedContext.FltSave.MxCsr, 0xcccccccc);
 
     /* Legacy floating point registers are truncated to 10 bytes */
     ok_eq_hex64(CapturedContext.Legacy[0].Low, 0xcccccccccccccccc);
