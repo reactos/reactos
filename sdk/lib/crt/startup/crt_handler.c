@@ -190,22 +190,12 @@ LPTOP_LEVEL_EXCEPTION_FILTER __mingw_oldexcpt_handler = NULL;
 long CALLBACK
 _gnu_exception_handler (EXCEPTION_POINTERS *exception_data);
 
-#define GCC_MAGIC (('G' << 16) | ('C' << 8) | 'C' | (1U << 29))
-
 long CALLBACK
 _gnu_exception_handler (EXCEPTION_POINTERS *exception_data)
 {
   void (*old_handler) (int);
   long action = EXCEPTION_CONTINUE_SEARCH;
   int reset_fpu = 0;
-
-#ifdef __SEH__
-  if ((exception_data->ExceptionRecord->ExceptionCode & 0x20ffffff) == GCC_MAGIC)
-    {
-      if ((exception_data->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE) == 0)
-        return EXCEPTION_CONTINUE_EXECUTION;
-    }
-#endif
 
   switch (exception_data->ExceptionRecord->ExceptionCode)
     {
