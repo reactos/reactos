@@ -5,6 +5,8 @@
  */
 
 #include "parport.h"
+#define NDEBUG
+#include <debug.h>
 
 static DRIVER_UNLOAD DriverUnload;
 static DRIVER_DISPATCH DispatchCreate;
