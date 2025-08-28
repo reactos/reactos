@@ -11,6 +11,8 @@
 
 #include <d3d9.h>
 
+static const GUID DISPLAY_GUID = { 0x67685559, 0x3106, 0x11D0, { 0xB9, 0x71, 0x00, 0xAA, 0x00, 0x34, 0x2F, 0x9F } };
+
 BOOL
 GetFileModifyTime(LPCWSTR pFullPath, WCHAR * szTime, int szTimeSize)
 {
@@ -355,6 +357,8 @@ void InitializeDisplayAdapters(PDXDIAG_CONTEXT pContext)
         wsprintfW (szText, L"%s %u", szDisplay, pContext->NumDisplayAdapter + 1);
         InsertTabCtrlItem(GetDlgItem(pContext->hMainDialog, IDC_TAB_CONTROL), pContext->NumDisplayAdapter + 1, szText);
 
+        pDisplayAdapter->guid = DISPLAY_GUID;
+        pDisplayAdapter->guid.Data1 += pContext->NumDisplayAdapter + dwOffset;
         pDisplayAdapter->hDisplayWnd = hwndDlg;
         pDisplayAdapters[pContext->NumDisplayAdapter] = pDisplayAdapter;
         pContext->NumDisplayAdapter++;
