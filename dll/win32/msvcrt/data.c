@@ -360,7 +360,9 @@ void msvcrt_init_args(void)
   MSVCRT__HUGE = HUGE_VAL;
   MSVCRT___setlc_active = 0;
   MSVCRT___unguarded_readlc_active = 0;
+#ifndef __REACTOS__
   MSVCRT__fmode = _O_TEXT;
+#endif
 
   env_init(FALSE, FALSE);
 
