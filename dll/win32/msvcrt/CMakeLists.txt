@@ -131,6 +131,7 @@ list(APPEND MSVCRT_SOURCE
     ${msvcrt_shared_asm}
     reactos/chkesp_failed.c
     reactos/misc.c
+    reactos/system.cpp
     concurrency.c
     console.c
     ctype.c
