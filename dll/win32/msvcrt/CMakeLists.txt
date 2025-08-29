@@ -126,6 +126,7 @@ list(APPEND MSVCRT_SOURCE
     ${msvcrt_shared_asm}
     reactos/chkesp_failed.c
     reactos/data.c
+    reactos/system.cpp
     concurrency.c
     console.c
     #crt_gccmain.c
