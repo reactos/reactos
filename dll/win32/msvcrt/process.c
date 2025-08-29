@@ -1243,6 +1243,7 @@ int CDECL _pclose(FILE* file)
   return i;
 }
 
+#ifndef __REACTOS__
 /*********************************************************************
  *      _wsystem (MSVCRT.@)
  *
@@ -1306,6 +1307,7 @@ int CDECL system(const char* cmd)
   }
   return res;
 }
+#endif
 
 /*********************************************************************
  *		_loaddll (MSVCRT.@)
