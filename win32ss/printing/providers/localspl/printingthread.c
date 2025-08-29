@@ -29,7 +29,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
 
     // Prepare the pPrinterName parameter.
     // This is the string for LocalOpenPrinter to open a port (e.g. "LPT1:, Port").
-    cchPortName = wcslen(pJob->pPrinter->pPort->pwszName);
+    cchPortName = (DWORD)wcslen(pJob->pPrinter->pPort->pwszName);
     pwszPrinterPort = DllAllocSplMem(cchPortName * sizeof(WCHAR) + sizeof(wszPortAppendix));
     if (!pwszPrinterPort)
     {
@@ -68,7 +68,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     pJob->hPrintProcessor = hPrintProcessor;
 
     // Prepare the pDocumentName parameter.
-    cchPrinterName = wcslen(OpenData.pPrinterName);
+    cchPrinterName = (DWORD)wcslen(OpenData.pPrinterName);
     pwszPrinterAndJob = DllAllocSplMem((cchPrinterName + cchJobAppendix + cchMaxJobIdDigits + 1) * sizeof(WCHAR));
     if (!pwszPrinterAndJob)
     {

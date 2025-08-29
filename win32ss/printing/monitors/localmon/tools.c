@@ -144,7 +144,7 @@ GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon)
     DWORD cchPortNameWithoutColon;
 
     // Compute the string length of pwszPortNameWithoutColon.
-    cchPortNameWithoutColon = wcslen(pwszPortName) - 1;
+    cchPortNameWithoutColon = (DWORD)wcslen(pwszPortName) - 1;
 
     // Check if pwszPortName really has a colon as the last character.
     if (pwszPortName[cchPortNameWithoutColon] != L':')

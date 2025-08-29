@@ -131,7 +131,7 @@ static
 wchar_t * wcsistr_plus(const wchar_t *s, wchar_t *b)
 {
     wchar_t * result = wcsistr(s, b);
-    UINT len = wcslen(b);
+    UINT len = (UINT)wcslen(b);
     // workarounds
     if (!result && b[len - 1] == L' ' && wcschr(s, L',') != NULL)
     {

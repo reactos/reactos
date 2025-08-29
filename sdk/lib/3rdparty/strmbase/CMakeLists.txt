@@ -21,5 +21,11 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(strmbase ${SOURCE})
+
+if(MSVC AND ARCH STREQUAL "amd64")
+    # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    target_compile_options(strmbase PRIVATE "/wd4267")
+endif()
+
 add_pch(strmbase precomp.h SOURCE)
 add_dependencies(strmbase psdk dxsdk)

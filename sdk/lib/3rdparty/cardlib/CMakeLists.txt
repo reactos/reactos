@@ -22,5 +22,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(cardlib PRIVATE -Wno-unused-but-set-variable)
 endif()
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+    target_compile_options(cardlib PRIVATE "/wd4267")
+endif()
+
 add_dependencies(cardlib psdk)
 add_pch(cardlib cardlib.h SOURCE)

@@ -331,7 +331,7 @@ GetProfileSize(
     ULARGE_INTEGER Size;
     BOOL bResult = TRUE;
 
-    dwProfilePathLength = wcslen(pszProfilePath);
+    dwProfilePathLength = (DWORD)wcslen(pszProfilePath);
 
     wcscat(pszProfilePath, L"\\*.*");
 
@@ -475,7 +475,7 @@ AddUserProfile(
     FindClose(hFile);
 
     /* Get the length of the profile path */
-    dwProfilePathLength = wcslen(szProfilePath);
+    dwProfilePathLength = (DWORD)wcslen(szProfilePath);
 
     /* Check for the ntuser.dat file */
     wcscat(szProfilePath, L"\\ntuser.dat");

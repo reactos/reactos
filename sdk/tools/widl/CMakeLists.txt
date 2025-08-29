@@ -49,5 +49,10 @@ if(MSVC)
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
     target_compile_options(widl PRIVATE "/wd4244")
 
+    if(ARCH STREQUAL "amd64")
+        # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
+        target_compile_options(widl PRIVATE "/wd4267")
+    endif()
+
     target_compile_options(widl PRIVATE "-WX")
 endif()
