@@ -81,7 +81,7 @@ ok_argsW_imp(const wchar_t* input_args, const wchar_t* arg1, const wchar_t* arg2
 }
 
 START_TEST(__getmainargs)
-{
+{//__debugbreak();
     ok_argsA("test.exe \"a b c\" d e", "a b c", "d", "e");
     ok_argsA("test.exe \"ab\\\"c\" \"\\\\\" d", "ab\"c", "\\", "d");
     ok_argsA("test.exe a\\\\\\b d\"e f\"g h", "a\\\\\\b", "de fg", "h");
