@@ -100,6 +100,7 @@ typedef struct _CONTEXT_ENTRY
     struct _CONTEXT_ENTRY *pNext;
 
     struct _CONTEXT_ENTRY *pParentContext;
+//    PHELPER_ENTRY pHelper;
 
     PWSTR pszContextName;
     GUID Guid;
@@ -121,6 +122,7 @@ typedef struct _CONTEXT_ENTRY
 extern PCONTEXT_ENTRY pRootContext;
 extern PCONTEXT_ENTRY pCurrentContext;
 
+extern PHELPER_ENTRY pHelperListHead;
 
 /* PROTOTYPES *****************************************************************/
 
@@ -129,8 +131,21 @@ extern PCONTEXT_ENTRY pCurrentContext;
 BOOL
 CreateRootContext(VOID);
 
+VOID
+CleanupContext(VOID);
+
 
 /* help.c */
+
+BOOL
+ProcessHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ DWORD dwCurrentIndex,
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwArgCount,
+    _In_ DWORD dwHelpLevel);
+
+
 DWORD
 WINAPI
 HelpCommand(
@@ -142,10 +157,21 @@ HelpCommand(
     LPCVOID pvData,
     BOOL *pbDone);
 
+#if 0
 VOID
 HelpGroup(
-    PCOMMAND_GROUP pGroup);
+    PCONTEXT_ENTRY pContext,
+    LPWSTR pszGroupName,
+    BOOL bRecurse);
 
+VOID
+HelpContext(
+    PCONTEXT_ENTRY pContext);
+
+VOID
+HelpSubcontexts(
+    PCONTEXT_ENTRY pContext);
+#endif
 
 /* helper.c */
 VOID
@@ -154,6 +180,10 @@ LoadHelpers(VOID);
 VOID
 UnloadHelpers(VOID);
 
+PHELPER_ENTRY
+FindHelper(
+    _In_ const GUID *pguidHelper,
+    _In_ PHELPER_ENTRY pHelper);
 
 DWORD
 WINAPI
@@ -192,12 +222,13 @@ ShowHelperCommand(
 /* interpreter.c */
 BOOL
 InterpretScript(
-    LPWSTR pszFileName);
+    _In_ LPWSTR pszFileName);
 
 BOOL
 InterpretCommand(
-    LPWSTR *argv,
-    DWORD dwArgCount);
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwArgCount,
+    _Inout_ PBOOL bDone);
 
 VOID
 InterpretInteractive(VOID);

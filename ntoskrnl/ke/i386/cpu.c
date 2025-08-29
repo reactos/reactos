@@ -378,7 +378,7 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & X86_FEATURE_TSC)     FeatureBits |= KF_RDTSC;
     if (CpuFeatures & X86_FEATURE_CX8)     FeatureBits |= KF_CMPXCHG8B;
     if (CpuFeatures & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuFeatures & X86_FEATURE_MTTR)    FeatureBits |= KF_MTRR;
+    if (CpuFeatures & X86_FEATURE_MTRR)    FeatureBits |= KF_MTRR;
     if (CpuFeatures & X86_FEATURE_PGE)     FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
     if (CpuFeatures & X86_FEATURE_CMOV)    FeatureBits |= KF_CMOV;
     if (CpuFeatures & X86_FEATURE_PAT)     FeatureBits |= KF_PAT;

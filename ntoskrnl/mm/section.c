@@ -3663,6 +3663,7 @@ MiRosUnmapViewOfSection(
         PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
         PMM_SECTION_SEGMENT SectionSegments;
         PMM_SECTION_SEGMENT Segment;
+        ULONG MapCount;
 
         Segment = MemoryArea->SectionData.Segment;
         ImageSectionObject = ImageSectionObjectFromSegment(Segment);
@@ -3700,7 +3701,9 @@ MiRosUnmapViewOfSection(
             }
         }
         DPRINT("One mapping less for %p\n", ImageSectionObject->FileObject->SectionObjectPointer);
-        InterlockedDecrement(&ImageSectionObject->MapCount);
+        MapCount = InterlockedDecrement(&ImageSectionObject->MapCount);
+        if (MapCount != 0)
+            ImageBaseAddress = NULL;
     }
     else
     {

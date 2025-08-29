@@ -780,7 +780,7 @@ ChangePasswordDialogProc(
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_SETCURSEL, 0, 0);
             SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_COMMAND:
@@ -793,9 +793,10 @@ ChangePasswordDialogProc(
                     }
                     else
                     {
+                        SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_OLDPWD, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NULL);
-                        SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD), TRUE);
                     }
                     return TRUE;
 
@@ -885,18 +886,15 @@ LogOffDialogProc(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDYES:
-                    EndDialog(hwndDlg, IDYES);
-                    return TRUE;
-
-                case IDNO:
-                    EndDialog(hwndDlg, IDNO);
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     return TRUE;
             }
             break;
 
         case WM_CLOSE:
-            EndDialog(hwndDlg, IDNO);
+            EndDialog(hwndDlg, IDCANCEL);
             return TRUE;
     }
 
@@ -991,7 +989,6 @@ SecurityDialogProc(
             SetWelcomeText(hwndDlg);
 
             OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
-            SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
         }
 
@@ -1014,7 +1011,7 @@ SecurityDialogProc(
                             EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
                         }
                     }
-                    else if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    else if (OnLogOff(hwndDlg, pgContext) == IDOK)
                     {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     }
@@ -1281,7 +1278,7 @@ SetDomainComboBox(
         lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)szComputerName);
     }
 
-    if (wcslen(pgContext->DomainName) != 0)
+    if (pgContext->DomainName[0])
     {
         lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->DomainName);
         if (lFindIndex == CB_ERR)
@@ -1324,7 +1321,9 @@ LogonDialogProc(
 
             if (pDlgData->pgContext->bAutoAdminLogon ||
                 !pDlgData->pgContext->bDontDisplayLastUserName)
+            {
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pDlgData->pgContext->UserName);
+            }
 
             if (pDlgData->pgContext->bAutoAdminLogon)
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pDlgData->pgContext->Password);
@@ -1342,7 +1341,7 @@ LogonDialogProc(
             if (pDlgData->pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
 
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:
@@ -1366,7 +1365,14 @@ LogonDialogProc(
             {
                 case IDOK:
                     if (DoLogon(hwndDlg, pDlgData->pgContext))
+                    {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_LOGON_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -1408,9 +1414,6 @@ LegalNoticeDialogProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwndDlg, 0);
-                    return TRUE;
-
                 case IDCANCEL:
                     EndDialog(hwndDlg, 0);
                     return TRUE;
@@ -1451,8 +1454,8 @@ GUILoggedOutSAS(
         RegCloseKey(hKey);
     }
 
-    if (LegalNotice.pszCaption != NULL && wcslen(LegalNotice.pszCaption) != 0 &&
-        LegalNotice.pszText != NULL && wcslen(LegalNotice.pszText) != 0)
+    if (LegalNotice.pszCaption != NULL && LegalNotice.pszCaption[0] &&
+        LegalNotice.pszText != NULL && LegalNotice.pszText[0])
     {
         pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                 pgContext->hDllInstance,
@@ -1596,18 +1599,18 @@ UnlockDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
+            DlgData_LoadBitmaps(pDlgData);
+
             SetWelcomeText(hwndDlg);
 
             SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pDlgData->pgContext);
-
             SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pDlgData->pgContext->UserName);
-            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
 
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            DlgData_LoadBitmaps(pDlgData);
-            return TRUE;
+            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:
@@ -1630,7 +1633,14 @@ UnlockDialogProc(
             {
                 case IDOK:
                     if (DoUnlock(hwndDlg, pDlgData->pgContext, &result))
+                    {
                         EndDialog(hwndDlg, result);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_UNLOCK_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:

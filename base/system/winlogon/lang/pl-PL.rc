@@ -25,7 +25,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Nie można załadować biblioteki DLL interfejsu logowania użytkownika %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Skontaktuj się z administratorem systemu, aby zamienić bibliotekę DLL lub odtworzyć jej oryginalną wersję.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Uruchom ponownie", 1, 80, 91, 71, 14
+    DEFPUSHBUTTON "&Uruchom ponownie", IDOK, 80, 91, 71, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 184, 140
@@ -34,10 +34,10 @@ CAPTION "Zamykanie systemu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Trwa zamykanie systemu. Zapisz wszystkie rozpoczęte prace i wyloguj się. Wszystkie niezapisane zmiany zostaną utracone po zamknięciu systemu.", -1, 33, 7, 147, 42
-    LTEXT "Czas do zamknięcia:", -1, 33, 50, 90, 8
+    LTEXT "Trwa zamykanie systemu. Zapisz wszystkie rozpoczęte prace i wyloguj się. Wszystkie niezapisane zmiany zostaną utracone po zamknięciu systemu.", IDC_STATIC, 33, 7, 147, 42
+    LTEXT "Czas do zamknięcia:", IDC_STATIC, 33, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Wiadomość:", -1, 33, 65, 135, 8
+    LTEXT "Wiadomość:", IDC_STATIC, 33, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 30, 75, 146, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -58,6 +58,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."
     IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawień..."
     IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu ReactOS..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d dni"
 END

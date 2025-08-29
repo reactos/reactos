@@ -58,8 +58,9 @@ wmain(
     LPCWSTR pszFileName = NULL;
     int index;
     int result = EXIT_SUCCESS;
+    BOOL bDone = FALSE;
 
-    DPRINT("main()\n");
+    DPRINT("wmain(%S)\n", GetCommandLineW());
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -93,7 +94,7 @@ wmain(
                 }
 
                 /* Run a command from the command line */
-                if (InterpretCommand((LPWSTR*)&argv[index], argc - index) == FALSE)
+                if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) != ERROR_SUCCESS)
                     result = EXIT_FAILURE;
                 goto done;
             }
@@ -186,6 +187,7 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
+    CleanupContext();
     UnloadHelpers();
 
     return result;
@@ -233,8 +235,19 @@ PrintMessageFromModule(
     _In_ DWORD  dwMsgId,
     ...)
 {
-    DPRINT1("PrintMessageFromModule()\n");
-    return 1;
+    WCHAR Buffer[256];
+    INT Length;
+    va_list ap;
+
+    Length = LoadStringW(hModule, dwMsgId, Buffer, 256);
+    if (Length == 0)
+        return 0;
+
+    va_start(ap, dwMsgId);
+    Length = ConPrintfV(StdOut, Buffer, ap);
+    va_end(ap);
+
+    return Length;
 }
 
 DWORD
@@ -247,7 +260,7 @@ PrintMessage(
     va_list ap;
 
     va_start(ap, pwszFormat);
-    Length = ConPrintf(StdOut, pwszFormat);
+    Length = ConPrintfV(StdOut, pwszFormat, ap);
     va_end(ap);
 
     return Length;

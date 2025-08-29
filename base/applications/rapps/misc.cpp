@@ -583,3 +583,123 @@ GetProgramFilesPath(CStringW &Path, BOOL PerUser, HWND hwnd)
     }
     return hr;
 }
+
+static BOOL
+ReadAt(HANDLE Handle, UINT Offset, LPVOID Buffer, UINT Size)
+{
+    OVERLAPPED ol = {};
+    ol.Offset = Offset;
+    DWORD cb;
+    return ReadFile(Handle, Buffer, Size, &cb, &ol) && cb == Size;
+}
+
+InstallerType
+GuessInstallerType(LPCWSTR Installer, UINT &ExtraInfo)
+{
+    ExtraInfo = 0;
+    InstallerType it = INSTALLER_UNKNOWN;
+
+    HANDLE hFile = CreateFileW(Installer, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return it;
+
+    BYTE buf[0x30 + 12];
+    if (!ReadAt(hFile, 0, buf, sizeof(buf)))
+        goto done;
+
+    if (buf[0] == 0xD0 && buf[1] == 0xCF && buf[2] == 0x11 && buf[3] == 0xE0)
+    {
+        if (!StrCmpIW(L".msi", PathFindExtensionW(Installer)))
+        {
+            it = INSTALLER_MSI;
+            goto done;
+        }
+    }
+
+    if (buf[0] != 'M' || buf[1] != 'Z')
+        goto done;
+
+    // <= Inno 5.1.4
+    {
+        UINT sig[3];
+        C_ASSERT(sizeof(buf) >= 0x30 + sizeof(sig));
+        CopyMemory(sig, buf + 0x30, sizeof(sig));
+        if (sig[0] == 0x6F6E6E49 && sig[1] == ~sig[2])
+        {
+            it = INSTALLER_INNO;
+            ExtraInfo = 1;
+            goto done;
+        }
+    }
+
+    // NSIS 1.6+
+    {
+        UINT nsis[1+1+3+1+1], nsisskip = 512;
+        for (UINT nsisoffset = nsisskip * 20; nsisoffset < 1024 * 1024 * 50; nsisoffset += nsisskip)
+        {
+            if (ReadAt(hFile, nsisoffset, nsis, sizeof(nsis)) && nsis[1] == 0xDEADBEEF)
+            {
+                if (nsis[2] == 0x6C6C754E && nsis[3] == 0x74666F73 && nsis[4] == 0x74736E49)
+                {
+                    it = INSTALLER_NSIS;
+                    goto done;
+                }
+            }
+        }
+    }
+
+    if (HMODULE hMod = LoadLibraryEx(Installer, NULL, LOAD_LIBRARY_AS_DATAFILE))
+    {
+        // Inno
+        enum { INNORCSETUPLDR = 11111 };
+        HGLOBAL hGlob;
+        HRSRC hRsrc = FindResourceW(hMod, MAKEINTRESOURCE(INNORCSETUPLDR), RT_RCDATA);
+        if (hRsrc && (hGlob = LoadResource(hMod, hRsrc)) != NULL)
+        {
+            if (BYTE *p = (BYTE*)LockResource(hGlob))
+            {
+                if (p[0] == 'r' && p[1] == 'D' && p[2] == 'l' && p[3] == 'P' && p[4] == 't' && p[5] == 'S')
+                    it = INSTALLER_INNO;
+                UnlockResource((void*)p);
+            }
+        }
+        FreeLibrary(hMod);
+    }
+done:
+    CloseHandle(hFile);
+    return it;
+}
+
+BOOL
+GetSilentInstallParameters(InstallerType InstallerType, UINT ExtraInfo, LPCWSTR Installer, CStringW &Parameters)
+{
+    switch (InstallerType)
+    {
+        case INSTALLER_MSI:
+        {
+            Parameters.Format(L"/i \"%s\" /qn", Installer);
+            return TRUE;
+        }
+
+        case INSTALLER_INNO:
+        {
+            LPCWSTR pszInnoParams = L"/SILENT /VERYSILENT /SP-";
+            if (ExtraInfo)
+                Parameters.Format(L"%s", pszInnoParams);
+            else
+                Parameters.Format(L"%s /SUPPRESSMSGBOXES", pszInnoParams); // https://jrsoftware.org/files/is5.5-whatsnew.htm
+            return TRUE;
+        }
+
+        case INSTALLER_NSIS:
+        {
+            Parameters = L"/S";
+            return TRUE;
+        }
+
+        default:
+        {
+            return FALSE;
+        }
+    }
+}

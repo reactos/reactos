@@ -5,6 +5,8 @@
 
 static LIST_ENTRY ThreadListHead;
 static KSPIN_LOCK ThreadListLock;
+static ERESOURCE GlobalLock;
+static ULONG GlobalLockLevel = 0;
 
 KEVENT TerminationEvent;
 NPAGED_LOOKASIDE_LIST MessageLookasideList;
@@ -32,14 +34,18 @@ u32_t sys_now(void)
 void
 sys_arch_protect(sys_prot_t *lev)
 {
-    /* Preempt the dispatcher */
-    KeRaiseIrql(DISPATCH_LEVEL, lev);
+    /* Acquire the global resource to prevent other CPUs from running */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&GlobalLock);
+    *lev = ++GlobalLockLevel;
 }
 
 void
 sys_arch_unprotect(sys_prot_t lev)
 {
-    KeLowerIrql(lev);
+    /* Release the global resource */
+    ASSERT((GlobalLockLevel > 0) && (lev == GlobalLockLevel));
+    GlobalLockLevel--;
+    ExReleaseResourceAndLeaveCriticalRegion(&GlobalLock);
 }
 
 err_t
@@ -131,7 +137,7 @@ sys_mbox_new(sys_mbox_t *mbox, int size)
 
     InitializeListHead(&mbox->ListHead);
 
-    KeInitializeEvent(&mbox->Event, NotificationEvent, FALSE);
+    KeInitializeSemaphore(&mbox->Semaphore, 0, MAXLONG);
 
     mbox->Valid = 1;
 
@@ -170,7 +176,7 @@ sys_mbox_post(sys_mbox_t *mbox, void *msg)
                                 &Container->ListEntry,
                                 &mbox->Lock);
 
-    KeSetEvent(&mbox->Event, IO_NO_INCREMENT, FALSE);
+    KeReleaseSemaphore(&mbox->Semaphore, IO_NO_INCREMENT, 1, FALSE);
 }
 
 u32_t
@@ -183,7 +189,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     PLWIP_MESSAGE_CONTAINER Container;
     PLIST_ENTRY Entry;
     KIRQL OldIrql;
-    PVOID WaitObjects[] = {&mbox->Event, &TerminationEvent};
+    PVOID WaitObjects[] = {&mbox->Semaphore, &TerminationEvent};
 
     LargeTimeout.QuadPart = Int32x32To64(timeout, -10000);
 
@@ -201,10 +207,8 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     if (Status == STATUS_WAIT_0)
     {
         KeAcquireSpinLock(&mbox->Lock, &OldIrql);
+        ASSERT(!IsListEmpty(&mbox->ListHead));
         Entry = RemoveHeadList(&mbox->ListHead);
-        ASSERT(Entry);
-        if (IsListEmpty(&mbox->ListHead))
-            KeClearEvent(&mbox->Event);
         KeReleaseSpinLock(&mbox->Lock, OldIrql);
 
         Container = CONTAINING_RECORD(Entry, LWIP_MESSAGE_CONTAINER, ListEntry);

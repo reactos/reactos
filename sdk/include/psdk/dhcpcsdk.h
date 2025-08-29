@@ -119,7 +119,11 @@ typedef struct _DHCPCAPI_CLASSID
 
 void WINAPI DhcpCApiCleanup(void);
 DWORD WINAPI DhcpCApiInitialize(DWORD *);
+DWORD WINAPI DhcpDeRegisterParamChange(DWORD, void *, void *);
+DWORD WINAPI DhcpRegisterParamChange(DWORD, LPVOID, LPWSTR, LPDHCPCAPI_CLASSID, DHCPCAPI_PARAMS_ARRAY, LPVOID);
+DWORD WINAPI DhcpRemoveDNSRegistrations(VOID);
 DWORD WINAPI DhcpRequestParams(DWORD, void *, WCHAR *, DHCPCAPI_CLASSID *, DHCPCAPI_PARAMS_ARRAY,
                                DHCPCAPI_PARAMS_ARRAY, BYTE *, DWORD *, WCHAR *);
+DWORD WINAPI DhcpUndoRequestParams(DWORD, LPVOID, LPWSTR, LPWSTR);
 
 #endif

@@ -183,27 +183,42 @@ typedef struct _NDIS_PNP_CAPABILITIES {
   NDIS_PM_WAKE_UP_CAPABILITIES  WakeUpCapabilities;
 } NDIS_PNP_CAPABILITIES, *PNDIS_PNP_CAPABILITIES;
 
+/* Type (OID_GEN_VLAN_ID) */
+typedef ULONG NDIS_VLAN_ID;
+
 /* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
 typedef enum _NDIS_MEDIUM {
-  NdisMedium802_3,
-  NdisMedium802_5,
-  NdisMediumFddi,
-  NdisMediumWan,
-  NdisMediumLocalTalk,
-  NdisMediumDix,
-  NdisMediumArcnetRaw,
-  NdisMediumArcnet878_2,
-  NdisMediumAtm,
-  NdisMediumWirelessWan,
-  NdisMediumIrda,
-  NdisMediumBpc,
-  NdisMediumCoWan,
-  NdisMedium1394,
-  NdisMediumMax
+    NdisMedium802_3,
+    NdisMedium802_5,
+    NdisMediumFddi,
+    NdisMediumWan,
+    NdisMediumLocalTalk,
+    NdisMediumDix,          // Not a real medium
+    NdisMediumArcnetRaw,
+    NdisMediumArcnet878_2,
+    NdisMediumAtm,
+    NdisMediumWirelessWan,
+    NdisMediumIrda,
+    NdisMediumBpc,
+    NdisMediumCoWan,
+    NdisMedium1394,
+    NdisMediumInfiniBand,
+#if ((NTDDI_VERSION >= NTDDI_VISTA) || NDIS_SUPPORT_NDIS6)
+    NdisMediumTunnel,
+    NdisMediumNative802_11,
+    NdisMediumLoopback,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    NdisMediumWiMAX,
+    NdisMediumIP,
+#endif
+    NdisMediumMax           // Not a real medium
 } NDIS_MEDIUM, *PNDIS_MEDIUM;
 
+/* Physical medium type (OID_GEN_PHYSICAL_MEDIUM) */
 typedef enum _NDIS_PHYSICAL_MEDIUM
 {
+    // Windows Server 2003 SP1 Platform SDK (or earlier?)
     NdisPhysicalMediumUnspecified,
     NdisPhysicalMediumWirelessLan,
     NdisPhysicalMediumCableModem,
@@ -215,6 +230,7 @@ typedef enum _NDIS_PHYSICAL_MEDIUM
     NdisPhysicalMediumWirelessWan,
     NdisPhysicalMediumNative802_11,
     NdisPhysicalMediumBluetooth,
+    // Windows SDK 7.1A (or earlier?)
     NdisPhysicalMediumInfiniband,
     NdisPhysicalMediumWiMax,
     NdisPhysicalMediumUWB,
@@ -224,7 +240,10 @@ typedef enum _NDIS_PHYSICAL_MEDIUM
     NdisPhysicalMediumWiredWAN,
     NdisPhysicalMediumWiredCoWan,
     NdisPhysicalMediumOther,
-    NdisPhysicalMediumMax
+    // Windows SDK 10.0.16299.0 (or earlier?)
+    NdisPhysicalMediumNative802_15_4,
+    // Always
+    NdisPhysicalMediumMax               // Not a real physical medium
 } NDIS_PHYSICAL_MEDIUM, *PNDIS_PHYSICAL_MEDIUM;
 
 typedef ULONG NDIS_OID, *PNDIS_OID;
@@ -440,10 +459,12 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define NDIS_MAC_OPTION_8021Q_VLAN                       0x00000200
 #define NDIS_MAC_OPTION_RESERVED                         0x80000000
 
-#define IOCTL_NDIS_QUERY_GLOBAL_STATS CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, \
-                                               0,                            \
-                                               METHOD_OUT_DIRECT,            \
-                                               FILE_ANY_ACCESS)
+#define _NDIS_CONTROL_CODE(request, method) \
+    CTL_CODE(FILE_DEVICE_PHYSICAL_NETCARD, request, method, FILE_ANY_ACCESS)
+
+#define IOCTL_NDIS_QUERY_GLOBAL_STATS   _NDIS_CONTROL_CODE(0x00, METHOD_OUT_DIRECT) // 0x170002
+
+#define IOCTL_NDIS_RESERVED7            _NDIS_CONTROL_CODE(0x0F, METHOD_OUT_DIRECT) // 0x17003e
 
 /* Hardware status codes (OID_GEN_HARDWARE_STATUS) */
 typedef enum _NDIS_HARDWARE_STATUS {

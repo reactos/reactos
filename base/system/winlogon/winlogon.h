@@ -227,7 +227,9 @@ typedef struct _WLSESSION
     BOOL UtilManHotkey;
     HWND SASWindow;
     HWINSTA InteractiveWindowStation;
-    LPWSTR InteractiveWindowStationName;
+    PWSTR InteractiveWindowStationName;
+    PWSTR UserName;
+    PWSTR Domain;
     HDESK ApplicationDesktop;
     HDESK WinlogonDesktop;
     HDESK ScreenSaverDesktop;
@@ -403,6 +405,10 @@ StartSystemShutdown(
     IN ULONG dwReason);
 
 /* winlogon.c */
+PWSTR
+WlStrDup(
+    _In_opt_ PCWSTR String);
+
 BOOL
 PlaySoundRoutine(IN LPCWSTR FileName,
                  IN UINT Logon,

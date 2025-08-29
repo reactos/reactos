@@ -72,7 +72,12 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
                     case NdisPhysicalMediumUnspecified:
 #endif
                     case NdisPhysicalMediumWirelessLan:
+                        /* Win2003: MIB_IF_TYPE_ETHERNET; Vista+: IF_TYPE_IEEE80211 */
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
                         OutData->if_type = IF_TYPE_IEEE80211;
+#else
+                        OutData->if_type = MIB_IF_TYPE_ETHERNET;
+#endif
                         break;
 #if 0
                     case NdisPhysicalMediumCableModem:
@@ -83,9 +88,12 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
                     case NdisPhysicalMedium1394:
                     case NdisPhysicalMediumWirelessWan:
 #endif
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+                    /* NDIS 6.0+ (Vista+) */
                     case NdisPhysicalMediumNative802_11:
                         OutData->if_type = IF_TYPE_IEEE80211;
                         break;
+#endif
 #if 0
                     case NdisPhysicalMediumBluetooth:
                     case NdisPhysicalMediumInfiniband:

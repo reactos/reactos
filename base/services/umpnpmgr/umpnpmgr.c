@@ -45,6 +45,7 @@ HKEY hEnumKey = NULL;
 HKEY hClassKey = NULL;
 BOOL g_IsUISuppressed = FALSE;
 BOOL g_ShuttingDown = FALSE;
+BOOL g_IsLiveMedium = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -200,6 +201,18 @@ GetSuppressNewUIValue(VOID)
     return bSuppressNewHWUI;
 }
 
+BOOL
+RunningOnLiveMedium(VOID)
+{
+    WCHAR LogPath[MAX_PATH];
+
+    GetSystemWindowsDirectoryW(LogPath, ARRAYSIZE(LogPath));
+    if (GetDriveTypeW(LogPath) == DRIVE_FIXED)
+        return FALSE;
+
+    return TRUE;
+}
+
 VOID WINAPI
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -210,6 +223,8 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("ServiceMain() called\n");
+
+    g_IsLiveMedium = RunningOnLiveMedium();
 
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,

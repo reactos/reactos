@@ -325,7 +325,7 @@ DrawIconOnOwnerDrawnButtons(
     hbmOld = SelectObject(hdcMem, pContext->hImageStrip);
     rect = pdis->rcItem;
 
-    /* Check the button ID for revelant bitmap to be used */
+    /* Check the button ID for relevant bitmap to be used */
     switch (pdis->CtlID)
     {
         case IDC_BUTTON_SHUTDOWN:
@@ -1037,9 +1037,7 @@ ShutdownDialogProc(
 
         case WM_DESTROY:
             if (pContext->bFriendlyUI)
-            {
                 EndFriendlyDialog(hDlg, pContext);
-            }
             return TRUE;
 
         case WM_ACTIVATE:
@@ -1152,7 +1150,7 @@ ShutdownDialog(
     IN PGINA_CONTEXT pgContext)
 {
     INT_PTR ret;
-    SHUTDOWN_DLG_CONTEXT Context;
+    SHUTDOWN_DLG_CONTEXT Context = {0};
 
 #if 0
     DWORD ShutdownOptions;
@@ -1239,7 +1237,7 @@ ShellShutdownDialog(
      * As we are called by the shell itself, don't use
      * the cached GINA context but use a local copy here.
      */
-    GINA_CONTEXT gContext = { 0 };
+    GINA_CONTEXT gContext = {0};
     DWORD BufferSize;
 
     UNREFERENCED_PARAMETER(lpUsername);

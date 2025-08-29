@@ -2674,10 +2674,7 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
   if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
       return ERROR_PROC_NOT_FOUND;
 
-  if (DhcpReleaseIpAddressLease(AdapterInfo->Index))
-      Status = ERROR_SUCCESS;
-  else
-      Status = ERROR_PROC_NOT_FOUND;
+  Status = DhcpReleaseParameters(AdapterInfo->Name);
 
   DhcpCApiCleanup();
 
@@ -2708,10 +2705,7 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
   if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
       return ERROR_PROC_NOT_FOUND;
 
-  if (DhcpRenewIpAddressLease(AdapterInfo->Index))
-      Status = ERROR_SUCCESS;
-  else
-      Status = ERROR_PROC_NOT_FOUND;
+  Status = DhcpAcquireParameters(AdapterInfo->Name);
 
   DhcpCApiCleanup();
 
