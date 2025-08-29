@@ -399,6 +399,15 @@
 #define IDC_RUNDLG_EDITPATH    12298
 #define IDC_RUNDLG_LABEL       12305
 
+/* Run As dialog */
+#define IDD_RUN_AS          1007
+#define IDC_RUNAS_CURRENT   100
+#define IDC_RUNAS_OTHER     101
+#define IDC_RUNAS_SAFER     102
+#define IDC_RUNAS_NAME      103
+#define IDC_RUNAS_BROWSE    104
+#define IDC_RUNAS_PWD       105
+
 /* ShellAbout dialog */
 #define IDD_ABOUT                     2
 #define IDC_ABOUT_ICON                0x3009
@@ -547,7 +556,6 @@
 #define IDC_LOG_OFF_TEXT_STATIC             15005
 
 /* Other dialogs */
-#define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
