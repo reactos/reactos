@@ -1045,9 +1045,12 @@ WlxLoggedOutSAS(
     pgContext->pMprNotifyInfo = pMprNotifyInfo;
     pgContext->pProfile = pProfile;
 
-
     res = pGinaUI->LoggedOutSAS(pgContext);
-    *phToken = pgContext->UserToken;
+
+    /* Return the logon information only if necessary */
+    if (res == WLX_SAS_ACTION_LOGON)
+        *phToken = pgContext->UserToken;
+
     return res;
 }
 
@@ -1113,6 +1116,20 @@ WlxLogoff(
     PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
     TRACE("WlxLogoff(%p)\n", pWlxContext);
+
+    /* Reset the captured Winlogon pointers */
+    pgContext->pAuthenticationId = NULL;
+    pgContext->pdwOptions = NULL;
+    pgContext->pMprNotifyInfo = NULL;
+    pgContext->pProfile = NULL;
+
+    /*
+     * Reset user login information.
+     * Keep pgContext->UserName and pgContext->DomainName around
+     * if we want to show them as default (last logged user) in
+     * the Log-On dialog.
+     */
+    ZeroMemory(&pgContext->LogonTime, sizeof(pgContext->LogonTime));
 
     /* Delete the password */
     SecureZeroMemory(pgContext->Password, sizeof(pgContext->Password));
