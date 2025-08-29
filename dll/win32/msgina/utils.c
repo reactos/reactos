@@ -108,6 +108,64 @@ ReadRegDwordValue(
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief
+ * Verifies whether the specified token has the given privilege.
+ *
+ * @see
+ * shell32!SHTestTokenPrivilegeW(),
+ * http://undoc.airesoft.co.uk/shell32.dll/SHTestTokenPrivilegeW.php
+ * and setupapi!DoesUserHavePrivilege().
+ */
+BOOL
+TestTokenPrivilege(
+    _In_opt_ HANDLE hToken,
+    _In_ ULONG Privilege)
+{
+    LUID PrivilegeLuid = {Privilege, 0};
+    HANDLE hNewToken = NULL;
+    PTOKEN_PRIVILEGES pTokenPriv;
+    DWORD dwLength;
+    BOOL ret = FALSE;
+
+    if (!hToken)
+    {
+        /* Open effective token */
+        ret = OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hNewToken);
+        if (!ret && (GetLastError() == ERROR_NO_TOKEN))
+            ret = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hNewToken);
+        if (!ret || !hNewToken)
+            return FALSE;
+        hToken = hNewToken;
+    }
+
+    dwLength = 0;
+    ret = GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwLength);
+    if (!ret && (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+        goto Quit;
+
+    ret = FALSE;
+    pTokenPriv = (PTOKEN_PRIVILEGES)LocalAlloc(LPTR, dwLength);
+    if (!pTokenPriv)
+        goto Quit;
+
+    if (GetTokenInformation(hToken, TokenPrivileges, pTokenPriv, dwLength, &dwLength))
+    {
+        DWORD i, cPrivs = pTokenPriv->PrivilegeCount;
+        for (i = 0; !ret && i < cPrivs; ++i)
+        {
+            ret = RtlEqualLuid(&PrivilegeLuid, &pTokenPriv->Privileges[i].Luid);
+        }
+    }
+
+    LocalFree(pTokenPriv);
+
+Quit:
+    if (hToken == hNewToken)
+        CloseHandle(hNewToken);
+    return ret;
+}
+
 PWSTR
 DuplicateString(
     _In_opt_ PCWSTR Str)

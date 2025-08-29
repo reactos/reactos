@@ -10,9 +10,7 @@
 
 #include <wingdi.h>
 #include <winnls.h>
-#include <winreg.h>
 #include <ndk/exfuncs.h>
-#include <ndk/setypes.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -132,8 +130,6 @@ SetWelcomeText(HWND hWnd)
     HKEY hKey;
     DWORD BufSize, dwType, dwWelcomeSize, dwTitleLength;
     LONG rc;
-
-    TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Open the Winlogon key */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -529,8 +525,6 @@ static VOID
 GUIDisplaySASNotice(
     IN OUT PGINA_CONTEXT pgContext)
 {
-    TRACE("GUIDisplaySASNotice()\n");
-
     /* Display the notice window */
     pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                             pgContext->hDllInstance,
@@ -816,9 +810,14 @@ ChangePasswordDialogProc(
 
 
 static VOID
-OnInitSecurityDlg(HWND hwnd,
-                  PGINA_CONTEXT pgContext)
+OnInitSecurityDlg(
+    _In_ HWND hwnd,
+    _In_ PGINA_CONTEXT pgContext)
 {
+    HKEY hKeyCurrentUser, hKey;
+    DWORD dwValue;
+    LONG lRet;
+
     WCHAR Buffer1[256];
     WCHAR Buffer2[256];
     WCHAR Buffer3[256];
@@ -842,6 +841,74 @@ OnInitSecurityDlg(HWND hwnd,
     wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
 
     SetDlgItemTextW(hwnd, IDC_SECURITY_LOGONDATE, Buffer4);
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"DisableLockWorkstation", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOCK), FALSE);
+
+        RegCloseKey(hKey);
+    }
+
+    /* Open the per-user registry key */
+    lRet = RegOpenLoggedOnHKCU(pgContext->UserToken,
+                               KEY_QUERY_VALUE,
+                               &hKeyCurrentUser);
+    if (lRet != ERROR_SUCCESS)
+    {
+        /* We couldn't, bail out */
+        return;
+    }
+
+    lRet = RegOpenKeyExW(hKeyCurrentUser,
+                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"DisableLockWorkstation", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOCK), FALSE);
+
+        lRet = ReadRegDwordValue(hKey, L"DisableChangePassword", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_CHANGEPWD), FALSE);
+
+        lRet = ReadRegDwordValue(hKey, L"DisableTaskMgr", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_TASKMGR), FALSE);
+
+        RegCloseKey(hKey);
+    }
+
+    lRet = RegOpenKeyExW(hKeyCurrentUser,
+                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"NoLogoff", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOGOFF), FALSE);
+
+        // TODO: Disable also if "NoDisconnect" on Terminal Services
+        /* Disable the "Shutdown" button if the user doesn't have shutdown privilege */
+        lRet = ReadRegDwordValue(hKey, L"NoClose", &dwValue);
+        if (((lRet == ERROR_SUCCESS) && !!dwValue) ||
+            !TestTokenPrivilege(pgContext->UserToken, SE_SHUTDOWN_PRIVILEGE))
+        {
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_SHUTDOWN), FALSE);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    RegCloseKey(hKeyCurrentUser);
 }
 
 
@@ -918,48 +985,36 @@ OnLogOff(
 static
 INT
 OnShutDown(
-    IN HWND hwndDlg,
-    IN PGINA_CONTEXT pgContext)
+    _In_ HWND hwndDlg,
+    _In_ PGINA_CONTEXT pgContext,
+    _In_ DWORD dwExcludeOptions)
 {
+    HKEY hKeyCurrentUser = NULL;
+    DWORD ShutdownOptions = 0;
     INT ret;
-    DWORD ShutdownOptions;
 
-    TRACE("OnShutDown(%p %p)\n", hwndDlg, pgContext);
-
-    pgContext->nShutdownAction = GetDefaultShutdownSelState();
-    ShutdownOptions = GetDefaultShutdownOptions();
-
-    if (pgContext->UserToken != NULL)
+    /* Open the per-user registry key */
+    if (RegOpenLoggedOnHKCU(pgContext->UserToken,
+                            KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
+                            &hKeyCurrentUser) != ERROR_SUCCESS)
     {
-        if (ImpersonateLoggedOnUser(pgContext->UserToken))
-        {
-            pgContext->nShutdownAction = LoadShutdownSelState();
-            ShutdownOptions = GetAllowedShutdownOptions();
-            RevertToSelf();
-        }
-        else
-        {
-            ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        }
+        ERR("RegOpenLoggedOnHKCU() failed with error %ld\n", GetLastError());
     }
+    pgContext->nShutdownAction = 0;
+    if (hKeyCurrentUser)
+    {
+        ShutdownOptions = GetAllowedShutdownOptions(hKeyCurrentUser, pgContext->UserToken);
+        pgContext->nShutdownAction = LoadShutdownSelState(hKeyCurrentUser);
+    }
+    ShutdownOptions &= ~dwExcludeOptions;
 
     ret = ShutdownDialog(hwndDlg, ShutdownOptions, pgContext);
 
-    if (ret == IDOK)
-    {
-        if (pgContext->UserToken != NULL)
-        {
-            if (ImpersonateLoggedOnUser(pgContext->UserToken))
-            {
-                SaveShutdownSelState(pgContext->nShutdownAction);
-                RevertToSelf();
-            }
-            else
-            {
-                ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-            }
-        }
-    }
+    if ((ret == IDOK) && hKeyCurrentUser)
+        SaveShutdownSelState(hKeyCurrentUser, pgContext->nShutdownAction);
+
+    if (hKeyCurrentUser)
+        RegCloseKey(hKeyCurrentUser);
 
     return ret;
 }
@@ -1031,7 +1086,7 @@ SecurityDialogProc(
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
                         }
                     }
-                    else if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                    else if (OnShutDown(hwndDlg, pgContext, 0) == IDOK)
                     {
                         EndDialog(hwndDlg, pgContext->nShutdownAction);
                     }
@@ -1065,8 +1120,6 @@ GUILoggedOnSAS(
     IN DWORD dwSasType)
 {
     INT result;
-
-    TRACE("GUILoggedOnSAS()\n");
 
     if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
     {
@@ -1377,8 +1430,11 @@ LogonDialogProc(
                     return TRUE;
 
                 case IDC_LOGON_SHUTDOWN:
-                    if (OnShutDown(hwndDlg, pDlgData->pgContext) == IDOK)
+                    if (OnShutDown(hwndDlg, pDlgData->pgContext,
+                                   WLX_SHUTDOWN_STATE_DISCONNECT | WLX_SHUTDOWN_STATE_LOGOFF) == IDOK)
+                    {
                         EndDialog(hwndDlg, pDlgData->pgContext->nShutdownAction);
+                    }
                     return TRUE;
             }
             break;
@@ -1730,8 +1786,6 @@ static VOID
 GUIDisplayLockedNotice(
     IN OUT PGINA_CONTEXT pgContext)
 {
-    TRACE("GUIdisplayLockedNotice()\n");
-
     pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,

@@ -1603,7 +1603,7 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
  */
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
-    typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
+    typedef DWORD (WINAPI *ShellShFunc)(HWND hWndParent, LPCWSTR pUserName, DWORD dwExcludeOptions);
     HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
 
     TRACE("(%p)\n", hWndOwner);
@@ -1623,11 +1623,10 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
     }
 
     ShellShFunc pShellShutdownDialog = (ShellShFunc)GetProcAddress(msginaDll, "ShellShutdownDialog");
-
     if (pShellShutdownDialog)
     {
         /* Actually call the function */
-        DWORD returnValue = pShellShutdownDialog(parent, NULL, FALSE);
+        DWORD returnValue = pShellShutdownDialog(parent, NULL, 0);
 
         switch (returnValue)
         {
