@@ -26,6 +26,9 @@
 #include "wine/debug.h"
 #include "wine/heap.h"
 
+#include <windows.h>
+#include "psdk/winsta.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(wtsapi);
 
 #ifdef __REACTOS__ /* FIXME: Inspect */
@@ -626,8 +629,21 @@ BOOL WINAPI WTSQueryUserConfigW(LPWSTR pServerName, LPWSTR pUserName, WTS_CONFIG
  */
 BOOL WINAPI WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags)
 {
-    FIXME("Stub %p 0x%08x\n", hWnd, dwFlags);
-    return TRUE;
+  DWORD processId;
+
+  if (IsWindow(hWnd) != 0) {
+    GetWindowThreadProcessId(hWnd, &processId);
+    if (processId != GetCurrentProcessId()) {
+        SetLastError(0x580);
+        return 0;
+    }
+    if ((dwFlags == 0) || (dwFlags == 1)) {
+      return WinStationRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE, hWnd, dwFlags);
+    }
+  }
+
+  SetLastError(0x57);
+  return 0;
 }
 
 /************************************************************
@@ -728,7 +744,22 @@ BOOL WINAPI WTSTerminateProcess(HANDLE hServer, DWORD ProcessId, DWORD ExitCode)
  */
 BOOL WINAPI WTSUnRegisterSessionNotification(HWND hWnd)
 {
-    FIXME("Stub %p\n", hWnd);
+    DWORD dwProcId;
+    DWORD lastError;
+
+    /* 0x1eae  27  WTSUnRegisterSessionNotification */
+    if (IsWindow(hWnd) == 0) {
+        lastError = ERROR_INVALID_PARAMETER;
+    }
+    else {
+        GetWindowThreadProcessId(hWnd,&dwProcId);
+        lastError = GetCurrentProcessId();
+        if (dwProcId == lastError) {
+           return WinStationUnRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE,hWnd);
+        }
+        lastError = ERROR_WINDOW_OF_OTHER_THREAD;
+    }
+    SetLastError(lastError);
     return FALSE;
 }
 

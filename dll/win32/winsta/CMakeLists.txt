@@ -1,5 +1,5 @@
 
-spec2def(winsta.dll winsta.spec)
+spec2def(winsta.dll winsta.spec ADD_IMPORTLIB)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 

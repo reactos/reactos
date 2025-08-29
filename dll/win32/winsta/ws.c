@@ -7,11 +7,13 @@
  */
 
 #include "winsta.h"
+#include "psdk/winsta.h"
 
-VOID
-WINSTAAPI WinStationFreeMemory(PVOID A)
+BOOLEAN
+WINSTAAPI WinStationFreeMemory(_In_ PVOID Buffer)
 {
-    FIXME("WinStationFreeMemory %p not freed!\n",A);
+    FIXME("WinStationFreeMemory %p not freed!\n", Buffer);
+    return FALSE;
 }
 
 
@@ -86,12 +88,13 @@ WINSTAAPI WinStationConnectW(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationFreeGAPMemory(PVOID A,
-                                  PVOID B,
-                                  PVOID C)
+BOOLEAN
+WINSTAAPI WinStationFreeGAPMemory(_In_ ULONG Level,
+                                    _In_ PTS_ALL_PROCESSES_INFO Processes,
+                                    _In_ ULONG NumberOfProcesses)
 {
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -244,11 +247,12 @@ WINSTAAPI WinStationTerminateProcess(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationUnRegisterConsoleNotification(PVOID A,
-                                                  PVOID B)
+BOOLEAN
+WINSTAAPI WinStationUnRegisterConsoleNotification(_In_opt_ HANDLE hServer,
+                                                  _In_ HWND WindowHandle)
 {
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -304,12 +308,14 @@ WINSTAAPI WinStationRegisterConsoleNotificationEx(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationRegisterConsoleNotification(PVOID A,
-                                                PVOID B,
-                                                PVOID C)
+BOOLEAN
+WINSTAAPI WinStationRegisterConsoleNotification(HANDLE hServer,
+                                                HWND WindowHandle,
+                                                ULONG Flags)
 {
     UNIMPLEMENTED;
+    // SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 VOID
