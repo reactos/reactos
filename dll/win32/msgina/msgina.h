@@ -147,6 +147,12 @@ ShutdownDialog(
 /* utils.c */
 
 LONG
+RegOpenLoggedOnHKCU(
+    _In_opt_ HANDLE hUserToken,
+    _In_ REGSAM samDesired,
+    _Out_ PHKEY phkResult);
+
+LONG
 ReadRegSzValue(
     _In_ HKEY hKey,
     _In_ PCWSTR pszValue,

@@ -9,6 +9,50 @@
 
 #include "msgina.h"
 
+/**
+ * @brief
+ * Opens and retrieves a handle to the HKEY_CURRENT_USER
+ * corresponding to the specified logged-on user.
+ *
+ * @param[in]   hUserToken
+ * Optional handle to a primary or impersonation access token that represents
+ * a logged-on user. See @b ImpersonateLoggedOnUser() for more information.
+ * If NULL, opens the SYSTEM's HKEY_USERS\.Default (i.e. HKEY_USERS\S-1-5-18).
+ *
+ * @param[in]   samDesired
+ * A mask (type: REGSAM or ACCESS_MASK) that specifies the desired access
+ * rights to the key. See @b RegOpenCurrentUser() for more information.
+ *
+ * @param[out]  phkResult
+ * A pointer to a variable that receives a handle to the opened key.
+ * When the handle is no longer needed, close it with @b RegCloseKey().
+ **/
+LONG
+RegOpenLoggedOnHKCU(
+    _In_opt_ HANDLE hUserToken,
+    _In_ REGSAM samDesired,
+    _Out_ PHKEY phkResult)
+{
+    LONG rc;
+
+    /* Impersonate the logged-on user if necessary */
+    if (hUserToken && !ImpersonateLoggedOnUser(hUserToken))
+    {
+        rc = GetLastError();
+        ERR("ImpersonateLoggedOnUser() failed with error %ld\n", rc);
+        return rc;
+    }
+
+    /* Open the logged-on user HKCU key */
+    rc = RegOpenCurrentUser(samDesired, phkResult);
+
+    /* Revert the impersonation */
+    if (hUserToken)
+        RevertToSelf();
+
+    return rc;
+}
+
 LONG
 ReadRegSzValue(
     _In_ HKEY hKey,

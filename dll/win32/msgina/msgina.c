@@ -499,46 +499,46 @@ WlxStartApplication(
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 WlxActivateUserShell(
-    PVOID pWlxContext,
-    PWSTR pszDesktopName,
-    PWSTR pszMprLogonScript,
-    PVOID pEnvironment)
+    _In_ PVOID pWlxContext,
+    _In_ PWSTR pszDesktopName,
+    _In_ PWSTR pszMprLogonScript,
+    _In_ PVOID pEnvironment)
 {
-    HKEY hKey;
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+    HKEY hKey, hKeyCurrentUser;
     DWORD BufSize, ValueType;
-    WCHAR pszUserInitApp[MAX_PATH + 1];
-    WCHAR pszExpUserInitApp[MAX_PATH];
     DWORD len;
     LONG rc;
+    BOOL ret;
+    WCHAR pszUserInitApp[MAX_PATH + 1];
+    WCHAR pszExpUserInitApp[MAX_PATH];
 
     TRACE("WlxActivateUserShell()\n");
 
     UNREFERENCED_PARAMETER(pszMprLogonScript);
 
-    /* Get the path of userinit */
-    rc = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE,
-        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-        0,
-        KEY_QUERY_VALUE,
-        &hKey);
+    /* Get the path of Userinit */
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
     if (rc != ERROR_SUCCESS)
     {
         WARN("RegOpenKeyExW() failed with error %lu\n", rc);
         return FALSE;
     }
 
-    /* Query userinit application */
     BufSize = sizeof(pszUserInitApp) - sizeof(UNICODE_NULL);
-    rc = RegQueryValueExW(
-        hKey,
-        L"Userinit",
-        NULL,
-        &ValueType,
-        (LPBYTE)pszUserInitApp,
-        &BufSize);
+    rc = RegQueryValueExW(hKey,
+                          L"Userinit",
+                          NULL,
+                          &ValueType,
+                          (PBYTE)pszUserInitApp,
+                          &BufSize);
     RegCloseKey(hKey);
     if (rc != ERROR_SUCCESS || (ValueType != REG_SZ && ValueType != REG_EXPAND_SZ))
     {
@@ -547,15 +547,52 @@ WlxActivateUserShell(
     }
     pszUserInitApp[MAX_PATH] = UNICODE_NULL;
 
-    len = ExpandEnvironmentStringsW(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
-    if (len > MAX_PATH)
+    len = ExpandEnvironmentStringsW(pszUserInitApp, pszExpUserInitApp, _countof(pszExpUserInitApp));
+    if (len > _countof(pszExpUserInitApp))
     {
         WARN("ExpandEnvironmentStringsW() failed. Required size %lu\n", len);
         return FALSE;
     }
 
-    /* Start userinit app */
-    return WlxStartApplication(pWlxContext, pszDesktopName, pEnvironment, pszExpUserInitApp);
+    /* Start the Userinit application */
+    ret = WlxStartApplication(pWlxContext, pszDesktopName, pEnvironment, pszExpUserInitApp);
+    if (!ret)
+        return ret;
+
+    /* For convenience, store in the logged-in user's Explorer key, the user name
+     * that was entered verbatim in the "Log On" dialog to log into the system.
+     * This name may differ from the resulting user name used during authentication. */
+
+    /* Open the per-user registry key */
+    rc = RegOpenLoggedOnHKCU(pgContext->UserToken,
+                             KEY_SET_VALUE,
+                             &hKeyCurrentUser);
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("RegOpenLoggedOnHKCU() failed with error %ld\n", rc);
+        return ret;
+    }
+
+    /* Open the subkey and write the value */
+    rc = RegOpenKeyExW(hKeyCurrentUser,
+                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                       0,
+                       KEY_SET_VALUE,
+                       &hKey);
+    if (rc == ERROR_SUCCESS)
+    {
+        len = wcslen(pgContext->UserName) + 1;
+        RegSetValueExW(hKey,
+                       L"Logon User Name",
+                       0,
+                       REG_SZ,
+                       (PBYTE)pgContext->UserName,
+                       len * sizeof(WCHAR));
+        RegCloseKey(hKey);
+    }
+    RegCloseKey(hKeyCurrentUser);
+
+    return ret;
 }
 
 /*
