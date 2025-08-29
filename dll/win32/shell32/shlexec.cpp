@@ -600,10 +600,10 @@ RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)(pData = (RUNASDLGDATA *)lParam));
             SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, EM_LIMITTEXT, _countof(pData->NameBuffer)-1, 0);
-            SendDlgItemMessageW(hwnd, IDC_RUNAS_PASS, EM_LIMITTEXT, _countof(pData->Password)-1, 0);
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, EM_LIMITTEXT, _countof(pData->Password)-1, 0);
             SendDlgItemMessageW(hwnd, IDC_RUNAS_OTHER, BM_CLICK, 0, 0);
 
-            HWND hCtl = GetDlgItem(hwnd, IDC_RUNAS_THIS);
+            HWND hCtl = GetDlgItem(hwnd, IDC_RUNAS_CURRENT);
             WCHAR fmtbuf[200], buf[_countof(fmtbuf) + _countof(pData->NameBuffer)];
             DWORD cch = _countof(pData->NameBuffer);
             if (GetUserNameW(pData->NameBuffer, &cch))
