@@ -206,9 +206,8 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    extern MMPTE ValidKernelPte;
     PMMPTE PointerPte;
-    MMPTE TempPte = ValidKernelPte;
+    MMPTE TempPte;
     PFN_NUMBER PageFrameNumber;
     PLIST_ENTRY ListEntry;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
