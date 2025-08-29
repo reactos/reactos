@@ -8,6 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/ucrt)
 list(APPEND SOURCE
     ../crt/_finite.c
     ../crt/_isnan.c
+    ../crt/_wsystem.c
     ../crt/acos.c
     ../crt/asin.c
     ../crt/atan.c
@@ -20,6 +21,7 @@ list(APPEND SOURCE
     ../crt/setjmp.c
     ../crt/sin.c
     ../crt/sqrt.c
+    ../crt/system.c
     ../crt/tan.c
     ../crt/wctomb.c
     testlist.c
