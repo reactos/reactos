@@ -109,7 +109,7 @@ LPWSTR WINAPI SdbGetStringTagPtr(PDB pdb, TAGID tagid);
 TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData);
 BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information);
-VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information);
+VOID WINAPI SdbFreeDatabaseInformation(_In_opt_ PDB_INFORMATION information);
 BOOL WINAPI SdbRegisterDatabaseEx(_In_ LPCWSTR pszDatabasePath, _In_ DWORD dwDatabaseType, _In_opt_ const PULONGLONG pTimeStamp);
 BOOL WINAPI SdbUnregisterDatabase(_In_ const GUID *pguidDB);
 
