@@ -1085,6 +1085,11 @@ HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPAR
 {
     switch (uMsg)
     {
+        #if ROSPOLICY_DESKTOPFOLDER_DEFLARGEICONS
+        case SFVM_DEFVIEWMODE:                     // CDesktopBrowser always forces FVM_ICON.
+            *((FOLDERVIEWMODE*)lParam) = FVM_ICON; // This sets the default for generic browsers.
+            return S_OK;
+        #endif
         case SFVM_VIEWRELEASE:
             m_pShellView = NULL;
             return S_OK;
