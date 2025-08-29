@@ -1219,12 +1219,12 @@ VOID SeiInit(LPCWSTR ProcessImage, HSDB hsdb, SDBQUERYRESULT* pQuery, BOOLEAN Pr
     SeiBuildShimRefArray(hsdb, pQuery, &ShimRefArray, &ShimFlags);
     if (ShimFlags.AppCompatFlags.QuadPart)
     {
-        SeiDbgPrint(SEI_MSG, NULL, "Using KERNEL apphack flags 0x%I64x\n", ShimFlags.AppCompatFlags.QuadPart);
+        SeiDbgPrint(SEI_MSG, NULL, "Using KERNEL apphack flags 0x%llx\n", ShimFlags.AppCompatFlags.QuadPart);
         Peb->AppCompatFlags.QuadPart |= ShimFlags.AppCompatFlags.QuadPart;
     }
     if (ShimFlags.AppCompatFlagsUser.QuadPart)
     {
-        SeiDbgPrint(SEI_MSG, NULL, "Using USER apphack flags 0x%I64x\n", ShimFlags.AppCompatFlagsUser.QuadPart);
+        SeiDbgPrint(SEI_MSG, NULL, "Using USER apphack flags 0x%llx\n", ShimFlags.AppCompatFlagsUser.QuadPart);
         Peb->AppCompatFlagsUser.QuadPart |= ShimFlags.AppCompatFlagsUser.QuadPart;
     }
     if (ShimFlags.ProcessParameters_Flags)

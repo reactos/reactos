@@ -88,7 +88,7 @@ std::string ReadStringNode(XMLHandle dbNode, const char* nodeName)
     return ToString(dbNode.FirstChildElement(nodeName));
 }
 
-DWORD ReadQWordNode(XMLHandle dbNode, const char* nodeName)
+QWORD ReadQWordNode(XMLHandle dbNode, const char* nodeName)
 {
     std::string value = ReadStringNode(dbNode, nodeName);
     int base = 10;
@@ -97,7 +97,7 @@ DWORD ReadQWordNode(XMLHandle dbNode, const char* nodeName)
         base = 16;
         value = value.substr(2);
     }
-    return static_cast<QWORD>(strtoul(value.c_str(), NULL, base));
+    return static_cast<QWORD>(strtoull(value.c_str(), NULL, base));
 }
 
 DWORD ReadDWordNode(XMLHandle dbNode, const char* nodeName)
