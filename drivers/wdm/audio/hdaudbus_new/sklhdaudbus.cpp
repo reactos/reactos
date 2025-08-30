@@ -311,9 +311,6 @@ HDA_AddDevice(
     KeSetImportanceDpc(&DeviceExtension->QueueDpc, HighImportance);
     KeSetImportanceDpc(&DeviceExtension->StreamDpc, HighImportance);
 
-    /* set device flags */
-    DeviceObject->Flags |= DO_POWER_PAGABLE;
-
     return Status;
 }
 

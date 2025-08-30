@@ -5,6 +5,7 @@
  * PURPOSE:         HDAUDBUS Driver
  * PROGRAMMER:      Coolstar TODO
                     Johannes Anderwald
+                    Oleg Dubinskiy
  */
 
 #define NDEBUG
@@ -70,6 +71,7 @@ WorkerStreamRoutine(
 
         if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms)
         {
+            DPRINT1("Timeout\n");
             InterlockedExchangeAdd(&StreamContext->fdoCtx->rirb.cmds[codecAddr], (LONG)TransferredCount - StreamContext->Count);
             SklHdAudBusPrint(
                 DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s timeout (Count: %d, transferred %d)!\n", __func__, StreamContext->Count,
@@ -105,6 +107,11 @@ HDA_TransferCodecVerbs(
 	//SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, Count);
 
     //DPRINT("HDA_TransferCodecVerbs %p Count %u CodecTransfer %p Callback %p Context %p\n", _context, Count, CodecTransfer, Callback, Context);
+
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL && !Callback) {
+        ASSERT(FALSE);
+        return STATUS_UNSUCCESSFUL;
+	}
 
 	if (!_context)
     {
@@ -188,7 +195,7 @@ HDA_TransferCodecVerbs(
 
 		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
             InterlockedExchangeAdd(&fdoCtx->rirb.cmds[codecAddr], (LONG)TransferredCount - Count); // FIXME
-            DPRINT1("Timeout");
+            DPRINT1("Timeout\n");
 			SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s timeout (Count: %d, transferred %d)!\n", __func__, Count, TransferredCount);
 			return STATUS_IO_TIMEOUT;
 		}
@@ -240,6 +247,7 @@ HDA_AllocateCaptureDmaEngine(
 		stream->streamFormat = *StreamFormat;
 
 		ConverterFormat->ConverterFormat = hdac_format(stream);
+		hdac_stream_reset(stream);
 
 		if (Handle)
 			*Handle = (HANDLE)stream;
@@ -292,9 +300,10 @@ HDA_AllocateRenderDmaEngine(
 		stream->stripe = Stripe;
 		stream->PdoContext = devData;
 		stream->running = FALSE;
-        RtlCopyMemory(&stream->streamFormat, StreamFormat, sizeof(HDAUDIO_STREAM_FORMAT));
+        stream->streamFormat = *StreamFormat;
 		
 		ConverterFormat->ConverterFormat = hdac_format(stream);
+		hdac_stream_reset(stream);
 
 		if (Handle)
 			*Handle = (HANDLE)stream;
@@ -417,12 +426,16 @@ HDA_SetDmaEngineState(
 			return STATUS_INVALID_HANDLE;
 		}
 
+		if (!stream->FdoContext->posbuf && StreamState != ResetState) {
+			ASSERT(FALSE);
+			return STATUS_INVALID_DEVICE_REQUEST;
+		}
+
 		 KIRQL OldLevel = KeAcquireInterruptSpinLock(devData->FdoContext->Interrupt);
 
         DPRINT1("OldState: %u\n", stream->StreamState);
          if (StreamState == RunState && !stream->running)
          {
-            hdac_stream_setup(stream);
             DPRINT1("starting stream\n");
             hdac_stream_start(stream);
             stream->running = TRUE;
@@ -440,7 +453,6 @@ HDA_SetDmaEngineState(
             if (!stream->running)
             {
                 hdac_stream_reset(stream);
-                hdac_stream_setup(stream);
             }
             else
             {
@@ -1052,40 +1064,195 @@ HDA_UnregisterNotificationCallback(
 NTSTATUS
 NTAPI
 HDA_SetupDmaEngineWithBdl(
-    IN PVOID _context,
-    IN HANDLE Handle,
-    IN ULONG BufferLength,
-    IN ULONG Lvi,
-    IN PHDAUDIO_BDL_ISR Isr,
-    IN PVOID Context,
-    OUT PUCHAR StreamId,
-    OUT PULONG FifoSize)
+	_In_ PVOID _context,
+	_In_ HANDLE Handle,
+	_In_ ULONG BufferLength,
+	_In_ ULONG Lvi,
+	_In_ PHDAUDIO_BDL_ISR Isr,
+	_In_ PVOID Context,
+	_Out_ PUCHAR StreamId,
+	_Out_ PULONG FifoSize)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT1("HDA_SetupDmaEngineWithBdl %p %p %d %d %p %p\n", _context, Handle, BufferLength, Lvi, Isr, Context);
+
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		ASSERT(FALSE);
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext)
+    {
+        ASSERT(FALSE);
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData)
+    {
+        ASSERT(FALSE);
+		return STATUS_INVALID_HANDLE;
+	}
+
+    if (stream->running)
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+    if (!stream->bdl)
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+    if (!stream->FdoContext->posbuf)
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	KIRQL OldLevel = KeAcquireInterruptSpinLock(devData->FdoContext->Interrupt);
+
+	stream->bufSz = BufferLength;
+	stream->numBlocks = Lvi;
+
+	hdac_stream_setup(stream);
+
+	stream->isr.IOC = stream->bdl->ioc;
+	stream->isr.IsrCallback = Isr;
+	stream->isr.CallbackContext = Context;
+
+	*StreamId = stream->streamTag;
+	*FifoSize = stream->fifoSize;
+
+	KeReleaseInterruptSpinLock(devData->FdoContext->Interrupt, OldLevel);
+
+    DPRINT1("HDA_SetupDmaEngineWithBdl done\n");
+
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 HDA_FreeContiguousDmaBuffer(
-    IN PVOID _context,
-    IN HANDLE Handle)
+	_In_ PVOID _context,
+	_In_ HANDLE Handle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+	DPRINT1("HDA_FreeContiguousDmaBuffer %p %p\n", _context, Handle);
+
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		ASSERT(FALSE);
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		ASSERT(FALSE);
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_HANDLE;
+	}
+
+	if (stream->running)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->bdl)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->FdoContext->posbuf)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	KIRQL OldLevel = KeAcquireInterruptSpinLock(devData->FdoContext->Interrupt);
+
+	stream_write32(stream, SD_BDLPL, 0);
+    if (stream->FdoContext->is64BitOK)
+    {
+        stream_write32(stream, SD_BDLPU, 0);
+    }
+	stream_write32(stream, SD_CTL, 0);
+
+	KeReleaseInterruptSpinLock(devData->FdoContext->Interrupt, OldLevel);
+
+	DPRINT1("HDA_FreeContiguousDmaBuffer done\n");
+
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 HDA_AllocateContiguousDmaBuffer(
-    IN PVOID _context,
-    IN HANDLE Handle,
-    IN ULONG RequestedBufferSize,
-    OUT PVOID* DataBuffer,
-    OUT PHDAUDIO_BUFFER_DESCRIPTOR* BdlBuffer)
+	_In_ PVOID _context,
+	_In_ HANDLE Handle,
+	_In_ ULONG RequestedBufferSize,
+	_Out_ PVOID* DataBuffer,
+	_Out_ PHDAUDIO_BUFFER_DESCRIPTOR* BdlBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+	DPRINT1("HDA_AllocateContiguousDmaBuffer %p %p %d\n", _context, Handle, RequestedBufferSize);
+
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		ASSERT(FALSE);
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext)
+	{
+		ASSERT(FALSE);
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_HANDLE;
+	}
+
+	if (stream->running)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->FdoContext->posbuf)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->bdl)
+	{
+		ASSERT(FALSE);
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	KIRQL OldLevel = KeAcquireInterruptSpinLock(devData->FdoContext->Interrupt);
+
+	stream->bufSz = (UINT32)RequestedBufferSize;
+
+	*DataBuffer = stream->FdoContext->posbuf;
+	*BdlBuffer = (PHDAUDIO_BUFFER_DESCRIPTOR)stream->bdl;
+
+	KeReleaseInterruptSpinLock(devData->FdoContext->Interrupt, OldLevel);
+
+	DPRINT1("HDA_AllocateContiguousDmaBuffer done\n");
+
+	return STATUS_SUCCESS;
 }
 
 VOID

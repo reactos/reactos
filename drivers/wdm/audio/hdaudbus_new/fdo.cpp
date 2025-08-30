@@ -352,11 +352,12 @@ Fdo_EvtDevicePrepareHardware(
     PHYSICAL_ADDRESS maxAddr;
     maxAddr.QuadPart = fdoCtx->is64BitOK ? MAXULONG64 : MAXULONG32;
 
-    fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
-    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
+    fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE * 3, maxAddr);
     if (!fdoCtx->posbuf) {
         return STATUS_NO_MEMORY;
     }
+
+    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE * 3);
 
     fdoCtx->rb = (UINT8 *)MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
     if (!fdoCtx->rb) {
@@ -403,6 +404,9 @@ Fdo_EvtDevicePrepareHardware(
                 }
 
                 stream->bdl = (PHDAC_BDLENTRY)MmAllocateContiguousMemory(BDL_SIZE, maxAddr);
+                if (stream->bdl) {
+					RtlZeroMemory(stream->bdl, BDL_SIZE);
+				}
             }
 
             SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
@@ -552,7 +556,7 @@ HDA_FDOQueryBusRelations(
         return STATUS_UNSUCCESSFUL;
     }
         
-    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(NonPagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? sizeof(PDEVICE_OBJECT) * (DeviceCount - 1) : 0));
+    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(NonPagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? sizeof(DEVICE_OBJECT) * (DeviceCount - 1) : 0));
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
