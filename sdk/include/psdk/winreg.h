@@ -39,6 +39,8 @@ extern "C" {
 #define REG_NOTIFY_CHANGE_ATTRIBUTES 2
 #define REG_NOTIFY_CHANGE_LAST_SET 4
 #define REG_NOTIFY_CHANGE_SECURITY 8
+#define REG_NOTIFY_THREAD_AGNOSTIC (0x10000000L)
+#define REG_MUI_STRING_TRUNCATE 1
 
 /* Shutdown flags for InitiateShutdownA/W */
 #define SHUTDOWN_FORCE_OTHERS           0x00000001
@@ -62,6 +64,11 @@ extern "C" {
 #define RRF_RT_DWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_DWORD)
 #define RRF_RT_QWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_QWORD)
 #define RRF_RT_ANY              (0x0000FFFF)
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
+#define RRF_SUBKEY_WOW6464KEY   (0x00010000)
+#define RRF_SUBKEY_WOW6432KEY   (0x00020000)
+#define RRF_WOW64_MASK          (0x00030000)
+#endif // _WIN32_WINNT >= _WIN32_WINNT_WIN10
 #define RRF_NOEXPAND            (1 << 28)
 #define RRF_ZEROONFAILURE       (1 << 29)
 
