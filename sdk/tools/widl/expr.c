@@ -112,28 +112,24 @@ static int is_float_type(const type_t *type)
 expr_t *make_expr(enum expr_type type)
 {
     expr_t *e = xmalloc(sizeof(expr_t));
+    memset(e, 0, sizeof(*e));
     e->type = type;
-    e->ref = NULL;
-    e->u.lval = 0;
-    e->is_const = FALSE;
-    e->cval = 0;
     return e;
 }
 
-expr_t *make_exprl(enum expr_type type, int val)
+expr_t *make_exprl(enum expr_type type, const struct integer *integer)
 {
     expr_t *e = xmalloc(sizeof(expr_t));
+    memset(e, 0, sizeof(*e));
     e->type = type;
-    e->ref = NULL;
-    e->u.lval = val;
-    e->is_const = FALSE;
+    e->u.integer = *integer;
     /* check for numeric constant */
-    if (type == EXPR_NUM || type == EXPR_HEXNUM || type == EXPR_TRUEFALSE)
+    if (type == EXPR_NUM || type == EXPR_TRUEFALSE)
     {
         /* make sure true/false value is valid */
-        assert(type != EXPR_TRUEFALSE || val == 0 || val == 1);
+        assert(type != EXPR_TRUEFALSE || integer->value == 0 || integer->value == 1);
         e->is_const = TRUE;
-        e->cval = val;
+        e->cval = integer->value;
     }
     return e;
 }
@@ -194,15 +190,15 @@ expr_t *make_exprt(enum expr_type type, var_t *var, expr_t *expr)
     expr_t *e;
     type_t *tref;
 
-    if (var->stgclass != STG_NONE && var->stgclass != STG_REGISTER)
+    if (var->declspec.stgclass != STG_NONE && var->declspec.stgclass != STG_REGISTER)
         error_loc("invalid storage class for type expression\n");
 
-    tref = var->type;
+    tref = var->declspec.type;
 
     e = xmalloc(sizeof(expr_t));
     e->type = type;
     e->ref = expr;
-    e->u.tref = tref;
+    e->u.tref = var->declspec;
     e->is_const = FALSE;
     if (type == EXPR_SIZEOF)
     {
@@ -252,10 +248,9 @@ expr_t *make_expr1(enum expr_type type, expr_t *expr)
 {
     expr_t *e;
     e = xmalloc(sizeof(expr_t));
+    memset(e, 0, sizeof(*e));
     e->type = type;
     e->ref = expr;
-    e->u.lval = 0;
-    e->is_const = FALSE;
     /* check for compile-time optimization */
     if (expr->is_const)
     {
@@ -406,29 +401,25 @@ struct expression_type
 static void check_scalar_type(const struct expr_loc *expr_loc,
                               const type_t *cont_type, const type_t *type)
 {
-    if (!cont_type || (!is_integer_type(type) && !is_ptr(type) &&
-                       !is_float_type(type)))
-        error_loc_info(&expr_loc->v->loc_info, "scalar type required in expression%s%s\n",
-                       expr_loc->attr ? " for attribute " : "",
-                       expr_loc->attr ? expr_loc->attr : "");
+    if (!cont_type || (!is_integer_type( type ) && !is_ptr( type ) && !is_float_type( type )))
+        error_at( &expr_loc->v->where, "scalar type required in expression%s%s\n",
+                  expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
 }
 
 static void check_arithmetic_type(const struct expr_loc *expr_loc,
                                   const type_t *cont_type, const type_t *type)
 {
-    if (!cont_type || (!is_integer_type(type) && !is_float_type(type)))
-        error_loc_info(&expr_loc->v->loc_info, "arithmetic type required in expression%s%s\n",
-                       expr_loc->attr ? " for attribute " : "",
-                       expr_loc->attr ? expr_loc->attr : "");
+    if (!cont_type || (!is_integer_type( type ) && !is_float_type( type )))
+        error_at( &expr_loc->v->where, "arithmetic type required in expression%s%s\n",
+                  expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
 }
 
 static void check_integer_type(const struct expr_loc *expr_loc,
                                const type_t *cont_type, const type_t *type)
 {
-    if (!cont_type || !is_integer_type(type))
-        error_loc_info(&expr_loc->v->loc_info, "integer type required in expression%s%s\n",
-                       expr_loc->attr ? " for attribute " : "",
-                       expr_loc->attr ? expr_loc->attr : "");
+    if (!cont_type || !is_integer_type( type ))
+        error_at( &expr_loc->v->where, "integer type required in expression%s%s\n",
+                  expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
 }
 
 static type_t *find_identifier(const char *identifier, const type_t *cont_type, int *found_in_cont_type)
@@ -462,6 +453,11 @@ static type_t *find_identifier(const char *identifier, const type_t *cont_type, 
         case TYPE_POINTER:
         case TYPE_ARRAY:
         case TYPE_BITFIELD:
+        case TYPE_APICONTRACT:
+        case TYPE_RUNTIMECLASS:
+        case TYPE_PARAMETERIZED_TYPE:
+        case TYPE_PARAMETER:
+        case TYPE_DELEGATE:
             /* nothing to do */
             break;
         case TYPE_ALIAS:
@@ -474,7 +470,7 @@ static type_t *find_identifier(const char *identifier, const type_t *cont_type, 
     if (fields) LIST_FOR_EACH_ENTRY( field, fields, const var_t, entry )
         if (field->name && !strcmp(identifier, field->name))
         {
-            type = field->type;
+            type = field->declspec.type;
             *found_in_cont_type = 1;
             break;
         }
@@ -482,7 +478,7 @@ static type_t *find_identifier(const char *identifier, const type_t *cont_type, 
     if (!type)
     {
         var_t *const_var = find_const(identifier, 0);
-        if (const_var) type = const_var->type;
+        if (const_var) type = const_var->declspec.type;
     }
 
     return type;
@@ -513,19 +509,18 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
     {
     case EXPR_VOID:
         break;
-    case EXPR_HEXNUM:
     case EXPR_NUM:
     case EXPR_TRUEFALSE:
         result.is_temporary = FALSE;
-        result.type = type_new_int(TYPE_BASIC_INT, 0);
+        result.type = type_new_int(e->u.integer.is_long ? TYPE_BASIC_LONG : TYPE_BASIC_INT, e->u.integer.is_unsigned);
         break;
     case EXPR_STRLIT:
         result.is_temporary = TRUE;
-        result.type = type_new_pointer(FC_UP, type_new_int(TYPE_BASIC_CHAR, 0), NULL);
+        result.type = type_new_pointer(type_new_int(TYPE_BASIC_CHAR, 0));
         break;
     case EXPR_WSTRLIT:
         result.is_temporary = TRUE;
-        result.type = type_new_pointer(FC_UP, type_new_int(TYPE_BASIC_WCHAR, 0), NULL);
+        result.type = type_new_pointer(type_new_int(TYPE_BASIC_WCHAR, 0));
         break;
     case EXPR_CHARCONST:
         result.is_temporary = TRUE;
@@ -542,11 +537,8 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         result.is_temporary = FALSE;
         result.type = find_identifier(e->u.sval, cont_type, &found_in_cont_type);
         if (!result.type)
-        {
-            error_loc_info(&expr_loc->v->loc_info, "identifier %s cannot be resolved in expression%s%s\n",
-                           e->u.sval, expr_loc->attr ? " for attribute " : "",
-                           expr_loc->attr ? expr_loc->attr : "");
-        }
+            error_at( &expr_loc->v->where, "identifier %s cannot be resolved in expression%s%s\n", e->u.sval,
+                      expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
         break;
     }
     case EXPR_LOGNOT:
@@ -570,28 +562,26 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
     case EXPR_ADDRESSOF:
         result = resolve_expression(expr_loc, cont_type, e->ref);
         if (!result.is_variable)
-            error_loc_info(&expr_loc->v->loc_info, "address-of operator applied to non-variable type in expression%s%s\n",
-                           expr_loc->attr ? " for attribute " : "",
-                           expr_loc->attr ? expr_loc->attr : "");
+            error_at( &expr_loc->v->where, "address-of operator applied to non-variable type in expression%s%s\n",
+                      expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
         result.is_variable = FALSE;
         result.is_temporary = TRUE;
-        result.type = type_new_pointer(FC_UP, result.type, NULL);
+        result.type = type_new_pointer(result.type);
         break;
     case EXPR_PPTR:
         result = resolve_expression(expr_loc, cont_type, e->ref);
         if (result.type && is_ptr(result.type))
-            result.type = type_pointer_get_ref(result.type);
+            result.type = type_pointer_get_ref_type(result.type);
         else if(result.type && is_array(result.type)
                             && type_array_is_decl_as_ptr(result.type))
-            result.type = type_array_get_element(result.type);
+            result.type = type_array_get_element_type(result.type);
         else
-            error_loc_info(&expr_loc->v->loc_info, "dereference operator applied to non-pointer type in expression%s%s\n",
-                           expr_loc->attr ? " for attribute " : "",
-                           expr_loc->attr ? expr_loc->attr : "");
+            error_at( &expr_loc->v->where, "dereference operator applied to non-pointer type in expression%s%s\n",
+                      expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
         break;
     case EXPR_CAST:
         result = resolve_expression(expr_loc, cont_type, e->ref);
-        result.type = e->u.tref;
+        result.type = e->u.tref.type;
         break;
     case EXPR_SIZEOF:
         result.is_temporary = FALSE;
@@ -640,9 +630,8 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         if (result.type && is_valid_member_operand(result.type))
             result = resolve_expression(expr_loc, result.type, e->u.ext);
         else
-            error_loc_info(&expr_loc->v->loc_info, "'.' or '->' operator applied to a type that isn't a structure, union or enumeration in expression%s%s\n",
-                           expr_loc->attr ? " for attribute " : "",
-                           expr_loc->attr ? expr_loc->attr : "");
+            error_at( &expr_loc->v->where, "'.' or '->' operator applied to a type that isn't a structure, union or enumeration in expression%s%s\n",
+                      expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
         break;
     case EXPR_COND:
     {
@@ -653,8 +642,8 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         result_third = resolve_expression(expr_loc, cont_type, e->ext2);
         check_scalar_type(expr_loc, cont_type, result_second.type);
         check_scalar_type(expr_loc, cont_type, result_third.type);
-        if (!is_ptr(result_second.type) ^ !is_ptr(result_third.type))
-            error_loc_info(&expr_loc->v->loc_info, "type mismatch in ?: expression\n" );
+        if (!is_ptr( result_second.type ) ^ !is_ptr( result_third.type ))
+            error_at( &expr_loc->v->where, "type mismatch in ?: expression\n" );
         /* FIXME: determine the correct return type */
         result = result_second;
         result.is_variable = FALSE;
@@ -665,17 +654,17 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         if (result.type && is_array(result.type))
         {
             struct expression_type index_result;
-            result.type = type_array_get_element(result.type);
+            result.type = type_array_get_element_type(result.type);
             index_result = resolve_expression(expr_loc, cont_type /* FIXME */, e->u.ext);
-            if (!index_result.type || !is_integer_type(index_result.type))
-                error_loc_info(&expr_loc->v->loc_info, "array subscript not of integral type in expression%s%s\n",
-                               expr_loc->attr ? " for attribute " : "",
-                               expr_loc->attr ? expr_loc->attr : "");
+            if (!index_result.type || !is_integer_type( index_result.type ))
+                error_at( &expr_loc->v->where, "array subscript not of integral type in expression%s%s\n",
+                          expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
         }
         else
-            error_loc_info(&expr_loc->v->loc_info, "array subscript operator applied to non-array type in expression%s%s\n",
-                           expr_loc->attr ? " for attribute " : "",
-                           expr_loc->attr ? expr_loc->attr : "");
+        {
+            error_at( &expr_loc->v->where, "array subscript operator applied to non-array type in expression%s%s\n",
+                      expr_loc->attr ? " for attribute " : "", expr_loc->attr ? expr_loc->attr : "" );
+        }
         break;
     }
     return result;
@@ -697,16 +686,20 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
     case EXPR_VOID:
         break;
     case EXPR_NUM:
-        fprintf(h, "%u", e->u.lval);
-        break;
-    case EXPR_HEXNUM:
-        fprintf(h, "0x%x", e->u.lval);
+        if (e->u.integer.is_hex)
+            fprintf(h, "0x%x", e->u.integer.value);
+        else
+            fprintf(h, "%u", e->u.integer.value);
+        if (e->u.integer.is_unsigned)
+            fprintf(h, "u");
+        if (e->u.integer.is_long)
+            fprintf(h, "l");
         break;
     case EXPR_DOUBLE:
         fprintf(h, "%#.15g", e->u.dval);
         break;
     case EXPR_TRUEFALSE:
-        if (e->u.lval == 0)
+        if (e->u.integer.value == 0)
             fprintf(h, "FALSE");
         else
             fprintf(h, "TRUE");
@@ -759,13 +752,13 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
         break;
     case EXPR_CAST:
         fprintf(h, "(");
-        write_type_decl(h, e->u.tref, NULL);
+        write_type_decl(h, &e->u.tref, NULL);
         fprintf(h, ")");
         write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
         break;
     case EXPR_SIZEOF:
         fprintf(h, "sizeof(");
-        write_type_decl(h, e->u.tref, NULL);
+        write_type_decl(h, &e->u.tref, NULL);
         fprintf(h, ")");
         break;
     case EXPR_SHL:
@@ -874,9 +867,8 @@ int compare_expr(const expr_t *a, const expr_t *b)
     switch (a->type)
     {
         case EXPR_NUM:
-        case EXPR_HEXNUM:
         case EXPR_TRUEFALSE:
-            return a->u.lval - b->u.lval;
+            return a->u.integer.value - b->u.integer.value;
         case EXPR_DOUBLE:
             return a->u.dval - b->u.dval;
         case EXPR_IDENTIFIER:
@@ -917,7 +909,7 @@ int compare_expr(const expr_t *a, const expr_t *b)
                 return ret;
             return compare_expr(a->u.ext, b->u.ext);
         case EXPR_CAST:
-            ret = compare_type(a->u.tref, b->u.tref);
+            ret = compare_type(a->u.tref.type, b->u.tref.type);
             if (ret != 0)
                 return ret;
             /* Fall through.  */
@@ -929,7 +921,7 @@ int compare_expr(const expr_t *a, const expr_t *b)
         case EXPR_POS:
             return compare_expr(a->ref, b->ref);
         case EXPR_SIZEOF:
-            return compare_type(a->u.tref, b->u.tref);
+            return compare_type(a->u.tref.type, b->u.tref.type);
         case EXPR_VOID:
             return 0;
     }
