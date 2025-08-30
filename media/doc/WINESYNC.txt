@@ -271,7 +271,7 @@ check Wine current sources first as it may already be fixed.
 
 sdk/lib/3rdparty/strmbase           # Synced to WineStaging-3.3
 
-sdk/lib/rtl/actctx.c                # Synced to Wine-5.18
+sdk/lib/rtl/actctx.c                # Synced to Wine-10.0
 sdk/lib/rtl/threadpool.c            # Synced to Wine-9.7
 
 advapi32 -
