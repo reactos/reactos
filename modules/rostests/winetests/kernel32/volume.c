@@ -18,11 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/test.h"
+#include <stdio.h>
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
 #include "winbase.h"
 #include "winioctl.h"
-#include <stdio.h>
-#include "wine/ddk/ntddcdvd.h"
+#ifdef __REACTOS__
+#undef IOCTL_STORAGE_PERSISTENT_RESERVE_OUT
+#endif
+#include "ntddstor.h"
+#include "winternl.h"
+#include "ddk/ntddcdvd.h"
+#include "ddk/mountmgr.h"
+#include "wine/test.h"
 
 #include <pshpack1.h>
 struct COMPLETE_DVD_LAYER_DESCRIPTOR
@@ -45,18 +54,15 @@ struct COMPLETE_DVD_MANUFACTURER_DESCRIPTOR
 C_ASSERT(sizeof(struct COMPLETE_DVD_MANUFACTURER_DESCRIPTOR) == 2053);
 
 static HINSTANCE hdll;
-static BOOL (WINAPI * pGetVolumeNameForVolumeMountPointA)(LPCSTR, LPSTR, DWORD);
-static BOOL (WINAPI * pGetVolumeNameForVolumeMountPointW)(LPCWSTR, LPWSTR, DWORD);
 static HANDLE (WINAPI *pFindFirstVolumeA)(LPSTR,DWORD);
 static BOOL (WINAPI *pFindNextVolumeA)(HANDLE,LPSTR,DWORD);
 static BOOL (WINAPI *pFindVolumeClose)(HANDLE);
 static UINT (WINAPI *pGetLogicalDriveStringsA)(UINT,LPSTR);
 static UINT (WINAPI *pGetLogicalDriveStringsW)(UINT,LPWSTR);
-static BOOL (WINAPI *pGetVolumeInformationA)(LPCSTR, LPSTR, DWORD, LPDWORD, LPDWORD, LPDWORD, LPSTR, DWORD);
-static BOOL (WINAPI *pGetVolumePathNameA)(LPCSTR, LPSTR, DWORD);
-static BOOL (WINAPI *pGetVolumePathNameW)(LPWSTR, LPWSTR, DWORD);
 static BOOL (WINAPI *pGetVolumePathNamesForVolumeNameA)(LPCSTR, LPSTR, DWORD, LPDWORD);
 static BOOL (WINAPI *pGetVolumePathNamesForVolumeNameW)(LPCWSTR, LPWSTR, DWORD, LPDWORD);
+static BOOL (WINAPI *pCreateSymbolicLinkA)(const char *, const char *, DWORD);
+static BOOL (WINAPI *pGetVolumeInformationByHandleW)(HANDLE, WCHAR *, DWORD, DWORD *, DWORD *, DWORD *, WCHAR *, DWORD);
 
 /* ############################### */
 
@@ -71,20 +77,22 @@ static void test_query_dos_deviceA(void)
     SetLastError(0xdeadbeef);
     ret = QueryDosDeviceA( NULL, NULL, 0 );
     ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-       "QueryDosDeviceA(no buffer): returned %u, le=%u\n", ret, GetLastError());
+       "QueryDosDeviceA(no buffer): returned %lu, le=%lu\n", ret, GetLastError());
 
     buffer = HeapAlloc( GetProcessHeap(), 0, buflen );
     SetLastError(0xdeadbeef);
     ret = QueryDosDeviceA( NULL, buffer, buflen );
     ok((ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER),
-        "QueryDosDeviceA failed to return list, last error %u\n", GetLastError());
+        "QueryDosDeviceA failed to return list, last error %lu\n", GetLastError());
 
     if (ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
         p = buffer;
         for (;;) {
-            if (!strlen(p)) break;
+            if (!*p) break;
             ret2 = QueryDosDeviceA( p, buffer2, sizeof(buffer2) );
-            ok(ret2, "QueryDosDeviceA failed to return current mapping for %s, last error %u\n", p, GetLastError());
+            /* Win10+ exposes the security device which requires extra privileges to be queried. So skip it */
+            ok(ret2 || broken( !strcmp( p, "MSSECFLTSYS" ) && GetLastError() == ERROR_ACCESS_DENIED ),
+               "QueryDosDeviceA failed to return current mapping for %s, last error %lu\n", p, GetLastError());
             p += strlen(p) + 1;
             if (ret <= (p-buffer)) break;
         }
@@ -94,7 +102,7 @@ static void test_query_dos_deviceA(void)
         /* Older W2K fails with ERROR_INSUFFICIENT_BUFFER when buflen is > 32767 */
         ret = QueryDosDeviceA( drivestr, buffer, buflen - 1);
         ok(ret || GetLastError() == ERROR_FILE_NOT_FOUND,
-            "QueryDosDeviceA failed to return current mapping for %s, last error %u\n", drivestr, GetLastError());
+            "QueryDosDeviceA failed to return current mapping for %s, last error %lu\n", drivestr, GetLastError());
         if(ret) {
             for (p = buffer; *p; p++) *p = toupper(*p);
             if (strstr(buffer, "HARDDISK") || strstr(buffer, "RAMDISK")) found = TRUE;
@@ -104,11 +112,12 @@ static void test_query_dos_deviceA(void)
     HeapFree( GetProcessHeap(), 0, buffer );
 }
 
-static void test_define_dos_deviceA(void)
+static void test_dos_devices(void)
 {
+    char buf[MAX_PATH], buf2[400];
     char drivestr[3];
-    char buf[MAX_PATH];
-    DWORD ret;
+    HANDLE file;
+    BOOL ret;
 
     /* Find an unused drive letter */
     drivestr[1] = ':';
@@ -122,20 +131,65 @@ static void test_define_dos_deviceA(void)
         return;
     }
 
-    /* Map it to point to the current directory */
-    ret = GetCurrentDirectoryA(sizeof(buf), buf);
-    ok(ret, "GetCurrentDir\n");
+    ret = DefineDosDeviceA( 0, drivestr, "C:/windows/" );
+    ok(ret, "failed to define drive %s, error %lu\n", drivestr, GetLastError());
 
-    ret = DefineDosDeviceA(0, drivestr, buf);
-    todo_wine
-    ok(ret, "Could not make drive %s point to %s!\n", drivestr, buf);
+    ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
+    ok(ret, "failed to query drive %s, error %lu\n", drivestr, GetLastError());
+    ok(!strcmp(buf, "\\??\\C:\\windows\\"), "got path %s\n", debugstr_a(buf));
 
-    if (!ret) {
-        skip("can't test removing fake drive\n");
-    } else {
-	ret = DefineDosDeviceA(DDD_REMOVE_DEFINITION, drivestr, NULL);
-	ok(ret, "Could not remove fake drive %s!\n", drivestr);
-    }
+    sprintf(buf, "%s/system32", drivestr);
+    file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    todo_wine ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+    CloseHandle( file );
+
+    /* but it's not a volume mount point */
+
+    sprintf(buf, "%s\\", drivestr);
+    ret = GetVolumeNameForVolumeMountPointA( buf, buf2, sizeof(buf2) );
+    ok(!ret, "expected failure\n");
+    todo_wine ok(GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError());
+
+    ret = DefineDosDeviceA(DDD_REMOVE_DEFINITION, drivestr, NULL);
+    ok(ret, "failed to remove drive %s, error %lu\n", drivestr, GetLastError());
+
+    ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "got error %lu\n", GetLastError());
+
+    sprintf(buf, "%s/system32", drivestr);
+    file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file == INVALID_HANDLE_VALUE, "expected failure\n");
+    todo_wine ok(GetLastError() == ERROR_PATH_NOT_FOUND, "got error %lu\n", GetLastError());
+
+    /* try with DDD_RAW_TARGET_PATH */
+
+    ret = DefineDosDeviceA( DDD_RAW_TARGET_PATH, drivestr, "\\??\\C:\\windows\\" );
+    ok(ret, "failed to define drive %s, error %lu\n", drivestr, GetLastError());
+
+    ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
+    ok(ret, "failed to query drive %s, error %lu\n", drivestr, GetLastError());
+    ok(!strcmp(buf, "\\??\\C:\\windows\\"), "got path %s\n", debugstr_a(buf));
+
+    sprintf(buf, "%s/system32", drivestr);
+    file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    todo_wine ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+    CloseHandle( file );
+
+    sprintf(buf, "%s\\", drivestr);
+    ret = GetVolumeNameForVolumeMountPointA( buf, buf2, sizeof(buf2) );
+    ok(!ret, "expected failure\n");
+    todo_wine ok(GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError());
+
+    ret = DefineDosDeviceA(DDD_REMOVE_DEFINITION, drivestr, NULL);
+    ok(ret, "failed to remove drive %s, error %lu\n", drivestr, GetLastError());
+
+    ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "got error %lu\n", GetLastError());
 }
 
 static void test_FindFirstVolume(void)
@@ -153,12 +207,12 @@ static void test_FindFirstVolume(void)
     ok( handle == INVALID_HANDLE_VALUE, "succeeded with short buffer\n" );
     ok( GetLastError() == ERROR_MORE_DATA ||  /* XP */
         GetLastError() == ERROR_FILENAME_EXCED_RANGE,  /* Vista */
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
     handle = pFindFirstVolumeA( volume, 49 );
     ok( handle == INVALID_HANDLE_VALUE, "succeeded with short buffer\n" );
-    ok( GetLastError() == ERROR_FILENAME_EXCED_RANGE, "wrong error %u\n", GetLastError() );
+    ok( GetLastError() == ERROR_FILENAME_EXCED_RANGE, "wrong error %lu\n", GetLastError() );
     handle = pFindFirstVolumeA( volume, 51 );
-    ok( handle != INVALID_HANDLE_VALUE, "failed err %u\n", GetLastError() );
+    ok( handle != INVALID_HANDLE_VALUE, "failed err %lu\n", GetLastError() );
     if (handle != INVALID_HANDLE_VALUE)
     {
         do
@@ -167,7 +221,7 @@ static void test_FindFirstVolume(void)
             ok( !memcmp( volume, "\\\\?\\Volume{", 11 ), "bad volume name %s\n", volume );
             ok( !memcmp( volume + 47, "}\\", 2 ), "bad volume name %s\n", volume );
         } while (pFindNextVolumeA( handle, volume, MAX_PATH ));
-        ok( GetLastError() == ERROR_NO_MORE_FILES, "wrong error %u\n", GetLastError() );
+        ok( GetLastError() == ERROR_NO_MORE_FILES, "wrong error %lu\n", GetLastError() );
         pFindVolumeClose( handle );
     }
 }
@@ -179,49 +233,43 @@ static void test_GetVolumeNameForVolumeMountPointA(void)
     DWORD len = sizeof(volume), reti;
     char temp_path[MAX_PATH];
 
-    /* not present before w2k */
-    if (!pGetVolumeNameForVolumeMountPointA) {
-        win_skip("GetVolumeNameForVolumeMountPointA not found\n");
-        return;
-    }
-
     reti = GetTempPathA(MAX_PATH, temp_path);
-    ok(reti != 0, "GetTempPathA error %d\n", GetLastError());
+    ok(reti != 0, "GetTempPathA error %ld\n", GetLastError());
     ok(reti < MAX_PATH, "temp path should fit into MAX_PATH\n");
 
-    ret = pGetVolumeNameForVolumeMountPointA(path, volume, 0);
+    ret = GetVolumeNameForVolumeMountPointA(path, volume, 0);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointA succeeded\n");
     ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Vista */
-        "wrong error, last=%d\n", GetLastError());
+        "wrong error, last=%ld\n", GetLastError());
 
     if (0) { /* these crash on XP */
-    ret = pGetVolumeNameForVolumeMountPointA(path, NULL, len);
+    ret = GetVolumeNameForVolumeMountPointA(path, NULL, len);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointA succeeded\n");
 
-    ret = pGetVolumeNameForVolumeMountPointA(NULL, volume, len);
+    ret = GetVolumeNameForVolumeMountPointA(NULL, volume, len);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointA succeeded\n");
     }
 
-    ret = pGetVolumeNameForVolumeMountPointA(path, volume, len);
+    ret = GetVolumeNameForVolumeMountPointA(path, volume, len);
     ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
     ok(!strncmp( volume, "\\\\?\\Volume{", 11),
         "GetVolumeNameForVolumeMountPointA failed to return valid string <%s>\n",
         volume);
 
     /* test with too small buffer */
-    ret = pGetVolumeNameForVolumeMountPointA(path, volume, 10);
+    ret = GetVolumeNameForVolumeMountPointA(path, volume, 10);
     ok(ret == FALSE && GetLastError() == ERROR_FILENAME_EXCED_RANGE,
-            "GetVolumeNameForVolumeMountPointA failed, wrong error returned, was %d, should be ERROR_FILENAME_EXCED_RANGE\n",
+            "GetVolumeNameForVolumeMountPointA failed, wrong error returned, was %ld, should be ERROR_FILENAME_EXCED_RANGE\n",
              GetLastError());
 
     /* Try on an arbitrary directory */
     /* On FAT filesystems it seems that GetLastError() is set to
        ERROR_INVALID_FUNCTION. */
-    ret = pGetVolumeNameForVolumeMountPointA(temp_path, volume, len);
+    ret = GetVolumeNameForVolumeMountPointA(temp_path, volume, len);
     ok(ret == FALSE && (GetLastError() == ERROR_NOT_A_REPARSE_POINT ||
         GetLastError() == ERROR_INVALID_FUNCTION),
-        "GetVolumeNameForVolumeMountPointA failed on %s, last=%d\n",
+        "GetVolumeNameForVolumeMountPointA failed on %s, last=%ld\n",
         temp_path, GetLastError());
 
     /* Try on a nonexistent dos drive */
@@ -233,16 +281,16 @@ static void test_GetVolumeNameForVolumeMountPointA(void)
     if (path[0] <= 'z')
     {
         path[2] = '\\';
-        ret = pGetVolumeNameForVolumeMountPointA(path, volume, len);
+        ret = GetVolumeNameForVolumeMountPointA(path, volume, len);
         ok(ret == FALSE && GetLastError() == ERROR_FILE_NOT_FOUND,
-            "GetVolumeNameForVolumeMountPointA failed on %s, last=%d\n",
+            "GetVolumeNameForVolumeMountPointA failed on %s, last=%ld\n",
             path, GetLastError());
 
         /* Try without trailing \ and on a nonexistent dos drive  */
         path[2] = 0;
-        ret = pGetVolumeNameForVolumeMountPointA(path, volume, len);
+        ret = GetVolumeNameForVolumeMountPointA(path, volume, len);
         ok(ret == FALSE && GetLastError() == ERROR_INVALID_NAME,
-            "GetVolumeNameForVolumeMountPointA failed on %s, last=%d\n",
+            "GetVolumeNameForVolumeMountPointA failed on %s, last=%ld\n",
             path, GetLastError());
     }
 }
@@ -251,29 +299,23 @@ static void test_GetVolumeNameForVolumeMountPointW(void)
 {
     BOOL ret;
     WCHAR volume[MAX_PATH], path[] = {'c',':','\\',0};
-    DWORD len = sizeof(volume) / sizeof(WCHAR);
+    DWORD len = ARRAY_SIZE(volume);
 
-    /* not present before w2k */
-    if (!pGetVolumeNameForVolumeMountPointW) {
-        win_skip("GetVolumeNameForVolumeMountPointW not found\n");
-        return;
-    }
-
-    ret = pGetVolumeNameForVolumeMountPointW(path, volume, 0);
+    ret = GetVolumeNameForVolumeMountPointW(path, volume, 0);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointW succeeded\n");
     ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Vista */
-        "wrong error, last=%d\n", GetLastError());
+        "wrong error, last=%ld\n", GetLastError());
 
     if (0) { /* these crash on XP */
-    ret = pGetVolumeNameForVolumeMountPointW(path, NULL, len);
+    ret = GetVolumeNameForVolumeMountPointW(path, NULL, len);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointW succeeded\n");
 
-    ret = pGetVolumeNameForVolumeMountPointW(NULL, volume, len);
+    ret = GetVolumeNameForVolumeMountPointW(NULL, volume, len);
     ok(ret == FALSE, "GetVolumeNameForVolumeMountPointW succeeded\n");
     }
 
-    ret = pGetVolumeNameForVolumeMountPointW(path, volume, len);
+    ret = GetVolumeNameForVolumeMountPointW(path, volume, len);
     ok(ret == TRUE, "GetVolumeNameForVolumeMountPointW failed\n");
 }
 
@@ -363,42 +405,37 @@ static void test_GetVolumeInformationA(void)
     char windowsdir[MAX_PATH+10];
     char currentdir[MAX_PATH+1];
 
-    ok( pGetVolumeInformationA != NULL, "GetVolumeInformationA not found\n");
-    if(!pGetVolumeInformationA) {
-        return;
-    }
-
     /* get windows drive letter and update strings for testing */
     result = GetWindowsDirectoryA(windowsdir, sizeof(windowsdir));
     ok(result < sizeof(windowsdir), "windowsdir is abnormally long!\n");
-    ok(result != 0, "GetWindowsDirectory: error %d\n", GetLastError());
+    ok(result != 0, "GetWindowsDirectory: error %ld\n", GetLastError());
     Root_Colon[0] = windowsdir[0];
     Root_Slash[0] = windowsdir[0];
     Root_UNC[4] = windowsdir[0];
 
     result = GetCurrentDirectoryA(MAX_PATH, currentdir);
-    ok(result, "GetCurrentDirectory: error %d\n", GetLastError());
+    ok(result, "GetCurrentDirectory: error %ld\n", GetLastError());
     /* Note that GetCurrentDir yields no trailing slash for subdirs */
 
     /* check for NO error on no trailing \ when current dir is root dir */
     ret = SetCurrentDirectoryA(Root_Slash);
-    ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
-    ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+    ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
+    ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
             NULL, NULL, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA root failed, last error %u\n", GetLastError());
+    ok(ret, "GetVolumeInformationA root failed, last error %lu\n", GetLastError());
 
     /* check for error on no trailing \ when current dir is subdir (windows) of queried drive */
     ret = SetCurrentDirectoryA(windowsdir);
-    ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+    ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+    ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
             NULL, NULL, fs_name_buf, fs_name_len);
     ok(!ret && (GetLastError() == ERROR_INVALID_NAME),
-        "GetVolumeInformationA did%s fail, last error %u\n", ret ? " not":"", GetLastError());
+        "GetVolumeInformationA did%s fail, last error %lu\n", ret ? " not":"", GetLastError());
 
     /* reset current directory */
     ret = SetCurrentDirectoryA(currentdir);
-    ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+    ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
 
     if (toupper(currentdir[0]) == toupper(windowsdir[0])) {
         skip("Please re-run from another device than %c:\n", windowsdir[0]);
@@ -413,106 +450,102 @@ static void test_GetVolumeInformationA(void)
         ok(ret, "SetEnvironmentVariable %s failed\n", Root_Env);
 
         ret = SetCurrentDirectoryA(windowsdir);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
         ret = SetCurrentDirectoryA(currentdir);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
 
         /* windows dir is current on the root drive, call fails */
         SetLastError(0xdeadbeef);
-        ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+        ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
                 NULL, NULL, fs_name_buf, fs_name_len);
         ok(!ret && (GetLastError() == ERROR_INVALID_NAME),
-           "GetVolumeInformationA did%s fail, last error %u\n", ret ? " not":"", GetLastError());
+           "GetVolumeInformationA did%s fail, last error %lu\n", ret ? " not":"", GetLastError());
 
         /* Try normal drive letter with trailing \ */
-        ret = pGetVolumeInformationA(Root_Slash, vol_name_buf, vol_name_size, NULL,
+        ret = GetVolumeInformationA(Root_Slash, vol_name_buf, vol_name_size, NULL,
                 NULL, NULL, fs_name_buf, fs_name_len);
-        ok(ret, "GetVolumeInformationA with \\ failed, last error %u\n", GetLastError());
+        ok(ret, "GetVolumeInformationA with \\ failed, last error %lu\n", GetLastError());
 
         ret = SetCurrentDirectoryA(Root_Slash);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
         ret = SetCurrentDirectoryA(currentdir);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
 
         /* windows dir is STILL CURRENT on root drive; the call fails as before,   */
         /* proving that SetCurrentDir did not remember the other drive's directory */
         SetLastError(0xdeadbeef);
-        ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+        ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
                 NULL, NULL, fs_name_buf, fs_name_len);
         ok(!ret && (GetLastError() == ERROR_INVALID_NAME),
-           "GetVolumeInformationA did%s fail, last error %u\n", ret ? " not":"", GetLastError());
+           "GetVolumeInformationA did%s fail, last error %lu\n", ret ? " not":"", GetLastError());
 
         /* Now C:\ becomes the current directory on drive C: */
         ret = SetEnvironmentVariableA(Root_Env, Root_Slash); /* set =C:=C:\ */
         ok(ret, "SetEnvironmentVariable %s failed\n", Root_Env);
 
         /* \ is current on root drive, call succeeds */
-        ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+        ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
                 NULL, NULL, fs_name_buf, fs_name_len);
-        ok(ret, "GetVolumeInformationA failed, last error %u\n", GetLastError());
+        ok(ret, "GetVolumeInformationA failed, last error %lu\n", GetLastError());
 
         /* again, SetCurrentDirectory on another drive does not matter */
         ret = SetCurrentDirectoryA(Root_Slash);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
         ret = SetCurrentDirectoryA(currentdir);
-        ok(ret, "SetCurrentDirectory: error %d\n", GetLastError());
+        ok(ret, "SetCurrentDirectory: error %ld\n", GetLastError());
 
         /* \ is current on root drive, call succeeds */
-        ret = pGetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
+        ret = GetVolumeInformationA(Root_Colon, vol_name_buf, vol_name_size, NULL,
                 NULL, NULL, fs_name_buf, fs_name_len);
-        ok(ret, "GetVolumeInformationA failed, last error %u\n", GetLastError());
+        ok(ret, "GetVolumeInformationA failed, last error %lu\n", GetLastError());
     }
 
     /* try null root directory to return "root of the current directory"  */
-    ret = pGetVolumeInformationA(NULL, vol_name_buf, vol_name_size, NULL,
+    ret = GetVolumeInformationA(NULL, vol_name_buf, vol_name_size, NULL,
             NULL, NULL, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA failed on null root dir, last error %u\n", GetLastError());
+    ok(ret, "GetVolumeInformationA failed on null root dir, last error %lu\n", GetLastError());
 
     /* Try normal drive letter with trailing \  */
-    ret = pGetVolumeInformationA(Root_Slash, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(Root_Slash, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA failed, root=%s, last error=%u\n", Root_Slash, GetLastError());
+    ok(ret, "GetVolumeInformationA failed, root=%s, last error=%lu\n", Root_Slash, GetLastError());
 
     /* try again with drive letter and the "disable parsing" prefix */
     SetLastError(0xdeadbeef);
-    ret = pGetVolumeInformationA(Root_UNC, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(Root_UNC, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA did%s fail, root=%s, last error=%u\n", ret ? " not":"", Root_UNC, GetLastError());
+    ok(ret, "GetVolumeInformationA did%s fail, root=%s, last error=%lu\n", ret ? " not":"", Root_UNC, GetLastError());
 
     /* try again with device name space  */
     Root_UNC[2] = '.';
     SetLastError(0xdeadbeef);
-    ret = pGetVolumeInformationA(Root_UNC, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(Root_UNC, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA did%s fail, root=%s, last error=%u\n", ret ? " not":"", Root_UNC, GetLastError());
+    ok(ret, "GetVolumeInformationA did%s fail, root=%s, last error=%lu\n", ret ? " not":"", Root_UNC, GetLastError());
 
     /* try again with a directory off the root - should generate error  */
     if (windowsdir[strlen(windowsdir)-1] != '\\') strcat(windowsdir, "\\");
     SetLastError(0xdeadbeef);
-    ret = pGetVolumeInformationA(windowsdir, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(windowsdir, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
     ok(!ret && (GetLastError()==ERROR_DIR_NOT_ROOT),
-          "GetVolumeInformationA did%s fail, root=%s, last error=%u\n", ret ? " not":"", windowsdir, GetLastError());
+          "GetVolumeInformationA did%s fail, root=%s, last error=%lu\n", ret ? " not":"", windowsdir, GetLastError());
     /* A subdir with trailing \ yields DIR_NOT_ROOT instead of INVALID_NAME */
     if (windowsdir[strlen(windowsdir)-1] == '\\') windowsdir[strlen(windowsdir)-1] = 0;
     SetLastError(0xdeadbeef);
-    ret = pGetVolumeInformationA(windowsdir, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(windowsdir, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
     ok(!ret && (GetLastError()==ERROR_INVALID_NAME),
-          "GetVolumeInformationA did%s fail, root=%s, last error=%u\n", ret ? " not":"", windowsdir, GetLastError());
+          "GetVolumeInformationA did%s fail, root=%s, last error=%lu\n", ret ? " not":"", windowsdir, GetLastError());
 
-    if (!pGetVolumeNameForVolumeMountPointA) {
-        win_skip("GetVolumeNameForVolumeMountPointA not found\n");
-        return;
-    }
     /* get the unique volume name for the windows drive  */
-    ret = pGetVolumeNameForVolumeMountPointA(Root_Slash, volume, MAX_PATH);
+    ret = GetVolumeNameForVolumeMountPointA(Root_Slash, volume, MAX_PATH);
     ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
 
     /* try again with unique volume name */
-    ret = pGetVolumeInformationA(volume, vol_name_buf, vol_name_size,
+    ret = GetVolumeInformationA(volume, vol_name_buf, vol_name_size,
             &vol_serial_num, &max_comp_len, &fs_flags, fs_name_buf, fs_name_len);
-    ok(ret, "GetVolumeInformationA failed, root=%s, last error=%u\n", volume, GetLastError());
+    ok(ret, "GetVolumeInformationA failed, root=%s, last error=%lu\n", volume, GetLastError());
 }
 
 /* Test to check that unique volume name from windows dir mount point  */
@@ -528,28 +561,22 @@ static void test_enum_vols(void)
     BOOL    found = FALSE;
     char    windowsdir[MAX_PATH];
 
-    if (!pGetVolumeNameForVolumeMountPointA) {
-        win_skip("GetVolumeNameForVolumeMountPointA not found\n");
-        return;
-    }
-
     /*get windows drive letter and update strings for testing  */
     ret = GetWindowsDirectoryA( windowsdir, sizeof(windowsdir) );
     ok(ret < sizeof(windowsdir), "windowsdir is abnormally long!\n");
-    ok(ret != 0, "GetWindowsDirectory: error %d\n", GetLastError());
+    ok(ret != 0, "GetWindowsDirectory: error %ld\n", GetLastError());
     path[0] = windowsdir[0];
 
     /* get the unique volume name for the windows drive  */
-    ret = pGetVolumeNameForVolumeMountPointA( path, Volume_1, MAX_PATH );
+    ret = GetVolumeNameForVolumeMountPointA( path, Volume_1, MAX_PATH );
     ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
     ok(strlen(Volume_1) == 49, "GetVolumeNameForVolumeMountPointA returned wrong length name %s\n", Volume_1);
 
     /* get first unique volume name of list  */
     hFind = pFindFirstVolumeA( Volume_2, MAX_PATH );
-    ok(hFind != INVALID_HANDLE_VALUE, "FindFirstVolume failed, err=%u\n",
+    ok(hFind != INVALID_HANDLE_VALUE, "FindFirstVolume failed, err=%lu\n",
                 GetLastError());
-    /* ReactOS */
-    if (hFind != INVALID_HANDLE_VALUE) {
+
     do
     {
         /* validate correct length of unique volume name  */
@@ -562,7 +589,6 @@ static void test_enum_vols(void)
     } while (pFindNextVolumeA( hFind, Volume_2, MAX_PATH ));
     ok(found, "volume name %s not found by Find[First/Next]Volume\n", Volume_1);
     pFindVolumeClose( hFind );
-    }
 }
 
 static void test_disk_extents(void)
@@ -575,7 +601,7 @@ static void test_disk_extents(void)
     handle = CreateFileA( "\\\\.\\c:", GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0 );
     if (handle == INVALID_HANDLE_VALUE)
     {
-        win_skip("can't open c: drive %u\n", GetLastError());
+        win_skip("can't open c: drive %lu\n", GetLastError());
         return;
     }
     size = 0;
@@ -587,14 +613,93 @@ static void test_disk_extents(void)
         CloseHandle( handle );
         return;
     }
-    ok(ret, "DeviceIoControl failed %u\n", GetLastError());
-    ok(size == 32, "expected 32, got %u\n", size);
+    ok(ret, "DeviceIoControl failed %lu\n", GetLastError());
+    ok(size == 32, "expected 32, got %lu\n", size);
     CloseHandle( handle );
+}
+
+static void test_disk_query_property(void)
+{
+    STORAGE_PROPERTY_QUERY query = {0};
+    STORAGE_DESCRIPTOR_HEADER header = {0};
+    STORAGE_DEVICE_DESCRIPTOR descriptor = {0};
+    DEVICE_SEEK_PENALTY_DESCRIPTOR seek_pen = {0};
+    HANDLE handle;
+    DWORD error;
+    DWORD size;
+    BOOL ret;
+
+    handle = CreateFileA("\\\\.\\PhysicalDrive0", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                         0, 0);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        win_skip("can't open \\\\.\\PhysicalDrive0 %#lx\n", GetLastError());
+        return;
+    }
+
+    query.PropertyId = StorageDeviceProperty;
+    query.QueryType = PropertyStandardQuery;
+
+    SetLastError(0xdeadbeef);
+    ret = DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), &header, sizeof(header), &size,
+                          NULL);
+    error = GetLastError();
+    ok(ret, "expect ret %#x, got %#x\n", TRUE, ret);
+    ok(error == 0xdeadbeef, "expect err %#x, got err %#lx\n", 0xdeadbeef, error);
+    ok(size == sizeof(header), "got size %ld\n", size);
+    ok(header.Version == sizeof(descriptor), "got header.Version %ld\n", header.Version);
+    ok(header.Size >= sizeof(descriptor), "got header.Size %ld\n", header.Size);
+
+    SetLastError(0xdeadbeef);
+    ret = DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), &descriptor, sizeof(descriptor),
+                          &size, NULL);
+    error = GetLastError();
+    ok(ret, "expect ret %#x, got %#x\n", TRUE, ret);
+    ok(error == 0xdeadbeef, "expect err %#x, got err %#lx\n", 0xdeadbeef, error);
+    ok(size == sizeof(descriptor), "got size %ld\n", size);
+    ok(descriptor.Version == sizeof(descriptor), "got descriptor.Version %ld\n", descriptor.Version);
+    ok(descriptor.Size >= sizeof(descriptor), "got descriptor.Size %ld\n", descriptor.Size);
+
+
+    query.PropertyId = StorageDeviceSeekPenaltyProperty;
+    query.QueryType = PropertyStandardQuery;
+    SetLastError(0xdeadbeef);
+    ret = DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), &header, sizeof(header), &size,
+                          NULL);
+    error = GetLastError();
+    if (!ret && error == ERROR_INVALID_FUNCTION)
+    {
+        win_skip( "StorageDeviceSeekPenaltyProperty is not supported.\n" ); /* Win7 */
+    }
+    else
+    {
+        ok(ret, "expect ret %#x, got %#x\n", TRUE, ret);
+        ok(error == 0xdeadbeef, "expect err %#x, got err %#lx\n", 0xdeadbeef, error);
+        ok(size == sizeof(header), "got size %ld\n", size);
+        ok(header.Version == sizeof(seek_pen), "got header.Version %ld\n", header.Version);
+        ok(header.Size == sizeof(seek_pen), "got header.Size %ld\n", header.Size);
+
+        memset(&seek_pen, 0xcc, sizeof(seek_pen));
+        ret = DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query), &seek_pen, sizeof(seek_pen),
+                              &size, NULL);
+        error = GetLastError();
+        ok(ret || (error == ERROR_INVALID_FUNCTION /* Win8 VMs */ || (error == ERROR_GEN_FAILURE /* VMs */)),
+          "got ret %d, error %#lx\n", ret, error);
+        if (ret)
+        {
+            ok(size == sizeof(seek_pen), "got size %ld\n", size);
+            ok(seek_pen.Version == sizeof(seek_pen), "got %ld\n", seek_pen.Version);
+            ok(seek_pen.Size == sizeof(seek_pen), "got %ld\n", seek_pen.Size);
+            ok(seek_pen.IncursSeekPenalty == TRUE || seek_pen.IncursSeekPenalty == FALSE, "got %d.\n", seek_pen.IncursSeekPenalty);
+        }
+    }
+
+    CloseHandle(handle);
 }
 
 static void test_GetVolumePathNameA(void)
 {
-    char volume_path[MAX_PATH], cwd[MAX_PATH];
+    char volume_path[MAX_PATH], cwd[MAX_PATH], expect_path[MAX_PATH];
     struct {
         const char *file_name;
         const char *path_name;
@@ -606,19 +711,19 @@ static void test_GetVolumePathNameA(void)
             NULL, NULL, 0,
             ERROR_INVALID_PARAMETER, 0xdeadbeef /* winxp */
         },
-        { /* test 1: empty input, NULL output, 0 output length */
+        { /* empty input, NULL output, 0 output length */
             "", NULL, 0,
             ERROR_INVALID_PARAMETER, 0xdeadbeef /* winxp */
         },
-        { /* test 2: valid input, NULL output, 0 output length */
+        { /* valid input, NULL output, 0 output length */
             "C:\\", NULL, 0,
             ERROR_INVALID_PARAMETER, ERROR_FILENAME_EXCED_RANGE /* winxp */
         },
-        { /* test 3: valid input, valid output, 0 output length */
+        { /* valid input, valid output, 0 output length */
             "C:\\", "C:\\", 0,
             ERROR_INVALID_PARAMETER, ERROR_FILENAME_EXCED_RANGE /* winxp */
         },
-        { /* test 4: valid input, valid output, 1 output length */
+        { /* valid input, valid output, 1 output length */
             "C:\\", "C:\\", 1,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
@@ -626,174 +731,132 @@ static void test_GetVolumePathNameA(void)
             "C:\\", "C:\\", sizeof(volume_path),
             NO_ERROR, NO_ERROR
         },
-        { /* test 6: lowercase input, uppercase output, valid output length */
+        { /* lowercase input, uppercase output, valid output length */
             "c:\\", "C:\\", sizeof(volume_path),
             NO_ERROR, NO_ERROR
         },
-        { /* test 7: poor quality input, valid output, valid output length */
-            "C::", "C:\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 8: really bogus input, valid output, 1 output length */
+        { /* really bogus input, valid output, 1 output length */
             "\\\\$$$", "C:\\", 1,
             ERROR_INVALID_NAME, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 9: a reasonable DOS path that is guaranteed to exist */
+        { /* a reasonable DOS path that is guaranteed to exist */
             "C:\\windows\\system32", "C:\\", sizeof(volume_path),
             NO_ERROR, NO_ERROR
         },
-        { /* test 10: a reasonable DOS path that shouldn't exist */
+        { /* a reasonable DOS path that shouldn't exist */
             "C:\\windows\\system32\\AnInvalidFolder", "C:\\", sizeof(volume_path),
             NO_ERROR, NO_ERROR
         },
-        { /* test 11: a reasonable NT-converted DOS path that shouldn't exist */
+        { /* test 10: a reasonable NT-converted DOS path that shouldn't exist */
             "\\\\?\\C:\\AnInvalidFolder", "\\\\?\\C:\\", sizeof(volume_path),
             NO_ERROR, NO_ERROR
         },
-        { /* test 12: an unreasonable NT-converted DOS path */
+        { /* an unreasonable NT-converted DOS path */
             "\\\\?\\InvalidDrive:\\AnInvalidFolder", "\\\\?\\InvalidDrive:\\" /* win2k, winxp */,
             sizeof(volume_path),
             ERROR_INVALID_NAME, NO_ERROR
         },
-        { /* test 13: an unreasonable NT volume path */
+        { /* an unreasonable NT volume path */
             "\\\\?\\Volume{00000000-00-0000-0000-000000000000}\\AnInvalidFolder",
             "\\\\?\\Volume{00000000-00-0000-0000-000000000000}\\" /* win2k, winxp */,
             sizeof(volume_path),
             ERROR_INVALID_NAME, NO_ERROR
         },
-        { /* test 14: an unreasonable NT-ish path */
+        { /* an unreasonable NT-ish path */
             "\\\\ReallyBogus\\InvalidDrive:\\AnInvalidFolder",
             "\\\\ReallyBogus\\InvalidDrive:\\" /* win2k, winxp */, sizeof(volume_path),
             ERROR_INVALID_NAME, NO_ERROR
         },
-        { /* test 15: poor quality input, valid output, valid (but short) output length */
-            "C::", "C:\\", 4,
-            NO_ERROR, ERROR_MORE_DATA
-        },
-        { /* test 16: unused drive letter */
+        {
             "M::", "C:\\", 4,
             ERROR_FILE_NOT_FOUND, ERROR_MORE_DATA
         },
-        { /* test 17: an unreasonable DOS path */
-            "InvalidDrive:\\AnInvalidFolder", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 18: a reasonable device path */
-            "\\??\\CdRom0", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 19: an unreasonable device path */
-            "\\??\\ReallyBogus", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 20 */
+        { /* test 15 */
             "C:", "C:", 2,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
-        { /* test 21 */
+        {
             "C:", "C:", 3,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 22 */
+        {
             "C:\\", "C:", 2,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
-        { /* test 23 */
+        {
             "C:\\", "C:", 3,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 24 */
+        {
             "C::", "C:", 2,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
-        { /* test 25 */
+        { /* test 20 */
             "C::", "C:", 3,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 26 */
-            "C::", "C:\\", 4,
-            NO_ERROR, ERROR_MORE_DATA
-        },
-        { /* test 27 */
+        {
             "C:\\windows\\system32\\AnInvalidFolder", "C:", 3,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 28 */
+        {
             "\\\\?\\C:\\AnInvalidFolder", "\\\\?\\C:", 3,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
-        { /* test 29 */
+        {
             "\\\\?\\C:\\AnInvalidFolder", "\\\\?\\C:", 6,
             ERROR_FILENAME_EXCED_RANGE, NO_ERROR
         },
-        { /* test 30 */
+        {
             "\\\\?\\C:\\AnInvalidFolder", "\\\\?\\C:", 7,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 31 */
+        { /* test 25 */
             "\\\\?\\c:\\AnInvalidFolder", "\\\\?\\c:", 7,
             NO_ERROR, ERROR_FILENAME_EXCED_RANGE
         },
-        { /* test 32 */
+        {
             "C:/", "C:\\", 4,
             NO_ERROR, ERROR_MORE_DATA
         },
-        { /* test 33 */
+        {
             "M:/", "", 4,
             ERROR_FILE_NOT_FOUND, ERROR_MORE_DATA
         },
-        { /* test 34 */
-            "C:ABC:DEF:\\AnInvalidFolder", "C:\\", 4,
-            NO_ERROR, ERROR_MORE_DATA
-        },
-        { /* test 35 */
+        {
             "?:ABC:DEF:\\AnInvalidFolder", "?:\\" /* win2k, winxp */, sizeof(volume_path),
             ERROR_FILE_NOT_FOUND, NO_ERROR
         },
-        { /* test 36 */
-            "relative/path", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 37 */
-            "/unix-style/absolute/path", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 38 */
-            "\\??\\C:\\NonExistent", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 39 */
-            "\\??\\M:\\NonExistent", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 40 */
-            "somefile:def", "%CurrentDrive%\\", sizeof(volume_path),
-            NO_ERROR, NO_ERROR
-        },
-        { /* test 41 */
+        {
             "s:omefile", "S:\\" /* win2k, winxp */, sizeof(volume_path),
             ERROR_FILE_NOT_FOUND, NO_ERROR
         },
+        { /* test 30: a reasonable forward slash path that is guaranteed to exist */
+            "C:/windows/system32", "C:\\", sizeof(volume_path),
+            NO_ERROR, NO_ERROR
+        },
     };
+
+    static const char *relative_tests[] =
+    {
+        "InvalidDrive:\\AnInvalidFolder",
+        "relative/path",
+        "somefile:def",
+    };
+
+    static const char *global_prefix_tests[] =
+    {
+        "\\??\\CdRom0",
+        "\\??\\ReallyBogus",
+        "\\??\\C:\\NonExistent",
+        "\\??\\M:\\NonExistent",
+    };
+
     BOOL ret, success;
     DWORD error;
     UINT i;
 
-    /* GetVolumePathNameA is not present before w2k */
-    if (!pGetVolumePathNameA)
-    {
-        win_skip("required functions not found\n");
-        return;
-    }
-
-    /* Obtain the drive of the working directory */
-    ret = GetCurrentDirectoryA( sizeof(cwd), cwd );
-    ok( ret, "Failed to obtain the current working directory.\n" );
-    cwd[2] = 0;
-    ret = SetEnvironmentVariableA( "CurrentDrive", cwd );
-    ok( ret, "Failed to set an environment variable for the current working drive.\n" );
-
-    for (i=0; i<sizeof(test_paths)/sizeof(test_paths[0]); i++)
+    for (i=0; i<ARRAY_SIZE(test_paths); i++)
     {
         BOOL broken_ret = test_paths[i].broken_error == NO_ERROR;
         char *output = (test_paths[i].path_name != NULL ? volume_path : NULL);
@@ -804,7 +867,7 @@ static void test_GetVolumePathNameA(void)
             volume_path[ test_paths[i].path_len ] = 0x11;
 
         SetLastError( 0xdeadbeef );
-        ret = pGetVolumePathNameA( test_paths[i].file_name, output, test_paths[i].path_len );
+        ret = GetVolumePathNameA( test_paths[i].file_name, output, test_paths[i].path_len );
         error = GetLastError();
         ok(ret == expected_ret || broken(ret == broken_ret),
                                 "GetVolumePathName test %d %s unexpectedly.\n",
@@ -812,20 +875,16 @@ static void test_GetVolumePathNameA(void)
 
         if (ret)
         {
-            char path_name[MAX_PATH];
-
-            ExpandEnvironmentStringsA( test_paths[i].path_name, path_name, MAX_PATH);
-            /* If we succeeded then make sure the path is correct */
-            success = (strcmp( volume_path, path_name ) == 0)
-                      || broken(strcasecmp( volume_path, path_name ) == 0) /* XP */;
-            ok(success, "GetVolumePathName test %d unexpectedly returned path %s (expected %s).\n",
-                        i, volume_path, path_name);
+            ok(!strcmp( volume_path, test_paths[i].path_name )
+                    || broken(!strcasecmp( volume_path, test_paths[i].path_name )), /* XP */
+                    "GetVolumePathName test %d unexpectedly returned path %s (expected %s).\n",
+                    i, volume_path, test_paths[i].path_name);
         }
         else
         {
             /* On success Windows always returns ERROR_MORE_DATA, so only worry about failure */
             success = (error == test_paths[i].error || broken(error == test_paths[i].broken_error));
-            ok(success, "GetVolumePathName test %d unexpectedly returned error 0x%x (expected 0x%x).\n",
+            ok(success, "GetVolumePathName test %d unexpectedly returned error 0x%lx (expected 0x%lx).\n",
                         i, error, test_paths[i].error);
         }
 
@@ -833,51 +892,84 @@ static void test_GetVolumePathNameA(void)
             ok(volume_path[ test_paths[i].path_len ] == 0x11,
                "GetVolumePathName test %d corrupted byte after end of buffer.\n", i);
     }
+
+    ret = GetCurrentDirectoryA( sizeof(cwd), cwd );
+    ok(ret, "Failed to obtain the current working directory, error %lu.\n", GetLastError());
+    ret = GetVolumePathNameA( cwd, expect_path, sizeof(expect_path) );
+    ok(ret, "Failed to obtain the current volume path, error %lu.\n", GetLastError());
+
+    for (i = 0; i < ARRAY_SIZE(relative_tests); i++)
+    {
+        ret = GetVolumePathNameA( relative_tests[i], volume_path, sizeof(volume_path) );
+        ok(ret, "GetVolumePathName(%s) failed unexpectedly, error %lu.\n",
+                debugstr_a( relative_tests[i] ), GetLastError());
+        ok(!strcmp( volume_path, expect_path ), "%s: expected %s, got %s.\n",
+                debugstr_a( relative_tests[i] ), debugstr_a( expect_path ), debugstr_a( volume_path ));
+    }
+
+    cwd[3] = 0;
+    for (i = 0; i < ARRAY_SIZE(global_prefix_tests); i++)
+    {
+        ret = GetVolumePathNameA( global_prefix_tests[i], volume_path, sizeof(volume_path) );
+        ok(ret, "GetVolumePathName(%s) failed unexpectedly, error %lu.\n",
+                debugstr_a( global_prefix_tests[i] ), GetLastError());
+        ok(!strcmp( volume_path, cwd ), "%s: expected %s, got %s.\n",
+                debugstr_a( global_prefix_tests[i] ), debugstr_a( cwd ), debugstr_a( volume_path ));
+    }
+
+    ret = GetVolumePathNameA( "C:.", expect_path, sizeof(expect_path) );
+    ok(ret, "Failed to obtain the volume path, error %lu.\n", GetLastError());
+
+    SetLastError( 0xdeadbeef );
+    ret = GetVolumePathNameA( "C::", volume_path, 1 );
+    ok(!ret, "Expected failure.\n");
+    ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE, "Got error %lu.\n", GetLastError());
+
+    ret = GetVolumePathNameA( "C::", volume_path, sizeof(volume_path) );
+    ok(ret, "Failed to obtain the volume path, error %lu.\n", GetLastError());
+    ok(!strcmp(volume_path, expect_path), "Expected %s, got %s.\n",
+            debugstr_a( expect_path ), debugstr_a( volume_path ));
+
+    ret = GetVolumePathNameA( "C:ABC:DEF:\\AnInvalidFolder", volume_path, sizeof(volume_path) );
+    ok(ret, "Failed to obtain the volume path, error %lu.\n", GetLastError());
+    ok(!strcmp(volume_path, expect_path), "Expected %s, got %s.\n",
+            debugstr_a( expect_path ), debugstr_a( volume_path ));
 }
 
 static void test_GetVolumePathNameW(void)
 {
-    static WCHAR drive_c1[] = {'C',':',0};
-    static WCHAR drive_c2[] = {'C',':','\\',0};
     WCHAR volume_path[MAX_PATH];
     BOOL ret;
 
-    if (!pGetVolumePathNameW)
-    {
-        win_skip("required functions not found\n");
-        return;
-    }
-
     volume_path[0] = 0;
     volume_path[1] = 0x11;
-    ret = pGetVolumePathNameW( drive_c1, volume_path, 1 );
+    ret = GetVolumePathNameW( L"C:\\", volume_path, 1 );
     ok(!ret, "GetVolumePathNameW test succeeded unexpectedly.\n");
-    ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE, "GetVolumePathNameW unexpectedly returned error 0x%x (expected 0x%x).\n",
+    ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE, "GetVolumePathNameW unexpectedly returned error 0x%lx (expected 0x%x).\n",
         GetLastError(), ERROR_FILENAME_EXCED_RANGE);
     ok(volume_path[1] == 0x11, "GetVolumePathW corrupted byte after end of buffer.\n");
 
     volume_path[0] = 0;
     volume_path[2] = 0x11;
-    ret = pGetVolumePathNameW( drive_c1, volume_path, 2 );
+    ret = GetVolumePathNameW( L"C:\\", volume_path, 2 );
     ok(!ret, "GetVolumePathNameW test succeeded unexpectedly.\n");
-    ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE, "GetVolumePathNameW unexpectedly returned error 0x%x (expected 0x%x).\n",
+    ok(GetLastError() == ERROR_FILENAME_EXCED_RANGE, "GetVolumePathNameW unexpectedly returned error 0x%lx (expected 0x%x).\n",
         GetLastError(), ERROR_FILENAME_EXCED_RANGE);
     ok(volume_path[2] == 0x11, "GetVolumePathW corrupted byte after end of buffer.\n");
 
     volume_path[0] = 0;
     volume_path[3] = 0x11;
-    ret = pGetVolumePathNameW( drive_c1, volume_path, 3 );
+    ret = GetVolumePathNameW( L"C:\\", volume_path, 3 );
     ok(ret || broken(!ret) /* win2k */, "GetVolumePathNameW test failed unexpectedly.\n");
-    ok(memcmp(volume_path, drive_c1, sizeof(drive_c1)) == 0
-       || broken(volume_path[0] == 0) /* win2k */,
-       "GetVolumePathNameW unexpectedly returned wrong path.\n");
+    ok(!memcmp(volume_path, L"C:\\", 3) || broken(!volume_path[0]) /* XP */,
+            "Got wrong path %s.\n", debugstr_w(volume_path));
     ok(volume_path[3] == 0x11, "GetVolumePathW corrupted byte after end of buffer.\n");
 
     volume_path[0] = 0;
     volume_path[4] = 0x11;
-    ret = pGetVolumePathNameW( drive_c1, volume_path, 4 );
+    ret = GetVolumePathNameW( L"C:\\", volume_path, 4 );
     ok(ret, "GetVolumePathNameW test failed unexpectedly.\n");
-    ok(memcmp(volume_path, drive_c2, sizeof(drive_c2)) == 0, "GetVolumePathNameW unexpectedly returned wrong path.\n");
+    ok(!wcscmp(volume_path, L"C:\\"), "Got wrong path %s.\n", debugstr_w(volume_path));
     ok(volume_path[4] == 0x11, "GetVolumePathW corrupted byte after end of buffer.\n");
 }
 
@@ -887,43 +979,43 @@ static void test_GetVolumePathNamesForVolumeNameA(void)
     char volume[MAX_PATH], buffer[MAX_PATH];
     DWORD len, error;
 
-    if (!pGetVolumePathNamesForVolumeNameA || !pGetVolumeNameForVolumeMountPointA)
+    if (!pGetVolumePathNamesForVolumeNameA)
     {
         win_skip("required functions not found\n");
         return;
     }
 
-    ret = pGetVolumeNameForVolumeMountPointA( "c:\\", volume, sizeof(volume) );
-    ok(ret, "failed to get volume name %u\n", GetLastError());
+    ret = GetVolumeNameForVolumeMountPointA( "c:\\", volume, sizeof(volume) );
+    ok(ret, "failed to get volume name %lu\n", GetLastError());
     trace("c:\\ -> %s\n", volume);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( NULL, NULL, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( "", NULL, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( volume, NULL, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", error);
+    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( volume, buffer, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", error);
+    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %lu\n", error);
 
     memset( buffer, 0xff, sizeof(buffer) );
     ret = pGetVolumePathNamesForVolumeNameA( volume, buffer, sizeof(buffer), NULL );
-    ok(ret, "failed to get path names %u\n", GetLastError());
+    ok(ret, "failed to get path names %lu\n", GetLastError());
     ok(!strcmp( "C:\\", buffer ), "expected \"\\C:\" got \"%s\"\n", buffer);
     ok(!buffer[4], "expected double null-terminated buffer\n");
 
@@ -932,34 +1024,34 @@ static void test_GetVolumePathNamesForVolumeNameA(void)
     ret = pGetVolumePathNamesForVolumeNameA( NULL, NULL, 0, &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     len = 0;
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( NULL, NULL, sizeof(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     len = 0;
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( NULL, buffer, sizeof(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     len = 0;
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameA( NULL, buffer, sizeof(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     len = 0;
     memset( buffer, 0xff, sizeof(buffer) );
     ret = pGetVolumePathNamesForVolumeNameA( volume, buffer, sizeof(buffer), &len );
-    ok(ret, "failed to get path names %u\n", GetLastError());
-    ok(len == 5 || broken(len == 2), "expected 5 got %u\n", len);
+    ok(ret, "failed to get path names %lu\n", GetLastError());
+    ok(len == 5 || broken(len == 2), "expected 5 got %lu\n", len);
     ok(!strcmp( "C:\\", buffer ), "expected \"\\C:\" got \"%s\"\n", buffer);
     ok(!buffer[4], "expected double null-terminated buffer\n");
 }
@@ -975,80 +1067,73 @@ static void test_GetVolumePathNamesForVolumeNameW(void)
     WCHAR volume[MAX_PATH], buffer[MAX_PATH];
     DWORD len, error;
 
-#ifdef __REACTOS__
-    /* due to failing all calls to GetVolumeNameForVolumeMountPointW, this
-     * buffer never gets initialized and could cause a buffer overflow later */
-    volume[0] = '$';
-    volume[1] = 0;
-#endif /* __REACTOS__ */
-
-    if (!pGetVolumePathNamesForVolumeNameW || !pGetVolumeNameForVolumeMountPointW)
+    if (!pGetVolumePathNamesForVolumeNameW)
     {
         win_skip("required functions not found\n");
         return;
     }
 
-    ret = pGetVolumeNameForVolumeMountPointW( drive_c, volume, sizeof(volume)/sizeof(volume[0]) );
-    ok(ret, "failed to get volume name %u\n", GetLastError());
+    ret = GetVolumeNameForVolumeMountPointW( drive_c, volume, ARRAY_SIZE(volume) );
+    ok(ret, "failed to get volume name %lu\n", GetLastError());
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameW( empty, NULL, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameW( volume, NULL, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", error);
+    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %lu\n", error);
 
     SetLastError( 0xdeadbeef );
     ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, 0, NULL );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", error);
+    ok(error == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %lu\n", error);
 
     if (0) { /* crash */
-    ret = pGetVolumePathNamesForVolumeNameW( volume, NULL, sizeof(buffer), NULL );
-    ok(ret, "failed to get path names %u\n", GetLastError());
+    ret = pGetVolumePathNamesForVolumeNameW( volume, NULL, ARRAY_SIZE(buffer), NULL );
+    ok(ret, "failed to get path names %lu\n", GetLastError());
     }
 
-    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, sizeof(buffer), NULL );
-    ok(ret, "failed to get path names %u\n", GetLastError());
+    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, ARRAY_SIZE(buffer), NULL );
+    ok(ret, "failed to get path names %lu\n", GetLastError());
 
     len = 0;
     memset( buffer, 0xff, sizeof(buffer) );
-    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, sizeof(buffer), &len );
-    ok(ret, "failed to get path names %u\n", GetLastError());
-    ok(len == 5, "expected 5 got %u\n", len);
+    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, ARRAY_SIZE(buffer), &len );
+    ok(ret, "failed to get path names %lu\n", GetLastError());
+    ok(len == 5, "expected 5 got %lu\n", len);
     ok(!buffer[4], "expected double null-terminated buffer\n");
 
     len = 0;
     volume[1] = '?';
     volume[lstrlenW( volume ) - 1] = 0;
     SetLastError( 0xdeadbeef );
-    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, sizeof(buffer), &len );
+    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, ARRAY_SIZE(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %u\n", error);
+    ok(error == ERROR_INVALID_NAME, "expected ERROR_INVALID_NAME got %lu\n", error);
 
     len = 0;
     volume[0] = '\\';
     volume[1] = 0;
     SetLastError( 0xdeadbeef );
-    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, sizeof(buffer), &len );
+    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, ARRAY_SIZE(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    todo_wine ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+    todo_wine ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %lu\n", error);
 
     len = 0;
     lstrcpyW( volume, volume_null );
     SetLastError( 0xdeadbeef );
-    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, sizeof(buffer), &len );
+    ret = pGetVolumePathNamesForVolumeNameW( volume, buffer, ARRAY_SIZE(buffer), &len );
     error = GetLastError();
     ok(!ret, "expected failure\n");
-    ok(error == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND got %u\n", error);
+    ok(error == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND got %lu\n", error);
 }
 
 static void test_dvd_read_structure(HANDLE handle)
@@ -1078,7 +1163,7 @@ static void test_dvd_read_structure(HANDLE handle)
 
     if(!ret)
     {
-        skip("IOCTL_DVD_READ_STRUCTURE not supported: %u\n", GetLastError());
+        skip("IOCTL_DVD_READ_STRUCTURE not supported: %lu\n", GetLastError());
         return;
     }
 
@@ -1135,7 +1220,7 @@ static void test_dvd_read_structure(HANDLE handle)
     /* Strangely, with NULL lpOutBuffer, last error is insufficient buffer, not invalid parameter as we could expect */
     ret = DeviceIoControl(handle, IOCTL_DVD_READ_STRUCTURE, &dvdReadStructure, sizeof(DVD_READ_STRUCTURE),
         NULL, sizeof(DVD_COPYRIGHT_DESCRIPTOR), &nbBytes, NULL);
-    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %u\n", ret, GetLastError());
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %lu\n", ret, GetLastError());
 
     for(i=0; i<sizeof(DVD_COPYRIGHT_DESCRIPTOR); i++)
     {
@@ -1143,7 +1228,7 @@ static void test_dvd_read_structure(HANDLE handle)
 
         ret = DeviceIoControl(handle, IOCTL_DVD_READ_STRUCTURE, &dvdReadStructure, sizeof(DVD_READ_STRUCTURE),
             &dvdCopyrightDescriptor, i, &nbBytes, NULL);
-        ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %u\n", ret, GetLastError());
+        ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %lu\n", ret, GetLastError());
     }
 
 
@@ -1155,7 +1240,7 @@ static void test_dvd_read_structure(HANDLE handle)
     ret = DeviceIoControl(handle, IOCTL_DVD_READ_STRUCTURE, &dvdReadStructure, sizeof(DVD_READ_STRUCTURE),
         &completeDvdManufacturerDescriptor, sizeof(DVD_MANUFACTURER_DESCRIPTOR), &nbBytes, NULL);
     ok(ret || broken(GetLastError() == ERROR_NOT_READY),
-        "IOCTL_DVD_READ_STRUCTURE (DvdManufacturerDescriptor) failed, last error = %u\n", GetLastError());
+        "IOCTL_DVD_READ_STRUCTURE (DvdManufacturerDescriptor) failed, last error = %lu\n", GetLastError());
     if(!ret)
         return;
 
@@ -1169,7 +1254,7 @@ static void test_dvd_read_structure(HANDLE handle)
     /* Basic parameter check */
     ret = DeviceIoControl(handle, IOCTL_DVD_READ_STRUCTURE, &dvdReadStructure, sizeof(DVD_READ_STRUCTURE),
         NULL, sizeof(DVD_MANUFACTURER_DESCRIPTOR), &nbBytes, NULL);
-    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %u\n", ret, GetLastError());
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "IOCTL_DVD_READ_STRUCTURE should have failed %d %lu\n", ret, GetLastError());
 }
 
 static void test_cdrom_ioctl(void)
@@ -1181,7 +1266,7 @@ static void test_cdrom_ioctl(void)
     bitmask = GetLogicalDrives();
     if(!bitmask)
     {
-        trace("GetLogicalDrives failed : %u\n", GetLastError());
+        trace("GetLogicalDrives failed : %lu\n", GetLastError());
         return;
     }
 
@@ -1203,7 +1288,7 @@ static void test_cdrom_ioctl(void)
         handle = CreateFileA(drive_full_path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
         if(handle == INVALID_HANDLE_VALUE)
         {
-            trace("Failed to open the device : %u\n", GetLastError());
+            trace("Failed to open the device : %lu\n", GetLastError());
             continue;
         }
 
@@ -1215,24 +1300,460 @@ static void test_cdrom_ioctl(void)
 
 }
 
+static void test_mounted_folder(void)
+{
+    char name_buffer[200], path[MAX_PATH], volume_name[100], *p;
+    FILE_NAME_INFORMATION *name = (FILE_NAME_INFORMATION *)name_buffer;
+    FILE_ATTRIBUTE_TAG_INFO info;
+    IO_STATUS_BLOCK io;
+    BOOL ret, got_path;
+    NTSTATUS status;
+    HANDLE file;
+    DWORD size;
+
+    file = CreateFileA( "C:\\", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileAttributeTagInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(!(info.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+            && (info.FileAttributes & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#lx\n", info.FileAttributes);
+    ok(!info.ReparseTag, "got reparse tag %#lx\n", info.ReparseTag);
+
+    CloseHandle( file );
+
+    file = CreateFileA( "C:\\", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileAttributeTagInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(!(info.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+            && (info.FileAttributes & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#lx\n", info.FileAttributes);
+    ok(!info.ReparseTag, "got reparse tag %#lx\n", info.ReparseTag);
+
+    CloseHandle( file );
+
+    ret = GetFileAttributesA( "C:\\" );
+    ok(!(ret & FILE_ATTRIBUTE_REPARSE_POINT) && (ret & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#x\n", ret);
+
+    ret = CreateDirectoryA("C:\\winetest_mnt", NULL);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough permissions to create a folder in the C: drive.\n");
+        return;
+    }
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\", volume_name, sizeof(volume_name) );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = SetVolumeMountPointA( "C:\\winetest_mnt\\", volume_name );
+    if (!ret)
+    {
+        skip("Not enough permissions to create a mounted folder.\n");
+        RemoveDirectoryA( "C:\\winetest_mnt" );
+        return;
+    }
+    todo_wine ok(ret, "got error %lu\n", GetLastError());
+
+    file = CreateFileA( "C:\\winetest_mnt", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileAttributeTagInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok((info.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+            && (info.FileAttributes & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#lx\n", info.FileAttributes);
+    ok(info.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT, "got reparse tag %#lx\n", info.ReparseTag);
+
+    status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(name->FileNameLength == wcslen(L"\\winetest_mnt") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+    ok(!wcsnicmp(name->FileName, L"\\winetest_mnt", wcslen(L"\\winetest_mnt")), "got name %s\n",
+            debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+
+    CloseHandle( file );
+
+    file = CreateFileA( "C:\\winetest_mnt", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileAttributeTagInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(!(info.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+            && (info.FileAttributes & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#lx\n", info.FileAttributes);
+    ok(!info.ReparseTag, "got reparse tag %#lx\n", info.ReparseTag);
+
+    status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(name->FileNameLength == wcslen(L"\\") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+    ok(!wcsnicmp(name->FileName, L"\\", wcslen(L"\\")), "got name %s\n",
+            debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+
+    CloseHandle( file );
+
+    ret = GetFileAttributesA( "C:\\winetest_mnt" );
+    ok(ret != INVALID_FILE_ATTRIBUTES, "got error %lu\n", GetLastError());
+    ok((ret & FILE_ATTRIBUTE_REPARSE_POINT) && (ret & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#x\n", ret);
+
+    file = CreateFileA( "C:\\winetest_mnt\\windows", 0, FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+    status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(name->FileNameLength == wcslen(L"\\windows") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+    ok(!wcsnicmp(name->FileName, L"\\windows", wcslen(L"\\windows")), "got name %s\n",
+            debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+
+    CloseHandle( file );
+
+    ret = GetVolumePathNameA( "C:\\winetest_mnt", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, "C:\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt", path, sizeof(path) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "wrong error %lu\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeInformationA( "C:\\winetest_mnt", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "wrong error %lu\n", GetLastError());
+
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt\\", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, volume_name), "expected %s, got %s\n", debugstr_a(volume_name), debugstr_a(path));
+    ret = GetVolumeInformationA( "C:\\winetest_mnt\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = GetVolumePathNameA( "C:\\winetest_mnt\\windows", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, "C:\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt\\windows\\", path, sizeof(path) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_NOT_A_REPARSE_POINT, "wrong error %lu\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeInformationA( "C:\\winetest_mnt\\windows\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_DIR_NOT_ROOT, "wrong error %lu\n", GetLastError());
+
+    ret = GetVolumePathNameA( "C:\\winetest_mnt\\nonexistent\\", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, "C:\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt\\nonexistent\\", path, sizeof(path) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %lu\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    ret = GetVolumeInformationA( "C:\\winetest_mnt\\nonexistent\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %lu\n", GetLastError());
+
+    ret = GetVolumePathNameA( "C:\\winetest_mnt\\winetest_mnt", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, "C:\\winetest_mnt\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+    ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt\\winetest_mnt\\", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, volume_name), "expected %s, got %s\n", debugstr_a(volume_name), debugstr_a(path));
+    ret = GetVolumeInformationA( "C:\\winetest_mnt\\winetest_mnt\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = GetVolumePathNameA( "C:/winetest_mnt/../winetest_mnt/.", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, "C:\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+    ret = GetVolumeNameForVolumeMountPointA( "C:/winetest_mnt/../winetest_mnt/.\\", path, sizeof(path) );
+    ok(ret, "got error %lu\n", GetLastError());
+    ok(!strcmp(path, volume_name), "expected %s, got %s\n", debugstr_a(volume_name), debugstr_a(path));
+    ret = GetVolumeInformationA( "C:/winetest_mnt/../winetest_mnt/.\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = GetVolumePathNamesForVolumeNameA( volume_name, path, sizeof(path), &size );
+    ok(ret, "got error %lu\n", GetLastError());
+    got_path = FALSE;
+    for (p = path; *p; p += strlen(p) + 1)
+    {
+        if (!strcmp( p, "C:\\winetest_mnt\\" ))
+            got_path = TRUE;
+        ok(strcmp( p, "C:\\winetest_mnt\\winetest_mnt\\" ), "GetVolumePathNamesForVolumeName() should not recurse\n");
+    }
+    ok(got_path, "mount point was not enumerated\n");
+
+    /* test interaction with symbolic links */
+
+    if (pCreateSymbolicLinkA)
+    {
+        ret = pCreateSymbolicLinkA( "C:\\winetest_link", "C:\\winetest_mnt\\", SYMBOLIC_LINK_FLAG_DIRECTORY );
+        ok(ret, "got error %lu\n", GetLastError());
+
+        ret = GetVolumePathNameA( "C:\\winetest_link\\", path, sizeof(path) );
+        ok(ret, "got error %lu\n", GetLastError());
+        ok(!strcmp(path, "C:\\"), "got %s\n", path);
+        SetLastError(0xdeadbeef);
+        ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_link\\", path, sizeof(path) );
+        ok(!ret, "expected failure\n");
+        ok(GetLastError() == ERROR_INVALID_PARAMETER
+                || broken(GetLastError() == ERROR_SUCCESS) /* 2008 */, "wrong error %lu\n", GetLastError());
+        ret = GetVolumeInformationA( "C:\\winetest_link\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+        ok(ret, "got error %lu\n", GetLastError());
+
+        ret = GetVolumePathNameA( "C:\\winetest_link\\windows\\", path, sizeof(path) );
+        ok(ret, "got error %lu\n", GetLastError());
+        ok(!strcmp(path, "C:\\"), "got %s\n", path);
+        SetLastError(0xdeadbeef);
+        ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_link\\windows\\", path, sizeof(path) );
+        ok(!ret, "expected failure\n");
+        ok(GetLastError() == ERROR_NOT_A_REPARSE_POINT, "wrong error %lu\n", GetLastError());
+        SetLastError(0xdeadbeef);
+        ret = GetVolumeInformationA( "C:\\winetest_link\\windows\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+        ok(!ret, "expected failure\n");
+        ok(GetLastError() == ERROR_DIR_NOT_ROOT, "wrong error %lu\n", GetLastError());
+
+        ret = GetVolumePathNameA( "C:\\winetest_link\\winetest_mnt", path, sizeof(path) );
+        ok(ret, "got error %lu\n", GetLastError());
+        ok(!strcmp(path, "C:\\winetest_link\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
+        ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_link\\winetest_mnt\\", path, sizeof(path) );
+        ok(ret, "got error %lu\n", GetLastError());
+        ok(!strcmp(path, volume_name), "expected %s, got %s\n", debugstr_a(volume_name), debugstr_a(path));
+        ret = GetVolumeInformationA( "C:\\winetest_link\\winetest_mnt\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+        ok(ret, "got error %lu\n", GetLastError());
+
+        /* The following test makes it clear that when we encounter a symlink
+         * while resolving, we resolve *every* junction in the path, i.e. both
+         * mount points and symlinks. */
+        ret = GetVolumePathNameA( "C:\\winetest_link\\winetest_mnt\\winetest_link\\windows\\", path, sizeof(path) );
+        ok(ret, "got error %lu\n", GetLastError());
+        ok(!strcmp(path, "C:\\") || !strcmp(path, "C:\\winetest_link\\winetest_mnt\\") /* 2008 */,
+                "got %s\n", debugstr_a(path));
+
+        file = CreateFileA( "C:\\winetest_link\\winetest_mnt\\winetest_link\\windows\\", 0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+        ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
+
+        status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
+        ok(!status, "got status %#lx\n", status);
+        ok(name->FileNameLength == wcslen(L"\\windows") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+        ok(!wcsnicmp(name->FileName, L"\\windows", wcslen(L"\\windows")), "got name %s\n",
+                debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+
+        CloseHandle( file );
+
+        ret = RemoveDirectoryA( "C:\\winetest_link\\" );
+        ok(ret, "got error %lu\n", GetLastError());
+
+        /* The following cannot be automatically tested:
+         *
+         * Suppose C: and D: are mount points of different volumes. If C:/a is
+         * symlinked to D:/b, GetVolumePathName("C:\\a") will return "D:\\" if
+         * "a" is a directory, but "C:\\" if "a" is a file.
+         * Moreover, if D: is mounted at C:/mnt, and C:/a is symlinked to
+         * C:/mnt, GetVolumePathName("C:\\mnt\\b") will still return "D:\\". */
+    }
+
+    ret = DeleteVolumeMountPointA( "C:\\winetest_mnt\\" );
+    ok(ret, "got error %lu\n", GetLastError());
+    ret = RemoveDirectoryA( "C:\\winetest_mnt" );
+    ok(ret, "got error %lu\n", GetLastError());
+}
+
+static void test_GetVolumeInformationByHandle(void)
+{
+    char DECLSPEC_ALIGN(8) buffer[50];
+    FILE_FS_ATTRIBUTE_INFORMATION *attr_info = (void *)buffer;
+    FILE_FS_VOLUME_INFORMATION *volume_info = (void *)buffer;
+    DWORD serial, filename_len, flags;
+    WCHAR label[20], fsname[20];
+    char volume[MAX_PATH+1];
+    IO_STATUS_BLOCK io;
+    HANDLE file;
+    NTSTATUS status;
+    BOOL ret;
+
+    if (!pGetVolumeInformationByHandleW)
+    {
+        win_skip("GetVolumeInformationByHandleW is not present.\n");
+        return;
+    }
+
+    file = CreateFileA( "C:/windows", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "failed to open file, error %lu\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetVolumeInformationByHandleW( INVALID_HANDLE_VALUE, label, ARRAY_SIZE(label), &serial,
+            &filename_len, &flags, fsname, ARRAY_SIZE(fsname) );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got error %lu\n", GetLastError());
+
+    ret = pGetVolumeInformationByHandleW( file, NULL, 0, NULL, NULL, NULL, NULL, 0 );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    ret = pGetVolumeInformationByHandleW( file, label, ARRAY_SIZE(label), &serial,
+            &filename_len, &flags, fsname, ARRAY_SIZE(fsname) );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    memset(buffer, 0, sizeof(buffer));
+    status = NtQueryVolumeInformationFile( file, &io, buffer, sizeof(buffer), FileFsAttributeInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(flags == attr_info->FileSystemAttributes, "expected flags %#lx, got %#lx\n",
+            attr_info->FileSystemAttributes, flags);
+    ok(filename_len == attr_info->MaximumComponentNameLength, "expected filename_len %lu, got %lu\n",
+            attr_info->MaximumComponentNameLength, filename_len);
+    ok(!wcscmp( fsname, attr_info->FileSystemName ), "expected fsname %s, got %s\n",
+            debugstr_w( attr_info->FileSystemName ), debugstr_w( fsname ));
+    ok(wcslen( fsname ) == attr_info->FileSystemNameLength / sizeof(WCHAR), "got %Iu\n", wcslen( fsname ));
+
+    SetLastError(0xdeadbeef);
+    ret = pGetVolumeInformationByHandleW( file, NULL, 0, NULL, &filename_len, &flags, fsname, 2 );
+    ok(!ret, "expected failure\n");
+    ok(GetLastError() == ERROR_BAD_LENGTH, "got error %lu\n", GetLastError());
+
+    memset(buffer, 0, sizeof(buffer));
+    status = NtQueryVolumeInformationFile( file, &io, buffer, sizeof(buffer), FileFsVolumeInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(serial == volume_info->VolumeSerialNumber, "expected serial %08lx, got %08lx\n",
+            volume_info->VolumeSerialNumber, serial);
+    ok(!wcscmp( label, volume_info->VolumeLabel ), "expected label %s, got %s\n",
+            debugstr_w( volume_info->VolumeLabel ), debugstr_w( label ));
+    ok(wcslen( label ) == volume_info->VolumeLabelLength / sizeof(WCHAR), "got %Iu\n", wcslen( label ));
+
+    CloseHandle( file );
+
+    /* get the unique volume name for the windows drive  */
+    ret = GetVolumeNameForVolumeMountPointA("C:\\", volume, MAX_PATH);
+    ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
+
+    /* try again with unique volume name */
+
+    file = CreateFileA( volume, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "failed to open file, error %lu\n", GetLastError());
+
+    ret = pGetVolumeInformationByHandleW( file, label, ARRAY_SIZE(label), &serial,
+            &filename_len, &flags, fsname, ARRAY_SIZE(fsname) );
+    ok(ret, "got error %lu\n", GetLastError());
+
+    memset(buffer, 0, sizeof(buffer));
+    status = NtQueryVolumeInformationFile( file, &io, buffer, sizeof(buffer), FileFsVolumeInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(serial == volume_info->VolumeSerialNumber, "expected serial %08lx, got %08lx\n",
+            volume_info->VolumeSerialNumber, serial);
+    ok(!wcscmp( label, volume_info->VolumeLabel ), "expected label %s, got %s\n",
+            debugstr_w( volume_info->VolumeLabel ), debugstr_w( label ));
+    ok(wcslen( label ) == volume_info->VolumeLabelLength / sizeof(WCHAR), "got %Iu\n", wcslen( label ));
+
+    memset(buffer, 0, sizeof(buffer));
+    status = NtQueryVolumeInformationFile( file, &io, buffer, sizeof(buffer), FileFsAttributeInformation );
+    ok(!status, "got status %#lx\n", status);
+    ok(flags == attr_info->FileSystemAttributes, "expected flags %#lx, got %#lx\n",
+            attr_info->FileSystemAttributes, flags);
+    ok(filename_len == attr_info->MaximumComponentNameLength, "expected filename_len %lu, got %lu\n",
+            attr_info->MaximumComponentNameLength, filename_len);
+    ok(!wcscmp( fsname, attr_info->FileSystemName ), "expected fsname %s, got %s\n",
+            debugstr_w( attr_info->FileSystemName ), debugstr_w( fsname ));
+    ok(wcslen( fsname ) == attr_info->FileSystemNameLength / sizeof(WCHAR), "got %Iu\n", wcslen( fsname ));
+
+    CloseHandle( file );
+}
+
+static void test_mountmgr_query_points(void)
+{
+    char input_buffer[64];
+    MOUNTMGR_MOUNT_POINTS *output;
+    MOUNTMGR_MOUNT_POINT *input = (MOUNTMGR_MOUNT_POINT *)input_buffer;
+    IO_STATUS_BLOCK io;
+    NTSTATUS status;
+    HANDLE file;
+
+    output = malloc(1024);
+
+    file = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, 0, NULL, OPEN_EXISTING, 0, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "failed to open mountmgr, error %lu\n", GetLastError());
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, NULL, 0, NULL, 0 );
+    ok(status == STATUS_INVALID_PARAMETER, "got %#lx\n", status);
+    ok(io.Status == 0xdeadf00d, "got status %#lx\n", io.Status);
+    ok(io.Information == 0xdeadf00d, "got information %#Ix\n", io.Information);
+
+    memset( input, 0, sizeof(*input) );
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input) - 1, NULL, 0 );
+    ok(status == STATUS_INVALID_PARAMETER, "got %#lx\n", status);
+    ok(io.Status == 0xdeadf00d, "got status %#lx\n", io.Status);
+    ok(io.Information == 0xdeadf00d, "got information %#Ix\n", io.Information);
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input), NULL, 0 );
+    ok(status == STATUS_INVALID_PARAMETER, "got %#lx\n", status);
+    ok(io.Status == 0xdeadf00d, "got status %#lx\n", io.Status);
+    ok(io.Information == 0xdeadf00d, "got information %#Ix\n", io.Information);
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    memset(output, 0xcc, sizeof(*output));
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input), output, sizeof(*output) - 1 );
+    ok(status == STATUS_INVALID_PARAMETER, "got %#lx\n", status);
+    ok(io.Status == 0xdeadf00d, "got status %#lx\n", io.Status);
+    ok(io.Information == 0xdeadf00d, "got information %#Ix\n", io.Information);
+    ok(output->Size == 0xcccccccc, "got size %lu\n", output->Size);
+    ok(output->NumberOfMountPoints == 0xcccccccc, "got count %lu\n", output->NumberOfMountPoints);
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    memset(output, 0xcc, sizeof(*output));
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input), output, sizeof(*output) );
+    ok(status == STATUS_BUFFER_OVERFLOW, "got %#lx\n", status);
+    ok(io.Status == STATUS_BUFFER_OVERFLOW, "got status %#lx\n", io.Status);
+    todo_wine ok(io.Information == offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]), "got information %#Ix\n", io.Information);
+    ok(output->Size > offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]), "got size %lu\n", output->Size);
+    todo_wine ok(output->NumberOfMountPoints && output->NumberOfMountPoints != 0xcccccccc,
+            "got count %lu\n", output->NumberOfMountPoints);
+
+    output = realloc(output, output->Size);
+
+    io.Status = 0xdeadf00d;
+    io.Information = 0xdeadf00d;
+    status = NtDeviceIoControlFile( file, NULL, NULL, NULL, &io,
+            IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input), output, output->Size );
+    ok(!status, "got %#lx\n", status);
+    ok(!io.Status, "got status %#lx\n", io.Status);
+    ok(io.Information == output->Size, "got size %lu, information %#Ix\n", output->Size, io.Information);
+    ok(output->Size > offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]), "got size %lu\n", output->Size);
+    ok(output->NumberOfMountPoints && output->NumberOfMountPoints != 0xcccccccc,
+            "got count %lu\n", output->NumberOfMountPoints);
+
+    CloseHandle( file );
+
+    free(output);
+}
+
 START_TEST(volume)
 {
     hdll = GetModuleHandleA("kernel32.dll");
-    pGetVolumeNameForVolumeMountPointA = (void *) GetProcAddress(hdll, "GetVolumeNameForVolumeMountPointA");
-    pGetVolumeNameForVolumeMountPointW = (void *) GetProcAddress(hdll, "GetVolumeNameForVolumeMountPointW");
     pFindFirstVolumeA = (void *) GetProcAddress(hdll, "FindFirstVolumeA");
     pFindNextVolumeA = (void *) GetProcAddress(hdll, "FindNextVolumeA");
     pFindVolumeClose = (void *) GetProcAddress(hdll, "FindVolumeClose");
     pGetLogicalDriveStringsA = (void *) GetProcAddress(hdll, "GetLogicalDriveStringsA");
     pGetLogicalDriveStringsW = (void *) GetProcAddress(hdll, "GetLogicalDriveStringsW");
-    pGetVolumeInformationA = (void *) GetProcAddress(hdll, "GetVolumeInformationA");
-    pGetVolumePathNameA = (void *) GetProcAddress(hdll, "GetVolumePathNameA");
-    pGetVolumePathNameW = (void *) GetProcAddress(hdll, "GetVolumePathNameW");
     pGetVolumePathNamesForVolumeNameA = (void *) GetProcAddress(hdll, "GetVolumePathNamesForVolumeNameA");
     pGetVolumePathNamesForVolumeNameW = (void *) GetProcAddress(hdll, "GetVolumePathNamesForVolumeNameW");
+    pCreateSymbolicLinkA = (void *) GetProcAddress(hdll, "CreateSymbolicLinkA");
+    pGetVolumeInformationByHandleW = (void *) GetProcAddress(hdll, "GetVolumeInformationByHandleW");
 
     test_query_dos_deviceA();
-    test_define_dos_deviceA();
+    test_dos_devices();
     test_FindFirstVolume();
     test_GetVolumePathNameA();
     test_GetVolumePathNameW();
@@ -1243,7 +1764,11 @@ START_TEST(volume)
     test_GetVolumeInformationA();
     test_enum_vols();
     test_disk_extents();
+    test_disk_query_property();
     test_GetVolumePathNamesForVolumeNameA();
     test_GetVolumePathNamesForVolumeNameW();
     test_cdrom_ioctl();
+    test_mounted_folder();
+    test_GetVolumeInformationByHandle();
+    test_mountmgr_query_points();
 }
