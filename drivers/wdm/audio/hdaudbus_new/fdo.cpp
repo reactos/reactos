@@ -353,10 +353,11 @@ Fdo_EvtDevicePrepareHardware(
     maxAddr.QuadPart = fdoCtx->is64BitOK ? MAXULONG64 : MAXULONG32;
 
     fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
-    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
     if (!fdoCtx->posbuf) {
         return STATUS_NO_MEMORY;
     }
+
+    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
 
     fdoCtx->rb = (UINT8 *)MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
     if (!fdoCtx->rb) {
@@ -401,8 +402,6 @@ Fdo_EvtDevicePrepareHardware(
                 if (fdoCtx->spbcap) {
                     stream->spib_addr = fdoCtx->spbcap + HDA_SPB_BASE + (HDA_SPB_INTERVAL * idx) + HDA_SPB_SPIB;
                 }
-
-                stream->bdl = (PHDAC_BDLENTRY)MmAllocateContiguousMemory(BDL_SIZE, maxAddr);
             }
 
             SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
@@ -475,17 +474,8 @@ Fdo_EvtDeviceReleaseHardware(
     if (fdoCtx->rb)
         MmFreeContiguousMemory(fdoCtx->rb);
 
-    if (fdoCtx->streams) {
-        for (UINT32 i = 0; i < fdoCtx->numStreams; i++) {
-            PHDAC_STREAM stream = &fdoCtx->streams[i];
-            if (stream->bdl) {
-                MmFreeContiguousMemory(stream->bdl);
-                stream->bdl = NULL;
-            }
-        }
-
+    if (fdoCtx->streams)
         ExFreePoolWithTag(fdoCtx->streams, SKLHDAUDBUS_POOL_TAG);
-    }
 
     if (fdoCtx->m_BAR0.Base.Base)
         MmUnmapIoSpace(fdoCtx->m_BAR0.Base.Base, fdoCtx->m_BAR0.Len);
