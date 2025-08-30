@@ -675,7 +675,7 @@ static VOID InitSystemUptime(HWND hwndDlg)
         pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32, "GetTickCount64");
         if (!pGetTickCount64)
         {
-            hKernel32Vista = LoadLibraryW(L"kernel32_vista.dll");
+            hKernel32Vista = LoadLibraryW(L"kernel32_win7.dll");
             if (hKernel32Vista)
             {
                 pGetTickCount64 = (PFGETTICKCOUNT64)GetProcAddress(hKernel32Vista, "GetTickCount64");
