@@ -41,29 +41,45 @@
 #include <htiface.h>
 #include <mshtml.h>
 #include <initguid.h>
+#include <apitest.h>
 
 typedef IUnknown *PUNKNOWN;
+
+/* Uncomment this if you want to log the offsets of COM interfaces. */
+// #define LOG_COM_INTERFACE_OFFSETS
 
 typedef struct _CLASS_AND_INTERFACES
 {
     const CLSID *clsid;
     PCSTR name;
+    ULONG MinClassNTDDIVersion;
+    ULONG MaxClassNTDDIVersion;
     struct
     {
-        LONG offset;
+        ULONG MinInterfaceNTDDIVersion;
+        ULONG MaxInterfaceNTDDIVersion;
         const IID *iid;
     } ifaces[80];
     PCWSTR ThreadingModel;
 } CLASS_AND_INTERFACES;
 typedef const CLASS_AND_INTERFACES *PCCLASS_AND_INTERFACES;
 
-#define ID_NAME(c) &c, #c
+#define ID_NAME(c, minc, maxc) &c, #c, minc, maxc
 
 VOID
 TestClasses(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
     _In_ INT ExpectedInterfaceCount);
+
+VOID
+TestClassesEx(
+    _In_ PCWSTR ModuleName,
+    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG MinimumNTDDIVersion,
+    _In_ ULONG MaximumNTDDIVersion,
+    _In_ BOOLEAN IsWinRT);
 
 /* Indicate that the interface is implemented in another (probably aggregate) object,
  * so its offset varies and is "far away" */
@@ -219,7 +235,7 @@ DEFINE_GUID(IID_IImageList_mmc,            0x43136eb8, 0xd36c, 0x11cf, 0xad, 0xb
 DEFINE_GUID(IID_IConsoleVerb,              0xe49f7a60, 0x74af, 0x11d0, 0xa2, 0x86, 0x00, 0xc0, 0x4f, 0xd8, 0xfe, 0x93);
 DEFINE_GUID(IID_ISnapInAbout,              0x1245208c, 0xa151, 0x11d0, 0xa7, 0xd7, 0x00, 0xc0, 0x4f, 0xd9, 0x09, 0xdd);
 
-
+DEFINE_GUID(IID_INetConnectionCommonUi2,   0xC08956A6, 0x1CD3, 0x11D1, 0xB1, 0xC5, 0x00, 0x80, 0x5F, 0xC1, 0x27, 0x0E); // Same as IID_INetLanConnectionUiInfo
 
 #endif /* _COM_APITEST_H_ */
 
