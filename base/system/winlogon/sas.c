@@ -497,13 +497,7 @@ CloseAllConnections(
 {
     if (!Session->UserToken || !ImpersonateLoggedOnUser(Session->UserToken))
         return;
-    _SEH2_TRY // Temporary HACK to avoid SEH crashes triggered by OutputDebugStringA()
-    {         // calls from WNetClearConnections(). CORE-20307, CORE-20309, CORE-20316
-        WNetClearConnections(NULL);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {}
-    _SEH2_END;
+    WNetClearConnections(NULL);
     RevertToSelf();
 }
 
