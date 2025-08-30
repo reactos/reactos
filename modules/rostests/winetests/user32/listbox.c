@@ -128,7 +128,7 @@ keypress (HWND handle, WPARAM keycode, BYTE scancode, BOOL extended)
 }
 
 #define listbox_field_ok(t, s, f, got) \
-  ok (t.s.f==got.f, "style %#x, step " #s ", field " #f \
+  ok (t.s.f==got.f, "style %#lx, step " #s ", field " #f \
       ": expected %d, got %d\n", style, t.s.f, got.f)
 
 #define listbox_todo_field_ok(t, s, f, got) \
@@ -178,18 +178,18 @@ check (DWORD style, const struct listbox_test test)
 	WCHAR *txtw;
 	int resA, resW;
 
-	txt = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, size+1);
+	txt = calloc(1, size + 1);
 	resA=SendMessageA(hLB, LB_GETTEXT, i, (LPARAM)txt);
         ok(!strcmp (txt, strings[i]), "returned string for item %d does not match %s vs %s\n", i, txt, strings[i]);
 
-	txtw = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, 2*size+2);
+	txtw = calloc(1, 2 * size + 2);
 	resW=SendMessageW(hLB, LB_GETTEXT, i, (LPARAM)txtw);
 	ok(resA == resW, "Unexpected text length.\n");
 	WideCharToMultiByte( CP_ACP, 0, txtw, -1, txt, size, NULL, NULL );
         ok(!strcmp (txt, strings[i]), "returned string for item %d does not match %s vs %s\n", i, txt, strings[i]);
 
-	HeapFree (GetProcessHeap(), 0, txtw);
-	HeapFree (GetProcessHeap(), 0, txt);
+	free(txtw);
+	free(txt);
   }
   
   /* Confirm the count of items, and that an invalid delete does not remove anything */
@@ -223,7 +223,7 @@ static void check_item_height(void)
     ok (SendMessageA(hLB, WM_SETFONT, (WPARAM)font, 0) == 0, "Can't set font\n");
 
     itemHeight = SendMessageA(hLB, LB_GETITEMHEIGHT, 0, 0);
-    ok (itemHeight == tm.tmHeight, "Item height wrong, got %d, expecting %d\n", itemHeight, tm.tmHeight);
+    ok (itemHeight == tm.tmHeight, "Item height wrong, got %d, expecting %ld\n", itemHeight, tm.tmHeight);
 
     DestroyWindow (hLB);
 
@@ -238,7 +238,7 @@ static void check_item_height(void)
     DestroyWindow (hLB);
 }
 
-static int got_selchange;
+static unsigned int got_selchange, got_drawitem;
 
 static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -249,7 +249,7 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         DWORD style = GetWindowLongA(GetWindow(hwnd, GW_CHILD), GWL_STYLE);
         MEASUREITEMSTRUCT *mi = (void*)lparam;
 
-        ok(wparam == mi->CtlID, "got wParam=%08lx, expected %08x\n", wparam, mi->CtlID);
+        ok(wparam == mi->CtlID, "got wParam=%08Ix, expected %08x\n", wparam, mi->CtlID);
         ok(mi->CtlType == ODT_LISTBOX, "mi->CtlType = %u\n", mi->CtlType);
         ok(mi->CtlID == 1, "mi->CtlID = %u\n", mi->CtlID);
         ok(mi->itemHeight, "mi->itemHeight = 0\n");
@@ -265,7 +265,7 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         else
         {
             ok((void*)mi->itemData == strings[mi->itemID],
-                    "mi->itemData = %08lx, expected %p\n", mi->itemData, strings[mi->itemID]);
+                    "mi->itemData = %08Ix, expected %p\n", mi->itemData, strings[mi->itemID]);
         }
         break;
     }
@@ -274,9 +274,9 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         RECT rc_item, rc_client, rc_clip;
         DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lparam;
 
-        trace("%p WM_DRAWITEM %08lx %08lx\n", hwnd, wparam, lparam);
+        trace("%p WM_DRAWITEM %08Ix %08Ix\n", hwnd, wparam, lparam);
 
-        ok(wparam == dis->CtlID, "got wParam=%08lx instead of %08x\n",
+        ok(wparam == dis->CtlID, "got wParam=%08Ix instead of %08x\n",
 			wparam, dis->CtlID);
         ok(dis->CtlType == ODT_LISTBOX, "wrong CtlType %04x\n", dis->CtlType);
 
@@ -293,6 +293,7 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         trace("item rect %s\n", wine_dbgstr_rect(&rc_item));
         ok(EqualRect(&dis->rcItem, &rc_item), "item rects are not equal\n");
 
+        got_drawitem++;
         break;
     }
 
@@ -343,6 +344,19 @@ static void test_ownerdraw(void)
         0,
         LBS_NODATA
     };
+    static const struct {
+        UINT message;
+        WPARAM wparam;
+        LPARAM lparam;
+        UINT drawitem;
+    } testcase[] = {
+        { WM_NULL, 0, 0, 0 },
+        { WM_PAINT, 0, 0, 0 },
+        { LB_GETCOUNT, 0, 0, 0 },
+        { LB_SETCOUNT, ARRAY_SIZE(strings), 0, ARRAY_SIZE(strings) },
+        { LB_ADDSTRING, 0, (LPARAM)"foo", ARRAY_SIZE(strings)+1 },
+        { LB_DELETESTRING, 0, 0, ARRAY_SIZE(strings)-1 },
+    };
     HWND parent, hLB;
     INT ret;
     RECT rc;
@@ -372,14 +386,14 @@ static void test_ownerdraw(void)
         SendMessageA(hLB, LB_GETITEMRECT, 0, (LPARAM)&rc);
         trace("item 0 rect %s\n", wine_dbgstr_rect(&rc));
         ok(!IsRectEmpty(&rc), "empty item rect\n");
-        ok(rc.top < 0, "rc.top is not negative (%d)\n", rc.top);
+        ok(rc.top < 0, "rc.top is not negative (%ld)\n", rc.top);
 
         DestroyWindow(hLB);
 
         /* Both FIXED and VARIABLE, FIXED should override VARIABLE. */
         hLB = CreateWindowA("listbox", "TestList", LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE | styles[i],
             0, 0, 100, 100, NULL, NULL, NULL, 0);
-        ok(hLB != NULL, "last error 0x%08x\n", GetLastError());
+        ok(hLB != NULL, "last error 0x%08lx\n", GetLastError());
 
         ok(GetWindowLongA(hLB, GWL_STYLE) & LBS_OWNERDRAWVARIABLE, "Unexpected window style.\n");
 
@@ -405,6 +419,40 @@ static void test_ownerdraw(void)
 
         DestroyWindow (hLB);
     }
+
+    /* test pending redraw state */
+    for (i = 0; i < ARRAY_SIZE(testcase); i++)
+    {
+        winetest_push_context("%d", i);
+        hLB = create_listbox(LBS_OWNERDRAWFIXED | LBS_NODATA | WS_CHILD | WS_VISIBLE, parent);
+        assert(hLB);
+
+        ret = SendMessageA(hLB, WM_SETREDRAW, FALSE, 0);
+        ok(!ret, "got %d\n", ret);
+        ret = SendMessageA(hLB, testcase[i].message, testcase[i].wparam, testcase[i].lparam);
+        if (testcase[i].message >= LB_ADDSTRING && testcase[i].message < LB_MSGMAX &&
+            testcase[i].message != LB_SETCOUNT)
+            ok(ret > 0, "expected > 0, got %d\n", ret);
+        else
+            ok(!ret, "expected 0, got %d\n", ret);
+
+        got_drawitem = 0;
+        ret = RedrawWindow(hLB, NULL, 0, RDW_UPDATENOW);
+        ok(ret, "RedrawWindow failed\n");
+        ok(!got_drawitem, "got %u\n", got_drawitem);
+
+        ret = SendMessageA(hLB, WM_SETREDRAW, TRUE, 0);
+        ok(!ret, "got %d\n", ret);
+
+        got_drawitem = 0;
+        ret = RedrawWindow(hLB, NULL, 0, RDW_UPDATENOW);
+        ok(ret, "RedrawWindow failed\n");
+        ok(got_drawitem == testcase[i].drawitem, "expected %u, got %u\n", testcase[i].drawitem, got_drawitem);
+
+        DestroyWindow(hLB);
+        winetest_pop_context();
+    }
+
     DestroyWindow(parent);
 }
 
@@ -583,21 +631,29 @@ static void test_LB_SETSEL(void)
 
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == -1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 0, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, TRUE, 0);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 0, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 0, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, TRUE, 1);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 1, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, FALSE, 1);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 1, "Unexpected caret index %d.\n", ret);
 
     DestroyWindow(list);
 
@@ -607,21 +663,29 @@ static void test_LB_SETSEL(void)
 
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == -1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 0, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, TRUE, 0);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 0, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 0, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, TRUE, 1);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 1, "Unexpected caret index %d.\n", ret);
 
     ret = SendMessageA(list, LB_SETSEL, FALSE, 1);
     ok(ret == 0, "Unexpected return value %d.\n", ret);
     ret = SendMessageA(list, LB_GETANCHORINDEX, 0, 0);
     ok(ret == 1, "Unexpected anchor index %d.\n", ret);
+    ret = SendMessageA(list, LB_GETCARETINDEX, 0, 0);
+    ok(ret == 1, "Unexpected caret index %d.\n", ret);
 
     DestroyWindow(list);
 }
@@ -721,70 +785,70 @@ static void test_changing_selection_styles(void)
             for (k = 0; k < ARRAY_SIZE(selexpect_multi); k++)
             {
                 ret = SendMessageA(listbox, LB_INSERTSTRING, -1, (LPARAM)"x");
-                ok(ret == k, "%u: Unexpected return value %d, expected %d.\n", j, ret, k);
+                ok(ret == k, "%u: Unexpected return value %ld, expected %d.\n", j, ret, k);
             }
             ret = SendMessageA(listbox, LB_GETCOUNT, 0, 0);
-            ok(ret == ARRAY_SIZE(selexpect_multi), "%u: Unexpected count %d.\n", j, ret);
+            ok(ret == ARRAY_SIZE(selexpect_multi), "%u: Unexpected count %ld.\n", j, ret);
 
             /* Select items with different methods */
             ret = SendMessageA(listbox, LB_SETCURSEL, 2, 0);
-            ok(ret == setcursel_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == setcursel_expect, "%u: Unexpected return value %ld.\n", j, ret);
             ret = SendMessageA(listbox, LB_SELITEMRANGE, TRUE, MAKELPARAM(0, 0));
-            ok(ret == selitemrange_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == selitemrange_expect, "%u: Unexpected return value %ld.\n", j, ret);
             ret = SendMessageA(listbox, LB_SELITEMRANGE, TRUE, MAKELPARAM(2, 2));
-            ok(ret == selitemrange_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == selitemrange_expect, "%u: Unexpected return value %ld.\n", j, ret);
 
             /* Verify that the proper items are selected */
             for (k = 0; k < ARRAY_SIZE(selexpect_multi); k++)
             {
                 ret = SendMessageA(listbox, LB_GETSEL, k, 0);
-                ok(ret == selexpect[k], "%u: Unexpected selection state %d, expected %d.\n",
+                ok(ret == selexpect[k], "%u: Unexpected selection state %ld, expected %ld.\n",
                     j, ret, selexpect[k]);
             }
 
             /* Now change the selection style */
             style = GetWindowLongA(listbox, GWL_STYLE);
             ok((style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) == selstyles[j],
-                "%u: unexpected window styles %#x.\n", j, style);
+                "%u: unexpected window styles %#lx.\n", j, style);
             if (selstyles[j] & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL))
                 style &= ~selstyles[j];
             else
                 style |= LBS_MULTIPLESEL | LBS_EXTENDEDSEL;
             SetWindowLongA(listbox, GWL_STYLE, style);
             style = GetWindowLongA(listbox, GWL_STYLE);
-            ok(!(style & selstyles[j]), "%u: unexpected window styles %#x.\n", j, style);
+            ok(!(style & selstyles[j]), "%u: unexpected window styles %#lx.\n", j, style);
 
             /* Verify that the same items are selected */
             ret = SendMessageA(listbox, LB_GETSELCOUNT, 0, 0);
-            ok(ret == getselcount_expect, "%u: expected %d from LB_GETSELCOUNT, got %d\n",
+            ok(ret == getselcount_expect, "%u: expected %ld from LB_GETSELCOUNT, got %ld\n",
                 j, getselcount_expect, ret);
 
             for (k = 0; k < ARRAY_SIZE(selexpect_multi); k++)
             {
                 ret = SendMessageA(listbox, LB_GETSEL, k, 0);
-                ok(ret == selexpect[k], "%u: Unexpected selection state %d, expected %d.\n",
+                ok(ret == selexpect[k], "%u: Unexpected selection state %ld, expected %ld.\n",
                     j, ret, selexpect[k]);
             }
 
             /* Lastly see if we can still change the selection as before with old style */
             if (setcursel_expect != LB_ERR) setcursel_expect = 0;
             ret = SendMessageA(listbox, LB_SETCURSEL, 0, 0);
-            ok(ret == setcursel_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == setcursel_expect, "%u: Unexpected return value %ld.\n", j, ret);
             ret = SendMessageA(listbox, LB_SELITEMRANGE, TRUE, MAKELPARAM(1, 1));
-            ok(ret == selitemrange_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == selitemrange_expect, "%u: Unexpected return value %ld.\n", j, ret);
             ret = SendMessageA(listbox, LB_SELITEMRANGE, FALSE, MAKELPARAM(2, 2));
-            ok(ret == selitemrange_expect, "%u: Unexpected return value %d.\n", j, ret);
+            ok(ret == selitemrange_expect, "%u: Unexpected return value %ld.\n", j, ret);
 
             /* And verify the selections */
             selexpect = (selstyles[j] & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) ? selexpect_multi2 : selexpect_single2;
             ret = SendMessageA(listbox, LB_GETSELCOUNT, 0, 0);
-            ok(ret == getselcount_expect, "%u: expected %d from LB_GETSELCOUNT, got %d\n",
+            ok(ret == getselcount_expect, "%u: expected %ld from LB_GETSELCOUNT, got %ld\n",
                 j, getselcount_expect, ret);
 
             for (k = 0; k < ARRAY_SIZE(selexpect_multi); k++)
             {
                 ret = SendMessageA(listbox, LB_GETSEL, k, 0);
-                ok(ret == selexpect[k], "%u: Unexpected selection state %d, expected %d.\n",
+                ok(ret == selexpect[k], "%u: Unexpected selection state %ld, expected %ld.\n",
                     j, ret, selexpect[k]);
             }
 
@@ -808,13 +872,13 @@ static void test_itemfrompoint(void)
 
     /* For an empty listbox win2k returns 0x1ffff, win98 returns 0x10000, nt4 returns 0xffffffff */
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( /* x */ 30, /* y */ 30 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %lx\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( 700, 30 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %lx\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( 30, 300 ));
-    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %x\n", r );
+    ok( r == 0x1ffff || r == 0x10000 || r == 0xffffffff, "ret %lx\n", r );
 
     id = SendMessageA( hList, LB_ADDSTRING, 0, (LPARAM) "hi");
     ok( id == 0, "item id wrong\n");
@@ -822,17 +886,17 @@ static void test_itemfrompoint(void)
     ok( id == 1, "item id wrong\n");
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( /* x */ 30, /* y */ 30 ));
-    ok( r == 0x1, "ret %x\n", r );
+    ok( r == 0x1, "ret %lx\n", r );
 
     r = SendMessageA(hList, LB_ITEMFROMPOINT, 0, MAKELPARAM( /* x */ 30, /* y */ 601 ));
     ok( r == 0x10001 || broken(r == 1), /* nt4 */
-        "ret %x\n", r );
+        "ret %lx\n", r );
 
     /* Resize control so that below assertions about sizes are valid */
     r = SendMessageA( hList, LB_GETITEMRECT, 0, (LPARAM)&rc);
-    ok( r == 1, "ret %x\n", r);
+    ok( r == 1, "ret %lx\n", r);
     r = MoveWindow(hList, 1, 1, 600, (rc.bottom - rc.top + 1) * 9 / 2, TRUE);
-    ok( r != 0, "ret %x\n", r);
+    ok( r != 0, "ret %lx\n", r);
 
     id = SendMessageA( hList, LB_ADDSTRING, 0, (LPARAM) "hi2");
     ok( id == 2, "item id wrong\n");
@@ -852,31 +916,31 @@ static void test_itemfrompoint(void)
 
     SendMessageA( hList, LB_SETTOPINDEX, 1, 0);
     r = SendMessageA( hList, LB_GETTOPINDEX, 0, 0);
-    ok( r == 1, "top %d\n", r);
+    ok( r == 1, "top %ld\n", r);
 
     r = SendMessageA( hList, LB_GETITEMRECT, 5, (LPARAM)&rc);
-    ok( r == 1, "ret %x\n", r);
+    ok( r == 1, "ret %lx\n", r);
     r = SendMessageA( hList, LB_GETITEMRECT, 6, (LPARAM)&rc);
-    ok( r == 0, "ret %x\n", r);
+    ok( r == 0, "ret %lx\n", r);
 
     r = SendMessageA( hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(/* x */ 10, /* y */ 10) );
-    ok( r == 1, "ret %x\n", r);
+    ok( r == 1, "ret %lx\n", r);
 
     r = SendMessageA( hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(1000, 10) );
     ok( r == 0x10001 || broken(r == 1), /* nt4 */
-        "ret %x\n", r );
+        "ret %lx\n", r );
 
     r = SendMessageA( hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(10, -10) );
     ok( r == 0x10001 || broken(r == 1), /* nt4 */
-        "ret %x\n", r );
+        "ret %lx\n", r );
 
     r = SendMessageA( hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(10, 100) );
     ok( r == 0x10005 || broken(r == 5), /* nt4 */
-        "item %x\n", r );
+        "item %lx\n", r );
 
     r = SendMessageA( hList, LB_ITEMFROMPOINT, 0, MAKELPARAM(10, 200) );
     ok( r == 0x10005 || broken(r == 5), /* nt4 */
-        "item %x\n", r );
+        "item %lx\n", r );
 
     DestroyWindow( hList );
 }
@@ -929,7 +993,7 @@ static void test_listbox_LB_DIR(void)
     ok(ret, "Failed to create test directory.\n");
 
     file = CreateFileA( "wtest1.tmp.c", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
-    ok(file != INVALID_HANDLE_VALUE, "Error creating the test file: %d\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "Error creating the test file: %ld\n", GetLastError());
     CloseHandle( file );
 
     /* NOTE: for this test to succeed, there must be no subdirectories
@@ -953,7 +1017,7 @@ static void test_listbox_LB_DIR(void)
         strcpy(pathBuffer, wildcard);
         res = SendMessageA(hList, LB_DIR, 0, (LPARAM)pathBuffer);
     }
-    ok (res >= 0, "SendMessage(LB_DIR, 0, *) failed - 0x%08x\n", GetLastError());
+    ok (res >= 0, "SendMessage(LB_DIR, 0, *) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox */
     itemCount = SendMessageA(hList, LB_GETCOUNT, 0, 0);
@@ -980,7 +1044,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, "w*.c");
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, 0, (LPARAM)pathBuffer);
-    ok (res >= 0, "SendMessage(LB_DIR, 0, w*.c) failed - 0x%08x\n", GetLastError());
+    ok (res >= 0, "SendMessage(LB_DIR, 0, w*.c) failed - 0x%08lx\n", GetLastError());
 
     /* Path specification does NOT converted to uppercase */
     ok (!strcmp(pathBuffer, "w*.c"),
@@ -1008,7 +1072,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY, *) failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY, *) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox.
      * All files plus "[..]"
@@ -1037,7 +1101,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, "w*.c");
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY, (LPARAM)pathBuffer);
-    ok (res >= 0, "SendMessage(LB_DIR, DDL_DIRECTORY, w*.c) failed - 0x%08x\n", GetLastError());
+    ok (res >= 0, "SendMessage(LB_DIR, DDL_DIRECTORY, w*.c) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. Since the parent directory does not
      * fit w*.c, there should be exactly the same number of items as without DDL_DIRECTORY
@@ -1066,7 +1130,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DRIVES|DDL_EXCLUSIVE, (LPARAM)pathBuffer);
-    ok (res >= 0, "SendMessage(LB_DIR, DDL_DRIVES|DDL_EXCLUSIVE, *)  failed - 0x%08x\n", GetLastError());
+    ok (res >= 0, "SendMessage(LB_DIR, DDL_DRIVES|DDL_EXCLUSIVE, *)  failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be at least one element before, since the string "[-c-]" should
@@ -1113,7 +1177,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DRIVES, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DRIVES, *)  failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DRIVES, *)  failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be at least one element before, since the string "[-c-]" should
@@ -1141,7 +1205,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, "w*.c");
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DRIVES, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DRIVES, w*.c)  failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DRIVES, w*.c)  failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be at least one element before, since the string "[-c-]" should
@@ -1176,7 +1240,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_DRIVES, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES, *) failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES, *) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be exactly the number of plain files, plus the number of mapped drives.
@@ -1216,7 +1280,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, "w*.c");
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_DRIVES, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES, w*.c) failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES, w*.c) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be exactly the number of plain files, plus the number of mapped drives.
@@ -1250,7 +1314,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, (LPARAM)pathBuffer);
-    ok (res != -1, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, *) failed err %u\n", GetLastError());
+    ok (res != -1, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_EXCLUSIVE, *) failed err %lu\n", GetLastError());
 
     itemCount = SendMessageA(hList, LB_GETCOUNT, 0, 0);
     ok (itemCount == itemCount_allDirs,
@@ -1292,7 +1356,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, wildcard);
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, (LPARAM)pathBuffer);
-    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, w*.c,) failed - 0x%08x\n", GetLastError());
+    ok (res > 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, w*.c,) failed - 0x%08lx\n", GetLastError());
 
     /* There should be no plain files on the listbox */
     itemCount = SendMessageA(hList, LB_GETCOUNT, 0, 0);
@@ -1327,7 +1391,7 @@ static void test_listbox_LB_DIR(void)
     strcpy(pathBuffer, "w*.c");
     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
     res = SendMessageA(hList, LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, (LPARAM)pathBuffer);
-    ok (res >= 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, w*.c,) failed - 0x%08x\n", GetLastError());
+    ok (res >= 0, "SendMessage(LB_DIR, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE, w*.c,) failed - 0x%08lx\n", GetLastError());
 
     /* There should be no plain files on the listbox, and no [..], since it does not fit w*.c */
     itemCount = SendMessageA(hList, LB_GETCOUNT, 0, 0);
@@ -1433,7 +1497,7 @@ static void test_listbox_dlgdir(void)
     HANDLE file;
 
     file = CreateFileA( "wtest1.tmp.c", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
-    ok(file != INVALID_HANDLE_VALUE, "Error creating the test file: %d\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "Error creating the test file: %ld\n", GetLastError());
     CloseHandle( file );
 
     /* NOTE: for this test to succeed, there must be no subdirectories
@@ -1460,7 +1524,7 @@ static void test_listbox_dlgdir(void)
      */
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL, 0);
-    ok (res == 1, "DlgDirList(*.c, 0) returned %d - expected 1 - 0x%08x\n", res, GetLastError());
+    ok (res == 1, "DlgDirList(*.c, 0) returned %d - expected 1 - 0x%08lx\n", res, GetLastError());
 
     /* Path specification gets converted to uppercase */
     ok (!strcmp(pathBuffer, "W*.C"),
@@ -1498,7 +1562,7 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DIRECTORY);
-    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY) failed - 0x%08x\n", GetLastError());
+    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be exactly more elements than before, since the directories should
@@ -1545,7 +1609,7 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DRIVES);
-    ok (res == 1, "DlgDirList(*.c, DDL_DRIVES) failed - 0x%08x\n", GetLastError());
+    ok (res == 1, "DlgDirList(*.c, DDL_DRIVES) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be at least one element before, since the string "[-c-]" should
@@ -1587,7 +1651,7 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DIRECTORY|DDL_DRIVES);
-    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_DRIVES) failed - 0x%08x\n", GetLastError());
+    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_DRIVES) failed - 0x%08lx\n", GetLastError());
 
     /* There should be some content in the listbox. In particular, there should
      * be exactly the number of plain files, plus the number of mapped drives,
@@ -1634,7 +1698,7 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DIRECTORY|DDL_EXCLUSIVE);
-    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_EXCLUSIVE) failed - 0x%08x\n", GetLastError());
+    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_EXCLUSIVE) failed - 0x%08lx\n", GetLastError());
 
     /* There should be exactly one element: "[..]" */
     itemCount = SendMessageA(g_listBox, LB_GETCOUNT, 0, 0);
@@ -1663,7 +1727,7 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "w*.c");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE);
-    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE) failed - 0x%08x\n", GetLastError());
+    ok (res == 1, "DlgDirList(*.c, DDL_DIRECTORY|DDL_DRIVES|DDL_EXCLUSIVE) failed - 0x%08lx\n", GetLastError());
 
     /* There should be no plain files on the listbox */
     itemCount = SendMessageA(g_listBox, LB_GETCOUNT, 0, 0);
@@ -1698,19 +1762,19 @@ static void test_listbox_dlgdir(void)
     strcpy(pathBuffer, "*");
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, ID_TEST_LABEL,
         DDL_DIRECTORY|DDL_DRIVES);
-    ok (res != 0, "DlgDirList(*, DDL_DIRECTORY|DDL_DRIVES) failed - 0x%08x\n", GetLastError());
+    ok (res != 0, "DlgDirList(*, DDL_DIRECTORY|DDL_DRIVES) failed - 0x%08lx\n", GetLastError());
 
     SendMessageA(g_listBox, LB_SETCURSEL, -1, 0); /* Unselect any current selection */
     memset(pathBuffer, 0, MAX_PATH);
     SetLastError(0xdeadbeef);
     res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
     ok (GetLastError() == 0xdeadbeef,
-        "DlgDirSelectEx() with no selection modified last error code from 0xdeadbeef to 0x%08x\n",
+        "DlgDirSelectEx() with no selection modified last error code from 0xdeadbeef to 0x%08lx\n",
         GetLastError());
     ok (res == 0, "DlgDirSelectEx() with no selection returned %d, expected 0\n", res);
     /* WinXP-SP2 leaves pathBuffer untouched, but Win98 fills it with garbage. */
     /*
-    ok (strlen(pathBuffer) == 0, "DlgDirSelectEx() with no selection filled buffer with %s\n", pathBuffer);
+    ok (!*pathBuffer, "DlgDirSelectEx() with no selection filled buffer with %s\n", pathBuffer);
     */
     /* Test proper drive/dir/file recognition */
     itemCount = SendMessageA(g_listBox, LB_GETCOUNT, 0, 0);
@@ -1720,7 +1784,6 @@ static void test_listbox_dlgdir(void)
         memset(tempBuffer, 0, MAX_PATH);
         driveletter = '\0';
         SendMessageA(g_listBox, LB_GETTEXT, i, (LPARAM)itemBuffer);
-        if (!strstr(itemBuffer, ".exe")) continue; // skip downloaded/generated files from other tests
         res = SendMessageA(g_listBox, LB_SETCURSEL, i, 0);
         ok (res == i, "SendMessageA(LB_SETCURSEL, %d) failed\n", i);
         if (sscanf(itemBuffer, "[-%c-]", &driveletter) == 1) {
@@ -1728,7 +1791,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 1, "DlgDirSelectEx() thinks %s (%s) is not a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1740,7 +1803,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 1, "DlgDirSelectEx() thinks %s (%s) is not a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1757,7 +1820,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 0, "DlgDirSelectEx() thinks %s (%s) is a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1791,7 +1854,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 1, "DlgDirSelectEx() thinks %s (%s) is not a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1803,7 +1866,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 1, "DlgDirSelectEx() thinks %s (%s) is not a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1820,7 +1883,7 @@ static void test_listbox_dlgdir(void)
             SetLastError(0xdeadbeef);
             res = DlgDirSelectExA(hWnd, pathBuffer, MAX_PATH, ID_TEST_LISTBOX);
             ok (GetLastError() == 0xdeadbeef,
-               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08x\n",
+               "DlgDirSelectEx() with selection at %d modified last error code from 0xdeadbeef to 0x%08lx\n",
                 i, GetLastError());
             ok(res == 0, "DlgDirSelectEx() thinks %s (%s) is a drive/directory!\n", itemBuffer, pathBuffer);
 
@@ -1852,7 +1915,7 @@ static void test_listbox_dlgdir(void)
     res = DlgDirListA(hWnd, pathBuffer, ID_TEST_LISTBOX, 0, DDL_DIRECTORY | DDL_EXCLUSIVE);
     ok(!res, "DlgDirList should have failed with 0 but %d was returned\n", res);
     ok(GetLastError() == ERROR_NO_WILDCARD_CHARACTERS,
-       "GetLastError should return 0x589, got 0x%X\n",GetLastError());
+       "GetLastError should return 0x589, got 0x%lX\n",GetLastError());
 
     DestroyWindow(hWnd);
 }
@@ -1876,10 +1939,16 @@ static void test_set_count( void )
     GetUpdateRect( listbox, &r, TRUE );
     ok( IsRectEmpty( &r ), "got non-empty rect\n");
 
+    ret = GetWindowLongA( listbox, GWL_STYLE );
+    ok((ret & (WS_VSCROLL | WS_HSCROLL)) == 0, "Listbox should not have scroll bars\n");
+
     ret = SendMessageA( listbox, LB_SETCOUNT, 100, 0 );
-    ok( ret == 0, "got %d\n", ret );
+    ok( ret == 0, "got %ld\n", ret );
     ret = SendMessageA( listbox, LB_GETCOUNT, 0, 0 );
-    ok( ret == 100, "got %d\n", ret );
+    ok( ret == 100, "got %ld\n", ret );
+
+    ret = GetWindowLongA( listbox, GWL_STYLE );
+    ok((ret & (WS_VSCROLL | WS_HSCROLL)) == WS_VSCROLL, "Listbox should have vertical scroll bar\n");
 
     GetUpdateRect( listbox, &r, TRUE );
     ok( !IsRectEmpty( &r ), "got empty rect\n");
@@ -1889,15 +1958,15 @@ static void test_set_count( void )
     ok( IsRectEmpty( &r ), "got non-empty rect\n");
 
     ret = SendMessageA( listbox, LB_SETCOUNT, 99, 0 );
-    ok( ret == 0, "got %d\n", ret );
+    ok( ret == 0, "got %ld\n", ret );
 
     GetUpdateRect( listbox, &r, TRUE );
     ok( !IsRectEmpty( &r ), "got empty rect\n");
 
     ret = SendMessageA( listbox, LB_SETCOUNT, -5, 0 );
-    ok( ret == 0, "got %d\n", ret );
+    ok( ret == 0, "got %ld\n", ret );
     ret = SendMessageA( listbox, LB_GETCOUNT, 0, 0 );
-    ok( ret == -5, "got %d\n", ret );
+    ok( ret == -5, "got %ld\n", ret );
 
     DestroyWindow( listbox );
 
@@ -1907,8 +1976,8 @@ static void test_set_count( void )
 
         SetLastError( 0xdeadbeef );
         ret = SendMessageA( listbox, LB_SETCOUNT, 100, 0 );
-        ok( ret == LB_ERR, "expected %d, got %d\n", LB_ERR, ret );
-        ok( GetLastError() == ERROR_SETCOUNT_ON_BAD_LB, "Unexpected error %d.\n", GetLastError() );
+        ok( ret == LB_ERR, "expected %d, got %ld\n", LB_ERR, ret );
+        ok( GetLastError() == ERROR_SETCOUNT_ON_BAD_LB, "Unexpected error %ld.\n", GetLastError() );
 
         DestroyWindow( listbox );
     }
@@ -1951,8 +2020,8 @@ static void test_GetListBoxInfo(void)
 
     lb_getlistboxinfo = 0;
     ret = pGetListBoxInfo(listbox);
-    ok(ret > 0, "got %d\n", ret);
-todo_wine
+    ok(ret > 0, "got %ld\n", ret);
+    todo_wine
     ok(lb_getlistboxinfo == 0, "got %d\n", lb_getlistboxinfo);
 
     DestroyWindow(listbox);
@@ -1977,45 +2046,45 @@ static void test_init_storage( void )
                                 0, 0, 100, 100, parent, (HMENU)1, NULL, 0);
 
         items_size = SendMessageA(listbox, LB_INITSTORAGE, 100, 0);
-        ok(items_size >= 100, "expected at least 100, got %d\n", items_size);
+        ok(items_size >= 100, "expected at least 100, got %ld\n", items_size);
 
         ret = SendMessageA(listbox, LB_INITSTORAGE, 0, 0);
-        ok(ret == items_size, "expected %d, got %d\n", items_size, ret);
+        ok(ret == items_size, "expected %ld, got %ld\n", items_size, ret);
 
         /* it doesn't grow since the space was already reserved */
         ret = SendMessageA(listbox, LB_INITSTORAGE, items_size, 0);
-        ok(ret == items_size, "expected %d, got %d\n", items_size, ret);
+        ok(ret == items_size, "expected %ld, got %ld\n", items_size, ret);
 
         /* it doesn't shrink the reserved space */
         ret = SendMessageA(listbox, LB_INITSTORAGE, 42, 0);
-        ok(ret == items_size, "expected %d, got %d\n", items_size, ret);
+        ok(ret == items_size, "expected %ld, got %ld\n", items_size, ret);
 
         /* now populate almost all of it so it's not reserved anymore */
         if (styles[i] & LBS_NODATA)
         {
             ret = SendMessageA(listbox, LB_SETCOUNT, items_size - 1, 0);
-            ok(ret == 0, "unexpected return value %d\n", ret);
+            ok(ret == 0, "unexpected return value %ld\n", ret);
         }
         else
         {
             for (j = 0; j < items_size - 1; j++)
             {
                 ret = SendMessageA(listbox, LB_INSERTSTRING, -1, (LPARAM)"");
-                ok(ret == j, "expected %d, got %d\n", j, ret);
+                ok(ret == j, "expected %d, got %ld\n", j, ret);
             }
         }
 
         /* we still have one more reserved slot, so it doesn't grow yet */
         ret = SendMessageA(listbox, LB_INITSTORAGE, 1, 0);
-        ok(ret == items_size, "expected %d, got %d\n", items_size, ret);
+        ok(ret == items_size, "expected %ld, got %ld\n", items_size, ret);
 
         /* fill the slot and check again, it should grow this time */
         ret = SendMessageA(listbox, LB_INSERTSTRING, -1, (LPARAM)"");
-        ok(ret == items_size - 1, "expected %d, got %d\n", items_size - 1, ret);
+        ok(ret == items_size - 1, "expected %ld, got %ld\n", items_size - 1, ret);
         ret = SendMessageA(listbox, LB_INITSTORAGE, 0, 0);
-        ok(ret == items_size, "expected %d, got %d\n", items_size, ret);
+        ok(ret == items_size, "expected %ld, got %ld\n", items_size, ret);
         ret = SendMessageA(listbox, LB_INITSTORAGE, 1, 0);
-        ok(ret > items_size, "expected it to grow past %d, got %d\n", items_size, ret);
+        ok(ret > items_size, "expected it to grow past %ld, got %ld\n", items_size, ret);
 
         DestroyWindow(listbox);
     }
@@ -2057,7 +2126,7 @@ static void test_extents(void)
     listbox = create_listbox(WS_CHILD | WS_VISIBLE, parent);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 0, "Got wrong initial horizontal extent: %u\n", res);
+    ok(res == 0, "Got wrong initial horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2072,7 +2141,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 64, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 64, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 64, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2087,7 +2156,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 184, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 184, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 184, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2104,7 +2173,7 @@ static void test_extents(void)
     listbox = create_listbox(WS_CHILD | WS_VISIBLE | WS_HSCROLL, parent);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 0, "Got wrong initial horizontal extent: %u\n", res);
+    ok(res == 0, "Got wrong initial horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2119,7 +2188,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 64, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 64, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 64, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2134,7 +2203,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 184, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 184, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 184, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2148,7 +2217,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 0, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 0, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 0, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2165,7 +2234,7 @@ static void test_extents(void)
     listbox = create_listbox(WS_CHILD | WS_VISIBLE | WS_HSCROLL | LBS_DISABLENOSCROLL, parent);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 0, "Got wrong initial horizontal extent: %u\n", res);
+    ok(res == 0, "Got wrong initial horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2180,7 +2249,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 64, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 64, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 64, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2195,7 +2264,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 184, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 184, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 184, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2209,7 +2278,7 @@ static void test_extents(void)
     SendMessageA(listbox, LB_SETHORIZONTALEXTENT, 0, 0);
 
     res = SendMessageA(listbox, LB_GETHORIZONTALEXTENT, 0, 0);
-    ok(res == 0, "Got wrong horizontal extent: %u\n", res);
+    ok(res == 0, "Got wrong horizontal extent: %lu\n", res);
 
     sinfo.cbSize = sizeof(sinfo);
     sinfo.fMask = SIF_RANGE;
@@ -2234,14 +2303,14 @@ static void test_WM_MEASUREITEM(void)
     listbox = create_listbox(WS_CHILD | LBS_OWNERDRAWVARIABLE, parent);
 
     data = SendMessageA(listbox, LB_GETITEMDATA, 0, 0);
-    ok(data == (LRESULT)strings[0], "data = %08lx, expected %p\n", data, strings[0]);
+    ok(data == (LRESULT)strings[0], "data = %08Ix, expected %p\n", data, strings[0]);
     DestroyWindow(parent);
 
     parent = create_parent();
     listbox = create_listbox(WS_CHILD | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS, parent);
 
     data = SendMessageA(listbox, LB_GETITEMDATA, 0, 0);
-    ok(!data, "data = %08lx\n", data);
+    ok(!data, "data = %08Ix\n", data);
     DestroyWindow(parent);
 }
 
@@ -2312,27 +2381,27 @@ static void test_LBS_NODATA(void)
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_FINDSTRING, 1, 0);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_FINDSTRING, 1, 42);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_FINDSTRINGEXACT, 1, 0);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_FINDSTRINGEXACT, 1, 42);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_SELECTSTRING, 1, 0);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = SendMessageA(listbox, LB_SELECTSTRING, 1, 42);
     ok(ret == LB_ERR, "Unexpected return value %d.\n", ret);
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%X\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should return 0x57, got 0x%lX\n", GetLastError());
 
     DestroyWindow(listbox);
 
@@ -2349,13 +2418,90 @@ static void test_LBS_NODATA(void)
         ok(listbox != NULL, "Failed to create a listbox.\n");
 
         style = GetWindowLongA(listbox, GWL_STYLE);
-        ok((style & invalid_styles[i]) == invalid_styles[i], "%u: unexpected window styles %#x.\n", i, style);
+        ok((style & invalid_styles[i]) == invalid_styles[i], "%u: unexpected window styles %#lx.\n", i, style);
         ret = SendMessageA(listbox, LB_SETCOUNT, 100, 0);
         ok(ret == LB_ERR, "%u: unexpected return value %d.\n", i, ret);
         DestroyWindow(listbox);
     }
 
     DestroyWindow(parent);
+}
+
+static void test_LB_FINDSTRING(void)
+{
+    static const WCHAR *strings[] =
+    {
+        L"abci",
+        L"AbCI",
+        L"abcI",
+        L"abc\xcdzz",
+        L"abc\xedzz",
+        L"abc\xcd",
+        L"abc\xed",
+        L"abcO",
+        L"abc\xd8",
+        L"abcP",
+    };
+    static const struct { const WCHAR *str; LRESULT from, res, exact, alt_res, alt_exact; } tests[] =
+    {
+        { L"ab",        -1, 0, -1, 0, -1 },
+        { L"abc",       -1, 0, -1, 0, -1 },
+        { L"abci",      -1, 0, 0, 0, 0 },
+        { L"ABCI",      -1, 0, 0, 0, 0 },
+        { L"ABC\xed",   -1, 3, 3, 3, 3 },
+        { L"ABC\xcd",    4, 5, 3, 5, 3 },
+        { L"abcp",      -1, 9, 9, 8, 8 },
+    };
+    HWND listbox;
+    unsigned int i;
+    LRESULT ret;
+
+    listbox = CreateWindowW( L"listbox", L"TestList", LBS_HASSTRINGS | LBS_SORT,
+                             0, 0, 100, 100, NULL, NULL, NULL, 0 );
+    ok( listbox != NULL, "Failed to create listbox\n" );
+    SendMessageW( listbox, LB_SETLOCALE, MAKELANGID( LANG_FRENCH, SUBLANG_DEFAULT ), 0 );
+    for (i = 0; i < ARRAY_SIZE(strings); i++) SendMessageW( listbox, LB_ADDSTRING, 0, (LPARAM)strings[i] );
+
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        ret = SendMessageW( listbox, LB_FINDSTRING, tests[i].from, (LPARAM)tests[i].str );
+        ok( ret == tests[i].res, "%u: wrong result %Id / %Id\n", i, ret, tests[i].res );
+        ret = SendMessageW( listbox, LB_FINDSTRINGEXACT, tests[i].from, (LPARAM)tests[i].str );
+        ok( ret == tests[i].exact, "%u: wrong result %Id / %Id\n", i, ret, tests[i].exact );
+    }
+
+    SendMessageW( listbox, LB_RESETCONTENT, 0, 0 );
+    SendMessageW( listbox, LB_SETLOCALE, MAKELANGID( LANG_SWEDISH, SUBLANG_DEFAULT ), 0 );
+    for (i = 0; i < ARRAY_SIZE(strings); i++) SendMessageW( listbox, LB_ADDSTRING, 0, (LPARAM)strings[i] );
+    ret = SendMessageW( listbox, LB_FINDSTRING, -1, (LPARAM)L"abcp" );
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
+    {
+        ret = SendMessageW( listbox, LB_FINDSTRING, tests[i].from, (LPARAM)tests[i].str );
+        ok( ret == tests[i].alt_res, "%u: wrong result %Id / %Id\n", i, ret, tests[i].alt_res );
+        ret = SendMessageW( listbox, LB_FINDSTRINGEXACT, tests[i].from, (LPARAM)tests[i].str );
+        ok( ret == tests[i].alt_exact, "%u: wrong result %Id / %Id\n", i, ret, tests[i].alt_exact );
+    }
+
+    SendMessageW( listbox, LB_RESETCONTENT, 0, 0 );
+    SendMessageW( listbox, LB_ADDSTRING, 0, (LPARAM)L"abc" );
+    SendMessageW( listbox, LB_ADDSTRING, 0, (LPARAM)L"[abc]" );
+    SendMessageW( listbox, LB_ADDSTRING, 0, (LPARAM)L"[-abc-]" );
+    ret = SendMessageW( listbox, LB_FINDSTRING, -1, (LPARAM)L"abc" );
+    ok( ret == 0, "wrong result %Id\n", ret );
+    ret = SendMessageW( listbox, LB_FINDSTRINGEXACT, -1, (LPARAM)L"abc" );
+    todo_wine
+    ok( ret == 0, "wrong result %Id\n", ret );
+    ret = SendMessageW( listbox, LB_FINDSTRING, 0, (LPARAM)L"abc" );
+    ok( ret == 1, "wrong result %Id\n", ret );
+    ret = SendMessageW( listbox, LB_FINDSTRINGEXACT, 0, (LPARAM)L"abc" );
+    todo_wine
+    ok( ret == 0, "wrong result %Id\n", ret );
+    ret = SendMessageW( listbox, LB_FINDSTRING, 1, (LPARAM)L"abc" );
+    ok( ret == 2, "wrong result %Id\n", ret );
+    ret = SendMessageW( listbox, LB_FINDSTRINGEXACT, 1, (LPARAM)L"abc" );
+    todo_wine
+    ok( ret == 0, "wrong result %Id\n", ret );
+    DestroyWindow( listbox );
 }
 
 START_TEST(listbox)
@@ -2457,4 +2603,5 @@ START_TEST(listbox)
   test_WM_MEASUREITEM();
   test_LB_SETSEL();
   test_LBS_NODATA();
+  test_LB_FINDSTRING();
 }
