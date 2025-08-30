@@ -17,7 +17,8 @@ NTSTATUS ResetHDAController(PFDO_CONTEXT fdoCtx, BOOLEAN wakeup) {
 
 	//Stop all Streams DMA Engine
 	for (UINT32 i = 0; i < fdoCtx->numStreams; i++) {
-		hdac_stream_stop(&fdoCtx->streams[i]);
+		if (fdoCtx->streams[i].running)
+			hdac_stream_stop(&fdoCtx->streams[i]);
 	}
 
 	//Stop CORB and RIRB
@@ -94,6 +95,7 @@ NTSTATUS GetHDACapabilities(PFDO_CONTEXT fdoCtx) {
 	fdoCtx->captureStreams = (gcap >> 8) & 0x0f;
 	fdoCtx->playbackStreams = (gcap >> 12) & 0x0f;
 
+	DPRINT1("streams (cap %d, playback %d)\n", fdoCtx->captureStreams, fdoCtx->playbackStreams);
 	SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
 		"streams (cap %d, playback %d)\n", fdoCtx->captureStreams, fdoCtx->playbackStreams);
 
@@ -139,7 +141,7 @@ void HDAInitRirb(PFDO_CONTEXT fdoCtx) {
 	//Set the rirb size to 256 entries
 	hda_write8(fdoCtx, RIRBSIZE, 0x02);
 
-	//Setup CORB address
+	//Setup RIRB address
 	fdoCtx->rirb.buf = (UINT32*)(fdoCtx->rb + 0x800);
 	fdoCtx->rirb.addr = MmGetPhysicalAddress(fdoCtx->rirb.buf);
 	RtlZeroMemory(fdoCtx->rirb.cmds, sizeof(fdoCtx->rirb.cmds));
@@ -190,14 +192,6 @@ NTSTATUS StartHDAController(PFDO_CONTEXT fdoCtx) {
 	//Enabling Controller Interrupt
 	hda_write32(fdoCtx, GCTL, hda_read32(fdoCtx, GCTL) | HDA_GCTL_UNSOL);
 	hda_write32(fdoCtx, INTCTL, hda_read32(fdoCtx, INTCTL) | HDA_INT_CTRL_EN | HDA_INT_GLOBAL_EN);
-
-	//Program position buffer
-	PHYSICAL_ADDRESS posbufAddr = MmGetPhysicalAddress(fdoCtx->posbuf);
-    hda_write32(fdoCtx, DPLBASE, posbufAddr.LowPart | HDA_DPLBASE_ENABLE);
-    if (fdoCtx->is64BitOK)
-    {
-        hda_write32(fdoCtx, DPUBASE, posbufAddr.HighPart);
-    }
 
 	udelay(1000);
 
@@ -321,8 +315,7 @@ static void HDAProcessUnsolEvents(PFDO_CONTEXT fdoCtx) {
 
 		HDAUDIO_CODEC_RESPONSE response;
 		RtlZeroMemory(&response, sizeof(HDAUDIO_CODEC_RESPONSE));
-
-		response.Response = rirb.response;
+		response.Unsolicited.Response = rirb.response;
 		response.IsUnsolicitedResponse = 1;
         response.IsValid = TRUE;
 
@@ -383,7 +376,7 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
             RtlCopyMemory(&fdoCtx->unsol_queue[fdoCtx->unsol_wp], &rirb, sizeof(rirb));
             UINT unsol_wp = (fdoCtx->unsol_wp + 1) % HDA_UNSOL_QUEUE_SIZE;
             fdoCtx->unsol_wp = unsol_wp;
-			fdoCtx->processUnsol = TRUE;
+            fdoCtx->processUnsol = TRUE;
             DPRINT1("Unsolicited response old_unsol_wp %u unsol_wp %u\n", old_unsol_wp, unsol_wp);
 		}
 		else if (fdoCtx->rirb.cmds[addr]) {
@@ -394,8 +387,8 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 				codecXfer->xfer[0]->Input.Response = rirb.response;
 				codecXfer->xfer[0]->Input.IsValid = 1;
 			}
-			
-			RtlMoveMemory(&codecXfer->xfer[0], &codecXfer->xfer[1], sizeof(PHDAUDIO_CODEC_TRANSFER) * (HDA_MAX_CORB_ENTRIES - 1));
+
+			RtlMoveMemory(&codecXfer->xfer[0], &codecXfer->xfer[1], sizeof(HDAUDIO_CODEC_TRANSFER) * (HDA_MAX_CORB_ENTRIES - 1));
 			codecXfer->xfer[HDA_MAX_CORB_ENTRIES - 1] = NULL;
 			InterlockedDecrement(&fdoCtx->rirb.cmds[addr]);
 
@@ -425,6 +418,13 @@ hda_stream_interrupt(PFDO_CONTEXT fdoCtx, unsigned int status) {
             {
                 stream->irqReceived = TRUE;
             }
+		}
+
+		if (stream->isr.IOC)
+		{
+			stream->isr.IsrCallback(
+						stream->isr.CallbackContext,
+						stream->int_sta_mask);
 		}
 	}
 	return handled;
@@ -472,6 +472,7 @@ hda_interrupt(
             KeInsertQueueDpc(&fdoCtx->QueueDpc, DeviceObject, NULL);
         }
 	}
+
 	return handled;
 }
 

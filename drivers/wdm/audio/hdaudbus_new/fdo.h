@@ -35,6 +35,12 @@ typedef struct _HDAC_STREAM_CALLBACK {
     PVOID CallbackContext;
 } HDAC_STREAM_CALLBACK, *PHDAC_STREAM_CALLBACK;
 
+typedef struct _HDAC_ISR_CALLBACK {
+    BOOLEAN IOC;
+    PHDAUDIO_BDL_ISR IsrCallback;
+    PVOID CallbackContext;
+} HDAC_ISR_CALLBACK, *PHDAC_ISR_CALLBACK;
+
 typedef struct _HDAC_BDLENTRY {
     UINT32 lowAddr;
     UINT32 highAddr;
@@ -71,6 +77,8 @@ typedef struct _HDAC_STREAM {
 
     PKEVENT registeredEvents[MAX_NOTIF_EVENTS];
     HDAC_STREAM_CALLBACK registeredCallbacks[MAX_NOTIF_EVENTS];
+
+    HDAC_ISR_CALLBACK isr;
 
     BOOLEAN running;
     BOOLEAN irqReceived;

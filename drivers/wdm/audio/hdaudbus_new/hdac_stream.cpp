@@ -10,7 +10,7 @@
 #include "driver.h"
 
 void hdac_stream_start(PHDAC_STREAM stream) {
-    hda_read32(stream->FdoContext, WALLCLK);
+    hda_read32(stream->FdoContext, WALLCLKA);
 
     DPRINT1("hdac_stream_start entered\n");
 
@@ -32,6 +32,7 @@ void hdac_stream_start(PHDAC_STREAM stream) {
 
 	/* set DMA start and interrupt mask */
 	stream_update8(stream, SD_CTL, 0, SD_CTL_DMA_START | SD_INT_MASK);
+	stream_write8(stream, SD_STS, SD_INT_MASK); /* to be sure */
 
     // wait for DMA start flag to be cleared
     ULONG Retries = 40;
