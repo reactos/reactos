@@ -684,6 +684,7 @@ wWinMain(HINSTANCE hInst,
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+        case MAKELANGID(LANG_ARABIC, SUBLANG_DEFAULT): // Added case for Arabic
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
 
