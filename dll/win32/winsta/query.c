@@ -7,6 +7,7 @@
  */
 
 #include "winsta.h"
+#include "psdk/winsta.h"
 
 VOID
 WINSTAAPI
@@ -34,11 +35,11 @@ https://learn.microsoft.com/en-us/previous-versions//aa383827(v=vs.85)
 BOOLEAN
 WINSTAAPI
 WinStationQueryInformationW(HANDLE hServer,
-                                    ULONG LogonId,
+                                    ULONG SessionId,
                                     WINSTATIONINFOCLASS WinStationInformationClass,
-                                    PVOID pWinStationInformation,
+                                    PVOID WinStationInformation,
                                     ULONG WinStationInformationLength,
-                                    PULONG pReturnLength)
+                                    PULONG ReturnLength)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
@@ -85,11 +86,13 @@ WINSTAAPI WinStationEnumerateLicenses(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationEnumerateProcesses(PVOID A,
-                                       PVOID B)
+BOOLEAN
+WINSTAAPI WinStationEnumerateProcesses(HANDLE ServerHandle,
+                                       PVOID* Processes)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -100,12 +103,14 @@ WINSTAAPI WinStationEnumerateA(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationEnumerateW(PVOID A,
-                               PVOID B,
-                               PVOID C)
+BOOLEAN
+WINSTAAPI WinStationEnumerateW(HANDLE hServer,
+                               PSESSIONIDW* SessionIds,
+                               PULONG Count)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -136,13 +141,15 @@ WINSTAAPI WinStationRequestSessionsList(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationGetAllProcesses(PVOID A,
-                                    PVOID B,
-                                    PVOID C,
-                                    PVOID D)
+BOOLEAN
+WINSTAAPI WinStationGetAllProcesses(HANDLE hServer,
+                                    ULONG Level,
+                                    PULONG NumberOfProcesses,
+                                    PTS_ALL_PROCESSES_INFO* Processes)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -167,12 +174,14 @@ WINSTAAPI WinStationGetLanAdapterNameW(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationGetConnectionProperty(PVOID A,
-                                          PVOID B,
-                                          PVOID C)
+BOOLEAN
+WINSTAAPI WinStationGetConnectionProperty(ULONG SessionId,
+                                          LPCGUID PropertyType,
+                                          PTS_PROPERTY_INFORMATION PropertyBuffer)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -185,15 +194,16 @@ WINSTAAPI WinStationGetInitialApplication(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationGetProcessSid(PVOID A,
-                                  PVOID B,
-                                  PVOID C,
-                                  PVOID D,
-                                  PVOID E,
-                                  PVOID F)
+BOOLEAN
+WINSTAAPI WinStationGetProcessSid(HANDLE hServer,
+                                  ULONG ProcessId,
+                                  FILETIME ProcessStartTime,
+                                  PVOID pProcessUserSid,
+                                  PULONG dwSidLength)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
