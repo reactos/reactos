@@ -78,14 +78,14 @@ static void InitParts(void)
     {
         // { eString, { eModule, id, nParts } }
         { SH32_PROGRAMS, { shell32, 45 /* IDS_PROGRAMS "Start Menu\Programs" */, 2 } },
-        { SH32_STARTUP, { shell32, 48 /* IDS_STARTUP "Start Menu\Programs\StartUp" */, 3 } },
+        { SH32_STARTUP, { shell32, 48 /* IDS_STARTUP "Start Menu\Programs\Startup" */, 3 } },
         { SH32_STARTMENU, { shell32, 51 /* IDS_STARTMENU "Start Menu" */, 1 } },
         { SH32_PROGRAM_FILES, { shell32, 63 /* IDS_PROGRAM_FILES "Program Files" */, 1 } },
         { SH32_PROGRAM_FILES_COMMON, { shell32, 65 /* IDS_PROGRAM_FILES_COMMON "Program Files\Common Files" */, 2 } },
         { SH32_ADMINTOOLS, { shell32, 67 /* IDS_ADMINTOOLS "Start Menu\Programs\Administrative Tools" */, 3 } },
         { UENV_STARTMENU, { userenv, 11 /* IDS_STARTMENU "Start Menu" */, 1 } },
         { UENV_PROGRAMS, { userenv, 12 /* IDS_PROGRAMS "Start Menu\Programs" */, 2 } },
-        { UENV_STARTUP, { userenv, 13 /* IDS_STARTUP "Start Menu\Programs\StartUp" */, 3 } },
+        { UENV_STARTUP, { userenv, 13 /* IDS_STARTUP "Start Menu\Programs\Startup" */, 3 } },
         { SYSS_PROGRAMFILES, { syssetup, 3600 /* IDS_PROGRAMFILES "%SystemDrive%\Program Files" */, 2 } },
         { SYSS_COMMONFILES, { syssetup, 3601 /* IDS_COMMONFILES "Common Files" */, 1 } },
         { MMSY_STARTMENU, { mmsys, 5851 /* IDS_STARTMENU "Start Menu" */, 1 } },
@@ -113,7 +113,7 @@ static PART_MATCH PartMatches[] =
     { { SH32_PROGRAMS, 1 }, { UENV_PROGRAMS, 1 } },
     { { SH32_PROGRAMS, 1 }, { UENV_STARTUP, 1 } },
     { { SH32_PROGRAMS, 1 }, { EOLD_PROGRAMS, 0 } },
-    // StartUp
+    // Startup
     { { SH32_STARTUP, 2 }, { UENV_STARTUP, 2 } },
     // Program Files
     { { SH32_PROGRAM_FILES, 0 }, { SH32_PROGRAM_FILES_COMMON, 0 } },
