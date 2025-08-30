@@ -76,8 +76,8 @@ typedef struct _HOOKMODULEINFO
 
 typedef struct _FLAGINFO
 {
-    ULARGE_INTEGER AppCompatFlags;
-    ULARGE_INTEGER AppCompatFlagsUser;
+    ULARGE_INTEGER AppCompatFlags;     // APPCOMPAT_FLAGS
+    ULARGE_INTEGER AppCompatFlagsUser; // APPCOMPAT_USERFLAGS
     ULONG ProcessParameters_Flags;
 } FLAGINFO, *PFLAGINFO;
 

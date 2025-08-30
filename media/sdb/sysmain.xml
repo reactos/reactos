@@ -271,6 +271,10 @@
                 <FLAG_MASK_KERNEL>8</FLAG_MASK_KERNEL>
             </FLAG>
 
+            <FLAG NAME="RendererFull3D">
+                <!-- ReactOS specific (CORE-20322) -->
+                <FLAG_MASK_KERNEL>0x8000000000000000</FLAG_MASK_KERNEL>
+            </FLAG>
         </LIBRARY>
 
         <!-- Backwards compatibility layers, incomplete! -->
@@ -441,6 +445,9 @@
         </LAYER>
         <LAYER NAME="GetDiskFreeSpace2GB">
             <FLAG_REF NAME="GetDiskFreeSpace2GB" />
+        </LAYER>
+        <LAYER NAME="RendererFull3D">
+            <FLAG_REF NAME="RendererFull3D" />
         </LAYER>
 
         <!-- Applications -->

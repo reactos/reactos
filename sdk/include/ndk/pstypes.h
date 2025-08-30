@@ -752,7 +752,7 @@ typedef struct _Wx86ThreadState
 #endif
 
 //
-// PEB.AppCompatFlags
+// PEB.AppCompatFlags.LowPart
 // Tag FLAG_MASK_KERNEL
 //
 typedef enum _APPCOMPAT_FLAGS
@@ -773,8 +773,30 @@ typedef enum _APPCOMPAT_FLAGS
     DisableNDRIIDConsistencyCheck = 0x20000,
     UserDisableForwarderPatch = 0x40000,
     DisableNewWMPAINTDispatchInOLE = 0x100000,
+    AddRestrictedSidInCoInitializeSecurity = 0x200000,
+    AllocDebugInfoForCritSections = 0x400000,
+    EnableLegacyLoadTypeLibForRelativePaths = 0x800000,
+    AllowMaximizedWindowGamma = 0x1000000,
+    CloudFilesHydrationDisallowed = 0x2000000,
+    CloudFilesFullHydrationOnOpen = 0x4000000,
+    CloudFilesFullHydration = 0x8000000,
+    DisableParallelLoader = 0x10000000,
+    DisguisePlaceholders = 0x20000000,
+    CloudFilesHydrationInForeground = 0x40000000,
     DoNotAddToCache = 0x80000000,
 } APPCOMPAT_FLAGS;
+
+//
+// PEB.AppCompatFlags.HighPart
+// Tag FLAG_MASK_KERNEL
+//
+typedef enum _APPCOMPAT_FLAGS_HIGHPART
+{
+    PosixDeleteDisabled = 0x1,
+
+    // ReactOS-specific
+    RendererFull3D = 0x80000000,    // CORE-20322
+} APPCOMPAT_FLAGS_HIGHPART;
 
 
 //
@@ -814,11 +836,6 @@ typedef enum _APPCOMPAT_USERFLAGS
     ForceLegacyResizeCM = 0x20000000,
     HardwareAudioMixer = 0x40000000,
     DisableSWCursorOnMoveSize = 0x80000000,
-#if 0
-    DisableWindowArrangement = 0x100000000,
-    ReorderWaveForCommunications = 0x200000000,
-    NoGdiHwAcceleration = 0x400000000,
-#endif
 } APPCOMPAT_USERFLAGS;
 
 //
@@ -830,6 +847,34 @@ typedef enum _APPCOMPAT_USERFLAGS_HIGHPART
     DisableWindowArrangement = 0x1,
     ReorderWaveForCommunications = 0x2,
     NoGdiHwAcceleration = 0x4,
+    NoTimerCoalescing = 0x8,
+    PrinterIsolationAware = 0x10,
+    UseWARPRendering = 0x20,
+    MirrorDriverDrawCursor = 0x40,
+    InstallShieldInstaller = 0x80,
+    Disable8And16BitModes = 0x100,
+    Disable8And16BitD3D = 0x200,
+    PromotePointer = 0x400,
+    PreventMouseInPointer = 0x800,
+    _8And16BitAggregateBlts = 0x1000,
+    _8And16BitGDIRedraw = 0x2000,
+    _8And16BitCopyOnFlip = 0x4000,
+    _8And16BitNoIncRefCount = 0x8000,
+    _8And16BitDXMaxWinMode = 0x10000,
+    EarlyMouseDelegation = 0x20000,
+    _8And16BitTimedPriSync = 0x40000,
+    UseIntegratedGraphics = 0x80000,
+    UseLegacyMouseWheelRouting = 0x100000,
+    PerProcessSystemDPIForceOn = 0x200000,
+    PerProcessSystemDPIForceOff = 0x400000,
+    DPIUnaware = 0x800000,
+    NoVirtWndRects = 0x1000000,
+    CFDNoRedirectInitialFolder = 0x2000000,
+    NoDTToDITMouseBatch = 0x4000000,
+    GdiDPIScaling = 0x8000000,
+    QueueMouseMoveOnReleaseCapture = 0x10000000,
+    DisableFocusTracking = 0x20000000,
+    GdiDPIScalingForceDisable = 0x40000000,
 } APPCOMPAT_USERFLAGS_HIGHPART;
 
 //
