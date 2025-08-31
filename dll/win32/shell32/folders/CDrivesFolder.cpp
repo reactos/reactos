@@ -877,36 +877,36 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
         case IDS_SHV_COLUMN_DISK_CAPACITY:
         case IDS_SHV_COLUMN_DISK_AVAILABLE:
         {
-            if (pszDrive1 && pszDrive2)
-            {
-                ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
-                BOOL bValid1 = FALSE, bValid2 = FALSE;
-
-                if (GetVolumeInformationA(pszDrive1, NULL, 0, NULL, NULL, NULL, NULL, 0))
-                    bValid1 = GetDiskFreeSpaceExA(pszDrive1, &Drive1Available, &Drive1Total, NULL);
-                else
-                    Drive1Available.QuadPart = Drive1Total.QuadPart = 0;
-
-                if (GetVolumeInformationA(pszDrive2, NULL, 0, NULL, NULL, NULL, NULL, 0))
-                    bValid2 = GetDiskFreeSpaceExA(pszDrive2, &Drive2Available, &Drive2Total, NULL);
-                else
-                    Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
-
-                LARGE_INTEGER Diff;
-                if (iColumn == IDS_SHV_COLUMN_DISK_CAPACITY) /* Size */
-                    Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
-                else /* Size available */
-                    Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
-
-                if (bValid1 != bValid2)
-                    hres = MAKE_COMPARE_HRESULT((int)!bValid1 - (int)!bValid2);
-                else
-                    hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
-            }
-            else
+            if (!pszDrive1 || !pszDrive2)
             {
                 hres = MAKE_COMPARE_HRESULT((int)!pszDrive1 - (int)!pszDrive2);
+                break;
             }
+
+            ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
+            BOOL bValid1 = FALSE, bValid2 = FALSE;
+
+            if (GetVolumeInformationA(pszDrive1, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                bValid1 = GetDiskFreeSpaceExA(pszDrive1, &Drive1Available, &Drive1Total, NULL);
+            else
+                Drive1Available.QuadPart = Drive1Total.QuadPart = 0;
+
+            if (GetVolumeInformationA(pszDrive2, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                bValid2 = GetDiskFreeSpaceExA(pszDrive2, &Drive2Available, &Drive2Total, NULL);
+            else
+                Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
+
+            LARGE_INTEGER Diff;
+            if (iColumn == IDS_SHV_COLUMN_DISK_CAPACITY) /* Size */
+                Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
+            else /* Size available */
+                Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
+
+            if (bValid1 != bValid2)
+                hres = MAKE_COMPARE_HRESULT((int)!bValid1 - (int)!bValid2);
+            else
+                hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
+
             break;
         }
         case IDS_SHV_COLUMN_TYPE:
