@@ -62,9 +62,9 @@ BEGIN
     PUSHBUTTON "Bea&rbeiten...", IDC_GWMOD, 120, 155, 50, 14
     PUSHBUTTON "&Entfernen", IDC_GWDEL, 180, 155, 50, 14
     GROUPBOX "", -1, 5, 181, 240, 30
-    CHECKBOX "A&utomatische Metrik", IDC_AUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "A&utomatische Metrik", IDC_IFAUTOMETRIC, 9, 179, 90, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     LTEXT "&Schnittstellenmetrik:", -1, 15, 195, 90, 12
-    EDITTEXT IDC_METRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
+    EDITTEXT IDC_IFMETRIC, 110, 193, 50, 12, WS_TABSTOP | ES_NUMBER
 END
 
 IDD_TCPIP_ADVDNS_DLG DIALOGEX 0, 0, 247, 220
@@ -127,9 +127,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 96, 15, 85, 12
     LTEXT "&Gateway:", -1, 5, 15, 70, 12
-    CHECKBOX "A&utomatische Metrik", IDC_USEMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "&Metrik:", IDC_METRICTXT, 5, 45, 45, 12, WS_DISABLED
-    EDITTEXT IDC_METRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
+    CHECKBOX "A&utomatische Metrik", IDC_GWAUTOMETRIC, 15, 30, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "&Metrik:", IDC_GWMETRICTXT, 5, 45, 45, 12, WS_DISABLED
+    EDITTEXT IDC_GWMETRIC, 100, 45, 50, 12, WS_TABSTOP | ES_NUMBER | WS_DISABLED
     DEFPUSHBUTTON "", IDC_OK, 50, 60, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 110, 60, 50, 14
 END
@@ -241,4 +241,5 @@ BEGIN
     IDS_DUP_SUFFIX "Das DNS-Suffix ist bereits in der Liste vorhanden."
     IDS_DUP_IPADDR "Die IP-Adresse ist bereits in der Liste vorhanden."
     IDS_DUP_GW "Der Standardgateway ist bereits in der Liste vorhanden."
+    IDS_METRIC_RANGE "Geben Sie eine Metrik zwischen 1 und 9999 ein."
 END
