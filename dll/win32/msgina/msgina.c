@@ -56,64 +56,6 @@ WlxNegotiate(
     return TRUE;
 }
 
-LONG
-ReadRegSzValue(
-    IN HKEY hKey,
-    IN LPCWSTR pszValue,
-    OUT LPWSTR* pValue)
-{
-    LONG rc;
-    DWORD dwType;
-    DWORD cbData = 0;
-    LPWSTR Value;
-
-    if (!pValue)
-        return ERROR_INVALID_PARAMETER;
-
-    *pValue = NULL;
-    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, NULL, &cbData);
-    if (rc != ERROR_SUCCESS)
-        return rc;
-    if (dwType != REG_SZ)
-        return ERROR_FILE_NOT_FOUND;
-    Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
-    if (!Value)
-        return ERROR_NOT_ENOUGH_MEMORY;
-    rc = RegQueryValueExW(hKey, pszValue, NULL, NULL, (LPBYTE)Value, &cbData);
-    if (rc != ERROR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, Value);
-        return rc;
-    }
-    /* NULL-terminate the string */
-    Value[cbData / sizeof(WCHAR)] = '\0';
-
-    *pValue = Value;
-    return ERROR_SUCCESS;
-}
-
-static LONG
-ReadRegDwordValue(
-    IN HKEY hKey,
-    IN LPCWSTR pszValue,
-    OUT LPDWORD pValue)
-{
-    LONG rc;
-    DWORD dwType;
-    DWORD cbData;
-    DWORD dwValue;
-
-    if (!pValue)
-        return ERROR_INVALID_PARAMETER;
-
-    cbData = sizeof(DWORD);
-    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
-    if (rc == ERROR_SUCCESS && dwType == REG_DWORD)
-        *pValue = dwValue;
-
-    return ERROR_SUCCESS;
-}
-
 static VOID
 ChooseGinaUI(VOID)
 {
@@ -692,20 +634,6 @@ WlxRemoveStatusMessage(
     return pGinaUI->RemoveStatusMessage(pgContext);
 }
 
-static PWSTR
-DuplicationString(PWSTR Str)
-{
-    DWORD cb;
-    PWSTR NewStr;
-
-    if (Str == NULL) return NULL;
-
-    cb = (wcslen(Str) + 1) * sizeof(WCHAR);
-    if ((NewStr = LocalAlloc(LMEM_FIXED, cb)))
-        memcpy(NewStr, Str, cb);
-    return NewStr;
-}
-
 
 BOOL
 DoAdminUnlock(
@@ -959,9 +887,9 @@ CreateProfile(
     }
 
     *pgContext->pAuthenticationId = Stats.AuthenticationId;
-    pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
-    pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
-    pgContext->pMprNotifyInfo->pszPassword = DuplicationString(Password);
+    pgContext->pMprNotifyInfo->pszUserName = DuplicateString(UserName);
+    pgContext->pMprNotifyInfo->pszDomain = DuplicateString(Domain);
+    pgContext->pMprNotifyInfo->pszPassword = DuplicateString(Password);
     pgContext->pMprNotifyInfo->pszOldPassword = NULL;
     *pgContext->pdwOptions = 0;
     *pgContext->pProfile = pProfile;

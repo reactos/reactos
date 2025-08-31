@@ -99,12 +99,6 @@ MyLogonUser(
 
 /* msgina.c */
 
-LONG
-ReadRegSzValue(
-    IN HKEY hKey,
-    IN LPCWSTR pszValue,
-    OUT LPWSTR *pValue);
-
 BOOL
 DoAdminUnlock(
     IN PGINA_CONTEXT pgContext,
@@ -149,6 +143,24 @@ ShutdownDialog(
     IN HWND hwndDlg,
     IN DWORD ShutdownOptions,
     IN PGINA_CONTEXT pgContext);
+
+/* utils.c */
+
+LONG
+ReadRegSzValue(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszValue,
+    _Out_ PWSTR* pValue);
+
+LONG
+ReadRegDwordValue(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszValue,
+    _Out_ PDWORD pValue);
+
+PWSTR
+DuplicateString(
+    _In_opt_ PCWSTR Str);
 
 
 #ifdef __cplusplus
