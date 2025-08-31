@@ -2399,6 +2399,18 @@ NdisIDispatchPnp(
         Irp->IoStatus.Information |= Adapter->NdisMiniportBlock.PnPFlags;
         break;
 
+      case IRP_MN_REMOVE_DEVICE:
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+        
+        IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
+        
+        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
+        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
+        
+        IoDeleteDevice(DeviceObject);
+        return Status;
+
       default:
         break;
     }
