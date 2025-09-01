@@ -579,13 +579,15 @@ static HWND SHELL_GetUsableDialogOwner(HWND hWnd)
 }
 
 /*************************************************************************
- *    SHELL32_PromptAndRunProcessAs [Internal]
+ *    PromptAndRunProcessAs [Internal]
  */
-typedef struct {
-    WCHAR NameBuffer[MAX_PATH];
-    WCHAR Password[MAX_PATH];
+typedef struct _RUNASDLGDATA
+{
     LPWSTR Name, Domain;
     BOOL Safer;
+    UINT LogonFlags;
+    WCHAR NameBuffer[MAX_PATH];
+    WCHAR Password[MAX_PATH];
 } RUNASDLGDATA;
 
 static
@@ -622,15 +624,13 @@ RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDCANCEL:
-                    EndDialog(hwnd, 1);
+                    EndDialog(hwnd, IDCANCEL);
                     break;
 
                 case IDOK:
                 {
-                    pData->Safer = SendDlgItemMessage(hwnd, IDC_RUNAS_SAFER, BM_GETCHECK, 0, 0);
-                    SendDlgItemMessage(hwnd, IDC_RUNAS_NAME, WM_GETTEXT, _countof(pData->NameBuffer), (LPARAM)pData->NameBuffer);
-                    SendDlgItemMessage(hwnd, IDC_RUNAS_PWD, WM_GETTEXT, _countof(pData->Password), (LPARAM)pData->Password);
-                    UINT other = SendDlgItemMessage(hwnd, IDC_RUNAS_OTHER, BM_GETCHECK, 0, 0) != 0;
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, WM_GETTEXT, _countof(pData->NameBuffer), (LPARAM)pData->NameBuffer);
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, WM_GETTEXT, _countof(pData->Password), (LPARAM)pData->Password);
                     pData->Name = pData->NameBuffer;
                     pData->Domain = wcsstr(pData->Name, L"\\");
                     if (pData->Domain)
@@ -640,24 +640,16 @@ RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         pData->Domain = pData->Name;
                         pData->Name = tmp;
                     }
-                    if (other)
-                    {
-                        HANDLE hToken;
-                        if (!LogonUser(pData->Name, pData->Domain, pData->Password,
-                                       LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT,
-                                       &hToken))
-                        {
-                            return SHELL_ErrorBox(hwnd);
-                        }
-                        CloseHandle(hToken);
-                        other |= (GetKeyState(VK_SHIFT) & 0x8000);
-                    }
-                    EndDialog(hwnd, 2 + other);
+                    pData->LogonFlags = GetKeyState(VK_SHIFT) < 0 ? LOGON_NETCREDENTIALS_ONLY : LOGON_WITH_PROFILE;
+                    pData->Safer = IsDlgButtonChecked(hwnd, IDC_RUNAS_SAFER);
+                    if (!IsDlgButtonChecked(hwnd, IDC_RUNAS_OTHER))
+                        pData->Name = NULL;
+                    EndDialog(hwnd, IDOK);
                     break;
                 }
 
                 case IDC_RUNAS_BROWSE:
-                    return SHELL_ErrorBox(hwnd, ERROR_CALL_NOT_IMPLEMENTED); // TODO
+                    return SHELL_ErrorBox(hwnd, ERROR_NOT_SUPPORTED); // TODO
             }
             break;
     }
@@ -666,7 +658,7 @@ RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static
 HRESULT
-SHELL32_PromptAndRunProcessAs(
+PromptAndRunProcessAs(
     _In_opt_ HWND hwnd,
     _In_ LPWSTR Cmd,
     _In_ DWORD CreationFlags,
@@ -676,31 +668,54 @@ SHELL32_PromptAndRunProcessAs(
     _Out_ PROCESS_INFORMATION *pPI)
 {
     RUNASDLGDATA data;
-    INT_PTR dlgret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN_AS),
-                                     SHELL_GetUsableDialogOwner(hwnd), RunAsDlgProc, (LPARAM)&data);
-    if (dlgret > 2)
+    UINT error;
+    INT_PTR dlgret;
+    hwnd = SHELL_GetUsableDialogOwner(hwnd);
+
+again:
+    dlgret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN_AS),
+                             hwnd, RunAsDlgProc, (LPARAM)&data);
+    if (dlgret == IDOK && data.Name)
     {
-        UINT logonFlags = (dlgret & 0x8000) ? LOGON_NETCREDENTIALS_ONLY : LOGON_WITH_PROFILE;
-        dlgret = CreateProcessWithLogonW(data.Name, data.Domain, data.Password, logonFlags,
-                                         NULL, Cmd, CreationFlags, Env, Dir, pSI, pPI);
+        if (CreateProcessWithLogonW(data.Name, data.Domain, data.Password, data.LogonFlags,
+                                    NULL, Cmd, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
+        switch (error)
+        {
+            case ERROR_LOGON_FAILURE:
+            case ERROR_NO_SUCH_USER:
+            case ERROR_INVALID_ACCOUNT_NAME:
+            case ERROR_ACCOUNT_DISABLED:
+            case ERROR_ACCOUNT_RESTRICTION:
+            case ERROR_INVALID_LOGON_HOURS:
+            case ERROR_PASSWORD_EXPIRED:
+                SHELL_ErrorBox(hwnd, error);
+                goto again;
+        }
     }
-    else if (dlgret > 1)
+    else if (dlgret == IDOK)
     {
         // TODO: Use the Safer API if requested to
-        dlgret = CreateProcessW(NULL, Cmd, NULL, NULL, FALSE, CreationFlags, Env, Dir, pSI, pPI);
+        if (CreateProcessW(NULL, Cmd, NULL, NULL, FALSE, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
     }
-    else if (dlgret > 0)
+    else if (dlgret == IDCANCEL)
     {
         SetLastError(ERROR_CANCELLED);
+        pPI->hProcess = NULL;
         return S_FALSE;
     }
-    SecureZeroMemory(&data, sizeof(data));
-    if (dlgret == 0 || dlgret == -1)
+    else
     {
         pPI->hProcess = NULL;
         return E_FAIL;
     }
-    return S_OK;
+    SecureZeroMemory(&data, sizeof(data));
+    return HRESULT_FROM_WIN32(error);
 }
 
 /*************************************************************************
@@ -715,7 +730,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     UINT_PTR retval = SE_ERR_NOASSOC;
     UINT gcdret = 0, lasterror = 0;
     WCHAR curdir[MAX_PATH];
-    DWORD dwCreationFlags;
+    DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     const WCHAR *lpDirectory = NULL;
 
     TRACE("Execute %s from directory %s\n", debugstr_w(lpCmd), debugstr_w(psei->lpDirectory));
@@ -740,7 +755,6 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
-    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
         dwCreationFlags |= CREATE_NEW_CONSOLE;
     if (psei->fMask & SEE_MASK_FLAG_SEPVDM)
@@ -774,7 +788,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     BOOL createdProcess;
     if (psei->lpVerb && !StrCmpIW(L"runas", psei->lpVerb))
     {
-        HRESULT hr = SHELL32_PromptAndRunProcessAs(psei->hwnd, (LPWSTR)lpCmd, dwCreationFlags,
+        HRESULT hr = PromptAndRunProcessAs(psei->hwnd, (LPWSTR)lpCmd, dwCreationFlags,
                                                  env, lpDirectory, &startup, &info);
         createdProcess = hr == S_OK;
         if (hr == S_FALSE)
