@@ -1,0 +1,1 @@
+/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/isohybrid.dir/link.d CMakeFiles/isohybrid.dir/isohybrid.c.o CMakeFiles/isohybrid.dir/reactos_support_code.c.o CMakeFiles/isohybrid.dir/__/port/getopt.c.o CMakeFiles/isohybrid.dir/__/port/getopt1.c.o -o ../../../isohybrid

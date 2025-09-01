@@ -1,0 +1,2 @@
+/usr/bin/ar qc libzlibhost.a CMakeFiles/zlibhost.dir/adler32.c.o CMakeFiles/zlibhost.dir/crc32.c.o CMakeFiles/zlibhost.dir/deflate.c.o CMakeFiles/zlibhost.dir/inffast.c.o CMakeFiles/zlibhost.dir/inflate.c.o CMakeFiles/zlibhost.dir/inftrees.c.o CMakeFiles/zlibhost.dir/trees.c.o CMakeFiles/zlibhost.dir/zutil.c.o
+/usr/bin/ranlib libzlibhost.a

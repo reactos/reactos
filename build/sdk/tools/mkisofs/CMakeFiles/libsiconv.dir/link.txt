@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblibsiconv.a CMakeFiles/libsiconv.dir/schilytools/libsiconv/sic_nls.c.o
+/usr/bin/ranlib liblibsiconv.a

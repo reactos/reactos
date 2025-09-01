@@ -1,0 +1,1 @@
+/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/mkshelllink.dir/link.d CMakeFiles/mkshelllink.dir/mkshelllink/mkshelllink.c.o -o ../../mkshelllink

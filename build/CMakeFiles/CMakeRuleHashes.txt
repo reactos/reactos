@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+4edfc6b27f87bbde0761aced2fac0f45 sdk/tools/widl/parser.tab.c
+2422eb25276166e18cde895d35d16b72 sdk/tools/widl/parser.yy.c
+8ae2388c26b2e9909a8286e24870f1ee sdk/tools/wpp/ppl.yy.c
+21c238a9c75dd6387e46b0b0ba822871 sdk/tools/wpp/ppy.tab.c

@@ -1,0 +1,1 @@
+/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/mkhive.dir/link.d CMakeFiles/mkhive.dir/binhive.c.o CMakeFiles/mkhive.dir/cmi.c.o CMakeFiles/mkhive.dir/mkhive.c.o CMakeFiles/mkhive.dir/reginf.c.o CMakeFiles/mkhive.dir/registry.c.o CMakeFiles/mkhive.dir/rtl.c.o -o ../../../mkhive  ../unicode/libunicode.a ../../lib/cmlib/libcmlibhost.a ../../lib/inflib/libinflibhost.a

@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/xml2sdb.dir/link.d CMakeFiles/xml2sdb.dir/main.cpp.o CMakeFiles/xml2sdb.dir/tinyxml2.cpp.o CMakeFiles/xml2sdb.dir/xml2sdb.cpp.o CMakeFiles/xml2sdb.dir/__/__/__/dll/appcompat/apphelp/sdbwrite.c.o CMakeFiles/xml2sdb.dir/__/__/__/dll/appcompat/apphelp/sdbstringtable.c.o -o ../../../xml2sdb

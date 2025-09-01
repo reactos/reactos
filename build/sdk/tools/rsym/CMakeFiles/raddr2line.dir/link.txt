@@ -1,0 +1,1 @@
+/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/raddr2line.dir/link.d CMakeFiles/raddr2line.dir/raddr2line.c.o -o ../../../raddr2line  librsym_common.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc librsym_common.a CMakeFiles/rsym_common.dir/rsym_common.c.o
+/usr/bin/ranlib librsym_common.a

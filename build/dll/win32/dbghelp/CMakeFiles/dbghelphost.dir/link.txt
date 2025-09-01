@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdbghelphost.a CMakeFiles/dbghelphost.dir/compat.c.o CMakeFiles/dbghelphost.dir/dbghelp.c.o CMakeFiles/dbghelphost.dir/dwarf.c.o CMakeFiles/dbghelphost.dir/inflate.c.o CMakeFiles/dbghelphost.dir/module.c.o CMakeFiles/dbghelphost.dir/pe_module.c.o CMakeFiles/dbghelphost.dir/source.c.o CMakeFiles/dbghelphost.dir/stabs.c.o CMakeFiles/dbghelphost.dir/storage.c.o CMakeFiles/dbghelphost.dir/symbol.c.o CMakeFiles/dbghelphost.dir/type.c.o CMakeFiles/dbghelphost.dir/cpu_i386.c.o
+/usr/bin/ranlib libdbghelphost.a

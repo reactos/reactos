@@ -1,0 +1,2 @@
+/usr/bin/ar qc libinflibhost.a CMakeFiles/inflibhost.dir/infcore.c.o CMakeFiles/inflibhost.dir/infget.c.o CMakeFiles/inflibhost.dir/infput.c.o CMakeFiles/inflibhost.dir/infhostgen.c.o CMakeFiles/inflibhost.dir/infhostget.c.o CMakeFiles/inflibhost.dir/infhostput.c.o CMakeFiles/inflibhost.dir/infhostrtl.c.o
+/usr/bin/ranlib libinflibhost.a

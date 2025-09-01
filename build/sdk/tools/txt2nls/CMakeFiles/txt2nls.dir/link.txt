@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/txt2nls.dir/link.d CMakeFiles/txt2nls.dir/main.cpp.o -o ../../../txt2nls

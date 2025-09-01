@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/utf16le.dir/link.d CMakeFiles/utf16le.dir/utf16le/utf16le.cpp.o -o ../../utf16le

@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/asmpp.dir/link.d CMakeFiles/asmpp.dir/asmpp.cpp.o -o ../../../asmpp
