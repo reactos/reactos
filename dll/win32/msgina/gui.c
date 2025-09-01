@@ -842,9 +842,6 @@ OnInitSecurityDlg(HWND hwnd,
     wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
 
     SetDlgItemTextW(hwnd, IDC_SECURITY_LOGONDATE, Buffer4);
-
-    if (pgContext->bAutoAdminLogon)
-        EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOGOFF), FALSE);
 }
 
 
