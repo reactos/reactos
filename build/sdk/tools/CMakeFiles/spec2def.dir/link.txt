@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/spec2def.dir/link.d CMakeFiles/spec2def.dir/spec2def/spec2def.c.o -o ../../spec2def

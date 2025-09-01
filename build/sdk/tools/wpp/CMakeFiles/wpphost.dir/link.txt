@@ -1,2 +1,0 @@
-/usr/bin/ar qc libwpphost.a CMakeFiles/wpphost.dir/preproc.c.o CMakeFiles/wpphost.dir/wpp.c.o CMakeFiles/wpphost.dir/ppl.yy.c.o CMakeFiles/wpphost.dir/ppy.tab.c.o
-/usr/bin/ranlib libwpphost.a

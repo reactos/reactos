@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/rsym.dir/link.d CMakeFiles/rsym.dir/rsym.c.o -o ../../../rsym  librsym_common.a ../../../dll/win32/dbghelp/libdbghelphost.a ../unicode/libunicode.a

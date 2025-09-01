@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/gendib.dir/link.d CMakeFiles/gendib.dir/gendib/gendib.c.o -o ../../gendib

@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/obj2bin.dir/link.d CMakeFiles/obj2bin.dir/obj2bin/obj2bin.c.o -o ../../obj2bin

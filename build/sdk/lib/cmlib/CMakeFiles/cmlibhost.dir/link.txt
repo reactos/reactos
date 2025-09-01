@@ -1,2 +1,0 @@
-/usr/bin/ar qc libcmlibhost.a CMakeFiles/cmlibhost.dir/cmcheck.c.o CMakeFiles/cmlibhost.dir/cminit.c.o CMakeFiles/cmlibhost.dir/cmheal.c.o CMakeFiles/cmlibhost.dir/cmindex.c.o CMakeFiles/cmlibhost.dir/cmkeydel.c.o CMakeFiles/cmlibhost.dir/cmname.c.o CMakeFiles/cmlibhost.dir/cmse.c.o CMakeFiles/cmlibhost.dir/cmvalue.c.o CMakeFiles/cmlibhost.dir/hivebin.c.o CMakeFiles/cmlibhost.dir/hivecell.c.o CMakeFiles/cmlibhost.dir/hiveinit.c.o CMakeFiles/cmlibhost.dir/hivesum.c.o CMakeFiles/cmlibhost.dir/hivewrt.c.o
-/usr/bin/ranlib libcmlibhost.a

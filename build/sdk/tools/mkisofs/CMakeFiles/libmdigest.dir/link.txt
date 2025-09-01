@@ -1,2 +1,0 @@
-/usr/bin/ar qc liblibmdigest.a CMakeFiles/libmdigest.dir/schilytools/libmdigest/sha3.c.o
-/usr/bin/ranlib liblibmdigest.a

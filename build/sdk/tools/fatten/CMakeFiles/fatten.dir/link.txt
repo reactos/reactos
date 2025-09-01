@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/fatten.dir/link.d CMakeFiles/fatten.dir/fatten.c.o CMakeFiles/fatten.dir/fatfs/diskio.c.o CMakeFiles/fatten.dir/fatfs/ff.c.o CMakeFiles/fatten.dir/fatfs/option/ccsbcs.c.o -o ../../../fatten

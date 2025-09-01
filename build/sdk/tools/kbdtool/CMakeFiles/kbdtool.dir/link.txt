@@ -1,1 +1,0 @@
-/usr/bin/cc -g -Wl,--dependency-file=CMakeFiles/kbdtool.dir/link.d CMakeFiles/kbdtool.dir/data.c.o CMakeFiles/kbdtool.dir/main.c.o CMakeFiles/kbdtool.dir/output.c.o CMakeFiles/kbdtool.dir/parser.c.o -o ../../../kbdtool
