@@ -2418,6 +2418,7 @@ NdisIDispatchPnp(
         return Status;
 
       default:
+        NDIS_DbgPrint(MIN_TRACE, ("Unhandled minor function: 0x%X\n", Stack->MinorFunction));
         break;
     }
 
