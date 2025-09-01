@@ -235,16 +235,13 @@ PrintMessageFromModule(
     _In_ DWORD  dwMsgId,
     ...)
 {
-    WCHAR Buffer[256];
     INT Length;
     va_list ap;
 
-    Length = LoadStringW(hModule, dwMsgId, Buffer, 256);
-    if (Length == 0)
-        return 0;
-
     va_start(ap, dwMsgId);
-    Length = ConPrintfV(StdOut, Buffer, ap);
+    Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
+                             MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+                             ap);
     va_end(ap);
 
     return Length;
