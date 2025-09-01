@@ -2400,6 +2400,12 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_REMOVE_DEVICE:
+        Status = IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("IoSetDeviceInterfaceState failed: 0x%X\n", Status));
+        }
+
         IoSkipCurrentIrpStackLocation(Irp);
         Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
         
