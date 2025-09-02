@@ -50,7 +50,9 @@ static void msvcrt_search_executable(const wchar_t *name, wchar_t *fullname, int
   int extension = 1;
 
   *fullname = '\0';
+#ifndef __REACTOS__
   msvcrt_set_errno(ERROR_FILE_NOT_FOUND);
+#endif
 
   end = name + MAX_PATH - 1;
   for(p = name; p < end; p++)
