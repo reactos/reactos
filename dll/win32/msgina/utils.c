@@ -53,13 +53,15 @@ ReadRegDwordValue(
 
     cbData = sizeof(dwValue);
     rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (PBYTE)&dwValue, &cbData);
-    if ((rc == ERROR_SUCCESS) && (dwType == REG_DWORD) && (cbData == sizeof(dwValue)))
-    {
-        *pValue = dwValue;
-        return ERROR_SUCCESS;
-    }
+    if (rc != ERROR_SUCCESS)
+        return rc;
+    if (dwType != REG_DWORD)
+        return ERROR_UNSUPPORTED_TYPE;
+    if (cbData != sizeof(dwValue))
+        return ERROR_INVALID_DATA; // ERROR_DATATYPE_MISMATCH;
 
-    return rc;
+    *pValue = dwValue;
+    return ERROR_SUCCESS;
 }
 
 PWSTR
