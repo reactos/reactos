@@ -2335,8 +2335,8 @@ NdisIDeviceIoControl(
   return Status;
 }
 
+static
 NTSTATUS
-NTAPI
 NdisIRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
