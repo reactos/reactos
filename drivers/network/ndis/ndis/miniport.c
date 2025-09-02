@@ -2338,8 +2338,8 @@ NdisIDeviceIoControl(
 NTSTATUS
 NTAPI
 NdisIRemoveDevice(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
