@@ -2337,6 +2337,34 @@ NdisIDeviceIoControl(
 
 NTSTATUS
 NTAPI
+NdisIRemoveDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+    
+    NTSTATUS Status = IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        NDIS_DbgPrint(MIN_TRACE, ("IoSetDeviceInterfaceState failed: 0x%X\n", Status));
+    }
+
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+
+    IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
+        
+    RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
+    RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
+        
+    IoDeleteDevice(DeviceObject);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 NdisIDispatchPnp(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -2400,22 +2428,7 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_REMOVE_DEVICE:
-        Status = IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            NDIS_DbgPrint(MIN_TRACE, ("IoSetDeviceInterfaceState failed: 0x%X\n", Status));
-        }
-
-        IoSkipCurrentIrpStackLocation(Irp);
-        Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
-        
-        IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
-        
-        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
-        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
-        
-        IoDeleteDevice(DeviceObject);
-        return Status;
+        return NdisIRemoveDevice(DeviceObject, Irp);
 
       default:
         NDIS_DbgPrint(MIN_TRACE, ("Unhandled minor function: 0x%X\n", Stack->MinorFunction));
