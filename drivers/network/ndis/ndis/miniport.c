@@ -2341,7 +2341,6 @@ NdisIRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
-    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
     
     NTSTATUS Status = IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
