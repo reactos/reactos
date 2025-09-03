@@ -2355,7 +2355,6 @@ NdisIRemoveDevice(
 
     IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
         
-    RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
     RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
         
     IoDeleteDevice(DeviceObject);
