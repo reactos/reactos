@@ -2341,6 +2341,7 @@ NdisIRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
+    NTSTATUS Status;
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
     
     if (Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer)
@@ -2356,7 +2357,25 @@ NdisIRemoveDevice(
     IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
         
     RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
-        
+
+    if (Adapter->NdisMiniportBlock.Resources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.Resources);
+        Adapter->NdisMiniportBlock.Resources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
+        Adapter->NdisMiniportBlock.AllocatedResources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResourcesTranslated)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResourcesTranslated);
+        Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
+    }
+
     IoDeleteDevice(DeviceObject);
 
     return Status;
