@@ -2351,6 +2351,7 @@ NdisIRemoveDevice(
         Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer = NULL;
     }
 
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     IoSkipCurrentIrpStackLocation(Irp);
     Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
 
