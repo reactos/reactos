@@ -2343,10 +2343,11 @@ NdisIRemoveDevice(
 {
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
     
-    NTSTATUS Status = IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
-    if (!NT_SUCCESS(Status))
+    if (Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer)
     {
-        NDIS_DbgPrint(MIN_TRACE, ("IoSetDeviceInterfaceState failed: 0x%X\n", Status));
+        IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
+        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
+        Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer = NULL;
     }
 
     IoSkipCurrentIrpStackLocation(Irp);
