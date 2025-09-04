@@ -81,6 +81,27 @@ TestHardError(
     UNICODE_STRING String2 = RTL_CONSTANT_STRING(StringBuffer2);
     ULONG_PTR HardErrorParameters[6];
     BOOLEAN Ret;
+    ULONG FailCriticalErrors = SEM_FAILCRITICALERRORS;
+    ULONG HardErrorMode = FailCriticalErrors;
+
+    /* Without SEM_FAILCRITICALERRORS, most of the calls in this
+     * test will just return ResponseReturnToCaller without doing anything.
+     * TODO: We should have test coverage for that.
+     */
+    Status = ZwQueryInformationProcess(ZwCurrentProcess(),
+                                       ProcessDefaultHardErrorMode,
+                                       &HardErrorMode,
+                                       sizeof(HardErrorMode),
+                                       NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    if (HardErrorMode != FailCriticalErrors)
+    {
+        Status = ZwSetInformationProcess(ZwCurrentProcess(),
+                                         ProcessDefaultHardErrorMode,
+                                         &FailCriticalErrors,
+                                         sizeof(FailCriticalErrors));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
 
     String1.Length = sizeof L"Parameter1" - sizeof UNICODE_NULL;
     String1Ansi.Length = sizeof "Parameter1" - sizeof ANSI_NULL;
@@ -94,7 +115,12 @@ TestHardError(
     CheckHardError(0x40000003,                  0, OptionOk,                STATUS_SUCCESS,            ResponseNotHandled,     6, 1, 2, 3, 4, 5, 6);           // TODO: interactive on ROS
     }
 
-    CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseNotHandled,     0, 0);
+    /* Note: in the following test, getting a Response other than ResponseReturnToCaller
+     * is a sign of an exploitable bug in NtRaiseHardError. If this test fails on
+     * Windows, that means Windows is broken. Do not "fix" this test!
+     */
+    CheckHardError(0x40000004,                  0, OptionShutdownSystem,    STATUS_PRIVILEGE_NOT_HELD, ResponseReturnToCaller, 0, 0);
+    trace("Note: The above test may fail on Windows. This indicates a bug in Windows, not the test!\n");
     if (InteractivePart1)
     {
     // TODO: these 2 are interactive on ROS
@@ -214,6 +240,15 @@ TestHardError(
     CheckInformationalHardError(STATUS_DLL_NOT_FOUND,        NULL,     NULL, STATUS_SUCCESS, FALSE);
     CheckInformationalHardError(STATUS_SERVICE_NOTIFICATION, &String1, NULL, STATUS_SUCCESS, FALSE);
     ok_bool_false(IoSetThreadHardErrorMode(TRUE), "IoSetThreadHardErrorMode returned");
+
+    if (HardErrorMode != FailCriticalErrors)
+    {
+        Status = ZwSetInformationProcess(ZwCurrentProcess(),
+                                         ProcessDefaultHardErrorMode,
+                                         &HardErrorMode,
+                                         sizeof(HardErrorMode));
+        ok_eq_hex(Status, STATUS_SUCCESS);
+    }
 }
 
 START_TEST(ExHardError)
