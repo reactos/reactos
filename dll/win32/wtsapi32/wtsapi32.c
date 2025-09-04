@@ -27,45 +27,57 @@
 #include "wine/heap.h"
 
 #include <windows.h>
-#include "psdk/winsta.h"
+#include "reactos/ts/winsta.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wtsapi);
 
 #ifdef __REACTOS__ /* FIXME: Inspect */
-#define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)
+#define GetCurrentProcessToken() ((HANDLE) ~(ULONG_PTR)3)
 #endif
 
 /************************************************************
  *                WTSCloseServer  (WTSAPI32.@)
  */
-void WINAPI WTSCloseServer(HANDLE hServer)
+void WINAPI
+WTSCloseServer(HANDLE hServer)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
     FIXME("Stub %p\n", hServer);
 }
 
 /************************************************************
  *                WTSConnectSessionA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSConnectSessionA(ULONG LogonId, ULONG TargetLogonId, PSTR pPassword, BOOL bWait)
+BOOL WINAPI
+WTSConnectSessionA(ULONG LogonId, ULONG TargetLogonId, PSTR pPassword, BOOL bWait)
 {
-   FIXME("Stub %d %d (%s) %d\n", LogonId, TargetLogonId, debugstr_a(pPassword), bWait);
-   return TRUE;
+    SetLastError(ERROR_SUCCESS);
+    UNIMPLEMENTED;
+    FIXME("Stub %d %d (%s) %d\n", LogonId, TargetLogonId, debugstr_a(pPassword), bWait);
+    return TRUE;
 }
 
 /************************************************************
  *                WTSConnectSessionW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSConnectSessionW(ULONG LogonId, ULONG TargetLogonId, PWSTR pPassword, BOOL bWait)
+BOOL WINAPI
+WTSConnectSessionW(ULONG LogonId, ULONG TargetLogonId, PWSTR pPassword, BOOL bWait)
 {
-   FIXME("Stub %d %d (%s) %d\n", LogonId, TargetLogonId, debugstr_w(pPassword), bWait);
-   return TRUE;
+    SetLastError(ERROR_SUCCESS);
+    UNIMPLEMENTED;
+    FIXME("Stub %d %d (%s) %d\n", LogonId, TargetLogonId, debugstr_w(pPassword), bWait);
+    return TRUE;
 }
 
 /************************************************************
  *                WTSDisconnectSession  (WTSAPI32.@)
  */
-BOOL WINAPI WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
+BOOL WINAPI
+WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
 {
+    SetLastError(ERROR_SUCCESS);
+    UNIMPLEMENTED;
     FIXME("Stub %p 0x%08x %d\n", hServer, SessionId, bWait);
     return TRUE;
 }
@@ -73,43 +85,49 @@ BOOL WINAPI WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
 /************************************************************
  *                WTSEnableChildSessions  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnableChildSessions(BOOL enable)
+BOOL WINAPI
+WTSEnableChildSessions(BOOL enable)
 {
+    SetLastError(ERROR_SUCCESS);
+    UNIMPLEMENTED;
     FIXME("Stub %d\n", enable);
     return TRUE;
 }
 
-
 /************************************************************
  *                WTSEnumerateProcessesExW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateProcessesExW(HANDLE server, DWORD *level, DWORD session_id, WCHAR **info, DWORD *count)
+BOOL WINAPI
+WTSEnumerateProcessesExW(HANDLE server, DWORD *level, DWORD session_id, WCHAR **info, DWORD *count)
 {
     FIXME("Stub %p %p %d %p %p\n", server, level, session_id, info, count);
-    if (count) *count = 0;
+    if (count)
+        *count = 0;
     return FALSE;
 }
 
 /************************************************************
  *                WTSEnumerateProcessesExA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateProcessesExA(HANDLE server, DWORD *level, DWORD session_id, char **info, DWORD *count)
+BOOL WINAPI
+WTSEnumerateProcessesExA(HANDLE server, DWORD *level, DWORD session_id, char **info, DWORD *count)
 {
     FIXME("Stub %p %p %d %p %p\n", server, level, session_id, info, count);
-    if (count) *count = 0;
+    if (count)
+        *count = 0;
     return FALSE;
 }
 
 /************************************************************
  *                WTSEnumerateProcessesA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version,
-    PWTS_PROCESS_INFOA* ppProcessInfo, DWORD* pCount)
+BOOL WINAPI
+WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_PROCESS_INFOA *ppProcessInfo, DWORD *pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
-          ppProcessInfo, pCount);
+    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version, ppProcessInfo, pCount);
 
-    if (!ppProcessInfo || !pCount) return FALSE;
+    if (!ppProcessInfo || !pCount)
+        return FALSE;
 
     *pCount = 0;
     *ppProcessInfo = NULL;
@@ -120,8 +138,8 @@ BOOL WINAPI WTSEnumerateProcessesA(HANDLE hServer, DWORD Reserved, DWORD Version
 /************************************************************
  *                WTSEnumerateProcessesW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version,
-    PWTS_PROCESS_INFOW* ppProcessInfo, DWORD* pCount)
+BOOL WINAPI
+WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_PROCESS_INFOW *ppProcessInfo, DWORD *pCount)
 {
     WTS_PROCESS_INFOW *processInfo;
     SYSTEM_PROCESS_INFORMATION *spi;
@@ -154,8 +172,7 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
             return FALSE;
         }
         status = NtQuerySystemInformation(SystemProcessInformation, buf, size, NULL);
-    }
-    while (status == STATUS_INFO_LENGTH_MISMATCH);
+    } while (status == STATUS_INFO_LENGTH_MISMATCH);
 
     if (status != STATUS_SUCCESS)
     {
@@ -170,7 +187,8 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
     {
         size += sizeof(WTS_PROCESS_INFOW) + spi->ProcessName.Length + sizeof(WCHAR);
         count++;
-        if (spi->NextEntryOffset == 0) break;
+        if (spi->NextEntryOffset == 0)
+            break;
         spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
     }
 
@@ -193,11 +211,11 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
         processInfo->ProcessId = HandleToUlong(spi->UniqueProcessId);
         processInfo->pProcessName = name;
         processInfo->pUserSid = NULL;
-        memcpy( name, spi->ProcessName.Buffer, spi->ProcessName.Length );
-        name[ spi->ProcessName.Length/sizeof(WCHAR) ] = 0;
+        memcpy(name, spi->ProcessName.Buffer, spi->ProcessName.Length);
+        name[spi->ProcessName.Length / sizeof(WCHAR)] = 0;
 
         processInfo++;
-        name += (spi->ProcessName.Length + sizeof(WCHAR))/sizeof(WCHAR);
+        name += (spi->ProcessName.Length + sizeof(WCHAR)) / sizeof(WCHAR);
         spi = (SYSTEM_PROCESS_INFORMATION *)(((PCHAR)spi) + spi->NextEntryOffset);
     }
 
@@ -208,8 +226,11 @@ BOOL WINAPI WTSEnumerateProcessesW(HANDLE hServer, DWORD Reserved, DWORD Version
 /************************************************************
  *                WTSEnumerateServersA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateServersA(LPSTR pDomainName, DWORD Reserved, DWORD Version, PWTS_SERVER_INFOA *ppServerInfo, DWORD *pCount)
+BOOL WINAPI
+WTSEnumerateServersA(LPSTR pDomainName, DWORD Reserved, DWORD Version, PWTS_SERVER_INFOA *ppServerInfo, DWORD *pCount)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
     FIXME("Stub %s 0x%08x 0x%08x %p %p\n", debugstr_a(pDomainName), Reserved, Version, ppServerInfo, pCount);
     return FALSE;
 }
@@ -217,45 +238,52 @@ BOOL WINAPI WTSEnumerateServersA(LPSTR pDomainName, DWORD Reserved, DWORD Versio
 /************************************************************
  *                WTSEnumerateServersW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateServersW(LPWSTR pDomainName, DWORD Reserved, DWORD Version, PWTS_SERVER_INFOW *ppServerInfo, DWORD *pCount)
+BOOL WINAPI
+WTSEnumerateServersW(LPWSTR pDomainName, DWORD Reserved, DWORD Version, PWTS_SERVER_INFOW *ppServerInfo, DWORD *pCount)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
     FIXME("Stub %s 0x%08x 0x%08x %p %p\n", debugstr_w(pDomainName), Reserved, Version, ppServerInfo, pCount);
     return FALSE;
 }
 
-
 /************************************************************
  *                WTSEnumerateEnumerateSessionsExW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateSessionsExW(HANDLE server, DWORD *level, DWORD filter, WTS_SESSION_INFO_1W* info, DWORD *count)
+BOOL WINAPI
+WTSEnumerateSessionsExW(HANDLE server, DWORD *level, DWORD filter, WTS_SESSION_INFO_1W *info, DWORD *count)
 {
     FIXME("Stub %p %p %d %p %p\n", server, level, filter, info, count);
-    if (count) *count = 0;
+    if (count)
+        *count = 0;
     return FALSE;
 }
 
 /************************************************************
  *                WTSEnumerateEnumerateSessionsExA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateSessionsExA(HANDLE server, DWORD *level, DWORD filter, WTS_SESSION_INFO_1A* info, DWORD *count)
+BOOL WINAPI
+WTSEnumerateSessionsExA(HANDLE server, DWORD *level, DWORD filter, WTS_SESSION_INFO_1A *info, DWORD *count)
 {
     FIXME("Stub %p %p %d %p %p\n", server, level, filter, info, count);
-    if (count) *count = 0;
+    if (count)
+        *count = 0;
     return FALSE;
 }
 
 /************************************************************
  *                WTSEnumerateEnumerateSessionsA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateSessionsA(HANDLE hServer, DWORD Reserved, DWORD Version,
-    PWTS_SESSION_INFOA* ppSessionInfo, DWORD* pCount)
+BOOL WINAPI
+WTSEnumerateSessionsA(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_SESSION_INFOA *ppSessionInfo, DWORD *pCount)
 {
     static int once;
 
-    if (!once++) FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
-          ppSessionInfo, pCount);
+    if (!once++)
+        FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version, ppSessionInfo, pCount);
 
-    if (!ppSessionInfo || !pCount) return FALSE;
+    if (!ppSessionInfo || !pCount)
+        return FALSE;
 
     *pCount = 0;
     *ppSessionInfo = NULL;
@@ -266,13 +294,13 @@ BOOL WINAPI WTSEnumerateSessionsA(HANDLE hServer, DWORD Reserved, DWORD Version,
 /************************************************************
  *                WTSEnumerateEnumerateSessionsW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version,
-    PWTS_SESSION_INFOW* ppSessionInfo, DWORD* pCount)
+BOOL WINAPI
+WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_SESSION_INFOW *ppSessionInfo, DWORD *pCount)
 {
-    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version,
-          ppSessionInfo, pCount);
+    FIXME("Stub %p 0x%08x 0x%08x %p %p\n", hServer, Reserved, Version, ppSessionInfo, pCount);
 
-    if (!ppSessionInfo || !pCount) return FALSE;
+    if (!ppSessionInfo || !pCount)
+        return FALSE;
 
     *pCount = 0;
     *ppSessionInfo = NULL;
@@ -283,7 +311,8 @@ BOOL WINAPI WTSEnumerateSessionsW(HANDLE hServer, DWORD Reserved, DWORD Version,
 /************************************************************
  *                WTSFreeMemory (WTSAPI32.@)
  */
-void WINAPI WTSFreeMemory(PVOID pMemory)
+void WINAPI
+WTSFreeMemory(PVOID pMemory)
 {
     heap_free(pMemory);
 }
@@ -291,7 +320,8 @@ void WINAPI WTSFreeMemory(PVOID pMemory)
 /************************************************************
  *                WTSFreeMemoryExA (WTSAPI32.@)
  */
-BOOL WINAPI WTSFreeMemoryExA(WTS_TYPE_CLASS type, void *ptr, ULONG nmemb)
+BOOL WINAPI
+WTSFreeMemoryExA(WTS_TYPE_CLASS type, void *ptr, ULONG nmemb)
 {
     TRACE("%d %p %d\n", type, ptr, nmemb);
     heap_free(ptr);
@@ -301,29 +331,30 @@ BOOL WINAPI WTSFreeMemoryExA(WTS_TYPE_CLASS type, void *ptr, ULONG nmemb)
 /************************************************************
  *                WTSFreeMemoryExW (WTSAPI32.@)
  */
-BOOL WINAPI WTSFreeMemoryExW(WTS_TYPE_CLASS type, void *ptr, ULONG nmemb)
+BOOL WINAPI
+WTSFreeMemoryExW(WTS_TYPE_CLASS type, void *ptr, ULONG nmemb)
 {
     TRACE("%d %p %d\n", type, ptr, nmemb);
     heap_free(ptr);
     return TRUE;
 }
 
-
 /************************************************************
  *                WTSLogoffSession (WTSAPI32.@)
  */
-BOOL WINAPI WTSLogoffSession(HANDLE hserver, DWORD session_id, BOOL bwait)
+BOOL WINAPI
+WTSLogoffSession(HANDLE hserver, DWORD session_id, BOOL bwait)
 {
     FIXME("(%p, 0x%x, %d): stub\n", hserver, session_id, bwait);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
-
 /************************************************************
  *                WTSOpenServerExW (WTSAPI32.@)
  */
-HANDLE WINAPI WTSOpenServerExW(WCHAR *server_name)
+HANDLE WINAPI
+WTSOpenServerExW(WCHAR *server_name)
 {
     FIXME("(%s) stub\n", debugstr_w(server_name));
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -333,7 +364,8 @@ HANDLE WINAPI WTSOpenServerExW(WCHAR *server_name)
 /************************************************************
  *                WTSOpenServerExA (WTSAPI32.@)
  */
-HANDLE WINAPI WTSOpenServerExA(char *server_name)
+HANDLE WINAPI
+WTSOpenServerExA(char *server_name)
 {
     FIXME("(%s) stub\n", debugstr_a(server_name));
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -343,7 +375,8 @@ HANDLE WINAPI WTSOpenServerExA(char *server_name)
 /************************************************************
  *                WTSOpenServerA (WTSAPI32.@)
  */
-HANDLE WINAPI WTSOpenServerA(LPSTR pServerName)
+HANDLE WINAPI
+WTSOpenServerA(LPSTR pServerName)
 {
     FIXME("(%s) stub\n", debugstr_a(pServerName));
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -353,7 +386,8 @@ HANDLE WINAPI WTSOpenServerA(LPSTR pServerName)
 /************************************************************
  *                WTSOpenServerW (WTSAPI32.@)
  */
-HANDLE WINAPI WTSOpenServerW(LPWSTR pServerName)
+HANDLE WINAPI
+WTSOpenServerW(LPWSTR pServerName)
 {
     FIXME("(%s) stub\n", debugstr_w(pServerName));
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -363,12 +397,13 @@ HANDLE WINAPI WTSOpenServerW(LPWSTR pServerName)
 /************************************************************
  *                WTSQuerySessionInformationA  (WTSAPI32.@)
  */
-BOOL WINAPI WTSQuerySessionInformationA(
+BOOL WINAPI
+WTSQuerySessionInformationA(
     HANDLE hServer,
     DWORD SessionId,
     WTS_INFO_CLASS WTSInfoClass,
-    LPSTR* Buffer,
-    DWORD* BytesReturned)
+    LPSTR *Buffer,
+    DWORD *BytesReturned)
 {
 #ifdef __REACTOS__
     const size_t wcsErrorCode = -1;
@@ -433,8 +468,7 @@ BOOL WINAPI WTSQuerySessionInformationA(
     return result;
 #else
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationA */
-    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
-        Buffer, BytesReturned);
+    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
 
     return FALSE;
 #endif
@@ -443,12 +477,13 @@ BOOL WINAPI WTSQuerySessionInformationA(
 /************************************************************
  *                WTSQuerySessionInformationW  (WTSAPI32.@)
  */
-BOOL WINAPI WTSQuerySessionInformationW(
+BOOL WINAPI
+WTSQuerySessionInformationW(
     HANDLE hServer,
     DWORD SessionId,
     WTS_INFO_CLASS WTSInfoClass,
-    LPWSTR* Buffer,
-    DWORD* BytesReturned)
+    LPWSTR *Buffer,
+    DWORD *BytesReturned)
 {
 #ifdef __REACTOS__
     if (!BytesReturned || !Buffer)
@@ -472,7 +507,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
         case WTSSessionId:
         {
             const DWORD size = sizeof(ULONG);
-            ULONG* output = heap_alloc_zero(size);
+            ULONG *output = heap_alloc_zero(size);
             if (!output)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -487,7 +522,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
 
         case WTSUserName:
         {
-            WCHAR* username;
+            WCHAR *username;
             DWORD count = 0;
 
             GetUserNameW(NULL, &count);
@@ -509,7 +544,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
         case WTSConnectState:
         {
             const DWORD size = sizeof(DWORD);
-            WCHAR* output = heap_alloc_zero(size);
+            WCHAR *output = heap_alloc_zero(size);
             if (!output)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -524,7 +559,7 @@ BOOL WINAPI WTSQuerySessionInformationW(
         case WTSClientProtocolType:
         {
             const DWORD size = sizeof(WORD);
-            WCHAR* output = heap_alloc_zero(size);
+            WCHAR *output = heap_alloc_zero(size);
             if (!output)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -559,14 +594,13 @@ BOOL WINAPI WTSQuerySessionInformationW(
     }
 
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
-    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
-        Buffer, BytesReturned);
+    // return WinStationQueryInformationW(hServer, SessionId, (WINSTATIONINFOCLASS)WTSInfoClass, Buffer, 0, BytesReturned);
+    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
 
     return FALSE;
 #else
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
-    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass,
-        Buffer, BytesReturned);
+    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
 
     if (WTSInfoClass == WTSUserName)
     {
@@ -574,8 +608,10 @@ BOOL WINAPI WTSQuerySessionInformationW(
         DWORD count = 0;
 
         GetUserNameW(NULL, &count);
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) return FALSE;
-        if (!(username = heap_alloc(count * sizeof(WCHAR)))) return FALSE;
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            return FALSE;
+        if (!(username = heap_alloc(count * sizeof(WCHAR))))
+            return FALSE;
         GetUserNameW(username, &count);
         *Buffer = username;
         *BytesReturned = count * sizeof(WCHAR);
@@ -588,7 +624,8 @@ BOOL WINAPI WTSQuerySessionInformationW(
 /************************************************************
  *                WTSQueryUserToken (WTSAPI32.@)
  */
-BOOL WINAPI WTSQueryUserToken(ULONG session_id, PHANDLE token)
+BOOL WINAPI
+WTSQueryUserToken(ULONG session_id, PHANDLE token)
 {
     FIXME("%u %p semi-stub!\n", session_id, token);
 
@@ -598,260 +635,325 @@ BOOL WINAPI WTSQueryUserToken(ULONG session_id, PHANDLE token)
         return FALSE;
     }
 
-    return DuplicateHandle(GetCurrentProcess(), GetCurrentProcessToken(),
-                           GetCurrentProcess(), token,
-                           0, FALSE, DUPLICATE_SAME_ACCESS);
+    return DuplicateHandle(
+        GetCurrentProcess(),
+        GetCurrentProcessToken(),
+        GetCurrentProcess(),
+        token,
+        0,
+        FALSE,
+        DUPLICATE_SAME_ACCESS);
 }
 
 /************************************************************
  *                WTSQueryUserConfigA (WTSAPI32.@)
  */
-BOOL WINAPI WTSQueryUserConfigA(LPSTR pServerName, LPSTR pUserName, WTS_CONFIG_CLASS WTSConfigClass, LPSTR *ppBuffer, DWORD *pBytesReturned)
+BOOL WINAPI
+WTSQueryUserConfigA(
+    LPSTR pServerName,
+    LPSTR pUserName,
+    WTS_CONFIG_CLASS WTSConfigClass,
+    LPSTR *ppBuffer,
+    DWORD *pBytesReturned)
 {
-   FIXME("Stub (%s) (%s) 0x%08x %p %p\n", debugstr_a(pServerName), debugstr_a(pUserName), WTSConfigClass,
-        ppBuffer, pBytesReturned);
-   return FALSE;
+    FIXME("Stub (%s) (%s) 0x%08x %p %p\n", debugstr_a(pServerName), debugstr_a(pUserName), WTSConfigClass, ppBuffer, pBytesReturned);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSQueryUserConfigW (WTSAPI32.@)
  */
-BOOL WINAPI WTSQueryUserConfigW(LPWSTR pServerName, LPWSTR pUserName, WTS_CONFIG_CLASS WTSConfigClass, LPWSTR *ppBuffer, DWORD *pBytesReturned)
+BOOL WINAPI
+WTSQueryUserConfigW(
+    LPWSTR pServerName,
+    LPWSTR pUserName,
+    WTS_CONFIG_CLASS WTSConfigClass,
+    LPWSTR *ppBuffer,
+    DWORD *pBytesReturned)
 {
-   FIXME("Stub (%s) (%s) 0x%08x %p %p\n", debugstr_w(pServerName), debugstr_w(pUserName), WTSConfigClass,
-        ppBuffer, pBytesReturned);
-   return FALSE;
+    FIXME(
+        "Stub (%s) (%s) 0x%08x %p %p\n", debugstr_w(pServerName), debugstr_w(pUserName), WTSConfigClass, ppBuffer,
+        pBytesReturned);
+    return FALSE;
 }
-
 
 /************************************************************
  *                WTSRegisterSessionNotification (WTSAPI32.@)
  */
-BOOL WINAPI WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags)
+BOOL WINAPI
+WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags)
 {
-  DWORD processId;
-
-  if (IsWindow(hWnd) != 0) {
-    GetWindowThreadProcessId(hWnd, &processId);
-    if (processId != GetCurrentProcessId()) {
-        SetLastError(0x580);
-        return 0;
+    if (!IsWindow(hWnd))
+    {
+        DWORD processId;
+        GetWindowThreadProcessId(hWnd, &processId);
+        if (processId != GetCurrentProcessId())
+        {
+            SetLastError(ERROR_WINDOW_OF_OTHER_THREAD);
+            return FALSE;
+        }
+        if (dwFlags == NOTIFY_FOR_THIS_SESSION || dwFlags == NOTIFY_FOR_ALL_SESSIONS)
+        {
+            return WinStationRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE, hWnd, dwFlags);
+        }
     }
-    if ((dwFlags == 0) || (dwFlags == 1)) {
-      return WinStationRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE, hWnd, dwFlags);
-    }
-  }
 
-  SetLastError(0x57);
-  return 0;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSRegisterSessionNotificationEx (WTSAPI32.@)
  */
-BOOL WINAPI WTSRegisterSessionNotificationEx(HANDLE hServer, HWND hWnd, DWORD dwFlags)
+BOOL WINAPI
+WTSRegisterSessionNotificationEx(HANDLE hServer, HWND hWnd, DWORD dwFlags)
 {
     FIXME("Stub %p %p 0x%08x\n", hServer, hWnd, dwFlags);
     return FALSE;
 }
 
-
 /************************************************************
  *                WTSSendMessageA (WTSAPI32.@)
  */
-BOOL WINAPI WTSSendMessageA(HANDLE hServer, DWORD SessionId, LPSTR pTitle, DWORD TitleLength, LPSTR pMessage,
-   DWORD MessageLength, DWORD Style, DWORD Timeout, DWORD *pResponse, BOOL bWait)
+BOOL WINAPI
+WTSSendMessageA(
+    HANDLE hServer,
+    DWORD SessionId,
+    LPSTR pTitle,
+    DWORD TitleLength,
+    LPSTR pMessage,
+    DWORD MessageLength,
+    DWORD Style,
+    DWORD Timeout,
+    DWORD *pResponse,
+    BOOL bWait)
 {
-   FIXME("Stub %p 0x%08x (%s) %d (%s) %d 0x%08x %d %p %d\n", hServer, SessionId, debugstr_a(pTitle), TitleLength, debugstr_a(pMessage), MessageLength, Style, Timeout, pResponse, bWait);
-   return FALSE;
+    FIXME(
+        "Stub %p 0x%08x (%s) %d (%s) %d 0x%08x %d %p %d\n", hServer, SessionId, debugstr_a(pTitle), TitleLength,
+        debugstr_a(pMessage), MessageLength, Style, Timeout, pResponse, bWait);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSSendMessageW (WTSAPI32.@)
  */
-BOOL WINAPI WTSSendMessageW(HANDLE hServer, DWORD SessionId, LPWSTR pTitle, DWORD TitleLength, LPWSTR pMessage,
-   DWORD MessageLength, DWORD Style, DWORD Timeout, DWORD *pResponse, BOOL bWait)
+BOOL WINAPI
+WTSSendMessageW(
+    HANDLE hServer,
+    DWORD SessionId,
+    LPWSTR pTitle,
+    DWORD TitleLength,
+    LPWSTR pMessage,
+    DWORD MessageLength,
+    DWORD Style,
+    DWORD Timeout,
+    DWORD *pResponse,
+    BOOL bWait)
 {
-   FIXME("Stub %p 0x%08x (%s) %d (%s) %d 0x%08x %d %p %d\n", hServer, SessionId, debugstr_w(pTitle), TitleLength, debugstr_w(pMessage), MessageLength, Style, Timeout, pResponse, bWait);
-   return FALSE;
+    FIXME(
+        "Stub %p 0x%08x (%s) %d (%s) %d 0x%08x %d %p %d\n", hServer, SessionId, debugstr_w(pTitle), TitleLength,
+        debugstr_w(pMessage), MessageLength, Style, Timeout, pResponse, bWait);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSSetUserConfigA (WTSAPI32.@)
  */
-BOOL WINAPI WTSSetUserConfigA(LPSTR pServerName, LPSTR pUserName, WTS_CONFIG_CLASS WTSConfigClass, LPSTR pBuffer, DWORD DataLength)
+BOOL WINAPI
+WTSSetUserConfigA(LPSTR pServerName, LPSTR pUserName, WTS_CONFIG_CLASS WTSConfigClass, LPSTR pBuffer, DWORD DataLength)
 {
-   FIXME("Stub (%s) (%s) 0x%08x %p %d\n", debugstr_a(pServerName), debugstr_a(pUserName), WTSConfigClass,pBuffer, DataLength);
-   return FALSE;
+    FIXME(
+        "Stub (%s) (%s) 0x%08x %p %d\n", debugstr_a(pServerName), debugstr_a(pUserName), WTSConfigClass, pBuffer,
+        DataLength);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSSetUserConfigW (WTSAPI32.@)
  */
-BOOL WINAPI WTSSetUserConfigW(LPWSTR pServerName, LPWSTR pUserName, WTS_CONFIG_CLASS WTSConfigClass, LPWSTR pBuffer, DWORD DataLength)
+BOOL WINAPI
+WTSSetUserConfigW(
+    LPWSTR pServerName,
+    LPWSTR pUserName,
+    WTS_CONFIG_CLASS WTSConfigClass,
+    LPWSTR pBuffer,
+    DWORD DataLength)
 {
-   FIXME("Stub (%s) (%s) 0x%08x %p %d\n", debugstr_w(pServerName), debugstr_w(pUserName), WTSConfigClass,pBuffer, DataLength);
-   return FALSE;
+    FIXME(
+        "Stub (%s) (%s) 0x%08x %p %d\n", debugstr_w(pServerName), debugstr_w(pUserName), WTSConfigClass, pBuffer,
+        DataLength);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSShutdownSystem (WTSAPI32.@)
  */
-BOOL WINAPI WTSShutdownSystem(HANDLE hServer, DWORD ShutdownFlag)
+BOOL WINAPI
+WTSShutdownSystem(HANDLE hServer, DWORD ShutdownFlag)
 {
-   FIXME("Stub %p 0x%08x\n", hServer,ShutdownFlag);
-   return FALSE;
+    FIXME("Stub %p 0x%08x\n", hServer, ShutdownFlag);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSStartRemoteControlSessionA (WTSAPI32.@)
  */
-BOOL WINAPI WTSStartRemoteControlSessionA(LPSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers)
+BOOL WINAPI
+WTSStartRemoteControlSessionA(LPSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers)
 {
-   FIXME("Stub (%s) %d %d %d\n", debugstr_a(pTargetServerName), TargetLogonId, HotkeyVk, HotkeyModifiers);
-   return FALSE;
+    FIXME("Stub (%s) %d %d %d\n", debugstr_a(pTargetServerName), TargetLogonId, HotkeyVk, HotkeyModifiers);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSStartRemoteControlSessionW (WTSAPI32.@)
  */
-BOOL WINAPI WTSStartRemoteControlSessionW(LPWSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers)
+BOOL WINAPI
+WTSStartRemoteControlSessionW(LPWSTR pTargetServerName, ULONG TargetLogonId, BYTE HotkeyVk, USHORT HotkeyModifiers)
 {
-   FIXME("Stub (%s) %d %d %d\n", debugstr_w(pTargetServerName), TargetLogonId, HotkeyVk, HotkeyModifiers);
-   return FALSE;
+    FIXME("Stub (%s) %d %d %d\n", debugstr_w(pTargetServerName), TargetLogonId, HotkeyVk, HotkeyModifiers);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSStopRemoteControlSession (WTSAPI32.@)
  */
-BOOL WINAPI WTSStopRemoteControlSession(ULONG LogonId)
+BOOL WINAPI
+WTSStopRemoteControlSession(ULONG LogonId)
 {
-   FIXME("Stub %d\n",  LogonId);
-   return FALSE;
+    FIXME("Stub %d\n", LogonId);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSTerminateProcess (WTSAPI32.@)
  */
-BOOL WINAPI WTSTerminateProcess(HANDLE hServer, DWORD ProcessId, DWORD ExitCode)
+BOOL WINAPI
+WTSTerminateProcess(HANDLE hServer, DWORD ProcessId, DWORD ExitCode)
 {
-   FIXME("Stub %p %d %d\n", hServer, ProcessId, ExitCode);
-   return FALSE;
-}
-
-/************************************************************
- *                WTSUnRegisterSessionNotification (WTSAPI32.@)
- */
-BOOL WINAPI WTSUnRegisterSessionNotification(HWND hWnd)
-{
-    DWORD dwProcId;
-    DWORD lastError;
-
-    /* 0x1eae  27  WTSUnRegisterSessionNotification */
-    if (IsWindow(hWnd) == 0) {
-        lastError = ERROR_INVALID_PARAMETER;
-    }
-    else {
-        GetWindowThreadProcessId(hWnd,&dwProcId);
-        lastError = GetCurrentProcessId();
-        if (dwProcId == lastError) {
-           return WinStationUnRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE,hWnd);
-        }
-        lastError = ERROR_WINDOW_OF_OTHER_THREAD;
-    }
-    SetLastError(lastError);
+    FIXME("Stub %p %d %d\n", hServer, ProcessId, ExitCode);
     return FALSE;
 }
 
 /************************************************************
  *                WTSUnRegisterSessionNotification (WTSAPI32.@)
  */
-BOOL WINAPI WTSUnRegisterSessionNotificationEx(HANDLE hServer, HWND hWnd)
+BOOL WINAPI
+WTSUnRegisterSessionNotification(HWND hWnd)
+{
+    if (!IsWindow(hWnd))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    DWORD dwProcId;
+    GetWindowThreadProcessId(hWnd, &dwProcId);
+
+    if (dwProcId == GetCurrentProcessId())
+    {
+        return WinStationUnRegisterConsoleNotification(WTS_CURRENT_SERVER_HANDLE, hWnd);
+    }
+
+    SetLastError(ERROR_WINDOW_OF_OTHER_THREAD);
+    return FALSE;
+}
+
+/************************************************************
+ *                WTSUnRegisterSessionNotification (WTSAPI32.@)
+ */
+BOOL WINAPI
+WTSUnRegisterSessionNotificationEx(HANDLE hServer, HWND hWnd)
 {
     FIXME("Stub %p %p\n", hServer, hWnd);
     return FALSE;
 }
 
-
 /************************************************************
  *                WTSVirtualChannelClose (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelClose(HANDLE hChannelHandle)
+BOOL WINAPI
+WTSVirtualChannelClose(HANDLE hChannelHandle)
 {
-   FIXME("Stub %p\n", hChannelHandle);
-   return FALSE;
+    FIXME("Stub %p\n", hChannelHandle);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSVirtualChannelOpen (WTSAPI32.@)
  */
-HANDLE WINAPI WTSVirtualChannelOpen(HANDLE hServer, DWORD SessionId, LPSTR pVirtualName)
+HANDLE WINAPI
+WTSVirtualChannelOpen(HANDLE hServer, DWORD SessionId, LPSTR pVirtualName)
 {
-   FIXME("Stub %p %d (%s)\n", hServer, SessionId, debugstr_a(pVirtualName));
-   return NULL;
+    FIXME("Stub %p %d (%s)\n", hServer, SessionId, debugstr_a(pVirtualName));
+    return NULL;
 }
 
 /************************************************************
  *                WTSVirtualChannelOpen (WTSAPI32.@)
  */
-HANDLE WINAPI WTSVirtualChannelOpenEx(DWORD SessionId, LPSTR pVirtualName, DWORD flags)
+HANDLE WINAPI
+WTSVirtualChannelOpenEx(DWORD SessionId, LPSTR pVirtualName, DWORD flags)
 {
-   FIXME("Stub %d (%s) %d\n",  SessionId, debugstr_a(pVirtualName), flags);
-   return NULL;
+    FIXME("Stub %d (%s) %d\n", SessionId, debugstr_a(pVirtualName), flags);
+    return NULL;
 }
 
 /************************************************************
  *                WTSVirtualChannelPurgeInput (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelPurgeInput(HANDLE hChannelHandle)
+BOOL WINAPI
+WTSVirtualChannelPurgeInput(HANDLE hChannelHandle)
 {
-   FIXME("Stub %p\n", hChannelHandle);
-   return FALSE;
+    FIXME("Stub %p\n", hChannelHandle);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSVirtualChannelPurgeOutput (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelPurgeOutput(HANDLE hChannelHandle)
+BOOL WINAPI
+WTSVirtualChannelPurgeOutput(HANDLE hChannelHandle)
 {
-   FIXME("Stub %p\n", hChannelHandle);
-   return FALSE;
+    FIXME("Stub %p\n", hChannelHandle);
+    return FALSE;
 }
-
 
 /************************************************************
  *                WTSVirtualChannelQuery (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelQuery(HANDLE hChannelHandle, WTS_VIRTUAL_CLASS WtsVirtualClass, PVOID *ppBuffer, DWORD *pBytesReturned)
+BOOL WINAPI
+WTSVirtualChannelQuery(HANDLE hChannelHandle, WTS_VIRTUAL_CLASS WtsVirtualClass, PVOID *ppBuffer, DWORD *pBytesReturned)
 {
-   FIXME("Stub %p %d %p %p\n", hChannelHandle, WtsVirtualClass, ppBuffer, pBytesReturned);
-   return FALSE;
+    FIXME("Stub %p %d %p %p\n", hChannelHandle, WtsVirtualClass, ppBuffer, pBytesReturned);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSVirtualChannelRead (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelRead(HANDLE hChannelHandle, ULONG TimeOut, PCHAR Buffer, ULONG BufferSize, PULONG pBytesRead)
+BOOL WINAPI
+WTSVirtualChannelRead(HANDLE hChannelHandle, ULONG TimeOut, PCHAR Buffer, ULONG BufferSize, PULONG pBytesRead)
 {
-   FIXME("Stub %p %d %p %d %p\n", hChannelHandle, TimeOut, Buffer, BufferSize, pBytesRead);
-   return FALSE;
+    FIXME("Stub %p %d %p %d %p\n", hChannelHandle, TimeOut, Buffer, BufferSize, pBytesRead);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSVirtualChannelWrite (WTSAPI32.@)
  */
-BOOL WINAPI WTSVirtualChannelWrite(HANDLE hChannelHandle, PCHAR Buffer, ULONG Length, PULONG pBytesWritten)
+BOOL WINAPI
+WTSVirtualChannelWrite(HANDLE hChannelHandle, PCHAR Buffer, ULONG Length, PULONG pBytesWritten)
 {
-   FIXME("Stub %p %p %d %p\n", hChannelHandle, Buffer, Length, pBytesWritten);
-   return FALSE;
+    FIXME("Stub %p %p %d %p\n", hChannelHandle, Buffer, Length, pBytesWritten);
+    return FALSE;
 }
 
 /************************************************************
  *                WTSWaitSystemEvent (WTSAPI32.@)
  */
-BOOL WINAPI WTSWaitSystemEvent(HANDLE hServer, DWORD Mask, DWORD* Flags)
+BOOL WINAPI
+WTSWaitSystemEvent(HANDLE hServer, DWORD Mask, DWORD *Flags)
 {
-    /* FIXME: Forward request to winsta.dll::WinStationWaitSystemEvent */
-    FIXME("Stub %p 0x%08x %p\n", hServer, Mask, Flags);
-    return FALSE;
+    return WinStationWaitSystemEvent(hServer, Mask, Flags);
 }

@@ -8,6 +8,7 @@
  */
 
 #include "winsta.h"
+#include "reactos/ts/winsta.h"
 
 VOID
 WINSTAAPI LogonIdFromWinStationNameA(PVOID A,
@@ -17,12 +18,14 @@ WINSTAAPI LogonIdFromWinStationNameA(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI LogonIdFromWinStationNameW(PVOID A,
-                                     PVOID B,
-                                     PVOID C)
+BOOLEAN
+WINSTAAPI LogonIdFromWinStationNameW(_In_opt_ HANDLE ServerHandle,
+    _In_ PCWSTR WinStationName,
+    _Out_ PULONG SessionId)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -55,12 +58,14 @@ WINSTAAPI WinStationNameFromLogonIdA(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationNameFromLogonIdW(PVOID A,
-                                     PVOID B,
-                                     PVOID C)
+BOOLEAN
+WINSTAAPI WinStationNameFromLogonIdW(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _Out_writes_(WINSTATIONNAME_LENGTH + 1) PWSTR WinStationName)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

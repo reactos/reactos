@@ -7,6 +7,7 @@
  */
 
 #include "winsta.h"
+#include "reactos/ts/winsta.h"
 
 VOID
 WINSTAAPI WinStationOpenServerA(PVOID A)
@@ -14,19 +15,20 @@ WINSTAAPI WinStationOpenServerA(PVOID A)
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationOpenServerW(PVOID A)
+HANDLE
+WINSTAAPI WinStationOpenServerW(_In_opt_ PCWSTR ServerName)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationCloseServer(PVOID A,
-                                PVOID B,
-                                PVOID C,
-                                PVOID D)
+BOOLEAN
+WINSTAAPI WinStationCloseServer(_In_ HANDLE ServerHandle)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -63,18 +65,22 @@ WINSTAAPI ServerQueryInetConnectorInformationW(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationServerPing(PVOID A)
+BOOLEAN
+WINSTAAPI WinStationServerPing(_In_opt_ HANDLE ServerHandle)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationGetTermSrvCountersValue(PVOID A,
-                                            PVOID B,
-                                            PVOID C)
+BOOLEAN
+WINSTAAPI WinStationGetTermSrvCountersValue(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG Count,
+    _Inout_ PTS_COUNTER Counters) // set counter IDs before calling
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID

@@ -14,7 +14,6 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winternl.h>
 
 #include <wine/debug.h>
 

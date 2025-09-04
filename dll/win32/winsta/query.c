@@ -7,7 +7,7 @@
  */
 
 #include "winsta.h"
-#include "psdk/winsta.h"
+#include "reactos/ts/winsta.h"
 
 VOID
 WINSTAAPI
@@ -87,8 +87,8 @@ WINSTAAPI WinStationEnumerateLicenses(PVOID A,
 }
 
 BOOLEAN
-WINSTAAPI WinStationEnumerateProcesses(HANDLE ServerHandle,
-                                       PVOID* Processes)
+WINSTAAPI WinStationEnumerateProcesses(_In_opt_ HANDLE ServerHandle,
+                                       _Out_ PVOID* Processes)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
@@ -104,10 +104,11 @@ WINSTAAPI WinStationEnumerateA(PVOID A,
 }
 
 BOOLEAN
-WINSTAAPI WinStationEnumerateW(HANDLE hServer,
-                               PSESSIONIDW* SessionIds,
-                               PULONG Count)
+WINSTAAPI WinStationEnumerateW(_In_opt_ HANDLE hServer,
+                               _Out_ PSESSIONIDW *SessionIds,
+                               _Out_ PULONG Count)
 {
+    FIXME("%p %p %p\n", hServer, SessionIds, Count);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
     return FALSE;

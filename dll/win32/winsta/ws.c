@@ -7,11 +7,13 @@
  */
 
 #include "winsta.h"
-#include "psdk/winsta.h"
+#include "reactos/ts/winsta.h"
 
 BOOLEAN
-WINSTAAPI WinStationFreeMemory(_In_ PVOID Buffer)
+WINSTAAPI WinStationFreeMemory(PVOID Buffer)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
     FIXME("WinStationFreeMemory %p not freed!\n", Buffer);
     return FALSE;
 }
@@ -78,21 +80,24 @@ WINSTAAPI WinStationConnectEx(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationConnectW(PVOID A,
-                             PVOID B,
-                             PVOID C,
-                             PVOID D,
-                             PVOID E)
+BOOLEAN
+WINSTAAPI WinStationConnectW(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ ULONG TargetSessionId,
+    _In_opt_ PCWSTR Password,
+    _In_ BOOLEAN bWait)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 BOOLEAN
-WINSTAAPI WinStationFreeGAPMemory(_In_ ULONG Level,
-                                    _In_ PTS_ALL_PROCESSES_INFO Processes,
-                                    _In_ ULONG NumberOfProcesses)
+WINSTAAPI WinStationFreeGAPMemory(ULONG Level,
+                                    PTS_ALL_PROCESSES_INFO Processes,
+                                    ULONG NumberOfProcesses)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -145,19 +150,21 @@ WINSTAAPI WinStationSendMessageA(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationSendMessageW(PVOID A,
-                                 PVOID B,
-                                 PVOID C,
-                                 PVOID D,
-                                 PVOID E,
-                                 PVOID F,
-                                 PVOID G,
-                                 PVOID H,
-                                 PVOID I,
-                                 PVOID J)
+BOOLEAN
+WINSTAAPI WinStationSendMessageW(HANDLE ServerHandle,
+    ULONG SessionId,
+    PCWSTR Title,
+    ULONG TitleLength,
+    PCWSTR Message,
+    ULONG MessageLength,
+    ULONG Style,
+    ULONG Timeout,
+    PULONG Response,
+    BOOLEAN DoNotWait)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -183,14 +190,16 @@ WINSTAAPI WinStationSetInformationA(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationSetInformationW(PVOID A,
-                                    PVOID B,
-                                    PVOID C,
-                                    PVOID D,
-                                    PVOID E)
+BOOLEAN
+WINSTAAPI WinStationSetInformationW(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ WINSTATIONINFOCLASS WinStationInformationClass,
+    _In_reads_bytes_(WinStationInformationLength) PVOID WinStationInformation,
+    _In_ ULONG WinStationInformationLength)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -201,29 +210,35 @@ WINSTAAPI WinStationSetPoolCount(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationShadow(PVOID A,
-                           PVOID B,
-                           PVOID C,
-                           PVOID D,
-                           PVOID E)
+BOOLEAN
+WINSTAAPI WinStationShadow(_In_opt_ HANDLE ServerHandle,
+    _In_ PCWSTR TargetServerName,
+    _In_ ULONG TargetSessionId,
+    _In_ UCHAR HotKeyVk,
+    _In_ USHORT HotkeyModifiers) // KBD*
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationShadowStop(PVOID A,
-                               PVOID B,
-                               PVOID C)
+BOOLEAN
+WINSTAAPI WinStationShadowStop(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ BOOLEAN bWait) // ignored
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationShutdownSystem(PVOID A,
-                                   PVOID B)
+BOOLEAN
+WINSTAAPI WinStationShutdownSystem(HANDLE ServerHandle,
+    ULONG ShutdownFlags) // WSD_*
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -239,45 +254,55 @@ WINSTAAPI WinStationSystemShutdownWait(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationTerminateProcess(PVOID A,
-                                     PVOID B,
-                                     PVOID C)
-{
-    UNIMPLEMENTED;
-}
-
 BOOLEAN
-WINSTAAPI WinStationUnRegisterConsoleNotification(_In_opt_ HANDLE hServer,
-                                                  _In_ HWND WindowHandle)
+WINSTAAPI WinStationTerminateProcess(HANDLE ServerHandle,
+    ULONG ProcessId,
+    ULONG ExitCode)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
     return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationVirtualOpen(PVOID A,
-                                PVOID B,
-                                PVOID C)
+BOOLEAN
+WINSTAAPI WinStationUnRegisterConsoleNotification(HANDLE hServer,
+                                                  HWND WindowHandle)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID
-WINSTAAPI WinStationVirtualOpenEx(PVOID A,
-                                  PVOID B,
-                                  PVOID C,
-                                  PVOID D)
+HANDLE
+WINSTAAPI WinStationVirtualOpen(HANDLE ServerHandle,
+    ULONG SessionId,
+    PCSTR Name)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return NULL;
 }
 
-VOID
-WINSTAAPI WinStationWaitSystemEvent(PVOID A,
-                                    PVOID B,
-                                    PVOID C)
+HANDLE
+WINSTAAPI WinStationVirtualOpenEx(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ PCSTR Name,
+    _In_ ULONG Flags)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return NULL;
+}
+
+BOOLEAN
+WINSTAAPI WinStationWaitSystemEvent(HANDLE hServer,
+                                    ULONG Mask,
+                                    PULONG Flags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
+    FIXME("Stub %p 0x%08x %p\n", hServer, Mask, Flags);
+    return FALSE;
 }
 
 VOID
@@ -299,13 +324,14 @@ WINSTAAPI WinStationDynVirtualChanWrite(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationRegisterConsoleNotificationEx(PVOID A,
-                                                  PVOID B,
-                                                  PVOID C,
-                                                  PVOID D)
+BOOLEAN
+WINSTAAPI WinStationRegisterConsoleNotificationEx(_In_opt_ HANDLE ServerHandle,
+    _In_ HWND WindowHandle,
+    _In_ ULONG Flags)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 BOOLEAN
@@ -313,8 +339,8 @@ WINSTAAPI WinStationRegisterConsoleNotification(HANDLE hServer,
                                                 HWND WindowHandle,
                                                 ULONG Flags)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
-    // SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
