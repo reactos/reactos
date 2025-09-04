@@ -9,8 +9,8 @@
  */
 
 #include "precomp.h"
-#define WIN32_NO_STATUS
-#include "pstypes.h" /* SharedUserData */
+#define NTOS_MODE_USER
+#include <ndk/pstypes.h> /* For SharedUserData */
 
 static TCHAR BugLink[] = _T("http://jira.reactos.org/");
 static TCHAR ReportAsWorkstationKey[] = _T("SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
@@ -56,7 +56,7 @@ OnInitSysSettingsDialog(HWND hwndDlg)
     DWORD dwVal = 0;
     DWORD dwType = REG_DWORD;
     DWORD cbData = sizeof(DWORD);
-    BOOL ReportAsWorkstation = SharedUserData->NtProductType == VER_NT_WORKSTATION;
+    BOOL ReportAsWorkstation = SharedUserData->NtProductType == NtProductWinNt;
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                      ReportAsWorkstationKey,
@@ -71,7 +71,7 @@ OnInitSysSettingsDialog(HWND hwndDlg)
                             (LPBYTE)&dwVal,
                             &cbData) == ERROR_SUCCESS)
         {
-            if (cbData == sizeof(DWORD))
+            if (dwType == REG_DWORD && cbData == sizeof(DWORD))
                 ReportAsWorkstation = dwVal != FALSE;
         }
 

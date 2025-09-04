@@ -386,7 +386,7 @@ HRESULT WINAPI CControlPanelFolder::CreateViewObject(HWND hwndOwner, REFIID riid
             WARN("IContextMenu not implemented\n");
             hr = E_NOTIMPL;
         } else if (IsEqualIID(riid, IID_IShellView)) {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this , NULL, this };
             hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
         }
     }
@@ -671,6 +671,23 @@ HRESULT WINAPI CControlPanelFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
         return E_POINTER;
     *pidl = ILClone(pidlRoot);
     return S_OK;
+}
+
+HRESULT WINAPI CControlPanelFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case SFVM_DEFVIEWMODE:
+        {
+        #if ROSPOLICY_CONTROLSFOLDER_DEFLARGEICONS
+            *((FOLDERVIEWMODE*)lParam) = FVM_ICON;
+        #else
+            *((FOLDERVIEWMODE*)lParam) = IsOS(OS_SERVERADMINUI) ? FVM_LIST : FVM_ICON;
+        #endif
+            return S_OK;
+        }
+    }
+    return E_NOTIMPL;
 }
 
 CCPLItemMenu::CCPLItemMenu()

@@ -9,6 +9,38 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+HRESULT
+ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid)
+{
+    if (IsEqualIID(*pVid, VID_LargeIcons))
+        return FVM_ICON;
+    else if (IsEqualIID(*pVid, VID_SmallIcons))
+        return FVM_SMALLICON;
+    else if (IsEqualIID(*pVid, VID_List))
+        return FVM_LIST;
+    else if (IsEqualIID(*pVid, VID_Details))
+        return FVM_DETAILS;
+    else if (IsEqualIID(*pVid, VID_Thumbnails))
+        return FVM_THUMBNAIL;
+    else if (IsEqualIID(*pVid, VID_Tile))
+        return FVM_TILE;
+    else if (IsEqualIID(*pVid, VID_ThumbStrip))
+        return FVM_THUMBSTRIP;
+    return E_UNEXPECTED;
+}
+
+const SHELLVIEWID *
+FolderViewModeToShellViewId(UINT FVM)
+{
+    static const SHELLVIEWID *vids[] = {
+        &VID_LargeIcons, &VID_SmallIcons,
+        &VID_Details, &VID_Thumbnails,
+        &VID_Tile, &VID_ThumbStrip,
+    };
+    FVM -= FVM_FIRST;
+    return FVM < _countof(vids) ? vids[FVM] : NULL;
+}
+
 // This class adapts the legacy function callback to work as an IShellFolderViewCB
 class CShellFolderViewCBWrapper :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
