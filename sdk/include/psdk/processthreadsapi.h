@@ -150,7 +150,7 @@ typedef enum _PROCESS_INFORMATION_CLASS
     ProcessAppMemoryInfo,
     ProcessInPrivateInfo,
     ProcessPowerThrottling,
-    ProcessReservedValue1,
+    ProcessReservedValue1,  // Formerly ProcessActivityThrottlePolicyInfo
     ProcessTelemetryCoverageInfo,
     ProcessProtectionLevelInfo,
     ProcessLeapSecondInfo,
