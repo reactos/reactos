@@ -18,8 +18,8 @@ The following build tools are shared with Wine.
 base/ctf/msctf                  # Forked at Wine-10.12
 
 sdk/tools/unicode               # Synced to WineStaging-4.18
-sdk/tools/widl                  # Synced to WineStaging-4.0
-sdk/tools/wpp                   # Synced to WineStaging-2.9
+sdk/tools/widl                  # Synced to Wine-10.0
+sdk/tools/wpp                   # Synced to Wine-10.0 (Module was moved into wrc tool)
 
 The following libraries are shared with Wine.
 
