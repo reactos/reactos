@@ -13,19 +13,21 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
-        ID_NAME(CLSID_CNetCfg),
+        ID_NAME(CLSID_CNetCfg, NTDDI_MIN, NTDDI_MAX),
         {
-            {    0x0,   &IID_INetCfg },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_INetCfgLock },
-            {   0x10,   &IID_INetCfgPnpReconfigCallback },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_INetCfg },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_IUnknown },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_INetCfgLock },
+            { NTDDI_MIN,          NTDDI_MAX,          &IID_INetCfgPnpReconfigCallback },
         },
         L"Both"
     },
 };
-static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
 START_TEST(netcfgx)
 {
-    TestClasses(L"netcfgx", ExpectedInterfaces, ExpectedInterfaceCount);
+    if (GetNTVersion() < _WIN32_WINNT_WIN10)
+        TestClasses(L"netcfgx", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
+    else
+        TestClasses(L"NetSetupShim", ExpectedInterfaces, RTL_NUMBER_OF(ExpectedInterfaces));
 }
