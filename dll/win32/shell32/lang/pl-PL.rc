@@ -372,24 +372,23 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
-IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+IDD_RUN_AS DIALOGEX 0, 0, 240, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Uruchom jako"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Które konto użytkownika chcesz użyć do uruchomienia tego programu?", -1, 10, 15, 220, 16
-    CHECKBOX "Bieżący użytkownik %s", 14000, 10, 40, 178, 10
-    LTEXT "Zabezpiecz mój komputer i dane przed nieautoryzowanym działaniem programów.", -1, 25, 52, 200, 16, WS_DISABLED
-    CHECKBOX "Ta opcja może zabezpieczyć twój komputer lub dane na nim przed szkodliwymi programami, ale użycie jej może spowodować nieprawidłowe działanie programów.", 14001, 25, 69, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Następujący użytkownik:", 14002, 10, 101, 97, 10
-    LTEXT "Nazwa użytkownika:", -1, 20, 119, 74, 10
-    COMBOBOX 14003, 95, 116, 80, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 116, 30, 14
-    LTEXT "Hasło:", -1, 20, 144, 53, 10
-    EDITTEXT 14005, 95, 141, 80, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 141, 30, 14
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Anuluj", 14008, 122, 170, 60, 14
+    ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
+    LTEXT "Które konto użytkownika chcesz użyć do uruchomienia tego programu?", -1, 32, 12, 200, 16
+    AUTORADIOBUTTON "Bieżący użytkownik %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "Następujący użytkownik:", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "Nazwa użytkownika:", -1, 18, 124, 54, 10
+    COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
+    LTEXT "Hasło:", -1, 18, 142, 53, 10
+    EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 129, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Anuluj", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
