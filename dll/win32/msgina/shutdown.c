@@ -1213,8 +1213,8 @@ ShutdownDialog(
     SHUTDOWN_DLG_CONTEXT Context = {0};
 
 #if 0
-    ShutdownOptions = GetAllowedShutdownOptions(???, pgContext->UserToken);
-    pgContext->nShutdownAction = LoadShutdownSelState(???);
+    ShutdownOptions = GetAllowedShutdownOptions(hKeyCurrentUser, pgContext->UserToken);
+    pgContext->nShutdownAction = LoadShutdownSelState(hKeyCurrentUser);
     ShutdownOptions &= ~dwExcludeOptions;
 #endif
 
@@ -1259,7 +1259,7 @@ ShutdownDialog(
 
 #if 0
     if (ret == IDOK)
-        SaveShutdownSelState(???, pgContext->nShutdownAction);
+        SaveShutdownSelState(hKeyCurrentUser, pgContext->nShutdownAction);
 #endif
 
     return ret;
