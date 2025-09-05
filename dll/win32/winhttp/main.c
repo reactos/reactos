@@ -17,7 +17,11 @@
  */
 
 #define COBJMACROS
+#ifdef __REACTOS__
+#include "wine/config.h"
+#else
 #include "config.h"
+#endif
 #include "ws2tcpip.h"
 #include <stdarg.h>
 
