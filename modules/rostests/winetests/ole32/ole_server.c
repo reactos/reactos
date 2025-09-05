@@ -60,21 +60,6 @@ static const struct
 
 static LONG obj_ref, class_ref, server_locks;
 
-static const char *debugstr_guid(const GUID *guid)
-{
-    int i;
-
-    if (!guid) return "(null)";
-
-    for (i = 0; i < ARRAY_SIZE(guid_name); i++)
-    {
-        if (IsEqualIID(guid, guid_name[i].guid))
-            return guid_name[i].name;
-    }
-
-    return wine_dbgstr_guid(guid);
-}
-
 /******************************* OLE server *******************************/
 typedef struct
 {
