@@ -469,3 +469,4 @@
 757 stdcall -noname -version=0x600+ DisplayNameOfW(ptr ptr long ptr long)
 866 stdcall -noname -version=0x600+ SHExtCoCreateInstance(wstr ptr ptr ptr ptr)
 887 stub -noname -version=0x601+ SHExtCoCreateInstanceCheckCategory
+@ stdcall -version=0x600+ SHGetKnownFolderPath(ptr long ptr ptr)
