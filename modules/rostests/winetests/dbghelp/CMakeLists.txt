@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_executable(dbghelp_winetest dbghelp.c testlist.c)
 target_compile_definitions(dbghelp_winetest PRIVATE WINETEST_USE_DBGSTR_LONGLONG)
 set_module_type(dbghelp_winetest win32cui)
