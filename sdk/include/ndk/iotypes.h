@@ -151,6 +151,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DOE_REMOVE_PENDING                      0x4
 #define DOE_REMOVE_PROCESSED                    0x8
 #define DOE_START_PENDING                       0x10
+#define DOE_DEFAULT_SD_PRESENT                  0x800
 
 //
 // Device Object StartIo Flags
