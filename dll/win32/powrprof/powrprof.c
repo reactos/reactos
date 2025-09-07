@@ -462,7 +462,7 @@ IsPwrHibernateAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS4 && PowerCaps.HiberFilePresent; // IsHiberfilPresent();
+    return IS_PWR_HIBERNATE_ALLOWED(&PowerCaps);
 }
 
 BOOLEAN WINAPI
@@ -481,7 +481,7 @@ IsPwrShutdownAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS5;
+    return IS_PWR_POWEROFF_ALLOWED(&PowerCaps);
 }
 
 BOOLEAN WINAPI
@@ -500,7 +500,9 @@ IsPwrSuspendAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3;
+    // NOTE for possible future wine-syncs: wine erroneously use '&&'
+    // instead of: PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3;
+    return IS_PWR_SUSPEND_ALLOWED(&PowerCaps);
 }
 
 DWORD WINAPI
