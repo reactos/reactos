@@ -131,6 +131,8 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedDlgProc);
     if (spc.SystemS4)
     {
+        /* ACPI S4 state is supported, display the "Hibernate" page
+         * where we can enable or disable the hibernation file */
         InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
     }
 

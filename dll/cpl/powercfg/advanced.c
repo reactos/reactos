@@ -135,9 +135,9 @@ GetPowerActionFromPolicy(
     else
     {
         poAction = Policy->Action;
-        if ((poAction == PowerActionHibernate) && !(spc->SystemS4 && spc->HiberFilePresent))
+        if ((poAction == PowerActionHibernate) && !IS_PWR_HIBERNATE_ALLOWED(spc))
             poAction = PowerActionSleep;
-        if ((poAction == PowerActionSleep) && !(spc->SystemS1 || spc->SystemS2 || spc->SystemS3))
+        if ((poAction == PowerActionSleep) && !IS_PWR_SUSPEND_ALLOWED(spc))
         {
             if (bIsLid)
                 poAction = PowerActionNone;
@@ -282,7 +282,7 @@ Adv_InitDialog(
     HWND hList2;
     HWND hList3;
 
-    BOOLEAN bSuspend = FALSE;
+    BOOLEAN bSuspend;
     BOOLEAN bHibernate;
     BOOLEAN bShutdown;
     BOOL bEnabled;
@@ -308,11 +308,9 @@ Adv_InitDialog(
 
     GetPwrCapabilities(&spc);
 
-    if (spc.SystemS1 || spc.SystemS2 || spc.SystemS3)
-        bSuspend=TRUE;
-
-    bHibernate = spc.HiberFilePresent;
-    bShutdown = spc.SystemS5;
+    bSuspend = IS_PWR_SUSPEND_ALLOWED(&spc);
+    bHibernate = IS_PWR_HIBERNATE_ALLOWED(&spc);
+    bShutdown = IS_PWR_POWEROFF_ALLOWED(&spc);
 
     hList1 = GetDlgItem(hwndDlg, IDC_LIDCLOSE);
     SendMessage(hList1, CB_RESETCONTENT, 0, 0);

@@ -208,25 +208,27 @@ Pos_InitData(
     SYSTEM_POWER_CAPABILITIES spc;
 
     if (!GetPwrCapabilities(&spc))
-    {
         return FALSE;
-    }
 
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY),
-               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+               IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
-               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+               IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     if (spc.SystemBatteriesPresent)
+    {
         ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
-                   (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+                   IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
+    }
 
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),
-               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+               IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),
-               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+               IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     if (spc.SystemBatteriesPresent)
+    {
         ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST),
-                   (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+                   IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
+    }
 
     return TRUE;
 }
