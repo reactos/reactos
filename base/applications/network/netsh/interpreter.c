@@ -221,6 +221,23 @@ InterpretScript(
 
 
 VOID
+PrintPrompt(
+    PCONTEXT_ENTRY pContext)
+{
+    if (pContext == pRootContext)
+    {
+        ConPuts(StdOut, L"netsh");
+    }
+    else
+    {
+        PrintPrompt(pContext->pParentContext);
+        ConPuts(StdOut, L" ");
+        ConPuts(StdOut, pContext->pszContextName);
+    }
+}
+
+
+VOID
 InterpretInteractive(VOID)
 {
     WCHAR input_line[MAX_STRING_SIZE];
@@ -236,12 +253,7 @@ InterpretInteractive(VOID)
         memset(args_vector, 0, sizeof(args_vector));
 
         /* Shown just before the input where the user places commands */
-        ConPuts(StdOut, L"netsh");
-        if (pCurrentContext != pRootContext)
-        {
-            ConPuts(StdOut, L" ");
-            ConPuts(StdOut, pCurrentContext->pszContextName);
-        }
+        PrintPrompt(pCurrentContext);
         ConPuts(StdOut, L">");
 
         /* Get input from the user. */
