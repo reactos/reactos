@@ -58,6 +58,7 @@ typedef struct _HELPER_ENTRY
     struct _HELPER_ENTRY *pNext;
 
     NS_HELPER_ATTRIBUTES Attributes;
+    GUID ParentHelperGuid;
 
     PDLL_LIST_ENTRY pDllEntry;
     BOOL bStarted;
@@ -74,7 +75,7 @@ typedef struct _COMMAND_ENTRY
     struct _COMMAND_ENTRY *pPrev;
     struct _COMMAND_ENTRY *pNext;
 
-    LPCWSTR pwszCmdToken;
+    PWSTR pwszCmdToken;
     PFN_HANDLE_CMD pfnCmdHandler;
     DWORD dwShortCmdHelpToken;
     DWORD dwCmdHlpToken;
@@ -86,7 +87,7 @@ typedef struct _COMMAND_GROUP
     struct _COMMAND_GROUP *pPrev;
     struct _COMMAND_GROUP *pNext;
 
-    LPCWSTR pwszCmdGroupToken;
+    PWSTR pwszCmdGroupToken;
     DWORD dwShortCmdHelpToken;
     DWORD dwFlags;
 
@@ -134,6 +135,9 @@ CreateRootContext(VOID);
 VOID
 CleanupContext(VOID);
 
+PCONTEXT_ENTRY
+FindContextByGuid(
+    _In_ const GUID *pGuid);
 
 /* help.c */
 

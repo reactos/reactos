@@ -39,6 +39,12 @@ AddContext(
 {
     PCONTEXT_ENTRY pEntry;
 
+    DPRINT("AddContext(%S)\n", pszName);
+    if (pParentContext)
+    {
+        DPRINT("ParentContext %S\n", pParentContext->pszContextName);
+    }
+
     if (pParentContext != NULL && pszName == NULL)
         return NULL;
 
@@ -70,7 +76,7 @@ AddContext(
     /* Insert it */
     if (pParentContext != NULL)
     {
-        if (pParentContext->pSubContextHead == NULL && pParentContext->pSubContextTail == NULL)
+        if ((pParentContext->pSubContextHead == NULL) && (pParentContext->pSubContextTail == NULL))
         {
             pParentContext->pSubContextHead = pEntry;
             pParentContext->pSubContextTail = pEntry;
@@ -431,7 +437,7 @@ CreateRootContext(VOID)
     PCOMMAND_GROUP pGroup;
 
     pRootContext = AddContext(NULL, NULL, NULL);
-    DPRINT1("pRootContext: %p\n", pRootContext);
+    DPRINT("pRootContext: %p\n", pRootContext);
     if (pRootContext == NULL)
         return FALSE;
 
@@ -470,13 +476,54 @@ CreateRootContext(VOID)
 }
 
 
+static
+PCONTEXT_ENTRY
+FindSubContextByGuid(
+    PCONTEXT_ENTRY pContext,
+    const GUID *pGuid)
+{
+    PCONTEXT_ENTRY pResultContext, pSubContext;
+
+    DPRINT("FindSubContextByGuid(%p)\n", pContext);
+    DPRINT("%lx <--> %lx\n", pContext->Guid.Data1, pGuid->Data1);
+
+    if (IsEqualGUID(&pContext->Guid, pGuid))
+    {
+        DPRINT("Found!\n");
+        return pContext;
+    }
+
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext)
+    {
+        pResultContext = FindSubContextByGuid(pSubContext, pGuid);
+        if (pResultContext)
+            return pResultContext;
+
+        pSubContext = pSubContext->pNext;
+    }
+
+    return NULL;
+}
+
+
+PCONTEXT_ENTRY
+FindContextByGuid(
+    const GUID *pGuid)
+{
+    if (pRootContext == NULL)
+        return NULL;
+    return FindSubContextByGuid(pRootContext, pGuid);
+}
+
+
 DWORD
 WINAPI
 RegisterContext(
     _In_ const NS_CONTEXT_ATTRIBUTES *pChildContext)
 {
     PHELPER_ENTRY pHelper;
-    PCONTEXT_ENTRY pContext;
+    PCONTEXT_ENTRY pContext, pParentContext;
     PCOMMAND_GROUP pGroup;
     DWORD i, j;
 
@@ -501,8 +548,17 @@ RegisterContext(
     DPRINT("Top commands: %lu\n", pChildContext->ulNumTopCmds);
 
     pHelper = FindHelper(&pChildContext->guidHelper, pHelperListHead);
+    DPRINT("Helper %p\n", pHelper);
+    pParentContext = pRootContext;
+    if (pHelper != NULL)
+    {
+        pParentContext = FindContextByGuid(&pHelper->ParentHelperGuid);
+        DPRINT("pParentContext %p\n", pParentContext);
+        if (pParentContext == NULL)
+            pParentContext = pRootContext;
+    }
 
-    pContext = AddContext(pRootContext, pChildContext->pwszContext, (GUID*)&pChildContext->guidHelper);
+    pContext = AddContext(pParentContext, pChildContext->pwszContext, (GUID*)&pChildContext->guidHelper);
     if (pContext != NULL)
     {
         if ((pHelper != NULL) && (pHelper->pDllEntry != NULL))
