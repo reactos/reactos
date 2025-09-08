@@ -837,7 +837,6 @@ HRESULT WINAPI CDrivesFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcRes
 /**************************************************************************
 *     CDrivesFolder::CompareIDs
 */
-
 HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     HRESULT hres;
@@ -897,7 +896,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
                 Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
 
             LARGE_INTEGER Diff;
-            if (iColumn == IDS_SHV_COLUMN_DISK_CAPACITY) /* Size */
+            if (MyComputerSFHeader[iColumn].colnameid == IDS_SHV_COLUMN_DISK_CAPACITY) /* Size */
                 Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
             else /* Size available */
                 Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
