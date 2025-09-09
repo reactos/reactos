@@ -21,7 +21,8 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
-    arch/vgafont.c)
+    arch/vgafont.c
+    arch/uefi/uefiarc.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND UEFILDR_ARC_SOURCE
