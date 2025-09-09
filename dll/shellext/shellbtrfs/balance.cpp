@@ -632,16 +632,15 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C3), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES_RAID1C4), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_PROFILES ? true : false);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_PROFILES), balance_started ? false : true);
-
-                // usage
+// usage
 
                 CheckDlgButton(hwndDlg, IDC_USAGE, opts->flags & BTRFS_BALANCE_OPTS_USAGE ? BST_CHECKED : BST_UNCHECKED);
 
-                s = std::to_wstring((unsigned long long)opts->usage_start);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->usage_start);
                 SetDlgItemTextW(hwndDlg, IDC_USAGE_START, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_START_SPINNER), UDM_SETRANGE32, 0, 100);
 
-                s = std::to_wstring((unsigned long long)opts->usage_end);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->usage_end);
                 SetDlgItemTextW(hwndDlg, IDC_USAGE_END, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_USAGE_END_SPINNER), UDM_SETRANGE32, 0, 100);
 
@@ -663,10 +662,10 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                 CheckDlgButton(hwndDlg, IDC_DRANGE, opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? BST_CHECKED : BST_UNCHECKED);
 
-                s = std::to_wstring((unsigned long long)opts->drange_start);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->drange_start);
                 SetDlgItemTextW(hwndDlg, IDC_DRANGE_START, s.c_str());
 
-                s = std::to_wstring((unsigned long long)opts->drange_end);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->drange_end);
                 SetDlgItemTextW(hwndDlg, IDC_DRANGE_END, s.c_str());
 
                 EnableWindow(GetDlgItem(hwndDlg, IDC_DRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_DRANGE ? true : false);
@@ -677,10 +676,10 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                 CheckDlgButton(hwndDlg, IDC_VRANGE, opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? BST_CHECKED : BST_UNCHECKED);
 
-                s = std::to_wstring((unsigned long long)opts->vrange_start);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->vrange_start);
                 SetDlgItemTextW(hwndDlg, IDC_VRANGE_START, s.c_str());
 
-                s = std::to_wstring((unsigned long long)opts->vrange_end);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->vrange_end);
                 SetDlgItemTextW(hwndDlg, IDC_VRANGE_END, s.c_str());
 
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VRANGE_START), !balance_started && opts->flags & BTRFS_BALANCE_OPTS_VRANGE ? true : false);
@@ -691,11 +690,11 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                 CheckDlgButton(hwndDlg, IDC_LIMIT, opts->flags & BTRFS_BALANCE_OPTS_LIMIT ? BST_CHECKED : BST_UNCHECKED);
 
-                s = std::to_wstring((unsigned long long)opts->limit_start);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->limit_start);
                 SetDlgItemTextW(hwndDlg, IDC_LIMIT_START, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_START_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
 
-                s = std::to_wstring((unsigned long long)opts->limit_end);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->limit_end);
                 SetDlgItemTextW(hwndDlg, IDC_LIMIT_END, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_LIMIT_END_SPINNER), UDM_SETRANGE32, 0, 0x7fffffff);
 
@@ -709,11 +708,11 @@ INT_PTR CALLBACK BtrfsBalance::BalanceOptsDlgProc(HWND hwndDlg, UINT uMsg, WPARA
 
                 CheckDlgButton(hwndDlg, IDC_STRIPES, opts->flags & BTRFS_BALANCE_OPTS_STRIPES ? BST_CHECKED : BST_UNCHECKED);
 
-                s = std::to_wstring((unsigned long long)opts->stripes_start);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->stripes_start);
                 SetDlgItemTextW(hwndDlg, IDC_STRIPES_START, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_START_SPINNER), UDM_SETRANGE32, 0, 0xffff);
 
-                s = std::to_wstring((unsigned long long)opts->stripes_end);
+                wstring_sprintf(s, L"%llu", (unsigned long long)opts->stripes_end);
                 SetDlgItemTextW(hwndDlg, IDC_STRIPES_END, s.c_str());
                 SendMessageW(GetDlgItem(hwndDlg, IDC_STRIPES_END_SPINNER), UDM_SETRANGE32, 0, 0xffff);
 
