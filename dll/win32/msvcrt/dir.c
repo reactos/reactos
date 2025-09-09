@@ -235,6 +235,18 @@ int CDECL _wchdir(const wchar_t * newdir)
     msvcrt_set_errno(newdir?GetLastError():0);
     return -1;
   }
+#ifdef __REACTOS__
+    /* Update the drive-specific current directory variable */
+    WCHAR fulldir[MAX_PATH];
+    if (GetCurrentDirectoryW(ARRAYSIZE(fulldir), fulldir) >= 2)
+    {
+        if (fulldir[1] == L':')
+        {
+            WCHAR envvar[4] = { L'=', towupper(fulldir[0]), L':', L'\0' };
+            SetEnvironmentVariableW(envvar, fulldir);
+        }
+    }
+#endif
   return 0;
 }
 
