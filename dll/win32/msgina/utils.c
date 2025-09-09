@@ -94,15 +94,34 @@ ReadRegDwordValue(
 {
     LONG rc;
     DWORD dwValue, dwType, cbData;
+    /* Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal. */
+    WCHAR Buffer[sizeof("4294967295")];
+    C_ASSERT(sizeof(Buffer) >= sizeof(DWORD));
 
-    cbData = sizeof(dwValue);
-    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (PBYTE)&dwValue, &cbData);
+    cbData = sizeof(Buffer);
+    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (PBYTE)&Buffer, &cbData);
     if (rc != ERROR_SUCCESS)
         return rc;
-    if (dwType != REG_DWORD)
+
+    if (dwType == REG_DWORD)
+    {
+        if (cbData != sizeof(dwValue))
+            return ERROR_INVALID_DATA; // ERROR_DATATYPE_MISMATCH;
+        dwValue = *(PDWORD)Buffer;
+    }
+    else if (dwType == REG_SZ)
+    {
+        PWCHAR pEnd = NULL;
+        Buffer[cbData / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        dwValue = wcstoul(Buffer, &pEnd, 0);
+        if (*pEnd) // Don't consider REG_SZ to be supported in this case!
+            return ERROR_UNSUPPORTED_TYPE;
+    }
+    else
+    {
         return ERROR_UNSUPPORTED_TYPE;
-    if (cbData != sizeof(dwValue))
-        return ERROR_INVALID_DATA; // ERROR_DATATYPE_MISMATCH;
+    }
 
     *pValue = dwValue;
     return ERROR_SUCCESS;
