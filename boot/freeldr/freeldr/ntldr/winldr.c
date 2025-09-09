@@ -12,6 +12,14 @@
 #include "registry.h"
 #include <internal/cmboot.h>
 
+// AGENT-MODIFIED: Include UEFI ARC functions header for UEFI boot support
+#ifdef UEFIBOOT
+#include <uefildr.h>
+#include <uefi/uefiarcname.h>
+extern EFI_SYSTEM_TABLE* GlobalSystemTable;
+extern EFI_HANDLE GlobalImageHandle;
+#endif
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
@@ -184,9 +192,33 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG_PTR PathSeparator;
     PLOADER_PARAMETER_EXTENSION Extension;
 
-    /* Construct SystemRoot and ArcBoot from SystemPath */
-    PathSeparator = strstr(BootPath, "\\") - BootPath;
-    RtlStringCbCopyNA(ArcBoot, sizeof(ArcBoot), BootPath, PathSeparator);
+    // AGENT-MODIFIED: Use UEFI-specific boot partition detection if running under UEFI
+#ifdef UEFIBOOT
+    if (GlobalSystemTable != NULL)
+    {
+        ULONG RDiskNumber = 0;
+        ULONG PartitionNumber = 1;
+        
+        /* Get boot partition info from UEFI */
+        if (UefiGetBootPartitionInfo(&RDiskNumber, &PartitionNumber, ArcBoot, sizeof(ArcBoot)))
+        {
+            TRACE("UEFI Boot Device: %s\n", ArcBoot);
+        }
+        else
+        {
+            /* Fallback to parsing the BootPath */
+            PathSeparator = strstr(BootPath, "\\") - BootPath;
+            RtlStringCbCopyNA(ArcBoot, sizeof(ArcBoot), BootPath, PathSeparator);
+            TRACE("Using fallback ArcBoot: '%s'\n", ArcBoot);
+        }
+    }
+    else
+#endif
+    {
+        /* Construct SystemRoot and ArcBoot from SystemPath */
+        PathSeparator = strstr(BootPath, "\\") - BootPath;
+        RtlStringCbCopyNA(ArcBoot, sizeof(ArcBoot), BootPath, PathSeparator);
+    }
 
     TRACE("ArcBoot: '%s'\n", ArcBoot);
     TRACE("SystemRoot: '%s'\n", SystemRoot);
@@ -246,63 +278,44 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     LoaderBlock->ArcDiskInformation = &WinLdrSystemBlock->ArcDiskInformation;
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
-    /* Convert ARC disk information from freeldr to a correct format */
-    ULONG DiscCount = ArcGetDiskCount();
-    
-    /* Special handling for UEFI boot - add a dummy CD-ROM entry if we're booting from CD */
-    if (DiscCount == 0 && strstr(ArcBoot, "cdrom"))
+    // AGENT-MODIFIED: Use UEFI-specific ARC disk initialization if running under UEFI
+#ifdef UEFIBOOT
+    if (GlobalSystemTable != NULL)
     {
-        PARC_DISK_SIGNATURE_EX ArcDiskSig;
-        
-        TRACE("UEFI CD-ROM boot detected, adding dummy ARC disk entry\n");
-        
-        /* Allocate the ARC structure for CD-ROM */
-        ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
-        if (ArcDiskSig)
+        /* Use UEFI-specific ARC disk initialization */
+        if (!UefiInitializeArcDisks(LoaderBlock))
         {
-            /* Initialize the CD-ROM entry */
-            RtlZeroMemory(ArcDiskSig, sizeof(ARC_DISK_SIGNATURE_EX));
-            
-            /* Set up the ARC name for CD-ROM */
-            RtlStringCbCopyA(ArcDiskSig->ArcName, sizeof(ArcDiskSig->ArcName), 
-                           "multi(0)disk(0)cdrom(0)");
-            
-            /* CD-ROM doesn't have a disk signature, but we need valid structure */
-            ArcDiskSig->DiskSignature.Signature = 0xCD000000;  /* Special CD-ROM signature */
-            ArcDiskSig->DiskSignature.CheckSum = 0;
-            ArcDiskSig->DiskSignature.ValidPartitionTable = FALSE;
-            ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
-            
-            /* Insert into the list */
-            InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
-                          &ArcDiskSig->DiskSignature.ListEntry);
-            
-            TRACE("Added CD-ROM ARC disk entry\n");
+            ERR("UefiInitializeArcDisks() failed\n");
         }
     }
-    
-    for (i = 0; i < DiscCount; i++)
+    else
+#endif
     {
-        PARC_DISK_SIGNATURE_EX ArcDiskSig;
-
-        /* Allocate the ARC structure */
-        ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
-        if (!ArcDiskSig)
+        /* Convert ARC disk information from freeldr to a correct format */
+        ULONG DiscCount = ArcGetDiskCount();
+        for (i = 0; i < DiscCount; i++)
         {
-            ERR("Failed to allocate ARC structure! Ignoring remaining ARC disks. (i = %lu, DiskCount = %lu)\n",
-                i, DiscCount);
-            break;
+            PARC_DISK_SIGNATURE_EX ArcDiskSig;
+
+            /* Allocate the ARC structure */
+            ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
+            if (!ArcDiskSig)
+            {
+                ERR("Failed to allocate ARC structure! Ignoring remaining ARC disks. (i = %lu, DiskCount = %lu)\n",
+                    i, DiscCount);
+                break;
+            }
+
+            /* Copy the data over */
+            RtlCopyMemory(ArcDiskSig, ArcGetDiskInfo(i), sizeof(ARC_DISK_SIGNATURE_EX));
+
+            /* Set the ARC Name pointer */
+            ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
+
+            /* Insert into the list */
+            InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
+                           &ArcDiskSig->DiskSignature.ListEntry);
         }
-
-        /* Copy the data over */
-        RtlCopyMemory(ArcDiskSig, ArcGetDiskInfo(i), sizeof(ARC_DISK_SIGNATURE_EX));
-
-        /* Set the ARC Name pointer */
-        ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
-
-        /* Insert into the list */
-        InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
-                       &ArcDiskSig->DiskSignature.ListEntry);
     }
 
     /* Convert all lists to Virtual address */

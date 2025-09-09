@@ -14,6 +14,10 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
+// AGENT-MODIFIED: Define local GUID instances as done in other UEFI files
+EFI_GUID gEfiBlockIoProtocolGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
+EFI_GUID gEfiLoadedImageProtocolGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
+
 #define TAG_UEFI_DISK 'kDfU'  /* "UefD" in reverse for UEFI Disk */
 
 
@@ -110,69 +114,16 @@ ReadDiskSignature(
     return FALSE;
 }
 
-/* -------------------------------------------------------------------------- */
-/* FreeLdr disk I/O implementation for UEFI                                   */
-/* -------------------------------------------------------------------------- */
-
-BOOLEAN
-UefiDiskGetDriveGeometry(
-    UCHAR DriveNumber,
-    PGEOMETRY Geometry)
-{
-    ULONG DiskIndex = DriveNumber - 0x80; /* Convert from BIOS drive number */
-    
-    if (DiskIndex >= UefiDiskHandleCount)
-        return FALSE;
-    
-    PUEFI_DISK_HANDLE_ENTRY Disk = &UefiDiskHandles[DiskIndex];
-    
-    Geometry->Cylinders = 1024; /* Fake values for LBA mode */
-    Geometry->Heads = 255;
-    Geometry->SectorsPerTrack = 63;
-    Geometry->BytesPerSector = (ULONG)Disk->BlockIo->Media->BlockSize;
-    Geometry->Sectors = Disk->BlockIo->Media->LastBlock + 1;
-    
-    return TRUE;
-}
-
-BOOLEAN
-UefiDiskReadLogicalSectors(
-    IN UCHAR DriveNumber,
-    IN ULONGLONG SectorNumber,
-    IN ULONG SectorCount,
-    OUT PVOID Buffer)
-{
-    EFI_STATUS Status;
-    ULONG DiskIndex = DriveNumber - 0x80;
-    
-    if (DiskIndex >= UefiDiskHandleCount)
-        return FALSE;
-    
-    PUEFI_DISK_HANDLE_ENTRY Disk = &UefiDiskHandles[DiskIndex];
-    
-    Status = Disk->BlockIo->ReadBlocks(
-        Disk->BlockIo,
-        Disk->BlockIo->Media->MediaId,
-        SectorNumber,
-        SectorCount * Disk->BlockIo->Media->BlockSize,
-        Buffer);
-    
-    return !EFI_ERROR(Status);
-}
-
-ULONG
-UefiDiskGetCacheableBlockCount(UCHAR DriveNumber)
-{
-    /* Return a reasonable cache size */
-    return 64; /* 64 sectors */
-}
+// AGENT-MODIFIED: Removed duplicate disk I/O functions that conflict with uefidisk.c
+// The disk I/O functions are already implemented in uefidisk.c
 
 /* -------------------------------------------------------------------------- */
 /* Main initialization function                                               */
 /* -------------------------------------------------------------------------- */
 
+// AGENT-MODIFIED: Renamed function to avoid conflict with existing uefidisk.c implementation
 BOOLEAN
-UefiInitializeBootDevices(VOID)
+UefiEnumerateArcDisks(VOID)
 {
     EFI_STATUS Status;
     EFI_HANDLE* Handles = NULL;
@@ -181,7 +132,7 @@ UefiInitializeBootDevices(VOID)
     CHAR ArcName[256];
     ULONG Signature, CheckSum;
 
-    TRACE("UefiInitializeBootDevices: Starting UEFI disk enumeration\n");
+    TRACE("UefiEnumerateArcDisks: Starting UEFI disk enumeration\n");
 
     /* Get all block I/O handles */
     Status = GlobalSystemTable->BootServices->LocateHandleBuffer(
@@ -260,15 +211,9 @@ UefiInitializeBootDevices(VOID)
     UefiDiskHandleCount = ValidDiskCount;
     GlobalSystemTable->BootServices->FreePool(Handles);
     
-    TRACE("UefiInitializeBootDevices: Found %lu valid disks\n", ValidDiskCount);
+    TRACE("UefiEnumerateArcDisks: Found %lu valid disks\n", ValidDiskCount);
     
-    /* Register disk access functions with MachVtbl if not already done */
-    if (!MachVtbl.DiskReadLogicalSectors)
-    {
-        MachVtbl.DiskReadLogicalSectors = UefiDiskReadLogicalSectors;
-        MachVtbl.DiskGetDriveGeometry = UefiDiskGetDriveGeometry;
-        MachVtbl.DiskGetCacheableBlockCount = UefiDiskGetCacheableBlockCount;
-    }
+    // AGENT-MODIFIED: Removed MachVtbl registration as it's handled by uefidisk.c
     
     return (ValidDiskCount > 0);
 }

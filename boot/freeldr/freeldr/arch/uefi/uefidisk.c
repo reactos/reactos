@@ -8,6 +8,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <uefildr.h>
+// AGENT-MODIFIED: Include header for UefiEnumerateArcDisks
+#include <uefi/uefiarcname.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
@@ -566,6 +568,9 @@ UefiInitializeBootDevices(VOID)
     DiskReadBuffer = MmAllocateMemoryWithType(DiskReadBufferSize, LoaderFirmwareTemporary);
     UefiSetupBlockDevices();
     UefiSetBootpath();
+    
+    // AGENT-MODIFIED: Enumerate all ARC disks for proper Windows boot support
+    UefiEnumerateArcDisks();
 
     /* Check if handles were properly initialized */
     if (handles == NULL || InternalUefiDisk == NULL)

@@ -47,6 +47,7 @@ MachInit(const char *CmdLine)
     MachVtbl.DiskGetDriveGeometry = UefiDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = UefiDiskGetCacheableBlockCount;
     MachVtbl.GetTime = UefiGetTime;
+    // AGENT-MODIFIED: Keep existing UefiInitializeBootDevices from uefidisk.c
     MachVtbl.InitializeBootDevices = UefiInitializeBootDevices;
     MachVtbl.HwDetect = UefiHwDetect;
     MachVtbl.HwIdle = UefiHwIdle;
