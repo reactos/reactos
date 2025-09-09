@@ -153,12 +153,8 @@ BOOL
 GetRegistrySettings(PGINA_CONTEXT pgContext)
 {
     HKEY hKey = NULL;
-    LPWSTR lpAutoAdminLogon = NULL;
-    LPWSTR lpDontDisplayLastUserName = NULL;
-    LPWSTR lpShutdownWithoutLogon = NULL;
-    LPWSTR lpIgnoreShiftOverride = NULL;
+    DWORD dwValue, dwSize;
     DWORD dwDisableCAD = 0;
-    DWORD dwSize;
     LONG rc;
 
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -172,62 +168,41 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
         return FALSE;
     }
 
-    rc = ReadRegSzValue(hKey,
-                        L"AutoAdminLogon",
-                        &lpAutoAdminLogon);
+    rc = ReadRegDwordValue(hKey, L"AutoAdminLogon", &dwValue);
     if (rc == ERROR_SUCCESS)
-    {
-        if (wcscmp(lpAutoAdminLogon, L"1") == 0)
-            pgContext->bAutoAdminLogon = TRUE;
-    }
-
+        pgContext->bAutoAdminLogon = !!dwValue;
     TRACE("bAutoAdminLogon: %s\n", pgContext->bAutoAdminLogon ? "TRUE" : "FALSE");
 
-    rc = ReadRegDwordValue(hKey,
-                           L"DisableCAD",
-                           &dwDisableCAD);
+    // TODO: What to do also depends whether we are on Terminal Services.
+    rc = ReadRegDwordValue(hKey, L"DisableCAD", &dwDisableCAD);
     if (rc == ERROR_SUCCESS)
     {
         if (dwDisableCAD != 0)
             pgContext->bDisableCAD = TRUE;
     }
-
     TRACE("bDisableCAD: %s\n", pgContext->bDisableCAD ? "TRUE" : "FALSE");
 
+    // NOTE: The default value is always read from the registry (Workstation: TRUE; Server: FALSE).
+    // TODO: Set it to TRUE always on SafeMode. Keep it FALSE for remote sessions.
     pgContext->bShutdownWithoutLogon = TRUE;
-    rc = ReadRegSzValue(hKey,
-                        L"ShutdownWithoutLogon",
-                        &lpShutdownWithoutLogon);
+    rc = ReadRegDwordValue(hKey, L"ShutdownWithoutLogon", &dwValue);
     if (rc == ERROR_SUCCESS)
-    {
-        if (wcscmp(lpShutdownWithoutLogon, L"0") == 0)
-            pgContext->bShutdownWithoutLogon = FALSE;
-    }
+        pgContext->bShutdownWithoutLogon = !!dwValue;
 
-    rc = ReadRegSzValue(hKey,
-                        L"DontDisplayLastUserName",
-                        &lpDontDisplayLastUserName);
+    rc = ReadRegDwordValue(hKey, L"DontDisplayLastUserName", &dwValue);
     if (rc == ERROR_SUCCESS)
-    {
-        if (wcscmp(lpDontDisplayLastUserName, L"1") == 0)
-            pgContext->bDontDisplayLastUserName = TRUE;
-    }
+        pgContext->bDontDisplayLastUserName = !!dwValue;
 
-    rc = ReadRegSzValue(hKey,
-                        L"IgnoreShiftOverride",
-                        &lpIgnoreShiftOverride);
+    rc = ReadRegDwordValue(hKey, L"IgnoreShiftOverride", &dwValue);
     if (rc == ERROR_SUCCESS)
-    {
-        if (wcscmp(lpIgnoreShiftOverride, L"1") == 0)
-            pgContext->bIgnoreShiftOverride = TRUE;
-    }
+        pgContext->bIgnoreShiftOverride = !!dwValue;
 
     dwSize = sizeof(pgContext->UserName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultUserName",
                           NULL,
                           NULL,
-                          (LPBYTE)&pgContext->UserName,
+                          (PBYTE)&pgContext->UserName,
                           &dwSize);
 
     dwSize = sizeof(pgContext->DomainName);
@@ -235,7 +210,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           L"DefaultDomainName",
                           NULL,
                           NULL,
-                          (LPBYTE)&pgContext->DomainName,
+                          (PBYTE)&pgContext->DomainName,
                           &dwSize);
 
     dwSize = sizeof(pgContext->Password);
@@ -243,22 +218,10 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           L"DefaultPassword",
                           NULL,
                           NULL,
-                          (LPBYTE)&pgContext->Password,
+                          (PBYTE)&pgContext->Password,
                           &dwSize);
     if (rc)
         GetLsaDefaultPassword(pgContext);
-
-    if (lpIgnoreShiftOverride != NULL)
-        HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);
-
-    if (lpShutdownWithoutLogon != NULL)
-        HeapFree(GetProcessHeap(), 0, lpShutdownWithoutLogon);
-
-    if (lpDontDisplayLastUserName != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDontDisplayLastUserName);
-
-    if (lpAutoAdminLogon != NULL)
-        HeapFree(GetProcessHeap(), 0, lpAutoAdminLogon);
 
     if (hKey != NULL)
         RegCloseKey(hKey);
