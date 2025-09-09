@@ -1,519 +1,436 @@
 /*
  * PROJECT:     FreeLoader UEFI Support
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Build ARC names from UEFI device paths (UEFI -> ARC bridge)
- * AUTHOR:      ChatGPT (based on ReactOS/FreeLdr style and UEFI specs)
+ * PURPOSE:     UEFI disk enumeration and ARC name bridge
+ * COPYRIGHT:   Copyright 2025 Ahmed ARIF
  */
 
 #include <uefildr.h>
 #include <freeldr.h>
 #include <arcname.h>
-#include "ntldr/winldr.h" 
+#include "ntldr/winldr.h"
+#include <disk.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
+#define TAG_UEFI_DISK 'kDfU'  /* "UefD" in reverse for UEFI Disk */
+
+
 /* -------------------------------------------------------------------------- */
-/* External symbols from other freeldr units                                  */
+/* External symbols                                                           */
 /* -------------------------------------------------------------------------- */
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
-extern EFI_HANDLE       GlobalImageHandle;
-
-/* From winldr.c (already defined there) — it is a POINTER */
+extern EFI_HANDLE GlobalImageHandle;
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
-/* Optional: used elsewhere; leave NULL here unless you detect FS type */
-extern PCWSTR BootFileSystem;
+/* From archwsup.c - use existing infrastructure */
+extern VOID AddReactOSArcDiskInfo(IN PSTR ArcName,
+                                  IN ULONG Signature,
+                                  IN ULONG Checksum,
+                                  IN BOOLEAN ValidPartitionTable);
+extern ULONG ArcGetDiskCount(VOID);
+extern PARC_DISK_SIGNATURE_EX ArcGetDiskInfo(ULONG Index);
 
 /* -------------------------------------------------------------------------- */
-/* Local helpers & types                                                      */
+/* UEFI Disk tracking structures                                              */
 /* -------------------------------------------------------------------------- */
 
-/* Fallback for SetDevicePathNodeLength if not pulled in via headers */
-#ifndef SetDevicePathNodeLength
-#define SetDevicePathNodeLength(Node, Length) do {        \
-    (Node)->Length[0] = (UINT8)((Length) & 0xFF);         \
-    (Node)->Length[1] = (UINT8)(((Length) >> 8) & 0xFF);  \
-} while (0)
-#endif
-
-/* Minimal pool helpers using BootServices */
-static __inline VOID FreePoolSafe(IN VOID* Ptr)
+typedef struct _UEFI_DISK_HANDLE_ENTRY
 {
-    if (Ptr) GlobalSystemTable->BootServices->FreePool((VOID*)Ptr);
-}
+    EFI_HANDLE Handle;
+    EFI_BLOCK_IO_PROTOCOL* BlockIo;
+    ULONG DiskNumber;
+} UEFI_DISK_HANDLE_ENTRY, *PUEFI_DISK_HANDLE_ENTRY;
 
-static PVOID UefiAllocateZeroPool(IN UINTN Size)
-{
-    PVOID Buffer = NULL;
-    if (!EFI_ERROR(GlobalSystemTable->BootServices->AllocatePool(EfiLoaderData, Size, &Buffer)) && Buffer)
-        RtlZeroMemory(Buffer, Size);
-    return Buffer;
-}
-
-static PVOID UefiAllocateCopyPool(IN UINTN Size, IN CONST VOID* Src)
-{
-    PVOID Buffer = NULL;
-    if (!EFI_ERROR(GlobalSystemTable->BootServices->AllocatePool(EfiLoaderData, Size, &Buffer)) && Buffer && Src)
-        RtlCopyMemory(Buffer, Src, Size);
-    return Buffer;
-}
-
-/* Minimal device-path helpers (don’t depend on library) */
-static UINTN UefiGetDevicePathSize(IN EFI_DEVICE_PATH_PROTOCOL* Dp)
-{
-    UINTN Size = 0;
-    EFI_DEVICE_PATH_PROTOCOL* Node = Dp;
-    if (!Node) return 0;
-
-    while (!IsDevicePathEnd(Node))
-    {
-        Size += DevicePathNodeLength(Node);
-        Node = NextDevicePathNode(Node);
-    }
-
-    /* add end node */
-    Size += sizeof(EFI_DEVICE_PATH_PROTOCOL);
-    return Size;
-}
-
-static VOID UefiSetDevicePathEndNode(OUT EFI_DEVICE_PATH_PROTOCOL* Node)
-{
-    if (!Node) return;
-    Node->Type    = END_DEVICE_PATH_TYPE;
-    Node->SubType = END_ENTIRE_DEVICE_PATH_SUBTYPE;
-    /* Write length bytes directly to avoid macro conflicts */
-    {
-        UINT16 len = (UINT16)sizeof(EFI_DEVICE_PATH_PROTOCOL);
-        Node->Length[0] = (UINT8)(len & 0xFF);
-        Node->Length[1] = (UINT8)((len >> 8) & 0xFF);
-    }
-}
-
-/* String compare for CHAR16 (avoid external dep) */
-static INTN StrCmp16(IN CONST CHAR16* A, IN CONST CHAR16* B)
-{
-    if (A == B) return 0;
-    if (!A) return -1;
-    if (!B) return 1;
-    while (*A && (*A == *B)) { ++A; ++B; }
-    return (INTN)(*A) - (INTN)(*B);
-}
-
-typedef struct _UEFI_DISK_REC
-{
-    EFI_HANDLE DiskHandle;                 /* Physical disk handle (BlockIo, !LogicalPartition) */
-    EFI_DEVICE_PATH_PROTOCOL* DiskDp;      /* Its device path */
-    UINT32 RDiskIndex;                     /* Assigned rdisk() index */
-} UEFI_DISK_REC;
-
-typedef struct _UEFI_PART_REC
-{
-    EFI_HANDLE PartHandle;                 /* Partition handle (BlockIo, LogicalPartition) */
-    EFI_DEVICE_PATH_PROTOCOL* PartDp;      /* Its device path */
-    EFI_HANDLE ParentDisk;                 /* Resolved parent physical disk handle */
-    UINT32 RDiskIndex;                     /* Inherited from parent */
-    UINT32 PartitionIndex;                 /* 1-based partition() index within that disk */
-} UEFI_PART_REC;
-
-typedef struct _UEFI_ARC_CTX
-{
-    UEFI_DISK_REC* Disks;
-    UINTN          DiskCount;
-
-    UEFI_PART_REC* Parts;
-    UINTN          PartCount;
-
-    /* DevicePathToText disabled in this build; we’ll use pointer ordering */
-    VOID*          DpToText;
-} UEFI_ARC_CTX;
+/* Keep track of UEFI handles for disk I/O operations */
+static UEFI_DISK_HANDLE_ENTRY* UefiDiskHandles = NULL;
+static UINTN UefiDiskHandleCount = 0;
 
 /* -------------------------------------------------------------------------- */
-/* Small utilities                                                            */
+/* MBR/GPT signature reading                                                  */
 /* -------------------------------------------------------------------------- */
 
-static CHAR16* DpToTextMaybe(UEFI_ARC_CTX* Ctx, EFI_DEVICE_PATH_PROTOCOL* Dp)
-{
-    /* DevicePathToText not available — return NULL */
-    UNREFERENCED_PARAMETER(Ctx);
-    UNREFERENCED_PARAMETER(Dp);
-    return NULL;
-}
-
-static INTN StrCmpNullSafe(CHAR16* A, CHAR16* B)
-{
-    if (A && B) return StrCmp16(A, B);
-    if (A && !B) return 1;
-    if (!A && B) return -1;
-    return 0;
-}
-
-/* Compare DevicePaths deterministically (text if available, else pointer) */
-static INTN CmpDpStable(UEFI_ARC_CTX* Ctx, EFI_DEVICE_PATH_PROTOCOL* A, EFI_DEVICE_PATH_PROTOCOL* B)
-{
-    CHAR16* ta = DpToTextMaybe(Ctx, A);
-    CHAR16* tb = DpToTextMaybe(Ctx, B);
-    INTN r = StrCmpNullSafe(ta, tb);
-    FreePoolSafe(ta);
-    FreePoolSafe(tb);
-    if (r != 0) return r;
-
-    /* Fallback: compare addresses (stable within this boot) */
-    if (A < B) return -1;
-    if (A > B) return 1;
-    return 0;
-}
-
-/* Walk a device path and strip partition/media nodes to get the parent disk handle */
-static EFI_HANDLE FindParentDiskHandle(EFI_HANDLE PartHandle)
+static BOOLEAN
+ReadDiskSignature(
+    IN EFI_BLOCK_IO_PROTOCOL* BlockIo,
+    OUT PULONG Signature,
+    OUT PULONG CheckSum)
 {
     EFI_STATUS Status;
-    EFI_DEVICE_PATH_PROTOCOL* Dp = NULL;
-    EFI_DEVICE_PATH_PROTOCOL* Work = NULL;
-    EFI_HANDLE Handle = NULL;
+    MASTER_BOOT_RECORD* Mbr;
+    UINT8* Buffer;
+    ULONG i, Sum = 0;
 
-    Status = GlobalSystemTable->BootServices->HandleProtocol(PartHandle, &gEfiDevicePathProtocolGuid, (VOID**)&Dp);
-    if (EFI_ERROR(Status) || !Dp) return NULL;
+    *Signature = 0;
+    *CheckSum = 0;
 
-    /* Copy the DP so we can mutate */
-    UINTN Sz = UefiGetDevicePathSize(Dp);
-    Work = UefiAllocateCopyPool(Sz, Dp);
-    if (!Work) return NULL;
-
-    /* Trim nodes from the end until LocateDevicePath gives a non-logical BlockIo */
-    EFI_DEVICE_PATH_PROTOCOL* Node = Work;
-    EFI_DEVICE_PATH_PROTOCOL* LastGood = Work;
-
-    while (!IsDevicePathEnd(Node))
-    {
-        LastGood = Node;
-        Node = NextDevicePathNode(Node);
-    }
-
-    /* Pop nodes progressively */
-    while (LastGood && LastGood != Work)
-    {
-        /* Terminate here */
-        UefiSetDevicePathEndNode(LastGood);
-
-        EFI_DEVICE_PATH_PROTOCOL* Tmp = Work;
-        Handle = NULL;
-        Status = GlobalSystemTable->BootServices->LocateDevicePath(&gEfiBlockIoProtocolGuid, &Tmp, &Handle);
-        if (!EFI_ERROR(Status) && Handle)
-        {
-            EFI_BLOCK_IO_PROTOCOL* Blk = NULL;
-            if (!EFI_ERROR(GlobalSystemTable->BootServices->HandleProtocol(Handle, &gEfiBlockIoProtocolGuid, (VOID**)&Blk))
-                && Blk && !Blk->Media->LogicalPartition)
-            {
-                /* Found a physical disk handle */
-                FreePoolSafe(Work);
-                return Handle;
-            }
-        }
-
-        /* Move LastGood back one node: find previous */
-        /* Re-scan from start to the node before LastGood */
-        EFI_DEVICE_PATH_PROTOCOL* Prev = NULL;
-        EFI_DEVICE_PATH_PROTOCOL* Cur  = Work;
-        while (!IsDevicePathEnd(Cur) && Cur != LastGood)
-        {
-            Prev = Cur;
-            Cur = NextDevicePathNode(Cur);
-        }
-        LastGood = Prev;
-    }
-
-    FreePoolSafe(Work);
-    return NULL;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Enumeration and indexing                                                   */
-/* -------------------------------------------------------------------------- */
-
-static EFI_STATUS InitArcCtx(UEFI_ARC_CTX* Ctx)
-{
-    EFI_STATUS Status;
-    RtlZeroMemory(Ctx, sizeof(*Ctx));
-
-    /* DevicePathToText not available in this build */
-    Ctx->DpToText = NULL;
-
-    /* Get all BlockIo handles */
-    EFI_HANDLE* Handles = NULL;
-    UINTN Count = 0;
-    Status = GlobalSystemTable->BootServices->LocateHandleBuffer(ByProtocol,
-                                                                 &gEfiBlockIoProtocolGuid,
-                                                                 NULL,
-                                                                 &Count,
-                                                                 &Handles);
-    if (EFI_ERROR(Status) || Count == 0) return EFI_NOT_FOUND;
-
-    /* First pass: classify disks vs partitions */
-    Ctx->Disks = (UEFI_DISK_REC*)UefiAllocateZeroPool(sizeof(UEFI_DISK_REC) * Count);
-    Ctx->Parts = (UEFI_PART_REC*)UefiAllocateZeroPool(sizeof(UEFI_PART_REC) * Count);
-    if (!Ctx->Disks || !Ctx->Parts)
-    {
-        FreePoolSafe(Ctx->Disks);
-        FreePoolSafe(Ctx->Parts);
-        FreePoolSafe(Handles);
-        return EFI_OUT_OF_RESOURCES;
-    }
-
-    for (UINTN i = 0; i < Count; ++i)
-    {
-        EFI_BLOCK_IO_PROTOCOL* Blk = NULL;
-        EFI_DEVICE_PATH_PROTOCOL* Dp = NULL;
-        if (EFI_ERROR(GlobalSystemTable->BootServices->HandleProtocol(Handles[i], &gEfiBlockIoProtocolGuid, (VOID**)&Blk)) || !Blk)
-            continue;
-        if (EFI_ERROR(GlobalSystemTable->BootServices->HandleProtocol(Handles[i], &gEfiDevicePathProtocolGuid, (VOID**)&Dp)) || !Dp)
-            continue;
-
-        if (!Blk->Media->LogicalPartition)
-        {
-            UEFI_DISK_REC* d = &Ctx->Disks[Ctx->DiskCount++];
-            d->DiskHandle = Handles[i];
-            d->DiskDp = Dp;
-        }
-        else
-        {
-            UEFI_PART_REC* p = &Ctx->Parts[Ctx->PartCount++];
-            p->PartHandle = Handles[i];
-            p->PartDp = Dp;
-            p->ParentDisk = NULL; /* filled later */
-        }
-    }
-
-    FreePoolSafe(Handles);
-
-    /* Sort disks deterministically */
-    for (UINTN i = 0; i + 1 < Ctx->DiskCount; ++i)
-    {
-        for (UINTN j = i + 1; j < Ctx->DiskCount; ++j)
-        {
-            if (CmpDpStable(Ctx, Ctx->Disks[i].DiskDp, Ctx->Disks[j].DiskDp) > 0)
-            {
-                UEFI_DISK_REC tmp = Ctx->Disks[i];
-                Ctx->Disks[i] = Ctx->Disks[j];
-                Ctx->Disks[j] = tmp;
-            }
-        }
-        Ctx->Disks[i].RDiskIndex = (UINT32)i;
-    }
-    if (Ctx->DiskCount)
-        Ctx->Disks[Ctx->DiskCount - 1].RDiskIndex = (UINT32)(Ctx->DiskCount - 1);
-
-    /* Map partitions to parent disks and assign partition indices (1-based) */
-    for (UINTN i = 0; i < Ctx->PartCount; ++i)
-    {
-        Ctx->Parts[i].ParentDisk = FindParentDiskHandle(Ctx->Parts[i].PartHandle);
-    }
-
-    /* For each disk, collect and sort its partitions, assign partition numbers */
-    for (UINTN d = 0; d < Ctx->DiskCount; ++d)
-    {
-        /* count parts for this disk */
-        UINTN localCount = 0;
-        for (UINTN p = 0; p < Ctx->PartCount; ++p)
-            if (Ctx->Parts[p].ParentDisk == Ctx->Disks[d].DiskHandle)
-                ++localCount;
-
-        if (!localCount) continue;
-
-        /* gather indices */
-        UINTN* idx = (UINTN*)UefiAllocateZeroPool(sizeof(UINTN) * localCount);
-        if (!idx) continue;
-        UINTN k = 0;
-        for (UINTN p = 0; p < Ctx->PartCount; ++p)
-            if (Ctx->Parts[p].ParentDisk == Ctx->Disks[d].DiskHandle)
-                idx[k++] = p;
-
-        /* sort by DP (stable) */
-        for (UINTN a = 0; a + 1 < localCount; ++a)
-        {
-            for (UINTN b = a + 1; b < localCount; ++b)
-            {
-                if (CmpDpStable(Ctx, Ctx->Parts[idx[a]].PartDp, Ctx->Parts[idx[b]].PartDp) > 0)
-                {
-                    UINTN t = idx[a]; idx[a] = idx[b]; idx[b] = t;
-                }
-            }
-        }
-
-        /* assign partition numbers 1..N and rdisk index */
-        for (UINTN n = 0; n < localCount; ++n)
-        {
-            UEFI_PART_REC* pr = &Ctx->Parts[idx[n]];
-            pr->RDiskIndex = Ctx->Disks[d].RDiskIndex;
-            pr->PartitionIndex = (UINT32)(n + 1);
-        }
-
-        FreePoolSafe(idx);
-    }
-
-    return EFI_SUCCESS;
-}
-
-static VOID FreeArcCtx(UEFI_ARC_CTX* Ctx)
-{
-    FreePoolSafe(Ctx->Disks);
-    FreePoolSafe(Ctx->Parts);
-    RtlZeroMemory(Ctx, sizeof(*Ctx));
-}
-
-/* Resolve which (disk,partition) corresponds to the current boot image */
-static EFI_STATUS ResolveBootPartition(UEFI_ARC_CTX* Ctx,
-                                       UINT32* OutRDisk,
-                                       UINT32* OutPartition)
-{
-    EFI_STATUS Status;
-    EFI_LOADED_IMAGE_PROTOCOL* LoadedImage = NULL;
-    EFI_DEVICE_PATH_PROTOCOL*  ImageDp = NULL;
-
-    if (!OutRDisk || !OutPartition) return EFI_INVALID_PARAMETER;
-
-    Status = GlobalSystemTable->BootServices->HandleProtocol(GlobalImageHandle,
-                                                             &gEfiLoadedImageProtocolGuid,
-                                                             (VOID**)&LoadedImage);
-    TRACE("UEFI ARC: ResolveBootPartition: HandleProtocol(LoadedImage) -> %lx\n",
-              (ULONG_PTR)Status);
-    if (EFI_ERROR(Status) || !LoadedImage)
-        return EFI_NOT_FOUND;
-
-    /* Prefer the device we were loaded from (not the image file path) */
-    Status = GlobalSystemTable->BootServices->HandleProtocol(LoadedImage->DeviceHandle,
-                                                             &gEfiDevicePathProtocolGuid,
-                                                             (VOID**)&ImageDp);
-    if (EFI_ERROR(Status) || !ImageDp)
-        return EFI_NOT_FOUND;
-
-    /* Find a matching partition handle: match DevicePath prefix */
-    EFI_HANDLE PartHandle = NULL;
-
-    /* Simplest: find BlockIo(LogicalPartition) whose DP is a prefix of ImageDp */
-    for (UINTN i = 0; i < Ctx->PartCount; ++i)
-    {
-        EFI_DEVICE_PATH_PROTOCOL* Copy = (EFI_DEVICE_PATH_PROTOCOL*)UefiAllocateCopyPool(UefiGetDevicePathSize(ImageDp), ImageDp);
-        if (!Copy) continue;
-
-        EFI_DEVICE_PATH_PROTOCOL* Tmp = Copy;
-        EFI_HANDLE H = NULL;
-        if (!EFI_ERROR(GlobalSystemTable->BootServices->LocateDevicePath(&gEfiBlockIoProtocolGuid, &Tmp, &H)))
-        {
-            if (H == Ctx->Parts[i].PartHandle)
-            {
-                PartHandle = H;
-                FreePoolSafe(Copy);
-                break;
-            }
-        }
-        FreePoolSafe(Copy);
-    }
-
-    if (!PartHandle)
-    {
-        /* Fallback: if the image’s DeviceHandle itself is a logical partition */
-        EFI_BLOCK_IO_PROTOCOL* Blk = NULL;
-        if (!EFI_ERROR(GlobalSystemTable->BootServices->HandleProtocol(LoadedImage->DeviceHandle,
-                                                                       &gEfiBlockIoProtocolGuid,
-                                                                       (VOID**)&Blk)) &&
-            Blk && Blk->Media->LogicalPartition)
-        {
-            PartHandle = LoadedImage->DeviceHandle;
-        }
-    }
-
-    if (!PartHandle) return EFI_NOT_FOUND;
-
-    for (UINTN p = 0; p < Ctx->PartCount; ++p)
-    {
-        if (Ctx->Parts[p].PartHandle == PartHandle)
-        {
-            TRACE("UEFI ARC: matched partition rdisk(%u) partition(%u)\n", Ctx->Parts[p].RDiskIndex, Ctx->Parts[p].PartitionIndex);
-            *OutRDisk     = Ctx->Parts[p].RDiskIndex;
-            *OutPartition = Ctx->Parts[p].PartitionIndex ? Ctx->Parts[p].PartitionIndex : 1;
-            return EFI_SUCCESS;
-        }
-    }
-
-    return EFI_NOT_FOUND;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Public: Build ARC device & full path                                       */
-/* -------------------------------------------------------------------------- */
-
-/* Builds:
- *   ArcBootOut:  "multi(0)disk(0)rdisk(N)partition(M)"
- *   BootPathOut: "multi(0)disk(0)rdisk(N)partition(M)\<SystemPath>"
- *
- * SystemPath may be NULL (then BootPathOut ends with '\').
- */
-BOOLEAN
-UefiBuildArcBootPaths(OUT CHAR*  BootPathOut,
-                      IN  SIZE_T BootPathCapacity,
-                      OUT CHAR*  ArcBootOut,
-                      IN  SIZE_T ArcBootCapacity,
-                      IN  PCSTR  SystemPath /* e.g. "\\reactos\\" or "\\Windows\\" */)
-{
-    EFI_STATUS Status;
-    UEFI_ARC_CTX Ctx;
-    UINT32 rdisk = 0, part = 1;
-
-    if (!BootPathOut || !ArcBootOut) return FALSE;
-
-    BootPathOut[0] = '\0';
-    ArcBootOut[0]  = '\0';
-
-    Status = InitArcCtx(&Ctx);
+    /* Allocate buffer for reading */
+    Status = GlobalSystemTable->BootServices->AllocatePool(
+        EfiLoaderData,
+        BlockIo->Media->BlockSize,
+        (VOID**)&Buffer);
+    
     if (EFI_ERROR(Status))
         return FALSE;
 
-    Status = ResolveBootPartition(&Ctx, &rdisk, &part);
+    /* Read first sector (MBR) */
+    Status = BlockIo->ReadBlocks(
+        BlockIo,
+        BlockIo->Media->MediaId,
+        0,
+        BlockIo->Media->BlockSize,
+        Buffer);
+    
     if (EFI_ERROR(Status))
     {
-        /* Fallback: first disk, first partition */
-        WARN("UEFI ARC: failed to resolve boot partition (Status=%lx) — using rdisk(0) partition(1)\n", (ULONG_PTR)Status);
-        rdisk = 0;
-        part = 1;
+        GlobalSystemTable->BootServices->FreePool(Buffer);
+        return FALSE;
     }
 
-    /* Compose ARC device */
-    RtlStringCbPrintfA(ArcBootOut, ArcBootCapacity,
-                       "multi(0)disk(0)rdisk(%u)partition(%u)",
-                       (unsigned)rdisk, (unsigned)part);
+    Mbr = (MASTER_BOOT_RECORD*)Buffer;
 
-    /* Compose full BootPath */
-    if (SystemPath && *SystemPath)
+    /* Check for valid MBR signature */
+    if (Mbr->MasterBootRecordMagic == 0xAA55)
     {
-        /* Ensure it starts with '\' and ends with '\' */
-        CHAR sysNorm[MAX_PATH];
-        RtlStringCbCopyA(sysNorm, sizeof(sysNorm), SystemPath);
-        if (sysNorm[0] != '\\' && sysNorm[0] != '/')
-            RtlStringCbPrintfA(sysNorm, sizeof(sysNorm), "\\%s", SystemPath);
-        SIZE_T L = strlen(sysNorm);
-        if (L == 0 || sysNorm[L - 1] != '\\')
-            RtlStringCbCatA(sysNorm, sizeof(sysNorm), "\\");
+        /* Calculate checksum */
+        for (i = 0; i < 512 / sizeof(ULONG); i++)
+        {
+            Sum += ((PULONG)Buffer)[i];
+        }
+        *CheckSum = ~Sum + 1;
+        *Signature = Mbr->Signature;
+        
+        GlobalSystemTable->BootServices->FreePool(Buffer);
+        return TRUE;
+    }
 
-        RtlStringCbPrintfA(BootPathOut, BootPathCapacity, "%s%s", ArcBootOut, sysNorm);
+    GlobalSystemTable->BootServices->FreePool(Buffer);
+    return FALSE;
+}
+
+/* -------------------------------------------------------------------------- */
+/* FreeLdr disk I/O implementation for UEFI                                   */
+/* -------------------------------------------------------------------------- */
+
+BOOLEAN
+UefiDiskGetDriveGeometry(
+    UCHAR DriveNumber,
+    PGEOMETRY Geometry)
+{
+    ULONG DiskIndex = DriveNumber - 0x80; /* Convert from BIOS drive number */
+    
+    if (DiskIndex >= UefiDiskHandleCount)
+        return FALSE;
+    
+    PUEFI_DISK_HANDLE_ENTRY Disk = &UefiDiskHandles[DiskIndex];
+    
+    Geometry->Cylinders = 1024; /* Fake values for LBA mode */
+    Geometry->Heads = 255;
+    Geometry->SectorsPerTrack = 63;
+    Geometry->BytesPerSector = (ULONG)Disk->BlockIo->Media->BlockSize;
+    Geometry->Sectors = Disk->BlockIo->Media->LastBlock + 1;
+    
+    return TRUE;
+}
+
+BOOLEAN
+UefiDiskReadLogicalSectors(
+    IN UCHAR DriveNumber,
+    IN ULONGLONG SectorNumber,
+    IN ULONG SectorCount,
+    OUT PVOID Buffer)
+{
+    EFI_STATUS Status;
+    ULONG DiskIndex = DriveNumber - 0x80;
+    
+    if (DiskIndex >= UefiDiskHandleCount)
+        return FALSE;
+    
+    PUEFI_DISK_HANDLE_ENTRY Disk = &UefiDiskHandles[DiskIndex];
+    
+    Status = Disk->BlockIo->ReadBlocks(
+        Disk->BlockIo,
+        Disk->BlockIo->Media->MediaId,
+        SectorNumber,
+        SectorCount * Disk->BlockIo->Media->BlockSize,
+        Buffer);
+    
+    return !EFI_ERROR(Status);
+}
+
+ULONG
+UefiDiskGetCacheableBlockCount(UCHAR DriveNumber)
+{
+    /* Return a reasonable cache size */
+    return 64; /* 64 sectors */
+}
+
+/* -------------------------------------------------------------------------- */
+/* Main initialization function                                               */
+/* -------------------------------------------------------------------------- */
+
+BOOLEAN
+UefiInitializeBootDevices(VOID)
+{
+    EFI_STATUS Status;
+    EFI_HANDLE* Handles = NULL;
+    UINTN HandleCount = 0;
+    UINTN i, ValidDiskCount = 0;
+    CHAR ArcName[256];
+    ULONG Signature, CheckSum;
+
+    TRACE("UefiInitializeBootDevices: Starting UEFI disk enumeration\n");
+
+    /* Get all block I/O handles */
+    Status = GlobalSystemTable->BootServices->LocateHandleBuffer(
+        ByProtocol,
+        &gEfiBlockIoProtocolGuid,
+        NULL,
+        &HandleCount,
+        &Handles);
+    
+    if (EFI_ERROR(Status) || HandleCount == 0)
+    {
+        ERR("No block devices found\n");
+        return FALSE;
+    }
+
+    /* Allocate handle tracking array */
+    UefiDiskHandles = (UEFI_DISK_HANDLE_ENTRY*)FrLdrHeapAlloc(
+        sizeof(UEFI_DISK_HANDLE_ENTRY) * HandleCount,
+        TAG_UEFI_DISK);
+    
+    if (!UefiDiskHandles)
+    {
+        GlobalSystemTable->BootServices->FreePool(Handles);
+        return FALSE;
+    }
+
+    RtlZeroMemory(UefiDiskHandles, sizeof(UEFI_DISK_HANDLE_ENTRY) * HandleCount);
+
+    /* Enumerate physical disks only (not partitions) */
+    for (i = 0; i < HandleCount; i++)
+    {
+        EFI_BLOCK_IO_PROTOCOL* BlockIo;
+        
+        Status = GlobalSystemTable->BootServices->HandleProtocol(
+            Handles[i],
+            &gEfiBlockIoProtocolGuid,
+            (VOID**)&BlockIo);
+        
+        if (EFI_ERROR(Status) || !BlockIo->Media->MediaPresent)
+            continue;
+        
+        /* Skip logical partitions - we want physical disks only */
+        if (BlockIo->Media->LogicalPartition)
+            continue;
+        
+        /* Skip removable media for now (USB, CD-ROM) */
+        /* You may want to handle these separately */
+        if (BlockIo->Media->RemovableMedia)
+            continue;
+        
+        /* Store disk handle for I/O operations */
+        UefiDiskHandles[ValidDiskCount].Handle = Handles[i];
+        UefiDiskHandles[ValidDiskCount].BlockIo = BlockIo;
+        UefiDiskHandles[ValidDiskCount].DiskNumber = ValidDiskCount;
+        
+        /* Create ARC name */
+        RtlStringCbPrintfA(ArcName, sizeof(ArcName),
+                          "multi(0)disk(0)rdisk(%lu)", ValidDiskCount);
+        
+        /* Read disk signature and checksum */
+        if (!ReadDiskSignature(BlockIo, &Signature, &CheckSum))
+        {
+            Signature = 0;
+            CheckSum = 0;
+        }
+        
+        /* Add to the global ARC disk list using existing infrastructure */
+        AddReactOSArcDiskInfo(ArcName, Signature, CheckSum, TRUE);
+        
+        TRACE("Found disk %lu: %s, Signature=0x%08X, CheckSum=0x%08X\n",
+              ValidDiskCount, ArcName, Signature, CheckSum);
+        
+        ValidDiskCount++;
+    }
+    
+    UefiDiskHandleCount = ValidDiskCount;
+    GlobalSystemTable->BootServices->FreePool(Handles);
+    
+    TRACE("UefiInitializeBootDevices: Found %lu valid disks\n", ValidDiskCount);
+    
+    /* Register disk access functions with MachVtbl if not already done */
+    if (!MachVtbl.DiskReadLogicalSectors)
+    {
+        MachVtbl.DiskReadLogicalSectors = UefiDiskReadLogicalSectors;
+        MachVtbl.DiskGetDriveGeometry = UefiDiskGetDriveGeometry;
+        MachVtbl.DiskGetCacheableBlockCount = UefiDiskGetCacheableBlockCount;
+    }
+    
+    return (ValidDiskCount > 0);
+}
+
+/* -------------------------------------------------------------------------- */
+/* ARC disk information population for loader block                           */
+/* -------------------------------------------------------------------------- */
+
+BOOLEAN
+UefiInitializeArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    ULONG i, DiskCount;
+    PARC_DISK_SIGNATURE_EX ArcDiskInfo;
+    PARC_DISK_SIGNATURE_EX ArcDiskSig;
+    
+    TRACE("UefiInitializeArcDisks: Populating loader block ARC disk information\n");
+    
+    if (!LoaderBlock || !LoaderBlock->ArcDiskInformation)
+    {
+        ERR("Invalid loader block or ArcDiskInformation\n");
+        return FALSE;
+    }
+    
+    /* Initialize the list head if needed */
+    if (IsListEmpty(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead))
+    {
+        InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
+    }
+    
+    /* Get the disk count from the existing infrastructure */
+    DiskCount = ArcGetDiskCount();
+    
+    /* Add each disk to the loader block's ARC disk list */
+    for (i = 0; i < DiskCount; i++)
+    {
+        /* Get disk info from existing infrastructure */
+        ArcDiskInfo = ArcGetDiskInfo(i);
+        if (!ArcDiskInfo)
+            continue;
+        
+        /* Allocate ARC disk signature structure for loader block */
+        ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
+        if (!ArcDiskSig)
+        {
+            ERR("Failed to allocate ARC disk signature\n");
+            continue;
+        }
+        
+        /* Copy the disk information */
+        RtlCopyMemory(ArcDiskSig, ArcDiskInfo, sizeof(ARC_DISK_SIGNATURE_EX));
+        
+        /* Fix up the ArcName pointer to point to the copied string */
+        ArcDiskSig->DiskSignature.ArcName = ArcDiskSig->ArcName;
+        
+        /* Insert into the loader block list */
+        InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
+                      &ArcDiskSig->DiskSignature.ListEntry);
+        
+        TRACE("Added ARC disk to loader block: %s (Sig=0x%08X, ChkSum=0x%08X)\n",
+              ArcDiskSig->ArcName, 
+              ArcDiskSig->DiskSignature.Signature,
+              ArcDiskSig->DiskSignature.CheckSum);
+    }
+    
+    TRACE("UefiInitializeArcDisks: Added %lu disks to loader block\n", DiskCount);
+    
+    return TRUE;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Boot device resolution                                                     */
+/* -------------------------------------------------------------------------- */
+
+BOOLEAN
+UefiGetBootPartitionInfo(
+    OUT PULONG RDiskNumber,
+    OUT PULONG PartitionNumber,
+    OUT PCHAR BootDevice,
+    IN ULONG BootDeviceSize)
+{
+    EFI_STATUS Status;
+    EFI_LOADED_IMAGE_PROTOCOL* LoadedImage;
+    EFI_HANDLE BootHandle;
+    EFI_BLOCK_IO_PROTOCOL* BootBlockIo;
+    UINTN i;
+    
+    /* Get the loaded image protocol */
+    Status = GlobalSystemTable->BootServices->HandleProtocol(
+        GlobalImageHandle,
+        &gEfiLoadedImageProtocolGuid,
+        (VOID**)&LoadedImage);
+    
+    if (EFI_ERROR(Status))
+    {
+        WARN("Failed to get LoadedImageProtocol\n");
+        /* Default to first disk, first partition */
+        *RDiskNumber = 0;
+        *PartitionNumber = 1;
+        if (BootDevice)
+            RtlStringCbPrintfA(BootDevice, BootDeviceSize,
+                              "multi(0)disk(0)rdisk(0)partition(1)");
+        return FALSE;
+    }
+    
+    BootHandle = LoadedImage->DeviceHandle;
+    
+    /* Try to get block I/O protocol from boot device */
+    Status = GlobalSystemTable->BootServices->HandleProtocol(
+        BootHandle,
+        &gEfiBlockIoProtocolGuid,
+        (VOID**)&BootBlockIo);
+    
+    if (EFI_ERROR(Status))
+    {
+        WARN("Boot device has no BlockIo protocol\n");
+        *RDiskNumber = 0;
+        *PartitionNumber = 1;
+        if (BootDevice)
+            RtlStringCbPrintfA(BootDevice, BootDeviceSize,
+                              "multi(0)disk(0)rdisk(0)partition(1)");
+        return FALSE;
+    }
+    
+    /* Find the parent disk if this is a partition */
+    if (BootBlockIo->Media->LogicalPartition)
+    {
+        /* For now, assume partition 1 on the first matching disk */
+        /* TODO: Implement proper partition enumeration and matching */
+        *RDiskNumber = 0;
+        *PartitionNumber = 1;
+        
+        /* Try to match against enumerated disks */
+        for (i = 0; i < UefiDiskHandleCount; i++)
+        {
+            /* Simple heuristic: could be improved with proper parent detection */
+            *RDiskNumber = i;
+            break;
+        }
     }
     else
     {
-        RtlStringCbPrintfA(BootPathOut, BootPathCapacity, "%s\\", ArcBootOut);
+        /* Boot device is a whole disk */
+        for (i = 0; i < UefiDiskHandleCount; i++)
+        {
+            if (UefiDiskHandles[i].Handle == BootHandle)
+            {
+                *RDiskNumber = i;
+                *PartitionNumber = 1; /* Assume first partition */
+                break;
+            }
+        }
     }
-
-    TRACE("UEFI ARC: ArcBoot=\"%s\"  BootPath=\"%s\"\n", ArcBootOut, BootPathOut);
-
-    /* Stash ArcBootDeviceName for winldr.c consumers */
-    if (WinLdrSystemBlock)
+    
+    if (BootDevice)
     {
-        /* Copy only the device part (ArcBootOut) */
-        RtlStringCbCopyA(WinLdrSystemBlock->ArcBootDeviceName,
-                         sizeof(WinLdrSystemBlock->ArcBootDeviceName),
-                         ArcBootOut);
+        RtlStringCbPrintfA(BootDevice, BootDeviceSize,
+                          "multi(0)disk(0)rdisk(%lu)partition(%lu)",
+                          *RDiskNumber, *PartitionNumber);
     }
-
-    FreeArcCtx(&Ctx);
+    
+    TRACE("Boot device: rdisk(%lu) partition(%lu)\n",
+          *RDiskNumber, *PartitionNumber);
+    
     return TRUE;
 }
