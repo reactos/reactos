@@ -176,6 +176,10 @@ MiMapPTEs(
     PMMPTE PointerPte;
     MMPTE TmplPte = ValidKernelPte;
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    TmplPte.u.Hard.Global = MiIsGlobalPte(MiAddressToPte(StartAddress));
+#endif
+
     /* Loop the PTEs */
     for (PointerPte = MiAddressToPte(StartAddress);
          PointerPte <= MiAddressToPte(EndAddress);
@@ -224,8 +228,8 @@ MiInitializePageTable(VOID)
         PointerPxe->u.Long = 0;
     }
 
-    /* Flush the TLB */
-    KeFlushCurrentTb();
+    /* Flush the TLB on this processor */
+    KxFlushEntireCurrentTb();
 
     /* Set up a template PTE */
     TmplPte.u.Long = 0;
@@ -707,6 +711,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmPfnDatabase = (PVOID)MI_PFN_DATABASE;
     MmWorkingSetList = (PVOID)MI_WORKING_SET_LIST;
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    MiInitializeGlobalPages();
+#endif
 
 //    PrototypePte.u.Proto.Valid = 1
 //    PrototypePte.u.ReadOnly
