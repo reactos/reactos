@@ -373,24 +373,23 @@ FONT 9, "宋体", 0, 0, 0x0
 BEGIN
 END
 
-IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+IDD_RUN_AS DIALOGEX 0, 0, 240, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "运行方式"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
-    LTEXT "您想使用哪个用户帐户运行这个程序？", -1, 10, 20, 220, 20
-    CHECKBOX "当前用户 %s", 14000, 10, 45, 150, 10
-    LTEXT "保护我的计算机和数据不受未授权程序的活动影响", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "这个选项可以保护您的计算机或个人数据不受病毒损害，但选择该选项可能会导致程序工作不正确。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "下列用户：", 14002, 10, 100, 90, 10
-    LTEXT "用户名：", -1, 20, 118, 54, 10
-    COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14
-    LTEXT "密码：", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14
-    PUSHBUTTON "确定", 14007, 57, 170, 60, 14
-    PUSHBUTTON "取消", 14008, 122, 170, 60, 14
+    ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
+    LTEXT "您想使用哪个用户帐户运行这个程序？", -1, 32, 12, 200, 16
+    AUTORADIOBUTTON "当前用户 %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "下列用户:", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "用户名:", -1, 18, 124, 54, 10
+    COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
+    LTEXT "密码:", -1, 18, 142, 53, 10
+    EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "确定", IDOK, 129, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "取消", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190

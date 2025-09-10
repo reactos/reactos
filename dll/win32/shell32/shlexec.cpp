@@ -566,6 +566,158 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
     return hr;
 }
 
+static HWND SHELL_GetUsableDialogOwner(HWND hWnd)
+{
+    // Explicitly block the shell desktop listview from becoming the owner (IContextMenu calling ShellExecute)
+    HWND hProgman = GetShellWindow();
+    if (hWnd && IsWindowVisible(hWnd) && hWnd != GetDesktopWindow() &&
+        hWnd != hProgman && !IsChild(hProgman, hWnd))
+    {
+        return hWnd;
+    }
+    return NULL;
+}
+
+/*************************************************************************
+ *    PromptAndRunProcessAs [Internal]
+ */
+typedef struct _RUNASDLGDATA
+{
+    LPWSTR Name, Domain;
+    BOOL Safer;
+    UINT LogonFlags;
+    WCHAR NameBuffer[MAX_PATH];
+    WCHAR Password[MAX_PATH];
+} RUNASDLGDATA;
+
+static
+INT_PTR
+CALLBACK
+RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    RUNASDLGDATA *pData = (RUNASDLGDATA *)GetWindowLongPtrW(hwnd, DWLP_USER);
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)(pData = (RUNASDLGDATA *)lParam));
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, EM_LIMITTEXT, _countof(pData->NameBuffer)-1, 0);
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, EM_LIMITTEXT, _countof(pData->Password)-1, 0);
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_OTHER, BM_CLICK, 0, 0);
+
+            HWND hCtl = GetDlgItem(hwnd, IDC_RUNAS_CURRENT);
+            WCHAR fmtbuf[200], buf[_countof(fmtbuf) + _countof(pData->NameBuffer)];
+            DWORD cch = _countof(pData->NameBuffer);
+            if (GetUserNameW(pData->NameBuffer, &cch))
+            {
+                SendMessageW(hCtl, WM_GETTEXT, _countof(fmtbuf), (LPARAM)buf);
+                StringCchPrintfW(fmtbuf, _countof(fmtbuf), buf, L"(%s)"); // Change "Blah blah %s" to "Blah blah (%s)"
+                StringCchPrintfW(buf, _countof(buf), fmtbuf, pData->NameBuffer);
+                SendMessageW(hCtl, WM_SETTEXT, 0, (LPARAM)buf);
+                SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, CB_ADDSTRING, 0, (LPARAM)pData->NameBuffer);
+            }
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, CB_SETCURSEL, 0, 0);
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+
+                case IDOK:
+                {
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, WM_GETTEXT, _countof(pData->NameBuffer), (LPARAM)pData->NameBuffer);
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, WM_GETTEXT, _countof(pData->Password), (LPARAM)pData->Password);
+                    pData->Name = pData->NameBuffer;
+                    pData->Domain = wcsstr(pData->Name, L"\\");
+                    if (pData->Domain)
+                    {
+                        LPWSTR tmp = pData->Domain + 1;
+                        pData->Domain[0] = UNICODE_NULL;
+                        pData->Domain = pData->Name;
+                        pData->Name = tmp;
+                    }
+                    pData->LogonFlags = GetKeyState(VK_SHIFT) < 0 ? LOGON_NETCREDENTIALS_ONLY : LOGON_WITH_PROFILE;
+                    pData->Safer = IsDlgButtonChecked(hwnd, IDC_RUNAS_SAFER);
+                    if (!IsDlgButtonChecked(hwnd, IDC_RUNAS_OTHER))
+                        pData->Name = NULL;
+                    EndDialog(hwnd, IDOK);
+                    break;
+                }
+
+                case IDC_RUNAS_BROWSE:
+                    return SHELL_ErrorBox(hwnd, ERROR_NOT_SUPPORTED); // TODO
+            }
+            break;
+    }
+    return FALSE;
+}
+
+static
+HRESULT
+PromptAndRunProcessAs(
+    _In_opt_ HWND hwnd,
+    _In_ LPWSTR Cmd,
+    _In_ DWORD CreationFlags,
+    _In_opt_ LPWSTR Env,
+    _In_opt_ LPCWSTR Dir,
+    _In_ STARTUPINFOW *pSI,
+    _Out_ PROCESS_INFORMATION *pPI)
+{
+    RUNASDLGDATA data;
+    UINT error;
+    INT_PTR dlgret;
+    hwnd = SHELL_GetUsableDialogOwner(hwnd);
+
+again:
+    dlgret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN_AS),
+                             hwnd, RunAsDlgProc, (LPARAM)&data);
+    if (dlgret == IDOK && data.Name)
+    {
+        if (CreateProcessWithLogonW(data.Name, data.Domain, data.Password, data.LogonFlags,
+                                    NULL, Cmd, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
+        switch (error)
+        {
+            case ERROR_LOGON_FAILURE:
+            case ERROR_NO_SUCH_USER:
+            case ERROR_INVALID_ACCOUNT_NAME:
+            case ERROR_ACCOUNT_DISABLED:
+            case ERROR_ACCOUNT_RESTRICTION:
+            case ERROR_INVALID_LOGON_HOURS:
+            case ERROR_PASSWORD_EXPIRED:
+                SHELL_ErrorBox(hwnd, error);
+                goto again;
+        }
+    }
+    else if (dlgret == IDOK)
+    {
+        // TODO: Use the Safer API if requested to
+        if (CreateProcessW(NULL, Cmd, NULL, NULL, FALSE, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
+    }
+    else if (dlgret == IDCANCEL)
+    {
+        SetLastError(ERROR_CANCELLED);
+        pPI->hProcess = NULL;
+        return S_FALSE;
+    }
+    else
+    {
+        pPI->hProcess = NULL;
+        return E_FAIL;
+    }
+    SecureZeroMemory(&data, sizeof(data));
+    return HRESULT_FROM_WIN32(error);
+}
+
 /*************************************************************************
  *    SHELL_ExecuteW [Internal]
  *
@@ -576,9 +728,9 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     STARTUPINFOW  startup;
     PROCESS_INFORMATION info;
     UINT_PTR retval = SE_ERR_NOASSOC;
-    UINT gcdret = 0;
+    UINT gcdret = 0, lasterror = 0;
     WCHAR curdir[MAX_PATH];
-    DWORD dwCreationFlags;
+    DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     const WCHAR *lpDirectory = NULL;
 
     TRACE("Execute %s from directory %s\n", debugstr_w(lpCmd), debugstr_w(psei->lpDirectory));
@@ -603,7 +755,6 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
-    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
         dwCreationFlags |= CREATE_NEW_CONSOLE;
     if (psei->fMask & SEE_MASK_FLAG_SEPVDM)
@@ -634,8 +785,25 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
             startup.dwFlags |= STARTF_SHELLPRIVATE;
     }
 
-    if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
-                       lpDirectory, &startup, &info))
+    BOOL createdProcess;
+    if (psei->lpVerb && !StrCmpIW(L"runas", psei->lpVerb))
+    {
+        HRESULT hr = PromptAndRunProcessAs(psei->hwnd, (LPWSTR)lpCmd, dwCreationFlags,
+                                                 env, lpDirectory, &startup, &info);
+        createdProcess = hr == S_OK;
+        if (hr == S_FALSE)
+        {
+            retval = 33; // Pretend cancel is success.
+            goto done;
+        }
+    }
+    else
+    {
+        createdProcess = CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE,
+                                        dwCreationFlags, env, lpDirectory, &startup, &info);
+    }
+
+    if (createdProcess)
     {
         /* Give 30 seconds to the app to come up, if desired. Probably only needed
            when starting app immediately before making a DDE connection. */
@@ -650,20 +818,23 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
             CloseHandle( info.hProcess );
         CloseHandle( info.hThread );
     }
-    else if ((retval = GetLastError()) >= 32)
+    else if ((retval = lasterror = GetLastError()) >= 32)
     {
         WARN("CreateProcess returned error %ld\n", retval);
         retval = ERROR_BAD_FORMAT;
     }
 
+done:
     TRACE("returning %lu\n", retval);
-
     psei_out->hInstApp = (HINSTANCE)retval;
 
     if (gcdret)
+    {
         if (!SetCurrentDirectoryW(curdir))
             ERR("cannot return to directory %s\n", debugstr_w(curdir));
-
+        if (lasterror)
+            RestoreLastError(lasterror);
+    }
     return retval;
 }
 
