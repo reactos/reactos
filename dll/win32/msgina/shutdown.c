@@ -9,10 +9,10 @@
  */
 
 #include "msgina.h"
-#include <powrprof.h>
 #include <wingdi.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <ndk/pofuncs.h>
 
 /* Macros for fancy shutdown dialog */
 #define FONT_POINT_SIZE                 13
@@ -587,7 +587,7 @@ CreateToolTipForButtons(
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              hDlg, NULL, hInst, NULL);
 
-    /* Associate the tooltip with the tool. */
+    /* Associate the tooltip with the tool */
     LoadStringW(hInst, detailID, szBuffer, _countof(szBuffer));
     tool.lpszText = szBuffer;
     SendMessageW(hwndTip, TTM_ADDTOOLW, 0, (LPARAM)&tool);
@@ -811,6 +811,8 @@ GetAllowedShutdownOptions(
 {
     DWORD Options = 0;
     DWORD dwPolicyValue;
+    SYSTEM_POWER_CAPABILITIES PowerCaps;
+    NTSTATUS Status;
 
     dwPolicyValue = 0;
     GetPolicyDWORDValue(hKeyCurrentUser,
@@ -832,17 +834,27 @@ GetAllowedShutdownOptions(
     if (!TestTokenPrivilege(hUserToken, SE_SHUTDOWN_PRIVILEGE))
         return Options; // The user doesn't have them, bail out.
 
+    /* We can always shutdown and restart */
     Options |= WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
 
-    // NOTE: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" value "Shutdown"
-    // for "advanced" sleep options. See the 3rd parameter of:
-    // https://learn.microsoft.com/en-us/windows/win32/api/powrprof/nf-powrprof-setsuspendstate
+    /* Determine whether extra power options are available */
+    Status = NtPowerInformation(SystemPowerCapabilities, NULL, 0, &PowerCaps, sizeof(PowerCaps));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtPowerInformation(SystemPowerCapabilities) failed (Status 0x%08lx)\n", Status);
+    }
+    else
+    {
+        if (IS_PWR_SUSPEND_ALLOWED(&PowerCaps))
+            Options |= WLX_SHUTDOWN_STATE_SLEEP;
 
-    if (IsPwrSuspendAllowed())
-        Options |= WLX_SHUTDOWN_STATE_SLEEP;
+        // TODO: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" value "Shutdown"
+        // for sleep options. In particular, if set it tells that wakeup events can be disabled.
+        // This will enable WLX_SHUTDOWN_STATE_SLEEP2 support.
 
-    if (IsPwrHibernateAllowed())
-        Options |= WLX_SHUTDOWN_STATE_HIBERNATE;
+        if (IS_PWR_HIBERNATE_ALLOWED(&PowerCaps))
+            Options |= WLX_SHUTDOWN_STATE_HIBERNATE;
+    }
 
     // TODO: Consider Windows 8+ support for:
     // "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power" value "HiberbootEnabled"
@@ -918,6 +930,8 @@ ShutdownOnFriendlyInit(
     PGINA_CONTEXT pgContext = pContext->pgContext;
     HDC hdc;
     LONG lfHeight;
+    BOOLEAN bCanSuspend = !!(pContext->ShutdownOptions & (WLX_SHUTDOWN_STATE_SLEEP | WLX_SHUTDOWN_STATE_SLEEP2));
+    BOOLEAN bCanHibernate = !!(pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_HIBERNATE);
 
     /* Create font for the IDC_TURN_OFF_STATIC static control */
     hdc = GetDC(hDlg);
@@ -936,10 +950,10 @@ ShutdownOnFriendlyInit(
     pContext->bIsSleepButtonReplaced = FALSE;
     pContext->bTimer = FALSE;
 
-    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
-    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), IsPwrSuspendAllowed());
+    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), bCanHibernate);
+    EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), bCanSuspend);
 
-    /* Gather old button func */
+    /* Gather old button function */
     pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
 
     /* Set bIsButtonHot to false, create tooltips for each buttons, make buttons to remember pContext and subclass the buttons */
@@ -952,10 +966,10 @@ ShutdownOnFriendlyInit(
         CreateToolTipForButtons(IDC_BUTTON_SHUTDOWN + i,
                                 IDS_SHUTDOWN_SHUTDOWN_DESC + i,
                                 hDlg, IDS_SHUTDOWN_SHUTDOWN + i,
-                                pContext->pgContext->hDllInstance);
+                                pgContext->hDllInstance);
     }
 
-    if (pContext->ShutdownDialogId == IDD_SHUTDOWN_FANCY && IsPwrSuspendAllowed())
+    if ((pContext->ShutdownDialogId == IDD_SHUTDOWN_FANCY) && bCanSuspend)
     {
         pContext->iTimer = SetTimer(hDlg, 0, 50, NULL);
         pContext->bTimer = TRUE;
@@ -1126,18 +1140,49 @@ ShutdownDialogProc(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDC_BUTTON_SHUTDOWN:
-                    ExitWindowsEx(EWX_SHUTDOWN, SHTDN_REASON_MAJOR_OTHER);
-                    break;
+                /* Check for fancy shutdown dialog buttons */
+                case IDC_BUTTON_SHUTDOWN: case IDC_BUTTON_REBOOT:
+                case IDC_BUTTON_SLEEP:    case IDC_BUTTON_HIBERNATE:
+                {
+                    DWORD Button = LOWORD(wParam);
+                    PGINA_CONTEXT pgContext = pContext->pgContext;
+                    pgContext->nShutdownAction = 0;
+                    if (Button == IDC_BUTTON_SHUTDOWN)
+                    {
+                        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_POWER_OFF)
+                            pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                    }
+                    else if (Button == IDC_BUTTON_REBOOT)
+                    {
+                        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_REBOOT)
+                            pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                    }
+                    else if (Button == IDC_BUTTON_SLEEP)
+                    {
+                        if (pContext->ShutdownOptions & (WLX_SHUTDOWN_STATE_SLEEP | WLX_SHUTDOWN_STATE_SLEEP2))
+                        {
+                            /* Choose "Sleep with wakeup events disabled" if
+                             * available, otherwise use the regular sleep mode */
+                            if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_SLEEP2)
+                                pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_SLEEP2;
+                            else
+                                pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_SLEEP;
+                        }
+                    }
+                    else if (Button == IDC_BUTTON_HIBERNATE)
+                    {
+                        if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_HIBERNATE)
+                            pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_HIBERNATE;
+                    }
+                    if (pgContext->nShutdownAction == 0)
+                        break;
 
-                case IDC_BUTTON_REBOOT:
-                    ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER);
+                    pContext->bCloseDlg = TRUE;
+                    EndDialog(hDlg, IDOK);
                     break;
+                }
 
-                case IDC_BUTTON_SLEEP:
-                    SetSuspendState(TRUE, TRUE, TRUE);
-                    break;
-
+                /* Classic shutdown dialog buttons */
                 case IDOK:
                     ShutdownOnOk(hDlg, pContext->pgContext);
 
