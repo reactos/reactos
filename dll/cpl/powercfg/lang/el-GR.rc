@@ -8,8 +8,8 @@ CAPTION "Συνδυασμοί τροφοδοσίας"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", -1, 37, 6, 208, 36
-    GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", -1, 6, 43, 240, 50
+    LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Αποθήκευση ως...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "&Διαγραφή", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -39,8 +39,8 @@ CAPTION "Συνδυασμοί τροφοδοσίας"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", -1, 37, 6, 208, 36
-    GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", -1, 6, 43, 240, 50
+    LTEXT "Επιλέξτε τις ρυθμίσεις με τον πιο κατάλληλο συνδυασμό τροφοδοσίας για αυτόν τον υπολογιστή. Σημειώστε ότι αλλάζοντας τις παρακάτω ρυθμίσεις, θα τροποποιηθεί ο επιλεγμένος συνδυασμός.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "Σ&υνδυασμοί τροφοδοσίας", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Αποθήκευση ως...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "&Διαγραφή", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -60,27 +60,27 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ειδοποιήσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ειδοποίηση πεσμένης μπαταρίας", -1, 6, 7, 239, 99
-    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    GROUPBOX "Ειδοποίηση πεσμένης μπαταρίας", IDC_STATIC, 6, 7, 239, 99
+    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM1, 15, 17, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
     CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
-    PUSHBUTTON "Ειδοποίηση...", -1, 148, 50, 88, 14, WS_DISABLED
-    LTEXT "Ειδοποίηση:", -1, 28, 67, 89, 10
+    PUSHBUTTON "Ειδοποίηση...", IDC_STATIC, 148, 50, 88, 14, WS_DISABLED
+    LTEXT "Ειδοποίηση:", IDC_STATIC, 28, 67, 89, 10
     LTEXT "?", IDC_ALARMMSG1, 118, 67, 125, 10
-    LTEXT "Ενέργεια:", -1, 28, 79, 89, 10
+    LTEXT "Ενέργεια:", IDC_STATIC, 28, 79, 89, 10
     LTEXT "?", IDC_ALARMAKTION1, 118, 79, 125, 10
-    LTEXT "Εκτέλεση:", -1, 28, 91, 89, 10
+    LTEXT "Εκτέλεση:", IDC_STATIC, 28, 91, 89, 10
     LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
-    GROUPBOX "Ειδοποίηση κρίσιμου σημείου μπαταρίας", -1, 6, 115, 239, 99
-    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    GROUPBOX "Ειδοποίηση κρίσιμου σημείου μπαταρίας", IDC_STATIC, 6, 115, 239, 99
+    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM2, 15, 125, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
-    PUSHBUTTON "Ειδοποίηση...", -1, 148, 158, 88, 14, WS_DISABLED
-    LTEXT "Ειδοποίηση:", -1, 28, 175, 89, 10
+    PUSHBUTTON "Ειδοποίηση...", IDC_STATIC, 148, 158, 88, 14, WS_DISABLED
+    LTEXT "Ειδοποίηση:", IDC_STATIC, 28, 175, 89, 10
     LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
-    LTEXT "Ενέργεια:", -1, 28, 187, 89, 10
+    LTEXT "Ενέργεια:", IDC_STATIC, 28, 187, 89, 10
     LTEXT "?", IDC_ALARMAKTION2, 118, 187, 125, 10
-    LTEXT "Εκτέλεση:", -1, 28, 199, 89, 10
+    LTEXT "Εκτέλεση:", IDC_STATIC, 28, 199, 89, 10
     LTEXT "?", IDC_ALARMPROG2, 118, 199, 125, 10
 END
 
@@ -90,12 +90,12 @@ CAPTION "Για προχωρημένους"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Επιλέξτε τις ρυθμίσεις εξοικονόμησης ενέργειας που θέλετε να χρησιμοποιήσετε.", -1, 37, 6, 208, 20
-    GROUPBOX "Επιλογές", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "Εμφάνιση του εικονιδίου στη γραμμή εργασιών", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Κωδικός πρόσβασης κατά την επαναφορά από αναμονή", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Εμφάνιση ένδειξης όταν εξαντλείται η μπαταρία", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
-    GROUPBOX "Κουμπιά τροφοδοσίας", -1, 6, 101, 240, 110
+    LTEXT "Επιλέξτε τις ρυθμίσεις εξοικονόμησης ενέργειας που θέλετε να χρησιμοποιήσετε.", IDC_STATIC, 37, 6, 208, 20
+    GROUPBOX "Επιλογές", IDC_STATIC, 6, 30, 240, 65
+    AUTOCHECKBOX "Εμφάνιση του εικονιδίου στη γραμμή εργασιών", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10
+    AUTOCHECKBOX "&Κωδικός πρόσβασης κατά την επαναφορά από αναμονή", IDC_PASSWORDLOGON, 17, 60, 220, 10
+    AUTOCHECKBOX "&Εμφάνιση ένδειξης όταν εξαντλείται η μπαταρία", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10
+    GROUPBOX "Κουμπιά τροφοδοσίας", IDC_STATIC, 6, 101, 240, 110
     LTEXT "&Κατά το κλείσιμο του καλύμματος του φορητού υπολογιστή μου:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Κατά το κ&λείσιμο του υπολογιστή μου:", IDC_SPOWERBUTTON, 15, 145, 222, 10
@@ -110,13 +110,13 @@ CAPTION "Αδρανοποίηση"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
-    LTEXT "Όταν ο υπολογιστής αδρανοποιείται, αποθηκεύει ό,τι έχει στη μνήμη στο σκληρό δίσκο και μετά τερματίζεται η λειτουργία του. Όταν επανέρχεται από την αδρανοποίηση, επιστρέφει στο αρχικό του επίπεδο. ", -1, 37, 6, 208, 35
-    GROUPBOX "Αδρανοποίηση", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "Ενε&ργοποίηση αδρανοποίησης", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "Χώρος του δίσκου για λειτουργία αδρανοποίησης", -1, 6, 80, 240, 76
-    LTEXT "Διαθέσιμος χώρος στο δίσκο:", -1, 15, 95, 150, 10
+    LTEXT "Όταν ο υπολογιστής αδρανοποιείται, αποθηκεύει ό,τι έχει στη μνήμη στο σκληρό δίσκο και μετά τερματίζεται η λειτουργία του. Όταν επανέρχεται από την αδρανοποίηση, επιστρέφει στο αρχικό του επίπεδο. ", IDC_STATIC, 37, 6, 208, 35
+    GROUPBOX "Αδρανοποίηση", IDC_STATIC, 6, 41, 240, 32
+    AUTOCHECKBOX "Ενε&ργοποίηση αδρανοποίησης", IDC_HIBERNATEFILE, 17, 55, 210, 10
+    GROUPBOX "Χώρος του δίσκου για λειτουργία αδρανοποίησης", IDC_STATIC, 6, 80, 240, 76
+    LTEXT "Διαθέσιμος χώρος στο δίσκο:", IDC_STATIC, 15, 95, 150, 10
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
-    LTEXT "Απαιτούμενος χώρος για αδρανοποίηση:", -1, 15, 115, 150, 10
+    LTEXT "Απαιτούμενος χώρος για αδρανοποίηση:", IDC_STATIC, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
     LTEXT "Θα πρέπει να ελευθερώσετε χώρο στο δίσκο σας πριν ο υπολογιστής σας μπορέσει αν τεθεί σε κατάσταση αδρανοποίησης.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
@@ -126,7 +126,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Save Scheme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 180, 8
+    LTEXT "Save this power scheme as:", IDC_STATIC, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
@@ -138,11 +138,11 @@ CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "Show details for each &battery", IDC_SHOWDETAILS, 7, 10, 190, 10, WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Power status", -1, 7, 41, 240, 170
+    GROUPBOX "Power status", IDC_STATIC, 7, 41, 240, 170
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 23, 54, 21, 20
-    LTEXT "Current power source:", -1, 54, 54, 73, 10
+    LTEXT "Current power source:", IDC_STATIC, 54, 54, 73, 10
     LTEXT "AC power", IDC_POWERSOURCE, 140, 54, 60, 10
-    LTEXT "Total battery power remaining:", -1, 54, 64, 101, 10
+    LTEXT "Total battery power remaining:", IDC_STATIC, 54, 64, 101, 10
     LTEXT "100%", IDC_POWERSTATUS, 160, 64, 50, 10
 
     LTEXT "#1", IDC_BATTERY0, 24, 113, 13, 10
@@ -185,7 +185,7 @@ BEGIN
     LTEXT "100%", IDC_BATTERYPERCENT7, 214, 183, 21, 10
     LTEXT "Charging", IDC_BATTERYCHARGING7, 192, 198, 38, 10
 
-    LTEXT "Click an individual battery icon for more information.", -1, 108, 230, 150, 10
+    LTEXT "Click an individual battery icon for more information.", IDC_STATIC, 108, 230, 150, 10
 END
 
 IDD_POWERMETERDETAILS DIALOGEX 0, 0, 263, 156
@@ -193,16 +193,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Battery status", -1, 7, 7, 249, 120
-    LTEXT "Battery name: ", -1, 16, 22, 48, 8
+    GROUPBOX "Battery status", IDC_STATIC, 7, 7, 249, 120
+    LTEXT "Battery name: ", IDC_STATIC, 16, 22, 48, 8
     LTEXT "", IDC_BATTERYNAME, 66, 22, 179, 8
-    LTEXT "Unique ID: ", -1, 16, 35, 48, 8
+    LTEXT "Unique ID: ", IDC_STATIC, 16, 35, 48, 8
     LTEXT "", IDC_BATTERYUNIQUEID, 66, 35, 179, 8
-    LTEXT "Chemistry: ", -1, 16, 48, 48, 8
+    LTEXT "Chemistry: ", IDC_STATIC, 16, 48, 48, 8
     LTEXT "", IDC_BATTERYCHEMISTRY, 66, 48, 179, 8
-    LTEXT "Power state: ", -1, 16, 61, 48, 8
+    LTEXT "Power state: ", IDC_STATIC, 16, 61, 48, 8
     LTEXT "", IDC_BATTERYPOWERSTATE, 66, 61, 179, 8
-    LTEXT "Manufacturer: ", -1, 16, 74, 48, 8
+    LTEXT "Manufacturer: ", IDC_STATIC, 16, 74, 48, 8
     LTEXT "", IDC_BATTERYMANUFACTURER, 66, 74, 179, 8
     PUSHBUTTON "&Refresh", IDC_REFRESH, 16, 104, 50, 14
     DEFPUSHBUTTON "&OK", IDOK, 206, 134, 50, 14
@@ -210,8 +210,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Επιλογές Ενέργειας"
-    IDS_CPLDESCRIPTION_1 "Ρύθμιση χαρακτηριστικών εξοικονόμησης ενέργειας."
+    IDS_CPLNAME "Επιλογές Ενέργειας"
+    IDS_CPLDESCRIPTION "Ρύθμιση χαρακτηριστικών εξοικονόμησης ενέργειας."
     IDS_PERCENT "%i%%"
     IDS_SOUND "Ήχος"
     IDS_TEXT "Κείμενο"

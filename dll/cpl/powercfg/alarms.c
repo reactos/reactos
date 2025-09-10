@@ -1,12 +1,10 @@
 /*
- * PROJECT:         ReactOS Power Configuration Applet
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/alarms.c
- * PURPOSE:         alarms tab of applet
- * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  Martin Rottensteiner
- *                  Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Alarms tab
+ * COPYRIGHT:   Copyright 2006 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
  */
 
 #include "powercfg.h"
@@ -23,73 +21,65 @@ Ala_InitData(HWND hwndDlg)
     TCHAR szProgram[MAX_PATH];
 
     if (!ReadGlobalPwrPolicy(&gGPP))
-    {
         return FALSE;
-    }
 
     if (gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable)
     {
         CheckDlgButton(hwndDlg, IDC_ALARM1,
             gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable ? BST_CHECKED : BST_UNCHECKED);
 
-        if (LoadString(hApplet, IDS_PERCENT, szTemp, MAX_PATH))
+        if (LoadString(hApplet, IDS_PERCENT, szTemp, _countof(szTemp)))
         {
             _stprintf(szBatteryLevel, szTemp, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
             SetDlgItemText(hwndDlg, IDC_ALARMVALUE1, szBatteryLevel);
         }
 
         SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
-            TBM_SETRANGE,
-            (WPARAM)TRUE,
-            (LPARAM)MAKELONG(0, 100));
+                           TBM_SETRANGE,
+                           (WPARAM)TRUE,
+                           (LPARAM)MAKELONG(0, 100));
         SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
-            TBM_SETTICFREQ,
-            (WPARAM)TRUE,
-            (LPARAM)20);
+                           TBM_SETTICFREQ,
+                           (WPARAM)TRUE,
+                           (LPARAM)20);
         SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
-            TBM_SETPOS,
-            (WPARAM)TRUE,
-            (LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
+                           TBM_SETPOS,
+                           (WPARAM)TRUE,
+                           (LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
 
-        if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
+        if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.Action+IDS_PowerActionNone1, szAction, _countof(szAction)))
         {
             SetDlgItemText(hwndDlg, IDC_ALARMAKTION1, szAction);
         }
 
-        memset(szMessage, 0x0, sizeof(szMessage));
-        LoadString(hApplet, IDS_NOACTION, szMessage, MAX_PATH);
+        ZeroMemory(szMessage, sizeof(szMessage));
+        LoadString(hApplet, IDS_NOACTION, szMessage, _countof(szMessage));
 
         if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_TEXT)
         {
             if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
             {
-                if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH) && LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s, %s"),szSound,szText);
-                }
+                if (LoadString(hApplet, IDS_SOUND, szSound, _countof(szSound)) && LoadString(hApplet, IDS_TEXT, szText, _countof(szText)))
+                    _stprintf(szMessage, _T("%s, %s"), szSound, szText);
             }
             else
             {
-                if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s"),szText);
-                }
+                if (LoadString(hApplet, IDS_TEXT, szText, _countof(szText)))
+                    _stprintf(szMessage, _T("%s"), szText);
             }
         }
         else
         {
             if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
             {
-                if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s"),szSound);
-                }
+                if (LoadString(hApplet, IDS_SOUND, szSound, _countof(szSound)))
+                    _stprintf(szMessage, _T("%s"), szSound);
             }
         }
 
         SetDlgItemText(hwndDlg, IDC_ALARMMSG1, szMessage);
 
-        if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
+        if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, _countof(szProgram)))
         {
             SetDlgItemText(hwndDlg, IDC_ALARMPROG1, szProgram);
         }
@@ -100,60 +90,54 @@ Ala_InitData(HWND hwndDlg)
         CheckDlgButton(hwndDlg, IDC_ALARM2,
             gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable ? BST_CHECKED : BST_UNCHECKED);
 
-        if (LoadString(hApplet, IDS_PERCENT, szTemp, MAX_PATH))
+        if (LoadString(hApplet, IDS_PERCENT, szTemp, _countof(szTemp)))
         {
             _stprintf(szBatteryLevel, szTemp, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
             SetDlgItemText(hwndDlg, IDC_ALARMVALUE2, szBatteryLevel);
         }
 
         SendDlgItemMessage(hwndDlg, IDC_ALARMBAR2,
-            TBM_SETRANGE,
-            (WPARAM)TRUE,
-            (LPARAM)MAKELONG(0, 100));
+                           TBM_SETRANGE,
+                           (WPARAM)TRUE,
+                           (LPARAM)MAKELONG(0, 100));
         SendDlgItemMessage(hwndDlg, IDC_ALARMBAR2,
-            TBM_SETPOS,
-            (WPARAM)TRUE,
-            (LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
+                           TBM_SETPOS,
+                           (WPARAM)TRUE,
+                           (LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
 
-        if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
+        if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.Action+IDS_PowerActionNone1, szAction, _countof(szAction)))
         {
             SetDlgItemText(hwndDlg, IDC_ALARMAKTION2, szAction);
         }
 
-        memset(szMessage, 0x0, sizeof(szMessage));
-        LoadString(hApplet, IDS_NOACTION, szMessage, MAX_PATH);
+        ZeroMemory(szMessage, sizeof(szMessage));
+        LoadString(hApplet, IDS_NOACTION, szMessage, _countof(szMessage));
 
         if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_TEXT)
         {
             if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
             {
-                if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH) && LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s, %s"),szSound,szText);
-                }
+                if (LoadString(hApplet, IDS_TEXT, szText, _countof(szText)) && LoadString(hApplet, IDS_SOUND, szSound, _countof(szSound)))
+                    _stprintf(szMessage, _T("%s, %s"), szSound, szText);
             }
             else
             {
-                if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s"),szText);
-                }
+                if (LoadString(hApplet, IDS_TEXT, szText, _countof(szText)))
+                    _stprintf(szMessage, _T("%s"), szText);
             }
         }
         else
         {
             if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
             {
-                if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
-                {
-                    _stprintf(szMessage,_T("%s"),szSound);
-                }
+                if (LoadString(hApplet, IDS_SOUND, szSound, _countof(szSound)))
+                    _stprintf(szMessage, _T("%s"), szSound);
             }
         }
 
         SetDlgItemText(hwndDlg, IDC_ALARMMSG2, szMessage);
 
-        if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
+        if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, _countof(szProgram)))
         {
             SetDlgItemText(hwndDlg, IDC_ALARMPROG2, szProgram);
         }

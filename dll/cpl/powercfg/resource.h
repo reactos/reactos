@@ -1,9 +1,25 @@
+/*
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resource definitions
+ * COPYRIGHT:   Copyright 2006 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
+ */
+
 #pragma once
 
 /* IDs */
 
+#define IDC_STATIC  (-1)
+
 /* Set default to IDI_AC */
-#define IDC_CPLICON_1 IDI_AC
+#define IDC_CPLICON IDI_AC
+#define IDS_CPLNAME 190
+#define IDS_CPLDESCRIPTION 191
+
+
+/* Dialogs, Controls and Strings */
 
 #define IDS_PERCENT  49
 #define IDS_SOUND    50
@@ -66,7 +82,6 @@
 #define IDI_SCREEN    178
 #define IDI_HIBERNATE 179
 
-#define IDS_CPLNAME_1       190
 #define IDC_ENERGYLIST      200
 #define IDC_GRPDETAIL       201
 #define IDC_SAT             202
@@ -166,5 +181,3 @@
 #define IDC_BATTERYCHARGING5     (IDC_BATTERYCHARGING0 + 5)
 #define IDC_BATTERYCHARGING6     (IDC_BATTERYCHARGING0 + 6)
 #define IDC_BATTERYCHARGING7     (IDC_BATTERYCHARGING0 + 7)
-
-#define IDS_CPLDESCRIPTION_1 901

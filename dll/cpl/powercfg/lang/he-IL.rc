@@ -8,8 +8,8 @@ CAPTION "תכניות צריכת חשמל"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.", -1, 37, 6, 208, 36
-    GROUPBOX "תכנית צריכת חשמל", -1, 6, 43, 240, 50
+    LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "תכנית צריכת חשמל", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "שמור בשם...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "מחק", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -39,8 +39,8 @@ CAPTION "תכניות צריכת חשמל"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.", -1, 37, 6, 208, 36
-    GROUPBOX "תכנית צריכת חשמל", -1, 6, 43, 240, 50
+    LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "תכנית צריכת חשמל", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "שמור בשם...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "מחק", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -60,27 +60,27 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "התראות"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "התראת סוללה נמוכה", -1, 6, 7, 239, 99
-    AUTOCHECKBOX "הפעל התראת סוללה נמוכה מתי שכוח הסוללה מגיע ל:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    GROUPBOX "התראת סוללה נמוכה", IDC_STATIC, 6, 7, 239, 99
+    AUTOCHECKBOX "הפעל התראת סוללה נמוכה מתי שכוח הסוללה מגיע ל:", IDC_ALARM1, 15, 17, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
     CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
-    PUSHBUTTON "פעולת התראה...", -1, 148, 50, 88, 14, WS_DISABLED
-    LTEXT "הודעה:", -1, 28, 67, 89, 10
+    PUSHBUTTON "פעולת התראה...", IDC_STATIC, 148, 50, 88, 14, WS_DISABLED
+    LTEXT "הודעה:", IDC_STATIC, 28, 67, 89, 10
     LTEXT "?", IDC_ALARMMSG1, 118, 67, 125, 10
-    LTEXT "פעולה", -1, 28, 79, 89, 10
+    LTEXT "פעולה", IDC_STATIC, 28, 79, 89, 10
     LTEXT "?", IDC_ALARMAKTION1, 118, 79, 125, 10
-    LTEXT "הפעל תכנית:", -1, 28, 91, 89, 10
+    LTEXT "הפעל תכנית:", IDC_STATIC, 28, 91, 89, 10
     LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
-    GROUPBOX "התראת סוללה קריטית", -1, 6, 115, 239, 99
-    AUTOCHECKBOX "הפעל התראת סוללה קריטית מתי שכוח הסוללה מגיע ל:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    GROUPBOX "התראת סוללה קריטית", IDC_STATIC, 6, 115, 239, 99
+    AUTOCHECKBOX "הפעל התראת סוללה קריטית מתי שכוח הסוללה מגיע ל:", IDC_ALARM2, 15, 125, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
-    PUSHBUTTON "פעולת התראה...", -1, 148, 158, 88, 14, WS_DISABLED
-    LTEXT "הודעה:", -1, 28, 175, 89, 10
+    PUSHBUTTON "פעולת התראה...", IDC_STATIC, 148, 158, 88, 14, WS_DISABLED
+    LTEXT "הודעה:", IDC_STATIC, 28, 175, 89, 10
     LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
-    LTEXT "פעולה", -1, 28, 187, 89, 10
+    LTEXT "פעולה", IDC_STATIC, 28, 187, 89, 10
     LTEXT "?", IDC_ALARMAKTION2, 118, 187, 125, 10
-    LTEXT "הפעל תכנית:", -1, 28, 199, 89, 10
+    LTEXT "הפעל תכנית:", IDC_STATIC, 28, 199, 89, 10
     LTEXT "?", IDC_ALARMPROG2, 118, 199, 125, 10
 END
 
@@ -90,12 +90,12 @@ CAPTION "מתקדם"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "בחר את אפשרויות צריכת החשמל שברצונך להשתמש:", -1, 37, 6, 208, 20
-    GROUPBOX "אפשרויות", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "תמיר הראה סמל על שורת המשימות", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "בקש סיסמה מתי שחוזר מהמתנה", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "עמעם תצוגה בזמן פעולה על סוללות", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
-    GROUPBOX "לחצני הפעלה", -1, 6, 101, 240, 110
+    LTEXT "בחר את אפשרויות צריכת החשמל שברצונך להשתמש:", IDC_STATIC, 37, 6, 208, 20
+    GROUPBOX "אפשרויות", IDC_STATIC, 6, 30, 240, 65
+    AUTOCHECKBOX "תמיר הראה סמל על שורת המשימות", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10
+    AUTOCHECKBOX "בקש סיסמה מתי שחוזר מהמתנה", IDC_PASSWORDLOGON, 17, 60, 220, 10
+    AUTOCHECKBOX "עמעם תצוגה בזמן פעולה על סוללות", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10
+    GROUPBOX "לחצני הפעלה", IDC_STATIC, 6, 101, 240, 110
     LTEXT "כאשר אני סוגר את מכסה:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "כאשר אני לוחץ על לחצן ההפעלה:", IDC_SPOWERBUTTON, 15, 145, 222, 10
@@ -110,13 +110,13 @@ CAPTION "תרדמת"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
-    LTEXT "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state.", -1, 37, 6, 208, 35
-    GROUPBOX "תרדמת", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "אפשר תרדמת", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "שטח כונן לתרדמת", -1, 6, 80, 240, 76
-    LTEXT "שטח כונן פנוי:", -1, 15, 95, 150, 10
+    LTEXT "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state.", IDC_STATIC, 37, 6, 208, 35
+    GROUPBOX "תרדמת", IDC_STATIC, 6, 41, 240, 32
+    AUTOCHECKBOX "אפשר תרדמת", IDC_HIBERNATEFILE, 17, 55, 210, 10
+    GROUPBOX "שטח כונן לתרדמת", IDC_STATIC, 6, 80, 240, 76
+    LTEXT "שטח כונן פנוי:", IDC_STATIC, 15, 95, 150, 10
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
-    LTEXT "שטח כונן הדרוש לתרדמת", -1, 15, 115, 150, 10
+    LTEXT "שטח כונן הדרוש לתרדמת", IDC_STATIC, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
     LTEXT "You must free some disk space before your computer can hibernate.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
@@ -126,7 +126,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Save Scheme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 180, 8
+    LTEXT "Save this power scheme as:", IDC_STATIC, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
@@ -138,11 +138,11 @@ CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "Show details for each &battery", IDC_SHOWDETAILS, 7, 10, 190, 10, WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Power status", -1, 7, 41, 240, 170
+    GROUPBOX "Power status", IDC_STATIC, 7, 41, 240, 170
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 23, 54, 21, 20
-    LTEXT "Current power source:", -1, 54, 54, 73, 10
+    LTEXT "Current power source:", IDC_STATIC, 54, 54, 73, 10
     LTEXT "AC power", IDC_POWERSOURCE, 140, 54, 60, 10
-    LTEXT "Total battery power remaining:", -1, 54, 64, 101, 10
+    LTEXT "Total battery power remaining:", IDC_STATIC, 54, 64, 101, 10
     LTEXT "100%", IDC_POWERSTATUS, 160, 64, 50, 10
 
     LTEXT "#1", IDC_BATTERY0, 24, 113, 13, 10
@@ -185,7 +185,7 @@ BEGIN
     LTEXT "100%", IDC_BATTERYPERCENT7, 214, 183, 21, 10
     LTEXT "Charging", IDC_BATTERYCHARGING7, 192, 198, 38, 10
 
-    LTEXT "Click an individual battery icon for more information.", -1, 108, 230, 150, 10
+    LTEXT "Click an individual battery icon for more information.", IDC_STATIC, 108, 230, 150, 10
 END
 
 IDD_POWERMETERDETAILS DIALOGEX 0, 0, 263, 156
@@ -193,16 +193,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Battery status", -1, 7, 7, 249, 120
-    LTEXT "Battery name: ", -1, 16, 22, 48, 8
+    GROUPBOX "Battery status", IDC_STATIC, 7, 7, 249, 120
+    LTEXT "Battery name: ", IDC_STATIC, 16, 22, 48, 8
     LTEXT "", IDC_BATTERYNAME, 66, 22, 179, 8
-    LTEXT "Unique ID: ", -1, 16, 35, 48, 8
+    LTEXT "Unique ID: ", IDC_STATIC, 16, 35, 48, 8
     LTEXT "", IDC_BATTERYUNIQUEID, 66, 35, 179, 8
-    LTEXT "Chemistry: ", -1, 16, 48, 48, 8
+    LTEXT "Chemistry: ", IDC_STATIC, 16, 48, 48, 8
     LTEXT "", IDC_BATTERYCHEMISTRY, 66, 48, 179, 8
-    LTEXT "Power state: ", -1, 16, 61, 48, 8
+    LTEXT "Power state: ", IDC_STATIC, 16, 61, 48, 8
     LTEXT "", IDC_BATTERYPOWERSTATE, 66, 61, 179, 8
-    LTEXT "Manufacturer: ", -1, 16, 74, 48, 8
+    LTEXT "Manufacturer: ", IDC_STATIC, 16, 74, 48, 8
     LTEXT "", IDC_BATTERYMANUFACTURER, 66, 74, 179, 8
     PUSHBUTTON "&Refresh", IDC_REFRESH, 16, 104, 50, 14
     DEFPUSHBUTTON "&OK", IDOK, 206, 134, 50, 14
@@ -210,8 +210,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "אפשרויות צריכת חשמל"
-    IDS_CPLDESCRIPTION_1 "Configure energy-saving settings for your computer."
+    IDS_CPLNAME "אפשרויות צריכת חשמל"
+    IDS_CPLDESCRIPTION "Configure energy-saving settings for your computer."
     IDS_PERCENT "%i%%"
     IDS_SOUND "קול"
     IDS_TEXT "טקסט"

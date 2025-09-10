@@ -1,18 +1,15 @@
 /*
- * PROJECT:         ReactOS Power Configuration Applet
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/powermeter.c
- * PURPOSE:         hibernate tab of applet
- * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  Martin Rottensteiner
- *                  Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Power Meter & Battery tab
+ * COPYRIGHT:   Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "powercfg.h"
+#include <debug.h>
 
-static int SelectedBattery = 0;
-static HWND hwndDlgDetail = 0;
+static UINT SelectedBattery = 0;
+static HWND hwndDlgDetail = NULL;
 
 typedef struct
 {
@@ -202,14 +199,14 @@ PowerMeterDetail_UpdateStats(HWND hwndDlg)
     Status[0] = UNICODE_NULL;
     if (pmi.ACOnline)
     {
-        if (LoadString(hApplet, IDS_ONLINE, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_ONLINE, Buffer, _countof(Buffer)))
         {
             wcscpy(Status, Buffer);
         }
     }
     if (pmi.Charging)
     {
-        if (LoadString(hApplet, IDS_CHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_CHARGING, Buffer, _countof(Buffer)))
         {
             if (Status[0] != UNICODE_NULL)
             {
@@ -220,7 +217,7 @@ PowerMeterDetail_UpdateStats(HWND hwndDlg)
     }
     else
     {
-        if (LoadString(hApplet, IDS_DISCHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_DISCHARGING, Buffer, _countof(Buffer)))
         {
             if (Status[0] != UNICODE_NULL)
             {
@@ -235,7 +232,6 @@ PowerMeterDetail_UpdateStats(HWND hwndDlg)
     SetDlgItemTextW(hwndDlg, IDC_BATTERYMANUFACTURER, pmi.Manufacturer);
 }
 
-
 static
 VOID
 PowerMeterDetail_InitDialog(HWND hwndDlg)
@@ -243,7 +239,7 @@ PowerMeterDetail_InitDialog(HWND hwndDlg)
     WCHAR FormatBuffer[200];
     WCHAR Buffer[200];
 
-    if (LoadString(hApplet, IDS_DETAILEDBATTERY, FormatBuffer, sizeof(Buffer) / sizeof(WCHAR)))
+    if (LoadString(hApplet, IDS_DETAILEDBATTERY, FormatBuffer, _countof(FormatBuffer)))
     {
         wsprintf(Buffer, FormatBuffer, SelectedBattery + 1);
         SetWindowTextW(hwndDlg, Buffer);
@@ -269,7 +265,7 @@ PowerMeterDetailDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             else if (LOWORD(wParam) == IDOK)
             {
                 DestroyWindow(hwndDlgDetail);
-                hwndDlgDetail = 0;
+                hwndDlgDetail = NULL;
                 return TRUE;
             }
 
@@ -288,28 +284,28 @@ PowerMeter_InitDialog(HWND hwndDlg)
     PowerMeterInfo_UpdateGlobalStats(&pmi);
     if (pmi.ACOnline)
     {
-        if (LoadString(hApplet, IDS_ONLINE, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_ONLINE, Buffer, _countof(Buffer)))
         {
             SetDlgItemTextW(hwndDlg, IDC_POWERSOURCE, Buffer);
         }
     }
     else
     {
-        if (LoadString(hApplet, IDS_OFFLINE, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_OFFLINE, Buffer, _countof(Buffer)))
         {
             SetDlgItemTextW(hwndDlg, IDC_POWERSOURCE, Buffer);
         }
     }
     if (pmi.Charging)
     {
-        if (LoadString(hApplet, IDS_CHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_CHARGING, Buffer, _countof(Buffer)))
         {
             SetDlgItemTextW(hwndDlg, IDC_BATTERYCHARGING0 + SelectedBattery, Buffer);
         }
     }
     else
     {
-        if (LoadString(hApplet, IDS_DISCHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+        if (LoadString(hApplet, IDS_DISCHARGING, Buffer, _countof(Buffer)))
         {
             SetDlgItemTextW(hwndDlg, IDC_BATTERYCHARGING0 + SelectedBattery, Buffer);
         }
@@ -328,14 +324,14 @@ PowerMeter_InitDialog(HWND hwndDlg)
         ShowWindow(GetDlgItem(hwndDlg, IDC_BATTERYCHARGING0 + SelectedBattery), SW_SHOW);
         if (pmi.Charging)
         {
-            if (LoadString(hApplet, IDS_CHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+            if (LoadString(hApplet, IDS_CHARGING, Buffer, _countof(Buffer)))
             {
                 SetDlgItemTextW(hwndDlg, IDC_BATTERYCHARGING0 + SelectedBattery, Buffer);
             }
         }
         else
         {
-            if (LoadString(hApplet, IDS_DISCHARGING, Buffer, sizeof(Buffer) / sizeof(WCHAR)))
+            if (LoadString(hApplet, IDS_DISCHARGING, Buffer, _countof(Buffer)))
             {
                 SetDlgItemTextW(hwndDlg, IDC_BATTERYCHARGING0 + SelectedBattery, Buffer);
             }

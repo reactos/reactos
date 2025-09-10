@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resource file
+ * COPYRIGHT:   Copyright 2006 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
+ */
+
 #include <windef.h>
 #include <winuser.h>
 #include <commctrl.h>

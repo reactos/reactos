@@ -8,8 +8,8 @@ CAPTION "Combinaciones de energía"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.", -1, 37, 6, 208, 36
-    GROUPBOX "C&ombinaciones de energía", -1, 6, 43, 240, 50
+    LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "C&ombinaciones de energía", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -39,8 +39,8 @@ CAPTION "Combinaciones de energía"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.", -1, 37, 6, 208, 36
-    GROUPBOX "C&ombinaciones de energía", -1, 6, 43, 240, 50
+    LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.", IDC_STATIC, 37, 6, 208, 36
+    GROUPBOX "C&ombinaciones de energía", IDC_STATIC, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
     PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
@@ -60,27 +60,27 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarmas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Alarma de batería baja", -1, 6, 7, 239, 99
-    AUTOCHECKBOX "Activar &la alarma cuando alcanza el nivel de potencia:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    GROUPBOX "Alarma de batería baja", IDC_STATIC, 6, 7, 239, 99
+    AUTOCHECKBOX "Activar &la alarma cuando alcanza el nivel de potencia:", IDC_ALARM1, 15, 17, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
     CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
-    PUSHBUTTON "Acción de la alar&ma...", -1, 148, 50, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
-    LTEXT "Notificación:", -1, 28, 67, 89, 10
+    PUSHBUTTON "Acción de la alar&ma...", IDC_STATIC, 148, 50, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
+    LTEXT "Notificación:", IDC_STATIC, 28, 67, 89, 10
     LTEXT "?", IDC_ALARMMSG1, 118, 67, 125, 10
-    LTEXT "Acción:", -1, 28, 79, 89, 10
+    LTEXT "Acción:", IDC_STATIC, 28, 79, 89, 10
     LTEXT "?", IDC_ALARMAKTION1, 118, 79, 125, 10
-    LTEXT "Ejecutar programa:", -1, 28, 91, 89, 10
+    LTEXT "Ejecutar programa:", IDC_STATIC, 28, 91, 89, 10
     LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
-    GROUPBOX "Alarma de batería crítica", -1, 6, 115, 239, 99
-    AUTOCHECKBOX "A&ctivar la alarma cuando alcanza el nivel de potencia:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    GROUPBOX "Alarma de batería crítica", IDC_STATIC, 6, 115, 239, 99
+    AUTOCHECKBOX "A&ctivar la alarma cuando alcanza el nivel de potencia:", IDC_ALARM2, 15, 125, 225, 10
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
-    PUSHBUTTON "Acción de la alar&ma...", -1, 148, 158, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
-    LTEXT "Notificación:", -1, 28, 175, 89, 10
+    PUSHBUTTON "Acción de la alar&ma...", IDC_STATIC, 148, 158, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
+    LTEXT "Notificación:", IDC_STATIC, 28, 175, 89, 10
     LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
-    LTEXT "Acción:", -1, 28, 187, 89, 10
+    LTEXT "Acción:", IDC_STATIC, 28, 187, 89, 10
     LTEXT "?", IDC_ALARMAKTION2, 118, 187, 125, 10
-    LTEXT "Ejecutar programa:", -1, 28, 199, 89, 10
+    LTEXT "Ejecutar programa:", IDC_STATIC, 28, 199, 89, 10
     LTEXT "?", IDC_ALARMPROG2, 118, 199, 125, 10
 END
 
@@ -90,12 +90,12 @@ CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Seleccione los ajustes de ahorro energético que desee usar.", -1, 37, 6, 208, 20
-    GROUPBOX "Opciones", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "S&olicitar una contraseña tras un tiempo de inactividad", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Atenuar monitor cuando esté funcionando con batería", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
-    GROUPBOX "Botones de encendido", -1, 6, 101, 240, 110
+    LTEXT "Seleccione los ajustes de ahorro energético que desee usar.", IDC_STATIC, 37, 6, 208, 20
+    GROUPBOX "Opciones", IDC_STATIC, 6, 30, 240, 65
+    AUTOCHECKBOX "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10
+    AUTOCHECKBOX "S&olicitar una contraseña tras un tiempo de inactividad", IDC_PASSWORDLOGON, 17, 60, 220, 10
+    AUTOCHECKBOX "&Atenuar monitor cuando esté funcionando con batería", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10
+    GROUPBOX "Botones de encendido", IDC_STATIC, 6, 101, 240, 110
     LTEXT "&Cuando cierre la tapa de mi ordenador portátil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Cuando pr&esione el botón de encendido de mi equipo:", IDC_SPOWERBUTTON, 15, 145, 222, 10
@@ -110,13 +110,13 @@ CAPTION "Hibernación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
-    LTEXT "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernación vuelve a su estado anterior. ", -1, 37, 6, 208, 35
-    GROUPBOX "Hibernar ", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "Habilitar &hibernación", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "Espacio en disco para hibernación ", -1, 6, 80, 240, 76
-    LTEXT "Espacio libre en disco:", -1, 15, 95, 150, 10
+    LTEXT "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernación vuelve a su estado anterior. ", IDC_STATIC, 37, 6, 208, 35
+    GROUPBOX "Hibernar ", IDC_STATIC, 6, 41, 240, 32
+    AUTOCHECKBOX "Habilitar &hibernación", IDC_HIBERNATEFILE, 17, 55, 210, 10
+    GROUPBOX "Espacio en disco para hibernación ", IDC_STATIC, 6, 80, 240, 76
+    LTEXT "Espacio libre en disco:", IDC_STATIC, 15, 95, 150, 10
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
-    LTEXT "Espacio en disco requerido para hibernar:", -1, 15, 115, 150, 10
+    LTEXT "Espacio en disco requerido para hibernar:", IDC_STATIC, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
     LTEXT "Debe liberar algo de espacio en el disco para que su equipo pueda hibernar.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
@@ -126,7 +126,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Save Scheme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 180, 8
+    LTEXT "Save this power scheme as:", IDC_STATIC, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
@@ -138,11 +138,11 @@ CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTOCHECKBOX "Show details for each &battery", IDC_SHOWDETAILS, 7, 10, 190, 10, WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Power status", -1, 7, 41, 240, 170
+    GROUPBOX "Power status", IDC_STATIC, 7, 41, 240, 170
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 23, 54, 21, 20
-    LTEXT "Current power source:", -1, 54, 54, 73, 10
+    LTEXT "Current power source:", IDC_STATIC, 54, 54, 73, 10
     LTEXT "AC power", IDC_POWERSOURCE, 140, 54, 60, 10
-    LTEXT "Total battery power remaining:", -1, 54, 64, 101, 10
+    LTEXT "Total battery power remaining:", IDC_STATIC, 54, 64, 101, 10
     LTEXT "100%", IDC_POWERSTATUS, 160, 64, 50, 10
 
     LTEXT "#1", IDC_BATTERY0, 24, 113, 13, 10
@@ -185,7 +185,7 @@ BEGIN
     LTEXT "100%", IDC_BATTERYPERCENT7, 214, 183, 21, 10
     LTEXT "Charging", IDC_BATTERYCHARGING7, 192, 198, 38, 10
 
-    LTEXT "Click an individual battery icon for more information.", -1, 108, 230, 150, 10
+    LTEXT "Click an individual battery icon for more information.", IDC_STATIC, 108, 230, 150, 10
 END
 
 IDD_POWERMETERDETAILS DIALOGEX 0, 0, 263, 156
@@ -193,16 +193,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Power Meter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Battery status", -1, 7, 7, 249, 120
-    LTEXT "Battery name: ", -1, 16, 22, 48, 8
+    GROUPBOX "Battery status", IDC_STATIC, 7, 7, 249, 120
+    LTEXT "Battery name: ", IDC_STATIC, 16, 22, 48, 8
     LTEXT "", IDC_BATTERYNAME, 66, 22, 179, 8
-    LTEXT "Unique ID: ", -1, 16, 35, 48, 8
+    LTEXT "Unique ID: ", IDC_STATIC, 16, 35, 48, 8
     LTEXT "", IDC_BATTERYUNIQUEID, 66, 35, 179, 8
-    LTEXT "Chemistry: ", -1, 16, 48, 48, 8
+    LTEXT "Chemistry: ", IDC_STATIC, 16, 48, 48, 8
     LTEXT "", IDC_BATTERYCHEMISTRY, 66, 48, 179, 8
-    LTEXT "Power state: ", -1, 16, 61, 48, 8
+    LTEXT "Power state: ", IDC_STATIC, 16, 61, 48, 8
     LTEXT "", IDC_BATTERYPOWERSTATE, 66, 61, 179, 8
-    LTEXT "Manufacturer: ", -1, 16, 74, 48, 8
+    LTEXT "Manufacturer: ", IDC_STATIC, 16, 74, 48, 8
     LTEXT "", IDC_BATTERYMANUFACTURER, 66, 74, 179, 8
     PUSHBUTTON "&Refresh", IDC_REFRESH, 16, 104, 50, 14
     DEFPUSHBUTTON "&OK", IDOK, 206, 134, 50, 14
@@ -210,8 +210,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Opciones de energía"
-    IDS_CPLDESCRIPTION_1 "Configura los parámetros de ahorro de energía de su equipo."
+    IDS_CPLNAME "Opciones de energía"
+    IDS_CPLDESCRIPTION "Configura los parámetros de ahorro de energía de su equipo."
     IDS_PERCENT "%i%%"
     IDS_SOUND "Sonido"
     IDS_TEXT "Texto"

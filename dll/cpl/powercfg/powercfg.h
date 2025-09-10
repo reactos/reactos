@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Main header
+ * COPYRIGHT:   Copyright 2006 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
+ */
+
 #ifndef _POWERCFG_H
 #define _POWERCFG_H
 
@@ -21,19 +30,10 @@
 #include <strsafe.h>
 #include <setupapi.h>
 #include <batclass.h>
-#include <debug.h>
 #include <initguid.h>
 #include <devguid.h>
 
 #include "resource.h"
-
-typedef struct
-{
-  int idIcon;
-  int idName;
-  int idDescription;
-  APPLET_PROC AppletProc;
-} APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
 extern GLOBAL_POWER_POLICY gGPP;
