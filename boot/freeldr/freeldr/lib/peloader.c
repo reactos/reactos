@@ -1017,7 +1017,7 @@ PeLdrLoadImageEx(
             Position.QuadPart = SectionHeader->PointerToRawData;
             Status = ArcSeek(FileId, &Position, SeekAbsolute);
 
-            TRACE("SH->VA: 0x%X\n", SectionHeader->VirtualAddress);
+            //TODO keep this TRACE("SH->VA: 0x%X\n", SectionHeader->VirtualAddress);
 
             /* Read this section from the file, size = SizeOfRawData */
             Status = ArcRead(FileId, (PUCHAR)PhysicalBase + SectionHeader->VirtualAddress, SizeOfRawData, &BytesRead);
@@ -1031,7 +1031,7 @@ PeLdrLoadImageEx(
         /* Size of data is less than the virtual size: fill up the remainder with zeroes */
         if (SizeOfRawData < VirtualSize)
         {
-            TRACE("PeLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
+            //TODO keep this TRACE("PeLdrLoadImage(): SORD %d < VS %d\n", SizeOfRawData, VirtualSize);
             RtlZeroMemory((PVOID)(SectionHeader->VirtualAddress + (ULONG_PTR)PhysicalBase + SizeOfRawData), VirtualSize - SizeOfRawData);
         }
 

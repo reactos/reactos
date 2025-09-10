@@ -68,7 +68,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
     ULONG i;
     CHAR Name[32];
 
-    TRACE("IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
+    //TODO keep this TRACE("IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
 
     Offset = 0;
     Record = (PDIR_RECORD)DirectoryBuffer;
@@ -88,18 +88,18 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 
         if (Record->FileIdLength == 1 && Record->FileId[0] == 0)
         {
-            TRACE("Name '.'\n");
+            //TODO keep this TRACE("Name '.'\n");
         }
         else if (Record->FileIdLength == 1 && Record->FileId[0] == 1)
         {
-            TRACE("Name '..'\n");
+            //TODO keep this TRACE("Name '..'\n");
         }
         else
         {
             for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
                 Name[i] = Record->FileId[i];
             Name[i] = ANSI_NULL;
-            //TODO LOGS TEMP remove for not flodding logs TRACE("Name '%s'\n", Name);
+            //TODO keep this TRACE("Name '%s'\n", Name);
 
             if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
             {
@@ -188,7 +188,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     ARC_STATUS Status;
     BOOLEAN DoFullLookup;
 
-    TRACE("IsoLookupFile() FileName = %s\n", FileName);
+    //TODO keep this TRACE("IsoLookupFile() FileName = %s\n", FileName);
 
     Volume = IsoVolumes[DeviceId];
 
@@ -367,7 +367,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     ULONG NumberOfSectors;
     ULONG BytesRead;
 
-    TRACE("IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
+    //TODO keep this TRACE("IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
 
     DeviceId = FsGetDeviceId(FileId);
     *Count = 0;
@@ -515,7 +515,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         FileHandle->FilePointer += N;
     }
 
-    TRACE("IsoRead() done\n");
+    //TODO keep this TRACE("IsoRead() done\n");
 
     return ESUCCESS;
 }

@@ -398,80 +398,11 @@ UefiSetupBlockDevices(VOID)
     UefiBootRootIdentifier = 0;
 
     /* 1) Setup a list of boot handles by using the LocateHandle protocol */
-    Status = GlobalSystemTable->BootServices->LocateHandle(ByProtocol, &bioGuid, NULL, &handle_size, NULL);
-    
-    TRACE("Initial LocateHandle call: Status=0x%lx, handle_size=%lu, EFI_BUFFER_TOO_SMALL=0x%lx\n", 
-          (ULONG)Status, (ULONG)handle_size, (ULONG)EFI_BUFFER_TOO_SMALL);
-    
-    /* Check if the call succeeded to get the buffer size */
-    if (Status == EFI_NOT_FOUND || handle_size == 0)
-    {
-        /* No block I/O devices found - this is possible in some UEFI setups */
-        TRACE("No block I/O devices found (Status=0x%lx)\n", (ULONG)Status);
-        handles = NULL;
-        InternalUefiDisk = NULL;
-        PcBiosDiskCount = 0;
-        return;
-    }
-    
-    /* When we pass NULL buffer, UEFI returns the required buffer size */
-    /* The status should be EFI_BUFFER_TOO_SMALL (0x8000000000000005 on 64-bit) */
-    /* But some implementations may just return 5. Check both cases. */
-    ULONG StatusValue = (ULONG)Status;
-    if (StatusValue == (ULONG)EFI_BUFFER_TOO_SMALL || StatusValue == 5 || 
-        StatusValue == 0x80000005 || Status == EFI_BUFFER_TOO_SMALL)
-    {
-        /* This is the expected case - we have devices and need to allocate buffer */
-        TRACE("LocateHandle needs buffer of size=%lu bytes for block devices\n", (ULONG)handle_size);
-    }
-    else if ((StatusValue == 0 || Status == EFI_SUCCESS) && handle_size > 0)
-    {
-        /* Some UEFI implementations might return success with a size */
-        TRACE("LocateHandle returned success with handle_size=%lu\n", (ULONG)handle_size);
-    }
-    else
-    {
-        /* Only treat as error if we have neither success nor buffer_too_small with valid size */
-        ERR("Unexpected LocateHandle status: Status=0x%lx, handle_size=%lu\n", StatusValue, (ULONG)handle_size);
-        handles = NULL;
-        InternalUefiDisk = NULL;
-        PcBiosDiskCount = 0;
-        return;
-    }
-    handles = MmAllocateMemoryWithType(handle_size, LoaderFirmwareTemporary);
-    if (handles == NULL)
-    {
-        ERR("Failed to allocate memory for handles\n");
-        return;
-    }
     Status = GlobalSystemTable->BootServices->LocateHandle(ByProtocol, &bioGuid, NULL, &handle_size, handles);
-    TRACE("Second LocateHandle call: Status=0x%lx, handle_size=%lu\n", (ULONG)Status, (ULONG)handle_size);
-    
-    /* Check if the second call succeeded */
-    if (Status != EFI_SUCCESS && Status != 0)
-    {
-        ERR("Failed to locate handles: Status=0x%lx\n", (ULONG)Status);
-        return;
-    }
-    
+    handles = MmAllocateMemoryWithType(handle_size, LoaderFirmwareTemporary);
+    Status = GlobalSystemTable->BootServices->LocateHandle(ByProtocol, &bioGuid, NULL, &handle_size, handles);
     SystemHandleCount = handle_size / sizeof(EFI_HANDLE);
-    TRACE("Found %lu block I/O devices\n", SystemHandleCount);
-    
-    if (SystemHandleCount == 0)
-    {
-        TRACE("No block devices to enumerate\n");
-        handles = NULL;
-        InternalUefiDisk = NULL;
-        PcBiosDiskCount = 0;
-        return;
-    }
-    
     InternalUefiDisk = MmAllocateMemoryWithType(sizeof(INTERNAL_UEFI_DISK) * SystemHandleCount, LoaderFirmwareTemporary);
-    if (InternalUefiDisk == NULL)
-    {
-        ERR("Failed to allocate memory for disk info\n");
-        return;
-    }
 
     BlockDeviceIndex = 0;
     /* 2) Parse the handle list */
@@ -572,13 +503,6 @@ UefiInitializeBootDevices(VOID)
     // AGENT-MODIFIED: Enumerate all ARC disks for proper Windows boot support
     UefiEnumerateArcDisks();
 
-    /* Check if handles were properly initialized */
-    if (handles == NULL || InternalUefiDisk == NULL)
-    {
-        TRACE("No block devices available, skipping CD-ROM detection\n");
-        return TRUE;
-    }
-
     /* Add it, if it's a cdrom */
     GlobalSystemTable->BootServices->HandleProtocol(handles[UefiBootRootIdentifier], &bioGuid, (void**)&bio);
     if (bio->Media->RemovableMedia == TRUE && bio->Media->BlockSize == 2048)
@@ -634,66 +558,23 @@ UefiDiskReadLogicalSectors(
     OUT PVOID Buffer)
 {
     ULONG UefiDriveNumber;
-    EFI_STATUS Status;
-
-    /* Validate drive number */
-    if (DriveNumber < FIRST_BIOS_DISK || InternalUefiDisk == NULL)
-    {
-        ERR("Invalid drive number 0x%x (FIRST_BIOS_DISK=0x%x)\n", DriveNumber, FIRST_BIOS_DISK);
-        return FALSE;
-    }
 
     UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
-    //TODO LOGS TEMP remove for not flodding logs TRACE("UefiDiskReadLogicalSectors: DriveNumber: 0x%x -> UefiDriveNumber: %d\n", DriveNumber, UefiDriveNumber);
-    
-    /* Validate UEFI drive number */
-    if (handles == NULL || GlobalSystemTable == NULL || GlobalSystemTable->BootServices == NULL)
-    {
-        ERR("UEFI not properly initialized\n");
-        return FALSE;
-    }
-    
-    Status = GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
-    if (EFI_ERROR(Status) || bio == NULL)
-    {
-        ERR("Failed to get Block I/O protocol\n");
-        return FALSE;
-    }
+    //TODO keep this TRACE("UefiDiskReadLogicalSectors: DriveNumber: %d\n", UefiDriveNumber);
+    GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
 
     /* Devices setup */
-    Status = bio->ReadBlocks(bio, bio->Media->MediaId, SectorNumber, SectorCount * bio->Media->BlockSize, Buffer);
-    return !EFI_ERROR(Status);
+    bio->ReadBlocks(bio, bio->Media->MediaId, SectorNumber, SectorCount * bio->Media->BlockSize, Buffer);
+    return TRUE;
 }
 
 BOOLEAN
 UefiDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
     ULONG UefiDriveNumber;
-    EFI_STATUS Status;
-
-    /* Validate drive number */
-    if (DriveNumber < FIRST_BIOS_DISK || InternalUefiDisk == NULL)
-    {
-        ERR("Invalid drive number 0x%x for geometry\n", DriveNumber);
-        return FALSE;
-    }
 
     UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
-    
-    /* Validate UEFI handles */
-    if (handles == NULL || GlobalSystemTable == NULL || GlobalSystemTable->BootServices == NULL)
-    {
-        ERR("UEFI not properly initialized for geometry\n");
-        return FALSE;
-    }
-    
-    Status = GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
-    if (EFI_ERROR(Status) || bio == NULL || bio->Media == NULL)
-    {
-        ERR("Failed to get Block I/O protocol for geometry\n");
-        return FALSE;
-    }
-    
+    GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
     Geometry->Cylinders = 1; // Not relevant for the UEFI BIO protocol
     Geometry->Heads = 1;     // Not relevant for the UEFI BIO protocol
     Geometry->SectorsPerTrack = (bio->Media->LastBlock + 1);
@@ -706,32 +587,9 @@ UefiDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 ULONG
 UefiDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
-    ULONG UefiDriveNumber;
-    EFI_STATUS Status;
-    
-    /* Validate drive number */
-    if (DriveNumber < FIRST_BIOS_DISK || InternalUefiDisk == NULL)
-    {
-        ERR("Invalid drive number 0x%x for cache count\n", DriveNumber);
-        return 0;
-    }
-    
-    UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
-    TRACE("UefiDiskGetCacheableBlockCount: DriveNumber: 0x%x -> UefiDriveNumber: %d\n", DriveNumber, UefiDriveNumber);
+    ULONG UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
+    TRACE("UefiDiskGetCacheableBlockCount: DriveNumber: %d\n", UefiDriveNumber);
 
-    /* Validate UEFI handles */
-    if (handles == NULL || GlobalSystemTable == NULL || GlobalSystemTable->BootServices == NULL)
-    {
-        ERR("UEFI not properly initialized for cache count\n");
-        return 0;
-    }
-
-    Status = GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
-    if (EFI_ERROR(Status) || bio == NULL || bio->Media == NULL)
-    {
-        ERR("Failed to get Block I/O protocol for cache count\n");
-        return 0;
-    }
-    
+    GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
     return (bio->Media->LastBlock + 1);
 }
