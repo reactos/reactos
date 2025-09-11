@@ -26,6 +26,11 @@ MACHVTBL MachVtbl;
 TIMEINFO*
 ArcGetTime(VOID)
 {
+    if (!MachVtbl.GetTime)
+    {
+        return NULL;
+    }
+    
     return MachVtbl.GetTime();
 }
 

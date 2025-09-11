@@ -7,6 +7,8 @@
 
 #include <uefildr.h>
 
+extern EFI_SYSTEM_TABLE* GlobalSystemTable;
+
 #ifndef _M_ARM
 /* TODO: Handle this with custom Disk / partition setup */
 UCHAR
@@ -19,7 +21,10 @@ DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 VOID
 StallExecutionProcessor(ULONG Microseconds)
 {
-
+    if (GlobalSystemTable && GlobalSystemTable->BootServices)
+    {
+        GlobalSystemTable->BootServices->Stall(Microseconds);
+    }
 }
 
 VOID
@@ -50,5 +55,6 @@ UefiPcBeep(VOID)
 VOID
 UefiHwIdle(VOID)
 {
-
+    /* Use 1ms delay for idle to prevent CPU spinning */
+    StallExecutionProcessor(1000);
 }

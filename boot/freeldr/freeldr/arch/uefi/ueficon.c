@@ -13,13 +13,13 @@
 /* GLOBALS ********************************************************************/
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
-extern BOOLEAN UefiBootServicesExited;  /* Defined in uefimem.c */
 static unsigned CurrentCursorX = 0;
 static unsigned CurrentCursorY = 0;
 static unsigned CurrentAttr = 0x0f;
 static EFI_INPUT_KEY Key;
 static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
+static BOOLEAN KeyAvailable = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -28,10 +28,6 @@ UefiConsPutChar(int c)
 {
     ULONG Width, Height, Unused;
     BOOLEAN NeedScroll;
-
-    /* Don't output to console after boot services have been exited */
-    if (UefiBootServicesExited)
-        return;
 
     UefiVideoGetDisplaySize(&Width, &Height, &Unused);
 
@@ -126,21 +122,30 @@ ConvertToBiosExtValue(UCHAR KeyIn)
 BOOLEAN
 UefiConsKbHit(VOID)
 {
-    /* No keyboard input after boot services have been exited */
-    if (UefiBootServicesExited)
-        return FALSE;
-        
-    return (GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key) != EFI_NOT_READY);
+    EFI_STATUS Status;
+    
+    /* Only read a new key if we don't have one buffered */
+    if (!KeyAvailable && !ExtendedKey)
+    {
+        Status = GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key);
+        if (Status == EFI_SUCCESS)
+        {
+            KeyAvailable = TRUE;
+        }
+        else
+        {
+            KeyAvailable = FALSE;
+        }
+    }
+    
+    return (KeyAvailable || ExtendedKey);
 }
 
 int
 UefiConsGetCh(VOID)
 {
     UCHAR KeyOutput = 0;
-
-    /* No keyboard input after boot services have been exited */
-    if (UefiBootServicesExited)
-        return 0;
+    EFI_STATUS Status;
 
     /* If an extended key press was detected the last time we were called
      * then return the scan code of that key. */
@@ -150,19 +155,32 @@ UefiConsGetCh(VOID)
         return ExtendedScanCode;
     }
 
+    /* Ensure we have a key available */
+    if (!KeyAvailable)
+    {
+        /* Wait for a key if none is buffered */
+        do
+        {
+            Status = GlobalSystemTable->ConIn->ReadKeyStroke(GlobalSystemTable->ConIn, &Key);
+        } while (Status != EFI_SUCCESS);
+        KeyAvailable = TRUE;
+    }
+
     if (Key.UnicodeChar != 0)
     {
         KeyOutput = Key.UnicodeChar;
     }
-    else
+    else if (Key.ScanCode != 0)
     {
         ExtendedKey = TRUE;
         ExtendedScanCode = ConvertToBiosExtValue(Key.ScanCode);
         KeyOutput = KEY_EXTENDED;
     }
 
-    /* UEFI will stack input requests, we have to clear it */
+    /* Clear the key buffer after consuming it */
     Key.UnicodeChar = 0;
     Key.ScanCode = 0;
+    KeyAvailable = FALSE;
+    
     return KeyOutput;
 }
