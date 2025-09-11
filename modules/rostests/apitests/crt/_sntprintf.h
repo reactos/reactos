@@ -13,6 +13,23 @@
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 
+#ifndef TEST_STATIC_CRT
+
+static PFN_sntprintf p_sntprintf;
+
+static BOOL Init(void)
+{
+    HMODULE hdll = LoadLibraryA(TEST_DLL_NAME);
+    p_sntprintf = (PFN_sntprintf)GetProcAddress(hdll, str_sntprintf);
+    ok(p_sntprintf != NULL, "Failed to load %s from %s\n", str_sntprintf, TEST_DLL_NAME);
+    return (p_sntprintf != NULL);
+}
+
+#undef _sntprintf
+#define _sntprintf p_sntprintf
+
+#endif // !TEST_STATIC_CRT
+
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
 #define broken(x) 0
@@ -22,6 +39,14 @@ START_TEST(_sntprintf)
     _TCHAR Buffer[128];
     size_t BufferSize = sizeof(Buffer) / sizeof(Buffer[0]);
     int Result;
+
+#ifndef TEST_STATIC_CRT
+    if (!Init())
+    {
+        skip("Skipping tests, because %s is not available\n", str_sntprintf);
+        return;
+    }
+#endif
 
     StartSeh()
         Result = _sntprintf(NULL, 0, _T("Hello"));
@@ -35,7 +60,9 @@ START_TEST(_sntprintf)
     StartSeh()
         Result = _sntprintf(NULL, 1, _T("Hello"));
         ok_int(Result, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 5);
-#if defined(_UNICODE) || defined(TEST_CRTDLL)
+#if defined(TEST_CRTDLL)
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#elif defined(_UNICODE)
     EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);

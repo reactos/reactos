@@ -26,7 +26,7 @@ list(APPEND SOURCE_CRT_TESTS
 )
 
 add_library(ntdll_crt_test_lib ${SOURCE_CRT_TESTS})
-target_compile_definitions(ntdll_crt_test_lib PRIVATE TEST_NTDLL)
+target_compile_definitions(ntdll_crt_test_lib PRIVATE TEST_NTDLL TEST_DLL_NAME="ntdll.dll")
 target_link_libraries(ntdll_crt_test_lib ${PSEH_LIB})
 add_dependencies(ntdll_crt_test_lib psdk)
 
