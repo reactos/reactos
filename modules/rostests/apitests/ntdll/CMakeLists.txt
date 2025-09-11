@@ -14,7 +14,6 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
     ../crt/mbstowcs.c
-    ../crt/mbtowc.c
     ../crt/setjmp.c
     ../crt/sprintf.c
     ../crt/strcpy.c
@@ -22,7 +21,6 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/strtoul.c
     ../crt/wcstombs.c
     ../crt/wcstoul.c
-    ../crt/wctomb.c
 )
 
 add_library(ntdll_crt_test_lib ${SOURCE_CRT_TESTS})
