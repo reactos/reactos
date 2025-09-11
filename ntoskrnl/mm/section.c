@@ -2312,7 +2312,7 @@ MmCreatePhysicalMemorySection(VOID)
                             &Handle);
     if (!NT_SUCCESS(Status))
     {
-        ObDereferenceObject(PhysSection);
+        /* Note: ObInsertObject dereferences PhysSection on failure */
         return Status;
     }
     ObCloseHandle(Handle, KernelMode);

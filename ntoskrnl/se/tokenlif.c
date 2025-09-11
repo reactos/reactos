@@ -417,6 +417,8 @@ SepCreateToken(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ObInsertObject() failed (Status 0x%lx)\n", Status);
+            /* Note: ObInsertObject dereferences AccessToken on failure */
+            return Status;
         }
     }
     else
@@ -2243,6 +2245,7 @@ NtFilterToken(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtFilterToken(): Failed to insert the filtered token (Status 0x%lx)\n", Status);
+        /* Note: ObInsertObject dereferences FilteredToken on failure */
         goto Quit;
     }
 
