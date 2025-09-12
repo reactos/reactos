@@ -23,7 +23,6 @@ extern UCHAR BitmapFont8x16[256 * 16];
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 REACTOS_INTERNAL_BGCONTEXT framebufferData;
-BOOLEAN UefiVideoInitialized = FALSE;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 /* FUNCTIONS ******************************************************************/
@@ -42,41 +41,20 @@ UefiInitializeVideo(VOID)
         return Status;
     }
 
-    /* Try to set a reasonable resolution like 800x600 or 1024x768 */
-    UINT32 BestMode = 0;
-    UINT32 BestWidth = 0;
-    UINT32 BestHeight = 0;
+    /* AGENT-MODIFIED: Add debug output for GOP modes */
+    TRACE("AGENT-MODIFIED: GOP Protocol located successfully\n");
+    TRACE("  MaxMode: %d\n", gop->Mode->MaxMode);
+    TRACE("  Current Mode: %d\n", gop->Mode->Mode);
     
-    /* Search for 800x600 or 1024x768 mode */
-    for (UINT32 i = 0; i < gop->Mode->MaxMode; i++)
+    /* We don't need high resolutions for freeldr */
+    if (gop->Mode->MaxMode > LOWEST_SUPPORTED_RES)
     {
-        EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* Info;
-        UINTN InfoSize;
-        
-        if (gop->QueryMode(gop, i, &InfoSize, &Info) == EFI_SUCCESS)
+        Status = gop->SetMode(gop, LOWEST_SUPPORTED_RES);
+        if (Status != EFI_SUCCESS)
         {
-            /* Prefer 800x600 or 1024x768 */
-            if ((Info->HorizontalResolution == 800 && Info->VerticalResolution == 600) ||
-                (Info->HorizontalResolution == 1024 && Info->VerticalResolution == 768))
-            {
-                BestMode = i;
-                BestWidth = Info->HorizontalResolution;
-                BestHeight = Info->VerticalResolution;
-                break;
-            }
-            /* Otherwise pick something reasonable */
-            else if (Info->HorizontalResolution >= 800 && Info->HorizontalResolution <= 1024 &&
-                     Info->HorizontalResolution > BestWidth)
-            {
-                BestMode = i;
-                BestWidth = Info->HorizontalResolution;
-                BestHeight = Info->VerticalResolution;
-            }
+            TRACE("AGENT-MODIFIED: Failed to set mode %d, using current mode\n", LOWEST_SUPPORTED_RES);
         }
     }
-    
-    /* Set the selected mode */
-    gop->SetMode(gop, BestMode);
 
     framebufferData.BaseAddress        = (ULONG_PTR)gop->Mode->FrameBufferBase;
     framebufferData.BufferSize         = gop->Mode->FrameBufferSize;
@@ -85,7 +63,14 @@ UefiInitializeVideo(VOID)
     framebufferData.PixelsPerScanLine  = gop->Mode->Info->PixelsPerScanLine;
     framebufferData.PixelFormat        = gop->Mode->Info->PixelFormat;
 
-    UefiVideoInitialized = TRUE;
+    /* AGENT-MODIFIED: Print GOP framebuffer details */
+    TRACE("AGENT-MODIFIED: GOP Framebuffer initialized:\n");
+    TRACE("  BaseAddress: 0x%lx\n", framebufferData.BaseAddress);
+    TRACE("  BufferSize: 0x%x\n", framebufferData.BufferSize);
+    TRACE("  Resolution: %dx%d\n", framebufferData.ScreenWidth, framebufferData.ScreenHeight);
+    TRACE("  PixelsPerScanLine: %d\n", framebufferData.PixelsPerScanLine);
+    TRACE("  PixelFormat: %d\n", framebufferData.PixelFormat);
+
     return Status;
 }
 

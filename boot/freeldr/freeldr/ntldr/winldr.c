@@ -368,6 +368,34 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // FIXME: Extension->AcpiTableSize;
     }
 
+    /* AGENT-MODIFIED: Pass GOP framebuffer info to kernel for UEFI boot */
+#ifdef UEFIBOOT
+    {
+        extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
+        if (framebufferData.BaseAddress != 0)
+        {
+            Extension->GopFramebuffer.FrameBufferBase.QuadPart = framebufferData.BaseAddress;
+            Extension->GopFramebuffer.FrameBufferSize = framebufferData.BufferSize;
+            Extension->GopFramebuffer.HorizontalResolution = framebufferData.ScreenWidth;
+            Extension->GopFramebuffer.VerticalResolution = framebufferData.ScreenHeight;
+            Extension->GopFramebuffer.PixelsPerScanLine = framebufferData.PixelsPerScanLine;
+            Extension->GopFramebuffer.PixelFormat = framebufferData.PixelFormat;
+            /* Note: RedMask, GreenMask, BlueMask are only needed for PixelFormat==2 (Bitmask) */
+            Extension->GopFramebuffer.RedMask = 0;
+            Extension->GopFramebuffer.GreenMask = 0;
+            Extension->GopFramebuffer.BlueMask = 0;
+            
+            TRACE("AGENT-MODIFIED: GOP Framebuffer passed to kernel:\n");
+            TRACE("  BaseAddress: 0x%llx\n", Extension->GopFramebuffer.FrameBufferBase.QuadPart);
+            TRACE("  Size: 0x%x\n", Extension->GopFramebuffer.FrameBufferSize);
+            TRACE("  Resolution: %dx%d\n", Extension->GopFramebuffer.HorizontalResolution,
+                  Extension->GopFramebuffer.VerticalResolution);
+            TRACE("  PixelsPerScanLine: %d\n", Extension->GopFramebuffer.PixelsPerScanLine);
+            TRACE("  PixelFormat: %d\n", Extension->GopFramebuffer.PixelFormat);
+        }
+    }
+#endif
+
     if (VersionToBoot >= _WIN32_WINNT_VISTA)
     {
         Extension->BootViaWinload = 1;
