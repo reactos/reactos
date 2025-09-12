@@ -310,12 +310,10 @@ static VOID
  */
 LONG
 NTAPI
-RtlUnhandledExceptionFilter(IN struct _EXCEPTION_POINTERS* ExceptionInfo)
+RtlUnhandledExceptionFilter(
+    _In_ PEXCEPTION_POINTERS ExceptionInfo)
 {
-    /* This is used by the security cookie checks, and also called externally */
-    UNIMPLEMENTED;
-    PrintStackTrace(ExceptionInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return RtlUnhandledExceptionFilter2(ExceptionInfo, "");
 }
 
 /*
@@ -325,12 +323,12 @@ LONG
 NTAPI
 RtlUnhandledExceptionFilter2(
     _In_ PEXCEPTION_POINTERS ExceptionInfo,
-    _In_ ULONG Flags)
+    _In_ PCSTR Function)
 {
     /* This is used by the security cookie checks, and also called externally */
     UNIMPLEMENTED;
     PrintStackTrace(ExceptionInfo);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 
 /*
