@@ -453,6 +453,15 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     //
     // AGENT-MODIFIED: GOP framebuffer information for UEFI boot
     GOP_FRAMEBUFFER_INFO GopFramebuffer;
+    // AGENT-MODIFIED: BGRT (Boot Graphics Resource Table) info for seamless boot logo
+    struct {
+        BOOLEAN Valid;                   /* TRUE if BGRT data is available */
+        UCHAR ImageType;                 /* 0=BMP (only type defined) */
+        ULONGLONG ImageAddress;          /* Physical address of the logo image */
+        ULONG ImageSize;                 /* Size of the logo image in bytes */
+        ULONG ImageOffsetX;              /* X offset on screen where logo should be displayed */
+        ULONG ImageOffsetY;              /* Y offset on screen where logo should be displayed */
+    } BgrtInfo;
 } LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
 
 //

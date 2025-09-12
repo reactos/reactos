@@ -16,6 +16,8 @@
 #ifdef UEFIBOOT
 #include <uefildr.h>
 #include <uefi/uefiarcname.h>
+// AGENT-MODIFIED: Include ACPI header for BGRT table support
+#include <drivers/acpi/acpi.h>
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 #endif
@@ -372,6 +374,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 #ifdef UEFIBOOT
     {
         extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
+        extern PBGRT_TABLE GetBgrtTable(VOID); // AGENT-MODIFIED: Get BGRT table from UEFI hardware detection
+        
         if (framebufferData.BaseAddress != 0)
         {
             Extension->GopFramebuffer.FrameBufferBase.QuadPart = framebufferData.BaseAddress;
@@ -392,6 +396,30 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
                   Extension->GopFramebuffer.VerticalResolution);
             TRACE("  PixelsPerScanLine: %d\n", Extension->GopFramebuffer.PixelsPerScanLine);
             TRACE("  PixelFormat: %d\n", Extension->GopFramebuffer.PixelFormat);
+        }
+        
+        // AGENT-MODIFIED: Pass BGRT info to kernel for seamless boot logo
+        PBGRT_TABLE Bgrt = GetBgrtTable();
+        if (Bgrt)
+        {
+            Extension->BgrtInfo.Valid = TRUE;
+            Extension->BgrtInfo.ImageType = Bgrt->ImageType;
+            Extension->BgrtInfo.ImageAddress = Bgrt->LogoAddress;
+            // Calculate image size from BMP header if needed (for now set to 0)
+            Extension->BgrtInfo.ImageSize = 0; // Will be determined later from BMP header
+            Extension->BgrtInfo.ImageOffsetX = Bgrt->OffsetX;
+            Extension->BgrtInfo.ImageOffsetY = Bgrt->OffsetY;
+            
+            TRACE("[AGENT] BGRT Info passed to kernel:\n");
+            TRACE("  ImageType: %u\n", Extension->BgrtInfo.ImageType);
+            TRACE("  ImageAddress: 0x%llx\n", Extension->BgrtInfo.ImageAddress);
+            TRACE("  ImageOffset: (%lu, %lu)\n", Extension->BgrtInfo.ImageOffsetX,
+                  Extension->BgrtInfo.ImageOffsetY);
+        }
+        else
+        {
+            Extension->BgrtInfo.Valid = FALSE;
+            TRACE("[AGENT] No BGRT table found, boot logo support disabled\n");
         }
     }
 #endif

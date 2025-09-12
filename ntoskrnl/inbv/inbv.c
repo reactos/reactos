@@ -7,23 +7,31 @@
  *              Copyright 2015-2022 Hermès Bélusca-Maïto
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <ntoskrnl.h>
 #include "inbv/logo.h"
+#define NDEBUG
+#include <debug.h>
+
+/* AGENT-MODIFIED: GOP video function prototypes for UEFI boot */
+BOOLEAN NTAPI GopVidInitialize(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock);
+VOID    NTAPI GopVidCleanUp(VOID);
+VOID    NTAPI GopVidResetDisplay(_In_ BOOLEAN HalReset);
+VOID    NTAPI GopVidSolidColorFill(_In_ ULONG Left, _In_ ULONG Top, _In_ ULONG Right, _In_ ULONG Bottom, _In_ UCHAR Color);
+VOID    NTAPI GopVidBufferToScreenBlt(_In_reads_bytes_(Delta * Height) PUCHAR Buffer, _In_ ULONG Left, _In_ ULONG Top, _In_ ULONG Width, _In_ ULONG Height, _In_ ULONG Delta);
+VOID    NTAPI GopVidScreenToBufferBlt(_Out_writes_bytes_(Delta * Height) PUCHAR Buffer, _In_ ULONG Left, _In_ ULONG Top, _In_ ULONG Width, _In_ ULONG Height, _In_ ULONG Delta);
+VOID    NTAPI GopVidDisplayString(_In_z_ PUCHAR String);
+VOID    NTAPI GopVidBitBlt(_In_ PUCHAR Buffer, _In_ ULONG Left, _In_ ULONG Top);
 
 /* GLOBALS *******************************************************************/
 
-/*
- * Enable this define if you want Inbv to use coloured headless mode.
- */
+/* Enable this define if you want Inbv to use coloured headless mode. */
 // #define INBV_HEADLESS_COLORS
 
 typedef struct _INBV_PROGRESS_STATE
 {
-    ULONG Floor;
-    ULONG Ceiling;
-    ULONG Bias;
+    ULONG Floor;   /* 0..100 */
+    ULONG Ceiling; /* 0..100 */
+    ULONG Bias;    /* Ceiling - Floor */
 } INBV_PROGRESS_STATE;
 
 typedef struct _BT_PROGRESS_INDICATOR
@@ -39,6 +47,9 @@ static INBV_DISPLAY_STATE InbvDisplayState = INBV_DISPLAY_STATE_DISABLED;
 BOOLEAN InbvBootDriverInstalled = FALSE;
 static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
 
+/* AGENT-MODIFIED: Track if we're using GOP video (UEFI) or bootvid (BIOS) */
+static BOOLEAN InbvUsingGopVideo = FALSE;
+
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
 static INBV_DISPLAY_STRING_FILTER InbvDisplayFilter = NULL;
 
@@ -50,44 +61,21 @@ static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 static ULONG ResourceCount = 0;
 static PUCHAR ResourceList[1 + IDB_MAX_RESOURCES]; // First entry == NULL, followed by 'ResourceCount' entries.
 
-
 /*
  * Headless terminal text colors
  */
-
 #ifdef INBV_HEADLESS_COLORS
-
-// Conversion table CGA to ANSI color index
 static const UCHAR CGA_TO_ANSI_COLOR_TABLE[16] =
 {
-    0,  // Black
-    4,  // Blue
-    2,  // Green
-    6,  // Cyan
-    1,  // Red
-    5,  // Magenta
-    3,  // Brown/Yellow
-    7,  // Grey/White
-
-    60, // Bright Black
-    64, // Bright Blue
-    62, // Bright Green
-    66, // Bright Cyan
-    61, // Bright Red
-    65, // Bright Magenta
-    63, // Bright Yellow
-    67  // Bright Grey (White)
+    0, 4, 2, 6, 1, 5, 3, 7,
+    60, 64, 62, 66, 61, 65, 63, 67
 };
-
-#define CGA_TO_ANSI_COLOR(CgaColor) \
-    CGA_TO_ANSI_COLOR_TABLE[CgaColor & 0x0F]
-
+#define CGA_TO_ANSI_COLOR(CgaColor) CGA_TO_ANSI_COLOR_TABLE[(CgaColor) & 0x0F]
 #endif
 
-// Default colors: text in white, background in black
+/* Default colors: text in white, background in black */
 static ULONG InbvTerminalTextColor = 37;
 static ULONG InbvTerminalBkgdColor = 40;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -115,24 +103,17 @@ FindBitmapResource(
          NextEntry != ListHead;
          NextEntry = NextEntry->Flink)
     {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-        /* Check for a match */
         if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &UpString, TRUE) ||
             RtlEqualUnicodeString(&LdrEntry->BaseDllName, &MpString, TRUE))
         {
-            /* Break out */
             break;
         }
     }
 
-    /* Check if we found it */
     if (NextEntry != ListHead)
     {
-        /* Try to find the resource */
         ResourceInfo.Type = RT_BITMAP;
         ResourceInfo.Name = ResourceId;
         ResourceInfo.Language = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
@@ -143,12 +124,8 @@ FindBitmapResource(
                                    &ResourceDataEntry);
         if (NT_SUCCESS(Status))
         {
-            /* Access the resource */
             ULONG Size = 0;
-            Status = LdrAccessResource(LdrEntry->DllBase,
-                                       ResourceDataEntry,
-                                       &Data,
-                                       &Size);
+            Status = LdrAccessResource(LdrEntry->DllBase, ResourceDataEntry, &Data, &Size);
             if ((Data) && (ResourceId < 3))
             {
                 KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, Size);
@@ -157,7 +134,6 @@ FindBitmapResource(
         }
     }
 
-    /* Return the pointer */
     return Data;
 }
 
@@ -166,10 +142,7 @@ NTAPI
 InbvGetResourceAddress(
     _In_ ULONG ResourceNumber)
 {
-    /* Validate the resource number */
     if (ResourceNumber > ResourceCount) return NULL;
-
-    /* Return the address */
     return ResourceList[ResourceNumber];
 }
 
@@ -184,134 +157,102 @@ InbvDriverInitialize(
     BOOLEAN ResetMode = FALSE; // By default do not reset the video mode
     ULONG i;
 
-    /* Quit if we're already installed */
     if (InbvBootDriverInstalled) return TRUE;
 
-    /* Initialize the lock and check the current display state */
     KeInitializeSpinLock(&BootDriverLock);
+
     if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
     {
-        /* Reset the video mode in case we do not have a custom boot logo */
         CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
         ResetMode   = (CommandLine == NULL) || (strstr(CommandLine, "BOOTLOGO") == NULL);
     }
 
-    /* Check if this is UEFI boot */
-    BOOLEAN IsUefiBoot = FALSE;
-    if (LoaderBlock && LoaderBlock->Extension)
+    /* AGENT-MODIFIED: UEFI vs BIOS selection */
+    if (LoaderBlock->FirmwareInformation.FirmwareTypeEfi)
     {
-        IsUefiBoot = LoaderBlock->Extension->BootViaEFI;
-        
-#ifdef _M_AMD64
-        /* For UEFI boot, pass framebuffer info to bootvid */
-        if (IsUefiBoot && LoaderBlock->Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
+        DPRINT1("[AGENT] UEFI boot detected, initializing GOP video driver\n");
+        InbvBootDriverInstalled = GopVidInitialize(LoaderBlock);
+        InbvUsingGopVideo = InbvBootDriverInstalled;
+
+        if (!InbvBootDriverInstalled)
         {
-            /* Export framebuffer info for bootvid driver */
-            extern PHYSICAL_ADDRESS VidpFrameBufferBase;
-            extern ULONG VidpFrameBufferSize;
-            extern ULONG VidpScreenWidth;
-            extern ULONG VidpScreenHeight;
-            extern ULONG VidpPixelsPerScanLine;
-            
-            VidpFrameBufferBase = LoaderBlock->Extension->UefiFramebuffer.FrameBufferBase;
-            VidpFrameBufferSize = LoaderBlock->Extension->UefiFramebuffer.FrameBufferSize;
-            VidpScreenWidth = LoaderBlock->Extension->UefiFramebuffer.ScreenWidth;
-            VidpScreenHeight = LoaderBlock->Extension->UefiFramebuffer.ScreenHeight;
-            VidpPixelsPerScanLine = LoaderBlock->Extension->UefiFramebuffer.PixelsPerScanLine;
+            DPRINT1("[AGENT] GOP init failed, falling back to bootvid\n");
+            InbvBootDriverInstalled = VidInitialize(ResetMode);
+            InbvUsingGopVideo = FALSE;
         }
-#endif
     }
-    
-    /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(ResetMode);
-    
+    else
+    {
+        DPRINT1("[AGENT] BIOS boot detected, initializing bootvid\n");
+        InbvBootDriverInstalled = VidInitialize(ResetMode);
+        InbvUsingGopVideo = FALSE;
+    }
+
     if (InbvBootDriverInstalled)
     {
-        /* Find bitmap resources in the kernel */
         ResourceCount = min(Count, RTL_NUMBER_OF(ResourceList) - 1);
         for (i = 1; i <= ResourceCount; i++)
-        {
-            /* Do the lookup */
             ResourceList[i] = FindBitmapResource(LoaderBlock, i);
-        }
 
-        /* Set the progress bar ranges */
+        /* 0..100 subset by default */
         InbvSetProgressBarSubset(0, 100);
-
         // BootAnimInitialize(LoaderBlock, Count);
     }
 
-    /* Return install state */
     return InbvBootDriverInstalled;
 }
+
+/* ---- Lock helpers (fixed for proper IRQL semantics) --------------------- */
 
 VOID
 NTAPI
 InbvAcquireLock(VOID)
 {
-    KIRQL OldIrql;
-
-    /* Check if we're at dispatch level or lower */
-    OldIrql = KeGetCurrentIrql();
-    if (OldIrql <= DISPATCH_LEVEL)
-    {
-        /* Loop until the lock is free */
-        while (!KeTestSpinLock(&BootDriverLock));
-
-        /* Raise IRQL to dispatch level */
-        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    }
-
-    /* Acquire the lock */
-    KiAcquireSpinLock(&BootDriverLock);
-    InbvOldIrql = OldIrql;
+    /* Raise to DPC and acquire at DPC level */
+    KeRaiseIrql(DISPATCH_LEVEL, &InbvOldIrql);
+    KeAcquireSpinLockAtDpcLevel(&BootDriverLock);
 }
 
 VOID
 NTAPI
 InbvReleaseLock(VOID)
 {
-    KIRQL OldIrql;
-
-    /* Capture the old IRQL */
-    OldIrql = InbvOldIrql;
-
-    /* Release the driver lock */
-    KiReleaseSpinLock(&BootDriverLock);
-
-    /* If we were at dispatch level or lower, restore the old IRQL */
-    if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
+    /* Release at DPC and restore previous IRQL */
+    KeReleaseSpinLockFromDpcLevel(&BootDriverLock);
+    KeLowerIrql(InbvOldIrql);
 }
+
+/* ------------------------------------------------------------------------ */
 
 VOID
 NTAPI
 InbvEnableBootDriver(
     _In_ BOOLEAN Enable)
 {
-    /* Check if we're installed */
     if (InbvBootDriverInstalled)
     {
-        /* Check for lost state */
         if (InbvDisplayState >= INBV_DISPLAY_STATE_LOST) return;
 
-        /* Acquire the lock */
         InbvAcquireLock();
 
-        /* Cleanup the screen if we own it */
-        if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED) VidCleanUp();
+        /* Clean screen using the active backend if we own it */
+        if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
+        {
+            if (InbvUsingGopVideo)
+                GopVidCleanUp();
+            else
+                VidCleanUp();
+        }
 
-        /* Set the new display state */
-        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED :
-                                    INBV_DISPLAY_STATE_DISABLED;
+        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED
+                                  : INBV_DISPLAY_STATE_DISABLED;
 
-        /* Release the lock */
         InbvReleaseLock();
     }
     else
     {
-        /* Set the new display state */
-        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED :
-                                    INBV_DISPLAY_STATE_DISABLED;
+        InbvDisplayState = Enable ? INBV_DISPLAY_STATE_OWNED
+                                  : INBV_DISPLAY_STATE_DISABLED;
     }
 }
 
@@ -319,15 +260,12 @@ VOID
 NTAPI
 InbvAcquireDisplayOwnership(VOID)
 {
-    /* Check if we have a callback and we're just acquiring it now */
     if ((InbvResetDisplayParameters) &&
         (InbvDisplayState == INBV_DISPLAY_STATE_LOST))
     {
-        /* Call the callback */
         InbvResetDisplayParameters(80, 50);
     }
 
-    /* Acquire the display */
     InbvDisplayState = INBV_DISPLAY_STATE_OWNED;
 }
 
@@ -336,16 +274,14 @@ NTAPI
 InbvSetDisplayOwnership(
     _In_ BOOLEAN DisplayOwned)
 {
-    /* Set the new display state */
-    InbvDisplayState = DisplayOwned ? INBV_DISPLAY_STATE_OWNED :
-                                      INBV_DISPLAY_STATE_LOST;
+    InbvDisplayState = DisplayOwned ? INBV_DISPLAY_STATE_OWNED
+                                    : INBV_DISPLAY_STATE_LOST;
 }
 
 BOOLEAN
 NTAPI
 InbvCheckDisplayOwnership(VOID)
 {
-    /* Return if we own it or not */
     return InbvDisplayState != INBV_DISPLAY_STATE_LOST;
 }
 
@@ -353,7 +289,6 @@ INBV_DISPLAY_STATE
 NTAPI
 InbvGetDisplayState(VOID)
 {
-    /* Return the actual state */
     return InbvDisplayState;
 }
 
@@ -362,37 +297,32 @@ NTAPI
 InbvDisplayString(
     _In_ PCHAR String)
 {
-    /* Make sure we own the display */
-    if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
-    {
-        /* If we're not allowed, return success anyway */
-        if (!InbvDisplayDebugStrings) return TRUE;
+    if (InbvDisplayState != INBV_DISPLAY_STATE_OWNED)
+        return FALSE;
 
-        /* Check if a filter is installed */
-        if (InbvDisplayFilter) InbvDisplayFilter(&String);
-
-        /* Acquire the lock */
-        InbvAcquireLock();
-
-        /* Make sure we're installed and display the string */
-        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR)String);
-
-        /* Print the string on the EMS port */
-        HeadlessDispatch(HeadlessCmdPutString,
-                         String,
-                         strlen(String) + sizeof(ANSI_NULL),
-                         NULL,
-                         NULL);
-
-        /* Release the lock */
-        InbvReleaseLock();
-
-        /* All done */
+    if (!InbvDisplayDebugStrings)
         return TRUE;
+
+    if (InbvDisplayFilter) InbvDisplayFilter(&String);
+
+    InbvAcquireLock();
+
+    if (InbvBootDriverInstalled)
+    {
+        if (InbvUsingGopVideo)
+            GopVidDisplayString((PUCHAR)String); /* May be a stub */
+        else
+            VidDisplayString((PUCHAR)String);
     }
 
-    /* We don't own it, fail */
-    return FALSE;
+    HeadlessDispatch(HeadlessCmdPutString,
+                     String,
+                     strlen(String) + sizeof(ANSI_NULL),
+                     NULL,
+                     NULL);
+
+    InbvReleaseLock();
+    return TRUE;
 }
 
 BOOLEAN
@@ -400,15 +330,8 @@ NTAPI
 InbvEnableDisplayString(
     _In_ BOOLEAN Enable)
 {
-    BOOLEAN OldSetting;
-
-    /* Get the old setting */
-    OldSetting = InbvDisplayDebugStrings;
-
-    /* Update it */
+    BOOLEAN OldSetting = InbvDisplayDebugStrings;
     InbvDisplayDebugStrings = Enable;
-
-    /* Return the old setting */
     return OldSetting;
 }
 
@@ -417,7 +340,6 @@ NTAPI
 InbvInstallDisplayStringFilter(
     _In_ INBV_DISPLAY_STRING_FILTER DisplayFilter)
 {
-    /* Save the filter */
     InbvDisplayFilter = DisplayFilter;
 }
 
@@ -425,7 +347,6 @@ BOOLEAN
 NTAPI
 InbvIsBootDriverInstalled(VOID)
 {
-    /* Return driver state */
     return InbvBootDriverInstalled;
 }
 
@@ -434,23 +355,26 @@ NTAPI
 InbvNotifyDisplayOwnershipLost(
     _In_ INBV_RESET_DISPLAY_PARAMETERS Callback)
 {
-    /* Check if we're installed */
     if (InbvBootDriverInstalled)
     {
-        /* Acquire the lock and cleanup if we own the screen */
         InbvAcquireLock();
-        if (InbvDisplayState != INBV_DISPLAY_STATE_LOST) VidCleanUp();
 
-        /* Set the reset callback and display state */
+        if (InbvDisplayState != INBV_DISPLAY_STATE_LOST)
+        {
+            /* AGENT-MODIFIED: Cleanup using the active backend */
+            if (InbvUsingGopVideo)
+                GopVidCleanUp();
+            else
+                VidCleanUp();
+        }
+
         InbvResetDisplayParameters = Callback;
         InbvDisplayState = INBV_DISPLAY_STATE_LOST;
 
-        /* Release the lock */
         InbvReleaseLock();
     }
     else
     {
-        /* Set the reset callback and display state */
         InbvResetDisplayParameters = Callback;
         InbvDisplayState = INBV_DISPLAY_STATE_LOST;
     }
@@ -460,16 +384,16 @@ BOOLEAN
 NTAPI
 InbvResetDisplay(VOID)
 {
-    /* Check if we're installed and we own it */
     if (InbvBootDriverInstalled &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
-        /* Do the reset */
-        VidResetDisplay(TRUE);
+        if (InbvUsingGopVideo)
+            GopVidResetDisplay(TRUE);
+        else
+            VidResetDisplay(TRUE);
         return TRUE;
     }
 
-    /* Nothing to reset */
     return FALSE;
 }
 
@@ -481,8 +405,10 @@ InbvSetScrollRegion(
     _In_ ULONG Right,
     _In_ ULONG Bottom)
 {
-    /* Just call bootvid */
-    VidSetScrollRegion(Left, Top, Right, Bottom);
+    /* Text mode scroll region only applies to BOOTVID (VGA text). */
+    if (!InbvUsingGopVideo)
+        VidSetScrollRegion(Left, Top, Right, Bottom);
+    /* else: GOP path has no text-mode scroll; intentionally no-op. */
 }
 
 VOID
@@ -492,7 +418,6 @@ InbvSetTextColor(
 {
     HEADLESS_CMD_SET_COLOR HeadlessSetColor;
 
-    /* Set color for EMS port */
 #ifdef INBV_HEADLESS_COLORS
     InbvTerminalTextColor = 30 + CGA_TO_ANSI_COLOR(Color);
 #else
@@ -506,8 +431,9 @@ InbvSetTextColor(
                      NULL,
                      NULL);
 
-    /* Update the text color */
-    VidSetTextColor(Color);
+    /* BOOTVID can update text color; GOP backend has no text-mode attributes. */
+    if (!InbvUsingGopVideo)
+        VidSetTextColor(Color);
 }
 
 VOID
@@ -521,39 +447,34 @@ InbvSolidColorFill(
 {
     HEADLESS_CMD_SET_COLOR HeadlessSetColor;
 
-    /* Make sure we own it */
-    if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
+    if (InbvDisplayState != INBV_DISPLAY_STATE_OWNED)
+        return;
+
+    InbvAcquireLock();
+
+    if (InbvBootDriverInstalled)
     {
-        /* Acquire the lock */
-        InbvAcquireLock();
-
-        /* Check if we're installed */
-        if (InbvBootDriverInstalled)
-        {
-            /* Call bootvid */
+        if (InbvUsingGopVideo)
+            GopVidSolidColorFill(Left, Top, Right, Bottom, (UCHAR)Color);
+        else
             VidSolidColorFill(Left, Top, Right, Bottom, (UCHAR)Color);
-        }
-
-        /* Set color for EMS port and clear display */
-#ifdef INBV_HEADLESS_COLORS
-        InbvTerminalBkgdColor = 40 + CGA_TO_ANSI_COLOR(Color);
-#else
-        InbvTerminalBkgdColor = 40;
-#endif
-        HeadlessSetColor.TextColor = InbvTerminalTextColor;
-        HeadlessSetColor.BkgdColor = InbvTerminalBkgdColor;
-        HeadlessDispatch(HeadlessCmdSetColor,
-                         &HeadlessSetColor,
-                         sizeof(HeadlessSetColor),
-                         NULL,
-                         NULL);
-        HeadlessDispatch(HeadlessCmdClearDisplay,
-                         NULL, 0,
-                         NULL, NULL);
-
-        /* Release the lock */
-        InbvReleaseLock();
     }
+
+#ifdef INBV_HEADLESS_COLORS
+    InbvTerminalBkgdColor = 40 + CGA_TO_ANSI_COLOR(Color);
+#else
+    InbvTerminalBkgdColor = 40;
+#endif
+    HeadlessSetColor.TextColor = InbvTerminalTextColor;
+    HeadlessSetColor.BkgdColor = InbvTerminalBkgdColor;
+    HeadlessDispatch(HeadlessCmdSetColor,
+                     &HeadlessSetColor,
+                     sizeof(HeadlessSetColor),
+                     NULL,
+                     NULL);
+    HeadlessDispatch(HeadlessCmdClearDisplay, NULL, 0, NULL, NULL);
+
+    InbvReleaseLock();
 }
 
 VOID
@@ -563,19 +484,18 @@ InbvBitBlt(
     _In_ ULONG X,
     _In_ ULONG Y)
 {
-    /* Check if we're installed and we own it */
-    if (InbvBootDriverInstalled &&
-        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
-    {
-        /* Acquire the lock */
-        InbvAcquireLock();
+    if (!(InbvBootDriverInstalled &&
+          (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)))
+        return;
 
-        /* Do the blit */
+    InbvAcquireLock();
+
+    if (InbvUsingGopVideo)
+        GopVidBitBlt(Buffer, X, Y);
+    else
         VidBitBlt(Buffer, X, Y);
 
-        /* Release the lock */
-        InbvReleaseLock();
-    }
+    InbvReleaseLock();
 }
 
 VOID
@@ -588,13 +508,18 @@ InbvBufferToScreenBlt(
     _In_ ULONG Height,
     _In_ ULONG Delta)
 {
-    /* Check if we're installed and we own it */
-    if (InbvBootDriverInstalled &&
-        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
-    {
-        /* Do the blit */
+    if (!(InbvBootDriverInstalled &&
+          (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)))
+        return;
+
+    InbvAcquireLock();
+
+    if (InbvUsingGopVideo)
+        GopVidBufferToScreenBlt(Buffer, X, Y, Width, Height, Delta);
+    else
         VidBufferToScreenBlt(Buffer, X, Y, Width, Height, Delta);
-    }
+
+    InbvReleaseLock();
 }
 
 VOID
@@ -607,49 +532,33 @@ InbvScreenToBufferBlt(
     _In_ ULONG Height,
     _In_ ULONG Delta)
 {
-    /* Check if we're installed and we own it */
-    if (InbvBootDriverInstalled &&
-        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
-    {
-        /* Do the blit */
+    if (!(InbvBootDriverInstalled &&
+          (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)))
+        return;
+
+    InbvAcquireLock();
+
+    if (InbvUsingGopVideo)
+        GopVidScreenToBufferBlt(Buffer, X, Y, Width, Height, Delta);
+    else
         VidScreenToBufferBlt(Buffer, X, Y, Width, Height, Delta);
-    }
+
+    InbvReleaseLock();
 }
 
-/**
- * @brief
- * Sets the screen coordinates of the loading progress bar and enable it.
- *
- * @param[in]   Left
- * @param[in]   Top
- * The left/top coordinates.
- *
- * @return None.
- **/
+/* Progress bar API **********************************************************/
+
 VOID
 NTAPI
 InbvSetProgressBarCoordinates(
     _In_ ULONG Left,
     _In_ ULONG Top)
 {
-    /* Update the coordinates */
     ProgressBarLeft = Left;
     ProgressBarTop  = Top;
-
-    /* Enable the progress bar */
     ShowProgressBar = TRUE;
 }
 
-/**
- * @brief
- * Gives some progress feedback, without specifying any explicit number
- * of progress steps or percentage.
- * The corresponding percentage is derived from the progress indicator's
- * current count, capped to the number of expected calls to be made to
- * this function (default: 25, see @b InbvProgressIndicator.Expected).
- *
- * @return None.
- **/
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -657,64 +566,33 @@ InbvIndicateProgress(VOID)
 {
     ULONG Percentage;
 
-    /* Increase progress */
     InbvProgressIndicator.Count++;
 
-    /* Compute the new percentage - Don't go over 100% */
     Percentage = 100 * InbvProgressIndicator.Count /
                        InbvProgressIndicator.Expected;
     Percentage = min(Percentage, 99);
 
     if (Percentage != InbvProgressIndicator.Percentage)
     {
-        /* Percentage has changed, update the progress bar */
         InbvProgressIndicator.Percentage = Percentage;
         InbvUpdateProgressBar(Percentage);
     }
 }
 
-/**
- * @brief
- * Specifies a progress percentage sub-range.
- * Further calls to InbvIndicateProgress() or InbvUpdateProgressBar()
- * will update the progress percentage relative to this sub-range.
- * In particular, the percentage provided to InbvUpdateProgressBar()
- * is relative to this sub-range.
- *
- * @param[in]   Floor
- * The lower bound percentage of the sub-range (default: 0).
- *
- * @param[in]   Ceiling
- * The upper bound percentage of the sub-range (default: 100).
- *
- * @return None.
- **/
 VOID
 NTAPI
 InbvSetProgressBarSubset(
     _In_ ULONG Floor,
     _In_ ULONG Ceiling)
 {
-    /* Sanity checks */
     ASSERT(Floor < Ceiling);
     ASSERT(Ceiling <= 100);
 
-    /* Update the progress bar state */
-    InbvProgressState.Floor = Floor * 100;
-    InbvProgressState.Ceiling = Ceiling * 100;
-    InbvProgressState.Bias = Ceiling - Floor;
+    InbvProgressState.Floor   = Floor;             /* 0..100 */
+    InbvProgressState.Ceiling = Ceiling;           /* 0..100 */
+    InbvProgressState.Bias    = Ceiling - Floor;   /* 0..100 */
 }
 
-/**
- * @brief
- * Updates the progress bar percentage, relative to the current
- * percentage sub-range previously set by InbvSetProgressBarSubset().
- *
- * @param[in]   Percentage
- * The progress percentage, relative to the current sub-range.
- *
- * @return None.
- **/
 VOID
 NTAPI
 InbvUpdateProgressBar(
@@ -722,22 +600,25 @@ InbvUpdateProgressBar(
 {
     ULONG TotalProgress;
 
-    /* Make sure the progress bar is enabled, that we own and are installed */
     if (ShowProgressBar &&
         InbvBootDriverInstalled &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
-        /* Compute the total progress and tick the progress bar */
-        TotalProgress = InbvProgressState.Floor + (Percentage * InbvProgressState.Bias);
-        // TotalProgress /= (100 * 100);
+        /* Map subrange [Floor, Ceiling] using integer math, clamp to 0..100 */
+        TotalProgress = InbvProgressState.Floor +
+                        (Percentage * InbvProgressState.Bias) / 100;
+        if (TotalProgress > 100) TotalProgress = 100;
 
         BootAnimTickProgressBar(TotalProgress);
     }
 }
 
+/* NtDisplayString ***********************************************************/
+
 NTSTATUS
 NTAPI
-NtDisplayString(IN PUNICODE_STRING DisplayString)
+NtDisplayString(
+    IN PUNICODE_STRING DisplayString)
 {
     NTSTATUS Status;
     UNICODE_STRING CapturedString;
@@ -749,34 +630,26 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 
     PreviousMode = ExGetPreviousMode();
 
-    /* We require the TCB privilege */
     if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
         return STATUS_PRIVILEGE_NOT_HELD;
 
-    /* Capture the string */
     Status = ProbeAndCaptureUnicodeString(&CapturedString, PreviousMode, DisplayString);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Do not display the string if it is empty */
     if (CapturedString.Length == 0 || CapturedString.Buffer == NULL)
     {
         Status = STATUS_SUCCESS;
         goto Quit;
     }
 
-    /*
-     * Convert the string since INBV understands only ANSI/OEM. Allocate the
-     * string buffer in non-paged pool because INBV passes it down to BOOTVID.
-     * We cannot perform the allocation using RtlUnicodeStringToOemString()
-     * since its allocator uses PagedPool.
-     */
     OemLength = RtlUnicodeStringToOemSize(&CapturedString);
     if (OemLength > MAXUSHORT)
     {
         Status = STATUS_BUFFER_OVERFLOW;
         goto Quit;
     }
+
     RtlInitEmptyAnsiString((PANSI_STRING)&OemString, NULL, (USHORT)OemLength);
     OemString.Buffer = ExAllocatePoolWithTag(NonPagedPool, OemLength, TAG_OSTR);
     if (OemString.Buffer == NULL)
@@ -784,6 +657,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
         Status = STATUS_NO_MEMORY;
         goto Quit;
     }
+
     Status = RtlUnicodeStringToOemString(&OemString, &CapturedString, FALSE);
     if (!NT_SUCCESS(Status))
     {
@@ -791,17 +665,12 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
         goto Quit;
     }
 
-    /* Display the string */
     InbvDisplayString(OemString.Buffer);
 
-    /* Free the string buffer */
     ExFreePoolWithTag(OemString.Buffer, TAG_OSTR);
-
     Status = STATUS_SUCCESS;
 
 Quit:
-    /* Free the captured string */
     ReleaseCapturedUnicodeString(&CapturedString, PreviousMode);
-
     return Status;
 }

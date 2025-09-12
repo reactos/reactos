@@ -122,6 +122,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/halstub.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/fstub/translate.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/bootanim.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/gopvid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbvport.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/viddata.c
