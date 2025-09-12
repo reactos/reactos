@@ -388,6 +388,21 @@ typedef struct _LOADER_PERFORMANCE_DATA
 // See http://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/loader_parameter_extension.htm
 // for more details.
 //
+
+// AGENT-MODIFIED: Added GOP framebuffer handoff structure for UEFI systems
+typedef struct _GOP_FRAMEBUFFER_INFO
+{
+    PHYSICAL_ADDRESS FrameBufferBase;    /* Physical address of the framebuffer */
+    ULONG FrameBufferSize;                /* Size of the framebuffer in bytes */
+    ULONG HorizontalResolution;          /* Width in pixels */
+    ULONG VerticalResolution;            /* Height in pixels */
+    ULONG PixelsPerScanLine;             /* Pitch/stride in pixels */
+    ULONG PixelFormat;                   /* 0=RGBX, 1=BGRX, 2=Bitmask, 3=BltOnly */
+    ULONG RedMask;                       /* For PixelFormat==2 */
+    ULONG GreenMask;                     /* For PixelFormat==2 */
+    ULONG BlueMask;                      /* For PixelFormat==2 */
+    ULONG Reserved;                      /* Alignment/future use */
+} GOP_FRAMEBUFFER_INFO, *PGOP_FRAMEBUFFER_INFO;
 typedef struct _LOADER_PARAMETER_EXTENSION
 {
     ULONG Size;
@@ -434,16 +449,10 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     ULONG ResumePages;
     PVOID DumpHeader;
     //
-    // ReactOS UEFI Extensions
+    // ReactOS additions
     //
-    struct {
-        PHYSICAL_ADDRESS FrameBufferBase;
-        ULONG FrameBufferSize;
-        ULONG ScreenWidth;
-        ULONG ScreenHeight;
-        ULONG PixelsPerScanLine;
-        ULONG PixelFormat;
-    } UefiFramebuffer;
+    // AGENT-MODIFIED: GOP framebuffer information for UEFI boot
+    GOP_FRAMEBUFFER_INFO GopFramebuffer;
 } LOADER_PARAMETER_EXTENSION, *PLOADER_PARAMETER_EXTENSION;
 
 //

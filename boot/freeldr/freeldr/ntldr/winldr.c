@@ -165,6 +165,24 @@ AllocateAndInitLPB(
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
     InitializeListHead(&LoaderBlock->BootDriverListHead);
 
+    // AGENT-MODIFIED: Set firmware type based on boot method
+#ifdef UEFIBOOT
+    if (GlobalSystemTable != NULL)
+    {
+        /* We're booting via UEFI */
+        LoaderBlock->FirmwareInformation.FirmwareTypeEfi = 1;
+        Extension->BootViaEFI = 1;
+        TRACE("AGENT-DEBUG: Setting FirmwareTypeEfi = 1 (UEFI boot detected)\n");
+    }
+    else
+#endif
+    {
+        /* We're booting via legacy BIOS */
+        LoaderBlock->FirmwareInformation.FirmwareTypeEfi = 0;
+        Extension->BootViaEFI = 0;
+        TRACE("AGENT-DEBUG: Setting FirmwareTypeEfi = 0 (BIOS boot)\n");
+    }
+
     *OutLoaderBlock = LoaderBlock;
 }
 

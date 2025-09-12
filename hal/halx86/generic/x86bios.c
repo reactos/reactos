@@ -56,32 +56,9 @@ HalInitializeBios(
     PMDL Mdl;
     ULONG64 PhysicalAddress;
 
-    /* Debug output */
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** HAL: HalInitializeBios entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-
     if (Phase == 0)
     {
-        {
-            const char msg[] = "*** HAL: HalInitializeBios Phase 0 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-#ifdef _M_AMD64
-        /* Skip BIOS initialization on AMD64 for now - memory allocation issues */
-        {
-            const char msg[] = "*** HAL: Skipping BIOS init on AMD64 ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        return;
-#endif
-        
+        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
         /* Allocate one page for a fallback mapping */
         PhysicalAddress = HalpAllocPhysicalMemory(LoaderBlock,
                                                   0x100000,
@@ -89,7 +66,10 @@ HalInitializeBios(
                                                   FALSE);
         if (PhysicalAddress == 0)
         {
-            ASSERT(FALSE);
+            /* Allocation failed - x86 BIOS services will not be available */
+            DPRINT1("HalInitializeBios: Failed to allocate fallback page\n");
+            x86BiosIsInitialized = FALSE;
+            return;
         }
 
         x86BiosFallbackPfn = PhysicalAddress / PAGE_SIZE;
@@ -102,17 +82,24 @@ HalInitializeBios(
                                                         FALSE);
         if (x86BiosBufferPhysical == 0)
         {
-            ASSERT(FALSE);
+            /* Allocation failed - x86 BIOS services will not be available */
+            DPRINT1("HalInitializeBios: Failed to allocate buffer page\n");
+            x86BiosIsInitialized = FALSE;
+            return;
         }
     }
     else
     {
 
+        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
         /* Allocate an MDL for 1MB */
         Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
         if (!Mdl)
         {
-            ASSERT(FALSE);
+            /* MDL allocation failed - x86 BIOS services will not be available */
+            DPRINT1("HalInitializeBios: Failed to allocate MDL\n");
+            x86BiosIsInitialized = FALSE;
+            return;
         }
 
         /* Get pointer to the pfn array */
@@ -160,7 +147,15 @@ HalInitializeBios(
 
         /* Map the MDL to system space */
         x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
-        ASSERT(x86BiosMemoryMapping);
+        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
+        if (!x86BiosMemoryMapping)
+        {
+            /* MDL mapping failed - x86 BIOS services will not be available */
+            DPRINT1("HalInitializeBios: Failed to map MDL to system space\n");
+            IoFreeMdl(Mdl);
+            x86BiosIsInitialized = FALSE;
+            return;
+        }
 
         DPRINT1("*x86BiosMemoryMapping: %p, %p\n",
                 *(PVOID*)x86BiosMemoryMapping, *(PVOID*)(x86BiosMemoryMapping + 8));
@@ -178,9 +173,16 @@ x86BiosAllocateBuffer(
     _In_ USHORT *Offset)
 {
     /* Check if the system is initialized and the buffer is large enough */
-    if (!x86BiosIsInitialized || (*Size > PAGE_SIZE))
+    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    if (!x86BiosIsInitialized)
     {
-        /* Something was wrong, fail! */
+        /* x86 BIOS services not available (UEFI system) */
+        return STATUS_NOT_SUPPORTED;
+    }
+    
+    if (*Size > PAGE_SIZE)
+    {
+        /* Buffer too large */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -205,10 +207,18 @@ x86BiosFreeBuffer(
     _In_ USHORT Segment,
     _In_ USHORT Offset)
 {
-    /* Check if the system is initialized and if the address matches */
-    if (!x86BiosIsInitialized || (Segment != 0x2000) || (Offset != 0))
+    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    if (!x86BiosIsInitialized)
     {
-        /* Something was wrong, fail */
+        /* x86 BIOS services not available (UEFI system) */
+        return STATUS_NOT_SUPPORTED;
+    }
+    
+    // AGENT-MODIFIED: Accept the segment returned by x86BiosAllocateBuffer (x86BiosBufferPhysical / 16)
+    /* Check if the address matches the allocated buffer */
+    if ((Segment != (x86BiosBufferPhysical / 16)) || (Offset != 0))
+    {
+        /* Invalid segment/offset */
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -237,9 +247,16 @@ x86BiosReadMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    if (!x86BiosIsInitialized || ((Address + Size) > 0x100000))
+    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    if (!x86BiosIsInitialized)
     {
-        /* Invalid */
+        /* x86 BIOS services not available (UEFI system) */
+        return STATUS_NOT_SUPPORTED;
+    }
+    
+    if ((Address + Size) > 0x100000)
+    {
+        /* Invalid address range */
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -264,9 +281,16 @@ x86BiosWriteMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    if (!x86BiosIsInitialized || ((Address + Size) > 0x100000))
+    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    if (!x86BiosIsInitialized)
     {
-        /* Invalid */
+        /* x86 BIOS services not available (UEFI system) */
+        return STATUS_NOT_SUPPORTED;
+    }
+    
+    if ((Address + Size) > 0x100000)
+    {
+        /* Invalid address range */
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -440,6 +464,13 @@ x86BiosCall(
     ULONG FlatIp;
     PUCHAR InstructionPointer;
 
+    // AGENT-MODIFIED: Fail gracefully on UEFI systems where x86bios is not initialized
+    if (!x86BiosIsInitialized)
+    {
+        DPRINT1("x86BiosCall: NOT_SUPPORTED (UEFI)\n");
+        return FALSE;
+    }
+
     /* Initialize the emulator context */
     Fast486Initialize(&EmulatorContext,
                       x86MemRead,
@@ -521,6 +552,14 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
+    // AGENT-MODIFIED: Return FALSE for UEFI systems and when x86bios is not initialized
+    if (!x86BiosIsInitialized)
+    {
+        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        DPRINT("HalpBiosDisplayReset: x86bios not initialized (UEFI system?)\n");
+        return FALSE;
+    }
+
 #if 0
     X86_BIOS_REGISTERS Registers;
     ULONG OldEflags;
