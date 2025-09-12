@@ -26,6 +26,26 @@
 #endif
 #endif
 
+#ifndef TEST_STATIC_CRT
+
+typedef int (__cdecl *PFN_sprintf)(char *_Dest, const char *_Format, ...);
+static PFN_sprintf p_sprintf;
+
+static BOOL Init(void)
+{
+    HMODULE hdll = LoadLibraryA(TEST_DLL_NAME);
+#ifdef TEST_USER32
+    p_sprintf = (PFN_sprintf)GetProcAddress(hdll, "wsprintfA");
+#else
+    p_sprintf = (PFN_sprintf)GetProcAddress(hdll, "sprintf");
+#endif
+    ok(p_sprintf != NULL, "Failed to load sprintf from %s\n", TEST_DLL_NAME);
+    return (p_sprintf != NULL);
+}
+#define sprintf p_sprintf
+
+#endif // !TEST_STATIC_CRT
+
 /* NOTE: This test is not only used for all the CRT apitests, but also for
  *       user32's wsprintf. Make sure to test them all */
 START_TEST(sprintf)
@@ -34,15 +54,27 @@ START_TEST(sprintf)
     CHAR Buffer[128];
     PCHAR String;
 
+#ifndef TEST_STATIC_CRT
+    if (!Init())
+    {
+        skip("Skipping tests, because sprintf is not available\n");
+        return;
+    }
+#endif
+
     /* basic parameter tests */
     StartSeh()
         Length = sprintf(NULL, NULL);
+#if defined(TEST_CRTDLL) || defined(TEST_USER32)
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
     EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+#endif
 
     StartSeh()
         Length = sprintf(NULL, "");
         ok_int(Length, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 0);
-#if TEST_CRTDLL || TEST_USER32
+#if defined(TEST_CRTDLL) || defined(TEST_USER32)
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);
@@ -51,7 +83,7 @@ START_TEST(sprintf)
     StartSeh()
         Length = sprintf(NULL, "Hello");
         ok_int(Length, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 5);
-#if TEST_CRTDLL || TEST_USER32
+#if defined(TEST_CRTDLL) || defined(TEST_USER32)
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);
