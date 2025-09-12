@@ -531,6 +531,7 @@ protected:
     friend class CUIFMenu;
 
 public:
+    using CUIFObject::OnTimer;  // Bring base class OnTimer() into scope
     enum { POINTING_TIMER_ID = 0x7982, USER_TIMER_ID = 0x5461 };
     operator HWND() const { return m_hWnd; }
     CUIFWindow(HINSTANCE hInst, DWORD style);

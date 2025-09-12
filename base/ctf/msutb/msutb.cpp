@@ -1283,7 +1283,7 @@ public:
     CLBarInatItem(DWORD dwThreadId);
 
     STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
-    STDMETHOD(OnMenuSelect)(INT nCommandId);
+    STDMETHOD(OnMenuSelect)(UINT wID) override;
     STDMETHOD(GetIcon)(HICON *phIcon) override;
     STDMETHOD(GetText)(BSTR *pbstr) override;
 };
@@ -3832,11 +3832,11 @@ STDMETHODIMP CLBarInatItem::InitMenu(ITfMenu *pMenu)
     return S_OK;
 }
 
-STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
+STDMETHODIMP CLBarInatItem::OnMenuSelect(UINT wID)
 {
     HKL hKL;
 
-    if (nCommandId == 2000)
+    if (wID == 2000)
     {
         if (g_pTipbarWnd)
         {
@@ -3845,7 +3845,7 @@ STDMETHODIMP CLBarInatItem::OnMenuSelect(INT nCommandId)
                 pLangBarMgr->ShowFloating(TF_SFT_SHOWNORMAL);
         }
     }
-    else if (TF_GetMlngHKL(nCommandId, &hKL, NULL, 0))
+    else if (TF_GetMlngHKL(wID, &hKL, NULL, 0))
     {
         g_pTipbarWnd->RestoreLastFocus(NULL, !!(g_pTipbarWnd->m_dwTipbarWndFlags & TIPBAR_CHILD));
         HWND hwndFore = ::GetForegroundWindow();

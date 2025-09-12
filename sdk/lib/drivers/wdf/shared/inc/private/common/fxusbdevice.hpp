@@ -55,6 +55,8 @@ struct FxUsbDeviceControlContext : public FxUsbRequestContext {
         __in FxRequestBase* Request
         );
 
+    using FxRequestContext::StoreAndReferenceMemory;  // Bring base class method into scope
+
     VOID
     StoreAndReferenceMemory(
         __in FxUsbDevice* Device,

@@ -21,6 +21,10 @@
 
 #include "precomp.h"
 
+// Disable false positive warning about CComObject<T>::CreateInstance hiding IClassFactory::CreateInstance
+// They are different methods with different signatures and purposes
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+
 #include "shell32_version.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

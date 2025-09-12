@@ -734,7 +734,7 @@ protected:
     IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
     BOOL _InitLate();
-    BOOL _IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData);
+    BOOL _IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) const override;
     DWORD _DeleteValue(LPCWSTR pszValue) override;
 
     HRESULT _CreateNode(UINT iSlot, CMruNode **ppNewNode);
@@ -869,7 +869,7 @@ BOOL CMruNode::_InitLate()
     return !!m_pShellFolder;
 }
 
-BOOL CMruNode::_IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData)
+BOOL CMruNode::_IsEqual(const SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData) const
 {
     return m_pShellFolder->CompareIDs(0x10000000,
                                       (LPITEMIDLIST)pItem->pvData,

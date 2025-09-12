@@ -12,6 +12,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msctfime);
 /// @implemented
 CicProfile::CicProfile()
 {
+    m_dwFlags = 0;  // Initialize first
     m_dwFlags &= 0xFFFFFFF0;
     m_cRefs = 1;
     m_pIPProfiles = NULL;

@@ -64,9 +64,6 @@ PVOID     OsLoaderBase;
 SIZE_T    OsLoaderSize;
 EFI_HANDLE PublicBootHandle;
 
-static PVOID ExitStack;
-static PVOID EndofExitStack;
-
 /* Declared elsewhere */
 void _exituefi(VOID);
 
