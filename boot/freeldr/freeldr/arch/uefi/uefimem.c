@@ -390,6 +390,8 @@ UefiExitBootServices(VOID)
     else
     {
         TRACE("Exited boot services\n");
+        /* AGENT-MODIFIED: Mark boot services as exited for console fallback to GOP */
+        UefiConsMarkBootServicesExited();
     }
 }
 

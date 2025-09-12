@@ -110,3 +110,22 @@ UefiInitializeFileSystemSupport(_In_ EFI_HANDLE ImageHandle,
 
 VOID
 UefiVideoScrollUp(VOID);
+
+/* AGENT-MODIFIED: Added GOP console function declarations */
+VOID
+UefiGopConsolePutChar(CHAR Ch);
+
+VOID
+UefiGopConsolePutString(PCSTR String);
+
+VOID
+UefiGopConsoleClear(VOID);
+
+VOID
+UefiGopConsoleSetCursor(UINT32 X, UINT32 Y);
+
+BOOLEAN
+UefiGopConsoleIsInitialized(VOID);
+
+VOID
+UefiConsMarkBootServicesExited(VOID);

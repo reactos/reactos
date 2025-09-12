@@ -21,11 +21,26 @@ static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
 static BOOLEAN KeyAvailable = FALSE;
 
+/* AGENT-MODIFIED: Add GOP console function declarations */
+extern VOID UefiGopConsolePutChar(CHAR Ch);
+extern VOID UefiGopConsolePutString(PCSTR String);
+extern VOID UefiGopConsoleClear(VOID);
+extern VOID UefiGopConsoleSetCursor(UINT32 X, UINT32 Y);
+extern BOOLEAN UefiGopConsoleIsInitialized(VOID);
+static BOOLEAN BootServicesExited = FALSE;
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
 UefiConsPutChar(int c)
 {
+    /* AGENT-MODIFIED: Use GOP console if boot services have been exited */
+    if (BootServicesExited && UefiGopConsoleIsInitialized())
+    {
+        UefiGopConsolePutChar((CHAR)c);
+        return;
+    }
+    
     ULONG Width, Height, Unused;
     BOOLEAN NeedScroll;
 
@@ -183,4 +198,17 @@ UefiConsGetCh(VOID)
     KeyAvailable = FALSE;
     
     return KeyOutput;
+}
+
+/* AGENT-MODIFIED: Function to mark boot services as exited */
+VOID
+UefiConsMarkBootServicesExited(VOID)
+{
+    BootServicesExited = TRUE;
+    
+    /* AGENT-MODIFIED: Ensure GOP console is ready for use */
+    if (UefiGopConsoleIsInitialized())
+    {
+        UefiGopConsoleSetCursor(CurrentCursorX, CurrentCursorY);
+    }
 }

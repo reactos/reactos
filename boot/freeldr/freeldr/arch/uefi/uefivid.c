@@ -15,6 +15,12 @@ DBG_DEFAULT_CHANNEL(WARNING);
 #define TOP_BOTTOM_LINES 0
 #define LOWEST_SUPPORTED_RES 1
 
+/* AGENT-MODIFIED: Added preferred resolution constants for better mode selection */
+#define PREFERRED_WIDTH_MIN  800
+#define PREFERRED_WIDTH_MAX  1920
+#define PREFERRED_HEIGHT_MIN 600
+#define PREFERRED_HEIGHT_MAX 1200
+
 /* GLOBALS ********************************************************************/
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
@@ -25,13 +31,89 @@ UCHAR MachDefaultTextColor = COLOR_GRAY;
 REACTOS_INTERNAL_BGCONTEXT framebufferData;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
+/* AGENT-MODIFIED: Added variables for software text rendering */
+static UINT32 ConsoleX = 0;
+static UINT32 ConsoleY = 0;
+static UINT32 MaxConsoleX = 0;
+static UINT32 MaxConsoleY = 0;
+static BOOLEAN GopConsoleInitialized = FALSE;
+
 /* FUNCTIONS ******************************************************************/
+
+/* AGENT-MODIFIED: Added function to select optimal GOP mode */
+static UINT32
+UefiFindOptimalGopMode(EFI_GRAPHICS_OUTPUT_PROTOCOL* gop)
+{
+    EFI_STATUS Status;
+    UINT32 BestMode = 0;
+    UINT32 BestScore = 0;
+    UINT32 CurrentMode;
+    UINTN SizeOfInfo;
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* Info;
+    
+    TRACE("AGENT-MODIFIED: Searching for optimal GOP mode\n");
+    TRACE("  Total modes available: %d\n", gop->Mode->MaxMode);
+    
+    for (CurrentMode = 0; CurrentMode < gop->Mode->MaxMode; CurrentMode++)
+    {
+        Status = gop->QueryMode(gop, CurrentMode, &SizeOfInfo, &Info);
+        if (Status == EFI_SUCCESS)
+        {
+            UINT32 Width = Info->HorizontalResolution;
+            UINT32 Height = Info->VerticalResolution;
+            UINT32 Score = 0;
+            
+            TRACE("  Mode %d: %dx%d, PixelFormat=%d\n", 
+                  CurrentMode, Width, Height, Info->PixelFormat);
+            
+            /* Skip modes without framebuffer support */
+            if (Info->PixelFormat == PixelBltOnly)
+            {
+                TRACE("    Skipping - no framebuffer\n");
+                continue;
+            }
+            
+            /* Preferred resolutions (in order of preference) */
+            if (Width == 1024 && Height == 768)
+                Score = 100;  /* Most preferred */
+            else if (Width == 1280 && Height == 1024)
+                Score = 95;
+            else if (Width == 1280 && Height == 800)
+                Score = 90;
+            else if (Width == 800 && Height == 600)
+                Score = 85;
+            else if (Width == 1366 && Height == 768)
+                Score = 80;
+            else if (Width == 1440 && Height == 900)
+                Score = 75;
+            else if (Width == 640 && Height == 480)
+                Score = 50;  /* Fallback */
+            else if (Width >= PREFERRED_WIDTH_MIN && Width <= PREFERRED_WIDTH_MAX &&
+                     Height >= PREFERRED_HEIGHT_MIN && Height <= PREFERRED_HEIGHT_MAX)
+            {
+                /* Other acceptable resolutions */
+                Score = 60;
+            }
+            
+            if (Score > BestScore)
+            {
+                BestScore = Score;
+                BestMode = CurrentMode;
+                TRACE("    New best mode (score=%d)\n", Score);
+            }
+        }
+    }
+    
+    TRACE("AGENT-MODIFIED: Selected mode %d with score %d\n", BestMode, BestScore);
+    return BestMode;
+}
 
 EFI_STATUS
 UefiInitializeVideo(VOID)
 {
     EFI_STATUS Status;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    UINT32 OptimalMode;
 
     RtlZeroMemory(&framebufferData, sizeof(framebufferData));
     Status = GlobalSystemTable->BootServices->LocateProtocol(&EfiGraphicsOutputProtocol, 0, (void**)&gop);
@@ -46,13 +128,18 @@ UefiInitializeVideo(VOID)
     TRACE("  MaxMode: %d\n", gop->Mode->MaxMode);
     TRACE("  Current Mode: %d\n", gop->Mode->Mode);
     
-    /* We don't need high resolutions for freeldr */
-    if (gop->Mode->MaxMode > LOWEST_SUPPORTED_RES)
+    /* AGENT-MODIFIED: Find and set optimal resolution instead of hardcoded low res */
+    OptimalMode = UefiFindOptimalGopMode(gop);
+    if (OptimalMode != gop->Mode->Mode)
     {
-        Status = gop->SetMode(gop, LOWEST_SUPPORTED_RES);
+        Status = gop->SetMode(gop, OptimalMode);
         if (Status != EFI_SUCCESS)
         {
-            TRACE("AGENT-MODIFIED: Failed to set mode %d, using current mode\n", LOWEST_SUPPORTED_RES);
+            TRACE("AGENT-MODIFIED: Failed to set optimal mode %d, using current mode\n", OptimalMode);
+        }
+        else
+        {
+            TRACE("AGENT-MODIFIED: Successfully set mode %d\n", OptimalMode);
         }
     }
 
@@ -70,6 +157,14 @@ UefiInitializeVideo(VOID)
     TRACE("  Resolution: %dx%d\n", framebufferData.ScreenWidth, framebufferData.ScreenHeight);
     TRACE("  PixelsPerScanLine: %d\n", framebufferData.PixelsPerScanLine);
     TRACE("  PixelFormat: %d\n", framebufferData.PixelFormat);
+    
+    /* AGENT-MODIFIED: Initialize console dimensions for software text rendering */
+    MaxConsoleX = framebufferData.ScreenWidth / CHAR_WIDTH;
+    MaxConsoleY = (framebufferData.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT;
+    ConsoleX = 0;
+    ConsoleY = 0;
+    GopConsoleInitialized = TRUE;
+    TRACE("AGENT-MODIFIED: Console dimensions: %dx%d chars\n", MaxConsoleX, MaxConsoleY);
 
     return Status;
 }
@@ -257,4 +352,110 @@ UefiVideoGetPaletteColor(UCHAR Color, UCHAR* Red,
                          UCHAR* Green, UCHAR* Blue)
 {
     /* Not supported */
+}
+
+/* AGENT-MODIFIED: Added software text rendering functions for GOP console */
+
+/* AGENT-MODIFIED: Direct GOP console output function */
+VOID
+UefiGopConsolePutChar(CHAR Ch)
+{
+    ULONG FgColor, BgColor;
+    
+    if (!GopConsoleInitialized || framebufferData.BaseAddress == 0)
+        return;
+    
+    /* Get current colors */
+    UefiVideoAttrToColors(MachDefaultTextColor, &FgColor, &BgColor);
+    
+    /* Handle special characters */
+    if (Ch == '\r')
+    {
+        ConsoleX = 0;
+        return;
+    }
+    else if (Ch == '\n')
+    {
+        ConsoleX = 0;
+        ConsoleY++;
+    }
+    else if (Ch == '\t')
+    {
+        ConsoleX = (ConsoleX + 8) & ~7;
+    }
+    else if (Ch == '\b')
+    {
+        if (ConsoleX > 0)
+        {
+            ConsoleX--;
+            UefiVideoOutputChar(' ', ConsoleX, ConsoleY, FgColor, BgColor);
+        }
+    }
+    else
+    {
+        /* Output normal character */
+        UefiVideoOutputChar(Ch, ConsoleX, ConsoleY, FgColor, BgColor);
+        ConsoleX++;
+    }
+    
+    /* Handle line wrap */
+    if (ConsoleX >= MaxConsoleX)
+    {
+        ConsoleX = 0;
+        ConsoleY++;
+    }
+    
+    /* Handle scrolling */
+    if (ConsoleY >= MaxConsoleY)
+    {
+        UefiVideoScrollUp();
+        ConsoleY = MaxConsoleY - 1;
+    }
+}
+
+/* AGENT-MODIFIED: GOP console string output */
+VOID
+UefiGopConsolePutString(PCSTR String)
+{
+    if (!String)
+        return;
+        
+    while (*String)
+    {
+        UefiGopConsolePutChar(*String);
+        String++;
+    }
+}
+
+/* AGENT-MODIFIED: Clear GOP console screen */
+VOID
+UefiGopConsoleClear(VOID)
+{
+    if (!GopConsoleInitialized || framebufferData.BaseAddress == 0)
+        return;
+    
+    UefiVideoClearScreen(MachDefaultTextColor);
+    ConsoleX = 0;
+    ConsoleY = 0;
+}
+
+/* AGENT-MODIFIED: Set GOP console cursor position */
+VOID
+UefiGopConsoleSetCursor(UINT32 X, UINT32 Y)
+{
+    if (!GopConsoleInitialized)
+        return;
+        
+    if (X < MaxConsoleX)
+        ConsoleX = X;
+    
+    if (Y < MaxConsoleY)
+        ConsoleY = Y;
+}
+
+/* AGENT-MODIFIED: Get GOP console status */
+BOOLEAN
+UefiGopConsoleIsInitialized(VOID)
+{
+    return GopConsoleInitialized && (framebufferData.BaseAddress != 0);
 }
