@@ -25,6 +25,54 @@
 
 #if DBG
 
+// AGENT-MODIFIED: Forward declaration for ArcGetRelativeTime
+ULONG ArcGetRelativeTime(VOID);
+
+// AGENT-MODIFIED: Global boot timestamp for Linux-style logging
+static ULONGLONG BootStartTimestamp = 0;
+static BOOLEAN TimestampInitialized = FALSE;
+
+// AGENT-MODIFIED: Get microseconds since boot using TSC or fallback
+static ULONGLONG
+GetMicrosecondsSinceBoot(VOID)
+{
+#if defined(_M_IX86) || defined(_M_AMD64)
+    ULONGLONG CurrentTimestamp;
+    ULONGLONG ElapsedCycles;
+    ULONGLONG Microseconds;
+    
+    // Initialize boot timestamp on first call
+    if (!TimestampInitialized)
+    {
+        BootStartTimestamp = __rdtsc();
+        TimestampInitialized = TRUE;
+        return 0;
+    }
+    
+    CurrentTimestamp = __rdtsc();
+    ElapsedCycles = CurrentTimestamp - BootStartTimestamp;
+    
+    // Assume ~2GHz CPU for approximation (2000 cycles per microsecond)
+    // This is a rough estimate that works reasonably well for modern CPUs
+    Microseconds = ElapsedCycles / 2000;
+    
+    return Microseconds;
+#else
+    // Fallback for non-x86 architectures: use relative time in seconds
+    ULONG Seconds;
+    
+    if (!TimestampInitialized)
+    {
+        TimestampInitialized = TRUE;
+        return 0;
+    }
+    
+    // Use ArcGetRelativeTime as fallback (returns seconds)
+    Seconds = ArcGetRelativeTime();
+    return (ULONGLONG)Seconds * 1000000ULL;
+#endif
+}
+
 #define DEBUG_ALL
 // #define DEBUG_WARN
 // #define DEBUG_ERR
@@ -267,6 +315,14 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     /* Print the header if we have started a new line */
     if (DebugStartOfLine)
     {
+        // AGENT-MODIFIED: Add Linux-style timestamp at the beginning
+        ULONGLONG Microseconds = GetMicrosecondsSinceBoot();
+        ULONGLONG Seconds = Microseconds / 1000000ULL;
+        ULONGLONG Fractional = Microseconds % 1000000ULL;
+        
+        // Format: [SSSSSS.MMMMMM] where S=seconds, M=microseconds
+        DbgPrint("[%8llu.%06llu] ", Seconds, Fractional);
+        
         DbgPrint("(%s:%lu) ", File, Line);
 
         switch (Level)
