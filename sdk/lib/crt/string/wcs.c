@@ -246,6 +246,9 @@ INT CDECL wctomb( char *dst, wchar_t ch )
     BOOL error;
     INT size;
 
+    if (!dst)
+        return 0;
+
     size = WideCharToMultiByte(get_locinfo()->lc_codepage, 0, &ch, 1, dst, dst ? 6 : 0, NULL, &error);
     if(!size || error) {
         *_errno() = EINVAL;

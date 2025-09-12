@@ -19,7 +19,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DLL Antarmuka Masuk Pengguna %s gagal diambil.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Hubungi administrator sistem anda untuk mengganti DLL, atau mengembalikan DLL aslinya.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Mulai Lagi", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Mulai Ulang", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -28,10 +28,10 @@ CAPTION "Menonaktifkan Sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Menonaktifkan sistem telah dimulai. Mohon simpan semua pekerjaan dan menghentikan sesi. Semua pekerjaan yang belum tersimpan akan hilang ketika sistem dinonaktifkan.", -1, 38, 7, 135, 40
-    LTEXT "Menonaktifkan sistem dalam waktu:", -1, 38, 50, 90, 8
+    LTEXT "Menonaktifkan sistem telah dimulai. Mohon simpan semua pekerjaan dan menghentikan sesi. Semua pekerjaan yang belum tersimpan akan hilang ketika sistem dinonaktifkan.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "Menonaktifkan sistem dalam waktu:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Pesan:", -1, 38, 65, 135, 8
+    LTEXT "Pesan:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -52,6 +52,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Menyiapkan untuk Tidur..."
     IDS_SAVEYOURSETTINGS "Menyimpan setelan anda..."
     IDS_REACTOSISSTARTINGUP "ReactOS dimulai..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d hari"
 END

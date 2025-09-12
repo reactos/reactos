@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "La DLL %s del interfaz de Logon dió un error al cargar.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Contacte con el administrador de su sistema para sustituir la DLL, ó reinstale la DLL original.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "&Berrabiarazi", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "&Berrabiarazi", IDOK, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
@@ -33,10 +33,10 @@ CAPTION "Itzali Sistema"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "Se ha iniciado el apagado del sistema. Por favor, guarda todo tu trabajo y cierra la sesión. Se perderá todo el trabajo no guardado.", -1, 38, 7, 135, 40
-    LTEXT "El sistema se apagará en:", -1, 38, 50, 90, 8
+    LTEXT "Se ha iniciado el apagado del sistema. Por favor, guarda todo tu trabajo y cierra la sesión. Se perderá todo el trabajo no guardado.", IDC_STATIC, 38, 7, 135, 40
+    LTEXT "El sistema se apagará en:", IDC_STATIC, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Mensaje:", -1, 38, 65, 135, 8
+    LTEXT "Mensaje:", IDC_STATIC, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -57,6 +57,7 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
     IDS_SAVEYOURSETTINGS "Gordetzen zure pertsonal konfigurazioa..."
     IDS_REACTOSISSTARTINGUP "Itzaron, ReactOS hasi da..."
+    IDS_LOGGINGOFF "Logging off..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d egunak"
 END

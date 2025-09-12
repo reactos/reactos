@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(mscms_winetest profile.c testlist.c)
 set_module_type(mscms_winetest win32cui)

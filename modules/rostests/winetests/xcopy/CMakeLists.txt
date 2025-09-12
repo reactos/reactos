@@ -1,4 +1,5 @@
 
+add_definitions(-D__ROS_LONG64__)
 add_executable(xcopy_winetest xcopy.c testlist.c)
 set_module_type(xcopy_winetest win32cui)
 add_importlibs(xcopy_winetest msvcrt kernel32)

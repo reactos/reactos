@@ -14,7 +14,81 @@
 
 /* Magic pointers come from KUSER_SHARED_DATA; needed to get true NT version on Windows 8+ */
 #define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
-#define GetNTVersion() (((*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C)) << 8) | (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270)))
+#define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
+#define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
+#define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+#define GENERATE_NTDDI(Major, Minor, ServicePack, Subversion) \
+    (((Major) << 24) | ((Minor) << 16) | ((ServicePack) << 8) | (Subversion))
+#define NTDDI_MIN 0UL
+#define NTDDI_MAX 0xFFFFFFFFUL
+
+static inline ULONG GetNTDDIVersion(VOID)
+{
+    ULONG NTBuildNo, NTMajor, NTMinor, ServicePack, Subversion;
+
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+    {
+        NTMajor = GetMajorNTVersion();
+        NTMinor = GetMinorNTVersion();
+        ServicePack = 0;
+
+        if (NTMajor > 6)
+            NTBuildNo = (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0260));
+        else
+            NTBuildNo = 0;
+
+        switch (NTBuildNo)
+        {
+            // Windows 10
+            case 10240: Subversion = 0;  break; // 1507
+            case 10586: Subversion = 1;  break; // 1511
+            case 14393: Subversion = 2;  break; // 1607
+            case 15063: Subversion = 3;  break; // 1703
+            case 16299: Subversion = 4;  break; // 1709
+            case 17134: Subversion = 5;  break; // 1803
+            case 17763: Subversion = 6;  break; // 1809
+            case 18362: Subversion = 7;  break; // 1903
+            case 18363: Subversion = 8;  break; // 1909
+            case 19041: Subversion = 9;  break; // 2004
+            case 19042: Subversion = 10; break; // 20H2
+            case 19043: Subversion = 11; break; // 21H1
+            case 19044: Subversion = 12; break; // 21H2
+            case 19045: Subversion = 13; break; // 22H2
+
+            // Windows 11
+            case 22000: Subversion = 14; break; // 21H2
+            case 22621: Subversion = 15; break; // 22H2
+            case 22631: Subversion = 16; break; // 23H2
+            case 26100: Subversion = 17; break; // 24H2
+
+            default: Subversion = 0; break;     // Unknown build
+        }
+    }
+    else
+    {
+        OSVERSIONINFOEXW OSVersion;
+
+        OSVersion.dwOSVersionInfoSize = sizeof(OSVersion);
+
+        if (GetVersionExW((LPOSVERSIONINFOW)&OSVersion))
+        {
+            NTMajor = OSVersion.dwMajorVersion;
+            NTMinor = OSVersion.dwMinorVersion;
+            ServicePack = OSVersion.wServicePackMajor;
+            Subversion = 0;
+        }
+        else 
+        {
+            trace("Estimating an NTDDI value, GetVersionEx failed.\n");
+            NTMajor = GetMajorNTVersion();
+            NTMinor = GetMinorNTVersion();
+            ServicePack = 0;
+            Subversion = 0;
+        }
+    }
+
+    return GENERATE_NTDDI(NTMajor, NTMinor, ServicePack, Subversion);
+}
 
 #include <pseh/pseh2.h>
 

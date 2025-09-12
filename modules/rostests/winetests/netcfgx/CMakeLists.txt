@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 add_executable(netcfgx_winetest netcfgx.c testlist.c)
 target_link_libraries(netcfgx_winetest uuid)
 set_module_type(netcfgx_winetest win32cui)

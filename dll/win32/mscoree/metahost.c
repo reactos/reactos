@@ -82,6 +82,19 @@ static void CDECL do_nothing(void)
 {
 }
 
+#ifdef __REACTOS__
+int WINAPIV ShellMessageBoxA(HINSTANCE hAppInst, HWND hWnd, LPCSTR lpcText, LPCSTR lpcTitle, UINT fuStyle, ...);
+#undef MESSAGE
+#define MESSAGE(msg) \
+do { \
+    WINE_MESSAGE((msg)); \
+    ShellMessageBoxA(NULL, NULL, (msg), "Wine Mono", MB_OK | MB_ICONSTOP); \
+} while(0)
+//
+// NOTE for wine-syncs: This warning is gradually removed in Wine commits:
+// c99754ef15a8, 6b889fe9188a, 5cd6db03495d, and 26c9bd9f15c3
+//
+#endif
 static void missing_runtime_message(const CLRRuntimeInfo *This)
 {
     if (This->major == 1)

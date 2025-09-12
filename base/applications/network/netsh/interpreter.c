@@ -14,15 +14,17 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL
-InterpretCommand(
+ProcessCommand(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ DWORD dwArgCount,
     _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount)
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwHelpLevel,
+    _Inout_ PBOOL bDone)
 {
-    PCONTEXT_ENTRY pContext, pSubContext;
+    PCONTEXT_ENTRY pSubContext;
     PCOMMAND_ENTRY pCommand;
     PCOMMAND_GROUP pGroup;
-    BOOL bDone = FALSE;
-    DWORD dwHelpLevel = 0;
     DWORD dwError = ERROR_SUCCESS;
 
     /* If no args provided */
@@ -50,21 +52,13 @@ InterpretCommand(
         {
             if (_wcsicmp(argv[0], pCommand->pwszCmdToken) == 0)
             {
-                if (dwHelpLevel == 1)
+                dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex, dwArgCount, 0, NULL, bDone);
+                if (dwError != ERROR_SUCCESS)
                 {
+                   ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
                     ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
-                    return TRUE;
                 }
-                else
-                {
-                    dwError = pCommand->pfnCmdHandler(NULL, argv, 0, dwArgCount, 0, NULL, &bDone);
-                    if (dwError != ERROR_SUCCESS)
-                    {
-                        ConPrintf(StdOut, L"Error: %lu\n\n");
-                        ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
-                    }
-                    return !bDone;
-                }
+                return TRUE;
             }
 
             pCommand = pCommand->pNext;
@@ -75,40 +69,33 @@ InterpretCommand(
         {
             if (_wcsicmp(argv[0], pGroup->pwszCmdGroupToken) == 0)
             {
-                if (dwHelpLevel == 1)
+                if (dwArgCount == 1)
                 {
-                    HelpGroup(pGroup);
+                    ProcessHelp(pContext, dwArgCount, argv, dwCurrentIndex, dwHelpLevel + 1);
                     return TRUE;
                 }
-
-                pCommand = pGroup->pCommandListHead;
-                while (pCommand != NULL)
+                else
                 {
-                    if ((dwArgCount > 1) && (_wcsicmp(argv[1], pCommand->pwszCmdToken) == 0))
+                    pCommand = pGroup->pCommandListHead;
+                    while (pCommand != NULL)
                     {
-                        if (dwHelpLevel == 2)
+                        if ((dwArgCount > 1) && (_wcsicmp(argv[1], pCommand->pwszCmdToken) == 0))
+//                        if ((dwArgCount > dwCurrentIndex + 1) && (wcsicmp(argv[dwCurrentIndex + 1], pCommand->pwszCmdToken) == 0))
                         {
-                            ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
-                            return TRUE;
-                        }
-                        else
-                        {
-                            dwError = pCommand->pfnCmdHandler(NULL, argv, 1, dwArgCount, 0, NULL, &bDone);
+                            dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex + 1, dwArgCount, 0, NULL, bDone);
                             if (dwError != ERROR_SUCCESS)
                             {
-                                ConPrintf(StdOut, L"Error: %lu\n\n");
+                                ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
                                 ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
-                                return TRUE;
                             }
-                            return !bDone;
+                            return TRUE;
                         }
+
+                        pCommand = pCommand->pNext;
                     }
 
-                    pCommand = pCommand->pNext;
+                    return FALSE;
                 }
-
-                HelpGroup(pGroup);
-                return TRUE;
             }
 
             pGroup = pGroup->pNext;
@@ -121,8 +108,21 @@ InterpretCommand(
             {
                 if (_wcsicmp(argv[0], pSubContext->pszContextName) == 0)
                 {
-                    pCurrentContext = pSubContext;
-                    return TRUE;
+                    DPRINT("%S ==> dwCurrentIndex: %lu  dwArgCount: %lu\n", argv[dwCurrentIndex], dwCurrentIndex, dwArgCount);
+                    if (dwArgCount == dwCurrentIndex + 1)
+                    {
+                        pCurrentContext = pSubContext;
+                        return TRUE;
+                    }
+                    else
+                    {
+                        return ProcessCommand(pSubContext,
+                                              dwArgCount,
+                                              argv,
+                                              dwCurrentIndex + 1,
+                                              dwHelpLevel,
+                                              bDone);
+                    }
                 }
 
                 pSubContext = pSubContext->pNext;
@@ -135,9 +135,44 @@ InterpretCommand(
         pContext = pContext->pParentContext;
     }
 
-    ConResPrintf(StdErr, IDS_INVALID_COMMAND, argv[0]);
+    return FALSE;
+}
 
-    return TRUE;
+
+BOOL
+InterpretCommand(
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwArgCount,
+    _Inout_ PBOOL bDone)
+{
+    /* If no args provided */
+    if (dwArgCount == 0)
+        return TRUE;
+
+    if (pCurrentContext == NULL)
+    {
+        DPRINT("InterpretCmd: invalid context %p\n", pCurrentContext);
+        return FALSE;
+    }
+
+    if ((_wcsicmp(argv[dwArgCount - 1], L"?") == 0) ||
+        (_wcsicmp(argv[dwArgCount - 1], L"help") == 0))
+    {
+        return ProcessHelp(pCurrentContext,
+                           dwArgCount,
+                           argv,
+                           0,
+                           dwArgCount - 1);
+    }
+    else
+    {
+        return ProcessCommand(pCurrentContext,
+                              dwArgCount,
+                              argv,
+                              0,
+                              0,
+                              bDone);
+    }
 }
 
 
@@ -152,6 +187,7 @@ InterpretScript(
     LPWSTR args_vector[MAX_ARGS_COUNT];
     DWORD dwArgCount = 0;
     BOOL bWhiteSpace = TRUE;
+    BOOL bDone = FALSE;
     LPWSTR ptr;
 
     memset(args_vector, 0, sizeof(args_vector));
@@ -179,7 +215,24 @@ InterpretScript(
     }
 
     /* sends the string to find the command */
-    return InterpretCommand(args_vector, dwArgCount);
+    return InterpretCommand(args_vector, dwArgCount, &bDone) == ERROR_SUCCESS;
+}
+
+
+VOID
+PrintPrompt(
+    PCONTEXT_ENTRY pContext)
+{
+    if (pContext == pRootContext)
+    {
+        ConPuts(StdOut, L"netsh");
+    }
+    else
+    {
+        PrintPrompt(pContext->pParentContext);
+        ConPuts(StdOut, L" ");
+        ConPuts(StdOut, pContext->pszContextName);
+    }
 }
 
 
@@ -190,22 +243,16 @@ InterpretInteractive(VOID)
     LPWSTR args_vector[MAX_ARGS_COUNT];
     DWORD dwArgCount = 0;
     BOOL bWhiteSpace = TRUE;
-    BOOL bRun = TRUE;
+    BOOL bDone = FALSE;
     LPWSTR ptr;
 
-    while (bRun != FALSE)
+    for (;;)
     {
         dwArgCount = 0;
         memset(args_vector, 0, sizeof(args_vector));
 
         /* Shown just before the input where the user places commands */
-//        ConResPuts(StdOut, IDS_APP_PROMPT);
-        ConPuts(StdOut, L"netsh");
-        if (pCurrentContext != pRootContext)
-        {
-            ConPuts(StdOut, L" ");
-            ConPuts(StdOut, pCurrentContext->pszContextName);
-        }
+        PrintPrompt(pCurrentContext);
         ConPuts(StdOut, L">");
 
         /* Get input from the user. */
@@ -232,6 +279,12 @@ InterpretInteractive(VOID)
         }
 
         /* Send the string to find the command */
-        bRun = InterpretCommand(args_vector, dwArgCount);
+        if (InterpretCommand(args_vector, dwArgCount, &bDone) == FALSE)
+        {
+            ConResPrintf(StdErr, IDS_INVALID_COMMAND, input_line);
+        }
+
+        if (bDone)
+            break;
     }
 }

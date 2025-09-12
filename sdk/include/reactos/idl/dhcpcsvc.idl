@@ -7,7 +7,7 @@
 typedef [handle] wchar_t *PDHCP_SERVER_NAME;
 
 [
-    uuid(6BFFD098-A112-3610-9833-012892020162),
+    uuid(4D5839D6-01BC-559C-B2EC-7DF12EC1B7E6),
     version(0.0),
     pointer_default(unique),
 #ifdef __midl
@@ -52,4 +52,10 @@ interface dhcpcsvc
         [in] DWORD AdapterIndex,
         [in] DWORD Address,
         [in] DWORD Netmask);
+
+    /* Function 4 */
+    DWORD
+    __stdcall
+    RemoveDNSRegistrations(
+        [in, string, unique] PDHCP_SERVER_NAME ServerName);
 }

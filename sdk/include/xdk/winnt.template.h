@@ -28,12 +28,6 @@
 #error Compiler too old!
 #endif
 
-#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
-#ifndef __ROS_LONG64__
-#define __ROS_LONG64__
-#endif
-#endif
-
 #include <ctype.h>
 //#include <winapifamily.h>
 #ifdef __GNUC__

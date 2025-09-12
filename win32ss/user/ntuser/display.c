@@ -349,9 +349,12 @@ UserEnumDisplayDevices(
 
                     RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), L"\\");
 
-                    /* FIXME: DevicePropertyDriverKeyName string should be appended */
-                    pHardwareId[0] = UNICODE_NULL;
-                    RtlStringCbCatW(pdispdev->DeviceID, sizeof(pdispdev->DeviceID), pHardwareId);
+                    dwLength = wcslen(pdispdev->DeviceID) + 1;
+                    Status = IoGetDeviceProperty(pdo,
+                                                 DevicePropertyDriverKeyName,
+                                                 (ARRAYSIZE(pdispdev->DeviceID) - dwLength) * sizeof(WCHAR),
+                                                 pdispdev->DeviceID + dwLength - 1,
+                                                 &dwLength);
                 }
 
                 TRACE("Hardware ID: %ls\n", pdispdev->DeviceID);
@@ -377,6 +380,7 @@ NtUserEnumDisplayDevices(
     PDISPLAY_DEVICEW pDisplayDevice,
     DWORD dwFlags)
 {
+    static const UNICODE_STRING ustrDisplay = RTL_CONSTANT_STRING(L"DISPLAY");
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
     DISPLAY_DEVICEW dispdev;
@@ -408,7 +412,7 @@ NtUserEnumDisplayDevices(
         }
         _SEH2_END
 
-        if (ustrDevice.Length > 0)
+        if (ustrDevice.Length > 0 && !RtlEqualUnicodeString(&ustrDevice, &ustrDisplay, TRUE))
             pustrDevice = &ustrDevice;
         else
             pustrDevice = NULL;

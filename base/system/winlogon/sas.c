@@ -429,7 +429,8 @@ PlayEventSound(
 
 static
 VOID
-RestoreAllConnections(PWLSESSION Session)
+RestoreAllConnections(
+    _In_ PWLSESSION Session)
 {
     DWORD dRet;
     HANDLE hEnum;
@@ -441,9 +442,7 @@ RestoreAllConnections(PWLSESSION Session)
 
     UserProfile = (Session && Session->UserToken);
     if (!UserProfile)
-    {
         return;
-    }
 
     if (!ImpersonateLoggedOnUser(Session->UserToken))
     {
@@ -471,7 +470,7 @@ RestoreAllConnections(PWLSESSION Session)
         dSize = 0x1000;
         dCount = -1;
 
-        memset(lpRes, 0, dSize);
+        ZeroMemory(lpRes, dSize);
         dRet = WNetEnumResource(hEnum, &dCount, lpRes, &dSize);
         if (dRet == WN_SUCCESS || dRet == WN_MORE_DATA)
         {
@@ -488,6 +487,17 @@ RestoreAllConnections(PWLSESSION Session)
     WNetCloseEnum(hEnum);
 
 quit:
+    RevertToSelf();
+}
+
+static
+VOID
+CloseAllConnections(
+    _In_ PWLSESSION Session)
+{
+    if (!Session->UserToken || !ImpersonateLoggedOnUser(Session->UserToken))
+        return;
+    WNetClearConnections(NULL);
     RevertToSelf();
 }
 
@@ -621,14 +631,16 @@ HandleLogon(
         Session->hProfileInfo = ProfileInfo.hProfile;
     }
 
+    /* Cache the username and domain */
+    Session->UserName = WlStrDup(Session->MprNotifyInfo.pszUserName);
+    Session->Domain = WlStrDup(Session->MprNotifyInfo.pszDomain);
+
     /* Create environment block for the user */
     if (!CreateUserEnvironment(Session))
     {
         WARN("WL: CreateUserEnvironment() failed\n");
         goto cleanup;
     }
-
-    CallNotificationDlls(Session, LogonHandler);
 
     /* Enable per-user settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
@@ -648,19 +660,22 @@ HandleLogon(
         goto cleanup;
     }
 
+    CallNotificationDlls(Session, LogonHandler);
+
     /* Connect remote resources */
     RestoreAllConnections(Session);
 
+    /* Start the user shell */
+    CallNotificationDlls(Session, StartShellHandler);
     if (!StartUserShell(Session))
     {
         //WCHAR StatusMsg[256];
         WARN("WL: WlxActivateUserShell() failed\n");
-        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg) / sizeof(StatusMsg[0]));
+        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, ARRAYSIZE(StatusMsg));
         //MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
         goto cleanup;
     }
-
-    CallNotificationDlls(Session, StartShellHandler);
+    CallNotificationDlls(Session, PostShellHandler);
 
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
@@ -687,6 +702,10 @@ cleanup:
 
     if (!ret)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+        Session->UserName = Session->Domain = NULL;
+
         if (Session->hProfileInfo)
             UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
         Session->hProfileInfo = NULL;
@@ -748,9 +767,6 @@ LogoffShutdownThread(
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
         ret = FALSE;
     }
-
-    /* Cancel all the user connections */
-    WNetClearConnections(NULL);
 
     if (UserToken)
         RevertToSelf();
@@ -1024,18 +1040,25 @@ HandleLogoff(
         return Status;
     }
 
+    /* Invoke Logoff notifications on the application desktop */
+    SwitchDesktop(Session->ApplicationDesktop);
+    DisplayStatusMessage(Session, Session->ApplicationDesktop, IDS_LOGGINGOFF);
+    CallNotificationDlls(Session, LogoffHandler);
+    RemoveStatusMessage(Session);
+
+    /* The remaining Logoff steps run on the Winlogon desktop */
     SwitchDesktop(Session->WinlogonDesktop);
 
     PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
+    /* Close all user network connections */
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
+    CloseAllConnections(Session);
+    // TODO: Do any other user-specific network-related cleaning:
+    // user-added NetAPI message aliases; user cached credentials (remote login)...
+
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
-
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
-    CallNotificationDlls(Session, LogoffHandler);
-
-    // FIXME: Closing network connections!
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
 
     /* Kill remaining COM processes that may have been started by logoff scripts */
     hThread = CreateThread(psa, 0, KillComProcesses, (PVOID)Session->UserToken, 0, NULL);
@@ -1049,6 +1072,10 @@ HandleLogoff(
     DestroyLogoffSecurityAttributes(psa);
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+    Session->UserName = Session->Domain = NULL;
 
     if (Session->hProfileInfo)
         UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
@@ -1095,8 +1122,8 @@ ShutdownComputerWindowProc(
         }
         case WM_INITDIALOG:
         {
-            RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
-            SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+            /* Remove the Close menu item */
+            DeleteMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
             return TRUE;
         }
     }
@@ -1124,22 +1151,30 @@ HandleShutdown(
     IN DWORD wlxAction)
 {
     NTSTATUS Status;
+    UINT uMsgId;
     BOOLEAN Old;
 
-    // SwitchDesktop(Session->WinlogonDesktop);
-
-    /* If the system is rebooting, show the appropriate string */
+    /* Display the appropriate shutdown or reboot message */
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
+        uMsgId = IDS_REACTOSISRESTARTING;
     else
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+        uMsgId = IDS_REACTOSISSHUTTINGDOWN;
+
+    // SwitchDesktop(Session->WinlogonDesktop);
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
+
+    /* Invoke Shutdown notifications and notify GINA */
+    CallNotificationDlls(Session, ShutdownHandler);
+    Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
 
     /* Run the shutdown thread. *IGNORE* all failures as we want to force shutting down! */
     Status = RunLogoffShutdownThread(Session, NULL, wlxAction);
     if (!NT_SUCCESS(Status))
         ERR("Failed to start the Shutdown thread, Status 0x%08lx\n", Status);
 
-    CallNotificationDlls(Session, ShutdownHandler);
+    /* Show again the shutdown message */
+    // SwitchDesktop(Session->WinlogonDesktop); // Re-enable if you notice the desktop may have switched to something else.
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
 
     /* Destroy SAS window */
     UninitializeSAS(Session);
@@ -1183,7 +1218,6 @@ DoGenericAction(
                 {
                     Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-                    CallNotificationDlls(Session, LogonHandler);
                 }
             }
             break;
@@ -1224,8 +1258,16 @@ DoGenericAction(
         case WLX_SAS_ACTION_FORCE_LOGOFF: /* 0x09 */
         case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
-            if (Session->LogonState != STATE_LOGGED_OFF)
+            if ((Session->LogonState != STATE_INIT) &&
+                (Session->LogonState != STATE_LOGGED_OFF) &&
+                (Session->LogonState != STATE_LOGGED_OFF_SAS) &&
+                (Session->LogonState != STATE_SHUT_DOWN))
             {
+                ASSERT((Session->LogonState == STATE_LOGGED_ON) ||
+                       (Session->LogonState == STATE_LOGGED_ON_SAS) ||
+                       (Session->LogonState == STATE_LOCKED) ||
+                       (Session->LogonState == STATE_LOCKED_SAS));
+
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
                 if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
@@ -1237,9 +1279,6 @@ DoGenericAction(
             }
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
-                // FIXME: WlxShutdown should be done from inside HandleShutdown,
-                // after having displayed "ReactOS is shutting down" message.
-                Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);

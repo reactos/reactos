@@ -2314,6 +2314,11 @@ NdisIDeviceIoControl(
       Irp->IoStatus.Information = Written;
       break;
 
+    case IOCTL_NDIS_RESERVED7:
+      NDIS_DbgPrint(MIN_TRACE, ("NdisIDeviceIoControl: IOCTL_NDIS_RESERVED7 UNIMPLEMENTED (CORE-13831)\n"));
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+
     default:
       NDIS_DbgPrint(MIN_TRACE, ("NdisIDeviceIoControl: unsupported control code 0x%lx\n", ControlCode));
       break;

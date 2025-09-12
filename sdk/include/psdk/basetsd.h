@@ -6,12 +6,6 @@
 #include <msvctarget.h>
 #endif
 
-#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
-#ifndef __ROS_LONG64__
-#define __ROS_LONG64__
-#endif
-#endif
-
 #ifdef __GNUC__
 #ifndef __int64
 #define __int64 long long

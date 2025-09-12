@@ -98,25 +98,27 @@ extern "C" {
 #elif defined(__x86_64)
 
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
-    __MINGW_EXTENSION unsigned __int64 Part[2];
+    unsigned __int64 Part[2];
   } SETJMP_FLOAT128;
 
 #define _JBLEN 16
   typedef SETJMP_FLOAT128 _JBTYPE;
 
   typedef struct _JUMP_BUFFER {
-    __MINGW_EXTENSION unsigned __int64 Frame;
-    __MINGW_EXTENSION unsigned __int64 Rbx;
-    __MINGW_EXTENSION unsigned __int64 Rsp;
-    __MINGW_EXTENSION unsigned __int64 Rbp;
-    __MINGW_EXTENSION unsigned __int64 Rsi;
-    __MINGW_EXTENSION unsigned __int64 Rdi;
-    __MINGW_EXTENSION unsigned __int64 R12;
-    __MINGW_EXTENSION unsigned __int64 R13;
-    __MINGW_EXTENSION unsigned __int64 R14;
-    __MINGW_EXTENSION unsigned __int64 R15;
-    __MINGW_EXTENSION unsigned __int64 Rip;
-    __MINGW_EXTENSION unsigned __int64 Spare;
+    unsigned __int64 Frame;
+    unsigned __int64 Rbx;
+    unsigned __int64 Rsp;
+    unsigned __int64 Rbp;
+    unsigned __int64 Rsi;
+    unsigned __int64 Rdi;
+    unsigned __int64 R12;
+    unsigned __int64 R13;
+    unsigned __int64 R14;
+    unsigned __int64 R15;
+    unsigned __int64 Rip;
+    unsigned long MxCsr;
+    unsigned short FpCsr;
+    unsigned short Spare;
     SETJMP_FLOAT128 Xmm6;
     SETJMP_FLOAT128 Xmm7;
     SETJMP_FLOAT128 Xmm8;

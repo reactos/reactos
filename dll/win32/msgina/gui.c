@@ -10,9 +10,7 @@
 
 #include <wingdi.h>
 #include <winnls.h>
-#include <winreg.h>
 #include <ndk/exfuncs.h>
-#include <ndk/setypes.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -132,8 +130,6 @@ SetWelcomeText(HWND hWnd)
     HKEY hKey;
     DWORD BufSize, dwType, dwWelcomeSize, dwTitleLength;
     LONG rc;
-
-    TRACE("SetWelcomeText(%p)\n", hWnd);
 
     /* Open the Winlogon key */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -529,8 +525,6 @@ static VOID
 GUIDisplaySASNotice(
     IN OUT PGINA_CONTEXT pgContext)
 {
-    TRACE("GUIDisplaySASNotice()\n");
-
     /* Display the notice window */
     pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                             pgContext->hDllInstance,
@@ -780,7 +774,7 @@ ChangePasswordDialogProc(
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_ADDSTRING, 0, (LPARAM)pgContext->DomainName);
             SendDlgItemMessageW(hwndDlg, IDC_CHANGEPWD_DOMAIN, CB_SETCURSEL, 0, 0);
             SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_COMMAND:
@@ -793,9 +787,10 @@ ChangePasswordDialogProc(
                     }
                     else
                     {
+                        SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_OLDPWD, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD1, NULL);
                         SetDlgItemTextW(hwndDlg, IDC_CHANGEPWD_NEWPWD2, NULL);
-                        SetFocus(GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD));
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_CHANGEPWD_OLDPWD), TRUE);
                     }
                     return TRUE;
 
@@ -815,9 +810,14 @@ ChangePasswordDialogProc(
 
 
 static VOID
-OnInitSecurityDlg(HWND hwnd,
-                  PGINA_CONTEXT pgContext)
+OnInitSecurityDlg(
+    _In_ HWND hwnd,
+    _In_ PGINA_CONTEXT pgContext)
 {
+    HKEY hKeyCurrentUser, hKey;
+    DWORD dwValue;
+    LONG lRet;
+
     WCHAR Buffer1[256];
     WCHAR Buffer2[256];
     WCHAR Buffer3[256];
@@ -842,8 +842,73 @@ OnInitSecurityDlg(HWND hwnd,
 
     SetDlgItemTextW(hwnd, IDC_SECURITY_LOGONDATE, Buffer4);
 
-    if (pgContext->bAutoAdminLogon)
-        EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOGOFF), FALSE);
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"DisableLockWorkstation", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOCK), FALSE);
+
+        RegCloseKey(hKey);
+    }
+
+    /* Open the per-user registry key */
+    lRet = RegOpenLoggedOnHKCU(pgContext->UserToken,
+                               KEY_QUERY_VALUE,
+                               &hKeyCurrentUser);
+    if (lRet != ERROR_SUCCESS)
+    {
+        /* We couldn't, bail out */
+        return;
+    }
+
+    lRet = RegOpenKeyExW(hKeyCurrentUser,
+                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"DisableLockWorkstation", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOCK), FALSE);
+
+        lRet = ReadRegDwordValue(hKey, L"DisableChangePassword", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_CHANGEPWD), FALSE);
+
+        lRet = ReadRegDwordValue(hKey, L"DisableTaskMgr", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_TASKMGR), FALSE);
+
+        RegCloseKey(hKey);
+    }
+
+    lRet = RegOpenKeyExW(hKeyCurrentUser,
+                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+                         0,
+                         KEY_QUERY_VALUE, &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        lRet = ReadRegDwordValue(hKey, L"NoLogoff", &dwValue);
+        if ((lRet == ERROR_SUCCESS) && !!dwValue)
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_LOGOFF), FALSE);
+
+        // TODO: Disable also if "NoDisconnect" on Terminal Services
+        /* Disable the "Shutdown" button if the user doesn't have shutdown privilege */
+        lRet = ReadRegDwordValue(hKey, L"NoClose", &dwValue);
+        if (((lRet == ERROR_SUCCESS) && !!dwValue) ||
+            !TestTokenPrivilege(pgContext->UserToken, SE_SHUTDOWN_PRIVILEGE))
+        {
+            EnableWindow(GetDlgItem(hwnd, IDC_SECURITY_SHUTDOWN), FALSE);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    RegCloseKey(hKeyCurrentUser);
 }
 
 
@@ -885,18 +950,15 @@ LogOffDialogProc(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDYES:
-                    EndDialog(hwndDlg, IDYES);
-                    return TRUE;
-
-                case IDNO:
-                    EndDialog(hwndDlg, IDNO);
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hwndDlg, LOWORD(wParam));
                     return TRUE;
             }
             break;
 
         case WM_CLOSE:
-            EndDialog(hwndDlg, IDNO);
+            EndDialog(hwndDlg, IDCANCEL);
             return TRUE;
     }
 
@@ -923,48 +985,36 @@ OnLogOff(
 static
 INT
 OnShutDown(
-    IN HWND hwndDlg,
-    IN PGINA_CONTEXT pgContext)
+    _In_ HWND hwndDlg,
+    _In_ PGINA_CONTEXT pgContext,
+    _In_ DWORD dwExcludeOptions)
 {
+    HKEY hKeyCurrentUser = NULL;
+    DWORD ShutdownOptions = 0;
     INT ret;
-    DWORD ShutdownOptions;
 
-    TRACE("OnShutDown(%p %p)\n", hwndDlg, pgContext);
-
-    pgContext->nShutdownAction = GetDefaultShutdownSelState();
-    ShutdownOptions = GetDefaultShutdownOptions();
-
-    if (pgContext->UserToken != NULL)
+    /* Open the per-user registry key */
+    if (RegOpenLoggedOnHKCU(pgContext->UserToken,
+                            KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
+                            &hKeyCurrentUser) != ERROR_SUCCESS)
     {
-        if (ImpersonateLoggedOnUser(pgContext->UserToken))
-        {
-            pgContext->nShutdownAction = LoadShutdownSelState();
-            ShutdownOptions = GetAllowedShutdownOptions();
-            RevertToSelf();
-        }
-        else
-        {
-            ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        }
+        ERR("RegOpenLoggedOnHKCU() failed with error %ld\n", GetLastError());
     }
+    pgContext->nShutdownAction = 0;
+    if (hKeyCurrentUser)
+    {
+        ShutdownOptions = GetAllowedShutdownOptions(hKeyCurrentUser, pgContext->UserToken);
+        pgContext->nShutdownAction = LoadShutdownSelState(hKeyCurrentUser);
+    }
+    ShutdownOptions &= ~dwExcludeOptions;
 
     ret = ShutdownDialog(hwndDlg, ShutdownOptions, pgContext);
 
-    if (ret == IDOK)
-    {
-        if (pgContext->UserToken != NULL)
-        {
-            if (ImpersonateLoggedOnUser(pgContext->UserToken))
-            {
-                SaveShutdownSelState(pgContext->nShutdownAction);
-                RevertToSelf();
-            }
-            else
-            {
-                ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-            }
-        }
-    }
+    if ((ret == IDOK) && hKeyCurrentUser)
+        SaveShutdownSelState(hKeyCurrentUser, pgContext->nShutdownAction);
+
+    if (hKeyCurrentUser)
+        RegCloseKey(hKeyCurrentUser);
 
     return ret;
 }
@@ -991,7 +1041,6 @@ SecurityDialogProc(
             SetWelcomeText(hwndDlg);
 
             OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
-            SetFocus(GetDlgItem(hwndDlg, IDNO));
             return TRUE;
         }
 
@@ -1014,7 +1063,7 @@ SecurityDialogProc(
                             EndDialog(hwndDlg, WLX_SAS_ACTION_FORCE_LOGOFF);
                         }
                     }
-                    else if (OnLogOff(hwndDlg, pgContext) == IDYES)
+                    else if (OnLogOff(hwndDlg, pgContext) == IDOK)
                     {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
                     }
@@ -1037,7 +1086,7 @@ SecurityDialogProc(
                             RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
                         }
                     }
-                    else if (OnShutDown(hwndDlg, pgContext) == IDOK)
+                    else if (OnShutDown(hwndDlg, pgContext, 0) == IDOK)
                     {
                         EndDialog(hwndDlg, pgContext->nShutdownAction);
                     }
@@ -1071,8 +1120,6 @@ GUILoggedOnSAS(
     IN DWORD dwSasType)
 {
     INT result;
-
-    TRACE("GUILoggedOnSAS()\n");
 
     if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
     {
@@ -1281,7 +1328,7 @@ SetDomainComboBox(
         lIndex = SendMessageW(hwndDomainComboBox, CB_ADDSTRING, 0, (LPARAM)szComputerName);
     }
 
-    if (wcslen(pgContext->DomainName) != 0)
+    if (pgContext->DomainName[0])
     {
         lFindIndex = SendMessageW(hwndDomainComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)pgContext->DomainName);
         if (lFindIndex == CB_ERR)
@@ -1324,7 +1371,9 @@ LogonDialogProc(
 
             if (pDlgData->pgContext->bAutoAdminLogon ||
                 !pDlgData->pgContext->bDontDisplayLastUserName)
+            {
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_USERNAME, pDlgData->pgContext->UserName);
+            }
 
             if (pDlgData->pgContext->bAutoAdminLogon)
                 SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, pDlgData->pgContext->Password);
@@ -1342,7 +1391,7 @@ LogonDialogProc(
             if (pDlgData->pgContext->bAutoAdminLogon)
                 PostMessage(GetDlgItem(hwndDlg, IDOK), BM_CLICK, 0, 0);
 
-            return TRUE;
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:
@@ -1366,7 +1415,14 @@ LogonDialogProc(
             {
                 case IDOK:
                     if (DoLogon(hwndDlg, pDlgData->pgContext))
+                    {
                         EndDialog(hwndDlg, WLX_SAS_ACTION_LOGON);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_LOGON_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_LOGON_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -1374,8 +1430,11 @@ LogonDialogProc(
                     return TRUE;
 
                 case IDC_LOGON_SHUTDOWN:
-                    if (OnShutDown(hwndDlg, pDlgData->pgContext) == IDOK)
+                    if (OnShutDown(hwndDlg, pDlgData->pgContext,
+                                   WLX_SHUTDOWN_STATE_DISCONNECT | WLX_SHUTDOWN_STATE_LOGOFF) == IDOK)
+                    {
                         EndDialog(hwndDlg, pDlgData->pgContext->nShutdownAction);
+                    }
                     return TRUE;
             }
             break;
@@ -1408,9 +1467,6 @@ LegalNoticeDialogProc(
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwndDlg, 0);
-                    return TRUE;
-
                 case IDCANCEL:
                     EndDialog(hwndDlg, 0);
                     return TRUE;
@@ -1451,8 +1507,8 @@ GUILoggedOutSAS(
         RegCloseKey(hKey);
     }
 
-    if (LegalNotice.pszCaption != NULL && wcslen(LegalNotice.pszCaption) != 0 &&
-        LegalNotice.pszText != NULL && wcslen(LegalNotice.pszText) != 0)
+    if (LegalNotice.pszCaption != NULL && LegalNotice.pszCaption[0] &&
+        LegalNotice.pszText != NULL && LegalNotice.pszText[0])
     {
         pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                 pgContext->hDllInstance,
@@ -1596,18 +1652,18 @@ UnlockDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
+            DlgData_LoadBitmaps(pDlgData);
+
             SetWelcomeText(hwndDlg);
 
             SetLockMessage(hwndDlg, IDC_UNLOCK_MESSAGE, pDlgData->pgContext);
-
             SetDlgItemTextW(hwndDlg, IDC_UNLOCK_USERNAME, pDlgData->pgContext->UserName);
-            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
 
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            DlgData_LoadBitmaps(pDlgData);
-            return TRUE;
+            SetFocus(GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD));
+            return FALSE; // Default focus is changed.
         }
 
         case WM_PAINT:
@@ -1630,7 +1686,14 @@ UnlockDialogProc(
             {
                 case IDOK:
                     if (DoUnlock(hwndDlg, pDlgData->pgContext, &result))
+                    {
                         EndDialog(hwndDlg, result);
+                    }
+                    else
+                    {
+                        SetDlgItemTextW(hwndDlg, IDC_UNLOCK_PASSWORD, NULL);
+                        SendMessageW(hwndDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwndDlg, IDC_UNLOCK_PASSWORD), TRUE);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -1723,8 +1786,6 @@ static VOID
 GUIDisplayLockedNotice(
     IN OUT PGINA_CONTEXT pgContext)
 {
-    TRACE("GUIdisplayLockedNotice()\n");
-
     pgContext->pWlxFuncs->WlxDialogBoxParam(
         pgContext->hWlx,
         pgContext->hDllInstance,

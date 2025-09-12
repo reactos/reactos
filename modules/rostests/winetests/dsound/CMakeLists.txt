@@ -1,4 +1,6 @@
 
+add_definitions(-D__ROS_LONG64__)
+
 list(APPEND SOURCE
     capture.c
     ds3d8.c

@@ -2116,7 +2116,7 @@ ExSetResourceOwnerPointer(IN PERESOURCE Resource,
  * @name ExTryToAcquireResourceExclusiveLite
  * @implemented NT4
  *
- *     The ExTryToAcquireResourceExclusiveLite routine routine attemps to
+ *     The ExTryToAcquireResourceExclusiveLite routine routine attempts to
  *     acquire the given resource for exclusive access.
  *
  * @param Resource
