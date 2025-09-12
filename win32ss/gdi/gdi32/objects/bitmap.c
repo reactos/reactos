@@ -982,6 +982,17 @@ SetDIBitsToDevice(
         }
     }
 
+    if (YDest >= 0)
+    {
+        ScanLines = min(abs(Height), ScanLines);
+        if (YSrc > 0)
+        {
+            ScanLines += YSrc;
+            if (Height + YDest + 1 < ScanLines)
+                YSrc = 0;
+        }
+    }
+
     /*
      if ( !pDc_Attr || // DC is Public
      ColorUse == DIB_PAL_COLORS ||
