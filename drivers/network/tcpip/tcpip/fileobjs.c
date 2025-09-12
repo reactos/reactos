@@ -486,22 +486,9 @@ NTSTATUS FileOpenAddress(
           /* Sanity check */
           ASSERT(Address->Address[0].Address[0].sin_port == AddrFile->Port);
       }
-      else if (!AddrIsUnspecified(&AddrFile->Address))
-      {
-          /* The client is trying to bind to a local address so allocate a port now too */
-          AllocatedPort = TCPAllocatePort(0);
-
-          /* Check for bind success */
-          if (AllocatedPort == (UINT)-1)
-          {
-              ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-              return STATUS_ADDRESS_ALREADY_EXISTS;
-          }
-          AddrFile->Port = AllocatedPort;
-      }
       else
       {
-          /* The client wants an unspecified port with an unspecified address so we wait to see what the TCP library gives us */
+          /* The client wants an unspecified port so we wait to see what the TCP library gives us */
           AddrFile->Port = 0;
       }
 
