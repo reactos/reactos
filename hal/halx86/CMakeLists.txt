@@ -73,5 +73,7 @@ elseif(ARCH STREQUAL "amd64")
 
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi up apic)
     add_hal(halmp SOURCES ${HAL_SOURCE} COMPONENTS generic acpi smp apic)
+    # AGENT-MODIFIED: Added halmacpi.dll for AMD64 to provide better UEFI compatibility
+    add_hal(halmacpi SOURCES smp/halmacpi.rc COMPONENTS generic acpi smp apic)
 
 endif()
