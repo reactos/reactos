@@ -530,6 +530,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    BufferLength,
                                                    TAG_IOBUF);
+                    if (Irp->AssociatedIrp.SystemBuffer == NULL)
+                    {
+                        RtlRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                    }
 
                     /* Check if we got a buffer */
                     if (InputBuffer)
@@ -577,6 +581,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                         ExAllocatePoolWithQuotaTag(PoolType,
                                                    InputBufferLength,
                                                    TAG_IOBUF);
+                    if (Irp->AssociatedIrp.SystemBuffer == NULL)
+                    {
+                        RtlRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+                    }
 
                     /* Copy into the System Buffer */
                     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
