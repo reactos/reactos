@@ -120,7 +120,11 @@ static WCHAR **cmdline_to_argv( const WCHAR *src, int *ret_argc )
                 dst -= bcount / 2;
                 src++;
                 if (in_quotes && *src == '"') *dst++ = *src++;
+#ifdef __REACTOS__
+                in_quotes = !in_quotes;
+#else
                 else in_quotes = !in_quotes;
+#endif
             }
             else
             {
@@ -144,6 +148,75 @@ static WCHAR **cmdline_to_argv( const WCHAR *src, int *ret_argc )
     *ret_argc = argc;
     return argv;
 }
+
+#ifdef __REACTOS__
+static CHAR **cmdline_to_argvA( const CHAR *src, int *ret_argc )
+{
+    CHAR **argv, *arg, *dst;
+    int argc, in_quotes = 0, bcount = 0, len = strlen(src) + 1;
+
+    argc = 2 + len / 2;
+    argv = HeapAlloc( GetProcessHeap(), 0, argc * sizeof(*argv) + len * sizeof(CHAR) );
+    arg = dst = (CHAR *)(argv + argc);
+    argc = 0;
+    while (*src)
+    {
+        if ((*src == ' ' || *src == '\t') && !in_quotes)
+        {
+            /* skip the remaining spaces */
+            while (*src == ' ' || *src == '\t') src++;
+            if (!*src) break;
+            /* close the argument and copy it */
+            *dst++ = 0;
+            argv[argc++] = arg;
+            /* start with a new argument */
+            arg = dst;
+            bcount = 0;
+        }
+        else if (*src == '\\')
+        {
+            *dst++ = *src++;
+            bcount++;
+        }
+        else if (*src == '"')
+        {
+            if ((bcount & 1) == 0)
+            {
+                /* Preceded by an even number of '\', this is half that
+                 * number of '\', plus a '"' which we discard.
+                 */
+                dst -= bcount / 2;
+                src++;
+                if (in_quotes && *src == '"') *dst++ = *src++;
+#ifdef __REACTOS__
+                in_quotes = !in_quotes;
+#else
+                else in_quotes = !in_quotes;
+#endif
+            }
+            else
+            {
+                /* Preceded by an odd number of '\', this is half that
+                 * number of '\' followed by a '"'
+                 */
+                dst -= bcount / 2 + 1;
+                *dst++ = *src++;
+            }
+            bcount = 0;
+        }
+        else  /* a regular character */
+        {
+            *dst++ = *src++;
+            bcount = 0;
+        }
+    }
+    *dst = 0;
+    argv[argc++] = arg;
+    argv[argc] = NULL;
+    *ret_argc = argc;
+    return argv;
+}
+#endif
 
 typedef void (CDECL *_INITTERMFUN)(void);
 typedef int (CDECL *_INITTERM_E_FN)(void);
@@ -479,8 +552,15 @@ int CDECL __wgetmainargs(int *argc, wchar_t** *wargv, wchar_t** *wenvp,
         }
     }
     if (!expand_wildcards) {
+#ifdef __REACTOS__
+        if ((MSVCRT___wargv == NULL) || (MSVCRT___argc == 0))
+        {
+            MSVCRT___wargv = cmdline_to_argv(MSVCRT__wcmdln, &MSVCRT___argc);
+        }
+#else
         MSVCRT___argc = initial_argc;
         MSVCRT___wargv = initial_wargv;
+#endif
     }
 
     env_init(TRUE, FALSE);
@@ -515,8 +595,15 @@ int CDECL __getmainargs(int *argc, char** *argv, char** *envp,
         }
     }
     if (!expand_wildcards) {
+#ifdef __REACTOS__
+        if ((MSVCRT___argv == NULL) || (MSVCRT___argc == 0))
+        {
+            MSVCRT___argv = cmdline_to_argvA(MSVCRT__acmdln, &MSVCRT___argc);
+        }
+#else
         MSVCRT___argc = initial_argc;
         MSVCRT___argv = build_argv( initial_wargv );
+#endif
     }
 
     *argc = MSVCRT___argc;
