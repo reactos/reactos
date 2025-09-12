@@ -51,17 +51,7 @@ int __cdecl _set_FMA3_enable(int flag)
 
 int __fma3_lib_init(void);
 
-/* FIXME: init_fma3 variable is unused but required for automatic initialization
- * The variable is placed in .CRT$XIC section to ensure __fma3_lib_init is called
- * during C runtime initialization. Suppress unused variable warning with attribute */
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 _CRTALLOC(".CRT$XIC") static _PIFV init_fma3 = __fma3_lib_init;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 int __fma3_lib_init(void)
 {

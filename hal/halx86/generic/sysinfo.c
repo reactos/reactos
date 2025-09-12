@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#define NDEBUG
 #include <debug.h>
 
 HAL_AMLI_BAD_IO_ADDRESS_LIST HalAMLIBadIOAddressList[] =

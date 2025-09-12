@@ -30,6 +30,7 @@
 
 #include <ntsecapi.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define HandleToScm(Handle) (PSIDCACHEMGR)(Handle)

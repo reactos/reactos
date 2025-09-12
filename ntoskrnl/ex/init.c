@@ -13,10 +13,8 @@
 #include <reactos/buildno.h>
 #include "inbv/logo.h"
 
+#define NDEBUG
 #include <debug.h>
-
-/* For COM port debugging */
-#define COM1_PORT 0x3F8
 
 /* This is the size that we can expect from the win 2003 loader */
 #define LOADER_PARAMETER_EXTENSION_MIN_SIZE \
@@ -557,10 +555,6 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Create SMSS process */
     SmssName = ProcessParams->ImagePathName;
-    
-    /* Debug output */
-    DPRINT("*** KERNEL: Loading SMSS from: %wZ ***\n", &SmssName);
-    
     Status = RtlCreateUserProcess(&SmssName,
                                   OBJ_CASE_INSENSITIVE,
                                   RtlDeNormalizeProcessParams(ProcessParams),
@@ -571,10 +565,6 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                   NULL,
                                   NULL,
                                   ProcessInformation);
-    
-    /* Debug output */
-    DPRINT("*** KERNEL: RtlCreateUserProcess returned: 0x%08lX ***\n", Status);
-    
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
@@ -648,76 +638,21 @@ BOOLEAN
 NTAPI
 ExpInitSystemPhase0(VOID)
 {
-    /* Debug: ExpInitSystemPhase0 entry */
-    {
-        const char msg[] = "*** EX: ExpInitSystemPhase0 starting ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-
     /* Initialize EXRESOURCE Support */
-    {
-        const char msg[] = "*** EX: Calling ExpResourceInitialization ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     ExpResourceInitialization();
 
     /* Initialize the environment lock */
-    {
-        const char msg[] = "*** EX: Initializing environment lock ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     ExInitializeFastMutex(&ExpEnvironmentLock);
 
     /* Initialize the lookaside lists and locks */
-    {
-        const char msg[] = "*** EX: Calling ExpInitLookasideLists ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     ExpInitLookasideLists();
 
-    /* Initialize handle tables */
-    {
-        const char msg[] = "*** EX: Calling ExpInitializeHandleTables ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    ExpInitializeHandleTables();
-
     /* Initialize the Firmware Table resource and listhead */
-    {
-        const char msg[] = "*** EX: Initializing firmware table resources ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    {
-        const char msg[] = "*** EX: Initializing firmware table list head ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     InitializeListHead(&ExpFirmwareTableProviderListHead);
-    
-    /* Defer firmware table resource initialization until memory manager is ready */
-    {
-        const char msg[] = "*** EX: DEFERRING firmware table resources until MM is ready (AMD64 fix) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* TODO: Initialize these after memory manager is properly set up */
-    /* ExInitializeResourceLite(&ExpFirmwareTableResource);
-       ExInitializeResourceLite(&ExpTimeRefreshLock); */
+    ExInitializeResourceLite(&ExpFirmwareTableResource);
+    ExInitializeResourceLite(&ExpTimeRefreshLock);
 
     /* Set the suite mask to maximum and return */
-    {
-        const char msg[] = "*** EX: ExpInitSystemPhase0 complete! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     ExSuiteMask = 0xFFFFFFFF;
     return TRUE;
 }
@@ -993,14 +928,6 @@ NTAPI
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Debug output */
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** KERNEL: ExpInitializeExecutive entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     PNLS_DATA_BLOCK NlsData;
     CHAR Buffer[256];
     ANSI_STRING AnsiPath;
@@ -1015,18 +942,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CHAR VersionBuffer[65];
 
     /* Validate Loader */
-    {
-        const char msg[] = "*** KERNEL: Validating loader ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (!ExpIsLoaderValid(LoaderBlock))
     {
-        const char msg[] = "*** KERNEL ERROR: Invalid loader! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        
         /* Invalid loader version */
         KeBugCheckEx(MISMATCHED_HAL,
                      3,
@@ -1034,45 +951,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
                      LoaderBlock->Extension->MajorVersion,
                      LoaderBlock->Extension->MinorVersion);
     }
-    
-    {
-        const char msg[] = "*** KERNEL: Loader validated ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize PRCB pool lookaside pointers */
-    {
-        const char msg[] = "*** KERNEL: Calling ExInitPoolLookasidePointers (from ExpInitializeExecutive) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* TEMPORARILY SKIP - causes hang */
-    /* ExInitPoolLookasidePointers(); */
-    
-    {
-        const char msg[] = "*** KERNEL: ExInitPoolLookasidePointers skipped (from ExpInitializeExecutive) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    ExInitPoolLookasidePointers();
 
     /* Check if this is an application CPU */
-    {
-        const char msg[] = "*** KERNEL: Checking if application CPU ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (Cpu)
     {
         /* Then simply initialize it with HAL */
-        {
-            const char msg[] = "*** KERNEL: Application CPU, initializing HAL ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
         if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
         {
             /* Initialization failed */
@@ -1082,24 +968,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
         /* We're done */
         return;
     }
-    
-    {
-        const char msg[] = "*** KERNEL: This is CPU 0 (boot processor) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Assume no text-mode or remote boot */
     ExpInTextModeSetup = FALSE;
     IoRemoteBootClient = FALSE;
 
     /* Check if we have a setup loader block */
-    {
-        const char msg[] = "*** KERNEL: Checking setup loader block ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (LoaderBlock->SetupLdrBlock)
     {
         /* Check if this is text-mode setup */
@@ -1119,368 +993,56 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Set phase to 0 */
     ExpInitializationPhase = 0;
-    
-    {
-        const char msg[] = "*** KERNEL: Phase set to 0 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-
-    /* Initialize KD as early as possible for DPRINT support */
-    {
-        const char msg[] = "*** KERNEL: Initializing KdInitSystem Phase 0 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    if (!KdInitSystem(0, LoaderBlock))
-    {
-        const char msg[] = "*** KERNEL: KdInitSystem Phase 0 failed! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    else
-    {
-        const char msg[] = "*** KERNEL: KdInitSystem Phase 0 SUCCESS - DPRINT enabled ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        
-        /* Test INT3 directly first - TEMPORARILY DISABLED */
-#if 0
-        {
-            const char msg[] = "*** KERNEL: Testing INT3 breakpoint ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            
-            /* Try INT3 to see if exception handling works at all */
-            __debugbreak();
-            
-            const char msg2[] = "*** KERNEL: Returned from INT3 ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-        }
-#endif
-        {
-            const char msg[] = "*** KERNEL: Skipping INT3 test for now (hangs on AMD64) ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-        /* Test DPRINT now - INT 0x2D handler has been properly implemented */
-        DPRINT1("ExpInitializeExecutive: KdInitSystem Phase 0 complete - DPRINT is working!\n");
-    }
 
     /* Get boot command line */
-    {
-        const char msg[] = "*** KERNEL: Getting boot command line ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-#ifdef _M_AMD64
-    /* Check if LoaderBlock is valid before accessing it */
-    if (!LoaderBlock)
-    {
-        const char msg[] = "*** KERNEL: ERROR - LoaderBlock is NULL! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        CommandLine = NULL;
-    }
-    else if ((ULONG_PTR)LoaderBlock < 0x100000)
-    {
-        const char msg[] = "*** KERNEL: ERROR - LoaderBlock has invalid address! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        CommandLine = NULL;
-    }
-    else
-    {
-        /* Print LoaderBlock address */
-        {
-            const char msg[] = "*** KERNEL: LoaderBlock at: ";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            
-            /* Print hex address */
-            ULONG_PTR addr = (ULONG_PTR)LoaderBlock;
-            char hex[17] = "0x";
-            int i;
-            for (i = 15; i >= 0; i--)
-            {
-                ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
-                hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            }
-            for (i = 0; i < 18; i++)
-            {
-                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                __outbyte(COM1_PORT, hex[i]);
-            }
-            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-            __outbyte(COM1_PORT, '\n');
-        }
-        
-        /* Try to safely probe LoadOptions field */
-        {
-            const char msg[] = "*** KERNEL: Checking LoadOptions field ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-        /* Use exception handling to safely access LoadOptions */
-        _SEH2_TRY
-        {
-            /* First check if we can read the LoadOptions pointer itself */
-            PVOID TestPtr = (PVOID)&(LoaderBlock->LoadOptions);
-            
-            {
-                const char msg[] = "*** KERNEL: LoadOptions field address: ";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                
-                /* Print hex address */
-                ULONG_PTR addr = (ULONG_PTR)TestPtr;
-                char hex[17] = "0x";
-                int i;
-                for (i = 15; i >= 0; i--)
-                {
-                    ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
-                    hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                }
-                for (i = 0; i < 18; i++)
-                {
-                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                    __outbyte(COM1_PORT, hex[i]);
-                }
-                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                __outbyte(COM1_PORT, '\n');
-            }
-            
-            /* Now try to read the actual LoadOptions value */
-            CommandLine = LoaderBlock->LoadOptions;
-            
-            /* Print the LoadOptions pointer value */
-            {
-                const char msg[] = "*** KERNEL: LoadOptions pointer value: ";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                
-                /* Print hex address */
-                ULONG_PTR addr = (ULONG_PTR)CommandLine;
-                char hex[17] = "0x";
-                int i;
-                for (i = 15; i >= 0; i--)
-                {
-                    ULONG_PTR digit = (addr >> (i * 4)) & 0xF;
-                    hex[15 - i + 2] = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                }
-                for (i = 0; i < 18; i++)
-                {
-                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                    __outbyte(COM1_PORT, hex[i]);
-                }
-                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                __outbyte(COM1_PORT, '\n');
-            }
-            
-            /* Check if the pointer looks valid */
-            if (!CommandLine)
-            {
-                const char msg[] = "*** KERNEL: LoadOptions is NULL, skipping ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
-            else if ((ULONG_PTR)CommandLine < 0x1000)
-            {
-                const char msg[] = "*** KERNEL: LoadOptions points to low memory, invalid! ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                CommandLine = NULL;
-            }
-            else if ((ULONG_PTR)CommandLine >= 0xfffff80000000000ULL && 
-                     (ULONG_PTR)CommandLine < 0xfffff80100000000ULL)
-            {
-                /* The pointer is in kernel space but might not be mapped.
-                 * For AMD64 during early boot, the bootloader may have incorrectly
-                 * converted a physical address using PaToVa. We need to be careful here.
-                 */
-                const char msg[] = "*** KERNEL: LoadOptions in kernel space, attempting access ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                
-                /* Try to read the first character to see if it's accessible */
-                volatile char TestChar = *CommandLine;
-                
-                {
-                    const char msg2[] = "*** KERNEL: LoadOptions accessible, first char: ";
-                    const char *p2 = msg2;
-                    while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                    __outbyte(COM1_PORT, TestChar ? TestChar : '?');
-                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                    __outbyte(COM1_PORT, '\n');
-                }
-            }
-            else
-            {
-                const char msg[] = "*** KERNEL: LoadOptions has unexpected address range ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            const char msg[] = "*** KERNEL: EXCEPTION accessing LoadOptions! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            CommandLine = NULL;
-        }
-        _SEH2_END;
-    }
-#else
     CommandLine = LoaderBlock->LoadOptions;
-#endif
     if (CommandLine)
     {
-        {
-            const char msg[] = "*** KERNEL: Command line found, processing ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-#ifdef _M_AMD64
-        /* Wrap command line processing in exception handler for safety */
-        _SEH2_TRY
-        {
-#endif
         /* Upcase it for comparison and check if we're in performance mode */
+        _strupr(CommandLine);
+        PerfMem = strstr(CommandLine, "PERFMEM");
+        if (PerfMem)
         {
-            const char msg[] = "*** KERNEL: Upcasing command line (manual) ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-        /* Manual _strupr to avoid runtime library */
-        {
-            PCHAR p = CommandLine;
-            while (*p)
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
             {
-                if (*p >= 'a' && *p <= 'z')
-                    *p = *p - 'a' + 'A';
-                p++;
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMemUsed)
+                {
+                    /* FIXME: TODO */
+                    DPRINT1("BBT performance mode not yet supported."
+                            "/PERFMEM option ignored.\n");
+                }
             }
         }
-#ifdef _M_AMD64
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+
+        /* Check if we're burning memory */
+        PerfMem = strstr(CommandLine, "BURNMEMORY");
+        if (PerfMem)
         {
-            const char msg[] = "*** KERNEL: EXCEPTION processing command line! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            CommandLine = NULL;
-        }
-        _SEH2_END;
-        
-        if (CommandLine)
-        {
-#endif
-        
-        {
-            const char msg[] = "*** KERNEL: Command line upcased, searching for PERFMEM ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-        /* Manual strstr for PERFMEM */
-        PerfMem = NULL;
-        {
-            PCHAR p = CommandLine;
-            const char target[] = "PERFMEM";
-            while (*p)
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
             {
-                BOOLEAN match = TRUE;
-                for (int i = 0; i < 7; i++)
-                {
-                    if (p[i] != target[i])
-                    {
-                        match = FALSE;
-                        break;
-                    }
-                }
-                if (match)
-                {
-                    PerfMem = p;
-                    break;
-                }
-                p++;
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMemUsed) ExBurnMemory(LoaderBlock, PerfMemUsed, LoaderBad);
             }
         }
-        /* Skip PERFMEM and BURNMEMORY for now - requires strstr and atol */
-        {
-            const char msg[] = "*** KERNEL: Skipping PERFMEM/BURNMEMORY checks (runtime lib deps) ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-#ifdef _M_AMD64
-        }  /* End of if (CommandLine) after exception handler */
-#endif
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: Setting up NLS base and offsets ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
-#ifdef _M_AMD64
-    /* Wrap NLS data access in exception handler */
-    _SEH2_TRY
-    {
-#endif
     /* Setup NLS Base and offsets */
     NlsData = LoaderBlock->NlsData;
-    if (NlsData)
-    {
-        ExpNlsTableBase = NlsData->AnsiCodePageData;
-        ExpAnsiCodePageDataOffset = 0;
-        ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
-                                           (ULONG_PTR)NlsData->AnsiCodePageData);
-        ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
-                                                (ULONG_PTR)NlsData->AnsiCodePageData);
-    }
-    else
-    {
-        const char msg[] = "*** KERNEL: WARNING - NlsData is NULL! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        ExpNlsTableBase = NULL;
-        ExpAnsiCodePageDataOffset = 0;
-        ExpOemCodePageDataOffset = 0;
-        ExpUnicodeCaseTableDataOffset = 0;
-    }
-#ifdef _M_AMD64
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        const char msg[] = "*** KERNEL: EXCEPTION accessing NLS data! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        NlsData = NULL;
-        ExpNlsTableBase = NULL;
-        ExpAnsiCodePageDataOffset = 0;
-        ExpOemCodePageDataOffset = 0;
-        ExpUnicodeCaseTableDataOffset = 0;
-    }
-    _SEH2_END;
-#endif
+    ExpNlsTableBase = NlsData->AnsiCodePageData;
+    ExpAnsiCodePageDataOffset = 0;
+    ExpOemCodePageDataOffset = (ULONG)((ULONG_PTR)NlsData->OemCodePageData -
+                                       (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpUnicodeCaseTableDataOffset = (ULONG)((ULONG_PTR)NlsData->UnicodeCodePageData -
+                                            (ULONG_PTR)NlsData->AnsiCodePageData);
 
     /* Initialize the NLS Tables */
-    {
-        const char msg[] = "*** KERNEL: Skipping NLS table initialization (runtime lib deps) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Skip NLS initialization for now - requires runtime library 
     RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
                              ExpAnsiCodePageDataOffset),
                      (PVOID)((ULONG_PTR)ExpNlsTableBase +
@@ -1489,54 +1051,18 @@ ExpInitializeExecutive(IN ULONG Cpu,
                              ExpUnicodeCaseTableDataOffset),
                      &ExpNlsTableInfo);
     RtlResetRtlTranslations(&ExpNlsTableInfo);
-    */
-    
-    {
-        const char msg[] = "*** KERNEL: NLS initialization complete, initializing HAL ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Now initialize the HAL */
     if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
     {
         /* HAL failed to initialize, bugcheck */
-        {
-            const char msg[] = "*** KERNEL ERROR: HAL initialization failed! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         KeBugCheck(HAL_INITIALIZATION_FAILED);
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: HAL initialized successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 
     /* Make sure interrupts are active now */
-    {
-        const char msg[] = "*** KERNEL: Enabling interrupts ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     _enable();
-    
-    {
-        const char msg[] = "*** KERNEL: Interrupts enabled ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Clear the crypto exponent */
-    {
-        const char msg[] = "*** KERNEL: Clearing crypto exponent ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     SharedUserData->CryptoExponent = 0;
 
     /* Set global flags for the checked build */
@@ -1546,66 +1072,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Setup NT System Root Path */
-    {
-        const char msg[] = "*** KERNEL: Setting up NT System Root Path ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Manual sprintf to avoid runtime library */
-    {
-        const char* prefix = "C:";
-        char* dest = Buffer;
-        const char* src = prefix;
-        
-        /* Copy prefix */
-        while (*src) *dest++ = *src++;
-        
-        /* Copy boot path */
-        src = LoaderBlock->NtBootPathName;
-        while (*src) *dest++ = *src++;
-        
-        /* Null terminate */
-        *dest = '\0';
-    }
+    sprintf(Buffer, "C:%s", LoaderBlock->NtBootPathName);
 
     /* Convert to ANSI_STRING and null-terminate it */
-    {
-        const char msg[] = "*** KERNEL: Converting path to ANSI string ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: Calling RtlInitString ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Manual RtlInitString to avoid strlen runtime library dependency */
-    {
-        const char* p = Buffer;
-        SIZE_T len = 0;
-        while (*p++) len++;  /* Manual strlen */
-        
-        AnsiPath.Buffer = Buffer;
-        AnsiPath.Length = (USHORT)len;
-        AnsiPath.MaximumLength = (USHORT)len + 1;
-    }
-    
-    {
-        const char msg[] = "*** KERNEL: RtlInitString complete, fixing null termination ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
+    RtlInitString(&AnsiPath, Buffer);
     Buffer[--AnsiPath.Length] = ANSI_NULL;
-    
-    {
-        const char msg[] = "*** KERNEL: ANSI string processing complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Get the string from KUSER_SHARED_DATA's buffer */
     RtlInitEmptyUnicodeString(&NtSystemRoot,
@@ -1613,63 +1084,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
                               sizeof(SharedUserData->NtSystemRoot));
 
     /* Now fill it in */
-    {
-        const char msg[] = "*** KERNEL: Converting ANSI to Unicode for NtSystemRoot ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Manual ANSI to Unicode conversion to avoid RtlAnsiStringToUnicodeString */
-    {
-        PWCHAR Dest = NtSystemRoot.Buffer;
-        PCHAR Src = AnsiPath.Buffer;
-        SIZE_T Length = 0;
-        
-        while (*Src && Length < (NtSystemRoot.MaximumLength / sizeof(WCHAR) - 1))
-        {
-            *Dest++ = (WCHAR)*Src++;
-            Length++;
-        }
-        *Dest = L'\0';
-        NtSystemRoot.Length = (USHORT)(Length * sizeof(WCHAR));
-        Status = STATUS_SUCCESS;
-    }
-    
-    /* Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE); */
+    Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
     if (!NT_SUCCESS(Status)) KeBugCheck(SESSION3_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: NtSystemRoot conversion complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Setup bugcheck messages */
-    {
-        const char msg[] = "*** KERNEL: Skipping bugcheck init (resource loading issues) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Skip KiInitializeBugCheck - has resource loading dependencies */
-    /* KiInitializeBugCheck(); */
+    KiInitializeBugCheck();
 
     /* Setup initial system settings */
-    {
-        const char msg[] = "*** KERNEL: Skipping registry control values (registry deps) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Skip CmGetSystemControlValues - has registry dependencies */
-    /* CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector); */
-    
-    /* HYPOTHESIS CONFIRMED: strcmp crashes during early boot - implement manual version */
-    {
-        const char msg[] = "*** KERNEL: strcmp CRASHES - implementing manual comparison ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Set the Service Pack Number and add it to the CSD Version number if needed */
     CmNtSpBuildNumber = VER_PRODUCTBUILD_QFE;
@@ -1682,67 +1104,19 @@ ExpInitializeExecutive(IN ULONG Cpu,
     NtGlobalFlag |= CmNtGlobalFlag;
 
     /* Initialize the executive at phase 0 */
-    {
-        const char msg[] = "*** KERNEL: Initializing executive subsystem (Phase 0) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: Executive subsystem initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize the memory manager at phase 0 */
-    {
-        const char msg[] = "*** KERNEL: Initializing memory manager (Phase 0) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Initialize memory manager Phase 0 - critical for AMD64 */
-    {
-        const char msg[] = "*** KERNEL: Initializing MmInitSystem(0) for AMD64 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Initialize memory manager - use MmArmInitSystem for AMD64 */
     if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: Memory manager initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    /* Load boot symbols - fixed for AMD64 */
-    {
-        const char msg[] = "*** KERNEL: Loading boot symbols (fixed for AMD64) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    /* Enable boot symbol loading */
+    /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);
 
     /* Check if we should break after symbol load */
-    {
-        const char msg[] = "*** KERNEL: Checking debugger breakpoint ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     if (KdBreakAfterSymbolLoad)
         DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Check if this loader is compatible with NT 5.2 */
-    {
-        const char msg[] = "*** KERNEL: Checking loader compatibility ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     if (LoaderBlock->Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
     {
         /* Setup headless terminal settings */
@@ -1750,11 +1124,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Set system ranges */
-    {
-        const char msg[] = "*** KERNEL: Setting system ranges ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 #ifdef _M_AMD64
     SharedUserData->Reserved1 = MM_HIGHEST_USER_ADDRESS_WOW64;
     SharedUserData->Reserved3 = MM_SYSTEM_RANGE_START_WOW64;
@@ -1763,42 +1132,15 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
 #endif
 
-    /* Initialize NLS tables - fixed for AMD64 */
-    // DPRINT1("ExpInitializeExecutive: Initializing NLS tables (fixed for AMD64)\n");
-    {
-        const char msg[] = "*** KERNEL: Initializing NLS tables ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    /* Enable NLS initialization */
+    /* Make a copy of the NLS Tables */
     ExpInitNls(LoaderBlock);
 
     /* Get the kernel's load entry */
-    {
-        const char msg[] = "*** KERNEL: Getting kernel load entry ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     NtosEntry = CONTAINING_RECORD(LoaderBlock->LoadOrderListHead.Flink,
                                   LDR_DATA_TABLE_ENTRY,
                                   InLoadOrderLinks);
 
-    /* SKIP service pack/beta version string processing - runtime lib issues */
-    {
-        const char msg[] = "*** KERNEL: SKIPPING service pack/beta string processing (runtime lib deps) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Skip the entire service pack/beta string processing which uses RtlFindMessage, 
-       RtlStringCbPrintfA, RtlStringCbCopyExA - all crash on AMD64 
-       Just set minimal version string */
-    Status = STATUS_SUCCESS;
-    CmCSDVersionString.Buffer = NULL;
-    CmCSDVersionString.Length = 0;
-    CmCSDVersionString.MaximumLength = 0;
-    
-#if 0  /* DISABLED: Runtime library dependencies cause crashes */
+    /* Check if this is a service pack */
     if (CmNtCSDVersion & 0xFFFF)
     {
         /* Get the service pack string */
@@ -1945,25 +1287,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
         DPRINT1("Kernel-mode exception logging support not yet present."
                 "FLG_ENABLE_EXCEPTION_LOGGING flag ignored.\n");
     }
-#endif  /* End of disabled service pack/version string processing */
 
-    /* Initialize handle tables - fixed for AMD64 */
-    {
-        const char msg[] = "*** KERNEL: Initializing handle tables (fixed for AMD64) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    /* Enable handle table initialization */
+    /* Initialize the Handle Table */
     ExpInitializeHandleTables();
 
-    /* SKIP debug system call count table - memory allocation issues on AMD64 */
-    {
-        const char msg[] = "*** KERNEL: SKIPPING debug system call count table (AMD64 compatibility issue) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-#if 0  /* DISABLED: Memory allocation and RtlZeroMemory issues */
+#if DBG
     /* On checked builds, allocate the system call count table */
     KeServiceDescriptorTable[0].Count =
         ExAllocatePoolWithTag(NonPagedPool,
@@ -1982,98 +1310,22 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 #endif
 
-    /* Initialize Object Manager - critical for AMD64 */
-    {
-        const char msg[] = "*** KERNEL: Initializing Object Manager (fixed for AMD64) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Enable Object Manager initialization */
+    /* Create the Basic Object Manager Types to allow new Object Types */
     if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: Object Manager initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    /* Initialize Security subsystem - critical for AMD64 */
-    {
-        const char msg[] = "*** KERNEL: Initializing Security subsystem (fixed for AMD64) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Enable Security subsystem initialization */
+    /* Load basic Security for other Managers */
     if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: Security subsystem initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize the Process Manager */
-    {
-        const char msg[] = "*** KERNEL: Initializing Process Manager (creates Phase1 thread!) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* PROPER THREAD CREATION: Let PsInitSystem create the Phase1 thread as designed */
-    {
-        const char msg[] = "*** KERNEL: ABOUT TO CALL PsInitSystem - THE CRITICAL CALL! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: Process Manager initialized - Phase1 thread created! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-
-    /* IMMEDIATE DEBUG: Test progression past Process Manager */
-    __outbyte(COM1_PORT, 'N');
-    __outbyte(COM1_PORT, 'E');
-    __outbyte(COM1_PORT, 'X');
-    __outbyte(COM1_PORT, 'T');
-    __outbyte(COM1_PORT, '\n');
 
     /* Initialize the PnP Manager */
-    {
-        const char msg[] = "*** KERNEL: Initializing PnP Manager ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (!PpInitSystem()) KeBugCheck(PP0_INITIALIZATION_FAILED);
-    
-    {
-        const char msg[] = "*** KERNEL: PnP Manager initialized successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize the User-Mode Debugging Subsystem */
-    {
-        const char msg[] = "*** KERNEL: Initializing User-Mode Debugging Subsystem ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     DbgkInitialize();
 
     /* Calculate the tick count multiplier */
-    {
-        const char msg[] = "*** KERNEL: Calculating tick count multiplier ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
     SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;
 
@@ -2087,76 +1339,38 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* ReactOS magic */
     *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) = 0x8eac705;
-    
-    {
-        const char msg[] = "*** KERNEL: ExpInitializeExecutive completed successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 }
 
 VOID
 NTAPI
 MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-VOID
-NTAPI
-Phase1InitializationDiscard(IN PVOID Context);
-
 CODE_SEG("INIT")
 VOID
 NTAPI
 Phase1InitializationDiscard(IN PVOID Context)
 {
-    DPRINT("KERNEL: Phase1InitializationDiscard entered successfully\n");
-    /* Remove infinite loop that was blocking boot */
     PLOADER_PARAMETER_BLOCK LoaderBlock = Context;
-    NTSTATUS Status = STATUS_SUCCESS, MsgStatus = STATUS_SUCCESS;
-    (VOID)Status;  /* Suppress unused warning */
-    (VOID)MsgStatus;  /* Suppress unused warning */
-#ifndef _M_AMD64
+    NTSTATUS Status, MsgStatus;
     TIME_FIELDS TimeFields;
-#endif
     LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime, Timeout;
-    (VOID)SystemBootTime; (VOID)UniversalBootTime; (VOID)OldTime; (VOID)Timeout;
-    BOOLEAN NoGuiBoot = TRUE, ResetBias = FALSE, AlternateShell = FALSE;
-    (VOID)NoGuiBoot; (VOID)ResetBias; (VOID)AlternateShell;
-    PLDR_DATA_TABLE_ENTRY NtosEntry = NULL;
-    PMESSAGE_RESOURCE_ENTRY MsgEntry = NULL;
-    (VOID)NtosEntry; (VOID)MsgEntry;
-    PCHAR CommandLine = NULL, Y2KHackRequired = NULL, SafeBoot = NULL, Environment = NULL;
-    PCHAR StringBuffer = NULL, EndBuffer = NULL, BeginBuffer = NULL, MpString = "";
-    (VOID)CommandLine; (VOID)Y2KHackRequired; (VOID)SafeBoot; (VOID)Environment;
-    (VOID)StringBuffer; (VOID)EndBuffer; (VOID)BeginBuffer; (VOID)MpString;
+    BOOLEAN NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
+    PLDR_DATA_TABLE_ENTRY NtosEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
+    PCHAR CommandLine, Y2KHackRequired, SafeBoot, Environment;
+    PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
     ANSI_STRING TempString;
-    (VOID)TempString;
-    ULONG LastTzBias = 0, Length = 0, YearHack = 0, Disposition = 0, MessageCode = 0;
-    (VOID)LastTzBias; (VOID)Length; (VOID)YearHack; (VOID)Disposition; (VOID)MessageCode;
-    SIZE_T Size = 0;
-    size_t Remaining = 0;
-    (VOID)Size; (VOID)Remaining;
-    PRTL_USER_PROCESS_INFORMATION ProcessInfo = NULL;
+    ULONG LastTzBias, Length, YearHack = 0, Disposition, MessageCode = 0;
+    SIZE_T Size;
+    size_t Remaining;
+    PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE KeyHandle = NULL, OptionHandle = NULL;
+    HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
-    (VOID)ProcessInfo; (VOID)KeyPartialInfo; (VOID)KeyName;
-    (VOID)ObjectAttributes; (VOID)KeyHandle; (VOID)OptionHandle; (VOID)ProcessParameters;
 
-    /* Debug: About to allocate initialization buffer */
-    DPRINT("KERNEL: Phase1 - Using static init buffer for early boot\n");
-
-#ifdef _M_AMD64
-    /* For AMD64 early boot, use a static buffer since pool isn't ready */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Using static init buffer\n");
-    static INIT_BUFFER StaticInitBuffer;
-    InitBuffer = &StaticInitBuffer;
-    RtlZeroMemory(InitBuffer, sizeof(INIT_BUFFER));
-    DPRINT("Phase1InitializationDiscard: StaticInitBuffer at %p, size %lu\n", 
-           InitBuffer, sizeof(INIT_BUFFER));
-#else
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
@@ -2166,47 +1380,16 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Bugcheck */
         KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 8, 0, 0);
     }
-#endif
-
-    /* Debug: Init buffer ready */
-    DPRINT("KERNEL: Phase1 - Init buffer ready\n");
 
     /* Set to phase 1 */
     ExpInitializationPhase = 1;
-    DPRINT("KERNEL: Phase1 - ExpInitializationPhase set to 1\n");
 
     /* Set us at maximum priority */
-    DPRINT("KERNEL: Phase1 - Setting thread priority\n");
-    
-#ifdef _M_AMD64
-    /* Skip thread priority setting for now on AMD64 */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Skipping KeSetPriorityThread\n");
-    DPRINT("Current thread: %p\n", KeGetCurrentThread());
-#else
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
-#endif
-
-    /* Debug: About to initialize HAL */
-    DPRINT("KERNEL: Phase1 - Calling HalInitSystem\n");
 
     /* Do Phase 1 HAL Initialization */
     if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
-    
-    /* Debug: HAL initialized */
-    DPRINT("KERNEL: Phase1 - HAL initialized successfully\n");
 
-
-    /* Debug: About to get command line */
-    DPRINT("KERNEL: Phase1 - Getting command line\n");
-
-#ifdef _M_AMD64
-    /* Skip command line processing on AMD64 for now */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Skipping command line processing\n");
-    CommandLine = NULL;
-    NoGuiBoot = TRUE;  /* Disable GUI for now */
-    SosEnabled = FALSE;
-    DPRINT("AMD64 Boot flags: NoGuiBoot=%d, SosEnabled=%d\n", NoGuiBoot, SosEnabled);
-#else
     /* Get the command line and upcase it */
     CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
 
@@ -2215,26 +1398,11 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Get the SOS setting */
     SosEnabled = (CommandLine && strstr(CommandLine, "SOS") != NULL);
-#endif
 
-    /* Debug: About to setup boot video */
-    {
-        const char msg[] = "KERNEL: Phase1 - Setting up boot video\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
-#ifdef _M_AMD64
-    /* Skip boot video on AMD64 for now */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Skipping boot video initialization\n");
-    DPRINT("Boot video would initialize with NoGuiBoot=%d\n", NoGuiBoot);
-#else
     /* Setup the boot video driver */
     InbvEnableBootDriver(!NoGuiBoot);
     InbvDriverInitialize(LoaderBlock, IDB_MAX_RESOURCES);
-#endif
 
-#ifndef _M_AMD64
     /* Check if GUI boot is enabled */
     if (!NoGuiBoot)
     {
@@ -2250,7 +1418,6 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Don't allow boot-time strings */
         InbvEnableDisplayString(FALSE);
     }
-#endif
 
     /* Check if this is LiveCD (WinPE) mode */
     if (CommandLine && strstr(CommandLine, "MININT") != NULL)
@@ -2260,24 +1427,6 @@ Phase1InitializationDiscard(IN PVOID Context)
         InitWinPEModeType |= (strstr(CommandLine, "INRAM") != NULL) ? 0x80000000 : 0x00000001;
     }
 
-    /* Debug: About to get kernel entry */
-    {
-        const char msg[] = "KERNEL: Phase1 - Getting kernel entry\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
-#ifdef _M_AMD64
-    /* Skip message handling on AMD64 for now */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Skipping remaining initialization\n");
-    
-    /* Success - continue with limited initialization */
-    DPRINT1("Phase1InitializationDiscard: AMD64 - Continuing with limited init\n");
-    DPRINT("LoaderBlock at %p, Extension at %p\n", 
-           LoaderBlock, LoaderBlock ? LoaderBlock->Extension : NULL);
-#endif  /* _M_AMD64 */
-
-#ifndef _M_AMD64
     /* Get the kernel's load entry */
     NtosEntry = CONTAINING_RECORD(LoaderBlock->LoadOrderListHead.Flink,
                                   LDR_DATA_TABLE_ENTRY,
@@ -2540,103 +1689,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Set up Region Maps, Sections and the Paging File */
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
-#ifdef _M_AMD64
-    /* Test UEFI framebuffer after MM is ready */
-    DPRINT1("Phase1InitializationDiscard: MM initialized - Testing UEFI framebuffer\n");
-        
-        /* Try to access framebuffer from loader extension */
-        PLOADER_PARAMETER_EXTENSION Extension = LoaderBlock->Extension;
-        if (Extension && Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
-        {
-            PHYSICAL_ADDRESS FrameBufferBase = Extension->UefiFramebuffer.FrameBufferBase;
-            ULONG FrameBufferSize = Extension->UefiFramebuffer.FrameBufferSize;
-            ULONG ScreenWidth = Extension->UefiFramebuffer.ScreenWidth;
-            ULONG ScreenHeight = Extension->UefiFramebuffer.ScreenHeight;
-            
-            if (FrameBufferBase.QuadPart && FrameBufferSize)
-            {
-                /* Map the framebuffer into kernel virtual space */
-                PVOID VirtualFramebuffer = MmMapIoSpace(FrameBufferBase, FrameBufferSize, MmNonCached);
-                
-                if (VirtualFramebuffer)
-                {
-                    /* Draw a simple test pattern - white rectangle */
-                    PULONG Pixels = (PULONG)VirtualFramebuffer;
-                    ULONG x, y;
-                    
-                    /* Clear screen to dark blue ReactOS background */
-                    for (y = 0; y < ScreenHeight; y++)
-                    {
-                        for (x = 0; x < ScreenWidth; x++)
-                        {
-                            Pixels[y * ScreenWidth + x] = 0xFF1E3A8A; /* Dark blue */
-                        }
-                    }
-                    
-                    /* Draw "ReactOS" text banner at center */
-                    ULONG centerX = ScreenWidth / 2;
-                    ULONG centerY = ScreenHeight / 2;
-                    
-                    /* Draw white rectangle as logo placeholder */
-                    for (y = centerY - 50; y < centerY + 50 && y < ScreenHeight; y++)
-                    {
-                        for (x = centerX - 150; x < centerX + 150 && x < ScreenWidth; x++)
-                        {
-                            Pixels[y * ScreenWidth + x] = 0xFFFFFFFF; /* White */
-                        }
-                    }
-                    
-                    /* Draw blue text area inside */
-                    for (y = centerY - 40; y < centerY + 40 && y < ScreenHeight; y++)
-                    {
-                        for (x = centerX - 140; x < centerX + 140 && x < ScreenWidth; x++)
-                        {
-                            Pixels[y * ScreenWidth + x] = 0xFF1E3A8A; /* Dark blue */
-                        }
-                    }
-                    
-                    /* Draw progress bar outline */
-                    for (x = centerX - 100; x < centerX + 100 && x < ScreenWidth; x++)
-                    {
-                        Pixels[(centerY + 70) * ScreenWidth + x] = 0xFFFFFFFF; /* Top */
-                        Pixels[(centerY + 90) * ScreenWidth + x] = 0xFFFFFFFF; /* Bottom */
-                    }
-                    for (y = centerY + 70; y < centerY + 90 && y < ScreenHeight; y++)
-                    {
-                        Pixels[y * ScreenWidth + (centerX - 100)] = 0xFFFFFFFF; /* Left */
-                        Pixels[y * ScreenWidth + (centerX + 100)] = 0xFFFFFFFF; /* Right */
-                    }
-                    
-                    /* Draw progress bar fill (50%) */
-                    for (y = centerY + 72; y < centerY + 88 && y < ScreenHeight; y++)
-                    {
-                        for (x = centerX - 98; x < centerX && x < ScreenWidth; x++)
-                        {
-                            Pixels[y * ScreenWidth + x] = 0xFF00FF00; /* Green */
-                        }
-                    }
-                    
-                    const char msg2[] = "*** Framebuffer test patterns drawn! ***\n";
-                    const char *p2 = msg2;
-                    while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-                }
-                else
-                {
-                    const char msg2[] = "*** Failed to map framebuffer! ***\n";
-                    const char *p2 = msg2;
-                    while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-                }
-            }
-            else
-            {
-                const char msg2[] = "*** No framebuffer info available! ***\n";
-                const char *p2 = msg2;
-                while (*p2) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-            }
-        }
-    }
-#endif
-
     /* Create NLS section */
     ExpInitNls(LoaderBlock);
 
@@ -2742,12 +1794,6 @@ Phase1InitializationDiscard(IN PVOID Context)
                     AlternateShell = TRUE;
                 }
             }
-
-            /* Debug: DPRINT should be working at this stage */
-            DPRINT1("ExpLoadInitialProcess: SafeBoot mode processing completed\n");
-            DPRINT1("InitSafeBootMode: %d, AlternateShell: %s, MessageCode: 0x%x\n", 
-                    InitSafeBootMode, AlternateShell ? "TRUE" : "FALSE", MessageCode);
-            DPRINT("DPRINT test at line %d - this should appear in debug builds only\n", __LINE__);
 
             /* Find the message to print out */
             Status = RtlFindMessage(NtosEntry->DllBase,
@@ -2968,18 +2014,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
-    /* Debug: Check if file system is ready */
-    DPRINT("*** KERNEL: About to load initial process (smss.exe) ***\n");
-    
-    /* Give file system drivers time to initialize (temporary workaround) */
-    {
-        LARGE_INTEGER WaitTime;
-        WaitTime.QuadPart = Int32x32To64(100, -10000); /* 100ms delay */
-        KeDelayExecutionThread(KernelMode, FALSE, &WaitTime);
-        
-        DPRINT("*** KERNEL: Delayed to allow FS initialization ***\n");
-    }
-    
     /* Launch initial process */
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
@@ -3019,55 +2053,15 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Free the boot buffer */
     ExFreePoolWithTag(InitBuffer, TAG_INIT);
-#endif /* Close non-AMD64 Phase1InitializationDiscard code */
 }
 
 VOID
 NTAPI
 Phase1Initialization(IN PVOID Context)
 {
-    DPRINT("KERNEL: Calling 123\n");
-
     /* Do the .INIT part of Phase 1 which we can free later */
     Phase1InitializationDiscard(Context);
 
-    DPRINT("*** KERNEL: Phase1InitializationDiscard completed! ***\n");
-
-    /* Output boot success messages */
-    DPRINT("*** KERNEL: ReactOS AMD64 kernel boot successful! Entering final idle loop ***\n");
-    
-    DPRINT("*** ReactOS AMD64 KERNEL BOOT COMPLETE ***\n");
-    
-    DPRINT("*** The kernel has successfully initialized and is running! ***\n");
-
-    /* Try to jump into zero page thread with error handling */
-    {
-        /* Check if MM is ready for zero page thread */
-        if (MmNumberOfPhysicalPages && MmAvailablePages)
-        {
-            DPRINT("*** KERNEL: Starting MmZeroPageThread ***\n");
-            
-            /* This should not return */
-            MmZeroPageThread();
-            
-            /* If we got here, something went wrong */
-            DPRINT("*** KERNEL: ERROR: Returned from MmZeroPageThread! ***\n");
-        }
-        else
-        {
-            DPRINT("*** KERNEL: MM not ready for zero page thread, entering idle loop ***\n");
-        }
-    }
-    
-    /* Final fallback idle loop */
-    DPRINT("*** KERNEL: Entering kernel idle loop ***\n");
-    
-    /* Enter idle loop */
-    while (TRUE)
-    {
-        /* Halt the CPU to save power */
-        _disable();
-        __halt();
-        _enable();
-    }
+    /* Jump into zero page thread */
+    MmZeroPageThread();
 }

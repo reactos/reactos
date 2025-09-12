@@ -5,9 +5,6 @@
  * Copyright 2002 Ove Kaaven
  * Copyright 2006-2008 Robert Shearman
  *
- * FIXME: This parser has 2 shift/reduce conflicts that should be resolved
- * to ensure unambiguous parsing. The conflicts are benign but should be fixed.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either

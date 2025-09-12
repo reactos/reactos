@@ -8,6 +8,7 @@
 #include <ntoskrnl.h>
 #include <x86x64/Cpuid.h>
 #include <x86x64/Msr.h>
+#define NDEBUG
 #include <debug.h>
 
 // These are not officially documented

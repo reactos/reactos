@@ -27,6 +27,7 @@
 
 #include <pseh/pseh2.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define MAX_MODULES 0x2710      // Matches 10.000 modules

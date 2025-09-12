@@ -10,6 +10,7 @@
 
 #include <pci.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -1575,12 +1576,10 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     USHORT CapOffset, TempOffset;
     LONGLONG HackFlags;
     PDEVICE_OBJECT DeviceObject;
-    union {
-        UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
-        PCI_COMMON_CONFIG Config;
-    } PciBuffer, BiosBuffer;
-    PPCI_COMMON_HEADER PciData = (PVOID)&PciBuffer.Config;
-    PPCI_COMMON_HEADER BiosData = (PVOID)&BiosBuffer.Config;
+    UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
+    UCHAR BiosBuffer[PCI_COMMON_HDR_LENGTH];
+    PPCI_COMMON_HEADER PciData = (PVOID)Buffer;
+    PPCI_COMMON_HEADER BiosData = (PVOID)BiosBuffer;
     PCI_SLOT_NUMBER PciSlot;
     PCHAR Name;
     NTSTATUS Status;

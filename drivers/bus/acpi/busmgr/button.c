@@ -25,6 +25,7 @@
 
 #include <precomp.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define _COMPONENT		ACPI_BUTTON_COMPONENT

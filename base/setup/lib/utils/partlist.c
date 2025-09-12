@@ -15,6 +15,7 @@
 
 #include "registry.h"
 
+#define NDEBUG
 #include <debug.h>
 
 // #define DUMP_PARTITION_TABLE
@@ -3437,8 +3438,7 @@ UseAlternativeDisk:
             DPRINT1("Use new first active system partition %lu in disk %lu, drive letter %C\n",
                     CandidatePartition->PartitionNumber,
                     CandidatePartition->DiskEntry->DiskNumber,
-                    (!CandidatePartition->Volume || !CandidatePartition->Volume->Info.DriveLetter) ?
-                    L'-' : CandidatePartition->Volume->Info.DriveLetter);
+                    !CandidatePartition->Volume->Info.DriveLetter ? L'-' : CandidatePartition->Volume->Info.DriveLetter);
 
             /* Return the candidate system partition */
             return CandidatePartition;
@@ -3478,8 +3478,7 @@ UseAlternativeDisk:
         DPRINT1("Use first active system partition %lu in disk %lu, drive letter %C\n",
                 CandidatePartition->PartitionNumber,
                 CandidatePartition->DiskEntry->DiskNumber,
-                (!CandidatePartition->Volume || !CandidatePartition->Volume->Info.DriveLetter) ?
-                L'-' : CandidatePartition->Volume->Info.DriveLetter);
+                !CandidatePartition->Volume->Info.DriveLetter ? L'-' : CandidatePartition->Volume->Info.DriveLetter);
 
         /* Return the candidate system partition */
         return CandidatePartition;
@@ -3517,8 +3516,7 @@ UseAlternativePartition:
     DPRINT1("Use alternative active system partition %lu in disk %lu, drive letter %C\n",
             CandidatePartition->PartitionNumber,
             CandidatePartition->DiskEntry->DiskNumber,
-            (!CandidatePartition->Volume || !CandidatePartition->Volume->Info.DriveLetter) ?
-            L'-' : CandidatePartition->Volume->Info.DriveLetter);
+            !CandidatePartition->Volume->Info.DriveLetter ? L'-' : CandidatePartition->Volume->Info.DriveLetter);
 
     /* Return the candidate system partition */
     return CandidatePartition;

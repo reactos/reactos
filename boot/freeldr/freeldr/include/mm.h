@@ -136,19 +136,8 @@ PFN_NUMBER MmGetLoaderPagesSpanned(VOID);
 ULONG MmGetBiosMemoryMap(_Out_ PFREELDR_MEMORY_DESCRIPTOR *MemoryMap);
 
 /* Heap */
-/* CRITICAL FIX: Increased heap sizes to handle debug builds
- * Debug builds have much larger drivers (e.g., cdrom.sys is 9MB)
- * We need more heap space to allocate these during boot
- * Previous values: DEFAULT=1MB, TEMP=32MB
- * New values: DEFAULT=16MB, TEMP=128MB 
- * For AMD64 UEFI: Use moderate heap sizes to balance memory usage */
-#ifdef _M_AMD64
-#define DEFAULT_HEAP_SIZE (16 * 1024 * 1024)
-#define TEMP_HEAP_SIZE (64 * 1024 * 1024)
-#else
-#define DEFAULT_HEAP_SIZE (16 * 1024 * 1024)
-#define TEMP_HEAP_SIZE (128 * 1024 * 1024)
-#endif
+#define DEFAULT_HEAP_SIZE (1024 * 1024)
+#define TEMP_HEAP_SIZE (32 * 1024 * 1024)
 
 extern SIZE_T FrLdrImageSize;
 

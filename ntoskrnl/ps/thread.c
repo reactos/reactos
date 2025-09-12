@@ -10,6 +10,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -194,13 +195,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
-    
-    /* === CRITICAL DEBUG: PspCreateThread Entry Point === */
-    {
-        const char msg[] = "*** KERNEL: PspCreateThread - ENTERED! (Core thread creation) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
     PSTRACE(PS_THREAD_DEBUG,
             "ThreadContext: %p TargetProcess: %p ProcessHandle: %p\n",
             ThreadContext, TargetProcess, ProcessHandle);
@@ -616,39 +610,15 @@ PsCreateSystemThread(OUT PHANDLE ThreadHandle,
     PEPROCESS TargetProcess = NULL;
     HANDLE Handle = ProcessHandle;
     PAGED_CODE();
-    
-    /* === CRITICAL DEBUG: PsCreateSystemThread Entry Point === */
-    {
-        const char msg[] = "*** KERNEL: PsCreateSystemThread - ENTRY (Phase1 thread creation!) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     PSTRACE(PS_THREAD_DEBUG,
             "ProcessHandle: %p StartRoutine: %p StartContext: %p\n",
             ProcessHandle, StartRoutine, StartContext);
 
     /* Check if we have a handle. If not, use the System Process */
-    {
-        const char msg[] = "*** KERNEL: PsCreateSystemThread - Setting up target process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
     if (!ProcessHandle)
     {
         Handle = NULL;
         TargetProcess = PsInitialSystemProcess;
-        
-        const char msg[] = "*** KERNEL: PsCreateSystemThread - Using System Process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-
-    {
-        const char msg[] = "*** KERNEL: PsCreateSystemThread - About to call PspCreateThread ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3FD) & 0x20) == 0); __outbyte(0x3F8, *p++); }
     }
 
     /* Call the shared function */

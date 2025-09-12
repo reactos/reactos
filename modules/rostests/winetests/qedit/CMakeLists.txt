@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(qedit_winetest mediadet.c timeline.c testlist.c qedit.rc)
 set_module_type(qedit_winetest win32cui)

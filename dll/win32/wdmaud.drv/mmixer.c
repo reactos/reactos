@@ -16,6 +16,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/iofuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 #include <mmebuddy_debug.h>
 

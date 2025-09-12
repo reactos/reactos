@@ -6,6 +6,7 @@
 #include <winbase.h>
 #include <dnsrslvr_c.h>
 
+#define NDEBUG
 #include <debug.h>
 
 handle_t __RPC_USER

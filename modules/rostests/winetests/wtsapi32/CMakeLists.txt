@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(wtsapi32_winetest wtsapi.c testlist.c)
 set_module_type(wtsapi32_winetest win32cui)

@@ -30,10 +30,7 @@
 #include "winbase.h"
 #include "winternl.h"
 #include "msvcrt.h"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-parameter"
 #include "wine/exception.h"
-#pragma GCC diagnostic pop
 #include "excpt.h"
 #include "wine/debug.h"
 

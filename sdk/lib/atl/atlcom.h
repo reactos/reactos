@@ -133,13 +133,6 @@ public:
     }
 };
 
-/* FIXME: CComObject<T>::CreateInstance static method may hide T::CreateInstance virtual method
- * when they have different signatures. This is a name collision, not a real override issue.
- * Using pragma to suppress -Woverloaded-virtual warning for this template class */
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
-#endif
 template <class Base>
 class CComObject : public Base
 {
@@ -209,9 +202,6 @@ public:
 
 
 };
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 template <class Base>
 class CComContainedObject : public Base

@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -184,14 +185,7 @@ VOID
 NTAPI
 MiInitializeNonPagedPoolThresholds(VOID)
 {
-    #define COM1_PORT 0x3F8
     PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
-    
-    {
-        const char msg[] = "*** MM/POOL: MiInitializeNonPagedPoolThresholds entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Default low threshold of 8MB or one third of nonpaged pool */
     MiLowNonPagedPoolThreshold = (8 * _1MB) >> PAGE_SHIFT;
@@ -200,14 +194,7 @@ MiInitializeNonPagedPoolThresholds(VOID)
     /* Default high threshold of 20MB or 50% */
     MiHighNonPagedPoolThreshold = (20 * _1MB) >> PAGE_SHIFT;
     MiHighNonPagedPoolThreshold = min(MiHighNonPagedPoolThreshold, Size / 2);
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(MiLowNonPagedPoolThreshold < MiHighNonPagedPoolThreshold); */
-    
-    {
-        const char msg[] = "*** MM/POOL: MiInitializeNonPagedPoolThresholds completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    ASSERT(MiLowNonPagedPoolThreshold < MiHighNonPagedPoolThreshold);
 }
 
 CODE_SEG("INIT")
@@ -290,31 +277,17 @@ VOID
 NTAPI
 MiInitializeNonPagedPool(VOID)
 {
-    #define COM1_PORT 0x3F8
     ULONG i;
     PFN_COUNT PoolPages;
     PMMFREE_POOL_ENTRY FreeEntry, FirstEntry;
     PMMPTE PointerPte;
-    
-    {
-        const char msg[] = "*** MM/POOL: MiInitializeNonPagedPool entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* SKIP PAGED_CODE check on AMD64 */
-    /* PAGED_CODE(); */
+    PAGED_CODE();
 
     //
     // Initialize the pool S-LISTs as well as their maximum count. In general,
     // we'll allow 8 times the default on a 2GB system, and two times the default
     // on a 1GB system.
     //
-    {
-        const char msg[] = "*** MM/POOL: Initializing S-LIST heads ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     InitializeSListHead(&MiPagedPoolSListHead);
     InitializeSListHead(&MiNonPagedPoolSListHead);
     if (MmNumberOfPhysicalPages >= ((2 * _1GB) /PAGE_SIZE))
@@ -341,11 +314,6 @@ MiInitializeNonPagedPool(VOID)
     //
     // We keep 4 lists of free pages (4 lists help avoid contention)
     //
-    {
-        const char msg[] = "*** MM/POOL: Initializing free lists ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     for (i = 0; i < MI_MAX_FREE_PAGE_LISTS; i++)
     {
         //
@@ -357,18 +325,8 @@ MiInitializeNonPagedPool(VOID)
     //
     // Calculate how many pages the initial nonpaged pool has
     //
-    {
-        const char msg[] = "*** MM/POOL: Calculating pool pages ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     PoolPages = (PFN_COUNT)BYTES_TO_PAGES(MmSizeOfNonPagedPoolInBytes);
     MmNumberOfFreeNonPagedPool = PoolPages;
-    {
-        const char msg[] = "*** MM/POOL: Pool pages calculated ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     //
     // Initialize the first free entry
@@ -414,27 +372,15 @@ MiInitializeNonPagedPool(VOID)
     //
     // Validate and remember last allocated pool page
     //
-    {
-        const char msg[] = "*** MM/POOL: Validating last pool page ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     PointerPte = MiAddressToPte((PVOID)((ULONG_PTR)MmNonPagedPoolEnd0 - 1));
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(PointerPte->u.Hard.Valid == 1); */
+    ASSERT(PointerPte->u.Hard.Valid == 1);
     MiEndOfInitialPoolFrame = PFN_FROM_PTE(PointerPte);
 
     //
     // Validate the first nonpaged pool expansion page (which is a guard page)
     //
-    {
-        const char msg[] = "*** MM/POOL: Validating expansion guard page ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     PointerPte = MiAddressToPte(MmNonPagedPoolExpansionStart);
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(PointerPte->u.Hard.Valid == 0); */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
 
     //
     // Calculate the size of the expansion region alone
@@ -452,19 +398,9 @@ MiInitializeNonPagedPool(VOID)
     // guard page on top so make sure to skip it. The bottom guard page will be
     // guaranteed by the fact our size is off by one.
     //
-    {
-        const char msg[] = "*** MM/POOL: Initializing system PTEs ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiInitializeSystemPtes(PointerPte + 1,
                            MiExpansionPoolPagesInitialCharge,
                            NonPagedPoolExpansion);
-    {
-        const char msg[] = "*** MM/POOL: MiInitializeNonPagedPool completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 }
 
 POOL_TYPE

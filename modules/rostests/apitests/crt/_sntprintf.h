@@ -6,12 +6,15 @@
  */
 
 #define WIN32_NO_STATUS
-#include <apitest.h>
+#include <wine/test.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
+
+#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
+#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
@@ -19,6 +22,7 @@
 
 START_TEST(_sntprintf)
 {
+    NTSTATUS ExceptionStatus;
     _TCHAR Buffer[128];
     size_t BufferSize = sizeof(Buffer) / sizeof(Buffer[0]);
     int Result;
@@ -34,9 +38,10 @@ START_TEST(_sntprintf)
 
     StartSeh()
         Result = _sntprintf(NULL, 1, _T("Hello"));
-        ok_int(Result, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? -1 : 5);
+        ok(Result == 5 ||
+           broken(Result == -1) /* Win7 */, "Result = %d\n", Result);
 #if defined(_UNICODE) || defined(TEST_CRTDLL)
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+    EndSeh(STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);
 #endif

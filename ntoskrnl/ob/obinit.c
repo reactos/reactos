@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -214,35 +215,10 @@ ObInitSystem(VOID)
     PSECURITY_DESCRIPTOR KernelObjectsSD = NULL;
     NTSTATUS Status;
 
-#ifdef _M_AMD64
-    /* Debug output for AMD64 */
-    #define COM_PORT 0x3F8
-    {
-        const char msg[] = "*** OB: ObInitSystem entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
-
     /* Check if this is actually Phase 1 initialization */
     if (ObpInitializationPhase != 0) goto ObPostPhase0;
 
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Phase 0 initialization starting ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
-
     /* Initialize the OBJECT_CREATE_INFORMATION List */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing CreateInfo lookaside list ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ExInitializeSystemLookasideList(&ObpCreateInfoLookasideList,
                                     NonPagedPool,
                                     sizeof(OBJECT_CREATE_INFORMATION),
@@ -250,36 +226,13 @@ ObInitSystem(VOID)
                                     32,
                                     &ExSystemLookasideListHead);
 
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: CreateInfo lookaside initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
-
     /* Set the captured UNICODE_STRING Object Name List */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing NameBuffer lookaside list ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ExInitializeSystemLookasideList(&ObpNameBufferLookasideList,
                                     PagedPool,
                                     248,
                                     'MNbO',
                                     16,
                                     &ExSystemLookasideListHead);
-
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: NameBuffer lookaside initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Temporarily setup both pointers to the shared list */
     Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCreateInfoLookasideList;
@@ -288,127 +241,29 @@ ObInitSystem(VOID)
     Prcb->PPLookasideList[LookasideNameBufferList].P = &ObpNameBufferLookasideList;
 
     /* Initialize the security descriptor cache */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing SD cache ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ObpInitSdCache();
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: SD cache initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Initialize the Default Event */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing default event ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE);
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Default event initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Initialize the Dos Device Map mutex */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing device map mutex ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     KeInitializeGuardedMutex(&ObpDeviceMapLock);
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Device map mutex initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Setup default access for the system process */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Setting up default access rights ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
     PsGetCurrentThread()->GrantedAccess = THREAD_ALL_ACCESS;
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Default access rights set ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Setup the Object Reaper */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing object reaper work item ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
 
     /* Initialize default Quota block */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Initializing quota system ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     PsInitializeQuotaSystem();
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Quota system initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Create kernel handle table */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Creating kernel handle table ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     PsGetCurrentProcess()->ObjectTable = ExCreateHandleTable(NULL);
     ObpKernelHandleTable = PsGetCurrentProcess()->ObjectTable;
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Kernel handle table created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Create the Type Type */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Creating Type object type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Type");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -421,22 +276,8 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteObjectType;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpTypeObjectType);
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Type object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Create the Directory Type */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Creating Directory object type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     RtlInitUnicodeString(&Name, L"Directory");
     ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
@@ -447,22 +288,8 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpDirectoryObjectType);
     ObpDirectoryObjectType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Directory object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Create 'symbolic link' object type */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Creating SymbolicLink object type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     RtlInitUnicodeString(&Name, L"SymbolicLink");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_SYMBOLIC_LINK);
     ObjectTypeInitializer.GenericMapping = ObpSymbolicLinkMapping;
@@ -471,22 +298,8 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpSymbolicLinkObjectType);
     ObpSymbolicLinkObjectType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: SymbolicLink object type created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
     /* Phase 0 initialization complete */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** OB: Phase 0 initialization complete! ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ObpInitializationPhase++;
     return TRUE;
 

@@ -14,6 +14,7 @@
 #include <ks.h>
 #include <ksmedia.h>
 
+#define NDEBUG
 #include <debug.h>
 
 static HDEVNOTIFY device_notification_handle = NULL;

@@ -14,6 +14,7 @@
 #include <wmistr.h>
 #include <dmilib.h>
 
+#define NDEBUG
 #include <debug.h>
 
 const GUID MSSmBios_RawSMBiosTables_GUID = SMBIOS_DATA_GUID;

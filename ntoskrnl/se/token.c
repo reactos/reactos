@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -1686,18 +1687,7 @@ SeAssignPrimaryToken(
     _In_ PEPROCESS Process,
     _In_ PTOKEN Token)
 {
-    /* Skip PAGED_CODE check on AMD64 during early boot */
-#ifndef _M_AMD64
     PAGED_CODE();
-#endif
-
-    /* Debug output */
-    #define COM_PORT 0x3F8
-    {
-        const char msg[] = "*** SE: SeAssignPrimaryToken entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
 
     /* Sanity checks */
     ASSERT(Token->TokenType == TokenPrimary);
@@ -1710,12 +1700,6 @@ SeAssignPrimaryToken(
     ObReferenceObject(Token);
     Token->TokenInUse = TRUE;
     ObInitializeFastReference(&Process->Token, Token);
-    
-    {
-        const char msg[] = "*** SE: SeAssignPrimaryToken complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
 }
 
 /**

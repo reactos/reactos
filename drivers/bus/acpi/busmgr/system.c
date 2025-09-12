@@ -29,6 +29,7 @@
 
 #include <precomp.h>
 
+#define NDEBUG
 #include <debug.h>
 
 ACPI_STATUS acpi_system_save_state(UINT32);

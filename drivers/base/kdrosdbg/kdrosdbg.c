@@ -17,6 +17,7 @@
 #include <windbgkd.h>
 #include <kddll.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

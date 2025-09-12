@@ -13,6 +13,7 @@
 
 #include <winuser.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /*

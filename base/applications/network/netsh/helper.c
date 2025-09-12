@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -25,12 +26,12 @@ PDLL_LIST_ENTRY pCurrentDll = NULL;
 
 static
 VOID
-StartHelpers(
-    PHELPER_ENTRY pHelper)
+StartHelpers(VOID)
 {
-    PHELPER_ENTRY pSubHelper;
+    PHELPER_ENTRY pHelper;
     DWORD dwError;
 
+    pHelper = pHelperListHead;
     while (pHelper != NULL)
     {
         if (pHelper->bStarted == FALSE)
@@ -41,13 +42,6 @@ StartHelpers(
                 if (dwError == ERROR_SUCCESS)
                     pHelper->bStarted = TRUE;
             }
-        }
-
-        pSubHelper = pHelper->pSubHelperHead;
-        while (pSubHelper != NULL)
-        {
-            StartHelpers(pSubHelper);
-            pSubHelper = pSubHelper->pNext;
         }
 
         pHelper = pHelper->pNext;
@@ -316,7 +310,7 @@ done:
 
     RegCloseKey(hKey);
 
-    StartHelpers(pHelperListHead);
+    StartHelpers();
 }
 
 
@@ -342,20 +336,15 @@ UnloadHelpers(VOID)
 
 PHELPER_ENTRY
 FindHelper(
-    _In_ const GUID *pguidHelper,
-    _In_ PHELPER_ENTRY pHelper)
+    _In_ const GUID *pguidHelper)
 {
-    PHELPER_ENTRY pFoundHelper;
+    PHELPER_ENTRY pHelper;
 
-//    pHelper = pHelperListHead;
+    pHelper = pHelperListHead;
     while (pHelper != NULL)
     {
         if (IsEqualGUID(pguidHelper, &pHelper->Attributes.guidHelper))
             return pHelper;
-
-        pFoundHelper = FindHelper(pguidHelper, pHelper->pSubHelperHead);
-        if (pFoundHelper)
-            return pFoundHelper;
 
         pHelper = pHelper->pNext;
     }
@@ -375,10 +364,10 @@ RegisterHelper(
 
     DPRINT("RegisterHelper(%p %p)\n", pguidParentHelper, pHelperAttributes);
 
-    if (FindHelper(&pHelperAttributes->guidHelper, pHelperListHead) != NULL)
+    if (FindHelper(&pHelperAttributes->guidHelper) != NULL)
     {
         DPRINT1("The Helper has already been registered!\n");
-        return ERROR_INVALID_PARAMETER;
+        return 1;
     }
 
     pHelper = (PHELPER_ENTRY)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HELPER_ENTRY));
@@ -394,7 +383,7 @@ RegisterHelper(
 
     if (pguidParentHelper == NULL)
     {
-        if ((pHelperListHead == NULL) && (pHelperListTail == NULL))
+        if (pHelperListTail == NULL)
         {
             pHelperListHead = pHelper;
             pHelperListTail = pHelper;
@@ -408,15 +397,11 @@ RegisterHelper(
     }
     else
     {
-        CopyMemory(&pHelper->ParentHelperGuid, pguidParentHelper, sizeof(GUID));
-        pParentHelper = FindHelper(pguidParentHelper, pHelperListHead);
+        pParentHelper = FindHelper(&pHelperAttributes->guidHelper);
         if (pParentHelper == NULL)
-        {
-            DPRINT("Parent helper not found!\n");
             return ERROR_INVALID_PARAMETER;
-        }
 
-        if ((pParentHelper->pSubHelperHead == NULL) && (pParentHelper->pSubHelperTail == NULL))
+        if (pParentHelper->pSubHelperHead == NULL && pParentHelper->pSubHelperTail == NULL)
         {
             pParentHelper->pSubHelperHead = pHelper;
             pParentHelper->pSubHelperTail = pHelper;
@@ -461,7 +446,7 @@ AddHelperCommand(
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    StartHelpers(pHelperListHead);
+    StartHelpers();
 
     return ERROR_SUCCESS;
 }
@@ -534,46 +519,51 @@ DeleteHelperCommand(
 
 static
 VOID
-PrintHelpers(
-    _In_ PHELPER_ENTRY pHelperListHead,
+PrintSubContext(
+    _In_ PCONTEXT_ENTRY pParentContext,
     _In_ DWORD dwLevel)
 {
-    PHELPER_ENTRY pHelper;
     PCONTEXT_ENTRY pContext;
-    WCHAR szIndent[22];
+    PHELPER_ENTRY pHelper;
+    WCHAR szPrefix[22];
     DWORD i;
 
-    for (i = 0; i < min(dwLevel, 10) * 2; i++)
-        szIndent[i] = L' ';
-    szIndent[dwLevel * 2] = UNICODE_NULL;
+    if (pParentContext == NULL)
+        return;
 
-    pHelper = pHelperListHead;
-    while (pHelper != NULL)
+    pContext = pParentContext->pSubContextHead;
+    while (pContext != NULL)
     {
-        pContext = FindContextByGuid(&pHelper->Attributes.guidHelper);
-        if (pContext)
+        pHelper = FindHelper(&pContext->Guid);
+        if (pHelper != NULL)
         {
-            ConPrintf(StdOut,
-                      L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}  %-16s  %s%s\n",
-                      pHelper->Attributes.guidHelper.Data1,
-                      pHelper->Attributes.guidHelper.Data2,
-                      pHelper->Attributes.guidHelper.Data3,
-                      pHelper->Attributes.guidHelper.Data4[0],
-                      pHelper->Attributes.guidHelper.Data4[1],
-                      pHelper->Attributes.guidHelper.Data4[2],
-                      pHelper->Attributes.guidHelper.Data4[3],
-                      pHelper->Attributes.guidHelper.Data4[4],
-                      pHelper->Attributes.guidHelper.Data4[5],
-                      pHelper->Attributes.guidHelper.Data4[6],
-                      pHelper->Attributes.guidHelper.Data4[7],
-                      pHelper->pDllEntry->pszShortName,
-                      szIndent,
-                      pContext->pszContextName);
+            if (dwLevel > 10)
+                dwLevel = 10;
+
+            for (i = 0; i < dwLevel * 2; i++)
+                szPrefix[i] = L' ';
+            szPrefix[i] = UNICODE_NULL;
+
+            ConPrintf(StdOut, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}  %-16s  %s%s\n",
+                pHelper->Attributes.guidHelper.Data1,
+                pHelper->Attributes.guidHelper.Data2,
+                pHelper->Attributes.guidHelper.Data3,
+                pHelper->Attributes.guidHelper.Data4[0],
+                pHelper->Attributes.guidHelper.Data4[1],
+                pHelper->Attributes.guidHelper.Data4[2],
+                pHelper->Attributes.guidHelper.Data4[3],
+                pHelper->Attributes.guidHelper.Data4[4],
+                pHelper->Attributes.guidHelper.Data4[5],
+                pHelper->Attributes.guidHelper.Data4[6],
+                pHelper->Attributes.guidHelper.Data4[7],
+                pHelper->pDllEntry->pszShortName,
+                szPrefix,
+                pContext->pszContextName);
         }
 
-        PrintHelpers(pHelper->pSubHelperHead, dwLevel + 1);
+        PrintSubContext(pContext, dwLevel + 1);
 
-        pHelper = pHelper->pNext;
+        pContext = pContext->pNext;
     }
 }
 
@@ -597,7 +587,7 @@ ShowHelperCommand(
     if (pRootContext == NULL)
         return ERROR_SUCCESS;
 
-    PrintHelpers(pHelperListHead, 0);
+    PrintSubContext(pRootContext, 0);
 
     return ERROR_SUCCESS;
 }

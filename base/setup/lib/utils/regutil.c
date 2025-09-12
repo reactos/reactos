@@ -13,6 +13,7 @@
 
 #include "regutil.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

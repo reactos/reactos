@@ -11,6 +11,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 ULONG ObpLUIDDeviceMapsDisabled;
@@ -513,30 +514,6 @@ ObInheritDeviceMap(IN PEPROCESS Parent,
     PDEVICE_MAP DeviceMap;
 
     DPRINT("ObInheritDeviceMap()\n");
-
-    /* Debug output */
-    #define COM_PORT 0x3F8
-    {
-        const char msg[] = "*** OB: ObInheritDeviceMap entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-
-#ifdef _M_AMD64
-    /* During early boot, guarded mutex might have issues */
-    extern ULONG ExpInitializationPhase;
-    if (ExpInitializationPhase == 0)
-    {
-        {
-            const char msg2[] = "*** OB: Early boot - setting NULL device map ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p2++); }
-        }
-        /* For initial system process, just set NULL device map */
-        Process->DeviceMap = NULL;
-        return;
-    }
-#endif
 
     /* Acquire the device map lock */
     KeAcquireGuardedMutex(&ObpDeviceMapLock);

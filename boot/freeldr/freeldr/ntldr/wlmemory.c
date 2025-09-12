@@ -38,8 +38,7 @@ static const PCSTR MemTypeDesc[] = {
     "MemoryData        ", // not used
     "NlsData           ", // used
     "SpecialMemory     ", // == Bad
-    "BBTMemory         ", // == Bad
-    "LoaderReserve     "  // Type 24 - Reserved by loader
+    "BBTMemory         " // == Bad
     };
 
 static VOID
@@ -123,6 +122,7 @@ MempSetupPagingForRegion(
         /* Pages used by the kernel */
         case LoaderExceptionBlock:
         case LoaderSystemBlock:
+        case LoaderFirmwarePermanent:
         case LoaderSystemCode:
         case LoaderHalCode:
         case LoaderBootDriver:
@@ -142,16 +142,6 @@ MempSetupPagingForRegion(
             Status = MempSetupPaging(BasePage, PageCount, TRUE);
             break;
 
-        /* CRITICAL FIX: LoaderFirmwarePermanent is UEFI firmware memory
-         * that the kernel doesn't need direct access to. These regions can be
-         * huge (GB+) and mapping them exhausts bootloader memory.
-         * The kernel will map specific firmware regions it needs on demand. */
-        case LoaderFirmwarePermanent:
-            TRACE("Skipping page table creation for LoaderFirmwarePermanent (0x%lx pages at 0x%lx)\n", 
-                  PageCount, BasePage);
-            /* Don't create page tables for firmware permanent memory */
-            break;
-
         /* Pages not in use */
         case LoaderFree:
         case LoaderBad:
@@ -163,7 +153,7 @@ MempSetupPagingForRegion(
         case LoaderBBTMemory:
             break;
 
-        /* Reserved memory types - skip mapping */
+        // FIXME: not known (not used anyway)
         case LoaderReserve:
         case LoaderLargePageFiller:
         case LoaderErrorLogMemory:

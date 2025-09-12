@@ -31,6 +31,7 @@
 
 #include <winbase.h>
 
+#define NDEBUG
 #include <debug.h>
 #include "hidp.h"
 

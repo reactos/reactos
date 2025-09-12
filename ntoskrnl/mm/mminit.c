@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -55,11 +56,7 @@ MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
                                 0,
                                 PAGE_SIZE);
     ASSERT(Status == STATUS_SUCCESS);
-    /* Bugcheck if memory area creation fails - critical for system stability */
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheckEx(MEMORY_MANAGEMENT, Status, (ULONG_PTR)BaseAddress, Size, 0);
-    }
+    // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
 }
 
 CODE_SEG("INIT")

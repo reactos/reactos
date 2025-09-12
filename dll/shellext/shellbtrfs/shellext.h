@@ -48,16 +48,6 @@
 #ifdef __REACTOS__
 #define string_view string
 #define wstring_view wstring
-/* C++11 compatible replacement for std::to_wstring */
-#include <sstream>
-namespace std {
-    template<typename T>
-    inline wstring to_wstring(T value) {
-        wostringstream woss;
-        woss << value;
-        return woss.str();
-    }
-}
 #endif
 #include <vector>
 #include <stdint.h>

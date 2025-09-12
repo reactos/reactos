@@ -9,6 +9,7 @@
 
 #include "halxbox.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

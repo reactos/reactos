@@ -27,6 +27,13 @@
 
 #include <specstrings.h>
 
+// FIXME: Ugly hack
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
+#define __ROS_LONG64__
+#endif
+#endif
+
 #ifndef NO_STRICT
 #ifndef STRICT
 #define STRICT 1

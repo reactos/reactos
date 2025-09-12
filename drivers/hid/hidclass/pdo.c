@@ -12,6 +12,7 @@
 
 #include <wdmguid.h>
 
+#define NDEBUG
 #include <debug.h>
 
 PHIDP_COLLECTION_DESC

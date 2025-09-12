@@ -14,6 +14,7 @@
 #include <k32.h>
 #include <malloc.h>
 
+#define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
 

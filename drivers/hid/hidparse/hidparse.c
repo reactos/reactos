@@ -11,6 +11,7 @@
 #include "hidparse.h"
 #include "hidp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 PVOID

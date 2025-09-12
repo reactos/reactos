@@ -22,6 +22,7 @@
 #include "in.h"
 #include "wave.h"
 
+#define NDEBUG
 #include <debug.h>
 
 SB16 sb16;

@@ -161,10 +161,8 @@ int Telnet::Open(const char *szHost1, const char *strPort1){
 	if (bWinsockUp && !bConnected){
 		telSetConsoleTitle(szHost1);
 
-		strncpy (szHost,szHost1, 126);
-		szHost[126] = '\0';
-		strncpy(strPort, strPort1, sizeof(strPort) - 1);
-		strPort[sizeof(strPort) - 1] = '\0';
+		strncpy (szHost,szHost1, 127);
+		strncpy(strPort, strPort1, sizeof(strPort));
 
 		// Determine whether to pipe to an executable or use our own sockets
 		// (Paul Brannan March 18, 1999)

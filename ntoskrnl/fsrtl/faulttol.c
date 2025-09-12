@@ -10,6 +10,7 @@
 
 #include <ntoskrnl.h>
 #include "ntddft.h"
+#define NDEBUG
 #include <debug.h>
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -27,19 +27,15 @@ EXTERN KiSystemStartupBootStack:PROC
 PUBLIC KiSwitchToBootStack
 .PROC KiSwitchToBootStack
 
-    /* CRITICAL FIX: In UEFI mode, we're already in long mode with flat segments
-     * We don't need to change segments at all - just switch the stack pointer
-     * The problem was trying to change SS which causes a fault in UEFI mode */
-    
-    /* Simply set the new stack pointer */
+    /* Setup the new stack */
+    mov ax, HEX(18)
+    mov ss, ax
     mov rsp, rcx
-    
-    /* Align stack and reserve space */
-    and rsp, HEX(FFFFFFFFFFFFFFF0)  // Align to 16 bytes
-    sub rsp, HEX(28)                 // Reserve shadow space for Windows x64 ABI
+    // Note: 8 bytes extra to compensate for the missing return address on
+    // the stack. On function entry the stack is unaligned by 8!!
+    sub rsp, HEX(308) // FIXME
     .ENDPROLOG
 
-    /* Jump to the boot stack initialization routine */
     jmp KiSystemStartupBootStack
 
 .ENDP

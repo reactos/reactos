@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#define NDEBUG
 #include <debug.h>
 
 #undef READ_PORT_UCHAR

@@ -678,10 +678,9 @@ CreateUI(BOOL Silent, LPTHREAD_START_ROUTINE ThreadProc)
 }
 
 BOOL
-ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive, bool Silent)
+ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive)
 {
     InstallInfo Info(AppInfo.szDisplayName, *AppInfo.GetConfigParser(), Archive);
-    Info.Silent = Silent;
     g_pInfo = &Info;
     return CreateUI(Info.Silent, ExtractAndInstallThread) ? !Info.Error : FALSE;
 }

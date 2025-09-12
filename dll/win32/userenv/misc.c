@@ -29,6 +29,7 @@
 
 #include "resources.h"
 
+#define NDEBUG
 #include <debug.h>
 
 SID_IDENTIFIER_AUTHORITY LocalSystemAuthority = {SECURITY_NT_AUTHORITY};

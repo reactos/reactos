@@ -36,6 +36,7 @@ DebugService2:
     /* Pass the service number in eax */
     mov rax, r8
     int HEX(2D)
+    int 3
     ret
 
 
@@ -59,6 +60,7 @@ DebugService:
 
     /* Call the Interrupt */
     int HEX(2D)
+    int 3
 
    /* Return */
     ret

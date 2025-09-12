@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #include "newcc.h"
 #include "section/newmm.h"
+#define NDEBUG
 #include <debug.h>
 
 /* STRUCTURES *****************************************************************/

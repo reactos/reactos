@@ -32,6 +32,7 @@
 #include "ntfs.h"
 #include <ntintsafe.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

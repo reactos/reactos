@@ -41,14 +41,6 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedMRU",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSaveMRU",,0x00000012
 
-; Policies overrides
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DisableLockWorkstation",0x00010001,1
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System","DisableLockWorkstation",0x00010001,1
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System","DisableChangePassword",0x00010001,1
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer","NoDisconnect",0x00010001,1
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer","NoLogoff",0x00010001,1
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer","StartMenuLogoff",0x00010001,1
-
 ; User Profile environment variables
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","USERPROFILE",0x00020000,"%SystemDrive%\Profiles\Default User"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ALLUSERSPROFILE",0x00020000,"%SystemDrive%\Profiles\All Users"

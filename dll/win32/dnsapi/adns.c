@@ -10,6 +10,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 DNS_STATUS

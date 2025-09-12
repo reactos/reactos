@@ -64,18 +64,9 @@ writestr_end:
 writechr:
     pushf
     pusha
-    
-    /* Output to VGA screen */
     mov ah, HEX(0E)
     xor bx, bx
     int HEX(10)
-    
-    /* Also output to COM1 serial port */
-    push ax
-    mov dx, HEX(03F8)  /* COM1 port */
-    out dx, al         /* Send character */
-    pop ax
-    
     popa
     popf
     ret

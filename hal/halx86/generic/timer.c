@@ -10,6 +10,7 @@
 
 #include <hal.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -114,7 +115,7 @@ HalpInitializeClock(VOID)
     HalpCurrentTimeIncrement = Increment;
 }
 
-#if defined(_M_IX86) || defined(_M_AMD64)
+#ifdef _M_IX86
 #ifndef _MINIHAL_
 VOID
 FASTCALL

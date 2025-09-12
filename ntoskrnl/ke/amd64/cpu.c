@@ -13,6 +13,7 @@
 #include <x86x64/Cpuid.h>
 #include <x86x64/Msr.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -54,130 +55,38 @@ typedef union _CPU_SIGNATURE
 
 /* FUNCTIONS *****************************************************************/
 
-/* Serial port for debug output */
-#define COM1_PORT 0x3F8
-
 ULONG
 NTAPI
 KiGetCpuVendor(VOID)
 {
-    /* Debug output */
-    {
-        const char msg[] = "*** KERNEL: KiGetCpuVendor entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     PKPRCB Prcb = KeGetCurrentPrcb();
-    
-    {
-        const char msg[] = "*** KERNEL: Got PRCB from KeGetCurrentPrcb ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     CPU_INFO CpuInfo;
-    
-    {
-        const char msg[] = "*** KERNEL: About to call KiCpuId ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Get the Vendor ID and null-terminate it */
     KiCpuId(&CpuInfo, 0);
-    
-    {
-        const char msg[] = "*** KERNEL: KiCpuId returned successfully ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    {
-        const char msg[] = "*** KERNEL: Copying vendor string to PRCB ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     /* Copy it to the PRCB and null-terminate it */
     *(ULONG*)&Prcb->VendorString[0] = CpuInfo.Ebx;
     *(ULONG*)&Prcb->VendorString[4] = CpuInfo.Edx;
     *(ULONG*)&Prcb->VendorString[8] = CpuInfo.Ecx;
     Prcb->VendorString[12] = 0;
-    
-    {
-        const char msg[] = "*** KERNEL: Vendor string copied, checking CPU type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    /* Now check the CPU Type - use manual comparison to avoid strcmp issues */
+    /* Now check the CPU Type */
+    if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
     {
-        const char msg[] = "*** KERNEL: Manual vendor string comparison ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    /* Manual comparison for Intel */
-    BOOLEAN isIntel = TRUE;
-    for (int i = 0; i < 12; i++)
-    {
-        if (Prcb->VendorString[i] != CmpIntelID[i])
-        {
-            isIntel = FALSE;
-            break;
-        }
-    }
-    
-    /* Manual comparison for AMD */
-    BOOLEAN isAmd = TRUE;
-    for (int i = 0; i < 12; i++)
-    {
-        if (Prcb->VendorString[i] != CmpAmdID[i])
-        {
-            isAmd = FALSE;
-            break;
-        }
-    }
-    
-    /* Manual comparison for Centaur */
-    BOOLEAN isCentaur = TRUE;
-    for (int i = 0; i < 12; i++)
-    {
-        if (Prcb->VendorString[i] != CmpCentaurID[i])
-        {
-            isCentaur = FALSE;
-            break;
-        }
-    }
-    
-    if (isIntel)
-    {
-        const char msg[] = "*** KERNEL: Detected Intel CPU ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         Prcb->CpuVendor = CPU_INTEL;
     }
-    else if (isAmd)
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpAmdID))
     {
-        const char msg[] = "*** KERNEL: Detected AMD CPU ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         Prcb->CpuVendor = CPU_AMD;
     }
-    else if (isCentaur)
+    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
     {
-        const char msg[] = "*** KERNEL: Detected VIA/Centaur CPU ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         DPRINT1("VIA CPUs not fully supported\n");
         Prcb->CpuVendor = CPU_VIA;
     }
     else
     {
-        const char msg[] = "*** KERNEL: Unknown CPU vendor ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         /* Invalid CPU */
         DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
         Prcb->CpuVendor = CPU_UNKNOWN;
@@ -517,22 +426,7 @@ VOID
 NTAPI
 KiGetCacheInformation(VOID)
 {
-    /* Debug output */
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** KERNEL: KiGetCacheInformation entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    
-    {
-        const char msg[] = "*** KERNEL: Got PCR from KeGetPcr ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     ULONG Vendor;
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
@@ -542,28 +436,9 @@ KiGetCacheInformation(VOID)
 
     /* Set default L2 size */
     Pcr->SecondLevelCacheSize = 0;
-    
-    {
-        const char msg[] = "*** KERNEL: Set default L2 cache size ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Get the Vendor ID and make sure we support CPUID */
-    {
-        const char msg[] = "*** KERNEL: Getting CPU vendor ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     Vendor = KiGetCpuVendor();
-    
-    {
-        const char msg[] = "*** KERNEL: Got CPU vendor ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     if (!Vendor) return;
 
     /* Check the Vendor ID */

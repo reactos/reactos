@@ -14,6 +14,7 @@
 #include <kdbg/kdb.h>
 #endif
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -1415,22 +1416,6 @@ KeBugCheckEx(IN ULONG BugCheckCode,
              IN ULONG_PTR BugCheckParameter3,
              IN ULONG_PTR BugCheckParameter4)
 {
-#ifdef _M_AMD64
-    /* Check for spin lock false positive during early boot */
-    if (BugCheckCode == 0x0000000f) /* SPIN_LOCK_ALREADY_OWNED */
-    {
-        static volatile ULONG SpinLockBugCheckCount = 0;
-        
-        /* Just count and return to avoid infinite recursion */
-        /* This is likely a false positive during early boot */
-        if (++SpinLockBugCheckCount <= 1000)
-        {
-            /* Silently ignore during early boot */
-            return;
-        }
-    }
-#endif
-
     /* Call the internal API */
     KeBugCheckWithTf(BugCheckCode,
                      BugCheckParameter1,

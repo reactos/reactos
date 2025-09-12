@@ -28,6 +28,7 @@
 
 #include <ndk/sefuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 
 PSID

@@ -28,6 +28,7 @@
 
 #include "ntmarta.h"
 
+#define NDEBUG
 #include <debug.h>
 
 HINSTANCE hDllInstance;

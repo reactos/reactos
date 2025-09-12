@@ -13,6 +13,7 @@
 #include "blue.h"
 #include <ndk/inbvfuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* NOTES ******************************************************************/

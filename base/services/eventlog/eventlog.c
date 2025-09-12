@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <netevent.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

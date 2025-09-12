@@ -15,6 +15,7 @@
 
 #include <hal.h>
 #include "apicp.h"
+#define NDEBUG
 #include <debug.h>
 
 #ifndef _M_AMD64
@@ -463,19 +464,6 @@ ApicInitializeIOApic(VOID)
     UCHAR Index;
     ULONG Vector;
 
-#ifdef _M_AMD64
-    /* On AMD64/UEFI, skip I/O APIC mapping during early init */
-    /* But we still need to initialize the vector to index table */
-    
-    /* Init the vector to index table */
-    for (Vector = 0; Vector <= 255; Vector++)
-    {
-        HalpVectorToIndex[Vector] = APIC_FREE_VECTOR;
-    }
-    
-    /* TODO: Properly map I/O APIC after MMU is fully initialized */
-    return;
-#else
     /* Map the I/O Apic page */
     Pte = HalAddressToPte(IOAPIC_BASE);
     Pte->PageFrameNumber = IOAPIC_PHYS_BASE / PAGE_SIZE;
@@ -485,7 +473,6 @@ ApicInitializeIOApic(VOID)
     Pte->CacheDisable = 1;
     Pte->Global = 1;
     _ReadWriteBarrier();
-#endif
 
     /* Setup a redirection entry */
     ReDirReg.Vector = APIC_FREE_VECTOR;
@@ -528,33 +515,15 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 {
     ULONG_PTR EFlags;
 
-#ifdef _M_AMD64
-    DPRINT1("APIC: HalpInitializePICs entered\n");
-#endif
-
     /* Save EFlags and disable interrupts */
     EFlags = __readeflags();
     _disable();
 
-#ifndef _M_AMD64
-    /* Initialize and mask the PIC - not needed on AMD64/UEFI */
+    /* Initialize and mask the PIC */
     HalpInitializeLegacyPICs();
-#endif
-
-#ifdef _M_AMD64
-    DPRINT1("APIC: About to call ApicInitializeIOApic\n");
-#endif
 
     /* Initialize the I/O APIC */
     ApicInitializeIOApic();
-
-#ifdef _M_AMD64
-    DPRINT1("APIC: ApicInitializeIOApic returned\n");
-#endif
-
-#ifdef _M_AMD64
-    DPRINT1("APIC: About to reserve vectors\n");
-#endif
 
     /* Manually reserve some vectors */
     HalpVectorToIndex[APC_VECTOR] = APIC_RESERVED_VECTOR;
@@ -563,42 +532,21 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     HalpVectorToIndex[CLOCK_IPI_VECTOR] = APIC_RESERVED_VECTOR;
     HalpVectorToIndex[APIC_SPURIOUS_VECTOR] = APIC_RESERVED_VECTOR;
 
-#ifdef _M_AMD64
-    DPRINT1("APIC: Vectors reserved\n");
-#endif
-
-#ifdef _M_AMD64
-    DPRINT1("APIC: About to register interrupt handlers\n");
-    
-    /* On AMD64/UEFI, skip IDT handler registration for now - might cause issues */
-    /* TODO: Properly implement interrupt handlers for AMD64 */
-    DPRINT1("APIC: Skipping IDT handler registration on AMD64\n");
-#else
     /* Set interrupt handlers in the IDT */
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
     KeRegisterInterruptHandler(CLOCK_IPI_VECTOR, HalpClockIpi);
+#ifndef _M_AMD64
     KeRegisterInterruptHandler(APC_VECTOR, HalpApcInterrupt);
     KeRegisterInterruptHandler(DISPATCH_VECTOR, HalpDispatchInterrupt);
 #endif
 
-#ifdef _M_AMD64
-    DPRINT1("APIC: About to register vectors\n");
-    
-    /* Skip HalpRegisterVector on AMD64 for now - might cause issues */
-    DPRINT1("APIC: Skipping HalpRegisterVector on AMD64\n");
-#else
     /* Register the vectors for APC and dispatch interrupts */
     HalpRegisterVector(IDT_INTERNAL, 0, APC_VECTOR, APC_LEVEL);
     HalpRegisterVector(IDT_INTERNAL, 0, DISPATCH_VECTOR, DISPATCH_LEVEL);
-#endif
 
     /* Restore interrupt state */
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
     __writeeflags(EFlags);
-    
-#ifdef _M_AMD64
-    DPRINT1("APIC: HalpInitializePICs completed successfully\n");
-#endif
 }
 
 

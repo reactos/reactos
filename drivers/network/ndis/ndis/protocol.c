@@ -925,7 +925,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
     ULONG ResultLength;
     PLIST_ENTRY CurrentEntry = NULL;
 
-    RegistryPathStr = ExAllocatePoolWithTag(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY), NDIS_TAG);
+    RegistryPathStr = ExAllocatePoolWithTag(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY), NDIS_TAG + __LINE__);
     if(!RegistryPathStr)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -944,7 +944,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
     InitializeObjectAttributes(&ObjectAttributes, &RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     NtStatus = ZwOpenKey(&DriverKeyHandle, KEY_READ, &ObjectAttributes);
 
-    ExFreePoolWithTag(RegistryPathStr, NDIS_TAG);
+    ExFreePool(RegistryPathStr);
 
     if(NT_SUCCESS(NtStatus))
     {
@@ -960,7 +960,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
         }
         else
         {
-            KeyInformation = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, NDIS_TAG);
+            KeyInformation = ExAllocatePoolWithTag(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, NDIS_TAG + __LINE__);
             if(!KeyInformation)
             {
                 NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -977,7 +977,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
                 if(!NT_SUCCESS(NtStatus))
                 {
                     NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value\n"));
-                    ExFreePoolWithTag(KeyInformation, NDIS_TAG);
+                    ExFreePool(KeyInformation);
                     KeyInformation = NULL;
                 }
             }
@@ -987,6 +987,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
     if (!NT_SUCCESS(NtStatus))
     {
         NDIS_DbgPrint(MID_TRACE, ("Performing global bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
+        KeyInformation = NULL;
 
         CurrentEntry = AdapterListHead.Flink;
     }
@@ -1102,7 +1103,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
 
     if (KeyInformation)
     {
-        ExFreePoolWithTag(KeyInformation, NDIS_TAG);
+        ExFreePool(KeyInformation);
     }
 }
 

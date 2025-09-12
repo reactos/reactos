@@ -1,6 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
 #define WIN32_LEAN_AND_MEAN
+#define __ROS_LONG64__
 #include <windows.h>
 
 #define STANDALONE

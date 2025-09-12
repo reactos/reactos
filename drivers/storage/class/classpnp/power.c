@@ -429,9 +429,7 @@ ClasspPowerUpCompletion(
                 SrbSetCdbLength(srbHeader, 6);
 
                 cdb = SrbGetCdb(srbHeader);
-                if (cdb) {
-                    RtlZeroMemory(cdb, 6); // Use the actual CDB length, not sizeof(CDB)
-                }
+                RtlZeroMemory(cdb, sizeof(CDB));
 
                 cdb->START_STOP.OperationCode = SCSIOP_START_STOP_UNIT;
                 cdb->START_STOP.Start = 1;
@@ -1016,10 +1014,9 @@ ClasspPowerDownCompletion(
                 SrbSetCdbLength(srbHeader, 10);
 
                 cdb = SrbGetCdb(srbHeader);
-                if (cdb) {
-                    RtlZeroMemory(cdb, 10); // Use the actual CDB length, not sizeof(CDB)
-                    cdb->SYNCHRONIZE_CACHE10.OperationCode = SCSIOP_SYNCHRONIZE_CACHE;
-                }
+
+                RtlZeroMemory(cdb, sizeof(CDB));
+                cdb->SYNCHRONIZE_CACHE10.OperationCode = SCSIOP_SYNCHRONIZE_CACHE;
 
                 IoSetCompletionRoutine(fdoExtension->PrivateFdoData->PowerProcessIrp,
                                        ClasspPowerDownCompletion,
@@ -1243,9 +1240,7 @@ ClasspPowerDownCompletion(
                 SrbSetCdbLength(srbHeader, 6);
 
                 cdb = SrbGetCdb(srbHeader);
-                if (cdb) {
-                    RtlZeroMemory(cdb, 6); // Use the actual CDB length, not sizeof(CDB)
-                }
+                RtlZeroMemory(cdb, sizeof(CDB));
 
                 cdb->START_STOP.OperationCode = SCSIOP_START_STOP_UNIT;
                 cdb->START_STOP.Start = 0;

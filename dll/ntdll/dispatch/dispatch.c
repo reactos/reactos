@@ -11,6 +11,7 @@
 
 #include <ntdll.h>
 
+#define NDEBUG
 #include <debug.h>
 
 typedef NTSTATUS (NTAPI *USER_CALL)(PVOID Argument, ULONG ArgumentLength);

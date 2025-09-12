@@ -68,22 +68,11 @@ TuiDisplayMenu(
         }
     }
 
-    /* Force immediate boot of ReactOS (Debug) */
+    /* Check if there is no timeout */
+    if (!MenuTimeOut)
     {
-        ULONG i;
-        for (i = 0; i < MenuItemCount; i++)
-        {
-            /* Look for ReactOS Debug entry */
-            if (strstr(MenuItemList[i], "Debug") != NULL || 
-                strstr(MenuItemList[i], "debug") != NULL)
-            {
-                /* Found debug entry, select it and return immediately */
-                if (SelectedMenuItem) *SelectedMenuItem = i;
-                return TRUE;
-            }
-        }
-        /* If no debug found, just boot first item immediately */
-        if (SelectedMenuItem) *SelectedMenuItem = 0;
+        /* Return the default selected item */
+        if (SelectedMenuItem) *SelectedMenuItem = DefaultMenuItem;
         return TRUE;
     }
 
@@ -105,12 +94,6 @@ TuiDisplayMenu(
     /* Get the current second of time */
     LastClockSecond = ArcGetTime()->Second;
 
-    /* Use a simple counter as fallback if clock doesn't work (common in UEFI) */
-    ULONG TimeoutCounter = 0;
-    /* Approximate iterations per second - adjusted for UEFI systems */
-    ULONG IterationsPerSecond = 100;  /* Ultra fast for testing - will countdown in milliseconds */
-    BOOLEAN ClockBroken = TRUE;  /* Force counter mode for testing */
-
     /* Process keys */
     while (TRUE)
     {
@@ -123,36 +106,11 @@ TuiDisplayMenu(
 
         /* Get the updated time, and check if more than a second has elapsed */
         CurrentClockSecond = ArcGetTime()->Second;
-        
-        /* Check if clock is working (second changed) or use fallback counter */
-        BOOLEAN SecondElapsed = FALSE;
-        
-        /* First check if clock seems broken (stuck at 0 or not changing after many iterations) */
-        if (!ClockBroken && TimeoutCounter > 5000 && CurrentClockSecond == LastClockSecond)
+        if (CurrentClockSecond != LastClockSecond)
         {
-            ClockBroken = TRUE;
-        }
-        
-        if (!ClockBroken && CurrentClockSecond != LastClockSecond && CurrentClockSecond != 0)
-        {
-            /* Clock is working, use it */
+            /* Update the time information */
             LastClockSecond = CurrentClockSecond;
-            SecondElapsed = TRUE;
-            TimeoutCounter = 0;  /* Reset counter when clock works */
-        }
-        else if (MenuInformation.MenuTimeRemaining > 0)
-        {
-            /* Clock not working or timeout active, use counter fallback */
-            TimeoutCounter++;
-            if (TimeoutCounter >= IterationsPerSecond)
-            {
-                TimeoutCounter = 0;
-                SecondElapsed = TRUE;
-            }
-        }
-        
-        if (SecondElapsed)
-        {
+
             // FIXME: Theme-specific
             /* Update the date & time */
             TuiUpdateDateTime();

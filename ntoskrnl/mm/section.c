@@ -46,6 +46,7 @@
 #include <ntoskrnl.h>
 #include <cache/newcc.h>
 #include <cache/section/newmm.h>
+#define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
 
@@ -3662,7 +3663,6 @@ MiRosUnmapViewOfSection(
         PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
         PMM_SECTION_SEGMENT SectionSegments;
         PMM_SECTION_SEGMENT Segment;
-        ULONG MapCount;
 
         Segment = MemoryArea->SectionData.Segment;
         ImageSectionObject = ImageSectionObjectFromSegment(Segment);
@@ -3700,9 +3700,7 @@ MiRosUnmapViewOfSection(
             }
         }
         DPRINT("One mapping less for %p\n", ImageSectionObject->FileObject->SectionObjectPointer);
-        MapCount = InterlockedDecrement(&ImageSectionObject->MapCount);
-        if (MapCount != 0)
-            ImageBaseAddress = NULL;
+        InterlockedDecrement(&ImageSectionObject->MapCount);
     }
     else
     {

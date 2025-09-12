@@ -14,6 +14,7 @@
 #include <ndk/iofuncs.h>
 #include <ndk/setypes.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* DATA **********************************************************************/
@@ -1149,7 +1150,7 @@ ExfReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
  * @name ExfTryToWakePushLock
  * @implemented NT5.2
  *
- *     The ExfTryToWakePushLock attempts to wake a waiting pushlock.
+ *     The ExfTryToWakePushLock attemps to wake a waiting pushlock.
  *
  * @param PushLock
  *        Pointer to a PushLock which is in the wait state.

@@ -1,4 +1,5 @@
 #include <windef.h>
+#define NDEBUG
 #include <reactos/debug.h>
 
 void WINAPI

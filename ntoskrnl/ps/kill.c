@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -622,7 +623,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         if (KdDebuggerEnabled)
         {
             /* Break to debugger */
-            PspCatchCriticalBreak("Critical process 0x%p (%s) exited\n",
+            PspCatchCriticalBreak("Critical  process 0x%p (in %s) exited\n",
                                   CurrentProcess,
                                   CurrentProcess->ImageFileName);
         }
@@ -999,7 +1000,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     if (Thread->BreakOnTermination)
     {
         /* Break to debugger */
-        PspCatchCriticalBreak("Terminating critical thread 0x%p (in %s)\n",
+        PspCatchCriticalBreak("Terminating critical thread 0x%p (%s)\n",
                               Thread,
                               Thread->ThreadsProcess->ImageFileName);
     }

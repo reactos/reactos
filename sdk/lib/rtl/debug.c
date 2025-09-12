@@ -81,7 +81,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
         if (PrefixLength > sizeof(Buffer)) PrefixLength = sizeof(Buffer);
 
         /* Copy it */
-        memcpy(Buffer, Prefix, PrefixLength);
+        strncpy(Buffer, Prefix, PrefixLength);
 
         /* Do the printf */
         Length = _vsnprintf(Buffer + PrefixLength,

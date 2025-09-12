@@ -18,14 +18,12 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
-#include <svc.h>
 
 #include <browser_s.h>
 
 #include <wine/debug.h>
 
 extern HINSTANCE hDllInstance;
-extern PSVCHOST_GLOBAL_DATA lpServiceGlobals;
 
 DWORD
 WINAPI

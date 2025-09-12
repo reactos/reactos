@@ -1403,6 +1403,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
+
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1415,6 +1416,7 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
+
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1427,6 +1429,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
+
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1439,7 +1442,7 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     PDESKTOP pdo = pti->rpdesk;
-    if (!pdo)
+    if (NULL == pdo)
     {
         ERR("Thread doesn't have a desktop\n");
         return NULL;

@@ -8,6 +8,7 @@
 
 #include "pciide.h"
 
+#define NDEBUG
 #include <debug.h>
 
 IDE_CHANNEL_STATE NTAPI

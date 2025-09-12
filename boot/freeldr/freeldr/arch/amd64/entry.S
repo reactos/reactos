@@ -26,11 +26,6 @@ RealEntryPoint:
     mov gs, ax
 //    mov ss, ax
 
-    /* Quick serial test - write 'F' to COM1 */
-    mov dx, HEX(3F8)    /* COM1 port */
-    mov al, 'F'
-    out dx, al
-
     //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
 
     /* Setup long mode stack */
@@ -43,11 +38,6 @@ ContinueAddress:
     .quad FrldrStartup
 
 FrldrStartup:
-
-    /* Write 'S' to serial */
-    mov dx, HEX(3F8)
-    mov al, 'S'
-    out dx, al
 
     /* Set up CR0 for SSE */
     mov rax, cr0
@@ -80,33 +70,11 @@ FrldrStartup:
     shr rcx, 3
     rep stosq
 
-    /* Pass NULL command line for now to avoid crash */
-    xor rcx, rcx
+    /* Pass the command line to BootMain */
+    mov rcx, offset cmdline
 
-    /* Write 'B' before calling BootMain */
-    mov dx, HEX(3F8)
-    mov al, 'B'
-    out dx, al
-    
-    /* Ensure interrupts are disabled */
-    cli
-    
-    /* Ensure stack is aligned to 16 bytes before call */
-    and rsp, HEX(0FFFFFFFFFFFFFFF0)
-    sub rsp, HEX(20)    /* Shadow space for Windows x64 ABI */
-
-    /* Write 'M' right before calling BootMain */
-    mov dx, HEX(3F8)
-    mov al, 'M'
-    out dx, al
-    
-    /* GO! Call BootMain */
+    /* GO! */
     call BootMain
-    
-    /* Write 'X' if we return (shouldn't happen) */
-    mov dx, HEX(3F8)
-    mov al, 'X'
-    out dx, al
 
     /* We should never get here */
 stop:

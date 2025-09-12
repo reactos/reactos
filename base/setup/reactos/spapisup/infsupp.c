@@ -12,6 +12,7 @@
 #include "reactos.h"
 #include <winnls.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* SETUP* API COMPATIBILITY FUNCTIONS ****************************************/

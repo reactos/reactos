@@ -189,8 +189,8 @@ static
 PVOID
 GetInt1eTable(VOID)
 {
-    volatile PUSHORT SegPtr = (volatile PUSHORT)0x7A;
-    volatile PUSHORT OfsPtr = (volatile PUSHORT)0x78;
+    PUSHORT SegPtr = (PUSHORT)0x7A;
+    PUSHORT OfsPtr = (PUSHORT)0x78;
 
     return (PVOID)((ULONG_PTR)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr));
 }
@@ -438,11 +438,6 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
 VOID
 FrLdrCheckCpuCompatibility(VOID)
 {
-#ifdef _M_AMD64
-    /* On AMD64, we already know the CPU is compatible */
-    return;
-#endif
-
     INT CpuInformation[4] = {-1};
     ULONG NumberOfIds;
 

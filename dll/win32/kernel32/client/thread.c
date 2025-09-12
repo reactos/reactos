@@ -11,6 +11,7 @@
 
 #include <k32.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define SXS_SUPPORT_FIXME

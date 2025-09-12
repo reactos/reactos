@@ -13,6 +13,7 @@
 #include <ndk/lpcfuncs.h>
 #include <iolog/iolog.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

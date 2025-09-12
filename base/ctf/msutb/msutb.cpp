@@ -1283,8 +1283,7 @@ public:
     CLBarInatItem(DWORD dwThreadId);
 
     STDMETHOD(InitMenu)(ITfMenu *pMenu) override;
-    using CLBarItemButtonBase::OnMenuSelect;  // Bring base class OnMenuSelect(UINT) into scope
-    STDMETHOD(OnMenuSelect)(INT nCommandId);  // Overload with INT parameter
+    STDMETHOD(OnMenuSelect)(INT nCommandId);
     STDMETHOD(GetIcon)(HICON *phIcon) override;
     STDMETHOD(GetText)(BSTR *pbstr) override;
 };

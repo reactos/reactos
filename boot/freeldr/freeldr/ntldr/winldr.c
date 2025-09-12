@@ -111,56 +111,6 @@ AllocateAndInitLPB(
     Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
     Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
     Extension->MinorVersion = (VersionToBoot & 0xFF);
-    
-    /* Set boot type flags */
-#ifdef UEFIBOOT
-    /* Mark this as a UEFI boot and pass framebuffer info */
-    Extension->BootViaEFI = TRUE;
-    Extension->BootViaWinload = FALSE;
-    
-    /* Pass UEFI GOP framebuffer info if available */
-    {
-        /* The framebuffer struct is defined in uefildr.h for UEFI builds */
-        typedef struct {
-            ULONG_PTR BaseAddress;
-            ULONG BufferSize;
-            UINT32 ScreenWidth;
-            UINT32 ScreenHeight;
-            UINT32 PixelsPerScanLine;
-            UINT32 PixelFormat;
-        } REACTOS_INTERNAL_BGCONTEXT;
-        
-        /* These externs are only available in UEFI builds */
-        extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
-        extern BOOLEAN UefiVideoInitialized;
-        
-        if (UefiVideoInitialized)
-        {
-            /* Copy framebuffer information to loader extension */
-            Extension->UefiFramebuffer.FrameBufferBase.QuadPart = framebufferData.BaseAddress;
-            Extension->UefiFramebuffer.FrameBufferSize = framebufferData.BufferSize;
-            Extension->UefiFramebuffer.ScreenWidth = framebufferData.ScreenWidth;
-            Extension->UefiFramebuffer.ScreenHeight = framebufferData.ScreenHeight;
-            Extension->UefiFramebuffer.PixelsPerScanLine = framebufferData.PixelsPerScanLine;
-            Extension->UefiFramebuffer.PixelFormat = framebufferData.PixelFormat;
-            
-            /* Log framebuffer info for debugging */
-            TRACE("UEFI GOP initialized: %ux%u @ 0x%llx (size=%u)\n",
-                (unsigned int)framebufferData.ScreenWidth, 
-                (unsigned int)framebufferData.ScreenHeight,
-                (unsigned long long)framebufferData.BaseAddress, 
-                (unsigned int)framebufferData.BufferSize);
-        }
-        else
-        {
-            TRACE("UEFI video not initialized\n");
-        }
-    }
-#else
-    /* Legacy BIOS boot - no framebuffer info */
-    Extension->BootViaEFI = FALSE;
-    Extension->BootViaWinload = FALSE;
-#endif
 
     /* Init three critical lists, used right away */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
@@ -491,19 +441,6 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
     TRACE("DriverPath: '%s', DllName: '%s', LPB\n", DriverPath, DllName);
 
-    /* With increased heap size (128MB), we can load all drivers
-     * Only skip truly problematic or unnecessary drivers */
-    {
-        /* Skip only known problematic drivers that might cause issues */
-        if (_stricmp(DllName, "nmidebug.sys") == 0 ||  /* NMI Debug driver - can cause issues */
-            _stricmp(DllName, "sacdrv.sys") == 0)       /* Special Admin Console - not needed */
-        {
-            TRACE("Skipping problematic driver %s\n", DllName);
-            *DriverDTE = NULL;
-            return TRUE;
-        }
-    }
-
     // Check if driver is already loaded
     Success = PeLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
     if (Success)
@@ -710,18 +647,13 @@ LoadModule(
     CHAR ProgressString[256];
     PVOID BaseAddress;
 
-    TRACE("LoadModule: Path='%s', File='%s', ImportName='%s'\n", Path, File, ImportName);
-    
     RtlStringCbPrintfA(ProgressString, sizeof(ProgressString), "Loading %s...", File);
     UiUpdateProgressBar(Percentage, ProgressString);
 
     RtlStringCbCopyA(FullFileName, sizeof(FullFileName), Path);
     RtlStringCbCatA(FullFileName, sizeof(FullFileName), File);
 
-    TRACE("LoadModule: FullFileName='%s'\n", FullFileName);
     NtLdrOutputLoadMsg(FullFileName, NULL);
-    
-    TRACE("LoadModule: About to call PeLdrLoadImage('%s')\n", FullFileName);
     Success = PeLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
@@ -730,7 +662,6 @@ LoadModule(
     }
     TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
-    TRACE("LoadModule: About to call PeLdrAllocateDataTableEntry for '%s'\n", ImportName);
     Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
@@ -743,20 +674,10 @@ LoadModule(
         MmFreeMemory(BaseAddress);
         return NULL;
     }
-    TRACE("LoadModule: DataTableEntry allocated, Dte=%p\n", *Dte);
-    
-    if (*Dte)
-    {
-        TRACE("LoadModule: Dte->DllBase=%p, Dte->EntryPoint=%p\n", 
-              (*Dte)->DllBase, (*Dte)->EntryPoint);
-    }
 
     /* Init security cookie */
-    TRACE("LoadModule: About to init security cookie\n");
     PeLdrInitSecurityCookie(*Dte);
-    TRACE("LoadModule: Security cookie initialized\n");
 
-    TRACE("LoadModule: Returning BaseAddress=%p for '%s'\n", BaseAddress, File);
     return BaseAddress;
 }
 
@@ -960,7 +881,6 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
      */
 
     /* Load the Kernel */
-    TRACE("*** LOADING KERNEL: KernelFileName='%s', DirPath='%s' ***\n", KernelFileName, DirPath);
     KernelBase = LoadModule(LoaderBlock, DirPath, KernelFileName,
                             "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
     if (!KernelBase)
@@ -968,19 +888,6 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         ERR("LoadModule('%s') failed\n", KernelFileName);
         UiMessageBox("Could not load %s", KernelFileName);
         return FALSE;
-    }
-    TRACE("*** KERNEL LOADED: Base=%p, KernelDTE=%p ***\n", KernelBase, *KernelDTE);
-    if (*KernelDTE)
-    {
-        TRACE("*** KERNEL DTE: DllBase=%p, EntryPoint=%p ***\n", 
-              (*KernelDTE)->DllBase, (*KernelDTE)->EntryPoint);
-        
-        /* Log the physical address of the kernel for debugging */
-        {
-            PVOID KernelPhysical = VaToPa((*KernelDTE)->DllBase);
-            TRACE("*** KERNEL Physical Base: %p (from VA %p) ***\n", 
-                  KernelPhysical, (*KernelDTE)->DllBase);
-        }
     }
 
     /* Load the HAL */
@@ -1449,28 +1356,22 @@ LoadAndBootWindowsCommon(
     PeLdrImportDllLoadCallback = NULL;
 
     /* Initialize Phase 1 - no drivers loading anymore */
-    TRACE("About to call WinLdrInitializePhase1()\n");
     WinLdrInitializePhase1(LoaderBlock,
                            BootOptions,
                            SystemRoot,
                            BootPath,
                            OperatingSystemVersion);
-    TRACE("Returned from WinLdrInitializePhase1()\n");
 
-    TRACE("About to call UiUpdateProgressBar(100)\n");
     UiUpdateProgressBar(100, NULL);
-    TRACE("Returned from UiUpdateProgressBar()\n");
 
-    /* NOTE: We cannot access KernelDTE->EntryPoint yet because it contains virtual addresses
-     * that aren't mapped until WinLdrSetupMemoryLayout() sets up the page tables.
-     * We'll get the entry point after page tables are set up. */
-    TRACE("KernelDTE saved at %p (will get entry point after paging setup)\n", KernelDTE);
-    
-    /* For now, just save the LoaderBlock virtual address */
+    /* Save entry-point pointer and Loader block VAs */
+    KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
     LoaderBlockVA = PaToVa(LoaderBlock);
-    TRACE("LoaderBlockVA set to %p (from %p)\n", LoaderBlockVA, LoaderBlock);
 
-    /* Show the "debug mode" notice if needed BEFORE exiting boot services */
+    /* "Stop all motors", change videomode */
+    MachPrepareForReactOS();
+
+    /* Show the "debug mode" notice if needed */
     /* Match KdInitSystem() conditions */
     if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
         !NtLdrGetOption(BootOptions, "NODEBUG") &&
@@ -1497,396 +1398,36 @@ LoadAndBootWindowsCommon(
                   DebugPortLength, DebugPort);
     }
 
-    /* "Stop all motors", change videomode - This exits UEFI boot services! */
-    TRACE("About to call MachPrepareForReactOS() to exit boot services\n");
-    MachPrepareForReactOS();
-    TRACE("Returned from MachPrepareForReactOS() - Boot services should be exited now\n");
-    /* Boot services are now exited - no more UEFI calls allowed! */
-
     /* Debugging... */
     //DumpMemoryAllocMap();
 
     /* Do the machine specific initialization */
-    TRACE("About to call WinLdrSetupMachineDependent()\n");
     WinLdrSetupMachineDependent(LoaderBlock);
-    TRACE("Returned from WinLdrSetupMachineDependent()\n");
 
     /* Map pages and create memory descriptors */
-    TRACE("About to call WinLdrSetupMemoryLayout()\n");
     WinLdrSetupMemoryLayout(LoaderBlock);
-    TRACE("Returned from WinLdrSetupMemoryLayout()\n");
 
     /* Set processor context */
-    TRACE("About to call WinLdrSetProcessorContext()\n");
     WinLdrSetProcessorContext(OperatingSystemVersion);
-    TRACE("Returned from WinLdrSetProcessorContext()\n");
-
-    /* NOW we can safely access the kernel entry point after page tables are set up */
-    TRACE("Page tables set up, now getting kernel entry point from KernelDTE\n");
-    KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
-    TRACE("KiSystemStartup = %p\n", KiSystemStartup);
-    
-    /* Verify kernel mapping */
-    {
-        PVOID KernelPhysical = VaToPa(KernelDTE->DllBase);
-        PVOID EntryPhysical = VaToPa((PVOID)KiSystemStartup);
-        PIMAGE_NT_HEADERS NtHeaders;
-        
-        TRACE("*** KERNEL MAPPING CHECK ***\n");
-        TRACE("    Kernel VA Base: %p -> PA: %p\n", KernelDTE->DllBase, KernelPhysical);
-        TRACE("    Entry Point VA: %p -> PA: %p\n", KiSystemStartup, EntryPhysical);
-        TRACE("    Offset from base: 0x%lx\n", 
-              (ULONG_PTR)KiSystemStartup - (ULONG_PTR)KernelDTE->DllBase);
-        
-        /* Check the PE header to verify entry point */
-        NtHeaders = RtlImageNtHeader(KernelPhysical);
-        if (NtHeaders)
-        {
-            TRACE("    PE Entry Point RVA: 0x%lx\n", NtHeaders->OptionalHeader.AddressOfEntryPoint);
-            TRACE("    PE Image Base: 0x%llx\n", (ULONG64)NtHeaders->OptionalHeader.ImageBase);
-            TRACE("    Calculated Entry: %p\n", 
-                  (PVOID)((ULONG_PTR)KernelDTE->DllBase + NtHeaders->OptionalHeader.AddressOfEntryPoint));
-        }
-    }
-    
-    /* Validate kernel entry point */
-    if (KiSystemStartup == NULL)
-    {
-        ERR("FATAL: Kernel entry point is NULL!\n");
-        UiMessageBox("Failed to get kernel entry point");
-        return ENOEXEC;
-    }
 
     /* Save final value of LoaderPagesSpanned */
-    TRACE("About to save LoaderPagesSpanned\n");
     LoaderBlock->Extension->LoaderPagesSpanned = MmGetLoaderPagesSpanned();
-    TRACE("LoaderPagesSpanned saved as %lu\n", LoaderBlock->Extension->LoaderPagesSpanned);
 
     TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
           KiSystemStartup, LoaderBlockVA);
 
     /* Zero KI_USER_SHARED_DATA page */
-    TRACE("About to zero KI_USER_SHARED_DATA page at %p\n", (PVOID)KI_USER_SHARED_DATA);
     RtlZeroMemory((PVOID)KI_USER_SHARED_DATA, MM_PAGE_SIZE);
-    TRACE("KI_USER_SHARED_DATA page zeroed\n");
 
-    TRACE("About to call WinLdrpDumpMemoryDescriptors()\n");
     WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
-    TRACE("Returned from WinLdrpDumpMemoryDescriptors()\n");
-    
-    TRACE("About to call WinLdrpDumpBootDriver()\n");
     WinLdrpDumpBootDriver(LoaderBlockVA);
-    TRACE("Returned from WinLdrpDumpBootDriver()\n");
-    
 #ifndef _M_AMD64
-    TRACE("About to call WinLdrpDumpArcDisks()\n");
     WinLdrpDumpArcDisks(LoaderBlockVA);
-    TRACE("Returned from WinLdrpDumpArcDisks()\n");
 #endif
 
     /* Pass control */
-    TRACE("*** ABOUT TO JUMP TO KERNEL ***\n");
-    TRACE("*** KiSystemStartup = %p ***\n", KiSystemStartup);
-    TRACE("*** LoaderBlockVA = %p ***\n", LoaderBlockVA);
-    
-    /* Final sanity check */
-    if ((ULONG_PTR)KiSystemStartup < KSEG0_BASE)
-    {
-        ERR("FATAL: KiSystemStartup address %p is not in kernel space!\n", KiSystemStartup);
-        TRACE("Expected kernel address >= %p\n", (PVOID)KSEG0_BASE);
-        for(;;); /* Hang */
-    }
-    
-#if defined(_M_AMD64) || defined(_M_X64) || defined(__x86_64__)
-    /* For AMD64, ensure proper state before kernel handoff */
-    {
-#ifdef UEFIBOOT
-        extern BOOLEAN UefiBootServicesExited;
-        
-        if (!UefiBootServicesExited)
-        {
-            TRACE("WARNING: Boot services not properly exited before kernel handoff!\n");
-            /* Try to exit them now */
-            MachPrepareForReactOS();
-        }
-#endif
-        
-        /* Ensure the kernel entry point is accessible */
-        {
-            /* Get the physical address where kernel should be */
-            ULONG64 KernelEntryVA = (ULONG64)KiSystemStartup;
-            ULONG64 KernelEntryPA = KernelEntryVA - KSEG0_BASE;
-            ULONG64 KernelPagePA = KernelEntryPA & ~(PAGE_SIZE - 1);
-            ULONG64 KernelPageVA = KernelEntryVA & ~(PAGE_SIZE - 1);
-            
-            TRACE("*** KERNEL ENTRY POINT MAPPING ***\n");
-            TRACE("    Entry VA: 0x%llx\n", KernelEntryVA);
-            TRACE("    Entry PA: 0x%llx\n", KernelEntryPA);
-            TRACE("    Page VA: 0x%llx\n", KernelPageVA);
-            TRACE("    Page PA: 0x%llx\n", KernelPagePA);
-            
-            /* Try to read bytes from the entry point to verify it's mapped and contains code */
-            {
-                volatile UCHAR TestBytes[16];
-                int i;
-                TRACE("    Testing read from kernel entry point...\n");
-                for (i = 0; i < 16; i++)
-                {
-                    TestBytes[i] = *((volatile UCHAR*)KiSystemStartup + i);
-                }
-                TRACE("    Read successful, first 16 bytes at entry:");
-                for (i = 0; i < 16; i++)
-                {
-                    TRACE(" %02x", TestBytes[i]);
-                }
-                TRACE("\n");
-                
-                /* Check if this looks like valid x64 code */
-                if (TestBytes[0] == 0x41 && TestBytes[1] == 0x50)
-                {
-                    TRACE("    WARNING: Bytes look like ASCII 'AP' not x64 code!\n");
-                }
-                else if (TestBytes[0] == 0x48 || TestBytes[0] == 0x4C || 
-                         TestBytes[0] == 0x55 || TestBytes[0] == 0x53)
-                {
-                    TRACE("    Bytes look like valid x64 code (REX prefix or PUSH)\n");
-                }
-            }
-        }
-        
-        /* Ensure interrupts are disabled */
-        _disable();
-        
-        /* Memory barrier to ensure all writes are complete */
-        MemoryBarrier();
-        
-        /* Verify critical control registers */
-        {
-            ULONG64 cr0, cr3, cr4, efer;
-            __asm__ __volatile__("movq %%cr0, %0" : "=r"(cr0));
-            __asm__ __volatile__("movq %%cr3, %0" : "=r"(cr3));
-            __asm__ __volatile__("movq %%cr4, %0" : "=r"(cr4));
-            
-            /* Read EFER MSR */
-            efer = __readmsr(0xC0000080);
-            
-            TRACE("*** Control registers before jump: CR0=%llx, CR3=%llx, CR4=%llx ***\n", cr0, cr3, cr4);
-            TRACE("*** EFER MSR: %llx (LME=%d, LMA=%d, NXE=%d) ***\n", 
-                  efer, !!(efer & 0x100), !!(efer & 0x400), !!(efer & 0x800));
-            
-            /* Ensure paging is enabled */
-            if (!(cr0 & 0x80000000))
-            {
-                ERR("FATAL: Paging not enabled! CR0=%llx\n", cr0);
-                for(;;);
-            }
-            
-            /* Ensure Long Mode is active */
-            if (!(efer & 0x400))
-            {
-                ERR("FATAL: Long Mode not active! EFER=%llx\n", efer);
-                for(;;);
-            }
-        }
-        
-        /* Flush TLB to ensure all mappings are visible */
-        {
-            ULONG64 cr3;
-            __asm__ __volatile__("movq %%cr3, %0" : "=r"(cr3));
-            __writecr3(cr3);
-        }
-        
-        /* Flush instruction cache */
-        __wbinvd();
-        
-        /* Ensure stack is 16-byte aligned for AMD64 calling convention */
-        {
-            ULONG64 rsp;
-            __asm__ __volatile__("movq %%rsp, %0" : "=r"(rsp));
-            TRACE("Current RSP before alignment: %llx\n", rsp);
-            
-            /* Align RSP to 16-byte boundary and leave space for red zone */
-            rsp = (rsp & ~0xF) - 0x8;  /* Align and adjust for call instruction */
-            TRACE("Aligned RSP: %llx\n", rsp);
-            
-            /* Set the aligned stack */
-            __asm__ __volatile__("movq %0, %%rsp" : : "r"(rsp));
-        }
-    }
-#endif
-    
-    TRACE("*** Calling (*KiSystemStartup)(LoaderBlockVA) NOW! ***\n");
-    TRACE("*** THIS IS THE LAST MESSAGE FROM FREELDR ***\n");
-    
-    /* Add immediate debug output to verify we reach this point */
-    TRACE("*** DEBUG: Line 1570 reached, about to enter architecture-specific code ***\n");
-    
-#if defined(_M_AMD64) || defined(_M_X64) || defined(__x86_64__)
-    TRACE("*** DEBUG: AMD64 path selected (entering block at line 1573) ***\n");
-    /* For AMD64, perform direct call with proper ABI */
-    {
-        TRACE("*** DEBUG: Inside AMD64 block (line 1575) ***\n");
-        
-        /* Skip segment setup in UEFI mode - segments are already correct */
-        /* In UEFI boot, we're already in long mode with proper segments */
-        TRACE("*** DEBUG: Skipping segment setup in UEFI mode (segments already correct) ***\n");
-        
-        /* Verify we're in a valid code segment */
-        {
-            USHORT CurrentCS;
-            __asm__ __volatile__("movw %%cs, %0" : "=r"(CurrentCS));
-            TRACE("Current CS before jump: 0x%x (0x38 is valid for UEFI mode)\n", CurrentCS);
-            
-            /* In UEFI mode, CS=0x38 is perfectly valid - it's the UEFI long mode code segment
-             * The kernel will set up its own segments after taking control */
-        }
-        
-        /* Clear direction flag as required by ABI */
-        __asm__ __volatile__("cld");
-        
-        /* Verify LoaderBlock is valid before jumping */
-        if (LoaderBlockVA == NULL)
-        {
-            ERR("FATAL: LoaderBlockVA is NULL!\n");
-            for(;;);
-        }
-        
-        /* Verify LoaderBlock contents */
-        {
-            PLOADER_PARAMETER_BLOCK TestBlock = (PLOADER_PARAMETER_BLOCK)LoaderBlockVA;
-            TRACE("LoaderBlock verification:\n");
-            TRACE("    LoaderBlock at VA = %p\n", TestBlock);
-            TRACE("    LoaderBlock->LoadOrderListHead = %p\n", &TestBlock->LoadOrderListHead);
-            TRACE("    LoaderBlock->MemoryDescriptorListHead = %p\n", &TestBlock->MemoryDescriptorListHead);
-            TRACE("    LoaderBlock->KernelStack = %p\n", TestBlock->KernelStack);
-            TRACE("    LoaderBlock->Process = %p\n", TestBlock->Process);
-            TRACE("    LoaderBlock->Thread = %p\n", TestBlock->Thread);
-        }
-        
-        /* Jump to kernel with Windows x64 ABI - LoaderBlock in RCX */
-        TRACE("*** About to execute final jump to kernel entry point ***\n");
-        TRACE("    RCX (LoaderBlock) = %p\n", LoaderBlockVA);
-        TRACE("    Target address = %p\n", KiSystemStartup);
-        
-        /* Simple direct jump - we're already in long mode with correct segments */
-        TRACE("*** Performing simple direct jump to kernel ***\n");
-        
-        /* One more verification that the kernel is mapped */
-        {
-            volatile UCHAR TestByte;
-            TRACE("*** Final kernel mapping check before jump ***\n");
-            TestByte = *(volatile UCHAR *)KiSystemStartup;
-            TRACE("    First byte at entry point: 0x%02x\n", TestByte);
-        }
-        
-        /* Check IDT is set */
-        {
-            KDESCRIPTOR IdtDesc;
-            __sidt(&IdtDesc.Limit);
-            TRACE("*** IDT check: Base=%p, Limit=0x%x ***\n", IdtDesc.Base, IdtDesc.Limit);
-        }
-        
-        /* Check stack pointer */
-        {
-            ULONG64 CurrentRSP;
-            __asm__ __volatile__("movq %%rsp, %0" : "=r"(CurrentRSP));
-            TRACE("*** Current RSP before call: 0x%llx ***\n", CurrentRSP);
-        }
-        
-        /* Set IF flag to disable interrupts */
-        _disable();
-        
-        /* Set up MSRs for kernel */
-        {
-            ULONG64 efer = __readmsr(0xC0000080);
-            
-            /* Enable SYSCALL/SYSRET if not already set */
-            if (!(efer & 1))  /* Check SCE bit */
-            {
-                TRACE("*** Enabling SYSCALL/SYSRET (SCE bit) in EFER ***\n");
-                efer |= 1;  /* Set SCE bit */
-                __writemsr(0xC0000080, efer);
-            }
-            
-            /* Set up SYSCALL MSRs with kernel segments */
-            /* STAR MSR (0xC0000081) - SYSCALL CS/SS */
-            /* Upper 32 bits: SYSRET CS/SS (+16/+8), Lower 32 bits: SYSCALL CS/SS */
-            __writemsr(0xC0000081, 0x0023001000000000ULL);  /* Kernel CS=0x10, User CS=0x23 */
-            
-            /* LSTAR MSR (0xC0000082) - SYSCALL RIP target */
-            /* Will be set by kernel to its system call handler */
-            __writemsr(0xC0000082, 0);
-            
-            /* SFMASK MSR (0xC0000084) - SYSCALL RFLAGS mask */
-            __writemsr(0xC0000084, 0x47700);  /* Standard NT flags mask */
-            
-            TRACE("*** MSRs configured for kernel ***\n");
-        }
-        
-        /* Note: We can't switch to kernel stack here because it's in kernel space
-         * and we're still running in identity-mapped space. The kernel will
-         * switch to its own stack after it starts executing. */
-        TRACE("*** Kernel stack prepared at %p for kernel to use ***\n", 
-              LoaderBlockVA ? ((PLOADER_PARAMETER_BLOCK)LoaderBlockVA)->KernelStack : 0);
-        
-        /* In UEFI mode, we're using UEFI's segments until we jump to kernel
-         * The kernel will set up its own segments after the jump */
-        TRACE("*** Using UEFI segment configuration (CS=0x38) ***\n");
-        
-        /* Final state check before kernel jump */
-        {
-            ULONG64 cr0, cr3, cr4, efer, rsp;
-            __asm__ __volatile__("movq %%cr0, %0" : "=r"(cr0));
-            __asm__ __volatile__("movq %%cr3, %0" : "=r"(cr3));
-            __asm__ __volatile__("movq %%cr4, %0" : "=r"(cr4));
-            __asm__ __volatile__("movq %%rsp, %0" : "=r"(rsp));
-            efer = __readmsr(0xC0000080);
-            
-            TRACE("*** FINAL STATE BEFORE KERNEL JUMP ***\n");
-            TRACE("    CR0=0x%llx (PG=%d, PE=%d, WP=%d)\n", 
-                  cr0, !!(cr0 & 0x80000000), !!(cr0 & 1), !!(cr0 & 0x10000));
-            TRACE("    CR3=0x%llx\n", cr3);
-            TRACE("    CR4=0x%llx (PAE=%d, PSE=%d, PGE=%d)\n",
-                  cr4, !!(cr4 & 0x20), !!(cr4 & 0x10), !!(cr4 & 0x80));
-            TRACE("    EFER=0x%llx (LME=%d, LMA=%d, NXE=%d, SCE=%d)\n",
-                  efer, !!(efer & 0x100), !!(efer & 0x400), !!(efer & 0x800), !!(efer & 1));
-            TRACE("    RSP=0x%llx\n", rsp);
-        }
-        
-        /* Verify kernel entry is accessible one more time */
-        {
-            volatile ULONG64 *TestPtr = (volatile ULONG64 *)KiSystemStartup;
-            volatile ULONG64 TestVal;
-            TRACE("*** Testing kernel entry point accessibility ***\n");
-            TestVal = *TestPtr;
-            TRACE("*** First 8 bytes at entry: 0x%016llx ***\n", TestVal);
-        }
-        
-        /* Jump to kernel entry point */
-        TRACE("*** JUMPING TO KERNEL NOW AT %p WITH RCX=%p ***\n", KiSystemStartup, LoaderBlockVA);
-        
-        /* Simple direct jump - avoid far jump complications */
-        __asm__ __volatile__(
-            /* Set up LoaderBlock parameter in RCX per Windows x64 ABI */
-            "movq %0, %%rcx\n\t"
-            
-            /* Clear other parameter registers */
-            "xorq %%rdx, %%rdx\n\t"
-            "xorq %%r8, %%r8\n\t"
-            "xorq %%r9, %%r9\n\t"
-            
-            /* Direct jump to kernel entry point */
-            "jmpq *%1\n\t"
-            : 
-            : "r"(LoaderBlockVA), "r"(KiSystemStartup)
-            : "rcx", "rdx", "r8", "r9", "memory"
-        );
-    }
-#else
     (*KiSystemStartup)(LoaderBlockVA);
-#endif
 
-    TRACE("*** ERROR: Returned from KiSystemStartup - this should never happen! ***\n");
     UNREACHABLE; // return ESUCCESS;
 }
 

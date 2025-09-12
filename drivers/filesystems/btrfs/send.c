@@ -3627,7 +3627,7 @@ NTSTATUS send_subvol(device_extension* Vcb, void* data, ULONG datalen, PFILE_OBJ
             if (datalen < offsetof(btrfs_send_subvol32, num_clones))
                 return STATUS_INVALID_PARAMETER;
 
-            parent = (HANDLE)(ULONG_PTR)bss32->parent;
+            parent = Handle32ToHandle(bss32->parent);
 
             if (datalen >= offsetof(btrfs_send_subvol32, clones[0]))
                 num_clones = bss32->num_clones;
@@ -3700,7 +3700,7 @@ NTSTATUS send_subvol(device_extension* Vcb, void* data, ULONG datalen, PFILE_OBJ
                 if (IoIs32bitProcess(Irp)) {
                     btrfs_send_subvol32* bss32 = (btrfs_send_subvol32*)data;
 
-                    h = (HANDLE)(ULONG_PTR)bss32->clones[i];
+                    h = Handle32ToHandle(bss32->clones[i]);
                 } else
 #endif
                     h = bss->clones[i];

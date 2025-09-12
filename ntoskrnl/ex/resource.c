@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* Macros for reading resource flags */
@@ -2116,7 +2117,7 @@ ExSetResourceOwnerPointer(IN PERESOURCE Resource,
  * @name ExTryToAcquireResourceExclusiveLite
  * @implemented NT4
  *
- *     The ExTryToAcquireResourceExclusiveLite routine routine attempts to
+ *     The ExTryToAcquireResourceExclusiveLite routine routine attemps to
  *     acquire the given resource for exclusive access.
  *
  * @param Resource

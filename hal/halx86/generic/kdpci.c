@@ -247,23 +247,19 @@ HalpFindMatchingDebuggingDevice(
             {
                 ULONG Bytes;
                 PCI_SLOT_NUMBER PciSlot;
-                union {
-                    PCI_COMMON_HEADER Header;
-                    PCI_COMMON_CONFIG Config;
-                } PciData;
-                PCI_COMMON_HEADER* PciConfig = &PciData.Header;
+                PCI_COMMON_HEADER PciConfig;
 
                 PciSlot.u.bits.DeviceNumber = DeviceNumber;
                 PciSlot.u.bits.FunctionNumber = FunctionNumber;
                 PciSlot.u.bits.Reserved = 0;
                 Bytes = HalpPhase0GetPciDataByOffset(BusNumber,
                                                      PciSlot,
-                                                     PciConfig,
+                                                     &PciConfig,
                                                      0,
                                                      PCI_COMMON_HDR_LENGTH);
                 if (Bytes != PCI_COMMON_HDR_LENGTH ||
-                    PciConfig->VendorID == PCI_INVALID_VENDORID ||
-                    PciConfig->VendorID == 0)
+                    PciConfig.VendorID == PCI_INVALID_VENDORID ||
+                    PciConfig.VendorID == 0)
                 {
                     if (FunctionNumber == 0)
                     {
@@ -279,20 +275,20 @@ HalpFindMatchingDebuggingDevice(
 
                 DPRINT0("Check %02x:%02x.%x [%04x:%04x]\n",
                         BusNumber, DeviceNumber, FunctionNumber,
-                        PciConfig->VendorID, PciConfig->DeviceID);
+                        PciConfig.VendorID, PciConfig.DeviceID);
 
-                switch (PCI_CONFIGURATION_TYPE(&PciData.Config))
+                switch (PCI_CONFIGURATION_TYPE(&PciConfig))
                 {
                     case PCI_DEVICE_TYPE:
                     {
-                        if (HalpMatchDebuggingDevice(PciDevice, BusNumber, PciSlot, PciConfig))
+                        if (HalpMatchDebuggingDevice(PciDevice, BusNumber, PciSlot, &PciConfig))
                         {
                             DPRINT0("Found device\n");
 
                             if (HalpConfigureDebuggingDevice(PciDevice,
                                                              BusNumber,
                                                              PciSlot,
-                                                             PciConfig))
+                                                             &PciConfig))
                             {
                                 DPRINT0("Device is ready\n");
                                 return TRUE;
@@ -317,7 +313,7 @@ HalpFindMatchingDebuggingDevice(
                         break;
                 }
 
-                if (!PCI_MULTIFUNCTION_DEVICE(&PciData.Config))
+                if (!PCI_MULTIFUNCTION_DEVICE(&PciConfig))
                 {
                     /* The device is a single function device */
                     break;

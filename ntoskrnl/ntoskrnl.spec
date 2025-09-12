@@ -1644,10 +1644,3 @@
 @ stdcall -arch=arm __rt_udiv()
 @ stdcall -arch=arm __rt_udiv64()
 @ stdcall -arch=arm __rt_srsh()
-
-# UEFI Framebuffer Data Exports
-@ extern VidpFrameBufferBase
-@ extern VidpFrameBufferSize
-@ extern VidpScreenWidth
-@ extern VidpScreenHeight
-@ extern VidpPixelsPerScanLine

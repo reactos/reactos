@@ -527,8 +527,7 @@ void TConfig::inifile_init() {
 	// B. K. Oxley 9/16/98
 	char* env_telnet_ini = getenv (ENV_TELNET_INI);
 	if (env_telnet_ini && *env_telnet_ini) {
-		strncpy (inifile, env_telnet_ini, sizeof(inifile) - 1);
-		inifile[sizeof(inifile) - 1] = '\0';
+		strncpy (inifile, env_telnet_ini, sizeof(inifile));
 		return;
 	}
 
@@ -590,8 +589,7 @@ void TConfig::keyfile_init() {
 
 	} else {
 		// set the keyfile to the value of the environment variable
-		strncpy(keyfile, k, sizeof(keyfile) - 1);
-		keyfile[sizeof(keyfile) - 1] = '\0';
+		strncpy(keyfile, k, sizeof(keyfile));
 	}
 }
 
@@ -682,9 +680,13 @@ bool TConfig::Process_Params(int argc, char *argv[]) {
 }
 
 void TConfig::set_string(char *dest, const char *src, const int length) {
-   int l = length - 1;
+   int l = length;
    strncpy(dest, src, l);
-   dest[l] = '\0';  // Ensure null-termination
+ //  dest[length-1] = '\0';
+ // Ioannou : this messes strings - is this really needed ?
+ // The target string, dest, might not be null-terminated
+ // if the length of src is length or more.
+ // it should be dest[length] = '\0' for strings with length 1
  // (Escape_string etc), but doesn't work with others (like host).
  // dest is long enough to avoid this in all the tested cases
 }

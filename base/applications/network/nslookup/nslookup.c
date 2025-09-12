@@ -488,14 +488,12 @@ BOOL ParseCommandLine( int argc, char* argv[] )
             if( NoMoreOptions )
             {
                 strncpy( Server, argv[i], 255 );
-                Server[255] = '\0';
 
                 /* Determine which one to resolve. This is based on whether the
                    DNS server provided was an IP or an FQDN. */
                 if( IsValidIP( Server ) )
                 {
-                    strncpy( State.DefaultServerAddress, Server, 15 );
-                    State.DefaultServerAddress[15] = '\0';
+                    strncpy( State.DefaultServerAddress, Server, 16 );
 
                     PerformInternalLookup( State.DefaultServerAddress,
                                            State.DefaultServer );
@@ -503,7 +501,6 @@ BOOL ParseCommandLine( int argc, char* argv[] )
                 else
                 {
                     strncpy( State.DefaultServer, Server, 255 );
-                    State.DefaultServer[255] = '\0';
 
                     PerformInternalLookup( State.DefaultServer,
                                            State.DefaultServerAddress );
@@ -723,7 +720,6 @@ BOOL ParseCommandLine( int argc, char* argv[] )
                     /* Grab the address to resolve. No more options accepted
                        past this point. */
                     strncpy( AddrToResolve, argv[i], 255 );
-                    AddrToResolve[255] = '\0';
                     NoMoreOptions = TRUE;
                 }
             }
@@ -825,13 +821,10 @@ int main( int argc, char* argv[] )
     }
 
     strncpy( State.domain, pNetInfo->DomainName, 255 );
-    State.domain[255] = '\0';
     strncpy( State.srchlist[0], pNetInfo->DomainName, 255 );
-    State.srchlist[0][255] = '\0';
     strncpy( State.DefaultServerAddress,
              pNetInfo->DnsServerList.IpAddress.String,
              15 );
-    State.DefaultServerAddress[15] = '\0';
 
     HeapFree( ProcessHeap, 0, pNetInfo );
 

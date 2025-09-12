@@ -7,6 +7,7 @@
 
 #include "pciidex.h"
 
+#define NDEBUG
 #include <debug.h>
 
 ULONG PciIdeControllerNumber = 0;
@@ -107,21 +108,18 @@ NTSTATUS
 PciIdeXGetConfigurationInfo(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension)
 {
-    union {
-        UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, BaseClass)];
-        PCI_COMMON_HEADER PciHeader;
-    } PciData;
-    PPCI_COMMON_HEADER PciConfig = &PciData.PciHeader;
+    UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, BaseClass)];
+    PPCI_COMMON_HEADER PciConfig = (PPCI_COMMON_HEADER)Buffer;
     ULONG BytesRead;
 
     PAGED_CODE();
 
     BytesRead = (*FdoExtension->BusInterface.GetBusData)(FdoExtension->BusInterface.Context,
                                                          PCI_WHICHSPACE_CONFIG,
-                                                         PciData.Buffer,
+                                                         Buffer,
                                                          0,
-                                                         sizeof(PciData.Buffer));
-    if (BytesRead != sizeof(PciData.Buffer))
+                                                         sizeof(Buffer));
+    if (BytesRead != sizeof(Buffer))
         return STATUS_IO_DEVICE_ERROR;
 
     FdoExtension->VendorId = PciConfig->VendorID;

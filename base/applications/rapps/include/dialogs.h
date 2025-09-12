@@ -9,13 +9,9 @@ VOID
 CreateSettingsDlg(HWND hwnd);
 
 // Download dialogs
-enum DOWNLOADAPPFLAGS {
-    DAF_SILENT  = 0x01,
-    DAF_MODAL   = 0x02,
-};
 VOID
 DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial);
 BOOL
 DownloadApplication(CAppInfo *pAppInfo);
 BOOL
-DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, UINT Flags = 0);
+DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, BOOL bIsModal);

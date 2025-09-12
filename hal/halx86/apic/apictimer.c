@@ -10,6 +10,7 @@
 
 #include <hal.h>
 #include "apicp.h"
+#define NDEBUG
 #include <debug.h>
 
 extern LARGE_INTEGER HalpCpuClockFrequency;
@@ -29,31 +30,8 @@ ApicSetTimerInterval(ULONG MicroSeconds)
     LVT_REGISTER LvtEntry;
     ULONGLONG TimerInterval;
 
-#ifdef _M_AMD64
-    /* Safety check for uninitialized frequency */
-    if (HalpCpuClockFrequency.QuadPart == 0)
-    {
-        DPRINT1("ApicSetTimerInterval: WARNING - CPU clock frequency is 0, using default\n");
-        HalpCpuClockFrequency.QuadPart = 2000000000ULL; /* 2 GHz default */
-    }
-#endif
-
     /* Calculate the Timer interval */
     TimerInterval = HalpCpuClockFrequency.QuadPart * MicroSeconds / 1000000;
-
-#ifdef _M_AMD64
-    /* Sanity check the interval */
-    if (TimerInterval == 0)
-    {
-        DPRINT1("ApicSetTimerInterval: WARNING - Calculated interval is 0, using minimum\n");
-        TimerInterval = 1000; /* Minimum interval */
-    }
-    else if (TimerInterval > 0xFFFFFFFF)
-    {
-        DPRINT1("ApicSetTimerInterval: WARNING - Interval too large, capping\n");
-        TimerInterval = 0xFFFFFFFF;
-    }
-#endif
 
     /* Set the count interval */
     ApicWrite(APIC_TICR, (ULONG)TimerInterval);
@@ -71,21 +49,6 @@ VOID
 NTAPI
 ApicInitializeTimer(ULONG Cpu)
 {
-#ifdef _M_AMD64
-    DPRINT1("ApicInitializeTimer: Entry for CPU %d\n", Cpu);
-    
-    /* Check if CPU clock frequency is initialized */
-    if (HalpCpuClockFrequency.QuadPart == 0)
-    {
-        /* Use a default frequency for AMD64 - 2GHz as a reasonable default */
-        DPRINT1("ApicInitializeTimer: WARNING - CPU clock frequency not calibrated, using default\n");
-        HalpCpuClockFrequency.QuadPart = 2000000000ULL; /* 2 GHz */
-    }
-    else
-    {
-        DPRINT1("ApicInitializeTimer: CPU clock frequency = %lld Hz\n", HalpCpuClockFrequency.QuadPart);
-    }
-#endif
 
     /* Initialize the TSC */
     //HalpInitializeTsc();
@@ -94,8 +57,6 @@ ApicInitializeTimer(ULONG Cpu)
     ApicWrite(APIC_TDCR, TIMER_DV_DivideBy1);
 
     ApicSetTimerInterval(1000);
-
-    DPRINT1("ApicInitializeTimer: Timer initialized with 1000us interval\n");
 
 // KeSetTimeIncrement
 }

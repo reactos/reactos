@@ -1,4 +1,5 @@
 
+remove_definitions(-D__ROS_LONG64__)
 add_executable(windowscodecsext_winetest transform.c testlist.c)
 set_module_type(windowscodecsext_winetest win32cui)
 add_importlibs(windowscodecsext_winetest ole32 windowscodecsext msvcrt kernel32)

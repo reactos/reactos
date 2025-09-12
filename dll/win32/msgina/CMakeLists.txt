@@ -7,8 +7,7 @@ list(APPEND SOURCE
     msgina.c
     shutdown.c
     stubs.c
-    tui.c
-    utils.c)
+    tui.c)
 
 list(APPEND PCH_SKIP_SOURCE
     dimmedwindow.cpp

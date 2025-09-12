@@ -19,34 +19,35 @@ PTHREADINFO ptiLastInput = NULL;
 HWND ghwndOldFullscreen = NULL;
 
 /*
- * Check locking of a process or one or more menus are active.
- */
+  Check locking of a process or one or more menus are active.
+*/
 BOOL FASTCALL
 IsFGLocked(VOID)
 {
-    return (gppiLockSFW || guSFWLockCount);
+   return (gppiLockSFW || guSFWLockCount);
 }
 
 /*
- * Get capture window via foreground Queue.
- */
+  Get capture window via foreground Queue.
+*/
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
 {
-    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-    if (!ForegroundQueue)
-        return NULL;
-    return (ForegroundQueue->spwndCapture ? UserHMGetHandle(ForegroundQueue->spwndCapture) : NULL);
+   PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
+   return ( ForegroundQueue ? (ForegroundQueue->spwndCapture ? UserHMGetHandle(ForegroundQueue->spwndCapture) : 0) : 0);
 }
 
 HWND FASTCALL
 IntGetThreadFocusWindow(VOID)
 {
-    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue;
-    if (!ThreadQueue)
-        return NULL;
-    return (ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : NULL);
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+   if (!ThreadQueue)
+     return NULL;
+   return ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
 }
 
 BOOL FASTCALL IntIsWindowFullscreen(PWND Window)
@@ -1422,19 +1423,20 @@ co_UserSetFocus(PWND Window)
 HWND FASTCALL
 UserGetForegroundWindow(VOID)
 {
-    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-    if (!ForegroundQueue)
-        return NULL;
-    return (ForegroundQueue->spwndActive ? UserHMGetHandle(ForegroundQueue->spwndActive) : NULL);
+   PUSER_MESSAGE_QUEUE ForegroundQueue;
+
+   ForegroundQueue = IntGetFocusMessageQueue();
+   return( ForegroundQueue ? (ForegroundQueue->spwndActive ? UserHMGetHandle(ForegroundQueue->spwndActive) : 0) : 0);
 }
 
 HWND FASTCALL UserGetActiveWindow(VOID)
 {
-    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-    PUSER_MESSAGE_QUEUE ThreadQueue = pti->MessageQueue;
-    if (!ThreadQueue)
-        return NULL;
-    return (ThreadQueue->spwndActive ? UserHMGetHandle(ThreadQueue->spwndActive) : NULL);
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+   return( ThreadQueue ? (ThreadQueue->spwndActive ? UserHMGetHandle(ThreadQueue->spwndActive) : 0) : 0);
 }
 
 HWND APIENTRY

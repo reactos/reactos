@@ -28,7 +28,7 @@
 @ stub DhcpReleaseIpAddressLease
 @ stub DhcpReleaseIpAddressLeaseEx
 @ stdcall DhcpReleaseParameters(wstr)
-@ stdcall DhcpRemoveDNSRegistrations()
+@ stub DhcpRemoveDNSRegistrations
 @ stub DhcpRenewIpAddressLease
 @ stub DhcpRenewIpAddressLeaseEx
 @ stub DhcpRequestOptions

@@ -21,6 +21,7 @@
 
 #include "nic.h"
 
+#define NDEBUG
 #include <debug.h>
 
 VOID

@@ -62,13 +62,6 @@ SearchForAppWithDisplayName(CAppDB &db, AppsCategories Type, LPCWSTR Name)
 static BOOL
 HandleInstallCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
-    UINT flags = DAF_MODAL;
-    if (argcLeft >= 1 && !StrCmpIW(L"/S", argvLeft[0]))
-    {
-        flags |= DAF_SILENT;
-        argvLeft = &argvLeft[1], --argcLeft;
-    }
-
     if (argcLeft < 1)
     {
         InitRappsConsole();
@@ -87,19 +80,12 @@ HandleInstallCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLef
         }
     }
 
-    return DownloadListOfApplications(Applications, flags);
+    return DownloadListOfApplications(Applications, TRUE);
 }
 
 static BOOL
 HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 {
-    UINT flags = DAF_MODAL;
-    if (argcLeft >= 1 && !StrCmpIW(L"/S", argvLeft[0]))
-    {
-        flags |= DAF_SILENT;
-        argvLeft = &argvLeft[1], --argcLeft;
-    }
-
     if (argcLeft != 1)
     {
         InitRappsConsole();
@@ -132,7 +118,7 @@ HandleSetupCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     }
     SetupCloseInfFile(InfHandle);
 
-    return DownloadListOfApplications(Applications, flags);
+    return DownloadListOfApplications(Applications, TRUE);
 }
 
 static BOOL
@@ -214,14 +200,6 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 static BOOL
 HandleGenerateInstallerCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 {
-    bool bSilent = false;
-    if (argcLeft && !StrCmpIW(argvLeft[0], L"/S"))
-    {
-        bSilent = true;
-        --argcLeft;
-        ++argvLeft;
-    }
-
     if (argcLeft != 2)
         return FALSE;
 
@@ -229,7 +207,7 @@ HandleGenerateInstallerCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
     if (!pAI)
         return FALSE;
 
-    return ExtractAndRunGeneratedInstaller(*pAI, argvLeft[1], bSilent);
+    return ExtractAndRunGeneratedInstaller(*pAI, argvLeft[1]);
 }
 
 static BOOL

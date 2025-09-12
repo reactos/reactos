@@ -10,6 +10,7 @@
 
 #include "fltmgr.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

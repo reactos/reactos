@@ -13,6 +13,7 @@
 #include <apisets.h>
 #include <compat_undoc.h>
 
+#define NDEBUG
 #include <debug.h>
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;

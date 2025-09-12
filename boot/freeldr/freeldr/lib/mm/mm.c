@@ -70,8 +70,9 @@ PVOID MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType)
     FreePagesInLookupTable -= PagesNeeded;
     MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-    //TRACE("Allocated %d bytes (%d pages) of memory (type %ld) starting at page 0x%lx.\n", MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
-    //TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
+    TRACE("Allocated %d bytes (%d pages) of memory (type %ld) starting at page 0x%lx.\n",
+          MemorySize, PagesNeeded, MemoryType, FirstFreePageFromEnd);
+    TRACE("Memory allocation pointer: 0x%x\n", MemPointer);
 
     // Update LoaderPagesSpanned count
     if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
@@ -108,8 +109,6 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
         ERR("Memory allocation failed in MmAllocateMemoryAtAddress(). "
             "Not enough free memory to allocate %d bytes (requesting %d pages but have only %d). "
             "\n", MemorySize, PagesNeeded, FreePagesInLookupTable);
-        ERR("DEBUG: Requested address: %p, Total pages: %lu, Free pages: %lu\n",
-            DesiredAddress, TotalPagesInLookupTable, FreePagesInLookupTable);
         UiMessageBoxCritical("Memory allocation failed: out of memory.");
         return NULL;
     }
@@ -119,8 +118,6 @@ PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF
         WARN("Memory allocation failed in MmAllocateMemoryAtAddress(). "
              "Not enough free memory to allocate %d bytes at address %p.\n",
              MemorySize, DesiredAddress);
-        WARN("DEBUG: Pages needed: %lu, Free pages: %lu, Total pages: %lu\n",
-             PagesNeeded, FreePagesInLookupTable, TotalPagesInLookupTable);
 
         // Don't tell this to user since caller should try to alloc this memory
         // at a different address

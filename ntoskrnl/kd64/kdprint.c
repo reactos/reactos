@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define KD_PRINT_MAX_BYTES 512
@@ -64,14 +65,6 @@ KdLogDbgPrint(
 {
     SIZE_T Length, Remaining;
     KIRQL OldIrql;
-    KIRQL CurrentIrql;
-
-#ifdef _M_AMD64
-    /* Early return to avoid infinite recursion on AMD64 during early boot */
-    /* The circular buffer isn't properly initialized yet, and trying to log
-     * debug output can cause issues. This is a temporary fix. */
-    return;
-#endif
 
     /* If the string is empty, bail out */
     if (!String->Buffer || (String->Length == 0))
@@ -81,21 +74,8 @@ KdLogDbgPrint(
     if (!KdPrintCircularBuffer /*|| (KdPrintBufferSize == 0)*/)
         return;
 
-    /* Get current IRQL - if we're already at HIGH_LEVEL, we're likely in a
-     * recursive call from KdpAcquireLock or similar. Skip logging to avoid deadlock.
-     */
-    CurrentIrql = KeGetCurrentIrql();
-    if (CurrentIrql >= HIGH_LEVEL)
-        return;
-
-    /* Try to acquire the spinlock. If it's already held (possibly by us in a
-     * recursive call), skip logging to avoid deadlock.
-     */
-    if (!KeTryToAcquireSpinLockAtDpcLevel(&KdpPrintSpinLock))
-        return;
-
-    /* We got the lock, now raise IRQL to HIGH_LEVEL */
-    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    /* Acquire the log spinlock without waiting at raised IRQL */
+    OldIrql = KdpAcquireLock(&KdpPrintSpinLock);
 
     Length = min(String->Length, KdPrintBufferSize);
     Remaining = KdPrintCircularBuffer + KdPrintBufferSize - KdPrintWritePointer;
@@ -120,9 +100,8 @@ KdLogDbgPrint(
             ++KdPrintRolloverCount;
     }
 
-    /* Release the spinlock and restore IRQL */
-    KiReleaseSpinLock(&KdpPrintSpinLock);
-    KeLowerIrql(OldIrql);
+    /* Release the spinlock */
+    KdpReleaseLock(&KdpPrintSpinLock, OldIrql);
 }
 
 BOOLEAN
@@ -477,36 +456,12 @@ KdpPrint(
     BOOLEAN Enable;
     STRING OutputString;
 
-#ifdef _M_AMD64
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** KdpPrint: Entry ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
-
     if (NtQueryDebugFilterState(ComponentId, Level) == (NTSTATUS)FALSE)
     {
         /* Mask validation failed */
         *Handled = TRUE;
-#ifdef _M_AMD64
-        {
-            const char msg[] = "*** KdpPrint: Filter check failed, returning SUCCESS ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-#endif
         return STATUS_SUCCESS;
     }
-
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdpPrint: Filter check passed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
 
     /* Assume failure */
     *Handled = FALSE;
@@ -522,73 +477,31 @@ KdpPrint(
          * can't use _alloca due to PSEH. So the buffer exists in this
          * helper function instead.
          */
-        Status = KdpPrintFromUser(ComponentId,
-                                  Level,
-                                  String,
-                                  Length,
-                                  PreviousMode,
-                                  TrapFrame,
-                                  ExceptionFrame,
-                                  Handled);
-        return Status;
+        return KdpPrintFromUser(ComponentId,
+                                Level,
+                                String,
+                                Length,
+                                PreviousMode,
+                                TrapFrame,
+                                ExceptionFrame,
+                                Handled);
     }
 
     /* Setup the output string */
     OutputString.Buffer = String;
     OutputString.Length = OutputString.MaximumLength = Length;
 
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdpPrint: About to call KdLogDbgPrint ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
-
     /* Log the print */
     KdLogDbgPrint(&OutputString);
-
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdpPrint: KdLogDbgPrint returned ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
 
     /* Check for a debugger */
     if (KdDebuggerNotPresent)
     {
         /* Fail */
         *Handled = TRUE;
-#ifdef _M_AMD64
-        {
-            const char msg[] = "*** KdpPrint: No debugger present, returning ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-#endif
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
-#ifdef _M_AMD64
-    /* On AMD64, skip KdEnterDebugger/KdExitDebugger during early boot to avoid
-     * recursion. Just print the string directly to serial port. */
-    {
-        const char msg[] = "*** KdpPrint: Printing string directly to serial (skipping debugger enter/exit) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        
-        /* Print the actual string to serial port */
-        for (USHORT i = 0; i < OutputString.Length; i++)
-        {
-            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-            __outbyte(COM1_PORT, OutputString.Buffer[i]);
-        }
-        
-        Status = STATUS_SUCCESS;
-    }
-#else
     /* Enter the debugger */
     Enable = KdEnterDebugger(TrapFrame, ExceptionFrame);
 
@@ -606,7 +519,6 @@ KdpPrint(
 
     /* Exit the debugger and return */
     KdExitDebugger(Enable);
-#endif
     *Handled = TRUE;
     return Status;
 }

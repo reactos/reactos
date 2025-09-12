@@ -137,15 +137,12 @@ struct DownloadInfo
     DownloadInfo() :  DLType(DLTYPE_APPLICATION), IType(INSTALLER_UNKNOWN), SizeInBytes(0)
     {
     }
-    DownloadInfo(const CAppInfo &AppInfo, UINT DAF = 0) : DLType(DLTYPE_APPLICATION), Flags(DAF)
+    DownloadInfo(const CAppInfo &AppInfo) : DLType(DLTYPE_APPLICATION)
     {
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
         IType = AppInfo.GetInstallerType();
         szPackageName = AppInfo.szIdentifier;
-
-        if (Flags & DAF_SILENT)
-            IExecType = AppInfo.GetInstallerInfo(szSilentInstallArgs);
 
         CConfigParser *cfg = static_cast<const CAvailableApplicationInfo&>(AppInfo).GetConfigParser();
         if (cfg)
@@ -159,14 +156,11 @@ struct DownloadInfo
 
     DownloadType DLType;
     InstallerType IType;
-    InstallerType IExecType = INSTALLER_UNKNOWN;
-    UINT Flags = 0;
     CStringW szUrl;
     CStringW szName;
     CStringW szSHA1;
     CStringW szPackageName;
     CStringW szFileName;
-    CStringW szSilentInstallArgs;
     ULONG SizeInBytes;
 };
 
@@ -482,9 +476,9 @@ public:
     CDownloadManager() : m_hDlg(NULL), m_Threads(0), m_Index(0), m_bCancelled(FALSE) {}
 
     static CDownloadManager*
-    CreateInstanceHelper(UINT Flags)
+    CreateInstanceHelper(BOOL Modal)
     {
-        if (!(Flags & DAF_MODAL))
+        if (!Modal)
         {
             CDownloadManager* pExisting = CDownloadManager::FindInstance();
             if (pExisting)
@@ -496,8 +490,7 @@ public:
         CComPtr<CDownloadManager> obj;
         if (FAILED(ShellObjectCreator(obj)))
             return NULL;
-        obj->m_fDaf = Flags;
-        obj->m_bModal = !!(Flags & DAF_MODAL);
+        obj->m_bModal = Modal;
         return obj.Detach();
     }
 
@@ -514,7 +507,7 @@ public:
     static CDownloadManager*
     FindInstance()
     {
-        if (g_hDownloadWnd && IsWindowVisible(g_hDownloadWnd))
+        if (g_hDownloadWnd)
             return (CDownloadManager*)SendMessageW(g_hDownloadWnd, WM_GETINSTANCE, 0, 0);
         return NULL;
     }
@@ -523,12 +516,6 @@ public:
     IsCancelled()
     {
         return !IsWindow(m_hDlg) || SendMessageW(m_hDlg, WM_ISCANCELLED, 0, 0);
-    }
-
-    BOOL
-    IsSilentDialog()
-    {
-        return m_fDaf & DAF_SILENT;
     }
 
     void StartWorkerThread();
@@ -551,7 +538,6 @@ protected:
     UINT m_Index;
     BOOL m_bCancelled;
     BOOL m_bModal;
-    UINT m_fDaf = 0;
     WCHAR m_szCaptionFmt[100];
     ATL::CSimpleArray<DownloadInfo> m_List;
     CDowloadingAppsListView m_ListView;
@@ -587,17 +573,10 @@ CDownloadManager::Add(const DownloadInfo &Info)
 void
 CDownloadManager::Show()
 {
-    HWND hDlg = NULL;
-    const BOOL bSilent = IsSilentDialog(), bModal = m_bModal;
-    if (bModal && !bSilent)
+    if (m_bModal)
         DialogBoxParamW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DlgProc, (LPARAM)this);
     else if (!m_hDlg || !IsWindow(m_hDlg))
-        hDlg = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DlgProc, (LPARAM)this);
-
-    // A DialogBox dialog cannot be invisible, it is forced visible after WM_INITDIALOG returns.
-    // We therefore use a modeless dialog when we are both modal and silent.
-    for (MSG msg; bModal && bSilent && hDlg && GetMessageW(&msg, NULL, 0, 0);)
-        DispatchMessage(&msg);
+        CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DlgProc, (LPARAM)this);
 }
 
 INT_PTR CALLBACK
@@ -662,7 +641,7 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
                 return FALSE;
             m_ListView.LoadList(m_List);
 
-            ShowWindow(hDlg, IsSilentDialog() ? SW_HIDE : SW_SHOW);
+            ShowWindow(hDlg, SW_SHOW);
             StartWorkerThread();
             return TRUE;
         }
@@ -679,7 +658,7 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             m_bCancelled = TRUE;
             if (m_ProgressBar)
                 m_ProgressBar.UnsubclassWindow(TRUE);
-            return m_bModal && !IsSilentDialog() ? ::EndDialog(hDlg, 0) : ::DestroyWindow(hDlg);
+            return m_bModal ? ::EndDialog(hDlg, 0) : ::DestroyWindow(hDlg);
 
         case WM_DESTROY:
             if (g_hDownloadWnd == hDlg)
@@ -687,8 +666,6 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             g_Busy--;
             if (hMainWnd)
                 PostMessage(hMainWnd, WM_NOTIFY_OPERATIONCOMPLETED, 0, 0);
-            if (m_bModal && IsSilentDialog())
-                PostQuitMessage(0);
             Release();
             break;
 
@@ -1081,7 +1058,6 @@ run:
     // run it
     if (Info.DLType == DLTYPE_APPLICATION)
     {
-        BOOL bSilentInstall = Info.Flags & DAF_SILENT;
         CStringW app, params, tempdir;
         SHELLEXECUTEINFOW shExInfo = { sizeof(shExInfo), SEE_MASK_NOCLOSEPROCESS, hDlg };
         shExInfo.lpVerb = L"open";
@@ -1091,8 +1067,9 @@ run:
 
         if (Info.IType == INSTALLER_GENERATE)
         {
-            params = L"/" CMD_KEY_GENINST + CStringW(bSilentInstall ? L" /S" : L"") +
-                     L" \"" + Info.szPackageName + L"\" \"" + shExInfo.lpFile + L"\"";
+            params = L"/" + CStringW(CMD_KEY_GENINST) + L" \"" +
+                     Info.szPackageName + L"\" \"" +
+                     CStringW(shExInfo.lpFile) + L"\"";
             shExInfo.lpParameters = params;
             shExInfo.lpFile = app.GetBuffer(MAX_PATH);
             GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
@@ -1107,30 +1084,6 @@ run:
                 goto end;
             }
             shExInfo.lpFile = app;
-        }
-
-        if (bSilentInstall)
-        {
-            if (!Info.szSilentInstallArgs.IsEmpty())
-            {
-                // The package wants to force specific parameters
-                shExInfo.lpParameters = Info.szSilentInstallArgs.GetString();
-            }
-            else
-            {
-                UINT extrainfo = 0;
-                InstallerType it = Info.IExecType;
-
-                if (it == INSTALLER_UNKNOWN || it == INSTALLER_EXEINZIP)
-                    it = GuessInstallerType(shExInfo.lpFile, extrainfo);
-
-                if (GetSilentInstallParameters(it, extrainfo, shExInfo.lpFile, params))
-                {
-                    shExInfo.lpParameters = params;
-                    if (it == INSTALLER_MSI)
-                        shExInfo.lpFile = L"msiexec.exe"; // params contains the .msi path
-                }
-            }
         }
 
         /* FIXME: Do we want to log installer status? */
@@ -1189,19 +1142,19 @@ end:
 }
 
 BOOL
-DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, UINT Flags)
+DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, BOOL bIsModal)
 {
     if (AppsList.IsEmpty())
         return FALSE;
 
     CComPtr<CDownloadManager> pDM;
-    if (!CDownloadManager::CreateInstance(Flags, pDM))
+    if (!CDownloadManager::CreateInstance(bIsModal, pDM))
         return FALSE;
 
     for (POSITION it = AppsList.GetHeadPosition(); it;)
     {
         const CAppInfo *Info = AppsList.GetNext(it);
-        pDM->Add(DownloadInfo(*Info, Flags));
+        pDM->Add(DownloadInfo(*Info));
     }
     pDM->Show();
     return TRUE;
@@ -1210,19 +1163,21 @@ DownloadListOfApplications(const CAtlList<CAppInfo *> &AppsList, UINT Flags)
 BOOL
 DownloadApplication(CAppInfo *pAppInfo)
 {
+    const bool bModal = false;
     if (!pAppInfo)
         return FALSE;
 
     CAtlList<CAppInfo*> list;
     list.AddTail(pAppInfo);
-    return DownloadListOfApplications(list);
+    return DownloadListOfApplications(list, bModal);
 }
 
 VOID
 DownloadApplicationsDB(LPCWSTR lpUrl, BOOL IsOfficial)
 {
+    const bool bModal = true;
     CComPtr<CDownloadManager> pDM;
-    if (!CDownloadManager::CreateInstance(DAF_MODAL, pDM))
+    if (!CDownloadManager::CreateInstance(bModal, pDM))
         return;
 
     DownloadInfo DatabaseDLInfo;

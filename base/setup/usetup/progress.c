@@ -10,6 +10,7 @@
 
 #include "usetup.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

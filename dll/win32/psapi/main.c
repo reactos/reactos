@@ -16,6 +16,7 @@
 
 #include <psapi.h>
 
+#define NDEBUG
 #include <debug.h>
 
 static

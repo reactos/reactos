@@ -10,6 +10,7 @@
 
 #include <ntoskrnl.h>
 #include <winerror.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

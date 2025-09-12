@@ -14,6 +14,7 @@
 #include <hal.h>
 #include "apicp.h"
 #include <smp.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -102,30 +103,11 @@ HalpInitializeClock(VOID)
     ULONG_PTR EFlags;
     UCHAR RegisterB;
 
-#ifdef _M_AMD64
-    DPRINT1("HalpInitializeClock: entered\n");
-#endif
-
     /* Save EFlags and disable interrupts */
     EFlags = __readeflags();
     _disable();
 
-#ifdef _M_AMD64
-    DPRINT1("HalpInitializeClock: interrupts disabled\n");
-#endif
-
     // TODO: disable NMI
-
-#ifdef _M_AMD64
-    /* On AMD64/UEFI, skip CMOS initialization for now - might cause issues */
-    DPRINT1("HalpInitializeClock: Skipping CMOS init on AMD64/UEFI\n");
-    
-    /* TODO: Implement proper timer initialization for UEFI */
-    __writeeflags(EFlags);
-    
-    DPRINT1("HalpInitializeClock: completed (stub)\n");
-    return;
-#endif
 
     /* Acquire CMOS lock */
     HalpAcquireCmosSpinLock();

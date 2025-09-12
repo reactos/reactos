@@ -13,6 +13,7 @@
 
 #include <ntoskrnl.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #ifdef _BLDR_

@@ -12,6 +12,7 @@
 #include <initguid.h>
 #include <wdmguid.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #if 0

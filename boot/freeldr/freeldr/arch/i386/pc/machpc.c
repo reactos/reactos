@@ -701,21 +701,17 @@ ULONG
 PcGetSerialPort(ULONG Index, PULONG Irq)
 {
     static const ULONG PcIrq[MAX_COM_PORTS] = {4, 3, 4, 3};
-    // PUSHORT BasePtr; // TODO: Remove unused variable - temporarily commented for build
+    PUSHORT BasePtr;
 
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
      * Each COM port address is stored in a 2-byte field.
      * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
+    BasePtr = (PUSHORT)0x400;
     *Irq = PcIrq[Index];
-    
-    {
-        USHORT ComPortAddr;
-        USHORT* BdaComPortAddr = (USHORT*)(0x400 + Index * sizeof(USHORT));
-        __asm__ volatile("movw (%1), %0" : "=r" (ComPortAddr) : "r" (BdaComPortAddr) : "memory");
-        return (ULONG) ComPortAddr;
-    }
+
+    return (ULONG) *(BasePtr + Index);
 }
 
 /*
@@ -1764,13 +1760,6 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
 VOID
 MachInit(const char *CmdLine)
 {
-#ifdef _M_AMD64
-    /* On AMD64, use our special long mode implementation */
-    extern VOID Amd64MachInit(const char *CmdLine);
-    Amd64MachInit(CmdLine);
-    return;
-#endif
-
     /* Setup vtbl */
     RtlZeroMemory(&MachVtbl, sizeof(MachVtbl));
     MachVtbl.ConsPutChar = PcConsPutChar;

@@ -11,6 +11,7 @@
 
 #include <ntoskrnl.h>
 #include <cache/section/newmm.h>
+#define NDEBUG
 #include <debug.h>
 
 /* TYPES ********************************************************************/

@@ -10,6 +10,7 @@
 #include <hal.h>
 #include <smp.h>
 
+#define NDEBUG
 #include <debug.h>
 
 BOOLEAN

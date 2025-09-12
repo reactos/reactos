@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(
     -D__WINESRC__
     -DUSE_WINE_TODOS

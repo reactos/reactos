@@ -15,7 +15,6 @@
 Startup:
 
     cli
-    
 
     /* Setup real mode segment registers */
     xor ax, ax
@@ -25,9 +24,9 @@ Startup:
     mov gs, ax
     mov ss, ax
 
-    /* Save the boot drive and partition to BSS area */
-    mov byte ptr ds:[HEX(6F6C)], dl  /* BSS_BootDrive */
-    mov byte ptr ds:[HEX(6F6D)], dh  /* BSS_BootPartition */
+    /* Save the boot drive and partition */
+    mov byte ptr ds:[BSS_BootDrive], dl
+    mov byte ptr ds:[BSS_BootPartition], dh
 
     /* Setup a real mode stack */
     mov sp, word ptr ds:[stack16]
@@ -73,47 +72,31 @@ Msg_LongModeSupported:
     /* Build the startup page tables */
     call BuildPageTables
 
-    /* Store real mode entry point in BSS area */
-    mov dword ptr ds:[HEX(6F00)], offset RealModeEntryPoint  /* BSS_RealModeEntry */
+    /* Store real mode entry point in shared memory */
+    mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
 
-    /* Get the real PE entry point from the image */
-    /* The PE is at FREELDR_PE_BASE (0x10000) */
+    /* Address the image with es segment */
     mov ax, FREELDR_PE_BASE / 16
     mov es, ax
-    
-    /* Get PE header offset from DOS header */
+
+    /* Get address of optional header */
     mov eax, dword ptr es:[IMAGE_DOS_HEADER_e_lfanew]
-    
-    /* Get the AddressOfEntryPoint from optional header */
-    /* PE header + 4 (signature) + 20 (file header) + 16 (offset to entry point in optional header) */
-    add eax, 4 + IMAGE_FILE_HEADER_SIZE + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint
-    mov eax, dword ptr es:[eax]
-    
-    /* The entry point is relative to PE base, add FREELDR_PE_BASE */
+    add eax, 4 + IMAGE_FILE_HEADER_SIZE
+
+    /* Get address of entry point */
+    mov eax, dword ptr es:[eax + IMAGE_OPTIONAL_HEADER_AddressOfEntryPoint]
     add eax, FREELDR_PE_BASE
-    
-    /* Debug: Output entry point address to serial */
-    push eax
-    mov dx, HEX(3F8)
-    mov al, 'E'
-    out dx, al
-    pop eax
-    
-    /* Save entry point as 64-bit value in the jump instruction */
-    /* The mov rax, imm64 instruction is at InLongMode + offset */
-    /* Calculate the offset to the immediate value in the instruction */
-    mov dword ptr ds:[InLongModeJumpAddr], eax
-    mov dword ptr ds:[InLongModeJumpAddr + 4], 0
+
+    /* Save entry point */
+    mov dword ptr ds:[LongModeEntryPoint], eax
 
     /* Restore es */
     xor ax, ax
     mov es, ax
-    
 
     /* Output status */
     mov si, offset Msg_SwitchToLongMode
     call writestr
-    
 
     jmp ExitToLongMode
 
@@ -123,12 +106,12 @@ Msg_SwitchToLongMode:
 .align 8
 gdt:
     .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 00: NULL descriptor */
-    .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08: NULL descriptor */
-    .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: 64-bit code segment */
-    .word HEX(0000), HEX(0000), HEX(9200), HEX(0000) /* 18: 64-bit data segment */
+    .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08:  */
+    .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode CS */
+    .word HEX(FFFF), HEX(0000), HEX(F300), HEX(00CF) /* 18: long mode DS */
     .word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
     .word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
-    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: 32-bit compat mode CS */
+    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode CS */
 
 /* GDT table pointer */
 gdtptr:
@@ -286,11 +269,6 @@ RealModeEntryPoint:
 
 InRealMode:
 
-    /* Send 'R' to show we're back in real mode */
-    mov dx, HEX(03F8)
-    mov al, 'R'
-    out dx, al
-
 //    mov ax, HEX(0b800)
 //    mov es, ax
 //    mov word ptr es:[12], HEX(0e00) + '6'
@@ -323,7 +301,6 @@ InRealMode:
 ExitToLongMode:
     /* Disable interrupts */
     cli
-    
 
     /* Set correct segment registers */
     xor ax,ax
@@ -336,17 +313,14 @@ ExitToLongMode:
     /* Save current stack pointer */
     mov word ptr ds:[stack16], sp
 
-
     /* Set PAE and PGE: 10100000b */
     mov eax, cr4
     or eax, HEX(00A0)
     mov cr4, eax
 
-
     /* Point cr3 at the PML4 */
     mov eax, PML4_ADDRESS
     mov cr3, eax
-
 
     /* Enable long mode */
     mov ecx, MSR_EFER
@@ -354,54 +328,25 @@ ExitToLongMode:
     or eax, HEX(00000100)
     wrmsr
 
-
     /* Activate long mode by enabling paging and protection simultaneously,
        skipping protected mode entirely */
     mov eax, cr0
     or eax, HEX(80000001)
     mov cr0, eax
 
-
-    /* Clear prefetch queue & correct CS with far jump to 64-bit code */
-    /* Push the selector and offset, then use retf */
-    push LMODE_CS                 // Push selector
-    push offset InLongMode        // Push offset
-    retf                          // Far return to pop CS:EIP
+    /* Clear prefetch queue & correct CS */
+    ljmp16 LMODE_CS, InLongMode
 InLongMode:
-    /* We're now in 64-bit long mode, need 64-bit instructions */
-    /* Output 'L' to show we're in long mode */
-    .byte 0xBA, 0xF8, 0x03, 0x00, 0x00  // mov edx, 0x3F8
-    .byte 0xB0, 'L'                     // mov al, 'L'
-    .byte 0xEE                          // out dx, al
-    
-    /* Setup data segments for 64-bit mode - need proper 64-bit instructions */
-    .byte 0xB8, 0x18, 0x00, 0x00, 0x00  // mov eax, 0x18
-    .byte 0x8E, 0xD8                    // mov ds, ax
-    .byte 0x8E, 0xC0                    // mov es, ax
-    .byte 0x8E, 0xE8                    // mov gs, ax
-    .byte 0x8E, 0xE0                    // mov fs, ax
-    .byte 0x8E, 0xD0                    // mov ss, ax
-    
-    /* Debug: Output 'S' after segments setup */
-    .byte 0xBA, 0xF8, 0x03, 0x00, 0x00  // mov edx, 0x3F8
-    .byte 0xB0, 'S'                     // mov al, 'S'
-    .byte 0xEE                          // out dx, al
-    
-    /* Set up stack pointer to a safe location */
-    .byte 0x48, 0xBC              // mov rsp, imm64
-    .quad 0x90000                 // Stack at 0x90000
-    
-    /* Debug: Output 'J' before jump */
-    .byte 0x66, 0xBA, 0xF8, 0x03  // mov dx, 0x3F8
-    .byte 0xB0, 'J'               // mov al, 'J'
-    .byte 0xEE                    // out dx, al
-    
-    /* Jump to the saved entry point using absolute address */
-    /* Load the 64-bit entry point address */
-    .byte 0x48, 0xB8              // mov rax, imm64
-InLongModeJumpAddr:
-    .quad 0                       // Will be patched with actual entry point
-    .byte 0xFF, 0xE0              // jmp rax
+    //DB 66h, 0B8h, 18h, 00h // mov ax, LMODE_DS
+    //DB 66h, 8Eh, 0D8h // mov ds, ax
+    //DB 66h, 66h, 0C7h, 04h, 25h, 00h, 80h, 0Bh, 00h, 31h, 0Eh
+    //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
+
+    .byte HEX(0FF), HEX(25) // opcode of 64bit indirect jump
+    .long 1 // relative address of LongModeEntryPoint
+    nop
+LongModeEntryPoint:
+    .long 0, 0
 
     int HEX(16)
     jmp Reboot

@@ -13,6 +13,7 @@
 #include <k32.h>
 #include <ntstrsafe.h>
 
+#define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
 

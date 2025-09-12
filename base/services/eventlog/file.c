@@ -14,6 +14,7 @@
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* LOG FILE LIST - GLOBALS ***************************************************/

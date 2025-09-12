@@ -9,4 +9,3 @@ add_library(win32u_2k3sp2 MODULE
 
 set_module_type(win32u_2k3sp2 module)
 add_dependencies(win32u_2k3sp2 psdk)
-add_rostests_file(TARGET win32u_2k3sp2)

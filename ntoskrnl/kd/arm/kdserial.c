@@ -10,6 +10,7 @@
 
 #include <ntoskrnl.h>
 #include <arm/peripherals/pl011.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/

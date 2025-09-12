@@ -16,6 +16,7 @@
 #include "filesup.h"
 #include "inicache.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

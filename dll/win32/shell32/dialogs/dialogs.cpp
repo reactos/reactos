@@ -40,7 +40,6 @@ typedef struct
     HBITMAP hImageStrip;
     HBRUSH hBrush;
     HFONT hfFont;
-    BOOL bCloseDlg;
     WNDPROC OldButtonProc;
 } LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
@@ -360,7 +359,7 @@ BOOL WINAPI PickIconDlg(
     WCHAR szExpandedPath[MAX_PATH];
 
     // Initialize the dialog
-    PICK_ICON_CONTEXT IconContext = {0};
+    PICK_ICON_CONTEXT IconContext = { NULL };
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), lpstrFile);
     ExpandEnvironmentStringsW(lpstrFile, szExpandedPath, _countof(szExpandedPath));
@@ -1130,7 +1129,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
     hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hImageStrip);
     rect = pdis->rcItem;
 
-    /* Check the button ID for relevant bitmap to be used */
+    /* Check the button ID for revelant bitmap to be used */
     switch (pdis->CtlID)
     {
         case IDC_LOG_OFF_BUTTON:
@@ -1450,33 +1449,23 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             return TRUE;
         }
 
-        case WM_DESTROY:
-            if (pContext->bFriendlyUI)
-                EndFriendlyDialog(hwnd, pContext);
-            return TRUE;
+        case WM_CLOSE:
+            EndDialog(hwnd, IDCANCEL);
+            break;
 
+        /*
+        * If the user deactivates the log off dialog (it loses its focus
+        * while the dialog is not being closed), then destroy the dialog
+        * box.
+        */
         case WM_ACTIVATE:
         {
-            /*
-             * If the user deactivates the log-off dialog (it loses its focus
-             * while the dialog is not being closed), then destroy the dialog
-             * and cancel user logoff.
-             */
             if (LOWORD(wParam) == WA_INACTIVE)
             {
-                if (!pContext->bCloseDlg)
-                {
-                    pContext->bCloseDlg = TRUE;
-                    EndDialog(hwnd, IDCANCEL);
-                }
+                EndDialog(hwnd, IDCANCEL);
             }
             return FALSE;
         }
-
-        case WM_CLOSE:
-            pContext->bCloseDlg = TRUE;
-            EndDialog(hwnd, IDCANCEL);
-            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -1487,11 +1476,15 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
 
                 case IDCANCEL:
-                    pContext->bCloseDlg = TRUE;
                     EndDialog(hwnd, IDCANCEL);
                     break;
             }
             break;
+
+        case WM_DESTROY:
+            if (pContext->bFriendlyUI)
+                EndFriendlyDialog(hwnd, pContext);
+            return TRUE;
 
         case WM_CTLCOLORSTATIC:
         {
@@ -1543,7 +1536,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
     CComPtr<IUnknown> fadeHandler;
     HWND parent = NULL;
     DWORD LogoffDialogID = IDD_LOG_OFF;
-    LOGOFF_DLG_CONTEXT Context = {0};
+    LOGOFF_DLG_CONTEXT Context;
 
     if (!CallShellDimScreen(&fadeHandler, &parent))
         parent = hWndOwner;
@@ -1603,7 +1596,7 @@ VOID ExitWindowsDialog_backup(HWND hWndOwner)
  */
 void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
-    typedef DWORD (WINAPI *ShellShFunc)(HWND hWndParent, LPCWSTR pUserName, DWORD dwExcludeOptions);
+    typedef DWORD (WINAPI *ShellShFunc)(HWND hParent, WCHAR *Username, BOOL bHideLogoff);
     HINSTANCE msginaDll = LoadLibraryW(L"msgina.dll");
 
     TRACE("(%p)\n", hWndOwner);
@@ -1623,10 +1616,11 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
     }
 
     ShellShFunc pShellShutdownDialog = (ShellShFunc)GetProcAddress(msginaDll, "ShellShutdownDialog");
+
     if (pShellShutdownDialog)
     {
         /* Actually call the function */
-        DWORD returnValue = pShellShutdownDialog(parent, NULL, 0);
+        DWORD returnValue = pShellShutdownDialog(parent, NULL, FALSE);
 
         switch (returnValue)
         {

@@ -3,6 +3,7 @@
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 
+#define NDEBUG
 #include <reactos/debug.h>
 
 void

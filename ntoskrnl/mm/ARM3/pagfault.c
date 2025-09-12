@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -1722,16 +1723,6 @@ MmArmAccessFault(IN ULONG FaultCode,
     PMMPFN Pfn1;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
 
-#ifdef _M_AMD64
-    /* Check for NULL pointer access */
-    if ((ULONG_PTR)Address < PAGE_SIZE)
-    {
-        /* This is a NULL pointer dereference */
-        DPRINT1("NULL pointer access at %p - returning ACCESS_VIOLATION\n", Address);
-        return STATUS_ACCESS_VIOLATION;
-    }
-#endif
-
     /* Check for page fault on high IRQL */
     if (OldIrql > APC_LEVEL)
     {
@@ -1808,21 +1799,6 @@ MmArmAccessFault(IN ULONG FaultCode,
     {
         /* Bail out, if the fault came from user mode */
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
-        
-#ifdef _M_AMD64
-        /* Check for kernel stack overflow */
-        if (Mode == KernelMode && TrapInformation)
-        {
-            extern BOOLEAN NTAPI KiIsKernelStackOverflow(IN ULONG_PTR FaultAddress, IN PKTRAP_FRAME TrapFrame);
-            extern NTSTATUS NTAPI KiHandleKernelStackOverflow(IN PKTRAP_FRAME TrapFrame);
-            
-            if (KiIsKernelStackOverflow((ULONG_PTR)Address, (PKTRAP_FRAME)TrapInformation))
-            {
-                /* This is a kernel stack overflow - handle it */
-                return KiHandleKernelStackOverflow((PKTRAP_FRAME)TrapInformation);
-            }
-        }
-#endif
 
 #if (_MI_PAGING_LEVELS == 2)
         if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address)) MiSynchronizeSystemPde((PMMPDE)PointerPte);

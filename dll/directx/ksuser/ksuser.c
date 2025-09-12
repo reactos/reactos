@@ -7,6 +7,7 @@
  */
 
 #include "ksuser.h"
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS

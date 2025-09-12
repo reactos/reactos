@@ -132,8 +132,6 @@ typedef LONG KPRIORITY;
 //
 // Basic NT Types
 //
-typedef ULONG LOGICAL, *PLOGICAL;
-
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H) && !defined(_NTSECAPI_)
 
 #if !defined(__BCRYPT_H__) && !defined(__WINE_BCRYPT_H)

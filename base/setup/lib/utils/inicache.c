@@ -11,6 +11,7 @@
 
 #include "inicache.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* PRIVATE FUNCTIONS ********************************************************/

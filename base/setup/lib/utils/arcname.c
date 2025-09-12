@@ -27,6 +27,7 @@
 #include "partlist.h"
 #include "arcname.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

@@ -12,6 +12,7 @@
 
 #include <ntdll.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/
@@ -52,11 +53,11 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
             (kvpInfo->Type == REG_DWORD) &&
             (kvpInfo->DataLength == sizeof(ULONG)))
         {
-            BOOLEAN IsWorkstation = SharedUserData->NtProductType == NtProductWinNt;
-            BOOLEAN ReportAsWorkstation = (*(PULONG)kvpInfo->Data) != 0;
+            ULONG IsWorkstation = SharedUserData->NtProductType == NtProductWinNt;
+            ULONG ReportAsWorkstation = (*(PULONG)kvpInfo->Data) != 0;
             if (IsWorkstation != ReportAsWorkstation)
             {
-                g_ReportProductType = ReportAsWorkstation ? VER_NT_WORKSTATION : VER_NT_SERVER;
+                g_ReportProductType = ReportAsWorkstation ? NtProductWinNt : NtProductServer;
             }
         }
 
@@ -72,7 +73,7 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
     }
     else
     {
-        g_ReportProductType = -1; /* No override, caller gets the real value */
+        g_ReportProductType = -1;
     }
 }
 

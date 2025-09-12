@@ -198,13 +198,9 @@
 
 /* ReactOS hacks */
 void __cdecl __debugbreak(void);
-#ifndef DbgPrint
 unsigned long __cdecl DbgPrint(const char *Format, ...);
-#endif
 #define exit(n) __debugbreak()
-#ifndef printf
 #define printf DbgPrint
-#endif
 
 # ifdef _MSC_VER
 #  pragma warning(disable:4244)

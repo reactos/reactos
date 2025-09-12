@@ -247,11 +247,8 @@ ReturnFar:
     /* Pop Eflags from the stack */
     popfq
 
-    /* Return far - use explicit operand size for AMD64 */
-    /* FIXME: GAS warns about ambiguous operand size for lret
-     * We need to specify the size explicitly for AMD64 */
-    .byte 0x48  /* REX.W prefix for 64-bit operand */
-    .byte 0xCB  /* Far return opcode */
+    /* Return far */
+    retf
 
 .ENDP
 

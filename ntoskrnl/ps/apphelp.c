@@ -21,6 +21,7 @@ https://web.archive.org/web/20150926070918/https://dl.mandiant.com/EE/library/Wh
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

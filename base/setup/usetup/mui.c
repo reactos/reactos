@@ -27,6 +27,7 @@
 #include "usetup.h"
 #include "muilanguages.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* Special characters */

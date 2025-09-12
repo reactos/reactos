@@ -33,6 +33,7 @@
 #include "registry.h"
 #include "substset.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

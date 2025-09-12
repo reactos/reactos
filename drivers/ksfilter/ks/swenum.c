@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <swenum.h>
 
+#define NDEBUG
 #include <debug.h>
 
 LONG KsDeviceCount = 0;

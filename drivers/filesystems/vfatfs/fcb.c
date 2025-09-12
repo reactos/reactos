@@ -12,6 +12,7 @@
 
 #include "vfat.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #ifdef __GNUC__

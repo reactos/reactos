@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 extern void KiInvalidSystemThreadStartupExit(void);
@@ -42,14 +43,6 @@ KiInitializeContextThread(IN PKTHREAD Thread,
                            IN PVOID StartContext,
                            IN PCONTEXT Context)
 {
-    /* Debug output */
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** KERNEL: KiInitializeContextThread entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     PKSTART_FRAME StartFrame;
     PKSWITCH_FRAME CtxSwitchFrame;
     PKTRAP_FRAME TrapFrame;
@@ -57,122 +50,22 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     PVOID InitialStack;
 
     /* Allocate space on the stack for the XSAVE area */
-    {
-        const char msg[] = "*** KERNEL: Allocating space for XSAVE area ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     InitialStack = (PUCHAR)Thread->InitialStack - KeXStateLength;
     InitialStack = ALIGN_DOWN_POINTER_BY(InitialStack, 64);
     Thread->InitialStack = InitialStack;
 
     /* Initialize the state save area */
-    {
-        const char msg[] = "*** KERNEL: Initializing state save area (RtlZeroMemory) ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     Thread->StateSaveArea = InitialStack;
-    
-    /* Manual zero memory to avoid RtlZeroMemory */
-    /* RtlZeroMemory(Thread->StateSaveArea, KeXStateLength); */
-    {
-        PUCHAR Ptr = (PUCHAR)Thread->StateSaveArea;
-        SIZE_T Size = KeXStateLength;
-        
-        /* Debug output for size and pointer */
-        {
-            char msg[256];
-            char *p = msg;
-            const char prefix[] = "*** KERNEL: Zeroing ";
-            const char *pp = prefix;
-            while (*pp) *p++ = *pp++;
-            
-            /* Convert size to hex string */
-            ULONG64 val = Size;
-            char hex[17];
-            int j = 15;
-            hex[16] = 0;
-            for (j = 15; j >= 0; j--)
-            {
-                hex[j] = "0123456789ABCDEF"[val & 0xF];
-                val >>= 4;
-            }
-            for (j = 0; j < 16; j++) *p++ = hex[j];
-            
-            const char middle[] = " bytes at 0x";
-            pp = middle;
-            while (*pp) *p++ = *pp++;
-            
-            /* Convert pointer to hex string */
-            val = (ULONG64)Ptr;
-            for (j = 15; j >= 0; j--)
-            {
-                hex[j] = "0123456789ABCDEF"[val & 0xF];
-                val >>= 4;
-            }
-            for (j = 0; j < 16; j++) *p++ = hex[j];
-            
-            const char suffix[] = " ***\n";
-            pp = suffix;
-            while (*pp) *p++ = *pp++;
-            *p = '\0';
-            
-            p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-        
-        /* Check if pointers are valid */
-        if (!Ptr || Size > 0x10000)
-        {
-            const char msg[] = "*** KERNEL: Invalid pointer or size! ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            Size = 512; /* Use default XSAVE_FORMAT size */
-        }
-        
-        /* Zero memory safely */
-        if (Ptr)
-        {
-            for (SIZE_T i = 0; i < Size; i++)
-            {
-                /* Add progress output every 64 bytes */
-                if ((i & 0x3F) == 0)
-                {
-                    const char msg[] = ".";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                }
-                Ptr[i] = 0;
-            }
-            
-            const char msg[] = "\n*** KERNEL: Memory zeroed successfully ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-    }
-    
+    RtlZeroMemory(Thread->StateSaveArea, KeXStateLength);
     Thread->StateSaveArea->MxCsr = INITIAL_MXCSR;
-    Thread->StateSaveArea->ControlWord = INITIAL_FPCSR;
 
-    /* Check if we use XSAVE */
-    if (KeFeatureBits & KF_XSTATE)
+    /* Special initialization for XSAVES */
+    if (KeFeatureBits & KF_XSAVES)
     {
-        /* Enable the mask for legacy floating point state */
+        /* Set bit 63 in XCOMP_BV to mark the area as compacted.
+           XRSTORS requires this and will #GP otherwise. */
         PXSAVE_AREA XSaveArea = (PXSAVE_AREA)Thread->StateSaveArea;
-        XSaveArea->Header.Mask |= XSTATE_MASK_LEGACY_FLOATING_POINT;
-
-        /* Special initialization for XSAVES */
-        if (KeFeatureBits & KF_XSAVES)
-        {
-            /* Set bit 63 in XCOMP_BV to mark the area as compacted.
-               XRSTORS requires this and will #GP otherwise.
-               Also mark legacy FP as compacted. */
-            XSaveArea->Header.CompactionMask |= 0x8000000000000000ULL |
-                                                XSTATE_MASK_LEGACY_FLOATING_POINT;
-        }
+        XSaveArea->Header.Reserved[0] = 0x8000000000000000ULL;
     }
 
     /* Check if this is a With-Context Thread */

@@ -848,10 +848,10 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 		}
 	}
 
-#define CHECK_XRPNT if(xrpnt >= (real*)xr + SBLIMIT*SSLIMIT) \
+#define CHECK_XRPNT if(xrpnt >= &xr[SBLIMIT][0]) \
 { \
 	if(NOQUIET) \
-		error2("attempted xrpnt overflow (%p !< %p)", (void*) xrpnt, (void*) ((real*)xr + SBLIMIT*SSLIMIT)); \
+		error2("attempted xrpnt overflow (%p !< %p)", (void*) xrpnt, (void*) &xr[SBLIMIT][0]); \
 	return 1; \
 }
 
@@ -1287,7 +1287,7 @@ static int III_dequantize_sample(mpg123_handle *fr, real xr[SBLIMIT][SSLIMIT],in
 		gr_info->maxb       = 1;
 	}
 
-	while(xrpnt < (real*)xr + SBLIMIT*SSLIMIT)
+	while(xrpnt < &xr[SBLIMIT][0])
 	*xrpnt++ = DOUBLE_TO_REAL(0.0);
 
 	while( part2remain > 16 )

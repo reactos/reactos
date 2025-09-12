@@ -15,6 +15,7 @@
 #include <ndk/pstypes.h>
 #endif
 
+#define NDEBUG
 #include <debug.h>
 
 // #define MAX_PAGING_FILES     16  // See also ntoskrnl/include/internal/mm.h

@@ -11,6 +11,7 @@
 #include "ksecdd.h"
 #include <ksecioctl.h>
 
+#define NDEBUG
 #include <debug.h>
 
 

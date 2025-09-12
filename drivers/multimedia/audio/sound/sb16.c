@@ -17,6 +17,7 @@ NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
 
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS NTAPI

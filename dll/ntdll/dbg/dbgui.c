@@ -12,6 +12,7 @@
 
 #include <ndk/dbgkfuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

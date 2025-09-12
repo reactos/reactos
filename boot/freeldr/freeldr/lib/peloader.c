@@ -727,18 +727,12 @@ PeLdrAllocateDataTableEntry(
                                                            TAG_WLDR_DTE);
     if (DataTableEntry == NULL)
         return FALSE;
-    
-    TRACE("DataTableEntry allocated at %p, size=%lu\n", DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
 
     /* Get NT headers from the image */
-    TRACE("Getting NT headers from image at %p\n", BasePA);
     NtHeaders = RtlImageNtHeader(BasePA);
-    TRACE("NtHeaders at %p\n", NtHeaders);
 
     /* Initialize corresponding fields of DTE based on NT headers value */
-    TRACE("Zeroing DataTableEntry\n");
     RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
-    TRACE("DataTableEntry zeroed\n");
     DataTableEntry->DllBase = BaseVA;
     DataTableEntry->SizeOfImage = NtHeaders->OptionalHeader.SizeOfImage;
     DataTableEntry->EntryPoint = RVA(BaseVA, NtHeaders->OptionalHeader.AddressOfEntryPoint);
@@ -916,29 +910,9 @@ PeLdrLoadImageEx(
     SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
 
     /* Try to allocate this memory; if it fails, allocate somewhere else */
-#ifdef _M_AMD64
-    /* For AMD64 kernel (LoaderSystemCode), allocate at a low physical address for RIP-relative addressing */
-    if (MemoryType == LoaderSystemCode)
-    {
-        /* Try to allocate kernel at 2MB physical (right after 1MB mark) */
-        PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
-                           (PVOID)0x200000,  /* 2MB physical */
-                           MemoryType);
-        /* Note: If this fails, we'll fall through to allocate anywhere */
-    }
-    else
-    {
-        /* For other modules, use the normal allocation 
-         * CRITICAL FIX: Use ULONG_PTR instead of ULONG to avoid truncating 64-bit ImageBase values */
-        PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
-                           (PVOID)((ULONG_PTR)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
-                           MemoryType);
-    }
-#else
     PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
                        (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
                        MemoryType);
-#endif
 
     if (PhysicalBase == NULL)
     {
@@ -957,8 +931,6 @@ PeLdrLoadImageEx(
     VirtualBase = KernelMapping ? PaToVa(PhysicalBase) : PhysicalBase;
 
     TRACE("Base PA: 0x%p, VA: 0x%p\n", PhysicalBase, VirtualBase);
-    DbgPrint("PeLdrLoadImageEx: Allocated at PA=0x%p, VA=0x%p, ImageBase=0x%llx\n", 
-             PhysicalBase, VirtualBase, (ULONGLONG)NtHeaders->OptionalHeader.ImageBase);
 
     /* Copy headers from already read data */
     RtlCopyMemory(PhysicalBase, HeadersBuffer, min(NtHeaders->OptionalHeader.SizeOfHeaders, sizeof(HeadersBuffer)));
@@ -1048,68 +1020,15 @@ PeLdrLoadImageEx(
     /* Relocate the image, if it needs it */
     if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
     {
-        LONGLONG RelocDelta;
-        
-        /* Calculate the relocation delta */
-        RelocDelta = (LONGLONG)((ULONG_PTR)VirtualBase - NtHeaders->OptionalHeader.ImageBase);
-        
-        WARN("Relocating image: ImageBase=0x%llx -> VirtualBase=%p (delta=%llx)\n", 
-             (ULONGLONG)NtHeaders->OptionalHeader.ImageBase, VirtualBase, RelocDelta);
-        
-        /* Debug output for kernel ImageBase issue */
-        if (KernelMapping && MemoryType == LoaderSystemCode)
-        {
-            ERR("DEBUG: Kernel PE ImageBase from header: 0x%llx\n", (ULONGLONG)NtHeaders->OptionalHeader.ImageBase);
-            ERR("DEBUG: Kernel VirtualBase: 0x%p\n", VirtualBase);
-            ERR("DEBUG: Calculated RelocDelta: 0x%llx\n", RelocDelta);
-        }
-        
-#ifdef _M_AMD64
-        /* For AMD64 kernel, check if relocation delta is too large for RIP-relative addressing */
-        if (KernelMapping && MemoryType == LoaderSystemCode)
-        {
-            /* RIP-relative addressing has a ±2GB limit */
-            if (RelocDelta > 0x7FFFFFFFLL || RelocDelta < -0x80000000LL)
-            {
-                ERR("ERROR: Kernel relocation delta 0x%llx exceeds RIP-relative addressing limits!\n", RelocDelta);
-                ERR("  This will cause global variable access to fail.\n");
-                ERR("  Kernel ImageBase: 0x%llx, VirtualBase: %p\n", 
-                    (ULONGLONG)NtHeaders->OptionalHeader.ImageBase, VirtualBase);
-                /* Continue anyway - kernel will crash but we'll see how far it gets */
-            }
-        }
-#endif
-        
-        /* For kernel images, we need to relocate using the virtual address delta */
-        if (KernelMapping)
-        {
-            /* The image is loaded at PhysicalBase but will run at VirtualBase */
-            /* Relocations must be applied based on where it will run (VirtualBase) */
-            Status = LdrRelocateImageWithBias(PhysicalBase,
-                                              RelocDelta,
-                                              "FreeLdr",
-                                              ESUCCESS,
-                                              ESUCCESS, /* In case of conflict still return success */
-                                              ENOEXEC);
-        }
-        else
-        {
-            /* For non-kernel images, use the physical base delta */
-            Status = LdrRelocateImageWithBias(PhysicalBase,
-                                              (ULONG_PTR)PhysicalBase - NtHeaders->OptionalHeader.ImageBase,
-                                              "FreeLdr",
-                                              ESUCCESS,
-                                              ESUCCESS, /* In case of conflict still return success */
-                                              ENOEXEC);
-        }
-        
+        WARN("Relocating %p -> %p\n", NtHeaders->OptionalHeader.ImageBase, VirtualBase);
+        Status = LdrRelocateImageWithBias(PhysicalBase,
+                                          (ULONG_PTR)VirtualBase - (ULONG_PTR)PhysicalBase,
+                                          "FreeLdr",
+                                          ESUCCESS,
+                                          ESUCCESS, /* In case of conflict still return success */
+                                          ENOEXEC);
         if (Status != ESUCCESS)
-        {
-            ERR("Failed to relocate image, Status=%d\n", Status);
             goto Failure;
-        }
-        
-        TRACE("Image relocated successfully with delta=%llx\n", RelocDelta);
     }
 
     /* Fill output parameters */

@@ -1601,13 +1601,7 @@
                             glyph_data.pointer,
                             (FT_ULong)glyph_data.length );
 
-      /* Store pointer to local stream using memcpy to avoid compiler warning */
-      /* This is safe as the stream is only used within this function scope */
-      {
-        FT_Stream stream_ptr = &inc_stream;
-        /* Use memcpy to mask the pointer assignment from compiler analysis */
-        memcpy(&loader->stream, &stream_ptr, sizeof(FT_Stream));
-      }
+      loader->stream = &inc_stream;
     }
     else
 

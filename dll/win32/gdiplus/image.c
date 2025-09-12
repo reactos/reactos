@@ -4127,7 +4127,7 @@ static GpStatus load_wmf(IStream *stream, GpMetafile **metafile)
     if (hr != S_OK || size != sizeof(mh))
         return GenericError;
 
-    if (*(UINT32*)&mh == WMF_PLACEABLE_KEY)
+    if (((WmfPlaceableFileHeader *)&mh)->Key == WMF_PLACEABLE_KEY)
     {
         seek.QuadPart = 0;
         hr = IStream_Seek(stream, seek, STREAM_SEEK_SET, NULL);

@@ -10,6 +10,7 @@
 #include "precomp.h"
 #include <ntstrsafe.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FMIFS.1 */

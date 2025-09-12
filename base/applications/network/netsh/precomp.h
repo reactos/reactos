@@ -58,7 +58,6 @@ typedef struct _HELPER_ENTRY
     struct _HELPER_ENTRY *pNext;
 
     NS_HELPER_ATTRIBUTES Attributes;
-    GUID ParentHelperGuid;
 
     PDLL_LIST_ENTRY pDllEntry;
     BOOL bStarted;
@@ -75,7 +74,7 @@ typedef struct _COMMAND_ENTRY
     struct _COMMAND_ENTRY *pPrev;
     struct _COMMAND_ENTRY *pNext;
 
-    PWSTR pwszCmdToken;
+    LPCWSTR pwszCmdToken;
     PFN_HANDLE_CMD pfnCmdHandler;
     DWORD dwShortCmdHelpToken;
     DWORD dwCmdHlpToken;
@@ -87,7 +86,7 @@ typedef struct _COMMAND_GROUP
     struct _COMMAND_GROUP *pPrev;
     struct _COMMAND_GROUP *pNext;
 
-    PWSTR pwszCmdGroupToken;
+    LPCWSTR pwszCmdGroupToken;
     DWORD dwShortCmdHelpToken;
     DWORD dwFlags;
 
@@ -101,7 +100,6 @@ typedef struct _CONTEXT_ENTRY
     struct _CONTEXT_ENTRY *pNext;
 
     struct _CONTEXT_ENTRY *pParentContext;
-//    PHELPER_ENTRY pHelper;
 
     PWSTR pszContextName;
     GUID Guid;
@@ -123,7 +121,6 @@ typedef struct _CONTEXT_ENTRY
 extern PCONTEXT_ENTRY pRootContext;
 extern PCONTEXT_ENTRY pCurrentContext;
 
-extern PHELPER_ENTRY pHelperListHead;
 
 /* PROTOTYPES *****************************************************************/
 
@@ -132,24 +129,8 @@ extern PHELPER_ENTRY pHelperListHead;
 BOOL
 CreateRootContext(VOID);
 
-VOID
-CleanupContext(VOID);
-
-PCONTEXT_ENTRY
-FindContextByGuid(
-    _In_ const GUID *pGuid);
 
 /* help.c */
-
-BOOL
-ProcessHelp(
-    _In_ PCONTEXT_ENTRY pContext,
-    _In_ DWORD dwCurrentIndex,
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount,
-    _In_ DWORD dwHelpLevel);
-
-
 DWORD
 WINAPI
 HelpCommand(
@@ -161,21 +142,10 @@ HelpCommand(
     LPCVOID pvData,
     BOOL *pbDone);
 
-#if 0
 VOID
 HelpGroup(
-    PCONTEXT_ENTRY pContext,
-    LPWSTR pszGroupName,
-    BOOL bRecurse);
+    PCOMMAND_GROUP pGroup);
 
-VOID
-HelpContext(
-    PCONTEXT_ENTRY pContext);
-
-VOID
-HelpSubcontexts(
-    PCONTEXT_ENTRY pContext);
-#endif
 
 /* helper.c */
 VOID
@@ -184,10 +154,6 @@ LoadHelpers(VOID);
 VOID
 UnloadHelpers(VOID);
 
-PHELPER_ENTRY
-FindHelper(
-    _In_ const GUID *pguidHelper,
-    _In_ PHELPER_ENTRY pHelper);
 
 DWORD
 WINAPI
@@ -226,13 +192,12 @@ ShowHelperCommand(
 /* interpreter.c */
 BOOL
 InterpretScript(
-    _In_ LPWSTR pszFileName);
+    LPWSTR pszFileName);
 
 BOOL
 InterpretCommand(
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount,
-    _Inout_ PBOOL bDone);
+    LPWSTR *argv,
+    DWORD dwArgCount);
 
 VOID
 InterpretInteractive(VOID);

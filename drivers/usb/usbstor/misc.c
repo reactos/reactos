@@ -9,6 +9,7 @@
 
 #include "usbstor.h"
 
+#define NDEBUG
 #include <debug.h>
 
 IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;

@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -511,11 +512,8 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
                IN ULONG Length)
 {
     PCI_SLOT_NUMBER Slot;
-    union {
-        UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
-        PCI_COMMON_CONFIG PciConfig;
-    } PciData;
-    PPCI_COMMON_CONFIG PciConfig = &PciData.PciConfig;
+    UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
+    PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
 
     Slot.u.AsULONG = SlotNumber;
@@ -560,7 +558,7 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
         if (Len > Length) Len = Length;
 
         /* Copy the data into the caller's buffer */
-        RtlMoveMemory(Buffer, PciData.PciBuffer + Offset, Len);
+        RtlMoveMemory(Buffer, PciBuffer + Offset, Len);
 
         /* Update buffer and offset, decrement total length */
         Offset += Len;
@@ -594,11 +592,8 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
                IN ULONG Length)
 {
     PCI_SLOT_NUMBER Slot;
-    union {
-        UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
-        PCI_COMMON_CONFIG PciConfig;
-    } PciData2;
-    PPCI_COMMON_CONFIG PciConfig = &PciData2.PciConfig;
+    UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
+    PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
 
     Slot.u.AsULONG = SlotNumber;
@@ -631,10 +626,10 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
         if (Len > Length) Len = Length;
 
         /* Copy the specific caller data */
-        RtlMoveMemory(PciData2.PciBuffer + Offset, Buffer, Len);
+        RtlMoveMemory(PciBuffer + Offset, Buffer, Len);
 
         /* Write the actual configuration data */
-        HalpWritePCIConfig(BusHandler, Slot, PciData2.PciBuffer + Offset, Offset, Len);
+        HalpWritePCIConfig(BusHandler, Slot, PciBuffer + Offset, Offset, Len);
 
         /* Update buffer and offset, decrement total length */
         Offset += Len;

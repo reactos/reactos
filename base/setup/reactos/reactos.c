@@ -32,6 +32,7 @@
 
 #include "resource.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/

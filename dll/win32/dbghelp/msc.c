@@ -710,12 +710,7 @@ static BOOL codeview_add_type_enum_field_list(struct module* module,
             const char* name = (const char*)&type->enumerate_v3.value + vlen;
 
             symt_add_enum_element(module, symt, name, value);
-            /* Calculate string length safely with bounds check */
-            {
-                size_t max_len = last - (const unsigned char*)name;
-                size_t name_len = strnlen(name, max_len > 0 ? max_len - 1 : 0);
-                ptr += 2 + 2 + vlen + (1 + name_len);
-            }
+            ptr += 2 + 2 + vlen + (1 + strlen(name));
             break;
         }
 
@@ -864,12 +859,7 @@ static int codeview_add_type_struct_field_list(struct codeview_type_parse* ctp,
 
             codeview_add_udt_element(ctp, symt, c_name, value, type->member_v3.type);
 
-            /* Calculate string length safely with bounds check */
-            {
-                size_t max_len = last - (const unsigned char*)c_name;
-                size_t name_len = strnlen(c_name, max_len > 0 ? max_len - 1 : 0);
-                ptr += 2 + 2 + 4 + leaf_len + (name_len + 1);
-            }
+            ptr += 2 + 2 + 4 + leaf_len + (strlen(c_name) + 1);
             break;
 
         case LF_STMEMBER_V1:

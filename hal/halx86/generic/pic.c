@@ -8,6 +8,7 @@
  /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#define NDEBUG
 #include <debug.h>
 
  /* FUNCTIONS ******************************************************************/
@@ -20,12 +21,6 @@ HalpInitializeLegacyPICs(VOID)
     I8259_ICW2 Icw2;
     I8259_ICW3 Icw3;
     I8259_ICW4 Icw4;
-
-#ifdef _M_AMD64
-    /* On AMD64 with UEFI, legacy PICs are not present */
-    /* Skip initialization entirely on AMD64 - we use APIC instead */
-    return;
-#endif
 
     ASSERT(!(__readeflags() & EFLAGS_INTERRUPT_MASK));
 

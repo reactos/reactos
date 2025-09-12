@@ -14,7 +14,6 @@ extern void func_exp(void);
 extern void func_log(void);
 extern void func_log10(void);
 extern void func_round(void);
-extern void func_setjmp(void);
 extern void func_sin(void);
 extern void func_sqrt(void);
 extern void func_tan(void);
@@ -33,7 +32,6 @@ const struct test winetest_testlist[] =
     { "log", func_log },
     { "log10", func_log10 },
     { "round", func_round },
-    { "setjmp", func_setjmp },
     { "sin", func_sin },
     { "sqrt", func_sqrt },
     { "tan", func_tan },

@@ -5050,13 +5050,6 @@ KsFilterFactoryGetDevice(
     return KsGetDevice((PVOID)FilterFactory);
 }
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-KSDDKAPI
-VOID
-NTAPI
-KsFilterReleaseProcessingMutex(
-  _In_ PKSFILTER Filter);
-
 /* etc. */
 #endif /* avstream */
 

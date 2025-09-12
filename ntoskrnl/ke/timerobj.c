@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -174,21 +175,10 @@ KiCompleteTimer(IN PKTIMER Timer,
     KiRemoveEntryTimer(Timer);
 
     /* Link the timer list to our stack */
-    /* FIXME: GCC warns about storing address of local variable ListHead
-     * This is a false positive - the temporary list is only used within this function
-     * and the timer's list entry is properly relinked before the function returns
-     * Using pragma to suppress -Wdangling-pointer warning */
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdangling-pointer"
-#endif
     ListHead.Flink = &Timer->TimerListEntry;
     ListHead.Blink = &Timer->TimerListEntry;
     Timer->TimerListEntry.Flink = &ListHead;
     Timer->TimerListEntry.Blink = &ListHead;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
     /* Release the timer lock */
     KiReleaseTimerLock(LockQueue);

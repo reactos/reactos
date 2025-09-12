@@ -21,7 +21,7 @@ static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR fo
     va_start(args, formatString);
     ret = _vsnprintf(buf, buf_size, formatString, args);
     va_end(args);
-    ok(expected_ret == ret, "Test failed for `%s`: expected %i, got %i.\n", formatString, expected_ret, ret);
+    ok(expected_ret == ret, "Test failed: expected %i, got %i.\n", expected_ret, ret);
 }
 
 START_TEST(_vsnprintf)
@@ -37,10 +37,7 @@ START_TEST(_vsnprintf)
 #if defined(TEST_CRTDLL)||defined(TEST_USER32)
         call_varargs(NULL, INT_MAX, -1, "%s it really work?", "does");
 #else
-        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
-            call_varargs(NULL, INT_MAX, -1, "%s it really work?", "does");
-        else
-            call_varargs(NULL, INT_MAX, 20, "%s it really work?", "does");
+        call_varargs(NULL, INT_MAX, 20, "%s it really work?", "does");
 #endif
 
 #if defined(TEST_CRTDLL)||defined(TEST_USER32)
@@ -52,10 +49,7 @@ START_TEST(_vsnprintf)
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
-        ok_eq_uint(errno, ERROR_BAD_COMMAND);
-    else
-        ok_eq_uint(errno, 0);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 
     /* This one is no better */
@@ -75,23 +69,17 @@ START_TEST(_vsnprintf)
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
-        ok_eq_uint(errno, ERROR_BAD_COMMAND);
-    else
-        ok_eq_uint(errno, 0);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 
     /* One more NULL checks */
     StartSeh()
         call_varargs(buffer, 255, -1, NULL);
-    EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+    EndSeh(STATUS_ACCESS_VIOLATION);
 
 #if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
     ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 #else
-    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
-        ok_eq_uint(errno, ERROR_BAD_COMMAND);
-    else
-        ok_eq_uint(errno, 0);
+    ok(errno == 0, "Expected 0, got %u\n", errno);
 #endif
 }

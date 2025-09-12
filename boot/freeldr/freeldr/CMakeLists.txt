@@ -53,7 +53,6 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
     lib/inifile/inifile.c
     lib/inifile/parse.c
     lib/mm/meminit.c
-    lib/mm/memops.c
     lib/mm/mm.c
     lib/mm/heap.c)
 
@@ -97,8 +96,7 @@ elseif(ARCH STREQUAL "amd64")
 
     list(APPEND FREELDR_ARC_SOURCE
         arch/i386/i386bug.c
-        arch/i386/ntoskrnl.c
-        arch/amd64/machamd64.c)
+        arch/i386/ntoskrnl.c)
 
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/amd64/winldr.c)
@@ -106,21 +104,6 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/arm/winldr.c)
-
-elseif(ARCH STREQUAL "arm64")
-    list(APPEND FREELDR_COMMON_ASM_SOURCE
-        arch/arm64/misc.S
-        arch/arm64/except.S
-        arch/arm64/cache_v2.S)
-
-    list(APPEND FREELDR_ARC_SOURCE
-        arch/arm64/macharm64.c
-        arch/arm64/trap.c
-        arch/arm64/mmu_v2.c
-        arch/arm64/timer.c)
-
-    list(APPEND FREELDR_NTLDR_SOURCE
-        ntldr/arch/arm64/winldr.c)
 
 else()
     #TBD

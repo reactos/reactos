@@ -39,6 +39,12 @@
 #endif
 #endif
 
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
+#define __ROS_LONG64__
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -233,10 +239,7 @@ struct protoent {
 #define WSADESCRIPTION_LEN 256
 #define WSASYS_STATUS_LEN 128
 
-/* FIXME: INVALID_SOCKET macro causes overflow warning on 64-bit when converting
- * from unsigned long long to int. This is intentional to create an invalid handle value (-1).
- * Cast through UINT_PTR to avoid the warning. */
-#define INVALID_SOCKET ((SOCKET)(UINT_PTR)(~0))
+#define INVALID_SOCKET (SOCKET)(~0)
 
 #define SOCKET_ERROR (-1)
 

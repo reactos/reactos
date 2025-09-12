@@ -11,6 +11,7 @@
 #include "precomp.h"
 #include "fileqsup.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

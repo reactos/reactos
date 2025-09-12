@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "ntoskrnl.h"
+#define NDEBUG
 #include "debug.h"
 
 /* GLOBALS *******************************************************************/
@@ -529,7 +530,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 if (Prcb->VendorString[0])
                 {
                     /* Convert it to Unicode */
-                    RtlInitAnsiString(&TempString, (PCSZ)Prcb->VendorString);
+                    RtlInitAnsiString(&TempString, Prcb->VendorString);
                     if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE)))
                     {
                         /* Add it to the registry */

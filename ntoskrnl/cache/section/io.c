@@ -46,6 +46,7 @@
 
 #include <ntoskrnl.h>
 #include "newmm.h"
+#define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
 

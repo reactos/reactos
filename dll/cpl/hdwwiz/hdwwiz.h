@@ -15,6 +15,7 @@
 #include <reactos/dll/devmgr/devmgr.h>
 #include <cpl.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define MAX_STR_SIZE 255

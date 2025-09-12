@@ -20,6 +20,7 @@
 
 #include "resource.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #define MAX_PASSWORD_LENGTH 64

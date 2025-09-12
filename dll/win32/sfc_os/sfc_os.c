@@ -28,6 +28,7 @@
 #include <winuser.h>
 #include <winwlx.h>
 
+#define NDEBUG
 #include <debug.h>
 
 HINSTANCE hLibModule;

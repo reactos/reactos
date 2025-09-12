@@ -20,6 +20,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 const char *dns_type_to_str( unsigned short type )

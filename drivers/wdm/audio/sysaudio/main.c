@@ -11,6 +11,7 @@
 
 #include "sysaudio.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #define TAG_SYSAUDIO 'AsyS'

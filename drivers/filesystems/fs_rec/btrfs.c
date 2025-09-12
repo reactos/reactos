@@ -12,6 +12,7 @@
 #include "fs_rec.h"
 #include "btrfs.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

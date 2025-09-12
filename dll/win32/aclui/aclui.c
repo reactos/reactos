@@ -30,6 +30,7 @@
 
 #include <sddl.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #include "resource.h"

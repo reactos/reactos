@@ -8,6 +8,7 @@
 
 #include "console.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

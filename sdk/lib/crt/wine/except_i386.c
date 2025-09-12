@@ -1147,7 +1147,6 @@ void CDECL MSVCRT_longjmp(_JUMP_BUFFER *jmp, int retval)
 #endif
 }
 
-#ifndef __REACTOS__
 /*********************************************************************
  *		_seh_longjmp_unwind (MSVCRT.@)
  */
@@ -1155,7 +1154,6 @@ void __stdcall _seh_longjmp_unwind(_JUMP_BUFFER *jmp)
 {
     msvcrt_local_unwind2( (MSVCRT_EXCEPTION_FRAME *)jmp->Registration, jmp->TryLevel, (void *)jmp->Ebp );
 }
-#endif
 
 /*********************************************************************
  *		_seh_longjmp_unwind4 (MSVCRT.@)

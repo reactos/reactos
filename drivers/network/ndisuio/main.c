@@ -8,6 +8,7 @@
 
 #include "ndisuio.h"
 
+#define NDEBUG
 #include <debug.h>
 
 PDEVICE_OBJECT GlobalDeviceObject;

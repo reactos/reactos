@@ -7,6 +7,7 @@
 
 #include "pciidex.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /** @brief Global debugging level. Valid values are between 0 (Error) and 3 (Trace). */

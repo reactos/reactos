@@ -33,6 +33,7 @@
 #include "kdb.h"
 #include "../kd/kdterminal.h"
 
+#define NDEBUG
 #include "debug.h"
 
 /* DEFINES *******************************************************************/
@@ -125,7 +126,7 @@ BOOLEAN
     IN PCH Argv[]);
 
 static PKDBG_CLI_ROUTINE KdbCliCallbacks[10];
-static BOOLEAN KdbUseIntelSyntax = TRUE; /* Set to TRUE for intel syntax */
+static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
 static BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
 
 static ULONG KdbNumberOfRowsPrinted = 0;
@@ -987,7 +988,7 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr = {{0, 0, 0}}, Idtr = {{0, 0, 0}};
+        KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
         USHORT Ldtr, Tr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1799,7 +1800,7 @@ KdbpCmdThread(
     };
 
     ASSERT(KdbCurrentProcess);
-    
+
     if (Argc >= 2 && _stricmp(Argv[1], "list") == 0)
     {
         Process = KdbCurrentProcess;

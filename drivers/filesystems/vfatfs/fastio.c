@@ -8,6 +8,7 @@
 
 #include "vfat.h"
 
+#define NDEBUG
 #include <debug.h>
 
 static FAST_IO_CHECK_IF_POSSIBLE VfatFastIoCheckIfPossible;

@@ -13,6 +13,7 @@
 #include <ntddk.h>
 #include <wmilib.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

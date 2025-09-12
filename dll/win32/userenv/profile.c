@@ -11,6 +11,7 @@
 
 #include <sddl.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -2006,7 +2007,7 @@ LoadUserProfileW(
     _Inout_ LPPROFILEINFOW lpProfileInfo)
 {
     WCHAR szUserHivePath[MAX_PATH];
-    DWORD dwLength;
+    DWORD dwLength = _countof(szUserHivePath);
     PTOKEN_USER UserSid = NULL;
     UNICODE_STRING SidString = { 0, 0, NULL };
     HANDLE hProfileMutex = NULL;
@@ -2054,14 +2055,6 @@ LoadUserProfileW(
     {
         DPRINT1("Loading profile %S\n", SidString.Buffer);
 
-        /*
-         * NOTE: lpProfilePath specifies the path to a *roaming* user profile,
-         * for example on a domain server, if any. It is then used to create
-         * a local image (copy) of the profile on the local computer.
-         *
-         * FIXME: We currently don't implement this in ReactOS; instead, we use
-         * it directly as *the* user's profile path, without doing any copy...
-         */
         if (lpProfileInfo->lpProfilePath)
         {
             /* Use the caller's specified roaming user profile path */
@@ -2069,18 +2062,17 @@ LoadUserProfileW(
         }
         else
         {
-            /* Build a default user profile path */
-            dwLength = _countof(szUserHivePath);
+            /* FIXME: check if MS Windows allows lpProfileInfo->lpProfilePath to be NULL */
             if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
             {
-                DPRINT1("GetProfilesDirectoryW() failed (Error %ld)\n", GetLastError());
+                DPRINT1("GetProfilesDirectoryW() failed (error %ld)\n", GetLastError());
                 goto cleanup;
             }
-            StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
-            StringCbCatW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpUserName);
         }
 
         /* Create user hive name */
+        StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
+        StringCbCatW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpUserName);
         StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\ntuser.dat");
         DPRINT("szUserHivePath: %S\n", szUserHivePath);
 

@@ -734,11 +734,6 @@ protected:
     IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
     BOOL _InitLate();
-    /* FIXME: This method hides the virtual base class method due to different const qualifier
-     * Base class: _IsEqual(const SLOTITEMDATA*, LPCVOID, UINT) const
-     * This class: _IsEqual(SLOTITEMDATA*, LPCVOID, UINT) [non-const]
-     * Using 'using' declaration to make base class version visible */
-    using CMruBase::_IsEqual;
     BOOL _IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData);
     DWORD _DeleteValue(LPCWSTR pszValue) override;
 

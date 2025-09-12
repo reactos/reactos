@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#define NDEBUG
 #include <debug.h>
 
 #define QUERY_ACTCTX_FLAG_VALID         (QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX | \

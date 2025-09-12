@@ -13,6 +13,7 @@
 #include <cache/newcc.h>
 #endif
 
+#define NDEBUG
 #include <debug.h>
 
 #include "inbv/logo.h"

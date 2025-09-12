@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 //
@@ -139,30 +140,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         IN BOOLEAN SecondChanceException)
 {
     BOOLEAN Unload;
-#ifdef _M_AMD64
     ULONG_PTR ProgramCounter;
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** KdpTrap: Entry, ExceptionCode=";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        
-        ULONG code = ExceptionRecord->ExceptionCode;
-        for (int k = 28; k >= 0; k -= 4)
-        {
-            int digit = (code >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-            __outbyte(COM1_PORT, c);
-        }
-        
-        const char msg2[] = "\n";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-    }
-#else
-    ULONG_PTR ProgramCounter;
-#endif
     BOOLEAN Handled;
     NTSTATUS ReturnStatus;
     USHORT ReturnLength;
@@ -184,13 +162,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
         {
             /* DbgPrint */
             case BREAKPOINT_PRINT:
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KdpTrap: BREAKPOINT_PRINT detected, calling KdpPrint ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                }
-#endif
+
                 /* Call the worker routine */
                 ReturnStatus = KdpPrint((ULONG)KdpGetParameterThree(ContextRecord),
                                         (ULONG)KdpGetParameterFour(ContextRecord),
@@ -200,33 +172,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                                         TrapFrame,
                                         ExceptionFrame,
                                         &Handled);
-
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KdpTrap: KdpPrint returned, Handled=";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                    char h = Handled ? '1' : '0';
-                    while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                    __outbyte(COM1_PORT, h);
-                    const char msg2[] = " ReturnStatus=";
-                    const char *p2 = msg2;
-                    while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-                    for (int k = 28; k >= 0; k -= 4)
-                    {
-                        int digit = (ReturnStatus >> k) & 0xF;
-                        char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                        while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                        __outbyte(COM1_PORT, c);
-                    }
-                    const char msg3[] = "\n";
-                    const char *p3 = msg3;
-                    while (*p3) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p3++); }
-                }
-#endif
-
-                /* Mark as handled - we processed the debug print */
-                Handled = TRUE;
 
                 /* Update the return value for the caller */
                 KeSetContextReturnRegister(ContextRecord, ReturnStatus);
@@ -294,38 +239,11 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
          * If the PC was not updated, we'll increment it ourselves so execution
          * continues past the breakpoint.
          */
-#ifdef _M_AMD64
-        {
-            const char msg[] = "*** KdpTrap: Checking if RIP needs adjustment ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-#endif
         if (ProgramCounter == KeGetContextPc(ContextRecord))
         {
-            ULONG InstructionSize = KD_BREAKPOINT_SIZE;  /* Default for INT3 */
-            
-            /* For BREAKPOINT_PRINT (INT 0x2D), the instruction is 2 bytes */
-            if (ExceptionRecord->ExceptionInformation[0] == BREAKPOINT_PRINT)
-            {
-                InstructionSize = 2;  /* INT 0x2D is 2 bytes: 0xCD 0x2D */
-            }
-#ifdef _M_AMD64
-            {
-                const char msg[] = "*** KdpTrap: Adjusting RIP by ";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                char sz = '0' + InstructionSize;
-                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                __outbyte(COM1_PORT, sz);
-                const char msg2[] = " bytes\n";
-                const char *p2 = msg2;
-                while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-            }
-#endif
-            /* Update it in the context */
+            /* Update it */
             KeSetContextPc(ContextRecord,
-                           ProgramCounter + InstructionSize);
+                           ProgramCounter + KD_BREAKPOINT_SIZE);
         }
     }
     else
@@ -338,20 +256,6 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
                             PreviousMode,
                             SecondChanceException);
     }
-
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdpTrap: Returning Handled=";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        char h = Handled ? '1' : '0';
-        while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-        __outbyte(COM1_PORT, h);
-        const char msg2[] = "\n";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-    }
-#endif
 
     /* Return TRUE or FALSE to caller */
     return Handled;

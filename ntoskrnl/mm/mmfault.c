@@ -10,6 +10,7 @@
 
 #include <ntoskrnl.h>
 #include <cache/section/newmm.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -285,24 +286,6 @@ MmAccessFault(IN ULONG FaultCode,
          ((ULONG_PTR)Address < (ULONG_PTR)MmPagedPoolEnd)) ||
         (!MmGetKernelAddressSpace()))
     {
-#ifdef _M_AMD64
-        /* Check for NULL pointer access first */
-        if ((ULONG_PTR)Address < PAGE_SIZE)
-        {
-            static ULONG NullFaultCount = 0;
-            NullFaultCount++;
-            DPRINT1("NULL pointer fault #%lu at address %p\n", NullFaultCount, Address);
-            if (NullFaultCount > 5)
-            {
-                /* Too many NULL faults, something is wrong */
-                DPRINT1("Too many NULL pointer faults, returning ACCESS_VIOLATION to stop infinite loop\n");
-                return STATUS_ACCESS_VIOLATION;
-            }
-            /* For early NULL faults, also return ACCESS_VIOLATION to prevent infinite loops */
-            DPRINT1("NULL pointer access detected, returning ACCESS_VIOLATION\n");
-            return STATUS_ACCESS_VIOLATION;
-        }
-#endif
         /* This is an ARM3 fault */
         DPRINT("ARM3 fault %p\n", Vad);
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);

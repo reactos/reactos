@@ -114,13 +114,13 @@ MACRO(EnterTrap, Flags)
     mov [rbp + KTRAP_FRAME_R10], r10
     mov [rbp + KTRAP_FRAME_R11], r11
 
-    /* Save volatile xmm registers - use MOVUPS for unaligned access */
-    movups [rbp + KTRAP_FRAME_Xmm0], xmm0
-    movups [rbp + KTRAP_FRAME_Xmm1], xmm1
-    movups [rbp + KTRAP_FRAME_Xmm2], xmm2
-    movups [rbp + KTRAP_FRAME_Xmm3], xmm3
-    movups [rbp + KTRAP_FRAME_Xmm4], xmm4
-    movups [rbp + KTRAP_FRAME_Xmm5], xmm5
+    /* Save volatile xmm registers */
+    movaps [rbp + KTRAP_FRAME_Xmm0], xmm0
+    movaps [rbp + KTRAP_FRAME_Xmm1], xmm1
+    movaps [rbp + KTRAP_FRAME_Xmm2], xmm2
+    movaps [rbp + KTRAP_FRAME_Xmm3], xmm3
+    movaps [rbp + KTRAP_FRAME_Xmm4], xmm4
+    movaps [rbp + KTRAP_FRAME_Xmm5], xmm5
 
     if (Flags AND TF_SEGMENTS)
         /* Save segment selectors */
@@ -235,12 +235,12 @@ kernel_mode_return:
     mov r11, [rbp + KTRAP_FRAME_R11]
 
     /* Restore xmm registers */
-    movups xmm0, [rbp + KTRAP_FRAME_Xmm0]
-    movups xmm1, [rbp + KTRAP_FRAME_Xmm1]
-    movups xmm2, [rbp + KTRAP_FRAME_Xmm2]
-    movups xmm3, [rbp + KTRAP_FRAME_Xmm3]
-    movups xmm4, [rbp + KTRAP_FRAME_Xmm4]
-    movups xmm5, [rbp + KTRAP_FRAME_Xmm5]
+    movaps xmm0, [rbp + KTRAP_FRAME_Xmm0]
+    movaps xmm1, [rbp + KTRAP_FRAME_Xmm1]
+    movaps xmm2, [rbp + KTRAP_FRAME_Xmm2]
+    movaps xmm3, [rbp + KTRAP_FRAME_Xmm3]
+    movaps xmm4, [rbp + KTRAP_FRAME_Xmm4]
+    movaps xmm5, [rbp + KTRAP_FRAME_Xmm5]
 
     /* Restore MCXSR */
     ldmxcsr [rbp + KTRAP_FRAME_MxCsr]

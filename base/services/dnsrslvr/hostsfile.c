@@ -12,6 +12,7 @@
 #include <in6addr.h>
 
 
+#define NDEBUG
 #include <debug.h>
 
 static WCHAR szHexChar[] = L"0123456789abcdef";

@@ -8,6 +8,7 @@
 
 #include <usetup.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #define INITGUID

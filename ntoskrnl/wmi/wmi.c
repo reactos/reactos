@@ -16,6 +16,7 @@
 
 #include "wmip.h"
 
+#define NDEBUG
 #include <debug.h>
 
 typedef PVOID PWMI_LOGGER_INFORMATION; // FIXME

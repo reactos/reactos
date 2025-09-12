@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 extern ULONG ExpInitializationPhase;
@@ -320,26 +321,9 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING Name;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     ULONG i;
-    
-#ifdef _M_AMD64
-    /* Debug output for AMD64 */
-    #define COM_PORT 0x3F8
-    const char msg1[] = "*** PS: PspInitPhase0 entered ***\n";
-    const char *p = msg1;
-    while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-#endif
 
     /* Get the system size */
-#ifdef _M_AMD64
-    /* On AMD64, MM might not be fully initialized yet */
-    SystemSize = MmMediumSystem;
-    
-    const char msg2[] = "*** PS: System size set to MmMediumSystem ***\n";
-    p = msg2;
-    while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-#else
     SystemSize = MmQuerySystemSize();
-#endif
 
     /* Setup some memory options */
     PspDefaultPagefileLimit = -1;
@@ -365,13 +349,6 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup callbacks */
-#ifdef _M_AMD64
-    {
-        const char msg3[] = "*** PS: Setting up callbacks ***\n";
-        const char *p3 = msg3;
-        while (*p3) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p3++); }
-    }
-#endif
     for (i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
     {
         ExInitializeCallBack(&PspThreadNotifyRoutine[i]);
@@ -386,16 +363,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup the quantum table */
-#ifdef _M_AMD64
-    {
-        const char msg4[] = "*** PS: Setting up quantum table ***\n";
-        const char *p4 = msg4;
-        while (*p4) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p4++); }
-    }
-    /* Skip on AMD64 for now - may hang */
-#else
     PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
-#endif
 
     /* Set quota settings */
     if (!PspDefaultPagedLimit) PspDefaultPagedLimit = 0;
@@ -417,32 +385,11 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (PspDefaultPagefileLimit != MAXULONG) PspDefaultPagefileLimit <<= 20;
 
     /* Initialize the Active Process List */
-#ifdef _M_AMD64
-    {
-        const char msg5[] = "*** PS: Initializing active process list ***\n";
-        const char *p5 = msg5;
-        while (*p5) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p5++); }
-    }
-#endif
     InitializeListHead(&PsActiveProcessHead);
     KeInitializeGuardedMutex(&PspActiveProcessMutex);
 
     /* Get the idle process */
-#ifdef _M_AMD64
-    {
-        const char msg6[] = "*** PS: Getting idle process ***\n";
-        const char *p6 = msg6;
-        while (*p6) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p6++); }
-    }
-#endif
     PsIdleProcess = PsGetCurrentProcess();
-#ifdef _M_AMD64
-    {
-        const char msg7[] = "*** PS: Got idle process, setting up locks ***\n";
-        const char *p7 = msg7;
-        while (*p7) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p7++); }
-    }
-#endif
 
     /* Setup the locks */
     PsIdleProcess->ProcessLock.Value = 0;
@@ -454,14 +401,6 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Clear kernel time */
     PsIdleProcess->Pcb.KernelTime = 0;
 
-#ifdef _M_AMD64
-    {
-        const char msg8[] = "*** PS: Initializing object type initializer ***\n";
-        const char *p8 = msg8;
-        while (*p8) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p8++); }
-    }
-#endif
-
     /* Initialize Object Initializer */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -472,27 +411,12 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.SecurityRequired = TRUE;
 
     /* Initialize the Process type */
-#ifdef _M_AMD64
-    {
-        const char msg9[] = "*** PS: Creating Process object type ***\n";
-        const char *p9 = msg9;
-        while (*p9) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p9++); }
-    }
-#endif
     RtlInitUnicodeString(&Name, L"Process");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
     ObjectTypeInitializer.GenericMapping = PspProcessMapping;
     ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
-    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
-#ifdef _M_AMD64
-    {
-        const char msg10[] = "*** PS: Process object type created ***\n";
-        const char *p10 = msg10;
-        while (*p10) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p10++); }
-    }
-#endif
-    if (!NT_SUCCESS(Status)) return FALSE;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
     /*  Initialize the Thread type  */
     RtlInitUnicodeString(&Name, L"Thread");
@@ -501,8 +425,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.GenericMapping = PspThreadMapping;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
-    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
     /*  Initialize the Job type  */
     RtlInitUnicodeString(&Name, L"Job");
@@ -512,8 +435,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.InvalidAttributes = 0;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
-    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
     /* Initialize job structures external to this file */
     PspInitializeJobStructures();
@@ -523,57 +445,18 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeInitializeGuardedMutex(&PspWorkingSetChangeHead.Lock);
 
     /* Create the CID Handle table */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: Creating CID handle table ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     PspCidTable = ExCreateHandleTable(NULL);
     if (!PspCidTable) return FALSE;
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: CID handle table created ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 
-    /* Initialize LDT/VDM support for x86 */
-#ifdef _X86_
-    PspInitializeLdt();
-    PspInitializeVdm();
-#endif
+    /* FIXME: Initialize LDT/VDM support */
 
     /* Setup the reaper */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: Setting up reaper work item ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 
     /* Set the boot access token */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: Setting boot access token ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     PspBootAccessToken = (PTOKEN)(PsIdleProcess->Token.Value & ~MAX_FAST_REFS);
 
     /* Setup default object attributes */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: Setting up object attributes ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
                                0,
@@ -581,13 +464,6 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL);
 
     /* Create the Initial System Process */
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** PS: Creating initial system process ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
     Status = PspCreateProcess(&PspInitialSystemProcessHandle,
                               PROCESS_ALL_ACCESS,
                               &ObjectAttributes,
@@ -623,7 +499,8 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Zero it */
-    RtlZeroMemory(PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName,
+    RtlZeroMemory(PsInitialSystemProcess->
+                  SeAuditProcessCreationInfo.ImageFileName,
                   sizeof(OBJECT_NAME_INFORMATION));
 
     /* Setup the system initialization thread */
@@ -658,6 +535,7 @@ PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     switch (ExpInitializationPhase)
     {
     case 0:
+
         /* Do Phase 0 */
         return PspInitPhase0(LoaderBlock);
 

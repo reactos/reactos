@@ -38,13 +38,6 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-/* Define debug levels always - they're just constants */
-#define ERR_LEVEL      0x1
-#define FIXME_LEVEL    0x2
-#define WARN_LEVEL     0x4
-#define TRACE_LEVEL    0x8
-#define MAX_LEVEL (ERR_LEVEL | FIXME_LEVEL | WARN_LEVEL | TRACE_LEVEL)
-
 #if DBG
 
     VOID
@@ -56,6 +49,13 @@
     VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
     VOID    DebugDisableScreenPort(VOID);
     VOID    DbgParseDebugChannels(PCHAR Value);
+
+    #define ERR_LEVEL      0x1
+    #define FIXME_LEVEL    0x2
+    #define WARN_LEVEL     0x4
+    #define TRACE_LEVEL    0x8
+
+    #define MAX_LEVEL ERR_LEVEL | FIXME_LEVEL | WARN_LEVEL | TRACE_LEVEL
 
     #define DBG_DEFAULT_CHANNEL(ch) static int DbgDefaultChannel = DPRINT_##ch
 

@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -35,39 +36,12 @@ KeInitializeEvent(OUT PKEVENT Event,
                   IN EVENT_TYPE Type,
                   IN BOOLEAN State)
 {
-#ifdef _M_AMD64
-    /* Debug output for AMD64 */
-    #define COM_PORT 0x3F8
-    {
-        const char msg[] = "*** KE: KeInitializeEvent entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
-
     /* Initialize the Dispatcher Header */
     Event->Header.Type = Type;
     //Event->Header.Signalling = FALSE; // fails in kmtest
     Event->Header.Size = sizeof(KEVENT) / sizeof(ULONG);
     Event->Header.SignalState = State;
-    
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KE: About to call InitializeListHead ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
-    
     InitializeListHead(&(Event->Header.WaitListHead));
-    
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KE: KeInitializeEvent completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-#endif
 }
 
 /*

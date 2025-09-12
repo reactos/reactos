@@ -9,6 +9,7 @@
 
 #include "vfat.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #include <stdio.h>

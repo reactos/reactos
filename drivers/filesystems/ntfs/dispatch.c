@@ -28,6 +28,7 @@
 
 #include "ntfs.h"
 
+#define NDEBUG
 #include <debug.h>
 
 static LONG QueueCount = 0;

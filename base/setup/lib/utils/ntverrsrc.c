@@ -16,6 +16,7 @@
 
 #include "ntverrsrc.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

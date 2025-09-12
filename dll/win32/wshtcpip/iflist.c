@@ -11,6 +11,7 @@
 #include <iptypes.h>
 #include <wine/list.h>
 
+#define NDEBUG
 #include <debug.h>
 
 

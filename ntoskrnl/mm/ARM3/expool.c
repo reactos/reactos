@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -1019,32 +1020,15 @@ NTAPI
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {
-    #define COM1_PORT 0x3F8
     PPOOL_DESCRIPTOR Descriptor;
     SIZE_T TableSize;
     ULONG i;
-    
-    {
-        const char msg[] = "*** MM/EXPOOL: InitializePool entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     //
     // Check what kind of pool this is
     //
-    {
-        const char msg[] = "*** MM/EXPOOL: Checking pool type ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     if (PoolType == NonPagedPool)
     {
-        {
-            const char msg[] = "*** MM/EXPOOL: NonPagedPool - computing table size ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         //
         // Compute the track table size and convert it from a power of two to an
         // actual byte size
@@ -1058,16 +1042,10 @@ InitializePool(IN POOL_TYPE PoolType,
         {
             if (TableSize & 1)
             {
-                /* SKIP ASSERT on AMD64 */
-                /* ASSERT((TableSize & ~1) == 0); */
+                ASSERT((TableSize & ~1) == 0);
                 if (!(TableSize & ~1)) break;
             }
             TableSize >>= 1;
-        }
-        {
-            const char msg[] = "*** MM/EXPOOL: Table size computed ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
         }
 
         //
@@ -1090,11 +1068,6 @@ InitializePool(IN POOL_TYPE PoolType,
         // Loop trying with the biggest specified size first, and cut it down
         // by a power of two each iteration in case not enough memory exist
         //
-        {
-            const char msg[] = "*** MM/EXPOOL: Allocating tracker table ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         while (TRUE)
         {
             //
@@ -1109,19 +1082,9 @@ InitializePool(IN POOL_TYPE PoolType,
             //
             // Allocate the tracker table and exit the loop if this worked
             //
-            {
-                const char msg[] = "*** MM/EXPOOL: Calling MiAllocatePoolPages ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
             PoolTrackTable = MiAllocatePoolPages(NonPagedPool,
                                                  (PoolTrackTableSize + 1) *
                                                  sizeof(POOL_TRACKER_TABLE));
-            {
-                const char msg[] = "*** MM/EXPOOL: MiAllocatePoolPages returned ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
             if (PoolTrackTable) break;
 
             //
@@ -1142,21 +1105,11 @@ InitializePool(IN POOL_TYPE PoolType,
         //
         // Add one entry, compute the hash, and zero the table
         //
-        {
-            const char msg[] = "*** MM/EXPOOL: Tracker table allocated, zeroing ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         PoolTrackTableSize++;
         PoolTrackTableMask = PoolTrackTableSize - 2;
 
         RtlZeroMemory(PoolTrackTable,
                       PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
-        {
-            const char msg[] = "*** MM/EXPOOL: Tracker table zeroed ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
 
         //
         // Finally, add the most used tags to speed up those allocations
@@ -1223,19 +1176,9 @@ InitializePool(IN POOL_TYPE PoolType,
         // An extra entry is not needed for for the big pool tracker, so just
         // compute the hash and zero it
         //
-        {
-            const char msg[] = "*** MM/EXPOOL: Zeroing big page table ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         PoolBigPageTableHash = PoolBigPageTableSize - 1;
         RtlZeroMemory(PoolBigPageTable,
                       PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
-        {
-            const char msg[] = "*** MM/EXPOOL: Big page table zeroed ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         for (i = 0; i < PoolBigPageTableSize; i++)
         {
             PoolBigPageTable[i].Va = (PVOID)POOL_BIG_TABLE_ENTRY_FREE;
@@ -1244,11 +1187,6 @@ InitializePool(IN POOL_TYPE PoolType,
         //
         // During development, print this out so we can see what's happening
         //
-        {
-            const char msg[] = "*** MM/EXPOOL: Tables initialized ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
         DPRINT("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolTrackTable, PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
         DPRINT("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
@@ -1327,12 +1265,6 @@ InitializePool(IN POOL_TYPE PoolType,
         ExpInsertPoolTracker('looP',
                              ROUND_TO_PAGES(PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE)),
                              NonPagedPool);
-    }
-    
-    {
-        const char msg[] = "*** MM/EXPOOL: InitializePool completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
     }
 }
 

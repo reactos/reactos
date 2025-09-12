@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -123,25 +124,11 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     PKNODE Node;
 #endif
 
-    /* Debug output */
-    #define COM_PORT 0x3F8
-    {
-        const char msg[] = "*** KE: KeInitializeProcess entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-
     /* Initialize the Dispatcher Header */
     Process->Header.Type = ProcessObject;
     Process->Header.Size = sizeof(KPROCESS) / sizeof(ULONG);
     Process->Header.SignalState = 0;
     InitializeListHead(&(Process->Header.WaitListHead));
-
-    {
-        const char msg[] = "*** KE: Dispatcher header initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
 
     /* Initialize Scheduler Data, Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
@@ -154,12 +141,6 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
 #endif
 
-    {
-        const char msg[] = "*** KE: Initializing process lists ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
-
     /* Initialize the lists */
     InitializeListHead(&Process->ThreadListHead);
     InitializeListHead(&Process->ProfileListHead);
@@ -167,12 +148,6 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
 
     /* Initialize the current State */
     Process->State = ProcessInMemory;
-
-    {
-        const char msg[] = "*** KE: KeInitializeProcess complete ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM_PORT + 5) & 0x20) == 0); __outbyte(COM_PORT, *p++); }
-    }
 
     /* Check how many Nodes there are on the system */
 #ifdef CONFIG_SMP

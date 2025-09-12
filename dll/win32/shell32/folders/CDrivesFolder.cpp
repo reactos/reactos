@@ -837,13 +837,10 @@ HRESULT WINAPI CDrivesFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcRes
 /**************************************************************************
 *     CDrivesFolder::CompareIDs
 */
+
 HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     HRESULT hres;
-    UINT iColumn = LOWORD(lParam);
-
-    if (iColumn >= _countof(MyComputerSFHeader))
-        return E_INVALIDARG;
 
     if (!pidl1 || !pidl2)
     {
@@ -851,69 +848,57 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
         return E_INVALIDARG;
     }
 
-    CHAR* pszDrive1 = _ILIsDrive(pidl1) ? _ILGetDataPointer(pidl1)->u.drive.szDriveName : NULL;
-    if (!pszDrive1 && !IsRegItem(pidl1) && FAILED_UNEXPECTEDLY(E_INVALIDARG))
+    if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
+        return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
+
+    UINT iColumn = LOWORD(lParam);
+    if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
-    CHAR* pszDrive2 = _ILIsDrive(pidl2) ? _ILGetDataPointer(pidl2)->u.drive.szDriveName : NULL;
-    if (!pszDrive2 && !IsRegItem(pidl2) && FAILED_UNEXPECTEDLY(E_INVALIDARG))
-        return E_INVALIDARG;
+
+    CHAR* pszDrive1 = _ILGetDataPointer(pidl1)->u.drive.szDriveName;
+    CHAR* pszDrive2 = _ILGetDataPointer(pidl2)->u.drive.szDriveName;
 
     int result;
     switch (MyComputerSFHeader[iColumn].colnameid)
     {
         case IDS_SHV_COLUMN_NAME:
         {
-            if (!pszDrive1 && !pszDrive2)
-                return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
-            else if (pszDrive1 && pszDrive2)
-                result = _stricmp(pszDrive1, pszDrive2);
-            else
-                result = (int)!pszDrive1 - (int)!pszDrive2; // Sort drives first
+            result = _stricmp(pszDrive1, pszDrive2);
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }
-
-        case IDS_SHV_COLUMN_DISK_CAPACITY:
-        case IDS_SHV_COLUMN_DISK_AVAILABLE:
-        {
-            if (!pszDrive1 || !pszDrive2)
-            {
-                hres = MAKE_COMPARE_HRESULT((int)!pszDrive1 - (int)!pszDrive2);
-                break;
-            }
-
-            ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
-            BOOL bValid1 = FALSE, bValid2 = FALSE;
-
-            if (GetVolumeInformationA(pszDrive1, NULL, 0, NULL, NULL, NULL, NULL, 0))
-                bValid1 = GetDiskFreeSpaceExA(pszDrive1, &Drive1Available, &Drive1Total, NULL);
-            else
-                Drive1Available.QuadPart = Drive1Total.QuadPart = 0;
-
-            if (GetVolumeInformationA(pszDrive2, NULL, 0, NULL, NULL, NULL, NULL, 0))
-                bValid2 = GetDiskFreeSpaceExA(pszDrive2, &Drive2Available, &Drive2Total, NULL);
-            else
-                Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
-
-            LARGE_INTEGER Diff;
-            if (MyComputerSFHeader[iColumn].colnameid == IDS_SHV_COLUMN_DISK_CAPACITY) /* Size */
-                Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
-            else /* Size available */
-                Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
-
-            if (bValid1 != bValid2)
-                hres = MAKE_COMPARE_HRESULT((int)!bValid1 - (int)!bValid2);
-            else
-                hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
-
-            break;
-        }
         case IDS_SHV_COLUMN_TYPE:
-        case IDS_SHV_COLUMN_COMMENTS:
         {
             /* We want to return immediately because SHELL32_CompareDetails also compares children. */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
         }
+        case IDS_SHV_COLUMN_DISK_CAPACITY:
+        case IDS_SHV_COLUMN_DISK_AVAILABLE:
+        {
+            ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
+
+            if (GetVolumeInformationA(pszDrive1, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                GetDiskFreeSpaceExA(pszDrive1, &Drive1Available, &Drive1Total, NULL);
+            else
+                Drive1Available.QuadPart = Drive1Total.QuadPart = 0;
+
+            if (GetVolumeInformationA(pszDrive2, NULL, 0, NULL, NULL, NULL, NULL, 0))
+                GetDiskFreeSpaceExA(pszDrive2, &Drive2Available, &Drive2Total, NULL);
+            else
+                Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
+
+            LARGE_INTEGER Diff;
+            if (lParam == 3) /* Size */
+                Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
+            else /* Size available */
+                Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
+
+            hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
+            break;
+        }
+        case IDS_SHV_COLUMN_COMMENTS:
+            hres = MAKE_COMPARE_HRESULT(0);
+            break;
         DEFAULT_UNREACHABLE;
     }
 
@@ -951,8 +936,8 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
-        SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, this };
-        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, static_cast<IShellFolderViewCB*>(this) };
+            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -1418,11 +1403,6 @@ STDMETHODIMP CDrivesFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam
                 g_IsFloppyCache = 0;
             }
             break;
-        #if ROSPOLICY_DRIVESFOLDER_DEFLARGEICONS
-        case SFVM_DEFVIEWMODE:
-            *((FOLDERVIEWMODE*)lParam) = FVM_ICON;
-            return S_OK;
-        #endif
     }
     return E_NOTIMPL;
 }

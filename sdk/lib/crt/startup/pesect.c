@@ -18,7 +18,7 @@
 #define __ImageBase __MINGW_LSYMBOL(_image_base__)
 #endif
 /* This symbol is defined by the linker.  */
-extern char __ImageBase[];
+extern IMAGE_DOS_HEADER __ImageBase;
 #endif
 
 WINBOOL _ValidateImageBase (PBYTE);
@@ -33,10 +33,10 @@ _ValidateImageBase (PBYTE pImageBase)
   pDOSHeader = (PIMAGE_DOS_HEADER) pImageBase;
   if (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)
     return FALSE;
-  pNTHeader = (PIMAGE_NT_HEADERS) (pImageBase + pDOSHeader->e_lfanew);
+  pNTHeader = (PIMAGE_NT_HEADERS) ((PBYTE) pDOSHeader + pDOSHeader->e_lfanew);
   if (pNTHeader->Signature != IMAGE_NT_SIGNATURE)
     return FALSE;
-  pOptHeader = (PIMAGE_OPTIONAL_HEADER) ((PBYTE)pNTHeader + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader));
+  pOptHeader = (PIMAGE_OPTIONAL_HEADER) &pNTHeader->OptionalHeader;
   if (pOptHeader->Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC)
     return FALSE;
   return TRUE;
@@ -204,10 +204,7 @@ __mingw_enum_import_library_names (int i)
   if (! _ValidateImageBase (pImageBase))
     return NULL;
 
-  {
-    PIMAGE_DOS_HEADER pDOSHeader = (PIMAGE_DOS_HEADER) pImageBase;
-    pNTHeader = (PIMAGE_NT_HEADERS) (pImageBase + pDOSHeader->e_lfanew);
-  }
+  pNTHeader = (PIMAGE_NT_HEADERS) (pImageBase + ((PIMAGE_DOS_HEADER) pImageBase)->e_lfanew);
 
   importsStartRVA = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
   if (!importsStartRVA)

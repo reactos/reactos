@@ -10,6 +10,7 @@
 #include "scsiport.h"
 #include "scsitypes.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

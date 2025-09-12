@@ -26,6 +26,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 HINSTANCE hInstance = NULL;

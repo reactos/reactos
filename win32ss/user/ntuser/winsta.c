@@ -1963,25 +1963,19 @@ NtUserBuildNameList(
 BOOL APIENTRY
 NtUserSetLogonNotifyWindow(HWND hWnd)
 {
-    BOOL Ret = FALSE;
-
-    UserEnterExclusive();
-
-    if (!IntIsWindow(hWnd))
-        goto Leave;
-
     if (gpidLogon != PsGetCurrentProcessId())
     {
-        EngSetLastError(ERROR_ACCESS_DENIED);
-        goto Leave;
+        return FALSE;
+    }
+
+    if (!IntIsWindow(hWnd))
+    {
+        return FALSE;
     }
 
     hwndSAS = hWnd;
-    Ret = TRUE;
 
-Leave:
-    UserLeave();
-    return Ret;
+    return TRUE;
 }
 
 BOOL

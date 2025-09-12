@@ -13,6 +13,7 @@
 
 #include "isapnp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/

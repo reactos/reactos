@@ -287,19 +287,7 @@ VOID
 NTAPI
 MiBuildNonPagedPool(VOID)
 {
-    #define COM1_PORT 0x3F8
-    {
-        const char msg[] = "*** MM/AMD64: MiBuildNonPagedPool entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
     /* Check if this is a machine with less than 256MB of RAM, and no overide */
-    {
-        const char msg[] = "*** MM/AMD64: Checking physical pages ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     if ((MmNumberOfPhysicalPages <= MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING) &&
         !(MmSizeOfNonPagedPoolInBytes))
     {
@@ -339,11 +327,6 @@ MiBuildNonPagedPool(VOID)
     }
 
     /* Page-align the nonpaged pool size */
-    {
-        const char msg[] = "*** MM/AMD64: Page-aligning nonpaged pool size ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MmSizeOfNonPagedPoolInBytes &= ~(PAGE_SIZE - 1);
 
     /* Now, check if there was a registry size for the maximum size */
@@ -366,77 +349,27 @@ MiBuildNonPagedPool(VOID)
     MmMaximumNonPagedPoolInPages = MmMaximumNonPagedPoolInBytes >> PAGE_SHIFT;
 
     /* Non paged pool starts after the PFN database */
-    {
-        const char msg[] = "*** MM/AMD64: Calculating nonpaged pool start ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MmNonPagedPoolStart = MmPfnDatabase + MxPfnAllocation * PAGE_SIZE;
 
     /* Calculate the nonpaged pool expansion start region */
     MmNonPagedPoolExpansionStart = (PCHAR)MmNonPagedPoolStart +
                                           MmSizeOfNonPagedPoolInBytes;
-    /* Verify alignment */
-    if (!IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart))
-    {
-        DPRINT1("WARNING: MmNonPagedPoolExpansionStart not page aligned: %p\n", 
-                MmNonPagedPoolExpansionStart);
-    }
+    ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart));
 
     /* And this is where the none paged pool ends */
     MmNonPagedPoolEnd = (PCHAR)MmNonPagedPoolStart + MmMaximumNonPagedPoolInBytes;
-    /* Verify pool end is in valid range */
-    if (MmNonPagedPoolEnd >= (PVOID)MM_HAL_VA_START)
-    {
-        DPRINT1("WARNING: MmNonPagedPoolEnd exceeds HAL VA start: %p >= %p\n",
-                MmNonPagedPoolEnd, (PVOID)MM_HAL_VA_START);
-    }
+    ASSERT(MmNonPagedPoolEnd < (PVOID)MM_HAL_VA_START);
 
     /* Map PPEs and PDEs for non paged pool (including expansion) */
-    {
-        const char msg[] = "*** MM/AMD64: Mapping PPEs ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiMapPPEs(MmNonPagedPoolStart, MmNonPagedPoolEnd);
-    {
-        const char msg[] = "*** MM/AMD64: Mapping PDEs ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiMapPDEs(MmNonPagedPoolStart, MmNonPagedPoolEnd);
 
     /* Map the nonpaged pool PTEs (without expansion) */
-    {
-        const char msg[] = "*** MM/AMD64: Mapping PTEs ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiMapPTEs(MmNonPagedPoolStart, (PCHAR)MmNonPagedPoolExpansionStart - 1);
-    {
-        const char msg[] = "*** MM/AMD64: PTEs mapped ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize the ARM3 nonpaged pool */
-    {
-        const char msg[] = "*** MM/AMD64: Initializing nonpaged pool ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiInitializeNonPagedPool();
-    {
-        const char msg[] = "*** MM/AMD64: Initializing thresholds ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiInitializeNonPagedPoolThresholds();
-    {
-        const char msg[] = "*** MM/AMD64: MiBuildNonPagedPool completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
 }
 
@@ -630,7 +563,7 @@ MiAddDescriptorToDatabase(
         while (PageCount--)
         {
             /* Add it to the free list */
-            Pfn->u3.e1.CacheAttribute = MiNonCached; /* Use non-cached for free pages initially */
+            Pfn->u3.e1.CacheAttribute = MiNonCached; // FIXME: Windows ASSERTs MiChached, but why not MiNotMapped?
             MiInsertPageInFreeList(BasePage + PageCount);
 
             /* Go to the previous page */
@@ -763,42 +696,12 @@ NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    #define COM1_PORT 0x3F8
     NTSTATUS Status;
     ULONG Flags;
 
-    {
-        const char msg[] = "*** MM/AMD64: MiInitMachineDependent entered ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-
-    /* Initialize UEFI support if available */
-    {
-        extern NTSTATUS MmInitializeUefiSupport(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-        NTSTATUS UefiStatus = MmInitializeUefiSupport(LoaderBlock);
-        if (NT_SUCCESS(UefiStatus))
-        {
-            const char msg[] = "*** MM/AMD64: UEFI support initialized ***\n";
-            const char *p = msg;
-            while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        }
-    }
-
-    /* Check that PFN allocation was successful */
-    if (MxPfnAllocation == 0)
-    {
-        const char msg[] = "*** MM/AMD64: WARNING - MxPfnAllocation is 0 ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    ASSERT(MxPfnAllocation != 0);
 
     /* Set some hardcoded addresses */
-    {
-        const char msg[] = "*** MM/AMD64: Setting hardcoded addresses ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MmHyperSpaceEnd = (PVOID)HYPER_SPACE_END;
     MmNonPagedSystemStart = (PVOID)MM_SYSTEM_SPACE_START;
     MmPfnDatabase = (PVOID)MI_PFN_DATABASE;
@@ -812,142 +715,38 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 //    PrototypePte.u.ProtoAddress
     PrototypePte.u.Soft.PageFileHigh = MI_PTE_LOOKUP_NEEDED;
 
-    {
-        const char msg[] = "*** MM/AMD64: Calling MiInitializePageTable ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiInitializePageTable();
-    {
-        const char msg[] = "*** MM/AMD64: MiInitializePageTable completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    {
-        const char msg[] = "*** MM/AMD64: Calling MiBuildNonPagedPool ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiBuildNonPagedPool();
-    {
-        const char msg[] = "*** MM/AMD64: MiBuildNonPagedPool completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
-    {
-        const char msg[] = "*** MM/AMD64: Calling MiBuildSystemPteSpace ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiBuildSystemPteSpace();
-    {
-        const char msg[] = "*** MM/AMD64: MiBuildSystemPteSpace completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Map the PFN database pages */
-    {
-        const char msg[] = "*** MM/AMD64: Calling MiBuildPfnDatabase ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     MiBuildPfnDatabase(LoaderBlock);
-    {
-        const char msg[] = "*** MM/AMD64: MiBuildPfnDatabase completed ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Reset the ref/share count so that MmInitializeProcessAddressSpace works */
-    {
-        const char msg[] = "*** MM/AMD64: Resetting PFN ref counts ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    PMMPFN Pfn;
-    
-    {
-        const char msg[] = "*** MM/AMD64: Getting PFN for PXE_SELFMAP ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    Pfn = MiGetPfnEntry(PFN_FROM_PTE((PMMPTE)PXE_SELFMAP));
-    if (Pfn)
-    {
-        Pfn->u2.ShareCount = 0;
-        Pfn->u3.e2.ReferenceCount = 0;
-    }
+    PMMPFN Pfn = MiGetPfnEntry(PFN_FROM_PTE((PMMPTE)PXE_SELFMAP));
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
-    {
-        const char msg[] = "*** MM/AMD64: Getting PFN for HYPER_SPACE PDE ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     Pfn = MiGetPfnEntry(PFN_FROM_PDE(MiAddressToPde((PVOID)HYPER_SPACE)));
-    if (Pfn)
-    {
-        Pfn->u2.ShareCount = 0;
-        Pfn->u3.e2.ReferenceCount = 0;
-    }
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
-    {
-        const char msg[] = "*** MM/AMD64: Getting PFN for HYPER_SPACE PPE ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     Pfn = MiGetPfnEntry(PFN_FROM_PPE(MiAddressToPpe((PVOID)HYPER_SPACE)));
-    if (Pfn)
-    {
-        Pfn->u2.ShareCount = 0;
-        Pfn->u3.e2.ReferenceCount = 0;
-    }
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
-    {
-        const char msg[] = "*** MM/AMD64: Getting PFN for HYPER_SPACE PXE ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     Pfn = MiGetPfnEntry(PFN_FROM_PXE(MiAddressToPxe((PVOID)HYPER_SPACE)));
-    if (Pfn)
-    {
-        Pfn->u2.ShareCount = 0;
-        Pfn->u3.e2.ReferenceCount = 0;
-    }
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
-    {
-        const char msg[] = "*** MM/AMD64: Getting PFN for WorkingSetList ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     Pfn = MiGetPfnEntry(PFN_FROM_PTE(MiAddressToPte(MmWorkingSetList)));
-    if (Pfn)
-    {
-        Pfn->u2.ShareCount = 0;
-        Pfn->u3.e2.ReferenceCount = 0;
-    }
-    
-    {
-        const char msg[] = "*** MM/AMD64: PFN ref counts reset ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    Pfn->u2.ShareCount = 0;
+    Pfn->u3.e2.ReferenceCount = 0;
 
     /* Initialize the nonpaged pool */
-    {
-        const char msg[] = "*** MM/AMD64: Initializing nonpaged pool ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
     InitializePool(NonPagedPool, 0);
-    {
-        const char msg[] = "*** MM/AMD64: Nonpaged pool initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
 
     /* Initialize the bogus address space */
     Flags = 0;
@@ -961,21 +760,16 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the balancer */
     MmInitializeBalancer((ULONG)MmAvailablePages, 0);
 
-    /* Verify we have everything we need */
-    if (!MmPfnDatabase || !MmNonPagedSystemStart || !MmNonPagedPoolStart ||
-        !MmSizeOfNonPagedPoolInBytes || !MmMaximumNonPagedPoolInBytes || 
-        !MmNonPagedPoolExpansionStart || !MmHyperSpaceEnd || !MmNumberOfSystemPtes)
-    {
-        const char msg[] = "*** MM/AMD64: WARNING - Some MM globals not initialized ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-    
-    {
-        const char msg[] = "*** MM/AMD64: MiInitMachineDependent returning SUCCESS ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
+    /* Make sure we have everything we need */
+    ASSERT(MmPfnDatabase);
+    ASSERT(MmNonPagedSystemStart);
+    ASSERT(MmNonPagedPoolStart);
+    ASSERT(MmSizeOfNonPagedPoolInBytes);
+    ASSERT(MmMaximumNonPagedPoolInBytes);
+    ASSERT(MmNonPagedPoolExpansionStart);
+    ASSERT(MmHyperSpaceEnd);
+    ASSERT(MmNumberOfSystemPtes);
+    ASSERT(MiAddressToPde(MmNonPagedPoolStart)->u.Hard.Valid);
     ASSERT(MiAddressToPte(MmNonPagedPoolStart)->u.Hard.Valid);
 
     return STATUS_SUCCESS;

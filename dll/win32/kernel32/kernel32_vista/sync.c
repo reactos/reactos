@@ -1,5 +1,6 @@
 #include "k32_vista.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #if defined(_M_AMD64) || defined(__i386__)

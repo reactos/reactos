@@ -9,6 +9,7 @@
 #include <rosdhcp.h>
 #include <winsvc.h>
 
+#define NDEBUG
 #include <debug.h>
 
 static WCHAR ServiceName[] = L"DHCP";
@@ -86,46 +87,22 @@ PDHCP_SERVER_NAME_unbind(
     }
 }
 
-/*!
- * Initializes the DHCP interface
- *
- * \param[out] Version
- *        Returns the DHCP Interface Version
- *
- * \return ERROR_SUCCESS on success
- *
- * \remarks DhcpCApiInitialized must be called before any other DHCP Function.
- */
+
 DWORD
 APIENTRY
 DhcpCApiInitialize(
     _Out_ LPDWORD Version)
 {
     *Version = 2;
-    return ERROR_SUCCESS;
+    return NO_ERROR;
 }
 
-/*!
- * Cleans up the DHCP interface
- *
- * \remarks Other DHCP Functions must not be called after DhcpCApiCleanup.
- */
 VOID
 APIENTRY
 DhcpCApiCleanup(VOID)
 {
 }
 
-/*!
- * Renews a DHCP Lease
- *
- * \param[in] AdapterName
- *        Name (GUID) of the Adapter
- *
- * \return ERROR_SUCCESS on success
- *
- * \remarks Undocumented by Microsoft
- */
 DWORD
 APIENTRY
 DhcpAcquireParameters(
@@ -138,6 +115,28 @@ DhcpAcquireParameters(
     RpcTryExcept
     {
         ret = Client_AcquireParameters(NULL, AdapterName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+DWORD
+APIENTRY
+DhcpReleaseParameters(
+    _In_ PWSTR AdapterName)
+{
+    DWORD ret;
+
+    DPRINT("DhcpReleaseParameters(%S)\n", AdapterName);
+
+    RpcTryExcept
+    {
+        ret = Client_ReleaseParameters(NULL, AdapterName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -175,58 +174,6 @@ DhcpHandlePnPEvent(
     return 0;
 }
 
-/*!
- * Set new TCP/IP parameters and notify DHCP client service of this
- *
- * \param[in] ServerName
- *        NULL for local machine
- *
- * \param[in] AdapterName
- *        IPHLPAPI name of adapter to change
- *
- * \param[in] NewIpAddress
- *        TRUE if IP address changes
-
- * \param[in] IpIndex
- *        ...
- *
- * \param[in] IpAddress
- *        New IP address (network byte order)
- *
- * \param[in] SubnetMask
- *        New subnet mask (network byte order)
- *
- * \param[in] DhcpAction
- *        0 - don't modify
- *        1 - enable DHCP
- *        2 - disable DHCP
- *
- * \return ERROR_SUCCESS on success
- *
- * \remarks Undocumented by Microsoft
- */
-DWORD
-APIENTRY
-DhcpNotifyConfigChange(
-    _In_ LPWSTR ServerName,
-    _In_ LPWSTR AdapterName,
-    _In_ BOOL NewIpAddress,
-    _In_ DWORD IpIndex,
-    _In_ DWORD IpAddress,
-    _In_ DWORD SubnetMask,
-    _In_ INT DhcpAction)
-{
-    DPRINT1("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
-    DPRINT1("DhcpNotifyConfigChange(%S %S %lu %lu %lu %lu %d)\n",
-            ServerName, AdapterName, NewIpAddress, IpIndex, IpAddress, SubnetMask, DhcpAction);
-
-    if (AdapterName == NULL)
-        return ERROR_INVALID_PARAMETER;
-
-    UNIMPLEMENTED;
-    return ERROR_SUCCESS;
-}
-
 DWORD APIENTRY
 DhcpQueryHWInfo(DWORD AdapterIndex,
                 PDWORD MediaType,
@@ -248,64 +195,6 @@ DhcpQueryHWInfo(DWORD AdapterIndex,
     RpcEndExcept;
 
     return (ret == ERROR_SUCCESS) ? 1 : 0;
-}
-
-/*!
- * Releases a DHCP Lease
- *
- * \param[in] AdapterName
- *        Name (GUID) of the Adapter
- *
- * \return ERROR_SUCCESS on success
- *
- * \remarks Undocumented by Microsoft
- */
-DWORD
-APIENTRY
-DhcpReleaseParameters(
-    _In_ PWSTR AdapterName)
-{
-    DWORD ret;
-
-    DPRINT("DhcpReleaseParameters(%S)\n", AdapterName);
-
-    RpcTryExcept
-    {
-        ret = Client_ReleaseParameters(NULL, AdapterName);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return ret;
-}
-
-/*!
- * Removes all DNS Registrations which were added by the DHCP Client
- *
- * \return ERROR_SUCCESS on success
- */
-DWORD
-WINAPI
-DhcpRemoveDNSRegistrations(VOID)
-{
-    DWORD ret;
-
-    DPRINT("DhcpRemoveDNSRegistrations()\n");
-
-    RpcTryExcept
-    {
-        ret = Client_RemoveDNSRegistrations(NULL);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return ret;
 }
 
 DWORD
@@ -331,6 +220,45 @@ DhcpStaticRefreshParams(DWORD AdapterIndex,
     return (ret == ERROR_SUCCESS) ? 1 : 0;
 }
 
+/*!
+ * Set new TCP/IP parameters and notify DHCP client service of this
+ *
+ * \param[in] ServerName
+ *        NULL for local machine
+ *
+ * \param[in] AdapterName
+ *        IPHLPAPI name of adapter to change
+ *
+ * \param[in] NewIpAddress
+ *        TRUE if IP address changes
+ *
+ * \param[in] IpAddress
+ *        New IP address (network byte order)
+ *
+ * \param[in] SubnetMask
+ *        New subnet mask (network byte order)
+ *
+ * \param[in] DhcpAction
+ *        0 - don't modify
+ *        1 - enable DHCP
+ *        2 - disable DHCP
+ *
+ * \return non-zero on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
+DWORD APIENTRY
+DhcpNotifyConfigChange(LPWSTR ServerName,
+                       LPWSTR AdapterName,
+                       BOOL NewIpAddress,
+                       DWORD IpIndex,
+                       DWORD IpAddress,
+                       DWORD SubnetMask,
+                       INT DhcpAction)
+{
+    DPRINT1("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
+    return 0;
+}
 
 DWORD APIENTRY
 DhcpRequestParams(DWORD Flags,

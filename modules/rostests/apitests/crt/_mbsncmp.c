@@ -21,8 +21,6 @@ ULONG g_WinVersion;
  */
 #ifdef TEST_CRTDLL
 #define RETURN_DIFF 0
-#elif defined(TEST_MSVCRT) && defined(_WIN64)
-#define RETURN_DIFF 0
 #else
 #define RETURN_DIFF (g_WinVersion >= _WIN32_WINNT_VISTA)
 #endif
@@ -54,24 +52,24 @@ START_TEST(_mbsncmp)
 
     /* Strings longer than or equal to length */
     ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"c", 1);
-    ok_eq_int(ret, DIFF_RETURN(-, 2));
+    ok(ret == DIFF_RETURN(-, 2), "ret = %d\n", ret);
 
     ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"a", 1);
-    ok_eq_int(ret, 0);
+    ok(ret == 0, "ret = %d\n", ret);
 
     ret = _mbsncmp((const unsigned char *)"ab", (const unsigned char *)"aB", 1);
-    ok_eq_int(ret, 0);
+    ok(ret == 0, "ret = %d\n", ret);
 
     ret = _mbsncmp((const unsigned char *)"aa", (const unsigned char *)"ac", 2);
-    ok_eq_int(ret, DIFF_RETURN(-, 2));
+    ok(ret == DIFF_RETURN(-, 2), "ret = %d\n", ret);
 
     /* Length longer than one of the strings */
     ret = _mbsncmp((const unsigned char *)"a", (const unsigned char *)"ac", 2);
-    ok_eq_int(ret, DIFF_RETURN(-, 'c'));
+    ok(ret == DIFF_RETURN(-, 'c'), "ret = %d\n", ret);
 
     ret = _mbsncmp((const unsigned char *)"aa", (const unsigned char *)"a", 2);
-    ok_eq_int(ret, DIFF_RETURN(+, 'a'));
+    ok(ret == DIFF_RETURN(+, 'a'), "ret = %d\n", ret);
 
     ret = _mbsncmp((const unsigned char *)"ab", (const unsigned char *)"ab", 100);
-    ok_eq_int(ret, 0);
+    ok(ret == 0, "ret = %d\n", ret);
 }

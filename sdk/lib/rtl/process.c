@@ -34,22 +34,15 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
                                Attributes & (OBJ_CASE_INSENSITIVE | OBJ_INHERIT),
                                NULL,
                                NULL);
-    /* Debug output */
-    DbgPrint("*** RtlpMapFile: Attempting to open: %wZ ***\n", ImageFileName);
-    
     Status = ZwOpenFile(&hFile,
                         SYNCHRONIZE | FILE_EXECUTE | FILE_READ_DATA,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_DELETE | FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
-    
-    DbgPrint("*** RtlpMapFile: ZwOpenFile returned: 0x%08lX ***\n", Status);
-    
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to read image file from disk, Status = 0x%08lX\n", Status);
-        DbgPrint("*** CRITICAL: Cannot open %wZ - File system not ready? ***\n", ImageFileName);
+        DPRINT1("Failed to read image file from disk, Status = 0x%08X\n", Status);
         return Status;
     }
 

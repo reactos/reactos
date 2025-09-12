@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 extern KI_INTERRUPT_DISPATCH_ENTRY KiUnexpectedRange[256];
@@ -52,22 +53,6 @@ KDESCRIPTOR KiIdtDescriptor = {{0}, sizeof(KiIdt) - 1, KiIdt};
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef _M_AMD64
-VOID
-NTAPI
-KiDebugServiceTrapDebug(VOID)
-{
-    /* Output to serial port directly */
-    const char msg[] = "*** KiDebugServiceTrap ENTERED! ***\n";
-    const char *p = msg;
-    while (*p) 
-    { 
-        while ((__inbyte(0x3F8 + 5) & 0x20) == 0); 
-        __outbyte(0x3F8, *p++); 
-    }
-}
-#endif
-
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -76,53 +61,6 @@ KeInitExceptions(VOID)
     int i, j;
 
     /* Initialize the Idt */
-#ifdef _M_AMD64
-    /* On AMD64, we need to fix up the addresses because the static table
-       has unrelocated addresses. The addresses in the table are RVAs (relative
-       virtual addresses) from the image base, not absolute addresses. */
-    
-    /* Get the actual kernel base. PsNtosImageBase is not initialized yet when
-       KeInitExceptions is called, so we calculate it from our own address. */
-    
-    /* Get current function address to determine kernel base */
-    ULONG64 CurrentFunc = (ULONG64)KeInitExceptions;
-    
-    /* The kernel is loaded at 0xFFFFF80006400000
-       KeInitExceptions is at 0xFFFFF80006B1CD04
-       So we need to mask to get 0xFFFFF80006400000 */
-    
-    /* Round down to nearest 0x400000 boundary (4MB) */
-    ULONG64 KernelBase = CurrentFunc & 0xFFFFFFFFFFC00000ULL;
-    
-    /* Adjust if we're not at a standard base */
-    if ((KernelBase & 0xFFFFFF) != 0x400000)
-    {
-        /* Try 1MB boundary */
-        KernelBase = CurrentFunc & 0xFFFFFFFFF0000000ULL;
-        /* Add the standard offset */
-        KernelBase = KernelBase + 0x06400000;
-    }
-    
-    /* Debug output */
-    {
-        const char msg1[] = "*** IDT Init: KernelBase=";
-        const char *p1 = msg1;
-        while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
-        
-        for (int k = 60; k >= 0; k -= 4)
-        {
-            int digit = (KernelBase >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, c);
-        }
-        
-        const char msg2[] = "\n";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-    }
-#endif
-
     for (j = i = 0; i < 256; i++)
     {
         ULONG64 Offset;
@@ -130,66 +68,6 @@ KeInitExceptions(VOID)
         if (KiInterruptInitTable[j].InterruptId == i)
         {
             Offset = (ULONG64)KiInterruptInitTable[j].ServiceRoutine;
-#ifdef _M_AMD64
-            /* Debug output for 0x2D */
-            if (i == 0x2D)
-            {
-                const char msg1[] = "*** IDT[0x2D]: Raw offset=";
-                const char *p1 = msg1;
-                while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
-                
-                for (int k = 60; k >= 0; k -= 4)
-                {
-                    int digit = (Offset >> k) & 0xF;
-                    char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                    while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-                    __outbyte(0x3F8, c);
-                }
-                
-                const char msg2[] = "\n";
-                const char *p2 = msg2;
-                while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-            }
-#endif
-#ifdef _M_AMD64
-            /* The addresses in the table are file offsets (unrelocated).
-               We need to convert them to kernel virtual addresses.
-               If the address is less than kernel space, it needs relocation. */
-            if (Offset < 0xFFFF000000000000ULL)
-            {
-                /* This is an unrelocated RVA. The offset is relative to the image base.
-                   The table contains addresses like 0x0CD04C4D which are offsets
-                   from the default image base (0x00400000 for executables).
-                   
-                   We need to convert: 0x0CD04C4D -> 0xFFFFF80006784C4D
-                   
-                   The calculation is:
-                   Real address = KernelBase + (RVA - DefaultImageBase)
-                   where DefaultImageBase = 0x00400000 for PE executables
-                   
-                   But actually, it seems the values are already RVAs from base 0,
-                   so we just add them to the kernel base. However, they seem
-                   to have an offset of 0x0C900000 built in.
-                   
-                   Let's subtract that offset and add to kernel base. */
-                   
-                /* It appears the offsets are from 0x0C000000 range, 
-                   but kernel functions start at 0x06000000 range in the loaded image.
-                   So we need to adjust: 0x0CD04C4D - 0x0C900000 + 0x06380000 = 0x06784C4D
-                   Then add kernel base. */
-                   
-                /* The raw offset is 0x0CD04C4D
-                   We need offset from kernel base: 0x00384C4D
-                   So we subtract: 0x0CD04C4D - 0x0C980000 = 0x00384C4D */
-                if (Offset > 0x0C000000)
-                {
-                    Offset = Offset - 0x0C980000;
-                }
-                
-                /* Now add the kernel base */
-                Offset = KernelBase + Offset;
-            }
-#endif
             KiIdt[i].Dpl = KiInterruptInitTable[j].Dpl;
             KiIdt[i].IstIndex = KiInterruptInitTable[j].IstIndex;
             j++;
@@ -197,23 +75,10 @@ KeInitExceptions(VOID)
         else
         {
             Offset = (ULONG64)&KiUnexpectedRange[i]._Op_push;
-#ifdef _M_AMD64
-            /* Check if this address needs relocation */
-            if (Offset < 0xFFFF000000000000ULL)
-            {
-                /* Same relocation as above */
-                if (Offset > 0x0C000000)
-                {
-                    Offset = Offset - 0x0C980000;
-                }
-                Offset = KernelBase + Offset;
-            }
-#endif
             KiIdt[i].Dpl = 0;
             KiIdt[i].IstIndex = 0;
         }
         KiIdt[i].OffsetLow = Offset & 0xffff;
-        /* Always use kernel CS for IDT entries - the interrupt gate will switch to it */
         KiIdt[i].Selector = KGDT64_R0_CODE;
         KiIdt[i].Type = 0x0e;
         KiIdt[i].Reserved0 = 0;
@@ -224,85 +89,6 @@ KeInitExceptions(VOID)
     }
 
     KeGetPcr()->IdtBase = KiIdt;
-    
-#ifdef _M_AMD64
-    /* Debug: Verify IDT entry 0x2D */
-    {
-        KIDTENTRY64 *Entry2D = &KiIdt[0x2D];
-        ULONG64 Handler = (ULONG64)Entry2D->OffsetLow | 
-                          ((ULONG64)Entry2D->OffsetMiddle << 16) | 
-                          ((ULONG64)Entry2D->OffsetHigh << 32);
-        
-        const char msg1[] = "*** IDT[0x2D]: Handler=";
-        const char *p1 = msg1;
-        while (*p1) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p1++); }
-        
-        /* Output handler address in hex */
-        for (int k = 60; k >= 0; k -= 4)
-        {
-            int digit = (Handler >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, c);
-        }
-        
-        const char msg2[] = " Expected=";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        
-        ULONG64 Expected = (ULONG64)KiDebugServiceTrap;
-        for (int k = 60; k >= 0; k -= 4)
-        {
-            int digit = (Expected >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, c);
-        }
-        
-        const char msg3[] = "\n*** IDT[0x2D]: Selector=";
-        const char *p3 = msg3;
-        while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
-        
-        /* Output selector in hex */
-        USHORT sel = Entry2D->Selector;
-        for (int k = 12; k >= 0; k -= 4)
-        {
-            int digit = (sel >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-            __outbyte(0x3F8, c);
-        }
-        
-        const char msg4[] = " DPL=";
-        const char *p4 = msg4;
-        while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
-        
-        char dpl = '0' + Entry2D->Dpl;
-        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-        __outbyte(0x3F8, dpl);
-        
-        const char msg5[] = " Type=";
-        const char *p5 = msg5;
-        while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
-        
-        char type = Entry2D->Type < 10 ? '0' + Entry2D->Type : 'A' + Entry2D->Type - 10;
-        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-        __outbyte(0x3F8, type);
-        
-        const char msg6[] = " Present=";
-        const char *p6 = msg6;
-        while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
-        
-        char present = '0' + Entry2D->Present;
-        while ((__inbyte(0x3F8 + 5) & 0x20) == 0);
-        __outbyte(0x3F8, present);
-        
-        const char msg7[] = "\n";
-        const char *p7 = msg7;
-        while (*p7) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p7++); }
-    }
-#endif
-    
     __lidt(&KiIdtDescriptor.Limit);
 }
 
@@ -357,38 +143,9 @@ KiDispatchExceptionToUser(
     _SEH2_EXCEPT((LocalExceptRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord),
                  EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Check if this is a stack overflow exception */
-        if (LocalExceptRecord.ExceptionCode == STATUS_STACK_OVERFLOW)
-        {
-            /* We have exhausted the user stack, cannot dispatch to user mode */
-            DPRINT1("Stack overflow detected while dispatching exception to user mode\n");
-            DPRINT1("Original exception: %lx at %p\n", 
-                    ExceptionRecord->ExceptionCode, 
-                    ExceptionRecord->ExceptionAddress);
-            
-            /* Mark the thread as having a stack overflow */
-            /* NOTE: ExceptionPort may not exist in all versions, skip this for now */
-            
-            /* Return failure to trigger second chance handling */
-            _disable();
-            return FALSE;
-        }
-        
-        /* Check if we got an access violation while touching user stack */
-        if (LocalExceptRecord.ExceptionCode == STATUS_ACCESS_VIOLATION)
-        {
-            /* The user stack is inaccessible */
-            DPRINT1("User stack inaccessible while dispatching exception\n");
-            DPRINT1("Failed at address: %p\n", LocalExceptRecord.ExceptionAddress);
-            
-            /* Return failure to trigger second chance handling */
-            _disable();
-            return FALSE;
-        }
+        // FIXME: handle stack overflow
 
-        /* Some other exception occurred - still can't dispatch */
-        DPRINT1("Exception %lx while dispatching to user mode\n", 
-                LocalExceptRecord.ExceptionCode);
+        /* Nothing we can do here */
         _disable();
         return FALSE;
     }
@@ -496,51 +253,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 {
     CONTEXT Context;
 
-#ifdef _M_AMD64
-    #define COM1_PORT 0x3F8
-    /* Debug output for exception dispatch */
-    {
-        const char msg[] = "*** KiDispatchException: Entry, ExceptionCode=";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-        
-        ULONG code = ExceptionRecord->ExceptionCode;
-        for (int k = 28; k >= 0; k -= 4)
-        {
-            int digit = (code >> k) & 0xF;
-            char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-            while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-            __outbyte(COM1_PORT, c);
-        }
-        
-        const char msg2[] = "\n";
-        const char *p2 = msg2;
-        while (*p2) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p2++); }
-        
-        /* If it's a breakpoint, show the service code */
-        if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT && 
-            ExceptionRecord->NumberParameters >= 1)
-        {
-            const char msg3[] = "*** KiDispatchException: BreakpointType=";
-            const char *p3 = msg3;
-            while (*p3) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p3++); }
-            
-            ULONG_PTR type = ExceptionRecord->ExceptionInformation[0];
-            for (int k = 28; k >= 0; k -= 4)
-            {
-                int digit = (type >> k) & 0xF;
-                char c = digit < 10 ? '0' + digit : 'A' + digit - 10;
-                while ((__inbyte(COM1_PORT + 5) & 0x20) == 0);
-                __outbyte(COM1_PORT, c);
-            }
-            
-            const char msg4[] = "\n";
-            const char *p4 = msg4;
-            while (*p4) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p4++); }
-        }
-    }
-#endif
-
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
 
@@ -559,25 +271,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Breakpoint */
         case STATUS_BREAKPOINT:
 
-            /* Check if this is a special debug service (not a regular INT3) */
-            if (ExceptionRecord->NumberParameters >= 1 &&
-                ExceptionRecord->ExceptionInformation[0] != BREAKPOINT_BREAK)
-            {
-                /* Special breakpoint (PRINT, PROMPT, etc.) - KdpTrap will handle RIP adjustment */
-                /* KdpTrap knows the correct instruction size for each type */
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KiDispatchException: Special debug service, calling KdpTrap ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                }
-#endif
-            }
-            else
-            {
-                /* Regular INT3 breakpoint - decrement RIP by one */
-                Context.Rip--;
-            }
+            /* Decrement RIP by one */
+            Context.Rip--;
             break;
 
         /* Internal exception */
@@ -598,13 +293,6 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* Check if this is a first-chance exception */
         if (FirstChance)
         {
-#ifdef _M_AMD64
-            {
-                const char msg[] = "*** KiDispatchException: About to call KiDebugRoutine (first chance) ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
-#endif
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
                                ExceptionFrame,
@@ -613,23 +301,9 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                                PreviousMode,
                                FALSE))
             {
-#ifdef _M_AMD64
-                {
-                    const char msg[] = "*** KiDispatchException: KiDebugRoutine handled the exception ***\n";
-                    const char *p = msg;
-                    while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-                }
-#endif
                 /* Exception was handled */
                 goto Handled;
             }
-#ifdef _M_AMD64
-            {
-                const char msg[] = "*** KiDispatchException: KiDebugRoutine did not handle the exception ***\n";
-                const char *p = msg;
-                while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-            }
-#endif
 
             /* If the Debugger couldn't handle it, dispatch the exception */
             if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
@@ -725,26 +399,12 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
 Handled:
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KiDispatchException: Reached Handled label, converting context back ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
     /* Convert the context back into Trap/Exception Frames */
     KeContextToTrapFrame(&Context,
                          ExceptionFrame,
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KiDispatchException: Context converted, returning ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(COM1_PORT + 5) & 0x20) == 0); __outbyte(COM1_PORT, *p++); }
-    }
-#endif
     return;
 }
 
@@ -773,180 +433,12 @@ KiSystemFatalException(IN ULONG ExceptionCode,
 
 NTSTATUS
 NTAPI
-KiFloatingErrorFaultHandler(
-    IN PKTRAP_FRAME TrapFrame)
-{
-    ULONG MxCsr;
-    
-    /* Check if this is a kernel mode fault */
-    if (TrapFrame->SegCs & MODE_MASK)
-    {
-        /* User mode fault - we'll dispatch an exception */
-        return STATUS_FLOAT_INVALID_OPERATION;
-    }
-    
-    /* Kernel mode floating point error */
-    DPRINT1("Kernel mode floating point error at RIP=%p\n", TrapFrame->Rip);
-    
-    /* Read the MXCSR register to get SSE status */
-    __asm__ __volatile__("stmxcsr %0" : "=m"(MxCsr));
-    
-    /* Check for specific floating point exceptions */
-    if (MxCsr & 0x0001) /* Invalid operation */
-    {
-        DPRINT1("FPU: Invalid operation exception\n");
-        return STATUS_FLOAT_INVALID_OPERATION;
-    }
-    else if (MxCsr & 0x0004) /* Divide by zero */
-    {
-        DPRINT1("FPU: Divide by zero exception\n");
-        return STATUS_FLOAT_DIVIDE_BY_ZERO;
-    }
-    else if (MxCsr & 0x0008) /* Overflow */
-    {
-        DPRINT1("FPU: Overflow exception\n");
-        return STATUS_FLOAT_OVERFLOW;
-    }
-    else if (MxCsr & 0x0010) /* Underflow */
-    {
-        DPRINT1("FPU: Underflow exception\n");
-        return STATUS_FLOAT_UNDERFLOW;
-    }
-    else if (MxCsr & 0x0020) /* Precision */
-    {
-        DPRINT1("FPU: Precision exception\n");
-        return STATUS_FLOAT_INEXACT_RESULT;
-    }
-    
-    /* Unknown floating point error */
-    DPRINT1("FPU: Unknown floating point error, MXCSR=%08lx\n", MxCsr);
-    return STATUS_FLOAT_INVALID_OPERATION;
-}
-
-BOOLEAN
-NTAPI
-KiIsKernelStackOverflow(
-    IN ULONG_PTR FaultAddress,
-    IN PKTRAP_FRAME TrapFrame)
-{
-    PKTHREAD Thread;
-    ULONG_PTR StackBase, StackLimit;
-    
-    /* Get the current thread */
-    Thread = KeGetCurrentThread();
-    if (!Thread) return FALSE;
-    
-    /* Get kernel stack bounds */
-    StackBase = (ULONG_PTR)Thread->InitialStack;
-    StackLimit = (ULONG_PTR)Thread->StackLimit;
-    
-    /* Check if we have valid stack bounds */
-    if (!StackBase || !StackLimit) return FALSE;
-    
-    /* Check if the fault address is below the stack limit (stack overflow) */
-    if (FaultAddress < StackLimit && FaultAddress >= (StackLimit - PAGE_SIZE))
-    {
-        /* This is likely a stack overflow */
-        DPRINT1("Kernel stack overflow detected!\n");
-        DPRINT1("Fault Address: %p, Stack Limit: %p, Stack Base: %p\n",
-                (PVOID)FaultAddress, (PVOID)StackLimit, (PVOID)StackBase);
-        DPRINT1("Thread: %p, Process: %p\n", Thread, Thread->Process);
-        
-        /* Check RSP to see how bad the overflow is */
-        if (TrapFrame)
-        {
-            ULONG_PTR Rsp = TrapFrame->Rsp;
-            DPRINT1("RSP: %p\n", (PVOID)Rsp);
-            
-            if (Rsp < StackLimit)
-            {
-                DPRINT1("Critical: RSP is already below stack limit by %lu bytes\n",
-                        StackLimit - Rsp);
-            }
-        }
-        
-        return TRUE;
-    }
-    
-    /* Not a stack overflow */
-    return FALSE;
-}
-
-NTSTATUS
-NTAPI
-KiHandleKernelStackOverflow(
-    IN PKTRAP_FRAME TrapFrame)
-{
-    /* We can't recover from kernel stack overflow - bug check */
-    KeBugCheckEx(KERNEL_STACK_INPAGE_ERROR,
-                 0, /* Reserved */
-                 TrapFrame->Rsp,
-                 TrapFrame->Rip,
-                 (ULONG_PTR)TrapFrame);
-                 
-    /* Should never get here */
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
 KiNpxNotAvailableFaultHandler(
     IN PKTRAP_FRAME TrapFrame)
 {
-    PKTHREAD Thread;
-    ULONG64 Cr0;
-    
-    /* Get the current thread */
-    Thread = KeGetCurrentThread();
-    
-    /* Check if we have FPU state to restore */
-    if (!Thread)
-    {
-        /* No thread, this is fatal */
-        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
-        return STATUS_UNSUCCESSFUL;
-    }
-    
-    /* Get current CR0 */
-    Cr0 = __readcr0();
-    
-    /* Check if FPU is present but disabled */
-    if (Cr0 & CR0_EM)
-    {
-        /* FPU emulation not supported on AMD64 */
-        DPRINT1("FPU emulation requested but not supported on AMD64\n");
-        KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, (ULONG_PTR)Cr0, 0, 2, TrapFrame);
-        return STATUS_UNSUCCESSFUL;
-    }
-    
-    /* Clear the TS flag to enable FPU access */
-    __writecr0(Cr0 & ~CR0_TS);
-    
-    /* Check if this thread has FPU state to restore */
-    if (Thread->StateSaveArea && Thread->NpxState != 0)
-    {
-        /* Restore FPU/XMM state using FXRSTOR */
-        KiRestoreXState(Thread->StateSaveArea, Thread->NpxState);
-    }
-    else
-    {
-        /* Initialize FPU for first use */
-        __asm__ __volatile__("fninit");
-        
-        /* Initialize MXCSR for SSE */
-        __asm__ __volatile__(
-            "push $0x1F80\n\t"
-            "ldmxcsr (%%rsp)\n\t"
-            "add $8, %%rsp\n\t"
-            ::: "memory"
-        );
-        
-        /* Mark thread as having FPU state (basic x87 + SSE) */
-        Thread->NpxState = 0x3; /* XSTATE_LEGACY_FLOATING_POINT | XSTATE_LEGACY_SSE */
-    }
-    
-    /* FPU is now available */
-    return STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
+    return -1;
 }
 
 static
@@ -1175,17 +667,7 @@ KiGeneralProtectionFaultHandler(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    /* Log the unhandled GPF for debugging */
-    DPRINT1("Unhandled General Protection Fault!\n");
-    DPRINT1("RIP: %p, CS: %04x\n", TrapFrame->Rip, TrapFrame->SegCs);
-    DPRINT1("RSP: %p, SS: %04x\n", TrapFrame->Rsp, TrapFrame->SegSs);
-    DPRINT1("RAX: %p, RBX: %p\n", TrapFrame->Rax, TrapFrame->Rbx);
-    DPRINT1("RCX: %p, RDX: %p\n", TrapFrame->Rcx, TrapFrame->Rdx);
-    DPRINT1("Instruction bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
-            Instructions[0], Instructions[1], Instructions[2], Instructions[3],
-            Instructions[4], Instructions[5], Instructions[6], Instructions[7]);
-    
-    /* For now, return unsuccessful to avoid reboot loop */
+    ASSERT(FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

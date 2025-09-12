@@ -7,6 +7,7 @@
 
 #include "audiosrv.h"
 
+#define NDEBUG
 #include <debug.h>
 
 SERVICE_STATUS_HANDLE service_status_handle;

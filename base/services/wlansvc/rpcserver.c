@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 //#define GET_IF_ENTRY2_IMPLEMENTED 1
 

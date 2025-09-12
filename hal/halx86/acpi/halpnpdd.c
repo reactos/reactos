@@ -13,6 +13,7 @@
 #include <initguid.h>
 #include <wdmguid.h>
 
+#define NDEBUG
 #include <debug.h>
 
 typedef enum _EXTENSION_TYPE

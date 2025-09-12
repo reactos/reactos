@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
@@ -388,13 +389,10 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
                        IN ULONG NumberOfPtes,
                        IN MMSYSTEM_PTE_POOL_TYPE PoolType)
 {
-    DPRINT("MM/SYSPTE: MiInitializeSystemPtes entered\n");
-    
     //
     // Sanity checks
     //
-    /* SKIP ASSERT on AMD64 */
-    /* ASSERT(NumberOfPtes >= 1); */
+    ASSERT(NumberOfPtes >= 1);
 
     //
     // Set the starting and ending PTE addresses for this space
@@ -409,8 +407,6 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     // Clear all the PTEs to start with
     //
     RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
-    
-    DPRINT("MM/SYSPTE: PTEs zeroed\n");
 
     //
     // Make the first entry free and link it
@@ -442,8 +438,6 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
         //
         MmTotalSystemPtes = NumberOfPtes;
     }
-    
-    DPRINT("MM/SYSPTE: MiInitializeSystemPtes completed\n");
 }
 
 /* EOF */

@@ -125,7 +125,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/gopvid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/inbvport.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/inbv/viddata.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/adapter.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/arcname.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/iomgr/bootlog.c
@@ -239,7 +238,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mmfault.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/mminit.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/pagefile.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/pe_loader.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/region.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/rmap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/section.c
@@ -264,8 +262,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/job.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/kill.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process_loader.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/process_real.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/psnotify.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/query.c
@@ -362,7 +358,6 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/thrdini.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/procsup.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/amd64/uefi.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/amd64/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/stubs.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/traphandler.c
@@ -389,23 +384,6 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/arm/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/arm/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/arm/rtlexcpt.c)
-elseif(ARCH STREQUAL "arm64")
-    list(APPEND ASM_SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/boot.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/ctxswitch.S
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/trap.S)
-    list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/config/arm/cmhardwr.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm64/kdarm64.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/cpu.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/except.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/kiinit.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/thrdini.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm64/usercall.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/arm/page.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/arm/stubs.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/arm/init.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/arm64/psctx.c)
 endif()
 
 if(NOT _WINKD_)
@@ -426,8 +404,6 @@ if(NOT _WINKD_)
             list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
         endif()
     elseif(ARCH STREQUAL "arm")
-        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdserial.c)
-    elseif(ARCH STREQUAL "arm64")
         list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdserial.c)
     endif()
 

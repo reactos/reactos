@@ -391,7 +391,7 @@ ACPI_GLOBAL (BOOLEAN,               AcpiGbl_SystemAwakeAndRunning);
 
 #else
 #define ACPI_DBG_DEPENDENT_RETURN_VOID(Prototype) \
-    __attribute__((unused)) static ACPI_INLINE Prototype {return;}
+    static ACPI_INLINE Prototype {return;}
 
 #endif /* ACPI_DEBUG_OUTPUT */
 
@@ -430,10 +430,10 @@ ACPI_GLOBAL (BOOLEAN,               AcpiGbl_SystemAwakeAndRunning);
 
 #else
 #define ACPI_DBR_DEPENDENT_RETURN_OK(Prototype) \
-    __attribute__((unused)) static ACPI_INLINE Prototype {return(AE_OK);}
+    static ACPI_INLINE Prototype {return(AE_OK);}
 
 #define ACPI_DBR_DEPENDENT_RETURN_VOID(Prototype) \
-    __attribute__((unused)) static ACPI_INLINE Prototype {return;}
+    static ACPI_INLINE Prototype {return;}
 
 #endif /* ACPI_DEBUGGER */
 

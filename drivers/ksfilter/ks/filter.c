@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 typedef struct
@@ -139,12 +140,12 @@ IKsProcessingObject_fnProcessingObjectWork(
     if (KeGetCurrentIrql() == PASSIVE_LEVEL)
     {
         /* acquire processing mutex */
-        KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, NULL);
     }
     else
     {
         /* dispatch level processing */
-        if (KeReadStateMutex(&This->ProcessingMutex) == 0)
+        if (KeReadStateMutex(&This->ControlMutex) == 0)
         {
             /* some thread was faster */
             DPRINT1("processing object too slow\n");
@@ -153,7 +154,7 @@ IKsProcessingObject_fnProcessingObjectWork(
 
         /* acquire processing mutex */
         TimeOut.QuadPart = 0LL;
-        Status = KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, &TimeOut);
+        Status = KeWaitForSingleObject(&This->ControlMutex, Executive, KernelMode, FALSE, &TimeOut);
 
         if (Status == STATUS_TIMEOUT)
         {

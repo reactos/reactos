@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #define HAS_CHILDREN(d)		((d)->children.next != &((d)->children))

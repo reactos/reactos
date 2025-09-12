@@ -8,6 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+#define NDEBUG
 #include <debug.h>
 
 KAFFINITY HalpActiveProcessors;

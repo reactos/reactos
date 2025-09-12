@@ -71,21 +71,7 @@ EfiEntry(
     }
 
     /* 0x32000 is what UEFI defines, but we can go smaller if we want */
-    /* Allocate stack from high memory to avoid conflicts with low memory regions */
-    PVOID StackBase = MmAllocateHighestMemoryBelowAddress(0x32000, (PVOID)0x10000000, LoaderOsloaderStack);
-    if (StackBase == NULL)
-    {
-        /* Fallback to normal allocation if high memory allocation fails */
-        TRACE("High memory allocation failed, trying normal allocation\n");
-        StackBase = MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack);
-        if (StackBase == NULL)
-        {
-            UiMessageBoxCritical("Unable to allocate stack memory.");
-            goto Quit;
-        }
-    }
-    BasicStack = (PVOID)((ULONG_PTR)StackBase + 0x32000);
-    TRACE("Stack allocated: Base=0x%p, Top=0x%p\n", StackBase, BasicStack);
+    BasicStack = (PVOID)((ULONG_PTR)0x32000 + (ULONG_PTR)MmAllocateMemoryWithType(0x32000, LoaderOsloaderStack));
     _changestack();
 
 Quit:

@@ -26,6 +26,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 LSTATUS WINAPI RegCopyTreeW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ HKEY);

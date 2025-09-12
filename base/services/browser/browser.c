@@ -15,7 +15,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(browser);
 /* GLOBALS ******************************************************************/
 
 HINSTANCE hDllInstance;
-PSVCHOST_GLOBAL_DATA lpServiceGlobals;
 
 static WCHAR ServiceName[] = L"browser";
 
@@ -32,12 +31,7 @@ UpdateServiceStatus(
 {
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
-
-    if (dwState == SERVICE_RUNNING)
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_STOP;
-    else
-        ServiceStatus.dwControlsAccepted = 0;
-
+    ServiceStatus.dwControlsAccepted = 0;
     ServiceStatus.dwWin32ExitCode = 0;
     ServiceStatus.dwServiceSpecificExitCode = 0;
     ServiceStatus.dwCheckPoint = 0;
@@ -93,8 +87,6 @@ ServiceControlHandler(
 
         case SERVICE_CONTROL_SHUTDOWN:
             TRACE("  SERVICE_CONTROL_SHUTDOWN received\n");
-            /* Stop listening to incoming RPC messages */
-            RpcMgmtStopServerListening(NULL);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -133,8 +125,8 @@ ServiceInit(VOID)
 VOID
 WINAPI
 ServiceMain(
-    _In_ DWORD ArgCount,
-    _In_ LPWSTR *ArgVector)
+    _In_ INT ArgCount,
+    _In_ PWSTR *ArgVector)
 {
     DWORD dwError;
 
@@ -163,16 +155,6 @@ ServiceMain(
     }
 
     UpdateServiceStatus(SERVICE_RUNNING);
-}
-
-
-VOID
-WINAPI
-SvchostPushServiceGlobals(
-    _In_ PSVCHOST_GLOBAL_DATA lpGlobals)
-{
-    TRACE("SvchostPushServiceGlobals(%p)\n", lpGlobals);
-    lpServiceGlobals = lpGlobals;
 }
 
 

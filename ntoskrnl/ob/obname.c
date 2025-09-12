@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 ULONG ObpCaseInsensitive = TRUE;

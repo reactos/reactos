@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <debug.h>
 
 #define KiVdmGetInstructionSize(x) ((x) & 0xFF)

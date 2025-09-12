@@ -10,6 +10,7 @@
 
 #include "processr.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

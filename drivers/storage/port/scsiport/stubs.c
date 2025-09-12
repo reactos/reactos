@@ -10,6 +10,7 @@
 
 #include <srb.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #undef ScsiPortReadPortBufferUchar

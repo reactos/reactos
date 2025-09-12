@@ -56,6 +56,64 @@ WlxNegotiate(
     return TRUE;
 }
 
+LONG
+ReadRegSzValue(
+    IN HKEY hKey,
+    IN LPCWSTR pszValue,
+    OUT LPWSTR* pValue)
+{
+    LONG rc;
+    DWORD dwType;
+    DWORD cbData = 0;
+    LPWSTR Value;
+
+    if (!pValue)
+        return ERROR_INVALID_PARAMETER;
+
+    *pValue = NULL;
+    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, NULL, &cbData);
+    if (rc != ERROR_SUCCESS)
+        return rc;
+    if (dwType != REG_SZ)
+        return ERROR_FILE_NOT_FOUND;
+    Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+    if (!Value)
+        return ERROR_NOT_ENOUGH_MEMORY;
+    rc = RegQueryValueExW(hKey, pszValue, NULL, NULL, (LPBYTE)Value, &cbData);
+    if (rc != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Value);
+        return rc;
+    }
+    /* NULL-terminate the string */
+    Value[cbData / sizeof(WCHAR)] = '\0';
+
+    *pValue = Value;
+    return ERROR_SUCCESS;
+}
+
+static LONG
+ReadRegDwordValue(
+    IN HKEY hKey,
+    IN LPCWSTR pszValue,
+    OUT LPDWORD pValue)
+{
+    LONG rc;
+    DWORD dwType;
+    DWORD cbData;
+    DWORD dwValue;
+
+    if (!pValue)
+        return ERROR_INVALID_PARAMETER;
+
+    cbData = sizeof(DWORD);
+    rc = RegQueryValueExW(hKey, pszValue, NULL, &dwType, (LPBYTE)&dwValue, &cbData);
+    if (rc == ERROR_SUCCESS && dwType == REG_DWORD)
+        *pValue = dwValue;
+
+    return ERROR_SUCCESS;
+}
+
 static VOID
 ChooseGinaUI(VOID)
 {
@@ -153,8 +211,12 @@ BOOL
 GetRegistrySettings(PGINA_CONTEXT pgContext)
 {
     HKEY hKey = NULL;
-    DWORD dwValue, dwSize;
+    LPWSTR lpAutoAdminLogon = NULL;
+    LPWSTR lpDontDisplayLastUserName = NULL;
+    LPWSTR lpShutdownWithoutLogon = NULL;
+    LPWSTR lpIgnoreShiftOverride = NULL;
     DWORD dwDisableCAD = 0;
+    DWORD dwSize;
     LONG rc;
 
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -168,41 +230,62 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
         return FALSE;
     }
 
-    rc = ReadRegDwordValue(hKey, L"AutoAdminLogon", &dwValue);
+    rc = ReadRegSzValue(hKey,
+                        L"AutoAdminLogon",
+                        &lpAutoAdminLogon);
     if (rc == ERROR_SUCCESS)
-        pgContext->bAutoAdminLogon = !!dwValue;
+    {
+        if (wcscmp(lpAutoAdminLogon, L"1") == 0)
+            pgContext->bAutoAdminLogon = TRUE;
+    }
+
     TRACE("bAutoAdminLogon: %s\n", pgContext->bAutoAdminLogon ? "TRUE" : "FALSE");
 
-    // TODO: What to do also depends whether we are on Terminal Services.
-    rc = ReadRegDwordValue(hKey, L"DisableCAD", &dwDisableCAD);
+    rc = ReadRegDwordValue(hKey,
+                           L"DisableCAD",
+                           &dwDisableCAD);
     if (rc == ERROR_SUCCESS)
     {
         if (dwDisableCAD != 0)
             pgContext->bDisableCAD = TRUE;
     }
+
     TRACE("bDisableCAD: %s\n", pgContext->bDisableCAD ? "TRUE" : "FALSE");
 
-    // NOTE: The default value is always read from the registry (Workstation: TRUE; Server: FALSE).
-    // TODO: Set it to TRUE always on SafeMode. Keep it FALSE for remote sessions.
     pgContext->bShutdownWithoutLogon = TRUE;
-    rc = ReadRegDwordValue(hKey, L"ShutdownWithoutLogon", &dwValue);
+    rc = ReadRegSzValue(hKey,
+                        L"ShutdownWithoutLogon",
+                        &lpShutdownWithoutLogon);
     if (rc == ERROR_SUCCESS)
-        pgContext->bShutdownWithoutLogon = !!dwValue;
+    {
+        if (wcscmp(lpShutdownWithoutLogon, L"0") == 0)
+            pgContext->bShutdownWithoutLogon = FALSE;
+    }
 
-    rc = ReadRegDwordValue(hKey, L"DontDisplayLastUserName", &dwValue);
+    rc = ReadRegSzValue(hKey,
+                        L"DontDisplayLastUserName",
+                        &lpDontDisplayLastUserName);
     if (rc == ERROR_SUCCESS)
-        pgContext->bDontDisplayLastUserName = !!dwValue;
+    {
+        if (wcscmp(lpDontDisplayLastUserName, L"1") == 0)
+            pgContext->bDontDisplayLastUserName = TRUE;
+    }
 
-    rc = ReadRegDwordValue(hKey, L"IgnoreShiftOverride", &dwValue);
+    rc = ReadRegSzValue(hKey,
+                        L"IgnoreShiftOverride",
+                        &lpIgnoreShiftOverride);
     if (rc == ERROR_SUCCESS)
-        pgContext->bIgnoreShiftOverride = !!dwValue;
+    {
+        if (wcscmp(lpIgnoreShiftOverride, L"1") == 0)
+            pgContext->bIgnoreShiftOverride = TRUE;
+    }
 
     dwSize = sizeof(pgContext->UserName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultUserName",
                           NULL,
                           NULL,
-                          (PBYTE)&pgContext->UserName,
+                          (LPBYTE)&pgContext->UserName,
                           &dwSize);
 
     dwSize = sizeof(pgContext->DomainName);
@@ -210,7 +293,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           L"DefaultDomainName",
                           NULL,
                           NULL,
-                          (PBYTE)&pgContext->DomainName,
+                          (LPBYTE)&pgContext->DomainName,
                           &dwSize);
 
     dwSize = sizeof(pgContext->Password);
@@ -218,10 +301,22 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           L"DefaultPassword",
                           NULL,
                           NULL,
-                          (PBYTE)&pgContext->Password,
+                          (LPBYTE)&pgContext->Password,
                           &dwSize);
     if (rc)
         GetLsaDefaultPassword(pgContext);
+
+    if (lpIgnoreShiftOverride != NULL)
+        HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);
+
+    if (lpShutdownWithoutLogon != NULL)
+        HeapFree(GetProcessHeap(), 0, lpShutdownWithoutLogon);
+
+    if (lpDontDisplayLastUserName != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDontDisplayLastUserName);
+
+    if (lpAutoAdminLogon != NULL)
+        HeapFree(GetProcessHeap(), 0, lpAutoAdminLogon);
 
     if (hKey != NULL)
         RegCloseKey(hKey);
@@ -462,46 +557,46 @@ WlxStartApplication(
 /*
  * @implemented
  */
-BOOL
-WINAPI
+BOOL WINAPI
 WlxActivateUserShell(
-    _In_ PVOID pWlxContext,
-    _In_ PWSTR pszDesktopName,
-    _In_ PWSTR pszMprLogonScript,
-    _In_ PVOID pEnvironment)
+    PVOID pWlxContext,
+    PWSTR pszDesktopName,
+    PWSTR pszMprLogonScript,
+    PVOID pEnvironment)
 {
-    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
-    HKEY hKey, hKeyCurrentUser;
+    HKEY hKey;
     DWORD BufSize, ValueType;
-    DWORD len;
-    LONG rc;
-    BOOL ret;
     WCHAR pszUserInitApp[MAX_PATH + 1];
     WCHAR pszExpUserInitApp[MAX_PATH];
+    DWORD len;
+    LONG rc;
 
     TRACE("WlxActivateUserShell()\n");
 
     UNREFERENCED_PARAMETER(pszMprLogonScript);
 
-    /* Get the path of Userinit */
-    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                       L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-                       0,
-                       KEY_QUERY_VALUE,
-                       &hKey);
+    /* Get the path of userinit */
+    rc = RegOpenKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+        0,
+        KEY_QUERY_VALUE,
+        &hKey);
     if (rc != ERROR_SUCCESS)
     {
         WARN("RegOpenKeyExW() failed with error %lu\n", rc);
         return FALSE;
     }
 
+    /* Query userinit application */
     BufSize = sizeof(pszUserInitApp) - sizeof(UNICODE_NULL);
-    rc = RegQueryValueExW(hKey,
-                          L"Userinit",
-                          NULL,
-                          &ValueType,
-                          (PBYTE)pszUserInitApp,
-                          &BufSize);
+    rc = RegQueryValueExW(
+        hKey,
+        L"Userinit",
+        NULL,
+        &ValueType,
+        (LPBYTE)pszUserInitApp,
+        &BufSize);
     RegCloseKey(hKey);
     if (rc != ERROR_SUCCESS || (ValueType != REG_SZ && ValueType != REG_EXPAND_SZ))
     {
@@ -510,52 +605,15 @@ WlxActivateUserShell(
     }
     pszUserInitApp[MAX_PATH] = UNICODE_NULL;
 
-    len = ExpandEnvironmentStringsW(pszUserInitApp, pszExpUserInitApp, _countof(pszExpUserInitApp));
-    if (len > _countof(pszExpUserInitApp))
+    len = ExpandEnvironmentStringsW(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
+    if (len > MAX_PATH)
     {
         WARN("ExpandEnvironmentStringsW() failed. Required size %lu\n", len);
         return FALSE;
     }
 
-    /* Start the Userinit application */
-    ret = WlxStartApplication(pWlxContext, pszDesktopName, pEnvironment, pszExpUserInitApp);
-    if (!ret)
-        return ret;
-
-    /* For convenience, store in the logged-in user's Explorer key, the user name
-     * that was entered verbatim in the "Log On" dialog to log into the system.
-     * This name may differ from the resulting user name used during authentication. */
-
-    /* Open the per-user registry key */
-    rc = RegOpenLoggedOnHKCU(pgContext->UserToken,
-                             KEY_SET_VALUE,
-                             &hKeyCurrentUser);
-    if (rc != ERROR_SUCCESS)
-    {
-        ERR("RegOpenLoggedOnHKCU() failed with error %ld\n", rc);
-        return ret;
-    }
-
-    /* Open the subkey and write the value */
-    rc = RegOpenKeyExW(hKeyCurrentUser,
-                       L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-                       0,
-                       KEY_SET_VALUE,
-                       &hKey);
-    if (rc == ERROR_SUCCESS)
-    {
-        len = wcslen(pgContext->UserName) + 1;
-        RegSetValueExW(hKey,
-                       L"Logon User Name",
-                       0,
-                       REG_SZ,
-                       (PBYTE)pgContext->UserName,
-                       len * sizeof(WCHAR));
-        RegCloseKey(hKey);
-    }
-    RegCloseKey(hKeyCurrentUser);
-
-    return ret;
+    /* Start userinit app */
+    return WlxStartApplication(pWlxContext, pszDesktopName, pEnvironment, pszExpUserInitApp);
 }
 
 /*
@@ -632,6 +690,20 @@ WlxRemoveStatusMessage(
     TRACE("WlxRemoveStatusMessage()\n");
 
     return pGinaUI->RemoveStatusMessage(pgContext);
+}
+
+static PWSTR
+DuplicationString(PWSTR Str)
+{
+    DWORD cb;
+    PWSTR NewStr;
+
+    if (Str == NULL) return NULL;
+
+    cb = (wcslen(Str) + 1) * sizeof(WCHAR);
+    if ((NewStr = LocalAlloc(LMEM_FIXED, cb)))
+        memcpy(NewStr, Str, cb);
+    return NewStr;
 }
 
 
@@ -763,21 +835,19 @@ CreateProfile(
     IN PWSTR Password)
 {
     PWLX_PROFILE_V2_0 pProfile = NULL;
+    PWSTR pProfilePath = NULL;
     PWSTR pEnvironment = NULL;
     TOKEN_STATISTICS Stats;
     DWORD cbStats, cbSize;
     DWORD dwLength;
-#if 0
-    BOOL bIsDomainLogon;
-    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH+1];
-#endif
+    BOOL bResult;
 
     /* Store the logon time in the context */
     GetLocalTime(&pgContext->LogonTime);
 
     /* Store user and domain in the context */
     wcscpy(pgContext->UserName, UserName);
-    if (Domain == NULL || !Domain[0])
+    if (Domain == NULL || wcslen(Domain) == 0)
     {
         dwLength = _countof(pgContext->DomainName);
         GetComputerNameW(pgContext->DomainName, &dwLength);
@@ -786,17 +856,25 @@ CreateProfile(
     {
         wcscpy(pgContext->DomainName, Domain);
     }
-    /* From now on we use in UserName and Domain the captured values from pgContext */
-    UserName = pgContext->UserName;
-    Domain = pgContext->DomainName;
 
-#if 0
-    /* Determine whether this is really a domain logon, by verifying
-     * that the specified domain is different from the local computer */
-    dwLength = _countof(ComputerName);
-    GetComputerNameW(ComputerName, &dwLength);
-    bIsDomainLogon = (_wcsicmp(ComputerName, Domain) != 0);
-#endif
+    /* Get profile path */
+    cbSize = 0;
+    bResult = GetProfilesDirectoryW(NULL, &cbSize);
+    if (!bResult && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        pProfilePath = LocalAlloc(LMEM_FIXED, cbSize * sizeof(WCHAR));
+        if (!pProfilePath)
+        {
+            WARN("LocalAlloc() failed\n");
+            goto cleanup;
+        }
+        bResult = GetProfilesDirectoryW(pProfilePath, &cbSize);
+    }
+    if (!bResult)
+    {
+        WARN("GetUserProfileDirectoryW() failed\n");
+        goto cleanup;
+    }
 
     /* Allocate memory for profile */
     pProfile = LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(*pProfile));
@@ -806,61 +884,10 @@ CreateProfile(
         goto cleanup;
     }
     pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
+    pProfile->pszProfile = pProfilePath;
 
-    /*
-     * TODO: For domain logon support:
-     *
-     * - pszProfile: Specifies the path to a *roaming* user profile on a
-     *   domain server, if any. It is then used to create a local image
-     *   (copy) of the profile on the local computer.
-     *   ** This data should be retrieved from the LsaLogonUser() call
-     *      made by MyLogonUser()! **
-     *
-     * - pszPolicy (for domain logon): Path to a policy file.
-     *   Windows' msgina.dll hardcodes it as:
-     *   "\\<domain_controller>\netlogon\ntconfig.pol"
-     *
-     * - pszNetworkDefaultUserProfile (for domain logon): Path to the
-     *   default user profile. Windows' msgina.dll hardcodes it as:
-     *   "\\<domain_controller>\netlogon\Default User"
-     *
-     * - pszServerName (for domain logon): Name ("domain_controller") of
-     *   the server (local computer; Active Directory domain controller...)
-     *   that validated the logon.
-     *   ** This data should be retrieved from the LsaLogonUser() call
-     *      made by MyLogonUser()! **
-     *
-     * NOTES:
-     * - The paths use the domain controllers' "netlogon" share.
-     * - These strings are LocalAlloc'd here, and LocalFree'd by Winlogon.
-     */
-    pProfile->pszProfile = NULL;
-    pProfile->pszPolicy = NULL;
-    pProfile->pszNetworkDefaultUserProfile = NULL;
-    pProfile->pszServerName = NULL;
-#if 0
-    if (bIsDomainLogon)
-    {
-        PWSTR pServerName;
-        cbSize = sizeof(L"\\\\") + wcslen(Domain) * sizeof(WCHAR);
-        pServerName = LocalAlloc(LMEM_FIXED, cbSize);
-        if (!pServerName)
-            WARN("HeapAlloc() failed\n"); // Consider this optional, so no failure.
-        else
-            StringCbPrintfW(pServerName, cbSize, L"\\\\%ws", Domain); // See LogonServer below.
-        pProfile->pszServerName = pServerName;
-    }
-#endif
-
-    /* Build the minimal environment string block */
-    // FIXME: LogonServer is the name of the server that processed the logon
-    // request ("domain_controller"). It can be different from the selected
-    // user's logon domain.
-    // See e.g.:
-    // - https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/ns-ntsecapi-msv1_0_interactive_profile
-    // - https://learn.microsoft.com/en-us/windows/win32/api/winwlx/ns-winwlx-wlx_consoleswitch_credentials_info_v1_0
     cbSize = sizeof(L"LOGONSERVER=\\\\") +
-             wcslen(Domain) * sizeof(WCHAR) +
+             wcslen(pgContext->DomainName) * sizeof(WCHAR) +
              sizeof(UNICODE_NULL);
     pEnvironment = LocalAlloc(LMEM_FIXED, cbSize);
     if (!pEnvironment)
@@ -869,27 +896,26 @@ CreateProfile(
         goto cleanup;
     }
 
-    StringCbPrintfW(pEnvironment, cbSize, L"LOGONSERVER=\\\\%ws", Domain);
+    StringCbPrintfW(pEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->DomainName);
     ASSERT(wcslen(pEnvironment) == cbSize / sizeof(WCHAR) - 2);
     pEnvironment[cbSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
 
     pProfile->pszEnvironment = pEnvironment;
 
-    /* Return the other info */
     if (!GetTokenInformation(pgContext->UserToken,
                              TokenStatistics,
                              &Stats,
                              sizeof(Stats),
                              &cbStats))
     {
-        WARN("Couldn't get Authentication Id from user token!\n");
+        WARN("Couldn't get Authentication id from user token!\n");
         goto cleanup;
     }
 
     *pgContext->pAuthenticationId = Stats.AuthenticationId;
-    pgContext->pMprNotifyInfo->pszUserName = DuplicateString(UserName);
-    pgContext->pMprNotifyInfo->pszDomain = DuplicateString(Domain);
-    pgContext->pMprNotifyInfo->pszPassword = DuplicateString(Password);
+    pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
+    pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
+    pgContext->pMprNotifyInfo->pszPassword = DuplicationString(Password);
     pgContext->pMprNotifyInfo->pszOldPassword = NULL;
     *pgContext->pdwOptions = 0;
     *pgContext->pProfile = pProfile;
@@ -898,6 +924,8 @@ CreateProfile(
 cleanup:
     if (pEnvironment)
         LocalFree(pEnvironment);
+    if (pProfilePath)
+        LocalFree(pProfilePath);
     if (pProfile)
         LocalFree(pProfile);
     return FALSE;
@@ -973,12 +1001,9 @@ WlxLoggedOutSAS(
     pgContext->pMprNotifyInfo = pMprNotifyInfo;
     pgContext->pProfile = pProfile;
 
+
     res = pGinaUI->LoggedOutSAS(pgContext);
-
-    /* Return the logon information only if necessary */
-    if (res == WLX_SAS_ACTION_LOGON)
-        *phToken = pgContext->UserToken;
-
+    *phToken = pgContext->UserToken;
     return res;
 }
 
@@ -1044,20 +1069,6 @@ WlxLogoff(
     PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
     TRACE("WlxLogoff(%p)\n", pWlxContext);
-
-    /* Reset the captured Winlogon pointers */
-    pgContext->pAuthenticationId = NULL;
-    pgContext->pdwOptions = NULL;
-    pgContext->pMprNotifyInfo = NULL;
-    pgContext->pProfile = NULL;
-
-    /*
-     * Reset user login information.
-     * Keep pgContext->UserName and pgContext->DomainName around
-     * if we want to show them as default (last logged user) in
-     * the Log-On dialog.
-     */
-    ZeroMemory(&pgContext->LogonTime, sizeof(pgContext->LogonTime));
 
     /* Delete the password */
     SecureZeroMemory(pgContext->Password, sizeof(pgContext->Password));

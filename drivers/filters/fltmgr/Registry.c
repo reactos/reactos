@@ -11,6 +11,7 @@
 #include "fltmgr.h"
 #include "fltmgrint.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

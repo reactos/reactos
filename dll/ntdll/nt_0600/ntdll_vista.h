@@ -15,6 +15,7 @@
 #include <ndk/umfuncs.h>
 #include <ndk/ldrfuncs.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #include "../include/ntdllp.h"

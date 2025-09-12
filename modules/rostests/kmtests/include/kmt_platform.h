@@ -51,6 +51,7 @@
 #define ok_irql(i)
 #define KIRQL int
 typedef const UCHAR CUCHAR, *PCUCHAR;
+typedef ULONG LOGICAL, *PLOGICAL;
 
 #undef KeRaiseIrql
 #define KeRaiseIrql(new, old) *(old) = 123

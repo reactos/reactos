@@ -11,6 +11,7 @@
 
 #include "bootcode.h"
 
+#define NDEBUG
 #include <debug.h>
 
 

@@ -155,8 +155,8 @@ typedef struct STRUCT(_PEB)
     ULONG TlsExpansionBitmapBits[32];
     ULONG SessionId;
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-    ULARGE_INTEGER AppCompatFlags;     // APPCOMPAT_FLAGS
-    ULARGE_INTEGER AppCompatFlagsUser; // APPCOMPAT_USERFLAGS
+    ULARGE_INTEGER AppCompatFlags;
+    ULARGE_INTEGER AppCompatFlagsUser;
     PTR(PVOID) pShimData;
     PTR(PVOID) AppCompatInfo;
     STRUCT(UNICODE_STRING) CSDVersion;

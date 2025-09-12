@@ -566,9 +566,9 @@ Ext2ProcessVolumeProperty(
 
             RtlZeroMemory(Property->Codepage, CODEPAGE_MAXLEN);
             if (Vcb->Codepage.PageTable) {
-                strncpy(Property->Codepage, Vcb->Codepage.PageTable->charset, CODEPAGE_MAXLEN - 1);
+                strncpy(Property->Codepage, Vcb->Codepage.PageTable->charset, CODEPAGE_MAXLEN);
             } else {
-                strncpy(Property->Codepage, "default", CODEPAGE_MAXLEN - 1);
+                strncpy(Property->Codepage, "default", CODEPAGE_MAXLEN);
             }
             break;
 

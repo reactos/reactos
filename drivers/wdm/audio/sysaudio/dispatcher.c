@@ -8,6 +8,7 @@
 
 #include "sysaudio.h"
 
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS

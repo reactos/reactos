@@ -33,6 +33,7 @@
 #include <lsass/lsasrv.h>
 #include <samsrv/samsrv.h>
 
+#define NDEBUG
 #include <debug.h>
 
 INT WINAPI

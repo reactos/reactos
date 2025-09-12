@@ -10,6 +10,7 @@
 
 #include "ksecdd.h"
 
+#define NDEBUG
 #include <debug.h>
 
 typedef PVOID PSECURITY_PACKAGE_OPTIONS, PSecurityUserData;

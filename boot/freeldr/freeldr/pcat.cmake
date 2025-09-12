@@ -19,13 +19,6 @@ elseif(ARCH STREQUAL "amd64")
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
-    
-    # CRITICAL: Disable optimization for mode switching code
-    # These files contain sensitive assembly that breaks with optimization
-    set_source_files_properties(
-        ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
-        PROPERTIES COMPILE_FLAGS "-O0"
-    )
 endif()
 
 
@@ -125,13 +118,6 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/int386.S
         arch/amd64/pnpbios.S
         arch/amd64/linux.S)
-    
-    # CRITICAL: Disable optimization for sensitive AMD64 assembly files
-    set_source_files_properties(
-        arch/amd64/entry.S
-        arch/amd64/int386.S
-        PROPERTIES COMPILE_FLAGS "-O0"
-    )
 
     list(APPEND PCATLDR_ARC_SOURCE
         lib/fs/pxe.c

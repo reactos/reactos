@@ -1,5 +1,6 @@
 #include <rosdhcp.h>
 
+#define NDEBUG
 #include <reactos/debug.h>
 
 extern HANDLE hAdapterStateChangedEvent;
@@ -322,16 +323,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             ApiLock();
 
-            /* FIXME: AdapterFindByHardwareAddress expects up to 16 bytes but bPhysAddr is only 8.
-             * This is safe because dwPhysAddrLen limits the actual bytes accessed.
-             * Use a union to avoid the warning. */
-            union {
-                u_int8_t addr16[16];
-                u_int8_t addr8[8];
-            } hw_addr = {0};
-            memcpy(hw_addr.addr8, Table->table[i].bPhysAddr, 
-                   min(Table->table[i].dwPhysAddrLen, sizeof(hw_addr.addr8)));
-            if ((Adapter = AdapterFindByHardwareAddress(hw_addr.addr16, Table->table[i].dwPhysAddrLen)))
+            if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
             {
                 proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
 

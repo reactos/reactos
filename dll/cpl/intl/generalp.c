@@ -786,7 +786,7 @@ SetNewLocale(
                   MAX_MISCCOUNTRY);
 
     GetLocaleInfo(lcid,
-                  LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
+                  LOCALE_SLANGUAGE | LOCALE_NOUSEROVERRIDE,
                   pGlobalData->szMiscLanguage,
                   MAX_MISCLANGUAGE);
 

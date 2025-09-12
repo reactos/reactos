@@ -11,6 +11,7 @@
 #include "kd.h"
 #include "kdterminal.h"
 
+#define NDEBUG
 #include <debug.h>
 
 #undef KdD0Transition
@@ -114,13 +115,6 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: Entry ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#endif
     PCHAR CommandLine, Port = NULL;
     ULONG i;
     BOOLEAN Success = FALSE;
@@ -131,11 +125,6 @@ KdDebuggerInitialize0(
         CommandLine = LoaderBlock->LoadOptions;
         if (CommandLine)
         {
-#ifdef _M_AMD64
-            /* On AMD64, LoadOptions might be in read-only memory from UEFI */
-            /* Skip command line processing for now - use default settings */
-            Port = NULL;
-#else
             /* Upcase it */
             _strupr(CommandLine);
 
@@ -144,7 +133,6 @@ KdDebuggerInitialize0(
 
             /* Get the port */
             Port = strstr(CommandLine, "DEBUGPORT");
-#endif
         }
     }
 
@@ -167,151 +155,12 @@ KdDebuggerInitialize0(
     if (KdpDebugMode.Value == 0)
         KdpDebugMode.Serial = TRUE;
 
-#ifdef _M_AMD64
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: About to call providers ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#endif
-
     /* Call the providers at Phase 0 */
-#ifdef _M_AMD64
-    /* On AMD64, we need to manually initialize the providers because
-     * the function pointers in InitRoutines aren't properly relocated.
-     * We'll directly call the init routines which are now properly exported.
-     */
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: AMD64 manual provider init ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* Ensure serial debug mode is enabled */
-    KdpDebugMode.Serial = TRUE;
-    
-    /* Call KdpSerialInit directly */
-    extern NTSTATUS NTAPI KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable, ULONG BootPhase);
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: Calling KdpSerialInit directly ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-    
-    /* Initialize the serial provider */
-    DispatchTable[1].InitStatus = KdpSerialInit(&DispatchTable[1], 0);
-    Success = NT_SUCCESS(DispatchTable[1].InitStatus);
-    
-    if (Success)
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: KdpSerialInit succeeded ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        
-        /* Test if the print routine was set */
-        if (DispatchTable[1].KdpPrintRoutine)
-        {
-            const char msg2[] = "*** KdDebuggerInitialize0: Print routine is set ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        }
-        else
-        {
-            const char msg2[] = "*** KdDebuggerInitialize0: WARNING - Print routine is NULL ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        }
-    }
-    else
-    {
-        const char msg[] = "*** KdDebuggerInitialize0: KdpSerialInit FAILED ***\n";
-        const char *p = msg;
-        while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-    }
-#else
     for (i = 0; i < RTL_NUMBER_OF(DispatchTable); i++)
     {
-#ifdef _M_AMD64
-        {
-            char msg[100];
-            const char *p;
-            int j = 0;
-            msg[j++] = '*'; msg[j++] = '*'; msg[j++] = '*'; msg[j++] = ' ';
-            msg[j++] = 'K'; msg[j++] = 'd'; msg[j++] = 'D'; msg[j++] = 'e';
-            msg[j++] = 'b'; msg[j++] = 'u'; msg[j++] = 'g'; msg[j++] = 'g';
-            msg[j++] = 'e'; msg[j++] = 'r'; msg[j++] = 'I'; msg[j++] = 'n';
-            msg[j++] = 'i'; msg[j++] = 't'; msg[j++] = 'i'; msg[j++] = 'a';
-            msg[j++] = 'l'; msg[j++] = 'i'; msg[j++] = 'z'; msg[j++] = 'e';
-            msg[j++] = '0'; msg[j++] = ':'; msg[j++] = ' '; msg[j++] = 'C';
-            msg[j++] = 'a'; msg[j++] = 'l'; msg[j++] = 'l'; msg[j++] = 'i';
-            msg[j++] = 'n'; msg[j++] = 'g'; msg[j++] = ' '; msg[j++] = 'p';
-            msg[j++] = 'r'; msg[j++] = 'o'; msg[j++] = 'v'; msg[j++] = 'i';
-            msg[j++] = 'd'; msg[j++] = 'e'; msg[j++] = 'r'; msg[j++] = ' ';
-            msg[j++] = '0' + i; msg[j++] = ' '; msg[j++] = '*'; msg[j++] = '*';
-            msg[j++] = '*'; msg[j++] = '\n'; msg[j] = '\0';
-            p = msg;
-            while (*p) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p++); }
-        }
-        {
-            const char msg2[] = "*** KdDebuggerInitialize0: About to call InitRoutines ***\n";
-            const char *p2 = msg2;
-            while (*p2) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p2++); }
-        }
-        /* Check if InitRoutines[i] is valid */
-        if (InitRoutines[i] == NULL)
-        {
-            const char msg3[] = "*** KdDebuggerInitialize0: InitRoutines[i] is NULL! ***\n";
-            const char *p3 = msg3;
-            while (*p3) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p3++); }
-            continue;
-        }
-        {
-            const char msg4[] = "*** KdDebuggerInitialize0: About to access DispatchTable ***\n";
-            const char *p4 = msg4;
-            while (*p4) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p4++); }
-        }
-        
-        /* Let's try calling with simpler code to debug */
-        {
-            const char msg5[] = "*** KdDebuggerInitialize0: About to call InitRoutines[i]() ***\n";
-            const char *p5 = msg5;
-            while (*p5) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p5++); }
-        }
-        
-        /* Print the function pointer address */
-        {
-            ULONG_PTR FuncAddr = (ULONG_PTR)InitRoutines[i];
-            char addr_msg[100];
-            int j = 0;
-            addr_msg[j++] = '*'; addr_msg[j++] = '*'; addr_msg[j++] = '*';
-            addr_msg[j++] = ' '; addr_msg[j++] = 'I'; addr_msg[j++] = 'n';
-            addr_msg[j++] = 'i'; addr_msg[j++] = 't'; addr_msg[j++] = 'R';
-            addr_msg[j++] = 'o'; addr_msg[j++] = 'u'; addr_msg[j++] = 't';
-            addr_msg[j++] = 'i'; addr_msg[j++] = 'n'; addr_msg[j++] = 'e';
-            addr_msg[j++] = 's'; addr_msg[j++] = '['; addr_msg[j++] = '0' + i;
-            addr_msg[j++] = ']'; addr_msg[j++] = ' '; addr_msg[j++] = 'a';
-            addr_msg[j++] = 't'; addr_msg[j++] = ':'; addr_msg[j++] = ' ';
-            addr_msg[j++] = '0'; addr_msg[j++] = 'x';
-            
-            /* Convert address to hex string */
-            for (int k = 15; k >= 0; k--) {
-                ULONG_PTR nibble = (FuncAddr >> (k * 4)) & 0xF;
-                if (nibble < 10)
-                    addr_msg[j++] = '0' + nibble;
-                else
-                    addr_msg[j++] = 'A' + (nibble - 10);
-            }
-            addr_msg[j++] = '\n';
-            addr_msg[j] = '\0';
-            
-            const char *p6 = addr_msg;
-            while (*p6) { while ((__inbyte(0x3F8 + 5) & 0x20) == 0); __outbyte(0x3F8, *p6++); }
-        }
-#endif
         DispatchTable[i].InitStatus = InitRoutines[i](&DispatchTable[i], 0);
         Success = (Success || NT_SUCCESS(DispatchTable[i].InitStatus));
     }
-#endif /* _M_AMD64 */
 
     /* Return success if at least one of the providers succeeded */
     return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);

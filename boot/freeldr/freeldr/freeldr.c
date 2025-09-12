@@ -99,135 +99,61 @@ LaunchSecondStageLoader(VOID)
     return (*EntryPoint)();
 }
 
-static inline void SerialPutChar(char c)
-{
-    WRITE_PORT_UCHAR((PUCHAR)0x3F8, c);
-}
-
-/* Define STANDALONE_BOOT to create a minimal FreeLoader for testing */
-/* #define STANDALONE_BOOT */
-
-/* With optimization disabled for critical files, we can try full boot */
-
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
-    /* Send 'M' to show we entered BootMain */
-    SerialPutChar('M');
-    
     /* Load the default settings from the command-line */
     LoadSettings(CmdLine);
-    
-    /* Send 'D' to show LoadSettings completed */
-    SerialPutChar('D');
 
-    /* Debugger pre-initialization - force COM1 output for debugging */
-    DebugInit("DEBUGPORT=COM1 BAUDRATE=115200");
-    
-    /* Send 'I' to show DebugInit completed */
-    SerialPutChar('I');
+    /* Debugger pre-initialization */
+    DebugInit(BootMgrInfo.DebugString);
 
-    //DbgPrint("FreeLoader: Starting BootMain()\n");
-    //DbgPrint("FreeLoader: Command line: %s\n", CmdLine ? CmdLine : "(null)");
-    
-    SerialPutChar('C');
     MachInit(CmdLine);
-    SerialPutChar('H');
 
-    //DbgPrint("FreeLoader: MachInit completed\n");
     TRACE("BootMain() called.\n");
 
 #ifndef UEFIBOOT
     /* Check if the CPU is new enough */
-    SerialPutChar('P');
     FrLdrCheckCpuCompatibility(); // FIXME: Should be done inside MachInit!
-    SerialPutChar('U');
 #endif
 
     /* UI pre-initialization */
-    SerialPutChar('U');
     if (!UiInitialize(FALSE))
     {
         UiMessageBoxCritical("Unable to initialize UI.");
         goto Quit;
     }
 
-#ifdef STANDALONE_BOOT
-    /* Standalone boot - minimal initialization for testing */
-    DbgPrint("FreeLoader: Running in STANDALONE mode\n");
-    DbgPrint("FreeLoader: Skipping all subsystem initialization\n");
-    DbgPrint("FreeLoader: 64-bit mode successfully reached!\n");
-    DbgPrint("FreeLoader: Boot test completed successfully\n");
-    
-    SerialPutChar('S');
-    SerialPutChar('U');
-    SerialPutChar('C');
-    SerialPutChar('C');
-    SerialPutChar('E');
-    SerialPutChar('S');
-    SerialPutChar('S');
-    SerialPutChar('!');
-    SerialPutChar('\n');
-    
-    /* Halt the system */
-    for (;;) {
-        __asm__ __volatile__("hlt");
-    }
-#else
-    /* Normal boot path - full initialization */
-    
     /* Initialize memory manager */
-    SerialPutChar('M');
-    DbgPrint("FreeLoader: Initializing memory manager...\n");
     if (!MmInitializeMemoryManager())
     {
-        DbgPrint("FreeLoader: ERROR - Unable to initialize memory manager\n");
         UiMessageBoxCritical("Unable to initialize memory manager.");
         goto Quit;
     }
-    SerialPutChar('O');
-    DbgPrint("FreeLoader: Memory manager initialized successfully\n");
 
     /* Initialize I/O subsystem */
-    SerialPutChar('F');
-    DbgPrint("FreeLoader: Initializing I/O subsystem...\n");
     FsInit();
-    SerialPutChar('S');
 
     /* Initialize the module list */
-    SerialPutChar('L');
-    DbgPrint("FreeLoader: Initializing module list...\n");
     if (!PeLdrInitializeModuleList())
     {
         UiMessageBoxCritical("Unable to initialize module list.");
         goto Quit;
     }
-    SerialPutChar('E');
 
-    /* Initialize boot devices */
-    SerialPutChar('B');
-    DbgPrint("FreeLoader: Detecting boot devices...\n");
     if (!MachInitializeBootDevices())
     {
         UiMessageBoxCritical("Error when detecting hardware.");
         goto Quit;
     }
 
-    /* Launch second stage loader (rosload.exe) */
-    SerialPutChar('2');
-    DbgPrint("FreeLoader: Boot path: %s\n", FrLdrBootPath);
-    DbgPrint("FreeLoader: Attempting to launch second stage loader...\n");
-    
-    SerialPutChar('S');
-    
+    /* Launch second stage loader */
+    DbgPrint("Attempting to launch second stage loader...\n");
     ULONG Result = LaunchSecondStageLoader();
-    SerialPutChar('T');
-    DbgPrint("FreeLoader: LaunchSecondStageLoader returned: %lu\n", Result);
+    DbgPrint("LaunchSecondStageLoader returned: %lu\n", Result);
     if (Result != ESUCCESS)
     {
-        DbgPrint("FreeLoader: ERROR - Failed to load second stage loader (error %lu)\n", Result);
         UiMessageBoxCritical("Unable to load second stage loader.");
     }
-#endif
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */

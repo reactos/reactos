@@ -39,17 +39,7 @@ elseif(ARCH STREQUAL "arm")
         arch/arm/debug.c)
     #TBD
 elseif(ARCH STREQUAL "arm64")
-    list(APPEND UEFILDR_ARC_SOURCE
-        arch/arm64/macharm64.c
-        arch/arm64/trap.c
-        arch/arm64/mmu_v2.c
-        arch/arm64/timer.c)
-    list(APPEND UEFILDR_COMMON_ASM_SOURCE
-        arch/uefi/arm64/uefiasm.S
-        arch/arm64/entry.S
-        arch/arm64/misc.S
-        arch/arm64/except.S
-        arch/arm64/cache_v2.S)
+    #TBD
 else()
     #TBD
 endif()

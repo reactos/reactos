@@ -36,6 +36,7 @@ void WINAPI DebugSetMute(void) {
 IDirect3D9 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT sdk_version)
 {
     struct d3d9 *object;
+
     TRACE("sdk_version %#x.\n", sdk_version);
 
     if (!(object = heap_alloc_zero(sizeof(*object))))

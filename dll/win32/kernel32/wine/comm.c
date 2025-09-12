@@ -41,6 +41,7 @@ typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 #undef IOCTL_SERIAL_LSRMST_INSERT
 #include <ntddser.h>
 
+#define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(comm);
 

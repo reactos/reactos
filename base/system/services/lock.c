@@ -12,6 +12,7 @@
 
 #include <time.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

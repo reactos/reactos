@@ -30,6 +30,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 
@@ -790,7 +791,7 @@ PNP_ReportLogOn(
            hBinding, Admin, ProcessId);
 
     /* Fail, if the caller is not an interactive user */
-    if ((g_IsLiveMedium == FALSE) && (IsCallerInteractive(hBinding) == FALSE))
+    if (!IsCallerInteractive(hBinding))
         goto cleanup;
 
     /* Get the users token */

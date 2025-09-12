@@ -59,10 +59,7 @@ PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
 
     /* Copy the connection properties */
     pnetid = ILGetConnData(pidl);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
     memset(pnetid->Unknown, 0, sizeof(pnetid->Unknown));
-#pragma GCC diagnostic pop
     pnetid->clsidThisObject = pProperties->clsidThisObject;
     pnetid->guidId = pProperties->guidId;
     pnetid->Status = pProperties->Status;

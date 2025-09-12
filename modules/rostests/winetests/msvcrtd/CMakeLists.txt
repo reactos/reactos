@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_executable(msvcrtd_winetest debug.c testlist.c)
 set_module_type(msvcrtd_winetest win32cui)
 add_importlibs(msvcrtd_winetest msvcrt kernel32)

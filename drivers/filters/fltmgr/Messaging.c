@@ -12,6 +12,7 @@
 #include "fltmgrint.h"
 #include <fltmgr_shared.h>
 
+#define NDEBUG
 #include <debug.h>
 
 

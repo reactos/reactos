@@ -521,33 +521,16 @@ BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
 }
 
 /**
- * @unimplemented
- * @name SdbGetDatabaseInformationByName
- * Get information about the database
+ * @name SdbFreeDatabaseInformation
+ * Free up resources allocated in SdbGetDatabaseInformation
  *
- * @param lpwszFileName The database file
- * @param ppAttrInfo    The returned information, allocated by this function
- * @return TRUE on success
+ * @param information   The information retrieved from SdbGetDatabaseInformation
  */
-BOOL WINAPI
-SdbGetDatabaseInformationByName(_In_ LPCTSTR lpwszFileName, _Outptr_ PDB_INFORMATION *ppAttrInfo)
+VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information)
 {
-    SHIM_ERR("Unimplemented\n");
-    *ppAttrInfo = NULL;
-    return FALSE;
+    // No-op
 }
 
-/**
-  * @unimplemented
-  * @name SdbFreeDatabaseInformation
-  * Free up resources allocated in SdbGetDatabaseInformationByName
-  *
-  * @param information   The information retrieved from SdbGetDatabaseInformationByName
-  */
-VOID WINAPI SdbFreeDatabaseInformation(_In_opt_ PDB_INFORMATION information)
-{
-    SHIM_ERR("Unimplemented\n");
-}
 
 /**
  * Find the first named child tag.

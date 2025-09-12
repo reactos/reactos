@@ -26,6 +26,7 @@
 
 #include "usetup.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* Enable this define to hide FAT32 choice in case FAT is already present */

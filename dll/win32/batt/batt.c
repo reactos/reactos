@@ -18,6 +18,7 @@
 #include <initguid.h>
 #include <devguid.h>
 
+#define NDEBUG
 #include <debug.h>
 
 static

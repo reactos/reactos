@@ -10,6 +10,7 @@
 #include <k32.h>
 #include <ndk/rtltypes.h>
 
+#define NDEBUG
 #include <debug.h>
 
 #ifdef _M_IX86

@@ -73,7 +73,6 @@ _exituefi:
 #else
     lgdt    [rip + _gdtptr]          /* GAS: RIP-relative load of 10-byte GDTR */
 #endif
-#endif
 
     /* Re-enable interrupts if appropriate for your environment */
     /* sti */

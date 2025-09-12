@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
 
 add_executable(ws2_32_winetest protocol.c sock.c testlist.c)

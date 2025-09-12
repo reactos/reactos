@@ -25,6 +25,7 @@
 #include <reactos/drivers/ntddrdsk.h>
 #include "../../../filesystems/fs_rec/fs_rec.h"
 #include <stdio.h>
+#define NDEBUG
 #include <debug.h>
 
 #define DO_XIP   0x00020000

@@ -819,7 +819,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  * RtlTryEnterCriticalSection
  * @implemented NT4
  *
- *     Attempts to gain ownership of the critical section without waiting.
+ *     Attemps to gain ownership of the critical section without waiting.
  *
  * Params:
  *     CriticalSection - Critical section to attempt acquiring.
@@ -831,7 +831,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *     None
  *
  *--*/
-LOGICAL
+BOOLEAN
 NTAPI
 RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -863,14 +863,14 @@ RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
     UNIMPLEMENTED;
 }
 
-LOGICAL
+ULONG
 NTAPI
 RtlIsCriticalSectionLocked(PRTL_CRITICAL_SECTION CriticalSection)
 {
     return CriticalSection->RecursionCount != 0;
 }
 
-LOGICAL
+ULONG
 NTAPI
 RtlIsCriticalSectionLockedByThread(PRTL_CRITICAL_SECTION CriticalSection)
 {

@@ -2,6 +2,7 @@
 
 #include <poclass.h>
 
+#define NDEBUG
 #include <debug.h>
 
 CODE_SEG("INIT")

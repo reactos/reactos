@@ -662,14 +662,13 @@ function(set_module_type MODULE TYPE)
 
     # Set base address
     # Use 'IMAGEBASE default' to skip these set_image_base(), especially for win32dll test files
-    # Skip setting image base for amd64 due to binutils linker segfault bug (except for kernel)
-    if(__module_IMAGEBASE)
-        # Allow explicit IMAGEBASE even on amd64 if specified (needed for kernel)
-        if(NOT ${__module_IMAGEBASE} STREQUAL "default")
-            set_image_base(${MODULE} ${__module_IMAGEBASE})
-        endif()
-    elseif(NOT ARCH STREQUAL "amd64")
-        if(${TYPE} STREQUAL win32dll)
+    # Skip setting image base for amd64 due to binutils linker segfault bug
+    if(NOT ARCH STREQUAL "amd64")
+        if(__module_IMAGEBASE)
+            if(NOT ${__module_IMAGEBASE} STREQUAL "default")
+                set_image_base(${MODULE} ${__module_IMAGEBASE})
+            endif()
+        elseif(${TYPE} STREQUAL win32dll)
             if(DEFINED baseaddress_${MODULE})
                 set_image_base(${MODULE} ${baseaddress_${MODULE}})
             else()

@@ -11,6 +11,7 @@
 
 #include "mmdrv.h"
 
+#define NDEBUG
 #include <debug.h>
 
 typedef struct _DEVICE_LIST

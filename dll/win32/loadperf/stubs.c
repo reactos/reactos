@@ -1,4 +1,5 @@
 #include <windef.h>
+#define NDEBUG
 #include <reactos/debug.h>
 
 #define LOADPERF_FUNCTION DWORD WINAPI

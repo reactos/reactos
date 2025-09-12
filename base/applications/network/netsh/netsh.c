@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ******************************************************************/
@@ -57,9 +58,8 @@ wmain(
     LPCWSTR pszFileName = NULL;
     int index;
     int result = EXIT_SUCCESS;
-    BOOL bDone = FALSE;
 
-    DPRINT("wmain(%S)\n", GetCommandLineW());
+    DPRINT("main()\n");
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -93,7 +93,7 @@ wmain(
                 }
 
                 /* Run a command from the command line */
-                if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) != ERROR_SUCCESS)
+                if (InterpretCommand((LPWSTR*)&argv[index], argc - index) == FALSE)
                     result = EXIT_FAILURE;
                 goto done;
             }
@@ -186,7 +186,6 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
-    CleanupContext();
     UnloadHelpers();
 
     return result;
@@ -234,16 +233,8 @@ PrintMessageFromModule(
     _In_ DWORD  dwMsgId,
     ...)
 {
-    INT Length;
-    va_list ap;
-
-    va_start(ap, dwMsgId);
-    Length = ConResPrintfExV(StdOut, hModule, dwMsgId,
-                             MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-                             ap);
-    va_end(ap);
-
-    return Length;
+    DPRINT1("PrintMessageFromModule()\n");
+    return 1;
 }
 
 DWORD
@@ -256,7 +247,7 @@ PrintMessage(
     va_list ap;
 
     va_start(ap, pwszFormat);
-    Length = ConPrintfV(StdOut, pwszFormat, ap);
+    Length = ConPrintf(StdOut, pwszFormat);
     va_end(ap);
 
     return Length;

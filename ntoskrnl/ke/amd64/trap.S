@@ -11,10 +11,6 @@
 #include <ksamd64.inc>
 #include <trapamd64.inc>
 
-/* Debug definitions */
-.equ DEBUG_COM_PORT, 0x3F8
-.equ DEBUG_TIMEOUT, 1000
-
 EXTERN KiDispatchException:PROC
 EXTERN KeBugCheckWithTf:PROC
 EXTERN MmAccessFault:PROC
@@ -30,7 +26,6 @@ EXTERN MmDeleteKernelStack:PROC
 EXTERN KdSetOwedBreakpoints:PROC
 EXTERN KeAcquireSpinLockAtDpcLevel:PROC
 EXTERN KeReleaseSpinLockFromDpcLevel:PROC
-EXTERN KiDebugServiceTrapDebug:PROC
 
 
 /* Helper Macros *************************************************************/
@@ -232,44 +227,6 @@ PUBLIC KiBreakpointTrap
 FUNC KiBreakpointTrap
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
-    
-#ifdef DBG
-    /* Debug: Output '#' to serial port to show we reached INT3 handler */
-    push rax
-    push rdx
-    
-    /* Check for serial port hardware presence */
-    mov dx, DEBUG_COM_PORT + 7
-    in  al, dx
-    mov ah, al
-    mov al, 0x55
-    out dx, al
-    in  al, dx
-    cmp al, 0x55
-    jne .skip_serial
-    mov al, ah
-    out dx, al
-    
-    /* Poll serial port with timeout */
-    mov dx, DEBUG_COM_PORT + 5
-    mov ecx, DEBUG_TIMEOUT
-.wait:
-    in  al, dx
-    test al, 0x20
-    jnz .ready
-    loop .wait
-    jmp .skip_serial
-    
-.ready:
-    /* Output '#' character */
-    mov dx, DEBUG_COM_PORT
-    mov al, '#'
-    out dx, al
-    
-.skip_serial:
-    pop rdx
-    pop rax
-#endif
 
     /* Check if the frame was from kernelmode */
     test word ptr [rbp + KTRAP_FRAME_SegCs], 3
@@ -553,25 +510,9 @@ FUNC KiFloatingErrorFault
     /* Push pseudo error code */
     EnterTrap TF_SAVE_ALL
 
-    /* Clear the FPU exception state */
-    fnclex
-    
-    /* Call the C handler to handle the floating point exception */
-    mov rcx, rbp  /* Pass trap frame as parameter */
-    call KiFloatingErrorFaultHandler
-    
-    /* Check if we handled it successfully */
-    test eax, eax
-    jz FloatingErrorFaultHandled
-    
-    /* Not handled, dispatch exception */
-    mov eax, STATUS_FLOAT_INVALID_OPERATION
-    mov edx, 0    /* No parameters */
-    mov r9, 0
-    mov r10, 0
-    call InternalDispatchException
-    
-FloatingErrorFaultHandled:
+    UNIMPLEMENTED KiFloatingErrorFault
+    int 3
+
     /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC
@@ -646,20 +587,13 @@ FUNC KiDebugServiceTrap
    /* No error code */
     EnterTrap TF_SAVE_ALL
 
-    /* Properly dispatch the debug service exception to KdpTrap */
-    /* The exception will be handled by KdpTrap which will:
-     * 1. Call KdpPrint for BREAKPOINT_PRINT (RAX=1)
-     * 2. Advance RIP by 2 bytes for INT 0x2D
-     * 3. Set return value in RAX
-     */
-    
-    /* Dispatch the exception with all parameters */
-    /* ExceptionInformation[0] = Service code (RAX) */
-    /* ExceptionInformation[1] = String pointer (RCX) */
-    /* ExceptionInformation[2] = String length (RDX) */
+    /* Increase Rip to skip the int3 */
+    inc qword ptr [rbp + KTRAP_FRAME_Rip]
+
+    /* Dispatch the exception (Params = service, buffer, legth) */
     DispatchException STATUS_BREAKPOINT, 3, [rbp+KTRAP_FRAME_Rax], [rbp+KTRAP_FRAME_Rcx], [rbp+KTRAP_FRAME_Rdx]
-    
-    /* Return - KdpTrap has handled everything including RIP adjustment */
+
+    /* Return */
     ExitTrap TF_SAVE_ALL
 ENDFUNC
 

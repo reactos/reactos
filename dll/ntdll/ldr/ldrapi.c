@@ -11,6 +11,7 @@
 
 #include <ntdll.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -1630,7 +1631,7 @@ LdrFlushAlternateResourceModules(VOID)
 
 /*
  * @unimplemented
- * See https://web.archive.org/web/20231210142610/https://kernelmode.info/forum/viewtopic3973.html?t=991
+ * See https://www.kernelmode.info/forum/viewtopic.php?t=991
  */
 NTSTATUS
 NTAPI
