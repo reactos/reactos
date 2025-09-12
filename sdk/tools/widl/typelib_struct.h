@@ -49,13 +49,13 @@
  *
  */
 typedef struct tagMSFT_Header {
-/*0x00*/INT   magic1;       /* 0x5446534D "MSFT" */
-        INT   magic2;       /* 0x00010002 version nr? */
-        INT   posguid;      /* position of libid in guid table  */
+/*0x00*/int   magic1;       /* 0x5446534D "MSFT" */
+        int   magic2;       /* 0x00010002 version nr? */
+        int   posguid;      /* position of libid in guid table  */
                             /* (should be,  else -1) */
-        INT   lcid;         /* locale id */
-/*0x10*/INT   lcid2;
-        INT   varflags;     /* (largely) unknown flags */
+        int   lcid;         /* locale id */
+/*0x10*/int   lcid2;
+        int   varflags;     /* (largely) unknown flags */
                             /* the lower nibble is syskind */
                             /* 0x40 always seems to be set */
                             /* 0x10 set with a helpfile defined */
@@ -63,30 +63,30 @@ typedef struct tagMSFT_Header {
                                   case the offset to the name in the stringtable
                                   appears right after this struct, before the
                                   typeinfo offsets */
-        INT   version;      /* set with SetVersion() */
-        INT   flags;        /* set with SetFlags() */
-/*0x20*/INT   nrtypeinfos;  /* number of typeinfo's (till so far) */
-        INT   helpstring;   /* position of help string in stringtable */
-        INT   helpstringcontext;
-        INT   helpcontext;
-/*0x30*/INT   nametablecount;   /* number of names in name table */
-        INT   nametablechars;   /* nr of characters in name table */
-        INT   NameOffset;       /* offset of name in name table */
-        INT   helpfile;         /* position of helpfile in stringtable */
-/*0x40*/INT   CustomDataOffset; /* if -1 no custom data, else it is offset */
+        int   version;      /* set with SetVersion() */
+        int   flags;        /* set with SetFlags() */
+/*0x20*/int   nrtypeinfos;  /* number of typeinfo's (till so far) */
+        int   helpstring;   /* position of help string in stringtable */
+        int   helpstringcontext;
+        int   helpcontext;
+/*0x30*/int   nametablecount;   /* number of names in name table */
+        int   nametablechars;   /* nr of characters in name table */
+        int   NameOffset;       /* offset of name in name table */
+        int   helpfile;         /* position of helpfile in stringtable */
+/*0x40*/int   CustomDataOffset; /* if -1 no custom data, else it is offset */
                                 /* in customer data/guid offset table */
-        INT   res44;            /* unknown always: 0x20 (guid hash size?) */
-        INT   res48;            /* unknown always: 0x80 (name hash size?) */
-        INT   dispatchpos;      /* HREFTYPE to IDispatch, or -1 if no IDispatch */
-/*0x50*/INT   nimpinfos;        /* number of impinfos */
+        int   res44;            /* unknown always: 0x20 (guid hash size?) */
+        int   res48;            /* unknown always: 0x80 (name hash size?) */
+        int   dispatchpos;      /* HREFTYPE to IDispatch, or -1 if no IDispatch */
+/*0x50*/int   nimpinfos;        /* number of impinfos */
 } MSFT_Header;
 
 /* segments in the type lib file have a structure like this: */
 typedef struct tagMSFT_pSeg {
-        INT   offset;       /* absolute offset in file */
-        INT   length;       /* length of segment */
-        INT   res08;        /* unknown always -1 */
-        INT   res0c;        /* unknown always 0x0f in the header */
+        int   offset;       /* absolute offset in file */
+        int   length;       /* length of segment */
+        int   res08;        /* unknown always -1 */
+        int   res0c;        /* unknown always 0x0f in the header */
                             /* 0x03 in the typeinfo_data */
 } MSFT_pSeg;
 
@@ -118,70 +118,60 @@ typedef struct tagMSFT_SegDir {
 
 /* base type info data */
 typedef struct tagMSFT_TypeInfoBase {
-/*000*/ INT   typekind;             /*  it is the TKIND_xxx */
+/*000*/ int   typekind;             /*  it is the TKIND_xxx */
                                     /* some byte alignment stuff */
-        INT     memoffset;          /* points past the file, if no elements */
-        INT     res2;               /* zero if no element, N*0x40 */
-        INT     res3;               /* -1 if no element, (N-1)*0x38 */
-/*010*/ INT     res4;               /* always? 3 */
-        INT     res5;               /* always? zero */
-        INT     cElement;           /* counts elements, HI=cVars, LO=cFuncs */
-        INT     res7;               /* always? zero */
-/*020*/ INT     res8;               /* always? zero */
-        INT     res9;               /* always? zero */
-        INT     resA;               /* always? zero */
-        INT     posguid;            /* position in guid table */
-/*030*/ INT     flags;              /* Typeflags */
-        INT     NameOffset;         /* offset in name table */
-        INT     version;            /* element version */
-        INT     docstringoffs;      /* offset of docstring in string tab */
-/*040*/ INT     helpstringcontext;  /*  */
-        INT     helpcontext;    /* */
-        INT     oCustData;          /* offset in customer data table */
-#ifdef WORDS_BIGENDIAN
-        INT16   cbSizeVft;      /* virtual table size, including inherits */
-        INT16   cImplTypes;     /* nr of implemented interfaces */
-#else
-        INT16   cImplTypes;     /* nr of implemented interfaces */
-        INT16   cbSizeVft;      /* virtual table size, including inherits */
-#endif
-/*050*/ INT     size;           /* size in bytes, at least for structures */
+        int     memoffset;          /* points past the file, if no elements */
+        int     res2;               /* zero if no element, N*0x40 */
+        int     res3;               /* -1 if no element, (N-1)*0x38 */
+/*010*/ int     res4;               /* always? 3 */
+        int     res5;               /* always? zero */
+        int     cElement;           /* counts elements, HI=cVars, LO=cFuncs */
+        int     res7;               /* always? zero */
+/*020*/ int     res8;               /* always? zero */
+        int     res9;               /* always? zero */
+        int     resA;               /* always? zero */
+        int     posguid;            /* position in guid table */
+/*030*/ int     flags;              /* Typeflags */
+        int     NameOffset;         /* offset in name table */
+        int     version;            /* element version */
+        int     docstringoffs;      /* offset of docstring in string tab */
+/*040*/ int     helpstringcontext;  /*  */
+        int     helpcontext;    /* */
+        int     oCustData;          /* offset in customer data table */
+        short   cImplTypes;     /* nr of implemented interfaces */
+        short   cbSizeVft;      /* virtual table size, including inherits */
+/*050*/ int     size;           /* size in bytes, at least for structures */
         /* FIXME: name of this field */
-        INT     datatype1;      /* position in type description table */
+        int     datatype1;      /* position in type description table */
                                 /* or in base interfaces */
                                 /* if coclass: offset in reftable */
                                 /* if interface: reference to inherited if */
-        INT     datatype2;      /* for interfaces: hiword is num of inherited funcs */
+        int     datatype2;      /* for interfaces: hiword is num of inherited funcs */
                                 /*                 loword is num of inherited interfaces */
-        INT     res18;          /* always? 0 */
-/*060*/ INT     res19;          /* always? -1 */
+        int     res18;          /* always? 0 */
+/*060*/ int     res19;          /* always? -1 */
 } MSFT_TypeInfoBase;
 
 /* layout of an entry with information on imported types */
 typedef struct tagMSFT_ImpInfo {
-    INT     flags;          /* bits 0 - 15:  count */
+    int     flags;          /* bits 0 - 15:  count */
                             /* bit  16:      if set oGuid is an offset to Guid */
                             /*               if clear oGuid is a typeinfo index in the specified typelib */
                             /* bits 24 - 31: TKIND of reference */
-    INT     oImpFile;       /* offset in the Import File table */
-    INT     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of flags) */
+    int     oImpFile;       /* offset in the Import File table */
+    int     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of flags) */
 } MSFT_ImpInfo;
 
 #define MSFT_IMPINFO_OFFSET_IS_GUID 0x00010000
 
 /* function description data */
 typedef struct {
-/*  INT   recsize;       record size including some extra stuff */
-    INT   DataType;     /* data type of the member, eg return of function */
-    INT   Flags;        /* something to do with attribute flags (LOWORD) */
-#ifdef WORDS_BIGENDIAN
-    INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */
-    INT16 VtableOffset; /* offset in vtable */
-#else
-    INT16 VtableOffset; /* offset in vtable */
-    INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */
-#endif
-    INT   FKCCIC;       /* bit string with the following  */
+/*  int   recsize;       record size including some extra stuff */
+    int   DataType;     /* data type of the member, eg return of function */
+    int   Flags;        /* something to do with attribute flags (LOWORD) */
+    short VtableOffset; /* offset in vtable */
+    short funcdescsize; /* size of reconstituted FUNCDESC and related structs */
+    int   FKCCIC;       /* bit string with the following  */
                         /* meaning (bit 0 is the lsb): */
                         /* bits 0 - 2: FUNCKIND */
                         /* bits 3 - 6: INVOKEKIND */
@@ -191,96 +181,86 @@ typedef struct {
                         /* bit  13: oEntry is numeric */
                         /* bit  14: has retval param */
                         /* bits 16 - 31: index of next function with same id */
-#ifdef WORDS_BIGENDIAN
-    INT16 nroargs;      /* nr of optional arguments */
-    INT16 nrargs;       /* number of arguments (including optional ????) */
-#else
-    INT16 nrargs;       /* number of arguments (including optional ????) */
-    INT16 nroargs;      /* nr of optional arguments */
-#endif
+    short nrargs;       /* number of arguments (including optional ????) */
+    short nroargs;      /* nr of optional arguments */
     /* optional attribute fields, the number of them is variable */
-    INT   OptAttr[1];
+    int   OptAttr[1];
 /*
-0*  INT   helpcontext;
-1*  INT   oHelpString;
-2*  INT   oEntry;       // either offset in string table or numeric as it is (see bit 13 of FKCCIC) //
-3*  INT   res9;         // unknown (-1) //
-4*  INT   resA;         // unknown (-1) //
-5*  INT   HelpStringContext;
+0*  int   helpcontext;
+1*  int   oHelpString;
+2*  int   oEntry;       // either offset in string table or numeric as it is (see bit 13 of FKCCIC) //
+3*  int   res9;         // unknown (-1) //
+4*  int   resA;         // unknown (-1) //
+5*  int   HelpStringContext;
     // these are controlled by a bit set in the FKCCIC field  //
-6*  INT   oCustData;        // custom data for function //
-7*  INT   oArgCustData[1];  // custom data per argument //
+6*  int   oCustData;        // custom data for function //
+7*  int   oArgCustData[1];  // custom data per argument //
 */
 } MSFT_FuncRecord;
 
 /* after this may follow an array with default value pointers if the
  * appropriate bit in the FKCCIC field has been set:
- * INT   oDefaultValue[nrargs];
+ * int   oDefaultValue[nrargs];
  */
 
     /* Parameter info one per argument*/
 typedef struct {
-        INT   DataType;
-        INT   oName;
-        INT   Flags;
+        int   DataType;
+        int   oName;
+        int   Flags;
     } MSFT_ParameterInfo;
 
 /* Variable description data */
 typedef struct {
-/*  INT   recsize;      // record size including some extra stuff */
-    INT   DataType;     /* data type of the variable */
-    INT   Flags;        /* VarFlags (LOWORD) */
-#ifdef WORDS_BIGENDIAN
-    INT16 vardescsize;  /* size of reconstituted VARDESC and related structs */
-    INT16 VarKind;      /* VarKind */
-#else
-    INT16 VarKind;      /* VarKind */
-    INT16 vardescsize;  /* size of reconstituted VARDESC and related structs */
-#endif
-    INT   OffsValue;    /* value of the variable or the offset  */
+/*  int   recsize;      // record size including some extra stuff */
+    int   DataType;     /* data type of the variable */
+    int   Flags;        /* VarFlags (LOWORD) */
+    short VarKind;      /* VarKind */
+    short vardescsize;  /* size of reconstituted VARDESC and related structs */
+    int   OffsValue;    /* value of the variable or the offset  */
                         /* in the data structure */
     /* optional attribute fields, the number of them is variable */
     /* controlled by record length */
-    INT   HelpContext;
-    INT   oHelpString;
-    INT   res9;         /* unknown (-1) */
-    INT   oCustData;        /* custom data for variable */
-    INT   HelpStringContext;
+    int   HelpContext;
+    int   oHelpString;
+    int   res9;         /* unknown (-1) */
+    int   oCustData;        /* custom data for variable */
+    int   HelpStringContext;
 
 } MSFT_VarRecord;
 
 /* Structure of the reference data  */
 typedef struct {
-    INT   reftype;  /* either offset in type info table, then it's */
+    int   reftype;  /* either offset in type info table, then it's */
                     /* a multiple of 64 */
                     /* or offset in the external reference table */
                     /* with an offset of 1 */
-    INT   flags;
-    INT   oCustData;    /* custom data */
-    INT   onext;    /* next offset, -1 if last */
+    int   flags;
+    int   oCustData;    /* custom data */
+    int   onext;    /* next offset, -1 if last */
 } MSFT_RefRecord;
 
 /* this is how a guid is stored */
 typedef struct {
-    GUID guid;
-    INT   hreftype;     /* -2 for the typelib guid, typeinfo offset
+    struct uuid guid;
+    int   hreftype;     /* -2 for the typelib guid, typeinfo offset
 			   for typeinfo guid, low two bits are 01 if
 			   this is an imported typeinfo, low two bits
 			   are 10 if this is an imported typelib (used
 			   by imported typeinfos) */
-    INT   next_hash;    /* offset to next guid in the hash bucket */
+    int   next_hash;    /* offset to next guid in the hash bucket */
 } MSFT_GuidEntry;
 /* some data preceding entries in the name table */
 typedef struct {
-    INT   hreftype;     /* is -1 if name is for neither a typeinfo,
+    int   hreftype;     /* is -1 if name is for neither a typeinfo,
 			   a variable, or a function (that is, name
 			   is for a typelib or a function parameter).
 			   otherwise is the offset of the first
 			   typeinfo that this name refers to (either
 			   to the typeinfo itself or to a member of
 			   the typeinfo */
-    INT   next_hash;    /* offset to next name in the hash bucket */
-    INT   namelen;      /* only lower 8 bits are valid */
+    int   next_hash;    /* offset to next name in the hash bucket */
+    int   namelen;      /* only lower 8 bits are valid */
                         /* 0x1000 if name is only used once as a variable name */
                         /* 0x2000 if name is a variable in an enumeration */
                         /* 0x3800 if name is typeinfo name */
@@ -288,9 +268,9 @@ typedef struct {
 } MSFT_NameIntro;
 /* the custom data table directory has entries like this */
 typedef struct {
-    INT   GuidOffset;
-    INT   DataOffset;
-    INT   next;     /* next offset in the table, -1 if it's the last */
+    int   GuidOffset;
+    int   DataOffset;
+    int   next;     /* next offset in the table, -1 if it's the last */
 } MSFT_CDGuid;
 
 
@@ -305,35 +285,35 @@ typedef struct {
 #include "pshpack1.h"
 
 typedef struct {
-/*00*/	DWORD SLTG_magic;	/* 0x47544c53  == "SLTG" */
-/*04*/	WORD nrOfFileBlks;	/* no of SLTG_BlkEntry's + 1 */
-/*06*/  WORD res06;		/* ?? always 9 */
-/*08*/  WORD res08;             /* some kind of len/offset ?? */
-/*0a*/	WORD first_blk;		/* 1 based index into blk entries that
-				   corresponds to first block in file */
-/*0c*/	DWORD res0c;		/* always 0x000204ff */
-/*10*/  DWORD res10;		/* always 0x00000000 */
-/*14*/	DWORD res14;		/* always 0x000000c0 */
-/*18*/	DWORD res18;		/* always 0x46000000 */
-/*1c*/	DWORD res1c;		/* always 0x00000044 */
-/*20*/	DWORD res20;		/* always 0xffff0000 */
+/*00*/	unsigned int   SLTG_magic;	/* 0x47544c53  == "SLTG" */
+/*04*/	unsigned short nrOfFileBlks;	/* no of SLTG_BlkEntry's + 1 */
+/*06*/  unsigned short res06;		/* ?? always 9 */
+/*08*/  unsigned short res08;           /* some kind of len/offset ?? */
+/*0a*/	unsigned short first_blk;	/* 1 based index into blk entries that
+					   corresponds to first block in file */
+/*0c*/	unsigned int   res0c;		/* always 0x000204ff */
+/*10*/  unsigned int   res10;		/* always 0x00000000 */
+/*14*/	unsigned int   res14;		/* always 0x000000c0 */
+/*18*/	unsigned int   res18;		/* always 0x46000000 */
+/*1c*/	unsigned int   res1c;		/* always 0x00000044 */
+/*20*/	unsigned int   res20;		/* always 0xffff0000 */
 } SLTG_Header;
 
 /* This gets followed by a list of block entries */
 typedef struct {
-/*00*/  DWORD len;
-/*04*/	WORD index_string; /* offs from start of SLTG_Magic to index string */
-/*06*/  WORD next;
+/*00*/  unsigned int len;
+/*04*/	unsigned short index_string; /* offs from start of SLTG_Magic to index string */
+/*06*/  unsigned short next;
 } SLTG_BlkEntry;
 
 /* The order of the blocks in the file is given by starting at Block
-   entry firt_blk and stepping through using the next pointer */
+   entry first_blk and stepping through using the next pointer */
 
 /* These then get followed by this magic */
 typedef struct {
-/*00*/ BYTE res00;		/* always 0x01 */
-/*01*/ CHAR CompObj_magic[8];	/* always "CompObj" */
-/*09*/ CHAR dir_magic[4];	/* always "dir" */
+/*00*/ unsigned char res00;		/* always 0x01 */
+/*01*/ char          CompObj_magic[8];	/* always "CompObj" */
+/*09*/ char          dir_magic[4];	/* always "dir" */
 } SLTG_Magic;
 
 #define SLTG_COMPOBJ_MAGIC "CompObj"
@@ -346,13 +326,13 @@ uniqueness.  I guess successive chars increment when we need to wrap
 the first one. */
 
 typedef struct {
-/*00*/ CHAR string[11];
+/*00*/ char string[11];
 } SLTG_Index;
 
 
 /* This is followed by SLTG_pad9 */
 typedef struct {
-/*00*/ CHAR pad[9];	/* 9 '\0's */
+/*00*/ char pad[9];	/* 9 '\0's */
 } SLTG_Pad9;
 
 
@@ -362,25 +342,25 @@ each block is given by its entry in SLTG_BlkEntry. */
 /* type SLTG_NAME in rather like a BSTR except that the length in
 bytes is given by the first WORD and the string contains 8bit chars */
 
-typedef WORD SLTG_Name;
+typedef unsigned short SLTG_Name;
 
 /* The main library block looks like this.  This one seems to come last */
 
 typedef struct {
-/*00*/	WORD magic;		/* 0x51cc */
-/*02*/  WORD res02;		/* 0x0003, 0x0004 */
-/*04*/  WORD name;              /* offset to name in name table */
-/*06*/  SLTG_Name res06;	/* maybe this is just WORD == 0xffff */
-	SLTG_Name helpstring;
-	SLTG_Name helpfile;
-	DWORD helpcontext;
-	WORD syskind;		/* == 1 for win32, 0 for win16 */
-	WORD lcid;		/* == 0x409, 0x809 etc */
-	DWORD res12;		/* == 0 */
- 	WORD libflags;		/* LIBFLAG_* */
-	WORD maj_vers;
-	WORD min_vers;
-	GUID uuid;
+/*00*/	unsigned short magic;		/* 0x51cc */
+/*02*/  unsigned short res02;		/* 0x0003, 0x0004 */
+/*04*/  unsigned short name;            /* offset to name in name table */
+/*06*/  SLTG_Name      res06;		/* maybe this is just WORD == 0xffff */
+	SLTG_Name      helpstring;
+	SLTG_Name      helpfile;
+	unsigned int   helpcontext;
+	unsigned short syskind;		/* == 1 for win32, 0 for win16 */
+	unsigned short lcid;		/* == 0x409, 0x809 etc */
+	unsigned int   res12;		/* == 0 */
+	unsigned short libflags;	/* LIBFLAG_* */
+	unsigned short maj_vers;
+	unsigned short min_vers;
+	struct uuid uuid;
 } SLTG_LibBlk;
 
 #define SLTG_LIBBLK_MAGIC 0x51cc
@@ -388,18 +368,18 @@ typedef struct {
 /* we then get 0x40 bytes worth of 0xffff or small numbers followed by
    nrOfFileBlks - 2 of these */
 typedef struct {
-	WORD small_no;
-	SLTG_Name index_name; /* This refers to a name in the directory */
-	SLTG_Name other_name; /* Another one of these weird names */
-	WORD res1a;	      /* 0xffff */
-	WORD name_offs;	      /* offset to name in name table */
-	WORD more_bytes;      /* if this is non-zero we get this many
-				 bytes before the next element, which seem
-				 to reference the docstring of the type ? */
-	WORD res20;	      /* 0xffff */
-	DWORD helpcontext;
-	WORD res26;	      /* 0xffff */
-        GUID uuid;
+    unsigned short small_no;
+    SLTG_Name      index_name; /* This refers to a name in the directory */
+    SLTG_Name      other_name; /* Another one of these weird names */
+    unsigned short res1a;	   /* 0xffff */
+    unsigned short name_offs;  /* offset to name in name table */
+    unsigned short more_bytes; /* if this is non-zero we get this many
+                                  bytes before the next element, which seem
+                                  to reference the docstring of the type ? */
+    unsigned short res20;      /* 0xffff */
+    unsigned int   helpcontext;
+    unsigned short res26;      /* 0xffff */
+    struct uuid uuid;
 } SLTG_OtherTypeInfo;
 
 /* Next we get WORD 0x0003 followed by a DWORD which if we add to
@@ -407,104 +387,104 @@ typedef struct {
 struct */
 
 typedef struct {
-/*00*/	WORD magic;		/* 0x0501 */
-/*02*/	DWORD href_table;	/* if not 0xffffffff, then byte offset from
-				   beginning of struct to href table */
-/*06*/	DWORD res06;		/* 0xffffffff */
-/*0a*/	DWORD elem_table;	/* offset to members */
-/*0e*/	DWORD res0e;		/* 0xffffffff */
-/*12*/	WORD major_version;	/* major version number */
-/*14*/  WORD minor_version;	/* minor version number */
-/*16*/	DWORD res16;	/* 0xfffe0000 */
-/*1a*/	BYTE typeflags1;/* 0x02 | top 5 bits hold l5sbs of TYPEFLAGS */
-/*1b*/	BYTE typeflags2;/* TYPEFLAGS >> 5 */
-/*1c*/	BYTE typeflags3;/* 0x02*/
-/*1d*/	BYTE typekind;	/* 0x03 == TKIND_INTERFACE etc. */
-/*1e*/  DWORD res1e;	/* 0x00000000 or 0xffffffff */
+/*00*/	unsigned short magic;		/* 0x0501 */
+/*02*/	unsigned int   href_table;	/* if not 0xffffffff, then byte offset from
+					   beginning of struct to href table */
+/*06*/	unsigned int   res06;		/* 0xffffffff */
+/*0a*/	unsigned int   elem_table;	/* offset to members */
+/*0e*/	unsigned int   res0e;		/* 0xffffffff */
+/*12*/	unsigned short major_version;	/* major version number */
+/*14*/  unsigned short minor_version;	/* minor version number */
+/*16*/	unsigned int   res16;	/* 0xfffe0000 */
+/*1a*/	unsigned char typeflags1;/* 0x02 | top 5 bits hold l5sbs of TYPEFLAGS */
+/*1b*/	unsigned char typeflags2;/* TYPEFLAGS >> 5 */
+/*1c*/	unsigned char typeflags3;/* 0x02*/
+/*1d*/	unsigned char typekind;	/* 0x03 == TKIND_INTERFACE etc. */
+/*1e*/  unsigned int   res1e;	/* 0x00000000 or 0xffffffff */
 } SLTG_TypeInfoHeader;
 
 #define SLTG_TIHEADER_MAGIC 0x0501
 
 typedef struct {
-/*00*/  WORD cFuncs;
-/*02*/  WORD cVars;
-/*04*/  WORD cImplTypes;
-/*06*/  WORD res06;
-/*08*/  WORD res08;
-/*0a*/  WORD res0a;
-/*0c*/  WORD res0c;
-/*0e*/  WORD res0e;
-/*10*/  WORD res10;
-/*12*/  WORD res12;
-/*14*/  WORD tdescalias_vt; /* for TKIND_ALIAS */
-/*16*/  WORD res16;
-/*18*/  WORD res18;
-/*1a*/  WORD res1a;
-/*1c*/  WORD res1c;
-/*1e*/  WORD res1e;
-/*20*/  WORD cbSizeInstance;
-/*22*/  WORD cbAlignment;
-/*24*/  WORD res24;
-/*26*/  WORD res26;
-/*28*/  WORD cbSizeVft;
-/*2a*/  WORD res2a;
-/*2c*/  WORD res2c;
-/*2e*/  WORD res2e;
-/*30*/  WORD res30;
-/*32*/  WORD res32;
-/*34*/  WORD res34;
+/*00*/  unsigned short cFuncs;
+/*02*/  unsigned short cVars;
+/*04*/  unsigned short cImplTypes;
+/*06*/  unsigned short res06;
+/*08*/  unsigned short res08;
+/*0a*/  unsigned short res0a;
+/*0c*/  unsigned short res0c;
+/*0e*/  unsigned short res0e;
+/*10*/  unsigned short res10;
+/*12*/  unsigned short res12;
+/*14*/  unsigned short tdescalias_vt; /* for TKIND_ALIAS */
+/*16*/  unsigned short res16;
+/*18*/  unsigned short res18;
+/*1a*/  unsigned short res1a;
+/*1c*/  unsigned short res1c;
+/*1e*/  unsigned short res1e;
+/*20*/  unsigned short cbSizeInstance;
+/*22*/  unsigned short cbAlignment;
+/*24*/  unsigned short res24;
+/*26*/  unsigned short res26;
+/*28*/  unsigned short cbSizeVft;
+/*2a*/  unsigned short res2a;
+/*2c*/  unsigned short res2c;
+/*2e*/  unsigned short res2e;
+/*30*/  unsigned short res30;
+/*32*/  unsigned short res32;
+/*34*/  unsigned short res34;
 } SLTG_TypeInfoTail;
 
 typedef struct {
-/*00*/ WORD res00; /* 0x0001 sometimes 0x0003 ?? */
-/*02*/ WORD res02; /* 0xffff */
-/*04*/ BYTE res04; /* 0x01 */
-/*05*/ DWORD cbExtra; /* No of bytes that follow */
+/*00*/ unsigned short res00; /* 0x0001 sometimes 0x0003 ?? */
+/*02*/ unsigned short res02; /* 0xffff */
+/*04*/ unsigned char res04; /* 0x01 */
+/*05*/ unsigned int cbExtra; /* No of bytes that follow */
 } SLTG_MemberHeader;
 
 typedef struct {
-/*00*/	WORD magic;	/* 0x120a */
-/*02*/	WORD next;	/* offset in bytes to next block from start of block
-                           group, 0xffff if last item */
-/*04*/	WORD name;	/* offset to name within name table */
-/*06*/	WORD value;	/* offset to value from start of block group */
-/*08*/	WORD res08;	/* 0x56 */
-/*0a*/	DWORD memid;	/* memid */
-/*0e*/  WORD helpcontext;/* 0xfffe == no context, 0x0001 == stored in EnumInfo struct, else offset
-			    to value from start of block group */
-/*10*/	WORD helpstring;/* offset from start of block group to string offset */
+/*00*/	unsigned short magic;	/* 0x120a */
+/*02*/	unsigned short next;	/* offset in bytes to next block from start of block
+	                           group, 0xffff if last item */
+/*04*/	unsigned short name;	/* offset to name within name table */
+/*06*/	unsigned short value;	/* offset to value from start of block group */
+/*08*/	unsigned short res08;	/* 0x56 */
+/*0a*/	unsigned int   memid;	/* memid */
+/*0e*/  unsigned short helpcontext;/* 0xfffe == no context, 0x0001 == stored in EnumInfo struct, else offset
+				    to value from start of block group */
+/*10*/	unsigned short helpstring;/* offset from start of block group to string offset */
 } SLTG_EnumItem;
 
 #define SLTG_ENUMITEM_MAGIC 0x120a
 
 typedef struct {
-/*00*/	WORD vt;	/* vartype, 0xffff marks end. */
-/*02*/	WORD res02;	/* ?, 0xffff marks end */
+/*00*/	unsigned short vt;	/* vartype, 0xffff marks end. */
+/*02*/	unsigned short res02;	/* ?, 0xffff marks end */
 } SLTG_AliasItem;
 
 #define SLTG_ALIASITEM_MAGIC 0x001d
 
 
 typedef struct {
-	BYTE magic;	/* 0x4c or 0x6c */
-	BYTE inv;	/* high nibble is INVOKE_KIND, low nibble = 2 */
-	WORD next;	/* byte offset from beginning of group to next fn */
-	WORD name;	/* Offset within name table to name */
-	DWORD dispid;	/* dispid */
-	WORD helpcontext; /* helpcontext (again 1 is special) */
-	WORD helpstring;/* helpstring offset to offset */
-	WORD arg_off;	/* offset to args from start of block */
-	BYTE nacc;	/* lowest 3bits are CALLCONV, rest are no of args */
-        BYTE retnextopt;/* if 0x80 bit set ret type follows else next WORD
+	unsigned char  magic;	/* 0x4c or 0x6c */
+	unsigned char  inv;	/* high nibble is INVOKE_KIND, low nibble = 2 */
+	unsigned short next;	/* byte offset from beginning of group to next fn */
+	unsigned short name;	/* Offset within name table to name */
+	unsigned int   dispid;	/* dispid */
+	unsigned short helpcontext; /* helpcontext (again 1 is special) */
+	unsigned short helpstring;/* helpstring offset to offset */
+	unsigned short arg_off;	/* offset to args from start of block */
+	unsigned char  nacc;	/* lowest 3bits are CALLCONV, rest are no of args */
+        unsigned char  retnextopt;/* if 0x80 bit set ret type follows else next WORD
 			   is offset to ret type. No of optional args is
 			   middle 6 bits */
-	WORD rettype;	/* return type VT_?? or offset to ret type */
-	WORD vtblpos;	/* position in vtbl? */
-	WORD funcflags; /* present if magic == 0x6c */
+	unsigned short rettype;	/* return type VT_?? or offset to ret type */
+	unsigned short vtblpos;	/* position in vtbl? */
+	unsigned short funcflags; /* present if magic == 0x6c */
 /* Param list starts, repeat next two as required */
 #if 0
-	WORD  name;	/* offset to 2nd letter of name */
-	WORD+ type;	/* VT_ of param */
+	unsigned short name;	/* offset to 2nd letter of name */
+	unsigned short+ type;	/* VT_ of param */
 #endif
 } SLTG_Function;
 
@@ -512,32 +492,32 @@ typedef struct {
 #define SLTG_FUNCTION_WITH_FLAGS_MAGIC 0x6c
 
 typedef struct {
-/*00*/	BYTE magic;		/* 0xdf */
-/*01*/  BYTE res01;		/* 0x00 */
-/*02*/	DWORD res02;		/* 0xffffffff */
-/*06*/	DWORD res06;		/* 0xffffffff */
-/*0a*/	DWORD res0a;		/* 0xffffffff */
-/*0e*/	DWORD res0e;		/* 0xffffffff */
-/*12*/	DWORD res12;		/* 0xffffffff */
-/*16*/	DWORD res16;		/* 0xffffffff */
-/*1a*/	DWORD res1a;		/* 0xffffffff */
-/*1e*/	DWORD res1e;		/* 0xffffffff */
-/*22*/	DWORD res22;		/* 0xffffffff */
-/*26*/	DWORD res26;		/* 0xffffffff */
-/*2a*/	DWORD res2a;		/* 0xffffffff */
-/*2e*/	DWORD res2e;		/* 0xffffffff */
-/*32*/	DWORD res32;		/* 0xffffffff */
-/*36*/	DWORD res36;		/* 0xffffffff */
-/*3a*/	DWORD res3a;		/* 0xffffffff */
-/*3e*/	DWORD res3e;		/* 0xffffffff */
-/*42*/	WORD  res42;		/* 0xffff */
-/*44*/	DWORD number;		/* this is 8 times the number of refs */
+/*00*/	unsigned char  magic;		/* 0xdf */
+/*01*/  unsigned char  res01;		/* 0x00 */
+/*02*/	unsigned int   res02;		/* 0xffffffff */
+/*06*/	unsigned int   res06;		/* 0xffffffff */
+/*0a*/	unsigned int   res0a;		/* 0xffffffff */
+/*0e*/	unsigned int   res0e;		/* 0xffffffff */
+/*12*/	unsigned int   res12;		/* 0xffffffff */
+/*16*/	unsigned int   res16;		/* 0xffffffff */
+/*1a*/	unsigned int   res1a;		/* 0xffffffff */
+/*1e*/	unsigned int   res1e;		/* 0xffffffff */
+/*22*/	unsigned int   res22;		/* 0xffffffff */
+/*26*/	unsigned int   res26;		/* 0xffffffff */
+/*2a*/	unsigned int   res2a;		/* 0xffffffff */
+/*2e*/	unsigned int   res2e;		/* 0xffffffff */
+/*32*/	unsigned int   res32;		/* 0xffffffff */
+/*36*/	unsigned int   res36;		/* 0xffffffff */
+/*3a*/	unsigned int   res3a;		/* 0xffffffff */
+/*3e*/	unsigned int   res3e;		/* 0xffffffff */
+/*42*/	unsigned short res42;		/* 0xffff */
+/*44*/	unsigned int   number;		/* this is 8 times the number of refs */
 /*48*/	/* Now we have number bytes (8 for each ref) of SLTG_UnknownRefInfo */
 
-/*50*/	WORD res50;		/* 0xffff */
-/*52*/	BYTE res52;		/* 0x01 */
-/*53*/	DWORD res53;		/* 0x00000000 */
-/*57*/  SLTG_Name names[1];
+/*50*/	unsigned short res50;		/* 0xffff */
+/*52*/	unsigned char  res52;		/* 0x01 */
+/*53*/	unsigned int   res53;		/* 0x00000000 */
+/*57*/  SLTG_Name      names[1];
   /*    Now we have number/8 SLTG_Names (first WORD is no of bytes in the ascii
    *    string).  Strings look like "*\Rxxxx*#n".  If xxxx == ffff then the
    *    ref refers to the nth type listed in this library (0 based).  Else
@@ -547,47 +527,47 @@ typedef struct {
    *    the imported typelib.
    */
 
-/*xx*/ BYTE resxx;		/* 0xdf */
+/*xx*/  unsigned char  resxx;		/* 0xdf */
 
 } SLTG_RefInfo;
 
 #define SLTG_REF_MAGIC 0xdf
 
 typedef struct {
-	WORD res00;	/* 0x0001 */
-	BYTE res02;	/* 0x02 */
-	BYTE res03;	/* 0x40 if internal ref, 0x00 if external ? */
-	WORD res04;	/* 0xffff */
-	WORD res06;	/* 0x0000, 0x0013 or 0xffff ?? */
+	unsigned short res00;	/* 0x0001 */
+	unsigned char  res02;	/* 0x02 */
+	unsigned char  res03;	/* 0x40 if internal ref, 0x00 if external ? */
+	unsigned short res04;	/* 0xffff */
+	unsigned short res06;	/* 0x0000, 0x0013 or 0xffff ?? */
 } SLTG_UnknownRefInfo;
 
 typedef struct {
-  WORD res00; /* 0x004a */
-  WORD next;  /* byte offs to next interface */
-  WORD res04; /* 0xffff */
-  BYTE impltypeflags; /* IMPLTYPEFLAG_* */
-  BYTE res07; /* 0x80 */
-  WORD res08; /* 0x0012, 0x0028 ?? */
-  WORD ref;   /* number in ref table ? */
-  WORD res0c; /* 0x4000 */
-  WORD res0e; /* 0xfffe */
-  WORD res10; /* 0xffff */
-  WORD res12; /* 0x001d */
-  WORD pos_in_table; /* 0x0, 0x4, ? */
+    unsigned short res00; /* 0x004a */
+    unsigned short next;  /* byte offs to next interface */
+    unsigned short res04; /* 0xffff */
+    unsigned char  impltypeflags; /* IMPLTYPEFLAG_* */
+    unsigned char  res07; /* 0x80 */
+    unsigned short res08; /* 0x0012, 0x0028 ?? */
+    unsigned short ref;   /* number in ref table ? */
+    unsigned short res0c; /* 0x4000 */
+    unsigned short res0e; /* 0xfffe */
+    unsigned short res10; /* 0xffff */
+    unsigned short res12; /* 0x001d */
+    unsigned short pos_in_table; /* 0x0, 0x4, ? */
 } SLTG_ImplInfo;
 
 #define SLTG_IMPL_MAGIC 0x004a
 
 typedef struct {
-  BYTE magic; /* 0x0a */
-  BYTE typepos;
-  WORD next;
-  WORD name;
-  WORD byte_offs; /* pos in struct */
-  WORD type; /* if typepos == 0x02 this is the type, else offset to type */
-  DWORD memid;
-  WORD helpcontext; /* ?? */
-  WORD helpstring; /* ?? */
+    unsigned char  magic; /* 0x0a */
+    unsigned char  typepos;
+    unsigned short next;
+    unsigned short name;
+    unsigned short byte_offs; /* pos in struct */
+    unsigned short type; /* if typepos == 0x02 this is the type, else offset to type */
+    unsigned int   memid;
+    unsigned short helpcontext; /* ?? */
+    unsigned short helpstring; /* ?? */
 } SLTG_RecordItem;
 
 #define SLTG_RECORD_MAGIC 0x0a

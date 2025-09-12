@@ -21,33 +21,27 @@
 #ifndef __WIDL_PARSER_H
 #define __WIDL_PARSER_H
 
-typedef struct
-{
-  type_t *interface;
-  unsigned char old_pointer_default;
-} interface_info_t;
+#include "widltypes.h"
 
 int parser_parse(void);
 
+extern void parser_warning( const struct location *where, const char *message );
+extern void parser_error( const struct location *where, const char *message );
+extern void init_location( struct location *copy, const struct location *begin, const struct location *end );
+
 extern FILE *parser_in;
-extern char *parser_text;
 extern int parser_debug;
 extern int yy_flex_debug;
 
-int parser_lex(void);
-
-extern int import_stack_ptr;
-int do_import(char *fname);
-void abort_import(void);
-void pop_import(void);
-
-#define parse_only import_stack_ptr
+extern int parse_only;
 
 int is_type(const char *name);
 
-int do_warning(char *toggle, warning_list_t *wnum);
+int do_warning(const char *toggle, warning_list_t *wnum);
 int is_warning_enabled(int warning);
 
-extern char *temp_name;
+extern char *find_input_file( const char *name, const char *parent );
+extern FILE *open_input_file( const char *path );
+extern void close_all_inputs(void);
 
 #endif
