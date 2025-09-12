@@ -11,8 +11,16 @@ list(APPEND SOURCE
     themes.c
     genral.spec)
 
+if(ARCH STREQUAL "amd64")
+    list(APPEND SOURCE msys2.c)
+    list(APPEND ASM_SOURCE msys2.S)
+
+    add_asm_files(acgenral_asm ${ASM_SOURCE})
+endif()
+
 add_library(acgenral MODULE
     ${SOURCE}
+    ${acgenral_asm}
     ${CMAKE_CURRENT_BINARY_DIR}/acgenral.def)
 
 set_module_type(acgenral win32dll ENTRYPOINT DllMain 12)
