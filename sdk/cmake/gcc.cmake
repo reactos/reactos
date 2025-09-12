@@ -188,18 +188,19 @@ add_compile_options(
     -Wno-unused-local-typedefs
     -Wno-deprecated
     -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
-    -Wno-format
     -Wno-maybe-uninitialized
 )
 
-if(ARCH STREQUAL "arm")
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
+    add_compile_options(-Wno-format)
+elseif(ARCH STREQUAL "arm")
     add_compile_options(-Wno-attributes)
 endif()
 
 # Optimizations
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O2 -DNDEBUG)
+    add_compile_options(-O2 -DNDEBUG=)
     add_compile_options(-Wno-unused-variable)
     add_compile_options(-Wno-unused-but-set-variable)
 else()
@@ -237,7 +238,7 @@ if(ARCH STREQUAL "i386")
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-momit-leaf-frame-pointer)
     endif()
-elseif(ARCH STREQUAL "amd64")
+elseif(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-mpreferred-stack-boundary=4)
     endif()
@@ -340,7 +341,7 @@ set(CMAKE_C_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_LIBRARY})
 set(CMAKE_CXX_CREATE_SHARED_MODULE ${CMAKE_CXX_CREATE_SHARED_LIBRARY})
 set(CMAKE_RC_CREATE_SHARED_MODULE ${CMAKE_RC_CREATE_SHARED_LIBRARY})
 
-if(ARCH STREQUAL "amd64")
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
     # Workaround for binutils linker segfault on amd64 - disable auto-image-base
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup,--gc-sections")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
@@ -459,7 +460,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}.dir)
     # For amd64, we need to run ranlib after dlltool to add proper index
     # FIXME: For amd64, we need to run ranlib after dlltool to ensure proper index
-    if(ARCH STREQUAL "amd64")
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
         add_custom_command(
             OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}.a
             # Delete any existing file in the private directory before creating new one
@@ -492,7 +493,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
     
     # FIXME: On amd64, AR corrupts import libraries when using EXTERNAL_OBJECT
     # Force a copy operation to preserve the correct import library
-    if(ARCH STREQUAL "amd64")
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
         # Override the library file with a proper copy after it's created
         add_custom_command(TARGET ${_libname} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_PRIVATE_DIR}/${_libname}.a $<TARGET_FILE:${_libname}>
@@ -502,7 +503,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
     # Do the same with delay-import libs
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}_delayed.dir)
     # FIXME: For amd64, we need to run ranlib after dlltool to ensure proper index
-    if(ARCH STREQUAL "amd64")
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
         add_custom_command(
             OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
             # Delete any existing file in the private directory before creating new one
@@ -533,9 +534,9 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
         LINKER_LANGUAGE "C"
         PREFIX "")
     
-    # FIXME: On amd64, AR corrupts import libraries when using EXTERNAL_OBJECT
+    # FIXME: AR corrupts import libraries when using EXTERNAL_OBJECT
     # Force a copy operation to preserve the correct import library
-    if(ARCH STREQUAL "amd64")
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
         # Override the library file with a proper copy after it's created
         add_custom_command(TARGET ${_libname}_delayed POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a $<TARGET_FILE:${_libname}_delayed>
@@ -706,7 +707,7 @@ string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
 
 # Add libgcc_eh for exception handling on amd64
-if(ARCH STREQUAL "amd64")
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
     add_library(libgcc_eh STATIC IMPORTED GLOBAL)
     execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCCEH_LOCATION)
     string(STRIP ${LIBGCCEH_LOCATION} LIBGCCEH_LOCATION)

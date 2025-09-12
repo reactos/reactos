@@ -14,7 +14,12 @@ void* __emutls_get_address(void* control)
 /* Stub for __intrinsic_setjmpex */
 int __intrinsic_setjmpex(void* jmpbuf, void* frame)
 {
-    /* Forward to regular setjmp with context */
+    /* Forward to regular setjmp - i386 version takes only one parameter */
     jmp_buf* buf = (jmp_buf*)jmpbuf;
+#ifdef __i386__
+    (void)frame; /* Unused on i386 */
+    return _setjmp(*buf);
+#else
     return _setjmp(*buf, frame);
+#endif
 }

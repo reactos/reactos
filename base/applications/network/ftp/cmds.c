@@ -1662,13 +1662,11 @@ static void fatal(const char *msg)
  */
 int globulize(const char **cpp)
 {
-	char **globbed;
-	char **orig_globbed;
+	char **globbed, **orig_globbed;
 
 	if (!doglob)
 		return (1);
-	globbed = glob(*cpp);
-	orig_globbed = globbed;  /* Save original pointer for free() */
+	globbed = orig_globbed = glob(*cpp);
 	if (globerr != NULL) {
 		printf("%s: %s\n", *cpp, globerr);
 		(void) fflush(stdout);
@@ -1682,8 +1680,8 @@ int globulize(const char **cpp)
 		*cpp = *globbed++;
 		/* don't waste too much memory */
 		if (*globbed) {
-			blkfree(orig_globbed);  /* Use original pointer */
-			free((char *)orig_globbed);  /* Use original pointer */
+			blkfree(orig_globbed);
+			free((char *)orig_globbed);
 		}
 	}
 	return (1);

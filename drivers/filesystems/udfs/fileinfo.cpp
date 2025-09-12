@@ -1973,9 +1973,9 @@ UDFRename(
     // Overwite Flag
     BOOLEAN Replace = PtrSp->Parameters.SetFile.ReplaceIfExists &&
                       PtrBuffer->ReplaceIfExists;
-    NTSTATUS RC;
+    NTSTATUS RC = STATUS_SUCCESS;
     PVCB Vcb = Fcb1->Vcb;
-    PtrUDFFCB Fcb2;
+    PtrUDFFCB Fcb2 = NULL;
     BOOLEAN ic;
     BOOLEAN AcquiredVcb = TRUE;
     BOOLEAN AcquiredVcbEx = FALSE;
@@ -1985,7 +1985,7 @@ UDFRename(
     BOOLEAN UseClose;
 
     PUDF_FILE_INFO File1;
-    PUDF_FILE_INFO Dir1;
+    PUDF_FILE_INFO Dir1 = NULL;
     PUDF_FILE_INFO Dir2;
     PUDF_FILE_INFO NextFileInfo, fi;
 
@@ -2504,9 +2504,9 @@ UDFHardLink(
     // Overwite Flag
     BOOLEAN Replace = PtrSp->Parameters.SetFile.ReplaceIfExists &&
                       PtrBuffer->ReplaceIfExists;
-    NTSTATUS RC;
+    NTSTATUS RC = STATUS_SUCCESS;
     PVCB Vcb = Fcb1->Vcb;
-    PtrUDFFCB Fcb2;
+    PtrUDFFCB Fcb2 = NULL;
     BOOLEAN ic;
     BOOLEAN AcquiredVcb = TRUE;
     BOOLEAN AcquiredVcbEx = FALSE;

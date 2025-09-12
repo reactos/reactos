@@ -640,7 +640,7 @@ UDFDismountDevice(
     HANDLE NtFileHandle = (HANDLE)-1;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NOTIFY_MEDIA_CHANGE_USER_IN buffer = { 0 };
-    PFILE_FS_ATTRIBUTE_INFORMATION Buffer;
+    PFILE_FS_ATTRIBUTE_INFORMATION Buffer = NULL;
 
     _SEH2_TRY {
 

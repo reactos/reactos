@@ -108,8 +108,9 @@ UniataChipDetectChannels(
         AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PortMask", (ULONG)0xffffffff >> (32-deviceExtension->NumberChannels) );
     KdPrint2((PRINT_PREFIX "Force PortMask %#x\n", deviceExtension->AHCI_PI_mask));
 
-    for(i=deviceExtension->AHCI_PI_mask, n=0; i; n++, i=i>>1)
-        ; // Empty loop body - counting bits
+    for(i=deviceExtension->AHCI_PI_mask, n=0; i; n++, i=i>>1) {
+        /* empty loop body */
+    }
     KdPrint2((PRINT_PREFIX "mask -> %d chans\n", n));
 
     switch(VendorID) {
@@ -659,18 +660,11 @@ for_ugly_chips:
             }
             break;
         default:
-#ifdef __REACTOS__
-            /* I assume:
-             * - RangeStart == 0LL, "always". (CORE-13346)
-             * - It will be updated by UniataAhciDetect() a few lines below...
-             */
-#else
             if(!ScsiPortConvertPhysicalAddressToUlong((*ConfigInfo->AccessRanges)[5].RangeStart)) {
                 KdPrint2((PRINT_PREFIX "No BAR5, try BM\n"));
                 ChipFlags &= ~UNIATA_AHCI;
                 deviceExtension->HwFlags &= ~UNIATA_AHCI;
             }
-#endif
             break;
         }
     }
@@ -2563,11 +2557,8 @@ AtapiChipInit(
                 * size goes below 32DW.  Setting it to 1 makes the watermark
                 * 64DW.
                 *
-                * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
+                * https://jira.reactos.org/browse/CORE-5897
                 */
-#ifdef __REACTOS__
-                // New URL is https://jira.reactos.org/browse/CORE-5897
-#endif
 
                 if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
                     KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));

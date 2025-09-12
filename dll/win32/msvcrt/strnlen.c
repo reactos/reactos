@@ -10,12 +10,15 @@
 /*
  * @implemented
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
 size_t __cdecl strnlen(const char *str, size_t maxlen)
 {
     size_t len;
     
     if (!str)
         return 0;
+#pragma GCC diagnostic pop
     
     for (len = 0; len < maxlen && str[len]; len++)
         ;
@@ -26,12 +29,15 @@ size_t __cdecl strnlen(const char *str, size_t maxlen)
 /*
  * @implemented
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
 size_t __cdecl wcsnlen(const wchar_t *str, size_t maxlen)
 {
     size_t len;
     
     if (!str)
         return 0;
+#pragma GCC diagnostic pop
     
     for (len = 0; len < maxlen && str[len]; len++)
         ;

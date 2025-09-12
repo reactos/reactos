@@ -819,7 +819,7 @@ L16fromY(LogLuvState* sp, uint8* op, tmsize_t n)
 static
 #endif
 void
-XYZtoRGB24(float xyz[3], uint8 rgb[3])
+XYZtoRGB24(float* xyz, uint8* rgb)
 {
 	double	r, g, b;
 					/* assume CCIR-709 primaries */
@@ -973,7 +973,7 @@ uv_decode(double *up, double *vp, int c)	/* decode (u',v') index */
 static
 #endif
 void
-LogLuv24toXYZ(uint32 p, float XYZ[3])
+LogLuv24toXYZ(uint32 p, float* XYZ)
 {
 	int	Ce;
 	double	L, u, v, s, x, y;
@@ -1001,7 +1001,7 @@ LogLuv24toXYZ(uint32 p, float XYZ[3])
 static
 #endif
 uint32
-LogLuv24fromXYZ(float XYZ[3], int em)
+LogLuv24fromXYZ(float* XYZ, int em)
 {
 	int	Le, Ce;
 	double	u, v, s;
@@ -1114,7 +1114,7 @@ Luv24fromLuv48(LogLuvState* sp, uint8* op, tmsize_t n)
 static
 #endif
 void
-LogLuv32toXYZ(uint32 p, float XYZ[3])
+LogLuv32toXYZ(uint32 p, float* XYZ)
 {
 	double	L, u, v, s, x, y;
 					/* decode luminance */
@@ -1139,7 +1139,7 @@ LogLuv32toXYZ(uint32 p, float XYZ[3])
 static
 #endif
 uint32
-LogLuv32fromXYZ(float XYZ[3], int em)
+LogLuv32fromXYZ(float* XYZ, int em)
 {
 	unsigned int	Le, ue, ve;
 	double	u, v, s;

@@ -64,8 +64,8 @@
 	}
 
 NurbsTessellator::NurbsTessellator( BasicCurveEvaluator &c, BasicSurfaceEvaluator& e) 
-	: maplist( backend ),
-	  backend( c, e ),
+	: backend( c, e ),
+	  maplist( backend ),
           subdivider( renderhints, backend ),
 	  o_pwlcurvePool( sizeof( O_pwlcurve ), 32, "o_pwlcurvePool" ),
 	  o_nurbscurvePool( sizeof( O_nurbscurve ), 32, "o_nurbscurvePool"),

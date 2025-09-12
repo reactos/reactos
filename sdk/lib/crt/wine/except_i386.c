@@ -35,7 +35,14 @@
 #include "winbase.h"
 #include "winternl.h"
 #include "msvcrt.h"
+#ifdef __i386__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-parameter"
+#endif
 #include "wine/exception.h"
+#ifdef __i386__
+#pragma GCC diagnostic pop
+#endif
 #include "excpt.h"
 #include "wine/debug.h"
 
@@ -1130,7 +1137,14 @@ void CDECL MSVCRT_longjmp(_JUMP_BUFFER *jmp, int retval)
     if (!retval)
         retval = 1;
 
+#ifdef __i386__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-parameter"
     __wine_longjmp( (__wine_jmp_buf *)jmp, retval );
+#pragma GCC diagnostic pop
+#else
+    __wine_longjmp( *(__wine_jmp_buf *)jmp, retval );
+#endif
 }
 
 #ifndef __REACTOS__

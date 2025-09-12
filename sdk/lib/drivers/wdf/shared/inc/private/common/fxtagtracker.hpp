@@ -172,20 +172,9 @@ private:
         m_CurRefHistory(0),
         m_OwningObject(Owner)
     {
-        /* FIXME: Using RtlZeroMemory on non-trivial type generates -Wclass-memaccess warning
-         * FxTagHistory has a destructor, so memset is technically incorrect
-         * However, this is existing WDF framework code that works correctly
-         * The proper fix would be to use value initialization instead:
-         * for (int i = 0; i < TAG_HISTORY_DEPTH; i++) { m_TagHistory[i] = FxTagHistory(); }
-         * Using pragma to suppress -Wclass-memaccess warning */
-#ifdef __GNUC__
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wclass-memaccess"
-#endif
-        RtlZeroMemory(m_TagHistory, sizeof(m_TagHistory));
-#ifdef __GNUC__
-        #pragma GCC diagnostic pop
-#endif
+        for (int i = 0; i < TAG_HISTORY_DEPTH; i++) {
+            m_TagHistory[i] = FxTagHistory();
+        }
 
         //
         // We keep handle reference trackers in a list,

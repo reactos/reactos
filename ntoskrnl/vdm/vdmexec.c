@@ -11,9 +11,6 @@
 #include <ntoskrnl.h>
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-ULONG VdmBopCount;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -214,17 +211,19 @@ VdmpStartExecution(VOID)
     }
     else
     {
+
         /* Set interrupt state in the VDM State */
         if (VdmTib->VdmContext.EFlags & EFLAGS_INTERRUPT_MASK)
         {
             /* Enable them as well */
-            InterlockedOr((PLONG)VdmState, EFLAGS_INTERRUPT_MASK);
+            *VdmState |= EFLAGS_INTERRUPT_MASK;     /* was: InterlockedOr(...) */
         }
         else
         {
             /* Disable them */
-            InterlockedAnd((PLONG)VdmState, ~EFLAGS_INTERRUPT_MASK);
+            *VdmState &= ~EFLAGS_INTERRUPT_MASK;    /* was: InterlockedAnd(...) */
         }
+
 
         /* Enable the interrupt flag */
         VdmTib->VdmContext.EFlags |= EFLAGS_INTERRUPT_MASK;
@@ -330,9 +329,6 @@ VdmDispatchBop(IN PKTRAP_FRAME TrapFrame)
                 /* FIXME: No VDM Support */
                 ASSERT(FALSE);
             }
-
-            /* Increase the number of BOP operations */
-            VdmBopCount++;
 
             /* Get the TIB */
             VdmTib = NtCurrentTeb()->Vdm;

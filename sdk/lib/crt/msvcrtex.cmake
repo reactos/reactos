@@ -120,7 +120,7 @@ add_dependencies(msvcrtex psdk asm)
 
 # FIXME: For amd64, create a static library with CRT startup code
 # This library will be linked with executables via set_module_type
-if(ARCH STREQUAL "amd64")
+if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
     # Create a static library from the msvcrtex object files
     add_library(crt_startup STATIC $<TARGET_OBJECTS:msvcrtex>)
     set_target_properties(crt_startup PROPERTIES PREFIX "")

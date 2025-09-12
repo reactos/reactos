@@ -138,8 +138,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 #endif
     TCHAR StringQuote = _T('"');
     TCHAR CommandQuote = _T('\'');
-    // TODO: Variables array appears to be unused - investigate if needed for future functionality
-    // LPTSTR Variables[32];
+    LPTSTR Variables[32];
     PTCHAR Start, End;
     INT Ret = 0;
 
@@ -302,7 +301,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 #ifdef MSCMD_FOR_QUIRKS
     /* Windows' CMD compatibility: use the wrongly evaluated number of tokens */
     fc->varcount = NumTokens;
-    /* Always allocate on heap to avoid dangling pointer when function returns */
+    /* Always allocate to avoid dangling pointer to local array */
     fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
     if (!fc->values)
     {
@@ -315,7 +314,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     fc->varcount = NumTokens;
     for (NumTokens = 1; NumTokens < 32; ++NumTokens)
         fc->varcount += (TokensMask >> NumTokens) & 1;
-    /* Always allocate on heap to avoid dangling pointer when function returns */
+    /* Always allocate to avoid dangling pointer to local array */
     fc->values = cmd_alloc(fc->varcount * sizeof(*fc->values));
     if (!fc->values)
     {
@@ -470,9 +469,10 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     }
 
 Quit:
-    /* Always free the allocated values array */
-    if (fc->values)
+#ifdef MSCMD_FOR_QUIRKS
+    if (fc->values && (fc->values != Variables))
         cmd_free(fc->values);
+#endif
 
     return Ret;
 }

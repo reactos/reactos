@@ -205,7 +205,10 @@ void lfn_reset(void)
  * of the long name. */
 void lfn_add_slot(DIR_ENT * de, off_t dir_offset)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
     LFN_ENT *lfn = (LFN_ENT *) de;
+#pragma GCC diagnostic pop
     int slot = lfn->id & LFN_ID_SLOTMASK;
     unsigned offset;
 

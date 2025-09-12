@@ -9,18 +9,16 @@ target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:msvcrtex>)
 
 # FIXME: For amd64, combine CRT startup objects with import library
 # This ensures CRT startup symbols are available when linking
-if(ARCH STREQUAL "amd64")
-    add_dependencies(libmsvcrt crt_startup)
-    add_custom_command(TARGET libmsvcrt POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
-        COMMAND ${CMAKE_AR} x $<TARGET_FILE:crt_startup> --output=${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
-        COMMAND ${CMAKE_AR} x $<TARGET_FILE:libmsvcrt> --output=${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp 2>/dev/null || true
-        COMMAND ${CMAKE_AR} rcs ${CMAKE_CURRENT_BINARY_DIR}/libmsvcrt_combined.a ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp/*.o*
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libmsvcrt_combined.a $<TARGET_FILE:libmsvcrt>
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
-        COMMENT "FIXME: Combining CRT startup with msvcrt import library (amd64)"
-    )
-endif()
+add_dependencies(libmsvcrt crt_startup)
+add_custom_command(TARGET libmsvcrt POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
+    COMMAND ${CMAKE_AR} x $<TARGET_FILE:crt_startup> --output=${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
+    COMMAND ${CMAKE_AR} x $<TARGET_FILE:libmsvcrt> --output=${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp 2>/dev/null || true
+    COMMAND ${CMAKE_AR} rcs ${CMAKE_CURRENT_BINARY_DIR}/libmsvcrt_combined.a ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp/*.o*
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libmsvcrt_combined.a $<TARGET_FILE:libmsvcrt>
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_tmp
+    COMMENT "FIXME: Combining CRT startup with msvcrt import library"
+)
 
 # Embed RTC libs
 if (STACK_PROTECTOR)

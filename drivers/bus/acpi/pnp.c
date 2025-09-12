@@ -22,7 +22,6 @@ Bus_PlugInDevice (
 // Forward decls used below
 //
 NTSTATUS
-NTAPI
 Bus_PDO_PnP(
     PDEVICE_OBJECT      DeviceObject,
     PIRP                Irp,

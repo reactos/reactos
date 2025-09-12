@@ -549,7 +549,7 @@ PDHCP_ADAPTER AdapterFindInfo( struct interface_info *ip ) {
     return NULL;
 }
 
-PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen ) {
+PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t *haddr, u_int8_t hlen ) {
     PDHCP_ADAPTER Adapter;
     PLIST_ENTRY ListEntry;
 

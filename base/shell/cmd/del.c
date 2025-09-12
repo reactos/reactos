@@ -341,9 +341,9 @@ ProcessDirectory(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
                 dwFiles +=ProcessDirectory(szFullPath, dwFlags, dwAttrFlags);
                 if (dwFiles & 0x80000000)
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
             while (FindNextFile (hFile, &f));
             FindClose (hFile);

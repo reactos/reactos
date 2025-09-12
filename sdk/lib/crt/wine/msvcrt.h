@@ -401,7 +401,11 @@ extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,
 
 
 #ifdef __REACTOS__
+#ifdef _WIN64
+#define __wine_longjmp(buf, retval) longjmp(&(buf), retval)
+#else
 #define __wine_longjmp longjmp
+#endif
 #define __wine_jmp_buf _JBTYPE
 
 #ifdef _M_IX86

@@ -67,6 +67,7 @@ int CDECL rand_s(unsigned int *pval)
 #ifdef WIN64
 const void* __imp_rand_s = rand_s;
 #else
-const void* _imp_rand_s = rand_s;
+const void* _imp__rand_s = rand_s;  // i386 needs double underscore
+const void* _imp_rand_s = rand_s;   // Keep old one for compatibility
 #endif
 #endif

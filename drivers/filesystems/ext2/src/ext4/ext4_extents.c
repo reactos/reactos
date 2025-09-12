@@ -785,13 +785,10 @@ static int ext4_ext_insert_index(void *icb, handle_t *handle, struct inode *inod
 
 	ix->ei_block = cpu_to_le32(logical);
 	ext4_idx_store_pblock(ix, ptr);
-	/* FIXME: Avoid taking address of packed member eh_entries
-	 * by using temporary variable for read-modify-write */
-	{
-		__le16 entries = curp->p_hdr->eh_entries;
-		le16_add_cpu(&entries, 1);
-		curp->p_hdr->eh_entries = entries;
-	}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+	le16_add_cpu(&curp->p_hdr->eh_entries, 1);
+#pragma GCC diagnostic pop
 
 	if (unlikely(ix > EXT_LAST_INDEX(curp->p_hdr))) {
 		EXT4_ERROR_INODE(inode, "ix > EXT_LAST_INDEX!");
@@ -915,12 +912,10 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 		struct ext4_extent *ex;
 		ex = EXT_FIRST_EXTENT(neh);
 		memmove(ex, path[depth].p_ext, sizeof(struct ext4_extent) * m);
-		/* FIXME: Avoid taking address of packed member */
-		{
-			__le16 entries = neh->eh_entries;
-			le16_add_cpu(&entries, m);
-			neh->eh_entries = entries;
-		}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+		le16_add_cpu(&neh->eh_entries, m);
+#pragma GCC diagnostic pop
 	}
 
 	ext4_extent_block_csum_set(inode, neh);
@@ -937,12 +932,10 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 		err = ext4_ext_get_access(icb, handle, inode, path + depth);
 		if (err)
 			goto cleanup;
-		/* FIXME: Avoid taking address of packed member */
-		{
-			__le16 entries = path[depth].p_hdr->eh_entries;
-			le16_add_cpu(&entries, -m);
-			path[depth].p_hdr->eh_entries = entries;
-		}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+		le16_add_cpu(&path[depth].p_hdr->eh_entries, -m);
+#pragma GCC diagnostic pop
 		err = ext4_ext_dirty(icb, handle, inode, path + depth);
 		if (err)
 			goto cleanup;
@@ -1003,12 +996,10 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 		if (m) {
 			memmove(++fidx, path[i].p_idx,
 					sizeof(struct ext4_extent_idx) * m);
-			/* FIXME: Avoid taking address of packed member */
-		{
-			__le16 entries = neh->eh_entries;
-			le16_add_cpu(&entries, m);
-			neh->eh_entries = entries;
-		}
+	#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+		le16_add_cpu(&neh->eh_entries, m);
+#pragma GCC diagnostic pop
 		}
 		ext4_extent_block_csum_set(inode, neh);
 		set_buffer_uptodate(bh);
@@ -1024,12 +1015,10 @@ static int ext4_ext_split(void *icb, handle_t *handle, struct inode *inode,
 			err = ext4_ext_get_access(icb, handle, inode, path + i);
 			if (err)
 				goto cleanup;
-			/* FIXME: Avoid taking address of packed member */
-			{
-				__le16 entries = path[i].p_hdr->eh_entries;
-				le16_add_cpu(&entries, -m);
-				path[i].p_hdr->eh_entries = entries;
-			}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+			le16_add_cpu(&path[i].p_hdr->eh_entries, -m);
+#pragma GCC diagnostic pop
 			err = ext4_ext_dirty(icb, handle, inode, path + i);
 			if (err)
 				goto cleanup;
@@ -1128,12 +1117,10 @@ static int ext4_ext_grow_indepth(void *icb, handle_t *handle, struct inode *inod
 			(EXT_FIRST_INDEX(neh)->ei_block),
 			ext4_idx_pblock(EXT_FIRST_INDEX(neh)));
 
-	/* FIXME: Avoid taking address of packed member */
-	{
-		__le16 depth = neh->eh_depth;
-		le16_add_cpu(&depth, 1);
-		neh->eh_depth = depth;
-	}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+	le16_add_cpu(&neh->eh_depth, 1);
+#pragma GCC diagnostic pop
 	ext4_mark_inode_dirty(icb, handle, inode);
 out:
 	extents_brelse(bh);
@@ -1594,12 +1581,10 @@ static int ext4_ext_try_to_merge_right(struct inode *inode,
 				* sizeof(struct ext4_extent);
 			memmove(ex + 1, ex + 2, len);
 		}
-		/* FIXME: Avoid taking address of packed member */
-		{
-			__le16 entries = eh->eh_entries;
-			le16_add_cpu(&entries, -1);
-			eh->eh_entries = entries;
-		}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+		le16_add_cpu(&eh->eh_entries, -1);
+#pragma GCC diagnostic pop
 		merge_done = 1;
 		if (!eh->eh_entries)
 			EXT4_ERROR_INODE(inode, "eh->eh_entries = 0!");
@@ -1881,12 +1866,10 @@ has_space:
 		}
 	}
 
-	/* FIXME: Avoid taking address of packed member */
-	{
-		__le16 entries = eh->eh_entries;
-		le16_add_cpu(&entries, 1);
-		eh->eh_entries = entries;
-	}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+	le16_add_cpu(&eh->eh_entries, 1);
+#pragma GCC diagnostic pop
 	path[depth].p_ext = nearex;
 	nearex->ee_block = newext->ee_block;
 	ext4_ext_store_pblock(nearex, ext4_ext_pblock(newext));

@@ -102,8 +102,8 @@ public:
 
 protected:
     Renderhints		renderhints;
-    Maplist		maplist;
     Backend		backend;
+    Maplist		maplist;
 
 private:
 

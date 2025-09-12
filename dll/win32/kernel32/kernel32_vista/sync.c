@@ -2,11 +2,11 @@
 
 #include <debug.h>
 
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(__i386__)
 /* 
- * GCC 13 compatibility implementations for AMD64 builds
+ * GCC 13 compatibility implementations for AMD64 and i386 builds
  * These use critical sections as a fallback since the RTL functions
- * are not available in ReactOS for AMD64
+ * are not available in ReactOS for these architectures when targeting XP
  */
 
 typedef struct _SRWLOCK_CS {
@@ -84,7 +84,7 @@ ReleaseSRWLockShared(PSRWLOCK Lock)
 }
 
 #else
-/* Use actual RTL functions for non-AMD64 builds */
+/* Use actual RTL functions for builds that have them available */
 
 VOID
 WINAPI
@@ -128,7 +128,7 @@ ReleaseSRWLockShared(PSRWLOCK Lock)
     RtlReleaseSRWLockShared((PRTL_SRWLOCK)Lock);
 }
 
-#endif /* _M_AMD64 */
+#endif /* _M_AMD64 || __i386__ */
 
 FORCEINLINE
 PLARGE_INTEGER
@@ -143,7 +143,7 @@ BOOL
 WINAPI
 SleepConditionVariableCS(PCONDITION_VARIABLE ConditionVariable, PCRITICAL_SECTION CriticalSection, DWORD Timeout)
 {
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(__i386__)
     /* 
      * Simplified implementation for GCC 13 compatibility
      * Release the critical section, sleep, then re-acquire
@@ -172,7 +172,7 @@ BOOL
 WINAPI
 SleepConditionVariableSRW(PCONDITION_VARIABLE ConditionVariable, PSRWLOCK Lock, DWORD Timeout, ULONG Flags)
 {
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(__i386__)
     /* 
      * Simplified implementation for GCC 13 compatibility
      * Release the lock, sleep, then re-acquire based on flags
@@ -210,8 +210,8 @@ VOID
 WINAPI
 WakeAllConditionVariable(PCONDITION_VARIABLE ConditionVariable)
 {
-#ifdef _M_AMD64
-    /* Stub - condition variables not fully implemented for AMD64 */
+#if defined(_M_AMD64) || defined(__i386__)
+    /* Stub - condition variables not fully implemented for AMD64/i386 */
     UNREFERENCED_PARAMETER(ConditionVariable);
 #else
     RtlWakeAllConditionVariable((PRTL_CONDITION_VARIABLE)ConditionVariable);
@@ -222,8 +222,8 @@ VOID
 WINAPI
 WakeConditionVariable(PCONDITION_VARIABLE ConditionVariable)
 {
-#ifdef _M_AMD64
-    /* Stub - condition variables not fully implemented for AMD64 */
+#if defined(_M_AMD64) || defined(__i386__)
+    /* Stub - condition variables not fully implemented for AMD64/i386 */
     UNREFERENCED_PARAMETER(ConditionVariable);
 #else
     RtlWakeConditionVariable((PRTL_CONDITION_VARIABLE)ConditionVariable);

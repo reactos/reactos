@@ -1111,7 +1111,7 @@ UDFQueueDelayedClose(
     PtrUDFIrpContextLite    IrpContextLite;
     BOOLEAN                 StartWorker = FALSE;
     _SEH2_VOLATILE BOOLEAN  AcquiredVcb = FALSE;
-    NTSTATUS                RC;
+    NTSTATUS                RC = STATUS_SUCCESS;
 
     AdPrint(("  UDFQueueDelayedClose\n"));
 

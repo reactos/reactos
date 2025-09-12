@@ -75,14 +75,14 @@ gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
     }
     cotangent = COS(radians) / sine;
 
-    __gluMakeIdentityd((GLdouble*)m);
+    __gluMakeIdentityd((GLdouble *)m);
     m[0][0] = cotangent / aspect;
     m[1][1] = cotangent;
     m[2][2] = -(zFar + zNear) / deltaZ;
     m[2][3] = -1;
     m[3][2] = -2 * zNear * zFar / deltaZ;
     m[3][3] = 0;
-    glMultMatrixd(&m[0][0]);
+    glMultMatrixd((GLdouble *)m);
 }
 
 static void normalize(float v[3])
@@ -129,7 +129,7 @@ gluLookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez, GLdouble centerx,
     /* Recompute up as: up = side x forward */
     cross(side, forward, up);
 
-    __gluMakeIdentityf((GLfloat*)m);
+    __gluMakeIdentityf((GLfloat *)m);
     m[0][0] = side[0];
     m[1][0] = side[1];
     m[2][0] = side[2];
@@ -142,7 +142,7 @@ gluLookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez, GLdouble centerx,
     m[1][2] = -forward[1];
     m[2][2] = -forward[2];
 
-    glMultMatrixf(&m[0][0]);
+    glMultMatrixf((GLfloat *)m);
     glTranslated(-eyex, -eyey, -eyez);
 }
 

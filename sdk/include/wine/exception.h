@@ -101,7 +101,16 @@ typedef struct { int reg; } __wine_jmp_buf;
 #endif
 #endif
 
+#ifndef __wine_longjmp  /* Don't declare if already defined as macro */
+#ifdef _WIN64
 DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( __wine_jmp_buf *buf, int retval );
+#elif defined(__i386__)
+/* For i386, match the jmp_buf* type from setjmp.h */
+DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( __wine_jmp_buf *buf, int retval );
+#else
+DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( __wine_jmp_buf buf, int retval );
+#endif
+#endif
 DECLSPEC_NORETURN extern void __cdecl __wine_rtl_unwind( EXCEPTION_REGISTRATION_RECORD* frame, EXCEPTION_RECORD *record,
                                                          void (*target)(void) );
 
