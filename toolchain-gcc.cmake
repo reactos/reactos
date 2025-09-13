@@ -7,43 +7,85 @@ macro(require_program varname execname)
 endmacro()
 
 # pass variables necessary for the toolchain (needed for try_compile)
-set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH)
+set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH TOOLCHAIN_PATH TOOLCHAIN_PREFIX)
 
-# Choose the right MinGW toolchain prefix
-if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
-    if(ARCH STREQUAL "i386")
+# Use TOOLCHAIN_PATH and TOOLCHAIN_PREFIX if provided, otherwise fallback to old behavior
+if(DEFINED TOOLCHAIN_PATH AND DEFINED TOOLCHAIN_PREFIX)
+    # Use the custom toolchain path and prefix
+    message(STATUS "Using custom toolchain: ${TOOLCHAIN_PATH}/${TOOLCHAIN_PREFIX}-")
+    set(TOOLCHAIN_BASE_PATH "${TOOLCHAIN_PATH}/${TOOLCHAIN_PREFIX}-")
+    set(USE_CUSTOM_TOOLCHAIN ON)
+else()
+    # Fallback to the old MinGW toolchain prefix detection
+    set(USE_CUSTOM_TOOLCHAIN OFF)
+    if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
+        if(ARCH STREQUAL "i386")
 
-        if(CMAKE_HOST_WIN32)
-            set(MINGW_TOOLCHAIN_PREFIX "" CACHE STRING "MinGW Toolchain Prefix")
-        else()
-            set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
+            if(CMAKE_HOST_WIN32)
+                set(MINGW_TOOLCHAIN_PREFIX "" CACHE STRING "MinGW Toolchain Prefix")
+            else()
+                set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
+            endif()
+
+        elseif(ARCH STREQUAL "amd64")
+            set(MINGW_TOOLCHAIN_PREFIX "x86_64-w64-mingw32-" CACHE STRING "MinGW Toolchain Prefix")
+        elseif(ARCH STREQUAL "arm")
+            set(MINGW_TOOLCHAIN_PREFIX "arm-mingw32ce-" CACHE STRING "MinGW Toolchain Prefix")
         endif()
-
-    elseif(ARCH STREQUAL "amd64")
-        set(MINGW_TOOLCHAIN_PREFIX "x86_64-w64-mingw32-" CACHE STRING "MinGW Toolchain Prefix")
-    elseif(ARCH STREQUAL "arm")
-        set(MINGW_TOOLCHAIN_PREFIX "arm-mingw32ce-" CACHE STRING "MinGW Toolchain Prefix")
     endif()
-endif()
 
-if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
-    set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
+    if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
+        set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
+    endif()
 endif()
 
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR i686)
 
+# Set find root path for custom toolchain
+if(USE_CUSTOM_TOOLCHAIN)
+    set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PATH}")
+    # Allow finding host programs (bison, flex, git) in system paths
+    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+endif()
+
 # Which tools to use
-require_program(CMAKE_C_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
-require_program(CMAKE_CXX_COMPILER ${MINGW_TOOLCHAIN_PREFIX}g++${MINGW_TOOLCHAIN_SUFFIX})
-require_program(CMAKE_ASM_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
-set(CMAKE_ASM_COMPILER_ID "GNU")
-require_program(CMAKE_MC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windmc)
-require_program(CMAKE_RC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windres)
-require_program(CMAKE_DLLTOOL ${MINGW_TOOLCHAIN_PREFIX}dlltool)
-#set(CMAKE_AR ${MINGW_TOOLCHAIN_PREFIX}gcc-ar${MINGW_TOOLCHAIN_SUFFIX})
-require_program(CMAKE_OBJCOPY ${MINGW_TOOLCHAIN_PREFIX}objcopy)
+if(USE_CUSTOM_TOOLCHAIN)
+    # Use absolute paths with custom toolchain
+    set(CMAKE_C_COMPILER "${TOOLCHAIN_BASE_PATH}gcc")
+    set(CMAKE_CXX_COMPILER "${TOOLCHAIN_BASE_PATH}g++")
+    set(CMAKE_ASM_COMPILER "${TOOLCHAIN_BASE_PATH}gcc")
+    set(CMAKE_ASM_COMPILER_ID "GNU")
+    set(CMAKE_MC_COMPILER "${TOOLCHAIN_BASE_PATH}windmc")
+    set(CMAKE_RC_COMPILER "${TOOLCHAIN_BASE_PATH}windres")
+    set(CMAKE_DLLTOOL "${TOOLCHAIN_BASE_PATH}dlltool")
+    set(CMAKE_OBJCOPY "${TOOLCHAIN_BASE_PATH}objcopy")
+    
+    # Verify the compilers exist
+    if(NOT EXISTS "${CMAKE_C_COMPILER}")
+        message(FATAL_ERROR "C compiler not found at: ${CMAKE_C_COMPILER}")
+    endif()
+    if(NOT EXISTS "${CMAKE_CXX_COMPILER}")
+        message(FATAL_ERROR "C++ compiler not found at: ${CMAKE_CXX_COMPILER}")
+    endif()
+    
+    message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
+    message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
+else()
+    # Fallback to old find_program behavior
+    require_program(CMAKE_C_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
+    require_program(CMAKE_CXX_COMPILER ${MINGW_TOOLCHAIN_PREFIX}g++${MINGW_TOOLCHAIN_SUFFIX})
+    require_program(CMAKE_ASM_COMPILER ${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX})
+    set(CMAKE_ASM_COMPILER_ID "GNU")
+    require_program(CMAKE_MC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windmc)
+    require_program(CMAKE_RC_COMPILER ${MINGW_TOOLCHAIN_PREFIX}windres)
+    require_program(CMAKE_DLLTOOL ${MINGW_TOOLCHAIN_PREFIX}dlltool)
+    #set(CMAKE_AR ${MINGW_TOOLCHAIN_PREFIX}gcc-ar${MINGW_TOOLCHAIN_SUFFIX})
+    require_program(CMAKE_OBJCOPY ${MINGW_TOOLCHAIN_PREFIX}objcopy)
+endif()
 
 # FIXME: On amd64, archives lose their index when re-archived by AR after being created by dlltool
 # Use regular archives instead of thin archives (T flag) and always run ranlib
