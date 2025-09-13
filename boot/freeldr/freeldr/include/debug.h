@@ -59,8 +59,8 @@ VOID    DbgParseDebugChannels(PCHAR Value);
 
 #define DBG_DEFAULT_CHANNEL(ch) static int DbgDefaultChannel = DPRINT_##ch
 
-/* AGENT-MODIFIED: Critical boot trace - always enabled for BootMain trace */
-#define CRITICAL_TRACE(fmt, ...) DbgPrint("AGENT-TRACE: " fmt, ##__VA_ARGS__)
+/* Critical boot trace - always enabled for BootMain trace */
+#define CRITICAL_TRACE(fmt, ...) DbgPrint(fmt, ##__VA_ARGS__)
 
 #if DBG
     #define ERR_CH(ch, fmt, ...)    DbgPrint2(DPRINT_##ch, ERR_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)

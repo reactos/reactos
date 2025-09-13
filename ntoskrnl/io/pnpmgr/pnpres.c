@@ -641,15 +641,12 @@ IopCheckResourceDescriptor(
                 {
                     if (ResDesc->u.Interrupt.Vector == ResDesc2->u.Interrupt.Vector)
                     {
-                        /* AGENT-MODIFIED: Add better IRQ conflict debug info */
                         if (!Silent)
                         {
                             DPRINT1("Resource conflict: IRQ (0x%x 0x%x vs. 0x%x 0x%x) ShareDisp=%d vs %d\n",
                                     ResDesc->u.Interrupt.Vector, ResDesc->u.Interrupt.Level,
                                     ResDesc2->u.Interrupt.Vector, ResDesc2->u.Interrupt.Level,
                                     ResDesc->ShareDisposition, ResDesc2->ShareDisposition);
-                            DPRINT1("AGENT-TRACE: IRQ conflict on vector %d detected\n", 
-                                    ResDesc->u.Interrupt.Vector);
                         }
 
                         Result = TRUE;
