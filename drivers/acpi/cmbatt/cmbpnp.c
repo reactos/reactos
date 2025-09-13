@@ -678,7 +678,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
     FdoExtension->Tag = 0;
     FdoExtension->InterruptTime = KeQueryInterruptTime();
-    FdoExtension->TripPointSet = CmBattSetTripPpoint(FdoExtension, 0) !=
+    FdoExtension->TripPointSet = CmBattSetTripPoint(FdoExtension, 0) !=
                                  STATUS_OBJECT_NAME_NOT_FOUND;
 
     /* Setup the battery miniport information structure */

@@ -13,9 +13,9 @@
 #include <acpiioct.h>
 #include <debug.h>
 
-typedef struct
+typedef struct _ACPI_PACKAGE_FIELD
 {
-    LPSTR Name;
+    PSTR Name;
     BOOLEAN IsString;
     PVOID Data;
 } ACPI_PACKAGE_FIELD, *PACPI_PACKAGE_FIELD;
@@ -377,14 +377,14 @@ CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattSetTripPpoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                    IN ULONG AlarmValue)
+CmBattSetTripPoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                   IN ULONG AlarmValue)
 {
     NTSTATUS Status;
     ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER InputBuffer;
     PAGED_CODE();
     if (CmBattDebug & 0x440)
-        DbgPrint("CmBattSetTripPpoint: _BTP Alarm Value %x Device %x Tid %x\n",
+        DbgPrint("CmBattSetTripPoint: _BTP Alarm Value %x Device %x Tid %x\n",
                  AlarmValue, DeviceExtension->DeviceId, KeGetCurrentThread);
 
     /* Request the _BTP method */
@@ -400,7 +400,7 @@ CmBattSetTripPpoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                                      NULL,
                                      0);
     if (!(NT_SUCCESS(Status)) && (CmBattDebug & 0x440))
-        DbgPrint("CmBattSetTripPpoint: Failed _BTP method on device %x - Status (0x%x)\n",
+        DbgPrint("CmBattSetTripPoint: Failed _BTP method on device %x - Status (0x%x)\n",
                  DeviceExtension->DeviceId, Status);
 
     /* Return status */
