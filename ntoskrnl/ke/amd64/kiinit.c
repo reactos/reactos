@@ -98,8 +98,13 @@ KiInitializePcr(
     _In_ PKTHREAD IdleThread,
     _In_ PVOID DpcStack)
 {
+    // AGENT-MODIFIED: Add debug output before operations that might crash
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializePcr: Pcr=%p, about to zero memory\n", Pcr);
+
     /* Zero out the PCR */
     RtlZeroMemory(Pcr, sizeof(KIPCR));
+
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializePcr: Memory zeroed, setting pointers\n");
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
@@ -112,6 +117,9 @@ KiInitializePcr(
     /* Set the PRCB Version */
     Pcr->Prcb.MajorVersion = PRCB_MAJOR_VERSION;
     Pcr->Prcb.MinorVersion = PRCB_MINOR_VERSION;
+
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializePcr: Versions set, MajorVer=%d\n",
+                                      Pcr->Prcb.MajorVersion);
 
     /* Set the Build Type */
     Pcr->Prcb.BuildType = 0;
@@ -319,19 +327,29 @@ KiInitializeP0BootStructures(
     PKGDTENTRY64 TssEntry;
     PKTSS64 TssBase;
 
+    // AGENT-MODIFIED: Debug output to track crash location
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializeP0BootStructures: Setting up loader block\n");
+
     /* Set the initial stack, idle thread and process for processor 0 */
     LoaderBlock->KernelStack = (ULONG_PTR)KiP0BootStack;
     LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
     LoaderBlock->Process = (ULONG_PTR)&KiInitialProcess.Pcb;
     LoaderBlock->Prcb = (ULONG_PTR)&KiInitialPcr.Prcb;
 
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: Getting GDT/IDT descriptors\n");
+
     /* Get GDT and IDT descriptors */
     __sgdt(&GdtDescriptor.Limit);
     __sidt(&IdtDescriptor.Limit);
 
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: GDT base=%p, IDT base=%p\n",
+                                      GdtDescriptor.Base, IdtDescriptor.Base);
+
     /* Get the boot TSS from the GDT */
     TssEntry = KiGetGdtEntry(GdtDescriptor.Base, KGDT64_SYS_TSS);
     TssBase = KiGetGdtDescriptorBase(TssEntry);
+
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: TSS base=%p, calling KiInitializeProcessorBootStructures\n", TssBase);
 
     /* Initialize PCR and TSS */
     KiInitializeProcessorBootStructures(0,
@@ -344,6 +362,8 @@ KiInitializeP0BootStructures(
                                         KiP0DoubleFaultStack,
                                         KiP0DoubleFaultStack,
                                         KiP0DoubleFaultStack);
+
+    if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializeProcessorBootStructures complete\n");
 }
 
 CODE_SEG("INIT")
@@ -494,7 +514,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* HACK */
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
-    //FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
+    // AGENT-MODIFIED: Enable debug output to track kernel initialization
+    if (FrLdrDbgPrint) {
+        FrLdrDbgPrint("AGENT: KiSystemStartup entered, LoaderBlock=%p\n", LoaderBlock);
+    }
 
     /* Get the current CPU number */
     Cpu = KeNumberProcessors++; // FIXME
@@ -505,12 +528,24 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Save the loader block */
         KeLoaderBlock = LoaderBlock;
 
+        if (FrLdrDbgPrint) {
+            FrLdrDbgPrint("AGENT: Calling KiInitializeP0BootStructures\n");
+        }
+
         /* Prepare LoaderBlock, PCR, TSS with the P0 boot data */
         KiInitializeP0BootStructures(LoaderBlock);
+
+        if (FrLdrDbgPrint) {
+            FrLdrDbgPrint("AGENT: KiInitializeP0BootStructures complete\n");
+        }
     }
 
     /* Get Pcr from loader block */
     Pcr = CONTAINING_RECORD(LoaderBlock->Prcb, KIPCR, Prcb);
+
+    if (FrLdrDbgPrint) {
+        FrLdrDbgPrint("AGENT: Pcr=%p, Prcb=%p\n", Pcr, LoaderBlock->Prcb);
+    }
 
     /* Set the PRCB for this Processor */
     KiProcessorBlock[Cpu] = &Pcr->Prcb;
@@ -521,8 +556,16 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set us as the current process */
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
+    if (FrLdrDbgPrint) {
+        FrLdrDbgPrint("AGENT: Calling KiInitializeCpu\n");
+    }
+
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
+
+    if (FrLdrDbgPrint) {
+        FrLdrDbgPrint("AGENT: KiInitializeCpu complete\n");
+    }
 
     /* Initial setup for the boot CPU */
     if (Cpu == 0)

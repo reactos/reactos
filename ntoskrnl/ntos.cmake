@@ -293,11 +293,8 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/guidobj.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/smbios.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmi.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c)
-
-if(DBG)
-    list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/se/debug.c)
-endif()
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/debug.c)
 
 list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/ex/zw.S)
 

@@ -38,27 +38,31 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
+/* AGENT-MODIFIED: Always enable debug functions even in Release mode for critical boot debugging */
+/* These functions are always available regardless of DBG setting */
+VOID
+DebugInit(
+    _In_ PCSTR DebugString);
+
+ULONG   DbgPrint(const char *Format, ...);
+VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
+VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
+VOID    DebugDisableScreenPort(VOID);
+VOID    DbgParseDebugChannels(PCHAR Value);
+
+#define ERR_LEVEL      0x1
+#define FIXME_LEVEL    0x2
+#define WARN_LEVEL     0x4
+#define TRACE_LEVEL    0x8
+
+#define MAX_LEVEL ERR_LEVEL | FIXME_LEVEL | WARN_LEVEL | TRACE_LEVEL
+
+#define DBG_DEFAULT_CHANNEL(ch) static int DbgDefaultChannel = DPRINT_##ch
+
+/* AGENT-MODIFIED: Critical boot trace - always enabled for BootMain trace */
+#define CRITICAL_TRACE(fmt, ...) DbgPrint("AGENT-TRACE: " fmt, ##__VA_ARGS__)
+
 #if DBG
-
-    VOID
-    DebugInit(
-        _In_ PCSTR DebugString);
-
-    ULONG   DbgPrint(const char *Format, ...);
-    VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
-    VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
-    VOID    DebugDisableScreenPort(VOID);
-    VOID    DbgParseDebugChannels(PCHAR Value);
-
-    #define ERR_LEVEL      0x1
-    #define FIXME_LEVEL    0x2
-    #define WARN_LEVEL     0x4
-    #define TRACE_LEVEL    0x8
-
-    #define MAX_LEVEL ERR_LEVEL | FIXME_LEVEL | WARN_LEVEL | TRACE_LEVEL
-
-    #define DBG_DEFAULT_CHANNEL(ch) static int DbgDefaultChannel = DPRINT_##ch
-
     #define ERR_CH(ch, fmt, ...)    DbgPrint2(DPRINT_##ch, ERR_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
     #define FIXME_CH(ch, fmt, ...)  DbgPrint2(DPRINT_##ch, FIXME_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
     #define WARN_CH(ch, fmt, ...)   DbgPrint2(DPRINT_##ch, WARN_LEVEL, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -102,7 +106,7 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #endif // defined __i386__
 
 #else
-
+    /* AGENT-MODIFIED: In Release mode, enable critical traces but disable other debug output */
     #define DBG_DEFAULT_CHANNEL(ch)
 
     #define ERR_CH(ch, fmt, ...)
@@ -113,11 +117,13 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
     #define ERR(fmt, ...)
     #define FIXME(fmt, ...)
     #define WARN(fmt, ...)
-    #define TRACE(fmt, ...)
+    /* AGENT-MODIFIED: Use CRITICAL_TRACE for TRACE in Release mode to catch BootMain */
+    #define TRACE(fmt, ...) CRITICAL_TRACE(fmt, ##__VA_ARGS__)
 
     #define UNIMPLEMENTED
 
-    #define DebugInit(DebugString)
+    /* AGENT-MODIFIED: Keep DebugInit enabled in Release mode */
+    /* DebugInit is already declared above */
     #define BugCheck(fmt, ...)
     #define DbgDumpBuffer(mask, buf, len)
     #define DebugDisableScreenPort()

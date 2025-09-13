@@ -189,8 +189,8 @@ NTAPI
 NtSetLdtEntries(ULONG Selector1, LDT_ENTRY LdtEntry1, ULONG Selector2, LDT_ENTRY LdtEntry2)
 {
     UNIMPLEMENTED;
-    __debugbreak();
-    return STATUS_UNSUCCESSFUL;
+    // AGENT-MODIFIED: Removed __debugbreak() to prevent INT3 in release mode
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

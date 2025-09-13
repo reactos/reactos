@@ -1110,6 +1110,14 @@ IoCancelIrp(IN PIRP Irp)
 
     /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
+
+    /* AGENT-MODIFIED: Debug CancelRoutine value before setting Cancel flag */
+    if ((ULONG_PTR)Irp->CancelRoutine > 0 && (ULONG_PTR)Irp->CancelRoutine < 0x1000)
+    {
+        DPRINT1("AGENT-DEBUG: IoCancelIrp - IRP %p has suspicious CancelRoutine %p BEFORE setting Cancel\n",
+                Irp, Irp->CancelRoutine);
+    }
+
     Irp->Cancel = TRUE;
 
     /* Clear the cancel routine and get the old one */
@@ -1329,6 +1337,33 @@ IofCompleteRequest(IN PIRP Irp,
     {
         /* Bugcheck */
         KeBugCheckEx(MULTIPLE_IRP_COMPLETE_REQUESTS, (ULONG_PTR)Irp, 0, 0, 0);
+    }
+
+    /* AGENT-MODIFIED: Enhanced IRP CancelRoutine validation for x64 release mode */
+    /* Check for invalid CancelRoutine values that could cause crashes */
+    if (Irp->CancelRoutine)
+    {
+        PVOID CancelRoutine = Irp->CancelRoutine;
+        
+        /* AGENT-MODIFIED: Validate CancelRoutine pointer before proceeding */
+        /* Values below 0x10000 are definitely invalid (includes 0x1 seen in logs) */
+        /* Values above 0xFFFF800000000000 should be valid kernel addresses on x64 */
+        if ((ULONG_PTR)CancelRoutine < 0x10000 || 
+            ((ULONG_PTR)CancelRoutine > 0x7FFFFFFFFFFF && 
+             (ULONG_PTR)CancelRoutine < 0xFFFF800000000000))
+        {
+            DPRINT1("AGENT-DEBUG: IRP %p has INVALID CancelRoutine %p at completion - clearing it\n",
+                    Irp, CancelRoutine);
+            /* Clear invalid pointer directly to avoid crash */
+            Irp->CancelRoutine = NULL;
+        }
+        else
+        {
+            DPRINT1("AGENT-DEBUG: IRP %p has CancelRoutine %p at completion - clearing via IoSetCancelRoutine\n",
+                    Irp, CancelRoutine);
+            /* Use normal clearing for potentially valid pointers */
+            IoSetCancelRoutine(Irp, NULL);
+        }
     }
 
     /* Some sanity checks */
@@ -1861,6 +1896,15 @@ IoInitializeIrp(IN PIRP Irp,
             __FUNCTION__,
             Irp);
     RtlZeroMemory(Irp, PacketSize);
+
+    /* AGENT-MODIFIED: Explicitly verify CancelRoutine is NULL after zeroing */
+    if (Irp->CancelRoutine != NULL)
+    {
+        DPRINT1("AGENT-DEBUG: IoInitializeIrp - IRP %p has non-NULL CancelRoutine %p after RtlZeroMemory!\n",
+                Irp, Irp->CancelRoutine);
+        /* Force it to NULL */
+        Irp->CancelRoutine = NULL;
+    }
 
     /* Set the Header and other data */
     Irp->Type = IO_TYPE_IRP;

@@ -101,13 +101,27 @@ LaunchSecondStageLoader(VOID)
 
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
+    /* AGENT-MODIFIED: Add early trace to catch boot issues */
+    /* This uses DbgPrint directly to ensure output even before DebugInit */
+#ifdef __x86_64__
+    DbgPrint("AGENT-TRACE: BootMain entry on AMD64, CmdLine=%p\n", CmdLine);
+#else
+    DbgPrint("AGENT-TRACE: BootMain entry, CmdLine=%p\n", CmdLine);
+#endif
+
     /* Load the default settings from the command-line */
     LoadSettings(CmdLine);
 
     /* Debugger pre-initialization */
     DebugInit(BootMgrInfo.DebugString);
+    
+    /* AGENT-MODIFIED: Trace after DebugInit */
+    DbgPrint("AGENT-TRACE: DebugInit completed\n");
 
     MachInit(CmdLine);
+    
+    /* AGENT-MODIFIED: Trace after MachInit */
+    DbgPrint("AGENT-TRACE: MachInit completed\n");
 
     TRACE("BootMain() called.\n");
 

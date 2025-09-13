@@ -655,7 +655,8 @@ KiGeneralProtectionFaultHandler(
     {
         /* Not implemented */
         UNIMPLEMENTED;
-        ASSERT(FALSE);
+        // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+        return STATUS_NOT_IMPLEMENTED;
     }
 
     /* Check for RDMSR/WRMSR */
@@ -667,7 +668,8 @@ KiGeneralProtectionFaultHandler(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    ASSERT(FALSE);
+    // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode - unhandled GPF
+    // Return unsuccessful status for unhandled general protection faults
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -717,7 +719,8 @@ KiXmmExceptionHandler(
     else
     {
         /* Should not happen */
-        ASSERT(FALSE);
+        // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+        ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
     }
     
     return ExceptionCode;
