@@ -20,12 +20,15 @@ KdpSafeSendPacket(IN ULONG PacketType,
                   IN PSTRING MessageHeader,
                   IN PSTRING MessageData)
 {
-    if (KdDebuggerNotPresent || !KdDebuggerEnabled) return;
-    if (!MessageHeader || (MessageHeader->Length && !MessageHeader->Buffer)) return;
-    if (MessageData && MessageData->Length && !MessageData->Buffer) return;
+    if (KdDebuggerNotPresent || !KdDebuggerEnabled)
+        return;
 
     _SEH2_TRY
     {
+        if (!MessageHeader || (MessageHeader->Length && !MessageHeader->Buffer))
+            return;
+        if (MessageData && MessageData->Length && !MessageData->Buffer)
+            return;
         KdSendPacket(PacketType, MessageHeader, MessageData, &KdpContext);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
