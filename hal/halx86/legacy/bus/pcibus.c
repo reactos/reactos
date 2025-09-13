@@ -75,8 +75,6 @@ PCI_CONFIG_HANDLER PCIConfigHandlerType2 =
     }
 };
 
-/* AGENT_MOD_START: Fix PCI fake bus handler - initialize Config ports properly */
-/* The fake bus handler needs proper I/O port addresses for Type1 PCI config access */
 PCIPBUSDATA HalpFakePciBusData =
 {
     {
@@ -89,16 +87,9 @@ PCIPBUSDATA HalpFakePciBusData =
         {{{0, 0, 0}}},
         {0, 0, 0, 0}
     },
-    {
-        /* Config union - Type1 is default, so initialize it with proper port addresses */
-        .Type1 = {
-            .Address = (PULONG)(ULONG_PTR)PCI_TYPE1_ADDRESS_PORT,  /* 0xCF8 */
-            .Data = PCI_TYPE1_DATA_PORT                            /* 0xCFC */
-        }
-    },
-    PCI_MAX_DEVICES,  /* MaxDevice = 32 */
+    {{0, 0}},
+    32,
 };
-/* AGENT_MOD_END */
 
 BUS_HANDLER HalpFakePciBusHandler =
 {
@@ -236,65 +227,14 @@ HalpPCIConfig(IN PBUS_HANDLER BusHandler,
     ULONG i;
     UCHAR State[20];
 
-    /* AGENT_MOD_START: Debug for slot 0x21 crash */
-    if (Slot.u.AsULONG == 0x21)
-    {
-        DPRINT1("AGENT-TRACE: HalpPCIConfig entry - Slot=0x21, Offset=%u, Length=%u, ConfigIO=%p\n",
-                Offset, Length, ConfigIO);
-    }
-    /* AGENT_MOD_END */
-
-    /* AGENT-MODIFIED: Add null pointer validation */
-    if (!BusHandler || !BusHandler->BusData || !Buffer || !ConfigIO)
-    {
-        DPRINT1("AGENT-TRACE: HalpPCIConfig - Invalid parameters\n");
-        return;
-    }
-    
-    /* AGENT-MODIFIED: Check if PCIConfigHandler functions are initialized */
-    if (!PCIConfigHandler.Synchronize || !PCIConfigHandler.ReleaseSynchronzation)
-    {
-        DPRINT1("AGENT-TRACE: CRITICAL - PCIConfigHandler not initialized (Sync=%p, Release=%p)\n",
-                PCIConfigHandler.Synchronize, PCIConfigHandler.ReleaseSynchronzation);
-        return;
-    }
-
-    /* AGENT_MOD_START: Debug synchronize call for slot 0x21 */
-    if (Slot.u.AsULONG == 0x21)
-    {
-        DPRINT1("AGENT-TRACE: About to call PCIConfigHandler.Synchronize for slot 0x21\n");
-    }
-    /* AGENT_MOD_END */
-    
     /* Synchronize the operation */
     PCIConfigHandler.Synchronize(BusHandler, Slot, &OldIrql, State);
-
-    /* AGENT_MOD_START: Debug ConfigIO calls for slot 0x21 */
-    if (Slot.u.AsULONG == 0x21)
-    {
-        DPRINT1("AGENT-TRACE: After synchronize, about to loop. Length=%u\n", Length);
-    }
-    /* AGENT_MOD_END */
 
     /* Loop every increment */
     while (Length)
     {
         /* Find out the type of read/write we need to do */
         i = PCIDeref[Offset % sizeof(ULONG)][Length % sizeof(ULONG)];
-
-        /* AGENT_MOD_START: Debug ConfigIO calls for slot 0x21 */
-        if (Slot.u.AsULONG == 0x21)
-        {
-            DPRINT1("AGENT-TRACE: About to call ConfigIO[%u]=%p, Offset=%u, Length=%u, Buffer=%p\n",
-                    i, ConfigIO[i], Offset, Length, Buffer);
-            
-            /* Check if we might overflow */
-            if (Offset >= 64)
-            {
-                DPRINT1("AGENT-TRACE: WARNING! Offset %u >= 64, potential buffer overflow!\n", Offset);
-            }
-        }
-        /* AGENT_MOD_END */
 
         /* Do the read/write and return the number of bytes */
         i = ConfigIO[i]((PPCIPBUSDATA)BusHandler->BusData,
@@ -320,62 +260,6 @@ HalpReadPCIConfig(IN PBUS_HANDLER BusHandler,
                   IN ULONG Offset,
                   IN ULONG Length)
 {
-    /* AGENT_MOD_START: Enhanced debug for slot 0x21 crash with recursion tracking */
-    static volatile LONG RecursionDepth = 0;
-    LONG CurrentDepth;
-    
-    CurrentDepth = InterlockedIncrement(&RecursionDepth);
-    
-    if (Slot.u.AsULONG == 0x21)
-    {
-        DPRINT1("AGENT-TRACE: HalpReadPCIConfig entry [Depth=%d] - Slot=0x%x (Dev=%u, Func=%u), Buffer=%p, Offset=%u, Length=%u\n",
-                CurrentDepth, Slot.u.AsULONG, 
-                Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber,
-                Buffer, Offset, Length);
-                
-        if (CurrentDepth > 5)
-        {
-            DPRINT1("AGENT-TRACE: CRITICAL - Recursion depth %d exceeds safe limit!\n", CurrentDepth);
-        }
-    }
-    /* AGENT_MOD_END */
-    
-    /* AGENT-MODIFIED: Add null pointer validation */
-    if (!BusHandler || !Buffer)
-    {
-        DPRINT1("AGENT-TRACE: HalpReadPCIConfig - Invalid BusHandler or Buffer\n");
-        if (Buffer) RtlFillMemory(Buffer, Length, -1);
-        return;
-    }
-
-    /* AGENT_MOD_START: Log all PCI access attempts for debugging */
-    if (Offset == 0 && Length >= 2)
-    {
-        static ULONG LoggedSlots[32] = {0};
-        ULONG SlotIndex = Slot.u.AsULONG & 0x1F;
-        if (SlotIndex < 32 && !LoggedSlots[SlotIndex])
-        {
-            LoggedSlots[SlotIndex] = 1;
-            DPRINT1("AGENT-DEBUG: PCI Access - Slot=0x%x (Dev=%u, Func=%u)\n",
-                    Slot.u.AsULONG, Slot.u.bits.DeviceNumber, Slot.u.bits.FunctionNumber);
-        }
-    }
-    
-    /* AGENT_MOD_START: Special handling for slot 0x21 (IDE controller) */
-    if (Slot.u.AsULONG == 0x21)
-    {
-        DPRINT1("AGENT-DEBUG: Accessing slot 0x21 (IDE) - Buffer=%p, Offset=%u, Length=%u\n",
-                Buffer, Offset, Length);
-
-        /* Check if buffer is properly aligned for AMD64 */
-        if ((ULONG_PTR)Buffer & 0x7)
-        {
-            DPRINT1("AGENT-WARNING: Misaligned buffer %p for slot 0x21 access\n", Buffer);
-        }
-    }
-    /* AGENT_MOD_END */
-    
-    
     /* Validate the PCI Slot */
     if (!HalpValidPCISlot(BusHandler, Slot))
     {
@@ -384,18 +268,6 @@ HalpReadPCIConfig(IN PBUS_HANDLER BusHandler,
     }
     else
     {
-        /* AGENT-MODIFIED: Check if PCIConfigHandler is initialized before use */
-        if (!PCIConfigHandler.ConfigRead[0] || !PCIConfigHandler.ConfigRead[1] || !PCIConfigHandler.ConfigRead[2])
-        {
-            DPRINT1("AGENT-TRACE: CRITICAL - PCIConfigHandler.ConfigRead not initialized [%p, %p, %p]\n",
-                    PCIConfigHandler.ConfigRead[0], PCIConfigHandler.ConfigRead[1], PCIConfigHandler.ConfigRead[2]);
-            RtlFillMemory(Buffer, Length, -1);
-            /* AGENT_MOD_START: Decrement recursion counter */
-            InterlockedDecrement(&RecursionDepth);
-            /* AGENT_MOD_END */
-            return;
-        }
-        
         /* Send the request */
         HalpPCIConfig(BusHandler,
                       Slot,
@@ -403,29 +275,7 @@ HalpReadPCIConfig(IN PBUS_HANDLER BusHandler,
                       Offset,
                       Length,
                       PCIConfigHandler.ConfigRead);
-
-        /* AGENT_MOD_START: Log PCI data for slot 0x21 after read */
-        if (Slot.u.AsULONG == 0x21 && Offset == 0 && Length >= 4)
-        {
-            PUSHORT VendorId = (PUSHORT)Buffer;
-            PUSHORT DeviceId = (PUSHORT)((PUCHAR)Buffer + 2);
-            DPRINT1("AGENT-DEBUG: Slot 0x21 PCI ID: VendorID=0x%04x, DeviceID=0x%04x\n",
-                    *VendorId, *DeviceId);
-            if (Length >= 12)
-            {
-                PUCHAR ProgIf = (PUCHAR)Buffer + 0x09;
-                PUCHAR SubClass = (PUCHAR)Buffer + 0x0A;
-                PUCHAR ClassCode = (PUCHAR)Buffer + 0x0B;
-                DPRINT1("AGENT-DEBUG: Slot 0x21 Class: BaseClass=0x%02x, SubClass=0x%02x, ProgIf=0x%02x\n",
-                        *ClassCode, *SubClass, *ProgIf);
-            }
-        }
-        /* AGENT_MOD_END */
     }
-
-    /* AGENT_MOD_START: Decrement recursion counter on exit */
-    InterlockedDecrement(&RecursionDepth);
-    /* AGENT_MOD_END */
 }
 
 VOID
@@ -436,13 +286,6 @@ HalpWritePCIConfig(IN PBUS_HANDLER BusHandler,
                    IN ULONG Offset,
                    IN ULONG Length)
 {
-    /* AGENT-MODIFIED: Add null pointer validation */
-    if (!BusHandler || !Buffer)
-    {
-        DPRINT1("AGENT-TRACE: HalpWritePCIConfig - Invalid BusHandler or Buffer\n");
-        return;
-    }
-
     /* Validate the PCI Slot */
     if (HalpValidPCISlot(BusHandler, Slot))
     {
@@ -487,18 +330,9 @@ HalpValidPCISlot(IN PBUS_HANDLER BusHandler,
                  IN PCI_SLOT_NUMBER Slot)
 {
     PCI_SLOT_NUMBER MultiSlot;
-    PPCIPBUSDATA BusData;
+    PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
     UCHAR HeaderType;
     //ULONG Device;
-
-    /* AGENT-MODIFIED: Add null pointer validation */
-    if (!BusHandler || !BusHandler->BusData)
-    {
-        DPRINT1("AGENT-TRACE: HalpValidPCISlot - Invalid BusHandler or BusData\n");
-        return FALSE;
-    }
-
-    BusData = (PPCIPBUSDATA)BusHandler->BusData;
 
     /* Simple validation */
     if (Slot.u.bits.Reserved) return FALSE;
@@ -683,16 +517,6 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
     ULONG Len = 0;
 
     Slot.u.AsULONG = SlotNumber;
-    
-    /* AGENT-MODIFIED: Early validation to prevent crash on invalid slot 0x21 */
-    if (Slot.u.bits.DeviceNumber >= PCI_MAX_DEVICES)
-    {
-        DPRINT1("AGENT-TRACE: HalpGetPCIData - Invalid slot 0x%x (Device=%d >= %d)\n",
-                SlotNumber, Slot.u.bits.DeviceNumber, PCI_MAX_DEVICES);
-        RtlFillMemory(Buffer, Length, 0xFF);
-        return Length;
-    }
-    
 #ifdef SARCH_XBOX
     if (HalpXboxBlacklistedPCISlot(BusHandler->BusNumber, Slot))
     {
@@ -773,15 +597,6 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     ULONG Len = 0;
 
     Slot.u.AsULONG = SlotNumber;
-    
-    /* AGENT-MODIFIED: Early validation to prevent crash on invalid slot 0x21 */
-    if (Slot.u.bits.DeviceNumber >= PCI_MAX_DEVICES)
-    {
-        DPRINT1("AGENT-TRACE: HalpSetPCIData - Invalid slot 0x%x (Device=%d >= %d)\n",
-                SlotNumber, Slot.u.bits.DeviceNumber, PCI_MAX_DEVICES);
-        return 0;
-    }
-    
 #ifdef SARCH_XBOX
     if (HalpXboxBlacklistedPCISlot(BusHandler->BusNumber, Slot))
         return 0;
@@ -999,69 +814,11 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
     PCI_SLOT_NUMBER SlotNumber;
     ULONG WriteBuffer;
     DPRINT1("WARNING: PCI Slot Resource Assignment is FOOBAR\n");
-    
-    /* AGENT-MODIFIED: Check if PCI configuration is initialized before proceeding */
-    if (!HalpPCIConfigInitialized)
-    {
-        DPRINT1("AGENT-TRACE: CRITICAL - PCI not initialized yet when HalpAssignPCISlotResources called!\n");
-        DPRINT1("AGENT-TRACE: This is the root cause of crash at slot 0x21\n");
-        return STATUS_DEVICE_NOT_READY;
-    }
-    
-    /* AGENT-MODIFIED: Early slot validation to catch invalid slot 0x21 (decimal 33) */
-    SlotNumber.u.AsULONG = Slot;
-    if (SlotNumber.u.bits.DeviceNumber >= PCI_MAX_DEVICES)
-    {
-        DPRINT1("AGENT-TRACE: CRITICAL - Invalid PCI device number %d (max=%d) in slot 0x%x\n",
-                SlotNumber.u.bits.DeviceNumber, PCI_MAX_DEVICES - 1, Slot);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* AGENT-MODIFIED: Add null pointer validation for BusHandler */
-    if (!BusHandler)
-    {
-        DPRINT1("AGENT-TRACE: HalpAssignPCISlotResources - BusHandler is NULL\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* AGENT-MODIFIED: Validate AllocatedResources pointer */
-    if (!AllocatedResources)
-    {
-        DPRINT1("AGENT-TRACE: HalpAssignPCISlotResources - AllocatedResources is NULL\n");
-        return STATUS_INVALID_PARAMETER;
-    }
 
     /* FIXME: Should handle 64-bit addresses */
 
     /* Read configuration data */
     SlotNumber.u.AsULONG = Slot;
-    
-    /* AGENT-MODIFIED: Validate PCI slot before accessing - prevents crash at invalid slot 0x21 */
-    PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
-    DPRINT1("AGENT-TRACE: Validating slot 0x%x (Device=%d, Function=%d) MaxDevice=%d\n",
-            Slot, SlotNumber.u.bits.DeviceNumber, SlotNumber.u.bits.FunctionNumber,
-            BusData ? BusData->MaxDevice : -1);
-    
-    if (!HalpValidPCISlot(BusHandler, SlotNumber))
-    {
-        DPRINT1("AGENT-TRACE: Invalid PCI slot requested - Bus %d, Slot 0x%x (DeviceNumber=%d, FunctionNumber=%d)\n", 
-                BusHandler->BusNumber, Slot, 
-                SlotNumber.u.bits.DeviceNumber, 
-                SlotNumber.u.bits.FunctionNumber);
-        return STATUS_NO_SUCH_DEVICE;
-    }
-    
-    /* AGENT-MODIFIED: Add debug trace before PCI config read */
-    DPRINT1("AGENT-TRACE: Reading PCI config for Bus %d, Slot 0x%x\n", 
-            BusHandler->BusNumber, Slot);
-    
-    /* AGENT_MOD_START: Additional debug for slot 0x21 crash */
-    DPRINT1("AGENT-TRACE: BusHandler=%p, BusData=%p, Config.Type1.Address=%p, Config.Type1.Data=0x%x\n",
-            BusHandler, BusData, BusData->Config.Type1.Address, BusData->Config.Type1.Data);
-    DPRINT1("AGENT-TRACE: About to call HalpReadPCIConfig for slot 0x%x (Device=%d, Function=%d)\n",
-            SlotNumber.u.AsULONG, SlotNumber.u.bits.DeviceNumber, SlotNumber.u.bits.FunctionNumber);
-    /* AGENT_MOD_END */
-    
     HalpReadPCIConfig(BusHandler, SlotNumber, &PciConfig, 0, PCI_COMMON_HDR_LENGTH);
 
     /* Check if we read it correctly */
@@ -1101,32 +858,15 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         0xFF != PciConfig.u.type0.InterruptLine)
         ResourceCount++;
 
-    /* AGENT-MODIFIED: Ensure ResourceCount is valid before allocation */
-    if (ResourceCount == 0)
-    {
-        DPRINT1("AGENT-TRACE: No resources to allocate for PCI device\n");
-        *AllocatedResources = NULL;
-        return STATUS_SUCCESS;
-    }
-
     /* Allocate output buffer and initialize */
-    /* AGENT-MODIFIED: Calculate allocation size safely */
-    SIZE_T AllocationSize = sizeof(CM_RESOURCE_LIST);
-    if (ResourceCount > 1)
-    {
-        AllocationSize += (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    }
-    
     *AllocatedResources = ExAllocatePoolWithTag(
         PagedPool,
-        AllocationSize,
+        sizeof(CM_RESOURCE_LIST) +
+        (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
         TAG_HAL);
 
     if (NULL == *AllocatedResources)
-    {
-        DPRINT1("AGENT-TRACE: Failed to allocate resources (size=%lu)\n", AllocationSize);
         return STATUS_NO_MEMORY;
-    }
 
     (*AllocatedResources)->Count = 1;
     (*AllocatedResources)->List[0].InterfaceType = PCIBus;
@@ -1172,9 +912,6 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         0 != PciConfig.u.type0.InterruptLine &&
         0xFF != PciConfig.u.type0.InterruptLine)
     {
-        /* AGENT-MODIFIED: Add debug trace for IRQ assignment */
-        DPRINT1("AGENT-TRACE: Assigning IRQ %d for PCI device\n", PciConfig.u.type0.InterruptLine);
-        
         Descriptor->Type = CmResourceTypeInterrupt;
         Descriptor->ShareDisposition = CmResourceShareShared;          /* FIXME Just a guess */
         Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;     /* FIXME Just a guess */
@@ -1459,9 +1196,6 @@ HalpInitializePciStubs(VOID)
     PCI_SLOT_NUMBER j;
     ULONG VendorId = 0;
     ULONG MaxPciBusNumber;
-    
-    /* AGENT-MODIFIED: Trace PCI initialization */
-    DPRINT1("AGENT-TRACE: HalpInitializePciStubs called\n");
 
     /* Query registry information */
     PciRegistryInfo = HalpQueryPciRegistryInfo();
@@ -1502,18 +1236,6 @@ HalpInitializePciStubs(VOID)
             /* Set correct I/O Ports */
             BusData->Config.Type1.Address = PCI_TYPE1_ADDRESS_PORT;
             BusData->Config.Type1.Data = PCI_TYPE1_DATA_PORT;
-            
-            /* AGENT_MOD_START: Fix PCI slot 0x21 crash - set MaxDevice for Type 1 */
-            /* Type 1 PCI supports 32 devices (0-31), must set this or validation fails */
-            BusData->MaxDevice = PCI_MAX_DEVICES;
-            /* AGENT_MOD_END */
-            
-            /* AGENT-MODIFIED: Trace successful PCI Type 1 initialization */
-            DPRINT1("AGENT-TRACE: PCI Type 1 initialized, MaxDevice=%d, handlers: [%p, %p, %p]\n",
-                    BusData->MaxDevice,
-                    PCIConfigHandler.ConfigRead[0], 
-                    PCIConfigHandler.ConfigRead[1], 
-                    PCIConfigHandler.ConfigRead[2]);
             break;
 
         /* Type 2 PCI Bus */
@@ -1551,73 +1273,26 @@ HalpInitializePciStubs(VOID)
         /* Loop all possible buses */
         for (i = 0; i < HalpMaxPciBus; i++)
         {
-            /* AGENT_MOD_START: Properly scan all devices AND functions */
-            ULONG DeviceNumber, FunctionNumber;
-            
             /* Loop all devices */
-            for (DeviceNumber = 0; DeviceNumber < BusData->MaxDevice; DeviceNumber++)
+            for (j.u.AsULONG = 0; j.u.AsULONG < BusData->MaxDevice; j.u.AsULONG++)
             {
-                /* Loop all functions (0-7) */
-                for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+                /* Query the interface */
+                if (HaliPciInterfaceReadConfig(NULL,
+                                               i,
+                                               j,
+                                               &VendorId,
+                                               0,
+                                               sizeof(ULONG)))
                 {
-                    /* Build the slot number */
-                    j.u.AsULONG = 0;
-                    j.u.bits.DeviceNumber = DeviceNumber;
-                    j.u.bits.FunctionNumber = FunctionNumber;
-                    
-                    /* Skip slot 0x21 to avoid crashes but track that IDE exists */
-                    if (j.u.AsULONG == 0x21)
+                    /* Validate the vendor ID */
+                    if ((VendorId & 0xFFFF) != PCI_INVALID_VENDORID)
                     {
-                        /* We know QEMU puts IDE controller here, skip it but note its presence */
-                        DPRINT1("AGENT-DEBUG: Skipping problematic slot 0x21 (IDE controller location)\n");
-                        
-                        /* Manually increment IDE count since we can't scan it */
-                        /* This is a workaround for AMD64 crash issue */
-                        continue;
-                    }
-                    
-                    /* Query the interface */
-                    if (HaliPciInterfaceReadConfig(NULL,
-                                                   i,
-                                                   j,
-                                                   &VendorId,
-                                                   0,
-                                                   sizeof(ULONG)))
-                    {
-                        /* Validate the vendor ID */
-                        if ((VendorId & 0xFFFF) != PCI_INVALID_VENDORID)
-                        {
-                            /* Log detected PCI devices */
-                            DPRINT1("AGENT-DEBUG: PCI Device found - Bus=%u, Slot=0x%x (Dev=%u, Func=%u), VendorID=0x%04x, DeviceID=0x%04x\n",
-                                    i, j.u.AsULONG, j.u.bits.DeviceNumber, j.u.bits.FunctionNumber,
-                                    (VendorId & 0xFFFF), ((VendorId >> 16) & 0xFFFF));
-                            
-                            /* Set this as the maximum ID */
-                            MaxPciBusNumber = i;
-                            
-                            /* If this is function 0, check if it's multi-function */
-                            if (FunctionNumber == 0)
-                            {
-                                /* Read header type to check multi-function bit */
-                                UCHAR HeaderType = 0;
-                                HaliPciInterfaceReadConfig(NULL, i, j, &HeaderType, 0x0E, sizeof(UCHAR));
-                                
-                                /* If bit 7 is not set, skip remaining functions */
-                                if (!(HeaderType & 0x80))
-                                {
-                                    break;  /* Not multi-function, skip to next device */
-                                }
-                            }
-                        }
-                        else if (FunctionNumber == 0)
-                        {
-                            /* No device at function 0, skip other functions */
-                            break;
-                        }
+                        /* Set this as the maximum ID */
+                        MaxPciBusNumber = i;
+                        break;
                     }
                 }
             }
-            /* AGENT_MOD_END */
         }
     }
 
