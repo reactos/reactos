@@ -216,6 +216,23 @@ MatchToken(
 }
 
 DWORD
+WINAPI
+PreprocessCommand(
+    _In_ HANDLE hModule,
+    _Inout_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ TAG_TYPE *pttTags,
+    _In_ DWORD dwTagCount,
+    _In_ DWORD dwMinArgs,
+    _In_ DWORD dwMaxArgs,
+    _Out_ DWORD *pdwTagType)
+{
+    DPRINT1("PreprocessCommand()\n");
+    return 0;
+}
+
+DWORD
 CDECL
 PrintError(
     _In_opt_ HANDLE hModule,

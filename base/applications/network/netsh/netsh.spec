@@ -1,5 +1,6 @@
 @ stdcall MatchEnumTag(ptr wstr long ptr ptr)
 @ stdcall MatchToken(wstr wstr)
+@ stdcall PreprocessCommand(ptr ptr long long ptr long long long ptr)
 @ varargs PrintError(ptr long)
 @ varargs PrintMessage(wstr)
 @ varargs PrintMessageFromModule(ptr long)
