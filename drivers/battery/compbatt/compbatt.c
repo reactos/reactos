@@ -80,7 +80,7 @@ CompBattSystemControl(
  * location which contains the data of the individual battery.
  *
  * @param[in] Context
- * An aribtrary pointer that points to context data, this paramater
+ * An arbitrary pointer that points to context data, this parameter
  * is unused.
  *
  * @return
@@ -355,7 +355,7 @@ CompBattMonitorIrpCompleteWorker(
 
     /* Setup the necessary data to read battery status */
     BatteryData->WaitStatus.BatteryTag = BatteryData->Tag;
-    BatteryData->WaitStatus.Timeout = 3000;  // FIXME: Hardcoded (wait for 3 seconds) because we do not have ACPI notifications implemented yet...
+    BatteryData->WaitStatus.Timeout = -1;
 
     RtlCopyMemory(&BatteryData->WorkerBuffer.WorkerWaitStatus,
                   &BatteryData->WaitStatus,

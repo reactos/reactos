@@ -292,8 +292,13 @@ BatteryClassIoctl(PVOID ClassData,
                                                                  &BattNotify);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT1("SetStatusNotify failed (0x%x)\n", Status);
-                    break;
+                    DPRINT("SetStatusNotify failed (0x%x)\n", Status);
+                    // HACK: Continue anyway; the non-zero timeout will limit polling rate.
+                    // FIXME: Hardcoded (wait for 5 seconds) because ACPI notifications don't work...
+                    BattWait.Timeout = 5000;
+                    // FIXME 2: All these IOCTLs handled in BatteryClassIoctl() should actually
+                    // be queued and be serviced by a worker thread that also handles the slow
+                    // battery polling, in case the battery doesn't support status notifications.
                 }
 
                 ExAcquireFastMutex(&BattClass->Mutex);
