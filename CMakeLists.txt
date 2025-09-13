@@ -16,6 +16,8 @@ endif()
 
 project(REACTOS)
 
+set(DBG ON) #TODO for debug release, always set DBG to true
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
