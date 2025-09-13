@@ -7,14 +7,18 @@
  *                  userinit, winlogon, lsass and friends in vista.
  */
 
+
+#include "reactos/ts/winsta.h"
 #include "winsta.h"
 
-VOID
-WINSTAAPI WinStationDisconnect(PVOID A,
-                               PVOID B,
-                               PVOID C)
+BOOLEAN
+WINSTAAPI WinStationDisconnect(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ BOOLEAN bWait)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -63,11 +67,12 @@ WINSTAAPI WinStationReportUIResult(PVOID A,
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationGetLoggedOnCount(PVOID A,
-                                     PVOID B)
+BOOLEAN
+WINSTAAPI WinStationGetLoggedOnCount(_Out_ PULONG LoggedOnUserCount,
+    _Out_ PULONG LoggedOnDeviceCount)
 {
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
@@ -85,12 +90,13 @@ WINSTAAPI _WinStationWaitForConnect()
     UNIMPLEMENTED;
 }
 
-VOID
-WINSTAAPI WinStationReset(PVOID A,
-                          PVOID B,
-                          PVOID C)
+BOOLEAN
+WINSTAAPI WinStationReset(_In_opt_ HANDLE ServerHandle,
+    _In_ ULONG SessionId,
+    _In_ BOOLEAN bWait)
 {
     UNIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
