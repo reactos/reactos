@@ -530,7 +530,7 @@ BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information)
  * @return TRUE on success
  */
 BOOL WINAPI
-SdbGetDatabaseInformationByName(_In_ LPCTSTR lpwszFileName, _Outptr_ PDB_INFORMATION *ppAttrInfo)
+SdbGetDatabaseInformationByName(_In_ LPCWSTR lpwszFileName, _Outptr_ PDB_INFORMATION *ppAttrInfo)
 {
     SHIM_ERR("Unimplemented\n");
     *ppAttrInfo = NULL;
@@ -538,12 +538,12 @@ SdbGetDatabaseInformationByName(_In_ LPCTSTR lpwszFileName, _Outptr_ PDB_INFORMA
 }
 
 /**
-  * @unimplemented
-  * @name SdbFreeDatabaseInformation
-  * Free up resources allocated in SdbGetDatabaseInformationByName
-  *
-  * @param information   The information retrieved from SdbGetDatabaseInformationByName
-  */
+ * @unimplemented
+ * @name SdbFreeDatabaseInformation
+ * Free up resources allocated in SdbGetDatabaseInformationByName
+ *
+ * @param information   The information retrieved from SdbGetDatabaseInformationByName
+ */
 VOID WINAPI SdbFreeDatabaseInformation(_In_opt_ PDB_INFORMATION information)
 {
     SHIM_ERR("Unimplemented\n");
