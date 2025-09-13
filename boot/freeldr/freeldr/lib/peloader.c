@@ -911,7 +911,7 @@ PeLdrLoadImageEx(
 
     /* Try to allocate this memory; if it fails, allocate somewhere else */
     PhysicalBase = MmAllocateMemoryAtAddress(NtHeaders->OptionalHeader.SizeOfImage,
-                       (PVOID)((ULONG)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
+                       (PVOID)((ULONG_PTR)NtHeaders->OptionalHeader.ImageBase & (KSEG0_BASE - 1)),
                        MemoryType);
 
     if (PhysicalBase == NULL)
