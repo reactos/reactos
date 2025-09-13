@@ -8,26 +8,24 @@
 
 #include "pciidex.h"
 
-#define NDEBUG
-#include <debug.h>
-
 static
 CODE_SEG("PAGE")
 NTSTATUS
 PciIdeXPdoStartDevice(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PCM_RESOURCE_LIST ResourceList)
+    _In_ PCM_RESOURCE_LIST ResourcesTranslated)
 {
-    PUCHAR IoBase;
+    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->Common.FdoExt;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
-    IoBase = PdoExtension->ParentController->BusMasterPortBase;
-    if (!IS_PRIMARY_CHANNEL(PdoExtension))
+    Status = PciIdeStartChannel(&FdoExtension->Controller, PdoExtension, ResourcesTranslated);
+    if (!NT_SUCCESS(Status))
     {
-        IoBase += BM_SECONDARY_CHANNEL_OFFSET;
+        ERR("CH %lu: Failed to start channel 0x%lx\n", PdoExtension->Channel, Status);
+        return Status;
     }
-    DPRINT("Bus Master Base %p\n", IoBase);
 
     return STATUS_SUCCESS;
 }
@@ -38,37 +36,40 @@ NTSTATUS
 PciIdeXPdoStopDevice(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
+    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->Common.FdoExt;
+
     PAGED_CODE();
+
+    PciIdeStopChannel(&FdoExtension->Controller, PdoExtension);
 
     return STATUS_SUCCESS;
 }
 
-static
 CODE_SEG("PAGE")
 NTSTATUS
 PciIdeXPdoRemoveDevice(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ BOOLEAN FinalRemove)
+    _In_ PIRP Irp,
+    _In_ BOOLEAN FinalRemove,
+    _In_ BOOLEAN LockNeeded)
 {
-    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->ParentController;
-    ULONG i;
+    PFDO_DEVICE_EXTENSION FdoExtension = PdoExtension->Common.FdoExt;
 
     PAGED_CODE();
 
-    if (FinalRemove && PdoExtension->ReportedMissing)
+    PciIdeStopChannel(&FdoExtension->Controller, PdoExtension);
+
+    if (FinalRemove && (PdoExtension->Flags & PDO_FLAG_REPORTED_MISSING))
     {
-        ExAcquireFastMutex(&FdoExtension->DeviceSyncMutex);
+        IoReleaseRemoveLockAndWait(&PdoExtension->Common.RemoveLock, Irp);
 
-        for (i = 0; i < MAX_IDE_CHANNEL; ++i)
-        {
-            if (FdoExtension->Channels[i] == PdoExtension)
-            {
-                FdoExtension->Channels[i] = NULL;
-                break;
-            }
-        }
+        if (LockNeeded)
+            ExAcquireFastMutex(&FdoExtension->PdoListSyncMutex);
 
-        ExReleaseFastMutex(&FdoExtension->DeviceSyncMutex);
+        RemoveEntryList(&PdoExtension->ListEntry);
+
+        if (LockNeeded)
+            ExReleaseFastMutex(&FdoExtension->PdoListSyncMutex);
 
         IoDeleteDevice(PdoExtension->Common.Self);
     }
@@ -105,9 +106,9 @@ PciIdeXPdoQueryTargetDeviceRelations(
 
     PAGED_CODE();
 
-    DeviceRelations = ExAllocatePoolWithTag(PagedPool,
-                                            sizeof(DEVICE_RELATIONS),
-                                            TAG_PCIIDEX);
+    DeviceRelations = ExAllocatePoolUninitialized(PagedPool,
+                                                  sizeof(*DeviceRelations),
+                                                  TAG_PCIIDEX);
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -117,82 +118,6 @@ PciIdeXPdoQueryTargetDeviceRelations(
 
     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
     return STATUS_SUCCESS;
-}
-
-static IO_COMPLETION_ROUTINE PciIdeXOnRepeaterCompletion;
-
-static
-NTSTATUS
-NTAPI
-PciIdeXOnRepeaterCompletion(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp,
-    _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    if (Irp->PendingReturned)
-        KeSetEvent(Context, IO_NO_INCREMENT, FALSE);
-
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-PciIdeXPdoRepeatRequest(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PIRP Irp,
-    _In_opt_ PDEVICE_CAPABILITIES DeviceCapabilities)
-{
-    PDEVICE_OBJECT Fdo, TopDeviceObject;
-    PIO_STACK_LOCATION IoStack, SubStack;
-    PIRP SubIrp;
-    KEVENT Event;
-    NTSTATUS Status;
-
-    PAGED_CODE();
-
-    Fdo = PdoExtension->ParentController->Common.Self;
-    TopDeviceObject = IoGetAttachedDeviceReference(Fdo);
-
-    SubIrp = IoAllocateIrp(TopDeviceObject->StackSize, FALSE);
-    if (!SubIrp)
-    {
-        ObDereferenceObject(TopDeviceObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    SubStack = IoGetNextIrpStackLocation(SubIrp);
-    RtlCopyMemory(SubStack, IoStack, sizeof(IO_STACK_LOCATION));
-
-    if (DeviceCapabilities)
-        SubStack->Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
-
-    IoSetCompletionRoutine(SubIrp,
-                           PciIdeXOnRepeaterCompletion,
-                           &Event,
-                           TRUE,
-                           TRUE,
-                           TRUE);
-
-    SubIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-
-    Status = IoCallDriver(TopDeviceObject, SubIrp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    }
-
-    ObDereferenceObject(TopDeviceObject);
-
-    Status = SubIrp->IoStatus.Status;
-    IoFreeIrp(SubIrp);
-
-    return Status;
 }
 
 static
@@ -215,7 +140,7 @@ PciIdeXPdoQueryCapabilities(
     ParentCapabilities.Version = 1;
     ParentCapabilities.Address = MAXULONG;
     ParentCapabilities.UINumber = MAXULONG;
-    Status = PciIdeXPdoRepeatRequest(PdoExtension, Irp, &ParentCapabilities);
+    Status = PciIdeXPnpRepeatRequest(&PdoExtension->Common, Irp, &ParentCapabilities);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -226,25 +151,6 @@ PciIdeXPdoQueryCapabilities(
     /* Override some fields */
     DeviceCapabilities->UniqueID = FALSE;
     DeviceCapabilities->Address = PdoExtension->Channel;
-
-    return STATUS_SUCCESS;
-}
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-PciIdeXPdoQueryPnpDeviceState(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PIRP Irp)
-{
-    PAGED_CODE();
-
-    if (PdoExtension->Common.PageFiles ||
-        PdoExtension->Common.HibernateFiles ||
-        PdoExtension->Common.DumpFiles)
-    {
-        Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
-    }
 
     return STATUS_SUCCESS;
 }
@@ -265,11 +171,11 @@ PciIdeXPdoQueryResources(
 
     PAGED_CODE();
 
-    FdoExtension = PdoExtension->ParentController;
-    if (FdoExtension->InNativeMode)
+    FdoExtension = PdoExtension->Common.FdoExt;
+    if (!(FdoExtension->Controller.Flags & CTRL_FLAG_IN_LEGACY_MOVE))
         return Irp->IoStatus.Status;
 
-    ChannelState = PciIdeXChannelState(FdoExtension, PdoExtension->Channel);
+    ChannelState = PciIdeXGetChannelState(&FdoExtension->Controller, PdoExtension->Channel);
     if (ChannelState == ChannelDisabled)
         return Irp->IoStatus.Status;
 
@@ -345,11 +251,11 @@ PciIdeXPdoQueryResourceRequirements(
 
     PAGED_CODE();
 
-    FdoExtension = PdoExtension->ParentController;
-    if (FdoExtension->InNativeMode)
+    FdoExtension = PdoExtension->Common.FdoExt;
+    if (!(FdoExtension->Controller.Flags & CTRL_FLAG_IN_LEGACY_MOVE))
         return Irp->IoStatus.Status;
 
-    ChannelState = PciIdeXChannelState(FdoExtension, PdoExtension->Channel);
+    ChannelState = PciIdeXGetChannelState(&FdoExtension->Controller, PdoExtension->Channel);
     if (ChannelState == ChannelDisabled)
         return Irp->IoStatus.Status;
 
@@ -423,7 +329,7 @@ PciIdeXGetControllerVendorId(
 {
     PAGED_CODE();
 
-    switch (FdoExtension->VendorId)
+    switch (FdoExtension->Controller.Pci.VendorID)
     {
         case 0x0E11:
             return L"Compaq";
@@ -455,9 +361,9 @@ PciIdeXGetControllerDeviceId(
     PAGED_CODE();
 
     /* Intel */
-    if (FdoExtension->VendorId == 0x8086)
+    if (FdoExtension->Controller.Pci.VendorID == 0x8086)
     {
-        switch (FdoExtension->DeviceId)
+        switch (FdoExtension->Controller.Pci.DeviceID)
         {
             case 0x1230:
                 return L"PIIX";
@@ -471,6 +377,7 @@ PciIdeXGetControllerDeviceId(
         }
     }
 
+    /* Only certain controllers have a non-numeric identifier */
     return NULL;
 }
 
@@ -496,13 +403,13 @@ PciIdeXPdoQueryId(
       {
           static const WCHAR PciIdeDeviceId[] = L"PCIIDE\\IDEChannel";
 
-          Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(PciIdeDeviceId), TAG_PCIIDEX);
+          Buffer = ExAllocatePoolUninitialized(PagedPool, sizeof(PciIdeDeviceId), TAG_PCIIDEX);
           if (!Buffer)
               return STATUS_INSUFFICIENT_RESOURCES;
 
           RtlCopyMemory(Buffer, PciIdeDeviceId, sizeof(PciIdeDeviceId));
 
-          DPRINT("Device ID: '%S'\n", Buffer);
+          INFO("Device ID: '%S'\n", Buffer);
           break;
       }
 
@@ -520,16 +427,16 @@ PciIdeXPdoQueryId(
                       sizeof(IdeCompatibleId) +
                       sizeof(ANSI_NULL); /* multi-string */
 
-          Buffer = ExAllocatePoolWithTag(PagedPool,
-                                         CharCount * sizeof(WCHAR),
-                                         TAG_PCIIDEX);
+          Buffer = ExAllocatePoolUninitialized(PagedPool,
+                                               CharCount * sizeof(WCHAR),
+                                               TAG_PCIIDEX);
           if (!Buffer)
               return STATUS_INSUFFICIENT_RESOURCES;
 
-          FdoExtension = PdoExtension->ParentController;
+          FdoExtension = PdoExtension->Common.FdoExt;
           VendorString = PciIdeXGetControllerVendorId(FdoExtension);
 
-          DPRINT("HardwareIDs:\n");
+          INFO("HardwareIDs:\n");
 
           /* ID 1 */
           if (VendorString)
@@ -556,7 +463,7 @@ PciIdeXPdoQueryId(
                                                  0,
                                                  L"%ls-%04x",
                                                  VendorString,
-                                                 FdoExtension->DeviceId);
+                                                 FdoExtension->Controller.Pci.DeviceID);
               }
           }
           else
@@ -567,12 +474,12 @@ PciIdeXPdoQueryId(
                                              &Remaining,
                                              0,
                                              L"%04x-%04x",
-                                             FdoExtension->VendorId,
-                                             FdoExtension->DeviceId);
+                                             FdoExtension->Controller.Pci.VendorID,
+                                             FdoExtension->Controller.Pci.DeviceID);
           }
           ASSERT(NT_SUCCESS(Status));
 
-          DPRINT("  '%S'\n", Buffer);
+          INFO("  '%S'\n", Buffer);
 
           ++End;
           --Remaining;
@@ -590,7 +497,7 @@ PciIdeXPdoQueryId(
                                          L"Secondary_IDE_Channel");
           ASSERT(NT_SUCCESS(Status));
 
-          DPRINT("  '%S'\n", IdStart);
+          INFO("  '%S'\n", IdStart);
 
           ++End;
           --Remaining;
@@ -606,7 +513,7 @@ PciIdeXPdoQueryId(
                                          IdeCompatibleId);
           ASSERT(NT_SUCCESS(Status));
 
-          DPRINT("  '%S'\n", IdStart);
+          INFO("  '%S'\n", IdStart);
 
           *++End = UNICODE_NULL; /* multi-string */
           break;
@@ -614,9 +521,9 @@ PciIdeXPdoQueryId(
 
       case BusQueryCompatibleIDs:
       {
-          Buffer = ExAllocatePoolWithTag(PagedPool,
-                                         sizeof(IdeCompatibleId) + sizeof(UNICODE_NULL),
-                                         TAG_PCIIDEX);
+          Buffer = ExAllocatePoolUninitialized(PagedPool,
+                                               sizeof(IdeCompatibleId) + sizeof(UNICODE_NULL),
+                                               TAG_PCIIDEX);
           if (!Buffer)
               return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -624,17 +531,17 @@ PciIdeXPdoQueryId(
 
           Buffer[sizeof(IdeCompatibleId) / sizeof(WCHAR)] = UNICODE_NULL; /* multi-string */
 
-          DPRINT("Compatible ID: '%S'\n", Buffer);
+          INFO("Compatible ID: '%S'\n", Buffer);
           break;
       }
 
       case BusQueryInstanceID:
       {
-          CharCount = sizeof("0");
+          CharCount = sizeof("00");
 
-          Buffer = ExAllocatePoolWithTag(PagedPool,
-                                         CharCount * sizeof(WCHAR),
-                                         TAG_PCIIDEX);
+          Buffer = ExAllocatePoolUninitialized(PagedPool,
+                                               CharCount * sizeof(WCHAR),
+                                               TAG_PCIIDEX);
           if (!Buffer)
               return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -647,7 +554,7 @@ PciIdeXPdoQueryId(
                                          PdoExtension->Channel);
           ASSERT(NT_SUCCESS(Status));
 
-          DPRINT("Instance ID: '%S'\n", Buffer);
+          INFO("Instance ID: '%S'\n", Buffer);
           break;
       }
 
@@ -667,14 +574,39 @@ PciIdeXPdoQueryDeviceText(
     _In_ PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
     PWCHAR Buffer;
     ULONG Size;
+    size_t CharCount;
 
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     switch (IoStack->Parameters.QueryDeviceText.DeviceTextType)
     {
+        case DeviceTextDescription:
+        {
+            CharCount = sizeof("ATA Channel 99");
+
+            Buffer = ExAllocatePoolUninitialized(PagedPool,
+                                                 CharCount * sizeof(WCHAR),
+                                                 TAG_PCIIDEX);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            Status = RtlStringCchPrintfExW(Buffer,
+                                           CharCount,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           L"ATA Channel %lu",
+                                           PdoExtension->Channel);
+            ASSERT(NT_SUCCESS(Status));
+
+            INFO("Device Description: '%S'\n", Buffer);
+            break;
+        }
+
         case DeviceTextLocationInformation:
         {
             static const WCHAR PrimaryChannelText[] = L"Primary channel";
@@ -685,7 +617,7 @@ PciIdeXPdoQueryDeviceText(
             else
                 Size = sizeof(SecondaryChannelText);
 
-            Buffer = ExAllocatePoolWithTag(PagedPool, Size, TAG_PCIIDEX);
+            Buffer = ExAllocatePoolUninitialized(PagedPool, Size, TAG_PCIIDEX);
             if (!Buffer)
                 return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -694,7 +626,7 @@ PciIdeXPdoQueryDeviceText(
                           PrimaryChannelText : SecondaryChannelText,
                           Size);
 
-            DPRINT("Device ID: '%S'\n", Buffer);
+            INFO("Device Location: '%S'\n", Buffer);
             break;
         }
 
@@ -707,45 +639,93 @@ PciIdeXPdoQueryDeviceText(
 }
 
 static
+PCM_PARTIAL_RESOURCE_DESCRIPTOR
 CODE_SEG("PAGE")
-NTSTATUS
-PciIdeXPdoQueryDeviceUsageNotification(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PIRP Irp)
+PciIdeXGetInterruptResource(
+    _In_ PATA_CHANNEL_DATA ChanData)
 {
-    PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status;
-    volatile LONG* Counter;
+    PATA_CONTROLLER Controller = ChanData->Controller;
 
     PAGED_CODE();
 
-    Status = PciIdeXPdoRepeatRequest(PdoExtension, Irp, NULL);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    return &Controller->InterruptDesc;
+}
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    switch (IoStack->Parameters.UsageNotification.Type)
-    {
-        case DeviceUsageTypePaging:
-            Counter = &PdoExtension->Common.PageFiles;
-            break;
+static
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXQueryPciIdeInterface(
+    _In_ PPDO_DEVICE_EXTENSION PdoExt,
+    _In_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IoStack)
+{
+    PFDO_DEVICE_EXTENSION FdoExt = PdoExt->Common.FdoExt;
+    PATA_CONTROLLER Controller = &FdoExt->Controller;
+    PATA_CHANNEL_DATA ChanData;
+    PPCIIDE_INTERFACE PciIdeInterface;
 
-        case DeviceUsageTypeHibernation:
-            Counter = &PdoExtension->Common.HibernateFiles;
-            break;
+    PAGED_CODE();
 
-        case DeviceUsageTypeDumpFile:
-            Counter = &PdoExtension->Common.DumpFiles;
-            break;
+    if (IoStack->Parameters.QueryInterface.Size < sizeof(*PciIdeInterface))
+        return Irp->IoStatus.Status;
 
-        default:
-            return Status;
-    }
+    if (IoStack->Parameters.QueryInterface.Version != PCIIDEX_INTERFACE_VERSION)
+        return Irp->IoStatus.Status;
 
-    IoAdjustPagingPathCount(Counter, IoStack->Parameters.UsageNotification.InPath);
-    IoInvalidateDeviceState(PdoExtension->Common.Self);
+    PciIdeInterface = (PPCIIDE_INTERFACE)IoStack->Parameters.QueryInterface.Interface;
+    ChanData = PdoExt->ChanData;
+
+    RtlCopyMemory(&PciIdeInterface->Regs, &ChanData->Regs, sizeof(ChanData->Regs));
+
+    PciIdeInterface->Controller = Controller;
+    PciIdeInterface->ChanData = ChanData;
+    PciIdeInterface->Channel = ChanData->Channel;
+
+    PciIdeInterface->MaximumTransferLength = PdoExt->MaximumTransferLength;
+    PciIdeInterface->MaximumPhysicalPages = PdoExt->MaximumPhysicalPages;
+    PciIdeInterface->TransferModeSupportedBitmap = PdoExt->TransferModeSupportedBitmap;
+
+    PciIdeInterface->HwSyncObject = Controller->HwSyncObject;
+    PciIdeInterface->HwSyncContext = PdoExt->Common.Self;
+
+    PciIdeInterface->ChanInfo = ChanData->ChanInfo;
+
+    PciIdeInterface->GetInterruptResource = PciIdeXGetInterruptResource;
+    PciIdeInterface->SetTransferMode = AtaCtrlSetTransferMode;
+
+    PciIdeInterface->AdapterDeviceObject = FdoExt->Common.LowerDeviceObject;
+    PciIdeInterface->AdapterObject = ChanData->AdapterObject;
+    PciIdeInterface->PrdTable = ChanData->PrdTable;
+    PciIdeInterface->PrdTablePhysicalAddress = ChanData->PrdTablePhysicalAddress;
 
     return STATUS_SUCCESS;
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXPdoQueryInterface(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _Inout_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IsEqualGUIDAligned(IoStack->Parameters.QueryInterface.InterfaceType,
+                           &GUID_PCIIDE_INTERFACE_ROS))
+    {
+        Status = PciIdeXQueryPciIdeInterface(PdoExtension, Irp, IoStack);
+    }
+    else
+    {
+        Status = Irp->IoStatus.Status;
+    }
+
+    return Status;
 }
 
 static
@@ -760,12 +740,21 @@ PciIdeXPdoDispatchPnp(
 
     PAGED_CODE();
 
+    Status = IoAcquireRemoveLock(&PdoExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return Status;
+    }
+
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     switch (IoStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
             Status = PciIdeXPdoStartDevice(PdoExtension,
-                                           IoStack->Parameters.StartDevice.AllocatedResources);
+                                           IoStack->Parameters.StartDevice.AllocatedResourcesTranslated);
             break;
 
         case IRP_MN_STOP_DEVICE:
@@ -785,7 +774,9 @@ PciIdeXPdoDispatchPnp(
         case IRP_MN_SURPRISE_REMOVAL:
         case IRP_MN_REMOVE_DEVICE:
             Status = PciIdeXPdoRemoveDevice(PdoExtension,
-                                            IoStack->MinorFunction == IRP_MN_REMOVE_DEVICE);
+                                            Irp,
+                                            IoStack->MinorFunction == IRP_MN_REMOVE_DEVICE,
+                                            TRUE);
             break;
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
@@ -800,7 +791,7 @@ PciIdeXPdoDispatchPnp(
             break;
 
         case IRP_MN_QUERY_PNP_DEVICE_STATE:
-            Status = PciIdeXPdoQueryPnpDeviceState(PdoExtension, Irp);
+            Status = PciIdeXPnpQueryPnpDeviceState(&PdoExtension->Common, Irp);
             break;
 
         case IRP_MN_QUERY_RESOURCES:
@@ -820,7 +811,11 @@ PciIdeXPdoDispatchPnp(
             break;
 
         case IRP_MN_DEVICE_USAGE_NOTIFICATION:
-            Status = PciIdeXPdoQueryDeviceUsageNotification(PdoExtension, Irp);
+            Status = PciIdeXPnpQueryDeviceUsageNotification(&PdoExtension->Common, Irp);
+            break;
+
+        case IRP_MN_QUERY_INTERFACE:
+            Status = PciIdeXPdoQueryInterface(PdoExtension, Irp);
             break;
 
         default:
@@ -830,6 +825,8 @@ PciIdeXPdoDispatchPnp(
 
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    IoReleaseRemoveLock(&PdoExtension->Common.RemoveLock, Irp);
 
     return Status;
 }
