@@ -15,6 +15,26 @@
 
 #define KD_PRINT_MAX_BYTES 512
 
+static VOID
+KdpSafeSendPacket(IN ULONG PacketType,
+                  IN PSTRING MessageHeader,
+                  IN PSTRING MessageData)
+{
+    if (KdDebuggerNotPresent || !KdDebuggerEnabled) return;
+    if (!MessageHeader || (MessageHeader->Length && !MessageHeader->Buffer)) return;
+    if (MessageData && MessageData->Length && !MessageData->Buffer) return;
+
+    _SEH2_TRY
+    {
+        KdSendPacket(PacketType, MessageHeader, MessageData, &KdpContext);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Ignore failures to keep system stable */
+    }
+    _SEH2_END;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 KIRQL
@@ -113,6 +133,9 @@ KdpPrintString(
     DBGKD_DEBUG_IO DebugIo;
     USHORT Length;
 
+    if (KdDebuggerNotPresent || !KdDebuggerEnabled || !Output || !Output->Buffer)
+        return FALSE;
+
     /* Copy the string */
     KdpMoveMemory(KdpMessageBuffer,
                   Output->Buffer,
@@ -139,7 +162,7 @@ KdpPrintString(
     Data.Buffer = KdpMessageBuffer;
 
     /* Send the packet */
-    KdSendPacket(PACKET_TYPE_KD_DEBUG_IO, &Header, &Data, &KdpContext);
+    KdpSafeSendPacket(PACKET_TYPE_KD_DEBUG_IO, &Header, &Data);
 
     /* Check if the user pressed CTRL+C */
     return KdpPollBreakInWithPortLock();
@@ -155,6 +178,9 @@ KdpPromptString(
     DBGKD_DEBUG_IO DebugIo;
     ULONG Length;
     KDSTATUS Status;
+
+    if (KdDebuggerNotPresent || !KdDebuggerEnabled || !PromptString || !PromptString->Buffer || !ResponseString)
+        return FALSE;
 
     /* Copy the string to the message buffer */
     KdpMoveMemory(KdpMessageBuffer,
@@ -183,7 +209,7 @@ KdpPromptString(
     Data.Buffer = KdpMessageBuffer;
 
     /* Send the packet */
-    KdSendPacket(PACKET_TYPE_KD_DEBUG_IO, &Header, &Data, &KdpContext);
+    KdpSafeSendPacket(PACKET_TYPE_KD_DEBUG_IO, &Header, &Data);
 
     /* Set the maximum lengths for the receive */
     Header.MaximumLength = sizeof(DBGKD_DEBUG_IO);
