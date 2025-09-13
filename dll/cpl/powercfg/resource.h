@@ -19,6 +19,29 @@
 #define IDS_CPLDESCRIPTION 191
 
 
+/* Icons */
+#define IDI_AC        100
+#define IDI_DC        101
+#define IDI_ACDC      102
+#define IDI_SCREEN    103
+#define IDI_HIBERNATE 104
+
+#define IDI_BAT_CHARGE_CRIT     110
+#define IDI_BAT_CHARGE_LOW      111
+#define IDI_BAT_CHARGE_HALF     112
+#define IDI_BAT_CHARGE_HIGH     113
+#define IDI_BAT_CHARGE_FULL     114
+
+#define IDI_BAT_DISCHRG_CRIT    115
+#define IDI_BAT_DISCHRG_LOW     116
+#define IDI_BAT_DISCHRG_HALF    117
+#define IDI_BAT_DISCHRG_HIGH    118
+#define IDI_BAT_DISCHRG_FULL    119
+
+#define IDI_BAT_UNKNOWN         120
+#define IDI_BAT_NONE            121
+
+
 /* Dialogs, Controls and Strings */
 
 #define IDS_PERCENT  49
@@ -75,12 +98,6 @@
 #define IDC_BATTERYPOWERSTATE      176
 #define IDC_BATTERYMANUFACTURER    177
 #define IDS_DISCHARGING            178
-
-#define IDI_AC        175
-#define IDI_DC        176
-#define IDI_ACDC      177
-#define IDI_SCREEN    178
-#define IDI_HIBERNATE 179
 
 #define IDC_ENERGYLIST      200
 #define IDC_GRPDETAIL       201
@@ -145,9 +162,12 @@
 #define IDS_UNKNOWN              719
 
 #define IDC_SHOWDETAILS          800
-#define IDC_POWERSOURCE          801
-#define IDC_POWERSTATUS          802
-#define IDC_REFRESH              803
+#define IDC_IPOWERSOURCE         801
+#define IDC_POWERSOURCE          802
+#define IDC_POWERSTATUS          803
+#define IDC_BATTPROGRESS         804
+#define IDC_CLICKBATTINFO        805
+#define IDC_REFRESH              806
 
 #define IDC_BATTERY0             810
 #define IDC_BATTERY1             (IDC_BATTERY0 + 1)

@@ -27,6 +27,21 @@ IDI_DC ICON "resources/dc.ico"
 IDI_SCREEN ICON "resources/screen.ico"
 IDI_HIBERNATE ICON "resources/hibernate.ico"
 
+IDI_BAT_CHARGE_CRIT ICON "resources/batterychargingcritical.ico"
+IDI_BAT_CHARGE_LOW  ICON "resources/batterycharginglow.ico"
+IDI_BAT_CHARGE_HALF ICON "resources/batterycharginghalf.ico"
+IDI_BAT_CHARGE_HIGH ICON "resources/batterycharginghigh.ico"
+IDI_BAT_CHARGE_FULL ICON "resources/batterycharginghigh.ico"
+
+IDI_BAT_DISCHRG_CRIT ICON "resources/batterycritical.ico"
+IDI_BAT_DISCHRG_LOW  ICON "resources/batterylow.ico"
+IDI_BAT_DISCHRG_HALF ICON "resources/batteryhalf.ico"
+IDI_BAT_DISCHRG_HIGH ICON "resources/batteryhigh.ico"
+IDI_BAT_DISCHRG_FULL ICON "resources/batteryfull.ico"
+
+IDI_BAT_UNKNOWN ICON "resources/batteryunknown.ico"
+IDI_BAT_NONE    ICON "resources/nobattery.ico"
+
 #include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */
