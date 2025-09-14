@@ -533,14 +533,46 @@ KdpDprintf(
     USHORT Length;
     va_list ap;
     CHAR Buffer[512];
+    ULONGLONG Microseconds = 0;
+    ULONGLONG Seconds = 0;
+    ULONGLONG Fractional = 0;
+    USHORT TimestampLength = 0;
 
-    /* Format the string */
+    /* Get timestamp - architecture independent approach */
+#if defined(_M_AMD64) || defined(_M_IX86)
+    /* For x86/x64, use TSC for early boot when other timers might not be available */
+    ULONGLONG Tsc = __rdtsc();
+    /* Assume ~2GHz CPU (2000 cycles per microsecond) */
+    Microseconds = Tsc / 2000;
+#else
+    /* For other architectures, use a simple counter as fallback */
+    /* This would need proper timer implementation for each architecture */
+    static ULONGLONG Counter = 0;
+    Microseconds = Counter++;  /* Placeholder - needs proper implementation */
+#endif
+
+    /* Convert to seconds and fractional part */
+    Seconds = Microseconds / 1000000ULL;
+    Fractional = Microseconds % 1000000ULL;
+
+    /* Format timestamp directly into Buffer */
+    TimestampLength = (USHORT)_snprintf(Buffer, sizeof(Buffer),
+                                        "[%8llu.%06llu] ",
+                                        Seconds, Fractional);
+
+    if (TimestampLength >= sizeof(Buffer))
+        TimestampLength = 0;
+
+    /* Format the actual message after the timestamp */
     va_start(ap, Format);
-    Length = (USHORT)_vsnprintf(Buffer,
-                                sizeof(Buffer),
+    Length = (USHORT)_vsnprintf(Buffer + TimestampLength,
+                                sizeof(Buffer) - TimestampLength,
                                 Format,
                                 ap);
     va_end(ap);
+
+    /* Calculate total length */
+    Length = min(TimestampLength + Length, sizeof(Buffer) - 1);
 
     /* Set it up */
     String.Buffer = Buffer;

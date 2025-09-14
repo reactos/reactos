@@ -61,6 +61,8 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     CHAR Buffer[512];
     SIZE_T Length, PrefixLength;
     EXCEPTION_RECORD ExceptionRecord;
+    SIZE_T TimestampLength = 0;
+    ULONGLONG Microseconds, Seconds, Fractional;
 
     /* Check if we should print it or not */
     if ((ComponentId != MAXULONG) &&
@@ -76,16 +78,36 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     /* Guard against incorrect pointers */
     _SEH2_TRY
     {
+        /* Add timestamp - architecture independent approach */
+#if defined(_M_AMD64) || defined(_M_IX86)
+        /* For x86/x64, use TSC for early boot when other timers might not be available */
+        ULONGLONG Tsc = __rdtsc();
+        Microseconds = Tsc / 2000;  /* Assume ~2GHz CPU */
+#else
+        /* For other architectures, use a generic approach */
+        /* This is a fallback - actual implementation would need proper timer */
+        static ULONGLONG Counter = 0;
+        Microseconds = Counter++;  /* Placeholder - needs proper implementation */
+#endif
+        Seconds = Microseconds / 1000000ULL;
+        Fractional = Microseconds % 1000000ULL;
+
+        TimestampLength = _snprintf(Buffer, sizeof(Buffer),
+                                   "[%8llu.%06llu] ",
+                                   Seconds, Fractional);
+        if (TimestampLength > sizeof(Buffer)) TimestampLength = 0;
+
         /* Get the length and normalize it */
         PrefixLength = strlen(Prefix);
-        if (PrefixLength > sizeof(Buffer)) PrefixLength = sizeof(Buffer);
+        if (PrefixLength + TimestampLength > sizeof(Buffer))
+            PrefixLength = sizeof(Buffer) - TimestampLength;
 
         /* Copy it */
-        strncpy(Buffer, Prefix, PrefixLength);
+        strncpy(Buffer + TimestampLength, Prefix, PrefixLength);
 
         /* Do the printf */
-        Length = _vsnprintf(Buffer + PrefixLength,
-                            sizeof(Buffer) - PrefixLength,
+        Length = _vsnprintf(Buffer + TimestampLength + PrefixLength,
+                            sizeof(Buffer) - TimestampLength - PrefixLength,
                             Format,
                             ap);
     }
@@ -110,8 +132,8 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     }
     else
     {
-        /* Add the prefix */
-        Length += PrefixLength;
+        /* Add the prefix and timestamp */
+        Length += PrefixLength + TimestampLength;
     }
 
     /* Build the string */
