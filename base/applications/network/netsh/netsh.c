@@ -214,7 +214,7 @@ MatchToken(
     _In_ LPCWSTR pwszCmdToken)
 {
     DPRINT1("MatchToken %S %S\n", pwszUserToken, pwszCmdToken);
-    return (_wcsicmp(pwszUserToken, pwszCmdToken) == 0) ? TRUE : FALSE;
+    return (_wcsnicmp(pwszUserToken, pwszCmdToken, wcslen(pwszUserToken)) == 0) ? TRUE : FALSE;
 }
 
 DWORD
