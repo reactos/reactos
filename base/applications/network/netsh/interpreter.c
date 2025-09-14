@@ -224,16 +224,13 @@ VOID
 PrintPrompt(
     PCONTEXT_ENTRY pContext)
 {
-    if (pContext == pRootContext)
-    {
-        ConPuts(StdOut, L"netsh");
-    }
-    else
+    if (pContext != pRootContext)
     {
         PrintPrompt(pContext->pParentContext);
         ConPuts(StdOut, L" ");
-        ConPuts(StdOut, pContext->pszContextName);
     }
+
+    ConPuts(StdOut, pContext->pszContextName);
 }
 
 

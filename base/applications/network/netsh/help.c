@@ -21,7 +21,7 @@ GetContextFullName(
     _Inout_ LPWSTR pszBuffer,
     _In_ DWORD cchLength)
 {
-    if (pContext->pParentContext != NULL)
+    if (pContext != pRootContext)
     {
         GetContextFullName(pContext->pParentContext, pszBuffer, cchLength);
         wcscat(pszBuffer, L" ");
@@ -29,7 +29,7 @@ GetContextFullName(
     }
     else
     {
-        wcscpy(pszBuffer, L"netsh");
+        wcscpy(pszBuffer, pContext->pszContextName);
     }
 }
 
@@ -43,16 +43,12 @@ PrintCurrentContextHeader(
 
     if (pContext == pCurrentContext)
     {
-        ConPrintf(StdOut, L"\nCommands in this context:\n");
-    }
-    else if (pContext == pRootContext)
-    {
-        ConPrintf(StdOut, L"\nCommands in the netsh-context:\n");
+        ConResPrintf(StdOut, IDS_THIS_COMMANDS);
     }
     else
     {
         GetContextFullName(pContext, szBuffer, 80);
-        ConPrintf(StdOut, L"\nCommands in the %s-context:\n", szBuffer);
+        ConResPrintf(StdOut, IDS_CONTEXT_COMMANDS, szBuffer);
     }
 }
 

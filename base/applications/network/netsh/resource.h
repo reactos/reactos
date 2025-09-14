@@ -14,6 +14,8 @@
 #define IDS_INVALID_COMMAND      102
 #define IDS_OPEN_FAILED          103
 #define IDS_INVALID_SYNTAX       104
+#define IDS_THIS_COMMANDS        105
+#define IDS_CONTEXT_COMMANDS     106
 
 #define IDS_HELP_HEADER          200
 #define IDS_HELP_FOOTER          201

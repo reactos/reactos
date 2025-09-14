@@ -436,7 +436,7 @@ CreateRootContext(VOID)
 {
     PCOMMAND_GROUP pGroup;
 
-    pRootContext = AddContext(NULL, NULL, NULL);
+    pRootContext = AddContext(NULL, L"netsh", NULL);
     DPRINT("pRootContext: %p\n", pRootContext);
     if (pRootContext == NULL)
         return FALSE;
