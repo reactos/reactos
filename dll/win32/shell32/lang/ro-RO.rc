@@ -77,7 +77,7 @@ BEGIN
         MENUITEM "&Lipire", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Creare c&omandă rapidă", IDM_CREATELINK
-        MENUITEM "ș&tergere", IDM_DELETE
+        MENUITEM "Ș&tergere", IDM_DELETE
         MENUITEM "Redenu&mire", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Prop&rietăți", IDM_PROPERTIES
