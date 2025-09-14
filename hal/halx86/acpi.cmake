@@ -6,7 +6,9 @@ list(APPEND HAL_ACPI_SOURCE
     acpi/halpnpdd.c
     acpi/busemul.c
     acpi/madt.c
-    legacy/bus/pcibus.c)
+    legacy/bus/pcibus.c
+    ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.c
+    ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.c)
 
 # Needed to compile while using ACPICA
 if(ARCH STREQUAL "amd64")

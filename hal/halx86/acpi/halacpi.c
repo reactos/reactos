@@ -958,16 +958,368 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_SUCCESS;
 }
 
+/* Helper function to show PCI BAR size */
+CODE_SEG("INIT")
+static VOID
+ShowSize(ULONG Size)
+{
+    if (!Size) return;
+    DbgPrint(" [size=");
+    if (Size < 1024)
+    {
+        DbgPrint("%d", (int)Size);
+    }
+    else if (Size < 1048576)
+    {
+        DbgPrint("%dK", (int)(Size / 1024));
+    }
+    else if (Size < 0x80000000)
+    {
+        DbgPrint("%dM", (int)(Size / 1048576));
+    }
+    else
+    {
+        DbgPrint("%d", Size);
+    }
+    DbgPrint("]");
+}
+
+/* These includes provide the PCI device/vendor lookup tables */
+#define NEWLINE "\n"
+#include "pci_classes.h"
+#include "pci_vendors.h"
+
+/* Enhanced PCI device enumeration with rich output */
+CODE_SEG("INIT")
+static VOID
+HalpDebugPciDumpBusAcpi(
+    IN ULONG BusNumber,
+    IN PCI_SLOT_NUMBER PciSlot,
+    IN PPCI_COMMON_CONFIG PciData)
+{
+    PCHAR p, ClassName, Boundary, SubClassName, VendorName, ProductName, SubVendorName;
+    UCHAR HeaderType;
+    ULONG Length;
+    CHAR LookupString[16] = "";
+    CHAR bSubClassName[64] = "Unknown";
+    CHAR bVendorName[64] = "";
+    CHAR bProductName[128] = "Unknown device";
+    CHAR bSubVendorName[128] = "Unknown";
+    ULONG Size, Mem, b;
+    ULONG OriginalBar, PciBar;
+
+    HeaderType = (PciData->HeaderType & ~PCI_MULTIFUNCTION);
+
+    /* Isolate the class name */
+    sprintf(LookupString, "C %02x  ", PciData->BaseClass);
+    ClassName = strstr((PCHAR)ClassTable, LookupString);
+    if (ClassName)
+    {
+        /* Isolate the subclass name */
+        ClassName += strlen("C 00  ");
+        Boundary = strstr(ClassName, NEWLINE "C ");
+        sprintf(LookupString, NEWLINE "\t%02x  ", PciData->SubClass);
+        SubClassName = strstr(ClassName, LookupString);
+        if (Boundary && SubClassName > Boundary)
+        {
+            SubClassName = NULL;
+        }
+        if (!SubClassName)
+        {
+            SubClassName = ClassName;
+        }
+        else
+        {
+            SubClassName += strlen(NEWLINE "\t00  ");
+        }
+        /* Copy the subclass into our buffer */
+        p = strpbrk(SubClassName, NEWLINE);
+        if (p)
+        {
+            Length = p - SubClassName;
+            Length = min(Length, sizeof(bSubClassName) - 1);
+            strncpy(bSubClassName, SubClassName, Length);
+            bSubClassName[Length] = '\0';
+        }
+    }
+
+    /* Isolate the vendor name */
+    sprintf(LookupString, NEWLINE "%04x  ", PciData->VendorID);
+    VendorName = strstr((PCHAR)VendorTable, LookupString);
+    if (VendorName)
+    {
+        /* Copy the vendor name into our buffer */
+        VendorName += strlen(NEWLINE "0000  ");
+        p = strpbrk(VendorName, NEWLINE);
+        if (p)
+        {
+            Length = p - VendorName;
+            Length = min(Length, sizeof(bVendorName) - 1);
+            strncpy(bVendorName, VendorName, Length);
+            bVendorName[Length] = '\0';
+            p += strlen(NEWLINE);
+            while (*p == '\t' || *p == '#')
+            {
+                p = strpbrk(p, NEWLINE);
+                if (!p) break;
+                p += strlen(NEWLINE);
+            }
+            Boundary = p;
+
+            /* Isolate the product name */
+            sprintf(LookupString, "\t%04x  ", PciData->DeviceID);
+            ProductName = strstr(VendorName, LookupString);
+            if (Boundary && ProductName >= Boundary)
+            {
+                ProductName = NULL;
+            }
+            if (ProductName)
+            {
+                /* Copy the product name into our buffer */
+                ProductName += strlen("\t0000  ");
+                p = strpbrk(ProductName, NEWLINE);
+                if (p)
+                {
+                    Length = p - ProductName;
+                    Length = min(Length, sizeof(bProductName) - 1);
+                    strncpy(bProductName, ProductName, Length);
+                    bProductName[Length] = '\0';
+                    p += strlen(NEWLINE);
+                    while ((*p == '\t' && *(p + 1) == '\t') || *p == '#')
+                    {
+                        p = strpbrk(p, NEWLINE);
+                        if (!p) break;
+                        p += strlen(NEWLINE);
+                    }
+                    Boundary = p;
+                    SubVendorName = NULL;
+
+                    if (HeaderType == PCI_DEVICE_TYPE)
+                    {
+                        /* Isolate the subvendor and subsystem name */
+                        sprintf(LookupString,
+                                "\t\t%04x %04x  ",
+                                PciData->u.type0.SubVendorID,
+                                PciData->u.type0.SubSystemID);
+                        SubVendorName = strstr(ProductName, LookupString);
+                        if (Boundary && SubVendorName >= Boundary)
+                        {
+                            SubVendorName = NULL;
+                        }
+                    }
+                    if (SubVendorName)
+                    {
+                        /* Copy the subvendor name into our buffer */
+                        SubVendorName += strlen("\t\t0000 0000  ");
+                        p = strpbrk(SubVendorName, NEWLINE);
+                        if (p)
+                        {
+                            Length = p - SubVendorName;
+                            Length = min(Length, sizeof(bSubVendorName) - 1);
+                            strncpy(bSubVendorName, SubVendorName, Length);
+                            bSubVendorName[Length] = '\0';
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /* Print out the device information */
+    DbgPrint("%02x:%02x.%x %s [%02x%02x]: %s %s [%04x:%04x] (rev %02x)\n",
+             BusNumber,
+             PciSlot.u.bits.DeviceNumber,
+             PciSlot.u.bits.FunctionNumber,
+             bSubClassName,
+             PciData->BaseClass,
+             PciData->SubClass,
+             bVendorName,
+             bProductName,
+             PciData->VendorID,
+             PciData->DeviceID,
+             PciData->RevisionID);
+
+    if (HeaderType == PCI_DEVICE_TYPE)
+    {
+        DbgPrint("\tSubsystem: %s [%04x:%04x]\n",
+                 bSubVendorName,
+                 PciData->u.type0.SubVendorID,
+                 PciData->u.type0.SubSystemID);
+    }
+
+    /* Print out and decode flags */
+    DbgPrint("\tFlags:");
+    if (PciData->Command & PCI_ENABLE_BUS_MASTER) DbgPrint(" bus master,");
+    if (PciData->Status & PCI_STATUS_66MHZ_CAPABLE) DbgPrint(" 66MHz,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x000) DbgPrint(" fast devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x200) DbgPrint(" medium devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x400) DbgPrint(" slow devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x600) DbgPrint(" unknown devsel,");
+    DbgPrint(" latency %d", PciData->LatencyTimer);
+    if (PciData->u.type0.InterruptPin != 0 &&
+        PciData->u.type0.InterruptLine != 0 &&
+        PciData->u.type0.InterruptLine != 0xFF) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
+    else if (PciData->u.type0.InterruptPin != 0) DbgPrint(", IRQ assignment required");
+    DbgPrint("\n");
+
+    if (HeaderType == PCI_BRIDGE_TYPE)
+    {
+        DbgPrint("\tBridge:");
+        DbgPrint(" primary bus %d,", PciData->u.type1.PrimaryBus);
+        DbgPrint(" secondary bus %d,", PciData->u.type1.SecondaryBus);
+        DbgPrint(" subordinate bus %d,", PciData->u.type1.SubordinateBus);
+        DbgPrint(" secondary latency %d", PciData->u.type1.SecondaryLatency);
+        DbgPrint("\n");
+    }
+
+    /* Scan and display BARs (Base Address Registers) */
+    Size = 0;
+    for (b = 0; b < (HeaderType == PCI_DEVICE_TYPE ? PCI_TYPE0_ADDRESSES : PCI_TYPE1_ADDRESSES); b++)
+    {
+        /* Check for a BAR */
+        if (HeaderType != PCI_CARDBUS_BRIDGE_TYPE)
+            Mem = PciData->u.type0.BaseAddresses[b];
+        else
+            Mem = 0;
+        if (Mem)
+        {
+            /* Save original BAR value */
+            OriginalBar = Mem;
+            PciBar = 0xFFFFFFFF;
+
+            /* Write all 1s to determine size */
+            HalpPhase0SetPciDataByOffset(BusNumber,
+                                         PciSlot,
+                                         &PciBar,
+                                         FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[b]),
+                                         sizeof(ULONG));
+            /* Read back the value */
+            HalpPhase0GetPciDataByOffset(BusNumber,
+                                         PciSlot,
+                                         &PciBar,
+                                         FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[b]),
+                                         sizeof(ULONG));
+            /* Restore original value */
+            HalpPhase0SetPciDataByOffset(BusNumber,
+                                         PciSlot,
+                                         &OriginalBar,
+                                         FIELD_OFFSET(PCI_COMMON_CONFIG, u.type0.BaseAddresses[b]),
+                                         sizeof(ULONG));
+
+            /* Decode the address type */
+            if (PciBar & PCI_ADDRESS_IO_SPACE)
+            {
+                /* Guess the I/O size */
+                Size = 1 << 2;
+                while (!(PciBar & Size) && (Size)) Size <<= 1;
+
+                /* Print I/O BAR info */
+                DbgPrint("\tI/O ports at %04lx", Mem & PCI_ADDRESS_IO_ADDRESS_MASK);
+                ShowSize(Size);
+            }
+            else
+            {
+                /* Guess the memory size */
+                Size = 1 << 4;
+                while (!(PciBar & Size) && (Size)) Size <<= 1;
+
+                /* Print Memory BAR info */
+                DbgPrint("\tMemory at %08lx (%d-bit, %sprefetchable)",
+                         Mem & PCI_ADDRESS_MEMORY_ADDRESS_MASK,
+                         (Mem & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_32BIT ? 32 : 64,
+                         (Mem & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? "" : "non-");
+                ShowSize(Size);
+            }
+            DbgPrint("\n");
+        }
+    }
+}
+
 CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePciBus(VOID)
 {
+    PCI_COMMON_CONFIG PciConfig;
+    PCI_SLOT_NUMBER PciSlot;
+    ULONG BusNumber, DeviceNumber, FunctionNumber;
+    ULONG VendorId;
+
     /* Setup the PCI stub support */
     HalpInitializePciStubs();
 
     /* Set the NMI crash flag */
     HalpGetNMICrashFlag();
+
+    /* Print PCI bus enumeration header */
+    DbgPrint("\n====== PCI BUS HARDWARE DETECTION (ACPI HAL) =======\n\n");
+
+    /* Enumerate all PCI buses */
+    for (BusNumber = 0; BusNumber < 256; BusNumber++)
+    {
+        /* Try to read from bus - if it fails, no more buses */
+        PciSlot.u.AsULONG = 0;
+        HalpPhase0GetPciDataByOffset(BusNumber,
+                                     PciSlot,
+                                     &VendorId,
+                                     0,
+                                     sizeof(VendorId));
+
+        /* Check if this bus exists */
+        if (VendorId == 0xFFFFFFFF || VendorId == 0)
+        {
+            /* No device on slot 0, likely no bus */
+            if (BusNumber == 0)
+            {
+                /* Bus 0 must exist */
+                DbgPrint("ERROR: Cannot detect PCI Bus 0!\n");
+            }
+            break;
+        }
+
+        /* Enumerate all devices on this bus */
+        for (DeviceNumber = 0; DeviceNumber < 32; DeviceNumber++)
+        {
+            /* Enumerate all functions on this device */
+            for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+            {
+                /* Build the PCI slot */
+                PciSlot.u.AsULONG = 0;
+                PciSlot.u.bits.DeviceNumber = DeviceNumber;
+                PciSlot.u.bits.FunctionNumber = FunctionNumber;
+
+                /* Read the vendor ID */
+                HalpPhase0GetPciDataByOffset(BusNumber,
+                                             PciSlot,
+                                             &VendorId,
+                                             0,
+                                             sizeof(VendorId));
+
+                /* Check if device exists */
+                if (VendorId == 0xFFFFFFFF || VendorId == 0)
+                    continue;
+
+                /* Read full configuration */
+                HalpPhase0GetPciDataByOffset(BusNumber,
+                                             PciSlot,
+                                             &PciConfig,
+                                             0,
+                                             sizeof(PCI_COMMON_CONFIG));
+
+                /* Use the enhanced debug output function */
+                HalpDebugPciDumpBusAcpi(BusNumber, PciSlot, &PciConfig);
+
+                /* For function 0, check if this is a multi-function device */
+                if (FunctionNumber == 0 && !(PciConfig.HeaderType & PCI_MULTIFUNCTION))
+                {
+                    /* Single function device, skip other functions */
+                    break;
+                }
+            }
+        }
+    }
+
+    DbgPrint("\n====== END PCI BUS DETECTION =======\n\n");
 }
 
 VOID

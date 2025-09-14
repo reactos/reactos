@@ -87,6 +87,8 @@ HalInitSystem(
     PKPRCB Prcb = KeGetCurrentPrcb();
     NTSTATUS Status;
 
+    DPRINT1("HAL: HalInitSystem Phase=%d, IRQL=%d\n", BootPhase, KeGetCurrentIrql());
+
     /* Check the boot phase */
     if (BootPhase == 0)
     {

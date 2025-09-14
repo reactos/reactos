@@ -695,6 +695,8 @@ VOID
 NTAPI
 HalpFixupPciSupportedRanges(IN ULONG BusCount)
 {
+    DPRINT1("HalpFixupPciSupportedRanges %d\n", BusCount);
+
     ULONG i;
     PBUS_HANDLER Bus, ParentBus;
 
@@ -1022,6 +1024,7 @@ VOID
 NTAPI
 HalpInitializePciBus(VOID)
 {
+
 #ifndef _MINIHAL_
     PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo;
     UCHAR PciType;
