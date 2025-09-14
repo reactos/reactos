@@ -26,6 +26,7 @@ WINSTAAPI WinStationOpenServerW(_In_opt_ PCWSTR ServerName)
 BOOLEAN
 WINSTAAPI WinStationCloseServer(_In_ HANDLE ServerHandle)
 {
+    //FIXME("Stub %p\n", hServer);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     UNIMPLEMENTED;
     return FALSE;

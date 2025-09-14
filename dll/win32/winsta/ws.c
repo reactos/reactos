@@ -9,6 +9,10 @@
 #include "winsta.h"
 #include "reactos/ts/winsta.h"
 
+#include <ntifs.h>
+#include <ntstatus.h>
+#include <peb_teb.h>
+
 BOOLEAN
 WINSTAAPI WinStationFreeMemory(PVOID Buffer)
 {
@@ -325,13 +329,32 @@ WINSTAAPI WinStationDynVirtualChanWrite(PVOID A,
 }
 
 BOOLEAN
-WINSTAAPI WinStationRegisterConsoleNotificationEx(_In_opt_ HANDLE ServerHandle,
-    _In_ HWND WindowHandle,
-    _In_ ULONG Flags)
+WINSTAAPI WinStationRegisterConsoleNotificationEx(
+    _In_opt_ HANDLE hServer,
+    _In_ HWND hWnd,
+    _In_ ULONG dwFlags,
+    _In_ ULONG dwMask)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    UNIMPLEMENTED;
-    return FALSE;
+    if ( hServer == (HANDLE)-3 )
+    {
+        SetLastError(0x47Fu);
+        return FALSE;
+    }
+
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN v5 = RpcWinStationRegisterConsoleNotification(
+        hServer,
+        &Status,
+        NtCurrentTeb()->ProcessEnvironmentBlock->SessionId,
+        hWnd,
+        dwFlags,
+        dwMask);
+
+    if ( !v5 )
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+    }
+    return v5;
 }
 
 BOOLEAN

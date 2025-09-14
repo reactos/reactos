@@ -41,9 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wtsapi);
 void WINAPI
 WTSCloseServer(HANDLE hServer)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    UNIMPLEMENTED;
-    FIXME("Stub %p\n", hServer);
+    WinStationCloseServer(hServer);
 }
 
 /************************************************************
@@ -76,10 +74,7 @@ WTSConnectSessionW(ULONG LogonId, ULONG TargetLogonId, PWSTR pPassword, BOOL bWa
 BOOL WINAPI
 WTSDisconnectSession(HANDLE hServer, DWORD SessionId, BOOL bWait)
 {
-    SetLastError(ERROR_SUCCESS);
-    UNIMPLEMENTED;
-    FIXME("Stub %p 0x%08x %d\n", hServer, SessionId, bWait);
-    return TRUE;
+    return WinStationDisconnect(hServer, SessionId, bWait);
 }
 
 /************************************************************
@@ -467,10 +462,7 @@ WTSQuerySessionInformationA(
 
     return result;
 #else
-    /* FIXME: Forward request to winsta.dll::WinStationQueryInformationA */
-    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
-
-    return FALSE;
+    return WinStationQueryInformationA(hServer, SessionId, (WINSTATIONINFOCLASS)WTSInfoClass, Buffer, 0, BytesReturned);
 #endif
 }
 
@@ -594,10 +586,7 @@ WTSQuerySessionInformationW(
     }
 
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
-    // return WinStationQueryInformationW(hServer, SessionId, (WINSTATIONINFOCLASS)WTSInfoClass, Buffer, 0, BytesReturned);
-    FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
-
-    return FALSE;
+    return WinStationQueryInformationW(hServer, SessionId, (WINSTATIONINFOCLASS)WTSInfoClass, Buffer, 0, BytesReturned);
 #else
     /* FIXME: Forward request to winsta.dll::WinStationQueryInformationW */
     FIXME("Stub %p 0x%08x %d %p %p\n", hServer, SessionId, WTSInfoClass, Buffer, BytesReturned);
