@@ -16,17 +16,6 @@
 #define KiVdmGetInstructionSize(x) ((x) & 0xFF)
 #define KiVdmGetPrefixFlags(x)     ((x) & 0xFFFFFF00)
 
-/* Avoid -Wstringop-overflow from Interlocked* on fixed linear addresses.
- * Replace the interlocked-based macros with simple bit ops in this TU. */
-#ifdef KiVdmClearVdmEFlags
-#undef KiVdmClearVdmEFlags
-#endif
-#ifdef KiVdmSetVdmEFlags
-#undef KiVdmSetVdmEFlags
-#endif
-#define KiVdmClearVdmEFlags(x) do { *KiNtVdmState &= ~(x); } while (0)
-#define KiVdmSetVdmEFlags(x)   do { *KiNtVdmState |=  (x); } while (0)
-
 /* GLOBALS ********************************************************************/
 
 ULONG KeI386EFlagsAndMaskV86 = EFLAGS_USER_SANITIZE;

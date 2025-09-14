@@ -47,41 +47,9 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
     ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
 
-    /* AGENT-MODIFIED: Add debug traces to diagnose arc names creation failure */
-    DPRINT1("AGENT-DEBUG: IopCreateArcNames called\n");
-    DPRINT1("AGENT-DEBUG: ArcHalDeviceName = %s\n", 
-            LoaderBlock->ArcHalDeviceName ? LoaderBlock->ArcHalDeviceName : "(null)");
-    DPRINT1("AGENT-DEBUG: ArcBootDeviceName = %s\n", 
-            LoaderBlock->ArcBootDeviceName ? LoaderBlock->ArcBootDeviceName : "(null)");
-    DPRINT1("AGENT-DEBUG: ArcDiskInfo = %p\n", ArcDiskInfo);
-    
-    /* Check if ArcDiskInfo is valid before using it */
-    if (!ArcDiskInfo)
-    {
-        DPRINT1("AGENT-DEBUG: ArcDiskInfo is NULL - cannot proceed\n");
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
     /* Check if we only have one disk on the machine */
     SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
                  &ArcDiskInfo->DiskSignatureListHead);
-
-    /* AGENT-MODIFIED: Check for NULL device names before using them */
-    if (!LoaderBlock->ArcHalDeviceName || !LoaderBlock->ArcBootDeviceName)
-    {
-        DPRINT1("AGENT-DEBUG: ArcHalDeviceName or ArcBootDeviceName is NULL\n");
-        /* For UEFI boot, these might not be set - create defaults */
-        if (!LoaderBlock->ArcHalDeviceName)
-        {
-            LoaderBlock->ArcHalDeviceName = "multi(0)disk(0)rdisk(0)partition(1)";
-            DPRINT1("AGENT-DEBUG: Using default ArcHalDeviceName: %s\n", LoaderBlock->ArcHalDeviceName);
-        }
-        if (!LoaderBlock->ArcBootDeviceName)
-        {
-            LoaderBlock->ArcBootDeviceName = "multi(0)disk(0)cdrom(0)";
-            DPRINT1("AGENT-DEBUG: Using default ArcBootDeviceName: %s\n", LoaderBlock->ArcBootDeviceName);
-        }
-    }
 
     /* Create the global HAL partition name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
@@ -169,19 +137,13 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Loop every disk and try to find boot disk */
-    DPRINT1("AGENT-DEBUG: Calling IopCreateArcNamesDisk, SingleDisk=%d\n", SingleDisk);
     Status = IopCreateArcNamesDisk(LoaderBlock, SingleDisk, &FoundBoot);
-    DPRINT1("AGENT-DEBUG: IopCreateArcNamesDisk returned 0x%08lx, FoundBoot=%d\n", Status, FoundBoot);
-    
     /* If it succeeded but we didn't find boot device, try to browse Cds */
     if (NT_SUCCESS(Status) && !FoundBoot)
     {
-        DPRINT1("AGENT-DEBUG: Calling IopCreateArcNamesCd\n");
         Status = IopCreateArcNamesCd(LoaderBlock);
-        DPRINT1("AGENT-DEBUG: IopCreateArcNamesCd returned 0x%08lx\n", Status);
     }
 
-    DPRINT1("AGENT-DEBUG: IopCreateArcNames returning 0x%08lx\n", Status);
     /* Return success */
     return Status;
 }
@@ -210,24 +172,8 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG DiskNumber, CdRomCount, CheckSum, i, EnabledDisks = 0;
     PARC_DISK_INFORMATION ArcDiskInformation = LoaderBlock->ArcDiskInformation;
 
-    /* AGENT-MODIFIED: Add debug trace at entry */
-    DPRINT1("AGENT-DEBUG: IopCreateArcNamesCd entered\n");
-    
     /* Get all the Cds present in the system */
     CdRomCount = IoGetConfigurationInformation()->CdRomCount;
-    DPRINT1("AGENT-DEBUG: CdRomCount = %lu\n", CdRomCount);
-    DPRINT1("AGENT-DEBUG: UNCONDITIONAL DEBUG - WE ARE HERE!\n");
-    
-    /* AGENT_MOD_START: Early return for CD boot when no devices detected yet */
-    /* If we're booting from CD but no CD-ROM devices are detected yet,
-     * just return success. The CD-ROM driver will set up the devices later. */
-    if (CdRomCount == 0 && LoaderBlock->ArcBootDeviceName && 
-        strstr(LoaderBlock->ArcBootDeviceName, "cdrom") != NULL)
-    {
-        DPRINT1("AGENT-DEBUG: Booting from CD but CdRomCount=0, returning SUCCESS\n");
-        return STATUS_SUCCESS;
-    }
-    /* AGENT_MOD_END */
 
     /* Get enabled Cds and check if result matches
      * For the record, enabled Cds (or even disk) are Cds/disks
@@ -273,45 +219,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Not found... Not booting from a Cd */
     if (!ArcDiskSignature)
     {
-        DPRINT1("AGENT-DEBUG: Failed finding CD signature for boot device %s\n", LoaderBlock->ArcBootDeviceName);
-        
-        /* AGENT_MOD_START: Create synthetic ARC name for CD boot without signature */
-        /* If we're booting from CD but don't have a signature, create a synthetic ARC name.
-         * This happens in UEFI boot or when CD-ROM enumeration hasn't completed yet.
-         */
-        if (LoaderBlock->ArcBootDeviceName && strstr(LoaderBlock->ArcBootDeviceName, "cdrom") != NULL)
-        {
-            ANSI_STRING ArcNameStringA;
-            UNICODE_STRING ArcNameStringW;
-            CHAR ArcBuffer[128];
-            
-            DPRINT1("AGENT-DEBUG: Creating synthetic ARC name for CD boot device\n");
-            
-            /* Create the ARC name for the boot CD */
-            sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
-            RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
-            
-            /* Convert to Unicode and create symbolic link */
-            Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
-            if (NT_SUCCESS(Status))
-            {
-                /* For now, just return success - the actual device will be linked later
-                 * when the CD-ROM driver loads and detects the device */
-                DPRINT1("AGENT-DEBUG: Synthetic ARC name created: %s\n", ArcBuffer);
-                RtlFreeUnicodeString(&ArcNameStringW);
-                Status = STATUS_SUCCESS;
-            }
-            else
-            {
-                DPRINT1("AGENT-DEBUG: Failed to create synthetic ARC name, Status=0x%08lx\n", Status);
-            }
-        }
-        else
-        {
-            /* Not booting from CD, return error */
-            Status = STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        /* AGENT_MOD_END */
+        DPRINT("Failed finding a cd that could match current boot device\n");
         goto Cleanup;
     }
 
@@ -489,9 +397,6 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
 Cleanup:
-    /* AGENT-MODIFIED: Add debug trace to show return status */
-    DPRINT1("AGENT-DEBUG: IopCreateArcNamesCd exiting with Status=0x%08lx\n", Status);
-    
     if (PartitionBuffer)
     {
         ExFreePoolWithTag(PartitionBuffer, TAG_IO);
@@ -532,26 +437,18 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     UNICODE_STRING DeviceStringW, ArcNameStringW, HalPathStringW;
     ULONG DiskNumber, DiskCount, CheckSum, i, Signature, EnabledDisks = 0;
     PARC_DISK_INFORMATION ArcDiskInformation = LoaderBlock->ArcDiskInformation;
-    
-    /* AGENT-MODIFIED: Add debug trace at entry */
-    DPRINT1("AGENT-DEBUG: IopCreateArcNamesDisk entered, SingleDisk=%d\n", SingleDisk);
     ANSI_STRING ArcBootString, ArcSystemString, DeviceStringA, ArcNameStringA, HalPathStringA;
 
-    /* AGENT-MODIFIED: Initialize Status to avoid uninitialized variable bug */
-    Status = STATUS_OBJECT_NAME_NOT_FOUND;  /* Default to not found if we exit early */
-    
     /* Initialise device number */
     DeviceNumber.DeviceNumber = ULONG_MAX;
     /* Get all the disks present in the system */
     DiskCount = IoGetConfigurationInformation()->DiskCount;
-    DPRINT1("AGENT-DEBUG: DiskCount from IoGetConfigurationInformation = %lu\n", DiskCount);
 
     /* Get enabled disks and check if result matches */
     Status = IopFetchConfigurationInformation(&SymbolicLinkList,
                                               GUID_DEVINTERFACE_DISK,
                                               DiskCount,
                                               &EnabledDisks);
-    DPRINT1("AGENT-DEBUG: IopFetchConfigurationInformation returned 0x%08lx, EnabledDisks=%lu\n", Status, EnabledDisks);
     if (!NT_SUCCESS(Status))
     {
         NotEnabledPresent = TRUE;
@@ -926,10 +823,6 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     Status = STATUS_SUCCESS;
 
 Cleanup:
-    /* AGENT-MODIFIED: Add debug trace to show return status */
-    DPRINT1("AGENT-DEBUG: IopCreateArcNamesDisk exiting with Status=0x%08lx, FoundBoot=%d\n", 
-            Status, FoundBoot ? *FoundBoot : FALSE);
-    
     if (DriveLayout)
     {
         ExFreePool(DriveLayout);

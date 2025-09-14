@@ -1106,7 +1106,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
-    
     /* Initialize the memory manager at phase 0 */
     if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
@@ -1340,7 +1339,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* ReactOS magic */
     *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) = 0x8eac705;
-    
 }
 
 VOID
@@ -1373,9 +1371,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
 
-    DPRINT1("Phase1InitializationDiscard: ENTERED - System Phase 1 initialization starting\n");
-    DPRINT1("Phase1InitializationDiscard: Current IRQL = %d\n", KeGetCurrentIrql());
-
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
@@ -1393,9 +1388,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
     /* Do Phase 1 HAL Initialization */
-    DPRINT1("Phase1InitializationDiscard: Calling HalInitSystem(1)\n");
     if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
-    DPRINT1("Phase1InitializationDiscard: HalInitSystem(1) completed successfully\n");
 
     /* Get the command line and upcase it */
     CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);

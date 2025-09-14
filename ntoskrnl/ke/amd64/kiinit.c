@@ -512,12 +512,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
 
-    /* HACK */
-    FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
-    // AGENT-MODIFIED: Enable debug output to track kernel initialization
-    if (FrLdrDbgPrint) {
-        FrLdrDbgPrint("AGENT: KiSystemStartup entered, LoaderBlock=%p\n", LoaderBlock);
-    }
 
     /* Get the current CPU number */
     Cpu = KeNumberProcessors++; // FIXME
@@ -528,24 +522,14 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Save the loader block */
         KeLoaderBlock = LoaderBlock;
 
-        if (FrLdrDbgPrint) {
-            FrLdrDbgPrint("AGENT: Calling KiInitializeP0BootStructures\n");
-        }
-
         /* Prepare LoaderBlock, PCR, TSS with the P0 boot data */
         KiInitializeP0BootStructures(LoaderBlock);
 
-        if (FrLdrDbgPrint) {
-            FrLdrDbgPrint("AGENT: KiInitializeP0BootStructures complete\n");
-        }
     }
 
     /* Get Pcr from loader block */
     Pcr = CONTAINING_RECORD(LoaderBlock->Prcb, KIPCR, Prcb);
 
-    if (FrLdrDbgPrint) {
-        FrLdrDbgPrint("AGENT: Pcr=%p, Prcb=%p\n", Pcr, LoaderBlock->Prcb);
-    }
 
     /* Set the PRCB for this Processor */
     KiProcessorBlock[Cpu] = &Pcr->Prcb;
@@ -556,16 +540,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set us as the current process */
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
-    if (FrLdrDbgPrint) {
-        FrLdrDbgPrint("AGENT: Calling KiInitializeCpu\n");
-    }
 
     /* Initialize the CPU features */
     KiInitializeCpu(Pcr);
-
-    if (FrLdrDbgPrint) {
-        FrLdrDbgPrint("AGENT: KiInitializeCpu complete\n");
-    }
 
     /* Initial setup for the boot CPU */
     if (Cpu == 0)

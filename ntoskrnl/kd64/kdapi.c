@@ -50,29 +50,6 @@ KdpZeroMemory(
     while (Length--) *DestinationBytes++ = 0;
 }
 
-static VOID
-KdpSafeSendPacket(IN ULONG PacketType,
-                  IN PSTRING MessageHeader,
-                  IN PSTRING MessageData)
-{
-    if (KdDebuggerNotPresent || !KdDebuggerEnabled)
-        return;
-
-    _SEH2_TRY
-    {
-        if (!MessageHeader || (MessageHeader->Length && !MessageHeader->Buffer))
-            return;
-        if (MessageData && MessageData->Length && !MessageData->Buffer)
-            return;
-        KdSendPacket(PacketType, MessageHeader, MessageData, &KdpContext);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Packet send failed; ignore to preserve state */
-    }
-    _SEH2_END;
-}
-
 NTSTATUS
 NTAPI
 KdpCopyMemoryChunks(
@@ -204,9 +181,10 @@ KdpQueryMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     Header.Buffer = (PCHAR)State;
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -225,9 +203,10 @@ KdpSearchMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = STATUS_UNSUCCESSFUL;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -246,9 +225,10 @@ KdpFillMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = STATUS_UNSUCCESSFUL;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -280,9 +260,10 @@ KdpWriteBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -312,9 +293,10 @@ KdpRestoreBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 NTSTATUS
@@ -333,9 +315,10 @@ KdpWriteBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = STATUS_UNSUCCESSFUL;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -355,9 +338,10 @@ KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = STATUS_UNSUCCESSFUL;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -376,9 +360,10 @@ KdpWriteCustomBreakpoint(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = STATUS_UNSUCCESSFUL;
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
     Header.Buffer = (PCHAR)State;
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -472,9 +457,10 @@ KdpGetVersion(IN PDBGKD_MANIPULATE_STATE64 State)
     State->ReturnStatus = STATUS_SUCCESS;
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -512,9 +498,10 @@ KdpReadVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     Data->Length = (USHORT)Length;
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -540,9 +527,10 @@ KdpWriteVirtualMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                                               &WriteMemory->ActualBytesWritten);
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -602,9 +590,10 @@ KdpReadPhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
     Data->Length = (USHORT)Length;
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -651,9 +640,10 @@ KdpWritePhysicalMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                                               &WriteMemory->ActualBytesWritten);
 
     /* Send the packet */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -691,9 +681,10 @@ KdpReadControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
     Data->Length = (USHORT)Length;
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -717,9 +708,10 @@ KdpWriteControlSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                                   &WriteMemory->ActualBytesWritten);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -771,9 +763,10 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -822,9 +815,10 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -884,9 +878,10 @@ KdpGetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -944,9 +939,10 @@ KdpSetContextEx(IN PDBGKD_MANIPULATE_STATE64 State,
     }
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -980,9 +976,10 @@ KdpReadMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
     ReadMsr->DataValueHigh = MsrValue.HighPart;
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1006,9 +1003,10 @@ KdpWriteMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
     State->ReturnStatus = KdpSysWriteMsr(WriteMsr->Msr, &MsrValue.QuadPart);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1048,9 +1046,10 @@ KdpGetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     Data->Length = (USHORT)Length;
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data);
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -1076,9 +1075,10 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
                                              &SetBusData->Length);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1111,9 +1111,10 @@ KdpReadIoSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                             &ReadIo->DataSize);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1140,9 +1141,10 @@ KdpWriteIoSpace(IN PDBGKD_MANIPULATE_STATE64 State,
                                              &WriteIo->DataSize);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1176,9 +1178,10 @@ KdpReadIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
                                             &ReadIoExtended->DataSize);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1206,9 +1209,10 @@ KdpWriteIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
                                              &WriteIoExtended->DataSize);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1225,9 +1229,10 @@ KdpCheckLowMemory(IN PDBGKD_MANIPULATE_STATE64 State)
     State->ReturnStatus = KdpSysCheckLowMemory(MMDBG_COPY_UNSAFE);
 
     /* Send the reply */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -1244,9 +1249,10 @@ KdpNotSupported(IN PDBGKD_MANIPULATE_STATE64 State)
     Header.Buffer = (PCHAR)State;
 
     /* Send it */
-    KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 NULL);
+                 NULL,
+                 &KdpContext);
 }
 
 static
@@ -1297,7 +1303,7 @@ KdpSendWaitContinue(IN ULONG PacketType,
 
 SendPacket:
     /* Send the Packet */
-    KdpSafeSendPacket(PacketType, SendHeader, SendData);
+    KdSendPacket(PacketType, SendHeader, SendData, &KdpContext);
 
     /* If the debugger isn't present anymore, just return success */
     if (KdDebuggerNotPresent) return ContinueSuccess;
@@ -1582,9 +1588,10 @@ SendPacket:
                 ManipulateState.ReturnStatus = STATUS_UNSUCCESSFUL;
 
                 /* Send it */
-                KdpSafeSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                              &Header,
-                             &Data);
+                             &Data,
+                             &KdpContext);
                 break;
         }
     }

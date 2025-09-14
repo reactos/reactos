@@ -86,11 +86,9 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
     PETHREAD Thread = PsGetCurrentThread();
     KPROCESSOR_MODE WaitMode;
     EX_QUEUE_WORKER_INFO OldValue, NewValue;
-    BOOLEAN IsDynamic;
 
     /* Check if this is a dyamic thread */
-    IsDynamic = ((ULONG_PTR)Context & EX_DYNAMIC_WORK_THREAD) ? TRUE : FALSE;
-    if (IsDynamic)
+    if ((ULONG_PTR)Context & EX_DYNAMIC_WORK_THREAD)
     {
         /* It is, which means we will eventually time out after 10 minutes */
         Timeout.QuadPart = Int32x32To64(10, -10000000 * 60);
@@ -101,9 +99,6 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
     WorkQueueType = (WORK_QUEUE_TYPE)((ULONG_PTR)Context &
                                       ~EX_DYNAMIC_WORK_THREAD);
     WorkQueue = &ExWorkerQueue[WorkQueueType];
-
-    DPRINT1("[WORKER] Thread entry: QueueType=%d, Dynamic=%d, Thread=%p\n",
-            WorkQueueType, IsDynamic, Thread);
 
     /* Select the wait mode */
     WaitMode = (UCHAR)WorkQueue->Info.WaitMode;
@@ -137,9 +132,6 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
 
     /* Success, you are now officially a worker thread! */
     Thread->ActiveExWorker = TRUE;
-
-    DPRINT1("[WORKER] Thread active: QueueType=%d, WorkerCount=%d, CurrentCount=%lu\n",
-            WorkQueueType, NewValue.WorkerCount, WorkQueue->WorkerQueue.CurrentCount);
 
     /* Loop forever */
 ProcessLoop:
@@ -264,9 +256,6 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
     KPRIORITY Priority;
     NTSTATUS Status;
 
-    DPRINT1("[WORKER] ExpCreateWorkerThread: QueueType=%d, Dynamic=%d\n",
-            WorkQueueType, Dynamic);
-
     /* Check if this is going to be a dynamic thread */
     Context = WorkQueueType;
 
@@ -326,9 +315,6 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
     /* Dereference and close handle */
     ObDereferenceObject(Thread);
     ObCloseHandle(hThread, KernelMode);
-
-    DPRINT1("[WORKER] Created worker thread: QueueType=%d, Dynamic=%d, Priority=%d\n",
-            WorkQueueType, Dynamic, Priority);
 }
 
 /*++
@@ -542,8 +528,6 @@ ExpInitializeWorkerThreads(VOID)
     ULONG i;
     NTSTATUS Status;
 
-    DPRINT1("[WORKER] ExpInitializeWorkerThreads starting, KeNumberProcessors=%d\n", KeNumberProcessors);
-
     /* Setup the stack swap support */
     ExInitializeFastMutex(&ExpWorkerSwapinMutex);
     InitializeListHead(&ExpWorkerListHead);
@@ -569,15 +553,10 @@ ExpInitializeWorkerThreads(VOID)
         /* Clear the structure and initialize the queue */
         RtlZeroMemory(&ExWorkerQueue[WorkQueueType], sizeof(EX_WORK_QUEUE));
         KeInitializeQueue(&ExWorkerQueue[WorkQueueType].WorkerQueue, 0);
-        DPRINT1("[WORKER] Queue %d initialized: CurrentCount=%lu, MaximumCount=%lu\n",
-                WorkQueueType,
-                ExWorkerQueue[WorkQueueType].WorkerQueue.CurrentCount,
-                ExWorkerQueue[WorkQueueType].WorkerQueue.MaximumCount);
     }
 
     /* Dynamic threads are only used for the critical queue */
     ExWorkerQueue[CriticalWorkQueue].Info.MakeThreadsAsNecessary = TRUE;
-    DPRINT1("[WORKER] Critical queue set to MakeThreadsAsNecessary=TRUE\n");
 
     /* Initialize the balance set manager events */
     KeInitializeEvent(&ExpThreadSetManagerEvent, SynchronizationEvent, FALSE);
@@ -586,29 +565,23 @@ ExpInitializeWorkerThreads(VOID)
                       FALSE);
 
     /* Create the built-in worker threads for the critical queue */
-    DPRINT1("[WORKER] Creating %lu critical worker threads\n", CriticalThreads);
     for (i = 0; i < CriticalThreads; i++)
     {
         /* Create the thread */
         ExpCreateWorkerThread(CriticalWorkQueue, FALSE);
         ExCriticalWorkerThreads++;
-        DPRINT1("[WORKER] Created critical worker thread %lu/%lu\n", i+1, CriticalThreads);
     }
 
     /* Create the built-in worker threads for the delayed queue */
-    DPRINT1("[WORKER] Creating %lu delayed worker threads\n", DelayedThreads);
     for (i = 0; i < DelayedThreads; i++)
     {
         /* Create the thread */
         ExpCreateWorkerThread(DelayedWorkQueue, FALSE);
         ExDelayedWorkerThreads++;
-        DPRINT1("[WORKER] Created delayed worker thread %lu/%lu\n", i+1, DelayedThreads);
     }
 
     /* Create the built-in worker thread for the hypercritical queue */
-    DPRINT1("[WORKER] Creating hypercritical worker thread\n");
     ExpCreateWorkerThread(HyperCriticalWorkQueue, FALSE);
-    DPRINT1("[WORKER] Created hypercritical worker thread\n");
 
     /* Create the balance set manager thread */
     Status = PsCreateSystemThread(&ThreadHandle,
@@ -634,17 +607,6 @@ ExpInitializeWorkerThreads(VOID)
 
     /* Close the handle and return */
     ObCloseHandle(ThreadHandle, KernelMode);
-
-    /* Log final queue states */
-    for (WorkQueueType = 0; WorkQueueType < MaximumWorkQueue; WorkQueueType++)
-    {
-        DPRINT1("[WORKER] Final Queue %d state: CurrentCount=%lu, MaximumCount=%lu, DynamicThreadCount=%lu\n",
-                WorkQueueType,
-                ExWorkerQueue[WorkQueueType].WorkerQueue.CurrentCount,
-                ExWorkerQueue[WorkQueueType].WorkerQueue.MaximumCount,
-                ExWorkerQueue[WorkQueueType].DynamicThreadCount);
-    }
-    DPRINT1("[WORKER] ExpInitializeWorkerThreads completed\n");
 }
 
 VOID
@@ -765,9 +727,6 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
     ASSERT(QueueType < MaximumWorkQueue);
     ASSERT(WorkItem->List.Flink == NULL);
 
-    DPRINT1("[WORKER] ExQueueWorkItem: QueueType=%d, WorkerRoutine=%p\n",
-            QueueType, WorkItem->WorkerRoutine);
-
     /* Don't try to trick us */
     if ((ULONG_PTR)WorkItem->WorkerRoutine < MmUserProbeAddress)
     {
@@ -783,10 +742,6 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
     KeInsertQueue(&WorkQueue->WorkerQueue, &WorkItem->List);
     ASSERT(!WorkQueue->Info.QueueDisabled);
 
-    DPRINT1("[WORKER] After KeInsertQueue: CurrentCount=%lu, MaximumCount=%lu\n",
-            WorkQueue->WorkerQueue.CurrentCount,
-            WorkQueue->WorkerQueue.MaximumCount);
-
     /*
      * Check if we need a new thread. Our decision is as follows:
      *  - This queue type must support Dynamic Threads (duh!)
@@ -794,13 +749,6 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
      *  - We have CPUs which could be handling another thread
      *  - We haven't abused our usage of dynamic threads.
      */
-    DPRINT1("[WORKER] Thread check: MakeThreadsAsNecessary=%d, ListEmpty=%d, CurrentCount=%lu, MaxCount=%lu, DynamicCount=%lu\n",
-            WorkQueue->Info.MakeThreadsAsNecessary,
-            IsListEmpty(&WorkQueue->WorkerQueue.EntryListHead),
-            WorkQueue->WorkerQueue.CurrentCount,
-            WorkQueue->WorkerQueue.MaximumCount,
-            WorkQueue->DynamicThreadCount);
-
     if ((WorkQueue->Info.MakeThreadsAsNecessary) &&
         (!IsListEmpty(&WorkQueue->WorkerQueue.EntryListHead)) &&
         (WorkQueue->WorkerQueue.CurrentCount <
@@ -808,14 +756,10 @@ ExQueueWorkItem(IN PWORK_QUEUE_ITEM WorkItem,
         (WorkQueue->DynamicThreadCount < 16))
     {
         /* Let the balance manager know about it */
-        DPRINT1("[WORKER] Requesting a new thread. CurrentCount: %lu. MaxCount: %lu\n",
+        DPRINT1("Requesting a new thread. CurrentCount: %lu. MaxCount: %lu\n",
                 WorkQueue->WorkerQueue.CurrentCount,
                 WorkQueue->WorkerQueue.MaximumCount);
         KeSetEvent(&ExpThreadSetManagerEvent, 0, FALSE);
-    }
-    else
-    {
-        DPRINT1("[WORKER] NOT requesting new thread (conditions not met)\n");
     }
 }
 

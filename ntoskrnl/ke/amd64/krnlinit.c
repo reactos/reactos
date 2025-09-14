@@ -147,9 +147,6 @@ KiSystemStartupBootStack(VOID)
     PKPROCESS Process = Thread->ApcState.Process;
     PVOID KernelStack = (PVOID)KeLoaderBlock->KernelStack;
 
-    DPRINT1("KiSystemStartupBootStack: Entry\n");
-    DPRINT1("KiSystemStartupBootStack: KeNodeBlock = %p, KeNodeBlock[0] = %p\n", KeNodeBlock, KeNodeBlock[0]);
-
     /* Set Node Data */
     if (KeNodeBlock[0] == NULL)
     {
@@ -161,61 +158,34 @@ KiSystemStartupBootStack(VOID)
     {
         Prcb->ParentNode = KeNodeBlock[0];
     }
-    DPRINT1("KiSystemStartupBootStack: About to set ProcessorMask, SetMember = %lx\n", Prcb->SetMember);
     Prcb->ParentNode->ProcessorMask |= Prcb->SetMember;
-
-    DPRINT1("KiSystemStartupBootStack: Initializing Power Management\n");
     /* Initialize the Power Management Support for this PRCB */
     PoInitializePrcb(Prcb);
-
-    DPRINT1("KiSystemStartupBootStack: Saving CPU state\n");
     /* Save CPU state */
     KiSaveProcessorControlState(&Prcb->ProcessorState);
-
-    DPRINT1("KiSystemStartupBootStack: Getting cache information\n");
     /* Get cache line information for this CPU */
     KiGetCacheInformation();
-    DPRINT1("KiSystemStartupBootStack: Cache information retrieved\n");
-
-    DPRINT1("KiSystemStartupBootStack: Initializing spinlocks and DPC data\n");
     /* Initialize spinlocks and DPC data */
     KiInitSpinLocks(Prcb, Prcb->Number);
-    DPRINT1("KiSystemStartupBootStack: Spinlocks initialized\n");
-
-    DPRINT1("KiSystemStartupBootStack: Setting up thread-related fields in PRCB\n");
     /* Set up the thread-related fields in the PRCB */
     Prcb->CurrentThread = Thread;
     Prcb->NextThread = NULL;
     Prcb->IdleThread = Thread;
-
-    DPRINT1("KiSystemStartupBootStack: Initializing PRCB pool lookaside pointers\n");
     /* Initialize PRCB pool lookaside pointers */
     ExInitPoolLookasidePointers();
-
-    DPRINT1("KiSystemStartupBootStack: Lowering IRQL to APC_LEVEL\n");
     /* Lower to APC_LEVEL */
     KeLowerIrql(APC_LEVEL);
-    DPRINT1("KiSystemStartupBootStack: IRQL lowered\n");
-
     /* Check if this is the boot cpu */
     if (Prcb->Number == 0)
     {
-        DPRINT1("KiSystemStartupBootStack: Initializing kernel for boot CPU\n");
-        /* Initialize the kernel */
         KiInitializeKernel(Process, Thread, KernelStack, Prcb, LoaderBlock);
-        DPRINT1("KiSystemStartupBootStack: Kernel initialization complete\n");
     }
     else
     {
-        /* Initialize the startup thread */
         KiInitializeHandBuiltThread(Thread, Process, KernelStack);
     }
 
-    DPRINT1("KiSystemStartupBootStack: Calculating CPU frequency\n");
-    /* Calculate the CPU frequency */
     KiCalculateCpuFrequency(Prcb);
-    DPRINT1("KiSystemStartupBootStack: CPU frequency calculated\n");
-
     /* Raise to Dispatch */
     KfRaiseIrql(DISPATCH_LEVEL);
 
@@ -258,9 +228,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG_PTR PageDirectory[2];
     PVOID DpcStack;
     ULONG i;
-
-    DPRINT1("KiInitializeKernel: Entry\n");
-
     /* Initialize 8/16 bit SList support */
     RtlpUse16ByteSLists = (KeFeatureBits & KF_CMPXCHG16B) ? TRUE : FALSE;
 
@@ -323,13 +290,10 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitProcess->QuantumReset = MAXCHAR;
 
     /* Initialize the startup thread */
-    DPRINT1("KiInitializeKernel: Initializing hand-built thread\n");
     KiInitializeHandBuiltThread(InitThread, InitProcess, IdleStack);
 
     /* Initialize the Kernel Executive */
-    DPRINT1("KiInitializeKernel: Calling ExpInitializeExecutive\n");
     ExpInitializeExecutive(0, LoaderBlock);
-    DPRINT1("KiInitializeKernel: ExpInitializeExecutive returned\n");
 
     /* Calculate the time reciprocal */
     KiTimeIncrementReciprocal =

@@ -643,10 +643,9 @@ IopCheckResourceDescriptor(
                     {
                         if (!Silent)
                         {
-                            DPRINT1("Resource conflict: IRQ (0x%x 0x%x vs. 0x%x 0x%x) ShareDisp=%d vs %d\n",
+                            DPRINT1("Resource conflict: IRQ (0x%x 0x%x vs. 0x%x 0x%x)\n",
                                     ResDesc->u.Interrupt.Vector, ResDesc->u.Interrupt.Level,
-                                    ResDesc2->u.Interrupt.Vector, ResDesc2->u.Interrupt.Level,
-                                    ResDesc->ShareDisposition, ResDesc2->ShareDisposition);
+                                    ResDesc2->u.Interrupt.Vector, ResDesc2->u.Interrupt.Level);
                         }
 
                         Result = TRUE;
