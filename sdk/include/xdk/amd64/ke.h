@@ -71,8 +71,22 @@ FORCEINLINE
 KIRQL
 KeGetCurrentIrql(VOID)
 {
-    return (KIRQL)__readcr8();
+    /* Use workaround during early boot when CR8 might not be accessible */
+    if (KeCurrentIrqlWorkaround != 0xFF) {
+        return KeCurrentIrqlWorkaround;
+    }
+
+    KIRQL CurrentIrql = (KIRQL)__readcr8();
+    /* DbgPrint("KeGetCurrentIrql: CR8=%d\n", CurrentIrql); */
+    if (CurrentIrql > HIGH_LEVEL) {
+        DbgPrint("!!! INVALID IRQL READ: CR8=%d (max should be %d) !!!\n",
+                 CurrentIrql, HIGH_LEVEL);
+    }
+    return CurrentIrql;
 }
+
+/* Temporary workaround for CR8 access issues during early boot */
+extern volatile KIRQL KeCurrentIrqlWorkaround;
 
 _IRQL_requires_max_(HIGH_LEVEL)
 FORCEINLINE
@@ -80,7 +94,13 @@ VOID
 KeLowerIrql(
     _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql)
 {
-    //ASSERT((KIRQL)__readcr8() >= NewIrql);
+    /* Use workaround during early boot when CR8 might not be accessible */
+    if (KeCurrentIrqlWorkaround != 0xFF) {
+        KeCurrentIrqlWorkaround = NewIrql;
+        return;
+    }
+
+    /* Normal path with CR8 */
     __writecr8(NewIrql);
 }
 
@@ -94,8 +114,15 @@ KfRaiseIrql(
 {
     KIRQL OldIrql;
 
+    /* Use workaround during early boot when CR8 might not be accessible */
+    if (KeCurrentIrqlWorkaround != 0xFF) {
+        OldIrql = KeCurrentIrqlWorkaround;
+        KeCurrentIrqlWorkaround = NewIrql;
+        return OldIrql;
+    }
+
+    /* Normal path with CR8 */
     OldIrql = (KIRQL)__readcr8();
-    //ASSERT(OldIrql <= NewIrql);
     __writecr8(NewIrql);
     return OldIrql;
 }

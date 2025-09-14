@@ -18,10 +18,35 @@ PDEVICE_OBJECT
 PdoCreateLunDevice(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
+
+    DPRINT1("=== PdoCreateLunDevice DEBUG ===\n");
+    DPRINT1("DeviceExtension parameter: %p\n", DeviceExtension);
+    
+    if (!DeviceExtension) {
+        DPRINT1("ERROR: DeviceExtension is NULL!\n");
+        return NULL;
+    }
+    
+    DPRINT1("DeviceExtension->Common.DeviceObject: %p\n", DeviceExtension->Common.DeviceObject);
+    DPRINT1("DeviceExtension->Common.IsFDO: %d\n", DeviceExtension->Common.IsFDO);
+    
+
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     PDEVICE_OBJECT LunPDO;
 
+    /* Validate input parameters */
+    if (!DeviceExtension || !DeviceExtension->Common.DeviceObject)
+    {
+        DPRINT1("PdoCreateLunDevice: Invalid DeviceExtension or DeviceObject\n");
+        return NULL;
+    }
+
     ULONG LunExtensionSize = DeviceExtension->LunExtensionSize + sizeof(SCSI_PORT_LUN_EXTENSION);
+
+    DPRINT1("PdoCreateLunDevice: LunExtensionSize calculation:\n");
+    DPRINT1("  DeviceExtension->LunExtensionSize: %lu\n", DeviceExtension->LunExtensionSize);
+    DPRINT1("  sizeof(SCSI_PORT_LUN_EXTENSION): %lu\n", sizeof(SCSI_PORT_LUN_EXTENSION));
+    DPRINT1("  Total LunExtensionSize: %lu\n", LunExtensionSize);
 
     NTSTATUS Status = IoCreateDevice(DeviceExtension->Common.DeviceObject->DriverObject,
                                      LunExtensionSize,
@@ -45,6 +70,16 @@ PdoCreateLunDevice(
     LunExtension->Common.IsFDO = FALSE;
     LunExtension->Common.DeviceObject = LunPDO;
     LunExtension->Common.LowerDevice = DeviceExtension->Common.DeviceObject;
+
+    /* Validate that the Common fields are set correctly */
+    ASSERT(LunExtension->Common.DeviceObject == LunPDO);
+    ASSERT(LunExtension->Common.LowerDevice == DeviceExtension->Common.DeviceObject);
+    ASSERT(!LunExtension->Common.IsFDO);
+
+    DPRINT1("PDO created: PDO=%p, LunExt=%p, FDO=%p, FDOExt=%p\n",
+           LunPDO, LunExtension, DeviceExtension->Common.DeviceObject, DeviceExtension);
+    DPRINT1("  After init: Common.DeviceObject=%p, Common.LowerDevice=%p, Common.IsFDO=%d\n",
+           LunExtension->Common.DeviceObject, LunExtension->Common.LowerDevice, LunExtension->Common.IsFDO);
 
     /* Initialize a list of requests */
     InitializeListHead(&LunExtension->SrbInfo.Requests);

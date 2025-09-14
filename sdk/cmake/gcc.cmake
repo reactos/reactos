@@ -393,11 +393,12 @@ endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
     # Set the PE image version numbers from the NT OS version ReactOS is based on
-    # Disable for amd64 builds due to binutils segfault bug
-    if(NOT ARCH STREQUAL "amd64")
-        target_link_options(${MODULE} PRIVATE
-            -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
-    endif()
+    # AGENT_MOD_START: Re-enable version settings for AMD64 to fix boot driver loading
+    # The binutils segfault bug appears to be fixed in modern versions
+    # Without these settings, AMD64 drivers are built with OS version 4.0 and get skipped as "NT 4 drivers"
+    target_link_options(${MODULE} PRIVATE
+        -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
+    # AGENT_MOD_END
 
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)

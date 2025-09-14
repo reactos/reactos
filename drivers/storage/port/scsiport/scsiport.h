@@ -14,6 +14,9 @@
 #include <ntdddisk.h>
 #include <mountdev.h>
 
+/* Ensure consistent structure packing between i386 and AMD64 */
+#pragma pack(push, 8)
+
 #ifdef DBG
 #include <debug/driverdbg.h>
 #endif
@@ -138,6 +141,12 @@ typedef struct _SCSI_PORT_COMMON_EXTENSION
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT LowerDevice;
     BOOLEAN IsFDO;
+    /* Add padding for proper alignment on AMD64 */
+#ifdef _WIN64
+    UCHAR Padding[7];  /* Align to 8-byte boundary */
+#else
+    UCHAR Padding[3];  /* Align to 4-byte boundary */
+#endif
 } SCSI_PORT_COMMON_EXTENSION, *PSCSI_PORT_COMMON_EXTENSION;
 
 // PDO device
@@ -148,6 +157,11 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
     UCHAR PathId;
     UCHAR TargetId;
     UCHAR Lun;
+#ifdef _WIN64
+    UCHAR Padding1[5];  /* Align ULONG Flags to 8-byte boundary on AMD64 */
+#else
+    UCHAR Padding1[1];  /* Align ULONG Flags to 4-byte boundary on i386 */
+#endif
 
     ULONG Flags;
 
@@ -473,3 +487,6 @@ ScsiPortAllocateAdapterChannel(
     _In_ PIRP Irp,
     _In_ PVOID MapRegisterBase,
     _In_ PVOID Context);
+
+/* Restore previous packing */
+#pragma pack(pop)

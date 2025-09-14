@@ -176,17 +176,29 @@ KdbSymPrintAddress(
                                         FileName,
                                         FunctionName))
         {
+#ifdef _WIN64
+            KdbPrintf("<%s:%llx (%s:%d (%s))>",
+                      ModuleNameAnsi, (ULONGLONG)RelativeAddress,
+                      FileName, LineNumber, FunctionName);
+#else
             KdbPrintf("<%s:%x (%s:%d (%s))>",
                       ModuleNameAnsi, RelativeAddress,
                       FileName, LineNumber, FunctionName);
+#endif
             Printed = TRUE;
         }
     }
 
     if (!Printed)
     {
+        
         /* Just print module & address */
+#ifdef _WIN64
+        KdbPrintf("<%s:%llx>", ModuleNameAnsi, (ULONGLONG)RelativeAddress);
+#else
         KdbPrintf("<%s:%x>", ModuleNameAnsi, RelativeAddress);
+#endif
+
     }
 
     return TRUE;

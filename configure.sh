@@ -41,7 +41,7 @@ EOF
 
 # Default values (will be overridden by ReactOS.cmake and command line)
 ARCH="amd64"
-BUILD_TYPE="Release"
+BUILD_TYPE="Debug"
 CMAKE_GENERATOR=""
 OUTPUT_DIR=""
 TOOLCHAIN_PATH=""
