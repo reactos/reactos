@@ -51,12 +51,12 @@ ProcessCommand(
         pCommand = pContext->pCommandListHead;
         while (pCommand != NULL)
         {
-            if (_wcsicmp(argv[0], pCommand->pwszCmdToken) == 0)
+            if (_wcsicmp(argv[dwCurrentIndex], pCommand->pwszCmdToken) == 0)
             {
-                dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex, dwArgCount, 0, NULL, bDone);
+                dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex + 1, dwArgCount, 0, NULL, bDone);
                 if (dwError != ERROR_SUCCESS)
                 {
-                   ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
+                    ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
                     ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
                 }
                 return TRUE;
@@ -68,7 +68,7 @@ ProcessCommand(
         pGroup = pContext->pGroupListHead;
         while (pGroup != NULL)
         {
-            if (_wcsicmp(argv[0], pGroup->pwszCmdGroupToken) == 0)
+            if (_wcsicmp(argv[dwCurrentIndex], pGroup->pwszCmdGroupToken) == 0)
             {
                 if (dwArgCount == 1)
                 {
@@ -80,10 +80,9 @@ ProcessCommand(
                     pCommand = pGroup->pCommandListHead;
                     while (pCommand != NULL)
                     {
-                        if ((dwArgCount > 1) && (_wcsicmp(argv[1], pCommand->pwszCmdToken) == 0))
-//                        if ((dwArgCount > dwCurrentIndex + 1) && (wcsicmp(argv[dwCurrentIndex + 1], pCommand->pwszCmdToken) == 0))
+                        if ((dwArgCount > 1) && (_wcsicmp(argv[dwCurrentIndex + 1], pCommand->pwszCmdToken) == 0))
                         {
-                            dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex + 1, dwArgCount, 0, NULL, bDone);
+                            dwError = pCommand->pfnCmdHandler(NULL, argv, dwCurrentIndex + 2, dwArgCount, 0, NULL, bDone);
                             if (dwError != ERROR_SUCCESS)
                             {
                                 ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
