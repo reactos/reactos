@@ -11,7 +11,6 @@
 #include "cmbatt.h"
 
 #include <acpiioct.h>
-#include <debug.h>
 
 typedef struct _ACPI_PACKAGE_FIELD
 {
@@ -385,7 +384,7 @@ CmBattSetTripPoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     PAGED_CODE();
     if (CmBattDebug & 0x440)
         DbgPrint("CmBattSetTripPoint: _BTP Alarm Value %x Device %x Tid %x\n",
-                 AlarmValue, DeviceExtension->DeviceId, KeGetCurrentThread);
+                 AlarmValue, DeviceExtension->DeviceId, KeGetCurrentThread());
 
     /* Request the _BTP method */
     *(PULONG)InputBuffer.MethodName = 'PTB_';
