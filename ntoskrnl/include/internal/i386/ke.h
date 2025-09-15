@@ -218,8 +218,23 @@ typedef union _KTRAP_EXIT_SKIP_BITS
 // more time, this way we don't redefine ALL opcode handlers to have 3 parameters,
 // which would be forcing stack usage in all other scenarios.
 //
+#ifdef __GNUC__
+/* Workaround for GCC warning about writing to address near 0
+ * The compiler doesn't understand that KiNtVdmState points to a valid fixed address
+ */
+extern const PULONG KiNtVdmState;
+static inline void KiVdmSetVdmEFlags(ULONG x) {
+    volatile PLONG ptr = (PLONG)KiNtVdmState;
+    InterlockedOr(ptr, (x));
+}
+static inline void KiVdmClearVdmEFlags(ULONG x) {
+    volatile PLONG ptr = (PLONG)KiNtVdmState;
+    InterlockedAnd(ptr, ~(x));
+}
+#else
 #define KiVdmSetVdmEFlags(x)        InterlockedOr((PLONG)KiNtVdmState, (x));
 #define KiVdmClearVdmEFlags(x)      InterlockedAnd((PLONG)KiNtVdmState, ~(x))
+#endif
 #define KiCallVdmHandler(x)         KiVdmOpcode##x(TrapFrame, Flags)
 #define KiCallVdmPrefixHandler(x)   KiVdmOpcodePrefix(TrapFrame, Flags | x)
 #define KiVdmUnhandledOpcode(x)                     \

@@ -98,9 +98,6 @@ HalInitSystem(
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
 
-        // AGENT-MODIFIED: Temporarily bypass HAL mismatch checks to diagnose issue
-        // The PRCB appears uninitialized at this point in x64 builds
-        #if 0
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
         {
@@ -114,7 +111,6 @@ HalInitSystem(
             /* No match, bugcheck */
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
-        #endif
 
         /* Initialize ACPI */
         Status = HalpSetupAcpiPhase0(LoaderBlock);

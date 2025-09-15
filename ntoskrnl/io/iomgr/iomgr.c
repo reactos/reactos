@@ -404,16 +404,6 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     IO_STATUS_BLOCK IoStatusBlock;
     PFILE_OBJECT FileObject;
 
-    /* AGENT-MODIFIED: Add debug trace and UEFI handling */
-    DPRINT1("AGENT-DEBUG: IopMarkBootPartition called\n");
-    
-    /* For UEFI boot, ARC names might not exist - skip this step */
-    if (LoaderBlock->FirmwareInformation.FirmwareTypeEfi == 1)
-    {
-        DPRINT1("AGENT-DEBUG: UEFI boot - skipping boot partition marking (ARC names not available)\n");
-        return TRUE;  /* Return success for UEFI */
-    }
-
     /* Build the ARC device name */
     sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&DeviceString, Buffer);
