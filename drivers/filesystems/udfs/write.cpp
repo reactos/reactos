@@ -990,11 +990,11 @@ try_exit:   NOTHING;
                 // Update ValidDataLength
                 if(!IsThisADeferredWrite &&
                    NtReqFcb) {
-                    if(NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart < (ByteOffset.QuadPart + NumberBytesWritten)) {
+                    if(NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart < (LONGLONG)(ByteOffset.QuadPart + NumberBytesWritten)) {
 
                         NtReqFcb->CommonFCBHeader.ValidDataLength.QuadPart =
                             min(NtReqFcb->CommonFCBHeader.FileSize.QuadPart,
-                                ByteOffset.QuadPart + NumberBytesWritten);
+                                (LONGLONG)(ByteOffset.QuadPart + NumberBytesWritten));
                     }
                 }
             }

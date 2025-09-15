@@ -1790,9 +1790,13 @@ LPITEMIDLIST _ILCreateDesktop(void)
     LPITEMIDLIST ret;
 
     TRACE("()\n");
-    ret = SHAlloc(2);
+    ret = SHAlloc(sizeof(USHORT)); /* Allocate space for empty ITEMIDLIST (cb = 0) */
     if (ret)
-        ret->mkid.cb = 0;
+    {
+        /* An empty ITEMIDLIST is just a USHORT set to 0 */
+        LPWORD ptr = (LPWORD)ret;
+        *ptr = 0;
+    }
     return ret;
 }
 

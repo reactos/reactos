@@ -3855,15 +3855,17 @@ Return Value:
 
         //
         //  Store a pseudo path entry in our local buffer.
+        //  We only need the first few fields, not the entire structure.
         //
 
+        RtlZeroMemory( LocalBuffer, sizeof( LocalBuffer ));
+
+        /* Use byte offsets to avoid cast warnings */
+        LocalBuffer[FIELD_OFFSET(RAW_PATH_ISO, DirIdLen)] = 1;  /* DirIdLen = 1 */
+        *((PUSHORT)&LocalBuffer[FIELD_OFFSET(RAW_PATH_ISO, ParentNum)]) = 1;  /* ParentNum = 1 */
+        LocalBuffer[FIELD_OFFSET(RAW_PATH_ISO, DirId)] = '\0';  /* DirId[0] = '\0' */
+
         RawPath = (PRAW_PATH_ISO) LocalBuffer;
-
-        RtlZeroMemory( RawPath, sizeof( LocalBuffer ));
-
-        RawPath->DirIdLen = 1;
-        RawPath->ParentNum = 1;
-        RawPath->DirId[0] = '\0';
 
         //
         //  Now copy to the user's buffer.

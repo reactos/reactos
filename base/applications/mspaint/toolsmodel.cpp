@@ -22,6 +22,7 @@ ToolsModel::ToolsModel()
     m_rubberRadius = 4;
     m_transpBg = FALSE;
     m_zoom = 1000;
+    m_pToolObject = NULL;  /* Initialize to NULL before calling GetOrCreateTool */
     m_pToolObject = GetOrCreateTool(m_activeTool);
 }
 

@@ -70,7 +70,7 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
 
 %start XSLPattern
 
-%pure-parser
+%define api.pure
 %parse-param {parser_param* p}
 %parse-param {void* scanner}
 %lex-param {yyscan_t* scanner}

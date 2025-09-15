@@ -1483,8 +1483,11 @@ C1_SetData(
     hFontOld = SelectObject(hMemDC, hFont);
     for (iKey = C1K_OEM_3; iKey < C1K_BACKSPACE; ++iKey)
     {
-        pC1->Data[1][iKey] = pData->wCode[0][(BYTE)gC1K2VK[iKey]];
-        pC1->Data[0][iKey] = pData->wCode[1][(BYTE)gC1K2VK[iKey]];
+        /* We've verified uCount == 2, so accessing wCode[0] and wCode[1] is safe.
+         * Cast to avoid compiler warning about array bounds. */
+        const WORD (*pWCode)[256] = (const WORD (*)[256])pData->wCode;
+        pC1->Data[1][iKey] = pWCode[0][(BYTE)gC1K2VK[iKey]];
+        pC1->Data[0][iKey] = pWCode[1][(BYTE)gC1K2VK[iKey]];
     }
 
     SetBkColor(hMemDC, RGB(191, 191, 191));

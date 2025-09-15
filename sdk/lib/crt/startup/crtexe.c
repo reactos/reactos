@@ -343,11 +343,12 @@ check_managed_app (void)
   mingw_initltssuo_force=1;
   mingw_initcharmax=1;
 
-  pDOSHeader = (PIMAGE_DOS_HEADER) &__ImageBase;
+  /* __ImageBase is the base address of the module, cast to avoid warnings */
+  pDOSHeader = (PIMAGE_DOS_HEADER)(void *) &__ImageBase;
   if (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)
     return 0;
 
-  pPEHeader = (PIMAGE_NT_HEADERS)((char *)pDOSHeader + pDOSHeader->e_lfanew);
+  pPEHeader = (PIMAGE_NT_HEADERS)((unsigned char *)pDOSHeader + pDOSHeader->e_lfanew);
   if (pPEHeader->Signature != IMAGE_NT_SIGNATURE)
     return 0;
 

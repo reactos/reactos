@@ -189,6 +189,10 @@ KiCompleteTimer(IN PKTIMER Timer,
     /* Signal the timer if it's still on our list */
     if (!IsListEmpty(&ListHead)) RequestInterrupt = KiSignalTimer(Timer);
 
+    /* Clear the pointers to avoid dangling pointer warning */
+    Timer->TimerListEntry.Flink = NULL;
+    Timer->TimerListEntry.Blink = NULL;
+
     /* Release the dispatcher lock */
     KiReleaseDispatcherLockFromSynchLevel();
 

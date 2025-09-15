@@ -216,7 +216,7 @@ static int wql_lex( void *val, struct parser *parser );
 %lex-param { struct parser *ctx }
 %parse-param { struct parser *ctx }
 %define parse.error verbose
-%pure-parser
+%define api.pure
 
 %union
 {

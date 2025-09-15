@@ -514,8 +514,8 @@ UiEscapeString(PCHAR String)
             // Escape the character
             String[Idx] = '\n';
 
-            // Move the rest of the string up
-            strcpy(&String[Idx+1], &String[Idx+2]);
+            // Move the rest of the string up (including null terminator)
+            memmove(&String[Idx+1], &String[Idx+2], strlen(&String[Idx+2]) + 1);
         }
     }
 }

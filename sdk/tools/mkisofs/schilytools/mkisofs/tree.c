@@ -386,7 +386,7 @@ sort_n_finish(this_dir)
 				rootname[5] = 0;
 		}
 		new_reclen = strlen(rootname);
-		sprintf(newname, "%s000%s%s",
+		snprintf(newname, sizeof(newname), "%s000%s%s",
 				rootname,
 				extname,
 				((s_entry->isorec.flags[0] & ISO_DIRECTORY) ||
@@ -2121,7 +2121,7 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 
 		switch (lstatbuf.st_mode & S_IFMT) {
 		case S_IFDIR:
-			sprintf(buffer, "D\t%s\n",
+			snprintf(buffer, sizeof(buffer), "D\t%s\n",
 				s_entry->name);
 			break;
 
@@ -2146,7 +2146,7 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 
 #ifdef S_IFBLK
 		case S_IFBLK:
-			sprintf(buffer, "B\t%s\t%lu %lu\n",
+			snprintf(buffer, sizeof(buffer), "B\t%s\t%lu %lu\n",
 				s_entry->name,
 				(unsigned long) major(statbuf.st_rdev),
 				(unsigned long) minor(statbuf.st_rdev));
@@ -2154,13 +2154,13 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 #endif
 #ifdef S_IFIFO
 		case S_IFIFO:
-			sprintf(buffer, "P\t%s\n",
+			snprintf(buffer, sizeof(buffer), "P\t%s\n",
 				s_entry->name);
 			break;
 #endif
 #ifdef S_IFCHR
 		case S_IFCHR:
-			sprintf(buffer, "C\t%s\t%lu %lu\n",
+			snprintf(buffer, sizeof(buffer), "C\t%s\t%lu %lu\n",
 				s_entry->name,
 				(unsigned long) major(statbuf.st_rdev),
 				(unsigned long) minor(statbuf.st_rdev));
@@ -2180,19 +2180,19 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 			nchar = -1;
 #endif
 			symlink_buff[nchar < 0 ? 0 : nchar] = 0;
-			sprintf(buffer, "L\t%s\t%s\n",
+			snprintf(buffer, sizeof(buffer), "L\t%s\t%s\n",
 				s_entry->name, symlink_buff);
 			break;
 #endif
 #ifdef S_IFSOCK
 		case S_IFSOCK:
-			sprintf(buffer, "S\t%s\n",
+			snprintf(buffer, sizeof(buffer), "S\t%s\n",
 				s_entry->name);
 			break;
 #endif
 		case S_IFREG:
 		default:
-			sprintf(buffer, "F\t%s\n",
+			snprintf(buffer, sizeof(buffer), "F\t%s\n",
 				s_entry->name);
 			break;
 		};

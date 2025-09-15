@@ -710,7 +710,8 @@ static BOOL codeview_add_type_enum_field_list(struct module* module,
             const char* name = (const char*)&type->enumerate_v3.value + vlen;
 
             symt_add_enum_element(module, symt, name, value);
-            ptr += 2 + 2 + vlen + (1 + strlen(name));
+            /* name points to variable-length data after the structure */
+            ptr += 2 + 2 + vlen + (name ? 1 + strlen(name) : 1);
             break;
         }
 

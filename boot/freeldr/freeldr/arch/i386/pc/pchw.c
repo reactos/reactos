@@ -189,8 +189,9 @@ static
 PVOID
 GetInt1eTable(VOID)
 {
-    PUSHORT SegPtr = (PUSHORT)0x7A;
-    PUSHORT OfsPtr = (PUSHORT)0x78;
+    /* INT 1E vector is at 0x0078 (offset) and 0x007A (segment) in real mode IVT */
+    volatile PUSHORT SegPtr = (volatile PUSHORT)(ULONG_PTR)0x7A;
+    volatile PUSHORT OfsPtr = (volatile PUSHORT)(ULONG_PTR)0x78;
 
     return (PVOID)((ULONG_PTR)(((ULONG)(*SegPtr)) << 4) + (ULONG)(*OfsPtr));
 }

@@ -390,8 +390,18 @@ ACPI_GLOBAL (BOOLEAN,               AcpiGbl_SystemAwakeAndRunning);
     Prototype;
 
 #else
+/*
+ * For non-debug builds, define debug functions as empty inline stubs.
+ * Note: Some compilers may warn about unused static functions.
+ * This is expected behavior when debug output is disabled.
+ */
+#if defined(__GNUC__)
+#define ACPI_DBG_DEPENDENT_RETURN_VOID(Prototype) \
+    __attribute__((unused)) static ACPI_INLINE Prototype {return;}
+#else
 #define ACPI_DBG_DEPENDENT_RETURN_VOID(Prototype) \
     static ACPI_INLINE Prototype {return;}
+#endif
 
 #endif /* ACPI_DEBUG_OUTPUT */
 
@@ -429,11 +439,22 @@ ACPI_GLOBAL (BOOLEAN,               AcpiGbl_SystemAwakeAndRunning);
     ACPI_EXTERNAL_RETURN_VOID(Prototype)
 
 #else
+/*
+ * For non-debugger builds, define debugger functions as empty inline stubs.
+ */
+#if defined(__GNUC__)
+#define ACPI_DBR_DEPENDENT_RETURN_OK(Prototype) \
+    __attribute__((unused)) static ACPI_INLINE Prototype {return(AE_OK);}
+
+#define ACPI_DBR_DEPENDENT_RETURN_VOID(Prototype) \
+    __attribute__((unused)) static ACPI_INLINE Prototype {return;}
+#else
 #define ACPI_DBR_DEPENDENT_RETURN_OK(Prototype) \
     static ACPI_INLINE Prototype {return(AE_OK);}
 
 #define ACPI_DBR_DEPENDENT_RETURN_VOID(Prototype) \
     static ACPI_INLINE Prototype {return;}
+#endif
 
 #endif /* ACPI_DEBUGGER */
 

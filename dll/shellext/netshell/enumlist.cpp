@@ -59,6 +59,11 @@ PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
 
     /* Copy the connection properties */
     pnetid = ILGetConnData(pidl);
+    if (!pnetid)
+    {
+        CoTaskMemFree(pidl);
+        goto end;
+    }
     memset(pnetid->Unknown, 0, sizeof(pnetid->Unknown));
     pnetid->clsidThisObject = pProperties->clsidThisObject;
     pnetid->guidId = pProperties->guidId;

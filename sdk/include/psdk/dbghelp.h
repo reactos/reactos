@@ -630,6 +630,13 @@ typedef enum _MINIDUMP_CALLBACK_TYPE
     MemoryCallback,
 } MINIDUMP_CALLBACK_TYPE;
 
+/* These structures don't match Windows SDK but are kept for compatibility.
+ * The alignment warning is expected due to pack(4) with embedded CONTEXT. */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpacked-not-aligned"
+#endif
+
 typedef struct _MINIDUMP_THREAD_CALLBACK
 {
     ULONG                       ThreadId;
@@ -651,6 +658,10 @@ typedef struct _MINIDUMP_THREAD_EX_CALLBACK
     ULONG64                     BackingStoreBase;
     ULONG64                     BackingStoreEnd;
 } MINIDUMP_THREAD_EX_CALLBACK, *PMINIDUMP_THREAD_EX_CALLBACK;
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 typedef struct _MINIDUMP_INCLUDE_THREAD_CALLBACK
 {

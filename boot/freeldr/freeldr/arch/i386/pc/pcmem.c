@@ -215,7 +215,12 @@ PcMemCheckUsableMemorySize(VOID)
     /* Make sure the usable memory is large enough. To do this we check the 16
        bit value at address 0x413 inside the BDA, which gives us the usable size
        in KB */
-    Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
+    union {
+        ULONG_PTR Address;
+        volatile PUSHORT Ptr;
+    } BiosMemSize;
+    BiosMemSize.Address = 0x413;
+    Size = (*BiosMemSize.Ptr) * 1024;
     RequiredSize = FREELDR_BASE + FrLdrImageSize + PAGE_SIZE;
     if (Size < RequiredSize)
     {

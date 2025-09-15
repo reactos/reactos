@@ -701,17 +701,20 @@ ULONG
 PcGetSerialPort(ULONG Index, PULONG Irq)
 {
     static const ULONG PcIrq[MAX_COM_PORTS] = {4, 3, 4, 3};
-    PUSHORT BasePtr;
 
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
      * Each COM port address is stored in a 2-byte field.
      * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
-    BasePtr = (PUSHORT)0x400;
+    union {
+        ULONG_PTR Address;
+        volatile PUSHORT Ptr;
+    } ComPortBase;
+    ComPortBase.Address = 0x400 + (Index * sizeof(USHORT));
     *Irq = PcIrq[Index];
 
-    return (ULONG) *(BasePtr + Index);
+    return (ULONG) *ComPortBase.Ptr;
 }
 
 /*

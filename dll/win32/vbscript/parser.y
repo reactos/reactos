@@ -81,7 +81,7 @@ static statement_t *link_statements(statement_t*,statement_t*);
 
 %lex-param { parser_ctx_t *ctx }
 %parse-param { parser_ctx_t *ctx }
-%pure-parser
+%define api.pure
 %start Program
 
 %union {
@@ -102,6 +102,8 @@ static statement_t *link_statements(statement_t*,statement_t*);
     BOOL boolean;
     double dbl;
 }
+
+%expect 9
 
 %token tEXPRESSION tEOF tNL tEMPTYBRACKETS
 %token tLTEQ tGTEQ tNEQ

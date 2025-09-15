@@ -823,7 +823,7 @@ CODE_SEG("PAGE")
 ULONG
 DcGetBusModeParameters(
     _In_ PDC21X4_ADAPTER Adapter,
-    _In_ PPCI_COMMON_CONFIG PciData)
+    _In_ PVOID PciData)
 {
     ULONG DefaultMode, NewMode;
 
@@ -835,11 +835,23 @@ DcGetBusModeParameters(
     if (!(Adapter->Features & DC_ENABLE_PCI_COMMANDS))
         return DefaultMode;
 
-    INFO("PCI Cache Line Size %u\n", PciData->CacheLineSize * 4);
-    INFO("PCI Command %04lx\n", PciData->Command);
+    struct {
+        USHORT VendorID;
+        USHORT DeviceID;
+        USHORT Command;
+        USHORT Status;
+        UCHAR RevisionID;
+        UCHAR ProgIf;
+        UCHAR SubClass;
+        UCHAR BaseClass;
+        UCHAR CacheLineSize;
+    } *PciConfig = (PVOID)PciData;
+
+    INFO("PCI Cache Line Size %u\n", PciConfig->CacheLineSize * 4);
+    INFO("PCI Command %04lx\n", PciConfig->Command);
 
     /* Use the cache line size if it was set up by firmware */
-    switch (PciData->CacheLineSize)
+    switch (PciConfig->CacheLineSize)
     {
         case 8:
             NewMode = DC_BUS_MODE_CACHE_ALIGNMENT_8 | DC_BUS_MODE_BURST_LENGTH_8;
@@ -856,7 +868,7 @@ DcGetBusModeParameters(
     }
 
     /* Enable one of those commands */
-    if (PciData->Command & PCI_ENABLE_WRITE_AND_INVALIDATE)
+    if (PciConfig->Command & PCI_ENABLE_WRITE_AND_INVALIDATE)
     {
         NewMode |= DC_BUS_MODE_WRITE_INVALIDATE;
     }
@@ -874,8 +886,18 @@ NDIS_STATUS
 DcRecognizeHardware(
     _In_ PDC21X4_ADAPTER Adapter)
 {
+    struct {
+        USHORT VendorID;
+        USHORT DeviceID;
+        USHORT Command;
+        USHORT Status;
+        UCHAR RevisionID;
+        UCHAR ProgIf;
+        UCHAR SubClass;
+        UCHAR BaseClass;
+        UCHAR CacheLineSize;
+    } PciData;
     UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, CacheLineSize)];
-    PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)Buffer; // Partial PCI header
     PNDIS_TIMER_FUNCTION MediaMonitorRoutine;
     ULONG Bytes;
 
@@ -889,10 +911,13 @@ DcRecognizeHardware(
     if (Bytes != sizeof(Buffer))
         return NDIS_STATUS_FAILURE;
 
-    Adapter->DeviceId = PciConfig->DeviceID;
-    Adapter->RevisionId = PciConfig->RevisionID;
+    /* Copy buffer to our structure */
+    RtlCopyMemory(&PciData, Buffer, sizeof(Buffer));
 
-    switch ((PciConfig->DeviceID << 16) | PciConfig->VendorID)
+    Adapter->DeviceId = PciData.DeviceID;
+    Adapter->RevisionId = PciData.RevisionID;
+
+    switch ((PciData.DeviceID << 16) | PciData.VendorID)
     {
         case DC_DEV_DECCHIP_21040:
         {
@@ -920,7 +945,7 @@ DcRecognizeHardware(
             Adapter->ChipType = DC21140;
             Adapter->Features |= DC_HAS_TIMER;
 
-            if ((PciConfig->RevisionID & 0xF0) < 0x20)
+            if ((PciData.RevisionID & 0xF0) < 0x20)
             {
                 /* 21140 */
                 Adapter->Features |= DC_PERFECT_FILTERING_ONLY;
@@ -948,7 +973,7 @@ DcRecognizeHardware(
 
             Adapter->ChipType = DC21143;
 
-            if ((PciConfig->RevisionID & 0xF0) < 0x20)
+            if ((PciData.RevisionID & 0xF0) < 0x20)
             {
                 /* 21142 */
             }
@@ -962,7 +987,7 @@ DcRecognizeHardware(
             }
 
             /* 21143 -PD and -TD */
-            if ((PciConfig->RevisionID & 0xF0) > 0x30)
+            if ((PciData.RevisionID & 0xF0) > 0x30)
                 Adapter->Features |= DC_HAS_POWER_MANAGEMENT;
 
             Adapter->HandleLinkStateChange = MediaLinkStateChange21143;
@@ -999,7 +1024,7 @@ DcRecognizeHardware(
             return NDIS_STATUS_NOT_RECOGNIZED;
     }
 
-    Adapter->BusMode = DcGetBusModeParameters(Adapter, PciConfig);
+    Adapter->BusMode = DcGetBusModeParameters(Adapter, &PciData);
 
     INFO("Bus Mode %08lx\n", Adapter->BusMode);
 

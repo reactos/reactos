@@ -3241,9 +3241,15 @@ IntGetConsoleKeyboardLayoutName(OUT PVOID pszLayoutName,
     {
         /* Copy only KL_NAMELENGTH == 9 characters, ANSI or UNICODE */
         if (bAnsi)
-            strncpy(pszLayoutName, (PCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH);
+        {
+            strncpy(pszLayoutName, (PCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH - 1);
+            ((PCHAR)pszLayoutName)[KL_NAMELENGTH - 1] = '\0';
+        }
         else
-            wcsncpy(pszLayoutName, (PWCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH);
+        {
+            wcsncpy(pszLayoutName, (PWCHAR)GetKbdLayoutNameRequest->LayoutBuffer, KL_NAMELENGTH - 1);
+            ((PWCHAR)pszLayoutName)[KL_NAMELENGTH - 1] = L'\0';
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
