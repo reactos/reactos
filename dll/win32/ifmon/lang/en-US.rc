@@ -8,11 +8,11 @@ BEGIN
 
     IDS_HLP_IP_SHOW      "Displays IP information."
     IDS_HLP_ADDRESSES    "Displays IP address configuration."
-    IDS_HLP_ADDRESSES_EX "Usage: addresses\n\n    Display IP address configuration.\n"
+    IDS_HLP_ADDRESSES_EX "Usage: addresses [string]\n\n    Display IP address configuration.\n"
     IDS_HLP_CONFIG       "Displays IP address and additional information."
-    IDS_HLP_CONFIG_EX    "Usage: config\n\n    Display IP address and additional information.\n"
+    IDS_HLP_CONFIG_EX    "Usage: config [string]\n\n    Display IP address and additional information.\n"
     IDS_HLP_DNS          "Displays the DNS server addresses."
-    IDS_HLP_DNS_EX       "Usage: dns\n\n    Display DNS server adresses.\n"
+    IDS_HLP_DNS_EX       "Usage: dns [string]\n\n    Display DNS server adresses.\n"
 
     IDS_IP_HEADER        "\nConfiguration for interface ""%s""\n"
     IDS_DHCP_ON          "    DHCP enabled:                         Yes\n"

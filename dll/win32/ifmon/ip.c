@@ -93,7 +93,8 @@ FormatIPv4Address(
 static
 DWORD
 IpShowAdapters(
-    _In_ DWORD DisplayFlags)
+    _In_ DWORD DisplayFlags,
+    _In_ PWSTR InterfaceName)
 {
     PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
     PIP_ADAPTER_UNICAST_ADDRESS pUnicastAddress;
@@ -132,111 +133,114 @@ IpShowAdapters(
     Ptr = pAdapterAddresses;
     while (Ptr)
     {
-        PrintMessageFromModule(hDllInstance, IDS_IP_HEADER, Ptr->FriendlyName);
-
-        if (DisplayFlags & DISPLAY_ADRESSES)
+        if (InterfaceName == NULL || MatchToken(InterfaceName, Ptr->FriendlyName))
         {
-            PrintMessageFromModule(hDllInstance, (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED) ? IDS_DHCP_ON : IDS_DHCP_OFF);
+            PrintMessageFromModule(hDllInstance, IDS_IP_HEADER, Ptr->FriendlyName);
 
-            if (Ptr->FirstUnicastAddress == NULL)
+            if (DisplayFlags & DISPLAY_ADRESSES)
             {
-                PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
-            }
-            else
-            {
-                First = TRUE;
-                pUnicastAddress = Ptr->FirstUnicastAddress;
-                while (pUnicastAddress)
+                PrintMessageFromModule(hDllInstance, (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED) ? IDS_DHCP_ON : IDS_DHCP_OFF);
+
+                if (Ptr->FirstUnicastAddress == NULL)
                 {
-                    if (FormatIPv4Address(IpBuffer, &pUnicastAddress->Address))
-                    {
-                        if (First)
-                        {
-                            PrintMessageFromModule(hDllInstance, (pUnicastAddress->Next)? IDS_IPADDRESSES : IDS_IPADDRESS, IpBuffer);
-                        }
-                        else
-                        {
-                            PrintMessageFromModule(hDllInstance, IDS_EMPTYLINE, IpBuffer);
-                        }
-                        First = FALSE;
-                    }
-
-                    pUnicastAddress = pUnicastAddress->Next;
+                    PrintMessageFromModule(hDllInstance, IDS_NOIPADDRESS);
                 }
-            }
-
-            if (Ptr->FirstPrefix == NULL)
-            {
-                PrintMessage(L"    SubnetMask:                           %s\n", L"None");
-            }
-            else
-            {
-                First = TRUE;
-                pPrefix = Ptr->FirstPrefix;
-                while (pPrefix)
-                {
-                    if (FormatIPv4Address(IpBuffer, &pPrefix->Address))
-                    {
-                        if (First)
-                        {
-                            if (pPrefix->Next)
-                                PrintMessage(L"    SubnetMasks:                          %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
-                            else
-                                PrintMessage(L"    IP Address:                           %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
-                        }
-                        else
-                        {
-                            PrintMessage(L"                                          %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
-                        }
-                        First = FALSE;
-                    }
-
-                    pPrefix = pPrefix->Next;
-                }
-            }
-
-//            PrintMessage(L"    Default Gateway:                      %s\n", L"---");
-//            PrintMessage(L"    Gateway Metric:                       %s\n", L"---");
-//            PrintMessage(L"    Interface Metric:                     %s\n", L"---");
-        }
-
-        if (DisplayFlags & DISPLAY_DNS)
-        {
-            if (Ptr->FirstDnsServerAddress == NULL)
-            {
-                if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
-                    PrintMessage(L"    DNS servers configured through DHCP:  %s\n", L"None");
                 else
-                    PrintMessage(L"    Statically configured DNS Servers:    %s\n", L"None");
-            }
-            else
-            {
-                First = TRUE;
-                pDnsServer = Ptr->FirstDnsServerAddress;
-                while (pDnsServer)
                 {
-                    if (FormatIPv4Address(IpBuffer, &pDnsServer->Address))
+                    First = TRUE;
+                    pUnicastAddress = Ptr->FirstUnicastAddress;
+                    while (pUnicastAddress)
                     {
-                        if (First == TRUE)
+                        if (FormatIPv4Address(IpBuffer, &pUnicastAddress->Address))
                         {
-                            if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
-                                PrintMessage(L"    DNS servers configured through DHCP:  %s\n", IpBuffer);
+                            if (First)
+                            {
+                                PrintMessageFromModule(hDllInstance, (pUnicastAddress->Next)? IDS_IPADDRESSES : IDS_IPADDRESS, IpBuffer);
+                            }
                             else
-                                PrintMessage(L"    Statically configured DNS Servers:    %s\n", IpBuffer);
-                        }
-                        else
-                        {
-                            PrintMessage(L"                                          %s\n", IpBuffer);
+                            {
+                                PrintMessageFromModule(hDllInstance, IDS_EMPTYLINE, IpBuffer);
+                            }
+                            First = FALSE;
                         }
 
-                        First = FALSE;
+                        pUnicastAddress = pUnicastAddress->Next;
                     }
-
-                    pDnsServer = pDnsServer->Next;
                 }
+
+                if (Ptr->FirstPrefix == NULL)
+                {
+                    PrintMessage(L"    SubnetMask:                           %s\n", L"None");
+                }
+                else
+                {
+                    First = TRUE;
+                    pPrefix = Ptr->FirstPrefix;
+                    while (pPrefix)
+                    {
+                        if (FormatIPv4Address(IpBuffer, &pPrefix->Address))
+                        {
+                            if (First)
+                            {
+                                if (pPrefix->Next)
+                                    PrintMessage(L"    SubnetMasks:                          %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
+                                else
+                                    PrintMessage(L"    IP Address:                           %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
+                            }
+                            else
+                            {
+                                PrintMessage(L"                                          %s/%lu\n", IpBuffer, pPrefix->PrefixLength);
+                            }
+                            First = FALSE;
+                        }
+
+                        pPrefix = pPrefix->Next;
+                    }
+                }
+
+//                PrintMessage(L"    Default Gateway:                      %s\n", L"---");
+//                PrintMessage(L"    Gateway Metric:                       %s\n", L"---");
+//                PrintMessage(L"    Interface Metric:                     %s\n", L"---");
             }
 
-//            PrintMessage(L"    Register with which suffix:\n");
+            if (DisplayFlags & DISPLAY_DNS)
+            {
+                if (Ptr->FirstDnsServerAddress == NULL)
+                {
+                    if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+                        PrintMessage(L"    DNS servers configured through DHCP:  %s\n", L"None");
+                    else
+                        PrintMessage(L"    Statically configured DNS Servers:    %s\n", L"None");
+                }
+                else
+                {
+                    First = TRUE;
+                    pDnsServer = Ptr->FirstDnsServerAddress;
+                    while (pDnsServer)
+                    {
+                        if (FormatIPv4Address(IpBuffer, &pDnsServer->Address))
+                        {
+                            if (First == TRUE)
+                            {
+                                if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+                                    PrintMessage(L"    DNS servers configured through DHCP:  %s\n", IpBuffer);
+                                else
+                                    PrintMessage(L"    Statically configured DNS Servers:    %s\n", IpBuffer);
+                            }
+                            else
+                            {
+                                PrintMessage(L"                                          %s\n", IpBuffer);
+                            }
+
+                            First = FALSE;
+                        }
+
+                        pDnsServer = pDnsServer->Next;
+                    }
+                }
+
+//                PrintMessage(L"    Register with which suffix:\n");
+            }
         }
 
         Ptr = Ptr->Next;
@@ -264,7 +268,15 @@ IpShowAddresses(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    return IpShowAdapters(DISPLAY_ADRESSES);
+    PWSTR pszInterfaceName = NULL;
+
+    if (dwArgCount - dwCurrentIndex > 1)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwArgCount - dwCurrentIndex == 1)
+        pszInterfaceName = argv[dwCurrentIndex];
+
+    return IpShowAdapters(DISPLAY_ADRESSES, pszInterfaceName);
 }
 
 
@@ -280,7 +292,15 @@ IpShowConfig(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    return IpShowAdapters(DISPLAY_ADRESSES | DISPLAY_DNS);
+    PWSTR pszInterfaceName = NULL;
+
+    if (dwArgCount - dwCurrentIndex > 1)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwArgCount - dwCurrentIndex == 1)
+        pszInterfaceName = argv[dwCurrentIndex];
+
+    return IpShowAdapters(DISPLAY_ADRESSES | DISPLAY_DNS, pszInterfaceName);
 }
 
 
@@ -296,7 +316,15 @@ IpShowDns(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    return IpShowAdapters(DISPLAY_DNS);
+    PWSTR pszInterfaceName = NULL;
+
+    if (dwArgCount - dwCurrentIndex > 1)
+        return ERROR_INVALID_PARAMETER;
+
+    if (dwArgCount - dwCurrentIndex == 1)
+        pszInterfaceName = argv[dwCurrentIndex];
+
+    return IpShowAdapters(DISPLAY_DNS, pszInterfaceName);
 }
 
 
