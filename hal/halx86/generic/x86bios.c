@@ -580,8 +580,127 @@ HalpBiosDisplayReset(VOID)
     __writeeflags(OldEflags);
     return TRUE;
 #else
-    /* This x64 HAL does NOT currently handle display reset (TODO) */
-    return FALSE;
+    /* AMD64: Initialize VGA directly for 640x480 16-color mode (mode 0x12) */
+    DPRINT1("HalpBiosDisplayReset: AMD64 - Initializing VGA for graphics mode\n");
+
+    /* First, reset the VGA to a known state */
+
+    /* Reset Attribute Controller */
+    (VOID)READ_PORT_UCHAR((PUCHAR)0x3DA);  /* Reset flip-flop */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x00); /* Disable video */
+
+    /* Synchronous reset on */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x00);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x01);
+
+    /* Write Miscellaneous Output Register */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C2, 0xE3);  /* 640x480, 25MHz clock, -hsync, -vsync */
+
+    /* Sequencer registers */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x01);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x01);  /* Clock mode */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x02);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x0F);  /* Enable all planes */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x03);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x00);  /* Character map */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x04);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x06);  /* Chain-4 off, extended memory */
+
+    /* Synchronous reset off */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x00);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x03);
+
+    /* Unlock CRTC registers */
+    WRITE_PORT_UCHAR((PUCHAR)0x3D4, 0x11);
+    WRITE_PORT_UCHAR((PUCHAR)0x3D5, 0x00);
+
+    /* CRTC registers for 640x480 */
+    static const UCHAR crtc_regs[] = {
+        0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0x0B, 0x3E,
+        0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xEA, 0x8C, 0xDF, 0x28, 0x00, 0xE7, 0x04, 0xE3, 0xFF
+    };
+    ULONG i;
+    for (i = 0; i < sizeof(crtc_regs); i++) {
+        WRITE_PORT_UCHAR((PUCHAR)0x3D4, (UCHAR)i);
+        WRITE_PORT_UCHAR((PUCHAR)0x3D5, crtc_regs[i]);
+    }
+
+    /* Graphics Controller registers */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x00);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Set/Reset */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x01);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Enable Set/Reset */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x02);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Color Compare */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x03);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Data Rotate */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x04);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Read Map Select */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x05);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x00);  /* Graphics Mode: Write Mode 0 */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x06);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x05);  /* Miscellaneous: A0000-AFFFF, graphics mode */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x07);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0x0F);  /* Color Don't Care */
+    WRITE_PORT_UCHAR((PUCHAR)0x3CE, 0x08);
+    WRITE_PORT_UCHAR((PUCHAR)0x3CF, 0xFF);  /* Bit Mask */
+
+    /* Attribute Controller registers */
+    static const UCHAR attr_regs[] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
+        0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F
+    };
+
+    (VOID)READ_PORT_UCHAR((PUCHAR)0x3DA);  /* Reset flip-flop */
+    for (i = 0; i < 16; i++) {
+        WRITE_PORT_UCHAR((PUCHAR)0x3C0, (UCHAR)i);
+        WRITE_PORT_UCHAR((PUCHAR)0x3C0, attr_regs[i]);
+    }
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x10);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x01);  /* Graphics mode */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x11);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x00);  /* Overscan color */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x12);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x0F);  /* Color plane enable */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x13);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x00);  /* Horizontal pixel panning */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x14);
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x00);  /* Color select */
+
+    /* Enable video display */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C0, 0x20);
+
+    /* Set DAC mask */
+    WRITE_PORT_UCHAR((PUCHAR)0x3C6, 0xFF);
+
+    /* Clear screen by writing to VGA memory */
+    /* On AMD64, we need to map the VGA memory properly */
+    PHYSICAL_ADDRESS VgaPhysical;
+    PUCHAR VgaBase;
+    ULONG j;
+
+    VgaPhysical.QuadPart = 0xA0000;
+    VgaBase = (PUCHAR)MmMapIoSpace(VgaPhysical, 0x10000, MmNonCached);
+
+    if (VgaBase) {
+        /* Select all planes for writing */
+        WRITE_PORT_UCHAR((PUCHAR)0x3C4, 0x02);
+        WRITE_PORT_UCHAR((PUCHAR)0x3C5, 0x0F);
+
+        /* Clear video memory */
+        for (j = 0; j < 0x10000; j++) {
+            WRITE_REGISTER_UCHAR(VgaBase + j, 0x00);
+        }
+
+        /* Unmap the memory */
+        MmUnmapIoSpace(VgaBase, 0x10000);
+    } else {
+        DPRINT1("HalpBiosDisplayReset: Failed to map VGA memory\n");
+    }
+
+    DPRINT1("HalpBiosDisplayReset: AMD64 VGA graphics mode initialization complete\n");
+    return TRUE;
 #endif
 }
 #endif // _M_AMD64

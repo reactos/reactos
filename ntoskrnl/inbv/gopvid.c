@@ -1,24 +1,21 @@
-/*
- * PROJECT:     ReactOS Kernel
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     UEFI GOP Boot Video Driver support
- * COPYRIGHT:   Copyright 2024-2025 ReactOS
- */
-
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
 
-/*
- * GOP framebuffer backend for INBV/boot video.
- * Notes:
- *  - We support GOP PixelFormat RGBX8 (0), BGRX8 (1), and BitMask (2).
- *  - Write-combined mapping for performance.
- *  - Safe fast paths (memcpy/fill) only when formats match and BGRT isn't preserved.
- *  - All coordinates are in pixels; colors passed as 0x00RRGGBB.
- */
-
-/* ===== Globals ===== */
+typedef struct tagBITMAPINFOHEADER
+{
+    ULONG  biSize;
+    LONG   biWidth;
+    LONG   biHeight;
+    USHORT biPlanes;
+    USHORT biBitCount;
+    ULONG  biCompression;
+    ULONG  biSizeImage;
+    LONG   biXPelsPerMeter;
+    LONG   biYPelsPerMeter;
+    ULONG  biClrUsed;
+    ULONG  biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 
 static PHYSICAL_ADDRESS GopFbPhys = {{0}};
 static PUCHAR           GopFbBase = NULL;
@@ -26,30 +23,25 @@ static SIZE_T           GopFbSize = 0;
 
 static ULONG GopWidth  = 0;
 static ULONG GopHeight = 0;
-static ULONG GopPsl    = 0;   /* PixelsPerScanLine from firmware */
-static ULONG GopPitch  = 0;   /* bytes per scanline (Psl * Bpp) */
+static ULONG GopPsl    = 0;
+static ULONG GopPitch  = 0;
 
-static ULONG GopFormat = 0;   /* 0: RGBX8, 1: BGRX8, 2: BitMask */
-static ULONG GopBpp    = 4;   /* bytes per pixel (2/3/4) */
+static ULONG GopFormat = 0; /* 0=RGBX8, 1=BGRX8, 2=BitMask */
+static ULONG GopBpp    = 4; /* bytes per pixel: 2 or 4 (never 3) */
 
-/* BitMask fields (for Format==2) */
 static ULONG RMShift=0, GMShift=0, BMShift=0;
 static ULONG RWidth=0,  GWidth=0,  BWidth=0;
 static ULONG RMask=0,   GMask=0,   BMask=0;
 
-/* BGRT (preserve logo region if precise dims known) */
 static BOOLEAN   BgrtValid = FALSE;
 static ULONG     BgrtX = 0, BgrtY = 0, BgrtW = 0, BgrtH = 0;
 static ULONGLONG BgrtAddr = 0;
 static ULONG     BgrtSize = 0;
 
-/* ===== Helpers ===== */
-
-static inline VOID
-ComputeMaskInfo(_In_ ULONG Mask, _Out_ PULONG Shift, _Out_ PULONG Width)
+static __inline VOID ComputeMaskInfo(ULONG Mask, PULONG Shift, PULONG Width)
 {
     ULONG s = 0, w = 0;
-    if (Mask != 0)
+    if (Mask)
     {
         while (((Mask >> s) & 1) == 0 && s < 32) s++;
         ULONG m = Mask >> s;
@@ -59,34 +51,27 @@ ComputeMaskInfo(_In_ ULONG Mask, _Out_ PULONG Shift, _Out_ PULONG Width)
     *Width = w;
 }
 
-static inline ULONG
-Scale8ToMask(_In_ UCHAR v8, _In_ ULONG width)
+static __inline ULONG Scale8ToMask(UCHAR v8, ULONG width)
 {
-    if (width == 0) return 0;
-    /* Spread 0..255 into 0..(2^width-1) */
+    if (!width) return 0;
     const ULONG maxv = (1u << width) - 1u;
     return (ULONG)((v8 * maxv + 127u) / 255u);
 }
 
-static inline UCHAR
-ScaleMaskTo8(_In_ ULONG v, _In_ ULONG width)
+static __inline UCHAR ScaleMaskTo8(ULONG v, ULONG width)
 {
-    if (width == 0) return 0;
+    if (!width) return 0;
     const ULONG maxv = (1u << width) - 1u;
     return (UCHAR)((v * 255u + (maxv >> 1)) / maxv);
 }
 
-/* Pack R,G,B (0..255) into destination pixel for current GOP format */
-static inline ULONG
-PackRGB888(_In_ UCHAR r, _In_ UCHAR g, _In_ UCHAR b)
+static __inline ULONG PackRGB888(UCHAR r, UCHAR g, UCHAR b)
 {
     switch (GopFormat)
     {
-        case 0: /* RGBX8 -> memory (LE): B,G,R,X */
-            return ((ULONG)b) | ((ULONG)g << 8) | ((ULONG)r << 16);
-        case 1: /* BGRX8 -> memory (LE): R,G,B,X */
-            return ((ULONG)r) | ((ULONG)g << 8) | ((ULONG)b << 16);
-        case 2: /* BitMask */
+        case 0: return ((ULONG)r) | ((ULONG)g << 8) | ((ULONG)b << 16);  /* RGBX: mem R,G, B, X */
+        case 1: return ((ULONG)b) | ((ULONG)g << 8) | ((ULONG)r << 16);  /* BGRX: mem B,G, R, X */
+        case 2:
         {
             ULONG out = 0;
             if (RWidth) out |= (Scale8ToMask(r, RWidth) << RMShift) & RMask;
@@ -94,29 +79,26 @@ PackRGB888(_In_ UCHAR r, _In_ UCHAR g, _In_ UCHAR b)
             if (BWidth) out |= (Scale8ToMask(b, BWidth) << BMShift) & BMask;
             return out;
         }
-        default:
-            return 0;
+        default: return 0;
     }
 }
 
-/* Unpack a pixel from FB format to 0x00RRGGBB */
-static inline ULONG
-UnpackToRGB888(_In_ ULONG px)
+static __inline ULONG UnpackToRGB888(ULONG px)
 {
     UCHAR r=0,g=0,b=0;
     switch (GopFormat)
     {
-        case 0: /* RGBX8: memory B,G,R,X */
-            b = (UCHAR)( px        & 0xFF);
-            g = (UCHAR)((px >> 8)  & 0xFF);
-            r = (UCHAR)((px >> 16) & 0xFF);
-            break;
-        case 1: /* BGRX8: memory R,G,B,X */
+        case 0:
             r = (UCHAR)( px        & 0xFF);
             g = (UCHAR)((px >> 8)  & 0xFF);
             b = (UCHAR)((px >> 16) & 0xFF);
             break;
-        case 2: /* BitMask */
+        case 1:
+            b = (UCHAR)( px        & 0xFF);
+            g = (UCHAR)((px >> 8)  & 0xFF);
+            r = (UCHAR)((px >> 16) & 0xFF);
+            break;
+        case 2:
         {
             ULONG rv = (px & RMask) >> RMShift;
             ULONG gv = (px & GMask) >> GMShift;
@@ -126,57 +108,46 @@ UnpackToRGB888(_In_ ULONG px)
             b = ScaleMaskTo8(bv, BWidth);
             break;
         }
-        default:
-            break;
+        default: break;
     }
     return ((ULONG)r << 16) | ((ULONG)g << 8) | (ULONG)b;
 }
 
-static inline BOOLEAN
-RectEmpty(_In_ LONG l, _In_ LONG t, _In_ LONG r, _In_ LONG b)
+static __inline BOOLEAN RectEmpty(LONG l, LONG t, LONG r, LONG b)
 {
     return (r < l) || (b < t);
 }
 
-static inline BOOLEAN
-PointInBgrt(_In_ ULONG x, _In_ ULONG y)
+static __inline BOOLEAN PointInBgrt(ULONG x, ULONG y)
 {
-    if (!BgrtValid || BgrtW == 0 || BgrtH == 0) return FALSE;
-    return (x >= BgrtX && x < (BgrtX + BgrtW) &&
-            y >= BgrtY && y < (BgrtY + BgrtH));
+    if (!BgrtValid || !BgrtW || !BgrtH) return FALSE;
+    return (x >= BgrtX && x < (BgrtX + BgrtW) && y >= BgrtY && y < (BgrtY + BgrtH));
 }
 
-/* ===== Public API ===== */
-
-BOOLEAN
-NTAPI
-GopVidInitialize(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+static __inline VOID WritePixel(ULONG x, ULONG y, ULONG rgb)
 {
-    PLOADER_PARAMETER_EXTENSION Ext;
+    if (!GopFbBase) return;
+    if (x >= GopWidth || y >= GopHeight) return;
+    if (PointInBgrt(x, y)) return;
+    SIZE_T offset = (SIZE_T)y * GopPitch + (SIZE_T)x * GopBpp;
+    if (offset + GopBpp > GopFbSize) return;
+    PUCHAR p = GopFbBase + offset;
+    ULONG packed = PackRGB888((UCHAR)((rgb >> 16) & 0xFF),
+                              (UCHAR)((rgb >> 8)  & 0xFF),
+                              (UCHAR)( rgb        & 0xFF));
+    if (GopBpp == 4)      *(PULONG)p  = packed;
+    else if (GopBpp == 2) *(PUSHORT)p = (USHORT)packed;
+    else { p[0]=(UCHAR)(packed & 0xFF); p[1]=(UCHAR)((packed>>8)&0xFF); p[2]=(UCHAR)((packed>>16)&0xFF); }
+}
 
-    DPRINT1("[GOP] Init\n");
+BOOLEAN NTAPI GopVidInitialize(PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    if (KeGetCurrentIrql() > PASSIVE_LEVEL) return FALSE;
+    if (!LoaderBlock || !LoaderBlock->Extension) return FALSE;
 
-    if (KeGetCurrentIrql() > PASSIVE_LEVEL)
-    {
-        DPRINT1("[GOP] Init at IRQL %d is invalid\n", KeGetCurrentIrql());
-        return FALSE;
-    }
+    PLOADER_PARAMETER_EXTENSION Ext = LoaderBlock->Extension;
+    if (Ext->GopFramebuffer.FrameBufferBase.QuadPart == 0 || Ext->GopFramebuffer.FrameBufferSize == 0) return FALSE;
 
-    Ext = LoaderBlock ? LoaderBlock->Extension : NULL;
-    if (!Ext)
-    {
-        DPRINT1("[GOP] No loader extension\n");
-        return FALSE;
-    }
-
-    if (Ext->GopFramebuffer.FrameBufferBase.QuadPart == 0 ||
-        Ext->GopFramebuffer.FrameBufferSize == 0)
-    {
-        DPRINT1("[GOP] Missing framebuffer info\n");
-        return FALSE;
-    }
-
-    /* Basic geometry */
     GopWidth  = Ext->GopFramebuffer.HorizontalResolution;
     GopHeight = Ext->GopFramebuffer.VerticalResolution;
     GopPsl    = Ext->GopFramebuffer.PixelsPerScanLine;
@@ -185,120 +156,104 @@ GopVidInitialize(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     GMask     = Ext->GopFramebuffer.GreenMask;
     BMask     = Ext->GopFramebuffer.BlueMask;
 
-    /* Compute Bpp */
+    SIZE_T denom = (SIZE_T)GopPsl * (SIZE_T)GopHeight;
+    ULONG bpp_from_size = (denom && (Ext->GopFramebuffer.FrameBufferSize % denom) == 0)
+                          ? (ULONG)(Ext->GopFramebuffer.FrameBufferSize / denom)
+                          : 0;
+
     switch (GopFormat)
     {
-        case 0: /* RGBX8 */
-        case 1: /* BGRX8 */
+        case 0:
+        case 1:
             GopBpp = 4;
             break;
-        case 2: /* BitMask (assume up to 32 bits; derive) */
+        case 2:
         {
-            ULONG masks = RMask | GMask | BMask;
-            ULONG bits = 0;
-            while (masks) { bits++; masks >>= 1; }
-            GopBpp = (bits + 7) / 8;
-            if (GopBpp < 2) GopBpp = 2;
-            if (GopBpp > 4) GopBpp = 4;
-
+            if (bpp_from_size == 2 || bpp_from_size == 4) GopBpp = bpp_from_size;
+            else
+            {
+                ULONG masks = RMask | GMask | BMask;
+                GopBpp = (masks <= 0xFFFF) ? 2 : 4;
+            }
             ComputeMaskInfo(RMask, &RMShift, &RWidth);
             ComputeMaskInfo(GMask, &GMShift, &GWidth);
             ComputeMaskInfo(BMask, &BMShift, &BWidth);
             break;
         }
         default:
-            DPRINT1("[GOP] Unsupported PixelFormat=%lu\n", GopFormat);
-            return FALSE; /* PixelBltOnly cannot be linear-mapped */
+            return FALSE;
     }
 
-    /* Pitch & size */
+    if (GopBpp == 3) GopBpp = 4;
+
     GopPitch  = GopPsl * GopBpp;
     GopFbSize = (SIZE_T)Ext->GopFramebuffer.FrameBufferSize;
     GopFbPhys = Ext->GopFramebuffer.FrameBufferBase;
 
-    DPRINT1("[GOP] %ux%u, PSL=%u, Pitch=%u, Format=%lu, Bpp=%u, FB=0x%llx, Size=%u\n",
-            GopWidth, GopHeight, GopPsl, GopPitch, GopFormat, GopBpp,
-            (unsigned long long)GopFbPhys.QuadPart, (unsigned)GopFbSize);
-
-    /* Map FB as write-combined */
     GopFbBase = MmMapIoSpace(GopFbPhys, GopFbSize, MmWriteCombined);
-    if (!GopFbBase)
-    {
-        DPRINT1("[GOP] MmMapIoSpace WC failed, trying NonCached\n");
-        GopFbBase = MmMapIoSpace(GopFbPhys, GopFbSize, MmNonCached);
-        if (!GopFbBase)
-        {
-            DPRINT1("[GOP] Map failed\n");
-            return FALSE;
-        }
-    }
+    if (!GopFbBase) GopFbBase = MmMapIoSpace(GopFbPhys, GopFbSize, MmNonCached);
+    if (!GopFbBase) return FALSE;
 
-    /* BGRT (if precise dims are available in the loader ext, use them) */
+    SIZE_T total = (SIZE_T)GopPitch * (SIZE_T)GopHeight;
+    if (total <= GopFbSize) RtlZeroMemory(GopFbBase, total); else RtlZeroMemory(GopFbBase, GopFbSize);
+
     if (Ext->BgrtInfo.Valid)
     {
         BgrtX    = Ext->BgrtInfo.ImageOffsetX;
         BgrtY    = Ext->BgrtInfo.ImageOffsetY;
         BgrtAddr = Ext->BgrtInfo.ImageAddress;
         BgrtSize = Ext->BgrtInfo.ImageSize;
+        BgrtW = 0; BgrtH = 0;
 
-        /* If your loader provides width/height, set them here.
-           Otherwise we do not preserve (leave W/H at 0). */
-        BgrtW = 0;
-        BgrtH = 0;
-
-        BgrtValid = (BgrtW > 0 && BgrtH > 0);
-        DPRINT1("[GOP] BGRT: off=(%u,%u) addr=0x%llx size=%u preserve=%d\n",
-                BgrtX, BgrtY, (unsigned long long)BgrtAddr, BgrtSize, BgrtValid);
+#pragma pack(push,1)
+        typedef struct { USHORT bfType; ULONG bfSize; USHORT r1; USHORT r2; ULONG bfOffBits; } BMPFILEHEADER;
+#pragma pack(pop)
+        if (BgrtAddr && BgrtSize >= (sizeof(BMPFILEHEADER) + sizeof(BITMAPINFOHEADER)))
+        {
+            PUCHAR p = (PUCHAR)(ULONG_PTR)BgrtAddr;
+            BMPFILEHEADER* bfh = (BMPFILEHEADER*)p;
+            BITMAPINFOHEADER* bih = (BITMAPINFOHEADER*)(p + sizeof(BMPFILEHEADER));
+            if (bfh->bfType == 0x4D42 && bih->biWidth > 0 && bih->biHeight != 0)
+            {
+                BgrtW = (ULONG)bih->biWidth;
+                BgrtH = (ULONG)((bih->biHeight < 0) ? -bih->biHeight : bih->biHeight);
+            }
+        }
+        BgrtValid = (BgrtW && BgrtH);
     }
-    else
-    {
-        BgrtValid = FALSE;
-    }
+    else BgrtValid = FALSE;
 
+    DPRINT1("[GOP] %ux%u PSL=%u Bpp=%u Fmt=%lu\n", GopWidth, GopHeight, GopPsl, GopBpp, GopFormat);
     return TRUE;
 }
 
-VOID
-NTAPI
-GopVidCleanUp(VOID)
+VOID NTAPI GopVidCleanUp(VOID)
 {
-    DPRINT1("[GOP] CleanUp\n");
-    if (GopFbBase)
-    {
-        MmUnmapIoSpace(GopFbBase, GopFbSize);
-        GopFbBase = NULL;
-    }
+    if (GopFbBase) { MmUnmapIoSpace(GopFbBase, GopFbSize); GopFbBase = NULL; }
 }
 
-VOID
-NTAPI
-GopVidResetDisplay(_In_ BOOLEAN HalReset)
+VOID NTAPI GopVidResetDisplay(BOOLEAN HalReset)
 {
     UNREFERENCED_PARAMETER(HalReset);
-    DPRINT1("[GOP] ResetDisplay\n");
-
     if (!GopFbBase) return;
 
     if (!BgrtValid)
     {
-        RtlZeroMemory(GopFbBase, GopPitch * GopHeight);
+        SIZE_T total = (SIZE_T)GopPitch * (SIZE_T)GopHeight;
+        if (total <= GopFbSize) RtlZeroMemory(GopFbBase, total); else RtlZeroMemory(GopFbBase, GopFbSize);
         return;
     }
 
-    /* Clear everything except BGRT rect */
     for (ULONG y = 0; y < GopHeight; ++y)
     {
         PUCHAR row = GopFbBase + (SIZE_T)y * GopPitch;
-
         if (y < BgrtY || y >= (BgrtY + BgrtH))
         {
             RtlZeroMemory(row, (SIZE_T)GopPsl * GopBpp);
         }
         else
         {
-            if (BgrtX > 0)
-                RtlZeroMemory(row, (SIZE_T)BgrtX * GopBpp);
-
+            if (BgrtX > 0) RtlZeroMemory(row, (SIZE_T)BgrtX * GopBpp);
             ULONG after = BgrtX + BgrtW;
             if (after < GopWidth)
             {
@@ -309,51 +264,14 @@ GopVidResetDisplay(_In_ BOOLEAN HalReset)
     }
 }
 
-/* Write a pixel (0x00RRGGBB) with clipping and BGRT preserve */
-static inline VOID
-WritePixel(_In_ ULONG x, _In_ ULONG y, _In_ ULONG rgb)
-{
-    PUCHAR p;
-    ULONG packed;
-
-    if (!GopFbBase) return;
-    if (x >= GopWidth || y >= GopHeight) return;
-    if (PointInBgrt(x, y)) return;
-
-    p = GopFbBase + (SIZE_T)y * GopPitch + (SIZE_T)x * GopBpp;
-
-    packed = PackRGB888((UCHAR)((rgb >> 16) & 0xFF),
-                        (UCHAR)((rgb >> 8)  & 0xFF),
-                        (UCHAR)( rgb        & 0xFF));
-
-    switch (GopBpp)
-    {
-        case 2: *(PUSHORT)p = (USHORT)packed; break;
-        case 3: p[0] = (UCHAR)( packed       & 0xFF);
-                p[1] = (UCHAR)((packed >> 8) & 0xFF);
-                p[2] = (UCHAR)((packed >>16) & 0xFF);
-                break;
-        case 4: *(PULONG)p = packed; break;
-    }
-}
-
-VOID
-NTAPI
-GopVidSolidColorFill(
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG Right,
-    _In_ ULONG Bottom,
-    _In_ UCHAR Color)
+VOID NTAPI GopVidSolidColorFill(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR Color)
 {
     static const ULONG pal16[16] = {
         0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,
         0x555555,0x5555FF,0x55FF55,0x55FFFF,0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF
     };
-
     if (!GopFbBase) return;
 
-    /* Normalize & clip */
     LONG l = (LONG)Left, t = (LONG)Top, r = (LONG)Right, b = (LONG)Bottom;
     if (RectEmpty(l,t,r,b)) return;
 
@@ -365,75 +283,40 @@ GopVidSolidColorFill(
 
     const ULONG rgb = pal16[Color & 0x0F];
 
-    /* Fast row fill (only if 32bpp RGBX/BGRX and no BGRT preservation) */
-    if ((GopFormat == 0 || GopFormat == 1) && GopBpp == 4 && !BgrtValid)
+    if (!BgrtValid && GopBpp == 4 && (ULONG)l <= (ULONG)r)
     {
         const ULONG packed = PackRGB888((UCHAR)((rgb >> 16) & 0xFF),
                                         (UCHAR)((rgb >> 8)  & 0xFF),
                                         (UCHAR)( rgb        & 0xFF));
+        SIZE_T npx = (SIZE_T)(r - l + 1);
         for (ULONG y = (ULONG)t; y <= (ULONG)b; ++y)
         {
             PULONG row = (PULONG)(GopFbBase + (SIZE_T)y * GopPitch + (SIZE_T)l * 4);
-            SIZE_T npx = (SIZE_T)(r - l + 1);
-
-            /* align to 8 bytes then stream 64b if useful */
-            while (((ULONG_PTR)row & 7) && npx) { *row++ = packed; --npx; }
-
-            PULONGLONG q = (PULONGLONG)row;
-            const ULONGLONG vv = ((ULONGLONG)packed) | ((ULONGLONG)packed << 32);
-            while (npx >= 2) { *q++ = vv; npx -= 2; }
-
-            row = (PULONG)q;
-            while (npx) { *row++ = packed; --npx; }
+            SIZE_T bytes = npx * 4;
+            RtlFillMemoryUlong(row, (ULONG)bytes, packed);
         }
         return;
     }
 
-    /* Slow path: per-pixel (handles BGRT) */
     for (ULONG y = (ULONG)t; y <= (ULONG)b; ++y)
-    {
         for (ULONG x = (ULONG)l; x <= (ULONG)r; ++x)
             WritePixel(x, y, rgb);
-    }
 }
 
-VOID
-NTAPI
-GopVidBufferToScreenBlt(
-    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG Width,
-    _In_ ULONG Height,
-    _In_ ULONG Delta)
+VOID NTAPI GopVidBufferToScreenBlt(PUCHAR Buffer, ULONG Left, ULONG Top, ULONG Width, ULONG Height, ULONG Delta)
 {
     if (!GopFbBase || !Buffer) return;
-    if (Width == 0 || Height == 0) return;
+    if (!Width || !Height) return;
     if (Left >= GopWidth || Top >= GopHeight) return;
 
     if (Left + Width  > GopWidth)  Width  = GopWidth  - Left;
     if (Top  + Height > GopHeight) Height = GopHeight - Top;
 
-    /* Determine source bpp (heuristic based on Delta) */
     ULONG srcBpp = 0;
     if (Delta >= Width * 4) srcBpp = 4;
     else if (Delta >= Width * 3) srcBpp = 3;
     else srcBpp = 1;
 
-    /* Safe fast path: if src is 32bpp and FB is BGRX8 and we assume src is already BGRX8
-       (common for INBV logo buffers). Only when not preserving BGRT. */
-    if (!BgrtValid && srcBpp == 4 && GopBpp == 4 && GopFormat == 1)
-    {
-        for (ULONG y = 0; y < Height; ++y)
-        {
-            PUCHAR dst = GopFbBase + (SIZE_T)(Top + y) * GopPitch + (SIZE_T)Left * 4;
-            PUCHAR src = Buffer + (SIZE_T)y * Delta;
-            RtlCopyMemory(dst, src, (SIZE_T)Width * 4);
-        }
-        return;
-    }
-
-    /* Convert per-pixel */
     for (ULONG y = 0; y < Height; ++y)
     {
         PUCHAR src = Buffer + (SIZE_T)y * Delta;
@@ -442,16 +325,19 @@ GopVidBufferToScreenBlt(
             ULONG rgb;
             if (srcBpp == 4)
             {
-                /* Treat as 0x00RRGGBB in memory (common) */
-                rgb = (*(PULONG)(src + (SIZE_T)x * 4)) & 0x00FFFFFF;
+                ULONG spx = *(PULONG)(src + (SIZE_T)x * 4); /* BGRA/BGRX in memory */
+                UCHAR b = (UCHAR)(spx & 0xFF);
+                UCHAR g = (UCHAR)((spx >> 8) & 0xFF);
+                UCHAR r = (UCHAR)((spx >> 16) & 0xFF);
+                rgb = ((ULONG)r << 16) | ((ULONG)g << 8) | (ULONG)b;
             }
             else if (srcBpp == 3)
             {
-                rgb =  ((ULONG)src[x*3 + 0] << 16) |
-                       ((ULONG)src[x*3 + 1] << 8)  |
-                        (ULONG)src[x*3 + 2];
+                rgb = ((ULONG)src[x*3 + 2] << 16) |
+                      ((ULONG)src[x*3 + 1] << 8)  |
+                       (ULONG)src[x*3 + 0];
             }
-            else /* 8bpp palette (CGA 16 subset) */
+            else
             {
                 static const ULONG pal16[16] = {
                     0x000000,0x0000AA,0x00AA00,0x00AAAA,0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,
@@ -464,18 +350,10 @@ GopVidBufferToScreenBlt(
     }
 }
 
-VOID
-NTAPI
-GopVidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG Width,
-    _In_ ULONG Height,
-    _In_ ULONG Delta)
+VOID NTAPI GopVidScreenToBufferBlt(PUCHAR Buffer, ULONG Left, ULONG Top, ULONG Width, ULONG Height, ULONG Delta)
 {
     if (!GopFbBase || !Buffer) return;
-    if (Width == 0 || Height == 0) return;
+    if (!Width || !Height) return;
     if (Left >= GopWidth || Top >= GopHeight) return;
 
     if (Left + Width  > GopWidth)  Width  = GopWidth  - Left;
@@ -491,32 +369,26 @@ GopVidScreenToBufferBlt(
         PUCHAR dst = Buffer + (SIZE_T)y * Delta;
         for (ULONG x = 0; x < Width; ++x)
         {
-            /* Load FB pixel and convert to 0x00RRGGBB */
             PUCHAR p = GopFbBase + (SIZE_T)(Top + y) * GopPitch + (SIZE_T)(Left + x) * GopBpp;
             ULONG px = 0;
-
-            switch (GopBpp)
-            {
-                case 2: px = *(PUSHORT)p; break;
-                case 3: px = (ULONG)p[0] | ((ULONG)p[1] << 8) | ((ULONG)p[2] << 16); break;
-                case 4: px = *(PULONG)p; break;
-            }
+            if (GopBpp == 4) px = *(PULONG)p;
+            else if (GopBpp == 2) px = *(PUSHORT)p;
+            else px = (ULONG)p[0] | ((ULONG)p[1] << 8) | ((ULONG)p[2] << 16);
 
             const ULONG rgb = UnpackToRGB888(px);
 
             if (dstBpp == 4)
             {
-                *(PULONG)(dst + (SIZE_T)x * 4) = rgb;
+                *(PULONG)(dst + (SIZE_T)x * 4) = rgb; /* 0x00RRGGBB */
             }
             else if (dstBpp == 3)
             {
-                dst[x*3 + 0] = (UCHAR)((rgb >> 16) & 0xFF);
+                dst[x*3 + 0] = (UCHAR)( rgb        & 0xFF);
                 dst[x*3 + 1] = (UCHAR)((rgb >>  8) & 0xFF);
-                dst[x*3 + 2] = (UCHAR)( rgb        & 0xFF);
+                dst[x*3 + 2] = (UCHAR)((rgb >> 16) & 0xFF);
             }
             else
             {
-                /* crude quantization to 16-color CGA */
                 UCHAR r = (UCHAR)((rgb >> 16) & 0xFF);
                 UCHAR g = (UCHAR)((rgb >>  8) & 0xFF);
                 UCHAR b = (UCHAR)( rgb        & 0xFF);
@@ -531,23 +403,176 @@ GopVidScreenToBufferBlt(
     }
 }
 
-VOID
-NTAPI
-GopVidDisplayString(_In_z_ PUCHAR String)
+VOID NTAPI GopVidDisplayString(PUCHAR String)
 {
-    /* TODO: Implement 8x16 font rendering to display text on GOP framebuffer.
-       For now, we skip logging to avoid cluttering the debug output since these
-       strings already appear in the regular boot log. */
-    UNREFERENCED_PARAMETER(String);
+    while (*String)
+    {
+        if (*String == '\r' || *String == '\n')
+        {
+            DbgPrint("\n");
+            if (*String == '\r' && *(String + 1) == '\n') String++;
+        }
+        else DbgPrint("%c", *String);
+        String++;
+    }
 }
 
-VOID
-NTAPI
-GopVidBitBlt(_In_ PUCHAR Buffer, _In_ ULONG Left, _In_ ULONG Top)
+VOID NTAPI GopVidBitBlt(PUCHAR Buffer, ULONG Left, ULONG Top)
 {
-    UNREFERENCED_PARAMETER(Buffer);
-    UNREFERENCED_PARAMETER(Left);
-    UNREFERENCED_PARAMETER(Top);
-    /* If your BitBlt format is known, you can decode here and call GopVidBufferToScreenBlt. */
-    DPRINT1("[GOP] BitBlt at (%u,%u) [stub]\n", Left, Top);
+    if (!Buffer || !GopFbBase) return;
+
+    PBITMAPINFOHEADER bih = (PBITMAPINFOHEADER)Buffer;
+    if (bih->biSize < sizeof(BITMAPINFOHEADER)) return;
+
+    ULONG Width = (ULONG)bih->biWidth;
+    ULONG Height = (ULONG)((bih->biHeight < 0) ? -bih->biHeight : bih->biHeight);
+    ULONG BitCount = bih->biBitCount;
+    ULONG Compression = bih->biCompression;
+
+    ULONG PaletteCount = bih->biClrUsed ? bih->biClrUsed : ((BitCount <= 8) ? (1u << BitCount) : 0u);
+    if (BitCount == 4 && PaletteCount < 16) PaletteCount = 16;
+    if (PaletteCount > 256) PaletteCount = 256;
+
+    PUCHAR afterHeader = Buffer + bih->biSize;
+    PUCHAR paletteEndCandidate = afterHeader + (SIZE_T)PaletteCount * sizeof(ULONG);
+    if (paletteEndCandidate < afterHeader) return; /* overflow guard */
+
+    PULONG Palette = (PULONG)afterHeader;
+
+    static ULONG VgaPalette[16];
+    for (ULONG i = 0; i < PaletteCount && i < 16; i++)
+    {
+        ULONG bgra = Palette[i];
+        UCHAR b = (UCHAR)(bgra & 0xFF);
+        UCHAR g = (UCHAR)((bgra >> 8) & 0xFF);
+        UCHAR r = (UCHAR)((bgra >> 16) & 0xFF);
+        VgaPalette[i] = ((ULONG)r << 16) | ((ULONG)g << 8) | (ULONG)b;
+    }
+
+    LONG Delta = ((BitCount * Width + 31) / 32) * 4;
+    PUCHAR DataStart = Buffer + sizeof(BITMAPINFOHEADER) + (SIZE_T)PaletteCount * sizeof(ULONG);
+
+    SIZE_T expected;
+    if (bih->biSizeImage) expected = (SIZE_T)bih->biSizeImage;
+    else expected = (SIZE_T)((((BitCount * Width + 31) / 32) * 4) * Height);
+
+    SIZE_T maxReasonable =
+        (BitCount == 4) ? (SIZE_T)Delta * Height :
+        (SIZE_T)Delta * Height;
+
+    SIZE_T dataSize = (expected <= maxReasonable) ? expected : maxReasonable;
+    PUCHAR DataEnd = DataStart + dataSize;
+    if (DataEnd < DataStart) return; /* overflow guard */
+
+    BOOLEAN IsTopDown = (bih->biHeight < 0);
+
+    if (Compression == 2 && BitCount == 4)
+    {
+        ULONG CurrentY = IsTopDown ? Top : (Top + Height - 1);
+        ULONG CurrentX = Left;
+        LONG YInc = IsTopDown ? 1 : -1;
+        PUCHAR BitmapOffset = DataStart;
+
+        while (BitmapOffset < DataEnd)
+        {
+            if ((SIZE_T)(DataEnd - BitmapOffset) < 1) break;
+            ULONG RleValue = *BitmapOffset++;
+            if (RleValue)
+            {
+                if ((SIZE_T)(DataEnd - BitmapOffset) < 1) break;
+                ULONG NewRleValue = *BitmapOffset++;
+                ULONG Color1 = (NewRleValue >> 4) & 0x0F;
+                ULONG Color2 = NewRleValue & 0x0F;
+                for (ULONG i = 0; i < RleValue; i++)
+                {
+                    ULONG Color = (i & 1) ? Color2 : Color1;
+                    if (CurrentX < GopWidth && CurrentY < GopHeight &&
+                        CurrentX >= Left && CurrentX < (Left + Width) &&
+                        CurrentY >= Top && CurrentY < (Top + Height))
+                    {
+                        WritePixel(CurrentX, CurrentY, VgaPalette[Color & 0x0F]);
+                    }
+                    CurrentX++;
+                }
+            }
+            else
+            {
+                if ((SIZE_T)(DataEnd - BitmapOffset) < 1) break;
+                ULONG Esc = *BitmapOffset++;
+                if (Esc == 0)
+                {
+                    CurrentY += YInc;
+                    CurrentX = Left;
+                }
+                else if (Esc == 1)
+                {
+                    break;
+                }
+                else if (Esc == 2)
+                {
+                    if ((SIZE_T)(DataEnd - BitmapOffset) < 2) break;
+                    CurrentX += *BitmapOffset++;
+                    CurrentY += ((ULONG)(*BitmapOffset++)) * YInc;
+                }
+                else
+                {
+                    ULONG j = Esc;
+                    for (ULONG i = 0; i < j; i++)
+                    {
+                        if (BitmapOffset >= DataEnd) break;
+                        ULONG Code;
+                        if ((i & 1) == 0)
+                        {
+                            Code = (*BitmapOffset >> 4) & 0x0F;
+                        }
+                        else
+                        {
+                            Code = *BitmapOffset & 0x0F;
+                            BitmapOffset++;
+                        }
+                        if (CurrentX < GopWidth && CurrentY < GopHeight &&
+                            CurrentX >= Left && CurrentX < (Left + Width) &&
+                            CurrentY >= Top && CurrentY < (Top + Height))
+                        {
+                            WritePixel(CurrentX, CurrentY, VgaPalette[Code & 0x0F]);
+                        }
+                        CurrentX++;
+                    }
+                    if ((j & 1) && BitmapOffset < DataEnd) BitmapOffset++;
+                    if (((ULONG_PTR)BitmapOffset & 1) && BitmapOffset < DataEnd) BitmapOffset++;
+                }
+            }
+        }
+        return;
+    }
+    else if (BitCount == 4 && Compression == 0)
+    {
+        for (ULONG y = 0; y < Height; y++)
+        {
+            PUCHAR rowBase = IsTopDown
+                ? (DataStart + (SIZE_T)y * Delta)
+                : (DataStart + (SIZE_T)(Height - 1 - y) * Delta);
+
+            PUCHAR InputBuffer = rowBase;
+            UCHAR Colors = 0;
+            for (ULONG x = 0; x < Width; x++)
+            {
+                ULONG Color;
+                if ((x & 1) == 0)
+                {
+                    if (InputBuffer >= DataEnd) return;
+                    Colors = *InputBuffer;
+                    Color = VgaPalette[(Colors >> 4) & 0x0F];
+                }
+                else
+                {
+                    Color = VgaPalette[Colors & 0x0F];
+                    InputBuffer++;
+                }
+                if ((Left + x) < GopWidth && (Top + y) < GopHeight)
+                    WritePixel(Left + x, Top + y, Color);
+            }
+        }
+        return;
+    }
 }
