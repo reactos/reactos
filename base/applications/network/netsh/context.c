@@ -321,7 +321,7 @@ UpCommand(
     if (pCurrentContext != pRootContext)
         pCurrentContext = pCurrentContext->pParentContext;
 
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 
@@ -337,7 +337,7 @@ ExitCommand(
     BOOL *pbDone)
 {
     *pbDone = TRUE;
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 
@@ -352,7 +352,7 @@ RemCommand(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 
@@ -391,7 +391,7 @@ PopdCommand(
 
     HeapFree(GetProcessHeap(), 0, pEntry);
 
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 
@@ -427,7 +427,7 @@ PushdCommand(
         pContextStackHead = pEntry;
     }
 
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 
