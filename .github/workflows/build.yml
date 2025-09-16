@@ -145,11 +145,19 @@ jobs:
   build-msvc-arm:
     strategy:
       matrix:
-        toolset: ['14','14.2'] # VS 2022, 2019
+        os: [windows-2022, windows-latest]
+        toolset: ['14', '14.29'] # VS 2022 (ongoing), 2019 (last)
         arch: [arm, arm64]
         config: [Debug, Release]
+        exclude:
+          # arm64: windows-latest is enough/fine.
+          - os: windows-2022
+            arch: arm64
+          # arm (sdk): only available on windows-2022.
+          - os: windows-latest
+            arch: arm
       fail-fast: false
-    runs-on: windows-latest
+    runs-on: ${{matrix.os}}
     steps:
     - name: Install ninja
       run: choco install -y ninja
