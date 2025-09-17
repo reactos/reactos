@@ -36,7 +36,9 @@ out:
 	return status;
 }
 
-void HDA_AsyncWait(WDFWORKITEM WorkItem) {
+void
+NTAPI
+HDA_AsyncWait(WDFWORKITEM WorkItem) {
 	PHDA_ASYNC_CONTEXT workItemContext = HDAAsyncWorkItem_GetContext(WorkItem);
 
 	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, workItemContext->Count);
@@ -61,7 +63,9 @@ void HDA_AsyncWait(WDFWORKITEM WorkItem) {
 	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__);
 }
 
-NTSTATUS HDA_TransferCodecVerbs(
+NTSTATUS
+NTAPI
+HDA_TransferCodecVerbs(
 	_In_ PVOID _context,
 	_In_ ULONG Count,
 	_Inout_updates_(Count)
@@ -133,7 +137,9 @@ out:
 	return status;
 }
 
-NTSTATUS HDA_AllocateCaptureDmaEngine(
+NTSTATUS
+NTAPI
+HDA_AllocateCaptureDmaEngine(
 	_In_ PVOID _context,
 	_In_ UCHAR CodecAddress,
 	_In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
@@ -184,7 +190,9 @@ NTSTATUS HDA_AllocateCaptureDmaEngine(
 	return STATUS_INSUFFICIENT_RESOURCES;
 }
 
-NTSTATUS HDA_AllocateRenderDmaEngine(
+NTSTATUS
+NTAPI
+HDA_AllocateRenderDmaEngine(
 	_In_ PVOID _context,
 	_In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
 	_In_ BOOLEAN Stripe,
@@ -234,7 +242,9 @@ NTSTATUS HDA_AllocateRenderDmaEngine(
 	return STATUS_INSUFFICIENT_RESOURCES;
 }
 
-NTSTATUS HDA_ChangeBandwidthAllocation(
+NTSTATUS
+NTAPI
+HDA_ChangeBandwidthAllocation(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ PHDAUDIO_STREAM_FORMAT StreamFormat,
@@ -273,7 +283,9 @@ NTSTATUS HDA_ChangeBandwidthAllocation(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_FreeDmaEngine(
+NTSTATUS
+NTAPI
+HDA_FreeDmaEngine(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle
 ) {
@@ -306,7 +318,9 @@ NTSTATUS HDA_FreeDmaEngine(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_SetDmaEngineState(
+NTSTATUS
+NTAPI
+HDA_SetDmaEngineState(
 	_In_ PVOID _context,
 	_In_ HDAUDIO_STREAM_STATE StreamState,
 	_In_ ULONG NumberOfHandles,
@@ -348,7 +362,9 @@ NTSTATUS HDA_SetDmaEngineState(
 	return STATUS_SUCCESS;
 }
 
-VOID HDA_GetWallClockRegister(
+VOID
+NTAPI
+HDA_GetWallClockRegister(
 	_In_ PVOID _context,
 	_Out_ PULONG* Wallclock
 ) {
@@ -360,7 +376,9 @@ VOID HDA_GetWallClockRegister(
 	*Wallclock = (ULONG *)((devData->FdoContext)->m_BAR0.Base.baseptr + HDA_REG_WALLCLKA);
 }
 
-NTSTATUS HDA_GetLinkPositionRegister(
+NTSTATUS
+NTAPI
+HDA_GetLinkPositionRegister(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_Out_ PULONG* Position
@@ -383,7 +401,9 @@ NTSTATUS HDA_GetLinkPositionRegister(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_RegisterEventCallback(
+NTSTATUS
+NTAPI
+HDA_RegisterEventCallback(
 	_In_ PVOID _context,
 	_In_ PHDAUDIO_UNSOLICITED_RESPONSE_CALLBACK Routine,
 	_In_opt_ PVOID Context,
@@ -421,7 +441,9 @@ NTSTATUS HDA_RegisterEventCallback(
 	return STATUS_INSUFFICIENT_RESOURCES;
 }
 
-NTSTATUS HDA_UnregisterEventCallback(
+NTSTATUS
+NTAPI
+HDA_UnregisterEventCallback(
 	_In_ PVOID _context,
 	_In_ UCHAR Tag
 ) {
@@ -448,7 +470,9 @@ NTSTATUS HDA_UnregisterEventCallback(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_GetDeviceInformation(
+NTSTATUS
+NTAPI
+HDA_GetDeviceInformation(
 	_In_ PVOID _context,
 	_Inout_ PHDAUDIO_DEVICE_INFORMATION DeviceInformation
 ) {
@@ -476,7 +500,9 @@ NTSTATUS HDA_GetDeviceInformation(
 	return STATUS_SUCCESS;
 }
 
-void HDA_GetResourceInformation(
+void
+NTAPI
+HDA_GetResourceInformation(
 	_In_ PVOID _context,
 	_Out_ PUCHAR CodecAddress,
 	_Out_ PUCHAR FunctionGroupStartNode
@@ -491,7 +517,9 @@ void HDA_GetResourceInformation(
 		*FunctionGroupStartNode = devData->CodecIds.FunctionGroupStartNode;
 }
 
-NTSTATUS HDA_AllocateDmaBufferWithNotification(
+NTSTATUS
+NTAPI
+HDA_AllocateDmaBufferWithNotification(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ ULONG NotificationCount,
@@ -634,7 +662,9 @@ NTSTATUS HDA_AllocateDmaBufferWithNotification(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_FreeDmaBufferWithNotification(
+NTSTATUS
+NTAPI
+HDA_FreeDmaBufferWithNotification(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ PMDL BufferMdl,
@@ -682,7 +712,9 @@ NTSTATUS HDA_FreeDmaBufferWithNotification(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS HDA_AllocateDmaBuffer(
+NTSTATUS
+NTAPI
+HDA_AllocateDmaBuffer(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ SIZE_T RequestedBufferSize,
@@ -695,7 +727,9 @@ NTSTATUS HDA_AllocateDmaBuffer(
 	return HDA_AllocateDmaBufferWithNotification(_context, Handle, 1, RequestedBufferSize, BufferMdl, AllocatedBufferSize, &OffsetFromFirstPage, StreamId, FifoSize);
 }
 
-NTSTATUS HDA_FreeDmaBuffer(
+NTSTATUS
+NTAPI
+HDA_FreeDmaBuffer(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle
 ) {
@@ -712,7 +746,9 @@ NTSTATUS HDA_FreeDmaBuffer(
 	return HDA_FreeDmaBufferWithNotification(_context, Handle, stream->mdlBuf, stream->bufSz);
 }
 
-NTSTATUS HDA_RegisterNotificationEvent(
+NTSTATUS
+NTAPI
+HDA_RegisterNotificationEvent(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ PKEVENT NotificationEvent
@@ -740,7 +776,9 @@ NTSTATUS HDA_RegisterNotificationEvent(
 	return registered ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
-NTSTATUS HDA_UnregisterNotificationEvent(
+NTSTATUS
+NTAPI
+HDA_UnregisterNotificationEvent(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	_In_ PKEVENT NotificationEvent
@@ -768,7 +806,9 @@ NTSTATUS HDA_UnregisterNotificationEvent(
 	return registered ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
 }
 
-NTSTATUS HDA_RegisterNotificationCallback(
+NTSTATUS
+NTAPI
+HDA_RegisterNotificationCallback(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	PDEVICE_OBJECT Fdo,
@@ -804,7 +844,9 @@ NTSTATUS HDA_RegisterNotificationCallback(
 	return registered ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
-NTSTATUS HDA_UnregisterNotificationCallback(
+NTSTATUS
+NTAPI
+HDA_UnregisterNotificationCallback(
 	_In_ PVOID _context,
 	_In_ HANDLE Handle,
 	PHDAUDIO_DMA_NOTIFICATION_CALLBACK NotificationCallback,
@@ -1003,8 +1045,8 @@ HDAUDIO_BUS_INTERFACE_V2 HDA_BusInterfaceV2(PVOID Context) {
 	busInterface.Size = sizeof(HDAUDIO_BUS_INTERFACE_V2);
 	busInterface.Version = 0x0100;
 	busInterface.Context = Context;
-	busInterface.InterfaceReference = WdfDeviceInterfaceReferenceNoOp;
-	busInterface.InterfaceDereference = WdfDeviceInterfaceDereferenceNoOp;
+	busInterface.InterfaceReference = (PINTERFACE_REFERENCE)WdfDeviceInterfaceReferenceNoOp;
+	busInterface.InterfaceDereference = (PINTERFACE_DEREFERENCE)WdfDeviceInterfaceDereferenceNoOp;
 	busInterface.TransferCodecVerbs = HDA_TransferCodecVerbs;
 	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
 	busInterface.AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
@@ -1034,8 +1076,8 @@ HDAUDIO_BUS_INTERFACE_V3 HDA_BusInterfaceV3(PVOID Context) {
 	busInterface.Size = sizeof(HDAUDIO_BUS_INTERFACE_V3);
 	busInterface.Version = 0x0100;
 	busInterface.Context = Context;
-	busInterface.InterfaceReference = WdfDeviceInterfaceReferenceNoOp;
-	busInterface.InterfaceDereference = WdfDeviceInterfaceDereferenceNoOp;
+	busInterface.InterfaceReference = (PINTERFACE_REFERENCE)WdfDeviceInterfaceReferenceNoOp;
+	busInterface.InterfaceDereference = (PINTERFACE_DEREFERENCE)WdfDeviceInterfaceDereferenceNoOp;
 	busInterface.TransferCodecVerbs = HDA_TransferCodecVerbs;
 	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
 	busInterface.AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
@@ -1067,8 +1109,8 @@ HDAUDIO_BUS_INTERFACE HDA_BusInterface(PVOID Context) {
 	busInterface.Size = sizeof(HDAUDIO_BUS_INTERFACE);
 	busInterface.Version = 0x0100;
 	busInterface.Context = Context;
-	busInterface.InterfaceReference = WdfDeviceInterfaceReferenceNoOp;
-	busInterface.InterfaceDereference = WdfDeviceInterfaceDereferenceNoOp;
+	busInterface.InterfaceReference = (PINTERFACE_REFERENCE)WdfDeviceInterfaceReferenceNoOp;
+	busInterface.InterfaceDereference = (PINTERFACE_DEREFERENCE)WdfDeviceInterfaceDereferenceNoOp;
 	busInterface.TransferCodecVerbs = HDA_TransferCodecVerbs;
 	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
 	busInterface.AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;

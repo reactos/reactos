@@ -163,7 +163,7 @@ NTSTATUS StartHDAController(PFDO_CONTEXT fdoCtx) {
 	NTSTATUS status;
 	status = ResetHDAController(fdoCtx, TRUE);
 	if (!NT_SUCCESS(status)) {
-		goto exit;
+		return status;
 	}
 
 	//Clear STATESTS
@@ -188,7 +188,6 @@ NTSTATUS StartHDAController(PFDO_CONTEXT fdoCtx) {
 
 	fdoCtx->ControllerEnabled = TRUE;
 
-exit:
 	return status;
 }
 
@@ -367,7 +366,9 @@ int hda_stream_interrupt(PFDO_CONTEXT fdoCtx, unsigned int status) {
 	return handled;
 }
 
-BOOLEAN hda_interrupt(
+BOOLEAN
+NTAPI
+hda_interrupt(
 	WDFINTERRUPT Interrupt,
 	ULONG MessageID) {
 	UNREFERENCED_PARAMETER(MessageID);
@@ -406,7 +407,9 @@ BOOLEAN hda_interrupt(
 	return handled;
 }
 
-void hda_dpc(
+void
+NTAPI
+hda_dpc(
 	WDFINTERRUPT Interrupt,
 	WDFOBJECT AssociatedObject
 ) {
