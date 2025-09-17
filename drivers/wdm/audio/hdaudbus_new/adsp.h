@@ -1,6 +1,5 @@
 #ifndef __ADSP_INTERFACE
 #define __ADSP_INTERFACE
-#include <hdaudio.h>
 
 //
 // The ADSP_BUS_INTERFACE interface GUID

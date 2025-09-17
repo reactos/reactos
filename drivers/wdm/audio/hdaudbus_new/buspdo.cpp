@@ -2,6 +2,7 @@
 #include "adsp.h"
 
 NTSTATUS
+NTAPI
 Bus_CreatePdo(
     _In_ WDFDEVICE       Device,
     _In_ PWDFDEVICE_INIT DeviceInit,
@@ -9,6 +10,7 @@ Bus_CreatePdo(
 );
 
 NTSTATUS
+NTAPI
 Bus_EvtChildListIdentificationDescriptionDuplicate(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER SourceIdentificationDescription,
@@ -55,6 +57,7 @@ Return Value:
 }
 
 BOOLEAN
+NTAPI
 Bus_EvtChildListIdentificationDescriptionCompare(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER FirstIdentificationDescription,
@@ -114,6 +117,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 Bus_EvtDeviceListCreatePdo(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,
@@ -150,6 +154,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 Bus_CreatePdo(
     _In_ WDFDEVICE       Device,
     _In_ PWDFDEVICE_INIT DeviceInit,
@@ -502,12 +507,14 @@ Bus_CreatePdo(
     WdfDeviceSetPowerCapabilities(hChild, &powerCaps);
 
     if (Desc->CodecIds.IsDSP) {
+#if 0
         ADSP_BUS_INTERFACE busInterface = ADSP_BusInterface(pdoData);
         WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
             (PINTERFACE)&busInterface,
             &GUID_ADSP_BUS_INTERFACE,
             NULL);
         status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
+#endif
     }
     else {
         HDAUDIO_BUS_INTERFACE busInterface = HDA_BusInterface(pdoData);
