@@ -162,7 +162,7 @@ MMixerAddMixerControl(
 
         MixerControl->Control.Bounds.dwMinimum = 0;
         MixerControl->Control.Bounds.dwMaximum = 0xFFFF;
-        MixerControl->Control.Metrics.cSteps = 0xC0; /* FIXME */
+        MixerControl->Control.Metrics.cSteps = 0xC0;
 
         Length = sizeof(KSPROPERTY_DESCRIPTION) + sizeof(KSPROPERTY_MEMBERSHEADER) + sizeof(KSPROPERTY_STEPPING_LONG);
         Desc = (PKSPROPERTY_DESCRIPTION)MixerContext->Alloc(Length);
@@ -188,9 +188,10 @@ MMixerAddMixerControl(
             Members = (PKSPROPERTY_MEMBERSHEADER)(Desc + 1);
             Range = (PKSPROPERTY_STEPPING_LONG)(Members + 1);
 
-            DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
+            DPRINT1("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
             MaxRange = Range->Bounds.UnsignedMaximum - Range->Bounds.UnsignedMinimum;
+            DPRINT1("MaxRange = %d\n", MaxRange);
 
             if (MaxRange)
             {
@@ -200,6 +201,12 @@ MMixerAddMixerControl(
                     return MM_STATUS_NO_MEMORY;
 
                 Steps = MaxRange / Range->SteppingDelta + 1;
+                ASSERT(Steps);
+                DPRINT1("Steps = %d\n", Steps);
+
+                MixerControl->Control.Bounds.dwMinimum = Range->Bounds.UnsignedMinimum;
+                MixerControl->Control.Bounds.dwMaximum = Range->Bounds.UnsignedMaximum;
+                MixerControl->Control.Metrics.cSteps = Steps;
 
                 /* store mixer control info there */
                 VolumeData->Header.dwControlID = MixerControl->Control.dwControlID;
@@ -208,6 +215,7 @@ MMixerAddMixerControl(
                 VolumeData->SteppingDelta = Range->SteppingDelta;
                 VolumeData->ValuesCount = Steps;
                 VolumeData->InputSteppingDelta = 0x10000 / Steps;
+                DPRINT1("InputSteppingDelta = %d\n", VolumeData->InputSteppingDelta);
 
                 VolumeData->Values = (PLONG)MixerContext->Alloc(sizeof(LONG) * Steps);
                 if (!VolumeData->Values)
@@ -217,12 +225,11 @@ MMixerAddMixerControl(
                     return MM_STATUS_NO_MEMORY;
                 }
 
-                Value = Range->Bounds.SignedMinimum;
+                Value = Range->Bounds.UnsignedMinimum;
                 for (Index = 0; Index < Steps; Index++)
                 {
                     VolumeData->Values[Index] = Value;
-                    // HACK: use '- 1' to make the left and right volume controls behave independently.
-                    Value += Range->SteppingDelta - 1;
+                    Value += Range->SteppingDelta;
                 }
                 MixerControl->ExtraData = VolumeData;
            }
