@@ -9,6 +9,7 @@ Bus_CreatePdo(
 );
 
 NTSTATUS
+NTAPI
 Bus_EvtChildListIdentificationDescriptionDuplicate(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER SourceIdentificationDescription,
@@ -55,6 +56,7 @@ Return Value:
 }
 
 BOOLEAN
+NTAPI
 Bus_EvtChildListIdentificationDescriptionCompare(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER FirstIdentificationDescription,
@@ -94,6 +96,7 @@ Return Value:
 }
 
 VOID
+NTAPI
 Bus_EvtChildListIdentificationDescriptionCleanup(
     _In_ WDFCHILDLIST DeviceList,
     _Inout_ PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription
@@ -114,6 +117,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 Bus_EvtDeviceListCreatePdo(
     WDFCHILDLIST DeviceList,
     PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,

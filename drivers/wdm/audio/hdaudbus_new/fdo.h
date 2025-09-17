@@ -170,6 +170,7 @@ typedef struct _FDO_CONTEXT
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(FDO_CONTEXT, Fdo_GetContext)
 
 NTSTATUS
+NTAPI
 Fdo_Create(
 	_Inout_ PWDFDEVICE_INIT DeviceInit
 );

@@ -1,6 +1,7 @@
 #include "driver.h"
 
 NTSTATUS
+NTAPI
 SklHdAudBusEvtDeviceAdd(
 	_In_ WDFDRIVER Driver,
 	_Inout_ PWDFDEVICE_INIT DeviceInit
@@ -22,6 +23,7 @@ SklHdAudBusEvtDeviceAdd(
 }
 
 extern "C" NTSTATUS
+NTAPI
 DriverEntry(
 __in PDRIVER_OBJECT  DriverObject,
 __in PUNICODE_STRING RegistryPath
@@ -38,7 +40,10 @@ __in PUNICODE_STRING RegistryPath
 	//  Default to NonPagedPoolNx for non paged pool allocations where supported.
 	//
 
+#ifndef __REACTOS__
+	// FIXME: disabled for now, since it's unimplemented in ReactOS
 	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+#endif
 
 	WDF_DRIVER_CONFIG_INIT(&config, SklHdAudBusEvtDeviceAdd);
 
