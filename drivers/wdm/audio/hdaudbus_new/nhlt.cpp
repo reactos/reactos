@@ -156,7 +156,11 @@ NTSTATUS NHLTCheckSupported(_In_ WDFDEVICE FxDevice) {
 	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
 		status = STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
-		goto end;
+		if (outputBufferMemory != NULL) {
+			WdfObjectDelete(outputBufferMemory);
+			outputBufferMemory = NULL;
+		}
+		return status;
 	}
 	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
 
@@ -166,7 +170,6 @@ NTSTATUS NHLTCheckSupported(_In_ WDFDEVICE FxDevice) {
 		status = STATUS_NOT_SUPPORTED;
 	}
 
-end:
 	if (outputBufferMemory != NULL) {
 		WdfObjectDelete(outputBufferMemory);
 		outputBufferMemory = NULL;
@@ -188,8 +191,12 @@ NTSTATUS NHLTQueryTableAddress(_In_ WDFDEVICE FxDevice, UINT64 *nhltAddr, UINT64
 
 	PACPI_EVAL_OUTPUT_BUFFER outputBuffer = (PACPI_EVAL_OUTPUT_BUFFER)WdfMemoryGetBuffer(outputBufferMemory, NULL);
 	if (outputBuffer->Count < 1) {
-		return STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
-		goto end;
+		status = STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
+		if (outputBufferMemory != NULL) {
+			WdfObjectDelete(outputBufferMemory);
+			outputBufferMemory = NULL;
+		}
+		return status;
 	}
 
 	PACPI_METHOD_ARGUMENT argument = outputBuffer->Argument;
@@ -205,7 +212,6 @@ NTSTATUS NHLTQueryTableAddress(_In_ WDFDEVICE FxDevice, UINT64 *nhltAddr, UINT64
 		status = STATUS_UNSUCCESSFUL;
 	}
 
-end:
 	if (outputBufferMemory != NULL) {
 		WdfObjectDelete(outputBufferMemory);
 		outputBufferMemory = NULL;

@@ -1,6 +1,8 @@
 #include "driver.h"
 
-NTSTATUS HDAGraphics_EvtIoTargetQueryRemove(
+NTSTATUS
+NTAPI
+HDAGraphics_EvtIoTargetQueryRemove(
     WDFIOTARGET ioTarget
 ) {
     SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
@@ -10,7 +12,9 @@ NTSTATUS HDAGraphics_EvtIoTargetQueryRemove(
     return STATUS_SUCCESS;
 }
 
-void HDAGraphics_EvtIoTargetRemoveCanceled(
+void
+NTAPI
+HDAGraphics_EvtIoTargetRemoveCanceled(
     WDFIOTARGET ioTarget
 ) {
     WDF_IO_TARGET_OPEN_PARAMS openParams;
@@ -30,7 +34,9 @@ void HDAGraphics_EvtIoTargetRemoveCanceled(
     }
 }
 
-void HDAGraphics_EvtIoTargetRemoveComplete(
+void
+NTAPI
+HDAGraphics_EvtIoTargetRemoveComplete(
     WDFIOTARGET ioTarget
 ) {
     PFDO_CONTEXT fdoCtx;
@@ -49,7 +55,8 @@ void HDAGraphics_EvtIoTargetRemoveComplete(
     WdfObjectDelete(ioTarget);
 }
 
-void HDAGraphicsPowerNotificationCallback(
+void
+HDAGraphicsPowerNotificationCallback(
     PVOID GraphicsDeviceHandle,
     DEVICE_POWER_STATE NewGrfxPowerState,
     BOOLEAN PreNotification,
@@ -63,7 +70,8 @@ void HDAGraphicsPowerNotificationCallback(
     //No-Op
 }
 
-void HDAGraphicsPowerRemovalNotificationCallback(
+void
+HDAGraphicsPowerRemovalNotificationCallback(
     PVOID GraphicsDeviceHandle,
     PVOID PrivateHandle
 ) {
@@ -74,12 +82,15 @@ void HDAGraphicsPowerRemovalNotificationCallback(
 }
 
 void
+NTAPI
 Fdo_EnumerateCodec(
     PFDO_CONTEXT fdoCtx,
     UINT8 addr
 );
 
-void EjectGraphicsCodec(PFDO_CONTEXT fdoCtx) {
+void
+NTAPI
+EjectGraphicsCodec(PFDO_CONTEXT fdoCtx) {
     if (!fdoCtx->UseSGPCCodec) {
         return;
     }
@@ -110,7 +121,9 @@ void EjectGraphicsCodec(PFDO_CONTEXT fdoCtx) {
 
 }
 
-void EnumerateGraphicsCodec(PFDO_CONTEXT fdoCtx) {
+void
+NTAPI
+EnumerateGraphicsCodec(PFDO_CONTEXT fdoCtx) {
     if (!fdoCtx->UseSGPCCodec) {
         return;
     }
@@ -171,7 +184,9 @@ void HDAGraphicsPowerInitialComponentStateCallback( //https://learn.microsoft.co
     }
 }
 
-void HDAGraphicsPowerInterfaceAdd(WDFWORKITEM WorkItem) {
+void
+NTAPI
+HDAGraphicsPowerInterfaceAdd(WDFWORKITEM WorkItem) {
     PGRAPHICSWORKITEM_CONTEXT workItemContext = GraphicsWorkitem_GetContext(WorkItem);
     PFDO_CONTEXT fdoCtx = workItemContext->FdoContext;
     PUNICODE_STRING graphicsDeviceSymlink = &workItemContext->GPUDeviceSymlink;
@@ -245,6 +260,7 @@ exit:
 }
 
 NTSTATUS
+NTAPI
 HDAGraphicsPowerInterfaceCallback(
     PVOID NotificationStruct,
     PVOID Context

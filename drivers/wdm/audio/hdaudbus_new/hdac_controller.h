@@ -19,7 +19,7 @@ NTSTATUS SendHDACmds(PFDO_CONTEXT fdoCtx, ULONG count, PHDAUDIO_CODEC_TRANSFER C
 NTSTATUS RunSingleHDACmd(PFDO_CONTEXT fdoCtx, ULONG val, ULONG* res);
 
 //Old
-BOOLEAN hda_interrupt(WDFINTERRUPT Interrupt, ULONG MessageID);
-void hda_dpc(WDFINTERRUPT Interrupt, WDFOBJECT AssociatedObject);
+BOOLEAN NTAPI hda_interrupt(WDFINTERRUPT Interrupt, ULONG MessageID);
+void NTAPI hda_dpc(WDFINTERRUPT Interrupt, WDFOBJECT AssociatedObject);
 
 #endif
