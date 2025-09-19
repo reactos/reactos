@@ -217,10 +217,9 @@ IntWinStaOkToClose(
  * Validates the window station handle.
  *
  * Remarks
- *    If the function succeeds, the handle remains referenced. If the
- *    fucntion fails, last error is set.
+ *    If the function succeeds, the handle remains referenced.
+ *    If the function fails, last error is set.
  */
-
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
     HWINSTA WindowStation,
@@ -444,7 +443,6 @@ IntGetProcessWindowStation(HWINSTA *phWinSta OPTIONAL)
  * Status
  *    @implemented
  */
-
 NTSTATUS
 FASTCALL
 IntCreateWindowStation(
@@ -870,7 +868,6 @@ NtUserCreateWindowStation(
  * Status
  *    @implemented
  */
-
 HWINSTA
 APIENTRY
 NtUserOpenWindowStation(
@@ -1017,7 +1014,6 @@ NtUserOpenWindowStation(
  * Status
  *    @implemented
  */
-
 BOOL
 APIENTRY
 NtUserCloseWindowStation(
@@ -1098,7 +1094,6 @@ NtUserCloseWindowStation(
  * Status
  *    @unimplemented
  */
-
 BOOL APIENTRY
 NtUserGetObjectInformation(
     HANDLE hObject,
@@ -1337,7 +1332,6 @@ Exit:
  * Status
  *    @unimplemented
  */
-
 BOOL
 APIENTRY
 NtUserSetObjectInformation(
@@ -1375,7 +1369,6 @@ UserGetProcessWindowStation(VOID)
  * Status
  *    @implemented
  */
-
 HWINSTA APIENTRY
 NtUserGetProcessWindowStation(VOID)
 {
@@ -1517,7 +1510,6 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
  * Status
  *    @implemented
  */
-
 BOOL APIENTRY
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
@@ -1540,7 +1532,6 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
  * Status
  *    @implemented
  */
-
 BOOL APIENTRY
 NtUserLockWindowStation(HWINSTA hWindowStation)
 {
@@ -1584,7 +1575,6 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
  * Status
  *    @implemented
  */
-
 BOOL APIENTRY
 NtUserUnlockWindowStation(HWINSTA hWindowStation)
 {
@@ -1936,7 +1926,6 @@ BuildDesktopNameList(
  * Status
  *    @implemented
  */
-
 NTSTATUS APIENTRY
 NtUserBuildNameList(
     HWINSTA hWindowStation,
