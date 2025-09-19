@@ -92,15 +92,15 @@ static inline void udelay(LONG usec) {
 #define DBG_IOCTL 4
 
 static ULONG SklHdAudBusDebugLevel = 100;
-static ULONG SklHdAudBusDebugCatagories = DBG_INIT || DBG_PNP || DBG_IOCTL;
+static ULONG SklHdAudBusDebugCatagories = DBG_INIT | DBG_PNP | DBG_IOCTL;
 
-#if 0
+#if DBG
 #define SklHdAudBusPrint(dbglevel, dbgcatagory, fmt, ...) {          \
     if (SklHdAudBusDebugLevel >= dbglevel &&                         \
         (SklHdAudBusDebugCatagories && dbgcatagory))                 \
 		    {                                                           \
         DbgPrint(DRIVERNAME);                                   \
-        DbgPrint(fmt, __VA_ARGS__);                             \
+        DbgPrint(fmt, ##__VA_ARGS__);                             \
 		    }                                                           \
 }
 #else
