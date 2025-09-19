@@ -23,7 +23,7 @@ extern "C" {
 
 #include <wdm.h>
 #include <wdmguid.h>
-#include <wdf.h>
+#include <wdf/kmdf/1.17/wdf.h>
 #include <ntintsafe.h>
 #include <ntstrsafe.h>
 #include <hdaudio.h>
