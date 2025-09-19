@@ -14,12 +14,10 @@ struct WATCHENTRY
     HKEY hKey;
 };
 
-#define WATCHENTRY_MAX 12
-
 struct CRegWatcher
 {
-    static HANDLE s_ahWatchEvents[WATCHENTRY_MAX];
-    static WATCHENTRY s_WatchEntries[WATCHENTRY_MAX];
+    static HANDLE s_ahWatchEvents[WI_REGEVTS_MAX];
+    static WATCHENTRY s_WatchEntries[WI_REGEVTS_MAX];
     static UINT s_nSysColorTimerId, s_nKbdToggleTimerId, s_nRegImxTimerId;
 
     static BOOL Init();

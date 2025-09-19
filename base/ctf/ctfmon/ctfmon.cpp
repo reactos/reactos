@@ -189,9 +189,9 @@ InitApp(
     _In_ HINSTANCE hInstance,
     _In_ LPTSTR lpCmdLine)
 {
-    g_hInst     = hInstance;    // Save the instance handle
+    g_hInst = hInstance; // Save the instance handle
 
-    g_bOnWow64  = cicIsWow64();   // Is the current process on WoW64?
+    g_bOnWow64 = cicIsWow64(); // Is the current process on WoW64?
     cicGetOSInfo(&g_uACP, &g_dwOsInfo); // Get OS info
 
     // Create a mutex for Cicero
@@ -227,7 +227,7 @@ InitApp(
 
     if (g_pLoaderWnd->CreateWnd())
     {
-        // Go to the bottom of the hell
+        // Go to the bottom of the (s)hell
         ::SetWindowPos(g_pLoaderWnd->m_hWnd, HWND_BOTTOM, 0, 0, 0, 0,
                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
@@ -236,7 +236,7 @@ InitApp(
     if (!g_bOnWow64)
         GetPopupTipbar(g_pLoaderWnd->m_hWnd, g_fWinLogon);
 
-    // Do x64 stuffs
+    // Initialize x64-specific support
     CheckX64System(lpCmdLine);
 
     return TRUE;
@@ -264,7 +264,7 @@ DoMainLoop(VOID)
 
     if (g_bOnWow64) // Is the current process on WoW64?
     {
-        // Just a simple message loop
+        // Simply run a message loop
         while (::GetMessage(&msg, NULL, 0, 0))
         {
             ::TranslateMessage(&msg);
@@ -273,26 +273,30 @@ DoMainLoop(VOID)
         return (INT)msg.wParam;
     }
 
-    // Open the existing event by the name
+    // We wait on the CRegWatcher and the WinSta0 desktop-switch events.
+    HANDLE ahEvents[WI_REGEVTS_MAX + 1];
+    DWORD dwEventCount;
+
+    // Get the CRegWatcher handles
+    CopyMemory(ahEvents, CRegWatcher::s_ahWatchEvents, WI_REGEVTS_MAX * sizeof(HANDLE));
+    dwEventCount = WI_REGEVTS_MAX;
+
+    // Open the WinSta0 desktop-switch event and add it
     HANDLE hSwitchEvent = ::OpenEvent(SYNCHRONIZE, FALSE, TEXT("WinSta0_DesktopSwitch"));
+    if (hSwitchEvent)
+    {
+        ahEvents[WI_DESKTOP_SWITCH] = hSwitchEvent;
+        ++dwEventCount;
+    }
 
-    // The target events to watch
-    HANDLE ahEvents[WATCHENTRY_MAX + 1];
-
-    // Borrow some handles from CRegWatcher
-    CopyMemory(ahEvents, CRegWatcher::s_ahWatchEvents, WATCHENTRY_MAX * sizeof(HANDLE));
-
-    ahEvents[WI_DESKTOP_SWITCH] = hSwitchEvent; // Add it
-
-    // Another message loop
+    // Run the event loop
     for (;;)
     {
-        // Wait for target signal
-        DWORD dwWait = ::MsgWaitForMultipleObjects(_countof(ahEvents), ahEvents, 0, INFINITE,
-                                                   QS_ALLINPUT);
-        if (dwWait == (WAIT_OBJECT_0 + _countof(ahEvents))) // Is input available?
+        DWORD dwWait = ::MsgWaitForMultipleObjects(dwEventCount, ahEvents,
+                                                   FALSE, INFINITE, QS_ALLINPUT);
+        if (dwWait == (WAIT_OBJECT_0 + dwEventCount)) // Is input available?
         {
-            // Do the events
+            // Pump available messages
             while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             {
                 if (msg.message == WM_QUIT)
@@ -307,14 +311,30 @@ DoMainLoop(VOID)
             SetGlobalCompartmentDWORD(GUID_COMPARTMENT_SPEECH_OPENCLOSE, 0);
             ::ResetEvent(hSwitchEvent);
         }
-        else // Do the other events
+        else if (dwWait < (WAIT_OBJECT_0 + WI_REGEVTS_MAX)) // Do the other events
         {
             CRegWatcher::OnEvent(dwWait - WAIT_OBJECT_0);
+        }
+        else if (dwWait == WAIT_TIMEOUT)
+        {
+            // Ignore
+#ifndef NDEBUG
+            OutputDebugStringA("DoMainLoop: WAIT_TIMEOUT\n");
+#endif
+        }
+        else if (dwWait == WAIT_FAILED)
+        {
+            // Something failed, bail out
+#ifndef NDEBUG
+            OutputDebugStringA("DoMainLoop: WAIT_FAILED, exiting\n");
+#endif
+            break;
         }
     }
 
 Quit:
-    ::CloseHandle(hSwitchEvent);
+    if (hSwitchEvent)
+        ::CloseHandle(hSwitchEvent);
 
     return (INT)msg.wParam;
 }

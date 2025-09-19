@@ -10,10 +10,10 @@
 #include <ime/indicml.h>
 
 // The event handles to use in watching
-HANDLE CRegWatcher::s_ahWatchEvents[WATCHENTRY_MAX] = { NULL };
+HANDLE CRegWatcher::s_ahWatchEvents[WI_REGEVTS_MAX] = { NULL };
 
 // The registry entries to watch
-WATCHENTRY CRegWatcher::s_WatchEntries[WATCHENTRY_MAX] =
+WATCHENTRY CRegWatcher::s_WatchEntries[WI_REGEVTS_MAX] =
 {
     { HKEY_CURRENT_USER,  TEXT("Keyboard Layout\\Toggle")                           }, // WI_TOGGLE
     { HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\CTF\\TIP")                     }, // WI_MACHINE_TIF
@@ -114,6 +114,9 @@ CRegWatcher::InitEvent(
     _In_ SIZE_T iEvent,
     _In_ BOOL bResetEvent)
 {
+    if (iEvent >= _countof(s_ahWatchEvents))
+        return FALSE;
+
     // Reset the signal status
     if (bResetEvent)
         ::ResetEvent(s_ahWatchEvents[iEvent]);
@@ -315,6 +318,9 @@ VOID
 CRegWatcher::OnEvent(
     _In_ SIZE_T iEvent)
 {
+    if (iEvent >= _countof(s_ahWatchEvents))
+        return;
+
     InitEvent(iEvent, TRUE);
 
     switch (iEvent)
