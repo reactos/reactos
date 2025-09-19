@@ -389,8 +389,14 @@ int hda_stream_interrupt(PFDO_CONTEXT fdoCtx, unsigned int status) {
 			stream_write8(stream, SD_STS, SD_INT_MASK);
 			handled |= 1 << stream->idx;
 
-			if (sd_status & SD_INT_COMPLETE)
+			if (sd_status & SD_INT_COMPLETE) {
+				if (stream->isr.IOC && stream->isr.IsrCallback) {
+					stream->isr.IsrCallback(
+								stream->isr.CallbackContext,
+								sd_status);
+				}
 				stream->irqReceived = TRUE;
+			}
 		}
 	}
 	return handled;

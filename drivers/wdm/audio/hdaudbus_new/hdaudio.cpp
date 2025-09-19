@@ -824,6 +824,164 @@ HDA_UnregisterNotificationCallback(
 	return registered ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
 }
 
+NTSTATUS
+NTAPI
+HDA_SetupDmaEngineWithBdl(
+	_In_ PVOID _context,
+	_In_ HANDLE Handle,
+	_In_ ULONG BufferLength,
+	_In_ ULONG Lvi,
+	_In_ PHDAUDIO_BDL_ISR Isr,
+	_In_ PVOID Context,
+	_Out_ PUCHAR StreamId,
+	_Out_ PULONG FifoSize)
+{
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData) {
+		return STATUS_INVALID_HANDLE;
+	}
+
+	if (stream->running) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->bdl) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->dmaBuf) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	WdfInterruptAcquireLock(devData->FdoContext->Interrupt);
+
+	stream->bufSz = BufferLength;
+	stream->numBlocks = Lvi;
+
+	stream->isr.IOC = TRUE;
+	stream->isr.IsrCallback = Isr;
+	stream->isr.CallbackContext = Context;
+
+	hdac_stream_reset(stream);
+	hdac_stream_setup(stream);
+
+	*StreamId = stream->streamTag;
+	*FifoSize = stream->fifoSize;
+
+	WdfInterruptReleaseLock(devData->FdoContext->Interrupt);
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+HDA_FreeContiguousDmaBuffer(
+	_In_ PVOID _context,
+	_In_ HANDLE Handle)
+{
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData) {
+		return STATUS_INVALID_HANDLE;
+	}
+
+	if (stream->running) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->bdl) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->dmaBuf) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	WdfInterruptAcquireLock(devData->FdoContext->Interrupt);
+
+	stream_write32(stream, SD_BDLPL, 0);
+	stream_write32(stream, SD_BDLPU, 0);
+	stream_write32(stream, SD_CTL, 0);
+
+	WdfInterruptReleaseLock(devData->FdoContext->Interrupt);
+
+	MmFreeContiguousMemory(stream->dmaBuf);
+	stream->dmaBuf = NULL;
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+HDA_AllocateContiguousDmaBuffer(
+	_In_ PVOID _context,
+	_In_ HANDLE Handle,
+	_In_ ULONG RequestedBufferSize,
+	_Out_ PVOID* DataBuffer,
+	_Out_ PHDAUDIO_BUFFER_DESCRIPTOR* BdlBuffer)
+{
+	if (KeGetCurrentIrql() > PASSIVE_LEVEL) {
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PHDAC_STREAM stream = (PHDAC_STREAM)Handle;
+	if (stream->PdoContext != devData) {
+		return STATUS_INVALID_HANDLE;
+	}
+
+	if (stream->running) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (stream->dmaBuf) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+	if (!stream->bdl) {
+		return STATUS_INVALID_DEVICE_REQUEST;
+	}
+
+    PHYSICAL_ADDRESS maxAddr;
+    maxAddr.QuadPart = devData->FdoContext->is64BitOK ? MAXULONG64 : MAXULONG32;
+
+    stream->dmaBuf = MmAllocateContiguousMemory(RequestedBufferSize, maxAddr);
+    if (!stream->dmaBuf) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(stream->dmaBuf, RequestedBufferSize);
+
+	WdfInterruptAcquireLock(devData->FdoContext->Interrupt);
+
+	*DataBuffer = stream->dmaBuf;
+	*BdlBuffer = (PHDAUDIO_BUFFER_DESCRIPTOR)stream->bdl;
+
+	WdfInterruptReleaseLock(devData->FdoContext->Interrupt);
+
+	return STATUS_SUCCESS;
+}
+
 HDAUDIO_BUS_INTERFACE_V2 HDA_BusInterfaceV2(PVOID Context) {
 	HDAUDIO_BUS_INTERFACE_V2 busInterface;
 	RtlZeroMemory(&busInterface, sizeof(HDAUDIO_BUS_INTERFACE_V2));
@@ -903,6 +1061,35 @@ HDAUDIO_BUS_INTERFACE HDA_BusInterface(PVOID Context) {
 	busInterface.ChangeBandwidthAllocation = HDA_ChangeBandwidthAllocation;
 	busInterface.AllocateDmaBuffer = HDA_AllocateDmaBuffer;
 	busInterface.FreeDmaBuffer = HDA_FreeDmaBuffer;
+	busInterface.FreeDmaEngine = HDA_FreeDmaEngine;
+	busInterface.SetDmaEngineState = HDA_SetDmaEngineState;
+	busInterface.GetWallClockRegister = HDA_GetWallClockRegister;
+	busInterface.GetLinkPositionRegister = HDA_GetLinkPositionRegister;
+	busInterface.RegisterEventCallback = HDA_RegisterEventCallback;
+	busInterface.UnregisterEventCallback = HDA_UnregisterEventCallback;
+	busInterface.GetDeviceInformation = HDA_GetDeviceInformation;
+	busInterface.GetResourceInformation = HDA_GetResourceInformation;
+
+	return busInterface;
+}
+
+HDAUDIO_BUS_INTERFACE_BDL HDA_BusInterfaceBDL(PVOID Context)
+{
+	HDAUDIO_BUS_INTERFACE_BDL busInterface;
+	RtlZeroMemory(&busInterface, sizeof(HDAUDIO_BUS_INTERFACE_BDL));
+
+	busInterface.Size = sizeof(HDAUDIO_BUS_INTERFACE_BDL);
+	busInterface.Version = 0x0100;
+	busInterface.Context = Context;
+	busInterface.InterfaceReference = (PINTERFACE_REFERENCE)WdfDeviceInterfaceReferenceNoOp;
+	busInterface.InterfaceDereference = (PINTERFACE_DEREFERENCE)WdfDeviceInterfaceDereferenceNoOp;
+	busInterface.TransferCodecVerbs = HDA_TransferCodecVerbs;
+	busInterface.AllocateCaptureDmaEngine = HDA_AllocateCaptureDmaEngine;
+	busInterface.AllocateRenderDmaEngine = HDA_AllocateRenderDmaEngine;
+	busInterface.ChangeBandwidthAllocation = HDA_ChangeBandwidthAllocation;
+	busInterface.AllocateContiguousDmaBuffer = HDA_AllocateContiguousDmaBuffer;
+	busInterface.SetupDmaEngineWithBdl = HDA_SetupDmaEngineWithBdl;
+	busInterface.FreeContiguousDmaBuffer = HDA_FreeContiguousDmaBuffer;
 	busInterface.FreeDmaEngine = HDA_FreeDmaEngine;
 	busInterface.SetDmaEngineState = HDA_SetDmaEngineState;
 	busInterface.GetWallClockRegister = HDA_GetWallClockRegister;
