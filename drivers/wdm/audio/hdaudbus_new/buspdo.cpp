@@ -529,6 +529,16 @@ Bus_CreatePdo(
             return status;
         }
 
+        HDAUDIO_BUS_INTERFACE_BDL busInterfaceBDL = HDA_BusInterfaceBDL(pdoData);
+        WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
+            (PINTERFACE)&busInterfaceBDL,
+            &GUID_HDAUDIO_BUS_INTERFACE_BDL,
+            NULL);
+        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
+        if (!NT_SUCCESS(status)) {
+            return status;
+        }
+
         HDAUDIO_BUS_INTERFACE_V2 busInterface2 = HDA_BusInterfaceV2(pdoData);
         WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
             (PINTERFACE)&busInterface2,

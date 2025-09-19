@@ -374,10 +374,11 @@ Fdo_EvtDevicePrepareHardware(
     maxAddr.QuadPart = fdoCtx->is64BitOK ? MAXULONG64 : MAXULONG32;
 
     fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
-    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
     if (!fdoCtx->posbuf) {
         return STATUS_NO_MEMORY;
     }
+
+    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
 
     fdoCtx->rb = (UINT8 *)MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
     if (!fdoCtx->rb) {
@@ -424,6 +425,9 @@ Fdo_EvtDevicePrepareHardware(
                 }
 
                 stream->bdl = (PHDAC_BDLENTRY)MmAllocateContiguousMemory(BDL_SIZE, maxAddr);
+                if (stream->bdl) {
+                    RtlZeroMemory(stream->bdl, BDL_SIZE);
+                }
             }
 
             SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
