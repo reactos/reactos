@@ -8,7 +8,8 @@ list(APPEND SOURCE
     helper.c
     interpreter.c
     netsh.c
-    precomp.h)
+    precomp.h
+    ${CMAKE_CURRENT_BINARY_DIR}/netsh_stubs.c)
 
 add_executable(netsh ${SOURCE} netsh.rc ${CMAKE_CURRENT_BINARY_DIR}/netsh.def)
 
