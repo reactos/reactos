@@ -26,6 +26,8 @@ list(APPEND SOURCE
     ../crt/sin.c
     ../crt/sqrt.c
     ../crt/tan.c
+    ../crt/system.c
+    ../crt/_wsystem.c
     testlist.c
 )
 
