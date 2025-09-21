@@ -203,8 +203,23 @@ MatchEnumTag(
     _In_ const TOKEN_VALUE *pEnumTable,
     _Out_ PDWORD pdwValue)
 {
-    DPRINT1("MatchEnumTag()\n");
-    return 0;
+    DWORD i;
+
+    DPRINT("MatchEnumTag(%p %p %lu %p %p)\n", hModule, pwcArg, dwNumArg, pEnumTable, pdwValue);
+
+    if ((pEnumTable == NULL) || (pdwValue == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    for (i = 0; i < dwNumArg; i++)
+    {
+        if (MatchToken(pwcArg, pEnumTable[i].pwszToken))
+        {
+            *pdwValue = pEnumTable[i].dwValue;
+            return ERROR_SUCCESS;
+        }
+    }
+
+    return ERROR_NOT_FOUND;
 }
 
 BOOL
@@ -213,7 +228,11 @@ MatchToken(
     _In_ LPCWSTR pwszUserToken,
     _In_ LPCWSTR pwszCmdToken)
 {
-    DPRINT1("MatchToken %S %S\n", pwszUserToken, pwszCmdToken);
+    DPRINT("MatchToken(%S %S)\n", pwszUserToken, pwszCmdToken);
+
+    if ((pwszUserToken == NULL) || (pwszCmdToken == NULL))
+        return FALSE;
+
     return (_wcsnicmp(pwszUserToken, pwszCmdToken, wcslen(pwszUserToken)) == 0) ? TRUE : FALSE;
 }
 
