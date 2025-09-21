@@ -178,6 +178,10 @@ HelpSubcontexts(
 #endif
 
 /* helper.c */
+
+DWORD
+CreateRootHelper(VOID);
+
 VOID
 LoadHelpers(VOID);
 

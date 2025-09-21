@@ -14,6 +14,8 @@
 @ stdcall MatchEnumTag(ptr wstr long ptr ptr)
 @ stub MatchTagsInCmdLine
 @ stdcall MatchToken(wstr wstr)
+@ stub NsGetFriendlyNameFromIfName
+@ stub NsGetIfNameFromFriendlyName
 @ stdcall PreprocessCommand(ptr ptr long long ptr long long long ptr)
 @ varargs PrintError(ptr long)
 @ stub PrintErrorLog

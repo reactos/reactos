@@ -5,6 +5,16 @@
 extern "C" {
 #endif
 
+typedef enum _NS_REQS
+{
+    NS_REQ_ZERO = 0,
+    NS_REQ_PRESENT = 1,
+    NS_REQ_ALLOW_MULTIPLE = 2,
+    NS_REQ_ONE_OR_MORE = 3
+} NS_REQS;
+
+#define NETSH_ROOT_GUID          {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
+
 typedef
 DWORD
 (WINAPI *PGET_RESOURCE_STRING_FN)(
@@ -164,7 +174,7 @@ MatchToken(
 DWORD
 WINAPI
 PreprocessCommand(
-    _In_ HANDLE hModule,
+    _In_opt_ HANDLE hModule,
     _Inout_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
     _In_ DWORD dwArgCount,

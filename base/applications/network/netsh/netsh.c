@@ -66,6 +66,7 @@ wmain(
     ConInitStdStreams();
 
     /* FIXME: Init code goes here */
+    CreateRootHelper();
     CreateRootContext();
     LoadHelpers();
 
