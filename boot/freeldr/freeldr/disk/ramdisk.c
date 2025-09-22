@@ -170,49 +170,46 @@ RamDiskLoadVirtualFile(
     }
 
     /*
-     * Read it in chunks
+     * Read it in chunks, starting at the beginning
      */
-    Percent = 0;
-    for (TotalRead = 0; TotalRead < RamDiskFileSize; TotalRead += ChunkSize)
+    Position.QuadPart = 0;
+    Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
+        goto ReadFailure;
+
+    for (TotalRead = 0, Percent = 0;
+         TotalRead < RamDiskFileSize;
+         TotalRead += ChunkSize, Percent += PercentPerChunk)
     {
-        /* Check if we're at the last chunk */
+        /* If we are at the last chunk, read only what's remaining */
         if ((RamDiskFileSize - TotalRead) < ChunkSize)
-        {
-            /* Only need the actual data required */
             ChunkSize = (ULONG)(RamDiskFileSize - TotalRead);
-        }
 
         /* Update progress */
         UiUpdateProgressBar(Percent, NULL);
-        Percent += PercentPerChunk;
 
-        /* Copy the contents */
-        Position.QuadPart = TotalRead;
-        Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
-        if (Status == ESUCCESS)
-        {
-            Status = ArcRead(RamFileId,
-                             (PVOID)((ULONG_PTR)RamDiskBase + (ULONG_PTR)TotalRead),
-                             ChunkSize,
-                             &Count);
-        }
-
-        /* Check for success */
+        /* Copy the data */
+        Status = ArcRead(RamFileId,
+                         (PVOID)((ULONG_PTR)RamDiskBase + (ULONG_PTR)TotalRead),
+                         ChunkSize,
+                         &Count);
         if ((Status != ESUCCESS) || (Count != ChunkSize))
         {
-            MmFreeMemory(RamDiskBase);
-            RamDiskBase = NULL;
-            RamDiskFileSize = 0;
-            ArcClose(RamFileId);
-            UiMessageBox("Failed to read RAM disk.");
-            return ((Status != ESUCCESS) ? Status : EIO);
+            Status = ((Status != ESUCCESS) ? Status : EIO);
+            goto ReadFailure;
         }
     }
     UiUpdateProgressBar(100, NULL);
-
     ArcClose(RamFileId);
-
     return ESUCCESS;
+
+ReadFailure:
+    MmFreeMemory(RamDiskBase);
+    RamDiskBase = NULL;
+    RamDiskFileSize = 0;
+    ArcClose(RamFileId);
+    UiMessageBox("Failed to read RAM disk.");
+    return Status;
 }
 
 ARC_STATUS
