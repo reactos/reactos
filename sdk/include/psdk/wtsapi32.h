@@ -197,13 +197,16 @@ DECL_WINELIB_TYPE_AW(PWTS_SERVER_INFO)
 #define WTS_CURRENT_SERVER_HANDLE ((HANDLE)NULL)
 #define WTS_CURRENT_SESSION (~0u)
 
-void WINAPI WTSCloseServer(HANDLE);
-BOOL WINAPI WTSConnectSessionA(ULONG, ULONG, PSTR, BOOL);
-BOOL WINAPI WTSConnectSessionW(ULONG, ULONG, PWSTR, BOOL);
+#define NOTIFY_FOR_THIS_SESSION 0
+#define NOTIFY_FOR_ALL_SESSIONS 1
+
+void WINAPI WTSCloseServer(_In_ HANDLE);
+BOOL WINAPI WTSConnectSessionA(_In_ ULONG, _In_ ULONG, _In_ PSTR, _In_ BOOL);
+BOOL WINAPI WTSConnectSessionW(_In_ ULONG, _In_ ULONG, _In_ PWSTR, _In_ BOOL);
 #define     WTSConnectSession WINELIB_NAME_AW(WTSConnectSession)
 BOOL WINAPI WTSDisconnectSession(HANDLE, DWORD, BOOL);
 BOOL WINAPI WTSEnableChildSessions(BOOL);
-BOOL WINAPI WTSEnumerateProcessesA(HANDLE, DWORD, DWORD, PWTS_PROCESS_INFOA *, DWORD *);
+BOOL WINAPI WTSEnumerateProcessesA(_In_ HANDLE, _In_ DWORD, _In_ DWORD, _Out_ PWTS_PROCESS_INFOA *, _Out_ DWORD *);
 BOOL WINAPI WTSEnumerateProcessesW(HANDLE, DWORD, DWORD, PWTS_PROCESS_INFOW *, DWORD *);
 #define     WTSEnumerateProcesses WINELIB_NAME_AW(WTSEnumerateProcesses)
 BOOL WINAPI WTSEnumerateServersA( LPSTR, DWORD, DWORD, PWTS_SERVER_INFOA*, DWORD*);
@@ -223,7 +226,21 @@ BOOL WINAPI WTSQueryUserConfigA(LPSTR,LPSTR,WTS_CONFIG_CLASS,LPSTR*,DWORD*);
 BOOL WINAPI WTSQueryUserConfigW(LPWSTR,LPWSTR,WTS_CONFIG_CLASS,LPWSTR*,DWORD*);
 #define     WTSQueryUserConfig WINELIB_NAME_AW(WTSQueryUserConfig)
 BOOL WINAPI WTSQueryUserToken(ULONG, PHANDLE);
-BOOL WINAPI WTSRegisterSessionNotification(HWND, DWORD);
+/**
+ * Registers the specified window to receive session change notifications.
+ * This function allows applications to be notified of session connect,
+ * disconnect, logon, logoff, and other session-related events.
+ *
+ * @param hWnd A handle to the window that will receive session change notifications through the WM_WTSSESSION_CHANGE
+ * message. The window must belong to the calling process.
+ * @param dwFlags Specifies which sessions (current or all sessions) the notifications should apply to. Possible values:
+ *                - NOTIFY_FOR_THIS_SESSION: Notifications are for the current session only.
+ *                - NOTIFY_FOR_ALL_SESSIONS: Notifications apply to all sessions.
+ *
+ * @return If the function succeeds, the return value is TRUE. If the function fails, the return value is FALSE. Use
+ * GetLastError to get extended error information.
+ */
+BOOL WINAPI WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags);
 BOOL WINAPI WTSRegisterSessionNotificationEx(HANDLE, HWND, DWORD);
 BOOL WINAPI WTSStartRemoteControlSessionA(LPSTR, ULONG, BYTE, USHORT);
 BOOL WINAPI WTSStartRemoteControlSessionW(LPWSTR, ULONG, BYTE, USHORT);
@@ -232,7 +249,7 @@ BOOL WINAPI WTSStopRemoteControlSession(ULONG);
 BOOL WINAPI WTSTerminateProcess(HANDLE, DWORD, DWORD);
 BOOL WINAPI WTSUnRegisterSessionNotification(HWND);
 BOOL WINAPI WTSUnRegisterSessionNotificationEx(HANDLE, HWND);
-BOOL WINAPI WTSWaitSystemEvent(HANDLE, DWORD, DWORD*);
+BOOL WINAPI WTSWaitSystemEvent(_In_ HANDLE, _In_ DWORD, _Out_ PDWORD);
 
 #ifdef __cplusplus
 }
