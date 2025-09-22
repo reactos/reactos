@@ -171,7 +171,6 @@ static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
             ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
     ERR("%s\n", ErrorCodeString);
-
     UiMessageBox(ErrorCodeString);
 }
 
@@ -276,14 +275,18 @@ DiskInt13ExtensionsSupported(IN UCHAR DriveNumber)
         return FALSE;
     }
 
+#if DBG
+    TRACE("Drive 0x%x: INT 13h Extended version: 0x%02x, API bitmap: 0x%04x\n",
+          DriveNumber, RegsOut.b.ah, RegsOut.w.cx);
+#endif
     if (!(RegsOut.w.cx & 0x0001))
     {
         /*
          * CX = API subset support bitmap.
          * Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported.
          */
-        WARN("Suspicious API subset support bitmap 0x%x on device 0x%lx\n",
-             RegsOut.w.cx, DriveNumber);
+        WARN("Drive 0x%x: Suspicious API subset support bitmap 0x%04x\n",
+             DriveNumber, RegsOut.w.cx);
         return FALSE;
     }
 
@@ -333,13 +336,13 @@ DiskGetExtendedDriveParameters(
     RtlCopyMemory(Buffer, Ptr, BufferSize);
 
 #if DBG
-    TRACE("size of buffer:                          %x\n", Ptr[0]);
-    TRACE("information flags:                       %x\n", Ptr[1]);
-    TRACE("number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
-    TRACE("number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
-    TRACE("number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
-    TRACE("total number of sectors on drive:        %I64u\n", *(PULONGLONG)&Ptr[8]);
-    TRACE("bytes per sector:                        %u\n", Ptr[12]);
+    TRACE("Size of buffer:                          0x%x\n", Ptr[0]);
+    TRACE("Information flags:                       0x%x\n", Ptr[1]);
+    TRACE("Number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
+    TRACE("Number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
+    TRACE("Number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
+    TRACE("Total number of sectors on drive:        %I64u\n", *(PULONGLONG)&Ptr[8]);
+    TRACE("Bytes per sector:                        %u\n", Ptr[12]);
     if (Ptr[0] >= 0x1e)
     {
         // Ptr[13]: offset, Ptr[14]: segment
@@ -347,23 +350,23 @@ DiskGetExtendedDriveParameters(
         if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
             PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[14] << 4) + Ptr[13]);
-            TRACE("SpecPtr:                                 %x\n", SpecPtr);
-            TRACE("physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
-            TRACE("disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
-            TRACE("drive flags:                             %x\n", SpecPtr[4]);
-            TRACE("proprietary information:                 %x\n", SpecPtr[5]);
+            TRACE("SpecPtr:                                 0x%x\n", SpecPtr);
+            TRACE("Physical I/O port base address:          0x%x\n", *(PUSHORT)&SpecPtr[0]);
+            TRACE("Disk-drive control port address:         0x%x\n", *(PUSHORT)&SpecPtr[2]);
+            TRACE("Head register upper nibble:              0x%x\n", SpecPtr[4]);
+            TRACE("BIOS Vendor-specific:                    0x%x\n", SpecPtr[5]);
             TRACE("IRQ for drive:                           %u\n", SpecPtr[6]);
-            TRACE("sector count for multi-sector transfers: %u\n", SpecPtr[7]);
-            TRACE("DMA control:                             %x\n", SpecPtr[8]);
-            TRACE("programmed I/O control:                  %x\n", SpecPtr[9]);
-            TRACE("drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]);
+            TRACE("Sector count for multi-sector transfers: %u\n", SpecPtr[7]);
+            TRACE("DMA control:                             0x%x\n", SpecPtr[8]);
+            TRACE("Programmed I/O control:                  0x%x\n", SpecPtr[9]);
+            TRACE("Drive options:                           0x%x\n", *(PUSHORT)&SpecPtr[10]);
         }
     }
     if (Ptr[0] >= 0x42)
     {
-        TRACE("signature:                             %x\n", Ptr[15]);
+        TRACE("Signature:                             0x%x\n", Ptr[15]);
     }
-#endif
+#endif // DBG
 
     return TRUE;
 }
@@ -393,11 +396,13 @@ InitDriveGeometry(
               "Cylinders  : 0x%x\n"
               "Heads      : 0x%x\n"
               "Sects/Track: 0x%x\n"
+              "Total Sects: 0x%llx\n"
               "Bytes/Sect : 0x%x\n",
               DriveNumber,
               DiskDrive->ExtGeometry.Cylinders,
               DiskDrive->ExtGeometry.Heads,
               DiskDrive->ExtGeometry.SectorsPerTrack,
+              DiskDrive->ExtGeometry.Sectors,
               DiskDrive->ExtGeometry.BytesPerSector);
     }
 
@@ -444,7 +449,7 @@ InitDriveGeometry(
     DiskDrive->Geometry.Cylinders = Cylinders;
     DiskDrive->Geometry.Heads = RegsOut.b.dh + 1;
     DiskDrive->Geometry.SectorsPerTrack = RegsOut.b.cl & 0x3F;
-    DiskDrive->Geometry.BytesPerSector = 512;   /* Just assume 512 bytes per sector */
+    DiskDrive->Geometry.BytesPerSector = 512; /* Just assume 512 bytes per sector */
 
     DiskDrive->Geometry.Sectors = (ULONGLONG)DiskDrive->Geometry.Cylinders *
                                              DiskDrive->Geometry.Heads *
@@ -453,12 +458,14 @@ InitDriveGeometry(
     TRACE("Regular Int13h(0x%x) returned:\n"
           "Cylinders  : 0x%x\n"
           "Heads      : 0x%x\n"
-          "Sects/Track: 0x%x (original 0x%x)\n"
+          "Sects/Track: 0x%x\n"
+          "Total Sects: 0x%llx\n"
           "Bytes/Sect : 0x%x\n",
           DriveNumber,
           DiskDrive->Geometry.Cylinders,
           DiskDrive->Geometry.Heads,
-          DiskDrive->Geometry.SectorsPerTrack, RegsOut.b.cl,
+          DiskDrive->Geometry.SectorsPerTrack,
+          DiskDrive->Geometry.Sectors,
           DiskDrive->Geometry.BytesPerSector);
 
     return Success;
@@ -616,7 +623,7 @@ PcDiskReadLogicalSectorsLBA(
 
     /* If we get here then the read failed */
     DiskError("Disk Read Failed in LBA mode", RegsOut.b.ah);
-    ERR("Disk Read Failed in LBA mode: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n",
+    ERR("Disk Read Failed in LBA mode: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
         RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
         DriveNumber, SectorNumber, SectorCount);
 
@@ -719,7 +726,7 @@ PcDiskReadLogicalSectorsCHS(
         if (RetryCount >= 3)
         {
             DiskError("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
-            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d)\n",
+            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
                 RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
                 DriveNumber, SectorNumber, SectorCount);
             return FALSE;
@@ -750,7 +757,7 @@ PcDiskReadLogicalSectors(
 {
     PPC_DISK_DRIVE DiskDrive;
 
-    TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n",
+    TRACE("PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
     /* 16-bit BIOS addressing limitation */
