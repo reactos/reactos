@@ -2342,7 +2342,7 @@ NdisIRemoveDevice(
     _In_ PIRP Irp)
 {
     NTSTATUS Status;
-    PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
+    PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
     
     if (Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer)
     {
