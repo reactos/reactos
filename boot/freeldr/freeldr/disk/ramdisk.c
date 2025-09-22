@@ -14,6 +14,10 @@
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(DISK);
+#undef TRACE
+#undef WARN
+#define TRACE ERR
+#define WARN  ERR
 
 /* GLOBALS ********************************************************************/
 
@@ -284,6 +288,9 @@ RamDiskInitialize(
             {
                 RamDiskImageOffset = atol(Option + 14);
             }
+
+ERR("RDPATH: '%s' ; RDIMAGELENGTH: %llu ; RDIMAGEOFFSET: %lu\n",
+    FileName, RamDiskImageLength, RamDiskImageOffset);
         }
 
         if (*FileName)
