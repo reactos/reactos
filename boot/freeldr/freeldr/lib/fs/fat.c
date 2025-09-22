@@ -1464,14 +1464,8 @@ ARC_STATUS FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     BOOLEAN Success;
 
-    //
-    // Call old read method
-    //
+    /* Call old read method */
     Success = FatReadFile(FileHandle, N, Count, Buffer);
-
-    //
-    // Check for success
-    //
     if (Success)
         return ESUCCESS;
     else
