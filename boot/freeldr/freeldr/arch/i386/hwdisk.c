@@ -23,6 +23,10 @@
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
+#undef TRACE
+#undef WARN
+#define TRACE ERR
+#define WARN  ERR
 
 /*
  * This is the common code for harddisk for both the PC and the XBOX.
@@ -79,6 +83,26 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
     Information->Type = (Context->IsFloppy ? FloppyDiskPeripheral : DiskPeripheral);
+
+ERR("\nDiskGetFileInformation(%lu):\n"
+    "  Ctx.DriveNumber : %u\n"
+    "  Ctx.SectorSize  : %lu\n"
+    "  Ctx.SectorOffset: %llu\n"
+    "  Ctx.SectorCount : %llu\n"
+    "  Ctx.SectorNumber: %llu\n"
+    "\n"
+    "  Info.StartingAddress: %llu\n"
+    "  Info.EndingAddress  : %llu\n"
+    "  Info.CurrentAddress : %llu\n\n",
+    FileId,
+    Context->DriveNumber,
+    Context->SectorSize,
+    Context->SectorOffset,
+    Context->SectorCount,
+    Context->SectorNumber,
+    Information->StartingAddress.QuadPart,
+    Information->EndingAddress.QuadPart,
+    Information->CurrentAddress.QuadPart);
 
     return ESUCCESS;
 }
@@ -152,6 +176,20 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     Context->SectorCount = SectorCount;
     Context->SectorNumber = 0;
     FsSetDeviceSpecific(*FileId, Context);
+
+ERR("\nDiskOpen('%s', %lu):\n"
+    "  Ctx.DriveNumber : %u\n"
+    "  Ctx.SectorSize  : %lu\n"
+    "  Ctx.SectorOffset: %llu\n"
+    "  Ctx.SectorCount : %llu\n"
+    "  Ctx.SectorNumber: %llu\n",
+    Path,
+    *FileId,
+    Context->DriveNumber,
+    Context->SectorSize,
+    Context->SectorOffset,
+    Context->SectorCount,
+    Context->SectorNumber);
 
     return ESUCCESS;
 }

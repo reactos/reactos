@@ -23,6 +23,10 @@
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(DISK);
+#undef TRACE
+#undef WARN
+#define TRACE ERR
+#define WARN  ERR
 
 /* Enable this line if you want to support multi-drive caching (increases FreeLdr size!) */
 // #define CACHE_MULTI_DRIVES
@@ -574,6 +578,8 @@ InitDriveGeometry(
     REGS RegsIn, RegsOut;
     ULONG Cylinders;
 
+ERR("InitDriveGeometry(0x%x)\n", DriveNumber);
+
     /* Get the extended geometry first */
     RtlZeroMemory(&DiskDrive->ExtGeometry, sizeof(DiskDrive->ExtGeometry));
     Success = DiskGetExtendedDriveParameters(DriveNumber, DiskDrive,
@@ -729,6 +735,7 @@ InitDriveGeometry(
     if (!INT386_SUCCESS(RegsOut))
     {
         /* We failed, return the result of the previous call (extended geometry) */
+ERR("Drive 0x%x INT 13h get standard drive parameters FAILED\n", DriveNumber);
         return Success;
     }
     /* OR it with the old result, so that we return TRUE whenever either call succeeded */
