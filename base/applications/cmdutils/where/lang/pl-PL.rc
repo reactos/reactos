@@ -22,7 +22,7 @@ Opcje:\n\
   /R folder  Rekursywnie przeszukuje wzkazany folder.\n\
   /T         Pokazuje rozmiar i date modyfikacje wszystkich znalezionych plików.\n\
   wzorzec    Wzkazuje wzorzec używany do porównywania nazw przeszukiwanych plików. Wieloznaczniki * i ? mogą być używane.\n\
-             Formaty ""env:pattern"" i ""path:pattern"" też mogą\n\
+             Formaty ""$env:pattern"" i ""path:pattern"" też mogą\n\
              być używane, gdzie ""env"" jest zmienną środowiskową\n\
              i wyszukiwanie następuje w ścieżkach wzkazanych w zmiennej środowiskowej ""zmienna""\n\
              Nie można używać tych formatów z flagą /R. Wyszukiwanie jest także wykonywane\n\
@@ -44,9 +44,9 @@ Przykłady:\n\
     IDS_FILE_INFO "%10I64u  %-12ls %-12ls %ls\n"
     IDS_WANT_VALUE "BŁĄD: Wartość jest potrzebna dla '%ls'.\n"
     IDS_TYPE_HELP "Wpisz ""WHERE /?"" aby uzyskać pomoc.\n"
-    IDS_ENVPAT_WITH_R "BŁĄD: ""$zmienna_środowiskowa:wzorzec"" nie może być użyty z /R.\n"
-    IDS_PATHPAT_WITH_R "BŁĄD: ""ścieżka:wzorzec"" nie może być użyty z /R.\n"
-    IDS_BAD_PATHPAT "BŁĄD: Nieprawidłowy wzorzec jest wzkazany w ""ścieżka:wzorzec"".\n"
+    IDS_ENVPAT_WITH_R "BŁĄD: ""$env:pattern"" nie może być użyty z /R.\n"
+    IDS_PATHPAT_WITH_R "BŁĄD: ""path:pattern"" nie może być użyty z /R.\n"
+    IDS_BAD_PATHPAT "BŁĄD: Nieprawidłowy wzorzec jest wzkazany w ""path:pattern"".\n"
     IDS_OUTOFMEMORY "BŁĄD: Brak pamięci.\n"
     IDS_BAD_ENVVAR "BŁĄD: Nie znaleziono zmiennej środowiskowej ""%ls"".\n"
     IDS_CANT_FOUND "BŁĄD: System nie mógł znaleść wzkazanego pliku.\n"
