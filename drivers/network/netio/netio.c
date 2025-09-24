@@ -853,10 +853,6 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
 
 // DPRINT1("WskBind s is %p s->LocalAddressHandle is %p s->LocalAddressFile is %p status is %x TdiOpenAddressFile\n", s, s->LocalAddressHandle, s->LocalAddressFile, status);
 
-    if (NT_SUCCESS(status))
-    {
-        memcpy(&s->LocalAddress, LocalAddress, sizeof(s->LocalAddress));
-    }
     ExFreePoolWithTag(ta, TAG_NETIO);
 
 err_out:
@@ -1491,5 +1487,6 @@ WskDeregister(_In_ PWSK_REGISTRATION reg)
 {
     FUNCTION_TRACE;
 
-    /* noop */
+    reg->ReservedRegistrationState = 0;
+    reg->ReservedRegistrationContext = NULL;
 }
