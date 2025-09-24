@@ -342,23 +342,23 @@ NTSTATUS TdiConnect(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,             /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            ConnectionObject,        /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,
+                                            DeviceObject,
+                                            ConnectionObject,
+                                            NULL,
+                                            NULL);
     if (!*Irp) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    TdiBuildConnect(*Irp,                   /* IRP */
-                    DeviceObject,           /* Device object */
-                    ConnectionObject,       /* File object */
-                    CompletionRoutine,      /* Completion routine */
-                    CompletionContext,      /* Completion routine context */
-                    NULL,                   /* Time */
-                    ConnectionCallInfo,     /* Request connection information */
-                    ConnectionReturnInfo);  /* Return connection information */
+    TdiBuildConnect(*Irp,
+                    DeviceObject,
+                    ConnectionObject,
+                    CompletionRoutine,
+                    CompletionContext,
+                    NULL,
+                    ConnectionCallInfo,
+                    ConnectionReturnInfo);
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
 
@@ -399,11 +399,11 @@ NTSTATUS TdiAssociateAddressFile(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_ASSOCIATE_ADDRESS,   /* Sub function */
-                                           DeviceObject,            /* Device object */
-                                           ConnectionObject,        /* File object */
-                                           &Event,                  /* Event */
-                                           &Iosb);                  /* Status */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_ASSOCIATE_ADDRESS,
+                                           DeviceObject,
+                                           ConnectionObject,
+                                           &Event,
+                                           &Iosb);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -447,11 +447,11 @@ NTSTATUS TdiDisassociateAddressFile(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_DISASSOCIATE_ADDRESS,   /* Sub function */
-                                           DeviceObject,            /* Device object */
-                                           ConnectionObject,        /* File object */
-                                           &Event,                  /* Event */
-                                           &Iosb);                  /* Status */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_DISASSOCIATE_ADDRESS,
+                                           DeviceObject,
+                                           ConnectionObject,
+                                           &Event,
+                                           &Iosb);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -496,22 +496,22 @@ NTSTATUS TdiListen(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            ConnectionObject,        /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,
+                                            DeviceObject,
+                                            ConnectionObject,
+                                            NULL,
+                                            NULL);
     if (*Irp == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    TdiBuildListen(*Irp,                   /* IRP */
-                   DeviceObject,           /* Device object */
-                   ConnectionObject,       /* File object */
-                   CompletionRoutine,      /* Completion routine */
-                   CompletionContext,      /* Completion routine context */
-                   0,                      /* Flags */
-                   *RequestConnectionInfo, /* Request connection information */
-                   *ReturnConnectionInfo);  /* Return connection information */
+    TdiBuildListen(*Irp,
+                   DeviceObject,
+                   ConnectionObject,
+                   CompletionRoutine,
+                   CompletionContext,
+                   0,
+                   *RequestConnectionInfo,
+                   *ReturnConnectionInfo);
 
     TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, NULL);
 
@@ -550,21 +550,21 @@ NTSTATUS TdiAccept(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            AcceptConnectionObject,        /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,
+                                            DeviceObject,
+                                            AcceptConnectionObject,
+                                            NULL,
+                                            NULL);
     if (*Irp == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    TdiBuildAccept(*Irp,                   /* IRP */
-                   DeviceObject,           /* Device object */
-                   AcceptConnectionObject,       /* File object */
-                   CompletionRoutine,      /* Completion routine */
-                   CompletionContext,      /* Completion routine context */
-                   RequestConnectionInfo, /* Request connection information */
-                   ReturnConnectionInfo);  /* Return connection information */
+    TdiBuildAccept(*Irp,
+                   DeviceObject,
+                   AcceptConnectionObject,
+                   CompletionRoutine,
+                   CompletionContext,
+                   RequestConnectionInfo,
+                   ReturnConnectionInfo);
 
     TdiCall(*Irp, DeviceObject, NULL /* Don't wait for completion */, NULL);
 
@@ -610,11 +610,11 @@ NTSTATUS TdiSetEventHandler(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_SET_EVENT_HANDLER,   /* Sub function */
-                                           DeviceObject,            /* Device object */
-                                           FileObject,              /* File object */
-                                           &Event,                  /* Event */
-                                           &Iosb);                  /* Status */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_SET_EVENT_HANDLER,
+                                           DeviceObject,
+                                           FileObject,
+                                           &Event,
+                                           &Iosb);
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -726,11 +726,11 @@ NTSTATUS TdiQueryInformation(
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    Irp = TdiBuildInternalDeviceControlIrp(TDI_QUERY_INFORMATION,       /* Sub function */
-                                           DeviceObject,                /* Device object */
-                                           ConnectionObject,            /* File object */
-                                           &Event,                      /* Event */
-                                           &Iosb);                      /* Status */
+    Irp = TdiBuildInternalDeviceControlIrp(TDI_QUERY_INFORMATION,
+                                           DeviceObject,
+                                           ConnectionObject,
+                                           &Event,
+                                           &Iosb);
     if (!Irp) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -947,11 +947,11 @@ NTSTATUS TdiSend(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND,                /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            TransportObject,         /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND,
+                                            DeviceObject,
+                                            TransportObject,
+                                            NULL,
+                                            NULL);
 
     if (!*Irp) {
         DPRINT("Insufficient resources.\n");
@@ -984,14 +984,14 @@ NTSTATUS TdiSend(
 
     DPRINT("AFD>>> Got an MDL: %p\n", Mdl);
 
-    TdiBuildSend(*Irp,                   /* I/O Request Packet */
-                 DeviceObject,           /* Device object */
-                 TransportObject,        /* File object */
-                 CompletionRoutine,      /* Completion routine */
-                 CompletionContext,      /* Completion context */
-                 Mdl,                    /* Data buffer */
-                 Flags,                  /* Flags */
-                 BufferLength);          /* Length of data */
+    TdiBuildSend(*Irp,
+                 DeviceObject,
+                 TransportObject,
+                 CompletionRoutine,
+                 CompletionContext,
+                 Mdl,
+                 Flags,
+                 BufferLength);
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
     /* Does not block...  The MDL is deleted in the receive completion
@@ -1023,11 +1023,11 @@ NTSTATUS TdiReceive(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE,             /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            TransportObject,         /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE,
+                                            DeviceObject,
+                                            TransportObject,
+                                            NULL,
+                                            NULL);
 
     if (!*Irp) {
         DPRINT("Insufficient resources.\n");
@@ -1062,14 +1062,14 @@ NTSTATUS TdiReceive(
 
     DPRINT("AFD>>> Got an MDL: %p\n", Mdl);
 
-    TdiBuildReceive(*Irp,                   /* I/O Request Packet */
-                    DeviceObject,           /* Device object */
-                    TransportObject,        /* File object */
-                    CompletionRoutine,      /* Completion routine */
-                    CompletionContext,      /* Completion context */
-                    Mdl,                    /* Data buffer */
-                    Flags,                  /* Flags */
-                    BufferLength);          /* Length of data */
+    TdiBuildReceive(*Irp,
+                    DeviceObject,
+                    TransportObject,
+                    CompletionRoutine,
+                    CompletionContext,
+                    Mdl,
+                    Flags,
+                    BufferLength);
 
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
@@ -1115,11 +1115,11 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE_DATAGRAM,    /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            TransportObject,         /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_RECEIVE_DATAGRAM,
+                                            DeviceObject,
+                                            TransportObject,
+                                            NULL,
+                                            NULL);
 
     if (!*Irp) {
         DPRINT("Insufficient resources.\n");
@@ -1152,16 +1152,16 @@ NTSTATUS TdiReceiveDatagram(
 
     DPRINT("AFD>>> Got an MDL: %p\n", Mdl);
 
-    TdiBuildReceiveDatagram(*Irp,                   /* I/O Request Packet */
-                            DeviceObject,           /* Device object */
-                            TransportObject,        /* File object */
-                            CompletionRoutine,      /* Completion routine */
-                            CompletionContext,      /* Completion context */
-                            Mdl,                    /* Data buffer */
+    TdiBuildReceiveDatagram(*Irp,
+                            DeviceObject,
+                            TransportObject,
+                            CompletionRoutine,
+                            CompletionContext,
+                            Mdl,
                             BufferLength,
                             Addr,
                             Addr,
-                            Flags);                 /* Length of data */
+                            Flags);
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
     /* Does not block...  The MDL is deleted in the receive completion
@@ -1213,11 +1213,11 @@ NTSTATUS TdiSendDatagram(
         return STATUS_SUCCESS;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,       /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            TransportObject,         /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,
+                                            DeviceObject,
+                                            TransportObject,
+                                            NULL,
+                                            NULL);
 
     if (!*Irp) {
         DPRINT("Insufficient resources.\n");
@@ -1251,14 +1251,14 @@ NTSTATUS TdiSendDatagram(
 
     DPRINT("AFD>>> Got an MDL: %p\n", Mdl);
 
-    TdiBuildSendDatagram(*Irp,                   /* I/O Request Packet */
-                         DeviceObject,           /* Device object */
-                         TransportObject,        /* File object */
-                         CompletionRoutine,      /* Completion routine */
-                         CompletionContext,      /* Completion context */
-                         Mdl,                    /* Data buffer */
-                         BufferLength,           /* Bytes to send */
-                         Addr);                  /* Address */
+    TdiBuildSendDatagram(*Irp,
+                         DeviceObject,
+                         TransportObject,
+                         CompletionRoutine,
+                         CompletionContext,
+                         Mdl,
+                         BufferLength,
+                         Addr);
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
     /* Does not block...  The MDL is deleted in the send completion
@@ -1291,26 +1291,26 @@ NTSTATUS TdiDisconnect(
         return STATUS_INVALID_PARAMETER;
     }
 
-    *Irp = TdiBuildInternalDeviceControlIrp(TDI_DISCONNECT,          /* Sub function */
-                                            DeviceObject,            /* Device object */
-                                            TransportObject,         /* File object */
-                                            NULL,                    /* Event */
-                                            NULL);                   /* Status */
+    *Irp = TdiBuildInternalDeviceControlIrp(TDI_DISCONNECT,
+                                            DeviceObject,
+                                            TransportObject,
+                                            NULL,
+                                            NULL);
 
     if (!*Irp) {
         DPRINT("Insufficient resources.\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    TdiBuildDisconnect(*Irp,                   /* I/O Request Packet */
-                       DeviceObject,           /* Device object */
-                       TransportObject,        /* File object */
-                       CompletionRoutine,      /* Completion routine */
-                       CompletionContext,      /* Completion context */
-                       Time,                   /* Time */
-                       Flags,                  /* Disconnect flags */
-                       RequestConnectionInfo,  /* Indication of who to disconnect */
-                       ReturnConnectionInfo);  /* Indication of who disconnected */
+    TdiBuildDisconnect(*Irp,
+                       DeviceObject,
+                       TransportObject,
+                       CompletionRoutine,
+                       CompletionContext,
+                       Time,
+                       Flags,
+                       RequestConnectionInfo,
+                       ReturnConnectionInfo);
 
     TdiCall(*Irp, DeviceObject, NULL, NULL);
 
