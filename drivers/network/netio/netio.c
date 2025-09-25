@@ -379,12 +379,12 @@ NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Contex
     return STATUS_SUCCESS;
 }
 
-struct ListenContext
+typedef struct ListenContext
 {
     PWSK_SOCKET_INTERNAL ListenSocket;
     PWSK_SOCKET_INTERNAL AcceptSocket;
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo, ReturnConnectionInfo;
-};
+} LISTEN_CONTEXT, *PLISTEN_CONTEXT;
 
 static NTSTATUS NTAPI
 CompletionFireEvent(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
@@ -450,9 +450,9 @@ QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket);
 static NTSTATUS NTAPI
 ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
 {
-    struct ListenContext *l = (struct ListenContext *)Context;
-    PWSK_SOCKET_INTERNAL ListenSocket = l->ListenSocket;
-    PWSK_SOCKET_INTERNAL AcceptSocket = l->AcceptSocket;
+    PLISTEN_CONTEXT ListenContext = (PLISTEN_CONTEXT)Context;
+    PWSK_SOCKET_INTERNAL ListenSocket = ListenContext->ListenSocket;
+    PWSK_SOCKET_INTERNAL AcceptSocket = ListenContext->AcceptSocket;
     PWSK_CLIENT_LISTEN_DISPATCH ListenDispatch =
         (PWSK_CLIENT_LISTEN_DISPATCH)ListenSocket->ListenDispatch;
 
@@ -463,7 +463,7 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
      */
 
     PSOCKADDR RemoteAddress =
-        (PSOCKADDR)(&((PTRANSPORT_ADDRESS)l->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
+        (PSOCKADDR)(&((PTRANSPORT_ADDRESS)ListenContext->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
     PVOID AcceptSocketContext;
     const WSK_CLIENT_CONNECTION_DISPATCH *AcceptSocketDispatch;
     NTSTATUS Status;
@@ -497,9 +497,9 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
 
-    ExFreePoolWithTag(l->ReturnConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
-    ExFreePoolWithTag(l->RequestConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
-    ExFreePoolWithTag(l, TAG_NETIO);
+    ExFreePoolWithTag(ListenContext->ReturnConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+    ExFreePoolWithTag(ListenContext->RequestConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+    ExFreePoolWithTag(ListenContext, TAG_NETIO);
 
     /* And wait for the next incoming connection. */
     /* This is done in a separate thread at IRQL = 0 */
@@ -514,7 +514,7 @@ StartListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 {
     PIRP tdiIrp;
     NTSTATUS status;
-    struct ListenContext *lc;
+    PLISTEN_CONTEXT lc;
     PWSK_SOCKET_INTERNAL AcceptSocket;
 
     FUNCTION_TRACE;
