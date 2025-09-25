@@ -10,6 +10,22 @@
 #include <tchar.h>
 #include <errno.h>
 
+#ifndef TEST_STATIC_CRT
+
+typedef int (__cdecl *PFN_vscwprintf)(const char *format, va_list argptr);
+static PFN_vscwprintf p_vscwprintf;
+
+static BOOL Init(void)
+{
+    HMODULE hdll = LoadLibraryA(TEST_DLL_NAME);
+    p_vscwprintf = (PFN_vscwprintf)GetProcAddress(hdll, "_vscwprintf");
+    ok(p_vscwprintf != NULL, "Failed to load _vscwprintf from %s\n", TEST_DLL_NAME);
+    return (p_vscwprintf != NULL);
+}
+#define _vscprintf p_vscwprintf
+
+#endif // !TEST_STATIC_CRT
+
 static void call_varargs(int expected_ret, LPCWSTR formatString, ...)
 {
     va_list args;
@@ -23,6 +39,14 @@ static void call_varargs(int expected_ret, LPCWSTR formatString, ...)
 
 START_TEST(_vscwprintf)
 {
+#ifndef TEST_STATIC_CRT
+    if (!Init())
+    {
+        skip("Skipping tests, because _vscwprintf is not available\n");
+        return;
+    }
+#endif
+
     /* Lesson of the day: don't mix wide and ansi char */
     /* Lesson of the week: don't ignore the lesson of the day */
     call_varargs(12, L"%hs world!", "hello");
