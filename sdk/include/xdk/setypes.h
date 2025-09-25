@@ -1275,26 +1275,11 @@ typedef struct _SE_EXPORTS {
   PSID SeUserModeDriversSid;
   PSID SeProcTrustWinTcbSid;
   PSID SeTrustedInstallerSid;
-
-  //
-  // New Privileges defined for Windows 10
-  //
-
   LUID SeDelegateSessionUserImpersonatePrivilege;
   PSID SeAppSiloSid;
   PSID SeAppSiloVolumeRootMinimalCapabilitySid;
   PSID SeAppSiloProfilesRootMinimalCapabilitySid;
-
-  //
-  // App Silo Prompt Access Capability SID
-  //
-
   PSID SeAppSiloPromptForAccessCapabilitySid;
-
-  //
-  // App Silo Access To Publisher Directory Capability SID
-  //
-
   PSID SeAppSiloAccessToPublisherDirectoryCapabilitySid;
 #endif
 } SE_EXPORTS, *PSE_EXPORTS;
