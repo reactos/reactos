@@ -36,21 +36,6 @@ static HRESULT (WINAPI *pCreateDebuggingInterfaceFromVersion)(int, LPCWSTR, IUnk
 
 const WCHAR v2_0[] = {'v','2','.','0','.','5','0','7','2','7',0};
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    if(!riid)
-        return "(null)";
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
-
 static HRESULT WINAPI ManagedCallback2_QueryInterface(ICorDebugManagedCallback2 *iface, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_ICorDebugManagedCallback2, riid))

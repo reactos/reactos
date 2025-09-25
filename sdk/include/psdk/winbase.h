@@ -1124,6 +1124,7 @@ typedef struct _PROC_THREAD_ATTRIBUTE_LIST *PPROC_THREAD_ATTRIBUTE_LIST, *LPPROC
 #define PROC_THREAD_ATTRIBUTE_INPUT 0x00020000
 #define PROC_THREAD_ATTRIBUTE_ADDITIVE 0x00040000
 
+#ifndef _USE_FULL_PROC_THREAD_ATTRIBUTE
 typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
   ProcThreadAttributeParentProcess = 0,
   ProcThreadAttributeHandleList = 2,
@@ -1148,11 +1149,44 @@ typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
   ProcThreadAttributeTrustedApp = 29,
   ProcThreadAttributeSveVectorLength = 30,
 } PROC_THREAD_ATTRIBUTE_NUM;
+#endif // _USE_FULL_PROC_THREAD_ATTRIBUTE
 
 #define PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR (ProcThreadAttributeIdealProcessor | PROC_THREAD_ATTRIBUTE_THREAD | PROC_THREAD_ATTRIBUTE_INPUT)
 #define PROC_THREAD_ATTRIBUTE_HANDLE_LIST (ProcThreadAttributeHandleList | PROC_THREAD_ATTRIBUTE_INPUT)
 #define PROC_THREAD_ATTRIBUTE_PARENT_PROCESS (ProcThreadAttributeParentProcess | PROC_THREAD_ATTRIBUTE_INPUT)
 #define PROC_THREAD_ATTRIBUTE_MACHINE_TYPE (ProcThreadAttributeMachineType | PROC_THREAD_ATTRIBUTE_INPUT)
+
+#if (_WIN32_WINNT >= 0x0600)
+#define ProcThreadAttributeValue(Number, Thread, Input, Additive) \
+    (((Number) & PROC_THREAD_ATTRIBUTE_NUMBER) | \
+     ((Thread != FALSE) ? PROC_THREAD_ATTRIBUTE_THREAD : 0) | \
+     ((Input != FALSE) ? PROC_THREAD_ATTRIBUTE_INPUT : 0) | \
+     ((Additive != FALSE) ? PROC_THREAD_ATTRIBUTE_ADDITIVE : 0))
+#endif // (_WIN32_WINNT >= 0x0600)
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WINTHRESHOLD)
+#define PROCESS_CREATION_CHILD_PROCESS_RESTRICTED                0x01
+#define PROCESS_CREATION_CHILD_PROCESS_OVERRIDE                  0x02
+#define PROCESS_CREATION_CHILD_PROCESS_RESTRICTED_UNLESS_SECURE  0x04
+#define PROCESS_CREATION_ALL_APPLICATION_PACKAGES_OPT_OUT        0x01
+
+#define PROC_THREAD_ATTRIBUTE_JOB_LIST \
+    ProcThreadAttributeValue(ProcThreadAttributeJobList, FALSE, TRUE, FALSE)
+
+#define PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY \
+    ProcThreadAttributeValue(ProcThreadAttributeChildProcessPolicy, FALSE, TRUE, FALSE)
+
+#define PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY \
+    ProcThreadAttributeValue(ProcThreadAttributeAllApplicationPackagesPolicy, FALSE, TRUE, FALSE)
+
+#define PROC_THREAD_ATTRIBUTE_WIN32K_FILTER \
+    ProcThreadAttributeValue(ProcThreadAttributeWin32kFilter, FALSE, TRUE, FALSE)
+#endif //(_WIN32_WINNT >= _WIN32_WINNT_WINTHRESHOLD)
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+#define PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE \
+    ProcThreadAttributeValue(ProcThreadAttributePseudoConsole, FALSE, TRUE, FALSE)
+#endif //(NTDDI_VERSION >= NTDDI_WIN10_RS5)
 
 typedef DWORD
 (WINAPI *PFE_EXPORT_FUNC)(
