@@ -113,13 +113,13 @@ typedef struct _WSK_SOCKET_INTERNAL
     ULONG NumSocketPuts;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
-struct NetioContext
+typedef struct NetioContext
 {
     PIRP UserIrp;
     PWSK_SOCKET_INTERNAL socket;
     PTDI_CONNECTION_INFORMATION TargetConnectionInfo;
     PTDI_CONNECTION_INFORMATION PeerAddrRet;
-};
+} NETIO_CONTEXT, *PNETIO_CONTEXT;
 
 static void
 SocketGet(_In_ PWSK_SOCKET_INTERNAL Socket)
@@ -340,10 +340,10 @@ WskSocket(
     _Inout_ PIRP Irp);
 
 static NTSTATUS NTAPI
-NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Context)
+NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID ContextParam)
 {
-    struct NetioContext *c = (struct NetioContext *)Context;
-    PIRP UserIrp = c->UserIrp;
+    PNETIO_CONTEXT Context = (PNETIO_CONTEXT)ContextParam;
+    PIRP UserIrp = Context->UserIrp;
 
     FUNCTION_TRACE;
 
@@ -353,28 +353,28 @@ NetioComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Contex
         UserIrp->IoStatus.Information = Irp->IoStatus.Information;
     }
 
-    if (c->PeerAddrRet != NULL)
+    if (Context->PeerAddrRet != NULL)
     {
         PSOCKADDR RemoteAddress =
-            (PSOCKADDR)(&((PTRANSPORT_ADDRESS)c->PeerAddrRet->RemoteAddress)->Address[0].AddressType);
+            (PSOCKADDR)(&((PTRANSPORT_ADDRESS)Context->PeerAddrRet->RemoteAddress)->Address[0].AddressType);
 
-        memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
+        memcpy(&Context->socket->RemoteAddress, RemoteAddress, sizeof(Context->socket->RemoteAddress));
     }
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
     {
         IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
     }
 
-    SocketPut(c->socket);
-    if (c->TargetConnectionInfo != NULL)
+    SocketPut(Context->socket);
+    if (Context->TargetConnectionInfo != NULL)
     {
-        ExFreePoolWithTag(c->TargetConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+        ExFreePoolWithTag(Context->TargetConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
     }
-    if (c->PeerAddrRet != NULL)
+    if (Context->PeerAddrRet != NULL)
     {
-        ExFreePoolWithTag(c->PeerAddrRet, TAG_AFD_TDI_CONNECTION_INFORMATION);
+        ExFreePoolWithTag(Context->PeerAddrRet, TAG_AFD_TDI_CONNECTION_INFORMATION);
     }
-    ExFreePoolWithTag(c, TAG_NETIO);
+    ExFreePoolWithTag(Context, TAG_NETIO);
 
     return STATUS_SUCCESS;
 }
@@ -710,17 +710,17 @@ WskControlSocket(
                                 status = STATUS_INVALID_PARAMETER;
                                 break;
                             }
-                            WSK_EVENT_CALLBACK_CONTROL *c = (WSK_EVENT_CALLBACK_CONTROL *)InputBuffer;
+                            PWSK_EVENT_CALLBACK_CONTROL Control = (WSK_EVENT_CALLBACK_CONTROL *)InputBuffer;
 
                             if (((Socket->CallbackMask & WSK_EVENT_ACCEPT) == 0) &&
-                                ((c->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT))
+                                ((Control->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT))
                             {
-                                Socket->CallbackMask = c->EventMask;
+                                Socket->CallbackMask = Control->EventMask;
                                 QueueListening(Socket);
                             }
                             else
                             {
-                                Socket->CallbackMask = c->EventMask;
+                                Socket->CallbackMask = Control->EventMask;
                             }
 
                             status = STATUS_SUCCESS;
@@ -881,28 +881,28 @@ WskSendTo(
     PTDI_CONNECTION_INFORMATION TargetConnectionInfo;
     NTSTATUS status;
     void *BufferData;
-    struct NetioContext *nc;
+    PNETIO_CONTEXT NetioContext;
 
     FUNCTION_TRACE;
 
     IoSetNextIrpStackLocation(Irp);
 
     status = STATUS_INSUFFICIENT_RESOURCES;
-    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
-    if (nc == NULL)
+    NetioContext = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*NetioContext), TAG_NETIO);
+    if (NetioContext == NULL)
     {
         goto err_out;
     }
-    nc->socket = Socket;
-    nc->UserIrp = Irp;
+    NetioContext->socket = Socket;
+    NetioContext->UserIrp = Irp;
 
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
     {
         goto err_out_free_nc;
     }
-    nc->TargetConnectionInfo = TargetConnectionInfo;
-    nc->PeerAddrRet = NULL;
+    NetioContext->TargetConnectionInfo = TargetConnectionInfo;
+    NetioContext->PeerAddrRet = NULL;
 
     BufferData = MmGetSystemAddressForMdlSafe(Buffer->Mdl, NormalPagePriority);
     if (BufferData == NULL)
@@ -916,7 +916,7 @@ WskSendTo(
 
     /* This will create a tdiIrp: */
     status = TdiSendDatagram(&tdiIrp, Socket->LocalAddressFile, ((char *)BufferData) + Buffer->Offset,
-                        Buffer->Length, TargetConnectionInfo, NetioComplete, nc);
+                        Buffer->Length, TargetConnectionInfo, NetioComplete, NetioContext);
 
     /* If allocating tdiIrp fails we get here.
      * Call the IoCompletion of the application's Irp so this Irp
@@ -936,7 +936,7 @@ err_out_free_nc_and_tci:
     ExFreePoolWithTag(TargetConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
 err_out_free_nc:
-    ExFreePoolWithTag(nc, TAG_NETIO);
+    ExFreePoolWithTag(NetioContext, TAG_NETIO);
 
 err_out:
     Irp->IoStatus.Status = status;
@@ -1086,7 +1086,7 @@ WskConnect(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR RemoteAddress, _Reserved
     PIRP tdiIrp;
     PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
     NTSTATUS status, status2;
-    struct NetioContext *nc;
+    PNETIO_CONTEXT NetioContext;
 
     FUNCTION_TRACE;
 
@@ -1100,13 +1100,13 @@ WskConnect(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR RemoteAddress, _Reserved
     }
 
     status = STATUS_INSUFFICIENT_RESOURCES;
-    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
-    if (nc == NULL)
+    NetioContext = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*NetioContext), TAG_NETIO);
+    if (NetioContext == NULL)
     {
         goto err_out;
     }
-    nc->socket = Socket;
-    nc->UserIrp = Irp;
+    NetioContext->socket = Socket;
+    NetioContext->UserIrp = Irp;
 
     tdiIrp = NULL;
 
@@ -1122,7 +1122,7 @@ WskConnect(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR RemoteAddress, _Reserved
     {
         goto err_out_free_nc_and_disassociate;
     }
-    nc->TargetConnectionInfo = TargetConnectionInfo;
+    NetioContext->TargetConnectionInfo = TargetConnectionInfo;
 
     PeerAddrRet = NULL;
     TdiBuildNullConnectionInfo(&PeerAddrRet, TDI_ADDRESS_TYPE_IP);
@@ -1131,12 +1131,12 @@ WskConnect(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR RemoteAddress, _Reserved
         goto err_out_free_nc_and_tci;
     }
     PeerAddrRet->OptionsLength = 0;
-    nc->PeerAddrRet = PeerAddrRet;
+    NetioContext->PeerAddrRet = PeerAddrRet;
 
     IoMarkIrpPending(Irp);
     SocketGet(Socket);
 
-    status = TdiConnect(&tdiIrp, Socket->ConnectionFile, TargetConnectionInfo, PeerAddrRet, NetioComplete, nc);
+    status = TdiConnect(&tdiIrp, Socket->ConnectionFile, TargetConnectionInfo, PeerAddrRet, NetioComplete, NetioContext);
 
     /* If allocating tdiIrp fails we get here.
      * Call the IoCompletion of the application's Irp so this Irp
@@ -1162,7 +1162,7 @@ err_out_free_nc_and_disassociate:
     Socket->ConnectionFileAssociated = FALSE;
 
 err_out_free_nc:
-    ExFreePoolWithTag(nc, TAG_NETIO);
+    ExFreePoolWithTag(NetioContext, TAG_NETIO);
 
 err_out:
     Irp->IoStatus.Status = status;
@@ -1183,23 +1183,23 @@ WskStreamIo(
     PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
     NTSTATUS status;
     void *BufferData;
-    struct NetioContext *nc;
+    PNETIO_CONTEXT NetioContext;
 
     FUNCTION_TRACE;
 
     IoSetNextIrpStackLocation(Irp);
     status = STATUS_INSUFFICIENT_RESOURCES;
 
-    nc = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*nc), TAG_NETIO);
-    if (nc == NULL)
+    NetioContext = ExAllocatePoolUninitialized(NonPagedPool, sizeof(*NetioContext), TAG_NETIO);
+    if (NetioContext == NULL)
     {
         goto err_out;
     }
-    nc->socket = Socket;
-    nc->UserIrp = Irp;
+    NetioContext->socket = Socket;
+    NetioContext->UserIrp = Irp;
 
-    nc->TargetConnectionInfo = NULL;
-    nc->PeerAddrRet = NULL;
+    NetioContext->TargetConnectionInfo = NULL;
+    NetioContext->PeerAddrRet = NULL;
 
     BufferData = MmGetSystemAddressForMdlSafe(Buffer->Mdl, NormalPagePriority);
     if (BufferData == NULL)
@@ -1215,12 +1215,12 @@ WskStreamIo(
     {
         /* This will create a tdiIrp: */
         status = TdiSend(&tdiIrp, Socket->ConnectionFile, 0, ((char *)BufferData) + Buffer->Offset,
-                    Buffer->Length, NetioComplete, nc);
+                    Buffer->Length, NetioComplete, NetioContext);
     }
     else
     {
         status = TdiReceive(&tdiIrp, Socket->ConnectionFile, 0, ((char *)BufferData) + Buffer->Offset,
-                       Buffer->Length, NetioComplete, nc);
+                       Buffer->Length, NetioComplete, NetioContext);
     }
 
     /* If allocating tdiIrp fails we get here.
@@ -1237,7 +1237,7 @@ err_out_free_nc_unmap:
     /* TODO: implement freeing Buffer mmap */
 
 err_out_free_nc:
-    ExFreePoolWithTag(nc, TAG_NETIO);
+    ExFreePoolWithTag(NetioContext, TAG_NETIO);
 
 err_out:
     Irp->IoStatus.Status = status;
