@@ -8,7 +8,6 @@
 #define DECLSPEC_HIDDEN
 
 #include <objbase.h>
-#include <rpcproxy.h>
 #include <rpc.h>
 #include <rpcndr.h>
 #include <windows.h>

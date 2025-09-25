@@ -23,6 +23,7 @@
 
 #ifdef __REACTOS__
 #include <nls.h>
+#include <string.h>
 #else
 #include "windef.h"
 #include "winbase.h"
@@ -507,10 +508,10 @@ static const unsigned char Lookup_224[128 * 3] = {
  *  skind and lcid, while the low word is based on a repeated string
  *  hash of skind/str.
  */
-unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
+unsigned int lhash_val_of_name_sys( syskind_t skind, int lcid, const char *lpStr)
 {
-  ULONG nOffset, nMask = skind == SYS_MAC ? 1 : 0;
-  ULONG nHiWord, nLoWord = 0x0deadbee;
+  unsigned int nOffset, nMask = skind == SYS_MAC ? 1 : 0;
+  unsigned int nHiWord, nLoWord = 0x0deadbee;
   const unsigned char *str = (const unsigned char *)lpStr, *pnLookup = NULL;
 
   if (!str)
@@ -519,59 +520,6 @@ unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   switch (PRIMARYLANGID(LANGIDFROMLCID(lcid)))
   {
   default:
-    fprintf(stderr, "Unknown lcid %x, treating as latin-based, please report\n", lcid);
-    /* .. Fall Through .. */
-  case LANG_AFRIKAANS:  case LANG_ALBANIAN:   case LANG_ARMENIAN:
-  case LANG_ASSAMESE:   case LANG_AZERI:      case LANG_BASQUE:
-  case LANG_BELARUSIAN: case LANG_BENGALI:    case LANG_BULGARIAN:
-  case LANG_CATALAN:    case LANG_DANISH:     case LANG_DIVEHI:
-  case LANG_DUTCH:      case LANG_ENGLISH:    case LANG_ESTONIAN:
-  case LANG_FAEROESE:   case LANG_FINNISH:    case LANG_FRENCH:
-  case LANG_GALICIAN:   case LANG_GEORGIAN:   case LANG_GERMAN:
-  case LANG_GUJARATI:   case LANG_HINDI:      case LANG_INDONESIAN:
-  case LANG_ITALIAN:    case LANG_KANNADA:    case LANG_KASHMIRI:
-  case LANG_KAZAK:      case LANG_KONKANI:    case LANG_KYRGYZ:
-  case LANG_LATVIAN:    case LANG_LITHUANIAN: case LANG_MACEDONIAN:
-  case LANG_MALAY:      case LANG_MALAYALAM:  case LANG_MANIPURI:
-  case LANG_MARATHI:    case LANG_MONGOLIAN:  case LANG_NEPALI:
-  case LANG_ORIYA:      case LANG_PORTUGUESE: case LANG_PUNJABI:
-  case LANG_ROMANIAN:   case LANG_SANSKRIT:   case LANG_SERBIAN:
-  case LANG_SINDHI:     case LANG_SLOVENIAN:  case LANG_SWAHILI:
-  case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
-  case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
-  case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
-  case LANG_VIETNAMESE: case LANG_MALTESE:    case LANG_IRISH:
-  case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_TSWANA:
-  case LANG_XHOSA:      case LANG_ZULU:       case LANG_WELSH:
-  case LANG_BRETON:     case LANG_SCOTTISH_GAELIC: case LANG_NEUTRAL:
-/* some languages not in all windows versions or ReactOS */
-#ifdef LANG_MANX_GAELIC
-  case LANG_MANX_GAELIC:
-#endif
-#ifdef LANG_TAJIK
-  case LANG_TAJIK:
-#endif
-#ifdef LANG_ROMANSH
-  case LANG_ROMANSH:
-#endif
-#ifdef LANG_SUTU
-  case LANG_SUTU:
-#endif
-#ifdef LANG_TSONGA
-  case LANG_TSONGA:
-#endif
-#ifdef LANG_VENDA
-  case LANG_VENDA:
-#endif
-#ifdef LANG_ESPERANTO
-  case LANG_ESPERANTO:
-#endif
-#ifdef LANG_WALON
-  case LANG_WALON:
-#endif
-#ifdef LANG_CORNISH
-  case LANG_CORNISH:
-#endif
     nOffset = 16;
     pnLookup = Lookup_16;
     break;
@@ -642,4 +590,137 @@ unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   nLoWord = (nLoWord % 65599) & 0xffff;
 
   return nHiWord | nLoWord;
+}
+
+/* SHA1 algorithm
+ *
+ * Based on public domain SHA code by Steve Reid <steve@edmweb.com>
+ * Copied and adapted from ntdll.A_SHAInit / ntdll.A_SHAUpdate / ntdll.A_SHAFinal
+ */
+
+#ifdef WORDS_BIGENDIAN
+#define DWORD2BE(x) (x)
+#else
+#define DWORD2BE(x) ((((x) >> 24) & 0xff) | (((x) >> 8) & 0xff00) | (((x) << 8) & 0xff0000) | (((x) << 24) & 0xff000000))
+#endif
+
+#define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
+#define blk0(i) (block[i] = DWORD2BE(block[i]))
+#define blk1(i) (block[i&15] = rol(block[(i+13)&15]^block[(i+8)&15]^block[(i+2)&15]^block[i&15],1))
+#define f1(x,y,z) (z^(x&(y^z)))
+#define f2(x,y,z) (x^y^z)
+#define f3(x,y,z) ((x&y)|(z&(x|y)))
+#define f4(x,y,z) (x^y^z)
+/* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
+#define R0(v,w,x,y,z,i) z+=f1(w,x,y)+blk0(i)+0x5A827999+rol(v,5);w=rol(w,30);
+#define R1(v,w,x,y,z,i) z+=f1(w,x,y)+blk1(i)+0x5A827999+rol(v,5);w=rol(w,30);
+#define R2(v,w,x,y,z,i) z+=f2(w,x,y)+blk1(i)+0x6ED9EBA1+rol(v,5);w=rol(w,30);
+#define R3(v,w,x,y,z,i) z+=f3(w,x,y)+blk1(i)+0x8F1BBCDC+rol(v,5);w=rol(w,30);
+#define R4(v,w,x,y,z,i) z+=f4(w,x,y)+blk1(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
+
+/* Hash a single 512-bit block. This is the core of the algorithm. */
+static void sha1_transform(struct sha1_context *ctx)
+{
+   unsigned int a, b, c, d, e, *block = (unsigned int *)ctx->buffer;
+
+   /* Copy ctx->state[] to working variables */
+   a = ctx->state[0];
+   b = ctx->state[1];
+   c = ctx->state[2];
+   d = ctx->state[3];
+   e = ctx->state[4];
+
+   /* 4 rounds of 20 operations each. Loop unrolled. */
+   R0(a,b,c,d,e, 0); R0(e,a,b,c,d, 1); R0(d,e,a,b,c, 2); R0(c,d,e,a,b, 3);
+   R0(b,c,d,e,a, 4); R0(a,b,c,d,e, 5); R0(e,a,b,c,d, 6); R0(d,e,a,b,c, 7);
+   R0(c,d,e,a,b, 8); R0(b,c,d,e,a, 9); R0(a,b,c,d,e,10); R0(e,a,b,c,d,11);
+   R0(d,e,a,b,c,12); R0(c,d,e,a,b,13); R0(b,c,d,e,a,14); R0(a,b,c,d,e,15);
+   R1(e,a,b,c,d,16); R1(d,e,a,b,c,17); R1(c,d,e,a,b,18); R1(b,c,d,e,a,19);
+   R2(a,b,c,d,e,20); R2(e,a,b,c,d,21); R2(d,e,a,b,c,22); R2(c,d,e,a,b,23);
+   R2(b,c,d,e,a,24); R2(a,b,c,d,e,25); R2(e,a,b,c,d,26); R2(d,e,a,b,c,27);
+   R2(c,d,e,a,b,28); R2(b,c,d,e,a,29); R2(a,b,c,d,e,30); R2(e,a,b,c,d,31);
+   R2(d,e,a,b,c,32); R2(c,d,e,a,b,33); R2(b,c,d,e,a,34); R2(a,b,c,d,e,35);
+   R2(e,a,b,c,d,36); R2(d,e,a,b,c,37); R2(c,d,e,a,b,38); R2(b,c,d,e,a,39);
+   R3(a,b,c,d,e,40); R3(e,a,b,c,d,41); R3(d,e,a,b,c,42); R3(c,d,e,a,b,43);
+   R3(b,c,d,e,a,44); R3(a,b,c,d,e,45); R3(e,a,b,c,d,46); R3(d,e,a,b,c,47);
+   R3(c,d,e,a,b,48); R3(b,c,d,e,a,49); R3(a,b,c,d,e,50); R3(e,a,b,c,d,51);
+   R3(d,e,a,b,c,52); R3(c,d,e,a,b,53); R3(b,c,d,e,a,54); R3(a,b,c,d,e,55);
+   R3(e,a,b,c,d,56); R3(d,e,a,b,c,57); R3(c,d,e,a,b,58); R3(b,c,d,e,a,59);
+   R4(a,b,c,d,e,60); R4(e,a,b,c,d,61); R4(d,e,a,b,c,62); R4(c,d,e,a,b,63);
+   R4(b,c,d,e,a,64); R4(a,b,c,d,e,65); R4(e,a,b,c,d,66); R4(d,e,a,b,c,67);
+   R4(c,d,e,a,b,68); R4(b,c,d,e,a,69); R4(a,b,c,d,e,70); R4(e,a,b,c,d,71);
+   R4(d,e,a,b,c,72); R4(c,d,e,a,b,73); R4(b,c,d,e,a,74); R4(a,b,c,d,e,75);
+   R4(e,a,b,c,d,76); R4(d,e,a,b,c,77); R4(c,d,e,a,b,78); R4(b,c,d,e,a,79);
+
+   /* Add the working variables back into ctx->state[] */
+   ctx->state[0] += a;
+   ctx->state[1] += b;
+   ctx->state[2] += c;
+   ctx->state[3] += d;
+   ctx->state[4] += e;
+
+   /* Wipe variables */
+   a = b = c = d = e = 0;
+}
+
+void sha1_init(struct sha1_context *ctx)
+{
+   /* SHA1 initialization constants */
+   ctx->state[0] = 0x67452301;
+   ctx->state[1] = 0xEFCDAB89;
+   ctx->state[2] = 0x98BADCFE;
+   ctx->state[3] = 0x10325476;
+   ctx->state[4] = 0xC3D2E1F0;
+   ctx->count[0] = 0;
+   ctx->count[1] = 0;
+}
+
+void sha1_update(struct sha1_context *ctx, const char *data, size_t data_size)
+{
+   size_t buffer_size;
+
+   buffer_size = ctx->count[1] & 63;
+   ctx->count[1] += data_size;
+   if (ctx->count[1] < data_size) ctx->count[0]++;
+   ctx->count[0] += (data_size >> 29);
+
+   if (buffer_size + data_size < 64)
+      memcpy(&ctx->buffer[buffer_size], data, data_size);
+   else
+   {
+      while (buffer_size + data_size >= 64)
+      {
+         memcpy(ctx->buffer + buffer_size, data, 64 - buffer_size);
+         data += 64 - buffer_size;
+         data_size -= 64 - buffer_size;
+         sha1_transform(ctx);
+         buffer_size = 0;
+      }
+      memcpy(ctx->buffer + buffer_size, data, data_size);
+   }
+}
+
+void sha1_finalize(struct sha1_context *ctx, unsigned int result[5])
+{
+   unsigned int *count, length_hi, length_lo, i;
+   size_t pad_size, buffer_size;
+   char pad[72];
+
+   buffer_size = ctx->count[1] & 63;
+   if (buffer_size >= 56) pad_size = 56 + 64 - buffer_size;
+   else pad_size = 56 - buffer_size;
+
+   length_hi = (ctx->count[0] << 3) | (ctx->count[1] >> (32 - 3));
+   length_lo = (ctx->count[1] << 3);
+
+   memset(pad + 1, 0, pad_size - 1);
+   pad[0] = 0x80;
+   count = (unsigned int*)(pad + pad_size);
+   count[0] = DWORD2BE(length_hi);
+   count[1] = DWORD2BE(length_lo);
+   sha1_update(ctx, pad, pad_size + 8);
+
+   for (i = 0; i < 5; i++) result[i] = DWORD2BE(ctx->state[i]);
+
+   sha1_init(ctx);
 }
