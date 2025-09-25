@@ -4,7 +4,7 @@
  * PURPOSE:     Shim database manipulation functions
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blažević
- *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2025 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #if !defined(SDBWRITE_HOSTTOOL)
