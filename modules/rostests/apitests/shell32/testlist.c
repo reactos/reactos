@@ -47,6 +47,7 @@ extern void func_ShellState(void);
 extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHGetComputerDisplayNameW(void);
 extern void func_SHGetFileInfo(void);
+extern void func_SHGetKnownFolderPath(void);
 extern void func_SHGetUnreadMailCountW(void);
 extern void func_SHGetUserDisplayName(void);
 extern void func_SHIsBadInterfacePtr(void);
@@ -105,6 +106,7 @@ const struct test winetest_testlist[] =
     { "SHGetAttributesFromDataObject", func_SHGetAttributesFromDataObject },
     { "SHGetComputerDisplayNameW", func_SHGetComputerDisplayNameW },
     { "SHGetFileInfo", func_SHGetFileInfo },
+    { "SHGetKnownFolderPath", func_SHGetKnownFolderPath },
     { "SHGetUnreadMailCountW", func_SHGetUnreadMailCountW },
     { "SHGetUserDisplayName", func_SHGetUserDisplayName },
     { "SHIsBadInterfacePtr", func_SHIsBadInterfacePtr },
