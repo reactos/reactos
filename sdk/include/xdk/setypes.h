@@ -1203,6 +1203,7 @@ typedef struct _TOKEN_ACCESS_INFORMATION {
 #define TOKEN_UIACCESS                  0x1000
 #define TOKEN_NOT_LOW                   0x2000
 
+/* See: https://microsoft.github.io/windows-docs-rs/doc/windows/Wdk/Storage/FileSystem/struct.SE_EXPORTS.html */
 typedef struct _SE_EXPORTS {
   LUID SeCreateTokenPrivilege;
   LUID SeAssignPrimaryTokenPrivilege;
@@ -1269,6 +1270,26 @@ typedef struct _SE_EXPORTS {
   PSID SeHighMandatorySid;
   PSID SeSystemMandatorySid;
   PSID SeOwnerRightsSid;
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+  PSID SeAllAppPackagesSid;
+  PSID SeUserModeDriversSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+  PSID SeProcTrustWinTcbSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  PSID SeTrustedInstallerSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+  LUID SeDelegateSessionUserImpersonatePrivilege;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11) // The version guard is a guess.
+  PSID SeAppSiloSid;
+  PSID SeAppSiloVolumeRootMinimalCapabilitySid;
+  PSID SeAppSiloProfilesRootMinimalCapabilitySid;
+  PSID SeAppSiloPromptForAccessCapabilitySid;
+  PSID SeAppSiloAccessToPublisherDirectoryCapabilitySid;
+#endif
 } SE_EXPORTS, *PSE_EXPORTS;
 
 typedef NTSTATUS

@@ -181,9 +181,10 @@ TestDriverObject(
         ok_eq_pointer(DriverObject->DriverExtension->DriverObject, DriverObject);
         ok_eq_pointer(DriverObject->DriverExtension->AddDevice, NULL);
         ok_eq_ulong(DriverObject->DriverExtension->Count, 0UL);
+        /* Windows 7 doesn't capitalize "Services" like all other versions before and after it. */
         Equal = RtlEqualUnicodeString(RegistryPath,
                                       &RegPath,
-                                      FALSE);
+                                      (GetNTVersion() == _WIN32_WINNT_WIN7) ? TRUE : FALSE);
         ok(Equal, "RegistryPath is '%wZ'\n", RegistryPath);
         ok((ULONG_PTR)RegistryPath % PAGE_SIZE == 0, "RegistryPath %p not page-aligned\n", RegistryPath);
         ok_eq_pointer(RegistryPath->Buffer, (PWCHAR)(RegistryPath + 1));
@@ -193,7 +194,8 @@ TestDriverObject(
                                       FALSE);
         ok(Equal, "ServiceKeyName is '%wZ'\n", &DriverObject->DriverExtension->ServiceKeyName);
         ok_eq_tag(KmtGetPoolTag(DriverObject->DriverExtension->ServiceKeyName.Buffer), '  oI');
-        ok_eq_uint((KmtGetPoolType(DriverObject->DriverExtension->ServiceKeyName.Buffer) - 1) & BASE_POOL_TYPE_MASK, NonPagedPool);
+        if (GetNTVersion() <= _WIN32_WINNT_WS03) // Not guaranteed on Vista+
+            ok_eq_uint((KmtGetPoolType(DriverObject->DriverExtension->ServiceKeyName.Buffer) - 1) & BASE_POOL_TYPE_MASK, NonPagedPool);
         ok_eq_uint(DriverObject->DriverExtension->ServiceKeyName.MaximumLength, DriverObject->DriverExtension->ServiceKeyName.Length + sizeof(UNICODE_NULL));
         ok_eq_uint(DriverObject->DriverExtension->ServiceKeyName.Buffer[DriverObject->DriverExtension->ServiceKeyName.Length / sizeof(WCHAR)], UNICODE_NULL);
         Equal = RtlEqualUnicodeString(&DriverObject->DriverName,
@@ -348,7 +350,11 @@ TestDeviceCreated(
 
     /* Check the device object members */
     ok(DeviceObject->Type == 3, "Expected Type = 3, got %x\n", DeviceObject->Type);
-    ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got %x\n", DeviceObject->Size);
+#ifdef _M_IX86
+    ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got 0x%x\n", DeviceObject->Size);
+#else
+    ok(DeviceObject->Size == 0x150, "Expected Size = 0x150, got 0x%x\n", DeviceObject->Size);
+#endif
     ok(DeviceObject->ReferenceCount == 0, "Expected ReferenceCount = 0, got %lu\n",
         DeviceObject->ReferenceCount);
     ok(DeviceObject->DriverObject == ThisDriverObject,
@@ -368,17 +374,19 @@ TestDeviceCreated(
             "Expected Flags DO_DEVICE_HAS_NAME | DO_DEVICE_INITIALIZING, got %lu\n", DeviceObject->Flags);
     }
     ok(DeviceObject->DeviceType == FILE_DEVICE_UNKNOWN,
-        "Expected DeviceType to match creation parameter FILE_DEVICE_UNKNWOWN, got %lu\n",
+       "Expected DeviceType to match creation parameter FILE_DEVICE_UNKNWOWN, got %lu\n",
         DeviceObject->DeviceType);
     ok(DeviceObject->ActiveThreadCount == 0, "Expected ActiveThreadCount = 0, got %lu\n", DeviceObject->ActiveThreadCount);
 
     /* Check the extended extension */
     extdev = (PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension;
-    ok(extdev->ExtensionFlags == 0, "Expected Extended ExtensionFlags to be 0, got %lu\n", extdev->ExtensionFlags);
-    ok (extdev->Type == 13, "Expected Type of 13, got %d\n", extdev->Type);
-    ok (extdev->Size == 0, "Expected Size of 0, got %d\n", extdev->Size);
-    ok (extdev->DeviceObject == DeviceObject, "Expected DeviceOject to match newly created device %p, got %p\n",
-        DeviceObject, extdev->DeviceObject);
+    ok(extdev->ExtensionFlags == DOE_DEFAULT_SD_PRESENT || // Vista+
+       extdev->ExtensionFlags == 0,                        // WS03
+       "Expected Extended ExtensionFlags to be DOE_DEFAULT_SD_PRESENT or 0, got %lu\n", extdev->ExtensionFlags);
+    ok(extdev->Type == 13, "Expected Type of 13, got %d\n", extdev->Type);
+    ok(extdev->Size == 0, "Expected Size of 0, got %d\n", extdev->Size);
+    ok(extdev->DeviceObject == DeviceObject, "Expected DeviceOject to match newly created device %p, got %p\n",
+       DeviceObject, extdev->DeviceObject);
     ok(extdev->AttachedTo == NULL, "Expected AttachTo to be NULL, got %p\n", extdev->AttachedTo);
     ok(extdev->StartIoCount == 0, "Expected StartIoCount = 0, got %lu\n", extdev->StartIoCount);
     ok(extdev->StartIoKey == 0, "Expected StartIoKey = 0, got %lu\n", extdev->StartIoKey);
@@ -396,7 +404,11 @@ TestDeviceDeletion(
 
     /* Check the device object members */
     ok(DeviceObject->Type == 3, "Expected Type = 3, got %d\n", DeviceObject->Type);
-    ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got %d\n", DeviceObject->Size);
+#ifdef _M_IX86
+    ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got 0x%x\n", DeviceObject->Size);
+#else
+    ok(DeviceObject->Size == 0x150, "Expected Size = 0x150, got 0x%x\n", DeviceObject->Size);
+#endif
     ok(DeviceObject->ReferenceCount == 0, "Expected ReferenceCount = 0, got %lu\n",
         DeviceObject->ReferenceCount);
     if (!Lower)
@@ -426,9 +438,9 @@ TestDeviceDeletion(
 
     /* Check the extended extension */
     extdev = (PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension;
-    /* FIXME: Windows has the MSB set under some conditions, need to find out what this means */
-    ok((extdev->ExtensionFlags & 0x7fffffff) == DOE_UNLOAD_PENDING,
-        "Expected Extended ExtensionFlags to be DOE_UNLOAD_PENDING, got 0x%lx\n", extdev->ExtensionFlags);
+    ok((extdev->ExtensionFlags == (DOE_DEFAULT_SD_PRESENT | DOE_UNLOAD_PENDING) ||  // Vista+
+        extdev->ExtensionFlags & 0x7fffffff) == DOE_UNLOAD_PENDING,                 // WS03 FIXME: Windows has the MSB set under some conditions, need to find out what this means
+        "Unexpected Extended ExtensionFlags (0x%lx)\n", extdev->ExtensionFlags);
     ok (extdev->Type == 13, "Expected Type of 13, got %d\n", extdev->Type);
     ok (extdev->Size == 0, "Expected Size of 0, got %d\n", extdev->Size);
     ok (extdev->DeviceObject == DeviceObject, "Expected DeviceOject to match newly created device %p, got %p\n",
