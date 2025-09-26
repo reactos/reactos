@@ -31,7 +31,7 @@ GetVersionRegistryHandle(
     OBJECT_ATTRIBUTES objectAttributes;
     HANDLE handle = NULL;
     HANDLE keyHandle = NULL;
-    DECLARE_UNICODE_STRING_SIZE(string, 11);
+    DECLARE_UNICODE_STRING_SIZE(string, 256);
 
     
     status = RtlUnicodeStringPrintf(&string,
