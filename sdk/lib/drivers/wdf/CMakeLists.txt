@@ -185,7 +185,7 @@ list(APPEND SOURCE_KM
     reactos_special.cpp
     )
 
-add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM})
+add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM} wdf01000.rc)
 
 set_module_type(wdf01000 kernelmodedriver)
 
