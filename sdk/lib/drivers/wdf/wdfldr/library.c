@@ -4,27 +4,40 @@
  * PURPOSE:     WdfLdr driver - library functions
  * COPYRIGHT:   Copyright 2019 Max Korostil <mrmks04@yandex.ru>
  *              Copyright 2021 Victor Perevertkin <victor.perevertkin@reactos.org>
+ *              Copyright 2024 Justin Miller <justin.miller@reactos.org>
  */
 
 #include "wdfloader.h"
 
-static
 VOID
 LibraryFree(
     _In_ PLIBRARY_MODULE LibModule)
 {
+    DPRINT_TRACE_ENTRY();
+    
+    if (!LibModule)
+    {
+        DPRINT_ERROR(("LibModule is NULL\n"));
+        return;
+    }
+
     if (LibModule->ServicePath.Buffer)
     {
         RtlFreeUnicodeString(&LibModule->ServicePath);
+        LibModule->ServicePath.Buffer = NULL;
     }
 
     if (LibModule->ImageName.Buffer)
     {
         RtlFreeUnicodeString(&LibModule->ImageName);
+        LibModule->ImageName.Buffer = NULL;
     }
 
     ExDeleteResourceLite(&LibModule->ClientsListLock);
+    RtlZeroMemory(LibModule, sizeof(LIBRARY_MODULE));
     ExFreePoolWithTag(LibModule, WDFLDR_TAG);
+    
+    DPRINT_TRACE_EXIT();
 }
 
 /**
@@ -43,51 +56,71 @@ LibraryCreate(
     _Out_ PLIBRARY_MODULE* OutLibraryModule)
 {
     NTSTATUS status;
-    PLIBRARY_MODULE pLibModule;
+    PLIBRARY_MODULE pLibModule = NULL;
 
-    pLibModule = ExAllocatePoolWithTag(NonPagedPool, sizeof(*pLibModule), WDFLDR_TAG);
-    
+    DPRINT_TRACE_ENTRY();
+    if (!ServicePath || !OutLibraryModule)
+    {
+        DPRINT_ERROR(("Invalid parameters: ServicePath=%p, OutLibraryModule=%p\n", 
+                     ServicePath, OutLibraryModule));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *OutLibraryModule = NULL;
+
+    pLibModule = ExAllocatePoolZero(NonPagedPool, sizeof(LIBRARY_MODULE), WDFLDR_TAG);
     if (pLibModule == NULL)
     {
+        DPRINT_ERROR(("Failed to allocate library module structure\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    *pLibModule = (LIBRARY_MODULE){
-        .LibraryRefCount = 1,
-        .ImplicitlyLoaded = (_Bool)LibraryInfo,
-        .IsBootDriver = ServiceCheckBootStart((PUNICODE_STRING)ServicePath),
-        .LoaderThread = KeGetCurrentThread(),
-    };
+    pLibModule->LibraryRefCount = 1;
+    pLibModule->ImplicitlyLoaded = (LibraryInfo == NULL);
+    pLibModule->IsBootDriver = ServiceCheckBootStart((PUNICODE_STRING)ServicePath);
+    pLibModule->LoaderThread = KeGetCurrentThread();
 
     InitializeListHead(&pLibModule->ClientsListHead);
     InitializeListHead(&pLibModule->ClassListHead);
-    ExInitializeResourceLite(&pLibModule->ClientsListLock);
+    
+    status = ExInitializeResourceLite(&pLibModule->ClientsListLock);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT_ERROR(("ExInitializeResourceLite failed with status 0x%x\n", status));
+        goto Failure;
+    }
+    
     KeInitializeEvent(&pLibModule->LoaderEvent, SynchronizationEvent, FALSE);
 
+    /* Only set library information if provided */
     if (LibraryInfo)
     {
         pLibModule->LibraryInfo = LibraryInfo;
         pLibModule->Version = LibraryInfo->Version;
+        DPRINT_VERBOSE(("Library info provided: Version %d.%d.%d\n", 
+                       LibraryInfo->Version.Major, 
+                       LibraryInfo->Version.Minor, 
+                       LibraryInfo->Version.Build));
     }
 
-    // Initialize service's registry path
     pLibModule->ServicePath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                            ServicePath->MaximumLength,
                                                            WDFLDR_TAG);
     if (!pLibModule->ServicePath.Buffer)
     {
+        DPRINT_ERROR(("Failed to allocate service path buffer\n"));
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto Failure;
     }
 
     pLibModule->ServicePath.MaximumLength = ServicePath->MaximumLength;
     pLibModule->ServicePath.Length = ServicePath->Length;
-    RtlCopyMemory(pLibModule->ServicePath.Buffer, ServicePath->Buffer, ServicePath->MaximumLength);
+    RtlCopyMemory(pLibModule->ServicePath.Buffer, ServicePath->Buffer, ServicePath->Length);
     
     status = GetImageName(ServicePath, &pLibModule->ImageName);
     if (!NT_SUCCESS(status))
     {
-        __DBGPRINT(("LibraryCreate: GetImageName failed with status %x\n", status));
+        DPRINT_ERROR(("Failed to get image name from service path\n"));
         goto Failure;
     }
 
@@ -100,13 +133,26 @@ LibraryCreate(
         InsertHeadList(&WdfLdrGlobals.LoadedModulesList, &pLibModule->LibraryListEntry);
         
         *OutLibraryModule = pLibModule;
-        return status;
+        
+        DPRINT_VERBOSE(("Successfully created library module %wZ (Image: %wZ, Base: %p, Size: 0x%x)\n", 
+               &pLibModule->ServicePath, 
+               &pLibModule->ImageName,
+               pLibModule->ImageAddress,
+               pLibModule->ImageSize));
+        
+        DPRINT_TRACE_EXIT();
+        return STATUS_SUCCESS;
     }
 
-    __DBGPRINT(("LibraryCreate: GetImageInfo failed with status %x\n", status));
+    DPRINT_ERROR(("GetImageInfo failed with status 0x%x\n", status));
 
 Failure:
-    LibraryFree(pLibModule);
+    if (pLibModule)
+    {
+        LibraryFree(pLibModule);
+    }
+    
+    DPRINT_TRACE_EXIT();
     return status;
 }
 
@@ -222,6 +268,31 @@ LibraryReference(
     FxLdrReleaseLoadedModuleLock();
 }
 
+/**
+ * @brief Release a reference to a library module
+ */
+VOID
+NTAPI
+LibraryReleaseReference(
+    _In_ PLIBRARY_MODULE LibModule)
+{
+    LONG refCount;
+    
+    DPRINT_TRACE_ENTRY();
+    
+    refCount = InterlockedDecrement(&LibModule->LibraryRefCount);
+    DPRINT_VERBOSE(("Released reference to library %wZ, RefCount=%d\n", 
+                   &LibModule->ServicePath, refCount));
+    
+    if (refCount <= 0)
+    {
+        DPRINT(("Library %wZ reference count reached zero, unloading\n", &LibModule->ServicePath));
+        LibraryUnload(LibModule);
+    }
+    
+    DPRINT_TRACE_EXIT();
+}
+
 VOID
 LibraryDereference(
     _In_ PLIBRARY_MODULE LibModule)
@@ -283,8 +354,8 @@ LibraryUnload(
             status));
     }
 
-    // That should free the library entry
-    LibraryDereference(LibModule);
+    // Free the library module directly - caller handles the cleanup sequence
+    LibraryFree(LibModule);
 }
 
 BOOLEAN
@@ -370,7 +441,7 @@ LibraryLinkInClient(
                               &clientModule->ImageSize);
         if (!NT_SUCCESS(status))
         {
-            __DBGPRINT(("GetImageBase failed with status 0x%x\n", status));            
+            __DBGPRINT(("GetImageInfo failed with status 0x%x\n", status));            
             __DBGPRINT(("ERROR: Client module NOT linked\n"));
             ClientFree(clientModule);
 
@@ -443,10 +514,6 @@ LibraryUnlinkClient(
     return FALSE;
 }
 
-/**
- * @brief Finds a library module in WdfLdrGlobals.LoadedModulesList
- *        by service path in the registry. Compares only the service name part
- */
 _Requires_lock_held_(WdfLdrGlobals.LoadedModulesListLock)
 PLIBRARY_MODULE
 FindLibraryByServicePathLocked(
@@ -473,4 +540,62 @@ FindLibraryByServicePathLocked(
     }
 
     return foundModule;
+}
+
+_Requires_lock_held_(WdfLdrGlobals.LoadedModulesListLock)
+NTSTATUS
+NTAPI
+FindModuleByClientService(
+    _In_ PUNICODE_STRING RegistryPath,
+    _Out_ PLIBRARY_MODULE* Library)
+{
+    NTSTATUS status;
+    UNICODE_STRING imageName = { 0 };
+    PLIBRARY_MODULE foundModule = NULL;
+    
+    DPRINT_TRACE_ENTRY();
+    
+    if (!RegistryPath || !Library)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    *Library = NULL;
+
+    status = GetImageName(RegistryPath, &imageName);
+    if (!NT_SUCCESS(status))
+    {
+        if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED)
+        {
+            DbgPrint("WdfLdr: FindModuleByClientService - ");
+            DbgPrint("WdfLdr: FindModuleByClientService: GetImageName for %wZ failed with status 0x%x\n", RegistryPath, status);
+        }
+        goto Exit;
+    }
+
+    /* Search through loaded modules by comparing image names only */
+    for (PLIST_ENTRY entry = WdfLdrGlobals.LoadedModulesList.Flink;
+         entry != &WdfLdrGlobals.LoadedModulesList;
+         entry = entry->Flink)
+    {
+        PLIBRARY_MODULE currentLib = CONTAINING_RECORD(entry, LIBRARY_MODULE, LibraryListEntry);
+        
+        if (RtlEqualUnicodeString(&imageName, &currentLib->ImageName, TRUE))
+        {
+            foundModule = currentLib;
+            break;
+        }
+    }
+    
+    *Library = foundModule;
+    status = foundModule ? STATUS_SUCCESS : STATUS_NOT_FOUND;
+    
+Exit:
+    if (imageName.Buffer)
+    {
+        RtlFreeUnicodeString(&imageName);
+    }
+    
+    DPRINT_TRACE_EXIT();
+    return status;
 }
