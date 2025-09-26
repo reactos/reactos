@@ -4,6 +4,7 @@
  * PURPOSE:     WdfLdr driver - library functions
  * COPYRIGHT:   Copyright 2019 Max Korostil <mrmks04@yandex.ru>
  *              Copyright 2021 Victor Perevertkin <victor.perevertkin@reactos.org>
+ *              Copyright 2024 Justin Miller <justin.miller@reactos.org>
  */
 
 #pragma once
@@ -15,16 +16,56 @@
 
 #define WDFLDR_TAG 'LfdW'
 
+/* PRINT macros based on the open source segments of KMDF for consistency */
 #define __PrintUnfiltered(...)          \
-    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__);
+    DbgPrintEx(DPFLTR_DEFAULT_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__)
 
-#define __DBGPRINT(_x_)                                                           \
-{                                                                              \
-    if (WdfLdrDiags) {                                                    \
-        DbgPrint("Wdfldr: %s - ", __FUNCTION__); \
-        __PrintUnfiltered _x_                                                  \
+#define DPRINT(_x_)                                                            \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                            \
+        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                               \
+        __PrintUnfiltered _x_;                                                 \
     }                                                                          \
-}
+} while (0)
+
+#define DPRINT_VERBOSE(_x_)                                                    \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_VERBOSE_LOGGING) {                    \
+        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                               \
+        __PrintUnfiltered _x_;                                                 \
+    }                                                                          \
+} while (0)
+
+#define DPRINT_ERROR(_x_)                                                      \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_LOG_ERRORS) {                         \
+        DbgPrint("WdfLdr: ERROR: %s - ", __FUNCTION__);                        \
+        __PrintUnfiltered _x_;                                                 \
+    }                                                                          \
+} while (0)
+
+#define DPRINT_TRACE_ENTRY()                                                   \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_ENTRY) {               \
+        DbgPrint("WdfLdr: ENTER: %s\n", __FUNCTION__);                         \
+    }                                                                          \
+} while (0)
+
+#define DPRINT_TRACE_EXIT()                                                    \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_EXIT) {                \
+        DbgPrint("WdfLdr: EXIT: %s\n", __FUNCTION__);                          \
+    }                                                                          \
+} while (0)
+
+// Legacy compatibility - use do-while pattern for consistency
+#define __DBGPRINT(_x_)                                                        \
+do {                                                                           \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                            \
+        DbgPrint("Wdfldr: %s - ", __FUNCTION__);                               \
+        __PrintUnfiltered _x_;                                                 \
+    }                                                                          \
+} while (0)
 
 typedef struct _WDF_LDR_GLOBALS {
     OSVERSIONINFOEXW OsVersion;
@@ -32,9 +73,35 @@ typedef struct _WDF_LDR_GLOBALS {
     LIST_ENTRY LoadedModulesList;
 } WDF_LDR_GLOBALS, *PWDF_LDR_GLOBALS;
 
-#define DIAGFLAG_ENABLED 0x1
+//
+// Diagnostics Flags
+//
+#define DIAGFLAG_ENABLED                0x00000001
+#define DIAGFLAG_VERBOSE_LOGGING        0x00000002
+#define DIAGFLAG_TRACE_FUNCTION_ENTRY   0x00000004
+#define DIAGFLAG_TRACE_FUNCTION_EXIT    0x00000008
+#define DIAGFLAG_LOG_ERRORS             0x00000010
+#define DIAGFLAG_LOG_WARNINGS           0x00000020
 
-extern UINT32 WdfLdrDiags;
+//
+// Enhanced diagnostics structure similar to Windows 10
+//
+typedef struct _WDFLDR_DIAGS {
+    union {
+        UINT32 DiagFlags;
+        struct {
+            UINT32 DbgPrintOn :      1;
+            UINT32 Verbose :         1;
+            UINT32 FunctionEntries : 1;
+            UINT32 FunctionExits :   1;
+            UINT32 Errors :          1;
+            UINT32 Warnings :        1;
+            UINT32 Reserved :       26;
+        } DiagFlagsByName;
+    };
+} WDFLDR_DIAGS, *PWDFLDR_DIAGS;
+
+extern WDFLDR_DIAGS WdfLdrDiags;
 extern WDF_LDR_GLOBALS WdfLdrGlobals;
 
 typedef struct _LIBRARY_MODULE {
@@ -63,7 +130,7 @@ typedef
 NTSTATUS
 (NTAPI *PWDF_CLASS_BIND)(
     PWDF_BIND_INFO BindInfo,
-    PWDF_COMPONENT_GLOBALS Globals,
+    PWDF_COMPONENT_GLOBALS* Globals,
     PWDF_CLASS_BIND_INFO ClassBindInfo);
 
 typedef
@@ -88,7 +155,7 @@ typedef struct _WDF_LOADER_INTERFACE_CLASS_BIND {
 
 typedef struct _CLIENT_MODULE {
     LIST_ENTRY     LibListEntry;
-    PVOID          *Globals;
+    PVOID          Globals;
     PVOID          Context;
     PVOID          ImageAddr;
     ULONG          ImageSize;
@@ -180,13 +247,26 @@ FindClassByServiceNameLocked(
     _In_ PUNICODE_STRING Path,
     _Out_ PLIBRARY_MODULE* LibModule);
 
+VOID
+NTAPI
+ClassAddReference(
+    _In_ PCLASS_MODULE ClassModule);
+
+VOID
+ClassClose(
+    _In_ PCLASS_MODULE ClassModule);
+
+VOID
+ClassReleaseClientReference(
+    _In_ PCLASS_MODULE ClassModule);
+
 // common.c
 
 VOID
-FxLdrAcquireLoadedModuleLock();
+FxLdrAcquireLoadedModuleLock(VOID);
 
 VOID
-FxLdrReleaseLoadedModuleLock();
+FxLdrReleaseLoadedModuleLock(VOID);
 
 NTSTATUS
 GetImageInfo(
@@ -238,6 +318,10 @@ VOID
 LibraryUnload(
     _In_ PLIBRARY_MODULE LibModule);
 
+VOID
+LibraryFree(
+    _In_ PLIBRARY_MODULE LibModule);
+
 BOOLEAN
 LibraryAcquireClientLock(
     _In_ PLIBRARY_MODULE LibModule);
@@ -262,6 +346,30 @@ LibraryUnlinkClient(
 PLIBRARY_MODULE
 FindLibraryByServicePathLocked(
     _In_ PCUNICODE_STRING ServicePath);
+
+VOID
+NTAPI
+LibraryReleaseReference(
+    _In_ PLIBRARY_MODULE LibModule);
+
+NTSTATUS
+NTAPI
+FindModuleByClientService(
+    _In_ PUNICODE_STRING RegistryPath,
+    _Out_ PLIBRARY_MODULE* Library);
+
+// Version management functions
+NTSTATUS
+NTAPI
+ReferenceVersion(
+    _In_ PWDF_BIND_INFO Info,
+    _Out_ PLIBRARY_MODULE* Module);
+
+NTSTATUS
+NTAPI
+DereferenceVersion(
+    _In_ PWDF_BIND_INFO Info,
+    _In_opt_ PWDF_COMPONENT_GLOBALS Globals);
 
 // registry.c
 

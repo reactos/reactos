@@ -36,7 +36,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceRetrieveCurrentFrameNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -66,7 +66,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceSendUrbSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -148,7 +148,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -241,7 +241,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -274,7 +274,7 @@ WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceCyclePortSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -326,7 +326,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForCyclePort)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -378,7 +378,7 @@ __checkReturn
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetDeviceCreateUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

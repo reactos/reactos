@@ -66,7 +66,7 @@ extern "C" {
 
 WDF_EXTERN_C_START
 
-typedef VOID (*WDFFUNC) (VOID);
+typedef VOID (NTAPI *WDFFUNC) (VOID);
 extern const WDFFUNC *WdfFunctions;
 
 #include "wdftypes.h"

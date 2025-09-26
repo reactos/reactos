@@ -25,7 +25,7 @@ const WDFFUNC *WdfFunctions;
 PWDF_DRIVER_GLOBALS WdfDriverGlobals;
 WDF_BIND_INFO BindInfo =
 {
-    .Size = sizeof(WDF_BIND_INFO),
+    .Size = sizeof(BindInfo),
     .Component = L"KmdfLibrary", 
     .Version.Major = __WDF_MAJOR_VERSION,
     .Version.Minor = __WDF_MINOR_VERSION,
@@ -38,7 +38,7 @@ UNICODE_STRING gRegistryPath;
 
 static
 VOID
-FxDriverUnloadCommon()
+FxDriverUnloadCommon(VOID)
 {
     WdfVersionUnbind(&gRegistryPath, &BindInfo, (PWDF_COMPONENT_GLOBALS)WdfDriverGlobals);
 }
@@ -105,6 +105,5 @@ FxDriverEntry(
         pOriginalUnload = DriverObject->DriverUnload;
         DriverObject->DriverUnload = FxDriverUnload;
     }
-    
     return STATUS_SUCCESS;
 }

@@ -37,7 +37,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfSpinLockCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -109,7 +109,7 @@ WDFEXPORT(WdfSpinLockCreate)(
 __drv_raisesIRQL(DISPATCH_LEVEL)
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfSpinLockAcquire)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -147,7 +147,7 @@ WDFEXPORT(WdfSpinLockAcquire)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 __drv_minIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfSpinLockRelease)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

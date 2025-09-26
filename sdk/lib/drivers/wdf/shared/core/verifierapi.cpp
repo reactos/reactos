@@ -24,6 +24,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
+#ifdef __REACTOS__
+#include "../../reactos_special.h"
+#include "../../kmdf/inc/private/wdf115.h"
+#endif
 
 //
 // extern "C" all APIs
@@ -33,12 +37,10 @@ extern "C" {
 //
 // Global triage Info for dbgeng and 0x9F work
 //
-#ifndef __REACTOS__
 extern WDF_TRIAGE_INFO g_WdfTriageInfo;
-#endif
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -77,7 +79,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -149,7 +151,7 @@ Return Value:
 }
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCxVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -242,7 +244,7 @@ Return Value:
 
 
 PVOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -268,13 +270,7 @@ Return Value:
     DDI_ENTRY();
 
     UNREFERENCED_PARAMETER(DriverGlobals);
-
-#ifndef __REACTOS__
     return &g_WdfTriageInfo;
-#else
-    __debugbreak();
-    return NULL;
-#endif // __REACTOS__
 }
 
 } // extern "C"

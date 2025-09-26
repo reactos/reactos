@@ -185,7 +185,7 @@ list(APPEND SOURCE_KM
     reactos_special.cpp
     )
 
-add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM})
+add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM} wdf01000.rc)
 
 set_module_type(wdf01000 kernelmodedriver)
 
@@ -196,7 +196,9 @@ target_compile_definitions(wdf01000
     PUBLIC WDF_DEVICE_NO_WDMSEC_H _WIN32_WINNT=0x603 NTDDI_VERSION=0x06030000 # NTDDI_WINBLUE
     PRIVATE FX_CORE_MODE=1 FX_CORE_KERNEL_MODE=1
     PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600
-    PRIVATE __WDF_MAJOR_VERSION_STRING=01)
+    PRIVATE __WDF_MAJOR_VERSION_STRING=01
+    # wdf01000 is primarily 3rd party code, and we cannot control what crap vendor drivers do
+    PRIVATE NO_KERNEL_LIST_ENTRY_CHECKS)
 
 target_include_directories(wdf01000
     PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.17

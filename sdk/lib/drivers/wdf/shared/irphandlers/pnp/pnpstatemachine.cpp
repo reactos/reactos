@@ -3270,7 +3270,7 @@ Return Value:
     //
     // Reset WMI state
     //
-    // This->m_Device->m_PkgWmi->ResetStateForPdoRestart(); __REACTOS__
+    This->m_Device->m_PkgWmi->ResetStateForPdoRestart();
 
 
     This->m_Device->m_PkgIo->ResetStateForRestart();

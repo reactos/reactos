@@ -45,6 +45,7 @@ CopyQueryInterfaceToIrpStack(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 GetStackCapabilities(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,
@@ -169,6 +170,7 @@ Done:
 }
 
 VOID
+NTAPI
 SetD3ColdSupport(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,
@@ -213,6 +215,7 @@ IdleTimeoutManagement::_SystemManagedIdleTimeoutAvailable(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 SendDeviceUsageNotification(
     __in MxDeviceObject* RelatedDevice,
     __inout FxIrp* RelatedIrp,
@@ -291,7 +294,7 @@ SendDeviceUsageNotificationWorker(
 }
 
 VOID
-STDCALL
+NTAPI
 _DeviceUsageNotificationWorkItem(
     __in MdDeviceObject DeviceObject,
     __in PVOID Context

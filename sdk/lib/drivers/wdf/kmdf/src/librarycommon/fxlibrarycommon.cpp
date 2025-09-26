@@ -26,10 +26,12 @@ extern "C" {
 #include "fxldr.h"
 #include "fxlibrarycommon.h"
 #include "fxtelemetry.hpp"
-//#include "wdfversionlog.h"
-//#include "minwindef.h"
+#ifndef __REACTOS__
+#include "wdfversionlog.h"
+#include "minwindef.h"
+#else
 #include "reactos_special.h"
-
+#endif
 
 extern "C" {
 //
@@ -165,7 +167,6 @@ IsClientInfoValid(
     return TRUE;
 }
 
-
 VOID
 ReportDdiFunctionCountMismatch(
     _In_ PCUNICODE_STRING ServiceName,
@@ -219,17 +220,19 @@ ReportDdiFunctionCountMismatch(
     //
     // Report a telemetry event that can be used to proactively fix drivers
     //
-    //TraceLoggingWrite(g_TelemetryProvider,
-    //                "KmdfClientFunctionCountMismatch",
-    //                WDF_TELEMETRY_EVT_KEYWORDS,
-    //                TraceLoggingUnicodeString(ServiceName, "ServiceName"),
-    //                TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
-    //                TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+#ifndef __REACTOS__
+    TraceLoggingWrite(g_TelemetryProvider,
+                    "KmdfClientFunctionCountMismatch",
+                    WDF_TELEMETRY_EVT_KEYWORDS,
+                    TraceLoggingUnicodeString(ServiceName, "ServiceName"),
+                    TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
+                    TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+#endif
 }
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonCommission(
     VOID
     )
@@ -253,25 +256,25 @@ FxLibraryCommonCommission(
     //
     // register telemetry provider.
     //
-    //RegisterTelemetryProvider(); __REACTOS__ : not compiled
+#ifndef __REACTOS__
+    RegisterTelemetryProvider();
 
     //
     // Initialize internal WPP tracing.
     //
-    // __REACTOS__ : not compiled
-    //status = FxTraceInitialize();
-    //if (NT_SUCCESS(status)) {
-    //    FxLibraryGlobals.InternalTracingInitialized = TRUE;
-    //}
-    //else {
-    //    __Print(("Failed to initialize tracing for WDF\n"));
+    status = FxTraceInitialize();
+    if (NT_SUCCESS(status)) {
+        FxLibraryGlobals.InternalTracingInitialized = TRUE;
+    }
+    else {
+        __Print(("Failed to initialize tracing for WDF\n"));
 
         //
         // Failure to initialize is not critical enough to fail driver load.
         //
-    //    status = STATUS_SUCCESS;
-    //}
-
+        status = STATUS_SUCCESS;
+    }
+#endif
     //
     // Attempt to load RtlGetVersion (works for > w2k).
     //
@@ -300,7 +303,7 @@ FxLibraryCommonCommission(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonDecommission(
     VOID
     )
@@ -339,7 +342,7 @@ FxLibraryCommonDecommission(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonRegisterClient(
     __inout PWDF_BIND_INFO        Info,
     __deref_out PWDF_DRIVER_GLOBALS *WdfDriverGlobals,
@@ -491,12 +494,12 @@ FxLibraryCommonRegisterClient(
         }
         else {
             __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                     "Verificated functions table NOT IMPLEMENTED \n"));
+                     "Verifier functions table NOT IMPLEMENTED\n"));
 
             DbgBreakPoint();
 
             __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                     ": Enhanced Verification is ON \n"));
+                     ": Enhanced Verification is ON\n"));
 
 #ifndef __REACTOS__
             LockVerifierSection(fxDriverGlobals, ClientInfo->RegistryPath);
@@ -541,7 +544,7 @@ Done:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonUnregisterClient(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

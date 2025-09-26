@@ -35,7 +35,7 @@ extern "C" {
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeGetInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -64,7 +64,7 @@ WDFEXPORT(WdfUsbTargetPipeGetInformation)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeIsInEndpoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -87,7 +87,7 @@ WDFEXPORT(WdfUsbTargetPipeIsInEndpoint)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -110,7 +110,7 @@ WDFEXPORT(WdfUsbTargetPipeIsOutEndpoint)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_USB_PIPE_TYPE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeGetType)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -133,7 +133,7 @@ WDFEXPORT(WdfUsbTargetPipeGetType)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeSetNoMaximumPacketSizeCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -162,7 +162,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeWriteSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -197,7 +197,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForWrite)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -229,7 +229,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeReadSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -265,7 +265,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForRead)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -300,7 +300,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeConfigContinuousReader)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -431,7 +431,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeAbortSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -504,7 +504,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForAbort)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -548,7 +548,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeResetSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -628,7 +628,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForReset)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -672,7 +672,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeSendUrbSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -756,7 +756,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeFormatRequestForUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -846,7 +846,7 @@ WDFEXPORT(WdfUsbTargetPipeFormatRequestForUrb)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 USBD_PIPE_HANDLE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbTargetPipeWdmGetPipeHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

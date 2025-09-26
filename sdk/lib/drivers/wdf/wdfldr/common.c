@@ -10,14 +10,14 @@
 
 
 VOID
-FxLdrAcquireLoadedModuleLock()
+FxLdrAcquireLoadedModuleLock(VOID)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&WdfLdrGlobals.LoadedModulesListLock, TRUE);
 }
 
 VOID
-FxLdrReleaseLoadedModuleLock()
+FxLdrReleaseLoadedModuleLock(VOID)
 {
     ExReleaseResourceLite(&WdfLdrGlobals.LoadedModulesListLock);
     KeLeaveCriticalRegion();
@@ -37,7 +37,7 @@ GetNameFromPath(
         Name->Buffer = NULL;
         return;
     }
-    
+
     Name->Buffer = Path->Buffer + (Path->Length / 2) - 1;
     Name->Length = sizeof(WCHAR);
 
@@ -93,30 +93,30 @@ GetImageName(
 
     status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);
 
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
         return status;
     }
 
     status = FxLdrQueryData(keyHandle, &valueName, WDFLDR_TAG, &pKeyValPartial);
-    if (!NT_SUCCESS(status)) 
+    if (!NT_SUCCESS(status))
     {
         __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
         return status;
     }
 
     if (pKeyValPartial->Type != REG_SZ &&
-        pKeyValPartial->Type != REG_EXPAND_SZ) 
+        pKeyValPartial->Type != REG_EXPAND_SZ)
     {
         status = STATUS_OBJECT_TYPE_MISMATCH;
         __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
     }
 
     if (pKeyValPartial->DataLength == 0 ||
-        pKeyValPartial->DataLength > 0xFFFF) 
+        pKeyValPartial->DataLength > 0xFFFF)
     {
-        status = STATUS_INVALID_PARAMETER;    
+        status = STATUS_INVALID_PARAMETER;
         __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
     }
 
@@ -132,7 +132,7 @@ GetImageName(
 
     GetNameFromPath(&path, &name);
 
-    if (name.Length == 0) 
+    if (name.Length == 0)
     {
         status = STATUS_INVALID_PARAMETER;
         __DBGPRINT(("ERROR: GetNameFromPathW could not find a name, status 0x%x\n", status));
@@ -140,17 +140,17 @@ GetImageName(
     }
 
     status = RtlUShortAdd(name.Length, 2, &ImageName->Length);
-        
-    if (!NT_SUCCESS(status)) 
+
+    if (!NT_SUCCESS(status))
     {
         status = STATUS_INTEGER_OVERFLOW;
         __DBGPRINT(("ERROR: size computation failed with Status 0x%x\n", status));
         goto clean;
     }
-    
+
     ImageName->Buffer = ExAllocatePoolWithTag(PagedPool, ImageName->Length, WDFLDR_TAG);
 
-    if (ImageName->Buffer != NULL) 
+    if (ImageName->Buffer != NULL)
     {
         RtlZeroMemory(ImageName->Buffer, ImageName->Length);
         ImageName->MaximumLength = ImageName->Length;
@@ -159,18 +159,18 @@ GetImageName(
 
         __DBGPRINT(("Version Image Name \"%wZ\"\n", ImageName));
     }
-    else 
+    else
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
         __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
     }
 
 clean:
-    if (keyHandle) 
+    if (keyHandle)
     {
         ZwClose(keyHandle);
     }
-    if (pKeyValPartial) 
+    if (pKeyValPartial)
     {
         ExFreePoolWithTag(pKeyValPartial, WDFLDR_TAG);
     }

@@ -25,7 +25,9 @@ Revision History:
 
 extern "C" {
 // #include "FxDmaEnabler.tmh"
+#ifdef __REACTOS__
 #define RtlSizeTToULong RtlULongPtrToULong
+#endif
 }
 
 FxDmaEnabler::FxDmaEnabler(
@@ -123,6 +125,7 @@ FxDmaEnabler::Initialize(
     NTSTATUS   status;
     DEVICE_DESCRIPTION deviceDescription;
     PFX_DRIVER_GLOBALS pFxDriverGlobals = GetDriverGlobals();
+
 #ifndef __REACTOS__
     ULONG mapRegistersAllocated;
 #endif

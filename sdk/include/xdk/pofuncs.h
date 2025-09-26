@@ -196,11 +196,10 @@ PoCreatePowerRequest(
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 /******************************************************************************
- *                     PoFx Functions                     *
+ *                               PoFx Functions                               *
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
-  
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTKRNLVISTAAPI
 NTSTATUS

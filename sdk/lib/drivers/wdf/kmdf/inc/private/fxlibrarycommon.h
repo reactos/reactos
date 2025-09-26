@@ -35,27 +35,27 @@ extern RTL_OSVERSIONINFOW  gOsVersion;
 
 typedef
 NTSTATUS
-(STDCALL *PFN_RTL_GET_VERSION)(
+(NTAPI *PFN_RTL_GET_VERSION)(
     __out PRTL_OSVERSIONINFOW VersionInformation
     );
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonCommission(
     VOID
     );
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonDecommission(
     VOID
     );
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonRegisterClient(
     __inout PWDF_BIND_INFO        Info,
     __deref_out PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -64,7 +64,7 @@ FxLibraryCommonRegisterClient(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonUnregisterClient(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
