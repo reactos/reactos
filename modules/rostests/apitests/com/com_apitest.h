@@ -8,10 +8,6 @@
 #ifndef _COM_APITEST_H_
 #define _COM_APITEST_H_
 
-/* Define this to make wrong interface offsets count as test failures...
- * we usually don't want to be that strict */
-//#define FAIL_WRONG_OFFSET
-
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H

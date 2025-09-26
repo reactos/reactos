@@ -75,7 +75,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_WIN10,        NTDDI_MAX,          &IID_IMarshal},
         }
     },
-#if 0 // This is correct for Windows 10 1607, but crashes the test when un-initializing it.
+#if 0 // This crashes when un-initializing it. See ROSTESTS-405.
     {
         ID_NAME(CLSID_ShellDesktop, NTDDI_WIN10, NTDDI_MAX),
         {
