@@ -22,11 +22,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "tlhelp32.h"
 #include "wine/test.h"
 #include "winuser.h"
+#include "winternl.h"
 
 static char     selfname[MAX_PATH];
 
@@ -38,9 +41,12 @@ static BOOL (WINAPI *pProcess32First)(HANDLE, LPPROCESSENTRY32);
 static BOOL (WINAPI *pProcess32Next)(HANDLE, LPPROCESSENTRY32);
 static BOOL (WINAPI *pThread32First)(HANDLE, LPTHREADENTRY32);
 static BOOL (WINAPI *pThread32Next)(HANDLE, LPTHREADENTRY32);
+static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, void *, ULONG, ULONG *);
 
 /* 1 minute should be more than enough */
 #define WAIT_TIME       (60 * 1000)
+/* Specify the number of simultaneous threads to test */
+#define NUM_THREADS 4
 
 static DWORD WINAPI sub_thread(void* pmt)
 {
@@ -118,7 +124,7 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
         {
             if (pe.th32ProcessID == curr_pid) found++;
             if (pe.th32ProcessID == sub_pcs_pid) { childpos = num; found++; }
-            trace("PID=%x %s\n", pe.th32ProcessID, pe.szExeFile);
+            trace("PID=%lx %s\n", pe.th32ProcessID, pe.szExeFile);
             num++;
         } while (pProcess32Next( hSnapshot, &pe ));
     }
@@ -132,7 +138,7 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
         {
             if (pe.th32ProcessID == curr_pid) found++;
             if (pe.th32ProcessID == sub_pcs_pid) found++;
-            trace("PID=%x %s\n", pe.th32ProcessID, pe.szExeFile);
+            trace("PID=%lx %s\n", pe.th32ProcessID, pe.szExeFile);
             num--;
         } while (pProcess32Next( hSnapshot, &pe ));
     }
@@ -150,15 +156,169 @@ static void test_process(DWORD curr_pid, DWORD sub_pcs_pid)
     ok(!pProcess32First( hSnapshot, &pe ), "shouldn't return a process\n");
 }
 
+static DWORD WINAPI get_id_thread(void* curr_pid)
+{
+    HANDLE              hSnapshot;
+    THREADENTRY32       te;
+    HANDLE              ev, threads[NUM_THREADS];
+    DWORD               thread_ids[NUM_THREADS];
+    DWORD               thread_traversed[NUM_THREADS];
+    DWORD               tid, first_tid = 0;
+    BOOL                found = FALSE;
+    int                 i, matched_idx = -1;
+    ULONG               buf_size = 0;
+    NTSTATUS            status;
+    BYTE*               pcs_buffer = NULL;
+    DWORD               pcs_offset = 0;
+    SYSTEM_PROCESS_INFORMATION* spi = NULL;
+
+    ev = CreateEventW(NULL, TRUE, FALSE, NULL);
+    ok(ev != NULL, "Cannot create event\n");
+
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        threads[i] = CreateThread(NULL, 0, sub_thread, ev, 0, &tid);
+        ok(threads[i] != NULL, "Cannot create thread\n");
+        thread_ids[i] = tid;
+    }
+
+    hSnapshot = pCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    ok(hSnapshot != NULL, "Cannot create snapshot\n");
+
+    /* Check that this current process is enumerated */
+    te.dwSize = sizeof(te);
+    ok(pThread32First(hSnapshot, &te), "Thread cannot traverse\n");
+    do
+    {
+        if (found)
+        {
+            if (te.th32OwnerProcessID != PtrToUlong(curr_pid)) break;
+
+            if (matched_idx >= 0)
+            {
+                thread_traversed[matched_idx++] = te.th32ThreadID;
+                if (matched_idx >= NUM_THREADS) break;
+            }
+            else if (thread_ids[0] == te.th32ThreadID)
+            {
+                matched_idx = 0;
+                thread_traversed[matched_idx++] = te.th32ThreadID;
+            }
+        }
+        else if (te.th32OwnerProcessID == PtrToUlong(curr_pid))
+        {
+            found = TRUE;
+            first_tid = te.th32ThreadID;
+        }
+    }
+    while (pThread32Next(hSnapshot, &te));
+
+    ok(found, "Couldn't find self and/or sub-process in process list\n");
+
+    /* Check if the thread order is strictly consistent */
+    found = FALSE;
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        if (thread_traversed[i] != thread_ids[i])
+        {
+            found = TRUE;
+            break;
+        }
+        /* Reset data */
+        thread_traversed[i] = 0;
+    }
+    ok(found == FALSE, "The thread order is not strictly consistent\n");
+
+    /* Determine the order by NtQuerySystemInformation function */
+
+    while ((status = NtQuerySystemInformation(SystemProcessInformation,
+            pcs_buffer, buf_size, &buf_size)) == STATUS_INFO_LENGTH_MISMATCH)
+    {
+        free(pcs_buffer);
+        pcs_buffer = malloc(buf_size);
+    }
+    ok(status == STATUS_SUCCESS, "got %#lx\n", status);
+    found = FALSE;
+    matched_idx = -1;
+
+    do
+    {
+        spi = (SYSTEM_PROCESS_INFORMATION*)&pcs_buffer[pcs_offset];
+        if (spi->UniqueProcessId == curr_pid)
+        {
+            found = TRUE;
+            break;
+        }
+        pcs_offset += spi->NextEntryOffset;
+    } while (spi->NextEntryOffset != 0);
+
+    ok(found && spi, "No process found\n");
+    for (i = 0; i < spi->dwThreadCount; i++)
+    {
+        tid = HandleToULong(spi->ti[i].ClientId.UniqueThread);
+        if (matched_idx > 0)
+        {
+            thread_traversed[matched_idx++] = tid;
+            if (matched_idx >= NUM_THREADS) break;
+        }
+        else if (tid == thread_ids[0])
+        {
+            matched_idx = 0;
+            thread_traversed[matched_idx++] = tid;
+        }
+    }
+    free(pcs_buffer);
+
+    ok(matched_idx > 0, "No thread id match found\n");
+
+    found = FALSE;
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        if (thread_traversed[i] != thread_ids[i])
+        {
+            found = TRUE;
+            break;
+        }
+    }
+    ok(found == FALSE, "wrong order in NtQuerySystemInformation function\n");
+
+    SetEvent(ev);
+    WaitForMultipleObjects( NUM_THREADS, threads, TRUE, WAIT_TIME );
+    for (i = 0; i < NUM_THREADS; i++)
+        CloseHandle(threads[i]);
+    CloseHandle(ev);
+    CloseHandle(hSnapshot);
+
+    return first_tid;
+}
+
+static void test_main_thread(DWORD curr_pid, DWORD main_tid)
+{
+    HANDLE              thread;
+    DWORD               tid = 0;
+    int                 error;
+
+    /* Check that the main thread id is first one in this thread. */
+    tid = get_id_thread(ULongToPtr(curr_pid));
+    ok(tid == main_tid, "The first thread id returned is not the main thread id\n");
+
+    /* Check that the main thread id is first one in other thread. */
+    thread = CreateThread(NULL, 0, get_id_thread, ULongToPtr(curr_pid), 0, NULL);
+    error = WaitForSingleObject(thread, WAIT_TIME);
+    ok(error == WAIT_OBJECT_0, "Thread did not complete within timelimit\n");
+
+    ok(GetExitCodeThread(thread, &tid), "Could not retrieve exit code\n");
+    ok(tid == main_tid, "The first thread id returned is not the main thread id\n");
+}
+
 static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
 {
     HANDLE              hSnapshot;
     THREADENTRY32       te;
     MODULEENTRY32       me;
-    int                 num = 0;
     unsigned            curr_found = 0;
     unsigned            sub_found = 0;
-    
+
     hSnapshot = pCreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 );
     ok(hSnapshot != NULL, "Cannot create snapshot\n");
 
@@ -171,8 +331,7 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             if (te.th32OwnerProcessID == curr_pid) curr_found++;
             if (te.th32OwnerProcessID == sub_pcs_pid) sub_found++;
             if (winetest_debug > 1)
-                trace("PID=%x TID=%x %d\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
-            num++;
+                trace("PID=%lx TID=%lx %ld\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
         } while (pThread32Next( hSnapshot, &te ));
     }
     ok(curr_found, "couldn't find self in thread list\n");
@@ -188,8 +347,7 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             if (te.th32OwnerProcessID == curr_pid) curr_found++;
             if (te.th32OwnerProcessID == sub_pcs_pid) sub_found++;
             if (winetest_debug > 1)
-                trace("PID=%x TID=%x %d\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
-            num--;
+                trace("PID=%lx TID=%lx %ld\n", te.th32OwnerProcessID, te.th32ThreadID, te.tpBasePri);
         } while (pThread32Next( hSnapshot, &te ));
     }
     ok(curr_found, "couldn't find self in thread list\n");
@@ -217,8 +375,6 @@ static const char* sub_expected_modules[] =
     "ntdll.dll"
 };
 
-#define NUM_OF(x) (sizeof(x) / sizeof(x[0]))
-
 static void test_module(DWORD pid, const char* expected[], unsigned num_expected)
 {
     HANDLE              hSnapshot;
@@ -229,7 +385,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
     unsigned            i;
     int                 num = 0;
 
-    ok(NUM_OF(found) >= num_expected, "Internal: bump found[] size\n");
+    ok(ARRAY_SIZE(found) >= num_expected, "Internal: bump found[] size\n");
 
     hSnapshot = pCreateToolhelp32Snapshot( TH32CS_SNAPMODULE, pid );
     ok(hSnapshot != NULL, "Cannot create snapshot\n");
@@ -240,7 +396,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
     {
         do
         {
-            trace("PID=%x base=%p size=%x %s %s\n",
+            trace("PID=%lx base=%p size=%lx %s %s\n",
                   me.th32ProcessID, me.modBaseAddr, me.modBaseSize, me.szExePath, me.szModule);
             ok(me.th32ProcessID == pid, "wrong returned process id\n");
             for (i = 0; i < num_expected; i++)
@@ -259,7 +415,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
     {
         do
         {
-            trace("PID=%x base=%p size=%x %s %s\n",
+            trace("PID=%lx base=%p size=%lx %s %s\n",
                   me.th32ProcessID, me.modBaseAddr, me.modBaseSize, me.szExePath, me.szModule);
             for (i = 0; i < num_expected; i++)
                 if (!lstrcmpiA(expected[i], me.szModule)) found[i]++;
@@ -286,13 +442,14 @@ START_TEST(toolhelp)
     DWORD               pid = GetCurrentProcessId();
     int                 r;
     char                *p, module[MAX_PATH];
-    char                buffer[MAX_PATH];
+    char                buffer[MAX_PATH + 21];
     SECURITY_ATTRIBUTES sa;
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
     HANDLE              ev1, ev2;
     DWORD               w;
     HANDLE              hkernel32 = GetModuleHandleA("kernel32");
+    HANDLE              hntdll = GetModuleHandleA("ntdll.dll");
 
     pCreateToolhelp32Snapshot = (VOID *) GetProcAddress(hkernel32, "CreateToolhelp32Snapshot");
     pModule32First = (VOID *) GetProcAddress(hkernel32, "Module32First");
@@ -301,11 +458,13 @@ START_TEST(toolhelp)
     pProcess32Next = (VOID *) GetProcAddress(hkernel32, "Process32Next");
     pThread32First = (VOID *) GetProcAddress(hkernel32, "Thread32First");
     pThread32Next = (VOID *) GetProcAddress(hkernel32, "Thread32Next");
+    pNtQuerySystemInformation = (VOID *) GetProcAddress(hntdll, "NtQuerySystemInformation");
 
     if (!pCreateToolhelp32Snapshot || 
         !pModule32First || !pModule32Next ||
         !pProcess32First || !pProcess32Next ||
-        !pThread32First || !pThread32Next)
+        !pThread32First || !pThread32Next ||
+        !pNtQuerySystemInformation)
     {
         win_skip("Needed functions are not available, most likely running on Windows NT\n");
         return;
@@ -327,7 +486,7 @@ START_TEST(toolhelp)
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = SW_SHOWNORMAL;
 
-    sprintf(buffer, "%s tests/toolhelp.c %lu %lu", selfname, (DWORD_PTR)ev1, (DWORD_PTR)ev2);
+    sprintf(buffer, "%s toolhelp %Iu %Iu", selfname, (DWORD_PTR)ev1, (DWORD_PTR)ev2);
     ok(CreateProcessA(NULL, buffer, NULL, NULL, TRUE, 0, NULL, NULL, &startup, &info), "CreateProcess\n");
     /* wait for child to be initialized */
     w = WaitForSingleObject(ev1, WAIT_TIME);
@@ -341,9 +500,10 @@ START_TEST(toolhelp)
 
     test_process(pid, info.dwProcessId);
     test_thread(pid, info.dwProcessId);
-    test_module(pid, curr_expected_modules, NUM_OF(curr_expected_modules));
-    test_module(info.dwProcessId, sub_expected_modules, NUM_OF(sub_expected_modules));
+    test_main_thread(pid, GetCurrentThreadId());
+    test_module(pid, curr_expected_modules, ARRAY_SIZE(curr_expected_modules));
+    test_module(info.dwProcessId, sub_expected_modules, ARRAY_SIZE(sub_expected_modules));
 
     SetEvent(ev2);
-    winetest_wait_child_process( info.hProcess );
+    wait_child_process( info.hProcess );
 }
