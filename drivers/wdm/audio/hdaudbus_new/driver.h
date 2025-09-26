@@ -47,6 +47,13 @@ extern "C" {
 
 #include "regfuncs.h"
 
+NTSTATUS HDA_WaitForTransfer(
+	PFDO_CONTEXT fdoCtx,
+	UINT16 codecAddr,
+	_In_ ULONG Count,
+	_Inout_updates_(Count)
+	PHDAUDIO_CODEC_TRANSFER CodecTransfer
+);
 #define MAXUINT64 ((UINT64)~ ((UINT64)0))
 #define MAXULONG64 ((ULONG64)~ ((ULONG64)0))
 #define MAXULONG32 ((ULONG32) ~((ULONG32)0))

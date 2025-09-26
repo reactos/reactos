@@ -155,17 +155,13 @@ typedef struct _FDO_CONTEXT
     PVOID sofTplg;
     UINT64 sofTplgSz;
 
-    //unsolicited events
-    HDAC_RIRB unsol_queue[HDA_UNSOL_QUEUE_SIZE * 2];
-    UINT unsol_rp, unsol_wp;
-    BOOL processUnsol;
-
     //bit flags of detected codecs
     UINT16 codecMask;
     USHORT numCodecs;
 
     HDAC_RB corb;
     HDAC_RB rirb;
+    BOOL processRirb;
 
     UINT8 *rb; //CORB and RIRB buffers
     PVOID posbuf;

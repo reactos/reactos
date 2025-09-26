@@ -255,68 +255,15 @@ NTSTATUS RunSingleHDACmd(PFDO_CONTEXT fdoCtx, ULONG val, ULONG* res) {
 		return status;
 	}
 
-	LARGE_INTEGER StartTime;
-	KeQuerySystemTime(&StartTime);
-
-	int timeout_ms = 1000;
-	for (ULONG loopcounter = 0; ; loopcounter++) {
-		if (transfer.Input.IsValid) {
-			if (res) {
-				*res = transfer.Input.Response;
-			}
-			return STATUS_SUCCESS;
-		}
-
-		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTime(&CurrentTime);
-
-		UINT16 addr = HDACommandAddr(transfer.Output.Command);
-
-		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
-			WdfInterruptAcquireLock(fdoCtx->Interrupt);
-			InterlockedDecrement(&fdoCtx->rirb.cmds[addr]);
-			WdfInterruptReleaseLock(fdoCtx->Interrupt);
-			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
-				"%s: Timed out waiting for response\n", __func__);
-			return STATUS_IO_TIMEOUT;
-		}
-
-		LARGE_INTEGER Timeout;
-		Timeout.QuadPart = -10 * 100;
-		KeWaitForSingleObject(&fdoCtx->rirb.xferEvent[addr], Executive, KernelMode, TRUE, &Timeout);
+	UINT16 addr = HDACommandAddr(transfer.Output.Command);
+	status = HDA_WaitForTransfer(fdoCtx, addr, 1, &transfer);
+	if (transfer.Input.IsValid && res) {
+		*res = transfer.Input.Response;
 	}
+	return status;
 }
 
 #define HDA_RIRB_EX_UNSOL_EV	(1<<4)
-
-static void HDAProcessUnsolEvents(PFDO_CONTEXT fdoCtx) {
-	UINT rp;
-	while (fdoCtx->unsol_rp != fdoCtx->unsol_wp) {
-		rp = (fdoCtx->unsol_rp + 1) % HDA_UNSOL_QUEUE_SIZE;
-		fdoCtx->unsol_rp = rp;
-
-		HDAC_RIRB rirb = fdoCtx->unsol_queue[rp];
-
-		if (!(rirb.response_ex & HDA_RIRB_EX_UNSOL_EV)) //no unsolicited event
-			continue;
-
-		HDAUDIO_CODEC_RESPONSE response;
-		RtlZeroMemory(&response, sizeof(HDAUDIO_CODEC_RESPONSE));
-
-		response.Response = rirb.response;
-		response.IsUnsolicitedResponse = 1;
-
-		PPDO_DEVICE_DATA codec = fdoCtx->codecs[rirb.response_ex & 0x0f];
-		if (!codec || codec->FdoContext != fdoCtx)
-			continue;
-
-		UINT Tag = response.Unsolicited.Tag;
-		CODEC_UNSOLIT_CALLBACK callback = codec->unsolitCallbacks[Tag];
-		if (callback.inUse && callback.Routine) {
-			callback.Routine(response, callback.Context);
-		}
-	}
-}
 
 static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 	UINT16 wp, addr;
@@ -344,20 +291,36 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 				rirb.response, rirb.response_ex);
 		}
 		else if (rirb.response_ex & HDA_RIRB_EX_UNSOL_EV) {
-			UINT unsol_wp = (fdoCtx->unsol_wp + 1) % HDA_UNSOL_QUEUE_SIZE;
-			fdoCtx->unsol_wp = unsol_wp;
+			HDAUDIO_CODEC_RESPONSE response;
+			RtlZeroMemory(&response, sizeof(HDAUDIO_CODEC_RESPONSE));
 
-			fdoCtx->unsol_queue[unsol_wp] = rirb;
+			response.SDataIn = addr;
+			response.Response = rirb.response;
+			response.IsUnsolicitedResponse = 1;
+			response.IsValid = 1;
 
-			fdoCtx->processUnsol = TRUE;
+			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
+				"Unsol response on 0x%x: 0x%x\n", addr, response.Response);
+
+			PPDO_DEVICE_DATA codec = fdoCtx->codecs[addr];
+			if (!codec || codec->FdoContext != fdoCtx)
+				continue;
+
+			UINT Tag = response.Unsolicited.Tag;
+			CODEC_UNSOLIT_CALLBACK callback = codec->unsolitCallbacks[Tag];
+			if (callback.inUse && callback.Routine) {
+				callback.Routine(response, callback.Context);
+			}
 		}
 		else if (InterlockedAdd(&fdoCtx->rirb.cmds[addr], 0)) {
 			PHDAC_CODEC_XFER codecXfer = &fdoCtx->rirb.xfer[addr];
 			if (codecXfer->xfer[0]) {
-				SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
-					"Got response for 0x%x: 0x%x\n", codecXfer->xfer[0]->Output.Command, rirb.response);
+				codecXfer->xfer[0]->Input.SDataIn = addr;
 				codecXfer->xfer[0]->Input.Response = rirb.response;
 				codecXfer->xfer[0]->Input.IsValid = 1;
+
+				SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
+					"Got response on 0x%x for 0x%x: 0x%x\n", addr, codecXfer->xfer[0]->Output.Command, rirb.response);
 			}
 			else {
 				SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
@@ -366,9 +329,10 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 			
 			RtlMoveMemory(&codecXfer->xfer[0], &codecXfer->xfer[1], sizeof(PHDAUDIO_CODEC_TRANSFER) * (HDA_MAX_CORB_ENTRIES - 1));
 			codecXfer->xfer[HDA_MAX_CORB_ENTRIES - 1] = NULL;
-			InterlockedDecrement(&fdoCtx->rirb.cmds[addr]);
-
-			KeSetEvent(&fdoCtx->rirb.xferEvent[addr], IO_NO_INCREMENT, FALSE);
+			if (!InterlockedDecrement(&fdoCtx->rirb.cmds[addr])) {
+				SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "Empty queue for 0x%x\n", addr);
+				KeSetEvent(&fdoCtx->rirb.xferEvent[addr], IO_NO_INCREMENT, FALSE);
+			}
 		}
 		else {
 			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
@@ -431,16 +395,13 @@ hda_interrupt(
 		WdfInterruptQueueDpcForIsr(Interrupt);
 	}
 
-	status = hda_read16(fdoCtx, RIRBSTS);
+	status = hda_read8(fdoCtx, RIRBSTS);
 	if (status & RIRB_INT_MASK) {
-		hda_write16(fdoCtx, RIRBSTS, RIRB_INT_MASK);
+		hda_write8(fdoCtx, RIRBSTS, RIRB_INT_MASK);
 		if (status & RIRB_INT_RESPONSE) {
-			HDAFlushRIRB(fdoCtx);
+			fdoCtx->processRirb = TRUE;
+			WdfInterruptQueueDpcForIsr(Interrupt);
 		}
-	}
-
-	if (fdoCtx->processUnsol) {
-		WdfInterruptQueueDpcForIsr(Interrupt);
 	}
 
 	return handled;
@@ -478,8 +439,8 @@ hda_dpc(
 		}
 	}
 
-	if (fdoCtx->processUnsol) {
-		fdoCtx->processUnsol = FALSE;
-		HDAProcessUnsolEvents(fdoCtx);
+	if (fdoCtx->processRirb) {
+		fdoCtx->processRirb = FALSE;
+		HDAFlushRIRB(fdoCtx);
 	}
 }

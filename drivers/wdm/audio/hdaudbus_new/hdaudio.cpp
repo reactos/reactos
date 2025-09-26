@@ -1,5 +1,68 @@
 #include "driver.h"
 
+NTSTATUS HDA_WaitForTransfer(
+	PFDO_CONTEXT fdoCtx,
+	UINT16 codecAddr,
+	_In_ ULONG Count,
+	_Inout_updates_(Count)
+	PHDAUDIO_CODEC_TRANSFER CodecTransfer
+) {
+	NTSTATUS status = STATUS_SUCCESS;
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, Count);
+
+	LARGE_INTEGER Timeout;
+	Timeout.QuadPart = -10 * 1000 * 1000;
+	KeWaitForSingleObject(&fdoCtx->rirb.xferEvent[codecAddr], Executive, KernelMode, TRUE, &Timeout);
+	KeClearEvent(&fdoCtx->rirb.xferEvent[codecAddr]);
+
+	ULONG TransferredCount = 0;
+	for (ULONG i = 0; i < Count; i++) {
+		if (CodecTransfer[i].Input.IsValid) {
+			TransferredCount++;
+		}
+	}
+
+	if (TransferredCount < Count) {
+		InterlockedAdd(&fdoCtx->rirb.cmds[codecAddr], TransferredCount - Count);
+
+		SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s timeout (Count: %d, transferred %d)!\n", __func__, Count, TransferredCount);
+		status = STATUS_IO_TIMEOUT;
+		goto out;
+	}
+
+out:
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__, Count);
+	return status;
+}
+
+void
+NTAPI
+HDA_AsyncWait(WDFWORKITEM WorkItem) {
+	PHDA_ASYNC_CONTEXT workItemContext = HDAAsyncWorkItem_GetContext(WorkItem);
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, workItemContext->Count);
+
+	NTSTATUS status = HDA_WaitForTransfer(
+		workItemContext->devData->FdoContext,
+		workItemContext->devData->CodecIds.CodecAddress,
+		workItemContext->Count,
+		workItemContext->CodecTransfer
+	);
+	UNREFERENCED_PARAMETER(status);
+
+	workItemContext->Callback(
+		workItemContext->CodecTransfer,
+		workItemContext->CallbackContext
+	);
+
+	PFDO_CONTEXT fdoCtx = workItemContext->devData->FdoContext;
+	WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+	WdfObjectDelete(WorkItem);
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__);
+}
+
 NTSTATUS
 NTAPI
 HDA_TransferCodecVerbs(
@@ -10,7 +73,7 @@ HDA_TransferCodecVerbs(
 	_In_opt_ PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
 	_In_opt_ PVOID Context
 ) {
-	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, Count);
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d, Callback? %d)!\n", __func__, Count, Callback != NULL);
 
 	if (!_context)
 		return STATUS_NO_SUCH_DEVICE;
@@ -31,53 +94,46 @@ HDA_TransferCodecVerbs(
 
 	status = SendHDACmds(fdoCtx, Count, CodecTransfer);
 	if (!NT_SUCCESS(status)) {
-		WdfDeviceResumeIdle(fdoCtx->WdfDevice);
-		return status;
+		goto out;
 	}
-
-	UINT16 codecAddr = (UINT16)devData->CodecIds.CodecAddress;
-
-	int timeout_ms = 1000;
-	LARGE_INTEGER StartTime;
-	KeQuerySystemTime(&StartTime);
-	for (ULONG loopcounter = 0; ; loopcounter++) {
-		ULONG TransferredCount = 0;
-		for (ULONG i = 0; i < Count; i++) {
-			if (CodecTransfer[i].Input.IsValid) {
-				TransferredCount++;
-			}
-		}
-		if (TransferredCount >= Count) {
-			break;
-		}
-
-		LARGE_INTEGER CurrentTime;
-		KeQuerySystemTime(&CurrentTime);
-
-		if (((CurrentTime.QuadPart - StartTime.QuadPart) / (10 * 1000)) >= timeout_ms) {
-			InterlockedAdd(&fdoCtx->rirb.cmds[codecAddr], TransferredCount - Count);
-
-			SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s timeout (Count: %d, transferred %d)!\n", __func__, Count, TransferredCount);
-			status = STATUS_IO_TIMEOUT;
-			WdfDeviceResumeIdle(fdoCtx->WdfDevice);
-			return status;
-		}
-
-		LARGE_INTEGER Timeout;
-		Timeout.QuadPart = -10 * 100;
-		KeWaitForSingleObject(&fdoCtx->rirb.xferEvent[codecAddr], Executive, KernelMode, TRUE, &Timeout);
-	}
-
-	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__, Count);
 
 	if (Callback) { //TODO: Do this async
-		DbgPrint("Got Callback\n");
-		Callback(CodecTransfer, Context);
+		WDF_WORKITEM_CONFIG workItemConfig;
+		WDF_WORKITEM_CONFIG_INIT(&workItemConfig, HDA_AsyncWait);
+
+		WDF_OBJECT_ATTRIBUTES attributes;
+		WDFWORKITEM workItem;
+
+		WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+		WDF_OBJECT_ATTRIBUTES_SET_CONTEXT_TYPE(
+			&attributes,
+			HDA_ASYNC_CONTEXT
+		);
+		attributes.ParentObject = fdoCtx->WdfDevice;
+
+		WdfWorkItemCreate(&workItemConfig, &attributes, &workItem);
+
+		PHDA_ASYNC_CONTEXT workItemContext = HDAAsyncWorkItem_GetContext(workItem);
+		workItemContext->devData = devData;
+		workItemContext->Count = Count;
+		workItemContext->CodecTransfer = CodecTransfer;
+		workItemContext->Callback = Callback;
+		workItemContext->CallbackContext = Context;
+		WdfWorkItemEnqueue(workItem);
+	}
+	else {
+		status = HDA_WaitForTransfer(fdoCtx, devData->CodecIds.CodecAddress, Count, CodecTransfer);
+		if (!NT_SUCCESS(status)) {
+			goto out;
+		}
 	}
 
 	status = STATUS_SUCCESS;
 
-	WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+out:
+	if (!Callback)
+		WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__, Count);
 	return status;
 }
 

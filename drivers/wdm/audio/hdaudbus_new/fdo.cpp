@@ -581,15 +581,10 @@ Fdo_EvtDeviceD0Entry(
         update_pci_byte(&fdoCtx->BusInterface, NVIDIA_HDA_OSTRM_COH, 0x01, NVIDIA_HDA_ENABLE_COHBIT);
     }
 
-    //Reset unsolicited queue
-    RtlZeroMemory(&fdoCtx->unsol_queue, sizeof(fdoCtx->unsol_queue));
-    fdoCtx->unsol_rp = 0;
-    fdoCtx->unsol_wp = 0;
-    fdoCtx->processUnsol = FALSE;
-
     //Reset CORB / RIRB
     RtlZeroMemory(&fdoCtx->corb, sizeof(fdoCtx->corb));
     RtlZeroMemory(&fdoCtx->rirb, sizeof(fdoCtx->rirb));
+    fdoCtx->processRirb = FALSE;
 
     status = StartHDAController(fdoCtx);
 
