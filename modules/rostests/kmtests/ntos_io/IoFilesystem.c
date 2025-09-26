@@ -116,7 +116,7 @@ TestAllInformation(VOID)
         return;
 
     /* Find filesystem for the system */
-    FsAttributeInfo = ExAllocatePoolWithTag(PagedPool, FSAttributeBufferSize, 'FSys');
+    FsAttributeInfo = ExAllocatePoolWithTag(PagedPool, FSAttributeBufferSize, 'sySF');
     if (FsAttributeInfo == NULL)
     {
         ok(FALSE, "Failed to allocate memory to query the filesystem!\n");
@@ -129,7 +129,6 @@ TestAllInformation(VOID)
                                           FsAttributeInfo,
                                           FSAttributeBufferSize,
                                           FileFsAttributeInformation);
-
     if (NT_SUCCESS(Status))
     {
         if (FsAttributeInfo->FileSystemNameLength >= 8 &&
@@ -138,7 +137,6 @@ TestAllInformation(VOID)
             g_Filesystem = NTFS;
             trace("Filesystem: NTFS\n");
         }
-
         else if (FsAttributeInfo->FileSystemNameLength >= 10 &&
                 RtlCompareMemory(FsAttributeInfo->FileSystemName, L"FAT32", 10) == 10)
         {
@@ -160,7 +158,7 @@ TestAllInformation(VOID)
         ok(FALSE, "Failed to query filesystem: %lx\n", Status);
     }
 
-    ExFreePoolWithTag(FsAttributeInfo, 'FSys');
+    ExFreePoolWithTag(FsAttributeInfo, 'sySF');
 
     /* NtQueryInformationFile doesn't do length checks for kernel callers in a free build */
     if (KmtIsCheckedBuild)
@@ -846,7 +844,7 @@ Cleanup:
 
 START_TEST(IoFilesystem)
 {
-    /* TestAllInformation() has to be first since we detect the filesystem there. */
+    /* TestAllInformation() has to be first since we detect the filesystem there */
     TestAllInformation();
     TestRelativeNames();
     TestSharedCacheMap();
