@@ -4,11 +4,11 @@
  * PURPOSE:     WdfLdr driver - class functions
  * COPYRIGHT:   Copyright 2019 Max Korostil <mrmks04@yandex.ru>
  *              Copyright 2021 Victor Perevertkin <victor.perevertkin@reactos.org>
+ *              Copyright 2024 Justin Miller <justin.miller@reactos.org>
  */
 
 
 #include "wdfloader.h"
-
 
 VOID
 ClassAcquireClientLock(
@@ -504,38 +504,55 @@ ReferenceClassVersion(
         *ClassModule = pClassModule;
     }
 
-    status = ZwLoadDriver(&driverServiceName);
-    
-    if (NT_SUCCESS(status))
+    /* Class logic: Only call ZwLoadDriver if:
+     * 1. Class module was newly created, OR
+     * 2. Class module exists but has no ClassLibraryInfo
+     */
+    if (created || (pClassModule && !pClassModule->ClassLibraryInfo))
     {
-        ClassBindInfo->ClassModule = pClassModule;
-        *ClassModule = pClassModule;
-    }
+               
+        status = ZwLoadDriver(&driverServiceName);
         
-    if (status == STATUS_IMAGE_ALREADY_LOADED || status == STATUS_OBJECT_NAME_COLLISION)
-    {
-        if (pClassModule->ClassLibraryInfo)
+        if (!NT_SUCCESS(status))
         {
-            status = STATUS_SUCCESS;                
+
+            if (status == STATUS_OBJECT_PATH_NOT_FOUND || 
+                status == STATUS_OBJECT_NAME_NOT_FOUND ||
+                status == STATUS_IMAGE_ALREADY_LOADED)
+            {
+                /* Driver might already be loaded as boot driver - UCX*/
+                status = STATUS_SUCCESS;
+            }
         }
-        else
+        else if (pClassModule && !pClassModule->ClassLibraryInfo)
         {
-            __DBGPRINT(("ZwLoadDriver (%wZ) failed and no Libray information was returned: 0x%x\n",
-                &driverServiceName,
-                status));
+            status = STATUS_DRIVER_INTERNAL_ERROR;
         }
     }
     else
     {
-        __DBGPRINT(("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status));
-        pClassModule->ImageAlreadyLoaded = 1;
+        /* Class module exists and has ClassLibraryInfo - skip ZwLoadDriver */
+        status = STATUS_SUCCESS;
+    }
+    
+    /* Always set the class module regardless of ZwLoadDriver result (Again.. UCX) */
+    if (pClassModule && NT_SUCCESS(status))
+    {
+        ClassBindInfo->ClassModule = pClassModule;
+        *ClassModule = pClassModule;
+        
+        InterlockedExchangeAdd(&pClassModule->ClientRefCount, 1);
+        goto exit_success;
     }
 
 clean:
-    if (pClassModule && InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1) <= 0)
+    // Only cleanup on failure
+    if (pClassModule && InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1) == 1)
     {
         ClassCleanupAndFree(pClassModule);
     }
+
+exit_success:
 
     RtlFreeUnicodeString(&driverServiceName);
 
@@ -610,7 +627,7 @@ FindClassByServiceNameLocked(
             UNICODE_STRING haystackName;
             pClassModule = CONTAINING_RECORD(classEntry, CLASS_MODULE, LibraryLinkage);
             GetNameFromPath(&pClassModule->Service, &haystackName);
-               
+ 
             if (RtlEqualUnicodeString(&needleName, &haystackName, TRUE))
             {
                 if (LibModule != NULL)
@@ -671,7 +688,7 @@ LibraryUnloadClasses(
         __DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
 
         ClassUnload(pClassModule, 0);
-        if (!InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1))
+        if (InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1) == 1)
             ClassCleanupAndFree(pClassModule);
     }
     
@@ -685,8 +702,14 @@ LibraryAddToClassListLocked(
 {
     PLIST_ENTRY result;
 
+    if (!LibModule || !ClassModule)
+        return NULL;
+
     result = &ClassModule->LibraryLinkage;
     InsertHeadList(&LibModule->ClassListHead, &ClassModule->LibraryLinkage);
+
+    DPRINT_VERBOSE(("Added class %wZ to library %wZ\n", 
+                   &ClassModule->Service, &LibModule->ServicePath));
 
     return result;
 }
@@ -715,7 +738,7 @@ ClassRemoveFromLibraryList(
 
     if (removed)
     {
-        if (!InterlockedExchangeAdd(&ClassModule->ClassRefCount, -1))
+        if (InterlockedExchangeAdd(&ClassModule->ClassRefCount, -1) == 1)
             ClassCleanupAndFree(ClassModule);
     }
 }
@@ -761,6 +784,16 @@ ClassUnlinkClient(
 }
 
 VOID
+NTAPI
+ClassAddReference(
+    _In_ PCLASS_MODULE ClassModule)
+{
+    InterlockedIncrement(&ClassModule->ClassRefCount);
+    DPRINT_VERBOSE(("Added reference to class %wZ, RefCount=%d\n", 
+                   &ClassModule->Service, ClassModule->ClassRefCount));
+}
+
+VOID
 ClassReleaseClientReference(
     _In_ PCLASS_MODULE ClassModule)
 {
@@ -795,7 +828,11 @@ DereferenceClassVersion(
 
     if (pClassModule)
     {
-        pClassModule->ClassLibraryInfo->ClassLibraryUnbindClient(ClassBindInfo, Globals);
+        if (pClassModule->ClassLibraryInfo && 
+            pClassModule->ClassLibraryInfo->ClassLibraryUnbindClient)
+        {
+            pClassModule->ClassLibraryInfo->ClassLibraryUnbindClient(ClassBindInfo, &Globals);
+        }
         ClassUnlinkClient(pClassModule, ClassBindInfo);
         ClassReleaseClientReference(pClassModule);
         ClassBindInfo->ClassModule = NULL;
