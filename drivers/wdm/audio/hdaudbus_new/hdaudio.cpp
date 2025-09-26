@@ -1,41 +1,22 @@
 #include "driver.h"
 
-NTSTATUS
-NTAPI
-HDA_TransferCodecVerbs(
-	_In_ PVOID _context,
+NTSTATUS HDA_WaitForTransfer(
+	PPDO_DEVICE_DATA devData,
 	_In_ ULONG Count,
 	_Inout_updates_(Count)
-	PHDAUDIO_CODEC_TRANSFER CodecTransfer,
-	_In_opt_ PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
-	_In_opt_ PVOID Context
+	PHDAUDIO_CODEC_TRANSFER CodecTransfer
 ) {
-	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, Count);
-
-	if (!_context)
-		return STATUS_NO_SUCH_DEVICE;
-
-	NTSTATUS status = STATUS_SUCCESS;
-
-	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
 	if (!devData->FdoContext) {
 		return STATUS_NO_SUCH_DEVICE;
 	}
 
 	PFDO_CONTEXT fdoCtx = devData->FdoContext;
 
-	status = WdfDeviceStopIdle(devData->FdoContext->WdfDevice, TRUE);
-	if (!NT_SUCCESS(status)) {
-		return status;
-	}
-
-	status = SendHDACmds(fdoCtx, Count, CodecTransfer);
-	if (!NT_SUCCESS(status)) {
-		WdfDeviceResumeIdle(fdoCtx->WdfDevice);
-		return status;
-	}
-
 	UINT16 codecAddr = (UINT16)devData->CodecIds.CodecAddress;
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, Count);
 
 	int timeout_ms = 1000;
 	LARGE_INTEGER StartTime;
@@ -59,8 +40,7 @@ HDA_TransferCodecVerbs(
 
 			SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s timeout (Count: %d, transferred %d)!\n", __func__, Count, TransferredCount);
 			status = STATUS_IO_TIMEOUT;
-			WdfDeviceResumeIdle(fdoCtx->WdfDevice);
-			return status;
+			goto out;
 		}
 
 		LARGE_INTEGER Timeout;
@@ -70,14 +50,107 @@ HDA_TransferCodecVerbs(
 
 	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__, Count);
 
+out:
+	return status;
+}
+
+void
+NTAPI
+HDA_AsyncWait(WDFWORKITEM WorkItem) {
+	PHDA_ASYNC_CONTEXT workItemContext = HDAAsyncWorkItem_GetContext(WorkItem);
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d)!\n", __func__, workItemContext->Count);
+
+	NTSTATUS status = HDA_WaitForTransfer(
+		workItemContext->devData,
+		workItemContext->Count,
+		workItemContext->CodecTransfer
+	);
+	UNREFERENCED_PARAMETER(status);
+
+	workItemContext->Callback(
+		workItemContext->CodecTransfer,
+		workItemContext->CallbackContext
+	);
+
+	PFDO_CONTEXT fdoCtx = workItemContext->devData->FdoContext;
+	WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+	WdfObjectDelete(WorkItem);
+
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__);
+}
+
+NTSTATUS
+NTAPI
+HDA_TransferCodecVerbs(
+	_In_ PVOID _context,
+	_In_ ULONG Count,
+	_Inout_updates_(Count)
+	PHDAUDIO_CODEC_TRANSFER CodecTransfer,
+	_In_opt_ PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback,
+	_In_opt_ PVOID Context
+) {
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s called (Count: %d, Callback? %d)!\n", __func__, Count, Callback != NULL);
+
+	if (!_context)
+		return STATUS_NO_SUCH_DEVICE;
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+	PPDO_DEVICE_DATA devData = (PPDO_DEVICE_DATA)_context;
+	if (!devData->FdoContext) {
+		return STATUS_NO_SUCH_DEVICE;
+	}
+
+	PFDO_CONTEXT fdoCtx = devData->FdoContext;
+
+	status = WdfDeviceStopIdle(devData->FdoContext->WdfDevice, TRUE);
+	if (!NT_SUCCESS(status)) {
+		return status;
+	}
+
+	status = SendHDACmds(fdoCtx, Count, CodecTransfer);
+	if (!NT_SUCCESS(status)) {
+		goto out;
+	}
+
 	if (Callback) { //TODO: Do this async
-		DbgPrint("Got Callback\n");
-		Callback(CodecTransfer, Context);
+		WDF_WORKITEM_CONFIG workItemConfig;
+		WDF_WORKITEM_CONFIG_INIT(&workItemConfig, HDA_AsyncWait);
+
+		WDF_OBJECT_ATTRIBUTES attributes;
+		WDFWORKITEM workItem;
+
+		WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+		WDF_OBJECT_ATTRIBUTES_SET_CONTEXT_TYPE(
+			&attributes,
+			HDA_ASYNC_CONTEXT
+		);
+		attributes.ParentObject = fdoCtx->WdfDevice;
+
+		WdfWorkItemCreate(&workItemConfig, &attributes, &workItem);
+
+		PHDA_ASYNC_CONTEXT workItemContext = HDAAsyncWorkItem_GetContext(workItem);
+		workItemContext->devData = devData;
+		workItemContext->Count = Count;
+		workItemContext->CodecTransfer = CodecTransfer;
+		workItemContext->Callback = Callback;
+		workItemContext->CallbackContext = Context;
+		WdfWorkItemEnqueue(workItem);
+	}
+	else {
+		status = HDA_WaitForTransfer(devData, Count, CodecTransfer);
+		if (!NT_SUCCESS(status)) {
+			goto out;
+		}
 	}
 
 	status = STATUS_SUCCESS;
 
-	WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+out:
+	if (!Callback)
+		WdfDeviceResumeIdle(fdoCtx->WdfDevice);
+	SklHdAudBusPrint(DEBUG_LEVEL_VERBOSE, DBG_IOCTL, "%s exit (Count: %d)!\n", __func__, Count);
 	return status;
 }
 
