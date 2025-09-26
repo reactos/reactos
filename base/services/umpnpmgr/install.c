@@ -369,6 +369,7 @@ CreatePnpInstallEventSecurity(
         goto Quit;
     }
 
+    /* Compute the size needed for the DACL and allocate it */
     DaclSize = sizeof(ACL) +
                sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid) +
                sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid);
@@ -379,7 +380,6 @@ CreatePnpInstallEventSecurity(
         ErrCode = ERROR_OUTOFMEMORY;
         goto Quit;
     }
-
     if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
     {
         ErrCode = GetLastError();
@@ -428,20 +428,26 @@ CreatePnpInstallEventSecurity(
         goto Quit;
     }
 
-    if (!MakeSelfRelativeSD(&AbsoluteSd, NULL, &Size) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    /* Retrieve the size needed for the relative SD */
+    if (MakeSelfRelativeSD(&AbsoluteSd, NULL, &Size) ||
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
     {
-        RelativeSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
-        if (RelativeSd == NULL)
-        {
-            ErrCode = ERROR_OUTOFMEMORY;
-            goto Quit;
-        }
+        ErrCode = GetLastError();
+        goto Quit;
+    }
 
-        if (!MakeSelfRelativeSD(&AbsoluteSd, RelativeSd, &Size))
-        {
-            ErrCode = GetLastError();
-            goto Quit;
-        }
+    /* Build the relative SD */
+    RelativeSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    if (RelativeSd == NULL)
+    {
+        ErrCode = ERROR_OUTOFMEMORY;
+        goto Quit;
+    }
+    if (!MakeSelfRelativeSD(&AbsoluteSd, RelativeSd, &Size))
+    {
+        ErrCode = GetLastError();
+        HeapFree(GetProcessHeap(), 0, RelativeSd);
+        goto Quit;
     }
 
     *EventSd = RelativeSd;
@@ -449,27 +455,13 @@ CreatePnpInstallEventSecurity(
 
 Quit:
     if (SystemSid)
-    {
         FreeSid(SystemSid);
-    }
 
     if (AdminsSid)
-    {
         FreeSid(AdminsSid);
-    }
 
     if (Dacl)
-    {
         HeapFree(GetProcessHeap(), 0, Dacl);
-    }
-
-    if (ErrCode != ERROR_SUCCESS)
-    {
-        if (RelativeSd)
-        {
-            HeapFree(GetProcessHeap(), 0, RelativeSd);
-        }
-    }
 
     return ErrCode;
 }
