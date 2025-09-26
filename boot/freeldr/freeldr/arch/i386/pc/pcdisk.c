@@ -667,11 +667,11 @@ ERR("InitDriveGeometry(0x%x)\n", DriveNumber);
             {
                 WARN("GetCDROMSizeViaIso9660(0x%x) failed, using fallback\n", DriveNumber);
             }
-            if (!SizeSuccess)
-            {
-                SizeSuccess = GetDriveSizeViaBisection(DriveNumber, &Sectors, &BytesPerSector);
-                if (SizeSuccess)
-                {
+            // if (!SizeSuccess)
+            { BOOLEAN SizeSuccess2; ULONGLONG Sectors2; ULONG BytesPerSector2 = DiskDrive->ExtGeometry.BytesPerSector;
+                SizeSuccess2 = GetDriveSizeViaBisection(DriveNumber, &Sectors2, &BytesPerSector2);
+                if (SizeSuccess2)
+                { if (!SizeSuccess) { Sectors = Sectors2; BytesPerSector = BytesPerSector2; SizeSuccess = SizeSuccess2; }
                     TRACE("GetDriveSizeViaBisection(0x%x) returned:\n"
                           "  Sectors: %llu\n"
                           "  BytesPerSector: %lu\n",
