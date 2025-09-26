@@ -8,10 +8,6 @@
 #ifndef _COM_APITEST_H_
 #define _COM_APITEST_H_
 
-/* Define this if you're adding new classes - the test will auto-generate the
- * interface table entries for you ;) */
-//#define GENERATE_TABLE_ENTRIES
-
 /* Define this to make wrong interface offsets count as test failures...
  * we usually don't want to be that strict */
 //#define FAIL_WRONG_OFFSET
@@ -80,10 +76,6 @@ TestClassesEx(
     _In_ ULONG MinimumNTDDIVersion,
     _In_ ULONG MaximumNTDDIVersion,
     _In_ BOOLEAN IsWinRT);
-
-/* Indicate that the interface is implemented in another (probably aggregate) object,
- * so its offset varies and is "far away" */
-#define FARAWY (-65535)
 
 // TODO: fix our headers... we really shouldn't need these here
 DEFINE_GUID(CLSID_AugmentedShellFolder,    0x91ea3f8b, 0xc99b, 0x11d0, 0x98, 0x15, 0x00, 0xc0, 0x4f, 0xd9, 0x19, 0x72);

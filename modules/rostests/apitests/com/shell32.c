@@ -306,7 +306,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IOleWindow },
             { NTDDI_MIN,          NTDDI_MAX,          &IID_IObjectWithSite },
 
-            { NTDDI_VISTA,        NTDDI_VISTASP4,     &IID_IShellBrowserService_Vista },
+            { NTDDI_VISTA,        NTDDI_VISTASP4,     &IID_IShellBrowserService4 },
 
             { NTDDI_VISTA,        NTDDI_MAX,          &IID_IShellBrowser },
             { NTDDI_VISTA,        NTDDI_MAX,          &IID_IExplorerBrowser },

@@ -15,7 +15,6 @@
 #include <ndk/rtlfuncs.h>
 
 #define NDEBUG
-#define GENERATE_TABLE_ENTRIES
 #include <debug.h>
 
 #define myskip(c, ...) ((c) ? 0 : (skip(__VA_ARGS__), 1))
@@ -293,7 +292,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IAggregateFilterCondition),      RegisteredOnVistaOnly    },
     { ID_NAME(IID_IControlPanelEnumerator),        RegisteredOnVistaOnly    },
     { ID_NAME(IID_IShellFolder3),                  RegisteredOnVistaOnly    },
-    { ID_NAME_EX(IID_IShellBrowserService_Vista,
+    { ID_NAME_EX(IID_IShellBrowserService4,
                  IID_IShellBrowserService),        RegisteredOnVistaOnly    },
 
     { ID_NAME(IID_IDriveFolderExt),                RegisteredOnVistaOrNewer },
@@ -526,9 +525,9 @@ static KNOWN_INTERFACE KnownInterfaces[] =
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
 
 #define ValidClassForVersion(pClass, version) \
-    (((pClass->MinClassNTDDIVersion) <= version) && ((pClass->MaxClassNTDDIVersion) >= version))
+    ((pClass)->MinClassNTDDIVersion <= (version) && (pClass)->MaxClassNTDDIVersion >= (version))
 #define ValidInterfaceForVersion(interface, version) \
-    (((interface.MinInterfaceNTDDIVersion) <= version) && ((interface.MaxInterfaceNTDDIVersion) >= version))
+    ((interface).MinInterfaceNTDDIVersion <= (version) && (interface).MaxInterfaceNTDDIVersion >= (version))
 
 static
 PCKNOWN_INTERFACE
@@ -554,9 +553,13 @@ IsInterfaceExpected(
     INT i;
 
     for (i = 0; class->ifaces[i].iid; i++)
+    {
         if (ValidInterfaceForVersion(class->ifaces[i], NTDDIVersion) &&
             IsEqualIID(class->ifaces[i].iid, iid))
+        {
             return TRUE;
+        }
+    }
     return FALSE;
 }
 
@@ -786,7 +789,7 @@ TestClassesEx(
 
     NTDDIVersion = GetNTDDIVersion();
 
-    if(NTDDIVersion < MinimumNTDDIVersion || NTDDIVersion > MaximumNTDDIVersion)
+    if (NTDDIVersion < MinimumNTDDIVersion || NTDDIVersion > MaximumNTDDIVersion)
     {
         skip("Skipping all tests for module %S, NTDDI version (0x%08lx) is outside of the supported range (0x%08lx-0x%08lx).\n",
              ModuleName, NTDDIVersion, MinimumNTDDIVersion, MaximumNTDDIVersion);

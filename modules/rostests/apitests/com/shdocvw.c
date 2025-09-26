@@ -13,8 +13,7 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     /* CLSID_AdminFolderShortcut has two entries here because the threading model
-     * changed between Windows versions.
-     */
+     * changed between Windows versions. */
     {
         ID_NAME(CLSID_AdminFolderShortcut, NTDDI_MIN, NTDDI_VISTASP4),
         {
