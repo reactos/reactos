@@ -1270,12 +1270,20 @@ typedef struct _SE_EXPORTS {
   PSID SeHighMandatorySid;
   PSID SeSystemMandatorySid;
   PSID SeOwnerRightsSid;
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(__REACTOS__)   // The version guard is a guess.
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
   PSID SeAllAppPackagesSid;
   PSID SeUserModeDriversSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
   PSID SeProcTrustWinTcbSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
   PSID SeTrustedInstallerSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
   LUID SeDelegateSessionUserImpersonatePrivilege;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11) // The version guard is a guess.
   PSID SeAppSiloSid;
   PSID SeAppSiloVolumeRootMinimalCapabilitySid;
   PSID SeAppSiloProfilesRootMinimalCapabilitySid;

@@ -230,7 +230,7 @@ TestPoolQuota(VOID)
         if (Memory)
             ExFreePoolWithTag(Memory, 'tQmK');
     KmtEndSeh(STATUS_SUCCESS);
-#endif
+#endif // _WIN64
 }
 
 static

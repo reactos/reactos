@@ -350,11 +350,11 @@ TestDeviceCreated(
 
     /* Check the device object members */
     ok(DeviceObject->Type == 3, "Expected Type = 3, got %x\n", DeviceObject->Type);
-    #ifdef _M_IX86
+#ifdef _M_IX86
     ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got 0x%x\n", DeviceObject->Size);
-    #else
+#else
     ok(DeviceObject->Size == 0x150, "Expected Size = 0x150, got 0x%x\n", DeviceObject->Size);
-    #endif
+#endif
     ok(DeviceObject->ReferenceCount == 0, "Expected ReferenceCount = 0, got %lu\n",
         DeviceObject->ReferenceCount);
     ok(DeviceObject->DriverObject == ThisDriverObject,
@@ -404,11 +404,11 @@ TestDeviceDeletion(
 
     /* Check the device object members */
     ok(DeviceObject->Type == 3, "Expected Type = 3, got %d\n", DeviceObject->Type);
-    #ifdef _M_IX86
+#ifdef _M_IX86
     ok(DeviceObject->Size == 0xb8, "Expected Size = 0xb8, got 0x%x\n", DeviceObject->Size);
-    #else
+#else
     ok(DeviceObject->Size == 0x150, "Expected Size = 0x150, got 0x%x\n", DeviceObject->Size);
-    #endif
+#endif
     ok(DeviceObject->ReferenceCount == 0, "Expected ReferenceCount = 0, got %lu\n",
         DeviceObject->ReferenceCount);
     if (!Lower)
