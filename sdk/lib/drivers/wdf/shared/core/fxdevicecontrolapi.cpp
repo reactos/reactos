@@ -52,7 +52,7 @@ WDFEXPORT(WdfControlFinishInitializing)(
     MxDeviceObject device(pDevice->GetDeviceObject());
 
     if (pDevice->IsLegacy()) {
-        // pDevice->m_PkgWmi->Register(); __REACTOS__
+        pDevice->m_PkgWmi->Register();
         device.SetFlags(device.GetFlags() & ~DO_DEVICE_INITIALIZING);
     }
     else {
