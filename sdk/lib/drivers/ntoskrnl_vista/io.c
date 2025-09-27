@@ -8,7 +8,7 @@
 
 #include <ntdef.h>
 #include <ntifs.h>
-
+#include <debug.h>
 typedef struct _EX_WORKITEM_CONTEXT
 {
     PIO_WORKITEM WorkItem;
@@ -145,4 +145,68 @@ IoSetMasterIrpStatus(
     {
         MasterIrp->IoStatus.Status = Status;
     }
+}
+
+NTSTATUS
+IopConnectInterruptExFullySpecific(
+    _Inout_ PIO_CONNECT_INTERRUPT_PARAMETERS Parameters)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    /* Fallback to standard IoConnectInterrupt */
+    Status = IoConnectInterrupt(Parameters->FullySpecified.InterruptObject,
+                                Parameters->FullySpecified.ServiceRoutine,
+                                Parameters->FullySpecified.ServiceContext,
+                                Parameters->FullySpecified.SpinLock,
+                                Parameters->FullySpecified.Vector,
+                                Parameters->FullySpecified.Irql,
+                                Parameters->FullySpecified.SynchronizeIrql,
+                                Parameters->FullySpecified.InterruptMode,
+                                Parameters->FullySpecified.ShareVector,
+                                Parameters->FullySpecified.ProcessorEnableMask,
+                                Parameters->FullySpecified.FloatingSave);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("IopConnectInterruptExFullySpecific() failed: 0x%lx\n", Status);
+    return Status;
+}
+
+NTKRNLVISTAAPI
+NTSTATUS
+NTAPI
+IoConnectInterruptEx(
+    _Inout_ PIO_CONNECT_INTERRUPT_PARAMETERS Parameters)
+{
+    PAGED_CODE();
+
+    switch (Parameters->Version)
+    {
+        case CONNECT_FULLY_SPECIFIED:
+            return IopConnectInterruptExFullySpecific(Parameters);
+        case CONNECT_FULLY_SPECIFIED_GROUP:
+            //TODO: We don't do anything for the group type
+            return IopConnectInterruptExFullySpecific(Parameters);
+        case CONNECT_MESSAGE_BASED:
+            DPRINT1("FIXME: Message based interrupts are UNIMPLEMENTED\n");
+            break;
+        case CONNECT_LINE_BASED:
+            DPRINT1("FIXME: Line based interrupts are UNIMPLEMENTED\n");
+            break;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTKRNLVISTAAPI
+VOID
+NTAPI
+IoDisconnectInterruptEx(
+    _In_ PIO_DISCONNECT_INTERRUPT_PARAMETERS Parameters)
+{
+    PAGED_CODE();
+
+    //FIXME: This eventually will need to handle more cases
+    if (Parameters->ConnectionContext.InterruptObject)
+        IoDisconnectInterrupt(Parameters->ConnectionContext.InterruptObject);
 }
