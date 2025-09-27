@@ -30,487 +30,504 @@ typedef struct _KNOWN_INTERFACE
     const IID *iid;
     PCSTR name;
     PCWSTR wname;
-    BOOLEAN noreg;
+    BOOLEAN (*IsRegistered)(ULONG version);
 } KNOWN_INTERFACE;
 typedef const KNOWN_INTERFACE *PCKNOWN_INTERFACE;
 
 #undef ID_NAME
 #define ID_NAME(c) &c, #c, L ## #c
+#define ID_NAME_EX(c, d) &c, #d, L ## #d
+
+BOOLEAN RegisteredAlways(ULONG version)            { return TRUE; }
+BOOLEAN RegisteredNever(ULONG version)             { return FALSE; }
+BOOLEAN RegisteredOnWS03AndVista(ULONG version)    { return version >= NTDDI_WS03 && version < NTDDI_WIN7; }
+BOOLEAN RegisteredOnVistaOrNewer(ULONG version)    { return version >= NTDDI_VISTA; }
+BOOLEAN RegisteredOnVistaOnly(ULONG version)       { return version >= NTDDI_VISTA && version < NTDDI_WIN7; }
+BOOLEAN RegisteredOnVistaAndWin7(ULONG version)    { return version >= NTDDI_VISTA && version < NTDDI_WIN8; }
+BOOLEAN RegisteredOnVistaToWin8Dot1(ULONG version) { return version >= NTDDI_VISTA && version < NTDDI_WIN10; }
+BOOLEAN RegisteredOnWin7OrNewer(ULONG version)     { return version >= NTDDI_WIN7; }
+BOOLEAN RegisteredOnWin8OrNewer(ULONG version)     { return version >= NTDDI_WIN8; }
+BOOLEAN RegisteredOnWS03OrOlder(ULONG version)     { return version <= NTDDI_WS03SP4; }
+
 static KNOWN_INTERFACE KnownInterfaces[] =
 {
-    { ID_NAME(IID_IACList),                     TRUE },
-    { ID_NAME(IID_IACList2),                    TRUE },
-    { ID_NAME(IID_IADesktopP2),                 TRUE },
-    { ID_NAME(IID_IAccIdentity)                      },
-    { ID_NAME(IID_IAccPropServer)                    },
-    { ID_NAME(IID_IAccPropServices)                  },
-    { ID_NAME(IID_IAccessible)                       },
-    { ID_NAME(IID_IAccessibleHandler)                },
-    { ID_NAME(IID_IAccessControl),              TRUE },
-    { ID_NAME(IID_IAccessor)                         },
-    { ID_NAME(IID_IACLCustomMRU),               TRUE },
-    { ID_NAME(IID_IActiveDesktop),              TRUE },
-    { ID_NAME(IID_IActiveDesktopP),             TRUE },
-    { ID_NAME(IID_IActionProgress)                   },
-    { ID_NAME(IID_IActionProgressDialog)             },
-    { ID_NAME(IID_IAddressBarParser),           TRUE },
-    { ID_NAME(IID_IAddressBand),                TRUE },
-    { ID_NAME(IID_IAddressEditBox),             TRUE },
-    { ID_NAME(IID_IAsyncMoniker),               TRUE },
-    { ID_NAME(IID_IAugmentedShellFolder),       TRUE },
-    { ID_NAME(IID_IAugmentedShellFolder2),      TRUE },
-    { ID_NAME(IID_IAutoComplete),               TRUE },
-    { ID_NAME(IID_IAutoComplete2),              TRUE },
-    { ID_NAME(IID_IAutoCompleteDropDown)             },
-    { ID_NAME(IID_IBandHost)                         },
-    { ID_NAME(IID_IBandNavigate),                    },
-    { ID_NAME(IID_IBandProxy),                  TRUE },
-    { ID_NAME(IID_IBandSite)                         },
-    { ID_NAME(IID_IBandSiteHelper),             TRUE },
-    { ID_NAME(IID_IBanneredBar),                TRUE },
-    { ID_NAME(IID_IBindCtx)                          },
-    { ID_NAME(IID_IBindEventHandler)                 },
-    { ID_NAME(IID_IBindHost)                         },
-    { ID_NAME(IID_IBinding)                          },
-    { ID_NAME(IID_IBindProtocol),               TRUE },
-    { ID_NAME(IID_IBindResource)                     },
-    { ID_NAME(IID_IBindStatusCallback)               },
-    { ID_NAME(IID_IBlockingLock)                     },
-    { ID_NAME(IID_IBrowserFrameOptions),        TRUE },
-    { ID_NAME(IID_IBrowserService)                   },
-    { ID_NAME(IID_IBrowserService2),            TRUE },
-    { ID_NAME(IID_IBrowserService3),            TRUE },
-    { ID_NAME(IID_IBrowserService4),            TRUE },
-    { ID_NAME(IID_ICDBurn)                           },
-    { ID_NAME(IID_ICDBurnExt)                        },
-    { ID_NAME(IID_ICDBurnPriv)                       },
-    { ID_NAME(IID_ICallFactory),                TRUE },
-    { ID_NAME(IID_ICancelMethodCalls),          TRUE },
-    { ID_NAME(IID_ICatInformation)                   },
-    { ID_NAME(IID_ICatRegister)                      },
-    { ID_NAME(IID_IClassActivator),                  },
-    { ID_NAME(IID_IClassFactory)                     },
-    { ID_NAME(IID_IClassFactory2)                    },
-    { ID_NAME(IID_IClassFactory3),              TRUE },
-    { ID_NAME(IID_IClientSecurity),             TRUE },
-    { ID_NAME(IID_ICommDlgBrowser)                   },
-    { ID_NAME(IID_ICommDlgBrowser2)                  },
-    { ID_NAME(IID_ICommDlgBrowser3)                  },
-    { ID_NAME(IID_ICompositeFolder)                  },
-    { ID_NAME(IID_IComputerInfoChangeNotify),        },
-    { ID_NAME(IID_IComThreadingInfo),           TRUE },
-    { ID_NAME(IID_IConnectionPoint)                  },
-    { ID_NAME(IID_IConnectionPointContainer)         },
-    { ID_NAME(IID_IContext),                    TRUE },
-    { ID_NAME(IID_IContextMenu),                TRUE },
-    { ID_NAME(IID_IContextMenu2),               TRUE },
-    { ID_NAME(IID_IContextMenu3),               TRUE },
-    { ID_NAME(IID_IContextMenuCB),              TRUE },
-    { ID_NAME(IID_IContextMenuSite)                  },
-    { ID_NAME(IID_IContinue)                         },
-    { ID_NAME(IID_IContinueCallback)                 },
-    { ID_NAME(IID_ICopyHookA),                  TRUE },
-    { ID_NAME(IID_ICopyHookW),                  TRUE },
-    { ID_NAME(IID_ICurrentWorkingDirectory),    TRUE },
-    { ID_NAME(IID_ICustomizeInfoTip)                 },
-    { ID_NAME(IID_IDVGetEnum),                  TRUE },
-    { ID_NAME(IID_IDataObject)                       },
-    //{ ID_NAME(IID_IDefViewID)                        }, == DefViewFrame3
-    { ID_NAME(IID_IDefViewFrame),               TRUE },
-    { ID_NAME(IID_IDefViewFrame3)                    },
-    { ID_NAME(IID_IDefViewFrameGroup)                },
-    { ID_NAME(IID_IDefViewSafety),                   },
-    { ID_NAME(IID_IDefViewScript),              TRUE },
-    { ID_NAME(IID_IDelayedRelease),             TRUE },
-    { ID_NAME(IID_IDeskBand)                         },
-    { ID_NAME(IID_IDeskBandEx)                       },
-    { ID_NAME(IID_IDeskBar),                    TRUE },
-    { ID_NAME(IID_IDeskBarClient),              TRUE },
-    { ID_NAME(IID_IDeskMovr),                   TRUE },
-    { ID_NAME(IID_IDiscMasterProgressEvents)         },
-    { ID_NAME(IID_IDispatch)                         },
-    { ID_NAME(IID_IDispatchEx)                       },
-    { ID_NAME(IID_IDockingWindow)                    },
-    { ID_NAME(IID_IDockingWindowFrame),         TRUE },
-    { ID_NAME(IID_IDockingWindowSite),          TRUE },
-    { ID_NAME(IID_IDocViewSite),                TRUE },
-    { ID_NAME(IID_IDragSourceHelper),           TRUE },
-    { ID_NAME(IID_IDriveFolderExt),             TRUE },
-    { ID_NAME(IID_IDropSource)                       },
-    { ID_NAME(IID_IDropTarget)                       },
-    { ID_NAME(IID_IDropTargetHelper),           TRUE },
-    { ID_NAME(IID_IEFrameAuto)                       },
-    //{ ID_NAME(IID_IEnumCATID)                        }, == EnumGUID
-    //{ ID_NAME(IID_IEnumCLSID)                        }, == EnumGUID
-    { ID_NAME(IID_IEnumCATEGORYINFO)                 },
-    { ID_NAME(IID_IEnumConnectionPoints)             },
-    { ID_NAME(IID_IEnumConnections)                  },
-    { ID_NAME(IID_IEnumExtraSearch)                  },
-    { ID_NAME(IID_IEnumGUID)                         },
-    { ID_NAME(IID_IEnumIDList)                       },
-    { ID_NAME(IID_IEnumMoniker)                      },
-    //{ ID_NAME(IID_IEnumNetCfgBindingInterface)       },
-    //{ ID_NAME(IID_IEnumNetCfgBindingPath)            },
-    { ID_NAME(IID_IEnumNetCfgComponent),        TRUE },
-    { ID_NAME(IID_IEnumNetConnection)                },
-    { ID_NAME(IID_IEnumShellItems)                   },
-    { ID_NAME(IID_IEnumSTATSTG)                       },
-    { ID_NAME(IID_IEnumString)                       },
-    { ID_NAME(IID_IEnumUnknown)                      },
-    { ID_NAME(IID_IEnumVARIANT)                      },
-    { ID_NAME(IID_IErrorLog)                         },
-    { ID_NAME(IID_IExplorerBrowser)                  },
-    { ID_NAME(IID_IExplorerToolbar),            TRUE },
-    { ID_NAME(IID_IExtractIconA),               TRUE },
-    { ID_NAME(IID_IExtractIconW),               TRUE },
-    { ID_NAME(IID_IExtractImage)                     },
-    { ID_NAME(IID_IExtractImage2)                    },
-    { ID_NAME(IID_IFileDialog)                       },
-    { ID_NAME(IID_IFileDialog2),                TRUE },
-    { ID_NAME(IID_IFileOpenDialog)                   },
-    { ID_NAME(IID_IFileSaveDialog)                   },
-    { ID_NAME(IID_IFileSearchBand)                   },
-    { ID_NAME(IID_IFileViewerA),                TRUE },
-    { ID_NAME(IID_IFileViewerSite),             TRUE },
-    { ID_NAME(IID_IFileViewerW),                TRUE },
-    { ID_NAME(IID_IFilter)                           },
-    { ID_NAME(IID_IFolderBandPriv)                   },
-    { ID_NAME(IID_IFolderFilter)                     },
-    { ID_NAME(IID_IFolderFilterSite)                 },
-    { ID_NAME(IID_IFolderView)                       },
-    { ID_NAME(IID_IFolderView2)                      },
-    { ID_NAME(IID_IFolderViewHost),             TRUE },
-    { ID_NAME(IID_IFolderViewOC)                     },
-    { ID_NAME(IID_IFolderViewSettings)               },
-    { ID_NAME(IID_IForegroundTransfer),         TRUE },
-    { ID_NAME(IID_IGetNameSpaceExtensionPointer),TRUE},
-    { ID_NAME(IID_IGlobalFolderSettings),       TRUE },
-    { ID_NAME(IID_IHWEventHandler)                   },
-    { ID_NAME(IID_IHWEventHandler2)                  },
-    { ID_NAME(IID_IHlinkFrame)                       },
-    { ID_NAME(IID_IImageList),                  TRUE },
-    { ID_NAME(IID_IImageList2),                 TRUE },
-    { ID_NAME(IID_IInitializeObject),           TRUE },
-    { ID_NAME(IID_IInitializeWithBindCtx)            },
-    { ID_NAME(IID_IInitializeWithFile)               },
-    { ID_NAME(IID_IInputObject)                      },
-    { ID_NAME(IID_IInputObjectSite)                  },
-    { ID_NAME(IID_IInternalUnknown),            TRUE },
-    { ID_NAME(IID_IInternetSecurityManager)          },
-    { ID_NAME(IID_IInternetZoneManager),        TRUE },
-    { ID_NAME(IID_IItemNameLimits)                   },
-    { ID_NAME(IID_IMarshal)                          },
-    { ID_NAME(IID_IMarshal2),                   TRUE },
-    { ID_NAME(IID_IMenuBand),                   TRUE },
-    { ID_NAME(IID_IMenuPopup),                  TRUE },
-    { ID_NAME(IID_IModalWindow)                      },
-    { ID_NAME(IID_IMoniker)                          },
-    { ID_NAME(IID_IMruDataList),                TRUE },
-    { ID_NAME(IID_IMruPidlList),                TRUE },
-    { ID_NAME(IID_IMultiMonitorDockingSite),    TRUE },
-    { ID_NAME(IID_IMultiQI),                    TRUE },
-    { ID_NAME(IID_INameSpaceTreeControl),       TRUE },
-    { ID_NAME(IID_INamespaceProxy),             TRUE },
-    { ID_NAME(IID_INamespaceWalk)                    },
-    { ID_NAME(IID_INamespaceWalkCB)                  },
-    { ID_NAME(IID_INamespaceWalkCB2)                 },
-    { ID_NAME(IID_INetCfg),                     TRUE },
-    //{ ID_NAME(IID_INetCfgBindingInterface)           },
-    //{ ID_NAME(IID_INetCfgBindingPath)                },
-    { ID_NAME(IID_INetCfgComponent),            TRUE },
-    { ID_NAME(IID_INetCfgComponentBindings),    TRUE },
-    { ID_NAME(IID_INetCfgComponentControl),     TRUE },
-    { ID_NAME(IID_INetCfgComponentPropertyUi),  TRUE },
-    { ID_NAME(IID_INetCfgLock),                 TRUE },
-    { ID_NAME(IID_INetCfgPnpReconfigCallback),  TRUE },
-    { ID_NAME(IID_INetConnectionConnectUi),     TRUE },
-    { ID_NAME(IID_INetConnectionPropertyUi),    TRUE },
-    { ID_NAME(IID_INetConnectionPropertyUi2),   TRUE },
-    { ID_NAME(IID_INetConnectionManager)             },
-    { ID_NAME(IID_INetLanConnectionUiInfo),     TRUE },
-    { ID_NAME(IID_INewMenuClient)                    },
-    { ID_NAME(IID_INewShortcutHookA),           TRUE },
-    { ID_NAME(IID_INewShortcutHookW),           TRUE },
-    { ID_NAME(IID_INewWindowManager)                 },
-    { ID_NAME(IID_INSCTree),                    TRUE },
-    { ID_NAME(IID_INSCTree2),                   TRUE },
-    { ID_NAME(IID_IObjMgr),                     TRUE },
-    { ID_NAME(IID_IObjectSafety)                     },
-    { ID_NAME(IID_IObjectWithBackReferences)         },
-    { ID_NAME(IID_IObjectWithSite)                   },
-    { ID_NAME(IID_IOleClientSite)                    },
-    { ID_NAME(IID_IOleCommandTarget)                 },
-    { ID_NAME(IID_IOleContainer)                     },
-    { ID_NAME(IID_IOleControl)                       },
-    { ID_NAME(IID_IOleControlSite)                   },
-    { ID_NAME(IID_IOleInPlaceActiveObject)           },
-    { ID_NAME(IID_IOleInPlaceFrame)                  },
-    { ID_NAME(IID_IOleInPlaceObject)                 },
-    { ID_NAME(IID_IOleInPlaceObjectWindowless), TRUE },
-    { ID_NAME(IID_IOleInPlaceSite)                   },
-    { ID_NAME(IID_IOleInPlaceSiteEx)                 },
-    { ID_NAME(IID_IOleInPlaceSiteWindowless),   TRUE },
-    { ID_NAME(IID_IOleInPlaceUIWindow)               },
-    { ID_NAME(IID_IOleItemContainer),                },
-    { ID_NAME(IID_IOleLink),                         },
-    { ID_NAME(IID_IOleObject)                        },
-    { ID_NAME(IID_IOleWindow)                        },
-    { ID_NAME(IID_IParentAndItem)                    },
-    { ID_NAME(IID_IParseDisplayName),                },
-    { ID_NAME(IID_IPersist)                          },
-    { ID_NAME(IID_IPersistFile)                      },
-    { ID_NAME(IID_IPersistFolder)                    },
-    { ID_NAME(IID_IPersistFolder2)                   },
-    { ID_NAME(IID_IPersistFolder3)                   },
-    { ID_NAME(IID_IPersistFreeThreadedObject),  TRUE },
-    { ID_NAME(IID_IPersistHistory)                   },
-    { ID_NAME(IID_IPersistIDList)                    },
-    { ID_NAME(IID_IPersistMemory)                    },
-    { ID_NAME(IID_IPersistPropertyBag)               },
-    { ID_NAME(IID_IPersistPropertyBag2)              },
-    { ID_NAME(IID_IPersistStorage)                   },
-    { ID_NAME(IID_IPersistStream)                    },
-    { ID_NAME(IID_IPersistStreamInit)                },
-    { ID_NAME(IID_IPreviewHandler)                   },
-    { ID_NAME(IID_IPreviewHandlerFrame)              },
-    { ID_NAME(IID_IPreviewHandlerVisuals)            },
-    { ID_NAME(IID_IProgressDialog),             TRUE },
-    { ID_NAME(IID_IPropertyBag)                      },
-    { ID_NAME(IID_IPropertyBag2)                     },
-    { ID_NAME(IID_IPropertySetStorage)               },
-    { ID_NAME(IID_IPropertyStore)                    },
-    { ID_NAME(IID_IPropSheetPage),              TRUE },
-    { ID_NAME(IID_IProvideClassInfo)                 },
-    { ID_NAME(IID_IProvideClassInfo2)                },
-    { ID_NAME(IID_IQueryAssociations),          TRUE },
-    { ID_NAME(IID_IQueryCancelAutoPlay)              },
-    { ID_NAME(IID_IQueryInfo),                  TRUE },
-    { ID_NAME(IID_IQuickActivate)                    },
-    { ID_NAME(IID_IRegTreeOptions),             TRUE },
-    { ID_NAME(IID_IRemoteComputer)                   },
-    { ID_NAME(IID_IResolveShellLink)                 },
-    { ID_NAME(IID_IROTData),                         },
-    { ID_NAME(IID_IRpcOptions),                 TRUE },
-    { ID_NAME(IID_IRunnableObject)                   },
-    { ID_NAME(IID_IRunningObjectTable),              },
-    { ID_NAME(IID_ISLTracker),                  TRUE },
-    { ID_NAME(IID_IScriptErrorList)                  },
-    { ID_NAME(IID_ISearch)                           },
-    { ID_NAME(IID_ISearchAssistantOC)                },
-    { ID_NAME(IID_ISearchAssistantOC2)               },
-    { ID_NAME(IID_ISearchAssistantOC3)               },
-    { ID_NAME(IID_ISearchBar)                        },
-    { ID_NAME(IID_ISearches)                         },
-    { ID_NAME(IID_ISecMgrCacheSeedTarget)            },
-    { ID_NAME(IID_IServerSecurity),             TRUE },
-    { ID_NAME(IID_IServiceProvider)                  },
-    { ID_NAME(IID_IShellApp),                   TRUE },
-    { ID_NAME(IID_IShellBrowser)                     },
-    { ID_NAME(IID_IShellBrowserService),        TRUE },
-    { ID_NAME(IID_IShellChangeNotify),          TRUE },
-    { ID_NAME(IID_IShellCopyHookA),             TRUE },
-    { ID_NAME(IID_IShellCopyHookW),             TRUE },
-    { ID_NAME(IID_IShellDesktopTray),           TRUE },
-    { ID_NAME(IID_IShellDetails),               TRUE },
-    { ID_NAME(IID_IShellDispatch)                    },
-    { ID_NAME(IID_IShellDispatch2)                   },
-    { ID_NAME(IID_IShellDispatch3)                   },
-    { ID_NAME(IID_IShellDispatch4)                   },
-    { ID_NAME(IID_IShellDispatch5),             TRUE },
-    { ID_NAME(IID_IShellDispatch6),             TRUE },
-    { ID_NAME(IID_IShellExecuteHookA),          TRUE },
-    { ID_NAME(IID_IShellExecuteHookW),          TRUE },
-    { ID_NAME(IID_IShellExtInit),               TRUE },
-    { ID_NAME(IID_IShellFavoritesNameSpace)          },
-    { ID_NAME(IID_IShellFolder)                      },
-    { ID_NAME(IID_IShellFolder2)                     },
-    { ID_NAME(IID_IShellFolderBand),            TRUE },
-    { ID_NAME(IID_IShellFolderSearchable),      TRUE },
-    { ID_NAME(IID_IShellFolderSearchableCallback), TRUE },
-    { ID_NAME(IID_IShellFolderView),            TRUE },
-    { ID_NAME(IID_IShellFolderViewCB),          TRUE },
-    { ID_NAME(IID_IShellFolderViewDual)              },
-    { ID_NAME(IID_IShellFolderViewDual2)             },
-    { ID_NAME(IID_IShellFolderViewDual3),       TRUE },
-    { ID_NAME(IID_IShellFolderViewType),        TRUE },
-    { ID_NAME(IID_IShellIcon)                        },
-    { ID_NAME(IID_IShellIconOverlay),           TRUE },
-    { ID_NAME(IID_IShellIconOverlayIdentifier), TRUE },
-    { ID_NAME(IID_IShellImageData),             TRUE },
-    { ID_NAME(IID_IShellImageDataAbort),        TRUE },
-    { ID_NAME(IID_IShellImageDataFactory),      TRUE },
-    { ID_NAME(IID_IShellItem)                        },
-    { ID_NAME(IID_IShellItem2)                       },
-    { ID_NAME(IID_IShellItemArray)                   },
-    { ID_NAME(IID_IShellItemFilter)                  },
-    { ID_NAME(IID_IShellLinkA)                       },
-    { ID_NAME(IID_IShellLinkDataList),          TRUE },
-    { ID_NAME(IID_IShellLinkDual)                    },
-    { ID_NAME(IID_IShellLinkDual2)                   },
-    { ID_NAME(IID_IShellLinkW)                       },
-    { ID_NAME(IID_IShellMenu),                  TRUE },
-    { ID_NAME(IID_IShellMenu2),                 TRUE },
-    { ID_NAME(IID_IShellMenuAcc),               TRUE },
-    { ID_NAME(IID_IShellMenuCallback),          TRUE },
-    { ID_NAME(IID_IShellNameSpace)                   },
-    { ID_NAME(IID_IShellPropSheetExt),          TRUE },
-    { ID_NAME(IID_IShellService),               TRUE },
-    { ID_NAME(IID_IShellTaskScheduler),         TRUE },
-    { ID_NAME(IID_IShellUIHelper)                    },
-    { ID_NAME(IID_IShellUIHelper2),             TRUE },
-    { ID_NAME(IID_IShellView)                        },
-    { ID_NAME(IID_IShellView2)                       },
-    { ID_NAME(IID_IShellView3)                       },
-    { ID_NAME(IID_IShellWindows)                     },
-    { ID_NAME(IID_ISpecifyPropertyPages)             },
-    { ID_NAME(IID_IStorage)                          },
-    { ID_NAME(IID_IStream)                           },
-    { ID_NAME(IID_ISurrogate)                        },
-    { ID_NAME(IID_ISynchronize)                      },
-    { ID_NAME(IID_ISynchronizeContainer),       TRUE },
-    { ID_NAME(IID_ISynchronizeEvent),           TRUE },
-    { ID_NAME(IID_ISynchronizeHandle),          TRUE },
-    { ID_NAME(IID_ITargetEmbedding)                  },
-    { ID_NAME(IID_ITargetFrame)                      },
-    { ID_NAME(IID_ITargetFrame2)                     },
-    { ID_NAME(IID_ITargetFramePriv)                  },
-    { ID_NAME(IID_ITargetFramePriv2)                 },
-    { ID_NAME(IID_ITargetNotify)                     },
-    { ID_NAME(IID_ITaskbarList)                      },
-    { ID_NAME(IID_ITaskbarList2)                     },
-    { ID_NAME(IID_ITaskbarList3),               TRUE },
-    { ID_NAME(IID_ITaskbarList4),               TRUE },
-    { ID_NAME(IID_ITrackShellMenu),             TRUE },
-    /* This interface is completely different between PSDK and registry/shell32 */
-    { ID_NAME(IID_ITransferAdviseSink),         TRUE },
-#define IID_ITransferAdviseSink IID_ITransferAdviseSinkPriv
-    { ID_NAME(IID_ITransferAdviseSink)               },
-#undef IID_ITransferAdviseSink
-    { ID_NAME(IID_ITransferDestination),        TRUE },
-    { ID_NAME(IID_ITransferSource),             TRUE },
-    { ID_NAME(IID_ITranslateShellChangeNotify), TRUE },
-    { ID_NAME(IID_ITrayPriv),                   TRUE },
-    { ID_NAME(IID_ITrayPriv2),                  TRUE },
-    { ID_NAME(IID_IUnknown)                          },
-    { ID_NAME(IID_IURLSearchHook),              TRUE },
-    { ID_NAME(IID_IURLSearchHook2),             TRUE },
-    { ID_NAME(IID_IUrlHistoryNotify)                 },
-    { ID_NAME(IID_IUrlHistoryStg)                    },
-    { ID_NAME(IID_IUrlHistoryStg2)                   },
-    { ID_NAME(IID_IViewObject)                       },
-    { ID_NAME(IID_IViewObject2)                      },
-    { ID_NAME(IID_IViewObjectEx),               TRUE },
-    { ID_NAME(IID_IVisualProperties)                 },
-    { ID_NAME(IID_IWebBrowser)                       },
-    { ID_NAME(IID_IWebBrowser2)                      },
-    { ID_NAME(IID_IWebBrowserApp)                    },
-    { ID_NAME(IID_IWebBrowserPriv)                   },
-    { ID_NAME(IID_IWebBrowserPriv2)                  },
-    { ID_NAME(IID_IWinEventHandler),            TRUE },
+    { ID_NAME(DIID__SearchAssistantEvents),        RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_IMarshal),                       RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ICDBurnPriv),                    RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ICompositeFolder),               RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_IDefViewSafety),                 RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_IDropSource),                    RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearch),                        RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearchAssistantOC),             RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearchAssistantOC2),            RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearchAssistantOC3),            RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearchBar),                     RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_ISearches),                      RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_IEFrameAuto),                    RegisteredOnWS03OrOlder },
+    { ID_NAME(IID_IWebBrowserPriv2),               RegisteredOnWS03OrOlder },
+    /* These interfaces are different between PSDK and registry/shell32 */
+    { ID_NAME_EX(IID_ITransferAdviseSinkPriv,
+                 IID_ITransferAdviseSink),         RegisteredOnWS03OrOlder },
+    { ID_NAME_EX(IID_IDriveFolderExtOld,
+                 IID_IDriveFolderExt),             RegisteredOnWS03OrOlder },
 
-    { ID_NAME(IID_DFConstraint),                TRUE },
-    { ID_NAME(DIID__SearchAssistantEvents)           },
-    { ID_NAME(DIID_DShellFolderViewEvents)           },
-    { ID_NAME(DIID_DShellNameSpaceEvents)            },
-    { ID_NAME(DIID_DShellWindowsEvents)              },
-    { ID_NAME(DIID_DWebBrowserEvents)                },
-    { ID_NAME(DIID_DWebBrowserEvents2)               },
-    { ID_NAME(DIID_XMLDOMDocumentEvents )            },
+    { ID_NAME(IID_IAggregateFilterCondition),      RegisteredOnWS03AndVista },
+    { ID_NAME(IID_IBandNavigate),                  RegisteredOnWS03AndVista },
 
-    { ID_NAME(IID_CDefView),                    TRUE },
-    { ID_NAME(IID_Folder)                            },
-    { ID_NAME(IID_Folder2)                           },
-    { ID_NAME(IID_Folder3)                           },
-    { ID_NAME(IID_FolderItem)                        },
-    { ID_NAME(IID_FolderItem2)                       },
-    { ID_NAME(IID_FolderItems)                       },
-    { ID_NAME(IID_FolderItems2)                      },
-    { ID_NAME(IID_FolderItems3)                      },
-    { ID_NAME(IID_FolderItemVerb)                    },
-    { ID_NAME(IID_FolderItemVerbs)                   },
+    { ID_NAME(IID_IAccIdentity),                   RegisteredAlways },
+    { ID_NAME(IID_IAccPropServer),                 RegisteredAlways },
+    { ID_NAME(IID_IAccPropServices),               RegisteredAlways },
+    { ID_NAME(IID_IAccessible),                    RegisteredAlways },
+    { ID_NAME(IID_IAccessibleHandler),             RegisteredAlways },
+    { ID_NAME(IID_IAccessor),                      RegisteredAlways },
+    { ID_NAME(IID_IActionProgress),                RegisteredAlways },
+    { ID_NAME(IID_IActionProgressDialog),          RegisteredAlways },
+    { ID_NAME(IID_IAutoCompleteDropDown),          RegisteredAlways },
+    { ID_NAME(IID_IBandHost),                      RegisteredAlways },
+    { ID_NAME(IID_IBandSite),                      RegisteredAlways },
+    { ID_NAME(IID_IBindCtx),                       RegisteredAlways },
+    { ID_NAME(IID_IBindEventHandler),              RegisteredAlways },
+    { ID_NAME(IID_IBindHost),                      RegisteredAlways },
+    { ID_NAME(IID_IBinding),                       RegisteredAlways },
+    { ID_NAME(IID_IBindResource),                  RegisteredAlways },
+    { ID_NAME(IID_IBindStatusCallback),            RegisteredAlways },
+    { ID_NAME(IID_IBlockingLock),                  RegisteredAlways },
+    { ID_NAME(IID_IBrowserService),                RegisteredAlways },
+    { ID_NAME(IID_ICDBurn),                        RegisteredAlways },
+    { ID_NAME(IID_ICDBurnExt),                     RegisteredAlways },
+    { ID_NAME(IID_ICatInformation),                RegisteredAlways },
+    { ID_NAME(IID_ICatRegister),                   RegisteredAlways },
+    { ID_NAME(IID_IClassActivator),                RegisteredAlways },
+    { ID_NAME(IID_IClassFactory),                  RegisteredAlways },
+    { ID_NAME(IID_IClassFactory2),                 RegisteredAlways },
+    { ID_NAME(IID_ICommDlgBrowser),                RegisteredAlways },
+    { ID_NAME(IID_ICommDlgBrowser2),               RegisteredAlways },
+    { ID_NAME(IID_ICommDlgBrowser3),               RegisteredAlways },
+    { ID_NAME(IID_IComputerInfoChangeNotify),      RegisteredAlways },
+    { ID_NAME(IID_IConnectionPoint),               RegisteredAlways },
+    { ID_NAME(IID_IConnectionPointContainer),      RegisteredAlways },
+    { ID_NAME(IID_IContextMenuSite),               RegisteredAlways },
+    { ID_NAME(IID_IContinue),                      RegisteredAlways },
+    { ID_NAME(IID_IContinueCallback),              RegisteredAlways },
+    { ID_NAME(IID_ICustomizeInfoTip),              RegisteredAlways },
+    { ID_NAME(IID_IDataObject),                    RegisteredAlways },
+    { ID_NAME(IID_IDefViewFrame3),                 RegisteredAlways },
+    { ID_NAME(IID_IDefViewFrameGroup),             RegisteredAlways },
+    { ID_NAME(IID_IDeskBand),                      RegisteredAlways },
+    { ID_NAME(IID_IDeskBandEx),                    RegisteredAlways },
+    // { ID_NAME(IID_IDefViewID),                     RegisteredAlways }, == DefViewFrame3
+    { ID_NAME(IID_IDiscMasterProgressEvents),      RegisteredAlways },
+    { ID_NAME(IID_IDispatch),                      RegisteredAlways },
+    { ID_NAME(IID_IDispatchEx),                    RegisteredAlways },
+    { ID_NAME(IID_IDockingWindow),                 RegisteredAlways },
+    { ID_NAME(IID_IDropTarget),                    RegisteredAlways },
+    // { ID_NAME(IID_IEnumCATID),                     RegisteredAlways }, == EnumGUID
+    // { ID_NAME(IID_IEnumCLSID),                     RegisteredAlways }, == EnumGUID
+    { ID_NAME(IID_IEnumCATEGORYINFO),              RegisteredAlways },
+    { ID_NAME(IID_IEnumConnectionPoints),          RegisteredAlways },
+    { ID_NAME(IID_IEnumConnections),               RegisteredAlways },
+    { ID_NAME(IID_IEnumExtraSearch),               RegisteredAlways },
+    { ID_NAME(IID_IEnumGUID),                      RegisteredAlways },
+    { ID_NAME(IID_IEnumIDList),                    RegisteredAlways },
+    { ID_NAME(IID_IEnumMoniker),                   RegisteredAlways },
+    { ID_NAME(IID_IEnumNetConnection),             RegisteredAlways },
+    { ID_NAME(IID_IEnumShellItems),                RegisteredAlways },
+    { ID_NAME(IID_IEnumSTATSTG),                   RegisteredAlways },
+    { ID_NAME(IID_IEnumString),                    RegisteredAlways },
+    { ID_NAME(IID_IEnumUnknown),                   RegisteredAlways },
+    { ID_NAME(IID_IEnumVARIANT),                   RegisteredAlways },
+    { ID_NAME(IID_IErrorLog),                      RegisteredAlways },
+    { ID_NAME(IID_IExplorerBrowser),               RegisteredAlways },
+    { ID_NAME(IID_IExtractImage),                  RegisteredAlways },
+    { ID_NAME(IID_IExtractImage2),                 RegisteredAlways },
+    { ID_NAME(IID_IFileDialog),                    RegisteredAlways },
+    { ID_NAME(IID_IFileOpenDialog),                RegisteredAlways },
+    { ID_NAME(IID_IFileSaveDialog),                RegisteredAlways },
+    { ID_NAME(IID_IFileSearchBand),                RegisteredAlways },
+    { ID_NAME(IID_IFilter),                        RegisteredAlways },
+    { ID_NAME(IID_IFilterCondition),               RegisteredAlways },
+    { ID_NAME(IID_IFolderBandPriv),                RegisteredAlways },
+    { ID_NAME(IID_IFolderFilter),                  RegisteredAlways },
+    { ID_NAME(IID_IFolderFilterSite),              RegisteredAlways },
+    { ID_NAME(IID_IFolderView),                    RegisteredAlways },
+    { ID_NAME(IID_IFolderView2),                   RegisteredAlways },
+    { ID_NAME(IID_IFolderViewOC),                  RegisteredAlways },
+    { ID_NAME(IID_IFolderViewSettings),            RegisteredAlways },
+    { ID_NAME(IID_IHWEventHandler),                RegisteredAlways },
+    { ID_NAME(IID_IHWEventHandler2),               RegisteredAlways },
+    { ID_NAME(IID_IHlinkFrame),                    RegisteredAlways },
+    { ID_NAME(IID_IInitializeWithBindCtx),         RegisteredAlways },
+    { ID_NAME(IID_IInitializeWithFile),            RegisteredAlways },
+    { ID_NAME(IID_IInputObject),                   RegisteredAlways },
+    { ID_NAME(IID_IInputObjectSite),               RegisteredAlways },
+    { ID_NAME(IID_IInternetSecurityManager),       RegisteredAlways },
+    { ID_NAME(IID_IItemNameLimits),                RegisteredAlways },
+    { ID_NAME(IID_IModalWindow),                   RegisteredAlways },
+    { ID_NAME(IID_IMoniker),                       RegisteredAlways },
+    { ID_NAME(IID_INamespaceWalk),                 RegisteredAlways },
+    { ID_NAME(IID_INamespaceWalkCB),               RegisteredAlways },
+    { ID_NAME(IID_INamespaceWalkCB2),              RegisteredAlways },
+    { ID_NAME(IID_INetConnectionManager),          RegisteredAlways },
+    { ID_NAME(IID_INewMenuClient),                 RegisteredAlways },
+    { ID_NAME(IID_INewWindowManager),              RegisteredAlways },
+    { ID_NAME(IID_IObjectSafety),                  RegisteredAlways },
+    { ID_NAME(IID_IObjectWithBackReferences),      RegisteredAlways },
+    { ID_NAME(IID_IObjectWithSite),                RegisteredAlways },
+    { ID_NAME(IID_IOleClientSite),                 RegisteredAlways },
+    { ID_NAME(IID_IOleCommandTarget),              RegisteredAlways },
+    { ID_NAME(IID_IOleContainer),                  RegisteredAlways },
+    { ID_NAME(IID_IOleControl),                    RegisteredAlways },
+    { ID_NAME(IID_IOleControlSite),                RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceActiveObject),        RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceFrame),               RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceObject),              RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceSite),                RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceSiteEx),              RegisteredAlways },
+    { ID_NAME(IID_IOleInPlaceUIWindow),            RegisteredAlways },
+    { ID_NAME(IID_IOleItemContainer),              RegisteredAlways },
+    { ID_NAME(IID_IOleLink),                       RegisteredAlways },
+    { ID_NAME(IID_IOleObject),                     RegisteredAlways },
+    { ID_NAME(IID_IOleWindow),                     RegisteredAlways },
+    { ID_NAME(IID_IParentAndItem),                 RegisteredAlways },
+    { ID_NAME(IID_IParseDisplayName),              RegisteredAlways },
+    { ID_NAME(IID_IPersist),                       RegisteredAlways },
+    { ID_NAME(IID_IPersistFile),                   RegisteredAlways },
+    { ID_NAME(IID_IPersistFolder),                 RegisteredAlways },
+    { ID_NAME(IID_IPersistFolder2),                RegisteredAlways },
+    { ID_NAME(IID_IPersistFolder3),                RegisteredAlways },
+    { ID_NAME(IID_IPersistHistory),                RegisteredAlways },
+    { ID_NAME(IID_IPersistIDList),                 RegisteredAlways },
+    { ID_NAME(IID_IPersistMemory),                 RegisteredAlways },
+    { ID_NAME(IID_IPersistPropertyBag),            RegisteredAlways },
+    { ID_NAME(IID_IPersistPropertyBag2),           RegisteredAlways },
+    { ID_NAME(IID_IPersistStorage),                RegisteredAlways },
+    { ID_NAME(IID_IPersistStream),                 RegisteredAlways },
+    { ID_NAME(IID_IPersistStreamInit),             RegisteredAlways },
+    { ID_NAME(IID_IPreviewHandler),                RegisteredAlways },
+    { ID_NAME(IID_IPreviewHandlerFrame),           RegisteredAlways },
+    { ID_NAME(IID_IPreviewHandlerVisuals),         RegisteredAlways },
+    { ID_NAME(IID_IPropertyBag),                   RegisteredAlways },
+    { ID_NAME(IID_IPropertyBag2),                  RegisteredAlways },
+    { ID_NAME(IID_IPropertySetStorage),            RegisteredAlways },
+    { ID_NAME(IID_IPropertyStore),                 RegisteredAlways },
+    { ID_NAME(IID_IProvideClassInfo),              RegisteredAlways },
+    { ID_NAME(IID_IProvideClassInfo2),             RegisteredAlways },
+    { ID_NAME(IID_IQueryCancelAutoPlay),           RegisteredAlways },
+    { ID_NAME(IID_IQuickActivate),                 RegisteredAlways },
+    { ID_NAME(IID_IRemoteComputer),                RegisteredAlways },
+    { ID_NAME(IID_IResolveShellLink),              RegisteredAlways },
+    { ID_NAME(IID_IROTData),                       RegisteredAlways },
+    { ID_NAME(IID_IRunnableObject),                RegisteredAlways },
+    { ID_NAME(IID_IRunningObjectTable),            RegisteredAlways },
+    { ID_NAME(IID_IScriptErrorList),               RegisteredAlways },
+    { ID_NAME(IID_ISecMgrCacheSeedTarget),         RegisteredAlways },
+    { ID_NAME(IID_IServiceProvider),               RegisteredAlways },
+    { ID_NAME(IID_IShellBrowser),                  RegisteredAlways },
+    { ID_NAME(IID_IShellDispatch),                 RegisteredAlways },
+    { ID_NAME(IID_IShellDispatch2),                RegisteredAlways },
+    { ID_NAME(IID_IShellDispatch3),                RegisteredAlways },
+    { ID_NAME(IID_IShellDispatch4),                RegisteredAlways },
+    { ID_NAME(IID_IShellFavoritesNameSpace),       RegisteredAlways },
+    { ID_NAME(IID_IShellFolder),                   RegisteredAlways },
+    { ID_NAME(IID_IShellFolder2),                  RegisteredAlways },
+    { ID_NAME(IID_IShellFolderViewDual),           RegisteredAlways },
+    { ID_NAME(IID_IShellFolderViewDual2),          RegisteredAlways },
+    { ID_NAME(IID_IShellIcon),                     RegisteredAlways },
+    { ID_NAME(IID_IShellItem),                     RegisteredAlways },
+    { ID_NAME(IID_IShellItem2),                    RegisteredAlways },
+    { ID_NAME(IID_IShellItemArray),                RegisteredAlways },
+    { ID_NAME(IID_IShellItemFilter),               RegisteredAlways },
+    { ID_NAME(IID_IShellLinkA),                    RegisteredAlways },
+    { ID_NAME(IID_IShellLinkDual),                 RegisteredAlways },
+    { ID_NAME(IID_IShellLinkDual2),                RegisteredAlways },
+    { ID_NAME(IID_IShellLinkW),                    RegisteredAlways },
+    { ID_NAME(IID_IShellNameSpace),                RegisteredAlways },
+    { ID_NAME(IID_IShellUIHelper),                 RegisteredAlways },
+    { ID_NAME(IID_IShellView),                     RegisteredAlways },
+    { ID_NAME(IID_IShellView2),                    RegisteredAlways },
+    { ID_NAME(IID_IShellView3),                    RegisteredAlways },
+    { ID_NAME(IID_IShellWindows),                  RegisteredAlways },
+    { ID_NAME(IID_ISpecifyPropertyPages),          RegisteredAlways },
+    { ID_NAME(IID_IStorage),                       RegisteredAlways },
+    { ID_NAME(IID_IStream),                        RegisteredAlways },
+    { ID_NAME(IID_ISurrogate),                     RegisteredAlways },
+    { ID_NAME(IID_ISynchronize),                   RegisteredAlways },
+    { ID_NAME(IID_ITargetEmbedding),               RegisteredAlways },
+    { ID_NAME(IID_ITargetFrame),                   RegisteredAlways },
+    { ID_NAME(IID_ITargetFrame2),                  RegisteredAlways },
+    { ID_NAME(IID_ITargetFramePriv),               RegisteredAlways },
+    { ID_NAME(IID_ITargetFramePriv2),              RegisteredAlways },
+    { ID_NAME(IID_ITargetNotify),                  RegisteredAlways },
+    { ID_NAME(IID_ITaskbarList),                   RegisteredAlways },
+    { ID_NAME(IID_ITaskbarList2),                  RegisteredAlways },
+    { ID_NAME(IID_IUnknown),                       RegisteredAlways },
+    { ID_NAME(IID_IUrlHistoryNotify),              RegisteredAlways },
+    { ID_NAME(IID_IUrlHistoryStg),                 RegisteredAlways },
+    { ID_NAME(IID_IUrlHistoryStg2),                RegisteredAlways },
+    { ID_NAME(IID_IViewObject),                    RegisteredAlways },
+    { ID_NAME(IID_IViewObject2),                   RegisteredAlways },
+    { ID_NAME(IID_IVisualProperties),              RegisteredAlways },
+    { ID_NAME(IID_IWebBrowser),                    RegisteredAlways },
+    { ID_NAME(IID_IWebBrowser2),                   RegisteredAlways },
+    { ID_NAME(IID_IWebBrowserApp),                 RegisteredAlways },
+    { ID_NAME(IID_IWebBrowserPriv),                RegisteredAlways },
+    { ID_NAME(DIID_DShellFolderViewEvents),        RegisteredAlways },
+    { ID_NAME(DIID_DShellNameSpaceEvents),         RegisteredAlways },
+    { ID_NAME(DIID_DShellWindowsEvents),           RegisteredAlways },
+    { ID_NAME(DIID_DWebBrowserEvents),             RegisteredAlways },
+    { ID_NAME(DIID_DWebBrowserEvents2),            RegisteredAlways },
+    { ID_NAME(DIID_XMLDOMDocumentEvents),          RegisteredAlways },
+    { ID_NAME(IID_Folder),                         RegisteredAlways },
+    { ID_NAME(IID_Folder2),                        RegisteredAlways },
+    { ID_NAME(IID_Folder3),                        RegisteredAlways },
+    { ID_NAME(IID_FolderItem),                     RegisteredAlways },
+    { ID_NAME(IID_FolderItem2),                    RegisteredAlways },
+    { ID_NAME(IID_FolderItems),                    RegisteredAlways },
+    { ID_NAME(IID_FolderItems2),                   RegisteredAlways },
+    { ID_NAME(IID_FolderItems3),                   RegisteredAlways },
+    { ID_NAME(IID_FolderItemVerb),                 RegisteredAlways },
+    { ID_NAME(IID_FolderItemVerbs),                RegisteredAlways },
+    { ID_NAME(IID_IQueryContinue),                 RegisteredAlways },
+    { ID_NAME(IID_IUserNotification),              RegisteredAlways },
+    { ID_NAME(IID_IUserNotificationCallback),      RegisteredAlways },
+    { ID_NAME(IID_IUserNotification2),             RegisteredAlways },
+    { ID_NAME(IID_IUserEventTimer),                RegisteredAlways },
+    { ID_NAME(IID_IUserEventTimerCallback),        RegisteredAlways },
 
-    { ID_NAME(CLSID_ShellDesktop),              TRUE },
+    { ID_NAME(IID_IControlPanelEnumerator),        RegisteredOnVistaOnly    },
+    { ID_NAME(IID_IShellFolder3),                  RegisteredOnVistaOnly    },
+    { ID_NAME_EX(IID_IShellBrowserService4,
+                 IID_IShellBrowserService),        RegisteredOnVistaOnly    },
 
-    { ID_NAME(IID_IQueryContinue)                    },
-    { ID_NAME(IID_IUserNotification)                 },
-    { ID_NAME(IID_IUserNotificationCallback)         }, // On Vista+
-    { ID_NAME(IID_IUserNotification2)                }, // On Vista+
+    { ID_NAME(IID_IDriveFolderExt),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_INetConnectionConnectUi),        RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_INetConnectionCommonUi2),        RegisteredOnVistaOrNewer }, // This also covers IID_INetLanConnectionUiInfo.
+    { ID_NAME(IID_ISLTracker),                     RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IShellDispatch5),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IShellFolderViewDual3),          RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IShellLinkDataList),             RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IShellUIHelper2),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IBackReferencedObject),          RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_ICommonLayoutDefinition),        RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IDelegateHostItemContainer),     RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IExecuteCommand),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IFolderType),                    RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IFrameLayoutDefinition),         RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IItemFilter),                    RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IItemFilterOwner),               RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_INewItemAdvisor),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IObjectWithAssociationElement),  RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IObjectWithQuerySource),         RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IObjectWithSelection),           RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IPersistString2),                RegisteredOnVistaOrNewer },
+    { ID_NAME(IID_IRootAndRelativeParsingFolder),  RegisteredOnVistaOrNewer },
 
-    { ID_NAME(IID_IAggregateFilterCondition)         },
-    { ID_NAME(IID_IAliasRegistrationCallback),  TRUE },
-    { ID_NAME(IID_IAssociationArrayInitialize), TRUE },
-    { ID_NAME(IID_IAssociationList),            TRUE },
-    { ID_NAME(IID_IBackReferencedObject),       TRUE },
-    { ID_NAME(IID_IBasePropPage),               TRUE },
-    { ID_NAME(IID_ICommonLayoutDefinition),     TRUE },
-    { ID_NAME(IID_IControlPanelEnumerator),     TRUE },
-    { ID_NAME(IID_IDelegateHostItemContainer),  TRUE },
-    { ID_NAME(IID_IDrawPropertyControl),        TRUE },
-    { ID_NAME(IID_IEnumAssociationElements),    TRUE },
-    { ID_NAME(IID_IEnumerateAssociationElements),TRUE },
-    { ID_NAME(IID_IExecuteCommand),             TRUE },
-    { ID_NAME(IID_IFilterCondition)                  },
-    { ID_NAME(IID_IFolderNotify),               TRUE },
-    { ID_NAME(IID_IFolderProperties),           TRUE },
-    { ID_NAME(IID_IFolderType),                 TRUE },
-    { ID_NAME(IID_IFolderWithSearchRoot),       TRUE },
-    { ID_NAME(IID_IFrameLayoutDefinition),      TRUE },
-    { ID_NAME(IID_IItemFilter),                 TRUE },
-    { ID_NAME(IID_IItemFilterOwner),            TRUE },
-    { ID_NAME(IID_ILocalizableItemParent),      TRUE },
-    { ID_NAME(IID_INewItemAdvisor),             TRUE },
-    { ID_NAME(IID_IObjectWithAssociationElement),TRUE },
-    { ID_NAME(IID_IObjectWithAssociationList),  TRUE },
-    { ID_NAME(IID_IObjectWithQuerySource),      TRUE },
-    { ID_NAME(IID_IObjectWithSelection),        TRUE },
-    { ID_NAME(IID_IPersistString2),             TRUE },
-    { ID_NAME(IID_IPrinterFolder),              TRUE },
-    { ID_NAME(IID_IPropertyControl),            TRUE },
-    { ID_NAME(IID_IPropertyControlBase),        TRUE },
-    { ID_NAME(IID_IPropertyControlSite),        TRUE },
-    { ID_NAME(IID_IRegItemCustomAttributes),    TRUE },
-    { ID_NAME(IID_IRegItemCustomEnumerator),    TRUE },
-    { ID_NAME(IID_IRegItemFolder),              TRUE },
-    { ID_NAME(IID_IRootAndRelativeParsingFolder),TRUE },
-    { ID_NAME(IID_IScope),                      TRUE },
-    { ID_NAME(IID_IScopeItem),                  TRUE },
-    { ID_NAME(IID_IShellBrowserServce),         TRUE },
-    { ID_NAME(IID_IShellFolder3),               TRUE },
-    { ID_NAME(IID_ITaskCondition),              TRUE },
-    { ID_NAME(IID_ITaskConditionCombiner),      TRUE },
-    { ID_NAME(IID_ITaskConditionInit),          TRUE },
-    { ID_NAME(IID_ITransferProvider),           TRUE },
-    { ID_NAME(IID_IUserEventTimer)                   },
-    { ID_NAME(IID_IUserEventTimerCallback)           },
-    { ID_NAME(IID_IAssociationArrayOld),        TRUE },
-    { ID_NAME(IID_IAssociationArray),           TRUE },
-#define IID_IDriveFolderExt IID_IDriveFolderExtOld
-    { ID_NAME(IID_IDriveFolderExt)                   },
-#undef IID_IDriveFolderExt
-    { ID_NAME(IID_IPinnedListOld),              TRUE },
-    { ID_NAME(IID_IPinnedList),                 TRUE },
-    { ID_NAME(IID_IAttachmentExecute),          TRUE },
+    { ID_NAME(IID_IAssociationArray),              RegisteredOnVistaAndWin7 },
+    { ID_NAME(IID_IObjectWithAssociationList),     RegisteredOnVistaAndWin7 },
 
-    // + MMC stuff
-    { ID_NAME(IID_IComponentData),              TRUE },
-    { ID_NAME(IID_IConsole),                    TRUE },
-    { ID_NAME(IID_IConsole2),                   TRUE },
-    { ID_NAME(IID_IConsoleNameSpace),           TRUE },
-    { ID_NAME(IID_IConsoleNameSpace2),          TRUE },
-    { ID_NAME(IID_IPropertySheetCallback),      TRUE },
-    { ID_NAME(IID_IPropertySheetProvider),      TRUE },
-    { ID_NAME(IID_IExtendPropertySheet),        TRUE },
-    { ID_NAME(IID_IExtendPropertySheet2),       TRUE },
-    { ID_NAME(IID_IHeaderCtrl),                 TRUE },
-    { ID_NAME(IID_IToolbar),                    TRUE },
-    { ID_NAME(IID_IImageList_mmc),              TRUE },
-    { ID_NAME(IID_IConsoleVerb),                TRUE },
-    { ID_NAME(IID_ISnapInAbout),                TRUE },
-    // - MMC stuff
+    { ID_NAME(IID_IRegItemFolder),                 RegisteredOnVistaToWin8Dot1 },
 
-    { ID_NAME(IID_ICertificateManager),         TRUE },
+    { ID_NAME(IID_IFileDialog2),                   RegisteredOnWin7OrNewer },
+    { ID_NAME(IID_INameSpaceTreeControl),          RegisteredOnWin7OrNewer },
+    { ID_NAME(IID_ITaskbarList3),                  RegisteredOnWin7OrNewer },
+    { ID_NAME(IID_ITaskbarList4),                  RegisteredOnWin7OrNewer },
+    { ID_NAME(IID_IShellBrowserService),           RegisteredOnWin7OrNewer },
+
+    { ID_NAME(IID_ITransferAdviseSink),            RegisteredOnWin8OrNewer },
+
+    { ID_NAME(IID_IACList),                        RegisteredNever  },
+    { ID_NAME(IID_IACList2),                       RegisteredNever  },
+    { ID_NAME(IID_IADesktopP2),                    RegisteredNever  },
+    { ID_NAME(IID_IAccessControl),                 RegisteredNever  },
+    { ID_NAME(IID_IACLCustomMRU),                  RegisteredNever  },
+    { ID_NAME(IID_IActiveDesktop),                 RegisteredNever  },
+    { ID_NAME(IID_IActiveDesktopP),                RegisteredNever  },
+    { ID_NAME(IID_IAddressBarParser),              RegisteredNever  },
+    { ID_NAME(IID_IAddressBand),                   RegisteredNever  },
+    { ID_NAME(IID_IAddressEditBox),                RegisteredNever  },
+    { ID_NAME(IID_IAsyncMoniker),                  RegisteredNever  },
+    { ID_NAME(IID_IAugmentedShellFolder),          RegisteredNever  },
+    { ID_NAME(IID_IAugmentedShellFolder2),         RegisteredNever  },
+    { ID_NAME(IID_IAutoComplete),                  RegisteredNever  },
+    { ID_NAME(IID_IAutoComplete2),                 RegisteredNever  },
+    { ID_NAME(IID_IBandProxy),                     RegisteredNever  },
+    { ID_NAME(IID_IBandSiteHelper),                RegisteredNever  },
+    { ID_NAME(IID_IBanneredBar),                   RegisteredNever  },
+    { ID_NAME(IID_IBindProtocol),                  RegisteredNever  },
+    { ID_NAME(IID_IBrowserFrameOptions),           RegisteredNever  },
+    { ID_NAME(IID_IBrowserService2),               RegisteredNever  },
+    { ID_NAME(IID_IBrowserService3),               RegisteredNever  },
+    { ID_NAME(IID_IBrowserService4),               RegisteredNever  },
+    { ID_NAME(IID_ICallFactory),                   RegisteredNever  },
+    { ID_NAME(IID_ICancelMethodCalls),             RegisteredNever  },
+    { ID_NAME(IID_IClassFactory3),                 RegisteredNever  },
+    { ID_NAME(IID_IClientSecurity),                RegisteredNever  },
+    { ID_NAME(IID_IComThreadingInfo),              RegisteredNever  },
+    { ID_NAME(IID_IContext),                       RegisteredNever  },
+    { ID_NAME(IID_IContextMenu),                   RegisteredNever  },
+    { ID_NAME(IID_IContextMenu2),                  RegisteredNever  },
+    { ID_NAME(IID_IContextMenu3),                  RegisteredNever  },
+    { ID_NAME(IID_IContextMenuCB),                 RegisteredNever  },
+    { ID_NAME(IID_ICopyHookA),                     RegisteredNever  },
+    { ID_NAME(IID_ICopyHookW),                     RegisteredNever  },
+    { ID_NAME(IID_ICurrentWorkingDirectory),       RegisteredNever  },
+    { ID_NAME(IID_IDVGetEnum),                     RegisteredNever  },
+    { ID_NAME(IID_IDefViewFrame),                  RegisteredNever  },
+    { ID_NAME(IID_IDefViewScript),                 RegisteredNever  },
+    { ID_NAME(IID_IDelayedRelease),                RegisteredNever  },
+    { ID_NAME(IID_IDeskBar),                       RegisteredNever  },
+    { ID_NAME(IID_IDeskBarClient),                 RegisteredNever  },
+    { ID_NAME(IID_IDeskMovr),                      RegisteredNever  },
+    { ID_NAME(IID_IDockingWindowFrame),            RegisteredNever  },
+    { ID_NAME(IID_IDockingWindowSite),             RegisteredNever  },
+    { ID_NAME(IID_IDocViewSite),                   RegisteredNever  },
+    { ID_NAME(IID_IDragSourceHelper),              RegisteredNever  },
+    { ID_NAME(IID_IDropTargetHelper),              RegisteredNever  },
+    { ID_NAME(IID_IEnumNetCfgComponent),           RegisteredNever  },
+    { ID_NAME(IID_IExplorerToolbar),               RegisteredNever  },
+    { ID_NAME(IID_IExtractIconA),                  RegisteredNever  },
+    { ID_NAME(IID_IExtractIconW),                  RegisteredNever  },
+    { ID_NAME(IID_IFileViewerA),                   RegisteredNever  },
+    { ID_NAME(IID_IFileViewerSite),                RegisteredNever  },
+    { ID_NAME(IID_IFileViewerW),                   RegisteredNever  },
+    { ID_NAME(IID_IFolderViewHost),                RegisteredNever  },
+    { ID_NAME(IID_IForegroundTransfer),            RegisteredNever  },
+    { ID_NAME(IID_IGetNameSpaceExtensionPointer),  RegisteredNever  },
+    { ID_NAME(IID_IGlobalFolderSettings),          RegisteredNever  },
+    { ID_NAME(IID_IImageList),                     RegisteredNever  },
+    { ID_NAME(IID_IImageList2),                    RegisteredNever  },
+    { ID_NAME(IID_IInitializeObject),              RegisteredNever  },
+    { ID_NAME(IID_IInternalUnknown),               RegisteredNever  },
+    { ID_NAME(IID_IInternetZoneManager),           RegisteredNever  },
+    { ID_NAME(IID_IMarshal2),                      RegisteredNever  },
+    { ID_NAME(IID_IMenuBand),                      RegisteredNever  },
+    { ID_NAME(IID_IMenuPopup),                     RegisteredNever  },
+    { ID_NAME(IID_IMruDataList),                   RegisteredNever  },
+    { ID_NAME(IID_IMruPidlList),                   RegisteredNever  },
+    { ID_NAME(IID_IMultiMonitorDockingSite),       RegisteredNever  },
+    { ID_NAME(IID_IMultiQI),                       RegisteredNever  },
+    { ID_NAME(IID_INamespaceProxy),                RegisteredNever  },
+    { ID_NAME(IID_INetCfg),                        RegisteredNever  },
+    { ID_NAME(IID_INetCfgComponent),               RegisteredNever  },
+    { ID_NAME(IID_INetCfgComponentBindings),       RegisteredNever  },
+    { ID_NAME(IID_INetCfgComponentControl),        RegisteredNever  },
+    { ID_NAME(IID_INetCfgComponentPropertyUi),     RegisteredNever  },
+    { ID_NAME(IID_INetCfgLock),                    RegisteredNever  },
+    { ID_NAME(IID_INetCfgPnpReconfigCallback),     RegisteredNever  },
+    { ID_NAME(IID_INetConnectionPropertyUi),       RegisteredNever  },
+    { ID_NAME(IID_INetConnectionPropertyUi2),      RegisteredNever  },
+    { ID_NAME(IID_INewShortcutHookA),              RegisteredNever  },
+    { ID_NAME(IID_INewShortcutHookW),              RegisteredNever  },
+    { ID_NAME(IID_INSCTree),                       RegisteredNever  },
+    { ID_NAME(IID_INSCTree2),                      RegisteredNever  },
+    { ID_NAME(IID_IObjMgr),                        RegisteredNever  },
+    { ID_NAME(IID_IOleInPlaceObjectWindowless),    RegisteredNever  },
+    { ID_NAME(IID_IOleInPlaceSiteWindowless),      RegisteredNever  },
+    { ID_NAME(IID_IPersistFreeThreadedObject),     RegisteredNever  },
+    { ID_NAME(IID_IProgressDialog),                RegisteredNever  },
+    { ID_NAME(IID_IPropSheetPage),                 RegisteredNever  },
+    { ID_NAME(IID_IQueryAssociations),             RegisteredNever  },
+    { ID_NAME(IID_IQueryInfo),                     RegisteredNever  },
+    { ID_NAME(IID_IRegTreeOptions),                RegisteredNever  },
+    { ID_NAME(IID_IRpcOptions),                    RegisteredNever  },
+    { ID_NAME(IID_IServerSecurity),                RegisteredNever  },
+    { ID_NAME(IID_IShellApp),                      RegisteredNever  },
+    { ID_NAME(IID_IShellChangeNotify),             RegisteredNever  },
+    { ID_NAME(IID_IShellCopyHookA),                RegisteredNever  },
+    { ID_NAME(IID_IShellCopyHookW),                RegisteredNever  },
+    { ID_NAME(IID_IShellDesktopTray),              RegisteredNever  },
+    { ID_NAME(IID_IShellDetails),                  RegisteredNever  },
+    { ID_NAME(IID_IShellDispatch6),                RegisteredNever  },
+    { ID_NAME(IID_IShellExecuteHookA),             RegisteredNever  },
+    { ID_NAME(IID_IShellExecuteHookW),             RegisteredNever  },
+    { ID_NAME(IID_IShellExtInit),                  RegisteredNever  },
+    { ID_NAME(IID_IShellFolderBand),               RegisteredNever  },
+    { ID_NAME(IID_IShellFolderSearchable),         RegisteredNever  },
+    { ID_NAME(IID_IShellFolderSearchableCallback), RegisteredNever  },
+    { ID_NAME(IID_IShellFolderView),               RegisteredNever  },
+    { ID_NAME(IID_IShellFolderViewCB),             RegisteredNever  },
+    { ID_NAME(IID_IShellFolderViewType),           RegisteredNever  },
+    { ID_NAME(IID_IShellIconOverlay),              RegisteredNever  },
+    { ID_NAME(IID_IShellIconOverlayIdentifier),    RegisteredNever  },
+    { ID_NAME(IID_IShellImageData),                RegisteredNever  },
+    { ID_NAME(IID_IShellImageDataAbort),           RegisteredNever  },
+    { ID_NAME(IID_IShellImageDataFactory),         RegisteredNever  },
+    { ID_NAME(IID_IShellMenu),                     RegisteredNever  },
+    { ID_NAME(IID_IShellMenu2),                    RegisteredNever  },
+    { ID_NAME(IID_IShellMenuAcc),                  RegisteredNever  },
+    { ID_NAME(IID_IShellMenuCallback),             RegisteredNever  },
+    { ID_NAME(IID_IShellPropSheetExt),             RegisteredNever  },
+    { ID_NAME(IID_IShellService),                  RegisteredNever  },
+    { ID_NAME(IID_IShellTaskScheduler),            RegisteredNever  },
+    { ID_NAME(IID_ISynchronizeContainer),          RegisteredNever  },
+    { ID_NAME(IID_ISynchronizeEvent),              RegisteredNever  },
+    { ID_NAME(IID_ISynchronizeHandle),             RegisteredNever  },
+    { ID_NAME(IID_ITrackShellMenu),                RegisteredNever  },
+    { ID_NAME(IID_ITransferDestination),           RegisteredNever  },
+    { ID_NAME(IID_ITransferSource),                RegisteredNever  },
+    { ID_NAME(IID_ITranslateShellChangeNotify),    RegisteredNever  },
+    { ID_NAME(IID_ITrayPriv),                      RegisteredNever  },
+    { ID_NAME(IID_ITrayPriv2),                     RegisteredNever  },
+    { ID_NAME(IID_IURLSearchHook),                 RegisteredNever  },
+    { ID_NAME(IID_IURLSearchHook2),                RegisteredNever  },
+    { ID_NAME(IID_IViewObjectEx),                  RegisteredNever  },
+    { ID_NAME(IID_IWinEventHandler),               RegisteredNever  },
+    { ID_NAME(IID_DFConstraint),                   RegisteredNever  },
+    { ID_NAME(IID_CDefView),                       RegisteredNever  },
+    { ID_NAME(CLSID_ShellDesktop),                 RegisteredNever  },
+    { ID_NAME(IID_IAliasRegistrationCallback),     RegisteredNever  },
+    { ID_NAME(IID_IAssociationArrayInitialize),    RegisteredNever  },
+    { ID_NAME(IID_IAssociationList),               RegisteredNever  },
+    { ID_NAME(IID_IBasePropPage),                  RegisteredNever  },
+    { ID_NAME(IID_IDrawPropertyControl),           RegisteredNever  },
+    { ID_NAME(IID_IEnumAssociationElements),       RegisteredNever  },
+    { ID_NAME(IID_IEnumerateAssociationElements),  RegisteredNever  },
+    { ID_NAME(IID_IFolderNotify),                  RegisteredNever  },
+    { ID_NAME(IID_IFolderProperties),              RegisteredNever  },
+    { ID_NAME(IID_IFolderWithSearchRoot),          RegisteredNever  },
+    { ID_NAME(IID_ILocalizableItemParent),         RegisteredNever  },
+    { ID_NAME(IID_IPrinterFolder),                 RegisteredNever  },
+    { ID_NAME(IID_IPropertyControl),               RegisteredNever  },
+    { ID_NAME(IID_IPropertyControlBase),           RegisteredNever  },
+    { ID_NAME(IID_IPropertyControlSite),           RegisteredNever  },
+    { ID_NAME(IID_IRegItemCustomAttributes),       RegisteredNever  },
+    { ID_NAME(IID_IRegItemCustomEnumerator),       RegisteredNever  },
+    { ID_NAME(IID_IScope),                         RegisteredNever  },
+    { ID_NAME(IID_IScopeItem),                     RegisteredNever  },
+    { ID_NAME(IID_ITaskCondition),                 RegisteredNever  },
+    { ID_NAME(IID_ITaskConditionCombiner),         RegisteredNever  },
+    { ID_NAME(IID_ITaskConditionInit),             RegisteredNever  },
+    { ID_NAME(IID_ITransferProvider),              RegisteredNever  },
+    { ID_NAME(IID_IAssociationArrayOld),           RegisteredNever  },
+    { ID_NAME(IID_IPinnedListOld),                 RegisteredNever  },
+    { ID_NAME(IID_IPinnedList),                    RegisteredNever  },
+    { ID_NAME(IID_IAttachmentExecute),             RegisteredNever  },
+    { ID_NAME(IID_IComponentData),                 RegisteredNever  },
+    { ID_NAME(IID_IConsole),                       RegisteredNever  },
+    { ID_NAME(IID_IConsole2),                      RegisteredNever  },
+    { ID_NAME(IID_IConsoleNameSpace),              RegisteredNever  },
+    { ID_NAME(IID_IConsoleNameSpace2),             RegisteredNever  },
+    { ID_NAME(IID_IPropertySheetCallback),         RegisteredNever  },
+    { ID_NAME(IID_IPropertySheetProvider),         RegisteredNever  },
+    { ID_NAME(IID_IExtendPropertySheet),           RegisteredNever  },
+    { ID_NAME(IID_IExtendPropertySheet2),          RegisteredNever  },
+    { ID_NAME(IID_IHeaderCtrl),                    RegisteredNever  },
+    { ID_NAME(IID_IToolbar),                       RegisteredNever  },
+    { ID_NAME(IID_IImageList_mmc),                 RegisteredNever  },
+    { ID_NAME(IID_IConsoleVerb),                   RegisteredNever  },
+    { ID_NAME(IID_ISnapInAbout),                   RegisteredNever  },
+    { ID_NAME(IID_ICertificateManager),            RegisteredNever  },
+    { ID_NAME(IID_IEnumNetCfgBindingInterface),    RegisteredNever  },
+    { ID_NAME(IID_IEnumNetCfgBindingPath),         RegisteredNever  },
+    { ID_NAME(IID_INetCfgBindingInterface),        RegisteredNever  },
+    { ID_NAME(IID_INetCfgBindingPath),             RegisteredNever  },
 };
 static const INT KnownInterfaceCount = RTL_NUMBER_OF(KnownInterfaces);
+
+#define ValidClassForVersion(pClass, version) \
+    ((pClass)->MinClassNTDDIVersion <= (version) && (pClass)->MaxClassNTDDIVersion >= (version))
+#define ValidInterfaceForVersion(interface, version) \
+    ((interface).MinInterfaceNTDDIVersion <= (version) && (interface).MaxInterfaceNTDDIVersion >= (version))
 
 static
 PCKNOWN_INTERFACE
@@ -530,13 +547,19 @@ static
 BOOLEAN
 IsInterfaceExpected(
     _In_ PCCLASS_AND_INTERFACES class,
-    _In_ const IID *iid)
+    _In_ const IID *iid,
+    _In_ ULONG NTDDIVersion)
 {
     INT i;
 
     for (i = 0; class->ifaces[i].iid; i++)
-        if (IsEqualIID(class->ifaces[i].iid, iid))
+    {
+        if (ValidInterfaceForVersion(class->ifaces[i], NTDDIVersion) &&
+            IsEqualIID(class->ifaces[i].iid, iid))
+        {
             return TRUE;
+        }
+    }
     return FALSE;
 }
 
@@ -567,7 +590,8 @@ static
 VOID
 TestModuleInterfaces(
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     HRESULT hr;
     PVOID pObj;
@@ -578,6 +602,8 @@ TestModuleInterfaces(
     for (iClass = 0; iClass < ExpectedInterfaceCount; iClass++)
     {
         class = &ExpectedInterfaces[iClass];
+        if (!ValidClassForVersion(class, NTDDIVersion))
+            continue;
         hr = CoCreateInstance(class->clsid,
                               NULL,
                               CLSCTX_INPROC_SERVER,
@@ -592,22 +618,19 @@ TestModuleInterfaces(
 
         pUnk = pObj;
 
-        /* Check that all expected interfaces are present and have the right offset */
+        /* Check that all expected interfaces are present */
         for (iIntf = 0; class->ifaces[iIntf].iid; iIntf++)
         {
+            if (!ValidInterfaceForVersion(class->ifaces[iIntf], NTDDIVersion))
+                continue;
             PCKNOWN_INTERFACE iface = FindInterface(class->ifaces[iIntf].iid);
             LONG offset = GetInterfaceOffset(pUnk, iface->iid);
             if (offset == INTF_NOT_EXPOSED)
-                ok(0, "%s is missing %s (offset %ld)\n", class->name, iface->name, class->ifaces[iIntf].offset);
-            else if (class->ifaces[iIntf].offset != FARAWY)
-            {
-#ifdef FAIL_WRONG_OFFSET
-                ok(offset == class->ifaces[iIntf].offset, "%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset);
-#else
-                if (offset != class->ifaces[iIntf].offset)
-                    mytrace("%s, %s offset is %ld, expected %ld\n", class->name, iface->name, offset, class->ifaces[iIntf].offset);
+                ok(0, "%s is missing %s\n", class->name, iface->name);
+#ifdef LOG_COM_INTERFACE_OFFSETS
+            else
+                mytrace("%s0x%lx, %s, %s\n", offset < 0 ? "-" : "", offset < 0 ? -offset : offset, class->name, iface->name);
 #endif
-            }
         }
 
         /* Check that none other than the expected interfaces are present */
@@ -615,14 +638,10 @@ TestModuleInterfaces(
         {
             PCKNOWN_INTERFACE iface = &KnownInterfaces[iIntf];
             LONG offset;
-            if (IsInterfaceExpected(class, iface->iid))
+            if (IsInterfaceExpected(class, iface->iid, NTDDIVersion))
                 continue;
             offset = GetInterfaceOffset(pUnk, iface->iid);
-#ifdef GENERATE_TABLE_ENTRIES
-            ok(offset == INTF_NOT_EXPOSED, "%s: { %s0x%lx,   &%s },\n", class->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset, iface->name);
-#else
-            ok(offset == INTF_NOT_EXPOSED, "%s exposes %s (offset %ld), but shouldn't\n", class->name, iface->name, offset);
-#endif
+            ok(offset == INTF_NOT_EXPOSED, "%s exposes %s (offset %s0x%lx), but shouldn't\n", class->name, iface->name, offset < 0 ? "-" : "", offset < 0 ? -offset : offset);
         }
 
         // TODO: do some aggregation
@@ -636,7 +655,8 @@ VOID
 TestModuleRegistry(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     INT iClass;
     PCCLASS_AND_INTERFACES class;
@@ -659,6 +679,8 @@ TestModuleRegistry(
             PCWSTR expectedThreadingModel;
 
             class = &ExpectedInterfaces[iClass];
+            if (!ValidClassForVersion(class, NTDDIVersion))
+                continue;
             status = RtlStringFromGUID(class->clsid, &clsid);
             ok(status == STATUS_SUCCESS, "Failed to convert guid to string for %s, status %lx\n", class->name, status);
             if (myskip(NT_SUCCESS(status), "No guid string\n"))
@@ -717,7 +739,8 @@ VOID
 TestManualInstantiation(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG NTDDIVersion)
 {
     INT iClass;
     PCCLASS_AND_INTERFACES class;
@@ -733,6 +756,8 @@ TestManualInstantiation(
         PVOID pv;
         HRESULT hr;
         class = &ExpectedInterfaces[iClass];
+        if (!ValidClassForVersion(class, NTDDIVersion))
+            continue;
         hr = DllGetClassObject(class->clsid, &IID_IClassFactory, &pv);
         ok(hr == S_OK, "DllGetClassObject failed for %s, hr = 0x%lx\n", class->name, hr);
         if (!myskip(SUCCEEDED(hr), "No class factory\n"))
@@ -751,23 +776,48 @@ TestManualInstantiation(
 }
 
 VOID
-TestClasses(
+TestClassesEx(
     _In_ PCWSTR ModuleName,
     _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
-    _In_ INT ExpectedInterfaceCount)
+    _In_ INT ExpectedInterfaceCount,
+    _In_ ULONG MinimumNTDDIVersion,
+    _In_ ULONG MaximumNTDDIVersion,
+    _In_ BOOLEAN IsWinRT)
 {
     HRESULT hr;
+    ULONG NTDDIVersion;
+
+    NTDDIVersion = GetNTDDIVersion();
+
+    if (NTDDIVersion < MinimumNTDDIVersion || NTDDIVersion > MaximumNTDDIVersion)
+    {
+        skip("Skipping all tests for module %S, NTDDI version (0x%08lx) is outside of the supported range (0x%08lx-0x%08lx).\n",
+             ModuleName, NTDDIVersion, MinimumNTDDIVersion, MaximumNTDDIVersion);
+        return;
+    }
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     ok(hr == S_OK, "CoInitializeEx failed. hr=0x%lx\n", hr);
     if (myskip(SUCCEEDED(hr), "Failed to initialize COM. Cannot perform tests\n"))
         return;
 
-    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount);
-    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
-    TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount);
+    TestModuleInterfaces(ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
+    TestModuleRegistry(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
+    if (IsWinRT)
+        skip("%S is a WinRT module, skipping manual instantiation tests.\n", ModuleName);
+    else
+        TestManualInstantiation(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDIVersion);
 
     CoUninitialize();
+}
+
+VOID
+TestClasses(
+    _In_ PCWSTR ModuleName,
+    _In_ PCCLASS_AND_INTERFACES ExpectedInterfaces,
+    _In_ INT ExpectedInterfaceCount)
+{
+    TestClassesEx(ModuleName, ExpectedInterfaces, ExpectedInterfaceCount, NTDDI_MIN, NTDDI_MAX, FALSE);
 }
 
 static
@@ -779,11 +829,14 @@ TestInterfaceRegistry(
     INT i;
     HKEY hKeyInterface;
     LONG result;
+    ULONG CurrentNTDDI;
 
     result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Classes\\Interface", 0, KEY_ENUMERATE_SUB_KEYS, &hKeyInterface);
     ok(result == NO_ERROR, "Failed to open interface key, error %lu\n", result);
     if (!myskip(result == NO_ERROR, "No interface key\n"))
     {
+        CurrentNTDDI = GetNTDDIVersion();
+
         for (i = 0; i < InterfaceCount; i++)
         {
             HKEY hKey;
@@ -802,14 +855,14 @@ TestInterfaceRegistry(
                 continue;
 
             result = RegOpenKeyExW(hKeyInterface, iid.Buffer, 0, KEY_QUERY_VALUE, &hKey);
-            if (iface->noreg)
+            if (iface->IsRegistered(CurrentNTDDI))
             {
-                ok(result == ERROR_FILE_NOT_FOUND, "RegOpenKeyEx returned %lu for %s\n", result, iface->name);
+                ok(result == NO_ERROR, "%s should be registered. (Error %lu)\n", iface->name, result);
+                // (void)myskip(result == NO_ERROR, "No key\n");
             }
             else
             {
-                ok(result == NO_ERROR, "Failed to open key for %s, error %lu\n", iface->name, result);
-                (void)myskip(result == NO_ERROR, "No key\n");
+                ok(result == ERROR_FILE_NOT_FOUND, "%s should not be registered. (Error %lu)\n", iface->name, result);
             }
             RtlFreeUnicodeString(&iid);
             if (result != NO_ERROR)
