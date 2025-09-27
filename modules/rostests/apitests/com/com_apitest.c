@@ -71,6 +71,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME_EX(IID_IDriveFolderExtOld,
                  IID_IDriveFolderExt),             RegisteredOnWS03OrOlder },
 
+    { ID_NAME(IID_IAggregateFilterCondition),      RegisteredOnWS03AndVista },
     { ID_NAME(IID_IBandNavigate),                  RegisteredOnWS03AndVista },
 
     { ID_NAME(IID_IAccIdentity),                   RegisteredAlways },
@@ -143,6 +144,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IFileOpenDialog),                RegisteredAlways },
     { ID_NAME(IID_IFileSaveDialog),                RegisteredAlways },
     { ID_NAME(IID_IFileSearchBand),                RegisteredAlways },
+    { ID_NAME(IID_IFilter),                        RegisteredAlways },
+    { ID_NAME(IID_IFilterCondition),               RegisteredAlways },
     { ID_NAME(IID_IFolderBandPriv),                RegisteredAlways },
     { ID_NAME(IID_IFolderFilter),                  RegisteredAlways },
     { ID_NAME(IID_IFolderFilterSite),              RegisteredAlways },
@@ -154,6 +157,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IHWEventHandler2),               RegisteredAlways },
     { ID_NAME(IID_IHlinkFrame),                    RegisteredAlways },
     { ID_NAME(IID_IInitializeWithBindCtx),         RegisteredAlways },
+    { ID_NAME(IID_IInitializeWithFile),            RegisteredAlways },
     { ID_NAME(IID_IInputObject),                   RegisteredAlways },
     { ID_NAME(IID_IInputObjectSite),               RegisteredAlways },
     { ID_NAME(IID_IInternetSecurityManager),       RegisteredAlways },
@@ -205,6 +209,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IPropertyBag),                   RegisteredAlways },
     { ID_NAME(IID_IPropertyBag2),                  RegisteredAlways },
     { ID_NAME(IID_IPropertySetStorage),            RegisteredAlways },
+    { ID_NAME(IID_IPropertyStore),                 RegisteredAlways },
     { ID_NAME(IID_IProvideClassInfo),              RegisteredAlways },
     { ID_NAME(IID_IProvideClassInfo2),             RegisteredAlways },
     { ID_NAME(IID_IQueryCancelAutoPlay),           RegisteredAlways },
@@ -289,17 +294,12 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IUserEventTimer),                RegisteredAlways },
     { ID_NAME(IID_IUserEventTimerCallback),        RegisteredAlways },
 
-    { ID_NAME(IID_IAggregateFilterCondition),      RegisteredOnVistaOnly    },
     { ID_NAME(IID_IControlPanelEnumerator),        RegisteredOnVistaOnly    },
     { ID_NAME(IID_IShellFolder3),                  RegisteredOnVistaOnly    },
     { ID_NAME_EX(IID_IShellBrowserService4,
                  IID_IShellBrowserService),        RegisteredOnVistaOnly    },
 
     { ID_NAME(IID_IDriveFolderExt),                RegisteredOnVistaOrNewer },
-    { ID_NAME(IID_IFilter),                        RegisteredOnVistaOrNewer },
-    { ID_NAME(IID_IInitializeWithFile),            RegisteredOnVistaOrNewer },
-    { ID_NAME(IID_IPropertyStore),                 RegisteredOnVistaOrNewer },
-    { ID_NAME(IID_IFilterCondition),               RegisteredOnVistaOrNewer },
     { ID_NAME(IID_INetConnectionConnectUi),        RegisteredOnVistaOrNewer },
     { ID_NAME(IID_INetConnectionCommonUi2),        RegisteredOnVistaOrNewer }, // This also covers IID_INetLanConnectionUiInfo.
     { ID_NAME(IID_ISLTracker),                     RegisteredOnVistaOrNewer },
