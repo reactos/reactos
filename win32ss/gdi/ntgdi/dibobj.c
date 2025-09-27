@@ -528,16 +528,7 @@ NtGdiSetDIBitsToDeviceInternal(
            bmi->bmiHeader.biBitCount,
            XSrc, YSrc, XDest, YDest);
 
-    if (YDest >= 0)
-    {
-        ScanLines = min(abs(Height), ScanLines);
-        if (YSrc > 0)
-        {
-            ScanLines += YSrc;
-            YSrc = 0;
-        }
-    }
-    else
+    if (YDest < 0)
     {
         ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
     }
