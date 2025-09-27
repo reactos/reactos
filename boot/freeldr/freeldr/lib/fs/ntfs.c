@@ -149,7 +149,7 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
     ULONG ReadLength;
     ARC_STATUS Status;
 
-    TRACE("NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length);
+    TRACE("NtfsDiskRead - Offset: %I64u Length: %I64u\n", Offset, Length);
 
     //
     // I. Read partial first sector if needed
@@ -831,16 +831,10 @@ ARC_STATUS NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesRead64;
 
-    //
-    // Read file
-    //
+    /* Read data */
     BytesRead64 = NtfsReadAttribute(FileHandle->Volume, FileHandle->DataContext, FileHandle->Offset, Buffer, N);
     FileHandle->Offset += BytesRead64;
     *Count = (ULONG)BytesRead64;
-
-    //
-    // Check for success
-    //
     if (BytesRead64 > 0)
         return ESUCCESS;
     else

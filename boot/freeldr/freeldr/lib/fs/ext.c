@@ -1328,15 +1328,9 @@ ARC_STATUS ExtRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     ULONGLONG BytesReadBig;
     BOOLEAN Success;
 
-    //
-    // Read data
-    //
+    /* Read data */
     Success = ExtReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
     *Count = (ULONG)BytesReadBig;
-
-    //
-    // Check for success
-    //
     if (Success)
         return ESUCCESS;
     else

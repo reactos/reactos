@@ -86,7 +86,7 @@ XboxDiskReadLogicalSectors(
 {
     PDEVICE_UNIT DeviceUnit;
 
-    TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n",
+    TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
     DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
