@@ -20,17 +20,17 @@ Opcje:\n\
   /F         Wyświetla wszyskie znalezione pliki w cudzysłowach.\n\
   /Q         Tryb cichy. Nie wyświetla żadnych plików ani komunikatów.\n\
   /R folder  Rekursywnie przeszukuje określony folder.\n\
-  /T         Pokazuje rozmiar i datę modyfikacje wszystkich znalezionych plików.\n\
+  /T         Pokazuje rozmiar i datę modyfikacji wszystkich znalezionych plików.\n\
   wzorzec    Określa wzorzec używany do porównywania nazw przeszukiwanych plików.\n\
              Wieloznaczniki * i ? mogą być używane.\n\
              Formaty ""$env:pattern"" i ""path:pattern"" też mogą\n\
              być używane, gdzie ""env"" jest zmienną środowiskową\n\
-             i wyszukiwanie następuje w ścieżkach wzkazanych w zmiennej środowiskowej ""env""\n\
+             i wyszukiwanie następuje w ścieżkach ustawionych w zmiennej środowiskowej ""env""\n\
              Nie można używać tych formatów z przełącznikiem /R. Wyszukiwanie jest\n\
              także wykonywane poprzez dodanie rozszerzeń ze zmiennej środowiskowej PATHEXT do wzorca.\n\
   /?         Wyświetla ten komunikat.\n\
 \n\
-Informacja: To narzędzie zwraca poziom błędu 0 jeżel wyszukiwanie było udane,\n\
+Informacja: To narzędzie zwraca poziom błędu 0 jeżeli wyszukiwanie było udane,\n\
       1 jeżeli nie znaleziono pliku, i 2 jeżeli wystąpił błąd.\n\
 \n\
 Przykłady:\n\
@@ -50,7 +50,7 @@ Przykłady:\n\
     IDS_BAD_PATHPAT "BŁĄD: Określono nieprawidłowy wzorzec w ""path:pattern"".\n"
     IDS_OUTOFMEMORY "BŁĄD: Brak pamięci.\n"
     IDS_BAD_ENVVAR "BŁĄD: Nie znaleziono zmiennej środowiskowej ""%ls"".\n"
-    IDS_CANT_FOUND "BŁĄD: System nie mógł znaleść określonego pliku.\n"
+    IDS_CANT_FOUND "BŁĄD: System nie mógł znaleźć określonego pliku.\n"
     IDS_BAD_DIR "BŁĄD: Określony folder jest nieprawidłowy.\n"
     IDS_BAD_NAME "BŁĄD: Nazwa pliku, folderu lub etykieta woluminu jest niepoprawna.\n"
     IDS_TOO_MANY "BŁĄD: Opcja '%ls' nie jest dozwolona więcej niż '%u' razy.\n"
