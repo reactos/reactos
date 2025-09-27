@@ -2148,6 +2148,8 @@ typedef struct _DMA_TRANSFER_INFO
 #define DMA_TRANSFER_CONTEXT_SIZE_V1 64
 #endif
 
+#define DMA_SYNCHRONOUS_CALLBACK  0x01
+
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
   EjectionRelations,
