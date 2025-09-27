@@ -78,31 +78,31 @@ BEGIN
     VK_F5, ID_REFRESH, VIRTKEY
 END
 
-IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 225
-CAPTION "Ogólny"
+IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
+CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "", IDC_SERV_NAME, 70, 11, 176, 11, WS_CHILD | WS_VISIBLE
+    LTEXT "", IDC_SERV_NAME, 70, 11, 176, 8, WS_CHILD | WS_VISIBLE
     EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
     EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    PUSHBUTTON "Uruchom", IDC_START, 6, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Zatrzymaj", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Wstrzymaj", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Wznów", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
-    LTEXT "Nazwa usługi:", IDC_STATIC, 4, 11, 53, 11
-    LTEXT "Nazwa wyświetlana:", IDC_STATIC, 4, 32, 65, 11
-    LTEXT "Opis:", IDC_STATIC, 4, 48, 53, 11
-    LTEXT "Ścieżka do aplikacji", IDC_STATIC, 6, 76, 82, 9
-    LTEXT "Typ uruchomienia:", IDC_STATIC, 6, 109, 59, 11
-    LTEXT "Stan usługi:", IDC_STATIC, 4, 138, 53, 11
-    LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-    LTEXT "Możesz określić parametry początkowe, które będą użyte przy uruchomieniu usługi z tego miejsca.", IDC_STATIC, 6, 177, 240, 15
-    LTEXT "Parametry uruchomienia:", IDC_STATIC, 6, 196, 58, 21
+    PUSHBUTTON "Uruchom", IDC_START, 6, 155, 54, 14, WS_DISABLED
+    PUSHBUTTON "Zatrzymaj", IDC_STOP, 68, 155, 54, 14, WS_DISABLED
+    PUSHBUTTON "Wstrzymaj", IDC_PAUSE, 130, 155, 54, 14, WS_DISABLED
+    PUSHBUTTON "Wznów", IDC_RESUME, 192, 155, 54, 14, WS_DISABLED
+    LTEXT "Nazwa usługi:", IDC_STATIC, 4, 11, 53, 8
+    LTEXT "Nazwa wyświetlana:", IDC_STATIC, 4, 32, 65, 8
+    LTEXT "Opis:", IDC_STATIC, 4, 48, 53, 8
+    LTEXT "Ścieżka do pliku wykonywalnego:", IDC_STATIC, 6, 76, 91, 8
+    LTEXT "Typ uruchomienia:", IDC_STATIC, 6, 109, 59, 8
+    LTEXT "Stan usługi:", IDC_STATIC, 4, 138, 53, 8
+    LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 8, WS_CHILD | WS_VISIBLE
+    LTEXT "Możesz określić parametry początkowe, które będą użyte przy uruchomieniu usługi z tego miejsca.", IDC_STATIC, 6, 177, 240, 16
+    LTEXT "Parametry uruchomienia:", IDC_STATIC, 6, 196, 58, 16
     EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Edytuj", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+    PUSHBUTTON "Edytuj", IDC_EDIT, 192, 215, 54, 14, WS_DISABLED
 END
 
 IDD_LOGON DIALOGEX 6, 6, 253, 232
@@ -138,12 +138,12 @@ BEGIN
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Kolejne błędy:", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Resetuj &licznik błędów do zera po:", IDC_STATIC, 7, 75, 72, 8
-    EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "dniach", IDC_STATIC, 150, 75, 95, 8
-    LTEXT "Uruchom usługę &ponownie po:", IDC_RESTART_TEXT1, 7, 92, 92, 8
-    EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "minutach", IDC_RESTART_TEXT2, 150, 92, 95, 8
+    LTEXT "Resetuj &licznik błędów do zera po:", IDC_STATIC, 7, 75, 119, 8
+    EDITTEXT IDC_RESET_TIME, 130, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "dniach", IDC_STATIC, 178, 75, 60, 8
+    LTEXT "Uruchom usługę &ponownie po:", IDC_RESTART_TEXT1, 7, 92, 107, 8
+    EDITTEXT IDC_RESTART_TIME, 130, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT "minutach", IDC_RESTART_TEXT2, 178, 92, 60, 8
     GROUPBOX "Uruchamianie programu", IDC_RUN_GROUPBOX, 7, 108, 238, 80
     LTEXT "&Program:", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
@@ -166,8 +166,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Niektóre usługi są zależne od innych usług, sterowników systemowych i grup kolejności ładowania. Jeżeli składnik systemu jest zatrzymany lub nie działa prawidłowo, zależne od niego usługi nie uruchomią się.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Ta usługa jest zależna od następujących składników systemu:", IDC_STATIC, 8, 57, 236, 9
-    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
+    LTEXT "&Ta usługa jest zależna od następujących składników systemu:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "&Następujące składniki systemu są zależne od tej usługi:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
