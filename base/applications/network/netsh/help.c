@@ -66,7 +66,7 @@ PrintShortCommands(
     {
         if (LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer, 80) == 0)
             szBuffer[0] = UNICODE_NULL;
-        ConPrintf(StdOut, L"%-15s - %s\n", pCommand->pwszCmdToken, szBuffer);
+        ConPrintf(StdOut, L"%-15s - %s", pCommand->pwszCmdToken, szBuffer);
         pCommand = pCommand->pNext;
     }
 }
@@ -85,7 +85,7 @@ PrintShortGroups(
     {
         if (LoadStringW(pContext->hModule, pGroup->dwShortCmdHelpToken, szBuffer, 80) == 0)
             szBuffer[0] = UNICODE_NULL;
-        ConPrintf(StdOut, L"%-15s - %s\n", pGroup->pwszCmdGroupToken, szBuffer);
+        ConPrintf(StdOut, L"%-15s - %s", pGroup->pwszCmdGroupToken, szBuffer);
         pGroup = pGroup->pNext;
     }
 }
@@ -124,7 +124,7 @@ PrintShortGroupCommands(
         swprintf(szBuffer1, L"%s %s", pGroup->pwszCmdGroupToken, pCommand->pwszCmdToken);
         LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer2, 80);
 
-        ConPrintf(StdOut, L"%-15s - %s\n", szBuffer1, szBuffer2);
+        ConPrintf(StdOut, L"%-15s - %s", szBuffer1, szBuffer2);
         pCommand = pCommand->pNext;
     }
 }
