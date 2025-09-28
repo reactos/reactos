@@ -346,8 +346,10 @@ DiskGetExtendedDriveParameters(
     if (Ptr[0] >= 0x1e)
     {
         // Ptr[13]: offset, Ptr[14]: segment
-        TRACE("EDD configuration parameters:            %x:%x\n", Ptr[14], Ptr[13]);
-        if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
+        TRACE("EDD configuration parameters (DPTE):     %x:%x\n", Ptr[14], Ptr[13]);
+        /* The DPTE pointer is valid if it's != FFFF:FFFF (per the Enhanced Disk
+         * Drive Specification), but also, when it's != 0000:0000 (broken BIOSes) */
+        if (!(Ptr[13] == 0xFFFF && Ptr[14] == 0xFFFF) && !(Ptr[13] == 0 && Ptr[14] == 0))
         {
             PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[14] << 4) + Ptr[13]);
             TRACE("SpecPtr:                                 0x%x\n", SpecPtr);
