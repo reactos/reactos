@@ -210,7 +210,7 @@ Pc98DiskReadLogicalSectorsLBA(
         RegsIn.w.bp = ((ULONG_PTR)Buffer) & 0x0F;
 
         /* Retry 3 times */
-        for (RetryCount = 0; RetryCount < 3; RetryCount++)
+        for (RetryCount = 0; RetryCount < 3; ++RetryCount)
         {
             Int386(0x1B, &RegsIn, &RegsOut);
 
@@ -341,26 +341,17 @@ Pc98DiskReadLogicalSectorsCHS(
         }
 
         /* Perform the read. Retry 3 times. */
-        for (RetryCount = 0; RetryCount < 3; RetryCount++)
+        for (RetryCount = 0; RetryCount < 3; ++RetryCount)
         {
             Int386(0x1B, &RegsIn, &RegsOut);
 
-            /* If it worked break out */
-            if (INT386_SUCCESS(RegsOut))
-            {
+            /* If it worked, or if it was a corrected ECC error
+             * and the data is still good, return success */
+            if (INT386_SUCCESS(RegsOut) || (RegsOut.b.ah == 0x08))
                 break;
-            }
-            /* If it was a corrected ECC error then the data is still good */
-            else if (RegsOut.b.ah == 0x08)
-            {
-                break;
-            }
-            /* If it failed then do the next retry */
-            else
-            {
-                DiskResetController(DiskDrive);
-                continue;
-            }
+
+            /* It failed, do the next retry */
+            DiskResetController(DiskDrive);
         }
 
         /* If we retried 3 times then fail */
