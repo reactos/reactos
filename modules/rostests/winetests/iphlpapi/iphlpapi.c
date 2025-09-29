@@ -275,15 +275,11 @@ static void testGetIfTable(void)
 {
     DWORD apiReturn;
     ULONG dwSize = 0;
+
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-    BOOL NoGetIfEntry2 = FALSE;
-
-    if (!pGetIfEntry2) {
-        trace("Missing APIs! Skipping some tests...\n");
-        NoGetIfEntry2 = TRUE;
-    }
+    if (!pGetIfEntry2)
+        skip("Missing APIs!\n");
 #endif
-
     apiReturn = GetIfTable(NULL, NULL, FALSE);
     if (apiReturn == ERROR_NOT_SUPPORTED) {
         skip("GetIfTable is not supported\n");
@@ -311,6 +307,9 @@ static void testGetIfTable(void)
             DWORD i, index;
 
             if (winetest_debug > 1) trace( "interface table: %lu entries\n", buf->dwNumEntries );
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+            if (pGetIfEntry2) {
+#endif
             for (i = 0; i < buf->dwNumEntries; i++)
             {
                 MIB_IFROW *row = &buf->table[i];
@@ -336,8 +335,6 @@ static void testGetIfTable(void)
                 memset( &row2, 0, sizeof(row2) );
                 row2.InterfaceIndex = row->dwIndex;
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-                if (NoGetIfEntry2)
-                    continue;
                 pGetIfEntry2( &row2 );
 #else
                 GetIfEntry2( &row2 );
@@ -358,6 +355,9 @@ static void testGetIfTable(void)
 #endif
                 ok( !wcscmp( row->wszName, name ), "got %s vs %s\n", debugstr_w( row->wszName ), debugstr_w( name ) );
             }
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+            }
+#endif
         }
         free(buf);
     }
@@ -479,11 +479,8 @@ static void testGetIpNetTable(void)
     ULONG dwSize = 0;
     unsigned int i;
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-    BOOL GetIpNetTable2AndFreeMibTable = TRUE;
-    if (!pGetIpNetTable2 || !pFreeMibTable) {
-        trace("Missing APIs! Skipping some tests...\n");
-        GetIpNetTable2AndFreeMibTable = FALSE;
-    }
+    if (!pGetIpNetTable2 || !pFreeMibTable)
+        skip("Missing APIs!\n");
 #endif
 
     igmp3_addr = ipv4_addr( 224, 0, 0, 22 );
@@ -543,12 +540,15 @@ static void testGetIpNetTable(void)
                 else if (buf->table[i].dwAddr == ssdp_addr)
                     ssdp_found = TRUE;
             }
+#if defined(__REACTOS__)
+            if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif
             ok( igmp3_found, "%s not found.\n", ntoa( igmp3_addr ));
             ok( ssdp_found || broken(!ssdp_found) /* 239.255.255.250 is always present since Win10 */,
                 "%s not found.\n", ntoa( ssdp_addr ));
 
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-            if(GetIpNetTable2AndFreeMibTable) {
+            if(pGetIpNetTable2 && pFreeMibTable) {
             ret = pGetIpNetTable2( AF_INET, &table2 );
 #else
             ret = GetIpNetTable2( AF_INET, &table2 );
@@ -1332,6 +1332,9 @@ static void testIcmpSendEcho(void)
     ok(WaitForSingleObjectEx(event, 0, TRUE) == WAIT_TIMEOUT, "Event was unexpectedly signalled.\n");
 
     /* synchronous tests */
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
     SetLastError(0xdeadbeef);
     address = htonl(INADDR_LOOPBACK);
     replysz = sizeof(ICMP_ECHO_REPLY) + sizeof(IO_STATUS_BLOCK);
@@ -1384,6 +1387,9 @@ static void testIcmpSendEcho(void)
     ok(reply->Status == IP_SUCCESS, "Expect status: 0x%08x, got: 0x%08lx\n", IP_SUCCESS, reply->Status);
     ok(reply->DataSize == sizeof(senddata), "Got size: %d\n", reply->DataSize);
     ok(!memcmp(senddata, reply->Data, min(sizeof(senddata), reply->DataSize)), "Data mismatch\n");
+#ifdef __REACTOS__
+    }
+#endif
 
     /* asynchronous tests with event */
     SetLastError(0xdeadbeef);
@@ -1405,8 +1411,14 @@ static void testIcmpSendEcho(void)
         reply = (ICMP_ECHO_REPLY*)replydata2;
         ok(ntohl(reply->Address) == INADDR_LOOPBACK, "Address mismatch, expect: %s, got: %s\n", ntoa(INADDR_LOOPBACK),
            ntoa(reply->Address));
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
         ok(reply->Status == IP_SUCCESS, "Expect status: 0x%08x, got: 0x%08lx\n", IP_SUCCESS, reply->Status);
         ok(reply->DataSize == sizeof(senddata), "Got size: %d\n", reply->DataSize);
+#ifdef __REACTOS__
+    }
+#endif
         if (winetest_debug > 1)
         {
             reply = (ICMP_ECHO_REPLY*)replydata2;
@@ -1432,8 +1444,14 @@ static void testIcmpSendEcho(void)
     reply = (ICMP_ECHO_REPLY*)replydata2;
     ok(ntohl(reply->Address) == INADDR_LOOPBACK, "Address mismatch, expect: %s, got: %s\n", ntoa(INADDR_LOOPBACK),
        ntoa(reply->Address));
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
     ok(reply->Status == IP_SUCCESS, "Expect status: 0x%08x, got: 0x%08lx\n", IP_SUCCESS, reply->Status);
     ok(reply->DataSize == sizeof(senddata), "Got size: %d\n", reply->DataSize);
+#ifdef __REACTOS__
+    }
+#endif
     /* pre-Vista, reply->Data is an offset; otherwise it's a pointer, so hardcode the offset */
     ok(!memcmp(senddata, reply + 1, min(sizeof(senddata), reply->DataSize)), "Data mismatch\n");
 
@@ -1551,8 +1569,14 @@ static void testGetInterfaceInfo(void)
         {
             MIB_IFROW row = { .dwIndex = buf->Adapter[i].Index };
             GetIfEntry( &row );
+#ifdef __REACTOS__
+            if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
             ok( !wcscmp( buf->Adapter[i].Name, row.wszName ), "got %s vs %s\n",
                 debugstr_w( buf->Adapter[i].Name ), debugstr_w( row.wszName ) );
+#ifdef __REACTOS__
+            }
+#endif
             ok( row.dwType != IF_TYPE_SOFTWARE_LOOPBACK, "got loopback\n" );
         }
         free(buf);
@@ -1870,6 +1894,10 @@ static void test_GetAdaptersAddresses(void)
     IP_ADAPTER_ADDRESSES *aa, *ptr;
     IP_ADAPTER_UNICAST_ADDRESS *ua;
 
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+        if (!pConvertInterfaceLuidToGuid)
+            skip("Missing APIs!\n");
+#endif
     ret = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %lu\n", ret);
 
@@ -1883,6 +1911,9 @@ static void test_GetAdaptersAddresses(void)
     osize = 0x7fffffff;
     ret = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_SKIP_FRIENDLY_NAME, NULL, NULL, &osize);
     ok(ret == ERROR_BUFFER_OVERFLOW, "expected ERROR_BUFFER_OVERFLOW, got %lu\n", ret);
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif
     ok(osize == size, "expected %ld, got %ld\n", size, osize);
 
     ptr = malloc(size);
@@ -1911,10 +1942,6 @@ static void test_GetAdaptersAddresses(void)
         IP_ADAPTER_PREFIX *prefix;
         DWORD status;
         GUID guid;
-#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-        if (!pConvertInterfaceLuidToGuid)
-            trace("Missing APIs! Skipping some tests...\n");
-#endif
 
         ok(aa->Length == sizeof(IP_ADAPTER_ADDRESSES_LH) ||
            aa->Length == sizeof(IP_ADAPTER_ADDRESSES_XP),
@@ -1959,10 +1986,16 @@ static void test_GetAdaptersAddresses(void)
             if (ua->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)
                 dns_eligible_found = TRUE;
 
+#ifdef __REACTOS__
+            if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
             if(ua->Address.lpSockaddr->sa_family == AF_INET)
                 ok(aa->Ipv4Enabled == TRUE, "expected Ipv4Enabled flag to be set in interface %ls\n", aa->FriendlyName);
             else if(ua->Address.lpSockaddr->sa_family == AF_INET6)
                 ok(aa->Ipv6Enabled == TRUE, "expected Ipv6Enabled flag to be set in interface %ls\n", aa->FriendlyName);
+#ifdef __REACTOS__
+            }
+#endif
 
             ua = ua->Next;
         }
@@ -2071,6 +2104,13 @@ static void test_GetExtendedTcpTable_owner( int family )
     DWORD i, ret;
     void *raw_table = NULL;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        skip("This test is invalid for this NT version.\n");
+        return;
+    }
+#endif
     winetest_push_context( "%s", family == AF_INET ? "AF_INET" : "AF_INET6" );
 
     sock = socket( family, SOCK_STREAM, IPPROTO_TCP );
@@ -2264,6 +2304,13 @@ static void test_GetExtendedUdpTable_owner( int family )
     DWORD i, ret;
     void *raw_table = NULL;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        skip("This test is invalid for this NT version.\n");
+        return;
+    }
+#endif
     winetest_push_context( "%s", family == AF_INET ? "AF_INET" : "AF_INET6" );
 
     sock = socket( family, SOCK_DGRAM, IPPROTO_UDP );
