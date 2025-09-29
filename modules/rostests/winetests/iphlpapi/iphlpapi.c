@@ -2538,9 +2538,9 @@ static void convert_luid_to_name( NET_LUID *luid, WCHAR *expect_nameW, int len )
     }
 #ifdef __REACTOS__
     if (prefix)
-        _snwprintf( expect_nameW, len, L"%s_%d", prefix, luid->Info.NetLuidIndex );
+        _snwprintf( expect_nameW, len, L"%s_%d", prefix, (int)luid->Info.NetLuidIndex );
     else
-        _snwprintf( expect_nameW, len, L"iftype%d_%d", luid->Info.IfType, luid->Info.NetLuidIndex );
+        _snwprintf( expect_nameW, len, L"iftype%d_%d", (int)luid->Info.IfType, (int)luid->Info.NetLuidIndex );
 #else
     if (prefix)
         swprintf( expect_nameW, len, L"%s_%d", prefix, luid->Info.NetLuidIndex );
@@ -2772,8 +2772,13 @@ static void test_interface_identifier_conversion(void)
         ret = ConvertInterfaceNameToLuidA( NULL, &luid );
 #endif
         ok( ret == ERROR_INVALID_NAME, "got %lu\n", ret );
+#if defined(__REACTOS__) && defined(_WIN64)
+        ok( luid.Info.Reserved == 0xffdead, "reserved set\n" );
+        ok( luid.Info.NetLuidIndex == 0xffdead, "index set\n" );
+#else
         ok( luid.Info.Reserved == 0xdead, "reserved set\n" );
         ok( luid.Info.NetLuidIndex == 0xdead, "index set\n" );
+#endif
         ok( luid.Info.IfType == 0xdead, "type set\n" );
 
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
