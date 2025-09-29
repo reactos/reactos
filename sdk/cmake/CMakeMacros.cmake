@@ -567,6 +567,39 @@ list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativ
 list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
 list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
 
+# Signs a driver if it is kernelmodedriver or wdmdriver if the cert exists
+function(sign_driver_if_needed TARGET)
+    get_target_property(_type ${TARGET} REACTOS_MODULE_TYPE)
+    if(NOT _type)
+        message(STATUS "sign_driver_if_needed: No REACTOS_MODULE_TYPE for ${TARGET}")
+        return()
+    endif()
+    if(NOT (_type STREQUAL "kernelmodedriver" OR _type STREQUAL "wdmdriver"))
+        return()
+    endif()
+    if(NOT MSVC)
+        return()
+    endif()
+    if(NOT EXISTS "C:/ReactOSCerts/ReactOSDevCert.cer")
+        return()
+    endif()
+    # Get output file name
+    get_target_property(_output_name ${TARGET} OUTPUT_NAME)
+    if(NOT _output_name)
+        set(_output_name ${TARGET})
+    endif()
+    set(_driver_path "${CMAKE_CURRENT_BINARY_DIR}/${_output_name}.sys")
+    set(_driver_path "$<TARGET_FILE:${TARGET}>")
+    add_custom_command(TARGET ${TARGET} POST_BUILD
+        COMMAND SignTool sign /v /fd sha1 /s PrivateCertStore /n reactos.org /t http://timestamp.digicert.com "${_driver_path}"
+        COMMENT "Signing driver: ${_driver_path}")
+endfunction()
+
+# Example usage after driver target creation:
+# add_library(my_driver ...)
+# set_module_type(my_driver kernelmodedriver)
+# sign_driver_if_needed(my_driver)
+
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
@@ -657,6 +690,7 @@ function(set_module_type MODULE TYPE)
         add_dependencies(${MODULE} bugcodes xdk)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+            sign_driver_if_needed(${MODULE})
         endif()
     endif()
 
