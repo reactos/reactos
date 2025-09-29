@@ -345,10 +345,17 @@ static void testGetIfTable(void)
                 WideCharToMultiByte( CP_ACP, 0, row2.Description, -1, descr, sizeof(descr), NULL, NULL );
                 ok( !strcmp( (char *)row->bDescr, descr ), "got %s vs %s\n", row->bDescr, descr );
                 guid = &row2.InterfaceGuid;
+#ifdef __REACTOS__
+                _snwprintf( name, ARRAY_SIZE(name), L"\\DEVICE\\TCPIP_{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+                            guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1],
+                            guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
+                            guid->Data4[6], guid->Data4[7]);
+#else
                 swprintf( name, ARRAY_SIZE(name), L"\\DEVICE\\TCPIP_{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
                           guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1],
                           guid->Data4[2], guid->Data4[3], guid->Data4[4], guid->Data4[5],
                           guid->Data4[6], guid->Data4[7]);
+#endif
                 ok( !wcscmp( row->wszName, name ), "got %s vs %s\n", debugstr_w( row->wszName ), debugstr_w( name ) );
             }
         }
@@ -1978,7 +1985,7 @@ static void test_GetAdaptersAddresses(void)
               aa->ConnectionType, aa->TunnelType);
 
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
-        if (!pConvertInterfaceLuidToGuid) {
+        if (pConvertInterfaceLuidToGuid) {
         status = pConvertInterfaceLuidToGuid(&aa->Luid, &guid);
 #else
         status = ConvertInterfaceLuidToGuid(&aa->Luid, &guid);
@@ -2482,10 +2489,17 @@ static void convert_luid_to_name( NET_LUID *luid, WCHAR *expect_nameW, int len )
             break;
         }
     }
+#ifdef __REACTOS__
+    if (prefix)
+        _snwprintf( expect_nameW, len, L"%s_%d", prefix, luid->Info.NetLuidIndex );
+    else
+        _snwprintf( expect_nameW, len, L"iftype%d_%d", luid->Info.IfType, luid->Info.NetLuidIndex );
+#else
     if (prefix)
         swprintf( expect_nameW, len, L"%s_%d", prefix, luid->Info.NetLuidIndex );
     else
         swprintf( expect_nameW, len, L"iftype%d_%d", luid->Info.IfType, luid->Info.NetLuidIndex );
+#endif
 }
 
 static void test_interface_identifier_conversion(void)
