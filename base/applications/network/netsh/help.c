@@ -12,6 +12,27 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef enum
+{
+    Command,
+    Group,
+    SubContext
+} HELP_TYPE, *PHELP_TYPE;
+
+typedef struct
+{
+    HELP_TYPE Type;
+    PWSTR pszCommand;
+    DWORD dwHelpId;
+    union
+    {
+        PCOMMAND_ENTRY pCommand;
+        PCOMMAND_GROUP pGroup;
+        PCONTEXT_ENTRY pSubContext;
+    } Pointer;
+} HELP_ENTRY, *PHELP_ENTRY;
+
+
 /* FUNCTIONS ******************************************************************/
 
 static
@@ -55,61 +76,6 @@ PrintCurrentContextHeader(
 
 static
 VOID
-PrintShortCommands(
-    _In_ PCONTEXT_ENTRY pContext)
-{
-    PCOMMAND_ENTRY pCommand;
-    WCHAR szBuffer[80];
-
-    pCommand = pContext->pCommandListHead;
-    while (pCommand != NULL)
-    {
-        if (LoadStringW(pContext->hModule, pCommand->dwShortCmdHelpToken, szBuffer, 80) == 0)
-            szBuffer[0] = UNICODE_NULL;
-        ConPrintf(StdOut, L"%-15s - %s", pCommand->pwszCmdToken, szBuffer);
-        pCommand = pCommand->pNext;
-    }
-}
-
-
-static
-VOID
-PrintShortGroups(
-    _In_ PCONTEXT_ENTRY pContext)
-{
-    PCOMMAND_GROUP pGroup;
-    WCHAR szBuffer[80];
-
-    pGroup = pContext->pGroupListHead;
-    while (pGroup != NULL)
-    {
-        if (LoadStringW(pContext->hModule, pGroup->dwShortCmdHelpToken, szBuffer, 80) == 0)
-            szBuffer[0] = UNICODE_NULL;
-        ConPrintf(StdOut, L"%-15s - %s", pGroup->pwszCmdGroupToken, szBuffer);
-        pGroup = pGroup->pNext;
-    }
-}
-
-
-static
-VOID
-PrintShortSubContexts(
-    _In_ PCONTEXT_ENTRY pContext)
-{
-    PCONTEXT_ENTRY pSubContext;
-    WCHAR szBuffer[80];
-
-    pSubContext = pContext->pSubContextHead;
-    while (pSubContext != NULL)
-    {
-        GetContextFullName(pSubContext, szBuffer, 80);
-        ConPrintf(StdOut, L"%-15s - Changes to the \"%s\" context.\n", pSubContext->pszContextName, szBuffer);
-        pSubContext = pSubContext->pNext;
-    }
-}
-
-static
-VOID
 PrintShortGroupCommands(
     _In_ PCONTEXT_ENTRY pContext,
     _In_ PCOMMAND_GROUP pGroup)
@@ -144,22 +110,121 @@ PrintLongCommand(
 
 
 static
+int
+HelpCompare(
+    _In_ const void *p1,
+    _In_ const void *p2)
+{
+    return _wcsicmp(((PHELP_ENTRY)p1)->pszCommand, ((PHELP_ENTRY)p2)->pszCommand);
+}
+
+
+static
 VOID
 PrintContext(
     _In_ PCONTEXT_ENTRY pContext)
 {
-    DPRINT1("PrintContext()\n");
+    PCOMMAND_ENTRY pCommand;
+    PCOMMAND_GROUP pGroup;
+    PCONTEXT_ENTRY pSubContext;
+    PHELP_ENTRY pHelpArray = NULL;
+    DWORD dwCount = 0, dwIndex;
+    WCHAR szBuffer[80];
+
+    DPRINT("PrintContext()\n");
 
     if (pContext != pRootContext)
         PrintContext(pContext->pParentContext);
 
     PrintCurrentContextHeader(pContext);
 
-    PrintShortCommands(pContext);
+    /* Count short commands */
+    pCommand = pContext->pCommandListHead;
+    while (pCommand != NULL)
+    {
+        dwCount++;
+        pCommand = pCommand->pNext;
+    }
 
-    PrintShortGroups(pContext);
+    /* Count short groups */
+    pGroup = pContext->pGroupListHead;
+    while (pGroup != NULL)
+    {
+        dwCount++;
+        pGroup = pGroup->pNext;
+    }
 
-    PrintShortSubContexts(pContext);
+    /* Count short subcontexts */
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext != NULL)
+    {
+        dwCount++;
+        pSubContext = pSubContext->pNext;
+    }
+
+    pHelpArray = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwCount * sizeof(HELP_ENTRY));
+    if (pHelpArray == NULL)
+        return;
+
+    dwIndex = 0;
+
+    /* Add short commands */
+    pCommand = pContext->pCommandListHead;
+    while (pCommand != NULL)
+    {
+        pHelpArray[dwIndex].Type = Command;
+        pHelpArray[dwIndex].pszCommand = pCommand->pwszCmdToken;
+        pHelpArray[dwIndex].dwHelpId = pCommand->dwShortCmdHelpToken;
+//        pHelpArray[dwIndex].Pointer.pCommand = pCommand;
+        dwIndex++;
+        pCommand = pCommand->pNext;
+    }
+
+    /* Add short groups */
+    pGroup = pContext->pGroupListHead;
+    while (pGroup != NULL)
+    {
+        pHelpArray[dwIndex].Type = Group;
+        pHelpArray[dwIndex].pszCommand = pGroup->pwszCmdGroupToken;
+        pHelpArray[dwIndex].dwHelpId = pGroup->dwShortCmdHelpToken;
+//        pHelpArray[dwIndex].Pointer.pGroup = pGroup;
+        dwIndex++;
+        pGroup = pGroup->pNext;
+    }
+
+    /* Count short subcontexts */
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext != NULL)
+    {
+        pHelpArray[dwIndex].Type = SubContext;
+        pHelpArray[dwIndex].pszCommand = pSubContext->pszContextName;
+        pHelpArray[dwIndex].Pointer.pSubContext = pSubContext;
+        dwIndex++;
+        pSubContext = pSubContext->pNext;
+    }
+
+    qsort(pHelpArray, dwCount, sizeof(HELP_ENTRY), HelpCompare);
+
+    for (dwIndex = 0; dwIndex < dwCount; dwIndex++)
+    {
+        switch (pHelpArray[dwIndex].Type)
+        {
+            case Command:
+            case Group:
+                if (LoadStringW(pContext->hModule, pHelpArray[dwIndex].dwHelpId, szBuffer, 80) == 0)
+                    szBuffer[0] = UNICODE_NULL;
+                ConPrintf(StdOut, L"%-15s - %s", pHelpArray[dwIndex].pszCommand, szBuffer);
+                break;
+
+            case SubContext:
+                GetContextFullName(pHelpArray[dwIndex].Pointer.pSubContext, szBuffer, 80);
+                ConPrintf(StdOut, L"%-15s - Changes to the \"%s\" context.\n", pHelpArray[dwIndex].pszCommand, szBuffer);
+                break;
+        }
+    }
+
+    if (pHelpArray)
+        HeapFree(GetProcessHeap(), 0, pHelpArray);
 }
 
 
