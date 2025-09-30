@@ -1,6 +1,11 @@
 
 spec2def(netio.sys netio.spec ADD_IMPORTLIB)
 
+# NETIO.SYS is a NT 6 driver
+#
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 # Including AFD is needed by the TDI helpers. They have been
 # part of AFD before.
 
@@ -16,9 +21,6 @@ list(APPEND SOURCE
     ../tdihelpers/tdiconn.c
     ${CMAKE_CURRENT_BINARY_DIR}/netio.def
     )
-
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
 
 add_library(netio MODULE ${SOURCE})
 target_link_libraries(netio ${PSEH_LIB})

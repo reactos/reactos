@@ -360,7 +360,11 @@ typedef USHORT ADDRESS_FAMILY;
 #define NI_MAXSERV      32
 
 typedef struct sockaddr {
+#if (_WIN32_WINNT < 0x0600)
+  u_short sa_family;
+#else
   ADDRESS_FAMILY sa_family;
+#endif
   CHAR sa_data[14];
 } SOCKADDR, *PSOCKADDR, FAR *LPSOCKADDR;
 
