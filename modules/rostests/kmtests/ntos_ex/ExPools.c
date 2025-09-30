@@ -12,7 +12,7 @@
 
 #define TAG_POOLTEST 'tstP'
 
-#define BASE_POOL_TYPE_MASK 1
+#define BASE_POOL_TYPE_MASK 3
 #define QUOTA_POOL_MASK 8
 
 static
@@ -141,7 +141,6 @@ VOID
 TestPoolQuota(VOID)
 {
     PEPROCESS Process = PsGetCurrentProcess();
-    PEPROCESS StoredProcess;
     PVOID Memory;
     LONG InitialRefCount;
     LONG RefCount;
@@ -163,16 +162,23 @@ TestPoolQuota(VOID)
         RefCount = GetRefCount(Process);
         ok_eq_long(RefCount, InitialRefCount + 1);
 
-        /* A pointer to the process is found right before the next pool header */
-        StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
-        ok_eq_pointer(StoredProcess, Process);
+#ifdef _M_IX86
+        if (GetNTVersion() <= _WIN32_WINNT_WIN7)
+        {
+            /* For x86 NT 6.2 and older: a pointer to the process is found right before the next pool header */
+            PEPROCESS StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
+            ok_eq_pointer(StoredProcess, Process);
+        }
+#endif
 
         /* Pool type should have QUOTA_POOL_MASK set */
         PoolType = KmtGetPoolType(Memory);
         ok(PoolType != 0, "PoolType is 0\n");
         PoolType--;
         ok(PoolType & QUOTA_POOL_MASK, "PoolType = %x\n", PoolType);
-        ok((PoolType & BASE_POOL_TYPE_MASK) == PagedPool, "PoolType = %x\n", PoolType);
+        ok((PoolType & BASE_POOL_TYPE_MASK) == PagedPool ||                // Win2k3
+           (PoolType & BASE_POOL_TYPE_MASK) == NonPagedPoolMustSucceed,    // Vista+ promotes the memory allocation
+           "PoolType = %x\n", PoolType);
 
         ExFreePoolWithTag(Memory, 'tQmK');
         RefCount = GetRefCount(Process);
@@ -196,6 +202,16 @@ TestPoolQuota(VOID)
         ok_eq_long(RefCount, InitialRefCount);
     }
 
+#ifdef _WIN64
+    KmtStartSeh()
+        Memory = ExAllocatePoolWithQuotaTag(PagedPool,
+                                            0x7FFFFFFF,
+                                            'tQmK');
+        ok(Memory != NULL, "Failed to get 2GB block: %p\n", Memory);
+        if (Memory)
+            ExFreePoolWithTag(Memory, 'tQmK');
+    KmtEndSeh(STATUS_SUCCESS);
+#else
     /* Function raises by default */
     KmtStartSeh()
         Memory = ExAllocatePoolWithQuotaTag(PagedPool,
@@ -214,6 +230,7 @@ TestPoolQuota(VOID)
         if (Memory)
             ExFreePoolWithTag(Memory, 'tQmK');
     KmtEndSeh(STATUS_SUCCESS);
+#endif // _WIN64
 }
 
 static
