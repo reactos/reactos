@@ -38,9 +38,6 @@ set CMAKE_ARCH=
 REM Detect presence of cmake
 cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 
-REM Set System Architecture Directly
-set ARCH="%processor_architecture: =%"
-
 REM Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
     echo Detected RosBE for %ROS_ARCH%
@@ -50,7 +47,11 @@ if defined ROS_ARCH (
 
 ) else if defined VCINSTALLDIR (
     REM VS command prompt does not put this in environment vars
+
+    REM Set System Architecture Directly
+    set ARCH=%processor_architecture: =%
     if /I %ARCH% == "x86" set ARCH=i386
+
     cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
     cl 2>&1 | findstr /R /c:"19\.1.\." > NUL && set VS_VERSION=15
     cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
