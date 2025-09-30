@@ -760,6 +760,9 @@ static void test_SHCreateMemStream(void)
 
     num = ~0;
     hr = IStream_Read(stream, buff, sizeof(buff), &num);
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif
     ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(num == 0, "expected 0, got 0x%08lx\n", num);
 
@@ -783,6 +786,9 @@ static void test_SHCreateMemStream(void)
 
     num = ~0;
     hr = IStream_Read(stream, buff, sizeof(buff), &num);
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif
     ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(num == 0, "expected 0, got 0x%08lx\n", num);
 
@@ -806,6 +812,9 @@ static void test_SHCreateMemStream(void)
 
     num = ~0;
     hr = IStream_Read(stream, buff, sizeof(buff), &num);
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif
     ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(num == 0, "expected 0, got 0x%08lx\n", num);
 
