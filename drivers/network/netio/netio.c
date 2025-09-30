@@ -7,22 +7,27 @@
  *              <johannes@johannesthoma.com>
  */
 
-/* TODOs:
-    Done: Clean up socket in WskCloseSocket (have RefCount and
-    SocketGet / SocketPut functions).
-    Done: Remove unnecessary code (like Hook of completion)
-    Done: The whole Listen / Accept mechanism
-
-    Done: Make it compile with MS VC as well
-	There was some flexbison.7z file missing.
-    Rebase onto latest master
-    Squash commits (git rebase -i) one for tdihelpers one for netio
-
-    Some minor functions (not used by WinDRBD) are missing
-    (like WskControlClient, WskSocketConnect, ...)
-    Raw sockets are not supported for now.
-    We should have regression tests for that...
-*/
+/*
+ * [NETIO] NETIO.SYS driver
+ *
+ * This files adds the NETIO.SYS driver to ReactOS. It is not
+ * feature complete (meaning some functionality is unimplemented)
+ * but does its job quite good for what it originally was written
+ * for (which is getting WinDRBD working on ReactOS/Windows 2003 SP2).
+ *
+ * The driver re-uses parts of the AFD.SYS driver, namely those
+ * functions that ease communitating with the transport device
+ * interface (TDI). Other than that, following features are implemented
+ * and should work:
+ *
+ *     * TCP/IP networking: connect, listen, accept, read, write
+ *     * UDP/IP networking: write
+ *
+ * So in a nutshell TCP/IP support is completed, UDP support is
+ * partially complete and ICMP support does not exist yet.
+ * In particular the listen/accept mechanism allows one to write
+ * kernel side TCP servers that one connect to via the internet.
+ */
 
 #include <ntifs.h>
 #include <netiodef.h>
@@ -200,7 +205,7 @@ static VOID NTAPI PutSocketsThread(_In_opt_ void *p)
 {
     NTSTATUS status;
     PWSK_SOCKET_INTERNAL SocketToPut;
-    KIRQL flags;
+    KIRQL OldIrql;
     ULONG NumSocketPuts;
 
     FUNCTION_TRACE;
@@ -213,7 +218,7 @@ static VOID NTAPI PutSocketsThread(_In_opt_ void *p)
             DPRINT1("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
 
-        KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+        KeAcquireSpinLock(&SocketsToPutListLock, &OldIrql);
         while (SocketsToPut != NULL)
         {
             SocketToPut = SocketsToPut;
@@ -225,12 +230,12 @@ static VOID NTAPI PutSocketsThread(_In_opt_ void *p)
                 SocketToPut->NumSocketPuts--;
                 NumSocketPuts = SocketToPut->NumSocketPuts;
 
-                KeReleaseSpinLock(&SocketsToPutListLock, flags);
+                KeReleaseSpinLock(&SocketsToPutListLock, OldIrql);
                 SocketPut(SocketToPut);	/* Here IRQL MUST be PASSIVE_LEVEL, else we loop forever! */
-                KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+                KeAcquireSpinLock(&SocketsToPutListLock, &OldIrql);
             }
         }
-        KeReleaseSpinLock(&SocketsToPutListLock, flags);
+        KeReleaseSpinLock(&SocketsToPutListLock, OldIrql);
     }
 
     PsTerminateSystemThread(0);
@@ -263,7 +268,7 @@ static void StopSocketPutThread(void)
 static void
 SocketPut(_In_ PWSK_SOCKET_INTERNAL Socket)
 {
-    KIRQL flags;
+    KIRQL OldIrql;
 
     FUNCTION_TRACE;
 
@@ -273,7 +278,7 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL Socket)
 
     if (KeGetCurrentIrql() > PASSIVE_LEVEL)
     {
-        KeAcquireSpinLock(&SocketsToPutListLock, &flags);
+        KeAcquireSpinLock(&SocketsToPutListLock, &OldIrql);
         if (Socket->NumSocketPuts > 0)
         {
             Socket->NumSocketPuts++;
@@ -284,7 +289,7 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL Socket)
             SocketsToPut = Socket;
             Socket->NumSocketPuts = 1;
         }
-        KeReleaseSpinLock(&SocketsToPutListLock, flags);
+        KeReleaseSpinLock(&SocketsToPutListLock, OldIrql);
 
         KeSetEvent(&PutSocketsEvent, IO_NO_INCREMENT, FALSE);
 
