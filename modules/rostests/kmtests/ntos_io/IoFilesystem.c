@@ -138,7 +138,7 @@ TestAllInformation(VOID)
             trace("Filesystem: NTFS\n");
         }
         else if (FsAttributeInfo->FileSystemNameLength >= 10 &&
-                RtlCompareMemory(FsAttributeInfo->FileSystemName, L"FAT32", 10) == 10)
+                 RtlCompareMemory(FsAttributeInfo->FileSystemName, L"FAT32", 10) == 10)
         {
             g_Filesystem = FAT32;
             trace("Filesystem: FAT32\n");
