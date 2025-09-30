@@ -5,7 +5,7 @@ REM inside if (...) conditionals.
 REM See http://stackoverflow.com/questions/305605/weird-scope-issue-in-bat-file
 REM for more explanation.
 REM Precisely needed for configuring Visual Studio Environment.
-setlocal enabledelayedexpansion
+setlocal ENABLEDELAYEDEXPANSION ENABLEEXTENSIONS
 
 REM Does the user need help?
 if /I "%1" == "help" goto help
@@ -38,6 +38,9 @@ set CMAKE_ARCH=
 REM Detect presence of cmake
 cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
 
+REM Set System Architecture Directly
+set ARCH="%processor_architecture: =%"
+
 REM Detect build environment (MinGW, VS, WDK, ...)
 if defined ROS_ARCH (
     echo Detected RosBE for %ROS_ARCH%
@@ -47,10 +50,7 @@ if defined ROS_ARCH (
 
 ) else if defined VCINSTALLDIR (
     REM VS command prompt does not put this in environment vars
-    cl 2>&1 | find "x86" > NUL && set ARCH=i386
-    cl 2>&1 | find "x64" > NUL && set ARCH=amd64
-    cl 2>&1 | find "ARM" > NUL && set ARCH=arm
-    cl 2>&1 | find "ARM64" > NUL && set ARCH=arm64
+    if /I %ARCH% == "x86" set ARCH=i386
     cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
     cl 2>&1 | findstr /R /c:"19\.1.\." > NUL && set VS_VERSION=15
     cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
