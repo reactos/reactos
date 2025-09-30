@@ -1,7 +1,7 @@
 
 add_definitions(
     -DNDIS_MINIPORT_DRIVER
-    -DNDIS51_MINIPORT=1)
+    -DNDIS51_MINIPORT)
 
 list(APPEND SOURCE
     backoff.c
