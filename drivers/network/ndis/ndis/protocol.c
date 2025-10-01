@@ -1156,6 +1156,7 @@ NdisRegisterProtocol(
       break;
 
     case 0x05:
+      /* Identical for both NDIS50 and NDIS51 */
       MinSize = sizeof(NDIS50_PROTOCOL_CHARACTERISTICS);
       break;
 
