@@ -949,6 +949,9 @@ START_TEST(SeInheritance)
 {
     PKTHREAD Thread;
 
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "kmtest:SeInheritance is broken on Vista+.\n"))
+        return;
+
     TestObRootSecurity();
     Thread = KmtStartThread(SystemThread, NULL);
     KmtFinishThread(Thread, NULL);

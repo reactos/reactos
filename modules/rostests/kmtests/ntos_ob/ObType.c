@@ -169,7 +169,7 @@ QueryNameProc(
 }
 
 static
-VOID
+NTSTATUS
 ObtCreateObjectTypes(VOID)
 {
     INT i;
@@ -182,6 +182,9 @@ ObtCreateObjectTypes(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ObjectTypeHandle;
     UNICODE_STRING ObjectPath;
+
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "Custom object types are not supported on Vista+.\n"))
+        return STATUS_NOT_SUPPORTED;
 
     RtlCopyMemory(&Name.DirectoryName, L"\\ObjectTypes\\", sizeof Name.DirectoryName);
 
@@ -244,6 +247,8 @@ ObtCreateObjectTypes(VOID)
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok(ObTypes[i] != NULL, "ObType = NULL\n");
     }
+
+    return STATUS_SUCCESS;
 }
 
 static
@@ -415,10 +420,12 @@ VOID
 TestObjectType(
     IN BOOLEAN Clean)
 {
+    NTSTATUS Status;
+
     RtlZeroMemory(&Counts, sizeof Counts);
 
-    ObtCreateObjectTypes();
-    DPRINT("ObtCreateObjectTypes() done\n");
+    Status = ObtCreateObjectTypes();
+    DPRINT("ObtCreateObjectTypes() %s\n", NT_SUCCESS(Status) ? "succeeded" : "failed");
 
     ObtCreateDirectory();
     DPRINT("ObtCreateDirectory() done\n");
