@@ -26,7 +26,7 @@
  * So in a nutshell TCP/IP support is completed, UDP support is
  * partially complete and ICMP support does not exist yet.
  * In particular the listen/accept mechanism allows one to write
- * kernel side TCP servers that one connect to via the internet.
+ * kernel side TCP servers that one can connect to via the internet.
  */
 
 #include <ntifs.h>
@@ -1464,7 +1464,7 @@ WskRegister(_In_ PWSK_CLIENT_NPI client_npi, _Out_ PWSK_REGISTRATION reg)
 {
     FUNCTION_TRACE;
 
-    reg->ReservedRegistrationState = 42;
+    reg->ReservedRegistrationState = 0;
     reg->ReservedRegistrationContext = NULL;
     KeInitializeSpinLock(&reg->ReservedRegistrationLock);
 
