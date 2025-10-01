@@ -63,7 +63,7 @@
 #define AFD_SHARE_EXCLUSIVE 0x3L
 
 /* Function trace */
-// #define FUNCTION_TRACE DPRINT1("Function %s ...\n", __func__)
+/* #define FUNCTION_TRACE DPRINT1("Function %s ...\n", __func__) */
 #define FUNCTION_TRACE do { } while (0)
 
 typedef struct _WSK_SOCKET_INTERNAL
@@ -279,15 +279,15 @@ SocketPut(_In_ PWSK_SOCKET_INTERNAL Socket)
     if (KeGetCurrentIrql() > PASSIVE_LEVEL)
     {
         KeAcquireSpinLock(&SocketsToPutListLock, &OldIrql);
-        if (Socket->NumSocketPuts > 0)
-        {
-            Socket->NumSocketPuts++;
-        }
-        else
+        if (Socket->NumSocketPuts == 0)
         {
             Socket->NextSocketToPut = SocketsToPut;
             SocketsToPut = Socket;
             Socket->NumSocketPuts = 1;
+        }
+        else
+        {
+            Socket->NumSocketPuts++;
         }
         KeReleaseSpinLock(&SocketsToPutListLock, OldIrql);
 
@@ -483,7 +483,14 @@ ListenComplete(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp, _In_ PVOID Conte
     {
         ListenSocket->ListenIrp = NULL;
 
-        Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
+        Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context,
+                                                0,
+                                                &ListenSocket->LocalAddress,
+                                                RemoteAddress,
+                                                &AcceptSocket->Socket,
+                                                &AcceptSocketContext,
+                                                &AcceptSocketDispatch);
+
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
@@ -622,9 +629,7 @@ static void QueueListening(_In_ PWSK_SOCKET_INTERNAL ListenSocket)
 static VOID NTAPI RequeueListenThread(_In_ PVOID p)
 {
     PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL)p;
-    // PWSK_SOCKET_INTERNAL AcceptSocket;
     NTSTATUS status;
-    // PIRP AcceptIrp;
 
     FUNCTION_TRACE;
 
@@ -657,7 +662,7 @@ WskControlSocket(
     _Out_opt_ SIZE_T * OutputSizeReturned,
     _Inout_opt_ PIRP Irp)
 {
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
     NTSTATUS status = STATUS_NOT_IMPLEMENTED;
 
     FUNCTION_TRACE;
@@ -757,7 +762,7 @@ static NTSTATUS WSKAPI
 WskCloseSocket(_In_ PWSK_SOCKET SocketParam, _Inout_ PIRP Irp)
 {
     NTSTATUS status = STATUS_SUCCESS;
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
 
     IoSetNextIrpStackLocation(Irp);
 
@@ -835,7 +840,7 @@ static NTSTATUS WSKAPI
 WskBind(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG Flags, _Inout_ PIRP Irp)
 {
     NTSTATUS status;
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
 
     PTRANSPORT_ADDRESS ta = TdiTransportAddressFromSocketAddress(LocalAddress);
 
@@ -882,7 +887,7 @@ WskSendTo(
     _Inout_ PIRP Irp)
 {
     PIRP tdiIrp = NULL;
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
     PTDI_CONNECTION_INFORMATION TargetConnectionInfo;
     NTSTATUS status;
     void *BufferData;
@@ -1010,7 +1015,7 @@ WskGetRemoteAddress(_In_ PWSK_SOCKET SocketParam, _Out_ PSOCKADDR RemoteAddress,
 {
     FUNCTION_TRACE;
 
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
     IoSetNextIrpStackLocation(Irp);
@@ -1089,7 +1094,7 @@ WskConnect(_In_ PWSK_SOCKET SocketParam, _In_ PSOCKADDR RemoteAddress, _Reserved
 {
     PTDI_CONNECTION_INFORMATION TargetConnectionInfo, PeerAddrRet;
     PIRP tdiIrp;
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
     NTSTATUS status, status2;
     PNETIO_CONTEXT NetioContext;
 
@@ -1185,7 +1190,7 @@ WskStreamIo(
     _In_ enum direction Direction)
 {
     PIRP tdiIrp = NULL;
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
     NTSTATUS status;
     void *BufferData;
     PNETIO_CONTEXT NetioContext;
@@ -1270,7 +1275,7 @@ WskReceive(_In_ PWSK_SOCKET SocketParam, _In_ PWSK_BUF Buffer, _In_ ULONG Flags,
 static NTSTATUS WSKAPI
 WskDisconnect(_In_ PWSK_SOCKET SocketParam, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-    PWSK_SOCKET_INTERNAL Socket = (PWSK_SOCKET_INTERNAL)SocketParam;
+    PWSK_SOCKET_INTERNAL Socket = CONTAINING_RECORD(SocketParam, WSK_SOCKET_INTERNAL, Socket);
 
     FUNCTION_TRACE;
 
