@@ -3,8 +3,7 @@ add_definitions(
     -D_URLMON_
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
-    -DWINE_REGISTER_DLL
-    -DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
+    -DWINE_REGISTER_DLL)
 
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
 add_rpcproxy_files(urlmon_urlmon.idl)
@@ -55,3 +54,10 @@ add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user
 add_pch(urlmon precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET urlmon DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(urlmon) # CORE-5743: No ARRAY_SIZE macro
+
+# Hack for CMake not being able to properly escape command line GUID definition on some Unix hosts.
+if (CMAKE_HOST_WIN32)
+    add_compile_definitions(PROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
+else()
+    target_compile_options(urlmon PRIVATE -include ${CMAKE_SOURCE_DIR}/dll/win32/urlmon/clsid.h)
+endif()
