@@ -164,7 +164,7 @@ CreateDefaultProcessSecurityCommon(
                                    TokenOwnerSize);
     if (OwnerOfToken == NULL)
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for token owner!\n");
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for token owner\n");
         return FALSE;
     }
 
@@ -200,7 +200,7 @@ CreateDefaultProcessSecurityCommon(
                                           PrimaryGroupSize);
     if (PrimaryGroupOfToken == NULL)
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for primary group token!\n");
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for primary group token\n");
         Success = FALSE;
         goto Quit;
     }
@@ -225,7 +225,7 @@ CreateDefaultProcessSecurityCommon(
                                   0, 0, 0, 0, 0, 0, 0,
                                   &SystemSid))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to create Local System SID (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to create Local System SID (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -245,7 +245,7 @@ CreateDefaultProcessSecurityCommon(
                            DaclSize);
     if (Dacl == NULL)
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for DACL!\n");
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for DACL\n");
         Success = FALSE;
         goto Quit;
     }
@@ -253,7 +253,7 @@ CreateDefaultProcessSecurityCommon(
     /* Initialize the DACL */
     if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize DACL (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize DACL (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -264,7 +264,7 @@ CreateDefaultProcessSecurityCommon(
                              GENERIC_ALL,
                              OwnerSid))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for owner (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for owner (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -275,7 +275,7 @@ CreateDefaultProcessSecurityCommon(
                              GENERIC_ALL,
                              SystemSid))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for SYSTEM (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up ACE for SYSTEM (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -283,7 +283,7 @@ CreateDefaultProcessSecurityCommon(
     /* Initialize the descriptor in absolute format */
     if (!InitializeSecurityDescriptor(&AbsoluteSd, SECURITY_DESCRIPTOR_REVISION))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize absolute security descriptor (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to initialize absolute security descriptor (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -291,7 +291,7 @@ CreateDefaultProcessSecurityCommon(
     /* Set the DACL to the security descriptor */
     if (!SetSecurityDescriptorDacl(&AbsoluteSd, TRUE, Dacl, FALSE))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up DACL to absolute security descriptor (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up DACL to absolute security descriptor (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -299,7 +299,7 @@ CreateDefaultProcessSecurityCommon(
     /* Set the owner for this descriptor */
     if (!SetSecurityDescriptorOwner(&AbsoluteSd, OwnerSid, FALSE))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up owner to absolute security descriptor (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up owner to absolute security descriptor (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -307,7 +307,7 @@ CreateDefaultProcessSecurityCommon(
     /* Set the primary group for this descriptor */
     if (!SetSecurityDescriptorGroup(&AbsoluteSd, PrimaryGroupSid, FALSE))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up group to absolute security descriptor (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to set up group to absolute security descriptor (error %lu)\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -318,9 +318,10 @@ CreateDefaultProcessSecurityCommon(
      * to hold the descriptor in a converted self
      * relative format.
      */
-    if (!MakeSelfRelativeSD(&AbsoluteSd, NULL, &RelativeSDSize) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    if (MakeSelfRelativeSD(&AbsoluteSd, NULL, &RelativeSDSize) ||
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Unexpected error code (error code %d -- must be ERROR_INSUFFICIENT_BUFFER)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): error %lu, expected ERROR_INSUFFICIENT_BUFFER\n", GetLastError());
         Success = FALSE;
         goto Quit;
     }
@@ -331,7 +332,7 @@ CreateDefaultProcessSecurityCommon(
                                  RelativeSDSize);
     if (RelativeSD == NULL)
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate buffer for self relative descriptor!\n");
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate relative SD\n");
         Success = FALSE;
         goto Quit;
     }
@@ -339,7 +340,8 @@ CreateDefaultProcessSecurityCommon(
     /* Convert to a self relative format now */
     if (!MakeSelfRelativeSD(&AbsoluteSd, RelativeSD, &RelativeSDSize))
     {
-        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate relative SD, buffer too smal (error code %d)\n", GetLastError());
+        ERR("CreateDefaultProcessSecurityCommon(): Failed to allocate relative SD (error %lu)\n", GetLastError());
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSD);
         Success = FALSE;
         goto Quit;
     }
@@ -361,14 +363,6 @@ Quit:
 
     if (Dacl != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, Dacl);
-
-    if (Success == FALSE)
-    {
-        if (RelativeSD != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSD);
-        }
-    }
 
     return Success;
 }
@@ -412,7 +406,7 @@ InsertProcessSecurityCommon(
                                  DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION,
                                  ProcessSecurity))
     {
-        ERR("InsertProcessSecurityCommon(): Failed to set security for process (error code %d)\n", GetLastError());
+        ERR("InsertProcessSecurityCommon(): Failed to set security for process (error %lu)\n", GetLastError());
         return FALSE;
     }
 
@@ -421,7 +415,7 @@ InsertProcessSecurityCommon(
                                  DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION,
                                  ThreadSecurity))
     {
-        ERR("InsertProcessSecurityCommon(): Failed to set security for thread (error code %d)\n", GetLastError());
+        ERR("InsertProcessSecurityCommon(): Failed to set security for thread (error %lu)\n", GetLastError());
         return FALSE;
     }
 
@@ -730,7 +724,7 @@ CreateProcessAsUserCommon(
          */
         if (!CreateDefaultProcessSecurityCommon(hToken, &DefaultSd))
         {
-            ERR("Failed to create common security descriptor for the token for new process!\n");
+            ERR("Failed to create common security descriptor for the token for new process\n");
             Success = FALSE;
             goto Quit;
         }
@@ -865,7 +859,7 @@ CreateProcessAsUserCommon(
                                          ProcessSd,
                                          ThreadSd))
         {
-            ERR("Failed to set new security information for process and thread!\n");
+            ERR("Failed to set new security information for process and thread\n");
             NtClose(hTokenDup);
             Success = FALSE;
             goto Quit;
@@ -881,7 +875,7 @@ CreateProcessAsUserCommon(
      * ourselves as job done. The newly created process will use
      * the default security context at this point anyway.
      */
-    TRACE("No token supplied, the process will use default security context!\n");
+    TRACE("No token supplied, the process will use default security context\n");
     Success = TRUE;
 
 Quit:
