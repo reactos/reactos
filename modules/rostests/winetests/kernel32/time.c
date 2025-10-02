@@ -1140,9 +1140,11 @@ static void test_QueryUnbiasedInterruptTime(void)
     else win_skip( "RtlQueryUnbiasedInterruptTime not supported\n" );
 }
 
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_processor_idle_cycle_time(void)
 {
+#ifdef __REACTOS__
+    skip("Cannot build test_processor_idle_cycle_time() until kernelbase is synced.\n");
+#else
     unsigned int cpu_count = NtCurrentTeb()->Peb->NumberOfProcessors;
     ULONG64 buffer[64];
     ULONG size;
@@ -1206,8 +1208,8 @@ static void test_processor_idle_cycle_time(void)
     err = GetLastError();
     ok( bret == TRUE && err == 0xdeadbeef, "got %d, %ld.\n", bret, err );
     ok( size == cpu_count * sizeof(ULONG64), "got %lu.\n", size );
-}
 #endif
+}
 
 START_TEST(time)
 {
@@ -1240,7 +1242,5 @@ START_TEST(time)
     test_GetTimeZoneInformationForYear();
     test_GetTickCount();
     test_QueryUnbiasedInterruptTime();
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_processor_idle_cycle_time();
-#endif
 }

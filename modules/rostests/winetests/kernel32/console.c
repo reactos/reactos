@@ -1028,9 +1028,12 @@ static void testScreenBuffer(HANDLE hConOut)
     SetConsoleOutputCP(oldcp);
 }
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_new_screen_buffer_properties(HANDLE hConOut)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    UNREFERENCED_PARAMETER(hConOut);
+    skip("Cannot build test_new_screen_buffer_properties() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     BOOL ret;
     HANDLE hConOut2;
     CONSOLE_FONT_INFOEX cfi, cfi2;
@@ -1079,10 +1082,15 @@ static void test_new_screen_buffer_properties(HANDLE hConOut)
     ok(csbi2.srWindow.Top == csbi.srWindow.Top, "Top coordinate should match\n");
     ok(csbi2.srWindow.Right == csbi.srWindow.Right, "Right coordinate should match\n");
     ok(csbi2.srWindow.Bottom == csbi.srWindow.Bottom, "Bottom coordinate should match\n");
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
 
 static void test_new_screen_buffer_color_attributes(HANDLE hConOut)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    UNREFERENCED_PARAMETER(hConOut);
+    skip("Cannot build test_new_screen_buffer_color_attributes() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     CONSOLE_SCREEN_BUFFER_INFOEX csbi, csbi2;
     BOOL ret;
     HANDLE hConOut2;
@@ -1156,8 +1164,8 @@ static void test_new_screen_buffer_color_attributes(HANDLE hConOut)
     csbi.wPopupAttributes = orig_popup;
     ret = SetConsoleScreenBufferInfoEx(hConOut, &csbi);
     ok(ret, "SetConsoleScreenBufferInfoEx failed: error %lu\n", GetLastError());
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
-#endif
 
 static void CALLBACK signaled_function(void *p, BOOLEAN timeout)
 {
@@ -3510,9 +3518,12 @@ static void test_GetCurrentConsoleFont(HANDLE std_output)
        "got %d, expected %d\n", cfi.dwFontSize.Y, csbi.dwMaximumWindowSize.Y);
 }
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_GetCurrentConsoleFontEx(HANDLE std_output)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    UNREFERENCED_PARAMETER(std_output);
+    skip("Cannot build test_GetCurrentConsoleFontEx() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     HANDLE hmod;
     BOOL (WINAPI *pGetCurrentConsoleFontEx)(HANDLE, BOOL, CONSOLE_FONT_INFOEX *);
     CONSOLE_FONT_INFO cfi;
@@ -3633,11 +3644,15 @@ static void test_GetCurrentConsoleFontEx(HANDLE std_output)
 
     ok(cfix.dwFontSize.X == cfi.dwFontSize.X, "expected values to match\n");
     ok(cfix.dwFontSize.Y == cfi.dwFontSize.Y, "expected values to match\n");
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
 
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_SetCurrentConsoleFontEx(HANDLE std_output)
 {
+#ifdef __REACTOS__
+    UNREFERENCED_PARAMETER(std_output);
+    skip("Cannot build test_SetCurrentConsoleFontEx() until kernelbase is synced.\n");
+#else
     CONSOLE_FONT_INFOEX orig_cfix, cfix;
     BOOL ret;
     HANDLE pipe1, pipe2;
@@ -3750,9 +3765,8 @@ static void test_SetCurrentConsoleFontEx(HANDLE std_output)
     ret = SetCurrentConsoleFontEx(std_output, FALSE, &orig_cfix);
     ok(ret, "got %d, expected non-zero\n", ret);
     ok(GetLastError() == 0xdeadbeef, "got %lu, expected 0xdeadbeef\n", GetLastError());
+#endif // __REACTOS__
 }
-#endif
-#endif
 
 static void test_GetConsoleFontSize(HANDLE std_output)
 {
@@ -4265,9 +4279,12 @@ static void test_FreeConsole(void)
     CloseHandle(unbound_output);
 }
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void test_SetConsoleScreenBufferInfoEx(HANDLE std_output)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    UNREFERENCED_PARAMETER(std_output);
+    skip("Cannot build test_SetConsoleScreenBufferInfoEx() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     BOOL ret;
     HANDLE hmod;
     HANDLE std_input = CreateFileA("CONIN$", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
@@ -4311,10 +4328,14 @@ static void test_SetConsoleScreenBufferInfoEx(HANDLE std_output)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %lu, expected 87\n", GetLastError());
 
     CloseHandle(std_input);
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
 
 static void test_GetConsoleOriginalTitleA(void)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    skip("Cannot build test_GetConsoleOriginalTitleA() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     char title[] = "Original Console Title";
     char buf[64];
     DWORD ret, title_len = strlen(title);
@@ -4337,10 +4358,14 @@ static void test_GetConsoleOriginalTitleA(void)
     ok(ret, "GetConsoleOriginalTitleA failed: %lu\n", GetLastError());
     ok(!strcmp(buf, title), "got %s, expected %s\n", wine_dbgstr_a(buf), wine_dbgstr_a(title));
     ok(ret == title_len, "got %lu, expected %lu\n", ret, title_len);
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
 
 static void test_GetConsoleOriginalTitleW(void)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    skip("Cannot build test_GetConsoleOriginalTitleW() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     WCHAR title[] = L"Original Console Title";
     WCHAR buf[64];
     DWORD ret, title_len = lstrlenW(title);
@@ -4369,16 +4394,20 @@ static void test_GetConsoleOriginalTitleW(void)
     ok(ret, "GetConsoleOriginalTitleW failed: %lu\n", GetLastError());
     ok(!wcscmp(buf, L"Orig"), "got %s, expected 'Orig'\n", wine_dbgstr_w(buf));
     ok(ret == title_len, "got %lu, expected %lu\n", ret, title_len);
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
-#endif
 
 static void test_GetConsoleOriginalTitleW_empty(void)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    skip("Cannot build test_GetConsoleOriginalTitleW_empty() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     WCHAR buf[64];
     DWORD ret;
 
     ret = GetConsoleOriginalTitleW(buf, ARRAY_SIZE(buf));
     ok(!ret, "GetConsoleOriginalTitleW failed: %lu\n", GetLastError());
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
 
 static void test_GetConsoleOriginalTitle(void)
@@ -4389,6 +4418,13 @@ static void test_GetConsoleOriginalTitle(void)
     char title[] = "Original Console Title";
     BOOL ret;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        skip("This test is incredibly broken on WS03\n");
+        return;
+    }
+#endif // __REACTOS__
     winetest_get_mainargs(&argv);
     sprintf(buf, "\"%s\" console title_test", argv[0]);
     si.lpTitle = title;
@@ -4454,11 +4490,17 @@ static void test_GetConsoleTitleW(void)
 
     ret = GetConsoleTitleW(buf, 2);
     ok(ret, "GetConsoleTitleW failed: %lu\n", GetLastError());
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif // __REACTOS__
     ok(ret == wcslen(str), "Got string length %lu, expected %Iu\n", ret, wcslen(str));
     if (!skip_nt) ok(!wcscmp(buf, L"t"), "Title = %s\n", wine_dbgstr_w(buf));
 
     ret = GetConsoleTitleW(buf, 4);
     ok(ret, "GetConsoleTitleW failed: %lu\n", GetLastError());
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#endif // __REACTOS__
     ok(ret == wcslen(str), "Got string length %lu, expected %Iu\n", ret, wcslen(str));
     if (!skip_nt) ok(!wcscmp(buf, L"tes"), "Title = %s\n", wine_dbgstr_w(buf));
 
@@ -4529,7 +4571,11 @@ static void test_console_as_root_directory(void)
     status = NtCreateFile( &h2, SYNCHRONIZE, &attr, &iosb, NULL, 0,
                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                            FILE_OPEN, 0, NULL, 0 );
+#ifdef __REACTOS__
+    ok( status == STATUS_NOT_FOUND || broken( status == STATUS_OBJECT_TYPE_MISMATCH ) /* Win7 */ || broken( status == STATUS_INVALID_HANDLE ) /* WS03 */,
+#else
     ok( status == STATUS_NOT_FOUND || broken( status == STATUS_OBJECT_TYPE_MISMATCH ) /* Win7 */,
+#endif // __REACTOS__
         "NtCreateFile returned %#lx\n", status );
 
     CloseHandle( handle );
@@ -5102,21 +5148,27 @@ static void test_CreateProcessCUI(void)
         {TRUE,  0,                                     NULL_STD,        CP_WITH_CONSOLE | CP_WITH_HANDLE | CP_WITH_WINDOW},
         {TRUE,  DETACHED_PROCESS,                      NULL_STD,        0},
 /*20*/  {TRUE,  CREATE_NEW_CONSOLE,                    NULL_STD,        CP_OWN_CONSOLE | CP_WITH_WINDOW},
+#ifndef __REACTOS__
         {TRUE,  CREATE_NO_WINDOW,                      NULL_STD,        CP_OWN_CONSOLE},
+#endif // __REACTOS__
         {TRUE,  DETACHED_PROCESS | CREATE_NO_WINDOW,   NULL_STD,        0},
         {TRUE,  CREATE_NEW_CONSOLE | CREATE_NO_WINDOW, NULL_STD,        CP_OWN_CONSOLE | CP_WITH_WINDOW},
 
         {TRUE,  0,                                     CONSOLE_STD,     CP_INH_CONSOLE | CP_WITH_WINDOW},
 /*25*/  {TRUE,  DETACHED_PROCESS,                      CONSOLE_STD,     0},
         {TRUE,  CREATE_NEW_CONSOLE,                    CONSOLE_STD,     CP_OWN_CONSOLE | CP_WITH_WINDOW},
+#ifndef __REACTOS__
         {TRUE,  CREATE_NO_WINDOW,                      CONSOLE_STD,     CP_OWN_CONSOLE},
+#endif // __REACTOS__
         {TRUE,  DETACHED_PROCESS | CREATE_NO_WINDOW,   CONSOLE_STD,     0},
         {TRUE,  CREATE_NEW_CONSOLE | CREATE_NO_WINDOW, CONSOLE_STD,     CP_OWN_CONSOLE | CP_WITH_WINDOW},
 
 /*30*/  {TRUE,  0,                                     STARTUPINFO_STD, CP_INH_CONSOLE | CP_WITH_WINDOW},
         {TRUE,  DETACHED_PROCESS,                      STARTUPINFO_STD, CP_INPUT_VALID | CP_OUTPUT_VALID, .is_broken = 0x100},
         {TRUE,  CREATE_NEW_CONSOLE,                    STARTUPINFO_STD, CP_OWN_CONSOLE | CP_WITH_WINDOW,  .is_broken = CP_WITH_CONSOLE | CP_WITH_HANDLE | CP_WITH_WINDOW | CP_ALONE},
+#ifndef __REACTOS__
         {TRUE,  CREATE_NO_WINDOW,                      STARTUPINFO_STD, CP_OWN_CONSOLE,                   .is_broken = CP_WITH_CONSOLE | CP_WITH_HANDLE | CP_ALONE},
+#endif // __REACTOS__
         {TRUE,  DETACHED_PROCESS | CREATE_NO_WINDOW,   STARTUPINFO_STD, CP_INPUT_VALID | CP_OUTPUT_VALID, .is_broken = 0x100},
 /*35*/  {TRUE,  CREATE_NEW_CONSOLE | CREATE_NO_WINDOW, STARTUPINFO_STD, CP_OWN_CONSOLE | CP_WITH_WINDOW,  .is_broken = CP_WITH_CONSOLE | CP_WITH_HANDLE | CP_WITH_WINDOW | CP_ALONE},
     };
@@ -5141,7 +5193,9 @@ static void test_CreateProcessCUI(void)
          {TRUE,  0,                        STARTUPINFO_STD, FALSE,  CP_INH_CONSOLE | CP_WITH_WINDOW | CP_ENABLED_CTRLC},
          {TRUE,  CREATE_NEW_PROCESS_GROUP, STARTUPINFO_STD, FALSE,  CP_INH_CONSOLE | CP_WITH_WINDOW | CP_GROUP_LEADER},
          {FALSE, 0,                        CONSOLE_STD,     TRUE,   0},
+#ifndef __REACTOS__
          {FALSE, CREATE_NEW_PROCESS_GROUP, CONSOLE_STD,     TRUE,   CP_GROUP_LEADER},
+#endif // __REACTOS__
 /* 10 */ {FALSE, 0,                        CONSOLE_STD,     FALSE,  CP_ENABLED_CTRLC},
          {FALSE, CREATE_NEW_PROCESS_GROUP, CONSOLE_STD,     FALSE,  CP_GROUP_LEADER},
          {FALSE, 0,                        STARTUPINFO_STD, TRUE,   0},
@@ -5476,7 +5530,6 @@ START_TEST(console)
         ExitProcess(exit_code);
     }
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     if (argc >= 3 && !strcmp(argv[2], "title_test"))
     {
         if (argc == 3)
@@ -5488,7 +5541,6 @@ START_TEST(console)
             test_GetConsoleOriginalTitleW_empty();
         return;
     }
-#endif
 
     test_current = argc >= 3 && !strcmp(argv[2], "--current");
     using_pseudo_console = argc >= 3 && !strcmp(argv[2], "--pseudo-console");
@@ -5611,10 +5663,8 @@ START_TEST(console)
     testScroll(hConOut, sbi.dwSize);
     /* will test sb creation / modification / codepage handling */
     if (!test_current) testScreenBuffer(hConOut);
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_new_screen_buffer_properties(hConOut);
     test_new_screen_buffer_color_attributes(hConOut);
-#endif
     /* Test waiting for a console handle */
     testWaitForConsoleInput(hConIn);
     test_wait(hConIn, hConOut);
@@ -5665,21 +5715,15 @@ START_TEST(console)
     if (!test_current)
     {
         test_GetCurrentConsoleFont(hConOut);
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
         test_GetCurrentConsoleFontEx(hConOut);
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
         test_SetCurrentConsoleFontEx(hConOut);
-#endif
-#endif
         test_GetConsoleFontSize(hConOut);
         test_GetLargestConsoleWindowSize(hConOut);
         test_GetConsoleFontInfo(hConOut);
         test_SetConsoleFont(hConOut);
     }
     test_GetConsoleScreenBufferInfoEx(hConOut);
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_SetConsoleScreenBufferInfoEx(hConOut);
-#endif
     test_file_info(hConIn, hConOut);
     test_GetConsoleOriginalTitle();
     test_GetConsoleTitleA();

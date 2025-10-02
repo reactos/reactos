@@ -589,7 +589,6 @@ static const struct
         IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ }
 };
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static void create_test_dll( const WCHAR *name )
 {
     DWORD dummy;
@@ -657,6 +656,9 @@ static struct mui_res
 
 static void test_mui(void)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    skip("Cannot build test_mui() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     static const WCHAR ln_dll[] = L"test_mui.dll";
     static const WCHAR en_dll[] = L"en-US\\test_mui.dll.mui";
     static const BYTE zeros[16] = { 0 };
@@ -814,8 +816,8 @@ static void test_mui(void)
     DeleteFileW( ln_dll );
     DeleteFileW( en_dll );
     RemoveDirectoryW( L"en-US" );
-}
 #endif
+}
 
 START_TEST(resource)
 {
@@ -849,7 +851,5 @@ START_TEST(resource)
         DeleteFileA( filename );
     }
     test_find_resource();
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
     test_mui();
-#endif
 }

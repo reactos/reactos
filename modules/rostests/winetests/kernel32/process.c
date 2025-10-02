@@ -38,7 +38,6 @@
 #include "wine/test.h"
 #include "wine/heap.h"
 #ifdef __REACTOS__
-// #include <wincon_undoc.h>
 typedef void *HPCON;
 
 typedef enum _MACHINE_ATTRIBUTES
@@ -107,9 +106,7 @@ static BOOL   (WINAPI *pThread32First)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pThread32Next)(HANDLE, THREADENTRY32*);
 static BOOL   (WINAPI *pGetLogicalProcessorInformationEx)(LOGICAL_PROCESSOR_RELATIONSHIP,SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*,DWORD*);
 static SIZE_T (WINAPI *pGetLargePageMinimum)(void);
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static BOOL   (WINAPI *pGetSystemCpuSetInformation)(SYSTEM_CPU_SET_INFORMATION*,ULONG,ULONG*,HANDLE,ULONG);
-#endif
 static BOOL   (WINAPI *pInitializeProcThreadAttributeList)(struct _PROC_THREAD_ATTRIBUTE_LIST*, DWORD, DWORD, SIZE_T*);
 static BOOL   (WINAPI *pUpdateProcThreadAttribute)(struct _PROC_THREAD_ATTRIBUTE_LIST*, DWORD, DWORD_PTR, void *,SIZE_T,void*,SIZE_T*);
 static void   (WINAPI *pDeleteProcThreadAttributeList)(struct _PROC_THREAD_ATTRIBUTE_LIST*);
@@ -296,9 +293,7 @@ static BOOL init(void)
     pThread32Next = (void *)GetProcAddress(hkernel32, "Thread32Next");
     pGetLogicalProcessorInformationEx = (void *)GetProcAddress(hkernel32, "GetLogicalProcessorInformationEx");
     pGetLargePageMinimum = (void *)GetProcAddress(hkernel32, "GetLargePageMinimum");
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     pGetSystemCpuSetInformation = (void *)GetProcAddress(hkernel32, "GetSystemCpuSetInformation");
-#endif
     pInitializeProcThreadAttributeList = (void *)GetProcAddress(hkernel32, "InitializeProcThreadAttributeList");
     pUpdateProcThreadAttribute = (void *)GetProcAddress(hkernel32, "UpdateProcThreadAttribute");
     pDeleteProcThreadAttributeList = (void *)GetProcAddress(hkernel32, "DeleteProcThreadAttributeList");
@@ -4302,9 +4297,11 @@ static void test_GetLogicalProcessorInformationEx(void)
     HeapFree(GetProcessHeap(), 0, info);
 }
 
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_GetSystemCpuSetInformation(void)
 {
+#ifdef __REACTOS__
+    skip("Cannot build test_GetSystemCpuSetInformation() until kernelbase is synced.\n");
+#else
     SYSTEM_CPU_SET_INFORMATION *info, *info_nt;
     HANDLE process = GetCurrentProcess();
     ULONG size, expected_size;
@@ -4362,8 +4359,8 @@ static void test_GetSystemCpuSetInformation(void)
 
     heap_free(info_nt);
     heap_free(info);
+#endif // __REACTOS__
 }
-#endif
 
 static void test_largepages(void)
 {
@@ -5703,9 +5700,7 @@ START_TEST(process)
     test_GetNumaProcessorNode();
     test_session_info();
     test_GetLogicalProcessorInformationEx();
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_GetSystemCpuSetInformation();
-#endif
     test_largepages();
     test_ProcThreadAttributeList();
     test_SuspendProcessState();

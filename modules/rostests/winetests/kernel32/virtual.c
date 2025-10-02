@@ -4336,9 +4336,11 @@ static void test_shared_memory_ro(BOOL is_child, DWORD child_access)
     CloseHandle(mapping);
 }
 
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
 static void test_PrefetchVirtualMemory(void)
 {
+#ifdef __REACTOS__
+    skip("Cannot build test_PrefetchVirtualMemory() until kernelbase is synced.\n");
+#else
     WIN32_MEMORY_RANGE_ENTRY entries[2];
     char stackmem[] = "Test stack mem";
     static char testmem[] = "Test memory range data";
@@ -4379,8 +4381,8 @@ static void test_PrefetchVirtualMemory(void)
     ret = pPrefetchVirtualMemory( GetCurrentProcess(), 2, entries, 0 );
     ok( ret ||broken( is_wow64 && GetLastError() == ERROR_INVALID_PARAMETER ) /* win10 1507 */,
         "PrefetchVirtualMemory unexpected status on 2 page-aligned entries: %ld\n", GetLastError() );
-}
 #endif
+}
 
 static void test_ReadProcessMemory(void)
 {
@@ -4506,9 +4508,7 @@ START_TEST(virtual)
     test_IsBadWritePtr();
     test_IsBadCodePtr();
     test_write_watch();
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
     test_PrefetchVirtualMemory();
-#endif
     test_ReadProcessMemory();
 #if defined(__i386__) || defined(__x86_64__)
     test_stack_commit();

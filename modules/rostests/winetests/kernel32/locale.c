@@ -8652,7 +8652,6 @@ static void dump_sortkeys( char *argv[] )
     fclose( f );
 }
 
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
 static BOOL CALLBACK EnumDateFormatsExEx_proc(LPWSTR date_format_string, CALID calendar_id, LPARAM lp)
 {
     return TRUE;
@@ -8660,6 +8659,9 @@ static BOOL CALLBACK EnumDateFormatsExEx_proc(LPWSTR date_format_string, CALID c
 
 static void test_EnumDateFormatsExEx(void)
 {
+#if defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
+    skip("Cannot build test_EnumDateFormatsExEx() unless DLL_EXPORT_VERSION >= 0x600.\n");
+#else
     DWORD error;
     BOOL ret;
 
@@ -8681,8 +8683,8 @@ static void test_EnumDateFormatsExEx(void)
     error = GetLastError();
     ok(ret || (!ret && error == ERROR_INVALID_PARAMETER), /* < Win10 */
        "EnumDateFormatsExEx failed, error %#lx.\n", error);
+#endif // defined(__REACTOS__) && DLL_EXPORT_VERSION < 0x600
 }
-#endif
 
 START_TEST(locale)
 {
@@ -8759,7 +8761,5 @@ START_TEST(locale)
   test_EnumCalendarInfoExW();
 
   /* Run this test at the end */
-#if !defined(__REACTOS__) || DLL_EXPORT_VERSION >= 0x600
   test_EnumDateFormatsExEx();
-#endif
 }
