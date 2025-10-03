@@ -24,6 +24,7 @@ extern void func_mailslot(void);
 extern void func_module(void);
 extern void func_path(void);
 extern void func_pipe(void);
+extern void func_power(void);
 extern void func_process(void);
 extern void func_profile(void);
 extern void func_resource(void);
@@ -64,6 +65,7 @@ const struct test winetest_testlist[] =
     { "module", func_module },
     { "path", func_path },
     { "pipe", func_pipe },
+    { "power", func_power },
     { "process", func_process },
     { "profile", func_profile },
     { "resource", func_resource },
