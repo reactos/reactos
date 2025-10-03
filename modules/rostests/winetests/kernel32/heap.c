@@ -60,6 +60,12 @@ static BOOL (WINAPI *pHeapQueryInformation)(HANDLE,HEAP_INFORMATION_CLASS,void*,
 static BOOL (WINAPI *pHeapSetInformation)(HANDLE,HEAP_INFORMATION_CLASS,void*,SIZE_T);
 static UINT (WINAPI *pGlobalFlags)(HGLOBAL);
 static ULONG (WINAPI *pRtlGetNtGlobalFlags)(void);
+#ifdef __REACTOS__
+
+DWORD _ntVersion;
+BYTE _ntMajor;
+BYTE _ntMinor;
+#endif // __REACTOS__
 
 static void load_functions(void)
 {
@@ -424,7 +430,11 @@ static void test_HeapCreate(void)
     todo_wine
     ok( ptr1 != ptr, "HeapReAlloc HEAP_REALLOC_IN_PLACE_ONLY succeeded\n" );
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
 
     ret = HeapFree( heap, 0, ptr1 );
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
@@ -476,7 +486,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     ptr1 = HeapAlloc( heap, 0, 4 * alloc_size );
     ok( !ptr1, "HeapAlloc succeeded\n" );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY || broken(GetLastError() == ERROR_INSUFFICIENT_BUFFER) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     ret = HeapFree( heap, 0, ptr1 );
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
 
@@ -487,7 +501,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     ptr1 = HeapAlloc( heap, 0, 4 * alloc_size );
     ok( !ptr1, "HeapAlloc succeeded\n" );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY || broken(GetLastError() == ERROR_INSUFFICIENT_BUFFER) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     ret = HeapFree( heap, 0, ptr1 );
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
     ret = HeapFree( heap, 0, ptr );
@@ -528,7 +546,11 @@ static void test_HeapCreate(void)
     rtl_entry.lpData = NULL;
     SetLastError( 0xdeadbeef );
     while (!RtlWalkHeap( heap, &rtl_entry )) rtl_entries[count++] = rtl_entry;
+#ifdef __REACTOS__
+    ok( count == 3 || broken(count == 4) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 3, "got count %lu\n", count );
+#endif // __REACTOS__
 
     count = 0;
     memset( &entries, 0, sizeof(entries) );
@@ -537,7 +559,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 3 || broken(count == 4) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 3, "got count %lu\n", count );
+#endif // __REACTOS__
 
     for (i = 0; i < count; ++i)
     {
@@ -549,7 +575,11 @@ static void test_HeapCreate(void)
         if (!entries[i].wFlags)
             ok( rtl_entries[i].wFlags == 0, "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_ENTRY_BUSY)
+#ifdef __REACTOS__
+            ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */ || broken(rtl_entries[i].wFlags == RTL_HEAP_ENTRY_BUSY) /* WS03 */,
+#else
             ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */,
+#endif // __REACTOS__
                 "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE)
             ok( rtl_entries[i].wFlags == RTL_HEAP_ENTRY_UNCOMMITTED || broken(rtl_entries[i].wFlags == 0x100) /* win7 */,
@@ -569,6 +599,9 @@ static void test_HeapCreate(void)
         winetest_pop_context();
     }
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
     ok( entries[0].cbData <= 0x1000 /* sizeof(*heap) */, "got cbData %#lx\n", entries[0].cbData );
@@ -603,6 +636,9 @@ static void test_HeapCreate(void)
         "got cbData %#lx\n", entries[2].cbData );
     ok( entries[2].cbOverhead == 0, "got cbOverhead %#x\n", entries[2].cbOverhead );
     ok( entries[2].iRegionIndex == 0, "got iRegionIndex %d\n", entries[2].iRegionIndex );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     ptr = HeapAlloc( heap, HEAP_ZERO_MEMORY, 5 * alloc_size );
     ok( !!ptr, "HeapAlloc failed, error %lu\n", GetLastError() );
@@ -613,7 +649,11 @@ static void test_HeapCreate(void)
     rtl_entry.lpData = NULL;
     SetLastError( 0xdeadbeef );
     while (!RtlWalkHeap( heap, &rtl_entry )) rtl_entries[count++] = rtl_entry;
+#ifdef __REACTOS__
+    ok( count == 4 || broken(count == 5) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 4, "got count %lu\n", count );
+#endif // __REACTOS__
 
     memmove( entries + 16, entries, 3 * sizeof(entry) );
     count = 0;
@@ -622,7 +662,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 4 || broken(count == 5) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 4, "got count %lu\n", count );
+#endif // __REACTOS__
     ok( !memcmp( entries + 16, entries, 3 * sizeof(entry) ), "entries differ\n" );
 
     for (i = 0; i < count; ++i)
@@ -635,7 +679,11 @@ static void test_HeapCreate(void)
         if (!entries[i].wFlags)
             ok( rtl_entries[i].wFlags == 0, "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_ENTRY_BUSY)
+#ifdef __REACTOS__
+            ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */ || broken(rtl_entries[i].wFlags == RTL_HEAP_ENTRY_BUSY) /* WS03 */ || broken(rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_BLOCK|0x9)) /* WS03 */,
+#else
             ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */,
+#endif // __REACTOS__
                 "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE)
             ok( rtl_entries[i].wFlags == RTL_HEAP_ENTRY_UNCOMMITTED || broken(rtl_entries[i].wFlags == 0x100) /* win7 */,
@@ -656,13 +704,27 @@ static void test_HeapCreate(void)
     }
 
     ok( entries[3].wFlags == PROCESS_HEAP_ENTRY_BUSY ||
+#ifdef __REACTOS__
+        broken(entries[3].wFlags == (PROCESS_HEAP_ENTRY_BUSY | PROCESS_HEAP_ENTRY_DDESHARE)) /* win7 */ || broken(entries[3].wFlags == PROCESS_HEAP_UNCOMMITTED_RANGE) /* WS03 */,
+#else
         broken(entries[3].wFlags == (PROCESS_HEAP_ENTRY_BUSY | PROCESS_HEAP_ENTRY_DDESHARE)) /* win7 */,
+#endif // __REACTOS__
         "got wFlags %#x\n", entries[3].wFlags );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[3].lpData == ptr, "got lpData %p\n", entries[3].lpData );
     ok( entries[3].cbData == 5 * alloc_size, "got cbData %#lx\n", entries[3].cbData );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
     ok( entries[3].cbOverhead == 0 || entries[3].cbOverhead == 8 * sizeof(void *) /* win7 */,
         "got cbOverhead %#x\n", entries[3].cbOverhead );
+#ifdef __REACTOS__
+    ok( entries[3].iRegionIndex == 64 || broken(entries[3].iRegionIndex == 0) /* WS03 */, "got iRegionIndex %d\n", entries[3].iRegionIndex );
+#else
     ok( entries[3].iRegionIndex == 64, "got iRegionIndex %d\n", entries[3].iRegionIndex );
+#endif // __REACTOS__
 
     ptr1 = HeapAlloc( heap, HEAP_ZERO_MEMORY, 5 * alloc_size );
     ok( !!ptr1, "HeapAlloc failed, error %lu\n", GetLastError() );
@@ -673,7 +735,11 @@ static void test_HeapCreate(void)
     rtl_entry.lpData = NULL;
     SetLastError( 0xdeadbeef );
     while (!RtlWalkHeap( heap, &rtl_entry )) rtl_entries[count++] = rtl_entry;
+#ifdef __REACTOS__
+    ok( count == 5 || broken(count == 6) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 5, "got count %lu\n", count );
+#endif // __REACTOS__
 
     memmove( entries + 16, entries, 4 * sizeof(entry) );
     count = 0;
@@ -682,7 +748,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 5 || broken(count == 6) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 5, "got count %lu\n", count );
+#endif // __REACTOS__
     ok( !memcmp( entries + 16, entries, 4 * sizeof(entry) ), "entries differ\n" );
 
     for (i = 0; i < count; ++i)
@@ -695,7 +765,11 @@ static void test_HeapCreate(void)
         if (!entries[i].wFlags)
             ok( rtl_entries[i].wFlags == 0, "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_ENTRY_BUSY)
+#ifdef __REACTOS__
+            ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */ || broken(rtl_entries[i].wFlags == RTL_HEAP_ENTRY_BUSY) /* WS03 */ || broken(rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_BLOCK|0x9)) /* WS03 */,
+#else
             ok( rtl_entries[i].wFlags == (RTL_HEAP_ENTRY_COMMITTED|RTL_HEAP_ENTRY_BLOCK|RTL_HEAP_ENTRY_BUSY) || broken(rtl_entries[i].wFlags == 0x411) /* win7 */,
+#endif // __REACTOS__
                 "got wFlags %#x\n", rtl_entries[i].wFlags );
         else if (entries[i].wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE)
             ok( rtl_entries[i].wFlags == RTL_HEAP_ENTRY_UNCOMMITTED || broken(rtl_entries[i].wFlags == 0x100) /* win7 */,
@@ -718,6 +792,9 @@ static void test_HeapCreate(void)
     ok( entries[4].wFlags == PROCESS_HEAP_ENTRY_BUSY ||
         broken(entries[4].wFlags == (PROCESS_HEAP_ENTRY_BUSY | PROCESS_HEAP_ENTRY_DDESHARE)) /* win7 */,
         "got wFlags %#x\n", entries[4].wFlags );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( entries[4].lpData == ptr1, "got lpData %p\n", entries[4].lpData );
     ok( entries[4].cbData == 5 * alloc_size, "got cbData %#lx\n", entries[4].cbData );
     ok( entries[4].cbOverhead == 0 || entries[4].cbOverhead == 8 * sizeof(void *) /* win7 */,
@@ -736,7 +813,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 3 || broken(count == 4) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 3, "got count %lu\n", count );
+#endif // __REACTOS__
     ok( !memcmp( entries + 16, entries, 3 * sizeof(entry) ), "entries differ\n" );
 
     ptr = HeapAlloc( heap, HEAP_ZERO_MEMORY, 123 );
@@ -749,10 +830,17 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 4 || broken(count == 5) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 4, "got count %lu\n", count );
+#endif // __REACTOS__
     ok( !memcmp( entries + 16, entries, 1 * sizeof(entry) ), "entries differ\n" );
     ok( memcmp( entries + 17, entries + 2, 2 * sizeof(entry) ), "entries differ\n" );
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[1].wFlags == PROCESS_HEAP_ENTRY_BUSY, "got wFlags %#x\n", entries[1].wFlags );
     ok( entries[1].lpData == ptr, "got lpData %p\n", entries[1].lpData );
     ok( entries[1].cbData == 123, "got cbData %#lx\n", entries[1].cbData );
@@ -776,6 +864,9 @@ static void test_HeapCreate(void)
         "got cbData %#lx\n", entries[3].cbData );
     ok( entries[3].cbOverhead == 0, "got cbOverhead %#x\n", entries[3].cbOverhead );
     ok( entries[3].iRegionIndex == 0, "got iRegionIndex %d\n", entries[3].iRegionIndex );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     ptr1 = HeapAlloc( heap, HEAP_ZERO_MEMORY, 456 );
     ok( !!ptr1, "HeapAlloc failed, error %lu\n", GetLastError() );
@@ -787,10 +878,17 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 5 || broken(count == 6) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 5, "got count %lu\n", count );
+#endif // __REACTOS__
     ok( !memcmp( entries + 16, entries, 2 * sizeof(entry) ), "entries differ\n" );
     ok( memcmp( entries + 18, entries + 3, 2 * sizeof(entry) ), "entries differ\n" );
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[2].wFlags == PROCESS_HEAP_ENTRY_BUSY, "got wFlags %#x\n", entries[2].wFlags );
     ok( entries[2].lpData == ptr1, "got lpData %p\n", entries[2].lpData );
     ok( entries[2].cbData == 456, "got cbData %#lx\n", entries[2].cbData );
@@ -814,18 +912,27 @@ static void test_HeapCreate(void)
         "got cbData %#lx\n", entries[4].cbData );
     ok( entries[4].cbOverhead == 0, "got cbOverhead %#x\n", entries[4].cbOverhead );
     ok( entries[4].iRegionIndex == 0, "got iRegionIndex %d\n", entries[4].iRegionIndex );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     ret = HeapFree( heap, 0, ptr1 );
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
     ret = HeapFree( heap, 0, ptr );
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) { /* NOTE: This crashes on WS03. */
+#endif // __REACTOS__
     size = 0;
     SetLastError( 0xdeadbeef );
     ret = pHeapQueryInformation( 0, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( !ret, "HeapQueryInformation succeeded\n" );
     ok( GetLastError() == ERROR_NOACCESS, "got error %lu\n", GetLastError() );
     ok( size == 0, "got size %Iu\n", size );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     size = 0;
     SetLastError( 0xdeadbeef );
@@ -857,7 +964,11 @@ static void test_HeapCreate(void)
 
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( compat_info == 0 || broken(compat_info == 1) /* WS03 */, "got HeapCompatibilityInformation %lu\n", compat_info );
+#else
     ok( compat_info == 0, "got HeapCompatibilityInformation %lu\n", compat_info );
+#endif // __REACTOS__
 
     compat_info = 2;
     ret = pHeapSetInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info) );
@@ -900,7 +1011,11 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     ret = pHeapSetInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info) );
     ok( !ret, "HeapSetInformation succeeded\n" );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == ERROR_GEN_FAILURE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
     ok( compat_info == 0, "got HeapCompatibilityInformation %lu\n", compat_info );
@@ -917,14 +1032,22 @@ static void test_HeapCreate(void)
 
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( compat_info == 0 || broken(compat_info == 1) /* WS03 */, "got HeapCompatibilityInformation %lu\n", compat_info );
+#else
     ok( compat_info == 0, "got HeapCompatibilityInformation %lu\n", compat_info );
+#endif // __REACTOS__
 
     for (i = 0; i < 0x12; i++) ptrs[i] = pHeapAlloc( heap, 0, 0 );
     for (i = 0; i < 0x12; i++) HeapFree( heap, 0, ptrs[i] );
 
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( compat_info == 2 || broken(compat_info == 1) /* WS03 */, "got HeapCompatibilityInformation %lu\n", compat_info );
+#else
     ok( compat_info == 2, "got HeapCompatibilityInformation %lu\n", compat_info );
+#endif // __REACTOS__
 
     ret = HeapDestroy( heap );
     ok( ret, "HeapDestroy failed, error %lu\n", GetLastError() );
@@ -953,8 +1076,15 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( count == 3 || broken(count == 7) /* WS03 */, "got count %lu\n", count );
+#else
     ok( count == 3, "got count %lu\n", count );
+#endif // __REACTOS__
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
     ok( entries[0].cbData <= 0x1000 /* sizeof(*heap) */, "got cbData %#lx\n", entries[0].cbData );
@@ -962,6 +1092,9 @@ static void test_HeapCreate(void)
     ok( entries[0].iRegionIndex == 0, "got iRegionIndex %d\n", entries[0].iRegionIndex );
     ok( entries[1].wFlags == 0, "got wFlags %#x\n", entries[1].wFlags );
     ok( entries[2].wFlags == PROCESS_HEAP_UNCOMMITTED_RANGE, "got wFlags %#x\n", entries[2].wFlags );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     for (i = 0; i < 0x12; i++) ptrs[i] = pHeapAlloc( heap, 0, 24 + 2 * sizeof(void *) );
     for (i = 0; i < 0x12; i++) HeapFree( heap, 0, ptrs[i] );
@@ -974,9 +1107,15 @@ static void test_HeapCreate(void)
     while ((ret = HeapWalk( heap, &entry ))) entries[count++] = entry;
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
     todo_wine
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( count > 24, "got count %lu\n", count );
     if (count < 2) count = 2;
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
     ok( entries[0].cbData <= 0x1000 /* sizeof(*heap) */, "got cbData %#lx\n", entries[0].cbData );
@@ -994,6 +1133,9 @@ static void test_HeapCreate(void)
         todo_wine
         ok( entries[4 + i].cbOverhead == 2 * sizeof(void *), "got cbOverhead %#x\n", entries[4 + i].cbOverhead );
     }
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     if (entries[count - 1].wFlags == PROCESS_HEAP_REGION) /* > win7 */
         ok( entries[count - 2].wFlags == PROCESS_HEAP_UNCOMMITTED_RANGE, "got wFlags %#x\n", entries[count - 2].wFlags );
@@ -1007,6 +1149,9 @@ static void test_HeapCreate(void)
     SetLastError( 0xdeadbeef );
     while (!RtlWalkHeap( heap, &rtl_entry )) rtl_entries[count++] = rtl_entry;
     todo_wine
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( count > 24, "got count %lu\n", count );
     if (count < 2) count = 2;
 
@@ -1053,6 +1198,9 @@ static void test_HeapCreate(void)
     ok( count > 24, "got count %lu\n", count );
     if (count < 2) count = 2;
 
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
     ok( entries[0].cbData <= 0x1000 /* sizeof(*heap) */, "got cbData %#lx\n", entries[0].cbData );
@@ -1067,6 +1215,9 @@ static void test_HeapCreate(void)
         ok( entries[i].cbData == 0x18 + 2 * sizeof(void *), "got cbData %#lx\n", entries[i].cbData );
         ok( entries[i].cbOverhead == 0x8, "got cbOverhead %#x\n", entries[i].cbOverhead );
     }
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     if (entries[count - 1].wFlags == PROCESS_HEAP_REGION) /* > win7 */
         ok( entries[count - 2].wFlags == PROCESS_HEAP_UNCOMMITTED_RANGE, "got wFlags %#x\n", entries[count - 2].wFlags );
@@ -1209,14 +1360,22 @@ static void test_HeapCreate(void)
 
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( compat_info == 0 || broken(compat_info == 1) /* WS03 */, "got HeapCompatibilityInformation %lu\n", compat_info );
+#else
     ok( compat_info == 0, "got HeapCompatibilityInformation %lu\n", compat_info );
+#endif
 
     for (i = 0; i < 0x12; i++) ptrs[i] = pHeapAlloc( heap, 0, 0 );
     for (i = 0; i < 0x12; i++) HeapFree( heap, 0, ptrs[i] );
 
     ret = pHeapQueryInformation( heap, HeapCompatibilityInformation, &compat_info, sizeof(compat_info), &size );
     ok( ret, "HeapQueryInformation failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    ok( compat_info == 2 || broken(compat_info == 1) /* WS03 */, "got HeapCompatibilityInformation %lu\n", compat_info );
+#else
     ok( compat_info == 2, "got HeapCompatibilityInformation %lu\n", compat_info );
+#endif // __REACTOS__
 
     /* locking is serialized */
 
@@ -1242,6 +1401,9 @@ static void test_HeapCreate(void)
     thread_params.flags = 0;
     SetEvent( thread_params.start_event );
     res = WaitForSingleObject( thread_params.ready_event, 100 );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( !res, "WaitForSingleObject returned %#lx, error %lu\n", res, GetLastError() );
     ret = HeapUnlock( heap );
     ok( ret, "HeapUnlock failed, error %lu\n", GetLastError() );
@@ -1590,7 +1752,11 @@ static void test_GlobalAlloc(void)
     tmp_mem = GlobalReAlloc( mem, 0, GMEM_MOVEABLE );
     ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
     ok( GetLastError() == ERROR_INVALID_HANDLE, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    if (sizeof(void *) != 8 && _ntMajor >= 6) /* crashes on 64-bit, invalid on WS03 */
+#else
     if (sizeof(void *) != 8) /* crashes on 64-bit */
+#endif // __REACTOS__
     {
         SetLastError( 0xdeadbeef );
         tmp_mem = GlobalHandle( mem );
@@ -1633,7 +1799,11 @@ static void test_GlobalAlloc(void)
         SetLastError( 0xdeadbeef );
         ret = pRtlGetUserInfoHeap( GetProcessHeap(), 0, invalid_mem, (void **)&tmp_ptr, &tmp_flags );
         ok( !ret, "RtlGetUserInfoHeap failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+        ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == ERROR_NOACCESS) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
         ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     }
 
     /* invalid pointers are caught */
@@ -1641,7 +1811,11 @@ static void test_GlobalAlloc(void)
     tmp_mem = pGlobalFree( invalid_ptr );
     ok( tmp_mem == invalid_ptr, "GlobalFree succeeded\n" );
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOACCESS || broken(GetLastError() == ERROR_INVALID_HANDLE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOACCESS, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     SetLastError( 0xdeadbeef );
     flags = GlobalFlags( invalid_ptr );
     todo_wine
@@ -1687,9 +1861,15 @@ static void test_GlobalAlloc(void)
     size = GlobalSize( mem );
     ok( size == small_size, "GlobalSize returned %Iu\n", size );
     SetLastError( 0xdeadbeef );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     tmp_mem = GlobalReAlloc( mem, small_size, 0 );
     ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
     ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
     if (tmp_mem) mem = tmp_mem;
     tmp_mem = GlobalReAlloc( mem, 1024 * 1024, GMEM_MODIFY );
     ok( !!tmp_mem, "GlobalAlloc failed, error %lu\n", GetLastError() );
@@ -1704,6 +1884,9 @@ static void test_GlobalAlloc(void)
     ok( !!mem, "GlobalAlloc failed, error %lu\n", GetLastError() );
     tmp_mem = GlobalReAlloc( mem, small_size + 1, GMEM_MOVEABLE );
     ok( !!tmp_mem, "GlobalReAlloc failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( tmp_mem != mem, "GlobalReAlloc didn't relocate memory\n" );
     ptr = GlobalLock( tmp_mem );
     ok( !!ptr, "GlobalLock failed, error %lu\n", GetLastError() );
@@ -1712,7 +1895,10 @@ static void test_GlobalAlloc(void)
     ok( !mem, "GlobalFree failed, error %lu\n", GetLastError() );
 
     /* test GlobalReAlloc flags / GlobalLock combinations */
-
+#ifdef __REACTOS__
+    if (_ntMajor < 6) { skip("realloc_flags_tests invalid for WS03.\n"); }
+    else {
+#endif // __REACTOS__
     for (i = 0; i < ARRAY_SIZE(realloc_flags_tests); i++)
     {
         struct mem_entry expect_entry, entry;
@@ -1911,16 +2097,28 @@ static void test_GlobalAlloc(void)
         if (flags & GMEM_MODIFY) ok( tmp_mem == mem, "GlobalReAlloc returned %p\n", tmp_mem );
         else if (flags & GMEM_DISCARDABLE) ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
         else if (flags & GMEM_MOVEABLE) ok( tmp_mem == mem, "GlobalReAlloc returned %p, error %lu\n", tmp_mem, GetLastError() );
+#ifdef __REACTOS__
+        else ok( !tmp_mem || broken(_ntMajor == 6 && _ntMinor == 0), "GlobalReAlloc succeeded\n" );
+#else
         else ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
+#endif // __REACTOS__
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & GMEM_DISCARDABLE) && (flags & GMEM_MODIFY)) expect_entry.flags |= 4;
+#ifdef __REACTOS__
+        if (flags == GMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+#else
         if (flags == GMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
+#endif // __REACTOS__
         else ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
         ok( entry.flags == expect_entry.flags, "got flags %#Ix was %#Ix\n", entry.flags, expect_entry.flags );
 
         size = GlobalSize( mem );
         if (flags == GMEM_MOVEABLE) ok( size == 512, "GlobalSize returned %Iu\n", size );
+#ifdef __REACTOS__
+        else ok( size == small_size || broken(size == 512) /* Vista */, "GlobalSize returned %Iu\n", size );
+#else
         else ok( size == small_size, "GlobalSize returned %Iu\n", size );
+#endif // __REACTOS__
 
         ret = GlobalUnlock( mem );
         ok( !ret, "GlobalUnlock succeeded\n" );
@@ -1990,7 +2188,11 @@ static void test_GlobalAlloc(void)
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & GMEM_DISCARDABLE) && (flags & GMEM_MODIFY)) expect_entry.flags |= 4;
         if (flags & (GMEM_DISCARDABLE | GMEM_MODIFY)) ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
+#ifdef __REACTOS__
+        else ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+#else
         else ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
+#endif // __REACTOS__
         ok( entry.flags == expect_entry.flags, "got flags %#Ix was %#Ix\n", entry.flags, expect_entry.flags );
 
         size = GlobalSize( mem );
@@ -2052,6 +2254,9 @@ static void test_GlobalAlloc(void)
 
         winetest_pop_context();
     }
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     mem = GlobalAlloc( GMEM_DDESHARE, 100 );
     ok( !!mem, "GlobalAlloc failed, error %lu\n", GetLastError() );
@@ -2383,13 +2588,21 @@ static void test_LocalAlloc(void)
     tmp_mem = pLocalFree( invalid_ptr );
     ok( tmp_mem == invalid_ptr, "LocalFree succeeded\n" );
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOACCESS || broken(GetLastError() == ERROR_INVALID_HANDLE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOACCESS, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     SetLastError( 0xdeadbeef );
     flags = LocalFlags( invalid_ptr );
     todo_wine
     ok( flags == LMEM_INVALID_HANDLE, "LocalFlags succeeded\n" );
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOACCESS || broken(GetLastError() == ERROR_INVALID_HANDLE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOACCESS, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
     SetLastError( 0xdeadbeef );
     size = LocalSize( invalid_ptr );
     ok( size == 0, "LocalSize succeeded\n" );
@@ -2411,7 +2624,11 @@ static void test_LocalAlloc(void)
     tmp_mem = LocalHandle( invalid_ptr );
     ok( !tmp_mem, "LocalHandle succeeded\n" );
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_NOACCESS || broken(GetLastError() == ERROR_INVALID_HANDLE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_NOACCESS, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
 
     /* LMEM_FIXED block doesn't allow resize, though it succeeds with LMEM_MODIFY */
     mem = LocalAlloc( LMEM_FIXED, small_size );
@@ -2422,9 +2639,15 @@ static void test_LocalAlloc(void)
     size = LocalSize( mem );
     ok( size == small_size, "LocalSize returned %Iu\n", size );
     SetLastError( 0xdeadbeef );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6) {
+#endif // __REACTOS__
     tmp_mem = LocalReAlloc( mem, small_size, 0 );
     ok( !tmp_mem, "LocalReAlloc succeeded\n" );
     ok( GetLastError() == ERROR_NOT_ENOUGH_MEMORY, "got error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
     if (tmp_mem) mem = tmp_mem;
     tmp_mem = LocalReAlloc( mem, 1024 * 1024, LMEM_MODIFY );
     ok( !!tmp_mem, "LocalAlloc failed, error %lu\n", GetLastError() );
@@ -2439,6 +2662,9 @@ static void test_LocalAlloc(void)
     ok( !!mem, "LocalAlloc failed, error %lu\n", GetLastError() );
     tmp_mem = LocalReAlloc( mem, small_size + 1, LMEM_MOVEABLE );
     ok( !!tmp_mem, "LocalReAlloc failed, error %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    if (_ntMajor >= 6)
+#endif // __REACTOS__
     ok( tmp_mem != mem, "LocalReAlloc didn't relocate memory\n" );
     ptr = LocalLock( tmp_mem );
     ok( !!ptr, "LocalLock failed, error %lu\n", GetLastError() );
@@ -2448,6 +2674,10 @@ static void test_LocalAlloc(void)
 
     /* test LocalReAlloc flags / LocalLock / size combinations */
 
+#ifdef __REACTOS__
+    if (_ntMajor < 6) { skip("realloc_flags_tests invalid for WS03.\n"); }
+    else {
+#endif // __REACTOS__
     for (i = 0; i < ARRAY_SIZE(realloc_flags_tests); i++)
     {
         struct mem_entry expect_entry, entry;
@@ -2569,16 +2799,28 @@ static void test_LocalAlloc(void)
         if (flags & LMEM_MODIFY) ok( tmp_mem == mem, "LocalReAlloc returned %p\n", tmp_mem );
         else if (flags & LMEM_DISCARDABLE) ok( !tmp_mem, "LocalReAlloc succeeded\n" );
         else if (flags & LMEM_MOVEABLE) ok( tmp_mem == mem, "LocalReAlloc returned %p, error %lu\n", tmp_mem, GetLastError() );
+#ifdef __REACTOS__
+        else ok( !tmp_mem || broken(_ntMajor == 6 && _ntMinor == 0), "LocalReAlloc succeeded\n" );
+#else
         else ok( !tmp_mem, "LocalReAlloc succeeded\n" );
+#endif // __REACTOS__
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & LMEM_DISCARDABLE) && (flags & LMEM_MODIFY)) expect_entry.flags |= 4;
+#ifdef __REACTOS__
+        if (flags == LMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+#else
         if (flags == LMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
+#endif // __REACTOS__
         else ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
         ok( entry.flags == expect_entry.flags, "got flags %#Ix was %#Ix\n", entry.flags, expect_entry.flags );
 
         size = LocalSize( mem );
         if (flags == LMEM_MOVEABLE) ok( size == 512, "LocalSize returned %Iu\n", size );
+#ifdef __REACTOS__
+        else ok( size == small_size || broken(size == 512) /* Vista */, "LocalSize returned %Iu\n", size );
+#else
         else ok( size == small_size, "LocalSize returned %Iu\n", size );
+#endif // __REACTOS__
 
         ret = LocalUnlock( mem );
         ok( !ret, "LocalUnlock succeeded\n" );
@@ -2724,7 +2966,11 @@ static void test_LocalAlloc(void)
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & LMEM_DISCARDABLE) && (flags & LMEM_MODIFY)) expect_entry.flags |= 4;
         if (flags & (LMEM_DISCARDABLE | LMEM_MODIFY)) ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
+#ifdef __REACTOS__
+        else ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+#else
         else ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
+#endif // __REACTOS__
         ok( entry.flags == expect_entry.flags, "got flags %#Ix was %#Ix\n", entry.flags, expect_entry.flags );
 
         size = LocalSize( mem );
@@ -2858,6 +3104,9 @@ static void test_LocalAlloc(void)
 
         winetest_pop_context();
     }
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     mem = LocalAlloc( LMEM_FIXED, 100 );
     ok( !!mem, "LocalAlloc failed, error %lu\n", GetLastError() );
@@ -2874,7 +3123,11 @@ static void test_LocalAlloc(void)
     ok( !!mem, "LocalAlloc failed, error %lu\n", GetLastError() );
     SetLastError( 0xdeadbeef );
     size = LocalSize( mem );
+#ifdef __REACTOS__
+    ok( size == 0 || broken(size == 1) /* Vista */, "LocalSize returned %Iu\n", size );
+#else
     ok( size == 0, "LocalSize returned %Iu\n", size );
+#endif // __REACTOS__
     mem = LocalFree( mem );
     ok( !mem, "LocalFree failed, error %lu\n", GetLastError() );
 
@@ -3019,6 +3272,9 @@ static void test_block_layout( HANDLE heap, DWORD global_flags, DWORD heap_flags
         diff = min( llabs( ptr2 - ptr1 ), llabs( ptr1 - ptr0 ) );
         todo_wine_if( (!global_flags && alloc_size < 2 * sizeof(void *)) ||
                       ((heap_flags & HEAP_FREE_CHECKING_ENABLED) && diff >= 0x100000) )
+#ifdef __REACTOS__
+        if (_ntMajor >= 6)
+#endif // __REACTOS__
         ok( diff == expect_size, "got diff %#Ix exp %#Ix\n", diff, expect_size );
         ok( !memcmp( ptr0 + alloc_size, tail_buf, tail_size ), "missing block tail\n" );
         ok( !memcmp( ptr1 + alloc_size, tail_buf, tail_size ), "missing block tail\n" );
@@ -3145,12 +3401,26 @@ static void test_block_layout( HANDLE heap, DWORD global_flags, DWORD heap_flags
         ok( ret, "RtlSetUserValueHeap failed, error %lu\n", GetLastError() );
         SetLastError( 0xdeadbeef );
         ret = pRtlSetUserFlagsHeap( heap, 0, ptr0, 0, 0x1000 );
+#ifdef __REACTOS__
+        if (_ntMajor >= 6)
+#endif // __REACTOS__
         ok( !ret, "RtlSetUserFlagsHeap succeeded\n" );
+#ifdef __REACTOS__
+        ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
         ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
         SetLastError( 0xdeadbeef );
         ret = pRtlSetUserFlagsHeap( heap, 0, ptr0, 0x100, 0 );
+#ifdef __REACTOS__
+        if (_ntMajor >= 6)
+#endif // __REACTOS__
         ok( !ret, "RtlSetUserFlagsHeap succeeded\n" );
+#ifdef __REACTOS__
+        ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
         ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
         ret = pRtlSetUserFlagsHeap( heap, 0, ptr0, 0x400, 0x200 );
         ok( ret, "RtlSetUserFlagsHeap failed, error %lu\n", GetLastError() );
 
@@ -3436,6 +3706,13 @@ static void test_heap_layout( HANDLE handle, DWORD global_flag, DWORD heap_flags
     DWORD force_flags = heap_flags & ~(HEAP_SHARED|HEAP_DISABLE_COALESCE_ON_FREE);
     struct heap *heap = handle;
 
+#ifdef __REACTOS__
+    if (_ntMajor < 6)
+    {
+        skip("test_heap_layout() is invalid on WS03.\n");
+        return;
+    }
+#endif // __REACTOS__
     if (global_flag & FLG_HEAP_ENABLE_TAGGING) heap_flags |= HEAP_SHARED;
     if (!(global_flag & FLG_HEAP_PAGE_ALLOCS)) force_flags &= ~(HEAP_GROWABLE|HEAP_PRIVATE);
 
@@ -3728,6 +4005,13 @@ static void test_heap_sizes(void)
     SIZE_T size, round_size = 0x400 * sizeof(void*);
     char *base;
 
+#ifdef __REACTOS__
+    if (_ntMajor < 6)
+    {
+        skip("test_heap_sizes() is invalid for WS03.\n");
+        return;
+    }
+#endif // __REACTOS__
     test_heap_size( 0 );
     test_heap_size( 0x80000 );
     test_heap_size( 0x150000 );
@@ -3748,6 +4032,11 @@ START_TEST(heap)
     int argc;
     char **argv;
 
+#ifdef __REACTOS__
+    _ntVersion = GetVersion();
+    _ntMajor = LOBYTE(LOWORD(_ntVersion));
+    _ntMinor = HIBYTE(LOWORD(_ntVersion));
+#endif // __REACTOS__
     load_functions();
 
     argc = winetest_get_mainargs( &argv );

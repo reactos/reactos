@@ -401,26 +401,34 @@ static void test_ExpandEnvironmentStringsW(void)
         /*  5 */ { L"Long long value",       L"Long long value",        16, 16 },
         /*  6 */ { L"Long long value",       L"Long long value",        17, 16 },
         /*  7 */ { L"%TVAR% long long",      L"abcdefghijklmnopqrstuv",  0, 15 },
+#ifndef __REACTOS__
         /*  8 */ { L"%TVAR% long long",      L"",                        1, 15 },
         /*  9 */ { L"%TVAR% long long",      L"",                        2, 15 },
         /* 10 */ { L"%TVAR% long long",      L"",                        4, 15 },
+#endif // __REACTOS__
         /* 11 */ { L"%TVAR% long long",      L"WINE",                    5, 15 },
         /* 12 */ { L"%TVAR% long long",      L"WINE fghijklmnopqrstuv",  6, 15 },
         /* 13 */ { L"%TVAR% long long",      L"WINE lghijklmnopqrstuv",  7, 15 },
         /* 14 */ { L"%TVAR% long long",      L"WINE long long",         15, 15 },
         /* 15 */ { L"%TVAR% long long",      L"WINE long long",         16, 15 },
+#ifndef __REACTOS__
         /* 16 */ { L"%TVAR%%TVAR% long",     L"",                        4, 14 },
+#endif // __REACTOS__
         /* 17 */ { L"%TVAR%%TVAR% long",     L"WINE",                    5, 14 },
         /* 18 */ { L"%TVAR%%TVAR% long",     L"WINE",                    6, 14 },
+#ifndef __REACTOS__
         /* 19 */ { L"%TVAR%%TVAR% long",     L"WINE",                    8, 14 },
+#endif // __REACTOS__
         /* 20 */ { L"%TVAR%%TVAR% long",     L"WINEWINE",                9, 14 },
         /* 21 */ { L"%TVAR%%TVAR% long",     L"WINEWINE jklmnopqrstuv", 10, 14 },
         /* 22 */ { L"%TVAR%%TVAR% long",     L"WINEWINE long",          14, 14 },
         /* 23 */ { L"%TVAR%%TVAR% long",     L"WINEWINE long",          15, 14 },
         /* 24 */ { L"%TVAR% %TVAR% long",    L"WINE",                    5, 15 },
+#ifndef __REACTOS__
         /* 25 */ { L"%TVAR% %TVAR% long",    L"WINE ",                   6, 15 },
         /* 26 */ { L"%TVAR% %TVAR% long",    L"WINE ",                   8, 15 },
         /* 27 */ { L"%TVAR% %TVAR% long",    L"WINE ",                   9, 15 },
+#endif // __REACTOS__
         /* 28 */ { L"%TVAR% %TVAR% long",    L"WINE WINE",              10, 15 },
         /* 29 */ { L"%TVAR% %TVAR% long",    L"WINE WINE klmnopqrstuv", 11, 15 },
         /* 30 */ { L"%TVAR% %TVAR% long",    L"WINE WINE llmnopqrstuv", 12, 15 },

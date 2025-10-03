@@ -969,6 +969,13 @@ static void test_fiber_actctx(void)
     size_t i, j;
     BOOL ret;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        skip("test_fiber_actctx() crashes and isn't valid on WS03.\n");
+        return;
+    }
+#endif // __REACTOS__
     for (i = 0; i < ARRAY_SIZE(actctxs); i++)
     {
         actctxs[i] = create_actctx_from_module_manifest();

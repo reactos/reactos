@@ -159,11 +159,17 @@ static void test_GetDiskFreeSpaceA(void)
     ret = GetDiskFreeSpaceA("C:\\", &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters);
     ok(ret, "GetDiskFreeSpaceA error %ld\n", GetLastError());
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif // __REACTOS__
     ret = GetVolumeNameForVolumeMountPointA("C:\\", volume_guid_path, ARRAY_SIZE(volume_guid_path));
     ok(ret, "GetVolumeNameForVolumeMountPointA error %ld\n", GetLastError());
 
     ret = GetDiskFreeSpaceA(volume_guid_path, &sectors_per_cluster, &bytes_per_sector, &free_clusters, &total_clusters);
     ok(ret, "GetDiskFreeSpaceA error %ld\n", GetLastError());
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 
     logical_drives = GetLogicalDrives();
     ok(logical_drives != 0, "GetLogicalDrives error %ld\n", GetLastError());

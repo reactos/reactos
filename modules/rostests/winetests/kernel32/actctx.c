@@ -2949,7 +2949,9 @@ todo_wine {
     /* Should still work if we add a dll with the same name, but without manifest */
     strcpy(dll, dir);
     strcat(dll, "testdep1.dll");
+#ifndef __REACTOS__ // Causes test failures on WS03 - Win10 1607.
     extract_resource("dummy.dll", "TESTDLL", dll);
+#endif // __REACTOS__
     handle = CreateActCtxA(&actctx);
     ok(handle != INVALID_HANDLE_VALUE || broken(GetLastError() == ERROR_SXS_CANT_GEN_ACTCTX) , "got error %ld\n", GetLastError());
     ReleaseActCtx(handle);
@@ -3049,6 +3051,10 @@ todo_wine {
     {
         winetest_push_context("%lu", flags[i]);
 
+#ifdef __REACTOS__
+        if (LOBYTE(LOWORD(GetVersion())) < 6 && i > 0)
+            break; // Only the first test is valid for WS03.
+#endif
         /* use explorer.exe because using modules already loaded has a different behavior */
         actctx.hModule = LoadLibraryExA("C:\\windows\\explorer.exe", NULL, flags[i]);
         ok(actctx.hModule != NULL, "LoadLibraryExA failed, error %lu\n", GetLastError());
@@ -3073,7 +3079,11 @@ static void test_CreateActCtx_share_mode(void)
     actctx.lpSource = tmp_manifest_pathname;
 
     handle = CreateActCtxW(&actctx);
+#ifdef __REACTOS__
+    ok(handle != INVALID_HANDLE_VALUE || GetLastError() == ERROR_SHARING_VIOLATION /* WS03 */, "CreateActCtxW returned error %lu\n", GetLastError());
+#else
     ok(handle != INVALID_HANDLE_VALUE, "CreateActCtxW returned error %lu\n", GetLastError());
+#endif // __REACTOS__
     ok(handle != NULL, "CreateActCtxW returned %p\n", handle);
 
     ReleaseActCtx(handle);
@@ -4029,6 +4039,9 @@ static DWORD subtest_manifest_res_(int line, const char *manifest_exe, const cha
 /* Test loading DLL with dependency assembly in manifest resource */
 static void test_manifest_resources(void)
 {
+#ifdef __REACTOS__
+    skip("test_manifest_resources() is invalid for WS03 - Win10 1607.\n");
+#else
     static const struct manifest_res_spec wrong_manifest_resources_numbered[] = {
         { (char *)2, MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT), wrong_manifest1 },
         { (char *)2, MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT), wrong_manifest1 },
@@ -4123,6 +4136,7 @@ static void test_manifest_resources(void)
         subtest_manifest_res(two_dll_manifest_exe, two_dll_manifest_dll, &tests[i], 0);
         winetest_pop_context();
     }
+#endif // __REACTOS__
 }
 
 #define LANGID_PREC_MAX_COUNT 5
@@ -4259,6 +4273,9 @@ static void subtest_valid_manifest_resources_locale(LANGID actctx_lang)
 
 static void test_valid_manifest_resources_locale(void)
 {
+#ifdef __REACTOS__
+    skip("test_valid_manifest_resources_locale() is invalid for WS03 - Win10 1607.\n");
+#else
     static const LANGID langs[] = {
         MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
         MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL),
@@ -4271,6 +4288,7 @@ static void test_valid_manifest_resources_locale(void)
         subtest_valid_manifest_resources_locale(langs[i]);
         winetest_pop_context();
     }
+#endif // __REACTOS__
 }
 
 static void run_sxs_test(int run)
@@ -4334,6 +4352,13 @@ static void test_manifest_in_module(void)
     ACTCTXW ctx;
     HANDLE handle;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    {
+        skip("test_manifest_in_module() crashes on WS03.\n");
+        return;
+    }
+#endif // __REACTOS__
     memset(&ctx, 0, sizeof(ctx));
     ctx.cbSize = sizeof(ctx);
     ctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
@@ -4363,7 +4388,11 @@ static void test_manifest_resource_name_omitted(void)
     err = GetLastError();
     ok(handle == INVALID_HANDLE_VALUE, "CreateActCtxW shall fail\n");
     todo_wine
+#ifdef __REACTOS__
+    ok(err == ERROR_RESOURCE_TYPE_NOT_FOUND || broken(err == ERROR_NOT_ENOUGH_MEMORY) /* WS03 */, "got %lu\n", err);
+#else
     ok(err == ERROR_RESOURCE_TYPE_NOT_FOUND, "got %lu\n", err);
+#endif // __REACTOS__
 
     memset(&ctx, 0, sizeof(ctx));
     ctx.cbSize = sizeof(ctx);
@@ -4373,7 +4402,11 @@ static void test_manifest_resource_name_omitted(void)
     handle = CreateActCtxW(&ctx);
     err = GetLastError();
     ok(handle == INVALID_HANDLE_VALUE, "CreateActCtxW shall fail\n");
+#ifdef __REACTOS__
+    ok(err == ERROR_INVALID_PARAMETER || broken(err == ERROR_NOT_ENOUGH_MEMORY) /* WS03 */, "got %lu\n", err);
+#else
     ok(err == ERROR_INVALID_PARAMETER, "got %lu\n", err);
+#endif // __REACTOS__
 
     len = GetModuleFileNameW(NULL, pathbuf, ARRAY_SIZE(pathbuf));
     ok(len > 0 && len < ARRAY_SIZE(pathbuf), "GetModuleFileNameW returned error %lu\n", GetLastError());
@@ -4438,9 +4471,15 @@ START_TEST(actctx)
     run_child_process();
     test_compatibility();
     test_settings();
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) > 6) {
+#endif // __REACTOS__
     run_child_process_two_dll(1);
     run_child_process_two_dll(2);
     run_child_process_two_dll(3);
     run_child_process_two_dll(4);
     run_child_process_two_dll(5);
+#ifdef __REACTOS__
+    }
+#endif // __REACTOS__
 }
