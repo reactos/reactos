@@ -72,9 +72,6 @@ WDFEXPORT(WdfDriverGetRegistryPath)(
     return pDriver->GetRegistryPathUnicodeString()->Buffer;
 }
 
-// VOID
-// RosInitWdf();
-
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
@@ -102,9 +99,6 @@ WDFEXPORT(WdfDriverCreate)(
     WDFDRIVER hDriver;
     const LONG validFlags = WdfDriverInitNonPnpDriver |
                             WdfDriverInitNoDispatchOverride;
-
-    // RosInitWdf();
-    //DriverGlobals = WdfDriverGlobals;
 
     hDriver = NULL;
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);

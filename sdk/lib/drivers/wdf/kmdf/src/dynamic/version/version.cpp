@@ -84,9 +84,15 @@ extern "C" {
 
 #include "fxlibrarycommon.h"
 
+#ifdef __REACTOS__
 #define  KMDF_DEFAULT_NAME   "Wdf"  \
                              LITERAL(__WDF_MAJOR_VERSION_STRING)    \
+                            "000" //minor version
+#else
+#define  KMDF_DEFAULT_NAME   "Wdf" ## \
+                             LITERAL(__WDF_MAJOR_VERSION_STRING)   ## \
                              "000" //minor version
+#endif
 
 //-----------------------------------------------------------------------------
 // local prototype definitions

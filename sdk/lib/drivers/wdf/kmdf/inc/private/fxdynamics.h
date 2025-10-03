@@ -6941,10 +6941,6 @@ WDFEXPORT(WdfWorkItemFlush)(
     WDFWORKITEM WorkItem
     );
 
-//#ifndef __GNUC__
-//extern WDFVERSION WdfVersion;
-//#endif
-
 #ifdef FX_DYNAMICS_GENERATE_TABLE
 
 WDFVERSION WdfVersion = {

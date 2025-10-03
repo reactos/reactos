@@ -79,8 +79,6 @@ end:
         ZwClose(keyHandle);
     }
 
-    //FreeString(&string);
-
     return status;
 }
 

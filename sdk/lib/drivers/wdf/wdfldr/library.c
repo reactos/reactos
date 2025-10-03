@@ -327,9 +327,9 @@ LibraryUnload(
 {
     NTSTATUS status;
 
-    // TODO: Reference wdfldr.sys has this check. Research the reason
-    // if (LibModule->IsBootDriver)
-    //     return;
+    /* This occurs because of how WDF ClassDrivers behave. */
+    if (LibModule->IsBootDriver)
+        return;
     
     ASSERT(LibModule->LibraryInfo);
 

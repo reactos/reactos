@@ -26,10 +26,12 @@ extern "C" {
 #include "fxldr.h"
 #include "fxlibrarycommon.h"
 #include "fxtelemetry.hpp"
-//#include "wdfversionlog.h"
-//#include "minwindef.h"
+#ifndef __REACTOS__
+#include "wdfversionlog.h"
+#include "minwindef.h"
+#else
 #include "reactos_special.h"
-
+#endif
 
 extern "C" {
 //
@@ -219,12 +221,14 @@ ReportDdiFunctionCountMismatch(
     //
     // Report a telemetry event that can be used to proactively fix drivers
     //
-    //TraceLoggingWrite(g_TelemetryProvider,
-    //                "KmdfClientFunctionCountMismatch",
-    //                WDF_TELEMETRY_EVT_KEYWORDS,
-    //                TraceLoggingUnicodeString(ServiceName, "ServiceName"),
-    //                TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
-    //                TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+#ifndef __REACTOS__
+    TraceLoggingWrite(g_TelemetryProvider,
+                    "KmdfClientFunctionCountMismatch",
+                    WDF_TELEMETRY_EVT_KEYWORDS,
+                    TraceLoggingUnicodeString(ServiceName, "ServiceName"),
+                    TraceLoggingUInt32(ActualFunctionCount, "FunctionCount"),
+                    TraceLoggingUInt32(ExpectedFunctionCount, "ExpectedCount"));
+#endif
 }
 
 _Must_inspect_result_
@@ -253,25 +257,25 @@ FxLibraryCommonCommission(
     //
     // register telemetry provider.
     //
-    //RegisterTelemetryProvider(); __REACTOS__ : not compiled
+#ifndef __REACTOS__
+    RegisterTelemetryProvider();
 
     //
     // Initialize internal WPP tracing.
     //
-    // __REACTOS__ : not compiled
-    //status = FxTraceInitialize();
-    //if (NT_SUCCESS(status)) {
-    //    FxLibraryGlobals.InternalTracingInitialized = TRUE;
-    //}
-    //else {
-    //    __Print(("Failed to initialize tracing for WDF\n"));
+    status = FxTraceInitialize();
+    if (NT_SUCCESS(status)) {
+        FxLibraryGlobals.InternalTracingInitialized = TRUE;
+    }
+    else {
+        __Print(("Failed to initialize tracing for WDF\n"));
 
         //
         // Failure to initialize is not critical enough to fail driver load.
         //
-    //    status = STATUS_SUCCESS;
-    //}
-
+        status = STATUS_SUCCESS;
+    }
+#endif
     //
     // Attempt to load RtlGetVersion (works for > w2k).
     //
