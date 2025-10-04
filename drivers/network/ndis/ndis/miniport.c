@@ -2335,6 +2335,52 @@ NdisIDeviceIoControl(
   return Status;
 }
 
+static
+NTSTATUS
+NdisIRemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+    
+    if (Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer)
+    {
+        IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
+        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
+    }
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+
+    IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
+        
+    RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
+
+    if (Adapter->NdisMiniportBlock.Resources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.Resources);
+        Adapter->NdisMiniportBlock.Resources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
+        Adapter->NdisMiniportBlock.AllocatedResources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResourcesTranslated)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResourcesTranslated);
+        Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
+    }
+
+    IoDeleteDevice(DeviceObject);
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 NdisIDispatchPnp(
@@ -2399,7 +2445,11 @@ NdisIDispatchPnp(
         Irp->IoStatus.Information |= Adapter->NdisMiniportBlock.PnPFlags;
         break;
 
+      case IRP_MN_REMOVE_DEVICE:
+        return NdisIRemoveDevice(DeviceObject, Irp);
+
       default:
+        NDIS_DbgPrint(MIN_TRACE, ("Unhandled minor function: 0x%X\n", Stack->MinorFunction));
         break;
     }
 
