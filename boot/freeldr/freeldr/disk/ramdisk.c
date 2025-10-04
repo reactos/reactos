@@ -129,7 +129,7 @@ RamDiskLoadVirtualFile(
     if (Status != ESUCCESS)
         return Status;
 
-    /* Get the file size */
+    /* Get the file or device size */
     Status = ArcGetFileInformation(RamFileId, &Information);
     if (Status != ESUCCESS)
     {
@@ -140,6 +140,18 @@ RamDiskLoadVirtualFile(
      * positions of the partition as byte offsets from the start of the disk */
     Information.EndingAddress.QuadPart -= Information.StartingAddress.QuadPart;
     Information.StartingAddress.QuadPart = 0ULL;
+
+    /* If we are actually opening a RAW device, retrieve instead its usable volume size */
+    if (Information.FileNameLength == 0 && Information.FileName[0] == ANSI_NULL &&
+        (Information.Type == DiskPeripheral || Information.Type == FloppyDiskPeripheral))
+    {
+        ULONGLONG VolumeSize;
+        Status = FsGetVolumeSize(RamFileId, &VolumeSize);
+        if (Status != ESUCCESS)
+            ERR("Couldn't retrieve volume size on device '%s', falling back to RAW size\n", FileName);
+        else
+            Information.EndingAddress.QuadPart = VolumeSize;
+    }
 
     TRACE("RAMDISK size: %I64u (High: %lu ; Low: %lu)\n",
           Information.EndingAddress.QuadPart,
