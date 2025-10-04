@@ -40,6 +40,7 @@ static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Infor
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = RamDiskImageLength;
     Information->CurrentAddress.QuadPart = RamDiskOffset;
+    Information->Type = DiskPeripheral;
 
     return ESUCCESS;
 }
