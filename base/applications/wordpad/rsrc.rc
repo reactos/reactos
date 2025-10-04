@@ -71,6 +71,9 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_AR_SA
+    #include "lang/ar-SA.rc"
+#endif
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif
