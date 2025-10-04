@@ -58,7 +58,7 @@ static PDEVICE_OBJECT MainDeviceObject;
 PDRIVER_OBJECT KmtDriverObject = NULL;
 static KMT_USER_WORK_LIST WorkList;
 static ULONG RequestId = 0;
-static const LONGLONG TimeoutDuration = -10LL * (1000 * 1000 * 10); // 10 seconds
+static const LONGLONG TimeoutDuration = -30LL * (1000 * 1000 * 10); // 30 seconds
 
 /* Entry */
 /**
