@@ -1284,6 +1284,29 @@ ARC_STATUS BtrFsSeek(ULONG FileId, LARGE_INTEGER *Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
+
+/**
+ * @brief
+ * Returns the size of the BTRFS volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ARC_STATUS
+BtrFsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize)
+{
+    PBTRFS_INFO Volume;
+
+    Volume = BtrFsVolumes[DeviceId];
+    if (!Volume)
+        return EBADF;
+
+    *VolumeSize = Volume->SuperBlock.total_bytes;
+    // *BytesPerSector = Volume->SuperBlock.sectorsize;
+    return ESUCCESS;
+}
+
+
 const DEVVTBL BtrFsFuncTable =
 {
     BtrFsClose,
