@@ -99,6 +99,7 @@ typedef struct tagDISKCONTEXT
     UCHAR Lun;
 
     /* Device characteristics */
+    BOOLEAN IsFloppy;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
     ULONGLONG SectorCount;
@@ -196,6 +197,8 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
     Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
     Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
+    Information->Type = (Context->IsFloppy ? FloppyDiskPeripheral : DiskPeripheral);
+
     return ESUCCESS;
 }
 
@@ -260,6 +263,7 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     Context->PathId = (UCHAR)PathId;
     Context->TargetId = (UCHAR)TargetId;
     Context->Lun = (UCHAR)Lun;
+    Context->IsFloppy = (!strstr(Path, ")cdrom(") && strstr(Path, ")fdisk("));
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
     Context->SectorCount = SectorCount;
@@ -896,11 +900,9 @@ SpiScanAdapter(
 
     for (TargetId = 0; TargetId < DeviceExtension->MaxTargedIds; TargetId++)
     {
-        Lun = 0;
-        do
+        for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
         {
-            TRACE("Scanning SCSI device %d.%d.%d\n",
-                ScsiBus, TargetId, Lun);
+            TRACE("Scanning SCSI device %d.%d.%d\n", ScsiBus, TargetId, Lun);
 
             Srb = ExAllocatePool(PagedPool, sizeof(SCSI_REQUEST_BLOCK));
             if (!Srb)
@@ -926,24 +928,43 @@ SpiScanAdapter(
                 break;
             }
 
-            /* Device exists, create its ARC name */
-            if (InquiryBuffer.RemovableMedia)
+            /*
+             * Device exists, create its ARC name.
+             * NOTE: Other devices are not supported:
+             * - SEQUENTIAL_ACCESS_DEVICE i.e. Tape,
+             * - WRITE_ONCE_READ_MULTIPLE_DEVICE i.e. Worm.
+             */
+            if ((InquiryBuffer.DeviceType == DIRECT_ACCESS_DEVICE) ||
+                (InquiryBuffer.DeviceType == OPTICAL_DEVICE))
             {
-                sprintf(ArcName, "scsi(%ld)cdrom(%d)fdisk(%d)",
-                    ScsiBus, TargetId, Lun);
+                if ((InquiryBuffer.DeviceType == DIRECT_ACCESS_DEVICE) &&
+                    InquiryBuffer.RemovableMedia)
+                {
+                    /* Floppy disk */
+                    RtlStringCbPrintfA(ArcName, sizeof(ArcName),
+                                       "scsi(%ld)disk(%d)fdisk(%d)",
+                                       ScsiBus, TargetId, Lun);
+                    FsRegisterDevice(ArcName, &DiskVtbl);
+                }
+                else
+                {
+                    /* Other rigid disk */
+                    RtlStringCbPrintfA(ArcName, sizeof(ArcName),
+                                       "scsi(%ld)disk(%d)rdisk(%d)",
+                                       ScsiBus, TargetId, Lun);
+                    /* Now, check if it has partitions */
+                    SpiScanDevice(DeviceExtension, ArcName, PathId, TargetId, Lun);
+                }
+            }
+            else if (InquiryBuffer.DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE)
+            {
+                /* CD-ROM; note that the RemovableMedia bit may or may not be set */
+                RtlStringCbPrintfA(ArcName, sizeof(ArcName),
+                                   "scsi(%ld)cdrom(%d)fdisk(%d)",
+                                   ScsiBus, TargetId, Lun);
                 FsRegisterDevice(ArcName, &DiskVtbl);
             }
-            else
-            {
-                sprintf(ArcName, "scsi(%ld)disk(%d)rdisk(%d)",
-                    ScsiBus, TargetId, Lun);
-                /* Now, check if it has partitions */
-                SpiScanDevice(DeviceExtension, ArcName, PathId, TargetId, Lun);
-            }
-
-            /* Check next LUN */
-            Lun++;
-        } while (Lun < SCSI_MAXIMUM_LOGICAL_UNITS);
+        }
     }
 }
 
