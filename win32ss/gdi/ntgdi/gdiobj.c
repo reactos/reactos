@@ -479,6 +479,12 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
 {
     ULONG ulIndex, cNewRefs, cOldRefs;
     PENTRY pentry;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    /* Allow a window that is moving or resizing to have access to all of its child
+       windows dc's even if the dc belongs to another process i.e. 3D Screensaver  */
+    if (pti && pti->TIF_flags & TIF_MOVESIZETRACKING)
+        fl = GDIOBJFLAG_IGNOREPID;
 
     /* Get the handle index and check if its too big */
     ulIndex = GDI_HANDLE_GET_INDEX(hobj);
