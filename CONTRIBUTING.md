@@ -76,6 +76,7 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 - *Keep your contribution small and focused on the topic.* It can be tempting to fix existing issues as you come across them while reading the source code. Resist the temptation and put in a note in the source code instead, or (even better) put the issue in the issue tracking system.
 - *Respect our __[Coding Style]__ and __[Programming Guidelines]__.*
 - *Do not be afraid to ask questions.* Ask our developers in the [chat].
+- Do not contribute any material (code, data, media) that would subject the project’s distribution or use to statutory levies, including “paying public domain/domaine public payant” regimes in any jurisdiction. By contributing, you represent that your contribution is not subject to such levies and identify the provenance of any public-domain material.
 
 To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
 
