@@ -2358,6 +2358,25 @@ NdisIRemoveDevice(
         
     RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
 
+    if (Adapter->NdisMiniportBlock.PnPDeviceState == NdisPnPDeviceStarted)
+    {
+        /* Remove adapter from adapter list for this miniport */
+        ExInterlockedRemoveEntryList(&Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
+
+        /* Remove adapter from global adapter list */
+        ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
+
+        KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+
+        (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
+    }
+
+    if (Adapter->NdisMiniportBlock.EthDB)
+    {
+        EthDeleteFilter(Adapter->NdisMiniportBlock.EthDB);
+        Adapter->NdisMiniportBlock.EthDB = NULL;
+    }
+
     if (Adapter->NdisMiniportBlock.Resources)
     {
         ExFreePool(Adapter->NdisMiniportBlock.Resources);
