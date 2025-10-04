@@ -258,4 +258,9 @@ typedef struct _NTFS_FILE_HANDLE
     CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 
+ARC_STATUS
+NtfsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 const DEVVTBL* NtfsMount(ULONG DeviceId);
