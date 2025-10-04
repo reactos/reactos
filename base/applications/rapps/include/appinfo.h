@@ -98,6 +98,7 @@ enum InstallerType
 #define DB_SCOPE L"Scope" // User or Machine
 #define DB_SAVEAS L"SaveAs"
 #define DB_SILENTARGS L"SilentParameters"
+#define DB_OSBUILD L"OsBuild" // "Min-Max" || "Min+"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
@@ -174,6 +175,9 @@ class CAvailableApplicationInfo : public CAppInfo
 
     CConfigParser *
     GetConfigParser() const { return m_Parser; }
+
+    bool
+    IsCompatible() const;
 
     virtual BOOL
     Valid() const override;
