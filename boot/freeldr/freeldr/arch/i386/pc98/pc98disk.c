@@ -149,6 +149,24 @@ Pc98DiskDriveNumberToDrive(IN UCHAR DriveNumber)
         return NULL;
 }
 
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber)
+{
+    PPC98_DISK_DRIVE DiskDrive;
+
+    DiskDrive = Pc98DiskDriveNumberToDrive(DriveNumber);
+    if (!DiskDrive)
+        return -1; // MaximumType;
+
+    if (DiskDrive->Type & DRIVE_CDROM || DiskDrive->Type & DRIVE_MO)
+        return CdromController;
+    else if (DiskDrive->Type & DRIVE_FDD)
+        return FloppyDiskPeripheral;
+    else
+        return DiskPeripheral;
+}
+
 static inline
 UCHAR
 BytesPerSectorToSectorLengthCode(IN ULONG BytesPerSector)

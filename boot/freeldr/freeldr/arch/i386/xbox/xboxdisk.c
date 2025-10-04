@@ -77,6 +77,22 @@ XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber)
     return NULL;
 }
 
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber)
+{
+    PDEVICE_UNIT DeviceUnit;
+
+    DeviceUnit = XboxDiskDriveNumberToDeviceUnit(DriveNumber);
+    if (!DeviceUnit)
+        return -1; // MaximumType;
+
+    if (DeviceUnit == CdDrive) // (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
+        return CdromController;
+    else // if (DeviceUnit == HardDrive)
+        return DiskPeripheral;
+}
+
 BOOLEAN
 XboxDiskReadLogicalSectors(
     IN UCHAR DriveNumber,
