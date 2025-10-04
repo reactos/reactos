@@ -53,6 +53,11 @@ FsOpenFile(
     IN OPENMODE OpenMode,
     OUT PULONG FileId);
 
+ARC_STATUS
+FsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 

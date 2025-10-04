@@ -100,8 +100,20 @@ typedef struct _ExtSuperBlock
     UCHAR DefHashVersion;
     UCHAR JournalBackupType;
     USHORT GroupDescSize;
-    UCHAR Reserved[768];
+
+    ULONG DefaultMountOpts;
+    ULONG FirstMetaBg;
+    ULONG MkfsTime;
+    ULONG JnlBlocks[17];
+
+    /* 64bit support valid if EXT4_FEATURE_COMPAT_64BIT */
+    ULONG BlocksCountHi;
+    ULONG RBlocksCountHi;
+    ULONG FreeBlocksCountHi;
+
+    UCHAR Reserved[676];
 } EXT_SUPER_BLOCK, *PEXT_SUPER_BLOCK;
+C_ASSERT(sizeof(EXT_SUPER_BLOCK) == 0x400);
 
 typedef struct _ExtGroupDescriptor
 {
@@ -229,5 +241,9 @@ typedef struct _EXT_FILE_INFO
     UCHAR Attributes;
     CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } EXT_FILE_INFO, *PEXT_FILE_INFO;
+
+ULONGLONG
+ExtGetVolumeSize(
+    _In_ ULONG DeviceId);
 
 const DEVVTBL* ExtMount(ULONG DeviceId);

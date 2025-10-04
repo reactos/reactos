@@ -47,11 +47,13 @@ typedef struct _FAT_VOLUME_INFO
     ULONG RootDirSectors; /* Number of sectors of the root directory (non-fat32) */
     ULONG RootDirStartCluster; /* Starting cluster number of the root directory (fat32 only) */
     ULONG DataSectorStart; /* Starting sector of the data area */
+    // ULONG NumberOfClusters; /* Number of clusters of the data area */
     ULONG DeviceId;
+    ULONG TotalSectors; /* Total number of sectors on the volume */
     UINT16 BytesPerSector; /* Number of bytes per sector */
-    UINT8 FatType; /* FAT12, FAT16, FAT32, FATX16 or FATX32 */
-    UINT8 NumberOfFats; /* Number of FAT tables */
     UINT8 SectorsPerCluster; /* Number of sectors per cluster */
+    UINT8 NumberOfFats; /* Number of FAT tables */
+    UINT8 FatType; /* FAT12, FAT16, FAT32, FATX16 or FATX32 */
 } FAT_VOLUME_INFO;
 
 PFAT_VOLUME_INFO FatVolumes[MAX_FDS];
@@ -132,6 +134,27 @@ VOID FatSwapFatXDirEntry(PFATX_DIRENTRY Obj)
     SW(Obj, CreateDate);
     SW(Obj, LastAccessTime);
     SW(Obj, LastAccessDate);
+}
+
+/**
+ * @brief
+ * Returns the number of clusters of the data area of the FAT volume.
+ * This value is computed by taking the total sectors on the disk, subtracting
+ * up to the first file area sector, then dividing by the sectors per cluster count.
+ *
+ * @note
+ * Relies on the FAT_VOLUME_INFO fields already computed by FatOpenVolume().
+ *
+ * @see
+ * https://github.com/reactos/reactos/blob/435482912c6dc0aaa4371e37b7336b2b1291e65f/drivers/filesystems/fastfat/fat.h#L460
+ * https://github.com/reactos/reactos/blob/435482912c6dc0aaa4371e37b7336b2b1291e65f/drivers/filesystems/vfatfs/fsctl.c#L24
+ **/
+FORCEINLINE
+ULONG
+FatNumberOfClusters(
+    _In_ PFAT_VOLUME_INFO Volume)
+{
+    return ((Volume->TotalSectors - Volume->DataSectorStart) / Volume->SectorsPerCluster);
 }
 
 BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONGLONG PartitionSectorCount)
@@ -254,21 +277,38 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
         return FALSE;
     }
 
-    //
-    // Get the sectors per FAT,
-    // root directory starting sector,
-    // and data sector start
-    //
     if (ISFATX(Volume->FatType))
     {
-        Volume->BytesPerSector = 512;
+        Volume->TotalSectors = PartitionSectorCount;
+    }
+    else
+    {
+        /*
+         * After DOS 4.0, at least one of TotalSectors or TotalSectorsBig will be zero.
+         * In DOS version 3.2 or before, both of these might contain some value,
+         * because, before 3.2, there was no TotalSectorsBig entry. Thus some disks
+         * might have an unexpected value in the field, and we will use TotalSectorsBig
+         * only if TotalSectors equals zero.
+         */
+        C_ASSERT(FIELD_OFFSET(FAT_BOOTSECTOR, TotalSectors) ==
+                 FIELD_OFFSET(FAT32_BOOTSECTOR, TotalSectors));
+        C_ASSERT(FIELD_OFFSET(FAT_BOOTSECTOR, TotalSectorsBig) ==
+                 FIELD_OFFSET(FAT32_BOOTSECTOR, TotalSectorsBig));
+        Volume->TotalSectors = (FatVolumeBootSector->TotalSectors ? FatVolumeBootSector->TotalSectors
+                                                                  : FatVolumeBootSector->TotalSectorsBig);
+    }
+
+    /* Get the sectors per FAT, root directory sector start, and data sector start */
+    if (ISFATX(Volume->FatType))
+    {
+        Volume->BytesPerSector = SECTOR_SIZE;
         Volume->SectorsPerCluster = SWAPD(FatXVolumeBootSector->SectorsPerCluster);
-        Volume->FatSectorStart = (0x1000 / Volume->BytesPerSector);
+        Volume->FatSectorStart = 4096 / Volume->BytesPerSector;
         Volume->ActiveFatSectorStart = Volume->FatSectorStart;
-        Volume->NumberOfFats = 1;
+        Volume->NumberOfFats = 1; // FatXVolumeBootSector->NumberOfFats;
         FatSize = (ULONG)(PartitionSectorCount / Volume->SectorsPerCluster *
                   (Volume->FatType == FATX16 ? 2 : 4));
-        Volume->SectorsPerFat = ROUND_UP(FatSize, 0x1000) / Volume->BytesPerSector;
+        Volume->SectorsPerFat = ROUND_UP(FatSize, 4096) / Volume->BytesPerSector;
 
         Volume->RootDirSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
         Volume->RootDirSectors = FatXVolumeBootSector->SectorsPerCluster;
@@ -286,6 +326,7 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
 
         Volume->RootDirSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
         Volume->RootDirSectors = ((FatVolumeBootSector->RootDirEntries * 32) + (Volume->BytesPerSector - 1)) / Volume->BytesPerSector;
+        // Volume->RootDirSectors = (FatVolumeBootSector->RootDirEntries * sizeof(DIRENT) / Volume->BytesPerSector);
 
         Volume->DataSectorStart = Volume->RootDirSectorStart + Volume->RootDirSectors;
     }
@@ -294,10 +335,12 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
         Volume->BytesPerSector = Fat32VolumeBootSector->BytesPerSector;
         Volume->SectorsPerCluster = Fat32VolumeBootSector->SectorsPerCluster;
         Volume->FatSectorStart = Fat32VolumeBootSector->ReservedSectors;
-        Volume->ActiveFatSectorStart = Volume->FatSectorStart +
-                                       ((Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0);
+        Volume->ActiveFatSectorStart =
+            Volume->FatSectorStart + ((Fat32VolumeBootSector->ExtendedFlags & 0x80) ?
+                                      ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0);
         Volume->NumberOfFats = Fat32VolumeBootSector->NumberOfFats;
         Volume->SectorsPerFat = Fat32VolumeBootSector->SectorsPerFatBig;
+        // Volume->SectorsPerFat = (Fat32VolumeBootSector->SectorsPerFat ? Fat32VolumeBootSector->SectorsPerFat : Fat32VolumeBootSector->SectorsPerFatBig);
 
         Volume->RootDirStartCluster = Fat32VolumeBootSector->RootDirStartCluster;
         Volume->DataSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
@@ -312,6 +355,7 @@ BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONG
             return FALSE;
         }
     }
+    // Volume->NumberOfClusters = FatNumberOfClusters(Volume);
 
     Volume->FatCacheSize = min(Volume->SectorsPerFat, FAT_MAX_CACHE_SIZE / Volume->BytesPerSector);
     TRACE("FAT cache is %d sectors, %d bytes\n", Volume->FatCacheSize, Volume->FatCacheSize * Volume->BytesPerSector);
@@ -1562,6 +1606,22 @@ ARC_STATUS FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
+
+/**
+ * @brief
+ * Returns the size of the FAT volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ULONGLONG
+FatGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PFAT_VOLUME_INFO Volume = FatVolumes[DeviceId];
+    ASSERT(Volume);
+    return (ULONGLONG)Volume->TotalSectors * Volume->BytesPerSector;
+}
+
+
 const DEVVTBL FatFuncTable =
 {
     FatClose,
@@ -1585,7 +1645,7 @@ const DEVVTBL FatXFuncTable =
 const DEVVTBL* FatMount(ULONG DeviceId)
 {
     PFAT_VOLUME_INFO Volume;
-    UCHAR Buffer[512];
+    UCHAR Buffer[SECTOR_SIZE];
     PFAT_BOOTSECTOR BootSector = (PFAT_BOOTSECTOR)Buffer;
     PFAT32_BOOTSECTOR BootSector32 = (PFAT32_BOOTSECTOR)Buffer;
     PFATX_BOOTSECTOR BootSectorX = (PFATX_BOOTSECTOR)Buffer;

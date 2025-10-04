@@ -106,4 +106,8 @@ typedef struct _ISO_FILE_INFO
     CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } ISO_FILE_INFO, *PISO_FILE_INFO;
 
+ULONGLONG
+IsoGetVolumeSize(
+    _In_ ULONG DeviceId);
+
 const DEVVTBL* IsoMount(ULONG DeviceId);

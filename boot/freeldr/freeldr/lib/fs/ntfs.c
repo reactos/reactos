@@ -909,6 +909,22 @@ ARC_STATUS NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
+
+/**
+ * @brief
+ * Returns the size of the NTFS volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ULONGLONG
+NtfsGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PNTFS_VOLUME_INFO Volume = NtfsVolumes[DeviceId];
+    ASSERT(Volume);
+    return Volume->BootSector.VolumeSectorCount * Volume->BootSector.BytesPerSector;
+}
+
+
 const DEVVTBL NtfsFuncTable =
 {
     NtfsClose,

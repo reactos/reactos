@@ -174,4 +174,8 @@ typedef struct _FAT_FILE_INFO
     CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } FAT_FILE_INFO, *PFAT_FILE_INFO;
 
+ULONGLONG
+FatGetVolumeSize(
+    _In_ ULONG DeviceId);
+
 const DEVVTBL* FatMount(ULONG DeviceId);
