@@ -160,6 +160,117 @@ typedef struct _CONFIGURATION_COMPONENT
     PCHAR Identifier;
 } CONFIGURATION_COMPONENT, *PCONFIGURATION_COMPONENT;
 
+typedef struct _MONITOR_CONFIGURATION_DATA
+{
+    USHORT Version;
+    USHORT Revision;
+    USHORT HorizontalResolution;
+    USHORT HorizontalDisplayTime;
+    USHORT HorizontalBackPorch;
+    USHORT HorizontalFrontPorch;
+    USHORT HorizontalSync;
+    USHORT VerticalResolution;
+    USHORT VerticalBackPorch;
+    USHORT VerticalFrontPorch;
+    USHORT VerticalSync;
+    USHORT HorizontalScreenSize;
+    USHORT VerticalScreenSize;
+} MONITOR_CONFIGURATION_DATA, *PMONITOR_CONFIGURATION_DATA;
+
+typedef struct _FLOPPY_CONFIGURATION_DATA
+{
+    USHORT Version;
+    USHORT Revision;
+    CHAR Size[8];
+    ULONG MaxDensity;
+    ULONG MountDensity;
+} FLOPPY_CONFIGURATION_DATA, *PFLOPPY_CONFIGURATION_DATA;
+
+typedef struct _TIMEINFO
+{
+    USHORT Year;
+    USHORT Month;
+    USHORT Day;
+    USHORT Hour;
+    USHORT Minute;
+    USHORT Second;
+} TIMEINFO;
+
+typedef enum _MEMORY_TYPE
+{
+    MemoryExceptionBlock,
+    MemorySystemBlock,
+    MemoryFree,
+    MemoryBad,
+    MemoryLoadedProgram,
+    MemoryFirmwareTemporary,
+    MemoryFirmwarePermanent,
+    MemoryFreeContiguous,
+    MemorySpecialMemory,
+    MemoryMaximum
+} MEMORY_TYPE;
+
+typedef struct _MEMORY_DESCRIPTOR
+{
+    MEMORY_TYPE MemoryType;
+    PFN_NUMBER BasePage;
+    PFN_NUMBER PageCount;
+} MEMORY_DESCRIPTOR, *PMEMORY_DESCRIPTOR;
+
+typedef int CONFIGTYPE;
+typedef struct tagFILEINFORMATION
+{
+    LARGE_INTEGER StartingAddress;
+    LARGE_INTEGER EndingAddress;
+    LARGE_INTEGER CurrentAddress;
+    CONFIGTYPE Type;
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR Filename[32];
+} FILEINFORMATION;
+
+typedef
+ARC_STATUS
+(*ARC_CLOSE)(
+    ULONG FileId
+);
+
+typedef
+ARC_STATUS
+(*ARC_GET_FILE_INFORMATION)(
+    ULONG FileId,
+    FILEINFORMATION* Information
+);
+
+typedef
+ARC_STATUS
+(*ARC_OPEN)(
+    CHAR* Path,
+    OPENMODE OpenMode,
+    ULONG* FileId
+);
+
+typedef
+ARC_STATUS
+(*ARC_READ)(
+    ULONG FileId,
+    VOID* Buffer,
+    ULONG N, ULONG* Count
+);
+
+typedef
+ARC_STATUS
+(*ARC_SEEK)(
+    ULONG FileId,
+    LARGE_INTEGER* Position,
+    SEEKMODE SeekMode
+);
+
+
+//
+// Definitions for the NT OS Loader and the Loader Parameter Block
+//
+
 typedef struct _CONFIGURATION_COMPONENT_DATA
 {
     struct _CONFIGURATION_COMPONENT_DATA *Parent;
@@ -203,37 +314,6 @@ typedef enum _TYPE_OF_MEMORY
     LoaderMaximum
 } TYPE_OF_MEMORY;
 
-typedef enum _MEMORY_TYPE
-{
-    MemoryExceptionBlock,
-    MemorySystemBlock,
-    MemoryFree,
-    MemoryBad,
-    MemoryLoadedProgram,
-    MemoryFirmwareTemporary,
-    MemoryFirmwarePermanent,
-    MemoryFreeContiguous,
-    MemorySpecialMemory,
-    MemoryMaximum
-} MEMORY_TYPE;
-
-typedef struct _TIMEINFO
-{
-    USHORT Year;
-    USHORT Month;
-    USHORT Day;
-    USHORT Hour;
-    USHORT Minute;
-    USHORT Second;
-} TIMEINFO;
-
-typedef struct _MEMORY_DESCRIPTOR
-{
-    MEMORY_TYPE MemoryType;
-    PFN_NUMBER BasePage;
-    PFN_NUMBER PageCount;
-} MEMORY_DESCRIPTOR, *PMEMORY_DESCRIPTOR;
-
 typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 {
     LIST_ENTRY ListEntry;
@@ -267,32 +347,6 @@ typedef struct _ARC_DISK_INFORMATION
 {
     LIST_ENTRY DiskSignatureListHead;
 } ARC_DISK_INFORMATION, *PARC_DISK_INFORMATION;
-
-typedef struct _MONITOR_CONFIGURATION_DATA
-{
-    USHORT Version;
-    USHORT Revision;
-    USHORT HorizontalResolution;
-    USHORT HorizontalDisplayTime;
-    USHORT HorizontalBackPorch;
-    USHORT HorizontalFrontPorch;
-    USHORT HorizontalSync;
-    USHORT VerticalResolution;
-    USHORT VerticalBackPorch;
-    USHORT VerticalFrontPorch;
-    USHORT VerticalSync;
-    USHORT HorizontalScreenSize;
-    USHORT VerticalScreenSize;
-} MONITOR_CONFIGURATION_DATA, *PMONITOR_CONFIGURATION_DATA;
-
-typedef struct _FLOPPY_CONFIGURATION_DATA
-{
-    USHORT Version;
-    USHORT Revision;
-    CHAR Size[8];
-    ULONG MaxDensity;
-    ULONG MountDensity;
-} FLOPPY_CONFIGURATION_DATA, *PFLOPPY_CONFIGURATION_DATA;
 
 //
 // SMBIOS Table Header (FIXME: maybe move to smbios.h?)
@@ -806,54 +860,5 @@ typedef struct _LOADER_PARAMETER_BLOCK
     FIRMWARE_INFORMATION_LOADER_BLOCK FirmwareInformation;
 #endif
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
-
-typedef int CONFIGTYPE;
-typedef struct tagFILEINFORMATION
-{
-    LARGE_INTEGER StartingAddress;
-    LARGE_INTEGER EndingAddress;
-    LARGE_INTEGER CurrentAddress;
-    CONFIGTYPE Type;
-    ULONG FileNameLength;
-    UCHAR Attributes;
-    CHAR Filename[32];
-} FILEINFORMATION;
-
-typedef
-ARC_STATUS
-(*ARC_CLOSE)(
-    ULONG FileId
-);
-
-typedef
-ARC_STATUS
-(*ARC_GET_FILE_INFORMATION)(
-    ULONG FileId,
-    FILEINFORMATION* Information
-);
-
-typedef
-ARC_STATUS
-(*ARC_OPEN)(
-    CHAR* Path,
-    OPENMODE OpenMode,
-    ULONG* FileId
-);
-
-typedef
-ARC_STATUS
-(*ARC_READ)(
-    ULONG FileId,
-    VOID* Buffer,
-    ULONG N, ULONG* Count
-);
-
-typedef
-ARC_STATUS
-(*ARC_SEEK)(
-    ULONG FileId,
-    LARGE_INTEGER* Position,
-    SEEKMODE SeekMode
-);
 
 #endif
