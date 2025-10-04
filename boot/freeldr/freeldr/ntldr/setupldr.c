@@ -611,7 +611,7 @@ LoadReactOSSetup(
 
     /* Check if a RAM disk file was given */
     FileName = (PSTR)NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
-    if (FileName && (FileNameLength > 7))
+    if (FileName && (FileNameLength >= 7))
     {
         /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
