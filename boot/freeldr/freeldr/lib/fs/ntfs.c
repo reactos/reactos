@@ -509,7 +509,11 @@ VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 }
 #endif
 
-static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
+static BOOLEAN
+NtfsCompareFileName(
+    _In_ PCCH FileName,
+    _In_ SIZE_T FileNameLen,
+    _In_ PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR EntryFileName;
     UCHAR EntryFileNameLength;
@@ -522,7 +526,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     NtfsPrintFile(IndexEntry);
 #endif
 
-    if (strlen(FileName) != EntryFileNameLength)
+    if (FileNameLen != EntryFileNameLength)
         return FALSE;
 
     /*
@@ -540,7 +544,13 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     return TRUE;
 }
 
-static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, PCHAR FileName, ULONGLONG *OutMFTIndex)
+static BOOLEAN
+NtfsFindMftRecord(
+    _In_ PNTFS_VOLUME_INFO Volume,
+    _In_ ULONGLONG MFTIndex,
+    _In_ PCSTR FileName,
+    _Out_ PULONGLONG OutMFTIndex,
+    _Out_ PULONG FileAttributes)
 {
     PNTFS_MFT_RECORD MftRecord;
     //ULONG Magic;
@@ -555,6 +565,9 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
     PNTFS_INDEX_ENTRY IndexEntry, IndexEntryEnd;
     ULONG RecordOffset;
     ULONG IndexBlockSize;
+    SIZE_T FileNameLen;
+
+    FileNameLen = strlen(FileName);
 
     MftRecord = FrLdrTempAlloc(Volume->MftRecordSize, TAG_NTFS_MFT);
     if (MftRecord == NULL)
@@ -592,14 +605,15 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
-            if (NtfsCompareFileName(FileName, IndexEntry))
+            if (NtfsCompareFileName(FileName, FileNameLen, IndexEntry))
             {
                 *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
+                *FileAttributes = IndexEntry->FileName.FileAttributes;
                 FrLdrTempFree(IndexRecord, TAG_NTFS_INDEX_REC);
                 FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
                 return TRUE;
             }
-        IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
+            IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
         }
 
         if (IndexRoot->IndexHeader.Flags & NTFS_LARGE_INDEX)
@@ -670,19 +684,20 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
 
                 /* FIXME */
                 IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(USHORT *)(IndexRecord + 0x18));
-            IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
+                IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {
-                    if (NtfsCompareFileName(FileName, IndexEntry))
+                    if (NtfsCompareFileName(FileName, FileNameLen, IndexEntry))
                     {
                         TRACE("File found\n");
                         *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
+                        *FileAttributes = IndexEntry->FileName.FileAttributes;
+                        NtfsReleaseAttributeContext(IndexAllocationCtx);
                         FrLdrTempFree(BitmapData, TAG_NTFS_BITMAP);
                         FrLdrTempFree(IndexRecord, TAG_NTFS_INDEX_REC);
                         FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
-                        NtfsReleaseAttributeContext(IndexAllocationCtx);
                         return TRUE;
                     }
                     IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
@@ -706,12 +721,13 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
     return FALSE;
 }
 
-static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT *DataContext)
+static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_FILE_HANDLE FileHandle)
 {
     ULONG NumberOfPathParts;
-    CHAR PathPart[261];
+    ULONG i;
     ULONGLONG CurrentMFTIndex;
-    UCHAR i;
+    ULONG FileAttributes;
+    CHAR PathPart[261];
 
     TRACE("NtfsLookupFile() FileName = %s\n", FileName);
 
@@ -720,7 +736,9 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
     /* Skip leading path separator, if any */
     if (*FileName == '\\' || *FileName == '/')
         ++FileName;
+    PathPart[0] = ANSI_NULL;
 
+    /* Figure out how many sub-directories we are nested in and loop once for each part */
     NumberOfPathParts = FsGetNumPathParts(FileName);
     for (i = 0; i < NumberOfPathParts; i++)
     {
@@ -731,7 +749,7 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
         FileName++;
 
         TRACE("- Lookup: %s\n", PathPart);
-        if (!NtfsFindMftRecord(Volume, CurrentMFTIndex, PathPart, &CurrentMFTIndex))
+        if (!NtfsFindMftRecord(Volume, CurrentMFTIndex, PathPart, &CurrentMFTIndex, &FileAttributes))
         {
             TRACE("- Failed\n");
             return FALSE;
@@ -745,12 +763,30 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
         return FALSE;
     }
 
-    *DataContext = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_DATA, L"");
-    if (*DataContext == NULL)
+    FileHandle->DataContext = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_DATA, L"");
+    if (FileHandle->DataContext == NULL)
     {
         TRACE("NtfsLookupFile: Can't find data attribute\n");
         return FALSE;
     }
+
+    /* Map the attributes to ARC file attributes */
+    FileHandle->Attributes = 0;
+    if (FileAttributes & NTFS_FILE_ATTR_READONLY)
+        FileHandle->Attributes |= ReadOnlyFile;
+    if (FileAttributes & NTFS_FILE_ATTR_HIDDEN)
+        FileHandle->Attributes |= HiddenFile;
+    if (FileAttributes & NTFS_FILE_ATTR_SYSTEM)
+        FileHandle->Attributes |= SystemFile;
+    if (FileAttributes & NTFS_FILE_ATTR_ARCHIVE)
+        FileHandle->Attributes |= ArchiveFile;
+    if (FileAttributes & NTFS_FILE_ATTR_DIRECTORY)
+        FileHandle->Attributes |= DirectoryFile;
+
+    /* Copy the file name, perhaps truncated */
+    FileHandle->FileNameLength = (ULONG)strlen(PathPart);
+    FileHandle->FileNameLength = min(FileHandle->FileNameLength, sizeof(FileHandle->FileName) - 1);
+    RtlCopyMemory(FileHandle->FileName, PathPart, FileHandle->FileNameLength);
 
     return TRUE;
 }
@@ -772,6 +808,14 @@ ARC_STATUS NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = NtfsGetAttributeSize(&FileHandle->DataContext->Record);
     Information->CurrentAddress.QuadPart = FileHandle->Offset;
+
+    /* Set the ARC file attributes */
+    Information->Attributes = FileHandle->Attributes;
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = min(FileHandle->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, FileHandle->FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
 
     TRACE("NtfsGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
           FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
@@ -816,7 +860,7 @@ ARC_STATUS NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     // Search file entry
     //
     MftRecord = (PNTFS_MFT_RECORD)(FileHandle + 1);
-    if (!NtfsLookupFile(Volume, Path, MftRecord, &FileHandle->DataContext))
+    if (!NtfsLookupFile(Volume, Path, MftRecord, FileHandle))
     {
         FrLdrTempFree(FileHandle, TAG_NTFS_FILE);
         return ENOENT;
