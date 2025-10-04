@@ -189,6 +189,8 @@ BEGIN
     IDS_GERMAN_IBM_LAYOUT "Deutsch (IBM)"
     IDS_GERMAN_NEO_11_LAYOUT "Deutsch (NEO-1.1)"
     IDS_GERMAN_RISTOME_LAYOUT "Deutsch (RISTOME)"
+    IDS_GERMAN_EXTENDED1_LAYOUT "Deutsch Erweitert (E1)"
+    IDS_GERMAN_EXTENDED2_LAYOUT "Deutsch Erweitert (E2)"
     IDS_GREEK_LAYOUT "Griechisch"
     IDS_GREEK_220_LAYOUT "Griechisch (220)"
     IDS_GREEK_220_LATIN_LAYOUT "Griechisch (220, Lateinisch)"

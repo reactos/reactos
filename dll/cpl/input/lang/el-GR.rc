@@ -178,6 +178,8 @@ BEGIN
     IDS_GERMAN_IBM_LAYOUT "Γερμανικά (IBM)"
     IDS_GERMAN_NEO_11_LAYOUT "German (NEO-1.1)"
     IDS_GERMAN_RISTOME_LAYOUT "German (RISTOME)"
+    IDS_GERMAN_EXTENDED1_LAYOUT "German Extended (E1)"
+    IDS_GERMAN_EXTENDED2_LAYOUT "German Extended (E2)"
     IDS_GREEK_LAYOUT "Ελληνικά"
     IDS_GREEK_220_LAYOUT "Ελληνικά (220)"
     IDS_GREEK_220_LATIN_LAYOUT "Ελληνικά (220) Λατινικά"

@@ -201,4 +201,6 @@
 #define IDS_BURMESE_LAYOUT                             5140
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                   5141
 #define IDS_ESPERANTO_LAYOUT                           5142
+#define IDS_GERMAN_EXTENDED1_LAYOUT                    5143
+#define IDS_GERMAN_EXTENDED2_LAYOUT                    5144
 #define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
