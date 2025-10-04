@@ -21,7 +21,9 @@ Revision History:
 #include "fxusbpch.hpp"
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbInterfaceAPI.tmh"
+#endif
 }
 
 //
@@ -33,6 +35,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceSelectSetting)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -156,6 +159,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -192,6 +196,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetNumEndpoints)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -231,6 +236,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -293,6 +299,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetNumSettings)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -327,6 +334,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -370,6 +378,7 @@ Arguments:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -404,6 +413,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -438,6 +448,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFUSBPIPE
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
