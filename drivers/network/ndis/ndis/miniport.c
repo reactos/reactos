@@ -2348,7 +2348,6 @@ NdisIRemoveDevice(
     {
         IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
         RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
-        Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer = NULL;
     }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
