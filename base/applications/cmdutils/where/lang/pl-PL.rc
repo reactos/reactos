@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS WHERE command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
- * TRANSLATORS: Copyright 2025 Karol Gocłowski <cyberwordixx@gazeta.pl>
+ * TRANSLATOR:  Copyright 2025 Karol Gocłowski <cyberwordixx@gazeta.pl>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
