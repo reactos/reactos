@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ReactOS German Extended 1 ASCII Keyboard layout
  * Copyright (C) 2025 ReactOS
  * License: LGPL, see: LGPL.txt
