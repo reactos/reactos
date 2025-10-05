@@ -31,6 +31,7 @@ list(APPEND _keyboard_layouts
     kbdgneo
     kbdgr
     kbdgr1
+    kbdgre1
     kbdgrist
     kbdhe
     kbdheb
