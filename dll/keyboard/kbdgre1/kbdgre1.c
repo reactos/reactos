@@ -7,6 +7,19 @@
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
  */
 
+/*
+ * This keyboard layout is Work In Progress!
+ *
+ * Missing Keys:
+ *    1st row:
+ *      Shift + AltGr + VK_OEM_4 => 0x1e9e (capital sharp s)
+ *      AltGr + VK_OEM_6         => dot above dead key
+ *    2nd row:
+ *    3nd row:
+ *    4nd row:
+ *      all new keys
+ */
+
 #define WIN32_NO_STATUS
 #include <stdarg.h>
 #include <windef.h>
@@ -161,14 +174,9 @@ ROSDATA MODIFIERS modifier_bits = {
 };
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  { VK_OEM_5,    0,      {WCH_DEAD, 0xb0} },
-  { 0xff,        0,      {'^', WCH_NONE} }, // FIXME - why doesn't this work?
   /* Normal vs Shifted */
   /* The numbers */
-  { '1',         CAPLOK,   {'1', '!'} },
   /* Ctrl-2 generates NUL */
-  { '4',         CAPLOK,   {'4', '$'} },
-  { '5',         CAPLOK,   {'5', '%'} },
 
   { VK_OEM_6,    0, {WCH_DEAD, WCH_DEAD} },
   { 0xff,        0, {0xb4, '`'} },
@@ -217,7 +225,14 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl+Alt */
   /* Legacy (telnet-style) ascii escapes */
+  { VK_OEM_5, 0, {WCH_DEAD, 0xb0, 0xd7} },
+  { 0xff,     0, {'^', WCH_NONE, WCH_NONE} }, // FIXME - why doesn't this work?
+
+  { '1', CAPLOK, {'1', '!', 0x2019} },
   { '3', CAPLOK, {'3', 0xa7, 0xb3} },
+  { '4', CAPLOK, {'4', '$', 0x2014} },
+  { '5', CAPLOK, {'5', '%', 0xa1} },
+
   { '7', CAPLOK, {'7', '/', '{'} },
   { '8', CAPLOK, {'8', '(', '['} },
   { '9', CAPLOK, {'9', ')', ']'} },
@@ -247,7 +262,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
   { '2', CAPLOK, {'2', '\"', 0xb2, WCH_NONE, 0x00} },
-  { '6', CAPLOK, {'6', '&', WCH_NONE, WCH_NONE, 0x1e} },
+  { '6', CAPLOK, {'6', '&', 0xbf, WCH_NONE, 0x1e} },
   { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, WCH_NONE, 0x1f} },
   { 0, 0 }
 };
@@ -415,29 +430,63 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'=', L'^', 0x2259, 0x00) },
   { DEADTRANS(L'^', L'^', 0x0302, 0x00) },
   { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) },
+  { DEADTRANS(L'c', 0xb4, 0x107, 0x00) },
   { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) },
+  { DEADTRANS(L'g', 0xb4, 0x1f5, 0x00) },
   { DEADTRANS(L'i', 0xb4, 0xed, 0x00) },
+  { DEADTRANS(L'k', 0xb4, 0x1e31, 0x00) },
+  { DEADTRANS(L'l', 0xb4, 0x13a, 0x00) },
+  { DEADTRANS(L'm', 0xb4, 0x1e3f, 0x00) },
+  { DEADTRANS(L'n', 0xb4, 0x144, 0x00) },
   { DEADTRANS(L'o', 0xb4, 0xf3, 0x00) },
+  { DEADTRANS(L'p', 0xb4, 0x1e55, 0x00) },
+  { DEADTRANS(L'r', 0xb4, 0x155, 0x00) },
+  { DEADTRANS(L's', 0xb4, 0x15b, 0x00) },
   { DEADTRANS(L'u', 0xb4, 0xfa, 0x00) },
+  { DEADTRANS(L'w', 0xb4, 0x1e83, 0x00) },
   { DEADTRANS(L'y', 0xb4, 0xfd, 0x00) },
+  { DEADTRANS(L'z', 0xb4, 0x17a, 0x00) },
+  { DEADTRANS(L'ü', 0xb4, 0x1d8, 0x00) },
   { DEADTRANS(L'A', 0xb4, 0xc1, 0x00) },
+  { DEADTRANS(L'C', 0xb4, 0x106, 0x00) },
   { DEADTRANS(L'E', 0xb4, 0xc9, 0x00) },
+  { DEADTRANS(L'G', 0xb4, 0x1f4, 0x00) },
   { DEADTRANS(L'I', 0xb4, 0xcd, 0x00) },
+  { DEADTRANS(L'K', 0xb4, 0x1e30, 0x00) },
+  { DEADTRANS(L'L', 0xb4, 0x139, 0x00) },
+  { DEADTRANS(L'M', 0xb4, 0x1e3e, 0x00) },
+  { DEADTRANS(L'N', 0xb4, 0x143, 0x00) },
   { DEADTRANS(L'O', 0xb4, 0xd3, 0x00) },
+  { DEADTRANS(L'P', 0xb4, 0x1e54, 0x00) },
+  { DEADTRANS(L'R', 0xb4, 0x154, 0x00) },
+  { DEADTRANS(L'S', 0xb4, 0x15a, 0x00) },
   { DEADTRANS(L'U', 0xb4, 0xda, 0x00) },
+  { DEADTRANS(L'W', 0xb4, 0x1e82, 0x00) },
   { DEADTRANS(L'Y', 0xb4, 0xdd, 0x00) },
+  { DEADTRANS(L'Z', 0xb4, 0x179, 0x00) },
+  { DEADTRANS(L'Ü', 0xb4, 0x1d7, 0x00) },
   { DEADTRANS(L' ', 0xb4, 0xb4, 0x00) },
+  { DEADTRANS(0xb4, 0xb4, 0x301, 0x00) },
   { DEADTRANS(L'a', L'`', 0xe0, 0x00) },
   { DEADTRANS(L'e', L'`', 0xe8, 0x00) },
   { DEADTRANS(L'i', L'`', 0xec, 0x00) },
+  { DEADTRANS(L'n', L'`', 0x1f9, 0x00) },
   { DEADTRANS(L'o', L'`', 0xf2, 0x00) },
   { DEADTRANS(L'u', L'`', 0xf9, 0x00) },
+  { DEADTRANS(L'w', L'`', 0x1e81, 0x00) },
+  { DEADTRANS(L'y', L'`', 0x1ef3, 0x00) },
+  { DEADTRANS(L'ü', L'`', 0x1dc, 0x00) },
   { DEADTRANS(L'A', L'`', 0xc0, 0x00) },
   { DEADTRANS(L'E', L'`', 0xc8, 0x00) },
   { DEADTRANS(L'I', L'`', 0xcc, 0x00) },
+  { DEADTRANS(L'N', L'`', 0x1f8, 0x00) },
   { DEADTRANS(L'O', L'`', 0xd2, 0x00) },
   { DEADTRANS(L'U', L'`', 0xd9, 0x00) },
+  { DEADTRANS(L'W', L'`', 0x1e80, 0x00) },
+  { DEADTRANS(L'Y', L'`', 0x1ef2, 0x00) },
+  { DEADTRANS(L'Ü', L'`', 0x1db, 0x00) },
   { DEADTRANS(L' ', L'`', L'`', 0x00) },
+  { DEADTRANS(L'`', L'`', 0x300, 0x00) },
   { 0, 0 }
 };
 
