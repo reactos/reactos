@@ -21,7 +21,7 @@ static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
 static BOOLEAN KeyAvailable = FALSE;
 
-/* AGENT-MODIFIED: Add GOP console function declarations */
+/* NOTE: Add GOP console function declarations */
 extern VOID UefiGopConsolePutChar(CHAR Ch);
 extern VOID UefiGopConsolePutString(PCSTR String);
 extern VOID UefiGopConsoleClear(VOID);
@@ -34,7 +34,7 @@ static BOOLEAN BootServicesExited = FALSE;
 VOID
 UefiConsPutChar(int c)
 {
-    /* AGENT-MODIFIED: Use GOP console if boot services have been exited */
+    /* NOTE: Use GOP console if boot services have been exited */
     if (BootServicesExited && UefiGopConsoleIsInitialized())
     {
         UefiGopConsolePutChar((CHAR)c);
@@ -200,13 +200,13 @@ UefiConsGetCh(VOID)
     return KeyOutput;
 }
 
-/* AGENT-MODIFIED: Function to mark boot services as exited */
+/* NOTE: Function to mark boot services as exited */
 VOID
 UefiConsMarkBootServicesExited(VOID)
 {
     BootServicesExited = TRUE;
     
-    /* AGENT-MODIFIED: Ensure GOP console is ready for use */
+    /* NOTE: Ensure GOP console is ready for use */
     if (UefiGopConsoleIsInitialized())
     {
         UefiGopConsoleSetCursor(CurrentCursorX, CurrentCursorY);

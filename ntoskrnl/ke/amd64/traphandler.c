@@ -253,7 +253,7 @@ KiSystemCallHandler(
                 break;
 
             default:
-                // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+                // NOTE: Removed ASSERT(FALSE) to prevent INT3 in release mode
                 // Invalid parameter count - return error
                 TrapFrame->Rax = STATUS_INVALID_PARAMETER;
                 return (PVOID)NtSyscallFailure;
@@ -277,6 +277,6 @@ KiSystemService(IN PKTHREAD Thread,
                 IN ULONG Instruction)
 {
     UNIMPLEMENTED;
-    // AGENT-MODIFIED: Removed __debugbreak() to prevent INT3 in release mode
+    // NOTE: Removed __debugbreak() to prevent INT3 in release mode
 }
 

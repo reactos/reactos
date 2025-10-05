@@ -38,7 +38,7 @@
 #define DPRINT_HEAP         15  // messages in a bottle
 #define DBG_CHANNELS_COUNT  16
 
-/* AGENT-MODIFIED: Always enable debug functions even in Release mode for critical boot debugging */
+/* NOTE: Always enable debug functions even in Release mode for critical boot debugging */
 /* These functions are always available regardless of DBG setting */
 VOID
 DebugInit(
@@ -106,7 +106,7 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #endif // defined __i386__
 
 #else
-    /* AGENT-MODIFIED: In Release mode, enable critical traces but disable other debug output */
+    /* NOTE: In Release mode, enable critical traces but disable other debug output */
     #define DBG_DEFAULT_CHANNEL(ch)
 
     #define ERR_CH(ch, fmt, ...)
@@ -117,12 +117,12 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
     #define ERR(fmt, ...)
     #define FIXME(fmt, ...)
     #define WARN(fmt, ...)
-    /* AGENT-MODIFIED: Use CRITICAL_TRACE for TRACE in Release mode to catch BootMain */
+    /* NOTE: Use CRITICAL_TRACE for TRACE in Release mode to catch BootMain */
     #define TRACE(fmt, ...) CRITICAL_TRACE(fmt, ##__VA_ARGS__)
 
     #define UNIMPLEMENTED
 
-    /* AGENT-MODIFIED: Keep DebugInit enabled in Release mode */
+    /* NOTE: Keep DebugInit enabled in Release mode */
     /* DebugInit is already declared above */
     #define BugCheck(fmt, ...)
     #define DbgDumpBuffer(mask, buf, len)

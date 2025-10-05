@@ -609,7 +609,7 @@ function(set_module_type MODULE TYPE)
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         set_entrypoint(${MODULE} ${__module_ENTRYPOINT})
     elseif(${TYPE} STREQUAL nativecui)
-        # AGENT-MODIFIED: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
+        # NOTE: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
         if(ARCH STREQUAL "i386")
             set_entrypoint(${MODULE} NtProcessStartup 4)
         else()
@@ -629,28 +629,28 @@ function(set_module_type MODULE TYPE)
         endif()
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
-        # AGENT-MODIFIED: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
+        # NOTE: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
         if(ARCH STREQUAL "i386")
             set_entrypoint(${MODULE} DllMainCRTStartup 12)
         else()
             set_entrypoint(${MODULE} DllMainCRTStartup)
         endif()
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
-        # AGENT-MODIFIED: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
+        # NOTE: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
         if(ARCH STREQUAL "i386")
             set_entrypoint(${MODULE} DriverEntry 8)
         else()
             set_entrypoint(${MODULE} DriverEntry)
         endif()
     elseif(${TYPE} STREQUAL nativedll)
-        # AGENT-MODIFIED: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
+        # NOTE: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
         if(ARCH STREQUAL "i386")
             set_entrypoint(${MODULE} DllMain 12)
         else()
             set_entrypoint(${MODULE} DllMain)
         endif()
     elseif(TYPE STREQUAL kernel)
-        # AGENT-MODIFIED: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
+        # NOTE: Fix entry point for non-i386 architectures - stdcall decoration only applies to i386
         if(ARCH STREQUAL "i386")
             set_entrypoint(${MODULE} KiSystemStartup 4)
         else()

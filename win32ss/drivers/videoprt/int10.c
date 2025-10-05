@@ -263,11 +263,11 @@ IntInt10AllocateBuffer(
 
     return NO_ERROR;
 #else
-    // AGENT-MODIFIED: Handle STATUS_NOT_SUPPORTED for UEFI systems
+    // NOTE: Handle STATUS_NOT_SUPPORTED for UEFI systems
     Status = x86BiosAllocateBuffer(Length, Seg, Off);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("IntInt10AllocateBuffer: x86 BIOS services not supported (UEFI)\n");
         return ERROR_INVALID_FUNCTION;
     }
@@ -303,11 +303,11 @@ IntInt10FreeBuffer(
 
     return Status;
 #else
-    // AGENT-MODIFIED: Handle STATUS_NOT_SUPPORTED for UEFI systems
+    // NOTE: Handle STATUS_NOT_SUPPORTED for UEFI systems
     Status = x86BiosFreeBuffer(Seg, Off);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("IntInt10FreeBuffer: x86 BIOS services not supported (UEFI)\n");
         return ERROR_INVALID_FUNCTION;
     }
@@ -348,11 +348,11 @@ IntInt10ReadMemory(
 #else
     NTSTATUS Status;
 
-    // AGENT-MODIFIED: Handle STATUS_NOT_SUPPORTED for UEFI systems
+    // NOTE: Handle STATUS_NOT_SUPPORTED for UEFI systems
     Status = x86BiosReadMemory(Seg, Off, Buffer, Length);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("IntInt10ReadMemory: x86 BIOS services not supported (UEFI)\n");
         return ERROR_INVALID_FUNCTION;
     }
@@ -391,11 +391,11 @@ IntInt10WriteMemory(
 #else
     NTSTATUS Status;
 
-    // AGENT-MODIFIED: Handle STATUS_NOT_SUPPORTED for UEFI systems
+    // NOTE: Handle STATUS_NOT_SUPPORTED for UEFI systems
     Status = x86BiosWriteMemory(Seg, Off, Buffer, Length);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("IntInt10WriteMemory: x86 BIOS services not supported (UEFI)\n");
         return ERROR_INVALID_FUNCTION;
     }
@@ -445,11 +445,11 @@ IntInt10CallBios(
     /* The kernel needs access here */
     UnprotectLowV86Mem();
 #ifdef _M_AMD64
-    // AGENT-MODIFIED: Handle case where x86BiosCall may fail on UEFI systems
+    // NOTE: Handle case where x86BiosCall may fail on UEFI systems
     Status = x86BiosCall(0x10, &BiosContext) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
     if (!NT_SUCCESS(Status))
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("IntInt10CallBios: x86BiosCall failed (UEFI system without BIOS emulation?)\n");
     }
 #else

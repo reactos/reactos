@@ -655,7 +655,7 @@ KiGeneralProtectionFaultHandler(
     {
         /* Not implemented */
         UNIMPLEMENTED;
-        // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+        // NOTE: Removed ASSERT(FALSE) to prevent INT3 in release mode
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -668,7 +668,7 @@ KiGeneralProtectionFaultHandler(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode - unhandled GPF
+    // NOTE: Removed ASSERT(FALSE) to prevent INT3 in release mode - unhandled GPF
     // Return unsuccessful status for unhandled general protection faults
     return STATUS_UNSUCCESSFUL;
 }
@@ -719,7 +719,7 @@ KiXmmExceptionHandler(
     else
     {
         /* Should not happen */
-        // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+        // NOTE: Removed ASSERT(FALSE) to prevent INT3 in release mode
         ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
     }
     

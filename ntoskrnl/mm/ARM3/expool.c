@@ -379,12 +379,12 @@ ExpCheckPoolBlocks(IN PVOID Block)
     SIZE_T Size = 0;
     PPOOL_HEADER Entry;
 
-    /* AGENT-MODIFIED: Fix x64 pool corruption - handle paged vs non-paged pool */
+    /* NOTE: Fix x64 pool corruption - handle paged vs non-paged pool */
     /* Check if this is paged pool - on x64, paged pool starts at 0xFFFFFA80... */
 #ifdef _WIN64
     if ((ULONG_PTR)Block >= 0xFFFFFA8000000000ULL)
     {
-        /* AGENT-MODIFIED: Skip validation for paged pool entirely */
+        /* NOTE: Skip validation for paged pool entirely */
         /* Paged pool has different memory layout and validation rules */
         /* The PreviousSize/BlockSize consistency check doesn't apply */
         return;
@@ -395,7 +395,7 @@ ExpCheckPoolBlocks(IN PVOID Block)
         (ULONG_PTR)Block >= (ULONG_PTR)MmPagedPoolStart &&
         (ULONG_PTR)Block < (ULONG_PTR)MmPagedPoolEnd)
     {
-        /* AGENT-MODIFIED: Skip validation for paged pool entirely */
+        /* NOTE: Skip validation for paged pool entirely */
         /* Paged pool has different memory layout and validation rules */
         return;
     }
@@ -404,7 +404,7 @@ ExpCheckPoolBlocks(IN PVOID Block)
     /* Non-paged pool: find the first entry on the page */
     Entry = (PPOOL_HEADER)Block;
 
-    /* AGENT-MODIFIED: Only walk backwards if not already at first entry */
+    /* NOTE: Only walk backwards if not already at first entry */
     if (Entry->PreviousSize != 0)
     {
         /* For non-paged pool, the first entry should be at page boundary */
@@ -2421,7 +2421,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         return NULL;
     }
 
-    // AGENT-MODIFIED: Zero the pool header to ensure proper initialization on x64
+    // NOTE: Zero the pool header to ensure proper initialization on x64
     // This is critical for release builds where memory might not be zeroed
     RtlZeroMemory(Entry, sizeof(POOL_HEADER));
 
@@ -2431,7 +2431,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
     Entry->PoolType = OriginalType + 1;
-    Entry->PreviousSize = 0;  // AGENT-MODIFIED: Explicitly set PreviousSize after other fields for x64
+    Entry->PreviousSize = 0;  // NOTE: Explicitly set PreviousSize after other fields for x64
 
     //
     // This page will have two entries -- one for the allocation (which we just
@@ -2474,7 +2474,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Release the pool lock
         //
-        /* AGENT-MODIFIED: Only check pool blocks for non-paged pool */
+        /* NOTE: Only check pool blocks for non-paged pool */
         if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
         {
             ExpCheckPoolBlocks(Entry);
@@ -2486,7 +2486,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Simply do a sanity check
         //
-        /* AGENT-MODIFIED: Only check pool blocks for non-paged pool */
+        /* NOTE: Only check pool blocks for non-paged pool */
         if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
         {
             ExpCheckPoolBlocks(Entry);
@@ -2504,7 +2504,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // And return the pool allocation
     //
-    /* AGENT-MODIFIED: Only check pool blocks for non-paged pool */
+    /* NOTE: Only check pool blocks for non-paged pool */
     /* Paged pool has different memory layout and doesn't follow same rules */
     if ((PoolType & BASE_POOL_TYPE_MASK) == NonPagedPool)
     {

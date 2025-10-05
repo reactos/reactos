@@ -135,7 +135,7 @@ HalInitSystem(
         HalGetDmaAdapter = HalpGetDmaAdapter;
 
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
-        // AGENT-MODIFIED: Use appropriate display reset based on firmware type
+        // NOTE: Use appropriate display reset based on firmware type
         if (LoaderBlock->FirmwareInformation.FirmwareTypeEfi == 0)
         {
             HalResetDisplay = HalpBiosDisplayReset;
@@ -168,7 +168,7 @@ HalInitSystem(
         HalpInitPhase0(LoaderBlock);
 
         /* Initialize Phase 0 of the x86 emulator only for BIOS systems */
-        // AGENT-MODIFIED: Skip x86bios initialization on UEFI systems to prevent crashes
+        // NOTE: Skip x86bios initialization on UEFI systems to prevent crashes
         DPRINT1("AGENT-DEBUG: FirmwareTypeEfi = %d\n", LoaderBlock->FirmwareInformation.FirmwareTypeEfi);
         DPRINT1("AGENT-DEBUG: LoaderBlock Extension = %p\n", LoaderBlock->Extension);
         if (LoaderBlock->Extension)
@@ -194,7 +194,7 @@ HalInitSystem(
         HalpInitPhase1();
 
         /* Initialize Phase 1 of the x86 emulator only for BIOS systems */
-        // AGENT-MODIFIED: Skip x86bios initialization on UEFI systems to prevent crashes
+        // NOTE: Skip x86bios initialization on UEFI systems to prevent crashes
         if (LoaderBlock->FirmwareInformation.FirmwareTypeEfi == 0)
         {
             HalInitializeBios(1, LoaderBlock);

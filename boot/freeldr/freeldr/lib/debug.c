@@ -22,14 +22,14 @@
 
 #if DBG
 
-// AGENT-MODIFIED: Forward declaration for ArcGetRelativeTime
+// NOTE: Forward declaration for ArcGetRelativeTime
 ULONG ArcGetRelativeTime(VOID);
 
-// AGENT-MODIFIED: Global boot timestamp for Linux-style logging
+// NOTE: Global boot timestamp for Linux-style logging
 static ULONGLONG BootStartTimestamp = 0;
 static BOOLEAN TimestampInitialized = FALSE;
 
-// AGENT-MODIFIED: Get microseconds since boot using TSC or fallback
+// NOTE: Get microseconds since boot using TSC or fallback
 static ULONGLONG
 GetMicrosecondsSinceBoot(VOID)
 {
@@ -312,7 +312,7 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     /* Print the header if we have started a new line */
     if (DebugStartOfLine)
     {
-        // AGENT-MODIFIED: Add Linux-style timestamp at the beginning
+        // NOTE: Add Linux-style timestamp at the beginning
         ULONGLONG Microseconds = GetMicrosecondsSinceBoot();
         ULONGLONG Seconds = Microseconds / 1000000ULL;
         ULONGLONG Fractional = Microseconds % 1000000ULL;

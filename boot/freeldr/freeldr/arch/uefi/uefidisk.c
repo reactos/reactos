@@ -8,7 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <uefildr.h>
-// AGENT-MODIFIED: Include header for UefiEnumerateArcDisks
+// NOTE: Include header for UefiEnumerateArcDisks
 #include <uefi/uefiarcname.h>
 
 #include <debug.h>
@@ -500,7 +500,7 @@ UefiInitializeBootDevices(VOID)
     UefiSetupBlockDevices();
     UefiSetBootpath();
     
-    // AGENT-MODIFIED: Enumerate all ARC disks for proper Windows boot support
+    // NOTE: Enumerate all ARC disks for proper Windows boot support
     UefiEnumerateArcDisks();
 
     /* Add it, if it's a cdrom */

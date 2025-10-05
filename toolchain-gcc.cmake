@@ -122,7 +122,7 @@ set(CMAKE_CXX_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C++ Libraries")
 # This allows to have CMake test the compiler without linking
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-# AGENT-MODIFIED: Workaround for binutils 2.43.1 linker segmentation fault
+# NOTE: Workaround for binutils 2.43.1 linker segmentation fault
 # This version of binutils has a critical bug that causes segfaults when linking
 # complex DLLs with many object files and symbol exports
 # Applying multiple workarounds:

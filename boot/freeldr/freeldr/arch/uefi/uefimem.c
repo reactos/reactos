@@ -112,7 +112,7 @@ PUEFI_LoadMemoryMap(
                                                            &DescSize,
                                                            &DescVer);
 
-    // AGENT-MODIFIED: Added detailed status debugging
+    // NOTE: Added detailed status debugging
     TRACE("GetMemoryMap initial probe Status=%lx, EFI_BUFFER_TOO_SMALL=%lx\n", (UINTN)Status, (UINTN)EFI_BUFFER_TOO_SMALL);
     TRACE("MapSize=%lu DescSize=%lu after probe\n", (UINTN)MapSize, (UINTN)DescSize);
     
@@ -267,7 +267,7 @@ UefiMemGetMemoryMap(_Out_ ULONG *MemoryMapSize /* OUT: number of entries */)
     /* Convert the firmware map into FreeLdr's compact descriptor list. */
     const UINT32 EntryCount = (DescSize ? (UINT32)(MapBytes / DescSize) : 0);
 
-    // AGENT-MODIFIED: Added detailed allocation size debugging
+    // NOTE: Added detailed allocation size debugging
     TRACE("Memory allocation calculation: MapBytes=%lu, DescSize=%lu, EntryCount=%u\n", 
           (UINTN)MapBytes, (UINTN)DescSize, EntryCount);
 
@@ -279,7 +279,7 @@ UefiMemGetMemoryMap(_Out_ ULONG *MemoryMapSize /* OUT: number of entries */)
 
     SIZE_T FreeldrBytes = each * FreeldrEntriesCap;
     
-    // AGENT-MODIFIED: Added calculation result debugging
+    // NOTE: Added calculation result debugging
     TRACE("FreeldrBytes calculation: each=%lu * FreeldrEntriesCap=%lu = %lu\n", 
           (UINTN)each, (UINTN)FreeldrEntriesCap, (UINTN)FreeldrBytes);
 
@@ -294,13 +294,13 @@ UefiMemGetMemoryMap(_Out_ ULONG *MemoryMapSize /* OUT: number of entries */)
         return NULL;
     }
 
-    // AGENT-MODIFIED: Better debug trace before memset
+    // NOTE: Better debug trace before memset
     TRACE("About to memset: FreeldrMem=%p, FreeldrBytes=%lu\n", FreeldrMem, (UINTN)FreeldrBytes);
 
     /* Zero exactly what we allocated. */
     memset(FreeldrMem, 0, FreeldrBytes);
     
-    // AGENT-MODIFIED: Confirm memset succeeded
+    // NOTE: Confirm memset succeeded
     TRACE("memset completed successfully\n");
 
     /* Walk the EFI map and translate. */
@@ -387,7 +387,7 @@ UefiExitBootServices(VOID)
     else
     {
         TRACE("Exited boot services\n");
-        /* AGENT-MODIFIED: Mark boot services as exited for console fallback to GOP */
+        /* NOTE: Mark boot services as exited for console fallback to GOP */
         UefiConsMarkBootServicesExited();
     }
 }

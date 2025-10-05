@@ -35,7 +35,7 @@ KiIpiSend(
     }
     else
     {
-        // AGENT-MODIFIED: Removed ASSERT(FALSE) to prevent INT3 in release mode
+        // NOTE: Removed ASSERT(FALSE) to prevent INT3 in release mode
         // Unknown IPI request - ignore for now
     }
 }
@@ -46,7 +46,7 @@ KeIpiGenericCall(
     _In_ PKIPI_BROADCAST_WORKER Function,
     _In_ ULONG_PTR Argument)
 {
-    // AGENT-MODIFIED: Removed __debugbreak() to prevent INT3 in release mode
+    // NOTE: Removed __debugbreak() to prevent INT3 in release mode
     // IPI broadcast not fully implemented yet
     return 0;
 }

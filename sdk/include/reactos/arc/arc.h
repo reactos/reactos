@@ -389,7 +389,7 @@ typedef struct _LOADER_PERFORMANCE_DATA
 // for more details.
 //
 
-// AGENT-MODIFIED: Added GOP framebuffer handoff structure for UEFI systems
+// NOTE: Added GOP framebuffer handoff structure for UEFI systems
 typedef struct _GOP_FRAMEBUFFER_INFO
 {
     PHYSICAL_ADDRESS FrameBufferBase;    /* Physical address of the framebuffer */
@@ -451,9 +451,9 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     //
     // ReactOS additions
     //
-    // AGENT-MODIFIED: GOP framebuffer information for UEFI boot
+    // NOTE: GOP framebuffer information for UEFI boot
     GOP_FRAMEBUFFER_INFO GopFramebuffer;
-    // AGENT-MODIFIED: BGRT (Boot Graphics Resource Table) info for seamless boot logo
+    // NOTE: BGRT (Boot Graphics Resource Table) info for seamless boot logo
     struct {
         BOOLEAN Valid;                   /* TRUE if BGRT data is available */
         UCHAR ImageType;                 /* 0=BMP (only type defined) */

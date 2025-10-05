@@ -58,7 +58,7 @@ HalInitializeBios(
 
     if (Phase == 0)
     {
-        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
+        // NOTE: Make HAL init non-fatal for UEFI systems
         /* Allocate one page for a fallback mapping */
         PhysicalAddress = HalpAllocPhysicalMemory(LoaderBlock,
                                                   0x100000,
@@ -91,7 +91,7 @@ HalInitializeBios(
     else
     {
 
-        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
+        // NOTE: Make HAL init non-fatal for UEFI systems
         /* Allocate an MDL for 1MB */
         Mdl = IoAllocateMdl(NULL, 0x100000, FALSE, FALSE, NULL);
         if (!Mdl)
@@ -147,7 +147,7 @@ HalInitializeBios(
 
         /* Map the MDL to system space */
         x86BiosMemoryMapping = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
-        // AGENT-MODIFIED: Make HAL init non-fatal for UEFI systems
+        // NOTE: Make HAL init non-fatal for UEFI systems
         if (!x86BiosMemoryMapping)
         {
             /* MDL mapping failed - x86 BIOS services will not be available */
@@ -173,7 +173,7 @@ x86BiosAllocateBuffer(
     _In_ USHORT *Offset)
 {
     /* Check if the system is initialized and the buffer is large enough */
-    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    // NOTE: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
         /* x86 BIOS services not available (UEFI system) */
@@ -207,14 +207,14 @@ x86BiosFreeBuffer(
     _In_ USHORT Segment,
     _In_ USHORT Offset)
 {
-    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    // NOTE: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
         /* x86 BIOS services not available (UEFI system) */
         return STATUS_NOT_SUPPORTED;
     }
     
-    // AGENT-MODIFIED: Accept the segment returned by x86BiosAllocateBuffer (x86BiosBufferPhysical / 16)
+    // NOTE: Accept the segment returned by x86BiosAllocateBuffer (x86BiosBufferPhysical / 16)
     /* Check if the address matches the allocated buffer */
     if ((Segment != (x86BiosBufferPhysical / 16)) || (Offset != 0))
     {
@@ -247,7 +247,7 @@ x86BiosReadMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    // NOTE: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
         /* x86 BIOS services not available (UEFI system) */
@@ -281,7 +281,7 @@ x86BiosWriteMemory(
     Address = (Segment << 4) + Offset;
 
     /* Check if it's valid */
-    // AGENT-MODIFIED: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
+    // NOTE: Return STATUS_NOT_SUPPORTED on UEFI systems where x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
         /* x86 BIOS services not available (UEFI system) */
@@ -464,7 +464,7 @@ x86BiosCall(
     ULONG FlatIp;
     PUCHAR InstructionPointer;
 
-    // AGENT-MODIFIED: Fail gracefully on UEFI systems where x86bios is not initialized
+    // NOTE: Fail gracefully on UEFI systems where x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
         DPRINT1("x86BiosCall: NOT_SUPPORTED (UEFI)\n");
@@ -552,10 +552,10 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
-    // AGENT-MODIFIED: Return FALSE for UEFI systems and when x86bios is not initialized
+    // NOTE: Return FALSE for UEFI systems and when x86bios is not initialized
     if (!x86BiosIsInitialized)
     {
-        // AGENT-MODIFIED: Use DPRINT for repeated messages
+        // NOTE: Use DPRINT for repeated messages
         DPRINT("HalpBiosDisplayReset: x86bios not initialized (UEFI system?)\n");
         return FALSE;
     }

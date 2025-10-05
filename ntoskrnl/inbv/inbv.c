@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* AGENT-MODIFIED: GOP video function prototypes for UEFI boot */
+/* NOTE: GOP video function prototypes for UEFI boot */
 BOOLEAN NTAPI GopVidInitialize(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID    NTAPI GopVidCleanUp(VOID);
 VOID    NTAPI GopVidResetDisplay(_In_ BOOLEAN HalReset);
@@ -47,7 +47,7 @@ static INBV_DISPLAY_STATE InbvDisplayState = INBV_DISPLAY_STATE_DISABLED;
 BOOLEAN InbvBootDriverInstalled = FALSE;
 static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters = NULL;
 
-/* AGENT-MODIFIED: Track if we're using GOP video (UEFI) or bootvid (BIOS) */
+/* NOTE: Track if we're using GOP video (UEFI) or bootvid (BIOS) */
 static BOOLEAN InbvUsingGopVideo = FALSE;
 
 static BOOLEAN InbvDisplayDebugStrings = FALSE;
@@ -167,7 +167,7 @@ InbvDriverInitialize(
         ResetMode   = (CommandLine == NULL) || (strstr(CommandLine, "BOOTLOGO") == NULL);
     }
 
-    /* AGENT-MODIFIED: UEFI vs BIOS selection */
+    /* NOTE: UEFI vs BIOS selection */
     if (LoaderBlock->FirmwareInformation.FirmwareTypeEfi)
     {
         DPRINT1("[AGENT] UEFI boot detected, initializing GOP video driver\n");
@@ -361,7 +361,7 @@ InbvNotifyDisplayOwnershipLost(
 
         if (InbvDisplayState != INBV_DISPLAY_STATE_LOST)
         {
-            /* AGENT-MODIFIED: Cleanup using the active backend */
+            /* NOTE: Cleanup using the active backend */
             if (InbvUsingGopVideo)
                 GopVidCleanUp();
             else

@@ -2353,7 +2353,7 @@ void gl_save_Vertex4f( GLcontext *ctx,
 }
 
 
-void gl_save_Vertex3fv( GLcontext *ctx, const GLfloat *v ) /* AGENT-MODIFIED: Match header declaration */
+void gl_save_Vertex3fv( GLcontext *ctx, const GLfloat *v ) /* NOTE: Match header declaration */
 {
    Node *n = alloc_instruction( ctx,  OPCODE_VERTEX3, 3 );
    if (n) {

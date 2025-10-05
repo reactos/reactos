@@ -10,12 +10,12 @@
 #include <uefildr.h>
 
 #include <debug.h>
-// AGENT-MODIFIED: Include ACPI header for table structures
+// NOTE: Include ACPI header for table structures
 #include <drivers/acpi/acpi.h>
 
 DBG_DEFAULT_CHANNEL(WARNING);
 
-// AGENT-MODIFIED: Added BGRT table signature for Boot Graphics Resource Table support
+// NOTE: Added BGRT table signature for Boot Graphics Resource Table support
 #define BGRT_SIGNATURE 0x54524742  // "BGRT"
 
 /* GLOBALS *******************************************************************/
@@ -28,7 +28,7 @@ extern UINT32 FreeldrDescCount;
 
 BOOLEAN AcpiPresent = FALSE;
 
-// AGENT-MODIFIED: Global pointer to store BGRT table information
+// NOTE: Global pointer to store BGRT table information
 static PBGRT_TABLE BgrtTable = NULL;
 
 /* FUNCTIONS *****************************************************************/
@@ -59,7 +59,7 @@ FindAcpiBios(VOID)
     return rsdp;
 }
 
-// AGENT-MODIFIED: Function to find and parse BGRT table from ACPI tables
+// NOTE: Function to find and parse BGRT table from ACPI tables
 static
 PBGRT_TABLE
 FindBgrtTable(
@@ -236,7 +236,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 }
 
-// AGENT-MODIFIED: Function to get the stored BGRT table
+// NOTE: Function to get the stored BGRT table
 PBGRT_TABLE
 GetBgrtTable(VOID)
 {
@@ -266,7 +266,7 @@ UefiHwDetect(
     /* Detect ACPI */
     DetectAcpiBios(SystemKey, &BusNumber);
     
-    // AGENT-MODIFIED: Find and store BGRT table for boot logo support
+    // NOTE: Find and store BGRT table for boot logo support
     if (AcpiPresent)
     {
         PRSDP_DESCRIPTOR Rsdp = FindAcpiBios();

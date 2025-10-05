@@ -12,11 +12,11 @@
 #include "registry.h"
 #include <internal/cmboot.h>
 
-// AGENT-MODIFIED: Include UEFI ARC functions header for UEFI boot support
+// NOTE: Include UEFI ARC functions header for UEFI boot support
 #ifdef UEFIBOOT
 #include <uefildr.h>
 #include <uefi/uefiarcname.h>
-// AGENT-MODIFIED: Include ACPI header for BGRT table support
+// NOTE: Include ACPI header for BGRT table support
 #include <drivers/acpi/acpi.h>
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
@@ -117,7 +117,7 @@ AllocateAndInitLPB(
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
     InitializeListHead(&LoaderBlock->BootDriverListHead);
 
-    // AGENT-MODIFIED: Set firmware type based on boot method
+    // NOTE: Set firmware type based on boot method
 #ifdef UEFIBOOT
     if (GlobalSystemTable != NULL)
     {
@@ -162,7 +162,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG_PTR PathSeparator;
     PLOADER_PARAMETER_EXTENSION Extension;
 
-    // AGENT-MODIFIED: Use UEFI-specific boot partition detection if running under UEFI
+    // NOTE: Use UEFI-specific boot partition detection if running under UEFI
 #ifdef UEFIBOOT
     if (GlobalSystemTable != NULL)
     {
@@ -248,7 +248,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     LoaderBlock->ArcDiskInformation = &WinLdrSystemBlock->ArcDiskInformation;
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
-    // AGENT-MODIFIED: Use UEFI-specific ARC disk initialization if running under UEFI
+    // NOTE: Use UEFI-specific ARC disk initialization if running under UEFI
 #ifdef UEFIBOOT
     if (GlobalSystemTable != NULL)
     {
@@ -320,11 +320,11 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         // FIXME: Extension->AcpiTableSize;
     }
 
-    /* AGENT-MODIFIED: Pass GOP framebuffer info to kernel for UEFI boot */
+    /* NOTE: Pass GOP framebuffer info to kernel for UEFI boot */
 #ifdef UEFIBOOT
     {
         extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
-        extern PBGRT_TABLE GetBgrtTable(VOID); // AGENT-MODIFIED: Get BGRT table from UEFI hardware detection
+        extern PBGRT_TABLE GetBgrtTable(VOID); // NOTE: Get BGRT table from UEFI hardware detection
         
         if (framebufferData.BaseAddress != 0)
         {
@@ -339,7 +339,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
             Extension->GopFramebuffer.GreenMask = 0;
             Extension->GopFramebuffer.BlueMask = 0;
             
-            TRACE("AGENT-MODIFIED: GOP Framebuffer passed to kernel:\n");
+            TRACE("NOTE: GOP Framebuffer passed to kernel:\n");
             TRACE("  BaseAddress: 0x%llx\n", Extension->GopFramebuffer.FrameBufferBase.QuadPart);
             TRACE("  Size: 0x%x\n", Extension->GopFramebuffer.FrameBufferSize);
             TRACE("  Resolution: %dx%d\n", Extension->GopFramebuffer.HorizontalResolution,
@@ -348,7 +348,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
             TRACE("  PixelFormat: %d\n", Extension->GopFramebuffer.PixelFormat);
         }
         
-        // AGENT-MODIFIED: Pass BGRT info to kernel for seamless boot logo
+        // NOTE: Pass BGRT info to kernel for seamless boot logo
         PBGRT_TABLE Bgrt = GetBgrtTable();
         if (Bgrt)
         {

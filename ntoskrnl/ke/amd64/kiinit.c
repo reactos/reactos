@@ -98,7 +98,7 @@ KiInitializePcr(
     _In_ PKTHREAD IdleThread,
     _In_ PVOID DpcStack)
 {
-    // AGENT-MODIFIED: Add debug output before operations that might crash
+    // NOTE: Add debug output before operations that might crash
     if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializePcr: Pcr=%p, about to zero memory\n", Pcr);
 
     /* Zero out the PCR */
@@ -327,7 +327,7 @@ KiInitializeP0BootStructures(
     PKGDTENTRY64 TssEntry;
     PKTSS64 TssBase;
 
-    // AGENT-MODIFIED: Debug output to track crash location
+    // NOTE: Debug output to track crash location
     if (FrLdrDbgPrint) FrLdrDbgPrint("AGENT: KiInitializeP0BootStructures: Setting up loader block\n");
 
     /* Set the initial stack, idle thread and process for processor 0 */

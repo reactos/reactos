@@ -1091,7 +1091,7 @@ void gl_vertex2f_nop( GLcontext *ctx, GLfloat x, GLfloat y )
    gl_error( ctx, GL_INVALID_OPERATION, "glVertex2" );
 }
 
-void gl_vertex3fv_nop( GLcontext *ctx, const GLfloat *v ) /* AGENT-MODIFIED: Match header declaration */
+void gl_vertex3fv_nop( GLcontext *ctx, const GLfloat *v ) /* NOTE: Match header declaration */
 {
    gl_error( ctx, GL_INVALID_OPERATION, "glVertex3v" );
 }

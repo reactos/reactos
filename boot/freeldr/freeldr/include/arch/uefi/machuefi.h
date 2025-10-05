@@ -111,7 +111,7 @@ UefiInitializeFileSystemSupport(_In_ EFI_HANDLE ImageHandle,
 VOID
 UefiVideoScrollUp(VOID);
 
-/* AGENT-MODIFIED: Added GOP console function declarations */
+/* NOTE: Added GOP console function declarations */
 VOID
 UefiGopConsolePutChar(CHAR Ch);
 

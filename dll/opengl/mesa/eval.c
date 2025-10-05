@@ -1981,7 +1981,7 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
   GLfloat normal[3];
   GLfloat fcolor[4];
   GLubyte icolor[4];
-  GLubyte col[4]; /* AGENT-MODIFIED: Move col declaration to function scope to fix dangling pointer */
+  GLubyte col[4]; /* NOTE: Move col declaration to function scope to fix dangling pointer */
   GLubyte *colorptr;
   GLfloat texcoord[4];
   GLuint index;
@@ -2027,7 +2027,7 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
      colorptr = icolor;
   }
   else {
-     /* AGENT-MODIFIED: col is now declared at function scope */
+     /* NOTE: col is now declared at function scope */
      COPY_4V(col, ctx->Current.ByteColor );
      colorptr = col;
   }
@@ -2088,7 +2088,7 @@ void gl_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v )
    GLfloat normal[3];
    GLfloat fcolor[4];
    GLubyte icolor[4];
-   GLubyte col[4]; /* AGENT-MODIFIED: Move col declaration to function scope to fix dangling pointer */
+   GLubyte col[4]; /* NOTE: Move col declaration to function scope to fix dangling pointer */
    GLubyte *colorptr;
    GLfloat texcoord[4];
    GLuint index;
@@ -2166,7 +2166,7 @@ void gl_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v )
       colorptr = icolor;
    }
    else {
-     /* AGENT-MODIFIED: col is now declared at function scope */
+     /* NOTE: col is now declared at function scope */
      COPY_4V(col, ctx->Current.ByteColor );
      colorptr = col;
    }
