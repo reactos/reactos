@@ -20,6 +20,7 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+#include "fs/stat.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
@@ -124,7 +125,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
 
     // If we got a symbolic link then fix up the path
     // and re-call this function
-    if ((TempExtFileInfo.Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK)
+    if (_S_ISLNK(TempExtFileInfo.Inode.Mode))
     {
         TRACE("File is a symbolic link\n");
 
@@ -273,8 +274,7 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
         return FALSE;
     }
 
-    if (((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFREG) &&
-        ((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFLNK))
+    if (!_S_ISREG(InodeData.Mode) && !_S_ISLNK(InodeData.Mode))
     {
         FileSystemError("Inode is not a regular file or symbolic link.");
         return FALSE;
@@ -286,8 +286,8 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
     // If it's a regular file or a regular symbolic link
     // then get the block pointer list otherwise it must
     // be a fast symbolic link which doesn't have a block list
-    if (((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFREG) ||
-        ((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFLNK && InodeData.Size > FAST_SYMLINK_MAX_NAME_SIZE))
+    if (_S_ISREG(InodeData.Mode) ||
+        (_S_ISLNK(InodeData.Mode) && InodeData.Size > FAST_SYMLINK_MAX_NAME_SIZE))
     {
         ExtFileInfo->FileBlockList = ExtReadBlockPointerList(Volume, &InodeData);
         if (ExtFileInfo->FileBlockList == NULL)
@@ -383,7 +383,7 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
     {
         // Block pointer list is NULL
         // so this better be a fast symbolic link or else
-        if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) != EXT_S_IFLNK) ||
+        if (!_S_ISLNK(ExtFileInfo->Inode.Mode) ||
             (ExtFileInfo->FileSize > FAST_SYMLINK_MAX_NAME_SIZE))
         {
             FileSystemError("Block pointer list is NULL and file is not a fast symbolic link.");
@@ -411,7 +411,7 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
 
     // Check if this is a fast symbolic link
     // if so then the read is easy
-    if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK) &&
+    if (_S_ISLNK(ExtFileInfo->Inode.Mode) &&
         (ExtFileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
     {
         TRACE("Reading fast symbolic link data\n");
@@ -794,7 +794,7 @@ BOOLEAN ExtReadDirectory(PEXT_VOLUME_INFO Volume, ULONG Inode, PVOID* DirectoryB
     }
 
     // Make sure it is a directory inode
-    if ((InodePointer->Mode & EXT_S_IFMT) != EXT_S_IFDIR)
+    if (!_S_ISDIR(InodePointer->Mode))
     {
         FileSystemError("Inode is not a directory.");
         return FALSE;
@@ -1096,14 +1096,10 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
 
 ULONGLONG ExtGetInodeFileSize(PEXT_INODE Inode)
 {
-    if ((Inode->Mode & EXT_S_IFMT) == EXT_S_IFDIR)
-    {
+    if (_S_ISDIR(Inode->Mode))
         return (ULONGLONG)(Inode->Size);
-    }
     else
-    {
         return ((ULONGLONG)(Inode->Size) | ((ULONGLONG)(Inode->DirACL) << 32));
-    }
 }
 
 BOOLEAN ExtCopyBlockPointersByExtents(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, PEXT4_EXTENT_HEADER ExtentHeader)

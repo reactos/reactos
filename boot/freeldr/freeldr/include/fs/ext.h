@@ -140,7 +140,7 @@ typedef struct _Ext4Extent
 
 typedef struct _ExtInode
 {
-    USHORT Mode;
+    USHORT Mode; // Combination of _S_IF* mode flags (FILETYPE_INO_* in grub/fs/ext2.c)
     USHORT UID;
     ULONG Size;
     ULONG Atime;
@@ -176,7 +176,7 @@ typedef struct _ExtDirEntry
     ULONG Inode;
     USHORT EntryLen;
     UCHAR NameLen;
-    UCHAR FileType;
+    UCHAR FileType; // One of the FILETYPE_* values
     CHAR Name[EXT_DIR_ENTRY_MAX_NAME_LENGTH];
 } EXT_DIR_ENTRY, *PEXT_DIR_ENTRY;
 
@@ -208,34 +208,11 @@ typedef struct _ExtDirEntry
 /* The maximum extent length used to check for sparse extents.  */
 #define EXT4_EXTENT_MAX_LENGTH 32768
 
-// EXT_INODE::mode values
-#define EXT_S_IRWXO 0x0007 // Other mask
-#define EXT_S_IXOTH 0x0001 // ---------x execute
-#define EXT_S_IWOTH 0x0002 // --------w- write
-#define EXT_S_IROTH 0x0004 // -------r-- read
-
-#define EXT_S_IRWXG 0x0038 // Group mask
-#define EXT_S_IXGRP 0x0008 // ------x--- execute
-#define EXT_S_IWGRP 0x0010 // -----w---- write
-#define EXT_S_IRGRP 0x0020 // ----r----- read
-
-#define EXT_S_IRWXU 0x01C0 // User mask
-#define EXT_S_IXUSR 0x0040 // ---x------ execute
-#define EXT_S_IWUSR 0x0080 // --w------- write
-#define EXT_S_IRUSR 0x0100 // -r-------- read
-
-#define EXT_S_ISVTX 0x0200 // Sticky bit
-#define EXT_S_ISGID 0x0400 // SGID
-#define EXT_S_ISUID 0x0800 // SUID
-
-#define EXT_S_IFMT 0xF000   // Format mask
-#define EXT_S_IFIFO 0x1000  // FIFO buffer
-#define EXT_S_IFCHR 0x2000  // Character device
-#define EXT_S_IFDIR 0x4000  // Directory
-#define EXT_S_IFBLK 0x6000  // Block device
-#define EXT_S_IFREG 0x8000  // Regular file
-#define EXT_S_IFLNK 0xA000  // Symbolic link
-#define EXT_S_IFSOCK 0xC000 // Socket
+/* Filetype used in directory entry.  */
+#define FILETYPE_UNKNOWN    0
+#define FILETYPE_REG        1
+#define FILETYPE_DIRECTORY  2
+#define FILETYPE_SYMLINK    7
 
 #define FAST_SYMLINK_MAX_NAME_SIZE 60
 
