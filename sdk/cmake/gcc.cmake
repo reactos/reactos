@@ -175,7 +175,7 @@ endif()
 add_compile_options(-Wall -Wpointer-arith -Werror=maybe-uninitialized)
 
 # Disable some overzealous warnings
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wno-unknown-warning-option)
 endif()
 
