@@ -141,41 +141,20 @@ FindContextByGuid(
 
 /* help.c */
 
-BOOL
-ProcessHelp(
+VOID
+PrintCommandHelp(
     _In_ PCONTEXT_ENTRY pContext,
-    _In_ DWORD dwCurrentIndex,
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount,
-    _In_ DWORD dwHelpLevel);
-
-
-DWORD
-WINAPI
-HelpCommand(
-    LPCWSTR pwszMachine,
-    LPWSTR *ppwcArguments,
-    DWORD dwCurrentIndex,
-    DWORD dwArgCount,
-    DWORD dwFlags,
-    LPCVOID pvData,
-    BOOL *pbDone);
-
-#if 0
-VOID
-HelpGroup(
-    PCONTEXT_ENTRY pContext,
-    LPWSTR pszGroupName,
-    BOOL bRecurse);
+    _In_ PCOMMAND_ENTRY pCommand);
 
 VOID
-HelpContext(
-    PCONTEXT_ENTRY pContext);
+PrintGroupHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ LPWSTR pszGroupName,
+    _In_ BOOL bRecurse);
 
 VOID
-HelpSubcontexts(
-    PCONTEXT_ENTRY pContext);
-#endif
+PrintContextHelp(
+    _In_ PCONTEXT_ENTRY pContext);
 
 /* helper.c */
 

@@ -97,19 +97,6 @@ PrintShortGroupCommands(
 
 
 static
-VOID
-PrintLongCommand(
-    _In_ PCONTEXT_ENTRY pContext,
-    _In_ PCOMMAND_ENTRY pCommand)
-{
-    WCHAR szBuffer[80];
-
-    LoadStringW(pContext->hModule, pCommand->dwCmdHlpToken, szBuffer, 80);
-    ConPrintf(StdOut, szBuffer);
-}
-
-
-static
 int
 HelpCompare(
     _In_ const void *p1,
@@ -227,10 +214,39 @@ PrintContext(
         HeapFree(GetProcessHeap(), 0, pHelpArray);
 }
 
-
 static
 VOID
-PrintGroup(
+PrintSubcontexts(
+    _In_ PCONTEXT_ENTRY pContext)
+{
+    if (pContext->pSubContextHead == NULL)
+        return;
+
+    ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
+    pContext = pContext->pSubContextHead;
+    while (pContext != NULL)
+    {
+        ConPrintf(StdOut, L" %s", pContext->pszContextName);
+        pContext = pContext->pNext;
+    }
+    ConPuts(StdOut, L"\n");
+}
+
+
+VOID
+PrintCommandHelp(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ PCOMMAND_ENTRY pCommand)
+{
+    WCHAR szBuffer[80];
+
+    LoadStringW(pContext->hModule, pCommand->dwCmdHlpToken, szBuffer, 80);
+    ConPrintf(StdOut, szBuffer);
+}
+
+
+VOID
+PrintGroupHelp(
     _In_ PCONTEXT_ENTRY pContext,
     _In_ LPWSTR pszGroupName,
     _In_ BOOL bRecurse)
@@ -240,7 +256,7 @@ PrintGroup(
     if (bRecurse)
     {
         if (pContext != pRootContext)
-            PrintGroup(pContext->pParentContext, pszGroupName, bRecurse);
+            PrintGroupHelp(pContext->pParentContext, pszGroupName, bRecurse);
     }
 
     pGroup = pContext->pGroupListHead;
@@ -256,130 +272,12 @@ PrintGroup(
 }
 
 
-static
 VOID
-PrintSubcontexts(
+PrintContextHelp(
     _In_ PCONTEXT_ENTRY pContext)
 {
-    if (pCurrentContext->pSubContextHead != NULL)
-    {
-        ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
-        pContext = pCurrentContext->pSubContextHead;
-        while (pContext != NULL)
-        {
-            ConPrintf(StdOut, L" %s", pContext->pszContextName);
-            pContext = pContext->pNext;
-        }
-        ConPuts(StdOut, L"\n");
-    }
-}
-
-
-BOOL
-ProcessHelp(
-    _In_ PCONTEXT_ENTRY pContext,
-    _In_ DWORD dwArgCount,
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwCurrentIndex,
-    _In_ DWORD dwHelpLevel)
-{
-    PCONTEXT_ENTRY pSubContext;
-    PCOMMAND_ENTRY pCommand;
-    PCOMMAND_GROUP pGroup;
-
-    DPRINT("ProcessHelp(dwCurrentIndex %lu  dwArgCount %lu  dwHelpLevel %lu)\n", dwCurrentIndex, dwArgCount, dwHelpLevel);
-
-    if (dwHelpLevel == dwCurrentIndex)
-    {
-        ConResPrintf(StdOut, IDS_HELP_HEADER);
-        PrintContext(pContext);
-        PrintSubcontexts(pContext);
-        ConResPrintf(StdOut, IDS_HELP_FOOTER);
-        return TRUE;
-    }
-
-    pCommand = pContext->pCommandListHead;
-    while (pCommand != NULL)
-    {
-        if (_wcsicmp(argv[dwCurrentIndex], pCommand->pwszCmdToken) == 0) 
-        {
-            if (dwHelpLevel == dwCurrentIndex + 1)
-            {
-                PrintLongCommand(pContext, pCommand);
-                return TRUE;
-            }
-        }
-
-        pCommand = pCommand->pNext;
-    }
-
-    pGroup = pContext->pGroupListHead;
-    while (pGroup != NULL)
-    {
-        if (_wcsicmp(argv[dwCurrentIndex], pGroup->pwszCmdGroupToken) == 0)
-        {
-            if (dwHelpLevel == dwCurrentIndex + 1)
-            {
-                ConResPrintf(StdOut, IDS_HELP_HEADER);
-                PrintGroup(pContext, argv[dwCurrentIndex], (dwHelpLevel == 1));
-                return TRUE;
-            }
-
-            pCommand = pGroup->pCommandListHead;
-            while (pCommand != NULL)
-            {
-                if ((dwArgCount > dwCurrentIndex + 1) && (_wcsicmp(argv[dwCurrentIndex + 1], pCommand->pwszCmdToken) == 0))
-                {
-                    if (dwHelpLevel == dwCurrentIndex + 2)
-                    {
-                        PrintLongCommand(pContext, pCommand);
-                        return TRUE;
-                    }
-                }
-
-                pCommand = pCommand->pNext;
-            }
-
-//            ConResPrintf(StdOut, IDS_HELP_HEADER);
-//            PrintGroup(pContext, pGroup);
-            return FALSE;
-        }
-
-        pGroup = pGroup->pNext;
-    }
-
-    if (pContext == pCurrentContext)
-    {
-        pSubContext = pContext->pSubContextHead;
-        while (pSubContext != NULL)
-        {
-            if (_wcsicmp(argv[dwCurrentIndex], pSubContext->pszContextName) == 0) 
-            {
-                return ProcessHelp(pSubContext,
-                                   dwArgCount,
-                                   argv,
-                                   dwCurrentIndex + 1,
-                                   dwHelpLevel);
-            }
-
-            pSubContext = pSubContext->pNext;
-        }
-    }
-
-    return FALSE;
-}
-
-
-DWORD
-WINAPI
-HelpCommand(
-    LPCWSTR pwszMachine,
-    LPWSTR *ppwcArguments,
-    DWORD dwCurrentIndex,
-    DWORD dwArgCount,
-    DWORD dwFlags,
-    LPCVOID pvData,
-    BOOL *pbDone)
-{
-    return ERROR_SUCCESS;
+    ConResPrintf(StdOut, IDS_HELP_HEADER);
+    PrintContext(pContext);
+    PrintSubcontexts(pContext);
+    ConResPrintf(StdOut, IDS_HELP_FOOTER);
 }
