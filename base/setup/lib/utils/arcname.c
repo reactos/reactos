@@ -692,14 +692,14 @@ ResolveArcNameManually(
     IN  PPARTLIST PartList)
 {
     NTSTATUS Status;
-    ULONG AdapterKey;
-    ULONG ControllerKey;
-    ULONG PeripheralKey;
-    ULONG PartitionNumber;
+    ULONG AdapterKey = 0;
+    ULONG ControllerKey = 0;
+    ULONG PeripheralKey = 0;
+    ULONG PartitionNumber = 0;
     ADAPTER_TYPE AdapterType;
-    CONTROLLER_TYPE ControllerType;
-    PERIPHERAL_TYPE PeripheralType;
-    BOOLEAN UseSignature;
+    CONTROLLER_TYPE ControllerType = ControllerTypeMax;
+    PERIPHERAL_TYPE PeripheralType = PeripheralTypeMax;
+    BOOLEAN UseSignature = FALSE;
     SIZE_T NameLength;
 
     if (NtName->MaximumLength < sizeof(UNICODE_NULL))

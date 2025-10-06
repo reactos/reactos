@@ -10,8 +10,6 @@ size_t __cdecl _tcslen(const _TCHAR * str)
 {
  const _TCHAR * s;
 
- if(str == 0) return 0;
-
  for(s = str; *s; ++ s);
 
  return s - str;
