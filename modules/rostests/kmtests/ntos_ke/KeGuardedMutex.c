@@ -440,6 +440,9 @@ START_TEST(KeGuardedMutex)
         return;
     }
 
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "kmtest:KeGuardedMutex is broken on Vista+.\n"))
+        return;
+
     for (i = 0; i < sizeof TestIterations / sizeof TestIterations[0]; ++i)
     {
         trace("Run %d\n", i);

@@ -72,7 +72,7 @@ Test_IoOpenDeviceInterfaceRegistryKey(
     if (skip(NT_SUCCESS(Status), "IoOpenDeviceInterfaceRegistryKey() failed: 0x%lx\n", Status))
         return;
 
-    trace("IoOpenDeviceInterfaceRegistryKey() success: 0x%p\n", DeviceInterfaceKey);
+    DPRINT("IoOpenDeviceInterfaceRegistryKey() success: 0x%p\n", DeviceInterfaceKey);
 
     for (n = 0; n < RTL_NUMBER_OF(Types); ++n)
     {
@@ -96,7 +96,7 @@ Test_IoOpenDeviceInterfaceRegistryKey(
         if (skip(NT_SUCCESS(Status), "ZwCreateKey() failed to create a subkey: %d 0x%lx\n", n, Status))
             continue;
 
-        trace("ZwCreateKey(): successfully created subkey: %d 0x%p\n", n, DeviceInterfaceSubKey);
+        DPRINT("ZwCreateKey(): successfully created subkey: %d 0x%p\n", n, DeviceInterfaceSubKey);
 
         ZwDeleteKey(DeviceInterfaceSubKey);
         ZwClose(DeviceInterfaceSubKey);
@@ -123,7 +123,7 @@ Test_IoGetDeviceInterfaceAlias(
         if (skip(NT_SUCCESS(Status), "IoGetDeviceInterfaceAlias(): fail: %d 0x%x\n", n, Status))
             continue;
 
-        trace("IoGetDeviceInterfaceAlias(): success: %d %wZ\n", n, &AliasSymbolicLinkName);
+        DPRINT("IoGetDeviceInterfaceAlias(): success: %d %wZ\n", n, &AliasSymbolicLinkName);
 
         /* Test IoOpenDeviceInterfaceRegistryKey with alias symbolic link too */
         Test_IoOpenDeviceInterfaceRegistryKey(AliasSymbolicLinkName.Buffer);
@@ -149,7 +149,7 @@ Test_IoSetDeviceInterfaceState(
         if (skip(NT_SUCCESS(Status), "IoSetDeviceInterfaceState(): failed to enable interface: %d 0x%x\n", n, Status))
             continue;
 
-        trace("IoSetDeviceInterfaceState(): successfully enabled interface: %d %wZ\n", n, &SymbolicLinkName);
+        DPRINT("IoSetDeviceInterfaceState(): successfully enabled interface: %d %wZ\n", n, &SymbolicLinkName);
     }
 }
 
@@ -172,14 +172,14 @@ Test_IoGetDeviceInterfaces(
         return;
     }
 
-    trace("IoGetDeviceInterfaces '%wZ' results:\n", &GuidString);
+    DPRINT("IoGetDeviceInterfaces '%wZ' results:\n", &GuidString);
     RtlFreeUnicodeString(&GuidString);
 
     for (SymbolicLink = SymbolicLinkList;
          SymbolicLink[0] != UNICODE_NULL;
          SymbolicLink += wcslen(SymbolicLink) + 1)
     {
-        trace("Symbolic Link: %S\n", SymbolicLink);
+        DPRINT("Symbolic Link: %S\n", SymbolicLink);
         Test_IoGetDeviceInterfaceAlias(SymbolicLink);
         Test_IoOpenDeviceInterfaceRegistryKey(SymbolicLink);
         Test_IoSetDeviceInterfaceState(SymbolicLink);
@@ -209,7 +209,7 @@ NotificationCallback(
     ok_eq_uint(Notification->Size, sizeof(*Notification));
 
     /* symbolic link must exist */
-    trace("Interface change: %wZ\n", Notification->SymbolicLinkName);
+    DPRINT("Interface change: %wZ\n", Notification->SymbolicLinkName);
     InitializeObjectAttributes(&ObjectAttributes,
                                Notification->SymbolicLinkName,
                                OBJ_KERNEL_HANDLE,

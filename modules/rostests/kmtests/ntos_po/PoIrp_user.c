@@ -12,13 +12,12 @@ START_TEST(PoIrp)
 {
     DWORD Error;
 
-#if defined(_M_AMD64)
-    if (TRUE)
-    {
-        skip(FALSE, "ROSTESTS-368: Skipping kmtest:PoIrp because it crashes on Windows Server 2003 x64-Testbot.\n");
-        return;
-    }
+#ifdef _M_AMD64
+    if (skip(FALSE, "ROSTESTS-368: Skipping kmtest:PoIrp because it crashes on Windows Server 2003 x64-Testbot.\n"))
+#else
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "kmtest:PoIrp is broken on Vista+.\n"))
 #endif
+        return;
 
     Error = KmtLoadAndOpenDriver(L"PoIrp", TRUE);
     ok_eq_int(Error, ERROR_SUCCESS);
