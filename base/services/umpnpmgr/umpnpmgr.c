@@ -204,13 +204,49 @@ GetSuppressNewUIValue(VOID)
 BOOL
 RunningOnLiveMedium(VOID)
 {
-    WCHAR LogPath[MAX_PATH];
+    WCHAR CommandLine[MAX_PATH];
+    HKEY hSetupKey;
+    DWORD dwType;
+    DWORD dwSize;
+    DWORD dwError;
+    BOOL LiveMedium = FALSE;
 
-    GetSystemWindowsDirectoryW(LogPath, ARRAYSIZE(LogPath));
-    if (GetDriveTypeW(LogPath) == DRIVE_FIXED)
-        return FALSE;
+    DPRINT("RunningOnLiveMedium()\n");
 
-    return TRUE;
+    /* Open the Setup key */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\Setup",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hSetupKey);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Read the CmdLine value */
+    dwSize = sizeof(CommandLine);
+    dwError = RegQueryValueExW(hSetupKey,
+                               L"CmdLine",
+                               NULL,
+                               &dwType,
+                               (LPBYTE)CommandLine,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS ||
+        (dwType != REG_SZ &&
+         dwType != REG_EXPAND_SZ &&
+         dwType != REG_MULTI_SZ))
+        goto done;
+
+    /* Check for the '-mini' option */
+    if (wcsstr(CommandLine, L" -mini") != NULL)
+    {
+        DPRINT("Running on LiveMedium\n");
+        LiveMedium = TRUE;
+    }
+
+done:
+    RegCloseKey(hSetupKey);
+
+    return LiveMedium;
 }
 
 VOID WINAPI
