@@ -22,7 +22,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_HELP_HEADER       "\nThe following commands are available:\n"
-    IDS_HELP_FOOTER       "\nHelp Footer\n\n"
+    IDS_HELP_FOOTER       "\nTo view help for a command, type the command, followed by a space, and then\n type ?.\n\n"
     IDS_SUBCONTEXT_HEADER "\nThe following sub-contexts are available:\n"
 
     IDS_HLP_UP             "Goes up one context level.\n"
@@ -35,6 +35,8 @@ BEGIN
     IDS_HLP_POPD_EX        "Syntax: popd\n\n        Changes to the context on the stack.\n\n"
     IDS_HLP_PUSHD          "Stores the current context on the stack.\n"
     IDS_HLP_PUSHD_EX       "Syntax: pushd\n\n        Stores the current context on the stack.\n\n"
+    IDS_HLP_EXEC           "Runs a script file.\n"
+    IDS_HLP_EXEC_EX        "Syntax: exec <ScriptFile>\n\n        Loads the script file and runs it.\n\n"
 
     IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
     IDS_HLP_ADD_HELPER_EX  "Syntax: add helper <dll file name>\n\n        Installs the specified helper DLL in netsh.\n\n"

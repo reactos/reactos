@@ -208,8 +208,7 @@ InterpretCommand(
                     dwError = pCommand->pfnCmdHandler(NULL, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
                     if (dwError != ERROR_SUCCESS)
                     {
-                        ConPrintf(StdOut, L"Error: %lu\n\n", dwError);
-                        ConResPrintf(StdOut, pCommand->dwCmdHlpToken);
+                        ConPrintf(StdOut, L"Commnand: %S  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
                     }
                 }
 
@@ -347,7 +346,7 @@ InterpretScript(
         ptr++;
     }
 
-    return InterpretCommand(args_vector, dwArgCount, &bDone) == FALSE;
+    return InterpretCommand(args_vector, dwArgCount, &bDone);
 }
 
 

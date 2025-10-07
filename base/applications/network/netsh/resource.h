@@ -31,14 +31,16 @@
 #define IDS_HLP_POPD_EX          307
 #define IDS_HLP_PUSHD            308
 #define IDS_HLP_PUSHD_EX         309
+#define IDS_HLP_EXEC             310
+#define IDS_HLP_EXEC_EX          311
 
-#define IDS_HLP_ADD_HELPER       310
-#define IDS_HLP_ADD_HELPER_EX    311
-#define IDS_HLP_DEL_HELPER       312
-#define IDS_HLP_DEL_HELPER_EX    313
-#define IDS_HLP_SHOW_HELPER      314
-#define IDS_HLP_SHOW_HELPER_EX   315
+#define IDS_HLP_ADD_HELPER       320
+#define IDS_HLP_ADD_HELPER_EX    321
+#define IDS_HLP_DEL_HELPER       322
+#define IDS_HLP_DEL_HELPER_EX    323
+#define IDS_HLP_SHOW_HELPER      324
+#define IDS_HLP_SHOW_HELPER_EX   325
 
-#define IDS_HLP_GROUP_ADD        320
-#define IDS_HLP_GROUP_DELETE     321
-#define IDS_HLP_GROUP_SHOW       322
+#define IDS_HLP_GROUP_ADD        330
+#define IDS_HLP_GROUP_DELETE     331
+#define IDS_HLP_GROUP_SHOW       332

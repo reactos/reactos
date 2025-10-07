@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BOOL
+DWORD
 RunScript(
     _In_ LPCWSTR filename)
 {
@@ -26,7 +26,7 @@ RunScript(
     if (script == NULL)
     {
         ConResPrintf(StdErr, IDS_OPEN_FAILED, filename);
-        return FALSE;
+        return ERROR_FILE_NOT_FOUND;
     }
 
     /* Read and process the script */
@@ -35,14 +35,14 @@ RunScript(
         if (InterpretScript(tmp_string) == FALSE)
         {
             fclose(script);
-            return FALSE;
+            return ERROR_SUCCESS; /* FIXME */
         }
     }
 
     /* Close the file */
     fclose(script);
 
-    return TRUE;
+    return ERROR_SUCCESS;
 }
 
 /*

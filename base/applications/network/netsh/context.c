@@ -327,6 +327,26 @@ UpCommand(
 
 DWORD
 WINAPI
+ExecCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    DPRINT("ExecCommand()\n");
+
+    if (dwArgCount - dwCurrentIndex != 1)
+        return ERROR_INVALID_SYNTAX;
+
+    return RunScript(argv[dwCurrentIndex]);
+}
+
+
+DWORD
+WINAPI
 ExitCommand(
     LPCWSTR pwszMachine,
     LPWSTR *argv,
@@ -372,7 +392,7 @@ PopdCommand(
     DPRINT("PopdCommand()\n");
 
     if (pContextStackHead == NULL)
-        return 0;
+        return ERROR_SUCCESS;
 
     pEntry = pContextStackHead;
 
@@ -412,7 +432,7 @@ PushdCommand(
 
     pEntry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CONTEXT_STACK_ENTRY));
     if (pEntry == NULL)
-        return 1;
+        return ERROR_NOT_ENOUGH_MEMORY;
 
     pEntry->pContext = pCurrentContext;
     if (pContextStackHead == NULL)
@@ -446,6 +466,7 @@ CreateRootContext(VOID)
     AddContextCommand(pRootContext, L"..",    UpCommand,    IDS_HLP_UP,    IDS_HLP_UP_EX, 0);
     AddContextCommand(pRootContext, L"?",     NULL,         IDS_HLP_HELP, IDS_HLP_HELP_EX, 0);
     AddContextCommand(pRootContext, L"bye",   ExitCommand,  IDS_HLP_EXIT,  IDS_HLP_EXIT_EX, 0);
+    AddContextCommand(pRootContext, L"exec",  ExecCommand,  IDS_HLP_EXEC,  IDS_HLP_EXEC_EX, 0);
     AddContextCommand(pRootContext, L"exit",  ExitCommand,  IDS_HLP_EXIT,  IDS_HLP_EXIT_EX, 0);
     AddContextCommand(pRootContext, L"help",  NULL,         IDS_HLP_HELP, IDS_HLP_HELP_EX, 0);
     AddContextCommand(pRootContext, L"popd",  PopdCommand,  IDS_HLP_POPD,  IDS_HLP_POPD_EX, 0);

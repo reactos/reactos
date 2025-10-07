@@ -220,4 +220,10 @@ InterpretCommand(
 VOID
 InterpretInteractive(VOID);
 
+/* netsh.c */
+
+DWORD
+RunScript(
+    _In_ LPCWSTR filename);
+
 #endif /* PRECOMP_H */
