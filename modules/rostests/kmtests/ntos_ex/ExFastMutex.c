@@ -255,7 +255,7 @@ TestFastMutexConcurrent(
     LARGE_INTEGER Timeout;
     Timeout.QuadPart = -50 * MILLISECOND;
 
-#if defined(_M_AMD64)
+#ifdef _M_AMD64
     if (skip(FALSE, "ROSTESTS-367: Skipping TestFastMutexConcurrent() because it hangs on Windows Server 2003 x64-Testbot.\n"))
 #else
     if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "TestFastMutexConcurrent() doesn't work on Vista+.\n"))
