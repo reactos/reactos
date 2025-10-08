@@ -296,6 +296,8 @@ VOID
     _In_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ ULONG Reserved);
 
+#define PIO_APC_ROUTINE_DEFINED
+
 __kernel_entry
 NTSYSCALLAPI
 NTSTATUS
