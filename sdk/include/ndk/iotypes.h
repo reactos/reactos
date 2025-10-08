@@ -1174,6 +1174,8 @@ typedef VOID
     _In_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ ULONG Reserved);
 
+#define PIO_APC_ROUTINE_DEFINED
+
 //
 // Mailslot IOCTL Codes
 //
