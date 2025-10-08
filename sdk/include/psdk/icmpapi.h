@@ -18,8 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __WINE_ICMPAPI_H
-#define __WINE_ICMPAPI_H
+#ifndef _ICMP_INCLUDED_
+#define _ICMP_INCLUDED_
+
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,9 +31,11 @@ HANDLE WINAPI  IcmpCreateFile(
     VOID
     );
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 HANDLE WINAPI  Icmp6CreateFile(
     VOID
     );
+#endif
 
 BOOL WINAPI  IcmpCloseHandle(
     HANDLE  IcmpHandle
@@ -53,7 +57,11 @@ WINAPI
 IcmpSendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    PIO_APC_ROUTINE          ApcRoutine,
+#else
     FARPROC                  ApcRoutine,
+#endif
     PVOID                    ApcContext,
     IPAddr                   DestinationAddress,
     LPVOID                   RequestData,
@@ -64,12 +72,40 @@ IcmpSendEcho2(
     DWORD                    Timeout
     );
 
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+DWORD
+WINAPI
+IcmpSendEcho2Ex(
+    HANDLE                   IcmpHandle,
+    HANDLE                   Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    PIO_APC_ROUTINE          ApcRoutine,
+#else
+    FARPROC                  ApcRoutine,
+#endif
+    PVOID                    ApcContext,
+    IPAddr                   SourceAddress,
+    IPAddr                   DestinationAddress,
+    LPVOID                   RequestData,
+    WORD                     RequestSize,
+    PIP_OPTION_INFORMATION   RequestOptions,
+    LPVOID                   ReplyBuffer,
+    DWORD                    ReplySize,
+    DWORD                    Timeout
+    );
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 DWORD
 WINAPI
 Icmp6SendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    PIO_APC_ROUTINE          ApcRoutine,
+#else
     FARPROC                  ApcRoutine,
+#endif
     PVOID                    ApcContext,
     struct sockaddr_in6     *SourceAddress,
     struct sockaddr_in6     *DestinationAddress,
@@ -80,6 +116,7 @@ Icmp6SendEcho2(
     DWORD                    ReplySize,
     DWORD                    Timeout
     );
+#endif
 
 DWORD
 WINAPI
@@ -88,16 +125,17 @@ IcmpParseReplies(
     DWORD                    ReplySize
     );
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 DWORD
 WINAPI
 Icmp6ParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     );
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif /* __WINE_ICMPAPI_H */
+#endif /* _ICMP_INCLUDED_ */
