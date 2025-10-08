@@ -163,6 +163,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "Chinês (tradicional) - rápido"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "Chinês (tradicional) - Unicode"
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Chinês (tradicional) - teclado americano"
+    IDS_COLEMAK_LAYOUT "Colemak"
     IDS_CROATIAN_LAYOUT "Croata"
     IDS_CZECH_LAYOUT "Tcheco"
     IDS_CZECH_PROGRAMMERS_LAYOUT "Tcheco (programadores)"

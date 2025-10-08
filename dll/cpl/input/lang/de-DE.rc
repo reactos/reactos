@@ -167,6 +167,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "Chinesisch (traditionell) - Quick"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "Chinesisch (traditionell) - Unicode"
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Chinesisch (traditionell) - US-Tastatur"
+    IDS_COLEMAK_LAYOUT "Colemak"
     IDS_CROATIAN_LAYOUT "Kroatisch"
     IDS_CZECH_LAYOUT "Tschechisch"
     IDS_CZECH_PROGRAMMERS_LAYOUT "Tschechisch (Programmierer)"

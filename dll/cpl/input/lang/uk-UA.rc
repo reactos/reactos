@@ -164,6 +164,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "Китайська (традиційне письмо) - швидка"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "Китайська (традиційне письмо) - Юнікод"
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Китайська (традиційне письмо) - США"
+    IDS_COLEMAK_LAYOUT "Colemak"
     IDS_CROATIAN_LAYOUT "Хорватська"
     IDS_CZECH_LAYOUT "Чеська"
     IDS_CZECH_PROGRAMMERS_LAYOUT "Чеська (програмістська)"
