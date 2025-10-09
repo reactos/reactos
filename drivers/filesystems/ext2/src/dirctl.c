@@ -968,7 +968,6 @@ ProcessNextEntry:
 errorout:
 
         ((PULONG)((PUCHAR)Buffer + fc.efc_prev))[0] = 0;
-        FileIndex = ByteOffset;
 
         if (Status == STATUS_BUFFER_OVERFLOW) {
             /* just return fc.efc_start/EntrySize bytes that we filled */
