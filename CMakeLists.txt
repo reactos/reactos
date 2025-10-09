@@ -238,7 +238,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     # Version Options
     add_definitions(-DWINVER=0x502
-                    -D_WIN32_IE=0x600
+                    -D_WIN32_IE=0x603
                     -D_WIN32_WINNT=0x502
                     -D_WIN32_WINDOWS=0x502
                     -D_SETUPAPI_VER=0x502
