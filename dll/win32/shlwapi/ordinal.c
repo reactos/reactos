@@ -3067,7 +3067,11 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR idstr, CLSID *id)
  *  either set to TRUE, or removed depending on whether the browser is deemed
  *  to be integrated.
  */
+#ifdef __REACTOS__
+UINT WINAPI WhichPlatform(void)
+#else
 DWORD WINAPI WhichPlatform(void)
+#endif
 {
   static const char szIntegratedBrowser[] = "IntegratedBrowser";
   static DWORD dwState = 0;

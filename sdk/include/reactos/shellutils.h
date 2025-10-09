@@ -653,7 +653,7 @@ public:
     }
 };
 
-#if defined(__WINE_SHLWAPI_H) && !defined(NO_SHLWAPI)
+#if defined(_INC_SHLWAPI) && !defined(NO_SHLWAPI)
 struct CScopedSetObjectWithSite
 {
     IUnknown *m_pObj;
