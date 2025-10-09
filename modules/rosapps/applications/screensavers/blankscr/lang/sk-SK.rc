@@ -1,11 +1,15 @@
-/* TRANSLATOR:  Kario (kario@szm.sk)
- * DATE OF TR:  22-09-2007
+/*
+ * PROJECT:     ReactOS Blank ScreenSaver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATORS: Copyright 2007 Mário Kačmár <kario@szm.sk>
+ *              Copyright 2025 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Blank"
+    IDS_DESCRIPTION "Prázdna obrazovka"
     IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
 END
