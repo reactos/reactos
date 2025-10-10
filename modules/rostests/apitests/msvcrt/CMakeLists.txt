@@ -81,7 +81,7 @@ list(APPEND SOURCE
 
 add_executable(msvcrt_apitest ${SOURCE})
 add_dependencies(msvcrt_apitest asm)
-target_compile_definitions(msvcrt_apitest PRIVATE TEST_MSVCRT)
+target_compile_definitions(msvcrt_apitest PRIVATE TEST_MSVCRT TEST_DLL_NAME="msvcrt.dll")
 target_link_libraries(msvcrt_apitest wine ${PSEH_LIB})
 set_module_type(msvcrt_apitest win32cui)
 add_importlibs(msvcrt_apitest msvcrt kernel32 ntdll)

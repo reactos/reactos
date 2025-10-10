@@ -13,6 +13,22 @@
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 
+#ifndef TEST_STATIC_CRT
+
+typedef int (__cdecl *PFN_vsnprintf)(char *buf, size_t cnt, const char *fmt, va_list args);
+static PFN_vsnprintf p_vsnprintf;
+
+static BOOL Init(void)
+{
+    HMODULE hdll = LoadLibraryA(TEST_DLL_NAME);
+    p_vsnprintf = (PFN_vsnprintf)GetProcAddress(hdll, "_vsnprintf");
+    ok(p_vsnprintf != NULL, "Failed to load _vsnprintf from %s\n", TEST_DLL_NAME);
+    return (p_vsnprintf != NULL);
+}
+#define _vsnprintf p_vsnprintf
+
+#endif // !TEST_STATIC_CRT
+
 static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR formatString, ...)
 {
     va_list args;
@@ -27,6 +43,14 @@ static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR fo
 START_TEST(_vsnprintf)
 {
     char buffer[255];
+
+#ifndef TEST_STATIC_CRT
+    if (!Init())
+    {
+        skip("Skipping tests, because _vsnprintf is not available\n");
+        return;
+    }
+#endif
 
     /* Here you can mix wide and ANSI strings */
     call_varargs(buffer, 255, 12, "%S world!", L"hello");
@@ -49,8 +73,10 @@ START_TEST(_vsnprintf)
     EndSeh(STATUS_SUCCESS);
 #endif
 
-#if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
-    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
+#if defined(TEST_USER32)
+    ok_eq_uint(errno, EINVAL);
+#elif defined(TEST_NTDLL) || defined(TEST_CRTDLL)
+    ok_eq_uint(errno, 0);
 #else
     if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         ok_eq_uint(errno, ERROR_BAD_COMMAND);
@@ -72,8 +98,10 @@ START_TEST(_vsnprintf)
     EndSeh(STATUS_SUCCESS);
 #endif
 
-#if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
-    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
+#if defined(TEST_USER32)
+    ok_eq_uint(errno, EINVAL);
+#elif defined(TEST_NTDLL) || defined(TEST_CRTDLL)
+    ok_eq_uint(errno, 0);
 #else
     if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         ok_eq_uint(errno, ERROR_BAD_COMMAND);
@@ -84,10 +112,16 @@ START_TEST(_vsnprintf)
     /* One more NULL checks */
     StartSeh()
         call_varargs(buffer, 255, -1, NULL);
+#if defined(TEST_CRTDLL)
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
     EndSeh((GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : STATUS_ACCESS_VIOLATION);
+#endif
 
-#if defined(TEST_USER32) /* NTDLL doesn't use/set errno */
-    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
+#if defined(TEST_USER32)
+    ok_eq_uint(errno, EINVAL);
+#elif defined(TEST_NTDLL) || defined(TEST_CRTDLL)
+    ok_eq_uint(errno, 0);
 #else
     if (GetNTVersion() >= _WIN32_WINNT_VISTA)
         ok_eq_uint(errno, ERROR_BAD_COMMAND);
