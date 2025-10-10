@@ -21,7 +21,9 @@
 #include <wincon.h>
 #include <msiserver.h>
 #include <shlobj.h>
+#ifndef __REACTOS__
 #include <shlwapi.h>
+#endif
 #include <sddl.h>
 
 #include <wine/unicode.h>

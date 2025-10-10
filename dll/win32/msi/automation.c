@@ -30,7 +30,11 @@
 #include "msipriv.h"
 #include "activscp.h"
 #include "oleauto.h"
+#ifdef __REACTOS__
+#include "wine/shlwapi.h"
+#else
 #include "shlwapi.h"
+#endif
 #include "wine/debug.h"
 
 #include "msiserver.h"
@@ -41,11 +45,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 #define REG_INDEX_CLASSES_ROOT 0
 #define REG_INDEX_DYN_DATA 6
 
-#ifdef __REACTOS__
-/* DllGetVersion() is no longer defined in our PSDK. A fresh winesync
- * using Wine's headers will eliminate the need for this declaration. */
-HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *) DECLSPEC_HIDDEN;
-#endif
 struct automation_object;
 
 struct tid_id
