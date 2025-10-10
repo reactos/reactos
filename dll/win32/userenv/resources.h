@@ -39,3 +39,5 @@
 #define IDS_CACHE         17
 #define IDS_HISTORY       18
 #define IDS_COOKIES       19
+#define IDS_LOCALLOWAPPDATA 20
+#define IDS_ROAMINGAPPDATA 21
