@@ -2611,12 +2611,22 @@ static DWORD execute_fault_seh_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTR
         BOOL success;
 
         err = (flags & MEM_EXECUTE_OPTION_DISABLE) ? EXCEPTION_EXECUTE_FAULT : EXCEPTION_READ_FAULT;
+#ifdef __REACTOS__
+        if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
         ok( rec->ExceptionInformation[0] == err, "ExceptionInformation[0] is %ld instead of %ld\n",
             (DWORD)rec->ExceptionInformation[0], err );
+#ifdef __REACTOS__
+        }
+#endif
 
         success = VirtualProtect( (void *)rec->ExceptionInformation[1], 16, PAGE_EXECUTE_READWRITE, &old_prot );
         ok( success, "VirtualProtect failed %lu\n", GetLastError() );
+#ifdef __REACTOS__
+        ok( old_prot == PAGE_READWRITE || broken(old_prot == PAGE_NOACCESS) /* WS03 */, "wrong old prot %lx\n", old_prot );
+#else
         ok( old_prot == PAGE_READWRITE, "wrong old prot %lx\n", old_prot );
+#endif
 
         InterlockedIncrement( &num_execute_fault_calls );
     }
@@ -2832,7 +2842,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     else if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
     {
         trace( "DEP hardware support is available\n" );
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     }
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
@@ -2847,7 +2861,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 42, "call returned wrong result, expected 42, got %ld\n", ret );
     ok( num_guard_page_calls == 1, "expected one STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -2876,7 +2894,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -2891,7 +2913,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 1, "expected one STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -2920,7 +2946,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
             pRtlRemoveVectoredExceptionHandler( vectored_handler );
 
             ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
+#ifdef __REACTOS__
+            ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 2) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
             ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
         }
         else
             win_skip( "RtlAddVectoredExceptionHandler or RtlRemoveVectoredExceptionHandler not found\n" );
@@ -2939,7 +2969,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -2954,7 +2988,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -2969,7 +3007,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
         ok( num_execute_fault_calls == 0 || broken(num_execute_fault_calls == 1) /* Windows XP */,
             "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
@@ -2987,7 +3029,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 44, "call returned wrong result, expected 44, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
         ok( num_execute_fault_calls == 0 || broken(num_execute_fault_calls == 1) /* Windows XP */,
             "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
@@ -3071,7 +3117,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 42, "call returned wrong result, expected 42, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -3095,7 +3145,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 42, "call returned wrong result, expected 42, got %ld\n", ret );
     ok( num_guard_page_calls == 1, "expected one STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if (dep_flags & MEM_EXECUTE_OPTION_DISABLE)
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -3135,7 +3189,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0), "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 
@@ -3160,7 +3218,11 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( ret == 43, "call returned wrong result, expected 43, got %ld\n", ret );
     ok( num_guard_page_calls == 1, "expected one STATUS_GUARD_PAGE_VIOLATION exception, got %ld exceptions\n", num_guard_page_calls );
     if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
+#ifdef __REACTOS__
+        ok( num_execute_fault_calls == 1 || broken(num_execute_fault_calls == 0) /* WS03 */, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#else
         ok( num_execute_fault_calls == 1, "expected one STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
+#endif
     else
         ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %ld exceptions\n", num_execute_fault_calls );
 

@@ -1032,7 +1032,11 @@ static void testGetModuleHandleEx(void)
     ret = GetModuleHandleExA( 0, longname, &mod );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
+#ifdef __REACTOS__
+    ok( error == ERROR_MOD_NOT_FOUND || broken(error == ERROR_FILENAME_EXCED_RANGE) /* WS03 */, "got %lu\n", error );
+#else
     ok( error == ERROR_MOD_NOT_FOUND, "got %lu\n", error );
+#endif // __REACTOS__
     ok( mod == NULL, "got %p\n", mod );
 
     SetLastError( 0xdeadbeef );
@@ -1332,8 +1336,12 @@ static void check_refcount( HMODULE mod, unsigned int refcount )
     for (i = 0; i < min( refcount, 10 ); ++i)
     {
         ret = FreeLibrary( mod );
+#ifdef __REACTOS__
+        ok( ret || broken( refcount == ~0u && GetLastError() == ERROR_MOD_NOT_FOUND && (i == 2) ) /* Win8 */ || broken( refcount == 2 && GetLastError() == ERROR_MOD_NOT_FOUND && i == 1 ) /* WS03 */,
+#else
         ok( ret || broken( refcount == ~0u && GetLastError() == ERROR_MOD_NOT_FOUND && i == 2 ) /* Win8 */,
-            "Refcount test failed, i %u, error %lu.\n", i, GetLastError() );
+#endif // __REACTOS__
+            "Refcount test failed, i %u, error %lu.\n", i, GetLastError(), refcount );
         if (!ret) return;
     }
     if (refcount != ~0u)
@@ -1395,8 +1403,13 @@ static void test_LdrGetDllHandleEx(void)
     loaded_mod = LoadLibraryW( name.Buffer );
     ok( !!loaded_mod, "Failed to load module.\n" );
     status = pLdrGetDllHandleEx( 4, NULL, NULL, (void *)&name, &mod );
+#ifdef __REACTOS__
+    ok( !status || broken(status == STATUS_INVALID_PARAMETER) /* WS03 */, "Got unexpected status %#lx.\n", status );
+    ok( mod == loaded_mod || broken(mod == NULL) /* WS03 */, "got %p\n", mod );
+#else
     ok( !status, "Got unexpected status %#lx.\n", status );
     ok( mod == loaded_mod, "got %p\n", mod );
+#endif // __REACTOS__
     winetest_push_context( "Flag 4" );
     check_refcount( loaded_mod, 2 );
     winetest_pop_context();
@@ -1613,6 +1626,12 @@ static void test_ddag_node(void)
     unsigned int i;
     HMODULE hexe;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+        skip("test_ddag_node() crashes on WS03.\n");
+        return;
+    }
+#endif // __REACTOS__
     hexe = GetModuleHandleW( NULL );
     ok( !!hexe, "Got NULL exe handle.\n" );
 
@@ -1783,7 +1802,11 @@ static void test_base_address_index_tree(void)
     RTL_BALANCED_NODE *root, *node;
     char *base;
 
+#ifdef __REACTOS__
+    if ((LOBYTE(LOWORD(GetVersion())) < 6) || is_old_loader_struct()) return;
+#else
     if (is_old_loader_struct()) return;
+#endif // __REACTOS__
 
     mod = CONTAINING_RECORD(first->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
     ok( mod->BaseAddressIndexNode.ParentValue || mod->BaseAddressIndexNode.Left || mod->BaseAddressIndexNode.Right,
@@ -1831,7 +1854,11 @@ static void test_hash_links(void)
     BOOL found;
 
     /* Hash links structure is the same on older Windows loader but hashing algorithm is different. */
+#ifdef __REACTOS__
+    if ((LOBYTE(LOWORD(GetVersion())) < 6) || is_old_loader_struct()) return;
+#else
     if (is_old_loader_struct()) return;
+#endif // __REACTOS__
 
     root = &NtCurrentTeb()->Peb->LdrData->InLoadOrderModuleList;
     module = CONTAINING_RECORD(root->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);

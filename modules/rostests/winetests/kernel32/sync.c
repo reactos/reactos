@@ -2875,7 +2875,11 @@ static void test_QueueUserAPC(void)
     SetLastError(0xdeadbeef);
     ret = QueueUserAPC(user_apc, thread, 0);
     ok(!ret, "QueueUserAPC should fail\n");
+#ifdef __REACTOS__
+    ok(GetLastError() == ERROR_GEN_FAILURE || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got %lu\n", GetLastError());
+#else
     ok(GetLastError() == ERROR_GEN_FAILURE, "got %lu\n", GetLastError());
+#endif
 
     CloseHandle(thread);
 

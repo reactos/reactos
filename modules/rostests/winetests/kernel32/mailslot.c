@@ -411,14 +411,28 @@ static int mailslot_test(void)
     ok( ret == WAIT_TIMEOUT, "got %d\n", ret );
 
     hWriter = CreateFileA( szmspath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+#ifdef __REACTOS__
+    ok( hWriter != INVALID_HANDLE_VALUE || broken(GetLastError() == ERROR_SHARING_VIOLATION) /* WS03 */, "got err %lu\n", GetLastError() );
+#else
     ok( hWriter != INVALID_HANDLE_VALUE, "got err %lu\n", GetLastError() );
+#endif // __REACTOS__
 
     ret = WriteFile( hWriter, "data", 4, &count, NULL );
+#ifdef __REACTOS__
+    ok( ret == TRUE || broken(GetLastError() == ERROR_INVALID_HANDLE) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( ret == TRUE, "got error %lu\n", GetLastError() );
+#endif // __REACTOS__
 
     ret = WaitForSingleObject( hSlot, 1000 );
+#ifdef __REACTOS__
+    ok( !ret || broken(ret == WAIT_TIMEOUT) /* WS03 */, "got %d\n", ret );
+    ok( !io.Status || broken(io.Status == 0xdeadbeef) /* WS03 */, "got status %#lx\n", io.Status );
+    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+#else
     ok( !ret, "got %d\n", ret );
     ok( !io.Status, "got status %#lx\n", io.Status );
+#endif // __REACTOS__
     ok( io.Information == 4, "got size %Iu\n", io.Information );
 
     CloseHandle( hWriter );

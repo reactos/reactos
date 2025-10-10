@@ -2334,7 +2334,11 @@ static void test_thread_info(void)
         case ThreadBasicInformation:
         case ThreadAmILastThread:
         case ThreadPriorityBoost:
+#ifdef __REACTOS__
+            ok(status == STATUS_SUCCESS || broken(status == STATUS_ACCESS_DENIED && (i == 0 || i == 14)) /* WS03 */, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#else
             ok(status == STATUS_SUCCESS, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#endif
             break;
 
 #ifdef __i386__
@@ -2345,7 +2349,11 @@ static void test_thread_info(void)
 #endif
 
         case ThreadTimes:
+#ifdef __REACTOS__
+            ok(status == STATUS_SUCCESS || broken(status == STATUS_ACCESS_DENIED) /* WS03 */, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#else
             ok(status == STATUS_SUCCESS, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#endif
             break;
 
         case ThreadIsIoPending:

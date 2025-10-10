@@ -745,6 +745,9 @@ static void test_GetCalendarInfo(void)
     ret2 = WideCharToMultiByte( CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL );
     ok( ret == ret2, "got %d, expected %d\n", ret, ret2 );
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
     for (i = CAL_GREGORIAN; i <= CAL_UMALQURA; i++)
     {
         WCHAR name[80];
@@ -760,6 +763,9 @@ static void test_GetCalendarInfo(void)
                     i, wine_dbgstr_w(name), j, wine_dbgstr_w(bufferW) );
         }
     }
+#ifdef __REACTOS__
+    }
+#endif
 }
 
 static void test_GetDynamicTimeZoneInformation(void)

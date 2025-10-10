@@ -670,6 +670,9 @@ static void test_disk_query_property(void)
     }
     else
     {
+#ifdef __REACTOS__
+        if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif
         ok(ret, "expect ret %#x, got %#x\n", TRUE, ret);
         ok(error == 0xdeadbeef, "expect err %#x, got err %#lx\n", 0xdeadbeef, error);
         ok(size == sizeof(header), "got size %ld\n", size);
@@ -689,6 +692,9 @@ static void test_disk_query_property(void)
             ok(seek_pen.Size == sizeof(seek_pen), "got %ld\n", seek_pen.Size);
             ok(seek_pen.IncursSeekPenalty == TRUE || seek_pen.IncursSeekPenalty == FALSE, "got %d.\n", seek_pen.IncursSeekPenalty);
         }
+#ifdef __REACTOS__
+        }
+#endif
     }
 
     CloseHandle(handle);
@@ -1713,7 +1719,11 @@ static void test_mountmgr_query_points(void)
             IOCTL_MOUNTMGR_QUERY_POINTS, input, sizeof(*input), output, sizeof(*output) );
     ok(status == STATUS_BUFFER_OVERFLOW, "got %#lx\n", status);
     ok(io.Status == STATUS_BUFFER_OVERFLOW, "got status %#lx\n", io.Status);
+#ifdef __REACTOS__
+    todo_wine ok(io.Information == offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]) || broken(io.Information == sizeof(MOUNTMGR_MOUNT_POINTS)) /* WS03 */, "got information %#Ix\n", io.Information);
+#else
     todo_wine ok(io.Information == offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]), "got information %#Ix\n", io.Information);
+#endif
     ok(output->Size > offsetof(MOUNTMGR_MOUNT_POINTS, MountPoints[0]), "got size %lu\n", output->Size);
     todo_wine ok(output->NumberOfMountPoints && output->NumberOfMountPoints != 0xcccccccc,
             "got count %lu\n", output->NumberOfMountPoints);

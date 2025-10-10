@@ -3577,8 +3577,14 @@ static void test_StdHandleInheritance(void)
                 okChildHexInt("StartupInfoW", "hStdInputEncode", startup_expected, std_tests[i].is_broken);
                 okChildHexInt("StartupInfoW", "hStdOutputEncode", startup_expected, std_tests[i].is_broken);
 
+#ifdef __REACTOS__
+                if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+#endif // __REACTOS__
                 okChildHexInt("TEB", "hStdInputEncode", std_tests[i].expected, std_tests[i].is_broken);
                 okChildHexInt("TEB", "hStdOutputEncode", std_tests[i].expected, std_tests[i].is_broken);
+#ifdef __REACTOS__
+                }
+#endif // __REACTOS__
             }
 
             release_memory();
@@ -4207,7 +4213,11 @@ static void test_process_info(HANDLE hproc)
         case ProcessCycleTime:
         case ProcessPagePriority:
         case ProcessImageFileNameWin32:
+#ifdef __REACTOS__
+            ok(status == STATUS_SUCCESS || broken(status == STATUS_ACCESS_DENIED || status == STATUS_INVALID_PARAMETER) /* WS03 */, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#else
             ok(status == STATUS_SUCCESS, "for info %lu expected STATUS_SUCCESS, got %08lx (ret_len %lu)\n", i, status, ret_len);
+#endif // __REACTOS__
             break;
 
         case ProcessAffinityMask:
@@ -4236,7 +4246,11 @@ static void test_process_info(HANDLE hproc)
                     "for info %lu, got %08lx (ret_len %lu)\n", i, status, ret_len);
             else
                 todo_wine
+#ifdef __REACTOS__
+                ok(status == STATUS_ACCESS_DENIED || broken(status == STATUS_INVALID_PARAMETER) /* WS03 */,
+#else
                 ok(status == STATUS_ACCESS_DENIED,
+#endif // __REACTOS__
                     "for info %lu expected STATUS_ACCESS_DENIED, got %08lx (ret_len %lu)\n", i, status, ret_len);
             break;
 
@@ -4716,6 +4730,12 @@ static void test_handle_list_attribute(BOOL child, HANDLE handle1, HANDLE handle
         return;
     }
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+        skip("test_handle_list_attribute() crashes on WS03.\n");
+        return;
+    }
+#endif
     ret = pInitializeProcThreadAttributeList(NULL, 1, 0, &size);
     ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
             "Got unexpected ret %#x, GetLastError() %lu.\n", ret, GetLastError());
@@ -4762,6 +4782,12 @@ static void test_dead_process(void)
     DWORD offset = 0;
     NTSTATUS status;
 
+#ifdef __REACTOS__
+    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+        skip("test_dead_process() crashes on WS03.\n");
+        return;
+    }
+#endif
     create_process("exit", &pi);
     wait_child_process(pi.hProcess);
     Sleep(100);
