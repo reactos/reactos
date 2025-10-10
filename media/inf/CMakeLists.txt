@@ -26,7 +26,9 @@ list(APPEND INF_FILES
     shortcuts.inf
     unknown.inf
     usb.inf
+    usbhub3.inf
     usbport.inf
+    usbxhci.inf
     volume.inf
     wdmaudio.inf
     wmiacpi.inf)
