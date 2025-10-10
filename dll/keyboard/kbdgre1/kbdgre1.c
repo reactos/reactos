@@ -1,5 +1,5 @@
 ﻿/*
- * ReactOS German Extended 1 ASCII Keyboard layout
+ * ReactOS German Extended (E1) Keyboard layout
  * Copyright (C) 2025 ReactOS
  * License: LGPL, see: LGPL.txt
  *
@@ -10,14 +10,7 @@
 /*
  * This keyboard layout is Work In Progress!
  *
- * Missing Keys:
- *    1st row:
- *      Shift + AltGr + VK_OEM_4 => 0x1e9e (capital sharp s)
- *      AltGr + VK_OEM_6         => dot above dead key
- *    2nd row:
- *    3nd row:
- *    4nd row:
- *      all new keys
+ * Most dead key translations are still missing.
  */
 
 #define WIN32_NO_STATUS
@@ -169,101 +162,111 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
-  6,
-  { 0, 1, 3, 4, SHFT_INVALID, SHFT_INVALID, 2 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT, MENU, SHIFT + MENU, CTRL + MENU */
+  8,
+  /* Modifier bit order, NONE, SHIFT, CTRL, SHIFT+CTRL, ALT, SHIFT+ALT, CTRL+ALT, SHIFT+CTRL+ALT */
+  { 0, 1, 4, 5, SHFT_INVALID, SHFT_INVALID, 2, 3 }
 };
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  /* Normal vs Shifted */
-  /* The numbers */
-  /* Ctrl-2 generates NUL */
-
-  { VK_OEM_6,    0, {WCH_DEAD, WCH_DEAD} },
-  { 0xff,        0, {0xb4, '`'} },
-
-  /* First letter row */
-  { 'W',         CAPLOK,   {'w', 'W'} },
-  { 'R',         CAPLOK,   {'r', 'R'} },
-  { 'T',         CAPLOK,   {'t', 'T'} },
-  { 'Z',         CAPLOK,   {'z', 'Z'} },
-  { 'U',         CAPLOK,   {'u', 'U'} },
-  { 'I',         CAPLOK,   {'i', 'I'} },
-  { 'O',         CAPLOK,   {'o', 'O'} },
-  { 'P',         CAPLOK,   {'p', 'P'} },
-  /* Second letter row */
-  { 'A',         CAPLOK,   {'a', 'A'} },
-  { 'S',         CAPLOK,   {'s', 'S'} },
-  { 'D',         CAPLOK,   {'d', 'D'} },
-  { 'F',         CAPLOK,   {'f', 'F'} },
-  { 'G',         CAPLOK,   {'g', 'G'} },
-  { 'H',         CAPLOK,   {'h', 'H'} },
-  { 'J',         CAPLOK,   {'j', 'J'} },
-  { 'K',         CAPLOK,   {'k', 'K'} },
-  { 'L',         CAPLOK,   {'l', 'L'} },
-  { VK_OEM_3,    CAPLOK,   {0xf6, 0xd6} },
-  { VK_OEM_7,    CAPLOK,   {0xe4, 0xc4} },
-  /* Third letter row */
-  { 'Y',         CAPLOK,   {'y', 'Y'} },
-  { 'X',         CAPLOK,   {'x', 'X'} },
-  { 'C',         CAPLOK,   {'c', 'C'} },
-  { 'V',         CAPLOK,   {'v', 'V'} },
-  { 'B',         CAPLOK,   {'b', 'B'} },
-  { 'N',         CAPLOK,   {'n', 'N'} },
-
-  /* Specials */
-  { VK_OEM_COMMA,  CAPLOK, {',', ';'} },
-  { VK_OEM_PERIOD, CAPLOK, {'.', ':'} },
-  { VK_DECIMAL,    0, {',',','} },
-  { VK_TAB,        0, {'\t', '\t'} },
-  { VK_ADD,        0, {'+', '+'} },
-  { VK_DIVIDE,     0, {'/', '/'} },
-  { VK_MULTIPLY,   0, {'*', '*'} },
-  { VK_SUBTRACT,   0, {'-', '-'} },
+  /* Normal, Shift */
+  { VK_DECIMAL,    0,                  {',',      ',' } },
+  { VK_TAB,        0,                  {'\t',     '\t'} },
+  { VK_ADD,        0,                  {'+',      '+'} },
+  { VK_DIVIDE,     0,                  {'/',      '/'} },
+  { VK_MULTIPLY,   0,                  {'*',      '*'} },
+  { VK_SUBTRACT,   0,                  {'-',      '-'} },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
-  /* Normal, Shifted, Ctrl+Alt */
-  /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_5, 0, {WCH_DEAD, 0xb0, 0xd7} },
-  { 0xff,     0, {'^', WCH_NONE, WCH_NONE} }, // FIXME - why doesn't this work?
-
-  { '1', CAPLOK, {'1', '!', 0x2019} },
-  { '3', CAPLOK, {'3', 0xa7, 0xb3} },
-  { '4', CAPLOK, {'4', '$', 0x2014} },
-  { '5', CAPLOK, {'5', '%', 0xa1} },
-
-  { '7', CAPLOK, {'7', '/', '{'} },
-  { '8', CAPLOK, {'8', '(', '['} },
-  { '9', CAPLOK, {'9', ')', ']'} },
-  { '0', CAPLOK, {'0', '=', '}'} },
-  { VK_OEM_4, CAPLOK, {0xdf, '?', '\\'} },
-  { 'Q', CAPLOK, {'q', 'Q', '@'} },
-  { 'E', CAPLOK, {'e', 'E', 0x20ac} },
-  { 'M', CAPLOK, {'m', 'M', 0xb5} },
-  { VK_OEM_102, 0, {'<', '>', '|'} }, // FIXME - why doesn't this work?
+  /* Normal, Shift, Ctrl+Alt */
+  { VK_OEM_5,      0,                  {WCH_DEAD, 0x00b0,   0x00d7  } },
+  { 0xff,          0,                  {'^',      WCH_NONE, WCH_NONE} },
+  { '1',           CAPLOK,             {'1',      '!',      0x2019  } },
+  { '3',           CAPLOK,             {'3',      0x00a7,   0x00b3  } },
+  { '4',           CAPLOK,             {'4',      '$',      0x2014  } },
+  { '5',           CAPLOK,             {'5',      '%',      0x00a1  } },
+  { '7',           CAPLOK,             {'7',      '/',      '{'     } },
+  { '8',           CAPLOK,             {'8',      '(',      '['     } },
+  { '9',           CAPLOK,             {'9',      ')',      ']'     } },
+  { '0',           CAPLOK,             {'0',      '=',      '}'     } },
+  { VK_OEM_6,      0,                  {WCH_DEAD, WCH_DEAD, WCH_DEAD} },
+  { 0xff,          0,                  {0x00b4,   '`',      0x02d9  } },
+  { 'Q',           CAPLOK,             {'q',      'Q',      '@'     } },
+  { 'W',           CAPLOK,             {'w',      'W',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x00af  } },
+  { 'E',           CAPLOK,             {'e',      'E',      0x20ac  } },
+  { 'R',           CAPLOK,             {'r',      'R',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02dd  } },
+  { 'T',           CAPLOK,             {'t',      'T',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02c7  } },
+  { 'Z',           CAPLOK,             {'z',      'Z',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x00a8  } },
+  { 'U',           CAPLOK,             {'u',      'U',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02d8  } },
+  { 'I',           CAPLOK,             {'i',      'I',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02dc  } },
+  { 'O',           CAPLOK,             {'o',      'O',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02da  } },
+  { 'P',           CAPLOK,             {'p',      'P',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02c0  } },
+  { 'A',           CAPLOK,             {'a',      'A',      0x263a  } },
+  { 'S',           CAPLOK,             {'s',      'S',      0x2033  } },
+  { 'D',           CAPLOK,             {'d',      'D',      0x2032  } },
+  { 'F',           CAPLOK,             {'f',      'F',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02df  } },
+  { 'G',           CAPLOK,             {'g',      'G',      0x1e9e  } },
+  { 'H',           CAPLOK,             {'h',      'H',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02cd  } },
+  { 'J',           CAPLOK,             {'j',      'J',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x00b8  } },
+  { 'K',           CAPLOK,             {'k',      'K',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02cf  } },
+  { 'L',           CAPLOK,             {'l',      'L',      WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02db  } },
+  { VK_OEM_3,      CAPLOK,             {0x00f6,   0x00d6,   WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02cc  } },
+  { VK_OEM_7,      CAPLOK,             {0x00e4,   0x00c4,   WCH_DEAD} },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02d7  } },
+  { VK_OEM_102,    0,                  {'<',      '>',      '|'     } },
+  { 'Y',           CAPLOK,             {'y',      'Y',      0x203a  } },
+  { 'X',           CAPLOK,             {'x',      'X',      0x00bb  } },
+  { 'C',           CAPLOK,             {'c',      'C',      0x202f  } },
+  { 'V',           CAPLOK,             {'v',      'V',      0x20ab  } },
+  { 'B',           CAPLOK,             {'b',      'B',      0x2039  } },
+  { 'N',           CAPLOK,             {'n',      'N',      0x2013  } },
+  { 'M',           CAPLOK,             {'m',      'M',      0x00b5  } },
+  { VK_OEM_COMMA,  CAPLOK,             {',',      ';',      0x2011  } },
+  { VK_OEM_PERIOD, CAPLOK,             {'.',      ':',      0x00b7  } },
+  { VK_SPACE,      0,                  {' ',      ' ',      0x00a0  } },
   { 0,0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  /* Normal, Shifted, Ctrl, C-S-x */
-  /* Legacy Ascii generators */
-  { VK_OEM_1, CAPLOK, {0xfc, 0xdc, WCH_NONE, 0x1b} },
-  { VK_OEM_PLUS, CAPLOK, {'+', '*', '~', 0x1d} },
-  { VK_OEM_2, CAPLOK, {'#', '\'', WCH_NONE, 0x1c} },
-  { VK_BACK, 0, {'\b', '\b', WCH_NONE, 0x7f} },
-  { VK_ESCAPE, 0, {0x1b, 0x1b, WCH_NONE, 0x1b} },
-  { VK_RETURN, 0, {'\r', '\r', WCH_NONE, '\n'} },
-  { VK_SPACE, 0, {' ', ' ', WCH_NONE, ' '} },
-  { VK_CANCEL, 0, {0x03, 0x03, WCH_NONE, 0x03} },
+  /* Normal, Shift, Ctrl+Alt, Shift+Ctrl+Alt */
+  { VK_OEM_4,      CAPLOK,             {0x00df,   '?',      '\\',     0x1e9e  } },
   { 0, 0 }
 };
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
-  /* Normal, Shifted, Ctrl, C-S-x */
-  { '2', CAPLOK, {'2', '\"', 0xb2, WCH_NONE, 0x00} },
-  { '6', CAPLOK, {'6', '&', 0xbf, WCH_NONE, 0x1e} },
-  { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, WCH_NONE, 0x1f} },
+  /* Normal, Shift, Ctrl+Alt, Shift+Ctrl+Alt, Ctrl */
+  { '2',           CAPLOK,             {'2',      '\"',     0x00b2,   WCH_NONE, 0x0000  } },
+  { '6',           CAPLOK,             {'6',      '&',      0x00bf,   WCH_NONE, 0x001e  } },
+  { VK_OEM_1,      CAPLOK,             {0x00fc,   0x00dc,   WCH_DEAD, WCH_NONE, 0x001b  } },
+  { 0xff,          0,                  {WCH_NONE, WCH_NONE, 0x02bc,   WCH_NONE, WCH_NONE} },
+  { VK_OEM_PLUS,   CAPLOK,             {'+',      '*',      '~',      WCH_NONE, 0x001d  } },
+  { VK_OEM_2,      CAPLOK,             {'#',      '\'',     0x2212,   WCH_NONE, 0x001c  } },
+
+  { VK_BACK,       0,                  {'\b',     '\b',     WCH_NONE, WCH_NONE, 0x007f  } },
+  { VK_ESCAPE,     0,                  {0x001b,   0x001b,   WCH_NONE, WCH_NONE, 0x001b  } },
+  { VK_RETURN,     0,                  {'\r',     '\r',     WCH_NONE, WCH_NONE, '\n'    } },
+  { VK_CANCEL,     0,                  {0x0003,   0x0003,   WCH_NONE, WCH_NONE, 0x0003  } },
+  { 0, 0 }
+};
+
+ROSDATA VK_TO_WCHARS6 key_to_chars_6mod[] = {
+  /* Normal, Shift, Ctrl+Alt, Shift+Ctrl+Alt, Ctrl, Shift+Ctrl */
+  { VK_OEM_MINUS,  0,                  {'-',      '_',      0x00ad,   WCH_NONE, WCH_NONE, 0x001f  } },
   { 0, 0 }
 };
 
@@ -289,6 +292,7 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(3,key_to_chars_3mod),
   vk_master(4,key_to_chars_4mod),
   vk_master(5,key_to_chars_5mod),
+  vk_master(6,key_to_chars_6mod),
   vk_master(2,key_to_chars_2mod),
   vk_master(1,keypad_numbers),
   { 0,0,0 }
@@ -377,16 +381,33 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 };
 
 ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
-    L"\x00b4"	L"Akut",
-    L"`"	L"Gravis",
-    L"^"	L"Zirkumflex",
+    L"\x00b4" L"AKUT",
+    L"`"      L"GRAVIS",
+    L"\x00af" L"MAKRON",
+    L"\x02d9" L"\x00dcBERPUNKT",
+    L"^"      L"ZIRKUMFLEX",
+    L"\x02dd" L"DOPPELAKUT",
+    L"\x02c7" L"HATSCHEK",
+    L"\x00a8" L"TREMA",
+    L"\x02d8" L"BREVE",
+    L"\x02dc" L"TILDE",
+    L"\x02da" L"RING",
+    L"\x02c0" L"HORN",
+    L"\x02bc" L"HAKEN",
+    L"\x02df" L"EXTRA-WAHLTASTE",
+    L"\x02cd" L"UNTERSTRICH",
+    L"\x00b8" L"CEDILLA",
+    L"\x02cf" L"UNTERKOMMA",
+    L"\x02db" L"OGONEK",
+    L"\x02cc" L"UNTERPUNKT",
+    L"\x02d7" L"QUERSTRICHAKZENT",
     NULL
 };
 
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
 
 ROSDATA DEADKEY dead_key[] = {
-  { DEADTRANS(L' ', L'^', L'^',   0x00) },
+  { DEADTRANS(L' ', L'^', L'^',   0x00) }, /* circumflex */
   { DEADTRANS(L'0', L'^', 0x2070, 0x00) },
   { DEADTRANS(L'1', L'^', 0x00b9, 0x00) },
   { DEADTRANS(L'2', L'^', 0x00b2, 0x00) },
@@ -429,7 +450,8 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'-', L'^', 0x207b, 0x00) },
   { DEADTRANS(L'=', L'^', 0x2259, 0x00) },
   { DEADTRANS(L'^', L'^', 0x0302, 0x00) },
-  { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) },
+
+  { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, /* acute */
   { DEADTRANS(L'c', 0xb4, 0x107, 0x00) },
   { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) },
   { DEADTRANS(L'g', 0xb4, 0x1f5, 0x00) },
@@ -446,7 +468,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'w', 0xb4, 0x1e83, 0x00) },
   { DEADTRANS(L'y', 0xb4, 0xfd, 0x00) },
   { DEADTRANS(L'z', 0xb4, 0x17a, 0x00) },
-  { DEADTRANS(L'ü', 0xb4, 0x1d8, 0x00) },
+  { DEADTRANS(0xfc, 0xb4, 0x1d8, 0x00) },
   { DEADTRANS(L'A', 0xb4, 0xc1, 0x00) },
   { DEADTRANS(L'C', 0xb4, 0x106, 0x00) },
   { DEADTRANS(L'E', 0xb4, 0xc9, 0x00) },
@@ -464,10 +486,11 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'W', 0xb4, 0x1e82, 0x00) },
   { DEADTRANS(L'Y', 0xb4, 0xdd, 0x00) },
   { DEADTRANS(L'Z', 0xb4, 0x179, 0x00) },
-  { DEADTRANS(L'Ü', 0xb4, 0x1d7, 0x00) },
+  { DEADTRANS(0xdc, 0xb4, 0x1d7, 0x00) },
   { DEADTRANS(L' ', 0xb4, 0xb4, 0x00) },
   { DEADTRANS(0xb4, 0xb4, 0x301, 0x00) },
-  { DEADTRANS(L'a', L'`', 0xe0, 0x00) },
+
+  { DEADTRANS(L'a', L'`', 0xe0, 0x00) }, /* grave */
   { DEADTRANS(L'e', L'`', 0xe8, 0x00) },
   { DEADTRANS(L'i', L'`', 0xec, 0x00) },
   { DEADTRANS(L'n', L'`', 0x1f9, 0x00) },
@@ -475,7 +498,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'u', L'`', 0xf9, 0x00) },
   { DEADTRANS(L'w', L'`', 0x1e81, 0x00) },
   { DEADTRANS(L'y', L'`', 0x1ef3, 0x00) },
-  { DEADTRANS(L'ü', L'`', 0x1dc, 0x00) },
+  { DEADTRANS(0xfc, L'`', 0x1dc, 0x00) },
   { DEADTRANS(L'A', L'`', 0xc0, 0x00) },
   { DEADTRANS(L'E', L'`', 0xc8, 0x00) },
   { DEADTRANS(L'I', L'`', 0xcc, 0x00) },
@@ -484,9 +507,108 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'U', L'`', 0xd9, 0x00) },
   { DEADTRANS(L'W', L'`', 0x1e80, 0x00) },
   { DEADTRANS(L'Y', L'`', 0x1ef2, 0x00) },
-  { DEADTRANS(L'Ü', L'`', 0x1db, 0x00) },
+  { DEADTRANS(0xdc, L'`', 0x1db, 0x00) },
   { DEADTRANS(L' ', L'`', L'`', 0x00) },
   { DEADTRANS(L'`', L'`', 0x300, 0x00) },
+
+  { DEADTRANS(L'a', 0x2d9, 0x227, 0x00) },  /* dot above */
+  { DEADTRANS(L'b', 0x2d9, 0x1e03, 0x00) },
+  { DEADTRANS(L'c', 0x2d9, 0x10b, 0x00) },
+  { DEADTRANS(L'd', 0x2d9, 0x1e0b, 0x00) },
+  { DEADTRANS(L'e', 0x2d9, 0x117, 0x00) },
+  { DEADTRANS(L'f', 0x2d9, 0x1e1f, 0x00) },
+  { DEADTRANS(L'g', 0x2d9, 0x121, 0x00) },
+  { DEADTRANS(L'h', 0x2d9, 0x1e23, 0x00) },
+  { DEADTRANS(L'l', 0x2d9, 0x140, 0x00) },
+  { DEADTRANS(L'm', 0x2d9, 0x1e41, 0x00) },
+  { DEADTRANS(L'n', 0x2d9, 0x1e45, 0x00) },
+  { DEADTRANS(L'o', 0x2d9, 0x22f, 0x00) },
+  { DEADTRANS(L'p', 0x2d9, 0x1e57, 0x00) },
+  { DEADTRANS(L'r', 0x2d9, 0x1e59, 0x00) },
+  { DEADTRANS(L's', 0x2d9, 0x1e61, 0x00) },
+  { DEADTRANS(L't', 0x2d9, 0x1e6b, 0x00) },
+  { DEADTRANS(L'w', 0x2d9, 0x1e87, 0x00) },
+  { DEADTRANS(L'x', 0x2d9, 0x1e8b, 0x00) },
+  { DEADTRANS(L'z', 0x2d9, 0x17c, 0x00) },
+  { DEADTRANS(L'A', 0x2d9, 0x226, 0x00) },
+  { DEADTRANS(L'B', 0x2d9, 0x1e02, 0x00) },
+  { DEADTRANS(L'C', 0x2d9, 0x10a, 0x00) },
+  { DEADTRANS(L'D', 0x2d9, 0x1e0a, 0x00) },
+  { DEADTRANS(L'E', 0x2d9, 0x116, 0x00) },
+  { DEADTRANS(L'F', 0x2d9, 0x1e1e, 0x00) },
+  { DEADTRANS(L'G', 0x2d9, 0x120, 0x00) },
+  { DEADTRANS(L'H', 0x2d9, 0x1e22, 0x00) },
+  { DEADTRANS(L'I', 0x2d9, 0x130, 0x00) },
+  { DEADTRANS(L'L', 0x2d9, 0x13f, 0x00) },
+  { DEADTRANS(L'M', 0x2d9, 0x1e40, 0x00) },
+  { DEADTRANS(L'N', 0x2d9, 0x1e44, 0x00) },
+  { DEADTRANS(L'O', 0x2d9, 0x22e, 0x00) },
+  { DEADTRANS(L'P', 0x2d9, 0x1e56, 0x00) },
+  { DEADTRANS(L'R', 0x2d9, 0x1e58, 0x00) },
+  { DEADTRANS(L'S', 0x2d9, 0x1e60, 0x00) },
+  { DEADTRANS(L'T', 0x2d9, 0x1e6a, 0x00) },
+  { DEADTRANS(L'W', 0x2d9, 0x1e86, 0x00) },
+  { DEADTRANS(L'X', 0x2d9, 0x1e8a, 0x00) },
+  { DEADTRANS(L'Z', 0x2d9, 0x17b, 0x00) },
+  { DEADTRANS(L' ', 0x2d9, 0x2d9, 0x00) },
+  { DEADTRANS(L'~', 0x2d9, 0x2e1e, 0x00) },
+  { DEADTRANS(L'°', 0x2d9, 0x310, 0x00) },
+  { DEADTRANS(0x2d9, 0x2d9, 0x307, 0x00) },
+
+  { DEADTRANS(L'a', 0xaf, 0x101, 0x00) }, /* macron */
+  { DEADTRANS(L'e', 0xaf, 0x113, 0x00) },
+  { DEADTRANS(L'g', 0xaf, 0x1e21, 0x00) },
+  { DEADTRANS(L'i', 0xaf, 0x12b, 0x00) },
+  { DEADTRANS(L'o', 0xaf, 0x14d, 0x00) },
+  { DEADTRANS(L'u', 0xaf, 0x16b, 0x00) },
+  { DEADTRANS(L'y', 0xaf, 0x233, 0x00) },
+  { DEADTRANS(0xe4, 0xaf, 0x1df, 0x00) }, /* ä */
+  { DEADTRANS(0xf6, 0xaf, 0x22b, 0x00) }, /* ö */
+  { DEADTRANS(0xfc, 0xaf, 0x1d6, 0x00) }, /* ü */
+  { DEADTRANS(L'A', 0xaf, 0x100, 0x00) },
+  { DEADTRANS(L'E', 0xaf, 0x112, 0x00) },
+  { DEADTRANS(L'G', 0xaf, 0x1e20, 0x00) },
+  { DEADTRANS(L'I', 0xaf, 0x12a, 0x00) },
+  { DEADTRANS(L'O', 0xaf, 0x14c, 0x00) },
+  { DEADTRANS(L'U', 0xaf, 0x16a, 0x00) },
+  { DEADTRANS(L'Y', 0xaf, 0x232, 0x00) },
+  { DEADTRANS(0xc4, 0xaf, 0x1de, 0x00) }, /* Ä */
+  { DEADTRANS(0xd6, 0xaf, 0x22a, 0x00) }, /* Ö */
+  { DEADTRANS(0xdc, 0xaf, 0x1d5, 0x00) }, /* Ü */
+  { DEADTRANS(L'=', 0xaf, 0x2261, 0x00) },
+  { DEADTRANS(L'-', 0xaf, 0x2e40, 0x00) },
+  { DEADTRANS(0xaf, 0xaf, 0x304, 0x00) },
+
+  { DEADTRANS(L' ', 0x02dd, 0x02dd, 0x00) }, /* DOPPELAKUT incomplete */
+
+  { DEADTRANS(L' ', 0x02c7, 0x02c7, 0x00) }, /* HATCHEK incomplete */
+
+  { DEADTRANS(L' ', 0x00a8, 0x00a8, 0x00) }, /* TREMA incomplete */
+
+  { DEADTRANS(L' ', 0x02d8, 0x02d8, 0x00) }, /* BREVE incomplete */
+
+  { DEADTRANS(L' ', 0x02dc, 0x02dc, 0x00) }, /* TILDE incomplete */
+
+  { DEADTRANS(L' ', 0x02da, 0x02da, 0x00) }, /* RING incomplete */
+
+  { DEADTRANS(L' ', 0x02c0, 0x02c0, 0x00) }, /* HORN incomplete */
+
+  { DEADTRANS(L' ', 0x02bc, 0x02bc, 0x00) }, /* HAKEN incomplete */
+
+  { DEADTRANS(L' ', 0x02df, 0x02df, 0x00) }, /* EXTRA-WAHLTASTE incomplete */
+
+  { DEADTRANS(L' ', 0x02cd, 0x02cd, 0x00) }, /* UNTERSTRICH incomplete */
+
+  { DEADTRANS(L' ', 0x00b8, 0x00b8, 0x00) }, /* CEDILLA incomplete */
+
+  { DEADTRANS(L' ', 0x02cf, 0x02cf, 0x00) }, /* UNTERKOMMA incomplete */
+
+  { DEADTRANS(L' ', 0x02db, 0x02db, 0x00) }, /* OGONEK incomplete */
+
+  { DEADTRANS(L' ', 0x02cc, 0x02cc, 0x00) }, /* UNTERPUNKT incomplete */
+
+  { DEADTRANS(L' ', 0x02d7, 0x02d7, 0x00) }, /* QUERSTRICHAKZENT incomplete */
+
   { 0, 0 }
 };
 
