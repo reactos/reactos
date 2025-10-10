@@ -24,10 +24,6 @@
 #include "wincodec.h"
 #include "wine/test.h"
 
-#ifdef __REACTOS__
-#define debugstr_guid wine_dbgstr_guid
-#endif
-
 #define GET_RGB565_R(color)   ((BYTE)(((color) >> 11) & 0x1F))
 #define GET_RGB565_G(color)   ((BYTE)(((color) >> 5)  & 0x3F))
 #define GET_RGB565_B(color)   ((BYTE)(((color) >> 0)  & 0x1F))
