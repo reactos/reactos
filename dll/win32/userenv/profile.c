@@ -4,7 +4,7 @@
  * FILE:            dll/win32/userenv/profile.c
  * PURPOSE:         User profile code
  * PROGRAMMERS:     Eric Kohl
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  */
 
 #include "precomp.h"
@@ -938,7 +938,7 @@ CreateUserProfileExW(
     /* Get default user path */
     dwLength = sizeof(szBuffer);
     Error = RegQueryValueExW(hKey,
-                             L"DefaultUserProfile",
+                             L"Default",
                              NULL,
                              &dwType,
                              (LPBYTE)szBuffer,
@@ -1494,10 +1494,10 @@ GetDefaultUserProfileDirectoryW(
         return FALSE;
     }
 
-    /* Get 'DefaultUserProfile' name */
+    /* Get 'Default' name */
     dwLength = sizeof(szBuffer);
     Error = RegQueryValueExW(hKey,
-                             L"DefaultUserProfile",
+                             L"Default",
                              NULL,
                              &dwType,
                              (LPBYTE)szBuffer,
