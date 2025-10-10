@@ -120,7 +120,7 @@ static void test_EnableScrollBar(void)
     todo_wine
     ok( GetLastError() == ERROR_INVALID_PARAMETER
         || broken(GetLastError() == 0xdeadbeef), /* winxp */
-        "GetLastError() = %u\n", GetLastError() );
+        "GetLastError() = %lu\n", GetLastError() );
 
     /* disable window, try to re-enable */
     ret = EnableWindow( hScroll, FALSE );
@@ -181,12 +181,12 @@ static void test_SetScrollPos(void)
     SetLastError( 0xdeadbeef );
     ret = SetScrollPos( mainwnd, SB_CTL, 30, TRUE );
     ok( !ret, "The position should not be set.\n" );
-    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %u\n", GetLastError() );
+    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = GetScrollPos( mainwnd, SB_CTL );
     ok( !ret, "The position should be equal to zero\n");
-    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %u\n", GetLastError() );
+    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %lu\n", GetLastError() );
 
     DestroyWindow(hScroll);
     DestroyWindow(mainwnd);
@@ -242,7 +242,7 @@ static void test_GetScrollBarInfo(void)
     GetWindowRect( hScroll, &rect );
     ok( ret, "The GetWindowRect() call should not fail.\n" );
     ok( !(sbi.rgstate[0] & (STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN)),
-        "unexpected rgstate(0x%x)\n", sbi.rgstate[0]);
+        "unexpected rgstate(0x%lx)\n", sbi.rgstate[0]);
     ok(EqualRect(&rect, &sbi.rcScrollBar), "WindowRect %s != rcScrollBar %s\n",
        wine_dbgstr_rect(&rect), wine_dbgstr_rect(&sbi.rcScrollBar));
 
@@ -301,40 +301,40 @@ static void scrollbar_test_default( DWORD style)
     /* range is 0,0 if there are no H or V scroll bars. 0,100 otherwise */
     if( !( style & ( WS_VSCROLL | WS_HSCROLL)))
         ok( min == 0 && max == 0,
-                "Scroll bar range is %d,%d. Expected 0,0. Style %08x\n", min, max, style);
+                "Scroll bar range is %d,%d. Expected 0,0. Style %08lx\n", min, max, style);
     else
         ok(( min == 0 && max == 100) ||
                 broken( min == 0 && max == 0), /* Win 9x/ME */
-                "Scroll bar range is %d,%d. Expected 0,100. Style %08x\n", min, max, style);
+                "Scroll bar range is %d,%d. Expected 0,100. Style %08lx\n", min, max, style);
     ret = GetScrollRange( hwnd, SB_HORZ, &min, &max);
     ok( ret ||
             broken( !ret) /* Win 9x/ME */ , "GetScrollRange failed.\n");
     /* range is 0,0 if there are no H or V scroll bars. 0,100 otherwise */
     if( !( style & ( WS_VSCROLL | WS_HSCROLL)))
         ok( min == 0 && max == 0,
-                "Scroll bar range is %d,%d. Expected 0,0. Style %08x\n", min, max, style);
+                "Scroll bar range is %d,%d. Expected 0,0. Style %08lx\n", min, max, style);
     else
         ok(( min == 0 && max == 100) ||
                 broken( min == 0 && max == 0), /* Win 9x/ME */
-                "Scroll bar range is %d,%d. Expected 0,100. Style %08x\n", min, max, style);
+                "Scroll bar range is %d,%d. Expected 0,100. Style %08lx\n", min, max, style);
     /* test GetScrollInfo, vist for vertical SB */
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should fail if no H or V scroll bar styles are present. Succeed otherwise */
     if( !( style & ( WS_VSCROLL | WS_HSCROLL)))
-        ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08x\n", style);
+        ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08lx\n", style);
     else
         ok( ret ||
                 broken( !ret), /* Win 9x/ME */
-                "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+                "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     /* Same for Horizontal SB */
     ret = GetScrollInfo( hwnd, SB_HORZ, &si);
     /* should fail if no H or V scroll bar styles are present. Succeed otherwise */
     if( !( style & ( WS_VSCROLL | WS_HSCROLL)))
-        ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08x\n", style);
+        ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08lx\n", style);
     else
         ok( ret ||
                 broken( !ret), /* Win 9x/ME */
-                "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+                "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     /* now set the Vertical Scroll range to something that could be the default value it
      * already has */;
     ret = SetScrollRange( hwnd, SB_VERT, 0, 100, FALSE);
@@ -344,26 +344,26 @@ static void scrollbar_test_default( DWORD style)
     ok( ret, "GetScrollRange failed.\n");
     /* now the range should be 0,100 in ALL cases */
     ok( min == 0 && max == 100,
-            "Scroll bar range is %d,%d. Expected 0,100. Style %08x\n", min, max, style);
+            "Scroll bar range is %d,%d. Expected 0,100. Style %08lx\n", min, max, style);
     /* See what is different now for GetScrollRange */
     ret = GetScrollInfo( hwnd, SB_HORZ, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     /* report the windows style */
     winstyle = GetWindowLongA( hwnd, GWL_STYLE );
     /* WS_VSCROLL added to the window style */
     if( !(style & WS_VSCROLL))
     {
         if (bThemeActive || style != WS_HSCROLL)
-todo_wine
+            todo_wine
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == ( style | WS_VSCROLL),
-                "unexpected style change %08x/%08x\n", winstyle, style);
+                "unexpected style change %08lx/%08lx\n", winstyle, style);
         else
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style,
-                "unexpected style change %08x/%08x\n", winstyle, style);
+                "unexpected style change %08lx/%08lx\n", winstyle, style);
     }
     /* do the test again with H and V reversed.
      * Start with a clean window */
@@ -380,26 +380,26 @@ todo_wine
     ok( ret, "GetScrollRange failed.\n");
     /* now the range should be 0,100 in ALL cases */
     ok( min == 0 && max == 100,
-            "Scroll bar range is %d,%d. Expected 0,100. Style %08x\n", min, max, style);
+            "Scroll bar range is %d,%d. Expected 0,100. Style %08lx\n", min, max, style);
     /* See what is different now for GetScrollRange */
     ret = GetScrollInfo( hwnd, SB_HORZ, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     /* report the windows style */
     winstyle = GetWindowLongA( hwnd, GWL_STYLE );
     /* WS_HSCROLL added to the window style */
     if( !(style & WS_HSCROLL))
     {
         if (bThemeActive || style != WS_VSCROLL)
-todo_wine
+            todo_wine
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == ( style | WS_HSCROLL),
-                "unexpected style change %08x/%08x\n", winstyle, style);
+                "unexpected style change %08lx/%08lx\n", winstyle, style);
         else
             ok( (winstyle & (WS_HSCROLL|WS_VSCROLL)) == style,
-                "unexpected style change %08x/%08x\n", winstyle, style);
+                "unexpected style change %08lx/%08lx\n", winstyle, style);
     }
     /* Slightly change the test to use SetScrollInfo
      * Start with a clean window */
@@ -413,20 +413,20 @@ todo_wine
     si.nMax = 22;
     si.fMask |= SIF_RANGE;
     ret = SetScrollInfo( hwnd, SB_HORZ, &si, FALSE);
-    ok( ret, "SetScrollInfo failed. Style is %08x\n", style);
+    ok( ret, "SetScrollInfo failed. Style is %08lx\n", style);
     /* and request the Vertical range */
     ret = GetScrollRange( hwnd, SB_VERT, &min, &max);
     ok( ret, "GetScrollRange failed.\n");
     /* now the range should be 0,100 in ALL cases */
     ok( min == 0 && max == 100,
-            "Scroll bar range is %d,%d. Expected 0,100. Style %08x\n", min, max, style);
+            "Scroll bar range is %d,%d. Expected 0,100. Style %08lx\n", min, max, style);
     /* See what is different now for GetScrollRange */
     ret = GetScrollInfo( hwnd, SB_HORZ, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should succeed in ALL cases */
-    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08x\n", style);
+    ok( ret, "GetScrollInfo failed unexpectedly. Style is %08lx\n", style);
     /* also test if the window scroll bars are enabled */
     ret = EnableScrollBar( hwnd, SB_VERT, ESB_ENABLE_BOTH);
     ok( !ret, "Vertical window scroll bar was not enabled\n");
@@ -443,13 +443,13 @@ todo_wine
     assert( hwnd != 0);
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should fail */
-    ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08x\n", style);
+    ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08lx\n", style);
     /* add scroll styles */
     winstyle = GetWindowLongA( hwnd, GWL_STYLE );
     SetWindowLongW( hwnd, GWL_STYLE, winstyle | WS_VSCROLL | WS_HSCROLL);
     ret = GetScrollInfo( hwnd, SB_VERT, &si);
     /* should still fail */
-    ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08x\n", style);
+    ok( !ret, "GetScrollInfo succeeded unexpectedly. Style is %08lx\n", style);
     /* clean up */
     DestroyWindow( hwnd);
 }
@@ -561,6 +561,8 @@ static void test_SetScrollInfo(void)
 
     ret = IsWindowEnabled(hScroll);
     ok(!ret, "scroll bar enabled\n");
+    ret = IsWindowVisible(hScroll);
+    ok(!ret, "Unexpected visible state.\n");
 
     memset(&si, 0, sizeof(si));
     si.cbSize = sizeof(si);
@@ -581,6 +583,8 @@ static void test_SetScrollInfo(void)
     SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
     ret = IsWindowEnabled(hScroll);
     ok(!ret, "scroll bar enabled\n");
+    ret = IsWindowVisible(hScroll);
+    ok(!ret, "Unexpected visible state.\n");
 
     si.fMask = 0xf;
     ret = GetScrollInfo(hScroll, SB_CTL, &si);
@@ -588,6 +592,8 @@ static void test_SetScrollInfo(void)
 
     EnableScrollBar(hScroll, SB_CTL, ESB_ENABLE_BOTH);
     ok(IsWindowEnabled(hScroll), "expected enabled scrollbar\n");
+    ret = IsWindowVisible(hScroll);
+    ok(!ret, "Unexpected visible state.\n");
 
     si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
     si.nMax = 10;
@@ -597,6 +603,86 @@ static void test_SetScrollInfo(void)
     SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
     ret = IsWindowEnabled(hScroll);
     ok(ret, "scroll bar disabled\n");
+    ret = IsWindowVisible(hScroll);
+    ok(!ret, "Unexpected visible state.\n");
+
+    /* With visible window. */
+    ShowWindow(mainwnd, SW_SHOW);
+
+    ret = IsWindowVisible(hScroll);
+    ok(ret, "Unexpected visible state.\n");
+
+    EnableScrollBar(hScroll, SB_CTL, ESB_DISABLE_BOTH);
+    ret = IsWindowEnabled(hScroll);
+    ok(!ret, "Unexpected enabled state.\n");
+
+    /* Enabled state is changed only for visible windows, and only with redraw flag. */
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 100;
+    si.nMin = 10;
+    si.nPos = 0;
+    si.nPage = 50;
+    SetScrollInfo(hScroll, SB_CTL, &si, FALSE);
+    ret = IsWindowEnabled(hScroll);
+    ok(!ret, "Unexpected enabled state.\n");
+
+    /* State changes when called with same arguments too. */
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 100;
+    si.nMin = 10;
+    si.nPos = 0;
+    si.nPage = 50;
+    SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
+    ret = IsWindowEnabled(hScroll);
+    ok(ret, "Unexpected enabled state.\n");
+
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 100;
+    si.nMin = 10;
+    si.nPos = 0;
+    si.nPage = 100;
+    SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
+    ret = IsWindowEnabled(hScroll);
+    ok(!ret, "Unexpected enabled state.\n");
+
+    EnableScrollBar(hScroll, SB_CTL, ESB_ENABLE_BOTH);
+    ret = IsWindowEnabled(hScroll);
+    ok(ret, "Unexpected enabled state.\n");
+
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 100;
+    si.nMin = 10;
+    si.nPos = 0;
+    si.nPage = 100;
+    SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
+    ret = IsWindowEnabled(hScroll);
+    ok(!ret, "Unexpected enabled state.\n");
+
+    EnableScrollBar(hScroll, SB_CTL, ESB_DISABLE_BOTH);
+    ret = IsWindowEnabled(hScroll);
+    ok(!ret, "Unexpected enabled state.\n");
+
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 41;
+    si.nMin = 0;
+    si.nPos = 0;
+    si.nPage = 41;
+    SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
+    ret = IsWindowEnabled(hScroll);
+    ok(ret, "Unexpected enabled state.\n");
+
+    EnableScrollBar(mainwnd, SB_CTL, ESB_ENABLE_BOTH);
+
+    si.fMask = SIF_POS;
+    si.nPos = 3;
+    ret = SetScrollInfo(mainwnd, SB_HORZ, &si, FALSE);
+    ok(ret == 3, "SetScrollInfo returned %d\n", ret);
+
+    /* undocumented flag making SetScrollInfo return previous position */
+    si.fMask = SIF_POS | 0x1000;
+    si.nPos = 4;
+    ret = SetScrollInfo(mainwnd, SB_HORZ, &si, FALSE);
+    ok(ret == 3, "SetScrollInfo returned %d\n", ret);
 
     DestroyWindow(hScroll);
     DestroyWindow(mainwnd);
@@ -627,7 +713,7 @@ static void test_subclass(void)
     BOOL r;
 
     r = GetClassInfoExA(GetModuleHandleA(NULL), "SCROLLBAR", &class_info);
-    ok(r, "GetClassInfoEx failed: %u\n", GetLastError());
+    ok(r, "GetClassInfoEx failed: %lu\n", GetLastError());
     scrollbar_wndproc = class_info.lpfnWndProc;
 
     memset(&wc, 0, sizeof(wc));
@@ -636,42 +722,41 @@ static void test_subclass(void)
     wc.lpszClassName = "MyTestSubclass";
     wc.lpfnWndProc = subclass_proc;
     r = RegisterClassA(&wc);
-    ok(r, "RegisterClass failed: %u\n", GetLastError());
+    ok(r, "RegisterClass failed: %lu\n", GetLastError());
 
     hwnd = CreateWindowExA( 0, "MyTestSubclass", "Scroll", WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0 );
-    ok(hwnd != NULL, "Failed to create window: %u\n", GetLastError());
+    ok(hwnd != NULL, "Failed to create window: %lu\n", GetLastError());
 
     r = SetScrollRange(hwnd, SB_CTL, 0, 100, TRUE);
-    ok(r, "SetScrollRange failed: %u\n", GetLastError());
+    ok(r, "SetScrollRange failed: %lu\n", GetLastError());
 
     res = SetScrollPos(hwnd, SB_CTL, 2, FALSE);
-    ok(!res, "SetScrollPos returned %lu\n", res);
+    ok(!res, "SetScrollPos returned %Iu\n", res);
 
     memset(&set_scrollinfo, 0xcc, sizeof(set_scrollinfo));
     res = SetScrollPos(hwnd, SB_CTL, 1, FALSE);
-    ok(res == 2, "SetScrollPos returned %lu\n", res);
+    ok(res == 2, "SetScrollPos returned %Iu\n", res);
     ok(set_scrollinfo.cbSize == sizeof(SCROLLINFO), "cbSize = %u\n", set_scrollinfo.cbSize);
-    todo_wine
     ok(set_scrollinfo.fMask == (0x1000 | SIF_POS), "fMask = %x\n", set_scrollinfo.fMask);
     ok(set_scrollinfo.nPos == 1, "nPos = %x\n", set_scrollinfo.nPos);
 
     memset(&scroll_info, 0xcc, sizeof(scroll_info));
     scroll_info.cbSize = sizeof(scroll_info);
     res = SendMessageA(hwnd, SBM_GETSCROLLBARINFO, 0, (LPARAM)&scroll_info);
-    ok(res == 1, "SBM_GETSCROLLBARINFO returned %lu\n", res);
+    ok(res == 1, "SBM_GETSCROLLBARINFO returned %Iu\n", res);
 
     DestroyWindow(hwnd);
 
     /* if we skip calling wndproc for WM_CREATE, window is not considered a scrollbar */
     hwnd = CreateWindowExA( 0, "MyTestSubclass", "Scroll", WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandleA(NULL), (void *)1 );
-    ok(hwnd != NULL, "Failed to create window: %u\n", GetLastError());
+    ok(hwnd != NULL, "Failed to create window: %lu\n", GetLastError());
 
     memset(&scroll_info, 0xcc, sizeof(scroll_info));
     scroll_info.cbSize = sizeof(scroll_info);
     res = SendMessageA(hwnd, SBM_GETSCROLLBARINFO, 0, (LPARAM)&scroll_info);
-    ok(!res, "SBM_GETSCROLLBARINFO returned %lu\n", res);
+    ok(!res, "SBM_GETSCROLLBARINFO returned %Iu\n", res);
 
     DestroyWindow(hwnd);
 
@@ -679,33 +764,273 @@ static void test_subclass(void)
     wc.cbWndExtra = class_info.cbWndExtra - 1;
     wc.lpszClassName = "MyTestSubclass2";
     r = RegisterClassA(&wc);
-    ok(r, "RegisterClass failed: %u\n", GetLastError());
+    ok(r, "RegisterClass failed: %lu\n", GetLastError());
 
     hwnd = CreateWindowExA( 0, "MyTestSubclass2", "Scroll", WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0 );
-    ok(hwnd != NULL, "Failed to create window: %u\n", GetLastError());
+    ok(hwnd != NULL, "Failed to create window: %lu\n", GetLastError());
 
     memset(&scroll_info, 0xcc, sizeof(scroll_info));
     scroll_info.cbSize = sizeof(scroll_info);
     res = SendMessageA(hwnd, SBM_GETSCROLLBARINFO, 0, (LPARAM)&scroll_info);
-    ok(!res, "SBM_GETSCROLLBARINFO returned %lu\n", res);
+    ok(!res, "SBM_GETSCROLLBARINFO returned %Iu\n", res);
 
     memset(&set_scrollinfo, 0xcc, sizeof(set_scrollinfo));
     res = SetScrollPos(hwnd, SB_CTL, 1, FALSE);
-    ok(res == 0, "SetScrollPos returned %lu\n", res);
+    ok(res == 0, "SetScrollPos returned %Iu\n", res);
     ok(set_scrollinfo.cbSize == sizeof(SCROLLINFO), "cbSize = %u\n", set_scrollinfo.cbSize);
-    todo_wine
     ok(set_scrollinfo.fMask == (0x1000 | SIF_POS), "fMask = %x\n", set_scrollinfo.fMask);
     ok(set_scrollinfo.nPos == 1, "nPos = %x\n", set_scrollinfo.nPos);
 
     DestroyWindow(hwnd);
 }
 
+static void read_process(HWND hMainWnd)
+{
+    SCROLLBARINFO sbi = {0};
+    SCROLLINFO si;
+    BOOL ret;
+    RECT rect, intersection;
+    BOOL (WINAPI *pGetScrollBarInfo)(HWND, LONG, LPSCROLLBARINFO);
+
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_PAGE|SIF_POS|SIF_RANGE;
+    si.nMin = si.nMax = si.nPos = (int)0xdeadbeef;
+    si.nPage = 0xdeadbeef;
+    ret = GetScrollInfo( hMainWnd, SB_HORZ, &si );
+    todo_wine ok( ret, "GetScrollInfo should succeed\n" );
+
+    todo_wine ok( si.nMin == 1, "unexpected nMin %i\n", si.nMin );
+    todo_wine ok( si.nMax == 10, "unexpected nMax %i\n", si.nMax );
+    todo_wine ok( si.nPage == 3, "unexpected nPage %u\n", si.nPage );
+    todo_wine ok( si.nPos == 4, "unexpected nPos %i\n", si.nPos );
+
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_PAGE|SIF_POS|SIF_RANGE;
+    si.nMin = si.nMax = si.nPos = (int)0xdeadbeef;
+    si.nPage = 0xdeadbeef;
+    ret = GetScrollInfo( hMainWnd, SB_VERT, &si );
+    todo_wine ok( ret, "GetScrollInfo should succeed\n" );
+
+    todo_wine ok( si.nMin == 201, "unexpected nMin %i\n", si.nMin );
+    todo_wine ok( si.nMax == 210, "unexpected nMax %i\n", si.nMax );
+    todo_wine ok( si.nPage == 2, "unexpected nPage %u\n", si.nPage );
+    todo_wine ok( si.nPos == 204, "unexpected nPos %i\n", si.nPos );
+
+    pGetScrollBarInfo = (void*)GetProcAddress(GetModuleHandleA("user32.dll"), "GetScrollBarInfo");
+    if (!pGetScrollBarInfo)
+    {
+        win_skip("GetScrollBarInfo is not available\n");
+        return;
+    }
+
+    ret = GetWindowRect( hMainWnd, &rect );
+    ok( ret, "The GetWindowRect() call should not fail.\n" );
+
+    sbi.cbSize = sizeof(sbi);
+    sbi.rgstate[0] = 0xdeadbeef;
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_HSCROLL, &sbi );
+    todo_wine ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+
+    if (ret)
+    {
+        IntersectRect( &intersection, &sbi.rcScrollBar, &rect );
+        ok( EqualRect( &intersection, &sbi.rcScrollBar ), "hscroll rect %s outside window rect %s\n",
+            wine_dbgstr_rect( &sbi.rcScrollBar ), wine_dbgstr_rect( &rect ));
+        ok( sbi.rcScrollBar.right - sbi.rcScrollBar.left > sbi.rcScrollBar.bottom - sbi.rcScrollBar.top,
+            "hscroll rect %s should have width > height\n", wine_dbgstr_rect( &rect ));
+        ok( sbi.rgstate[0] == 0, "unexpected hscroll state %#lx\n", sbi.rgstate[0] );
+    }
+
+    sbi.cbSize = sizeof(sbi);
+    sbi.rgstate[0] = 0xdeadbeef;
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi );
+    todo_wine ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+
+    if (ret)
+    {
+        IntersectRect( &intersection, &sbi.rcScrollBar, &rect );
+        ok( EqualRect( &intersection, &sbi.rcScrollBar ), "vscroll rect %s outside window rect %s\n",
+            wine_dbgstr_rect( &sbi.rcScrollBar ), wine_dbgstr_rect( &rect ));
+        ok( sbi.rcScrollBar.right - sbi.rcScrollBar.left < sbi.rcScrollBar.bottom - sbi.rcScrollBar.top,
+            "vscroll rect %s should have width < height\n", wine_dbgstr_rect( &rect ));
+        ok( sbi.rgstate[0] == 0, "unexpected vscroll state %#lx\n", sbi.rgstate[0] );
+    }
+}
+
+static DWORD WINAPI write_process(HWND hMainWnd)
+{
+    SCROLLBARINFO sbi;
+    SCROLLINFO si;
+    BOOL ret;
+    BOOL (WINAPI *pGetScrollBarInfo)(HWND, LONG, LPSCROLLBARINFO);
+
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_POS;
+    si.nPos = 6;
+    ret = SetScrollInfo( hMainWnd, SB_HORZ, &si, FALSE );
+    todo_wine ok( ret, "SetScrollInfo should succeed\n" );
+
+    si.nPos = 206;
+    ret = SetScrollInfo( hMainWnd, SB_VERT, &si, FALSE );
+    todo_wine ok( ret, "SetScrollInfo should succeed\n" );
+
+    si.nPos = 0xdeadbeef;
+    ret = GetScrollInfo( hMainWnd, SB_HORZ, &si );
+    todo_wine ok( ret, "GetScrollInfo should succeed\n" );
+    todo_wine ok( si.nPos == 6, "unexpected nPos %i\n", si.nPos );
+
+    si.nPos = 0xdeadbeef;
+    ret = GetScrollInfo( hMainWnd, SB_VERT, &si );
+    todo_wine ok( ret, "GetScrollInfo should succeed\n" );
+    todo_wine ok( si.nPos == 206, "unexpected nPos %i\n", si.nPos );
+
+    pGetScrollBarInfo = (void*)GetProcAddress(GetModuleHandleA("user32.dll"), "GetScrollBarInfo");
+    if (!pGetScrollBarInfo)
+    {
+        win_skip("GetScrollBarInfo is not available\n");
+        return 0;
+    }
+
+    ret = EnableScrollBar( hMainWnd, SB_HORZ, ESB_DISABLE_BOTH );
+    todo_wine ok( ret, "EnableScrollBar should succeed\n" );
+
+    ret = ShowScrollBar( hMainWnd, SB_VERT, FALSE );
+    ok( ret, "ShowScrollBar should succeed\n" );
+
+    sbi.cbSize = sizeof(sbi);
+    sbi.rgstate[0] = 0xdeadbeef;
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_HSCROLL, &sbi );
+    todo_wine ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    todo_wine ok( sbi.rgstate[0] == STATE_SYSTEM_UNAVAILABLE, "unexpected hscroll state %#lx\n", sbi.rgstate[0] );
+
+    sbi.cbSize = sizeof(sbi);
+    sbi.rgstate[0] = 0xdeadbeef;
+    ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi );
+    todo_wine ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
+    todo_wine ok( sbi.rgstate[0] == STATE_SYSTEM_INVISIBLE, "unexpected vscroll state %#lx\n", sbi.rgstate[0] );
+
+    return 0;
+}
+
+static void test_cross_process(const char* argv0)
+{
+    HWND hMainWnd;
+    BOOL ret;
+    SCROLLINFO si;
+    STARTUPINFOA startup_info = {0};
+    PROCESS_INFORMATION process_info;
+    char path[MAX_PATH];
+
+    hMainWnd = create_main_test_wnd();
+
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_PAGE|SIF_POS|SIF_RANGE;
+    si.nMin = 1;
+    si.nMax = 10;
+    si.nPage = 3;
+    si.nPos = 4;
+    SetScrollInfo( hMainWnd, SB_HORZ, &si, FALSE );
+
+    si.nMin = 201;
+    si.nMax = 210;
+    si.nPage = 2;
+    si.nPos = 204;
+    SetScrollInfo( hMainWnd, SB_VERT, &si, FALSE );
+
+    startup_info.cb = sizeof(startup_info);
+    sprintf( path, "%s scroll read_process %p", argv0, hMainWnd );
+    ret = CreateProcessA( NULL, path, NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info );
+    ok(ret, "CreateProcess \"%s\" failed err %lu.\n", path, GetLastError());
+
+    /* Messages do not need to be processed to read info. */
+    winetest_wait_child_process(process_info.hProcess);
+    CloseHandle(process_info.hProcess);
+    CloseHandle(process_info.hThread);
+
+    sprintf( path, "%s scroll write_process %p", argv0, hMainWnd );
+    ret = CreateProcessA( NULL, path, NULL, NULL, FALSE, 0, NULL, NULL, &startup_info, &process_info );
+    ok(ret, "CreateProcess \"%s\" failed err %lu.\n", path, GetLastError());
+
+    /* Modifying info requires a message loop. */
+    while (MsgWaitForMultipleObjects( 1, &process_info.hProcess, FALSE, 5000, QS_SENDMESSAGE ) == 1)
+    {
+        MSG msg;
+        while (PeekMessageA( &msg, NULL, 0, 0, PM_REMOVE ))
+        {
+            TranslateMessage( &msg );
+            DispatchMessageA( &msg );
+        }
+    }
+
+    winetest_wait_child_process(process_info.hProcess);
+    CloseHandle(process_info.hProcess);
+    CloseHandle(process_info.hThread);
+
+    DestroyWindow( hScroll );
+    DestroyWindow( hMainWnd );
+}
+
+static void test_visual(void)
+{
+    static const int color_indices[] = {COLOR_SCROLLBAR, COLOR_BTNFACE};
+    static const DWORD styles[] = {SBS_SIZEBOX, SBS_SIZEGRIP};
+    COLORREF old_colors[2], colors[2], color;
+    HWND hwnd;
+    BOOL ret;
+    HDC hdc;
+    int i;
+
+    old_colors[0] = GetSysColor(color_indices[0]);
+    old_colors[1] = GetSysColor(color_indices[1]);
+    colors[0] = RGB(0x11, 0x22, 0x33);
+    colors[1] = RGB(0xaa, 0xbb, 0xcc);
+    ret = SetSysColors(ARRAY_SIZE(color_indices), color_indices, colors);
+    ok(ret, "SetSysColors failed, error %lu.\n", GetLastError());
+
+    for (i = 0; i < ARRAY_SIZE(styles); ++i)
+    {
+        winetest_push_context("style %#lx", styles[i]);
+
+        hwnd = CreateWindowA("ScrollBar", "", WS_POPUP | WS_VISIBLE | styles[i], 0, 0, 20, 20, 0, 0,
+                             0, 0);
+        ok(hwnd != NULL, "CreateWindowA failed, error %lu.\n", GetLastError());
+        RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ERASENOW | RDW_FRAME);
+
+        hdc = GetDC(hwnd);
+        color = GetPixel(hdc, 5, 5);
+        ok(color == colors[1], "Expected color %#lx, got %#lx.\n", colors[1], color);
+
+        ReleaseDC(hwnd, hdc);
+        DestroyWindow(hwnd);
+        winetest_pop_context();
+    }
+
+    ret = SetSysColors(ARRAY_SIZE(color_indices), color_indices, old_colors);
+    ok(ret, "SetSysColors failed, error %lu.\n", GetLastError());
+}
+
 START_TEST ( scroll )
 {
+    char **argv;
+    int argc;
     WNDCLASSA wc;
     HMODULE hUxtheme;
     BOOL (WINAPI * pIsThemeActive)(VOID);
+
+    argc = winetest_get_mainargs(&argv);
+    if (argc >= 4 && (!strcmp( argv[2], "read_process" ) || !strcmp( argv[2], "write_process" )))
+    {
+        long wnd_long = strtol( argv[3], NULL, 16 );
+        HWND wnd = (HWND)(INT_PTR)wnd_long;
+
+        if (!strcmp( argv[2], "read_process" ))
+            read_process( wnd );
+        else
+            write_process( wnd );
+
+        return;
+    }
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
@@ -726,6 +1051,7 @@ START_TEST ( scroll )
     scrollbar_test_track();
     test_SetScrollInfo();
     test_subclass();
+    test_cross_process( argv[0] );
 
     /* Some test results vary depending of theming being active or not */
     hUxtheme = LoadLibraryA("uxtheme.dll");
@@ -736,6 +1062,8 @@ START_TEST ( scroll )
             bThemeActive = pIsThemeActive();
         FreeLibrary(hUxtheme);
     }
+
+    test_visual();
 
     scrollbar_test_default( 0);
     scrollbar_test_default( WS_HSCROLL);
