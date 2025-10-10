@@ -399,13 +399,13 @@ FxVerifyObjectTableIsSorted(
 
 typedef
 NTSTATUS
-(STDCALL *PFN_RTL_GET_VERSION)(
+(NTAPI *PFN_RTL_GET_VERSION)(
     __out PRTL_OSVERSIONINFOW VersionInformation
     );
 
 typedef
 NTSTATUS
-(STDCALL *PFN_RTL_VERIFY_VERSION_INFO)(
+(NTAPI *PFN_RTL_VERIFY_VERSION_INFO)(
     __in PRTL_OSVERSIONINFOEXW VersionInfo,
     __in ULONG TypeMask,
     __in ULONGLONG  ConditionMask
@@ -413,7 +413,7 @@ NTSTATUS
 
 typedef
 ULONGLONG
-(STDCALL *PFN_VER_SET_CONDITION_MASK)(
+(NTAPI *PFN_VER_SET_CONDITION_MASK)(
     __in  ULONGLONG   ConditionMask,
     __in  ULONG   TypeMask,
     __in  UCHAR   Condition

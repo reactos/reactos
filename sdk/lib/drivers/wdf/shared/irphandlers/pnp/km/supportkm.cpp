@@ -291,7 +291,7 @@ SendDeviceUsageNotificationWorker(
 }
 
 VOID
-STDCALL
+NTAPI
 _DeviceUsageNotificationWorkItem(
     __in MdDeviceObject DeviceObject,
     __in PVOID Context

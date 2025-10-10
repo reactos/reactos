@@ -29,7 +29,7 @@ extern "C" {
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxIoTargetRemote::_PlugPlayNotification(
     __in PVOID NotificationStructure,
     __inout_opt PVOID Context

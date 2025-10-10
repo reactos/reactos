@@ -35,7 +35,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceSelectSetting)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -159,7 +159,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetInterfaceNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -196,7 +196,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumEndpoints)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -236,7 +236,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetEndpointInformation)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -299,7 +299,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumSettings)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -334,7 +334,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -378,7 +378,7 @@ Arguments:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetConfiguredSettingIndex)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -413,7 +413,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 BYTE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetNumConfiguredPipes)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -448,7 +448,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFUSBPIPE
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfUsbInterfaceGetConfiguredPipe)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

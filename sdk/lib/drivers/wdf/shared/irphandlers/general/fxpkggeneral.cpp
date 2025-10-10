@@ -1444,7 +1444,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxPkgGeneral::_CreateCompletionRoutine(
     __in MdDeviceObject DeviceObject,
     __in MdIrp           OriginalIrp,
@@ -1501,7 +1501,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxPkgGeneral::_CreateCompletionRoutine2(
     __in MdDeviceObject DeviceObject,
     __in MdIrp           OriginalIrp,

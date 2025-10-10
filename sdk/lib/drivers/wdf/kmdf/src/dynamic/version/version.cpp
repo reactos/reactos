@@ -124,7 +124,7 @@ PCHAR WdfLdrType = KMDF_DEFAULT_NAME;
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_COMMISSION(
     VOID
     );
@@ -132,7 +132,7 @@ WDF_LIBRARY_COMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_DECOMMISSION(
     VOID
     );
@@ -140,7 +140,7 @@ WDF_LIBRARY_DECOMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_REGISTER_CLIENT(
     __inout  PWDF_BIND_INFO             Info,
     __deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -150,7 +150,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_UNREGISTER_CLIENT(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals
@@ -200,7 +200,7 @@ WDF_LIBRARY_INFO  WdfLibraryInfo = {
 
 extern "C"
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryDispatch (
     __in struct _DEVICE_OBJECT * DeviceObject,
     __in PIRP Irp
@@ -315,7 +315,7 @@ FxLibraryCleanup(
 
 extern "C"
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     __in PDRIVER_OBJECT   DriverObject,
     __in PUNICODE_STRING  RegistryPath
@@ -405,7 +405,7 @@ DriverEntry(
 //-----------------------------------------------------------------------------
 extern "C"
 VOID
-STDCALL
+NTAPI
 DriverUnload(
     __in PDRIVER_OBJECT   DriverObject
     )
@@ -430,7 +430,7 @@ DriverUnload(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_COMMISSION(
     VOID
     )
@@ -444,7 +444,7 @@ WDF_LIBRARY_COMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_DECOMMISSION(
     VOID
     )
@@ -458,7 +458,7 @@ WDF_LIBRARY_DECOMMISSION(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_REGISTER_CLIENT(
     __in  PWDF_BIND_INFO        Info,
     __deref_out   PWDF_DRIVER_GLOBALS * WdfDriverGlobals,
@@ -542,7 +542,7 @@ WDF_LIBRARY_REGISTER_CLIENT(
 extern "C"
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 WDF_LIBRARY_UNREGISTER_CLIENT(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

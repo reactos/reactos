@@ -263,10 +263,10 @@ ClassReleaseClientReference(
 // common.c
 
 VOID
-FxLdrAcquireLoadedModuleLock();
+FxLdrAcquireLoadedModuleLock(VOID);
 
 VOID
-FxLdrReleaseLoadedModuleLock();
+FxLdrReleaseLoadedModuleLock(VOID);
 
 NTSTATUS
 GetImageInfo(

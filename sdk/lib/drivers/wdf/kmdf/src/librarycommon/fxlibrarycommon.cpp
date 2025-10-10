@@ -167,7 +167,6 @@ IsClientInfoValid(
     return TRUE;
 }
 
-
 VOID
 ReportDdiFunctionCountMismatch(
     _In_ PCUNICODE_STRING ServiceName,
@@ -233,7 +232,7 @@ ReportDdiFunctionCountMismatch(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonCommission(
     VOID
     )
@@ -304,7 +303,7 @@ FxLibraryCommonCommission(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonDecommission(
     VOID
     )
@@ -343,7 +342,7 @@ FxLibraryCommonDecommission(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonRegisterClient(
     __inout PWDF_BIND_INFO        Info,
     __deref_out PWDF_DRIVER_GLOBALS *WdfDriverGlobals,
@@ -495,12 +494,12 @@ FxLibraryCommonRegisterClient(
         }
         else {
             __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                     "Verificated functions table NOT IMPLEMENTED \n"));
+                     "Verifier functions table NOT IMPLEMENTED\n"));
 
             DbgBreakPoint();
 
             __Print((LITERAL(WDF_LIBRARY_REGISTER_CLIENT)
-                     ": Enhanced Verification is ON \n"));
+                     ": Enhanced Verification is ON\n"));
 
 #ifndef __REACTOS__
             LockVerifierSection(fxDriverGlobals, ClientInfo->RegistryPath);
@@ -545,7 +544,7 @@ Done:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxLibraryCommonUnregisterClient(
     __in PWDF_BIND_INFO        Info,
     __in PWDF_DRIVER_GLOBALS   WdfDriverGlobals

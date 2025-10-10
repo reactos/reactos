@@ -42,32 +42,31 @@ typedef struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) _MARKER_TYPE {
 
 typedef struct _LIBRARY_MODULE *PLIBRARY_MODULE;
 typedef struct _WDF_LIBRARY_INFO *PWDF_LIBRARY_INFO;
-#define STDCALL __stdcall
 
 typedef
 VOID
-(*WDFFUNC)(
+(NTAPI *WDFFUNC)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PFNLIBRARYCOMMISSION)(
+(NTAPI *PFNLIBRARYCOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PFNLIBRARYDECOMMISSION)(
+(NTAPI *PFNLIBRARYDECOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PFNLIBRARYREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __deref_out   PWDF_COMPONENT_GLOBALS   * ComponentGlobals,
     __deref_inout PVOID                    * Context
@@ -76,7 +75,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PFNLIBRARYUNREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYUNREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __in PWDF_COMPONENT_GLOBALS     DriverGlobals
     );
@@ -84,7 +83,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PWDF_REGISTER_LIBRARY)(
+(NTAPI *PWDF_REGISTER_LIBRARY)(
     __in  PWDF_LIBRARY_INFO   LibraryInfo,
     __in  PUNICODE_STRING     ServicePath,
     __in  PCUNICODE_STRING    LibraryDeviceName
@@ -93,7 +92,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(STDCALL *PWDF_VERSION_BIND)(
+(NTAPI *PWDF_VERSION_BIND)(
     __in  PDRIVER_OBJECT           DriverObject,
     __in  PUNICODE_STRING          RegistryPath,
     __in  PWDF_BIND_INFO           Info,
@@ -102,7 +101,7 @@ NTSTATUS
 
 typedef
 NTSTATUS
-(STDCALL *PWDF_VERSION_UNBIND)(
+(NTAPI *PWDF_VERSION_UNBIND)(
     __in PUNICODE_STRING         RegistryPath,
     __in PWDF_BIND_INFO          Info,
     __in PWDF_COMPONENT_GLOBALS  Globals

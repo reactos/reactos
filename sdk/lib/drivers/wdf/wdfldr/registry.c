@@ -9,18 +9,13 @@
 #include "wdfloader.h"
 
 
-/********************************************
+/**
+ * @brief Open framework version registry key
  * 
- * Open framework version registry key
- * 
- * Params:
- *    BindInfo - bind information
- *    HandleRegKey - opened key handle
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param BindInfo Bind information
+ * @param HandleRegKey Opened key handle
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 NTSTATUS
 NTAPI
 GetVersionRegistryHandle(
@@ -82,18 +77,13 @@ end:
     return status;
 }
 
-/********************************************
+/**
+ * @brief Create default service path from bind info
  * 
- * Create service path by bind info
- * 
- * Params:
- *    BindInfo - bind information
- *    RegistryPath - created path
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param BindInfo Bind information
+ * @param RegistryPath Created service path
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 NTSTATUS
 NTAPI
 GetDefaultServiceName(
@@ -142,18 +132,13 @@ GetDefaultServiceName(
     return status;
 }
 
-/********************************************
+/**
+ * @brief Get service path from bind info and registry
  * 
- * Create service path by bind info
- * 
- * Params:
- *    BindInfo - bind information
- *    ServicePath - service path in registry
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param BindInfo Bind information
+ * @param ServicePath Service path in registry
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 NTSTATUS
 GetVersionServicePath(
     _In_ PWDF_BIND_INFO BindInfo,

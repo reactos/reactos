@@ -40,7 +40,7 @@ extern "C" {
 extern WDF_TRIAGE_INFO g_WdfTriageInfo;
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfVerifierDbgBreakPoint)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals
@@ -79,7 +79,7 @@ Return Value:
 
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -151,7 +151,7 @@ Return Value:
 }
 
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCxVerifierKeBugCheck)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -244,7 +244,7 @@ Return Value:
 
 
 PVOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfGetTriageInfo)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals

@@ -158,6 +158,10 @@ Failure:
 
 /**
  * @brief Opens KMDF library's driver object by its name and fills some library structure data
+ * 
+ * @param LibModule Library module to update
+ * @param ObjectName Device object name
+ * @return STATUS_SUCCESS on success, error code otherwise
  */
 NTSTATUS
 LibraryOpen(
@@ -387,21 +391,16 @@ ClientFree(
     ExFreePoolWithTag(ClientModule, WDFLDR_TAG);
 }
 
-/********************************************
+/**
+ * @brief Create client module and add it to library client list
  * 
- * Create client module and add it to client list in library
- * 
- * Params:
- *    LibModule - library that client being added
- *    DriverServiceName - client driver service registry path
- *    BindInfo - bind information
- *    Context - 
- *    ClientModule - client added to library clients list
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param LibModule Library that client is being added to
+ * @param ServicePath Client driver service registry path
+ * @param BindInfo Bind information
+ * @param Context Client context
+ * @param OutClientModule Created client module added to library clients list
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 NTSTATUS
 LibraryLinkInClient(
     _In_ PLIBRARY_MODULE LibModule,

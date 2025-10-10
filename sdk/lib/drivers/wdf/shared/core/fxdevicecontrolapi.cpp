@@ -32,7 +32,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfControlFinishInitializing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

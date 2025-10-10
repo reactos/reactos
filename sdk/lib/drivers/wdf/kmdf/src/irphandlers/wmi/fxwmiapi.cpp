@@ -38,7 +38,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiProviderCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -98,7 +98,7 @@ WDFEXPORT(WdfWmiProviderCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -256,7 +256,7 @@ WDFEXPORT(WdfWmiInstanceCreate)(
 WDFAPI
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiProviderGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -276,7 +276,7 @@ WDFEXPORT(WdfWmiProviderGetDevice)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiProviderIsEnabled)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -298,7 +298,7 @@ WDFEXPORT(WdfWmiProviderIsEnabled)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONGLONG
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiProviderGetTracingHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -319,7 +319,7 @@ WDFEXPORT(WdfWmiProviderGetTracingHandle)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceRegister)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -342,7 +342,7 @@ WDFEXPORT(WdfWmiInstanceRegister)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceDeregister)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -364,7 +364,7 @@ WDFEXPORT(WdfWmiInstanceDeregister)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -384,7 +384,7 @@ WDFEXPORT(WdfWmiInstanceGetDevice)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFWMIPROVIDER
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceGetProvider)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -406,7 +406,7 @@ WDFEXPORT(WdfWmiInstanceGetProvider)(
 _Must_inspect_result_
 __drv_maxIRQL(APC_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfWmiInstanceFireEvent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

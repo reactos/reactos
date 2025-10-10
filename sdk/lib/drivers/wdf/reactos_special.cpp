@@ -17,12 +17,12 @@ extern "C" {
 
 extern "C" {
 
-typedef VOID (*WDFFUNC) (VOID);
+typedef VOID (NTAPI *WDFFUNC) (VOID);
 #define  KMDF_DEFAULT_NAME   "Wdf01000"
 
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WdfApiNotImplemented()
 {
 	DbgPrint("ReactOS KMDF: %s non-implemented API called\n");

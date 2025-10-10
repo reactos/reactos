@@ -61,7 +61,6 @@ WdfLdrDiagnosticsValueByNameAsULONG(
     if (ValueName == NULL || Value == NULL)
     {
         __DBGPRINT(("ERROR: Invalid Input Parameter\n"));
-
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -70,7 +69,6 @@ WdfLdrDiagnosticsValueByNameAsULONG(
     if (KeGetCurrentIrql() > PASSIVE_LEVEL)
     {
         __DBGPRINT(("Not at PASSIVE_LEVEL\n"));
-
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -181,7 +179,7 @@ DllInitialize(
 
 VOID
 NTAPI
-DllUnload()
+DllUnload(VOID)
 {
     if (gAlreadyUnloaded)
     {
@@ -299,19 +297,14 @@ WdfLdrQueryInterface(
     return STATUS_NOINTERFACE;
 }
 
-/********************************************
+/**
+ * @brief Register wdf01000 library
  * 
- * Register wdf01000 library
- * 
- * Params:
- *    LibraryInfo - information by register lib
- *    ServicePath - service path in registry
- *    LibraryDeviceName - kmdf device name
- * 
- * Result:
- *    Finded module pointer
- * 
-*********************************************/
+ * @param LibraryInfo Information about the library being registered
+ * @param ServicePath Service path in registry
+ * @param LibraryDeviceName KMDF device name
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
@@ -403,20 +396,15 @@ Failure:
     return status;
 }
 
-/********************************************
+/**
+ * @brief Bind client driver with framework
  * 
- * Bind client driver with framework
- * 
- * Params:
- *    DriverObject - driver object 
- *    RegistryPath - registry path
- *    BindInfo - client driver bind information
- *    ComponentGlobals - client driver global settings
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param DriverObject Driver object
+ * @param ServicePath Registry service path
+ * @param BindInfo Client driver bind information
+ * @param ComponentGlobals Client driver global settings
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
@@ -517,19 +505,14 @@ Exit:
     return status;
 }
 
-/********************************************
+/**
+ * @brief Unbind client driver from framework
  * 
- * Unbind client driver from framework
- * 
- * Params:
- *    RegistryPath - registry path
- *    BindInfo - client driver bind information
- *    ComponentGlobals - client driver global settings
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param RegistryPath Registry path
+ * @param BindInfo Client driver bind information
+ * @param ComponentGlobals Client driver global settings
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
@@ -697,21 +680,16 @@ DereferenceVersion(
     return NT_SUCCESS(unregisterStatus) ? status : unregisterStatus;
 }
 
-/********************************************
+/**
+ * @brief Register class extension library (e.g., UCX)
  * 
- * http://redplait.blogspot.com/2013/03/ucxfunctionsidc.html
+ * @see http://redplait.blogspot.com/2013/03/ucxfunctionsidc.html
  * 
- * Register extension driver
- * 
- * Params:
- *    ClassBindInfo - client driver bind information
- *    SourceString - 
- *    ObjectName - 
- * 
- * Result:
- *    Operation status
- * 
-*********************************************/
+ * @param ClassLibInfo Class library information
+ * @param SourceString Service name of the class library
+ * @param ObjectName Device object name
+ * @return STATUS_SUCCESS on success, error code otherwise
+ */
 CODE_SEG("PAGE")
 NTSTATUS
 NTAPI

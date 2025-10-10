@@ -1332,7 +1332,7 @@ FxDevice::_AcquireOptinRemoveLock(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxDevice::DispatchWithLock(
     __in MdDeviceObject DeviceObject,
     __in MdIrp Irp
@@ -1547,7 +1547,7 @@ DispatchWorker(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxDevice::Dispatch(
     __in MdDeviceObject DeviceObject,
     __in MdIrp       Irp

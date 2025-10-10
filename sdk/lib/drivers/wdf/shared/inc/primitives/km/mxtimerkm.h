@@ -26,7 +26,7 @@ Revision History:
 
 typedef
 BOOLEAN
-(STDCALL *PFN_KE_SET_COALESCABLE_TIMER) (
+(NTAPI *PFN_KE_SET_COALESCABLE_TIMER) (
     __inout PKTIMER Timer,
     __in LARGE_INTEGER DueTime,
     __in ULONG Period,

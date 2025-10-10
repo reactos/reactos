@@ -228,105 +228,117 @@ GetClassRegistryHandle(
     _In_ PWDF_BIND_INFO BindInfo,
     _Out_ PHANDLE KeyHandle)
 {
-    PWCHAR pClassName;
-    PWCHAR pClassNameBegin;
-    WCHAR currentSym;
-    PWDF_BIND_INFO pBindInfo;
-    PWDF_CLASS_BIND_INFO pClassBindInfo;
     UNICODE_STRING classVersions;
     OBJECT_ATTRIBUTES objectAttributes;
     HANDLE rootHandle = NULL;
     HANDLE classVersionsHandle = NULL;
     HANDLE classVersionHandle = NULL;
     NTSTATUS status;
-    SIZE_T numOfBytes;
+    SIZE_T classNameLength;
+    SIZE_T bufferSize;
     UNICODE_STRING objectName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf");
     DECLARE_UNICODE_STRING_SIZE(versionString, 11);
     
-    pClassBindInfo = ClassBindInfo;
-    pBindInfo = BindInfo;
     classVersions.Length = 0;
     classVersions.Buffer = NULL;
     *KeyHandle = NULL;
 
-    InitializeObjectAttributes(&objectAttributes, &objectName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* Open root registry key */
+    InitializeObjectAttributes(&objectAttributes,
+                               &objectName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
     status = ZwOpenKey(&rootHandle, KEY_QUERY_VALUE, &objectAttributes);
-
     if (!NT_SUCCESS(status))
     {
-        __DBGPRINT(("ZwOpenKey status 0x%08X\n", status));
-        goto clean;
+        __DBGPRINT(("ZwOpenKey failed for root key, status 0x%08X\n", status));
+        goto cleanup;
     }
 
-    pClassName = pClassBindInfo->ClassName;
-    pClassNameBegin = pClassName;
-    do
-    {
-        currentSym = *pClassName;
-        ++pClassName;
-    } while ( currentSym != '\0');
-
-    numOfBytes = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + sizeof(L"\\Versions");
-    classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, numOfBytes, WDFLDR_TAG);
-
+    classNameLength = wcslen(ClassBindInfo->ClassName);
+    bufferSize = (classNameLength * sizeof(WCHAR)) + sizeof(L"\\Versions");
+    
+    classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, bufferSize, WDFLDR_TAG);
     if (classVersions.Buffer == NULL)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
-        goto clean;
+        goto cleanup;
     }
         
-    classVersions.MaximumLength = (USHORT)numOfBytes;
-    status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", pClassBindInfo->ClassName);
+    classVersions.MaximumLength = (USHORT)bufferSize;
+    status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", ClassBindInfo->ClassName);
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("RtlUnicodeStringPrintf failed, status 0x%08X\n", status));
+        goto cleanup;
+    }
+
+    InitializeObjectAttributes(&objectAttributes,
+                               &classVersions,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               rootHandle,
+                               NULL);
     
-    if (!NT_SUCCESS(status))
-    {
-        __DBGPRINT(("RtlUnicodeStringPrintf status 0x%08x\n", status));
-        goto clean;
-    }
-
-    InitializeObjectAttributes(&objectAttributes, &classVersions, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, rootHandle, NULL);
     status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &objectAttributes);
-
     if (!NT_SUCCESS(status))
     {
-        __DBGPRINT(("ZwOpenKey status 0x%08X\n", status));
-        goto clean;
+        __DBGPRINT(("ZwOpenKey failed for class versions, status 0x%08X\n", status));
+        goto cleanup;
     }
 
-    status = RtlIntegerToUnicodeString(pClassBindInfo->Version.Major, 10, &versionString);
+    status = RtlIntegerToUnicodeString(ClassBindInfo->Version.Major, 10, &versionString);
     if (!NT_SUCCESS(status))
     {
-        __DBGPRINT(("ConvertUlongToWString status 0x%08X\n", status));
-        goto clean;
+        __DBGPRINT(("RtlIntegerToUnicodeString failed for class version, status 0x%08X\n", status));
+        goto cleanup;
     }
 
-    InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionsHandle, NULL);
+    InitializeObjectAttributes(&objectAttributes,
+                               &versionString,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               classVersionsHandle,
+                               NULL);
+    
     status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &objectAttributes);
-
-    if (NT_SUCCESS(status))
+    if (!NT_SUCCESS(status))
     {
-        status = RtlIntegerToUnicodeString(pBindInfo->Version.Major, 10, &versionString);
-        if (NT_SUCCESS(status))
-        {
-            InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionHandle, NULL);
-            status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
-        }
+        __DBGPRINT(("ZwOpenKey failed for class version, status 0x%08X\n", status));
+        goto cleanup;
     }
 
-clean:
-    if (rootHandle)
-        ZwClose(rootHandle);
+    status = RtlIntegerToUnicodeString(BindInfo->Version.Major, 10, &versionString);
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("RtlIntegerToUnicodeString failed for bind version, status 0x%08X\n", status));
+        goto cleanup;
+    }
+
+    InitializeObjectAttributes(&objectAttributes,
+                               &versionString,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               classVersionHandle,
+                               NULL);
+    
+    status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ZwOpenKey failed for bind version, status 0x%08X\n", status));
+        goto cleanup;
+    }
+
+cleanup:
+    if (classVersionHandle)
+        ZwClose(classVersionHandle);
     if (classVersionsHandle)
         ZwClose(classVersionsHandle);
-    if (KeyHandle)
-        ZwClose(KeyHandle);
+    if (rootHandle)
+        ZwClose(rootHandle);
 
     if (classVersions.Buffer)
     {
         ExFreePoolWithTag(classVersions.Buffer, WDFLDR_TAG);
-        classVersions.Length = 0;
-        classVersions.Buffer = NULL;
     }
 
     return status;
@@ -338,29 +350,25 @@ GetDefaultClassServiceName(
     _In_ PWDF_BIND_INFO BindInfo,
     _Out_ PUNICODE_STRING ServiceName)
 {
-    PWCHAR pClassName;
-    PWCHAR pClassNameBegin;
-    WCHAR currentSymbol;
-    SIZE_T size;
+    SIZE_T classNameLength;
+    SIZE_T bufferSize;
     NTSTATUS status;
 
-    pClassName = ClassBindInfo->ClassName;
-    pClassNameBegin = pClassName;
-    do
-    {
-        currentSymbol = *pClassName;
-        ++pClassName;
-    } while (currentSymbol);
-
-    size = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + 148;
-    ServiceName->Buffer = ExAllocatePoolWithTag(PagedPool, size, WDFLDR_TAG);
-
+    /* 
+     * version numbers are 2 digits each (4 chars)
+     */
+    classNameLength = wcslen(ClassBindInfo->ClassName);
+    bufferSize = (classNameLength * sizeof(WCHAR)) + 
+                 (sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") + 
+                  (4 * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
+    
+    ServiceName->Buffer = ExAllocatePoolWithTag(PagedPool, bufferSize, WDFLDR_TAG);
     if (ServiceName->Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    ServiceName->MaximumLength = (USHORT)size;
+    ServiceName->MaximumLength = (USHORT)bufferSize;
     status = RtlUnicodeStringPrintf(
         ServiceName,
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\%ws%02d%02d",
@@ -371,8 +379,6 @@ GetDefaultClassServiceName(
     if (!NT_SUCCESS(status))
     {
         ExFreePoolWithTag(ServiceName->Buffer, WDFLDR_TAG);
-        ServiceName->Length = 0;
-        ServiceName->Buffer = NULL;
     }
 
     return status;
@@ -512,7 +518,6 @@ ReferenceClassVersion(
     {
                
         status = ZwLoadDriver(&driverServiceName);
-        
         if (!NT_SUCCESS(status))
         {
 
@@ -546,11 +551,8 @@ ReferenceClassVersion(
     }
 
 clean:
-    // Only cleanup on failure
     if (pClassModule && InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1) == 1)
-    {
         ClassCleanupAndFree(pClassModule);
-    }
 
 exit_success:
 
@@ -656,7 +658,6 @@ LibraryUnloadClasses(
     PCLASS_MODULE pClassModule;
     LIST_ENTRY removedList;
 
-    
     InitializeListHead(&removedList);
     classListHead = &LibModule->ClassListHead;
 
@@ -672,14 +673,12 @@ LibraryUnloadClasses(
         InsertTailList(&removedList, entry);
     } while (!IsListEmpty(classListHead));
 
-    for(;;)
+    for (;;)
     {
         classListHead = removedList.Flink;
 
         if (IsListEmpty(&removedList))
-        {
             break;
-        }
 
         RemoveHeadList(&removedList);
         InitializeListHead(classListHead);
@@ -761,7 +760,6 @@ ClassUnlinkClient(
         entry = entry->Flink)
     {
         client = CONTAINING_RECORD(entry, CLASS_CLIENT_MODULE, ClassLinkage);
-
         if (CONTAINING_RECORD(entry, CLASS_CLIENT_MODULE, ClassLinkage)->ClientClassBindInfo == ClassBindInfo)
         {
             isUnlinked = TRUE;
@@ -800,7 +798,6 @@ ClassReleaseClientReference(
     int refs;
     
     __DBGPRINT(("Dereference module %wZ\n", &ClassModule->Service));
-
     refs = InterlockedDecrement(&ClassModule->ClientRefCount);
 
     if (refs <= 0)

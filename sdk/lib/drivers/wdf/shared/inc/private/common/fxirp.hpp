@@ -705,7 +705,7 @@ private:
 
     static
     NTSTATUS
-    STDCALL
+    NTAPI
     _IrpSynchronousCompletion(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp,
