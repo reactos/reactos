@@ -12,9 +12,7 @@
 #include <specstrings.h>
 #include <objbase.h>
 #include <shtypes.h>
-#ifdef _WIN32
 #include <pshpack8.h>
-#endif // _WIN32
 
 #ifndef WINSHLWAPI
 #ifndef _SHLWAPI_
@@ -184,6 +182,10 @@ LWSTDAPI SHReleaseThreadRef(void);
 LWSTDAPI_(BOOL) IsInternetESCEnabled(void);
 #endif // (_WIN32_IE >= 0x0602)
 
+/* According to Geoff Chappell, SHAllocShared, SHFreeShared, SHLockShared, and SHUnlockShared 
+ * were available in shlwapi.dll starting with IE40. However, Microsoft didn't expose them
+ * in their public shlwapi header until IE60SP2.
+ */
 #if (_WIN32_IE >= _WIN32_IE_IE60SP2)
 LWSTDAPI_(HANDLE) SHAllocShared(_In_opt_ const void *pvData, _In_ DWORD dwSize, _In_ DWORD dwDestinationProcessId);
 LWSTDAPI_(BOOL)   SHFreeShared(_In_ HANDLE hData, _In_ DWORD dwProcessId);
@@ -1272,9 +1274,7 @@ LWSTDAPI StrFormatByteSizeEx(ULONGLONG ull, SFBS_FLAGS flags, _Out_writes_(cchBu
 }
 #endif // __cplusplus
 
-#ifdef _WIN32
 #include <poppack.h>
-#endif // _WIN32
 
 #endif // NOSHLWAPI
 #endif // _INC_SHLWAPI
