@@ -7,7 +7,6 @@
  *              Copyright 2024 Justin Miller <justin.miller@reactos.org>
  */
 
-
 #include "wdfloader.h"
 
 VOID
@@ -89,14 +88,10 @@ ClassCreate(
     PCLASS_MODULE pNewClassModule;
     NTSTATUS status;
 
-    pNewClassModule = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_MODULE), WDFLDR_TAG);
-
+    pNewClassModule = ExAllocatePoolZero(NonPagedPool, sizeof(*pNewClassModule), WDFLDR_TAG);
     if (pNewClassModule == NULL)
-    {
         return NULL;
-    }
 
-    RtlZeroMemory(pNewClassModule, sizeof(CLASS_MODULE));
     if (ClassLibInfo != NULL)
     {
         pNewClassModule->ImplicitlyLoaded = TRUE;
@@ -111,15 +106,13 @@ ClassCreate(
     ExInitializeResourceLite(&pNewClassModule->ClientsListLock);
     InitializeListHead(&pNewClassModule->ClientsListHead);
     InitializeListHead(&pNewClassModule->LibraryLinkage);
-    pNewClassModule->Service.Buffer = ExAllocatePoolWithTag(PagedPool, ServiceName->MaximumLength, WDFLDR_TAG);
 
+    pNewClassModule->Service.Buffer = ExAllocatePoolZero(PagedPool, ServiceName->MaximumLength, WDFLDR_TAG);
     if (pNewClassModule->Service.Buffer == NULL)
     {
         goto clean;
     }
-
     pNewClassModule->Service.MaximumLength = ServiceName->MaximumLength;
-    RtlZeroMemory(pNewClassModule->Service.Buffer, pNewClassModule->Service.MaximumLength);
     RtlCopyUnicodeString(&pNewClassModule->Service, ServiceName);
     status = GetImageName(ServiceName, &pNewClassModule->ImageName);
 
@@ -153,11 +146,9 @@ ClassClientCreate()
 {
     PCLASS_CLIENT_MODULE pNewClassClientModule;
 
-    pNewClassClientModule = ExAllocatePoolWithTag(NonPagedPool, sizeof(CLASS_CLIENT_MODULE), WDFLDR_TAG);
-
+    pNewClassClientModule = ExAllocatePoolZero(NonPagedPool, sizeof(*pNewClassClientModule), WDFLDR_TAG);
     if (pNewClassClientModule != NULL)
     {
-        RtlZeroMemory(pNewClassClientModule, sizeof(CLASS_CLIENT_MODULE));
         InitializeListHead(&pNewClassClientModule->ClassLinkage);
         InitializeListHead(&pNewClassClientModule->ClientLinkage);
     }
@@ -662,27 +653,19 @@ LibraryUnloadClasses(
     classListHead = &LibModule->ClassListHead;
 
     if (IsListEmpty(classListHead))
-    {
         return classListHead;
+
+    while (!IsListEmpty(classListHead))
+    {
+        entry = RemoveHeadList(classListHead);
+        InsertTailList(&removedList, entry);
     }
 
-    do
+    while (!IsListEmpty(&removedList))
     {
-        entry = classListHead->Flink;
-        RemoveHeadList(classListHead);
-        InsertTailList(&removedList, entry);
-    } while (!IsListEmpty(classListHead));
-
-    for (;;)
-    {
-        classListHead = removedList.Flink;
-
-        if (IsListEmpty(&removedList))
-            break;
-
-        RemoveHeadList(&removedList);
-        InitializeListHead(classListHead);
-        pClassModule = CONTAINING_RECORD(classListHead, CLASS_MODULE, LibraryLinkage);
+        entry = RemoveHeadList(&removedList);
+        InitializeListHead(entry);
+        pClassModule = CONTAINING_RECORD(entry, CLASS_MODULE, LibraryLinkage);
             
         __DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
 
@@ -807,8 +790,7 @@ ClassReleaseClientReference(
     else
     {
         __DBGPRINT(("Dereference module %wZ still has %d references\n",
-            &ClassModule->Service,
-            refs));
+                   &ClassModule->Service, refs));
     }
 }
 

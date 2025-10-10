@@ -196,7 +196,7 @@ PoCreatePowerRequest(
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 /******************************************************************************
- *                     PoFx Functions                     *
+ *                               PoFx Functions                               *
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
