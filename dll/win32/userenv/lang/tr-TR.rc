@@ -13,27 +13,3 @@ BEGIN
     RTEXT "Time remaining:", IDC_TIMEOUTSTATIC, 172, 80, 54, 8
     LTEXT "", IDC_TIMEOUT, 230, 80, 12, 8
 END
-
-/* See also: dll/win32/shell32/lang */
-STRINGTABLE
-BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Belgeler ve Ayarlar"
-    IDS_APPDATA "Uygulama Verileri"
-    IDS_DESKTOP "Masaüstü"
-    IDS_FAVORITES "Yer İmleri"
-    IDS_MYDOCUMENTS "Belgelerim"
-    IDS_NETHOOD "Ağ Komşuları"
-    IDS_PRINTHOOD "Yazıcılar"
-    IDS_RECENT "En Son"
-    IDS_SENDTO "Gönder"
-    IDS_TEMPLATES "Şablonlar"
-    IDS_STARTMENU "Başlat Menüsü"
-    IDS_PROGRAMS "Başlat Menüsü\\Programlar"
-    IDS_STARTUP "Başlat Menüsü\\Programlar\\Başlangıç"
-    IDS_LOCALSETTINGS "Yerel Ayarlar"
-    IDS_LOCALAPPDATA "Yerel Ayarlar\\Uygulama Verileri"
-    IDS_TEMP "Yerel Ayarlar\\Geçici Dosyalar" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Yerel Ayarlar\\Geçici İnternet Dosyaları"
-    IDS_HISTORY "Yerel Ayarlar\\Geçmiş"
-    IDS_COOKIES "Tanımlama Bilgileri"
-END
