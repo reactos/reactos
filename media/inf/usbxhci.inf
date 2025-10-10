@@ -1,0 +1,97 @@
+; Installation file for USBXHCI
+
+[Version]
+signature="$Windows NT$"
+Class=USB
+ClassGUID={36FC9E60-C465-11CF-8056-444553540000}
+Provider=%ReactOS%
+DriverVer=02/15/2026,1.0
+
+[SourceDisksFiles]
+usbxhci.sys  = 3426
+ucx01000.sys      = 3426
+
+[ControlFlags]
+BasicDriverOk = *
+ExcludeFromSelect = *
+
+[DestinationDirs]
+DefaultDestDir    = 12
+USBXHCI.Copyfiles = 12
+
+[Manufacturer]
+%Generic.Mfg%=Generic
+
+;
+; ---------------------- xHCI Controllers ----------------------
+;
+
+[Generic]
+%PCI\CC_0C0330.DeviceDesc%=Generic.Install,PCI\CC_0C0330
+%ACPI\PNP0D10.DeviceDesc%=Generic.Install,ACPI\PNP0D10
+
+[Generic.Install.NT]
+CopyFiles=Generic.CopyFiles
+AddProperty=Generic.AddProperty
+ExcludeID=PCI\VEN_1B73&DEV_1000&CC_0C0330
+ExcludeID=PCI\VEN_1B73&DEV_1400&CC_0C0330
+
+[Generic.Install.NT.HW]
+AddReg=Generic_AddReg.HW
+Include=machine.inf
+Needs=PciD3ColdSupported
+
+[Generic_AddReg.HW]
+HKR, Interrupt Management,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties,, 0x00000010
+HKR, Interrupt Management\MessageSignaledInterruptProperties, MSISupported, 0x00010001, 1
+
+[Generic.Install.NT.Services]
+AddService=USBXHCI, 2, Generic.AddService
+AddService=UCX01000,,UCX.AddService
+
+[Generic.AddService]
+DisplayName   = %PCI\CC_0C0330.DeviceDesc%
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\USBXHCI.SYS
+AddReg        = USBXHCI.AddReg
+
+[USBXHCI.AddReg]
+HKR,, BootFlags,  0x00010001, 16 ; CM_SERVICE_USB3_DISK_BOOT_LOAD
+
+[Generic.CopyFiles]
+UCX01000.SYS
+USBXHCI.SYS
+
+[Generic.AddProperty]
+; DEVPKEY_Device_DebuggerSafe, DEVPROP_TYPE_UINT32
+{a45c254e-df1c-4efd-8020-67d146a850e0},39,7,,1
+
+[UCX.AddService]
+DisplayName    = "USB Controller Extension"
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\ucx01000.sys
+LoadOrderGroup = Base
+AddReg         = UCX.AddService.AddReg
+
+[UCX.AddService.AddReg]
+HKLM,System\CurrentControlSet\Control\Wdf\Kmdf\Ucx\Versions\1\1,Service,,ucx01000
+HKR,, BootFlags,  0x00010001, 16 ;CM_SERVICE_USB3_DISK_BOOT_LOAD
+
+;
+; --------------------------- Strings --------------------------
+;
+
+[Strings]
+;Non-Localizable
+ReactOS = "ReactOS"
+
+;Localizable
+Generic.Mfg = "Generic USB xHCI Host Controller"
+PCI\CC_0C0330.DeviceDesc="USB xHCI Compliant Host Controller"
+ACPI\PNP0D10.DeviceDesc="USB xHCI Compliant Host Controller"
+
