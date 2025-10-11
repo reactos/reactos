@@ -195,3 +195,89 @@ PoCreatePowerRequest(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+/******************************************************************************
+ *                     PoFx Functions                     *
+ ******************************************************************************/
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTKRNLVISTAAPI
+NTSTATUS
+NTAPI
+PoFxRegisterDevice(
+    _In_ PDEVICE_OBJECT Pdo,
+    _In_ PPO_FX_DEVICE Device,
+    _Out_ POHANDLE *Handle);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxUnregisterDevice(
+    _In_ POHANDLE Handle);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxStartDevicePowerManagement(
+    _In_ POHANDLE Handle);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxActivateComponent(
+    _In_ POHANDLE Handle,
+    _In_ ULONG Component,
+    _In_ ULONG Flags);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxCompleteDevicePowerNotRequired(
+    _In_ POHANDLE Handle);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxIdleComponent(
+    _In_ POHANDLE Handle,
+    _In_ ULONG Component,
+    _In_ ULONG Flags);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxCompleteIdleCondition(
+    _In_ POHANDLE Handle,
+    _In_ ULONG Component);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxCompleteIdleState(
+    _In_ POHANDLE Handle,
+    _In_ ULONG Component);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxSetDeviceIdleTimeout(
+    _In_ POHANDLE Handle,
+    _In_ ULONGLONG IdleTimeout);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoFxReportDevicePoweredOn(
+    _In_ POHANDLE Handle);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */

@@ -63,7 +63,7 @@ extern "C" {
 #include "fxtypedefskm.hpp"
 
 // #include "fxwmicompat.h"
-// #include "fxtrace.h"
+#include "fxtrace.h"
 #if defined(EVENT_TRACING)
 #include "fxwmicompat.h"
 #include "fxtrace.h"
