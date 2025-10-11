@@ -45,6 +45,7 @@ CopyQueryInterfaceToIrpStack(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 GetStackCapabilities(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,
@@ -169,6 +170,7 @@ Done:
 }
 
 VOID
+NTAPI
 SetD3ColdSupport(
     __in PFX_DRIVER_GLOBALS DriverGlobals,
     __in MxDeviceObject* DeviceInStack,
@@ -200,11 +202,7 @@ Return value:
     Pointer to the object that can be passed in to IoAllocateWorkItem
 --*/
 {
-    // return (PVOID) FxLibraryGlobals.DriverObject;
-    // __REACTOS__ : we don't have a WDF driver object here, use a child one
-
-    PFX_DRIVER_GLOBALS fxDriverGlobals = GetFxDriverGlobals(WdfDriverGlobals);
-    return fxDriverGlobals->Driver->GetDriverObject();
+    return (PVOID) FxLibraryGlobals.DriverObject;
 }
 
 BOOLEAN
@@ -217,6 +215,7 @@ IdleTimeoutManagement::_SystemManagedIdleTimeoutAvailable(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 SendDeviceUsageNotification(
     __in MxDeviceObject* RelatedDevice,
     __inout FxIrp* RelatedIrp,
@@ -295,7 +294,7 @@ SendDeviceUsageNotificationWorker(
 }
 
 VOID
-STDCALL
+NTAPI
 _DeviceUsageNotificationWorkItem(
     __in MdDeviceObject DeviceObject,
     __in PVOID Context

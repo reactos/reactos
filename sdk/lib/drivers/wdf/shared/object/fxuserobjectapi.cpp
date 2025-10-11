@@ -39,7 +39,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfObjectCreate)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,

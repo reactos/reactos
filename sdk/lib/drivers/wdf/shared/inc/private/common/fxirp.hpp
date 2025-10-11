@@ -27,6 +27,7 @@ Revision History:
 
 class FxIrp {
 
+    friend VOID GetTriageInfo(VOID);
     friend struct FxAutoIrp;
 
 private:
@@ -704,7 +705,7 @@ private:
 
     static
     NTSTATUS
-    STDCALL
+    NTAPI
     _IrpSynchronousCompletion(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp,

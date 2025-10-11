@@ -29,7 +29,7 @@ Revision History:
 #endif
 
 #ifdef __REACTOS__
-# ifndef STDCALL
-#  define STDCALL __stdcall
+# ifndef NTAPI
+#  define NTAPI __stdcall
 # endif
 #endif

@@ -36,7 +36,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoAddStaticChild)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -122,7 +122,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoLockStaticChildListForIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -181,7 +181,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoRetrieveNextStaticChild)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -259,7 +259,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoUnlockStaticChildListFromIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -315,7 +315,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoQueryForInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -410,7 +410,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFCHILDLIST
-STDCALL
+NTAPI
 WDFEXPORT(WdfFdoGetDefaultChildList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
