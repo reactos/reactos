@@ -307,6 +307,96 @@ DeleteContext(
 }
 
 
+static
+int
+DumpCompare(
+    _In_ const void *p1,
+    _In_ const void *p2)
+{
+    return ((PCONTEXT_ENTRY)p1)->ulPriority - ((PCONTEXT_ENTRY)p2)->ulPriority;
+}
+
+
+static
+DWORD
+DumpContext(
+    _In_ PCONTEXT_ENTRY pContext,
+    _In_ LPCWSTR pwszMachine,
+    _In_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwArgCount,
+    _In_ LPCVOID pvData)
+{
+    PCONTEXT_ENTRY pSubContext, *pSortArray = NULL;
+    DWORD dwCount, dwIndex;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("DumpContext()\n");
+
+    if (pContext->pfnDumpFn)
+    {
+        dwError = pContext->pfnDumpFn(pwszMachine,
+                                      ppwcArguments,
+                                      dwArgCount,
+                                      pvData);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("Dump function failed (Error %lu)\n", dwError);
+            return dwError;
+        }
+    }
+
+    if (pContext->pSubContextHead == NULL)
+        return dwError;
+
+    /* Count the sub-contexts */
+    dwCount = 0;
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext)
+    {
+        dwCount++;
+        pSubContext = pSubContext->pNext;
+    }
+
+    /* Allocate the sort array */
+    pSortArray = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(PCONTEXT_ENTRY));
+    if (pSortArray == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    /* Fill the sort array */
+    dwIndex = 0;
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext)
+    {
+        pSortArray[dwIndex] = pSubContext;
+        dwIndex++;
+        pSubContext = pSubContext->pNext;
+    }
+
+    /* Sort the array */
+    qsort(pSortArray, dwCount, sizeof(PCONTEXT_ENTRY), DumpCompare);
+
+    /* Dump the sub-contexts */
+    for (dwIndex = 0; dwIndex < dwCount; dwIndex++)
+    {
+        dwError = DumpContext(pSortArray[dwIndex],
+                              pwszMachine,
+                              ppwcArguments,
+                              dwArgCount,
+                              pvData);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("Dump function failed (Error %lu)\n", dwError);
+            break;
+        }
+    }
+
+    /* Free the sort array */
+    HeapFree(GetProcessHeap(), 0, pSortArray);
+
+    return dwError;
+}
+
+
 DWORD
 WINAPI
 UpCommand(
@@ -322,6 +412,27 @@ UpCommand(
         pCurrentContext = pCurrentContext->pParentContext;
 
     return ERROR_SUCCESS;
+}
+
+
+DWORD
+WINAPI
+DumpCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *ppwcArguments,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone)
+{
+    DPRINT("DumpCommand()\n");
+
+    return DumpContext(pCurrentContext,
+                       pwszMachine,
+                       ppwcArguments,
+                       dwArgCount,
+                       pvData);
 }
 
 
@@ -464,11 +575,12 @@ CreateRootContext(VOID)
     pRootContext->hModule = GetModuleHandle(NULL);
 
     AddContextCommand(pRootContext, L"..",    UpCommand,    IDS_HLP_UP,    IDS_HLP_UP_EX, 0);
-    AddContextCommand(pRootContext, L"?",     NULL,         IDS_HLP_HELP, IDS_HLP_HELP_EX, 0);
+    AddContextCommand(pRootContext, L"?",     NULL,         IDS_HLP_HELP,  IDS_HLP_HELP_EX, 0);
     AddContextCommand(pRootContext, L"bye",   ExitCommand,  IDS_HLP_EXIT,  IDS_HLP_EXIT_EX, 0);
+    AddContextCommand(pRootContext, L"dump",  DumpCommand,  IDS_HLP_DUMP,  IDS_HLP_DUMP_EX, 0);
     AddContextCommand(pRootContext, L"exec",  ExecCommand,  IDS_HLP_EXEC,  IDS_HLP_EXEC_EX, 0);
     AddContextCommand(pRootContext, L"exit",  ExitCommand,  IDS_HLP_EXIT,  IDS_HLP_EXIT_EX, 0);
-    AddContextCommand(pRootContext, L"help",  NULL,         IDS_HLP_HELP, IDS_HLP_HELP_EX, 0);
+    AddContextCommand(pRootContext, L"help",  NULL,         IDS_HLP_HELP,  IDS_HLP_HELP_EX, 0);
     AddContextCommand(pRootContext, L"popd",  PopdCommand,  IDS_HLP_POPD,  IDS_HLP_POPD_EX, 0);
     AddContextCommand(pRootContext, L"pushd", PushdCommand, IDS_HLP_PUSHD, IDS_HLP_PUSHD_EX, 0);
     AddContextCommand(pRootContext, L"quit",  ExitCommand,  IDS_HLP_EXIT,  IDS_HLP_EXIT_EX, 0);
@@ -582,6 +694,9 @@ RegisterContext(
     pContext = AddContext(pParentContext, pChildContext->pwszContext, (GUID*)&pChildContext->guidHelper);
     if (pContext != NULL)
     {
+        pContext->pfnDumpFn = pChildContext->pfnDumpFn;
+        pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ? pChildContext->ulPriority : 100;
+
         if ((pHelper != NULL) && (pHelper->pDllEntry != NULL))
         {
             pContext->hModule = pHelper->pDllEntry->hModule;

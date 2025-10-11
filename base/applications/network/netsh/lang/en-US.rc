@@ -37,6 +37,9 @@ BEGIN
     IDS_HLP_PUSHD_EX       "Syntax: pushd\n\n        Stores the current context on the stack.\n\n"
     IDS_HLP_EXEC           "Runs a script file.\n"
     IDS_HLP_EXEC_EX        "Syntax: exec <ScriptFile>\n\n        Loads the script file and runs it.\n\n"
+    IDS_HLP_DUMP           "Displays a configuration script.\n"
+    IDS_HLP_DUMP_EX        "Syntax: dump\n\n        Creates a script that contains the current configuration. If saved to a\n\
+        file, the script can be used to altered configuration settings.\n\n"
 
     IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
     IDS_HLP_ADD_HELPER_EX  "Syntax: add helper <dll file name>\n\n        Installs the specified helper DLL in netsh.\n\n"

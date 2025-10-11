@@ -33,6 +33,8 @@
 #define IDS_HLP_PUSHD_EX         309
 #define IDS_HLP_EXEC             310
 #define IDS_HLP_EXEC_EX          311
+#define IDS_HLP_DUMP             312
+#define IDS_HLP_DUMP_EX          313
 
 #define IDS_HLP_ADD_HELPER       320
 #define IDS_HLP_ADD_HELPER_EX    321
