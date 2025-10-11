@@ -695,7 +695,8 @@ RegisterContext(
     if (pContext != NULL)
     {
         pContext->pfnDumpFn = pChildContext->pfnDumpFn;
-        pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ? pChildContext->ulPriority : 100;
+        pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ?
+                               pChildContext->ulPriority : DEFAULT_CONTEXT_PRIORITY;
 
         if ((pHelper != NULL) && (pHelper->pDllEntry != NULL))
         {

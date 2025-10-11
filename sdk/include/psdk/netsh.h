@@ -48,6 +48,17 @@ enum NS_CMD_FLAGS
     CMD_FLAG_PRIORITY    = 0x80000000
 };
 
+enum NS_MODE_CHANGE
+{
+    NETSH_COMMIT       = 0,
+    NETSH_UNCOMMIT     = 1,
+    NETSH_FLUSH        = 2,
+    NETSH_COMMIT_STATE = 3,
+    NETSH_SAVE         = 4
+};
+
+#define DEFAULT_CONTEXT_PRIORITY 100
+
 #define NETSH_ROOT_GUID          {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}}
 
 typedef
