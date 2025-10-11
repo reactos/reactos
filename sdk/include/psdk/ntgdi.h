@@ -85,6 +85,16 @@ typedef struct tagDOWNLOADDESIGNVECTOR
 /* NtGdiResetDC */
 typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;
 
+typedef struct _FONT_FILE_INFO {
+    DWORD dwVersion;
+    DWORD dwSize;
+    DWORD dwType;
+    DWORD dwChecksum;
+    WCHAR szFaceName[LF_FACESIZE];
+    WCHAR szFileName[MAX_PATH];
+    DWORD dwFlags;
+} FONT_FILE_INFO, *PFONT_FILE_INFO;
+
 #if 0
 typedef struct _HLSURF_INFORMATION_PROBE {
     union {
