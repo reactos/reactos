@@ -132,6 +132,8 @@ UefiDiskGetFileInformation(ULONG FileId, FILEINFORMATION *Information)
     Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
     Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
+    Information->Type = DiskPeripheral; /* No floppy for you for now... */
+
     return ESUCCESS;
 }
 
@@ -491,8 +493,6 @@ UefiSetBootpath(VOID)
 BOOLEAN
 UefiInitializeBootDevices(VOID)
 {
-    ULONG i = 0;
-
     DiskReadBufferSize = EFI_PAGE_SIZE;
     DiskReadBuffer = MmAllocateMemoryWithType(DiskReadBufferSize, LoaderFirmwareTemporary);
     UefiSetupBlockDevices();
@@ -506,6 +506,7 @@ UefiInitializeBootDevices(VOID)
         PULONG Buffer;
         ULONG Checksum = 0;
         ULONG Signature;
+        ULONG i;
 
         /* Read the MBR */
         if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, DiskReadBuffer))

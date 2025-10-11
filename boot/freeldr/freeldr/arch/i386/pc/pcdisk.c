@@ -398,6 +398,18 @@ DiskGetExtendedDriveParameters(
     return TRUE;
 }
 
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber)
+{
+    if ((DriveNumber == FrldrBootDrive)/* && DiskIsDriveRemovable(DriveNumber) */ && (FrldrBootPartition == 0xFF))
+        return CdromController; /* This is our El Torito boot CD-ROM */
+    else if (DiskIsDriveRemovable(DriveNumber))
+        return FloppyDiskPeripheral;
+    else
+        return DiskPeripheral;
+}
+
 static BOOLEAN
 InitDriveGeometry(
     IN UCHAR DriveNumber,
