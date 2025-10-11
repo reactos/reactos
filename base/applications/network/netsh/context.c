@@ -339,7 +339,7 @@ ExecCommand(
     DPRINT("ExecCommand()\n");
 
     if (dwArgCount - dwCurrentIndex != 1)
-        return ERROR_INVALID_SYNTAX;
+        return ERROR_SHOW_USAGE;
 
     return RunScript(argv[dwCurrentIndex]);
 }

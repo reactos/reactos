@@ -208,7 +208,10 @@ InterpretCommand(
                     dwError = pCommand->pfnCmdHandler(NULL, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
                     if (dwError != ERROR_SUCCESS)
                     {
-                        ConPrintf(StdOut, L"Commnand: %S  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
+                        if (dwError == ERROR_SHOW_USAGE)
+                            PrintCommandHelp(pTempContext, pCommand);
+                        else
+                            ConPrintf(StdOut, L"Commnand: %S  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
                     }
                 }
 
