@@ -940,7 +940,7 @@ GetAdaptersAddresses(
                         UnicastAddress->Address.iSockaddrLength = sizeof(SOCKADDR);
                         UnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
                         ((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_port = 0;
-                        memcpy(&((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_addr, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
+                        ((LPSOCKADDR_IN)UnicastAddress->Address.lpSockaddr)->sin_addr.S_un.S_addr = AddrEntries[j].iae_addr;
 
                         CurrentAA->FirstUnicastAddress = UnicastAddress;
                         Ptr += Size;
@@ -968,7 +968,7 @@ GetAdaptersAddresses(
                         Prefix->Address.iSockaddrLength = sizeof(SOCKADDR);
                         Prefix->Address.lpSockaddr->sa_family = AF_INET;
                         ((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_port = 0;
-                        memcpy(&((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_addr, &AddrEntries[j].iae_addr, sizeof(AddrEntries[j].iae_addr));
+                        ((LPSOCKADDR_IN)Prefix->Address.lpSockaddr)->sin_addr.S_un.S_addr = AddrEntries[j].iae_addr & AddrEntries[j].iae_mask;
 
                         /* Compute the prefix size */
                         Prefix->PrefixLength = CountPrefixBits(AddrEntries[j].iae_mask);
