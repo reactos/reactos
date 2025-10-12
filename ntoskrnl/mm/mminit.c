@@ -43,12 +43,6 @@ NTAPI
 MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
 {
     const ULONG Protection = Executable ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
-    // PVOID pBaseAddress = BaseAddress;
-    /*
-        MmCreateMemoryArea is allowed to change the value pointed to by &pBaseAddress (it’s an in-out parameter).
-        Because we gave it the address of the local copy, the caller never sees the updated address; the original BaseAddress argument is left untouched.
-        If the memory manager ever rounds down or re-bases the requested range, that new base is lost the moment the function returns.
-    */
     PMEMORY_AREA MArea;
     NTSTATUS Status;
 
