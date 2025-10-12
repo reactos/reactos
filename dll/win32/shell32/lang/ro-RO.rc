@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2011-2019 ştefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2025 Copyright 2022-2025 Andrei-Valentin Miloiu <miloiuandrei@gmail.com> <miloiuandrei@gmail.com>
+ * TRANSLATORS: Copyright 2011-2019 Ştefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2025 Andrei-Valentin Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -865,9 +865,10 @@ BEGIN
     IDS_NO_FORMAT "Imposibil de formatat acest volum! Conţine fişiere de sistem importante care fac ReactOS să funcţioneze."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Imposibil de 'Executare fişier' (eroare internă)"
-    IDS_RUNDLG_BROWSE_ERROR "Imposibil de 'Răsfoire fişiere' (eroare internă)"
-    IDS_RUNDLG_BROWSE_CAPTION "Răsfoire fişiere"
+    IDS_RUNDLG_ERROR "Imposibil de afișat caseta de dialog Executare fişiere (eroare internă)"
+    IDS_RUNDLG_BROWSE_ERROR " */
+    IDS_RUNDLG_ERROR "Imposibil de afișat caseta de dialog Răsfoire (eroare internă)"
+    IDS_RUNDLG_BROWSE_CAPTION "Răsfoire"
     IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Orice fişier (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
@@ -887,7 +888,7 @@ BEGIN
     IDS_MYVIDEO "Video"
     IDS_DESKTOPDIRECTORY "Desktop"
     IDS_NETHOOD "Rețele"
-    IDS_TEMPLATES "şabloane"
+    IDS_TEMPLATES "Şabloane"
     IDS_APPDATA "Date de aplicație"
     IDS_PRINTHOOD "Imprimante"
     IDS_LOCAL_APPDATA "Preferințe locale\\Date de aplicație"
@@ -1023,10 +1024,10 @@ BEGIN
     IDS_ADVANCED_FOLDER "Fişiere şi foldere"
     IDS_ADVANCED_NET_CRAWLER "Căutare automată foldere şi imprimante în reţea"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Se afişează informaţii privind dimensiunea fişierului în sfaturile pentru folder"
-    IDS_ADVANCED_FRIENDLY_TREE "Afişare vizualizare simplă pentru folder în lista de foldere Explorer"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afişare conţinut foldere de sistem"
+    IDS_ADVANCED_FRIENDLY_TREE "Se afişează vizualizare simplă pentru folder în lista de foldere Explorer"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Se afişează conţinutul folderelor de sistem"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Se afişează calea completă în bara de adrese"
-    IDS_ADVANCED_SHOW_FULL_PATH "Afişare cale completă în bara de titlu"
+    IDS_ADVANCED_SHOW_FULL_PATH "Se afişează calea completă în bara de titlu"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Nu se păstrează în cache miniaturile"
     IDS_ADVANCED_HIDDEN "Fişiere şi foldere ascunse"
     IDS_ADVANCED_DONT_SHOW_HIDDEN "Nu se afişează fişierele şi folderele ascunse"
