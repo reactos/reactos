@@ -204,8 +204,9 @@ GetSuppressNewUIValue(VOID)
 BOOL
 RunningOnLiveMedium(VOID)
 {
-    WCHAR CommandLine[MAX_PATH];
-    HKEY hSetupKey;
+    WCHAR Options[MAX_PATH];
+    PWSTR CurrentOption, NextOption;
+    HKEY hControlKey;
     DWORD dwType;
     DWORD dwSize;
     DWORD dwError;
@@ -215,36 +216,42 @@ RunningOnLiveMedium(VOID)
 
     /* Open the Setup key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            L"SYSTEM\\Setup",
+                            L"SYSTEM\\CurrentControlSet\\Control",
                             0,
                             KEY_QUERY_VALUE,
-                            &hSetupKey);
+                            &hControlKey);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
     /* Read the CmdLine value */
-    dwSize = sizeof(CommandLine);
-    dwError = RegQueryValueExW(hSetupKey,
-                               L"CmdLine",
+    dwSize = sizeof(Options);
+    dwError = RegQueryValueExW(hControlKey,
+                               L"SystemStartOptions",
                                NULL,
                                &dwType,
-                               (LPBYTE)CommandLine,
+                               (LPBYTE)Options,
                                &dwSize);
-    if (dwError != ERROR_SUCCESS ||
-        (dwType != REG_SZ &&
-         dwType != REG_EXPAND_SZ &&
-         dwType != REG_MULTI_SZ))
+    if ((dwError != ERROR_SUCCESS) || (dwType != REG_SZ))
         goto done;
 
     /* Check for the '-mini' option */
-    if (wcsstr(CommandLine, L" -mini") != NULL)
+    CurrentOption = Options;
+    while (CurrentOption)
     {
-        DPRINT("Running on LiveMedium\n");
-        LiveMedium = TRUE;
+        NextOption = wcschr(CurrentOption, L' ');
+        if (NextOption)
+            *NextOption = L'\0';
+        if (_wcsicmp(CurrentOption, L"MININT") == 0)
+        {
+            DPRINT("Found 'MININT' boot option\n");
+            LiveMedium = TRUE;
+            goto done;
+        }
+        CurrentOption = NextOption ? NextOption + 1 : NULL;
     }
 
 done:
-    RegCloseKey(hSetupKey);
+    RegCloseKey(hControlKey);
 
     return LiveMedium;
 }
