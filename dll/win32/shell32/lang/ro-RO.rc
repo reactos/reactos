@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ * TRANSLATORS: Copyright 2011-2019 Ştefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2022-2025 Andrei-Valentin Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -11,11 +11,11 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 MENU_001 MENUEX
 BEGIN
     MENUITEM "Dal&e", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Miniaturi", FCIDM_SHVIEW_SMALLICON
-    MENUITEM "&Listare", FCIDM_SHVIEW_LISTVIEW
+    MENUITEM "Pictograme &mici", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "Aranjare &Miniaturi după", FCIDM_SHVIEW_ARRANGE
+    POPUP "Aranjează &pictogramele mici după", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Aranjare automată", FCIDM_SHVIEW_AUTOARRANGE
@@ -31,12 +31,12 @@ BEGIN
         POPUP "&Vizualizare", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Dal&e", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Miniaturi", FCIDM_SHVIEW_SMALLICON
-            MENUITEM "&Listare", FCIDM_SHVIEW_LISTVIEW
+            MENUITEM "Pictograme &mici", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "Aranjare &Miniaturi după", FCIDM_SHVIEW_ARRANGE
+        POPUP "Aranjează &pictogramele mici după", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Aranjare automată", FCIDM_SHVIEW_AUTOARRANGE
@@ -100,7 +100,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "Se&lectare", 0
     END
 END
 
@@ -377,17 +377,17 @@ CAPTION "Executare ca"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
-    LTEXT "Ce cont de utilizator este folosit pentru a executa?", -1, 32, 12, 200, 16
-    AUTORADIOBUTTON "Utilizator curent: %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
-    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
-    AUTORADIOBUTTON "Următorul utilizator:", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "Ce cont de utilizator alegeţi pentru a executa acest program?", -1, 32, 12, 200, 16
+    AUTORADIOBUTTON "Utilizatorul &curent (%s)", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "&Protejează computerul şi datele față de programe neautorizate\n\nAceastă opțiune poate preveni daunele provocate computerului şi datelor personale de către viruşi, dar selectarea acesteia poate cauza funcționarea necorespunzătoare a programului.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "&Acest utilizator:", IDC_RUNAS_OTHER, 7, 110, 226, 10
     LTEXT "Nume utilizator:", -1, 18, 124, 54, 10
     COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
     LTEXT "Parolă:", -1, 18, 142, 53, 10
     EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 129, 161, 50, 14, WS_TABSTOP
-    PUSHBUTTON "A&nulează", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 129, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Revocare", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -865,9 +865,9 @@ BEGIN
     IDS_NO_FORMAT "Imposibil de formatat acest volum! Conţine fişiere de sistem importante care fac ReactOS să funcţioneze."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Imposibil de 'Executare fişier' (eroare internă)"
-    IDS_RUNDLG_BROWSE_ERROR "Imposibil de 'Răsfoire fişiere' (eroare internă)"
-    IDS_RUNDLG_BROWSE_CAPTION "Răsfoire fişiere"
+    IDS_RUNDLG_ERROR "Imposibil de afișat caseta de dialog Executare fişiere (eroare internă)"
+    IDS_RUNDLG_BROWSE_ERROR "Imposibil de afișat caseta de dialog Răsfoire (eroare internă)"
+    IDS_RUNDLG_BROWSE_CAPTION "Răsfoire"
     IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Orice fişier (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
@@ -887,16 +887,16 @@ BEGIN
     IDS_MYVIDEO "Video"
     IDS_DESKTOPDIRECTORY "Desktop"
     IDS_NETHOOD "Rețele"
-    IDS_TEMPLATES "Șabloane"
+    IDS_TEMPLATES "Şabloane"
     IDS_APPDATA "Date de aplicație"
     IDS_PRINTHOOD "Imprimante"
     IDS_LOCAL_APPDATA "Preferințe locale\\Date de aplicație"
-    IDS_INTERNET_CACHE "Preferințe locale\\Fișiere de Internet temporare"
+    IDS_INTERNET_CACHE "Preferințe locale\\Fişiere de Internet temporare"
     IDS_COOKIES "Cookie-uri"
     IDS_HISTORY "Preferințe locale\\Istoric"
-    IDS_PROGRAM_FILES "Fișiere de program"
+    IDS_PROGRAM_FILES "Fişiere de program"
     IDS_MYPICTURES "Imagini"
-    IDS_PROGRAM_FILES_COMMON "Fișiere de program\\Fișiere comune"
+    IDS_PROGRAM_FILES_COMMON "Fişiere de program\\Fişiere comune"
     IDS_COMMON_DOCUMENTS "Documentele mele"
     IDS_ADMINTOOLS "Meniul Pornire\\Programe\\Administrative"
     IDS_COMMON_MUSIC "Documentele mele\\Muzică"
@@ -943,8 +943,8 @@ BEGIN
     IDS_CANTDISCONNECT "Imposibil de deconectat (Cod de eroare: %lu)."
     IDS_NONE "(Nimic)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "Extin&dere"
+    IDS_COLLAPSE "Re&strângere"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
@@ -983,9 +983,9 @@ BEGIN
     IDS_PRINT_VERB "Imprimare"
     IDS_CMD_VERB "Deschidere Panou de control aici"
 
-    IDS_MULTIPLETYPES   "Multiple Types"
-    IDS_VARIOUSFOLDERS  "Various Folders"
-    IDS_FILE_FOLDER "%u fişiere, %u foldere"
+    IDS_MULTIPLETYPES   "Mai multe tipuri"
+    IDS_VARIOUSFOLDERS  "Foldere variate"
+    IDS_FILE_FOLDER "%u (de) fişiere, %u (de) foldere"
 
     IDS_PRINTERS "Imprimante"
     IDS_FONTS "Fonturi"
@@ -1006,14 +1006,14 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descriere:"
 
     IDS_MENU_EMPTY "(Gol)"
-    IDS_OBJECTS "%d Obiecte"
-    IDS_OBJECTS_SELECTED "%d Obiecte selectate"
+    IDS_OBJECTS "%d (de) obiecte"
+    IDS_OBJECTS_SELECTED "%d (de) obiecte selectate"
 
     IDS_SEARCH_BROWSEITEM "Răsfoire..."
 
-    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
-    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Coş de reciclare"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "Coşul de reciclare conține fişierele şterse de pe acest computer. Aceste fişiere nu sunt eliminate definitiv până când nu goliți Coşul de reciclare."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&Vizualizare fişiere"
 
     IDS_TITLE_MYCOMP "Computerul meu"
     IDS_TITLE_MYNET "Locaţii în reţea"
@@ -1021,38 +1021,38 @@ BEGIN
     IDS_TITLE_BIN_0 "Coş de reciclare (gol)"
 
     IDS_ADVANCED_FOLDER "Fişiere şi foldere"
-    IDS_ADVANCED_NET_CRAWLER "Căutare automată foldere şi imprimante în reţea"
+    IDS_ADVANCED_NET_CRAWLER "Se caută în mod automat folderele şi imprimantele în reţea"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Se afişează informaţii privind dimensiunea fişierului în sfaturile pentru folder"
-    IDS_ADVANCED_FRIENDLY_TREE "Afişare vizualizare simplă pentru folder în lista de foldere Explorer"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Afişare conţinut foldere de sistem"
+    IDS_ADVANCED_FRIENDLY_TREE "Se afişează vizualizare simplă pentru folder în lista de foldere Explorer"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Se afişează conţinutul folderelor de sistem"
     IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Se afişează calea completă în bara de adrese"
-    IDS_ADVANCED_SHOW_FULL_PATH "Afişare cale completă în bara de titlu"
+    IDS_ADVANCED_SHOW_FULL_PATH "Se afişează calea completă în bara de titlu"
     IDS_ADVANCED_DISABLE_THUMB_CACHE "Nu se păstrează în cache miniaturile"
     IDS_ADVANCED_HIDDEN "Fişiere şi foldere ascunse"
     IDS_ADVANCED_DONT_SHOW_HIDDEN "Nu se afişează fişierele şi folderele ascunse"
     IDS_ADVANCED_SHOW_HIDDEN "Se afişează fişierele şi folderele ascunse"
     IDS_ADVANCED_HIDE_FILE_EXT "Se ascund extensiile pentru tipurile de fişiere cunoscute"
-    IDS_ADVANCED_SUPER_HIDDEN "Ascundere fişiere protejate ale sistemului de operare (recomandat)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Lansare ferestre foldere într-un proces separat"
+    IDS_ADVANCED_SUPER_HIDDEN "Se ascund fişierele protejate ale sistemului de operare (recomandat)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Se lansează ferestrele de foldere într-un proces separat"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Se rememorează fiecare setare de vizualizare foldere"
     IDS_ADVANCED_PERSIST_BROWSERS "Se restaurează fereastra folderului precedent la deschiderea sesiunii"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afişare Panou de control în Computerul meu"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Afişare în culori a fişierelor NTFS criptate sau comprimate"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Se afişează Panoul de control în Computerul meu"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Se afişează cu culori fişierele NTFS criptate sau comprimate"
     IDS_ADVANCED_SHOW_INFO_TIP "Se afişează descrieri pop-up pentru elemente din folder şi desktop"
-    IDS_ADVANCED_DISPLAY_FAVORITES "Afişare Favorite"
-    IDS_ADVANCED_DISPLAY_LOG_OFF "Afişare Log Off"
-    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Se extinde Panou de control"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Se afişează Favoritele"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Se afişează opțiunea Log Off"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Se extinde Panoul de control"
     IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Se extind Documentele mele"
-    IDS_ADVANCED_EXPAND_PRINTERS "Se extind Imprimante"
+    IDS_ADVANCED_EXPAND_PRINTERS "Se extind Imprimantele"
     IDS_ADVANCED_EXPAND_MY_PICTURES "Se extind Imaginile mele"
-    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Se extind Conexiuni de rețea"
-    IDS_ADVANCED_DISPLAY_RUN "Se afişează Executare"
-    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Se afişează Instrumente de administrare"
-    IDS_ADVANCED_SMALL_START_MENU "Se afişează Pictograme mici în Meniul Start"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Se extind Conexiunile de rețea"
+    IDS_ADVANCED_DISPLAY_RUN "Se afişează programul Executare"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Se afişează Instrumentele de administrare"
+    IDS_ADVANCED_SMALL_START_MENU "Se afişează Pictogramele mici în Meniul Start"
 
-    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
-    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
-    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
+    IDS_VISEFFECT_DRAGFULL "Afişează conținutul ferestrei la tragere"
+    IDS_VISEFFECT_FONTSMOOTHING "Margini fine ale fonturilor pentru ecran"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Foloseşte umbre paralele pentru etichetele pictogramelor de pe desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< &Complex"
     IDS_NEWEXT_ADVANCED_RIGHT "&Complex >>"
