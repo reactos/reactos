@@ -31,7 +31,7 @@ BEGIN
         POPUP "&Vizualizare", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Dal&e", FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Pictograme mici", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "Pictograme &mici", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
         END
