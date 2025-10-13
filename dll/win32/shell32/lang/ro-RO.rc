@@ -1006,13 +1006,13 @@ BEGIN
     IDS_EXE_DESCRIPTION "Descriere:"
 
     IDS_MENU_EMPTY "(Gol)"
-    IDS_OBJECTS "%d Obiecte"
-    IDS_OBJECTS_SELECTED "%d Obiecte selectate"
+    IDS_OBJECTS "%d (de) obiecte"
+    IDS_OBJECTS_SELECTED "%d (de) obiecte selectate"
 
     IDS_SEARCH_BROWSEITEM "Răsfoire..."
 
     IDS_RECYCLE_CLEANER_DISPLAYNAME "Coş de reciclare"
-    IDS_RECYCLE_CLEANER_DESCRIPTION "Coşul de reciclare conține fişierele şterse de pe acest computer. Aceste fişiere nu sunt eliminate definitiv p\xE2nă c\xE2nd nu goliți Coşul de reciclare."
+    IDS_RECYCLE_CLEANER_DESCRIPTION "Coşul de reciclare conține fişierele şterse de pe acest computer. Aceste fişiere nu sunt eliminate definitiv până când nu goliți Coşul de reciclare."
     IDS_RECYCLE_CLEANER_BUTTON_TEXT "&Vizualizare fişiere"
 
     IDS_TITLE_MYCOMP "Computerul meu"
@@ -1021,7 +1021,7 @@ BEGIN
     IDS_TITLE_BIN_0 "Coş de reciclare (gol)"
 
     IDS_ADVANCED_FOLDER "Fişiere şi foldere"
-    IDS_ADVANCED_NET_CRAWLER "Căutare automată foldere şi imprimante în reţea"
+    IDS_ADVANCED_NET_CRAWLER "Se caută în mod automat folderele şi imprimantele în reţea"
     IDS_ADVANCED_FOLDER_SIZE_TIP "Se afişează informaţii privind dimensiunea fişierului în sfaturile pentru folder"
     IDS_ADVANCED_FRIENDLY_TREE "Se afişează vizualizare simplă pentru folder în lista de foldere Explorer"
     IDS_ADVANCED_WEB_VIEW_BARRICADE "Se afişează conţinutul folderelor de sistem"
@@ -1036,7 +1036,7 @@ BEGIN
     IDS_ADVANCED_DESKTOP_PROCESS "Se lansează ferestrele de foldere într-un proces separat"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Se rememorează fiecare setare de vizualizare foldere"
     IDS_ADVANCED_PERSIST_BROWSERS "Se restaurează fereastra folderului precedent la deschiderea sesiunii"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Afişare Panou de control în Computerul meu"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Se afişează Panoul de control în Computerul meu"
     IDS_ADVANCED_SHOW_COMP_COLOR "Se afişează cu culori fişierele NTFS criptate sau comprimate"
     IDS_ADVANCED_SHOW_INFO_TIP "Se afişează descrieri pop-up pentru elemente din folder şi desktop"
     IDS_ADVANCED_DISPLAY_FAVORITES "Se afişează Favoritele"
