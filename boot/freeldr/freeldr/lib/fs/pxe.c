@@ -152,7 +152,7 @@ static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Informati
         FileName = _OpenFileName; // No separator: file name without directory.
 
     /* Copy the file name, perhaps truncated, and NUL-terminated */
-    Information->FileNameLength = strlen(FileName);
+    Information->FileNameLength = (ULONG)strlen(FileName);
     Information->FileNameLength = min(Information->FileNameLength, sizeof(Information->FileName) - 1);
     RtlCopyMemory(Information->FileName, FileName, Information->FileNameLength);
     Information->FileName[Information->FileNameLength] = ANSI_NULL;

@@ -111,7 +111,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
     PEXT_FILE_INFO        FileHandle;
     CHAR            SymLinkPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH];
     CHAR            FullPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH * 2];
-    ULONG_PTR        Index;
+    SIZE_T Index;
 
     TRACE("ExtOpenFile() FileName = \"%s\"\n", FileName);
 
@@ -320,7 +320,7 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
     }
 
     /* Copy the file name, perhaps truncated */
-    ExtFileInfo->FileNameLength = DirectoryEntry.NameLen; // strlen(PathPart);
+    ExtFileInfo->FileNameLength = DirectoryEntry.NameLen; // (ULONG)strlen(PathPart);
     ExtFileInfo->FileNameLength = min(ExtFileInfo->FileNameLength, sizeof(ExtFileInfo->FileName) - 1);
     RtlCopyMemory(ExtFileInfo->FileName, DirectoryEntry.Name /*PathPart*/, ExtFileInfo->FileNameLength);
 

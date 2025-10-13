@@ -873,7 +873,7 @@ ARC_STATUS FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, PFAT_FILE_INFO
         FatFileInfoPointer->Attributes |= DirectoryFile;
 
     /* Copy the file name, perhaps truncated */
-    FatFileInfoPointer->FileNameLength = strlen(PathPart);
+    FatFileInfoPointer->FileNameLength = (ULONG)strlen(PathPart);
     FatFileInfoPointer->FileNameLength = min(FatFileInfoPointer->FileNameLength, sizeof(FatFileInfoPointer->FileName) - 1);
     RtlCopyMemory(FatFileInfoPointer->FileName, PathPart, FatFileInfoPointer->FileNameLength);
 

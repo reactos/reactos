@@ -784,7 +784,7 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
         FileHandle->Attributes |= DirectoryFile;
 
     /* Copy the file name, perhaps truncated */
-    FileHandle->FileNameLength = strlen(PathPart);
+    FileHandle->FileNameLength = (ULONG)strlen(PathPart);
     FileHandle->FileNameLength = min(FileHandle->FileNameLength, sizeof(FileHandle->FileName) - 1);
     RtlCopyMemory(FileHandle->FileName, PathPart, FileHandle->FileNameLength);
 

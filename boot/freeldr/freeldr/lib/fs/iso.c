@@ -307,7 +307,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         IsoFileInfo->Attributes |= DirectoryFile;
 
     /* Copy the file name, perhaps truncated */
-    IsoFileInfo->FileNameLength = strlen(PathPart);
+    IsoFileInfo->FileNameLength = (ULONG)strlen(PathPart);
     IsoFileInfo->FileNameLength = min(IsoFileInfo->FileNameLength, sizeof(IsoFileInfo->FileName) - 1);
     RtlCopyMemory(IsoFileInfo->FileName, PathPart, IsoFileInfo->FileNameLength);
 
