@@ -111,7 +111,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
     PEXT_FILE_INFO        FileHandle;
     CHAR            SymLinkPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH];
     CHAR            FullPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH * 2];
-    ULONG_PTR        Index;
+    SIZE_T Index;
 
     TRACE("ExtOpenFile() FileName = \"%s\"\n", FileName);
 
@@ -209,8 +209,8 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
  */
 BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO ExtFileInfo)
 {
-    UINT32        i;
     ULONG        NumberOfPathParts;
+    ULONG        i;
     CHAR        PathPart[261];
     PVOID        DirectoryBuffer;
     ULONG        DirectoryInode = EXT_ROOT_INODE;
@@ -302,17 +302,40 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
 
     ExtFileInfo->FilePointer = 0;
     ExtFileInfo->FileSize = ExtGetInodeFileSize(&InodeData);
-    RtlCopyMemory(&ExtFileInfo->Inode, &InodeData, sizeof(EXT_INODE));
+    RtlCopyMemory(&ExtFileInfo->Inode, &InodeData, sizeof(InodeData));
+
+    /* Map the attributes to ARC file attributes */
+    ExtFileInfo->Attributes = 0;
+    if (!(InodeData.Mode & (_S_IWUSR | _S_IWGRP | _S_IWOTH)))
+        ExtFileInfo->Attributes |= ReadOnlyFile;
+    if (_S_ISDIR(InodeData.Mode))
+        ExtFileInfo->Attributes |= DirectoryFile;
+
+    /* Set hidden attribute for all entries starting with '.' */
+    if ((DirectoryEntry.NameLen >= 2 && DirectoryEntry.Name[0] == '.') &&
+         ((DirectoryEntry.NameLen == 2 && DirectoryEntry.Name[1] != '.') ||
+           DirectoryEntry.NameLen >= 3))
+    {
+        ExtFileInfo->Attributes |= HiddenFile;
+    }
+
+    /* Copy the file name, perhaps truncated */
+    ExtFileInfo->FileNameLength = DirectoryEntry.NameLen; // (ULONG)strlen(PathPart);
+    ExtFileInfo->FileNameLength = min(ExtFileInfo->FileNameLength, sizeof(ExtFileInfo->FileName) - 1);
+    RtlCopyMemory(ExtFileInfo->FileName, DirectoryEntry.Name /*PathPart*/, ExtFileInfo->FileNameLength);
 
     return TRUE;
 }
 
 BOOLEAN ExtSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT_DIR_ENTRY DirectoryEntry)
 {
-    ULONG           CurrentOffset = 0;
-    PEXT_DIR_ENTRY  CurrentDirectoryEntry;
+    PEXT_DIR_ENTRY CurrentDirectoryEntry;
+    ULONG CurrentOffset = 0;
+    SIZE_T FileNameLen;
 
     TRACE("ExtSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = \"%s\"\n", DirectoryBuffer, DirectorySize, FileName);
+
+    FileNameLen = strlen(FileName);
 
     while (CurrentOffset < DirectorySize)
     {
@@ -342,11 +365,10 @@ BOOLEAN ExtSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
         }
         TRACE("\"\n\n");
 
-        if (strlen(FileName) == CurrentDirectoryEntry->NameLen &&
-            !_strnicmp(FileName, CurrentDirectoryEntry->Name, CurrentDirectoryEntry->NameLen))
+        if ((FileNameLen == CurrentDirectoryEntry->NameLen) &&
+            (_strnicmp(FileName, CurrentDirectoryEntry->Name, FileNameLen) == 0))
         {
             RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT_DIR_ENTRY));
-
             return TRUE;
         }
 
@@ -1284,6 +1306,14 @@ ARC_STATUS ExtGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = FileHandle->FileSize;
     Information->CurrentAddress.QuadPart = FileHandle->FilePointer;
+
+    /* Set the ARC file attributes */
+    Information->Attributes = FileHandle->Attributes;
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = min(FileHandle->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, FileHandle->FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
 
     TRACE("ExtGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
           FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);

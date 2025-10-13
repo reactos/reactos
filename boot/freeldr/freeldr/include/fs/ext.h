@@ -220,11 +220,14 @@ typedef struct _EXT_VOLUME_INFO *PEXT_VOLUME_INFO;
 
 typedef struct _EXT_FILE_INFO
 {
-    ULONGLONG FileSize;    // File size
-    ULONGLONG FilePointer; // File pointer
-    PULONG FileBlockList;  // File block list
-    EXT_INODE Inode;       // File's inode
     PEXT_VOLUME_INFO Volume;
+    PULONG FileBlockList;   // File block list
+    EXT_INODE Inode;        // File inode
+    ULONGLONG FileSize;     // File size
+    ULONGLONG FilePointer;  // File pointer
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } EXT_FILE_INFO, *PEXT_FILE_INFO;
 
 const DEVVTBL* ExtMount(ULONG DeviceId);
