@@ -15,6 +15,10 @@
 #include <pshpack8.h>
 
 #ifndef WINSHLWAPI
+#ifdef __GNUC__
+#define LWSTDAPI_(t)   t WINAPI
+#define LWSTDAPIV_(t)  t WINAPIV
+#else
 #ifndef _SHLWAPI_
 #define LWSTDAPI_(t)   EXTERN_C DECLSPEC_IMPORT t STDAPICALLTYPE
 #define LWSTDAPIV_(t)  EXTERN_C DECLSPEC_IMPORT t STDAPIVCALLTYPE
@@ -22,6 +26,7 @@
 #define LWSTDAPI_(t)   STDAPI_(t)
 #define LWSTDAPIV_(t)  STDAPIV_(t)
 #endif // _SHLWAPI_
+#endif // __GNUC__
 #define LWSTDAPI       LWSTDAPI_(HRESULT)
 #define LWSTDAPIV      LWSTDAPIV_(HRESULT)
 #endif // WINSHLWAPI
@@ -1148,8 +1153,8 @@ LWSTDAPI_(BOOL)    StrToIntExA(_In_ LPCSTR, DWORD, _Out_ int*);
 LWSTDAPI_(BOOL)    StrToIntExW(_In_ LPCWSTR, DWORD, _Out_ int*);
 LWSTDAPI_(BOOL)    StrTrimA(_Inout_ LPSTR, _In_ LPCSTR);
 LWSTDAPI_(BOOL)    StrTrimW(_Inout_ LPWSTR, _In_ LPCWSTR);
-LWSTDAPI_(int)     wnsprintfA(_Out_writes_(cchDest) LPSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCSTR, ...);
-LWSTDAPI_(int)     wnsprintfW(_Out_writes_(cchDest) LPWSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCWSTR, ...);
+LWSTDAPIV_(int)    wnsprintfA(_Out_writes_(cchDest) LPSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCSTR, ...);
+LWSTDAPIV_(int)    wnsprintfW(_Out_writes_(cchDest) LPWSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCWSTR, ...);
 LWSTDAPI_(int)     wvnsprintfA(_Out_writes_(cchDest) LPSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCSTR, _In_ va_list);
 LWSTDAPI_(int)     wvnsprintfW(_Out_writes_(cchDest) LPWSTR, _In_ INT cchDest, _In_ _Printf_format_string_ LPCWSTR, _In_ va_list);
 #if (_WIN32_IE >= _WIN32_IE_IE60)
