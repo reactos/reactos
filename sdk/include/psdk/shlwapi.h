@@ -38,7 +38,6 @@ extern "C" {
 /*
  * GLOBAL SHLWAPI DEFINITIONS
  * These definitions are always available.
- * 
  */
 
 /* SHAutoComplete definitions */
@@ -49,9 +48,9 @@ extern "C" {
 #define SHACF_URLALL                (SHACF_URLHISTORY|SHACF_URLMRU)
 #define SHACF_USETAB                0x00000008
 #define SHACF_FILESYS_ONLY          0x00000010
-#if (_WIN32_IE >= 0x0600)
+#if (_WIN32_IE >= _WIN32_IE_IE60)
 #define SHACF_FILESYS_DIRS          0x00000020
-#endif // _WIN32_IE >= 0x0600
+#endif // _WIN32_IE_IE60
 #if (_WIN32_IE >= _WIN32_IE_IE70)
 #define SHACF_VIRTUAL_NAMESPACE     0x00000040
 #endif // _WIN32_IE_IE70
@@ -111,10 +110,7 @@ enum {
 #define DLLVER_QFE_MASK   0x000000000000FFFF
 
 #define MAKEDLLVERULL(major, minor, build, qfe) \
-    (((ULONGLONG)(major) << 48) | \
-     ((ULONGLONG)(minor) << 32) | \
-     ((ULONGLONG)(build) << 16) | \
-      (ULONGLONG)(qfe))
+    (((ULONGLONG)(major) << 48) | ((ULONGLONG)(minor) << 32) | ((ULONGLONG)(build) << 16) | (ULONGLONG)(qfe))
 
 #define DLLVER_PLATFORM_WINDOWS 0x01  // Windows 9.x
 #define DLLVER_PLATFORM_NT      0x02  // Windows NT
@@ -211,7 +207,6 @@ LWSTDAPI          SHCreateThreadRef(_Inout_ LONG*, _Outptr_ IUnknown**);
  * | NO_SHLWAPI_REG     | Disables registry functions |
  * | NO_SHLWAPI_STREAM  | Disables stream functions   |
  * | NO_SHLWAPI_STRFCNS | Disables string functions   |
- *
  */
 
 /* GDI functions */
@@ -690,7 +685,7 @@ LWSTDAPI           ParseURLW(_In_ LPCWSTR pszUrl, _Inout_ PARSEDURLW *ppu);
 #define ParseURL           ParseURLA
 #endif // UNICODE
 
-#define UrlEscapeSpaces(x, y, z) UrlCanonicalize(x, y, z, URL_ESCAPE_SPACES_ONLY | URL_DONT_ESCAPE_EXTRA_INFO )
+#define UrlEscapeSpaces(x, y, z) UrlCanonicalize(x, y, z, URL_ESCAPE_SPACES_ONLY | URL_DONT_ESCAPE_EXTRA_INFO)
 #define UrlUnescapeInPlace(x, y) UrlUnescape(x, NULL, NULL, y | URL_UNESCAPE_INPLACE)
 
 #endif // NO_SHLWAPI_PATH
@@ -706,8 +701,8 @@ LWSTDAPI           ParseURLW(_In_ LPCWSTR pszUrl, _Inout_ PARSEDURLW *ppu);
 #define SRRF_RT_REG_MULTI_SZ   0x0020
 #define SRRF_RT_REG_QWORD      0x0040
 #define SRRF_RT_ANY            0xFFFF
-#define SRRF_RT_DWORD          (SRRF_RT_REG_BINARY|SRRF_RT_REG_DWORD)
-#define SRRF_RT_QWORD          (SRRF_RT_REG_BINARY|SRRF_RT_REG_QWORD)
+#define SRRF_RT_DWORD          (SRRF_RT_REG_BINARY | SRRF_RT_REG_DWORD)
+#define SRRF_RT_QWORD          (SRRF_RT_REG_BINARY | SRRF_RT_REG_QWORD)
 
 #define SRRF_RM_ANY            0x00000
 #define SRRF_RM_NORMAL         0x10000
@@ -828,7 +823,6 @@ LWSTDAPI_(int)     SHRegGetIntW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ int);
 #define SHRegSetPath           SHRegSetPathW
 #define SHRegSetUSValue        SHRegSetUSValueW
 #define SHRegWriteUSValue      SHRegWriteUSValueW
-
 #define SHRegGetInt            SHRegGetIntW
 #else
 #define SHCopyKey              SHCopyKeyA
