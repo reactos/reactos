@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2014 Radek Liška (Black_Fox) <radekliska@gmail.com>
- *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ *              Copyright 2024-2025 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -175,9 +175,9 @@ BEGIN
     IDS_WELCOME_TEXT "Na levé straně zvolte kategorii, pak vpravo zvolte aplikaci, která bude nainstalována nebo odinstalována.\nWebová stránka ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Přidat/Odebrat programy"
+    IDS_APPWIZ_TEXT1 "Vyberte ""Aplikace"" nebo ""Aktualizace"" pro zobrazení seznamu aplikací nebo aktualizací nainstalovaných na vašem systému."
+    IDS_APPWIZ_TEXT2 "Pro odebrání programu nebo pro změnu jeho nainstalovaných komponent, ho vyberte ze seznamu a klikněte na ""Odinstalovat"" nebo ""Změnit""."
 END
 
 STRINGTABLE
