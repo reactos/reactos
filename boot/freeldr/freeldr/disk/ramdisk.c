@@ -141,7 +141,7 @@ RamDiskLoadVirtualFile(
     Information.StartingAddress.QuadPart = 0ULL;
 
     /* If we are actually opening a RAW device, retrieve instead its usable volume size */
-    if (Information.FileNameLength == 0 && Information.FileName[0] == ANSI_NULL &&
+    if (Information.FileNameLength == 0 && Information.Filename[0] == ANSI_NULL &&
         (Information.Type == DiskPeripheral || Information.Type == FloppyDiskPeripheral))
     {
         ULONGLONG VolumeSize;
