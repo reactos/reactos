@@ -866,8 +866,7 @@ BEGIN
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Imposibil de afișat caseta de dialog Executare fişiere (eroare internă)"
-    IDS_RUNDLG_BROWSE_ERROR " */
-    IDS_RUNDLG_ERROR "Imposibil de afișat caseta de dialog Răsfoire (eroare internă)"
+    IDS_RUNDLG_BROWSE_ERROR "Imposibil de afișat caseta de dialog Răsfoire (eroare internă)"
     IDS_RUNDLG_BROWSE_CAPTION "Răsfoire"
     IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Orice fişier (*.*)\0*.*\0"
 
