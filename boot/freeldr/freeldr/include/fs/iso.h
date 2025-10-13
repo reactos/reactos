@@ -96,7 +96,6 @@ typedef struct _ISO_FILE_INFO
     ULONG FileSize;     // File size
     ULONG FilePointer;  // File pointer
     BOOLEAN Directory;
-    ULONG DriveNumber;
 } ISO_FILE_INFO, *PISO_FILE_INFO;
 
 const DEVVTBL* IsoMount(ULONG DeviceId);
