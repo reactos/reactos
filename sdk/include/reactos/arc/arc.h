@@ -217,13 +217,12 @@ typedef struct _MEMORY_DESCRIPTOR
     PFN_NUMBER PageCount;
 } MEMORY_DESCRIPTOR, *PMEMORY_DESCRIPTOR;
 
-typedef int CONFIGTYPE;
-typedef struct tagFILEINFORMATION
+typedef struct _FILEINFORMATION
 {
     LARGE_INTEGER StartingAddress;
     LARGE_INTEGER EndingAddress;
     LARGE_INTEGER CurrentAddress;
-    CONFIGTYPE Type;
+    CONFIGURATION_TYPE Type;
     ULONG FileNameLength;
     UCHAR Attributes;
     CHAR Filename[32];
