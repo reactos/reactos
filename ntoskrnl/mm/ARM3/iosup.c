@@ -94,6 +94,14 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     IsIoMapping = (Pfn1 == NULL) ? TRUE : FALSE;
     CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
 
+    // Prevent mapping paging related structures. (Win10+ feature)
+    if (Pfn1 &&
+        Pfn1->PteAddress >= MiAddressToPte(PTE_BASE) && 
+        Pfn1->PteAddress <= MiAddressToPte(PTE_TOP))
+    {
+        return NULL;
+    }
+
     //
     // Now allocate system PTEs for the mapping, and get the VA
     //
