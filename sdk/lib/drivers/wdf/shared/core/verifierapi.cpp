@@ -270,9 +270,6 @@ Return Value:
     DDI_ENTRY();
 
     UNREFERENCED_PARAMETER(DriverGlobals);
-
-    DPRINT("WdfGetTriageInfo called, returning triage info structure\n");
-    
     return &g_WdfTriageInfo;
 }
 

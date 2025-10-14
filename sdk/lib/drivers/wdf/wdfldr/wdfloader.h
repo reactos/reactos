@@ -22,47 +22,47 @@
 
 #define DPRINT(_x_)                                                            \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                           \
-        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                              \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                            \
+        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                               \
         __PrintUnfiltered _x_;                                                 \
     }                                                                          \
 } while (0)
 
 #define DPRINT_VERBOSE(_x_)                                                    \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_VERBOSE_LOGGING) {                   \
-        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                              \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_VERBOSE_LOGGING) {                    \
+        DbgPrint("WdfLdr: %s - ", __FUNCTION__);                               \
         __PrintUnfiltered _x_;                                                 \
     }                                                                          \
 } while (0)
 
 #define DPRINT_ERROR(_x_)                                                      \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_LOG_ERRORS) {                        \
-        DbgPrint("WdfLdr: ERROR: %s - ", __FUNCTION__);                       \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_LOG_ERRORS) {                         \
+        DbgPrint("WdfLdr: ERROR: %s - ", __FUNCTION__);                        \
         __PrintUnfiltered _x_;                                                 \
     }                                                                          \
 } while (0)
 
 #define DPRINT_TRACE_ENTRY()                                                   \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_ENTRY) {              \
-        DbgPrint("WdfLdr: ENTER: %s\n", __FUNCTION__);                        \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_ENTRY) {               \
+        DbgPrint("WdfLdr: ENTER: %s\n", __FUNCTION__);                         \
     }                                                                          \
 } while (0)
 
 #define DPRINT_TRACE_EXIT()                                                    \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_EXIT) {               \
-        DbgPrint("WdfLdr: EXIT: %s\n", __FUNCTION__);                         \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_TRACE_FUNCTION_EXIT) {                \
+        DbgPrint("WdfLdr: EXIT: %s\n", __FUNCTION__);                          \
     }                                                                          \
 } while (0)
 
 // Legacy compatibility - use do-while pattern for consistency
 #define __DBGPRINT(_x_)                                                        \
 do {                                                                           \
-    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                           \
-        DbgPrint("Wdfldr: %s - ", __FUNCTION__);                              \
+    if (WdfLdrDiags.DiagFlags & DIAGFLAG_ENABLED) {                            \
+        DbgPrint("Wdfldr: %s - ", __FUNCTION__);                               \
         __PrintUnfiltered _x_;                                                 \
     }                                                                          \
 } while (0)

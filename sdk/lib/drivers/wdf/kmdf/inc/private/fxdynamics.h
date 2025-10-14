@@ -20,7 +20,7 @@ typedef WDFAPI NTSTATUS
 WDFAPI
 NTSTATUS
 NTAPI
-WdfApiNotImplemented();
+WdfApiNotImplemented(VOID);
 
 
 typedef struct _WDFFUNCTIONS {
@@ -7318,7 +7318,6 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfUsbTargetPipeWdmGetPipeHandle),
         WDFEXPORT(WdfVerifierDbgBreakPoint),
         WDFEXPORT(WdfVerifierKeBugCheck),
-        
         WDFEXPORT(WdfWmiProviderCreate),
         WDFEXPORT(WdfWmiProviderGetDevice),
         WDFEXPORT(WdfWmiProviderIsEnabled),

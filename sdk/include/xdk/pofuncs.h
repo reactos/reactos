@@ -200,7 +200,6 @@ PoCreatePowerRequest(
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
-  
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTKRNLVISTAAPI
 NTSTATUS

@@ -105,6 +105,5 @@ FxDriverEntry(
         pOriginalUnload = DriverObject->DriverUnload;
         DriverObject->DriverUnload = FxDriverUnload;
     }
-    
     return STATUS_SUCCESS;
 }

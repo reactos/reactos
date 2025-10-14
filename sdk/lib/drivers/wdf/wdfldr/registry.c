@@ -11,7 +11,7 @@
 
 /**
  * @brief Open framework version registry key
- * 
+ *
  * @param BindInfo Bind information
  * @param HandleRegKey Opened key handle
  * @return STATUS_SUCCESS on success, error code otherwise
@@ -28,7 +28,7 @@ GetVersionRegistryHandle(
     HANDLE keyHandle = NULL;
     DECLARE_UNICODE_STRING_SIZE(string, 256);
 
-    
+
     status = RtlUnicodeStringPrintf(&string,
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf\\%s\\Versions",
         BindInfo->Component); // Component name for kmdf driver - 'KmdfLibrary'
@@ -43,7 +43,7 @@ GetVersionRegistryHandle(
 
     InitializeObjectAttributes(&objectAttributes, &string, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
     status = ZwOpenKey(&keyHandle, KEY_QUERY_VALUE, &objectAttributes);
-    
+
     if (!NT_SUCCESS(status))
     {
         __DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &string, status));
@@ -51,7 +51,7 @@ GetVersionRegistryHandle(
     }
 
     status = RtlIntegerToUnicodeString(BindInfo->Version.Major, 10, &string);
-        
+
     if (!NT_SUCCESS(status))
     {
         __DBGPRINT(("ERROR: ConvertUlongToWString failed with Status 0x%x\n", status));
@@ -60,7 +60,7 @@ GetVersionRegistryHandle(
 
     InitializeObjectAttributes(&objectAttributes, &string, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, keyHandle, NULL);
     status = ZwOpenKey(&handle, KEY_READ, &objectAttributes);
-        
+
     if (!NT_SUCCESS(status))
     {
         __DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", string, status));
@@ -68,7 +68,7 @@ GetVersionRegistryHandle(
 
 end:
     *HandleRegKey = handle;
-    
+
     if (keyHandle != NULL)
     {
         ZwClose(keyHandle);
@@ -79,7 +79,7 @@ end:
 
 /**
  * @brief Create default service path from bind info
- * 
+ *
  * @param BindInfo Bind information
  * @param RegistryPath Created service path
  * @return STATUS_SUCCESS on success, error code otherwise
@@ -88,8 +88,7 @@ NTSTATUS
 NTAPI
 GetDefaultServiceName(
     _In_ PWDF_BIND_INFO BindInfo,
-    _Out_ PUNICODE_STRING RegistryPath
-)
+    _Out_ PUNICODE_STRING RegistryPath)
 {
     NTSTATUS status;
     static const SIZE_T regPathLength = sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Wdf01000") - sizeof(WCHAR);
@@ -100,7 +99,7 @@ GetDefaultServiceName(
     }
 
     RegistryPath->Buffer = (PWCHAR)ExAllocatePoolWithTag(PagedPool, regPathLength, WDFLDR_TAG);
-    
+
     if (RegistryPath->Buffer == NULL)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -123,18 +122,18 @@ GetDefaultServiceName(
     else
     {
         __DBGPRINT(("ERROR: RtlUnicodeStringCopyString failed with Status 0x%x\n", status));
-        
+
         ExFreePoolWithTag(RegistryPath->Buffer, WDFLDR_TAG);
         RegistryPath->Length = 0;
         RegistryPath->Buffer = NULL;
     }
-    
+
     return status;
 }
 
 /**
  * @brief Get service path from bind info and registry
- * 
+ *
  * @param BindInfo Bind information
  * @param ServicePath Service path in registry
  * @return STATUS_SUCCESS on success, error code otherwise
@@ -159,13 +158,13 @@ GetVersionServicePath(
     {
         // get service name
         status = FxLdrQueryData(handleRegKey, &ValueName, WDFLDR_TAG, &pKeyVal);
-        
+
         if (!NT_SUCCESS(status))
         {
             __DBGPRINT(("ERROR: QueryData failed with status 0x%x\n", status));
         }
         else
-        {            
+        {
             status = BuildServicePath(pKeyVal, ServicePath);
         }
     }
@@ -173,7 +172,7 @@ GetVersionServicePath(
     if (!NT_SUCCESS(status))
     {
         status = GetDefaultServiceName(BindInfo, ServicePath);
-        
+
         if (!NT_SUCCESS(status))
         {
             __DBGPRINT(("ERROR: GetVersionServicePath failed with Status 0x%x\n", status));
@@ -204,11 +203,11 @@ ServiceCheckBootStart(
     UNICODE_STRING valueName = RTL_CONSTANT_STRING(L"Start");
 
     InitializeObjectAttributes(&objectAttributes, Service, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-    status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);    
+    status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);
 
-    if (status != STATUS_OBJECT_NAME_NOT_FOUND) 
+    if (status != STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        if (NT_SUCCESS(status)) 
+        if (NT_SUCCESS(status))
         {
             status = FxLdrQueryUlong(keyHandle, &valueName, &value);
             if (NT_SUCCESS(status))
@@ -233,7 +232,7 @@ NTSTATUS
 FxLdrQueryUlong(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING ValueName,
-    _Out_  PULONG Value)
+    _Out_ PULONG Value)
 {
     NTSTATUS status;
     ULONG resultLength;
@@ -244,20 +243,19 @@ FxLdrQueryUlong(
     keyValue.Type = 0;
     keyValue.Data[0] = 0;
     status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation, &keyValue, sizeof(keyValue), &resultLength);
-
-    if (NT_SUCCESS(status)) 
+    if (NT_SUCCESS(status))
     {
-        if (keyValue.Type != REG_DWORD || keyValue.DataLength != 4) 
+        if (keyValue.Type != REG_DWORD || keyValue.DataLength != sizeof(*Value))
         {
             status = STATUS_INVALID_BUFFER_SIZE;
         }
-        else 
+        else
         {
             *Value = keyValue.Data[0];
             status = STATUS_SUCCESS;
         }
     }
-    else 
+    else
     {
         __DBGPRINT(("ERROR: ZwQueryValueKey failed with Status 0x%x\n", status));
     }
@@ -271,7 +269,7 @@ FxLdrQueryData(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING ValueName,
     _In_ ULONG Tag,
-    _Out_  PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo)
+    _Out_ PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo)
 {
     PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
     NTSTATUS status;
@@ -281,9 +279,9 @@ FxLdrQueryData(
     for (;;)
     {
         status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation, NULL, 0, &resultLength);
-        if (status != STATUS_BUFFER_TOO_SMALL) 
+        if (status != STATUS_BUFFER_TOO_SMALL)
         {
-            if (!NT_SUCCESS(status)) 
+            if (!NT_SUCCESS(status))
             {
                 __DBGPRINT(("ERROR: ZwQueryValueKey failed with status 0x%x\n", status));
             }
@@ -292,7 +290,7 @@ FxLdrQueryData(
         }
 
         status = RtlULongAdd(resultLength, 0xCu, &resultLength);
-        if (!NT_SUCCESS(status)) 
+        if (!NT_SUCCESS(status))
         {
             __DBGPRINT(("ERROR: Computing length of data under %wZ failed with status 0x%x\n", ValueName, status));
 
@@ -315,7 +313,7 @@ FxLdrQueryData(
             resultLength,
             &resultLength);
 
-        if (NT_SUCCESS(status)) 
+        if (NT_SUCCESS(status))
         {
             *KeyValPartialInfo = pKeyInfo;
             return status;
@@ -323,7 +321,7 @@ FxLdrQueryData(
 
         ExFreePoolWithTag(pKeyInfo, WDFLDR_TAG);
 
-        if (status != STATUS_BUFFER_TOO_SMALL) 
+        if (status != STATUS_BUFFER_TOO_SMALL)
         {
             __DBGPRINT(("ERROR: ZwQueryValueKey (%wZ) failed with Status 0x%x\n", ValueName, status));
 
@@ -344,13 +342,12 @@ BuildServicePath(
 {
     NTSTATUS status;
     PWCHAR buffer;
-    PWCHAR lastSymbol;
+    PWCHAR lastChar;
     UNICODE_STRING name;
     CONST WCHAR regPath[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\%wZ";
 
-
     if (KeyValueInformation->Type != REG_SZ &&
-        KeyValueInformation->Type != REG_EXPAND_SZ) 
+        KeyValueInformation->Type != REG_EXPAND_SZ)
     {
         status = STATUS_OBJECT_TYPE_MISMATCH;
         __DBGPRINT(("ERROR: BuildServicePath failed with status 0x%x\n", status));
@@ -358,7 +355,7 @@ BuildServicePath(
     }
 
     if (KeyValueInformation->DataLength == 0 ||
-        KeyValueInformation->DataLength > 0xFFFF) 
+        KeyValueInformation->DataLength > 0xFFFF)
     {
         status = STATUS_INVALID_PARAMETER;
         __DBGPRINT(("ERROR: BuildServicePath failed with status 0x%x\n", status));
@@ -369,30 +366,28 @@ BuildServicePath(
     name.Length = (USHORT)KeyValueInformation->DataLength;
     name.MaximumLength = (USHORT)KeyValueInformation->DataLength;
 
-    lastSymbol = ((wchar_t*)KeyValueInformation->Data) + KeyValueInformation->DataLength / 2;
-    if (KeyValueInformation->DataLength >= 2 &&    *lastSymbol == 0) 
+    lastChar = (PWCHAR)KeyValueInformation->Data + KeyValueInformation->DataLength / sizeof(WCHAR);
+    if (KeyValueInformation->DataLength >= sizeof(WCHAR) && *lastChar == UNICODE_NULL)
     {
-        name.Length = (USHORT)KeyValueInformation->DataLength - 2;
+        name.Length = (USHORT)KeyValueInformation->DataLength - sizeof(WCHAR);
     }
-        
-    buffer = ExAllocatePoolWithTag(PagedPool, name.Length + sizeof(regPath), WDFLDR_TAG);
 
+    buffer = ExAllocatePoolZero(PagedPool, name.Length + sizeof(regPath), WDFLDR_TAG);
     if (buffer != NULL)
     {
         ServicePath->Length = 0;
         ServicePath->MaximumLength = name.Length + sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");//106;
         ServicePath->Buffer = buffer;
-        RtlZeroMemory(ServicePath->Buffer, ServicePath->MaximumLength);
         status = RtlUnicodeStringPrintf(ServicePath, regPath, &name);
 
-        if (!NT_SUCCESS(status)) 
+        if (!NT_SUCCESS(status))
         {
             ExFreePoolWithTag(buffer, WDFLDR_TAG);
             ServicePath->Length = 0;
             ServicePath->Buffer = NULL;
         }
     }
-    else 
+    else
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
         __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));

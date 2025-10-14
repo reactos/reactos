@@ -2006,10 +2006,9 @@ FxDmaPacketTransaction::StageTransfer(
         // We can use a shared one in that case because we won't be mapping
         // multiple system DMA requests concurrently (HAL doesn't allow it)
         //
-        FxDmaEnabler* enabler;
+        FxDmaEnabler* enabler = GetDmaEnabler();
         size_t sgListSize;
-        
-        enabler = GetDmaEnabler();
+
 
         if (enabler->IsBusMaster()) {
             sgList = (PSCATTER_GATHER_LIST)sgListBuffer;

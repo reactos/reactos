@@ -37,7 +37,7 @@ ClassOpen(
         return STATUS_SUCCESS;
 
     status = IoGetDeviceObjectPointer(ObjectName, FILE_READ_DATA, &ClassModule->ClassFileObject, &deviceObject);
-    
+
     if (NT_SUCCESS(status))
         ClassModule->ClassDriverObject = deviceObject->DriverObject;
 
@@ -62,18 +62,10 @@ ClassCleanupAndFree(
     ClassClose(ClassModule);
 
     if (ClassModule->Service.Buffer != NULL)
-    {
         ExFreePoolWithTag(ClassModule->Service.Buffer, WDFLDR_TAG);
-        ClassModule->Service.Length = 0;
-        ClassModule->Service.Buffer = NULL;
-    }
 
     if (ClassModule->ImageName.Buffer != NULL)
-    {
         ExFreePoolWithTag(ClassModule->ImageName.Buffer, WDFLDR_TAG);
-        ClassModule->ImageName.Length = 0;
-        ClassModule->ImageName.Buffer = NULL;
-    }
 
     ExDeleteResourceLite(&ClassModule->ClientsListLock);
     ExFreePoolWithTag(ClassModule, WDFLDR_TAG);
@@ -229,7 +221,7 @@ GetClassRegistryHandle(
     SIZE_T bufferSize;
     UNICODE_STRING objectName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf");
     DECLARE_UNICODE_STRING_SIZE(versionString, 11);
-    
+
     classVersions.Length = 0;
     classVersions.Buffer = NULL;
     *KeyHandle = NULL;
@@ -250,14 +242,14 @@ GetClassRegistryHandle(
 
     classNameLength = wcslen(ClassBindInfo->ClassName);
     bufferSize = (classNameLength * sizeof(WCHAR)) + sizeof(L"\\Versions");
-    
+
     classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, bufferSize, WDFLDR_TAG);
     if (classVersions.Buffer == NULL)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
-        
+
     classVersions.MaximumLength = (USHORT)bufferSize;
     status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", ClassBindInfo->ClassName);
     if (!NT_SUCCESS(status))
@@ -271,7 +263,7 @@ GetClassRegistryHandle(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                rootHandle,
                                NULL);
-    
+
     status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &objectAttributes);
     if (!NT_SUCCESS(status))
     {
@@ -291,7 +283,7 @@ GetClassRegistryHandle(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                classVersionsHandle,
                                NULL);
-    
+
     status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &objectAttributes);
     if (!NT_SUCCESS(status))
     {
@@ -311,7 +303,7 @@ GetClassRegistryHandle(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                classVersionHandle,
                                NULL);
-    
+
     status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
     if (!NT_SUCCESS(status))
     {
@@ -345,14 +337,14 @@ GetDefaultClassServiceName(
     SIZE_T bufferSize;
     NTSTATUS status;
 
-    /* 
+    /*
      * version numbers are 2 digits each (4 chars)
      */
     classNameLength = wcslen(ClassBindInfo->ClassName);
-    bufferSize = (classNameLength * sizeof(WCHAR)) + 
-                 (sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") + 
+    bufferSize = (classNameLength * sizeof(WCHAR)) +
+                 (sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") +
                   (4 * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
-    
+
     ServiceName->Buffer = ExAllocatePoolWithTag(PagedPool, bufferSize, WDFLDR_TAG);
     if (ServiceName->Buffer == NULL)
     {
@@ -393,12 +385,12 @@ GetClassServicePath(
 
     if (!NT_SUCCESS(status))
     {
-        __DBGPRINT(("ERROR: GetClassRegistryHandle failed with status 0x%x\n", status));        
+        __DBGPRINT(("ERROR: GetClassRegistryHandle failed with status 0x%x\n", status));
     }
     else
     {
         status = FxLdrQueryData(Handle, &ValueName, WDFLDR_TAG, &pKeyValPartial);
-        
+
         if (!NT_SUCCESS(status))
         {
             __DBGPRINT(("ERROR: QueryData failed with status 0x%x\n", status));
@@ -412,7 +404,7 @@ GetClassServicePath(
     if (!NT_SUCCESS(status))
     {
         status = GetDefaultClassServiceName(ClassBindInfo, BindInfo, ServicePath);
-        
+
         if (!NT_SUCCESS(status))
         {
             __DBGPRINT(("ERROR: GetDefaultClassServiceName failed, status 0x%x\n", status));
@@ -496,7 +488,7 @@ ReferenceClassVersion(
     {
         if (!NT_SUCCESS(status))
             goto clean;
-        
+
         ClassBindInfo->ClassModule = pClassModule;
         *ClassModule = pClassModule;
     }
@@ -507,12 +499,12 @@ ReferenceClassVersion(
      */
     if (created || (pClassModule && !pClassModule->ClassLibraryInfo))
     {
-               
+
         status = ZwLoadDriver(&driverServiceName);
         if (!NT_SUCCESS(status))
         {
 
-            if (status == STATUS_OBJECT_PATH_NOT_FOUND || 
+            if (status == STATUS_OBJECT_PATH_NOT_FOUND ||
                 status == STATUS_OBJECT_NAME_NOT_FOUND ||
                 status == STATUS_IMAGE_ALREADY_LOADED)
             {
@@ -530,13 +522,13 @@ ReferenceClassVersion(
         /* Class module exists and has ClassLibraryInfo - skip ZwLoadDriver */
         status = STATUS_SUCCESS;
     }
-    
+
     /* Always set the class module regardless of ZwLoadDriver result (Again.. UCX) */
     if (pClassModule && NT_SUCCESS(status))
     {
         ClassBindInfo->ClassModule = pClassModule;
         *ClassModule = pClassModule;
-        
+
         InterlockedExchangeAdd(&pClassModule->ClientRefCount, 1);
         goto exit_success;
     }
@@ -620,7 +612,7 @@ FindClassByServiceNameLocked(
             UNICODE_STRING haystackName;
             pClassModule = CONTAINING_RECORD(classEntry, CLASS_MODULE, LibraryLinkage);
             GetNameFromPath(&pClassModule->Service, &haystackName);
- 
+
             if (RtlEqualUnicodeString(&needleName, &haystackName, TRUE))
             {
                 if (LibModule != NULL)
@@ -666,14 +658,14 @@ LibraryUnloadClasses(
         entry = RemoveHeadList(&removedList);
         InitializeListHead(entry);
         pClassModule = CONTAINING_RECORD(entry, CLASS_MODULE, LibraryLinkage);
-            
+
         __DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
 
         ClassUnload(pClassModule, 0);
         if (InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1) == 1)
             ClassCleanupAndFree(pClassModule);
     }
-    
+
     return classListHead;
 }
 
@@ -690,7 +682,7 @@ LibraryAddToClassListLocked(
     result = &ClassModule->LibraryLinkage;
     InsertHeadList(&LibModule->ClassListHead, &ClassModule->LibraryLinkage);
 
-    DPRINT_VERBOSE(("Added class %wZ to library %wZ\n", 
+    DPRINT_VERBOSE(("Added class %wZ to library %wZ\n",
                    &ClassModule->Service, &LibModule->ServicePath));
 
     return result;
@@ -732,7 +724,7 @@ ClassUnlinkClient(
 {
     PCLASS_CLIENT_MODULE client;
     BOOLEAN isUnlinked;
-    PLIST_ENTRY entry;    
+    PLIST_ENTRY entry;
 
     client = NULL;
     isUnlinked = FALSE;
@@ -770,7 +762,7 @@ ClassAddReference(
     _In_ PCLASS_MODULE ClassModule)
 {
     InterlockedIncrement(&ClassModule->ClassRefCount);
-    DPRINT_VERBOSE(("Added reference to class %wZ, RefCount=%d\n", 
+    DPRINT_VERBOSE(("Added reference to class %wZ, RefCount=%d\n",
                    &ClassModule->Service, ClassModule->ClassRefCount));
 }
 
@@ -779,7 +771,7 @@ ClassReleaseClientReference(
     _In_ PCLASS_MODULE ClassModule)
 {
     int refs;
-    
+
     __DBGPRINT(("Dereference module %wZ\n", &ClassModule->Service));
     refs = InterlockedDecrement(&ClassModule->ClientRefCount);
 
@@ -807,7 +799,7 @@ DereferenceClassVersion(
 
     if (pClassModule)
     {
-        if (pClassModule->ClassLibraryInfo && 
+        if (pClassModule->ClassLibraryInfo &&
             pClassModule->ClassLibraryInfo->ClassLibraryUnbindClient)
         {
             pClassModule->ClassLibraryInfo->ClassLibraryUnbindClient(ClassBindInfo, &Globals);
