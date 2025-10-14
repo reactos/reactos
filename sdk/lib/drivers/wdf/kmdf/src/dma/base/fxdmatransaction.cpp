@@ -1807,6 +1807,7 @@ FxDmaPacketTransaction::StageTransfer(
     UCHAR sgListBuffer[sizeof(SCATTER_GATHER_LIST)
                             + sizeof(SCATTER_GATHER_ELEMENT)];
 #endif
+
     WDFDMATRANSACTION dmaTransaction;
 
     KIRQL oldIrql;
@@ -2006,9 +2007,10 @@ FxDmaPacketTransaction::StageTransfer(
         // We can use a shared one in that case because we won't be mapping
         // multiple system DMA requests concurrently (HAL doesn't allow it)
         //
-        FxDmaEnabler* enabler = GetDmaEnabler();
+        FxDmaEnabler* enabler;
         size_t sgListSize;
 
+        enabler = GetDmaEnabler();
 
         if (enabler->IsBusMaster()) {
             sgList = (PSCATTER_GATHER_LIST)sgListBuffer;

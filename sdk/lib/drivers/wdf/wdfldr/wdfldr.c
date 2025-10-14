@@ -119,8 +119,8 @@ DllInitialize(
     }
 
     gAlreadyInitialized = TRUE;
-    RtlZeroMemory(&WdfLdrGlobals, sizeof(WDF_LDR_GLOBALS));
-    RtlZeroMemory(&WdfLdrDiags, sizeof(WDFLDR_DIAGS));
+    RtlZeroMemory(&WdfLdrGlobals, sizeof(WdfLdrGlobals));
+    RtlZeroMemory(&WdfLdrDiags, sizeof(WdfLdrDiags));
 
     InitializeListHead(&WdfLdrGlobals.LoadedModulesList);
     status = ExInitializeResourceLite(&WdfLdrGlobals.LoadedModulesListLock);

@@ -34,7 +34,7 @@ LibraryFree(
     }
 
     ExDeleteResourceLite(&LibModule->ClientsListLock);
-    RtlZeroMemory(LibModule, sizeof(LIBRARY_MODULE));
+    RtlZeroMemory(LibModule, sizeof(*LibModule));
     ExFreePoolWithTag(LibModule, WDFLDR_TAG);
 
     DPRINT_TRACE_EXIT();
@@ -56,7 +56,7 @@ LibraryCreate(
     _Out_ PLIBRARY_MODULE* OutLibraryModule)
 {
     NTSTATUS status;
-    PLIBRARY_MODULE pLibModule = NULL;
+    PLIBRARY_MODULE LibModule = NULL;
 
     DPRINT_TRACE_ENTRY();
     if (!ServicePath || !OutLibraryModule)
@@ -68,42 +68,42 @@ LibraryCreate(
 
     *OutLibraryModule = NULL;
 
-    pLibModule = ExAllocatePoolZero(NonPagedPool, sizeof(LIBRARY_MODULE), WDFLDR_TAG);
-    if (pLibModule == NULL)
+    LibModule = ExAllocatePoolZero(NonPagedPool, sizeof(*LibModule), WDFLDR_TAG);
+    if (LibModule == NULL)
     {
         DPRINT_ERROR(("Failed to allocate library module structure\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    pLibModule->LibraryRefCount = 1;
-    pLibModule->ImplicitlyLoaded = (LibraryInfo == NULL);
-    pLibModule->IsBootDriver = ServiceCheckBootStart((PUNICODE_STRING)ServicePath);
-    pLibModule->LoaderThread = KeGetCurrentThread();
+    LibModule->LibraryRefCount = 1;
+    LibModule->ImplicitlyLoaded = (LibraryInfo == NULL);
+    LibModule->IsBootDriver = ServiceCheckBootStart((PUNICODE_STRING)ServicePath);
+    LibModule->LoaderThread = KeGetCurrentThread();
 
-    InitializeListHead(&pLibModule->ClientsListHead);
-    InitializeListHead(&pLibModule->ClassListHead);
+    InitializeListHead(&LibModule->ClientsListHead);
+    InitializeListHead(&LibModule->ClassListHead);
 
-    status = ExInitializeResourceLite(&pLibModule->ClientsListLock);
+    status = ExInitializeResourceLite(&LibModule->ClientsListLock);
     if (!NT_SUCCESS(status))
     {
         DPRINT_ERROR(("ExInitializeResourceLite failed with status 0x%x\n", status));
         goto Failure;
     }
 
-    KeInitializeEvent(&pLibModule->LoaderEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&LibModule->LoaderEvent, SynchronizationEvent, FALSE);
 
     /* Only set library information if provided */
     if (LibraryInfo)
     {
-        pLibModule->LibraryInfo = LibraryInfo;
-        pLibModule->Version = LibraryInfo->Version;
+        LibModule->LibraryInfo = LibraryInfo;
+        LibModule->Version = LibraryInfo->Version;
         DPRINT_VERBOSE(("Library info provided: Version %d.%d.%d\n",
                        LibraryInfo->Version.Major,
                        LibraryInfo->Version.Minor,
                        LibraryInfo->Version.Build));
     }
 
-    pLibModule->ServicePath.Buffer = ExAllocatePoolWithTag(PagedPool,
+    LibModule->ServicePath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                            ServicePath->MaximumLength,
                                                            WDFLDR_TAG);
     if (!pLibModule->ServicePath.Buffer)
@@ -113,32 +113,32 @@ LibraryCreate(
         goto Failure;
     }
 
-    pLibModule->ServicePath.MaximumLength = ServicePath->MaximumLength;
-    pLibModule->ServicePath.Length = ServicePath->Length;
-    RtlCopyMemory(pLibModule->ServicePath.Buffer, ServicePath->Buffer, ServicePath->Length);
+    LibModule->ServicePath.MaximumLength = ServicePath->MaximumLength;
+    LibModule->ServicePath.Length = ServicePath->Length;
+    RtlCopyMemory(LibModule->ServicePath.Buffer, ServicePath->Buffer, ServicePath->Length);
 
-    status = GetImageName(ServicePath, &pLibModule->ImageName);
+    status = GetImageName(ServicePath, &LibModule->ImageName);
     if (!NT_SUCCESS(status))
     {
         DPRINT_ERROR(("Failed to get image name from service path\n"));
         goto Failure;
     }
 
-    status = GetImageInfo(&pLibModule->ImageName,
-                          &pLibModule->ImageAddress,
-                          &pLibModule->ImageSize);
+    status = GetImageInfo(&LibModule->ImageName,
+                          &LibModule->ImageAddress,
+                          &LibModule->ImageSize);
     if (NT_SUCCESS(status))
     {
         // Insert into loaded modules list. The LoadedModulesListLock is held here
-        InsertHeadList(&WdfLdrGlobals.LoadedModulesList, &pLibModule->LibraryListEntry);
+        InsertHeadList(&WdfLdrGlobals.LoadedModulesList, &LibModule->LibraryListEntry);
 
-        *OutLibraryModule = pLibModule;
+        *OutLibraryModule = LibModule;
 
         DPRINT_VERBOSE(("Successfully created library module %wZ (Image: %wZ, Base: %p, Size: 0x%x)\n",
-               &pLibModule->ServicePath,
-               &pLibModule->ImageName,
-               pLibModule->ImageAddress,
-               pLibModule->ImageSize));
+               &LibModule->ServicePath,
+               &LibModule->ImageName,
+               LibModule->ImageAddress,
+               LibModule->ImageSize));
 
         DPRINT_TRACE_EXIT();
         return STATUS_SUCCESS;
@@ -147,9 +147,9 @@ LibraryCreate(
     DPRINT_ERROR(("GetImageInfo failed with status 0x%x\n", status));
 
 Failure:
-    if (pLibModule)
+    if (LibModule)
     {
-        LibraryFree(pLibModule);
+        LibraryFree(LibModule);
     }
 
     DPRINT_TRACE_EXIT();

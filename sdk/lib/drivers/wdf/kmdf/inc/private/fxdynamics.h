@@ -14,15 +14,6 @@ Environment:
 #ifndef _FXDYNAMICS_H_
 #define _FXDYNAMICS_H_
 
-typedef WDFAPI NTSTATUS
-(NTAPI *PFN_ROSWDFUNIMPLEMENTED)(VOID);
-
-WDFAPI
-NTSTATUS
-NTAPI
-WdfApiNotImplemented(VOID);
-
-
 typedef struct _WDFFUNCTIONS {
 
     PFN_WDFCHILDLISTCREATE                                    pfnWdfChildListCreate;

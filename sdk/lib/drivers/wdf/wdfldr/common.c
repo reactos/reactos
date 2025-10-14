@@ -10,14 +10,14 @@
 
 
 VOID
-FxLdrAcquireLoadedModuleLock()
+FxLdrAcquireLoadedModuleLock(VOID)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&WdfLdrGlobals.LoadedModulesListLock, TRUE);
 }
 
 VOID
-FxLdrReleaseLoadedModuleLock()
+FxLdrReleaseLoadedModuleLock(VOID)
 {
     ExReleaseResourceLite(&WdfLdrGlobals.LoadedModulesListLock);
     KeLeaveCriticalRegion();

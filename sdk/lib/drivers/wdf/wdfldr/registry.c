@@ -28,7 +28,6 @@ GetVersionRegistryHandle(
     HANDLE keyHandle = NULL;
     DECLARE_UNICODE_STRING_SIZE(string, 256);
 
-
     status = RtlUnicodeStringPrintf(&string,
         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf\\%s\\Versions",
         BindInfo->Component); // Component name for kmdf driver - 'KmdfLibrary'

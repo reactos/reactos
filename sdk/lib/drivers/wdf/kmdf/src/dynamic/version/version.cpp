@@ -40,7 +40,6 @@ extern "C" {
 #define REGISTRY_KMDF_MINOR_VERSION L"MinorVersion"
 #define REGISTRY_KMDF_BUILD_NUMBER L"BuildNumber"
 
-
 //-----------------------------------------------------------------------------
 // These header files are referenced in order to make internal structures
 // available in public symbols. Various WDFKD debug commands use these
@@ -342,8 +341,9 @@ DriverEntry(
     // Initialize global to make NonPagedPool be treated as NxPool on Win8
     // and NonPagedPool on down-level
     //
-    // ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
-
+#ifndef __REACTOS__
+    ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+#endif
     RtlInitUnicodeString(&string, WDF_REGISTRY_DBGPRINT_ON);
 
     //
