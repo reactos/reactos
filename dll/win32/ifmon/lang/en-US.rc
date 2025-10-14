@@ -25,4 +25,13 @@ BEGIN
     IDS_SUBNETMASKS      "    Subnet Masks:                         %s\n"
 
     IDS_EMPTYLINE        "                                          %s\n"
+
+
+
+    IDS_DUMP_NEWLINE     "\n"
+    IDS_DUMP_HEADERLINE  "# ----------------------------------\n"
+
+    IDS_DUMP_IP_HEADER   "# Interface IP Configuration for ""%s""\n"
+
+
 END

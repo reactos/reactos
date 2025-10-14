@@ -22,3 +22,7 @@
 #define IDS_SUBNETMASKS      308
 
 #define IDS_EMPTYLINE        400
+
+#define IDS_DUMP_NEWLINE     800
+#define IDS_DUMP_HEADERLINE  801
+#define IDS_DUMP_IP_HEADER   802

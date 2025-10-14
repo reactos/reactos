@@ -331,6 +331,124 @@ IpShowDns(
 static
 DWORD
 WINAPI
+IpDumpFn(
+    _In_ LPCWSTR pwszRouter,
+    _In_ LPWSTR *ppwcArguments,
+    _In_ DWORD dwArgCount,
+    _In_ LPCVOID pvData)
+{
+    PIP_ADAPTER_ADDRESSES pAdapterAddresses = NULL, Ptr;
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicastAddress;
+    PIP_ADAPTER_DNS_SERVER_ADDRESS pDnsServer;
+    WCHAR AddressBuffer[17], MaskBuffer[17];
+    ULONG adaptOutBufLen = 15000;
+    ULONG Flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST;
+    DWORD Error = ERROR_SUCCESS;
+
+    DPRINT("IpDumpFn(%S %p %lu %p)\n", pwszRouter, ppwcArguments, dwArgCount, pvData);
+
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
+    PrintMessage(L"# Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
+    PrintMessage(L"pushd\n");
+    PrintMessage(L"interface ip\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+
+    /* set required buffer size */
+    pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
+    if (pAdapterAddresses == NULL)
+    {
+        Error = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
+    if (Error == ERROR_BUFFER_OVERFLOW)
+    {
+       free(pAdapterAddresses);
+       pAdapterAddresses = (PIP_ADAPTER_ADDRESSES)malloc(adaptOutBufLen);
+       if (pAdapterAddresses == NULL)
+       {
+           Error = ERROR_NOT_ENOUGH_MEMORY;
+           goto done;
+       }
+    }
+
+    Error = GetAdaptersAddresses(AF_INET, Flags, NULL, pAdapterAddresses, &adaptOutBufLen);
+    if (Error != ERROR_SUCCESS)
+        goto done;
+
+    Ptr = pAdapterAddresses;
+    while (Ptr)
+    {
+        if (Ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK)
+        {
+            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+            PrintMessageFromModule(hDllInstance, IDS_DUMP_IP_HEADER, Ptr->FriendlyName);
+            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+
+            if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+            {
+                PrintMessage(L"set address name=\"%s\" source=dhcp\n",
+                             Ptr->FriendlyName);
+            }
+            else
+            {
+                pUnicastAddress = Ptr->FirstUnicastAddress;
+                while (pUnicastAddress)
+                {
+                    FormatIPv4Address(AddressBuffer, &pUnicastAddress->Address);
+                    wcscpy(MaskBuffer, L"?");
+
+                    PrintMessage(L"set address name=\"%s\" source=static address=%s mask=%s\n",
+                                 Ptr->FriendlyName, AddressBuffer, MaskBuffer);
+
+                    pUnicastAddress = pUnicastAddress->Next;
+                }
+            }
+
+            if (Ptr->Flags & IP_ADAPTER_DHCP_ENABLED)
+            {
+                PrintMessage(L"set dns name=\"%s\" source=dhcp\n",
+                             Ptr->FriendlyName);
+            }
+            else
+            {
+                pDnsServer = Ptr->FirstDnsServerAddress;
+                while (pDnsServer)
+                {
+                    FormatIPv4Address(AddressBuffer, &pDnsServer->Address);
+
+                    PrintMessage(L"set dns name=\"%s\" source=%s address=%s\n",
+                                 Ptr->FriendlyName);
+
+                    pDnsServer = pDnsServer->Next;
+                }
+
+            }
+
+            PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+        }
+
+        Ptr = Ptr->Next;
+    }
+
+done:
+    if (pAdapterAddresses)
+        free(pAdapterAddresses);
+
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+    PrintMessage(L"popd\n");
+    PrintMessage(L"# End of Interface IP Configuration\n");
+    PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
+
+    return ERROR_SUCCESS;
+}
+
+
+static
+DWORD
+WINAPI
 IpStart(
     _In_ const GUID *pguidParent,
     _In_ DWORD dwVersion)
@@ -349,6 +467,8 @@ IpStart(
 
     ContextAttributes.ulNumGroups = sizeof(IpGroups) / sizeof(CMD_GROUP_ENTRY);
     ContextAttributes.pCmdGroups = IpGroups;
+
+    ContextAttributes.pfnDumpFn = IpDumpFn;
 
     RegisterContext(&ContextAttributes);
 
