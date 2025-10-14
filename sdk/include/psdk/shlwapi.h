@@ -16,6 +16,7 @@
 
 #ifndef WINSHLWAPI
 #ifdef __GNUC__
+/* FIXME: HACK: CORE-6504 */
 #define LWSTDAPI_(t)   t WINAPI
 #define LWSTDAPIV_(t)  t WINAPIV
 #else
