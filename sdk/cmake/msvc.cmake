@@ -1,4 +1,5 @@
 
+# TODO: Check/Document Debug, RelWithDebInfo and MinSizeRel cases.
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(/Ox /Ob2 /Ot /Oy)
     # Avoid spam in clang-cl as it doesn't support /GT
