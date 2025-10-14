@@ -3221,6 +3221,7 @@ DWORD WINAPI GetBestInterfaceEx(struct sockaddr *pDestAddr,PDWORD pdwBestIfIndex
     return 0L;
 }
 
+#ifdef GetAdaptersAddressesV1
 /*
  * @unimplemented
  */
@@ -3229,6 +3230,7 @@ DWORD WINAPI NhpAllocateAndGetInterfaceInfoFromStack(IP_INTERFACE_NAME_INFO **pp
     FIXME(":stub\n");
     return 0L;
 }
+#endif
 
 /*
  * @unimplemented
