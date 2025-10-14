@@ -44,6 +44,9 @@ IDB_STAR        BITMAP  "res/star.bmp"
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
