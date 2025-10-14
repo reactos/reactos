@@ -214,22 +214,59 @@ PrintContext(
         HeapFree(GetProcessHeap(), 0, pHelpArray);
 }
 
+
+static
+int
+SubContextCompare(
+    _In_ const void *p1,
+    _In_ const void *p2)
+{
+    return _wcsicmp((*((PCONTEXT_ENTRY*)p1))->pszContextName, (*((PCONTEXT_ENTRY*)p2))->pszContextName);
+}
+
+
 static
 VOID
 PrintSubcontexts(
     _In_ PCONTEXT_ENTRY pContext)
 {
+    PCONTEXT_ENTRY pSubContext, *pSubContextArray = NULL;
+    DWORD dwCount, dwIndex;
+
     if (pContext->pSubContextHead == NULL)
         return;
 
-    ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
-    pContext = pContext->pSubContextHead;
-    while (pContext != NULL)
+    dwCount = 0;
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext != NULL)
     {
-        ConPrintf(StdOut, L" %s", pContext->pszContextName);
-        pContext = pContext->pNext;
+        dwCount++;
+        pSubContext = pSubContext->pNext;
+    }
+
+    pSubContextArray = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(PCONTEXT_ENTRY));
+    if (pSubContextArray == NULL)
+        return;
+
+    dwIndex = 0;
+    pSubContext = pContext->pSubContextHead;
+    while (pSubContext != NULL)
+    {
+        pSubContextArray[dwIndex] = pSubContext;
+        dwIndex++;
+        pSubContext = pSubContext->pNext;
+    }
+  
+    qsort(pSubContextArray, dwCount, sizeof(PCONTEXT_ENTRY), SubContextCompare);
+
+    ConResPrintf(StdOut, IDS_SUBCONTEXT_HEADER);
+    for (dwIndex = 0; dwIndex < dwCount; dwIndex++)
+    {
+        ConPrintf(StdOut, L" %s", pSubContextArray[dwIndex]->pszContextName);
     }
     ConPuts(StdOut, L"\n");
+
+    HeapFree(GetProcessHeap(), 0, pSubContextArray);
 }
 
 
