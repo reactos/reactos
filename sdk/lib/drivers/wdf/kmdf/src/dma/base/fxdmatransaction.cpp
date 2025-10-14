@@ -1800,13 +1800,9 @@ FxDmaPacketTransaction::StageTransfer(
     PSCATTER_GATHER_LIST sgList;
 
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-#ifndef __REACTOS__
     UCHAR_MEMORY_ALIGNED sgListBuffer[sizeof(SCATTER_GATHER_LIST)
                             + sizeof(SCATTER_GATHER_ELEMENT)];
-#else
-    UCHAR sgListBuffer[sizeof(SCATTER_GATHER_LIST)
-                            + sizeof(SCATTER_GATHER_ELEMENT)];
-#endif
+
     WDFDMATRANSACTION dmaTransaction;
 
     KIRQL oldIrql;

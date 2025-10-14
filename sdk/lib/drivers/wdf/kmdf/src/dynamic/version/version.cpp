@@ -342,8 +342,9 @@ DriverEntry(
     // Initialize global to make NonPagedPool be treated as NxPool on Win8
     // and NonPagedPool on down-level
     //
-    // ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
-
+#ifndef __REACTOS__
+    ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+#endif
     RtlInitUnicodeString(&string, WDF_REGISTRY_DBGPRINT_ON);
 
     //
