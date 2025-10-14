@@ -417,7 +417,7 @@ StartSearch:
 
     mov    dl, byte ptr [BootDrive]
     mov    dh, byte ptr [BootPartition]
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 // Error message if Freeldr is compressed, encrypted or sparse
 CompressedFreeldr:
