@@ -167,6 +167,7 @@ HRESULT
 WINAPI
 INetCfgClass_fnFindComponent(
     INetCfgClass *iface,
+    LPCWSTR pszwComponentId,
     INetCfgComponent **pComponent)
 {
 //    HRESULT hr;
