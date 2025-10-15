@@ -1,5 +1,5 @@
 /*
- * ReactOS German ASCII Keyboard layout
+ * ReactOS German IBM Keyboard layout
  * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  *
