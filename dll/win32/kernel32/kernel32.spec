@@ -1,5 +1,5 @@
-@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) NTDLL.RtlAcquireSRWLockExclusive
-@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) NTDLL.RtlAcquireSRWLockShared
+@ stdcall -version=0x600+ AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
+@ stdcall -version=0x600+ AcquireSRWLockShared(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
@@ -1155,8 +1155,8 @@
 @ stdcall Toolhelp32ReadProcessMemory(long ptr ptr long ptr)
 @ stdcall TransactNamedPipe(long ptr long ptr long ptr ptr)
 @ stdcall TransmitCommChar(long long)
-@ stdcall -version=0x601+ TryAcquireSRWLockExclusive(ptr) NTDLL.RtlTryAcquireSRWLockExclusive
-@ stdcall -version=0x601+ TryAcquireSRWLockShared(ptr) NTDLL.RtlTryAcquireSRWLockShared
+@ stdcall -version=0x601+ TryAcquireSRWLockExclusive(ptr) ntdll.RtlTryAcquireSRWLockExclusive
+@ stdcall -version=0x601+ TryAcquireSRWLockShared(ptr) ntdll.RtlTryAcquireSRWLockShared
 @ stdcall TryEnterCriticalSection(ptr) ntdll.RtlTryEnterCriticalSection
 @ stub -version=0x600+ TrySubmitThreadpoolCallback
 @ stdcall TzSpecificLocalTimeToSystemTime(ptr ptr ptr)
