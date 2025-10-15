@@ -1290,8 +1290,8 @@ VOID WINAPI AcquireSRWLockExclusive(PSRWLOCK);
 VOID WINAPI AcquireSRWLockShared(PSRWLOCK);
 #endif
 #if (_WIN32_WINNT >= 0x0601)
-BOOLEAN WINAPI TryAcquireSRWLockExclusive(PSRWLOCK);
-BOOLEAN WINAPI TryAcquireSRWLockShared(PSRWLOCK);
+BOOL WINAPI TryAcquireSRWLockExclusive(PSRWLOCK);
+BOOL WINAPI TryAcquireSRWLockShared(PSRWLOCK);
 #endif
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI ActivateActCtx(_Inout_opt_ HANDLE, _Out_ ULONG_PTR*);
