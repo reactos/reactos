@@ -7,10 +7,98 @@
 
 #include "pciidex.h"
 
-#define NDEBUG
-#include <debug.h>
-
 ULONG PciIdeControllerNumber = 0;
+
+CODE_SEG("PAGE")
+BOOLEAN
+PciFindDevice(
+    _In_ __inner_callback PATA_PCI_MATCH_FN MatchFunction,
+    _In_ PVOID Context)
+{
+    ULONG BusNumber, DeviceNumber, FunctionNumber;
+
+    PAGED_CODE();
+
+    for (BusNumber = 0; BusNumber < 0xFF; ++BusNumber)
+    {
+        for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; ++DeviceNumber)
+        {
+            for (FunctionNumber = 0; FunctionNumber < PCI_MAX_FUNCTION; ++FunctionNumber)
+            {
+                UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, RevisionID)];
+                PPCI_COMMON_HEADER PciConfig = (PPCI_COMMON_HEADER)Buffer; // Partial PCI header
+                PCI_SLOT_NUMBER PciSlot;
+                ULONG BytesRead;
+
+                PciSlot.u.AsULONG = 0;
+                PciSlot.u.bits.DeviceNumber = DeviceNumber;
+                PciSlot.u.bits.FunctionNumber = FunctionNumber;
+
+                BytesRead = HalGetBusDataByOffset(PCIConfiguration,
+                                                  BusNumber,
+                                                  PciSlot.u.AsULONG,
+                                                  &Buffer,
+                                                  0,
+                                                  sizeof(Buffer));
+                if (BytesRead != PCI_COMMON_HDR_LENGTH ||
+                    PciConfig->VendorID == PCI_INVALID_VENDORID ||
+                    PciConfig->VendorID == 0)
+                {
+                    if (FunctionNumber == 0)
+                    {
+                        /* This slot has no single- or a multi-function device */
+                        break;
+                    }
+                    else
+                    {
+                        /* Continue scanning the functions */
+                        continue;
+                    }
+                }
+
+                if (MatchFunction(Context, BusNumber, PciSlot, PciConfig))
+                    return TRUE;
+
+                if (!PCI_MULTIFUNCTION_DEVICE(PciConfig))
+                {
+                    /* The device is a single function device */
+                    break;
+                }
+            }
+
+        }
+    }
+
+    return FALSE;
+}
+
+VOID
+PciRead(
+    _In_ PATA_CONTROLLER Controller,
+    _Out_writes_bytes_all_(BufferLength) PVOID Buffer,
+    _In_ ULONG ConfigDataOffset,
+    _In_ ULONG BufferLength)
+{
+    (*Controller->BusInterface.GetBusData)(Controller->BusInterface.Context,
+                                           PCI_WHICHSPACE_CONFIG,
+                                           Buffer,
+                                           ConfigDataOffset,
+                                           BufferLength);
+}
+
+VOID
+PciWrite(
+    _In_ PATA_CONTROLLER Controller,
+    _In_reads_bytes_(BufferLength) PVOID Buffer,
+    _In_ ULONG ConfigDataOffset,
+    _In_ ULONG BufferLength)
+{
+    (*Controller->BusInterface.SetBusData)(Controller->BusInterface.Context,
+                                           PCI_WHICHSPACE_CONFIG,
+                                           Buffer,
+                                           ConfigDataOffset,
+                                           BufferLength);
+}
 
 CODE_SEG("PAGE")
 NTSTATUS
@@ -28,7 +116,7 @@ PciIdeXDispatchWmi(
         PFDO_DEVICE_EXTENSION FdoExtension = DeviceObject->DeviceExtension;
 
         IoSkipCurrentIrpStackLocation(Irp);
-        Status = IoCallDriver(FdoExtension->Ldo, Irp);
+        Status = IoCallDriver(FdoExtension->Common.LowerDeviceObject, Irp);
     }
     else
     {
@@ -52,6 +140,148 @@ PciIdeXUnload(
     NOTHING;
 }
 
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXPnpRepeatRequest(
+    _In_ PCOMMON_DEVICE_EXTENSION CommonExt,
+    _In_ PIRP Irp,
+    _In_opt_ PDEVICE_CAPABILITIES DeviceCapabilities)
+{
+    PCOMMON_DEVICE_EXTENSION FdoExt = CommonExt->FdoExt;
+    PDEVICE_OBJECT TopDeviceObject;
+    PIO_STACK_LOCATION IoStack, SubStack;
+    PIRP SubIrp;
+    KEVENT Event;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+    ASSERT(!IS_FDO(CommonExt));
+
+    TopDeviceObject = IoGetAttachedDeviceReference(FdoExt->Self);
+
+    SubIrp = IoAllocateIrp(TopDeviceObject->StackSize, FALSE);
+    if (!SubIrp)
+    {
+        ObDereferenceObject(TopDeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    SubStack = IoGetNextIrpStackLocation(SubIrp);
+    RtlCopyMemory(SubStack, IoStack, sizeof(*SubStack));
+
+    if (DeviceCapabilities)
+        SubStack->Parameters.DeviceCapabilities.Capabilities = DeviceCapabilities;
+
+    IoSetCompletionRoutine(SubIrp,
+                           PciIdeXPdoCompletionRoutine,
+                           &Event,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+
+    SubIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
+    Status = IoCallDriver(TopDeviceObject, SubIrp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    }
+
+    ObDereferenceObject(TopDeviceObject);
+
+    Status = SubIrp->IoStatus.Status;
+    IoFreeIrp(SubIrp);
+
+    return Status;
+}
+
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXPnpQueryDeviceUsageNotification(
+    _In_ PCOMMON_DEVICE_EXTENSION CommonExt,
+    _In_ PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    volatile LONG* Counter;
+
+    PAGED_CODE();
+
+    if (IS_FDO(CommonExt))
+    {
+        Status = PciIdeXPnpRepeatRequest(CommonExt, Irp, NULL);
+    }
+    else
+    {
+        if (!NT_VERIFY(IoForwardIrpSynchronously(CommonExt->LowerDeviceObject, Irp)))
+            return STATUS_UNSUCCESSFUL;
+        Status = Irp->IoStatus.Status;
+    }
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    switch (IoStack->Parameters.UsageNotification.Type)
+    {
+        case DeviceUsageTypePaging:
+            Counter = &CommonExt->PageFiles;
+            break;
+
+        case DeviceUsageTypeHibernation:
+            Counter = &CommonExt->HibernateFiles;
+            break;
+
+        case DeviceUsageTypeDumpFile:
+            Counter = &CommonExt->DumpFiles;
+            break;
+
+        default:
+            return Status;
+    }
+
+    IoAdjustPagingPathCount(Counter, IoStack->Parameters.UsageNotification.InPath);
+
+    if (!IS_FDO(CommonExt))
+        IoInvalidateDeviceState(CommonExt->Self);
+
+    return STATUS_SUCCESS;
+}
+
+CODE_SEG("PAGE")
+NTSTATUS
+PciIdeXPnpQueryPnpDeviceState(
+    _In_ PCOMMON_DEVICE_EXTENSION CommonExt,
+    _In_ PIRP Irp)
+{
+    PAGED_CODE();
+
+    if (CommonExt->PageFiles || CommonExt->HibernateFiles || CommonExt->DumpFiles)
+        Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
+
+    if (IS_FDO(CommonExt))
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciIdeXPdoCompletionRoutine(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_reads_opt_(_Inexpressible_("varies")) PVOID Context)
+{
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    if (Irp->PendingReturned)
+        KeSetEvent(Context, IO_NO_INCREMENT, FALSE);
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -59,6 +289,7 @@ PciIdeXQueryInterface(
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ const GUID* Guid,
     _Out_ PVOID Interface,
+    _In_ ULONG Version,
     _In_ ULONG Size)
 {
     KEVENT Event;
@@ -72,7 +303,7 @@ PciIdeXQueryInterface(
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-                                       FdoExtension->Ldo,
+                                       FdoExtension->Common.LowerDeviceObject,
                                        NULL,
                                        0,
                                        NULL,
@@ -87,12 +318,12 @@ PciIdeXQueryInterface(
     Stack = IoGetNextIrpStackLocation(Irp);
     Stack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     Stack->Parameters.QueryInterface.InterfaceType = Guid;
-    Stack->Parameters.QueryInterface.Version = 1;
+    Stack->Parameters.QueryInterface.Version = Version;
     Stack->Parameters.QueryInterface.Size = Size;
     Stack->Parameters.QueryInterface.Interface = Interface;
     Stack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
-    Status = IoCallDriver(FdoExtension->Ldo, Irp);
+    Status = IoCallDriver(FdoExtension->Common.LowerDeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
@@ -100,53 +331,6 @@ PciIdeXQueryInterface(
     }
 
     return Status;
-}
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-PciIdeXGetConfigurationInfo(
-    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
-{
-    UCHAR Buffer[RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_HEADER, BaseClass)];
-    PPCI_COMMON_HEADER PciConfig = (PPCI_COMMON_HEADER)Buffer;
-    ULONG BytesRead;
-
-    PAGED_CODE();
-
-    BytesRead = (*FdoExtension->BusInterface.GetBusData)(FdoExtension->BusInterface.Context,
-                                                         PCI_WHICHSPACE_CONFIG,
-                                                         Buffer,
-                                                         0,
-                                                         sizeof(Buffer));
-    if (BytesRead != sizeof(Buffer))
-        return STATUS_IO_DEVICE_ERROR;
-
-    FdoExtension->VendorId = PciConfig->VendorID;
-    FdoExtension->DeviceId = PciConfig->DeviceID;
-
-    if (PciConfig->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR)
-    {
-        if (PciConfig->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR)
-        {
-            /* Both IDE channels in native mode */
-            FdoExtension->InNativeMode =
-                (PciConfig->ProgIf & PCIIDE_PROGIF_PRIMARY_CHANNEL_NATIVE_MODE) &&
-                (PciConfig->ProgIf & PCIIDE_PROGIF_SECONDARY_CHANNEL_NATIVE_MODE);
-        }
-        else if (PciConfig->SubClass == PCI_SUBCLASS_MSC_RAID_CTLR)
-        {
-            FdoExtension->InNativeMode = TRUE;
-        }
-    }
-
-    DPRINT("Controller %04x:%04x, Interface byte 0x%02x, Native mode %d\n",
-           FdoExtension->VendorId,
-           FdoExtension->DeviceId,
-           PciConfig->ProgIf,
-           FdoExtension->InNativeMode);
-
-    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
@@ -168,23 +352,22 @@ PciIdeXAddDevice(
 
     Status = RtlStringCbPrintfW(DeviceNameBuffer,
                                 sizeof(DeviceNameBuffer),
-                                L"\\Device\\Ide\\PciIde%u",
+                                L"\\Device\\Ide\\PciIde%lu",
                                 PciIdeControllerNumber);
     ASSERT(NT_SUCCESS(Status));
     RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
 
-    DPRINT("%s(%p, %p) '%wZ'\n", __FUNCTION__, DriverObject, PhysicalDeviceObject, &DeviceName);
+    INFO("%s(%p, %p) '%wZ'\n", __FUNCTION__, DriverObject, PhysicalDeviceObject, &DeviceName);
 
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
     ASSERT(DriverExtension);
 
     Status = RtlULongAdd(DriverExtension->MiniControllerExtensionSize,
-                         sizeof(FDO_DEVICE_EXTENSION),
+                         sizeof(*FdoExtension),
                          &DeviceExtensionSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Invalid miniport extension size %lx\n",
-                DriverExtension->MiniControllerExtensionSize);
+        ERR("Invalid miniport extension size %lx\n", DriverExtension->MiniControllerExtensionSize);
         return Status;
     }
 
@@ -197,55 +380,56 @@ PciIdeXAddDevice(
                             &Fdo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create FDO 0x%lx\n", Status);
+        ERR("Failed to create FDO 0x%lx\n", Status);
         return Status;
     }
 
     FdoExtension = Fdo->DeviceExtension;
 
-    RtlZeroMemory(FdoExtension, sizeof(FDO_DEVICE_EXTENSION));
-    FdoExtension->Common.IsFDO = TRUE;
+    RtlZeroMemory(FdoExtension, sizeof(*FdoExtension));
+    FdoExtension->Common.Flags = DO_IS_FDO;
     FdoExtension->Common.Self = Fdo;
+    IoInitializeRemoveLock(&FdoExtension->Common.RemoveLock, TAG_PCIIDEX, 0, 0);
+
     FdoExtension->DriverObject = DriverObject;
+    FdoExtension->Pdo = PhysicalDeviceObject;
     FdoExtension->ControllerNumber = PciIdeControllerNumber++;
 
-    KeInitializeSpinLock(&FdoExtension->BusDataLock);
-    ExInitializeFastMutex(&FdoExtension->DeviceSyncMutex);
+    ExInitializeFastMutex(&FdoExtension->PdoListSyncMutex);
+    InitializeListHead(&FdoExtension->PdoListHead);
 
-    Status = IoAttachDeviceToDeviceStackSafe(Fdo, PhysicalDeviceObject, &FdoExtension->Ldo);
+    KeInitializeSpinLock(&FdoExtension->Controller.Lock);
+
+    Status = IoAttachDeviceToDeviceStackSafe(Fdo,
+                                             PhysicalDeviceObject,
+                                             &FdoExtension->Common.LowerDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to attach FDO 0x%lx\n", Status);
+        ERR("Failed to attach FDO 0x%lx\n", Status);
         goto Failure;
     }
 
     /* DMA buffers alignment */
-    Fdo->AlignmentRequirement = max(FdoExtension->Ldo->AlignmentRequirement, FILE_WORD_ALIGNMENT);
+    Fdo->AlignmentRequirement = FdoExtension->Common.LowerDeviceObject->AlignmentRequirement;
+    Fdo->AlignmentRequirement = max(Fdo->AlignmentRequirement, ATA_MIN_BUFFER_ALIGNMENT);
 
     Status = PciIdeXQueryInterface(FdoExtension,
                                    &GUID_BUS_INTERFACE_STANDARD,
-                                   &FdoExtension->BusInterface,
-                                   sizeof(BUS_INTERFACE_STANDARD));
+                                   &FdoExtension->Controller.BusInterface,
+                                   PCI_BUS_INTERFACE_STANDARD_VERSION,
+                                   sizeof(FdoExtension->Controller.BusInterface));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No bus interface 0x%lx\n", Status);
-        goto Failure;
-    }
-
-    Status = PciIdeXGetConfigurationInfo(FdoExtension);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Unable to retrieve the configuration info %lx\n", Status);
+        ERR("No bus interface 0x%lx\n", Status);
         goto Failure;
     }
 
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-
     return STATUS_SUCCESS;
 
 Failure:
-    if (FdoExtension->Ldo)
-        IoDetachDevice(FdoExtension->Ldo);
+    if (FdoExtension->Common.LowerDeviceObject)
+        IoDetachDevice(FdoExtension->Common.LowerDeviceObject);
 
     IoDeleteDevice(Fdo);
 
@@ -297,17 +481,19 @@ PciIdeXInitialize(
 
     PAGED_CODE();
 
-    DPRINT("PciIdeXInitialize(%p '%wZ' %p 0x%lx)\n",
-           DriverObject, RegistryPath, HwGetControllerProperties, ExtensionSize);
+DbgPrint("#"); // fixme
+
+    INFO("PciIdeXInitialize(%p '%wZ' %p 0x%lx)\n",
+         DriverObject, RegistryPath, HwGetControllerProperties, ExtensionSize);
 
     Status = IoAllocateDriverObjectExtension(DriverObject,
                                              DriverObject,
-                                             sizeof(PCIIDEX_DRIVER_EXTENSION),
+                                             sizeof(*DriverExtension),
                                              (PVOID*)&DriverExtension);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    RtlZeroMemory(DriverExtension, sizeof(PCIIDEX_DRIVER_EXTENSION));
+    RtlZeroMemory(DriverExtension, sizeof(*DriverExtension));
     DriverExtension->MiniControllerExtensionSize = ExtensionSize;
     DriverExtension->HwGetControllerProperties = HwGetControllerProperties;
 
