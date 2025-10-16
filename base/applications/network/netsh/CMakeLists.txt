@@ -20,7 +20,7 @@ set_target_properties(netsh
 
 set_module_type(netsh win32cui UNICODE)
 target_link_libraries(netsh conutils ${PSEH_LIB})
-add_importlibs(netsh advapi32 msvcrt user32 kernel32 ntdll)
+add_importlibs(netsh iphlpapi advapi32 msvcrt user32 kernel32 ntdll)
 
 add_pch(netsh precomp.h SOURCE)
 add_cd_file(TARGET netsh DESTINATION reactos/system32 FOR all)

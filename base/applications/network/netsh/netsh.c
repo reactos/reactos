@@ -238,6 +238,43 @@ MatchToken(
 }
 
 DWORD
+WINAPI 
+NsGetFriendlyNameFromIfName(
+    _In_ DWORD dwUnknown1,
+    _In_ PWSTR pszIfName, 
+    _Inout_ PWSTR pszFriendlyName,
+    _Inout_ PDWORD pdwFriendlyName)
+{
+    UNICODE_STRING UnicodeIfName;
+    GUID InterfaceGuid;
+    NTSTATUS Status;
+    DWORD ret;
+
+    DPRINT("NsGetFriendlyNameFromIfName(%lx %S %p %p)\n",
+           dwUnknown1, pszIfName, pszFriendlyName, pdwFriendlyName);
+
+    RtlInitUnicodeString(&UnicodeIfName, pszIfName);
+    Status = RtlGUIDFromString(&UnicodeIfName,
+                               &InterfaceGuid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlGUIDFromString failed 0x%08lx\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    ret = NhGetInterfaceNameFromDeviceGuid(&InterfaceGuid,
+                                           pszFriendlyName,
+                                           pdwFriendlyName,
+                                           0, 0);
+    if (ret != ERROR_SUCCESS)
+    {
+        DPRINT1("NhGetInterfaceNameFromDeviceGuid() failed %lu\n", ret);
+    }
+
+    return ret;
+}
+
+DWORD
 WINAPI
 PreprocessCommand(
     _In_ HANDLE hModule,

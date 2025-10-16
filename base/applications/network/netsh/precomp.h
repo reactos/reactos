@@ -14,17 +14,21 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <ndk/rtlfuncs.h>
+
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
+#include <iphlpapi_undoc.h>
 
 #include <errno.h>
 
 #include <conutils.h>
 #include <netsh.h>
+#include <netsh_undoc.h>
 
 #include "resource.h"
 
