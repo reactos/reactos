@@ -31,11 +31,14 @@ Revision History:
 // Extern "C" the tmh file and all external APIs
 //
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "fxwmiapi.tmh"
+#endif
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfWmiProviderCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -95,6 +98,7 @@ WDFEXPORT(WdfWmiProviderCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfWmiInstanceCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -252,6 +256,7 @@ WDFEXPORT(WdfWmiInstanceCreate)(
 WDFAPI
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfWmiProviderGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -271,6 +276,7 @@ WDFEXPORT(WdfWmiProviderGetDevice)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfWmiProviderIsEnabled)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -292,6 +298,7 @@ WDFEXPORT(WdfWmiProviderIsEnabled)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONGLONG
+STDCALL
 WDFEXPORT(WdfWmiProviderGetTracingHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -312,6 +319,7 @@ WDFEXPORT(WdfWmiProviderGetTracingHandle)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfWmiInstanceRegister)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -334,6 +342,7 @@ WDFEXPORT(WdfWmiInstanceRegister)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfWmiInstanceDeregister)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -355,6 +364,7 @@ WDFEXPORT(WdfWmiInstanceDeregister)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfWmiInstanceGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -374,6 +384,7 @@ WDFEXPORT(WdfWmiInstanceGetDevice)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFWMIPROVIDER
+STDCALL
 WDFEXPORT(WdfWmiInstanceGetProvider)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -395,6 +406,7 @@ WDFEXPORT(WdfWmiInstanceGetProvider)(
 _Must_inspect_result_
 __drv_maxIRQL(APC_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfWmiInstanceFireEvent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
