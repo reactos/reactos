@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS Access Control List Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Serbian resource file
+ * TRANSLATOR:  Copyright 2025 aceydot <aceydot@tuta.io>
+ */
 LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
 
 IDD_SECPAGE DIALOGEX 0, 0, 227, 215
