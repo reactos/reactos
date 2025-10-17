@@ -37,6 +37,7 @@ typedef struct
 typedef struct _DEVICE_INFORMATION
 {
     ULONG DeviceFlags;
+    // Vista+ fields.
     ULONG SectorSize;
     LARGE_INTEGER SectorCount;
 } DEVICE_INFORMATION, *PDEVICE_INFORMATION;
@@ -180,7 +181,7 @@ QueryAvailableFileSystemFormat(
 BOOL
 NTAPI
 QueryDeviceInformation(
-    _In_ PWCHAR DriveRoot,
+    _In_ PCWSTR DriveRoot,
     _Out_ PVOID DeviceInformation,
     _In_ ULONG BufferSize);
 
