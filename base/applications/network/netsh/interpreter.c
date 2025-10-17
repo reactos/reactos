@@ -136,8 +136,8 @@ InterpretCommand(
     _Inout_ PBOOL bDone)
 {
     PCONTEXT_ENTRY pTempContext, pTempSubContext = NULL;
-    PCOMMAND_GROUP pGroup;
-    PCOMMAND_ENTRY pCommand;
+    PCOMMAND_GROUP pGroup = NULL;
+    PCOMMAND_ENTRY pCommand = NULL;
     INTERPRETER_STATE State = STATE_ANALYZE;
     DWORD dwArgIndex = 0;
     DWORD dwError = ERROR_SUCCESS;
@@ -197,7 +197,7 @@ InterpretCommand(
                 if (((dwArgIndex + 1) == (dwArgCount - 1)) &&
                     ((_wcsicmp(argv[dwArgIndex + 1], L"?") == 0) || (_wcsicmp(argv[dwArgIndex + 1], L"help") == 0)))
                 {
-                    PrintCommandHelp(pTempContext, pCommand);
+                    PrintCommandHelp(pTempContext, pGroup, pCommand);
                     State = STATE_DONE;
                     break;
                 }
@@ -209,9 +209,9 @@ InterpretCommand(
                     if (dwError != ERROR_SUCCESS)
                     {
                         if (dwError == ERROR_SHOW_USAGE)
-                            PrintCommandHelp(pTempContext, pCommand);
+                            PrintCommandHelp(pTempContext, pGroup, pCommand);
                         else
-                            ConPrintf(StdOut, L"Commnand: %S  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
+                            ConPrintf(StdOut, L"Command: %s  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
                     }
                 }
 

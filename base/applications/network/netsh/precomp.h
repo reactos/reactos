@@ -150,6 +150,7 @@ FindContextByGuid(
 VOID
 PrintCommandHelp(
     _In_ PCONTEXT_ENTRY pContext,
+    _In_ PCOMMAND_GROUP pGroup,
     _In_ PCOMMAND_ENTRY pCommand);
 
 VOID
