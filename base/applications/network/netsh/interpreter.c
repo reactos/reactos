@@ -213,6 +213,16 @@ InterpretCommand(
                         else
                             ConPrintf(StdOut, L"Command: %s  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
                     }
+                    else
+                    {
+                        /* Execute the commands following a pushd command */
+                        if ((_wcsicmp(pCommand->pwszCmdToken, L"pushd") == 0) &&
+                            (dwArgIndex < dwArgCount))
+                        {
+                            State = STATE_ANALYZE;
+                            break;
+                        }
+                    }
                 }
 
                 State = STATE_DONE;
