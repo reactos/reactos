@@ -1,6 +1,16 @@
 #ifndef __NETSH_UNDOC_H__
 #define __NETSH_UNDOC_H__
 
+VOID
+WINAPI
+FreeQuotedString(
+    _In_ LPWSTR pszQuotedString);
+
+LPWSTR
+WINAPI
+MakeQuotedString(
+    _In_ LPWSTR pszString);
+
 DWORD
 WINAPI 
 NsGetFriendlyNameFromIfName(

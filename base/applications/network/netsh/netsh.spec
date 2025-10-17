@@ -2,13 +2,13 @@
 @ stub ConvertStringToGuid
 @ stub DisplayMessageM
 @ stub DisplayMessageToConsole
-@ stub FreeQuotedString
+@ stdcall FreeQuotedString(wstr)
 @ stub FreeString
 @ stub GenericMonitor
 @ stub GetEnumString
 @ stub GetHostMachineInfo
 @ stub InitializeConsole
-@ stub MakeQuotedString
+@ stdcall MakeQuotedString(wstr)
 @ stub MakeString
 @ stub MatchCmdLine
 @ stdcall MatchEnumTag(ptr wstr long ptr ptr)

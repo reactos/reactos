@@ -194,6 +194,32 @@ done:
     return result;
 }
 
+VOID
+WINAPI
+FreeQuotedString(
+    _In_ LPWSTR pszQuotedString)
+{
+    DPRINT("FreeQuotedString(%S)\n", pszQuotedString);
+    HeapFree(GetProcessHeap(), 0, pszQuotedString);
+}
+
+LPWSTR
+WINAPI
+MakeQuotedString(
+    _In_ LPWSTR pszString)
+{
+    LPWSTR pszQuotedString;
+
+    DPRINT("MakeQuotedString(%S)\n", pszString);
+
+    pszQuotedString = HeapAlloc(GetProcessHeap(), 0, (wcslen(pszString) + 3) * sizeof(WCHAR));
+    if (pszQuotedString == NULL)
+        return NULL;
+
+    swprintf(pszQuotedString, L"\"%s\"", pszQuotedString);
+
+    return pszQuotedString;
+}
 
 DWORD
 WINAPI
