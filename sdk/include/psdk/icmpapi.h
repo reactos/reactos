@@ -1,103 +1,150 @@
 /*
- * Interface to the ICMP functions.
- *
- * Copyright (C) 1999 Francois Gouget
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS PSDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     ICMP API definitions
+ * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
-#ifndef __WINE_ICMPAPI_H
-#define __WINE_ICMPAPI_H
+#ifndef _ICMP_INCLUDED_
+#define _ICMP_INCLUDED_
+
+#pragma once
+
+#ifndef IPHLPAPI_DLL_LINKAGE
+#ifdef DECLSPEC_IMPORT
+#define IPHLPAPI_DLL_LINKAGE DECLSPEC_IMPORT
+#else
+#define IPHLPAPI_DLL_LINKAGE
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HANDLE WINAPI  IcmpCreateFile(
-    VOID
-    );
+IPHLPAPI_DLL_LINKAGE
+HANDLE
+WINAPI
+IcmpCreateFile(
+    VOID);
 
-HANDLE WINAPI  Icmp6CreateFile(
-    VOID
-    );
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+IPHLPAPI_DLL_LINKAGE
+HANDLE
+WINAPI
+Icmp6CreateFile(
+    VOID);
+#endif
 
-BOOL WINAPI  IcmpCloseHandle(
-    HANDLE  IcmpHandle
-    );
+IPHLPAPI_DLL_LINKAGE
+BOOL
+WINAPI
+IcmpCloseHandle(
+    _In_ HANDLE IcmpHandle);
 
-DWORD WINAPI  IcmpSendEcho(
-    HANDLE                 IcmpHandle,
-    IPAddr                 DestinationAddress,
-    LPVOID                 RequestData,
-    WORD                   RequestSize,
-    PIP_OPTION_INFORMATION RequestOptions,
-    LPVOID                 ReplyBuffer,
-    DWORD                  ReplySize,
-    DWORD                  Timeout
-    );
+IPHLPAPI_DLL_LINKAGE
+DWORD
+WINAPI
+IcmpSendEcho(
+    _In_ HANDLE IcmpHandle,
+    _In_ IPAddr DestinationAddress,
+    _In_reads_bytes_(RequestSize) LPVOID RequestData,
+    _In_ WORD RequestSize,
+    _In_opt_ PIP_OPTION_INFORMATION RequestOptions,
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMP_ECHO_REPLY) + RequestSize + 8)
+        DWORD ReplySize,
+    _In_ DWORD Timeout);
 
+IPHLPAPI_DLL_LINKAGE
 DWORD
 WINAPI
 IcmpSendEcho2(
-    HANDLE                   IcmpHandle,
-    HANDLE                   Event,
-    FARPROC                  ApcRoutine,
-    PVOID                    ApcContext,
-    IPAddr                   DestinationAddress,
-    LPVOID                   RequestData,
-    WORD                     RequestSize,
-    PIP_OPTION_INFORMATION   RequestOptions,
-    LPVOID                   ReplyBuffer,
-    DWORD                    ReplySize,
-    DWORD                    Timeout
-    );
+    _In_ HANDLE IcmpHandle,
+    _In_opt_ HANDLE Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+#else
+    _In_opt_ FARPROC ApcRoutine,
+#endif
+    _In_opt_ PVOID ApcContext,
+    _In_ IPAddr DestinationAddress,
+    _In_reads_bytes_(RequestSize) LPVOID RequestData,
+    _In_ WORD RequestSize,
+    _In_opt_ PIP_OPTION_INFORMATION RequestOptions,
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMP_ECHO_REPLY) + RequestSize + 8)
+        DWORD ReplySize,
+    _In_ DWORD Timeout);
 
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+IPHLPAPI_DLL_LINKAGE
+DWORD
+WINAPI
+IcmpSendEcho2Ex(
+    _In_ HANDLE IcmpHandle,
+    _In_opt_ HANDLE Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+#else
+    _In_opt_ FARPROC ApcRoutine,
+#endif
+    _In_opt_ PVOID ApcContext,
+    _In_ IPAddr SourceAddress,
+    _In_ IPAddr DestinationAddress,
+    _In_reads_bytes_(RequestSize) LPVOID RequestData,
+    _In_ WORD RequestSize,
+    _In_opt_ PIP_OPTION_INFORMATION RequestOptions,
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMP_ECHO_REPLY) + RequestSize + 8 + sizeof(IO_STATUS_BLOCK))
+        DWORD ReplySize,
+    _In_ DWORD Timeout);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+IPHLPAPI_DLL_LINKAGE
 DWORD
 WINAPI
 Icmp6SendEcho2(
-    HANDLE                   IcmpHandle,
-    HANDLE                   Event,
-    FARPROC                  ApcRoutine,
-    PVOID                    ApcContext,
-    struct sockaddr_in6     *SourceAddress,
-    struct sockaddr_in6     *DestinationAddress,
-    LPVOID                   RequestData,
-    WORD                     RequestSize,
-    PIP_OPTION_INFORMATION   RequestOptions,
-    LPVOID                   ReplyBuffer,
-    DWORD                    ReplySize,
-    DWORD                    Timeout
-    );
+    _In_ HANDLE IcmpHandle,
+    _In_opt_ HANDLE Event,
+#ifdef PIO_APC_ROUTINE_DEFINED
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+#else
+    _In_opt_ FARPROC ApcRoutine,
+#endif
+    _In_opt_ PVOID ApcContext,
+    _In_ struct sockaddr_in6 *SourceAddress,
+    _In_ struct sockaddr_in6 *DestinationAddress,
+    _In_reads_bytes_(RequestSize) LPVOID RequestData,
+    _In_ WORD RequestSize,
+    _In_opt_ PIP_OPTION_INFORMATION RequestOptions,
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMPV6_ECHO_REPLY) + RequestSize + 8 + sizeof(IO_STATUS_BLOCK))
+        DWORD ReplySize,
+    _In_ DWORD Timeout);
+#endif
 
+IPHLPAPI_DLL_LINKAGE
 DWORD
 WINAPI
 IcmpParseReplies(
-    LPVOID                   ReplyBuffer,
-    DWORD                    ReplySize
-    );
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMP_ECHO_REPLY) + 8)
+        DWORD ReplySize);
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+IPHLPAPI_DLL_LINKAGE
 DWORD
 WINAPI
 Icmp6ParseReplies(
-    LPVOID                   ReplyBuffer,
-    DWORD                    ReplySize
-    );
+    _Out_writes_bytes_(ReplySize) LPVOID ReplyBuffer,
+    _In_range_(>=, sizeof(ICMPV6_ECHO_REPLY) + 8)
+        DWORD ReplySize);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif /* __WINE_ICMPAPI_H */
+#endif /* _ICMP_INCLUDED_ */
