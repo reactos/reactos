@@ -23,22 +23,18 @@
 
 #include "typetree.h"
 
-extern int is_ptrchain_attr(const var_t *var, enum attr_type t);
-extern int is_aliaschain_attr(const type_t *var, enum attr_type t);
-extern int is_attr(const attr_list_t *list, enum attr_type t);
-extern void *get_attrp(const attr_list_t *list, enum attr_type t);
-extern unsigned int get_attrv(const attr_list_t *list, enum attr_type t);
 extern const char* get_name(const var_t *v);
-extern void write_type_left(FILE *h, type_t *t, enum name_type name_type, int declonly);
+extern void write_type_left(FILE *h, const decl_spec_t *ds, enum name_type name_type, bool define, int write_callconv);
 extern void write_type_right(FILE *h, type_t *t, int is_field);
-extern void write_type_decl(FILE *f, type_t *t, const char *name);
-extern void write_type_decl_left(FILE *f, type_t *t);
+extern void write_type_decl(FILE *f, const decl_spec_t *t, const char *name);
+extern void write_type_decl_left(FILE *f, const decl_spec_t *ds);
 extern unsigned int get_context_handle_offset( const type_t *type );
 extern unsigned int get_generic_handle_offset( const type_t *type );
 extern int needs_space_after(type_t *t);
 extern int is_object(const type_t *iface);
 extern int is_local(const attr_list_t *list);
 extern int count_methods(const type_t *iface);
+extern const statement_t * get_callas_source(const type_t *iface, const var_t *def);
 extern int need_stub(const type_t *iface);
 extern int need_proxy(const type_t *iface);
 extern int need_inline_stubs(const type_t *iface);
@@ -47,7 +43,7 @@ extern int need_proxy_file(const statement_list_t *stmts);
 extern int need_proxy_delegation(const statement_list_t *stmts);
 extern int need_inline_stubs_file(const statement_list_t *stmts);
 extern const var_t *is_callas(const attr_list_t *list);
-extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
+extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent, enum name_type name_type);
 extern const type_t* get_explicit_generic_handle_type(const var_t* var);
 extern const var_t *get_func_handle_var( const type_t *iface, const var_t *func,
                                          unsigned char *explicit_fc, unsigned char *implicit_fc );
@@ -64,6 +60,11 @@ static inline int is_ptr(const type_t *t)
 static inline int is_array(const type_t *t)
 {
     return type_get_type(t) == TYPE_ARRAY;
+}
+
+static inline int is_func(const type_t *t)
+{
+    return type_get_type(t) == TYPE_FUNCTION;
 }
 
 static inline int is_void(const type_t *t)
@@ -83,12 +84,12 @@ static inline int is_conformant_array(const type_t *t)
 
 static inline int last_ptr(const type_t *type)
 {
-    return is_ptr(type) && !is_declptr(type_pointer_get_ref(type));
+    return is_ptr(type) && !is_declptr(type_pointer_get_ref_type(type));
 }
 
 static inline int last_array(const type_t *type)
 {
-    return is_array(type) && !is_array(type_array_get_element(type));
+    return is_array(type) && !is_array(type_array_get_element_type(type));
 }
 
 static inline int is_string_type(const attr_list_t *attrs, const type_t *type)
@@ -102,7 +103,7 @@ static inline int is_context_handle(const type_t *type)
     const type_t *t;
     for (t = type;
          is_ptr(t) || type_is_alias(t);
-         t = type_is_alias(t) ? type_alias_get_aliasee(t) : type_pointer_get_ref(t))
+         t = type_is_alias(t) ? type_alias_get_aliasee_type(t) : type_pointer_get_ref_type(t))
         if (is_attr(t->attrs, ATTR_CONTEXTHANDLE))
             return 1;
     return 0;
