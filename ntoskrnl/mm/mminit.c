@@ -43,13 +43,12 @@ NTAPI
 MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
 {
     const ULONG Protection = Executable ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
-    PVOID pBaseAddress = BaseAddress;
     PMEMORY_AREA MArea;
     NTSTATUS Status;
 
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
-                                &pBaseAddress,
+                                &BaseAddress,
                                 Size,
                                 Protection,
                                 &MArea,
