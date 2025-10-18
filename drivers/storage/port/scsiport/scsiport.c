@@ -1203,9 +1203,9 @@ CreatePortConfig:
 
         /* Copy all stuff which we ever need from PortConfig to the DeviceExtension */
         if (PortConfig->MaximumNumberOfTargets > SCSI_MAXIMUM_TARGETS_PER_BUS)
-            DeviceExtension->MaxTargedIds = SCSI_MAXIMUM_TARGETS_PER_BUS;
+            DeviceExtension->MaxTargetIds = SCSI_MAXIMUM_TARGETS_PER_BUS;
         else
-            DeviceExtension->MaxTargedIds = PortConfig->MaximumNumberOfTargets;
+            DeviceExtension->MaxTargetIds = PortConfig->MaximumNumberOfTargets;
 
         DeviceExtension->NumberOfBuses = PortConfig->NumberOfBuses;
         DeviceExtension->CachesData = PortConfig->CachesData;

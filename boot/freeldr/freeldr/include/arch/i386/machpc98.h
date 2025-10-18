@@ -141,6 +141,10 @@ typedef struct _PC98_DISK_DRIVE
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
 
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber);
+
 LONG DiskReportError(BOOLEAN bShowError);
 BOOLEAN DiskResetController(IN PPC98_DISK_DRIVE DiskDrive);
 
