@@ -185,7 +185,7 @@ FxIrp::SetCancelRoutine(
 
 __inline
 NTSTATUS
-STDCALL
+NTAPI
 FxIrp::_IrpSynchronousCompletion(
     __in MdDeviceObject DeviceObject,
     __in PIRP OriginalIrp,

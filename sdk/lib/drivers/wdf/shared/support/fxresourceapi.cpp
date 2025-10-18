@@ -35,7 +35,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListSetSlotNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -74,7 +74,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListSetInterfaceType)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -179,7 +179,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListInsertIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -216,7 +216,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListAppendIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -250,7 +250,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -290,7 +290,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFIORESLIST
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListGetIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -337,7 +337,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -383,7 +383,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceRequirementsListRemoveByIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -464,7 +464,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -613,7 +613,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListInsertDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -650,7 +650,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListAppendDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -682,7 +682,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListUpdateDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -758,7 +758,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -797,7 +797,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PIO_RESOURCE_DESCRIPTOR
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -852,7 +852,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -907,7 +907,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfIoResourceListRemoveByDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1057,7 +1057,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListInsertDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1096,7 +1096,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListAppendDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1130,7 +1130,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1163,7 +1163,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1201,7 +1201,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1248,7 +1248,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCmResourceListRemoveByDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -1,5 +1,5 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
+add_definitions(-D_WIN32_WINNT=0x602)
 
 add_definitions(-DUNICODE -D_UNICODE -D_NTOSKRNL_ -D_NTSYSTEM_)
 
@@ -10,6 +10,7 @@ list(APPEND SOURCE
     fsrtl.c
     io.c
     po.c
+    pofx.c
     ke.c
     ${REACTOS_SOURCE_DIR}/sdk/lib/rtl/utf8.c)
 

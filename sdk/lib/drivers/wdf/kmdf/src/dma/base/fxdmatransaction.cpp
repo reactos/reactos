@@ -1045,7 +1045,7 @@ FxDmaScatterGatherTransaction::StageTransfer(
                                         m_CurrentFragmentOffset,
                                         (ULONG) m_CurrentFragmentLength,
 #pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
-                                        _AdapterListControl,
+                                        (PDRIVER_LIST_CONTROL)_AdapterListControl,
                                         this,
                                         m_LookasideBuffer,
                                         (ULONG) m_AdapterInfo->PreallocatedSGListSize);
@@ -1056,7 +1056,7 @@ FxDmaScatterGatherTransaction::StageTransfer(
                                       m_CurrentFragmentOffset,
                                       (ULONG) m_CurrentFragmentLength,
 #pragma prefast(suppress: __WARNING_CLASS_MISMATCH_NONE, "This warning requires a wrapper class for the DRIVER_LIST_CONTROL type.")
-                                      _AdapterListControl,
+                                      (PDRIVER_LIST_CONTROL)_AdapterListControl,
                                       this);
     }
 
@@ -1802,6 +1802,7 @@ FxDmaPacketTransaction::StageTransfer(
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
     UCHAR_MEMORY_ALIGNED sgListBuffer[sizeof(SCATTER_GATHER_LIST)
                             + sizeof(SCATTER_GATHER_ELEMENT)];
+
     WDFDMATRANSACTION dmaTransaction;
 
     KIRQL oldIrql;
@@ -2003,6 +2004,7 @@ FxDmaPacketTransaction::StageTransfer(
         //
         FxDmaEnabler* enabler = GetDmaEnabler();
         size_t sgListSize;
+
 
         if (enabler->IsBusMaster()) {
             sgList = (PSCATTER_GATHER_LIST)sgListBuffer;
