@@ -98,4 +98,9 @@ typedef struct _ISO_FILE_INFO
     BOOLEAN Directory;
 } ISO_FILE_INFO, *PISO_FILE_INFO;
 
+ARC_STATUS
+IsoGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 const DEVVTBL* IsoMount(ULONG DeviceId);

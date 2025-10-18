@@ -418,4 +418,9 @@ typedef struct {
     PBTRFS_INFO Volume;
 } btrfs_file_info, * pbtrfs_file_info;
 
+ARC_STATUS
+BtrFsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 const DEVVTBL* BtrFsMount(ULONG DeviceId);

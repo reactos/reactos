@@ -172,4 +172,10 @@ typedef struct
 
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
 
+
+ARC_STATUS
+FatGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 const DEVVTBL* FatMount(ULONG DeviceId);

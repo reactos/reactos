@@ -249,4 +249,9 @@ typedef struct
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 #include <poppack.h>
 
+ARC_STATUS
+NtfsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize);
+
 const DEVVTBL* NtfsMount(ULONG DeviceId);
