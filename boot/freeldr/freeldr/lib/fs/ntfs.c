@@ -39,6 +39,8 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 #define TAG_NTFS_VOLUME 'VftN'
 #define TAG_NTFS_DATA 'DftN'
 
+#define NTFS_MAX_ATTRIBUTE_LIST_RECURSION 8
+
 typedef struct _NTFS_VOLUME_INFO
 {
     NTFS_BOOTSECTOR BootSector;
@@ -371,21 +373,111 @@ static ULONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT Cont
     return AlreadyRead;
 }
 
-static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_RECORD AttrRecord, PNTFS_ATTR_RECORD AttrRecordEnd, ULONG Type, const WCHAR *Name, ULONG NameLength)
+static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(
+    PNTFS_VOLUME_INFO Volume,
+    PNTFS_ATTR_RECORD AttrRecord,
+    PNTFS_ATTR_RECORD AttrRecordEnd,
+    ULONG Type,
+    const WCHAR *Name,
+    ULONG NameLength,
+    ULONG Recursion,
+    ULONG Instance);
+static BOOLEAN NtfsReadMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, PNTFS_MFT_RECORD Buffer);
+
+static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelperList(
+    PNTFS_VOLUME_INFO Volume,
+    PNTFS_ATTR_LIST_ATTR AttrListRecord,
+    PNTFS_ATTR_LIST_ATTR AttrListRecordEnd,
+    ULONG Type,
+    const WCHAR *Name,
+    ULONG NameLength,
+    ULONG Recursion)
+{
+    ULONGLONG PrevMftIndex = -1;
+    PNTFS_MFT_RECORD MftRecord = FrLdrTempAlloc(Volume->MftRecordSize, TAG_NTFS_MFT);
+    if (!MftRecord)
+        return NULL;
+
+    while (AttrListRecord < AttrListRecordEnd)
+    {
+        ULONGLONG MftIndex = AttrListRecord->BaseFileRef & NTFS_MFT_MASK;
+        ULONG AttrType = AttrListRecord->Type;
+        ULONG AttrId = AttrListRecord->AttrId;
+
+        if (AttrType == NTFS_ATTR_TYPE_END)
+            break;
+
+        TRACE("Recursion = %u, AttrListRecord->Type = 0x%x\n", Recursion, AttrType);
+
+        if (AttrType == Type &&
+            AttrListRecord->NameLength == NameLength)
+        {
+            PWCHAR AttrListName;
+
+            AttrListName = (PWCHAR)((PCHAR)AttrListRecord + AttrListRecord->NameOffset);
+            if (RtlEqualMemory(AttrListName, Name, NameLength << 1))
+            {
+                PNTFS_ATTR_CONTEXT Context;
+                PNTFS_ATTR_RECORD AttrRecord;
+                PNTFS_ATTR_RECORD AttrRecordEnd;
+
+                if (PrevMftIndex != MftIndex)
+                {
+                    PrevMftIndex = MftIndex;
+                    if (!NtfsReadMftRecord(Volume, MftIndex, MftRecord))
+                        goto skip;
+                }
+
+                AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + MftRecord->AttributesOffset);
+                AttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + Volume->MftRecordSize);
+
+                Context = NtfsFindAttributeHelper(Volume, AttrRecord, AttrRecordEnd,
+                                                  Type, Name, NameLength,
+                                                  NTFS_MAX_ATTRIBUTE_LIST_RECURSION, AttrId);
+                if (Context)
+                {
+                    FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
+                    return Context;
+                }
+            }
+        }
+
+skip:
+        if (AttrListRecord->RecLength == 0)
+            break;
+        AttrListRecord = (PNTFS_ATTR_LIST_ATTR)((PCHAR)AttrListRecord + AttrListRecord->RecLength);
+    }
+
+    FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
+    return NULL;
+}
+
+static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(
+    PNTFS_VOLUME_INFO Volume,
+    PNTFS_ATTR_RECORD AttrRecord,
+    PNTFS_ATTR_RECORD AttrRecordEnd,
+    ULONG Type,
+    const WCHAR *Name,
+    ULONG NameLength,
+    ULONG Recursion,
+    ULONG Instance)
 {
     while (AttrRecord < AttrRecordEnd)
     {
         if (AttrRecord->Type == NTFS_ATTR_TYPE_END)
             break;
 
-        if (AttrRecord->Type == NTFS_ATTR_TYPE_ATTRIBUTE_LIST)
+        TRACE("Recursion = %u, AttrRecord->Type = 0x%x\n", Recursion, AttrRecord->Type);
+
+        /* Limit the $ATTRIBUTE_LIST recursion or else infinity loop */
+        if (AttrRecord->Type == NTFS_ATTR_TYPE_ATTRIBUTE_LIST && Recursion < NTFS_MAX_ATTRIBUTE_LIST_RECURSION)
         {
             PNTFS_ATTR_CONTEXT Context;
             PNTFS_ATTR_CONTEXT ListContext;
             PVOID ListBuffer;
             ULONGLONG ListSize;
-            PNTFS_ATTR_RECORD ListAttrRecord;
-            PNTFS_ATTR_RECORD ListAttrRecordEnd;
+            PNTFS_ATTR_LIST_ATTR ListAttrRecord;
+            PNTFS_ATTR_LIST_ATTR ListAttrRecordEnd;
 
             ListContext = NtfsPrepareAttributeContext(AttrRecord);
 
@@ -401,13 +493,14 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_VOLUME_INFO Volume, PNTF
                 continue;
             }
 
-            ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
-            ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
+            ListAttrRecord = (PNTFS_ATTR_LIST_ATTR)ListBuffer;
+            ListAttrRecordEnd = (PNTFS_ATTR_LIST_ATTR)((PCHAR)ListBuffer + ListSize);
 
             if (NtfsReadAttribute(Volume, ListContext, 0, ListBuffer, (ULONG)ListSize) == ListSize)
             {
-                Context = NtfsFindAttributeHelper(Volume, ListAttrRecord, ListAttrRecordEnd,
-                                                  Type, Name, NameLength);
+                Context = NtfsFindAttributeHelperList(Volume, ListAttrRecord, ListAttrRecordEnd,
+                                                      Type, Name, NameLength,
+                                                      Recursion + 1);
 
                 NtfsReleaseAttributeContext(ListContext);
                 FrLdrTempFree(ListBuffer, TAG_NTFS_LIST);
@@ -417,23 +510,23 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_VOLUME_INFO Volume, PNTF
             }
         }
 
-        if (AttrRecord->Type == Type)
+        if (AttrRecord->Type == Type &&
+            AttrRecord->NameLength == NameLength &&
+            NtfsGetAttributeSize(AttrRecord) != 0 && // HACK for ntfs3 driver on linux!!!
+            (Instance == (ULONG)-1 || (ULONG)AttrRecord->Instance == Instance))
         {
-            if (AttrRecord->NameLength == NameLength)
-            {
-                PWCHAR AttrName;
+            PWCHAR AttrName;
 
-                AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
-                if (RtlEqualMemory(AttrName, Name, NameLength << 1))
-                {
-                    /* Found it, fill up the context and return. */
-                    return NtfsPrepareAttributeContext(AttrRecord);
-                }
+            AttrName = (PWCHAR)((PCHAR)AttrRecord + AttrRecord->NameOffset);
+            if (RtlEqualMemory(AttrName, Name, NameLength << 1))
+            {
+                /* Found it, fill up the context and return. */
+                return NtfsPrepareAttributeContext(AttrRecord);
             }
         }
 
         if (AttrRecord->Length == 0)
-            return NULL;
+            break;
         AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)AttrRecord + AttrRecord->Length);
     }
 
@@ -451,7 +544,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_MFT_
     for (NameLength = 0; Name[NameLength] != 0; NameLength++)
         ;
 
-    return NtfsFindAttributeHelper(Volume, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
+    return NtfsFindAttributeHelper(Volume, AttrRecord, AttrRecordEnd, Type, Name, NameLength, 0, -1);
 }
 
 static BOOLEAN NtfsFixupRecord(PNTFS_VOLUME_INFO Volume, PNTFS_RECORD Record)
@@ -519,6 +612,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     EntryFileNameLength = IndexEntry->FileName.FileNameLength;
 
 #if DBG
+    TRACE("%s ", FileName);
     NtfsPrintFile(IndexEntry);
 #endif
 
@@ -599,7 +693,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
                 FrLdrTempFree(MftRecord, TAG_NTFS_MFT);
                 return TRUE;
             }
-        IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
+            IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
         }
 
         if (IndexRoot->IndexHeader.Flags & NTFS_LARGE_INDEX)
@@ -670,7 +764,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
 
                 /* FIXME */
                 IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(USHORT *)(IndexRecord + 0x18));
-            IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
+                IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
