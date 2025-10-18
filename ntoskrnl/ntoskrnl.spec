@@ -1613,7 +1613,7 @@
 @ cdecl strstr()
 @ cdecl swprintf()
 @ cdecl tolower()
-@ cdecl toupper()
+@ cdecl toupper() toupper_nt_mb
 @ cdecl towlower()
 @ cdecl towupper()
 @ stdcall vDbgPrintEx(long long str ptr)
