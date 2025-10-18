@@ -51,6 +51,8 @@ extern "C" {
 #define INVALID_SET_FILE_POINTER (~0u)
 #endif
 
+#define ignore_exceptions(bool)
+
 /* debug level */
 extern int winetest_debug;
 
