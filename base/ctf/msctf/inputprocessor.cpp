@@ -270,8 +270,10 @@ add_userkey(_In_ REFCLSID rclsid, _In_ LANGID langid, _In_ REFGUID guidProfile)
 
     TRACE("\n");
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
-    StringFromGUID2(guidProfile, buf2, _countof(buf2));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return;
+    if (!StringFromGUID2(guidProfile, buf2, _countof(buf2)))
+        return;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\%s\\0x%08x\\%s",
                      szwSystemTIPKey, buf, L"LanguageProfile", langid, buf2);
 
@@ -344,7 +346,8 @@ STDMETHODIMP CInputProcessorProfiles::Register(_In_ REFCLSID rclsid)
 
     TRACE("(%p) %s\n", this, debugstr_guid(&rclsid));
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s", szwSystemTIPKey, buf);
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE, NULL,
@@ -363,7 +366,8 @@ STDMETHODIMP CInputProcessorProfiles::Unregister(_In_ REFCLSID rclsid)
 
     TRACE("(%p) %s\n", this, debugstr_guid(&rclsid));
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s", szwSystemTIPKey, buf);
 
     RegDeleteTreeW(HKEY_LOCAL_MACHINE, fullkey);
@@ -390,14 +394,19 @@ STDMETHODIMP CInputProcessorProfiles::AddLanguageProfile(
           debugstr_guid(&guidProfile), debugstr_wn(pchDesc, cchDesc),
           debugstr_wn(pchIconFile, cchFile), uIconIndex);
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s", szwSystemTIPKey, buf);
 
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, fullkey, 0, KEY_READ | KEY_WRITE, &tipkey);
     if (error != ERROR_SUCCESS)
         return E_FAIL;
 
-    StringFromGUID2(guidProfile, buf, _countof(buf));
+    if (!StringFromGUID2(guidProfile, buf, _countof(buf)))
+    {
+        RegCloseKey(tipkey);
+        return E_FAIL;
+    }
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\0x%08x\\%s", L"LanguageProfile", langid, buf);
 
     error = RegCreateKeyExW(tipkey, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE,
@@ -444,13 +453,15 @@ STDMETHODIMP CInputProcessorProfiles::GetDefaultLanguageProfile(
     HKEY hKey;
     DWORD count;
     LSTATUS error;
+    HRESULT hr;
 
     TRACE("%p) %x %s %p %p\n", this, langid, debugstr_guid(&catid), pclsid, pguidProfile);
 
     if (cicIsNullPtr(&catid) || !pclsid || !pguidProfile)
         return E_INVALIDARG;
 
-    StringFromGUID2(catid, buf, _countof(buf));
+    if (!StringFromGUID2(catid, buf, _countof(buf)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\0x%08x\\%s", szwSystemCTFKey,
                      L"Assemblies", langid, buf);
 
@@ -465,11 +476,23 @@ STDMETHODIMP CInputProcessorProfiles::GetDefaultLanguageProfile(
         RegCloseKey(hKey);
         return S_FALSE;
     }
-    CLSIDFromString(buf, pclsid);
+    hr = CLSIDFromString(buf, pclsid);
+    if (FAILED(hr))
+    {
+        RegCloseKey(hKey);
+        return hr;
+    }
 
     error = RegQueryValueExW(hKey, L"Profile", 0, NULL, (PBYTE)buf, &count);
     if (error == ERROR_SUCCESS)
-        CLSIDFromString(buf, pguidProfile);
+    {
+        hr = CLSIDFromString(buf, pguidProfile);
+        if (FAILED(hr))
+        {
+            RegCloseKey(hKey);
+            return hr;
+        }
+    }
 
     RegCloseKey(hKey);
 
@@ -506,7 +529,8 @@ STDMETHODIMP CInputProcessorProfiles::SetDefaultLanguageProfile(
     if (FAILED(hr))
         return E_FAIL;
 
-    StringFromGUID2(catid, buf, _countof(buf));
+    if (!StringFromGUID2(catid, buf, _countof(buf)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\0x%08x\\%s", szwSystemCTFKey, L"Assemblies", langid, buf);
 
     error = RegCreateKeyExW(HKEY_CURRENT_USER, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE,
@@ -514,9 +538,17 @@ STDMETHODIMP CInputProcessorProfiles::SetDefaultLanguageProfile(
     if (error != ERROR_SUCCESS)
         return E_FAIL;
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+    {
+        RegCloseKey(hKey);
+        return E_FAIL;
+    }
     RegSetValueExW(hKey, L"Default", 0, REG_SZ, (PBYTE)buf, sizeof(buf));
-    StringFromGUID2(guidProfiles, buf, _countof(buf));
+    if (!StringFromGUID2(guidProfiles, buf, _countof(buf)))
+    {
+        RegCloseKey(hKey);
+        return E_FAIL;
+    }
     RegSetValueExW(hKey, L"Profile", 0, REG_SZ, (PBYTE)buf, sizeof(buf));
     RegCloseKey(hKey);
 
@@ -661,8 +693,10 @@ STDMETHODIMP CInputProcessorProfiles::EnableLanguageProfile(
 
     TRACE("(%p) %s %x %s %i\n", this, debugstr_guid(&rclsid), langid, debugstr_guid(&guidProfile), fEnable);
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
-    StringFromGUID2(guidProfile, buf2, _countof(buf2));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
+    if (!StringFromGUID2(guidProfile, buf2, _countof(buf2)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\%s\\0x%08x\\%s", szwSystemTIPKey, buf,
                      L"LanguageProfile", langid, buf2);
 
@@ -690,8 +724,10 @@ STDMETHODIMP CInputProcessorProfiles::IsEnabledLanguageProfile(
     if (!pfEnable)
         return E_INVALIDARG;
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
-    StringFromGUID2(guidProfile, buf2, _countof(buf2));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
+    if (!StringFromGUID2(guidProfile, buf2, _countof(buf2)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\%s\\0x%08x\\%s", szwSystemTIPKey,
                      buf, L"LanguageProfile", langid, buf2);
 
@@ -729,8 +765,10 @@ STDMETHODIMP CInputProcessorProfiles::EnableLanguageProfileByDefault(
 
     TRACE("(%p) %s %x %s %i\n", this, debugstr_guid(&rclsid), langid, debugstr_guid(&guidProfile), fEnable);
 
-    StringFromGUID2(rclsid, buf, _countof(buf));
-    StringFromGUID2(guidProfile, buf2, _countof(buf2));
+    if (!StringFromGUID2(rclsid, buf, _countof(buf)))
+        return E_FAIL;
+    if (!StringFromGUID2(guidProfile, buf2, _countof(buf2)))
+        return E_FAIL;
     StringCchPrintfW(fullkey, _countof(fullkey), L"%s\\%s\\%s\\0x%08x\\%s", szwSystemTIPKey,
                      buf, L"LanguageProfile", langid, buf2);
 

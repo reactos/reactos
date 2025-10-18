@@ -3810,7 +3810,8 @@ CreateProcessWithLogonW(
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        WARN("Exception: %lx\n", RpcExceptionCode());
+        LONG exceptionCode = RpcExceptionCode();
+        WARN("Exception: %lx\n", exceptionCode);
     }
     RpcEndExcept;
 
