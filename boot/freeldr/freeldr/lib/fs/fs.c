@@ -257,7 +257,7 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
          pEntry = pEntry->Flink)
     {
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
-        if (strncmp(pDevice->DeviceName, DeviceName, Length) == 0)
+        if ((strlen(pDevice->DeviceName) == Length) && (strncmp(pDevice->DeviceName, DeviceName, Length) == 0))
             break;
     }
 
