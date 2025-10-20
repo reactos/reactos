@@ -29,12 +29,21 @@ THE SOFTWARE.
 #ifdef _MSC_VER
 #pragma section (".CRT$XIC",long,read)
 #define _CRTALLOC(x) __declspec(allocate(x))
+#define CRTALLOC_USED
 #endif /* _MSC_VER */
 #else
 #include <intrin.h>
 #include <sect_attribs.h>
 #undef _CRTALLOC
 #define _CRTALLOC(x)
+#endif
+
+#ifndef CRTALLOC_USED
+#ifdef __GNUC__
+#define CRTALLOC_USED __attribute__((used))
+#else
+#define CRTALLOC_USED
+#endif
 #endif
 
 typedef int (__cdecl *_PIFV)(void); // FIXME: include process.h?
@@ -51,7 +60,7 @@ int __cdecl _set_FMA3_enable(int flag)
 
 int __fma3_lib_init(void);
 
-_CRTALLOC(".CRT$XIC") static _PIFV init_fma3 = __fma3_lib_init;
+CRTALLOC_USED _CRTALLOC(".CRT$XIC") static _PIFV init_fma3 = __fma3_lib_init;
 
 int __fma3_lib_init(void)
 {

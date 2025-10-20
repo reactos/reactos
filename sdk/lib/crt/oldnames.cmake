@@ -16,6 +16,14 @@ if(NOT MSVC)
 
     _add_library(oldnames STATIC EXCLUDE_FROM_ALL ${LIBRARY_PRIVATE_DIR}/oldnames.a)
     set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
+
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "i386")
+        add_custom_command(TARGET oldnames POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_PRIVATE_DIR}/oldnames.a $<TARGET_FILE:oldnames>
+            COMMAND ${CMAKE_AR} s $<TARGET_FILE:oldnames>
+            COMMAND ${CMAKE_RANLIB} $<TARGET_FILE:oldnames>
+            COMMENT "FIXME: Overwriting oldnames with proper import library (amd64 workaround)")
+    endif()
 else()
     add_asm_files(oldnames_asm oldnames-common.S oldnames-msvcrt.S)
     add_library(oldnames ${oldnames_asm})

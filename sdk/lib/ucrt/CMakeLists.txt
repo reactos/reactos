@@ -36,8 +36,11 @@ add_compile_definitions(
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Silence GCC/Clang warnings
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_options(-Wno-unknown-warning-option)
+    endif()
+
     add_compile_options(
-        -Wno-unknown-warning-option
         -Wno-unused-function
         -Wno-unknown-pragmas
         -Wno-builtin-declaration-mismatch
