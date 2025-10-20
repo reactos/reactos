@@ -424,9 +424,12 @@ IntVideoPortMapMemory(
 
       return MappedAddress;
    }
-
-   if (Status)
-      *Status = NO_ERROR;
+   else
+   {
+      if (Status)
+         *Status = ERROR_NOT_ENOUGH_MEMORY;
+      DPRINT1("Couldn't map video memory (IntVideoPortMapMemory)\n");
+   }
 
    return NULL;
 }
