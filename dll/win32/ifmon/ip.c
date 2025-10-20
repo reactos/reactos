@@ -350,8 +350,7 @@ IpDumpFn(
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
     PrintMessage(L"# Interface IP Configuration\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
-    PrintMessage(L"pushd\n");
-    PrintMessage(L"interface ip\n");
+    PrintMessage(L"pushd interface ip\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
 
     /* set required buffer size */

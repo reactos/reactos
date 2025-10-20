@@ -74,8 +74,7 @@ InterfaceDumpFn(
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
     PrintMessage(L"# Interface Configuration\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_HEADERLINE);
-    PrintMessage(L"pushd\n");
-    PrintMessage(L"interface\n");
+    PrintMessage(L"pushd interface\n");
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
 
     PrintMessageFromModule(hDllInstance, IDS_DUMP_NEWLINE);
