@@ -382,7 +382,7 @@ IntVideoPortMapMemory(
       {
          WARN_(VIDEOPRT, "IntVideoPortMapPhysicalMemory() failed! (0x%x)\n", NtStatus);
          if (Status)
-            *Status = NO_ERROR;
+            *Status = ERROR_NOT_ENOUGH_MEMORY;
          return NULL;
       }
       INFO_(VIDEOPRT, "Mapped user address = 0x%08x\n", MappedAddress);
@@ -424,9 +424,10 @@ IntVideoPortMapMemory(
 
       return MappedAddress;
    }
-
+    
    if (Status)
-      *Status = NO_ERROR;
+      *Status = ERROR_NOT_ENOUGH_MEMORY;
+   ERR_(VIDEOPRT, "Couldn't map video memory. IoAddress: %lx, NumberOfUchars: %lx, InIoSpace: %x\n", IoAddress.u.LowPart, NumberOfUchars, InIoSpace);
 
    return NULL;
 }
