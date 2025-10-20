@@ -19,10 +19,12 @@ Revision History:
 
 --*/
 
-#include "fxusbpch.hpp"
+#include "../fxusbpch.hpp"
 
 extern "C" {
+#if defined(EVENT_TRACING)
 #include "FxUsbDeviceApiKm.tmh"
+#endif
 }
 
 //
@@ -34,6 +36,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceRetrieveCurrentFrameNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -63,6 +66,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceSendUrbSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -144,6 +148,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -236,6 +241,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -268,6 +274,7 @@ WDFEXPORT(WdfUsbTargetDeviceIsConnectedSynchronous)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceCyclePortSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -319,6 +326,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceFormatRequestForCyclePort)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -370,6 +378,7 @@ __checkReturn
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfUsbTargetDeviceCreateUrb)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

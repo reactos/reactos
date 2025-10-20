@@ -25,6 +25,7 @@ Revision History:
 
 extern "C" {
 #include <ntddk.h>
+#include <wmistr.h>
 }
 
 #include <fx.hpp>

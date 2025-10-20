@@ -687,6 +687,8 @@ typedef PO_FX_DEVICE_V3 PO_FX_DEVICE, *PPO_FX_DEVICE;
 #error PO_FX_VERSION undefined!
 #endif
 
+#define PO_FX_UNKNOWN_POWER                         0xFFFFFFFF
+
 #endif // NTDDI_WIN8
 
 $endif (_WDMDDK_)
