@@ -36,8 +36,8 @@ DEFINE_OLEGUID(WINE_IID_IDelayedRelease,     0x000214EDL, 0, 0);
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi = 0;
-static BOOL (WINAPI *pSHLWAPI_269)(LPCSTR, CLSID *) = 0;
-static DWORD (WINAPI *pSHLWAPI_23)(REFGUID, LPSTR, INT) = 0;
+static BOOL (WINAPI *pGUIDFromStringA)(LPCSTR, CLSID *) = 0;
+static DWORD (WINAPI *pSHStringFromGUIDA)(REFGUID, LPSTR, INT) = 0;
 
 /* GUIDs to test */
 static const GUID * TEST_guids[] = {
@@ -109,16 +109,16 @@ static void test_ClassIDs(void)
   int i = 0;
   BOOL is_vista = FALSE;
 
-  if (!pSHLWAPI_269 || !pSHLWAPI_23)
+  if (!pGUIDFromStringA || !pSHStringFromGUIDA)
     return;
 
   while (*guids)
   {
-    dwLen = pSHLWAPI_23(*guids, szBuff, 256);
+    dwLen = pSHStringFromGUIDA(*guids, szBuff, 256);
     if (!i && dwLen == S_OK) is_vista = TRUE;  /* seems to return an HRESULT on vista */
-    ok(dwLen == (is_vista ? S_OK : 39), "wrong size %u for id %d\n", dwLen, i);
+    ok(dwLen == (is_vista ? S_OK : 39), "wrong size %lu for id %d\n", dwLen, i);
 
-    bRet = pSHLWAPI_269(szBuff, &guid);
+    bRet = pGUIDFromStringA(szBuff, &guid);
     ok(bRet != FALSE, "created invalid string '%s'\n", szBuff);
 
     if (bRet)
@@ -129,34 +129,33 @@ static void test_ClassIDs(void)
   }
 
   /* Test endianness */
-  dwLen = pSHLWAPI_23(&IID_Endianness, szBuff, 256);
-  ok(dwLen == (is_vista ? S_OK : 39), "wrong size %u for IID_Endianness\n", dwLen);
+  dwLen = pSHStringFromGUIDA(&IID_Endianness, szBuff, 256);
+  ok(dwLen == (is_vista ? S_OK : 39), "wrong size %lu for IID_Endianness\n", dwLen);
 
   ok(!strcmp(szBuff, "{01020304-0506-0708-090A-0B0C0D0E0F0A}"),
      "Endianness Broken, got '%s'\n", szBuff);
 
   /* test lengths */
   szBuff[0] = ':';
-  dwLen = pSHLWAPI_23(&IID_Endianness, szBuff, 0);
+  dwLen = pSHStringFromGUIDA(&IID_Endianness, szBuff, 0);
   ok(dwLen == (is_vista ? E_FAIL : 0), "accepted bad length\n");
   ok(szBuff[0] == ':', "wrote to buffer with no length\n");
 
   szBuff[0] = ':';
-  dwLen = pSHLWAPI_23(&IID_Endianness, szBuff, 38);
+  dwLen = pSHStringFromGUIDA(&IID_Endianness, szBuff, 38);
   ok(dwLen == (is_vista ? E_FAIL : 0), "accepted bad length\n");
   ok(szBuff[0] == ':', "wrote to buffer with no length\n");
 
   szBuff[0] = ':';
-  dwLen = pSHLWAPI_23(&IID_Endianness, szBuff, 39);
+  dwLen = pSHStringFromGUIDA(&IID_Endianness, szBuff, 39);
   ok(dwLen == (is_vista ? S_OK : 39), "rejected ok length\n");
   ok(szBuff[0] == '{', "Didn't write to buffer with ok length\n");
 
-  /* Test string */
   strcpy(szBuff, "{xxx-");
-  bRet = pSHLWAPI_269(szBuff, &guid);
+  bRet = pGUIDFromStringA(szBuff, &guid);
   ok(bRet == FALSE, "accepted invalid string\n");
 
-  dwLen = pSHLWAPI_23(&IID_Endianness, szBuff, 39);
+  dwLen = pSHStringFromGUIDA(&IID_Endianness, szBuff, 39);
   ok(dwLen == (is_vista ? S_OK : 39), "rejected ok length\n");
   ok(szBuff[0] == '{', "Didn't write to buffer with ok length\n");
 }
@@ -172,14 +171,14 @@ static void test_CLSIDFromProgIDWrap(void)
     pCLSIDFromProgIDWrap = (void*)GetProcAddress(hShlwapi,(char*)435);
 
     hres = pCLSIDFromProgIDWrap(wszStdPicture, &clsid);
-    ok(hres == S_OK, "CLSIDFromProgIDWrap failed: %08x\n", hres);
+    ok(hres == S_OK, "CLSIDFromProgIDWrap failed: %08lx\n", hres);
     ok(IsEqualGUID(&CLSID_StdPicture, &clsid), "wrong clsid\n");
 
     hres = pCLSIDFromProgIDWrap(NULL, &clsid);
-    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08lx, expected E_INVALIDARG\n", hres);
 
     hres = pCLSIDFromProgIDWrap(wszStdPicture, NULL);
-    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08x, expected E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08lx, expected E_INVALIDARG\n", hres);
 }
 
 START_TEST(clsid)
@@ -192,8 +191,8 @@ START_TEST(clsid)
       return;
   }
 
-  pSHLWAPI_269 = (void*)GetProcAddress(hShlwapi, (LPSTR)269);
-  pSHLWAPI_23 = (void*)GetProcAddress(hShlwapi, (LPSTR)23);
+  pGUIDFromStringA = (void*)GetProcAddress(hShlwapi, (LPSTR)269);
+  pSHStringFromGUIDA = (void*)GetProcAddress(hShlwapi, (LPSTR)23);
 
   test_ClassIDs();
   test_CLSIDFromProgIDWrap();
