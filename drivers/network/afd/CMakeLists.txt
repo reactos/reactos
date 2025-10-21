@@ -1,6 +1,7 @@
 
 include_directories(
     BEFORE include
+    ../tdihelpers/include
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
@@ -13,8 +14,8 @@ list(APPEND SOURCE
     afd/main.c
     afd/read.c
     afd/select.c
-    afd/tdi.c
-    afd/tdiconn.c
+    ../tdihelpers/tdi.c
+    ../tdihelpers/tdiconn.c
     afd/write.c
     include/afd.h)
 
