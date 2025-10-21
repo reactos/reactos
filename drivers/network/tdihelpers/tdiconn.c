@@ -16,10 +16,8 @@
 #endif
 
 /* If you want to see the DPRINT() output in your debugger,
- * remove the following line (or comment it out):
- */
-#define NDEBUG 1
-
+ * remove the following line (or comment it out) */
+#define NDEBUG
 #include <reactos/debug.h>
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
@@ -50,7 +48,7 @@ UINT TaLengthOfAddress( PTA_ADDRESS Addr )
 
     AddrLen += 2 * sizeof( USHORT );
 
-    DPRINT("AddrLen %x\n");
+    DPRINT("AddrLen %x\n", AddrLen);
 
     return AddrLen;
 }

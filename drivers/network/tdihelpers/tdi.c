@@ -19,10 +19,8 @@
 #include <tdiinfo.h>
 
 /* If you want to see the DPRINT() output in your debugger,
- * remove the following line (or comment it out):
- */
-#define NDEBUG 1
-
+ * remove the following line (or comment it out): */
+#define NDEBUG
 #include <reactos/debug.h>
 
 static NTSTATUS TdiCall(
@@ -133,8 +131,7 @@ static NTSTATUS TdiOpenDevice(
             DPRINT("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status);
             ZwClose(*Handle);
         } else {
-            DPRINT("Got handle (%p)  Object (%p)\n",
-                                     *Handle, *Object);
+            DPRINT("Got handle (%p)  Object (%p)\n", *Handle, *Object);
         }
     } else {
         DPRINT("ZwCreateFile() failed with status (0x%X)\n", Status);
@@ -170,8 +167,7 @@ NTSTATUS TdiOpenAddressFile(
     ULONG EaLength;
     PTRANSPORT_ADDRESS Address;
 
-    DPRINT("Called. DeviceName (%wZ)  Name (%p)\n",
-                             DeviceName, Name);
+    DPRINT("Called. DeviceName (%wZ)  Name (%p)\n", DeviceName, Name);
 
     /* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
     EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
@@ -384,8 +380,7 @@ NTSTATUS TdiAssociateAddressFile(
     KEVENT Event;
     PIRP Irp;
 
-    DPRINT("Called. AddressHandle (%p)  ConnectionObject (%p)\n",
-                             AddressHandle, ConnectionObject);
+    DPRINT("Called. AddressHandle (%p)  ConnectionObject (%p)\n", AddressHandle, ConnectionObject);
 
     if (!ConnectionObject) {
         DPRINT("Bad connection object.\n");
