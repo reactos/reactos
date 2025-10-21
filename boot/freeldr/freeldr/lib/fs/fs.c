@@ -532,6 +532,78 @@ FsOpenFile(
     return ArcOpen(FullPath, OpenMode, FileId);
 }
 
+/**
+ * @brief
+ * Returns the (useful) size of a file-system volume laid on the
+ * storage media device opened via @p DeviceId.
+ **/
+ARC_STATUS
+FsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize)
+{
+    DEVICE* pDevice;
+    const DEVVTBL* FuncTable;
+    PCWSTR ServiceName;
+
+    /* Check whether this file actually references a device */
+    pDevice = FsGetDeviceById(DeviceId);
+    if (!pDevice)
+        return EBADF; /* It doesn't, fail */
+
+    *VolumeSize = 0;
+
+    // TODO: Mount the device, if not already done?
+#if 1 // FIXME: TEMP HACK!
+    if (!pDevice->FileFuncTable && (pDevice->ReferenceCount <= 1))
+    {
+        for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
+        {
+            pDevice->FileFuncTable = FileSystems[fs](DeviceId);
+            if (pDevice->FileFuncTable)
+                break;
+        }
+    }
+#endif
+    // TODO: Use a virtual table function member for easily handling other file systems.
+
+    /* Check that the device is mounted (non-NULL FileFuncTable)
+     * and there is a "service" (file-system) name associated */
+    FuncTable = pDevice->FileFuncTable;
+    ServiceName = (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : NULL;
+    if (!ServiceName)
+    {
+        ERR("Non-mounted device %lu\n", DeviceId);
+        return ENXIO;
+    }
+
+    /* HACK: Since we don't currently use a virtual table function member,
+     * we instead do a manual lookup over the file-system name.
+     * The ordering follows that of the FileSystems[] table. */
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"cdfs"))
+        return IsoGetVolumeSize(DeviceId, VolumeSize);
+    else
+#endif
+    if (!_wcsicmp(ServiceName, L"fastfat") || !_wcsicmp(ServiceName, L"vfatfs"))
+        return FatGetVolumeSize(DeviceId, VolumeSize);
+    else
+    if (!_wcsicmp(ServiceName, L"btrfs"))
+        return BtrFsGetVolumeSize(DeviceId, VolumeSize);
+    else
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"ntfs"))
+        return NtfsGetVolumeSize(DeviceId, VolumeSize);
+    else
+    if (!_wcsicmp(ServiceName, L"ext2fs"))
+        return ExtGetVolumeSize(DeviceId, VolumeSize);
+    else
+#endif
+    ERR("Unsupported file system '%S' on storage device %lu\n", ServiceName, DeviceId);
+    return EIO; // ENXIO;
+}
+
 /*
  * FsGetNumPathParts()
  * This function parses a path in the form of dir1\dir2\file1.ext
