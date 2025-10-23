@@ -1055,6 +1055,14 @@ static void test_exceptions(void)
     run_exception_test(dreg_handler, &dreg_test, &segfault_code, sizeof(segfault_code), 0);
     check_debug_registers(2, &dreg_test);
 
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping test of single stepping behavior and int3 handling on ReactOS due to crashes\n");
+        return;
+    }
+#endif
+
     /* test single stepping behavior */
     got_exception = 0;
     run_exception_test(single_step_handler, NULL, &single_stepcode, sizeof(single_stepcode), 0);
@@ -3140,6 +3148,14 @@ static void test_exceptions(void)
         ok( got_exception == 4,"expected 4 exceptions, got %d\n", got_exception);
     }
 
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
+
     /* test single stepping behavior */
     SetUnhandledExceptionFilter( exc_filter );
     got_exception = 0;
@@ -3647,6 +3663,13 @@ static void run_rtlraiseexception_test(DWORD exceptioncode)
 
 static void test_rtlraiseexception(void)
 {
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
     if (!pRtlRaiseException)
     {
         skip("RtlRaiseException not found\n");
@@ -9160,6 +9183,14 @@ static void test_breakpoint(DWORD numexc)
 {
     DWORD (CDECL *func)(void) = code_mem;
     void *vectored_handler;
+
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping tests that crash\n");
+        return;
+    }
+#endif
 
     memcpy(code_mem, breakpoint_code, sizeof(breakpoint_code));
 #ifdef __arm__

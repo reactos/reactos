@@ -1416,6 +1416,10 @@ static void _check_enum_value( int line, const WCHAR *name, DWORD flags, int sub
     pRtlInitUnicodeString( &str, name );
     status = pNtOpenKey( &key, flags, &attr );
     ok_( __FILE__, line )( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08lx\n", status );
+#ifdef __REACTOS__
+    if (status != STATUS_SUCCESS)
+        return;
+#endif
 
     status = pNtQueryKey( key, KeyFullInformation, full_info, sizeof(buffer), &len );
     ok_( __FILE__, line )( status == STATUS_SUCCESS, "NtQueryKey failed: 0x%08lx\n", status );

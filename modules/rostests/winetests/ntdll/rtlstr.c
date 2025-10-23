@@ -2692,6 +2692,14 @@ static void test_RtlFormatMessage(void)
     NTSTATUS status;
     ULONG i, size;
 
+#ifdef __REACTOS__
+    if (is_reactos())
+    {
+        ok(FALSE, "RtlFormatMessage is unimplemented!\n");
+        return;
+    }
+#endif
+
     /* basic formats */
     testfmt( L"test", L"test", 0, FALSE );
     testfmt( L"", L"", 0, FALSE );
