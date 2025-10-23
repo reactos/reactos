@@ -980,6 +980,14 @@ static void test_completion_port_scheduling(void)
     ULONG_PTR key;
     BOOL bret;
 
+#if defined(__REACTOS__)
+    if (is_reactos())
+    {
+        skip("Skipping completion port scheduling test, because it hangs on ReactOS\n");
+        return;
+    }
+#endif
+
     for (i = 0; i < 2; ++i)
     {
         p[i].index = 0;
