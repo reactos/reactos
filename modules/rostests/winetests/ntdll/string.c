@@ -1967,6 +1967,14 @@ static void test_printf_format(void)
                 ok(0, "unknown length %u.\n", tests[i].arg_size);
                 break;
         }
+#ifdef __REACTOS__
+        if (!is_reactos() && (GetNTVersion() < _WIN32_WINNT_VISTA) && (len == -1))
+        {
+            win_skip("Skipping unsupported format test %u ('%s') on Windows 2003.\n", i, tests[i].spec);
+            winetest_pop_context();
+            continue;
+        }
+#endif
         strcpy(expected, tests[i].expected);
         strcat(expected, "|end");
         ok(len == strlen(expected), "got len %d, expected %Id.\n", len, strlen(expected));

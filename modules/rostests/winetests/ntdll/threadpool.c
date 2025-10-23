@@ -693,6 +693,14 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, TRUE, NULL);
     ok(userdata < 100, "expected userdata < 100, got %lu\n", userdata);
 
+#ifdef __REACTOS__
+    if (!pTpQueryPoolStackInformation)
+    {
+        skip("TpQueryPoolStackInformation not available\n");
+    }
+    else
+    {
+#endif
     /* test querying and setting the stack size */
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
@@ -708,6 +716,9 @@ static void test_tp_simple(void)
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == 1, "expected 1 byte StackReserve, got %ld\n", (ULONG)stack_info.StackReserve);
     ok(stack_info.StackCommit == 1, "expected 1 byte StackCommit, got %ld\n", (ULONG)stack_info.StackCommit);
+#ifdef __REACTOS__
+    }
+#endif
 
     /* cleanup */
     pTpReleaseCleanupGroup(group);
@@ -1918,6 +1929,14 @@ static void test_tp_multi_wait(void)
     TP_POOL *pool;
     DWORD result;
     int i;
+
+#ifdef __REACTOS__
+    if (pTpSetPoolStackInformation == NULL)
+    {
+        win_skip("TpSetPoolStackInformation not available\n");
+        return;
+    }
+#endif
 
     semaphore = CreateSemaphoreW(NULL, 0, 512, NULL);
     ok(semaphore != NULL, "failed to create semaphore\n");

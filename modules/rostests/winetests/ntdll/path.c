@@ -616,6 +616,10 @@ static void test_RtlDosPathNameToNtPathName_U(void)
             ok(status == STATUS_SUCCESS, "%s: Got status %#lx.\n", debugstr_w(tests[i].dos), status);
         }
 
+#ifdef __REACTOS__
+        if (!nameW.Buffer) continue;
+#endif // __REACTOS__
+
         ok(!wcscmp(nameW.Buffer, tests[i].nt)
                 || (tests[i].alt_nt && broken(!wcscmp(nameW.Buffer, tests[i].alt_nt))),
                 "%s: Expected %s, got %s.\n", debugstr_w(tests[i].dos),
