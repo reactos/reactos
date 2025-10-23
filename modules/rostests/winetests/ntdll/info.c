@@ -3833,6 +3833,9 @@ static void test_system_debug_control(void)
 
     for (class = 0; class < SysDbgMaxInfoClass; ++class)
     {
+#ifdef __REACTOS__
+        if ((class == SysDbgBreakPoint) && is_reactos()) continue; // Don't break into the kernel debugger!
+#endif
         status = pNtSystemDebugControl( class, NULL, 0, NULL, 0, NULL );
         if (is_wow64)
         {

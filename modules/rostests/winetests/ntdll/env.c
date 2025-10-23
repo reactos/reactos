@@ -516,6 +516,9 @@ static void test_process_params(void)
     /* also test the actual parameters of the current process */
 
     ok( cur_params->Flags & PROCESS_PARAMS_FLAG_NORMALIZED, "current params not normalized\n" );
+#ifdef __REACTOS__
+    if ((GetNTVersion() < _WIN32_WINNT_VISTA) || is_reactos()) size = 0; else /* Win2003/ReactOS do not allocate this from the heap */
+#endif
     size = HeapSize( GetProcessHeap(), 0, cur_params );
     ok( size != ~(SIZE_T)0, "not a heap block %p\n", cur_params );
     ok( cur_params->AllocationSize == cur_params->Size,
@@ -542,6 +545,9 @@ static void test_process_params(void)
 
     ok( (char *)initial_env < (char *)cur_params || (char *)initial_env >= (char *)cur_params + size,
         "initial environment inside block %p / %p\n", cur_params, initial_env );
+#ifdef __REACTOS__
+    if ((GetNTVersion() < _WIN32_WINNT_VISTA) || is_reactos()) size = 0; else /* Win2003/ReactOS does not allocate this from the heap */
+#endif
     size = HeapSize( GetProcessHeap(), 0, initial_env );
     ok( size != ~(SIZE_T)0, "env is not a heap block %p / %p\n", cur_params, initial_env );
     ok( cur_params->EnvironmentSize == size,
@@ -596,6 +602,9 @@ static void test_RtlSetCurrentEnvironment(void)
     old_env = NtCurrentTeb()->Peb->ProcessParameters->Environment;
     ok(NtCurrentTeb()->Peb->ProcessParameters->EnvironmentSize == get_env_length(old_env) * sizeof(WCHAR),
        "got wrong size %Iu\n", NtCurrentTeb()->Peb->ProcessParameters->EnvironmentSize);
+#ifdef __REACTOS__
+    return; /* ReactOS does not allocate this from the heap */
+#endif
     ok(NtCurrentTeb()->Peb->ProcessParameters->EnvironmentSize == HeapSize( GetProcessHeap(), 0, old_env ),
        "got wrong size %Iu\n", NtCurrentTeb()->Peb->ProcessParameters->EnvironmentSize);
 
