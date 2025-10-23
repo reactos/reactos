@@ -446,6 +446,14 @@ static void test_RtlUniform(void)
     ULONG expected;
     ULONG result;
 
+#ifdef __REACTOS__
+    if (!is_reactos() && (_winver < _WIN32_WINNT_VISTA))
+    {
+        skip("Skipping tests for RtlUniform, because it's broken on Windows 2003\n");
+        return;
+    }
+#endif // __REACTOS__
+
     /*
      * According to the documentation RtlUniform is using D.H. Lehmer's 1948
      * algorithm.  We assume a more generic version of this algorithm,
