@@ -1337,8 +1337,8 @@ Report(bool isFatal, const char *pFormat, ...)
     vDbgPrintEx(-1, DPFLTR_ERROR_LEVEL, pFormat, ap);
 
 #ifdef LIBSAN_KMODE
-    DbgPrintEx(-1, DPFLTR_ERROR_LEVEL, "Call trace:\n===========\n");
-    KdSystemDebugControl('DsoR', NULL, 0, NULL, 0, NULL, KernelMode);
+    //DbgPrintEx(-1, DPFLTR_ERROR_LEVEL, "Call trace:\n===========\n");
+    //KdSystemDebugControl('DsoR', NULL, 0, NULL, 0, NULL, KernelMode);
 #endif
 
     if (isFatal || alwaysFatal)
