@@ -11,12 +11,16 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_snprintf.c
     ../crt/_snwprintf.c
     ../crt/_stricmp.c
+    ../crt/_strlwr.c
     ../crt/_strnicmp.c
+    ../crt/_strupr.c
     ../crt/_vscwprintf.c
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
     ../crt/_wcsicmp.c
+    ../crt/_wcslwr.c
     ../crt/_wcsnicmp.c
+    ../crt/_wcsupr.c
     ../crt/mbstowcs.c
     ../crt/setjmp.c
     ../crt/sprintf.c
