@@ -1081,19 +1081,21 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         /* If it is VK_PACKET, high word of wParam is used for wchar */
         if (!bPacket)
         {
+            ULONG HighPart = 0;
             if (bExt)
-                Msg.lParam |= KF_EXTENDED << 16;
+                HighPart |= KF_EXTENDED;
             if (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU))
-                Msg.lParam |= KF_ALTDOWN << 16;
+                HighPart |= KF_ALTDOWN;
             if (bWasSimpleDown)
-                Msg.lParam |= KF_REPEAT << 16;
+                HighPart |= KF_REPEAT;
             if (!bIsDown)
-                Msg.lParam |= KF_UP << 16;
+                HighPart |= KF_UP;
             /* FIXME: Set KF_DLGMODE and KF_MENUMODE when needed */
             if (pFocusQueue->QF_flags & QF_DIALOGACTIVE)
-                Msg.lParam |= KF_DLGMODE << 16;
+                HighPart |= KF_DLGMODE;
             if (pFocusQueue->MenuOwner) // pti->pMenuState->fMenuStarted
-                Msg.lParam |= KF_MENUMODE << 16;
+                HighPart |= KF_MENUMODE;
+            Msg.lParam |= (HighPart << 16);
         }
 
         // Post mouse move before posting key buttons, to keep it syned.

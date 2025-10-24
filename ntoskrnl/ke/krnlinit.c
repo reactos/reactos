@@ -114,6 +114,7 @@ KiInitSystem(VOID)
 }
 
 CODE_SEG("INIT")
+NO_SANITIZE
 LARGE_INTEGER
 NTAPI
 KiComputeReciprocal(IN LONG Divisor,

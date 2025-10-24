@@ -1716,6 +1716,7 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
 /* pixels to points */
 #define PX2PT(pixels) FT_MulDiv((pixels), 72, 96)
 
+NO_SANITIZE
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -3635,6 +3636,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     return Status;
 }
 
+NO_SANITIZE
 static void FASTCALL
 FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
                    LPCWSTR FullName, PFONTGDI FontGDI)
@@ -6953,6 +6955,7 @@ IntEngFillBox(
 }
 
 
+NO_SANITIZE
 BOOL
 APIENTRY
 IntExtTextOutW(

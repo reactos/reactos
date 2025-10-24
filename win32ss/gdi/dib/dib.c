@@ -88,6 +88,7 @@ DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
 };
 
 
+NO_SANITIZE
 ULONG
 DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
 {

@@ -336,6 +336,7 @@ PVOID
 KeQueryInterruptHandler(IN ULONG Vector)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    ULONG_PTR Handler;
     UCHAR Entry;
 
     //
@@ -346,8 +347,9 @@ KeQueryInterruptHandler(IN ULONG Vector)
     //
     // Read the entry from the IDT
     //
-    return (PVOID)(((Pcr->IDT[Entry].ExtendedOffset << 16) & 0xFFFF0000) |
-                    (Pcr->IDT[Entry].Offset & 0xFFFF));
+    Handler = (ULONG_PTR)(USHORT)Pcr->IDT[Entry].ExtendedOffset << 16;
+    Handler |= (ULONG_PTR)(USHORT)Pcr->IDT[Entry].Offset;
+    return (PVOID)Handler;
 }
 
 //

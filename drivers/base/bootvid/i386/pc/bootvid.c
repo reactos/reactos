@@ -360,6 +360,7 @@ VgaIsPresent(VOID)
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+NO_SANITIZE
 BOOLEAN
 NTAPI
 VidInitialize(
