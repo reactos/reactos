@@ -22,6 +22,8 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_vscwprintf.c
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
+    ../crt/_wcsicmp.c
+    ../crt/_wcsnicmp.c
     ../crt/_wsystem.c
     ../crt/acos.c
     ../crt/asin.c
