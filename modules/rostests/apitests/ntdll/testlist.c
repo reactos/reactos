@@ -4,6 +4,8 @@
 
 extern void func__snprintf(void);
 extern void func__snwprintf(void);
+extern void func__stricmp(void);
+extern void func__strnicmp(void);
 extern void func__vscwprintf(void);
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
@@ -129,6 +131,8 @@ const struct test winetest_testlist[] =
     // CRT tests from ../crt
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
+    { "_stricmp", func__stricmp },
+    { "_strnicmp", func__strnicmp },
     { "_vscwprintf", func__vscwprintf },
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },

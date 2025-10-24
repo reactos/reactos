@@ -8,6 +8,8 @@ extern void func__mbsncmp(void);
 extern void func__mbsstr(void);
 extern void func__snprintf(void);
 extern void func__snwprintf(void);
+extern void func__stricmp(void);
+extern void func__strnicmp(void);
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
 extern void func__vsnprintf(void);
@@ -64,6 +66,8 @@ const struct test winetest_testlist[] =
     { "_mbsstr", func__mbsstr },
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
+    { "_stricmp", func__stricmp },
+    { "_strnicmp", func__strnicmp },
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },
     { "_vsnprintf", func__vsnprintf },
