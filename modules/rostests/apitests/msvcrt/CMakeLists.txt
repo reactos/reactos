@@ -16,6 +16,8 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/_mbsstr.c
     ../crt/_snprintf.c
     ../crt/_snwprintf.c
+    ../crt/_stricmp.c
+    ../crt/_strnicmp.c
     ../crt/_vscprintf.c
     ../crt/_vscwprintf.c
     ../crt/_vsnprintf.c

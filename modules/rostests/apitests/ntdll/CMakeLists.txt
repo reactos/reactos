@@ -10,6 +10,8 @@ spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 list(APPEND SOURCE_CRT_TESTS
     ../crt/_snprintf.c
     ../crt/_snwprintf.c
+    ../crt/_stricmp.c
+    ../crt/_strnicmp.c
     ../crt/_vscwprintf.c
     ../crt/_vsnprintf.c
     ../crt/_vsnwprintf.c
