@@ -3958,14 +3958,14 @@ private:
 
     static
     VOID
-    STDCALL
+    NTAPI
     _PowerThreadInterfaceReference(
         __inout PVOID Context
         );
 
     static
     VOID
-    STDCALL
+    NTAPI
     _PowerThreadInterfaceDereference(
         __inout PVOID Context
         );

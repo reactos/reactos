@@ -37,7 +37,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDeviceCreateDeviceInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -165,7 +165,7 @@ Done:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -273,7 +273,7 @@ WDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDeviceRetrieveDeviceInterfaceString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
