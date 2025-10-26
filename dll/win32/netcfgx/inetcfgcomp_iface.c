@@ -3,7 +3,8 @@
 typedef struct
 {
     const INetCfgComponent *lpVtbl;
-    const INetCfgComponentBindings *lpVtblComponentBindings;
+    const INetCfgComponentBindings *lpVtblBindings;
+    const INetCfgComponentPrivate  *lpVtblPrivate;
     LONG  ref;
     NetCfgComponentItem * pItem;
     INetCfgComponentPropertyUi * pProperty;
@@ -21,9 +22,13 @@ typedef struct
 
 static __inline INetCfgComponentImpl* impl_from_INetCfgComponentBindings(INetCfgComponentBindings *iface)
 {
-    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblComponentBindings));
+    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblBindings));
 }
 
+static __inline INetCfgComponentImpl* impl_from_INetCfgComponentPrivate(INetCfgComponentPrivate *iface)
+{
+    return (INetCfgComponentImpl*)((char *)iface - FIELD_OFFSET(INetCfgComponentImpl, lpVtblPrivate));
+}
 
 /***************************************************************
  * INetCfgComponentBindings
@@ -180,6 +185,59 @@ static const INetCfgComponentBindingsVtbl vt_NetCfgComponentBindings =
 };
 
 /***************************************************************
+ * INetCfgComponentPrivate
+ */
+
+HRESULT
+WINAPI
+INetCfgComponentPrivate_fnQueryInterface(
+    INetCfgComponentPrivate *iface,
+    REFIID iid,
+    LPVOID *ppvObj)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_QueryInterface((INetCfgComponent*)This, iid, ppvObj);
+}
+
+ULONG
+WINAPI
+INetCfgComponentPrivate_fnAddRef(
+    INetCfgComponentPrivate *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_AddRef((INetCfgComponent*)This);
+}
+
+ULONG
+WINAPI
+INetCfgComponentPrivate_fnRelease(
+    INetCfgComponentPrivate *iface)
+{
+    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    return INetCfgComponent_Release((INetCfgComponent*)This);
+}
+
+HRESULT
+WINAPI
+INetCfgComponentPrivate_fnUnknown1(
+    INetCfgComponentPrivate *iface,
+    DWORD dwParam1,
+    DWORD dwParam2)
+{
+//    INetCfgComponentImpl *This = impl_from_INetCfgComponentPrivate(iface);
+    ERR("INetCfgComponentPrivate_fnUnknown1(%p %lx %lx)\n", iface, dwParam1, dwParam2);
+    return S_OK;
+}
+
+static const INetCfgComponentPrivateVtbl vt_NetCfgComponentPrivate =
+{
+    INetCfgComponentPrivate_fnQueryInterface,
+    INetCfgComponentPrivate_fnAddRef,
+    INetCfgComponentPrivate_fnRelease,
+    INetCfgComponentPrivate_fnUnknown1,
+};
+
+/***************************************************************
  * INetCfgComponent
  */
 
@@ -202,8 +260,15 @@ INetCfgComponent_fnQueryInterface(
     }
     else if (IsEqualIID (iid, &IID_INetCfgComponentBindings))
     {
-        *ppvObj = (LPVOID)&This->lpVtblComponentBindings;
+        *ppvObj = (LPVOID)&This->lpVtblBindings;
         INetCfgComponentBindings_AddRef(iface);
+        return S_OK;
+    }
+    else if (IsEqualIID (iid, &IID_INetCfgComponentPrivate))
+    {
+        TRACE("IID_INetCfgComponentPrivate\n");
+        *ppvObj = (LPVOID)&This->lpVtblPrivate;
+        INetCfgComponentPrivate_AddRef(iface);
         return S_OK;
     }
 
@@ -693,7 +758,8 @@ INetCfgComponent_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv, N
 
     This->ref = 1;
     This->lpVtbl = (const INetCfgComponent*)&vt_NetCfgComponent;
-    This->lpVtblComponentBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
+    This->lpVtblBindings = (const INetCfgComponentBindings*)&vt_NetCfgComponentBindings;
+    This->lpVtblPrivate = (const INetCfgComponentPrivate*)&vt_NetCfgComponentPrivate;
     This->pProperty = NULL;
     This->pItem = pItem;
     This->pNCfg = pNCfg;
