@@ -24,6 +24,8 @@
 #include <commctrl.h>
 #include <cfgmgr32.h>
 
+#include <netcfgx_undoc.h>
+
 #include <wine/debug.h>
 
 #include "resource.h"
