@@ -3255,6 +3255,10 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
 		{
                     PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
 
+#ifdef __REACTOS__
+                    if (psInfo == NULL) break;
+#endif
+
                     /* don't overwrite ID_PSRESTARTWINDOWS or ID_PSREBOOTSYSTEM */
                     if (psInfo->result == 0)
                         psInfo->result = IDOK;
