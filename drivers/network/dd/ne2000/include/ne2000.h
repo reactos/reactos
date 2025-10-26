@@ -8,9 +8,6 @@
 #ifndef _NE2000_PCH_
 #define _NE2000_PCH_
 
-#define NDIS_MINIPORT_DRIVER
-#define NDIS_LEGACY_MINIPORT 1
-#define NDIS51_MINIPORT
 #include <ndis.h>
 #include <8390.h>
 
