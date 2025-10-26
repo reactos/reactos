@@ -5904,7 +5904,11 @@ static void union_arm_buffer_size(PMIDL_STUB_MESSAGE pStubMsg,
                         ERR("BufferLength == 0??\n");
                     PointerBufferSize(pStubMsg, *(unsigned char **)pMemory, desc);
                     pStubMsg->PointerLength = pStubMsg->BufferLength;
+#ifdef __REACTOS__
+                    pStubMsg->BufferLength += saved_buffer_length;
+#else
                     pStubMsg->BufferLength = saved_buffer_length;
+#endif
                 }
                 break;
             case FC_IP:

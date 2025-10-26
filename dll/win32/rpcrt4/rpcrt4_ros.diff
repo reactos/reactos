@@ -49,7 +49,22 @@ diff -pudN e:\wine\dlls\rpcrt4/cstub.c e:\reactos\dll\win32\rpcrt4/cstub.c
  #else
  
  #warning You must implement delegated proxies/stubs for your CPU
-
+diff --git "a/dll/win32/rpcrt4/ndr_marshall.c" "b/dll/win32/rpcrt4/ndr_marshall.c"
+index 764b304a047..5fdc1dbd106 100644
+--- "a/dll/win32/rpcrt4/ndr_marshall.c"
++++ "b/dll/win32/rpcrt4/ndr_marshall.c"
+@@ -5904,7 +5904,11 @@ static void union_arm_buffer_size(PMIDL_STUB_MESSAGE pStubMsg,
+                         ERR("BufferLength == 0??\n");
+                     PointerBufferSize(pStubMsg, *(unsigned char **)pMemory, desc);
+                     pStubMsg->PointerLength = pStubMsg->BufferLength;
++#ifdef __REACTOS__
++                    pStubMsg->BufferLength += saved_buffer_length;
++#else
+                     pStubMsg->BufferLength = saved_buffer_length;
++#endif
+                 }
+                 break;
+             case FC_IP:
 diff -pudN e:\wine\dlls\rpcrt4/rpc_epmap.c e:\reactos\dll\win32\rpcrt4/rpc_epmap.c
 --- e:\wine\dlls\rpcrt4/rpc_epmap.c	2016-11-16 17:29:34 +0100
 +++ e:\reactos\dll\win32\rpcrt4/rpc_epmap.c	2016-11-17 12:09:06 +0100
