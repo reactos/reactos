@@ -884,7 +884,7 @@ NetWkstaGetInfo(
     {
         status = NetrWkstaGetInfo(servername,
                                   level,
-                                  (LPWKSTA_INFO*)bufptr);
+                                  (LPWKSTA_INFO)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
