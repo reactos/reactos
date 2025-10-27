@@ -1,10 +1,9 @@
 /*
- * PROJECT:         ReactOS Win32 Base API
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/client/session.c
- * PURPOSE:         Session Support APIs
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Jiayu Ge (yepian@stu2025.jnu.edu.cn)
+ * PROJECT:     ReactOS Win32 Base API
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Session Support APIs
+ * COPYRIGHT:   Copyright 2011 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2025 Jiayu Ge <yepian@stu2025.jnu.edu.cn>
  */
 
 /* INCLUDES *******************************************************************/
