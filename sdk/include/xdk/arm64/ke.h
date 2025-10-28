@@ -13,6 +13,7 @@ $if (_WDMDDK_)
 #define PROFILE_LEVEL           15
 #define HIGH_LEVEL              15
 
+#define KI_USER_SHARED_DATA 0xFFFFF78000000000UI64
 #define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 
 #define PAGE_SIZE               0x1000
