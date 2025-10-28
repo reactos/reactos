@@ -696,14 +696,16 @@ __stdcall
 NetrWkstaUserGetInfo(
     WKSSVC_IDENTIFY_HANDLE Unused,
     unsigned long Level,
-    LPWKSTA_USER_INFO *UserInfo)
+    LPWKSTA_USER_INFO UserInfo)
 {
     MSV1_0_GETUSERINFO_REQUEST UserInfoRequest;
     PMSV1_0_GETUSERINFO_RESPONSE UserInfoResponseBuffer = NULL;
     DWORD UserInfoResponseBufferSize = 0;
     NTSTATUS Status, ProtocolStatus;
     LUID LogonId;
-    PWKSTA_USER_INFO pUserInfo;
+    PWKSTA_USER_INFO_0 pUserInfo0 = NULL;
+    PWKSTA_USER_INFO_1 pUserInfo1 = NULL;
+    PWKSTA_USER_INFO_1101 pUserInfo1101 = NULL;
     DWORD dwResult = NERR_Success;
 
     TRACE("NetrWkstaUserGetInfo(%s, %d, %p)\n", debugstr_w(Unused), Level, UserInfo);
@@ -749,120 +751,120 @@ NetrWkstaUserGetInfo(
     switch (Level)
     {
         case 0:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_0));
-            if (pUserInfo == NULL)
+            pUserInfo0 = midl_user_allocate(sizeof(WKSTA_USER_INFO_0));
+            if (pUserInfo0 == NULL)
             {
                 ERR("\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_0));
+            ZeroMemory(pUserInfo0, sizeof(WKSTA_USER_INFO_0));
 
             /* User Name */
-            pUserInfo->UserInfo0.wkui0_username =
+            pUserInfo0->wkui0_username =
                 midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo0.wkui0_username == NULL)
+            if (pUserInfo0->wkui0_username == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo0);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo0.wkui0_username,
+            ZeroMemory(pUserInfo0->wkui0_username,
                        UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo0.wkui0_username,
+            CopyMemory(pUserInfo0->wkui0_username,
                        UserInfoResponseBuffer->UserName.Buffer,
                        UserInfoResponseBuffer->UserName.Length);
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo0 = pUserInfo0;
             break;
 
         case 1:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_1));
-            if (pUserInfo == NULL)
+            pUserInfo1 = midl_user_allocate(sizeof(WKSTA_USER_INFO_1));
+            if (pUserInfo1 == NULL)
             {
                 ERR("\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1));
+            ZeroMemory(pUserInfo1, sizeof(WKSTA_USER_INFO_1));
 
             /* User Name */
-            pUserInfo->UserInfo1.wkui1_username =
+            pUserInfo1->wkui1_username =
                 midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_username == NULL)
+            if (pUserInfo1->wkui1_username == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_username,
+            ZeroMemory(pUserInfo1->wkui1_username,
                        UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_username,
+            CopyMemory(pUserInfo1->wkui1_username,
                        UserInfoResponseBuffer->UserName.Buffer,
                        UserInfoResponseBuffer->UserName.Length);
 
             /* Logon Domain Name */
-            pUserInfo->UserInfo1.wkui1_logon_domain =
+            pUserInfo1->wkui1_logon_domain =
                 midl_user_allocate(UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_logon_domain == NULL)
+            if (pUserInfo1->wkui1_logon_domain == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1->wkui1_username);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+            ZeroMemory(pUserInfo1->wkui1_logon_domain,
                        UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+            CopyMemory(pUserInfo1->wkui1_logon_domain,
                        UserInfoResponseBuffer->LogonDomainName.Buffer,
                        UserInfoResponseBuffer->LogonDomainName.Length);
 
             /* FIXME: wkui1_oth_domains */
 
             /* Logon Server */
-            pUserInfo->UserInfo1.wkui1_logon_server =
+            pUserInfo1->wkui1_logon_server =
                 midl_user_allocate(UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_logon_server == NULL)
+            if (pUserInfo1->wkui1_logon_server == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
-                midl_user_free(pUserInfo->UserInfo1.wkui1_logon_domain);
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1->wkui1_username);
+                midl_user_free(pUserInfo1->wkui1_logon_domain);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+            ZeroMemory(pUserInfo1->wkui1_logon_server,
                        UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+            CopyMemory(pUserInfo1->wkui1_logon_server,
                        UserInfoResponseBuffer->LogonServer.Buffer,
                        UserInfoResponseBuffer->LogonServer.Length);
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo1 = pUserInfo1;
             break;
 
         case 1101:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_1101));
-            if (pUserInfo == NULL)
+            pUserInfo1101 = midl_user_allocate(sizeof(WKSTA_USER_INFO_1101));
+            if (pUserInfo1101 == NULL)
             {
                 ERR("Failed to allocate WKSTA_USER_INFO_1101\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1101));
+            ZeroMemory(pUserInfo1101, sizeof(WKSTA_USER_INFO_1101));
 
             /* FIXME: wkui1101_oth_domains */
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo1101 = pUserInfo1101;
             break;
 
         default:
@@ -881,7 +883,7 @@ NetrWkstaUserGetInfo(
 /* Function 4 */
 unsigned long
 __stdcall
-NetrWkstaUserSetInfo (
+NetrWkstaUserSetInfo(
     WKSSVC_IDENTIFY_HANDLE Unused,
     unsigned long Level,
     LPWKSTA_USER_INFO UserInfo,
