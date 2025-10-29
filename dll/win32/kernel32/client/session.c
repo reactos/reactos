@@ -55,7 +55,7 @@ DosPathToSessionPathW(IN DWORD SessionID,
         }
         OutPathLength += 1; // \0 termination
         SessionPath = (LPWSTR)LocalAlloc(LMEM_FIXED, OutPathLength * sizeof(WCHAR));
-        if (!SessionPath)
+        if (SessionPath)
         {
             if (BaseStaticServerData->LUIDDeviceMapsEnabled)
             {
