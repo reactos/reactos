@@ -160,7 +160,7 @@ static void test_GetDiskFreeSpaceA(void)
     ok(ret, "GetDiskFreeSpaceA error %ld\n", GetLastError());
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ret = GetVolumeNameForVolumeMountPointA("C:\\", volume_guid_path, ARRAY_SIZE(volume_guid_path));
     ok(ret, "GetVolumeNameForVolumeMountPointA error %ld\n", GetLastError());

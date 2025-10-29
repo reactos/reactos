@@ -50,12 +50,6 @@ static const WCHAR localeW[] = {'e','n','-','U','S',0};
 static const WCHAR fooW[] = {'f','o','o',0};
 static const WCHAR emptyW[] = {0};
 static const WCHAR invalidW[] = {'i','n','v','a','l','i','d',0};
-#ifdef __REACTOS__
-
-static DWORD _ntVersion;
-static BYTE _ntMajor;
-static BYTE _ntMinor;
-#endif
 
 /* Some functions are only in later versions of kernel32.dll */
 static WORD enumCount;
@@ -1638,7 +1632,7 @@ static void test_GetNumberFormatA(void)
     {
 #ifdef __REACTOS__
       /* Skip tests[4, 10-13] on WS03 */
-      if (_ntMajor < 6 && (i == 4 || (i >= 10 && i <= 13)))
+      if (GetNTVersion() < _WIN32_WINNT_VISTA && (i == 4 || (i >= 10 && i <= 13)))
         continue;
 #endif
       SetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SGROUPING, tests[i].grouping);
@@ -1929,7 +1923,7 @@ static void test_CompareStringA(void)
   {
 #ifdef __REACTOS__
       /* Skip comparestringa_data[44, 45, 49] on WS03 */
-      if (_ntMajor < 6 && (i == 44 || i == 45 || i == 49))
+      if (GetNTVersion() < _WIN32_WINNT_VISTA && (i == 44 || i == 45 || i == 49))
         continue;
 #endif
       const struct comparestringa_entry *entry = &comparestringa_data[i];
@@ -2927,7 +2921,7 @@ static void test_LCMapStringEx(void)
     ret = pLCMapStringEx(invalidW, LCMAP_HIRAGANA,
                          upper_case, -1, buf, ARRAY_SIZE(buf), NULL, NULL, 0);
 #ifdef __REACTOS__
-    ok(ret || broken(_ntMajor == 6 && _ntMinor == 0), "LCMapStringEx should not fail with bad locale name\n");
+    ok(ret || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "LCMapStringEx should not fail with bad locale name\n");
 #else
     ok(ret, "LCMapStringEx should not fail with bad locale name\n");
 #endif
@@ -3883,7 +3877,7 @@ static void test_unicode_sorting(void)
         else if (len1 > len2) result = 1;
 
 #ifdef __REACTOS__
-        ok (result == entry->result_sortkey || broken(_ntMajor == 6 && _ntMinor == 0), "Test %d (%s, %s) - Expected %d, got %d\n",
+        ok (result == entry->result_sortkey || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "Test %d (%s, %s) - Expected %d, got %d\n",
 #else
         ok (result == entry->result_sortkey, "Test %d (%s, %s) - Expected %d, got %d\n",
 #endif
@@ -3893,7 +3887,7 @@ static void test_unicode_sorting(void)
 #if defined(__REACTOS__) && defined(_WIN64)
         if ((i == 0 || i == 5 || i == 8 || i == 9 || i == 17 || i == 80 || i == 81 || i == 84 ||
             i == 199 || i == 200 || i == 202 || i == 235 || i == 236 || i == 250 || i == 251 ||
-            i == 259 || i == 260) && (_ntMajor == 6 && _ntMinor == 0))
+            i == 259 || i == 260) && (GetNTVersion() == _WIN32_WINNT_VISTA))
             continue;
 #endif
         result = CompareStringEx(entry->locale, entry->flags,  entry->first, -1, entry->second, -1, NULL, NULL, 0);
@@ -4409,7 +4403,7 @@ static void test_FoldStringW(void)
         }
         ok(ret == 2, "Expected ret == 2, got %d, error %ld\n", ret, GetLastError());
 #ifdef __REACTOS__
-        ok(dst[0] == ch || broken(_ntMajor == 6 && _ntMinor == 0), "MAP_FOLDDIGITS: ch 0x%04x Expected unchanged got %04x\n", ch, dst[0]);
+        ok(dst[0] == ch || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "MAP_FOLDDIGITS: ch 0x%04x Expected unchanged got %04x\n", ch, dst[0]);
 #else
         ok(dst[0] == ch, "MAP_FOLDDIGITS: ch 0x%04x Expected unchanged got %04x\n", ch, dst[0]);
 #endif
@@ -6073,7 +6067,7 @@ static void test_IsValidLocaleName(void)
     ok(ret, "IsValidLocaleName failed\n");
     ret = pIsValidLocaleName(L"en");
 #ifdef __REACTOS__
-    ok(ret || broken(_ntMajor == 6 && _ntMinor == 0), "IsValidLocaleName failed\n");
+    ok(ret || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "IsValidLocaleName failed\n");
 #else
     ok(ret, "IsValidLocaleName failed\n");
 #endif
@@ -7264,7 +7258,7 @@ static void test_FindNLSStringEx(void)
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
 #ifdef __REACTOS__
-        if (_ntMajor == 6 && _ntMinor == 0 && i == 5) // Skip tests[5] on Vista
+        if (GetNTVersion() == _WIN32_WINNT_VISTA && i == 5) // Skip tests[5] on Vista
             continue;
 #endif
         int found = 0xdeadbeef;
@@ -8316,7 +8310,7 @@ static void test_NLSVersion(void)
         ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER, "wrong error %lu\n", GetLastError() );
 
 #ifdef __REACTOS__
-        if (_ntMajor >= 6) {
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
         SetLastError( 0xdeadbeef );
         info.dwNLSVersionInfoSize = offsetof( NLSVERSIONINFO, dwEffectiveId );
@@ -8333,7 +8327,7 @@ static void test_NLSVersion(void)
         ok( GetLastError() == ERROR_INVALID_FLAGS, "wrong error %lu\n", GetLastError() );
 
 #ifdef __REACTOS__
-        if (_ntMajor >= 6) {
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
         SetLastError( 0xdeadbeef );
         ret = pIsNLSDefinedString( COMPARE_STRING, 0, (NLSVERSIONINFO *)&info, L"ABC", -10 );
@@ -8878,11 +8872,6 @@ START_TEST(locale)
       }
   }
 
-#ifdef __REACTOS__
-  _ntVersion = GetVersion();
-  _ntMajor = LOBYTE(LOWORD(_ntVersion));
-  _ntMinor = HIBYTE(LOWORD(_ntVersion));
-#endif
   test_EnumTimeFormatsA();
   test_EnumTimeFormatsW();
   test_EnumDateFormatsA();

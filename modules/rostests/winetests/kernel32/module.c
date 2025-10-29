@@ -27,12 +27,6 @@
 #include "winternl.h"
 #include <psapi.h>
 #include "wine/test.h"
-#ifdef __REACTOS__
-
-static DWORD _ntVersion;
-static BYTE _ntMajor;
-static BYTE _ntMinor;
-#endif
 
 static DWORD (WINAPI *pGetDllDirectoryA)(DWORD,LPSTR);
 static DWORD (WINAPI *pGetDllDirectoryW)(DWORD,LPWSTR);
@@ -157,6 +151,10 @@ static BOOL is_old_loader_struct(void)
     HMODULE hexe;
 
     /* Check for old LDR data strcuture. */
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        return TRUE;
+#endif
     hexe = GetModuleHandleW( NULL );
     ok( !!hexe, "Got NULL exe handle.\n" );
     status = LdrFindEntryForAddress( hexe, &mod );
@@ -1655,7 +1653,7 @@ static void test_ddag_node(void)
     HMODULE hexe;
 
 #ifdef __REACTOS__
-    if (_ntMajor < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("test_ddag_node() crashes on WS03.\n");
         return;
     }
@@ -1698,7 +1696,7 @@ static void test_ddag_node(void)
     prev_node = NULL;
     se = node->Dependencies.Tail;
 #if defined(__REACTOS__) && defined(_MSC_VER)
-    if ((_ntMajor == 6 && _ntMinor >= 2) || _ntMajor > 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
         expected_exe_dependencies = expected_exe_dependencies_Win8;
         expected_exe_dependencies_size = ARRAY_SIZE(expected_exe_dependencies_Win8);
     } else {
@@ -1841,11 +1839,7 @@ static void test_base_address_index_tree(void)
     RTL_BALANCED_NODE *root, *node;
     char *base;
 
-#ifdef __REACTOS__
-    if (_ntMajor < 6 || is_old_loader_struct()) return;
-#else
     if (is_old_loader_struct()) return;
-#endif
 
     mod = CONTAINING_RECORD(first->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
     ok( mod->BaseAddressIndexNode.ParentValue || mod->BaseAddressIndexNode.Left || mod->BaseAddressIndexNode.Right,
@@ -1893,11 +1887,7 @@ static void test_hash_links(void)
     BOOL found;
 
     /* Hash links structure is the same on older Windows loader but hashing algorithm is different. */
-#ifdef __REACTOS__
-    if (_ntMajor < 6 || is_old_loader_struct()) return;
-#else
     if (is_old_loader_struct()) return;
-#endif
 
     root = &NtCurrentTeb()->Peb->LdrData->InLoadOrderModuleList;
     module = CONTAINING_RECORD(root->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
@@ -1924,11 +1914,6 @@ START_TEST(module)
 
     /* Test if we can use GetModuleFileNameW */
 
-#ifdef __REACTOS__
-    _ntVersion = GetVersion();
-    _ntMajor = LOBYTE(LOWORD(_ntVersion));
-    _ntMinor = HIBYTE(LOWORD(_ntVersion));
-#endif
     SetLastError(0xdeadbeef);
     GetModuleFileNameW(NULL, filenameW, MAX_PATH);
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)

@@ -32,10 +32,6 @@
 #include "delayloadhandler.h"
 #ifdef __REACTOS__
 #include "winehacks.h"
-
-static DWORD _ntVersion;
-static BYTE _ntMajor;
-static BYTE _ntMinor;
 #endif
 
 /* PROCESS_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
@@ -459,7 +455,7 @@ static BOOL query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
          (cor_header->MajorRuntimeVersion == 2 && cor_header->MinorRuntimeVersion >= 5)))
     {
 #ifdef __REACTOS__
-        ok( image.ComPlusILOnly || broken(_ntMajor < 6),
+        ok( image.ComPlusILOnly || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
         ok( image.ComPlusILOnly,
 #endif
@@ -467,7 +463,7 @@ static BOOL query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
         if (nt_header->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
             !(cor_header->Flags & COMIMAGE_FLAGS_32BITREQUIRED))
 #ifdef __REACTOS__
-            ok( image.ComPlusNativeReady || broken(_ntMajor < 6),
+            ok( image.ComPlusNativeReady || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
             ok( image.ComPlusNativeReady,
 #endif
@@ -493,7 +489,7 @@ static BOOL query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
         ok( !image.ImageMappedFlat, "%u: wrong ImageMappedFlat flags %02x\n", id, image.ImageFlags );
     else
 #ifdef __REACTOS__
-        ok( image.ImageMappedFlat || broken(_ntMajor < 6),
+        ok( image.ImageMappedFlat || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
         ok( image.ImageMappedFlat,
 #endif
@@ -504,7 +500,7 @@ static BOOL query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
             "%u: wrong ImageDynamicallyRelocated flags %02x\n", id, image.ImageFlags );
     else if (image.ImageContainsCode && !image.ImageMappedFlat && !cor_header)
 #ifdef __REACTOS__
-        ok( image.ImageDynamicallyRelocated || broken(_ntMajor < 6),
+        ok( image.ImageDynamicallyRelocated || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
         ok( image.ImageDynamicallyRelocated,
 #endif
@@ -738,7 +734,7 @@ static NTSTATUS map_image_section( const IMAGE_NT_HEADERS *nt_header, const IMAG
     {
         /* some dlls with invalid entry point will crash, but this means we loaded the test dll */
 #ifdef __REACTOS__
-        ok( !expect_fallback || broken(is_win64 && _ntMajor == 6 && _ntMinor > 1) /* Broken on 8.1 x64 */, "%u: got test dll but expected fallback\n", line );
+        ok( !expect_fallback || broken(is_win64 && GetNTVersion() == _WIN32_WINNT_WIN8) /* Broken on 8.1 x64 */, "%u: got test dll but expected fallback\n", line );
 #else
         ok( !expect_fallback, "%u: got test dll but expected fallback\n", line );
 #endif
@@ -2104,7 +2100,7 @@ static void test_section_access(void)
         }
 
 #ifdef __REACTOS__
-        if (_ntMajor >= 6) { // Crashes on WS03
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) { // Crashes on WS03
 #endif
         status = NtQueryInformationProcess(pi.hProcess, ProcessImageInformation,
                 &image_info, sizeof(image_info), NULL );
@@ -2440,7 +2436,7 @@ static void test_import_resolution(void)
             status = pNtQuerySection( mapping, SectionImageInformation, &image, sizeof(image), &size );
             ok( !status, "NtQuerySection failed %lx\n", status );
 #ifdef __REACTOS__
-            ok( test == 6 ? !image.ImageDynamicallyRelocated : image.ImageDynamicallyRelocated || broken(_ntMajor < 6),
+            ok( test == 6 ? !image.ImageDynamicallyRelocated : image.ImageDynamicallyRelocated || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
             ok( test == 6 ? !image.ImageDynamicallyRelocated : image.ImageDynamicallyRelocated,
 #endif
@@ -2457,7 +2453,7 @@ static void test_import_resolution(void)
                                           &size, 1 /* ViewShare */, 0, PAGE_READONLY );
             todo_wine_if (test == 5)
 #ifdef __REACTOS__
-            ok( status == (test == 6 ? STATUS_IMAGE_NOT_AT_BASE : STATUS_SUCCESS) || broken(_ntMajor < 6),
+            ok( status == (test == 6 ? STATUS_IMAGE_NOT_AT_BASE : STATUS_SUCCESS) || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
 #else
             ok( status == (test == 6 ? STATUS_IMAGE_NOT_AT_BASE : STATUS_SUCCESS),
 #endif
@@ -2475,7 +2471,7 @@ static void test_import_resolution(void)
             else todo_wine_if (test == 5)
             {
 #ifdef __REACTOS__
-                if (_ntMajor >= 6) {
+                if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
                 ok( (void *)pnt->OptionalHeader.ImageBase == mod, "not at base %p / %p\n",
                     (void *)pnt->OptionalHeader.ImageBase, mod );
@@ -2895,7 +2891,7 @@ static void subtest_export_forwarder_dep_chain( size_t num_chained_export_module
         trace( "All modules should be unloaded; the unloading process should not reload any DLL\n" );
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     for (i = 0; i < num_modules; i++)
     {
@@ -3159,7 +3155,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             /* FIXME: remove once Wine is fixed */
             todo_wine_if (!(expected_code == STILL_ACTIVE || expected_code == 196))
 #ifdef __REACTOS__
-                ok(!ret || broken(_ntMajor < 6), "RtlDllShutdownInProgress returned %ld\n", ret);
+                ok(!ret || broken(GetNTVersion() < _WIN32_WINNT_VISTA), "RtlDllShutdownInProgress returned %ld\n", ret);
 #else
                 ok(!ret, "RtlDllShutdownInProgress returned %ld\n", ret);
 #endif
@@ -3180,7 +3176,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
 #endif
             ok(GetLastError() == ERROR_SUCCESS, "FlsGetValue failed with error %lu\n", GetLastError());
 #ifdef __REACTOS__
-            ok(fls_callback_count == thread_detach_count + 1 || broken(_ntMajor < 6),
+            ok(fls_callback_count == thread_detach_count + 1 || broken(GetNTVersion() < _WIN32_WINNT_VISTA),
                 "wrong FLS callback count %ld, expected %d\n", fls_callback_count, thread_detach_count + 1);
 #else
             ok(fls_callback_count == thread_detach_count + 1,
@@ -3195,7 +3191,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             ok(ret, "FlsFree failed with error %lu\n", GetLastError());
             fls_index = FLS_OUT_OF_INDEXES;
 #ifdef __REACTOS__
-            if (_ntMajor >= 6)
+            if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
             ok(fls_callback_count == fls_count,
                 "wrong FLS callback count %ld, expected %d\n", fls_callback_count, fls_count);
@@ -3439,7 +3435,7 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             {
                 count = check_linked_list(fls_list_head, &NtCurrentTeb()->FlsSlots->fls_list_entry, &index);
 #ifdef __REACTOS__
-                if (_ntMajor >= 6) {
+                if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
                 ok(count <= thread_count, "Got unexpected count %u, thread_count %u.\n", count, thread_count);
                 ok(index == ~0, "Got unexpected index %u.\n", index);
@@ -3621,7 +3617,7 @@ static void child_process(const char *dll_name, DWORD target_offset)
         ok(hmod != 0, "DLL should not be unloaded\n");
 
 #ifdef __REACTOS__
-        if (_ntMajor >= 6) {
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
         SetLastError(0xdeadbeef);
         thread = CreateThread(NULL, 0, noop_thread_proc, &dummy, 0, &ret);
@@ -4822,11 +4818,6 @@ START_TEST(loader)
     SYSTEM_INFO si;
     DWORD len;
 
-#ifdef __REACTOS__
-    _ntVersion = GetVersion();
-    _ntMajor = LOBYTE(LOWORD(_ntVersion));
-    _ntMinor = HIBYTE(LOWORD(_ntVersion));
-#endif
     ntdll = GetModuleHandleA("ntdll.dll");
     kernel32 = GetModuleHandleA("kernel32.dll");
     pNtCreateSection = (void *)GetProcAddress(ntdll, "NtCreateSection");

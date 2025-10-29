@@ -746,7 +746,7 @@ static void test_GetCalendarInfo(void)
     ok( ret == ret2, "got %d, expected %d\n", ret, ret2 );
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     for (i = CAL_GREGORIAN; i <= CAL_UMALQURA; i++)
     {

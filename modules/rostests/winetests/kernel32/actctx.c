@@ -3052,7 +3052,7 @@ todo_wine {
         winetest_push_context("%lu", flags[i]);
 
 #ifdef __REACTOS__
-        if (LOBYTE(LOWORD(GetVersion())) < 6 && i > 0)
+        if (GetNTVersion() < _WIN32_WINNT_VISTA && i > 0)
             break; // Only the first test is valid for WS03.
 #endif
         /* use explorer.exe because using modules already loaded has a different behavior */
@@ -4353,7 +4353,7 @@ static void test_manifest_in_module(void)
     HANDLE handle;
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) < 6)
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
     {
         skip("test_manifest_in_module() crashes on WS03.\n");
         return;
@@ -4472,7 +4472,7 @@ START_TEST(actctx)
     test_compatibility();
     test_settings();
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) > 6) {
+    if (GetNTVersion() > _WIN32_WINNT_VISTA) {
 #endif
     run_child_process_two_dll(1);
     run_child_process_two_dll(2);

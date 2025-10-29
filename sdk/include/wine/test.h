@@ -103,6 +103,12 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
     return *str1 - *str2;
 }
 
+/* ReactOS specific extensions, useful for patches */
+#define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
+#define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
+#define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
+#define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+
 #ifdef STANDALONE
 
 #define START_TEST(name) \
@@ -133,7 +139,7 @@ extern int winetest_vok( int condition, const char *msg, __winetest_va_list ap )
 extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
-# define WINETEST_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+# define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
@@ -143,7 +149,7 @@ extern void __winetest_cdecl winetest_push_context( const char *fmt, ... ) __att
 extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
-# define WINETEST_PRINTF_ATTR(fmt,args)
+# define __WINE_PRINTF_ATTR(fmt,args)
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
 extern void __winetest_cdecl winetest_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
@@ -153,6 +159,7 @@ extern void __winetest_cdecl winetest_push_context( const char *fmt, ... );
 extern void winetest_pop_context(void);
 
 #endif /* __GNUC__ */
+
 
 #define subtest_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_subtest
 #define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok

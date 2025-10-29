@@ -568,7 +568,7 @@ static void test_utf7_encoding(void)
         /* tests dry run with dst=NULL and dstlen=0 */
         {
             {0x4F60,0x597D,0x5417,0}, -1, NULL, 0,
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             {0}, 0, 11
 #else
             {}, 0, 11
@@ -577,7 +577,7 @@ static void test_utf7_encoding(void)
         /* tests dry run with dst!=NULL and dstlen=0 */
         {
             {0x4F60,0x597D,0x5417,0}, -1, output, 0,
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             {0}, 0, 11
 #else
             {}, 0, 11
@@ -817,7 +817,7 @@ static void test_utf7_decoding(void)
         /* tests dry run with dst=NULL and dstlen=0 */
         {
             "+T2BZfQ-", -1, NULL, 0,
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             {0}, 0, 3
 #else
             {}, 0, 3
@@ -826,7 +826,7 @@ static void test_utf7_decoding(void)
         /* tests dry run with dst!=NULL and dstlen=0 */
         {
             "+T2BZfQ-", -1, output, 0,
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             {0}, 0, 3
 #else
             {}, 0, 3
@@ -895,7 +895,7 @@ static void test_utf7_decoding(void)
         /* tests len=0 but no error */
         {
             "+", 1, output, ARRAY_SIZE(output) - 1,
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             {0}, 0, 0
 #else
             {}, 0, 0

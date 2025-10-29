@@ -4417,7 +4417,7 @@ static void test_GetConsoleOriginalTitle(void)
     BOOL ret;
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("This test is incredibly broken on WS03\n");
         return;
     }
@@ -4488,7 +4488,7 @@ static void test_GetConsoleTitleW(void)
     ret = GetConsoleTitleW(buf, 2);
     ok(ret, "GetConsoleTitleW failed: %lu\n", GetLastError());
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok(ret == wcslen(str), "Got string length %lu, expected %Iu\n", ret, wcslen(str));
     if (!skip_nt) ok(!wcscmp(buf, L"t"), "Title = %s\n", wine_dbgstr_w(buf));
@@ -4496,7 +4496,7 @@ static void test_GetConsoleTitleW(void)
     ret = GetConsoleTitleW(buf, 4);
     ok(ret, "GetConsoleTitleW failed: %lu\n", GetLastError());
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok(ret == wcslen(str), "Got string length %lu, expected %Iu\n", ret, wcslen(str));
     if (!skip_nt) ok(!wcscmp(buf, L"tes"), "Title = %s\n", wine_dbgstr_w(buf));
@@ -5226,7 +5226,7 @@ static void test_CreateProcessCUI(void)
     for (i = 0; i < ARRAY_SIZE(no_console_tests); i++)
     {
 #ifdef __REACTOS__
-        if ((i == 9) && (LOBYTE(LOWORD(GetVersion())) < 6))
+        if (i == 9 && GetNTVersion() < _WIN32_WINNT_VISTA)
             continue;
 #endif
         res = check_child_console_bits(no_console_tests[i].use_cui ? cuiexec : guiexec,

@@ -39,10 +39,6 @@
 #include "wine/heap.h"
 #ifdef __REACTOS__
 #include "winehacks.h"
-
-static DWORD _ntVersion;
-static BYTE _ntMajor;
-static BYTE _ntMinor;
 #endif
 
 /* PROCESS_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
@@ -314,11 +310,7 @@ static void     get_file_name(char* buf)
  *		static void     childPrintf
  *
  */
-#ifdef __REACTOS__
-static void WINAPIV WINETEST_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
-#else
 static void WINAPIV __WINE_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
-#endif
 {
     va_list valist;
     char        buffer[1024+4*MAX_LISTED_ENV_VAR];
@@ -2758,7 +2750,7 @@ static void test_IsProcessInJob(void)
     ok(ret, "IsProcessInJob error %lu\n", GetLastError());
     ok(out, "IsProcessInJob returned out=%u\n", out);
 #ifdef __REACTOS__
-    if ((_ntMajor == 6 && _ntMinor >= 2) || _ntMajor > 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
         skip("Number of assigned processes broken on Win8+\n");
         test_accounting(job, 1, 1, 0);
     } else {
@@ -3556,7 +3548,7 @@ static void test_StdHandleInheritance(void)
         for (i = 0; i < tests[j].count; i++)
         {
             STARTUPINFOA startup;
-#if defined(__REACTOS__) && _MSC_VER < 1930
+#if defined(__REACTOS__) && defined(_MSC_VER) && _MSC_VER < 1930
             HANDLE hstd[2] = {0};
 #else
             HANDLE hstd[2] = {};
@@ -3605,7 +3597,7 @@ static void test_StdHandleInheritance(void)
                 okChildHexInt("StartupInfoW", "hStdOutputEncode", startup_expected, std_tests[i].is_broken);
 
 #ifdef __REACTOS__
-                if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+                if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
                 okChildHexInt("TEB", "hStdInputEncode", std_tests[i].expected, std_tests[i].is_broken);
                 okChildHexInt("TEB", "hStdOutputEncode", std_tests[i].expected, std_tests[i].is_broken);
@@ -4758,7 +4750,7 @@ static void test_handle_list_attribute(BOOL child, HANDLE handle1, HANDLE handle
     }
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("test_handle_list_attribute() crashes on WS03.\n");
         return;
     }
@@ -4810,7 +4802,7 @@ static void test_dead_process(void)
     NTSTATUS status;
 
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("test_dead_process() crashes on WS03.\n");
         return;
     }
@@ -5628,11 +5620,6 @@ START_TEST(process)
     ok(b, "Basic init of CreateProcess test\n");
     if (!b) return;
 
-#ifdef __REACTOS__
-    _ntVersion = GetVersion();
-    _ntMajor = LOBYTE(LOWORD(_ntVersion));
-    _ntMinor = HIBYTE(LOWORD(_ntVersion));
-#endif
     if (myARGC >= 3)
     {
         if (!strcmp(myARGV[2], "dump") && myARGC >= 4)

@@ -428,7 +428,7 @@ static int mailslot_test(void)
 #ifdef __REACTOS__
     ok( !ret || broken(ret == WAIT_TIMEOUT) /* WS03 */, "got %d\n", ret );
     ok( !io.Status || broken(io.Status == 0xdeadbeef) /* WS03 */, "got status %#lx\n", io.Status );
-    if (LOBYTE(LOWORD(GetVersion())) >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #else
     ok( !ret, "got %d\n", ret );
     ok( !io.Status, "got status %#lx\n", io.Status );

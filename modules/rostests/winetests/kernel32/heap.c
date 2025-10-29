@@ -57,12 +57,6 @@ static BOOL (WINAPI *pHeapQueryInformation)(HANDLE,HEAP_INFORMATION_CLASS,void*,
 static BOOL (WINAPI *pHeapSetInformation)(HANDLE,HEAP_INFORMATION_CLASS,void*,SIZE_T);
 static UINT (WINAPI *pGlobalFlags)(HGLOBAL);
 static ULONG (WINAPI *pRtlGetNtGlobalFlags)(void);
-#ifdef __REACTOS__
-
-static DWORD _ntVersion;
-static BYTE _ntMajor;
-static BYTE _ntMinor;
-#endif
 
 static void load_functions(void)
 {
@@ -597,7 +591,7 @@ static void test_HeapCreate(void)
     }
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
@@ -708,7 +702,7 @@ static void test_HeapCreate(void)
 #endif
         "got wFlags %#x\n", entries[3].wFlags );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[3].lpData == ptr, "got lpData %p\n", entries[3].lpData );
     ok( entries[3].cbData == 5 * alloc_size, "got cbData %#lx\n", entries[3].cbData );
@@ -790,7 +784,7 @@ static void test_HeapCreate(void)
         broken(entries[4].wFlags == (PROCESS_HEAP_ENTRY_BUSY | PROCESS_HEAP_ENTRY_DDESHARE)) /* win7 */,
         "got wFlags %#x\n", entries[4].wFlags );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( entries[4].lpData == ptr1, "got lpData %p\n", entries[4].lpData );
     ok( entries[4].cbData == 5 * alloc_size, "got cbData %#lx\n", entries[4].cbData );
@@ -836,7 +830,7 @@ static void test_HeapCreate(void)
     ok( memcmp( entries + 17, entries + 2, 2 * sizeof(entry) ), "entries differ\n" );
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[1].wFlags == PROCESS_HEAP_ENTRY_BUSY, "got wFlags %#x\n", entries[1].wFlags );
     ok( entries[1].lpData == ptr, "got lpData %p\n", entries[1].lpData );
@@ -884,7 +878,7 @@ static void test_HeapCreate(void)
     ok( memcmp( entries + 18, entries + 3, 2 * sizeof(entry) ), "entries differ\n" );
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[2].wFlags == PROCESS_HEAP_ENTRY_BUSY, "got wFlags %#x\n", entries[2].wFlags );
     ok( entries[2].lpData == ptr1, "got lpData %p\n", entries[2].lpData );
@@ -919,7 +913,7 @@ static void test_HeapCreate(void)
     ok( ret, "HeapFree failed, error %lu\n", GetLastError() );
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) { /* NOTE: This crashes on WS03. */
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) { /* NOTE: This crashes on WS03. */
 #endif
     size = 0;
     SetLastError( 0xdeadbeef );
@@ -1080,7 +1074,7 @@ static void test_HeapCreate(void)
 #endif
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
@@ -1105,13 +1099,13 @@ static void test_HeapCreate(void)
     ok( GetLastError() == ERROR_NO_MORE_ITEMS, "got error %lu\n", GetLastError() );
     todo_wine
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( count > 24, "got count %lu\n", count );
     if (count < 2) count = 2;
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
@@ -1147,7 +1141,7 @@ static void test_HeapCreate(void)
     while (!RtlWalkHeap( heap, &rtl_entry )) rtl_entries[count++] = rtl_entry;
     todo_wine
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( count > 24, "got count %lu\n", count );
     if (count < 2) count = 2;
@@ -1196,7 +1190,7 @@ static void test_HeapCreate(void)
     if (count < 2) count = 2;
 
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     ok( entries[0].wFlags == PROCESS_HEAP_REGION, "got wFlags %#x\n", entries[0].wFlags );
     ok( entries[0].lpData == heap, "got lpData %p\n", entries[0].lpData );
@@ -1399,7 +1393,7 @@ static void test_HeapCreate(void)
     SetEvent( thread_params.start_event );
     res = WaitForSingleObject( thread_params.ready_event, 100 );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( !res, "WaitForSingleObject returned %#lx, error %lu\n", res, GetLastError() );
     ret = HeapUnlock( heap );
@@ -1750,7 +1744,7 @@ static void test_GlobalAlloc(void)
     ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
     ok( GetLastError() == ERROR_INVALID_HANDLE, "got error %lu\n", GetLastError() );
 #ifdef __REACTOS__
-    if (sizeof(void *) != 8 && _ntMajor >= 6) /* crashes on 64-bit, invalid on WS03 */
+    if (sizeof(void *) != 8 && GetNTVersion() >= _WIN32_WINNT_VISTA) /* crashes on 64-bit, invalid on WS03 */
 #else
     if (sizeof(void *) != 8) /* crashes on 64-bit */
 #endif
@@ -1859,7 +1853,7 @@ static void test_GlobalAlloc(void)
     ok( size == small_size, "GlobalSize returned %Iu\n", size );
     SetLastError( 0xdeadbeef );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     tmp_mem = GlobalReAlloc( mem, small_size, 0 );
     ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
@@ -1882,7 +1876,7 @@ static void test_GlobalAlloc(void)
     tmp_mem = GlobalReAlloc( mem, small_size + 1, GMEM_MOVEABLE );
     ok( !!tmp_mem, "GlobalReAlloc failed, error %lu\n", GetLastError() );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( tmp_mem != mem, "GlobalReAlloc didn't relocate memory\n" );
     ptr = GlobalLock( tmp_mem );
@@ -1893,7 +1887,7 @@ static void test_GlobalAlloc(void)
 
     /* test GlobalReAlloc flags / GlobalLock combinations */
 #ifdef __REACTOS__
-    if (_ntMajor < 6) { skip("realloc_flags_tests invalid for WS03.\n"); }
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) { skip("realloc_flags_tests invalid for WS03.\n"); }
     else {
 #endif
     for (i = 0; i < ARRAY_SIZE(realloc_flags_tests); i++)
@@ -2095,14 +2089,14 @@ static void test_GlobalAlloc(void)
         else if (flags & GMEM_DISCARDABLE) ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
         else if (flags & GMEM_MOVEABLE) ok( tmp_mem == mem, "GlobalReAlloc returned %p, error %lu\n", tmp_mem, GetLastError() );
 #ifdef __REACTOS__
-        else ok( !tmp_mem || broken(_ntMajor == 6 && _ntMinor == 0), "GlobalReAlloc succeeded\n" );
+        else ok( !tmp_mem || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "GlobalReAlloc succeeded\n" );
 #else
         else ok( !tmp_mem, "GlobalReAlloc succeeded\n" );
 #endif
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & GMEM_DISCARDABLE) && (flags & GMEM_MODIFY)) expect_entry.flags |= 4;
 #ifdef __REACTOS__
-        if (flags == GMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+        if (flags == GMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "got unexpected ptr %p\n", entry.ptr );
 #else
         if (flags == GMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
 #endif
@@ -2186,7 +2180,7 @@ static void test_GlobalAlloc(void)
         if ((flags & GMEM_DISCARDABLE) && (flags & GMEM_MODIFY)) expect_entry.flags |= 4;
         if (flags & (GMEM_DISCARDABLE | GMEM_MODIFY)) ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
 #ifdef __REACTOS__
-        else ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+        else ok( entry.ptr != expect_entry.ptr || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "got unexpected ptr %p\n", entry.ptr );
 #else
         else ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
 #endif
@@ -2637,7 +2631,7 @@ static void test_LocalAlloc(void)
     ok( size == small_size, "LocalSize returned %Iu\n", size );
     SetLastError( 0xdeadbeef );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6) {
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
     tmp_mem = LocalReAlloc( mem, small_size, 0 );
     ok( !tmp_mem, "LocalReAlloc succeeded\n" );
@@ -2660,7 +2654,7 @@ static void test_LocalAlloc(void)
     tmp_mem = LocalReAlloc( mem, small_size + 1, LMEM_MOVEABLE );
     ok( !!tmp_mem, "LocalReAlloc failed, error %lu\n", GetLastError() );
 #ifdef __REACTOS__
-    if (_ntMajor >= 6)
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
     ok( tmp_mem != mem, "LocalReAlloc didn't relocate memory\n" );
     ptr = LocalLock( tmp_mem );
@@ -2672,7 +2666,7 @@ static void test_LocalAlloc(void)
     /* test LocalReAlloc flags / LocalLock / size combinations */
 
 #ifdef __REACTOS__
-    if (_ntMajor < 6)
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
         skip("realloc_flags_tests invalid for WS03.\n");
     else {
 #endif
@@ -2798,14 +2792,14 @@ static void test_LocalAlloc(void)
         else if (flags & LMEM_DISCARDABLE) ok( !tmp_mem, "LocalReAlloc succeeded\n" );
         else if (flags & LMEM_MOVEABLE) ok( tmp_mem == mem, "LocalReAlloc returned %p, error %lu\n", tmp_mem, GetLastError() );
 #ifdef __REACTOS__
-        else ok( !tmp_mem || broken(_ntMajor == 6 && _ntMinor == 0), "LocalReAlloc succeeded\n" );
+        else ok( !tmp_mem || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "LocalReAlloc succeeded\n" );
 #else
         else ok( !tmp_mem, "LocalReAlloc succeeded\n" );
 #endif
         entry = *mem_entry_from_HANDLE( mem );
         if ((flags & LMEM_DISCARDABLE) && (flags & LMEM_MODIFY)) expect_entry.flags |= 4;
 #ifdef __REACTOS__
-        if (flags == LMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+        if (flags == LMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "got unexpected ptr %p\n", entry.ptr );
 #else
         if (flags == LMEM_MOVEABLE) ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
 #endif
@@ -2965,7 +2959,7 @@ static void test_LocalAlloc(void)
         if ((flags & LMEM_DISCARDABLE) && (flags & LMEM_MODIFY)) expect_entry.flags |= 4;
         if (flags & (LMEM_DISCARDABLE | LMEM_MODIFY)) ok( entry.ptr == expect_entry.ptr, "got ptr %p\n", entry.ptr );
 #ifdef __REACTOS__
-        else ok( entry.ptr != expect_entry.ptr || broken(_ntMajor == 6 && _ntMinor == 0), "got unexpected ptr %p\n", entry.ptr );
+        else ok( entry.ptr != expect_entry.ptr || broken(GetNTVersion() == _WIN32_WINNT_VISTA), "got unexpected ptr %p\n", entry.ptr );
 #else
         else ok( entry.ptr != expect_entry.ptr, "got unexpected ptr %p\n", entry.ptr );
 #endif
@@ -3271,7 +3265,7 @@ static void test_block_layout( HANDLE heap, DWORD global_flags, DWORD heap_flags
         todo_wine_if( (!global_flags && alloc_size < 2 * sizeof(void *)) ||
                       ((heap_flags & HEAP_FREE_CHECKING_ENABLED) && diff >= 0x100000) )
 #ifdef __REACTOS__
-        if (_ntMajor >= 6)
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
         ok( diff == expect_size, "got diff %#Ix exp %#Ix\n", diff, expect_size );
         ok( !memcmp( ptr0 + alloc_size, tail_buf, tail_size ), "missing block tail\n" );
@@ -3400,7 +3394,7 @@ static void test_block_layout( HANDLE heap, DWORD global_flags, DWORD heap_flags
         SetLastError( 0xdeadbeef );
         ret = pRtlSetUserFlagsHeap( heap, 0, ptr0, 0, 0x1000 );
 #ifdef __REACTOS__
-        if (_ntMajor >= 6)
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
         ok( !ret, "RtlSetUserFlagsHeap succeeded\n" );
 #ifdef __REACTOS__
@@ -3411,7 +3405,7 @@ static void test_block_layout( HANDLE heap, DWORD global_flags, DWORD heap_flags
         SetLastError( 0xdeadbeef );
         ret = pRtlSetUserFlagsHeap( heap, 0, ptr0, 0x100, 0 );
 #ifdef __REACTOS__
-        if (_ntMajor >= 6)
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
 #endif
         ok( !ret, "RtlSetUserFlagsHeap succeeded\n" );
 #ifdef __REACTOS__
@@ -3705,7 +3699,7 @@ static void test_heap_layout( HANDLE handle, DWORD global_flag, DWORD heap_flags
     struct heap *heap = handle;
 
 #ifdef __REACTOS__
-    if (_ntMajor < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("test_heap_layout() is invalid on WS03.\n");
         return;
     }
@@ -4003,7 +3997,7 @@ static void test_heap_sizes(void)
     char *base;
 
 #ifdef __REACTOS__
-    if (_ntMajor < 6) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
         skip("test_heap_sizes() is invalid for WS03.\n");
         return;
     }
@@ -4028,11 +4022,6 @@ START_TEST(heap)
     int argc;
     char **argv;
 
-#ifdef __REACTOS__
-    _ntVersion = GetVersion();
-    _ntMajor = LOBYTE(LOWORD(_ntVersion));
-    _ntMinor = HIBYTE(LOWORD(_ntVersion));
-#endif
     load_functions();
 
     argc = winetest_get_mainargs( &argv );

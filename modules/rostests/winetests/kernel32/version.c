@@ -851,7 +851,7 @@ static void test_PackageIdFromFullName(void)
         return;
     }
 #ifdef __REACTOS__
-    if (LOBYTE(LOWORD(GetVersion())) <= 6) {
+    if (GetNTVersion() < _WIN32_WINNT_WIN10) {
         skip("test_PackageIdFromFullName() broken on Win8.1 and older\n");
         return;
     }

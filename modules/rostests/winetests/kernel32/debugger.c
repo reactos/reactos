@@ -58,11 +58,7 @@ static LONG child_failures;
 
 static HMODULE ntdll;
 
-#ifdef __REACTOS__
-static void WINAPIV WINETEST_PRINTF_ATTR(2, 3) test_child_ok(int condition, const char *msg, ...)
-#else
 static void WINAPIV __WINE_PRINTF_ATTR(2, 3) test_child_ok(int condition, const char *msg, ...)
-#endif
 {
     va_list valist;
 

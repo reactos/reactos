@@ -2612,7 +2612,7 @@ static DWORD execute_fault_seh_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTR
 
         err = (flags & MEM_EXECUTE_OPTION_DISABLE) ? EXCEPTION_EXECUTE_FAULT : EXCEPTION_READ_FAULT;
 #ifdef __REACTOS__
-        if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
         ok( rec->ExceptionInformation[0] == err, "ExceptionInformation[0] is %ld instead of %ld\n",
             (DWORD)rec->ExceptionInformation[0], err );

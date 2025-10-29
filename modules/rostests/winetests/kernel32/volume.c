@@ -671,7 +671,7 @@ static void test_disk_query_property(void)
     else
     {
 #ifdef __REACTOS__
-        if (LOBYTE(LOWORD(GetVersion())) >= 6) {
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA) {
 #endif
         ok(ret, "expect ret %#x, got %#x\n", TRUE, ret);
         ok(error == 0xdeadbeef, "expect err %#x, got err %#lx\n", 0xdeadbeef, error);
