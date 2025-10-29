@@ -48,6 +48,7 @@ BOOL WINAPI
 AbortSystemShutdownW(LPCWSTR lpMachineName)
 {
     DWORD dwError;
+    LONG exceptionCode = 0;
 
     RpcTryExcept
     {
@@ -55,7 +56,8 @@ AbortSystemShutdownW(LPCWSTR lpMachineName)
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RtlNtStatusToDosError(RpcExceptionCode());
+        exceptionCode = RpcExceptionCode();
+        dwError = RtlNtStatusToDosError(exceptionCode);
     }
     RpcEndExcept;
 
@@ -150,6 +152,7 @@ InitiateSystemShutdownW(LPWSTR lpMachineName,
 {
     UNICODE_STRING Message;
     DWORD dwError;
+    LONG exceptionCode = 0;
 
     RtlInitUnicodeString(&Message, lpMessage);
 
@@ -163,7 +166,8 @@ InitiateSystemShutdownW(LPWSTR lpMachineName,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RtlNtStatusToDosError(RpcExceptionCode());
+        exceptionCode = RpcExceptionCode();
+        dwError = RtlNtStatusToDosError(exceptionCode);
     }
     RpcEndExcept;
 
@@ -260,6 +264,7 @@ InitiateSystemShutdownExW(LPWSTR lpMachineName,
 {
     UNICODE_STRING Message;
     DWORD dwError;
+    LONG exceptionCode = 0;
 
     RtlInitUnicodeString(&Message, lpMessage);
 
@@ -274,7 +279,8 @@ InitiateSystemShutdownExW(LPWSTR lpMachineName,
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        exceptionCode = RpcExceptionCode();
+        dwError = exceptionCode;
     }
     RpcEndExcept;
 
