@@ -1109,6 +1109,112 @@ typedef struct _EXTENDED_DRIVER_EXTENSION
     PFS_FILTER_CALLBACKS FsFilterCallbacks;
 } EXTENDED_DRIVER_EXTENSION, *PEXTENDED_DRIVER_EXTENSION;
 
+//
+// I/O hibernation dump events
+//
+typedef enum _DUMP_EVENTS
+{
+    DUMP_EVENT_NONE = 0,
+    DUMP_EVENT_HIBER_RESUME = 1,
+    DUMP_EVENT_HIBER_RESUME_END = 2
+} DUMP_EVENTS, *PDUMP_EVENTS;
+
+//
+// I/O crash dump initialization context
+//
+typedef struct _DUMP_INITIALIZATION_CONTEXT
+{
+    ULONG Length;
+    ULONG Reserved;
+    PVOID MemoryBlock;
+    PVOID CommonBuffer[2];
+    LARGE_INTEGER PhysicalAddress[2];
+    VOID (*StallRoutine)(ULONG arg1);
+    UCHAR (*OpenRoutine)(LARGE_INTEGER arg1);
+    LONG (*WriteRoutine)(PLARGE_INTEGER arg1, PMDL arg2);
+    VOID (*FinishRoutine)();
+    PADAPTER_OBJECT AdapterObject;
+    PVOID MappedRegisterBase;
+    PVOID PortConfiguration;
+    BOOLEAN CrashDump;
+    BOOLEAN MarkMemoryOnly;
+    BOOLEAN HiberResume;
+    UCHAR Reserved1;
+    ULONG MaximumTransferSize;
+    ULONG CommonBufferSize;
+    PVOID TargetAddress;
+    LONG (*WritePendingRoutine)(LONG arg1, PLARGE_INTEGER arg2, PMDL arg3, PVOID arg4);
+    ULONG PartitionStyle;
+    union
+    {
+        struct
+        {
+            ULONG Signature;
+            ULONG CheckSum;
+        } Mbr;
+        struct
+        {
+            GUID DiskId;
+        } Gpt;
+    } DiskInfo;
+    LONG (*ReadRoutine)(LONG arg1, PLARGE_INTEGER arg2, PMDL arg3);
+    LONG (*GetDriveTelemetryRoutine)(ULONG arg1, ULONG arg2, PVOID arg3, ULONG arg4);
+    ULONG LogSectionTruncateSize;
+    ULONG Parameters[16];
+    VOID (*GetTransferSizesRoutine)(PULONG arg1, PULONG arg2);
+    VOID (*DumpNotifyRoutine)(DUMP_EVENTS arg1, PVOID arg2, ULONG arg3);
+} DUMP_INITIALIZATION_CONTEXT, *PDUMP_INITIALIZATION_CONTEXT;
+
+//
+// I/O crash dump stack context
+//
+typedef struct _DUMP_STACK_CONTEXT
+{
+    DUMP_INITIALIZATION_CONTEXT Init;
+    LARGE_INTEGER PartitionOffset;
+    PVOID DumpPointers;
+    ULONG PointersLength;
+    PUSHORT ModulePrefix;
+    LIST_ENTRY DriverList;
+    STRING InitMsg;
+    STRING ProgMsg;
+    STRING DoneMsg;
+    PVOID FileObject;
+    DEVICE_USAGE_NOTIFICATION_TYPE UsageTypes;
+} DUMP_STACK_CONTEXT, *PDUMP_STACK_CONTEXT;
+
+//
+// PnP Device Triage Completion Queue
+//
+typedef struct _TRIAGE_PNP_DEVICE_COMPLETION_QUEUE
+{
+    LIST_ENTRY DispatchedList;
+} TRIAGE_PNP_DEVICE_COMPLETION_QUEUE, *PTRIAGE_PNP_DEVICE_COMPLETION_QUEUE;
+
+//
+// Power 0x9F Failure Triage (see https://idebug.blogspot.com/2011/12/bug-check-0x9f-driverpowerstatefailure.html)
+//
+typedef struct _TRIAGE_9F_POWER
+{
+    ULONG Signature;
+    UCHAR Revision;
+    LIST_ENTRY IrpList;
+    LIST_ENTRY ThreadList;
+    PVOID DelayedWorkerQueue; // FIXME: This must be _TRIAGE_EX_WORK_QUEUE once we support KPRIQUEUEs
+} TRIAGE_9F_POWER, *PTRIAGE_9F_POWER;
+
+//
+// PnP 0x9F Failure Triage (see https://bsodtutorials.wordpress.com/2020/03/15/the-complete-guide-to-debugging-a-stop-0x9f-part-3)
+//
+typedef struct _TRIAGE_9F_PNP
+{
+    ULONG Signature;
+    UCHAR Revision;
+    PTRIAGE_PNP_DEVICE_COMPLETION_QUEUE CompletionQueue;
+    PVOID DelayedWorkQueue; // FIXME: This must be _TRIAGE_EX_WORK_QUEUE once we support KPRIQUEUEs
+    PVOID DelayedIoWorkQueue; // FIXME: This must be _TRIAGE_EX_WORK_QUEUE once we support KPRIQUEUEs
+} TRIAGE_9F_PNP, *PTRIAGE_9F_PNP;
+
 #endif // !NTOS_MODE_USER
 
 //
