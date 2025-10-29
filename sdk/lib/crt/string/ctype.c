@@ -865,6 +865,7 @@ int __cdecl _toupper(int c)
    return(c);
 }
 
+#ifndef _LIBCNT_
 /*
  * @implemented
  */
@@ -874,6 +875,7 @@ int __cdecl tolower(int c)
        return (c - upalpha);
    return(c);
 }
+#endif /* _LIBCNT_ */
 
 /*
  * @implemented
@@ -895,6 +897,7 @@ wint_t __cdecl towlower(wint_t c)
    return(c);
 }
 
+#ifndef _LIBCNT_
 /*
  * @implemented
  */
@@ -904,5 +907,6 @@ wint_t __cdecl towupper(wint_t c)
       return (c + upalpha);
    return(c);
 }
+#endif /* _LIBCNT_ */
 
 /* EOF */
