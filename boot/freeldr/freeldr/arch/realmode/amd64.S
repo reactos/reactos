@@ -61,13 +61,13 @@ Msg_Unsupported:
 Msg_Starting:
     .ascii "Starting FreeLoader...", CR, LF, NUL
 
-Msg_LongModeSupported:
-    .ascii "Long mode support detected.", CR, LF, NUL
+//Msg_LongModeSupported:
+//    .ascii "Long mode support detected.", CR, LF, NUL
 
 .LongModeSupported:
-    /* Output status */
-    mov si, offset Msg_LongModeSupported
-    call writestr
+//    /* Output status */
+//    mov si, offset Msg_LongModeSupported
+//    call writestr
 
     /* Load the GDT */
     lgdt lXdtPrefix ds:[gdtptr]
@@ -97,14 +97,14 @@ Msg_LongModeSupported:
     xor ax, ax
     mov es, ax
 
-    /* Output status */
-    mov si, offset Msg_SwitchToLongMode
-    call writestr
+//    /* Output status */
+//    mov si, offset Msg_SwitchToLongMode
+//    call writestr
 
     jmp ExitToLongMode
 
-Msg_SwitchToLongMode:
-    .ascii "Switching to long mode....", CR, LF, NUL
+//Msg_SwitchToLongMode:
+//    .ascii "Switching to long mode....", CR, LF, NUL
 
 .align 8
 gdt:
