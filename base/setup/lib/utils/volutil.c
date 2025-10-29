@@ -108,7 +108,7 @@ MountVolume(
         struct
         {
             FILE_FS_VOLUME_INFORMATION;
-            WCHAR Data[255];
+            WCHAR Data[_countof(Volume->VolumeLabel)];
         } LabelInfo;
 
         Status = NtQueryVolumeInformationFile(VolumeHandle,
