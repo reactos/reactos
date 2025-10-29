@@ -790,6 +790,9 @@ static size_t write_type_tfs(ITypeInfo *typeinfo, unsigned char *str,
     ITypeInfo *refinfo;
     TYPEATTR *attr;
     size_t off;
+#ifdef __REACTOS__
+    GUID guid;
+#endif
 
     TRACE("vt %d%s\n", desc->vt, toplevel ? " (toplevel)" : "");
 
@@ -811,11 +814,25 @@ static size_t write_type_tfs(ITypeInfo *typeinfo, unsigned char *str,
         case TKIND_RECORD:
             off = write_struct_tfs(refinfo, str, len, attr);
             break;
+#ifdef __REACTOS__
+        case TKIND_INTERFACE:
+        case TKIND_DISPATCH:
+            /* These are treated as if they were interface pointers. */
+            off = *len;
+            write_ip_tfs(str, len, &attr->guid);
+            break;
+        case TKIND_COCLASS:
+            off = *len;
+            get_default_iface(refinfo, attr->cImplTypes, &guid);
+            write_ip_tfs(str, len, &guid);
+            break;
+#else
         case TKIND_INTERFACE:
         case TKIND_DISPATCH:
         case TKIND_COCLASS:
             assert(0);
             break;
+#endif
         case TKIND_ALIAS:
             off = write_type_tfs(refinfo, str, len, &attr->tdescAlias, toplevel, onstack);
             break;
@@ -1001,6 +1018,14 @@ static HRESULT get_param_info(ITypeInfo *typeinfo, TYPEDESC *tdesc, int is_in,
             hr = get_param_info(refinfo, &attr->tdescAlias, is_in, is_out,
                     server_size, flags, basetype, tfs_tdesc);
             break;
+#ifdef __REACTOS__
+        case TKIND_INTERFACE:
+        case TKIND_DISPATCH:
+        case TKIND_COCLASS:
+            /* These are treated as if they were interface pointers. */
+            *flags |= MustFree;
+            break;
+#endif
         default:
             FIXME("unhandled kind %#x\n", attr->typekind);
             hr = E_NOTIMPL;
