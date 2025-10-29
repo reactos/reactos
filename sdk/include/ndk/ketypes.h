@@ -126,11 +126,6 @@ Author:
 #define THREAD_ALERT_INCREMENT          2
 
 //
-// Physical memory offset of KUSER_SHARED_DATA
-//
-#define KI_USER_SHARED_DATA_PHYSICAL    0x41000
-
-//
 // Quantum values and decrements
 //
 #define MAX_QUANTUM                     0x7F
@@ -163,6 +158,11 @@ typedef struct _FIBER                                    /* Field offsets:    */
     struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer;
 #endif
 } FIBER, *PFIBER;
+
+//
+// KUSER_SHARED_DATA location in User Mode
+//
+#define USER_SHARED_DATA                        (0x7FFE0000)
 
 #ifndef NTOS_MODE_USER
 //
