@@ -49,7 +49,7 @@ const struct test winetest_testlist[] =
     { "comm", func_comm },
     { "console", func_console },
     /* ReactOS */
-    //{ "debugger", func_debugger },
+    { "debugger", func_debugger },
     { "directory", func_directory },
     { "drive", func_drive },
     { "environ", func_environ },
@@ -57,7 +57,7 @@ const struct test winetest_testlist[] =
     { "file", func_file },
     { "format_msg", func_format_msg },
     /* ReactOS */
-    //{ "generated", func_generated },
+    { "generated", func_generated },
     { "heap", func_heap },
     { "loader", func_loader },
     { "locale", func_locale },

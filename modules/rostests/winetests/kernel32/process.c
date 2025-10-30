@@ -324,6 +324,9 @@ static void WINAPIV __WINE_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fm
 
 /* bits 0..1 contains FILE_TYPE_{UNKNOWN, CHAR, PIPE, DISK} */
 #if defined(__REACTOS__) && defined(_WIN64)
+/* This appears to be what HATTR_NULL resolves to on Windows x64 for native (not WoW) processes.
+ * It may be:
+ * HATTR_NULL (x86) | HATTR_INVALID | 0x01 */
 #define HATTR_NULL      0x0d               /* NULL handle value */
 #else
 #define HATTR_NULL      0x08               /* NULL handle value */
