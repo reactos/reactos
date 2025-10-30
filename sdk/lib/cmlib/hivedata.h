@@ -307,8 +307,15 @@ typedef struct _DUAL
     LIST_ENTRY FreeBins;
 } DUAL, *PDUAL;
 
-typedef struct _HHIVE
-{
+typedef struct _CMSI_RW_LOCK {
+    ULONG Dummy;
+} CMSI_RW_LOCK;
+
+typedef struct _HVP_VIEW_MAP {
+    ULONG Dummy[8];
+} HVP_VIEW_MAP;
+
+typedef struct _HHIVE {
     /* Hive identifier (0xBEE0BEE0) */
     ULONG Signature;
 
@@ -325,37 +332,95 @@ typedef struct _HHIVE
 #if (NTDDI_VERSION >= NTDDI_WIN7)
     PVOID HiveLoadFailure; // PHIVE_LOAD_FAILURE
 #endif
+
     PHBASE_BLOCK BaseBlock;
+
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    CMSI_RW_LOCK FlusherLock;
+    CMSI_RW_LOCK WriterLock;
+#endif
+
     RTL_BITMAP DirtyVector;
     ULONG DirtyCount;
     ULONG DirtyAlloc;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    RTL_BITMAP UnreconciledVector;
+    ULONG UnreconciledCount;
+#endif
+
     ULONG BaseBlockAlloc;
     ULONG Cluster;
-    BOOLEAN Flat;
-    BOOLEAN ReadOnly;
-#if (NTDDI_VERSION < NTDDI_VISTA) // NTDDI_LONGHORN
-    BOOLEAN Log;
-    BOOLEAN Alternate;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    union {
+        struct {
+            UCHAR Flat : 1;
+            UCHAR ReadOnly : 1;
+            UCHAR SystemCacheBacked : 1;
+            UCHAR Reserved : 5;
+        };
+        UCHAR FlagsByte;
+    };
+#else
+    UCHAR Flat;
+    UCHAR ReadOnly;
 #endif
-    BOOLEAN DirtyFlag;
-#if (NTDDI_VERSION >= NTDDI_VISTA) // NTDDI_LONGHORN
+
+    UCHAR DirtyFlag;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
     ULONG HvBinHeadersUse;
     ULONG HvFreeCellsUse;
     ULONG HvUsedCellsUse;
     ULONG CmUsedCellsUse;
 #endif
+
     ULONG HiveFlags;
-#if (NTDDI_VERSION < NTDDI_VISTA) // NTDDI_LONGHORN
+
+#if (NTDDI_VERSION < NTDDI_VISTA)
     ULONG LogSize;
 #else
     ULONG CurrentLog;
-    ULONG LogSize[2];
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    ULONG CurrentLogSequence;
+    ULONG CurrentLogOffset;
+    ULONG MinimumLogSequence;
+    ULONG LogFileSizeCap;
+    UCHAR LogDataPresent[2];
+    UCHAR PrimaryFileValid;
+    UCHAR BaseBlockDirty;
+    union {
+        struct {
+            USHORT FirstLogFile : 3;
+            USHORT SecondLogFile : 3;
+            USHORT HeaderRecovered : 1;
+            USHORT LegacyRecoveryIndicated : 1;
+            USHORT RecoveryInformationReserved : 8;
+        };
+        USHORT RecoveryInformation;
+    };
+    UCHAR LogEntriesRecovered[2];
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG CurrentLogMinimumSequence;
+    LARGE_INTEGER LastLogSwapTime;
+#endif
+
     ULONG RefreshCount;
     ULONG StorageTypeCount;
     ULONG Version;
+
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    HVP_VIEW_MAP ViewMap;
+#endif
+
     DUAL Storage[HTYPE_COUNT];
 } HHIVE, *PHHIVE;
+
 
 #define IsFreeCell(Cell)    ((Cell)->Size >= 0)
 #define IsUsedCell(Cell)    ((Cell)->Size <  0)
