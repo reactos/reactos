@@ -72,6 +72,20 @@ typedef struct _PROCESS_INFORMATION
 typedef struct _PROC_THREAD_ATTRIBUTE_LIST *PPROC_THREAD_ATTRIBUTE_LIST, *LPPROC_THREAD_ATTRIBUTE_LIST;
 
 WINBASEAPI
+HRESULT
+WINAPI
+GetThreadDescription(
+    _In_ HANDLE hThread,
+    _Outptr_result_z_ PWSTR* ppszThreadDescription);
+
+WINBASEAPI
+HRESULT
+WINAPI
+SetThreadDescription(
+    _In_ HANDLE hThread,
+    _In_ PCWSTR lpThreadDescription);
+
+WINBASEAPI
 BOOL
 WINAPI
 SetThreadStackGuarantee(

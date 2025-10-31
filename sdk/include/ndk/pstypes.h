@@ -412,6 +412,29 @@ typedef enum _THREADINFOCLASS
     ThreadActualBasePriority,
     ThreadTebInformation,
     ThreadCSwitchMon,
+
+    // Windows 7
+    ThreadCSwitchPmu, // 0x1C
+    ThreadWow64Context,
+    ThreadGroupInformation,
+    ThreadUmsInformation,
+    ThreadCounterProfiling,
+    ThreadIdealProcessorEx,
+
+    // Windows 8
+    ThreadCpuAccountingInformation, // 0x22
+
+    // Windows 8.1
+    ThreadSuspendCount, // 0x23
+
+    // Windows 10
+    ThreadHeterogeneousCpuPolic, // 0x24
+    ThreadContainerId,
+    ThreadNameInformation,
+    ThreadSelectedCpuSets,
+    ThreadSystemThreadInformation,
+    ThreadActualGroupAffinity,
+
     MaxThreadInfoClass
 } THREADINFOCLASS;
 
@@ -1046,6 +1069,11 @@ typedef struct _THREAD_BASIC_INFORMATION
     KPRIORITY Priority;
     KPRIORITY BasePriority;
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
+
+typedef struct _THREAD_NAME_INFORMATION
+{
+    UNICODE_STRING ThreadName;
+} THREAD_NAME_INFORMATION, *PTHREAD_NAME_INFORMATION;
 
 #ifndef NTOS_MODE_USER
 

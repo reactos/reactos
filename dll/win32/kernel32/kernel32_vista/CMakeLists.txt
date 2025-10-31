@@ -12,12 +12,14 @@ list(APPEND SOURCE
     GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
     GetFinalPathNameByHandle.c
+    GetNamedPipeClientProcessId.c
     GetTickCount64.c
     GetUserDefaultLocaleName.c
     InitOnce.c
     IsValidLocaleName.c
     LCIDToLocaleName.c
     LocaleNameToLCID.c
+    SetThreadDescription.c
     sync.c
     vista.c)
 
