@@ -2687,6 +2687,12 @@ static void test_findsectionstring(void)
     ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass2", TRUE, FALSE, __LINE__);
     ntdll_find(ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION, "wndClass3", FALSE, FALSE, __LINE__);
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        trace("HACK: ReactOS crashes on DeactivateActCtx() below.\n");
+        ret = FALSE;
+    } else
+#endif
     ret = DeactivateActCtx(0, cookie);
     ok(ret, "DeactivateActCtx failed: %lu\n", GetLastError());
     ReleaseActCtx(handle);
@@ -3171,6 +3177,12 @@ static void test_ZombifyActCtx(void)
     todo_wine
     ok(ret, "got %d\n", ret);
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        trace("HACK: ReactOS crashes on DeactivateActCtx() below.\n");
+        ret = FALSE;
+    } else
+#endif
     ret = DeactivateActCtx(0, cookie);
     ok(ret, "DeactivateActCtx failed: %lu\n", GetLastError());
     ReleaseActCtx(handle);
