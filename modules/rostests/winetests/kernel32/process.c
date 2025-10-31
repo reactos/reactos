@@ -2754,7 +2754,7 @@ static void test_IsProcessInJob(void)
     ok(out, "IsProcessInJob returned out=%u\n", out);
 #ifdef __REACTOS__
     if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
-        skip("Number of assigned processes broken on Win8+\n");
+        test_assigned_proc(job, 1);
         test_accounting(job, 1, 1, 0);
     } else {
 #endif
