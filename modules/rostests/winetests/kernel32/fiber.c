@@ -970,7 +970,7 @@ static void test_fiber_actctx(void)
     BOOL ret;
 
 #ifdef __REACTOS__
-    if (GetNTVersion() < _WIN32_WINNT_VISTA) {
+    if (GetNTVersion() < _WIN32_WINNT_VISTA && !is_reactos()) {
         skip("test_fiber_actctx() crashes and isn't valid on WS03.\n");
         return;
     }
