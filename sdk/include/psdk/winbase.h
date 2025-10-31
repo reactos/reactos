@@ -1965,6 +1965,13 @@ WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathA(LPCSTR ExeName);
 WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathW(LPCWSTR ExeName);
 #endif
 
+WINBASEAPI
+BOOL
+WINAPI
+GetNamedPipeClientProcessId(
+    _In_ HANDLE Pipe,
+    _Out_ PULONG ClientProcessId);
+
 BOOL
 WINAPI
 GetNamedPipeHandleStateA(

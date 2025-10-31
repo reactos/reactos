@@ -34,11 +34,6 @@
 #define ARRAY_SIZE(_x) (sizeof((_x))/sizeof((_x)[0]))
 #endif
 
-typedef struct _THREAD_NAME_INFORMATION
-{
-    UNICODE_STRING ThreadName;
-} THREAD_NAME_INFORMATION, *PTHREAD_NAME_INFORMATION;
-
 typedef void (CALLBACK *PNTAPCFUNC)(ULONG_PTR,ULONG_PTR,ULONG_PTR);
 typedef void (CALLBACK *PRTL_THREAD_START_ROUTINE)(LPVOID);
 typedef DWORD (CALLBACK *PRTL_WORK_ITEM_ROUTINE)(LPVOID);
@@ -1883,7 +1878,7 @@ static NTSTATUS tp_threadpool_lock( struct threadpool **out, TP_CALLBACK_ENVIRON
 
     if (environment)
     {
-#ifndef __REACTOS__ //Windows 7 stuff 
+#ifndef __REACTOS__ //Windows 7 stuff
         /* Validate environment parameters. */
         if (environment->Version == 3)
         {
@@ -1920,7 +1915,7 @@ static NTSTATUS tp_threadpool_lock( struct threadpool **out, TP_CALLBACK_ENVIRON
 
         pool = default_threadpool;
     }
- 
+
     RtlEnterCriticalSection( &pool->cs );
 
     /* Make sure that the threadpool has at least one thread. */

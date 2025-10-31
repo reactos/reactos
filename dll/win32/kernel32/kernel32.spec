@@ -524,7 +524,7 @@
 @ stub -version=0x600+ GetNamedPipeAttribute
 @ stub -version=0x600+ GetNamedPipeClientComputerNameA
 @ stub -version=0x600+ GetNamedPipeClientComputerNameW
-@ stub -version=0x600+ GetNamedPipeClientProcessId
+@ stdcall -version=0x600+ GetNamedPipeClientProcessId(ptr ptr)
 @ stub -version=0x600+ GetNamedPipeClientSessionId
 @ stdcall GetNamedPipeHandleStateA(long ptr ptr ptr ptr str long)
 @ stdcall GetNamedPipeHandleStateW(long ptr ptr ptr ptr wstr long)
@@ -1104,6 +1104,7 @@
 @ stdcall SetTermsrvAppInstallMode(long)
 @ stdcall SetThreadAffinityMask(long long)
 @ stdcall SetThreadContext(long ptr)
+@ stdcall -version=0xA00+ SetThreadDescription(ptr wstr)
 @ stdcall -stub -version=0x600+ SetThreadErrorMode(long ptr)
 @ stdcall SetThreadExecutionState(long)
 @ stdcall SetThreadIdealProcessor(long long)

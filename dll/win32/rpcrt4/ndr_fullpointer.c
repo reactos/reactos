@@ -19,6 +19,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -33,25 +34,19 @@ PFULL_PTR_XLAT_TABLES WINAPI NdrFullPointerXlatInit(ULONG NumberOfPointers,
                                                     XLAT_SIDE XlatSide)
 {
     ULONG NumberOfBuckets;
-    PFULL_PTR_XLAT_TABLES pXlatTables = HeapAlloc(GetProcessHeap(), 0, sizeof(*pXlatTables));
+    FULL_PTR_XLAT_TABLES *pXlatTables = malloc(sizeof(*pXlatTables));
 
-    TRACE("(%d, %d)\n", NumberOfPointers, XlatSide);
+    TRACE("(%ld, %d)\n", NumberOfPointers, XlatSide);
 
     if (!NumberOfPointers) NumberOfPointers = 512;
     NumberOfBuckets = ((NumberOfPointers + 3) & ~3) - 1;
 
-    pXlatTables->RefIdToPointer.XlatTable =
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(void *) * NumberOfPointers);
-    pXlatTables->RefIdToPointer.StateTable =
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(unsigned char) * NumberOfPointers);
+    pXlatTables->RefIdToPointer.XlatTable = calloc(NumberOfPointers, sizeof(void *));
+    pXlatTables->RefIdToPointer.StateTable = calloc(NumberOfPointers, sizeof(unsigned char));
     pXlatTables->RefIdToPointer.NumberOfEntries = NumberOfPointers;
 
-    TRACE("NumberOfBuckets = %d\n", NumberOfBuckets);
-    pXlatTables->PointerToRefId.XlatTable =
-        HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(PFULL_PTR_TO_REFID_ELEMENT) * NumberOfBuckets);
+    TRACE("NumberOfBuckets = %ld\n", NumberOfBuckets);
+    pXlatTables->PointerToRefId.XlatTable = calloc(NumberOfBuckets, sizeof(FULL_PTR_TO_REFID_ELEMENT *));
     pXlatTables->PointerToRefId.NumberOfBuckets = NumberOfBuckets;
     pXlatTables->PointerToRefId.HashMask = NumberOfBuckets - 1;
 
@@ -75,34 +70,36 @@ void WINAPI NdrFullPointerXlatFree(PFULL_PTR_XLAT_TABLES pXlatTables)
             XlatTableEntry; )
         {
             PFULL_PTR_TO_REFID_ELEMENT Next = XlatTableEntry->Next;
-            HeapFree(GetProcessHeap(), 0, XlatTableEntry);
+            free(XlatTableEntry);
             XlatTableEntry = Next;
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, pXlatTables->RefIdToPointer.XlatTable);
-    HeapFree(GetProcessHeap(), 0, pXlatTables->RefIdToPointer.StateTable);
-    HeapFree(GetProcessHeap(), 0, pXlatTables->PointerToRefId.XlatTable);
+    free(pXlatTables->RefIdToPointer.XlatTable);
+    free(pXlatTables->RefIdToPointer.StateTable);
+    free(pXlatTables->PointerToRefId.XlatTable);
 
-    HeapFree(GetProcessHeap(), 0, pXlatTables);
+    free(pXlatTables);
 }
 
 static void expand_pointer_table_if_necessary(PFULL_PTR_XLAT_TABLES pXlatTables, ULONG RefId)
 {
     if (RefId >= pXlatTables->RefIdToPointer.NumberOfEntries)
     {
-        pXlatTables->RefIdToPointer.NumberOfEntries = RefId * 2;
         pXlatTables->RefIdToPointer.XlatTable =
-            HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                pXlatTables->RefIdToPointer.XlatTable,
-                sizeof(void *) * pXlatTables->RefIdToPointer.NumberOfEntries);
+            realloc(pXlatTables->RefIdToPointer.XlatTable, sizeof(void *) * RefId * 2);
         pXlatTables->RefIdToPointer.StateTable =
-            HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                pXlatTables->RefIdToPointer.StateTable,
-                sizeof(unsigned char) * pXlatTables->RefIdToPointer.NumberOfEntries);
-
+            realloc(pXlatTables->RefIdToPointer.StateTable, RefId * 2);
         if (!pXlatTables->RefIdToPointer.XlatTable || !pXlatTables->RefIdToPointer.StateTable)
+        {
             pXlatTables->RefIdToPointer.NumberOfEntries = 0;
+            return;
+        }
+        memset(pXlatTables->RefIdToPointer.XlatTable + pXlatTables->RefIdToPointer.NumberOfEntries, 0,
+            (RefId * 2 - pXlatTables->RefIdToPointer.NumberOfEntries) * sizeof(void *));
+        memset(pXlatTables->RefIdToPointer.StateTable + pXlatTables->RefIdToPointer.NumberOfEntries, 0,
+            RefId * 2 - pXlatTables->RefIdToPointer.NumberOfEntries);
+        pXlatTables->RefIdToPointer.NumberOfEntries = RefId * 2;
     }
 }
 
@@ -137,7 +134,7 @@ int WINAPI NdrFullPointerQueryPointer(PFULL_PTR_XLAT_TABLES pXlatTables,
             return 0;
         }
 
-    XlatTableEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(*XlatTableEntry));
+    XlatTableEntry = malloc(sizeof(*XlatTableEntry));
     XlatTableEntry->Next = pXlatTables->PointerToRefId.XlatTable[Hash & pXlatTables->PointerToRefId.HashMask];
     XlatTableEntry->Pointer = pPointer;
     XlatTableEntry->RefId = *pRefId = pXlatTables->NextRefId++;
@@ -159,7 +156,7 @@ int WINAPI NdrFullPointerQueryRefId(PFULL_PTR_XLAT_TABLES pXlatTables,
                                     ULONG RefId, unsigned char QueryType,
                                     void **ppPointer)
 {
-    TRACE("(%p, 0x%x, %d, %p)\n", pXlatTables, RefId, QueryType, ppPointer);
+    TRACE("(%p, 0x%lx, %d, %p)\n", pXlatTables, RefId, QueryType, ppPointer);
 
     if (!RefId)
         return 1;
@@ -192,13 +189,13 @@ void WINAPI NdrFullPointerInsertRefId(PFULL_PTR_XLAT_TABLES pXlatTables,
     unsigned int i;
     PFULL_PTR_TO_REFID_ELEMENT XlatTableEntry;
 
-    TRACE("(%p, 0x%x, %p)\n", pXlatTables, RefId, pPointer);
+    TRACE("(%p, 0x%lx, %p)\n", pXlatTables, RefId, pPointer);
 
     /* simple hashing algorithm, don't know whether it matches native */
     for (i = 0; i < sizeof(pPointer); i++)
         Hash = (Hash * 3) ^ ((unsigned char *)&pPointer)[i];
 
-    XlatTableEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(*XlatTableEntry));
+    XlatTableEntry = malloc(sizeof(*XlatTableEntry));
     XlatTableEntry->Next = pXlatTables->PointerToRefId.XlatTable[Hash & pXlatTables->PointerToRefId.HashMask];
     XlatTableEntry->Pointer = pPointer;
     XlatTableEntry->RefId = RefId;

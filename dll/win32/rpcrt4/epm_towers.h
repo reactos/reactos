@@ -19,9 +19,7 @@
  *
  */
 
-#pragma once
-
-#include <epm_c.h>
+#include "epm.h"
 
 #define EPM_PROTOCOL_DNET_NSP		0x04
 #define EPM_PROTOCOL_OSI_TP4  		0x05

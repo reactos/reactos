@@ -24,6 +24,7 @@
 #define __WINE_RPCNDR_H
 
 #include <basetsd.h>
+#include <rpcsal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +36,7 @@ extern "C" {
 #pragma warning(disable:4255)
 #pragma warning(disable:4820)
 #endif
+
 #undef CONST_VTBL
 #ifdef CONST_VTABLE
 # define CONST_VTBL const
@@ -45,7 +47,6 @@ extern "C" {
 #ifndef EXTERN_GUID
 #ifdef __cplusplus
 #define EXTERN_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        EXTERN_C const GUID DECLSPEC_SELECTANY name DECLSPEC_HIDDEN; \
         EXTERN_C const GUID DECLSPEC_SELECTANY name = \
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #else
@@ -54,59 +55,18 @@ extern "C" {
 #endif
 #endif
 
-/* stupid #if can't handle casts... this __stupidity
-   is just a workaround for that limitation */
-
-#define __NDR_CHAR_REP_MASK  0x000f
-#define __NDR_INT_REP_MASK   0x00f0
-#define __NDR_FLOAT_REP_MASK 0xff00
-
-#define __NDR_IEEE_FLOAT     0x0000
-#define __NDR_VAX_FLOAT      0x0100
-#define __NDR_IBM_FLOAT      0x0300
-
-#define __NDR_ASCII_CHAR     0x0000
-#define __NDR_EBCDIC_CHAR    0x0001
-
-#define __NDR_LITTLE_ENDIAN  0x0010
-#define __NDR_BIG_ENDIAN     0x0000
-
-/* Mac's are special */
-#if defined(__RPC_MAC__)
-# define __NDR_LOCAL_DATA_REPRESENTATION \
-    (__NDR_IEEE_FLOAT | __NDR_ASCII_CHAR | __NDR_BIG_ENDIAN)
-#else
-# define __NDR_LOCAL_DATA_REPRESENTATION \
-    (__NDR_IEEE_FLOAT | __NDR_ASCII_CHAR | __NDR_LITTLE_ENDIAN)
-#endif
-
-#define __NDR_LOCAL_ENDIAN \
-  (__NDR_LOCAL_DATA_REPRESENTATION & __NDR_INT_REP_MASK)
-
-/* for convenience, define NDR_LOCAL_IS_BIG_ENDIAN iff it is */
-#if __NDR_LOCAL_ENDIAN == __NDR_BIG_ENDIAN
-# define NDR_LOCAL_IS_BIG_ENDIAN
-#elif __NDR_LOCAL_ENDIAN == __NDR_LITTLE_ENDIAN
-# undef NDR_LOCAL_IS_BIG_ENDIAN
-#else
-# error alien NDR_LOCAL_ENDIAN - Greg botched the defines again, please report
-#endif
-
-/* finally, do the casts like Microsoft */
-
-#define NDR_CHAR_REP_MASK             ((ULONG) __NDR_CHAR_REP_MASK)
-#define NDR_INT_REP_MASK              ((ULONG) __NDR_INT_REP_MASK)
-#define NDR_FLOAT_REP_MASK            ((ULONG) __NDR_FLOAT_REP_MASK)
-#define NDR_IEEE_FLOAT                ((ULONG) __NDR_IEEE_FLOAT)
-#define NDR_VAX_FLOAT                 ((ULONG) __NDR_VAX_FLOAT)
-#define NDR_IBM_FLOAT                 ((ULONG) __NDR_IBM_FLOAT)
-#define NDR_ASCII_CHAR                ((ULONG) __NDR_ASCII_CHAR)
-#define NDR_EBCDIC_CHAR               ((ULONG) __NDR_EBCDIC_CHAR)
-#define NDR_LITTLE_ENDIAN             ((ULONG) __NDR_LITTLE_ENDIAN)
-#define NDR_BIG_ENDIAN                ((ULONG) __NDR_BIG_ENDIAN)
-#define NDR_LOCAL_DATA_REPRESENTATION ((ULONG) __NDR_LOCAL_DATA_REPRESENTATION)
-#define NDR_LOCAL_ENDIAN              ((ULONG) __NDR_LOCAL_ENDIAN)
-
+#define NDR_CHAR_REP_MASK             ((ULONG)0x000f)
+#define NDR_INT_REP_MASK              ((ULONG)0x00f0)
+#define NDR_FLOAT_REP_MASK            ((ULONG)0xff00)
+#define NDR_IEEE_FLOAT                ((ULONG)0x0000)
+#define NDR_VAX_FLOAT                 ((ULONG)0x0100)
+#define NDR_IBM_FLOAT                 ((ULONG)0x0300)
+#define NDR_ASCII_CHAR                ((ULONG)0x0000)
+#define NDR_EBCDIC_CHAR               ((ULONG)0x0001)
+#define NDR_LITTLE_ENDIAN             ((ULONG)0x0010)
+#define NDR_BIG_ENDIAN                ((ULONG)0x0000)
+#define NDR_LOCAL_DATA_REPRESENTATION NDR_LITTLE_ENDIAN
+#define NDR_LOCAL_ENDIAN              NDR_LITTLE_ENDIAN
 
 #define TARGET_IS_NT50_OR_LATER 1
 #define TARGET_IS_NT40_OR_LATER 1
@@ -118,8 +78,13 @@ typedef INT64 hyper;
 typedef UINT64 MIDL_uhyper;
 typedef unsigned char boolean;
 
+#ifndef _ERROR_STATUS_T_DEFINED
+typedef ULONG error_status_t;
+#define _ERROR_STATUS_T_DEFINED
+#endif
+
 #define __RPC_CALLEE WINAPI
-#define RPC_VAR_ENTRY __cdecl
+#define RPC_VAR_ENTRY WINAPIV
 #define NDR_SHAREABLE static
 
 #define MIDL_ascii_strlen(s) strlen(s)
@@ -128,8 +93,8 @@ typedef unsigned char boolean;
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
 
-void * __RPC_USER MIDL_user_allocate(SIZE_T);
 void __RPC_USER MIDL_user_free(void *);
+void * __RPC_USER MIDL_user_allocate(SIZE_T) __WINE_ALLOC_SIZE(1) __WINE_DEALLOC(MIDL_user_free) __WINE_MALLOC;
 
 #define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
@@ -154,15 +119,33 @@ typedef void (__RPC_USER *NDR_RUNDOWN)(void *context);
 typedef void (__RPC_USER *NDR_NOTIFY_ROUTINE)(void);
 typedef void (__RPC_USER *NDR_NOTIFY2_ROUTINE)(boolean flag);
 
-#ifndef DECLSPEC_UUID
- #if defined(_MSC_VER) && defined(__cplusplus)
-  #define DECLSPEC_UUID(x) __declspec(uuid(x))
- #else
-  #define DECLSPEC_UUID(x)
- #endif
-#endif /* DECLSPEC_UUID */
+#ifdef __REACTOS__
+#ifndef __has_declspec_attribute
+# if defined(_MSC_VER)
+#  define __has_declspec_attribute(x) 1
+# else
+#  define __has_declspec_attribute(x) 0
+# endif
+#endif
+#endif
 
-#define MIDL_INTERFACE(x)   struct
+#ifndef DECLSPEC_NOVTABLE
+# if __has_declspec_attribute(novtable) && defined(__cplusplus)
+#  define DECLSPEC_NOVTABLE __declspec(novtable)
+# else
+#  define DECLSPEC_NOVTABLE
+# endif
+#endif
+
+#ifndef DECLSPEC_UUID
+# if __has_declspec_attribute(uuid) && defined (__cplusplus)
+#  define DECLSPEC_UUID(x) __declspec(uuid(x))
+# else
+#  define DECLSPEC_UUID(x)
+# endif
+#endif
+
+#define MIDL_INTERFACE(x)   struct DECLSPEC_UUID(x) DECLSPEC_NOVTABLE
 
 struct _MIDL_STUB_MESSAGE;
 struct _MIDL_STUB_DESC;
@@ -233,7 +216,7 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG PointerLength;
   unsigned int fInDontFree:1;
   unsigned int fDontCallFreeInst:1;
-  unsigned int fInOnlyParam:1;
+  unsigned int fUnused1 :1;
   unsigned int fHasReturn:1;
   unsigned int fHasExtensions:1;
   unsigned int fHasNewCorrDesc:1;
@@ -244,8 +227,8 @@ typedef struct _MIDL_STUB_MESSAGE
   unsigned int fHasMemoryValidateCallback:1;
   unsigned int fInFree:1;
   unsigned int fNeedMCCP:1;
-  int fUnused:3;
-  int fUnused2:16;
+  int fUnused2:3;
+  int fUnused3:16;
   DWORD dwDestContext;
   void *pvDestContext;
   NDR_SCONTEXT *SavedContextHandles;
@@ -357,6 +340,39 @@ typedef struct _COMM_FAULT_OFFSETS
   short FaultOffset;
 } COMM_FAULT_OFFSETS;
 
+typedef enum _IDL_CS_CONVERT
+{
+    IDL_CS_NO_CONVERT,
+    IDL_CS_IN_PLACE_CONVERT,
+    IDL_CS_NEW_BUFFER_CONVERT
+} IDL_CS_CONVERT;
+
+typedef void (__RPC_USER * CS_TYPE_NET_SIZE_ROUTINE)(RPC_BINDING_HANDLE,ULONG,ULONG,IDL_CS_CONVERT*,ULONG*,error_status_t*);
+typedef void (__RPC_USER * CS_TYPE_TO_NETCS_ROUTINE)(RPC_BINDING_HANDLE,ULONG,void*,ULONG,byte*,ULONG*,error_status_t*);
+typedef void (__RPC_USER * CS_TYPE_LOCAL_SIZE_ROUTINE)(RPC_BINDING_HANDLE,ULONG,ULONG,IDL_CS_CONVERT*,ULONG*,error_status_t*);
+typedef void (__RPC_USER * CS_TYPE_FROM_NETCS_ROUTINE)(RPC_BINDING_HANDLE,ULONG,byte*,ULONG,ULONG,void*,ULONG*,error_status_t*);
+typedef void (__RPC_USER * CS_TAG_GETTING_ROUTINE)(RPC_BINDING_HANDLE,int,ULONG*,ULONG*,ULONG*,error_status_t*);
+
+typedef struct _NDR_CS_SIZE_CONVERT_ROUTINES
+{
+    CS_TYPE_NET_SIZE_ROUTINE   pfnNetSize;
+    CS_TYPE_TO_NETCS_ROUTINE   pfnToNetCs;
+    CS_TYPE_LOCAL_SIZE_ROUTINE pfnLocalSize;
+    CS_TYPE_FROM_NETCS_ROUTINE pfnFromNetCs;
+} NDR_CS_SIZE_CONVERT_ROUTINES;
+
+typedef struct _NDR_CS_ROUTINES
+{
+    NDR_CS_SIZE_CONVERT_ROUTINES *pSizeConvertRoutines;
+    CS_TAG_GETTING_ROUTINE       *pTagGettingRoutines;
+} NDR_CS_ROUTINES;
+
+typedef struct _NDR_EXPR_DESC
+{
+    const unsigned short *pOffset;
+    PFORMAT_STRING        pFormatExpr;
+} NDR_EXPR_DESC;
+
 typedef struct _MIDL_STUB_DESC
 {
   void *RpcInterfaceInformation;
@@ -380,21 +396,35 @@ typedef struct _MIDL_STUB_DESC
   const USER_MARSHAL_ROUTINE_QUADRUPLE *aUserMarshalQuadruple;
   const NDR_NOTIFY_ROUTINE *NotifyRoutineTable;
   ULONG_PTR mFlags;
-  ULONG_PTR Reserved3;
-  ULONG_PTR Reserved4;
-  ULONG_PTR Reserved5;
+  const NDR_CS_ROUTINES *CsRoutineTables;
+  void *ProxyServerInfo;
+  const NDR_EXPR_DESC *pExprInfo;
 } MIDL_STUB_DESC;
 typedef const MIDL_STUB_DESC *PMIDL_STUB_DESC;
 
 typedef struct _MIDL_FORMAT_STRING
 {
   short Pad;
-#if defined(__GNUC__)
-  unsigned char Format[0];
-#else
-  unsigned char Format[1];
-#endif
+  unsigned char Format[];
 } MIDL_FORMAT_STRING;
+
+typedef struct _MIDL_METHOD_PROPERTY
+{
+    ULONG     Id;
+    ULONG_PTR Value;
+} MIDL_METHOD_PROPERTY, *PMIDL_METHOD_PROPERTY;
+
+typedef struct _MIDL_METHOD_PROPERTY_MAP
+{
+    ULONG                       Count;
+    const MIDL_METHOD_PROPERTY *Properties;
+} MIDL_METHOD_PROPERTY_MAP, *PMIDL_METHOD_PROPERTY_MAP;
+
+typedef struct _MIDL_INTERFACE_METHOD_PROPERTIES
+{
+    unsigned short MethodCount;
+    const MIDL_METHOD_PROPERTY_MAP * const *MethodProperties;
+} MIDL_INTERFACE_METHOD_PROPERTIES;
 
 typedef struct _MIDL_SYNTAX_INFO
 {
@@ -404,13 +434,13 @@ typedef struct _MIDL_SYNTAX_INFO
   const unsigned short* FmtStringOffset;
   PFORMAT_STRING TypeString;
   const void* aUserMarshalQuadruple;
-  ULONG_PTR pReserved1;
+  const MIDL_INTERFACE_METHOD_PROPERTIES *pMethodProperties;
   ULONG_PTR pReserved2;
 } MIDL_SYNTAX_INFO, *PMIDL_SYNTAX_INFO;
 
 typedef void (__RPC_API *STUB_THUNK)( PMIDL_STUB_MESSAGE );
 
-#ifdef WINE_STRICT_PROTOTYPES
+#ifndef WINE_NO_STRICT_PROTOTYPES
 typedef LONG (__RPC_API *SERVER_ROUTINE)(void);
 #else
 typedef LONG (__RPC_API *SERVER_ROUTINE)();
@@ -438,11 +468,17 @@ typedef struct _MIDL_STUBLESS_PROXY_INFO
   PMIDL_SYNTAX_INFO pSyntaxInfo;
 } MIDL_STUBLESS_PROXY_INFO, *PMIDL_STUBLESS_PROXY_INFO;
 
+
+#if defined(__i386__) && !defined(_MSC_VER) && !defined(__MINGW32__) && !defined(__CYGWIN__)
+/* Calling convention for returning structures/unions is different between Windows and gcc on i386 */
+typedef LONG_PTR CLIENT_CALL_RETURN;
+#else
 typedef union _CLIENT_CALL_RETURN
 {
   void *Pointer;
   LONG_PTR Simple;
 } CLIENT_CALL_RETURN;
+#endif
 
 typedef enum {
   STUB_UNMARSHAL,
@@ -491,7 +527,6 @@ typedef struct _FULL_PTR_XLAT_TABLES {
 
 struct IRpcStubBuffer;
 
-typedef ULONG error_status_t;
 typedef void  * NDR_CCONTEXT;
 
 typedef struct _SCONTEXT_QUEUE {
@@ -670,11 +705,15 @@ RPCRTAPI unsigned char* RPC_ENTRY
   NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
 CLIENT_CALL_RETURN RPC_VAR_ENTRY
-  NdrClientCall2( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 CLIENT_CALL_RETURN RPC_VAR_ENTRY
+  NdrClientCall2( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
+  NdrClientCall3( MIDL_STUBLESS_PROXY_INFO *info, ULONG proc, void *retval, ... );
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
+  Ndr64AsyncClientCall( MIDL_STUBLESS_PROXY_INFO *info, ULONG proc, void *retval, ... );
 CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 
@@ -697,7 +736,7 @@ RPCRTAPI LONG RPC_ENTRY
   NdrDcomAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
 
 RPCRTAPI void* RPC_ENTRY
-  NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, SIZE_T Len ) __WINE_ALLOC_SIZE(2);
+  NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, SIZE_T Len ) __WINE_ALLOC_SIZE(2) __WINE_MALLOC;
 
 RPCRTAPI void RPC_ENTRY
   NdrClearOutParameters( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat, void *ArgAddr );
@@ -706,10 +745,10 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
   NdrMapCommAndFaultStatus( PMIDL_STUB_MESSAGE pStubMsg, ULONG *pCommStatus,
                             ULONG *pFaultStatus, RPC_STATUS Status_ );
 
-RPCRTAPI void* RPC_ENTRY
-  NdrOleAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrOleFree( void* NodeToFree );
+RPCRTAPI void* RPC_ENTRY
+  NdrOleAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1) __WINE_DEALLOC(NdrOleFree) __WINE_MALLOC;
 
 RPCRTAPI void RPC_ENTRY
   NdrClientInitialize( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE pStubMsg,
@@ -732,7 +771,8 @@ RPCRTAPI void RPC_ENTRY
                        PMIDL_STUB_MESSAGE pStubMsg, PMIDL_STUB_DESC pStubDesc,
                        PFORMAT_STRING pFormat, void *pParamList );
 RPCRTAPI unsigned char* RPC_ENTRY
-  NdrGetBuffer( PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC_BINDING_HANDLE handle );
+  NdrGetBuffer( PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC_BINDING_HANDLE handle )
+  __WINE_ALLOC_SIZE(2) __WINE_MALLOC;
 RPCRTAPI void RPC_ENTRY
   NdrFreeBuffer( PMIDL_STUB_MESSAGE pStubMsg );
 RPCRTAPI unsigned char* RPC_ENTRY
@@ -767,14 +807,14 @@ RPCRTAPI void RPC_ENTRY
   NdrRpcSsDisableAllocate( PMIDL_STUB_MESSAGE pMessage );
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmSetClientToOsf( PMIDL_STUB_MESSAGE pMessage );
-RPCRTAPI void * RPC_ENTRY
-  NdrRpcSmClientAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmClientFree( void *NodeToFree );
 RPCRTAPI void * RPC_ENTRY
-  NdrRpcSsDefaultAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
+  NdrRpcSmClientAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1) __WINE_DEALLOC(NdrRpcSmClientFree) __WINE_MALLOC;
 RPCRTAPI void RPC_ENTRY
   NdrRpcSsDefaultFree( void *NodeToFree );
+RPCRTAPI void * RPC_ENTRY
+  NdrRpcSsDefaultAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1) __WINE_DEALLOC(NdrRpcSsDefaultFree) __WINE_MALLOC;
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   NdrGetUserMarshalInfo( ULONG *pFlags, ULONG InformationLevel, NDR_USER_MARSHAL_INFO *pMarshalInfo );

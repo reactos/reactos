@@ -12,6 +12,20 @@ extern "C" {
 #endif
 
 WINBASEAPI
+HRESULT
+WINAPI
+GetThreadDescription(
+    _In_ HANDLE hThread,
+    _Outptr_result_z_ PWSTR* ppszThreadDescription);
+
+WINBASEAPI
+HRESULT
+WINAPI
+SetThreadDescription(
+    _In_ HANDLE hThread,
+    _In_ PCWSTR lpThreadDescription);
+
+WINBASEAPI
 BOOL
 WINAPI
 SetThreadStackGuarantee(

@@ -20,11 +20,11 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "rpc.h"
 #include "rpcndr.h"
-#include "wine/winternl.h"
 
 #include "wine/debug.h"
 
@@ -55,7 +55,7 @@ typedef struct _RpcContextHandle
     NDR_RUNDOWN rundown_routine;
     void *ctx_guard;
     UUID uuid;
-    RTL_RWLOCK rw_lock;
+    CRITICAL_SECTION lock;
     unsigned int refs;
 } RpcContextHandle;
 
@@ -66,18 +66,18 @@ static RPC_STATUS RpcAssoc_Alloc(LPCSTR Protseq, LPCSTR NetworkAddr,
                                  RpcAssoc **assoc_out)
 {
     RpcAssoc *assoc;
-    assoc = HeapAlloc(GetProcessHeap(), 0, sizeof(*assoc));
+    assoc = malloc(sizeof(*assoc));
     if (!assoc)
         return RPC_S_OUT_OF_RESOURCES;
     assoc->refs = 1;
     list_init(&assoc->free_connection_pool);
     list_init(&assoc->context_handle_list);
-    InitializeCriticalSection(&assoc->cs);
+    InitializeCriticalSectionEx(&assoc->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
     assoc->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": RpcAssoc.cs");
-    assoc->Protseq = RPCRT4_strdupA(Protseq);
-    assoc->NetworkAddr = RPCRT4_strdupA(NetworkAddr);
-    assoc->Endpoint = RPCRT4_strdupA(Endpoint);
-    assoc->NetworkOptions = NetworkOptions ? RPCRT4_strdupW(NetworkOptions) : NULL;
+    assoc->Protseq = strdup(Protseq);
+    assoc->NetworkAddr = strdup(NetworkAddr);
+    assoc->Endpoint = strdup(Endpoint);
+    assoc->NetworkOptions = wcsdup(NetworkOptions);
     assoc->assoc_group_id = 0;
     assoc->connection_cnt = 0;
     UuidCreate(&assoc->http_uuid);
@@ -210,15 +210,15 @@ ULONG RpcAssoc_Release(RpcAssoc *assoc)
         LIST_FOR_EACH_ENTRY_SAFE(context_handle, context_handle_cursor, &assoc->context_handle_list, RpcContextHandle, entry)
             RpcContextHandle_Destroy(context_handle);
 
-        HeapFree(GetProcessHeap(), 0, assoc->NetworkOptions);
-        HeapFree(GetProcessHeap(), 0, assoc->Endpoint);
-        HeapFree(GetProcessHeap(), 0, assoc->NetworkAddr);
-        HeapFree(GetProcessHeap(), 0, assoc->Protseq);
+        free(assoc->NetworkOptions);
+        free(assoc->Endpoint);
+        free(assoc->NetworkAddr);
+        free(assoc->Protseq);
 
         assoc->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&assoc->cs);
 
-        HeapFree(GetProcessHeap(), 0, assoc);
+        free(assoc);
     }
 
     return refs;
@@ -245,14 +245,14 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
                                  InterfaceId, TransferSyntax);
 
     status = RPCRT4_Send(conn, hdr, NULL, 0);
-    RPCRT4_FreeHeader(hdr);
+    free(hdr);
     if (status != RPC_S_OK)
         return status;
 
     status = RPCRT4_ReceiveWithAuth(conn, &response_hdr, &msg, &auth_data, &auth_length);
     if (status != RPC_S_OK)
     {
-        ERR("receive failed with error %d\n", status);
+        ERR("receive failed with error %ld\n", status);
         return status;
     }
 
@@ -356,8 +356,8 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
     }
 
     I_RpcFree(msg.Buffer);
-    RPCRT4_FreeHeader(response_hdr);
-    HeapFree(GetProcessHeap(), 0, auth_data);
+    free(response_hdr);
+    free(auth_data);
     return status;
 }
 
@@ -458,17 +458,18 @@ RPC_STATUS RpcServerAssoc_AllocateContextHandle(RpcAssoc *assoc, void *CtxGuard,
 {
     RpcContextHandle *context_handle;
 
-    context_handle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context_handle));
+    context_handle = calloc(1, sizeof(*context_handle));
     if (!context_handle)
         return RPC_S_OUT_OF_MEMORY;
 
     context_handle->ctx_guard = CtxGuard;
-    RtlInitializeResource(&context_handle->rw_lock);
+    InitializeCriticalSectionEx(&context_handle->lock, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+    context_handle->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": RpcContextHandle.lock");
     context_handle->refs = 1;
 
     /* lock here to mirror unmarshall, so we don't need to special-case the
      * freeing of a non-marshalled context handle */
-    RtlAcquireResourceExclusive(&context_handle->rw_lock, TRUE);
+    EnterCriticalSection(&context_handle->lock);
 
     EnterCriticalSection(&assoc->cs);
     list_add_tail(&assoc->context_handle_list, &context_handle->entry);
@@ -500,7 +501,7 @@ RPC_STATUS RpcServerAssoc_FindContextHandle(RpcAssoc *assoc, const UUID *uuid,
             {
                 LeaveCriticalSection(&assoc->cs);
                 TRACE("found %p\n", context_handle);
-                RtlAcquireResourceExclusive(&context_handle->rw_lock, TRUE);
+                EnterCriticalSection(&context_handle->lock);
                 return RPC_S_OK;
             }
         }
@@ -555,9 +556,10 @@ static void RpcContextHandle_Destroy(RpcContextHandle *context_handle)
         context_handle->rundown_routine(context_handle->user_context);
     }
 
-    RtlDeleteResource(&context_handle->rw_lock);
+    context_handle->lock.DebugInfo->Spare[0] = 0;
+    DeleteCriticalSection(&context_handle->lock);
 
-    HeapFree(GetProcessHeap(), 0, context_handle);
+    free(context_handle);
 }
 
 unsigned int RpcServerAssoc_ReleaseContextHandle(RpcAssoc *assoc, NDR_SCONTEXT SContext, BOOL release_lock)
@@ -566,7 +568,7 @@ unsigned int RpcServerAssoc_ReleaseContextHandle(RpcAssoc *assoc, NDR_SCONTEXT S
     unsigned int refs;
 
     if (release_lock)
-        RtlReleaseResource(&context_handle->rw_lock);
+        LeaveCriticalSection(&context_handle->lock);
 
     EnterCriticalSection(&assoc->cs);
     refs = --context_handle->refs;
