@@ -34,7 +34,9 @@ extern "C" {
 
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
+WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDmaEnablerCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -271,7 +273,9 @@ WDFEXPORT(WdfDmaEnablerCreate)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 size_t
+STDCALL
 WDFEXPORT(WdfDmaEnablerGetMaximumLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -290,7 +294,9 @@ WDFEXPORT(WdfDmaEnablerGetMaximumLength)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 size_t
+STDCALL
 WDFEXPORT(WdfDmaEnablerGetMaximumScatterGatherElements)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -310,7 +316,9 @@ WDFEXPORT(WdfDmaEnablerGetMaximumScatterGatherElements)(
 
 
 __drv_maxIRQL(PASSIVE_LEVEL)
+WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfDmaEnablerSetMaximumScatterGatherElements)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -348,7 +356,9 @@ WDFEXPORT(WdfDmaEnablerSetMaximumScatterGatherElements)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 size_t
+STDCALL
 WDFEXPORT(WdfDmaEnablerGetFragmentLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -391,7 +401,9 @@ WDFEXPORT(WdfDmaEnablerGetFragmentLength)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 PDMA_ADAPTER
+STDCALL
 WDFEXPORT(WdfDmaEnablerWdmGetDmaAdapter)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -435,7 +447,9 @@ WDFEXPORT(WdfDmaEnablerWdmGetDmaAdapter)(
 
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
+WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDmaEnablerConfigureSystemProfile)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
