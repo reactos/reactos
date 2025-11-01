@@ -1,0 +1,17 @@
+The following people have helped with the development of FreeDOS Editor:
+
+Dr. Dobb's Journal: Originally wrote the application, D-Flat, which Edit is
+                    based on.
+
+Shaun Raven:        Fixed many bugs from D-Flat and made it more stable.
+
+Joe Cosentino:      Fixed lots more bugs, changed the user interface around,
+                    added or fixed 90% of additional features.
+
+Eric Auer:          Fixed many bugs including the file handling bugs and
+                    the AltGr bug.
+
+Jeremy Davis:       Added the Control+Break Handler, added additional video
+                    functions.
+
+Nagy Daniel:        Fixed the bug that turned TAB's into circles.

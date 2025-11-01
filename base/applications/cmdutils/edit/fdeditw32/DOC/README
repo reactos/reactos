@@ -1,0 +1,31 @@
+FreeDOS Edit 0.82
+
+Based on DFLAT TUI toolkit as described in Dr. Dobbs Journal (DDJ)
+See DFLAT.TXT for more information.
+
+Compiling:
+Tested with Borland's Turbo C 2.01 (TC2), Turbo C++ 1.01 (TC++1), 
+Turbo C/C++ 3.0 (TC3), and Borland C/C++ 3.1 (TC3/BC3)
+Should also work with later versions.
+
+To compile, 1st edit MAKEFILE to match your compiler, followed by
+running 'make'.  You may wish to then run clean to remove object
+files and lib files, the executables (*.exe) will still be available.
+(If compiling with TC3 or earlier? under NT, you may need to ensure
+your environment space is not to cluttered, i.e. unset unneeded
+environment variables, e.g. 'set PROCESSOR_IDENTIER=', etc. before make.)
+
+Once compiled you may wish to compress with an executable compressor
+such as UPX.  If upx.exe is in your path, after make or instead of
+'make all' you may run 'make upx' to build and then compress edit.exe
+
+
+Known Issues:
+- The beep() function in console.c produces warnings with TC3 if outp
+  macro is defined (you can #undef outp to remove them for TC3, but
+  TC++1 does not have an outp function only the macro).
+- The keyboard routines block control-break, presently the control-break
+  handler is #ifdef'd out as it is unused; reenable if necessary (MESSAGE.C).
+- See http://www.freedos.org/bugs/ for additional bugs or to report a bug.
+
+20041022

@@ -1,0 +1,14 @@
+Begin3
+Title:          Edit
+Version:        0.82
+Entered-date:   22 Oct 2004
+Description:    FreeDOS improved clone of MS-DOS Edit
+Keywords:       Edit Editor
+Author:         Joe Cosentino <hardmarine@comcast.net>
+Maintained-by:  Joe Cosentino <hardmarine@comcast.net>
+Primary-site:   http://www.geocities.com/xsaintx69/freedos
+Alternate-site: http://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/dos/edit
+Original-site:  http://www.geocities.com/xsaintx69/freedos
+Platforms:      DOS
+Copying-policy: GPL
+End

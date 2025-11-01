@@ -1,0 +1,15 @@
+FreeDOS Edit Bugs
+-----------------
+
+The FreeDOS bug database is available at:
+
+    http://www.freedos.org/bugs
+
+If you have a bug to report, do it there.  Also, please email the maintainer,
+Joe Cosentino, at hardmarine@comcast.net.  Please do not fill out a bug
+report for one that's already been reported.
+
+Thanks,
+
+Joe Cosentino
+hardmarine@comcast.net

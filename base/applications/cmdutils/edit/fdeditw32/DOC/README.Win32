@@ -1,0 +1,71 @@
+FreeDOS edit for Win32 (version 0.82)
+---------------------------------------
+FreeDOS edit is a text editor, originally written for DOS platforms.
+This port to Win32 adds several bug fixes and improvements including:
+1) the limit of 64 KBytes doesnt exist here.
+2) direct access to console and mouse.
+3) mouse wheel supported.
+4) supports sleeping mode for inexpensive execution.
+5) copy and paste text from the Win32 keyboard.
+
+Excluding these changes, this version has the same look and feel of the DOS one, so I suggest you to read its documentation if you have some doubts.
+
+This version has been tested and it worked fine on:
+* Win98
+* WinXP
+* ReactOS 0.3.0
+
+COMPILATION (MinGW)
+--------------------
+You need a working MinGW distribution for compiling the sources.
+Everything is already configured, you just need to enter into the directory with sources and type:
+
+> make
+
+At the end you will have two files: "edit.exe" and "edit.hlp".
+If you get an error when executing "huffc.exe" and/or "fixhelp.exe", probably you lanched the process out of the MSYS enviroment.
+In this case, you can complete the process manually by typing:
+
+> huffc edit.txt edit.hlp
+
+and then:
+
+> fixhelp edit
+
+That's all.
+
+COMPILATION (MSVC)
+-------------------
+As you can see, I don't provide Microsoft VisualC projects.
+Sorry, but I don't own those development tools.
+However, it shouldn't be too difficult to make the projects yourself.
+Just remember to add these definitions to the preprocessor:
+
+INCLUDE_PICTUREBOX
+INCLUDE_MULTI_WINDOWS
+INCLUDE_WINDOWOPTIONS
+INCLUDE_MAXIMIZE
+INCLUDE_MINIMIZE
+INCLUDE_RESTORE
+INCLUDE_EXTENDEDSELECTIONS
+
+and everything should work fine.
+
+TODO
+-----
+* Adding support for hardware tabs (selectable).
+* Some OEM keys may be unsupported.
+* Quick switch between windows (with "ALT + number").
+* Fixing some bugs still hidden somewhere.
+* It would be nice to have a common timer code, but separated from MESSAGE.C for all platforms. The porter will have to implement only a "GetTicks()" function for making it working.
+
+CLOSING WORDS AND THANKS
+-------------------------
+Not much to say here...
+I hope that this programme will be useful to all fans of text mode tools ;-)
+More important, thanks to all people who made the original DOS source.
+Last note, but not less important: don't use this editor for editing the files with hardware tabs, because this tool always expands them into spaces!
+
+Carlo Bramini - 09/02/2007
+
+

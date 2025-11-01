@@ -1,0 +1,9 @@
+0.82 beta 2 (20070228)
+=======================
+* Fixed bug: Window menu can crash program.
+  If there are no open windows, going to the Window menu (Alt-W) and pressing down causes a segmentation fault.
+* Implemented support for Win32 clipboard.
+
+0.82 beta 1 (20070209)
+=======================
+First write.
