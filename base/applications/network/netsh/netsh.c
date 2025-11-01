@@ -32,7 +32,7 @@ RunScript(
     /* Read and process the script */
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
-        if (InterpretScript(tmp_string) == FALSE)
+        if (InterpretLine(tmp_string) == FALSE)
         {
             fclose(script);
             return ERROR_SUCCESS; /* FIXME */
@@ -56,6 +56,7 @@ wmain(
 {
     LPCWSTR tmpBuffer = NULL;
     LPCWSTR pszFileName = NULL;
+    LPCWSTR pszContext = NULL;
     int index;
     int result = EXIT_SUCCESS;
     BOOL bDone = FALSE;
@@ -70,120 +71,122 @@ wmain(
     CreateRootContext();
     LoadHelpers();
 
-    if (argc < 2)
+    /* Process the command arguments */
+    for (index = 1; index < argc; index++)
     {
-        /* If there are no command arguments, then go straight to the interpreter */
-        InterpretInteractive();
+        if ((argv[index][0] == '/')||
+            (argv[index][0] == '-'))
+        {
+            tmpBuffer = argv[index] + 1;
+        }
+        else
+        {
+            if (pszFileName != NULL)
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                result = EXIT_FAILURE;
+                goto done;
+            }
+
+            /* Run a command from the command line */
+            if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) == FALSE)
+                result = EXIT_FAILURE;
+            goto done;
+        }
+
+        if (_wcsicmp(tmpBuffer, L"?") == 0)
+        {
+            /* Help option */
+            ConResPuts(StdOut, IDS_APP_USAGE);
+            result = EXIT_SUCCESS;
+            goto done;
+        }
+        else if (_wcsicmp(tmpBuffer, L"a") == 0)
+        {
+            /* Aliasfile option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                ConPuts(StdOut, L"\nThe -a option is not implemented yet\n");
+//                aliasfile = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                result = EXIT_FAILURE;
+            }
+        }
+        else if (_wcsicmp(tmpBuffer, L"c") == 0)
+        {
+            /* Context option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                pszContext = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                result = EXIT_FAILURE;
+            }
+        }
+        else if (_wcsicmp(tmpBuffer, L"f") == 0)
+        {
+            /* File option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                pszFileName = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                result = EXIT_FAILURE;
+            }
+        }
+        else if (_wcsicmp(tmpBuffer, L"r") == 0)
+        {
+            /* Remote option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                ConPuts(StdOut, L"\nThe -r option is not implemented yet\n");
+//                remote = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                result = EXIT_FAILURE;
+            }
+        }
+        else
+        {
+            /* Invalid command */
+            ConResPrintf(StdOut, IDS_INVALID_COMMAND, argv[index]);
+            result = EXIT_FAILURE;
+            goto done;
+        }
+    }
+
+    /* Set a context */
+    if (pszContext)
+    {
+        if (InterpretLine((LPWSTR)pszContext) == FALSE)
+        {
+            result = EXIT_FAILURE;
+            goto done;
+        }
+    }
+
+    /* Run a script or the interactive interpeter */
+    if (pszFileName != NULL)
+    {
+        if (RunScript(pszFileName) == FALSE)
+            result = EXIT_FAILURE;
     }
     else
     {
-        /* If there are command arguments, then process them */
-        for (index = 1; index < argc; index++)
-        {
-            if ((argv[index][0] == '/')||
-                (argv[index][0] == '-'))
-            {
-                tmpBuffer = argv[index] + 1;
-            }
-            else
-            {
-                if (pszFileName != NULL)
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                    goto done;
-                }
-
-                /* Run a command from the command line */
-                if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) != ERROR_SUCCESS)
-                    result = EXIT_FAILURE;
-                goto done;
-            }
-
-            if (_wcsicmp(tmpBuffer, L"?") == 0)
-            {
-                /* Help option */
-                ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_SUCCESS;
-                goto done;
-            }
-            else if (_wcsicmp(tmpBuffer, L"a") == 0)
-            {
-                /* Aliasfile option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -a option is not implemented yet\n");
-//                    aliasfile = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"c") == 0)
-            {
-                /* Context option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -c option is not implemented yet\n");
-//                    context = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"f") == 0)
-            {
-                /* File option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    pszFileName = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"r") == 0)
-            {
-                /* Remote option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -r option is not implemented yet\n");
-//                    remote = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else
-            {
-                /* Invalid command */
-                ConResPrintf(StdOut, IDS_INVALID_COMMAND, argv[index]);
-                result = EXIT_FAILURE;
-                goto done;
-            }
-        }
-
-        /* Now we process the filename if it exists */
-        if (pszFileName != NULL)
-        {
-            if (RunScript(pszFileName) == FALSE)
-            {
-                result = EXIT_FAILURE;
-                goto done;
-            }
-        }
+        InterpretInteractive();
     }
 
 done:

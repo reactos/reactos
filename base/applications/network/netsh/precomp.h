@@ -216,7 +216,7 @@ ShowHelperCommand(
 
 /* interpreter.c */
 BOOL
-InterpretScript(
+InterpretLine(
     _In_ LPWSTR pszFileName);
 
 BOOL

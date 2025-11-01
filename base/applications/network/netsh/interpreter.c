@@ -326,7 +326,7 @@ InterpretCommand(
  * The main function used for when reading commands from scripts.
  */
 BOOL
-InterpretScript(
+InterpretLine(
     _In_ LPWSTR pszInputLine)
 {
     LPWSTR args_vector[MAX_ARGS_COUNT];
