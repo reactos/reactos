@@ -106,7 +106,7 @@ LibraryCreate(
     LibModule->ServicePath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                            ServicePath->MaximumLength,
                                                            WDFLDR_TAG);
-    if (!pLibModule->ServicePath.Buffer)
+    if (!LibModule->ServicePath.Buffer)
     {
         DPRINT_ERROR(("Failed to allocate service path buffer\n"));
         status = STATUS_INSUFFICIENT_RESOURCES;
