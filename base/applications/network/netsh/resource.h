@@ -35,14 +35,27 @@
 #define IDS_HLP_EXEC_EX          311
 #define IDS_HLP_DUMP             312
 #define IDS_HLP_DUMP_EX          313
+#define IDS_HLP_OFFLINE          314
+#define IDS_HLP_OFFLINE_EX       315
+#define IDS_HLP_ONLINE           316
+#define IDS_HLP_ONLINE_EX        317
+#define IDS_HLP_ABORT            318
+#define IDS_HLP_ABORT_EX         319
+#define IDS_HLP_COMMIT           320
+#define IDS_HLP_COMMIT_EX        321
 
-#define IDS_HLP_ADD_HELPER       320
-#define IDS_HLP_ADD_HELPER_EX    321
-#define IDS_HLP_DEL_HELPER       322
-#define IDS_HLP_DEL_HELPER_EX    323
-#define IDS_HLP_SHOW_HELPER      324
-#define IDS_HLP_SHOW_HELPER_EX   325
+#define IDS_HLP_ADD_HELPER       340
+#define IDS_HLP_ADD_HELPER_EX    341
+#define IDS_HLP_DEL_HELPER       342
+#define IDS_HLP_DEL_HELPER_EX    343
+#define IDS_HLP_SET_MODE         344
+#define IDS_HLP_SET_MODE_EX      345
+#define IDS_HLP_SHOW_HELPER      346
+#define IDS_HLP_SHOW_HELPER_EX   347
+#define IDS_HLP_SHOW_MODE        348
+#define IDS_HLP_SHOW_MODE_EX     349
 
-#define IDS_HLP_GROUP_ADD        330
-#define IDS_HLP_GROUP_DELETE     331
-#define IDS_HLP_GROUP_SHOW       332
+#define IDS_HLP_GROUP_ADD        360
+#define IDS_HLP_GROUP_DELETE     361
+#define IDS_HLP_GROUP_SET        362
+#define IDS_HLP_GROUP_SHOW       363

@@ -110,8 +110,9 @@ typedef struct _CONTEXT_ENTRY
     PWSTR pszContextName;
     GUID Guid;
     HMODULE hModule;
-    PNS_CONTEXT_DUMP_FN pfnDumpFn;
     ULONG ulPriority;
+    PNS_CONTEXT_COMMIT_FN pfnCommitFn;
+    PNS_CONTEXT_DUMP_FN pfnDumpFn;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;
