@@ -302,7 +302,7 @@ Return Value:
 }
 
 VOID
-STDCALL
+NTAPI
 FxpBugCheckCallback(
     __in    KBUGCHECK_CALLBACK_REASON Reason,
     __in    PKBUGCHECK_REASON_CALLBACK_RECORD Record,
@@ -553,7 +553,7 @@ Done:;
 }
 
 VOID
-STDCALL
+NTAPI
 FxpLibraryBugCheckCallback(
     __in    KBUGCHECK_CALLBACK_REASON Reason,
     __in    PKBUGCHECK_REASON_CALLBACK_RECORD /* Record */,

@@ -34,7 +34,9 @@ extern "C" {
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -109,7 +111,9 @@ WDFEXPORT(WdfDmaTransactionCreate)(
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionInitializeUsingRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -359,7 +363,9 @@ WDFEXPORT(WdfDmaTransactionInitializeUsingRequest)(
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionInitializeUsingOffset)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -396,7 +402,9 @@ WDFEXPORT(WdfDmaTransactionInitializeUsingOffset)(
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionInitialize)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -519,7 +527,9 @@ WDFEXPORT(WdfDmaTransactionInitialize)(
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionExecute)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -541,7 +551,9 @@ WDFEXPORT(WdfDmaTransactionExecute)(
 
 __success(TRUE)
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionRelease)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -567,7 +579,9 @@ WDFEXPORT(WdfDmaTransactionRelease)(
 
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDmaTransactionDmaCompleted)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -594,7 +608,9 @@ WDFEXPORT(WdfDmaTransactionDmaCompleted)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDmaTransactionDmaCompletedWithLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -624,7 +640,9 @@ WDFEXPORT(WdfDmaTransactionDmaCompletedWithLength)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDmaTransactionDmaCompletedFinal)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -655,7 +673,9 @@ WDFEXPORT(WdfDmaTransactionDmaCompletedFinal)(
 
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 size_t
+NTAPI
 WDFEXPORT(WdfDmaTransactionGetBytesTransferred)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -674,7 +694,9 @@ WDFEXPORT(WdfDmaTransactionGetBytesTransferred)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionSetMaximumLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -695,7 +717,9 @@ WDFEXPORT(WdfDmaTransactionSetMaximumLength)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 WDFREQUEST
+NTAPI
 WDFEXPORT(WdfDmaTransactionGetRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -722,7 +746,9 @@ WDFEXPORT(WdfDmaTransactionGetRequest)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 size_t
+NTAPI
 WDFEXPORT(WdfDmaTransactionGetCurrentDmaTransferLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -742,7 +768,9 @@ WDFEXPORT(WdfDmaTransactionGetCurrentDmaTransferLength)(
 
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 WDFDEVICE
+NTAPI
 WDFEXPORT(WdfDmaTransactionGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -761,7 +789,9 @@ WDFEXPORT(WdfDmaTransactionGetDevice)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionSetChannelConfigurationCallback)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -810,7 +840,9 @@ WDFEXPORT(WdfDmaTransactionSetChannelConfigurationCallback)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionSetTransferCompleteCallback)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -860,7 +892,9 @@ WDFEXPORT(WdfDmaTransactionSetTransferCompleteCallback)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionSetDeviceAddressOffset)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -906,7 +940,9 @@ WDFEXPORT(WdfDmaTransactionSetDeviceAddressOffset)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 PVOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionWdmGetTransferContext)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -955,7 +991,9 @@ WDFEXPORT(WdfDmaTransactionWdmGetTransferContext)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionGetTransferInfo)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -984,7 +1022,9 @@ WDFEXPORT(WdfDmaTransactionGetTransferInfo)(
 //
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionSetImmediateExecution)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1019,7 +1059,9 @@ WDFEXPORT(WdfDmaTransactionSetImmediateExecution)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfDmaTransactionAllocateResources)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1112,7 +1154,9 @@ WDFEXPORT(WdfDmaTransactionAllocateResources)(
     return status;
 }
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionFreeResources)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1168,7 +1212,9 @@ WDFEXPORT(WdfDmaTransactionFreeResources)(
     return;
 }
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 BOOLEAN
+NTAPI
 WDFEXPORT(WdfDmaTransactionCancel)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1202,7 +1248,9 @@ WDFEXPORT(WdfDmaTransactionCancel)(
 }
 
 __drv_maxIRQL(DISPATCH_LEVEL)
+WDFAPI
 VOID
+NTAPI
 WDFEXPORT(WdfDmaTransactionStopSystemTransfer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

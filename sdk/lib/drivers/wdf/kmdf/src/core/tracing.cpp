@@ -109,17 +109,19 @@ FxWmiTraceMessage(
     __in ...
     )
 {
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
     va_list va;
 
     va_start(va, MessageNumber);
 
 #pragma prefast(suppress:__WARNING_BUFFER_OVERFLOW, "Recommneded by EndClean");
+#ifndef __REACTOS__
     status = WmiTraceMessageVa(LoggerHandle,
                                MessageFlags,
                                MessageGuid,
                                MessageNumber,
                                va);
+#endif
     va_end(va);
 
     return status;
