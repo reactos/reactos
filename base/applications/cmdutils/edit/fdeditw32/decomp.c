@@ -19,7 +19,11 @@ static int root;
 FILE *OpenHelpFile(const char *fn, const char *md)
 {
     int treect, i;
+#if defined(_WIN32) && defined(__REACTOS__)
+    char helpname[MAX_PATH];
+#else
     char helpname[65];
+#endif
 
     /* Get the name of the help file */
     BuildFileName(helpname, fn, ".hlp");

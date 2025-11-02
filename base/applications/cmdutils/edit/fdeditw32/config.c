@@ -2,6 +2,8 @@
 
 #include "dflat.h"
 
+#define TV_COLORS
+
 /* ----- default colors for color video system ----- */
 unsigned char color[CLASSCOUNT] [4] [2] = {
     /* ------------ NORMAL ------------ */
@@ -30,21 +32,36 @@ unsigned char color[CLASSCOUNT] [4] [2] = {
 
     /* ----------- EDITBOX ------------ */
    {{LIGHTGRAY, BLUE}, /* STD_COLOR    */
+#ifdef TV_COLORS
+    {LIGHTGRAY, GREEN}, /* SELECT_COLOR */
+#else
     {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
+#endif
     {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
     {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
 
     /* ---------- MENUBAR ------------- */
    {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
+#ifdef TV_COLORS
+    {BLACK, GREEN},     /* SELECT_COLOR */
+#else
     {BLACK, CYAN},      /* SELECT_COLOR */
+#endif
     {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
     {DARKGRAY, RED}},   /* HILITE_COLOR
                           Inactive, Shortcut (both FG) */
 
     /* ---------- POPDOWNMENU --------- */
-   {{BLACK, CYAN},      /* STD_COLOR    */
+   {
+#ifdef TV_COLORS
+    {BLACK, LIGHTGRAY}, /* STD_COLOR    */
+    {BLACK, GREEN},     /* SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
+#else
+    {BLACK, CYAN},      /* STD_COLOR    */
     {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
     {BLACK, CYAN},      /* FRAME_COLOR  */
+#endif
     {DARKGRAY, RED}},   /* HILITE_COLOR
                            Inactive ,Shortcut (both FG) */
 
@@ -69,9 +86,16 @@ unsigned char color[CLASSCOUNT] [4] [2] = {
     {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
 
     /* ------------ BUTTON ------------ */
-   {{BLACK, CYAN},      /* STD_COLOR    */
+   {
+#ifdef TV_COLORS
+    {BLACK, CYAN},      /* STD_COLOR    */
     {WHITE, CYAN},      /* SELECT_COLOR */
     {BLACK, CYAN},      /* FRAME_COLOR  */
+#else
+    {BLACK, CYAN},      /* STD_COLOR    */
+    {WHITE, CYAN},      /* SELECT_COLOR */
+    {BLACK, CYAN},      /* FRAME_COLOR  */
+#endif
     {DARKGRAY, RED}},   /* HILITE_COLOR
                            Inactive ,Shortcut (both FG) */
     /* ------------ COMBOBOX ----------- */
@@ -123,22 +147,37 @@ unsigned char color[CLASSCOUNT] [4] [2] = {
     {WHITE, LIGHTGRAY}},/* HILITE_COLOR */
 
     /* ---------- STATUSBAR ------------- */
+#ifdef TV_COLORS
+   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+#else
    {{BLACK, CYAN},      /* STD_COLOR    */
     {BLACK, CYAN},      /* SELECT_COLOR */
     {BLACK, CYAN},      /* FRAME_COLOR  */
     {BLACK, CYAN}},     /* HILITE_COLOR */
+#endif
 
     /* ----------- EDITOR ------------ */
    {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
+    {BLUE, LIGHTRED}, /* SELECT_COLOR */
+    {BLUE, LIGHTRED}, /* FRAME_COLOR  */
     {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
 
     /* ---------- TITLEBAR ------------ */
-   {{BLACK, CYAN},      /* STD_COLOR    */
+   {
+#ifdef TV_COLORS
+    {BLACK, RED},      /* STD_COLOR    */
+    {BLACK, GREEN},      /* SELECT_COLOR */
+    {MAGENTA, BLACK},      /* FRAME_COLOR  */
+    {WHITE, BLACK}},    /* HILITE_COLOR */
+#else
+    {BLACK, CYAN},      /* STD_COLOR    */
     {BLACK, CYAN},      /* SELECT_COLOR */
     {CYAN, BLACK},      /* FRAME_COLOR  */
     {WHITE, CYAN}},     /* HILITE_COLOR */
+#endif
 
     /* ------------ DUMMY ------------- */
    {{GREEN, LIGHTGRAY}, /* STD_COLOR    */
@@ -445,13 +484,21 @@ CONFIG cfg = {
     4,                                  /* Editor tab stops            */
     FALSE,                              /* Editor word wrap            */
     0,                                  /* Read Only?                  */
+#ifdef __REACTOS__
+    TRUE,                               /* Load blank file on startup  */
+#else
     FALSE,                              /* Load blank file on startup  */
+#endif
 #ifdef INCLUDE_WINDOWOPTIONS
     TRUE,                               /* Application Border          */
     TRUE,                               /* Application Title           */
     TRUE,                               /* Status Bar                  */
 #endif
+#ifdef __REACTOS__ // && TV_COLORS
+    TRUE,                               /* Textured application window */
+#else
     FALSE,                              /* Textured application window */
+#endif
     25,                                 /* Number of screen lines      */
     "Lpt1",                             /* Printer Port                */
     66,                                 /* Lines per printer page      */
@@ -481,7 +528,11 @@ void BuildFileName(char *path, const char *fn, const char *ext)
 
 FILE *OpenConfig(char *mode)
 {
+#if defined(_WIN32) && defined(__REACTOS__)
+    char path[MAX_PATH];
+#else
     char path[64];
+#endif
 
     BuildFileName(path, DFlatApplication, ".cfg");
     return fopen(path, mode);
@@ -507,7 +558,11 @@ BOOL LoadConfig(void)
         	}
             else
                 {
+#if defined(_WIN32) && defined(__REACTOS__)
+                char path[MAX_PATH];
+#else
                 char path[64];
+#endif
 
                 BuildFileName(path, DFlatApplication, ".cfg");
                 fclose(fp);

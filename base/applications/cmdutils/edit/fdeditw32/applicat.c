@@ -468,9 +468,9 @@ static void ShellDOS(WINDOW wnd)
         SetScreenHeight(ScreenHeight);
 
     SendMessage(NULL, HIDE_MOUSE, 0, 0);
-    printf("Type EXIT to return to %s.\n\n", DFlatApplication);
-    fflush(stdout);
-    spawnl(P_WAIT, getenv("COMSPEC"), NULL);
+    //printf("Type EXIT to return to %s.\n\n", DFlatApplication);
+    //fflush(stdout);
+    //spawnl(P_WAIT, getenv("COMSPEC"), NULL);
     if (SCREENHEIGHT != cfg.ScreenLines)
         SetScreenHeight(cfg.ScreenLines);
 
@@ -774,6 +774,7 @@ static void SelectLines(WINDOW wnd)
     if (SCREENHEIGHT != cfg.ScreenLines)
         {
         SetScreenHeight(cfg.ScreenLines);
+        /* ---- re-maximize ---- */
         if (wnd->condition==ISMAXIMIZED)
             {
             SendMessage(wnd, SIZE, (PARAM) GetRight(wnd), SCREENHEIGHT-1);

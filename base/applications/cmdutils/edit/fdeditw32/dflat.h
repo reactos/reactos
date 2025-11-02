@@ -28,10 +28,14 @@
 #endif
 #include <ctype.h>
 #include <io.h>
-#include <sys\types.h>
-#include <sys\stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <setjmp.h>
+
+#if defined(_WIN32) && defined(__REACTOS__)
+#define MAX_PATH 260
+#endif
 
 #if defined(_WIN32) || defined(__DJGPP__)
 #define far
@@ -60,7 +64,7 @@ typedef enum {FALSE, TRUE} BOOL;
 #define DOUBLETICKS 5
 
 #ifdef _WIN32
-#define MAXTEXTLEN (16*1024*1024) /* 16 MB is enought! */
+#define MAXTEXTLEN (16*1024*1024) /* 16 MB is enough! */
 #else
 #define MAXTEXTLEN 65000U /* maximum text buffer            */
 #endif

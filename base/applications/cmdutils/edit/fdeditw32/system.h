@@ -14,8 +14,8 @@
 #ifdef _WIN32
 #include "dir_w32.h"
 #include "country_w32.h"
-int w32_screenwidth();
-int w32_screenheight();
+int w32_screenwidth(void);
+int w32_screenheight(void);
 #define SCREENWIDTH         w32_screenwidth()
 #define SCREENHEIGHT        w32_screenheight()
 void init_videomode(void);

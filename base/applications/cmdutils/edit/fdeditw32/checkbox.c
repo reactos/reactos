@@ -27,7 +27,11 @@ int CheckBoxProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
             case KEYBOARD:
                 if ((int)p1 != ' ')
                     break;
+#ifdef __REACTOS__
+            case BUTTON_RELEASED:
+#else
             case LEFT_BUTTON:
+#endif
                 ct->setting ^= ON;
                 SendMessage(wnd, PAINT, 0, 0);
                 return TRUE;

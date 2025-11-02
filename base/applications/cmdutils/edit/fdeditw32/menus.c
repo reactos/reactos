@@ -16,8 +16,12 @@ DEFMENU(MainMenu)
         SELECTION("~Print",      ID_PRINT,            0,       INACTIVE)
         SELECTION("P~rinter setup...", ID_PRINTSETUP, 0,       0)
         SEPARATOR
-#ifndef _WIN32 // doesn't have much sense in this enviroment
+#ifdef INCLUDE_SHELLDOS
+#ifndef _WIN32
         SELECTION("~DOS Shell",  ID_DOS,              0,       0)
+#else
+        SELECTION("S~hell",      ID_DOS,              0,       0)
+#endif
 #endif
         SELECTION("E~xit",       ID_EXIT,             ALT_X,   0)
     ENDPOPDOWN

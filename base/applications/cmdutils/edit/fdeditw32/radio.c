@@ -30,7 +30,11 @@ int RadioButtonProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
             case KEYBOARD:
                 if ((int)p1 != ' ')
                     break;
+#ifdef __REACTOS__
+            case BUTTON_RELEASED:
+#else
             case LEFT_BUTTON:
+#endif
                 SetRadioButton(db, ct);
                 break;
             default:

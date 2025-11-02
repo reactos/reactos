@@ -4,6 +4,7 @@
 
 BOOL ClipString;
 
+/* In console_w32.c */
 void movefromscreen(void *bf, int offset, int len);
 void movetoscreen(void *bf, int offset, int len);
 

@@ -5,6 +5,10 @@
 void PaintMsg(WINDOW wnd, CTLWINDOW *ct, RECT *rc)
 {
     if (isVisible(wnd))    {
+#ifdef __REACTOS__
+        // if (ct->setting != ON)
+            // PaintShadow(wnd);
+#endif
         if (TestAttribute(wnd, SHADOW) && cfg.mono == 0)    {
             /* -------- draw the button's shadow ------- */
             int x;
@@ -37,6 +41,7 @@ void PaintMsg(WINDOW wnd, CTLWINDOW *ct, RECT *rc)
 
 void LeftButtonMsg(WINDOW wnd, MESSAGE msg, CTLWINDOW *ct)
 {
+#if 1 // ndef __REACTOS__
     if (cfg.mono == 0)    {
         /* --------- draw a pushed button -------- */
         int x;
@@ -48,15 +53,21 @@ void LeftButtonMsg(WINDOW wnd, MESSAGE msg, CTLWINDOW *ct)
             wputch(wnd, 223, x+1, 1);
         }
     }
+#endif
+#ifdef __REACTOS__
+    SendMessage(wnd, PAINT, 0, 0);
+#endif
     if (msg == LEFT_BUTTON)
         SendMessage(NULL, WAITMOUSE, 0, 0);
     else
         SendMessage(NULL, WAITKEYBOARD, 0, 0);
+#ifndef __REACTOS__
     SendMessage(wnd, PAINT, 0, 0);
     if (ct->setting == ON)
         PostMessage(GetParent(wnd), COMMAND, ct->command, 0);
     else
         beep();
+#endif
 }
 
 int ButtonProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
@@ -75,6 +86,14 @@ int ButtonProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
                 if (p1 != '\r')
                     break;
                 /* ---- fall through ---- */
+#ifdef __REACTOS__
+            case BUTTON_RELEASED:
+                if (ct->setting == ON)
+                    PostMessage(GetParent(wnd), COMMAND, ct->command, 0);
+                else
+                    beep();
+                /*break;*/return TRUE;
+#endif
             case LEFT_BUTTON:
                 LeftButtonMsg(wnd, msg, ct);
                 return TRUE;

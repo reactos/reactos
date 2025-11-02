@@ -2,6 +2,16 @@
 
 #include <windows.h>
 
+#ifdef __REACTOS__
+/* See sdk/include/reactos/wincon_undoc.h */
+WINBASEAPI
+INT
+WINAPI
+ShowConsoleCursor(
+    _In_ HANDLE hConsoleOutput,
+    _In_ BOOL bShow);
+#endif
+
 #include "keys.h"
 
 #define MAXSAVES    50
@@ -49,7 +59,7 @@ static const WORD col_fore[] = {
     FOREGROUND_INTENSITY,
     FOREGROUND_RED |    /* LIGHTRED */
     FOREGROUND_INTENSITY,
-    FOREGROUND_BLUE |   /* MAGENTA */
+    FOREGROUND_BLUE |   /* LIGHTMAGENTA */
     FOREGROUND_RED |
     FOREGROUND_INTENSITY,
     FOREGROUND_RED |    /* YELLOW */
@@ -91,7 +101,7 @@ static const WORD col_back[] = {
     BACKGROUND_INTENSITY,
     BACKGROUND_RED |    /* LIGHTRED */
     BACKGROUND_INTENSITY,
-    BACKGROUND_BLUE |   /* MAGENTA */
+    BACKGROUND_BLUE |   /* LIGHTMAGENTA */
     BACKGROUND_RED |
     BACKGROUND_INTENSITY,
     BACKGROUND_RED |    /* YELLOW */
@@ -112,9 +122,7 @@ static HANDLE hConsoleOut;
 static HANDLE hNewScreenBuffer;
 static CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-static SMALL_RECT updateRect;
 static COORD      updateCoord;
-static COORD      updateCoordSrc;
 static CHAR_INFO *chiBuffer;
 static unsigned char *coiBuffer;
 static COORD      lastCurPos;
@@ -206,7 +214,7 @@ static const key_tbl_t key_tbl3[] = {
 
 static keyb_t keyb = { 0, 0, { 0 } };
 
-int w32_getkey()
+int w32_getkey(void)
 {
     DWORD dwInputs;
     INPUT_RECORD inRec;
@@ -353,34 +361,121 @@ void videomode(void)
 */
 }
 
-void init_videomode(void)
+#ifdef __REACTOS__
+/*
+ * See, or adjust if needed, base/applications/cmdutils/mode/mode.c and
+ * subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole() implementations
+ * for more information.
+ */
+static BOOL
+ResizeTextConsole(
+    _In_ HANDLE hConOut,
+    _Inout_ PCONSOLE_SCREEN_BUFFER_INFO pcsbi,
+    _In_ COORD Resolution)
 {
-    CONSOLE_CURSOR_INFO curInfo;
-    DWORD dwMode;
+    BOOL Success;
+    SHORT Width, Height;
+    SMALL_RECT ConRect;
+
+    /*
+     * Use this trick to effectively resize the console buffer and window,
+     * because:
+     * - SetConsoleScreenBufferSize fails if the new console screen buffer size
+     *   is smaller than the current console window size, and:
+     * - SetConsoleWindowInfo fails if the new console window size is larger
+     *   than the current console screen buffer size.
+     */
+
+    /* Resize the screen buffer only if needed */
+    if (Resolution.X != pcsbi->dwSize.X || Resolution.Y != pcsbi->dwSize.Y)
+    {
+        Width  = pcsbi->srWindow.Right  - pcsbi->srWindow.Left + 1;
+        Height = pcsbi->srWindow.Bottom - pcsbi->srWindow.Top  + 1;
+
+        /*
+         * If the current console window is too large for
+         * the new screen buffer, resize it first.
+         */
+        if (Width > Resolution.X || Height > Resolution.Y)
+        {
+            /*
+             * NOTE: This is not a problem if we move the window back to (0,0)
+             * because when we resize the screen buffer, the window will move back
+             * to where the cursor is. Or, if the screen buffer is not resized,
+             * when we readjust again the window, we will move back to a correct
+             * position. This is what we wanted after all...
+             */
+            ConRect.Left   = ConRect.Top = 0;
+            ConRect.Right  = ConRect.Left + min(Width , Resolution.X) - 1;
+            ConRect.Bottom = ConRect.Top  + min(Height, Resolution.Y) - 1;
+
+            Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+            if (!Success) return FALSE;
+        }
+
+        /*
+         * Now resize the screen buffer.
+         *
+         * SetConsoleScreenBufferSize automatically takes into account the current
+         * cursor position when it computes starting which row it should copy text
+         * when resizing the screen buffer, and scrolls the console window such that
+         * the cursor is placed in it again. We therefore do not need to care about
+         * the cursor position and do the maths ourselves.
+         */
+        Success = SetConsoleScreenBufferSize(hConOut, Resolution);
+        if (!Success) return FALSE;
+
+        /*
+         * Setting a new screen buffer size can change other information,
+         * so update the console screen buffer information.
+         */
+        GetConsoleScreenBufferInfo(hConOut, pcsbi);
+    }
+
+    /* Always resize the console window within the permitted maximum size */
+    Width  = min(Resolution.X, pcsbi->dwMaximumWindowSize.X);
+    Height = min(Resolution.Y, pcsbi->dwMaximumWindowSize.Y);
+    ConRect.Left   = 0;
+    ConRect.Right  = ConRect.Left + Width - 1;
+    ConRect.Bottom = max(pcsbi->dwCursorPosition.Y, Height - 1);
+    ConRect.Top    = ConRect.Bottom - Height + 1;
+
+    SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+
+    /* Update the console screen buffer information */
+    GetConsoleScreenBufferInfo(hConOut, pcsbi);
+
+    return TRUE;
+}
+
+static void
+SetConsoleHeight(SHORT height)
+{
+    void* bufptr;
+    COORD Resolution;
     int x,y;
+    SMALL_RECT updateRect;
+    COORD updateCoordSrc;
 
-    if (initialized_vmode)
+    if (height <= 0)
         return;
-    initialized_vmode = TRUE;
 
-    hConsoleIn  = GetStdHandle(STD_INPUT_HANDLE);
-    hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    hNewScreenBuffer = CreateConsoleScreenBuffer( 
-       GENERIC_READ |           /* read/write access */
-       GENERIC_WRITE, 
-       0,                       /* not shared */
-       NULL,                    /* default security attributes */
-       CONSOLE_TEXTMODE_BUFFER, /* must be TEXTMODE */
-       NULL);
+    Resolution.X = csbi.dwSize.X; // 80;
+    Resolution.Y = height;
+    if (!ResizeTextConsole(hNewScreenBuffer, &csbi, Resolution))
+        return;
 
-    GetConsoleScreenBufferInfo(hConsoleOut, &csbi);
-    origCurPos = csbi.dwCursorPosition;
-    SetConsoleActiveScreenBuffer(hNewScreenBuffer);
     updateCoord.X = csbi.dwSize.X;
-/*    updateCoord.Y = csbi.dwSize.Y; */
-    updateCoord.Y = 25;
-    chiBuffer = (CHAR_INFO *)malloc(updateCoord.X*updateCoord.Y*sizeof(CHAR_INFO));
-    coiBuffer = (unsigned char *)malloc(updateCoord.X*updateCoord.Y);
+    updateCoord.Y = csbi.dwSize.Y;
+
+    /* NOTA: If the buffers are originally NULL, realloc == malloc */
+    bufptr = realloc(chiBuffer, updateCoord.X*updateCoord.Y*sizeof(CHAR_INFO));
+    if (bufptr)
+        chiBuffer = (CHAR_INFO *)bufptr;
+    bufptr = realloc(coiBuffer, updateCoord.X*updateCoord.Y);
+    if (bufptr)
+        coiBuffer = (unsigned char *)bufptr;
+
     updateCoordSrc.X = 0;
     updateCoordSrc.Y = 0;
     updateRect.Top = 0;
@@ -390,17 +485,47 @@ void init_videomode(void)
 
     for (y=0; y<updateCoord.Y; y++) {
         for (x=0; x<updateCoord.X; x++) {
-            chiBuffer[x+y*updateCoord.X].Char.AsciiChar = ' ';
-            chiBuffer[x+y*updateCoord.X].Attributes  = 0;
+            int n = x+y*updateCoord.X;
+            chiBuffer[n].Char.AsciiChar = ' ';
+            chiBuffer[n].Attributes = 0;
+            /**/coiBuffer[n] = 1;/**/
         }
     }
 
-    WriteConsoleOutput( 
+    WriteConsoleOutput(
         hNewScreenBuffer,
         chiBuffer,
         updateCoord,
         updateCoordSrc,
         &updateRect);
+}
+#endif
+
+void init_videomode(void)
+{
+    CONSOLE_CURSOR_INFO curInfo;
+    DWORD dwMode;
+
+    if (initialized_vmode)
+        return;
+    initialized_vmode = TRUE;
+
+    hConsoleIn  = GetStdHandle(STD_INPUT_HANDLE);
+    hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    hNewScreenBuffer = CreateConsoleScreenBuffer(
+       GENERIC_READ |           /* read/write access */
+       GENERIC_WRITE,
+       0,                       /* not shared */
+       NULL,                    /* default security attributes */
+       CONSOLE_TEXTMODE_BUFFER, /* must be TEXTMODE */
+       NULL);
+
+    GetConsoleScreenBufferInfo(hConsoleOut, &csbi);
+    origCurPos = csbi.dwCursorPosition;
+    SetConsoleActiveScreenBuffer(hNewScreenBuffer);
+
+    /* Initially start in 80x25 mode */
+    SetConsoleHeight(25);
 
     GetConsoleMode(hConsoleIn, &dwMode);
 /*
@@ -527,28 +652,37 @@ void set_cursor_type(unsigned t)
 /* ---- test for EGA -------- */
 BOOL isEGA(void)
 {
-    return 0;
+    return FALSE;
 }
 
 /* ---- test for VGA -------- */
 BOOL isVGA(void)
 {
-    return 1;
+    return TRUE;
 }
 
 /* ---------- set 25 line mode ------- */
 void Set25(void)
 {
+#ifdef __REACTOS__
+    SetConsoleHeight(25);
+#endif
 }
 
 /* ---------- set 43 line mode ------- */
 void Set43(void)
 {
+#ifdef __REACTOS__
+    SetConsoleHeight(43);
+#endif
 }
 
 /* ---------- set 50 line mode ------- */
 void Set50(void)
 {
+#ifdef __REACTOS__
+    SetConsoleHeight(50);
+#endif
 }
 
 /* ------ convert an Alt+ key to its letter equivalent ----- */
@@ -568,26 +702,26 @@ int AltConvert(int c)
 void w32_put_video(int x, int y, int ch_att)
 {
     SMALL_RECT srctRect;
-    COORD coordBufCoord;
+    COORD updateCoordSrc;
+    int n = x+y*updateCoord.X;
 
-    chiBuffer[x+y*updateCoord.X].Char.AsciiChar = ch_att & 0xFF;
+    chiBuffer[n].Char.AsciiChar = ch_att & 0xFF;
     ch_att >>= 8;
-    coiBuffer[x+y*updateCoord.X] = ch_att;
-    chiBuffer[x+y*updateCoord.X].Attributes  = col_fore[ch_att & 0xF] |
-                                               col_back[ch_att >> 4];
+    coiBuffer[n] = ch_att;
+    chiBuffer[n].Attributes  = col_fore[ch_att & 0xF] | col_back[ch_att >> 4];
     srctRect.Top = y;
     srctRect.Left = x;
     srctRect.Bottom = y;
     srctRect.Right = x;
- 
-    coordBufCoord.X = x; 
-    coordBufCoord.Y = y;
 
-    WriteConsoleOutput( 
+    updateCoordSrc.X = x;
+    updateCoordSrc.Y = y;
+
+    WriteConsoleOutput(
         hNewScreenBuffer,
         chiBuffer,
         updateCoord,
-        coordBufCoord,
+        updateCoordSrc,
         &srctRect);
 }
 
@@ -601,7 +735,7 @@ void w32_scroll_up(int x1,int y1,int x2,int y2,int attr)
 {
     int x,y,addr1,addr2,ch_att;
     SMALL_RECT srctRect;
-    COORD coordBufCoord;
+    COORD updateCoordSrc;
 
     ch_att = col_fore[attr & 0xF] | col_back[attr >> 4];
     addr1 = y1*updateCoord.X;
@@ -623,15 +757,15 @@ void w32_scroll_up(int x1,int y1,int x2,int y2,int attr)
     srctRect.Left = x1;
     srctRect.Bottom = y2;
     srctRect.Right = x2;
- 
-    coordBufCoord.X = x1; 
-    coordBufCoord.Y = y1;
 
-    WriteConsoleOutput( 
+    updateCoordSrc.X = x1;
+    updateCoordSrc.Y = y1;
+
+    WriteConsoleOutput(
         hNewScreenBuffer,
         chiBuffer,
         updateCoord,
-        coordBufCoord,
+        updateCoordSrc,
         &srctRect);
 }
 
@@ -639,7 +773,7 @@ void w32_scroll_dw(int x1,int y1,int x2,int y2,int attr)
 {
     int x,y,addr1,addr2,ch_att;
     SMALL_RECT srctRect;
-    COORD coordBufCoord;
+    COORD updateCoordSrc;
 
     ch_att = col_fore[attr & 0xF] | col_back[attr >> 4];
     addr1 = y2*updateCoord.X;
@@ -661,15 +795,15 @@ void w32_scroll_dw(int x1,int y1,int x2,int y2,int attr)
     srctRect.Left = x1;
     srctRect.Bottom = y2;
     srctRect.Right = x2;
- 
-    coordBufCoord.X = x1; 
-    coordBufCoord.Y = y1;
 
-    WriteConsoleOutput( 
+    updateCoordSrc.X = x1;
+    updateCoordSrc.Y = y1;
+
+    WriteConsoleOutput(
         hNewScreenBuffer,
         chiBuffer,
         updateCoord,
-        coordBufCoord,
+        updateCoordSrc,
         &srctRect);
 }
 
@@ -678,7 +812,7 @@ void movetoscreen(void *bf, int offset, int len)
     int x;
     unsigned char *cbf = (unsigned char *)bf;
     SMALL_RECT srctRect;
-    COORD coordBufCoord;
+    COORD updateCoordSrc;
 
     len >>= 1;
     offset >>= 1;
@@ -691,15 +825,15 @@ void movetoscreen(void *bf, int offset, int len)
     srctRect.Left = offset%updateCoord.X;
     srctRect.Bottom = (offset+len-1)/updateCoord.X;
     srctRect.Right = (offset+len-1)%updateCoord.X;
- 
-    coordBufCoord.X = srctRect.Left; 
-    coordBufCoord.Y = srctRect.Top;
 
-    WriteConsoleOutput( 
+    updateCoordSrc.X = srctRect.Left;
+    updateCoordSrc.Y = srctRect.Top;
+
+    WriteConsoleOutput(
         hNewScreenBuffer,
         chiBuffer,
         updateCoord,
-        coordBufCoord,
+        updateCoordSrc,
         &srctRect);
 }
 
@@ -716,12 +850,12 @@ void movefromscreen(void *bf, int offset, int len)
     }
 }
 
-int w32_screenwidth()
+int w32_screenwidth(void)
 {
     return updateCoord.X;
 }
 
-int w32_screenheight()
+int w32_screenheight(void)
 {
     return updateCoord.Y;
 }
@@ -747,7 +881,7 @@ void resetmouse(void)
 /* ----- test to see if the mouse driver is installed ----- */
 BOOL mouse_installed(void)
 {
-    return 1;
+    return TRUE;
 }
 
 /* ------ return true if mouse buttons are pressed ------- */
@@ -768,16 +902,25 @@ void get_mouseposition(int *x, int *y)
 /* -------- position the mouse cursor -------- */
 void set_mouseposition(int x, int y)
 {
+// #ifdef __REACTOS__
+//     SetCursorPos(x, y);
+// #endif
 }
 
 /* --------- display the mouse cursor -------- */
 void show_mousecursor(void)
 {
+#ifdef __REACTOS__
+    ShowConsoleCursor(hNewScreenBuffer, TRUE);
+#endif
 }
 
 /* --------- hide the mouse cursor ------- */
 void hide_mousecursor(void)
 {
+#ifdef __REACTOS__
+    ShowConsoleCursor(hNewScreenBuffer, FALSE);
+#endif
 }
 
 /* --- return true if a mouse button has been released --- */

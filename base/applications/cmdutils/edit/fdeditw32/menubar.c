@@ -52,9 +52,17 @@ static void BuildMenuMsg(WINDOW wnd, PARAM p1)
         GetText(wnd)=DFrealloc(GetText(wnd), strlen(GetText(wnd))+5);
         memmove(GetText(wnd)+offset+4, GetText(wnd)+offset, strlen(GetText(wnd))-offset+1);
         CopyCommand(GetText(wnd)+offset,ActiveMenu->Title,FALSE, wnd->WindowColors [STD_COLOR] [BG]);
+#ifdef __REACTOS__
+        menu[mctr].x1=offset-1;
+#else
         menu[mctr].x1=offset;
+#endif
         offset += strlen(ActiveMenu->Title)+(3+MSPACE);
+#ifdef __REACTOS__
+        menu[mctr].x2=offset-MSPACE+1;
+#else
         menu[mctr].x2=offset-MSPACE;
+#endif
         cp=strchr(ActiveMenu->Title, SHORTCUTCHAR);
         if (cp)
             menu[mctr].sc=tolower(*(cp+1));

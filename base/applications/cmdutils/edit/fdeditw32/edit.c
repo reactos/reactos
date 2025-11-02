@@ -9,6 +9,13 @@
 
 #include "dflat.h"
 
+#ifdef __REACTOS__
+#define countof(x)  (sizeof(x)/sizeof(x[0]))
+
+/* See system.h */
+void fix_mbar(MBAR *mbar);
+#endif
+
 /* D E F I N E S ///////////////////////////////////////////////////////// */
 
 #define CHARSLINE 80
@@ -19,6 +26,9 @@
 extern DBOX PrintSetup;
 char DFlatApplication[] = "Edit";
 static char Untitled[] = "Untitled";
+#ifdef __REACTOS__
+static unsigned int untitledCount = 0;
+#endif
 static int wndpos, LineCtr, CharCtr;
 static char *ports[] = {
     "Lpt1", "Lpt2", "Lpt3",
@@ -118,7 +128,13 @@ int main(int argc, char *argv[])
     fix_mbar(&MainMenu);
 
 
+#ifdef __REACTOS__
+    // Use an empty title string for CreateWindow() to not add HASTITLEBAR.
+    wnd = CreateWindow(APPLICATION, NULL/*"FreeDOS Edit"*/, 0, 0, -1, -1, &MainMenu, NULL, MemoPadProc, /*MOVEABLE | SIZEABLE | HASBORDER | MINMAXBOX |*/ HASSTATUSBAR);
+    SendMessage(wnd, MAXIMIZE, 0, 0); /* Put the application window maximized */
+#else
     wnd = CreateWindow(APPLICATION, "FreeDOS Edit", 0, 0, -1, -1, &MainMenu, NULL, MemoPadProc, MOVEABLE | SIZEABLE | HASBORDER | MINMAXBOX | HASSTATUSBAR);
+#endif
     LoadHelpFile(DFlatApplication);
     SendMessage(wnd, SETFOCUS, TRUE, 0);
     if (cfg.loadblank)
@@ -261,7 +277,7 @@ static int MemoPadProc(WINDOW wnd,MESSAGE msg,PARAM p1,PARAM p2)
                                "   D-Flat application published  \n"
                                "   in Dr. Dobb's Journal.        \n"
                                "                                 \n"
-                               "    컴컴컴컴컴컴컴컴컴컴컴컴�    \n"
+                               "    컴컴컴컴컴컴컴컴컴컴컴컴컴   \n"
                                "                                 \n"
                                "FreeDOS Edit is a clone of MS-DOS\n"
                                "editor for the FreeDOS Project   \n"
@@ -330,6 +346,11 @@ static void OpenPadWindow(WINDOW wnd, char *FileName,char *NewFileName)
 #if !defined(_WIN32)
     char *ermsg;
 #endif
+#ifdef __REACTOS__
+    /* Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal. */
+    char newUntitled[countof(Untitled) + countof(" (4294967295)")];
+#endif
 
     if (strcmp(FileName, Untitled))
         {
@@ -354,6 +375,18 @@ static void OpenPadWindow(WINDOW wnd, char *FileName,char *NewFileName)
             }
 #endif
         }
+#ifdef __REACTOS__
+    else if (NewFileName == NULL)
+    {
+        untitledCount++;
+        if (untitledCount > 1)
+        {
+            sprintf(newUntitled, "%s (%lu)", Untitled, untitledCount);
+            Fname = newUntitled;
+        }
+        // else { Fname = Untitled; }
+    }
+#endif
 
     wwnd = WatchIcon();
     wndpos += 2;
@@ -386,10 +419,19 @@ static void OpenPadWindow(WINDOW wnd, char *FileName,char *NewFileName)
         }
     else
         {
+#ifdef __REACTOS__
+        // assert(wnd1->extension == NULL);
+        if (strcmp(FileName, Untitled))
+        {
+            wnd1->extension = DFmalloc(strlen(FileName)+1);
+            strcpy(wnd1->extension, FileName);
+        }
+#else
         if (strcmp(FileName,Untitled) || wnd1->extension == NULL)
             wnd1->extension = DFmalloc(strlen(FileName)+1);
 
         strcpy(wnd1->extension, FileName);
+#endif
         LoadFile(wnd1);                 /* Only load if not a new file */
         }
 
@@ -406,7 +448,11 @@ static void LoadFile(WINDOW wnd)
     unsigned int recptr = 0;
     FILE *fp;
 
+#ifdef __REACTOS__
+    if (wnd->extension == NULL)
+#else
     if (!strcmp(wnd->extension, Untitled)) /* Not a real file load */
+#endif
         {
         SendMessage(wnd, SETTEXT, (PARAM) "", 0);
         return;
@@ -545,6 +591,10 @@ static void SaveFile(WINDOW wnd, int Saveas)
         {
         if (SaveAsDialogBox("*.*", NULL, FileName))
             {
+#ifdef __REACTOS__
+            if (wnd->extension == NULL)
+                untitledCount--;
+#endif
             if (wnd->extension != NULL)
                 free(wnd->extension);
 
@@ -724,6 +774,11 @@ static int EditorProc(WINDOW wnd,MESSAGE msg,PARAM p1,PARAM p2)
                 cfg.read_only=0;
                 wnd->TextChanged=FALSE;
                 }
+
+#ifdef __REACTOS__
+            if (wnd->extension == NULL)
+                untitledCount--;
+#endif
 
             if (wnd->TextChanged)
                 {

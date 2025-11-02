@@ -29,7 +29,11 @@ int StatusBarProc(WINDOW wnd, MESSAGE msg, PARAM p1, PARAM p2)
             statusbar = DFcalloc(1, WindowWidth(wnd)+1);
             memset(statusbar, ' ', WindowWidth(wnd));
             *(statusbar+WindowWidth(wnd)) = '\0';
+#ifdef __REACTOS__
+            strncpy(statusbar+1, "~F1=Help ³", 9);
+#else
             strncpy(statusbar+1, "F1=Help Ý", 9);
+#endif
             if (wnd->text)
                 {
                 int len = min(strlen(wnd->text), WindowWidth(wnd)-9);

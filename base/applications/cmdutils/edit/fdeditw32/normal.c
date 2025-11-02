@@ -105,7 +105,11 @@ static BOOL KeyboardMsg(WINDOW wnd, PARAM p1, PARAM p2)
                 if (x < SCREENWIDTH-1)
                     x++;
                 break;
+#ifdef __REACTOS__
+            case LARROW:
+#else
             case BS:
+#endif
                 if (x)
                     --x;
                 break;

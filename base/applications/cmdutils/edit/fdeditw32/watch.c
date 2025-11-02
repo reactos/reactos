@@ -57,8 +57,13 @@ WINDOW WatchIcon(void)
     WINDOW wnd;
 
     SendMessage(NULL, CURRENT_MOUSE_CURSOR, (PARAM) &mx, (PARAM) &my);
+#ifdef __REACTOS__
+    wnd = CreateWindow(BOX, NULL, mx, my, 3, 5, NULL,NULL,
+                    WatchIconProc, VISIBLE /*| HASBORDER */| NOCLIP | SAVESELF);
+#else
     wnd = CreateWindow(BOX, NULL, mx, my, 3, 5, NULL,NULL,
                     WatchIconProc, VISIBLE | HASBORDER | SHADOW | SAVESELF);
+#endif
     return wnd;
 
 }
