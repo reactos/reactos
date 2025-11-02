@@ -215,15 +215,10 @@ ShowHelperCommand(
 
 
 /* interpreter.c */
-BOOL
+
+DWORD
 InterpretLine(
     _In_ LPWSTR pszFileName);
-
-BOOL
-InterpretCommand(
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount,
-    _Inout_ PBOOL bDone);
 
 VOID
 InterpretInteractive(VOID);
@@ -233,5 +228,10 @@ InterpretInteractive(VOID);
 DWORD
 RunScript(
     _In_ LPCWSTR filename);
+
+LPWSTR
+MergeStrings(
+    _In_ LPWSTR pszStringArray[],
+    _In_ INT nCount);
 
 #endif /* PRECOMP_H */

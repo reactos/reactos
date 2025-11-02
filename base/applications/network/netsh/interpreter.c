@@ -129,7 +129,8 @@ GetContextSubContext(
 }
 
 
-BOOL
+static
+DWORD
 InterpretCommand(
     _In_ LPWSTR *argv,
     _In_ DWORD dwArgCount,
@@ -141,11 +142,10 @@ InterpretCommand(
     INTERPRETER_STATE State = STATE_ANALYZE;
     DWORD dwArgIndex = 0;
     DWORD dwError = ERROR_SUCCESS;
-    BOOL bFound = TRUE;
 
     /* If no args provided */
     if (dwArgCount == 0)
-        return TRUE;
+        return ERROR_SUCCESS;
 
     if (pCurrentContext == NULL)
         pCurrentContext = pRootContext;
@@ -155,7 +155,7 @@ InterpretCommand(
         ((_wcsicmp(argv[0], L"?") == 0) || (_wcsicmp(argv[0], L"help") == 0)))
     {
         PrintContextHelp(pCurrentContext);
-        return TRUE;
+        return ERROR_SUCCESS;
     }
 
     pTempContext = pCurrentContext;
@@ -256,7 +256,7 @@ InterpretCommand(
                     break;
                 }
 
-                bFound = FALSE;
+                dwError = ERROR_CMD_NOT_FOUND;
                 State = STATE_DONE;
                 break;
 
@@ -266,7 +266,7 @@ InterpretCommand(
                 if (pTempSubContext == pCurrentContext)
                 {
                     if (dwArgIndex != (dwArgCount - 1))
-                        bFound = FALSE;
+                        dwError = ERROR_CMD_NOT_FOUND;
 
                     State = STATE_DONE;
                     break;
@@ -300,7 +300,7 @@ InterpretCommand(
 
                 if (pTempContext->pParentContext == NULL)
                 {
-                    bFound = FALSE;
+                    dwError = ERROR_CMD_NOT_FOUND;
                     State = STATE_DONE;
                     break;
                 }
@@ -313,11 +313,11 @@ InterpretCommand(
 
             case STATE_DONE:
                 DPRINT("STATE_DONE\n");
-                return bFound;
+                return dwError;
         }
     }
 
-    return TRUE;
+    return ERROR_CMD_NOT_FOUND;
 } 
 
 
@@ -325,7 +325,7 @@ InterpretCommand(
  * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
-BOOL
+DWORD
 InterpretLine(
     _In_ LPWSTR pszInputLine)
 {
@@ -386,6 +386,7 @@ InterpretInteractive(VOID)
     BOOL bWhiteSpace = TRUE;
     BOOL bDone = FALSE;
     LPWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
 
     for (;;)
     {
@@ -419,7 +420,8 @@ InterpretInteractive(VOID)
             ptr++;
         }
 
-        if (InterpretCommand(args_vector, dwArgCount, &bDone) == FALSE)
+        dwError = InterpretCommand(args_vector, dwArgCount, &bDone);
+        if (dwError == ERROR_CMD_NOT_FOUND)
         {
             ConResPrintf(StdErr, IDS_INVALID_COMMAND, input_line);
         }

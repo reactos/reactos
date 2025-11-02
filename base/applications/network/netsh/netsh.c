@@ -18,8 +18,9 @@ DWORD
 RunScript(
     _In_ LPCWSTR filename)
 {
-    FILE *script;
     WCHAR tmp_string[MAX_STRING_SIZE];
+    FILE *script;
+    DWORD dwError = ERROR_SUCCESS;
 
     /* Open the file for processing */
     script = _wfopen(filename, L"r");
@@ -32,18 +33,50 @@ RunScript(
     /* Read and process the script */
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
-        if (InterpretLine(tmp_string) == FALSE)
-        {
-            fclose(script);
-            return ERROR_SUCCESS; /* FIXME */
-        }
+        dwError = InterpretLine(tmp_string);
+        if (dwError != ERROR_SUCCESS)
+            break;
     }
 
     /* Close the file */
     fclose(script);
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
+
+
+LPWSTR
+MergeStrings(
+    _In_ LPWSTR pszStringArray[],
+    _In_ INT nCount)
+{
+    LPWSTR pszOutString = NULL;
+    INT i, nLength;
+
+    if ((pszStringArray == NULL) || (nCount == 0))
+        return NULL;
+
+    nLength = 0;
+    for (i = 0; i < nCount; i++)
+        nLength += wcslen(pszStringArray[i]);
+
+    if (nLength > 0)
+        nLength += nCount; /* Space characters and terminating zero */
+
+    pszOutString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    for (i = 0; i < nCount; i++)
+    {
+        if (i != 0)
+            wcscat(pszOutString, L" ");
+        wcscat(pszOutString, pszStringArray[i]);
+    }
+
+    return pszOutString;
+}
+
 
 /*
  * wmain():
@@ -54,12 +87,11 @@ wmain(
     _In_ int argc,
     _In_ const LPWSTR argv[])
 {
-    LPCWSTR tmpBuffer = NULL;
     LPCWSTR pszFileName = NULL;
     LPCWSTR pszContext = NULL;
+    LPWSTR pszCommand = NULL;
     int index;
-    int result = EXIT_SUCCESS;
-    BOOL bDone = FALSE;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
 
@@ -74,34 +106,17 @@ wmain(
     /* Process the command arguments */
     for (index = 1; index < argc; index++)
     {
-        if ((argv[index][0] == '/')||
-            (argv[index][0] == '-'))
-        {
-            tmpBuffer = argv[index] + 1;
-        }
-        else
-        {
-            if (pszFileName != NULL)
-            {
-                ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_FAILURE;
-                goto done;
-            }
-
-            /* Run a command from the command line */
-            if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) == FALSE)
-                result = EXIT_FAILURE;
-            goto done;
-        }
-
-        if (_wcsicmp(tmpBuffer, L"?") == 0)
+        if ((_wcsicmp(argv[index], L"-?") == 0) ||
+            (_wcsicmp(argv[index], L"/?") == 0) ||
+            (_wcsicmp(argv[index], L"?") == 0))
         {
             /* Help option */
             ConResPuts(StdOut, IDS_APP_USAGE);
-            result = EXIT_SUCCESS;
+            dwError = ERROR_SUCCESS;
             goto done;
         }
-        else if (_wcsicmp(tmpBuffer, L"a") == 0)
+        else if ((_wcsicmp(argv[index], L"-a") == 0) ||
+                 (_wcsicmp(argv[index], L"/a") == 0))
         {
             /* Aliasfile option */
             if ((index + 1) < argc)
@@ -113,10 +128,12 @@ wmain(
             else
             {
                 ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_FAILURE;
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
             }
         }
-        else if (_wcsicmp(tmpBuffer, L"c") == 0)
+        else if ((_wcsicmp(argv[index], L"-c") == 0) ||
+                 (_wcsicmp(argv[index], L"/c") == 0))
         {
             /* Context option */
             if ((index + 1) < argc)
@@ -127,10 +144,12 @@ wmain(
             else
             {
                 ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_FAILURE;
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
             }
         }
-        else if (_wcsicmp(tmpBuffer, L"f") == 0)
+        else if ((_wcsicmp(argv[index], L"-f") == 0) ||
+                 (_wcsicmp(argv[index], L"/f") == 0))
         {
             /* File option */
             if ((index + 1) < argc)
@@ -141,10 +160,12 @@ wmain(
             else
             {
                 ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_FAILURE;
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
             }
         }
-        else if (_wcsicmp(tmpBuffer, L"r") == 0)
+        else if ((_wcsicmp(argv[index], L"-r") == 0) ||
+                 (_wcsicmp(argv[index], L"/r") == 0))
         {
             /* Remote option */
             if ((index + 1) < argc)
@@ -156,33 +177,43 @@ wmain(
             else
             {
                 ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_FAILURE;
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
             }
         }
         else
         {
-            /* Invalid command */
-            ConResPrintf(StdOut, IDS_INVALID_COMMAND, argv[index]);
-            result = EXIT_FAILURE;
-            goto done;
+            if (pszFileName != NULL)
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
+            }
+            else if (pszCommand == NULL)
+            {
+                pszCommand = MergeStrings((LPWSTR*)&argv[index], argc - index);
+                if (pszCommand)
+                    break;
+            }
         }
     }
 
     /* Set a context */
     if (pszContext)
     {
-        if (InterpretLine((LPWSTR)pszContext) == FALSE)
-        {
-            result = EXIT_FAILURE;
+        dwError = InterpretLine((LPWSTR)pszContext);
+        if (dwError != ERROR_SUCCESS)
             goto done;
-        }
     }
 
-    /* Run a script or the interactive interpeter */
+    /* Run a script, the command line instruction or the interactive interpeter */
     if (pszFileName != NULL)
     {
-        if (RunScript(pszFileName) == FALSE)
-            result = EXIT_FAILURE;
+        dwError = RunScript(pszFileName);
+    }
+    else if (pszCommand != NULL)
+    {
+        dwError = InterpretLine(pszCommand);
     }
     else
     {
@@ -191,10 +222,12 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
+    if (pszCommand != NULL)
+        HeapFree(GetProcessHeap(), 0, pszCommand);
     CleanupContext();
     UnloadHelpers();
 
-    return result;
+    return (dwError == ERROR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 VOID
