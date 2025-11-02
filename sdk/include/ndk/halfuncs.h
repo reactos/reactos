@@ -318,9 +318,9 @@ HalSetTimeIncrement(
 NTSTATUS
 NTAPI
 x86BiosAllocateBuffer(
-    _In_ ULONG *Size,
-    _In_ USHORT *Segment,
-    _In_ USHORT *Offset);
+    _Inout_ ULONG *Size,
+    _Out_ USHORT *Segment,
+    _Out_ USHORT *Offset);
 
 NTSTATUS
 NTAPI
