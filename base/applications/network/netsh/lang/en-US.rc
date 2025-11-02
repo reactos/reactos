@@ -26,47 +26,50 @@ BEGIN
     IDS_SUBCONTEXT_HEADER "\nThe following sub-contexts are available:\n"
 
     IDS_HLP_UP             "Goes up one context level.\n"
-    IDS_HLP_UP_EX          "Usage: %1!s!\n\n        Goes up one context level.\n"
+    IDS_HLP_UP_EX          "\nUsage: %1!s!\n\n        Goes up one context level.\n"
     IDS_HLP_EXIT           "Exits the program.\n"
-    IDS_HLP_EXIT_EX        "Usage: %1!s!\n\n        Exits the program.\n"
+    IDS_HLP_EXIT_EX        "\nUsage: %1!s!\n\n        Exits the program.\n"
     IDS_HLP_HELP           "Displays a list of commands.\n"
-    IDS_HLP_HELP_EX        "Usage: %1!s!\n\n        Displays a list of commands.\n"
+    IDS_HLP_HELP_EX        "\nUsage: %1!s!\n\n        Displays a list of commands.\n"
     IDS_HLP_POPD           "Changes to the context on the stack.\n"
-    IDS_HLP_POPD_EX        "Usage: %1!s!\n\n        Changes to the context on the stack.\n"
+    IDS_HLP_POPD_EX        "\nUsage: %1!s!\n\n        Changes to the context on the stack.\n"
     IDS_HLP_PUSHD          "Stores the current context on the stack.\n"
-    IDS_HLP_PUSHD_EX       "Usage: %1!s!\n\n        Stores the current context on the stack.\n"
+    IDS_HLP_PUSHD_EX       "\nUsage: %1!s!\n\n        Stores the current context on the stack.\n"
     IDS_HLP_EXEC           "Runs a script file.\n"
-    IDS_HLP_EXEC_EX        "Usage: %1!s! <script file name>\n\n        Loads the script file and runs it.\n"
+    IDS_HLP_EXEC_EX        "\nUsage: %1!s! <script file name>\n\n        Loads the script file and runs it.\n"
     IDS_HLP_DUMP           "Displays a configuration script.\n"
-    IDS_HLP_DUMP_EX        "Usage: %1!s!\n\n        Creates a script that contains the current configuration. If saved to a\n\
+    IDS_HLP_DUMP_EX        "\nUsage: %1!s!\n\n        Creates a script that contains the current configuration. If saved to a\n\
         file, the script can be used to altered configuration settings.\n"
     IDS_HLP_OFFLINE        "Sets the current mode to offline.\n"
-    IDS_HLP_OFFLINE_EX     "Usage: %1!s!\n\n        Sets the current mode to offline. Changes made while in offline mode\n\
+    IDS_HLP_OFFLINE_EX     "\nUsage: %1!s!\n\n        Sets the current mode to offline. Changes made while in offline mode\n\
         are saved and made in the running configuration when the mode is\n        switched back to online.\n"
     IDS_HLP_ONLINE         "Sets the current mode to online.\n"
-    IDS_HLP_ONLINE_EX      "Usage: %1!s!\n\n        Sets the current mode to online. Changes made while in online mode are\n\
+    IDS_HLP_ONLINE_EX      "\nUsage: %1!s!\n\n        Sets the current mode to online. Changes made while in online mode are\n\
         immediately reflected in the running configuration. If changes are\n        made while in offline mode, they are reflected in the running\n\
         configuration when the mode is switched back to online.\n"
     IDS_HLP_ABORT          "Discards changes made while in offline mode.\n"
-    IDS_HLP_ABORT_EX       "Usage: %1!s!\n\n        Discards changes made while in the offline mode. This does not affect\n\
+    IDS_HLP_ABORT_EX       "\nUsage: %1!s!\n\n        Discards changes made while in the offline mode. This does not affect\n\
         changes made while in online mode.\n"
     IDS_HLP_COMMIT         "Commits changes made while in offline mode.\n"
-    IDS_HLP_COMMIT_EX      "Usage: %1!s!\n\n        Commits changes to the running configuration that were made while in\n\
+    IDS_HLP_COMMIT_EX      "\nUsage: %1!s!\n\n        Commits changes to the running configuration that were made while in\n\
         offline mode. No action is taken for this command while in online\n        mode.\n"
 
     IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
-    IDS_HLP_ADD_HELPER_EX  "Usage: %1!s! <dll file name>\n\n        Installs the specified helper DLL in netsh.\n"
+    IDS_HLP_ADD_HELPER_EX  "\nUsage: %1!s! <dll file name>\n\n        Installs the specified helper DLL in netsh.\n"
 
     IDS_HLP_DEL_HELPER     "Removes a helper DLL.\n"
-    IDS_HLP_DEL_HELPER_EX  "Usage: %1!s! <dll file name>\n\n        Removes the specified helper DLL from netsh.\n"
+    IDS_HLP_DEL_HELPER_EX  "\nUsage: %1!s! <dll file name>\n\n        Removes the specified helper DLL from netsh.\n"
 
+    IDS_HLP_SET_MACHINE    "Sets the current machine on which to operate.\n"
+    IDS_HLP_SET_MACHINE_EX "\nUsage: %1!s! [[name=]<string>]\n\n        Sets the current machine on which to operate. If a machine name\n\
+        is not specified, the local machine is used.\n"
     IDS_HLP_SET_MODE       "Sets the current mode to online or offline.\n"
-    IDS_HLP_SET_MODE_EX    "Usage: %1!s! [mode=]{online|offline}\n\n        Sets the current mode to online or offline.\n"
+    IDS_HLP_SET_MODE_EX    "\nUsage: %1!s! [mode=]{online|offline}\n\n        Sets the current mode to online or offline.\n"
 
     IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers.\n"
-    IDS_HLP_SHOW_HELPER_EX "Usage: %1!s!\n\n        Lists all the top-level helpers.\n"
+    IDS_HLP_SHOW_HELPER_EX "\nUsage: %1!s!\n\n        Lists all the top-level helpers.\n"
     IDS_HLP_SHOW_MODE      "Shows the current mode.\n"
-    IDS_HLP_SHOW_MODE_EX   "Usage: %1!s!\n\n        Shows the current mode (offline or online).\n"
+    IDS_HLP_SHOW_MODE_EX   "\nUsage: %1!s!\n\n        Shows the current mode (offline or online).\n"
 
     IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries.\n"
     IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries.\n"

@@ -205,7 +205,7 @@ InterpretCommand(
                 if (pCommand->pfnCmdHandler != NULL)
                 {
                     dwArgIndex++;
-                    dwError = pCommand->pfnCmdHandler(NULL, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
+                    dwError = pCommand->pfnCmdHandler(pszMachine, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
                     if (dwError != ERROR_SUCCESS)
                     {
                         if (dwError == ERROR_SHOW_USAGE)
@@ -317,7 +317,8 @@ InterpretCommand(
         }
     }
 
-    return ERROR_CMD_NOT_FOUND;
+    /* Done */
+    return ERROR_SUCCESS;
 } 
 
 
@@ -365,7 +366,7 @@ InterpretLine(
 
 VOID
 PrintPrompt(
-    PCONTEXT_ENTRY pContext)
+    _In_ PCONTEXT_ENTRY pContext)
 {
     if (pContext != pRootContext)
     {
@@ -394,6 +395,8 @@ InterpretInteractive(VOID)
         memset(args_vector, 0, sizeof(args_vector));
 
         /* Shown just before the input where the user places commands */
+        if (pszMachine)
+            ConPrintf(StdOut, L"[%s] ", pszMachine);
         PrintPrompt(pCurrentContext);
         ConPuts(StdOut, L">");
 
@@ -423,7 +426,9 @@ InterpretInteractive(VOID)
         dwError = InterpretCommand(args_vector, dwArgCount, &bDone);
         if (dwError == ERROR_CMD_NOT_FOUND)
         {
-            ConResPrintf(StdErr, IDS_INVALID_COMMAND, input_line);
+            PWSTR pszCommandString = MergeStrings(args_vector, dwArgCount);
+            ConResPrintf(StdErr, IDS_INVALID_COMMAND, pszCommandString);
+            HeapFree(GetProcessHeap(), 0, pszCommandString);
         }
 
         if (bDone)

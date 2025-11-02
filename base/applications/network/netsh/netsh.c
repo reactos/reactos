@@ -12,6 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+HMODULE hModule = NULL;
+
 /* FUNCTIONS ******************************************************************/
 
 DWORD
@@ -95,6 +99,8 @@ wmain(
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
 
+    hModule = GetModuleHandle(NULL);
+
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
@@ -171,8 +177,15 @@ wmain(
             if ((index + 1) < argc)
             {
                 index++;
-                ConPuts(StdOut, L"\nThe -r option is not implemented yet\n");
-//                remote = argv[index];
+                pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
+                if (pszMachine == NULL)
+                {
+                    dwError = ERROR_NOT_ENOUGH_MEMORY;
+                    PrintError(hModule, dwError);
+                    goto done;
+                }
+
+                wcscpy(pszMachine, argv[index]);
             }
             else
             {
@@ -192,8 +205,14 @@ wmain(
             else if (pszCommand == NULL)
             {
                 pszCommand = MergeStrings((LPWSTR*)&argv[index], argc - index);
-                if (pszCommand)
-                    break;
+                if (pszCommand == NULL)
+                {
+                    dwError = ERROR_NOT_ENOUGH_MEMORY;
+                    PrintError(hModule, dwError);
+                    goto done;
+                }
+
+                break;
             }
         }
     }
@@ -222,8 +241,12 @@ wmain(
 
 done:
     /* FIXME: Cleanup code goes here */
+    if (pszMachine != NULL)
+        HeapFree(GetProcessHeap(), 0, pszMachine);
+
     if (pszCommand != NULL)
         HeapFree(GetProcessHeap(), 0, pszCommand);
+
     CleanupContext();
     UnloadHelpers();
 

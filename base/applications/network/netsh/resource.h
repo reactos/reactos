@@ -48,12 +48,14 @@
 #define IDS_HLP_ADD_HELPER_EX    341
 #define IDS_HLP_DEL_HELPER       342
 #define IDS_HLP_DEL_HELPER_EX    343
-#define IDS_HLP_SET_MODE         344
-#define IDS_HLP_SET_MODE_EX      345
-#define IDS_HLP_SHOW_HELPER      346
-#define IDS_HLP_SHOW_HELPER_EX   347
-#define IDS_HLP_SHOW_MODE        348
-#define IDS_HLP_SHOW_MODE_EX     349
+#define IDS_HLP_SET_MACHINE      344
+#define IDS_HLP_SET_MACHINE_EX   345
+#define IDS_HLP_SET_MODE         346
+#define IDS_HLP_SET_MODE_EX      347
+#define IDS_HLP_SHOW_HELPER      348
+#define IDS_HLP_SHOW_HELPER_EX   349
+#define IDS_HLP_SHOW_MODE        350
+#define IDS_HLP_SHOW_MODE_EX     351
 
 #define IDS_HLP_GROUP_ADD        360
 #define IDS_HLP_GROUP_DELETE     361

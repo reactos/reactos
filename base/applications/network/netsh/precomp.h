@@ -132,6 +132,9 @@ extern PCONTEXT_ENTRY pCurrentContext;
 
 extern PHELPER_ENTRY pHelperListHead;
 
+extern HMODULE hModule;
+extern PWSTR pszMachine;
+
 /* PROTOTYPES *****************************************************************/
 
 /* context.c */

@@ -29,6 +29,8 @@ PCONTEXT_ENTRY pCurrentContext = NULL;
 PCONTEXT_STACK_ENTRY pContextStackHead = NULL;
 PCONTEXT_STACK_ENTRY pContextStackTail = NULL;
 
+PWSTR pszMachine = NULL;
+
 static BOOL bOnline = TRUE; 
 
 /* FUNCTIONS ******************************************************************/
@@ -709,6 +711,43 @@ PushdCommand(
 
 DWORD
 WINAPI
+SetMachineCommand(
+    _In_ LPCWSTR pwszMachine,
+    _In_ LPWSTR *argv,
+    _In_ DWORD dwCurrentIndex,
+    _In_ DWORD dwArgCount,
+    _In_ DWORD dwFlags,
+    _In_ LPCVOID pvData,
+    _Out_ BOOL *pbDone)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("SetMachineCommand(pwszMachine %S  dwCurrentIndex %lu  dwArgCount %lu)\n",
+           pwszMachine, dwCurrentIndex, dwArgCount);
+
+    if ((dwArgCount - dwCurrentIndex) > 1)
+        return ERROR_SHOW_USAGE;
+
+    if (pszMachine != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, pszMachine);
+        pszMachine = NULL;
+    }
+
+    if ((dwArgCount - dwCurrentIndex) == 1)
+    {
+        pszMachine = HeapAlloc(GetProcessHeap(), 0, (sizeof(argv[dwCurrentIndex]) + 1) * sizeof(WCHAR));
+        if (pszMachine == NULL)
+            return ERROR_NOT_ENOUGH_MEMORY;
+        wcscpy(pszMachine, argv[dwCurrentIndex]);
+    }
+
+    return dwError;
+}
+
+
+DWORD
+WINAPI
 SetModeCommand(
     _In_ LPCWSTR pwszMachine,
     _In_ LPWSTR *argv,
@@ -720,9 +759,10 @@ SetModeCommand(
 {
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("SetModeCommand()\n");
+    DPRINT("SetModeCommand(pwszMachine %S  dwCurrentIndex %lu  dwArgCount %lu)\n",
+           pwszMachine, dwCurrentIndex, dwArgCount);
 
-    if (dwArgCount != 3)
+    if ((dwArgCount - dwCurrentIndex) != 1)
         return ERROR_SHOW_USAGE;
 
     if (!_wcsicmp(argv[dwCurrentIndex], L"offline"))
@@ -771,7 +811,7 @@ CreateRootContext(VOID)
     if (pRootContext == NULL)
         return FALSE;
 
-    pRootContext->hModule = GetModuleHandle(NULL);
+    pRootContext->hModule = hModule;
 
     AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0);
     AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
@@ -803,7 +843,8 @@ CreateRootContext(VOID)
     pGroup = AddCommandGroup(pRootContext, L"set", IDS_HLP_GROUP_SET, 0);
     if (pGroup)
     {
-        AddGroupCommand(pGroup, L"mode",   SetModeCommand,   IDS_HLP_SET_MODE,   IDS_HLP_SET_MODE_EX, 0);
+        AddGroupCommand(pGroup, L"machine", SetMachineCommand, IDS_HLP_SET_MACHINE, IDS_HLP_SET_MACHINE_EX, 0);
+        AddGroupCommand(pGroup, L"mode",    SetModeCommand,    IDS_HLP_SET_MODE,    IDS_HLP_SET_MODE_EX, 0);
     }
 
     pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0);
