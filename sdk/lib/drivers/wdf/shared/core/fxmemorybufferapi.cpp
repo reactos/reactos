@@ -35,7 +35,7 @@ __drv_when(PoolType == 1 || PoolType == 257, __drv_maxIRQL(APC_LEVEL))
 __drv_when(PoolType == 0 || PoolType == 256, __drv_maxIRQL(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -165,7 +165,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 PVOID
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryGetBuffer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -209,7 +209,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryCopyToBuffer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -288,7 +288,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryCopyFromBuffer)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

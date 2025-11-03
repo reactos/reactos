@@ -35,7 +35,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PFILE_OBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfFileObjectWdmGetFileObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

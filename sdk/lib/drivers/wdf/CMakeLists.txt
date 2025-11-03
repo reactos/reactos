@@ -1,9 +1,12 @@
 
+add_subdirectory(wdfldr)
+add_subdirectory(wdfdriverentry)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE_SHARED
     shared/core/fxcxdeviceinit.cpp
-    # shared/core/fxcxdeviceinitapi.cpp
+    shared/core/fxcxdeviceinitapi.cpp
     shared/core/fxdevice.cpp
     shared/core/fxdeviceapi.cpp
     shared/core/fxdevicebase.cpp
@@ -16,7 +19,7 @@ list(APPEND SOURCE_SHARED
     shared/core/fxfileobject.cpp
     shared/core/fxfileobjectapi.cpp
     shared/core/fxirpqueue.cpp
-    # shared/core/fxlock.cpp
+    shared/core/fxlock.cpp
     shared/core/fxlookasidelist.cpp
     shared/core/fxlookasidelistapi.cpp
     shared/core/fxmemorybuffer.cpp
@@ -40,14 +43,14 @@ list(APPEND SOURCE_SHARED
     shared/core/fxtimerapi.cpp
     shared/core/fxworkitem.cpp
     shared/core/fxworkitemapi.cpp
-    # shared/core/verifierapi.cpp
+    shared/core/verifierapi.cpp
     shared/irphandlers/default/fxdefaultirphandler.cpp
     shared/irphandlers/general/fxpkggeneral.cpp
     shared/irphandlers/io/fxioqueue.cpp
     shared/irphandlers/io/fxioqueueapi.cpp
     shared/irphandlers/io/fxpkgio.cpp
     shared/irphandlers/package/fxpackage.cpp
-    # shared/irphandlers/pnp/devicepwrreqstatemachine.cpp
+    shared/irphandlers/pnp/devicepwrreqstatemachine.cpp
     shared/irphandlers/pnp/eventqueue.cpp
     shared/irphandlers/pnp/fdopower.cpp
     shared/irphandlers/pnp/fxinterruptapi.cpp
@@ -79,7 +82,7 @@ list(APPEND SOURCE_SHARED
     shared/object/wdfpool.cpp
     shared/support/fxcollection.cpp
     shared/support/fxcollectionapi.cpp
-    # shared/support/fxdeviceinterface.cpp
+    # shared/support/fxdeviceinterface.cpp # obsolete. KM/UM files are compiled instead of this one
     shared/support/fxdeviceinterfaceapi.cpp
     shared/support/fxdevicetext.cpp
     shared/support/fxregistryapi.cpp
@@ -91,7 +94,7 @@ list(APPEND SOURCE_SHARED
     shared/support/fxspinlockapi.cpp
     shared/support/fxstring.cpp
     shared/support/fxstringapi.cpp
-    # shared/support/fxtelemetry.cpp
+    shared/support/fxtelemetry.cpp
     shared/support/fxtransactionedlist.cpp
     shared/support/fxwaitlock.cpp
     shared/support/fxwaitlockapi.cpp
@@ -100,13 +103,13 @@ list(APPEND SOURCE_SHARED
     shared/targets/general/fxiotargetapi.cpp
     shared/targets/general/fxiotargetremote.cpp
     shared/targets/general/fxiotargetself.cpp
-    # shared/targets/usb/fxusbdevice.cpp
-    # shared/targets/usb/fxusbdeviceapi.cpp
-    # shared/targets/usb/fxusbinterface.cpp
-    # shared/targets/usb/fxusbinterfaceapi.cpp
-    # shared/targets/usb/fxusbpipe.cpp
-    # shared/targets/usb/fxusbpipeapi.cpp
-    # shared/targets/usb/usbutil.cpp
+    shared/targets/usb/fxusbdevice.cpp
+    shared/targets/usb/fxusbdeviceapi.cpp
+    shared/targets/usb/fxusbinterface.cpp
+    shared/targets/usb/fxusbinterfaceapi.cpp
+    shared/targets/usb/fxusbpipe.cpp
+    shared/targets/usb/fxusbpipeapi.cpp
+    shared/targets/usb/usbutil.cpp
     )
 
 list(APPEND SOURCE_KM
@@ -118,20 +121,20 @@ list(APPEND SOURCE_KM
     kmdf/src/core/fxdpc.cpp
     kmdf/src/core/fxdpcapi.cpp
     kmdf/src/core/fxsystemthread.cpp
-    # kmdf/src/core/tracing.cpp
-    # kmdf/src/dma/base/fxcommonbuffer.cpp # requires DMA stuff
-    # kmdf/src/dma/base/fxcommonbufferapi.cpp # requires DMA stuff
-    # kmdf/src/dma/base/fxdmaenabler.cpp
-    # kmdf/src/dma/base/fxdmaenablerapi.cpp
-    # kmdf/src/dma/base/fxdmatransaction.cpp
-    # kmdf/src/dma/base/fxdmatransactionapi.cpp
-    # kmdf/src/dynamic/version/version.cpp
+    kmdf/src/core/tracing.cpp
+    kmdf/src/dma/base/fxcommonbuffer.cpp # requires DMA stuff
+    kmdf/src/dma/base/fxcommonbufferapi.cpp # requires DMA stuff
+    kmdf/src/dma/base/fxdmaenabler.cpp
+    kmdf/src/dma/base/fxdmaenablerapi.cpp
+    kmdf/src/dma/base/fxdmatransaction.cpp
+    kmdf/src/dma/base/fxdmatransactionapi.cpp
+    kmdf/src/dynamic/version/version.cpp
     kmdf/src/fxtosharedinterface/fxobject/fxobjectinfokm.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiapi.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiinstance.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiirphandler.cpp
-    # kmdf/src/irphandlers/wmi/fxwmiprovider.cpp
-    # kmdf/src/librarycommon/fxlibrarycommon.cpp
+    kmdf/src/irphandlers/wmi/fxwmiapi.cpp
+    kmdf/src/irphandlers/wmi/fxwmiinstance.cpp
+    kmdf/src/irphandlers/wmi/fxwmiirphandler.cpp
+    kmdf/src/irphandlers/wmi/fxwmiprovider.cpp
+    kmdf/src/librarycommon/fxlibrarycommon.cpp
     kmdf/src/support/fxqueryinterface.cpp
     kmdf/src/support/fxqueryinterfaceapi.cpp
     kmdf/src/support/fxrelateddevice.cpp
@@ -157,7 +160,7 @@ list(APPEND SOURCE_KM
     shared/irphandlers/pnp/km/pnpstatemachinekm.cpp
     shared/irphandlers/pnp/km/powerpolicystatemachinekm.cpp
     shared/irphandlers/pnp/km/powerstatemachinekm.cpp # stubs
-    # shared/irphandlers/pnp/km/poxinterfacekm.cpp
+    shared/irphandlers/pnp/km/poxinterfacekm.cpp
     shared/irphandlers/pnp/km/supportkm.cpp
     shared/object/km/fxobjectkm.cpp
     shared/object/km/globalskm.cpp
@@ -175,26 +178,32 @@ list(APPEND SOURCE_KM
     shared/targets/general/km/fxiotargetapikm.cpp
     shared/targets/general/km/fxiotargetkm.cpp
     shared/targets/general/km/fxiotargetremotekm.cpp
+    # usb
+    shared/targets/usb/km/fxusbdeviceapikm.cpp
+    shared/targets/usb/km/fxusbdevicekm.cpp
+    shared/targets/usb/km/fxusbpipekm.cpp
     reactos_special.cpp
     )
 
-# add_library(wdf01000 MODULE ${SOURCE})
+add_library(wdf01000 SHARED ${SOURCE_SHARED} ${SOURCE_KM} wdf01000.rc)
 
-# set_module_type(wdf01000 kernelmodedriver ENTRYPOINT 0)
-# add_importlibs(wdf01000 ntoskrnl hal wdfldr)
-# add_cd_file(TARGET wdf01000 DESTINATION reactos/system32/drivers FOR all)
-# add_registry_inf(wdf01000_reg.inf)
+set_module_type(wdf01000 kernelmodedriver)
 
-add_library(wdf01000 ${SOURCE_SHARED} ${SOURCE_KM})
+add_cd_file(TARGET wdf01000 DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_registry_inf(wdf01000_reg.inf)
 
 target_compile_definitions(wdf01000
     PUBLIC WDF_DEVICE_NO_WDMSEC_H _WIN32_WINNT=0x603 NTDDI_VERSION=0x06030000 # NTDDI_WINBLUE
     PRIVATE FX_CORE_MODE=1 FX_CORE_KERNEL_MODE=1
-    PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600)
+    PRIVATE __WDF_MAJOR_VERSION=1 __WDF_MINOR_VERSION=17 __WDF_BUILD_NUMBER=7600
+    PRIVATE __WDF_MAJOR_VERSION_STRING=01
+    # wdf01000 is primarily 3rd party code, and we cannot control what crap vendor drivers do
+    PRIVATE NO_KERNEL_LIST_ENTRY_CHECKS)
 
 target_include_directories(wdf01000
     PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.17
     PRIVATE
+        ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/wdf/wdfldr
         shared/inc/primitives/common
         shared/inc/primitives/km
         shared/inc/private/common
@@ -208,10 +217,11 @@ target_include_directories(wdf01000
         shared/irphandlers/pnp/km # pnpprivkm.hpp
     )
 
-target_link_libraries(wdf01000 aux_klib ntoskrnl_vista ${PSEH_LIB})
+target_link_libraries(wdf01000 aux_klib usbdex ntoskrnl_vista ${PSEH_LIB})
+add_importlibs(wdf01000 wdfldr ntoskrnl hal)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(wdf01000
         PRIVATE -Wno-write-strings -Wno-unknown-pragmas -Wno-switch
-        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder -Wno-invalid-offsetof -Wno-delete-non-virtual-dtor>)
+        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder -Wno-invalid-offsetof -Wno-delete-non-virtual-dtor -Wno-class-memaccess>)
 endif()

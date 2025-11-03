@@ -1434,7 +1434,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxPkgFdo::_PnpFilteredStartDeviceCompletionRoutine(
     __in    MdDeviceObject DeviceObject,
     __inout MdIrp Irp,
@@ -1458,7 +1458,7 @@ FxPkgFdo::_PnpFilteredStartDeviceCompletionRoutine(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxPkgFdo::_PnpStartDeviceCompletionRoutine(
     __in    MdDeviceObject DeviceObject,
     __inout MdIrp Irp,

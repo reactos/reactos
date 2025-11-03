@@ -45,7 +45,7 @@ __drv_minIRQL(DISPATCH_LEVEL)
 __drv_requiresIRQL(DISPATCH_LEVEL)
 __drv_sameIRQL
 VOID
-STDCALL
+NTAPI
 FxFlushDpc (
     __in struct _KDPC *Dpc,
     __in_opt PVOID DeferredContext,

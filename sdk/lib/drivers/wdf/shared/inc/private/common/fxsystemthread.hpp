@@ -256,7 +256,7 @@ private:
     //
     static
     VOID
-    STDCALL
+    NTAPI
     StaticThreadThunk(
         __inout PVOID Context
         );
@@ -282,7 +282,7 @@ private:
     //
     static
     VOID
-    STDCALL
+    NTAPI
     StaticReaperThunk(
         __inout PVOID Context
         );

@@ -830,11 +830,11 @@ Return Value:
 
 
 
-    // m_PkgWmi = new(pGlobals) FxWmiIrpHandler(pGlobals, this); __REACTOS__
-    // if (m_PkgWmi == NULL) {
-    //     return STATUS_INSUFFICIENT_RESOURCES;
-    // }
-    // InstallPackage(m_PkgWmi);
+    m_PkgWmi = new(pGlobals) FxWmiIrpHandler(pGlobals, this);
+    if (m_PkgWmi == NULL) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    InstallPackage(m_PkgWmi);
 #endif
 
     //
@@ -1216,7 +1216,7 @@ Return Value:
             // we delete the device object, otherwise we can bugcheck when
             // running under driver verifier.
             //
-            // m_PkgWmi->Deregister(); __REACTOS__
+            m_PkgWmi->Deregister();
         }
 
         //
@@ -1261,7 +1261,7 @@ FxDevice::Dispose(
             // valid to reference the pointer because there is an explicit
             // reference on the object that was taken when we created this object.
             //
-            // m_PkgWmi->Deregister(); __REACTOS__
+            m_PkgWmi->Deregister();
         }
 
         //
@@ -1332,7 +1332,7 @@ FxDevice::_AcquireOptinRemoveLock(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxDevice::DispatchWithLock(
     __in MdDeviceObject DeviceObject,
     __in MdIrp Irp
@@ -1547,7 +1547,7 @@ DispatchWorker(
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxDevice::Dispatch(
     __in MdDeviceObject DeviceObject,
     __in MdIrp       Irp
