@@ -48,7 +48,7 @@ PciGetDescriptionMessage(IN ULONG Identifier,
         /* Grab the text */
         Description = (PWCHAR)Entry->Text;
 
-        /* Validate valid message length, ending with a newline character */
+        /* Validate the message length, ending with a newline character */
         ASSERT(TextLength > sizeof(WCHAR));
         ASSERT(Description[(TextLength / sizeof(WCHAR)) - 1] == L'\n');
 
