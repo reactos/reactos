@@ -1036,6 +1036,8 @@
 @ cdecl _unloaddll(long)
 @ cdecl _unlock(long)
 @ cdecl _unlock_file(ptr)
+@ cdecl -arch=win32 _utime(str ptr) _utime32
+@ cdecl -arch=win64 _utime(str ptr) _utime64
 @ cdecl -version=0x600+ _utime32(str ptr)
 @ cdecl _utime64(str ptr)
 @ cdecl -version=0x600+ _vcprintf(str ptr)
@@ -1062,8 +1064,6 @@
 # stub -version=0x600+ _vprintf_p(str ptr)
 # stub -version=0x600+ _vprintf_p_l(str ptr ptr)
 # stub -version=0x600+ _vprintf_s_l(str ptr ptr)
-@ cdecl -arch=win32 _utime(str ptr) _utime32
-@ cdecl -arch=win64 _utime(str ptr) _utime64
 @ cdecl _vscprintf(str ptr)
 @ cdecl -version=0x600+ _vscprintf_l(str ptr ptr)
 @ cdecl -version=0x600+ _vscprintf_p_l(str ptr ptr)
@@ -1277,8 +1277,8 @@
 @ cdecl -version=0x600+ clearerr_s(ptr)
 @ cdecl clock()
 @ cdecl cos(double)
-@ cdecl cosh(double)
 @ cdecl -arch=!i386 cosf(float)
+@ cdecl cosh(double)
 @ cdecl -arch=!i386 coshf(float)
 @ cdecl -arch=win32 ctime(ptr) _ctime32
 @ cdecl -arch=win64 ctime(ptr) _ctime64
@@ -1369,8 +1369,8 @@
 @ cdecl -arch=win64 localtime(ptr) _localtime64
 @ cdecl log(double)
 @ cdecl log10(double)
-@ cdecl -arch=!i386 logf(float)
 @ cdecl -arch=!i386 log10f(float)
+@ cdecl -arch=!i386 logf(float)
 @ cdecl longjmp(ptr long)
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
@@ -1420,8 +1420,8 @@
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)
 @ cdecl sin(double)
-@ cdecl sinh(double)
 @ cdecl -arch=!i386 sinf(float)
+@ cdecl sinh(double)
 @ cdecl -arch=!i386 sinhf(float)
 @ varargs sprintf(ptr str)
 @ varargs -version=0x600+ sprintf_s(ptr long str)
