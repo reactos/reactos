@@ -54,7 +54,7 @@ HKR, Ndi\Interfaces,              LowerRange,          0, "ethernet"
 
 [Parameters]
 HKR, Ndi\Params\ConnectRate,        ParamDesc,  0,          %ConnectRate%
-HKR, Ndi\Params\ConnectRate,        Default,    0,          "1001"
+HKR, Ndi\Params\ConnectRate,        Default,    0,          "10000"
 HKR, Ndi\Params\ConnectRate,        type,       0,          "enum"
 HKR, Ndi\Params\ConnectRate\enum,   "10",       0,          %10M%
 HKR, Ndi\Params\ConnectRate\enum,   "100",      0,          %100M%
