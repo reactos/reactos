@@ -8,11 +8,30 @@ BEGIN
 
     IDS_HLP_IP_SHOW      "Displays IP information.\n"
     IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
-    IDS_HLP_ADDRESSES_EX "Usage: addresses [string]\n\n    Display IP address configuration.\n"
+    IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks: Displays the IP address configuration for a specific interface or interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area network""\n"
     IDS_HLP_CONFIG       "Displays IP address and additional information.\n"
-    IDS_HLP_CONFIG_EX    "Usage: config [string]\n\n    Display IP address and additional information.\n"
+    IDS_HLP_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks: Displays the IP address and DNS server configuration for a specific interface\nor interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area Network""\n"
     IDS_HLP_DNS          "Displays the DNS server addresses.\n"
-    IDS_HLP_DNS_EX       "Usage: dns [string]\n\n    Display DNS server adresses.\n"
+    IDS_HLP_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks:\n\n\
+Displays the DNS server configuration for a specific interface\nor interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area Network""\n"
 
     IDS_IP_HEADER        "\nConfiguration for interface ""%s""\n"
     IDS_DHCP_ON          "    DHCP enabled:                         Yes\n"
