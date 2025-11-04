@@ -96,33 +96,52 @@ ValidatePort(
 {
     switch (Port)
     {
-        // VGA: https://wiki.osdev.org/VGA_Hardware#Port_0x3C0
+        // CGA: https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/CGA.TXT
+        // EGA: https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/EGAREGS.TXT
+        // VGA: https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/VGAREGS.TXT
+        //      https://wiki.osdev.org/VGA_Hardware#VGA_Registers
+        //      http://www.osdever.net./documents/vga_ports.txt
+        //      https://www.ardent-tool.com/video/VGA_Video_Modes.html
         case 0x3C0: return (Size == 1) && IsWrite;
         case 0x3C1: return (Size == 1) && !IsWrite;
         case 0x3C2: return (Size == 1) && IsWrite;
         case 0x3C4: return IsWrite;
         case 0x3C5: return (Size <= 2);
+        case 0x3C6: return (Size == 1);
         case 0x3C7: return (Size == 1) && IsWrite;
+        case 0x3C8: return (Size == 1) && IsWrite;
+        case 0x3C9: return (Size == 1);
         case 0x3CC: return (Size == 1) && !IsWrite;
         case 0x3CE: return IsWrite;
         case 0x3CF: return (Size <= 2);
-        case 0x3D4: return IsWrite;
-        case 0x3D5: return (Size <= 2);
-        case 0x3C6: return (Size == 1);
-        case 0x3C8: return (Size == 1) && IsWrite;
-        case 0x3C9: return (Size == 1);
-        case 0x3DA: return (Size == 1) && !IsWrite;
+
+        case 0x3D4: return IsWrite;     // CRT Controller Register (Color)
+        case 0x3D5: return (Size <= 2); // CRT Controller Register (Color)
+        case 0x3DA: return (Size == 1) && !IsWrite; // Status Register (Color)
 
         // OVMF debug messages used by VBox / QEMU
         // https://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/EFI/Firmware/OvmfPkg/README
         case 0x402: return (Size == 1) && IsWrite;
 
         // BOCHS VBE: https://forum.osdev.org/viewtopic.php?f=1&t=14639
+        // https://wiki.osdev.org/Bochs_VBE_Extensions#Programming_the_BGA
         case 0x1CE: return (Size == 1) && IsWrite;
         case 0x1CF: return (Size == 1);
 
         // CHECKME!
+        // https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/HERCULES.TXT
         case 0x3B6: return (Size <= 2);
+
+        case 0x3B4: return IsWrite;     // CRT Controller Register (Monochrome)
+        case 0x3B5: return (Size <= 2); // CRT Controller Register (Monochrome)
+        case 0x3BA: return (Size == 1) && !IsWrite; // Status Register (Monochrome)
+
+        // case 0x3DB: case 0x3DC: return FALSE; // Lightpen support
+
+// case 0x3D8: // CGA mode control register
+// case 0x3D9: // CGA colour control register
+// case 0x3E0:  6845 registers (14 of them) (port 03D4h/03D5h)
+
 
 //
 // INVESTIGATE: It is known (Geoff Chappell) that the x86 BIOS emulator
