@@ -12,9 +12,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_USAGE "\nUsage: netsh [-a AliasFile] [-c Context] [-r RemoteMachine] \
 \n             [Command | -f ScriptFile]\n"
-    IDS_INVALID_COMMAND  "The following command was not found: %ls.\n"
     IDS_OPEN_FAILED      "The file %ls could not be openend.\n"
-    IDS_INVALID_SYNTAX   "The syntax supplied for this command is not valid. Check help for the correct syntax.\n\n"
     IDS_THIS_COMMANDS    "\nCommands in this context:\n"
     IDS_CONTEXT_COMMANDS "\nCommands in the %s-context:\n"
 END
@@ -75,4 +73,10 @@ BEGIN
     IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries.\n"
     IDS_HLP_GROUP_SET      "Updates configuration settings.\n"
     IDS_HLP_GROUP_SHOW     "Displays information.\n"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_INVALID_SYNTAX   "The syntax supplied for this command is not valid. Check help for the correct syntax.\n"
+    ERROR_CMD_NOT_FOUND    "The following command was not found: %1!s!.\n"
 END

@@ -35,6 +35,8 @@
 
 /* DEFINES *******************************************************************/
 
+#define HUGE_BUFFER_SIZE  2048
+
 #define MAX_STRING_SIZE 1024
 #define MAX_ARGS_COUNT 256
 

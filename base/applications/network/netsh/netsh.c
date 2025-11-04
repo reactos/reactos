@@ -383,8 +383,81 @@ PrintError(
     _In_ DWORD dwErrId,
     ...)
 {
-    DPRINT1("PrintError()\n");
-    return 1;
+    PWSTR pszInBuffer = NULL, pszOutBuffer = NULL;
+    DWORD dwLength = 0;
+    va_list ap;
+
+    DPRINT("PrintError(%p %lu ...)\n", hModule, dwErrId);
+
+    va_start(ap, dwErrId);
+
+    pszOutBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+    if (pszOutBuffer == NULL)
+        goto done;
+
+    if (hModule)
+    {
+        pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+        if (pszInBuffer == NULL)
+            goto done;
+
+        dwLength = LoadStringW(hModule, dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
+        if (dwLength == 0)
+            goto done;
+
+        dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
+                                  pszInBuffer,
+                                  0,
+                                  0,
+                                  pszOutBuffer,
+                                  HUGE_BUFFER_SIZE,
+                                  &ap);
+    }
+    else
+    {
+        if ((dwErrId > NETSH_ERROR_BASE) && (dwErrId < NETSH_ERROR_END))
+        {
+            pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+            if (pszInBuffer == NULL)
+                goto done;
+
+            dwLength = LoadStringW(GetModuleHandle(NULL), dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
+            if (dwLength == 0)
+                goto done;
+
+            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
+                                      pszInBuffer,
+                                      0,
+                                      0L,
+                                      pszOutBuffer,
+                                      HUGE_BUFFER_SIZE,
+                                      &ap);
+        }
+        else
+        {
+            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
+                                      NULL,
+                                      dwErrId,
+                                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                      pszOutBuffer,
+                                      HUGE_BUFFER_SIZE,
+                                      &ap);
+        }
+    }
+
+    va_end(ap);
+
+    if (dwLength > 0)
+        ConPuts(StdOut, pszOutBuffer);
+
+done:
+    if (pszOutBuffer)
+        HeapFree(GetProcessHeap(), 0, pszOutBuffer);
+
+    if (pszInBuffer)
+        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+
+    return dwLength;
 }
 
 DWORD

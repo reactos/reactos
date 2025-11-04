@@ -427,7 +427,7 @@ InterpretInteractive(VOID)
         if (dwError == ERROR_CMD_NOT_FOUND)
         {
             PWSTR pszCommandString = MergeStrings(args_vector, dwArgCount);
-            ConResPrintf(StdErr, IDS_INVALID_COMMAND, pszCommandString);
+            PrintError(NULL, dwError, pszCommandString);
             HeapFree(GetProcessHeap(), 0, pszCommandString);
         }
 
