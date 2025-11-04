@@ -219,8 +219,9 @@ IntVideoPortReleaseResources(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("VideoPortReleaseResources IoReportResource failed with 0x%08lx ; ConflictDetected: %s\n",
-                Status, ConflictDetected ? "TRUE" : "FALSE");
+        ERR_(VIDEOPRT,
+             "VideoPortReleaseResources IoReportResource failed with 0x%08lx ; ConflictDetected: %s\n",
+             Status, ConflictDetected ? "TRUE" : "FALSE");
     }
     /* Ignore the returned status however... */
 }
@@ -430,6 +431,7 @@ IntVideoPortMapMemory(
         IoAddress.u.LowPart, NumberOfUchars, InIoSpace);
    if (Status)
       *Status = ERROR_INVALID_PARAMETER;
+
    return NULL;
 }
 
