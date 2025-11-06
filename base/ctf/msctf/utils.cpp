@@ -480,7 +480,8 @@ TF_RegisterLangBarAddIn(
 
     TCHAR szBuff[MAX_PATH], szGUID[40];
     StringCchCopy(szBuff, _countof(szBuff), TEXT("SOFTWARE\\Microsoft\\CTF\\LangBarAddIn\\"));
-    StringFromGUID2T(rguid, szGUID, _countof(szGUID));
+    if (!StringFromGUID2T(rguid, szGUID, _countof(szGUID)))
+        return E_FAIL;
     StringCchCat(szBuff, _countof(szBuff), szGUID);
 
     CicRegKey regKey;
@@ -524,7 +525,8 @@ TF_UnregisterLangBarAddIn(
     if (error == ERROR_SUCCESS)
     {
         TCHAR szGUID[40];
-        StringFromGUID2T(rguid, szGUID, _countof(szGUID));
+        if (!StringFromGUID2T(rguid, szGUID, _countof(szGUID)))
+            return E_FAIL;
         regKey.RecurseDeleteKey(szGUID);
         hr = S_OK;
     }

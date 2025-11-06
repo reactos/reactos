@@ -205,7 +205,7 @@ LRESULT CTrayClockWnd::OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 BOOL CTrayClockWnd::MeasureLines()
 {
     HDC hDC;
-    HFONT hPrevFont;
+    HFONT hPrevFont = NULL;
     UINT c, i;
     BOOL bRet = TRUE;
 

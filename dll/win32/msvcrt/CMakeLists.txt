@@ -6,6 +6,12 @@ spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 target_compile_definitions(libmsvcrt INTERFACE _DLL __USE_CRTIMP)
 # Embed msvcrtex into libmsvcrt
 target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:msvcrtex>)
+add_custom_command(TARGET libmsvcrt POST_BUILD
+    COMMAND ${CMAKE_AR} q $<TARGET_FILE:libmsvcrt> $<TARGET_OBJECTS:msvcrtex>
+    COMMAND ${CMAKE_AR} s $<TARGET_FILE:libmsvcrt>
+    COMMAND ${CMAKE_RANLIB} $<TARGET_FILE:libmsvcrt>
+    COMMAND_EXPAND_LISTS
+    COMMENT "Appending CRT startup objects to libmsvcrt")
 
 # Embed RTC libs
 if (STACK_PROTECTOR)

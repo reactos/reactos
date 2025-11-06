@@ -654,7 +654,9 @@ STDMETHODIMP CThreadMgr::ActivateEx(
     if (!g_processId)
     {
         GUID guid;
-        CoCreateGuid(&guid);
+        HRESULT hr = CoCreateGuid(&guid);
+        if (FAILED(hr))
+            return hr;
         GetClientId(guid, &g_processId);
     }
 
