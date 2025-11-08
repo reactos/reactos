@@ -209,9 +209,10 @@ InterpretCommand(
                     if (dwError != ERROR_SUCCESS)
                     {
                         if (dwError == ERROR_SHOW_USAGE)
+                        {
                             PrintCommandHelp(pTempContext, pGroup, pCommand);
-                        else
-                            ConPrintf(StdOut, L"Command: %s  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
+                            dwError == ERROR_SUPPRESS_OUTPUT;
+                        }
                     }
                     else
                     {
@@ -314,7 +315,7 @@ InterpretCommand(
                 break;
 
             case STATE_DONE:
-                DPRINT("STATE_DONE\n");
+                DPRINT("STATE_DONE dwError %ld\n", dwError);
                 return dwError;
         }
     }
@@ -426,12 +427,14 @@ InterpretInteractive(VOID)
         }
 
         dwError = InterpretCommand(args_vector, dwArgCount, &bDone);
-        if (dwError == ERROR_CMD_NOT_FOUND)
+        if ((dwError != ERROR_SUCCESS) && (dwError != ERROR_SUPPRESS_OUTPUT))
         {
             PWSTR pszCommandString = MergeStrings(args_vector, dwArgCount);
             PrintError(NULL, dwError, pszCommandString);
             HeapFree(GetProcessHeap(), 0, pszCommandString);
         }
+        if (dwError != ERROR_SUPPRESS_OUTPUT)
+            ConPuts(StdOut, L"\n");
 
         if (bDone)
             break;
