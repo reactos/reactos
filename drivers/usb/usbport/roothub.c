@@ -190,6 +190,13 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
                 return RHStatus;
             }
 
+            if (Port == 0 ||
+                Port > PdoExtension->RootHubDescriptors->Descriptor.bNumberOfPorts)
+            {
+                DPRINT1("USBPORT_RootHubClassCommand: CLEAR_FEATURE invalid port %u\n", Port);
+                return RHStatus;
+            }
+
             switch (Feature)
             {
                 case FEATURE_PORT_ENABLE:
@@ -248,6 +255,13 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
             }
 
             Feature = SetupPacket->wValue.W;
+
+            if (Port == 0 ||
+                Port > PdoExtension->RootHubDescriptors->Descriptor.bNumberOfPorts)
+            {
+                DPRINT1("USBPORT_RootHubClassCommand: SET_FEATURE invalid port %u\n", Port);
+                return RHStatus;
+            }
 
             switch (Feature)
             {
