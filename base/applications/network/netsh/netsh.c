@@ -91,7 +91,8 @@ wmain(
     _In_ int argc,
     _In_ const LPWSTR argv[])
 {
-    LPCWSTR pszFileName = NULL;
+    LPCWSTR pszScriptFileName = NULL;
+    LPCWSTR pszAliasFileName = NULL;
     LPCWSTR pszContext = NULL;
     LPWSTR pszCommand = NULL;
     int index;
@@ -105,6 +106,7 @@ wmain(
     ConInitStdStreams();
 
     /* FIXME: Init code goes here */
+    InitAliases();
     CreateRootHelper();
     CreateRootContext();
     LoadHelpers();
@@ -129,7 +131,7 @@ wmain(
             {
                 index++;
                 ConPuts(StdOut, L"\nThe -a option is not implemented yet\n");
-//                aliasfile = argv[index];
+                pszAliasFileName = argv[index];
             }
             else
             {
@@ -161,7 +163,7 @@ wmain(
             if ((index + 1) < argc)
             {
                 index++;
-                pszFileName = argv[index];
+                pszScriptFileName = argv[index];
             }
             else
             {
@@ -196,7 +198,7 @@ wmain(
         }
         else
         {
-            if (pszFileName != NULL)
+            if (pszScriptFileName != NULL)
             {
                 ConResPuts(StdOut, IDS_APP_USAGE);
                 dwError = ERROR_INVALID_SYNTAX;
@@ -217,6 +219,14 @@ wmain(
         }
     }
 
+    /* Run the alias file */
+    if (pszAliasFileName != NULL)
+    {
+        dwError = RunScript(pszAliasFileName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
     /* Set a context */
     if (pszContext)
     {
@@ -226,9 +236,9 @@ wmain(
     }
 
     /* Run a script, the command line instruction or the interactive interpeter */
-    if (pszFileName != NULL)
+    if (pszScriptFileName != NULL)
     {
-        dwError = RunScript(pszFileName);
+        dwError = RunScript(pszScriptFileName);
     }
     else if (pszCommand != NULL)
     {
@@ -249,6 +259,7 @@ done:
 
     CleanupContext();
     UnloadHelpers();
+    DestroyAliases();
 
     return (dwError == ERROR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

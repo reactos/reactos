@@ -3,6 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 spec2def(netsh.exe netsh.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    alias.c
     context.c
     help.c
     helper.c

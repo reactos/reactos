@@ -15,6 +15,7 @@ BEGIN
     IDS_OPEN_FAILED      "The file %ls could not be openend.\n"
     IDS_THIS_COMMANDS    "\nCommands in this context:\n"
     IDS_CONTEXT_COMMANDS "\nCommands in the %s-context:\n"
+    IDS_ALIAS_NOT_FOUND  "The following alias was not found: %s.\n"
 END
 
 STRINGTABLE
@@ -51,6 +52,12 @@ BEGIN
     IDS_HLP_COMMIT         "Commits changes made while in offline mode.\n"
     IDS_HLP_COMMIT_EX      "\nUsage: %1!s!\n\n        Commits changes to the running configuration that were made while in\n\
         offline mode. No action is taken for this command while in online\n        mode.\n"
+    IDS_HLP_ALIAS           "Adds an alias.\n"
+    IDS_HLP_ALIAS_EX        "\nUsage : %1!s! [alias-name] [string1 string 2 ...]\n\n        If no arguments are specified, all aliases will be displayed.\n\
+        If alias-name is specified, then the equivalent string for it\n        will be displayed (if found).\n\
+        If one or more strings are specified, then alias-name is set to\n        these strings.\n"
+    IDS_HLP_UNALIAS         "Deletes an alias.\n"
+    IDS_HLP_UNALIAS_EX      "\nUsage : %1!s! alias-name\n\n        Deletes alias alias-name.\n"
 
     IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
     IDS_HLP_ADD_HELPER_EX  "\nUsage: %1!s! <dll file name>\n\n        Installs the specified helper DLL in netsh.\n"
@@ -64,6 +71,8 @@ BEGIN
     IDS_HLP_SET_MODE       "Sets the current mode to online or offline.\n"
     IDS_HLP_SET_MODE_EX    "\nUsage: %1!s! [mode=]{online|offline}\n\n        Sets the current mode to online or offline.\n"
 
+    IDS_HLP_SHOW_ALIAS     "Lists all defined aliases.\n"
+    IDS_HLP_SHOW_ALIAS_EX  "\nUsage: %1!s!\n\n        Lists all defined aliases.\n"
     IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers.\n"
     IDS_HLP_SHOW_HELPER_EX "\nUsage: %1!s!\n\n        Lists all the top-level helpers.\n"
     IDS_HLP_SHOW_MODE      "Shows the current mode.\n"
@@ -79,4 +88,5 @@ STRINGTABLE
 BEGIN
     ERROR_INVALID_SYNTAX   "The syntax supplied for this command is not valid. Check help for the correct syntax.\n"
     ERROR_CMD_NOT_FOUND    "The following command was not found: %1!s!.\n"
+    ERROR_OKAY             "Ok.\n"
 END

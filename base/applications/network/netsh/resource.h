@@ -14,6 +14,7 @@
 #define IDS_OPEN_FAILED          102
 #define IDS_THIS_COMMANDS        103
 #define IDS_CONTEXT_COMMANDS     104
+#define IDS_ALIAS_NOT_FOUND      105
 
 #define IDS_HELP_HEADER          200
 #define IDS_HELP_FOOTER          201
@@ -41,6 +42,10 @@
 #define IDS_HLP_ABORT_EX         319
 #define IDS_HLP_COMMIT           320
 #define IDS_HLP_COMMIT_EX        321
+#define IDS_HLP_ALIAS            322
+#define IDS_HLP_ALIAS_EX         323
+#define IDS_HLP_UNALIAS          324
+#define IDS_HLP_UNALIAS_EX       325
 
 #define IDS_HLP_ADD_HELPER       340
 #define IDS_HLP_ADD_HELPER_EX    341
@@ -50,10 +55,12 @@
 #define IDS_HLP_SET_MACHINE_EX   345
 #define IDS_HLP_SET_MODE         346
 #define IDS_HLP_SET_MODE_EX      347
-#define IDS_HLP_SHOW_HELPER      348
-#define IDS_HLP_SHOW_HELPER_EX   349
-#define IDS_HLP_SHOW_MODE        350
-#define IDS_HLP_SHOW_MODE_EX     351
+#define IDS_HLP_SHOW_ALIAS       348
+#define IDS_HLP_SHOW_ALIAS_EX    349
+#define IDS_HLP_SHOW_HELPER      350
+#define IDS_HLP_SHOW_HELPER_EX   351
+#define IDS_HLP_SHOW_MODE        352
+#define IDS_HLP_SHOW_MODE_EX     353
 
 #define IDS_HLP_GROUP_ADD        360
 #define IDS_HLP_GROUP_DELETE     361

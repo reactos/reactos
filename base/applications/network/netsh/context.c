@@ -816,6 +816,7 @@ CreateRootContext(VOID)
     AddContextCommand(pRootContext, L"..",      UpCommand,      IDS_HLP_UP,      IDS_HLP_UP_EX, 0);
     AddContextCommand(pRootContext, L"?",       NULL,           IDS_HLP_HELP,    IDS_HLP_HELP_EX, 0);
     AddContextCommand(pRootContext, L"abort",   AbortCommand,   IDS_HLP_ABORT,   IDS_HLP_ABORT_EX, 0);
+    AddContextCommand(pRootContext, L"alias",   AliasCommand,   IDS_HLP_ALIAS,   IDS_HLP_ALIAS_EX, 0);
     AddContextCommand(pRootContext, L"bye",     ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
     AddContextCommand(pRootContext, L"commit",  CommitCommand,  IDS_HLP_COMMIT,  IDS_HLP_COMMIT_EX, 0);
     AddContextCommand(pRootContext, L"dump",    DumpCommand,    IDS_HLP_DUMP,    IDS_HLP_DUMP_EX, 0);
@@ -827,6 +828,7 @@ CreateRootContext(VOID)
     AddContextCommand(pRootContext, L"popd",    PopdCommand,    IDS_HLP_POPD,    IDS_HLP_POPD_EX, 0);
     AddContextCommand(pRootContext, L"pushd",   PushdCommand,   IDS_HLP_PUSHD,   IDS_HLP_PUSHD_EX, 0);
     AddContextCommand(pRootContext, L"quit",    ExitCommand,    IDS_HLP_EXIT,    IDS_HLP_EXIT_EX, 0);
+    AddContextCommand(pRootContext, L"unalias", UnaliasCommand, IDS_HLP_UNALIAS, IDS_HLP_UNALIAS_EX, 0);
 
     pGroup = AddCommandGroup(pRootContext, L"add", IDS_HLP_GROUP_ADD, 0);
     if (pGroup)
@@ -850,6 +852,7 @@ CreateRootContext(VOID)
     pGroup = AddCommandGroup(pRootContext, L"show", IDS_HLP_GROUP_SHOW, 0);
     if (pGroup)
     {
+        AddGroupCommand(pGroup, L"alias",  ShowAliasCommand,  IDS_HLP_SHOW_ALIAS,  IDS_HLP_SHOW_ALIAS_EX, 0);
         AddGroupCommand(pGroup, L"helper", ShowHelperCommand, IDS_HLP_SHOW_HELPER, IDS_HLP_SHOW_HELPER_EX, 0);
         AddGroupCommand(pGroup, L"mode",   ShowModeCommand,   IDS_HLP_SHOW_MODE,   IDS_HLP_SHOW_MODE_EX, 0);
     }
