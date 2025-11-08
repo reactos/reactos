@@ -211,7 +211,7 @@ InterpretCommand(
                         if (dwError == ERROR_SHOW_USAGE)
                         {
                             PrintCommandHelp(pTempContext, pGroup, pCommand);
-                            dwError == ERROR_SUPPRESS_OUTPUT;
+                            dwError = ERROR_SUPPRESS_OUTPUT;
                         }
                     }
                     else
