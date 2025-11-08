@@ -10,6 +10,10 @@ add_library(usbehci MODULE
     guid.c
     usbehci.rc)
 
+target_compile_definitions(usbehci
+    # HACK: Disabled until USB Stack is reinvestigated.
+    PRIVATE NO_KERNEL_LIST_ENTRY_CHECKS)
+
 set_module_type(usbehci kernelmodedriver)
 add_importlibs(usbehci usbport usbd hal ntoskrnl)
 add_pch(usbehci usbehci.h SOURCE)
