@@ -947,6 +947,7 @@ RegisterContext(
     {
         pContext->pfnCommitFn = pChildContext->pfnCommitFn;
         pContext->pfnDumpFn = pChildContext->pfnDumpFn;
+        pContext->pfnConnectFn = pChildContext->pfnConnectFn;
         pContext->ulPriority = (pChildContext->dwFlags & CMD_FLAG_PRIORITY) ?
                                pChildContext->ulPriority : DEFAULT_CONTEXT_PRIORITY;
 

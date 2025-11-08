@@ -115,6 +115,7 @@ typedef struct _CONTEXT_ENTRY
     ULONG ulPriority;
     PNS_CONTEXT_COMMIT_FN pfnCommitFn;
     PNS_CONTEXT_DUMP_FN pfnDumpFn;
+    PNS_CONTEXT_CONNECT_FN pfnConnectFn;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;

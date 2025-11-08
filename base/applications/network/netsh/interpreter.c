@@ -276,6 +276,8 @@ InterpretCommand(
                 {
                     DPRINT("Set current context\n");
                     pCurrentContext = pTempSubContext;
+                    if (pCurrentContext->pfnConnectFn)
+                        dwError = pCurrentContext->pfnConnectFn(pszMachine);
                     State = STATE_DONE;
                     break;
                 }
