@@ -1,0 +1,25 @@
+#if !defined(_HDA_CONTROLLER_H_)
+#define _HDA_CONTROLLER_H_
+
+typedef struct _HDA_ASYNC_CONTEXT {
+	PPDO_DEVICE_DATA devData;
+	ULONG Count;
+	PHDAUDIO_CODEC_TRANSFER CodecTransfer;
+	PHDAUDIO_TRANSFER_COMPLETE_CALLBACK Callback;
+	PVOID CallbackContext;
+} HDA_ASYNC_CONTEXT, * PHDA_ASYNC_CONTEXT;
+
+WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(HDA_ASYNC_CONTEXT, HDAAsyncWorkItem_GetContext);
+
+//New
+NTSTATUS GetHDACapabilities(PFDO_CONTEXT fdoCtx);
+NTSTATUS StartHDAController(PFDO_CONTEXT fdoCtx);
+NTSTATUS StopHDAController(PFDO_CONTEXT fdoCtx);
+NTSTATUS SendHDACmds(PFDO_CONTEXT fdoCtx, ULONG count, PHDAUDIO_CODEC_TRANSFER CodecTransfer);
+NTSTATUS RunSingleHDACmd(PFDO_CONTEXT fdoCtx, ULONG val, ULONG* res);
+
+//Old
+BOOLEAN hda_interrupt(WDFINTERRUPT Interrupt, ULONG MessageID);
+void hda_dpc(WDFINTERRUPT Interrupt, WDFOBJECT AssociatedObject);
+
+#endif
