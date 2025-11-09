@@ -1,101 +1,112 @@
-;/*++
-;
-;Copyright (c) CoolStar.  All rights reserved.
-;
-;Module Name:
-;    sklhdaudbus.inf
-;
-;Abstract:
-;    INF file for installing the SKL HD Aud Bus Driver
-;
-;
-;--*/
-
 [Version]
-Signature   = "$WINDOWS NT$"
-Class       = System
-ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318}
-Provider    = CoolStar
-DriverVer   = 8/15/2022,1.0.0
-CatalogFile = sklhdaudbus.cat
-PnpLockdown = 1
-
-[DestinationDirs]
-DefaultDestDir = 12
-
-; ================= Class section =====================
-
-[SourceDisksNames]
-1 = %DiskId1%,,,""
+Signature = "$Windows NT$"
+Class = System
+ClassGuid = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider = ReactOS
+DriverVer=11/19/2010,6.1.7601.17514
+PnPLockdown=1
 
 [SourceDisksFiles]
-sklhdaudbus.sys  = 1,,
+hdaudbus.sys = 3426
+
+[DestinationDirs]
+DefaultDestDir = 12 ; windows\system32\drivers
+
+[Manufacturer]
+Microsoft = GenericMfg
+
+[ControlFlags]
+ExcludeFromSelect = PCI\CC_0403
+;ExcludeFromSelect = PCI\VEN_8086&DEV_2668
+
+[GenericMfg]
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\CC_0403
+%HDAudio.DeviceDesc% = HDAudio_Device, PCI\VEN_8086&DEV_2668
+
+[HDAudio_Device.NT]
+CopyFiles = Drivers_Dir
+AddReg = HDAudio.AddReg
+
+[Drivers_Dir]
+hdaudbus.sys,,,0x0100
+
+[HDAudio.AddReg]
+HKR,Settings,DeviceDescription_FUNC_01,,%AUDIOFG%
+HKR,Settings,DeviceDescription_FUNC_02,,%MODEMFG%
+HKR,Settings,DeviceDescription_Default,,%UNKNOWNFG%
+HKR,Settings,DeviceLocation,,%HDAudioBUS%
+HKR,Interrupt Management,,0x00000010
+HKR,Interrupt Management\MessageSignaledInterruptProperties,,0x00000010
+HKR,Interrupt Management\MessageSignaledInterruptProperties,MSISupported,0x00010001,1
+
+;-------------- Service installation
+[HDAudio_Device.NT.Services]
+AddService = HDAudBus, 0x00000002, HDAudio_Service_Inst
+
+; -------------- HDAudio driver install sections
+[HDAudio_Service_Inst]
+DisplayName    = %HDAudBus.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\HDAudBus.sys
+LoadOrderGroup = Extended Base
 
 [SignatureAttributes]
-sklhdaudbus.sys=SignatureAttributes.DRM
+hdaudbus.sys=SignatureAttributes.DRM
 
 [SignatureAttributes.DRM]
 DRMLevel=1300
 
-[SignatureAttributes.PETrust]
-PETrust=true
-
-;*****************************************
-; SklHDAudBus  Install Section
-;*****************************************
-
-[Manufacturer]
-%StdMfg%=Standard,NT$ARCH$
-
-; Decorated model section take precedence over undecorated 
-; ones on XP and later.
-[Standard.NT$ARCH$]
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_9D70&CC_0401 ;Intel Skylake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_9D71&CC_0401 ;Intel Kaby Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_5A98&CC_0401 ;Intel Apollo Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_3198&CC_0401 ;Intel Gemini Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_02C8&CC_0401 ;Intel Comet Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_4DC8&CC_0401 ;Intel Jasper Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_A0C8&CC_0401 ;Intel Tiger Lake
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_51C8&CC_0401 ;Intel Alder Lake-P
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_51CC&CC_0401 ;Intel Alder Lake-M
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_54C8&CC_0401 ;Intel Alder Lake-N
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_51CA&CC_0401 ;Intel Raptor Lake-P
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_7E28&CC_0401 ;Intel Meteor Lake-P
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_7728&CC_0401 ;Intel Arrow Lake-P
-%SklHDAudBus.DeviceDesc%=SklHDAudBus_Device, PCI\VEN_8086&DEV_A828&CC_0401 ;Intel Lunar Lake-P
-
-[SklHDAudBus_Device.NT]
-CopyFiles=Drivers_Dir
-
-[SklHDAudBus_Device.NT.HW]
-AddReg=SklHDAudBus_AddReg
-Include=pci.inf
-Needs=PciD3ColdSupported.HW
-
-[Drivers_Dir]
-sklhdaudbus.sys
-
-[SklHDAudBus_AddReg]
-; Set to 1 to connect the first interrupt resource found, 0 to leave disconnected
-HKR,Settings,"ConnectInterrupt",0x00010001,0
-
-;-------------- Service installation
-[SklHDAudBus_Device.NT.Services]
-AddService = SklHDAudBus,%SPSVCINST_ASSOCSERVICE%, SklHDAudBus_Service_Inst
-
-; -------------- SklHDAudBus driver install sections
-[SklHDAudBus_Service_Inst]
-DisplayName    = %SklHDAudBus.SVCDESC%
-ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
-StartType      = 3               ; SERVICE_DEMAND_START 
-ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %12%\sklhdaudbus.sys
-LoadOrderGroup = Base
-
 [Strings]
-SPSVCINST_ASSOCSERVICE= 0x00000002
-StdMfg                 = "CoolStar"
-DiskId1                = "CoolStar HD Audio Installation Disk #1"
-SklHDAudBus.DeviceDesc = "CoolStar HD Audio"
-SklHDAudBus.SVCDESC    = "CoolStar HD Audio Service"
+DiskId1 = "ReactOS UAA Bus Driver for High Definition Audio. Installation Disk #1"
+HDAudio.DeviceDesc = "High Definition Audio Controller"
+HDAudBus.SVCDESC = "ReactOS UAA Bus Driver for High Definition Audio"
+AUDIOFG = "Audio Device on High Definition Audio Bus"
+MODEMFG = "Modem Device on High Definition Audio Bus"
+UNKNOWNFG = "Unknown Device on High Definition Audio Bus"
+HDAudioBUS = "Internal High Definition Audio Bus"
+
+[Strings.0415]
+DiskId1 = "Sterownik magistrali ReactOS UAA dla High Definition Audio. Dysk instalacyjny #1"
+HDAudio.DeviceDesc = "Kontroler High Definition Audio"
+HDAudBus.SVCDESC = "Sterownik magistrali ReactOS UAA dla High Definition Audio."
+AUDIOFG = "Urządzenie audio na High Definition Audio Bus"
+MODEMFG = "Urządzenie telefoniczne na High Definition Audio Bus"
+UNKNOWNFG = "Nieznane urządzenie na High Definition Audio Bus"
+HDAudioBUS = "Wewnętrzna magistrala High Definition Audio"
+
+[Strings.0418]
+DiskId1 = "Modúl-pilot ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
+HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
+HDAudBus.SVCDESC = "Modúl-pilot ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
+AUDIOFG = "Dispozitiv audio pe magistrala audio de înaltă definiție"
+MODEMFG = "Dispozitiv modem pe magistrala audio de înaltă definiție"
+UNKNOWNFG = "Dispozitiv nespecificat pe magistrala audio de înaltă definiție"
+HDAudioBUS = "Magistrală internă audio de înaltă definiție"
+
+[Strings.041f]
+DiskId1 = "Yüksek Tanımlı Ses İçin ReactOS UAA Veri Yolu Sürücüsü. 1. Kurulum Diski"
+HDAudio.DeviceDesc = "Yüksek Tanımlı Ses Denetleyicisi"
+HDAudBus.SVCDESC = "Yüksek Tanımlı Ses için ReactOS UAA Veri Yolu Sürücüsü"
+AUDIOFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Ses Aygıtı"
+MODEMFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Çevirge Aygıtı"
+UNKNOWNFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Bilinmeyen Aygıt"
+HDAudioBUS = "İç Yüksek Tanımlı Ses Veri Yolu"
+
+[Strings.0804]
+HDAudio.DeviceDesc = "高保真音频控制器"
+HDAudBus.SVCDESC = "ReactOS 高保真音频 UAA 总线驱动"
+AUDIOFG = "HDA 总线上的音频设备"
+MODEMFG = "HDA 总线上的 Modem 设备"
+UNKNOWNFG = "HDA 总线上的未知设备"
+HDAudioBUS = "内部 HDA 总线"
+
+[Strings.0a]
+DiskId1 = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad. Disco de instalación 1"
+HDAudio.DeviceDesc = "Controlador de Audio de Alta Fidelidad"
+HDAudBus.SVCDESC = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad"
+AUDIOFG = "Dispositivo de Audio en el Bus de Audio de Alta Fidelidad"
+MODEMFG = "Dispositivo Modem en el Bus de Audio de Alta Fidelidad"
+UNKNOWNFG = "Dispositivo desconocido en el Bus de Audio de Alta Fidelidad"
+HDAudioBUS = "Bus Interno de Audio de Alta Fidelidad"
