@@ -476,7 +476,9 @@ NetrServerStatisticsGet(
     DWORD Options,
     LPSTAT_SERVER_0 *InfoStruct)
 {
-    PSTAT_SERVER_0 pStatBuffer;
+    SYSTEM_TIMEOFDAY_INFORMATION TimeOfDayInfo;
+    PSTAT_SERVER_0 pStatBuffer = NULL;
+    NTSTATUS Status;
 
     TRACE("NetrServerStatisticsGet(%p %p %lu 0x%lx %p)\n",
           ServerName, Service, Level, Options, InfoStruct);
@@ -492,6 +494,20 @@ NetrServerStatisticsGet(
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ZeroMemory(pStatBuffer, sizeof(STAT_SERVER_0));
+
+    /* Query the boot time */
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &TimeOfDayInfo,
+                                      sizeof(TimeOfDayInfo),
+                                      NULL);
+    if (NT_SUCCESS(Status))
+    {
+        ULONG Seconds = 0;
+        if (RtlTimeToSecondsSince1970(&TimeOfDayInfo.BootTime, &Seconds))
+        {
+            pStatBuffer->sts0_start = Seconds;
+        }
+    }
 
     // FIXME: Return the actual statistcs data!
 

@@ -1012,7 +1012,9 @@ NetrWorkstationStatisticsGet(
     unsigned long Options,
     LPSTAT_WORKSTATION_0 *Buffer)
 {
-    PSTAT_WORKSTATION_0 pStatBuffer;
+    SYSTEM_TIMEOFDAY_INFORMATION TimeOfDayInfo;
+    PSTAT_WORKSTATION_0 pStatBuffer = NULL;
+    NTSTATUS Status;
 
     TRACE("NetrWorkstationStatisticsGet(%p %p %lu 0x%lx %p)\n",
           ServerName, ServiceName, Level, Options, Buffer);
@@ -1028,6 +1030,21 @@ NetrWorkstationStatisticsGet(
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ZeroMemory(pStatBuffer, sizeof(STAT_WORKSTATION_0));
+
+    /* Query the boot time */
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &TimeOfDayInfo,
+                                      sizeof(TimeOfDayInfo),
+                                      NULL);
+    if (NT_SUCCESS(Status))
+    {
+        ULONG Seconds = 0;
+        if (RtlTimeToSecondsSince1970(&TimeOfDayInfo.BootTime, &Seconds))
+        {
+            pStatBuffer->StatisticsStartTime.u.HighPart = 0;
+            pStatBuffer->StatisticsStartTime.u.LowPart = Seconds;
+        }
+    }
 
     // FIXME: Return the actual statistcs data!
 
