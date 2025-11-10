@@ -110,6 +110,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    USHORT AdapterNumber;
    USHORT DisplayNumber;
    ULONG NumberOfSecondaryDisplays;
+   VIDEO_PORT_CONFIG_INFO ConfigInfo;
    CHAR POINTER_ALIGNMENT MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
