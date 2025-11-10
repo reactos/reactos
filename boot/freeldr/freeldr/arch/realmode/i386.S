@@ -120,11 +120,7 @@ exit_to_protected:
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr gdtptr
-#else
-    lgdt gdtptr
-#endif
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Enable Protected Mode */
     mov eax, cr0
