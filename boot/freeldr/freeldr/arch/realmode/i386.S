@@ -95,11 +95,7 @@ inrmode:
     mov sp, word ptr ds:[stack16]
 
     /* Load IDTR with real mode value */
-#ifdef _USE_ML
-    lidt fword ptr rmode_idtptr
-#else
-    lidt rmode_idtptr
-#endif
+    lidt lXdtPrefix ds:[rmode_idtptr]
 
     sti /* These are ok now */
 
