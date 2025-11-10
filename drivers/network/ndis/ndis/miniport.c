@@ -2368,7 +2368,7 @@ NdisIRemoveDevice(
 
         KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
-        (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
+        Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler(Adapter);
     }
 
     if (Adapter->NdisMiniportBlock.EthDB)
