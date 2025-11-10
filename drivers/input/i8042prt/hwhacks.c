@@ -41,6 +41,20 @@ const HARDWARE_TABLE i8042HardwareTable[] =
 
     { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 6000                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 6400                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 640m                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 700m                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 710m                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 9300                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron E1505                  "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron E1705                  "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C400                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C600                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C610                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C640                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C800                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude C810                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D400                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D410                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D430                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D530                   "}}, FL_INITHACK },
@@ -54,7 +68,10 @@ const HARDWARE_TABLE i8042HardwareTable[] =
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E4300                  "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E4310                  "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E6400                  "}}, FL_INITHACK },
-
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E6430                  "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E6530                  "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron z600                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Inspiron 1150                   "}}, FL_INITHACK },
 };
 
 
