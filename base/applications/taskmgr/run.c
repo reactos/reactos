@@ -10,6 +10,33 @@
 
 void TaskManager_OnFileNew(void)
 {
+     if(GetAsyncKeyState(VK_LCONTROL) || GetAsyncKeyState(VK_RCONTROL)){
+        STARTUPINFOW siInfo = {0};
+        ZeroMemory(&siInfo, sizeof(siInfo));
+        siInfo.cb = sizeof(siInfo);
+        PROCESS_INFORMATION piInfo = {0};
+        ZeroMemory(&piInfo, sizeof(piInfo));
+        WCHAR app[] = L"cmd.exe";
+        BOOL result = CreateProcessW(NULL, 
+            app, 
+            NULL, 
+            NULL, FALSE, 
+            CREATE_NEW_CONSOLE, NULL, 
+            NULL, &siInfo, 
+            &piInfo);
+        if(result == FALSE){
+            // so we can't create the process through CreateProcessW
+            // lets do the definition of insanity and try to create it 
+            // through ShellExecute! that will surely work (right? right???????)
+            ShellExecuteW(NULL, L"runas", 
+                L"cmd.exe", NULL, NULL, 
+                SW_SHOW);
+        } else {
+            CloseHandle(piInfo.hThread);
+            CloseHandle(piInfo.hProcess);
+        }
+        return;
+    }
     HMODULE     hShell32;
     RUNFILEDLG  RunFileDlg;
     WCHAR       szTitle[40];
