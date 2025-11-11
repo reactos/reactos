@@ -210,8 +210,8 @@ gdt:
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(17)                      /* Limit */
-    .long gdt - FREELDR_BASE           /* Base Address */
+    .word HEX(17)                       /* Limit */
+    .long OFF(gdt) - FREELDR_BASE       /* Base Address */
 
     /* Force 8-byte alignment */
     .align 8
