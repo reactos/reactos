@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #pragma once
+#endif // __REACTOS__
 
 typedef struct nsWineURI nsWineURI;
 
@@ -57,6 +59,8 @@ typedef struct {
     REQUEST_METHOD request_method;
     struct list response_headers;
     struct list request_headers;
+
+    nsChannelBSC *binding;
 } nsChannel;
 
 typedef struct {
