@@ -95,11 +95,7 @@ inrmode:
     mov sp, word ptr ds:[stack16]
 
     /* Load IDTR with real mode value */
-#ifdef _USE_ML
-    lidt fword ptr rmode_idtptr
-#else
-    lidt rmode_idtptr
-#endif
+    lidt lXdtPrefix ds:[rmode_idtptr]
 
     sti /* These are ok now */
 
@@ -120,11 +116,7 @@ exit_to_protected:
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr gdtptr
-#else
-    lgdt gdtptr
-#endif
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Enable Protected Mode */
     mov eax, cr0
