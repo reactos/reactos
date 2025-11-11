@@ -7,7 +7,7 @@
 @ stdcall CryptCATAdminAcquireContext2(ptr ptr wstr ptr long)
 @ stdcall CryptCATAdminAddCatalog(long wstr wstr long)
 @ stdcall CryptCATAdminCalcHashFromFileHandle(long ptr ptr long)
-#@ stub CryptCATAdminCalcHashFromFileHandle2
+@ stdcall CryptCATAdminCalcHashFromFileHandle2(ptr ptr ptr ptr long)
 @ stdcall CryptCATAdminEnumCatalogFromHash(long ptr long long ptr)
 @ stub CryptCATAdminPauseServiceForBackup
 @ stdcall CryptCATAdminReleaseCatalogContext(long long long)
@@ -34,10 +34,10 @@
 @ stdcall CryptCATGetMemberInfo(ptr wstr)
 @ stub CryptCATHandleFromStore
 @ stdcall CryptCATOpen(wstr long long long long)
-@ stub CryptCATPersistStore
-@ stub CryptCATPutAttrInfo
-@ stub CryptCATPutCatAttrInfo
-@ stub CryptCATPutMemberInfo
+@ stdcall CryptCATPersistStore(ptr)
+@ stdcall CryptCATPutAttrInfo(ptr ptr wstr long long ptr)
+@ stdcall CryptCATPutCatAttrInfo(ptr wstr long long ptr)
+@ stdcall CryptCATPutMemberInfo(ptr wstr wstr ptr long long ptr)
 @ stub CryptCATStoreFromHandle
 @ stub CryptCATVerifyMember
 @ stdcall CryptSIPCreateIndirectData(ptr ptr ptr)
@@ -94,7 +94,7 @@
 @ stub WTHelperCheckCertUsage
 @ stub WTHelperGetAgencyInfo
 @ stdcall WTHelperGetFileHandle(ptr)
-@ stub WTHelperGetFileHash
+#@ stub WTHelperGetFileHash
 @ stdcall WTHelperGetFileName(ptr)
 @ stdcall WTHelperGetKnownUsages(long ptr)
 @ stdcall WTHelperGetProvCertFromChain(ptr long)
@@ -142,7 +142,7 @@
 @ stdcall WinVerifyTrust(long ptr ptr)
 @ stdcall WinVerifyTrustEx(long ptr ptr)
 @ stdcall WintrustAddActionID(ptr long ptr)
-@ stdcall WintrustAddDefaultForUsage(ptr ptr)
+@ stdcall WintrustAddDefaultForUsage(str ptr)
 @ stdcall WintrustCertificateTrust(ptr)
 @ stub WintrustGetDefaultForUsage
 @ stdcall WintrustGetRegPolicyFlags(ptr)
