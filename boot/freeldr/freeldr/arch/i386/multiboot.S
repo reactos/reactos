@@ -33,7 +33,10 @@
  * multiboot kernels above 1MB. So we let GRUB load us
  * there and then relocate ourself to FREELDR_BASE.
  */
-#define INITIAL_BASE HEX(200000)
+#define INITIAL_BASE        TEMPCODE_BASE
+
+/* The address that we want to execute FreeLoader */
+#define DESTINATION_BASE    FREELDR_BASE
 
 
 #ifdef _M_IX86
@@ -156,16 +159,19 @@ mb2:
     inc dh
 
 mb3:
+    /* Adjust the gdt table address */
+    add dword ptr [(gdtptr + 2) + INITIAL_BASE - FREELDR_BASE], DESTINATION_BASE
+
     /* Relocate itself to lower address */
     mov esi, INITIAL_BASE
-    mov edi, FREELDR_BASE
+    mov edi, DESTINATION_BASE
     mov ecx, offset __bss_start__ - FREELDR_BASE
     rep movsb
 
     /* Load segment registers for real-address mode */
-    mov edi, offset gdtptr
+    mov edi, offset gdtptr + DESTINATION_BASE - FREELDR_BASE
     lgdt lXdtPrefix [rdi]
-    mov edi, offset idtptr
+    mov edi, offset idtptr + DESTINATION_BASE - FREELDR_BASE
     lidt lXdtPrefix [rdi]
 
     mov ax, HEX(10)
@@ -176,7 +182,9 @@ mb3:
     mov ss, ax
 
     /* Jump to relocated code */
-    ljmp HEX(08), mb4
+    push HEX(08)
+    push offset mb4 + DESTINATION_BASE - FREELDR_BASE
+    retf
 
 mbfail:
     int 3
@@ -190,7 +198,7 @@ mb4:
     mov cr0, rax
 
     /* Jump to real entry point */
-    ljmp16 FREELDR_BASE / 16, 0
+    ljmp16 DESTINATION_BASE / 16, 0
 
 
     /* Force 8-byte alignment */
@@ -202,8 +210,8 @@ gdt:
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(17)       /* Limit */
-    .long gdt           /* Base Address */
+    .word HEX(17)                      /* Limit */
+    .long gdt - FREELDR_BASE           /* Base Address */
 
     /* Force 8-byte alignment */
     .align 8
