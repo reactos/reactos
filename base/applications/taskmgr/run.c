@@ -62,6 +62,7 @@ void TaskManager_OnFileNew(void)
         }
         return;
     }
+
     /* Load language strings from resource file */
     LoadStringW(hInst, IDS_CREATENEWTASK, szTitle, _countof(szTitle));
     LoadStringW(hInst, IDS_CREATENEWTASK_DESC, szText, _countof(szText));
