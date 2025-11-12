@@ -18,8 +18,7 @@ void TaskManager_OnFileNew(void)
     /* If CTRL is held, start the user's command-line shell */
     if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
-        STARTUPINFOW siInfo = {0};
-        siInfo.cb = sizeof(siInfo);
+        STARTUPINFOW si = { sizeof(si) };
         PROCESS_INFORMATION piInfo = {0};
         WCHAR szComSpec[MAX_PATH];
         DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", szComSpec, _countof(szComSpec));
