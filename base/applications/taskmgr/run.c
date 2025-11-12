@@ -22,8 +22,8 @@ void TaskManager_OnFileNew(void)
         siInfo.cb = sizeof(siInfo);
         PROCESS_INFORMATION piInfo = {0};
         WCHAR szComSpec[MAX_PATH];
-        DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", application, 256);
-        if(envarRes == 0)
+        DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", szComSpec, _countof(szComSpec));
+        if (envarRes == 0)
         {
             /* Couldn't get the environment variable, default to cmd.exe */
             wcscpy(szComSpec, L"cmd.exe");
