@@ -12,7 +12,7 @@ void TaskManager_OnFileNew(void)
 {
     // if ctrl is held, create cmd.exe 
     if((GetAsyncKeyState(VK_LCONTROL) & 0x8000) 
-        || (GetAsyncKeyState(VK_LCONTROL) & 0x8000)){
+        || (GetAsyncKeyState(VK_RCONTROL) & 0x8000)){
         STARTUPINFOW siInfo = {0};
         ZeroMemory(&siInfo, sizeof(siInfo));
         siInfo.cb = sizeof(siInfo);
