@@ -10,7 +10,6 @@
 
 void TaskManager_OnFileNew(void)
 {
-    
     HMODULE     hShell32;
     RUNFILEDLG  RunFileDlg;
     WCHAR       szTitle[40];
