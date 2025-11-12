@@ -18,22 +18,25 @@ void TaskManager_OnFileNew(void)
         siInfo.cb = sizeof(siInfo);
         PROCESS_INFORMATION piInfo = {0};
         ZeroMemory(&piInfo, sizeof(piInfo));
-        WCHAR app[] = L"cmd.exe";
+        WCHAR application[256];
+        DWORD envarRes = GetEnvironmentVariableW(L"COMSPEC", application, 256);
+        if(envarRes == 0)
+        {
+            // couldn't get the environment variable, default to cmd.exe
+            // application has a buffer size of 256, it should fit without issues
+            wcscpy(application, L"cmd.exe");
+        }
         BOOL result = CreateProcessW(NULL, 
-            app, 
-            NULL, 
-            NULL, FALSE, 
-            CREATE_NEW_CONSOLE, NULL, 
-            NULL, &siInfo, 
-            &piInfo);
-        if(result == FALSE){
-            // so we can't create the process through CreateProcessW
-            // lets do the definition of insanity and try to create it 
-            // through ShellExecute! that will surely work (right? right???????)
-            ShellExecuteW(NULL, L"runas", 
-                L"cmd.exe", NULL, NULL, 
-                SW_SHOW);
-        } else {
+                                     application, 
+                                     NULL, 
+                                     NULL, 
+                                     FALSE, 
+                                     CREATE_NEW_CONSOLE, 
+                                     NULL, 
+                                     NULL, &siInfo, 
+                                     &piInfo);
+        if(result == TRUE)
+        {
             CloseHandle(piInfo.hThread);
             CloseHandle(piInfo.hProcess);
         }
