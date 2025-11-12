@@ -37,11 +37,8 @@ void TaskManager_OnFileNew(void)
                                      NULL, 
                                      NULL, &siInfo, 
                                      &piInfo);
-        if (result)
+        if (!result)
         {
-            CloseHandle(piInfo.hThread);
-            CloseHandle(piInfo.hProcess);
-        } else {
             /* Couldn't create cmd.exe from ComSpec value, try again with cmd.exe */
             WCHAR appCmd[] = L"cmd.exe";
             result = CreateProcessW(NULL, 
@@ -53,11 +50,12 @@ void TaskManager_OnFileNew(void)
                                      NULL, 
                                      NULL, &siInfo, 
                                      &piInfo);
-            if(result == TRUE)
-            {
-                CloseHandle(piInfo.hThread);
-                CloseHandle(piInfo.hProcess);
-            }
+        }
+
+        if (result)
+        {
+            CloseHandle(piInfo.hThread);
+            CloseHandle(piInfo.hProcess);
         }
         return;
     }
