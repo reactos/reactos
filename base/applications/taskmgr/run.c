@@ -24,7 +24,7 @@ void TaskManager_OnFileNew(void)
         PROCESS_INFORMATION piInfo = {0};
         ZeroMemory(&piInfo, sizeof(piInfo));
         WCHAR application[256];
-        DWORD envarRes = GetEnvironmentVariableW(L"COMSPEC", application, 256);
+        DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", application, 256);
         if(envarRes == 0)
         {
             // couldn't get the environment variable, default to cmd.exe
