@@ -38,7 +38,7 @@ void TaskManager_OnFileNew(void)
                                      NULL, 
                                      NULL, &siInfo, 
                                      &piInfo);
-        if(result == TRUE)
+        if (result)
         {
             CloseHandle(piInfo.hThread);
             CloseHandle(piInfo.hProcess);
