@@ -160,7 +160,8 @@ mb2:
 
 mb3:
     /* Adjust the gdt table address */
-    add dword ptr [(gdtptr + 2) + INITIAL_BASE - FREELDR_BASE], DESTINATION_BASE
+    mov eax, offset (gdtptr + 2) + INITIAL_BASE - FREELDR_BASE
+    add dword ptr [rax], DESTINATION_BASE
 
     /* Relocate itself to lower address */
     mov esi, INITIAL_BASE
@@ -182,8 +183,10 @@ mb3:
     mov ss, ax
 
     /* Jump to relocated code */
-    push HEX(08)
-    push offset mb4 + DESTINATION_BASE - FREELDR_BASE
+    mov eax, HEX(08)
+    mov ebx, offset mb4 + DESTINATION_BASE - FREELDR_BASE
+    push rax
+    push rbx
     retf
 
 mbfail:
