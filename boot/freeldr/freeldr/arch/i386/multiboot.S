@@ -183,7 +183,8 @@ mb3:
 
     /* Jump to relocated code */
     push HEX(08)
-    push offset mb4 + DESTINATION_BASE - FREELDR_BASE
+    mov eax, offset mb4 + DESTINATION_BASE - FREELDR_BASE
+    push rax
     retf
 
 mbfail:
