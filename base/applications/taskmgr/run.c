@@ -10,6 +10,11 @@
 
 void TaskManager_OnFileNew(void)
 {
+    
+    HMODULE     hShell32;
+    RUNFILEDLG  RunFileDlg;
+    WCHAR       szTitle[40];
+    WCHAR       szText[256];
     // if ctrl is held, create cmd.exe 
     if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
@@ -42,11 +47,6 @@ void TaskManager_OnFileNew(void)
         }
         return;
     }
-    HMODULE     hShell32;
-    RUNFILEDLG  RunFileDlg;
-    WCHAR       szTitle[40];
-    WCHAR       szText[256];
-
     /* Load language strings from resource file */
     LoadStringW(hInst, IDS_CREATENEWTASK, szTitle, _countof(szTitle));
     LoadStringW(hInst, IDS_CREATENEWTASK_DESC, szText, _countof(szText));
