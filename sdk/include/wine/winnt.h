@@ -162,3 +162,19 @@ typedef struct _XSTATE
 #define ReadAcquire(x) ReadAcquire((volatile long*)(x))
 #define WriteRelease(x, y) WriteRelease((volatile long*)(x), (y))
 #endif
+
+#ifndef __WINE_WINNT_EXCEPTION_REGISTRATION_RECORD
+#define __WINE_WINNT_EXCEPTION_REGISTRATION_RECORD
+struct _EXCEPTION_REGISTRATION_RECORD;
+
+typedef DWORD (CDECL *PEXCEPTION_HANDLER)(PEXCEPTION_RECORD,struct _EXCEPTION_REGISTRATION_RECORD*,
+                                          PCONTEXT,struct _EXCEPTION_REGISTRATION_RECORD **);
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Prev; // This is 'Next' in MS' headers
+  PEXCEPTION_HANDLER       Handler;
+} EXCEPTION_REGISTRATION_RECORD;
+#endif // __WINE_WINNT_EXCEPTION_REGISTRATION_RECORD
+
+#define HEAP_SHARED           0x04000000
