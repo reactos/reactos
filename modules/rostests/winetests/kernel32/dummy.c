@@ -1,7 +1,5 @@
 /*
- * Resources for kernel test suite.
- *
- * Copyright 2008 Alexandre Julliard
+ * Copyright 2019 Fabian Maurer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,12 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
+#if 0
+#pragma makedep testdll
+#endif
 
-1 MENU LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+#include <windows.h>
+
+static HINSTANCE instance;
+
+BOOL WINAPI DllMain(HINSTANCE instance_new, DWORD reason, LPVOID reserved)
 {
-    MENUITEM "foo", 1
+     switch (reason)
+    {
+        case DLL_PROCESS_ATTACH:
+            instance = instance_new;
+            break;
+    }
+
+    return TRUE;
 }
 
-/* @makedep: wine_test.manifest */
-124 24 wine_test.manifest
+void WINAPI get_path(char *buffer, int buffer_size)
+{
+    GetModuleFileNameA(instance, buffer, buffer_size);
+}
