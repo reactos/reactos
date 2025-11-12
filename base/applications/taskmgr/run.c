@@ -25,9 +25,8 @@ void TaskManager_OnFileNew(void)
         DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", application, 256);
         if(envarRes == 0)
         {
-            // couldn't get the environment variable, default to cmd.exe
-            // application has a buffer size of 256, it should fit without issues
-            wcscpy(application, L"cmd.exe");
+            /* Couldn't get the environment variable, default to cmd.exe */
+            wcscpy(szComSpec, L"cmd.exe");
         }
         BOOL result = CreateProcessW(NULL, 
                                      application, 
