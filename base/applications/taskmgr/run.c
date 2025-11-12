@@ -19,7 +19,7 @@ void TaskManager_OnFileNew(void)
     if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
         STARTUPINFOW si = { sizeof(si) };
-        PROCESS_INFORMATION piInfo = {0};
+        PROCESS_INFORMATION pi = {0};
         WCHAR szComSpec[MAX_PATH];
         DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", szComSpec, _countof(szComSpec));
         if (envarRes == 0)
@@ -34,8 +34,8 @@ void TaskManager_OnFileNew(void)
                                      FALSE, 
                                      CREATE_NEW_CONSOLE, 
                                      NULL, 
-                                     NULL, &siInfo, 
-                                     &piInfo);
+                                     NULL, &si, 
+                                     &pi);
         if (!result)
         {
             /* Couldn't create cmd.exe from ComSpec value, try again with cmd.exe */
@@ -47,14 +47,14 @@ void TaskManager_OnFileNew(void)
                                      FALSE, 
                                      CREATE_NEW_CONSOLE, 
                                      NULL, 
-                                     NULL, &siInfo, 
-                                     &piInfo);
+                                     NULL, &si, 
+                                     &pi);
         }
 
         if (result)
         {
-            CloseHandle(piInfo.hThread);
-            CloseHandle(piInfo.hProcess);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
         }
         return;
     }
