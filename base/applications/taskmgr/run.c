@@ -29,7 +29,7 @@ void TaskManager_OnFileNew(void)
             wcscpy(szComSpec, L"cmd.exe");
         }
         BOOL result = CreateProcessW(NULL, 
-                                     application, 
+                                     szComSpec, 
                                      NULL, 
                                      NULL, 
                                      FALSE, 
