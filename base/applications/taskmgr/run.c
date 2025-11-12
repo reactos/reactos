@@ -14,7 +14,8 @@ void TaskManager_OnFileNew(void)
     RUNFILEDLG  RunFileDlg;
     WCHAR       szTitle[40];
     WCHAR       szText[256];
-    // if ctrl is held, create cmd.exe 
+
+    /* If CTRL is held, start the user's command-line shell */
     if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
         STARTUPINFOW siInfo = {0};
