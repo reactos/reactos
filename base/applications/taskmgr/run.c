@@ -21,7 +21,6 @@ void TaskManager_OnFileNew(void)
         STARTUPINFOW siInfo = {0};
         siInfo.cb = sizeof(siInfo);
         PROCESS_INFORMATION piInfo = {0};
-        ZeroMemory(&piInfo, sizeof(piInfo));
         WCHAR application[256];
         DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", application, 256);
         if(envarRes == 0)
