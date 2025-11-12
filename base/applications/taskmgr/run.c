@@ -19,7 +19,6 @@ void TaskManager_OnFileNew(void)
     if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
         STARTUPINFOW siInfo = {0};
-        ZeroMemory(&siInfo, sizeof(siInfo));
         siInfo.cb = sizeof(siInfo);
         PROCESS_INFORMATION piInfo = {0};
         ZeroMemory(&piInfo, sizeof(piInfo));
