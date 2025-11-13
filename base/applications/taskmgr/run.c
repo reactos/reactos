@@ -38,7 +38,7 @@ void TaskManager_OnFileNew(void)
                                      &pi);
         if (!result)
         {
-            /* Couldn't create cmd.exe from ComSpec value, try again with cmd.exe */
+            /* Couldn't create user chosen shell from ComSpec value, try again with cmd.exe */
             WCHAR appCmd[] = L"cmd.exe";
             result = CreateProcessW(NULL, 
                                      appCmd, 
