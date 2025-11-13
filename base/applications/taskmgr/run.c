@@ -21,34 +21,34 @@ void TaskManager_OnFileNew(void)
         STARTUPINFOW si = { sizeof(si) };
         PROCESS_INFORMATION pi = {0};
         WCHAR szComSpec[MAX_PATH];
+        WCHAR fallbackCmd[] = L"cmd.exe";
         DWORD envarRes = GetEnvironmentVariableW(L"ComSpec", szComSpec, _countof(szComSpec));
         if (envarRes == 0)
         {
             /* Couldn't get the environment variable, default to cmd.exe */
-            wcscpy(szComSpec, L"cmd.exe");
+            wcscpy(szComSpec, fallbackCmd);
         }
-        BOOL result = CreateProcessW(NULL, 
-                                     szComSpec, 
-                                     NULL, 
-                                     NULL, 
-                                     FALSE, 
-                                     CREATE_NEW_CONSOLE, 
-                                     NULL, 
-                                     NULL, &si, 
-                                     &pi);
+        BOOL result = CreateProcessW(NULL,
+                                     szComSpec,
+                                     NULL,
+                                     NULL,
+                                     FALSE,
+                                     CREATE_NEW_CONSOLE,
+                                     NULL,
+                                     NULL,
+                                     &si, &pi);
         if (!result)
         {
-            /* Couldn't create user chosen shell from ComSpec value, try again with cmd.exe */
-            WCHAR appCmd[] = L"cmd.exe";
-            result = CreateProcessW(NULL, 
-                                     appCmd, 
-                                     NULL, 
-                                     NULL, 
-                                     FALSE, 
-                                     CREATE_NEW_CONSOLE, 
-                                     NULL, 
-                                     NULL, &si, 
-                                     &pi);
+            /* Couldn't create user-chosen shell from ComSpec value, try again with cmd.exe */
+            result = CreateProcessW(NULL,
+                                    fallbackCmd,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    CREATE_NEW_CONSOLE,
+                                    NULL,
+                                    NULL,
+                                    &si, &pi);
         }
 
         if (result)
