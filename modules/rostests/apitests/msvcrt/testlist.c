@@ -4,6 +4,8 @@
 
 extern void func__finite(void);
 extern void func__isnan(void);
+extern void func__mbsnbcat(void);
+extern void func__mbsncat(void);
 extern void func__mbsncmp(void);
 extern void func__mbsstr(void);
 extern void func__snprintf(void);
@@ -60,6 +62,8 @@ const struct test winetest_testlist[] =
 {
     { "_finite", func__finite },
     { "_isnan", func__isnan },
+    { "_mbsnbcat", func__mbsnbcat },
+    { "_mbsncat", func__mbsncat },
     { "_mbsncmp", func__mbsncmp },
     { "_mbsstr", func__mbsstr },
     { "_snprintf", func__snprintf },

@@ -1,5 +1,7 @@
 
 list(APPEND SOURCE_CRTDLL
+    ../crt/_mbsnbcat.c
+    ../crt/_mbsncat.c
     ../crt/_mbsncmp.c
     ../crt/_mbsstr.c
     ../crt/setjmp.c
