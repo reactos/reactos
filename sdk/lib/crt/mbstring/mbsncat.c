@@ -60,6 +60,10 @@ unsigned char *_mbsncat (unsigned char *dst, const unsigned char *src, size_t n)
 unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n)
 {
     MSVCRT_pthreadmbcinfo mbcinfo = get_mbcinfo();
+    unsigned char *s;
+
+    /* replace TRACE with ERR for debug output */
+    TRACE("Src %s\n", wine_dbgstr_an((const char*)src, n));
 
     if (!MSVCRT_CHECK_PMT(dst && src))
         return NULL;
@@ -87,5 +91,8 @@ unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n
         *dst = '\0';
         return res;
     }
-    return u_strncat(dst, src, n); /* ASCII CP */
+    s = u_strncat(dst, src, n); /* ASCII CP */
+    /* replace TRACE with ERR for debug output */
+    TRACE("Dst %s\n", wine_dbgstr_an((const char*)dst, _mbslen(dst)));
+    return s;
 }
