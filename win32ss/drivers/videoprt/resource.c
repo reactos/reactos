@@ -209,14 +209,22 @@ IntVideoPortReleaseResources(
     // An empty CM_RESOURCE_LIST
     UCHAR EmptyResourceList[FIELD_OFFSET(CM_RESOURCE_LIST, List)] = {0};
 
-    Status = IoReportResourceForDetection(
-                DeviceExtension->DriverObject,
-                NULL, 0, /* Driver List */
-                DeviceExtension->PhysicalDeviceObject,
-                (PCM_RESOURCE_LIST)EmptyResourceList,
-                sizeof(EmptyResourceList),
-                &ConflictDetected);
-
+    if (DeviceExtension->IsLegacyDevice)
+    {
+        Status = IoReportResourceForDetection(
+                    DeviceExtension->DriverObject,
+                    NULL, 0, /* Driver List */
+                    DeviceExtension->PhysicalDeviceObject,
+                    (PCM_RESOURCE_LIST)EmptyResourceList,
+                    sizeof(EmptyResourceList),
+                    &ConflictDetected);
+    }
+    else
+    {
+        //TODO: See Comment in VideoPortVerifyAccessRanges
+        ConflictDetected = FALSE;
+        Status = NO_ERROR;
+    }
     if (!NT_SUCCESS(Status))
     {
         ERR_(VIDEOPRT,
@@ -998,14 +1006,27 @@ VideoPortVerifyAccessRanges(
             PartialDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
     }
 
-    /* Try to acquire all resource ranges */
-    Status = IoReportResourceForDetection(
-                DeviceExtension->DriverObject,
-                NULL, 0, /* Driver List */
-                DeviceExtension->PhysicalDeviceObject,
-                ResourceList, ResourceListSize,
-                &ConflictDetected);
-
+    if (DeviceExtension->IsLegacyDevice)
+    {
+        /* Try to acquire all resource ranges */
+        Status = IoReportResourceForDetection(
+                    DeviceExtension->DriverObject,
+                    NULL, 0, /* Driver List */
+                    DeviceExtension->PhysicalDeviceObject,
+                    ResourceList, ResourceListSize,
+                    &ConflictDetected);
+    }
+    else
+    {
+        /*
+         * FIXME: There needs to be more than just totally ignoring here.
+         * It's clear MS videoprt doesn't call this on the PNP device ranges,
+         * (e.g) https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-ioreportresourcefordetection
+         * But there still needs to be handling of VGA ranges being occupied or not.
+         */
+        ConflictDetected = FALSE;
+        Status = NO_ERROR;
+    }
     ExFreePoolWithTag(ResourceList, TAG_VIDEO_PORT);
 
     /* If VgaSave driver is conflicting and we don't explicitely want

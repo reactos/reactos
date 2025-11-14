@@ -462,6 +462,11 @@ IntVideoPortFindAdapter(
     if (DeviceExtension->PhysicalDeviceObject == NULL)
     {
         LegacyDetection = TRUE;
+        DeviceExtension->IsLegacyDevice = TRUE;
+    }
+    else
+    {
+        DeviceExtension->IsLegacyDevice = FALSE;
     }
 
     if (LegacyDetection)
