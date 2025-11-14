@@ -36,7 +36,27 @@ static void test_LoadStringW(void)
     HINSTANCE hInst = GetModuleHandleA(NULL);
     WCHAR copiedstringw[128], returnedstringw[128], *resourcepointer = NULL;
     char copiedstring[128], returnedstring[128];
-    int length1, length2, retvalue;
+    int length1, length2, retvalue, i;
+    static struct
+    {
+        int id;
+        const WCHAR *string;
+    } string_table_tests[] =
+    {
+        { 2,   L"Error" },
+        { 13,  L"&More Windows..." },
+        { 800, L"OK" },
+        { 801, L"Cancel" },
+        { 802, L"&Abort" },
+        { 803, L"&Retry" },
+        { 804, L"&Ignore" },
+        { 805, L"&Yes" },
+        { 806, L"&No" },
+        { 807, L"&Close" },
+        { 808, L"Help" },
+        { 809, L"&Try Again" },
+        { 810, L"&Continue" },
+    };
 
     /* Check that the string which is returned by LoadStringW matches
        the string at the pointer returned by LoadStringW when called with buflen = 0 */
@@ -51,10 +71,10 @@ static void test_LoadStringW(void)
         return;
     }
     length2 = LoadStringW(hInst, 2, returnedstringw, ARRAY_SIZE(returnedstringw)); /* get resource string */
-    ok(length2 > 0, "LoadStringW failed to load resource 2, ret %d, err %d\n", length2, GetLastError());
+    ok(length2 > 0, "LoadStringW failed to load resource 2, ret %d, err %ld\n", length2, GetLastError());
     ok(length1 == length2, "LoadStringW returned different values dependent on buflen. ret1 %d, ret2 %d\n",
         length1, length2);
-    ok(length1 > 0 && resourcepointer != NULL, "LoadStringW failed to get pointer to resource 2, ret %d, err %d\n",
+    ok(length1 > 0 && resourcepointer != NULL, "LoadStringW failed to get pointer to resource 2, ret %d, err %ld\n",
         length1, GetLastError());
 
     /* Copy the resource since it is not '\0' terminated, and add '\0' to the end */
@@ -75,6 +95,67 @@ static void test_LoadStringW(void)
     /* check again, with a different buflen value, that calling LoadStringW with buffer = NULL returns zero */
     retvalue = LoadStringW(hInst, 2, NULL, 128);
     ok(!retvalue, "LoadStringW returned a non-zero value when called with buffer = NULL, retvalue = %d\n", retvalue);
+
+    /* Test builtin string table in user32. */
+    if ((PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID())) != LANG_ENGLISH)
+            || (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH))
+    {
+        skip("Skip for Non-English system.\n");
+        return;
+    }
+    else
+    {
+        hInst = GetModuleHandleW(L"user32.dll");
+        ok(!!hInst, "Can't get module %#lx.\n", GetLastError());
+
+        for (i = 0; i < ARRAYSIZE(string_table_tests); i++)
+        {
+            winetest_push_context("Test %u", i);
+
+            length1 = LoadStringW(hInst, string_table_tests[i].id, returnedstringw, ARRAY_SIZE(returnedstringw));
+            ok(length1 == wcslen(string_table_tests[i].string), "Got wrong length %d.\n", length1);
+            ok(!wcscmp(returnedstringw, string_table_tests[i].string), "Got wrong string %s.\n",
+                    debugstr_w(returnedstringw));
+
+            winetest_pop_context();
+        }
+    }
+
+    /* Test missing resource. */
+    SetLastError(0xdeadbeef);
+    memset(returnedstringw, 0xcc, sizeof(returnedstringw));
+    length1 = LoadStringW(hInst, 0xdeadbeef, returnedstringw, ARRAY_SIZE(returnedstringw));
+    ok(!length1, "got %d.\n", length1);
+    ok(GetLastError() == ERROR_RESOURCE_NAME_NOT_FOUND || broken(GetLastError() == ERROR_MUI_FILE_NOT_FOUND) /* Win7 */,
+            "got %lu.\n", GetLastError());
+    ok(!returnedstringw[0], "got %#x.\n", returnedstringw[0]);
+    ok(returnedstringw[1] == 0xcccc, "got %#x.\n", returnedstringw[1]);
+
+    SetLastError(0xdeadbeef);
+    memset(returnedstringw, 0xcc, sizeof(returnedstringw));
+    length1 = LoadStringW(hInst, 0xdeadbeef, returnedstringw, 0);
+    ok(!length1, "got %d.\n", length1);
+    ok(GetLastError() == ERROR_RESOURCE_NAME_NOT_FOUND || broken(GetLastError() == ERROR_MUI_FILE_NOT_LOADED) /* Win7 */,
+            "got %lu.\n", GetLastError());
+    ok(returnedstringw[0] == 0xcccc, "got %#x.\n", returnedstringw[1]);
+
+    SetLastError(0xdeadbeef);
+    memset(returnedstringw, 0xcc, sizeof(returnedstringw));
+    length1 = LoadStringW(hInst, 0xdeadbeef, returnedstringw, 1);
+    ok(!length1, "got %d.\n", length1);
+    ok(GetLastError() == ERROR_RESOURCE_NAME_NOT_FOUND || broken(GetLastError() == ERROR_MUI_FILE_NOT_LOADED) /* Win7 */,
+            "got %lu.\n", GetLastError());
+    ok(!returnedstringw[0], "got %#x.\n", returnedstringw[0]);
+    ok(returnedstringw[1] == 0xcccc, "got %#x.\n", returnedstringw[1]);
+
+    /* Test short buffer */
+    SetLastError(0xdeadbeef);
+    memset(returnedstringw, 0xcc, sizeof(returnedstringw));
+    length1 = LoadStringW(hInst, 2, returnedstringw, 1); /* get resource string */
+    ok(!length1, "got %d.\n", length1);
+    ok(GetLastError() == 0xdeadbeef, "got %lu.\n", GetLastError());
+    ok(!returnedstringw[0], "got %#x.\n", returnedstringw[0]);
+    ok(returnedstringw[1] == 0xcccc, "got %#x.\n", returnedstringw[1]);
 }
 
 static void test_LoadStringA (void)
@@ -109,22 +190,22 @@ static void test_LoadStringA (void)
     }
 
     ret = LoadStringA(hInst, 1, buf, sizeof(buf) );
-    ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret > 0, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
     ret2 = LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf));
-    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret2 == ret, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
     ret2 = LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf));
-    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret2 == ret, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 65534, buf, sizeof(buf) );
-    ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret > 0, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
     ret2 = LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf));
-    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret2 == ret, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
     ret2 = LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf));
-    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ok( ret2 == ret, "LoadString failed: ret %d err %ld\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 0, buf, 0);
     ok( ret == -1 || broken(ret == 0),
-        "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
+        "LoadStringA did not return -1 when called with buflen = 0, got %d, err %ld\n",
         ret, GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -132,7 +213,7 @@ static void test_LoadStringA (void)
     ret = LoadStringA(hInst, 1, buf, 1);
     ok( !ret, "LoadString returned %d\n", ret);
     ok( buf[0] == 0, "buf[0] = %c (%x)\n", buf[0], buf[0]);
-    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %d\n", GetLastError());
+    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %ld\n", GetLastError());
 }
 
 static void test_accel1(void)
@@ -172,11 +253,11 @@ static void test_accel1(void)
     ac[n++].fVirt = (SHORT) 0xffff;
 
     ac[n].cmd = 0xfff0;
-    ac[n].key = 0xffff;
+    ac[n].key = 'B';
     ac[n++].fVirt = (SHORT) 0xfff0;
 
     ac[n].cmd = 0xfff0;
-    ac[n].key = 0xffff;
+    ac[n].key = 'C';
     ac[n++].fVirt = 0x0000;
 
     ac[n].cmd = 0xfff0;
@@ -204,12 +285,12 @@ static void test_accel1(void)
 
     if (++n == r) goto done;
     ok( ac[n].cmd == 0xfff0, "cmd 2 not preserved got %x\n", ac[n].cmd);
-    ok( (ac[n].key & 0xff) == 0xff, "key 2 not preserved got %x\n", ac[n].key);
+    ok( ac[n].key == 'B', "key 2 not preserved got %x\n", ac[n].key);
     ok( ac[n].fVirt == 0x0070, "fVirt 2 wrong got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
     ok( ac[n].cmd == 0xfff0, "cmd 3 not preserved got %x\n", ac[n].cmd);
-    ok( (ac[n].key & 0xff) == 0xff, "key 3 not preserved got %x\n", ac[n].key);
+    ok( ac[n].key == 'C', "key 3 not preserved got %x\n", ac[n].key);
     ok( ac[n].fVirt == 0x0000, "fVirt 3 wrong got %x\n", ac[n].fVirt);
 
     if (++n == r) goto done;
@@ -348,7 +429,8 @@ static void test_PrivateExtractIcons(void) {
     ok(cIcons == ~0u, "got %u\n", cIcons);
 
     cIcons = pPrivateExtractIconsA("notepad.exe", 0, 16, 16, NULL, NULL, 1, 0);
-    ok(cIcons == 1 || broken(cIcons == 2) /* win2k */, "got %u\n", cIcons);
+    ok(cIcons == 1 || broken(cIcons == 4) /* win11 */ ||
+       broken(cIcons == 2) /* win2k */, "got %u\n", cIcons);
 
     ahIcon[0] = (HICON)0xdeadbeef;
     cIcons = pPrivateExtractIconsA("notepad.exe", 0, 16, 16, ahIcon, NULL, 1, 0);
@@ -410,7 +492,11 @@ static void test_LoadImage(void)
 START_TEST(resource)
 {
     init_function_pointers();
+#if !defined(__REACTOS__) || !defined(_M_AMD64)
     test_LoadStringA();
+#else
+    skip("LoadStringA test broken on amd64!\n");
+#endif
     test_LoadStringW();
     test_accel1();
     test_accel2();
