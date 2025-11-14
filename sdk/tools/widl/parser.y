@@ -2157,7 +2157,7 @@ static type_t *reg_typedefs( struct location where, decl_spec_t *decl_spec, decl
         type->attrs = attrs;
   }
 
-#ifdef __REACTOS__  /* r53187 / 5bf224e */
+#ifdef __REACTOS__ /* r53187 / 5bf224e */
   /* Append the SWITCHTYPE attribute to a non-encapsulated union if it does not already have it.  */
   if (type_get_type_detect_alias(type) == TYPE_UNION &&
       is_attr(attrs, ATTR_SWITCHTYPE) &&
