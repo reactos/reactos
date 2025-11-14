@@ -86,12 +86,41 @@ static void expand_pointer_table_if_necessary(PFULL_PTR_XLAT_TABLES pXlatTables,
 {
     if (RefId >= pXlatTables->RefIdToPointer.NumberOfEntries)
     {
+#ifdef __REACTOS__
+        void* ptrNew;
+        ptrNew = realloc(pXlatTables->RefIdToPointer.XlatTable, sizeof(void *) * RefId * 2);
+        if (!ptrNew)
+        {
+            ERR("Couldn't reallocate RefIdToPointer.XlatTable from %lu to %lu entries\n",
+                pXlatTables->RefIdToPointer.NumberOfEntries, RefId * 2);
+            free(pXlatTables->RefIdToPointer.XlatTable);
+        }
+        pXlatTables->RefIdToPointer.XlatTable = ptrNew;
+        if (ptrNew)
+        {
+            ptrNew = realloc(pXlatTables->RefIdToPointer.StateTable, RefId * 2);
+            if (!ptrNew)
+            {
+                ERR("Couldn't reallocate RefIdToPointer.StateTable from %lu to %lu entries\n",
+                    pXlatTables->RefIdToPointer.NumberOfEntries, RefId * 2);
+                free(pXlatTables->RefIdToPointer.StateTable);
+            }
+            pXlatTables->RefIdToPointer.StateTable = ptrNew;
+        }
+#else
         pXlatTables->RefIdToPointer.XlatTable =
             realloc(pXlatTables->RefIdToPointer.XlatTable, sizeof(void *) * RefId * 2);
         pXlatTables->RefIdToPointer.StateTable =
             realloc(pXlatTables->RefIdToPointer.StateTable, RefId * 2);
+#endif
         if (!pXlatTables->RefIdToPointer.XlatTable || !pXlatTables->RefIdToPointer.StateTable)
         {
+#ifdef __REACTOS__
+            free(pXlatTables->RefIdToPointer.XlatTable);
+            free(pXlatTables->RefIdToPointer.StateTable);
+            pXlatTables->RefIdToPointer.XlatTable = NULL;
+            pXlatTables->RefIdToPointer.StateTable = NULL;
+#endif
             pXlatTables->RefIdToPointer.NumberOfEntries = 0;
             return;
         }
