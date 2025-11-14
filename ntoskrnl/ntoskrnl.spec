@@ -362,7 +362,7 @@
 @ stdcall IoCheckShareAccess(long long ptr ptr long)
 @ stdcall IoCompleteRequest(ptr long)
 @ stdcall IoConnectInterrupt(ptr ptr ptr ptr long long long long long long long)
-@ stdcall -version=0x600+ IoConnectInterruptEx(ptr)
+@ stdcall IoConnectInterruptEx(ptr)
 @ stdcall IoCreateController(long)
 @ stdcall IoCreateDevice(ptr long ptr long long long ptr)
 @ stdcall IoCreateDisk(ptr ptr)
@@ -391,7 +391,7 @@
 @ extern IoDeviceHandlerObjectType
 @ extern IoDeviceObjectType
 @ stdcall IoDisconnectInterrupt(ptr)
-@ stdcall -version=0x600+ IoDisconnectInterruptEx(ptr)
+@ stdcall IoDisconnectInterruptEx(ptr)
 @ extern IoDriverObjectType
 @ stdcall IoEnqueueIrp(ptr)
 @ stdcall IoEnumerateDeviceObjectList(ptr ptr long ptr)
