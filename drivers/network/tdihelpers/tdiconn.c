@@ -1,14 +1,26 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/net/afd/afd/tdiconn.c
+ * FILE:             drivers/net/tdihelpers/tdiconn.c
  * PURPOSE:          Ancillary functions driver
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)
  * UPDATE HISTORY:
  * 20040708 Created
+ * 20251021 Moved to tdihelpers since it is used by 2 drivers (AFD, NETIO) now
  */
 
 #include <afd.h>
+
+#ifdef UNIMPLEMENTED
+#undef UNIMPLEMENTED
+#endif
+
+/* If you want to see the DPRINT() output in your debugger,
+ * remove the following line (or comment it out):
+ */
+#define NDEBUG 1
+
+#include <reactos/debug.h>
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {
@@ -38,7 +50,7 @@ UINT TaLengthOfAddress( PTA_ADDRESS Addr )
 
     AddrLen += 2 * sizeof( USHORT );
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n");
 
     return AddrLen;
 }
@@ -52,7 +64,7 @@ UINT TaLengthOfTransportAddress( PTRANSPORT_ADDRESS Addr )
 
     AddrLen += sizeof(ULONG);
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n", AddrLen);
 
     return AddrLen;
 }
@@ -66,7 +78,7 @@ UINT TaLengthOfTransportAddressByType(UINT AddressType)
 
     AddrLen += sizeof(ULONG) + 2 * sizeof(USHORT);
 
-    AFD_DbgPrint(MID_TRACE,("AddrLen %x\n", AddrLen));
+    DPRINT("AddrLen %x\n", AddrLen);
 
     return AddrLen;
 }
@@ -136,13 +148,13 @@ PTRANSPORT_ADDRESS TaBuildNullTransportAddress(UINT AddressType)
 NTSTATUS TdiBuildNullConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnInfo,
   ULONG Type )
-/*
- * FUNCTION: Builds a NULL TDI connection information structure
- * ARGUMENTS:
- *     ConnectionInfo = Address of buffer to place connection information
- *     Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
- * RETURNS:
- *     Status of operation
+/*!
+ * @brief Builds a NULL TDI connection information structure
+ *
+ * @param    ConnectionInfo = Address of buffer to place connection information
+ * @param    Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
+ *
+ * @return   Status of operation
  */
 {
     ULONG TdiAddressSize;
@@ -151,7 +163,7 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
     TdiAddressSize = TaLengthOfTransportAddressByType(Type);
     if (!TdiAddressSize)
     {
-        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
+        DPRINT("Invalid parameter\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -170,14 +182,14 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
 NTSTATUS TdiBuildNullConnectionInfo
 ( PTDI_CONNECTION_INFORMATION *ConnectionInfo,
   ULONG Type )
-/*
- * FUNCTION: Builds a NULL TDI connection information structure
- * ARGUMENTS:
- *     ConnectionInfo = Address of buffer pointer to allocate connection
- *                      information in
- *     Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
- * RETURNS:
- *     Status of operation
+/*!
+ * @brief Builds a NULL TDI connection information structure
+ *
+ * @param    ConnectionInfo = Address of buffer pointer to allocate connection
+ *                            information in
+ * @param    Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
+ *
+ * @return   Status of operation
  */
 {
     PTDI_CONNECTION_INFORMATION ConnInfo;
@@ -186,7 +198,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
     TdiAddressSize = TaLengthOfTransportAddressByType(Type);
     if (!TdiAddressSize) {
-        AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
+        DPRINT("Invalid parameter\n");
         *ConnectionInfo = NULL;
         return STATUS_INVALID_PARAMETER;
     }
