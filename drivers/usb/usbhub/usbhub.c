@@ -1958,7 +1958,7 @@ USBH_ProcessPortStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
     /*
      * Multiple port change bits can be set at once (e.g. enable + reset).
-     * Handle each independently
+     * Handle each independently.
      */
     if (PortStatusChange.PortEnableDisableChange)
     {

@@ -475,7 +475,7 @@ USBSTOR_SendCBWRequest(
     Context->cbw.DataTransferLength = Request->DataTransferLength;
     Context->cbw.Flags = ((UCHAR)Request->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) << 1;
 
-    // Per BOT spec, LUN is 4 bits; clamp just in case
+    // Per Bulk Only Transfer, LUN is 4 bits; clamp just in case
     Context->cbw.LUN = (UCHAR)(PDODeviceExtension->LUN & 0x0F);
     Context->cbw.CommandBlockLength = Request->CdbLength;
 
@@ -560,7 +560,7 @@ USBSTOR_HandleExecuteSCSI(
      *
      * TODO: There's actually a bigger bug here though,
      * while the above CAN HAPPPEN:
-     * Card Readers multiplex their card slots for example But we can deal with
+     * Card Readers multiplex their card slots for example, but we can deal with
      * that as we put more effort into fixing the USB stack.
      */
     if (SrbGetCdb(Request)->CDB10.LogicalUnitNumber != PDODeviceExtension->LUN)

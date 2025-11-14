@@ -421,12 +421,7 @@ FDO_HandlePnp(
             /* Delete the device object */
             IoDeleteDevice(DeviceObject);
 
-            /*
-             * The lower driver completes the IRP for removal:
-             * HACK: TODO:
-             * I'm not convinced this is actually what windows is doing.
-             * It's possible the issue is in the lower driver.
-             */
+            /* The lower driver completes the IRP for removal */
             return Status;
         }
         case IRP_MN_START_DEVICE:

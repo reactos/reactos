@@ -1398,7 +1398,7 @@ USBPORT_InitializeDevice(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
                     TransferedLen);
         }
 
-        /* Use the known bMaxPacketSize0 (was obtained prior to SetAddress). */
+        /* Use the known bMaxPacketSize0 (was obtained prior to SetAddress) */
         MaxPacketSize = DeviceHandle->DeviceDescriptor.bMaxPacketSize0;
 
         if (!(MaxPacketSize == 8 || MaxPacketSize == 16 ||
@@ -1409,7 +1409,7 @@ USBPORT_InitializeDevice(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
             goto ExitError;
         }
 
-        /* Mark USB2 hub flag when identifiable (bDeviceClass available in header). */
+        /* Mark USB2 hub flag when identifiable (bDeviceClass available in header) */
         if (DeviceHandle->DeviceSpeed == UsbHighSpeed &&
             DeviceHandle->DeviceDescriptor.bDeviceClass == USB_DEVICE_CLASS_HUB)
         {
