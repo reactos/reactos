@@ -2,6 +2,8 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func__mbsnbcat(void);
+extern void func__mbsncat(void);
 extern void func__mbsncmp(void);
 extern void func__mbsstr(void);
 extern void func__snprintf(void);
@@ -22,6 +24,8 @@ extern void func_wctomb(void);
 
 const struct test winetest_testlist[] =
 {
+    { "_mbsnbcat", func__mbsnbcat },
+    { "_mbsncat", func__mbsncat },
     { "_mbsncmp", func__mbsncmp },
     { "_mbsstr", func__mbsstr },
     { "_snprintf", func__snprintf },

@@ -10,6 +10,8 @@ list(APPEND SOURCE_CRT_TESTS
     ../crt/fpcontrol.c
     ../crt/_finite.c
     ../crt/_isnan.c
+    ../crt/_mbsnbcat.c
+    ../crt/_mbsncat.c
     ../crt/_mbsncmp.c
     ../crt/_mbsstr.c
     ../crt/_snprintf.c
