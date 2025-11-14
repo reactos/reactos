@@ -43,7 +43,7 @@ NdisQueryPciBusInterface(
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-                                       Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                                       Adapter->NdisMiniportBlock.NextDeviceObject,
                                        NULL,
                                        0,
                                        NULL,
@@ -75,7 +75,6 @@ NdisQueryPciBusInterface(
         Adapter->BusInterface = BusInterface;
     } else {
         ExFreePoolWithTag(BusInterface, NDIS_TAG);
-        Adapter->BusInterface = NULL;
     }
 
     return Status;
@@ -268,7 +267,6 @@ NdisReadPciSlotInformation(
   }
 
   /* Fall back to HAL functions ONLY if bus interface is not available */
-  NDIS_DbgPrint(MAX_TRACE, ("NdisReadPciSlotInformation: Using HAL functions\n"));
   return HalGetBusDataByOffset(PCIConfiguration,
                                Adapter->NdisMiniportBlock.BusNumber, Adapter->NdisMiniportBlock.SlotNumber,
                                Buffer, Offset, Length);
@@ -303,7 +301,6 @@ NdisWritePciSlotInformation(
   }
 
   /* Fall back to HAL functions ONLY if bus interface is not available */
-  NDIS_DbgPrint(MAX_TRACE, ("NdisWritePciSlotInformation: Using HAL functions\n"));
   return HalSetBusDataByOffset(PCIConfiguration,
                                Adapter->NdisMiniportBlock.BusNumber, Adapter->NdisMiniportBlock.SlotNumber,
                                Buffer, Offset, Length);

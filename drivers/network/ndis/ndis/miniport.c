@@ -2256,6 +2256,7 @@ NdisIPnPStopDevice(
 
         ExFreePoolWithTag(Adapter->BusInterface, NDIS_TAG);
         Adapter->BusInterface = NULL;
+        Adapter->BusInterfaceQueried = FALSE;
     }
 
   if (Adapter->NdisMiniportBlock.Resources)
