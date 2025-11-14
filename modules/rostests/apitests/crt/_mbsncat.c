@@ -143,7 +143,8 @@ VOID mbsncat_PerformTests(_In_ LPSTR fname, _In_opt_ PFN__mbsncat func)
     ok(!memcmp(dest, "dinosaurduck", sizeof("dinosaurduck")),
        "Expected the output buffer string to be \"dinosaurduck\", got '%s'\n", dest);
 
-    /* TODO: Add some distinguishing tests (_mbsncat vs. _mbsnbcat) for copying chars */
+    /* TODO: Add some distinguishing tests (_mbsncat vs. _mbsnbcat) for concatenating chars vs. bytes,
+     * should probably be done with actual multibyte-character strings. */
 }
 
 START_TEST(_mbsncat)
