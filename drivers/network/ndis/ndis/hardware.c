@@ -35,7 +35,7 @@ NdisQueryPciBusInterface(
         return STATUS_NOT_SUPPORTED;
     }
 
-    BusInterface = ExAllocatePoolWithTag(NonPagedPool, sizeof(BUS_INTERFACE_STANDARD), NDIS_TAG);
+    BusInterface = ExAllocatePoolWithTag(NonPagedPool, sizeof(*BusInterface), NDIS_TAG);
     if (BusInterface == NULL) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -58,7 +58,7 @@ NdisQueryPciBusInterface(
     IrpStack->MajorFunction = IRP_MJ_PNP;
     IrpStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IrpStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
-    IrpStack->Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
+    IrpStack->Parameters.QueryInterface.Size = sizeof(*BusInterface);
     IrpStack->Parameters.QueryInterface.Version = 1;
     IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterface;
     IrpStack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
@@ -293,13 +293,11 @@ NdisWritePciSlotInformation(
   Status = NdisQueryPciBusInterface(Adapter);
   if (NT_SUCCESS(Status) && Adapter->BusInterface != NULL) {
       ULONG Result;
-
       Result = Adapter->BusInterface->SetBusData(Adapter->BusInterface->Context,
                                                  PCI_WHICHSPACE_CONFIG,
                                                  Buffer,
                                                  Offset,
                                                  Length);
-
       NDIS_DbgPrint(MAX_TRACE, ("NdisWritePciSlotInformation: Using bus interface, wrote %u bytes\n", Result));
       return Result;
   }
