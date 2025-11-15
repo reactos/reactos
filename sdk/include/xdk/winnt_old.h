@@ -4579,8 +4579,7 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
 #elif defined (_M_ARM64)
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
-    //UNIMPLEMENTED;
-    return 0;
+    return (struct _TEB *)__getReg(18);
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
