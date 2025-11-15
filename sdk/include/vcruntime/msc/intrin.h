@@ -380,7 +380,7 @@ void _sgdt(void *Destination);
 #pragma intrinsic(__sev)
 #endif
 
-#if defined _M_ARM64
+#if defined(_M_ARM64)
 #pragma intrinsic(__getReg)
 #endif
 
