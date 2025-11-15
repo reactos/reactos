@@ -91,6 +91,14 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 /* Timeout in ms for sending to keyboard controller. */
 #define CONTROLLER_TIMEOUT                              250
 
+#include <pshpack1.h>
+typedef struct _PNP_DOCK_INFO
+{
+    ULONG DockLocationID;
+    ULONG SerialNumber;
+    USHORT Capabilities;
+} PNP_DOCK_INFO, *PPNP_DOCK_INFO;
+#include <poppack.h>
 
 VOID
 PcGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
@@ -186,6 +194,7 @@ DetectDockingStation(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
     PDOCKING_STATE_INFORMATION DockingState;
+    PPNP_DOCK_INFO DockInfo;
     ULONG Size, Result;
 
     Result = PnpBiosGetDockStationInformation(DiskReadBuffer);
@@ -217,8 +226,14 @@ DetectDockingStation(
     DockingState->ReturnCode = Result;
     if (Result == 0)
     {
-        /* FIXME: Add more device specific data */
-        ERR("FIXME: System docked\n");
+        DockInfo = (PPNP_DOCK_INFO)DiskReadBuffer;
+        DockingState->DockLocationID = DockInfo->DockLocationID;
+        DockingState->SerialNumber = DockInfo->SerialNumber;
+        DockingState->Capabilities = DockInfo->Capabilities;
+        TRACE("System docked\n");
+        TRACE("Location: 0x%08lx\n", DockInfo->DockLocationID);
+        TRACE("Serial: 0x%08lx\n", DockInfo->SerialNumber);
+        TRACE("Capabilities: 0x%04hx\n", DockInfo->Capabilities);
     }
 
     /* Create controller key */
