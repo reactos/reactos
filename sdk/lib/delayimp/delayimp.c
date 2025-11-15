@@ -11,26 +11,13 @@
 #include <winbase.h>
 #include <delayimp.h>
 
-/**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
+/**** Linker magic: provide default (NULL) pointers in separate
+ **** compilation units (pfnDliNotifyHook2.c and pfnDliFailureHook2.c),
+ **** so as to allow the user to override these ****/
 
-/* The actual items we use */
+/* The actual symbols we use */
 extern PfnDliHook __pfnDliNotifyHook2;
 extern PfnDliHook __pfnDliFailureHook2;
-
-#if !defined(__GNUC__)
-/* The fallback symbols */
-PfnDliHook __pfnDliNotifyHook2Default = NULL;
-PfnDliHook __pfnDliFailureHook2Default = NULL;
-
-/* Tell the linker to use the fallback symbols */
-#if defined (_M_IX86)
-#pragma comment(linker, "/alternatename:___pfnDliNotifyHook2=___pfnDliNotifyHook2Default")
-#pragma comment(linker, "/alternatename:___pfnDliFailureHook2=___pfnDliFailureHook2Default")
-#else
-#pragma comment(linker, "/alternatename:__pfnDliNotifyHook2=__pfnDliNotifyHook2Default")
-#pragma comment(linker, "/alternatename:__pfnDliFailureHook2=__pfnDliFailureHook2Default")
-#endif
-#endif
 
 
 /**** Helper functions to convert from RVA to address ****/
