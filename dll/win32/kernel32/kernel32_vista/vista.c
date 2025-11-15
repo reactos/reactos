@@ -743,3 +743,23 @@ SetThreadPreferredUILanguages(
     return FALSE;
 }
 
+/******************************************************************************
+ *	CompareStringOrdinal   (kernelbase.@)
+ */
+INT WINAPI DECLSPEC_HOTPATCH CompareStringOrdinalNT5( const WCHAR *str1, INT len1,
+                                                   const WCHAR *str2, INT len2, BOOL ignore_case )
+{
+    UINT32 min_len = len1 < len2 ? len1 : len2;
+    INT32 cmp = _wcsnicmp(str1, str2, min_len);
+
+    if (cmp < 0)
+        return -1;
+    else if (cmp > 0)
+        return 1;
+    else if (len1 < len2)
+        return -1;
+    else if (len1 > len2)
+        return 1;
+    else
+        return 0;
+}
