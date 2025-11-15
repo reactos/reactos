@@ -686,13 +686,11 @@ int open_typelib( const char *name )
             TRYOPEN( strmake( "%s/wine%s/%s", libdir, pe_dir, name ));
             TRYOPEN( strmake( "%s/wine/%s", libdir, name ));
         }
-#ifndef __REACTOS__
         for (i = 0; i < ARRAY_SIZE(default_dirs); i++)
         {
             if (i && !strcmp( default_dirs[i], default_dirs[0] )) continue;
             TRYOPEN( strmake( "%s%s/%s", default_dirs[i], pe_dir, name ));
         }
-#endif
     }
 #endif
 

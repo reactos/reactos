@@ -382,14 +382,6 @@ static inline char *make_temp_dir(void)
     char *name;
     const char *tmpdir = NULL;
 
-#ifdef __REACTOS__
-#ifdef _WIN32
-    if (!(tmpdir = getenv("TEMP"))) tmpdir = "temp";
-#else
-    if (!(tmpdir = getenv("TMPDIR"))) tmpdir = "/tmp";
-#endif
-#endif
-
     for (count = 0; count < 0x8000; count++)
     {
         if (tmpdir)
@@ -400,7 +392,11 @@ static inline char *make_temp_dir(void)
         value += 7777;
         if (errno == EACCES && !tmpdir)
         {
+#if defined(__REACTOS__) && defined(_WIN32)
+            if (!(tmpdir = getenv("TEMP"))) tmpdir = "temp";
+#else
             if (!(tmpdir = getenv("TMPDIR"))) tmpdir = "/tmp";
+#endif
         }
         free( name );
     }
