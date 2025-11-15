@@ -18,16 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
 #include "objbase.h"
 #include "wine/debug.h"
 #include "moniker.h"
@@ -38,8 +34,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 typedef struct AntiMonikerImpl{
     IMoniker IMoniker_iface;
     IROTData IROTData_iface;
-    LONG ref;
+    LONG refcount;
     IUnknown *pMarshal; /* custom marshaler */
+    DWORD count;
 } AntiMonikerImpl;
 
 static inline AntiMonikerImpl *impl_from_IMoniker(IMoniker *iface)
@@ -52,6 +49,22 @@ static inline AntiMonikerImpl *impl_from_IROTData(IROTData *iface)
     return CONTAINING_RECORD(iface, AntiMonikerImpl, IROTData_iface);
 }
 
+static AntiMonikerImpl *unsafe_impl_from_IMoniker(IMoniker *iface);
+
+BOOL is_anti_moniker(IMoniker *iface, DWORD *order)
+{
+    AntiMonikerImpl *moniker = unsafe_impl_from_IMoniker(iface);
+
+    if (!moniker)
+    {
+        *order = 0;
+        return FALSE;
+    }
+
+    *order = moniker->count;
+
+    return TRUE;
+}
 
 /*******************************************************************************
  *        AntiMoniker_QueryInterface
@@ -63,19 +76,19 @@ AntiMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 
     TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
-    /* Perform a sanity check on the parameters.*/
     if ( ppvObject==0 )
 	return E_INVALIDARG;
 
-    /* Initialize the return parameter */
     *ppvObject = 0;
 
-    /* Compare the riid with the interface IDs implemented by this object.*/
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IPersist, riid) ||
         IsEqualIID(&IID_IPersistStream, riid) ||
-        IsEqualIID(&IID_IMoniker, riid))
+        IsEqualIID(&IID_IMoniker, riid) ||
+        IsEqualGUID(&CLSID_AntiMoniker, riid))
+    {
         *ppvObject = iface;
+    }
     else if (IsEqualIID(&IID_IROTData, riid))
         *ppvObject = &This->IROTData_iface;
     else if (IsEqualIID(&IID_IMarshal, riid))
@@ -88,11 +101,9 @@ AntiMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
         return IUnknown_QueryInterface(This->pMarshal, riid, ppvObject);
     }
 
-    /* Check that we obtained an interface.*/
     if ((*ppvObject)==0)
         return E_NOINTERFACE;
 
-    /* always increase the reference count by one when it is successful */
     IMoniker_AddRef(iface);
 
     return S_OK;
@@ -101,37 +112,33 @@ AntiMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 /******************************************************************************
  *        AntiMoniker_AddRef
  ******************************************************************************/
-static ULONG WINAPI
-AntiMonikerImpl_AddRef(IMoniker* iface)
+static ULONG WINAPI AntiMonikerImpl_AddRef(IMoniker *iface)
 {
-    AntiMonikerImpl *This = impl_from_IMoniker(iface);
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+    ULONG refcount = InterlockedIncrement(&moniker->refcount);
 
-    TRACE("(%p)\n",This);
+    TRACE("%p, refcount %lu.\n", iface, refcount);
 
-    return InterlockedIncrement(&This->ref);
+    return refcount;
 }
 
 /******************************************************************************
  *        AntiMoniker_Release
  ******************************************************************************/
-static ULONG WINAPI
-AntiMonikerImpl_Release(IMoniker* iface)
+static ULONG WINAPI AntiMonikerImpl_Release(IMoniker *iface)
 {
-    AntiMonikerImpl *This = impl_from_IMoniker(iface);
-    ULONG ref;
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+    ULONG refcount = InterlockedDecrement(&moniker->refcount);
 
-    TRACE("(%p)\n",This);
+    TRACE("%p, refcount %lu.\n", iface, refcount);
 
-    ref = InterlockedDecrement(&This->ref);
-
-    /* destroy the object if there are no more references to it */
-    if (ref == 0)
+    if (!refcount)
     {
-        if (This->pMarshal) IUnknown_Release(This->pMarshal);
-        HeapFree(GetProcessHeap(),0,This);
+        if (moniker->pMarshal) IUnknown_Release(moniker->pMarshal);
+        free(moniker);
     }
 
-    return ref;
+    return refcount;
 }
 
 /******************************************************************************
@@ -168,30 +175,35 @@ AntiMonikerImpl_IsDirty(IMoniker* iface)
 /******************************************************************************
  *        AntiMoniker_Load
  ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_Load(IMoniker* iface,IStream* pStm)
+static HRESULT WINAPI AntiMonikerImpl_Load(IMoniker *iface, IStream *stream)
 {
-    DWORD constant=1,dwbuffer;
-    HRESULT res;
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+    DWORD count = 0;
+    HRESULT hr;
 
-    /* data read by this function is only a DWORD constant (must be 1) ! */
-    res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),NULL);
+    TRACE("%p, %p.\n", iface, stream);
 
-    if (SUCCEEDED(res)&& dwbuffer!=constant)
-        return E_FAIL;
+    if (FAILED(hr = IStream_Read(stream, &count, sizeof(count), NULL)))
+        return hr;
 
-    return res;
+    if (count > 0xfffff)
+        return E_INVALIDARG;
+
+    moniker->count = count;
+
+    return S_OK;
 }
 
 /******************************************************************************
  *        AntiMoniker_Save
  ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_Save(IMoniker* iface,IStream* pStm,BOOL fClearDirty)
+static HRESULT WINAPI AntiMonikerImpl_Save(IMoniker *iface, IStream *stream, BOOL clear_dirty)
 {
-    static const DWORD constant = 1;
-    /* data written by this function is only a DWORD constant set to 1 ! */
-    return IStream_Write(pStm,&constant,sizeof(constant),NULL);
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+
+    TRACE("%p, %p, %d.\n", iface, stream, clear_dirty);
+
+    return IStream_Write(stream, &moniker->count, sizeof(moniker->count), NULL);
 }
 
 /******************************************************************************
@@ -244,14 +256,11 @@ AntiMonikerImpl_BindToStorage(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLef
     return E_NOTIMPL;
 }
 
-/******************************************************************************
- *        AntiMoniker_Reduce
- ******************************************************************************/
 static HRESULT WINAPI
 AntiMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar,
                        IMoniker** ppmkToLeft, IMoniker** ppmkReduced)
 {
-    TRACE("(%p,%p,%d,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
+    TRACE("%p, %p, %ld, %p, %p.\n", iface, pbc, dwReduceHowFar, ppmkToLeft, ppmkReduced);
 
     if (ppmkReduced==NULL)
         return E_POINTER;
@@ -283,16 +292,12 @@ AntiMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
         return CreateGenericComposite(iface,pmkRight,ppmkComposite);
 }
 
-/******************************************************************************
- *        AntiMoniker_Enum
- ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoniker)
+static HRESULT WINAPI AntiMonikerImpl_Enum(IMoniker *iface, BOOL forward, IEnumMoniker **ppenumMoniker)
 {
-    TRACE("(%p,%d,%p)\n",iface,fForward,ppenumMoniker);
+    TRACE("%p, %d, %p.\n", iface, forward, ppenumMoniker);
 
     if (ppenumMoniker == NULL)
-        return E_POINTER;
+        return E_INVALIDARG;
 
     *ppenumMoniker = NULL;
 
@@ -302,33 +307,35 @@ AntiMonikerImpl_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoniker
 /******************************************************************************
  *        AntiMoniker_IsEqual
  ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
+static HRESULT WINAPI AntiMonikerImpl_IsEqual(IMoniker *iface, IMoniker *other)
 {
-    DWORD mkSys;
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface), *other_moniker;
 
-    TRACE("(%p,%p)\n",iface,pmkOtherMoniker);
+    TRACE("%p, %p.\n", iface, other);
 
-    if (pmkOtherMoniker==NULL)
+    if (!other)
+        return E_INVALIDARG;
+
+    other_moniker = unsafe_impl_from_IMoniker(other);
+    if (!other_moniker)
         return S_FALSE;
 
-    IMoniker_IsSystemMoniker(pmkOtherMoniker,&mkSys);
-
-    if (mkSys==MKSYS_ANTIMONIKER)
-        return S_OK;
-    else
-        return S_FALSE;
+    return moniker->count == other_moniker->count ? S_OK : S_FALSE;
 }
 
 /******************************************************************************
  *        AntiMoniker_Hash
  ******************************************************************************/
-static HRESULT WINAPI AntiMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
+static HRESULT WINAPI AntiMonikerImpl_Hash(IMoniker *iface, DWORD *hash)
 {
-    if (pdwHash==NULL)
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+
+    TRACE("%p, %p.\n", iface, hash);
+
+    if (!hash)
         return E_POINTER;
 
-    *pdwHash = 0x80000001;
+    *hash = 0x80000000 | moniker->count;
 
     return S_OK;
 }
@@ -391,41 +398,43 @@ AntiMonikerImpl_Inverse(IMoniker* iface,IMoniker** ppmk)
 /******************************************************************************
  *        AntiMoniker_CommonPrefixWith
  ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
+static HRESULT WINAPI AntiMonikerImpl_CommonPrefixWith(IMoniker *iface, IMoniker *other, IMoniker **prefix)
 {
-    DWORD mkSys;
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface), *other_moniker;
+    HRESULT hr;
 
-    IMoniker_IsSystemMoniker(pmkOther,&mkSys);
+    TRACE("%p, %p, %p.\n", iface, other, prefix);
 
-    if(mkSys==MKSYS_ANTIMONIKER){
+    other_moniker = unsafe_impl_from_IMoniker(other);
+    if (other_moniker)
+    {
+        if (moniker->count <= other_moniker->count)
+        {
+            *prefix = iface;
+            hr = moniker->count == other_moniker->count ? MK_S_US : MK_S_ME;
+        }
+        else
+        {
+            *prefix = other;
+            hr = MK_S_HIM;
+        }
 
-        IMoniker_AddRef(iface);
-
-        *ppmkPrefix=iface;
-
-        IMoniker_AddRef(iface);
-
-        return MK_S_US;
+        IMoniker_AddRef(*prefix);
+        return hr;
     }
-    else
-        return MonikerCommonPrefixWith(iface,pmkOther,ppmkPrefix);
+
+    return MonikerCommonPrefixWith(iface, other, prefix);
 }
 
-/******************************************************************************
- *        AntiMoniker_RelativePathTo
- ******************************************************************************/
-static HRESULT WINAPI
-AntiMonikerImpl_RelativePathTo(IMoniker* iface,IMoniker* pmOther, IMoniker** ppmkRelPath)
+static HRESULT WINAPI AntiMonikerImpl_RelativePathTo(IMoniker *iface, IMoniker *other, IMoniker **result)
 {
-    TRACE("(%p,%p,%p)\n",iface,pmOther,ppmkRelPath);
+    TRACE("%p, %p, %p.\n", iface, other, result);
 
-    if (ppmkRelPath==NULL)
-        return E_POINTER;
+    if (!other || !result)
+        return E_INVALIDARG;
 
-    IMoniker_AddRef(pmOther);
-
-    *ppmkRelPath=pmOther;
+    IMoniker_AddRef(other);
+    *result = other;
 
     return MK_S_HIM;
 }
@@ -434,14 +443,16 @@ AntiMonikerImpl_RelativePathTo(IMoniker* iface,IMoniker* pmOther, IMoniker** ppm
  *        AntiMoniker_GetDisplayName
  ******************************************************************************/
 static HRESULT WINAPI
-AntiMonikerImpl_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
-                               IMoniker* pmkToLeft, LPOLESTR *ppszDisplayName)
+AntiMonikerImpl_GetDisplayName(IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *displayname)
 {
-    static const WCHAR back[]={'\\','.','.',0};
+    AntiMonikerImpl *moniker = impl_from_IMoniker(iface);
+    static const WCHAR nameW[] = {'\\','.','.'};
+    WCHAR *ptrW;
+    int i;
 
-    TRACE("(%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,ppszDisplayName);
+    TRACE("%p, %p, %p, %p.\n", iface, pbc, pmkToLeft, displayname);
 
-    if (ppszDisplayName==NULL)
+    if (!displayname)
         return E_POINTER;
 
     if (pmkToLeft!=NULL){
@@ -449,12 +460,13 @@ AntiMonikerImpl_GetDisplayName(IMoniker* iface, IBindCtx* pbc,
         return E_NOTIMPL;
     }
 
-    *ppszDisplayName=CoTaskMemAlloc(sizeof(back));
-
-    if (*ppszDisplayName==NULL)
+    *displayname = ptrW = CoTaskMemAlloc((moniker->count * ARRAY_SIZE(nameW) + 1) * sizeof(WCHAR));
+    if (!*displayname)
         return E_OUTOFMEMORY;
 
-    lstrcpyW(*ppszDisplayName,back);
+    for (i = 0; i < moniker->count; ++i)
+        memcpy(ptrW + i * ARRAY_SIZE(nameW), nameW, sizeof(nameW));
+    ptrW[moniker->count * ARRAY_SIZE(nameW)] = 0;
 
     return S_OK;
 }
@@ -528,19 +540,18 @@ static ULONG WINAPI AntiMonikerROTDataImpl_Release(IROTData* iface)
  *        AntiMonikerIROTData_GetComparisonData
  ******************************************************************************/
 static HRESULT WINAPI
-AntiMonikerROTDataImpl_GetComparisonData(IROTData* iface, BYTE* pbData,
-                                          ULONG cbMax, ULONG* pcbData)
+AntiMonikerROTDataImpl_GetComparisonData(IROTData *iface, BYTE *data, ULONG data_len, ULONG *data_req)
 {
-    DWORD constant = 1;
+    AntiMonikerImpl *moniker = impl_from_IROTData(iface);
 
-    TRACE("(%p, %u, %p)\n", pbData, cbMax, pcbData);
+    TRACE("%p, %p, %lu, %p.\n", iface, data, data_len, data_req);
 
-    *pcbData = sizeof(CLSID) + sizeof(DWORD);
-    if (cbMax < *pcbData)
+    *data_req = sizeof(CLSID) + sizeof(DWORD);
+    if (data_len < *data_req)
         return E_OUTOFMEMORY;
 
-    memcpy(pbData, &CLSID_AntiMoniker, sizeof(CLSID));
-    memcpy(pbData+sizeof(CLSID), &constant, sizeof(DWORD));
+    memcpy(data, &CLSID_AntiMoniker, sizeof(CLSID));
+    memcpy(data + sizeof(CLSID), &moniker->count, sizeof(moniker->count));
 
     return S_OK;
 }
@@ -575,6 +586,13 @@ static const IMonikerVtbl VT_AntiMonikerImpl =
     AntiMonikerImpl_IsSystemMoniker
 };
 
+static AntiMonikerImpl *unsafe_impl_from_IMoniker(IMoniker *iface)
+{
+    if (iface->lpVtbl != &VT_AntiMonikerImpl)
+        return NULL;
+    return CONTAINING_RECORD(iface, AntiMonikerImpl, IMoniker_iface);
+}
+
 /********************************************************************************/
 /* Virtual function table for the IROTData class.                               */
 static const IROTDataVtbl VT_ROTDataImpl =
@@ -585,19 +603,19 @@ static const IROTDataVtbl VT_ROTDataImpl =
     AntiMonikerROTDataImpl_GetComparisonData
 };
 
-/******************************************************************************
- *         AntiMoniker_Construct (local function)
- *******************************************************************************/
-static HRESULT AntiMonikerImpl_Construct(AntiMonikerImpl* This)
+HRESULT create_anti_moniker(DWORD order, IMoniker **ret)
 {
+    AntiMonikerImpl *moniker;
 
-    TRACE("(%p)\n",This);
+    if (!(moniker = calloc(1, sizeof(*moniker))))
+        return E_OUTOFMEMORY;
 
-    /* Initialize the virtual function table. */
-    This->IMoniker_iface.lpVtbl = &VT_AntiMonikerImpl;
-    This->IROTData_iface.lpVtbl = &VT_ROTDataImpl;
-    This->ref          = 0;
-    This->pMarshal     = NULL;
+    moniker->IMoniker_iface.lpVtbl = &VT_AntiMonikerImpl;
+    moniker->IROTData_iface.lpVtbl = &VT_ROTDataImpl;
+    moniker->refcount = 1;
+    moniker->count = order;
+
+    *ret = &moniker->IMoniker_iface;
 
     return S_OK;
 }
@@ -605,27 +623,11 @@ static HRESULT AntiMonikerImpl_Construct(AntiMonikerImpl* This)
 /******************************************************************************
  *        CreateAntiMoniker	[OLE32.@]
  ******************************************************************************/
-HRESULT WINAPI CreateAntiMoniker(IMoniker **ppmk)
+HRESULT WINAPI CreateAntiMoniker(IMoniker **moniker)
 {
-    AntiMonikerImpl* newAntiMoniker;
-    HRESULT hr;
+    TRACE("%p.\n", moniker);
 
-    TRACE("(%p)\n",ppmk);
-
-    newAntiMoniker = HeapAlloc(GetProcessHeap(), 0, sizeof(AntiMonikerImpl));
-
-    if (newAntiMoniker == 0)
-        return STG_E_INSUFFICIENTMEMORY;
-
-    hr = AntiMonikerImpl_Construct(newAntiMoniker);
-    if (FAILED(hr))
-    {
-        HeapFree(GetProcessHeap(),0,newAntiMoniker);
-        return hr;
-    }
-
-    return AntiMonikerImpl_QueryInterface(&newAntiMoniker->IMoniker_iface, &IID_IMoniker,
-            (void**)ppmk);
+    return create_anti_moniker(1, moniker);
 }
 
 HRESULT WINAPI AntiMoniker_CreateInstance(IClassFactory *iface,
@@ -646,9 +648,7 @@ HRESULT WINAPI AntiMoniker_CreateInstance(IClassFactory *iface,
         return hr;
 
     hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
-
-    if (FAILED(hr))
-        IMoniker_Release(pMoniker);
+    IMoniker_Release(pMoniker);
 
     return hr;
 }
