@@ -3822,19 +3822,7 @@ static void LISTVIEW_SetSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     infoPtr->nSelectionMark = nItem;
 }
 
-/***
- * DESCRIPTION:
- * Set selection(s) with keyboard.
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- * [I] nItem : item index
- * [I] space : VK_SPACE code sent
- *
- * RETURN:
- *   SUCCESS : TRUE (needs to be repainted)
- *   FAILURE : FALSE (nothing has changed)
- */
+/* Change item selection with key input. */
 static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, DWORD keys)
 {
   WORD wShift = !!(keys & SHIFT_KEY);
