@@ -31,8 +31,7 @@ unsigned char *_mbsncat (unsigned char *dst, const unsigned char *src, size_t n)
     if (!n)
         return dst;
 
-    if (!MSVCRT_CHECK_PMT(dst && src))
-        return NULL;
+    if (!dst || !src) ERR("Bad Parameter\n");
 
     if (mbcinfo->ismbcodepage)
     {
@@ -65,7 +64,9 @@ unsigned char * _mbsnbcat(unsigned char *dst, const unsigned char *src, size_t n
     /* replace TRACE with ERR for debug output */
     TRACE("Src %s\n", wine_dbgstr_an((const char*)src, n));
 
-    if (!MSVCRT_CHECK_PMT(dst && src))
+    if (!dst || !src) ERR("Bad Parameter\n");
+
+    if (!src && !dst && !n && !MSVCRT_CHECK_PMT(dst && src))
         return NULL;
 
     if (mbcinfo->ismbcodepage)
