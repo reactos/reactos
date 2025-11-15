@@ -433,8 +433,6 @@ enum key_state
     SPACE_KEY = 0x4,
 };
 
-
-
 /*
  * forward declarations
  */
@@ -3839,7 +3837,6 @@ static void LISTVIEW_SetSelection(LISTVIEW_INFO *infoPtr, INT nItem)
  */
 static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, DWORD keys)
 {
-  /* FIXME: pass in the state */
   WORD wShift = !!(keys & SHIFT_KEY);
   WORD wCtrl = !!(keys & CTRL_KEY);
   BOOL bResult = FALSE;
@@ -10244,7 +10241,6 @@ static LRESULT LISTVIEW_KeyDown(LISTVIEW_INFO *infoPtr, INT nVirtualKey, LONG lK
 
       LISTVIEW_KeySelection(infoPtr, nItem, keys);
   }
-
 
   return 0;
 }
