@@ -1,0 +1,95 @@
+/*
+ * Copyright 2017 Alex Henrie
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifdef __WIDL__
+#pragma winrt
+#endif
+
+import "wtypes.idl";
+
+typedef void *ROPARAMIIDHANDLE;
+
+[
+    object
+]
+interface IRoSimpleMetaDataBuilder
+{
+    HRESULT SetWinRtInterface(
+        GUID iid
+    );
+
+    HRESULT SetDelegate(
+        GUID iid
+    );
+
+    HRESULT SetInterfaceGroupSimpleDefault(
+        const WCHAR *typename,
+        const WCHAR *default_name,
+        const GUID *default_iid
+    );
+
+    HRESULT SetInterfaceGroupParameterizedDefault(
+        const WCHAR *typename,
+        UINT32 name_element_count,
+        const WCHAR **name_elements
+    );
+
+    HRESULT SetRuntimeClassSimpleDefault(
+        const WCHAR *typename,
+        const WCHAR *default_name,
+        const GUID *default_iid
+    );
+
+    HRESULT SetRuntimeClassParameterizedDefault(
+        const WCHAR *typename,
+        UINT32 name_element_count,
+        const WCHAR **name_elements
+    );
+
+    HRESULT SetStruct(
+        const WCHAR *typename,
+        UINT32 field_count,
+        const WCHAR **field_typenames
+    );
+
+    HRESULT SetEnum(
+        const WCHAR *typename,
+        const WCHAR *base_type
+    );
+
+    HRESULT SetParameterizedInterface(
+        GUID iid,
+        UINT32 arg_count
+    );
+
+    HRESULT SetParameterizedDelegate(
+        GUID iid,
+        UINT32 arg_count
+    );
+}
+
+[
+    object
+]
+interface IRoMetaDataLocator
+{
+    HRESULT Locate(
+        const WCHAR *typename,
+        IRoSimpleMetaDataBuilder *out
+    );
+}

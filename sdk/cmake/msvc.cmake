@@ -406,7 +406,7 @@ function(spec2def _dllname _spec_file)
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY;WITH_DBG;NO_DBG" "VERSION" "" ${ARGN})
 
     # Get library basename
-    get_filename_component(_file ${_dllname} NAME_WE)
+    get_filename_component(_file ${_dllname} NAME_WLE)
 
     # Error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
