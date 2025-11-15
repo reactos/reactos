@@ -33,7 +33,7 @@
 
 #include "wine/test.h"
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error %#08lx\n", hr)
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -99,7 +99,6 @@ static const IID IID_WineTest =
     {0xbc, 0x13, 0x51, 0x6e, 0x92, 0x39, 0xac, 0xe1}
 };
 
-#define TEST_OPTIONAL 0x1
 #define TEST_TODO     0x2
 
 struct expected_method
@@ -119,7 +118,8 @@ static HRESULT g_QIFailsWith;
 
 static UINT cf_test_1, cf_test_2, cf_test_3;
 
-static FORMATETC *g_dataobject_fmts;
+static FORMATETC *data_object_format;
+static const BYTE *data_object_dib;
 
 /****************************************************************************
  * PresentationDataHeader
@@ -154,18 +154,10 @@ static inline void check_expected_method_fmt(const char *method_name, const FORM
 static void inline check_expected_method_fmt(const char *method_name, const FORMATETC *fmt)
 #endif
 {
-    trace("%s\n", method_name);
+    if (winetest_debug > 1) trace("%s\n", method_name);
     ok(expected_method_list->method != NULL, "Extra method %s called\n", method_name);
-    if (!strcmp(expected_method_list->method, "WINE_EXTRA"))
-    {
-        todo_wine ok(0, "Too many method calls.\n");
-        return;
-    }
     if (expected_method_list->method)
     {
-        while (expected_method_list->flags & TEST_OPTIONAL &&
-               strcmp(expected_method_list->method, method_name) != 0)
-            expected_method_list++;
         todo_wine_if (expected_method_list->flags & TEST_TODO)
         {
             ok(!strcmp(expected_method_list->method, method_name),
@@ -175,11 +167,11 @@ static void inline check_expected_method_fmt(const char *method_name, const FORM
             {
                 ok(fmt->cfFormat == expected_method_list->fmt.cfFormat, "got cf %04x vs %04x\n",
                    fmt->cfFormat, expected_method_list->fmt.cfFormat );
-                ok(fmt->dwAspect == expected_method_list->fmt.dwAspect, "got aspect %d vs %d\n",
+                ok(fmt->dwAspect == expected_method_list->fmt.dwAspect, "got aspect %ld vs %ld\n",
                    fmt->dwAspect, expected_method_list->fmt.dwAspect );
-                ok(fmt->lindex == expected_method_list->fmt.lindex, "got lindex %d vs %d\n",
+                ok(fmt->lindex == expected_method_list->fmt.lindex, "got lindex %ld vs %ld\n",
                    fmt->lindex, expected_method_list->fmt.lindex );
-                ok(fmt->tymed == expected_method_list->fmt.tymed, "got tymed %d vs %d\n",
+                ok(fmt->tymed == expected_method_list->fmt.tymed, "got tymed %ld vs %ld\n",
                    fmt->tymed, expected_method_list->fmt.tymed );
             }
         }
@@ -192,13 +184,10 @@ static void inline check_expected_method_fmt(const char *method_name, const FORM
 
 #define CHECK_NO_EXTRA_METHODS() \
     do { \
-        while (expected_method_list->flags & TEST_OPTIONAL) \
-            expected_method_list++; \
         ok(!expected_method_list->method, "Method sequence starting from %s not called\n", expected_method_list->method); \
     } while (0)
 
-/* 2 x 1 x 32 bpp dib. PelsPerMeter = 200x400 */
-static const BYTE dib[] =
+static const BYTE dib_white[] =
 {
     0x28, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x20, 0x00,
@@ -208,22 +197,32 @@ static const BYTE dib[] =
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
+static const BYTE dib_black[] =
+{
+    0x28, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x20, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xc8, 0x00, 0x00, 0x00, 0x90, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
 static void create_dib( STGMEDIUM *med )
 {
     void *ptr;
 
     med->tymed = TYMED_HGLOBAL;
-    U(med)->hGlobal = GlobalAlloc( GMEM_MOVEABLE, sizeof(dib) );
-    ptr = GlobalLock( U(med)->hGlobal );
-    memcpy( ptr, dib, sizeof(dib) );
-    GlobalUnlock( U(med)->hGlobal );
+    med->hGlobal = GlobalAlloc(GMEM_MOVEABLE, sizeof(dib_white));
+    ptr = GlobalLock( med->hGlobal );
+    memcpy(ptr, dib_white, sizeof(dib_white));
+    GlobalUnlock( med->hGlobal );
     med->pUnkForRelease = NULL;
 }
 
 static void create_bitmap( STGMEDIUM *med )
 {
     med->tymed = TYMED_GDI;
-    U(med)->hBitmap = CreateBitmap( 1, 1, 1, 1, NULL );
+    med->hBitmap = CreateBitmap( 1, 1, 1, 1, NULL );
     med->pUnkForRelease = NULL;
 }
 
@@ -233,7 +232,7 @@ static void create_emf(STGMEDIUM *med)
 
     Rectangle(hdc, 0, 0, 150, 300);
     med->tymed = TYMED_ENHMF;
-    U(med)->hEnhMetaFile = CloseEnhMetaFile(hdc);
+    med->hEnhMetaFile = CloseEnhMetaFile(hdc);
     med->pUnkForRelease = NULL;
 }
 
@@ -245,13 +244,13 @@ static void create_mfpict(STGMEDIUM *med)
     Rectangle(hdc, 0, 0, 100, 200);
 
     med->tymed = TYMED_MFPICT;
-    U(med)->hMetaFilePict = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
-    mf = GlobalLock(U(med)->hMetaFilePict);
+    med->hMetaFilePict = GlobalAlloc(GMEM_MOVEABLE, sizeof(METAFILEPICT));
+    mf = GlobalLock(med->hMetaFilePict);
     mf->mm = MM_ANISOTROPIC;
     mf->xExt = 100;
     mf->yExt = 200;
     mf->hMF = CloseMetaFile(hdc);
-    GlobalUnlock(U(med)->hMetaFilePict);
+    GlobalUnlock(med->hMetaFilePict);
     med->pUnkForRelease = NULL;
 }
 
@@ -266,13 +265,15 @@ static void create_text(STGMEDIUM *med)
     GlobalUnlock(handle);
 
     med->tymed = TYMED_HGLOBAL;
-    U(med)->hGlobal = handle;
+    med->hGlobal = handle;
     med->pUnkForRelease = NULL;
 }
 
+static LONG ole_object_refcount;
+
 static HRESULT WINAPI OleObject_QueryInterface(IOleObject *iface, REFIID riid, void **ppv)
 {
-    CHECK_EXPECTED_METHOD("OleObject_QueryInterface");
+    if (winetest_debug > 1) trace("IOleObject::QueryInterface(%s)\n", debugstr_guid(riid));
 
     *ppv = NULL;
 
@@ -292,20 +293,17 @@ static HRESULT WINAPI OleObject_QueryInterface(IOleObject *iface, REFIID riid, v
         return S_OK;
     }
 
-    trace("OleObject_QueryInterface: returning E_NOINTERFACE\n");
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI OleObject_AddRef(IOleObject *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObject_AddRef");
-    return 2;
+    return InterlockedIncrement(&ole_object_refcount);
 }
 
 static ULONG WINAPI OleObject_Release(IOleObject *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObject_Release");
-    return 1;
+    return InterlockedDecrement(&ole_object_refcount);
 }
 
 static HRESULT WINAPI OleObject_SetClientSite
@@ -521,7 +519,7 @@ static HRESULT WINAPI OleObject_GetMiscStatus
 {
     CHECK_EXPECTED_METHOD("OleObject_GetMiscStatus");
 
-    ok(aspect == DVASPECT_CONTENT, "got aspect %d\n", aspect);
+    ok(aspect == DVASPECT_CONTENT, "got aspect %ld\n", aspect);
 
     if (g_GetMiscStatusFailsWith == S_OK)
     {
@@ -577,20 +575,17 @@ static IOleObject OleObject = { &OleObjectVtbl };
 
 static HRESULT WINAPI OleObjectPersistStg_QueryInterface(IPersistStorage *iface, REFIID riid, void **ppv)
 {
-    trace("OleObjectPersistStg_QueryInterface\n");
     return IOleObject_QueryInterface(&OleObject, riid, ppv);
 }
 
 static ULONG WINAPI OleObjectPersistStg_AddRef(IPersistStorage *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectPersistStg_AddRef");
-    return 2;
+    return IOleObject_AddRef(&OleObject);
 }
 
 static ULONG WINAPI OleObjectPersistStg_Release(IPersistStorage *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectPersistStg_Release");
-    return 1;
+    return IOleObject_Release(&OleObject);
 }
 
 static HRESULT WINAPI OleObjectPersistStg_GetClassId(IPersistStorage *iface, CLSID *clsid)
@@ -681,14 +676,12 @@ static HRESULT WINAPI OleObjectCache_QueryInterface(IOleCache *iface, REFIID rii
 
 static ULONG WINAPI OleObjectCache_AddRef(IOleCache *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectCache_AddRef");
-    return 2;
+    return IOleObject_AddRef(&OleObject);
 }
 
 static ULONG WINAPI OleObjectCache_Release(IOleCache *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectCache_Release");
-    return 1;
+    return IOleObject_Release(&OleObject);
 }
 
 static HRESULT WINAPI OleObjectCache_Cache
@@ -708,11 +701,11 @@ static HRESULT WINAPI OleObjectCache_Cache
             ok((pformatetc->ptd != NULL) == (g_expected_fetc->ptd != NULL),
                     "ptd: %p\n", pformatetc->ptd);
             ok(pformatetc->dwAspect == g_expected_fetc->dwAspect,
-                    "dwAspect: %x\n", pformatetc->dwAspect);
+                    "dwAspect: %lx\n", pformatetc->dwAspect);
             ok(pformatetc->lindex == g_expected_fetc->lindex,
-                    "lindex: %x\n", pformatetc->lindex);
+                    "lindex: %lx\n", pformatetc->lindex);
             ok(pformatetc->tymed == g_expected_fetc->tymed,
-                    "tymed: %x\n", pformatetc->tymed);
+                    "tymed: %lx\n", pformatetc->tymed);
         }
     } else
         ok(pformatetc == NULL, "pformatetc should be NULL\n");
@@ -828,14 +821,12 @@ static HRESULT WINAPI OleObjectRunnable_QueryInterface(IRunnableObject *iface, R
 
 static ULONG WINAPI OleObjectRunnable_AddRef(IRunnableObject *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectRunnable_AddRef");
-    return 2;
+    return IOleObject_AddRef(&OleObject);
 }
 
 static ULONG WINAPI OleObjectRunnable_Release(IRunnableObject *iface)
 {
-    CHECK_EXPECTED_METHOD("OleObjectRunnable_Release");
-    return 1;
+    return IOleObject_Release(&OleObject);
 }
 
 static HRESULT WINAPI OleObjectRunnable_GetRunningClass(
@@ -920,7 +911,7 @@ static HRESULT WINAPI viewobject_Draw(IViewObject *iface, DWORD aspect, LONG ind
     LPCRECTL bounds, LPCRECTL wbounds, BOOL (STDMETHODCALLTYPE *pfnContinue)(ULONG_PTR dwContinue),
     ULONG_PTR dwContinue)
 {
-    ok(index == -1, "index=%d\n", index);
+    ok(index == -1, "index=%ld\n", index);
     return S_OK;
 }
 
@@ -978,143 +969,49 @@ static void test_OleCreate(IStorage *pStorage)
     FORMATETC formatetc;
     static const struct expected_method methods_olerender_none[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", TEST_OPTIONAL },
-        { "OleObject_Release", TEST_OPTIONAL },
-        { "OleObject_QueryInterface", TEST_OPTIONAL },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_Release", TEST_OPTIONAL },
         { NULL, 0 }
     };
     static const struct expected_method methods_olerender_draw[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_QueryInterface", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectRunnable_AddRef", 0 },
         { "OleObjectRunnable_Run", 0 },
-        { "OleObjectRunnable_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectCache_AddRef", 0 },
         { "OleObjectCache_Cache", 0 },
-        { "OleObjectCache_Release", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
         { NULL, 0 }
     };
     static const struct expected_method methods_olerender_draw_with_site[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
         { "OleObject_GetMiscStatus", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
         { "OleObject_SetClientSite", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectRunnable_AddRef", 0 },
         { "OleObjectRunnable_Run", 0 },
-        { "OleObjectRunnable_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectCache_AddRef", 0 },
         { "OleObjectCache_Cache", 0 },
-        { "OleObjectCache_Release", 0 },
-        { "OleObject_Release", 0 },
         { NULL, 0 }
     };
     static const struct expected_method methods_olerender_format[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
         { "OleObject_GetMiscStatus", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
         { "OleObject_SetClientSite", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectRunnable_AddRef", 0 },
         { "OleObjectRunnable_Run", 0 },
-        { "OleObjectRunnable_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectCache_AddRef", 0 },
         { "OleObjectCache_Cache", 0 },
-        { "OleObjectCache_Release", 0 },
-        { "OleObject_Release", 0 },
         { NULL, 0 }
     };
     static const struct expected_method methods_olerender_asis[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_QueryInterface", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
         { NULL, 0 }
     };
     static const struct expected_method methods_olerender_draw_no_runnable[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_QueryInterface", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectCache_AddRef", 0 },
         { "OleObjectCache_Cache", 0 },
-        { "OleObjectCache_Release", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
         { NULL, 0 },
     };
     static const struct expected_method methods_olerender_draw_no_cache[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObject_QueryInterface", TEST_OPTIONAL /* NT4 only */ },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_InitNew", 0 },
-        { "OleObjectPersistStg_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectRunnable_AddRef", 0 },
         { "OleObjectRunnable_Run", 0 },
-        { "OleObjectRunnable_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_Release", TEST_OPTIONAL /* NT4 only */ },
         { NULL, 0 }
     };
 
@@ -1127,34 +1024,34 @@ static void test_OleCreate(IStorage *pStorage)
     runnable = &OleObjectRunnable;
     cache = &OleObjectCache;
     expected_method_list = methods_olerender_none;
-    trace("OleCreate with OLERENDER_NONE:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_NONE, NULL, NULL, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     expected_method_list = methods_olerender_draw;
-    trace("OleCreate with OLERENDER_DRAW:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, NULL, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     expected_method_list = methods_olerender_draw_with_site;
-    trace("OleCreate with OLERENDER_DRAW, with site:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, (IOleClientSite*)0xdeadbeef, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     /* GetMiscStatus fails */
     g_GetMiscStatusFailsWith = 0x8fafefaf;
     expected_method_list = methods_olerender_draw_with_site;
-    trace("OleCreate with OLERENDER_DRAW, with site:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, (IOleClientSite*)0xdeadbeef, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
     g_GetMiscStatusFailsWith = S_OK;
 
     formatetc.cfFormat = CF_TEXT;
@@ -1163,29 +1060,28 @@ static void test_OleCreate(IStorage *pStorage)
     formatetc.lindex = -1;
     formatetc.tymed = TYMED_HGLOBAL;
     expected_method_list = methods_olerender_format;
-    trace("OleCreate with OLERENDER_FORMAT:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_FORMAT, &formatetc, (IOleClientSite *)0xdeadbeef, pStorage, (void **)&pObject);
     ok(hr == S_OK ||
        broken(hr == E_INVALIDARG), /* win2k */
-       "OleCreate failed with error 0x%08x\n", hr);
+       "OleCreate failed with error 0x%08lx\n", hr);
     if (pObject)
     {
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
     }
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     expected_method_list = methods_olerender_asis;
-    trace("OleCreate with OLERENDER_ASIS:\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_ASIS, NULL, NULL, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     formatetc.cfFormat = 0;
     formatetc.tymed = TYMED_NULL;
     runnable = NULL;
     expected_method_list = methods_olerender_draw_no_runnable;
-    trace("OleCreate with OLERENDER_DRAW (no IRunnableObject):\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, NULL, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
@@ -1194,12 +1090,11 @@ static void test_OleCreate(IStorage *pStorage)
     runnable = &OleObjectRunnable;
     cache = NULL;
     expected_method_list = methods_olerender_draw_no_cache;
-    trace("OleCreate with OLERENDER_DRAW (no IOleCache):\n");
     hr = OleCreate(&CLSID_Equation3, &IID_IOleObject, OLERENDER_DRAW, NULL, NULL, pStorage, (void **)&pObject);
     ok_ole_success(hr, "OleCreate");
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
-    trace("end\n");
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
     g_expected_fetc = NULL;
 }
 
@@ -1211,60 +1106,50 @@ static void test_OleLoad(IStorage *pStorage)
 
     static const struct expected_method methods_oleload[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
         { "OleObject_GetMiscStatus", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectPersistStg_AddRef", 0 },
         { "OleObjectPersistStg_Load", 0 },
-        { "OleObjectPersistStg_Release", 0 },
         { "OleObject_SetClientSite", 0 },
-        { "OleObject_Release", 0 },
-        { "OleObject_QueryInterface", 0 },
         { "OleObject_GetMiscStatus", 0 },
-        { "OleObject_Release", 0 },
         { NULL, 0 }
     };
 
     /* Test once with IOleObject_GetMiscStatus failing */
     expected_method_list = methods_oleload;
     g_GetMiscStatusFailsWith = E_FAIL;
-    trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
     ok(hr == S_OK ||
        broken(hr == E_INVALIDARG), /* win98 and win2k */
-       "OleLoad failed with error 0x%08x\n", hr);
+       "OleLoad failed with error 0x%08lx\n", hr);
     if(pObject)
     {
         DWORD dwStatus = 0xdeadbeef;
         hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
-        ok(hr == E_FAIL, "Got 0x%08x\n", hr);
-        ok(dwStatus == 0x1234, "Got 0x%08x\n", dwStatus);
+        ok(hr == E_FAIL, "Got 0x%08lx\n", hr);
+        ok(dwStatus == 0x1234, "Got 0x%08lx\n", dwStatus);
 
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
     }
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
     g_GetMiscStatusFailsWith = S_OK;
 
     /* Test again, let IOleObject_GetMiscStatus succeed. */
     expected_method_list = methods_oleload;
-    trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
     ok(hr == S_OK ||
        broken(hr == E_INVALIDARG), /* win98 and win2k */
-       "OleLoad failed with error 0x%08x\n", hr);
+       "OleLoad failed with error 0x%08lx\n", hr);
     if (pObject)
     {
         DWORD dwStatus = 0xdeadbeef;
         hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
-        ok(hr == S_OK, "Got 0x%08x\n", hr);
-        ok(dwStatus == 1, "Got 0x%08x\n", dwStatus);
+        ok(hr == S_OK, "Got 0x%08lx\n", hr);
+        ok(dwStatus == 1, "Got 0x%08lx\n", dwStatus);
 
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
     }
+    ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     for (fmt = CF_TEXT; fmt < CF_MAX; fmt++)
     {
@@ -1282,21 +1167,21 @@ static void test_OleLoad(IStorage *pStorage)
         for (i = 0; i < 7; i++)
         {
             hr = StgCreateDocfile(NULL, STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE | STGM_DELETEONRELEASE, 0, &stg);
-            ok(hr == S_OK, "StgCreateDocfile error %#x\n", hr);
+            ok(hr == S_OK, "StgCreateDocfile error %#lx\n", hr);
 
             hr = IStorage_SetClass(stg, &CLSID_WineTest);
-            ok(hr == S_OK, "SetClass error %#x\n", hr);
+            ok(hr == S_OK, "SetClass error %#lx\n", hr);
 
             hr = IStorage_CreateStream(stg, olrepres, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE, 0, 0, &stream);
-            ok(hr == S_OK, "CreateStream error %#x\n", hr);
+            ok(hr == S_OK, "CreateStream error %#lx\n", hr);
 
             data = ~0;
             hr = IStream_Write(stream, &data, sizeof(data), NULL);
-            ok(hr == S_OK, "Write error %#x\n", hr);
+            ok(hr == S_OK, "Write error %#lx\n", hr);
 
             data = fmt;
             hr = IStream_Write(stream, &data, sizeof(data), NULL);
-            ok(hr == S_OK, "Write error %#x\n", hr);
+            ok(hr == S_OK, "Write error %#lx\n", hr);
 
             switch (fmt)
             {
@@ -1330,10 +1215,10 @@ static void test_OleLoad(IStorage *pStorage)
             header.dwObjectExtentY = 1;
             header.dwSize = data_size;
             hr = IStream_Write(stream, &header, sizeof(header), NULL);
-            ok(hr == S_OK, "Write error %#x\n", hr);
+            ok(hr == S_OK, "Write error %#lx\n", hr);
 
             hr = IStream_Write(stream, buf, data_size, NULL);
-            ok(hr == S_OK, "Write error %#x\n", hr);
+            ok(hr == S_OK, "Write error %#lx\n", hr);
 
             IStream_Release(stream);
 
@@ -1344,19 +1229,19 @@ static void test_OleLoad(IStorage *pStorage)
                 IStorage_Release(stg);
                 continue;
             }
-            ok(hr == S_OK, "OleLoad error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
+            ok(hr == S_OK, "OleLoad error %#lx: cfFormat = %lu, advf = %#lx\n", hr, fmt, header.advf);
 
             hdc = CreateCompatibleDC(0);
             SetRect(&rc, 0, 0, 100, 100);
             hr = OleDraw(obj, DVASPECT_CONTENT, hdc, &rc);
             DeleteDC(hdc);
             if (fmt == CF_METAFILEPICT)
-                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
+                ok(hr == S_OK, "OleDraw error %#lx: cfFormat = %lu, advf = %#lx\n", hr, fmt, header.advf);
             else if (fmt == CF_ENHMETAFILE)
-todo_wine
-                ok(hr == S_OK, "OleDraw error %#x: cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
+                todo_wine
+                ok(hr == S_OK, "OleDraw error %#lx: cfFormat = %lu, advf = %#lx\n", hr, fmt, header.advf);
             else
-                ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#x, cfFormat = %u, advf = %#x\n", hr, fmt, header.advf);
+                ok(hr == OLE_E_BLANK || hr == OLE_E_NOTRUNNING || hr == E_FAIL, "OleDraw should fail: %#lx, cfFormat = %lu, advf = %#lx\n", hr, fmt, header.advf);
 
             IUnknown_Release(obj);
             IStorage_Release(stg);
@@ -1451,8 +1336,6 @@ static HRESULT WINAPI DataObject_QueryInterface(
             REFIID           riid,
             void**           ppvObject)
 {
-    CHECK_EXPECTED_METHOD("DataObject_QueryInterface");
-
     if (IsEqualIID(riid, &IID_IDataObject) || IsEqualIID(riid, &IID_IUnknown))
     {
         *ppvObject = iface;
@@ -1465,14 +1348,12 @@ static HRESULT WINAPI DataObject_QueryInterface(
 static ULONG WINAPI DataObject_AddRef(
             IDataObject*     iface)
 {
-    CHECK_EXPECTED_METHOD("DataObject_AddRef");
     return 2;
 }
 
 static ULONG WINAPI DataObject_Release(
             IDataObject*     iface)
 {
-    CHECK_EXPECTED_METHOD("DataObject_Release");
     return 1;
 }
 
@@ -1484,34 +1365,33 @@ static inline BOOL fmtetc_equal( const FORMATETC *a, const FORMATETC *b )
 
 }
 
-static HRESULT WINAPI DataObject_GetData( IDataObject *iface, FORMATETC *fmt_in,
-                                          STGMEDIUM *med )
+static HRESULT WINAPI DataObject_GetData(IDataObject *iface, FORMATETC *format, STGMEDIUM *medium)
 {
-    FORMATETC *fmt;
+    if (winetest_debug > 1) trace("IDataObject::GetData(cf %u)\n", format->cfFormat);
 
-    CHECK_EXPECTED_METHOD_FMT("DataObject_GetData", fmt_in);
-
-    for (fmt = g_dataobject_fmts; fmt && fmt->cfFormat != 0; fmt++)
+    if (data_object_format && fmtetc_equal(format, data_object_format))
     {
-        if (fmtetc_equal( fmt_in, fmt ))
+        switch (format->cfFormat)
         {
-            switch (fmt->cfFormat)
-            {
-            case CF_DIB:
-                create_dib( med );
-                return S_OK;
-            case CF_BITMAP:
-                create_bitmap( med );
-                return S_OK;
-            case CF_ENHMETAFILE:
-                create_emf( med );
-                return S_OK;
-            case CF_TEXT:
-                create_text( med );
-                return S_OK;
-            default:
-                trace( "unhandled fmt %d\n", fmt->cfFormat );
-            }
+        case CF_DIB:
+            medium->tymed = TYMED_HGLOBAL;
+            medium->pUnkForRelease = NULL;
+            medium->hGlobal = GlobalAlloc(GMEM_MOVEABLE, sizeof(dib_white));
+            memcpy(GlobalLock(medium->hGlobal), data_object_dib, sizeof(dib_white));
+            GlobalUnlock(medium->hGlobal);
+            return S_OK;
+        case CF_BITMAP:
+            create_bitmap(medium);
+            return S_OK;
+        case CF_ENHMETAFILE:
+            create_emf(medium);
+            return S_OK;
+        case CF_METAFILEPICT:
+            create_mfpict(medium);
+            return S_OK;
+        case CF_TEXT:
+            create_text(medium);
+            return S_OK;
         }
     }
 
@@ -1527,16 +1407,11 @@ static HRESULT WINAPI DataObject_GetDataHere(
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI DataObject_QueryGetData( IDataObject *iface, FORMATETC *fmt_in )
+static HRESULT WINAPI DataObject_QueryGetData(IDataObject *iface, FORMATETC *format)
 {
-    FORMATETC *fmt;
+    if (winetest_debug > 1) trace("IDataObject::QueryGetData(cf %u)\n", format->cfFormat);
 
-    CHECK_EXPECTED_METHOD_FMT("DataObject_QueryGetData", fmt_in);
-
-    for (fmt = g_dataobject_fmts; fmt && fmt->cfFormat != 0; fmt++)
-        if (fmtetc_equal( fmt_in, fmt )) return S_OK;
-
-    return S_FALSE;
+    return (data_object_format && fmtetc_equal(format, data_object_format)) ? S_OK : S_FALSE;
 }
 
 static HRESULT WINAPI DataObject_GetCanonicalFormatEtc(
@@ -1583,7 +1458,7 @@ static HRESULT WINAPI DataObject_DAdvise(
     {
         ok(pformatetc->cfFormat == cf_test_2, "got %04x\n", pformatetc->cfFormat);
         stgmedium.tymed = TYMED_HGLOBAL;
-        U(stgmedium).hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 4);
+        stgmedium.hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 4);
         stgmedium.pUnkForRelease = NULL;
         IAdviseSink_OnDataChange(pAdvSink, pformatetc, &stgmedium);
     }
@@ -1663,7 +1538,7 @@ static void check_enum_cache(IOleCache2 *cache, const STATDATA *expect, int num)
     HRESULT hr;
 
     hr = IOleCache2_EnumCache( cache, &enum_stat );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     while (IEnumSTATDATA_Next(enum_stat, 1, &stat, NULL) == S_OK)
     {
@@ -1671,15 +1546,15 @@ static void check_enum_cache(IOleCache2 *cache, const STATDATA *expect, int num)
             stat.formatetc.cfFormat, expect->formatetc.cfFormat );
         ok( !stat.formatetc.ptd == !expect->formatetc.ptd, "got %p expect %p\n",
             stat.formatetc.ptd, expect->formatetc.ptd );
-        ok( stat.formatetc.dwAspect == expect->formatetc.dwAspect, "got %d expect %d\n",
+        ok( stat.formatetc.dwAspect == expect->formatetc.dwAspect, "got %ld expect %ld\n",
             stat.formatetc.dwAspect, expect->formatetc.dwAspect );
-        ok( stat.formatetc.lindex == expect->formatetc.lindex, "got %d expect %d\n",
+        ok( stat.formatetc.lindex == expect->formatetc.lindex, "got %ld expect %ld\n",
             stat.formatetc.lindex, expect->formatetc.lindex );
-        ok( stat.formatetc.tymed == expect->formatetc.tymed, "got %d expect %d\n",
+        ok( stat.formatetc.tymed == expect->formatetc.tymed, "got %ld expect %ld\n",
             stat.formatetc.tymed, expect->formatetc.tymed );
-        ok( stat.advf == expect->advf, "got %d expect %d\n", stat.advf, expect->advf );
+        ok( stat.advf == expect->advf, "got %ld expect %ld\n", stat.advf, expect->advf );
         ok( stat.pAdvSink == 0, "got %p\n", stat.pAdvSink );
-        ok( stat.dwConnection == expect->dwConnection, "got %d expect %d\n", stat.dwConnection, expect->dwConnection );
+        ok( stat.dwConnection == expect->dwConnection, "got %ld expect %ld\n", stat.dwConnection, expect->dwConnection );
         num--;
         expect++;
     }
@@ -1729,9 +1604,6 @@ static void test_data_cache(void)
         { "draw_continue", 1 },
         { "draw_continue", 1 },
         { "draw_continue", 1 },
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_THUMBNAIL, -1, TYMED_HGLOBAL} },
-        { "DataObject_GetData", 0, { CF_BITMAP,       NULL, DVASPECT_THUMBNAIL, -1, TYMED_GDI} },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_ICON,      -1, TYMED_MFPICT} },
         { NULL, 0 }
     };
     static const struct expected_method methods_cachethenrun[] =
@@ -1764,15 +1636,15 @@ static void test_data_cache(void)
 
     /* requested is not IUnknown */
     hr = CreateDataCache(&unknown, &CLSID_NULL, &IID_IOleCache2, (void**)&pOleCache);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = CreateDataCache(&unknown, &CLSID_NULL, &IID_IUnknown, (void**)&unk);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
 
     hr = IUnknown_QueryInterface(unk, &IID_IOleCache, (void**)&olecache);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     hr = IUnknown_QueryInterface(unk, &IID_IOleCache2, (void**)&pOleCache);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     ok(unk != (IUnknown*)olecache, "got %p, expected %p\n", olecache, unk);
     ok(unk != (IUnknown*)pOleCache, "got %p, expected %p\n", pOleCache, unk);
     IOleCache2_Release(pOleCache);
@@ -1780,13 +1652,13 @@ static void test_data_cache(void)
     IUnknown_Release(unk);
 
     hr = CreateDataCache(NULL, &CLSID_NULL, &IID_IUnknown, (void**)&unk);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     hr = IUnknown_QueryInterface(unk, &IID_IOleCache, (void**)&olecache);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     hr = IUnknown_QueryInterface(unk, &IID_IOleCache2, (void**)&pOleCache);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     hr = IUnknown_QueryInterface(unk, &IID_IUnknown, (void**)&unk2);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
     ok(unk == (IUnknown*)olecache, "got %p, expected %p\n", olecache, unk);
     ok(unk == (IUnknown*)pOleCache, "got %p, expected %p\n", pOleCache, unk);
     ok(unk == unk2, "got %p, expected %p\n", unk2, unk);
@@ -1821,16 +1693,16 @@ static void test_data_cache(void)
     ok(IsEqualCLSID(&clsid, &IID_NULL), "clsid should be blank\n");
 
     hr = IOleCache2_Uncache(pOleCache, 0xdeadbeef);
-    ok(hr == OLE_E_NOCONNECTION, "IOleCache_Uncache with invalid value should return OLE_E_NOCONNECTION instead of 0x%x\n", hr);
+    ok(hr == OLE_E_NOCONNECTION, "IOleCache_Uncache with invalid value should return OLE_E_NOCONNECTION instead of 0x%lx\n", hr);
 
     /* Both tests crash on NT4 and below. StgCreatePropSetStg is only available on w2k and above. */
     if (GetProcAddress(GetModuleHandleA("ole32.dll"), "StgCreatePropSetStg"))
     {
         hr = IOleCache2_Cache(pOleCache, NULL, 0, &dwConnection);
-        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL fmtetc should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL fmtetc should have returned E_INVALIDARG instead of 0x%08lx\n", hr);
 
         hr = IOleCache2_Cache(pOleCache, NULL, 0, NULL);
-        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL pdwConnection should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+        ok(hr == E_INVALIDARG, "IOleCache_Cache with NULL pdwConnection should have returned E_INVALIDARG instead of 0x%08lx\n", hr);
     }
     else
     {
@@ -1849,15 +1721,15 @@ static void test_data_cache(void)
                 (fmtetc.cfFormat == CF_BITMAP && fmtetc.tymed == TYMED_GDI) ||
                 (fmtetc.cfFormat == CF_DIB && fmtetc.tymed == TYMED_HGLOBAL) ||
                 (fmtetc.cfFormat == CF_ENHMETAFILE && fmtetc.tymed == TYMED_ENHMF))
-                ok(hr == S_OK, "IOleCache_Cache cfFormat = %d, tymed = %d should have returned S_OK instead of 0x%08x\n",
+                ok(hr == S_OK, "IOleCache_Cache cfFormat = %d, tymed = %ld should have returned S_OK instead of 0x%08lx\n",
                     fmtetc.cfFormat, fmtetc.tymed, hr);
             else if (fmtetc.tymed == TYMED_HGLOBAL)
                 ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED ||
                    broken(hr == S_OK && fmtetc.cfFormat == CF_BITMAP) /* Win9x & NT4 */,
-                    "IOleCache_Cache cfFormat = %d, tymed = %d should have returned CACHE_S_FORMATETC_NOTSUPPORTED instead of 0x%08x\n",
+                    "IOleCache_Cache cfFormat = %d, tymed = %ld should have returned CACHE_S_FORMATETC_NOTSUPPORTED instead of 0x%08lx\n",
                     fmtetc.cfFormat, fmtetc.tymed, hr);
             else
-                ok(hr == DV_E_TYMED, "IOleCache_Cache cfFormat = %d, tymed = %d should have returned DV_E_TYMED instead of 0x%08x\n",
+                ok(hr == DV_E_TYMED, "IOleCache_Cache cfFormat = %d, tymed = %ld should have returned DV_E_TYMED instead of 0x%08lx\n",
                     fmtetc.cfFormat, fmtetc.tymed, hr);
             if (SUCCEEDED(hr))
             {
@@ -1884,13 +1756,13 @@ static void test_data_cache(void)
 
     fmtetc.cfFormat = CF_METAFILEPICT;
     stgmedium.tymed = TYMED_MFPICT;
-    U(stgmedium).hMetaFilePict = OleMetafilePictFromIconAndLabel(
+    stgmedium.hMetaFilePict = OleMetafilePictFromIconAndLabel(
         LoadIconA(NULL, (LPSTR)IDI_APPLICATION), wszPath, wszPath, 0);
     stgmedium.pUnkForRelease = NULL;
 
     fmtetc.dwAspect = DVASPECT_CONTENT;
     hr = IOleCache2_SetData(pOleCache, &fmtetc, &stgmedium, FALSE);
-    ok(hr == OLE_E_BLANK, "IOleCache_SetData for aspect not in cache should have return OLE_E_BLANK instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_BLANK, "IOleCache_SetData for aspect not in cache should have return OLE_E_BLANK instead of 0x%08lx\n", hr);
 
     fmtetc.dwAspect = DVASPECT_ICON;
     hr = IOleCache2_SetData(pOleCache, &fmtetc, &stgmedium, FALSE);
@@ -1901,7 +1773,7 @@ static void test_data_cache(void)
     todo_wine {
     ok_ole_success(hr, "IViewObject_Freeze");
     hr = IViewObject_Freeze(pViewObject, DVASPECT_CONTENT, -1, NULL, &dwFreeze);
-    ok(hr == OLE_E_BLANK, "IViewObject_Freeze with uncached aspect should have returned OLE_E_BLANK instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_BLANK, "IViewObject_Freeze with uncached aspect should have returned OLE_E_BLANK instead of 0x%08lx\n", hr);
     }
 
     rcBounds.left = 0;
@@ -1914,7 +1786,7 @@ static void test_data_cache(void)
     ok_ole_success(hr, "IViewObject_Draw");
 
     hr = IViewObject_Draw(pViewObject, DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue, 0xdeadbeef);
-    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08lx\n", hr);
 
     /* a NULL draw_continue fn ptr */
     hr = IViewObject_Draw(pViewObject, DVASPECT_ICON, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, NULL, 0xdeadbeef);
@@ -1924,7 +1796,7 @@ static void test_data_cache(void)
     hr = IViewObject_Draw(pViewObject, DVASPECT_ICON, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue_false, 0xdeadbeef);
     ok(hr == E_ABORT ||
        broken(hr == S_OK), /* win9x may skip the callbacks */
-       "IViewObject_Draw with draw_continue_false returns 0x%08x\n", hr);
+       "IViewObject_Draw with draw_continue_false returns 0x%08lx\n", hr);
 
     DeleteDC(hdcMem);
 
@@ -1938,7 +1810,7 @@ static void test_data_cache(void)
     ok_ole_success(hr, "IPersistStorage_SaveCompleted");
 
     hr = IPersistStorage_IsDirty(pPS);
-    ok(hr == S_FALSE, "IPersistStorage_IsDirty should have returned S_FALSE instead of 0x%x\n", hr);
+    ok(hr == S_FALSE, "IPersistStorage_IsDirty should have returned S_FALSE instead of 0x%lx\n", hr);
 
     IPersistStorage_Release(pPS);
     IViewObject_Release(pViewObject);
@@ -1948,7 +1820,6 @@ static void test_data_cache(void)
     CHECK_NO_EXTRA_METHODS();
 
     /* Test with loaded data */
-    trace("Testing loaded data with CreateDataCache:\n");
     expected_method_list = methods_cacheload;
 
     hr = CreateDataCache(NULL, &CLSID_NULL, &IID_IOleCache2, (LPVOID *)&pOleCache);
@@ -1966,7 +1837,7 @@ static void test_data_cache(void)
     ok_ole_success(hr, "IPersistStorage_Load");
 
     hr = IPersistStorage_IsDirty(pPS);
-    ok(hr == S_FALSE, "IPersistStorage_IsDirty should have returned S_FALSE instead of 0x%x\n", hr);
+    ok(hr == S_FALSE, "IPersistStorage_IsDirty should have returned S_FALSE instead of 0x%lx\n", hr);
 
     fmtetc.cfFormat = 0;
     fmtetc.dwAspect = DVASPECT_ICON;
@@ -1974,7 +1845,7 @@ static void test_data_cache(void)
     fmtetc.ptd = NULL;
     fmtetc.tymed = TYMED_MFPICT;
     hr = IOleCache2_Cache(pOleCache, &fmtetc, 0, &dwConnection);
-    ok(hr == CACHE_S_SAMECACHE, "IOleCache_Cache with already loaded data format type should return CACHE_S_SAMECACHE instead of 0x%x\n", hr);
+    ok(hr == CACHE_S_SAMECACHE, "IOleCache_Cache with already loaded data format type should return CACHE_S_SAMECACHE instead of 0x%lx\n", hr);
 
     rcBounds.left = 0;
     rcBounds.top = 0;
@@ -1986,7 +1857,7 @@ static void test_data_cache(void)
     ok_ole_success(hr, "IViewObject_Draw");
 
     hr = IViewObject_Draw(pViewObject, DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue, 0xdeadbeef);
-    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08lx\n", hr);
 
     /* unload the cached storage object, causing it to be reloaded */
     hr = IOleCache2_DiscardCache(pOleCache, DISCARDCACHE_NOSAVE);
@@ -2002,12 +1873,12 @@ static void test_data_cache(void)
     hr = IOleCache2_DiscardCache(pOleCache, DISCARDCACHE_NOSAVE);
     ok_ole_success(hr, "IOleCache2_DiscardCache");
     hr = IViewObject_Draw(pViewObject, DVASPECT_ICON, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue, 0xdeadbeef);
-    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08lx\n", hr);
 
     DeleteDC(hdcMem);
 
     hr = IOleCache2_InitCache(pOleCache, &DataObject);
-    ok(hr == CACHE_E_NOCACHE_UPDATED, "IOleCache_InitCache should have returned CACHE_E_NOCACHE_UPDATED instead of 0x%08x\n", hr);
+    ok(hr == CACHE_E_NOCACHE_UPDATED, "IOleCache_InitCache should have returned CACHE_E_NOCACHE_UPDATED instead of 0x%08lx\n", hr);
 
     IPersistStorage_Release(pPS);
     IViewObject_Release(pViewObject);
@@ -2033,44 +1904,44 @@ static void test_data_cache(void)
     ok_ole_success(hr, "IOleCache_Cache");
 
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+    ok(hr == OLE_E_BLANK, "got %08lx\n", hr);
 
     fmtetc.cfFormat = cf_test_1;
     fmtetc.dwAspect = DVASPECT_CONTENT;
     fmtetc.tymed = TYMED_HGLOBAL;
 
     hr = IOleCache2_Cache(pOleCache, &fmtetc, 0, &dwConnection);
-    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08lx\n", hr);
 
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+    ok(hr == OLE_E_BLANK, "got %08lx\n", hr);
 
     fmtetc.cfFormat = cf_test_2;
     hr = IOleCache2_Cache(pOleCache, &fmtetc, ADVF_PRIMEFIRST, &dwConnection);
-    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08lx\n", hr);
 
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+    ok(hr == OLE_E_BLANK, "got %08lx\n", hr);
 
     hr = IOleCacheControl_OnRun(pOleCacheControl, &DataObject);
     ok_ole_success(hr, "IOleCacheControl_OnRun");
 
     fmtetc.cfFormat = cf_test_3;
     hr = IOleCache2_Cache(pOleCache, &fmtetc, 0, &dwConnection);
-    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08lx\n", hr);
 
     fmtetc.cfFormat = cf_test_1;
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+    ok(hr == OLE_E_BLANK, "got %08lx\n", hr);
 
     fmtetc.cfFormat = cf_test_2;
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     ReleaseStgMedium(&stgmedium);
 
     fmtetc.cfFormat = cf_test_3;
     hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
-    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+    ok(hr == OLE_E_BLANK, "got %08lx\n", hr);
 
     IOleCacheControl_Release(pOleCacheControl);
     IDataObject_Release(pCacheDataObject);
@@ -2104,18 +1975,18 @@ static IStorage *create_storage( int num )
     ULONG written;
 
     hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     hr = IStorage_SetClass( stg, &CLSID_Picture_Dib );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     hr = IStorage_CreateStream( stg, CONTENTS, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE, 0, 0, &stm );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     if (num == 1) /* Set biXPelsPerMeter = 0 */
     {
         file_dib[0x26] = 0;
         file_dib[0x27] = 0;
     }
     hr = IStream_Write( stm, file_dib, sizeof(file_dib), &written );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     IStream_Release( stm );
     return stg;
 }
@@ -2142,32 +2013,32 @@ static void test_data_cache_dib_contents_stream(int num)
     };
 
     hr = CreateDataCache( NULL, &CLSID_Picture_Metafile, &IID_IUnknown, (void **)&unk );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     hr = IUnknown_QueryInterface( unk, &IID_IPersistStorage, (void **)&persist );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     hr = IUnknown_QueryInterface( unk, &IID_IDataObject, (void **)&data );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     hr = IUnknown_QueryInterface( unk, &IID_IViewObject2, (void **)&view );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     hr = IUnknown_QueryInterface( unk, &IID_IOleCache2, (void **)&cache );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
 
     stg = create_storage( num );
 
     hr = IPersistStorage_Load( persist, stg );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     IStorage_Release( stg );
 
     hr = IPersistStorage_GetClassID( persist, &cls );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     ok( IsEqualCLSID( &cls, &CLSID_Picture_Dib ), "class id mismatch\n" );
 
     hr = IDataObject_GetData( data, &fmt, &med );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
-    ok( med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed );
-    ok( GlobalSize( U(med).hGlobal ) >= sizeof(dib) - sizeof(BITMAPFILEHEADER),
-        "got %lu\n", GlobalSize( U(med).hGlobal ) );
-    ptr = GlobalLock( U(med).hGlobal );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
+    ok( med.tymed == TYMED_HGLOBAL, "got %lx\n", med.tymed );
+    ok( GlobalSize( med.hGlobal ) >= sizeof(dib_white) - sizeof(BITMAPFILEHEADER),
+        "got %Iu\n", GlobalSize( med.hGlobal ) );
+    ptr = GlobalLock( med.hGlobal );
 
     expect_info = *(BITMAPINFOHEADER *)(file_dib + sizeof(BITMAPFILEHEADER));
     if (expect_info.biXPelsPerMeter == 0 || expect_info.biYPelsPerMeter == 0)
@@ -2180,25 +2051,25 @@ static void test_data_cache_dib_contents_stream(int num)
     ok( !memcmp( ptr, &expect_info, sizeof(expect_info) ), "mismatch\n" );
     ok( !memcmp( ptr + sizeof(expect_info), file_dib + sizeof(BITMAPFILEHEADER) + sizeof(expect_info),
                  sizeof(file_dib) - sizeof(BITMAPFILEHEADER) - sizeof(expect_info) ), "mismatch\n" );
-    GlobalUnlock( U(med).hGlobal );
+    GlobalUnlock( med.hGlobal );
     ReleaseStgMedium( &med );
 
     check_enum_cache( cache, enum_expect, 2 );
 
     hr = IViewObject2_GetExtent( view, DVASPECT_CONTENT, -1, NULL, &sz );
-    ok( SUCCEEDED(hr), "got %08x\n", hr );
+    ok( SUCCEEDED(hr), "got %08lx\n", hr );
     if (num == 0)
     {
-        ok( sz.cx == 1000, "got %d\n", sz.cx );
-        ok( sz.cy == 250, "got %d\n", sz.cy );
+        ok( sz.cx == 1000, "got %ld\n", sz.cx );
+        ok( sz.cy == 250, "got %ld\n", sz.cy );
     }
     else
     {
         HDC hdc = GetDC( 0 );
         LONG x = 2 * 2540 / GetDeviceCaps( hdc, LOGPIXELSX );
         LONG y = 1 * 2540 / GetDeviceCaps( hdc, LOGPIXELSY );
-        ok( sz.cx == x, "got %d %d\n", sz.cx, x );
-        ok( sz.cy == y, "got %d %d\n", sz.cy, y );
+        ok( sz.cx == x, "got %ld %ld\n", sz.cx, x );
+        ok( sz.cy == y, "got %ld %ld\n", sz.cy, y );
 
         ReleaseDC( 0, hdc );
     }
@@ -2224,8 +2095,8 @@ static void check_dib_size( HGLOBAL h, int cx, int cy )
     BITMAPINFO *info;
 
     info = GlobalLock( h );
-    ok( info->bmiHeader.biWidth == cx, "got %d expect %d\n", info->bmiHeader.biWidth, cx );
-    ok( info->bmiHeader.biHeight == cy, "got %d expect %d\n", info->bmiHeader.biHeight, cy );
+    ok( info->bmiHeader.biWidth == cx, "got %ld expect %d\n", info->bmiHeader.biWidth, cx );
+    ok( info->bmiHeader.biHeight == cy, "got %ld expect %d\n", info->bmiHeader.biHeight, cy );
     GlobalUnlock( h );
 }
 
@@ -2253,7 +2124,7 @@ static void test_data_cache_cache(void)
     };
 
     hr = CreateDataCache( NULL, &CLSID_NULL, &IID_IOleCache2, (void **)&cache );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* create a dib entry which will also create a bitmap entry too */
     fmt.cfFormat = CF_DIB;
@@ -2263,8 +2134,8 @@ static void test_data_cache_cache(void)
     fmt.tymed = TYMED_HGLOBAL;
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( conn == 2, "got %d\n", conn );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( conn == 2, "got %ld\n", conn );
     expect[0].dwConnection = conn;
     expect[1].dwConnection = conn;
 
@@ -2275,15 +2146,15 @@ static void test_data_cache_cache(void)
     fmt.tymed = TYMED_GDI;
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == CACHE_S_SAMECACHE, "got %08x\n", hr );
+    ok( hr == CACHE_S_SAMECACHE, "got %08lx\n", hr );
 
     /* metafile */
     fmt.cfFormat = CF_METAFILEPICT;
     fmt.tymed = TYMED_MFPICT;
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( conn == 3, "got %d\n", conn );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( conn == 3, "got %ld\n", conn );
     expect[2].dwConnection = conn;
 
     check_enum_cache( cache, expect,  3);
@@ -2293,21 +2164,21 @@ static void test_data_cache_cache(void)
     fmt.tymed = TYMED_ENHMF;
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( conn == 4, "got %d\n", conn );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( conn == 4, "got %ld\n", conn );
     expect[3].dwConnection = conn;
 
     check_enum_cache( cache, expect, 4 );
 
     /* uncache everything */
     hr = IOleCache2_Uncache( cache, expect[3].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, expect[2].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, expect[0].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, expect[0].dwConnection );
-    ok( hr == OLE_E_NOCONNECTION, "got %08x\n", hr );
+    ok( hr == OLE_E_NOCONNECTION, "got %08lx\n", hr );
 
     check_enum_cache( cache, expect, 0 );
 
@@ -2316,7 +2187,7 @@ static void test_data_cache_cache(void)
     fmt.tymed = TYMED_GDI;
 
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     expect[0].dwConnection = conn;
     expect[1].dwConnection = conn;
@@ -2325,25 +2196,25 @@ static void test_data_cache_cache(void)
 
     /* Try setting a 1x1 bitmap */
     hr = IOleCache2_QueryInterface( cache, &IID_IDataObject, (void **) &data );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     create_bitmap( &med );
 
     hr = IOleCache2_SetData( cache, &fmt, &med, TRUE );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IDataObject_GetData( data, &fmt, &med );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( med.tymed == TYMED_GDI, "got %d\n", med.tymed );
-    check_bitmap_size( U(med).hBitmap, 1, 1 );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( med.tymed == TYMED_GDI, "got %ld\n", med.tymed );
+    check_bitmap_size( med.hBitmap, 1, 1 );
     ReleaseStgMedium( &med );
 
     fmt.cfFormat = CF_DIB;
     fmt.tymed = TYMED_HGLOBAL;
     hr = IDataObject_GetData( data, &fmt, &med );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( med.tymed == TYMED_HGLOBAL, "got %d\n", med.tymed );
-    check_dib_size( U(med).hGlobal, 1, 1 );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( med.tymed == TYMED_HGLOBAL, "got %ld\n", med.tymed );
+    check_dib_size( med.hGlobal, 1, 1 );
     ReleaseStgMedium( &med );
 
     /* Now set a 2x1 dib */
@@ -2352,96 +2223,96 @@ static void test_data_cache_cache(void)
     create_dib( &med );
 
     hr = IOleCache2_SetData( cache, &fmt, &med, TRUE );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     fmt.cfFormat = CF_BITMAP;
     fmt.tymed = TYMED_GDI;
     hr = IDataObject_GetData( data, &fmt, &med );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( med.tymed == TYMED_GDI, "got %d\n", med.tymed );
-    check_bitmap_size( U(med).hBitmap, 2, 1 );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( med.tymed == TYMED_GDI, "got %ld\n", med.tymed );
+    check_bitmap_size( med.hBitmap, 2, 1 );
     ReleaseStgMedium( &med );
 
     fmt.cfFormat = CF_DIB;
     fmt.tymed = TYMED_HGLOBAL;
     hr = IDataObject_GetData( data, &fmt, &med );
-    ok( hr == S_OK, "got %08x\n", hr );
-    ok( med.tymed == TYMED_HGLOBAL, "got %d\n", med.tymed );
-    check_dib_size( U(med).hGlobal, 2, 1 );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    ok( med.tymed == TYMED_HGLOBAL, "got %ld\n", med.tymed );
+    check_dib_size( med.hGlobal, 2, 1 );
     ReleaseStgMedium( &med );
 
     /* uncache everything */
     hr = IOleCache2_Uncache( cache, conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* view caching */
     fmt.cfFormat = 0;
     fmt.tymed = TYMED_ENHMF;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     view_caching[0].dwConnection = conn;
 
     fmt.tymed = TYMED_HGLOBAL;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == CACHE_S_SAMECACHE, "got %08x\n", hr );
+    ok( hr == CACHE_S_SAMECACHE, "got %08lx\n", hr );
 
     fmt.dwAspect = DVASPECT_THUMBNAIL;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     view_caching[1].dwConnection = conn;
 
     fmt.dwAspect = DVASPECT_DOCPRINT;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     view_caching[2].dwConnection = conn;
 
     /* DVASPECT_ICON view cache gets mapped to CF_METAFILEPICT */
     fmt.dwAspect = DVASPECT_ICON;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     view_caching[3].dwConnection = conn;
 
     check_enum_cache( cache, view_caching, 4 );
 
     /* uncache everything */
     hr = IOleCache2_Uncache( cache, view_caching[3].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, view_caching[2].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, view_caching[1].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, view_caching[0].dwConnection );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* Only able to set cfFormat == CF_METAFILEPICT (or == 0, see above) for DVASPECT_ICON */
     fmt.dwAspect = DVASPECT_ICON;
     fmt.cfFormat = CF_DIB;
     fmt.tymed = TYMED_HGLOBAL;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == DV_E_FORMATETC, "got %08x\n", hr );
+    ok( hr == DV_E_FORMATETC, "got %08lx\n", hr );
     fmt.cfFormat = CF_BITMAP;
     fmt.tymed = TYMED_GDI;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == DV_E_FORMATETC, "got %08x\n", hr );
+    ok( hr == DV_E_FORMATETC, "got %08lx\n", hr );
     fmt.cfFormat = CF_ENHMETAFILE;
     fmt.tymed = TYMED_ENHMF;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == DV_E_FORMATETC, "got %08x\n", hr );
+    ok( hr == DV_E_FORMATETC, "got %08lx\n", hr );
     fmt.cfFormat = CF_METAFILEPICT;
     fmt.tymed = TYMED_MFPICT;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* uncache everything */
     hr = IOleCache2_Uncache( cache, conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* tymed == 0 */
     fmt.cfFormat = CF_ENHMETAFILE;
     fmt.dwAspect = DVASPECT_CONTENT;
     fmt.tymed = 0;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == DV_E_TYMED, "got %08x\n", hr );
+    ok( hr == DV_E_TYMED, "got %08lx\n", hr );
 
     IDataObject_Release( data );
     IOleCache2_Release( cache );
@@ -2453,30 +2324,30 @@ static void test_data_cache_cache(void)
     fmt.dwAspect = DVASPECT_CONTENT;
     fmt.tymed = TYMED_HGLOBAL;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == CACHE_S_SAMECACHE, "got %08x\n", hr );
+    ok( hr == CACHE_S_SAMECACHE, "got %08lx\n", hr );
 
     /* aspect other than DVASPECT_CONTENT should fail */
     fmt.dwAspect = DVASPECT_THUMBNAIL;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( FAILED(hr), "got %08x\n", hr );
+    ok( FAILED(hr), "got %08lx\n", hr );
 
     fmt.dwAspect = DVASPECT_DOCPRINT;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( FAILED(hr), "got %08x\n", hr );
+    ok( FAILED(hr), "got %08lx\n", hr );
 
     /* try caching another clip format */
     fmt.cfFormat = CF_METAFILEPICT;
     fmt.dwAspect = DVASPECT_CONTENT;
     fmt.tymed = TYMED_MFPICT;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( FAILED(hr), "got %08x\n", hr );
+    ok( FAILED(hr), "got %08lx\n", hr );
 
     /* As an exception, it's possible to add an icon aspect */
     fmt.cfFormat = CF_METAFILEPICT;
     fmt.dwAspect = DVASPECT_ICON;
     fmt.tymed = TYMED_MFPICT;
     hr = IOleCache2_Cache( cache, &fmt, 0, &conn );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     IOleCache2_Release( cache );
 }
@@ -2512,13 +2383,13 @@ static void test_data_cache_init(void)
     for (i = 0; i < ARRAY_SIZE(data); i++)
     {
         hr = CreateDataCache( NULL, data[i].clsid, &IID_IOleCache2, (void **)&cache );
-        ok( hr == S_OK, "got %08x\n", hr );
+        ok( hr == S_OK, "got %08lx\n", hr );
 
         check_enum_cache( cache, enum_expect + data[i].enum_start , data[i].enum_num );
 
         IOleCache2_QueryInterface( cache, &IID_IPersistStorage, (void **) &persist );
         hr = IPersistStorage_GetClassID( persist, &clsid );
-        ok( hr == S_OK, "got %08x\n", hr );
+        ok( hr == S_OK, "got %08lx\n", hr );
         ok( IsEqualCLSID( &clsid, data[i].clsid ), "class id mismatch %s %s\n", wine_dbgstr_guid( &clsid ),
             wine_dbgstr_guid( data[i].clsid ) );
 
@@ -2563,72 +2434,72 @@ static void test_data_cache_initnew(void)
     };
 
     hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_dib );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     hr = IStorage_SetClass( stg_dib, &CLSID_Picture_Dib );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_mf );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     hr = IStorage_SetClass( stg_mf, &CLSID_Picture_Metafile );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = StgCreateDocfile( NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE, 0, &stg_wine );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
     hr = IStorage_SetClass( stg_wine, &CLSID_WineTestOld );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = CreateDataCache( NULL, &CLSID_WineTestOld, &IID_IOleCache2, (void **)&cache );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     IOleCache2_QueryInterface( cache, &IID_IPersistStorage, (void **) &persist );
 
     hr = IPersistStorage_InitNew( persist, stg_dib );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_GetClassID( persist, &clsid );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
 
     check_enum_cache( cache, initnew_expect, 2 );
 
     hr = IPersistStorage_InitNew( persist, stg_mf );
-    ok( hr == CO_E_ALREADYINITIALIZED, "got %08x\n", hr);
+    ok( hr == CO_E_ALREADYINITIALIZED, "got %08lx\n", hr);
 
     hr = IPersistStorage_HandsOffStorage( persist );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_GetClassID( persist, &clsid );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
 
     hr = IPersistStorage_InitNew( persist, stg_mf );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_GetClassID( persist, &clsid );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     ok( IsEqualCLSID( &clsid, &CLSID_Picture_Metafile ), "got %s\n", wine_dbgstr_guid( &clsid ) );
 
     check_enum_cache( cache, initnew2_expect, 3 );
 
     hr = IPersistStorage_HandsOffStorage( persist );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_InitNew( persist, stg_dib );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_GetClassID( persist, &clsid );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     ok( IsEqualCLSID( &clsid, &CLSID_Picture_Dib ), "got %s\n", wine_dbgstr_guid( &clsid ) );
 
     check_enum_cache( cache, initnew3_expect, 5 );
 
     hr = IPersistStorage_HandsOffStorage( persist );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_InitNew( persist, stg_wine );
-    ok( hr == S_OK, "got %08x\n", hr);
+    ok( hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_GetClassID( persist, &clsid );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     ok( IsEqualCLSID( &clsid, &CLSID_WineTestOld ), "got %s\n", wine_dbgstr_guid( &clsid ) );
 
     check_enum_cache( cache, initnew4_expect, 5 );
@@ -2641,83 +2512,25 @@ static void test_data_cache_initnew(void)
     IOleCache2_Release( cache );
 }
 
+static BOOL compare_global(HGLOBAL handle, const void *data, SIZE_T size)
+{
+    const void *mem = GlobalLock(handle);
+    BOOL ret = GlobalSize(handle) == size && !memcmp(data, mem, size);
+    GlobalUnlock(handle);
+    return ret;
+}
+
 static void test_data_cache_updatecache( void )
 {
+    FORMATETC dib_fmt = {CF_DIB, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    FORMATETC emf_fmt = {CF_ENHMETAFILE, NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF};
+    FORMATETC wmf_fmt = {CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_MFPICT};
+    FORMATETC view_fmt = {0, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    IDataObject *data;
     HRESULT hr;
     IOleCache2 *cache;
-    FORMATETC fmt;
+    STGMEDIUM medium;
     DWORD conn[4];
-
-    static const struct expected_method methods_dib[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_BITMAP,       NULL, DVASPECT_CONTENT, -1, TYMED_GDI } },
-        { NULL }
-    };
-
-    static const struct expected_method methods_dib_emf[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_ENHMETAFILE,  NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_dib_wmf[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_viewcache[] =
-    {
-        { "DataObject_QueryGetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_MFPICT } },
-        { "DataObject_QueryGetData", 0, { CF_ENHMETAFILE,  NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF } },
-        { "DataObject_QueryGetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { "DataObject_QueryGetData", 0, { CF_BITMAP,       NULL, DVASPECT_CONTENT, -1, TYMED_GDI } },
-        { NULL }
-    };
-    static const struct expected_method methods_viewcache_with_dib[] =
-    {
-        { "DataObject_QueryGetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_MFPICT } },
-        { "DataObject_QueryGetData", 0, { CF_ENHMETAFILE,  NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF } },
-        { "DataObject_QueryGetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData",      0, { CF_DIB,          NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { NULL }
-    };
-    static const struct expected_method methods_flags_all[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT,   -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_ENHMETAFILE,  NULL, DVASPECT_CONTENT,   -1, TYMED_ENHMF } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT,   -1, TYMED_MFPICT } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT,   -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_flags_ifblank_1[] =
-    {
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT,   -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_flags_ifblank_2[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT,   -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT,   -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_flags_normal[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT,   -1, TYMED_HGLOBAL } },
-        { NULL }
-    };
-    static const struct expected_method methods_initcache[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB,          NULL, DVASPECT_CONTENT,   -1, TYMED_HGLOBAL } },
-        { "DataObject_GetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT,   -1, TYMED_MFPICT } },
-        { NULL }
-    };
-    static const struct expected_method methods_empty[] =
-    {
-        { NULL }
-    };
 
     static STATDATA view_cache[] =
     {
@@ -2729,216 +2542,276 @@ static void test_data_cache_updatecache( void )
         {{ CF_BITMAP,       0, DVASPECT_CONTENT, -1, TYMED_GDI },     0, NULL, 0 }
     };
 
-    static FORMATETC dib_fmt[] =
-    {
-        { CF_DIB,       NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
-        { 0 }
-    };
-
     hr = CreateDataCache( NULL, &CLSID_WineTestOld, &IID_IOleCache2, (void **)&cache );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
+    IOleCache2_QueryInterface(cache, &IID_IDataObject, (void **)&data);
 
-    /* No cache slots */
-    g_dataobject_fmts = NULL;
-    expected_method_list = NULL;
+    data_object_format = NULL;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = IOleCache2_Cache( cache, &dib_fmt, 0, &conn[0] );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08lx\n", hr );
 
-    /* A dib cache slot */
-    fmt.cfFormat = CF_DIB;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    hr = IOleCache2_Cache( cache, &fmt, 0, &conn[0] );
-    ok( hr == S_OK, "got %08x\n", hr );
-
-    expected_method_list = methods_dib;
-
+    data_object_format = &dib_fmt;
+    data_object_dib = dib_white;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_white, sizeof(dib_white)), "Media didn't match.\n");
 
-    /* Now with a dib available */
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_dib;
+    hr = IOleCache2_Cache(cache, &emf_fmt, 0, &conn[1]);
+    ok( hr == S_OK, "got %08lx\n", hr );
 
+    data_object_dib = dib_black;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    /* Add an EMF cache slot */
-    fmt.cfFormat = CF_ENHMETAFILE;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_ENHMF;
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_black, sizeof(dib_black)), "Media didn't match.\n");
 
-    hr = IOleCache2_Cache( cache, &fmt, 0, &conn[1] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_dib_emf;
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    /* Two slots to fill, only the dib will succeed */
+    data_object_format = &emf_fmt;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
 
-    /* Replace the emf slot with a wmf */
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_ENHMF, "Got unexpected tymed %lu.\n", medium.tymed);
+
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
+    data_object_format = &wmf_fmt;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_ENHMF, "Got unexpected tymed %lu.\n", medium.tymed);
+
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
     hr = IOleCache2_Uncache( cache, conn[1] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    fmt.cfFormat = CF_METAFILEPICT;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_MFPICT;
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    hr = IOleCache2_Cache( cache, &fmt, 0, &conn[1] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_dib_wmf;
+    hr = IOleCache2_Cache( cache, &wmf_fmt, 0, &conn[1] );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
+    data_object_format = &emf_fmt;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
+    data_object_format = &wmf_fmt;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &wmf_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     hr = IOleCache2_Uncache( cache, conn[1] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
     hr = IOleCache2_Uncache( cache, conn[0] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    /* View caching */
-    fmt.cfFormat = 0;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
+    /* Test view caching. */
 
-    hr = IOleCache2_Cache( cache, &fmt, 0, &conn[0] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IOleCache2_Cache( cache, &view_fmt, 0, &conn[0] );
+    ok( hr == S_OK, "got %08lx\n", hr );
     view_cache[0].dwConnection = conn[0];
 
-    g_dataobject_fmts = NULL;
-    expected_method_list = methods_viewcache;
-
+    data_object_format = NULL;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08x\n", hr );
+    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
     check_enum_cache( cache, view_cache, 1 );
 
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_viewcache_with_dib;
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &view_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
+    data_object_format = &dib_fmt;
+    data_object_dib = dib_white;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
     view_cache_after_dib[0].dwConnection = view_cache_after_dib[1].dwConnection = view_cache[0].dwConnection;
     check_enum_cache( cache, view_cache_after_dib, 2 );
 
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_white, sizeof(dib_white)), "Media didn't match.\n");
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &view_fmt, &medium);
+    todo_wine ok(hr == DV_E_CLIPFORMAT, "Got hr %#lx.\n", hr);
+
+    data_object_format = &emf_fmt;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
+    ok( hr == CACHE_E_NOCACHE_UPDATED, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
     hr = IOleCache2_Uncache( cache, conn[0] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
     /* Try some different flags */
 
-    fmt.cfFormat = CF_DIB;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_HGLOBAL;
+    hr = IOleCache2_Cache( cache, &dib_fmt, 0, &conn[0] );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    hr = IOleCache2_Cache( cache, &fmt, 0, &conn[0] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IOleCache2_Cache( cache, &emf_fmt, ADVF_NODATA, &conn[1] );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    fmt.cfFormat = CF_ENHMETAFILE;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_ENHMF;
+    data_object_format = &dib_fmt;
+    data_object_dib = dib_white;
+    hr = IOleCache2_UpdateCache(cache, &DataObject, UPDFCACHE_IFBLANK, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    hr = IOleCache2_Cache( cache, &fmt, ADVF_NODATA, &conn[1] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_white, sizeof(dib_white)), "Media didn't match.\n");
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    fmt.cfFormat = CF_METAFILEPICT;
-    fmt.ptd = NULL;
-    fmt.dwAspect = DVASPECT_CONTENT;
-    fmt.lindex = -1;
-    fmt.tymed = TYMED_MFPICT;
+    data_object_dib = dib_black;
+    hr = IOleCache2_UpdateCache(cache, &DataObject, UPDFCACHE_IFBLANK, NULL);
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    hr = IOleCache2_Cache( cache, &fmt, ADVFCACHE_ONSAVE, &conn[2] );
-    ok( hr == S_OK, "got %08x\n", hr );
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_white, sizeof(dib_white)), "Media didn't match.\n");
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_flags_all;
-
-    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-
-    CHECK_NO_EXTRA_METHODS();
-
-    expected_method_list = methods_flags_all;
-
-    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ALL, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
-
-    CHECK_NO_EXTRA_METHODS();
-
-    expected_method_list = methods_flags_ifblank_1;
-
+    data_object_format = &emf_fmt;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_IFBLANK , NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(medium.tymed == TYMED_HGLOBAL, "Got unexpected tymed %lu.\n", medium.tymed);
+    ok(compare_global(medium.hGlobal, dib_white, sizeof(dib_white)), "Media didn't match.\n");
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
     hr = IOleCache2_DiscardCache( cache, DISCARDCACHE_NOSAVE );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    expected_method_list = methods_flags_ifblank_2;
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_IFBLANK , NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
-
-    CHECK_NO_EXTRA_METHODS();
-
-    hr = IOleCache2_DiscardCache( cache, DISCARDCACHE_NOSAVE );
-    ok( hr == S_OK, "got %08x\n", hr );
-
-    expected_method_list = methods_flags_all;
-
+    data_object_format = &emf_fmt;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_IFBLANK | UPDFCACHE_NODATACACHE, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
-
-    expected_method_list = methods_empty;
-
-    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ONLYIFBLANK | UPDFCACHE_NORMALCACHE, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
-
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     hr = IOleCache2_DiscardCache( cache, DISCARDCACHE_NOSAVE );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    expected_method_list = methods_flags_normal;
-
+    data_object_format = &dib_fmt;
     hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ONLYIFBLANK | UPDFCACHE_NORMALCACHE, NULL );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
-    expected_method_list = methods_initcache;
+    data_object_format = &emf_fmt;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ONLYIFBLANK | UPDFCACHE_NORMALCACHE, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_IFBLANK | UPDFCACHE_NORMALCACHE, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
+    hr = IOleCache2_DiscardCache( cache, DISCARDCACHE_NOSAVE );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    data_object_format = &dib_fmt;
     hr = IOleCache2_InitCache( cache, &DataObject );
-    ok( hr == S_OK, "got %08x\n", hr );
+    ok( hr == S_OK, "got %08lx\n", hr );
 
-    CHECK_NO_EXTRA_METHODS();
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
 
+    data_object_format = &emf_fmt;
+    hr = IOleCache2_UpdateCache( cache, &DataObject, UPDFCACHE_ONLYIFBLANK | UPDFCACHE_NORMALCACHE, NULL );
+    ok( hr == S_OK, "got %08lx\n", hr );
+
+    hr = IDataObject_GetData(data, &dib_fmt, &medium);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = IDataObject_GetData(data, &emf_fmt, &medium);
+    ok(hr == OLE_E_BLANK, "Got hr %#lx.\n", hr);
+
+    IDataObject_Release(data);
     IOleCache2_Release( cache );
 }
 
@@ -2966,26 +2839,17 @@ static void test_default_handler(void)
 
     static const struct expected_method methods_embeddinghelper[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_AddRef", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_QueryInterface", TEST_TODO },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_QueryInterface", 0 },
-        { "OleObject_QueryInterface", TEST_OPTIONAL }, /* Win95/98/NT4 */
-        { "OleObject_Release", TEST_TODO },
-        { "WINE_EXTRA", TEST_OPTIONAL },
         { NULL, 0 }
     };
 
     hr = CoCreateInstance(&CLSID_WineTest, NULL, CLSCTX_INPROC_HANDLER, &IID_IOleObject, (void **)&pObject);
-    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance should have failed with REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance should have failed with REGDB_E_CLASSNOTREG instead of 0x%08lx\n", hr);
 
     hr = OleCreateDefaultHandler(&CLSID_WineTest, NULL, &IID_IOleObject, (void **)&pObject);
     ok_ole_success(hr, "OleCreateDefaultHandler");
 
     hr = IOleObject_QueryInterface(pObject, &IID_IOleInPlaceObject, (void **)&pInPlaceObj);
-    ok(hr == E_NOINTERFACE, "IOleObject_QueryInterface(&IID_IOleInPlaceObject) should return E_NOINTERFACE instead of 0x%08x\n", hr);
+    ok(hr == E_NOINTERFACE, "IOleObject_QueryInterface(&IID_IOleInPlaceObject) should return E_NOINTERFACE instead of 0x%08lx\n", hr);
 
     hr = IOleObject_Advise(pObject, &AdviseSink, &dwAdvConn);
     ok_ole_success(hr, "IOleObject_Advise");
@@ -2996,7 +2860,7 @@ static void test_default_handler(void)
     /* FIXME: test IOleObject_EnumAdvise */
 
     hr = IOleObject_EnumVerbs(pObject, &pEnumVerbs);
-    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_EnumVerbs should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_EnumVerbs should have returned REGDB_E_CLASSNOTREG instead of 0x%08lx\n", hr);
 
     hr = IOleObject_GetClientSite(pObject, &pClientSite);
     ok_ole_success(hr, "IOleObject_GetClientSite");
@@ -3006,15 +2870,15 @@ static void test_default_handler(void)
 
     hr = IOleObject_GetClipboardData(pObject, 0, &pDataObject);
     ok(hr == OLE_E_NOTRUNNING,
-       "IOleObject_GetClipboardData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n",
+       "IOleObject_GetClipboardData should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n",
        hr);
 
     hr = IOleObject_GetExtent(pObject, DVASPECT_CONTENT, &sizel);
-    ok(hr == OLE_E_BLANK, "IOleObject_GetExtent should have returned OLE_E_BLANK instead of 0x%08x\n",
+    ok(hr == OLE_E_BLANK, "IOleObject_GetExtent should have returned OLE_E_BLANK instead of 0x%08lx\n",
        hr);
 
     hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
-    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_GetMiscStatus should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_GetMiscStatus should have returned REGDB_E_CLASSNOTREG instead of 0x%08lx\n", hr);
 
     hr = IOleObject_GetUserClassID(pObject, &clsid);
     ok_ole_success(hr, "IOleObject_GetUserClassID");
@@ -3027,20 +2891,20 @@ static void test_default_handler(void)
     }
 
     hr = IOleObject_InitFromData(pObject, NULL, TRUE, 0);
-    ok(hr == OLE_E_NOTRUNNING, "IOleObject_InitFromData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IOleObject_InitFromData should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     hr = IOleObject_IsUpToDate(pObject);
-    ok(hr == OLE_E_NOTRUNNING, "IOleObject_IsUpToDate should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IOleObject_IsUpToDate should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     palette.palNumEntries = 1;
     palette.palVersion = 2;
     memset(&palette.palPalEntry[0], 0, sizeof(palette.palPalEntry[0]));
     hr = IOleObject_SetColorScheme(pObject, &palette);
-    ok(hr == OLE_E_NOTRUNNING, "IOleObject_SetColorScheme should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IOleObject_SetColorScheme should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     sizel.cx = sizel.cy = 0;
     hr = IOleObject_SetExtent(pObject, DVASPECT_CONTENT, &sizel);
-    ok(hr == OLE_E_NOTRUNNING, "IOleObject_SetExtent should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IOleObject_SetExtent should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     hr = IOleObject_SetHostNames(pObject, wszHostName, NULL);
     ok_ole_success(hr, "IOleObject_SetHostNames");
@@ -3052,11 +2916,11 @@ static void test_default_handler(void)
     IMoniker_Release(pMoniker);
 
     hr = IOleObject_GetMoniker(pObject, OLEGETMONIKER_ONLYIFTHERE, OLEWHICHMK_CONTAINER, &pMoniker);
-    ok(hr == E_FAIL, "IOleObject_GetMoniker should have returned E_FAIL instead of 0x%08x\n", hr);
+    ok(hr == E_FAIL, "IOleObject_GetMoniker should have returned E_FAIL instead of 0x%08lx\n", hr);
 
     hr = IOleObject_Update(pObject);
     todo_wine
-    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_Update should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_Update should have returned REGDB_E_CLASSNOTREG instead of 0x%08lx\n", hr);
 
     hr = IOleObject_QueryInterface(pObject, &IID_IDataObject, (void **)&pDataObject);
     ok_ole_success(hr, "IOleObject_QueryInterface");
@@ -3083,7 +2947,7 @@ static void test_default_handler(void)
     fmtetc.lindex = -1;
     fmtetc.tymed = TYMED_ENHMF;
     hr = IDataObject_QueryGetData(pDataObject, &fmtetc);
-    ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     fmtetc.cfFormat = CF_TEXT;
     fmtetc.ptd = NULL;
@@ -3091,7 +2955,7 @@ static void test_default_handler(void)
     fmtetc.lindex = -1;
     fmtetc.tymed = TYMED_NULL;
     hr = IDataObject_QueryGetData(pDataObject, &fmtetc);
-    ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
+    ok(hr == OLE_E_NOTRUNNING, "IDataObject_QueryGetData should have returned OLE_E_NOTRUNNING instead of 0x%08lx\n", hr);
 
     hr = IOleObject_QueryInterface(pObject, &IID_IRunnableObject, (void **)&pRunnableObject);
     ok_ole_success(hr, "IOleObject_QueryInterface");
@@ -3100,7 +2964,7 @@ static void test_default_handler(void)
     ok_ole_success(hr, "IRunnableObject_SetContainedObject");
 
     hr = IRunnableObject_Run(pRunnableObject, NULL);
-    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_Run should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "IOleObject_Run should have returned REGDB_E_CLASSNOTREG instead of 0x%08lx\n", hr);
 
     hr = IOleObject_Close(pObject, OLECLOSE_NOSAVE);
     ok_ole_success(hr, "IOleObject_Close");
@@ -3124,24 +2988,25 @@ static void test_default_handler(void)
 
             g_QIFailsWith = E_FAIL;
             hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
-            ok(hr == E_FAIL, "Got 0x%08x\n", hr);
+            ok(hr == E_FAIL, "Got 0x%08lx\n", hr);
 
             g_QIFailsWith = E_NOINTERFACE;
             hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
-            ok(hr == E_NOINTERFACE, "Got 0x%08x\n", hr);
+            ok(hr == E_NOINTERFACE, "Got 0x%08lx\n", hr);
 
             g_QIFailsWith = CO_E_OBJNOTCONNECTED;
             hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
-            ok(hr == CO_E_OBJNOTCONNECTED, "Got 0x%08x\n", hr);
+            ok(hr == CO_E_OBJNOTCONNECTED, "Got 0x%08lx\n", hr);
 
             g_QIFailsWith = 0x87654321;
             hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
-            ok(hr == 0x87654321, "Got 0x%08x\n", hr);
+            ok(hr == 0x87654321, "Got 0x%08lx\n", hr);
 
             IOleObject_Release(pObject);
         }
 
         CHECK_NO_EXTRA_METHODS();
+        todo_wine ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
         hr = CoRevokeClassObject(dwRegister);
         ok_ole_success(hr, "CoRevokeClassObject");
@@ -3152,16 +3017,12 @@ static void test_runnable(void)
 {
     static const struct expected_method methods_query_runnable[] =
     {
-        { "OleObject_QueryInterface", 0 },
-        { "OleObjectRunnable_AddRef", 0 },
         { "OleObjectRunnable_IsRunning", 0 },
-        { "OleObjectRunnable_Release", 0 },
         { NULL, 0 }
     };
 
     static const struct expected_method methods_no_runnable[] =
     {
-        { "OleObject_QueryInterface", 0 },
         { NULL, 0 }
     };
 
@@ -3176,18 +3037,21 @@ static void test_runnable(void)
     ret = OleIsRunning(object);
     ok(ret == TRUE, "Object should be running\n");
     CHECK_NO_EXTRA_METHODS();
+    todo_wine ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     g_isRunning = FALSE;
     expected_method_list = methods_query_runnable;
     ret = OleIsRunning(object);
     ok(ret == FALSE, "Object should not be running\n");
     CHECK_NO_EXTRA_METHODS();
+    todo_wine ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     g_showRunnable = FALSE;  /* QueryInterface(IID_IRunnableObject, ...) will fail */
     expected_method_list = methods_no_runnable;
     ret = OleIsRunning(object);
     ok(ret == TRUE, "Object without IRunnableObject should be running\n");
     CHECK_NO_EXTRA_METHODS();
+    todo_wine ok(!ole_object_refcount, "Got outstanding refcount %ld.\n", ole_object_refcount);
 
     g_isRunning = TRUE;
     g_showRunnable = TRUE;
@@ -3273,10 +3137,10 @@ static void test_OleRun(void)
 
     /* doesn't support IRunnableObject */
     hr = OleRun(&unknown);
-    ok(hr == S_OK, "OleRun failed 0x%08x\n", hr);
+    ok(hr == S_OK, "OleRun failed 0x%08lx\n", hr);
 
     hr = OleRun((IUnknown*)&testrunnable);
-    ok(hr == 0xdeadc0de, "got 0x%08x\n", hr);
+    ok(hr == 0xdeadc0de, "got 0x%08lx\n", hr);
 }
 
 static void test_OleLockRunning(void)
@@ -3284,7 +3148,7 @@ static void test_OleLockRunning(void)
     HRESULT hr;
 
     hr = OleLockRunning(&unknown, TRUE, FALSE);
-    ok(hr == S_OK, "OleLockRunning failed 0x%08x\n", hr);
+    ok(hr == S_OK, "OleLockRunning failed 0x%08lx\n", hr);
 }
 
 static void test_OleDraw(void)
@@ -3293,13 +3157,13 @@ static void test_OleDraw(void)
     RECT rect;
 
     hr = OleDraw((IUnknown*)&viewobject, 0, (HDC)0x1, NULL);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
 
     hr = OleDraw(NULL, 0, (HDC)0x1, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = OleDraw(NULL, 0, (HDC)0x1, &rect);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 }
 
 static const WCHAR olepres0W[] = {2,'O','l','e','P','r','e','s','0','0','0',0};
@@ -3338,18 +3202,18 @@ static HRESULT WINAPI Storage_CreateStream(IStorage *iface, LPCOLESTR pwcsName, 
         CHECK_EXPECT(Storage_CreateStream_CompObj);
         *ppstm = comp_obj_stream;
 
-        todo_wine ok(grfMode == (STGM_CREATE|STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %x\n", grfMode);
+        todo_wine ok(grfMode == (STGM_CREATE|STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %lx\n", grfMode);
     }
     else if (!lstrcmpW(pwcsName, olepres0W))
     {
         CHECK_EXPECT(Storage_CreateStream_OlePres);
         *ppstm = olepres_stream;
 
-        todo_wine ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %x\n", grfMode);
+        todo_wine ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %lx\n", grfMode);
     }
     else
     {
-todo_wine
+        todo_wine
         ok(0, "unexpected stream name %s\n", wine_dbgstr_w(pwcsName));
 #if 0   /* FIXME: return NULL once Wine is fixed */
         *ppstm = NULL;
@@ -3359,15 +3223,15 @@ todo_wine
 #endif
     }
 
-    ok(!reserved1, "reserved1 = %x\n", reserved1);
-    ok(!reserved2, "reserved2 = %x\n", reserved2);
+    ok(!reserved1, "reserved1 = %lx\n", reserved1);
+    ok(!reserved2, "reserved2 = %lx\n", reserved2);
     ok(!!ppstm, "ppstm = NULL\n");
 
     IStream_AddRef(*ppstm);
     hr = IStream_Seek(*ppstm, pos, STREAM_SEEK_SET, NULL);
-    ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
     hr = IStream_SetSize(*ppstm, size);
-    ok(hr == S_OK, "IStream_SetSize returned %x\n", hr);
+    ok(hr == S_OK, "IStream_SetSize returned %lx\n", hr);
     return S_OK;
 }
 
@@ -3379,45 +3243,45 @@ static HRESULT WINAPI Storage_OpenStream(IStorage *iface, LPCOLESTR pwcsName, vo
     HRESULT hr;
 
     ok(!reserved1, "reserved1 = %p\n", reserved1);
-    ok(!reserved2, "reserved2 = %x\n", reserved2);
+    ok(!reserved2, "reserved2 = %lx\n", reserved2);
     ok(!!ppstm, "ppstm = NULL\n");
 
     if(!lstrcmpW(pwcsName, comp_objW)) {
         CHECK_EXPECT2(Storage_OpenStream_CompObj);
-        ok(grfMode == STGM_SHARE_EXCLUSIVE, "grfMode = %x\n", grfMode);
+        ok(grfMode == STGM_SHARE_EXCLUSIVE, "grfMode = %lx\n", grfMode);
 
         *ppstm = comp_obj_stream;
         IStream_AddRef(comp_obj_stream);
         hr = IStream_Seek(comp_obj_stream, pos, STREAM_SEEK_SET, NULL);
-        ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+        ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
         return S_OK;
     }else if(!lstrcmpW(pwcsName, ole1W)) {
         CHECK_EXPECT(Storage_OpenStream_Ole);
 
         if (!ole_stream)
         {
-            ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READ), "grfMode = %x\n", grfMode);
+            ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READ), "grfMode = %lx\n", grfMode);
 
             *ppstm = NULL;
             return STG_E_FILENOTFOUND;
         }
 
-        ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %x\n", grfMode);
+        ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %lx\n", grfMode);
 
         *ppstm = ole_stream;
         IStream_AddRef(ole_stream);
         hr = IStream_Seek(ole_stream, pos, STREAM_SEEK_SET, NULL);
-        ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+        ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
         return S_OK;
 
     }else if(!lstrcmpW(pwcsName, olepres0W)) {
         CHECK_EXPECT(Storage_OpenStream_OlePres);
-        ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %x\n", grfMode);
+        ok(grfMode == (STGM_SHARE_EXCLUSIVE|STGM_READWRITE), "grfMode = %lx\n", grfMode);
 
         *ppstm = olepres_stream;
         IStream_AddRef(olepres_stream);
         hr = IStream_Seek(olepres_stream, pos, STREAM_SEEK_SET, NULL);
-        ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+        ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
         return S_OK;
     }
 
@@ -3515,7 +3379,7 @@ static HRESULT WINAPI Storage_Stat(IStorage *iface, STATSTG *pstatstg, DWORD grf
 {
     CHECK_EXPECT2(Storage_Stat);
     ok(pstatstg != NULL, "pstatstg = NULL\n");
-    ok(grfStatFlag == STATFLAG_NONAME, "grfStatFlag = %x\n", grfStatFlag);
+    ok(grfStatFlag == STATFLAG_NONAME, "grfStatFlag = %lx\n", grfStatFlag);
 
     memset(pstatstg, 0, sizeof(STATSTG));
     pstatstg->type = STGTY_STORAGE;
@@ -3587,18 +3451,18 @@ static void test_OleDoAutoConvert(void)
     HRESULT hr;
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &comp_obj_stream);
-    ok(hr == S_OK, "CreateStreamOnHGlobal returned %x\n", hr);
+    ok(hr == S_OK, "CreateStreamOnHGlobal returned %lx\n", hr);
     hr = IStream_Write(comp_obj_stream, (char*)&comp_obj_data, sizeof(comp_obj_data), NULL);
-    ok(hr == S_OK, "IStream_Write returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Write returned %lx\n", hr);
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &ole_stream);
-    ok(hr == S_OK, "CreateStreamOnHGlobal returned %x\n", hr);
+    ok(hr == S_OK, "CreateStreamOnHGlobal returned %lx\n", hr);
     hr = IStream_Write(ole_stream, (char*)&ole_data, sizeof(ole_data), NULL);
-    ok(hr == S_OK, "IStream_Write returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Write returned %lx\n", hr);
 
     clsid = IID_WineTest;
     hr = OleDoAutoConvert(NULL, &clsid);
-    ok(hr == E_INVALIDARG, "OleDoAutoConvert returned %x\n", hr);
+    ok(hr == E_INVALIDARG, "OleDoAutoConvert returned %lx\n", hr);
     ok(IsEqualIID(&clsid, &IID_NULL), "clsid = %s\n", wine_dbgstr_guid(&clsid));
 
     if(0) /* crashes on Win7 */
@@ -3607,7 +3471,7 @@ static void test_OleDoAutoConvert(void)
     clsid = IID_WineTest;
     SET_EXPECT(Storage_Stat);
     hr = OleDoAutoConvert(&Storage, &clsid);
-    ok(hr == REGDB_E_CLASSNOTREG, "OleDoAutoConvert returned %x\n", hr);
+    ok(hr == REGDB_E_CLASSNOTREG, "OleDoAutoConvert returned %lx\n", hr);
     CHECK_CALLED(Storage_Stat);
     ok(IsEqualIID(&clsid, &CLSID_WineTestOld), "clsid = %s\n", wine_dbgstr_guid(&clsid));
 
@@ -3617,14 +3481,14 @@ static void test_OleDoAutoConvert(void)
     ret = RegCreateKeyExW(HKEY_CLASSES_ROOT, buf, 0, NULL, 0,
             KEY_READ | KEY_WRITE | KEY_CREATE_SUB_KEY, NULL, &root, NULL);
     if(ret != ERROR_SUCCESS) {
-        win_skip("not enough permissions to create CLSID key (%u)\n", ret);
+        win_skip("not enough permissions to create CLSID key (%lu)\n", ret);
         return;
     }
 
     clsid = IID_WineTest;
     SET_EXPECT(Storage_Stat);
     hr = OleDoAutoConvert(&Storage, &clsid);
-    ok(hr == REGDB_E_KEYMISSING, "OleDoAutoConvert returned %x\n", hr);
+    ok(hr == REGDB_E_KEYMISSING, "OleDoAutoConvert returned %lx\n", hr);
     CHECK_CALLED(Storage_Stat);
     ok(IsEqualIID(&clsid, &CLSID_WineTestOld), "clsid = %s\n", wine_dbgstr_guid(&clsid));
 
@@ -3642,7 +3506,7 @@ static void test_OleDoAutoConvert(void)
     SET_EXPECT(Storage_CreateStream_CompObj);
     SET_EXPECT(Storage_OpenStream_Ole);
     hr = OleDoAutoConvert(&Storage, &clsid);
-    ok(hr == S_OK, "OleDoAutoConvert returned %x\n", hr);
+    ok(hr == S_OK, "OleDoAutoConvert returned %lx\n", hr);
     CHECK_CALLED(Storage_Stat);
     CHECK_CALLED(Storage_OpenStream_CompObj);
     CHECK_CALLED(Storage_SetClass);
@@ -3651,58 +3515,58 @@ static void test_OleDoAutoConvert(void)
     ok(IsEqualIID(&clsid, &CLSID_WineTest), "clsid = %s\n", wine_dbgstr_guid(&clsid));
 
     hr = IStream_Seek(comp_obj_stream, pos, STREAM_SEEK_SET, NULL);
-    ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
     hr = IStream_Read(comp_obj_stream, &comp_obj_data, sizeof(comp_obj_data), NULL);
-    ok(hr == S_OK, "IStream_Read returned %x\n", hr);
-    ok(comp_obj_data.reserved1 == 0xfffe0001, "reserved1 = %x\n", comp_obj_data.reserved1);
-    ok(comp_obj_data.version == 0xa03, "version = %x\n", comp_obj_data.version);
-    ok(comp_obj_data.reserved2[0] == -1, "reserved2[0] = %x\n", comp_obj_data.reserved2[0]);
+    ok(hr == S_OK, "IStream_Read returned %lx\n", hr);
+    ok(comp_obj_data.reserved1 == 0xfffe0001, "reserved1 = %lx\n", comp_obj_data.reserved1);
+    ok(comp_obj_data.version == 0xa03, "version = %lx\n", comp_obj_data.version);
+    ok(comp_obj_data.reserved2[0] == -1, "reserved2[0] = %lx\n", comp_obj_data.reserved2[0]);
     ok(IsEqualIID(comp_obj_data.reserved2+1, &CLSID_WineTestOld), "reserved2 = %s\n", wine_dbgstr_guid((CLSID*)(comp_obj_data.reserved2+1)));
-    ok(!comp_obj_data.ansi_user_type_len, "ansi_user_type_len = %d\n", comp_obj_data.ansi_user_type_len);
-    ok(!comp_obj_data.ansi_clipboard_format_len, "ansi_clipboard_format_len = %d\n", comp_obj_data.ansi_clipboard_format_len);
-    ok(!comp_obj_data.reserved3, "reserved3 = %x\n", comp_obj_data.reserved3);
-    ok(comp_obj_data.unicode_marker == 0x71b239f4, "unicode_marker = %x\n", comp_obj_data.unicode_marker);
-    ok(!comp_obj_data.unicode_user_type_len, "unicode_user_type_len = %d\n", comp_obj_data.unicode_user_type_len);
-    ok(!comp_obj_data.unicode_clipboard_format_len, "unicode_clipboard_format_len = %d\n", comp_obj_data.unicode_clipboard_format_len);
-    ok(!comp_obj_data.reserved4, "reserved4 %d\n", comp_obj_data.reserved4);
+    ok(!comp_obj_data.ansi_user_type_len, "ansi_user_type_len = %ld\n", comp_obj_data.ansi_user_type_len);
+    ok(!comp_obj_data.ansi_clipboard_format_len, "ansi_clipboard_format_len = %ld\n", comp_obj_data.ansi_clipboard_format_len);
+    ok(!comp_obj_data.reserved3, "reserved3 = %lx\n", comp_obj_data.reserved3);
+    ok(comp_obj_data.unicode_marker == 0x71b239f4, "unicode_marker = %lx\n", comp_obj_data.unicode_marker);
+    ok(!comp_obj_data.unicode_user_type_len, "unicode_user_type_len = %ld\n", comp_obj_data.unicode_user_type_len);
+    ok(!comp_obj_data.unicode_clipboard_format_len, "unicode_clipboard_format_len = %ld\n", comp_obj_data.unicode_clipboard_format_len);
+    ok(!comp_obj_data.reserved4, "reserved4 %ld\n", comp_obj_data.reserved4);
 
     hr = IStream_Seek(ole_stream, pos, STREAM_SEEK_SET, NULL);
-    ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
     hr = IStream_Read(ole_stream, &ole_data, sizeof(ole_data), NULL);
-    ok(hr == S_OK, "IStream_Read returned %x\n", hr);
-    ok(ole_data.version == 0, "version = %x\n", ole_data.version);
-    ok(ole_data.flags == 4, "flags = %x\n", ole_data.flags);
+    ok(hr == S_OK, "IStream_Read returned %lx\n", hr);
+    ok(ole_data.version == 0, "version = %lx\n", ole_data.version);
+    ok(ole_data.flags == 4, "flags = %lx\n", ole_data.flags);
     for(i=2; i<sizeof(ole_data)/sizeof(DWORD); i++)
-        ok(((DWORD*)&ole_data)[i] == 0, "ole_data[%d] = %x\n", i, ((DWORD*)&ole_data)[i]);
+        ok(((DWORD*)&ole_data)[i] == 0, "ole_data[%ld] = %lx\n", i, ((DWORD*)&ole_data)[i]);
 
     SET_EXPECT(Storage_OpenStream_Ole);
     hr = SetConvertStg(&Storage, TRUE);
-    ok(hr == S_OK, "SetConvertStg returned %x\n", hr);
+    ok(hr == S_OK, "SetConvertStg returned %lx\n", hr);
     CHECK_CALLED(Storage_OpenStream_Ole);
 
     SET_EXPECT(Storage_OpenStream_CompObj);
     SET_EXPECT(Storage_Stat);
     SET_EXPECT(Storage_CreateStream_CompObj);
     hr = WriteFmtUserTypeStg(&Storage, 0, NULL);
-    ok(hr == S_OK, "WriteFmtUserTypeStg returned %x\n", hr);
+    ok(hr == S_OK, "WriteFmtUserTypeStg returned %lx\n", hr);
     todo_wine CHECK_CALLED(Storage_OpenStream_CompObj);
     CHECK_CALLED(Storage_Stat);
     CHECK_CALLED(Storage_CreateStream_CompObj);
     hr = IStream_Seek(comp_obj_stream, pos, STREAM_SEEK_SET, NULL);
-    ok(hr == S_OK, "IStream_Seek returned %x\n", hr);
+    ok(hr == S_OK, "IStream_Seek returned %lx\n", hr);
     hr = IStream_Read(comp_obj_stream, &comp_obj_data, sizeof(comp_obj_data), NULL);
-    ok(hr == S_OK, "IStream_Read returned %x\n", hr);
-    ok(comp_obj_data.reserved1 == 0xfffe0001, "reserved1 = %x\n", comp_obj_data.reserved1);
-    ok(comp_obj_data.version == 0xa03, "version = %x\n", comp_obj_data.version);
-    ok(comp_obj_data.reserved2[0] == -1, "reserved2[0] = %x\n", comp_obj_data.reserved2[0]);
+    ok(hr == S_OK, "IStream_Read returned %lx\n", hr);
+    ok(comp_obj_data.reserved1 == 0xfffe0001, "reserved1 = %lx\n", comp_obj_data.reserved1);
+    ok(comp_obj_data.version == 0xa03, "version = %lx\n", comp_obj_data.version);
+    ok(comp_obj_data.reserved2[0] == -1, "reserved2[0] = %lx\n", comp_obj_data.reserved2[0]);
     ok(IsEqualIID(comp_obj_data.reserved2+1, &CLSID_WineTestOld), "reserved2 = %s\n", wine_dbgstr_guid((CLSID*)(comp_obj_data.reserved2+1)));
-    ok(!comp_obj_data.ansi_user_type_len, "ansi_user_type_len = %d\n", comp_obj_data.ansi_user_type_len);
-    ok(!comp_obj_data.ansi_clipboard_format_len, "ansi_clipboard_format_len = %d\n", comp_obj_data.ansi_clipboard_format_len);
-    ok(!comp_obj_data.reserved3, "reserved3 = %x\n", comp_obj_data.reserved3);
-    ok(comp_obj_data.unicode_marker == 0x71b239f4, "unicode_marker = %x\n", comp_obj_data.unicode_marker);
-    ok(!comp_obj_data.unicode_user_type_len, "unicode_user_type_len = %d\n", comp_obj_data.unicode_user_type_len);
-    ok(!comp_obj_data.unicode_clipboard_format_len, "unicode_clipboard_format_len = %d\n", comp_obj_data.unicode_clipboard_format_len);
-    ok(!comp_obj_data.reserved4, "reserved4 %d\n", comp_obj_data.reserved4);
+    ok(!comp_obj_data.ansi_user_type_len, "ansi_user_type_len = %ld\n", comp_obj_data.ansi_user_type_len);
+    ok(!comp_obj_data.ansi_clipboard_format_len, "ansi_clipboard_format_len = %ld\n", comp_obj_data.ansi_clipboard_format_len);
+    ok(!comp_obj_data.reserved3, "reserved3 = %lx\n", comp_obj_data.reserved3);
+    ok(comp_obj_data.unicode_marker == 0x71b239f4, "unicode_marker = %lx\n", comp_obj_data.unicode_marker);
+    ok(!comp_obj_data.unicode_user_type_len, "unicode_user_type_len = %ld\n", comp_obj_data.unicode_user_type_len);
+    ok(!comp_obj_data.unicode_clipboard_format_len, "unicode_clipboard_format_len = %ld\n", comp_obj_data.unicode_clipboard_format_len);
+    ok(!comp_obj_data.reserved4, "reserved4 %ld\n", comp_obj_data.reserved4);
 
     ret = IStream_Release(comp_obj_stream);
     ok(!ret, "comp_obj_stream was not freed\n");
@@ -3710,9 +3574,9 @@ static void test_OleDoAutoConvert(void)
     ok(!ret, "ole_stream was not freed\n");
 
     ret = RegDeleteKeyA(root, "AutoConvertTo");
-    ok(ret == ERROR_SUCCESS, "RegDeleteKey error %u\n", ret);
+    ok(ret == ERROR_SUCCESS, "RegDeleteKey error %lu\n", ret);
     ret = RegDeleteKeyA(root, "");
-    ok(ret == ERROR_SUCCESS, "RegDeleteKey error %u\n", ret);
+    ok(ret == ERROR_SUCCESS, "RegDeleteKey error %lu\n", ret);
     RegCloseKey(root);
 }
 
@@ -3750,28 +3614,28 @@ static void test_data_cache_save(void)
     PresentationDataHeader hdr;
 
     hr = CreateILockBytesOnHGlobal(0, TRUE, &ilb);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     hr = StgCreateDocfileOnILockBytes(ilb, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0,  &doc);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     ILockBytes_Release(ilb);
 
     hr = IStorage_SetClass(doc, &CLSID_WineTest);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = IStorage_CreateStream(doc, contentsW, STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     hr = IStream_Write(stm, bmpimage, sizeof(bmpimage), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     IStream_Release(stm);
 
     hr = IStorage_CreateStream(doc, olepres0W, STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     clipformat[0] = -1;
     clipformat[1] = CF_METAFILEPICT;
     hr = IStream_Write(stm, clipformat, sizeof(clipformat), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hdr.tdSize = sizeof(hdr.tdSize);
     hdr.dvAspect = DVASPECT_CONTENT;
@@ -3782,31 +3646,31 @@ static void test_data_cache_save(void)
     hdr.dwObjectExtentY = 0;
     hdr.dwSize = sizeof(mf_blank_bits);
     hr = IStream_Write(stm, &hdr, sizeof(hdr), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     hr = IStream_Write(stm, mf_blank_bits, sizeof(mf_blank_bits), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     IStream_Release(stm);
 
     hr = CreateDataCache(NULL, &CLSID_NULL, &IID_IUnknown, (void **)&cache);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     hr = IOleCache2_QueryInterface(cache, &IID_IPersistStorage, (void **)&stg);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     hr = IPersistStorage_Load(stg, doc);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     IStorage_Release(doc);
 
     hr = IPersistStorage_IsDirty(stg);
-    ok(hr == S_FALSE, "unexpected %#x\n", hr);
+    ok(hr == S_FALSE, "unexpected %#lx\n", hr);
 
     ole_stream = NULL;
     hr = CreateStreamOnHGlobal(NULL, TRUE, &olepres_stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     /* FIXME: remove this stream once Wine is fixed */
     hr = CreateStreamOnHGlobal(NULL, TRUE, &contents_stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     SET_EXPECT(Storage_CreateStream_OlePres);
     SET_EXPECT(Storage_OpenStream_OlePres);
@@ -3814,15 +3678,14 @@ static void test_data_cache_save(void)
     SET_EXPECT(Storage_DestroyElement);
     Storage_DestroyElement_limit = 50;
     Storage_SetClass_CLSID = &CLSID_NULL;
-    trace("IPersistStorage_Save:\n");
     hr = IPersistStorage_Save(stg, &Storage, FALSE);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     CHECK_CALLED(Storage_CreateStream_OlePres);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_OpenStream_OlePres);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_OpenStream_Ole);
-todo_wine
+    todo_wine
     CHECK_CALLED(Storage_DestroyElement);
 
     IStream_Release(olepres_stream);
@@ -4007,12 +3870,12 @@ static void check_storage_contents(IStorage *stg, const struct storage_def *stg_
     *matched_streams = 0;
 
     hr = IStorage_Stat(stg, &stat, STATFLAG_NONAME);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     ok(IsEqualCLSID(stg_def->clsid, &stat.clsid), "expected %s, got %s\n",
        wine_dbgstr_guid(stg_def->clsid), wine_dbgstr_guid(&stat.clsid));
 
     hr = IStorage_EnumElements(stg, 0, NULL, 0, &enumstg);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     for (;;)
     {
@@ -4026,18 +3889,18 @@ static void check_storage_contents(IStorage *stg, const struct storage_def *stg_
 
         hr = IEnumSTATSTG_Next(enumstg, 1, &stat, NULL);
         if(hr == S_FALSE) break;
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         if (winetest_debug > 1)
-            trace("name %s, type %u, size %d, clsid %s\n",
+            trace("name %s, type %lu, size %ld, clsid %s\n",
                 wine_dbgstr_w(stat.pwcsName), stat.type, stat.cbSize.u.LowPart, wine_dbgstr_guid(&stat.clsid));
 
-        ok(stat.type == STGTY_STREAM, "unexpected %#x\n", stat.type);
+        ok(stat.type == STGTY_STREAM, "unexpected %#lx\n", stat.type);
 
         WideCharToMultiByte(CP_ACP, 0, stat.pwcsName, -1, name, sizeof(name), NULL, NULL);
 
         hr = IStorage_OpenStream(stg, stat.pwcsName, NULL, STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         if (!memcmp(name, "\2OlePres", 8))
         {
@@ -4049,27 +3912,27 @@ static void check_storage_contents(IStorage *stg, const struct storage_def *stg_
                 header_size = FIELD_OFFSET(PresentationDataHeader, unknown7);
 
             hr = IStream_Read(stream, &header, header_size, &bytes);
-            ok(hr == S_OK, "unexpected %#x\n", hr);
-            ok(bytes == header_size, "read %u bytes, expected %u\n", bytes, header_size);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
+            ok(bytes == header_size, "read %lu bytes, expected %lu\n", bytes, header_size);
 
             if (winetest_debug > 1)
-                trace("header: tdSize %#x, dvAspect %#x, lindex %#x, advf %#x, unknown7 %#x, dwObjectExtentX %#x, dwObjectExtentY %#x, dwSize %#x\n",
+                trace("header: tdSize %#lx, dvAspect %#x, lindex %#lx, advf %#lx, unknown7 %#lx, dwObjectExtentX %#lx, dwObjectExtentY %#lx, dwSize %#lx\n",
                     header.tdSize, header.dvAspect, header.lindex, header.advf, header.unknown7,
                     header.dwObjectExtentX, header.dwObjectExtentY, header.dwSize);
         }
 
         memset(data, 0, sizeof(data));
         hr = IStream_Read(stream, data, sizeof(data), &bytes);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         if (winetest_debug > 1)
-            trace("stream data (%u bytes): %02x %02x %02x %02x\n", bytes, data[0], data[1], data[2], data[3]);
+            trace("stream data (%lu bytes): %02x %02x %02x %02x\n", bytes, data[0], data[1], data[2], data[3]);
 
         for (i = 0; i < stg_def->stream_count; i++)
         {
             if (seen_stream[i]) continue;
 
             if (winetest_debug > 1)
-                trace("%s/%s, %d/%d, %d/%d, %d/%d\n",
+                trace("%s/%s, %d/%d, %d/%d, %d/%ld\n",
                     stg_def->stream[i].name, name,
                     stg_def->stream[i].cf, clipformat,
                     stg_def->stream[i].dvAspect, header.dvAspect,
@@ -4109,15 +3972,15 @@ static HRESULT stgmedium_cmp(const STGMEDIUM *med1, STGMEDIUM *med2)
 
     if (med1->tymed == TYMED_MFPICT)
     {
-        METAFILEPICT *mfpict1 = GlobalLock(U(med1)->hMetaFilePict);
-        METAFILEPICT *mfpict2 = GlobalLock(U(med2)->hMetaFilePict);
+        METAFILEPICT *mfpict1 = GlobalLock(med1->hMetaFilePict);
+        METAFILEPICT *mfpict2 = GlobalLock(med2->hMetaFilePict);
 
         datasize1 = GetMetaFileBitsEx(mfpict1->hMF, 0, NULL);
         datasize2 = GetMetaFileBitsEx(mfpict2->hMF, 0, NULL);
         if (datasize1 == datasize2)
         {
-            data1 = HeapAlloc(GetProcessHeap(), 0, datasize1);
-            data2 = HeapAlloc(GetProcessHeap(), 0, datasize2);
+            data1 = malloc(datasize1);
+            data2 = malloc(datasize2);
             GetMetaFileBitsEx(mfpict1->hMF, datasize1, data1);
             GetMetaFileBitsEx(mfpict2->hMF, datasize2, data2);
         }
@@ -4129,8 +3992,8 @@ static HRESULT stgmedium_cmp(const STGMEDIUM *med1, STGMEDIUM *med2)
         datasize2 = GetEnhMetaFileBits(med2->hEnhMetaFile, 0, NULL);
         if (datasize1 == datasize2)
         {
-            data1 = HeapAlloc(GetProcessHeap(), 0, datasize1);
-            data2 = HeapAlloc(GetProcessHeap(), 0, datasize2);
+            data1 = malloc(datasize1);
+            data2 = malloc(datasize2);
             GetEnhMetaFileBits(med1->hEnhMetaFile, datasize1, data1);
             GetEnhMetaFileBits(med2->hEnhMetaFile, datasize2, data2);
         }
@@ -4157,20 +4020,20 @@ static HRESULT stgmedium_cmp(const STGMEDIUM *med1, STGMEDIUM *med2)
 
     if (med1->tymed == TYMED_HGLOBAL)
     {
-        GlobalUnlock(U(med1)->hGlobal);
-        GlobalUnlock(U(med2)->hGlobal);
+        GlobalUnlock(med1->hGlobal);
+        GlobalUnlock(med2->hGlobal);
     }
     else if (med1->tymed == TYMED_MFPICT)
     {
-        HeapFree(GetProcessHeap(), 0, data1);
-        HeapFree(GetProcessHeap(), 0, data2);
-        GlobalUnlock(U(med1)->hMetaFilePict);
-        GlobalUnlock(U(med2)->hMetaFilePict);
+        free(data1);
+        free(data2);
+        GlobalUnlock(med1->hMetaFilePict);
+        GlobalUnlock(med2->hMetaFilePict);
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, data1);
-        HeapFree(GetProcessHeap(), 0, data2);
+        free(data1);
+        free(data2);
     }
 
     return S_OK;
@@ -4184,10 +4047,10 @@ static IStorage *create_storage_from_def(const struct storage_def *stg_def)
     int i;
 
     hr = StgCreateDocfile(NULL, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_DELETEONRELEASE, 0, &stg);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = IStorage_SetClass(stg, stg_def->clsid);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     for (i = 0; i < stg_def->stream_count; i++)
     {
@@ -4195,7 +4058,7 @@ static IStorage *create_storage_from_def(const struct storage_def *stg_def)
 
         MultiByteToWideChar(CP_ACP, 0, stg_def->stream[i].name, -1, name, 32);
         hr = IStorage_CreateStream(stg, name, STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         if (stg_def->stream[i].cf != -1)
         {
@@ -4213,7 +4076,7 @@ static IStorage *create_storage_from_def(const struct storage_def *stg_def)
                 clipformat[0] = 0;
                 hr = IStream_Write(stm, &clipformat[0], sizeof(clipformat[0]), NULL);
             }
-            ok(hr == S_OK, "unexpected %#x\n", hr);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
 
             hdr.tdSize = sizeof(hdr.tdSize);
             hdr.dvAspect = stg_def->stream[i].dvAspect;
@@ -4224,13 +4087,13 @@ static IStorage *create_storage_from_def(const struct storage_def *stg_def)
             hdr.dwObjectExtentY = 0;
             hdr.dwSize = stg_def->stream[i].data_size;
             hr = IStream_Write(stm, &hdr, sizeof(hdr), NULL);
-            ok(hr == S_OK, "unexpected %#x\n", hr);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
         }
 
         if (stg_def->stream[i].data_size)
         {
             hr = IStream_Write(stm, stg_def->stream[i].data, stg_def->stream[i].data_size, NULL);
-            ok(hr == S_OK, "unexpected %#x\n", hr);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
         }
 
         IStream_Release(stm);
@@ -4262,57 +4125,57 @@ static void get_stgdef(struct storage_def *stg_def, CLIPFORMAT cf, STGMEDIUM *st
     switch (cf)
     {
     case CF_DIB:
-        data_size = sizeof(dib);
+        data_size = sizeof(dib_white);
         if (!strcmp(stg_def->stream[stm_idx].name, "CONTENTS"))
         {
             data_size += sizeof(dib_inf);
-            data = HeapAlloc(GetProcessHeap(), 0, data_size);
+            data = malloc(data_size);
             memcpy(data, dib_inf, sizeof(dib_inf));
-            memcpy(data + sizeof(dib_inf), dib, sizeof(dib));
+            memcpy(data + sizeof(dib_inf), dib_white, sizeof(dib_white));
         }
         else
         {
-            data = HeapAlloc(GetProcessHeap(), 0, data_size);
-            memcpy(data, dib, sizeof(dib));
+            data = malloc(data_size);
+            memcpy(data, dib_white, sizeof(dib_white));
         }
         stg_def->stream[stm_idx].data = data;
         stg_def->stream[stm_idx].data_size = data_size;
         break;
     case CF_METAFILEPICT:
-        mfpict = GlobalLock(U(stg_med)->hMetaFilePict);
+        mfpict = GlobalLock(stg_med->hMetaFilePict);
         data_size = GetMetaFileBitsEx(mfpict->hMF, 0, NULL);
         if (!strcmp(stg_def->stream[stm_idx].name, "CONTENTS"))
         {
-            data = HeapAlloc(GetProcessHeap(), 0, data_size + sizeof(mf_rec));
+            data = malloc(data_size + sizeof(mf_rec));
             memcpy(data, mf_rec, sizeof(mf_rec));
             GetMetaFileBitsEx(mfpict->hMF, data_size, data + sizeof(mf_rec));
             data_size += sizeof(mf_rec);
         }
         else
         {
-            data = HeapAlloc(GetProcessHeap(), 0, data_size);
+            data = malloc(data_size);
             GetMetaFileBitsEx(mfpict->hMF, data_size, data);
         }
-        GlobalUnlock(U(stg_med)->hMetaFilePict);
+        GlobalUnlock(stg_med->hMetaFilePict);
         stg_def->stream[stm_idx].data_size = data_size;
         stg_def->stream[stm_idx].data = data;
         break;
     case CF_ENHMETAFILE:
         if (!strcmp(stg_def->stream[stm_idx].name, "CONTENTS"))
         {
-            data_size = GetEnhMetaFileBits(U(stg_med)->hEnhMetaFile, 0, NULL);
-            data = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) + sizeof(ENHMETAHEADER) + data_size);
+            data_size = GetEnhMetaFileBits(stg_med->hEnhMetaFile, 0, NULL);
+            data = malloc(sizeof(DWORD) + sizeof(ENHMETAHEADER) + data_size);
             *((DWORD *)data) = sizeof(ENHMETAHEADER);
-            GetEnhMetaFileBits(U(stg_med)->hEnhMetaFile, data_size, data + sizeof(DWORD) + sizeof(ENHMETAHEADER));
+            GetEnhMetaFileBits(stg_med->hEnhMetaFile, data_size, data + sizeof(DWORD) + sizeof(ENHMETAHEADER));
             memcpy(data + sizeof(DWORD), data + sizeof(DWORD) + sizeof(ENHMETAHEADER), sizeof(ENHMETAHEADER));
             data_size += sizeof(DWORD) + sizeof(ENHMETAHEADER);
         }
         else
         {
             hdc = GetDC(NULL);
-            data_size = GetWinMetaFileBits(U(stg_med)->hEnhMetaFile, 0, NULL, MM_ANISOTROPIC, hdc);
-            data = HeapAlloc(GetProcessHeap(), 0, data_size);
-            GetWinMetaFileBits(U(stg_med)->hEnhMetaFile, data_size, data, MM_ANISOTROPIC, hdc);
+            data_size = GetWinMetaFileBits(stg_med->hEnhMetaFile, 0, NULL, MM_ANISOTROPIC, hdc);
+            data = malloc(data_size);
+            GetWinMetaFileBits(stg_med->hEnhMetaFile, data_size, data, MM_ANISOTROPIC, hdc);
             ReleaseDC(NULL, hdc);
         }
         stg_def->stream[stm_idx].data_size = data_size;
@@ -4458,40 +4321,39 @@ static void test_data_cache_save_data(void)
     for (pdata = data; pdata->clsid != NULL; pdata++)
     {
         hr = CreateDataCache(NULL, pdata->clsid, &IID_IOleCache2, (void **)&cache);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         for (i = 0; i < pdata->num_fmts; i++)
         {
             hr = IOleCache2_Cache(cache, &pdata->fmts[i], 0, &dummy);
-            ok(SUCCEEDED(hr), "unexpected %#x\n", hr);
+            ok(SUCCEEDED(hr), "unexpected %#lx\n", hr);
             if (i < pdata->num_set)
             {
                 get_stgmedium(pdata->fmts[i].cfFormat, &stgmeds[i]);
                 get_stgdef(&pdata->stg_def, pdata->fmts[i].cfFormat, &stgmeds[i], i);
                 hr = IOleCache2_SetData(cache, &pdata->fmts[i], &stgmeds[i], FALSE);
-                ok(hr == S_OK, "unexpected %#x\n", hr);
+                ok(hr == S_OK, "unexpected %#lx\n", hr);
             }
         }
 
         /* create Storage in memory where we'll save cache */
         hr = CreateILockBytesOnHGlobal(0, TRUE, &ilb);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         hr = StgCreateDocfileOnILockBytes(ilb, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, &doc);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         ILockBytes_Release(ilb);
         hr = IStorage_SetClass(doc, &CLSID_WineTestOld);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         hr = IOleCache2_QueryInterface(cache, &IID_IPersistStorage, (void **)&persist);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         /* cache entries are dirty. test saving them to stg */
-        trace("IPersistStorage_Save:\n");
         hr = IPersistStorage_Save(persist, doc, FALSE);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         hr = IPersistStorage_IsDirty(persist);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         check_storage_contents(doc, &pdata->stg_def, &enumerated_streams, &matched_streams);
         ok(enumerated_streams == matched_streams, "enumerated %d != matched %d\n",
@@ -4504,25 +4366,24 @@ static void test_data_cache_save_data(void)
 
         /* now test _Load/_GetData using the storage we used for _Save */
         hr = CreateDataCache(NULL, pdata->clsid, &IID_IOleCache2, (void **)&cache);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         hr = IOleCache2_QueryInterface(cache, &IID_IPersistStorage, (void **)&persist);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         hr = IStorage_SetClass(doc, pdata->clsid);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
-        trace("IPersistStorage_Load\n");
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         hr = IPersistStorage_Load(persist, doc);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         hr = IOleCache2_QueryInterface(cache, &IID_IDataObject, (void **)&odata);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         for (i = 0; i < pdata->num_set; i++)
         {
             hr = IDataObject_GetData(odata, &pdata->fmts[i], &stgmed);
-            ok(hr == S_OK, "unexpected %#x\n", hr);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
 
             hr = stgmedium_cmp(&stgmeds[i], &stgmed);
-            ok(hr == S_OK, "unexpected %#x\n", hr);
+            ok(hr == S_OK, "unexpected %#lx\n", hr);
             ReleaseStgMedium(&stgmed);
             ReleaseStgMedium(&stgmeds[i]);
         }
@@ -4532,7 +4393,7 @@ static void test_data_cache_save_data(void)
         IStorage_Release(doc);
         IOleCache2_Release(cache);
         for (i = 0; i < pdata->num_set; i++)
-            HeapFree(GetProcessHeap(), 0, (void *)pdata->stg_def.stream[i].data);
+            free((void *)pdata->stg_def.stream[i].data);
 
     }
 }
@@ -4578,31 +4439,31 @@ static void test_data_cache_contents(void)
            enumerated_streams, test_data[i].in->stream_count);
 
         hr = CreateDataCache(NULL, &CLSID_NULL, &IID_IUnknown, (void **)&cache);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         hr = IOleCache2_QueryInterface(cache, &IID_IPersistStorage, (void **)&stg);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
         hr = IPersistStorage_Load(stg, doc1);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         IStorage_Release(doc1);
 
         hr = StgCreateDocfile(NULL, STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_DELETEONRELEASE, 0, &doc2);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         hr = IPersistStorage_IsDirty(stg);
-        ok(hr == S_FALSE, "%d: unexpected %#x\n", i, hr);
+        ok(hr == S_FALSE, "%d: unexpected %#lx\n", i, hr);
 
         hr = IPersistStorage_Save(stg, doc2, FALSE);
-        ok(hr == S_OK, "unexpected %#x\n", hr);
+        ok(hr == S_OK, "unexpected %#lx\n", hr);
 
         IPersistStorage_Release(stg);
 
         enumerated_streams = matched_streams = -1;
         check_storage_contents(doc2, test_data[i].out, &enumerated_streams, &matched_streams);
-todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_1 || test_data[i].in == &stg_def_2))
+        todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_1 || test_data[i].in == &stg_def_2))
         ok(enumerated_streams == matched_streams, "%d out: enumerated %d != matched %d\n", i,
            enumerated_streams, matched_streams);
-todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_5
+        todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 || test_data[i].in == &stg_def_5
                  || test_data[i].in == &stg_def_6))
         ok(enumerated_streams == test_data[i].out->stream_count, "%d: saved streams %d != def streams %d\n", i,
             enumerated_streams, test_data[i].out->stream_count);
@@ -4616,6 +4477,9 @@ todo_wine_if(!(test_data[i].in == &stg_def_0 || test_data[i].in == &stg_def_4 ||
 
 static void test_OleCreateStaticFromData(void)
 {
+    FORMATETC dib_fmt = {CF_DIB, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    FORMATETC emf_fmt = {CF_ENHMETAFILE, NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF};
+    FORMATETC text_fmt = {CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
     HRESULT hr;
     IOleObject *ole_obj = NULL;
     IStorage *storage;
@@ -4625,41 +4489,10 @@ static void test_OleCreateStaticFromData(void)
     STATSTG statstg;
     int enumerated_streams, matched_streams;
     STGMEDIUM stgmed;
-    static FORMATETC dib_fmt[] =
-    {
-        { CF_DIB, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
-        { 0 }
-    };
-    static FORMATETC emf_fmt[] =
-    {
-        { CF_ENHMETAFILE, NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF },
-        { 0 }
-    };
-    static FORMATETC text_fmt[] =
-    {
-        { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
-        { 0 }
-    };
     static const struct expected_method methods_create_from_dib[] =
     {
         { "DataObject_EnumFormatEtc", TEST_TODO },
         { "DataObject_GetDataHere", 0 },
-        { "DataObject_QueryGetData", 0, { CF_METAFILEPICT, NULL, DVASPECT_CONTENT, -1, TYMED_ISTORAGE } },
-        { NULL }
-    };
-    static const struct expected_method methods_createstatic_from_dib[] =
-    {
-        { "DataObject_GetData", 0, { CF_DIB, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
-        { NULL }
-    };
-    static const struct expected_method methods_createstatic_from_emf[] =
-    {
-        { "DataObject_GetData", 0, { CF_ENHMETAFILE, NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF } },
-        { NULL }
-    };
-    static const struct expected_method methods_createstatic_from_text[] =
-    {
-        { "DataObject_GetData", 0, { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL } },
         { NULL }
     };
     static struct storage_def stg_def_dib =
@@ -4679,30 +4512,30 @@ static void test_OleCreateStaticFromData(void)
 
 
     hr = CreateILockBytesOnHGlobal(NULL, TRUE, &ilb);
-    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08lx.\n", hr);
     hr = StgCreateDocfileOnILockBytes(ilb, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE,
                                       0, &storage);
-    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08lx.\n", hr);
     ILockBytes_Release(ilb);
 
     hr = OleCreateStaticFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT,
-                                 dib_fmt, NULL, NULL, (void **)&ole_obj);
-    ok(hr == E_INVALIDARG, "OleCreateStaticFromData should fail: 0x%08x.\n", hr);
+                                 &dib_fmt, NULL, NULL, (void **)&ole_obj);
+    ok(hr == E_INVALIDARG, "OleCreateStaticFromData should fail: 0x%08lx.\n", hr);
 
     hr = OleCreateStaticFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT,
-                                 dib_fmt, NULL, storage, NULL);
-    ok(hr == E_INVALIDARG, "OleCreateStaticFromData should fail: 0x%08x.\n", hr);
+                                 &dib_fmt, NULL, storage, NULL);
+    ok(hr == E_INVALIDARG, "OleCreateStaticFromData should fail: 0x%08lx.\n", hr);
 
     /* CF_DIB */
-    g_dataobject_fmts = dib_fmt;
-    expected_method_list = methods_createstatic_from_dib;
+    data_object_format = &dib_fmt;
+    data_object_dib = dib_white;
     hr = OleCreateStaticFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT,
-                                 dib_fmt, NULL, storage, (void **)&ole_obj);
-    ok(hr == S_OK, "OleCreateStaticFromData failed: 0x%08x.\n", hr);
+                                 &dib_fmt, NULL, storage, (void **)&ole_obj);
+    ok(hr == S_OK, "OleCreateStaticFromData failed: 0x%08lx.\n", hr);
     hr = IOleObject_QueryInterface(ole_obj, &IID_IPersist, (void **)&persist);
-    ok(hr == S_OK, "IOleObject_QueryInterface failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "IOleObject_QueryInterface failed: 0x%08lx.\n", hr);
     hr = IPersist_GetClassID(persist, &clsid);
-    ok(hr == S_OK, "IPersist_GetClassID failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "IPersist_GetClassID failed: 0x%08lx.\n", hr);
     ok(IsEqualCLSID(&clsid, &CLSID_Picture_Dib), "Got wrong clsid: %s, expected: %s.\n",
        wine_dbgstr_guid(&clsid), wine_dbgstr_guid(&CLSID_Picture_Dib));
     hr = IStorage_Stat(storage, &statstg, STATFLAG_NONAME);
@@ -4720,23 +4553,23 @@ static void test_OleCreateStaticFromData(void)
     IPersist_Release(persist);
     IStorage_Release(storage);
     IOleObject_Release(ole_obj);
+    free((void *)stg_def_dib.stream[2].data);
 
     /* CF_ENHMETAFILE */
     hr = CreateILockBytesOnHGlobal(NULL, TRUE, &ilb);
-    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08lx.\n", hr);
     hr = StgCreateDocfileOnILockBytes(ilb, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE,
                                       0, &storage);
-    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08lx.\n", hr);
     ILockBytes_Release(ilb);
-    g_dataobject_fmts = emf_fmt;
-    expected_method_list = methods_createstatic_from_emf;
+    data_object_format = &emf_fmt;
     hr = OleCreateStaticFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT,
-                                 emf_fmt, NULL, storage, (void **)&ole_obj);
-    ok(hr == S_OK, "OleCreateStaticFromData failed: 0x%08x.\n", hr);
+                                 &emf_fmt, NULL, storage, (void **)&ole_obj);
+    ok(hr == S_OK, "OleCreateStaticFromData failed: 0x%08lx.\n", hr);
     hr = IOleObject_QueryInterface(ole_obj, &IID_IPersist, (void **)&persist);
-    ok(hr == S_OK, "IOleObject_QueryInterface failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "IOleObject_QueryInterface failed: 0x%08lx.\n", hr);
     hr = IPersist_GetClassID(persist, &clsid);
-    ok(hr == S_OK, "IPersist_GetClassID failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "IPersist_GetClassID failed: 0x%08lx.\n", hr);
     ok(IsEqualCLSID(&clsid, &CLSID_Picture_EnhMetafile), "Got wrong clsid: %s, expected: %s.\n",
        wine_dbgstr_guid(&clsid), wine_dbgstr_guid(&CLSID_Picture_EnhMetafile));
     hr = IStorage_Stat(storage, &statstg, STATFLAG_NONAME);
@@ -4754,33 +4587,38 @@ static void test_OleCreateStaticFromData(void)
     IPersist_Release(persist);
     IStorage_Release(storage);
     IOleObject_Release(ole_obj);
+    free((void *)stg_def_emf.stream[2].data);
 
     /* CF_TEXT */
     hr = CreateILockBytesOnHGlobal(NULL, TRUE, &ilb);
-    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08lx.\n", hr);
     hr = StgCreateDocfileOnILockBytes(ilb, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE,
                                       0, &storage);
-    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08lx.\n", hr);
     ILockBytes_Release(ilb);
-    g_dataobject_fmts = text_fmt;
-    expected_method_list = methods_createstatic_from_text;
+    data_object_format = &text_fmt;
     hr = OleCreateStaticFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT,
-                                 text_fmt, NULL, storage, (void **)&ole_obj);
-    ok(hr == DV_E_CLIPFORMAT, "OleCreateStaticFromData should fail: 0x%08x.\n", hr);
+                                 &text_fmt, NULL, storage, (void **)&ole_obj);
+    ok(hr == DV_E_CLIPFORMAT, "OleCreateStaticFromData should fail: 0x%08lx.\n", hr);
     IStorage_Release(storage);
 
     hr = CreateILockBytesOnHGlobal(NULL, TRUE, &ilb);
-    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "CreateILockBytesOnHGlobal failed: 0x%08lx.\n", hr);
     hr = StgCreateDocfileOnILockBytes(ilb, STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_READWRITE,
                                       0, &storage);
-    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08x.\n", hr);
+    ok(hr == S_OK, "StgCreateDocfileOnILockBytes failed: 0x%08lx.\n", hr);
     ILockBytes_Release(ilb);
-    g_dataobject_fmts = dib_fmt;
+    data_object_format = &dib_fmt;
     expected_method_list = methods_create_from_dib;
-    hr = OleCreateFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT, dib_fmt, NULL,
+    hr = OleCreateFromData(&DataObject, &IID_IOleObject, OLERENDER_FORMAT, &dib_fmt, NULL,
                            storage, (void **)&ole_obj);
-    todo_wine ok(hr == DV_E_FORMATETC, "OleCreateFromData should failed: 0x%08x.\n", hr);
+    todo_wine ok(hr == DV_E_FORMATETC, "OleCreateFromData should failed: 0x%08lx.\n", hr);
     IStorage_Release(storage);
+}
+
+static void test_ReleaseStgMedium( void )
+{
+    ReleaseStgMedium( NULL );
 }
 
 START_TEST(ole2)
@@ -4834,6 +4672,7 @@ START_TEST(ole2)
     test_data_cache_save_data();
     test_data_cache_contents();
     test_OleCreateStaticFromData();
+    test_ReleaseStgMedium();
 
     CoUninitialize();
 }

@@ -29,7 +29,7 @@
 
 #include "wine/test.h"
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error %#08lx\n", hr)
 
 static const CLSID CLSID_WineTest =
 { /* 9474ba1a-258b-490b-bc13-516e9239ace0 */
@@ -101,17 +101,17 @@ static void test_error_info(void)
     IErrorInfo_Release(pErrorInfo);
 
     hr = GetErrorInfo(0, &pErrorInfo);
-    ok(hr == S_FALSE, "GetErrorInfo should have returned S_FALSE instead of 0x%08x\n", hr);
+    ok(hr == S_FALSE, "GetErrorInfo should have returned S_FALSE instead of 0x%08lx\n", hr);
     ok(!pErrorInfo, "pErrorInfo should be set to NULL\n");
 
     hr = SetErrorInfo(0, NULL);
     ok_ole_success(hr, "SetErrorInfo");
 
     hr = GetErrorInfo(0xdeadbeef, &pErrorInfo);
-    ok(hr == E_INVALIDARG, "GetErrorInfo should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "GetErrorInfo should have returned E_INVALIDARG instead of 0x%08lx\n", hr);
 
     hr = SetErrorInfo(0xdeadbeef, NULL);
-    ok(hr == E_INVALIDARG, "SetErrorInfo should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "SetErrorInfo should have returned E_INVALIDARG instead of 0x%08lx\n", hr);
 }
 
 START_TEST(errorinfo)
