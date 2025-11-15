@@ -2,7 +2,7 @@
  * Temporary place for ole2 stubs.
  *
  * Copyright (C) 1999 Corel Corporation
- * Move these functions to dlls/ole32/ole2impl.c when you implement them.
+ * Move these functions to dlls/ole32/ole2.c when you implement them.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@ HRESULT WINAPI  OleCreateLinkToFile(LPCOLESTR lpszFileName, REFIID riid,
 	  		DWORD renderopt, LPFORMATETC lpFormatEtc,
 			LPOLECLIENTSITE pClientSite, LPSTORAGE pStg, LPVOID* ppvObj)
 {
-    FIXME("(%p,%p,%i,%p,%p,%p,%p), stub!\n",lpszFileName, riid, renderopt, lpFormatEtc, pClientSite, pStg, ppvObj);
+    FIXME("%p, %p, %ld, %p, %p, %p, %p stub!\n",lpszFileName, riid, renderopt, lpFormatEtc, pClientSite, pStg, ppvObj);
     return E_NOTIMPL;
 }
 
@@ -77,16 +77,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH OleRegEnumFormatEtc (
   DWORD    dwDirection,
   LPENUMFORMATETC* ppenumFormatetc)
 {
-    FIXME("(%p, %d, %p), stub!\n", clsid, dwDirection, ppenumFormatetc);
+    FIXME("%p, %ld, %p stub!\n", clsid, dwDirection, ppenumFormatetc);
 
     return E_NOTIMPL;
-}
-
-/***********************************************************************
- *              CoGetCallerTID        [OLE32.@]
- */
-HRESULT WINAPI CoGetCallerTID(LPDWORD lpdwTID)
-{
-  FIXME("stub!\n");
-  return E_NOTIMPL;
 }
