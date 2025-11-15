@@ -24,6 +24,7 @@ extern void func_mailslot(void);
 extern void func_module(void);
 extern void func_path(void);
 extern void func_pipe(void);
+extern void func_power(void);
 extern void func_process(void);
 extern void func_profile(void);
 extern void func_resource(void);
@@ -48,7 +49,7 @@ const struct test winetest_testlist[] =
     { "comm", func_comm },
     { "console", func_console },
     /* ReactOS */
-    //{ "debugger", func_debugger },
+    { "debugger", func_debugger },
     { "directory", func_directory },
     { "drive", func_drive },
     { "environ", func_environ },
@@ -56,7 +57,7 @@ const struct test winetest_testlist[] =
     { "file", func_file },
     { "format_msg", func_format_msg },
     /* ReactOS */
-    //{ "generated", func_generated },
+    { "generated", func_generated },
     { "heap", func_heap },
     { "loader", func_loader },
     { "locale", func_locale },
@@ -64,6 +65,7 @@ const struct test winetest_testlist[] =
     { "module", func_module },
     { "path", func_path },
     { "pipe", func_pipe },
+    { "power", func_power },
     { "process", func_process },
     { "profile", func_profile },
     { "resource", func_resource },
