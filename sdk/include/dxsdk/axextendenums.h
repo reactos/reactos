@@ -19,16 +19,6 @@
 #ifndef AXEXTEND_ENUM_H
 #define AXEXTEND_ENUM_H
 
-#include <exposeenums2managed.h>
-
-ENUM16 TAG(TunerInputType)
-{
-    TunerInputCable,
-    TunerInputAntenna
-} TunerInputType;
-
-#include <unexposeenums2managed.h>
-
 typedef enum tagAnalogVideoStandard
 {
     AnalogVideo_None     = 0x00000000,
