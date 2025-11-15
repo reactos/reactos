@@ -50,4 +50,7 @@ CURSOR_COPY CURSOR drag_copy.cur
 /* @makedep: drag_link.cur */
 CURSOR_LINK CURSOR drag_link.cur
 
-1 WINE_REGISTRY "ole32.rgs"
+1 WINE_REGISTRY "dcom_r_res.rgs"
+2 WINE_REGISTRY "ole32_objidl_r_res.rgs"
+3 WINE_REGISTRY "ole32_oleidl_r_res.rgs"
+4 WINE_REGISTRY "ole32_unkwn_r_res.rgs"
