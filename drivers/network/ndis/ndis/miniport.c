@@ -2337,7 +2337,7 @@ NdisIDeviceIoControl(
 
 static
 NTSTATUS
-NdisIRemoveDevice(
+NdisIPnPRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
@@ -2465,7 +2465,7 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_REMOVE_DEVICE:
-        return NdisIRemoveDevice(DeviceObject, Irp);
+        return NdisIPnPRemoveDevice(DeviceObject, Irp);
 
       default:
         NDIS_DbgPrint(MIN_TRACE, ("Unhandled minor function: 0x%X\n", Stack->MinorFunction));
