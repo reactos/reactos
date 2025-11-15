@@ -24,6 +24,7 @@ add_subdirectory(bcrypt)
 add_subdirectory(browseui)
 add_subdirectory(cabinet)
 add_subdirectory(cmd)
+#add_subdirectory(combase) # TODO: combase_win10 import will not work on Windows 10
 add_subdirectory(comcat)
 add_subdirectory(comctl32)
 add_subdirectory(comdlg32)
