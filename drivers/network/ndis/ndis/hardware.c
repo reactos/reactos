@@ -35,7 +35,7 @@ NdisQueryPciBusInterface(
       return STATUS_NOT_SUPPORTED;
     }
 
-    BusInterfacePtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(BUS_INTERFACE_STANDARD), NDIS_TAG);
+    BusInterfacePtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(*BusInterfacePtr), NDIS_TAG);
     if (BusInterfacePtr == NULL) {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -58,7 +58,7 @@ NdisQueryPciBusInterface(
     IrpStack->MajorFunction = IRP_MJ_PNP;
     IrpStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IrpStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
-    IrpStack->Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
+    IrpStack->Parameters.QueryInterface.Size = sizeof(*BusInterfacePtr);
     IrpStack->Parameters.QueryInterface.Version = 1;
     IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterfacePtr;
     IrpStack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
@@ -73,10 +73,8 @@ NdisQueryPciBusInterface(
 
     if (NT_SUCCESS(Status)) {
       Adapter->BusInterface = *BusInterfacePtr;
-      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
-    } else {
-      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
     }
+    ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
 
     return Status;
 }
@@ -252,7 +250,6 @@ NdisReadPciSlotInformation(
     IN  ULONG       Length)
 {
   PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
-    /* NTSTATUS Status; */
 
   /* Slot number is ignored since W2K for all NDIS drivers. */
   if (Adapter->BusInterface.GetBusData != NULL) {
@@ -285,7 +282,6 @@ NdisWritePciSlotInformation(
     IN  ULONG       Length)
 {
   PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
-    /* NTSTATUS Status; */
 
   /* Slot number is ignored since W2K for all NDIS drivers. */
   if (Adapter->BusInterface.SetBusData != NULL) {
