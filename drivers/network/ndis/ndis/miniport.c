@@ -2073,6 +2073,9 @@ NdisIPnPStartDevice(
     }
   WrapperContext.SlotNumber = Adapter->NdisMiniportBlock.SlotNumber;
 
+  if (Adapter->NdisMiniportBlock.BusType == NdisInterfacePci)
+    Status = NdisQueryPciBusInterface(Adapter);
+
   NdisCloseConfiguration(ConfigHandle);
 
   /* Set handlers (some NDIS macros require these) */
@@ -2249,14 +2252,12 @@ NdisIPnPStopDevice(
       Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
     }
 
-    if (Adapter->BusInterface)
+    if (Adapter->BusInterface.SetBusData != NULL)
     {
-        if (Adapter->BusInterface->InterfaceDereference)
-            Adapter->BusInterface->InterfaceDereference(Adapter->BusInterface->Context);
+      if (Adapter->BusInterface.InterfaceDereference)
+        Adapter->BusInterface.InterfaceDereference(Adapter->BusInterface.Context);
 
-        ExFreePoolWithTag(Adapter->BusInterface, NDIS_TAG);
-        Adapter->BusInterface = NULL;
-        Adapter->BusInterfaceQueried = FALSE;
+      Adapter->BusInterface.SetBusData = NULL;
     }
 
   if (Adapter->NdisMiniportBlock.Resources)
@@ -2552,8 +2553,6 @@ NdisIAddDevice(
   KeInitializeSpinLock(&Adapter->NdisMiniportBlock.Lock);
   InitializeListHead(&Adapter->ProtocolListHead);
 
-  Adapter->BusInterface = NULL;
-  Adapter->BusInterfaceQueried = FALSE;
 
   Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
                                      &GUID_DEVINTERFACE_NET,

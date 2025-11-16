@@ -15,7 +15,7 @@
 #include "ndissys.h"
 #include <wdmguid.h>
 
-static NTSTATUS
+NTSTATUS
 NdisQueryPciBusInterface(
     IN PLOGICAL_ADAPTER Adapter)
 {
@@ -24,57 +24,58 @@ NdisQueryPciBusInterface(
     PIRP Irp;
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION IrpStack;
-    PBUS_INTERFACE_STANDARD BusInterface;
+    PBUS_INTERFACE_STANDARD BusInterfacePtr;
 
     if (Adapter->BusInterfaceQueried) {
-        return (Adapter->BusInterface != NULL) ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
+      return (Adapter->BusInterface.GetBusData != NULL) ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
     }
 
     Adapter->BusInterfaceQueried = TRUE;
     if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci) {
-        return STATUS_NOT_SUPPORTED;
+      return STATUS_NOT_SUPPORTED;
     }
 
-    BusInterface = ExAllocatePoolWithTag(NonPagedPool, sizeof(*BusInterface), NDIS_TAG);
-    if (BusInterface == NULL) {
-        return STATUS_INSUFFICIENT_RESOURCES;
+    BusInterfacePtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(BUS_INTERFACE_STANDARD), NDIS_TAG);
+    if (BusInterfacePtr == NULL) {
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-                                       Adapter->NdisMiniportBlock.NextDeviceObject,
-                                       NULL,
-                                       0,
-                                       NULL,
-                                       &Event,
-                                       &IoStatusBlock);
+                       Adapter->NdisMiniportBlock.NextDeviceObject,
+                       NULL,
+                       0,
+                       NULL,
+                       &Event,
+                       &IoStatusBlock);
     if (Irp == NULL) {
-        ExFreePoolWithTag(BusInterface, NDIS_TAG);
-        return STATUS_INSUFFICIENT_RESOURCES;
+      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     IrpStack = IoGetNextIrpStackLocation(Irp);
     IrpStack->MajorFunction = IRP_MJ_PNP;
     IrpStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IrpStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
-    IrpStack->Parameters.QueryInterface.Size = sizeof(*BusInterface);
+    IrpStack->Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
     IrpStack->Parameters.QueryInterface.Version = 1;
-    IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterface;
+    IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterfacePtr;
     IrpStack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 
     Status = IoCallDriver(Adapter->NdisMiniportBlock.PhysicalDeviceObject, Irp);
     if (Status == STATUS_PENDING) {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      Status = IoStatusBlock.Status;
     }
 
     if (NT_SUCCESS(Status)) {
-        Adapter->BusInterface = BusInterface;
+      Adapter->BusInterface = *BusInterfacePtr;
+      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
     } else {
-        ExFreePoolWithTag(BusInterface, NDIS_TAG);
+      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
     }
 
     return Status;
@@ -251,17 +252,16 @@ NdisReadPciSlotInformation(
     IN  ULONG       Length)
 {
   PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
-  NTSTATUS Status;
+    /* NTSTATUS Status; */
 
   /* Slot number is ignored since W2K for all NDIS drivers. */
-  Status = NdisQueryPciBusInterface(Adapter);
-  if (NT_SUCCESS(Status) && Adapter->BusInterface != NULL) {
+  if (Adapter->BusInterface.GetBusData != NULL) {
       ULONG Result;
-      Result = Adapter->BusInterface->GetBusData(Adapter->BusInterface->Context,
-                                                 PCI_WHICHSPACE_CONFIG,
-                                                 Buffer,
-                                                 Offset,
-                                                 Length);
+      Result = Adapter->BusInterface.GetBusData(Adapter->BusInterface.Context,
+                                                PCI_WHICHSPACE_CONFIG,
+                                                Buffer,
+                                                Offset,
+                                                Length);
       NDIS_DbgPrint(MAX_TRACE, ("NdisReadPciSlotInformation: Using bus interface, read %u bytes\n", Result));
       return Result;
   }
@@ -285,17 +285,16 @@ NdisWritePciSlotInformation(
     IN  ULONG       Length)
 {
   PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
-  NTSTATUS Status;
+    /* NTSTATUS Status; */
 
   /* Slot number is ignored since W2K for all NDIS drivers. */
-  Status = NdisQueryPciBusInterface(Adapter);
-  if (NT_SUCCESS(Status) && Adapter->BusInterface != NULL) {
+  if (Adapter->BusInterface.SetBusData != NULL) {
       ULONG Result;
-      Result = Adapter->BusInterface->SetBusData(Adapter->BusInterface->Context,
-                                                 PCI_WHICHSPACE_CONFIG,
-                                                 Buffer,
-                                                 Offset,
-                                                 Length);
+      Result = Adapter->BusInterface.SetBusData(Adapter->BusInterface.Context,
+                                                PCI_WHICHSPACE_CONFIG,
+                                                Buffer,
+                                                Offset,
+                                                Length);
       NDIS_DbgPrint(MAX_TRACE, ("NdisWritePciSlotInformation: Using bus interface, wrote %u bytes\n", Result));
       return Result;
   }
