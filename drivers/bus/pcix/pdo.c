@@ -308,6 +308,8 @@ PciPdoIrpQueryInterface(IN PIRP Irp,
     NTSTATUS Status;
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(Irp);
+
     /* Query the interface from the PCI driver */
     Status = PciQueryInterface(
                 (PPCI_FDO_EXTENSION)DeviceExtension,
