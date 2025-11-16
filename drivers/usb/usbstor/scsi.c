@@ -565,7 +565,7 @@ USBSTOR_HandleExecuteSCSI(
      */
     if (SrbGetCdb(Request)->CDB10.LogicalUnitNumber != PDODeviceExtension->LUN)
     {
-        DPRINT1("USBSTOR_HandleExecuteSCSI: CDB LUN %u != PDO LUN %u (using CBW LUN)\n",
+        DPRINT1("USBSTOR_HandleExecuteSCSI: CDB LUN %lu != PDO LUN %lu (using CBW LUN)\n",
                 (ULONG)SrbGetCdb(Request)->CDB10.LogicalUnitNumber,
                 (ULONG)PDODeviceExtension->LUN);
     }

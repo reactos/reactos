@@ -1854,9 +1854,9 @@ USBH_ProcessHubStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
                                 USBHUB_FEATURE_C_HUB_LOCAL_POWER);
     }
     /*
-     * per USB 2.0 spec multiple hub change bits
-     * may be set simultaneously. Handle OverCurrentChange independently so
-     * we don’t miss clearing it when LocalPowerChange is also set.
+     * Per USB 2.0 spec multiple hub change bits may be set simultaneously.
+     * Handle OverCurrentChange independently so we don’t miss clearing it
+     * when LocalPowerChange is also set.
      */
     if (HubStatusChange.OverCurrentChange)
     {
