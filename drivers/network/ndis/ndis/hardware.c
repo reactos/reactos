@@ -31,9 +31,6 @@ NdisQueryPciBusInterface(
     }
 
     Adapter->BusInterfaceQueried = TRUE;
-    if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci) {
-      return STATUS_NOT_SUPPORTED;
-    }
 
     BusInterfacePtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(*BusInterfacePtr), NDIS_TAG);
     if (BusInterfacePtr == NULL) {
@@ -59,13 +56,13 @@ NdisQueryPciBusInterface(
     IrpStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IrpStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
     IrpStack->Parameters.QueryInterface.Size = sizeof(*BusInterfacePtr);
-    IrpStack->Parameters.QueryInterface.Version = 1;
+    IrpStack->Parameters.QueryInterface.Version = PCI_BUS_INTERFACE_STANDARD_VERSION;
     IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterfacePtr;
     IrpStack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 
-    Status = IoCallDriver(Adapter->NdisMiniportBlock.PhysicalDeviceObject, Irp);
+    Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
     if (Status == STATUS_PENDING) {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = IoStatusBlock.Status;
