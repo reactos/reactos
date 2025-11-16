@@ -305,12 +305,22 @@ PciPdoIrpQueryInterface(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNREFERENCED_PARAMETER(Irp);
-    UNREFERENCED_PARAMETER(IoStackLocation);
-    UNREFERENCED_PARAMETER(DeviceExtension);
+    NTSTATUS Status;
+    PAGED_CODE();
 
-    UNIMPLEMENTED_DBGBREAK();
-    return STATUS_NOT_SUPPORTED;
+    /* Query the interface from the PCI driver */
+    Status = PciQueryInterface(
+                (PPCI_FDO_EXTENSION)DeviceExtension,
+                IoStackLocation->Parameters.QueryInterface.InterfaceType,
+                IoStackLocation->Parameters.QueryInterface.Size,
+                IoStackLocation->Parameters.QueryInterface.Version,
+                IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData,
+                IoStackLocation->Parameters.QueryInterface.Interface,
+                FALSE);
+
+    /* TODO: There's more to this story, but NOT TODAY! */
+
+    return Status;
 }
 
 NTSTATUS
