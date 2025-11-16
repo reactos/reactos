@@ -66,7 +66,7 @@ int _ismbcsymbol( unsigned int c )
  */
 int _ismbcspace( unsigned int c )
 {
-	return ((c) == 0x8140);
+    return (c == 0x20 || (c >= 0x09 && c <= 0x0D ));
 }
 /*
  * @implemented
