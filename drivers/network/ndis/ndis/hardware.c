@@ -24,21 +24,12 @@ NdisQueryPciBusInterface(
     PIRP Irp;
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION IrpStack;
-    PBUS_INTERFACE_STANDARD BusInterfacePtr;
 
     if (Adapter->BusInterfaceQueried) {
       return (Adapter->BusInterface.GetBusData != NULL) ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED;
     }
 
     Adapter->BusInterfaceQueried = TRUE;
-    if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci) {
-      return STATUS_NOT_SUPPORTED;
-    }
-
-    BusInterfacePtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(*BusInterfacePtr), NDIS_TAG);
-    if (BusInterfacePtr == NULL) {
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -50,7 +41,6 @@ NdisQueryPciBusInterface(
                        &Event,
                        &IoStatusBlock);
     if (Irp == NULL) {
-      ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -58,23 +48,23 @@ NdisQueryPciBusInterface(
     IrpStack->MajorFunction = IRP_MJ_PNP;
     IrpStack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     IrpStack->Parameters.QueryInterface.InterfaceType = &GUID_BUS_INTERFACE_STANDARD;
-    IrpStack->Parameters.QueryInterface.Size = sizeof(*BusInterfacePtr);
-    IrpStack->Parameters.QueryInterface.Version = 1;
-    IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)BusInterfacePtr;
+    IrpStack->Parameters.QueryInterface.Size = sizeof(Adapter->BusInterface);
+    IrpStack->Parameters.QueryInterface.Version = PCI_BUS_INTERFACE_STANDARD_VERSION;
+    IrpStack->Parameters.QueryInterface.Interface = (PINTERFACE)&Adapter->BusInterface;
     IrpStack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 
-    Status = IoCallDriver(Adapter->NdisMiniportBlock.PhysicalDeviceObject, Irp);
+    Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
     if (Status == STATUS_PENDING) {
       KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
       Status = IoStatusBlock.Status;
     }
 
-    if (NT_SUCCESS(Status)) {
-      Adapter->BusInterface = *BusInterfacePtr;
+    if (!NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(&Adapter->BusInterface, sizeof(Adapter->BusInterface));
     }
-    ExFreePoolWithTag(BusInterfacePtr, NDIS_TAG);
 
     return Status;
 }
