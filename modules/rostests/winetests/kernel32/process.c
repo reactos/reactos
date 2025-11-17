@@ -2484,6 +2484,12 @@ static void test_DuplicateHandle(void)
     DWORD info;
     BOOL r;
 
+#if defined(__REACTOS__) && defined(_WIN64)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: test_DuplicateHandle() deadlocks on ReactOS x64!\n");
+        return;
+    }
+#endif
     r = DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(),
             GetCurrentProcess(), &out, 0, FALSE,
             DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
@@ -5623,6 +5629,12 @@ START_TEST(process)
     ok(b, "Basic init of CreateProcess test\n");
     if (!b) return;
 
+#if defined(__REACTOS__) && defined(SKIPBADHEAP_K32_WINETEST)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: These tests are too rough on ReactOS heap manager on x64. It will eventually finish but it takes over an hour to complete the test suite with it which isn't acceptable.\n");
+        return;
+    }
+#endif
     if (myARGC >= 3)
     {
         if (!strcmp(myARGV[2], "dump") && myARGC >= 4)

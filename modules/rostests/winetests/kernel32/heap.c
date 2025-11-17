@@ -4044,6 +4044,12 @@ START_TEST(heap)
     int argc;
     char **argv;
 
+#if defined(__REACTOS__) && defined(SKIPBADHEAP_K32_WINETEST)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: These tests are too rough on ReactOS heap manager on x64. It will eventually finish but it takes over an hour to complete the test suite with it which isn't acceptable.\n");
+        return;
+    }
+#endif
     load_functions();
 
     argc = winetest_get_mainargs( &argv );
