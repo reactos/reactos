@@ -2484,6 +2484,12 @@ static void test_DuplicateHandle(void)
     DWORD info;
     BOOL r;
 
+#if defined(__REACTOS__) && defined(_WIN64)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: test_DuplicateHandle() deadlocks on ReactOS x64!\n");
+        return;
+    }
+#endif
     r = DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(),
             GetCurrentProcess(), &out, 0, FALSE,
             DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
