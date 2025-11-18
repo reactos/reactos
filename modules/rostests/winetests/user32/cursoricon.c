@@ -2868,7 +2868,11 @@ static void test_monochrome_icon(void)
 
         handle = LoadImageA(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
         if (!monochrome && !use_core_info) ok(handle != NULL, "LoadImage() failed with %lu.\n", GetLastError());
+#ifdef __REACTOS__
+        else todo_wine ok(handle == NULL || broken(!use_core_info) /* Win7 */ || broken(GetLastError() == ERROR_SUCCESS) /* WS03 */, "LoadImage() failed with %lu.\n", GetLastError());
+#else
         else todo_wine ok(handle == NULL || broken(!use_core_info) /* Win7 */, "LoadImage() failed with %lu.\n", GetLastError());
+#endif
         if (handle == NULL)
         {
             skip("Icon failed to load: %s, %s\n",
