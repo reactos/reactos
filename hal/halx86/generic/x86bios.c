@@ -499,7 +499,6 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
-#if 0
     X86_BIOS_REGISTERS Registers;
     ULONG OldEflags;
     BOOLEAN Success;
@@ -515,9 +514,5 @@ HalpBiosDisplayReset(VOID)
     /* Restore previous flags */
     __writeeflags(OldEflags);
     return Success;
-#else
-    /* This x64 HAL does NOT currently handle display reset (TODO) */
-    return FALSE;
-#endif
 }
 #endif // _M_AMD64
