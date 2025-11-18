@@ -94,6 +94,13 @@ NtGdiExtEscape(
    PPDEVOBJ ppdev;
    PSURFACE psurf;
 
+   /* Validate input parameters */
+   if ((InSize < 0) || (OutSize < 0))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      return -1;
+   }
+
    if (hDC == NULL)
    {
       if (pDriver)
@@ -156,83 +163,55 @@ NtGdiExtEscape(
       goto Exit;
    }
 
-   if ( InSize && UnsafeInData )
+   if (InSize)
    {
       _SEH2_TRY
       {
-        ProbeForRead(UnsafeInData,
-                     InSize,
-                     1);
+         SafeInData = ExAllocatePoolWithTag(PagedPool, InSize, GDITAG_TEMP);
+         if (SafeInData == NULL)
+         {
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto Exit;
+         }
+         else
+         {
+            ProbeForRead(UnsafeInData, InSize, 1);
+            RtlCopyMemory(SafeInData, UnsafeInData, InSize);
+         }
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if (!NT_SUCCESS(Status))
-      {
-         Result = -1;
-         goto Exit;
-      }
-
-      SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, GDITAG_TEMP );
-      if ( !SafeInData )
-      {
-         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         Result = -1;
-         goto Exit;
-      }
-
-      _SEH2_TRY
-      {
-        /* Pointers were already probed! */
-        RtlCopyMemory(SafeInData,
-                      UnsafeInData,
-                      InSize);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if ( !NT_SUCCESS(Status) )
-      {
+         Status = _SEH2_GetExceptionCode();
          SetLastNtError(Status);
-         Result = -1;
          goto Exit;
       }
+      _SEH2_END;
    }
 
-   if ( OutSize && UnsafeOutData )
+   if (OutSize)
    {
-      _SEH2_TRY
+      if (UnsafeOutData != NULL)
       {
-        ProbeForWrite(UnsafeOutData,
-                      OutSize,
-                      1);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-        Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END;
-
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         Result = -1;
-         goto Exit;
+         _SEH2_TRY
+         {
+            ProbeForWrite(UnsafeOutData, OutSize, 1);
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            Status = _SEH2_GetExceptionCode();
+            SetLastNtError(Status);
+            goto Exit;
+         }
+         _SEH2_END;
       }
 
-      SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, GDITAG_TEMP );
-      if ( !SafeOutData )
+      SafeOutData = ExAllocatePoolWithTag(PagedPool, OutSize, GDITAG_TEMP);
+      if (SafeOutData == NULL)
       {
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         Result = -1;
          goto Exit;
       }
+      RtlZeroMemory(SafeOutData, OutSize);
    }
 
    /* Finally call the driver */
@@ -242,44 +221,46 @@ NtGdiExtEscape(
          InSize,
          SafeInData,
          OutSize,
-         SafeOutData );
+         SafeOutData);
+
+   if (OutSize != 0 && UnsafeOutData != NULL && SafeOutData != NULL)
+   {
+      _SEH2_TRY
+      {
+         RtlCopyMemory(UnsafeOutData, SafeOutData, OutSize);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         Status = _SEH2_GetExceptionCode();
+         SetLastNtError(Status);
+         Result = -1;
+      }
+      _SEH2_END;
+   }
 
 Exit:
-   if (hDC == NULL)
+   if (ppdev != NULL)
    {
-      EngReleaseSemaphore(ppdev->hsemDevLock);
-   }
-   SURFACE_ShareUnlockSurface(psurf);
-   PDEVOBJ_vRelease(ppdev);
-
-   if ( SafeInData )
-   {
-      ExFreePoolWithTag ( SafeInData ,GDITAG_TEMP );
-   }
-
-   if ( SafeOutData )
-   {
-      if (Result > 0)
+      if (hDC == NULL)
       {
-         _SEH2_TRY
-         {
-            /* Pointers were already probed! */
-            RtlCopyMemory(UnsafeOutData, SafeOutData, OutSize);
-         }
-         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-         {
-            Status = _SEH2_GetExceptionCode();
-         }
-         _SEH2_END;
-
-         if ( !NT_SUCCESS(Status) )
-         {
-            SetLastNtError(Status);
-            Result = -1;
-         }
+         EngReleaseSemaphore(ppdev->hsemDevLock);
       }
+      PDEVOBJ_vRelease(ppdev);
+   }
 
-      ExFreePoolWithTag ( SafeOutData, GDITAG_TEMP );
+   if (psurf != NULL)
+   {
+      SURFACE_ShareUnlockSurface(psurf);
+   }
+
+   if (SafeInData != NULL)
+   {
+      ExFreePoolWithTag(SafeInData, GDITAG_TEMP);
+   }
+
+   if (SafeOutData != NULL)
+   {
+      ExFreePoolWithTag(SafeOutData, GDITAG_TEMP);
    }
 
    return Result;
