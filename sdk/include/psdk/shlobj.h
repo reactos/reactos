@@ -197,6 +197,14 @@ SHGetFolderPathAndSubDirW(
   _In_opt_ LPCWSTR,
   _Out_writes_(MAX_PATH) LPWSTR);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+HRESULT WINAPI SHGetKnownFolderPath(
+  _In_ REFKNOWNFOLDERID rfid,
+  _In_ DWORD dwFlags,
+  _In_opt_ HANDLE hToken,
+  _Outptr_ PWSTR *ppszPath);
+#endif
+
 #define SHGetFolderPathAndSubDir WINELIB_NAME_AW(SHGetFolderPathAndSubDir)
 
 HRESULT WINAPI
