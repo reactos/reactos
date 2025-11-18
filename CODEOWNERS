@@ -477,6 +477,11 @@
 /sdk/include/reactos/libs/zlib/ @ThFabba
 /sdk/lib/3rdparty/zlib/         @ThFabba
 
+# kbcrypt
+#   M: MuerteSeguraZ
+#   S: Maintained
+/drivers/crypto/kbcrypt/    @MuerteSeguraZ
+
 # x64 related code (keep this at the bottom)
 #   M: tkreuzer, ThePhysicist, Timo Kreuzer
 #   S: Maintained
