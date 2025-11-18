@@ -129,6 +129,7 @@ HalBeginSystemInterrupt(
     _Out_ PKIRQL OldIrql
 );
 
+NTHALAPI
 VOID
 FASTCALL
 HalClearSoftwareInterrupt(
@@ -171,6 +172,7 @@ HalEndSystemInterrupt(
 #endif
 
 #ifdef _ARM_ // FIXME: ndk/arm? armddk.h?
+NTHALAPI
 ULONG
 HalGetInterruptSource(
     VOID
@@ -267,6 +269,7 @@ HalGetEnvironmentVariable(
 //
 // Profiling Functions
 //
+NTHALAPI
 VOID
 NTAPI
 HalStartProfileInterrupt(
@@ -315,6 +318,7 @@ HalSetTimeIncrement(
 //
 // BIOS call API
 //
+NTHALAPI
 NTSTATUS
 NTAPI
 x86BiosAllocateBuffer(
@@ -322,12 +326,14 @@ x86BiosAllocateBuffer(
     _Out_ USHORT *Segment,
     _Out_ USHORT *Offset);
 
+NTHALAPI
 NTSTATUS
 NTAPI
 x86BiosFreeBuffer(
     _In_ USHORT Segment,
     _In_ USHORT Offset);
 
+NTHALAPI
 NTSTATUS
 NTAPI
 x86BiosReadMemory(
@@ -336,6 +342,7 @@ x86BiosReadMemory(
     _Out_writes_bytes_(Size) PVOID Buffer,
     _In_ ULONG Size);
 
+NTHALAPI
 NTSTATUS
 NTAPI
 x86BiosWriteMemory(
@@ -344,6 +351,7 @@ x86BiosWriteMemory(
     _In_reads_bytes_(Size) PVOID Buffer,
     _In_ ULONG Size);
 
+NTHALAPI
 BOOLEAN
 NTAPI
 x86BiosCall(
