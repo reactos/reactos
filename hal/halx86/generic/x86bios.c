@@ -499,28 +499,20 @@ BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
-#if 0
     X86_BIOS_REGISTERS Registers;
     ULONG OldEflags;
+    BOOLEAN Success;
 
     /* Save flags and disable interrupts */
     OldEflags = __readeflags();
     _disable();
 
-    /* Set AH = 0 (Set video mode), AL = 0x12 (640x480x16 vga) */
-    Registers.Eax = 0x12;
-
-    /* Call INT 0x10 */
-    x86BiosCall(0x10, &Registers);
-
-    // FIXME: check result
+    /* Call INT 0x10, AH = 0 (Set video mode), AL = 0x12 (640x480x16 VGA) */
+    Registers.Eax = 0x0012;
+    Success = x86BiosCall(0x10, &Registers);
 
     /* Restore previous flags */
     __writeeflags(OldEflags);
-    return TRUE;
-#else
-    /* This x64 HAL does NOT currently handle display reset (TODO) */
-    return FALSE;
-#endif
+    return Success;
 }
 #endif // _M_AMD64
