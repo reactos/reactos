@@ -2,6 +2,9 @@
 add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
+spec2def(testlib.dll testlib.spec)
+
 list(APPEND SOURCE
     clipboard.c
     compobj.c
@@ -34,8 +37,14 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-	target_compile_options(ole32_winetest PRIVATE -Wno-format-overflow)
+	target_compile_options(ole32_winetest PRIVATE -Wno-format-overflow -Wno-discarded-qualifiers)
 endif()
 
 add_pch(ole32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET ole32_winetest)
+
+add_library(testlib MODULE testlib.c ${CMAKE_CURRENT_BINARY_DIR}/testlib.def)
+set_module_type(testlib win32dll)
+add_importlibs(testlib msvcrt kernel32 ntdll)
+add_rostests_file(TARGET testlib)
+

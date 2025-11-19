@@ -52,15 +52,15 @@ typedef BOOL (*enumeratefunc)(const void *k, const void *v, void *extra,
  * extra is passed to c (and d, if it's provided).
  * Assumes c is not NULL.
  */
-struct dictionary *dictionary_create(comparefunc c, destroyfunc d, void *extra) DECLSPEC_HIDDEN;
+struct dictionary *dictionary_create(comparefunc c, destroyfunc d, void *extra);
 
 /* Assumes d is not NULL. */
-void dictionary_destroy(struct dictionary *d) DECLSPEC_HIDDEN;
+void dictionary_destroy(struct dictionary *d);
 
 /* Returns how many entries have been stored in the dictionary.  If two values
  * with the same key are inserted, only one is counted.
  */
-UINT dictionary_num_entries(struct dictionary *d) DECLSPEC_HIDDEN;
+UINT dictionary_num_entries(struct dictionary *d);
 
 /* Sets an element with key k and value v to the dictionary.  If a value
  * already exists with key k, its value is replaced, and the destroyfunc (if
@@ -70,7 +70,7 @@ UINT dictionary_num_entries(struct dictionary *d) DECLSPEC_HIDDEN;
  * values for either the key or the value.
  * Assumes d is not NULL.
  */
-void dictionary_insert(struct dictionary *d, const void *k, const void *v) DECLSPEC_HIDDEN;
+void dictionary_insert(struct dictionary *d, const void *k, const void *v);
 
 /* If a value with key k has been inserted into the dictionary, *v is set
  * to its associated value.  Returns FALSE if the key is not found, and TRUE
@@ -79,15 +79,15 @@ void dictionary_insert(struct dictionary *d, const void *k, const void *v) DECLS
  * value; see dictionary_insert.)
  * Assumes d and v are not NULL.
  */
-BOOL dictionary_find(struct dictionary *d, const void *k, void **v) DECLSPEC_HIDDEN;
+BOOL dictionary_find(struct dictionary *d, const void *k, void **v);
 
 /* Removes the element with key k from the dictionary.  Calls the destroyfunc
  * for the dictionary with the element if found (so you may destroy it if it's
  * dynamically allocated.)
  * Assumes d is not NULL.
  */
-void dictionary_remove(struct dictionary *d, const void *k) DECLSPEC_HIDDEN;
+void dictionary_remove(struct dictionary *d, const void *k);
 
-void dictionary_enumerate(struct dictionary *d, enumeratefunc e, void *closure) DECLSPEC_HIDDEN;
+void dictionary_enumerate(struct dictionary *d, enumeratefunc e, void *closure);
 
 #endif /* ndef __DICTIONARY_H__ */
