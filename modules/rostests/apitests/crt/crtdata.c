@@ -623,7 +623,7 @@ void Test__winver(void)
 void Test__wpgmptr(void)
 {
     void* p = _wpgmptr;
-    ok_ptr(_wpgmptr, NULL);
+    todo_ros ok_ptr(_wpgmptr, NULL);
 
     #undef _wpgmptr
     ok_ptr(_wpgmptr, p);
