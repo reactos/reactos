@@ -4,7 +4,7 @@
  * PURPOSE:     Shim matching / data (un)packing
  * COPYRIGHT:   Copyright 2011 André Hentschel
  *              Copyright 2013 Mislav Blaževic
- *              Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2015-2025 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #define WIN32_NO_STATUS
@@ -25,7 +25,9 @@ typedef struct _ShimData
     DWORD dwMagic;
     SDBQUERYRESULT Query;
     WCHAR szLayer[MAX_LAYER_LENGTH];
-    DWORD dwRosProcessCompatVersion;  // ReactOS specific
+    // Start ReactOS specific
+    DWORD dwRosProcessCompatVersion;
+    PVOID RtlGetCurrentDirectory_U_RtlpMsysDecoy;
 } ShimData;
 
 #define SHIMDATA_MAGIC  0xAC0DEDAB
@@ -35,6 +37,7 @@ C_ASSERT(SHIMDATA_MAGIC == REACTOS_SHIMDATA_MAGIC);
 C_ASSERT(sizeof(ShimData) == sizeof(ReactOS_ShimData));
 C_ASSERT(offsetof(ShimData, dwMagic) == offsetof(ReactOS_ShimData, dwMagic));
 C_ASSERT(offsetof(ShimData, dwRosProcessCompatVersion) == offsetof(ReactOS_ShimData, dwRosProcessCompatVersion));
+C_ASSERT(offsetof(ShimData, RtlGetCurrentDirectory_U_RtlpMsysDecoy) == offsetof(ReactOS_ShimData, RtlGetCurrentDirectory_U_RtlpMsysDecoy));
 
 
 static BOOL WINAPI SdbpFileExists(LPCWSTR path)
@@ -508,18 +511,28 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
         goto Cleanup;
     }
 
-    /* EXE is list TAG which contains data required to match executable */
-    iter = SdbFindFirstTag(pdb, database, TAG_EXE);
+    /*
+     * Instead of brute-force searching the 'entire' DB, we should:
+     * 1. Iterate over the Index TAG_EXE.TAG_WILDCARD_NAME
+     * 2. Search the index TAG_EXE.TAG_NAME (fallback to SdbFindFirstNamedTag)
+     * 3. Search the index TAG_EXE.TAG_16BIT_MODULE_NAME (fallback to SdbFindFirstNamedTag)
+     */
 
-    /* Search for entry in database, we should look into indexing tags! */
-    while (iter != TAGID_NULL)
+
+    /* EXE is list TAG which contains data required to match executable */
+    for (iter = SdbFindFirstTag(pdb, database, TAG_EXE); iter != TAGID_NULL; iter = SdbFindNextTag(pdb, database, iter))
     {
-        LPWSTR foundName;
-        /* Check if exe name matches */
         name = SdbFindFirstTag(pdb, iter, TAG_NAME);
+        LPWSTR foundName = SdbGetStringTagPtr(pdb, name);
         /* If this is a malformed DB, (no TAG_NAME), we should not crash. */
-        foundName = SdbGetStringTagPtr(pdb, name);
-        if (foundName && !_wcsicmp(foundName, file_name))
+        if (!foundName)
+            continue;
+
+        /* We only support full wildcard names for now */
+        BOOL isWildcard = foundName[0] == '*' && foundName[1] == UNICODE_NULL;
+
+        /* Check if exe name matches */
+        if (isWildcard || !_wcsicmp(foundName, file_name))
         {
             /* Get information about executable required to match it with database entry */
             if (!attribs)
@@ -536,9 +549,6 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
                 SdbpAddExeMatch(hsdb, pdb, iter, result);
             }
         }
-
-        /* Continue iterating */
-        iter = SdbFindNextTag(pdb, database, iter);
     }
 
     /* Restore the full path. */
