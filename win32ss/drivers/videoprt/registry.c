@@ -23,6 +23,9 @@
 #include <ndk/obfuncs.h>
 #include <stdio.h>
 
+#define CONST_STR_SIZE(x) (sizeof(x) - sizeof(x[0]))
+#define CONST_STR_LEN(x)  (sizeof(x)/sizeof(x[0]) - 1)
+
 #define NDEBUG
 #include <debug.h>
 
@@ -394,7 +397,7 @@ IntDuplicateUnicodeString(
         DestinationString->MaximumLength = DestMaxLength;
 
         if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
-            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     return STATUS_SUCCESS;
@@ -602,11 +605,11 @@ IntCreateRegistryPath(
     IN ULONG DeviceNumber,
     OUT PUNICODE_STRING DeviceRegistryPath)
 {
-    static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
-    static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
-    static WCHAR ControlSet[] = L"CONTROLSET";
-    static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-    static WCHAR Insert2[] = L"\\Device";
+    static const WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
+    static const WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
+    static const WCHAR ControlSet[] = L"CONTROLSET";
+    static const WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+    static const WCHAR Insert2[] = L"\\Device";
     UNICODE_STRING DeviceNumberString;
     WCHAR DeviceNumberBuffer[20];
     BOOLEAN Valid;
@@ -628,26 +631,26 @@ IntCreateRegistryPath(
 
     /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
     Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
-             0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
-                            wcslen(RegistryMachineSystem)));
+             _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
+                       CONST_STR_LEN(RegistryMachineSystem)) == 0);
     if (Valid)
     {
-        AfterControlSet.Buffer += wcslen(RegistryMachineSystem);
-        AfterControlSet.Length -= sizeof(RegistryMachineSystem) - sizeof(UNICODE_NULL);
+        AfterControlSet.Buffer += CONST_STR_LEN(RegistryMachineSystem);
+        AfterControlSet.Length -= CONST_STR_SIZE(RegistryMachineSystem);
 
         /* Check if path contains CURRENTCONTROLSET */
         if (AfterControlSet.Length > sizeof(CurrentControlSet) &&
-            0 == _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, wcslen(CurrentControlSet)))
+            _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, CONST_STR_LEN(CurrentControlSet)) == 0)
         {
-            AfterControlSet.Buffer += wcslen(CurrentControlSet);
-            AfterControlSet.Length -= sizeof(CurrentControlSet) - sizeof(UNICODE_NULL);
+            AfterControlSet.Buffer += CONST_STR_LEN(CurrentControlSet);
+            AfterControlSet.Length -= CONST_STR_SIZE(CurrentControlSet);
         }
         /* Check if path contains CONTROLSETnum */
         else if (AfterControlSet.Length > sizeof(ControlSet) &&
-                 0 == _wcsnicmp(AfterControlSet.Buffer, ControlSet, wcslen(ControlSet)))
+                 _wcsnicmp(AfterControlSet.Buffer, ControlSet, CONST_STR_LEN(ControlSet)) == 0)
         {
-            AfterControlSet.Buffer += wcslen(ControlSet);
-            AfterControlSet.Length -= sizeof(ControlSet) - sizeof(UNICODE_NULL);
+            AfterControlSet.Buffer += CONST_STR_LEN(ControlSet);
+            AfterControlSet.Length -= CONST_STR_SIZE(ControlSet);
             while (AfterControlSet.Length > 0 &&
                     *AfterControlSet.Buffer >= L'0' &&
                     *AfterControlSet.Buffer <= L'9')
@@ -685,7 +688,7 @@ IntCreateRegistryPath(
             wcsncpy(DeviceRegistryPath->Buffer,
                     DriverRegistryPath->Buffer,
                     AfterControlSet.Buffer - DriverRegistryPath->Buffer);
-            DeviceRegistryPath->Length = (AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
+            DeviceRegistryPath->Length = (ULONG_PTR)AfterControlSet.Buffer - (ULONG_PTR)DriverRegistryPath->Buffer;
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
             RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
@@ -722,8 +725,8 @@ IntCreateRegistryPath(
         RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
     }
 
-    DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",
-           DriverRegistryPath, DeviceRegistryPath);
+    INFO_(VIDEOPRT, "Formatted registry key '%wZ' -> '%wZ'\n",
+          DriverRegistryPath, DeviceRegistryPath);
 
     return STATUS_SUCCESS;
 }
