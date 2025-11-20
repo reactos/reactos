@@ -48,7 +48,7 @@ typedef int (CDECL *MSVCRT_new_handler_func)(size_t size);
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static LONG MSVCRT_new_mode;
 
-/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */ 
+/* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */
 static unsigned int MSVCRT_amblksiz = 16;
 /* FIXME - According to documentation it should be 480 bytes, at runtime default is 0 */
 static size_t MSVCRT_sbh_threshold = 0;
@@ -829,7 +829,7 @@ int CDECL wmemcpy_s(wchar_t *dest, size_t numberOfElements,
 
 BOOL msvcrt_init_heap(void)
 {
-#if _MSVCR_VER <= 100
+#if _MSVCR_VER <= 100 && !defined(__REACTOS__)
     heap = HeapCreate(0, 0, 0);
 #else
     heap = GetProcessHeap();
@@ -839,7 +839,7 @@ BOOL msvcrt_init_heap(void)
 
 void msvcrt_destroy_heap(void)
 {
-#if _MSVCR_VER <= 100
+#if _MSVCR_VER <= 100 && !defined(__REACTOS__)
     HeapDestroy(heap);
 #endif
     if(sb_heap)
