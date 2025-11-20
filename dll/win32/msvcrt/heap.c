@@ -829,7 +829,7 @@ int CDECL wmemcpy_s(wchar_t *dest, size_t numberOfElements,
 
 BOOL msvcrt_init_heap(void)
 {
-#if _MSVCR_VER <= 100
+#if _MSVCR_VER <= 100 && !defined(__REACTOS__)
     heap = HeapCreate(0, 0, 0);
 #else
     heap = GetProcessHeap();
