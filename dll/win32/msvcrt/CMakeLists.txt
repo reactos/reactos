@@ -70,6 +70,7 @@ if(ARCH STREQUAL "i386")
         except_i386.c
     )
     list(APPEND SHARED_ASM_SOURCE
+        i386/__wine_RtlUnwind.s
         i386/inout.s
     )
 elseif(ARCH STREQUAL "amd64")
@@ -115,6 +116,9 @@ add_library(msvcrt_shared
 )
 
 target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0)
+#if(ARCH STREQUAL "i386")
+    #target_compile_definitions(msvcrt_shared PRIVATE RtlUnwind=__wine_RtlUnwind)
+#endif()
 add_dependencies(msvcrt_shared psdk asm)
 
 ###############################################################################
