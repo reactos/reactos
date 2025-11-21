@@ -1959,7 +1959,11 @@ static void check_preferred_mode(const DISPLAYCONFIG_TARGET_PREFERRED_MODE *mode
 
     dm.dmSize = sizeof(dm);
     bret = EnumDisplaySettingsW(gdi_device_name, ENUM_CURRENT_SETTINGS, &dm);
+#ifdef __REACTOS__
+    ok(bret || broken(GetLastError() == ERROR_INVALID_PARAMETER) /* Win8 */, "got error %lu.\n", GetLastError());
+#else
     ok(bret, "got error %lu.\n", GetLastError());
+#endif
 
     if (dm.dmPelsWidth == 1024 && dm.dmPelsHeight == 768)
     {
@@ -2015,8 +2019,14 @@ static void test_QueryDisplayConfig_result(UINT32 flags,
         source_name.header.id = pi[i].sourceInfo.id;
         source_name.viewGdiDeviceName[0] = '\0';
         ret = pDisplayConfigGetDeviceInfo(&source_name.header);
+#ifdef __REACTOS__
+        ok(!ret || broken(ret == ERROR_GEN_FAILURE) /* Win8 */, "Expected 0, got %ld\n", ret);
+        if (ret != ERROR_GEN_FAILURE)
+            ok(source_name.viewGdiDeviceName[0] != '\0', "Expected GDI device name, got empty string\n");
+#else
         ok(!ret, "Expected 0, got %ld\n", ret);
         ok(source_name.viewGdiDeviceName[0] != '\0', "Expected GDI device name, got empty string\n");
+#endif
 
         /* Test with an invalid adapter LUID */
         source_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
@@ -2033,7 +2043,11 @@ static void test_QueryDisplayConfig_result(UINT32 flags,
         target_name.header.id = pi[i].targetInfo.id;
         target_name.monitorDevicePath[0] = '\0';
         ret = pDisplayConfigGetDeviceInfo(&target_name.header);
+#ifdef __REACTOS__
+        ok(!ret || broken(ret == ERROR_GEN_FAILURE) /* Win8 */, "Expected 0, got %ld\n", ret);
+#else
         ok(!ret, "Expected 0, got %ld\n", ret);
+#endif
         check_device_path(target_name.monitorDevicePath, &target_name.header.adapterId, target_name.header.id);
 
         preferred_mode.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE;
@@ -2042,9 +2056,16 @@ static void test_QueryDisplayConfig_result(UINT32 flags,
         preferred_mode.header.id = pi[i].targetInfo.id;
         preferred_mode.width = preferred_mode.height = 0;
         ret = pDisplayConfigGetDeviceInfo(&preferred_mode.header);
+#ifdef __REACTOS__
+        ok(!ret || broken(ret == ERROR_GEN_FAILURE) /* Win8 */, "Expected 0, got %ld\n", ret);
+        if (!ret)
+            ok(preferred_mode.width > 0 && preferred_mode.height > 0, "Expected non-zero height/width, got %ux%u\n",
+                    preferred_mode.width, preferred_mode.height);
+#else
         ok(!ret, "Expected 0, got %ld\n", ret);
         ok(preferred_mode.width > 0 && preferred_mode.height > 0, "Expected non-zero height/width, got %ux%u\n",
                 preferred_mode.width, preferred_mode.height);
+#endif
         check_preferred_mode(&preferred_mode, source_name.viewGdiDeviceName);
 
         todo_wine {
@@ -2053,8 +2074,14 @@ static void test_QueryDisplayConfig_result(UINT32 flags,
         adapter_name.header.adapterId = pi[i].sourceInfo.adapterId;
         adapter_name.adapterDevicePath[0] = '\0';
         ret = pDisplayConfigGetDeviceInfo(&adapter_name.header);
+#ifdef __REACTOS__
+        ok(!ret || broken(ret == ERROR_GEN_FAILURE) /* Win8 */, "Expected 0, got %ld\n", ret);
+        if (!ret)
+            ok(adapter_name.adapterDevicePath[0] != '\0', "Expected adapter device path, got empty string\n");
+#else
         ok(!ret, "Expected 0, got %ld\n", ret);
         ok(adapter_name.adapterDevicePath[0] != '\0', "Expected adapter device path, got empty string\n");
+#endif
         }
 
         /* Check corresponding modes */
@@ -2328,22 +2355,38 @@ static void test_DisplayConfigGetDeviceInfo(void)
     source_name.header.type = 0xFFFF;
     source_name.header.size = sizeof(source_name.header);
     ret = pDisplayConfigGetDeviceInfo(&source_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     source_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
     source_name.header.size = sizeof(source_name.header);
     ret = pDisplayConfigGetDeviceInfo(&source_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     source_name.header.type = 0xFFFF;
     source_name.header.size = sizeof(source_name);
     ret = pDisplayConfigGetDeviceInfo(&source_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     source_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
     source_name.header.size = sizeof(source_name) - 1;
     ret = pDisplayConfigGetDeviceInfo(&source_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     source_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
     source_name.header.size = sizeof(source_name);
@@ -2356,7 +2399,11 @@ static void test_DisplayConfigGetDeviceInfo(void)
     target_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
     target_name.header.size = sizeof(target_name) - 1;
     ret = pDisplayConfigGetDeviceInfo(&target_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     target_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
     target_name.header.size = sizeof(target_name);
@@ -2369,7 +2416,11 @@ static void test_DisplayConfigGetDeviceInfo(void)
     preferred_mode.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE;
     preferred_mode.header.size = sizeof(preferred_mode) - 1;
     ret = pDisplayConfigGetDeviceInfo(&preferred_mode.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     preferred_mode.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_PREFERRED_MODE;
     preferred_mode.header.size = sizeof(preferred_mode);
@@ -2382,7 +2433,11 @@ static void test_DisplayConfigGetDeviceInfo(void)
     adapter_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME;
     adapter_name.header.size = sizeof(adapter_name) - 1;
     ret = pDisplayConfigGetDeviceInfo(&adapter_name.header);
+#ifdef __REACTOS__
+    ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_GEN_FAILURE /* Win7 */, "got %ld\n", ret);
+#else
     ok(ret == ERROR_INVALID_PARAMETER, "got %ld\n", ret);
+#endif
 
     adapter_name.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME;
     adapter_name.header.size = sizeof(adapter_name);
