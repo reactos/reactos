@@ -28,7 +28,12 @@ extern "C" {
 #include <tcpestats.h>
 
 #ifndef IPHLPAPI_DLL_LINKAGE
+#if defined(__REACTOS__) && defined(__GNUC__)
+/* FIXME: CORE-6504 */
+#define IPHLPAPI_DLL_LINKAGE
+#else
 #define IPHLPAPI_DLL_LINKAGE DECLSPEC_IMPORT
+#endif
 #endif
 
 #define NET_STRING_IPV4_ADDRESS           0x00000001
