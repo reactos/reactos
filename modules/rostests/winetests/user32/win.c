@@ -6355,6 +6355,14 @@ static void test_csparentdc(void)
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-40, -40, 110, 110}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test1_win8 = 
+   {
+        {{0, 0, 166, 150}, {0, 0, 166, 150}, {0, 0, 166, 150}}, nothing_todo,
+        {{0, 0, 40, 40}, {-20, -20, 146, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
+        {{0, 0, 40, 40}, {-40, -40, 126, 110}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
+   };
+#endif
 
    const struct parentdc_test test2 = 
    {
@@ -6362,6 +6370,14 @@ static void test_csparentdc(void)
         {{0, 0, 40, 40}, {-20, -20, 30, 30}, {0, 0, 30, 30}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-40, -40, 10, 10}, {0, 0, 10, 10}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test2_win8 = 
+   {
+        {{0, 0, 166, 150}, {0, 0, 50, 50}, {0, 0, 50, 50}}, nothing_todo,
+        {{0, 0, 40, 40}, {-20, -20, 30, 30}, {0, 0, 30, 30}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
+        {{0, 0, 40, 40}, {-40, -40, 10, 10}, {0, 0, 10, 10}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
+   };
+#endif
 
    const struct parentdc_test test3 = 
    {
@@ -6369,6 +6385,14 @@ static void test_csparentdc(void)
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test3_win8 = 
+   {
+        {{0, 0, 166, 150}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
+        {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
+        {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
+   };
+#endif
 
    const struct parentdc_test test4 = 
    {
@@ -6376,6 +6400,14 @@ static void test_csparentdc(void)
         {{0, 0, 40, 40}, {20, 20, 30, 30}, {20, 20, 30, 30}}, nothing_todo,
         {{0, 0, 40, 40}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test4_win8 = 
+   {
+        {{0, 0, 166, 150}, {40, 40, 50, 50}, {40, 40, 50, 50}}, nothing_todo,
+        {{0, 0, 40, 40}, {20, 20, 30, 30}, {20, 20, 30, 30}}, nothing_todo,
+        {{0, 0, 40, 40}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
+   };
+#endif
 
    const struct parentdc_test test5 = 
    {
@@ -6383,6 +6415,14 @@ static void test_csparentdc(void)
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-20, -20, 20, 20}, {0, 0, 20, 20}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test5_win8 = 
+   {
+        {{0, 0, 166, 150}, {20, 20, 60, 60}, {20, 20, 60, 60}}, nothing_todo,
+        {{0, 0, 40, 40}, {-20, -20, 146, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
+        {{0, 0, 40, 40}, {-20, -20, 20, 20}, {0, 0, 20, 20}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
+   };
+#endif
 
    const struct parentdc_test test6 = 
    {
@@ -6397,6 +6437,14 @@ static void test_csparentdc(void)
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
    };
+#ifdef __REACTOS__
+   const struct parentdc_test test7_win8 = 
+   {
+        {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
+        {{0, 0, 40, 40}, {-20, -20, 146, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
+        {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
+   };
+#endif
 #undef nothing_todo
 
    clsMain.style = CS_DBLCLKS;
@@ -6445,31 +6493,81 @@ static void test_csparentdc(void)
    zero_parentdc_test(&test_answer);
    InvalidateRect(hwndMain, NULL, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test1_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test1, test_answer);
+    }
+#else
    parentdc_ok(test1, test_answer);
+#endif
 
    zero_parentdc_test(&test_answer);
    SetRect(&rc, 0, 0, 50, 50);
    InvalidateRect(hwndMain, &rc, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test2_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test2, test_answer);
+    }
+#else
    parentdc_ok(test2, test_answer);
+#endif
 
    zero_parentdc_test(&test_answer);
    SetRect(&rc, 0, 0, 10, 10);
    InvalidateRect(hwndMain, &rc, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test3_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test3, test_answer);
+    }
+#else
    parentdc_ok(test3, test_answer);
+#endif
 
    zero_parentdc_test(&test_answer);
    SetRect(&rc, 40, 40, 50, 50);
    InvalidateRect(hwndMain, &rc, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test4_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test4, test_answer);
+    }
+#else
    parentdc_ok(test4, test_answer);
+#endif
 
    zero_parentdc_test(&test_answer);
    SetRect(&rc, 20, 20, 60, 60);
    InvalidateRect(hwndMain, &rc, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test5_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test5, test_answer);
+    }
+#else
    parentdc_ok(test5, test_answer);
+#endif
 
    zero_parentdc_test(&test_answer);
    SetRect(&rc, 0, 0, 10, 10);
@@ -6481,7 +6579,17 @@ static void test_csparentdc(void)
    SetRect(&rc, -5, -5, 65, 65);
    InvalidateRect(hwnd1, &rc, TRUE);
    flush_events( TRUE );
+#ifdef __REACTOS__
+    /* The parentdc_ok macro breaks if/else staements without braces */
+    if (GetNTVersion() >= _WIN32_WINNT_WIN8) {
+        parentdc_ok(test7_win8, test_answer);
+    }
+    else {
+        parentdc_ok(test7, test_answer);
+    }
+#else
    parentdc_ok(test7, test_answer);
+#endif
 
    DestroyWindow(hwndMain);
    DestroyWindow(hwnd1);

@@ -9762,7 +9762,11 @@ static void subtest_hvredraw(HWND hparent, UINT class_style, DWORD style)
         CombineRgn( hrgn_expect, hrgn_new_vis, hrgn_old_vis, is_redraw ? RGN_COPY : RGN_DIFF );
 
         rgn_ok = EqualRgn( hrgn_expect, hrgn_actual );
+#ifdef __REACTOS__
+        ok( !!rgn_ok || broken(GetNTVersion() == _WIN32_WINNT_WINBLUE), "Update region shall match expected region\n" );
+#else
         ok( !!rgn_ok, "Update region shall match expected region\n" );
+#endif
 
         if (!rgn_ok)
         {
