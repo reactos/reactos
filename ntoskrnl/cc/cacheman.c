@@ -117,22 +117,30 @@ CcShutdownSystem(VOID)
     /* NOTHING TO DO */
 }
 
-/*
- * @unimplemented
- */
 LARGE_INTEGER
 NTAPI
-CcGetFlushedValidData (
+CcGetFlushedValidData(
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     IN BOOLEAN BcbListHeld
-    )
+)
 {
-	LARGE_INTEGER i;
+    LARGE_INTEGER validDataLength = {0};
 
-	UNIMPLEMENTED;
+    if (SectionObjectPointer == NULL || SectionObjectPointer->SharedCacheMap == NULL) {
+        return validDataLength;
+    }
 
-	i.QuadPart = 0;
-	return i;
+    if (!BcbListHeld) {
+        ExAcquireResourceSharedLite(&SectionObjectPointer->SharedCacheMap->BcbResource, TRUE);
+    }
+
+    validDataLength.QuadPart = SectionObjectPointer->SharedCacheMap->ValidDataGoal.QuadPart;
+
+    if (!BcbListHeld) {
+        ExReleaseResourceLite(&SectionObjectPointer->SharedCacheMap->BcbResource);
+    }
+
+    return validDataLength;
 }
 
 /*
