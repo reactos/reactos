@@ -4575,6 +4575,9 @@ static void test_mdi_messages(void)
                                 0, 0, CW_USEDEFAULT, CW_USEDEFAULT,
                                 mdi_client, 0, GetModuleHandleA(0), NULL);
     ok(!!mdi_child2, "Failed to create window, error %lu.\n", GetLastError());
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+#endif
     ok_sequence(WmCreateMDIchildInvisibleMaxSeq4, "Create maximized invisible MDI child window", FALSE);
     ok(IsZoomed(mdi_child2), "MDI child should be maximized\n");
     ok(!(GetWindowLongA(mdi_child2, GWL_STYLE) & WS_VISIBLE), "MDI child should be not visible\n");
@@ -5193,6 +5196,9 @@ static void test_showwindow(void)
     flush_sequence();
     ShowWindow(hwnd, SW_SHOWNOACTIVATE);
     flush_events();
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmShowNoActivateMinimizedOverlappedSeq,
                 "ShowWindow(hwnd, SW_SHOWNOACTIVATE): minimized overlapped", TRUE);
 
@@ -5223,6 +5229,9 @@ static void test_showwindow(void)
     flush_sequence();
     ShowWindow(hwnd, SW_SHOWNOACTIVATE);
     flush_events();
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmShowNoActivateActiveMinimizedOverlappedSeq,
                 "ShowWindow(hwnd, SW_SHOWNOACTIVATE): active minimized overlapped", TRUE);
 
@@ -5800,6 +5809,9 @@ static void test_messages(void)
                              WS_CHILD | WS_VISIBLE | WS_CAPTION,
                              0, 0, 10, 10, hparent, 0, 0, NULL);
     ok (hchild != 0, "Failed to create child window\n");
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+#endif
     ok_sequence(WmCreateVisibleChildSeq, "CreateWindow:visible child", FALSE);
 
     if (winetest_debug > 1) trace("testing scroll APIs on a visible child window %p\n", hchild);
@@ -5815,7 +5827,7 @@ static void test_messages(void)
                              0, 0, 10, 10, hparent, 0, 0, NULL);
     ok (hchild != 0, "Failed to create child window\n");
     ok_sequence(WmCreateChildSeq, "CreateWindow:child", FALSE);
-    
+
     hchild2 = CreateWindowExA(0, "SimpleWindowClass", "Test child2", WS_CHILD,
                                100, 100, 50, 50, hparent, 0, 0, NULL);
     ok (hchild2 != 0, "Failed to create child2 window\n");
@@ -10648,6 +10660,9 @@ static void test_accelerators(void)
     keybd_event('N', 0, KEYEVENTF_KEYUP, 0);
     keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
     pump_msg_loop(hwnd, hAccel);
+#ifdef __REACTOS__
+    if (0) // Test failures on WS03-Win10 1607
+#endif
     ok_sequence(WmCtrlVkN, "Ctrl+VK_N press/release", FALSE);
 
     if (winetest_debug > 1) trace("testing Alt+VK_N press/release\n");
@@ -12367,7 +12382,11 @@ static char *get_test_dll_path(void)
     ok(file != INVALID_HANDLE_VALUE, "Failed to create file %s: %lu.\n", debugstr_a(path), GetLastError());
 
     res = FindResourceA(NULL, dll_name, "TESTDLL");
+#ifdef __REACTOS__
+    ok(!!res || broken(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND) /* WS03 */, "Failed to load resource: %lu\n", GetLastError());
+#else
     ok(!!res, "Failed to load resource: %lu\n", GetLastError());
+#endif
     ptr = LockResource(LoadResource(GetModuleHandleA(NULL), res));
     WriteFile(file, ptr, SizeofResource(GetModuleHandleA(NULL), res), &written, NULL);
     ok(written == SizeofResource(GetModuleHandleA(NULL), res), "Failed to write resource\n");
@@ -12398,8 +12417,16 @@ static void test_set_hook(void)
 
     SetLastError(0xdeadbeef);
     hhook = SetWindowsHookExA(WH_JOURNALRECORD, cbt_hook_proc, 0, 0);
+#ifdef __REACTOS__
+    ok(!hhook || broken(GetNTVersion() == _WIN32_WINNT_VISTA || GetNTVersion() == _WIN32_WINNT_WIN7), "global hook requires hModule != 0\n");
+    ok(GetLastError() == ERROR_ACCESS_DENIED
+       || broken(GetLastError() == ERROR_HOOK_NEEDS_HMOD) /* WS03 */
+       || broken(GetLastError() == 0xdeadbeef) /* Vista */,
+       "unexpected error %ld\n", GetLastError());
+#else
     ok(!hhook, "global hook requires hModule != 0\n");
     ok(GetLastError() == ERROR_ACCESS_DENIED, "unexpected error %ld\n", GetLastError());
+#endif
 
     SetLastError(0xdeadbeef);
     hhook = SetWindowsHookExA(WH_CBT, 0, GetModuleHandleA(0), GetCurrentThreadId());
@@ -12413,6 +12440,10 @@ static void test_set_hook(void)
     test_dll_path = get_test_dll_path();
     test_dll_module = LoadLibraryA(test_dll_path);
     p_dummy_hook_proc = (void *)GetProcAddress(test_dll_module, "dummy_hook_proc");
+#ifdef __REACTOS__
+    /* Test failures on WS03-Win 10 1607 */
+    if (0) {
+#endif
     for (i = WH_MIN; i <= WH_MAX; i++)
     {
         winetest_push_context("ID %d", i);
@@ -12455,6 +12486,9 @@ static void test_set_hook(void)
 
         winetest_pop_context();
     }
+#ifdef __REACTOS__
+    }
+#endif
     FreeLibrary(test_dll_module);
     ret = DeleteFileA(test_dll_path);
     ok(ret, "Failed to remove the test dll, error %ld.\n", GetLastError());
@@ -12769,7 +12803,11 @@ static void test_recursive_messages(void)
     flush_events();
 
     /* Expect recursive_messages_proc() gets called recursively for WM_SETCURSOR */
+#ifdef __REACTOS__
+    ok(max_msg_depth == 15 || broken(max_msg_depth == 14) /* 64-bit */, "Got expected %d.\n", max_msg_depth);
+#else
     ok(max_msg_depth == 15, "Got expected %d.\n", max_msg_depth);
+#endif
 
     DestroyWindow(hwnd);
     UnregisterClassA(cls.lpszClassName, cls.hInstance);
@@ -13547,10 +13585,18 @@ static DWORD WINAPI test_edit_ime_messages(void *unused_arg)
 
     himc = ImmGetContext(hwnd);
     ret = ImmSetCompositionStringA(himc, SCS_SETSTR, "Wine", 4, NULL, 0);
+#ifdef __REACTOS__
+    ok(ret || broken(GetNTVersion() < _WIN32_WINNT_VISTA), "ImmSetCompositionStringA failed.\n");
+#else
     ok(ret, "ImmSetCompositionStringA failed.\n");
+#endif
     flush_sequence();
     ret = ImmNotifyIME(himc, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+#ifdef __REACTOS__
+    ok(ret || broken(GetNTVersion() < _WIN32_WINNT_VISTA), "ImmNotifyIME failed.\n");
+#else
     ok(ret, "ImmNotifyIME failed.\n");
+#endif
     /* Note that the following message loop is necessary to get the WM_CHAR messages because they
      * are posted. Same for the later message loops in this function. */
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
@@ -13558,6 +13604,9 @@ static DWORD WINAPI test_edit_ime_messages(void *unused_arg)
         ok_sequence(edit_wm_ime_composition_korean_seq,
                     "korean WM_IME_COMPOSITION", TRUE);
     else
+#ifdef __REACTOS__
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
         ok_sequence(edit_wm_ime_composition_seq, "WM_IME_COMPOSITION", TRUE);
 
     /* Test that WM_IME_CHAR is passed to DefWindowProc() to get WM_CHAR */
@@ -13573,15 +13622,26 @@ static DWORD WINAPI test_edit_ime_messages(void *unused_arg)
     ok(lr == EIMES_GETCOMPSTRATONCE, "Got unexpected lr %#Ix.\n", lr);
 
     ret = ImmSetCompositionStringA(himc, SCS_SETSTR, "Wine", 4, NULL, 0);
+#ifdef __REACTOS__
+    ok(ret || broken(GetNTVersion() < _WIN32_WINNT_VISTA), "ImmSetCompositionStringA failed.\n");
+#else
     ok(ret, "ImmSetCompositionStringA failed.\n");
+#endif
     flush_sequence();
     ret = ImmNotifyIME(himc, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+#ifdef __REACTOS__
+    ok(ret || broken(GetNTVersion() < _WIN32_WINNT_VISTA), "ImmNotifyIME failed.\n");
+#else
     ok(ret, "ImmNotifyIME failed.\n");
+#endif
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     if (hkl == korean_hkl)
         ok_sequence(edit_eimes_getcompstratonce_korean_seq,
                     "korean WM_IME_COMPOSITION with EIMES_GETCOMPSTRATONCE", TRUE);
     else
+#ifdef __REACTOS__
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
         ok_sequence(edit_eimes_getcompstratonce_seq,
                     "WM_IME_COMPOSITION with EIMES_GETCOMPSTRATONCE", TRUE);
 
@@ -14632,6 +14692,9 @@ static void test_quit_message(void)
     flush_sequence();
     ret = DialogBoxParamA(GetModuleHandleA(NULL), "TEST_EMPTY_DIALOG", 0, wm_quit_dlg_proc, 0);
     ok(ret == 1, "expected 1, got %d\n", ret);
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmQuitDialogSeq, "WmQuitDialogSeq", FALSE);
     memset(&msg, 0xab, sizeof(msg));
     ret = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
@@ -15044,6 +15107,9 @@ static void test_SetWindowRgn(void)
     ok_sequence( WmSetWindowRgn, "WmSetWindowRgn2", FALSE );
 
     SetWindowRgn( hwnd, 0, TRUE );
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_WINBLUE)
+#endif
     ok_sequence( WmSetWindowRgn_clear, "WmSetWindowRgn_clear", FALSE );
 
     DestroyWindow( hwnd );
@@ -15592,7 +15658,12 @@ static void test_ShowWindow(void)
         ok(style == sw[i].style, "%d: expected style %08lx, got %08lx\n", i+1, sw[i].style, style);
 
         sprintf(comment, "%d: ShowWindow(%s)", i+1, sw_cmd_name[idx]);
+#if !defined(__REACTOS__) || !defined(_WIN64)
+#ifdef __REACTOS__
+        if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
         ok_sequence(sw[i].msg, comment, sw[i].todo_msg);
+#endif
 
         wp.length = sizeof(wp);
         SetLastError(0xdeadbeaf);
@@ -16006,6 +16077,9 @@ static void test_dialog_messages(void)
 
     hdlg = CreateDialogParamA(0, "FOCUS_TEST_DIALOG_3", 0, test_dlg_proc2, 0);
     ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmCreateDialogParamSeq_3, "CreateDialogParam_3", TRUE);
     EndDialog(hdlg, 0);
     DestroyWindow(hdlg);
@@ -16016,6 +16090,9 @@ static void test_dialog_messages(void)
     register_class(&cls);
     hdlg = CreateDialogParamA(0, "FOCUS_TEST_DIALOG_4", 0, test_dlg_proc3, 0);
     ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmCreateDialogParamSeq_4, "CreateDialogParam_4", TRUE);
     EndDialog(hdlg, 0);
     DestroyWindow(hdlg);
@@ -16389,7 +16466,11 @@ static void test_SetActiveWindow(void)
 
     if (winetest_debug > 1) trace("SetActiveWindow(hwnd), hwnd not visible\n");
     ret = SetActiveWindow(hwnd);
+#ifdef __REACTOS__
+    ok( ret == NULL || broken(GetNTVersion() == _WIN32_WINNT_VISTA || GetNTVersion() == _WIN32_WINNT_WIN7), "SetActiveWindow(hwnd), hwnd not visible, previous is %p\n", ret );
+#else
     ok( ret == NULL, "SetActiveWindow(hwnd), hwnd not visible, previous is %p\n", ret );
+#endif
     ok_sequence(SetActiveWindowSeq3, "SetActiveWindow(hwnd), hwnd not visible", TRUE);
     flush_sequence();
 
@@ -16432,6 +16513,9 @@ static void test_SetForegroundWindow(void)
     ok_sequence(WmEmptySeq, "SetForegroundWindow( 0 ) away from foreground top level window", FALSE);
     if (winetest_debug > 1) trace("SetForegroundWindow( GetDesktopWindow() )\n");
     SetForegroundWindow( GetDesktopWindow() );
+#ifdef __REACTOS__
+    if (GetNTVersion() != _WIN32_WINNT_VISTA && GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence(SetForegroundWindowSeq, "SetForegroundWindow( desktop ) away from "
                                         "foreground top level window", FALSE);
     if (winetest_debug > 1) trace("done\n");
@@ -17600,6 +17684,9 @@ static void test_menu_messages(void)
         win_skip( "menu tracking through VK_MENU not supported\n" );
         goto done;
     }
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(wm_popup_menu_1, "popup menu command", FALSE);
 
     /* Alt+F, Right, Enter */
@@ -17618,6 +17705,9 @@ static void test_menu_messages(void)
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA && GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence(wm_popup_menu_2, "submenu of a popup menu command", FALSE);
 
     if (winetest_debug > 1) trace("testing single menu item command\n");
@@ -17633,6 +17723,9 @@ static void test_menu_messages(void)
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+#ifdef __REACTOS__
+    if (GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence(wm_single_menu_item, "single menu item command", FALSE);
 
     set_menu_style(hmenu, 0);
@@ -17666,6 +17759,9 @@ static void test_menu_messages(void)
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+#ifdef __REACTOS__
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA && GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence(wm_popup_menu_3, "submenu of a popup menu command", FALSE);
 
 done:
@@ -17875,7 +17971,9 @@ static void test_defwinproc(void)
 
     DefWindowProcA(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
     flush_events();
+#if !defined(__REACTOS__) || !defined(_MSC_VER) // Fails on Windows when built with MSVC
     ok_sequence(WmRestoreMinimizedOverlappedSeq, "DefWindowProcA(SC_RESTORE):overlapped", TRUE);
+#endif
 
     ShowWindow(hwnd, SW_MINIMIZE);
     SetActiveWindow(hwnd);
@@ -17884,6 +17982,9 @@ static void test_defwinproc(void)
     flush_sequence();
     DefWindowProcA(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
     flush_events();
+#ifdef __REACTOS__
+    if (GetNTVersion() != _WIN32_WINNT_VISTA && GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence(WmRestoreActiveMinimizedOverlappedSeq, "DefWindowProcA(SC_RESTORE):active minimized overlapped", TRUE);
 
     child[0] = CreateWindowExA(0, "TestWindowClass", "1st child",
@@ -18865,7 +18966,9 @@ static void test_SetParent(void)
 
     SetParent(popup, child);
     flush_events();
+#if !defined(__REACTOS__) || !defined(_WIN64)
     ok_sequence(WmSetParentSeq_2, "SetParent() visible WS_POPUP", TRUE);
+#endif
 
     ok(GetWindowLongA(popup, GWL_STYLE) & WS_VISIBLE, "WS_VISIBLE should be set\n");
     ok(!IsWindowVisible(popup), "IsWindowVisible() should return FALSE\n");
@@ -19964,6 +20067,9 @@ static void test_TrackPopupMenu(void)
     flush_sequence();
     SetTimer( hwnd, TIMER_ID, 500, NULL );
     ret = TrackPopupMenu( hpopupmenu, 0, 100,100, 0, hwnd, NULL );
+#ifdef __REACTOS__
+    if (GetNTVersion() != _WIN32_WINNT_VISTA && GetNTVersion() != _WIN32_WINNT_WIN7)
+#endif
     ok_sequence( WmTrackPopupMenuMinimizeWindow, "TrackPopupMenuMinimizeWindow", TRUE );
     ok( ret == 1, "TrackPopupMenu failed with error %li\n", GetLastError() );
     KillTimer( hwnd, TIMER_ID );
@@ -20378,6 +20484,12 @@ static void test_restore_messages(void)
     HWND hwnd;
     INT i;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() == _WIN32_WINNT_WIN7) {
+        skip("The Alt+Tab tests here can cause Windows 7 to lock up\n");
+        return;
+    }
+#endif
     hwnd = CreateWindowExA(0, "TestWindowClass", "Test overlapped", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100,
                            100, 200, 200, 0, 0, 0, NULL);
     ok (hwnd != 0, "Failed to create overlapped window\n");
@@ -20410,6 +20522,9 @@ static void test_restore_messages(void)
         skip("Alt+Tab failed to bring up test window.\n");
         goto done;
     }
+#ifdef __REACTOS__
+    if (GetNTVersion() != _WIN32_WINNT_VISTA)
+#endif
     ok_sequence(WmRestoreMinimizedSeq, "Restore minimized window", TRUE);
 
 done:

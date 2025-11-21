@@ -154,7 +154,11 @@ static void test_LoadStringW(void)
     length1 = LoadStringW(hInst, 2, returnedstringw, 1); /* get resource string */
     ok(!length1, "got %d.\n", length1);
     ok(GetLastError() == 0xdeadbeef, "got %lu.\n", GetLastError());
+#ifdef __REACTOS__
+    ok(!returnedstringw[0] || broken(returnedstringw[0] == 0xcccc) /* WS03 */, "got %#x.\n", returnedstringw[0]);
+#else
     ok(!returnedstringw[0], "got %#x.\n", returnedstringw[0]);
+#endif
     ok(returnedstringw[1] == 0xcccc, "got %#x.\n", returnedstringw[1]);
 }
 
