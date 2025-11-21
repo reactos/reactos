@@ -895,11 +895,19 @@ static void test_thread_exit_destroy(void)
     SetLastError( 0xdeadbeef );
     tmp = SetParent( child1, adopter );
     ok( tmp == 0, "SetParent returned %p\n", tmp );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif
     SetLastError( 0xdeadbeef );
     tmp = SetParent( child3, adopter );
     ok( tmp == 0, "SetParent returned %p\n", tmp );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif
     SetLastError( 0xdeadbeef );
     tmp = GetParent( child1 );
     ok( tmp == params.hwnd, "GetParent returned %p, error %lu\n", tmp, GetLastError() );
@@ -921,8 +929,14 @@ static void test_thread_exit_destroy(void)
 
     child = CreateWindowExA( 0, "ToolWindowClass", "Tool window 1", WS_CHILD,
                              0, 0, 100, 100, child1, 0, 0, NULL );
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER /* MSVC test builds return child, GCC test builds don't on Windows */
+        || broken(child && GetLastError() == ERROR_SUCCESS) /* WS03 */,
+        "CreateWindowExA returned %p %lu\n", child, GetLastError() );
+#else
     ok( !child && GetLastError() == ERROR_INVALID_PARAMETER,
         "CreateWindowExA returned %p %lu\n", child, GetLastError() );
+#endif
 
     ret = MoveWindow( child1, 5, 5, 10, 10, FALSE );
     ok( ret, "MoveWindow failed: %lu\n", GetLastError() );
@@ -945,15 +959,31 @@ static void test_thread_exit_destroy(void)
     SetLastError( 0xdeadbeef );
     ret = SetWindowPos( child2, HWND_TOPMOST, 0, 0, 100, 100, SWP_NOSIZE|SWP_NOMOVE );
     todo_wine
+#ifdef __REACTOS__
+    ok( !ret || broken(ret) /* WS03 */, "SetWindowPos succeeded\n" );
+#else
     ok( !ret, "SetWindowPos succeeded\n" );
+#endif
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "SetWindowPos returned error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "SetWindowPos returned error %lu\n", GetLastError() );
+#endif
     SetLastError( 0xdeadbeef );
     ret = SetWindowPos( child2, 0, 10, 10, 200, 200, SWP_NOZORDER | SWP_NOACTIVATE );
     todo_wine
+#ifdef __REACTOS__
+    ok( !ret || broken(ret) /* WS03 */, "SetWindowPos succeeded\n" );
+#else
     ok( !ret, "SetWindowPos succeeded\n" );
+#endif
     todo_wine
+#ifdef __REACTOS__
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "SetWindowPos returned error %lu\n", GetLastError() );
+#else
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "SetWindowPos returned error %lu\n", GetLastError() );
+#endif
 
     rgn = CreateRectRgn( 5, 5, 15, 15 );
     SetLastError( 0xdeadbeef );
@@ -13151,7 +13181,11 @@ static LRESULT WINAPI ncdestroy_test_proc( HWND hwnd, UINT msg, WPARAM wp, LPARA
         SetLastError( 0xdeadbeef );
         parent = SetParent( hwnd, hwndMain );
         ok( parent == 0, "SetParent returned %p\n", parent );
+#ifdef __REACTOS__
+        ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef) /* WS03 */, "got error %lu\n", GetLastError() );
+#else
         ok( GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError() );
+#endif
 
         ret = GetWindowRect( hwnd, &rect );
         ok( ret, "GetWindowRect failed: %lu\n", GetLastError() );
@@ -13169,8 +13203,14 @@ static LRESULT WINAPI ncdestroy_test_proc( HWND hwnd, UINT msg, WPARAM wp, LPARA
 
         child = CreateWindowExA( 0, "ToolWindowClass", "Tool window 1", WS_CHILD,
                                  0, 0, 100, 100, hwnd, 0, 0, NULL );
+#ifdef __REACTOS__
+        ok( GetLastError() == ERROR_INVALID_PARAMETER /* MSVC test builds return child, GCC test builds don't on Windows */
+            || broken(child && GetLastError() == ERROR_SUCCESS) /* WS03 */,
+            "CreateWindowExA returned %p %lu\n", child, GetLastError() );
+#else
         ok( !child && GetLastError() == ERROR_INVALID_PARAMETER,
             "CreateWindowExA returned %p %lu\n", child, GetLastError() );
+#endif
         break;
     }
 

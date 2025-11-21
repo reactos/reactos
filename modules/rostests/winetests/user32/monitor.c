@@ -2637,7 +2637,11 @@ static void _check_display_dc(INT line, HDC hdc, const DEVMODEA *dm, BOOL allow_
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     value = GetDIBits(hdc, hbmp, 0, 0, NULL, (LPBITMAPINFO)bmi, DIB_RGB_COLORS);
     ok(value, "GetDIBits failed, error %#lx.\n", GetLastError());
+#ifdef __REACTOS__
+    ok(bmi->bmiHeader.biCompression == BI_BITFIELDS || broken(bmi->bmiHeader.biCompression == BI_RGB) /* WS03 */, "Got unexpected biCompression %lu.\n", bmi->bmiHeader.biCompression);
+#else
     ok(bmi->bmiHeader.biCompression == BI_BITFIELDS, "Got unexpected biCompression %lu.\n", bmi->bmiHeader.biCompression);
+#endif
 
     ret = GetObjectA(hbmp, sizeof(bitmap), &bitmap);
     /* GetObjectA fails on Win7 and older */
@@ -2788,7 +2792,11 @@ static void test_display_dc(void)
 
             value = GetDeviceCaps(hdc, NUMCOLORS);
             if (bpps[i] > 8 || (bpps[i] == 8 && LOBYTE(LOWORD(GetVersion())) >= 6))
+#ifdef __REACTOS__
+                ok(value == -1 || broken(value == 20) /* Vista */, "Expected -1, got %d.\n", value);
+#else
                 ok(value == -1, "Expected -1, got %d.\n", value);
+#endif
             else if (bpps[i] == 8 && LOBYTE(LOWORD(GetVersion())) < 6)
                 ok(value > 16 && value <= 256, "Got %d.\n", value);
             else

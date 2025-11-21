@@ -258,6 +258,10 @@ static LRESULT CALLBACK SysParamsTestWndProc( HWND hWnd, UINT msg, WPARAM wParam
             /* ignore these messages when caused by other actions */
             case SPI_ICONVERTICALSPACING:
             case SPI_SETWORKAREA:
+#ifdef __REACTOS__
+            case SPI_SETBORDER: /* WS03 */
+            case SPI_SETNONCLIENTMETRICS: /* WS03 */
+#endif
                 break;
             default:
                 ok( 0, "too many changes counter=%d last change=%Iu\n", change_counter, wParam );
@@ -291,7 +295,11 @@ static void test_change_message( int action, int optional )
         return;
     ok( change_counter >= 1, "Missed a message: change_counter=%d\n", change_counter );
     change_counter = 0;
+#ifdef __REACTOS__
+    ok( action == change_last_param || broken(action == SPI_SETBORDER) || broken(action == SPI_SETNONCLIENTMETRICS), "Wrong action got %d expected %d\n", change_last_param, action );
+#else
     ok( action == change_last_param, "Wrong action got %d expected %d\n", change_last_param, action );
+#endif
     change_last_param = 0;
 }
 
