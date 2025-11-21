@@ -391,6 +391,20 @@ IsSystem64Bit()
 #endif
 }
 
+UINT
+GetOsBuildNumber()
+{
+    static UINT build = 0;
+    if (!build)
+    {
+        OSVERSIONINFOW ovi;
+        ovi.dwOSVersionInfoSize = sizeof(ovi);
+        GetVersionExW(&ovi);
+        build = ovi.dwBuildNumber;
+    }
+    return build;
+}
+
 INT
 GetSystemColorDepth()
 {
@@ -576,7 +590,7 @@ GetProgramFilesPath(CStringW &Path, BOOL PerUser, HWND hwnd)
     {
         hr = GetSpecialPath(CSIDL_LOCAL_APPDATA, Path, hwnd);
         // Use the correct path on NT6 (on NT5 the path becomes a bit long)
-        if (SUCCEEDED(hr) && LOBYTE(GetVersion()) >= 6)
+        if (SUCCEEDED(hr) && GetOsBuildNumber() >= 6000)
         {
             Path = BuildPath(Path, L"Programs"); // Should not be localized
         }
