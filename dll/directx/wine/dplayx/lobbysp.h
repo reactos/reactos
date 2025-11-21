@@ -514,6 +514,6 @@ DECLARE_INTERFACE_(IDPLobbySP,IUnknown)
 /* This variable is exported from the DLL at ordinal 6 to be accessed by the
  * SP directly. This is the same variable that the DP SP will use.
  */
-extern DWORD gdwDPlaySPRefCount DECLSPEC_HIDDEN;
+extern DWORD gdwDPlaySPRefCount;
 
 #endif

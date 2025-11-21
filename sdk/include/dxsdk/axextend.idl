@@ -20,6 +20,8 @@
 #pragma makedep install
 #endif
 
+#include <axextendenums.h>
+
 interface IAMAnalogVideoDecoder;
 interface IAMAnalogVideoEncoder;
 interface IAMAudioInputMixer;
@@ -242,18 +244,18 @@ typedef struct
             {
                 ULONG cPins;
                 [size_is(cPins)] const REGFILTERPINS *rgPins;
-            } DUMMYSTRUCTNAME1;
+            };
 
         [case(2)]
             struct
             {
                 ULONG cPins2;
                 [size_is(cPins2)] const REGFILTERPINS2 *rgPins2;
-            } DUMMYSTRUCTNAME2;
+            };
 
         [default]
             ;
-    } DUMMYUNIONNAME;
+    };
 
 } REGFILTER2;
 
@@ -878,7 +880,7 @@ interface IAMCertifiedOutputProtection : IUnknown
     HRESULT ProtectionStatus(
         [in] const AMCOPPStatusInput* pStatusInput,
         [out] AMCOPPStatusOutput* pStatusOutput);
-};
+}
 
 enum _AM_RENSDEREXFLAGS
 {
@@ -1151,10 +1153,54 @@ interface IResourceManager : IUnknown
 
 }
 
+typedef enum AM_STREAM_INFO_FLAGS
+{
+    AM_STREAM_INFO_START_DEFINED   = 0x01,
+    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
+    AM_STREAM_INFO_DISCARDING      = 0x04,
+    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
+} AM_STREAM_INFO_FLAGS;
+
+typedef struct AM_STREAM_INFO
+{
+    REFERENCE_TIME tStart;
+    REFERENCE_TIME tStop;
+    DWORD dwStartCookie;
+    DWORD dwStopCookie;
+    DWORD dwFlags;
+} AM_STREAM_INFO;
+
+[
+    local,
+    object,
+    uuid(36b73881-c2c8-11cf-8b46-00805f6cef60),
+    pointer_default(unique)
+]
+interface IAMStreamControl : IUnknown
+{
+    HRESULT StartAt(
+        [in] const REFERENCE_TIME *ptStart,
+        [in] DWORD dwCookie);
+
+    HRESULT StopAt(
+        [in] const REFERENCE_TIME *ptStop,
+        [in] BOOL bSendExtra,
+        [in] DWORD dwCookie);
+
+    HRESULT GetInfo(
+        [out] AM_STREAM_INFO *pInfo);
+}
+
 cpp_quote("#ifndef _IKsPropertySet_")
 cpp_quote("#define _IKsPropertySet_")
 cpp_quote("#define KSPROPERTY_SUPPORT_GET  1")
 cpp_quote("#define KSPROPERTY_SUPPORT_SET  2")
+
+typedef enum AMPROPERTY_PIN
+{
+    AMPROPERTY_PIN_CATEGORY,
+    AMPROPERTY_PIN_MEDIUM,
+} AMPROPERTY_PIN;
 
 [
     object,
@@ -1249,7 +1295,7 @@ enum _AM_FILTER_MISC_FLAGS
 interface IAMFilterMiscFlags : IUnknown
 {
     ULONG GetMiscFlags();
-};
+}
 
 [
     local,
@@ -1264,22 +1310,6 @@ interface IAMGraphBuilderCallback : IUnknown
 
     HRESULT CreatedFilter(
         [in] IBaseFilter *pFil);
-};
-
-[
-    local,
-    object,
-    uuid(56ED71A0-AF5F-11D0-B3F0-00AA003761C5),
-    pointer_default(unique)
-]
-interface IAMBufferNegotiation : IUnknown
-{
-     HRESULT SuggestAllocatorProperties (
-        [in] const ALLOCATOR_PROPERTIES *pprop);
-
-     HRESULT GetAllocatorProperties (
-        [out] ALLOCATOR_PROPERTIES *pprop);
-
 }
 
 [
@@ -1302,44 +1332,212 @@ interface IAMVfwCaptureDialogs : IUnknown
             [in] long data2);
 }
 
-#include <axextendenums.h>
-
-typedef enum
+[
+    local,
+    object,
+    uuid(c6e13370-30ac-11d0-a18c-00a0c9118956),
+    pointer_default(unique)
+]
+interface IAMCameraControl : IUnknown
 {
-    AM_STREAM_INFO_START_DEFINED   = 0x01,
-    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
-    AM_STREAM_INFO_DISCARDING      = 0x04,
-    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
-} AM_STREAM_INFO_FLAGS;
-
-typedef struct
-{
-    REFERENCE_TIME tStart;
-    REFERENCE_TIME tStop;
-    DWORD dwStartCookie;
-    DWORD dwStopCookie;
-    DWORD dwFlags;
-}AM_STREAM_INFO;
+    HRESULT GetRange([in] long property, [out] long *min, [out] long *max,
+        [out] long *stepping_delta, [out] long *default_value, [out] long *flags);
+    HRESULT Set([in] long property, [in] long property_value, [in] long flags);
+    HRESULT Get([in] long property, [out] long *property_value, [out] long *flags);
+}
 
 [
     local,
     object,
-    uuid(36b73881-c2c8-11cf-8b46-00805f6cef60),
+    uuid(6a2e0670-28e4-11d0-a18c-00a0c9118956),
     pointer_default(unique)
 ]
-interface IAMStreamControl : IUnknown
+interface IAMVideoControl : IUnknown
 {
-    HRESULT StartAt(
-        [in] const REFERENCE_TIME *ptStart,
-        [in] DWORD dwCookie);
+    HRESULT GetCaps([in] IPin *pin, [out] long *flags);
+    HRESULT SetMode([in] IPin *pin, long mode);
+    HRESULT GetMode([in] IPin *pin, [out] long *mode);
+    HRESULT GetCurrentActualFrameRate([in] IPin *pin, [out] LONGLONG *frame_rate);
+    HRESULT GetMaxAvailableFrameRate([in] IPin *pin, [in] long index,
+            [in] SIZE dimensions, [out] LONGLONG *frame_rate);
+    HRESULT GetFrameRateList([in] IPin *pin, [in] long index, [in] SIZE dimensions,
+            [out] long *list_size, [out] LONGLONG **frame_rate);
+}
 
-    HRESULT StopAt(
-        [in] const REFERENCE_TIME *ptStop,
-        [in] BOOL bSendExtra,
-        [in] DWORD dwCookie);
+[
+    local,
+    object,
+    uuid(56ed71a0-af5f-11d0-b3f0-00aa003761c5),
+    pointer_default(unique)
+]
+interface IAMBufferNegotiation : IUnknown
+{
+    HRESULT SuggestAllocatorProperties([in] const ALLOCATOR_PROPERTIES *prop);
+    HRESULT GetAllocatorProperties([out] ALLOCATOR_PROPERTIES *prop);
+}
 
-    HRESULT GetInfo(
-        [out] AM_STREAM_INFO *pInfo);
+[
+    local,
+    object,
+    uuid(c6e13344-30ac-11d0-a18c-00a0c9118956),
+    pointer_default(unique)
+]
+interface IAMDroppedFrames : IUnknown
+{
+    HRESULT GetNumDropped([out] long *number);
+    HRESULT GetNumNotDropped([out] long *number);
+    HRESULT GetDroppedInfo([in] long size, [out] long *array, [out] long *copied);
+    HRESULT GetAverageFrameSize([out] long *size);
+}
+
+[
+    local,
+    object,
+    uuid(62ea93ba-ec62-11d2-b770-00c04fb6bd3d),
+    pointer_default(unique)
+]
+interface IAMLatency : IUnknown
+{
+    HRESULT GetLatency([in, out] REFERENCE_TIME *latency);
+}
+
+[
+    local,
+    object,
+    uuid(f185fe76-e64e-11d2-b76e-00c04fb6bd3d),
+    pointer_default(unique)
+]
+interface IAMPushSource : IAMLatency
+{
+    HRESULT GetPushSourceFlags([out] ULONG *flags);
+    HRESULT SetPushSourceFlags([in] ULONG flags);
+    HRESULT SetStreamOffset([in] REFERENCE_TIME offset);
+    HRESULT GetStreamOffset([out] REFERENCE_TIME *offset);
+    HRESULT GetMaxStreamOffset([out] REFERENCE_TIME *offset);
+    HRESULT SetMaxStreamOffset([in] REFERENCE_TIME offset);
+};
+
+[
+    local,
+    object,
+    uuid(c6e13343-30ac-11d0-a18c-00a0c9118956),
+    pointer_default(unique)
+]
+interface IAMVideoCompression : IUnknown
+{
+    HRESULT put_KeyFrameRate([in] long frame_rate);
+    HRESULT get_KeyFrameRate([out] long *frame_rate);
+    HRESULT put_PFramesPerKeyFrame([in] long frame);
+    HRESULT get_PFramesPerKeyFrame([out] long *frame);
+    HRESULT put_Quality([in] double quality);
+    HRESULT get_Quality([out] double *quality);
+    HRESULT put_WindowSize([in] DWORDLONG size);
+    HRESULT get_WindowSize([out] DWORDLONG *size);
+    HRESULT GetInfo([out, size_is(*version_size)] LPWSTR version, [in, out] int *version_size,
+            [out, size_is(*description_size)] LPWSTR description, [in, out] int *description_size,
+            [out] long *frame_rate, [out] long *key, [out] double *quality, [out] long *capabilities);
+    HRESULT OverrideKeyFrame([in] long number);
+    HRESULT OverrideFrameSize([in] long number, [in] long size);
+}
+
+[
+    local,
+    object,
+    uuid(c6e13380-30ac-11d0-a18c-00a0c9118956),
+    pointer_default(unique)
+]
+interface IAMCrossbar : IUnknown
+{
+    HRESULT get_PinCounts([out] long *output, [out] long *intput);
+    HRESULT CanRoute([in] long output, [in] long input);
+    HRESULT Route([in] long output, [in] long input);
+    HRESULT get_IsRoutedTo([in] long output, [out] long *input);
+    HRESULT get_CrossbarPinInfo([in] BOOL is_input, [in] long index,
+            [out] long *related, [out] long *type);
+}
+
+typedef enum tagAMTunerEventType
+{
+    AMTUNER_EVENT_CHANGED = 0x0001,
+} AMTunerEventType;
+
+[
+    local,
+    object,
+    uuid(211a8760-03ac-11d1-8d13-00aa00bd8339),
+    pointer_default(unique)
+]
+interface IAMTunerNotification : IUnknown
+{
+    HRESULT OnEvent([in] AMTunerEventType event);
+}
+
+typedef enum tagAMTunerModeType
+{
+    AMTUNER_MODE_DEFAULT  = 0x0000,
+    AMTUNER_MODE_TV       = 0x0001,
+    AMTUNER_MODE_FM_RADIO = 0x0002,
+    AMTUNER_MODE_AM_RADIO = 0x0004,
+    AMTUNER_MODE_DSS      = 0x0008,
+} AMTunerModeType;
+
+[
+    local,
+    object,
+    uuid(211a8761-03ac-11d1-8d13-00aa00bd8339),
+    pointer_default(unique)
+]
+interface IAMTuner : IUnknown
+{
+    HRESULT put_Channel([in] long channel, [in] long video, [in] long audio);
+    HRESULT get_Channel([out] long *channel, [out] long *video, [out] long *audio);
+    HRESULT ChannelMinMax([out] long *min, [out] long *max);
+    HRESULT put_CountryCode([in] long country);
+    HRESULT get_CountryCode([out] long *country);
+    HRESULT put_TuningSpace([in] long tuning_space);
+    HRESULT get_TuningSpace([out] long *tuning_space);
+    [local] HRESULT Logon([in] HANDLE user);
+    HRESULT Logout();
+    HRESULT SignalPresent([out] long *signal_strength);
+    HRESULT put_Mode([in] AMTunerModeType mode);
+    HRESULT get_Mode([out] AMTunerModeType *mode);
+    HRESULT GetAvailableModes([out] long *modes);
+    HRESULT RegisterNotificationCallBack([in] IAMTunerNotification *notify, [in] long events);
+    HRESULT UnRegisterNotificationCallBack([in] IAMTunerNotification *notify);
+}
+
+[
+    local,
+    object,
+    uuid(211a8766-03ac-11d1-8d13-00aa00bd8339),
+    pointer_default(unique)
+]
+interface IAMTVTuner : IAMTuner
+{
+    HRESULT get_AvailableTVFormats([out] long *standard);
+    HRESULT get_TVFormat([out] long *standard);
+    HRESULT AutoTune([in] long channel, [out] long *signal);
+    HRESULT StoreAutoTune();
+    HRESULT get_NumInputConnections([out] long *number);
+    HRESULT put_InputType([in] long index, [in] TunerInputType type);
+    HRESULT get_InputType([in] long index, [out] TunerInputType *type);
+    HRESULT put_ConnectInput([in] long index);
+    HRESULT get_ConnectInput([out] long *index);
+    HRESULT get_VideoFrequency([out] long *freq);
+    HRESULT get_AudioFrequency([out] long *freq);
+}
+
+[
+    local,
+    object,
+    uuid(e46a9787-2b71-444d-a4b5-1fab7b708d6a),
+    pointer_default(unique),
+]
+interface IVideoFrameStep : IUnknown
+{
+    HRESULT Step(DWORD frame_count, [in] IUnknown *filter);
+    HRESULT CanStep(long multiple, [in] IUnknown *filter);
+    HRESULT CancelStep();
 }
 
 typedef enum tagTVAudioMode

@@ -184,6 +184,29 @@ __WINE_SERVER_LIST_INLINE void list_move_head( struct list *dst, struct list *sr
     list_init(src);
 }
 
+/* move the slice of elements from begin to end inclusive to the tail of dst */
+__WINE_SERVER_LIST_INLINE void list_move_slice_tail( struct list *dst, struct list *begin, struct list *end )
+{
+    struct list *dst_prev = dst->prev;
+    begin->prev->next = end->next;
+    end->next->prev = begin->prev;
+    dst_prev->next = begin;
+    dst->prev = end;
+    begin->prev = dst_prev;
+    end->next = dst;
+}
+
+/* move all elements from src to before the specified element */
+__WINE_SERVER_LIST_INLINE void list_move_before( struct list *dst, struct list *src )
+{
+    if (list_empty(src)) return;
+    dst->prev->next = src->next;
+    src->next->prev = dst->prev;
+    dst->prev = src->prev;
+    src->prev->next = dst;
+    list_init(src);
+}
+
 /* iterate through the list */
 #define LIST_FOR_EACH(cursor,list) \
     for ((cursor) = (list)->next; (cursor) != (list); (cursor) = (cursor)->next)

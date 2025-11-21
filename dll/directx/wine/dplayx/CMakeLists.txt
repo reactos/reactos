@@ -1,6 +1,7 @@
 
 add_definitions(
-    -DCOM_NO_WINDOWS_H)
+    -DCOM_NO_WINDOWS_H
+    -Dstrdup=_strdup)
 
 spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
@@ -22,8 +23,8 @@ add_library(dplayx MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/dplayx.def)
 
 set_module_type(dplayx win32dll)
-target_link_libraries(dplayx dxguid uuid wine)
-add_importlibs(dplayx winmm ole32 user32 advapi32 msvcrt kernel32 ntdll)
+target_link_libraries(dplayx pathcch wine_dll_register dxguid uuid wine)
+add_importlibs(dplayx winmm ole32 user32 advapi32 msvcrt kernel32_vista kernel32 ntdll)
 add_pch(dplayx precomp.h SOURCE)
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(dplayx) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

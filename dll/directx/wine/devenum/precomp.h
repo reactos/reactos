@@ -6,9 +6,6 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
 #include "devenum_private.h"
 
 #include <wine/debug.h>
