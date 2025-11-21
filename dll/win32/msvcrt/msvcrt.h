@@ -463,6 +463,7 @@ static inline char* astrdupw_utf8(const wchar_t *wstr)
 
 #if defined(__REACTOS__) && defined(_M_IX86)
 // ASM wrapper for Wine code, implemented in i386/__wine_RtlUnwind.s
+#include <rtlsupportapi.h>
 void
 WINAPI
 __wine_RtlUnwind(
@@ -470,6 +471,7 @@ __wine_RtlUnwind(
     PVOID targetIp,
     struct _EXCEPTION_RECORD* pRecord,
     PVOID retval);
+#define RtlUnwind __wine_RtlUnwind
 #endif /* _M_IX86 */
 
 #endif /* __WINE_MSVCRT_H */

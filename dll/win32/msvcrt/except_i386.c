@@ -253,11 +253,7 @@ static inline void call_catch_block( PEXCEPTION_RECORD rec, CONTEXT *context,
         _CreateFrameInfo(&nested_frame.frame_info.frame_info, object);
 
         /* unwind the stack */
-#ifdef __REACTOS__
-        __wine_RtlUnwind( catch_frame ? &catch_frame->frame : &frame->frame, 0, rec, 0 );
-#else
         RtlUnwind( catch_frame ? &catch_frame->frame : &frame->frame, 0, rec, 0 );
-#endif
         cxx_local_unwind( frame, descr, tryblock->start_level );
         frame->trylevel = tryblock->end_level + 1;
 
