@@ -5,6 +5,7 @@ list(APPEND COMMON_STDLIB_SOURCE
 
 list(APPEND LIBCNTPR_STDLIB_SOURCE
     ${COMMON_STDLIB_SOURCE}
+    stdlib/_invalid_parameter_nt.c
     stdlib/rand_nt.c
 )
 
