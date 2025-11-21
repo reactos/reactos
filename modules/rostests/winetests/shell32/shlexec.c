@@ -112,7 +112,7 @@ static char* decodeA(const char* str)
     return ptr;
 }
 
-static void WINAPIV WINETEST_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
+static void WINAPIV __WINE_PRINTF_ATTR(2,3) childPrintf(HANDLE h, const char* fmt, ...)
 {
     __ms_va_list valist;
     char        buffer[1024];
@@ -346,7 +346,7 @@ static void dump_child_(const char* file, int line)
  ***/
 
 static char shell_call[2048];
-static void WINAPIV WINETEST_PRINTF_ATTR(2,3) _okShell(int condition, const char *msg, ...)
+static void WINAPIV __WINE_PRINTF_ATTR(2,3) _okShell(int condition, const char *msg, ...)
 {
     __ms_va_list valist;
     char buffer[2048];
