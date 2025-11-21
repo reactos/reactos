@@ -22,7 +22,12 @@
 #include <ntddndis.h>
 
 #ifndef IPHLPAPI_DLL_LINKAGE
+#if defined(__REACTOS__) && defined(__GNUC__)
+/* FIXME: CORE-6504 */
+#define IPHLPAPI_DLL_LINKAGE
+#else
 #define IPHLPAPI_DLL_LINKAGE DECLSPEC_IMPORT
+#endif
 #endif
 
 #ifndef ANY_SIZE
