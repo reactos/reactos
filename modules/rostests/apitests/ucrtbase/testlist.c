@@ -18,6 +18,7 @@ extern void func_setjmp(void);
 extern void func_sin(void);
 extern void func_sqrt(void);
 extern void func_tan(void);
+extern void func_wctomb(void);
 
 
 const struct test winetest_testlist[] =
@@ -37,6 +38,7 @@ const struct test winetest_testlist[] =
     { "sin", func_sin },
     { "sqrt", func_sqrt },
     { "tan", func_tan },
+    { "wctomb", func_wctomb },
 
     { 0, 0 }
 };
