@@ -273,6 +273,15 @@ FreeQuotedString(
     HeapFree(GetProcessHeap(), 0, pszQuotedString);
 }
 
+VOID
+WINAPI
+FreeString(
+    _In_ LPWSTR pszString)
+{
+    DPRINT("FreeString(%S)\n", pszString);
+    LocalFree(pszString);
+}
+
 LPWSTR
 WINAPI
 MakeQuotedString(
@@ -289,6 +298,44 @@ MakeQuotedString(
     swprintf(pszQuotedString, L"\"%s\"", pszQuotedString);
 
     return pszQuotedString;
+}
+
+LPWSTR
+CDECL
+MakeString(
+    _In_ HANDLE hModule,
+    _In_ DWORD dwMsgId,
+    ...)
+{
+    LPWSTR pszInBuffer, pszOutBuffer = NULL;
+    DWORD dwLength;
+    va_list ap;
+
+    DPRINT("MakeString(%p %lu ...)\n", hModule, dwMsgId);
+
+    va_start(ap, dwMsgId);
+
+    pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+    if (pszInBuffer == NULL)
+        return NULL;
+
+    dwLength = LoadStringW(hModule, dwMsgId, pszInBuffer, HUGE_BUFFER_SIZE);
+    if (dwLength > 0)
+        goto done;
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                   pszInBuffer,
+                   0,
+                   0,
+                   (LPWSTR)&pszOutBuffer,
+                   0,
+                   &ap);
+
+done:
+    if (pszInBuffer)
+        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+
+    return pszOutBuffer;
 }
 
 DWORD
