@@ -91,8 +91,7 @@ add_importlibs(msi advapi32 advapi32_vista cabinet comctl32 gdi32 ole32 oleaut32
     imagehlp
     mspatcha
     msvcrt
-    kernel32_vista
-    kernel32
+    kernel32_win7
     ntdll)
 
 add_pch(msi precomp.h "${PCH_SKIP_SOURCE}")
