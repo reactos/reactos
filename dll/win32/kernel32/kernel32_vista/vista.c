@@ -43,7 +43,7 @@ QueryFullProcessImageNameW(
         return FALSE;
     }
 
-    dwBufferSize = (*lpdwSize + 1) * sizeof(WCHAR);
+    dwBufferSize = sizeof(UNICODE_STRING) + *lpdwSize * sizeof(WCHAR);
     pBuffer = (PUNICODE_STRING)RtlAllocateHeap(RtlGetProcessHeap(), 0, dwBufferSize);
     if (!pBuffer)
     {
