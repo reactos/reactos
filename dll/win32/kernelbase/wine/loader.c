@@ -28,7 +28,9 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winternl.h"
+#ifndef __REACTOS__
 #include "ddk/ntddk.h"
+#endif
 #include "kernelbase.h"
 #include "wine/list.h"
 #include "wine/asm.h"
@@ -82,6 +84,7 @@ FARPROC WINAPI get_proc_address( HMODULE module, LPCSTR function )
     return proc;
 }
 
+#ifndef __REACTOS__
 
 /******************************************************************
  *      load_library_as_datafile
@@ -180,7 +183,7 @@ static HMODULE load_library( const UNICODE_STRING *libname, DWORD flags )
     RtlReleasePath( load_path );
     return module;
 }
-
+#endif
 
 /****************************************************************************
  *	AddDllDirectory   (kernelbase.@)
@@ -195,7 +198,7 @@ DLL_DIRECTORY_COOKIE WINAPI DECLSPEC_HOTPATCH AddDllDirectory( const WCHAR *dir 
     return cookie;
 }
 
-
+#ifndef __REACTOS__
 /***********************************************************************
  *	DelayLoadFailureHook   (kernelbase.@)
  */
@@ -566,6 +569,7 @@ HMODULE WINAPI DECLSPEC_HOTPATCH LoadLibraryExW( LPCWSTR name, HANDLE file, DWOR
     return module;
 }
 
+#endif
 
 /***********************************************************************
  *      LoadPackagedLibrary    (kernelbase.@)
@@ -1137,6 +1141,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH SizeofResource( HINSTANCE module, HRSRC rsrc )
     return ((IMAGE_RESOURCE_DATA_ENTRY *)rsrc)->Size;
 }
 
+#ifndef __REACTOS__
 
 /***********************************************************************
  * Activation contexts
@@ -1261,3 +1266,4 @@ BOOL WINAPI DECLSPEC_HOTPATCH ZombifyActCtx( HANDLE context )
 {
     return set_ntstatus( RtlZombifyActivationContext( context ));
 }
+#endif
