@@ -32,11 +32,10 @@ QueryFullProcessImageNameW(
     _Out_writes_to_(*lpdwSize, *lpdwSize) LPWSTR lpExeName,
     _Inout_ PDWORD lpdwSize)
 {
-    BOOL bRet;
+    BOOL bRet = FALSE;
     DWORD dwBufferSize;
     PUNICODE_STRING pBuffer;
     NTSTATUS Status;
-    DWORD dwCch;
 
     if (dwFlags & ~PROCESS_NAME_NATIVE)
     {
@@ -44,7 +43,7 @@ QueryFullProcessImageNameW(
         return FALSE;
     }
 
-    dwBufferSize = sizeof(UNICODE_STRING) + *lpdwSize * sizeof(WCHAR);
+    dwBufferSize = (*lpdwSize + 1) * sizeof(WCHAR);
     pBuffer = (PUNICODE_STRING)RtlAllocateHeap(RtlGetProcessHeap(), 0, dwBufferSize);
     if (!pBuffer)
     {
@@ -52,7 +51,6 @@ QueryFullProcessImageNameW(
         return FALSE;
     }
 
-    bRet = FALSE;
     Status = NtQueryInformationProcess(hProcess,
                                        (dwFlags & PROCESS_NAME_NATIVE) ? ProcessImageFileName : ProcessImageFileNameWin32,
                                        pBuffer,
@@ -60,7 +58,7 @@ QueryFullProcessImageNameW(
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        dwCch = pBuffer->Length / sizeof(WCHAR);
+        DWORD dwCch = pBuffer->Length / sizeof(WCHAR);
         if (dwCch >= *lpdwSize)
         {
             BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
@@ -75,7 +73,9 @@ QueryFullProcessImageNameW(
     }
     else
     {
-        BaseSetLastNTError(Status == STATUS_INFO_LENGTH_MISMATCH ? STATUS_BUFFER_TOO_SMALL : Status);
+        if (Status == STATUS_INFO_LENGTH_MISMATCH)
+            Status = STATUS_BUFFER_TOO_SMALL;
+        BaseSetLastNTError(Status);
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
@@ -94,10 +94,9 @@ QueryFullProcessImageNameA(
     _Out_writes_to_(*lpdwSize, *lpdwSize) LPSTR lpExeName,
     _Inout_ PDWORD lpdwSize)
 {
-    BOOL bRet;
+    BOOL bRet = FALSE;
     DWORD dwSize;
     PWSTR pszFullName;
-    INT iCch;
 
     dwSize = *lpdwSize;
     pszFullName = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, dwSize * sizeof(WCHAR));
@@ -107,9 +106,9 @@ QueryFullProcessImageNameA(
         return FALSE;
     }
 
-    bRet = FALSE;
     if (QueryFullProcessImageNameW(hProcess, dwFlags, pszFullName, &dwSize))
     {
+        INT iCch;
         iCch = WideCharToMultiByte(CP_ACP,
                                    WC_NO_BEST_FIT_CHARS,
                                    pszFullName,
