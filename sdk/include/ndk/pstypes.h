@@ -46,11 +46,6 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
 #endif // !NTOS_MODE_USER
 
 //
-// KUSER_SHARED_DATA location in User Mode
-//
-#define USER_SHARED_DATA                        (0x7FFE0000)
-
-//
 // Global Flags
 //
 #define FLG_STOP_ON_EXCEPTION                   0x00000001
