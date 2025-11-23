@@ -2879,6 +2879,95 @@ NtSetInformationThread(
             break;
         }
 
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+        case ThreadNameInformation:
+        {
+            UNICODE_STRING CapturedThreadName;
+            PUNICODE_STRING NewThreadName;
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(UNICODE_STRING))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the thread.
+             * NOTE: Win10+ uses THREAD_SET_LIMITED_INFORMATION instead;
+             * however some tools misuse thread names to perform suspicious
+             * operations; therefore we try to mess with these by requiring
+             * a bit more of access rights. */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               THREAD_SET_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* Probe and capture the thread name */
+            Status = ProbeAndCaptureUnicodeString(&CapturedThreadName,
+                                                  PreviousMode,
+                                                  (PUNICODE_STRING)ThreadInformation);
+            if (!NT_SUCCESS(Status))
+            {
+                ObDereferenceObject(Thread);
+                break;
+            }
+
+            /* Allocate a new buffer only if the thread name isn't empty
+             * (REMARK: We only consider Length instead of MaximumLength).
+             * If empty, just reset the thread name pointer to NULL instead
+             * of allocating an empty UNICODE_STRING. */
+            if (CapturedThreadName.Length)
+            {
+                ULONG Length = sizeof(UNICODE_STRING) + CapturedThreadName.Length;
+                NewThreadName = ExAllocatePoolWithTag(NonPagedPool, // FIXME: NonPagedPoolNx
+                                                      Length, TAG_THREAD_NAME);
+                if (!NewThreadName)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    /* Copy the new thread name */
+                    NewThreadName->Length =
+                    NewThreadName->MaximumLength = CapturedThreadName.Length;
+                    NewThreadName->Buffer = (PWSTR)(NewThreadName + 1);
+                    RtlCopyMemory(NewThreadName->Buffer,
+                                  CapturedThreadName.Buffer,
+                                  CapturedThreadName.Length);
+                }
+            }
+            else
+            {
+                NewThreadName = NULL;
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                /* Switch the original thread name with the new one */
+                PUNICODE_STRING OldThreadName;
+                PspLockThreadSecurityExclusive(Thread);
+                OldThreadName = Thread->ThreadName;
+                Thread->ThreadName = NewThreadName;
+                PspUnlockThreadSecurityExclusive(Thread);
+
+                /* Free the old thread name */
+                if (OldThreadName)
+                    ExFreePoolWithTag(OldThreadName, TAG_THREAD_NAME);
+            }
+
+            /* Free the captured string */
+            ReleaseCapturedUnicodeString(&CapturedThreadName, PreviousMode);
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+        }
+#endif /* (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__) */
+
         /* Anything else */
         default:
             /* Not yet implemented */
@@ -3347,6 +3436,72 @@ NtQueryInformationThread(
             ObDereferenceObject(Thread);
             break;
         }
+
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+        case ThreadNameInformation:
+        {
+            PUNICODE_STRING ThreadName;
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+            // FIXME: Use THREAD_QUERY_LIMITED_INFORMATION when implemented
+                                               THREAD_QUERY_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            PspLockThreadSecurityShared(Thread);
+
+            ThreadName = Thread->ThreadName;
+
+            /* Set the return length (REMARK: We only
+             * consider Length instead of MaximumLength) */
+            Length = sizeof(UNICODE_STRING);
+            Length += (ThreadName ? ThreadName->Length : 0);
+            if (ThreadInformationLength < Length)
+            {
+                PspUnlockThreadSecurityShared(Thread);
+                ObDereferenceObject(Thread);
+                Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            /* Protect writes with SEH */
+            _SEH2_TRY
+            {
+                PTHREAD_NAME_INFORMATION NameInfo =
+                    (PTHREAD_NAME_INFORMATION)ThreadInformation;
+                if (ThreadName && ThreadName->Length)
+                {
+                    NameInfo->ThreadName.Length =
+                    NameInfo->ThreadName.MaximumLength = ThreadName->Length;
+                    NameInfo->ThreadName.Buffer = (PWSTR)(&NameInfo->ThreadName + 1);
+                    RtlCopyMemory(NameInfo->ThreadName.Buffer,
+                                  ThreadName->Buffer,
+                                  ThreadName->Length);
+                }
+                else
+                {
+                    RtlInitEmptyUnicodeString(&NameInfo->ThreadName, NULL, 0);
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            PspUnlockThreadSecurityShared(Thread);
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+        }
+#endif /* (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__) */
 
         /* Anything else */
         default:

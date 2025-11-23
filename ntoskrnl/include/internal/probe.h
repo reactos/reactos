@@ -54,7 +54,7 @@
  * or the actual class is not present in the class list array.
  *
  * STATUS_INFO_LENGTH_MISMATCH -- Indicates the information length doesn't match with
- * the one that the information class itself expects. This is the case with classes
+ * the one that the information class itself expects. This is the case with classes where
  * ICIF_SET_SIZE_VARIABLE is not set, which means that the class requires a fixed
  * length size.
  *

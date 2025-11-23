@@ -136,6 +136,7 @@
 #define TAG_PS_APC              'pasP' /* Psap - Ps APC */
 #define TAG_SHIM                'MIHS'
 #define TAG_QUOTA_BLOCK         'bQsP'
+#define TAG_THREAD_NAME         'mNhT'
 
 /* Run-Time Library Tags */
 #define TAG_HDTB    'BTDH'
