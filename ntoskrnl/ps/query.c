@@ -912,7 +912,8 @@ NtQueryInformationProcess(
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
-                                               PROCESS_QUERY_INFORMATION, // FIXME: Use PROCESS_QUERY_LIMITED_INFORMATION if implemented
+            // FIXME: Use PROCESS_QUERY_LIMITED_INFORMATION when implemented
+                                               PROCESS_QUERY_INFORMATION,
                                                PsProcessType,
                                                PreviousMode,
                                                (PVOID*)&Process,
@@ -2274,19 +2275,10 @@ NtSetInformationThread(
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
-    HANDLE TokenHandle = NULL;
     KPRIORITY Priority = 0;
-    KAFFINITY Affinity = 0, CombinedAffinity;
-    PVOID Address = NULL;
     PEPROCESS Process;
-    ULONG_PTR DisableBoost = 0;
-    ULONG_PTR IdealProcessor = 0;
-    ULONG_PTR Break = 0;
     PTEB Teb;
-    ULONG_PTR TlsIndex = 0;
-    PVOID *ExpansionSlots;
-    PETHREAD ProcThread;
-    BOOLEAN HasPrivilege;
+
     PAGED_CODE();
 
     /* Validate the information class */
@@ -2310,7 +2302,7 @@ NtSetInformationThread(
     {
         /* Thread priority */
         case ThreadPriority:
-
+        {
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(KPRIORITY))
             {
@@ -2344,6 +2336,7 @@ NtSetInformationThread(
             /* Check for the required privilege */
             if (Priority >= LOW_REALTIME_PRIORITY)
             {
+                BOOLEAN HasPrivilege;
                 HasPrivilege = SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
                                                        ThreadHandle,
                                                        THREAD_SET_INFORMATION,
@@ -2371,9 +2364,10 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadBasePriority:
-
+        {
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(LONG))
             {
@@ -2430,8 +2424,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadAffinityMask:
+        {
+            KAFFINITY Affinity = 0, CombinedAffinity;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG_PTR))
@@ -2509,8 +2506,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadImpersonationToken:
+        {
+            HANDLE TokenHandle;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(HANDLE))
@@ -2549,8 +2549,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadQuerySetWin32StartAddress:
+        {
+            PVOID Address;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG_PTR))
@@ -2589,8 +2592,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadIdealProcessor:
+        {
+            ULONG_PTR IdealProcessor;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG_PTR))
@@ -2637,7 +2643,7 @@ NtSetInformationThread(
 
             /* Get the TEB and protect the thread */
             Teb = Thread->Tcb.Teb;
-            if ((Teb) && (ExAcquireRundownProtection(&Thread->RundownProtect)))
+            if (Teb && ExAcquireRundownProtection(&Thread->RundownProtect))
             {
                 /* Save the ideal processor */
                 Teb->IdealProcessor = Thread->Tcb.IdealProcessor;
@@ -2649,8 +2655,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadPriorityBoost:
+        {
+            ULONG_PTR DisableBoost;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG_PTR))
@@ -2689,8 +2698,12 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadZeroTlsCell:
+        {
+            ULONG_PTR TlsIndex;
+            PETHREAD ProcThread;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG))
@@ -2753,7 +2766,7 @@ NtSetInformationThread(
                                             TLS_EXPANSION_SLOTS) - 1)
                             {
                                 /* Check if we have expansion slots */
-                                ExpansionSlots = Teb->TlsExpansionSlots;
+                                PVOID* ExpansionSlots = Teb->TlsExpansionSlots;
                                 if (ExpansionSlots)
                                 {
                                     /* Clear the index */
@@ -2779,8 +2792,11 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadBreakOnTermination:
+        {
+            ULONG Break;
 
             /* Check buffer length */
             if (ThreadInformationLength != sizeof(ULONG))
@@ -2834,9 +2850,10 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadHideFromDebugger:
-
+        {
             /* Check buffer length */
             if (ThreadInformationLength != 0)
             {
@@ -2860,6 +2877,7 @@ NtSetInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         /* Anything else */
         default:
@@ -2891,11 +2909,7 @@ NtQueryInformationThread(
     NTSTATUS Status;
     ULONG Access;
     ULONG Length = 0;
-    PTHREAD_BASIC_INFORMATION ThreadBasicInfo =
-        (PTHREAD_BASIC_INFORMATION)ThreadInformation;
-    PKERNEL_USER_TIMES ThreadTime = (PKERNEL_USER_TIMES)ThreadInformation;
-    KIRQL OldIrql;
-    ULONG ThreadTerminated;
+
     PAGED_CODE();
 
     /* Validate the information class */
@@ -2925,6 +2939,9 @@ NtQueryInformationThread(
     {
         /* Basic thread information */
         case ThreadBasicInformation:
+        {
+            PTHREAD_BASIC_INFORMATION ThreadBasicInfo =
+                (PTHREAD_BASIC_INFORMATION)ThreadInformation;
 
             /* Set the return length */
             Length = sizeof(THREAD_BASIC_INFORMATION);
@@ -2966,9 +2983,12 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         /* Thread time information */
         case ThreadTimes:
+        {
+            PKERNEL_USER_TIMES ThreadTime = (PKERNEL_USER_TIMES)ThreadInformation;
 
             /* Set the return length */
             Length = sizeof(KERNEL_USER_TIMES);
@@ -3017,9 +3037,10 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadQuerySetWin32StartAddress:
-
+        {
             /* Set the return length*/
             Length = sizeof(PVOID);
 
@@ -3055,9 +3076,10 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadPerformanceCount:
-
+        {
             /* Set the return length*/
             Length = sizeof(LARGE_INTEGER);
 
@@ -3093,9 +3115,10 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadAmILastThread:
-
+        {
             /* Set the return length*/
             Length = sizeof(ULONG);
 
@@ -3135,8 +3158,11 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadIsIoPending:
+        {
+            KIRQL OldIrql;
 
             /* Set the return length*/
             Length = sizeof(ULONG);
@@ -3179,10 +3205,11 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         /* LDT and GDT information */
         case ThreadDescriptorTableEntry:
-
+        {
 #if defined(_X86_)
             /* Reference the thread */
             Status = ObReferenceObjectByHandle(ThreadHandle,
@@ -3207,9 +3234,10 @@ NtQueryInformationThread(
             Status = STATUS_NOT_IMPLEMENTED;
 #endif
             break;
+        }
 
         case ThreadPriorityBoost:
-
+        {
             /* Set the return length*/
             Length = sizeof(ULONG);
 
@@ -3242,9 +3270,10 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadBreakOnTermination:
-
+        {
             /* Set the return length */
             Length = sizeof(ULONG);
 
@@ -3277,8 +3306,11 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         case ThreadIsTerminated:
+        {
+            ULONG ThreadTerminated;
 
             /* Set the return length*/
             Length = sizeof(ThreadTerminated);
@@ -3314,6 +3346,7 @@ NtQueryInformationThread(
             /* Dereference the thread */
             ObDereferenceObject(Thread);
             break;
+        }
 
         /* Anything else */
         default:
