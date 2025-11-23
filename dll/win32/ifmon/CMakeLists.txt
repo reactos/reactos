@@ -7,6 +7,7 @@ list(APPEND SOURCE
     ifmon.rc
     interface.c
     ip.c
+    winsock.c
     ${CMAKE_CURRENT_BINARY_DIR}/ifmon.def)
 
 add_library(ifmon MODULE ${SOURCE})

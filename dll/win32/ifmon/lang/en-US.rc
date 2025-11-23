@@ -28,10 +28,18 @@ Examples:\n\n\
 Parameters:\n\n\
       Tag             Value\n\
       name            The name of a specific interface.\n\n\
-Remarks:\n\n\
-Displays the DNS server configuration for a specific interface\nor interfaces.\n\n\
+Remarks: Displays the DNS server configuration for a specific interface\nor interfaces.\n\n\
 Examples:\n\n\
       %1!s! ""Local Area Network""\n"
+
+    IDS_HLP_WINSOCK_RESET "Resets the Winsock Catalog to a clean state.\n"
+    IDS_HLP_WINSOCK_RESET_EX "\nUsage: %1!s!\n\n\
+Remarks: Resets the Winsock Catalog to a clean state.\n"
+    IDS_HLP_WINSOCK_SHOW  "Displays information.\n"
+    IDS_HLP_WINSOCK_SHOW_CATALOG "Displays contents of Winsock Catalog.\n"
+    IDS_HLP_WINSOCK_SHOW_CATALOG_EX "\nUsage: %1!s! [[type=]full]\n\n\
+Parameters:\n\n\
+    \n"
 
     IDS_IP_HEADER        "\nConfiguration for interface ""%s""\n"
     IDS_DHCP_ON          "    DHCP enabled:                         Yes\n"

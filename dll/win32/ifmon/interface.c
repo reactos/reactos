@@ -15,17 +15,7 @@
 #include "guid.h"
 #include "resource.h"
 
-static
-DWORD
-WINAPI
-InterfaceShowInterface(
-    LPCWSTR pwszMachine,
-    LPWSTR *argv,
-    DWORD dwCurrentIndex,
-    DWORD dwArgCount,
-    DWORD dwFlags,
-    LPCVOID pvData,
-    BOOL *pbDone);
+static FN_HANDLE_CMD InterfaceShowInterface;
 
 static
 CMD_ENTRY

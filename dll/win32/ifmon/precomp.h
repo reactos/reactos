@@ -33,4 +33,8 @@ DWORD
 WINAPI
 RegisterIpHelper(VOID);
 
+DWORD
+WINAPI
+RegisterWinsockHelper(VOID);
+
 #endif /* PRECOMP_H */
