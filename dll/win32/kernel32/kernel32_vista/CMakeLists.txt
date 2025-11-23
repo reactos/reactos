@@ -7,8 +7,8 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys ..)
 spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    firmware.c
     EnumSystemLocalesEx.c
+    firmware.c
     GetLocaleInfoEx.c
     GetFileInformationByHandleEx.c
     GetFinalPathNameByHandle.c
@@ -19,8 +19,8 @@ list(APPEND SOURCE
     IsValidLocaleName.c
     LCIDToLocaleName.c
     LocaleNameToLCID.c
-    SetThreadDescription.c
     sync.c
+    ThreadDescription.c
     vista.c)
 
 # These functions are not exported from kernel32_vista (yet).
