@@ -9,7 +9,55 @@
 
 #include "pciidex.h"
 
+PVOID GlobalHbaIoBase = (PVOID)0xFFFFFFFF;
+PVOID GlobalPortIoBase = (PVOID)0xFFFFFFFF;
+
 /* FUNCTIONS ******************************************************************/
+
+static
+VOID
+AhciDumpHbaCapabilities(
+    _In_ ULONG AhciCapabilities)
+{
+    DbgPrint("NP=%u ", (AhciCapabilities & AHCI_CAP_NP) + 1);
+    DbgPrint("NCS=%u ", ((AhciCapabilities & AHCI_CAP_NCS) >> 8) + 1);
+    DbgPrint("ISS=%u ", (AhciCapabilities & AHCI_CAP_ISS) >> 20);
+    if (AhciCapabilities & AHCI_CAP_SXS)
+        DbgPrint("SXS ");
+    if (AhciCapabilities & AHCI_CAP_EMS)
+        DbgPrint("EMS ");
+    if (AhciCapabilities & AHCI_CAP_CCCS)
+        DbgPrint("CCCS ");
+    if (AhciCapabilities & AHCI_CAP_PSC)
+        DbgPrint("PSC ");
+    if (AhciCapabilities & AHCI_CAP_SSC)
+        DbgPrint("SSC ");
+    if (AhciCapabilities & AHCI_CAP_PMD)
+        DbgPrint("PMD ");
+    if (AhciCapabilities & AHCI_CAP_FBSS)
+        DbgPrint("FBSS ");
+    if (AhciCapabilities & AHCI_CAP_SPM)
+        DbgPrint("SPM ");
+    if (AhciCapabilities & AHCI_CAP_SAM)
+        DbgPrint("SAM ");
+    if (AhciCapabilities & AHCI_CAP_SCLO)
+        DbgPrint("SCLO ");
+    if (AhciCapabilities & AHCI_CAP_SAL)
+        DbgPrint("SAL ");
+    if (AhciCapabilities & AHCI_CAP_SALP)
+        DbgPrint("SALP ");
+    if (AhciCapabilities & AHCI_CAP_SSS)
+        DbgPrint("SSS ");
+    if (AhciCapabilities & AHCI_CAP_SMPS)
+        DbgPrint("SMPS ");
+    if (AhciCapabilities & AHCI_CAP_SSNTF)
+        DbgPrint("SSNTF ");
+    if (AhciCapabilities & AHCI_CAP_SNCQ)
+        DbgPrint("SNCQ ");
+    if (AhciCapabilities & AHCI_CAP_S64A)
+        DbgPrint("S64A ");
+    DbgPrint("\n");
+}
 
 static
 CODE_SEG("PAGE")
@@ -330,6 +378,57 @@ AtaAhciIsPortRemovable(
 }
 
 static
+VOID
+AhciDumpPortCmdStatus(
+    _In_ ULONG PxCmd)
+{
+    DbgPrint("ISS=%u ", (PxCmd & AHCI_PXCMD_ICC_MASK) >> 28);
+    if (PxCmd & AHCI_PXCMD_ST)
+        DbgPrint("ST ");
+    if (PxCmd & AHCI_PXCMD_SUD)
+        DbgPrint("SUD ");
+    if (PxCmd & AHCI_PXCMD_POD)
+        DbgPrint("POD ");
+    if (PxCmd & AHCI_PXCMD_CLO)
+        DbgPrint("CLO ");
+    if (PxCmd & AHCI_PXCMD_FRE)
+        DbgPrint("FRE ");
+    if (PxCmd & AHCI_PXCMD_MPSS)
+        DbgPrint("MPSS ");
+    if (PxCmd & AHCI_PXCMD_FR)
+        DbgPrint("FR ");
+    if (PxCmd & AHCI_PXCMD_CR)
+        DbgPrint("CR ");
+    if (PxCmd & AHCI_PXCMD_CPS)
+        DbgPrint("CPS ");
+    if (PxCmd & AHCI_PXCMD_PMA)
+        DbgPrint("PMA ");
+    if (PxCmd & AHCI_PXCMD_HPCP)
+        DbgPrint("HPCP ");
+    if (PxCmd & AHCI_PXCMD_MPSP)
+        DbgPrint("MPSP ");
+    if (PxCmd & AHCI_PXCMD_CPD)
+        DbgPrint("CPD ");
+    if (PxCmd & AHCI_PXCMD_ESP)
+        DbgPrint("ESP ");
+    if (PxCmd & AHCI_PXCMD_FBSCP)
+        DbgPrint("FBSCP ");
+    if (PxCmd & AHCI_PXCMD_APSTE)
+        DbgPrint("APSTE ");
+    if (PxCmd & AHCI_PXCMD_ATAPI)
+        DbgPrint("ATAPI ");
+    if (PxCmd & AHCI_PXCMD_DLAE)
+        DbgPrint("DLAE ");
+    if (PxCmd & AHCI_PXCMD_ALPE)
+        DbgPrint("ALPE ");
+    if (PxCmd & AHCI_PXCMD_ASP)
+        DbgPrint("ASP ");
+
+    DbgPrint("CCS=%lu ", (PxCmd & AHCI_PXCMD_CCS_MASK) >> 8);
+    DbgPrint("\n");
+}
+
+static
 CODE_SEG("PAGE")
 NTSTATUS
 AtaAhciCreateChannelData(
@@ -371,6 +470,34 @@ AtaAhciCreateChannelData(
         ChanData->Info.TransferModeSupported = SATA_ALL;
 
         ChanData->IoBase = AHCI_PORT_BASE(Controller->IoBase, i);
+
+        if (Controller->Flags & CTRL_FLAG_EXTRA_DEBUG)
+        {
+            PVOID IoBase = ChanData->IoBase;
+            ULONG CmdStatus;
+
+            if (i == 0)
+            {
+                GlobalPortIoBase = IoBase;
+            }
+
+            DbgPrint("Port %lu:\n", i);
+            DbgPrint("PxIS     0x%08lX\n", AHCI_PORT_READ(IoBase, PxInterruptStatus));
+            DbgPrint("PxIE     0x%08lX\n", AHCI_PORT_READ(IoBase, PxInterruptEnable));
+            CmdStatus = AHCI_PORT_READ(IoBase, PxCmdStatus);
+            DbgPrint("PxCMD    0x%08lX ", CmdStatus);
+            AhciDumpPortCmdStatus(CmdStatus);
+            DbgPrint("PxTFD    0x%08lX\n", AHCI_PORT_READ(IoBase, PxTaskFileData));
+            DbgPrint("PxSIG    0x%08lX\n", AHCI_PORT_READ(IoBase, PxSignature));
+            DbgPrint("PxSSTS   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataStatus));
+            DbgPrint("PxSCTL   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataControl));
+            DbgPrint("PxSERR   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataError));
+            DbgPrint("PxSACT   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataActive));
+            DbgPrint("PxCI     0x%08lX\n", AHCI_PORT_READ(IoBase, PxCommandIssue));
+            DbgPrint("PxSNTF   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataNotification));
+            DbgPrint("PxFBS    0x%08lX\n", AHCI_PORT_READ(IoBase, PxFisSwitchingControl));
+            DbgPrint("PxDEVSLP 0x%08lX\n", AHCI_PORT_READ(IoBase, PxDeviceSleep));
+        }
 
         ChanData->EnableInterrupts(ChanData, FALSE);
 
@@ -563,10 +690,22 @@ AhciGetControllerProperties(
     Controller->FreeResources = AtaAhciHbaFreeResouces;
     Controller->AttachChannel = AtaAhciAttachChannel;
 
+    if ((Controller->Pci.VendorID == 0x1002) &&
+        (Controller->Pci.DeviceID == 0x4391))
+    {
+        Controller->Flags |= CTRL_FLAG_EXTRA_DEBUG;
+        INFO("Extra debug\n");
+
+        GlobalHbaIoBase = Controller->IoBase;
+    }
+
     /* Set AE before accessing other AHCI registers */
     GlobalControl = AHCI_HBA_READ(Controller->IoBase, HbaGlobalControl);
     GlobalControl |= AHCI_GHC_AE;
     AHCI_HBA_WRITE(Controller->IoBase, HbaGlobalControl, GlobalControl);
+
+    // Test
+    (VOID)AHCI_HBA_READ(Controller->IoBase, HbaGlobalControl);
 
     Controller->AhciCapabilities = AHCI_HBA_READ(Controller->IoBase, HbaCapabilities);
     Controller->ChannelBitmap = AHCI_HBA_READ(Controller->IoBase, HbaPortBitmap);
@@ -594,7 +733,12 @@ AhciGetControllerProperties(
         Controller->AhciCapabilities |= AHCI_CAP_SPM;
 #endif
 
+    // HACK
+    if (Controller->Flags & CTRL_FLAG_EXTRA_DEBUG)
+        Controller->AhciCapabilities &= ~AHCI_CAP_SPM;
+
     /* Reset the HBA into a consistent state */
+    GlobalControl = AHCI_HBA_READ(Controller->IoBase, HbaGlobalControl);
     GlobalControl |= AHCI_GHC_HR;
     AHCI_HBA_WRITE(Controller->IoBase, HbaGlobalControl, GlobalControl);
 
@@ -613,6 +757,18 @@ AhciGetControllerProperties(
         return STATUS_IO_TIMEOUT;
     }
 
+    /* Re-enable AE */
+    GlobalControl |= AHCI_GHC_AE;
+    AHCI_HBA_WRITE(Controller->IoBase, HbaGlobalControl, GlobalControl);
+
+    /* Disable interrupts */
+    GlobalControl = AHCI_HBA_READ(Controller->IoBase, HbaGlobalControl);
+    if (GlobalControl & AHCI_GHC_IE)
+    {
+        GlobalControl &= ~AHCI_GHC_IE;
+        AHCI_HBA_WRITE(Controller->IoBase, HbaGlobalControl, GlobalControl);
+    }
+
     Status = AtaAhciCreateChannelData(Controller);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -627,10 +783,7 @@ AhciGetControllerProperties(
          Controller->AhciCapabilities,
          Controller->AhciCapabilitiesEx);
 
-    /* Disable interrupts and re-enable AE */
-    GlobalControl &= ~AHCI_GHC_IE;
-    GlobalControl |= AHCI_GHC_AE;
-    AHCI_HBA_WRITE(Controller->IoBase, HbaGlobalControl, GlobalControl);
+    AhciDumpHbaCapabilities(Controller->AhciCapabilities);
 
     /* Clear HBA interrupts */
     AHCI_HBA_WRITE(Controller->IoBase, HbaInterruptStatus, 0xFFFFFFFF);

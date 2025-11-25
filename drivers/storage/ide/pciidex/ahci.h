@@ -519,13 +519,72 @@ C_ASSERT(FIELD_OFFSET(AHCI_COMMAND_TABLE, PrdTable) == 128);
 #define AHCI_PORT_BASE(HbaIoBase, PortNumber) \
     (PULONG)((ULONG_PTR)(HbaIoBase) + (PortNumber) * 0x80 + 0x100)
 
+extern PVOID GlobalHbaIoBase;
+extern PVOID GlobalPortIoBase;
+
+FORCEINLINE
+PCHAR
+GetPortRegStr(_In_ AHCI_PORT_REGISTER Register)
+{
+    switch ((ULONG)Register)
+    {
+        case 0x00: return "PxCLB ";
+        case 0x04: return "PxCLBU";
+        case 0x08: return "PxFB  ";
+        case 0x0C: return "PxFBU ";
+        case 0x10: return "PxIS  ";
+        case 0x14: return "PxIE  ";
+        case 0x18: return "PxCMD ";
+        case 0x20: return "PxTFD ";
+        case 0x24: return "PxSIG ";
+        case 0x28: return "PxSSTS";
+        case 0x2C: return "PxSCTL";
+        case 0x30: return "PxSERR";
+        case 0x34: return "PxSACT";
+        case 0x38: return "PxCI  ";
+        case 0x3C: return "PxSNTF";
+        case 0x40: return "PxFBS ";
+        case 0x44: return "PxDEVS";
+
+        default:
+            return "<UNKNOWN>";
+    }
+}
+
+FORCEINLINE
+PCHAR
+GetHbaRegStr(_In_ AHCI_HOST_BUS_ADAPTER_REGISTER Register)
+{
+    switch ((ULONG)Register)
+    {
+        case 0x00: return "CAP";
+        case 0x04: return "GHC";
+        case 0x08: return "IS";
+        case 0x0C: return "PI";
+        case 0x10: return "VS";
+        case 0x14: return "CCC_CTL";
+        case 0x18: return "CCC_PORTS";
+        case 0x1C: return "EM_LOC";
+        case 0x20: return "EM_CT";
+        case 0x24: return "CAP2";
+        case 0x28: return "BOHC";
+        default:
+            return "<UNKNOWN>";
+    }
+}
+
 FORCEINLINE
 ULONG
 AHCI_HBA_READ(
     _In_ PVOID HbaIoBase,
     _In_ AHCI_HOST_BUS_ADAPTER_REGISTER Register)
 {
-    return READ_REGISTER_ULONG((PULONG)((ULONG_PTR)HbaIoBase + Register));
+    ULONG r = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)HbaIoBase + Register));
+
+    if (HbaIoBase == GlobalHbaIoBase)
+        DbgPrint("H_%s --> %x\n", GetHbaRegStr(Register), r);
+
+    return r;
 }
 
 FORCEINLINE
@@ -535,6 +594,9 @@ AHCI_HBA_WRITE(
     _In_ AHCI_HOST_BUS_ADAPTER_REGISTER Register,
     _In_ ULONG Value)
 {
+    if (HbaIoBase == GlobalHbaIoBase)
+        DbgPrint("H_%s <-- %lx\n", GetHbaRegStr(Register), Value);
+
     WRITE_REGISTER_ULONG((PULONG)((ULONG_PTR)HbaIoBase + Register), Value);
 }
 
@@ -544,7 +606,12 @@ AHCI_PORT_READ(
     _In_ PVOID PortIoBase,
     _In_ AHCI_PORT_REGISTER Register)
 {
-    return READ_REGISTER_ULONG((PULONG)((ULONG_PTR)PortIoBase + Register));
+    ULONG r = READ_REGISTER_ULONG((PULONG)((ULONG_PTR)PortIoBase + Register));
+
+    if (PortIoBase == GlobalPortIoBase)
+        DbgPrint("%s --> %x\n", GetPortRegStr(Register), r);
+
+    return r;
 }
 
 FORCEINLINE
@@ -554,5 +621,8 @@ AHCI_PORT_WRITE(
     _In_ AHCI_PORT_REGISTER Register,
     _In_ ULONG Value)
 {
+    if (PortIoBase == GlobalPortIoBase)
+        DbgPrint("%s <-- %lx\n", GetPortRegStr(Register), Value);
+
     WRITE_REGISTER_ULONG((PULONG)((ULONG_PTR)PortIoBase + Register), Value);
 }

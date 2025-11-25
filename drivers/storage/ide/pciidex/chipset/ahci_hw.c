@@ -124,6 +124,9 @@ AtaAhciStopCommandListProcess(
 {
     ULONG CmdStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
     if (CmdStatus & AHCI_PXCMD_ST)
     {
@@ -138,6 +141,9 @@ AtaAhciStartCommandListProcess(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
     ULONG CmdStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
     CmdStatus |= AHCI_PXCMD_ST;
@@ -156,6 +162,9 @@ BOOLEAN
 AtaAhciStopCommandListProcessAndWait(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     AtaAhciStopCommandListProcess(ChanData);
 
     if (AtaAhciIsHbaHotRemoved(ChanData))
@@ -175,6 +184,9 @@ AtaAhciStopFisReceiveProcess(
 {
     ULONG CmdStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
     if (CmdStatus & AHCI_PXCMD_FRE)
     {
@@ -190,6 +202,9 @@ AtaAhciStartFisReceiveProcess(
 {
     ULONG CmdStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
     CmdStatus |= AHCI_PXCMD_FRE;
     AHCI_PORT_WRITE(ChanData->IoBase, PxCmdStatus, CmdStatus);
@@ -200,6 +215,9 @@ BOOLEAN
 AtaAhciStopFisReceiveProcessAndWait(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     AtaAhciStopFisReceiveProcess(ChanData);
 
     if (AtaAhciIsHbaHotRemoved(ChanData))
@@ -217,6 +235,9 @@ VOID
 AtaAhciStartFisReceiveProcessAndWait(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     AtaAhciStartFisReceiveProcess(ChanData);
 
     if (!AtaAhciPollRegister(ChanData->IoBase,
@@ -238,6 +259,9 @@ AtaAhciPhyEnterListenMode(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
     ULONG CmdStatus, SataControl;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     if (!(ChanData->Controller->AhciCapabilities & AHCI_CAP_SSS))
         return;
@@ -262,6 +286,9 @@ AtaAhciPerformCommandListOverride(
 {
     ULONG CmdStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     if (!(ChanData->Controller->AhciCapabilities & AHCI_CAP_SCLO))
       return TRUE;
 
@@ -283,6 +310,9 @@ AtaAhciFbsControl(
     _In_ BOOLEAN DoEnable)
 {
     ULONG FbsControl, NewFbsControl;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     if (!(ChanData->ChanInfo & CHANNEL_FLAG_HAS_FBS))
         return;
@@ -328,6 +358,9 @@ AtaAhciEnterIdleState(
 {
     ULONG CmdStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
 
     /* Already in an idle state */
@@ -362,6 +395,9 @@ VOID
 AtaAhciSetupDmaMemoryAddress(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     /* Physical address of the allocated command list */
     AHCI_PORT_WRITE(ChanData->IoBase, PxCommandListBaseLow, (ULONG)ChanData->Mem.CommandListPhys);
     if (ChanData->Controller->AhciCapabilities & AHCI_CAP_S64A)
@@ -387,6 +423,9 @@ AtaAhciSpinUp(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
     ULONG CmdStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
 
@@ -425,6 +464,9 @@ AtaAhciPhyCheckDevicePresence(
 {
     ULONG i, SataStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     /* Do a quick check first (100 us) */
     for (i = 0; i < 10; ++i)
     {
@@ -453,6 +495,9 @@ BOOLEAN
 AtaAhciPhyWaitForReady(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     return AtaAhciPollRegister(ChanData->IoBase,
                                PxSataStatus,
                                AHCI_PXSSTS_DET_MASK,
@@ -467,6 +512,9 @@ AtaAhciWaitForDeviceReady(
     _In_ ULONG TimeOut)
 {
     ULONG i, TaskFileData;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     /* Do a quick check first (100 us) */
     for (i = 0; i < 10; ++i)
@@ -513,6 +561,9 @@ AtaAhciPostRequestPolled(
 {
     ULONG InterruptStatus, TaskFileData;
     UCHAR SrbStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     ASSERT((ChanData->ActiveSlotsBitmap == 0) && (ChanData->ActiveQueuedSlotsBitmap == 0));
 
@@ -593,6 +644,9 @@ AtaAhciSendResetFis(
     PAHCI_COMMAND_HEADER CommandHeader = &ChanData->CommandList->CommandHeader[AHCI_INTERNAL_SLOT];
     PAHCI_FIS_HOST_TO_DEVICE H2dFis = &CommandTable->HostToDeviceFis;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     RtlZeroMemory(H2dFis, sizeof(*H2dFis));
     H2dFis->Type = AHCI_FIS_REGISTER_HOST_TO_DEVICE;
     H2dFis->Flags = PortNumber;
@@ -625,6 +679,9 @@ AtaAhciPmpRead(
     PAHCI_FIS_HOST_TO_DEVICE H2dFis = &CommandTable->HostToDeviceFis;
     PAHCI_FIS_DEVICE_TO_HOST D2hFis = &ChanData->ReceivedFis->DeviceToHostFis;
     UCHAR SrbStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     RtlZeroMemory(H2dFis, sizeof(*H2dFis));
     H2dFis->Type = AHCI_FIS_REGISTER_HOST_TO_DEVICE;
@@ -661,6 +718,9 @@ AtaAhciPmpWrite(
     PAHCI_COMMAND_HEADER CommandHeader = &ChanData->CommandList->CommandHeader[AHCI_INTERNAL_SLOT];
     PAHCI_FIS_HOST_TO_DEVICE H2dFis = &CommandTable->HostToDeviceFis;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     RtlZeroMemory(H2dFis, sizeof(*H2dFis));
     H2dFis->Type = AHCI_FIS_REGISTER_HOST_TO_DEVICE;
     H2dFis->Flags = UPDATE_COMMAND | AHCI_PMP_CONTROL_PORT;
@@ -689,6 +749,9 @@ AtaAhciPmpDisableSilXmitEarlyAck(
     UCHAR SrbStatus;
     ULONG Value;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     SrbStatus = AtaAhciPmpRead(ChanData, AHCI_PMP_CONTROL_PORT, 129, &Value);
     if (SrbStatus != SRB_STATUS_SUCCESS)
         return FALSE;
@@ -712,6 +775,9 @@ AtaAhciPmpIdentifyPmp(
 {
     ULONG ProductId, RevisionInfo, PortCount;
     UCHAR SrbStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     *PortCountResult = 0;
 
@@ -778,6 +844,9 @@ AtaAhciPmpDetect(
 {
     ULONG CmdStatus, Signature;
     UCHAR SrbStatus;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     /* Indicate a PMP */
     CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
@@ -866,6 +935,9 @@ AtaAhciPhyCheckConnection(
     ATA_CONNECTION_STATUS ConnectionStatus;
     ULONG RetryCount;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     for (RetryCount = 0; RetryCount < 2; ++RetryCount)
     {
         /* Suspend DMA engine and wait for port idle */
@@ -948,6 +1020,9 @@ AtaAhciEnumerateChannel(
     ULONG RetryCount, PortCount;
     ATA_CONNECTION_STATUS ConnectionStatus;
     BOOLEAN CheckForPmp = TRUE;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     if (AtaAhciIsHbaHotRemoved(ChanData))
         return 0;
@@ -1032,6 +1107,9 @@ AtaAhciPmpCheckSendComReset(
     ULONG SataControl;
     UCHAR SrbStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     INFO("CH %lu: Transmit a COMRESET on the interface\n", ChanData->Channel);
 
     /* Clear errors */
@@ -1069,6 +1147,9 @@ AtaAhciPmpPhyCheckDevicePresence(
     ULONG i, SataStatus;
     UCHAR SrbStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     for (i = 0; i < AHCI_DELAY_PMP_DET_PRESENSE; ++i)
     {
         SrbStatus = AtaAhciPmpRead(ChanData, PortNumber, AHCI_PMP_SSTATUS, &SataStatus);
@@ -1105,6 +1186,9 @@ AtaAhciPmpPhyWaitForReady(
     ULONG i, SataStatus;
     UCHAR SrbStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     for (i = 0; i < AHCI_DELAY_PMP_DET_PRESENSE; ++i)
     {
         SrbStatus = AtaAhciPmpRead(ChanData, PortNumber, AHCI_PMP_SSTATUS, &SataStatus);
@@ -1140,6 +1224,9 @@ AtaPmpCheckConnection(
 {
     ATA_CONNECTION_STATUS ConnectionStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     INFO("CH %lu: Reset PMP port %lu\n", ChanData->Channel, PortNumber);
 
     ChanData->PortNotification(AtaResetDetected, ChanData->PortContext, 1 << PortNumber);
@@ -1167,6 +1254,9 @@ AtaAhciPmpIdentifyDeviceBehindPmp(
     ATA_CONNECTION_STATUS ConnectionStatus;
     UCHAR SrbStatus;
     ULONG RetryCount;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     ASSERT(!(ChanData->ChanInfo & CHANNEL_FLAG_FBS_ENABLED));
 
@@ -1214,6 +1304,9 @@ AtaAhciIdentifyDevice(
 {
     PCHANNEL_DATA_AHCI ChanData = ChannelContext;
     ULONG Signature;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     if (ChanData->ChanInfo & CHANNEL_FLAG_IS_PMP)
     {
@@ -1365,6 +1458,9 @@ AtaAhciHandleFatalError(
     ULONG i, CmdStatus, SlotsBitmap, FailedSlot;
     PATA_DEVICE_REQUEST Request;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     Request = NULL;
     CurrentCommandSlot = AHCI_PXCMD_CCS(AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus));
 
@@ -1478,6 +1574,9 @@ AtaAhciHandlePortStateChange(
 {
     ULONG SataStatus;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     if (InterruptStatus & AHCI_PXIRQ_DMPS)
     {
         ULONG CmdStatus = AHCI_PORT_READ(ChanData->IoBase, PxCmdStatus);
@@ -1506,6 +1605,9 @@ AtaAhciDowngradeInterfaceSpeed(
     _In_ PCHANNEL_DATA_AHCI ChanData)
 {
     ULONG SataSpeed, SataControl;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     SataSpeed = AHCI_PORT_READ(ChanData->IoBase, PxSataStatus) & AHCI_PXSSTS_SPD_MASK;
     if (SataSpeed != AHCI_PXSSTS_SPD_SATA1)

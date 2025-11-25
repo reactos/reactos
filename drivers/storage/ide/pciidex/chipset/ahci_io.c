@@ -139,6 +139,9 @@ AtaAhciStartIo(
     PULONG IoBase = ChanData->IoBase;
     ULONG IssueSlot;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     IssueSlot = 1 << Request->Slot;
 
     ChanData->ActiveSlotsBitmap |= IssueSlot;
@@ -175,6 +178,9 @@ AtaAhciPrepareIo(
     PAHCI_COMMAND_HEADER CommandHeader;
     PAHCI_FIS_HOST_TO_DEVICE Fis;
     ULONG Control;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     Control = sizeof(*Fis) / sizeof(ULONG);
     Control |= DEV_NUMBER(Request->Device) << AHCI_COMMAND_HEADER_PMP_SHIFT;
@@ -303,6 +309,9 @@ AtaAhciPortCompleteCommands(
 {
     ULONG Slot;
 
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
+
     while (_BitScanForward(&Slot, CommandsCompleted) != 0)
     {
         PATA_DEVICE_REQUEST Request;
@@ -345,6 +354,9 @@ AtaAhciPortHandleInterrupt(
 {
     ULONG InterruptStatus, CommandsIssued, CommandsCompleted;
     AHCI_PORT_REGISTER CommandRegister;
+
+    if ((ChanData->Channel == 0) && (ChanData->Controller->Flags & CTRL_FLAG_EXTRA_DEBUG))
+        DbgPrint("%s\n", __FUNCTION__);
 
     /* Clear all pending events */
     InterruptStatus = AHCI_PORT_READ(ChanData->IoBase, PxInterruptStatus);
@@ -407,6 +419,9 @@ AtaAhciHbaIsr(
 {
     PATA_CONTROLLER Controller = Context;
     ULONG Port, InterruptStatus, PortInterruptBitmap;
+
+    if (Controller->Flags & CTRL_FLAG_EXTRA_DEBUG)
+        DbgPrint("%s\n", __FUNCTION__);
 
     InterruptStatus = AHCI_HBA_READ(Controller->IoBase, HbaInterruptStatus);
     if (InterruptStatus == 0)

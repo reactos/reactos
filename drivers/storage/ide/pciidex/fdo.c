@@ -162,6 +162,7 @@ AtaCtrlStartPciController(
             /* Generic PCI IDE controller */
             WARN("Using generic PCI IDE minidriver\n");
             Status = PciIdeGetControllerProperties(Controller);
+            Controller->ChannelBitmap = NUM_TO_BITMAP(2);
         }
     }
     if (!NT_SUCCESS(Status))
@@ -393,6 +394,59 @@ AtaCtrlDowngradeInterfaceSpeed(
     return FALSE;
 }
 
+#if DBG
+static
+VOID
+AhciDumpPortCmdStatus(
+    _In_ ULONG PxCmd)
+{
+    DbgPrint("ISS=%u ", (PxCmd & AHCI_PXCMD_ICC_MASK) >> 28);
+    if (PxCmd & AHCI_PXCMD_ST)
+        DbgPrint("ST ");
+    if (PxCmd & AHCI_PXCMD_SUD)
+        DbgPrint("SUD ");
+    if (PxCmd & AHCI_PXCMD_POD)
+        DbgPrint("POD ");
+    if (PxCmd & AHCI_PXCMD_CLO)
+        DbgPrint("CLO ");
+    if (PxCmd & AHCI_PXCMD_FRE)
+        DbgPrint("FRE ");
+    if (PxCmd & AHCI_PXCMD_MPSS)
+        DbgPrint("MPSS ");
+    if (PxCmd & AHCI_PXCMD_FR)
+        DbgPrint("FR ");
+    if (PxCmd & AHCI_PXCMD_CR)
+        DbgPrint("CR ");
+    if (PxCmd & AHCI_PXCMD_CPS)
+        DbgPrint("CPS ");
+    if (PxCmd & AHCI_PXCMD_PMA)
+        DbgPrint("PMA ");
+    if (PxCmd & AHCI_PXCMD_HPCP)
+        DbgPrint("HPCP ");
+    if (PxCmd & AHCI_PXCMD_MPSP)
+        DbgPrint("MPSP ");
+    if (PxCmd & AHCI_PXCMD_CPD)
+        DbgPrint("CPD ");
+    if (PxCmd & AHCI_PXCMD_ESP)
+        DbgPrint("ESP ");
+    if (PxCmd & AHCI_PXCMD_FBSCP)
+        DbgPrint("FBSCP ");
+    if (PxCmd & AHCI_PXCMD_APSTE)
+        DbgPrint("APSTE ");
+    if (PxCmd & AHCI_PXCMD_ATAPI)
+        DbgPrint("ATAPI ");
+    if (PxCmd & AHCI_PXCMD_DLAE)
+        DbgPrint("DLAE ");
+    if (PxCmd & AHCI_PXCMD_ALPE)
+        DbgPrint("ALPE ");
+    if (PxCmd & AHCI_PXCMD_ASP)
+        DbgPrint("ASP ");
+
+    DbgPrint("CCS=%lu ", (PxCmd & AHCI_PXCMD_CCS_MASK) >> 8);
+    DbgPrint("\n");
+}
+#endif
+
 VOID
 AtaCtrlAbortChannel(
     _In_ PVOID ChannelContext,
@@ -407,7 +461,45 @@ AtaCtrlAbortChannel(
 
     /* Disable and clear pending interrupts */
     if (DisableInterrupts)
+    {
+#if DBG
+        if (ChanData->Controller->Flags & CTRL_FLAG_IS_AHCI)
+        {
+            PVOID IoBase = ((PCHANNEL_DATA_AHCI)ChanData)->IoBase;
+            ULONG CmdStatus;
+
+            DbgPrint("PxIS     0x%08lX\n", AHCI_PORT_READ(IoBase, PxInterruptStatus));
+            DbgPrint("PxIE     0x%08lX\n", AHCI_PORT_READ(IoBase, PxInterruptEnable));
+            CmdStatus = AHCI_PORT_READ(IoBase, PxCmdStatus);
+            DbgPrint("PxCMD    0x%08lX ", CmdStatus);
+            AhciDumpPortCmdStatus(CmdStatus);
+            DbgPrint("PxTFD    0x%08lX\n", AHCI_PORT_READ(IoBase, PxTaskFileData));
+            DbgPrint("PxSIG    0x%08lX\n", AHCI_PORT_READ(IoBase, PxSignature));
+            DbgPrint("PxSSTS   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataStatus));
+            DbgPrint("PxSCTL   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataControl));
+            DbgPrint("PxSERR   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataError));
+            DbgPrint("PxSACT   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataActive));
+            DbgPrint("PxCI     0x%08lX\n", AHCI_PORT_READ(IoBase, PxCommandIssue));
+            DbgPrint("PxSNTF   0x%08lX\n", AHCI_PORT_READ(IoBase, PxSataNotification));
+            DbgPrint("PxFBS    0x%08lX\n", AHCI_PORT_READ(IoBase, PxFisSwitchingControl));
+            DbgPrint("PxDEVSLP 0x%08lX\n", AHCI_PORT_READ(IoBase, PxDeviceSleep));
+
+            DbgPrint("CAP        0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 0 * 4));
+            DbgPrint("GHC        0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 1 * 4));
+            DbgPrint("IS         0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 2 * 4));
+            DbgPrint("PI         0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 3 * 4));
+            DbgPrint("VS         0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 4 * 4));
+            DbgPrint("CCC_CTL    0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 5 * 4));
+            DbgPrint("CCC_PORTS  0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 6 * 4));
+            DbgPrint("EM_LOC     0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 7 * 4));
+            DbgPrint("EM_CT      0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 8 * 4));
+            DbgPrint("CAP2       0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 9 * 4));
+            DbgPrint("BOHC       0x%08lX\n", AHCI_HBA_READ(ChanData->Controller->IoBase, 10* 4));
+        }
+#endif
+
         ChanData->EnableInterrupts(ChanData, FALSE);
+    }
 }
 
 CODE_SEG("PAGE")
