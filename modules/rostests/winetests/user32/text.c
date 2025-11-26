@@ -524,6 +524,11 @@ static void test_DrawTextCalcRect(void)
 
         /* When passing invalid DC, other parameters must be ignored - no crashes on invalid pointers */
 
+#ifdef __REACTOS__
+        if (is_reactos()) {
+            ok(FALSE, "FIXME: invalid pointer tests crash on ReactOS.\n");
+        } else {
+#endif
         SetLastError(0xdeadbeef);
         textheight = DrawTextExW((HDC)0xdeadbeef, (LPWSTR)0xdeadbeef, 100000, &rect, 0, 0);
         ok(textheight == 0, "Got textheight from DrawTextExW\n");
@@ -538,6 +543,9 @@ static void test_DrawTextCalcRect(void)
         textheight = DrawTextExA((HDC)0xdeadbeef, 0, -1, (LPRECT)0xdeadbeef, DT_CALCRECT, 0);
         ok(textheight == 0, "Got textheight from DrawTextExA\n");
         ok(GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_INVALID_HANDLE,"Got error %lu\n", GetLastError());
+#ifdef __REACTOS__
+        }
+#endif
 
         if (0)
         {

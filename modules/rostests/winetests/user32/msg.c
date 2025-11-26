@@ -12680,6 +12680,12 @@ static void test_recursive_hook(void)
     MSG msg;
     BOOL b;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: Recursive msg tests crash on ReactOS!\n");
+        return;
+    }
+#endif
     hook_hwnd = CreateWindowExA(WS_EX_TOPMOST, "Static", NULL, WS_POPUP | WS_VISIBLE, 0, 0, 200, 60,
                                 NULL, NULL, NULL, NULL);
     ok(hook_hwnd != NULL, "CreateWindow failed\n");
@@ -12789,6 +12795,12 @@ static void test_recursive_messages(void)
     WNDCLASSA cls = {0};
     HWND hwnd;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: Recursive msg tests crash on ReactOS!\n");
+        return;
+    }
+#endif
     cls.lpfnWndProc = recursive_messages_proc;
     cls.hInstance = GetModuleHandleA(0);
     cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
@@ -13683,6 +13695,13 @@ static void test_edit_messages(void)
     DWORD dlg_code;
     HANDLE thread;
 
+#ifdef __REACTOS__
+    /* test_edit_messages() crashes on Windows Vista and Windows 7 */
+    if (!is_reactos() && (GetNTVersion() >= _WIN32_WINNT_VISTA && GetNTVersion() <= _WIN32_WINNT_WIN7)) {
+        skip("This test crashes on Windows Vista and Windows 7.\n");
+        return;
+    }
+#endif
     subclass_edit();
     log_all_parent_messages++;
 
@@ -20489,7 +20508,7 @@ static void test_restore_messages(void)
     INT i;
 
 #ifdef __REACTOS__
-    if (GetNTVersion() == _WIN32_WINNT_WIN7) {
+    if (GetNTVersion() == _WIN32_WINNT_WIN7 && !is_reactos()) {
         skip("The Alt+Tab tests here can cause Windows 7 to lock up\n");
         return;
     }
@@ -20931,10 +20950,6 @@ START_TEST(msg)
     test_DestroyWindow();
     test_DispatchMessage();
     test_SendMessageTimeout();
-#ifdef __REACTOS__
-    /* test_edit_messages() crashes on Windows Vista and Windows 7 */
-    if (!((GetVersion() & 0xFFFF) == 0x0006 || (GetVersion() & 0xFFFF) == 0x0106))
-#endif
     test_edit_messages();
     test_quit_message();
     test_notify_message();
