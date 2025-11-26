@@ -18,15 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #define COBJMACROS
 
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -39,8 +35,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -127,7 +121,7 @@ static ULONG WINAPI xmlnodemap_AddRef(
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -137,13 +131,14 @@ static ULONG WINAPI xmlnodemap_Release(
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
         xmlnode_release( This->node );
         xmldoc_release( This->node->doc );
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        heap_free( This );
+        free( This );
     }
 
     return ref;
@@ -231,7 +226,7 @@ static HRESULT WINAPI xmlnodemap_get_item(
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
-    TRACE("(%p)->(%d %p)\n", This, index, item);
+    TRACE("%p, %ld, %p.\n", iface, index, item);
 
     return This->funcs->get_item(This->node, index, item);
 }
@@ -279,7 +274,7 @@ static HRESULT WINAPI xmlnodemap_nextNode(
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
-    TRACE("(%p)->(%p: %d)\n", This, nextItem, This->iterator);
+    TRACE("%p, %p, %ld.\n", iface, nextItem, This->iterator);
 
     return This->funcs->next_node(This->node, &This->iterator, nextItem);
 }
@@ -289,7 +284,7 @@ static HRESULT WINAPI xmlnodemap_reset(
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( iface );
 
-    TRACE("(%p)->(%d)\n", This, This->iterator);
+    TRACE("%p, %ld.\n", iface, This->iterator);
 
     This->iterator = 0;
 
@@ -371,13 +366,13 @@ static HRESULT xmlnodemap_get_dispid(IUnknown *iface, BSTR name, DWORD flags, DI
     WCHAR *ptr;
     int idx = 0;
 
-    for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
+    for(ptr = name; *ptr >= '0' && *ptr <= '9'; ptr++)
         idx = idx*10 + (*ptr-'0');
     if(*ptr)
         return DISP_E_UNKNOWNNAME;
 
     *dispid = DISPID_DOM_COLLECTION_BASE + idx;
-    TRACE("ret %x\n", *dispid);
+    TRACE("ret %lx\n", *dispid);
     return S_OK;
 }
 
@@ -386,7 +381,7 @@ static HRESULT xmlnodemap_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fla
 {
     xmlnodemap *This = impl_from_IXMLDOMNamedNodeMap( (IXMLDOMNamedNodeMap*)iface );
 
-    TRACE("(%p)->(%x %x %x %p %p %p)\n", This, id, lcid, flags, params, res, ei);
+    TRACE("%p, %ld, %lx, %x, %p, %p, %p.\n", iface, id, lcid, flags, params, res, ei);
 
     V_VT(res) = VT_DISPATCH;
     V_DISPATCH(res) = NULL;
@@ -437,7 +432,7 @@ IXMLDOMNamedNodeMap *create_nodemap(xmlNodePtr node, const struct nodemap_funcs 
 {
     xmlnodemap *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -456,5 +451,3 @@ IXMLDOMNamedNodeMap *create_nodemap(xmlNodePtr node, const struct nodemap_funcs 
 
     return &This->IXMLDOMNamedNodeMap_iface;
 }
-
-#endif
