@@ -18,17 +18,17 @@
 #include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
-#include <libxml/valid.h>
 #include <libxml/debugXML.h>
 #include <libxml/HTMLtree.h>
 #include <libxml/HTMLparser.h>
 #include <libxml/xmlerror.h>
-#include <libxml/globals.h>
 #include <libxml/xpathInternals.h>
 #include <libxml/uri.h>
 #ifdef LIBXML_SCHEMAS_ENABLED
 #include <libxml/relaxng.h>
 #endif
+
+#include "private/error.h"
 
 #define DUMP_TEXT_TYPE 1
 
@@ -2633,7 +2633,7 @@ xmlShellValidate(xmlShellCtxtPtr ctxt, char *dtd,
     int res = -1;
 
     if ((ctxt == NULL) || (ctxt->doc == NULL)) return(-1);
-    vctxt.userData = NULL;
+    memset(&vctxt, 0, sizeof(vctxt));
     vctxt.error = xmlGenericError;
     vctxt.warning = xmlGenericError;
 
