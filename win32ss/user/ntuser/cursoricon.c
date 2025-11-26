@@ -658,12 +658,6 @@ NtUserGetCursorInfo(
     TRACE("Enter NtUserGetCursorInfo\n");
     UserEnterShared();
 
-    if (pci == NULL || (PVOID)pci > MmHighestUserAddress)
-    {
-        EngSetLastError(ERROR_NOACCESS);
-        goto end;
-    }
-
     CurInfo = IntGetSysCursorInfo();
     CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
@@ -697,7 +691,6 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-end:
     UserLeave();
     TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     
