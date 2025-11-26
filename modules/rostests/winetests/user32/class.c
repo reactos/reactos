@@ -1661,14 +1661,6 @@ static void test_uxtheme(void)
 
 static void test_class_name(void)
 {
-#ifdef __REACTOS__
-    /* FIXME: ReactOS crashes in the test below (Windows does not.)
-     * Because this crash is masked in testman, we chose to not build
-     * this test.
-     *
-     * TODO: Fix ReactOS to not crash when running the test below.
-     */
-#else
     WCHAR class_name[] = L"ClassNameTest";
     HINSTANCE hinst = GetModuleHandleW(0);
     WNDCLASSEXW wcex;
@@ -1677,6 +1669,12 @@ static void test_class_name(void)
     UINT_PTR res;
     HWND hwnd;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: ReactOS crashes on test_class_name()!\n");
+        return;
+    }
+#endif
     memset(&wcex, 0, sizeof wcex);
     wcex.cbSize        = sizeof wcex;
     wcex.lpfnWndProc   = ClassTest_WndProc;
@@ -1712,7 +1710,6 @@ static void test_class_name(void)
 
     DestroyWindow(hwnd);
     UnregisterClassW(class_name, hinst);
-#endif
 }
 
 START_TEST(class)

@@ -43,8 +43,6 @@
 #ifdef __REACTOS__
 #include "devpropdef.h"
 
-#define winetest_platform_is_wine FALSE
-
 typedef struct DISPLAYCONFIG_GET_SOURCE_DPI_SCALE
 {
     DISPLAYCONFIG_DEVICE_INFO_HEADER header;
