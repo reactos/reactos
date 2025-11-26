@@ -10,7 +10,24 @@
  * Bjorn Reese <breese@users.sourceforge.net>
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <math.h>
+#include <limits.h>
+#include <float.h>
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/parserInternals.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
+#include <libxml/encoding.h>
+#include "xsltutils.h"
+#include "pattern.h"
+#include "templates.h"
+#include "transform.h"
+#include "numbersInternals.h"
 
 #ifndef FALSE
 # define FALSE (0 == 1)
@@ -99,7 +116,7 @@ xsltIsLetterDigit(int val) {
 #define IS_DIGIT_ONE(x) xsltIsDigitZero((x)-1)
 
 static int
-xsltIsDigitZero(unsigned int ch)
+xsltIsDigitZero(int ch)
 {
     /*
      * Reference: ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
@@ -166,7 +183,7 @@ xsltNumberFormatDecimal(xmlBufferPtr buffer,
 	        i = -1;
 		break;
 	    }
-	    *(--pointer) = (xmlChar)val;
+	    *(--pointer) = val;
 	}
 	else {
 	/*
@@ -336,8 +353,7 @@ xsltNumberFormatTokenize(const xmlChar *format,
      * Insert initial non-alphanumeric token.
      * There is always such a token in the list, even if NULL
      */
-    while (!xsltIsLetterDigit(val = xmlStringCurrentChar(NULL, format+ix,
-                                                         &len))) {
+    while (!xsltIsLetterDigit(val = xsltGetUTF8CharZ(format+ix, &len))) {
 	if (format[ix] == 0)		/* if end of format string */
 	    break; /* while */
 	ix += len;
@@ -360,19 +376,19 @@ xsltNumberFormatTokenize(const xmlChar *format,
 	    tokens->end = NULL;
 	}
 
-	val = xmlStringCurrentChar(NULL, format+ix, &len);
+	val = xsltGetUTF8CharZ(format+ix, &len);
 	if (IS_DIGIT_ONE(val) ||
 		 IS_DIGIT_ZERO(val)) {
 	    tokens->tokens[tokens->nTokens].width = 1;
 	    while (IS_DIGIT_ZERO(val)) {
 		tokens->tokens[tokens->nTokens].width++;
 		ix += len;
-		val = xmlStringCurrentChar(NULL, format+ix, &len);
+		val = xsltGetUTF8CharZ(format+ix, &len);
 	    }
 	    if (IS_DIGIT_ONE(val)) {
 		tokens->tokens[tokens->nTokens].token = val - 1;
 		ix += len;
-		val = xmlStringCurrentChar(NULL, format+ix, &len);
+		val = xsltGetUTF8CharZ(format+ix, &len);
 	    } else {
                 tokens->tokens[tokens->nTokens].token = '0';
                 tokens->tokens[tokens->nTokens].width = 1;
@@ -383,7 +399,7 @@ xsltNumberFormatTokenize(const xmlChar *format,
 		    (val == 'i') ) {
 	    tokens->tokens[tokens->nTokens].token = val;
 	    ix += len;
-	    val = xmlStringCurrentChar(NULL, format+ix, &len);
+	    val = xsltGetUTF8CharZ(format+ix, &len);
 	} else {
 	    /* XSLT section 7.7
 	     * "Any other format token indicates a numbering sequence
@@ -405,7 +421,7 @@ xsltNumberFormatTokenize(const xmlChar *format,
 	 */
 	while (xsltIsLetterDigit(val)) {
 	    ix += len;
-	    val = xmlStringCurrentChar(NULL, format+ix, &len);
+	    val = xsltGetUTF8CharZ(format+ix, &len);
 	}
 
 	/*
@@ -416,7 +432,7 @@ xsltNumberFormatTokenize(const xmlChar *format,
 	    if (val == 0)
 		break; /* while */
 	    ix += len;
-	    val = xmlStringCurrentChar(NULL, format+ix, &len);
+	    val = xsltGetUTF8CharZ(format+ix, &len);
 	}
 	if (ix > j)
 	    tokens->end = xmlStrndup(&format[j], ix - j);
@@ -948,6 +964,7 @@ xsltFormatNumberConversion(xsltDecimalFormatPtr self,
     xmlChar *the_format, *prefix = NULL, *suffix = NULL;
     xmlChar *nprefix, *nsuffix = NULL;
     int	    prefix_length, suffix_length = 0, nprefix_length, nsuffix_length;
+    int     exp10;
     double  scale;
     int	    j, len = 0;
     int     self_grouping_len;
@@ -968,32 +985,12 @@ xsltFormatNumberConversion(xsltDecimalFormatPtr self,
 		"Invalid format (0-length)\n");
     }
     *result = NULL;
-    switch (xmlXPathIsInf(number)) {
-	case -1:
-	    if (self->minusSign == NULL)
-		*result = xmlStrdup(BAD_CAST "-");
-	    else
-		*result = xmlStrdup(self->minusSign);
-	    /* Intentional fall-through */
-	case 1:
-	    if ((self == NULL) || (self->infinity == NULL))
-		*result = xmlStrcat(*result, BAD_CAST "Infinity");
-	    else
-		*result = xmlStrcat(*result, self->infinity);
-	    return(status);
-	default:
-	    if (xmlXPathIsNaN(number)) {
-		if ((self == NULL) || (self->noNumber == NULL))
-		    *result = xmlStrdup(BAD_CAST "NaN");
-		else
-		    *result = xmlStrdup(self->noNumber);
-		return(status);
-	    }
-    }
-
-    buffer = xmlBufferCreate();
-    if (buffer == NULL) {
-	return XPATH_MEMORY_ERROR;
+    if (xmlXPathIsNaN(number)) {
+        if ((self == NULL) || (self->noNumber == NULL))
+            *result = xmlStrdup(BAD_CAST "NaN");
+        else
+            *result = xmlStrdup(self->noNumber);
+        return(status);
     }
 
     format_info.integer_hash = 0;
@@ -1266,6 +1263,30 @@ OUTPUT_NUMBER:
 	format_info.add_decimal = TRUE;
     }
 
+    /* Apply multiplier */
+    number *= (double)format_info.multiplier;
+    switch (xmlXPathIsInf(number)) {
+	case -1:
+	    if (self->minusSign == NULL)
+		*result = xmlStrdup(BAD_CAST "-");
+	    else
+		*result = xmlStrdup(self->minusSign);
+	    /* Intentional fall-through */
+	case 1:
+	    if ((self == NULL) || (self->infinity == NULL))
+		*result = xmlStrcat(*result, BAD_CAST "Infinity");
+	    else
+		*result = xmlStrcat(*result, self->infinity);
+	    return(status);
+	default:
+            break;
+    }
+
+    buffer = xmlBufferCreate();
+    if (buffer == NULL) {
+	return XPATH_MEMORY_ERROR;
+    }
+
     /* Ready to output our number.  First see if "default sign" is required */
     if (default_sign != 0)
 	xmlBufferAdd(buffer, self->minusSign, xmlUTF8Strsize(self->minusSign, 1));
@@ -1280,10 +1301,24 @@ OUTPUT_NUMBER:
         j += len;
     }
 
+    /* Round to n digits */
+    number = fabs(number);
+    exp10 = format_info.frac_digits + format_info.frac_hash;
+    /* DBL_MAX_10_EXP should be 308 on IEEE platforms. */
+    if (exp10 > DBL_MAX_10_EXP) {
+        if (format_info.frac_digits > DBL_MAX_10_EXP) {
+            format_info.frac_digits = DBL_MAX_10_EXP;
+            format_info.frac_hash = 0;
+        } else {
+            format_info.frac_hash = DBL_MAX_10_EXP - format_info.frac_digits;
+        }
+        exp10 = DBL_MAX_10_EXP;
+    }
+    scale = pow(10.0, (double) exp10);
+    number += .5 / scale;
+    number -= fmod(number, 1 / scale);
+
     /* Next do the integer part of the number */
-    number = fabs(number) * (double)format_info.multiplier;
-    scale = pow(10.0, (double)(format_info.frac_digits + format_info.frac_hash));
-    number = floor((scale * number + 0.5)) / scale;
     if ((self->grouping != NULL) &&
         (self->grouping[0] != 0)) {
         int gchar;

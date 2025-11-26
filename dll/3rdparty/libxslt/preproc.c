@@ -15,7 +15,31 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/valid.h>
+#include <libxml/hash.h>
+#include <libxml/uri.h>
+#include <libxml/encoding.h>
+#include <libxml/xmlerror.h>
+#include "xslt.h"
+#include "xsltutils.h"
+#include "xsltInternals.h"
+#include "transform.h"
+#include "templates.h"
+#include "variables.h"
+#include "numbersInternals.h"
+#include "preproc.h"
+#include "extra.h"
+#include "imports.h"
+#include "extensions.h"
+#include "pattern.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_PREPROC
@@ -368,8 +392,6 @@ xsltFreeStylePreComp(xsltStylePreCompPtr comp) {
             break;
         case XSLT_FUNC_SORT: {
 		xsltStyleItemSortPtr item = (xsltStyleItemSortPtr) comp;
-		if (item->locale != (xsltLocale)0)
-		    xsltFreeLocale(item->locale);
 		if (item->comp != NULL)
 		    xmlXPathFreeCompExpr(item->comp);
 	    }
@@ -472,8 +494,6 @@ xsltFreeStylePreComp(xsltStylePreCompPtr comp) {
 	    break;
     }
 #else
-    if (comp->locale != (xsltLocale)0)
-	xsltFreeLocale(comp->locale);
     if (comp->comp != NULL)
 	xmlXPathFreeCompExpr(comp->comp);
     if (comp->numdata.countPat != NULL)
@@ -719,12 +739,6 @@ xsltSortComp(xsltStylesheetPtr style, xmlNodePtr inst) {
     comp->lang = xsltEvalStaticAttrValueTemplate(style, inst,
 				 (const xmlChar *)"lang",
 				 NULL, &comp->has_lang);
-    if (comp->lang != NULL) {
-	comp->locale = xsltNewLocale(comp->lang);
-    }
-    else {
-        comp->locale = (xsltLocale)0;
-    }
 
     comp->select = xsltGetCNsProp(style, inst,(const xmlChar *)"select", XSLT_NAMESPACE);
     if (comp->select == NULL) {
