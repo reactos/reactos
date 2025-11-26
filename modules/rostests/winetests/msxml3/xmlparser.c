@@ -108,44 +108,44 @@ static void create_test(void)
     hr = CoCreateInstance(&CLSID_XMLParser30, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLParser, (void**)&parser);
     if (FAILED(hr))
     {
-        win_skip("IXMLParser is not available (0x%08x)\n", hr);
+        win_skip("IXMLParser is not available, hr %#lx.\n", hr);
         return;
     }
 
     flags = IXMLParser_GetFlags(parser);
-    ok(flags == 0, "Expected 0 got %d\n", flags);
+    ok(!flags, "Unexpected flags %#lx.\n", flags);
 
     hr = IXMLParser_SetFlags(parser, XMLFLAG_SAX);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     flags = IXMLParser_GetFlags(parser);
-    ok(flags == XMLFLAG_SAX, "Expected 0 got %d\n", flags);
+    ok(flags == XMLFLAG_SAX, "Unexpected flags %ld.\n", flags);
 
     hr = IXMLParser_GetFactory(parser, NULL);
-    ok(hr == E_INVALIDARG, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLParser_GetFactory(parser, &nodefactory);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(nodefactory == NULL, "expected NULL\n");
 
     hr = IXMLParser_SetFactory(parser, &thenodefactory);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLParser_GetFactory(parser, &nodefactory);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(nodefactory == &thenodefactory, "expected NULL\n");
 
     hr = IXMLParser_SetInput(parser, NULL);
-    ok(hr == E_INVALIDARG, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLParser_SetFactory(parser, NULL);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLParser_SetFlags(parser, 0);
-    ok(hr == S_OK, "Expected S_OK got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     hr = IXMLParser_GetParserState(parser);
-    ok(hr == XMLPARSER_IDLE, "got 0x%08x\n", hr);
+    ok(hr == XMLPARSER_IDLE, "Unexpected hr %#lx.\n", hr);
 
     IXMLParser_Release(parser);
 }
