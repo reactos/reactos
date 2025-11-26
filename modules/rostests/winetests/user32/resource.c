@@ -164,6 +164,9 @@ static void test_LoadStringW(void)
 
 static void test_LoadStringA (void)
 {
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    skip("LoadStringA test broken on amd64!\n");
+#else
     HINSTANCE hInst = GetModuleHandleA(NULL);
     static const char str[] = "String resource"; /* same in resource.rc */
     char buf[128];
@@ -218,6 +221,7 @@ static void test_LoadStringA (void)
     ok( !ret, "LoadString returned %d\n", ret);
     ok( buf[0] == 0, "buf[0] = %c (%x)\n", buf[0], buf[0]);
     ok( GetLastError() == 0xdeadbeef, "GetLastError() = %ld\n", GetLastError());
+#endif
 }
 
 static void test_accel1(void)
@@ -496,11 +500,7 @@ static void test_LoadImage(void)
 START_TEST(resource)
 {
     init_function_pointers();
-#if !defined(__REACTOS__) || !defined(_M_AMD64)
     test_LoadStringA();
-#else
-    skip("LoadStringA test broken on amd64!\n");
-#endif
     test_LoadStringW();
     test_accel1();
     test_accel2();

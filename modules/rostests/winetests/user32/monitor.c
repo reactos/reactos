@@ -1898,7 +1898,9 @@ static void test_EnumDisplayMonitors(void)
 
 static void check_device_path(const WCHAR *device_path, const LUID *adapter_id, DWORD id)
 {
-#ifndef __REACTOS__ // TODO: We're missing some functions in setupapi before we can enable this
+#ifdef __REACTOS__
+    skip("FIXME: check_device_path() cannot be built until we add new functions to setupapi\n");
+#else
     BYTE iface_detail_buffer[sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W) + 256 * sizeof(WCHAR)];
     SP_DEVINFO_DATA device_data = {sizeof(device_data)};
     SP_DEVICE_INTERFACE_DATA iface = {sizeof(iface)};
@@ -1947,7 +1949,7 @@ static void check_device_path(const WCHAR *device_path, const LUID *adapter_id, 
     ok(found, "device_path %s not found, luid %04lx:%04lx.\n", debugstr_w(device_path), adapter_id->HighPart,
             adapter_id->LowPart);
     SetupDiDestroyDeviceInfoList(set);
-#endif // __REACTOS__
+#endif
 }
 
 static void check_preferred_mode(const DISPLAYCONFIG_TARGET_PREFERRED_MODE *mode, const WCHAR *gdi_device_name)

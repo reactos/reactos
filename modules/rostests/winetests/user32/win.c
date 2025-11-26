@@ -42,8 +42,6 @@
 #define ULONG_PTR UINT_PTR
 #ifdef __REACTOS__
 #define DCX_USESTYLE 0x00010000
-#define flaky
-#define flaky_wine
 #endif
 
 void dump_region(HRGN hrgn);
@@ -2915,6 +2913,13 @@ static void test_icons(void)
     HWND hwnd;
     BOOL ret;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+    {
+        skip("test_icons() crashes on Windows Server 2003 and ReactOS.\n");
+        return;
+    }
+#endif
     cls.lpfnWndProc = DefWindowProcA;
     cls.hIcon = icon4;
     cls.hIconSm = icon5;
@@ -8643,6 +8648,11 @@ static void test_gettext(void)
     }
 
     /* GetWindowText doesn't crash */
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: These tests crash on ReactOS!\n");
+    } else {
+#endif
     r = GetWindowTextA( hwnd, (LPSTR)0x10, 0x1000 );
     ok( r == 0, "GetWindowText should return zero (%Id)\n", r );
     r = GetWindowTextA( hwnd, (LPSTR)0x10000, 0 );
@@ -8660,6 +8670,9 @@ static void test_gettext(void)
     ok( r == 0, "GetWindowText should return zero (%Id)\n", r );
     r = GetWindowTextW( hwnd, (LPWSTR)0x1000, 0xff000000);
     ok( r == 0, "GetWindowText should return zero (%Id)\n", r );
+#ifdef __REACTOS__
+    }
+#endif
 
     DestroyWindow(hwnd);
 }
@@ -9363,6 +9376,11 @@ static void test_layered_window(void)
 
     ret = pSetLayeredWindowAttributes( hwnd, 0, 255, LWA_ALPHA );
     ok( ret, "SetLayeredWindowAttributes should succeed on layered window\n" );
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: This hangs on ReactOS!\n");
+    } else {
+#endif
     while (GetMessageA(&msg, 0, 0, 0))
     {
         DispatchMessageA(&msg);
@@ -9370,6 +9388,9 @@ static void test_layered_window(void)
         if (msg.message == WM_PAINT && msg.hwnd == child)
             break;
     }
+#ifdef __REACTOS__
+    }
+#endif
 
     DestroyWindow( hwnd );
     DeleteDC( hdc );
@@ -13621,10 +13642,6 @@ START_TEST(win)
     test_thread_exit_destroy();
     test_ncdestroy();
 
-#ifdef __REACTOS__
-    /* test_icons() crashes on Windows Server 2003 */
-    if ((GetVersion() & 0xFF) > 5)
-#endif
     test_icons();
     test_SetWindowPos(hwndMain, hwndMain2);
     test_SetMenu(hwndMain);

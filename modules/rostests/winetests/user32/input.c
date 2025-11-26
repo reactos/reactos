@@ -138,9 +138,6 @@ typedef struct tagPOINTER_INFO
 #define RIDEV_DEVNOTIFY    0x00002000
 #define RIDEV_EXMODEMASK   0x000000F0
 
-#define flaky_wine
-#define flaky
-
 WINUSERAPI INT         WINAPI GetWindowRgnBox(HWND,LPRECT);
 #endif
 

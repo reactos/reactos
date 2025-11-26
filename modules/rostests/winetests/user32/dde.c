@@ -2765,8 +2765,16 @@ START_TEST(dde)
     test_dde_aw_transaction( TRUE, TRUE );
     test_dde_aw_transaction( FALSE, FALSE );
 
+#if defined(__REACTOS__) && defined(__GNUC__)
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: Running these test_dde_aw_transaction() tests again crashes GCC ReactOS but not MSVC ReactOS!\n");
+    } else {
+#endif
     test_dde_aw_transaction( FALSE, TRUE );
     test_dde_aw_transaction( TRUE, FALSE );
+#if defined(__REACTOS__) && defined(__GNUC__)
+    }
+#endif
     test_dde_aw_transaction( TRUE, TRUE );
     test_dde_aw_transaction( FALSE, FALSE );
 
