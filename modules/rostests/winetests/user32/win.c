@@ -41,6 +41,7 @@
 #define LONG_PTR INT_PTR
 #define ULONG_PTR UINT_PTR
 #ifdef __REACTOS__
+/* Not in Windows SDK, but is in Wine headers */
 #define DCX_USESTYLE 0x00010000
 #endif
 
@@ -2914,8 +2915,7 @@ static void test_icons(void)
     BOOL ret;
 
 #ifdef __REACTOS__
-    if (GetNTVersion() <= _WIN32_WINNT_WS03)
-    {
+    if (GetNTVersion() <= _WIN32_WINNT_WS03) {
         skip("test_icons() crashes on Windows Server 2003 and ReactOS.\n");
         return;
     }

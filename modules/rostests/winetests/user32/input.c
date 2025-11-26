@@ -1315,7 +1315,11 @@ static void test_SendInput_keyboard_messages( WORD vkey, WORD scan, WCHAR wch, W
 
     struct send_input_keyboard_test unicode_vkey[] =
     {
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        {.scan = 0x3c0, .vkey = vkey, .flags = KEYEVENTF_UNICODE, .expect_state = { 0 /*[vkey] = 0x80*/},
+#else
         {.scan = 0x3c0, .vkey = vkey, .flags = KEYEVENTF_UNICODE, .expect_state = {/*[vkey] = 0x80*/},
+#endif
          .expect = {KEY_HOOK(WM_KEYDOWN, 0xc0, vkey), KEY_MSG(WM_KEYDOWN, 0xc0, vkey), WIN_MSG(WM_CHAR, wch, MAKELONG(1, 0xc0)), {0}}},
         {.scan = 0x3c0, .vkey = vkey, .flags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
          .expect = {KEY_HOOK(WM_KEYUP, 0xc0, vkey), KEY_MSG(WM_KEYUP, 0xc0, vkey), {0}}},
@@ -3343,12 +3347,46 @@ static const struct tounicode_tests
     { 0, shift, 'a', 1, {'A',0}},
     { 0, menu, 'a', 1, {'a',0}},
     { 0, shift|menu, 'a', 1, {'A',0}},
+#if defined(__REACTOS__) && defined(_MSC_VER)
+    { 0, shift|ctrl|menu, 'a', 0, {0}},
+#else
     { 0, shift|ctrl|menu, 'a', 0, {}},
+#endif
     { 0, ctrl, 'a', 1, {1, 0}},
     { 0, shift|ctrl, 'a', 1, {1, 0}},
+#if defined(__REACTOS__) && defined(_MSC_VER)
+    { VK_TAB, ctrl, 0, 0, {0}},
+    { VK_TAB, shift|ctrl, 0, 0, {0}},
+#else
     { VK_TAB, ctrl, 0, 0, {}},
     { VK_TAB, shift|ctrl, 0, 0, {}},
+#endif
     { VK_RETURN, ctrl, 0, 1, {'\n', 0}},
+#if defined(__REACTOS__) && defined(_MSC_VER)
+    { VK_RETURN, shift|ctrl, 0, 0, {0}},
+    { 0, ctrl, '4', 0, {0}},
+    { 0, shift|ctrl, '4', 0, {0}},
+    { 0, ctrl, '!', 0, {0}},
+    { 0, ctrl, '\"', 0, {0}},
+    { 0, ctrl, '#', 0, {0}},
+    { 0, ctrl, '$', 0, {0}},
+    { 0, ctrl, '%', 0, {0}},
+    { 0, ctrl, '\'', 0, {0}},
+    { 0, ctrl, '(', 0, {0}},
+    { 0, ctrl, ')', 0, {0}},
+    { 0, ctrl, '*', 0, {0}},
+    { 0, ctrl, '+', 0, {0}},
+    { 0, ctrl, ',', 0, {0}},
+    { 0, ctrl, '-', 0, {0}},
+    { 0, ctrl, '.', 0, {0}},
+    { 0, ctrl, '/', 0, {0}},
+    { 0, ctrl, ':', 0, {0}},
+    { 0, ctrl, ';', 0, {0}},
+    { 0, ctrl, '<', 0, {0}},
+    { 0, ctrl, '=', 0, {0}},
+    { 0, ctrl, '>', 0, {0}},
+    { 0, ctrl, '?', 0, {0}},
+#else
     { VK_RETURN, shift|ctrl, 0, 0, {}},
     { 0, ctrl, '4', 0, {}},
     { 0, shift|ctrl, '4', 0, {}},
@@ -3372,13 +3410,18 @@ static const struct tounicode_tests
     { 0, ctrl, '=', 0, {}},
     { 0, ctrl, '>', 0, {}},
     { 0, ctrl, '?', 0, {}},
+#endif
     { 0, ctrl, '@', 1, {0}},
     { 0, ctrl, '[', 1, {0x1b}},
     { 0, ctrl, '\\', 1, {0x1c}},
     { 0, ctrl, ']', 1, {0x1d}},
     { 0, ctrl, '^', 1, {0x1e}},
     { 0, ctrl, '_', 1, {0x1f}},
+#if defined(__REACTOS__) && defined(_MSC_VER)
+    { 0, ctrl, '`', 0, {0}},
+#else
     { 0, ctrl, '`', 0, {}},
+#endif
     { VK_SPACE, 0, 0, 1, {' ',0}},
     { VK_SPACE, shift, 0, 1, {' ',0}},
     { VK_SPACE, ctrl, 0, 1, {' ',0}},
