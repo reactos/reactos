@@ -473,6 +473,7 @@ PrepareFoldersToScan(
     DWORD CustomTextLength = 0;
     DWORD LengthNeeded = 0;
     LPWSTR Buffer;
+    INT idx = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
 
     /* Calculate length needed to store the search paths */
     if (IncludeRemovableDevices)
@@ -492,7 +493,8 @@ PrepareFoldersToScan(
     }
     if (IncludeCustomPath)
     {
-        CustomTextLength = 1 + ComboBox_GetTextLength(hwndCombo);
+        CustomTextLength = 1 + ((idx != CB_ERR) ?
+        (INT)SendMessageW(hwndCombo, CB_GETLBTEXTLEN, idx, 0) : ComboBox_GetTextLength(hwndCombo));
         LengthNeeded += CustomTextLength;
     }
 
@@ -526,7 +528,9 @@ PrepareFoldersToScan(
     }
     if (IncludeCustomPath)
     {
-        Buffer += 1 + GetWindowTextW(hwndCombo, Buffer, CustomTextLength);
+        Buffer += 1 + ((idx != CB_ERR) ?
+        SendMessageW(hwndCombo, CB_GETLBTEXT, idx, (LPARAM)Buffer) :
+        GetWindowTextW(hwndCombo, Buffer, CustomTextLength));
     }
     *Buffer = '\0';
 
