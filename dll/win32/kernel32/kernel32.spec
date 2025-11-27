@@ -174,7 +174,7 @@
 @ stdcall -stub -version=0x600+ CreateThreadpoolIo(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ CreateThreadpoolTimer(ptr ptr ptr)
 @ stdcall -stub -version=0x600+ CreateThreadpoolWait(ptr ptr ptr)
-@ stdcall -stub -version=0x600+ CreateThreadpoolWork(ptr ptr ptr)
+@ stdcall -version=0x600+ CreateThreadpoolWork(ptr ptr ptr)
 @ stdcall CreateTimerQueue()
 @ stdcall CreateTimerQueueTimer(ptr long ptr ptr long long long)
 @ stdcall CreateToolhelp32Snapshot(long long)
@@ -1159,7 +1159,7 @@
 @ stdcall -version=0x601+ TryAcquireSRWLockExclusive(ptr) ntdll.RtlTryAcquireSRWLockExclusive
 @ stdcall -version=0x601+ TryAcquireSRWLockShared(ptr) ntdll.RtlTryAcquireSRWLockShared
 @ stdcall TryEnterCriticalSection(ptr) ntdll.RtlTryEnterCriticalSection
-@ stub -version=0x600+ TrySubmitThreadpoolCallback
+@ stdcall -version=0x600+  TrySubmitThreadpoolCallback(ptr ptr ptr)
 @ stdcall TzSpecificLocalTimeToSystemTime(ptr ptr ptr)
 @ stdcall UTRegister(long str str str ptr ptr ptr)
 @ stdcall UTUnRegister(long)

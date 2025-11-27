@@ -26,7 +26,7 @@ cpp_quote("#include <wingdi.h>")
     threading(both),
     uuid(670d1d20-a068-11d0-b3f0-00aa003761c5)  /* IAMCopyCaptureFileProgress */
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
     helpstring("Filter Graph"),
@@ -85,20 +85,6 @@ coclass SeekingPassThru { interface ISeekingPassThru; }
 coclass AsyncReader { interface IBaseFilter; }
 
 [
-    helpstring("AVI Splitter"),
-    threading(both),
-    uuid(1b544c20-fd0b-11ce-8c63-00aa0044b51e)
-]
-coclass AviSplitter { interface IBaseFilter; }
-
-[
-    helpstring("MPEG-I Stream Splitter"),
-    threading(both),
-    uuid(336475d0-942a-11ce-a870-00aa002feab5)
-]
-coclass MPEG1Splitter { interface IBaseFilter; }
-
-[
     helpstring("AVI Decompressor"),
     threading(both),
     uuid(cf49d4e0-1115-11ce-b03a-0020af0ba770)
@@ -118,13 +104,6 @@ coclass DSoundRender { interface IBaseFilter; }
     uuid(e30629d1-27e5-11ce-875d-00608cb78066)
 ]
 coclass AudioRender { interface IBaseFilter; }
-
-[
-    helpstring("Null Renderer"),
-    threading(both),
-    uuid(c1f400a4-3f08-11d3-9f0b-006008039e37)
-]
-coclass NullRenderer { interface IBaseFilter; }
 
 [
     helpstring("Video Renderer"),
@@ -148,13 +127,6 @@ coclass VideoRendererDefault { interface IBaseFilter; }
 coclass ACMWrapper { interface IBaseFilter; }
 
 [
-    helpstring("Wave Parser"),
-    threading(both),
-    uuid(d51bd5a1-7548-11cf-a520-0080c77ef58a)
-]
-coclass WAVEParser { interface IBaseFilter; }
-
-[
     helpstring("Video Mixing Renderer"),
     threading(both),
     uuid(b87beb7b-8d29-423f-ae4d-6582c10175ac)
@@ -167,3 +139,44 @@ coclass VideoMixingRenderer { interface IBaseFilter; }
     uuid(51b4abf3-748f-4e3b-a276-c828330e926a)
 ]
 coclass VideoMixingRenderer9 { interface IBaseFilter; }
+
+[
+    threading(both),
+    uuid(99d54f63-1a69-41ae-aa4d-c976eb3f0713)
+]
+coclass AllocPresenter {}
+
+[
+    helpstring("MPEG-I Stream Splitter"),
+    threading(both),
+    uuid(336475d0-942a-11ce-a870-00aa002feab5)
+]
+coclass MPEG1Splitter {}
+
+[
+    helpstring("AVI Splitter"),
+    threading(both),
+    uuid(1b544c20-fd0b-11ce-8c63-00aa0044b51e)
+]
+coclass AviSplitter {}
+
+[
+    helpstring("Wave Parser"),
+    threading(both),
+    uuid(d51bd5a1-7548-11cf-a520-0080c77ef58a)
+]
+coclass WAVEParser {}
+
+[
+    helpstring("MPEG Audio Decoder"),
+    threading(both),
+    uuid(4a2286e0-7bef-11ce-9bd9-0000e202599c)
+]
+coclass CMpegAudioCodec {}
+
+[
+    helpstring("MPEG Video Decoder"),
+    threading(both),
+    uuid(feb50740-7bef-11ce-9bd9-0000e202599c)
+]
+coclass CMpegVideoCodec {}

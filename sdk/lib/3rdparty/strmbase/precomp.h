@@ -7,8 +7,6 @@
 #include <assert.h>
 
 #define COBJMACROS
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
 
 #include <dshow.h>
 #include <wine/debug.h>
