@@ -301,14 +301,13 @@ CAvailableApplicationInfo::IsCompatible() const
     CStringW szBuffer;
     if (m_Parser->GetString(DB_OSBUILD, szBuffer))
     {
-        PWSTR start = szBuffer.GetBuffer(), p = start;
-        UINT minb = StrToIntW(p);
-        while (*p >= '0' && *p <= '9')
-            ++p;
+        PWSTR start = szBuffer.GetBuffer();
+        PWSTR p;
+        UINT minb = wcstoul(start, &p, 0);
         if (p > start)
         {
             UINT osb = GetOsBuildNumber();
-            UINT maxb = (*p == '-') ? (StrToIntW(++p)) : (*p == '+' ? UINT_MAX : 0);
+            UINT maxb = (*p == '-') ? wcstoul(++p, NULL, 0) : (*p == '+' ? UINT_MAX : 0);
             return maxb && osb >= minb && osb <= maxb;
         }
     }
