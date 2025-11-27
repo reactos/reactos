@@ -295,7 +295,7 @@ MakeQuotedString(
     if (pszQuotedString == NULL)
         return NULL;
 
-    swprintf(pszQuotedString, L"\"%s\"", pszQuotedString);
+    swprintf(pszQuotedString, L"\"%s\"", pszString);
 
     return pszQuotedString;
 }
