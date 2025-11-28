@@ -29,8 +29,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -136,8 +134,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
   ULONG bytesReadBuffer;
   HRESULT res;
 
-  TRACE("(%p, %p, %d, %p)\n",
-	iface, pv, cb, pcbRead);
+  TRACE("%p, %p, %lu, %p.\n", iface, pv, cb, pcbRead);
 
   if (!This->parentStorage)
   {
@@ -167,7 +164,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
     This->currentPosition.QuadPart += *pcbRead;
   }
 
-  TRACE("<-- %08x\n", res);
+  TRACE("<-- %#lx\n", res);
   return res;
 }
 
@@ -192,8 +189,7 @@ static HRESULT WINAPI StgStreamImpl_Write(
   ULONG bytesWritten = 0;
   HRESULT res;
 
-  TRACE("(%p, %p, %d, %p)\n",
-	iface, pv, cb, pcbWritten);
+  TRACE("%p, %p, %lu, %p.\n", iface, pv, cb, pcbWritten);
 
   /*
    * Do we have permission to write to this stream?
@@ -204,7 +200,7 @@ static HRESULT WINAPI StgStreamImpl_Write(
   case STGM_READWRITE:
       break;
   default:
-      WARN("access denied by flags: 0x%x\n", STGM_ACCESS_MODE(This->grfMode));
+      WARN("access denied by flags: %#lx\n", STGM_ACCESS_MODE(This->grfMode));
       return STG_E_ACCESSDENIED;
   }
 
@@ -250,7 +246,7 @@ static HRESULT WINAPI StgStreamImpl_Write(
   if (SUCCEEDED(res))
     res = StorageBaseImpl_Flush(This->parentStorage);
 
-  TRACE("<-- %08x, written %u\n", res, *pcbWritten);
+  TRACE("<-- %#lx, written %lu\n", res, *pcbWritten);
   return res;
 }
 
@@ -274,8 +270,7 @@ static HRESULT WINAPI StgStreamImpl_Seek(
   DirEntry currentEntry;
   HRESULT hr;
 
-  TRACE("(%p, %d, %d, %p)\n",
-	iface, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+  TRACE("%p, %ld, %ld, %p.\n", iface, dlibMove.LowPart, dwOrigin, plibNewPosition);
 
   /*
    * fail if the stream has no parent (as does windows)
@@ -316,7 +311,7 @@ static HRESULT WINAPI StgStreamImpl_Seek(
       *plibNewPosition = currentEntry.size;
       break;
     default:
-      WARN("invalid dwOrigin %d\n", dwOrigin);
+      WARN("invalid dwOrigin %ld\n", dwOrigin);
       return STG_E_INVALIDFUNCTION;
   }
 
@@ -345,7 +340,7 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
 
   HRESULT      hr;
 
-  TRACE("(%p, %d)\n", iface, libNewSize.u.LowPart);
+  TRACE("%p, %ld.\n", iface, libNewSize.LowPart);
 
   if(!This->parentStorage)
   {
@@ -356,9 +351,9 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
   /*
    * As documented.
    */
-  if (libNewSize.u.HighPart != 0)
+  if (libNewSize.HighPart != 0)
   {
-    WARN("invalid value for libNewSize.u.HighPart %d\n", libNewSize.u.HighPart);
+    WARN("invalid value for libNewSize.HighPart %ld\n", libNewSize.HighPart);
     return STG_E_INVALIDFUNCTION;
   }
 
@@ -400,8 +395,7 @@ static HRESULT WINAPI StgStreamImpl_CopyTo(
   ULARGE_INTEGER totalBytesRead;
   ULARGE_INTEGER totalBytesWritten;
 
-  TRACE("(%p, %p, %d, %p, %p)\n",
-	iface, pstm, cb.u.LowPart, pcbRead, pcbWritten);
+  TRACE("%p, %p, %ld, %p, %p.\n", iface, pstm, cb.LowPart, pcbRead, pcbWritten);
 
   /*
    * Sanity check
@@ -424,7 +418,7 @@ static HRESULT WINAPI StgStreamImpl_CopyTo(
     if ( cb.QuadPart >= sizeof(tmpBuffer) )
       copySize = sizeof(tmpBuffer);
     else
-      copySize = cb.u.LowPart;
+      copySize = cb.LowPart;
 
     IStream_Read(iface, tmpBuffer, copySize, &bytesRead);
 
@@ -547,7 +541,7 @@ static HRESULT WINAPI StgStreamImpl_Stat(
   DirEntry     currentEntry;
   HRESULT      hr;
 
-  TRACE("%p %p %d\n", This, pstatstg, grfStatFlag);
+  TRACE("%p, %p, %#lx.\n", This, pstatstg, grfStatFlag);
 
   /*
    * if stream has no parent, return STG_E_REVERTED
@@ -700,8 +694,8 @@ StgStreamImpl* StgStreamImpl_Construct(
     /*
      * Start the stream at the beginning.
      */
-    newStream->currentPosition.u.HighPart = 0;
-    newStream->currentPosition.u.LowPart = 0;
+    newStream->currentPosition.HighPart = 0;
+    newStream->currentPosition.LowPart = 0;
 
     /* add us to the storage's list of active streams */
     StorageBaseImpl_AddStream(parentStorage, newStream);
