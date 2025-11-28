@@ -582,8 +582,15 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     IQS_NONE,
     /* ThreadContainerId */
     IQS_NONE,
+
     /* ThreadNameInformation */
-    IQS_NONE,
+    IQS_SAME
+    (
+        UNICODE_STRING,
+        ULONG_PTR,
+        ICIF_QUERY | ICIF_SET | ICIF_SIZE_VARIABLE
+    ),
+
     /* ThreadSelectedCpuSets */
     IQS_NONE,
     /* ThreadSystemThreadInformation */
