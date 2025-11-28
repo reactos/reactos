@@ -61,7 +61,11 @@ NdisAcquireReadWriteLock(
       KeAcquireSpinLock(&Lock->SpinLock, &LockState->OldIrql);
       /* Check if any other processor helds a shared lock. */
       for (ProcessorNumber = KeNumberProcessors; ProcessorNumber--; ) {
+        #if (NTDDI_VERSION >= NTDDI_WIN7)
+        if (ProcessorNumber != KeGetCurrentProcessorNumberEx(NULL)) {
+        #else
         if (ProcessorNumber != KeGetCurrentProcessorNumber()) {
+        #endif
           /* Wait till the shared lock is released. */
           while (Lock->RefCount[ProcessorNumber].RefCount != 0) {
             for (BusyLoop = 32; BusyLoop--; )
@@ -74,15 +78,27 @@ NdisAcquireReadWriteLock(
     }
   } else {
     KeRaiseIrql(DISPATCH_LEVEL, &LockState->OldIrql);
+    #if (NTDDI_VERSION >= NTDDI_WIN7)
+    RefCount = InterlockedIncrement((PLONG)&Lock->RefCount[KeGetCurrentProcessorNumberEx(NULL)].RefCount);
+    #else
     RefCount = InterlockedIncrement((PLONG)&Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount);
+    #endif
     /* Racing with a exclusive write lock case. */
     if (Lock->SpinLock != 0) {
       if (RefCount == 1) {
         if (Lock->Context != PsGetCurrentThread()) {
           /* Wait for the exclusive lock to be released. */
+          #if (NTDDI_VERSION >= NTDDI_WIN7)
+          Lock->RefCount[KeGetCurrentProcessorNumberEx(NULL)].RefCount--;
+          #else
           Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount--;
+          #endif
           KeAcquireSpinLockAtDpcLevel(&Lock->SpinLock);
+          #if (NTDDI_VERSION >= NTDDI_WIN7)
+          Lock->RefCount[KeGetCurrentProcessorNumberEx(NULL)].RefCount++;
+          #else
           Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount++;
+          #endif
           KeReleaseSpinLockFromDpcLevel(&Lock->SpinLock);
         }
       }
@@ -112,7 +128,11 @@ NdisReleaseReadWriteLock(
       return;
 
     case 3: /* Shared read lock */
+      #if (NTDDI_VERSION >= NTDDI_WIN7)
+      Lock->RefCount[KeGetCurrentProcessorNumberEx(NULL)].RefCount--;
+      #else
       Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount--;
+      #endif
       LockState->LockState = -1;
       if (LockState->OldIrql < DISPATCH_LEVEL)
         KeLowerIrql(LockState->OldIrql);
