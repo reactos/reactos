@@ -108,12 +108,11 @@ SESSION:
 -each logon session is associated with a window station
 
 WINDOW STATION:
--only Winsta0 has access to the display
--Only one window station, called Winsta0, can interact with the user display, keyboard, mouse
--is a secure object
--Only the interactive window station WinSta0, can display
-  output or receive input. Other window stations are used by "services"
- (but cant u switch winsta?? so a noninteractive winsta becomes active?)
+-Only one desktop is visible to the user and only one can receive input at any time.
+-Contains a logical display surface.
+-Contains windows (or a pointer to the desktop window).
+-Once a window is created, it cannot move between desktops.
+
 -contains a set of global atoms
 -contains a clipboard
 -contains a set of desktop objects
