@@ -475,9 +475,6 @@ static void test_schema_refs(void)
     hr = IXMLDOMSchemaCollection_get(cache, NULL, &node);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(node != NULL, "%p\n", node);
-#ifdef __REACTOS__
-    if (node != NULL)
-#endif
     IXMLDOMNode_Release(node);
 
     node = NULL;
@@ -485,9 +482,6 @@ static void test_schema_refs(void)
     hr = IXMLDOMSchemaCollection_get(cache, str, &node);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(node != NULL, "%p\n", node);
-#ifdef __REACTOS__
-    if (node != NULL)
-#endif
     IXMLDOMNode_Release(node);
     SysFreeString(str);
 
@@ -1024,9 +1018,6 @@ static void test_collection_content(void)
         ok(bstr != NULL && *bstr, "expected non-empty string\n");
         content[i] = bstr;
 
-#ifdef __REACTOS__
-        if (bstr == NULL) continue;
-#endif
         for (j = 0; j < i; ++j)
             ok(wcscmp(content[j], bstr), "got duplicate entry\n");
     }
@@ -1416,18 +1407,10 @@ static void test_XDR_datatypes(void)
             break;
         case VT_R8:
             if (!wcscmp(ptr->typename, L"float"))
-#ifdef __REACTOS__ // crash due to printf bug, will be fixed with import of wine's msvcrt
-                ok(V_R8(&v) == 3.14159, "got 0x%llx\n", *(unsigned long long*)&V_R8(&v));
-#else
                 ok(V_R8(&v) == 3.14159, "got %f\n", V_R8(&v));
-#endif
             else
             todo_wine
-#ifdef __REACTOS__ // crash due to printf bug, will be fixed with import of wine's msvcrt
-                ok(V_R8(&v) == 3.14159265358979323846, "got 0x%llx\n", *(unsigned long long*)&V_R8(&v));
-#else
                 ok(V_R8(&v) == 3.14159265358979323846, "got %.20f\n", V_R8(&v));
-#endif
             break;
         case VT_UI1:
             ok(V_UI1(&v) == 0xFF, "got %02x\n", V_UI1(&v));
