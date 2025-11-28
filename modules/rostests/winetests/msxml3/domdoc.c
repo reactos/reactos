@@ -4167,17 +4167,11 @@ static void test_removeNamedItem(void)
     removed_node = NULL;
     hr = IXMLDOMNamedNodeMap_removeNamedItem( map, _bstr_("ns:b"), &removed_node );
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
-#ifdef __REACTOS__
-    if (removed_node != NULL)
-#endif
     IXMLDOMNode_Release( removed_node );
 
     removed_node = NULL;
     hr = IXMLDOMNamedNodeMap_removeNamedItem( map, _bstr_("xml:lang"), &removed_node );
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
-#ifdef __REACTOS__
-    if (removed_node != NULL)
-#endif
     IXMLDOMNode_Release( removed_node );
 
     len = -1;
@@ -7383,9 +7377,6 @@ static void test_TransformWithLoadingLocalFile(void)
 
             hr = IXMLDOMDocument_QueryInterface(xsl, &IID_IXMLDOMNode, (void**)&pNode );
             ok(hr == S_OK, "Unexpected hr %#lx.\n", hr );
-#ifdef __REACTOS__ // RTC failure in libxslt!xmlXPathCompOpEval
-            if (!is_reactos())
-#endif
             if(hr == S_OK)
             {
                 /* This will load the temp file via the XSL */
@@ -8359,9 +8350,6 @@ static void test_get_ownerDocument(void)
     IXMLDOMDocument_Release(doc2);
     IXMLDOMDocument_Release(doc3);
     IXMLDOMDocument2_Release(doc);
-#if defined(__REACTOS__) && defined(_M_AMD64)
-    if (!is_reactos())
-#endif
     IXMLDOMDocument2_Release(doc_owner);
     free_bstrs();
 }
@@ -8926,9 +8914,6 @@ static void test_createProcessingInstruction(void)
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(item != NULL, "got NULL\n");
 
-#ifdef __REACTOS__
-    if (item != NULL) {
-#endif
     hr = IXMLDOMNode_get_nodeName(item, &bstr);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!lstrcmpW(bstr, L"encoding"), "got %s\n", wine_dbgstr_w(bstr));
@@ -8940,9 +8925,6 @@ static void test_createProcessingInstruction(void)
     ok(V_VT(&var) == VT_BSTR, "got %u\n", V_VT(&var));
     ok(!lstrcmpW(V_BSTR(&var), L"windows-1252"), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
     VariantClear(&var);
-#ifdef __REACTOS__
-    }
-#endif
 
     IXMLDOMNamedNodeMap_Release(node_map);
     IXMLDOMNode_Release(node);
@@ -9587,18 +9569,13 @@ static void test_insertBefore(void)
 
     doc = create_document(&IID_IXMLDOMDocument);
     doc3 = create_document(&IID_IXMLDOMDocument);
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
+
     /* NULL to document */
     V_VT(&v) = VT_NULL;
     node = (void*)0xdeadbeef;
     hr = IXMLDOMDocument_insertBefore(doc, NULL, v, &node);
     ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
     ok(node == (void*)0xdeadbeef, "got %p\n", node);
-#ifdef __REACTOS__
-    }
-#endif
 
     /* document to document */
     V_VT(&v) = VT_NULL;
@@ -9769,18 +9746,12 @@ static void test_insertBefore(void)
 
     todo_wine EXPECT_REF(elem2, 2);
 
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
     /* NULL to element */
     V_VT(&v) = VT_NULL;
     node = (void*)0xdeadbeef;
     hr = IXMLDOMElement_insertBefore(elem1, NULL, v, &node);
     ok(hr == E_INVALIDARG, "Unexpected hr %#lx.\n", hr);
     ok(node == (void*)0xdeadbeef, "got %p\n", node);
-#ifdef __REACTOS__
-    }
-#endif
 
     /* document to element */
     V_VT(&v) = VT_DISPATCH;
@@ -10787,9 +10758,6 @@ static void test_selection(void)
     VariantClear(&v[0]);
 
     /* IEnumVARIANT_Next makes the IXMLDOMSelection cursor advance one step more */
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
     hr = IXMLDOMSelection_nextNode(selection, &node);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     hr = IXMLDOMNode_get_nodeName(node, &name);
@@ -10797,9 +10765,6 @@ static void test_selection(void)
     ok(!lstrcmpW(name, L"d"), "got node name %s\n", wine_dbgstr_w(name));
     SysFreeString(name);
     IXMLDOMNode_Release(node);
-#ifdef __REACTOS__
-    }
-#endif
 
     /* The IEnumVARIANT cursor is still at position '2', */
     /* therefore attempting to fetch 4 elements yields 'c' and 'd' */
@@ -10810,9 +10775,6 @@ static void test_selection(void)
     ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(ret == 2, "got %ld, expected 2\n", ret);
 
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
     ok(V_VT(&v[0]) == VT_DISPATCH, "got var type %d\n", V_VT(&v[0]));
     hr = IDispatch_QueryInterface(V_DISPATCH(&v[0]), &IID_IXMLDOMNode, (void**)&node);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
@@ -10821,9 +10783,6 @@ static void test_selection(void)
     ok(!lstrcmpW(name, L"c"), "got node name %s\n", wine_dbgstr_w(name));
     SysFreeString(name);
     IXMLDOMNode_Release(node);
-#ifdef __REACTOS__
-    }
-#endif
 
     ok(V_VT(&v[1]) == VT_DISPATCH, "got var type %d\n", V_VT(&v[1]));
     hr = IDispatch_QueryInterface(V_DISPATCH(&v[1]), &IID_IXMLDOMNode, (void**)&node);
@@ -10843,9 +10802,6 @@ static void test_selection(void)
 
     IXMLDOMSelection_Release(selection);
     IXMLDOMNodeList_Release(list);
-#ifdef __REACTOS__
-    if (!is_reactos())
-#endif
     IXMLDOMDocument_Release(doc);
 
     free_bstrs();
@@ -10903,9 +10859,6 @@ static void _test_doc_load_from_path(IXMLDOMDocument *doc, const char *path,
     ok_(__FILE__, line)(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* Create another instance for the same document, check url */
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
     hr = IXMLDOMElement_get_ownerDocument(elem, &doc2);
     ok_(__FILE__, line)(hr == S_OK, "Failed to get owner document, hr %#lx.\n", hr);
 
@@ -10916,9 +10869,6 @@ static void _test_doc_load_from_path(IXMLDOMDocument *doc, const char *path,
     IXMLDOMDocument_Release(doc2);
     IXMLDOMElement_Release(elem);
     SysFreeString(url2);
-#ifdef __REACTOS__
-    }
-#endif
     SysFreeString(url);
 }
 
@@ -12715,9 +12665,6 @@ static void test_get_namespaces(void)
     hr = IEnumVARIANT_Reset(enumv);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
-#ifdef __REACTOS__
-    memset(v, 0, sizeof(v));
-#endif
     V_VT(&v[1]) = VT_EMPTY;
     V_VT(&v[0]) = VT_EMPTY;
     hr = IEnumVARIANT_Next(enumv, 2, v, &fetched);
@@ -13343,9 +13290,6 @@ static void test_namedmap_newenum(void)
     ok(!lstrcmpW(str, L"attr3"), "got node name %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
     IXMLDOMNode_Release(node);
-#ifdef __REACTOS__
-    if (!is_reactos()) {
-#endif
     hr = IDispatch_QueryInterface(V_DISPATCH(&v[1]), &IID_IXMLDOMNode, (void**)&node);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     hr = IXMLDOMNode_get_nodeName(node, &str);
@@ -13353,9 +13297,6 @@ static void test_namedmap_newenum(void)
     ok(!lstrcmpW(str, L"attr4"), "got node name %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
     IXMLDOMNode_Release(node);
-#ifdef __REACTOS__
-    }
-#endif
     VariantClear(&v[1]);
     VariantClear(&v[0]);
     IEnumVARIANT_Release(enum2);
@@ -13944,13 +13885,7 @@ static void test_namespaces_as_attributes(void)
                 item = NULL;
                 hr = IXMLDOMNamedNodeMap_get_item(map, i, &item);
                 ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
-#ifdef __REACTOS__
-                if (item == NULL)
-                {
-                    ok(0, "item is NULL at index %ld\n", i);
-                    continue;
-                }
-#endif
+
                 str = NULL;
                 hr = IXMLDOMNode_get_nodeName(item, &str);
                 ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
