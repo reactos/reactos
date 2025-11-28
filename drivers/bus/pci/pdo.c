@@ -1316,6 +1316,32 @@ PdoQueryInterface(
     return Status;
 }
 
+static
+VOID
+PciDumpContents(
+    _In_reads_bytes_(Length) const VOID* Buffer,
+    _In_ ULONG Length)
+{
+    ULONG Offset, Count, i;
+    const UCHAR* Data = Buffer;
+
+    DbgPrint("PCI data:\n");
+
+    Offset = 0;
+    while (Offset < Length)
+    {
+        DbgPrint("%04x:\t", Offset);
+
+        Count = min(Length - Offset, 8);
+        for (i = 0; i < Count; ++i, ++Offset)
+        {
+            DbgPrint("0x%02x, ", Data[Offset], (i == 7) ? '-' : ' ');
+        }
+
+        DbgPrint("\n");
+    }
+}
+
 static NTSTATUS
 PdoStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
@@ -1369,6 +1395,18 @@ PdoStartDevice(
     DBGPRINT("pci!PdoStartDevice: Enabling command flags for PCI device 0x%x on bus 0x%x: ",
             DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
             DeviceExtension->PciDevice->BusNumber);
+
+    if (DeviceExtension->PciDevice->PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR)
+    {
+        DbgPrint("pci!PdoStartDevice: Enabling command flags for PCI device 0x%x on bus 0x%x: ",
+                 DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                 DeviceExtension->PciDevice->BusNumber);
+        DbgPrint("%04X:%04X\n",
+                 DeviceExtension->PciDevice->PciConfig.VendorID,
+                 DeviceExtension->PciDevice->PciConfig.DeviceID);
+        PciDumpContents(&DeviceExtension->PciDevice->PciConfig, 64);
+    }
+
     if (DeviceExtension->PciDevice->EnableBusMaster)
     {
         Command |= PCI_ENABLE_BUS_MASTER;
@@ -1393,6 +1431,22 @@ PdoStartDevice(
 
         /* OR with the previous value */
         Command |= DeviceExtension->PciDevice->PciConfig.Command;
+
+        /* if ((DeviceExtension->PciDevice->PciConfig.VendorID == 0x1002) && */
+            /* (DeviceExtension->PciDevice->PciConfig.DeviceID == 0x4391)) */
+        /* { */
+            /* DbgPrint("CMD: BEFORE 0x%04X\n", Command); */
+            /* Command ^= PCI_DISABLE_LEVEL_INTERRUPT; */
+            /* DbgPrint("CMD: AFTER  0x%04X\n", Command); */
+        /* } */
+
+        if (DeviceExtension->PciDevice->PciConfig.BaseClass == PCI_CLASS_MASS_STORAGE_CTLR)
+        {
+            DbgPrint("%04X:%04X\n",
+                     DeviceExtension->PciDevice->PciConfig.VendorID,
+                     DeviceExtension->PciDevice->PciConfig.DeviceID);
+            DbgPrint("CMD: RESULT  0x%04X\n", Command);
+        }
 
         HalSetBusDataByOffset(PCIConfiguration,
                               DeviceExtension->PciDevice->BusNumber,
