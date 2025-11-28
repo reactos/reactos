@@ -1484,7 +1484,9 @@
 @ cdecl strtok(str str)
 @ cdecl -version=0x600+ strtok_s(str str ptr)
 @ cdecl strtol(str ptr long)
+@ cdecl -impsym strtoll(str ptr long) _strtoi64
 @ cdecl strtoul(str ptr long)
+@ cdecl -impsym strtoull(str ptr long) _strtoui64
 @ cdecl strxfrm(ptr str long)
 @ varargs swprintf(ptr wstr)
 @ stub -version=0x600+ swprintf_s

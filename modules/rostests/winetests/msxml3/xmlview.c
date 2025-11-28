@@ -121,14 +121,15 @@ static HRESULT WINAPI HTMLEvents_Invoke(IDispatch *iface, DISPID dispIdMember, R
         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult,
         EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    if(dispIdMember == DISPID_HTMLDOCUMENTEVENTS2_ONREADYSTATECHANGE) {
-        static const WCHAR completeW[] = {'c','o','m','p','l','e','t','e',0};
+    if (dispIdMember == DISPID_HTMLDOCUMENTEVENTS2_ONREADYSTATECHANGE)
+    {
+        static const WCHAR completeW[] = L"complete";
         HRESULT hr;
         BSTR state;
 
         hr = IHTMLDocument2_get_readyState(html_doc, &state);
-        ok(hr == S_OK, "got 0x%08x\n", hr);
-        if(!memcmp(state, completeW, sizeof(completeW)))
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+        if (!memcmp(state, completeW, sizeof(completeW)))
             loaded = TRUE;
         SysFreeString(state);
     }
@@ -160,28 +161,28 @@ static void test_QueryInterface(void)
         win_skip("Failed to create XMLView instance\n");
         return;
     }
-    ok(hres == S_OK, "CoCreateInstance returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
 
     hres = IUnknown_QueryInterface(xmlview, &IID_IPersistMoniker, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface(IID_IPersistMoniker) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IUnknown_Release(unk);
 
     hres = IUnknown_QueryInterface(xmlview, &IID_IPersistHistory, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface(IID_IPersistHistory) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IUnknown_Release(unk);
 
     hres = IUnknown_QueryInterface(xmlview, &IID_IOleCommandTarget, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface(IID_IOleCommandTarget) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IUnknown_Release(unk);
 
     hres = IUnknown_QueryInterface(xmlview, &IID_IOleObject, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface(IID_IOleObject) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IUnknown_Release(unk);
 
     hres = IUnknown_QueryInterface(xmlview, &IID_IHTMLDocument, (void**)&htmldoc);
-    ok(hres == S_OK, "QueryInterface(IID_IHTMLDocument) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = IHTMLDocument_QueryInterface(htmldoc, &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "QueryInterface(IID_IUnknown) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     ok(unk == xmlview, "Aggregation is not working as expected\n");
     IUnknown_Release(unk);
     IHTMLDocument_Release(htmldoc);
@@ -191,9 +192,6 @@ static void test_QueryInterface(void)
 
 static void test_Load(void)
 {
-    static const WCHAR xmlview_xmlW[] = {'/','x','m','l','/','x','m','l','v','i','e','w','.','x','m','l',0};
-    static const WCHAR res[] = {'r','e','s',':','/','/',0};
-
     WCHAR buf[1024];
     IPersistMoniker *pers_mon;
     IConnectionPointContainer *cpc;
@@ -205,9 +203,9 @@ static void test_Load(void)
     MSG msg;
     BSTR source;
 
-    lstrcpyW(buf, res);
-    GetModuleFileNameW(NULL, buf+lstrlenW(buf), ARRAY_SIZE(buf)-ARRAY_SIZE(res));
-    lstrcatW(buf, xmlview_xmlW);
+    lstrcpyW(buf, L"res://");
+    GetModuleFileNameW(NULL, buf+lstrlenW(buf), ARRAY_SIZE(buf)-ARRAY_SIZE(L"res://"));
+    lstrcatW(buf, L"/xml/xmlview.xml");
 
     if(!pCreateURLMoniker) {
         win_skip("CreateURLMoniker not available\n");
@@ -220,26 +218,26 @@ static void test_Load(void)
         win_skip("Failed to create XMLView instance\n");
         return;
     }
-    ok(hres == S_OK, "CoCreateInstance returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
 
     hres = IPersistMoniker_QueryInterface(pers_mon, &IID_IHTMLDocument2, (void**)&html_doc);
-    ok(hres == S_OK, "QueryInterface(HTMLDocument2) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = IPersistMoniker_QueryInterface(pers_mon, &IID_IConnectionPointContainer, (void**)&cpc);
-    ok(hres == S_OK, "QueryInterface(IConnectionPointContainer) returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = IConnectionPointContainer_FindConnectionPoint(cpc, &IID_IDispatch, &cp);
-    ok(hres == S_OK, "FindConnectionPoint returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = IConnectionPoint_Advise(cp, (IUnknown*)&HTMLEvents, NULL);
-    ok(hres == S_OK, "Advise returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IConnectionPoint_Release(cp);
     IConnectionPointContainer_Release(cpc);
 
     hres = CreateBindCtx(0, &bctx);
-    ok(hres == S_OK, "CreateBindCtx returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = pCreateURLMoniker(NULL, buf, &mon);
-    ok(hres == S_OK, "CreateUrlMoniker returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     loaded = FALSE;
     hres = IPersistMoniker_Load(pers_mon, TRUE, mon, bctx, 0);
-    ok(hres == S_OK, "Load returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     IBindCtx_Release(bctx);
     IMoniker_Release(mon);
 
@@ -249,9 +247,9 @@ static void test_Load(void)
     }
 
     hres = IHTMLDocument2_get_body(html_doc, &elem);
-    ok(hres == S_OK, "get_body returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     hres = IHTMLElement_get_outerHTML(elem, &source);
-    ok(hres == S_OK, "get_outerHTML returned %x, expected S_OK\n", hres);
+    ok(hres == S_OK, "Unexpected hr %#lx.\n", hres);
     ok(!html_src_compare(source, xmlview_html), "Incorrect HTML source: %s\n", wine_dbgstr_w(source));
     IHTMLElement_Release(elem);
     SysFreeString(source);

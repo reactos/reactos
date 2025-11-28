@@ -34,12 +34,9 @@
 
 #include "wine/test.h"
 
-#define EXPECT_HR(hr,hr_exp) \
-    ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
-
-static const CHAR xdr_schema1_uri[] = "x-schema:test1.xdr";
-static const CHAR xdr_schema1_xml[] =
-"<?xml version='1.0'?>"
+static const WCHAR xdr_schema1_uri[] = L"x-schema:test1.xdr";
+static const WCHAR xdr_schema1_xml[] =
+L"<?xml version='1.0'?>"
 "<Schema xmlns='urn:schemas-microsoft-com:xml-data'"
 "        xmlns:dt='urn:schemas-microsoft-com:datatypes'"
 "        name='test1.xdr'>"
@@ -55,9 +52,9 @@ static const CHAR xdr_schema1_xml[] =
 "   </ElementType>"
 "</Schema>";
 
-static const CHAR xdr_schema2_uri[] = "x-schema:test2.xdr";
-static const CHAR xdr_schema2_xml[] =
-"<?xml version='1.0'?>"
+static const WCHAR xdr_schema2_uri[] = L"x-schema:test2.xdr";
+static const WCHAR xdr_schema2_xml[] =
+L"<?xml version='1.0'?>"
 "<Schema xmlns='urn:schemas-microsoft-com:xml-data'"
 "        xmlns:dt='urn:schemas-microsoft-com:datatypes'"
 "        name='test2.xdr'>"
@@ -71,9 +68,9 @@ static const CHAR xdr_schema2_xml[] =
 "   </ElementType>"
 "</Schema>";
 
-static const CHAR xdr_schema3_uri[] = "x-schema:test3.xdr";
-static const CHAR xdr_schema3_xml[] =
-"<?xml version='1.0'?>"
+static const WCHAR xdr_schema3_uri[] = L"x-schema:test3.xdr";
+static const WCHAR xdr_schema3_xml[] =
+L"<?xml version='1.0'?>"
 "<Schema xmlns='urn:schemas-microsoft-com:xml-data'"
 "        xmlns:dt='urn:schemas-microsoft-com:datatypes'"
 "        name='test3.xdr'>"
@@ -87,50 +84,10 @@ static const CHAR xdr_schema3_xml[] =
 "   </ElementType>"
 "</Schema>";
 
-static const CHAR xsd_schema1_uri[] = "x-schema:test1.xsd";
-static const CHAR xsd_schema1_xml[] =
-"<?xml version='1.0'?>"
-"<schema xmlns='http://www.w3.org/2001/XMLSchema'"
-"            targetNamespace='x-schema:test1.xsd'>"
-"   <element name='root'>"
-"       <complexType>"
-"           <sequence maxOccurs='unbounded'>"
-"               <any/>"
-"           </sequence>"
-"       </complexType>"
-"   </element>"
-"</schema>";
+static const WCHAR xsd_schema1_uri[] = L"x-schema:test1.xsd";
 
-static const CHAR xsd_schema2_uri[] = "x-schema:test2.xsd";
-static const CHAR xsd_schema2_xml[] =
-"<?xml version='1.0'?>"
-"<schema xmlns='http://www.w3.org/2001/XMLSchema'"
-"            targetNamespace='x-schema:test2.xsd'>"
-"   <element name='root'>"
-"       <complexType>"
-"           <sequence maxOccurs='unbounded'>"
-"               <any/>"
-"           </sequence>"
-"       </complexType>"
-"   </element>"
-"</schema>";
-
-static const CHAR xsd_schema3_uri[] = "x-schema:test3.xsd";
-static const CHAR xsd_schema3_xml[] =
-"<?xml version='1.0'?>"
-"<schema xmlns='http://www.w3.org/2001/XMLSchema'"
-"            targetNamespace='x-schema:test3.xsd'>"
-"   <element name='root'>"
-"       <complexType>"
-"           <sequence maxOccurs='unbounded'>"
-"               <any/>"
-"           </sequence>"
-"       </complexType>"
-"   </element>"
-"</schema>";
-
-static const CHAR szDatatypeXDR[] =
-"<Schema xmlns='urn:schemas-microsoft-com:xml-data'\n"
+static const WCHAR szDatatypeXDR[] =
+L"<Schema xmlns='urn:schemas-microsoft-com:xml-data'\n"
 "        xmlns:dt='urn:schemas-microsoft-com:datatypes'>\n"
 "   <ElementType name='base64Data' content='textOnly' dt:type='bin.base64'/>\n"
 "   <ElementType name='hexData' content='textOnly' dt:type='bin.hex'/>\n"
@@ -205,8 +162,8 @@ static const CHAR szDatatypeXDR[] =
 "   </ElementType>\n"
 "</Schema>";
 
-static const CHAR szDatatypeXML[] =
-"<?xml version='1.0'?>\n"
+static const WCHAR szDatatypeXML[] =
+L"<?xml version='1.0'?>\n"
 "<Properties xmlns='urn:x-schema:datatype-test-xdr'>\n"
 "   <Property>\n"
 "       <Name>testBase64</Name>\n"
@@ -378,8 +335,8 @@ static const CHAR szDatatypeXML[] =
 "   </Property>\n"
 "</Properties>";
 
-static const CHAR szOpenSeqXDR[] =
-"<Schema xmlns='urn:schemas-microsoft-com:xml-data'>\n"
+static const WCHAR szOpenSeqXDR[] =
+L"<Schema xmlns='urn:schemas-microsoft-com:xml-data'>\n"
 "   <ElementType name='w' content='empty' model='closed'/>\n"
 "   <ElementType name='x' content='empty' model='closed'/>\n"
 "   <ElementType name='y' content='empty' model='closed'/>\n"
@@ -395,31 +352,15 @@ static const CHAR szOpenSeqXDR[] =
 "   </ElementType>\n"
 "</Schema>";
 
-static const CHAR szOpenSeqXML1[] = "<test><x/><x/><y/><z/><z/></test>";
-static const CHAR szOpenSeqXML2[] = "<test><x/><x/><y/><z/><z/><w/></test>";
-static const CHAR szOpenSeqXML3[] = "<test><w/><x/><x/><y/><z/><z/></test>";
-static const CHAR szOpenSeqXML4[] = "<test><x/><x/><y/><z/><z/><v/></test>";
+static const WCHAR szOpenSeqXML1[] = L"<test><x/><x/><y/><z/><z/></test>";
+static const WCHAR szOpenSeqXML2[] = L"<test><x/><x/><y/><z/><z/><w/></test>";
+static const WCHAR szOpenSeqXML3[] = L"<test><w/><x/><x/><y/><z/><z/></test>";
+static const WCHAR szOpenSeqXML4[] = L"<test><x/><x/><y/><z/><z/><v/></test>";
 
-#define check_ref_expr(expr, n) { \
-    LONG ref = expr; \
-    ok(ref == n, "expected %i refs, got %i\n", n, ref); \
-}
-
-#define check_refs(iface, obj, n) { \
-    LONG ref = iface ## _AddRef(obj); \
-    ok(ref == n+1, "expected %i refs, got %i\n", n+1, ref); \
-    ref = iface ## _Release(obj); \
-    ok(ref == n, "expected %i refs, got %i\n", n, ref); \
-}
-
-#define ole_check(expr) { \
-    HRESULT r = expr; \
-    ok(r == S_OK, #expr " returned %x\n", r); \
-}
-
-#define ole_expect(expr, expect) { \
-    HRESULT r = expr; \
-    ok(r == (expect), #expr " returned %x, expected %x\n", r, expect); \
+static ULONG get_refcount(void *iface)
+{
+    IUnknown_AddRef((IUnknown *)iface);
+    return IUnknown_Release((IUnknown *)iface);
 }
 
 #define _expect64(expr, str, base, TYPE, CONV) { \
@@ -429,29 +370,16 @@ static const CHAR szOpenSeqXML4[] = "<test><x/><x/><y/><z/><z/><v/></test>";
                   wine_dbgstr_longlong(v1), wine_dbgstr_longlong(v2)); \
 }
 
-#ifdef __REACTOS__
-#define expect_int64(expr, x, base) _expect64(expr, #x, base, LONG64, _strtoi64)
-#define expect_uint64(expr, x, base) _expect64(expr, #x, base, ULONG64, _strtoui64)
-#else
 #define expect_int64(expr, x, base) _expect64(expr, #x, base, LONG64, strtoll)
 #define expect_uint64(expr, x, base) _expect64(expr, #x, base, ULONG64, strtoull)
-#endif
 
 static BSTR alloced_bstrs[256];
 static int alloced_bstrs_count;
 
-static BSTR alloc_str_from_narrow(const char *str)
-{
-    int len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-    BSTR ret = SysAllocStringLen(NULL, len - 1);  /* NUL character added automatically */
-    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
-    return ret;
-}
-
-static BSTR _bstr_(const char *str)
+static BSTR _bstr_(const WCHAR *str)
 {
     assert(alloced_bstrs_count < ARRAY_SIZE(alloced_bstrs));
-    alloced_bstrs[alloced_bstrs_count] = alloc_str_from_narrow(str);
+    alloced_bstrs[alloced_bstrs_count] = SysAllocString(str);
     return alloced_bstrs[alloced_bstrs_count++];
 }
 
@@ -478,7 +406,7 @@ static void* _create_object(const GUID *clsid, const char *name, const IID *iid,
 
     hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, iid, &obj);
     if (hr != S_OK)
-        win_skip_(__FILE__,line)("failed to create %s instance: 0x%08x\n", name, hr);
+        win_skip_(__FILE__,line)("failed to create %s instance: hr %#lx.\n", name, hr);
 
     return obj;
 }
@@ -500,10 +428,10 @@ static void test_schema_refs(void)
     IXMLDOMDocument2 *doc;
     IXMLDOMNode *node;
     IXMLDOMSchemaCollection *cache;
+    LONG len, refcount;
     VARIANT v;
     VARIANT_BOOL b;
     BSTR str;
-    LONG len;
     HRESULT hr;
 
     doc = create_document(&IID_IXMLDOMDocument2);
@@ -519,156 +447,196 @@ static void test_schema_refs(void)
 
     VariantInit(&v);
     str = SysAllocString(xdr_schema_xml);
-    ole_check(IXMLDOMDocument2_loadXML(doc, str, &b));
+    hr = IXMLDOMDocument2_loadXML(doc, str, &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "b %04x\n", b);
     SysFreeString(str);
 
     node = (void*)0xdeadbeef;
-    ole_check(IXMLDOMSchemaCollection_get(cache, NULL, &node));
+    hr = IXMLDOMSchemaCollection_get(cache, NULL, &node);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(node == NULL, "%p\n", node);
 
     /* NULL uri pointer, still adds a document */
-    ole_check(IXMLDOMSchemaCollection_add(cache, NULL, _variantdoc_(doc)));
+    hr = IXMLDOMSchemaCollection_add(cache, NULL, _variantdoc_(doc));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     len = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &len));
-    ok(len == 1, "got %d\n", len);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &len);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(len == 1, "Unexpected length %ld.\n", len);
     /* read back - empty valid BSTR */
     str = NULL;
-    ole_check(IXMLDOMSchemaCollection_get_namespaceURI(cache, 0, &str));
+    hr = IXMLDOMSchemaCollection_get_namespaceURI(cache, 0, &str);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(str && *str == 0, "got %p\n", str);
     SysFreeString(str);
 
     node = NULL;
-    ole_check(IXMLDOMSchemaCollection_get(cache, NULL, &node));
+    hr = IXMLDOMSchemaCollection_get(cache, NULL, &node);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(node != NULL, "%p\n", node);
-#if __REACTOS__
-    if (node)
+#ifdef __REACTOS__
+    if (node != NULL)
 #endif
     IXMLDOMNode_Release(node);
 
     node = NULL;
     str = SysAllocString(L"");
-    ole_check(IXMLDOMSchemaCollection_get(cache, str, &node));
+    hr = IXMLDOMSchemaCollection_get(cache, str, &node);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(node != NULL, "%p\n", node);
-#if __REACTOS__
-    if (node)
+#ifdef __REACTOS__
+    if (node != NULL)
 #endif
     IXMLDOMNode_Release(node);
     SysFreeString(str);
 
     /* remove with NULL uri */
-    ole_check(IXMLDOMSchemaCollection_remove(cache, NULL));
+    hr = IXMLDOMSchemaCollection_remove(cache, NULL);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     len = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &len));
-    ok(len == 0, "got %d\n", len);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &len);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(len == 0, "Unexpected length %ld.\n", len);
 
     /* same, but with VT_UNKNOWN type */
     V_VT(&v) = VT_UNKNOWN;
     V_UNKNOWN(&v) = (IUnknown*)doc;
     hr = IXMLDOMSchemaCollection_add(cache, NULL, v);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     len = -1;
     hr = IXMLDOMSchemaCollection_get_length(cache, &len);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(len == 1, "got %d\n", len);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(len == 1, "Unexpected length %ld.\n", len);
 
     hr = IXMLDOMSchemaCollection_remove(cache, NULL);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     len = -1;
     hr = IXMLDOMSchemaCollection_get_length(cache, &len);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(len == 0, "got %d\n", len);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(len == 0, "Unexpected length %ld.\n", len);
 
     str = SysAllocString(L"x-schema:test.xml");
-    ole_check(IXMLDOMSchemaCollection_add(cache, str, _variantdoc_(doc)));
+    hr = IXMLDOMSchemaCollection_add(cache, str, _variantdoc_(doc));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* IXMLDOMSchemaCollection_add doesn't add a ref on doc */
-    check_refs(IXMLDOMDocument2, doc, 1);
+    refcount = get_refcount(doc);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
 
     SysFreeString(str);
 
     V_VT(&v) = VT_INT;
-    ole_expect(IXMLDOMDocument2_get_schemas(doc, &v), S_FALSE);
+    hr = IXMLDOMDocument2_get_schemas(doc, &v);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&v) == VT_NULL, "vt %x\n", V_VT(&v));
 
-    check_ref_expr(IXMLDOMSchemaCollection_AddRef(cache), 2);
+    refcount = IXMLDOMSchemaCollection_AddRef(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = (IDispatch*)cache;
 
     /* check that putref_schemas takes a ref */
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    check_refs(IXMLDOMSchemaCollection, cache, 3);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 3, "Unexpected refcount %ld.\n", refcount);
 
     VariantClear(&v); /* refs now 2 */
 
     V_VT(&v) = VT_INT;
     /* check that get_schemas adds a ref */
-    ole_check(IXMLDOMDocument2_get_schemas(doc, &v));
+    hr = IXMLDOMDocument2_get_schemas(doc, &v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&v) == VT_DISPATCH, "vt %x\n", V_VT(&v));
-    check_refs(IXMLDOMSchemaCollection, cache, 3);
+    refcount = get_refcount(cache);
+    ok(refcount == 3, "Unexpected refcount %ld.\n", refcount);
 
     /* get_schemas doesn't release a ref if passed VT_DISPATCH - ie it doesn't call VariantClear() */
-    ole_check(IXMLDOMDocument2_get_schemas(doc, &v));
+    hr = IXMLDOMDocument2_get_schemas(doc, &v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&v) == VT_DISPATCH, "vt %x\n", V_VT(&v));
-    check_refs(IXMLDOMSchemaCollection, cache, 4);
+    refcount = get_refcount(cache);
+    ok(refcount == 4, "Unexpected refcount %ld.\n", refcount);
 
     /* release the two refs returned by get_schemas */
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache), 3);
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache), 2);
+    refcount = IXMLDOMSchemaCollection_Release(cache);
+    ok(refcount == 3, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMSchemaCollection_Release(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
 
     /* check that taking another ref on the document doesn't change the schema's ref count */
-    check_ref_expr(IXMLDOMDocument2_AddRef(doc), 2);
-    check_refs(IXMLDOMSchemaCollection, cache, 2);
-    check_ref_expr(IXMLDOMDocument2_Release(doc), 1);
+    refcount = IXMLDOMDocument2_AddRef(doc);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
+    refcount = get_refcount(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMDocument2_Release(doc);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
 
     /* call putref_schema with some odd variants */
     V_VT(&v) = VT_INT;
-    ole_expect(IXMLDOMDocument2_putref_schemas(doc, v), E_FAIL);
-    check_refs(IXMLDOMSchemaCollection, cache, 2);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == E_FAIL, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
 
     /* calling with VT_EMPTY releases the schema */
     V_VT(&v) = VT_EMPTY;
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    check_refs(IXMLDOMSchemaCollection, cache, 1);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
 
     /* try setting with VT_UNKNOWN */
-    check_ref_expr(IXMLDOMSchemaCollection_AddRef(cache), 2);
+    refcount = IXMLDOMSchemaCollection_AddRef(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
     V_VT(&v) = VT_UNKNOWN;
     V_UNKNOWN(&v) = (IUnknown*)cache;
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    check_refs(IXMLDOMSchemaCollection, cache, 3);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 3, "Unexpected refcount %ld.\n", refcount);
 
     VariantClear(&v); /* refs now 2 */
 
     /* calling with VT_NULL releases the schema */
     V_VT(&v) = VT_NULL;
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    check_refs(IXMLDOMSchemaCollection, cache, 1);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
 
     /* refs now 1 */
     /* set again */
-    check_ref_expr(IXMLDOMSchemaCollection_AddRef(cache), 2);
+    refcount = IXMLDOMSchemaCollection_AddRef(cache);
+    ok(refcount == 2, "Unexpected refcount %ld.\n", refcount);
     V_VT(&v) = VT_UNKNOWN;
     V_UNKNOWN(&v) = (IUnknown*)cache;
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    check_refs(IXMLDOMSchemaCollection, cache, 3);
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    refcount = get_refcount(cache);
+    ok(refcount == 3, "Unexpected refcount %ld.\n", refcount);
 
     VariantClear(&v); /* refs now 2 */
 
     /* release the final ref on the doc which should release its ref on the schema */
-    check_ref_expr(IXMLDOMDocument2_Release(doc), 0);
+    refcount = IXMLDOMDocument2_Release(doc);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
 
-    check_refs(IXMLDOMSchemaCollection, cache, 1);
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache), 0);
+    refcount = get_refcount(cache);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMSchemaCollection_Release(cache);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
 }
 
 static void test_collection_refs(void)
 {
     IXMLDOMDocument2 *schema1, *schema2, *schema3;
     IXMLDOMSchemaCollection *cache1, *cache2, *cache3;
+    LONG refcount, length;
     VARIANT_BOOL b;
-    LONG length;
+    HRESULT hr;
 
     schema1 = create_document(&IID_IXMLDOMDocument2);
     ok(schema1 != NULL, "Failed to create a document.\n");
@@ -691,93 +659,166 @@ static void test_collection_refs(void)
     cache2 = create_cache(&IID_IXMLDOMSchemaCollection);
     cache3 = create_cache(&IID_IXMLDOMSchemaCollection);
 
-    ole_check(IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema1_uri), _variantdoc_(schema1)));
-    ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xdr_schema2_uri), _variantdoc_(schema2)));
-    ole_check(IXMLDOMSchemaCollection_add(cache3, _bstr_(xdr_schema3_uri), _variantdoc_(schema3)));
+    hr = IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema1_uri), _variantdoc_(schema1));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_add(cache2, _bstr_(xdr_schema2_uri), _variantdoc_(schema2));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_add(cache3, _bstr_(xdr_schema3_uri), _variantdoc_(schema3));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
-    check_ref_expr(IXMLDOMDocument2_Release(schema1), 0);
-    check_ref_expr(IXMLDOMDocument2_Release(schema2), 0);
-    check_ref_expr(IXMLDOMDocument2_Release(schema3), 0);
+    refcount = IXMLDOMDocument2_Release(schema1);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMDocument2_Release(schema2);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMDocument2_Release(schema3);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
     schema1 = NULL;
     schema2 = NULL;
     schema3 = NULL;
 
     /* releasing the original doc does not affect the schema cache */
-    ole_check(IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), (IXMLDOMNode**)&schema1));
-    ole_check(IXMLDOMSchemaCollection_get(cache2, _bstr_(xdr_schema2_uri), (IXMLDOMNode**)&schema2));
-    ole_check(IXMLDOMSchemaCollection_get(cache3, _bstr_(xdr_schema3_uri), (IXMLDOMNode**)&schema3));
+    hr = IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), (IXMLDOMNode**)&schema1);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_get(cache2, _bstr_(xdr_schema2_uri), (IXMLDOMNode**)&schema2);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_get(cache3, _bstr_(xdr_schema3_uri), (IXMLDOMNode**)&schema3);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* we get a read-only domdoc interface, created just for us */
-    if (schema1) check_refs(IXMLDOMDocument2, schema1, 1);
-    if (schema2) check_refs(IXMLDOMDocument2, schema2, 1);
-    if (schema3) check_refs(IXMLDOMDocument2, schema3, 1);
+    if (schema1)
+    {
+        refcount = get_refcount(schema1);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
 
-    ole_expect(IXMLDOMSchemaCollection_addCollection(cache1, NULL), E_POINTER);
-    ole_check(IXMLDOMSchemaCollection_addCollection(cache2, cache1));
-    ole_check(IXMLDOMSchemaCollection_addCollection(cache3, cache2));
+    if (schema2)
+    {
+        refcount = get_refcount(schema2);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
+
+    if (schema3)
+    {
+        refcount = get_refcount(schema3);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
+
+    hr = IXMLDOMSchemaCollection_addCollection(cache1, NULL);
+    ok(hr == E_POINTER, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_addCollection(cache2, cache1);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_addCollection(cache3, cache2);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache1, &length));
-    ok(length == 1, "expected length 1, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache1, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 1, "Unexpected length %ld.\n", length);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache2, &length));
-    ok(length == 2, "expected length 2, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache2, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 2, "Unexpected length %ld.\n", length);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache3, &length));
-    ok(length == 3, "expected length 3, got %i\n", length);
-
+    hr = IXMLDOMSchemaCollection_get_length(cache3, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 3, "Unexpected length %ld.\n", length);
 
     /* merging collections does not affect the ref count */
-    check_refs(IXMLDOMSchemaCollection, cache1, 1);
-    check_refs(IXMLDOMSchemaCollection, cache2, 1);
-    check_refs(IXMLDOMSchemaCollection, cache3, 1);
+    refcount = get_refcount(cache1);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    refcount = get_refcount(cache2);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    refcount = get_refcount(cache3);
+    ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
 
     /* nor does it affect the domdoc instances */
-    if (schema1) check_refs(IXMLDOMDocument2, schema1, 1);
-    if (schema2) check_refs(IXMLDOMDocument2, schema2, 1);
-    if (schema3) check_refs(IXMLDOMDocument2, schema3, 1);
+    if (schema1)
+    {
+        refcount = IXMLDOMDocument2_Release(schema1);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
 
-    if (schema1) check_ref_expr(IXMLDOMDocument2_Release(schema1), 0);
-    if (schema2) check_ref_expr(IXMLDOMDocument2_Release(schema2), 0);
-    if (schema3) check_ref_expr(IXMLDOMDocument2_Release(schema3), 0);
+    if (schema2)
+    {
+        refcount = IXMLDOMDocument2_Release(schema2);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
+
+    if (schema3)
+    {
+        refcount = IXMLDOMDocument2_Release(schema3);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
+
     schema1 = NULL;
     schema2 = NULL;
     schema3 = NULL;
 
     /* releasing the domdoc instances doesn't change the cache */
-    ole_check(IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), (IXMLDOMNode**)&schema1));
-    ole_check(IXMLDOMSchemaCollection_get(cache2, _bstr_(xdr_schema2_uri), (IXMLDOMNode**)&schema2));
-    ole_check(IXMLDOMSchemaCollection_get(cache3, _bstr_(xdr_schema3_uri), (IXMLDOMNode**)&schema3));
+    hr = IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), (IXMLDOMNode**)&schema1);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_get(cache2, _bstr_(xdr_schema2_uri), (IXMLDOMNode**)&schema2);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_get(cache3, _bstr_(xdr_schema3_uri), (IXMLDOMNode**)&schema3);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     /* we can just get them again */
-    if (schema1) check_refs(IXMLDOMDocument2, schema1, 1);
-    if (schema2) check_refs(IXMLDOMDocument2, schema2, 1);
-    if (schema3) check_refs(IXMLDOMDocument2, schema3, 1);
+    if (schema1)
+    {
+        refcount = get_refcount(schema1);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
+
+    if (schema2)
+    {
+        refcount = get_refcount(schema2);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
+
+    if (schema3)
+    {
+        refcount = get_refcount(schema3);
+        ok(refcount == 1, "Unexpected refcount %ld.\n", refcount);
+    }
 
     /* releasing the caches does not affect the domdoc instances */
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache1), 0);
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache2), 0);
-    check_ref_expr(IXMLDOMSchemaCollection_Release(cache3), 0);
+    refcount = IXMLDOMSchemaCollection_Release(cache1);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMSchemaCollection_Release(cache2);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    refcount = IXMLDOMSchemaCollection_Release(cache3);
+    ok(!refcount, "Unexpected refcount %ld.\n", refcount);
 
     /* they're just for us */
-    if (schema1) check_refs(IXMLDOMDocument2, schema1, 1);
-    if (schema2) check_refs(IXMLDOMDocument2, schema2, 1);
-    if (schema3) check_refs(IXMLDOMDocument2, schema3, 1);
-
-    if (schema1) check_ref_expr(IXMLDOMDocument2_Release(schema1), 0);
-    if (schema2) check_ref_expr(IXMLDOMDocument2_Release(schema2), 0);
-    if (schema3) check_ref_expr(IXMLDOMDocument2_Release(schema3), 0);
+    if (schema1)
+    {
+        refcount = IXMLDOMDocument2_Release(schema1);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
+    if (schema2)
+    {
+        refcount = IXMLDOMDocument2_Release(schema2);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
+    if (schema3)
+    {
+        refcount = IXMLDOMDocument2_Release(schema3);
+        ok(!refcount, "Unexpected refcount %ld.\n", refcount);
+    }
 
     free_bstrs();
 }
@@ -787,6 +828,7 @@ static void test_length(void)
     IXMLDOMDocument2 *schema1, *schema2, *schema3;
     IXMLDOMSchemaCollection *cache;
     VARIANT_BOOL b;
+    HRESULT hr;
     VARIANT v;
     LONG length;
 
@@ -809,62 +851,81 @@ static void test_length(void)
 
     VariantInit(&v);
 
-    ole_check(IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_expect(IXMLDOMSchemaCollection_get_length(cache, NULL), E_POINTER);
+    hr = IXMLDOMSchemaCollection_get_length(cache, NULL);
+    ok(hr == E_POINTER, "Unexpected hr %#lx.\n", hr);
 
     /* MSDN lies; removing a nonexistent entry produces no error */
-    ole_check(IXMLDOMSchemaCollection_remove(cache, NULL));
-    ole_check(IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema1_uri)));
+    hr = IXMLDOMSchemaCollection_remove(cache, NULL);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema1_uri));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 0, "expected length 0, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 0, "Unexpected length %ld.\n", length);
 
-    ole_check(IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema1_uri), _variantdoc_(schema1)));
-
-    length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 1, "expected length 1, got %i\n", length);
-
-    ole_check(IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema2_uri), _variantdoc_(schema2)));
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema1_uri), _variantdoc_(schema1));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 2, "expected length 2, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 1, "Unexpected length %ld.\n", length);
 
-    ole_check(IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema3_uri), _variantdoc_(schema3)));
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema2_uri), _variantdoc_(schema2));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 3, "expected length 3, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 2, "Unexpected length %ld.\n", length);
+
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema3_uri), _variantdoc_(schema3));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+
+    length = -1;
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 3, "Unexpected length %ld.\n", length);
 
     /* adding with VT_NULL is the same as removing */
     V_VT(&v) = VT_NULL;
-    ole_check(IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema1_uri), v));
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(xdr_schema1_uri), v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 2, "expected length 2, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 2, "Unexpected length %ld.\n", length);
 
-    ole_check(IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema2_uri)));
-
-    length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 1, "expected length 1, got %i\n", length);
-
-    ole_check(IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema3_uri)));
+    hr = IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema2_uri));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache, &length));
-    ok(length == 0, "expected length 0, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 1, "Unexpected length %ld.\n", length);
+
+    hr = IXMLDOMSchemaCollection_remove(cache, _bstr_(xdr_schema3_uri));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+
+    length = -1;
+    hr = IXMLDOMSchemaCollection_get_length(cache, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 0, "Unexpected length %ld.\n", length);
 
     IXMLDOMDocument2_Release(schema1);
     IXMLDOMDocument2_Release(schema2);
@@ -876,9 +937,9 @@ static void test_length(void)
 
 static void test_collection_content(void)
 {
-    IXMLDOMDocument2 *schema1, *schema2, *schema3, *schema4, *schema5;
+    IXMLDOMDocument2 *schema1, *schema2, *schema3;
     BSTR content[5] = {NULL, NULL, NULL, NULL, NULL};
-    IXMLDOMSchemaCollection *cache1, *cache2;
+    IXMLDOMSchemaCollection *cache1;
     VARIANT_BOOL b;
     LONG length;
     HRESULT hr;
@@ -890,7 +951,6 @@ static void test_collection_content(void)
     schema3 = create_document_version(30, &IID_IXMLDOMDocument2);
 
     cache1 = create_cache_version(30, &IID_IXMLDOMSchemaCollection);
-    cache2 = create_cache_version(40, &IID_IXMLDOMSchemaCollection);
 
     if (!schema1 || !schema2 || !schema3 || !cache1)
     {
@@ -903,102 +963,72 @@ static void test_collection_content(void)
         return;
     }
 
-    ole_check(IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b));
+    hr = IXMLDOMDocument2_loadXML(schema3, _bstr_(xdr_schema3_xml), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML\n");
 
-    ole_check(IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema1_uri), _variantdoc_(schema1)));
-    ole_check(IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema2_uri), _variantdoc_(schema2)));
-    ole_check(IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema3_uri), _variantdoc_(schema3)));
+    hr = IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema1_uri), _variantdoc_(schema1));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema2_uri), _variantdoc_(schema2));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    hr = IXMLDOMSchemaCollection_add(cache1, _bstr_(xdr_schema3_uri), _variantdoc_(schema3));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     length = -1;
-    ole_check(IXMLDOMSchemaCollection_get_length(cache1, &length));
-    ok(length == 3, "expected length 3, got %i\n", length);
+    hr = IXMLDOMSchemaCollection_get_length(cache1, &length);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(length == 3, "Unexpected length %ld.\n", length);
 
     IXMLDOMDocument2_Release(schema1);
     IXMLDOMDocument2_Release(schema2);
     IXMLDOMDocument2_Release(schema3);
 
-    if (cache2)
-    {
-        schema1 = create_document_version(40, &IID_IXMLDOMDocument2);
-        schema2 = create_document_version(40, &IID_IXMLDOMDocument2);
-        schema3 = create_document_version(40, &IID_IXMLDOMDocument2);
-        schema4 = create_document_version(40, &IID_IXMLDOMDocument2);
-        schema5 = create_document_version(40, &IID_IXMLDOMDocument2);
-        ole_check(IXMLDOMDocument2_loadXML(schema1, _bstr_(xdr_schema1_xml), &b));
-        ok(b == VARIANT_TRUE, "failed to load XML\n");
-        ole_check(IXMLDOMDocument2_loadXML(schema2, _bstr_(xdr_schema2_xml), &b));
-        ok(b == VARIANT_TRUE, "failed to load XML\n");
-        ole_check(IXMLDOMDocument2_loadXML(schema3, _bstr_(xsd_schema1_xml), &b));
-        ok(b == VARIANT_TRUE, "failed to load XML\n");
-        ole_check(IXMLDOMDocument2_loadXML(schema4, _bstr_(xsd_schema2_xml), &b));
-        ok(b == VARIANT_TRUE, "failed to load XML\n");
-        ole_check(IXMLDOMDocument2_loadXML(schema5, _bstr_(xsd_schema3_xml), &b));
-        ok(b == VARIANT_TRUE, "failed to load XML\n");
-
-        /* combining XDR and XSD schemas in the same cache is fine */
-        ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xdr_schema1_uri), _variantdoc_(schema1)));
-        ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xdr_schema2_uri), _variantdoc_(schema2)));
-        ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xsd_schema1_uri), _variantdoc_(schema3)));
-        ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xsd_schema2_uri), _variantdoc_(schema4)));
-        ole_check(IXMLDOMSchemaCollection_add(cache2, _bstr_(xsd_schema3_uri), _variantdoc_(schema5)));
-
-        length = -1;
-        ole_check(IXMLDOMSchemaCollection_get_length(cache2, &length));
-        ok(length == 5, "expected length 5, got %i\n", length);
-
-        IXMLDOMDocument2_Release(schema1);
-        IXMLDOMDocument2_Release(schema2);
-        IXMLDOMDocument2_Release(schema3);
-        IXMLDOMDocument2_Release(schema4);
-        IXMLDOMDocument2_Release(schema5);
-    }
-
     bstr = (void*)0xdeadbeef;
     /* error if index is out of range */
     hr = IXMLDOMSchemaCollection_get_namespaceURI(cache1, 3, &bstr);
-    EXPECT_HR(hr, E_FAIL);
+    ok(hr == E_FAIL, "Unexpected hr %#lx.\n", hr);
     ok(bstr == (void*)0xdeadbeef, "got %p\n", bstr);
     /* error if return pointer is NULL */
-    ole_expect(IXMLDOMSchemaCollection_get_namespaceURI(cache1, 0, NULL), E_POINTER);
+    hr = IXMLDOMSchemaCollection_get_namespaceURI(cache1, 0, NULL);
+    ok(hr == E_POINTER, "Unexpected hr %#lx.\n", hr);
     /* pointer is checked first */
-    ole_expect(IXMLDOMSchemaCollection_get_namespaceURI(cache1, 3, NULL), E_POINTER);
+    hr = IXMLDOMSchemaCollection_get_namespaceURI(cache1, 3, NULL);
+    ok(hr == E_POINTER, "Unexpected hr %#lx.\n", hr);
 
     schema1 = NULL;
     /* no error if ns uri does not exist */
-    ole_check(IXMLDOMSchemaCollection_get(cache1, _bstr_(xsd_schema1_uri), (IXMLDOMNode**)&schema1));
+    hr = IXMLDOMSchemaCollection_get(cache1, _bstr_(xsd_schema1_uri), (IXMLDOMNode**)&schema1);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!schema1, "expected NULL\n");
     /* a NULL bstr corresponds to no-uri ns */
-    ole_check(IXMLDOMSchemaCollection_get(cache1, NULL, (IXMLDOMNode**)&schema1));
+    hr = IXMLDOMSchemaCollection_get(cache1, NULL, (IXMLDOMNode**)&schema1);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(!schema1, "expected NULL\n");
     /* error if return pointer is NULL */
-    ole_expect(IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), NULL), E_POINTER);
+    hr = IXMLDOMSchemaCollection_get(cache1, _bstr_(xdr_schema1_uri), NULL);
+    ok(hr == E_POINTER, "Unexpected hr %#lx.\n", hr);
 
     for (i = 0; i < 3; ++i)
     {
         bstr = NULL;
-        ole_check(IXMLDOMSchemaCollection_get_namespaceURI(cache1, i, &bstr));
+        hr = IXMLDOMSchemaCollection_get_namespaceURI(cache1, i, &bstr);
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
         ok(bstr != NULL && *bstr, "expected non-empty string\n");
-#if __REACTOS__
-        if (bstr != NULL && *bstr)
-        {
-            content[i] = bstr;
-            for (j = 0; j < i; ++j)
-                ok(wcscmp(content[j], bstr), "got duplicate entry\n");
-        }
-#else
         content[i] = bstr;
 
-        for (j = 0; j < i; ++j)
-            ok(winetest_strcmpW(content[j], bstr), "got duplicate entry\n");
+#ifdef __REACTOS__
+        if (bstr == NULL) continue;
 #endif
-
+        for (j = 0; j < i; ++j)
+            ok(wcscmp(content[j], bstr), "got duplicate entry\n");
     }
 
     for (i = 0; i < 3; ++i)
@@ -1007,198 +1037,8 @@ static void test_collection_content(void)
         content[i] = NULL;
     }
 
-    if (cache2)
-    {
-        for (i = 0; i < 5; ++i)
-        {
-            bstr = NULL;
-            ole_check(IXMLDOMSchemaCollection_get_namespaceURI(cache2, i, &bstr));
-            ok(bstr != NULL && *bstr, "expected non-empty string\n");
-
-#if __REACTOS__
-            if (bstr != NULL && *bstr)
-            {
-                for (j = 0; j < i; ++j)
-                    ok(wcscmp(content[j], bstr), "got duplicate entry\n");
-            }
-#else
-            for (j = 0; j < i; ++j)
-                ok(winetest_strcmpW(content[j], bstr), "got duplicate entry\n");
-#endif
-            content[i] = bstr;
-        }
-
-        for (i = 0; i < 5; ++i)
-        {
-            SysFreeString(content[i]);
-            content[i] = NULL;
-        }
-    }
-
     IXMLDOMSchemaCollection_Release(cache1);
-    if (cache2) IXMLDOMSchemaCollection_Release(cache2);
-
     free_bstrs();
-}
-
-static HRESULT validate_regex_document(IXMLDOMDocument2 *doc, IXMLDOMDocument2 *schema, IXMLDOMSchemaCollection* cache,
-    const WCHAR *regex, const WCHAR *input)
-{
-    static const WCHAR regex_doc[] =
-L""
-"<?xml version='1.0'?>"
-"<root xmlns='urn:test'>%s</root>";
-
-    static const WCHAR regex_schema[] =
-L"<?xml version='1.0'?>"
-"<schema xmlns='http://www.w3.org/2001/XMLSchema'"
-"            targetNamespace='urn:test'>"
-"    <element name='root'>"
-"        <simpleType>"
-"            <restriction base='string'>"
-"                <pattern value='%s'/>"
-"            </restriction>"
-"        </simpleType>"
-"    </element>"
-"</schema>";
-
-    WCHAR buffer[1024];
-    IXMLDOMParseError* err;
-    VARIANT v;
-    VARIANT_BOOL b;
-    BSTR namespace;
-    BSTR bstr;
-    HRESULT hr;
-
-    VariantInit(&v);
-
-#ifdef __REACTOS__
-    swprintf(buffer, regex_doc, input);
-#else
-    swprintf(buffer, ARRAY_SIZE(buffer), regex_doc, input);
-#endif
-    bstr = SysAllocString(buffer);
-    ole_check(IXMLDOMDocument2_loadXML(doc, bstr, &b));
-    ok(b == VARIANT_TRUE, "failed to load XML\n");
-    SysFreeString(bstr);
-
-#ifdef __REACTOS__
-    swprintf(buffer, regex_schema, regex);
-#else
-    swprintf(buffer, ARRAY_SIZE(buffer), regex_schema, regex);
-#endif
-    bstr = SysAllocString(buffer);
-    ole_check(IXMLDOMDocument2_loadXML(schema, bstr, &b));
-    ok(b == VARIANT_TRUE, "failed to load XML\n");
-    SysFreeString(bstr);
-
-    /* add the schema to the cache */
-    V_VT(&v) = VT_DISPATCH;
-    V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMDocument2_QueryInterface(schema, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
-    ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    namespace = alloc_str_from_narrow("urn:test");
-    hr = IXMLDOMSchemaCollection_add(cache, namespace, v);
-    SysFreeString(namespace);
-    VariantClear(&v);
-    if (FAILED(hr))
-        return hr;
-
-    /* associate the cache to the doc */
-    V_VT(&v) = VT_DISPATCH;
-    V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
-    ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
-    VariantClear(&v);
-
-    /* validate the doc
-     * only declared elements in the declared order
-     * this is fine */
-    err = NULL;
-    bstr = NULL;
-    hr = IXMLDOMDocument2_validate(doc, &err);
-    ok(err != NULL, "domdoc_validate() should always set err\n");
-    if (IXMLDOMParseError_get_reason(err, &bstr) != S_FALSE)
-        trace("got error: %s\n", wine_dbgstr_w(bstr));
-    SysFreeString(bstr);
-    IXMLDOMParseError_Release(err);
-
-    return hr;
-}
-
-static void test_regex(void)
-{
-    struct regex_test {
-        const WCHAR *regex;
-        const WCHAR *input;
-    };
-
-    struct regex_test tests[] = {
-        { L"\\!", L"!" },
-        { L"\\\"", L"\"" },
-        { L"\\#", L"#" },
-        { L"\\$", L"$" },
-        { L"\\%", L"%" },
-        { L"\\,", L"," },
-        { L"\\/", L"/" },
-        { L"\\:", L":" },
-        { L"\\;", L";" },
-        { L"\\=", L"=" },
-        { L"\\>", L">" },
-        { L"\\@", L"@" },
-        { L"\\`", L"`" },
-        { L"\\~", L"~" },
-        { L"\\uCAFE", L"\xCAFE" },
-        /* non-BMP character in surrogate pairs: */
-        { L"\\uD83D\\uDE00", L"\xD83D\xDE00" },
-        /* "x{,2}" is non-standard and only works on libxml2 <= v2.9.10 */
-        { L"x{0,2}", L"x" }
-    };
-
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(tests); i++)
-    {
-        IXMLDOMDocument2 *doc40, *doc60;
-        IXMLDOMDocument2 *schema40, *schema60;
-        IXMLDOMSchemaCollection *cache40, *cache60;
-
-        doc40 = create_document_version(40, &IID_IXMLDOMDocument2);
-        doc60 = create_document_version(60, &IID_IXMLDOMDocument2);
-        schema40 = create_document_version(40, &IID_IXMLDOMDocument2);
-        schema60 = create_document_version(60, &IID_IXMLDOMDocument2);
-        cache40 = create_cache_version(40, &IID_IXMLDOMSchemaCollection);
-        cache60 = create_cache_version(60, &IID_IXMLDOMSchemaCollection);
-
-        if (doc60 && schema60 && cache60)
-        {
-            HRESULT hr = validate_regex_document(doc60, schema60, cache60, tests[i].regex, tests[i].input);
-            ok(hr == S_OK, "got 0x%08x for for version 60 regex %s input %s\n",
-               hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
-            if (doc40 && schema40 && cache40)
-            {
-                hr = validate_regex_document(doc40, schema40, cache40, tests[i].regex, tests[i].input);
-                ok(hr == S_OK, "got 0x%08x version 40 regex %s input %s\n",
-                   hr, wine_dbgstr_w(tests[i].regex), wine_dbgstr_w(tests[i].input));
-            }
-        }
-        else
-            ok(0, "out of memory\n");
-
-        if (doc40)
-            IXMLDOMDocument2_Release(doc40);
-        if (doc60)
-            IXMLDOMDocument2_Release(doc60);
-        if (schema40)
-            IXMLDOMDocument2_Release(schema40);
-        if (schema60)
-            IXMLDOMDocument2_Release(schema60);
-        if (cache40)
-            IXMLDOMSchemaCollection_Release(cache40);
-        if (cache60)
-            IXMLDOMSchemaCollection_Release(cache60);
-    }
 }
 
 static void test_XDR_schemas(void)
@@ -1207,6 +1047,7 @@ static void test_XDR_schemas(void)
     IXMLDOMSchemaCollection* cache;
     IXMLDOMParseError* err;
     VARIANT_BOOL b;
+    HRESULT hr;
     VARIANT v;
     BSTR bstr;
 
@@ -1225,26 +1066,32 @@ static void test_XDR_schemas(void)
 
     VariantInit(&v);
 
-    ole_check(IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML1), &b));
+    hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML1), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
-    ole_check(IXMLDOMDocument2_loadXML(schema, _bstr_(szOpenSeqXDR), &b));
+    hr = IXMLDOMDocument2_loadXML(schema, _bstr_(szOpenSeqXDR), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     /* load the schema */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMDocument2_QueryInterface(schema, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    hr = IXMLDOMDocument2_QueryInterface(schema, &IID_IDispatch, (void**)&V_DISPATCH(&v));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMSchemaCollection_add(cache, _bstr_(""), v));
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(L""), v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* associate the cache to the doc */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* validate the doc
@@ -1252,9 +1099,11 @@ static void test_XDR_schemas(void)
      * this is fine */
     err = NULL;
     bstr = NULL;
-    ole_check(IXMLDOMDocument2_validate(doc, &err));
+    hr = IXMLDOMDocument2_validate(doc, &err);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
-    ole_expect(IXMLDOMParseError_get_reason(err, &bstr), S_FALSE);
+    hr = IXMLDOMParseError_get_reason(err, &bstr);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(IXMLDOMParseError_get_reason(err, &bstr) == S_FALSE, "got error: %s\n", wine_dbgstr_w(bstr));
     SysFreeString(bstr);
     IXMLDOMParseError_Release(err);
@@ -1262,15 +1111,18 @@ static void test_XDR_schemas(void)
     /* load the next doc */
     IXMLDOMDocument2_Release(doc);
     doc = create_document(&IID_IXMLDOMDocument2);
-    ole_check(IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML2), &b));
+    hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML2), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     /* associate the cache to the doc */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* validate the doc
@@ -1278,9 +1130,11 @@ static void test_XDR_schemas(void)
      * this is fine */
     err = NULL;
     bstr = NULL;
-    ole_check(IXMLDOMDocument2_validate(doc, &err));
+    hr = IXMLDOMDocument2_validate(doc, &err);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
-    ole_expect(IXMLDOMParseError_get_reason(err, &bstr), S_FALSE);
+    hr = IXMLDOMParseError_get_reason(err, &bstr);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(IXMLDOMParseError_get_reason(err, &bstr) == S_FALSE, "got error: %s\n", wine_dbgstr_w(bstr));
     SysFreeString(bstr);
     IXMLDOMParseError_Release(err);
@@ -1288,22 +1142,26 @@ static void test_XDR_schemas(void)
     /* load the next doc */
     IXMLDOMDocument2_Release(doc);
     doc = create_document(&IID_IXMLDOMDocument2);
-    ole_check(IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML3), &b));
+    hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML3), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     /* associate the cache to the doc */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* validate the doc
      * fails, extra elements are only allowed at the end */
     err = NULL;
     bstr = NULL;
-    ole_expect(IXMLDOMDocument2_validate(doc, &err), S_FALSE);
+    hr = IXMLDOMDocument2_validate(doc, &err);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
     todo_wine ok(IXMLDOMParseError_get_reason(err, &bstr) == S_OK, "got error: %s\n", wine_dbgstr_w(bstr));
     SysFreeString(bstr);
@@ -1312,22 +1170,26 @@ static void test_XDR_schemas(void)
     /* load the next doc */
     IXMLDOMDocument2_Release(doc);
     doc = create_document(&IID_IXMLDOMDocument2);
-    ole_check(IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML4), &b));
+    hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szOpenSeqXML4), &b);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     /* associate the cache to the doc */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
-    ole_check(IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v)));
+    hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v));
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    ole_check(IXMLDOMDocument2_putref_schemas(doc, v));
+    hr = IXMLDOMDocument2_putref_schemas(doc, v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* validate the doc
      * fails, undeclared elements are not allowed */
     err = NULL;
     bstr = NULL;
-    ole_expect(IXMLDOMDocument2_validate(doc, &err), S_FALSE);
+    hr = IXMLDOMDocument2_validate(doc, &err);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
     todo_wine ok(IXMLDOMParseError_get_reason(err, &bstr) == S_OK, "got error: %s\n", wine_dbgstr_w(bstr));
     SysFreeString(bstr);
@@ -1341,41 +1203,41 @@ static void test_XDR_schemas(void)
 }
 
 typedef struct {
-    const char *query;
+    const WCHAR *query;
     enum VARENUM type_schema;
-    const char *typename;
+    const WCHAR *typename;
     BOOL todo;
 } xdr_datatypes;
 
 static const xdr_datatypes xdr_datatypes_data[] = {
-    { "//Property[Name!text()='testBase64']/Value/base64Data",         VT_ARRAY|VT_UI1, "bin.base64" },
-    { "//Property[Name!text()='testHex']/Value/hexData",               VT_ARRAY|VT_UI1, "bin.hex" },
-    { "//Property[Name!text()='testBool']/Value/boolData",             VT_BOOL, "boolean" },
-    { "//Property[Name!text()='testChar']/Value/charData",             VT_I4,   "char", TRUE },
-    { "//Property[Name!text()='testDate']/Value/dateData",             VT_DATE, "date" },
-    { "//Property[Name!text()='testDateTime']/Value/dateTimeData",     VT_DATE, "dateTime" },
-    { "//Property[Name!text()='testDateTimeTz']/Value/dateTimeTzData", VT_DATE, "dateTime.tz" },
-    { "//Property[Name!text()='testFixed']/Value/fixedData",           VT_CY,   "fixed.14.4" },
-    { "//Property[Name!text()='testFloat']/Value/floatData",           VT_R8,   "float" },
-    { "//Property[Name!text()='testI1']/Value/i1Data",                 VT_I1,   "i1" },
-    { "//Property[Name!text()='testI2']/Value/i2Data",                 VT_I2,   "i2" },
-    { "//Property[Name!text()='testI4']/Value/i4Data",                 VT_I4,   "i4" },
-    { "//Property[Name!text()='testI8']/Value/i8Data",                 VT_NULL, "i8", TRUE },
-    { "//Property[Name!text()='testInt']/Value/intData",               VT_I4,   "int" },
-    { "//Property[Name!text()='testNmtoken']/Value/nmtokData",         VT_BSTR, NULL },
-    { "//Property[Name!text()='testNmtokens']/Value/nmtoksData",       VT_BSTR, NULL },
-    { "//Property[Name!text()='testNumber']/Value/numData",            VT_BSTR, "number" },
-    { "//Property[Name!text()='testR4']/Value/r4Data",                 VT_R4,   "r4" },
-    { "//Property[Name!text()='testR8']/Value/r8Data",                 VT_R8,   "r8" },
-    { "//Property[Name!text()='testString']/Value/stringData",         VT_BSTR, NULL },
-    { "//Property[Name!text()='testTime']/Value/timeData",             VT_DATE, "time" },
-    { "//Property[Name!text()='testTimeTz']/Value/timeTzData",         VT_DATE, "time.tz" },
-    { "//Property[Name!text()='testU1']/Value/u1Data",                 VT_UI1,  "ui1" },
-    { "//Property[Name!text()='testU2']/Value/u2Data",                 VT_UI2,  "ui2" },
-    { "//Property[Name!text()='testU4']/Value/u4Data",                 VT_UI4,  "ui4" },
-    { "//Property[Name!text()='testU8']/Value/u8Data",                 VT_NULL, "ui8", TRUE },
-    { "//Property[Name!text()='testURI']/Value/uriData",               VT_BSTR, "uri" },
-    { "//Property[Name!text()='testUUID']/Value/uuidData",             VT_BSTR, "uuid" },
+    { L"//Property[Name!text()='testBase64']/Value/base64Data",         VT_ARRAY|VT_UI1, L"bin.base64" },
+    { L"//Property[Name!text()='testHex']/Value/hexData",               VT_ARRAY|VT_UI1, L"bin.hex" },
+    { L"//Property[Name!text()='testBool']/Value/boolData",             VT_BOOL, L"boolean" },
+    { L"//Property[Name!text()='testChar']/Value/charData",             VT_I4,   L"char", TRUE },
+    { L"//Property[Name!text()='testDate']/Value/dateData",             VT_DATE, L"date" },
+    { L"//Property[Name!text()='testDateTime']/Value/dateTimeData",     VT_DATE, L"dateTime" },
+    { L"//Property[Name!text()='testDateTimeTz']/Value/dateTimeTzData", VT_DATE, L"dateTime.tz" },
+    { L"//Property[Name!text()='testFixed']/Value/fixedData",           VT_CY,   L"fixed.14.4" },
+    { L"//Property[Name!text()='testFloat']/Value/floatData",           VT_R8,   L"float" },
+    { L"//Property[Name!text()='testI1']/Value/i1Data",                 VT_I1,   L"i1" },
+    { L"//Property[Name!text()='testI2']/Value/i2Data",                 VT_I2,   L"i2" },
+    { L"//Property[Name!text()='testI4']/Value/i4Data",                 VT_I4,   L"i4" },
+    { L"//Property[Name!text()='testI8']/Value/i8Data",                 VT_NULL, L"i8", TRUE },
+    { L"//Property[Name!text()='testInt']/Value/intData",               VT_I4,   L"int" },
+    { L"//Property[Name!text()='testNmtoken']/Value/nmtokData",         VT_BSTR, NULL },
+    { L"//Property[Name!text()='testNmtokens']/Value/nmtoksData",       VT_BSTR, NULL },
+    { L"//Property[Name!text()='testNumber']/Value/numData",            VT_BSTR, L"number" },
+    { L"//Property[Name!text()='testR4']/Value/r4Data",                 VT_R4,   L"r4" },
+    { L"//Property[Name!text()='testR8']/Value/r8Data",                 VT_R8,   L"r8" },
+    { L"//Property[Name!text()='testString']/Value/stringData",         VT_BSTR, NULL },
+    { L"//Property[Name!text()='testTime']/Value/timeData",             VT_DATE, L"time" },
+    { L"//Property[Name!text()='testTimeTz']/Value/timeTzData",         VT_DATE, L"time.tz" },
+    { L"//Property[Name!text()='testU1']/Value/u1Data",                 VT_UI1,  L"ui1" },
+    { L"//Property[Name!text()='testU2']/Value/u2Data",                 VT_UI2,  L"ui2" },
+    { L"//Property[Name!text()='testU4']/Value/u4Data",                 VT_UI4,  L"ui4" },
+    { L"//Property[Name!text()='testU8']/Value/u8Data",                 VT_NULL, L"ui8", TRUE },
+    { L"//Property[Name!text()='testURI']/Value/uriData",               VT_BSTR, L"uri" },
+    { L"//Property[Name!text()='testUUID']/Value/uuidData",             VT_BSTR, L"uuid" },
     { NULL }
 };
 
@@ -1408,53 +1270,53 @@ static void test_XDR_datatypes(void)
     }
 
     hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szDatatypeXML), &b);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     hr = IXMLDOMDocument2_loadXML(doc2, _bstr_(szDatatypeXML), &b);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     hr = IXMLDOMDocument2_loadXML(schema, _bstr_(szDatatypeXDR), &b);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(b == VARIANT_TRUE, "failed to load XML string\n");
 
     err = NULL;
     hr = IXMLDOMDocument2_validate(doc, &err);
-    EXPECT_HR(hr, S_FALSE);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
     hr = IXMLDOMParseError_get_errorCode(err, &l);
-    EXPECT_HR(hr, S_OK);
-    ok(l == E_XML_NODTD, "got %08x\n", l);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(l == E_XML_NODTD, "Unexpected error code %#lx.\n", l);
     IXMLDOMParseError_Release(err);
 
     err = NULL;
     hr = IXMLDOMDocument2_validate(doc2, &err);
-    EXPECT_HR(hr, S_FALSE);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
     hr = IXMLDOMParseError_get_errorCode(err, &l);
-    EXPECT_HR(hr, S_OK);
-    ok(l == E_XML_NODTD, "got %08x\n", l);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
+    ok(l == E_XML_NODTD, "Unexpected error code %#lx.\n", l);
     IXMLDOMParseError_Release(err);
 
     /* now load the schema */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
     hr = IXMLDOMDocument2_QueryInterface(schema, &IID_IDispatch, (void**)&V_DISPATCH(&v));
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
-    hr = IXMLDOMSchemaCollection_add(cache, _bstr_("urn:x-schema:datatype-test-xdr"), v);
-    EXPECT_HR(hr, S_OK);
+    hr = IXMLDOMSchemaCollection_add(cache, _bstr_(L"urn:x-schema:datatype-test-xdr"), v);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* associate the cache to the doc */
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
     hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatch, (void**)&V_DISPATCH(&v));
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(V_DISPATCH(&v) != NULL, "failed to get IDispatch interface\n");
     hr = IXMLDOMDocument2_putref_schemas(doc2, v);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     VariantClear(&v);
 
     /* validate the doc */
@@ -1462,13 +1324,13 @@ static void test_XDR_datatypes(void)
     l = 0;
     bstr = NULL;
     hr = IXMLDOMDocument2_validate(doc2, &err);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(err != NULL, "domdoc_validate() should always set err\n");
     hr = IXMLDOMParseError_get_errorCode(err, &l);
-    EXPECT_HR(hr, S_FALSE);
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
     hr = IXMLDOMParseError_get_reason(err, &bstr);
-    EXPECT_HR(hr, S_FALSE);
-    ok(l == 0, "got %08x : %s\n", l, wine_dbgstr_w(bstr));
+    ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
+    ok(l == 0, "Unexpected value %lx : %s\n", l, wine_dbgstr_w(bstr));
     SysFreeString(bstr);
     IXMLDOMParseError_Release(err);
 
@@ -1480,20 +1342,20 @@ static void test_XDR_datatypes(void)
 
         /* check data types without the schema */
         hr = IXMLDOMDocument2_selectSingleNode(doc, _bstr_(ptr->query), &node);
-        EXPECT_HR(hr, S_OK);
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
         ok(node != NULL, "expected node\n");
 
         V_VT(&type) = VT_EMPTY;
         V_BSTR(&type) = (void*)-1;
         hr = IXMLDOMNode_get_dataType(node, &type);
-        EXPECT_HR(hr, S_FALSE);
+        ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
         ok(V_VT(&type) == VT_NULL, "got type %i\n", V_VT(&type));
         /* when returning VT_NULL, the pointer is set to NULL */
         ok(V_BSTR(&type) == NULL, "got %p\n", V_BSTR(&type));
 
         VariantClear(&type);
         hr = IXMLDOMNode_get_nodeTypedValue(node, &type);
-        EXPECT_HR(hr, S_OK);
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
         ok(V_VT(&type) == VT_BSTR, "got variant type %i\n", V_VT(&v));
         VariantClear(&type);
         IXMLDOMNode_Release(node);
@@ -1501,30 +1363,30 @@ static void test_XDR_datatypes(void)
         /* check the data with schema */
         node = NULL;
         hr = IXMLDOMDocument2_selectSingleNode(doc2, _bstr_(ptr->query), &node);
-        EXPECT_HR(hr, S_OK);
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
         ok(node != NULL, "expected node\n");
 
         V_VT(&type) = VT_EMPTY;
         hr = IXMLDOMNode_get_dataType(node, &type);
         if (ptr->typename)
         {
-            EXPECT_HR(hr, S_OK);
+            ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
             ok(V_VT(&type) == VT_BSTR, "got type %i\n", V_VT(&type));
             ok(!lstrcmpW(V_BSTR(&type), _bstr_(ptr->typename)), "got %s\n", wine_dbgstr_w(V_BSTR(&type)));
         }
         else
         {
-            EXPECT_HR(hr, S_FALSE);
-            ok(V_VT(&type) == VT_NULL, "%s: got type %i\n", ptr->query, V_VT(&type));
+            ok(hr == S_FALSE, "Unexpected hr %#lx.\n", hr);
+            ok(V_VT(&type) == VT_NULL, "%s: got type %i\n", wine_dbgstr_w(ptr->query), V_VT(&type));
         }
         VariantClear(&type);
 
         VariantClear(&v);
         hr = IXMLDOMNode_get_nodeTypedValue(node, &v);
-        EXPECT_HR(hr, S_OK);
+        ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
         todo_wine_if(ptr->todo)
-            ok(V_VT(&v) == ptr->type_schema, "%s: got variant type %i\n", ptr->query, V_VT(&v));
+            ok(V_VT(&v) == ptr->type_schema, "%s: got variant type %i\n", wine_dbgstr_w(ptr->query), V_VT(&v));
 
         switch (ptr->type_schema)
         {
@@ -1538,13 +1400,13 @@ static void test_XDR_datatypes(void)
             ok(V_I2(&v) == 420, "got %i\n", V_I2(&v));
             break;
         case VT_I4:
-            if (!strcmp(ptr->typename, "int"))
-                ok(V_I4(&v) == 42, "got %i\n", V_I4(&v));
-            else if (!strcmp(ptr->typename, "char"))
+            if (!wcscmp(ptr->typename, L"int"))
+                ok(V_I4(&v) == 42, "got %ld\n", V_I4(&v));
+            else if (!wcscmp(ptr->typename, L"char"))
             todo_wine
-                ok(V_I4(&v) == 'u', "got %x\n", V_I4(&v));
+                ok(V_I4(&v) == 'u', "got %lx\n", V_I4(&v));
             else
-                ok(V_I4(&v) == -420000000, "got %i\n", V_I4(&v));
+                ok(V_I4(&v) == -420000000, "got %ld\n", V_I4(&v));
             break;
         case VT_I8:
             expect_int64(V_I8(&v), -4200000000, 10);
@@ -1553,11 +1415,19 @@ static void test_XDR_datatypes(void)
             ok(V_R4(&v) == (float)3.14159265, "got %f\n", V_R4(&v));
             break;
         case VT_R8:
-            if (!strcmp(ptr->typename, "float"))
+            if (!wcscmp(ptr->typename, L"float"))
+#ifdef __REACTOS__ // crash due to printf bug, will be fixed with import of wine's msvcrt
+                ok(V_R8(&v) == 3.14159, "got 0x%llx\n", *(unsigned long long*)&V_R8(&v));
+#else
                 ok(V_R8(&v) == 3.14159, "got %f\n", V_R8(&v));
+#endif
             else
             todo_wine
+#ifdef __REACTOS__ // crash due to printf bug, will be fixed with import of wine's msvcrt
+                ok(V_R8(&v) == 3.14159265358979323846, "got 0x%llx\n", *(unsigned long long*)&V_R8(&v));
+#else
                 ok(V_R8(&v) == 3.14159265358979323846, "got %.20f\n", V_R8(&v));
+#endif
             break;
         case VT_UI1:
             ok(V_UI1(&v) == 0xFF, "got %02x\n", V_UI1(&v));
@@ -1566,7 +1436,7 @@ static void test_XDR_datatypes(void)
             ok(V_UI2(&v) == 0xFFFF, "got %04x\n", V_UI2(&v));
             break;
         case VT_UI4:
-            ok(V_UI4(&v) == 0xFFFFFFFF, "got %08x\n", V_UI4(&v));
+            ok(V_UI4(&v) == 0xFFFFFFFF, "got %#lx\n", V_UI4(&v));
             break;
         case VT_UI8:
             expect_uint64(V_UI8(&v), 0xFFFFFFFFFFFFFFFF, 16);
@@ -1590,26 +1460,6 @@ static void test_XDR_datatypes(void)
     free_bstrs();
 }
 
-static void test_validate_on_load(void)
-{
-    IXMLDOMSchemaCollection2 *cache;
-    VARIANT_BOOL b;
-    HRESULT hr;
-
-    cache = create_cache_version(40, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    hr = IXMLDOMSchemaCollection2_get_validateOnLoad(cache, NULL);
-    EXPECT_HR(hr, E_POINTER);
-
-    b = VARIANT_FALSE;
-    hr = IXMLDOMSchemaCollection2_get_validateOnLoad(cache, &b);
-    EXPECT_HR(hr, S_OK);
-    ok(b == VARIANT_TRUE, "got %d\n", b);
-
-    IXMLDOMSchemaCollection2_Release(cache);
-}
-
 static void test_obj_dispex(IUnknown *obj)
 {
     DISPID dispid = DISPID_SAX_XMLREADER_GETFEATURE;
@@ -1621,42 +1471,42 @@ static void test_obj_dispex(IUnknown *obj)
     BSTR name;
 
     hr = IUnknown_QueryInterface(obj, &IID_IDispatchEx, (void**)&dispex);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     if (FAILED(hr)) return;
 
     ticnt = 0;
     hr = IDispatchEx_GetTypeInfoCount(dispex, &ticnt);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(ticnt == 1, "ticnt=%u\n", ticnt);
 
     name = SysAllocString(L"*");
     hr = IDispatchEx_DeleteMemberByName(dispex, name, fdexNameCaseSensitive);
-    EXPECT_HR(hr, E_NOTIMPL);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
     SysFreeString(name);
 
     hr = IDispatchEx_DeleteMemberByDispID(dispex, dispid);
-    EXPECT_HR(hr, E_NOTIMPL);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
 
     props = 0;
     hr = IDispatchEx_GetMemberProperties(dispex, dispid, grfdexPropCanAll, &props);
-    EXPECT_HR(hr, E_NOTIMPL);
-    ok(props == 0, "expected 0 got %d\n", props);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
+    ok(props == 0, "expected 0 got %ld\n", props);
 
     hr = IDispatchEx_GetMemberName(dispex, dispid, &name);
-    EXPECT_HR(hr, E_NOTIMPL);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
     if (SUCCEEDED(hr)) SysFreeString(name);
 
     hr = IDispatchEx_GetNextDispID(dispex, fdexEnumDefault, DISPID_XMLDOM_SCHEMACOLLECTION_ADD, &dispid);
-    EXPECT_HR(hr, E_NOTIMPL);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
 
     unk = (IUnknown*)0xdeadbeef;
     hr = IDispatchEx_GetNameSpaceParent(dispex, &unk);
-    EXPECT_HR(hr, E_NOTIMPL);
+    ok(hr == E_NOTIMPL, "Unexpected hr %#lx.\n", hr);
     ok(unk == (IUnknown*)0xdeadbeef, "got %p\n", unk);
 
     name = SysAllocString(L"testprop");
     hr = IDispatchEx_GetDispID(dispex, name, fdexNameEnsure, &dispid);
-    ok(hr == DISP_E_UNKNOWNNAME, "got 0x%08x\n", hr);
+    ok(hr == DISP_E_UNKNOWNNAME, "Unexpected hr %#lx.\n", hr);
     SysFreeString(name);
 
     IDispatchEx_Release(dispex);
@@ -1675,12 +1525,12 @@ static void test_dispex(void)
     if (!cache) return;
 
     hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IUnknown, (void**)&unk);
-    EXPECT_HR(hr, S_OK);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     test_obj_dispex(unk);
     IUnknown_Release(unk);
 
     hr = IXMLDOMSchemaCollection_QueryInterface(cache, &IID_IDispatchEx, (void**)&dispex);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
 
     V_VT(&arg) = VT_I4;
     V_I4(&arg) = 0;
@@ -1692,159 +1542,12 @@ static void test_dispex(void)
     V_VT(&ret) = VT_EMPTY;
     V_DISPATCH(&ret) = (void*)0x1;
     hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
-    ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "Unexpected hr %#lx.\n", hr);
     ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
     ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
 
     IDispatchEx_Release(dispex);
     IXMLDOMSchemaCollection_Release(cache);
-
-    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection);
-    if (cache)
-    {
-        test_obj_dispex((IUnknown*)cache);
-        IXMLDOMSchemaCollection_Release(cache);
-    }
-}
-
-static void test_get(void)
-{
-    IXMLDOMSchemaCollection2 *cache;
-    IXMLDOMNode *node;
-    HRESULT hr;
-
-    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    hr = IXMLDOMSchemaCollection2_get(cache, NULL, NULL);
-    ok(hr == E_NOTIMPL || hr == E_POINTER /* win8 */, "got %08x\n", hr);
-
-    hr = IXMLDOMSchemaCollection2_get(cache, _bstr_("uri"), &node);
-    EXPECT_HR(hr, E_NOTIMPL);
-
-    IXMLDOMSchemaCollection2_Release(cache);
-
-    cache = create_cache_version(40, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    hr = IXMLDOMSchemaCollection2_get(cache, NULL, NULL);
-    EXPECT_HR(hr, E_POINTER);
-
-    hr = IXMLDOMSchemaCollection2_get(cache, _bstr_("uri"), &node);
-    EXPECT_HR(hr, S_OK);
-
-    IXMLDOMSchemaCollection2_Release(cache);
-    free_bstrs();
-}
-
-static void test_remove(void)
-{
-    IXMLDOMSchemaCollection2 *cache;
-    IXMLDOMDocument *doc;
-    VARIANT_BOOL b;
-    HRESULT hr;
-    VARIANT v;
-    LONG len;
-
-    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    doc = create_document_version(60, &IID_IXMLDOMDocument);
-    ok(doc != NULL, "got %p\n", doc);
-
-    hr = IXMLDOMDocument_loadXML(doc, _bstr_(xsd_schema1_xml), &b);
-    EXPECT_HR(hr, S_OK);
-
-    V_VT(&v) = VT_DISPATCH;
-    V_DISPATCH(&v) = (IDispatch*)doc;
-    hr = IXMLDOMSchemaCollection2_add(cache, _bstr_(xsd_schema1_uri), v);
-    EXPECT_HR(hr, S_OK);
-
-    len = -1;
-    hr = IXMLDOMSchemaCollection2_get_length(cache, &len);
-    EXPECT_HR(hr, S_OK);
-    ok(len == 1, "got %d\n", len);
-
-    /* ::remove() is a stub for version 6 */
-    hr = IXMLDOMSchemaCollection2_remove(cache, NULL);
-    EXPECT_HR(hr, E_NOTIMPL);
-
-    hr = IXMLDOMSchemaCollection2_remove(cache, _bstr_("invaliduri"));
-    EXPECT_HR(hr, E_NOTIMPL);
-
-    hr = IXMLDOMSchemaCollection2_remove(cache, _bstr_(xsd_schema1_uri));
-    EXPECT_HR(hr, E_NOTIMPL);
-
-    len = -1;
-    hr = IXMLDOMSchemaCollection2_get_length(cache, &len);
-    EXPECT_HR(hr, S_OK);
-    ok(len == 1, "got %d\n", len);
-
-    IXMLDOMDocument_Release(doc);
-    IXMLDOMSchemaCollection2_Release(cache);
-    free_bstrs();
-
-    /* ::remove() works for version 4 */
-    cache = create_cache_version(40, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    doc = create_document_version(40, &IID_IXMLDOMDocument);
-    ok(doc != NULL, "got %p\n", doc);
-
-    hr = IXMLDOMDocument_loadXML(doc, _bstr_(xsd_schema1_xml), &b);
-    EXPECT_HR(hr, S_OK);
-
-    V_VT(&v) = VT_DISPATCH;
-    V_DISPATCH(&v) = (IDispatch*)doc;
-    hr = IXMLDOMSchemaCollection2_add(cache, _bstr_(xsd_schema1_uri), v);
-    EXPECT_HR(hr, S_OK);
-
-    len = -1;
-    hr = IXMLDOMSchemaCollection2_get_length(cache, &len);
-    EXPECT_HR(hr, S_OK);
-    ok(len == 1, "got %d\n", len);
-
-    hr = IXMLDOMSchemaCollection2_remove(cache, NULL);
-    EXPECT_HR(hr, S_OK);
-
-    hr = IXMLDOMSchemaCollection2_remove(cache, _bstr_("invaliduri"));
-    EXPECT_HR(hr, S_OK);
-
-    len = -1;
-    hr = IXMLDOMSchemaCollection2_get_length(cache, &len);
-    EXPECT_HR(hr, S_OK);
-    ok(len == 1, "got %d\n", len);
-
-    hr = IXMLDOMSchemaCollection2_remove(cache, _bstr_(xsd_schema1_uri));
-    EXPECT_HR(hr, S_OK);
-
-    len = -1;
-    hr = IXMLDOMSchemaCollection2_get_length(cache, &len);
-    EXPECT_HR(hr, S_OK);
-    ok(len == 0, "got %d\n", len);
-
-    IXMLDOMDocument_Release(doc);
-    IXMLDOMSchemaCollection2_Release(cache);
-
-    free_bstrs();
-}
-
-static void test_ifaces(void)
-{
-    IXMLDOMSchemaCollection2 *cache;
-    IUnknown *unk;
-    HRESULT hr;
-
-    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection2);
-    if (!cache) return;
-
-    /* CLSID_XMLSchemaCache60 is returned as an interface (the same as IXMLDOMSchemaCollection2). */
-    hr = IXMLDOMSchemaCollection2_QueryInterface(cache, &CLSID_XMLSchemaCache60, (void**)&unk);
-    ok (hr == S_OK, "Could not get CLSID_XMLSchemaCache60 iface: %08x\n", hr);
-    ok (unk == (IUnknown*)cache, "unk != cache\n");
-
-    IUnknown_Release(unk);
-    IXMLDOMSchemaCollection2_Release(cache);
 }
 
 START_TEST(schema)
@@ -1858,14 +1561,9 @@ START_TEST(schema)
     test_collection_refs();
     test_length();
     test_collection_content();
-    test_regex();
     test_XDR_schemas();
     test_XDR_datatypes();
-    test_validate_on_load();
     test_dispex();
-    test_get();
-    test_remove();
-    test_ifaces();
 
     CoUninitialize();
 }
