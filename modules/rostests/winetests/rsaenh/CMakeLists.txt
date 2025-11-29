@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(rsaenh_winetest rsaenh.c testlist.c)
 set_module_type(rsaenh_winetest win32cui)

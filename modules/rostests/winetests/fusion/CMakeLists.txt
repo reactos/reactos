@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 list(APPEND SOURCE
     asmcache.c
     asmenum.c

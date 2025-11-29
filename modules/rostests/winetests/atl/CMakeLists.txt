@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-D_ATL_VER=_ATL_VER_30)
 
 list(APPEND SOURCE
