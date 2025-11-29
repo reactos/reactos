@@ -163,6 +163,25 @@ ProbeAndCaptureUnicodeString(
 #endif
             if (Dest->Buffer != NULL)
             {
+#ifdef PROBE_USTR_TOLERATE_MALFORMED_STRINGS
+                if (Dest->Length % sizeof(WCHAR))
+                    Dest->Length--;
+                if (Dest->Length > Dest->MaximumLength)
+                    Dest->Length = Dest->MaximumLength;
+#else
+// REMARK: Ideally we should use RtlValidateUnicodeString() or ntstrsafe.h's
+// RtlUnicodeStringValidate(Ex), but the code below performs the same checks.
+// Also, UNICODE_STRING_MAX_CHARS == default NTSTRSAFE_UNICODE_STRING_MAX_CCH.
+                if (Dest->Length % sizeof(WCHAR) != 0 ||
+                    Dest->MaximumLength % sizeof(WCHAR) != 0 ||
+                    Dest->Length > Dest->MaximumLength ||
+                    Dest->MaximumLength > UNICODE_STRING_MAX_CHARS * sizeof(WCHAR) ||
+                    (Dest->Buffer == NULL && (Dest->Length != 0 || Dest->MaximumLength != 0)))
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                    _SEH2_LEAVE;
+                }
+#endif
                 if (Dest->Length != 0)
                 {
                     ProbeForRead(Dest->Buffer, Dest->Length, sizeof(WCHAR));
@@ -183,18 +202,12 @@ ProbeAndCaptureUnicodeString(
 
                     /* Set it as the buffer */
                     Dest->Buffer = Buffer;
-                    if (Dest->Length % sizeof(WCHAR))
-                    {
-                        Dest->Length--;
-                    }
+#ifdef PROBE_USTR_TOLERATE_MALFORMED_STRINGS
                     if (Dest->Length >= UNICODE_STRING_MAX_BYTES)
-                    {
                         Dest->MaximumLength = Dest->Length;
-                    }
                     else
-                    {
-                        Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
-                    }
+#endif
+                    Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
                 }
                 else
                 {
