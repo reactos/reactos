@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/wine)
 add_executable(localui_winetest localui.c testlist.c)
 set_module_type(localui_winetest win32cui)

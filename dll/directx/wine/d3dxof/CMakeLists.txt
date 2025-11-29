@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 spec2def(d3dxof.dll d3dxof.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

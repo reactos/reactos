@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_definitions(
     -DUSE_WINE_TODOS
     -D_WINE)

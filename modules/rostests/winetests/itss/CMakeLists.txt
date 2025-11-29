@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_executable(itss_winetest protocol.c testlist.c rsrc.rc)
 set_module_type(itss_winetest win32cui)
 add_importlibs(itss_winetest ole32 msvcrt kernel32)

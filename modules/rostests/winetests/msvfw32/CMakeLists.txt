@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(msvfw32_winetest drawdib.c mciwnd.c msvfw.c testlist.c msvfw32.rc)
 set_module_type(msvfw32_winetest win32cui)

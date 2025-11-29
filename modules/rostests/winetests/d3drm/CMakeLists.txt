@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(d3drm_winetest d3drm.c vector.c testlist.c)
 target_link_libraries(d3drm_winetest uuid dxguid)

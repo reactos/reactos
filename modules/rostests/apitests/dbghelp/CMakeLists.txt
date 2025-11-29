@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__ -DWINETEST_USE_DBGSTR_LONGLONG)
+add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib

@@ -1,7 +1,6 @@
 
 add_definitions(
-    -D_WINE
-    -D__ROS_LONG64__)
+    -D_WINE)
 
 spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 

@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__ROS_LONG64__
     -Dstrcasecmp=_stricmp
 )
 
