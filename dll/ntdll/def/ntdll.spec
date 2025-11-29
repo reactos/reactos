@@ -1888,7 +1888,7 @@
 @ varargs swprintf(ptr wstr)
 @ cdecl -arch=i386,x86_64 tan(double)
 @ cdecl tolower(long)
-@ cdecl toupper(long)
+@ cdecl toupper(long) toupper_nt_mb
 @ cdecl towlower(long)
 @ cdecl towupper(long)
 @ stdcall vDbgPrintEx(long long str ptr)

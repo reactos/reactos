@@ -77,4 +77,19 @@
 /* Virtual DOS Machines (VDM) Support Definitions */
 #include "include/vdm.h"
 
+/* Undo hacks in wine/unicode.h */
+#undef tolowerW
+static inline WCHAR tolowerW( WCHAR ch )
+{
+    extern WINE_UNICODE_API const WCHAR wine_casemap_lower[];
+    return ch + wine_casemap_lower[wine_casemap_lower[ch >> 8] + (ch & 0xff)];
+}
+
+#undef toupperW
+static inline WCHAR toupperW( WCHAR ch )
+{
+    extern WINE_UNICODE_API const WCHAR wine_casemap_upper[];
+    return ch + wine_casemap_upper[wine_casemap_upper[ch >> 8] + (ch & 0xff)];
+}
+
 #endif /* __K32_H */
