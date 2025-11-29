@@ -3396,3 +3396,257 @@ HRESULT WINAPI SHGetSpecialFolderLocation(
     hr = SHGetFolderLocation(hwndOwner, nFolder, NULL, 0, ppidl);
     return hr;
 }
+
+#ifdef __REACTOS__
+/*************************************************************************
+ * SHGetKnownFolderPath [SHELL32.@] (Vista+)
+ *
+ * Retrieves the path of a known folder identified by its ID.
+ *
+ * PARAMS
+ *   rfid       [I] A KNOWNFOLDERID GUID that identifies the folder.
+ *   dwFlags    [I] Flags to specify retrieval options.
+ *   hToken     [I] An access token that represents a specific user.
+ *                  Can be NULL (current user), -1 (default user profile),
+ *                  or a valid token handle.
+ *   ppszPath   [O] Pointer to a buffer allocated with SHAlloc that contains
+ *                  the path string. Caller is responsible for freeing.
+ *
+ * RETURNS
+ *   S_OK: Success. *ppszPath contains the path.
+ *   S_FALSE: Folder exists but has no path (virtual folder without KF_FLAG_NO_ALIAS).
+ *   E_INVALIDARG: rfid is not a valid KNOWNFOLDERID or ppszPath is NULL.
+ *   Other HRESULT error codes on failure (e.g., out of memory, path not found).
+ */
+HRESULT WINAPI SHGetKnownFolderPath(
+    _In_ REFKNOWNFOLDERID rfid,
+    _In_ DWORD dwFlags,
+    _In_opt_ HANDLE hToken,
+    _Outptr_ PWSTR *ppszPath)
+{
+    UINT i;
+    HRESULT hr;
+    WCHAR szPath[MAX_PATH];
+    INT mapped_csidl = -1;
+
+    if (!ppszPath)
+    {
+        TRACE("Invalid argument: ppszPath is NULL\n");
+        return E_INVALIDARG;
+    }
+
+    *ppszPath = NULL;
+
+    if ((dwFlags & KF_FLAG_DEFAULT_PATH) && (hToken == NULL))
+        hToken = INVALID_HANDLE_VALUE;
+
+    for (i = 0; i < ARRAY_SIZE(CSIDL_Data); ++i)
+    {
+        if (IsEqualGUID(rfid, CSIDL_Data[i].id))
+        {
+            mapped_csidl = i;
+            break;
+        }
+    }
+
+    if (mapped_csidl == -1)
+    {
+        ERR("Unknown known folder GUID requested\n");
+        return E_INVALIDARG;
+    }
+
+    CSIDL_Type type = CSIDL_Data[mapped_csidl].type;
+    LPCWSTR szDefaultPath = CSIDL_Data[mapped_csidl].szDefaultPath;
+    int nShell32IconIndex = CSIDL_Data[mapped_csidl].nShell32IconIndex;
+
+    switch (mapped_csidl)
+    {
+        case CSIDL_INTERNET:
+        case CSIDL_CONTROLS:
+        case CSIDL_PRINTERS:
+        case CSIDL_BITBUCKET:
+        case CSIDL_DRIVES:
+        case CSIDL_NETWORK:
+        case CSIDL_CONNECTIONS:
+            if (!(dwFlags & KF_FLAG_NO_ALIAS))
+            {
+                return S_FALSE;
+            }
+            break;
+        default:
+            break;
+    }
+
+    szPath[0] = UNICODE_NULL;
+
+    DWORD internalFlags = 0;
+
+    if (dwFlags & KF_FLAG_DEFAULT_PATH)
+        internalFlags |= SHGFP_TYPE_DEFAULT;
+
+    switch (type)
+    {
+        case CSIDL_Type_Disallowed:
+            hr = E_INVALIDARG;
+            break;
+        case CSIDL_Type_NonExistent:
+             hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+             break;
+        case CSIDL_Type_WindowsPath:
+            if (!GetWindowsDirectoryW(szPath, MAX_PATH))
+            {
+                hr = HRESULT_FROM_WIN32(GetLastError());
+            } 
+            else 
+            {
+                hr = S_OK;
+            }
+            if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
+            {
+                PathAppendW(szPath, szDefaultPath);
+            }
+            break;
+        case CSIDL_Type_SystemPath:
+            if (!GetSystemDirectoryW(szPath, MAX_PATH))
+            {
+                hr = HRESULT_FROM_WIN32(GetLastError());
+            } 
+            else 
+            {
+                hr = S_OK;
+            }
+            if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
+            {
+                PathAppendW(szPath, szDefaultPath);
+            }
+            break;
+        case CSIDL_Type_SystemX86Path:
+            if (!GetSystemWow64DirectoryW(szPath, _countof(szPath)))
+            {
+                if (!GetSystemDirectoryW(szPath, _countof(szPath)))
+                {
+                    hr = HRESULT_FROM_WIN32(GetLastError());
+                } 
+                else 
+                {
+                    hr = S_OK;
+                }
+            } 
+            else 
+            {
+                hr = S_OK;
+            }
+            if (SUCCEEDED(hr) && szDefaultPath && !IS_INTRESOURCE(szDefaultPath) && *szDefaultPath)
+            {
+                PathAppendW(szPath, szDefaultPath);
+            }
+            break;
+        case CSIDL_Type_CurrVer:
+            hr = _SHGetCurrentVersionPath(internalFlags, (BYTE)mapped_csidl, szPath);
+            break;
+        case CSIDL_Type_User:
+        case CSIDL_Type_InMyDocuments:
+            hr = _SHGetUserProfilePath(hToken, internalFlags, (BYTE)mapped_csidl, szPath);
+            break;
+        case CSIDL_Type_AllUsers:
+            hr = _SHGetAllUsersProfilePath(internalFlags, (BYTE)mapped_csidl, szPath);
+            break;
+        default:
+            TRACE("SHGetKnownFolderPath: Unhandled CSIDL_Type %d\n", type);
+            hr = E_NOTIMPL;
+            break;
+    }
+
+    if (FAILED(hr))
+    {
+        TRACE("Failed to get path, HRESULT=0x%08x\n", hr);
+        return hr;
+    }
+
+    if (!(dwFlags & KF_FLAG_DONT_UNEXPAND) && szPath[0] == '%')
+    {
+        WCHAR szExpandedPath[MAX_PATH];
+        hr = _SHExpandEnvironmentStrings(hToken, szPath, szExpandedPath, _countof(szExpandedPath));
+        if (FAILED(hr))
+        {
+             TRACE("Failed to expand environment strings, HRESULT=0x%08x\n", hr);
+             return hr;
+        }
+        StringCchCopyW(szPath, _countof(szPath), szExpandedPath);
+    }
+
+    BOOL bVerify = !(dwFlags & KF_FLAG_DONT_VERIFY);
+    BOOL bCreate = (dwFlags & (KF_FLAG_CREATE | KF_FLAG_INIT));
+
+    if (bVerify)
+    {
+        if (!PathFileExistsW(szPath))
+        {
+            if (bCreate)
+            {
+                int ret = SHCreateDirectoryExW(NULL, szPath, NULL);
+                if (ret != ERROR_SUCCESS && ret != ERROR_ALREADY_EXISTS)
+                {
+                    hr = HRESULT_FROM_WIN32(ret);
+                    TRACE("Failed to create directory, HRESULT=0x%08x\n", hr);
+                    return hr;
+                }
+            }
+            else
+            {
+                 hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+                 TRACE("Path not found and creation not requested\n");
+                 return hr;
+            }
+        }
+
+        if ((dwFlags & KF_FLAG_INIT) && nShell32IconIndex)
+        {
+            WCHAR szIconLocation[MAX_PATH];
+            WCHAR szDesktopIniPath[MAX_PATH];
+            DWORD dwAttributes;
+
+            dwAttributes = GetFileAttributesW(szPath);
+            if (dwAttributes != INVALID_FILE_ATTRIBUTES)
+            {
+                 dwAttributes |= FILE_ATTRIBUTE_READONLY;
+                 SetFileAttributesW(szPath, dwAttributes);
+            }
+
+            StringCchCopyW(szDesktopIniPath, _countof(szDesktopIniPath), szPath);
+            PathAppendW(szDesktopIniPath, L"desktop.ini");
+
+            StringCchPrintfW(szIconLocation, _countof(szIconLocation),
+                             L"%%SystemRoot%%\\system32\\shell32.dll,%d",
+                             nShell32IconIndex);
+
+            WritePrivateProfileStringW(L".ShellClassInfo", L"IconResource", szIconLocation, szDesktopIniPath);
+
+            WritePrivateProfileStringW(NULL, NULL, NULL, szDesktopIniPath);
+
+            dwAttributes = GetFileAttributesW(szDesktopIniPath);
+            if (dwAttributes != INVALID_FILE_ATTRIBUTES)
+            {
+                dwAttributes |= FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN;
+                SetFileAttributesW(szDesktopIniPath, dwAttributes);
+            }
+        }
+    }
+
+    SIZE_T pathLen = lstrlenW(szPath);
+
+    *ppszPath = (PWSTR)SHAlloc((pathLen + 1) * sizeof(WCHAR));
+    if (!*ppszPath)
+    {
+        TRACE("Failed to allocate memory for path\n");
+        hr = E_OUTOFMEMORY;
+        return hr;
+    }
+
+    StringCchCopyW(*ppszPath, pathLen + 1, szPath);
+
+    hr = S_OK;
+
+    return hr;
+}
+#endif
