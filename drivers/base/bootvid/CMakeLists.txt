@@ -37,6 +37,7 @@ add_library(bootvid MODULE
 
 set_module_type(bootvid kerneldll ENTRYPOINT 0)
 add_importlibs(bootvid ntoskrnl hal)
+target_link_libraries(bootvid ksanitize)
 add_pch(bootvid precomp.h SOURCE)
 add_dependencies(bootvid psdk)
 add_cd_file(TARGET bootvid DESTINATION reactos/system32 NO_CAB FOR all)
