@@ -39,9 +39,6 @@ if(MSVC)
     # export of deleting destructor "name"
     target_link_options(msvcrt PRIVATE "/ignore:4102")
     set_property(TARGET libmsvcrt APPEND PROPERTY STATIC_LIBRARY_OPTIONS "/ignore:4102")
-    if(ARCH STREQUAL "i386")
-        target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:ftol2_sse>)
-    endif()
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)
