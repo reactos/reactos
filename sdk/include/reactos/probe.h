@@ -3,7 +3,7 @@
 
 #include <suppress.h>
 
-#if ! defined(_NTOSKRNL_) && ! defined(_WIN32K_)
+#if !defined(_NTOSKRNL_) && !defined(_WIN32K_)
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
 
@@ -53,7 +53,7 @@ static const LARGE_STRING __emptyLargeString = {0, 0, 0, NULL};
 
 #define ProbeForReadGenericType(Ptr, Type, Default)                            \
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
-     (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
+      (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?  \
          ExRaiseAccessViolation(), Default :                     \
          *(const volatile Type *)(Ptr))
 
@@ -96,10 +96,11 @@ static const LARGE_STRING __emptyLargeString = {0, 0, 0, NULL};
 #if defined(_WIN32K_)
 static __inline
 VOID
-ProbeArrayForRead(IN const VOID *ArrayPtr,
-                  IN ULONG ItemSize,
-                  IN ULONG ItemCount,
-                  IN ULONG Alignment)
+ProbeArrayForRead(
+    _In_ const VOID *ArrayPtr,
+    _In_ ULONG ItemSize,
+    _In_ ULONG ItemCount,
+    _In_ ULONG Alignment)
 {
     ULONG ArraySize;
 
@@ -117,10 +118,11 @@ ProbeArrayForRead(IN const VOID *ArrayPtr,
 
 static __inline
 VOID
-ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
-                   IN ULONG ItemSize,
-                   IN ULONG ItemCount,
-                   IN ULONG Alignment)
+ProbeArrayForWrite(
+    _Inout_ PVOID ArrayPtr,
+    _In_ ULONG ItemSize,
+    _In_ ULONG ItemCount,
+    _In_ ULONG Alignment)
 {
     ULONG ArraySize;
 
@@ -139,16 +141,17 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
 
 static __inline
 NTSTATUS
-ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
-                             IN KPROCESSOR_MODE CurrentMode,
-                             IN const UNICODE_STRING *UnsafeSrc)
+ProbeAndCaptureUnicodeString(
+    _Out_ PUNICODE_STRING Dest,
+    _In_ KPROCESSOR_MODE CurrentMode,
+    _In_ const UNICODE_STRING *UnsafeSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PWCHAR Buffer = NULL;
     ASSERT(Dest != NULL);
 
     /* Probe the structure and buffer*/
-    if(CurrentMode != KernelMode)
+    if (CurrentMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -158,7 +161,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
 #else
             *Dest = ProbeForReadUnicodeString(UnsafeSrc);
 #endif
-            if(Dest->Buffer != NULL)
+            if (Dest->Buffer != NULL)
             {
                 if (Dest->Length != 0)
                 {
@@ -211,9 +214,8 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
         {
             /* Free allocated resources and zero the destination string */
             if (Buffer != NULL)
-            {
                 ExFreePoolWithTag(Buffer, 'RTSU');
-            }
+
             Dest->Length = 0;
             Dest->MaximumLength = 0;
             Dest->Buffer = NULL;
@@ -226,23 +228,21 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     else
     {
         /* Just copy the UNICODE_STRING structure, don't allocate new memory!
-           We trust the caller to supply valid pointers and data. */
+         * We trust the caller to supply valid pointers and data. */
         *Dest = *UnsafeSrc;
     }
 
-    /* Return */
     return Status;
 }
 
 static __inline
 VOID
-ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
-                             IN KPROCESSOR_MODE CurrentMode)
+ReleaseCapturedUnicodeString(
+    _In_ PUNICODE_STRING CapturedString,
+    _In_ KPROCESSOR_MODE CurrentMode)
 {
-    if(CurrentMode != KernelMode && CapturedString->Buffer != NULL)
-    {
+    if (CurrentMode != KernelMode && CapturedString->Buffer != NULL)
         ExFreePoolWithTag(CapturedString->Buffer, 'RTSU');
-    }
 
     CapturedString->Length = 0;
     CapturedString->MaximumLength = 0;
