@@ -18,6 +18,6 @@ add_library(lpk MODULE
 
 set_module_type(lpk win32dll UNICODE ENTRYPOINT LpkDllInitialize 12)
 target_link_libraries(lpk wine)
-add_importlibs(lpk usp10 version user32 gdi32 kernel32 ntdll)
+add_importlibs(lpk usp10 user32 gdi32 kernel32 ntdll)
 add_pch(lpk ros_lpk.h SOURCE)
 add_cd_file(TARGET lpk DESTINATION reactos/system32 FOR all)
