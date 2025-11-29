@@ -232,10 +232,17 @@ QuerySetThreadValidator(
                 case ThreadZeroTlsCell:
                 case ThreadIdealProcessor:
                 case ThreadSetTlsArrayAddress:
-                case ThreadHideFromDebugger:
                 case ThreadSwitchLegacyState:
                 {
                     SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    break;
+                }
+
+                /* This class supports queries only on Vista and above */
+                case ThreadHideFromDebugger:
+                {
+                    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
                 }
 
@@ -280,7 +287,7 @@ QuerySetThreadValidator(
 
                 /*
                  * This class doesn't take a strict type for size length.
-                 * The function happily succeds on an information length
+                 * The function happily succeeds on an information length
                  * mismatch scenario with STATUS_SUCCESS.
                  */
                 case ThreadHideFromDebugger:
