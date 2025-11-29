@@ -1,6 +1,6 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
-add_definitions(-D__ROS_LONG64__)
+
 add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE

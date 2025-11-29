@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_executable(inetmib1_winetest main.c testlist.c)
 set_module_type(inetmib1_winetest win32cui)
 add_importlibs(inetmib1_winetest snmpapi msvcrt kernel32)

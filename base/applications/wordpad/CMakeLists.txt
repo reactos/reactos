@@ -1,6 +1,5 @@
 
 remove_definitions(-D_WIN32_IE=0x600)
-add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     olecallback.c
