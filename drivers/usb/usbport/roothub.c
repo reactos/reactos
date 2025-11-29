@@ -248,7 +248,6 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
             }
 
             Feature = SetupPacket->wValue.W;
-
             switch (Feature)
             {
                 case FEATURE_PORT_ENABLE:

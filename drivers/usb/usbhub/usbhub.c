@@ -1853,7 +1853,12 @@ USBH_ProcessHubStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
         USBH_SyncClearHubStatus(HubExtension,
                                 USBHUB_FEATURE_C_HUB_LOCAL_POWER);
     }
-    else if (HubStatusChange.OverCurrentChange)
+    /*
+     * Per USB 2.0 spec multiple hub change bits may be set simultaneously.
+     * Handle OverCurrentChange independently so we don’t miss clearing it
+     * when LocalPowerChange is also set.
+     */
+    if (HubStatusChange.OverCurrentChange)
     {
         USBH_SyncClearHubStatus(HubExtension,
                                 USBHUB_FEATURE_C_HUB_OVER_CURRENT);
@@ -1948,25 +1953,33 @@ USBH_ProcessPortStateChange(IN PUSBHUB_FDO_EXTENSION HubExtension,
         }
 
         IoInvalidateDeviceRelations(HubExtension->LowerPDO, BusRelations);
+        return;
     }
-    else if (PortStatusChange.PortEnableDisableChange)
+
+    /*
+     * Multiple port change bits can be set at once (e.g. enable + reset).
+     * Handle each independently.
+     */
+    if (PortStatusChange.PortEnableDisableChange)
     {
         RequestValue = USBHUB_FEATURE_C_PORT_ENABLE;
         PortData->PortStatus = *PortStatus;
         USBH_SyncClearPortStatus(HubExtension, Port, RequestValue);
-        return;
     }
-    else if (PortStatusChange.SuspendChange)
+
+    if (PortStatusChange.SuspendChange)
     {
         DPRINT1("USBH_ProcessPortStateChange: SuspendChange UNIMPLEMENTED. FIXME\n");
         DbgBreakPoint();
     }
-    else if (PortStatusChange.OverCurrentIndicatorChange)
+
+    if (PortStatusChange.OverCurrentIndicatorChange)
     {
         DPRINT1("USBH_ProcessPortStateChange: OverCurrentIndicatorChange UNIMPLEMENTED. FIXME\n");
         DbgBreakPoint();
     }
-    else if (PortStatusChange.ResetChange)
+
+    if (PortStatusChange.ResetChange)
     {
         RequestValue = USBHUB_FEATURE_C_PORT_RESET;
         PortData->PortStatus = *PortStatus;

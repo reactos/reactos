@@ -17,6 +17,10 @@ add_library(usbhub MODULE
     ${PCH_SKIP_SOURCE}
     usbhub.rc)
 
+target_compile_definitions(usbhub
+    # HACK: Disabled until USB Stack is reinvestigated.
+    PRIVATE NO_KERNEL_LIST_ENTRY_CHECKS)
+
 target_link_libraries(usbhub ${PSEH_LIB})
 set_module_type(usbhub kernelmodedriver)
 add_importlibs(usbhub ntoskrnl hal wmilib usbd)
