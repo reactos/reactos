@@ -199,6 +199,15 @@ typedef struct _PO_DEVICE_NOTIFY_ORDER
     PO_NOTIFY_ORDER_LEVEL OrderLevel[8];
 } PO_DEVICE_NOTIFY_ORDER, *PPO_DEVICE_NOTIFY_ORDER;
 
+typedef struct _PO_DEVICE_NOTIFY_ENTRY {
+    LIST_ENTRY ListEntry;
+    struct _DEVICE_OBJECT* DeviceObject;
+    PVOID Callback;
+    PVOID Context;
+    ULONG Flags;
+    ULONG Order;
+} PO_DEVICE_NOTIFY_ENTRY, *PPO_DEVICE_NOTIFY_ENTRY;
+
 typedef struct _POP_DEVICE_SYS_STATE
 {
     UCHAR IrpMinor;

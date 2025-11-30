@@ -28,6 +28,22 @@ POP_POWER_ACTION PopAction;
 WORK_QUEUE_ITEM PopShutdownWorkItem;
 SYSTEM_POWER_CAPABILITIES PopCapabilities;
 
+#ifndef DEVICE_NOTIFY_CALLBACK_ORDER_MAX
+#define DEVICE_NOTIFY_CALLBACK_ORDER_MAX 2
+#endif
+
+#ifndef PO_NOTIFY_SOURCE
+#define PO_NOTIFY_SOURCE 0x1
+#endif
+
+#ifndef PO_NOTIFY_TARGET
+#define PO_NOTIFY_TARGET 0x2
+#endif
+
+#ifndef NonPagedPoolNx
+#define NonPagedPoolNx NonPagedPool
+#endif
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static WORKER_THREAD_ROUTINE PopPassivePowerCall;
@@ -535,20 +551,83 @@ PoCancelDeviceNotify(IN PVOID NotifyBlock)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
+/* * @implemented, minimal */
 NTSTATUS
 NTAPI
-PoRegisterDeviceNotify(OUT PVOID Unknown0,
-                       IN ULONG Unknown1,
-                       IN ULONG Unknown2,
-                       IN ULONG Unknown3,
-                       IN PVOID Unknown4,
-                       IN PVOID Unknown5)
+PoRegisterDeviceNotify(
+    OUT PVOID *NotificationHandle,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG Flags,
+    IN ULONG Order,
+    IN PVOID Callback,
+    IN PVOID Context
+)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PDEVICE_OBJECT_POWER_EXTENSION PowerExt;
+    PPO_DEVICE_NOTIFY_ENTRY Entry;
+    PLIST_ENTRY Head, Cur;
+    KIRQL OldIrql;
+
+    /* validate parameters */
+    if (!NotificationHandle || !DeviceObject || !Callback)
+        return STATUS_INVALID_PARAMETER;
+
+    if (Order > DEVICE_NOTIFY_CALLBACK_ORDER_MAX)
+        return STATUS_INVALID_PARAMETER;
+
+    /* validate flags */
+    if ((Flags & ~(PO_NOTIFY_SOURCE | PO_NOTIFY_TARGET)) ||
+        ((Flags & PO_NOTIFY_SOURCE) && (Flags & PO_NOTIFY_TARGET)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    PowerExt = DeviceObject->PowerExtension;
+    if (!PowerExt)
+        return STATUS_INVALID_DEVICE_REQUEST;
+
+    /* allocate entry */
+    Entry = ExAllocatePoolWithTag(NonPagedPoolNx,
+                                  sizeof(PO_DEVICE_NOTIFY_ENTRY),
+                                  'tNoP');
+    if (!Entry)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlZeroMemory(Entry, sizeof(*Entry));
+
+    Entry->DeviceObject = DeviceObject;
+    Entry->Callback     = Callback;
+    Entry->Context      = Context;
+    Entry->Flags        = Flags;
+    Entry->Order        = Order;
+
+    /* choose the correct list */
+    Head = (Flags & PO_NOTIFY_SOURCE)
+         ? &PowerExt->NotifySourceList
+         : &PowerExt->NotifyTargetList;
+
+    /* use I/O manager lock for list operations */
+    KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+
+    /* ordered insertion */
+    Cur = Head->Flink;
+    while (Cur != Head)
+    {
+        PPO_DEVICE_NOTIFY_ENTRY CurEntry =
+            CONTAINING_RECORD(Cur, PO_DEVICE_NOTIFY_ENTRY, ListEntry);
+
+        if (CurEntry->Order > Entry->Order)
+            break;
+
+        Cur = Cur->Flink;
+    }
+
+    InsertTailList(Cur->Blink, &Entry->ListEntry);
+
+    KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+
+    *NotificationHandle = Entry;
+    return STATUS_SUCCESS;
 }
 
 /*
