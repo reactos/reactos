@@ -64,7 +64,7 @@ static ULONG WINAPI d3drm_face1_AddRef(IDirect3DRMFace *iface)
     struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
     ULONG refcount = InterlockedIncrement(&face->ref);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     return refcount;
 }
@@ -74,12 +74,12 @@ static ULONG WINAPI d3drm_face1_Release(IDirect3DRMFace *iface)
     struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
     ULONG refcount = InterlockedDecrement(&face->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
         d3drm_object_cleanup((IDirect3DRMObject *)iface, &face->obj);
-        heap_free(face);
+        free(face);
     }
 
     return refcount;
@@ -117,7 +117,7 @@ static HRESULT WINAPI d3drm_face2_SetAppData(IDirect3DRMFace2 *iface, DWORD data
 {
     struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
 
-    TRACE("iface %p, data %#x.\n", iface, data);
+    TRACE("iface %p, data %#lx.\n", iface, data);
 
     face->obj.appdata = data;
 
@@ -128,7 +128,7 @@ static HRESULT WINAPI d3drm_face1_SetAppData(IDirect3DRMFace *iface, DWORD data)
 {
     struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    TRACE("iface %p, data %#x.\n", iface, data);
+    TRACE("iface %p, data %#lx.\n", iface, data);
 
     return d3drm_face2_SetAppData(&face->IDirect3DRMFace2_iface, data);
 }
@@ -206,7 +206,7 @@ static HRESULT WINAPI d3drm_face1_AddVertex(IDirect3DRMFace *iface, D3DVALUE x, 
 static HRESULT WINAPI d3drm_face1_AddVertexAndNormalIndexed(IDirect3DRMFace *iface,
         DWORD vertex, DWORD normal)
 {
-    FIXME("iface %p, vertex %u, normal %u stub!\n", iface, vertex, normal);
+    FIXME("iface %p, vertex %lu, normal %lu stub!\n", iface, vertex, normal);
 
     return E_NOTIMPL;
 }
@@ -236,7 +236,7 @@ static HRESULT WINAPI d3drm_face2_SetColor(IDirect3DRMFace2 *iface, D3DCOLOR col
 {
     struct d3drm_face *face = impl_from_IDirect3DRMFace2(iface);
 
-    TRACE("iface %p, color 0x%08x.\n", iface, color);
+    TRACE("iface %p, color 0x%08lx.\n", iface, color);
 
     face->color = color;
 
@@ -247,7 +247,7 @@ static HRESULT WINAPI d3drm_face1_SetColor(IDirect3DRMFace *iface, D3DCOLOR colo
 {
     struct d3drm_face *face = impl_from_IDirect3DRMFace(iface);
 
-    TRACE("iface %p, color 0x%08x.\n", iface, color);
+    TRACE("iface %p, color 0x%08lx.\n", iface, color);
 
     return d3drm_face2_SetColor(&face->IDirect3DRMFace2_iface, color);
 }
@@ -262,7 +262,7 @@ static HRESULT WINAPI d3drm_face1_SetTexture(IDirect3DRMFace *iface, IDirect3DRM
 static HRESULT WINAPI d3drm_face1_SetTextureCoordinates(IDirect3DRMFace *iface,
         DWORD vertex, D3DVALUE u, D3DVALUE v)
 {
-    FIXME("iface %p, vertex %u, u %.8e, v %.8e stub!\n", iface, vertex, u, v);
+    FIXME("iface %p, vertex %lu, u %.8e, v %.8e stub!\n", iface, vertex, u, v);
 
     return E_NOTIMPL;
 }
@@ -284,7 +284,7 @@ static HRESULT WINAPI d3drm_face1_SetTextureTopology(IDirect3DRMFace *iface, BOO
 static HRESULT WINAPI d3drm_face1_GetVertex(IDirect3DRMFace *iface,
         DWORD index, D3DVECTOR *vertex, D3DVECTOR *normal)
 {
-    FIXME("iface %p, index %u, vertex %p, normal %p stub!\n", iface, index, vertex, normal);
+    FIXME("iface %p, index %lu, vertex %p, normal %p stub!\n", iface, index, vertex, normal);
 
     return E_NOTIMPL;
 }
@@ -301,7 +301,7 @@ static HRESULT WINAPI d3drm_face1_GetVertices(IDirect3DRMFace *iface,
 static HRESULT WINAPI d3drm_face1_GetTextureCoordinates(IDirect3DRMFace *iface,
         DWORD vertex, D3DVALUE *u, D3DVALUE *v)
 {
-    FIXME("iface %p, vertex %u, u %p, v %p stub!\n", iface, vertex, u, v);
+    FIXME("iface %p, vertex %lu, u %p, v %p stub!\n", iface, vertex, u, v);
 
     return E_NOTIMPL;
 }
@@ -343,14 +343,14 @@ static int WINAPI d3drm_face1_GetVertexCount(IDirect3DRMFace *iface)
 
 static int WINAPI d3drm_face1_GetVertexIndex(IDirect3DRMFace *iface, DWORD which)
 {
-    FIXME("iface %p, which %u stub!\n", iface, which);
+    FIXME("iface %p, which %lu stub!\n", iface, which);
 
     return 0;
 }
 
 static int WINAPI d3drm_face1_GetTextureCoordinateIndex(IDirect3DRMFace *iface, DWORD which)
 {
-    FIXME("iface %p, which %u stub!\n", iface, which);
+    FIXME("iface %p, which %lu stub!\n", iface, which);
 
     return 0;
 }
@@ -475,7 +475,7 @@ static HRESULT WINAPI d3drm_face2_AddVertex(IDirect3DRMFace2 *iface, D3DVALUE x,
 static HRESULT WINAPI d3drm_face2_AddVertexAndNormalIndexed(IDirect3DRMFace2 *iface,
         DWORD vertex, DWORD normal)
 {
-    FIXME("iface %p, vertex %u, normal %u stub!\n", iface, vertex, normal);
+    FIXME("iface %p, vertex %lu, normal %lu stub!\n", iface, vertex, normal);
 
     return E_NOTIMPL;
 }
@@ -490,7 +490,7 @@ static HRESULT WINAPI d3drm_face2_SetTexture(IDirect3DRMFace2 *iface, IDirect3DR
 static HRESULT WINAPI d3drm_face2_SetTextureCoordinates(IDirect3DRMFace2 *iface,
         DWORD vertex, D3DVALUE u, D3DVALUE v)
 {
-    FIXME("iface %p, vertex %u, u %.8e, v %.8e stub!\n", iface, vertex, u, v);
+    FIXME("iface %p, vertex %lu, u %.8e, v %.8e stub!\n", iface, vertex, u, v);
 
     return E_NOTIMPL;
 }
@@ -512,7 +512,7 @@ static HRESULT WINAPI d3drm_face2_SetTextureTopology(IDirect3DRMFace2 *iface, BO
 static HRESULT WINAPI d3drm_face2_GetVertex(IDirect3DRMFace2 *iface,
         DWORD index, D3DVECTOR *vertex, D3DVECTOR *normal)
 {
-    FIXME("iface %p, index %u, vertex %p, normal %p stub!\n", iface, index, vertex, normal);
+    FIXME("iface %p, index %lu, vertex %p, normal %p stub!\n", iface, index, vertex, normal);
 
     return E_NOTIMPL;
 }
@@ -529,7 +529,7 @@ static HRESULT WINAPI d3drm_face2_GetVertices(IDirect3DRMFace2 *iface,
 static HRESULT WINAPI d3drm_face2_GetTextureCoordinates(IDirect3DRMFace2 *iface,
         DWORD vertex, D3DVALUE *u, D3DVALUE *v)
 {
-    FIXME("iface %p, vertex %u, u %p, v %p stub!\n", iface, vertex, u, v);
+    FIXME("iface %p, vertex %lu, u %p, v %p stub!\n", iface, vertex, u, v);
 
     return E_NOTIMPL;
 }
@@ -571,14 +571,14 @@ static int WINAPI d3drm_face2_GetVertexCount(IDirect3DRMFace2 *iface)
 
 static int WINAPI d3drm_face2_GetVertexIndex(IDirect3DRMFace2 *iface, DWORD which)
 {
-    FIXME("iface %p, which %u stub!\n", iface, which);
+    FIXME("iface %p, which %lu stub!\n", iface, which);
 
     return 0;
 }
 
 static int WINAPI d3drm_face2_GetTextureCoordinateIndex(IDirect3DRMFace2 *iface, DWORD which)
 {
-    FIXME("iface %p, which %u stub!\n", iface, which);
+    FIXME("iface %p, which %lu stub!\n", iface, which);
 
     return 0;
 }
@@ -624,7 +624,7 @@ HRESULT d3drm_face_create(struct d3drm_face **face)
 
     TRACE("face %p.\n", face);
 
-    if (!(object = heap_alloc_zero(sizeof(*object))))
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
     object->IDirect3DRMFace_iface.lpVtbl = &d3drm_face1_vtbl;

@@ -25,4 +25,4 @@
 
 1 WINE_REGISTRY d3dxof.rgs
 
-#include <wine/wine_common_ver.rc>
+#include "wine/wine_common_ver.rc"

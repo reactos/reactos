@@ -25,7 +25,9 @@
 #ifndef _TXC_DXTN_H
 #define _TXC_DXTN_H
 
-#ifndef __REACTOS__
+#ifdef __REACTOS__
+#include <wine/winternl.h>
+#else
 #include "winternl.h"
 #endif
 #include "wine/wgl.h"

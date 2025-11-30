@@ -1,0 +1,13 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{4fd2a832-86c8-11d0-8fca-00c04fd9189d}' = s 'IDirectDrawFactory'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

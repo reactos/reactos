@@ -16,12 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep install
+#endif
+
 #define CHARS_IN_GUID 39
 cpp_quote("#define CHARS_IN_GUID 39")
 
 /* GetTimeFormat is defined in winnls.h as
  * either the W or A suffixed version */
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef GetTimeFormat")
+cpp_quote("#endif")
 
 typedef struct _AMMediaType
 {

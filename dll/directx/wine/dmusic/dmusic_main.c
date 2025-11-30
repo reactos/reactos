@@ -215,6 +215,7 @@ int even_or_odd (DWORD number) {
 	return (number & 0x1); /* basically, check if bit 0 is set ;) */
 }
 
+#ifndef __REACTOS__
 /* FOURCC to string conversion for debug messages */
 const char *debugstr_fourcc (DWORD fourcc) {
     if (!fourcc) return "'null'";
@@ -222,6 +223,7 @@ const char *debugstr_fourcc (DWORD fourcc) {
 		(char)(fourcc), (char)(fourcc >> 8),
         (char)(fourcc >> 16), (char)(fourcc >> 24));
 }
+#endif
 
 /* DMUS_VERSION struct to string conversion for debug messages */
 static const char *debugstr_dmversion(const DMUS_VERSION *version)

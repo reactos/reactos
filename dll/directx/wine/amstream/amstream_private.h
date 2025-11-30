@@ -32,13 +32,13 @@
 #include "mmstream.h"
 #include "austream.h"
 #include "amstream.h"
-
-HRESULT AM_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT ddrawmediastream_create(IMultiMediaStream *Parent, const MSPID *pPurposeId,
-        STREAM_TYPE StreamType, IAMMediaStream **ppMediaStream) DECLSPEC_HIDDEN;
-HRESULT audiomediastream_create(IMultiMediaStream *parent, const MSPID *purpose_id,
-        STREAM_TYPE stream_type, IAMMediaStream **media_stream) DECLSPEC_HIDDEN;
+#ifdef __REACTOS__
+#define CONDITION_VARIABLE RTL_CONDITION_VARIABLE
+#endif
+HRESULT multimedia_stream_create(IUnknown *outer, void **out);
+HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj);
+HRESULT filter_create(IUnknown *outer, void **out);
+HRESULT ddraw_stream_create(IUnknown *outer, void **out);
+HRESULT audio_stream_create(IUnknown *outer, void **out);
 
 #endif /* __AMSTREAM_PRIVATE_INCLUDED__ */

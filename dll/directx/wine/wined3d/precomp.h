@@ -22,23 +22,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_WINED3D_PRECOMP_H
-#define __WINE_WINED3D_PRECOMP_H
-
-#include <wine/config.h>
-#include <wine/port.h>
-
-#ifdef HAVE_FLOAT_H
-# include <float.h>
-#endif
-
-#include <stdio.h>
-
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include "wined3d_private.h"
-
-#include <reactos/undocuser.h>
-
-#endif /* !__WINE_WINED3D_PRECOMP_H */
+ #ifndef __WINE_WINED3D_PRECOMP_H
+ #define __WINE_WINED3D_PRECOMP_H
+ 
+ #include <wine/config.h>
+ #include <wine/port.h>
+ 
+ #ifdef HAVE_FLOAT_H
+ # include <float.h>
+ #endif
+ 
+ #include <stdio.h>
+ 
+ #define _INC_WINDOWS
+ #define COM_NO_WINDOWS_H
+ 
+ #include "wined3d_private.h"
+ 
+ #include <reactos/undocuser.h>
+ 
+ #endif /* !__WINE_WINED3D_PRECOMP_H */
+ 

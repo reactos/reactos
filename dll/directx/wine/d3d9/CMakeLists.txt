@@ -36,6 +36,6 @@ endif()
 set_module_type(d3d9 win32dll UNICODE)
 target_link_libraries(d3d9 wine)
 add_importlibs(d3d9 d3dwine user32 msvcrt kernel32 ntdll)
-add_pch(d3d9 precomp.h "${PCH_SKIP_SOURCE}")
+#add_pch(d3d9 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(d3d9) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

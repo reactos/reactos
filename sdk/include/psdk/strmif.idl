@@ -20,12 +20,8 @@ import "unknwn.idl";
 import "objidl.idl";
 
 #include <devenum.idl>
-
 #include <axcore.idl>
-
 #include <axextend.idl>
-
 #include <dyngraph.idl>
-
-/* TODO: #include <dvdif.h> */
 #include <vmrender.idl>
+#include <dvdif.idl>

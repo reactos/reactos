@@ -744,3 +744,5 @@
     SVC_(GdiDdDDISharedPrimaryUnLockNotification, 1)
     SVC_(GdiDdDDISignalSynchronizationObject, 1)
     SVC_(GdiDdDDIWaitForSynchronizationObject, 1)
+    SVC_(GdiDdDDIOpenAdapterFromLuid, 1)
+    SVC_(GdiDdQueryVideoMemoryInfo, 1)
