@@ -1651,46 +1651,6 @@ NtSetInformationProcess(
                 break;
             }
 
-#if 0 // OLD AND DEPRECATED CODE!!!!
-
-            /* FIXME - update the session id for the process token */
-            //Status = PsLockProcess(Process, FALSE);
-            if (!NT_SUCCESS(Status)) break;
-
-            /* Write the session ID in the EPROCESS */
-            Process->Session = UlongToPtr(SessionInfo.SessionId); // HACK!!!
-
-            /* Check if the process also has a PEB */
-            if (Process->Peb)
-            {
-                /*
-                 * Attach to the process to make sure we're in the right
-                 * context to access the PEB structure
-                 */
-                KeAttachProcess(&Process->Pcb);
-
-                /* Enter SEH for write to user-mode PEB */
-                _SEH2_TRY
-                {
-                    /* Write the session ID */
-                    Process->Peb->SessionId = SessionInfo.SessionId;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    /* Get exception code */
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-
-                /* Detach from the process */
-                KeDetachProcess();
-            }
-
-            /* Unlock the process */
-            //PsUnlockProcess(Process);
-
-#endif
-
             /*
              * Since we cannot change the session ID of the given
              * process anymore because it is set once and for all
