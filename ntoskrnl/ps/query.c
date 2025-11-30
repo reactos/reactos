@@ -21,8 +21,9 @@ ULONG PspTraceLevel = 0;
 
 NTSTATUS
 NTAPI
-PsReferenceProcessFilePointer(IN PEPROCESS Process,
-                              OUT PFILE_OBJECT *FileObject)
+PsReferenceProcessFilePointer(
+    _In_ PEPROCESS Process,
+    _Outptr_ PFILE_OBJECT *FileObject)
 {
     PSECTION Section;
     PAGED_CODE();
@@ -210,7 +211,8 @@ NTAPI
 NtQueryInformationProcess(
     _In_ HANDLE ProcessHandle,
     _In_ PROCESSINFOCLASS ProcessInformationClass,
-    _Out_ PVOID ProcessInformation,
+    _Out_writes_bytes_to_opt_(ProcessInformationLength, *ReturnLength)
+        PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength,
     _Out_opt_ PULONG ReturnLength)
 {
@@ -1384,10 +1386,11 @@ NtQueryInformationProcess(
  */
 NTSTATUS
 NTAPI
-NtSetInformationProcess(IN HANDLE ProcessHandle,
-                        IN PROCESSINFOCLASS ProcessInformationClass,
-                        IN PVOID ProcessInformation,
-                        IN ULONG ProcessInformationLength)
+NtSetInformationProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength)
 {
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -2302,10 +2305,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
  */
 NTSTATUS
 NTAPI
-NtSetInformationThread(IN HANDLE ThreadHandle,
-                       IN THREADINFOCLASS ThreadInformationClass,
-                       IN PVOID ThreadInformation,
-                       IN ULONG ThreadInformationLength)
+NtSetInformationThread(
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength)
 {
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -2914,11 +2918,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
  */
 NTSTATUS
 NTAPI
-NtQueryInformationThread(IN HANDLE ThreadHandle,
-                         IN THREADINFOCLASS ThreadInformationClass,
-                         OUT PVOID ThreadInformation,
-                         IN ULONG ThreadInformationLength,
-                         OUT PULONG ReturnLength OPTIONAL)
+NtQueryInformationThread(
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _Out_writes_bytes_to_opt_(ThreadInformationLength, *ReturnLength)
+        PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength,
+    _Out_opt_ PULONG ReturnLength)
 {
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();

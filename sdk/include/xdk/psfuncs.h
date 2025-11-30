@@ -46,11 +46,12 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationProcess(
-  _In_ HANDLE ProcessHandle,
-  _In_ PROCESSINFOCLASS ProcessInformationClass,
-  _Out_ PVOID ProcessInformation,
-  _In_ ULONG ProcessInformationLength,
-  _Out_opt_ PULONG ReturnLength);
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_writes_bytes_to_opt_(ProcessInformationLength, *ReturnLength)
+        PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
