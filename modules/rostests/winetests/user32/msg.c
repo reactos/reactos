@@ -17801,6 +17801,12 @@ static void test_paintingloop(void)
 {
     HWND hwnd;
 
+#ifdef __REACTOS__
+    if (!is_reactos() && GetNTVersion() == _WIN32_WINNT_WS03) {
+        skip("I think this test crashes on our WS03 test bot!\n");
+        return;
+    }
+#endif
     paint_loop_done = FALSE;
     hwnd = CreateWindowExA(0x0,"PaintLoopWindowClass",
                                "PaintLoopWindowClass",WS_OVERLAPPEDWINDOW,
