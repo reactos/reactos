@@ -106,12 +106,13 @@ typedef struct
     ULONG  MaximumPixelClock;          /* Maximum pixel clock for graphics video mode, in Hz */
     UCHAR  Reserved2[190];             /* 190 BYTEs  reserved (0) */
 } SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
+C_ASSERT(sizeof(SVGA_MODE_INFORMATION) == 256);
 #include <poppack.h>
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 
 static ULONG VideoCard = VIDEOCARD_CGA_OR_OTHER;        /* Type of video card installed on the system */
-static USHORT BiosVideoMode;                            /* Current video mode as known by BIOS */
+static USHORT BiosVideoMode = VIDEOMODE_NORMAL_TEXT;    /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;                          /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                         /* Screen Height in characters */
 static ULONG BytesPerScanLine = 160;                    /* Number of bytes per scanline (delta) */
@@ -202,11 +203,13 @@ PcVideoDetectVideoCard(VOID)
 }
 
 static BOOLEAN
-PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInformation)
+PcVideoVesaGetSVGAModeInformation(
+    _In_ USHORT Mode,
+    _Out_ PSVGA_MODE_INFORMATION ModeInformation)
 {
     REGS Regs;
 
-    RtlZeroMemory((PVOID)BIOSCALLBUFFER, 256);
+    RtlZeroMemory((PVOID)BIOSCALLBUFFER, sizeof(*ModeInformation));
 
     /* VESA SuperVGA BIOS - GET SuperVGA MODE INFORMATION
      * AX = 4F01h
@@ -234,41 +237,228 @@ PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInform
     if (Regs.w.ax != 0x004F)
         return FALSE;
 
-    RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(SVGA_MODE_INFORMATION));
+    RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(*ModeInformation));
 
     TRACE("\n");
-    TRACE("BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
-    TRACE("ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
-    TRACE("WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
-    TRACE("WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
-    TRACE("WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
-    TRACE("WindowSize = %dKB\n", ModeInformation->WindowSize);
-    TRACE("WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
-    TRACE("WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
+    TRACE("BiosVesaGetSVGAModeInformation(Mode 0x%x)\n", Mode);
+    TRACE("ModeAttributes = 0x%04x\n", ModeInformation->ModeAttributes);
+    TRACE("WindowAttributesA = 0x%02x\n", ModeInformation->WindowAttributesA);
+    TRACE("WindowAttributesB = 0x%02x\n", ModeInformation->WindowsAttributesB);
+    TRACE("WindowGranularity = %huKB\n", ModeInformation->WindowGranularity);
+    TRACE("WindowSize = %huKB\n", ModeInformation->WindowSize);
+    TRACE("WindowAStartSegment = 0x%04x\n", ModeInformation->WindowAStartSegment);
+    TRACE("WindowBStartSegment = 0x%04x\n", ModeInformation->WindowBStartSegment);
     TRACE("WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
-    TRACE("BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
-    TRACE("WidthInPixels = %d\n", ModeInformation->WidthInPixels);
-    TRACE("HeightInPixels = %d\n", ModeInformation->HeightInPixels);
-    TRACE("CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
-    TRACE("CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
-    TRACE("NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
-    TRACE("BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
-    TRACE("NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
-    TRACE("MemoryModel = %d\n", ModeInformation->MemoryModel);
-    TRACE("BankSize = %d\n", ModeInformation->BankSize);
-    TRACE("NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
+    TRACE("BytesPerScanLine = %hu\n", ModeInformation->BytesPerScanLine);
+    TRACE("WidthInPixels = %hu\n", ModeInformation->WidthInPixels);
+    TRACE("HeightInPixels = %hu\n", ModeInformation->HeightInPixels);
+    TRACE("CharacterWidthInPixels = %u\n", ModeInformation->CharacterWidthInPixels);
+    TRACE("CharacterHeightInPixels = %u\n", ModeInformation->CharacterHeightInPixels);
+    TRACE("NumberOfMemoryPlanes = %u\n", ModeInformation->NumberOfMemoryPlanes);
+    TRACE("BitsPerPixel = %u\n", ModeInformation->BitsPerPixel);
+    TRACE("NumberOfBanks = %u\n", ModeInformation->NumberOfBanks);
+    TRACE("MemoryModel = %u\n", ModeInformation->MemoryModel);
+    TRACE("BankSize = %u\n", ModeInformation->BankSize);
+    TRACE("NumberOfImagePanes = %u\n", ModeInformation->NumberOfImagePanes);
+    TRACE("Reserved1 = 0x%02x\n", ModeInformation->Reserved1);
     TRACE("---VBE v1.2+ ---\n");
-    TRACE("RedMaskSize = %d\n", ModeInformation->RedMaskSize);
-    TRACE("RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
-    TRACE("GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
-    TRACE("GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
-    TRACE("BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
-    TRACE("BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
-    TRACE("ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
-    TRACE("ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
+    TRACE("RedMaskSize = %u\n", ModeInformation->RedMaskSize);
+    TRACE("RedMaskPosition = %u\n", ModeInformation->RedMaskPosition);
+    TRACE("GreenMaskSize = %u\n", ModeInformation->GreenMaskSize);
+    TRACE("GreenMaskPosition = %u\n", ModeInformation->GreenMaskPosition);
+    TRACE("BlueMaskSize = %u\n", ModeInformation->BlueMaskSize);
+    TRACE("BlueMaskPosition = %u\n", ModeInformation->BlueMaskPosition);
+    TRACE("ReservedMaskSize = %u\n", ModeInformation->ReservedMaskSize);
+    TRACE("ReservedMaskPosition = %u\n", ModeInformation->ReservedMaskPosition);
+    TRACE("DirectColorModeInfo = 0x%02x\n", ModeInformation->DirectColorModeInfo);
+    TRACE("---VBE v2.0+ ---\n");
+    TRACE("LinearVideoBufferAddress = 0x%x\n", ModeInformation->LinearVideoBufferAddress);
+    TRACE("OffscreenMemoryPointer = 0x%x\n", ModeInformation->OffscreenMemoryPointer);
+    TRACE("OffscreenMemorySize = %huKB\n", ModeInformation->OffscreenMemorySize);
+    TRACE("---VBE v3.0 ---\n");
+    TRACE("LinearBytesPerScanLine = %hu\n", ModeInformation->LinearBytesPerScanLine);
+    TRACE("BankedNumberOfImages = %u\n", ModeInformation->BankedNumberOfImages);
+    TRACE("LinearNumberOfImages = %u\n", ModeInformation->LinearNumberOfImages);
+    TRACE("LinearRedMaskSize = %u\n", ModeInformation->LinearRedMaskSize);
+    TRACE("LinearRedMaskPosition = %u\n", ModeInformation->LinearRedMaskPosition);
+    TRACE("LinearGreenMaskSize = %u\n", ModeInformation->LinearGreenMaskSize);
+    TRACE("LinearGreenMaskPosition = %u\n", ModeInformation->LinearGreenMaskPosition);
+    TRACE("LinearBlueMaskSize = %u\n", ModeInformation->LinearBlueMaskSize);
+    TRACE("LinearBlueMaskPosition = %u\n", ModeInformation->LinearBlueMaskPosition);
+    TRACE("LinearReservedMaskSize = %u\n", ModeInformation->LinearReservedMaskSize);
+    TRACE("LinearReservedMaskPosition = %u\n", ModeInformation->LinearReservedMaskPosition);
+    TRACE("MaximumPixelClock = %luHz\n", ModeInformation->MaximumPixelClock);
     TRACE("\n");
 
     return TRUE;
+}
+
+static BOOLEAN
+PcVideoVesaGetCurrentSVGAMode(
+    _Out_ PUSHORT Mode)
+{
+    REGS Regs;
+
+    /*
+     * VESA SuperVGA BIOS - GET CURRENT VIDEO MODE
+     *
+     * AX = 4F03h
+     * Return:
+     * AL = 4Fh if function supported
+     * AH = status
+     * 00h successful
+     * BX = video mode (see #00083,#00084)
+     *
+     * bit 13:
+     * VBE/AF v1.0P accelerated video mode
+     *
+     * bit 14:
+     * Linear frame buffer enabled (VBE v2.0+)
+     *
+     * bit 15:
+     * Don't clear video memory
+     * 01h failed
+     */
+    Regs.w.ax = 0x4F03;
+    Int386(0x10, &Regs, &Regs);
+
+    if (Regs.w.ax != 0x004F)
+        return FALSE;
+
+    *Mode = Regs.w.bx;
+    return TRUE;
+}
+
+static BOOLEAN
+PcVideoGetBiosMode(
+    _Out_ PUSHORT Mode)
+{
+    REGS Regs;
+
+    /* Int 10h AH=0Fh
+     * VIDEO - GET CURRENT VIDEO MODE
+     *
+     * AH = 0Fh
+     * Return:
+     * AH = number of character columns
+     * AL = display mode (see #00010 at AH=00h)
+     * BH = active page (see AH=05h)
+     *
+     * Notes: If mode was set with bit 7 set ("no blanking"), the returned
+     * mode will also have bit 7 set. EGA, VGA, and UltraVision return either
+     * AL=03h (color) or AL=07h (monochrome) in all extended-row text modes.
+     * HP 200LX returns AL=07h (monochrome) if mode was set to AL=21h and
+     * always 80 resp. 40 columns in all text modes regardless of current
+     * zoom setting (see AH=D0h). When using a Hercules Graphics Card,
+     * additional checks are necessary:
+     *
+     * mode 05h:
+     * If WORD 0040h:0063h is 03B4h, may be in graphics page 1
+     * (as set by DOSSHELL and other Microsoft software)
+     *
+     * mode 06h:
+     * If WORD 0040h:0063h is 03B4h, may be in graphics page 0
+     * (as set by DOSSHELL and other Microsoft software)
+     *
+     * mode 07h:
+     * If BYTE 0040h:0065h bit 1 is set, Hercules card is in
+     * graphics mode, with bit 7 indicating the page (mode set by
+     * Hercules driver for Borland Turbo C).
+     * The Tandy 2000 BIOS is only documented as returning AL, not AH or BH
+     */
+    Regs.b.ah = 0x0F;
+    Int386(0x10, &Regs, &Regs);
+
+    if (Regs.b.ah == 0)
+        return FALSE;
+
+    *Mode = Regs.b.al;
+    return TRUE;
+}
+
+static VOID
+PcVideoGetDisplayMode(VOID)
+{
+    USHORT Mode = 0;
+
+    /* Is the current mode VESA? */
+    if (PcVideoVesaGetCurrentSVGAMode(&Mode) &&
+        PcVideoVesaGetSVGAModeInformation(Mode, &VesaVideoModeInformation))
+    {
+        TRACE("VESA mode detected\n");
+        ScreenWidth = VesaVideoModeInformation.WidthInPixels;
+        ScreenHeight = VesaVideoModeInformation.HeightInPixels;
+        BytesPerScanLine = VesaVideoModeInformation.BytesPerScanLine;
+        BiosVideoMode = Mode;
+        DisplayMode = (0x0108 <= Mode && Mode <= 0x010C) ? VideoTextMode : VideoGraphicsMode;
+        VesaVideoMode = TRUE;
+    }
+    /* If not, it should be a regular BIOS mode */
+    else if (PcVideoGetBiosMode(&Mode))
+    {
+        /*
+         * The BIOS data area 0x400 holds information about the current video mode.
+         * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
+         * https://stanislavs.org/helppc/bios_data_area.html
+         */
+
+        UCHAR BiosMode = (*(PUCHAR)0x449) & 0x7F; /* Current video mode */
+        ASSERT(BiosMode == Mode);
+        BiosVideoMode = Mode;
+        TRACE("BIOS mode detected\n");
+
+        ScreenWidth = *(PUSHORT)0x44A; /* Number of screen columns */
+        ScreenHeight = 1 + *(PUCHAR)0x484; /* 1 + "Rows on the screen (less 1, EGA+)" */
+
+        /*
+         * Select bits 7 and 4 of "Video display data area (MCGA and VGA)"
+         * |7|6|5|4|3|2|1|0|
+         *  |     `------ see table below
+         *  `--------- alphanumeric scan lines (see table below)
+         *
+         * then convert to a number and map it to the scanline number:
+         * Bit7  Bit4  Scan Lines
+         * 0     0     350 line mode
+         * 0     1     400 line mode
+         * 1     0     200 line mode
+         * 1     1     reserved
+         */
+        BytesPerScanLine = (*(PUCHAR)0x489) & 0x90;
+        BytesPerScanLine = ((BytesPerScanLine & 0x80) >> 6) | ((BytesPerScanLine & 0x10) >> 4);
+        switch (BytesPerScanLine)
+        {
+            case VERTRES_200_SCANLINES:
+                BytesPerScanLine = 200; break;
+            case VERTRES_350_SCANLINES:
+                BytesPerScanLine = 350; break;
+            case VERTRES_400_SCANLINES:
+                BytesPerScanLine = 400; break;
+            default:
+                BytesPerScanLine = 160; break;
+        }
+
+        DisplayMode = VideoTextMode;
+        VesaVideoMode = FALSE;
+    }
+    else
+    {
+        /* Set the values for the default text mode.
+         * If a graphics mode is set, these values will be changed. */
+        TRACE("Fallback mode detected\n");
+        BiosVideoMode = VIDEOMODE_NORMAL_TEXT;
+        ScreenWidth = 80;
+        ScreenHeight = 25;
+        BytesPerScanLine = 160;
+        DisplayMode = VideoTextMode;
+        VesaVideoMode = FALSE;
+    }
+
+    TRACE("This is a %s video mode\n", VesaVideoMode ? "VESA" : "BIOS");
+    TRACE("BiosVideoMode    = 0x%x\n", BiosVideoMode);
+    TRACE("DisplayMode      = %sMode\n", DisplayMode == VideoTextMode ? "Text" : "Graphics");
+    TRACE("ScreenWidth      = %lu\n", ScreenWidth);
+    TRACE("ScreenHeight     = %lu\n", ScreenHeight);
+    TRACE("BytesPerScanLine = %lu\n", BytesPerScanLine);
 }
 
 static BOOLEAN
@@ -849,6 +1039,14 @@ PcVideoInit(VOID)
 {
     /* Detect the installed video card */
     VideoCard = PcVideoDetectVideoCard();
+
+    /* Retrieve the initial display mode parameters */
+    PcVideoGetDisplayMode();
+
+    // FIXME: We don't support graphics modes yet!
+    // Revert to 80x25 text mode.
+    if (DisplayMode != VideoTextMode)
+        PcVideoSetMode(VIDEOMODE_NORMAL_TEXT);
 }
 
 VIDEODISPLAYMODE
