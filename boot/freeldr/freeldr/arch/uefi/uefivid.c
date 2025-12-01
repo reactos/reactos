@@ -6,12 +6,11 @@
  */
 
 #include <uefildr.h>
+#include "../vgafont.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 #define TOP_BOTTOM_LINES 0
 #define LOWEST_SUPPORTED_RES 1
 
@@ -19,7 +18,6 @@ DBG_DEFAULT_CHANNEL(WARNING);
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-extern UCHAR BitmapFont8x16[256 * 16];
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 REACTOS_INTERNAL_BGCONTEXT framebufferData;
@@ -115,14 +113,14 @@ UefiVideoClearScreen(UCHAR Attr)
 VOID
 UefiVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgColor)
 {
-    PUCHAR FontPtr;
+    const UCHAR* FontPtr;
     PULONG Pixel;
     UCHAR Mask;
     unsigned Line;
     unsigned Col;
     ULONG Delta;
     Delta = (framebufferData.PixelsPerScanLine * 4 + 3) & ~ 0x3;
-    FontPtr = BitmapFont8x16 + Char * 16;
+    FontPtr = BitmapFont8x16 + Char * CHAR_HEIGHT;
     Pixel = (PULONG) ((char *) framebufferData.BaseAddress +
             (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) *  Delta + X * CHAR_WIDTH * 4);
 

@@ -20,6 +20,7 @@
  */
 
 #include <freeldr.h>
+#include "../../vgafont.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
@@ -35,9 +36,6 @@ extern multiboot_info_t * MultibootInfoPtr;
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
-
 #define TOP_BOTTOM_LINES 0
 
 #define FB_SIZE_MB 4
@@ -47,13 +45,13 @@ UCHAR MachDefaultTextColor = COLOR_GRAY;
 static VOID
 XboxVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgColor)
 {
-  PUCHAR FontPtr;
+  const UCHAR* FontPtr;
   PULONG Pixel;
   UCHAR Mask;
   unsigned Line;
   unsigned Col;
 
-  FontPtr = BitmapFont8x16 + Char * 16;
+  FontPtr = BitmapFont8x16 + Char * CHAR_HEIGHT;
   Pixel = (PULONG) ((char *) FrameBuffer + (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * Delta
                   + X * CHAR_WIDTH * BytesPerPixel);
   for (Line = 0; Line < CHAR_HEIGHT; Line++)

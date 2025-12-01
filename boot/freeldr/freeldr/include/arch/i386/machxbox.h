@@ -24,8 +24,6 @@
 
 #include <drivers/xbox/xgpu.h>
 
-extern UCHAR BitmapFont8x16[256 * 16];
-
 VOID XboxConsPutChar(int Ch);
 BOOLEAN XboxConsKbHit(VOID);
 int XboxConsGetCh(VOID);
