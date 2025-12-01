@@ -45,10 +45,29 @@ UefiInitializeVideo(VOID)
     gop->SetMode(gop, LOWEST_SUPPORTED_RES);
 
     framebufferData.BaseAddress        = (ULONG_PTR)gop->Mode->FrameBufferBase;
-    framebufferData.BufferSize         = gop->Mode->FrameBufferSize;
     framebufferData.ScreenWidth        = gop->Mode->Info->HorizontalResolution;
     framebufferData.ScreenHeight       = gop->Mode->Info->VerticalResolution;
     framebufferData.PixelsPerScanLine  = gop->Mode->Info->PixelsPerScanLine;
+    // Workaround for some UEFI implementations that report a smaller or larger framebuffer size
+    // than the actual framebuffer size. For example, Hyper-V Generation 2 Virtual Machines will
+    // return DEFAULT_VRAM_SIZE_WIN8 a.k.a. 8 MiB as UEFI framebuffer size, even though the virtual
+    // machine screen resolution is 1024 x 768 with 32 bpp, which should only be 3 MiB a.k.a
+    // 4 * 1024 * 768. If you set the framebuffer size as the original reported size, the generic
+    // framebuffer driver initialization code will try to clear more memory than the actual
+    // framebuffer size, which causes a silent deadloop when ReactOS is going to the win32k stage.
+    // References:
+    // - https://github.com/microsoft/mu_msvm/blob/04548fca3cb84b03b3ceebd0e01972e6254eeb6d
+    //   /MsvmPkg/VideoDxe/VideoDxe.c#L229
+    // - https://github.com/microsoft/mu_msvm/blob/04548fca3cb84b03b3ceebd0e01972e6254eeb6d
+    //   /MsvmPkg/VideoDxe/VramSize.h
+    // It also seems that reported screen width may be smaller than the actual screen width on some
+    // hardware like some older Apple hardware which DistroHopper39B reported may caused by byte
+    // alignment which means that calculating it this way would probably result in the size being
+    // too small to fit the whole screen. So we need to use PixelsPerScanLine instead of
+    // ScreenWidth.
+    framebufferData.BufferSize         = framebufferData.PixelsPerScanLine *
+                                         framebufferData.ScreenHeight *
+                                         sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL);
     framebufferData.PixelFormat        = gop->Mode->Info->PixelFormat;
 
     return Status;
