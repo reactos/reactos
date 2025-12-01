@@ -20985,21 +20985,60 @@ START_TEST(msg)
     test_nullCallback();
     test_dbcs_wm_char();
     test_unicode_wm_char();
+#ifdef __REACTOS__
+    trace("Running test_defwinproc()...");
+#endif
     test_defwinproc();
+#ifdef __REACTOS__
+    trace("Running test_desktop_winproc()...");
+#endif
     test_desktop_winproc();
+#ifdef __REACTOS__
+    trace("Running test_clipboard_viewers()...");
+#endif
     test_clipboard_viewers();
+#ifdef __REACTOS__
+    trace("Running test_keyflags()...");
+#endif
     test_keyflags();
+#ifdef __REACTOS__
+    trace("Running test_hotkey()...");
+#endif
     test_hotkey();
+#ifdef __REACTOS__
+    trace("Running test_layered_window()...");
+#endif
     test_layered_window();
+#ifdef __REACTOS__
+    trace("Running test_TrackPopupMenu()...");
+#endif
     test_TrackPopupMenu();
+#ifdef __REACTOS__
+    trace("Running test_TrackPopupMenuEmpty()...");
+#endif
     test_TrackPopupMenuEmpty();
+#ifdef __REACTOS__
+    trace("Running test_DoubleSetCapture()...");
+#endif
     test_DoubleSetCapture();
+#ifdef __REACTOS__
+    trace("Running test_create_name()...");
+#endif
     test_create_name();
+#ifdef __REACTOS__
+    trace("Running test_hook_changing_window_proc()...");
+#endif
     test_hook_changing_window_proc();
+#ifdef __REACTOS__
+    trace("Running test_hook_cleanup()...");
+#endif
     test_hook_cleanup();
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
+#ifdef __REACTOS__
+    trace("Running test_SetForegroundWindow()...");
+#endif
     test_SetForegroundWindow();
 
     UnhookWindowsHookEx(hCBT_hook);
