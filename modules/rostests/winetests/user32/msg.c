@@ -72,6 +72,10 @@
 #else
 #define ARCH "none"
 #endif
+#ifdef __REACTOS__
+// Temp for now to see where this is crashing on WS03 testbot
+extern int winetest_debug;
+#endif
 
 static void pump_msg_loop(HWND hwnd, HACCEL hAccel);
 
@@ -20866,6 +20870,10 @@ START_TEST(msg)
     BOOL (WINAPI *pIsWinEventHookInstalled)(DWORD)= 0;/*GetProcAddress(user32, "IsWinEventHookInstalled");*/
     int argc;
 
+#ifdef __REACTOS__
+    // Temp for now to see where this is crashing on WS03 testbot
+    winetest_debug = 2;
+#endif
     argc = winetest_get_mainargs( &test_argv );
     if (argc >= 3)
     {
