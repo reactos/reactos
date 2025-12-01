@@ -6,12 +6,11 @@
  */
 
 #include <uefildr.h>
+#include "../vgafont.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WARNING);
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 #define TOP_BOTTOM_LINES 0
 #define LOWEST_SUPPORTED_RES 1
 
@@ -19,7 +18,6 @@ DBG_DEFAULT_CHANNEL(WARNING);
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-extern UCHAR BitmapFont8x16[256 * 16];
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 REACTOS_INTERNAL_BGCONTEXT framebufferData;

@@ -9,8 +9,8 @@
 
 #include <freeldr.h>
 #include <drivers/pc98/video.h>
+#include "../../vgafont.h"
 
-extern UCHAR BitmapFont8x16[];
 extern BOOLEAN HiResoMachine;
 
 /* GLOBALS ********************************************************************/
@@ -20,9 +20,6 @@ extern BOOLEAN HiResoMachine;
 #define TEXT_CHAR_SIZE 2
 UCHAR TextCols;
 UCHAR TextLines;
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 400

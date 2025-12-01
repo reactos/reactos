@@ -7,9 +7,6 @@
 
 #include <uefildr.h>
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
-
 /* GLOBALS ********************************************************************/
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;

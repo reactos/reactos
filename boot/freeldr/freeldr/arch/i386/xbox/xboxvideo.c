@@ -20,6 +20,7 @@
  */
 
 #include <freeldr.h>
+#include "../../vgafont.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
@@ -34,9 +35,6 @@ static ULONG Delta;
 extern multiboot_info_t * MultibootInfoPtr;
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 
 #define TOP_BOTTOM_LINES 0
 
