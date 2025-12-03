@@ -919,11 +919,6 @@ static void test_bitmap_font_metrics(void)
 
     trace("system language id %04x\n", system_lang_id);
 
-#ifdef __REACTOS__
-    skip("ReactOS does not support bitmap (raster) fonts at this time\n");
-    return;
-#endif
-
     expected_cs = GetACP();
     if (!TranslateCharsetInfo(ULongToPtr(expected_cs), &csi, TCI_SRCCODEPAGE))
     {
@@ -6867,7 +6862,12 @@ START_TEST(font)
     test_logfont();
     test_bitmap_font();
     test_outline_font();
-    test_bitmap_font_metrics();
+
+    if (is_reactos())
+        skip("ReactOS does not support bitmap (raster) fonts at this time\n");
+    else
+        test_bitmap_font_metrics();
+
     test_GdiGetCharDimensions();
     test_GetCharABCWidths();
     test_text_extents();
