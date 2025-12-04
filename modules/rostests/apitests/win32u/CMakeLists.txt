@@ -77,15 +77,15 @@ list(APPEND SOURCE
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
 
-add_executable(win32knt_apitest
+add_executable(win32u_apitest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     dlihook.c
     win32knt.rc)
 
-target_link_libraries(win32knt_apitest ${PSEH_LIB} gditools)
-set_module_type(win32knt_apitest win32cui)
-add_importlibs(win32knt_apitest
+target_link_libraries(win32u_apitest ${PSEH_LIB} gditools)
+set_module_type(win32u_apitest win32cui)
+add_importlibs(win32u_apitest
     gdi32
     user32
     shell32
@@ -93,7 +93,7 @@ add_importlibs(win32knt_apitest
     msvcrt
     kernel32
     ntdll)
-add_delay_importlibs(win32knt_apitest win32u imm32)
-add_dependencies(win32knt_apitest xdk)
-add_pch(win32knt_apitest win32nt.h "${PCH_SKIP_SOURCE}")
-add_rostests_file(TARGET win32knt_apitest)
+add_delay_importlibs(win32u_apitest win32u imm32)
+add_dependencies(win32u_apitest xdk)
+add_pch(win32u_apitest win32nt.h "${PCH_SKIP_SOURCE}")
+add_rostests_file(TARGET win32u_apitest)
