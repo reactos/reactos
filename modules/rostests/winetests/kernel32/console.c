@@ -769,7 +769,12 @@ static void testCtrlHandler(void)
     ok(GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0), "Couldn't send ctrl-c event\n");
     /* FIXME: it isn't synchronous on wine but it can still happen before we test */
     if (0) ok(mch_count == 1, "Event isn't synchronous\n");
+#ifdef __REACTOS__ // This fails on ReactOS testbots on Windows, but not on my local Windows VMs.
+    DWORD res = WaitForSingleObject(mch_event, 3000);
+    ok(res == WAIT_OBJECT_0, "event sending didn't work (%ld)\n", res);
+#else
     ok(WaitForSingleObject(mch_event, 3000) == WAIT_OBJECT_0, "event sending didn't work\n");
+#endif
     CloseHandle(mch_event);
 
     ok(SetConsoleCtrlHandler(NULL, FALSE), "Couldn't turn on ctrl-c handling\n");
@@ -5226,7 +5231,7 @@ static void test_CreateProcessCUI(void)
     for (i = 0; i < ARRAY_SIZE(no_console_tests); i++)
     {
 #ifdef __REACTOS__
-        if (i == 9 && GetNTVersion() < _WIN32_WINNT_VISTA)
+        if (i == 9 && GetNTVersion() < _WIN32_WINNT_WIN7)
             continue;
 #endif
         res = check_child_console_bits(no_console_tests[i].use_cui ? cuiexec : guiexec,

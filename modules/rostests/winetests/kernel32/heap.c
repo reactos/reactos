@@ -3850,14 +3850,25 @@ static void test_GetPhysicallyInstalledSystemMemory(void)
 
     total_memory = 0;
     ret = pGetPhysicallyInstalledSystemMemory(&total_memory);
+#ifdef __REACTOS__
+    ok(ret || broken(GetLastError() == ERROR_INVALID_FUNCTION) /* Vista x64 ROS testbot */, "GetPhysicallyInstalledSystemMemory unexpectedly failed (%lu)\n", GetLastError());
+    if (ret)
+        ok(total_memory != 0, "expected total_memory != 0\n");
+#else
     ok(ret, "GetPhysicallyInstalledSystemMemory unexpectedly failed (%lu)\n", GetLastError());
     ok(total_memory != 0, "expected total_memory != 0\n");
+#endif
 
     memstatus.dwLength = sizeof(memstatus);
     ret = GlobalMemoryStatusEx(&memstatus);
     ok(ret, "GlobalMemoryStatusEx unexpectedly failed\n");
+#ifdef __REACTOS__
+    ok(total_memory >= memstatus.ullTotalPhys / 1024 || broken(total_memory == 0) /* Vista x64 ROS testbot */,
+       "expected total_memory >= memstatus.ullTotalPhys / 1024\n");
+#else
     ok(total_memory >= memstatus.ullTotalPhys / 1024,
        "expected total_memory >= memstatus.ullTotalPhys / 1024\n");
+#endif
 }
 
 static void test_GlobalMemoryStatus(void)

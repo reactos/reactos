@@ -737,10 +737,18 @@ static void test_SystemFirmwareTable(void)
         HeapFree(GetProcessHeap(), 0, sfti);
         return;
     }
+#ifdef __REACTOS__
+    ok( status == STATUS_BUFFER_TOO_SMALL || broken(status == STATUS_INVALID_DEVICE_REQUEST) /* Vista x64 ROS testbot */, "NtQuerySystemInformation failed %lx\n", status );
+#else
     ok( status == STATUS_BUFFER_TOO_SMALL, "NtQuerySystemInformation failed %lx\n", status );
+#endif
     sfti = HeapReAlloc(GetProcessHeap(), 0, sfti, expected_len);
     status = pNtQuerySystemInformation(SystemFirmwareTableInformation, sfti, expected_len, &expected_len);
+#ifdef __REACTOS__
+    ok( !status || broken(status == STATUS_INVALID_DEVICE_REQUEST) /* Vista x64 ROS testbot */, "NtQuerySystemInformation failed %lx\n", status );
+#else
     ok( !status, "NtQuerySystemInformation failed %lx\n", status );
+#endif
 
     expected_len -= min_sfti_len;
     ok( sfti->TableBufferLength == expected_len, "wrong len %lu/%lx\n",
