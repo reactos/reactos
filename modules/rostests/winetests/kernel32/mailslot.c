@@ -400,9 +400,9 @@ static int mailslot_test(void)
     ok( io.Status == 0xdeadbeef, "got status %#lx\n", io.Status );
     ok( io.Information == 0xdeadbeef, "got size %Iu\n", io.Information );
 
-#if defined(__REACTOS__) && defined(__GNUC__)
+#ifdef __REACTOS__
     if (is_reactos()) {
-        ok(FALSE, "FIXME: This bugchecks on ReactOS, but only on GCC builds. This does not bugcheck on checked Windows builds.\n");
+        ok(FALSE, "FIXME: This often bugchecks on ReactOS. This does not bugcheck on checked Windows builds.\n");
     } else {
 #endif
     io.Status = 0xdeadbeef;
@@ -411,7 +411,7 @@ static int mailslot_test(void)
     ok( ret == STATUS_PENDING, "got %#x\n", ret );
     ok( io.Status == 0xdeadbeef, "got status %#lx\n", io.Status );
     ok( io.Information == 0xdeadbeef, "got size %Iu\n", io.Information );
-#if defined(__REACTOS__) && defined(__GNUC__)
+#ifdef __REACTOS__
     }
 #endif
 
