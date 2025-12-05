@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Inf Include="sklhdaudbus.inf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{4d2da254-d169-4d8e-a302-5e9e489bdbb1}</UniqueIdentifier>
+      <Extensions>*.c</Extensions>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{02a39469-356c-43ce-b243-807bdac88792}</UniqueIdentifier>
+      <Extensions>*.h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sklhdaudbus.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="fdo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="buspdo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="hdac_controller.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="hdaudio.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="hdac_stream.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="adsp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="nhlt.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="sof-tplg.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="sgpc.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="driver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="trace.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="fdo.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="buspdo.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hda_registers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hdac_controller.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hda_verbs.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regfuncs.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hdac_stream.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="adsp.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="nhlt.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sof-tplg.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="sklhdaudbus.rc" />
+  </ItemGroup>
+</Project>
