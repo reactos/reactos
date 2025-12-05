@@ -58,4 +58,5 @@
 @ stdcall SetThreadPreferredUILanguages(long wstr ptr)
 
 @ stdcall GetNamedPipeClientProcessId(ptr ptr)
+@ stdcall GetThreadDescription(ptr ptr) # Win 10
 @ stdcall SetThreadDescription(ptr wstr) # Win 10
