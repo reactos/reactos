@@ -59,3 +59,4 @@
 
 @ stdcall GetNamedPipeClientProcessId(ptr ptr)
 @ stdcall SetThreadDescription(ptr wstr) # Win 10
+@ stdcall GetSystemTimePreciseAsFileTime(ptr) kernel32.GetSystemTimeAsFileTime
