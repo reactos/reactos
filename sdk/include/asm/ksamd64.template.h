@@ -1047,7 +1047,9 @@ OFFSET(KTHREAD_TrapFrame, KTHREAD, TrapFrame),
 OFFSET(KTHREAD_PreviousMode, KTHREAD, PreviousMode),
 OFFSET(KTHREAD_KernelStack, KTHREAD, KernelStack),
 OFFSET(KTHREAD_UserApcPending, KTHREAD, ApcState.UserApcPending),
+#if (NTDDI_VERSION < NTDDI_WIN8)
 OFFSET(KTHREAD_LargeStack, KTHREAD, LargeStack),
+#endif
 
 HEADER("KINTERRUPT"),
 OFFSET(KINTERRUPT_Type, KINTERRUPT, Type),
