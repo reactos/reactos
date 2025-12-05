@@ -158,7 +158,7 @@ GetProcessImageVersionInfo(
  * TODO: Move call from LpkDllInitialize() to LpkInitialize() when latter
  * function is implemented.
  */
-static void LPK_ApplyMirroring(void)
+static void LPK_ApplyMirroring_new(void)
 {
     PWSTR pwstrFileDescription = NULL;
     PVOID pvFileInfo;
@@ -226,23 +226,23 @@ Exit:
     ERR("# new: SetProcessDefaultLayout(%lu);\n", dwDefaultLayout);
 }
 
-#if 0
+#if 1
 static void LPK_ApplyMirroring()
 {
-    static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
-                                          '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
-    static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
-                                       '\\','%','0','4','x','%','0','4','x',
-                                       '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
-    WCHAR *str, buffer[MAX_PATH];
+    //static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
+    //                                      '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
+    //static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
+    //                                   '\\','%','0','4','x','%','0','4','x',
+    //                                   '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
+    WCHAR buffer[MAX_PATH];
 #ifdef __REACTOS__
-    DWORD i, version_layout = 0;
+    DWORD version_layout = 0;
     UINT len;
 #else
     DWORD i, len, version_layout = 0;
 #endif
-    DWORD user_lang = GetUserDefaultLangID();
-    DWORD *languages;
+    //DWORD user_lang = GetUserDefaultLangID();
+    //DWORD *languages;
     void *data = NULL;
 
     ERR("LPK_ApplyMirroring() 1\n");
@@ -253,6 +253,7 @@ static void LPK_ApplyMirroring()
 
     GetModuleFileNameW( 0, buffer, MAX_PATH );
     if (!(len = GetFileVersionInfoSizeW( buffer, NULL ))) goto done;
+#if 0
     ERR("LPK_ApplyMirroring() 3\n");
     if (!(data = HeapAlloc( GetProcessHeap(), 0, len ))) goto done;
     ERR("LPK_ApplyMirroring() 4\n");
@@ -272,7 +273,7 @@ static void LPK_ApplyMirroring()
     if (!VerQueryValueW( data, buffer, (void **)&str, &len )) goto done;
     ERR( "found description %s\n", debugstr_w( str ));
     if (str[0] == 0x200e && str[1] == 0x200e) version_layout = LAYOUT_RTL;
-
+#endif
 done:
     ERR("LPK_ApplyMirroring() 7\n");
     HeapFree( GetProcessHeap(), 0, data );
