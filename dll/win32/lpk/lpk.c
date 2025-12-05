@@ -158,15 +158,29 @@ GetProcessImageVersionInfo(
  * TODO: Move call from LpkDllInitialize() to LpkInitialize() when latter
  * function is implemented.
  */
-static void LPK_ApplyMirroring(void)
+static void LPK_ApplyMirroring_new(void)
 {
     PWSTR pwstrFileDescription = NULL;
     PVOID pvFileInfo;
     DWORD cbFileInfoSize;
+    DWORD dwDefaultLayout;
+
+    if (!GetProcessDefaultLayout(&dwDefaultLayout))
+    {
+        ERR("# new: GetProcessDefaultLayout failed\n");
+    }
+    else
+    {
+        ERR("# new: GetProcessDefaultLayout returned %lu\n", dwDefaultLayout);
+    }
 
     /* Get the VersionInfo resource of the main executable */
     if (!GetProcessImageVersionInfo(&pvFileInfo, &cbFileInfoSize))
-        return;
+    {
+        ERR("# new: GetProcessImageVersionInfo failed\n");
+        dwDefaultLayout = 0;
+        goto Exit;
+    }
 
     /* The length (in WCHARs) of the key name, including the null-terminator */
     const DWORD cchKeyLength = sizeof(L"FileDescription") / sizeof(WCHAR);
@@ -200,9 +214,72 @@ static void LPK_ApplyMirroring(void)
         (pwstrFileDescription[0] == 0x200E) &&
         (pwstrFileDescription[1] == 0x200E))
     {
-        SetProcessDefaultLayout(LAYOUT_RTL);
+        dwDefaultLayout = LAYOUT_RTL;
     }
+    else
+    {
+        dwDefaultLayout = LAYOUT_LTR;
+    }
+
+Exit:
+    SetProcessDefaultLayout(dwDefaultLayout);
+    ERR("# new: SetProcessDefaultLayout(%lu);\n", dwDefaultLayout);
 }
+
+#if 1
+static void LPK_ApplyMirroring()
+{
+    static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
+                                          '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
+    static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
+                                       '\\','%','0','4','x','%','0','4','x',
+                                       '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
+    WCHAR *str, buffer[MAX_PATH];
+#ifdef __REACTOS__
+    DWORD i, version_layout = 0;
+    UINT len;
+#else
+    DWORD i, len, version_layout = 0;
+#endif
+    DWORD user_lang = GetUserDefaultLangID();
+    DWORD *languages;
+    void *data = NULL;
+
+    ERR("LPK_ApplyMirroring() 1\n");
+
+    LPK_ApplyMirroring_new();
+
+    ERR("LPK_ApplyMirroring() 2\n");
+
+    GetModuleFileNameW( 0, buffer, MAX_PATH );
+    if (!(len = GetFileVersionInfoSizeW( buffer, NULL ))) goto done;
+    ERR("LPK_ApplyMirroring() 3\n");
+    if (!(data = HeapAlloc( GetProcessHeap(), 0, len ))) goto done;
+    ERR("LPK_ApplyMirroring() 4\n");
+    if (!GetFileVersionInfoW( buffer, 0, len, data )) goto done;
+    ERR("LPK_ApplyMirroring() 5\n");
+    if (!VerQueryValueW( data, translationW, (void **)&languages, &len ) || !len) goto done;
+    ERR("LPK_ApplyMirroring() 6\n");
+
+    len /= sizeof(DWORD);
+    for (i = 0; i < len; i++) if (LOWORD(languages[i]) == user_lang) break;
+    if (i == len)  /* try neutral language */
+    for (i = 0; i < len; i++)
+        if (LOWORD(languages[i]) == MAKELANGID( PRIMARYLANGID(user_lang), SUBLANG_NEUTRAL )) break;
+    if (i == len) i = 0;  /* default to the first one */
+
+    sprintfW( buffer, filedescW, LOWORD(languages[i]), HIWORD(languages[i]) );
+    if (!VerQueryValueW( data, buffer, (void **)&str, &len )) goto done;
+    ERR( "found description %s\n", debugstr_w( str ));
+    if (str[0] == 0x200e && str[1] == 0x200e) version_layout = LAYOUT_RTL;
+
+done:
+    ERR("LPK_ApplyMirroring() 7\n");
+    HeapFree( GetProcessHeap(), 0, data );
+    //SetProcessDefaultLayout(version_layout);
+    ERR("# old: SetProcessDefaultLayout(%lu);\n", version_layout);
+}
+#endif
 
 BOOL
 WINAPI
