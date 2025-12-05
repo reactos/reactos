@@ -58,6 +58,10 @@ if(ARCH STREQUAL "i386")
         # arch/i386/i386bug.c
         arch/i386/i386idt.c)
 
+    if(SARCH STREQUAL "xbox")
+        list(APPEND PCATLDR_ARC_SOURCE
+            arch/vidfb.c)
+    endif()
     if(SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox")
         # These machine types require built-in bitmap font
         list(APPEND PCATLDR_ARC_SOURCE

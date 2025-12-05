@@ -20,15 +20,15 @@
  */
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(MEMORY);
 
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
 extern multiboot_info_t * MultibootInfoPtr;
 extern ULONG NvBase;
-extern PVOID FrameBuffer;
+extern ULONG_PTR FrameBuffer;
 extern ULONG FrameBufferSize;
 
 #define TEST_SIZE     0x200
@@ -267,7 +267,7 @@ XboxMemGetMemoryMap(ULONG *MemoryMapSize)
         {
             /* Video memory */
             ReserveMemory(XboxMemoryMap,
-                          (ULONG_PTR)FrameBuffer,
+                          FrameBuffer,
                           FrameBufferSize,
                           LoaderFirmwarePermanent,
                           "Video memory");

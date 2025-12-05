@@ -24,14 +24,13 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 
 #define MAX_XBOX_COM_PORTS    2
 
-extern PVOID FrameBuffer;
+extern ULONG_PTR FrameBuffer;
 extern ULONG FrameBufferSize;
 
 BOOLEAN
 XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
 {
     /* We emulate PCI BIOS here, there are 2 known working PCI buses on an original Xbox */
-
     BusData->NoBuses = 2;
     BusData->MajorRevision = 1;
     BusData->MinorRevision = 0;
@@ -181,7 +180,7 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     PartialDescriptor->Type = CmResourceTypeMemory;
     PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
     PartialDescriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
-    PartialDescriptor->u.Memory.Start.LowPart = (ULONG_PTR)FrameBuffer & 0x0FFFFFFF;
+    PartialDescriptor->u.Memory.Start.LowPart = (FrameBuffer & 0x0FFFFFFF);
     PartialDescriptor->u.Memory.Length = FrameBufferSize;
 
     FldrCreateComponentKey(BusKey,
