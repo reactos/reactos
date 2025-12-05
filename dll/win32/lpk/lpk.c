@@ -158,7 +158,7 @@ GetProcessImageVersionInfo(
  * TODO: Move call from LpkDllInitialize() to LpkInitialize() when latter
  * function is implemented.
  */
-static void LPK_ApplyMirroring_new(void)
+static void LPK_ApplyMirroring(void)
 {
     PWSTR pwstrFileDescription = NULL;
     PVOID pvFileInfo;
@@ -226,7 +226,7 @@ Exit:
     ERR("# new: SetProcessDefaultLayout(%lu);\n", dwDefaultLayout);
 }
 
-#if 1
+#if 0
 static void LPK_ApplyMirroring()
 {
     static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
