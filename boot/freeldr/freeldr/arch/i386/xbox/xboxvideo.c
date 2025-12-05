@@ -233,7 +233,7 @@ XboxVideoInit(VOID)
 }
 
 VIDEODISPLAYMODE
-XboxVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
+XboxVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init)
 {
   /* We only have one mode, semi-text */
   return VideoTextMode;

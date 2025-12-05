@@ -185,7 +185,7 @@ Pc98VideoClearScreen(UCHAR Attr)
 }
 
 VIDEODISPLAYMODE
-Pc98VideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
+Pc98VideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 {
     /* Not supported by hardware */
     return VideoTextMode;

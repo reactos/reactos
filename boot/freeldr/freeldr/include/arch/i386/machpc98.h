@@ -63,7 +63,7 @@ int Pc98ConsGetCh(VOID);
 
 VOID Pc98VideoInit(VOID);
 VOID Pc98VideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE Pc98VideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+VIDEODISPLAYMODE Pc98VideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 VOID Pc98VideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG Pc98VideoGetBufferSize(VOID);
 VOID Pc98VideoGetFontsFromFirmware(PULONG RomFontPointers);
