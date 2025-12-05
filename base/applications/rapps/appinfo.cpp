@@ -295,10 +295,29 @@ CAvailableApplicationInfo::RetrieveLanguages()
     }
 }
 
+bool
+CAvailableApplicationInfo::IsCompatible() const
+{
+    CStringW szBuffer;
+    if (m_Parser->GetString(DB_OSBUILD, szBuffer))
+    {
+        PWSTR start = szBuffer.GetBuffer();
+        PWSTR p;
+        UINT minb = wcstoul(start, &p, 0);
+        if (p > start)
+        {
+            UINT osb = GetOsBuildNumber();
+            UINT maxb = (*p == '-') ? wcstoul(++p, NULL, 0) : (*p == '+' ? UINT_MAX : 0);
+            return maxb && osb >= minb && osb <= maxb;
+        }
+    }
+    return true;
+}
+
 BOOL
 CAvailableApplicationInfo::Valid() const
 {
-    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty();
+    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty() && IsCompatible();
 }
 
 BOOL
