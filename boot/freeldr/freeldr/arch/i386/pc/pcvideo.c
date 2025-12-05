@@ -885,7 +885,7 @@ PcVideoSetMemoryBank(USHORT BankNumber)
 }
 
 VIDEODISPLAYMODE
-PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
+PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 {
   USHORT VideoMode = VIDEOMODE_NORMAL_TEXT;
 

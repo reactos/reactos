@@ -32,7 +32,7 @@ int XboxConsGetCh(VOID);
 
 VOID XboxVideoInit(VOID);
 VOID XboxVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE XboxVideoSetDisplayMode(char *DisplayModem, BOOLEAN Init);
+VIDEODISPLAYMODE XboxVideoSetDisplayMode(PCSTR DisplayModem, BOOLEAN Init);
 VOID XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG XboxVideoGetBufferSize(VOID);
 VOID XboxVideoGetFontsFromFirmware(PULONG RomFontPointers);

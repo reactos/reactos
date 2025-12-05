@@ -159,7 +159,7 @@ UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 }
 
 VIDEODISPLAYMODE
-UefiVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
+UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init)
 {
     /* We only have one mode, semi-text */
     return VideoTextMode;
