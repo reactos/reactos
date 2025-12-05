@@ -19,56 +19,14 @@
 
 #include <libxml/HTMLtree.h>
 
-#include "buf.h"
-#include "enc.h"
-#include "save.h"
-
-/************************************************************************
- *									*
- *			XHTML detection					*
- *									*
- ************************************************************************/
-#define XHTML_STRICT_PUBLIC_ID BAD_CAST \
-   "-//W3C//DTD XHTML 1.0 Strict//EN"
-#define XHTML_STRICT_SYSTEM_ID BAD_CAST \
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
-#define XHTML_FRAME_PUBLIC_ID BAD_CAST \
-   "-//W3C//DTD XHTML 1.0 Frameset//EN"
-#define XHTML_FRAME_SYSTEM_ID BAD_CAST \
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd"
-#define XHTML_TRANS_PUBLIC_ID BAD_CAST \
-   "-//W3C//DTD XHTML 1.0 Transitional//EN"
-#define XHTML_TRANS_SYSTEM_ID BAD_CAST \
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
-
-#define XHTML_NS_NAME BAD_CAST "http://www.w3.org/1999/xhtml"
-/**
- * xmlIsXHTML:
- * @systemID:  the system identifier
- * @publicID:  the public identifier
- *
- * Try to find if the document correspond to an XHTML DTD
- *
- * Returns 1 if true, 0 if not and -1 in case of error
- */
-int
-xmlIsXHTML(const xmlChar *systemID, const xmlChar *publicID) {
-    if ((systemID == NULL) && (publicID == NULL))
-	return(-1);
-    if (publicID != NULL) {
-	if (xmlStrEqual(publicID, XHTML_STRICT_PUBLIC_ID)) return(1);
-	if (xmlStrEqual(publicID, XHTML_FRAME_PUBLIC_ID)) return(1);
-	if (xmlStrEqual(publicID, XHTML_TRANS_PUBLIC_ID)) return(1);
-    }
-    if (systemID != NULL) {
-	if (xmlStrEqual(systemID, XHTML_STRICT_SYSTEM_ID)) return(1);
-	if (xmlStrEqual(systemID, XHTML_FRAME_SYSTEM_ID)) return(1);
-	if (xmlStrEqual(systemID, XHTML_TRANS_SYSTEM_ID)) return(1);
-    }
-    return(0);
-}
+#include "private/buf.h"
+#include "private/enc.h"
+#include "private/error.h"
+#include "private/save.h"
 
 #ifdef LIBXML_OUTPUT_ENABLED
+
+#define XHTML_NS_NAME BAD_CAST "http://www.w3.org/1999/xhtml"
 
 #define TODO								\
     xmlGenericError(xmlGenericErrorContext,				\
@@ -463,7 +421,7 @@ xmlAttrSerializeContent(xmlOutputBufferPtr buf, xmlAttrPtr attr)
  *
  * This will dump the content of the notation table as an XML DTD definition
  */
-void
+static void
 xmlBufDumpNotationTable(xmlBufPtr buf, xmlNotationTablePtr table) {
     xmlBufferPtr buffer;
 
@@ -487,7 +445,7 @@ xmlBufDumpNotationTable(xmlBufPtr buf, xmlNotationTablePtr table) {
  * This will dump the content of the element declaration as an XML
  * DTD definition
  */
-void
+static void
 xmlBufDumpElementDecl(xmlBufPtr buf, xmlElementPtr elem) {
     xmlBufferPtr buffer;
 
@@ -511,7 +469,7 @@ xmlBufDumpElementDecl(xmlBufPtr buf, xmlElementPtr elem) {
  * This will dump the content of the attribute declaration as an XML
  * DTD definition
  */
-void
+static void
 xmlBufDumpAttributeDecl(xmlBufPtr buf, xmlAttributePtr attr) {
     xmlBufferPtr buffer;
 
@@ -534,7 +492,7 @@ xmlBufDumpAttributeDecl(xmlBufPtr buf, xmlAttributePtr attr) {
  *
  * This will dump the content of the entity table as an XML DTD definition
  */
-void
+static void
 xmlBufDumpEntityDecl(xmlBufPtr buf, xmlEntityPtr ent) {
     xmlBufferPtr buffer;
 
@@ -595,7 +553,6 @@ static void
 xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur);
 #endif
 static void xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur);
-void xmlNsListDumpOutput(xmlOutputBufferPtr buf, xmlNsPtr cur);
 static int xmlDocContentDumpOutput(xmlSaveCtxtPtr ctxt, xmlDocPtr cur);
 
 /**
@@ -1434,13 +1391,14 @@ xhtmlAttrListDumpOutput(xmlSaveCtxtPtr ctxt, xmlAttrPtr cur) {
 static void
 xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
     int format = ctxt->format, addmeta;
-    xmlNodePtr tmp, root, unformattedNode = NULL;
+    xmlNodePtr tmp, root, unformattedNode = NULL, parent;
     xmlChar *start, *end;
     xmlOutputBufferPtr buf = ctxt->buf;
 
     if (cur == NULL) return;
 
     root = cur;
+    parent = cur->parent;
     while (1) {
         switch (cur->type) {
         case XML_DOCUMENT_NODE:
@@ -1457,7 +1415,9 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 	    break;
 
         case XML_DOCUMENT_FRAG_NODE:
-            if (cur->children) {
+            /* Always validate cur->parent when descending. */
+            if ((cur->parent == parent) && (cur->children != NULL)) {
+                parent = cur;
                 cur = cur->children;
                 continue;
             }
@@ -1484,6 +1444,16 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 				      ctxt->indent_nr : ctxt->level),
 				     ctxt->indent);
 
+            /*
+             * Some users like lxml are known to pass nodes with a corrupted
+             * tree structure. Fall back to a recursive call to handle this
+             * case.
+             */
+            if ((cur->parent != parent) && (cur->children != NULL)) {
+                xhtmlNodeDumpOutput(ctxt, cur);
+                break;
+            }
+
             xmlOutputBufferWrite(buf, 1, "<");
             if ((cur->ns != NULL) && (cur->ns->prefix != NULL)) {
                 xmlOutputBufferWriteString(buf, (const char *)cur->ns->prefix);
@@ -1504,10 +1474,10 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
             if (cur->properties != NULL)
                 xhtmlAttrListDumpOutput(ctxt, cur->properties);
 
-            if ((cur->parent != NULL) &&
-                (cur->parent->parent == (xmlNodePtr) cur->doc) &&
+            if ((parent != NULL) &&
+                (parent->parent == (xmlNodePtr) cur->doc) &&
                 xmlStrEqual(cur->name, BAD_CAST"head") &&
-                xmlStrEqual(cur->parent->name, BAD_CAST"html")) {
+                xmlStrEqual(parent->name, BAD_CAST"html")) {
 
                 tmp = cur->children;
                 while (tmp != NULL) {
@@ -1613,6 +1583,7 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
 
                 if (ctxt->format == 1) xmlOutputBufferWrite(buf, 1, "\n");
                 if (ctxt->level >= 0) ctxt->level++;
+                parent = cur;
                 cur = cur->children;
                 continue;
             }
@@ -1707,13 +1678,9 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
                 break;
             }
 
-            /*
-             * The parent should never be NULL here but we want to handle
-             * corrupted documents gracefully.
-             */
-            if (cur->parent == NULL)
-                return;
-            cur = cur->parent;
+            cur = parent;
+            /* cur->parent was validated when descending. */
+            parent = cur->parent;
 
             if (cur->type == XML_ELEMENT_NODE) {
                 if (ctxt->level > 0) ctxt->level--;
@@ -1890,7 +1857,7 @@ xmlSaveDoc(xmlSaveCtxtPtr ctxt, xmlDocPtr doc)
 /**
  * xmlSaveTree:
  * @ctxt:  a document saving context
- * @node:  the top node of the subtree to save
+ * @cur:  the top node of the subtree to save
  *
  * Save a subtree starting at the node parameter to a saving context
  * TODO: The function is not fully implemented yet as it does not return the
@@ -2178,7 +2145,7 @@ xmlNodeDump(xmlBufferPtr buf, xmlDocPtr doc, xmlNodePtr cur, int level,
     xmlBufBackToBuffer(buffer);
     if (ret > INT_MAX)
         return(-1);
-    return((int) ret);
+    return(ret);
 }
 
 /**
@@ -2209,17 +2176,9 @@ xmlBufNodeDump(xmlBufPtr buf, xmlDocPtr doc, xmlNodePtr cur, int level,
     xmlInitParser();
 
     if (cur == NULL) {
-#ifdef DEBUG_TREE
-        xmlGenericError(xmlGenericErrorContext,
-                        "xmlNodeDump : node == NULL\n");
-#endif
         return (-1);
     }
     if (buf == NULL) {
-#ifdef DEBUG_TREE
-        xmlGenericError(xmlGenericErrorContext,
-                        "xmlNodeDump : buf == NULL\n");
-#endif
         return (-1);
     }
     outbuf = (xmlOutputBufferPtr) xmlMalloc(sizeof(xmlOutputBuffer));
@@ -2261,18 +2220,8 @@ xmlElemDump(FILE * f, xmlDocPtr doc, xmlNodePtr cur)
     xmlInitParser();
 
     if (cur == NULL) {
-#ifdef DEBUG_TREE
-        xmlGenericError(xmlGenericErrorContext,
-                        "xmlElemDump : cur == NULL\n");
-#endif
         return;
     }
-#ifdef DEBUG_TREE
-    if (doc == NULL) {
-        xmlGenericError(xmlGenericErrorContext,
-                        "xmlElemDump : doc == NULL\n");
-    }
-#endif
 
     outbuf = xmlOutputBufferCreateFile(f, NULL);
     if (outbuf == NULL)
@@ -2316,6 +2265,8 @@ xmlNodeDumpOutput(xmlOutputBufferPtr buf, xmlDocPtr doc, xmlNodePtr cur,
     xmlDtdPtr dtd;
     int is_xhtml = 0;
 #endif
+
+    (void) doc;
 
     xmlInitParser();
 
@@ -2406,6 +2357,7 @@ xmlDocDumpFormatMemoryEnc(xmlDocPtr out_doc, xmlChar **doc_txt_ptr,
 
     if ((out_buff = xmlAllocOutputBuffer(conv_hdlr)) == NULL ) {
         xmlSaveErrMemory("creating buffer");
+        xmlCharEncCloseFunc(conv_hdlr);
         return;
     }
 
@@ -2509,10 +2461,6 @@ xmlDocFormatDump(FILE *f, xmlDocPtr cur, int format) {
     int ret;
 
     if (cur == NULL) {
-#ifdef DEBUG_TREE
-        xmlGenericError(xmlGenericErrorContext,
-		"xmlDocDump : document == NULL\n");
-#endif
 	return(-1);
     }
     encoding = (const char *) cur->encoding;
@@ -2734,4 +2682,3 @@ xmlSaveFile(const char *filename, xmlDocPtr cur) {
 }
 
 #endif /* LIBXML_OUTPUT_ENABLED */
-

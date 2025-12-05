@@ -796,9 +796,6 @@ static void test_xmlelem_collection(void)
     ok(V_VT(&var[3]) == 0xcccc, "Expected invalid, got %x\n", V_VT(&var[3]));
     ok(num_vars == 2, "Unexpected count %ld.\n", num_vars);
 
-#ifdef __REACTOS__
-    if (V_VT(&var[1]) == VT_DISPATCH) {
-#endif
     hr = IDispatch_QueryInterface(V_DISPATCH(&var[1]), &IID_IXMLElement, (LPVOID *)&child);
     ok(hr == S_OK, "Unexpected hr %#lx.\n", hr);
     ok(child != NULL, "Expected non-NULL child\n");
@@ -815,9 +812,6 @@ static void test_xmlelem_collection(void)
     ok(!lstrcmpW(str, L"NAME"), "Expected NAME\n");
     SysFreeString(str);
     IXMLElement_Release(child);
-#ifdef __REACTOS__
-    }
-#endif
 
     /* <Number>1234</Number> */
     V_VT(&vIndex) = VT_I4;

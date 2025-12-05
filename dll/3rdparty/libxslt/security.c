@@ -6,13 +6,20 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
 
+#include <string.h>
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 
 #if defined(_WIN32)
+#include <windows.h>
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 #endif
@@ -28,6 +35,16 @@
 #    define HAVE_STAT
 #  endif
 #endif
+
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
+#include <libxml/uri.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "extensions.h"
+#include "security.h"
+
 
 struct _xsltSecurityPrefs {
     xsltSecurityCheck readFile;
@@ -405,6 +422,19 @@ xsltCheckRead(xsltSecurityPrefsPtr sec,
     xmlURIPtr uri;
     xsltSecurityCheck check;
 
+    if (xmlStrstr(URL, BAD_CAST "://") == NULL) {
+	check = xsltGetSecurityPrefs(sec, XSLT_SECPREF_READ_FILE);
+	if (check != NULL) {
+            ret = check(sec, ctxt, (const char *) URL);
+            if (ret == 0) {
+                xsltTransformError(ctxt, NULL, NULL,
+                             "Local file read for %s refused\n", URL);
+                return(0);
+            }
+        }
+        return(1);
+    }
+
     uri = xmlParseURI((const char *)URL);
     if (uri == NULL) {
 	xsltTransformError(ctxt, NULL, NULL,
@@ -446,4 +476,3 @@ xsltCheckRead(xsltSecurityPrefsPtr sec,
     xmlFreeURI(uri);
     return(1);
 }
-

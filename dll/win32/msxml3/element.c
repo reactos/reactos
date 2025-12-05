@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -38,8 +34,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -106,28 +100,27 @@ static HRESULT WINAPI domelem_QueryInterface(
     return S_OK;
 }
 
-static ULONG WINAPI domelem_AddRef(
-    IXMLDOMElement *iface )
+static ULONG WINAPI domelem_AddRef(IXMLDOMElement *iface)
 {
-    domelem *This = impl_from_IXMLDOMElement( iface );
-    LONG ref = InterlockedIncrement(&This->ref);
+    domelem *element = impl_from_IXMLDOMElement(iface);
+    LONG ref = InterlockedIncrement(&element->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
 
     return ref;
 }
 
-static ULONG WINAPI domelem_Release(
-    IXMLDOMElement *iface )
+static ULONG WINAPI domelem_Release(IXMLDOMElement *iface)
 {
-    domelem *This = impl_from_IXMLDOMElement( iface );
-    ULONG ref = InterlockedDecrement(&This->ref);
+    domelem *element = impl_from_IXMLDOMElement(iface);
+    ULONG ref = InterlockedDecrement(&element->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
 
-    if(!ref) {
-        destroy_xmlnode(&This->node);
-        heap_free(This);
+    if (!ref)
+    {
+        destroy_xmlnode(&element->node);
+        free(element);
     }
 
     return ref;
@@ -309,6 +302,8 @@ static HRESULT WINAPI domelem_insertBefore(
 
     TRACE("(%p)->(%p %s %p)\n", This, newNode, debugstr_variant(&refChild), old_node);
 
+    if (!newNode) return E_INVALIDARG;
+
     hr = IXMLDOMNode_get_nodeType(newNode, &type);
     if (hr != S_OK) return hr;
 
@@ -459,7 +454,6 @@ static inline HRESULT variant_from_dt(XDR_DT dt, xmlChar* str, VARIANT* v)
 
     switch (dt)
     {
-    case DT_INVALID:
     case DT_STRING:
     case DT_NMTOKEN:
     case DT_NMTOKENS:
@@ -502,9 +496,9 @@ static inline HRESULT variant_from_dt(XDR_DT dt, xmlChar* str, VARIANT* v)
 
             if(p+4<e && *(p+4)=='-') /* parse date (yyyy-mm-dd) */
             {
-                st.wYear = atoiW(p);
-                st.wMonth = atoiW(p+5);
-                st.wDay = atoiW(p+8);
+                st.wYear = wcstol(p, NULL, 10);
+                st.wMonth = wcstol(p+5, NULL, 10);
+                st.wDay = wcstol(p+8, NULL, 10);
                 p += 10;
 
                 if(*p == 'T') p++;
@@ -512,15 +506,15 @@ static inline HRESULT variant_from_dt(XDR_DT dt, xmlChar* str, VARIANT* v)
 
             if(p+2<e && *(p+2)==':') /* parse time (hh:mm:ss.?) */
             {
-                st.wHour = atoiW(p);
-                st.wMinute = atoiW(p+3);
-                st.wSecond = atoiW(p+6);
+                st.wHour = wcstol(p, NULL, 10);
+                st.wMinute = wcstol(p+3, NULL, 10);
+                st.wSecond = wcstol(p+6, NULL, 10);
                 p += 8;
 
                 if(*p == '.')
                 {
                     p++;
-                    while(isdigitW(*p)) p++;
+                    while (*p >= '0' && *p <= '9') p++;
                 }
             }
 
@@ -529,9 +523,9 @@ static inline HRESULT variant_from_dt(XDR_DT dt, xmlChar* str, VARIANT* v)
             V_DATE(v) = date;
 
             if(*p == '+') /* parse timezone offset (+hh:mm) */
-                V_DATE(v) += (DOUBLE)atoiW(p+1)/24 + (DOUBLE)atoiW(p+4)/1440;
+                V_DATE(v) += (DOUBLE)wcstol(p+1, NULL, 10)/24 + (DOUBLE)wcstol(p+4, NULL, 10)/1440;
             else if(*p == '-') /* parse timezone offset (-hh:mm) */
-                V_DATE(v) -= (DOUBLE)atoiW(p+1)/24 + (DOUBLE)atoiW(p+4)/1440;
+                V_DATE(v) -= (DOUBLE)wcstol(p+1, NULL, 10)/24 + (DOUBLE)wcstol(p+4, NULL, 10)/1440;
 
             VariantClear(&src);
             handled = TRUE;
@@ -741,6 +735,13 @@ static HRESULT WINAPI domelem_get_nodeTypedValue(
     V_VT(v) = VT_NULL;
 
     dt = element_get_dt(get_element(This));
+
+    if (dt == DT_INVALID)
+    {
+        if (SUCCEEDED(hr = node_get_text(&This->node, &V_BSTR(v))))
+            V_VT(v) = VT_BSTR;
+        return hr;
+    }
     content = xmlNodeGetContent(get_element(This));
     hr = variant_from_dt(dt, content, v);
     xmlFree(content);
@@ -847,6 +848,7 @@ static HRESULT WINAPI domelem_put_nodeTypedValue(
     {
     /* for untyped node coerce to BSTR and set */
     case DT_INVALID:
+    case DT_INT:
         if (V_VT(&value) != VT_BSTR)
         {
             VARIANT content;
@@ -1247,7 +1249,7 @@ static HRESULT WINAPI domelem_getAttribute(
             xml_value = xmlGetNsProp(element, xml_name, NULL);
     }
 
-    heap_free(xml_name);
+    free(xml_name);
     if(xml_value)
     {
         V_VT(value) = VT_BSTR;
@@ -1309,8 +1311,8 @@ static HRESULT WINAPI domelem_setAttribute(
         if (ns)
         {
             int cmp = xmlStrEqual(ns->href, xml_value);
-            heap_free(xml_value);
-            heap_free(xml_name);
+            free(xml_value);
+            free(xml_name);
             return cmp ? S_OK : E_INVALIDARG;
         }
     }
@@ -1318,8 +1320,8 @@ static HRESULT WINAPI domelem_setAttribute(
     if (!xmlSetNsProp(element, NULL, xml_name, xml_value))
         hr = E_FAIL;
 
-    heap_free(xml_value);
-    heap_free(xml_name);
+    free(xml_value);
+    free(xml_name);
 
     return hr;
 }
@@ -1363,13 +1365,13 @@ static HRESULT WINAPI domelem_getAttributeNode(
     nameA = xmlchar_from_wchar(p);
     if (!xmlValidateNameValue(nameA))
     {
-        heap_free(nameA);
+        free(nameA);
         return E_FAIL;
     }
 
     if (!attributeNode)
     {
-        heap_free(nameA);
+        free(nameA);
         return S_FALSE;
     }
 
@@ -1394,7 +1396,7 @@ static HRESULT WINAPI domelem_getAttributeNode(
         if (attr && attr->ns) attr = NULL;
     }
 
-    heap_free(nameA);
+    free(nameA);
 
     if (attr)
     {
@@ -1437,7 +1439,7 @@ static HRESULT WINAPI domelem_setAttributeNode(
     if (hr != S_OK) return hr;
 
     /* adding xmlns attribute doesn't change a tree or existing namespace definition */
-    if (!strcmpW(nameW, xmlnsW))
+    if (!wcscmp(nameW, xmlnsW))
     {
         SysFreeString(nameW);
         return DISP_E_UNKNOWNNAME;
@@ -1468,8 +1470,8 @@ static HRESULT WINAPI domelem_setAttributeNode(
     {
         SysFreeString(nameW);
         VariantClear(&valueW);
-        heap_free(name);
-        heap_free(value);
+        free(name);
+        free(value);
         return E_OUTOFMEMORY;
     }
 
@@ -1479,8 +1481,8 @@ static HRESULT WINAPI domelem_setAttributeNode(
 
     SysFreeString(nameW);
     VariantClear(&valueW);
-    heap_free(name);
-    heap_free(value);
+    free(name);
+    free(value);
 
     return attr ? S_OK : E_FAIL;
 }
@@ -1604,14 +1606,14 @@ static HRESULT domelem_get_qualified_item(const xmlNodePtr node, BSTR name, BSTR
     nameA = xmlchar_from_wchar(name);
     if (!nameA)
     {
-        heap_free(href);
+        free(href);
         return E_OUTOFMEMORY;
     }
 
     attr = xmlHasNsProp(node, nameA, href);
 
-    heap_free(nameA);
-    heap_free(href);
+    free(nameA);
+    free(href);
 
     if (!attr)
     {
@@ -1635,7 +1637,7 @@ static HRESULT domelem_get_named_item(const xmlNodePtr node, BSTR name, IXMLDOMN
 
     nameA = xmlchar_from_wchar(name);
     local = xmlSplitQName2(nameA, &prefix);
-    heap_free(nameA);
+    free(nameA);
 
     if (!local)
         return domelem_get_qualified_item(node, name, NULL, item);
@@ -1716,14 +1718,14 @@ static HRESULT domelem_remove_qualified_item(xmlNodePtr node, BSTR name, BSTR ur
     nameA = xmlchar_from_wchar(name);
     if (!nameA)
     {
-        heap_free(href);
+        free(href);
         return E_OUTOFMEMORY;
     }
 
     attr = xmlHasNsProp(node, nameA, href);
 
-    heap_free(nameA);
-    heap_free(href);
+    free(nameA);
+    free(href);
 
     if (!attr)
     {
@@ -1748,8 +1750,43 @@ static HRESULT domelem_remove_qualified_item(xmlNodePtr node, BSTR name, BSTR ur
 
 static HRESULT domelem_remove_named_item(xmlNodePtr node, BSTR name, IXMLDOMNode **item)
 {
+    xmlChar *nameA, *local, *prefix;
+    BSTR uriW, localW;
+    xmlNsPtr ns;
+    HRESULT hr;
+
     TRACE("(%p)->(%s %p)\n", node, debugstr_w(name), item);
-    return domelem_remove_qualified_item(node, name, NULL, item);
+
+    nameA = xmlchar_from_wchar(name);
+    local = xmlSplitQName2(nameA, &prefix);
+    free(nameA);
+
+    if (!local)
+        return domelem_remove_qualified_item(node, name, NULL, item);
+
+    ns = xmlSearchNs(node->doc, node, prefix);
+
+    xmlFree(prefix);
+
+    if (!ns)
+    {
+        xmlFree(local);
+        if (item) *item = NULL;
+        return item ? S_FALSE : E_INVALIDARG;
+    }
+
+    uriW = bstr_from_xmlChar(ns->href);
+    localW = bstr_from_xmlChar(local);
+    xmlFree(local);
+
+    TRACE("removing qualified node %s, uri=%s\n", debugstr_w(localW), debugstr_w(uriW));
+
+    hr = domelem_remove_qualified_item(node, localW, uriW, item);
+
+    SysFreeString(localW);
+    SysFreeString(uriW);
+
+    return hr;
 }
 
 static HRESULT domelem_get_item(const xmlNodePtr node, LONG index, IXMLDOMNode **item)
@@ -1760,7 +1797,7 @@ static HRESULT domelem_get_item(const xmlNodePtr node, LONG index, IXMLDOMNode *
     IUnknown *unk;
     HRESULT hr;
 
-    TRACE("(%p)->(%d %p)\n", node, index, item);
+    TRACE("%p, %ld, %p.\n", node, index, item);
 
     *item = NULL;
 
@@ -1782,19 +1819,30 @@ static HRESULT domelem_get_item(const xmlNodePtr node, LONG index, IXMLDOMNode *
     if (!node->nsDef)
         return S_FALSE;
 
-    attrIndex++;
     ns = node->nsDef;
-    for (; attrIndex < index && ns->next != NULL; attrIndex++)
+    while (attrIndex < index)
+    {
+        attrIndex++;
+
+        if (!ns->next)
+            break;
+
         ns = ns->next;
+    }
 
     if (attrIndex < index)
         return S_FALSE;
 
-    xmlns = xmlNewNs(NULL, BAD_CAST "http://www.w3.org/2000/xmlns/", BAD_CAST "xmlns");
-    if (!xmlns)
-        return E_OUTOFMEMORY;
+    if (!ns->prefix) {
+        xmlns = NULL;
+        curr = xmlNewProp(NULL, BAD_CAST "xmlns", ns->href);
+    } else {
+        xmlns = xmlNewNs(NULL, BAD_CAST "http://www.w3.org/2000/xmlns/", BAD_CAST "xmlns");
+        if (!xmlns)
+            return E_OUTOFMEMORY;
 
-    curr = xmlNewNsProp(NULL, xmlns, ns->prefix, ns->href);
+        curr = xmlNewNsProp(NULL, xmlns, ns->prefix, ns->href);
+    }
     if (!curr) {
         xmlFreeNs(xmlns);
         return E_OUTOFMEMORY;
@@ -1847,11 +1895,13 @@ static HRESULT domelem_next_node(const xmlNodePtr node, LONG *iter, IXMLDOMNode 
     xmlAttrPtr curr;
     LONG i;
 
-    TRACE("(%p)->(%d: %p)\n", node, *iter, nextNode);
+    TRACE("%p, %ld, %p.\n", node, *iter, nextNode);
 
     *nextNode = NULL;
 
     curr = node->properties;
+    if (curr == NULL)
+        return S_FALSE;
 
     for (i = 0; i < *iter; i++) {
         if (curr->next == NULL)
@@ -1893,7 +1943,7 @@ IUnknown* create_element( xmlNodePtr element )
 {
     domelem *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof *This);
     if ( !This )
         return NULL;
 
@@ -1904,5 +1954,3 @@ IUnknown* create_element( xmlNodePtr element )
 
     return (IUnknown*)&This->IXMLDOMElement_iface;
 }
-
-#endif
