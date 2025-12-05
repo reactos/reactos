@@ -18020,6 +18020,14 @@ static void test_defwinproc(void)
 #endif
     ok_sequence(WmRestoreActiveMinimizedOverlappedSeq, "DefWindowProcA(SC_RESTORE):active minimized overlapped", TRUE);
 
+#ifdef __REACTOS__
+    if (!is_reactos() && GetNTVersion() == _WIN32_WINNT_WS03) {
+        skip("The rest of these tests crash on WHS testbot!\n");
+        flush_sequence();
+        DestroyWindow(hwnd);
+        return;
+    }
+#endif
     child[0] = CreateWindowExA(0, "TestWindowClass", "1st child",
                                WS_VISIBLE | WS_CHILD, 0,0,500,100, hwnd, 0, 0, NULL);
     child[1] = CreateWindowExA(0, "TestWindowClass", "2nd child",
@@ -20986,53 +20994,43 @@ START_TEST(msg)
     test_dbcs_wm_char();
     test_unicode_wm_char();
 #ifdef __REACTOS__
-    trace("Running test_defwinproc()...");
-#endif
+    trace("Running test_defwinproc()...\n");
     test_defwinproc();
-#ifdef __REACTOS__
-    trace("Running test_desktop_winproc()...");
-#endif
+    trace("Running test_desktop_winproc()...\n");
     test_desktop_winproc();
-#ifdef __REACTOS__
-    trace("Running test_clipboard_viewers()...");
-#endif
+    trace("Running test_clipboard_viewers()...\n");
     test_clipboard_viewers();
-#ifdef __REACTOS__
-    trace("Running test_keyflags()...");
-#endif
+    trace("Running test_keyflags()...\n");
     test_keyflags();
-#ifdef __REACTOS__
-    trace("Running test_hotkey()...");
-#endif
+    trace("Running test_hotkey()...\n");
     test_hotkey();
-#ifdef __REACTOS__
-    trace("Running test_layered_window()...");
-#endif
+    trace("Running test_layered_window()...\n");
     test_layered_window();
-#ifdef __REACTOS__
-    trace("Running test_TrackPopupMenu()...");
-#endif
+    trace("Running test_TrackPopupMenu()...\n");
     test_TrackPopupMenu();
-#ifdef __REACTOS__
-    trace("Running test_TrackPopupMenuEmpty()...");
-#endif
+    trace("Running test_TrackPopupMenuEmpty()...\n");
     test_TrackPopupMenuEmpty();
-#ifdef __REACTOS__
-    trace("Running test_DoubleSetCapture()...");
-#endif
+    trace("Running test_DoubleSetCapture()...\n");
     test_DoubleSetCapture();
-#ifdef __REACTOS__
-    trace("Running test_create_name()...");
-#endif
+    trace("Running test_create_name()...\n");
     test_create_name();
-#ifdef __REACTOS__
-    trace("Running test_hook_changing_window_proc()...");
-#endif
+    trace("Running test_hook_changing_window_proc()...\n");
     test_hook_changing_window_proc();
-#ifdef __REACTOS__
-    trace("Running test_hook_cleanup()...");
-#endif
+    trace("Running test_hook_cleanup()...\n");
     test_hook_cleanup();
+#else
+    test_defwinproc();
+    test_desktop_winproc();
+    test_clipboard_viewers();
+    test_keyflags();
+    test_hotkey();
+    test_layered_window();
+    test_TrackPopupMenu();
+    test_TrackPopupMenuEmpty();
+    test_DoubleSetCapture();
+    test_create_name();
+    test_hook_changing_window_proc();
+#endif
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
