@@ -13552,7 +13552,11 @@ static void test_sockopt_validity(void)
         { IP_MTU,                     WSAENOTCONN,     0,          TRUE },
         { IP_RECVERR,                 WSAEINVAL,       0,          TRUE },
         { IP_USER_MTU,                0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test ipv4_udp_tests[] =
     {
@@ -13587,7 +13591,11 @@ static void test_sockopt_validity(void)
         { IP_MTU,                     WSAENOTCONN,     0,          TRUE },
         { IP_RECVERR,                 0,               0,          TRUE },
         { IP_USER_MTU,                0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test ipv4_raw_tests[] =
     {
@@ -13622,7 +13630,11 @@ static void test_sockopt_validity(void)
         { IP_MTU,                     WSAENOTCONN,     0,          TRUE },
         { IP_RECVERR,                 WSAEINVAL,       0,          TRUE },
         { IP_USER_MTU,                0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test ipv6_tcp_tests[] =
     {
@@ -13657,7 +13669,11 @@ static void test_sockopt_validity(void)
         { IPV6_MTU,                   WSAENOTCONN,     0,          TRUE },
         { IPV6_RECVERR,               WSAEINVAL,       0,          TRUE },
         { IPV6_USER_MTU,              0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test ipv6_udp_tests[] =
     {
@@ -13692,7 +13708,11 @@ static void test_sockopt_validity(void)
         { IPV6_MTU,                   WSAENOTCONN,     0,          TRUE },
         { IPV6_RECVERR,               0,               0,          TRUE },
         { IPV6_USER_MTU,              0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test ipv6_raw_tests[] =
     {
@@ -13727,14 +13747,22 @@ static void test_sockopt_validity(void)
         { IPV6_MTU,                   WSAENOTCONN,     0,          TRUE },
         { IPV6_RECVERR,               WSAEINVAL,       0,          TRUE },
         { IPV6_USER_MTU,              0,               0,          TRUE },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     static const struct sockopt_validity_test file_handle_tests[] =
     {
         { -1,                         WSAENOTSOCK                       },
         { SO_TYPE,                    WSAENOTSOCK                       },
         { SO_OPENTYPE                                                   },
+#if defined(__REACTOS__) && defined(_MSC_VER)
+        { 0 }
+#else
         {}
+#endif
     };
     char path[MAX_PATH];
     HANDLE file;
