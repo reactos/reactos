@@ -503,12 +503,20 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadHideFromDebugger */
-    IQS_SAME
-    (
-        CHAR,
-        ULONG,
-        ICIF_SET | ICIF_SET_SIZE_VARIABLE
-    ),
+    {
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        sizeof(BOOLEAN), /* Query support only on Vista and above */
+#else
+        0,
+#endif
+        sizeof(ULONG), // UCHAR
+        0, /* No size for Set */
+        sizeof(ULONG),
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        ICIF_QUERY |
+#endif
+        ICIF_SET
+    },
 
     /* ThreadBreakOnTermination */
     IQS_SAME
