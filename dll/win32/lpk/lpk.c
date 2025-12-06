@@ -229,17 +229,9 @@ Exit:
 #if 1
 static void LPK_ApplyMirroring()
 {
-    WCHAR buffer[MAX_PATH];
-
-    ERR("LPK_ApplyMirroring() 1\n");
-
     LPK_ApplyMirroring_new();
 
-    ERR("LPK_ApplyMirroring() 2\n");
-
-    GetModuleFileNameW( 0, buffer, MAX_PATH );
-
-    ERR("LPK_ApplyMirroring() 7\n");
+    GetFileVersionInfoSizeW(L"", NULL );
 }
 #endif
 
