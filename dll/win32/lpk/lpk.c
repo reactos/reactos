@@ -230,8 +230,6 @@ Exit:
 static void LPK_ApplyMirroring()
 {
     WCHAR buffer[MAX_PATH];
-    DWORD version_layout = 0;
-    void *data = NULL;
 
     ERR("LPK_ApplyMirroring() 1\n");
 
@@ -243,8 +241,6 @@ static void LPK_ApplyMirroring()
     GetFileVersionInfoSizeW( buffer, NULL );
 
     ERR("LPK_ApplyMirroring() 7\n");
-    HeapFree( GetProcessHeap(), 0, data );
-    ERR("# old: SetProcessDefaultLayout(%lu);\n", version_layout);
 }
 #endif
 
