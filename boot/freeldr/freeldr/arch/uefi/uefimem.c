@@ -30,7 +30,6 @@ AddMemoryDescriptor(
 extern ULONG LoaderPagesSpanned;
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
 
 EFI_MEMORY_DESCRIPTOR* EfiMemoryMap = NULL;
 UINT32 FreeldrDescCount;
