@@ -238,7 +238,6 @@ static void LPK_ApplyMirroring()
     ERR("LPK_ApplyMirroring() 2\n");
 
     GetModuleFileNameW( 0, buffer, MAX_PATH );
-    GetFileVersionInfoSizeW( buffer, NULL );
 
     ERR("LPK_ApplyMirroring() 7\n");
 }
