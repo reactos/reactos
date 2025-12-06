@@ -51,7 +51,7 @@ PrintDisk(
                  FreeSize,
                  lpFreeUnit,
                  L" ",
-                 L" ");
+                 (DiskEntry->PartitionStyle == PARTITION_STYLE_GPT) ? L"*" : L" ");
 }
 
 

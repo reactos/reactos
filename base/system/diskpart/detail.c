@@ -89,7 +89,7 @@ DetailDisk(
 
     /* TODO: Print more disk details */
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, CurrentDisk->LayoutBuffer->Signature);
+    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, CurrentDisk->LayoutBuffer->Mbr.Signature);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);

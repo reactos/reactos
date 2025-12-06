@@ -173,11 +173,11 @@ typedef struct _DISKENTRY
     BOOLEAN Dirty;
 
     BOOLEAN NewDisk;
-    BOOLEAN NoMbr; /* MBR is absent */
+    DWORD PartitionStyle;
 
     UNICODE_STRING DriverName;
 
-    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION_EX LayoutBuffer;
 
     PPARTENTRY ExtendedPartition;
 

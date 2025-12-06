@@ -404,12 +404,12 @@ AddPartitionToDisk(
     ULONG PartitionIndex,
     BOOLEAN LogicalPartition)
 {
-    PPARTITION_INFORMATION PartitionInfo;
+    PPARTITION_INFORMATION_EX PartitionInfo;
     PPARTENTRY PartEntry;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
-    if (PartitionInfo->PartitionType == 0 ||
-        (LogicalPartition == TRUE && IsContainerPartition(PartitionInfo->PartitionType)))
+    if (PartitionInfo->Mbr.PartitionType == 0 ||
+        (LogicalPartition == TRUE && IsContainerPartition(PartitionInfo->Mbr.PartitionType)))
         return;
 
     PartEntry = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -425,8 +425,8 @@ AddPartitionToDisk(
     PartEntry->StartSector.QuadPart = (ULONGLONG)PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector;
     PartEntry->SectorCount.QuadPart = (ULONGLONG)PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector;
 
-    PartEntry->BootIndicator = PartitionInfo->BootIndicator;
-    PartEntry->PartitionType = PartitionInfo->PartitionType;
+    PartEntry->BootIndicator = PartitionInfo->Mbr.BootIndicator;
+    PartEntry->PartitionType = PartitionInfo->Mbr.PartitionType;
 
     PartEntry->LogicalPartition = LogicalPartition;
     PartEntry->IsPartitioned = TRUE;
@@ -782,7 +782,7 @@ AddDiskToList(
     PLIST_ENTRY ListEntry;
     PBIOSDISKENTRY BiosDiskEntry;
     ULONG LayoutBufferSize;
-    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
 
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
@@ -871,11 +871,25 @@ AddDiskToList(
 //    DiskEntry->Signature = Signature;
     DiskEntry->BiosFound = FALSE;
 
-    /* Check if this disk has a valid MBR */
+    /* Check the disk partition style */
     if (Mbr->Magic != MBR_MAGIC)
-        DiskEntry->NoMbr = TRUE;
+    {
+        DPRINT("Partition style: RAW\n");
+        DiskEntry->PartitionStyle = PARTITION_STYLE_RAW;
+    }
     else
-        DiskEntry->NoMbr = FALSE;
+    {
+        if (Mbr->Partition[0].PartitionType == PARTITION_GPT)
+        {
+            DPRINT("Partition style: GPT\n");
+            DiskEntry->PartitionStyle = PARTITION_STYLE_GPT;
+        }
+        else
+        {
+            DPRINT("Partition style: MBR\n");
+            DiskEntry->PartitionStyle = PARTITION_STYLE_MBR;
+        }
+    }
 
     /* Free Mbr sector buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, Mbr);
@@ -954,8 +968,8 @@ AddDiskToList(
     InsertAscendingList(&DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
     /* Allocate a layout buffer with 4 partition entries first */
-    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
     DiskEntry->LayoutBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                               HEAP_ZERO_MEMORY,
                                               LayoutBufferSize);
@@ -973,7 +987,7 @@ AddDiskToList(
                                        NULL,
                                        NULL,
                                        &Iosb,
-                                       IOCTL_DISK_GET_DRIVE_LAYOUT,
+                                       IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
                                        NULL,
                                        0,
                                        DiskEntry->LayoutBuffer,
@@ -987,7 +1001,7 @@ AddDiskToList(
             return;
         }
 
-        LayoutBufferSize += 4 * sizeof(PARTITION_INFORMATION);
+        LayoutBufferSize += 4 * sizeof(PARTITION_INFORMATION_EX);
         NewLayoutBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
                                             HEAP_ZERO_MEMORY,
                                             DiskEntry->LayoutBuffer,
@@ -1009,7 +1023,7 @@ AddDiskToList(
 
     if (DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart != 0 &&
         DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionLength.QuadPart != 0 &&
-        DiskEntry->LayoutBuffer->PartitionEntry[0].PartitionType != 0)
+        DiskEntry->LayoutBuffer->PartitionEntry[0].Mbr.PartitionType != 0)
     {
         if ((DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector) % DiskEntry->SectorsPerTrack == 0)
         {
@@ -1487,7 +1501,7 @@ WritePartitions(
     HANDLE FileHandle;
     IO_STATUS_BLOCK Iosb;
     ULONG BufferSize;
-    PPARTITION_INFORMATION PartitionInfo;
+    PPARTITION_INFORMATION_EX PartitionInfo;
     ULONG PartitionCount;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
@@ -1532,14 +1546,14 @@ WritePartitions(
     PartitionCount = DiskEntry->LayoutBuffer->PartitionCount;
 
     /* Set the new disk layout and retrieve its updated version with possibly modified partition numbers */
-    BufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                 ((PartitionCount - 1) * sizeof(PARTITION_INFORMATION));
+    BufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                 ((PartitionCount - 1) * sizeof(PARTITION_INFORMATION_EX));
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
                                    NULL,
                                    NULL,
                                    &Iosb,
-                                   IOCTL_DISK_SET_DRIVE_LAYOUT,
+                                   IOCTL_DISK_SET_DRIVE_LAYOUT_EX,
                                    DiskEntry->LayoutBuffer,
                                    BufferSize,
                                    DiskEntry->LayoutBuffer,
@@ -1604,7 +1618,7 @@ WritePartitions(
 static
 BOOLEAN
 IsEmptyLayoutEntry(
-    IN PPARTITION_INFORMATION PartitionInfo)
+    IN PPARTITION_INFORMATION_EX PartitionInfo)
 {
     if (PartitionInfo->StartingOffset.QuadPart == 0 &&
         PartitionInfo->PartitionLength.QuadPart == 0)
@@ -1619,7 +1633,7 @@ IsEmptyLayoutEntry(
 static
 BOOLEAN
 IsSamePrimaryLayoutEntry(
-    IN PPARTITION_INFORMATION PartitionInfo,
+    IN PPARTITION_INFORMATION_EX PartitionInfo,
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry)
 {
@@ -1681,7 +1695,7 @@ BOOLEAN
 ReAllocateLayoutBuffer(
     _In_ PDISKENTRY DiskEntry)
 {
-    PDRIVE_LAYOUT_INFORMATION NewLayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
     ULONG NewPartitionCount;
     ULONG CurrentPartitionCount = 0;
     ULONG LayoutBufferSize;
@@ -1700,8 +1714,8 @@ ReAllocateLayoutBuffer(
     if (CurrentPartitionCount == NewPartitionCount)
         return TRUE;
 
-    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                       ((NewPartitionCount - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                       ((NewPartitionCount - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
     NewLayoutBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
                                         HEAP_ZERO_MEMORY,
                                         DiskEntry->LayoutBuffer,
@@ -1733,8 +1747,8 @@ VOID
 UpdateDiskLayout(
     _In_ PDISKENTRY DiskEntry)
 {
-    PPARTITION_INFORMATION PartitionInfo;
-    PPARTITION_INFORMATION LinkInfo = NULL;
+    PPARTITION_INFORMATION_EX PartitionInfo;
+    PPARTITION_INFORMATION_EX LinkInfo = NULL;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
     LARGE_INTEGER HiddenSectors64;
@@ -1749,6 +1763,8 @@ UpdateDiskLayout(
         DPRINT("ReAllocateLayoutBuffer() failed.\n");
         return;
     }
+
+    DiskEntry->LayoutBuffer->PartitionStyle = PARTITION_STYLE_MBR;
 
     /* Update the primary partition table */
     Index = 0;
@@ -1775,13 +1791,14 @@ UpdateDiskLayout(
             {
                 DPRINT1("Updating primary partition entry %lu\n", Index);
 
+                PartitionInfo->PartitionStyle = PARTITION_STYLE_MBR;
                 PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
                 PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                PartitionInfo->HiddenSectors = PartEntry->StartSector.LowPart;
+                PartitionInfo->Mbr.HiddenSectors = PartEntry->StartSector.LowPart;
                 PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
-                PartitionInfo->PartitionType = PartEntry->PartitionType;
-                PartitionInfo->BootIndicator = PartEntry->BootIndicator;
-                PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
+                PartitionInfo->Mbr.PartitionType = PartEntry->PartitionType;
+                PartitionInfo->Mbr.BootIndicator = PartEntry->BootIndicator;
+                PartitionInfo->Mbr.RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
                 PartitionInfo->RewritePartition = TRUE;
             }
 
@@ -1817,26 +1834,28 @@ UpdateDiskLayout(
 
             DPRINT1("Updating logical partition entry %lu\n", Index);
 
+            PartitionInfo->PartitionStyle = PARTITION_STYLE_MBR;
             PartitionInfo->StartingOffset.QuadPart = PartEntry->StartSector.QuadPart * DiskEntry->BytesPerSector;
             PartitionInfo->PartitionLength.QuadPart = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-            PartitionInfo->HiddenSectors = DiskEntry->SectorAlignment;
+            PartitionInfo->Mbr.HiddenSectors = DiskEntry->SectorAlignment;
             PartitionInfo->PartitionNumber = PartEntry->PartitionNumber;
-            PartitionInfo->PartitionType = PartEntry->PartitionType;
-            PartitionInfo->BootIndicator = FALSE;
-            PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
+            PartitionInfo->Mbr.PartitionType = PartEntry->PartitionType;
+            PartitionInfo->Mbr.BootIndicator = FALSE;
+            PartitionInfo->Mbr.RecognizedPartition = IsRecognizedPartition(PartEntry->PartitionType);
             PartitionInfo->RewritePartition = TRUE;
 
             /* Fill the link entry of the previous partition entry */
             if (LinkInfo != NULL)
             {
+                LinkInfo->PartitionStyle = PARTITION_STYLE_MBR;
                 LinkInfo->StartingOffset.QuadPart = (PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 LinkInfo->PartitionLength.QuadPart = (PartEntry->StartSector.QuadPart + DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 HiddenSectors64.QuadPart = PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment - DiskEntry->ExtendedPartition->StartSector.QuadPart;
-                LinkInfo->HiddenSectors = HiddenSectors64.LowPart;
+                LinkInfo->Mbr.HiddenSectors = HiddenSectors64.LowPart;
                 LinkInfo->PartitionNumber = 0;
-                LinkInfo->PartitionType = PARTITION_EXTENDED;
-                LinkInfo->BootIndicator = FALSE;
-                LinkInfo->RecognizedPartition = FALSE;
+                LinkInfo->Mbr.PartitionType = PARTITION_EXTENDED;
+                LinkInfo->Mbr.BootIndicator = FALSE;
+                LinkInfo->Mbr.RecognizedPartition = FALSE;
                 LinkInfo->RewritePartition = TRUE;
             }
 
@@ -1859,13 +1878,14 @@ UpdateDiskLayout(
         {
             DPRINT1("Wiping primary partition entry %lu\n", Index);
 
+            PartitionInfo->PartitionStyle = PARTITION_STYLE_MBR;
             PartitionInfo->StartingOffset.QuadPart = 0;
             PartitionInfo->PartitionLength.QuadPart = 0;
-            PartitionInfo->HiddenSectors = 0;
+            PartitionInfo->Mbr.HiddenSectors = 0;
             PartitionInfo->PartitionNumber = 0;
-            PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
-            PartitionInfo->BootIndicator = FALSE;
-            PartitionInfo->RecognizedPartition = FALSE;
+            PartitionInfo->Mbr.PartitionType = PARTITION_ENTRY_UNUSED;
+            PartitionInfo->Mbr.BootIndicator = FALSE;
+            PartitionInfo->Mbr.RecognizedPartition = FALSE;
             PartitionInfo->RewritePartition = TRUE;
         }
     }
@@ -1883,13 +1903,14 @@ UpdateDiskLayout(
             {
                 DPRINT1("Wiping partition entry %lu\n", Index);
 
+                PartitionInfo->PartitionStyle = PARTITION_STYLE_MBR;
                 PartitionInfo->StartingOffset.QuadPart = 0;
                 PartitionInfo->PartitionLength.QuadPart = 0;
-                PartitionInfo->HiddenSectors = 0;
+                PartitionInfo->Mbr.HiddenSectors = 0;
                 PartitionInfo->PartitionNumber = 0;
-                PartitionInfo->PartitionType = PARTITION_ENTRY_UNUSED;
-                PartitionInfo->BootIndicator = FALSE;
-                PartitionInfo->RecognizedPartition = FALSE;
+                PartitionInfo->Mbr.PartitionType = PARTITION_ENTRY_UNUSED;
+                PartitionInfo->Mbr.BootIndicator = FALSE;
+                PartitionInfo->Mbr.RecognizedPartition = FALSE;
                 PartitionInfo->RewritePartition = TRUE;
             }
         }

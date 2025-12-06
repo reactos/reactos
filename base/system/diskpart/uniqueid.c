@@ -30,7 +30,7 @@ UniqueIdDisk(
     if (argc == 2)
     {
         ConPuts(StdOut, L"\n");
-        ConPrintf(StdOut, L"Disk ID: %08lx\n", CurrentDisk->LayoutBuffer->Signature);
+        ConPrintf(StdOut, L"Disk ID: %08lx\n", CurrentDisk->LayoutBuffer->Mbr.Signature);
         ConPuts(StdOut, L"\n");
         return TRUE;
     }
@@ -63,7 +63,7 @@ UniqueIdDisk(
     }
 
     DPRINT("New Signature: 0x%08lx\n", ulValue);
-    CurrentDisk->LayoutBuffer->Signature = ulValue;
+    CurrentDisk->LayoutBuffer->Mbr.Signature = ulValue;
     CurrentDisk->Dirty = TRUE;
     UpdateDiskLayout(CurrentDisk);
     WritePartitions(CurrentDisk);

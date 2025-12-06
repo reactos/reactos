@@ -35,6 +35,17 @@ CreateExtendedPartition(
         return TRUE;
     }
 
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        ConPuts(StdOut, L"GPT Partitions are not supported yet!\n");
+        return TRUE;
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
+    {
+        /* FIXME: Initialize disk properly! */
+        CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR;
+    }
+
     for (i = 3; i < argc; i++)
     {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
@@ -212,6 +223,12 @@ CreateLogicalPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
+        return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle != PARTITION_STYLE_MBR)
+    {
+        ConPuts(StdOut, L"Invalid partition style!\n");
         return TRUE;
     }
 
@@ -413,6 +430,17 @@ CreatePrimaryPartition(
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
         return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        ConPuts(StdOut, L"GPT Partitions are not supported yet!\n");
+        return TRUE;
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
+    {
+        /* FIXME: Initialize disk properly! */
+        CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR;
     }
 
     for (i = 3; i < argc; i++)
