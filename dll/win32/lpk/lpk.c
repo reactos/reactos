@@ -231,7 +231,8 @@ static void LPK_ApplyMirroring()
 {
     LPK_ApplyMirroring_new();
 
-    GetFileVersionInfoSizeW(L"", NULL );
+    static const void* p  = (void*)GetFileVersionInfoSizeW;
+    (void)p;
 }
 #endif
 
