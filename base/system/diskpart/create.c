@@ -43,7 +43,7 @@ CreateExtendedPartition(
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
     {
         /* FIXME: Initialize disk properly! */
-        CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR;
+        CurrentDisk->PartitionStyle = PARTITION_STYLE_MBR;
     }
 
     for (i = 3; i < argc; i++)
@@ -440,7 +440,7 @@ CreatePrimaryPartition(
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
     {
         /* FIXME: Initialize disk properly! */
-        CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR;
+        CurrentDisk->PartitionStyle = PARTITION_STYLE_MBR;
     }
 
     for (i = 3; i < argc; i++)
