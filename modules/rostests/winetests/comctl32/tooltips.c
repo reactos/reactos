@@ -1237,7 +1237,7 @@ START_TEST(tooltips)
 {
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
-
+    //__debugbreak();
     init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
 
     LoadLibraryA("comctl32.dll");
