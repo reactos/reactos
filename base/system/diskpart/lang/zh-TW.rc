@@ -29,6 +29,7 @@ BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart 無法把標記磁碟分割為使用中。\n請確認磁碟分割是有效的。\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為使用中。\n"
     IDS_ACTIVE_ALREADY "\n目前的磁碟分割已經標記為使用中。\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
 STRINGTABLE
@@ -105,6 +106,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart 無法把磁碟分割標記為非使用中。\n請確認磁碟分割是有效的。\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart 已標記磁碟分割為非使用中。\n"
     IDS_INACTIVE_ALREADY "\n目前的磁碟分割已經標記為非使用中。\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */

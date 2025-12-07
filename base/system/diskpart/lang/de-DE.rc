@@ -20,6 +20,7 @@ BEGIN
     IDS_ACTIVE_FAIL "\nDie Partition konnte nicht als aktiv markiert werden.\nVergewissern Sie sich, dass diese Partition gültig ist.\n"
     IDS_ACTIVE_SUCCESS "\nDie aktuelle Partition wurde als aktiv markiert.\n"
     IDS_ACTIVE_ALREADY "\nDie aktuelle Partition wurde bereits als aktiv markiert.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
 STRINGTABLE
@@ -96,6 +97,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDie Partition konnte nicht als inaktiv markiert werden.\nVergewissern Sie sich, dass diese Partition gültig ist.\n"
     IDS_INACTIVE_SUCCESS "\nDie aktuelle Partition wurde als inaktiv markiert.\n"
     IDS_INACTIVE_ALREADY "\nDie aktuelle Partition wurde bereits als inaktiv markiert.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */

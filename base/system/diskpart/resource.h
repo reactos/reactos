@@ -21,6 +21,7 @@
 #define IDS_ACTIVE_FAIL                1000
 #define IDS_ACTIVE_SUCCESS             1001
 #define IDS_ACTIVE_ALREADY             1002
+#define IDS_ACTIVE_NO_MBR              1003
 
 #define IDS_CLEAN_FAIL                 1020
 #define IDS_CLEAN_SUCCESS              1021
@@ -74,7 +75,7 @@
 #define IDS_INACTIVE_FAIL              1210
 #define IDS_INACTIVE_SUCCESS           1211
 #define IDS_INACTIVE_ALREADY           1212
-
+#define IDS_INACTIVE_NO_MBR            1213
 
 #define IDS_LIST_DISK_HEAD             3300
 #define IDS_LIST_DISK_LINE             3301

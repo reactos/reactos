@@ -30,6 +30,7 @@ BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart, bölümü etkin olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin olarak işaretledi.\n"
     IDS_ACTIVE_ALREADY "\nGeçerli bölüm zaten etkin olarak işaretlenmiş.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
 STRINGTABLE
@@ -106,6 +107,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart, bölümü etkin değil olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin değil olarak işaretledi.\n"
     IDS_INACTIVE_ALREADY "\nGeçerli bölüm zaten etkin değil olarak işaretlenmiş.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */

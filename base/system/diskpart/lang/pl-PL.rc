@@ -20,6 +20,7 @@ BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart nie mógł oznaczyć partycji jako aktywnej.\nUpewnij się, że partycja jest prawidłowa.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart oznaczył bieżącą partycję jako aktywną.\n"
     IDS_ACTIVE_ALREADY "\nBieżąca partycja jest już oznaczona jako aktywna.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
 STRINGTABLE
@@ -96,6 +97,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart nie może oznaczyć partycji jako nieaktywnej.\nUpewnij się, że partycja jest prawidłowa.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart oznaczył bieżącą partycję jako nieaktywną.\n"
     IDS_INACTIVE_ALREADY "\nBieżąca partycja jest już oznaczona jako nieaktywna.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */

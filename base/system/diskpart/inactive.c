@@ -33,23 +33,30 @@ inactive_main(
         return TRUE;
     }
 
-    if (!CurrentPartition->BootIndicator)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        ConResPuts(StdOut, IDS_INACTIVE_ALREADY);
-        return TRUE;
-    }
+        if (!CurrentPartition->BootIndicator)
+        {
+            ConResPuts(StdOut, IDS_INACTIVE_ALREADY);
+            return TRUE;
+        }
 
-    CurrentPartition->BootIndicator = FALSE;
-    CurrentDisk->Dirty = TRUE;
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
-    if (NT_SUCCESS(Status))
-    {
-        ConResPuts(StdOut, IDS_INACTIVE_SUCCESS);
+        CurrentPartition->BootIndicator = FALSE;
+        CurrentDisk->Dirty = TRUE;
+        UpdateDiskLayout(CurrentDisk);
+        Status = WritePartitions(CurrentDisk);
+        if (NT_SUCCESS(Status))
+        {
+            ConResPuts(StdOut, IDS_INACTIVE_SUCCESS);
+        }
+        else
+        {
+            ConResPuts(StdOut, IDS_INACTIVE_FAIL);
+        }
     }
     else
     {
-        ConResPuts(StdOut, IDS_INACTIVE_FAIL);
+        ConResPuts(StdOut, IDS_INACTIVE_NO_MBR);
     }
 
     return TRUE;

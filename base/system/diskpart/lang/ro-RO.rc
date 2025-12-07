@@ -28,6 +28,7 @@ BEGIN
     IDS_ACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția activă.\nAsigurați-vă că partiția este validă.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca activă.\n"
     IDS_ACTIVE_ALREADY "\nPartiția curentă este deja marcată ca activă.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
 STRINGTABLE
@@ -104,6 +105,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția inactivă.\nAsigurați-vă că partiția este validă.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca inactivă.\n"
     IDS_INACTIVE_ALREADY "\nPartiția curentă este deja marcată ca inactivă.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */
