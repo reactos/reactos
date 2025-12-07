@@ -1177,7 +1177,7 @@ Example:
 .
 
 
-MessageId=10011
+MessageId=10012
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_EFI
 Severity=Informational
 Facility=System
@@ -1213,7 +1213,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10012
+MessageId=10013
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_EXTENDED
 Severity=Informational
 Facility=System
@@ -1596,7 +1596,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10013
+MessageId=10014
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_LOGICAL
 Severity=Informational
 Facility=System
@@ -1963,7 +1963,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10014
+MessageId=10015
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_MSR
 Severity=Informational
 Facility=System
@@ -1999,7 +1999,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10015
+MessageId=10016
 SymbolicName=MSG_COMMAND_CREATE_PARTITION_PRIMARY
 Severity=Informational
 Facility=System
@@ -3081,7 +3081,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10016
+MessageId=10017
 SymbolicName=MSG_COMMAND_DELETE_DISK
 Severity=Informational
 Facility=System
@@ -3117,7 +3117,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10017
+MessageId=10018
 SymbolicName=MSG_COMMAND_DELETE_PARTITION
 Severity=Informational
 Facility=System
@@ -3385,7 +3385,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10018
+MessageId=10019
 SymbolicName=MSG_COMMAND_DELETE_VOLUME
 Severity=Informational
 Facility=System
@@ -3421,7 +3421,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10019
+MessageId=10020
 SymbolicName=MSG_COMMAND_DETAIL_DISK
 Severity=Informational
 Facility=System
@@ -3546,7 +3546,7 @@ Language=Taiwanese
     DETAIL DISK
 .
 
-MessageId=10020
+MessageId=10021
 SymbolicName=MSG_COMMAND_DETAIL_PARTITION
 Severity=Informational
 Facility=System
@@ -3663,7 +3663,7 @@ Language=Taiwanese
     DETAIL PARTITION
 .
 
-MessageId=10021
+MessageId=10022
 SymbolicName=MSG_COMMAND_DETAIL_VOLUME
 Severity=Informational
 Facility=System
@@ -3789,7 +3789,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10022
+MessageId=10023
 SymbolicName=MSG_COMMAND_DETACH
 Severity=Informational
 Facility=System
@@ -3825,7 +3825,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10023
+MessageId=10024
 SymbolicName=MSG_COMMAND_EXIT
 Severity=Informational
 Facility=System
@@ -3921,7 +3921,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10024
+MessageId=10025
 SymbolicName=MSG_COMMAND_EXPAND
 Severity=Informational
 Facility=System
@@ -3957,7 +3957,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10025
+MessageId=10026
 SymbolicName=MSG_COMMAND_EXTEND
 Severity=Informational
 Facility=System
@@ -3993,7 +3993,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10026
+MessageId=10027
 SymbolicName=MSG_COMMAND_FILESYSTEMS
 Severity=Informational
 Facility=System
@@ -4122,7 +4122,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10027
+MessageId=10028
 SymbolicName=MSG_COMMAND_FORMAT
 Severity=Informational
 Facility=System
@@ -4779,7 +4779,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10028
+MessageId=10029
 SymbolicName=MSG_COMMAND_GPT
 Severity=Informational
 Facility=System
@@ -4815,7 +4815,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10029
+MessageId=10030
 SymbolicName=MSG_COMMAND_HELP
 Severity=Informational
 Facility=System
@@ -4975,7 +4975,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10030
+MessageId=10031
 SymbolicName=MSG_COMMAND_IMPORT
 Severity=Informational
 Facility=System
@@ -5011,7 +5011,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10031
+MessageId=10032
 SymbolicName=MSG_COMMAND_INACTIVE
 Severity=Informational
 Facility=System
@@ -5252,7 +5252,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10032
+MessageId=10033
 SymbolicName=MSG_COMMAND_LIST_DISK
 Severity=Informational
 Facility=System
@@ -5507,7 +5507,7 @@ Language=Taiwanese
     LIST DISK
 .
 
-MessageId=10033
+MessageId=10034
 SymbolicName=MSG_COMMAND_LIST_PARTITION
 Severity=Informational
 Facility=System
@@ -5666,7 +5666,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10034
+MessageId=10035
 SymbolicName=MSG_COMMAND_LIST_VOLUME
 Severity=Informational
 Facility=System
@@ -5771,7 +5771,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10035
+MessageId=10036
 SymbolicName=MSG_COMMAND_LIST_VDISK
 Severity=Informational
 Facility=System
@@ -5807,7 +5807,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10036
+MessageId=10037
 SymbolicName=MSG_COMMAND_MERGE
 Severity=Informational
 Facility=System
@@ -5843,7 +5843,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10037
+MessageId=10038
 SymbolicName=MSG_COMMAND_OFFLINE
 Severity=Informational
 Facility=System
@@ -5879,7 +5879,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10038
+MessageId=10039
 SymbolicName=MSG_COMMAND_ONLINE
 Severity=Informational
 Facility=System
@@ -5915,7 +5915,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10039
+MessageId=10040
 SymbolicName=MSG_COMMAND_RECOVER
 Severity=Informational
 Facility=System
@@ -5951,7 +5951,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10040
+MessageId=10041
 SymbolicName=MSG_COMMAND_REM
 Severity=Informational
 Facility=System
@@ -6146,7 +6146,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10041
+MessageId=10042
 SymbolicName=MSG_COMMAND_REMOVE
 Severity=Informational
 Facility=System
@@ -6182,7 +6182,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10042
+MessageId=10043
 SymbolicName=MSG_COMMAND_REPAIR
 Severity=Informational
 Facility=System
@@ -6218,7 +6218,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10043
+MessageId=10044
 SymbolicName=MSG_COMMAND_RESCAN
 Severity=Informational
 Facility=System
@@ -6315,7 +6315,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10044
+MessageId=10045
 SymbolicName=MSG_COMMAND_RETAIN
 Severity=Informational
 Facility=System
@@ -6351,7 +6351,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10045
+MessageId=10046
 SymbolicName=MSG_COMMAND_SAN
 Severity=Informational
 Facility=System
@@ -6387,7 +6387,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10046
+MessageId=10047
 SymbolicName=MSG_COMMAND_SELECT_DISK
 Severity=Informational
 Facility=System
@@ -6808,7 +6808,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10047
+MessageId=10048
 SymbolicName=MSG_COMMAND_SELECT_PARTITION
 Severity=Informational
 Facility=System
@@ -7022,7 +7022,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10048
+MessageId=10049
 SymbolicName=MSG_COMMAND_SELECT_VOLUME
 Severity=Informational
 Facility=System
@@ -7250,7 +7250,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10049
+MessageId=10050
 SymbolicName=MSG_COMMAND_SELECT_VDISK
 Severity=Informational
 Facility=System
@@ -7286,7 +7286,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10050
+MessageId=10051
 SymbolicName=MSG_COMMAND_SETID
 Severity=Informational
 Facility=System
@@ -8126,7 +8126,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10051
+MessageId=10052
 SymbolicName=MSG_COMMAND_SHRINK
 Severity=Informational
 Facility=System
@@ -8162,7 +8162,7 @@ Language=Taiwanese
 .
 
 
-MessageId=10052
+MessageId=10053
 SymbolicName=MSG_COMMAND_UNIQUEID_DISK
 Severity=Informational
 Facility=System
