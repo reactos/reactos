@@ -19,7 +19,7 @@ setid_main(
 {
     UCHAR PartitionType = 0;
     INT i, length;
-    PWSTR pszSuffix = NULL;
+    PWSTR pszSuffix, pszId = NULL;
     NTSTATUS Status;
 
     DPRINT("SetId()\n");
@@ -41,45 +41,70 @@ setid_main(
         if (HasPrefix(argv[i], L"id=", &pszSuffix))
         {
             /* id=<Byte>|<GUID> */
-            DPRINT("Id : %s\n", pszSuffix);
-
-            length = wcslen(pszSuffix);
-            if (length == 0)
-            {
-                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
-            }
-
-            if (length > 2)
-            {
-                ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
-                return TRUE;
-            }
-
-            /* Byte */
-            PartitionType = (UCHAR)wcstoul(pszSuffix, NULL, 16);
-            if (PartitionType == 0)
-            {
-                ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
-                return TRUE;
-            }
+            DPRINT("ID : %s\n", pszSuffix);
+            pszId = pszSuffix;
+        }
+        else if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NOERR\n");
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+        }
+        else if (_wcsicmp(argv[i], L"override") == 0)
+        {
+            /* override */
+            DPRINT("OVERRIDE\n");
+            ConPuts(StdOut, L"The OVERRIDE option is not supported yet!\n");
+        }
+        else
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
         }
     }
 
-    if (PartitionType == 0x42)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConResPuts(StdErr, IDS_SETID_INVALID_TYPE);
+        ConPuts(StdErr, L"The setid command does not support GPT disks yet!\n");
         return TRUE;
     }
-
-    CurrentPartition->PartitionType = PartitionType;
-    CurrentDisk->Dirty = TRUE;
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
-    if (!NT_SUCCESS(Status))
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        ConResPuts(StdOut, IDS_SETID_FAIL);
-        return TRUE;
+        length = wcslen(pszId);
+        if (length == 0)
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+
+        if (length > 2)
+        {
+            ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
+            return TRUE;
+        }
+
+        PartitionType = (UCHAR)wcstoul(pszSuffix, NULL, 16);
+        if ((PartitionType == 0) && (errno == ERANGE))
+        {
+            ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
+            return TRUE;
+        }
+
+        if (PartitionType == 0x42)
+        {
+            ConResPuts(StdErr, IDS_SETID_INVALID_TYPE);
+            return TRUE;
+        }
+
+        CurrentPartition->PartitionType = PartitionType;
+        CurrentDisk->Dirty = TRUE;
+        UpdateDiskLayout(CurrentDisk);
+        Status = WritePartitions(CurrentDisk);
+        if (!NT_SUCCESS(Status))
+        {
+            ConResPuts(StdOut, IDS_SETID_FAIL);
+            return TRUE;
+        }
     }
 
     ConResPuts(StdOut, IDS_SETID_SUCCESS);

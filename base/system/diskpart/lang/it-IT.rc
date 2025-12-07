@@ -50,6 +50,7 @@ STRINGTABLE
 BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart non è stato in grado di creare la partizione specificata.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart ha creato con successo la partizione selezionata.\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -149,6 +150,11 @@ BEGIN
     IDS_SETID_SUCCESS "\nIl tipo di partizione è stato cambiato con successo.\n"
     IDS_SETID_INVALID_FORMAT "\nIl formato del tipo di partizione non è valido.\n"
     IDS_SETID_INVALID_TYPE "\nIl tipo di partizione non è valido.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */

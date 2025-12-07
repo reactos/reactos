@@ -19,7 +19,8 @@ UniqueIdDisk(
     _In_ PWSTR *argv)
 {
     WCHAR szBuffer[40];
-    PWSTR pszSuffix = NULL;
+    PWSTR pszSuffix, pszId = NULL;
+    INT i;
     ULONG ulValue;
 
     if (CurrentDisk == NULL)
@@ -48,32 +49,58 @@ UniqueIdDisk(
         return TRUE;
     }
 
-    if (!HasPrefix(argv[2], L"ID=", &pszSuffix))
+    for (i = 1; i < argc; i++)
     {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        if (HasPrefix(argv[2], L"id=", &pszSuffix))
+        {
+            /* id=<Byte>|<GUID> */
+            DPRINT("ID : %s\n", pszSuffix);
+            pszId = pszSuffix;
+        }
+        else if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NOERR\n");
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+        }
+        else
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
     }
 
-    if ((pszSuffix == NULL) ||
-        (wcslen(pszSuffix) != 8) ||
-        (IsHexString(pszSuffix) == FALSE))
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        ConPuts(StdErr, L"The uniqueid disk command does not support GPT disks yet!\n");
     }
-
-    ulValue = wcstoul(pszSuffix, NULL, 16);
-    if ((ulValue == 0) && (errno == ERANGE))
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
-    }
+        if ((pszId == NULL) ||
+            (wcslen(pszId) != 8) ||
+            (IsHexString(pszId) == FALSE))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
 
-    DPRINT("New Signature: 0x%08lx\n", ulValue);
-    CurrentDisk->LayoutBuffer->Mbr.Signature = ulValue;
-    CurrentDisk->Dirty = TRUE;
-    UpdateDiskLayout(CurrentDisk);
-    WritePartitions(CurrentDisk);
+        ulValue = wcstoul(pszId, NULL, 16);
+        if ((ulValue == 0) && (errno == ERANGE))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+
+        DPRINT("New Signature: 0x%08lx\n", ulValue);
+        CurrentDisk->LayoutBuffer->Mbr.Signature = ulValue;
+        CurrentDisk->Dirty = TRUE;
+        UpdateDiskLayout(CurrentDisk);
+        WritePartitions(CurrentDisk);
+    }
+    else
+    {
+        ConResPuts(StdOut, IDS_UNIQUID_DISK_INVALID_STYLE);
+    }
 
     return TRUE;
 }

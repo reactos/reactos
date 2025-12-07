@@ -53,6 +53,7 @@ STRINGTABLE
 BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart belirtilen bölümü oluşturamadı.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturdu.\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -152,6 +153,11 @@ BEGIN
     IDS_SETID_SUCCESS "\nBölüm türü başarıyla değiştirildi.\n"
     IDS_SETID_INVALID_FORMAT "\nBölüm türünün biçimi geçersiz.\n"
     IDS_SETID_INVALID_TYPE "\nBölüm türü geçersiz.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */

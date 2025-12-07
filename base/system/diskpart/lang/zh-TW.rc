@@ -52,6 +52,7 @@ STRINGTABLE
 BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart 無法建立指定的磁碟分割。\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart 成功建立指定的磁碟分割。\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -151,6 +152,11 @@ BEGIN
     IDS_SETID_SUCCESS "\n成功更改磁碟類型。\n"
     IDS_SETID_INVALID_FORMAT "\n磁碟類型的格式是無效的。\n"
     IDS_SETID_INVALID_TYPE "\n無效的磁碟類型。\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */

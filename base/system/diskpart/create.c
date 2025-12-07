@@ -37,7 +37,7 @@ CreateExtendedPartition(
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConPuts(StdOut, L"GPT Partitions are not supported yet!\n");
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
         return TRUE;
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
@@ -226,9 +226,9 @@ CreateLogicalPartition(
         return TRUE;
     }
 
-    if (CurrentDisk->PartitionStyle != PARTITION_STYLE_MBR)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConPuts(StdOut, L"Invalid partition style!\n");
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
         return TRUE;
     }
 
@@ -262,7 +262,7 @@ CreateLogicalPartition(
         }
         else if (HasPrefix(argv[i], L"id=", &pszSuffix))
         {
-            /* id=<Byte>|<GUID> */
+            /* id=<Byte> */
             DPRINT("Id : %s\n", pszSuffix);
 
             length = wcslen(pszSuffix);
@@ -276,12 +276,6 @@ CreateLogicalPartition(
                     return TRUE;
                 }
             }
-#if 0
-            else if ()
-            {
-                /* GUID */
-            }
-#endif
             else
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
