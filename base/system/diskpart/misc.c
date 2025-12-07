@@ -146,3 +146,59 @@ DuplicateString(
 
     return pszOutString;
 }
+
+
+VOID
+CreateGUID(
+    _Out_ GUID *pGuid)
+{
+    RtlGenRandom(pGuid, sizeof(*pGuid));
+    /* Clear the version bits and set the version (4) */
+    pGuid->Data3 &= 0x0fff;
+    pGuid->Data3 |= (4 << 12);
+    /* Set the topmost bits of Data4 (clock_seq_hi_and_reserved) as
+     * specified in RFC 4122, section 4.4.
+     */
+    pGuid->Data4[0] &= 0x3f;
+    pGuid->Data4[0] |= 0x80;
+}
+
+
+VOID
+CreateSignature(
+    _Out_ PDWORD pSignature)
+{
+    LARGE_INTEGER SystemTime;
+    TIME_FIELDS TimeFields;
+    PUCHAR Buffer;
+
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToTimeFields(&SystemTime, &TimeFields);
+
+    Buffer = (PUCHAR)pSignature;
+    Buffer[0] = (UCHAR)(TimeFields.Year & 0xFF) + (UCHAR)(TimeFields.Hour & 0xFF);
+    Buffer[1] = (UCHAR)(TimeFields.Year >> 8) + (UCHAR)(TimeFields.Minute & 0xFF);
+    Buffer[2] = (UCHAR)(TimeFields.Month & 0xFF) + (UCHAR)(TimeFields.Second & 0xFF);
+    Buffer[3] = (UCHAR)(TimeFields.Day & 0xFF) + (UCHAR)(TimeFields.Milliseconds & 0xFF);
+}
+
+
+VOID
+PrintGUID(
+    _Out_ PWSTR pszBuffer,
+    _In_ GUID *pGuid)
+{
+    swprintf(pszBuffer,
+             L"%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+             pGuid->Data1,
+             pGuid->Data2,
+             pGuid->Data3,
+             pGuid->Data4[0],
+             pGuid->Data4[1],
+             pGuid->Data4[2],
+             pGuid->Data4[3],
+             pGuid->Data4[4],
+             pGuid->Data4[5],
+             pGuid->Data4[6],
+             pGuid->Data4[7]);    
+}

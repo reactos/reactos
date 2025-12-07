@@ -39,6 +39,16 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart nu a reușit să creeze partiția specificată.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
 END
@@ -52,7 +62,7 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disc ID: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "Disc ID: %s\n"
     IDS_DETAIL_INFO_TYPE "Tip"
     IDS_DETAIL_INFO_STATUS "Stare"
     IDS_DETAIL_INFO_PATH   "Cale   : %hu\n"
@@ -173,7 +183,10 @@ BEGIN
     IDS_HELP_BREAK                     "Șterge configurația în oglindă.\n"
     IDS_HELP_CLEAN                     "Elimină informațiile de configurare, sau toate informațiile,\n              de pe disc.\n"
     IDS_HELP_COMPACT                   "Încearcă reducerea dimensiunii fizice a fișierului.\n"
+
     IDS_HELP_CONVERT                   "Convertește în diverse formate de disc.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Crează un volum, o partiție, sau un disc virtual.\n"
     IDS_HELP_CREATE_PARTITION          "Creează o partiție.\n"

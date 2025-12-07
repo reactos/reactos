@@ -38,6 +38,16 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart non è stato in grado di creare la partizione specificata.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart ha creato con successo la partizione selezionata.\n"
 END
@@ -51,7 +61,7 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "ID Disco: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "ID Disco: %s\n"
     IDS_DETAIL_INFO_TYPE "Tipo"
     IDS_DETAIL_INFO_STATUS "Stato"
     IDS_DETAIL_INFO_PATH   "Percorso   : %hu\n"
@@ -172,7 +182,10 @@ BEGIN
     IDS_HELP_BREAK                     "Interrompi la replicazione su un disco mirror.\n"
     IDS_HELP_CLEAN                     "Cancella le informazioni sulla configurazione o tutte le informazioni dal\n disco.\n"
     IDS_HELP_COMPACT                   "Tenta di ridurre la grandezza fisica del file.\n"
+
     IDS_HELP_CONVERT                   "Converti tra formati dischi differenti.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Crea volume, partizione o disco virtuale.\n"
     IDS_HELP_CREATE_PARTITION          "Crea una partizione.\n"

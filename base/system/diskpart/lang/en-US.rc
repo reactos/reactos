@@ -31,6 +31,16 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
 END
@@ -44,7 +54,7 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %s\n"
     IDS_DETAIL_INFO_TYPE "Type"
     IDS_DETAIL_INFO_STATUS "Status"
     IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
@@ -165,7 +175,10 @@ BEGIN
     IDS_HELP_BREAK                     "Break a mirror set.\n"
     IDS_HELP_CLEAN                     "Clear the configuration information, or all information, off\n              the disk.\n"
     IDS_HELP_COMPACT                   "Attempts to reduce the physical size of the file.\n"
-    IDS_HELP_CONVERT                   "Convert between different disk formats.\n"
+
+    IDS_HELP_CONVERT                   "Converts between different disk formats.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Create a volume, partition, or virtual disk.\n"
     IDS_HELP_CREATE_PARTITION          "Create a partition.\n"

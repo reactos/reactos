@@ -26,6 +26,13 @@
 #define IDS_CLEAN_SUCCESS              1021
 #define IDS_CLEAN_SYSTEM               1022
 
+#define IDS_CONVERT_GPT_ALREADY        1040
+#define IDS_CONVERT_GPT_NOT_EMPTY      1041
+#define IDS_CONVERT_GPT_SUCCESS        1042
+#define IDS_CONVERT_MBR_ALREADY        1043
+#define IDS_CONVERT_MBR_NOT_EMPTY      1044
+#define IDS_CONVERT_MBR_SUCCESS        1045
+
 #define IDS_CREATE_PARTITION_FAIL      1050
 #define IDS_CREATE_PARTITION_SUCCESS   1051
 
@@ -121,68 +128,71 @@
 #define IDS_HELP_BREAK                      64
 #define IDS_HELP_CLEAN                      65
 #define IDS_HELP_COMPACT                    66
+
 #define IDS_HELP_CONVERT                    67
+#define IDS_HELP_CONVERT_GPT                68
+#define IDS_HELP_CONVERT_MBR                69
 
-#define IDS_HELP_CREATE                     68
-#define IDS_HELP_CREATE_PARTITION           69
-#define IDS_HELP_CREATE_PARTITION_EFI       70
-#define IDS_HELP_CREATE_PARTITION_EXTENDED  71
-#define IDS_HELP_CREATE_PARTITION_LOGICAL   72
-#define IDS_HELP_CREATE_PARTITION_MSR       73
-#define IDS_HELP_CREATE_PARTITION_PRIMARY   74
-#define IDS_HELP_CREATE_VOLUME              75
-#define IDS_HELP_CREATE_VDISK               76
+#define IDS_HELP_CREATE                     70
+#define IDS_HELP_CREATE_PARTITION           71
+#define IDS_HELP_CREATE_PARTITION_EFI       72
+#define IDS_HELP_CREATE_PARTITION_EXTENDED  73
+#define IDS_HELP_CREATE_PARTITION_LOGICAL   74
+#define IDS_HELP_CREATE_PARTITION_MSR       75
+#define IDS_HELP_CREATE_PARTITION_PRIMARY   76
+#define IDS_HELP_CREATE_VOLUME              77
+#define IDS_HELP_CREATE_VDISK               78
 
-#define IDS_HELP_DELETE                     77
-#define IDS_HELP_DELETE_DISK                78
-#define IDS_HELP_DELETE_PARTITION           79
-#define IDS_HELP_DELETE_VOLUME              80
+#define IDS_HELP_DELETE                     79
+#define IDS_HELP_DELETE_DISK                80
+#define IDS_HELP_DELETE_PARTITION           81
+#define IDS_HELP_DELETE_VOLUME              82
 
-#define IDS_HELP_DETACH                     81
+#define IDS_HELP_DETACH                     83
 
-#define IDS_HELP_DETAIL                     82
-#define IDS_HELP_DETAIL_DISK                83
-#define IDS_HELP_DETAIL_PARTITION           84
-#define IDS_HELP_DETAIL_VOLUME              85
+#define IDS_HELP_DETAIL                     84
+#define IDS_HELP_DETAIL_DISK                85
+#define IDS_HELP_DETAIL_PARTITION           86
+#define IDS_HELP_DETAIL_VOLUME              87
 
-#define IDS_HELP_EXIT                       86
-#define IDS_HELP_EXPAND                     87
-#define IDS_HELP_EXTEND                     88
-#define IDS_HELP_FILESYSTEMS                89
-#define IDS_HELP_FORMAT                     90
-#define IDS_HELP_GPT                        91
-#define IDS_HELP_HELP                       92
-#define IDS_HELP_IMPORT                     93
-#define IDS_HELP_INACTIVE                   94
+#define IDS_HELP_EXIT                       88
+#define IDS_HELP_EXPAND                     89
+#define IDS_HELP_EXTEND                     90
+#define IDS_HELP_FILESYSTEMS                91
+#define IDS_HELP_FORMAT                     92
+#define IDS_HELP_GPT                        93
+#define IDS_HELP_HELP                       94
+#define IDS_HELP_IMPORT                     95
+#define IDS_HELP_INACTIVE                   96
 
-#define IDS_HELP_LIST                       95
-#define IDS_HELP_LIST_DISK                  96
-#define IDS_HELP_LIST_PARTITION             97
-#define IDS_HELP_LIST_VOLUME                98
-#define IDS_HELP_LIST_VDISK                 99
+#define IDS_HELP_LIST                       97
+#define IDS_HELP_LIST_DISK                  98
+#define IDS_HELP_LIST_PARTITION             99
+#define IDS_HELP_LIST_VOLUME               100
+#define IDS_HELP_LIST_VDISK                101
 
-#define IDS_HELP_MERGE                     100
-#define IDS_HELP_ONLINE                    101
-#define IDS_HELP_OFFLINE                   102
-#define IDS_HELP_RECOVER                   103
-#define IDS_HELP_REM                       104
-#define IDS_HELP_REMOVE                    105
-#define IDS_HELP_REPAIR                    106
-#define IDS_HELP_RESCAN                    107
-#define IDS_HELP_RETAIN                    108
-#define IDS_HELP_SAN                       109
+#define IDS_HELP_MERGE                     102
+#define IDS_HELP_ONLINE                    103
+#define IDS_HELP_OFFLINE                   104
+#define IDS_HELP_RECOVER                   105
+#define IDS_HELP_REM                       106
+#define IDS_HELP_REMOVE                    107
+#define IDS_HELP_REPAIR                    108
+#define IDS_HELP_RESCAN                    109
+#define IDS_HELP_RETAIN                    110
+#define IDS_HELP_SAN                       111
 
-#define IDS_HELP_SELECT                    110
-#define IDS_HELP_SELECT_DISK               111
-#define IDS_HELP_SELECT_PARTITION          112
-#define IDS_HELP_SELECT_VOLUME             113
-#define IDS_HELP_SELECT_VDISK              114
+#define IDS_HELP_SELECT                    112
+#define IDS_HELP_SELECT_DISK               113
+#define IDS_HELP_SELECT_PARTITION          114
+#define IDS_HELP_SELECT_VOLUME             115
+#define IDS_HELP_SELECT_VDISK              116
 
-#define IDS_HELP_SETID                     115
-#define IDS_HELP_SHRINK                    116
+#define IDS_HELP_SETID                     117
+#define IDS_HELP_SHRINK                    118
 
-#define IDS_HELP_UNIQUEID                  117
-#define IDS_HELP_UNIQUEID_DISK             118
+#define IDS_HELP_UNIQUEID                  119
+#define IDS_HELP_UNIQUEID_DISK             120
 
 #define IDS_ERROR_MSG_NO_SCRIPT  2000
 #define IDS_ERROR_MSG_BAD_ARG    2001

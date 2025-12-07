@@ -41,6 +41,16 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart belirtilen bölümü oluşturamadı.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturdu.\n"
 END
@@ -54,7 +64,7 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
+    IDS_DETAIL_INFO_DISK_ID "Disk ID: %s\n"
     IDS_DETAIL_INFO_TYPE "Tür"
     IDS_DETAIL_INFO_STATUS "Durum"
     IDS_DETAIL_INFO_PATH   "Yol   : %hu\n"
@@ -175,7 +185,10 @@ BEGIN
     IDS_HELP_BREAK                     "Bir yansıma yığını ayır.\n"
     IDS_HELP_CLEAN                     "Diskin yapılandırma bilgisini ya da tüm bilgisini sil.\n"
     IDS_HELP_COMPACT                   "Dosyanın fiziki boyutunu düşürmeye çalışır.\n"
+
     IDS_HELP_CONVERT                   "Farklı disk biçimleri arasında dönüştür.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Bir birim, bölüm ya da sanal disk oluştur.\n"
     IDS_HELP_CREATE_PARTITION          "Bir bölüm oluşturun.\n"

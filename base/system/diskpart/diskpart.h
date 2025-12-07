@@ -20,6 +20,7 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winioctl.h>
+#include <ntsecapi.h>
 
 #include <errno.h>
 #include <strsafe.h>
@@ -51,6 +52,8 @@
 #include <fmifs/fmifs.h>
 
 #include "resource.h"
+
+//#define DUMP_PARTITION_TABLE
 
 /* DEFINES *******************************************************************/
 
@@ -246,7 +249,20 @@ BOOL clean_main(INT argc, LPWSTR *argv);
 BOOL compact_main(INT argc, LPWSTR *argv);
 
 /* convert.c */
-BOOL convert_main(INT argc, LPWSTR *argv);
+NTSTATUS
+CreateDisk(
+    _In_ ULONG DiskNumber,
+    _In_ PCREATE_DISK DiskInfo);
+
+BOOL
+ConvertGPT(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+ConvertMBR(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* create.c */
 BOOL
@@ -405,6 +421,19 @@ PWSTR
 DuplicateString(
     _In_ PWSTR pszInString);
 
+VOID
+CreateGUID(
+    _Out_ GUID *pGuid);
+
+VOID
+CreateSignature(
+    _Out_ PDWORD pSignature);
+
+VOID
+PrintGUID(
+    _Out_ PWSTR pszBuffer,
+    _In_ GUID *pGuid);
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 
@@ -412,6 +441,12 @@ BOOL offline_main(INT argc, LPWSTR *argv);
 BOOL online_main(INT argc, LPWSTR *argv);
 
 /* partlist.c */
+#ifdef DUMP_PARTITION_TABLE
+VOID
+DumpPartitionTable(
+    _In_ PDISKENTRY DiskEntry);
+#endif
+
 ULONGLONG
 AlignDown(
     _In_ ULONGLONG Value,
@@ -428,6 +463,11 @@ CreateVolumeList(VOID);
 
 VOID
 DestroyVolumeList(VOID);
+
+VOID
+ReadLayoutBuffer(
+    _In_ HANDLE FileHandle,
+    _In_ PDISKENTRY DiskEntry);
 
 NTSTATUS
 WritePartitions(

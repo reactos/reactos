@@ -72,6 +72,7 @@ DetailDisk(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     BOOL bPrintHeader = TRUE;
+    WCHAR szBuffer[40];
 
     DPRINT("DetailDisk()\n");
 
@@ -89,7 +90,13 @@ DetailDisk(
 
     /* TODO: Print more disk details */
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, CurrentDisk->LayoutBuffer->Mbr.Signature);
+    if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
+        PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
+    else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
+        swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+    else
+        wcscpy(szBuffer, L"00000000");
+    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, szBuffer);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);

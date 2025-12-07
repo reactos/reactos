@@ -80,6 +80,57 @@ PVOLENTRY  CurrentVolume = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
+#ifdef DUMP_PARTITION_TABLE
+VOID
+DumpPartitionTable(
+    _In_ PDISKENTRY DiskEntry)
+{
+    PPARTITION_INFORMATION_EX PartitionInfo;
+    ULONG i;
+
+    DbgPrint("\n");
+
+    if (DiskEntry->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        DbgPrint("Index  Start         Length        Hidden      Nr  Type  Boot  RW\n");
+        DbgPrint("-----  ------------  ------------  ----------  --  ----  ----  --\n");
+
+        for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
+        {
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
+            DbgPrint("  %3lu  %12I64u  %12I64u  %10lu  %2lu    %2x     %c   %c\n",
+                     i,
+                     PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                     PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                     PartitionInfo->Mbr.HiddenSectors,
+                     PartitionInfo->PartitionNumber,
+                     PartitionInfo->Mbr.PartitionType,
+                     PartitionInfo->Mbr.BootIndicator ? '*': ' ',
+                     PartitionInfo->RewritePartition ? 'Y': 'N');
+        }
+    }
+    else if (DiskEntry->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        DbgPrint("Index  Start         Length        Nr  RW  Type    \n");
+        DbgPrint("-----  ------------  ------------  --  --  --------\n");
+        for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
+        {
+            PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
+
+            DbgPrint("  %3lu  %12I64u  %12I64u  %2lu    %c  %08lx\n",
+                     i,
+                     PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                     PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                     PartitionInfo->PartitionNumber,
+                     PartitionInfo->RewritePartition ? 'Y': 'N',
+                     PartitionInfo->Gpt.PartitionType.Data1);
+        }
+    }
+
+    DbgPrint("\n");
+}
+#endif
+
 ULONGLONG
 AlignDown(
     _In_ ULONGLONG Value,
@@ -761,6 +812,66 @@ ScanForUnpartitionedDiskSpace(
 }
 
 
+VOID
+ReadLayoutBuffer(
+    _In_ HANDLE FileHandle,
+    _In_ PDISKENTRY DiskEntry)
+{
+    ULONG LayoutBufferSize;
+    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+
+    /* Allocate a layout buffer with 4 partition entries first */
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
+    DiskEntry->LayoutBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                              HEAP_ZERO_MEMORY,
+                                              LayoutBufferSize);
+    if (DiskEntry->LayoutBuffer == NULL)
+    {
+        DPRINT1("Failed to allocate the disk layout buffer!\n");
+        return;
+    }
+
+    for (;;)
+    {
+        DPRINT1("Buffer size: %lu\n", LayoutBufferSize);
+        Status = NtDeviceIoControlFile(FileHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Iosb,
+                                       IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
+                                       NULL,
+                                       0,
+                                       DiskEntry->LayoutBuffer,
+                                       LayoutBufferSize);
+        if (NT_SUCCESS(Status))
+            break;
+
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            DPRINT1("NtDeviceIoControlFile() failed (Status: 0x%08lx)\n", Status);
+            return;
+        }
+
+        LayoutBufferSize += 4 * sizeof(PARTITION_INFORMATION_EX);
+        NewLayoutBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            DiskEntry->LayoutBuffer,
+                                            LayoutBufferSize);
+        if (NewLayoutBuffer == NULL)
+        {
+            DPRINT1("Failed to reallocate the disk layout buffer!\n");
+            return;
+        }
+
+        DiskEntry->LayoutBuffer = NewLayoutBuffer;
+    }
+}
+
+
 static
 VOID
 AddDiskToList(
@@ -781,8 +892,6 @@ AddDiskToList(
     ULONG i;
     PLIST_ENTRY ListEntry;
     PBIOSDISKENTRY BiosDiskEntry;
-    ULONG LayoutBufferSize;
-    PDRIVE_LAYOUT_INFORMATION_EX NewLayoutBuffer;
 
     Status = NtDeviceIoControlFile(FileHandle,
                                    NULL,
@@ -967,53 +1076,7 @@ AddDiskToList(
 
     InsertAscendingList(&DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
-    /* Allocate a layout buffer with 4 partition entries first */
-    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
-                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
-    DiskEntry->LayoutBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                              HEAP_ZERO_MEMORY,
-                                              LayoutBufferSize);
-    if (DiskEntry->LayoutBuffer == NULL)
-    {
-        DPRINT1("Failed to allocate the disk layout buffer!\n");
-        return;
-    }
-
-    for (;;)
-    {
-        DPRINT1("Buffer size: %lu\n", LayoutBufferSize);
-        Status = NtDeviceIoControlFile(FileHandle,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &Iosb,
-                                       IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
-                                       NULL,
-                                       0,
-                                       DiskEntry->LayoutBuffer,
-                                       LayoutBufferSize);
-        if (NT_SUCCESS(Status))
-            break;
-
-        if (Status != STATUS_BUFFER_TOO_SMALL)
-        {
-            DPRINT1("NtDeviceIoControlFile() failed (Status: 0x%08lx)\n", Status);
-            return;
-        }
-
-        LayoutBufferSize += 4 * sizeof(PARTITION_INFORMATION_EX);
-        NewLayoutBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                            HEAP_ZERO_MEMORY,
-                                            DiskEntry->LayoutBuffer,
-                                            LayoutBufferSize);
-        if (NewLayoutBuffer == NULL)
-        {
-            DPRINT1("Failed to reallocate the disk layout buffer!\n");
-            return;
-        }
-
-        DiskEntry->LayoutBuffer = NewLayoutBuffer;
-    }
+    ReadLayoutBuffer(FileHandle, DiskEntry);
 
     DPRINT1("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
 
@@ -1976,6 +2039,7 @@ GetNextUnpartitionedEntry(
 
     return NULL;
 }
+
 
 NTSTATUS
 DismountVolume(

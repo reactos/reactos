@@ -25,7 +25,10 @@ COMMAND cmds[] =
     {L"BREAK",       NULL,         NULL,        break_main,              IDS_HELP_BREAK,                     MSG_COMMAND_BREAK},
     {L"CLEAN",       NULL,         NULL,        clean_main,              IDS_HELP_CLEAN,                     MSG_COMMAND_CLEAN},
     {L"COMPACT",     NULL,         NULL,        compact_main,            IDS_HELP_COMPACT,                   MSG_COMMAND_COMPACT},
-    {L"CONVERT",     NULL,         NULL,        convert_main,            IDS_HELP_CONVERT,                   MSG_COMMAND_CONVERT},
+
+    {L"CONVERT",     NULL,         NULL,        NULL,                    IDS_HELP_CONVERT,                   MSG_NONE},
+    {L"CONVERT",     L"GPT",       NULL,        ConvertGPT,              IDS_HELP_CONVERT_GPT,               MSG_COMMAND_CONVERT_GPT},
+    {L"CONVERT",     L"MBR",       NULL,        ConvertMBR,              IDS_HELP_CONVERT_MBR,               MSG_COMMAND_CONVERT_MBR},
 
     {L"CREATE",      NULL,         NULL,        NULL,                    IDS_HELP_CREATE,                    MSG_NONE},
     {L"CREATE",      L"PARTITION", NULL,        NULL,                    IDS_HELP_CREATE_PARTITION,          MSG_NONE},

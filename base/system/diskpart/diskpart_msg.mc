@@ -740,38 +740,440 @@ Language=Taiwanese
 
 
 MessageId=10010
-SymbolicName=MSG_COMMAND_CONVERT
+SymbolicName=MSG_COMMAND_CONVERT_GPT
 Severity=Informational
 Facility=System
 Language=English
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=German
-<Add CONVERT command help text here>
+    Konvertiert einen Datenträger mit MBR (Master Boot Record) Partitionstabelle
+    in einen Datenträger mit GPT (GUID Partititionstabelle) Partititonstabelle.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit
+                dem entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    MBR-Datenträger ausgewählt sein.
+
+    Der Datenträger muss eine minimale Größe von 128 MB haben.
+
+    Wichtig:
+        Nur ein leerer Datenträger kann in einen GPT-Datenträger konvertiert
+        werden. Sichern Sie alle Daten und löschen Sie alle Partitionen und
+        Volumes bevor Sie den Datenträger konvertieres.
+
+Beispiel:
+    CONVERT GPT
 .
 Language=Polish
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Portugese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CONVERT>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Russian
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Albanian
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Turkish
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Chinese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
 .
 Language=Taiwanese
-<Add CONVERT command help text here>
+    Converts a disk with an MBR (Master Boot Record) partition table
+    into a disk with a GPT (GUID partititon table) partititon table.
+
+Syntax:  CONVERT GPT [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    An MBR disk must be selected for this operation to succeed.
+
+    The disk must have a minimum size of 128 MB.
+
+    Important:
+        Only empty disks can be converted to GPT. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT GPT
+.
+
+
+MessageId=10011
+SymbolicName=MSG_COMMAND_CONVERT_MBR
+Severity=Informational
+Facility=System
+Language=English
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=German
+    Konvertiert einen Datenträger mit GPT (GUID Partititionstabelle) Partitionstabelle
+    in einen Datenträger mit MBR (Master Boot Record) Partititonstabelle.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit
+                dem entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    GPT-Datenträger ausgewählt sein.
+
+    Wichtig:
+        Nur ein leerer Datenträger kann in einen MBR-Datenträger konvertiert
+        werden. Sichern Sie alle Daten und löschen Sie alle Partitionen und
+        Volumes bevor Sie den Datenträger konvertieres.
+
+Beispiel:
+    CONVERT MBR
+.
+Language=Polish
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Portugese
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Romanian
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Russian
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Albanian
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Turkish
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Chinese
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
+.
+Language=Taiwanese
+    Converts a disk with a GPT (GUID partititon table) partition table
+    into a disk with an MBR (Master Boot Record) partititon table.
+
+Syntax:  CONVERT MBR [NOERR]
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A GPT disk must be selected for this operation to succeed.
+
+    Important:
+        Only empty disks can be converted to MBR. Backup all data and delete all
+        partitions or volumes before you convert the disk.
+
+Example:
+    CONVERT MBR
 .
 
 

@@ -18,6 +18,7 @@ UniqueIdDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
+    WCHAR szBuffer[40];
     PWSTR pszSuffix = NULL;
     ULONG ulValue;
 
@@ -30,7 +31,13 @@ UniqueIdDisk(
     if (argc == 2)
     {
         ConPuts(StdOut, L"\n");
-        ConPrintf(StdOut, L"Disk ID: %08lx\n", CurrentDisk->LayoutBuffer->Mbr.Signature);
+        if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
+            PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
+        else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
+            swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+        else
+            wcscpy(szBuffer, L"00000000");
+        ConPrintf(StdOut, L"Disk ID: %s\n", szBuffer);
         ConPuts(StdOut, L"\n");
         return TRUE;
     }
