@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GNU GPLv2 only as published by the Free Software Foundation
  * PURPOSE:         Test for pipe (CORE-17376)
- * PROGRAMMER:      Simone Mario Lombardo
+ * PROGRAMMER:      Simone Mario Lombardo <me@simonelombardo.com>
+ *                  Julen Urizar Compains <julenuri@hotmail.com>
  */
 
 #include "precomp.h"
@@ -16,57 +17,38 @@ static const char* g_PipeName = "\\\\.\\pipe\\rostest_pipe";
 
 static DWORD g_dwReadBufferSize;
 
-void CheckError(BOOL Success, DWORD dwLastError, const char* errorMsg)
-{
-    ok(Success, errorMsg);
-    if (!Success)
-    {
-        trace("Error: %s. LastError: 0x%lX\n", errorMsg, dwLastError);
-    }
-}
-
 DWORD WINAPI PipeWriter(_In_ PVOID Param)
 {
     HANDLE hPipe = (HANDLE)Param;
     DWORD cbWritten = 0;
     BOOL Success = WriteFile(hPipe, TEST_MESSAGE, TEST_MESSAGE_SIZE, &cbWritten, NULL);
-    DWORD dwLastError = GetLastError();
 
-    CheckError(Success, dwLastError, "Pipe's WriteFile failed");
-    ok(cbWritten == TEST_MESSAGE_SIZE, "Invalid cbWritten: 0x%lx\n", cbWritten);
+    ok(Success, "WriteFile() failed, last error = 0x%lx\n", GetLastError());
+    ok_int(cbWritten, TEST_MESSAGE_SIZE);
 
     return 0;
 }
 
 DWORD WINAPI PipeReader(_In_ PVOID Param)
 {
-    HANDLE hPipe = (HANDLE)Param;
-    CHAR* szOutMsg = (CHAR*)malloc(g_dwReadBufferSize);
-    if (!szOutMsg)
-    {
-        trace("Memory allocation failed for szOutMsg\n");
-        return -1;
-    }
+    CHAR outMsg[MAXBUFFERSIZE];
+    HANDLE hPipe;
+    
+    hPipe=(HANDLE)Param;
 
     DWORD cbRead = 0;
-    BOOL Success = ReadFile(hPipe, szOutMsg, g_dwReadBufferSize, &cbRead, NULL);
-    DWORD dwLastError = GetLastError();
-
+    BOOL Success = ReadFile(hPipe, outMsg, g_dwReadBufferSize, &cbRead, NULL);
+    
     if (g_dwReadBufferSize == MINBUFFERSIZE)
-    {
-        ok(!Success, "Pipe's ReadFile returned TRUE, instead of expected FALSE\n");
-    }
+        ok(!Success, "ReadFile() unexpectedly succeeded\n");
     else
-    {
-        CheckError(Success, dwLastError, "Pipe's ReadFile failed");
-    }
+        ok(Success, "ReadFile() failed, last error = 0x%lx\n", GetLastError());
 
-    ok(cbRead > 0, "Invalid cbRead: 0x%lx\n", cbRead);
+    ok(cbRead != 0, "cbRead == 0\n");
 
     if (g_dwReadBufferSize == MINBUFFERSIZE)
-        ok(dwLastError == ERROR_MORE_DATA, "Pipe's ReadFile last error is unexpected\n");
+        ok_hex(GetLastError(), ERROR_MORE_DATA);
 
-    free(szOutMsg);
     return 0;
 }
 
@@ -132,4 +114,3 @@ START_TEST(Pipes)
     StartTestCORE17376(MINBUFFERSIZE);
     StartTestCORE17376(MAXBUFFERSIZE);
 }
-
