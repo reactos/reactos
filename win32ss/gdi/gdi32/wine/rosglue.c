@@ -187,7 +187,7 @@ GDI_hdc_not_using_object(
 
     /* Remove the HDC link for the object */
     hdcLink = GdiRemoveClientObjLink(hobj);
-    ASSERT(hdcLink == hdc);
+    ASSERT(hdcLink == NULL || hdcLink == hdc);
 }
 
 /***********************************************************************
