@@ -40,6 +40,13 @@ typedef struct _EXLATEOBJ
             ULONG ulGreenShift;
             ULONG ulBlueShift;
         };
+        struct
+        {
+            LONG lDeltaR;
+            LONG lDeltaG;
+            LONG lDeltaB;
+            LONG lHalfDist;
+        } ToMono;
     };
 } EXLATEOBJ, *PEXLATEOBJ;
 
