@@ -193,8 +193,7 @@ PcVideoDetectVideoCard(VOID)
    * 0Ch    MCGA w/ color analog display
    * FFh    unknown display type
    */
-  Regs.b.ah = 0x12;
-  Regs.b.bl = 0x10;
+  Regs.w.ax = 0x1A00;
   Int386(0x10, &Regs, &Regs);
 
   if (0x1a == Regs.b.al)
@@ -614,7 +613,7 @@ PcVideoSetMode80x50_80x43(VOID)
 {
   if (VIDEOCARD_VGA == PcVideoDetectVideoCard())
     {
-      PcVideoSetBiosMode(0x12);
+      PcVideoSetBiosMode(0x03);
       PcVideoSetFont8x8();
       PcVideoSelectAlternatePrintScreen();
       PcVideoDisableCursorEmulation();
