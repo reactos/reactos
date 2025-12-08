@@ -24,6 +24,7 @@ HDC ghdcDIB1, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
 PVOID gpvDIB1, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
 ULONG (*gpDIB32)[8][8];
 HPALETTE ghpal;
+HDC ghdcInfo;
 
 MYPAL gpal =
 {
@@ -194,6 +195,14 @@ BOOL GdiToolsInit(void)
     }
 
     gpDIB32 = gpvDIB32;
+
+    /* Create an Info-DC */
+    ghdcInfo = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+    if (!ghdcInfo)
+    {
+        printf("failed to create info DC\n");
+        return FALSE;
+    }
 
     return TRUE;
 }
