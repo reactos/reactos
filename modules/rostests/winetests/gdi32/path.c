@@ -51,7 +51,7 @@ static void test_path_state(void)
     bi->bmiHeader.biBitCount = 32;
     bi->bmiHeader.biPlanes = 1;
     bi->bmiHeader.biCompression = BI_RGB;
-    dib = CreateDIBSection( 0, bi, DIB_RGB_COLORS, (void**)&bits, NULL, 0 );
+    dib = CreateDIBSection( 0, bi, DIB_RGB_COLORS, &bits, NULL, 0 );
     orig = SelectObject( hdc, dib );
 
     BeginPath( hdc );
@@ -69,13 +69,13 @@ static void test_path_state(void)
     ok( !ret, "WidenPath succeeded\n" );
 
     ret = EndPath( hdc );
-    ok( ret, "EndPath failed error %u\n", GetLastError() );
+    ok( ret, "EndPath failed error %lu\n", GetLastError() );
     ret = WidenPath( hdc );
-    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+    ok( ret, "WidenPath failed error %lu\n", GetLastError() );
 
     SelectObject( hdc, orig );
     ret = WidenPath( hdc );
-    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+    ok( ret, "WidenPath failed error %lu\n", GetLastError() );
 
     BeginPath( hdc );
     LineTo( hdc, 100, 100 );
@@ -84,22 +84,22 @@ static void test_path_state(void)
     SaveDC( hdc );
     SelectObject( hdc, dib );
     ret = EndPath( hdc );
-    ok( ret, "EndPath failed error %u\n", GetLastError() );
+    ok( ret, "EndPath failed error %lu\n", GetLastError() );
     ret = WidenPath( hdc );
-    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+    ok( ret, "WidenPath failed error %lu\n", GetLastError() );
 
     /* path should be open again after RestoreDC */
     RestoreDC( hdc, -1  );
     ret = WidenPath( hdc );
     ok( !ret, "WidenPath succeeded\n" );
     ret = EndPath( hdc );
-    ok( ret, "EndPath failed error %u\n", GetLastError() );
+    ok( ret, "EndPath failed error %lu\n", GetLastError() );
 
     SaveDC( hdc );
     BeginPath( hdc );
     RestoreDC( hdc, -1  );
     ret = WidenPath( hdc );
-    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+    ok( ret, "WidenPath failed error %lu\n", GetLastError() );
 
     /* test all functions with no path at all */
     AbortPath( hdc );
@@ -107,55 +107,55 @@ static void test_path_state(void)
     ret = WidenPath( hdc );
     ok( !ret, "WidenPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = FlattenPath( hdc );
     ok( !ret, "FlattenPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = StrokePath( hdc );
     ok( !ret, "StrokePath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = FillPath( hdc );
     ok( !ret, "FillPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = StrokeAndFillPath( hdc );
     ok( !ret, "StrokeAndFillPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = SelectClipPath( hdc, RGN_OR );
     ok( !ret, "SelectClipPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     rgn = PathToRegion( hdc );
     ok( !rgn, "PathToRegion succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = EndPath( hdc );
     ok( !ret, "SelectClipPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
     ret = CloseFigure( hdc );
     ok( !ret, "CloseFigure succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     /* test all functions with an open path */
     AbortPath( hdc );
@@ -164,7 +164,7 @@ static void test_path_state(void)
     ret = WidenPath( hdc );
     ok( !ret, "WidenPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -172,7 +172,7 @@ static void test_path_state(void)
     ret = FlattenPath( hdc );
     ok( !ret, "FlattenPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -180,7 +180,7 @@ static void test_path_state(void)
     ret = StrokePath( hdc );
     ok( !ret, "StrokePath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -188,7 +188,7 @@ static void test_path_state(void)
     ret = FillPath( hdc );
     ok( !ret, "FillPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -196,7 +196,7 @@ static void test_path_state(void)
     ret = StrokeAndFillPath( hdc );
     ok( !ret, "StrokeAndFillPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -205,7 +205,7 @@ static void test_path_state(void)
     ret = SelectClipPath( hdc, RGN_OR );
     ok( !ret, "SelectClipPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -214,7 +214,7 @@ static void test_path_state(void)
     rgn = PathToRegion( hdc );
     ok( !rgn, "PathToRegion succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -267,7 +267,7 @@ static void test_path_state(void)
     SetLastError( 0xdeadbeef );
     ret = SelectClipPath( hdc, RGN_OR );
     ok( !ret, "SelectClipPath succeeded on empty path\n" );
-    ok( GetLastError() == 0xdeadbeef, "wrong error %u\n", GetLastError() );
+    ok( GetLastError() == 0xdeadbeef, "wrong error %lu\n", GetLastError() );
     ok( GetPath( hdc, NULL, NULL, 0 ) == -1, "path not deleted\n" );
 
     BeginPath( hdc );
@@ -283,7 +283,7 @@ static void test_path_state(void)
     SetLastError( 0xdeadbeef );
     rgn = PathToRegion( hdc );
     ok( !rgn, "PathToRegion succeeded on empty path\n" );
-    ok( GetLastError() == 0xdeadbeef, "wrong error %u\n", GetLastError() );
+    ok( GetLastError() == 0xdeadbeef, "wrong error %lu\n", GetLastError() );
     DeleteObject( rgn );
     ok( GetPath( hdc, NULL, NULL, 0 ) == -1, "path not deleted\n" );
 
@@ -293,7 +293,7 @@ static void test_path_state(void)
     ret = CloseFigure( hdc );
     ok( !ret, "CloseFigure succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     AbortPath( hdc );
     BeginPath( hdc );
@@ -302,7 +302,7 @@ static void test_path_state(void)
     ret = EndPath( hdc );
     ok( !ret, "EndPath succeeded\n" );
     ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
-        "wrong error %u\n", GetLastError() );
+        "wrong error %lu\n", GetLastError() );
 
     DeleteDC( hdc );
     DeleteObject( dib );
@@ -354,7 +354,7 @@ static void test_widenpath(void)
     BeginPath(hdc);
     ret = WidenPath(hdc);
     ok(ret == FALSE && (GetLastError() == ERROR_CAN_NOT_COMPLETE || GetLastError() == 0xdeadbeef),
-       "WidenPath fails while widening an open path. Return value is %d, should be %d. Error is %u\n", ret, FALSE, GetLastError());
+       "WidenPath fails while widening an open path. Return value is %d, should be %d. Error is %lu\n", ret, FALSE, GetLastError());
 
     AbortPath(hdc);
 
@@ -365,7 +365,7 @@ static void test_widenpath(void)
     Polyline(hdc, pnt, 6);
     EndPath(hdc);
     ret = WidenPath(hdc);
-    ok(ret == TRUE, "WidenPath failed: %d\n", GetLastError());
+    ok(ret == TRUE, "WidenPath failed: %ld\n", GetLastError());
     nSize = GetPath(hdc, NULL, NULL, 0);
     ok(nSize > 6, "WidenPath should compute a widened path with a 1px wide pen. Path length is %d, should be more than 6\n", nSize);
 
@@ -410,17 +410,16 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
     /* Get the path */
     assert(hdc != 0);
     size = GetPath(hdc, NULL, NULL, 0);
-    ok(size > 0, "GetPath returned size %d, last error %d\n", size, GetLastError());
+    ok(size > 0, "GetPath returned size %d, last error %ld\n", size, GetLastError());
     if (size <= 0) return;
 
-    pnt = HeapAlloc(GetProcessHeap(), 0, size*sizeof(POINT));
+    pnt = malloc(size * sizeof(POINT));
     assert(pnt != 0);
-    types = HeapAlloc(GetProcessHeap(), 0, size*sizeof(BYTE));
+    types = malloc(size);
     assert(types != 0);
     size = GetPath(hdc, pnt, types, size);
     assert(size > 0);
 
-    ros_skip_flaky
     ok( size == expected_size, "%s: Path size %d does not match expected size %d\n",
         path_name, size, expected_size);
 
@@ -430,16 +429,14 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
          * floating point to integer conversion */
         static const int fudge = 2;
 
-        ros_skip_flaky
-        ok( types[idx] == expected[idx].type, "%s: Expected #%d: %s (%d,%d) but got %s (%d,%d)\n",
+        ok( types[idx] == expected[idx].type, "%s: Expected #%d: %s (%d,%d) but got %s (%ld,%ld)\n",
             path_name, idx, type_string[expected[idx].type], expected[idx].x, expected[idx].y,
             type_string[types[idx]], pnt[idx].x, pnt[idx].y);
 
         if (types[idx] == expected[idx].type)
-            ros_skip_flaky
             ok( (pnt[idx].x >= expected[idx].x - fudge && pnt[idx].x <= expected[idx].x + fudge) &&
                 (pnt[idx].y >= expected[idx].y - fudge && pnt[idx].y <= expected[idx].y + fudge),
-                "%s: Expected #%d: %s  position (%d,%d) but got (%d,%d)\n", path_name, idx,
+                "%s: Expected #%d: %s  position (%d,%d) but got (%ld,%ld)\n", path_name, idx,
                 type_string[expected[idx].type], expected[idx].x, expected[idx].y, pnt[idx].x, pnt[idx].y);
     }
 
@@ -447,12 +444,12 @@ static void ok_path(HDC hdc, const char *path_name, const path_test_t *expected,
     {
         printf("static const path_test_t %s[] =\n{\n", path_name);
         for (idx = 0; idx < size; idx++)
-            printf("    {%d, %d, %s}, /* %d */\n", pnt[idx].x, pnt[idx].y, type_string[types[idx]], idx);
+            printf("    {%ld, %ld, %s}, /* %d */\n", pnt[idx].x, pnt[idx].y, type_string[types[idx]], idx);
         printf("};\n" );
     }
 
-    HeapFree(GetProcessHeap(), 0, types);
-    HeapFree(GetProcessHeap(), 0, pnt);
+    free(types);
+    free(pnt);
 }
 
 static const path_test_t arcto_path[] =
@@ -498,7 +495,7 @@ static void test_arcto(void)
     CloseFigure(hdc);
     EndPath(hdc);
 
-    ok_path(hdc, "arcto_path", arcto_path, sizeof(arcto_path)/sizeof(path_test_t));
+    ok_path(hdc, "arcto_path", arcto_path, ARRAY_SIZE(arcto_path));
 done:
     ReleaseDC(0, hdc);
 }
@@ -543,7 +540,7 @@ static void test_anglearc(void)
     CloseFigure(hdc);
     EndPath(hdc);
 
-    ok_path(hdc, "anglearc_path", anglearc_path, sizeof(anglearc_path)/sizeof(path_test_t));
+    ok_path(hdc, "anglearc_path", anglearc_path, ARRAY_SIZE(anglearc_path));
 done:
     ReleaseDC(0, hdc);
 }
@@ -610,12 +607,13 @@ static void test_polydraw(void)
     BOOL retb;
     POINT pos;
     HDC hdc = GetDC(0);
+    HWND hwnd;
 
     MoveToEx( hdc, -20, -20, NULL );
 
     BeginPath(hdc);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == -20 && pos.y == -20, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == -20 && pos.y == -20, "wrong pos %ld,%ld\n", pos.x, pos.y );
 
     /* closefigure with no previous moveto */
     if (!(retb = PolyDraw(hdc, polydraw_pts, polydraw_tps, 2)) &&
@@ -623,72 +621,85 @@ static void test_polydraw(void)
     {
         /* PolyDraw is only available on Win2k and later */
         win_skip("PolyDraw is not available\n");
-        goto done;
+        ReleaseDC(0, hdc);
+        return;
     }
     expect(TRUE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 10 && pos.y == 15, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 10 && pos.y == 15, "wrong pos %ld,%ld\n", pos.x, pos.y );
     LineTo(hdc, -10, -10);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == -10 && pos.y == -10, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == -10 && pos.y == -10, "wrong pos %ld,%ld\n", pos.x, pos.y );
 
     MoveToEx(hdc, 100, 100, NULL);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 100 && pos.y == 100, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 100 && pos.y == 100, "wrong pos %ld,%ld\n", pos.x, pos.y );
     LineTo(hdc, 95, 95);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 95 && pos.y == 95, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 95 && pos.y == 95, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* closefigure with previous moveto */
     retb = PolyDraw(hdc, polydraw_pts, polydraw_tps, 2);
     expect(TRUE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 10 && pos.y == 15, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 10 && pos.y == 15, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* bad bezier points */
     retb = PolyDraw(hdc, &(polydraw_pts[2]), &(polydraw_tps[2]), 4);
     expect(FALSE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 10 && pos.y == 15, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 10 && pos.y == 15, "wrong pos %ld,%ld\n", pos.x, pos.y );
     retb = PolyDraw(hdc, &(polydraw_pts[6]), &(polydraw_tps[6]), 4);
     expect(FALSE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 10 && pos.y == 15, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 10 && pos.y == 15, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* good bezier points */
     retb = PolyDraw(hdc, &(polydraw_pts[8]), &(polydraw_tps[8]), 4);
     expect(TRUE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 35 && pos.y == 40, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 35 && pos.y == 40, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* does lineto or bezierto take precedence? */
     retb = PolyDraw(hdc, &(polydraw_pts[12]), &(polydraw_tps[12]), 4);
     expect(FALSE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 35 && pos.y == 40, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 35 && pos.y == 40, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* bad point type, has already moved cursor position */
     retb = PolyDraw(hdc, &(polydraw_pts[15]), &(polydraw_tps[15]), 4);
     expect(FALSE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 35 && pos.y == 40, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 35 && pos.y == 40, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* bad point type, cursor position is moved, but back to its original spot */
     retb = PolyDraw(hdc, &(polydraw_pts[17]), &(polydraw_tps[17]), 4);
     expect(FALSE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 35 && pos.y == 40, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 35 && pos.y == 40, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* does lineto or moveto take precedence? */
     retb = PolyDraw(hdc, &(polydraw_pts[20]), &(polydraw_tps[20]), 3);
     expect(TRUE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 65 && pos.y == 65, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 65 && pos.y == 65, "wrong pos %ld,%ld\n", pos.x, pos.y );
     /* consecutive movetos */
     retb = PolyDraw(hdc, &(polydraw_pts[23]), &(polydraw_tps[23]), 4);
     expect(TRUE, retb);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 80 && pos.y == 80, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 80 && pos.y == 80, "wrong pos %ld,%ld\n", pos.x, pos.y );
 
     EndPath(hdc);
-    ok_path(hdc, "polydraw_path", polydraw_path, sizeof(polydraw_path)/sizeof(path_test_t));
+    ok_path(hdc, "polydraw_path", polydraw_path, ARRAY_SIZE(polydraw_path));
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 80 && pos.y == 80, "wrong pos %d,%d\n", pos.x, pos.y );
-done:
+    ok( pos.x == 80 && pos.y == 80, "wrong pos %ld,%ld\n", pos.x, pos.y );
     ReleaseDC(0, hdc);
+
+    /* Test a special case that GDI path driver is created before window driver */
+    hwnd = CreateWindowA("static", NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL);
+    hdc = GetDC(hwnd);
+
+    BeginPath(hdc);
+    SetWindowPos(hwnd, 0, 0, 0, 100, 100, SWP_NOZORDER | SWP_NOMOVE | SWP_SHOWWINDOW);
+    retb = PolyDraw(hdc, polydraw_pts, polydraw_tps, 2);
+    ok(retb, "PolyDraw failed, error %#lx\n", GetLastError());
+    EndPath(hdc);
+
+    ReleaseDC(hwnd, hdc);
+    DestroyWindow(hwnd);
 }
 
 static void test_closefigure(void) {
@@ -698,27 +709,27 @@ static void test_closefigure(void) {
 
     MoveToEx( hdc, 100, 100, NULL );
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 100 && pos.y == 100, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 100 && pos.y == 100, "wrong pos %ld,%ld\n", pos.x, pos.y );
 
     BeginPath(hdc);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 100 && pos.y == 100, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 100 && pos.y == 100, "wrong pos %ld,%ld\n", pos.x, pos.y );
     MoveToEx(hdc, 95, 95, NULL);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 95 && pos.y == 95, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 95 && pos.y == 95, "wrong pos %ld,%ld\n", pos.x, pos.y );
     LineTo(hdc, 95,  0);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 95 && pos.y == 0, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 95 && pos.y == 0, "wrong pos %ld,%ld\n", pos.x, pos.y );
     LineTo(hdc,  0, 95);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 0 && pos.y == 95, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 0 && pos.y == 95, "wrong pos %ld,%ld\n", pos.x, pos.y );
 
     CloseFigure(hdc);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 0 && pos.y == 95, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 0 && pos.y == 95, "wrong pos %ld,%ld\n", pos.x, pos.y );
     EndPath(hdc);
     GetCurrentPositionEx( hdc, &pos );
-    ok( pos.x == 0 && pos.y == 95, "wrong pos %d,%d\n", pos.x, pos.y );
+    ok( pos.x == 0 && pos.y == 95, "wrong pos %ld,%ld\n", pos.x, pos.y );
     nSize = GetPath(hdc, NULL, NULL, 0);
 
     AbortPath(hdc);
@@ -740,7 +751,7 @@ static void test_closefigure(void) {
 static void WINAPI linedda_callback(INT x, INT y, LPARAM lparam)
 {
     POINT **pt = (POINT**)lparam;
-    ok((*pt)->x == x && (*pt)->y == y, "point mismatch expect(%d,%d) got(%d,%d)\n",
+    ok((*pt)->x == x && (*pt)->y == y, "point mismatch expect(%ld,%ld) got(%d,%d)\n",
        (*pt)->x, (*pt)->y, x, y);
 
     (*pt)++;
@@ -969,7 +980,7 @@ static void test_rectangle(void)
     SetArcDirection( hdc, AD_COUNTERCLOCKWISE );
     EndPath( hdc );
     SetMapMode( hdc, MM_TEXT );
-    ok_path( hdc, "rectangle_path", rectangle_path, sizeof(rectangle_path)/sizeof(path_test_t) );
+    ok_path( hdc, "rectangle_path", rectangle_path, ARRAY_SIZE(rectangle_path) );
     ReleaseDC( 0, hdc );
 }
 
@@ -1330,7 +1341,7 @@ static void test_roundrect(void)
     SetArcDirection( hdc, AD_COUNTERCLOCKWISE );
     EndPath( hdc );
     SetMapMode( hdc, MM_TEXT );
-    ok_path( hdc, "roundrect_path", roundrect_path, sizeof(roundrect_path)/sizeof(path_test_t) );
+    ok_path( hdc, "roundrect_path", roundrect_path, ARRAY_SIZE(roundrect_path) );
     ReleaseDC( 0, hdc );
 }
 
@@ -1710,7 +1721,7 @@ static void test_ellipse(void)
     SetArcDirection( hdc, AD_COUNTERCLOCKWISE );
     EndPath( hdc );
     SetMapMode( hdc, MM_TEXT );
-    ok_path( hdc, "ellipse_path", ellipse_path, sizeof(ellipse_path)/sizeof(path_test_t) );
+    ok_path( hdc, "ellipse_path", ellipse_path, ARRAY_SIZE(ellipse_path) );
 }
 
 static const path_test_t all_funcs_path[] =
@@ -1893,7 +1904,32 @@ static void test_all_functions(void)
     LineTo( hdc, 150, 150 );
     /* FIXME: ExtTextOut */
     EndPath( hdc );
-    ok_path( hdc, "all_funcs_path", all_funcs_path, sizeof(all_funcs_path)/sizeof(path_test_t) );
+    ok_path( hdc, "all_funcs_path", all_funcs_path, ARRAY_SIZE(all_funcs_path) );
+    ReleaseDC( 0, hdc );
+}
+
+static void test_clipped_polygon_fill(void)
+{
+    const POINT pts[3] = {{-10, -10}, {10, -5}, {0, 10}};
+    HBRUSH brush, oldbrush;
+    HBITMAP bmp, oldbmp;
+    HDC hdc, memdc;
+    COLORREF col;
+
+    hdc = GetDC( 0 );
+    memdc = CreateCompatibleDC( hdc );
+    bmp = CreateCompatibleBitmap( hdc, 20, 20 );
+    brush = CreateSolidBrush( RGB( 0x11, 0x22, 0x33 ) );
+    oldbrush = SelectObject( memdc, brush );
+    oldbmp = SelectObject( memdc, bmp );
+    Polygon( memdc, pts, ARRAY_SIZE(pts) );
+    col = GetPixel( memdc, 1, 1 );
+    ok( col == RGB( 0x11, 0x22, 0x33 ), "got %06lx\n", col );
+    SelectObject( memdc, oldbrush );
+    SelectObject( memdc, oldbmp );
+    DeleteObject( brush );
+    DeleteObject( bmp );
+    DeleteDC( memdc );
     ReleaseDC( 0, hdc );
 }
 
@@ -1909,5 +1945,6 @@ START_TEST(path)
     test_rectangle();
     test_roundrect();
     test_ellipse();
+    test_clipped_polygon_fill();
     test_all_functions();
 }
