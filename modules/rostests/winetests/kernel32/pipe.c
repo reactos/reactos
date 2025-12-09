@@ -4277,12 +4277,6 @@ static void test_CancelSynchronousIo(void)
     ok(GetLastError() == ERROR_NOT_FOUND,
         "In CancelSynchronousIo failure, expected ERROR_NOT_FOUND, got %ld\n", GetLastError());
 
-#if defined(__REACTOS__) && defined(_WIN64)
-    if (is_reactos()) {
-        ok(FALSE, "FIXME: The rest of this test hangs infinitely on ReactOS x64!\n");
-        return;
-    }
-#endif
     /* synchronous i/o */
     pipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX,
                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -4404,6 +4398,12 @@ START_TEST(pipe)
     test_nowait(PIPE_TYPE_BYTE);
     test_nowait(PIPE_TYPE_MESSAGE);
     test_GetOverlappedResultEx();
+#ifdef __REACTOS__
+    if (is_reactos() || GetNTVersion() <= _WIN32_WINNT_WS03) {
+        skip("These next tests crash or hang on ReactOS and Windows Server 2003.\n");
+        return;
+    }
+#endif
     test_exit_process_async();
     test_CancelSynchronousIo();
 }
