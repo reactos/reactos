@@ -23,7 +23,7 @@ START_TEST(NtUserGetCursorInfo)
     ok_int(res, FALSE);
     ok_int(error, ERROR_NOACCESS);
     
-    // 2
+    /* 2. Hardcoded invalid pointer */
     SetLastError(0);
     res = NtUserGetCursorInfo((PCURSORINFO)(ULONG_PTR)0xDEADBEEF);
     error = GetLastError();
