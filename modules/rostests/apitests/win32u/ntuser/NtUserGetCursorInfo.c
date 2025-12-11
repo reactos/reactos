@@ -15,7 +15,7 @@ START_TEST(NtUserGetCursorInfo)
     DWORD error;
     BOOL res;
 
-    // 1
+    /* 1. NULL pointer */
     SetLastError(0);
     res = NtUserGetCursorInfo(NULL);
     error = GetLastError();
