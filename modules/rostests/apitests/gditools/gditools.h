@@ -1,10 +1,10 @@
 
 #pragma once
 
-extern HBITMAP ghbmp1, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;
-extern HBITMAP ghbmpDIB1, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
-extern HDC ghdcDIB1, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
-extern PVOID gpvDIB1, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
+extern HBITMAP ghbmp1, ghbmp1_InvCol, ghbmp1_RB, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;
+extern HBITMAP ghbmpDIB1, ghbmpDIB1_InvCol, ghbmpDIB1_RB, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
+extern HDC ghdcDIB1, ghdcDIB1_InvCol, ghdcDIB1_RB, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
+extern PVOID gpvDIB1, gpvDIB1_InvCol, gpvDIB1_RB, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
 extern HDC ghdcInfo;
 
 extern HBITMAP ghbmpDIB32;
