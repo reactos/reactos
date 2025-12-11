@@ -709,7 +709,7 @@ CHSourceDlgProc(
                         if (SHGetPathFromIDListW(pidl, Directory))
                         {
                             /* Remove previous item selection */
-                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH,  CB_SETCURSEL, -1, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_SETCURSEL, -1, 0);
 
                             /* Set the IDC_COMBO_PATH text */
                             SetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), Directory);
