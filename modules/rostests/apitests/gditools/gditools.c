@@ -18,10 +18,10 @@
 
 #include "gditools.h"
 
-HBITMAP ghbmp1, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;
-HBITMAP ghbmpDIB1, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
-HDC ghdcDIB1, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
-PVOID gpvDIB1, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
+HBITMAP ghbmp1, ghbmp1_InvCol, ghbmp1_RB, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;
+HBITMAP ghbmpDIB1, ghbmpDIB1_InvCol, ghbmpDIB1_RB, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
+HDC ghdcDIB1, ghdcDIB1_InvCol, ghdcDIB1_RB, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
+PVOID gpvDIB1, gpvDIB1_InvCol, gpvDIB1_RB, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
 ULONG (*gpDIB32)[8][8];
 HPALETTE ghpal;
 HDC ghdcInfo;
@@ -105,6 +105,9 @@ GdiGetHandleUserData(
     return pentry->pUser;
 }
 
+#define FL_INVERT_COLORS 0x01
+#define FL_RED_BLUE 0x02
+
 BOOL
 InitPerBitDepth(
     _In_ ULONG cBitsPerPixel,
@@ -113,7 +116,8 @@ InitPerBitDepth(
     _Out_ HBITMAP *phbmp,
     _Out_ HDC *phdcDIB,
     _Out_ HBITMAP *phbmpDIB,
-    _Out_ PVOID *ppvBits)
+    _Out_ PVOID *ppvBits,
+    _In_ ULONG flags)
 {
     struct
     {
@@ -146,8 +150,21 @@ InitPerBitDepth(
 
     if (cBitsPerPixel == 1)
     {
-        bmiBuffer.bmiColors[0] = 0;
-        bmiBuffer.bmiColors[1] = 0xFFFFFF;
+        if (flags & FL_RED_BLUE)
+        {
+            bmiBuffer.bmiColors[0] = RGB(0xFF, 0x00, 0x00);
+            bmiBuffer.bmiColors[1] = RGB(0x00, 0x00, 0xFF);
+        }
+        else if (flags & FL_INVERT_COLORS)
+        {
+            bmiBuffer.bmiColors[0] = 0xFFFFFF;
+            bmiBuffer.bmiColors[1] = 0;
+        }
+        else
+        {
+            bmiBuffer.bmiColors[0] = 0;
+            bmiBuffer.bmiColors[1] = 0xFFFFFF;
+        }
         pbmi->bmiHeader.biClrUsed = 2;
     }
 
@@ -183,12 +200,14 @@ BOOL GdiToolsInit(void)
         return FALSE;
     }
 
-    if (!InitPerBitDepth(1, 9, 9, &ghbmp1, &ghdcDIB1, &ghbmpDIB1, &gpvDIB1) ||
-        !InitPerBitDepth(4, 5, 5, &ghbmp4, &ghdcDIB4, &ghbmpDIB4, &gpvDIB4) ||
-        !InitPerBitDepth(8, 5, 5, &ghbmp8, &ghdcDIB8, &ghbmpDIB8, &gpvDIB8) ||
-        !InitPerBitDepth(16, 8, 8, &ghbmp16, &ghdcDIB16, &ghbmpDIB16, &gpvDIB16) ||
-        !InitPerBitDepth(24, 8, 8, &ghbmp24, &ghdcDIB24, &ghbmpDIB24, &gpvDIB24) ||
-        !InitPerBitDepth(32, 8, 8, &ghbmp32, &ghdcDIB32, &ghbmpDIB32, &gpvDIB32))
+    if (!InitPerBitDepth(1, 9, 9, &ghbmp1, &ghdcDIB1, &ghbmpDIB1, &gpvDIB1, 0) ||
+        !InitPerBitDepth(1, 9, 9, &ghbmp1_InvCol, &ghdcDIB1_InvCol, &ghbmpDIB1_InvCol, &gpvDIB1_InvCol, FL_INVERT_COLORS) ||
+        !InitPerBitDepth(1, 9, 9, &ghbmp1_RB, &ghdcDIB1_RB, &ghbmpDIB1_RB, &gpvDIB1_RB, FL_RED_BLUE) ||
+        !InitPerBitDepth(4, 5, 5, &ghbmp4, &ghdcDIB4, &ghbmpDIB4, &gpvDIB4, 0) ||
+        !InitPerBitDepth(8, 5, 5, &ghbmp8, &ghdcDIB8, &ghbmpDIB8, &gpvDIB8, 0) ||
+        !InitPerBitDepth(16, 8, 8, &ghbmp16, &ghdcDIB16, &ghbmpDIB16, &gpvDIB16, 0) ||
+        !InitPerBitDepth(24, 8, 8, &ghbmp24, &ghdcDIB24, &ghbmpDIB24, &gpvDIB24, 0) ||
+        !InitPerBitDepth(32, 8, 8, &ghbmp32, &ghdcDIB32, &ghbmpDIB32, &gpvDIB32, 0))
     {
         printf("failed to create objects\n");
         return FALSE;
