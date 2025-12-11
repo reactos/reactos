@@ -40,7 +40,7 @@ START_TEST(NtUserGetCursorInfo)
     ok_int(res, FALSE);
     ok_int(error, ERROR_INVALID_PARAMETER);
 
-    // 4
+    /* 4. Single CURSORINFO pointer */
     SetLastError(0);
     cursor.cbSize = sizeof(cursor);
     res = NtUserGetCursorInfo(&cursor);
