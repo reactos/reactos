@@ -31,7 +31,7 @@ START_TEST(NtUserGetCursorInfo)
     ok_int(res, FALSE);
     ok_int(error, ERROR_NOACCESS);
 
-    // 3
+    /* 3. Invalid cbSize */
     SetLastError(0);
     cursor.cbSize = 0;
     res = NtUserGetCursorInfo(&cursor);
