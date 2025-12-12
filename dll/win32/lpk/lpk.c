@@ -110,53 +110,104 @@ static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, in
     DeleteObject(hpen);
 }
 
-/* Code taken from the GetProcessDefaultLayout() function from Wine's user32
- * Wine version 3.17
+static
+BOOL
+GetProcessImageVersionInfo(
+    _Out_ PVOID* pFileInfo,
+    _Out_ LPDWORD pdwLen)
+{
+    HRSRC hResource;
+    DWORD dwResourceSize;
+    HGLOBAL hResourceData;
+    PVOID pvResourceData;
+
+    *pFileInfo = NULL;
+    *pdwLen = 0;
+
+    /* Try to get the VersionInfo resource */
+    hResource = FindResourceW(NULL, MAKEINTRESOURCEW(VS_VERSION_INFO), RT_VERSION);
+    if (hResource == NULL)
+        return FALSE;
+
+    /* Get resource size and do basic size check */
+    dwResourceSize = SizeofResource(NULL, hResource);
+    if (dwResourceSize < sizeof(VS_FIXEDFILEINFO))
+        return FALSE;
+
+    /* Load the resource */
+    hResourceData = LoadResource(NULL, hResource);
+    if (hResourceData == NULL)
+        return FALSE;
+
+    /* Lock the resource */
+    pvResourceData = LockResource(hResourceData);
+    if (pvResourceData == NULL)
+        return FALSE;
+
+    *pFileInfo = pvResourceData;
+    *pdwLen = dwResourceSize;
+    return TRUE;
+}
+
+/* Checks the VersionInfo of the main executable for RTL layout
+ * and applies it to the process if found.
+ * See https://web.archive.org/web/20050207001156/http://www.microsoft.com/globaldev/getwr/steps/WRG_mirror.mspx
  *
  * This function should be called from LpkInitialize(),
  * which is in turn called by GdiInitializeLanguagePack() (from gdi32).
  * TODO: Move call from LpkDllInitialize() to LpkInitialize() when latter
  * function is implemented.
  */
-static void LPK_ApplyMirroring()
+static void LPK_ApplyMirroring(void)
 {
-    static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
-                                          '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
-    static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
-                                       '\\','%','0','4','x','%','0','4','x',
-                                       '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
-    WCHAR *str, buffer[MAX_PATH];
-#ifdef __REACTOS__
-    DWORD i, version_layout = 0;
-    UINT len;
-#else
-    DWORD i, len, version_layout = 0;
-#endif
-    DWORD user_lang = GetUserDefaultLangID();
-    DWORD *languages;
-    void *data = NULL;
+    PWSTR pwstrFileDescription = NULL;
+    PVOID pvFileInfo;
+    DWORD cbFileInfoSize;
 
-    GetModuleFileNameW( 0, buffer, MAX_PATH );
-    if (!(len = GetFileVersionInfoSizeW( buffer, NULL ))) goto done;
-    if (!(data = HeapAlloc( GetProcessHeap(), 0, len ))) goto done;
-    if (!GetFileVersionInfoW( buffer, 0, len, data )) goto done;
-    if (!VerQueryValueW( data, translationW, (void **)&languages, &len ) || !len) goto done;
+    /* HACK!!!! For some reason this call, that does nothing, is required,
+       otherwise comctl32_winetest tooltips starts to fail. */
+    GetFileVersionInfoSizeW(L"", NULL );
 
-    len /= sizeof(DWORD);
-    for (i = 0; i < len; i++) if (LOWORD(languages[i]) == user_lang) break;
-    if (i == len)  /* try neutral language */
-    for (i = 0; i < len; i++)
-        if (LOWORD(languages[i]) == MAKELANGID( PRIMARYLANGID(user_lang), SUBLANG_NEUTRAL )) break;
-    if (i == len) i = 0;  /* default to the first one */
+    /* Get the VersionInfo resource of the main executable */
+    if (!GetProcessImageVersionInfo(&pvFileInfo, &cbFileInfoSize))
+    {
+        return;
+    }
 
-    sprintfW( buffer, filedescW, LOWORD(languages[i]), HIWORD(languages[i]) );
-    if (!VerQueryValueW( data, buffer, (void **)&str, &len )) goto done;
-    TRACE( "found description %s\n", debugstr_w( str ));
-    if (str[0] == 0x200e && str[1] == 0x200e) version_layout = LAYOUT_RTL;
+    /* The length (in WCHARs) of the key name, including the null-terminator */
+    const DWORD cchKeyLength = sizeof(L"FileDescription") / sizeof(WCHAR);
 
-done:
-    HeapFree( GetProcessHeap(), 0, data );
-    SetProcessDefaultLayout(version_layout);
+    /* Calculate the required length (in WCHARs) for a FileDescription entry:
+       The key (incl. null) + alignment byte + 2 LTR markers (note: the key
+       is always unaligned by 2 bytes) */
+    const DWORD cchRequired = cchKeyLength + 1 + 2;
+
+    /* Scan the VersionInfo resource for the "FileDescription" key */
+    PWSTR pwchCurrent = (PWSTR)pvFileInfo;
+    DWORD cchRemining = cbFileInfoSize / sizeof(WCHAR);
+    while (cchRemining >= cchRequired)
+    {
+        /* Compare current position with the "FileDescription" key */
+        if (lstrcmpW(pwchCurrent, L"FileDescription") == 0)
+        {
+            /* The value starts after the key, the Null-terminator and 1 WCHAR alignment */
+            pwstrFileDescription = pwchCurrent + cchKeyLength + 1;
+            break;
+        }
+
+        /* Move to next position */
+        pwchCurrent++;
+        cchRemining--;
+    }
+
+    /* Check if the description starts with 2 LTR markers (u200E).
+       Yes, this is how MS marks the layout as RTL (see article linked above). */
+    if ((pwstrFileDescription != NULL) &&
+        (pwstrFileDescription[0] == 0x200E) &&
+        (pwstrFileDescription[1] == 0x200E))
+    {
+        SetProcessDefaultLayout(LAYOUT_RTL);
+    }
 }
 
 BOOL
