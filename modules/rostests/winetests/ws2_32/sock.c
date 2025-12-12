@@ -2252,6 +2252,12 @@ static void test_reuseaddr(void)
     unsigned int i, j;
     int size;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03 && !is_reactos()) {
+        skip("These tests crash on Windows Server 2003.\n");
+        return;
+    }
+#endif
     saddr_in_any.sin_family = AF_INET;
     saddr_in_any.sin_port = htons(SERVERPORT + 1);
     saddr_in_any.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -4482,13 +4488,21 @@ static void test_select(void)
     ok(FD_ISSET(fdWrite, &readfds), "fdWrite socket is not in the set\n");
     ok(FD_ISSET(fdRead, &readfds), "fdRead socket is not in the set\n");
 
+#ifdef __REACTOS__
+    /* ReactOS infinitely loops here */
+    for(i = 0; i < 10000; i++) {
+#else
     while(1) {
+#endif
         FD_ZERO(&writefds);
         FD_SET(fdWrite, &writefds);
         ret = select(fdWrite+1, NULL, &writefds, NULL, &select_timeout);
         if(!ret) break;
         ok(send(fdWrite, tmp_buf, sizeof(tmp_buf), 0) > 0, "failed to send data\n");
     }
+#ifdef __REACTOS__
+    ok(i < 10000, "select() never had time limit expire.\n");
+#endif
     FD_ZERO(&readfds);
     FD_SET(fdWrite, &readfds);
     FD_SET(fdRead, &readfds);
@@ -5575,6 +5589,11 @@ static void test_fionread_siocatmark(void)
     ok(ret == 5, "got %d\n", ret);
 
     /* wait for the data to be available */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask(client, POLLRDNORM, POLLRDNORM);
 
     check_fionread_siocatmark(client, 5, TRUE);
@@ -5583,6 +5602,11 @@ static void test_fionread_siocatmark(void)
     ok(ret == 1, "got %d\n", ret);
 
     /* wait for the data to be available */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask(client, POLLRDBAND, POLLRDBAND);
 
     check_fionread_siocatmark_todo_oob(client, 5, FALSE);
@@ -5601,6 +5625,11 @@ static void test_fionread_siocatmark(void)
     ok(ret == 1, "got %d\n", ret);
 
     /* wait for the data to be available */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask_todo(client, POLLRDBAND, POLLRDBAND);
 
     check_fionread_siocatmark_todo(client, 2, FALSE);
@@ -5619,6 +5648,11 @@ static void test_fionread_siocatmark(void)
     ok(ret == 1, "got %d\n", ret);
 
     /* wait for the data to be available */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask(client, POLLRDBAND, POLLRDBAND);
 
     ret = 1;
@@ -5636,6 +5670,11 @@ static void test_fionread_siocatmark(void)
     ok(ret == 1, "got %d\n", ret);
 
     /* wait for the data to be available */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask(client, POLLRDNORM, POLLRDNORM);
 
     check_fionread_siocatmark(client, 1, TRUE);
@@ -7313,6 +7352,12 @@ static void test_events(void)
 {
     struct event_test_ctx ctx;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03) {
+        skip("Event tests crash on Windows Server 2003.\n");
+        return;
+    }
+#endif
     ctx.is_message = FALSE;
     ctx.event = CreateEventW(NULL, TRUE, FALSE, NULL);
 
@@ -7809,6 +7854,11 @@ static void test_WSARecv(void)
     /* Non-overlapped WSARecv() performs an alertable wait (tested below), but
      * not if it completes synchronously. Make sure it completes synchronously
      * by polling for input. */
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("Skipping crashing test on Windows Server 2003.\n");
+    else
+#endif
     check_poll_mask(dest, POLLRDNORM, POLLRDNORM);
 
     apc_count = 0;
@@ -13870,6 +13920,11 @@ static void test_tcp_reset(void)
     ok(ret == -1, "got %d\n", ret);
     ok(WSAGetLastError() == WSAECONNRESET, "got error %u\n", WSAGetLastError());
 
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03)
+        skip("This test crashes on Windows Server 2003.\n");
+    else
+#endif
     check_poll(client, POLLERR | POLLHUP | POLLWRNORM);
 
     FD_ZERO(&readfds);
@@ -14243,6 +14298,12 @@ static void test_select_after_WSAEventSelect(void)
     HANDLE event;
     int ret;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() <= _WIN32_WINNT_WS03) {
+        skip("This test crashes on Windows Server 2003.\n");
+        return;
+    }
+#endif
     tcp_socketpair(&client, &server);
     event = CreateEventA(NULL, FALSE, FALSE, NULL);
 
