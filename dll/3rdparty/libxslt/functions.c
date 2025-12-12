@@ -10,9 +10,30 @@
  * Bjorn Reese <breese@users.sourceforge.net> for number formatting
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
 
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/valid.h>
+#include <libxml/hash.h>
+#include <libxml/xmlerror.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
+#include <libxml/parserInternals.h>
+#include <libxml/uri.h>
 #include <libxml/xpointer.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "functions.h"
+#include "extensions.h"
+#include "numbersInternals.h"
+#include "keys.h"
+#include "documents.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_FUNCTION
@@ -75,45 +96,25 @@ xsltXPathFunctionLookup (void *vctxt,
  ************************************************************************/
 
 static void
-xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
+xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt,
+                                 const xmlChar* URI, const xmlChar *fragment)
 {
     xsltTransformContextPtr tctxt;
-    xmlURIPtr uri;
-    xmlChar *fragment;
     xsltDocumentPtr idoc; /* document info */
     xmlDocPtr doc;
     xmlXPathContextPtr xptrctxt = NULL;
     xmlXPathObjectPtr resObj = NULL;
 
+    (void) xptrctxt;
+
     tctxt = xsltXPathGetTransformContext(ctxt);
     if (tctxt == NULL) {
 	xsltTransformError(NULL, NULL, NULL,
 	    "document() : internal error tctxt == NULL\n");
-	valuePush(ctxt, xmlXPathNewNodeSet(NULL));
-	return;
+        goto out_fragment;
     }
 
-    uri = xmlParseURI((const char *) URI);
-    if (uri == NULL) {
-	xsltTransformError(tctxt, NULL, NULL,
-	    "document() : failed to parse URI\n");
-	valuePush(ctxt, xmlXPathNewNodeSet(NULL));
-	return;
-    }
-
-    /*
-     * check for and remove fragment identifier
-     */
-    fragment = (xmlChar *)uri->fragment;
-    if (fragment != NULL) {
-        xmlChar *newURI;
-	uri->fragment = NULL;
-	newURI = xmlSaveUri(uri);
-	idoc = xsltLoadDocument(tctxt, newURI);
-	xmlFree(newURI);
-    } else
-	idoc = xsltLoadDocument(tctxt, URI);
-    xmlFreeURI(uri);
+    idoc = xsltLoadDocument(tctxt, URI);
 
     if (idoc == NULL) {
 	if ((URI == NULL) ||
@@ -126,12 +127,7 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 	    */
 	    doc = tctxt->style->doc;
 	} else {
-	    valuePush(ctxt, xmlXPathNewNodeSet(NULL));
-
-	    if (fragment != NULL)
-		xmlFree(fragment);
-
-	    return;
+            goto out_fragment;
 	}
     } else
 	doc = idoc->doc;
@@ -143,7 +139,7 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 
     /* use XPointer of HTML location for fragment ID */
 #ifdef LIBXML_XPTR_ENABLED
-    xptrctxt = xmlXPtrNewContext(doc, NULL, NULL);
+    xptrctxt = xmlXPathNewContext(doc);
     if (xptrctxt == NULL) {
 	xsltTransformError(tctxt, NULL, NULL,
 	    "document() : internal error xptrctxt == NULL\n");
@@ -178,7 +174,6 @@ out_fragment:
     if (resObj == NULL)
         resObj = xmlXPathNewNodeSet(NULL);
     valuePush(ctxt, resObj);
-    xmlFree(fragment);
 }
 
 /**
@@ -194,7 +189,8 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
 {
     xmlXPathObjectPtr obj, obj2 = NULL;
     xmlChar *base = NULL, *URI;
-
+    xmlChar *newURI = NULL;
+    xmlChar *fragment = NULL;
 
     if ((nargs < 1) || (nargs > 2)) {
         xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
@@ -221,14 +217,14 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
         obj2 = valuePop(ctxt);
     }
 
-    if (ctxt->value->type == XPATH_NODESET) {
+    if ((ctxt->value != NULL) && (ctxt->value->type == XPATH_NODESET)) {
         int i;
         xmlXPathObjectPtr newobj, ret;
 
         obj = valuePop(ctxt);
         ret = xmlXPathNewNodeSet(NULL);
 
-        if ((obj != NULL) && obj->nodesetval) {
+        if ((obj != NULL) && (obj->nodesetval != NULL) && (ret != NULL)) {
             for (i = 0; i < obj->nodesetval->nodeNr; i++) {
                 valuePush(ctxt,
                           xmlXPathNewNodeSet(obj->nodesetval->nodeTab[i]));
@@ -240,11 +236,15 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
                               xmlXPathNewNodeSet(obj->nodesetval->
                                                  nodeTab[i]));
                 }
+                if (ctxt->error)
+                    break;
                 xsltDocumentFunction(ctxt, 2);
                 newobj = valuePop(ctxt);
-                ret->nodesetval = xmlXPathNodeSetMerge(ret->nodesetval,
-                                                       newobj->nodesetval);
-                xmlXPathFreeObject(newobj);
+                if (newobj != NULL) {
+                    ret->nodesetval = xmlXPathNodeSetMerge(ret->nodesetval,
+                                                           newobj->nodesetval);
+                    xmlXPathFreeObject(newobj);
+                }
             }
         }
 
@@ -259,7 +259,7 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
      * Make sure it's converted to a string
      */
     xmlXPathStringFunction(ctxt, 1);
-    if (ctxt->value->type != XPATH_STRING) {
+    if ((ctxt->value == NULL) || (ctxt->value->type != XPATH_STRING)) {
         xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
                          "document() : invalid arg expecting a string\n");
         ctxt->error = XPATH_INVALID_TYPE;
@@ -272,7 +272,32 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
         valuePush(ctxt, xmlXPathNewNodeSet(NULL));
     } else {
         xsltTransformContextPtr tctxt;
+        xmlURIPtr uri;
+        const xmlChar *url;
+
         tctxt = xsltXPathGetTransformContext(ctxt);
+
+        url = obj->stringval;
+
+        uri = xmlParseURI((const char *) url);
+        if (uri == NULL) {
+            xsltTransformError(tctxt, NULL, NULL,
+                "document() : failed to parse URI '%s'\n", url);
+            valuePush(ctxt, xmlXPathNewNodeSet(NULL));
+            goto error;
+        }
+
+        /*
+         * check for and remove fragment identifier
+         */
+        fragment = (xmlChar *)uri->fragment;
+        if (fragment != NULL) {
+            uri->fragment = NULL;
+            newURI = xmlSaveUri(uri);
+            url = newURI;
+        }
+        xmlFreeURI(uri);
+
         if ((obj2 != NULL) && (obj2->nodesetval != NULL) &&
             (obj2->nodesetval->nodeNr > 0) &&
             IS_XSLT_REAL_NODE(obj2->nodesetval->nodeTab[0])) {
@@ -293,7 +318,8 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
                                       (xmlNodePtr) tctxt->style->doc);
             }
         }
-        URI = xmlBuildURI(obj->stringval, base);
+
+        URI = xmlBuildURI(url, base);
         if (base != NULL)
             xmlFree(base);
         if (URI == NULL) {
@@ -306,10 +332,14 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
                 valuePush(ctxt, xmlXPathNewNodeSet(NULL));
             }
         } else {
-	    xsltDocumentFunctionLoadDocument( ctxt, URI );
+	    xsltDocumentFunctionLoadDocument(ctxt, URI, fragment);
 	    xmlFree(URI);
 	}
     }
+
+error:
+    xmlFree(newURI);
+    xmlFree(fragment);
     xmlXPathFreeObject(obj);
     if (obj2 != NULL)
         xmlXPathFreeObject(obj2);
@@ -358,6 +388,12 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	xmlXPathObjectPtr newobj, ret;
 
 	ret = xmlXPathNewNodeSet(NULL);
+        if (ret == NULL) {
+            ctxt->error = XPATH_MEMORY_ERROR;
+            xmlXPathFreeObject(obj1);
+            xmlXPathFreeObject(obj2);
+            return;
+        }
 
 	if (obj2->nodesetval != NULL) {
 	    for (i = 0; i < obj2->nodesetval->nodeNr; i++) {
@@ -367,8 +403,9 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 		xmlXPathStringFunction(ctxt, 1);
 		xsltKeyFunction(ctxt, 2);
 		newobj = valuePop(ctxt);
-		ret->nodesetval = xmlXPathNodeSetMerge(ret->nodesetval,
-						       newobj->nodesetval);
+                if (newobj != NULL)
+		    ret->nodesetval = xmlXPathNodeSetMerge(ret->nodesetval,
+						           newobj->nodesetval);
 		xmlXPathFreeObject(newobj);
 	    }
 	}
@@ -425,13 +462,13 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	 */
 	valuePush(ctxt, obj2);
 	xmlXPathStringFunction(ctxt, 1);
-	if ((ctxt->value == NULL) || (ctxt->value->type != XPATH_STRING)) {
+	obj2 = valuePop(ctxt);
+	if ((obj2 == NULL) || (obj2->type != XPATH_STRING)) {
 	    xsltTransformError(tctxt, NULL, tctxt->inst,
 		"key() : invalid arg expecting a string\n");
 	    ctxt->error = XPATH_INVALID_TYPE;
 	    goto error;
 	}
-	obj2 = valuePop(ctxt);
 	value = obj2->stringval;
 
 	/*
@@ -534,6 +571,10 @@ xsltUnparsedEntityURIFunction(xmlXPathParserContextPtr ctxt, int nargs){
     obj = valuePop(ctxt);
     if (obj->type != XPATH_STRING) {
 	obj = xmlXPathConvertString(obj);
+        if (obj == NULL) {
+            xmlXPathErr(ctxt, XPATH_MEMORY_ERROR);
+            return;
+        }
     }
 
     str = obj->stringval;
@@ -626,7 +667,8 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
         return;
     }
 
-    if (formatValues != NULL) {
+    if ((ctxt->error == 0) &&
+        (formatValues != NULL) && (formatObj != NULL) && (numberObj != NULL)) {
 	if (xsltFormatNumberConversion(formatValues,
 				       formatObj->stringval,
 				       numberObj->floatval,
@@ -651,11 +693,16 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
  */
 void
 xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
-    static char base_address;
+    xsltTransformContextPtr tctxt;
     xmlNodePtr cur = NULL;
     xmlXPathObjectPtr obj = NULL;
-    long val;
-    xmlChar str[30];
+    char *str;
+    const xmlChar *nsPrefix = NULL;
+    void **psviPtr;
+    unsigned long id;
+    size_t size, nsPrefixSize = 0;
+
+    tctxt = xsltXPathGetTransformContext(ctxt);
 
     if (nargs == 0) {
 	cur = ctxt->context->node;
@@ -665,16 +712,15 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
 
 	if ((ctxt->value == NULL) || (ctxt->value->type != XPATH_NODESET)) {
 	    ctxt->error = XPATH_INVALID_TYPE;
-	    xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
+	    xsltTransformError(tctxt, NULL, NULL,
 		"generate-id() : invalid arg expecting a node-set\n");
-	    return;
+            goto out;
 	}
 	obj = valuePop(ctxt);
 	nodelist = obj->nodesetval;
 	if ((nodelist == NULL) || (nodelist->nodeNr <= 0)) {
-	    xmlXPathFreeObject(obj);
 	    valuePush(ctxt, xmlXPathNewCString(""));
-	    return;
+	    goto out;
 	}
 	cur = nodelist->nodeTab[0];
 	for (i = 1;i < nodelist->nodeNr;i++) {
@@ -683,22 +729,93 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	        cur = nodelist->nodeTab[i];
 	}
     } else {
-	xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
+	xsltTransformError(tctxt, NULL, NULL,
 		"generate-id() : invalid number of args %d\n", nargs);
 	ctxt->error = XPATH_INVALID_ARITY;
-	return;
+	goto out;
     }
 
-    if (obj)
-        xmlXPathFreeObject(obj);
+    size = 30; /* for "id%lu" */
 
-    val = (long)((char *)cur - (char *)&base_address);
-    if (val >= 0) {
-      snprintf((char *)str, sizeof(str), "idp%ld", val);
+    if (cur->type == XML_NAMESPACE_DECL) {
+        xmlNsPtr ns = (xmlNsPtr) cur;
+
+        nsPrefix = ns->prefix;
+        if (nsPrefix == NULL)
+            nsPrefix = BAD_CAST "";
+        nsPrefixSize = xmlStrlen(nsPrefix);
+        /* For "ns" and hex-encoded string */
+        size += nsPrefixSize * 2 + 2;
+
+        /* Parent is stored in 'next'. */
+        cur = (xmlNodePtr) ns->next;
+    }
+
+    psviPtr = xsltGetPSVIPtr(cur);
+    if (psviPtr == NULL) {
+        xsltTransformError(tctxt, NULL, NULL,
+                "generate-id(): invalid node type %d\n", cur->type);
+        ctxt->error = XPATH_INVALID_TYPE;
+        goto out;
+    }
+
+    if (xsltGetSourceNodeFlags(cur) & XSLT_SOURCE_NODE_HAS_ID) {
+        id = (unsigned long) (size_t) *psviPtr;
     } else {
-      snprintf((char *)str, sizeof(str), "idm%ld", -val);
+        if (cur->type == XML_TEXT_NODE && cur->line == USHRT_MAX) {
+            /* Text nodes store big line numbers in psvi. */
+            cur->line = 0;
+        } else if (*psviPtr != NULL) {
+            xsltTransformError(tctxt, NULL, NULL,
+                    "generate-id(): psvi already set\n");
+            ctxt->error = XPATH_MEMORY_ERROR;
+            goto out;
+        }
+
+        if (tctxt->currentId == ULONG_MAX) {
+            xsltTransformError(tctxt, NULL, NULL,
+                    "generate-id(): id overflow\n");
+            ctxt->error = XPATH_MEMORY_ERROR;
+            goto out;
+        }
+
+        id = ++tctxt->currentId;
+        *psviPtr = (void *) (size_t) id;
+        xsltSetSourceNodeFlags(tctxt, cur, XSLT_SOURCE_NODE_HAS_ID);
     }
-    valuePush(ctxt, xmlXPathNewString(str));
+
+    str = xmlMalloc(size);
+    if (str == NULL) {
+        xsltTransformError(tctxt, NULL, NULL,
+                "generate-id(): out of memory\n");
+        ctxt->error = XPATH_MEMORY_ERROR;
+        goto out;
+    }
+    if (nsPrefix == NULL) {
+        snprintf(str, size, "id%lu", id);
+    } else {
+        size_t i, j;
+
+        snprintf(str, size, "id%luns", id);
+
+        /*
+         * Only ASCII alphanumerics are allowed, so we hex-encode the prefix.
+         */
+        j = strlen(str);
+        for (i = 0; i < nsPrefixSize; i++) {
+            int v;
+
+            v = nsPrefix[i] >> 4;
+            str[j++] = v < 10 ? '0' + v : 'A' + (v - 10);
+            v = nsPrefix[i] & 15;
+            str[j++] = v < 10 ? '0' + v : 'A' + (v - 10);
+        }
+        str[j] = '\0';
+    }
+    valuePush(ctxt, xmlXPathWrapString(BAD_CAST str));
+
+out:
+    xmlXPathFreeObject(obj);
 }
 
 /**
