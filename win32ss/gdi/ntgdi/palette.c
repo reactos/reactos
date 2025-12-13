@@ -149,6 +149,9 @@ PALETTE_AllocPalette(
         /* Check color count */
         if ((cColors == 0) || (cColors > 1024)) return NULL;
 
+        /* Mark 2 color indexed palettes as monochrome */
+        if (cColors == 2) iMode |= PAL_MONOCHROME;
+
         /* Allocate enough space for the palete entries */
         cjSize += cColors * sizeof(PALETTEENTRY);
     }
