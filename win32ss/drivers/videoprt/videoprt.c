@@ -940,7 +940,7 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
-    static BOOLEAN FirstInitialization;
+    static BOOLEAN FirstInitialization = FALSE;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
@@ -951,6 +951,13 @@ VideoPortInitialize(
         KeInitializeMutex(&VgaSyncLock, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
+
+        Status = IntInitializeInt10();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntInitializeInt10(FirstInit) failed: 0x%lx\n", Status);
+            // return Status; // Let's continue and hope for the best...
+        }
     }
 
     /* As a first thing do parameter checks. */
