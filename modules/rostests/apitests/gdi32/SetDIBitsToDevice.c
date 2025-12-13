@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 static void
 Test_SetDIBitsToDevice_Params()
@@ -687,10 +687,8 @@ Test_SetDIBitsToDevice()
 
 START_TEST(SetDIBitsToDevice)
 {
-    InitStuff();
+    GdiToolsInit();
 
     Test_SetDIBitsToDevice_Params();
     Test_SetDIBitsToDevice();
-
-
 }

@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 void Test_MaskBlt_1bpp()
 {
@@ -293,7 +293,7 @@ void Test_MaskBlt_Brush()
 
 START_TEST(MaskBlt)
 {
-    InitStuff();
+    GdiToolsInit();
     Test_MaskBlt_1bpp();
     Test_MaskBlt_16bpp();
     Test_MaskBlt_32bpp();

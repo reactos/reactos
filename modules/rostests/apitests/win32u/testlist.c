@@ -38,6 +38,7 @@ extern void func_NtGdiSelectFont(void);
 extern void func_NtGdiSelectPen(void);
 extern void func_NtGdiSetBitmapBits(void);
 extern void func_NtGdiSetDIBitsToDeviceInternal(void);
+extern void func_NtGdiSetPixel(void);
 extern void func_NtGdiTransformPoints(void);
 //extern void func_NtUserCallHwnd(void);
 //extern void func_NtUserCallHwndLock(void);
@@ -105,6 +106,7 @@ const struct test winetest_testlist[] =
     { "NtGdiSelectPen", func_NtGdiSelectPen },
     { "NtGdiSetBitmapBits", func_NtGdiSetBitmapBits },
     { "NtGdiSetDIBitsToDeviceInternal", func_NtGdiSetDIBitsToDeviceInternal },
+    { "NtGdiSetPixel", func_NtGdiSetPixel },
     { "NtGdiTransformPoints", func_NtGdiTransformPoints },
 
     /* ntuser */

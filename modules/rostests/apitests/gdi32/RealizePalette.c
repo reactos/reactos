@@ -7,11 +7,11 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 START_TEST(RealizePalette)
 {
-    InitStuff();
+    GdiToolsInit();
     ok_int(RealizePalette(NULL), GDI_ERROR);
     ok_int(RealizePalette((HDC)UlongToHandle(0xdeadc0de)), GDI_ERROR);
     ok_int(RealizePalette((HDC)UlongToHandle(0x00010001)), 0);

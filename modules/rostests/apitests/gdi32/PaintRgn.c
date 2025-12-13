@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 void Test_PaintRgn()
 {
@@ -55,7 +55,6 @@ void Test_PaintRgn()
 
 START_TEST(PaintRgn)
 {
-    InitStuff();
+    GdiToolsInit();
     Test_PaintRgn();
 }
-

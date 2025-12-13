@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 void
 Test_GetDIBits_xBpp(
@@ -473,7 +473,7 @@ void Test_GetDIBits_BI_BITFIELDS()
 START_TEST(GetDIBits)
 {
     //getchar();
-    InitStuff();
+    GdiToolsInit();
     Test_GetDIBits_xBpp(1);
     Test_GetDIBits_xBpp(4);
     Test_GetDIBits_xBpp(8);
@@ -482,4 +482,3 @@ START_TEST(GetDIBits)
     Test_GetDIBits_xBpp(32);
     Test_GetDIBits();
 }
-

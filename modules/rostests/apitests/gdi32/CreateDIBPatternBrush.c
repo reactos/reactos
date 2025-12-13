@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 /* New color use parameter. See https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/108497 */
 #define DIB_PAL_INDICES 2
@@ -180,10 +180,9 @@ void Test_CreateDIBPatternBrushPt_RLE8()
 
 START_TEST(CreateDIBPatternBrush)
 {
-    InitStuff();
+    GdiToolsInit();
 
     Test_CreateDIBPatternBrush();
     Test_CreateDIBPatternBrushPt();
     //Test_CreateDIBPatternBrushPt_RLE8(); broken
 }
-

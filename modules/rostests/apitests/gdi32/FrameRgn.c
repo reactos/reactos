@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include <gditools.h>
 
 #if 0
 BOOL
@@ -135,11 +135,8 @@ void Test_FrameRgn()
 
 }
 
-
-
 START_TEST(FrameRgn)
 {
-    InitStuff();
+    GdiToolsInit();
     Test_FrameRgn();
 }
-
