@@ -33,6 +33,9 @@
 /* Use the 32-bit x86 emulator by default, on NT 6.x (Vista+), or on NT 5.x
  * if the HAL has the necessary exports. Otherwise fall back to V86 mode. */
 BOOLEAN VideoPortDisableX86Emulator = FALSE;
+
+/* Tells whether the video address space has been initialized for VDM calls */
+static BOOLEAN VDMAddressSpaceInitialized = FALSE;
 #endif
 
 KMUTEX VideoPortInt10Mutex;
@@ -171,7 +174,8 @@ IntInitializeVideoAddressSpace(VOID)
     /* We should only do that for CSRSS */
     ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
 
-    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
+    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply
+     * support us mapping the view into the reserved area, but it doesn't. */
     BaseAddress = 0;
     ViewSize = 1024 * 1024;
     Status = ZwFreeVirtualMemory(NtCurrentProcess(),
@@ -181,7 +185,7 @@ IntInitializeVideoAddressSpace(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
-        return 0;
+        return Status;
     }
 
     /* Open the physical memory section */
@@ -250,7 +254,7 @@ IntInitializeVideoAddressSpace(VOID)
     {
         DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
                 BaseAddress);
-        return 0;
+        return STATUS_UNSUCCESSFUL;
     }
 
     /* Get the real mode IVT and BDA from the kernel */
@@ -265,6 +269,7 @@ IntInitializeVideoAddressSpace(VOID)
     ProtectLowV86Mem();
 
     /* Return success */
+    VDMAddressSpaceInitialized = TRUE;
     return STATUS_SUCCESS;
 }
 
@@ -594,6 +599,19 @@ IntInt10CallBiosEmu(
 
     UNREFERENCED_PARAMETER(Context);
 
+#ifdef _M_IX86
+    if (!VDMAddressSpaceInitialized)
+    {
+        /* There are buggy 3rd-party miniport drivers that invoke the Int10 service
+         * in their initialization routine, before the VDM address space has been
+         * mapped and Ke386CallBios() can be called. They would therefore hit this
+         * ASSERT. Instead, disable it, log an error and bail out. */
+        //ASSERT(FALSE);
+        ERR_(VIDEOPRT, "Warning: Attempt to call %s before Int10 support is initialized.\n", __FUNCTION__);
+        return ERROR_INVALID_PARAMETER;
+    }
+#endif
+
     /* Clear the context and fill out the BIOS arguments */
     RtlZeroMemory(&BiosContext, sizeof(BiosContext));
     BiosContext.Eax = BiosArguments->Eax;
@@ -644,6 +662,17 @@ IntInt10CallBiosV86(
     KAPC_STATE ApcState;
 
     UNREFERENCED_PARAMETER(Context);
+
+    if (!VDMAddressSpaceInitialized)
+    {
+        /* There are buggy 3rd-party miniport drivers that invoke the Int10 service
+         * in their initialization routine, before the VDM address space has been
+         * mapped and Ke386CallBios() can be called. They would therefore hit this
+         * ASSERT. Instead, disable it, log an error and bail out. */
+        //ASSERT(FALSE);
+        ERR_(VIDEOPRT, "Warning: Attempt to call %s before Int10 support is initialized.\n", __FUNCTION__);
+        return ERROR_INVALID_PARAMETER;
+    }
 
     /* Clear the context and fill out the BIOS arguments */
     RtlZeroMemory(&BiosContext, sizeof(BiosContext));
@@ -736,27 +765,38 @@ static const INT10_INTERFACE *Int10Vtbl = &Int10IFace[0];
 NTSTATUS
 IntInitializeInt10(VOID)
 {
-#ifdef _M_IX86
-    /* We should only do that for CSRSS */
-    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+    static BOOLEAN FirstInitialization = FALSE;
 
-    /* Initialize the x86 emulator if necessary, otherwise fall back to V86 mode */
-    if (!VideoPortDisableX86Emulator)
+    if (!FirstInitialization)
     {
-        /* Use the emulation routines */
-        //Int10Vtbl = &Int10IFace[0];
-        if (IntInitializeX86Emu())
-            return STATUS_SUCCESS;
-        DPRINT1("Could not initialize the x86 emulator; falling back to V86 mode\n");
-        VideoPortDisableX86Emulator = TRUE;
+        FirstInitialization = TRUE;
+#ifdef _M_IX86
+        /* Initialize the x86 emulator if necessary, otherwise fall back to V86 mode */
+        if (!VideoPortDisableX86Emulator)
+        {
+            /* Use the emulation routines */
+            //Int10Vtbl = &Int10IFace[0];
+            if (IntInitializeX86Emu())
+                return STATUS_SUCCESS;
+            DPRINT1("Could not initialize the x86 emulator; falling back to V86 mode\n");
+            VideoPortDisableX86Emulator = TRUE;
+        }
+
+        /* Fall back to the V86 routines */
+        Int10Vtbl = &Int10IFace[1];
+        return STATUS_SUCCESS;
+#else
+        /* Initialize the x86 emulator */
+        return (IntInitializeX86Emu() ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED);
+#endif
     }
 
-    /* Fall back to the V86 routines */
-    Int10Vtbl = &Int10IFace[1];
+    /* We should only do that for CSRSS */
+    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+#ifdef _M_IX86
     return IntInitializeVideoAddressSpace();
 #else
-    /* Initialize the x86 emulator */
-    return (IntInitializeX86Emu() ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED);
+    return STATUS_SUCCESS;
 #endif
 }
 

@@ -388,7 +388,7 @@ IntVideoPortDispatchOpen(
         Status = IntInitializeInt10();
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "IntInitializeInt10() failed: 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "IntInitializeInt10(CSR) failed: 0x%lx\n", Status);
             ObDereferenceObject(CsrProcess);
             CsrProcess = NULL;
             return Status;
