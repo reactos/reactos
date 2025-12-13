@@ -33,6 +33,9 @@
 /* Use the 32-bit x86 emulator by default, on NT 6.x (Vista+), or on NT 5.x
  * if the HAL has the necessary exports. Otherwise fall back to V86 mode. */
 BOOLEAN VideoPortDisableX86Emulator = FALSE;
+
+/* Tells whether the video address space has been initialized for VDM calls */
+BOOLEAN VDMVideoAddressSpaceInitialized = FALSE;
 #endif
 
 KMUTEX VideoPortInt10Mutex;
@@ -181,7 +184,7 @@ IntInitializeVideoAddressSpace(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
-        return 0;
+        return 0; // FIXME
     }
 
     /* Open the physical memory section */
@@ -250,7 +253,7 @@ IntInitializeVideoAddressSpace(VOID)
     {
         DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
                 BaseAddress);
-        return 0;
+        return 0; // FIXME
     }
 
     /* Get the real mode IVT and BDA from the kernel */
@@ -265,6 +268,7 @@ IntInitializeVideoAddressSpace(VOID)
     ProtectLowV86Mem();
 
     /* Return success */
+    VDMVideoAddressSpaceInitialized = TRUE;
     return STATUS_SUCCESS;
 }
 
@@ -594,6 +598,11 @@ IntInt10CallBiosEmu(
 
     UNREFERENCED_PARAMETER(Context);
 
+#ifdef _M_IX86
+    if (!VDMVideoAddressSpaceInitialized)
+        DPRINT1("** %s: VDMVideoAddressSpaceInitialized FALSE, hope for the best!\n", __FUNCTION__);
+#endif
+
     /* Clear the context and fill out the BIOS arguments */
     RtlZeroMemory(&BiosContext, sizeof(BiosContext));
     BiosContext.Eax = BiosArguments->Eax;
@@ -644,6 +653,14 @@ IntInt10CallBiosV86(
     KAPC_STATE ApcState;
 
     UNREFERENCED_PARAMETER(Context);
+
+    if (!VDMVideoAddressSpaceInitialized)
+    {
+        DPRINT1("** %s: VDMVideoAddressSpaceInitialized FALSE, invalid caller!\n", __FUNCTION__);
+        ASSERT(FALSE);
+        return ERROR_INVALID_PARAMETER;
+    }
+    ASSERT(VDMVideoAddressSpaceInitialized);
 
     /* Clear the context and fill out the BIOS arguments */
     RtlZeroMemory(&BiosContext, sizeof(BiosContext));
@@ -734,29 +751,45 @@ static const INT10_INTERFACE *Int10Vtbl = &Int10IFace[0];
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
-IntInitializeInt10(VOID)
+IntInitializeInt10(
+    _In_ BOOLEAN FirstPhase)
 {
-#ifdef _M_IX86
-    /* We should only do that for CSRSS */
-    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+    static UCHAR PhasesDone = 0;
 
-    /* Initialize the x86 emulator if necessary, otherwise fall back to V86 mode */
-    if (!VideoPortDisableX86Emulator)
+    if (FirstPhase)
     {
-        /* Use the emulation routines */
-        //Int10Vtbl = &Int10IFace[0];
-        if (IntInitializeX86Emu())
-            return STATUS_SUCCESS;
-        DPRINT1("Could not initialize the x86 emulator; falling back to V86 mode\n");
-        VideoPortDisableX86Emulator = TRUE;
+        ASSERT(PhasesDone == 0);
+        PhasesDone |= 1;
+#ifdef _M_IX86
+        /* Initialize the x86 emulator if necessary, otherwise fall back to V86 mode */
+        if (!VideoPortDisableX86Emulator)
+        {
+            /* Use the emulation routines */
+            //Int10Vtbl = &Int10IFace[0];
+            if (IntInitializeX86Emu())
+                return STATUS_SUCCESS;
+            DPRINT1("Could not initialize the x86 emulator; falling back to V86 mode\n");
+            VideoPortDisableX86Emulator = TRUE;
+        }
+
+        /* Fall back to the V86 routines */
+        Int10Vtbl = &Int10IFace[1];
+        return STATUS_SUCCESS;
+#else
+        /* Initialize the x86 emulator */
+        return (IntInitializeX86Emu() ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED);
+#endif
     }
 
-    /* Fall back to the V86 routines */
-    Int10Vtbl = &Int10IFace[1];
+    ASSERT(PhasesDone == 1);
+    PhasesDone |= 2;
+
+    /* We should only do that for CSRSS */
+    ASSERT(PsGetCurrentProcess() == (PEPROCESS)CsrProcess);
+#ifdef _M_IX86
     return IntInitializeVideoAddressSpace();
 #else
-    /* Initialize the x86 emulator */
-    return (IntInitializeX86Emu() ? STATUS_SUCCESS : STATUS_NOT_SUPPORTED);
+    return STATUS_SUCCESS;
 #endif
 }
 
