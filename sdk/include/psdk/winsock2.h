@@ -989,22 +989,30 @@ typedef LPWSANAMESPACE_INFOEXA LPWSANAMESPACE_INFOEX;
 
 #define POLLRDNORM  0x0100
 #define POLLRDBAND  0x0200
+#ifndef POLLIN
 #define POLLIN      (POLLRDNORM | POLLRDBAND)
+#endif
+#ifndef POLLPRI
 #define POLLPRI     0x0400
+#endif
 
 #define POLLWRNORM  0x0010
+#ifndef POLLOUT
 #define POLLOUT     (POLLWRNORM)
+#endif
 #define POLLWRBAND  0x0020
 
 #define POLLERR     0x0001
 #define POLLHUP     0x0002
 #define POLLNVAL    0x0004
 
+#ifndef pollfd
 typedef struct pollfd {
   SOCKET fd;
   SHORT events;
   SHORT revents;
 } WSAPOLLFD, *PWSAPOLLFD, FAR *LPWSAPOLLFD;
+#endif
 
 #endif /* (_WIN32_WINNT >= 0x0600) */
 
