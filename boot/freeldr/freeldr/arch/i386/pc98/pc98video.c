@@ -9,8 +9,8 @@
 
 #include <freeldr.h>
 #include <drivers/pc98/video.h>
+#include "../../vgafont.h"
 
-extern UCHAR BitmapFont8x16[];
 extern BOOLEAN HiResoMachine;
 
 /* GLOBALS ********************************************************************/
@@ -20,9 +20,6 @@ extern BOOLEAN HiResoMachine;
 #define TEXT_CHAR_SIZE 2
 UCHAR TextCols;
 UCHAR TextLines;
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 400
@@ -185,7 +182,7 @@ Pc98VideoClearScreen(UCHAR Attr)
 }
 
 VIDEODISPLAYMODE
-Pc98VideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
+Pc98VideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 {
     /* Not supported by hardware */
     return VideoTextMode;

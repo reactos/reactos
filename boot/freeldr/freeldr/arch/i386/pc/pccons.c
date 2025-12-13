@@ -18,12 +18,6 @@
 
 #include <freeldr.h>
 
-#define TEXTMODE_BUFFER      0xb8000
-#define TEXTMODE_BUFFER_SIZE 0x8000
-
-#define TEXT_COLS  80
-#define TEXT_LINES 25
-
 VOID
 PcConsPutChar(int Ch)
 {

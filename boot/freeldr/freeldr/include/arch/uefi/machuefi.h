@@ -23,7 +23,7 @@ VOID
 UefiVideoClearScreen(UCHAR Attr);
 
 VIDEODISPLAYMODE
-UefiVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 
 VOID
 UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
