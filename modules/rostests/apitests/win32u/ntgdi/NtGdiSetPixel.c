@@ -18,13 +18,13 @@ static void Test_NtGdiSetPixel_generic(void)
     SetLastError(0xdeadbeef);
     cr = NtGdiSetPixel(NULL, 0, 0, 0);
     ok_eq_hex(cr, CLR_INVALID);
-    todo_ros ok_eq_ulong(GetLastError(), 0xdeadbeef);
+    ok_eq_ulong(GetLastError(), 0xdeadbeef);
 
     /* Test invalid hdc */
     SetLastError(0xdeadbeef);
     cr = NtGdiSetPixel((HDC)0x12345678, 0, 0, 0);
     ok_eq_hex(cr, CLR_INVALID);
-    todo_ros ok_eq_ulong(GetLastError(), 0xdeadbeef);
+    ok_eq_ulong(GetLastError(), 0xdeadbeef);
 
     /* Test empty memory DC */
     SetLastError(0xdeadbeef);
@@ -183,13 +183,13 @@ static void Test_NtGdiSetPixel_1Bpp(void)
 
     /* Test the PALETTEINDEX color mask (16 bits) */
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x01FF0007);
-    todo_ros ok_eq_hex(cr, 0xFFFFFF);
+    ok_eq_hex(cr, 0xFFFFFF);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x01FF8007);
     ok_eq_hex(cr, 0);
 
     /* Test the PALETTEINDEX flag (crColor & 0x01000000) */
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x0FF000007);
-    todo_ros ok_eq_hex(cr, 0xFFFFFF);
+    ok_eq_hex(cr, 0xFFFFFF);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x0FE000007);
     ok_eq_hex(cr, 0x000000);
 
@@ -230,24 +230,24 @@ static void Test_NtGdiSetPixel_1Bpp(void)
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, DIBINDEX(2));
     ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, DIBINDEX(3));
-    todo_ros ok_eq_hex(cr, 0);
+    ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, DIBINDEX(0x81));
-    todo_ros ok_eq_hex(cr, 0);
+    ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, DIBINDEX(0xFF01));
     ok_eq_hex(cr, 0xFFFFFF);
 
     /* Test invalid COLORREFs */
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, CLR_INVALID);
-    todo_ros ok_eq_hex(cr, 0);
-    todo_ros ok_eq_hex(((PUCHAR)gpvDIB1)[0], 0x00);
+    ok_eq_hex(cr, 0);
+    ok_eq_hex(((PUCHAR)gpvDIB1)[0], 0x00);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, DIBINDEX(100));
     ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, PALETTEINDEX(100));
     ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x03FFFFFF);
-    todo_ros ok_eq_hex(cr, 0);
+    ok_eq_hex(cr, 0);
     cr = NtGdiSetPixel(ghdcDIB1, 0, 0, 0x10FE0001);
-    todo_ros ok_eq_hex(cr, 0);
+    ok_eq_hex(cr, 0);
 
     SelectPalette(ghdcDIB1, hOldPal, FALSE);
 
@@ -260,8 +260,8 @@ static void Test_NtGdiSetPixel_1Bpp(void)
     ok_eq_hex(cr, 0xFFFFFF);
     ok_eq_hex(((PUCHAR)gpvDIB1_InvCol)[0], 0x00);
     cr = NtGdiSetPixel(ghdcDIB1_InvCol, 0, 0, CLR_INVALID);
-    todo_ros ok_eq_hex(cr, 0);
-    todo_ros ok_eq_hex(((PUCHAR)gpvDIB1_InvCol)[0], 0x80);
+    ok_eq_hex(cr, 0);
+    ok_eq_hex(((PUCHAR)gpvDIB1_InvCol)[0], 0x80);
 
     /* Test Red-Blue bitmap */
     ((PUCHAR)gpvDIB1_RB)[0] = 0x00;
@@ -310,13 +310,13 @@ static void Test_NtGdiSetPixel_32Bpp(void)
 
     /* Test the PALETTEINDEX color mask (16 bits) */
     cr = NtGdiSetPixel(ghdcDIB32, 0, 0, 0x01FF0001);
-    todo_ros ok_eq_hex(cr, 0x000080);
+    ok_eq_hex(cr, 0x000080);
     cr = NtGdiSetPixel(ghdcDIB32, 0, 0, 0x01FF8001);
     ok_eq_hex(cr, 0);
 
     /* Test the PALETTEINDEX flag (crColor & 0x01000000) */
     cr = NtGdiSetPixel(ghdcDIB32, 0, 0, 0x0FF000007);
-    todo_ros ok_eq_hex(cr, 0xC0C0C0);
+    ok_eq_hex(cr, 0xC0C0C0);
     cr = NtGdiSetPixel(ghdcDIB32, 0, 0, 0x0FE000007);
     ok_eq_hex(cr, 0x000007);
 
