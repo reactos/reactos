@@ -35,16 +35,16 @@ active_main(
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        if (CurrentPartition->BootIndicator)
+        if (CurrentPartition->Mbr.BootIndicator)
         {
             ConResPuts(StdOut, IDS_ACTIVE_ALREADY);
             return TRUE;
         }
 
-        CurrentPartition->BootIndicator = TRUE;
+        CurrentPartition->Mbr.BootIndicator = TRUE;
         CurrentDisk->Dirty = TRUE;
-        UpdateDiskLayout(CurrentDisk);
-        Status = WritePartitions(CurrentDisk);
+        UpdateMbrDiskLayout(CurrentDisk);
+        Status = WriteMbrPartitions(CurrentDisk);
         if (NT_SUCCESS(Status))
         {
             ConResPuts(StdOut, IDS_ACTIVE_SUCCESS);

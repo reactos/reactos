@@ -81,10 +81,12 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Çökme Dökümü Diski"
     IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
     IDS_DETAIL_PARTITION_NUMBER "Bölüm %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Tür                 : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Tür                 : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Gizli               : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Etkin               : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Bayt cinsinden ofset: %I64u\n"
+    IDS_DETAIL_PARTITION_REQUIRED "Required      : %s\n"
+    IDS_DETAIL_PARTITION_ATTRIBUTE "Attributes    : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nBu birime bağlı disk yok.\n"
     IDS_DETAIL_NO_VOLUME "\nBu bölümle ilişkilendirilmiş bir birim yok.\n"
 END

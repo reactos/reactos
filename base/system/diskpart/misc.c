@@ -202,3 +202,90 @@ PrintGUID(
              pGuid->Data4[6],
              pGuid->Data4[7]);    
 }
+
+static
+BYTE
+CharToByte(
+    WCHAR Char)
+{
+    if (iswdigit(Char))
+    {
+        return (BYTE)((INT)Char - (INT)'0');
+    }
+    else if (iswalpha(Char))
+    {
+        if (iswupper(Char))
+            return (INT)Char - ((INT)'A' - 10);
+        else
+            return (INT)Char - ((INT)'a' - 10);
+    }
+    return 0;
+}
+
+
+BOOL
+StringToGUID(
+    _Out_ GUID *pGuid,
+    _In_ PWSTR pszString)
+{
+    INT i;
+
+    if (pszString == NULL)
+        return FALSE;
+
+    pGuid->Data1 = 0;
+    for (i = 0; i < 8; i++)
+    {
+        if (!iswxdigit(pszString[i]))
+            return FALSE;
+
+        pGuid->Data1 = (pGuid->Data1 << 4) | CharToByte(pszString[i]);
+    }
+
+    if (pszString[8] != L'-')
+        return FALSE;
+
+    pGuid->Data2 = 0;
+    for (i = 9; i < 13; i++)
+    {
+        if (!iswxdigit(pszString[i]))
+            return FALSE;
+
+        pGuid->Data2 = (pGuid->Data2 << 4) | CharToByte(pszString[i]);
+    }
+
+    if (pszString[13] != L'-')
+        return FALSE;
+
+    pGuid->Data3 = 0;
+    for (i = 14; i < 18; i++)
+    {
+        if (!iswxdigit(pszString[i]))
+            return FALSE;
+
+        pGuid->Data3 = (pGuid->Data3 << 4) | CharToByte(pszString[i]);
+    }
+
+    if (pszString[18] != L'-')
+        return FALSE;
+
+    for (i = 19; i < 36; i += 2)
+    {
+        if (i == 23)
+        {
+            if (pszString[i] != L'-')
+                return FALSE;
+            i++;
+        }
+
+        if (!iswxdigit(pszString[i]) || !iswxdigit(pszString[i + 1]))
+            return FALSE;
+
+        pGuid->Data4[(i - 19) / 2] = CharToByte(pszString[i]) << 4 | CharToByte(pszString[i + 1]);
+    }
+
+    if (pszString[36] == L'\0')
+        return TRUE;
+
+    return FALSE;
+}

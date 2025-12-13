@@ -63,7 +63,7 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the logical partition */
-        if (PartEntry->PartitionType != 0)
+        if (PartEntry->Mbr.PartitionType != 0)
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);
@@ -82,8 +82,8 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the primary partition */
-        if ((PartEntry->PartitionType != 0) &&
-            (IsContainerPartition(PartEntry->PartitionType) == FALSE))
+        if ((PartEntry->Mbr.PartitionType != 0) &&
+            (IsContainerPartition(PartEntry->Mbr.PartitionType) == FALSE))
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);

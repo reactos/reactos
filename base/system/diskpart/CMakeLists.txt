@@ -24,6 +24,7 @@ list(APPEND SOURCE
     filesystems.c
     format.c
     gpt.c
+    guid.c
     help.c
     import.c
     inactive.c

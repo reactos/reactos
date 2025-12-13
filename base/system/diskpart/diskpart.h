@@ -50,10 +50,13 @@
 #include <ndk/umfuncs.h>
 
 #include <fmifs/fmifs.h>
+#include <guiddef.h>
 
+#include "guid.h"
 #include "resource.h"
 
 //#define DUMP_PARTITION_TABLE
+//#define DUMP_PARTITION_LIST
 
 /* DEFINES *******************************************************************/
 
@@ -98,6 +101,19 @@ typedef enum _VOLUME_TYPE
     VOLUME_TYPE_UNKNOWN
 } VOLUME_TYPE, *PVOLUME_TYPE;
 
+typedef struct _MBR_PARTITION_DATA
+{
+    BOOLEAN BootIndicator;
+    UCHAR PartitionType;
+} MBR_PARTITION_DATA, *PMBR_PARTITION_DATA;
+
+typedef struct _GPT_PARTITION_DATA
+{
+    GUID PartitionType;
+    GUID PartitionId;
+    DWORD64 Attributes;
+} GPT_PARTITION_DATA, *PGPT_PARTITION_DATA;
+
 typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
@@ -107,8 +123,12 @@ typedef struct _PARTENTRY
     ULARGE_INTEGER StartSector;
     ULARGE_INTEGER SectorCount;
 
-    BOOLEAN BootIndicator;
-    UCHAR PartitionType;
+    union
+    {
+        MBR_PARTITION_DATA Mbr;
+        GPT_PARTITION_DATA Gpt;
+    };
+
     ULONG OnDiskPartitionNumber;
     ULONG PartitionNumber;
     ULONG PartitionIndex;
@@ -160,6 +180,9 @@ typedef struct _DISKENTRY
     ULARGE_INTEGER SectorCount;
     ULONG SectorAlignment;
     ULONG CylinderAlignment;
+
+    ULARGE_INTEGER StartSector;
+    ULARGE_INTEGER EndSector;
 
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
@@ -434,6 +457,11 @@ PrintGUID(
     _Out_ PWSTR pszBuffer,
     _In_ GUID *pGuid);
 
+BOOL
+StringToGUID(
+    _Out_ GUID *pGuid,
+    _In_ PWSTR pszString);
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 
@@ -444,6 +472,12 @@ BOOL online_main(INT argc, LPWSTR *argv);
 #ifdef DUMP_PARTITION_TABLE
 VOID
 DumpPartitionTable(
+    _In_ PDISKENTRY DiskEntry);
+#endif
+
+#ifdef DUMP_PARTITION_LIST
+VOID
+DumpPartitionList(
     _In_ PDISKENTRY DiskEntry);
 #endif
 
@@ -465,17 +499,34 @@ VOID
 DestroyVolumeList(VOID);
 
 VOID
+ScanForUnpartitionedMbrDiskSpace(
+    PDISKENTRY DiskEntry);
+
+VOID
+ScanForUnpartitionedGptDiskSpace(
+    PDISKENTRY DiskEntry);
+
+VOID
 ReadLayoutBuffer(
     _In_ HANDLE FileHandle,
     _In_ PDISKENTRY DiskEntry);
 
 NTSTATUS
-WritePartitions(
+WriteMbrPartitions(
+    _In_ PDISKENTRY DiskEntry);
+
+NTSTATUS
+WriteGptPartitions(
     _In_ PDISKENTRY DiskEntry);
 
 VOID
-UpdateDiskLayout(
+UpdateMbrDiskLayout(
     _In_ PDISKENTRY DiskEntry);
+
+VOID
+UpdateGptDiskLayout(
+    _In_ PDISKENTRY DiskEntry,
+    _In_ BOOL DeleteEntry);
 
 PPARTENTRY
 GetPrevUnpartitionedEntry(

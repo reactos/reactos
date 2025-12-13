@@ -72,7 +72,15 @@ UniqueIdDisk(
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConPuts(StdErr, L"The uniqueid disk command does not support GPT disks yet!\n");
+        if (!StringToGUID(&CurrentDisk->LayoutBuffer->Gpt.DiskId, pszId))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+
+        CurrentDisk->Dirty = TRUE;
+        UpdateGptDiskLayout(CurrentDisk, FALSE);
+        WriteGptPartitions(CurrentDisk);
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
@@ -94,8 +102,8 @@ UniqueIdDisk(
         DPRINT("New Signature: 0x%08lx\n", ulValue);
         CurrentDisk->LayoutBuffer->Mbr.Signature = ulValue;
         CurrentDisk->Dirty = TRUE;
-        UpdateDiskLayout(CurrentDisk);
-        WritePartitions(CurrentDisk);
+        UpdateMbrDiskLayout(CurrentDisk);
+        WriteMbrPartitions(CurrentDisk);
     }
     else
     {

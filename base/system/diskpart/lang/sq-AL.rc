@@ -75,10 +75,12 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Hedhja e te dhenave Disk"
     IDS_DETAIL_INFO_CLST_DSK "Grupimet ne Disk"
     IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
+    IDS_DETAIL_PARTITION_REQUIRED "Required      : %s\n"
+    IDS_DETAIL_PARTITION_ATTRIBUTE "Attributes    : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
     IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
 END

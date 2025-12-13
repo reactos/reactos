@@ -17,7 +17,6 @@ setid_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
-    UCHAR PartitionType = 0;
     INT i, length;
     PWSTR pszSuffix, pszId = NULL;
     NTSTATUS Status;
@@ -65,11 +64,25 @@ setid_main(
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        ConPuts(StdErr, L"The setid command does not support GPT disks yet!\n");
-        return TRUE;
+        if (!StringToGUID(&CurrentPartition->Gpt.PartitionType, pszId))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+
+        CurrentDisk->Dirty = TRUE;
+        UpdateGptDiskLayout(CurrentDisk, FALSE);
+        Status = WriteGptPartitions(CurrentDisk);
+        if (!NT_SUCCESS(Status))
+        {
+            ConResPuts(StdOut, IDS_SETID_FAIL);
+            return TRUE;
+        }
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
+        UCHAR PartitionType = 0;
+
         length = wcslen(pszId);
         if (length == 0)
         {
@@ -96,10 +109,10 @@ setid_main(
             return TRUE;
         }
 
-        CurrentPartition->PartitionType = PartitionType;
+        CurrentPartition->Mbr.PartitionType = PartitionType;
         CurrentDisk->Dirty = TRUE;
-        UpdateDiskLayout(CurrentDisk);
-        Status = WritePartitions(CurrentDisk);
+        UpdateMbrDiskLayout(CurrentDisk);
+        Status = WriteMbrPartitions(CurrentDisk);
         if (!NT_SUCCESS(Status))
         {
             ConResPuts(StdOut, IDS_SETID_FAIL);

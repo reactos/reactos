@@ -161,43 +161,68 @@ SelectPartition(
         return TRUE;
     }
 
-    Entry = CurrentDisk->PrimaryPartListHead.Flink;
-    while (Entry != &CurrentDisk->PrimaryPartListHead)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-
-        if (PartEntry->PartitionType != 0)
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
         {
-            if (PartNumber == ulValue)
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
-                CurrentPartition = PartEntry;
-                ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return TRUE;
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return TRUE;
+                }
+
+                PartNumber++;
             }
 
-            PartNumber++;
+            Entry = Entry->Flink;
         }
 
-        Entry = Entry->Flink;
+        Entry = CurrentDisk->LogicalPartListHead.Flink;
+        while (Entry != &CurrentDisk->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
+            {
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return TRUE;
+                }
+
+                PartNumber++;
+            }
+            Entry = Entry->Flink;
+        }
     }
-
-    Entry = CurrentDisk->LogicalPartListHead.Flink;
-    while (Entry != &CurrentDisk->LogicalPartListHead)
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-
-        if (PartEntry->PartitionType != 0)
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
         {
-            if (PartNumber == ulValue)
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (!IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             {
-                CurrentPartition = PartEntry;
-                ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return TRUE;
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return TRUE;
+                }
+
+                PartNumber++;
             }
 
-            PartNumber++;
+            Entry = Entry->Flink;
         }
-        Entry = Entry->Flink;
     }
 
     ConResPuts(StdErr, IDS_SELECT_PARTITION_INVALID);

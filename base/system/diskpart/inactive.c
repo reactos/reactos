@@ -35,16 +35,16 @@ inactive_main(
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        if (!CurrentPartition->BootIndicator)
+        if (!CurrentPartition->Mbr.BootIndicator)
         {
             ConResPuts(StdOut, IDS_INACTIVE_ALREADY);
             return TRUE;
         }
 
-        CurrentPartition->BootIndicator = FALSE;
+        CurrentPartition->Mbr.BootIndicator = FALSE;
         CurrentDisk->Dirty = TRUE;
-        UpdateDiskLayout(CurrentDisk);
-        Status = WritePartitions(CurrentDisk);
+        UpdateMbrDiskLayout(CurrentDisk);
+        Status = WriteMbrPartitions(CurrentDisk);
         if (NT_SUCCESS(Status))
         {
             ConResPuts(StdOut, IDS_INACTIVE_SUCCESS);

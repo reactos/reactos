@@ -23,7 +23,7 @@ CreateDisk(
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
 
-    DPRINT1("CreateDisk(%lu %p)\n", DiskNumber, DiskInfo);
+    DPRINT("CreateDisk(%lu %p)\n", DiskNumber, DiskInfo);
 
     StringCchPrintfW(DstPath, ARRAYSIZE(DstPath),
                      L"\\Device\\Harddisk%lu\\Partition0",
@@ -64,23 +64,17 @@ CreateDisk(
         goto done;
     }
 
-    CurrentDisk->PartitionStyle = DiskInfo->PartitionStyle;
-
     /* Free the layout buffer */
     if (CurrentDisk->LayoutBuffer)
-    {
         RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDisk->LayoutBuffer);
-        CurrentDisk->LayoutBuffer = NULL;
-        CurrentDisk->ExtendedPartition = NULL;
-    }
+
+    CurrentDisk->LayoutBuffer = NULL;
+    CurrentDisk->ExtendedPartition = NULL;
+    CurrentDisk->Dirty = FALSE;
+    CurrentDisk->NewDisk = TRUE;
+    CurrentDisk->PartitionStyle = DiskInfo->PartitionStyle;
 
     ReadLayoutBuffer(FileHandle, CurrentDisk);
-
-    DPRINT1("PartitionCount: %lu\n", CurrentDisk->LayoutBuffer->PartitionCount);
-
-#ifdef DUMP_PARTITION_TABLE
-    DumpPartitionTable(CurrentDisk);
-#endif
 
 done:
     if (FileHandle)
@@ -112,7 +106,7 @@ ConvertGPT(
         return TRUE;
     }
 
-    if (CurrentDisk->LayoutBuffer->PartitionCount != 0)
+    if (GetPrimaryPartitionCount(CurrentDisk) != 0)
     {
         ConResPuts(StdOut, IDS_CONVERT_GPT_NOT_EMPTY);
         return TRUE;
@@ -134,12 +128,17 @@ ConvertGPT(
     Status = CreateDisk(CurrentDisk->DiskNumber, &DiskInfo);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("CreateDisk() failed!\n");
+        return TRUE;
+    }
 
-    }
-    else
-    {
-        ConResPuts(StdOut, IDS_CONVERT_GPT_SUCCESS);
-    }
+    CurrentDisk->StartSector.QuadPart = AlignDown(CurrentDisk->LayoutBuffer->Gpt.StartingUsableOffset.QuadPart / CurrentDisk->BytesPerSector,
+                                                  CurrentDisk->SectorAlignment) + (ULONGLONG)CurrentDisk->SectorAlignment;
+    CurrentDisk->EndSector.QuadPart = AlignDown(CurrentDisk->StartSector.QuadPart + (CurrentDisk->LayoutBuffer->Gpt.UsableLength.QuadPart / CurrentDisk->BytesPerSector) - 1,
+                                                CurrentDisk->SectorAlignment);
+
+    ScanForUnpartitionedGptDiskSpace(CurrentDisk);
+    ConResPuts(StdOut, IDS_CONVERT_GPT_SUCCESS);
 
     return TRUE;
 }
@@ -168,7 +167,7 @@ ConvertMBR(
         return TRUE;
     }
 
-    if (CurrentDisk->LayoutBuffer->PartitionCount != 0)
+    if (GetPrimaryPartitionCount(CurrentDisk) != 0)
     {
         ConResPuts(StdOut, IDS_CONVERT_MBR_NOT_EMPTY);
         return TRUE;
@@ -180,12 +179,15 @@ ConvertMBR(
     Status = CreateDisk(CurrentDisk->DiskNumber, &DiskInfo);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("CreateDisk() failed!\n");
+        return TRUE;
+    }
 
-    }
-    else
-    {
-        ConResPuts(StdOut, IDS_CONVERT_MBR_SUCCESS);
-    }
+    CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
+    CurrentDisk->EndSector.QuadPart = min(CurrentDisk->SectorCount.QuadPart, 0x100000000) - 1;
+
+    ScanForUnpartitionedMbrDiskSpace(CurrentDisk);
+    ConResPuts(StdOut, IDS_CONVERT_MBR_SUCCESS);
 
     return TRUE;
 }
