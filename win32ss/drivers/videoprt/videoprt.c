@@ -971,6 +971,13 @@ VideoPortInitialize(
         KeInitializeMutex(&VgaSyncLock, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
+
+        Status = IntInitializeInt10(TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntInitializeInt10(TRUE) failed: 0x%lx\n", Status);
+            // return Status; // Let's continue and hope for the best...
+        }
     }
 
     /* As a first thing do parameter checks. */
