@@ -13,6 +13,72 @@
 
 /* FUNCTIONS ******************************************************************/
 
+static
+ULONGLONG
+GetFreeDiskSize(
+    _In_ PDISKENTRY DiskEntry)
+{
+    ULONGLONG SectorCount;
+    PLIST_ENTRY Entry;
+    PPARTENTRY PartEntry;
+
+    if (DiskEntry->PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        SectorCount = DiskEntry->EndSector.QuadPart - DiskEntry->StartSector.QuadPart + 1;
+
+        Entry = DiskEntry->PrimaryPartListHead.Flink;
+        while (Entry != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if ((PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED) && 
+                !IsContainerPartition(PartEntry->Mbr.PartitionType))
+            {
+                SectorCount -= PartEntry->SectorCount.QuadPart;
+            }
+
+            Entry = Entry->Flink;
+        }
+
+        Entry = DiskEntry->LogicalPartListHead.Flink;
+        while (Entry != &DiskEntry->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
+            {
+                SectorCount -= PartEntry->SectorCount.QuadPart;
+            }
+
+            Entry = Entry->Flink;
+        }
+    }
+    else if (DiskEntry->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        SectorCount = DiskEntry->EndSector.QuadPart - DiskEntry->StartSector.QuadPart + 1;
+
+        Entry = DiskEntry->PrimaryPartListHead.Flink;
+        while (Entry != &DiskEntry->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (!IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
+            {
+                SectorCount -= PartEntry->SectorCount.QuadPart;
+            }
+
+            Entry = Entry->Flink;
+        }
+    }
+    else
+    {
+        SectorCount = DiskEntry->SectorCount.QuadPart;
+    }
+
+    return SectorCount * DiskEntry->BytesPerSector;
+}
+
+
 VOID
 PrintDisk(
     _In_ PDISKENTRY DiskEntry)
@@ -38,9 +104,26 @@ PrintDisk(
         lpSizeUnit = L"MB";
     }
 
-    /* FIXME */
-    FreeSize = 0;
-    lpFreeUnit = L"B";
+    FreeSize = GetFreeDiskSize(DiskEntry);
+    if (FreeSize >= 10737418240) /* 10 GB */
+    {
+        FreeSize = RoundingDivide(FreeSize, 1073741824);
+        lpFreeUnit = L"GB";
+    }
+    else if (FreeSize >= 10485760) /* 10 MB */
+    {
+        FreeSize = RoundingDivide(FreeSize, 1048576);
+        lpFreeUnit = L"MB";
+    }
+    else if (FreeSize >= 10240) /* 10 KB */
+    {
+        FreeSize = RoundingDivide(FreeSize, 1024);
+        lpFreeUnit = L"KB";
+    }
+    else
+    {
+        lpFreeUnit = L"B";
+    }
 
     ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
                  (CurrentDisk == DiskEntry) ? L'*' : L' ',
@@ -115,7 +198,7 @@ ListPartition(
         {
             PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
-            if (PartEntry->Mbr.PartitionType != 0)
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
 
@@ -171,7 +254,7 @@ ListPartition(
         {
             PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
-            if (PartEntry->Mbr.PartitionType != 0)
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
 
