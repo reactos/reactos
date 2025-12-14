@@ -231,6 +231,15 @@ typedef struct _VOLENTRY
 
 } VOLENTRY, *PVOLENTRY;
 
+#define SIZE_1KB    (1024ULL)
+#define SIZE_10KB   (10ULL * 1024ULL)
+#define SIZE_1MB    (1024ULL * 1024ULL)
+#define SIZE_10MB   (10ULL * 1024ULL * 1024ULL)
+#define SIZE_1GB    (1024ULL * 1024ULL * 1024ULL)
+#define SIZE_10GB   (10ULL * 1024ULL * 1024ULL * 1024ULL)
+#define SIZE_1TB    (1024ULL * 1024ULL * 1024ULL * 1024ULL)
+#define SIZE_10TB   (10ULL * 1024ULL * 1024ULL * 1024ULL * 1024ULL)
+
 
 /* GLOBAL VARIABLES ***********************************************************/
 

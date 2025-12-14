@@ -91,33 +91,43 @@ PrintDisk(
     DiskSize = DiskEntry->SectorCount.QuadPart *
                (ULONGLONG)DiskEntry->BytesPerSector;
 
-    if (DiskSize >= 10737418240) /* 10 GB */
+    if (DiskSize >= SIZE_10TB) /* 10 TB */
     {
-        DiskSize = RoundingDivide(DiskSize, 1073741824);
+        DiskSize = RoundingDivide(DiskSize, SIZE_1TB);
+        lpSizeUnit = L"TB";
+    }
+    else if (DiskSize >= SIZE_10GB) /* 10 GB */
+    {
+        DiskSize = RoundingDivide(DiskSize, SIZE_1GB);
         lpSizeUnit = L"GB";
     }
     else
     {
-        DiskSize = RoundingDivide(DiskSize, 1048576);
+        DiskSize = RoundingDivide(DiskSize, SIZE_1MB);
         if (DiskSize == 0)
             DiskSize = 1;
         lpSizeUnit = L"MB";
     }
 
     FreeSize = GetFreeDiskSize(DiskEntry);
-    if (FreeSize >= 10737418240) /* 10 GB */
+    if (FreeSize >= SIZE_10TB) /* 10 TB */
     {
-        FreeSize = RoundingDivide(FreeSize, 1073741824);
+        FreeSize = RoundingDivide(FreeSize, SIZE_1TB);
+        lpFreeUnit = L"TB";
+    }
+    else if (FreeSize >= SIZE_10GB) /* 10 GB */
+    {
+        FreeSize = RoundingDivide(FreeSize, SIZE_1GB);
         lpFreeUnit = L"GB";
     }
-    else if (FreeSize >= 10485760) /* 10 MB */
+    else if (FreeSize >= SIZE_10MB) /* 10 MB */
     {
-        FreeSize = RoundingDivide(FreeSize, 1048576);
+        FreeSize = RoundingDivide(FreeSize, SIZE_1MB);
         lpFreeUnit = L"MB";
     }
-    else if (FreeSize >= 10240) /* 10 KB */
+    else if (FreeSize >= SIZE_10KB) /* 10 KB */
     {
-        FreeSize = RoundingDivide(FreeSize, 1024);
+        FreeSize = RoundingDivide(FreeSize, SIZE_1KB);
         lpFreeUnit = L"KB";
     }
     else
@@ -202,37 +212,47 @@ ListPartition(
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartSize >= 10737418240) /* 10 GB */
+                if (PartSize >= SIZE_10TB) /* 10 TB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1073741824);
+                    PartSize = RoundingDivide(PartSize, SIZE_1TB);
+                    lpSizeUnit = L"TB";
+                }
+                else if (PartSize >= SIZE_10GB) /* 10 GB */
+                {
+                    PartSize = RoundingDivide(PartSize, SIZE_1GB);
                     lpSizeUnit = L"GB";
                 }
-                else if (PartSize >= 10485760) /* 10 MB */
+                else if (PartSize >= SIZE_10MB) /* 10 MB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1048576);
+                    PartSize = RoundingDivide(PartSize, SIZE_1MB);
                     lpSizeUnit = L"MB";
                 }
                 else
                 {
-                    PartSize = RoundingDivide(PartSize, 1024);
+                    PartSize = RoundingDivide(PartSize, SIZE_1KB);
                     lpSizeUnit = L"KB";
                 }
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartOffset >= 10737418240) /* 10 GB */
+                if (PartOffset >= SIZE_10TB) /* 10 TB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1073741824);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1TB);
+                    lpOffsetUnit = L"TB";
+                }
+                else if (PartOffset >= SIZE_10GB) /* 10 GB */
+                {
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1GB);
                     lpOffsetUnit = L"GB";
                 }
-                else if (PartOffset >= 10485760) /* 10 MB */
+                else if (PartOffset >= SIZE_10MB) /* 10 MB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1048576);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1MB);
                     lpOffsetUnit = L"MB";
                 }
                 else
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1024);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1KB);
                     lpOffsetUnit = L"KB";
                 }
 
@@ -258,37 +278,47 @@ ListPartition(
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartSize >= 10737418240) /* 10 GB */
+                if (PartSize >= SIZE_10TB) /* 10 TB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1073741824);
+                    PartSize = RoundingDivide(PartSize, SIZE_1TB);
+                    lpSizeUnit = L"TB";
+                }
+                else if (PartSize >= SIZE_10GB) /* 10 GB */
+                {
+                    PartSize = RoundingDivide(PartSize, SIZE_1GB);
                     lpSizeUnit = L"GB";
                 }
-                else if (PartSize >= 10485760) /* 10 MB */
+                else if (PartSize >= SIZE_10MB) /* 10 MB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1048576);
+                    PartSize = RoundingDivide(PartSize, SIZE_1MB);
                     lpSizeUnit = L"MB";
                 }
                 else
                 {
-                    PartSize = RoundingDivide(PartSize, 1024);
+                    PartSize = RoundingDivide(PartSize, SIZE_1KB);
                     lpSizeUnit = L"KB";
                 }
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartOffset >= 10737418240) /* 10 GB */
+                if (PartOffset >= SIZE_10TB) /* 10 TB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1073741824);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1TB);
+                    lpOffsetUnit = L"TB";
+                }
+                else if (PartOffset >= SIZE_10GB) /* 10 GB */
+                {
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1GB);
                     lpOffsetUnit = L"GB";
                 }
-                else if (PartOffset >= 10485760) /* 10 MB */
+                else if (PartOffset >= SIZE_10MB) /* 10 MB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1048576);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1MB);
                     lpOffsetUnit = L"MB";
                 }
                 else
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1024);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1KB);
                     lpOffsetUnit = L"KB";
                 }
 
@@ -318,37 +348,47 @@ ListPartition(
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartSize >= 10737418240) /* 10 GB */
+                if (PartSize >= SIZE_10TB) /* 10 TB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1073741824);
+                    PartSize = RoundingDivide(PartSize, SIZE_1TB);
+                    lpSizeUnit = L"TB";
+                }
+                else if (PartSize >= SIZE_10GB) /* 10 GB */
+                {
+                    PartSize = RoundingDivide(PartSize, SIZE_1GB);
                     lpSizeUnit = L"GB";
                 }
-                else if (PartSize >= 10485760) /* 10 MB */
+                else if (PartSize >= SIZE_10MB) /* 10 MB */
                 {
-                    PartSize = RoundingDivide(PartSize, 1048576);
+                    PartSize = RoundingDivide(PartSize, SIZE_1MB);
                     lpSizeUnit = L"MB";
                 }
                 else
                 {
-                    PartSize = RoundingDivide(PartSize, 1024);
+                    PartSize = RoundingDivide(PartSize, SIZE_1KB);
                     lpSizeUnit = L"KB";
                 }
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
 
-                if (PartOffset >= 10737418240) /* 10 GB */
+                if (PartOffset >= SIZE_10TB) /* 10 TB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1073741824);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1TB);
+                    lpOffsetUnit = L"TB";
+                }
+                else if (PartOffset >= SIZE_10GB) /* 10 GB */
+                {
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1GB);
                     lpOffsetUnit = L"GB";
                 }
-                else if (PartOffset >= 10485760) /* 10 MB */
+                else if (PartOffset >= SIZE_10MB) /* 10 MB */
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1048576);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1MB);
                     lpOffsetUnit = L"MB";
                 }
                 else
                 {
-                    PartOffset = RoundingDivide(PartOffset, 1024);
+                    PartOffset = RoundingDivide(PartOffset, SIZE_1KB);
                     lpOffsetUnit = L"KB";
                 }
 
@@ -402,21 +442,27 @@ PrintVolume(
     PWSTR pszVolumeType;
 
     VolumeSize = VolumeEntry->Size.QuadPart;
-    if (VolumeSize >= 10737418240) /* 10 GB */
+    if (VolumeSize >= SIZE_10TB) /* 10 TB */
     {
-        VolumeSize = RoundingDivide(VolumeSize, 1073741824);
+        VolumeSize = RoundingDivide(VolumeSize, SIZE_1TB);
+        pszSizeUnit = L"TB";
+    }
+    else if (VolumeSize >= SIZE_10GB) /* 10 GB */
+    {
+        VolumeSize = RoundingDivide(VolumeSize, SIZE_1GB);
         pszSizeUnit = L"GB";
     }
-    else if (VolumeSize >= 10485760) /* 10 MB */
+    else if (VolumeSize >= SIZE_10MB) /* 10 MB */
     {
-        VolumeSize = RoundingDivide(VolumeSize, 1048576);
+        VolumeSize = RoundingDivide(VolumeSize, SIZE_1MB);
         pszSizeUnit = L"MB";
     }
     else
     {
-        VolumeSize = RoundingDivide(VolumeSize, 1024);
+        VolumeSize = RoundingDivide(VolumeSize, SIZE_1KB);
         pszSizeUnit = L"KB";
     }
+
     switch (VolumeEntry->VolumeType)
     {
         case VOLUME_TYPE_CDROM:
