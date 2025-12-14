@@ -298,12 +298,22 @@ ConvertMBR(
 
 /* create.c */
 BOOL
+CreateEfiPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
 CreateExtendedPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
 BOOL
 CreateLogicalPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+CreateMsrPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 

@@ -1182,34 +1182,286 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_EFI
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=German
-<Add CREATE PARTITION EFI command help text here>
+    Erstellt eine EFI-Systempartition (Extensible Firmware Interface)
+    auf einem GPT-Datenträger (GPT = GUID-Partitionstabelle).
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Falls keine Größe angegeben
+                ist, wird die Partition erweitert, bis im aktuellen Bereich
+                kein freier Speicherplatz mehr vorhanden ist.
+
+    OFFSET=<N>  Das Offset, in Kilobytes (KB), an dem die Partition
+                erstellt wird. Falls kein Offset angegeben ist, wird
+                die Partition im ersten Datenträgerbereich angelegt, der
+                eine ausreichende Größe für die Partition hat.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten. Ohne den Parameter NOERR wird DiskPart bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Nachdem die Partition erstellt wurde, erhält die neue Partition
+    den Fokus.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    GPT-Basisdatenträger ausgewählt sein.
+
+Beispiel:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Polish
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Portugese
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION EFI>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Russian
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Albanian
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Turkish
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Chinese
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 Language=Taiwanese
-<Add CREATE PARTITION EFI command help text here>
+    Creates an Extensible Firmware Interface (EFI) system partition on a GUID
+    partition table (GPT) disk.
+
+Syntax:  CREATE PARTITION EFI [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). If no size is
+                given, the partition continues until there is no more free
+                space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    After the partition has been created, the focus is given to the new
+    partition.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+Example:
+
+    CREATE PARTITION EFI SIZE=1000
 .
 
 
@@ -1968,34 +2220,399 @@ SymbolicName=MSG_COMMAND_CREATE_PARTITION_MSR
 Severity=Informational
 Facility=System
 Language=English
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=German
-<Add CREATE PARTITION MSR command help text here>
+    Erstellt eine MSR-Partition (Microsoft Reserved) auf einem GPT-Datenträger
+    (GPT = GUID-Partitionstabelle).
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    Die Größe der Partition in MB. Die Länge der Partition in
+                Byte entspricht mindestens dem durch N angegebenen Wert. Falls
+                keine Größe angegeben ist, wird die Partition erweitert, bis
+                sie den gesamten freien Speicherplatz im aktuellen Bereich
+                umfasst.
+
+    OFFSET=<N>  Das Offset, in Kilobyte (KB), an dem die Partition erstellt
+                wird. Falls kein Offset angegeben ist, wird die Partition im
+                ersten Datenträgerbereich erstellt, der eine ausreichende Größe
+                für die Partition hat.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler mit dem
+                entsprechenden Fehlercode beendet.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein GPT-
+    Basisdatenträger ausgewählt sein.
+
+    Achtung:
+
+        Gehen Sie bei Verwendung dieses Befehls mit äußerster Vorsicht vor.
+        Da GPT-Datenträger ein bestimmtes Partitionslayout erfordern, könnte
+        der Datenträger beim Erstellen von MSR-Partitionen unlesbar werden.
+        Auf GPT-Datenträgern, die zum Starten von ReactOS verwendet werden, ist
+        die EFI-Systempartition die erste Partition auf dem Datenträger,
+        gefolgt von der MSR-Partition. GPT-Datenträger, die nur zum Speichern
+        von Daten verwendet werden, haben keine, EFI-Systempartition. Die
+        MSR-Partition ist daher in einem solchen Fall die erste Partition.
+
+    Von ReactOS werden online keine MSR-Partitionen bereitgestellt.
+    Auf MSR-Partitionen können Sie keine Daten speichern, und Sie können
+    MSR-Partitionen nicht löschen.
+
+Beispiel:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Polish
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Portugese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda CREATE PARTITION MSR>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Russian
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Albanian
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Turkish
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Chinese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 Language=Taiwanese
-<Add CREATE PARTITION MSR command help text here>
+    Creates a Microsoft Reserved (MSR) partition on a GUID partition table
+    (GPT) disk.
+
+Syntax:  CREATE PARTITION MSR [SIZE=<N>] [OFFSET=<N>] [NOERR]
+
+    SIZE=<N>    The size of the partition in megabytes (MB). The partition is
+                at least as big in bytes as the number specified by N. If no
+                size is given, the partition continues until there is no more
+                free space in the current region.
+
+    OFFSET=<N>  The offset, in kilobytes (KB), at which the partition is
+                created. If no offset is given, the partition is placed in the
+                first disk extent that is large enough to hold it.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    A basic GPT disk must be selected for this operation to succeed.
+
+    Caution:
+
+        Be very careful when using this command. Because GPT disks require a
+        specific partition layout, creating Microsoft Reserved partitions could
+        cause the disk to become unreadable. On GPT disks that are used to boot
+        ReactOS, the EFI System partition is the first partition on the disk,
+        followed by the Microsoft Reserved partition. GPT disks used only for
+        data storage do not have an EFI System partition, in which case the
+        Microsoft Reserved partition is the first partition.
+
+    ReactOS does not online Microsoft Reserved partitions. You cannot store data
+    on them and you cannot delete them.
+
+Example:
+
+    CREATE PARTITION MSR SIZE=1000
 .
 
 
