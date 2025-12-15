@@ -173,13 +173,14 @@ DeleteGptPartition(
         List->SystemPartition = NULL;
     }
 #endif
-#if 0
-    if ((bOverride == FALSE) && (IsKnownPartition(CurrentPartition) == FALSE))
+
+    if ((bOverride == FALSE) &&
+        ((memcmp(&CurrentPartition->Gpt.PartitionType, &PARTITION_SYSTEM_GUID, sizeof(GUID)) == 0) ||
+         (memcmp(&CurrentPartition->Gpt.PartitionType, &PARTITION_MSFT_RESERVED_GUID, sizeof(GUID)) == 0)))
     {
         ConResPuts(StdOut, IDS_DELETE_PARTITION_FAIL);
         return;
     }
-#endif
 
 #ifdef DUMP_PARTITION_LIST
     DumpPartitionList(CurrentDisk);
