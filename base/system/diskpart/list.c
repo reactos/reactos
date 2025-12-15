@@ -189,10 +189,44 @@ ListPartition(
     LPWSTR lpSizeUnit;
     LPWSTR lpOffsetUnit;
     ULONG PartNumber = 1;
+    BOOL bPartitionFound = FALSE;
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_LIST_PARTITION_NO_DISK);
+        return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
+                bPartitionFound = TRUE;
+
+            Entry = Entry->Flink;
+        }
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+            if (!IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
+                bPartitionFound = TRUE;
+
+            Entry = Entry->Flink;
+        }
+    }
+
+    if (bPartitionFound == FALSE)
+    {
+        ConPuts(StdOut, L"\n");
+        ConResPuts(StdOut, IDS_LIST_PARTITION_NONE);
+        ConPuts(StdOut, L"\n");
         return TRUE;
     }
 

@@ -85,9 +85,10 @@
 #define IDS_LIST_PARTITION_LINE        3304
 #define IDS_LIST_PARTITION_FORMAT      3305
 #define IDS_LIST_PARTITION_NO_DISK     3306
-#define IDS_LIST_VOLUME_HEAD           3307
-#define IDS_LIST_VOLUME_LINE           3308
-#define IDS_LIST_VOLUME_FORMAT         3309
+#define IDS_LIST_PARTITION_NONE        3307
+#define IDS_LIST_VOLUME_HEAD           3308
+#define IDS_LIST_VOLUME_LINE           3309
+#define IDS_LIST_VOLUME_FORMAT         3310
 
 #define IDS_RESCAN_START               4100
 #define IDS_RESCAN_END                 4101

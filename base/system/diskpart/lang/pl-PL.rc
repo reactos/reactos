@@ -112,6 +112,7 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  ------------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partycja    %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNie wybrano dysku do wyświetlenia partycji.\nWybierz dysk i spróbuj ponownie.\n\n"
+    IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
     IDS_LIST_VOLUME_HEAD "  Wolumin ###  Lit  Etykieta     FS     Typ         Rozmiar  Stan     Info\n"
     IDS_LIST_VOLUME_LINE "  -----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c Wolumin %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"

@@ -121,6 +121,7 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c 磁碟分割 %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n沒有可列出分區的磁碟。\n請選擇一個磁碟，再試一次。\n\n"
+    IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
     IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤         FS     類型        大小     狀態     資訊\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c 磁碟區 %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
