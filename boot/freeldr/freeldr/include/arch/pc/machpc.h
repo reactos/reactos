@@ -30,6 +30,7 @@ VOID PcConsPutChar(int Ch);
 BOOLEAN PcConsKbHit(VOID);
 int PcConsGetCh(VOID);
 
+VOID PcVideoInit(VOID);
 VOID PcVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE PcVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);

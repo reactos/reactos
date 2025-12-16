@@ -1807,6 +1807,7 @@ MachInit(const char *CmdLine)
     MachVtbl.HwIdle = PcHwIdle;
 
     HalpCalibrateStallExecution();
+    PcVideoInit();
 }
 
 VOID

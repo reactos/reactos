@@ -110,6 +110,7 @@ typedef struct
 
 UCHAR MachDefaultTextColor = COLOR_GRAY;
 
+static ULONG VideoCard = VIDEOCARD_CGA_OR_OTHER;        /* Type of video card installed on the system */
 static USHORT BiosVideoMode;                            /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;                          /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                         /* Screen Height in characters */
@@ -587,7 +588,7 @@ PcVideoSetMode80x25(VOID)
 static BOOLEAN
 PcVideoSetMode80x50_80x43(VOID)
 {
-    if (VIDEOCARD_VGA == PcVideoDetectVideoCard())
+    if (VideoCard == VIDEOCARD_VGA)
     {
         PcVideoSetBiosMode(0x03);
         PcVideoSetFont8x8();
@@ -597,7 +598,7 @@ PcVideoSetMode80x50_80x43(VOID)
         ScreenWidth = 80;
         ScreenHeight = 50;
     }
-    else if (VIDEOCARD_EGA == PcVideoDetectVideoCard())
+    else if (VideoCard == VIDEOCARD_EGA)
     {
         PcVideoSetBiosMode(0x03);
         PcVideoSetFont8x8();
@@ -843,6 +844,13 @@ PcVideoSetMemoryBank(USHORT BankNumber)
         CurrentMemoryBank = BankNumber;
 }
 
+VOID
+PcVideoInit(VOID)
+{
+    /* Detect the installed video card */
+    VideoCard = PcVideoDetectVideoCard();
+}
+
 VIDEODISPLAYMODE
 PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 {
@@ -854,21 +862,21 @@ PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
         return DisplayMode;
     }
 
-    if (VIDEOCARD_CGA_OR_OTHER == PcVideoDetectVideoCard())
+    if (VideoCard == VIDEOCARD_CGA_OR_OTHER)
     {
         TRACE("CGA or other display adapter detected.\n");
         printf("CGA or other display adapter detected.\n");
         printf("Using 80x25 text mode.\n");
         VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
-    else if (VIDEOCARD_EGA == PcVideoDetectVideoCard())
+    else if (VideoCard == VIDEOCARD_EGA)
     {
         TRACE("EGA display adapter detected.\n");
         printf("EGA display adapter detected.\n");
         printf("Using 80x25 text mode.\n");
         VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
-    else /* if (VIDEOCARD_VGA == PcVideoDetectVideoCard()) */
+    else /* VIDEOCARD_VGA */
     {
         TRACE("VGA display adapter detected.\n");
 
