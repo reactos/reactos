@@ -71,6 +71,9 @@
 #define IDS_FILESYSTEMS_TYPE           1182
 #define IDS_FILESYSTEMS_CLUSTERSIZE    1183
 
+#define IDS_GPT_FAIL                   1190
+#define IDS_GPT_SUCCESS                1191
+
 #define IDS_HELP_FORMAT_STRING         1200
 
 #define IDS_INACTIVE_FAIL              1210

@@ -2415,6 +2415,8 @@ UpdateGptDiskLayout(
             PartitionInfo->Gpt.Attributes = PartEntry->Gpt.Attributes;
             ZeroMemory(&PartitionInfo->Gpt.Name, 36 * sizeof(WCHAR)); /* ??? */
 
+            PartEntry->PartitionNumber = PartitionInfo->PartitionNumber;
+
             Index++;
         }
     }

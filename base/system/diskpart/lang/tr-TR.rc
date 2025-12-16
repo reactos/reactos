@@ -101,6 +101,12 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_GPT_FAIL "\nDiskPart failed to assign atttributes to the selected GPT partition.\n"
+    IDS_GPT_SUCCESS "\nDiskPart successfully assigned the attributes the selected GPT partition.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_HELP_FORMAT_STRING "%-11.11s - %s"
 END
 
