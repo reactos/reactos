@@ -201,6 +201,142 @@ PcVideoDetectVideoCard(VOID)
         return VIDEOCARD_EGA;
 }
 
+static BOOLEAN
+PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInformation)
+{
+    REGS Regs;
+
+    RtlZeroMemory((PVOID)BIOSCALLBUFFER, 256);
+
+    /* VESA SuperVGA BIOS - GET SuperVGA MODE INFORMATION
+     * AX = 4F01h
+     * CX = SuperVGA video mode (see #04082 for bitfields)
+     * ES:DI -> 256-byte buffer for mode information (see #00079)
+     * Return:
+     * AL = 4Fh if function supported
+     * AH = status
+     * 00h successful
+     * ES:DI buffer filled
+     * 01h failed
+     *
+     * Desc: Determine the attributes of the specified video mode.
+     *
+     * Note: While VBE 1.1 and higher will zero out all unused bytes
+     * of the buffer, v1.0 did not, so applications that want to be
+     * backward compatible should clear the buffer before calling.
+     */
+    Regs.w.ax = 0x4F01;
+    Regs.w.cx = Mode;
+    Regs.w.es = BIOSCALLBUFSEGMENT;
+    Regs.w.di = BIOSCALLBUFOFFSET;
+    Int386(0x10, &Regs, &Regs);
+
+    if (Regs.w.ax != 0x004F)
+        return FALSE;
+
+    RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(SVGA_MODE_INFORMATION));
+
+    TRACE("\n");
+    TRACE("BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
+    TRACE("ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
+    TRACE("WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
+    TRACE("WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
+    TRACE("WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
+    TRACE("WindowSize = %dKB\n", ModeInformation->WindowSize);
+    TRACE("WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
+    TRACE("WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
+    TRACE("WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
+    TRACE("BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
+    TRACE("WidthInPixels = %d\n", ModeInformation->WidthInPixels);
+    TRACE("HeightInPixels = %d\n", ModeInformation->HeightInPixels);
+    TRACE("CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
+    TRACE("CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
+    TRACE("NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
+    TRACE("BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
+    TRACE("NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
+    TRACE("MemoryModel = %d\n", ModeInformation->MemoryModel);
+    TRACE("BankSize = %d\n", ModeInformation->BankSize);
+    TRACE("NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
+    TRACE("---VBE v1.2+ ---\n");
+    TRACE("RedMaskSize = %d\n", ModeInformation->RedMaskSize);
+    TRACE("RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
+    TRACE("GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
+    TRACE("GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
+    TRACE("BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
+    TRACE("BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
+    TRACE("ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
+    TRACE("ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
+    TRACE("\n");
+
+    return TRUE;
+}
+
+static BOOLEAN
+PcVideoSetBiosVesaMode(USHORT Mode)
+{
+    REGS Regs;
+
+    /* Int 10h AX=4F02h
+     * VESA SuperVGA BIOS - SET SuperVGA VIDEO MODE
+     *
+     * AX = 4F02h
+     * BX = new video mode
+     * ES:DI -> (VBE 3.0+) CRTC information block, bit mode bit 11 set
+     * Return:
+     * AL = 4Fh if function supported
+     * AH = status
+     * 00h successful
+     * 01h failed
+     *
+     * Values for VESA video mode:
+     * 00h-FFh OEM video modes (see #00010 at AH=00h)
+     * 100h   640x400x256
+     * 101h   640x480x256
+     * 102h   800x600x16
+     * 103h   800x600x256
+     * 104h   1024x768x16
+     * 105h   1024x768x256
+     * 106h   1280x1024x16
+     * 107h   1280x1024x256
+     * 108h   80x60 text
+     * 109h   132x25 text
+     * 10Ah   132x43 text
+     * 10Bh   132x50 text
+     * 10Ch   132x60 text
+     * ---VBE v1.2+ ---
+     * 10Dh   320x200x32K
+     * 10Eh   320x200x64K
+     * 10Fh   320x200x16M
+     * 110h   640x480x32K
+     * 111h   640x480x64K
+     * 112h   640x480x16M
+     * 113h   800x600x32K
+     * 114h   800x600x64K
+     * 115h   800x600x16M
+     * 116h   1024x768x32K
+     * 117h   1024x768x64K
+     * 118h   1024x768x16M
+     * 119h   1280x1024x32K (1:5:5:5)
+     * 11Ah   1280x1024x64K (5:6:5)
+     * 11Bh   1280x1024x16M
+     * ---VBE 2.0+ ---
+     * 120h   1600x1200x256
+     * 121h   1600x1200x32K
+     * 122h   1600x1200x64K
+     * 81FFh   special full-memory access mode
+     *
+     * Notes: The special mode 81FFh preserves the contents of the video memory and gives
+     * access to all of the memory; VESA recommends that the special mode be a packed-pixel
+     * mode. For VBE 2.0+, it is required that the VBE implement the mode, but not place it
+     * in the list of available modes (mode information for this mode can be queried
+     * directly, however). As of VBE 2.0, VESA will no longer define video mode numbers.
+     */
+    Regs.w.ax = 0x4F02;
+    Regs.w.bx = Mode;
+    Int386(0x10, &Regs, &Regs);
+    return (Regs.w.ax == 0x004F);
+}
+
 static VOID
 PcVideoSetBiosMode(UCHAR VideoMode)
 {
@@ -438,142 +574,6 @@ PcVideoSetDisplayEnd(VOID)
     /* Vertical display end */
     WRITE_PORT_UCHAR((PUCHAR)CRTC, 0x12);
     WRITE_PORT_UCHAR((PUCHAR)CRTC+1, 0xDF);
-}
-
-static BOOLEAN
-PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInformation)
-{
-    REGS Regs;
-
-    RtlZeroMemory((PVOID)BIOSCALLBUFFER, 256);
-
-    /* VESA SuperVGA BIOS - GET SuperVGA MODE INFORMATION
-     * AX = 4F01h
-     * CX = SuperVGA video mode (see #04082 for bitfields)
-     * ES:DI -> 256-byte buffer for mode information (see #00079)
-     * Return:
-     * AL = 4Fh if function supported
-     * AH = status
-     * 00h successful
-     * ES:DI buffer filled
-     * 01h failed
-     *
-     * Desc: Determine the attributes of the specified video mode.
-     *
-     * Note: While VBE 1.1 and higher will zero out all unused bytes
-     * of the buffer, v1.0 did not, so applications that want to be
-     * backward compatible should clear the buffer before calling.
-     */
-    Regs.w.ax = 0x4F01;
-    Regs.w.cx = Mode;
-    Regs.w.es = BIOSCALLBUFSEGMENT;
-    Regs.w.di = BIOSCALLBUFOFFSET;
-    Int386(0x10, &Regs, &Regs);
-
-    if (Regs.w.ax != 0x004F)
-        return FALSE;
-
-    RtlCopyMemory(ModeInformation, (PVOID)BIOSCALLBUFFER, sizeof(SVGA_MODE_INFORMATION));
-
-    TRACE("\n");
-    TRACE("BiosVesaGetSVGAModeInformation() mode 0x%x\n", Mode);
-    TRACE("ModeAttributes = 0x%x\n", ModeInformation->ModeAttributes);
-    TRACE("WindowAttributesA = 0x%x\n", ModeInformation->WindowAttributesA);
-    TRACE("WindowAttributesB = 0x%x\n", ModeInformation->WindowsAttributesB);
-    TRACE("WindowGranularity = %dKB\n", ModeInformation->WindowGranularity);
-    TRACE("WindowSize = %dKB\n", ModeInformation->WindowSize);
-    TRACE("WindowAStartSegment = 0x%x\n", ModeInformation->WindowAStartSegment);
-    TRACE("WindowBStartSegment = 0x%x\n", ModeInformation->WindowBStartSegment);
-    TRACE("WindowPositioningFunction = 0x%x\n", ModeInformation->WindowPositioningFunction);
-    TRACE("BytesPerScanLine = %d\n", ModeInformation->BytesPerScanLine);
-    TRACE("WidthInPixels = %d\n", ModeInformation->WidthInPixels);
-    TRACE("HeightInPixels = %d\n", ModeInformation->HeightInPixels);
-    TRACE("CharacterWidthInPixels = %d\n", ModeInformation->CharacterWidthInPixels);
-    TRACE("CharacterHeightInPixels = %d\n", ModeInformation->CharacterHeightInPixels);
-    TRACE("NumberOfMemoryPlanes = %d\n", ModeInformation->NumberOfMemoryPlanes);
-    TRACE("BitsPerPixel = %d\n", ModeInformation->BitsPerPixel);
-    TRACE("NumberOfBanks = %d\n", ModeInformation->NumberOfBanks);
-    TRACE("MemoryModel = %d\n", ModeInformation->MemoryModel);
-    TRACE("BankSize = %d\n", ModeInformation->BankSize);
-    TRACE("NumberOfImagePlanes = %d\n", ModeInformation->NumberOfImagePanes);
-    TRACE("---VBE v1.2+ ---\n");
-    TRACE("RedMaskSize = %d\n", ModeInformation->RedMaskSize);
-    TRACE("RedMaskPosition = %d\n", ModeInformation->RedMaskPosition);
-    TRACE("GreenMaskSize = %d\n", ModeInformation->GreenMaskSize);
-    TRACE("GreenMaskPosition = %d\n", ModeInformation->GreenMaskPosition);
-    TRACE("BlueMaskSize = %d\n", ModeInformation->BlueMaskSize);
-    TRACE("BlueMaskPosition = %d\n", ModeInformation->BlueMaskPosition);
-    TRACE("ReservedMaskSize = %d\n", ModeInformation->ReservedMaskSize);
-    TRACE("ReservedMaskPosition = %d\n", ModeInformation->ReservedMaskPosition);
-    TRACE("\n");
-
-    return TRUE;
-}
-
-static BOOLEAN
-PcVideoSetBiosVesaMode(USHORT Mode)
-{
-    REGS Regs;
-
-    /* Int 10h AX=4F02h
-     * VESA SuperVGA BIOS - SET SuperVGA VIDEO MODE
-     *
-     * AX = 4F02h
-     * BX = new video mode
-     * ES:DI -> (VBE 3.0+) CRTC information block, bit mode bit 11 set
-     * Return:
-     * AL = 4Fh if function supported
-     * AH = status
-     * 00h successful
-     * 01h failed
-     *
-     * Values for VESA video mode:
-     * 00h-FFh OEM video modes (see #00010 at AH=00h)
-     * 100h   640x400x256
-     * 101h   640x480x256
-     * 102h   800x600x16
-     * 103h   800x600x256
-     * 104h   1024x768x16
-     * 105h   1024x768x256
-     * 106h   1280x1024x16
-     * 107h   1280x1024x256
-     * 108h   80x60 text
-     * 109h   132x25 text
-     * 10Ah   132x43 text
-     * 10Bh   132x50 text
-     * 10Ch   132x60 text
-     * ---VBE v1.2+ ---
-     * 10Dh   320x200x32K
-     * 10Eh   320x200x64K
-     * 10Fh   320x200x16M
-     * 110h   640x480x32K
-     * 111h   640x480x64K
-     * 112h   640x480x16M
-     * 113h   800x600x32K
-     * 114h   800x600x64K
-     * 115h   800x600x16M
-     * 116h   1024x768x32K
-     * 117h   1024x768x64K
-     * 118h   1024x768x16M
-     * 119h   1280x1024x32K (1:5:5:5)
-     * 11Ah   1280x1024x64K (5:6:5)
-     * 11Bh   1280x1024x16M
-     * ---VBE 2.0+ ---
-     * 120h   1600x1200x256
-     * 121h   1600x1200x32K
-     * 122h   1600x1200x64K
-     * 81FFh   special full-memory access mode
-     *
-     * Notes: The special mode 81FFh preserves the contents of the video memory and gives
-     * access to all of the memory; VESA recommends that the special mode be a packed-pixel
-     * mode. For VBE 2.0+, it is required that the VBE implement the mode, but not place it
-     * in the list of available modes (mode information for this mode can be queried
-     * directly, however). As of VBE 2.0, VESA will no longer define video mode numbers.
-     */
-    Regs.w.ax = 0x4F02;
-    Regs.w.bx = Mode;
-    Int386(0x10, &Regs, &Regs);
-    return (Regs.w.ax == 0x004F);
 }
 
 static BOOLEAN
