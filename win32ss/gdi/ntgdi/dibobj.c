@@ -63,7 +63,7 @@ CreateDIBPalette(
         cColors = 1 << cBitsPixel;
 
         /* Allocate the palette */
-        ppal = PALETTE_AllocPalette(PAL_INDEXED,
+        ppal = PALETTE_AllocPalette(PAL_INDEXED | PAL_DIBSECTION,
                                     cColors,
                                     NULL,
                                     0,
@@ -221,7 +221,7 @@ CreateDIBPalette(
         }
 
         /* Allocate the bitfield palette */
-        ppal = PALETTE_AllocPalette(PAL_BITFIELDS,
+        ppal = PALETTE_AllocPalette(PAL_BITFIELDS | PAL_DIBSECTION,
                                     0,
                                     NULL,
                                     flRedMask,
