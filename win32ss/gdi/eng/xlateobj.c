@@ -511,7 +511,7 @@ EXLATEOBJ_vInitialize(
                 ulColor = RGB(ppalSrc->IndexedColors[i].peRed,
                               ppalSrc->IndexedColors[i].peGreen,
                               ppalSrc->IndexedColors[i].peBlue);
-                pexlo->xlo.pulXlate[i] = PALETTE_ulGetNearestBitFieldsIndex(ppalDst, ulColor);
+                pexlo->xlo.pulXlate[i] = PALETTE_ulGetNearestIndex(ppalDst, ulColor);
             }
         }
     }
