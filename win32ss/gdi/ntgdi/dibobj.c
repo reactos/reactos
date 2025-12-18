@@ -1391,13 +1391,13 @@ NtGdiStretchDIBitsInternal(
         {
             NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
                         hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                        dwRop, 0, 0);
+                        dwRop, CLR_INVALID, 0);
         }
         else
         {
             NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
                             hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                            cxSrc, cySrc, dwRop, 0);
+                            cxSrc, cySrc, dwRop, CLR_INVALID);
         }
 
         /* cleanup */

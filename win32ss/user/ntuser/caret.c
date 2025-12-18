@@ -66,7 +66,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
                                 0,
                                 0,
                                 SRCINVERT,
-                                0,
+                                CLR_INVALID,
                                 0);
             NtGdiSelectBitmap(hdcMem, hbmOld);
             GreDeleteObject(hdcMem);

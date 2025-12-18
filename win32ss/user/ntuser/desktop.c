@@ -1989,7 +1989,7 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cxWallpaper,
                                         gspv.cyWallpaper,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                 }
                 else if (gspv.WallpaperMode == wmTile)
                 {
@@ -2007,7 +2007,7 @@ IntPaintDesktop(HDC hDC)
                                         0,
                                         0,
                                         SRCCOPY,
-                                        0,
+                                        CLR_INVALID,
                                         0);
                         }
                     }
@@ -2027,7 +2027,7 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cxWallpaper,
                                         gspv.cyWallpaper,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                     }
                 }
                 else if (gspv.WallpaperMode == wmFill)
@@ -2045,7 +2045,7 @@ IntPaintDesktop(HDC hDC)
                                         wallpaperWidth,
                                         wallpaperHeight,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                     }
                 }
                 else
@@ -2059,7 +2059,7 @@ IntPaintDesktop(HDC hDC)
                                 0,
                                 0,
                                 SRCCOPY,
-                                0,
+                                CLR_INVALID,
                                 0);
                 }
                 NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
