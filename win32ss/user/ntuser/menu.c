@@ -1792,7 +1792,7 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
         ++left;
         ++top;
     }
-    NtGdiBitBlt( hdc, left, top, w, h, hdcMem, bmp_xoffset, 0, rop , 0, 0);
+    NtGdiBitBlt( hdc, left, top, w, h, hdcMem, bmp_xoffset, 0, rop , CLR_INVALID, 0);
     IntGdiDeleteDC( hdcMem, FALSE );
 }
 
@@ -2443,7 +2443,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
                 NtGdiSelectBitmap( hdcMem, bm );
                 NtGdiBitBlt( hdc, rc.left, (y - check_bitmap_height) / 2,
                         check_bitmap_width, check_bitmap_height,
-                        hdcMem, 0, 0, SRCCOPY, 0,0);
+                        hdcMem, 0, 0, SRCCOPY, CLR_INVALID,0);
                 IntGdiDeleteDC( hdcMem, FALSE );
                 checked = TRUE;
             }

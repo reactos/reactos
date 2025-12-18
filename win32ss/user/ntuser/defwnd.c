@@ -570,7 +570,7 @@ DefWndScreenshot(PWND pWnd)
     hdc2 = NtGdiCreateCompatibleDC(hdc);
     NtGdiSelectBitmap(hdc2, hbitmap);
 
-    NtGdiBitBlt(hdc2, 0, 0, w, h, hdc, 0, 0, SRCCOPY, 0, 0);
+    NtGdiBitBlt(hdc2, 0, 0, w, h, hdc, 0, 0, SRCCOPY, CLR_INVALID, 0);
 
     UserSetClipboardData(CF_BITMAP, hbitmap, &scd);
 

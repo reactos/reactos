@@ -1296,7 +1296,7 @@ IntPrintWindow(
                  xSrc,
                  ySrc,
                  SRCCOPY,
-                 0,
+                 CLR_INVALID,
                  0);
 
     UserReleaseDC( pwnd, hdcSrc, FALSE);
