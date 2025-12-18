@@ -954,11 +954,11 @@ VOID SeiBuildInclExclList(PDB pdb, TAGID ShimTag, PSHIMINFO pShimInfo)
     SeiReadInExclude(pdb, ShimTag, &pShimInfo->InExclude);
 }
 
-DWORD SeiPatchImportsByName(PIMAGE_THUNK_DATA OriginalThunk, PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi,  PLDR_DATA_TABLE_ENTRY LdrEntry)
+DWORD SeiPatchImportsByName(PIMAGE_THUNK_DATA OriginalThunk, PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi, PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     DWORD dwFound = 0;
 
-    for (;OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
+    for (; OriginalThunk->u1.AddressOfData && FirstThunk->u1.Function; OriginalThunk++, FirstThunk++)
     {
         if (!IMAGE_SNAP_BY_ORDINAL(OriginalThunk->u1.Function) && !SeiIsOrdinalName(HookApi->FunctionName))
         {
@@ -988,7 +988,7 @@ DWORD SeiPatchImportsByAddress(PIMAGE_THUNK_DATA FirstThunk, PHOOKAPIEX HookApi,
 {
     DWORD dwFound = 0;
 
-    for (;FirstThunk->u1.Function; FirstThunk++)
+    for (; FirstThunk->u1.Function; FirstThunk++)
     {
         if ((PULONG_PTR)FirstThunk->u1.Function == HookApi->OriginalFunction)
         {
@@ -1074,7 +1074,7 @@ VOID SeiHookImports(PLDR_DATA_TABLE_ENTRY LdrEntry)
                     dwFound = SeiPatchImportsByAddress(FirstThunk, HookApi, LdrEntry);
                 }
 
-                /* Sadly, iat does not have to be sorted, and can even contain duplicate entries. */
+                /* Sadly, IAT does not have to be sorted, and can even contain duplicate entries. */
                 if (dwFound != 1)
                 {
                     char szOrdProcFmt[10];
