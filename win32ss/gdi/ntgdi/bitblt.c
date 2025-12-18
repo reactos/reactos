@@ -485,7 +485,7 @@ NtGdiMaskBlt(
             goto cleanup;
 
         /* Create the XLATEOBJ. */
-        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        EXLATEOBJ_vInitXlateFromDCsEx(&exlo, DCSrc, DCDest, crBackColor);
         XlateObj = &exlo.xlo;
     }
 
@@ -735,7 +735,7 @@ GreStretchBltMask(
             goto failed;
 
         /* Create the XLATEOBJ. */
-        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        EXLATEOBJ_vInitXlateFromDCsEx(&exlo, DCSrc, DCDest, dwBackColor);
         XlateObj = &exlo.xlo;
     }
 

@@ -768,7 +768,7 @@ SnapWindow(HWND hWnd)
     }
 
     hbmOld = NtGdiSelectBitmap(hdcMem, hbm);
-    NtGdiBitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY, 0, 0);
+    NtGdiBitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY, CLR_INVALID, 0);
     NtGdiSelectBitmap(hdcMem, hbmOld);
     IntGdiDeleteDC(hdcMem, FALSE);
 
