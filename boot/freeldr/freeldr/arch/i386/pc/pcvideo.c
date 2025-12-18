@@ -933,27 +933,9 @@ PcVideoSetMode(USHORT NewMode)
 
         return TRUE;
     }
-    else if (0x0108 <= NewMode && NewMode <= 0x010C)
-    {
-        /* VESA Text Mode */
-        if (!PcVideoVesaGetSVGAModeInformation(NewMode, &VesaVideoModeInformation))
-            return FALSE;
-
-        if (!PcVideoSetBiosVesaMode(NewMode))
-            return FALSE;
-
-        ScreenWidth = VesaVideoModeInformation.WidthInPixels;
-        ScreenHeight = VesaVideoModeInformation.HeightInPixels;
-        BytesPerScanLine = VesaVideoModeInformation.BytesPerScanLine;
-        BiosVideoMode = NewMode;
-        DisplayMode = VideoTextMode;
-        VesaVideoMode = TRUE;
-
-        return TRUE;
-    }
     else
     {
-        /* VESA Graphics Mode */
+        /* VESA Text/Graphics Mode */
         if (!PcVideoVesaGetSVGAModeInformation(NewMode, &VesaVideoModeInformation))
             return FALSE;
 
@@ -964,7 +946,7 @@ PcVideoSetMode(USHORT NewMode)
         ScreenHeight = VesaVideoModeInformation.HeightInPixels;
         BytesPerScanLine = VesaVideoModeInformation.BytesPerScanLine;
         BiosVideoMode = NewMode;
-        DisplayMode = VideoGraphicsMode;
+        DisplayMode = (0x0108 <= NewMode && NewMode <= 0x010C) ? VideoTextMode : VideoGraphicsMode;
         VesaVideoMode = TRUE;
 
         return TRUE;
