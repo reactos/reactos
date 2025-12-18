@@ -290,6 +290,13 @@ VOID XboxHwIdle(VOID)
     /* UNIMPLEMENTED */
 }
 
+// FIXME: Dummy to make freeldr exports working.
+VOID __cdecl ChainLoadBiosBootSectorCode(
+    IN UCHAR BootDrive OPTIONAL,
+    IN ULONG BootPartition OPTIONAL)
+{
+    /* No-op on XBOX */
+}
 
 /******************************************************************************/
 
@@ -372,11 +379,8 @@ MachInit(const char *CmdLine)
 VOID
 XboxPrepareForReactOS(VOID)
 {
-    /* On Xbox, prepare video and disk support */
+    /* Prepare video and turn off debug messages to screen */
     XboxVideoPrepareForReactOS();
-    DiskStopFloppyMotor();
-
-    /* Turn off debug messages to screen */
     DebugDisableScreenPort();
 }
 
