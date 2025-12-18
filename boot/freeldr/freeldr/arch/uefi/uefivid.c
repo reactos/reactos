@@ -21,10 +21,38 @@ EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 /* FUNCTIONS ******************************************************************/
 
+/* EFI 1.x */
+#ifdef EFI_UGA_DRAW_PROTOCOL_GUID
+
+/* NOTE: EFI UGA does not support any other format than 32-bit xRGB, and
+ * no direct access to the underlying hardware framebuffer is offered */
+C_ASSERT(sizeof(EFI_UGA_PIXEL) == sizeof(ULONG));
+
+#endif /* EFI */
+
+/* UEFI support, see efi/GraphicsOutput.h */
+#ifdef EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID // __GRAPHICS_OUTPUT_H__
+
+C_ASSERT(sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL) == sizeof(ULONG));
+
+/**
+ * @brief   Maps UEFI GOP pixel format to pixel masks.
+ * @see     EFI_PIXEL_BITMASK
+ **/
+static EFI_PIXEL_BITMASK EfiPixelMasks[] =
+{ /* Red,        Green,      Blue,       Reserved */
+    {0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000},   // PixelRedGreenBlueReserved8BitPerColor
+    {0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000},   // PixelBlueGreenRedReserved8BitPerColor
+    {0,          0,          0,          0}             // PixelBitMask, PixelBltOnly, ...
+};
+
+#endif /* UEFI */
+
 EFI_STATUS
 UefiInitializeVideo(VOID)
 {
     EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+    EFI_PIXEL_BITMASK* pPixelBitmask;
     ULONG BitsPerPixel;
 
     EFI_STATUS Status;
@@ -47,15 +75,33 @@ UefiInitializeVideo(VOID)
         case PixelRedGreenBlueReserved8BitPerColor:
         case PixelBlueGreenRedReserved8BitPerColor:
         {
+            pPixelBitmask = &EfiPixelMasks[PixelFormat];
             BitsPerPixel = RTL_BITS_OF(EFI_GRAPHICS_OUTPUT_BLT_PIXEL);
             break;
         }
 
         case PixelBitMask:
+        {
+            /*
+             * When the GOP pixel format is given by PixelBitMask, the pixel
+             * element size _may be_ different from 4 bytes.
+             * See UEFI Spec Rev.2.10 Section 12.9 "Graphics Output Protocol":
+             * example code "GetPixelElementSize()" function.
+             */
+            pPixelBitmask = &gop->Mode->Info->PixelInformation;
+            BitsPerPixel =
+                PixelBitmasksToBpp(pPixelBitmask->RedMask,
+                                   pPixelBitmask->GreenMask,
+                                   pPixelBitmask->BlueMask,
+                                   pPixelBitmask->ReservedMask);
+            break;
+        }
+
         case PixelBltOnly:
         default:
         {
             ERR("Unsupported UFEI GOP format %lu\n", PixelFormat);
+            pPixelBitmask = NULL;
             BitsPerPixel = 0;
             break;
         }
@@ -66,7 +112,8 @@ UefiInitializeVideo(VOID)
                          gop->Mode->Info->HorizontalResolution,
                          gop->Mode->Info->VerticalResolution,
                          gop->Mode->Info->PixelsPerScanLine,
-                         BitsPerPixel);
+                         BitsPerPixel,
+                         (PPIXEL_BITMASK)pPixelBitmask);
     return Status;
 }
 

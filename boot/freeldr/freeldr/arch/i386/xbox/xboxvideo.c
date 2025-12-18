@@ -134,7 +134,8 @@ XboxVideoInit(VOID)
                          ScreenWidth,
                          ScreenHeight,
                          ScreenWidth, // PixelsPerScanLine
-                         BytesPerPixel * 8);
+                         BytesPerPixel * 8,
+                         NULL);
 
     VidFbClearScreenColor(MAKE_COLOR(0, 0, 0), TRUE);
 }
