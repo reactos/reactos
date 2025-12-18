@@ -844,6 +844,36 @@ EXLATEOBJ_vInitXlateFromDCs(
     pexlo->ppalDstDc = pdcDst->dclevel.ppal;
 }
 
+VOID
+NTAPI
+EXLATEOBJ_vInitXlateFromDCsEx(
+    _Out_ EXLATEOBJ* pexlo,
+    _In_ PDC pdcSrc,
+    _In_ PDC pdcDst,
+    _In_ COLORREF crBackColor)
+{
+    PSURFACE psurfDst, psurfSrc;
+
+    psurfDst = pdcDst->dclevel.pSurface;
+    psurfSrc = pdcSrc->dclevel.pSurface;
+
+    if (crBackColor == CLR_INVALID)
+    {
+        crBackColor = pdcSrc->pdcattr->crBackgroundClr;
+    }
+
+    /* Normal initialisation. No surface means DEFAULT_BITMAP */
+    EXLATEOBJ_vInitialize(pexlo,
+                          psurfSrc ? psurfSrc->ppal : gppalMono,
+                          psurfDst ? psurfDst->ppal : gppalMono,
+                          crBackColor,
+                          pdcDst->pdcattr->crBackgroundClr,
+                          pdcDst->pdcattr->crForegroundClr);
+
+    pexlo->ppalDstDc = pdcDst->dclevel.ppal;
+}
+
+
 VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(
     PEXLATEOBJ pexlo,
     PPALETTE ppalDst,
