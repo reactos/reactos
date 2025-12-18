@@ -54,7 +54,8 @@ VidFbCopyOffScreenBufferToVRAM(
     _In_ PVOID Buffer);
 
 VOID
-VidFbScrollUp(VOID);
+VidFbScrollUp(
+    _In_ UCHAR Attr);
 
 #if 0
 VOID

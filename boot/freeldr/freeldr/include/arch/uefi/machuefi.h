@@ -107,6 +107,3 @@ UefiHwIdle(VOID);
 VOID
 UefiInitializeFileSystemSupport(_In_ EFI_HANDLE ImageHandle,
                                 _In_ EFI_SYSTEM_TABLE *SystemTable);
-
-VOID
-UefiVideoScrollUp(VOID);

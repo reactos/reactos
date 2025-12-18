@@ -15,8 +15,6 @@ DBG_DEFAULT_CHANNEL(UI);
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-
-UCHAR MachDefaultTextColor = COLOR_GRAY;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 
 #define LOWEST_SUPPORTED_RES 1
@@ -107,12 +105,6 @@ VOID
 UefiVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
     VidFbCopyOffScreenBufferToVRAM(Buffer);
-}
-
-VOID
-UefiVideoScrollUp(VOID)
-{
-    VidFbScrollUp();
 }
 
 VOID

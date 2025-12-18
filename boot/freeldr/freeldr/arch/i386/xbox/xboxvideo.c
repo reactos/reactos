@@ -31,15 +31,7 @@ ULONG FrameBufferSize;
 extern multiboot_info_t * MultibootInfoPtr;
 #define FB_SIZE_MB 4
 
-UCHAR MachDefaultTextColor = COLOR_GRAY;
-
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
-
-VOID
-XboxVideoScrollUp(VOID)
-{
-    VidFbScrollUp();
-}
 
 VOID
 XboxVideoClearScreen(UCHAR Attr)

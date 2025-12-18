@@ -247,7 +247,8 @@ VidFbCopyOffScreenBufferToVRAM(
 }
 
 VOID
-VidFbScrollUp(VOID)
+VidFbScrollUp(
+    _In_ UCHAR Attr)
 {
     UINT32 BgColor, Dummy;
     ULONG PixelCount = framebufInfo.ScreenWidth * CHAR_HEIGHT *
@@ -255,7 +256,7 @@ VidFbScrollUp(VOID)
     PUINT32 Src = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + (CHAR_HEIGHT + TOP_BOTTOM_LINES) * framebufInfo.Delta);
     PUINT32 Dst = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + TOP_BOTTOM_LINES * framebufInfo.Delta);
 
-    VidFbAttrToColors(ATTR(COLOR_WHITE, COLOR_BLACK), &Dummy, &BgColor);
+    VidFbAttrToColors(Attr, &Dummy, &BgColor);
 
     while (PixelCount--)
         *Dst++ = *Src++;
