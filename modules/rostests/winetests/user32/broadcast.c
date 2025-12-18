@@ -37,13 +37,13 @@ static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 {
     if (msg == WM_NULL)
     {
-        trace("main_window_procA: Sleeping for %lu ms\n", wparam);
+        trace("main_window_procA: Sleeping for %Iu ms\n", wparam);
         if (wparam)
         {
             if (WaitForSingleObject(hevent, wparam) == WAIT_TIMEOUT)
                 SetEvent(hevent);
         }
-        trace("main_window_procA: Returning WM_NULL with parameter %08lx\n", lparam);
+        trace("main_window_procA: Returning WM_NULL with parameter %08Ix\n", lparam);
         return lparam;
     }
 
@@ -90,52 +90,52 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
         win_skip("%s is not implemented\n", functionname);
         return;
     }
-    ok(!ret || broken(ret), "Returned: %d\n", ret);
-    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
+    ok(!ret || broken(ret), "Returned: %ld\n", ret);
+    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08lx\n", GetLastError());
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( 0x80000000, &recips, WM_NULL, 0, 0 );
-    ok(!ret || broken(ret), "Returned: %d\n", ret);
-    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
+    ok(!ret || broken(ret), "Returned: %ld\n", ret);
+    if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08lx\n", GetLastError());
 
 if (0) /* TODO: Check the hang flags */
 {
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_QUERY|(BSF_NOHANG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0 );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_QUERY|(BSF_NOHANG|BSF_NOTIMEOUTIFNOTHUNG), &recips, WM_NULL, 30000, 0 );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_QUERY|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0 );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_POSTMESSAGE|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0 );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 }
 
     SetLastError( 0xdeadbeef );
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_POSTMESSAGE|BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, 0 );
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %ld\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
     PulseEvent(hevent);
 
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY );
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %ld\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     PulseEvent(hevent);
 }
@@ -152,51 +152,51 @@ static void test_parametersEx(PBROADCASTEX broadcastex)
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( 0x80000000, &recips, WM_NULL, 0, 0, NULL );
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
-    ok(!ret, "Returned: %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08lx\n", GetLastError());
+    ok(!ret, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( 0x80000000, &recips, WM_NULL, 0, 0, NULL );
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
-    ok(!ret, "Returned: %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08lx\n", GetLastError());
+    ok(!ret, "Returned: %ld\n", ret);
 
 if (0) /* TODO: Check the hang flags */
 {
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_QUERY|(BSF_NOHANG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_QUERY|(BSF_NOHANG|BSF_NOTIMEOUTIFNOTHUNG), &recips, WM_NULL, 30000, 0, NULL );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_QUERY|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_POSTMESSAGE|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
-    ok(0, "Last error: %08x\n", GetLastError());
-    ok(0, "Returned: %d\n", ret);
+    ok(0, "Last error: %08lx\n", GetLastError());
+    ok(0, "Returned: %ld\n", ret);
 }
 
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_POSTMESSAGE|BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, 0, NULL );
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %ld\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_OBJECT_0, "Synchronous message sent instead\n");
     PulseEvent(hevent);
 
     recips = BSM_APPLICATIONS;
     ret = broadcastex( BSF_SENDNOTIFYMESSAGE, &recips, WM_NULL, 100, BROADCAST_QUERY_DENY, NULL );
-    ok(ret==1, "Returned: %d\n", ret);
+    ok(ret==1, "Returned: %ld\n", ret);
     ok(WaitForSingleObject(hevent, 0) != WAIT_TIMEOUT, "Asynchronous message sent instead\n");
     PulseEvent(hevent);
 }

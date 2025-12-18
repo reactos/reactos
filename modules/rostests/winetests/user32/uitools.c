@@ -46,7 +46,7 @@ static void test_FillRect(void)
     oldhbmp = SelectObject(hdcmem, hbmp);
     ok(oldhbmp != NULL, "SelectObject returned NULL\n"); /* a memdc always has a bitmap selected */
     col = GetPixel(hdcmem, 0, 0);
-    ok( col == 0xffffff, "GetPixel returned %08x, expected 0xffffff\n", col);
+    ok( col == 0xffffff, "GetPixel returned %08lx, expected 0xffffff\n", col);
 
     /* select black brush */
     old_brush = SelectObject(hdcmem, GetStockObject(BLACK_BRUSH));
@@ -55,7 +55,7 @@ static void test_FillRect(void)
     SelectObject(hdcmem, old_brush);
     /* bitmap filled with last selected brush */
     col = GetPixel(hdcmem, 0, 0);
-    ok(col == 0, "GetPixel returned %08x, expected 0\n", col);
+    ok(col == 0, "GetPixel returned %08lx, expected 0\n", col);
 
     SelectObject(hdcmem, oldhbmp);
     DeleteObject(hbmp);

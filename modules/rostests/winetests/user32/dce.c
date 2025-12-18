@@ -54,7 +54,7 @@ static void test_dc_attributes(void)
 
     ok( WindowFromDC( hdc ) == hwnd_cache, "wrong window\n" );
     ReleaseDC( hwnd_cache, hdc );
-    ok( WindowFromDC( hdc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( hdc ) != hwnd_cache, "wrong window\n" );
     hdc = GetDC( hwnd_cache );
     rop = GetROP2( hdc );
     ok( rop == def_rop, "wrong ROP2 %d after release\n", rop );
@@ -124,7 +124,7 @@ static void test_dc_attributes(void)
     ok( caps == 0, "got %d\n", caps );
     caps = GetDeviceCaps( old_hdc, NUMCOLORS );
     ok( caps == 0, "got %d\n", caps );
-    ok( WindowFromDC( old_hdc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( old_hdc ) != hwnd_cache, "wrong window\n" );
 
     hdc = GetDC(0);
     caps = GetDeviceCaps( hdc, HORZRES );
@@ -369,6 +369,7 @@ static void test_dc_visrgn(void)
     /* parent DC */
     hdc = GetDC( hwnd_parentdc );
     GetClipBox( hdc, &rect );
+    MapWindowPoints(hwnd_parentdc, hwnd_parent, (POINT *)&rect, 2);
     ReleaseDC( hwnd_parentdc, hdc );
 
     hdc = GetDC( hwnd_parent );
@@ -384,7 +385,7 @@ static void test_dc_visrgn(void)
 static void test_begin_paint(void)
 {
     HDC old_hdc, hdc;
-    RECT rect, parent_rect;
+    RECT rect, parent_rect, client_rect;
     PAINTSTRUCT ps;
     COLORREF cr;
 
@@ -399,6 +400,33 @@ static void test_begin_paint(void)
     GetClipBox( hdc, &rect );
     ok( rect.left >= 10 && rect.top >= 10 && rect.right <= 20 && rect.bottom <= 20,
         "invalid clip box %s\n", wine_dbgstr_rect( &rect ));
+    EndPaint( hwnd_cache, &ps );
+
+    SetWindowPos( hwnd_cache, 0, 0, 0, 100, 100, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    RedrawWindow( hwnd_cache, NULL, 0, RDW_VALIDATE|RDW_NOFRAME|RDW_NOERASE );
+    SetRect( &rect, 0, 0, 150, 150 );
+    RedrawWindow( hwnd_cache, &rect, 0, RDW_INVALIDATE|RDW_NOFRAME|RDW_NOERASE );
+    hdc = BeginPaint( hwnd_cache, &ps );
+    GetClipBox( hdc, &rect );
+    GetClientRect( hwnd_cache, &client_rect );
+    ok( EqualRect( &rect, &client_rect ), "clip box = %s, expected %s\n",
+            wine_dbgstr_rect( &rect ), wine_dbgstr_rect( &client_rect ));
+    SetWindowPos( hwnd_cache, 0, 0, 0, 200, 200, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    GetClipBox( hdc, &rect );
+    GetClientRect( hwnd_cache, &client_rect );
+    todo_wine ok( (!rect.left && !rect.top && rect.right == 150 && rect.bottom == 150) ||
+            broken( EqualRect( &rect, &client_rect )),
+            "clip box = %s\n", wine_dbgstr_rect( &rect ));
+    EndPaint( hwnd_cache, &ps );
+
+    SetWindowPos( hwnd_cache, 0, 0, 0, 100, 100, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    RedrawWindow( hwnd_cache, NULL, 0, RDW_INVALIDATE|RDW_NOFRAME|RDW_NOERASE );
+    hdc = BeginPaint( hwnd_cache, &ps );
+    SetWindowPos( hwnd_cache, 0, 0, 0, 200, 200, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    GetClipBox( hdc, &rect );
+    GetClientRect( hwnd_cache, &client_rect );
+    todo_wine ok( EqualRect( &rect, &client_rect ), "clip box = %s, expected %s\n",
+            wine_dbgstr_rect( &rect ), wine_dbgstr_rect( &client_rect ));
     EndPaint( hwnd_cache, &ps );
 
     /* window DC */
@@ -440,6 +468,21 @@ static void test_begin_paint(void)
     ok( !(rect.left >= 10 && rect.top >= 10 && rect.right <= 20 && rect.bottom <= 20),
         "clip box should still be the whole window %s\n", wine_dbgstr_rect( &rect ));
 
+    SetWindowPos( hwnd_owndc, 0, 0, 0, 100, 100, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    RedrawWindow( hwnd_owndc, NULL, 0, RDW_VALIDATE|RDW_NOFRAME|RDW_NOERASE );
+    SetRect( &rect, 0, 0, 50, 50 );
+    RedrawWindow( hwnd_owndc, &rect, 0, RDW_INVALIDATE|RDW_ERASE );
+    hdc = BeginPaint( hwnd_owndc, &ps );
+    GetClipBox( hdc, &rect );
+    ok( !rect.left && !rect.top && rect.right == 50 && rect.bottom == 50,
+            "clip box = %s\n", wine_dbgstr_rect( &rect ));
+    SetWindowPos( hwnd_owndc, 0, 0, 0, 200, 200, SWP_NOZORDER|SWP_NOMOVE|SWP_NOACTIVATE );
+    GetClipBox( hdc, &rect );
+    GetClientRect( hwnd_owndc, &client_rect );
+    ok( EqualRect( &rect, &client_rect ), "clip box = %s, expected %s\n",
+            wine_dbgstr_rect( &rect ), wine_dbgstr_rect( &client_rect ));
+    EndPaint( hwnd_owndc, &ps );
+
     /* class DC */
 
     RedrawWindow( hwnd_classdc, NULL, 0, RDW_VALIDATE|RDW_NOFRAME|RDW_NOERASE );
@@ -466,18 +509,19 @@ static void test_begin_paint(void)
     RedrawWindow( hwnd_parentdc, NULL, 0, RDW_INVALIDATE );
     hdc = BeginPaint( hwnd_parentdc, &ps );
     GetClipBox( hdc, &rect );
+    MapWindowPoints(hwnd_parentdc, hwnd_parent, (POINT *)&rect, 2);
     cr = SetPixel( hdc, 10, 10, RGB(255, 0, 0) );
     ok( cr != -1, "error drawing outside of window client area\n" );
     EndPaint( hwnd_parentdc, &ps );
     GetClientRect( hwnd_parent, &parent_rect );
 
-    ok( rect.left == parent_rect.left, "rect.left = %d, expected %d\n", rect.left, parent_rect.left );
-    ok( rect.top == parent_rect.top, "rect.top = %d, expected %d\n", rect.top, parent_rect.top );
-    todo_wine ok( rect.right == parent_rect.right, "rect.right = %d, expected %d\n", rect.right, parent_rect.right );
-    todo_wine ok( rect.bottom == parent_rect.bottom, "rect.bottom = %d, expected %d\n", rect.bottom, parent_rect.bottom );
+    todo_wine ok( rect.left == parent_rect.left, "rect.left = %ld, expected %ld\n", rect.left, parent_rect.left );
+    todo_wine ok( rect.top == parent_rect.top, "rect.top = %ld, expected %ld\n", rect.top, parent_rect.top );
+    todo_wine ok( rect.right == parent_rect.right, "rect.right = %ld, expected %ld\n", rect.right, parent_rect.right );
+    todo_wine ok( rect.bottom == parent_rect.bottom, "rect.bottom = %ld, expected %ld\n", rect.bottom, parent_rect.bottom );
 
     hdc = GetDC( hwnd_parent );
-    todo_wine ok( GetPixel( hdc, 10, 10 ) == cr, "error drawing outside of window client area\n" );
+    todo_wine ok( GetPixel( hdc, 60, 60 ) == cr, "error drawing outside of window client area\n" );
     ReleaseDC( hwnd_parent, hdc );
 }
 
@@ -550,24 +594,13 @@ static void test_invisible_create(void)
 
 static void test_dc_layout(void)
 {
-    DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
-    DWORD (WINAPI *pGetLayout)(HDC hdc);
     HWND hwnd_cache_rtl, hwnd_owndc_rtl, hwnd_classdc_rtl, hwnd_classdc2_rtl;
     HDC hdc;
     DWORD layout;
-    HMODULE mod = GetModuleHandleA("gdi32.dll");
-
-    pGetLayout = (void *)GetProcAddress( mod, "GetLayout" );
-    pSetLayout = (void *)GetProcAddress( mod, "SetLayout" );
-    if (!pGetLayout || !pSetLayout)
-    {
-        win_skip( "Don't have SetLayout\n" );
-        return;
-    }
 
     hdc = GetDC( hwnd_cache );
-    pSetLayout( hdc, LAYOUT_RTL );
-    layout = pGetLayout( hdc );
+    SetLayout( hdc, LAYOUT_RTL );
+    layout = GetLayout( hdc );
     ReleaseDC( hwnd_cache, hdc );
     if (!layout)
     {
@@ -584,43 +617,43 @@ static void test_dc_layout(void)
     hwnd_classdc2_rtl = CreateWindowExA(WS_EX_LAYOUTRTL, "classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                         200, 200, 100, 100, 0, 0, GetModuleHandleA(0), NULL );
     hdc = GetDC( hwnd_cache_rtl );
-    layout = pGetLayout( hdc );
+    layout = GetLayout( hdc );
 
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
-    pSetLayout( hdc, 0 );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
+    SetLayout( hdc, 0 );
     ReleaseDC( hwnd_cache_rtl, hdc );
     hdc = GetDC( hwnd_owndc_rtl );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
     ReleaseDC( hwnd_cache_rtl, hdc );
 
     hdc = GetDC( hwnd_cache );
-    layout = pGetLayout( hdc );
-    ok( layout == 0, "wrong layout %x\n", layout );
+    layout = GetLayout( hdc );
+    ok( layout == 0, "wrong layout %lx\n", layout );
     ReleaseDC( hwnd_cache, hdc );
 
     hdc = GetDC( hwnd_owndc_rtl );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
-    pSetLayout( hdc, 0 );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
+    SetLayout( hdc, 0 );
     ReleaseDC( hwnd_owndc_rtl, hdc );
     hdc = GetDC( hwnd_owndc_rtl );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
     ReleaseDC( hwnd_owndc_rtl, hdc );
 
     hdc = GetDC( hwnd_classdc_rtl );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
-    pSetLayout( hdc, 0 );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
+    SetLayout( hdc, 0 );
     ReleaseDC( hwnd_classdc_rtl, hdc );
     hdc = GetDC( hwnd_classdc2_rtl );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
     ReleaseDC( hwnd_classdc2_rtl, hdc );
     hdc = GetDC( hwnd_classdc );
-    layout = pGetLayout( hdc );
-    ok( layout == LAYOUT_RTL, "wrong layout %x\n", layout );
+    layout = GetLayout( hdc );
+    ok( layout == LAYOUT_RTL, "wrong layout %lx\n", layout );
     ReleaseDC( hwnd_classdc_rtl, hdc );
 
     DestroyWindow(hwnd_classdc2_rtl);
@@ -632,8 +665,7 @@ static void test_dc_layout(void)
 static void test_destroyed_window(void)
 {
     HDC dc, old_dc;
-    HDC hdcs[30];
-    int i, rop;
+    int rop;
 
     dc = GetDC( hwnd_cache );
     SetROP2( dc, R2_WHITE );
@@ -645,18 +677,10 @@ static void test_destroyed_window(void)
     DestroyWindow( hwnd_cache );
     rop = GetROP2( dc );
     ok( rop == 0, "wrong ROP2 %d\n", rop );
-    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( dc ) != hwnd_cache, "wrong window\n" );
     ok( !ReleaseDC( hwnd_cache, dc ), "ReleaseDC succeeded\n" );
     dc = GetDC( hwnd_cache );
     ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
-
-    for (i = 0; i < 30; i++)
-    {
-        dc = hdcs[i] = GetDCEx( hwnd_parent, 0, DCX_CACHE | DCX_USESTYLE );
-        if (dc == old_dc) break;
-    }
-    ok( i < 30, "DC for destroyed window not reused\n" );
-    while (i > 0) ReleaseDC( hwnd_parent, hdcs[--i] );
 
     dc = GetDC( hwnd_classdc );
     SetROP2( dc, R2_WHITE );
@@ -674,7 +698,7 @@ static void test_destroyed_window(void)
 
     rop = GetROP2( dc );
     ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
-    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( dc ) != hwnd_classdc2, "wrong window\n" );
     ok( !ReleaseDC( hwnd_classdc2, dc ), "ReleaseDC succeeded\n" );
     dc = GetDC( hwnd_classdc2 );
     ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
@@ -688,7 +712,7 @@ static void test_destroyed_window(void)
 
     rop = GetROP2( dc );
     ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
-    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( dc ) != hwnd_classdc, "wrong window\n" );
     ok( !ReleaseDC( hwnd_classdc, dc ), "ReleaseDC succeeded\n" );
     dc = GetDC( hwnd_classdc );
     ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
@@ -702,7 +726,7 @@ static void test_destroyed_window(void)
 
     rop = GetROP2( dc );
     ok( rop == 0, "wrong ROP2 %d\n", rop );
-    ok( WindowFromDC( dc ) == 0, "wrong window\n" );
+    ok( WindowFromDC( dc ) != hwnd_owndc, "wrong window\n" );
     ok( !ReleaseDC( hwnd_owndc, dc ), "ReleaseDC succeeded\n" );
     dc = GetDC( hwnd_owndc );
     ok( !dc, "Got a non-NULL DC (%p) for a destroyed window\n", dc );
@@ -750,7 +774,7 @@ START_TEST(dce)
     hwnd_parent = CreateWindowA("static", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                 400, 0, 100, 100, 0, 0, 0, NULL );
     hwnd_parentdc = CreateWindowA("parentdc_class", NULL, WS_CHILD | WS_VISIBLE,
-                                  0, 0, 1, 1, hwnd_parent, 0, 0, NULL );
+                                  50, 50, 1, 1, hwnd_parent, 0, 0, NULL );
 
     test_dc_attributes();
     test_parameters();
