@@ -31,6 +31,9 @@ typedef struct _FRAMEBUFFER_INFO
     ULONG PixelsPerScanLine; // aka. "Pitch" or "ScreenStride", but Stride is in bytes or bits...
     ULONG BitsPerPixel;      // aka. "PixelStride".
 
+    /* Physical format of the pixel for BPP > 8, specified by bit-mask */
+    PIXEL_BITMASK PixelMasks;
+
 /** Calculated values */
 
     ULONG BytesPerPixel;
@@ -55,6 +58,11 @@ VidFbPrintFramebufferInfo(VOID)
     TRACE("    BitsPerPixel      : %lu\n", framebufInfo.BitsPerPixel);
     TRACE("    BytesPerPixel     : %lu\n", framebufInfo.BytesPerPixel);
     TRACE("    Delta             : %lu\n", framebufInfo.Delta);
+    TRACE("    ARGB masks:       : %08x/%08x/%08x/%08x\n",
+          framebufInfo.PixelMasks.ReservedMask,
+          framebufInfo.PixelMasks.RedMask,
+          framebufInfo.PixelMasks.GreenMask,
+          framebufInfo.PixelMasks.BlueMask);
 }
 #endif
 
@@ -78,6 +86,10 @@ VidFbPrintFramebufferInfo(VOID)
  * @param[in]   BitsPerPixel
  * The number of usable bits (not counting the reserved ones) per pixel.
  *
+ * @param[in]   PixelMasks
+ * Optional pointer to a PIXEL_BITMASK structure describing the pixel
+ * format used by the framebuffer.
+ *
  * @return
  * TRUE if initialization is successful; FALSE if not.
  **/
@@ -88,8 +100,11 @@ VidFbInitializeVideo(
     _In_ UINT32 ScreenWidth,
     _In_ UINT32 ScreenHeight,
     _In_ UINT32 PixelsPerScanLine,
-    _In_ UINT32 BitsPerPixel)
+    _In_ UINT32 BitsPerPixel,
+    _In_opt_ PPIXEL_BITMASK PixelMasks)
 {
+    PPIXEL_BITMASK BitMasks = &framebufInfo.PixelMasks;
+
     RtlZeroMemory(&framebufInfo, sizeof(framebufInfo));
 
     framebufInfo.BaseAddress  = BaseAddress;
@@ -110,8 +125,66 @@ VidFbInitializeVideo(
         return FALSE;
     }
 
+    //ASSERT((BitsPerPixel <= 8 && !PixelMasks) || (BitsPerPixel > 8));
+    if (BitsPerPixel > 8)
+    {
+        if (!PixelMasks ||
+            (PixelMasks->RedMask   == 0 &&
+             PixelMasks->GreenMask == 0 &&
+             PixelMasks->BlueMask  == 0 /* &&
+             PixelMasks->ReservedMask == 0 */))
+        {
+            /* Determine pixel mask given color depth and color channel */
+            switch (BitsPerPixel)
+            {
+                case 32:
+                case 24: /* 8:8:8 */
+                    BitMasks->RedMask   = 0x00FF0000; // 0x00FF0000;
+                    BitMasks->GreenMask = 0x0000FF00; // 0x00FF0000 >> 8;
+                    BitMasks->BlueMask  = 0x000000FF; // 0x00FF0000 >> 16;
+                    BitMasks->ReservedMask = ((1 << (BitsPerPixel - 24)) - 1) << 24;
+                    break;
+                case 16: /* 5:6:5 */
+                    BitMasks->RedMask   = 0xF800; // 0xF800;
+                    BitMasks->GreenMask = 0x07E0; // (0xF800 >> 5) | 0x20;
+                    BitMasks->BlueMask  = 0x001F; // 0xF800 >> 11;
+                    BitMasks->ReservedMask = 0;
+                    break;
+                case 15: /* 5:5:5 */
+                    BitMasks->RedMask   = 0x7C00; // 0x7C00;
+                    BitMasks->GreenMask = 0x03E0; // 0x7C00 >> 5;
+                    BitMasks->BlueMask  = 0x001F; // 0x7C00 >> 10;
+                    BitMasks->ReservedMask = 0x8000;
+                    break;
+                default:
+                    /* Unsupported BPP */
+                    UNIMPLEMENTED;
+                    RtlZeroMemory(BitMasks, sizeof(*BitMasks));
+            }
+        }
+        else
+        {
+            /* Copy the pixel masks */
+            RtlCopyMemory(BitMasks, PixelMasks, sizeof(*BitMasks));
+        }
+    }
+    else
+    {
+        /* Palettized modes don't use masks */
+        RtlZeroMemory(BitMasks, sizeof(*BitMasks));
+    }
+
 #if DBG
     VidFbPrintFramebufferInfo();
+    {
+    ULONG BppFromMasks =
+        PixelBitmasksToBpp(BitMasks->RedMask,
+                           BitMasks->GreenMask,
+                           BitMasks->BlueMask,
+                           BitMasks->ReservedMask);
+    TRACE("BitsPerPixel = %lu , BppFromMasks = %lu\n", BitsPerPixel, BppFromMasks);
+    //ASSERT(BitsPerPixel == BppFromMasks);
+    }
 #endif
 
     return TRUE;
