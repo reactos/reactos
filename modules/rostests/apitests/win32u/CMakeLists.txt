@@ -32,6 +32,7 @@ list(APPEND SOURCE
     ntgdi/NtGdiGetRandomRgn.c
     ntgdi/NtGdiGetStockObject.c
     ntgdi/NtGdiIntersectClipRect.c
+    ntgdi/NtGdiLineTo.c
     ntgdi/NtGdiOffsetClipRgn.c
     ntgdi/NtGdiPolyPolyDraw.c
     ntgdi/NtGdiRestoreDC.c
