@@ -31,11 +31,9 @@ START_TEST(NtGdiArcInternal)
     ok_long(GetLastError(), ERROR_INVALID_HANDLE);
 
     SetLastError(ERROR_SUCCESS);
-    ok_int(NtGdiArcInternal(0, hDC, 10, 10, 0, 0, 0, 0, 0, 0), TRUE);
-    ok_int(NtGdiArcInternal(0, hDC, 10, 10, -10, -10, 0, 0, 0, 0), TRUE);
+    //ok_int(NtGdiArcInternal(0, hDC, 10, 10, 0, 0, 0, 0, 0, 0), TRUE); // Fails on Windows 2003
+    //ok_int(NtGdiArcInternal(0, hDC, 10, 10, -10, -10, 0, 0, 0, 0), TRUE); // Fails on Windows 2003
     ok_int(NtGdiArcInternal(0, hDC, 0, 0, 0, 0, 10, 0, -10, 0), TRUE);
-
-// was passiert, wenn left > right ? einfach tauschen?
 
     DeleteDC(hDC);
 }
