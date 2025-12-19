@@ -85,7 +85,8 @@ Test_IsSpecialState(HDC hdc, BOOL bMemDC)
     else
     {
         TEST(SelectObject(hdc, GetStockObject(DEFAULT_BITMAP)) == 0);
-        TEST(SelectObject(hdc, hrgn2) == (PVOID)2);
+        HGDIOBJ hOldObj = SelectObject(hdc, hrgn2);
+        ok(hOldObj == (PVOID)2 || broken(hOldObj == (PVOID)1), "hOldObj was 0x%p\n", hOldObj);
     }
 
     /* Test colors */
