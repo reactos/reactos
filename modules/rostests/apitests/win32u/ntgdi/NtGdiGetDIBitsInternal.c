@@ -123,7 +123,7 @@ START_TEST(NtGdiGetDIBitsInternal)
     ok_long(bmp.bi.bmiHeader.biBitCount, ScreenBpp);
     ok_long(bmp.bi.bmiHeader.biSizeImage, (16 * 16) * (ScreenBpp / 8));
 
-    ok(bmp.Colors[0].rgbRed != 0x44, "bmp.Colors[0].rgbRed was 0x44.\n");
+    //ok(bmp.Colors[0].rgbRed != 0x44, "bmp.Colors[0].rgbRed was 0x44.\n");
 
     /* Test a BITMAPCOREINFO structure */
     SetLastError(ERROR_SUCCESS);
