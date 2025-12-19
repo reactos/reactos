@@ -82,6 +82,12 @@ void PerfDataUninitialize(void)
     if (pPerfData != NULL)
         HeapFree(GetProcessHeap(), 0, pPerfData);
 
+    if (pPerfDataOld != NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
+        pPerfDataOld = NULL;
+    }
+
     DeleteCriticalSection(&PerfDataCriticalSection);
 
     if (SystemUserSid != NULL)
