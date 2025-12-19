@@ -51,8 +51,8 @@
 
 #include <fmifs/fmifs.h>
 #include <guiddef.h>
+#include <diskguid.h>
 
-#include "guid.h"
 #include "resource.h"
 
 //#define DUMP_PARTITION_TABLE

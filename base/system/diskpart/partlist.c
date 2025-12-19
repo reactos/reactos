@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "diskpart.h"
-#include "guid.h"
 #include <ntddscsi.h>
 
 #define NDEBUG
