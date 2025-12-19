@@ -57,7 +57,7 @@ START_TEST(NtGdiDeleteObjectApp)
     SelectObject(hdc, hpen);
     ok(NtGdiDeleteObjectApp(hdc) != 0, "NtGdiDeleteObjectApp(hdc) was zero.\n");
     ok_long(GetLastError(), 0);
-    ok_int(GdiIsHandleValid(hdc), 1);
+    ok_int(GdiIsHandleValid(hdc), (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0 : 1);
     ok_ptr(SelectObject(hdc, GetStockObject(WHITE_PEN)), NULL);
     ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
 
@@ -71,7 +71,7 @@ START_TEST(NtGdiDeleteObjectApp)
     ok_ptr(SelectObject(hdc, GetStockObject(WHITE_PEN)), NULL);
     ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
     /* Make sure */
-    ok_ptr((void *)NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC), NULL);
+    ok_long(ReleaseDC(NULL, hdc), 0);
 
 
     /* Delete a brush */
@@ -125,7 +125,7 @@ START_TEST(NtGdiDeleteObjectApp)
     NtGdiSelectBitmap(hdc, GetStockObject(DEFAULT_BITMAP));
     ok_int(GdiIsHandleValid(hbmp), 0);
 
-    ok_int(NtGdiDeleteObjectApp(hbmp), 1);
+    ok_int(NtGdiDeleteObjectApp(hbmp), (GetNTVersion() >= _WIN32_WINNT_WIN10) ? 0 : 1);
     ok_long(GetLastError(), 0);
     ok_int(GdiIsHandleValid(hbmp), 0);
 
