@@ -36,7 +36,6 @@ START_TEST(NtUserScrollDC)
 
     hRgn = CreateRectRgn(0,0,10,10);
 
-
     /* Test inverted clip rect */
     rcScroll.left = 0;
     rcScroll.top = 25;
@@ -48,8 +47,8 @@ START_TEST(NtUserScrollDC)
     rcClip.bottom = -1000;
     SetLastError(ERROR_SUCCESS);
     Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
-    RTEST(Result == 1);
-    RTEST(GetLastError() == ERROR_SUCCESS);
+    ok_eq_int(Result, TRUE);
+    ok_eq_ulong(GetLastError(), ERROR_SUCCESS);
 
     /* Test inverted scroll rect */
     rcScroll.left = 0;
@@ -62,8 +61,8 @@ START_TEST(NtUserScrollDC)
     rcClip.bottom = 1000;
     SetLastError(ERROR_SUCCESS);
     Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
-    RTEST(Result == 1);
-    RTEST(GetLastError() == ERROR_SUCCESS);
+    ok_eq_int(Result, TRUE);
+    ok_eq_ulong(GetLastError(), ERROR_SUCCESS);
 
     rcScroll.left = 0;
     rcScroll.top = 25;
@@ -73,36 +72,36 @@ START_TEST(NtUserScrollDC)
     /* Test invalid update region */
     SetLastError(ERROR_SUCCESS);
     Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, (HRGN)0x123456, &rcUpdate);
-    RTEST(Result == 0);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_eq_int(Result, FALSE);
+    ok_eq_ulong(GetLastError(), ERROR_INVALID_HANDLE);
 
     /* Test invalid dc */
     SetLastError(ERROR_SUCCESS);
     Result = NtUserScrollDC((HDC)0x123456, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
-    RTEST(Result == 0);
-    RTEST(GetLastError() == ERROR_SUCCESS);
+    ok_eq_int(Result, FALSE);
+    ok_eq_ulong(GetLastError(), ERROR_SUCCESS);
 
     /* Test invalid update rect */
     SetLastError(ERROR_SUCCESS);
     Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, (PVOID)(LONG_PTR)0x80001000);
-    RTEST(Result == 0);
-    RTEST(GetLastError() == ERROR_NOACCESS);
+    ok_eq_int(Result, FALSE);
+    ok_eq_ulong(GetLastError(), ERROR_NOACCESS);
 
     Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
 
-    RTEST(Result == TRUE);
-    RTEST(rcUpdate.left == 0);
-    RTEST(rcUpdate.top == 35);
-    RTEST(rcUpdate.right == 70);
-    RTEST(rcUpdate.bottom == 55);
+    ok_eq_int(Result, TRUE);
+    ok_eq_long(rcUpdate.left, 0);
+    ok_eq_long(rcUpdate.top, 35);
+    ok_eq_long(rcUpdate.right, 70);
+    ok_eq_long(rcUpdate.bottom, 55);
 
     hTmpRgn = CreateRectRgn(10,45,70,55);
     Result = CombineRgn(hRgn, hRgn, hTmpRgn, RGN_XOR);
-    RTEST(Result == SIMPLEREGION);
+    ok_eq_int(Result, SIMPLEREGION);
 
     SetRectRgn(hTmpRgn,0,35,70,40);
     Result = CombineRgn(hRgn, hRgn, hTmpRgn, RGN_XOR);
-    RTEST(Result == NULLREGION);
+    ok_eq_int(Result, NULLREGION);
 
     DeleteObject(hTmpRgn);
 
