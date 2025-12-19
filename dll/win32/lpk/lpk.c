@@ -164,10 +164,6 @@ static void LPK_ApplyMirroring(void)
     PVOID pvFileInfo;
     DWORD cbFileInfoSize;
 
-    /* HACK!!!! For some reason this call, that does nothing, is required,
-       otherwise comctl32_winetest tooltips starts to fail. */
-    GetFileVersionInfoSizeW(L"", NULL );
-
     /* Get the VersionInfo resource of the main executable */
     if (!GetProcessImageVersionInfo(&pvFileInfo, &cbFileInfoSize))
     {
@@ -190,7 +186,7 @@ static void LPK_ApplyMirroring(void)
         /* Compare current position with the "FileDescription" key */
         if (lstrcmpW(pwchCurrent, L"FileDescription") == 0)
         {
-            /* The value starts after the key, the Null-terminator and 1 WCHAR alignment */
+            /* The value starts after the key, the null-terminator and 1 WCHAR alignment */
             pwstrFileDescription = pwchCurrent + cchKeyLength + 1;
             break;
         }
