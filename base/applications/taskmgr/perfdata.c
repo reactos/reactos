@@ -80,7 +80,10 @@ void PerfDataUninitialize(void)
     PSIDTOUSERNAME pEntry;
 
     if (pPerfData != NULL)
+    {
         HeapFree(GetProcessHeap(), 0, pPerfData);
+        pPerfData = NULL;
+    }
 
     if (pPerfDataOld != NULL)
     {
