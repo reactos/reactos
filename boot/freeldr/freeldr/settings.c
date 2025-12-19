@@ -14,8 +14,9 @@
 /* GLOBALS ********************************************************************/
 
 static CCHAR DebugString[256];
+static CCHAR VideoOptions[256];
 static CCHAR DefaultOs[256];
-BOOTMGRINFO BootMgrInfo = {NULL, NULL, -1, 0};
+BOOTMGRINFO BootMgrInfo = {NULL, NULL, NULL, -1, 0};
 
 /* FUNCTIONS ******************************************************************/
 
@@ -23,8 +24,9 @@ static VOID
 CmdLineParse(
     _In_ PCSTR CmdLine)
 {
-    PCHAR End, Setting;
-    ULONG_PTR Length, Offset = 0;
+    PCHAR Setting;
+    size_t Length;
+    ULONG_PTR Offset = 0;
 
     /*
      * Get the debug string, in the following format:
@@ -37,8 +39,7 @@ CmdLineParse(
     {
         /* Check if there are more command-line parameters following */
         Setting += sizeof("debug=") - sizeof(ANSI_NULL);
-        End = strstr(Setting, " ");
-        Length = (End ? (End - Setting) : strlen(Setting));
+        Length = strcspn(Setting, " \t");
 
         /* Copy the debug string and upcase it */
         RtlStringCbCopyNA(DebugString, sizeof(DebugString), Setting, Length);
@@ -55,6 +56,30 @@ CmdLineParse(
         BootMgrInfo.DebugString = DebugString;
     }
 
+    /* Get the video options */
+    Setting = strstr(CmdLine, "video=");
+    if (Setting)
+    {
+        Setting += sizeof("video=") - sizeof(ANSI_NULL);
+    }
+#if (defined(_M_IX86) || defined(_M_AMD64)) && !defined(SARCH_XBOX) && !defined(SARCH_PC98)
+    else
+    {
+        Setting = strstr(CmdLine, "vga=");
+        if (Setting)
+            Setting += sizeof("vga=") - sizeof(ANSI_NULL);
+    }
+#endif
+    if (Setting)
+    {
+        /* Check if there are more command-line parameters following */
+        Length = strcspn(Setting, " \t");
+
+        /* Copy the string */
+        RtlStringCbCopyNA(VideoOptions, sizeof(VideoOptions), Setting, Length);
+        BootMgrInfo.VideoOptions = VideoOptions;
+    }
+
     /* Get the timeout */
     Setting = strstr(CmdLine, "timeout=");
     if (Setting)
@@ -69,8 +94,7 @@ CmdLineParse(
     {
         /* Check if there are more command-line parameters following */
         Setting += sizeof("defaultos=") - sizeof(ANSI_NULL);
-        End = strstr(Setting, " ");
-        Length = (End ? (End - Setting) : strlen(Setting));
+        Length = strcspn(Setting, " \t");
 
         /* Copy the default OS */
         RtlStringCbCopyNA(DefaultOs, sizeof(DefaultOs), Setting, Length);
