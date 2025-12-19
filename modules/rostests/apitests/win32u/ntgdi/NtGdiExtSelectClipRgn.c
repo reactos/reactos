@@ -11,6 +11,7 @@ START_TEST(NtGdiExtSelectClipRgn)
 {
     HRGN hRgnDest, hRgn1, hRgn2;
     HDC hdc;
+    HBITMAP hbm;
 // test what params are accepted for what operations
 // 0? invalid? are params maybe ignored in some cases?
 // LastError
@@ -20,7 +21,9 @@ START_TEST(NtGdiExtSelectClipRgn)
     hRgn1 = CreateRectRgn(1,1,4,4);
     hRgn2 = CreateRectRgn(2,2,6,3);
 
-    hdc = GetDC(NULL);
+    hdc = CreateCompatibleDC(NULL);
+    hbm = CreateCompatibleBitmap(hdc, 10, 10);
+    SelectObject(hdc, hbm);
 
     /* RGN_AND = 1, RGN_OR = 2, RGN_XOR = 3, RGN_DIFF = 4, RGN_COPY = 5 */
 
@@ -54,4 +57,7 @@ START_TEST(NtGdiExtSelectClipRgn)
     ok_int(NtGdiExtSelectClipRgn(hdc, NULL, RGN_AND), ERROR);
     ok_long(GetLastError(), 0xDEADFACE);
     ok_int(NtGdiExtSelectClipRgn(hdc, NULL, RGN_COPY), SIMPLEREGION);
+
+    DeleteDC(hdc);
+    DeleteObject(hbm);
 }
