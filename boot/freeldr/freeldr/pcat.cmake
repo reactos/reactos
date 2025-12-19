@@ -89,7 +89,7 @@ if(ARCH STREQUAL "i386")
 
     elseif(SARCH STREQUAL "pc98")
         list(APPEND PCATLDR_ARC_SOURCE
-            arch/i386/pc/pcmem.c
+            arch/i386/pc/pcmem.c        # pc98mem.c depends on it
             arch/i386/pc98/machpc98.c
             arch/i386/pc98/pc98beep.c
             arch/i386/pc98/pc98cons.c
