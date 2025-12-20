@@ -111,10 +111,6 @@ HRESULT CDesktopThread::Initialize(ITrayWindow* pTray)
             return E_FAIL;
         }
     }
-
-    CloseHandle(m_hInitEvent);
-    m_hInitEvent = NULL;
-
     return S_OK;
 }
 
