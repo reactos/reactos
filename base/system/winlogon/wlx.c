@@ -1088,6 +1088,12 @@ CreateWindowStationAndDesktops(
     ret = TRUE;
 
 cleanup:
+        {
+            CloseWindowStation(Session->InteractiveWindowStation);
+            Session->InteractiveWindowStation = NULL;
+        }
+    }
+
     /* Free security descriptors regardless of success or failure */
     if (WlWinstaSecurityDescriptor)
     {
@@ -1124,11 +1130,7 @@ cleanup:
             Session->ScreenSaverDesktop = NULL;
         }
         if (Session->InteractiveWindowStation)
-        {
-            CloseWindowStation(Session->InteractiveWindowStation);
-            Session->InteractiveWindowStation = NULL;
-        }
-    }
+
 
     return ret;
 }

@@ -290,8 +290,6 @@ AddNotificationDll(
     NotificationDll->pszKeyName = WlStrDup(pszKeyName);
     if (NotificationDll->pszKeyName == NULL)
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NotificationDll);
-        NotificationDll = NULL;
         lError = ERROR_OUTOFMEMORY;
         goto done;
     }

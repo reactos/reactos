@@ -292,8 +292,6 @@ StartScreenSaver(
     if (rc != ERROR_SUCCESS)
     {
         ERR("WL: RegOpenKeyEx error %lu\n", rc);
-        RegCloseKey(hCurrentUser);
-        hCurrentUser = NULL;
         goto cleanup;
     }
 
