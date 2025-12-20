@@ -18,6 +18,8 @@ INT gNestedWindowLimit = 50;
 PWINDOWLIST gpwlList = NULL;
 PWINDOWLIST gpwlCache = NULL;
 
+#define MAX_LARGE_STRING_BYTES (64 * 1024) /* 64 KB hard cap */
+
 /* HELPER FUNCTIONS ***********************************************************/
 
 PVOID FASTCALL
@@ -2629,45 +2631,59 @@ ProbeAndCaptureLargeString(
 {
     LARGE_STRING lstrTemp;
     PVOID pvBuffer = NULL;
+    ULONG allocLength;
+    NTSTATUS Status;
 
+    /* Probe and copy the LARGE_STRING structure */
     _SEH2_TRY
     {
-        /* Probe and copy the string */
         ProbeForRead(plstrUnsafe, sizeof(LARGE_STRING), sizeof(ULONG));
         lstrTemp = *plstrUnsafe;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail */
         _SEH2_YIELD(return _SEH2_GetExceptionCode();)
     }
-    _SEH2_END
+    _SEH2_END;
 
-    if (lstrTemp.Length != 0)
+    /* Default output */
+    plstrSafe->Buffer = NULL;
+    plstrSafe->Length = 0;
+    plstrSafe->MaximumLength = 0;
+
+    if (lstrTemp.Length == 0)
     {
-        /* Allocate a buffer from paged pool */
-        pvBuffer = ExAllocatePoolWithTag(PagedPool, lstrTemp.Length, TAG_STRING);
-        if (!pvBuffer)
-        {
-            return STATUS_NO_MEMORY;
-        }
-
-        _SEH2_TRY
-        {
-            /* Probe and copy the buffer */
-            ProbeForRead(lstrTemp.Buffer, lstrTemp.Length, sizeof(WCHAR));
-            RtlCopyMemory(pvBuffer, lstrTemp.Buffer, lstrTemp.Length);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Cleanup and fail */
-            ExFreePoolWithTag(pvBuffer, TAG_STRING);
-            _SEH2_YIELD(return _SEH2_GetExceptionCode();)
-        }
-        _SEH2_END
+        return STATUS_SUCCESS;
     }
 
-    /* Set the output string */
+    /*
+     * Validate length arithmetic (ULONG-based, no size_t)
+     * We do NOT change semantics by adding a terminator.
+     */
+    Status = RtlULongAdd(lstrTemp.Length, 0, &allocLength);
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_INTEGER_OVERFLOW;
+    }
+
+    pvBuffer = ExAllocatePoolWithTag(PagedPool, allocLength, TAG_STRING);
+    if (!pvBuffer)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    _SEH2_TRY
+    {
+        ProbeForRead(lstrTemp.Buffer, lstrTemp.Length, sizeof(WCHAR));
+        RtlCopyMemory(pvBuffer, lstrTemp.Buffer, lstrTemp.Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(pvBuffer, TAG_STRING);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode();)
+    }
+    _SEH2_END;
+
     plstrSafe->Buffer = pvBuffer;
     plstrSafe->Length = lstrTemp.Length;
     plstrSafe->MaximumLength = lstrTemp.Length;
