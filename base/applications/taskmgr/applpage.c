@@ -332,7 +332,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     BOOL    bLargeIcon;
     BOOL    bHung = FALSE;
     LRESULT bAlive;
-    BOOL    bIconLoaded = FALSE; /* Track if icon was loaded and needs to be destroyed */
 
     typedef int (FAR __stdcall *IsHungAppWindowProc)(HWND);
     IsHungAppWindowProc IsHungAppWindow;
@@ -374,11 +373,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
             hIcon = (HICON)(LONG_PTR)GetClassLongPtrW(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
 
         /* If we still do not have any icon, load the default one */
-        if (!hIcon)
-        {
-            hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
-            bIconLoaded = TRUE; /* Mark that this icon was loaded and needs to be destroyed */
-        }
+        if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
     }
 
 #undef GET_ICON
@@ -391,10 +386,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
         bHung = IsHungAppWindow(hWnd);
 
     AddOrUpdateHwnd(hWnd, szText, hIcon, bHung);
-
-    /* ImageList_AddIcon and ImageList_ReplaceIcon make a copy, so destroy the loaded icon */
-    if (bIconLoaded && hIcon)
-        DestroyIcon(hIcon);
 
     return TRUE;
 }
