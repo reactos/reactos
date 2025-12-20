@@ -346,6 +346,12 @@ bool CIconWatcher::AddIconToWatcher(_In_ CONST NOTIFYICONDATA *iconData)
     }
 
     IconWatcherData *Icon = new IconWatcherData(iconData);
+    if (!Icon)
+    {
+        CloseHandle(hProcess);
+        return false;
+    }
+
     Icon->hProcess = hProcess;
     Icon->ProcessId = ProcessId;
 
@@ -673,6 +679,11 @@ CNotifyToolbar::CNotifyToolbar() :
 
 CNotifyToolbar::~CNotifyToolbar()
 {
+    if (m_ImageList)
+    {
+        ImageList_Destroy(m_ImageList);
+        m_ImageList = NULL;
+    }
 }
 
 int CNotifyToolbar::GetVisibleButtonCount()

@@ -276,7 +276,6 @@ public:
         if (!m_hThread)
         {
             m_bThreadRunning = FALSE;
-            CloseHandle(m_hThread);
         }
     }
 };
@@ -431,7 +430,19 @@ public:
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
         m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
     }
-    virtual ~CTaskSwitchWnd() { }
+    virtual ~CTaskSwitchWnd()
+    {
+        if (m_ImageList)
+        {
+            ImageList_Destroy(m_ImageList);
+            m_ImageList = NULL;
+        }
+        if (m_Theme)
+        {
+            CloseThemeData(m_Theme);
+            m_Theme = NULL;
+        }
+    }
 
     INT GetWndTextFromTaskItem(IN PTASK_ITEM TaskItem, LPWSTR szBuf, DWORD cchBuf)
     {
@@ -640,9 +651,12 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        BOOL bNeedDestroyIcon = (icon != NULL);
         if (!icon)
             icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskItem->IconIndex, icon);
+        if (bNeedDestroyIcon)
+            DestroyIcon(icon);
         tbbi.iImage = TaskItem->IconIndex;
 
         if (!m_TaskBar.SetButtonInfo(TaskItem->Index, &tbbi))
@@ -785,9 +799,12 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        BOOL bNeedDestroyIcon = (icon != NULL);
         if (!icon)
             icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
+        if (bNeedDestroyIcon)
+            DestroyIcon(icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
         tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;

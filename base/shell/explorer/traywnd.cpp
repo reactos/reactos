@@ -533,7 +533,9 @@ public:
             }
         }
 
-        CloseHandle(CreateThread(NULL, 0, s_RunFileDlgThread, this, 0, NULL));
+        HANDLE hThread = CreateThread(NULL, 0, s_RunFileDlgThread, this, 0, NULL);
+        if (hThread)
+            CloseHandle(hThread);
     }
 
     DWORD WINAPI TrayPropertiesThread()
@@ -587,7 +589,9 @@ public:
             }
         }
 
-        CloseHandle(CreateThread(NULL, 0, s_TrayPropertiesThread, this, 0, NULL));
+        HANDLE hThread = CreateThread(NULL, 0, s_TrayPropertiesThread, this, 0, NULL);
+        if (hThread)
+            CloseHandle(hThread);
         return NULL;
     }
 
