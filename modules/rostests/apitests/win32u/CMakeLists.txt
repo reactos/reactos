@@ -58,6 +58,7 @@ list(APPEND SOURCE
     ntuser/NtUserFindExistingCursorIcon.c
     ntuser/NtUserGetAsyncKeyState.c
     ntuser/NtUserGetClassInfo.c
+    ntuser/NtUserGetCursorInfo.c
 #    ntuser/NtUserGetIconInfo.c
     ntuser/NtUserGetKeyboardLayoutName.c
     ntuser/NtUserGetThreadState.c
