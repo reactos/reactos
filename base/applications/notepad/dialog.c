@@ -351,7 +351,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
     WaitCursor(TRUE);
     SetWindowText(Globals.hEdit, NULL);
 
-    /* Try to open the file with OPEN_EXISTING */
+    /* Try to open the file with OPEN_EXISTING because the file can be read-only */
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
