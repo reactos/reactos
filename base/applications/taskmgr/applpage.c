@@ -375,7 +375,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
         /* If we still do not have any icon, load the default one */
         if (!hIcon) hIcon = LoadIconW(hInst, bLargeIcon ? MAKEINTRESOURCEW(IDI_WINDOW) : MAKEINTRESOURCEW(IDI_WINDOWSM));
     }
-
 #undef GET_ICON
 
     bHung = FALSE;
