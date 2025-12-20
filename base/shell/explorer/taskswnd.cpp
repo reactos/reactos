@@ -430,19 +430,6 @@ public:
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
         m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
     }
-    virtual ~CTaskSwitchWnd()
-    {
-        if (m_ImageList)
-        {
-            ImageList_Destroy(m_ImageList);
-            m_ImageList = NULL;
-        }
-        if (m_Theme)
-        {
-            CloseThemeData(m_Theme);
-            m_Theme = NULL;
-        }
-    }
 
     INT GetWndTextFromTaskItem(IN PTASK_ITEM TaskItem, LPWSTR szBuf, DWORD cchBuf)
     {
@@ -1568,6 +1555,7 @@ public:
 
         CloseThemeData(m_Theme);
         DeleteAllTasks();
+
         return TRUE;
     }
 
