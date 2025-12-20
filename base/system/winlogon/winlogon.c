@@ -5,7 +5,7 @@
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Filip Navara
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Hervï¿½ Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -217,6 +217,8 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            RegCloseKey(hKey);
+            return;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -278,6 +280,8 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            RegCloseKey(hKey);
+            return;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))

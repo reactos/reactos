@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/screensaver.c
  * PURPOSE:         Screen saver management
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervï¿½ Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -292,6 +292,8 @@ StartScreenSaver(
     if (rc != ERROR_SUCCESS)
     {
         ERR("WL: RegOpenKeyEx error %lu\n", rc);
+        RegCloseKey(hCurrentUser);
+        hCurrentUser = NULL;
         goto cleanup;
     }
 
@@ -305,12 +307,20 @@ StartScreenSaver(
     {
         if (rc != ERROR_FILE_NOT_FOUND)
             ERR("WL: RegQueryValueEx error %lu\n", rc);
+        RegCloseKey(hKey);
+        hKey = NULL;
+        RegCloseKey(hCurrentUser);
+        hCurrentUser = NULL;
         goto cleanup;
     }
 
     if (bufferSize == 0)
     {
         ERR("WL: Buffer size is NULL!\n");
+        RegCloseKey(hKey);
+        hKey = NULL;
+        RegCloseKey(hCurrentUser);
+        hCurrentUser = NULL;
         goto cleanup;
     }
 
@@ -319,6 +329,10 @@ StartScreenSaver(
     if (wcslen(szApplicationName) == 0)
     {
         ERR("WL: Application Name length is zero!\n");
+        RegCloseKey(hKey);
+        hKey = NULL;
+        RegCloseKey(hCurrentUser);
+        hCurrentUser = NULL;
         goto cleanup;
     }
 

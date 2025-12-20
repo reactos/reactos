@@ -5,7 +5,7 @@
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Ge van Geldorp (gvg@reactos.com)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Hervï¿½ Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -1088,6 +1088,24 @@ CreateWindowStationAndDesktops(
     ret = TRUE;
 
 cleanup:
+    /* Free security descriptors regardless of success or failure */
+    if (WlWinstaSecurityDescriptor)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
+    }
+    if (WlApplicationDesktopSecurityDescriptor)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
+    }
+    if (WlWinlogonDesktopSecurityDescriptor)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
+    }
+    if (WlScreenSaverDesktopSecurityDescriptor)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
+    }
+
     if (!ret)
     {
         if (Session->ApplicationDesktop)
@@ -1109,22 +1127,6 @@ cleanup:
         {
             CloseWindowStation(Session->InteractiveWindowStation);
             Session->InteractiveWindowStation = NULL;
-        }
-        if (WlWinstaSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
-        }
-        if (WlApplicationDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
-        }
-        if (WlWinlogonDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
-        }
-        if (WlScreenSaverDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
         }
     }
 
