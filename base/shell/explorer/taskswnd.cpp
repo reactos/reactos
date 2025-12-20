@@ -1555,7 +1555,6 @@ public:
 
         CloseThemeData(m_Theme);
         DeleteAllTasks();
-
         return TRUE;
     }
 
