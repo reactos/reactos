@@ -651,12 +651,9 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
-        BOOL bNeedDestroyIcon = (icon != NULL);
         if (!icon)
             icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskItem->IconIndex, icon);
-        if (bNeedDestroyIcon)
-            DestroyIcon(icon);
         tbbi.iImage = TaskItem->IconIndex;
 
         if (!m_TaskBar.SetButtonInfo(TaskItem->Index, &tbbi))
@@ -799,12 +796,9 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
-        BOOL bNeedDestroyIcon = (icon != NULL);
         if (!icon)
             icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
-        if (bNeedDestroyIcon)
-            DestroyIcon(icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
         tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
