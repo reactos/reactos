@@ -351,12 +351,19 @@ VOID DoOpenFile(LPCTSTR szFileName)
     WaitCursor(TRUE);
     SetWindowText(Globals.hEdit, NULL);
 
+    /* Try to open the file with OPEN_EXISTING */
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        ShowLastError();
-        goto done;
+        /* Not existing? Let's open with OPEN_ALWAYS */
+        hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                           OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            ShowLastError();
+            goto done;
+        }
     }
 
     /* To make loading file quicker, we use the internal handle of EDIT control */
