@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/screensaver.c
  * PURPOSE:         Screen saver management
- * PROGRAMMERS:     Hervï¿½ Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
