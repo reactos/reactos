@@ -324,8 +324,10 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Cdb->CDB10.TransferBlocksLsb = FullSectors & 0xff;
         if (!SpiSendSynchronousSrb(Context->DeviceExtension, Srb))
         {
+            ExFreePool(Srb);
             return EIO;
         }
+        ExFreePool(Srb);
         Buffer = (PUCHAR)Buffer + FullSectors * Context->SectorSize;
         N -= FullSectors * Context->SectorSize;
         *Count += FullSectors * Context->SectorSize;
@@ -371,12 +373,14 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Cdb->CDB10.TransferBlocksLsb = 1;
         if (!SpiSendSynchronousSrb(Context->DeviceExtension, Srb))
         {
+            ExFreePool(Srb);
             ExFreePool(Sector);
             return EIO;
         }
         RtlCopyMemory(Buffer, Sector, N);
         *Count += N;
         /* Context->SectorNumber remains untouched (incomplete sector read) */
+        ExFreePool(Srb);
         ExFreePool(Sector);
     }
 

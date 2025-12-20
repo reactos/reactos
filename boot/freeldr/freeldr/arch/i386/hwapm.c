@@ -70,6 +70,7 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* FIXME: Add configuration data */
 
     /* Create new bus key */
+    BiosKey = NULL;
     FldrCreateComponentKey(SystemKey,
                            AdapterClass,
                            MultiFunctionAdapter,
@@ -80,6 +81,14 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                            PartialResourceList,
                            Size,
                            &BiosKey);
+
+    /* Check if component creation succeeded */
+    if (!BiosKey)
+    {
+        ERR("Failed to create APM component key\n");
+        FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+        return;
+    }
 
     /* Increment bus number */
     (*BusNumber)++;

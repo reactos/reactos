@@ -323,6 +323,7 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     PartialDescriptor->u.Dma.Port = 0;
 
     /* Create floppy disk controller */
+    ControllerKey = NULL;
     FldrCreateComponentKey(BusKey,
                            ControllerClass,
                            DiskController,
@@ -333,6 +334,14 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
+
+    /* Check if component creation succeeded */
+    if (!ControllerKey)
+    {
+        ERR("Failed to create floppy disk controller component key\n");
+        FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+        return NULL;
+    }
 
     if (FloppyCount)
         DetectBiosFloppyPeripheral(ControllerKey);
