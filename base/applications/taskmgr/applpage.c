@@ -380,6 +380,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
             bIconLoaded = TRUE; /* Mark that this icon was loaded and needs to be destroyed */
         }
     }
+
 #undef GET_ICON
 
     bHung = FALSE;
