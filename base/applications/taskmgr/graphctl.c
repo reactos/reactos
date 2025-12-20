@@ -68,10 +68,7 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
 
     hdc = GetDC(hParentWnd);
     if (!hdc)
-    {
-        ReleaseDC(hParentWnd, hdc);
         goto fail;
-    }
 
     inst->hdcGraph = hdcg = CreateCompatibleDC(hdc);
     inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, inst->BitmapHeight);
