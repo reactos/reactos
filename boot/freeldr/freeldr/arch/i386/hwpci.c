@@ -175,6 +175,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         {
             ERR("Failed to create PCI IRQ routing table component key\n");
             FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+            return;
         }
     }
 }
