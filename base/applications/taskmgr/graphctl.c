@@ -71,14 +71,11 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
     inst->hdcGraph = hdcg;
     inst->hbmGraph = CreateCompatibleBitmap(hdc, inst->BitmapWidth, inst->BitmapHeight);
 
-    if (!hdc ||
-        !hdcg ||
-        !inst->hbmGraph)
-    {
-        goto fail;
-    }
-
     ReleaseDC(hParentWnd, hdc);
+
+    if (!hdcg || !inst->hbmGraph)
+        goto fail;
+
     hbmOld = (HBITMAP)SelectObject(hdcg, inst->hbmGraph);
     DeleteObject(hbmOld);
 
@@ -107,8 +104,6 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
     return TRUE;
 
 fail:
-    if (hdc)
-        ReleaseDC(hParentWnd, hdc);
     GraphCtrl_Dispose(inst);
     return FALSE;
 }
