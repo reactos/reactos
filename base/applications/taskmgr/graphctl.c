@@ -75,8 +75,6 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
         !hdcg ||
         !inst->hbmGraph)
     {
-        if (hdc)
-            ReleaseDC(hParentWnd, hdc);
         goto fail;
     }
 
@@ -109,6 +107,8 @@ GraphCtrl_Create(PTM_GRAPH_CONTROL inst, HWND hWnd, HWND hParentWnd, PTM_FORMAT 
     return TRUE;
 
 fail:
+    if (hdc)
+        ReleaseDC(hParentWnd, hdc);
     GraphCtrl_Dispose(inst);
     return FALSE;
 }
