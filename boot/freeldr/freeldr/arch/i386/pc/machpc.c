@@ -982,8 +982,6 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     TRACE("DetectParallelPorts() done\n");
 }
 
-#endif // !SARCH_XBOX
-
 // static
 BOOLEAN
 DetectKeyboardDevice(VOID)
@@ -1184,9 +1182,6 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
     DetectKeyboardPeripheral(ControllerKey);
 }
-
-/* FIXME: Abstract things better so we don't need to place define here */
-#if !defined(SARCH_XBOX)
 
 static
 VOID
