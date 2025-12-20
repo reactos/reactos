@@ -1040,6 +1040,8 @@ LRESULT  CNotifyToolbar::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
         ImageList_Destroy(m_ImageList);
         m_ImageList = NULL;
     }
+    
+    return 0;
 }
 
 LRESULT CNotifyToolbar::OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
