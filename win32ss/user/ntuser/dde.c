@@ -10,6 +10,8 @@
 
 #include <dde.h>
 
+#define MAX_DDE_SIZE (1024 * 1024) /* arbitrary: 1 MB */
+
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 //
@@ -57,18 +59,18 @@ IntDDEPostCallback(
    PVOID Argument, ResultPointer;
    PDDEPOSTGET_CALLBACK_ARGUMENTS Common;
    int size = 0;
+   BOOL Success = FALSE;
+
    ResultPointer = NULL;
    ResultLength = ArgumentLength = sizeof(DDEPOSTGET_CALLBACK_ARGUMENTS);
 
    Argument = IntCbAllocateMemory(ArgumentLength);
-   if (NULL == Argument)
-   {
+   if (!Argument)
       return FALSE;
-   }
 
-   Common = (PDDEPOSTGET_CALLBACK_ARGUMENTS) Argument;
+   Common = (PDDEPOSTGET_CALLBACK_ARGUMENTS)Argument;
 
-   Common->pvData  = 0;
+   Common->pvData  = NULL;
    Common->size    = 0;
    Common->hwnd    = UserHMGetHandle(pWnd);
    Common->message = Msg;
@@ -85,23 +87,41 @@ IntDDEPostCallback(
 
    UserEnterCo();
 
-   if (!NT_SUCCESS(Status) || ResultPointer == NULL )
+   if (!NT_SUCCESS(Status) || ResultPointer == NULL ||
+       ResultLength < ArgumentLength)
    {
-      ERR("DDE Post callback failed!\n");
       IntCbFreeMemory(Argument);
       return 0;
    }
 
    RtlCopyMemory(Common, ResultPointer, ArgumentLength);
 
-   size    = Common->size;
-   *lParam = Common->lParam;
-   *Buffer = Common->pvData;
+   if (Common->size == 0 || Common->size > MAX_DDE_SIZE)
+   {
+      IntCbFreeMemory(Argument);
+      return 0;
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead(Common->pvData, Common->size, 1);
+
+      *Buffer = Common->pvData;
+      *lParam = Common->lParam;
+      size    = Common->size;
+      Success = TRUE;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Success = FALSE;
+   }
+   _SEH2_END;
 
    IntCbFreeMemory(Argument);
 
-   return size ? size : -1;
+   return Success ? size : 0;
 }
+
 
 //
 //  DDE Get/Peek message callback to user side.
