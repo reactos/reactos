@@ -80,15 +80,7 @@ void PerfDataUninitialize(void)
     PSIDTOUSERNAME pEntry;
 
     if (pPerfData != NULL)
-    {
         HeapFree(GetProcessHeap(), 0, pPerfData);
-    }
-
-    if (pPerfDataOld != NULL)
-    {
-        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
-        pPerfDataOld = NULL;
-    }
 
     DeleteCriticalSection(&PerfDataCriticalSection);
 
