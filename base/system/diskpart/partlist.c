@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "diskpart.h"
-#include <ntddscsi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1180,6 +1179,32 @@ AddDiskToList(
         return;
     }
 
+    PBYTE pBuffer = NULL;
+
+    pBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             1024);
+
+    STORAGE_PROPERTY_QUERY StoragePropertyQuery;
+    StoragePropertyQuery.PropertyId = StorageDeviceProperty;
+    StoragePropertyQuery.QueryType = PropertyStandardQuery;
+    Status = NtDeviceIoControlFile(FileHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   IOCTL_STORAGE_QUERY_PROPERTY,
+                                   &StoragePropertyQuery,
+                                   sizeof(STORAGE_PROPERTY_QUERY),
+                                   pBuffer,
+                                   1024);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
+        pBuffer = NULL;
+    }
+
+
     Mbr = (PARTITION_SECTOR*)RtlAllocateHeap(RtlGetProcessHeap(),
                                              0,
                                              DiskGeometry.BytesPerSector);
@@ -1224,7 +1249,104 @@ AddDiskToList(
                                 sizeof(DISKENTRY));
     if (DiskEntry == NULL)
     {
+        if (pBuffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Mbr);
         return;
+    }
+
+    if (pBuffer)
+    {
+        PSTORAGE_DESCRIPTOR_HEADER pDescriptorHeader;
+
+        pDescriptorHeader = (PSTORAGE_DESCRIPTOR_HEADER)pBuffer;
+        DPRINT("DescriptorHeader.Size %lu\n", pDescriptorHeader->Size);
+
+        if (pDescriptorHeader->Size <= 1024)
+        {
+            PSTORAGE_DEVICE_DESCRIPTOR pDeviceDescriptor;
+            pDeviceDescriptor = (PSTORAGE_DEVICE_DESCRIPTOR)pBuffer;
+            DPRINT("VendorIdOffset %lu\n", pDeviceDescriptor->VendorIdOffset);
+            DPRINT("ProductIdOffset %lu\n", pDeviceDescriptor->ProductIdOffset);
+            DPRINT("ProductRevisionOffset %lu\n", pDeviceDescriptor->ProductRevisionOffset);
+            DPRINT("SerialNumberOffset %lu\n", pDeviceDescriptor->SerialNumberOffset);
+            DPRINT("BusType: %u\n", pDeviceDescriptor->BusType);
+            if (pDeviceDescriptor->VendorIdOffset)
+            {
+                DPRINT("Vendor: %s\n", (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->VendorIdOffset));
+            }
+
+            if (pDeviceDescriptor->ProductIdOffset)
+            {
+                DPRINT("Product: %s\n", (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->ProductIdOffset));
+            }
+
+            INT VendorLength = 0, ProductLength = 0;
+            PWSTR VendorBuffer = NULL, ProductBuffer = NULL;
+
+            if (pDeviceDescriptor->VendorIdOffset)
+            {
+                VendorLength = MultiByteToWideChar(437,
+                                                   0,
+                                                   (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->VendorIdOffset),
+                                                   -1,
+                                                   NULL,
+                                                   0);
+                VendorBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                               HEAP_ZERO_MEMORY,
+                                               VendorLength * sizeof(WCHAR));
+                if (VendorBuffer)
+                    MultiByteToWideChar(437,
+                                        0,
+                                        (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->VendorIdOffset),
+                                        -1,
+                                        VendorBuffer,
+                                        VendorLength);
+            }
+
+            if (pDeviceDescriptor->ProductIdOffset)
+            {
+                ProductLength = MultiByteToWideChar(437,
+                                                   0,
+                                                   (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->ProductIdOffset),
+                                                   -1,
+                                                   NULL,
+                                                   0);
+
+                ProductBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                HEAP_ZERO_MEMORY,
+                                                ProductLength * sizeof(WCHAR));
+                if (ProductBuffer)
+                    MultiByteToWideChar(437,
+                                        0,
+                                        (PSTR)((ULONG_PTR)pBuffer + pDeviceDescriptor->ProductIdOffset),
+                                        -1,
+                                        ProductBuffer,
+                                        ProductLength);
+            }
+
+            DiskEntry->Description = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                     HEAP_ZERO_MEMORY,
+                                                     (VendorLength + ProductLength + 2) * sizeof(WCHAR));
+            if (VendorBuffer)
+                wcscat(DiskEntry->Description, VendorBuffer);
+
+            if ((VendorLength > 0) && (ProductLength > 0))
+                wcscat(DiskEntry->Description, L" ");
+
+            if (ProductBuffer)
+                wcscat(DiskEntry->Description, ProductBuffer);
+
+            DiskEntry->BusType = pDeviceDescriptor->BusType;
+
+            if (VendorBuffer)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, VendorBuffer);
+
+            if (ProductBuffer)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, ProductBuffer);
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
     }
 
 //    DiskEntry->Checksum = Checksum;
@@ -1313,9 +1435,9 @@ AddDiskToList(
     DiskEntry->SectorAlignment = (1024 * 1024) / DiskGeometry.BytesPerSector;
     DiskEntry->CylinderAlignment = (1024 * 1024) / DiskGeometry.BytesPerSector;
 
-    DPRINT1("SectorCount: %I64u\n", DiskEntry->SectorCount);
-    DPRINT1("SectorAlignment: %lu\n", DiskEntry->SectorAlignment);
-    DPRINT1("CylinderAlignment: %lu\n", DiskEntry->CylinderAlignment);
+    DPRINT("SectorCount: %I64u\n", DiskEntry->SectorCount);
+    DPRINT("SectorAlignment: %lu\n", DiskEntry->SectorAlignment);
+    DPRINT("CylinderAlignment: %lu\n", DiskEntry->CylinderAlignment);
 
     DiskEntry->DiskNumber = DiskNumber;
     DiskEntry->Port = ScsiAddress.PortNumber;
@@ -1329,7 +1451,7 @@ AddDiskToList(
 
     ReadLayoutBuffer(FileHandle, DiskEntry);
 
-    DPRINT1("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
+    DPRINT("PartitionCount: %lu\n", DiskEntry->LayoutBuffer->PartitionCount);
 
 #ifdef DUMP_PARTITION_TABLE
     DumpPartitionTable(DiskEntry);
@@ -1528,6 +1650,11 @@ DestroyPartitionList(VOID)
         if (DiskEntry->LayoutBuffer != NULL)
             RtlFreeHeap(RtlGetProcessHeap(), 0, DiskEntry->LayoutBuffer);
 
+        if (DiskEntry->Description != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DiskEntry->Description);
+
+        if (DiskEntry->Location != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DiskEntry->Location);
 
         /* Release disk entry */
         RtlFreeHeap(RtlGetProcessHeap(), 0, DiskEntry);

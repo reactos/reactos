@@ -63,9 +63,10 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "ID Disco: %s\n"
-    IDS_DETAIL_INFO_TYPE "Tipo"
-    IDS_DETAIL_INFO_STATUS "Stato"
+    IDS_DETAIL_DISK_DESCRIPTION "%s\n"
+    IDS_DETAIL_DISK_ID "ID Disco: %s\n"
+    IDS_DETAIL_DISK_TYPE "Tipo   : %s\n"
+    IDS_DETAIL_DISK_STATUS "Stato  : %s\n"
     IDS_DETAIL_INFO_PATH   "Percorso   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Target     : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID     : %hu\n"
@@ -273,4 +274,31 @@ BEGIN
     IDS_ERROR_MSG_BAD_ARG "Errore nel processare l'argomento: %s\n"
     IDS_ERROR_INVALID_ARGS "Argomenti non validi\n"
     IDS_ERROR_NO_MEDIUM "Nessun medium nel dispositivo.\n"
+END
+
+/* Bus type */
+STRINGTABLE
+BEGIN
+    IDS_BUSTYPE_UNKNOWN "Unknown"
+    IDS_BUSTYPE_SCSI    "SCSI"
+    IDS_BUSTYPE_ATAPI   "ATAPI"
+    IDS_BUSTYPE_ATA     "ATA"
+    IDS_BUSTYPE_1394    "1394"
+    IDS_BUSTYPE_SSA     "SSA"
+    IDS_BUSTYPE_FIBRE   "FibreChannel"
+    IDS_BUSTYPE_USB     "USB"
+    IDS_BUSTYPE_RAID    "RAID"
+    IDS_BUSTYPE_ISCSI   "iSCSI"
+    IDS_BUSTYPE_SAS     "SAS"
+    IDS_BUSTYPE_SATA    "SATA"
+    IDS_BUSTYPE_SD      "SD"
+    IDS_BUSTYPE_MMC     "MMC"
+    IDS_BUSTYPE_VIRTUAL "Virtual"
+    IDS_BUSTYPE_FBV     "FileBackedVirtual"
+    IDS_BUSTYPE_SPACES  "StorageSpaces"
+    IDS_BUSTYPE_NVME    "NVME"
+    IDS_BUSTYPE_SCM     "SCM"
+    IDS_BUSTYPE_UFS     "UFS"
+    IDS_BUSTYPE_NVMEOF  "NVMEOF"
+    IDS_BUSTYPE_OTHER   "Other"
 END

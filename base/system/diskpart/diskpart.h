@@ -17,9 +17,11 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winreg.h>
 #include <wincon.h>
 #include <winioctl.h>
+#include <winuser.h>
 #include <ntsecapi.h>
 
 #include <errno.h>
@@ -48,6 +50,9 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
+
+#include <ntddscsi.h>
+#include <ntddstor.h>
 
 #include <fmifs/fmifs.h>
 #include <guiddef.h>
@@ -171,6 +176,10 @@ typedef struct _BIOSDISKENTRY
 typedef struct _DISKENTRY
 {
     LIST_ENTRY ListEntry;
+
+    PWSTR Description;
+    PWSTR Location;
+    STORAGE_BUS_TYPE BusType;
 
     ULONGLONG Cylinders;
     ULONG TracksPerCylinder;
@@ -480,6 +489,12 @@ BOOL
 StringToGUID(
     _Out_ GUID *pGuid,
     _In_ PWSTR pszString);
+
+VOID
+PrintBusType(
+    _Out_ PWSTR pszBuffer,
+    _In_ INT cchBufferMax,
+    _In_ STORAGE_BUS_TYPE Bustype);
 
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);

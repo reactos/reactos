@@ -200,7 +200,7 @@ PrintGUID(
              pGuid->Data4[4],
              pGuid->Data4[5],
              pGuid->Data4[6],
-             pGuid->Data4[7]);    
+             pGuid->Data4[7]);
 }
 
 static
@@ -288,4 +288,23 @@ StringToGUID(
         return TRUE;
 
     return FALSE;
+}
+
+
+VOID
+PrintBusType(
+    _Out_ PWSTR pszBuffer,
+    _In_ INT cchBufferMax,
+    _In_ STORAGE_BUS_TYPE BusType)
+{
+    if (BusType <= BusTypeMax)
+        LoadStringW(GetModuleHandle(NULL),
+                    IDS_BUSTYPE_UNKNOWN + BusType,
+                    pszBuffer,
+                    cchBufferMax);
+    else
+        LoadStringW(GetModuleHandle(NULL),
+                    IDS_BUSTYPE_OTHER,
+                    pszBuffer,
+                    cchBufferMax);
 }

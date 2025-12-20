@@ -41,9 +41,10 @@
 #define IDS_DELETE_PARTITION_FAIL      1070
 #define IDS_DELETE_PARTITION_SUCCESS   1071
 
-#define IDS_DETAIL_INFO_DISK_ID        1107
-#define IDS_DETAIL_INFO_TYPE           1108
-#define IDS_DETAIL_INFO_STATUS         1109
+#define IDS_DETAIL_DISK_DESCRIPTION    1106
+#define IDS_DETAIL_DISK_ID             1107
+#define IDS_DETAIL_DISK_TYPE           1108
+#define IDS_DETAIL_DISK_STATUS         1109
 #define IDS_DETAIL_INFO_PATH           1110
 #define IDS_DETAIL_INFO_TARGET         1111
 #define IDS_DETAIL_INFO_LUN_ID         1112
@@ -202,7 +203,30 @@
 #define IDS_HELP_UNIQUEID                  119
 #define IDS_HELP_UNIQUEID_DISK             120
 
-#define IDS_ERROR_MSG_NO_SCRIPT  2000
-#define IDS_ERROR_MSG_BAD_ARG    2001
-#define IDS_ERROR_INVALID_ARGS   2002
-#define IDS_ERROR_NO_MEDIUM      2003
+#define IDS_ERROR_MSG_NO_SCRIPT  5000
+#define IDS_ERROR_MSG_BAD_ARG    5001
+#define IDS_ERROR_INVALID_ARGS   5002
+#define IDS_ERROR_NO_MEDIUM      5003
+
+#define IDS_BUSTYPE_UNKNOWN      5100
+#define IDS_BUSTYPE_SCSI         5101
+#define IDS_BUSTYPE_ATAPI        5102
+#define IDS_BUSTYPE_ATA          5103
+#define IDS_BUSTYPE_1394         5104
+#define IDS_BUSTYPE_SSA          5105
+#define IDS_BUSTYPE_FIBRE        5106
+#define IDS_BUSTYPE_USB          5107
+#define IDS_BUSTYPE_RAID         5108
+#define IDS_BUSTYPE_ISCSI        5109
+#define IDS_BUSTYPE_SAS          5110
+#define IDS_BUSTYPE_SATA         5111
+#define IDS_BUSTYPE_SD           5112
+#define IDS_BUSTYPE_MMC          5113
+#define IDS_BUSTYPE_VIRTUAL      5114
+#define IDS_BUSTYPE_FBV          5115
+#define IDS_BUSTYPE_SPACES       5116
+#define IDS_BUSTYPE_NVME         5117
+#define IDS_BUSTYPE_SCM          5118
+#define IDS_BUSTYPE_UFS          5119
+#define IDS_BUSTYPE_NVMEOF       5120
+#define IDS_BUSTYPE_OTHER        5121
