@@ -307,20 +307,12 @@ StartScreenSaver(
     {
         if (rc != ERROR_FILE_NOT_FOUND)
             ERR("WL: RegQueryValueEx error %lu\n", rc);
-        RegCloseKey(hKey);
-        hKey = NULL;
-        RegCloseKey(hCurrentUser);
-        hCurrentUser = NULL;
         goto cleanup;
     }
 
     if (bufferSize == 0)
     {
         ERR("WL: Buffer size is NULL!\n");
-        RegCloseKey(hKey);
-        hKey = NULL;
-        RegCloseKey(hCurrentUser);
-        hCurrentUser = NULL;
         goto cleanup;
     }
 
@@ -329,10 +321,6 @@ StartScreenSaver(
     if (wcslen(szApplicationName) == 0)
     {
         ERR("WL: Application Name length is zero!\n");
-        RegCloseKey(hKey);
-        hKey = NULL;
-        RegCloseKey(hCurrentUser);
-        hCurrentUser = NULL;
         goto cleanup;
     }
 
