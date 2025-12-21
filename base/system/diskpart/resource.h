@@ -23,6 +23,10 @@
 #define IDS_ACTIVE_ALREADY             1002
 #define IDS_ACTIVE_NO_MBR              1003
 
+#define IDS_AUTOMOUNT_ENABLED          1010
+#define IDS_AUTOMOUNT_DISABLED         1011
+#define IDS_AUTOMOUNT_SCRUBBED         1012
+
 #define IDS_CLEAN_FAIL                 1020
 #define IDS_CLEAN_SUCCESS              1021
 #define IDS_CLEAN_SYSTEM               1022

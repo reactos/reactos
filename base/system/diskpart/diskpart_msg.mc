@@ -418,36 +418,369 @@ SymbolicName=MSG_COMMAND_AUTOMOUNT
 Severity=Informational
 Facility=System
 Language=English
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=German
-<Add AUTOMOUNT command help text here>
+    Aktiviert oder deaktiviert das Feature für die automatische
+    Bereitstellung.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Ermöglicht es ReactOS, dem System hinzugefügten Volumes
+                automatisch Laufwerkbuchstaben zuzuordnen.
+
+    DISABLE     Verhindert, dass ReactOS dem System hinzugefügten
+                Volumes Laufwerkbuchstaben zuordnet.
+
+    SCRUB       Entfernt eingebundene Ordnerpfadnamen, Laufwerkbuchstaben,
+                Ordnerverzeichnisse und Registrierungseinstellungen für
+                Volumes, die nicht mehr im System vorhanden sind. Damit wird
+                verhindert, dass früher im System enthaltene Volumes
+                automatisch ihren früheren Laufwerkbuchstaben und
+                eingebundenen Ordnerpfadnamen zugeordnet werden,
+                wenn sie dem System wieder hinzugefügt werden.
+
+    NOERR       Nur für Skripting. Bei einem Fehler setzt DiskPart die
+                Verarbeitung von Befehlen fort, als sei der Fehler nicht
+                aufgetreten.
+                Ohne den Parameter NOERR wird DiskPart bei einem Fehler
+                mit dem entsprechenden Fehlercode beendet.
+
+    Bei aktiviertem Feature für automatische Bereitstellung wird das
+    Volume automatisch online geschaltet, und dem Volume wird ein
+    Laufwerkbuchstabe und ein Volume-GUID-Pfad zugeordnet, wenn das
+    Volume dem System hinzugefügt wird.
+    In SAN-Konfigurationen (Storage Area Network) wird durch Deaktivieren des
+    Features verhindert, dass Volumes automatisch online geschaltet werden und
+    neuen, für das System sichtbaren Volumes Laufwerkbuchstaben oder
+    Volume-GUID-Pfadnamen zugeordnet werden.
+
+Beispiel:
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Polish
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Portugese
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda AUTOMOUNT>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Russian
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Albanian
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Turkish
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Chinese
-<Add AUTOMOUNT command help text here>
+    Enables or disables the automount feature.
+
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
 .
 Language=Taiwanese
-<Add AUTOMOUNT command help text here>
-.
+    Enables or disables the automount feature.
 
+Syntax:  AUTOMOUNT [ENABLE] [DISABLE] [SCRUB] [NOERR]
+
+    ENABLE      Enables ReactOS to automatically assign drive letters
+                to volumes that are added to the system.
+
+    DISABLE     Prevents ReactOS from automatically assigning drive letters
+                to volumes that are added to the system.
+
+    SCRUB       Removes mounted folder pathnames, drive letters, mounted
+                folder directories, and registry settings, for volumes that
+                are no longer in the system. This prevents volumes that were
+                previously in the system from being automatically assigned
+                their former drive letters and mounted folder pathnames when
+                they are reintroduced to the system.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    When the AutoMount feature is enabled, ReactOS automatically brings the
+    volume online and assigns a drive letter and a volume GUID pathname to
+    the volume, when the volume is added to the system. In storage area network
+    (SAN) configurations, disabling AutoMount prevents ReactOS from automatically
+    onlining the volume and assigning drive letters or volume GUID pathnames
+    to any new volumes that are visible to the system.
+
+Example:
+
+    AUTOMOUNT
+    AUTOMOUNT ENABLE
+    AUTOMOUNT DISABLE
+.
 
 
 MessageId=10006

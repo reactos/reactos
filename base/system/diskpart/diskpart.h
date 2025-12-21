@@ -53,6 +53,7 @@
 
 #include <ntddscsi.h>
 #include <ntddstor.h>
+#include <mountmgr.h>
 
 #include <fmifs/fmifs.h>
 #include <guiddef.h>

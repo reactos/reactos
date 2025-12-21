@@ -34,6 +34,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CLEAN_FAIL "\nDiskPart 無法清理磁碟。\n這個磁碟上的資料可能是無法恢復的。\n"
     IDS_CLEAN_SUCCESS "\nDiskPart 成功清理磁碟。\n"
     IDS_CLEAN_SYSTEM "\n已選擇的磁碟是您的電腦操作所必要的，所以無法清理。\n"

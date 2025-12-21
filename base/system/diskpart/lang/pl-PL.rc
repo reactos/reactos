@@ -25,6 +25,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CLEAN_FAIL "\nDiskPart nie może wyczyścić dysku.\nDane na dysku mogą nie nadawać się do odzyskania.\n"
     IDS_CLEAN_SUCCESS "\nDiskPart pomyślnie oczyścił dysk.\n"
     IDS_CLEAN_SYSTEM "\nWybrany dysk jest niezbędny do działania tego komputera, nie może być wyczyszczony.\n"

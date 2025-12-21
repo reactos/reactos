@@ -25,6 +25,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nDie automatische Bereitstellung von neuen Volumes ist aktiviert.\n"
+    IDS_AUTOMOUNT_DISABLED "\nDie automatische Bereitstellung von neuen Volumes ist deaktiviert.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart hat die Liste der Bereitstellungspunkte erfolgreich bereinigt.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CLEAN_FAIL "\nDer Datenträger konnte nicht bereinigt werden.\nMöglicherweise können die Daten auf diesem Datenträger nicht wiederhergestellt werden.\n"
     IDS_CLEAN_SUCCESS "\nDer Datenträger wurde bereinigt.\n"
     IDS_CLEAN_SYSTEM "\nDer gewählte Datenträger ist zum Ausführen des Computers erforderlich und kann nicht bereinigt werden.\n"

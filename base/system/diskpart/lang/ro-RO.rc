@@ -33,6 +33,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CLEAN_FAIL "\nDiskPart nu a putut să curețe discul.\nDatele de pe disc ar putea să fie irecuperabile.\n"
     IDS_CLEAN_SUCCESS "\nDiskPart a reușit să curețe discul.\n"
     IDS_CLEAN_SYSTEM "\nDiscul selectat este necesar pentru funcționarea calculatorului dumneavoastră și este posibil să nu fie curățat.\n"
