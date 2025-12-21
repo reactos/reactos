@@ -1097,6 +1097,11 @@ VideoPortReleaseBuffer(
 
 /*
  * @implemented
+ *
+ * NOTE:
+ * VP_LOCK_OPERATION (video.h) enum
+ * values are equivalent to LOCK_OPERATION (wdm.h)
+ * and can be passed directly to MmProbeAndLockPages.
  */
 
 PVOID NTAPI
