@@ -11,6 +11,9 @@
 #include <immdev.h>
 #include <unaligned.h>
 
+#define NDEBUG
+#include <debug.h>
+
 DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
@@ -2627,14 +2630,21 @@ NTSTATUS
 NTAPI
 ProbeAndCaptureLargeString(
     OUT PLARGE_STRING plstrSafe,
-    IN PLARGE_STRING plstrUnsafe)
+    IN  PLARGE_STRING plstrUnsafe)
 {
     LARGE_STRING lstrTemp;
     PVOID pvBuffer = NULL;
     ULONG allocLength;
     NTSTATUS Status;
 
-    /* Probe and copy the LARGE_STRING structure */
+    /* Default output */
+    plstrSafe->Buffer = NULL;
+    plstrSafe->Length = 0;
+    plstrSafe->MaximumLength = 0;
+
+    DPRINT("ProbeAndCaptureLargeString: enter\n");
+
+    /* Capture the LARGE_STRING structure from user mode */
     _SEH2_TRY
     {
         ProbeForRead(plstrUnsafe, sizeof(LARGE_STRING), sizeof(ULONG));
@@ -2642,51 +2652,77 @@ ProbeAndCaptureLargeString(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH2_YIELD(return _SEH2_GetExceptionCode();)
+        NTSTATUS ex = _SEH2_GetExceptionCode();
+        DPRINT1("ProbeAndCaptureLargeString: exception probing structure (0x%08lx)\n", ex);
+        _SEH2_YIELD(return ex;)
     }
     _SEH2_END;
 
-    /* Default output */
-    plstrSafe->Buffer = NULL;
-    plstrSafe->Length = 0;
-    plstrSafe->MaximumLength = 0;
+    DPRINT("ProbeAndCaptureLargeString: Length=%lu Buffer=%p\n",
+           lstrTemp.Length, lstrTemp.Buffer);
 
+    /* Zero-length strings are valid */
     if (lstrTemp.Length == 0)
     {
+        DPRINT("ProbeAndCaptureLargeString: zero-length string\n");
         return STATUS_SUCCESS;
     }
 
     /*
-     * Validate length arithmetic (ULONG-based, no size_t)
-     * We do NOT change semantics by adding a terminator.
+     * Establish strict invariant:
+     * allocLength == lstrTemp.Length
      */
     Status = RtlULongAdd(lstrTemp.Length, 0, &allocLength);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ProbeAndCaptureLargeString: integer overflow (Length=%lu)\n",
+                lstrTemp.Length);
         return STATUS_INTEGER_OVERFLOW;
+    }
+
+    /*
+     * Policy guard: UI-related strings must be reasonably bounded.
+     * This is secondary to correctness.
+     */
+    if (allocLength > MAX_LARGE_STRING_BYTES)
+    {
+        DPRINT1("ProbeAndCaptureLargeString: Length %lu exceeds MAX_LARGE_STRING_BYTES\n",
+                allocLength);
+        return STATUS_INVALID_PARAMETER;
     }
 
     pvBuffer = ExAllocatePoolWithTag(PagedPool, allocLength, TAG_STRING);
     if (!pvBuffer)
     {
+        DPRINT1("ProbeAndCaptureLargeString: allocation failed (%lu bytes)\n",
+                allocLength);
         return STATUS_NO_MEMORY;
     }
 
+    ASSERT(pvBuffer != NULL);
+    ASSERT(allocLength == lstrTemp.Length);
+
     _SEH2_TRY
     {
-        ProbeForRead(lstrTemp.Buffer, lstrTemp.Length, sizeof(WCHAR));
-        RtlCopyMemory(pvBuffer, lstrTemp.Buffer, lstrTemp.Length);
+        ProbeForRead(lstrTemp.Buffer, allocLength, sizeof(WCHAR));
+        RtlCopyMemory(pvBuffer, lstrTemp.Buffer, allocLength);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        NTSTATUS ex = _SEH2_GetExceptionCode();
+        DPRINT1("ProbeAndCaptureLargeString: exception copying buffer (0x%08lx)\n", ex);
         ExFreePoolWithTag(pvBuffer, TAG_STRING);
-        _SEH2_YIELD(return _SEH2_GetExceptionCode();)
+        _SEH2_YIELD(return ex;)
     }
     _SEH2_END;
 
+    ASSERT(allocLength <= MAX_LARGE_STRING_BYTES);
+
     plstrSafe->Buffer = pvBuffer;
-    plstrSafe->Length = lstrTemp.Length;
-    plstrSafe->MaximumLength = lstrTemp.Length;
+    plstrSafe->Length = allocLength;
+    plstrSafe->MaximumLength = allocLength;
+
+    DPRINT("ProbeAndCaptureLargeString: success (%lu bytes)\n", allocLength);
 
     return STATUS_SUCCESS;
 }
