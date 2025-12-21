@@ -32,6 +32,7 @@ extern void func_InitializeLpkHooks(void);
 extern void func_KbdLayout(void);
 extern void func_keybd_event(void);
 extern void func_LoadImage(void);
+extern void func_LoadImage1bpp(void);
 extern void func_LoadImageGCC(void);
 extern void func_LookupIconIdFromDirectoryEx(void);
 extern void func_MenuUI(void);
@@ -97,6 +98,7 @@ const struct test winetest_testlist[] =
     { "KbdLayout", func_KbdLayout },
     { "keybd_event", func_keybd_event },
     { "LoadImage", func_LoadImage },
+    { "LoadImage1bpp", func_LoadImage1bpp },
     { "LoadImageGCC", func_LoadImageGCC },
     { "LookupIconIdFromDirectoryEx", func_LookupIconIdFromDirectoryEx },
     { "MenuUI", func_MenuUI },
