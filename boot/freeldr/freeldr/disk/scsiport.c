@@ -326,7 +326,6 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         {
             return EIO;
         }
-        ExFreePool(Srb);
         Buffer = (PUCHAR)Buffer + FullSectors * Context->SectorSize;
         N -= FullSectors * Context->SectorSize;
         *Count += FullSectors * Context->SectorSize;
