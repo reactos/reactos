@@ -1106,15 +1106,37 @@ VideoPortLockBuffer(
    IN ULONG Length,
    IN VP_LOCK_OPERATION Operation)
 {
-    PMDL Mdl;
+    PMDL Mdl = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
-    if (!Mdl)
+    UNREFERENCED_PARAMETER(HwDeviceExtension);
+
+    _SEH2_TRY
     {
+        Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
+        if (!Mdl)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            _SEH2_LEAVE;
+        }
+
+        MmProbeAndLockPages(Mdl, KernelMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (Mdl)
+        {
+            IoFreeMdl(Mdl);
+        }
         return NULL;
     }
-    /* FIXME use seh */
-    MmProbeAndLockPages(Mdl, KernelMode,Operation);
+
     return Mdl;
 }
 
