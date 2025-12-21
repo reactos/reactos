@@ -1142,7 +1142,6 @@ VideoPortLockBuffer(
     return Mdl;
 }
 
-
 /*
  * @implemented
  */
