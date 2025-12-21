@@ -95,21 +95,67 @@ IntVideoPortFilterResourceRequirements(
     PVIDEO_ACCESS_RANGE AccessRanges;
     ULONG AccessRangeCount, ListSize, i;
     PIO_RESOURCE_REQUIREMENTS_LIST ResList;
-    PIO_RESOURCE_REQUIREMENTS_LIST OldResList = IrpStack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
+    PIO_RESOURCE_REQUIREMENTS_LIST OldResList =
+        IrpStack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
     PIO_RESOURCE_DESCRIPTOR CurrentDescriptor;
     NTSTATUS Status;
 
-    DriverObject = DeviceObject->DriverObject;
-    DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
-    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceObject != NULL);
+    ASSERT(IrpStack != NULL);
+    ASSERT(Irp != NULL);
 
-    Status = IntVideoPortGetLegacyResources(DriverExtension, DeviceExtension, &AccessRanges, &AccessRangeCount);
+    DriverObject = DeviceObject->DriverObject;
+    ASSERT(DriverObject != NULL);
+
+    DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
+    ASSERT(DriverExtension != NULL);
+
+    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension != NULL);
+
+    DPRINT1("VIDEOPRT: FilterResourceRequirements DevObj=%p Irp=%p OldResList=%p IoStatus.Information=%p\n",
+            DeviceObject, Irp, OldResList, (PVOID)Irp->IoStatus.Information);
+
+    Status = IntVideoPortGetLegacyResources(DriverExtension,
+                                           DeviceExtension,
+                                           &AccessRanges,
+                                           &AccessRangeCount);
     if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("VIDEOPRT: IntVideoPortGetLegacyResources failed: 0x%08lx\n", Status);
         return Status;
+    }
+
+    /* No legacy resources to report */
     if (!AccessRangeCount)
     {
-        /* No legacy resources to report */
-        return Irp->IoStatus.Status;
+        /*
+         * IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+         * On Windows, the effective IO_RESOURCE_REQUIREMENTS_LIST is returned
+         * via Irp->IoStatus.Information (pointer-sized). If we have nothing to
+         * add, keep the existing list intact and succeed.
+         */
+        ASSERT(OldResList == IrpStack->Parameters.FilterResourceRequirements.IoResourceRequirementList);
+
+        if (Irp->IoStatus.Information == 0 && OldResList != NULL)
+        {
+            /* Fallback for callers that only populate the stack parameter */
+            Irp->IoStatus.Information = (ULONG_PTR)OldResList;
+        }
+        else
+        {
+            /* If already set, it should usually match the stack parameter */
+            ASSERT(Irp->IoStatus.Information == 0 ||
+                   OldResList == NULL ||
+                   (PVOID)Irp->IoStatus.Information == (PVOID)OldResList);
+        }
+
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        DPRINT1("VIDEOPRT: No legacy ranges; returning SUCCESS, IoStatus.Information=%p\n",
+                (PVOID)Irp->IoStatus.Information);
+
+        return STATUS_SUCCESS;
     }
 
     /* OK, we've got the access ranges now. Let's set up the resource requirements list */
@@ -118,9 +164,12 @@ IntVideoPortFilterResourceRequirements(
     {
         /* Already one there so let's add to it */
         ListSize = OldResList->ListSize + sizeof(IO_RESOURCE_DESCRIPTOR) * AccessRangeCount;
-        ResList = ExAllocatePool(NonPagedPool,
-                                 ListSize);
-        if (!ResList) return STATUS_NO_MEMORY;
+        ResList = ExAllocatePool(NonPagedPool, ListSize);
+        if (!ResList)
+        {
+            DPRINT1("VIDEOPRT: Out of memory allocating ResList (size=%lu)\n", ListSize);
+            return STATUS_NO_MEMORY;
+        }
 
         RtlCopyMemory(ResList, OldResList, OldResList->ListSize);
 
@@ -137,10 +186,14 @@ IntVideoPortFilterResourceRequirements(
     else
     {
         /* We need to make a new one */
-        ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (AccessRangeCount - 1);
-        ResList = ExAllocatePool(NonPagedPool,
-                                 ListSize);
-        if (!ResList) return STATUS_NO_MEMORY;
+        ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) +
+                   sizeof(IO_RESOURCE_DESCRIPTOR) * (AccessRangeCount - 1);
+        ResList = ExAllocatePool(NonPagedPool, ListSize);
+        if (!ResList)
+        {
+            DPRINT1("VIDEOPRT: Out of memory allocating ResList (size=%lu)\n", ListSize);
+            return STATUS_NO_MEMORY;
+        }
 
         RtlZeroMemory(ResList, ListSize);
 
@@ -168,7 +221,8 @@ IntVideoPortFilterResourceRequirements(
             CurrentDescriptor->Type = CmResourceTypeMemory;
 
         CurrentDescriptor->ShareDisposition =
-        (AccessRanges[i].RangeShareable ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+            (AccessRanges[i].RangeShareable ? CmResourceShareShared
+                                            : CmResourceShareDeviceExclusive);
 
         CurrentDescriptor->Flags = 0;
 
@@ -176,7 +230,8 @@ IntVideoPortFilterResourceRequirements(
         {
             CurrentDescriptor->u.Port.Length = AccessRanges[i].RangeLength;
             CurrentDescriptor->u.Port.MinimumAddress = AccessRanges[i].RangeStart;
-            CurrentDescriptor->u.Port.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
+            CurrentDescriptor->u.Port.MaximumAddress.QuadPart =
+                AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Port.Alignment = 1;
             if (AccessRanges[i].RangePassive & VIDEO_RANGE_PASSIVE_DECODE)
                 CurrentDescriptor->Flags |= CM_RESOURCE_PORT_PASSIVE_DECODE;
@@ -187,7 +242,8 @@ IntVideoPortFilterResourceRequirements(
         {
             CurrentDescriptor->u.Memory.Length = AccessRanges[i].RangeLength;
             CurrentDescriptor->u.Memory.MinimumAddress = AccessRanges[i].RangeStart;
-            CurrentDescriptor->u.Memory.MaximumAddress.QuadPart = AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
+            CurrentDescriptor->u.Memory.MaximumAddress.QuadPart =
+                AccessRanges[i].RangeStart.QuadPart + AccessRanges[i].RangeLength - 1;
             CurrentDescriptor->u.Memory.Alignment = 1;
             CurrentDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
         }
@@ -196,9 +252,14 @@ IntVideoPortFilterResourceRequirements(
     }
 
     Irp->IoStatus.Information = (ULONG_PTR)ResList;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    DPRINT1("VIDEOPRT: Added %lu legacy ranges; new ResList=%p ListSize=%lu\n",
+            AccessRangeCount, ResList, ResList->ListSize);
 
     return STATUS_SUCCESS;
 }
+
 
 VOID
 IntVideoPortReleaseResources(
@@ -1101,20 +1162,51 @@ VideoPortReleaseBuffer(
 
 PVOID NTAPI
 VideoPortLockBuffer(
-   IN PVOID HwDeviceExtension,
-   IN PVOID BaseAddress,
-   IN ULONG Length,
-   IN VP_LOCK_OPERATION Operation)
+    IN PVOID HwDeviceExtension,
+    IN PVOID BaseAddress,
+    IN ULONG Length,
+    IN VP_LOCK_OPERATION Operation)
 {
-    PMDL Mdl;
+    PMDL Mdl = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
+    UNREFERENCED_PARAMETER(HwDeviceExtension);
+
+    ASSERT(BaseAddress != NULL);
+    ASSERT(Length != 0);
+
+    /* IoAllocateMdl must not be wrapped in SEH */
     Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
-    if (!Mdl)
+    if (Mdl == NULL)
     {
+        DPRINT1("VIDEOPRT: IoAllocateMdl failed (Base=%p Length=%lu)\n",
+                BaseAddress, Length);
         return NULL;
     }
-    /* FIXME use seh */
-    MmProbeAndLockPages(Mdl, KernelMode,Operation);
+
+    _SEH2_TRY
+    {
+        /*
+         * VP_LOCK_OPERATION values intentionally match
+         * WDM LOCK_OPERATION on NT5 (Read/Write/Modify).
+         */
+        MmProbeAndLockPages(Mdl, KernelMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("VIDEOPRT: MmProbeAndLockPages fault "
+                "(Base=%p Length=%lu Op=%u Status=0x%08lx)\n",
+                BaseAddress, Length, Operation, Status);
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        IoFreeMdl(Mdl);
+        return NULL;
+    }
+
     return Mdl;
 }
 

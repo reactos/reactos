@@ -1181,66 +1181,46 @@ VideoPortGetVgaStatus(
 
     return ERROR_INVALID_FUNCTION;
 }
-
-/*
- * @implemented
- */
-PVOID
-NTAPI
+PVOID NTAPI
 VideoPortGetRomImage(
     IN PVOID HwDeviceExtension,
     IN PVOID Unused1,
     IN ULONG Unused2,
     IN ULONG Length)
 {
-    static PVOID RomImageBuffer = NULL;
+    PVIDEO_PORT_DEVICE_EXTENSION devExt = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
     PKPROCESS CallingProcess;
     KAPC_STATE ApcState;
 
-    TRACE_(VIDEOPRT, "VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
-           HwDeviceExtension, Length);
-
-    /* If the length is zero then free the existing buffer */
-    if (Length == 0)
-    {
-        if (RomImageBuffer != NULL)
-        {
-            ExFreePool(RomImageBuffer);
-            RomImageBuffer = NULL;
+    if (Length == 0) {
+        if (devExt->RomImageBuffer) {
+            ExFreePool(devExt->RomImageBuffer);
+            devExt->RomImageBuffer = NULL;
         }
         return NULL;
     }
-    else
-    {
-        /*
-         * The DDK says we shouldn't use the legacy C0000 method but get the
-         * ROM base address from the corresponding PCI or ACPI register but
-         * lets ignore that and use C0000 anyway. We have already mapped the
-         * BIOS area into memory so we'll copy from there.
-         */
+    /*
+    * The DDK says we shouldn't use the legacy C0000 method but get the
+    * ROM base address from the corresponding PCI or ACPI register but
+    * lets ignore that and use C0000 anyway. We have already mapped the
+    * BIOS area into memory so we'll copy from there.
+    */
 
-        /* Copy the BIOS */
-        Length = min(Length, 0x10000);
-        if (RomImageBuffer != NULL)
-            ExFreePool(RomImageBuffer);
+    /* Copy the BIOS */
+    Length = min(Length, 0x10000);
+    ExFreePool(devExt->RomImageBuffer);
+    devExt->RomImageBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_VIDEO_ROM);
+    if (!devExt->RomImageBuffer)
+        return NULL;
 
-        RomImageBuffer = ExAllocatePool(PagedPool, Length);
-        if (RomImageBuffer == NULL)
-            return NULL;
-
-        /* Perform the copy in the CSRSS context */
-        if (IntAttachToCSRSS(&CallingProcess, &ApcState))
-        {
-            RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-            IntDetachFromCSRSS(CallingProcess, &ApcState);
-        }
-        else
-        {
-            ExFreePool(RomImageBuffer);
-            RomImageBuffer = NULL;
-        }
-        return RomImageBuffer;
+    if (IntAttachToCSRSS(&CallingProcess, &ApcState)) {
+        RtlCopyMemory(devExt->RomImageBuffer, (PUCHAR)0xC0000, Length);
+        IntDetachFromCSRSS(CallingProcess, &ApcState);
+    } else {
+        ExFreePool(devExt->RomImageBuffer);
+        devExt->RomImageBuffer = NULL;
     }
+    return devExt->RomImageBuffer;
 }
 
 /*
