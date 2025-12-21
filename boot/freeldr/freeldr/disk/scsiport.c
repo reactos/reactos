@@ -324,7 +324,6 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         Cdb->CDB10.TransferBlocksLsb = FullSectors & 0xff;
         if (!SpiSendSynchronousSrb(Context->DeviceExtension, Srb))
         {
-            ExFreePool(Srb);
             return EIO;
         }
         ExFreePool(Srb);
