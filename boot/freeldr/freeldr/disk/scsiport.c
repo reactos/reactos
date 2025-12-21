@@ -377,7 +377,6 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         RtlCopyMemory(Buffer, Sector, N);
         *Count += N;
         /* Context->SectorNumber remains untouched (incomplete sector read) */
-        ExFreePool(Srb);
         ExFreePool(Sector);
     }
 
