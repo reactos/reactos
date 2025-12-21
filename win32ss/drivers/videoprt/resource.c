@@ -1106,20 +1106,20 @@ VideoPortLockBuffer(
    IN ULONG Length,
    IN VP_LOCK_OPERATION Operation)
 {
-    PMDL Mdl = NULL;
+    PMDL Mdl;
     NTSTATUS Status = STATUS_SUCCESS;
 
     UNREFERENCED_PARAMETER(HwDeviceExtension);
 
+    /* IoAllocateMdl must NOT be wrapped in SEH */
+    Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
+    if (Mdl == NULL)
+    {
+        return NULL;
+    }
+
     _SEH2_TRY
     {
-        Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
-        if (!Mdl)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            _SEH2_LEAVE;
-        }
-
         MmProbeAndLockPages(Mdl, KernelMode, Operation);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1130,15 +1130,13 @@ VideoPortLockBuffer(
 
     if (!NT_SUCCESS(Status))
     {
-        if (Mdl)
-        {
-            IoFreeMdl(Mdl);
-        }
+        IoFreeMdl(Mdl);
         return NULL;
     }
 
     return Mdl;
 }
+
 
 /*
  * @implemented
