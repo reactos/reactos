@@ -51,6 +51,16 @@ UniqueIdDisk(
 
     for (i = 1; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NOERR\n");
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+        }
+    }
+
+    for (i = 1; i < argc; i++)
+    {
         if (HasPrefix(argv[2], L"id=", &pszSuffix))
         {
             /* id=<Byte>|<GUID> */
@@ -59,9 +69,7 @@ UniqueIdDisk(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NOERR\n");
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+            /* noerr - Already handled above */
         }
         else
         {

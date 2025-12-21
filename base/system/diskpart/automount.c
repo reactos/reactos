@@ -195,16 +195,16 @@ automount_main(
 
     DPRINT("Automount()\n");
 
-#if 0
     for (i = 1; i < argc; i++)
     {
         if (_wcsicmp(argv[i], L"noerr") == 0)
         {
             /* noerr */
+#if 0
             bNoErr = TRUE;
+#endif
         }
     }
-#endif
 
     for (i = 1; i < argc; i++)
     {
@@ -225,7 +225,7 @@ automount_main(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* already handled */
+            /* noerr - Already handled above */
         }
         else
         {

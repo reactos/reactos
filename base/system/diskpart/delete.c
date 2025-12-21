@@ -303,6 +303,14 @@ DeletePartition(
             bNoErr = TRUE;
 #endif
         }
+    }
+
+    for (i = 2; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr - Already handled above */
+        }
         else if (_wcsicmp(argv[i], L"override") == 0)
         {
             /* override */

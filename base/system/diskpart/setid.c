@@ -37,6 +37,16 @@ setid_main(
 
     for (i = 1; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NOERR\n");
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+        }
+    }
+
+    for (i = 1; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"id=", &pszSuffix))
         {
             /* id=<Byte>|<GUID> */
@@ -45,9 +55,7 @@ setid_main(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NOERR\n");
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+            /* noerr - Already handled above */
         }
         else if (_wcsicmp(argv[i], L"override") == 0)
         {

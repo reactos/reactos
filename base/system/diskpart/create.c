@@ -45,6 +45,19 @@ CreateEfiPartition(
 
     for (i = 3; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
         {
             /* size=<N> (MB) */
@@ -73,12 +86,7 @@ CreateEfiPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -253,6 +261,19 @@ CreateExtendedPartition(
 
     for (i = 3; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
         {
             /* size=<N> (MB) */
@@ -290,12 +311,7 @@ CreateExtendedPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -439,6 +455,19 @@ CreateLogicalPartition(
 
     for (i = 3; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
         {
             /* size=<N> (MB) */
@@ -498,12 +527,7 @@ CreateLogicalPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -640,6 +664,19 @@ CreateMsrPartition(
 
     for (i = 3; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
         {
             /* size=<N> (MB) */
@@ -668,12 +705,7 @@ CreateMsrPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -1101,6 +1133,19 @@ CreatePrimaryPartition(
 
     for (i = 3; i < argc; i++)
     {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
         {
             /* size=<N> (MB) */
@@ -1144,12 +1189,7 @@ CreatePrimaryPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Alread handled above */
         }
         else
         {
