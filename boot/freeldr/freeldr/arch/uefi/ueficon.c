@@ -34,7 +34,7 @@ UefiConsPutChar(int c)
     NeedScroll = (CurrentCursorY >= Height);
     if (NeedScroll)
     {
-        VidFbScrollUp(CurrentAttr);
+        FbConsScrollUp(CurrentAttr);
         --CurrentCursorY;
     }
     if (c == '\r')

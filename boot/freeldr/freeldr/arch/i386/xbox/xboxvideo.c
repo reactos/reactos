@@ -36,13 +36,13 @@ extern multiboot_info_t * MultibootInfoPtr;
 VOID
 XboxVideoClearScreen(UCHAR Attr)
 {
-    VidFbClearScreen(Attr);
+    FbConsClearScreen(Attr);
 }
 
 VOID
 XboxVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
-    VidFbPutChar(Ch, Attr, X, Y);
+    FbConsPutChar(Ch, Attr, X, Y);
 }
 
 static UCHAR
@@ -149,13 +149,13 @@ XboxVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init)
 VOID
 XboxVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
-    VidFbGetDisplaySize(Width, Height, Depth);
+    FbConsGetDisplaySize(Width, Height, Depth);
 }
 
 ULONG
 XboxVideoGetBufferSize(VOID)
 {
-    return VidFbGetBufferSize();
+    return FbConsGetBufferSize();
 }
 
 VOID
@@ -179,7 +179,7 @@ XboxVideoHideShowTextCursor(BOOLEAN Show)
 VOID
 XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-    VidFbCopyOffScreenBufferToVRAM(Buffer);
+    FbConsCopyOffScreenBufferToVRAM(Buffer);
 }
 
 BOOLEAN
