@@ -1138,7 +1138,6 @@ VideoPortLockBuffer(
         IoFreeMdl(Mdl);
         return NULL;
     }
-
     return Mdl;
 }
 
