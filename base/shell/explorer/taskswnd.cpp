@@ -1558,7 +1558,10 @@ public:
         DeleteAllTasks();
 
         if (m_ImageList)
+        {
             ImageList_Destroy(m_ImageList);
+            m_ImageList = NULL;
+        }
 
         return TRUE;
     }
