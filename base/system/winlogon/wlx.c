@@ -957,10 +957,10 @@ CreateWindowStationAndDesktops(
     SECURITY_ATTRIBUTES ApplicationDesktopSecurity;
     SECURITY_ATTRIBUTES WinlogonDesktopSecurity;
     SECURITY_ATTRIBUTES ScreenSaverDesktopSecurity;
-    PSECURITY_DESCRIPTOR WlWinstaSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlApplicationDesktopSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlWinlogonDesktopSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlScreenSaverDesktopSecurityDescriptor;
+    PSECURITY_DESCRIPTOR WlWinstaSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlApplicationDesktopSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlWinlogonDesktopSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlScreenSaverDesktopSecurityDescriptor = NULL;
     BOOL ret = FALSE;
 
     if (!CreateWinstaSecurity(&WlWinstaSecurityDescriptor))
