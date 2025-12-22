@@ -1503,7 +1503,6 @@ static void test_set_getsockopt(void)
 #ifdef __REACTOS__
     ok((err == SOCKET_ERROR && (WSAGetLastError() == WSAEFAULT || WSAGetLastError() == WSAENOBUFS)) || broken(err == 0 && WSAGetLastError() == 0) /* WS03 */,
        "got %d with %d (expected SOCKET_ERROR with either WSAEFAULT or WSAENOBUFS)\n", err, WSAGetLastError());
-
 #else
     ok(err == SOCKET_ERROR && (WSAGetLastError() == WSAEFAULT || WSAGetLastError() == WSAENOBUFS),
        "got %d with %d (expected SOCKET_ERROR with either WSAEFAULT or WSAENOBUFS)\n", err, WSAGetLastError());
@@ -2766,6 +2765,13 @@ static void test_ip_pktinfo(void)
         rc = WSAIoctl(s1, SIO_GET_EXTENSION_FUNCTION_POINTER, &WSARecvMsg_GUID, sizeof(WSARecvMsg_GUID),
                  &pWSARecvMsg, sizeof(pWSARecvMsg), &dwBytes, NULL, NULL);
         ok(!rc, "failed to get WSARecvMsg, error %u\n", WSAGetLastError());
+#ifdef __REACTOS__
+        if (WSAGetLastError() == WSAEOPNOTSUPP) {
+            skip("Got WSAEOPNOTSUPP\n");
+            closesocket(s1);
+            continue;
+        }
+#endif
 
         /* Setup the server side socket */
         rc=bind(s1, (struct sockaddr*)&s1addr, sizeof(s1addr));
@@ -2947,6 +2953,12 @@ static void test_ipv4_cmsg(void)
                   &pWSARecvMsg, sizeof(pWSARecvMsg), &count, NULL, NULL);
     ok(!rc, "failed to get WSARecvMsg, error %u\n", WSAGetLastError());
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "ReactOS crashes on the tests below.\n");
+        goto cleanup;
+    }
+#endif
     memset(control, 0, sizeof(control));
     msg.Control.len = sizeof(control);
     rc = setsockopt(server, IPPROTO_IP, IP_RECVTTL, (const char *)&on, sizeof(on));
@@ -3029,6 +3041,7 @@ static void test_ipv4_cmsg(void)
     ok(!rc, "failed to clear IP_RECVTOS, error %u\n", WSAGetLastError());
 #ifdef __REACTOS__
     }
+cleanup:
 #endif
 
     closesocket(server);
@@ -5154,6 +5167,12 @@ static void test_accept(void)
     HANDLE thread_handle = NULL;
     DWORD id;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This test hangs on ReactOS!\n");
+        return;
+    }
+#endif
     memset(&address, 0, sizeof(address));
     address.sin_addr.s_addr = inet_addr("127.0.0.1");
     address.sin_family = AF_INET;
@@ -8326,6 +8345,13 @@ static void test_write_watch(void)
     size = 0x10000;
     base = VirtualAlloc( 0, size, MEM_RESERVE | MEM_COMMIT | MEM_WRITE_WATCH, PAGE_READWRITE );
     ok( base != NULL, "VirtualAlloc failed %lu\n", GetLastError() );
+#ifdef __REACTOS__
+    if (base == NULL) {
+        skip("Failed to allocate base needed for rest of this test.\n");
+        WSACloseEvent(event);
+        return;
+    }
+#endif
 
     memset( base, 0, size );
     count = 64;
@@ -8946,8 +8972,16 @@ static void test_connect(void)
     iret = bind(connector, (struct sockaddr*)&conaddress, sizeof(conaddress));
     ok(!iret, "failed to bind, error %u\n", WSAGetLastError());
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != INVALID_SOCKET, "failed to accept socket, error %u\n", WSAGetLastError());
+#ifdef __REACTOS__
+    }
+#endif
 
     buffer[0] = '1';
     buffer[1] = '2';
@@ -8963,8 +8997,16 @@ static void test_connect(void)
     ok(bret, "Connecting failed, error %ld\n", GetLastError());
     ok(bytesReturned == 3, "Bytes sent is %ld\n", bytesReturned);
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != INVALID_SOCKET, "could not accept socket error %d\n", WSAGetLastError());
+#ifdef __REACTOS__
+    }
+#endif
 
     bytesReturned = recv(acceptor, buffer, 3, 0);
     buffer[4] = 0;
@@ -9221,6 +9263,11 @@ static void test_AcceptEx(void)
     ok(!(NTSTATUS)overlapped.Internal, "got %#Ix\n", overlapped.Internal);
     ok(!bytesReturned, "got size %lu\n", bytesReturned);
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: This crashes on ReactOS!\n");
+    } else {
+#endif
     readBindAddress = readRemoteAddress = (struct sockaddr_in *)0xdeadbeef;
     localSize = remoteSize = 0xdeadbeef;
     pGetAcceptExSockaddrs(buffer, 0, 0, sizeof(struct sockaddr_in) + 16,
@@ -9229,6 +9276,9 @@ static void test_AcceptEx(void)
     ok(!memcmp(readRemoteAddress, &peerAddress, sizeof(peerAddress)), "remote addr didn't match\n");
     todo_wine ok(localSize == 0xdeadbeef, "got local size %u\n", localSize);
     ok(remoteSize == sizeof(struct sockaddr_in), "got remote size %u\n", remoteSize);
+#ifdef __REACTOS__
+    }
+#endif
 
     closesocket(connector);
     closesocket(acceptor);
@@ -9445,7 +9495,12 @@ static void test_AcceptEx(void)
     iret = connect(connector, (struct sockaddr*)&bindAddress, sizeof(bindAddress));
     ok(iret == 0, "connecting to accepting socket failed, error %d\n", WSAGetLastError());
 
+#ifdef __REACTOS__
+    /* ReactOS will hang infinitely here otherwise */
+    dwret = WaitForSingleObject(overlapped.hEvent, 5000);
+#else
     dwret = WaitForSingleObject(overlapped.hEvent, INFINITE);
+#endif
     ok(dwret == WAIT_OBJECT_0, "Waiting for accept event failed with %ld + errno %ld\n", dwret, GetLastError());
     ok(overlapped.Internal == STATUS_SUCCESS, "got %08lx\n", (ULONG)overlapped.Internal);
 
@@ -9502,6 +9557,11 @@ static void test_AcceptEx(void)
     pGetAcceptExSockaddrs(buffer, 2, sizeof(struct sockaddr_in) + 16, sizeof(struct sockaddr_in) + 16,
                           (struct sockaddr **)&readBindAddress, &localSize,
                           (struct sockaddr **)&readRemoteAddress, &remoteSize);
+#ifdef __REACTOS__
+    if (readBindAddress == (void*)0x1D) {
+        ok(FALSE, "readBindAddress is an invalid pointer!\n");
+    } else {
+#endif
     strcpy( ipbuffer, inet_ntoa(readBindAddress->sin_addr));
     ok( readBindAddress->sin_addr.s_addr == bindAddress.sin_addr.s_addr,
             "Local socket address is different %s != %s\n",
@@ -9509,6 +9569,11 @@ static void test_AcceptEx(void)
     ok( readBindAddress->sin_port == bindAddress.sin_port,
             "Local socket port is different: %d != %d\n",
             readBindAddress->sin_port, bindAddress.sin_port);
+#ifdef __REACTOS__
+    } if (readRemoteAddress == (void*)-1) {
+        ok(FALSE, "readRemoteAddress is an invalid pointer!\n");
+    } else {
+#endif
     strcpy( ipbuffer, inet_ntoa(readRemoteAddress->sin_addr));
     ok( readRemoteAddress->sin_addr.s_addr == peerAddress.sin_addr.s_addr,
             "Remote socket address is different %s != %s\n",
@@ -9516,6 +9581,9 @@ static void test_AcceptEx(void)
     ok( readRemoteAddress->sin_port == peerAddress.sin_port,
             "Remote socket port is different: %d != %d\n",
             readRemoteAddress->sin_port, peerAddress.sin_port);
+#ifdef __REACTOS__
+    }
+#endif
 
     bret = GetOverlappedResult((HANDLE)listener, &overlapped, &bytesReturned, FALSE);
     ok(bret, "GetOverlappedResult failed, error %ld\n", GetLastError());
@@ -9694,6 +9762,7 @@ static void test_shutdown(void)
     char buffer[5];
     WSABUF wsabuf;
 
+    /* __REACTOS__ NOTE: BUGCHECKS on ReactOS */
     overlapped.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
     listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     ok(listener != INVALID_SOCKET, "failed to create listener socket, error %d\n", WSAGetLastError());
@@ -9819,6 +9888,11 @@ static void test_shutdown(void)
 
     /* Test SD_BOTH. */
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "FIXME: This test bugchecks on ReactOS!\n");
+    } else {
+#endif
     client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     ok(client != -1, "failed to create socket, error %u\n", WSAGetLastError());
     ret = connect(client, (struct sockaddr *)&server_addr, sizeof(server_addr));
@@ -9874,6 +9948,9 @@ static void test_shutdown(void)
 
     closesocket(client);
     closesocket(server);
+#ifdef __REACTOS__
+    }
+#endif
 
     /* Send data to a peer which is closed. */
 
@@ -10248,6 +10325,12 @@ static void test_TransmitFile(void)
 
     memset( &ov, 0, sizeof(ov) );
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "ReactOS crashes on most of these TransmitFile tests!\n");
+        return;
+    }
+#endif
     /* Setup sockets for testing TransmitFile */
     client = socket(AF_INET, SOCK_STREAM, 0);
     ok(client != INVALID_SOCKET, "failed to create socket, error %lu\n", GetLastError());
@@ -11576,8 +11659,8 @@ static void test_completion_port(void)
     ok(num_bytes == 0, "Number of bytes transferred is %lu\n", num_bytes);
     ok(olp == &ov, "Overlapped structure is at %p\n", olp);
 #ifdef __REACTOS__
-    ok((NTSTATUS)olp->Internal == STATUS_CANCELLED || broken((NTSTATUS)olp->Internal == STATUS_LOCAL_DISCONNECT) /* WS03 */
-            || (NTSTATUS)olp->Internal == STATUS_CONNECTION_ABORTED, "got status %#Ix\n", olp->Internal);
+    ok(olp && ((NTSTATUS)olp->Internal == STATUS_CANCELLED || broken((NTSTATUS)olp->Internal == STATUS_LOCAL_DISCONNECT) /* WS03 */
+            || (NTSTATUS)olp->Internal == STATUS_CONNECTION_ABORTED), "olp is %s, got status %#Ix\n", olp ? "not null" : "NULL", olp ? olp->Internal : 0);
 #else
     ok((NTSTATUS)olp->Internal == STATUS_CANCELLED
             || (NTSTATUS)olp->Internal == STATUS_CONNECTION_ABORTED, "got status %#Ix\n", olp->Internal);
@@ -11691,9 +11774,17 @@ static void test_connect_completion_port(void)
     ret = GetOverlappedResult((HANDLE)connector, &overlapped, &size, FALSE);
     ok(ret, "got error %lu\n", GetLastError());
     ok(!size, "got %lu bytes\n", size);
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != -1, "failed to accept, error %u\n", WSAGetLastError());
     closesocket(acceptor);
+#ifdef __REACTOS__
+    }
+#endif
 
     size = 0xdeadbeef;
     key = 0xdeadbeef;
@@ -11725,9 +11816,17 @@ static void test_connect_completion_port(void)
     ret = GetOverlappedResult((HANDLE)connector, &overlapped, &size, FALSE);
     ok(ret, "got error %lu\n", GetLastError());
     ok(size == 3, "got %lu bytes\n", size);
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != -1, "failed to accept, error %u\n", WSAGetLastError());
     closesocket(acceptor);
+#ifdef __REACTOS__
+    }
+#endif
 
     size = 0xdeadbeef;
     key = 0xdeadbeef;
@@ -11761,9 +11860,17 @@ static void test_connect_completion_port(void)
     ret = GetOverlappedResult((HANDLE)connector, &overlapped, &size, FALSE);
     ok(ret, "got error %lu\n", GetLastError());
     ok(!size, "got %lu bytes\n", size);
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != -1, "failed to accept, error %u\n", WSAGetLastError());
     closesocket(acceptor);
+#ifdef __REACTOS__
+    }
+#endif
 
     ret = GetQueuedCompletionStatus(port, &size, &key, &overlapped_ptr, 0);
     ok(!ret, "expected failure\n");
@@ -11794,9 +11901,17 @@ static void test_connect_completion_port(void)
     ret = GetOverlappedResult((HANDLE)connector, &overlapped, &size, FALSE);
     ok(ret, "got error %lu\n", GetLastError());
     ok(!size, "got %lu bytes\n", size);
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This hangs on ReactOS!\n");
+    } else {
+#endif
     acceptor = accept(listener, NULL, NULL);
     ok(acceptor != -1, "failed to accept, error %u\n", WSAGetLastError());
     closesocket(acceptor);
+#ifdef __REACTOS__
+    }
+#endif
 
     size = 0xdeadbeef;
     key = 0xdeadbeef;
@@ -13686,6 +13801,12 @@ static void test_empty_recv(void)
     WSABUF wsabuf;
     int ret;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This test bugchecks on ReactOS!\n");
+        return;
+    }
+#endif
     overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     tcp_socketpair(&client, &server);
 
@@ -13741,6 +13862,12 @@ static void test_timeout(void)
     int ret, len;
     char buffer;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "Most of this test either hangs or bugchecks on ReactOS!\n");
+        return;
+    }
+#endif
     tcp_socketpair(&client, &server);
     overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
@@ -14231,6 +14358,12 @@ static void test_tcp_reset(void)
     char buffer[10];
     WSABUF wsabuf;
 
+#ifdef __REACTOS__
+    if (is_reactos()) {
+        ok(FALSE, "This test bugchecks on ReactOS!\n");
+        return;
+    }
+#endif
     overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
     tcp_socketpair(&client, &server);
@@ -14660,8 +14793,8 @@ static void test_select_after_WSAEventSelect(void)
     int ret;
 
 #ifdef __REACTOS__
-    if (GetNTVersion() <= _WIN32_WINNT_WS03 && !is_reactos()) {
-        skip("This test crashes on Windows Server 2003.\n");
+    if (GetNTVersion() <= _WIN32_WINNT_WS03) {
+        skip("This test crashes on Windows Server 2003 and ReactOS.\n");
         return;
     }
 #endif
@@ -14754,13 +14887,25 @@ static DWORD WINAPI test_send_buffering_thread(void *arg)
 {
     struct test_send_buffering_data *d = arg;
     int ret;
+#ifdef __REACTOS__
+    int errCnt = 0;
+#endif
 
     d->sent_size = 0;
     while ((ret = send(d->server, d->buffer, d->buffer_size, 0)) > 0)
     {
         ok(ret == d->buffer_size, "got %d.\n", ret);
         d->sent_size += ret;
+#ifdef __REACTOS__
+        if (ret != d->buffer_size)
+            errCnt++;
+        if (errCnt >= 25)
+            break;
+#endif
     }
+#ifdef __REACTOS__
+    ok(errCnt < 25, "error count too high in loop, would've infinitely looped.\n");
+#endif
     ok(ret == -1, "got %d\n", ret);
     ok(WSAGetLastError() == WSAEWOULDBLOCK, "got error %u.\n", WSAGetLastError());
     ok(d->sent_size, "got 0.\n");
@@ -14789,6 +14934,9 @@ static void test_send_buffering(void)
     int ret, recv_size, i;
     SOCKET client;
     HANDLE thread;
+#ifdef __REACTOS__
+    int errCnt = 0;
+#endif
 
     d.buffer_size = 1024 * 1024 * 50;
     d.buffer = malloc(d.buffer_size);
@@ -14805,7 +14953,16 @@ static void test_send_buffering(void)
     {
         ok(ret == d.buffer_size, "got %d.\n", ret);
         d.sent_size += ret;
+#ifdef __REACTOS__
+        if (ret != d.buffer_size)
+            errCnt++;
+        if (errCnt >= 25)
+            break;
+#endif
     }
+#ifdef __REACTOS__
+    ok(errCnt < 25, "error count too high in loop, would've infinitely looped.\n");
+#endif
     ok(ret == -1, "got %d\n", ret);
     ok(WSAGetLastError() == WSAEWOULDBLOCK, "got error %u.\n", WSAGetLastError());
     ok(d.sent_size, "got 0.\n");
