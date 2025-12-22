@@ -1088,30 +1088,6 @@ CreateWindowStationAndDesktops(
     ret = TRUE;
 
 cleanup:
-        {
-            CloseWindowStation(Session->InteractiveWindowStation);
-            Session->InteractiveWindowStation = NULL;
-        }
-    }
-
-    /* Free security descriptors regardless of success or failure */
-    if (WlWinstaSecurityDescriptor)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
-    }
-    if (WlApplicationDesktopSecurityDescriptor)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
-    }
-    if (WlWinlogonDesktopSecurityDescriptor)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
-    }
-    if (WlScreenSaverDesktopSecurityDescriptor)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
-    }
-
     if (!ret)
     {
         if (Session->ApplicationDesktop)
@@ -1130,7 +1106,21 @@ cleanup:
             Session->ScreenSaverDesktop = NULL;
         }
         if (Session->InteractiveWindowStation)
+        {
+            CloseWindowStation(Session->InteractiveWindowStation);
+            Session->InteractiveWindowStation = NULL;
+        }
+    }
 
+    /* Free security descriptors regardless of success or failure */
+    if (WlWinstaSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
+    if (WlApplicationDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
+    if (WlWinlogonDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
+    if (WlScreenSaverDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
 
     return ret;
 }
