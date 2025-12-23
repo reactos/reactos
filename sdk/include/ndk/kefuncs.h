@@ -859,7 +859,7 @@ VOID
 NTAPI
 Ke386IoSetAccessProcess(
     IN PEPROCESS Process,
-    IN ULONG Enable
+    IN ULONG MapNumber
 );
 
 #endif /* _X86_ */
