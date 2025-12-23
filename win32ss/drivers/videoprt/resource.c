@@ -21,6 +21,10 @@
 
 #include "videoprt.h"
 
+#ifdef _M_IX86
+#include <ndk/kefuncs.h>
+#endif
+
 #define NDEBUG
 #include <debug.h>
 
@@ -1252,14 +1256,14 @@ VideoPortSetTrappedEmulatorPorts(
         IoMap = MmAllocateNonCachedMemory(IOPM_SIZE);
         if (!IoMap)
         {
-            ERR(VIDEOPRT, "IOPM allocation failed (deny-all path)\n");
+            ERR_(VIDEOPRT, "IOPM allocation failed (deny-all path)\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
         RtlFillMemory(IoMap, IOPM_SIZE, 0xFF);
 
-        Ke386SetIoAccessMap(1, IoMap);
-        Ke386IoSetAccessProcess(Process, 1);
+        Ke386SetIoAccessMap(1, (PKIO_ACCESS_MAP)IoMap);
+        Ke386IoSetAccessProcess((PKPROCESS)Process, 1);
 
         MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
 
@@ -1366,8 +1370,8 @@ VideoPortSetTrappedEmulatorPorts(
      * Ke386SetIoAccessMap copies the bitmap internally.
      * Our buffer must not persist beyond this call.
      */
-    Ke386SetIoAccessMap(1, IoMap);
-    Ke386IoSetAccessProcess(Process, 1);
+    Ke386SetIoAccessMap(1, (PKIO_ACCESS_MAP)IoMap);
+    Ke386IoSetAccessProcess((PKPROCESS)Process, 1);
 
     TRACE_(VIDEOPRT, "IOPM committed for process %p\n", Process);
 
