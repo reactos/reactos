@@ -2967,9 +2967,7 @@ todo_wine {
     /* Should still work if we add a dll with the same name, but without manifest */
     strcpy(dll, dir);
     strcat(dll, "testdep1.dll");
-#ifndef __REACTOS__ // Causes test failures on WS03 - Win10 1607.
     extract_resource("dummy.dll", "TESTDLL", dll);
-#endif
     handle = CreateActCtxA(&actctx);
     ok(handle != INVALID_HANDLE_VALUE || broken(GetLastError() == ERROR_SXS_CANT_GEN_ACTCTX) , "got error %ld\n", GetLastError());
     ReleaseActCtx(handle);

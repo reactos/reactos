@@ -8,6 +8,13 @@ if(ARCH STREQUAL "amd64")
     add_definitions(-DSKIPBADHEAP_K32_WINETEST=1)
 endif()
 
+spec2def(dummy.dll dummy.spec)
+add_library(kernel32_winetest_dummy MODULE dummy.c ${CMAKE_CURRENT_BINARY_DIR}/dummy.def)
+set_target_properties(kernel32_winetest_dummy PROPERTIES OUTPUT_NAME "dummy")
+set_module_type(kernel32_winetest_dummy win32dll)
+add_importlibs(kernel32_winetest_dummy msvcrt kernel32)
+add_rostests_file(TARGET kernel32_winetest_dummy)
+
 list(APPEND SOURCE
     actctx.c
     atom.c
@@ -55,6 +62,16 @@ add_executable(kernel32_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     resource.rc)
+
+# CMake 3.9 and higher requires to specify this dependency manually
+# see https://gitlab.kitware.com/cmake/cmake/issues/19933
+set_property(SOURCE resource.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/dummy.dll ${CMAKE_CURRENT_BINARY_DIR}/dummy.dll)
+
+# resource.rc: let rc.exe find the dlls in their subdirectory, i.e. Debug.
+if (MSVC_IDE)
+    target_include_directories(kernel32_winetest PRIVATE
+        $<$<COMPILE_LANGUAGE:RC>:$<TARGET_FILE_DIR:kernel32_winetest_dummy>>)
+endif()
 
 if (MSVC)
     # error C4101: unreferenced local variable
