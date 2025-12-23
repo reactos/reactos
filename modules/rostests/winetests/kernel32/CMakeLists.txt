@@ -59,6 +59,7 @@ add_executable(kernel32_winetest
 if (MSVC)
     # error C4101: unreferenced local variable
     target_compile_options(kernel32_winetest PRIVATE /wd4101)
+
     # Approximates a __FILE__ macro with forward slashes instead of back slashes
     # and defines it as __FILE_FW_SLASH__.
     foreach(source_file ${SOURCE})

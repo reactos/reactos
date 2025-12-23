@@ -53,7 +53,7 @@ static BOOL   (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static NTSTATUS (WINAPI *pNtProtectVirtualMemory)(HANDLE, PVOID *, SIZE_T *, ULONG, ULONG *);
 static NTSTATUS (WINAPI *pNtReadVirtualMemory)(HANDLE,const void *,void *,SIZE_T, SIZE_T *);
 static NTSTATUS (WINAPI *pNtWriteVirtualMemory)(HANDLE, void *, const void *, SIZE_T, SIZE_T *);
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed. ROSTESTS-414
 static BOOL  (WINAPI *pPrefetchVirtualMemory)(HANDLE, ULONG_PTR, PWIN32_MEMORY_RANGE_ENTRY, ULONG);
 #endif
 
@@ -4537,7 +4537,7 @@ START_TEST(virtual)
     pNtProtectVirtualMemory = (void *)GetProcAddress( hntdll, "NtProtectVirtualMemory" );
     pNtReadVirtualMemory = (void *)GetProcAddress( hntdll, "NtReadVirtualMemory" );
     pNtWriteVirtualMemory = (void *)GetProcAddress( hntdll, "NtWriteVirtualMemory" );
-#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed.
+#ifndef __REACTOS__ // TODO: Enable when kernelbase is fixed. ROSTESTS-414
     pPrefetchVirtualMemory = (void *)GetProcAddress( hkernelbase, "PrefetchVirtualMemory" );
 #endif
 
