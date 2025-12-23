@@ -828,17 +828,10 @@ static unsigned int get_package_id_size(const PACKAGE_ID *id)
 
 static void packagefullname_from_packageid(WCHAR *buffer, size_t count, const PACKAGE_ID *id)
 {
-#if defined(__REACTOS__) && defined(_MSC_VER)
-    _snwprintf(buffer, count, L"%s_%u.%u.%u.%u_%s_%s_%s", id->name, id->version.Major,
-            id->version.Minor, id->version.Build, id->version.Revision,
-            arch_string_from_code(id->processorArchitecture), id->resourceId,
-            id->publisherId);
-#else
     swprintf(buffer, count, L"%s_%u.%u.%u.%u_%s_%s_%s", id->name, id->version.Major,
             id->version.Minor, id->version.Build, id->version.Revision,
             arch_string_from_code(id->processorArchitecture), id->resourceId,
             id->publisherId);
-#endif
 }
 
 static void test_PackageIdFromFullName(void)

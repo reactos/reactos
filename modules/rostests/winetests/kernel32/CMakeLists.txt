@@ -1,9 +1,9 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
-remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
+remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00 -DNTDDI_VERSION=0x0A000007)
 
-# Comment this block out if you want to debug the heap issue with these tests on ROS x64
+# Comment this block out if you want to debug the heap issue with these tests on ROS x64. ROSTESTS-415
 if(ARCH STREQUAL "amd64")
     add_definitions(-DSKIPBADHEAP_K32_WINETEST=1)
 endif()
@@ -98,16 +98,12 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 set_module_type(kernel32_winetest win32cui)
-target_link_libraries(kernel32_winetest pseh)
+target_link_libraries(kernel32_winetest pseh oldnames)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(kernel32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET kernel32_winetest)
 target_compile_definitions(kernel32_winetest PRIVATE 
     WINETEST_USE_DBGSTR_LONGLONG
     __WINESRC__
-    strnicmp=_strnicmp
-    wcsnicmp=_wcsnicmp
-    wcsicmp=_wcsicmp
-    strcasecmp=_stricmp
     strncasecmp=_strnicmp
-    stricmp=_stricmp)
+    strcasecmp=_stricmp)
