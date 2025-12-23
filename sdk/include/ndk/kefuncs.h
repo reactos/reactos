@@ -387,19 +387,17 @@ Ke386CallBios(
  *  - Windows NT videoprt.sys (reverse engineered)
  *  - Geoff Chappell: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/index.htm
  */
-VOID
+BOOLEAN
 NTAPI
 Ke386SetIoAccessMap(
     IN ULONG MapNumber,
-    IN PKIO_ACCESS_MAP  IoAccessMap
-);
+    IN PKIO_ACCESS_MAP IopmBuffer);
 
-VOID
+BOOLEAN
 NTAPI
 Ke386IoSetAccessProcess(
-    IN PEPROCESS Process,
-    IN ULONG MapNumber
-);
+    IN PKPROCESS Process,
+    IN ULONG MapNumber);
 
 #endif /* _M_IX86 */
 
