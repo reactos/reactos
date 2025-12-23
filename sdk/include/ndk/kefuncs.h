@@ -835,6 +835,35 @@ ZwYieldExecution(
 );
 #endif
 
+#ifdef _X86_
+
+/*
+ * Undocumented x86-only kernel exports.
+ *
+ * These functions manipulate the Task State Segment (TSS)
+ * I/O Permission Map (IOPM) and are used internally by
+ * videoprt.sys on Windows NT 4.0–5.2.
+ *
+ * References:
+ *  - Windows NT videoprt.sys (reverse engineered)
+ *  - Geoff Chappell: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ke/i386/index.htm
+ */
+VOID
+NTAPI
+Ke386SetIoAccessMap(
+    IN ULONG MapNumber,
+    IN PVOID IoAccessMap
+);
+
+VOID
+NTAPI
+Ke386IoSetAccessProcess(
+    IN PEPROCESS Process,
+    IN ULONG Enable
+);
+
+#endif /* _X86_ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
