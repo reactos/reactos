@@ -217,8 +217,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                PartialResourceList,
                                Size,
                                &BiosKey);
-
-        /* Check if component creation succeeded */
         if (!BiosKey)
         {
             ERR("Failed to create PCI BIOS component key\n");
