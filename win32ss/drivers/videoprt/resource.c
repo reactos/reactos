@@ -1202,7 +1202,7 @@ VideoPortSetTrappedEmulatorPorts(
     Process = PsGetCurrentProcess();
     ASSERT(Process != NULL);
 
-    /*
+    /**
      * NT semantics:
      * Passing zero ranges means “reset to default”.
      * Default on NT is: all emulator ports trapped.
@@ -1229,7 +1229,7 @@ VideoPortSetTrappedEmulatorPorts(
         return NO_ERROR;
     }
 
-    /*
+    /**
      * Hard sanity cap:
      * Prevent runaway miniports from handing us thousands of ranges.
      * Real Windows drivers stay well below this.
@@ -1253,7 +1253,7 @@ VideoPortSetTrappedEmulatorPorts(
 
     DPRINT1("VIDEOPRT: IOPM initialized (all ports trapped)\n");
 
-    /*
+    /**
      * Apply ranges in order, exactly as documented:
      * later entries may override earlier ones.
      */
@@ -1291,7 +1291,7 @@ VideoPortSetTrappedEmulatorPorts(
         }
     }
 
-    /*
+    /**
      * VGA-safe fallback
      *
      * WHY:
@@ -1322,7 +1322,7 @@ VideoPortSetTrappedEmulatorPorts(
         DPRINT1("VIDEOPRT: VGA-safe fallback ports enabled\n");
     }
 
-    /*
+    /**
      * Commit IOPM
      *
      * Ke386SetIoAccessMap copies the bitmap internally.
@@ -1335,7 +1335,7 @@ VideoPortSetTrappedEmulatorPorts(
 
     MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
 
-    /*
+    /**
      * IMPORTANT:
      * Revoke access (Ke386IoSetAccessProcess(...,0)) MUST be done
      * by NTVDM teardown or process exit handling.
