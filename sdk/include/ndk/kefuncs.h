@@ -385,7 +385,7 @@ Ke386CallBios(
  *
  * References:
  *  - Windows NT videoprt.sys (reverse engineered)
- *  - Geoff Chappell: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ke/i386/index.htm
+ *  - Geoff Chappell: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/index.htm
  */
 VOID
 NTAPI
