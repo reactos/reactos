@@ -284,11 +284,6 @@ static void test_GetSetEnvironmentVariableW(void)
        ret_size, GetLastError());
     ok(lstrcmpW(buf, empty_strW) == 0, "should copy an empty string\n");
 
-#ifdef __REACTOS__
-    if (is_reactos()) {
-      ok(FALSE, "FIXME: This test crashes on ReactOS for some reason.\n");
-    } else {
-#endif
     SetLastError(0xdeadbeef);
     ret_size = GetEnvironmentVariableW(name, NULL, 0);
     ok(ret_size == 1 ||
@@ -298,9 +293,6 @@ static void test_GetSetEnvironmentVariableW(void)
     ok(GetLastError() == 0xdeadbeef ||
        broken(GetLastError() == ERROR_MORE_DATA), /* XP */
        "should not fail with zero size but GetLastError=%ld\n", GetLastError());
-#ifdef __REACTOS__
-     }
-#endif
 
     /* Test the limits */
     SetLastError(0xdeadbeef);

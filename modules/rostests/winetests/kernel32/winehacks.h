@@ -1,6 +1,6 @@
 /* These definitions below are from Wine's headers, but for one reason or another
- * are not currently feasible to import. The ultimate goal should be to phase this
- * header out entirely by importing these Wine headers unchanged into sdk/include/wine.
+ * cannot be currently imported. The ultimate goal should be to phase this header
+ * out entirely by importing these Wine headers unchanged into sdk/include/wine.
  *
  * Note: the header filenames correspond to Wine headers, they are often incompatible
  * with our headers or Microsoft's corresponding header.
