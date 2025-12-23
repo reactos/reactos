@@ -81,8 +81,6 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                            PartialResourceList,
                            Size,
                            &BiosKey);
-
-    /* Check if component creation succeeded */
     if (!BiosKey)
     {
         ERR("Failed to create APM component key\n");
