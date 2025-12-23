@@ -1179,7 +1179,46 @@ VideoPortUnlockBuffer(
     }
 }
 
-
+/*
+ * @name VideoPortSetTrappedEmulatorPorts
+ * @implemented
+ *
+ * @brief
+ * Enables or disables the trapping of I/O ports for the current process (NTVDM)
+ * on x86 architectures.
+ *
+ * @details
+ * This function modifies the I/O Permission Map (IOPM) in the TSS via the
+ * Ke386IoSetAccessProcess API. It translates the abstract VIDEO_ACCESS_RANGE
+ * structures into a raw bitmap (0 = allowed, 1 = trapped).
+ *
+ * Behavioral Rules:
+ * 1. If NumAccessRanges is 0, all ports are trapped (reset to default).
+ * 2. On x86, this enables direct hardware access for VDM (DOS) applications.
+ * 3. On non-x86 platforms, this function is a stub and returns NO_ERROR.
+ *
+ * @param[in] HwDeviceExtension
+ * Pointer to the miniport driver's device extension.
+ *
+ * @param[in] NumAccessRanges
+ * The number of access ranges in the AccessRange array.
+ * ReactOS Hardening: Capped at 256 to prevent resource exhaustion.
+ *
+ * @param[in] AccessRange
+ * Pointer to an array of VIDEO_ACCESS_RANGE structures defining the ports
+ * to be untrapped (RangeVisible = TRUE) or trapped (RangeVisible = FALSE).
+ *
+ * @return
+ * VP_STATUS (Win32 Error Codes):
+ * - NO_ERROR: Success or non-x86 platform.
+ * - ERROR_INVALID_PARAMETER: Invalid ranges, excessive count, or alignment issues.
+ * - ERROR_NOT_ENOUGH_MEMORY: Failed to allocate temporary IOPM buffer.
+ *
+ * @remarks
+ * - IRQL: Must be called at PASSIVE_LEVEL.
+ * - The caller (NTVDM) is responsible for cleaning up the IOPM on process exit.
+ * - This implementation includes a defensive VGA-safe fallback for broken miniports.
+ */
 VP_STATUS NTAPI
 VideoPortSetTrappedEmulatorPorts(
     _In_ PVOID HwDeviceExtension,
