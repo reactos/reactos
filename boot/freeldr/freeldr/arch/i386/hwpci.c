@@ -169,8 +169,6 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &TableKey);
-
-        /* Check if component creation succeeded */
         if (!TableKey)
         {
             ERR("Failed to create PCI IRQ routing table component key\n");
