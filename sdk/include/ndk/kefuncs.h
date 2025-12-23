@@ -835,7 +835,7 @@ ZwYieldExecution(
 );
 #endif
 
-#ifdef _X86_
+#ifdef _M_IX86
 
 /*
  * Undocumented x86-only kernel exports.
@@ -862,7 +862,7 @@ Ke386IoSetAccessProcess(
     IN ULONG MapNumber
 );
 
-#endif /* _X86_ */
+#endif /* _M_IX86 */
 
 #ifdef __cplusplus
 } // extern "C"
