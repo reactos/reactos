@@ -1204,7 +1204,7 @@ VideoPortSetTrappedEmulatorPorts(
 
     /**
      * NT semantics:
-     * Passing zero ranges means “reset to default”.
+     * Passing zero ranges means "reset to default".
      * Default on NT is: all emulator ports trapped.
      */
     if (NumAccessRanges == 0 || AccessRange == NULL)
