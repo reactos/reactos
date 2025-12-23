@@ -1225,14 +1225,13 @@ VideoPortSetTrappedEmulatorPorts(
     _In_ ULONG NumAccessRanges,
     _In_ PVIDEO_ACCESS_RANGE AccessRange)
 {
-#ifdef _X86_
+#ifdef _M_IX86
     PUCHAR IoMap = NULL;
     ULONG i, port;
     PEPROCESS Process;
     BOOLEAN AnyPortEnabled = FALSE;
 
-    DPRINT1("VIDEOPRT: VideoPortSetTrappedEmulatorPorts ENTER "
-            "(HwDevExt=%p NumRanges=%lu)\n",
+    TRACE_(VIDEOPRT, "VideoPortSetTrappedEmulatorPorts(HwDevExt=%p NumRanges=%lu)\n",
             HwDeviceExtension, NumAccessRanges);
 
     /* Basic contract validation */
@@ -1248,12 +1247,12 @@ VideoPortSetTrappedEmulatorPorts(
      */
     if (NumAccessRanges == 0 || AccessRange == NULL)
     {
-        DPRINT1("VIDEOPRT: No ranges supplied — enforcing deny-all IOPM\n");
+         INFO_(VIDEOPRT, "No ranges supplied — enforcing deny-all IOPM\n");
 
         IoMap = MmAllocateNonCachedMemory(IOPM_SIZE);
         if (!IoMap)
         {
-            DPRINT1("VIDEOPRT: IOPM allocation failed (deny-all path)\n");
+            ERR(VIDEOPRT, "IOPM allocation failed (deny-all path)\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1264,7 +1263,7 @@ VideoPortSetTrappedEmulatorPorts(
 
         MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
 
-        DPRINT1("VIDEOPRT: Deny-all IOPM committed\n");
+        TRACE_(VIDEOPRT, "Deny-all IOPM committed\n");
         return NO_ERROR;
     }
 
@@ -1275,7 +1274,7 @@ VideoPortSetTrappedEmulatorPorts(
      */
     if (NumAccessRanges > 256)
     {
-        DPRINT1("VIDEOPRT: Rejecting excessive NumAccessRanges=%lu\n",
+        ERR_(VIDEOPRT, "Rejecting excessive NumAccessRanges=%lu\n",
                 NumAccessRanges);
         return ERROR_INVALID_PARAMETER;
     }
@@ -1283,14 +1282,14 @@ VideoPortSetTrappedEmulatorPorts(
     IoMap = MmAllocateNonCachedMemory(IOPM_SIZE);
     if (!IoMap)
     {
-        DPRINT1("VIDEOPRT: Failed to allocate IOPM buffer\n");
+        ERR_(VIDEOPRT, "Failed to allocate IOPM buffer\n");
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     /* Default deny-all */
     RtlFillMemory(IoMap, IOPM_SIZE, 0xFF);
 
-    DPRINT1("VIDEOPRT: IOPM initialized (all ports trapped)\n");
+    TRACE_(VIDEOPRT, "IOPM initialized (all ports trapped)\n");
 
     /**
      * Apply ranges in order, exactly as documented:
@@ -1305,7 +1304,7 @@ VideoPortSetTrappedEmulatorPorts(
             start >= 0x10000 ||
             start + len > 0x10000)
         {
-            DPRINT1("VIDEOPRT: Invalid AccessRange[%lu] "
+            ERR_(VIDEOPRT, "Invalid AccessRange[%lu] "
                     "(start=%lx len=%lx)\n",
                     i, start, len);
             MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
@@ -1320,12 +1319,12 @@ VideoPortSetTrappedEmulatorPorts(
             }
             AnyPortEnabled = TRUE;
 
-            DPRINT1("VIDEOPRT: Enabled direct I/O ports [%lx..%lx)\n",
+            TRACE_(VIDEOPRT, "Enabled direct I/O ports [%lx..%lx)\n",
                     start, start + len);
         }
         else
         {
-            DPRINT1("VIDEOPRT: Explicitly trapping ports [%lx..%lx)\n",
+            TRACE_(VIDEOPRT, "Explicitly trapping ports [%lx..%lx)\n",
                     start, start + len);
         }
     }
@@ -1358,7 +1357,7 @@ VideoPortSetTrappedEmulatorPorts(
             IoMap[port >> 3] &= ~(1 << (port & 7));
         }
 
-        DPRINT1("VIDEOPRT: VGA-safe fallback ports enabled\n");
+        TRACE_(VIDEOPRT, "VGA-safe fallback ports enabled\n");
     }
 
     /**
@@ -1370,7 +1369,7 @@ VideoPortSetTrappedEmulatorPorts(
     Ke386SetIoAccessMap(1, IoMap);
     Ke386IoSetAccessProcess(Process, 1);
 
-    DPRINT1("VIDEOPRT: IOPM committed for process %p\n", Process);
+    TRACE_(VIDEOPRT, "IOPM committed for process %p\n", Process);
 
     MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
 
