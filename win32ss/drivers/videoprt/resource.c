@@ -492,10 +492,10 @@ IntVideoPortUnmapMemory(
 
 PVOID NTAPI
 VideoPortGetDeviceBase(
-   IN PVOID HwDeviceExtension,
-   IN PHYSICAL_ADDRESS IoAddress,
-   IN ULONG NumberOfUchars,
-   IN UCHAR InIoSpace)
+   _In_ PVOID HwDeviceExtension,
+   _In_ PHYSICAL_ADDRESS IoAddress,
+   _In_ ULONG NumberOfUchars,
+   _In_ UCHAR InIoSpace)
 {
    TRACE_(VIDEOPRT, "VideoPortGetDeviceBase\n");
    return IntVideoPortMapMemory(
