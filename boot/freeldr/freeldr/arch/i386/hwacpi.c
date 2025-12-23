@@ -129,8 +129,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                PartialResourceList,
                                sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize,
                                &BiosKey);
-
-        /* Check if component creation succeeded */
         if (!BiosKey)
         {
             ERR("Failed to create ACPI BIOS component key\n");
