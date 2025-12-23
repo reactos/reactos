@@ -1179,45 +1179,12 @@ VideoPortUnlockBuffer(
     }
 }
 
-/*
- * VideoPortSetTrappedEmulatorPorts
- *
- * Purpose
- * -------
- * Configure the x86 I/O Permission Map (IOPM) for full-screen NTVDM sessions.
- *
- * This function is used by VGA/SVGA miniport drivers to dynamically allow
- * or deny direct user-mode access to I/O ports while a DOS application runs
- * full-screen.
- *
- * Design constraints
- * ------------------
- * - Windows NT 4.0–5.2 compatibility
- * - x86-only (IOPM is an IA-32 mechanism)
- * - No ABI / API changes
- * - Defensive against buggy or malicious miniports / VDDs
- * - System stability > application correctness
- *
- * Key design decisions
- * --------------------
- * 1. Default-deny policy (trap everything first)
- * 2. Strict validation of ranges to prevent system hangs
- * 3. Optional VGA-safe fallback to prevent black screens / lockups
- * 4. No persistent kernel allocations
- * 5. Per-call, per-process application of IOPM
- *
- * References
- * ----------
- * - Microsoft WDK: VideoPortSetTrappedEmulatorPorts
- * - Intel SDM Vol. 3: Task State Segment / IOPM
- * - Geoff Chappell: NT x86 Ke386* exports
- */
 
 VP_STATUS NTAPI
 VideoPortSetTrappedEmulatorPorts(
-    IN PVOID HwDeviceExtension,
-    IN ULONG NumAccessRanges,
-    IN PVIDEO_ACCESS_RANGE AccessRange)
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG NumAccessRanges,
+    _In_ PVIDEO_ACCESS_RANGE AccessRange)
 {
 #ifdef _X86_
     PUCHAR IoMap = NULL;
