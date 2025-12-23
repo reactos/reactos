@@ -391,7 +391,7 @@ VOID
 NTAPI
 Ke386SetIoAccessMap(
     IN ULONG MapNumber,
-    IN PVOID IoAccessMap
+    IN PKIO_ACCESS_MAP  IoAccessMap
 );
 
 VOID
