@@ -334,8 +334,6 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            PartialResourceList,
                            Size,
                            &ControllerKey);
-
-    /* Check if component creation succeeded */
     if (!ControllerKey)
     {
         ERR("Failed to create floppy disk controller component key\n");
