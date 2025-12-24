@@ -640,9 +640,11 @@ typedef struct _LOADER_PARAMETER_EXTENSION
     LIST_ENTRY BootApplicationPersistentData;
     PVOID WmdTestResult;
     GUID BootIdentifier;
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1 || defined __REACTOS__)
     ULONG ResumePages;
     PVOID DumpHeader;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
     PVOID BgContext;
     PVOID NumaLocalityInfo;
     PVOID NumaGroupAssignment;
@@ -864,7 +866,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
         PPC_LOADER_BLOCK PowerPC;
         ARM_LOADER_BLOCK Arm;
     } u;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_LONGHORN || defined __REACTOS__)
     FIRMWARE_INFORMATION_LOADER_BLOCK FirmwareInformation;
 #endif
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
