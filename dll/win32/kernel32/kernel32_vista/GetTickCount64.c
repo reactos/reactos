@@ -8,18 +8,10 @@ ULONGLONG
 WINAPI
 GetTickCount64(VOID)
 {
-    ULARGE_INTEGER TickCount;
+    LARGE_INTEGER TickCount;
 
-    while (TRUE)
-    {
-        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
-        TickCount.LowPart = SharedUserData->TickCount.LowPart;
+    TickCount = KiReadSystemTime(&SharedUserData->TickCount);
 
-        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time) break;
-
-        YieldProcessor();
-     }
-
-     return (UInt32x32To64(TickCount.LowPart, SharedUserData->TickCountMultiplier) >> 24) +
-            (UInt32x32To64(TickCount.HighPart, SharedUserData->TickCountMultiplier) << 8);
+    /* Convert to milliseconds */
+    return KiTickCountToMs(TickCount);
 }
