@@ -325,14 +325,48 @@ typedef struct _CM_KEY_CONTROL_BLOCK
 //
 typedef struct _CM_NOTIFY_BLOCK
 {
-    LIST_ENTRY HiveList;
-    LIST_ENTRY PostList;
-    PCM_KEY_CONTROL_BLOCK KeyControlBlock;
-    PCM_KEY_BODY KeyBody;
-    ULONG Filter:29;
-    ULONG WatchTree:30;
+    LIST_ENTRY HiveList; /* link to CMHIVE->NotifyList */
+    LIST_ENTRY PostList; /* list of CM_POST_BLOCK entries */
+    PCM_KEY_CONTROL_BLOCK KeyControlBlock; /* Control block for the target registry key */
+    PCM_KEY_BODY KeyBody; /* the registry key body */
+    ULONG Filter:29; /* Event type flags, REG_NOTIFY_CHANGE_* enum members */
+    ULONG WatchTree:30; /* Signal for changes in subkeys */
     ULONG NotifyPending:31;
 } CM_NOTIFY_BLOCK, *PCM_NOTIFY_BLOCK;
+
+//
+// Post Block
+//
+typedef struct _CM_POST_BLOCK
+{
+    LIST_ENTRY NotifyList; /* link to CM_NOTIFY_BLOCK->PostList */
+    BOOLEAN IsMasterPostBlock;
+
+    union
+    {
+        /* Master-specific fields */
+        struct
+        {
+            PKEVENT Event; /* An event object to signal listeners about the change */
+            PKAPC UserApc; /* User-mode Asynchronous Procedure Call, a callback routine to notify the listener about the change */
+            PWORK_QUEUE_ITEM WorkQueueItem; /* WorkQueueItem for kernel-mode asynchronous callback */
+            WORK_QUEUE_TYPE WorkQueueType;
+
+            ULONG SubCount; /* SubNotifyBlocks size */
+            PCM_NOTIFY_BLOCK* SubNotifyBlocks; /* Array of Subordinates notification block */
+
+            PKPROCESS Process;
+            PIO_STATUS_BLOCK IoStatusBlock;
+        };
+
+        /* Subordinate-specific fields */
+        struct
+        {
+            PCM_NOTIFY_BLOCK MasterNotifyBlock; /* Hold a reference to the master key's notify block */
+            struct _CM_POST_BLOCK* MasterPostBlock; /* Hold a reference to master key's post block for forwarding notifications */
+        };
+    };
+} CM_POST_BLOCK, *PCM_POST_BLOCK;
 
 //
 // Re-map Block
@@ -646,6 +680,46 @@ NTAPI
 CmpFlushNotify(
     IN PCM_KEY_BODY KeyBody,
     IN BOOLEAN LockHeld
+);
+
+VOID
+NTAPI
+CmpLockNotifyShared();
+
+VOID
+NTAPI
+CmpLockNotifyExclusive();
+
+VOID
+NTAPI
+CmpUnlockNotify();
+
+NTSTATUS
+NTAPI
+CmpInsertNotifyBlock(
+    _In_  PCM_KEY_BODY KeyBody,
+    _In_  ULONG Filter,
+    _In_  BOOLEAN WatchTree,
+    _Out_ PCM_NOTIFY_BLOCK* NotifyBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInsertPostBlock(
+    _In_        PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_opt_    PKEVENT EventObject,
+    _In_opt_    PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_    PVOID ApcContext,
+    _Out_       PCM_POST_BLOCK *PostBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInsertSubPostBlock(
+    _In_  PCM_NOTIFY_BLOCK NotifyBlock,
+    _In_  PCM_NOTIFY_BLOCK MasterNotifyBlock,
+    _In_  PCM_POST_BLOCK MasterPostBlock,
+    _Out_ PCM_POST_BLOCK *PostBlock
 );
 
 CODE_SEG("INIT")
