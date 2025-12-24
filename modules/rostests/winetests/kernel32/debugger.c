@@ -970,7 +970,14 @@ static void doChild(int argc, char **argv)
     }
     else if (is_wow64)
     {
+#ifdef __REACTOS__
+        static wchar_t expected_path[MAX_PATH];
+        GetWindowsDirectoryW(expected_path, MAX_PATH);
+        wcscat(expected_path, L"\\sysnative\\oleacc.dll");
+        wcscpy( path, expected_path );
+#else
         wcscpy( path, L"c:\\windows\\sysnative\\oleacc.dll" );
+#endif
     }
     else goto done;
 

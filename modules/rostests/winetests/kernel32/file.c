@@ -5917,7 +5917,11 @@ static void test_file_readonly_access(void)
 
 static void test_find_file_stream(void)
 {
+#ifdef __REACTOS__
+    WCHAR path[MAX_PATH];
+#else
     WCHAR path[] = {'C',':','\\','w','i','n','d','o','w','s',0};
+#endif
     HANDLE handle;
     int error;
     WIN32_FIND_STREAM_DATA data;
@@ -5928,6 +5932,9 @@ static void test_find_file_stream(void)
         return;
     }
 
+#ifdef __REACTOS__
+    GetWindowsDirectoryW(path, ARRAY_SIZE(path));
+#endif
     SetLastError(0xdeadbeef);
     handle = pFindFirstStreamW(path, FindStreamInfoStandard, &data, 0);
     error = GetLastError();
