@@ -373,6 +373,34 @@ Ke386CallBios(
     _Inout_ PCONTEXT BiosArguments
 );
 
+
+#ifdef _M_IX86
+
+/*
+ * Undocumented x86-only kernel exports.
+ *
+ * These functions manipulate the Task State Segment (TSS)
+ * I/O Permission Map (IOPM) and are used internally by
+ * videoprt.sys on Windows NT 4.0–5.2.
+ *
+ * References:
+ *  - Windows NT videoprt.sys (reverse engineered)
+ *  - Geoff Chappell: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/index.htm
+ */
+BOOLEAN
+NTAPI
+Ke386SetIoAccessMap(
+    IN ULONG MapNumber,
+    IN PKIO_ACCESS_MAP IopmBuffer);
+
+BOOLEAN
+NTAPI
+Ke386IoSetAccessProcess(
+    IN PKPROCESS Process,
+    IN ULONG MapNumber);
+
+#endif /* _M_IX86 */
+
 //
 // Misc. Functions
 //
