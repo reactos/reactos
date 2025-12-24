@@ -440,7 +440,7 @@ VidInitialize(
     /* Set the VGA Memory Base */
     VgaBase = Base;
 
-    /* Now check if we have to set the mode */
+    /* Check whether we have to set the video mode */
     if (SetMode)
     {
         /* Clear the current position */
@@ -460,27 +460,18 @@ VidInitialize(
         }
     }
 
-    /* VGA is ready */
     return TRUE;
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode && !HalResetDisplay())
     {
-        if (!HalResetDisplay())
-        {
-            /* The HAL didn't handle the display, fully re-initialize the VGA */
-            VgaInterpretCmdStream(VGA_640x480);
-        }
+        /* The HAL didn't handle the display, fully re-initialize the VGA */
+        VgaInterpretCmdStream(VGA_640x480);
     }
 
     /* Always re-initialize the AC registers */

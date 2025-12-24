@@ -10,6 +10,7 @@
 #include "precomp.h"
 #include <drivers/xbox/xgpu.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -199,7 +200,7 @@ VidInitialize(
     /* Place backbuffer in the hidden part of framebuffer */
     BackBuffer = (PUCHAR)(FrameBufferStart + NV2A_VIDEO_MEMORY_SIZE - BackBufferSize);
 
-    /* Now check if we have to set the mode */
+    /* Check whether we have to set the video mode */
     if (SetMode)
         VidResetDisplay(TRUE);
 
@@ -220,16 +221,11 @@ VidCleanUp(VOID)
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode)
         HalResetDisplay();
 
     /* Re-initialize the palette and fill the screen black */
@@ -240,10 +236,10 @@ VidResetDisplay(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
-    PULONG Entry = Table;
+    const ULONG* Entry = Table;
 
     for (ULONG i = 0; i < Count; i++, Entry++)
     {
@@ -354,7 +350,7 @@ DisplayCharacter(
     _In_ ULONG BackColor)
 {
     /* Get the font and pixel pointer */
-    PUCHAR FontChar = GetFontPtr(Character);
+    const UCHAR* FontChar = GetFontPtr(Character);
 
     /* Loop each pixel height */
     for (ULONG y = Top; y < Top + BOOTCHAR_HEIGHT; y++, FontChar += FONT_PTR_DELTA)

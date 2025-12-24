@@ -62,7 +62,7 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
-    PUCHAR FontChar;
+    const UCHAR* FontChar;
     ULONG i, j, XOffset;
 
     /* Get the font line for this character */
@@ -209,7 +209,7 @@ VidpInitializeDisplay(VOID)
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
     UNIMPLEMENTED;
@@ -251,24 +251,13 @@ VidInitialize(
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    //
-    // Clear the current position
-    //
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    //
-    // Re-initialize the VGA Display
-    //
+    /* Re-initialize the display */
     VidpInitializeDisplay();
 
-    //
-    // Re-initialize the palette and fill the screen black
-    //
+    /* Re-initialize the palette and fill the screen black */
     InitializePalette();
     VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
 }

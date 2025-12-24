@@ -20,7 +20,7 @@ VidInitialize(
 VOID
 NTAPI
 VidResetDisplay(
-    _In_ BOOLEAN HalReset);
+    _In_ BOOLEAN SetMode);
 
 ULONG
 NTAPI

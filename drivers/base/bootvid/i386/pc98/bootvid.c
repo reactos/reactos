@@ -252,11 +252,11 @@ SetPaletteEntryRGB(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
+    const ULONG* Entry = Table;
     ULONG i;
-    PULONG Entry = Table;
 
     for (i = 0; i < Count; i++)
         SetPaletteEntryRGB(i, *Entry++);
@@ -273,8 +273,8 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
+    const UCHAR* FontChar = GetFontPtr(Character);
     ULONG X, Y, PixelMask;
-    PUCHAR FontChar = GetFontPtr(Character);
 
     for (Y = Top;
          Y < Top + BOOTCHAR_HEIGHT;
@@ -394,19 +394,14 @@ VidCleanUp(VOID)
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
     PULONG PixelsPosition = (PULONG)(FrameBuffer + FB_OFFSET(0, 0));
     ULONG PixelCount = ((SCREEN_WIDTH * SCREEN_HEIGHT) / sizeof(ULONG)) + 1;
 
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode)
         HalResetDisplay();
 
     WRITE_PORT_UCHAR((PUCHAR)GDC1_IO_o_MODE_FLIPFLOP1, GRAPH_MODE_DISPLAY_DISABLE);

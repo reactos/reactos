@@ -18,35 +18,15 @@
 
 extern ULONG_PTR FrameBuffer;
 
-/* PROTOTYPES *****************************************************************/
-
-VOID
-DisplayCharacter(
-    _In_ CHAR Character,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG TextColor,
-    _In_ ULONG BackColor);
-
-VOID
-DoScroll(
-    _In_ ULONG Scroll);
+/* FUNCTIONS ******************************************************************/
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
 VOID
-PreserveRow(
-    _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
-    _In_ BOOLEAN Restore);
-
-VOID
 PrepareForSetPixel(VOID);
-
-/* FUNCTIONS ******************************************************************/
 
 FORCEINLINE
 VOID

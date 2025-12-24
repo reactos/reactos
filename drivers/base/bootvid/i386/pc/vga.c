@@ -117,7 +117,8 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
-    PUCHAR FontChar, PixelPtr;
+    const UCHAR* FontChar;
+    PUCHAR PixelPtr;
     ULONG Height;
     UCHAR Shift;
 
@@ -215,11 +216,11 @@ SetPaletteEntryRGB(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
+    const ULONG* Entry = Table;
     ULONG i;
-    PULONG Entry = Table;
 
     for (i = 0; i < Count; i++, Entry++)
     {
