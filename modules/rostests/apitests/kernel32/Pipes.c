@@ -31,8 +31,8 @@ DWORD WINAPI PipeWriter(_In_ PVOID Param)
 
 DWORD WINAPI PipeReader(_In_ PVOID Param)
 {
-    CHAR outMsg[MAXBUFFERSIZE];
     HANDLE hPipe = (HANDLE)Param;
+    CHAR outMsg[MAXBUFFERSIZE];
 
     DWORD cbRead = 0;
     BOOL Success = ReadFile(hPipe, outMsg, g_dwReadBufferSize, &cbRead, NULL);
