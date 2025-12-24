@@ -3063,16 +3063,23 @@ todo_wine {
     actctx.cbSize = sizeof(actctx);
     actctx.lpResourceName = MAKEINTRESOURCEA(1);
     actctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
+#ifdef __REACTOS__
+    char path_explorer[MAX_PATH];
+    GetWindowsDirectoryA(path_explorer, sizeof(path_explorer));
+    strcat(path_explorer, "\\explorer.exe");
+#endif
     for (i = 0; i < ARRAY_SIZE(flags); ++i)
     {
         winetest_push_context("%lu", flags[i]);
 
+        /* use explorer.exe because using modules already loaded has a different behavior */
 #ifdef __REACTOS__
         if (GetNTVersion() < _WIN32_WINNT_VISTA && i > 0)
             break; // Only the first test is valid for WS03.
-#endif
-        /* use explorer.exe because using modules already loaded has a different behavior */
+        actctx.hModule = LoadLibraryExA(path_explorer, NULL, flags[i]);
+#else
         actctx.hModule = LoadLibraryExA("C:\\windows\\explorer.exe", NULL, flags[i]);
+#endif
         ok(actctx.hModule != NULL, "LoadLibraryExA failed, error %lu\n", GetLastError());
         handle = CreateActCtxA(&actctx);
         ok(handle == INVALID_HANDLE_VALUE, "CreateActCtxA succeeded\n");
@@ -3834,7 +3841,13 @@ static void test_builtin_sxs(void)
     ULONG_PTR cookie;
     HANDLE handle_context;
     BOOL success;
+#ifdef __REACTOS__
+    static char expected_path[MAX_PATH];
+    GetWindowsDirectoryA(expected_path, sizeof(expected_path));
+    strcat(expected_path, "\\WinSxS");
+#else
     static const char *expected_path = "C:\\Windows\\WinSxS";
+#endif
 
     GetTempPathA(sizeof(path_tmp), path_tmp);
 

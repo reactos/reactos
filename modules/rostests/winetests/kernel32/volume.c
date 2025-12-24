@@ -115,6 +115,11 @@ static void test_dos_devices(void)
     char drivestr[3];
     HANDLE file;
     BOOL ret;
+#ifdef __REACTOS__
+    char root_path[MAX_PATH], buf3[MAX_PATH];
+
+    GetWindowsDirectoryA(root_path, sizeof(root_path));
+#endif
 
     /* Find an unused drive letter */
     drivestr[1] = ':';
@@ -128,12 +133,29 @@ static void test_dos_devices(void)
         return;
     }
 
+#ifdef __REACTOS__
+    sprintf(buf3, "%s/", root_path);
+    for (char *p = buf3; *p; p++) {
+        if (*p == '\\') *p = '/';                                  // Replace backslashes with forward slashes
+        else if (p != buf3) *p = (char)tolower((unsigned char)*p); // Lowercase everything except the first character
+    }
+    ret = DefineDosDeviceA( 0, drivestr, buf3 );
+#else
     ret = DefineDosDeviceA( 0, drivestr, "C:/windows/" );
+#endif
     ok(ret, "failed to define drive %s, error %lu\n", drivestr, GetLastError());
 
     ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
     ok(ret, "failed to query drive %s, error %lu\n", drivestr, GetLastError());
+#ifdef __REACTOS__
+    sprintf(buf3, "\\??\\%s\\", root_path);
+    for (char *p = buf3; *p; p++) {
+        if (p != (buf3 + 4)) *p = (char)tolower((unsigned char)*p); // Lowercase everything except "C:\"
+    }
+    ok(!strcmp(buf, buf3), "got path %s\n", debugstr_a(buf));
+#else
     ok(!strcmp(buf, "\\??\\C:\\windows\\"), "got path %s\n", debugstr_a(buf));
+#endif
 
     sprintf(buf, "%s/system32", drivestr);
     file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -163,12 +185,20 @@ static void test_dos_devices(void)
 
     /* try with DDD_RAW_TARGET_PATH */
 
+#ifdef __REACTOS__
+    ret = DefineDosDeviceA( DDD_RAW_TARGET_PATH, drivestr, buf3 );
+#else
     ret = DefineDosDeviceA( DDD_RAW_TARGET_PATH, drivestr, "\\??\\C:\\windows\\" );
+#endif
     ok(ret, "failed to define drive %s, error %lu\n", drivestr, GetLastError());
 
     ret = QueryDosDeviceA( drivestr, buf, sizeof(buf) );
     ok(ret, "failed to query drive %s, error %lu\n", drivestr, GetLastError());
+#ifdef __REACTOS__
+    ok(!strcmp(buf, buf3), "got path %s\n", debugstr_a(buf));
+#else
     ok(!strcmp(buf, "\\??\\C:\\windows\\"), "got path %s\n", debugstr_a(buf));
+#endif
 
     sprintf(buf, "%s/system32", drivestr);
     file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -859,6 +889,30 @@ static void test_GetVolumePathNameA(void)
     DWORD error;
     UINT i;
 
+#ifdef __REACTOS__
+    char sysroot[MAX_PATH];
+    char patched[MAX_PATH];
+
+    /* Get the real system root and lowercase everything other than "C:\""*/
+    GetWindowsDirectoryA(sysroot, sizeof(sysroot));
+    for (char *p = sysroot; *p; p++)
+        if (p != sysroot) *p = (char)tolower((unsigned char)*p);;
+
+    /* Patch test 8: "C:\\windows\\system32" */
+    sprintf(patched, "%s\\system32", sysroot);
+    test_paths[8].file_name = _strdup(patched);
+
+    /* Patch test 9: "C:\\windows\\system32\\AnInvalidFolder" */
+    sprintf(patched, "%s\\system32\\AnInvalidFolder", sysroot);
+    test_paths[9].file_name = _strdup(patched);
+
+    /* Patch test 30: "C:/windows/system32" (forward slashes) */
+    sprintf(patched, "%s/system32", sysroot);
+    for (char *p = patched; *p; p++)
+        if (*p == '\\') *p = '/';
+    test_paths[30].file_name = _strdup(patched);
+#endif
+
     for (i=0; i<ARRAY_SIZE(test_paths); i++)
     {
         BOOL broken_ret = test_paths[i].broken_error == NO_ERROR;
@@ -937,6 +991,12 @@ static void test_GetVolumePathNameA(void)
     ok(ret, "Failed to obtain the volume path, error %lu.\n", GetLastError());
     ok(!strcmp(volume_path, expect_path), "Expected %s, got %s.\n",
             debugstr_a( expect_path ), debugstr_a( volume_path ));
+#ifdef __REACTOS__
+    /* Free patched strings */
+    free((void*)test_paths[8].file_name);
+    free((void*)test_paths[9].file_name);
+    free((void*)test_paths[30].file_name);
+#endif
 }
 
 static void test_GetVolumePathNameW(void)
@@ -1313,6 +1373,17 @@ static void test_mounted_folder(void)
     NTSTATUS status;
     HANDLE file;
     DWORD size;
+#ifdef __REACTOS__
+    int i = 0;
+    char sysroot[MAX_PATH] = {0}, buf[MAX_PATH] = {0};
+    WCHAR buf2[MAX_PATH] = {0};
+
+    GetWindowsDirectoryA(sysroot, sizeof(sysroot));
+    for (char *p = sysroot; *p; p++) {
+        // Lowercase everything except "C:\"
+        if (p != sysroot) *p = (char)tolower((unsigned char)*p);
+    }
+#endif
 
     file = CreateFileA( "C:\\", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
             OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL );
@@ -1401,15 +1472,29 @@ static void test_mounted_folder(void)
     ok(ret != INVALID_FILE_ATTRIBUTES, "got error %lu\n", GetLastError());
     ok((ret & FILE_ATTRIBUTE_REPARSE_POINT) && (ret & FILE_ATTRIBUTE_DIRECTORY), "got attributes %#x\n", ret);
 
+#ifdef __REACTOS__
+    sprintf(buf, "C:\\winetest_mnt\\%s", sysroot + 3);
+    file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#else
     file = CreateFileA( "C:\\winetest_mnt\\windows", 0, FILE_SHARE_READ | FILE_SHARE_WRITE,
             NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#endif
     ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
 
     status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
     ok(!status, "got status %#lx\n", status);
+#ifdef __REACTOS__
+    /* Copy \windows (or \reactos) to buf2. */
+    while ((buf2[i] = (WCHAR)(unsigned char)sysroot[i+2]) != 0) i++;
+    ok(name->FileNameLength == wcslen(buf2) * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+    ok(!wcsnicmp(name->FileName, buf2, wcslen(buf2)), "got name %s\n",
+            debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+#else
     ok(name->FileNameLength == wcslen(L"\\windows") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
     ok(!wcsnicmp(name->FileName, L"\\windows", wcslen(L"\\windows")), "got name %s\n",
             debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+#endif
 
     CloseHandle( file );
 
@@ -1431,15 +1516,28 @@ static void test_mounted_folder(void)
     ret = GetVolumeInformationA( "C:\\winetest_mnt\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
     ok(ret, "got error %lu\n", GetLastError());
 
+#ifdef __REACTOS__
+    ret = GetVolumePathNameA( buf, path, sizeof(path) );
+#else
     ret = GetVolumePathNameA( "C:\\winetest_mnt\\windows", path, sizeof(path) );
+#endif
     ok(ret, "got error %lu\n", GetLastError());
     ok(!strcmp(path, "C:\\winetest_mnt\\"), "got %s\n", debugstr_a(path));
     SetLastError(0xdeadbeef);
+#ifdef __REACTOS__
+    strcat(buf, "\\");
+    ret = GetVolumeNameForVolumeMountPointA( buf, path, sizeof(path) );
+#else
     ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_mnt\\windows\\", path, sizeof(path) );
+#endif
     ok(!ret, "expected failure\n");
     ok(GetLastError() == ERROR_NOT_A_REPARSE_POINT, "wrong error %lu\n", GetLastError());
     SetLastError(0xdeadbeef);
+#ifdef __REACTOS__
+    ret = GetVolumeInformationA( buf, NULL, 0, NULL, NULL, NULL, NULL, 0 );
+#else
     ret = GetVolumeInformationA( "C:\\winetest_mnt\\windows\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+#endif
     ok(!ret, "expected failure\n");
     ok(GetLastError() == ERROR_DIR_NOT_ROOT, "wrong error %lu\n", GetLastError());
 
@@ -1502,15 +1600,28 @@ static void test_mounted_folder(void)
         ret = GetVolumeInformationA( "C:\\winetest_link\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
         ok(ret, "got error %lu\n", GetLastError());
 
+#ifdef __REACTOS__
+        sprintf(buf, "C:\\winetest_link\\%s", sysroot + 3);
+        ret = GetVolumePathNameA( buf, path, sizeof(path) );
+#else
         ret = GetVolumePathNameA( "C:\\winetest_link\\windows\\", path, sizeof(path) );
+#endif
         ok(ret, "got error %lu\n", GetLastError());
         ok(!strcmp(path, "C:\\"), "got %s\n", path);
         SetLastError(0xdeadbeef);
+#ifdef __REACTOS__
+        ret = GetVolumeNameForVolumeMountPointA( buf, path, sizeof(path) );
+#else
         ret = GetVolumeNameForVolumeMountPointA( "C:\\winetest_link\\windows\\", path, sizeof(path) );
+#endif
         ok(!ret, "expected failure\n");
         ok(GetLastError() == ERROR_NOT_A_REPARSE_POINT, "wrong error %lu\n", GetLastError());
         SetLastError(0xdeadbeef);
+#ifdef __REACTOS__
+        ret = GetVolumeInformationA( buf, NULL, 0, NULL, NULL, NULL, NULL, 0 );
+#else
         ret = GetVolumeInformationA( "C:\\winetest_link\\windows\\", NULL, 0, NULL, NULL, NULL, NULL, 0 );
+#endif
         ok(!ret, "expected failure\n");
         ok(GetLastError() == ERROR_DIR_NOT_ROOT, "wrong error %lu\n", GetLastError());
 
@@ -1526,20 +1637,35 @@ static void test_mounted_folder(void)
         /* The following test makes it clear that when we encounter a symlink
          * while resolving, we resolve *every* junction in the path, i.e. both
          * mount points and symlinks. */
+#ifdef __REACTOS__
+        sprintf(buf, "C:\\winetest_link\\winetest_mnt\\winetest_link\\%s\\", sysroot + 3);
+        ret = GetVolumePathNameA( buf, path, sizeof(path) );
+#else
         ret = GetVolumePathNameA( "C:\\winetest_link\\winetest_mnt\\winetest_link\\windows\\", path, sizeof(path) );
+#endif
         ok(ret, "got error %lu\n", GetLastError());
         ok(!strcmp(path, "C:\\") || !strcmp(path, "C:\\winetest_link\\winetest_mnt\\") /* 2008 */,
                 "got %s\n", debugstr_a(path));
 
+#ifdef __REACTOS__
+        file = CreateFileA( buf, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#else
         file = CreateFileA( "C:\\winetest_link\\winetest_mnt\\winetest_link\\windows\\", 0,
                 FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#endif
         ok(file != INVALID_HANDLE_VALUE, "got error %lu\n", GetLastError());
 
         status = NtQueryInformationFile( file, &io, name, sizeof(name_buffer), FileNameInformation );
         ok(!status, "got status %#lx\n", status);
+#ifdef __REACTOS__
+        ok(name->FileNameLength == wcslen(buf2) * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
+        ok(!wcsnicmp(name->FileName, buf2, wcslen(buf2)), "got name %s\n",
+                debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+#else
         ok(name->FileNameLength == wcslen(L"\\windows") * sizeof(WCHAR), "got length %lu\n", name->FileNameLength);
         ok(!wcsnicmp(name->FileName, L"\\windows", wcslen(L"\\windows")), "got name %s\n",
                 debugstr_wn(name->FileName, name->FileNameLength / sizeof(WCHAR)));
+#endif
 
         CloseHandle( file );
 
@@ -1573,6 +1699,15 @@ static void test_GetVolumeInformationByHandle(void)
     HANDLE file;
     NTSTATUS status;
     BOOL ret;
+#ifdef __REACTOS__
+    char sysroot[MAX_PATH];
+
+    GetWindowsDirectoryA(sysroot, sizeof(sysroot));
+    for (char *p = sysroot; *p; p++) {
+        if (*p == '\\') *p = '/';                                     // Use forward slashes
+        else if (p != sysroot) *p = (char)tolower((unsigned char)*p); // Lowercase everything except "C:\"
+    }
+#endif
 
 #if defined(__REACTOS__) && DLL_EXPORT_VERSION >= 0x600
     /* FIXME: GetVolumeInformationByHandleW is a STUB on ReactOS! */
@@ -1585,8 +1720,13 @@ static void test_GetVolumeInformationByHandle(void)
         return;
     }
 
+#ifdef __REACTOS__
+    file = CreateFileA( sysroot, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+            OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#else
     file = CreateFileA( "C:/windows", 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
             OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+#endif
     ok(file != INVALID_HANDLE_VALUE, "failed to open file, error %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
