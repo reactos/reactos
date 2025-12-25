@@ -549,21 +549,48 @@ PcMemFinalizeMemoryMap(
 {
     ULONG i;
 
+    ULONG FreeLdrStart = ALIGN_DOWN_BY(FREELDR_BASE, PAGE_SIZE);
+    ULONG FreeLdrEnd = ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
+    ULONG FreeLdrMax = ALIGN_UP_BY(MEMORY_MARGIN, PAGE_SIZE);
+
+    ULONG FreeldrGapStart = ALIGN_UP_BY(STACKADDR, PAGE_SIZE);
+    ULONG FreeldrGapEnd = FreeLdrStart;
+
+    ULONG FreeLdrStartPage = FreeLdrStart / PAGE_SIZE;
+    ULONG FreeLdrMaxPage = FreeLdrMax / PAGE_SIZE;
+
+    BOOLEAN WillReserveDiskBuffer = FALSE;
+
     /* Reserve some static ranges for freeldr */
     ReserveMemory(MemoryMap, 0x1000, STACKLOW - 0x1000, LoaderFirmwareTemporary, "BIOS area");
     ReserveMemory(MemoryMap, STACKLOW, STACKADDR - STACKLOW, LoaderOsloaderStack, "FreeLdr stack");
-    ReserveMemory(MemoryMap, FREELDR_BASE, FrLdrImageSize, LoaderLoadedProgram, "FreeLdr image");
+    if (FreeldrGapEnd > FreeldrGapStart)
+        ReserveMemory(MemoryMap, FreeldrGapStart, FreeldrGapEnd - FreeldrGapStart, LoaderFirmwareTemporary, "Freeldr gap"); 
+    ReserveMemory(MemoryMap, FreeLdrStart, FreeLdrEnd - FreeLdrStart, LoaderLoadedProgram, "FreeLdr image");
+    ReserveMemory(MemoryMap, FreeLdrEnd, FreeLdrMax - FreeLdrEnd, LoaderFirmwareTemporary, "FreeLdr reserved");
 
     /* Default to 1 page above freeldr for the disk read buffer */
-    DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
+    DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FreeLdrEnd, PAGE_SIZE);
     DiskReadBufferSize = PAGE_SIZE;
 
     /* Scan for free range above freeldr image */
     for (i = 0; i < PcMapCount; i++)
     {
-        if ((MemoryMap[i].BasePage > (FREELDR_BASE / PAGE_SIZE)) &&
-            (MemoryMap[i].MemoryType == LoaderFree))
+        BOOLEAN IsAboveStartRange =
+            MemoryMap[i].BasePage > FreeLdrStartPage;
+
+        BOOLEAN IsInsideRange =
+            IsAboveStartRange &&
+            (MemoryMap[i].BasePage + MemoryMap[i].PageCount) <= FreeLdrMaxPage;
+
+        if ((IsInsideRange &&
+             MemoryMap[i].MemoryType == LoaderFirmwareTemporary) ||
+            (IsAboveStartRange &&
+             MemoryMap[i].MemoryType == LoaderFree))
         {
+            if (MemoryMap[i].MemoryType == LoaderFree)
+                WillReserveDiskBuffer = TRUE;
+
             /* Use this range for the disk read buffer */
             DiskReadBuffer = (PVOID)(MemoryMap[i].BasePage * PAGE_SIZE);
             DiskReadBufferSize = min(MemoryMap[i].PageCount * PAGE_SIZE,
@@ -577,12 +604,13 @@ PcMemFinalizeMemoryMap(
 
     ASSERT(DiskReadBufferSize > 0);
 
-    /* Now reserve the range for the disk read buffer */
-    ReserveMemory(MemoryMap,
-                  (ULONG_PTR)DiskReadBuffer,
-                  DiskReadBufferSize,
-                  LoaderFirmwareTemporary,
-                  "Disk read buffer");
+    /* Now reserve the range for the disk read buffer if necessary */
+    if (WillReserveDiskBuffer)
+        ReserveMemory(MemoryMap,
+                      (ULONG_PTR)DiskReadBuffer,
+                      DiskReadBufferSize,
+                      LoaderFirmwareTemporary,
+                      "Disk read buffer");
 
     TRACE("Dumping resulting memory map:\n");
     for (i = 0; i < PcMapCount; i++)
