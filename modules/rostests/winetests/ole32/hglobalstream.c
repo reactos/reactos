@@ -29,7 +29,7 @@
 
 #include "wine/test.h"
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error %#08lx\n", hr)
 
 static char const * const *expected_method_list;
 
@@ -56,7 +56,7 @@ static void test_streamonhglobal(void)
     HRESULT hr;
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
-    ok(hr == S_OK, "Failed to create a stream, hr %#x.\n", hr);
+    ok(hr == S_OK, "Failed to create a stream, hr %#lx.\n", hr);
 
     ull.QuadPart = sizeof(data);
     hr = IStream_SetSize(pStream, ull);
@@ -65,6 +65,25 @@ static void test_streamonhglobal(void)
     hr = IStream_Write(pStream, data, sizeof(data), NULL);
     ok_ole_success(hr, "IStream_Write");
 
+    /* Seek beyond the end of the stream and read from it */
+    ll.QuadPart = sizeof(data) + 16;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+
+    hr = IStream_Read(pStream, buffer, sizeof(buffer), &read);
+    ok_ole_success(hr, "IStream_Read");
+    ok(read == 0, "IStream_Read returned read %ld\n", read);
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == sizeof(data) + 16, "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
+
+    /* Seek to the start of the stream and read from it */
     ll.QuadPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, NULL);
     ok_ole_success(hr, "IStream_Seek");
@@ -72,7 +91,7 @@ static void test_streamonhglobal(void)
     /* should return S_OK, not S_FALSE */
     hr = IStream_Read(pStream, buffer, sizeof(buffer), &read);
     ok_ole_success(hr, "IStream_Read");
-    ok(read == sizeof(data), "IStream_Read returned read %d\n", read);
+    ok(read == sizeof(data), "IStream_Read returned read %ld\n", read);
 
     /* ignores HighPart */
     ull.u.HighPart = -1;
@@ -93,8 +112,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- invalid seek argument */
     ull.u.HighPart = 0xCAFECAFE;
@@ -102,9 +121,9 @@ static void test_streamonhglobal(void)
     ll.u.HighPart = 0;
     ll.u.LowPart = 123;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_END+1, &ull);
-    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should not have changed HighPart, got %d\n", ull.u.HighPart);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08lx\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should not have changed HighPart, got %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid position argument (seek to beginning) */
     ull.u.HighPart = 0xCAFECAFE;
@@ -113,8 +132,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid position argument (seek to end) */
     ull.u.HighPart = 0xCAFECAFE;
@@ -123,8 +142,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_END, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- ignore HighPart in the move value (seek from current position) */
     ll.u.HighPart = 0;
@@ -138,8 +157,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- ignore HighPart in the move value (seek to beginning) */
     ll.u.HighPart = 0;
@@ -153,8 +172,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- invalid LowPart value (seek before start of stream) */
     ll.u.HighPart = 0;
@@ -167,9 +186,9 @@ static void test_streamonhglobal(void)
     ll.u.HighPart = 0;
     ll.u.LowPart = 0x80000000;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
-    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08lx\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid LowPart value (seek to start of stream) */
     ll.u.HighPart = 0;
@@ -183,8 +202,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = -(DWORD)sizeof(data);
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0, "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0, "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- invalid LowPart value (seek to start of stream-1) */
     ll.u.HighPart = 0;
@@ -197,9 +216,9 @@ static void test_streamonhglobal(void)
     ll.u.HighPart = 0;
     ll.u.LowPart = -(DWORD)sizeof(data)-1;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
-    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08lx\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid LowPart value (seek forward to 0x80000000) */
     ll.u.HighPart = 0;
@@ -213,8 +232,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0x80000000 - sizeof(data);
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0x80000000, "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0x80000000, "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- invalid LowPart value (seek to beginning) */
     ll.u.HighPart = 0;
@@ -227,9 +246,9 @@ static void test_streamonhglobal(void)
     ll.u.HighPart = 0;
     ll.u.LowPart = 0x80000000;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
-    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
-    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08lx\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %ld\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid LowPart value (seek to beginning) */
     ull.u.HighPart = 0xCAFECAFE;
@@ -238,8 +257,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0x7FFFFFFF;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08x\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08lx\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- valid LowPart value (seek from current position) */
     ll.u.HighPart = 0;
@@ -253,8 +272,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 0x7FFFFFFF;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08x\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08lx\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- second seek allows you to go past 0x7FFFFFFF size */
     ull.u.HighPart = 0xCAFECAFE;
@@ -263,8 +282,8 @@ static void test_streamonhglobal(void)
     ll.u.LowPart = 9;
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok_ole_success(hr, "IStream_Seek");
-    ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08x\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+    ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08lx\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     /* IStream_Seek -- seek wraps position/size on integer overflow, but not on win8 */
     ull.u.HighPart = 0xCAFECAFE;
@@ -274,10 +293,10 @@ static void test_streamonhglobal(void)
     hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
     ok(hr == S_OK || hr == STG_E_SEEKERROR /* win8 */, "IStream_Seek\n");
     if (SUCCEEDED(hr))
-        ok(ull.u.LowPart == 0x00000007, "should have set LowPart to 0x00000007 instead of %08x\n", ull.u.LowPart);
+        ok(ull.u.LowPart == 0x00000007, "should have set LowPart to 0x00000007 instead of %08lx\n", ull.u.LowPart);
     else
-        ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08x\n", ull.u.LowPart);
-    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+        ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08lx\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %ld\n", ull.u.HighPart);
 
     hr = IStream_Commit(pStream, STGC_DEFAULT);
     ok_ole_success(hr, "IStream_Commit");
@@ -286,18 +305,17 @@ static void test_streamonhglobal(void)
     ok_ole_success(hr, "IStream_Revert");
 
     hr = IStream_LockRegion(pStream, ull, ull, LOCK_WRITE);
-    ok(hr == STG_E_INVALIDFUNCTION, "IStream_LockRegion should have returned STG_E_INVALIDFUNCTION instead of 0x%08x\n", hr);
+    ok(hr == STG_E_INVALIDFUNCTION, "IStream_LockRegion should have returned STG_E_INVALIDFUNCTION instead of 0x%08lx\n", hr);
 
     hr = IStream_Stat(pStream, &statstg, STATFLAG_DEFAULT);
     ok_ole_success(hr, "IStream_Stat");
-    ok(statstg.type == STGTY_STREAM, "statstg.type should have been STGTY_STREAM instead of %d\n", statstg.type);
+    ok(statstg.type == STGTY_STREAM, "statstg.type should have been STGTY_STREAM instead of %ld\n", statstg.type);
 
     /* test OOM condition */
     ull.u.HighPart = -1;
-    ull.u.LowPart = -1;
+    ull.u.LowPart = 0;
     hr = IStream_SetSize(pStream, ull);
-    ok(hr == E_OUTOFMEMORY || broken(hr == S_OK), /* win9x */
-       "IStream_SetSize with large size should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
+    ok(hr == S_OK, "IStream_SetSize with large size should have returned S_OK instead of 0x%08lx\n", hr);
 
     IStream_Release(pStream);
 }
@@ -437,15 +455,15 @@ static void test_copyto(void)
 
     hr = IStream_Write(pStream, szHello, sizeof(szHello), &written);
     ok_ole_success(hr, "IStream_Write");
-    ok(written == sizeof(szHello), "only %d bytes written\n", written);
+    ok(written == sizeof(szHello), "only %ld bytes written\n", written);
 
     hr = IStream_Seek(pStream, llZero, STREAM_SEEK_SET, NULL);
     ok_ole_success(hr, "IStream_Seek");
 
     cb.QuadPart = sizeof(szHello);
     hr = IStream_CopyTo(pStream, &Test_Stream, cb, &ullRead, &ullWritten);
-    ok(ullWritten.QuadPart == 5, "ullWritten was %d instead\n", (ULONG)ullWritten.QuadPart);
-    ok(ullRead.QuadPart == sizeof(szHello), "only %d bytes read\n", (ULONG)ullRead.QuadPart);
+    ok(ullWritten.QuadPart == 5, "ullWritten was %ld instead\n", (ULONG)ullWritten.QuadPart);
+    ok(ullRead.QuadPart == sizeof(szHello), "only %ld bytes read\n", (ULONG)ullRead.QuadPart);
     ok_ole_success(hr, "IStream_CopyTo");
 
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
@@ -480,7 +498,7 @@ static void test_freed_hglobal(void)
     ULONG read, written;
 
     hglobal = GlobalAlloc(GMEM_DDESHARE|GMEM_NODISCARD|GMEM_MOVEABLE, strlen(teststring) + 1);
-    ok(hglobal != NULL, "GlobalAlloc failed with error %d\n", GetLastError());
+    ok(hglobal != NULL, "GlobalAlloc failed with error %ld\n", GetLastError());
     p = GlobalLock(hglobal);
     strcpy(p, teststring);
     GlobalUnlock(hglobal);
@@ -493,7 +511,7 @@ static void test_freed_hglobal(void)
     ok(!strcmp(buffer, teststring), "buffer data %s differs\n", buffer);
     ok(read == sizeof(teststring) ||
        broken(read == ((sizeof(teststring) + 3) & ~3)), /* win9x rounds the size */
-       "read should be sizeof(teststring) instead of %d\n", read);
+       "read should be sizeof(teststring) instead of %ld\n", read);
 
     GlobalFree(hglobal);
 
@@ -502,15 +520,15 @@ static void test_freed_hglobal(void)
     hr = IStream_Read(pStream, buffer, sizeof(buffer), &read);
     ok_ole_success(hr, "IStream_Read");
     ok(buffer[0] == 0, "buffer data should be untouched\n");
-    ok(read == 0, "read should be 0 instead of %d\n", read);
+    ok(read == 0, "read should be 0 instead of %ld\n", read);
 
     ull.QuadPart = sizeof(buffer);
     hr = IStream_SetSize(pStream, ull);
-    ok(hr == E_OUTOFMEMORY, "IStream_SetSize with invalid HGLOBAL should return E_OUTOFMEMORY instead of 0x%08x\n", hr);
+    ok(hr == E_OUTOFMEMORY, "IStream_SetSize with invalid HGLOBAL should return E_OUTOFMEMORY instead of 0x%08lx\n", hr);
 
     hr = IStream_Write(pStream, buffer, sizeof(buffer), &written);
-    ok(hr == E_OUTOFMEMORY, "IStream_Write with invalid HGLOBAL should return E_OUTOFMEMORY instead of 0x%08x\n", hr);
-    ok(written == 0, "written should be 0 instead of %d\n", written);
+    ok(hr == E_OUTOFMEMORY, "IStream_Write with invalid HGLOBAL should return E_OUTOFMEMORY instead of 0x%08lx\n", hr);
+    ok(written == 0, "written should be 0 instead of %ld\n", written);
 
     IStream_Release(pStream);
 }
@@ -526,21 +544,21 @@ static void stream_info(IStream *stream, HGLOBAL *hmem, int *size, int *pos)
     *size = *pos = -1;
 
     hr = GetHGlobalFromStream(stream, hmem);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     memset(&stat, 0x55, sizeof(stat));
     hr = IStream_Stat(stream, &stat, STATFLAG_DEFAULT);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
-    ok(stat.type == STGTY_STREAM, "unexpected %#x\n", stat.type);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
+    ok(stat.type == STGTY_STREAM, "unexpected %#lx\n", stat.type);
     ok(!stat.pwcsName, "unexpected %p\n", stat.pwcsName);
     ok(IsEqualIID(&stat.clsid, &GUID_NULL), "unexpected %s\n", wine_dbgstr_guid(&stat.clsid));
-    ok(!stat.cbSize.HighPart, "unexpected %#x\n", stat.cbSize.HighPart);
+    ok(!stat.cbSize.HighPart, "unexpected %#lx\n", stat.cbSize.HighPart);
     *size = stat.cbSize.LowPart;
 
     offset.QuadPart = 0;
     hr = IStream_Seek(stream, offset, STREAM_SEEK_CUR, &newpos);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
-    ok(!newpos.HighPart, "unexpected %#x\n", newpos.HighPart);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
+    ok(!newpos.HighPart, "unexpected %#lx\n", newpos.HighPart);
     *pos = newpos.LowPart;
 }
 
@@ -559,54 +577,53 @@ static void test_IStream_Clone(void)
     orig_hmem = GlobalAlloc(GMEM_MOVEABLE, 0);
     ok(orig_hmem != 0, "unexpected %p\n", orig_hmem);
     hr = CreateStreamOnHGlobal(orig_hmem, TRUE, &stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = GetHGlobalFromStream(stream, NULL);
-    ok(hr == E_INVALIDARG, "unexpected %#x\n", hr);
+    ok(hr == E_INVALIDARG, "unexpected %#lx\n", hr);
 
     hr = GetHGlobalFromStream(NULL, &hmem);
-    ok(hr == E_INVALIDARG, "unexpected %#x\n", hr);
+    ok(hr == E_INVALIDARG, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
     ok(hmem == orig_hmem, "handles should match\n");
-    ok(size == 0,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 0, "unexpected %d\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     hr = IStream_Clone(stream, &clone);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = IStream_Write(stream, hello, sizeof(hello), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0, "unexpected %p\n", hmem);
-    ok(size == 13,  "unexpected %d\n", size);
-    ok(pos == 13,  "unexpected %d\n", pos);
+    ok(hmem == orig_hmem, "handles should match\n");
+    ok(size == 13, "unexpected %d\n", size);
+    ok(pos == 13, "unexpected %d\n", pos);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 13,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 13, "unexpected %d\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     buf[0] = 0;
     hr = IStream_Read(clone, buf, sizeof(buf), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     ok(!strcmp(buf, hello), "wrong stream contents\n");
 
     newsize.QuadPart = 0x8000;
     hr = IStream_SetSize(stream, newsize);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(hmem == orig_hmem,  "unexpected %p\n", hmem);
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 13,  "unexpected %d\n", pos);
+    ok(hmem == orig_hmem, "handles should match\n");
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 13, "unexpected %d\n", pos);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 13,  "unexpected %d\n", pos);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 13, "unexpected %d\n", pos);
 
     IStream_Release(clone);
     IStream_Release(stream);
@@ -615,128 +632,89 @@ static void test_IStream_Clone(void)
     orig_hmem = GlobalAlloc(GMEM_FIXED, 1);
     ok(orig_hmem != 0, "unexpected %p\n", orig_hmem);
     hr = CreateStreamOnHGlobal(orig_hmem, TRUE, &stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = IStream_Clone(stream, &clone);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(size == 1,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(hmem == orig_hmem, "handles should match\n");
+    ok(size == 1, "unexpected %d\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 1,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 1, "unexpected %d\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     newsize.QuadPart = 0x8000;
     hr = IStream_SetSize(stream, newsize);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(hmem != orig_hmem,  "unexpected %p\n", hmem);
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(hmem != 0, "unexpected %p\n", hmem);
+    ok(hmem != orig_hmem, "unexpected %p\n", hmem);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     IStream_Release(stream);
     IStream_Release(clone);
 
-    /* exploit GMEM_FIXED forced move for different base streams */
-    orig_hmem = GlobalAlloc(GMEM_FIXED, 1);
-    ok(orig_hmem != 0, "unexpected %p\n", orig_hmem);
-    hr = CreateStreamOnHGlobal(orig_hmem, TRUE, &stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
-
-    hr = CreateStreamOnHGlobal(orig_hmem, TRUE, &clone);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
-
-    stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(size == 1,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
-
-    stream_info(clone, &hmem_clone, &size, &pos);
-    ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 1,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
-
-    newsize.QuadPart = 0x8000;
-    hr = IStream_SetSize(stream, newsize);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
-
-    stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(hmem != orig_hmem,  "unexpected %p\n", hmem);
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
-
-    stream_info(clone, &hmem_clone, &size, &pos);
-    ok(hmem_clone != hmem, "handles should not match\n");
-    ok(size == 1,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
-
-    IStream_Release(stream);
-    /* releasing clone leads to test termination under windows
-    IStream_Release(clone);
-    */
-
-    /* test Release for a being cloned stream */
+    /* test Release of cloned stream */
     hr = CreateStreamOnHGlobal(0, TRUE, &stream);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     hr = IStream_Clone(stream, &clone);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(stream, &hmem, &size, &pos);
-    ok(hmem != 0,  "unexpected %p\n", hmem);
-    ok(size == 0,  "unexpected %d\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(hmem != 0, "unexpected %p\n", hmem);
+    ok(size == 0, "unexpected %d\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 0, "unexpected %#x\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     ret = IStream_Release(stream);
     ok(ret == 0, "unexpected %d\n", ret);
 
     newsize.QuadPart = 0x8000;
     hr = IStream_SetSize(clone, newsize);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 0,  "unexpected %d\n", pos);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 0, "unexpected %d\n", pos);
 
     hr = IStream_Write(clone, hello, sizeof(hello), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 13,  "unexpected %d\n", pos);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 13, "unexpected %d\n", pos);
 
     offset.QuadPart = 0;
     hr = IStream_Seek(clone, offset, STREAM_SEEK_SET, NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
 
     buf[0] = 0;
     hr = IStream_Read(clone, buf, sizeof(buf), NULL);
-    ok(hr == S_OK, "unexpected %#x\n", hr);
+    ok(hr == S_OK, "unexpected %#lx\n", hr);
     ok(!strcmp(buf, hello), "wrong stream contents\n");
 
     stream_info(clone, &hmem_clone, &size, &pos);
     ok(hmem_clone == hmem, "handles should match\n");
-    ok(size == 0x8000,  "unexpected %#x\n", size);
-    ok(pos == 32,  "unexpected %d\n", pos);
+    ok(size == 0x8000, "unexpected %#x\n", size);
+    ok(pos == 32, "unexpected %d\n", pos);
 
     ret = IStream_Release(clone);
     ok(ret == 0, "unexpected %d\n", ret);

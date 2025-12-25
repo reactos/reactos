@@ -101,30 +101,30 @@ static void test_olestream(void)
     ole_stream_header_t header;
 
     hr = create_storage(&stg);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = IStorage_OpenStream(stg, olestream, NULL, STGM_SHARE_EXCLUSIVE | STGM_READ, 0, &stm);
-    ok(hr == STG_E_FILENOTFOUND, "got %08x\n", hr);
+    ok(hr == STG_E_FILENOTFOUND, "got %08lx\n", hr);
 
     hr = OleCreateDefaultHandler(&non_existent_class, 0, &IID_IOleObject, (void**)&ole_obj);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = IOleObject_QueryInterface(ole_obj, &IID_IPersistStorage, (void**)&persist);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = IPersistStorage_InitNew(persist, stg);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
 
     hr = IStorage_OpenStream(stg, olestream, NULL, STGM_SHARE_EXCLUSIVE | STGM_READ, 0, &stm);
-    ok(hr == S_OK, "got %08x\n", hr);
+    ok(hr == S_OK, "got %08lx\n", hr);
     hr = IStream_Read(stm, &header, sizeof(header), &read);
-    ok(hr == S_OK, "got %08x\n", hr);
-    ok(read == sizeof(header), "read %d\n", read);
-    ok(header.version == 0x02000001, "got version %08x\n", header.version);
-    ok(header.flags == 0x0, "got flags %08x\n", header.flags);
-    ok(header.link_update_opt == 0x0, "got link update option %08x\n", header.link_update_opt);
-    ok(header.res == 0x0, "got reserved %08x\n", header.res);
-    ok(header.moniker_size == 0x0, "got moniker size %08x\n", header.moniker_size);
+    ok(hr == S_OK, "got %08lx\n", hr);
+    ok(read == sizeof(header), "read %ld\n", read);
+    ok(header.version == 0x02000001, "got version %08lx\n", header.version);
+    ok(header.flags == 0x0, "got flags %08lx\n", header.flags);
+    ok(header.link_update_opt == 0x0, "got link update option %08lx\n", header.link_update_opt);
+    ok(header.res == 0x0, "got reserved %08lx\n", header.res);
+    ok(header.moniker_size == 0x0, "got moniker size %08lx\n", header.moniker_size);
 
     IStream_Release(stm);
 
@@ -247,17 +247,17 @@ static void test_default_handler_run(void)
 
     hres = CoRegisterClassObject(&test_server_clsid, (IUnknown*)&ClassFactory,
             CLSCTX_INPROC_SERVER, 0, &class_reg);
-    ok(hres == S_OK, "CoRegisterClassObject failed: %x\n", hres);
+    ok(hres == S_OK, "CoRegisterClassObject failed: %lx\n", hres);
 
     hres = OleCreateDefaultHandler(&test_server_clsid, NULL, &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "OleCreateDefaultHandler failed: %x\n", hres);
+    ok(hres == S_OK, "OleCreateDefaultHandler failed: %lx\n", hres);
 
     hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&ro);
-    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %x\n", hres);
+    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %lx\n", hres);
     IUnknown_Release(unk);
 
     hres = IRunnableObject_Run(ro, NULL);
-    ok(hres == REGDB_E_CLASSNOTREG, "Run returned: %x, expected REGDB_E_CLASSNOTREG\n", hres);
+    ok(hres == REGDB_E_CLASSNOTREG, "Run returned: %lx, expected REGDB_E_CLASSNOTREG\n", hres);
     IRunnableObject_Release(ro);
 
     SET_EXPECT(CF_QueryInterface_IMarshal);
@@ -266,28 +266,28 @@ static void test_default_handler_run(void)
 
     hres = CoRegisterClassObject(&test_server_clsid, (IUnknown*)&ClassFactory,
             CLSCTX_LOCAL_SERVER, 0, &class_reg);
-    ok(hres == S_OK, "CoRegisterClassObject failed: %x\n", hres);
+    ok(hres == S_OK, "CoRegisterClassObject failed: %lx\n", hres);
 
     hres = OleCreateDefaultHandler(&test_server_clsid, NULL, &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "OleCreateDefaultHandler failed: %x\n", hres);
+    ok(hres == S_OK, "OleCreateDefaultHandler failed: %lx\n", hres);
 
     hres = IUnknown_QueryInterface(unk, &IID_IOleObject, (void**)&oleobj);
-    ok(hres == S_OK, "QueryInterface(IID_IOleObject) failed: %x\n", hres);
+    ok(hres == S_OK, "QueryInterface(IID_IOleObject) failed: %lx\n", hres);
 
     hres = IOleObject_QueryInterface(oleobj, &IID_IPersistStorage, (void**)&persist);
-    ok(hres == S_OK, "QueryInterface(IID_IPersistStorage) failed: %x\n", hres);
+    ok(hres == S_OK, "QueryInterface(IID_IPersistStorage) failed: %lx\n", hres);
     IPersistStorage_Release(persist);
     IOleObject_Release(oleobj);
 
     hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&ro);
-    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %x\n", hres);
+    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %lx\n", hres);
     IUnknown_Release(unk);
 
     SET_EXPECT(CF_QueryInterface_ClassFactory);
     SET_EXPECT(CF_CreateInstance);
     hres = IRunnableObject_Run(ro, NULL);
-todo_wine
-    ok(hres == S_OK, "Run failed: %x\n", hres);
+    todo_wine
+    ok(hres == S_OK, "Run failed: %lx\n", hres);
     CHECK_CALLED(CF_QueryInterface_ClassFactory);
     CHECK_CALLED(CF_CreateInstance);
     IRunnableObject_Release(ro);
@@ -296,11 +296,11 @@ todo_wine
     SET_EXPECT(CF_CreateInstance);
     hres = CoCreateInstance(&test_server_clsid, NULL, CLSCTX_LOCAL_SERVER,
                             &IID_IOleObject, (void**)&oleobj);
-todo_wine
-    ok(hres == REGDB_E_CLASSNOTREG, "expected REGDB_E_CLASSNOTREG, got %x\n", hres);
-todo_wine
+    todo_wine
+    ok(hres == REGDB_E_CLASSNOTREG, "expected REGDB_E_CLASSNOTREG, got %lx\n", hres);
+    todo_wine
     CHECK_NOT_CALLED(CF_QueryInterface_ClassFactory);
-todo_wine
+    todo_wine
     CHECK_NOT_CALLED(CF_CreateInstance);
 
     SET_EXPECT(CF_QueryInterface_IMarshal);
