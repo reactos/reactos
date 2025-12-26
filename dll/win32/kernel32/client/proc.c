@@ -1398,8 +1398,6 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                         }
 
                         /* Someone beat us to it, we will use their data instead */
-                        Status = STATUS_SUCCESS;
-
                         /* We're going to free our own stuff, but not raise */
                         RtlFreeAnsiString(&TitleString);
                     }
@@ -1408,9 +1406,6 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                 RtlFreeAnsiString(&ShellString);
             }
             RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo);
-
-            /* Get the cached information again: either still NULL or set by another thread */
-            StartupInfo = BaseAnsiStartupInfo;
         }
         else
         {
@@ -1418,8 +1413,12 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
             Status = STATUS_NO_MEMORY;
         }
 
-        /* Raise an error unless we got here due to the race condition */
-        if (!StartupInfo) RtlRaiseStatus(Status);
+        /* Raise an error if there is no cached information */
+        if (!BaseAnsiStartupInfo)
+            RtlRaiseStatus(Status);
+
+        /* Get the cached information again: set by another thread */
+        StartupInfo = BaseAnsiStartupInfo;
     }
 
     /* Now copy from the cached ANSI version */
