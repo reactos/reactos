@@ -16,16 +16,16 @@ START_TEST(NtGdiBitBlt)
     DWORD bytes2[4] = {0x00000000, 0x0000000, 0x0000000, 0x00000000};
 
     /* Test NULL dc */
-    SetLastError(ERROR_SUCCESS);
+    SetLastError(0xDEADBEEF);
     bRet = NtGdiBitBlt((HDC)0, 0, 0, 10, 10, (HDC)0, 10, 10, SRCCOPY, 0, 0);
     ok_int(bRet, FALSE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
+    ok_long(GetLastError(), 0xDEADBEEF);
 
     /* Test invalid dc */
-    SetLastError(ERROR_SUCCESS);
+    SetLastError(0xDEADBEEF);
     bRet = NtGdiBitBlt((HDC)0x123456, 0, 0, 10, 10, (HDC)0x123456, 10, 10, SRCCOPY, 0, 0);
     ok_int(bRet, FALSE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
+    ok_long(GetLastError(), 0xDEADBEEF);
 
     hdc1 = NtGdiCreateCompatibleDC(0);
     ok(hdc1 != NULL, "hdc1 was NULL.\n");
@@ -33,62 +33,68 @@ START_TEST(NtGdiBitBlt)
     hdc2 = NtGdiCreateCompatibleDC(0);
     ok(hdc2 != NULL, "hdc2 was NULL.\n");
 
-    hbmp1 = NtGdiCreateBitmap(2, 2, 1, 32, (LPBYTE)bytes1 );
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 2;
+    bi.bmiHeader.biHeight = -2; // top-down
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    PVOID pvDibBits;
+
+    hbmp1 = CreateDIBSection(hdc1, &bi, DIB_RGB_COLORS, &pvDibBits, NULL, 0);
     ok(hbmp1 != NULL, "hbmp1 was NULL.\n");
+    memcpy(pvDibBits, bytes1, sizeof(bytes1));
     hOldBmp1 = SelectObject(hdc1, hbmp1);
 
-    ok(NtGdiGetPixel(hdc1, 0, 0) == 0x000000ff, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc1, 0, 1) == 0x00ff0000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc1, 1, 0) == 0x0000ff00, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc1, 1, 1) == 0x00ffffff, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc1, 0, 0), 0x000000ff);
+    ok_eq_hex(NtGdiGetPixel(hdc1, 0, 1), 0x00ff0000);
+    ok_eq_hex(NtGdiGetPixel(hdc1, 1, 0), 0x0000ff00);
+    ok_eq_hex(NtGdiGetPixel(hdc1, 1, 1), 0x00ffffff);
 
-    hbmp2 = NtGdiCreateBitmap(2, 2, 1, 32, (LPBYTE)bytes2 );
+    hbmp2 = CreateDIBSection(hdc2, &bi, DIB_RGB_COLORS, &pvDibBits, NULL, 0);
     ok(hbmp2 != NULL, "hbmp2 was NULL.\n");
+    memcpy(pvDibBits, bytes2, sizeof(bytes1));
     hOldBmp2 = SelectObject(hdc2, hbmp2);
 
     bRet = NtGdiBitBlt(hdc2, 1, 1, -2, -2, hdc1, 0, 0, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x00000000, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00000000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x00000000, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00000000, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00000000);
 
     bRet = NtGdiBitBlt(hdc2, 1, 1, -2, -2, hdc1, 1, 1, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x000000ff, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00000000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x00000000, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00000000, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x000000ff);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00000000);
 
     NtGdiSetPixel(hdc2, 0, 0, 0x00000000);
 
     bRet = NtGdiBitBlt(hdc2, 1, 1, -2, -2, hdc1, 0, 0, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x00000000, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00000000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x00000000, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00000000, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00000000);
 
     bRet = NtGdiBitBlt(hdc2, 1, 1, -2, -2, hdc1, 2, 2, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x00ffffff, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00000000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x00000000, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00000000, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x00ffffff);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x00000000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00000000);
 
     NtGdiSetPixel(hdc2, 0, 0, 0x00000000);
 
     bRet = NtGdiBitBlt(hdc2, 2, 2, -2, -2, hdc1, 2, 2, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x000000ff, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00ff0000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x0000ff00, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00ffffff, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x000000ff);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00ff0000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x0000ff00);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00ffffff);
 
     NtGdiSetPixel(hdc2, 0, 0, 0x00000000);
     NtGdiSetPixel(hdc2, 1, 0, 0x00000000);
@@ -97,11 +103,10 @@ START_TEST(NtGdiBitBlt)
 
     bRet = NtGdiBitBlt(hdc2, 0, 0, 2, 2, hdc1, 0, 0, SRCCOPY, 0, 0);
     ok_int(bRet, TRUE);
-    ok_long(GetLastError(), ERROR_SUCCESS);
-    ok(NtGdiGetPixel(hdc2, 0, 0) == 0x000000ff, "Pixel[0][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 0));
-    ok(NtGdiGetPixel(hdc2, 0, 1) == 0x00ff0000, "Pixel[0][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 0, 1));
-    ok(NtGdiGetPixel(hdc2, 1, 0) == 0x0000ff00, "Pixel[1][0] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 0));
-    ok(NtGdiGetPixel(hdc2, 1, 1) == 0x00ffffff, "Pixel[1][1] 0x%08x\n", (UINT)NtGdiGetPixel(hdc2, 1, 1));
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 0), 0x000000ff);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 0, 1), 0x00ff0000);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 0), 0x0000ff00);
+    ok_eq_hex(NtGdiGetPixel(hdc2, 1, 1), 0x00ffffff);
 
     SelectObject(hdc2, hOldBmp2);
     SelectObject(hdc1, hOldBmp1);
