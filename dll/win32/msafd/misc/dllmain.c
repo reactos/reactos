@@ -611,15 +611,14 @@ TranslateNtStatusError(NTSTATUS Status)
 }
 
 VOID
-MsafdWaitForBlockingIo(
-    _In_ HANDLE hEvent,
-    _In_ DWORD dwMilliseconds)
+MsafdWaitForAlert(
+    _In_ HANDLE hObject)
 {
     DWORD Result;
 
     for (;;)
     {
-        Result = WaitForSingleObjectEx(hEvent, dwMilliseconds, TRUE);
+        Result = WaitForSingleObjectEx(hObject, INFINITE, TRUE);
         if (Result != WAIT_IO_COMPLETION)
             break;
     }
@@ -790,7 +789,7 @@ WSPCloseSocket(IN SOCKET Handle,
                 /* Wait for return */
                 if (Status == STATUS_PENDING)
                 {
-                    MsafdWaitForBlockingIo(SockEvent, INFINITE);
+                    MsafdWaitForAlert(SockEvent);
                     Status = IoStatusBlock.Status;
                 }
             }
@@ -958,7 +957,7 @@ WSPBind(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -1043,7 +1042,7 @@ WSPListen(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -1319,7 +1318,7 @@ WSPSelect(IN int nfds,
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -1546,7 +1545,7 @@ WSPAccept(
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -1579,7 +1578,7 @@ WSPAccept(
             /* Wait for return */
             if (Status == STATUS_PENDING)
             {
-                MsafdWaitForBlockingIo(SockEvent, INFINITE);
+                MsafdWaitForAlert(SockEvent);
                 Status = IOSB.Status;
             }
 
@@ -1619,7 +1618,7 @@ WSPAccept(
                 /* Wait for return */
                 if (Status == STATUS_PENDING)
                 {
-                    MsafdWaitForBlockingIo(SockEvent, INFINITE);
+                    MsafdWaitForAlert(SockEvent);
                     Status = IOSB.Status;
                 }
 
@@ -1724,7 +1723,7 @@ WSPAccept(
             /* Wait for return */
             if (Status == STATUS_PENDING)
             {
-                MsafdWaitForBlockingIo(SockEvent, INFINITE);
+                MsafdWaitForAlert(SockEvent);
                 Status = IOSB.Status;
             }
 
@@ -1778,7 +1777,7 @@ WSPAccept(
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -1852,39 +1851,44 @@ MsafdConnectAPC(
 
     TRACE("MsafdConnectAPC(%p %lx %lx)\n", ApcContext, IoStatusBlock->Status, IoStatusBlock->Information);
 
-    Context->lpSocket->SharedData->SocketLastError = TranslateNtStatusError(IoStatusBlock->Status);
+    PSOCKET_INFORMATION Socket = GetSocketStructure(Context->lpSocket);
+    if (!Socket)
+    {
+        // FIXME: Socket is closed before this APC could run
+        HeapFree(GlobalHeap, 0, ApcContext);
+        return;
+    }
+
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(IoStatusBlock->Status);
     if (IoStatusBlock->Status == STATUS_SUCCESS)
     {
-        Context->lpSocket->SharedData->State = SocketConnected;
-        Context->lpSocket->TdiConnectionHandle = (HANDLE)IoStatusBlock->Information;
-        Context->lpSocket->SharedData->ConnectTime = GetCurrentTimeInSeconds();
+        Socket->SharedData->State = SocketConnected;
+        Socket->TdiConnectionHandle = (HANDLE)IoStatusBlock->Information;
+        Socket->SharedData->ConnectTime = GetCurrentTimeInSeconds();
     }
 
     /* Re-enable Async Event */
-    SockReenableAsyncSelectEvent(Context->lpSocket, FD_WRITE);
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
-    SockReenableAsyncSelectEvent(Context->lpSocket, FD_CONNECT);
+    SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
 
-    if (IoStatusBlock->Status == STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT))
+    if (IoStatusBlock->Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT))
     {
-        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
-                                                 Context->lpSocket->Handle,
-                                                 Context->lpSocket->TdiAddressHandle,
-                                                 Context->lpSocket->TdiConnectionHandle,
-                                                 WSH_NOTIFY_CONNECT);
+        Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                      Socket->Handle,
+                                      Socket->TdiAddressHandle,
+                                      Socket->TdiConnectionHandle,
+                                      WSH_NOTIFY_CONNECT);
     }
-    else if (IoStatusBlock->Status != STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
+    else if (IoStatusBlock->Status != STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
     {
-        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
-                                                 Context->lpSocket->Handle,
-                                                 Context->lpSocket->TdiAddressHandle,
-                                                 Context->lpSocket->TdiConnectionHandle,
-                                                 WSH_NOTIFY_CONNECT_ERROR);
+        Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                      Socket->Handle,
+                                      Socket->TdiAddressHandle,
+                                      Socket->TdiConnectionHandle,
+                                      WSH_NOTIFY_CONNECT_ERROR);
     }
-
-    /* Free IOCTL buffer */
-    HeapFree(GlobalHeap, 0, Context->lpConnectInfo);
 
     HeapFree(GlobalHeap, 0, ApcContext);
 }
@@ -1912,6 +1916,7 @@ WSPConnect(SOCKET Handle,
     int                        SocketDataLength;
     PMSAFD_CONNECT_APC_CONTEXT APCContext = NULL;
     PIO_APC_ROUTINE            APCFunction = NULL;
+    UCHAR                      Buffer[128];
 
     TRACE("WSPConnect(%x)\n", Handle);
 
@@ -1972,7 +1977,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            MsafdWaitForBlockingIo(SockEvent, INFINITE);
+            MsafdWaitForAlert(SockEvent);
             Status = IOSB->Status;
         }
 
@@ -1983,14 +1988,14 @@ WSPConnect(SOCKET Handle,
     /* Calculate the size of SocketAddress->sa_data */
     SocketDataLength = SocketAddressLength - FIELD_OFFSET(struct sockaddr, sa_data);
 
-    /* Allocate a connection info buffer with SocketDataLength bytes of payload */
-    ConnectInfo = HeapAlloc(GetProcessHeap(), 0,
-                            FIELD_OFFSET(AFD_CONNECT_INFO,
-                                         RemoteAddress.Address[0].Address[SocketDataLength]));
-    if (!ConnectInfo)
+    ConnectInfo = (PAFD_CONNECT_INFO)Buffer;
+
+    int connectionInfoSize = FIELD_OFFSET(AFD_CONNECT_INFO, RemoteAddress.Address[0].Address[SocketDataLength]);
+
+    if (connectionInfoSize > 128)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Leave;
+        *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     /* Set up Address in TDI Format */
@@ -2030,7 +2035,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            MsafdWaitForBlockingIo(SockEvent, INFINITE);
+            MsafdWaitForAlert(SockEvent);
             Status = IOSB->Status;
         }
 
@@ -2053,14 +2058,14 @@ WSPConnect(SOCKET Handle,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Leave;
         }
-        APCContext->lpConnectInfo = ConnectInfo;
-        APCContext->lpSocket = Socket;
+        APCContext->lpSocket = Handle;
         APCFunction = &MsafdConnectAPC;
 
         IOSB = &APCContext->IoStatusBlock;
     }
 
     IOSB->Status = STATUS_PENDING;
+    IOSB->Information = 0;
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
@@ -2070,7 +2075,7 @@ WSPConnect(SOCKET Handle,
                                    IOSB,
                                    IOCTL_AFD_CONNECT,
                                    ConnectInfo,
-                                   0x22,
+                                   connectionInfoSize,
                                    NULL,
                                    0);
     if (Socket->SharedData->NonBlocking)
@@ -2091,7 +2096,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for completion if blocking */
         if (Status == STATUS_PENDING)
         {
-            MsafdWaitForBlockingIo(SockEvent, INFINITE);
+            MsafdWaitForAlert(SockEvent);
             Status = IOSB->Status;
         }
 
@@ -2121,7 +2126,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            MsafdWaitForBlockingIo(SockEvent, INFINITE);
+            MsafdWaitForAlert(SockEvent);
             Status = IOSB->Status;
         }
     }
@@ -2129,11 +2134,6 @@ WSPConnect(SOCKET Handle,
 Leave:
     TRACE("Ending %lx\n", Status);
 
-    if (!APCFunction)
-    {
-        /* When using APC, this will be freed by the APC function */
-        HeapFree(GlobalHeap, 0, ConnectInfo);
-    }
     NtClose(SockEvent);
 
     /* Re-enable Async Event */
@@ -2240,7 +2240,7 @@ WSPShutdown(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -2320,7 +2320,7 @@ WSPGetSockName(IN SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -2424,7 +2424,7 @@ WSPGetPeerName(IN SOCKET s,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -3469,7 +3469,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     /* Wait for completion if not overlapped */
     if (!Overlapped && Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB->Status;
     }
 
@@ -3609,7 +3609,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     /* Wait for completion if not overlapped */
     if (!Overlapped && Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB->Status;
     }
 
@@ -3690,7 +3690,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
-        MsafdWaitForBlockingIo(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
