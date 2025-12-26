@@ -145,7 +145,6 @@ typedef struct _MSAFD_SEND_APC_CONTEXT
     LPWSAOVERLAPPED lpOverlapped;
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
     PSOCKET_INFORMATION lpSocket;
-    PVOID lpSendInfo;
     PTRANSPORT_ADDRESS lpRemoteAddress;
 } MSAFD_SEND_APC_CONTEXT, *PMSAFD_SEND_APC_CONTEXT;
 
@@ -154,7 +153,6 @@ typedef struct _MSAFD_RECV_APC_CONTEXT
     LPWSAOVERLAPPED lpOverlapped;
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
     PSOCKET_INFORMATION lpSocket;
-    PVOID lpRecvInfo;
 } MSAFD_RECV_APC_CONTEXT, *PMSAFD_RECV_APC_CONTEXT;
 
 typedef struct _MSAFD_CONNECT_APC_CONTEXT
@@ -593,8 +591,7 @@ MsafdReturnWithErrno(
 }
 
 VOID
-MsafdWaitForBlockingIo(
-    _In_ HANDLE hEvent,
-    _In_ DWORD dwMilliseconds);
+MsafdWaitForAlert(
+    _In_ HANDLE hObject);
 
 #endif /* __MSAFD_H */
