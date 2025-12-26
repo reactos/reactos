@@ -1,6 +1,6 @@
 /*
- * PROJECT:     ReactOS api tests
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for NtUserCreateAcceleratorTable
  * COPYRIGHT:   Copyright 2025 Max Korostil (mrmks04@yandex.ru)
  */
