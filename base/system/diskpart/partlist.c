@@ -1779,6 +1779,59 @@ GetVolumeType(
 
 static
 VOID
+GetVolumeSize(
+    _In_ HANDLE VolumeHandle,
+    _In_ PVOLENTRY VolumeEntry)
+{
+    FILE_FS_FULL_SIZE_INFORMATION SizeInfo;
+    FILE_FS_FULL_SIZE_INFORMATION FullSizeInfo;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    ZeroMemory(&FullSizeInfo, sizeof(FullSizeInfo));
+    Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                          &IoStatusBlock,
+                                          &FullSizeInfo,
+                                          sizeof(FILE_FS_FULL_SIZE_INFORMATION),
+                                          FileFsFullSizeInformation);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT1("FullSizeInfo.TotalAllocationUnits %I64u\n", FullSizeInfo.TotalAllocationUnits.QuadPart);
+        DPRINT1("FullSizeInfo.SectorsPerAllocationUnit %lu\n", FullSizeInfo.SectorsPerAllocationUnit);
+        DPRINT1("FullSizeInfo.BytesPerSector %lu\n", FullSizeInfo.BytesPerSector);
+
+        VolumeEntry->TotalAllocationUnits.QuadPart = FullSizeInfo.TotalAllocationUnits.QuadPart;
+        VolumeEntry->SectorsPerAllocationUnit = FullSizeInfo.SectorsPerAllocationUnit;
+        VolumeEntry->BytesPerSector = FullSizeInfo.BytesPerSector;
+    }
+    else
+    {
+        ZeroMemory(&SizeInfo, sizeof(SizeInfo));
+        Status = NtQueryVolumeInformationFile(VolumeHandle,
+                                              &IoStatusBlock,
+                                              &SizeInfo,
+                                              sizeof(FILE_FS_SIZE_INFORMATION),
+                                              FileFsSizeInformation);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("SizeInfo.TotalAllocationUnits %I64u\n", SizeInfo.TotalAllocationUnits.QuadPart);
+            DPRINT1("SizeInfo.SectorsPerAllocationUnit %lu\n", SizeInfo.SectorsPerAllocationUnit);
+            DPRINT1("SizeInfo.BytesPerSector %lu\n", SizeInfo.BytesPerSector);
+
+            VolumeEntry->TotalAllocationUnits.QuadPart = SizeInfo.TotalAllocationUnits.QuadPart;
+            VolumeEntry->SectorsPerAllocationUnit = SizeInfo.SectorsPerAllocationUnit;
+            VolumeEntry->BytesPerSector = SizeInfo.BytesPerSector;
+        }
+        else
+        {
+            DPRINT1("SizeInfo failed!\n");
+        }
+    }
+}
+
+
+static
+VOID
 AddVolumeToList(
     ULONG ulVolumeNumber,
     PWSTR pszVolumeName)
@@ -1824,6 +1877,7 @@ AddVolumeToList(
         return;
     }
 
+    wcscat(VolumeEntry->DeviceName, L"\\");
     DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
 
     RtlInitUnicodeString(&Name, VolumeEntry->DeviceName);
@@ -1844,13 +1898,14 @@ AddVolumeToList(
     {
         GetVolumeType(VolumeHandle, VolumeEntry);
         GetVolumeExtents(VolumeHandle, VolumeEntry);
+        GetVolumeSize(VolumeHandle, VolumeEntry);
         NtClose(VolumeHandle);
     }
 
     if (GetVolumeInformationW(pszVolumeName,
                               szVolumeName,
                               MAX_PATH + 1,
-                              NULL, //  [out, optional] LPDWORD lpVolumeSerialNumber,
+                              &VolumeEntry->SerialNumber,
                               NULL, //  [out, optional] LPDWORD lpMaximumComponentLength,
                               NULL, //  [out, optional] LPDWORD lpFileSystemFlags,
                               szFilesystem,
@@ -1878,6 +1933,9 @@ AddVolumeToList(
                                                          (3 + 1) * sizeof(WCHAR));
             if (VolumeEntry->pszFilesystem)
                 wcscpy(VolumeEntry->pszFilesystem, L"RAW");
+            VolumeEntry->SerialNumber = 0;
+            VolumeEntry->SectorsPerAllocationUnit = 1;
+            VolumeEntry->BytesPerSector = 512;
         }
     }
 

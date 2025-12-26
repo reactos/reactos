@@ -97,8 +97,10 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size:  %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Type         : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Cluster size :  %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
 END
 
 STRINGTABLE

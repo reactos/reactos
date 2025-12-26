@@ -93,8 +93,10 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Aktuelles Dateisystem\n"
     IDS_FILESYSTEMS_FORMATTING "Zur Formatierung unterstützte Dateisysteme\n"
-    IDS_FILESYSTEMS_TYPE "Typ                        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Größe der Zuordnungseinheit: %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Typ                        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Größe der Zuordnungseinheit: %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Kennung                    : %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Standard)"
 END
 
 STRINGTABLE

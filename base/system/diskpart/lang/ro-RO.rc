@@ -101,8 +101,10 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Fișierul de sistem curent\n"
     IDS_FILESYSTEMS_FORMATTING "Fișiere de sistem disponibile pentru formatare\n"
-    IDS_FILESYSTEMS_TYPE "Tip        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Mărimea cluster-ului: %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Tip        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Mărimea cluster-ului: %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number       : %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
 END
 
 STRINGTABLE

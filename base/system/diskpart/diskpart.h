@@ -229,6 +229,7 @@ typedef struct _VOLENTRY
     ULONG VolumeNumber;
     WCHAR VolumeName[MAX_PATH];
     WCHAR DeviceName[MAX_PATH];
+    DWORD SerialNumber;
 
     WCHAR DriveLetter;
 
@@ -236,6 +237,11 @@ typedef struct _VOLENTRY
     PWSTR pszFilesystem;
     VOLUME_TYPE VolumeType;
     ULARGE_INTEGER Size;
+
+    ULARGE_INTEGER TotalAllocationUnits;
+    ULARGE_INTEGER AvailableAllocationUnits;
+    ULONG SectorsPerAllocationUnit;
+    ULONG BytesPerSector;
 
     PVOLUME_DISK_EXTENTS pExtents;
 

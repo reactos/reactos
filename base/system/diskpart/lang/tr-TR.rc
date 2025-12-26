@@ -103,8 +103,10 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Geçerli Dosya Sistemi\n"
     IDS_FILESYSTEMS_FORMATTING "Biçimlendirme için kullanılabilen dosya sistemleri\n"
-    IDS_FILESYSTEMS_TYPE "Tür         : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Küme boyutu :  %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Tür          : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Küme boyutu  : %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
 END
 
 STRINGTABLE
