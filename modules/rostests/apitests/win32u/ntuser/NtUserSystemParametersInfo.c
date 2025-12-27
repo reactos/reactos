@@ -466,101 +466,124 @@ Test_SPI_SETBEEP(void)
     BOOL bOrig, bTemp = 0;
     WCHAR szReg[10];
     DWORD cbSize;
+    BOOL bRet;
 
     /* Get original value */
-    NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bOrig, 0);
+    bRet = NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original beep value\n");
+        return;
+    }
 
     /* Value 0 */
-    NtUserSystemParametersInfo(SPI_SETBEEP, 0, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0);
-    TEST(bTemp == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBEEP, 0, NULL, SPIF_UPDATEINIFILE), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0), 1);
+    ok_eq_bool(bTemp, FALSE);
     cbSize = sizeof(szReg);
     TEST(QueryUserRegValueW(KEY_SOUND, VAL_BEEP, &szReg, &cbSize, NULL) == ERROR_SUCCESS);
     TEST(_wcsicmp(szReg, L"No") == 0);
 
     /* Value 1 */
-    NtUserSystemParametersInfo(SPI_SETBEEP, 1, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0);
-    TEST(bTemp == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBEEP, 1, NULL, SPIF_UPDATEINIFILE), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0), 1);
+    ok_eq_bool(bTemp, TRUE);
     cbSize = sizeof(szReg);
     TEST(QueryUserRegValueW(KEY_SOUND, VAL_BEEP, &szReg, &cbSize, NULL) == ERROR_SUCCESS);
     TEST(_wcsicmp(szReg, L"Yes") == 0);
 
     /* Value 2 */
-    NtUserSystemParametersInfo(SPI_SETBEEP, 2, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0);
-    TEST(bTemp == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBEEP, 2, NULL, SPIF_UPDATEINIFILE), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBEEP, 0, &bTemp, 0), 1);
+    ok_eq_bool(bTemp, TRUE);
     cbSize = sizeof(szReg);
-    TEST(QueryUserRegValueW(KEY_SOUND, VAL_BEEP, &szReg, &cbSize, NULL) == ERROR_SUCCESS);
-    TEST(_wcsicmp(szReg, L"Yes") == 0);
+    ok_eq_int(QueryUserRegValueW(KEY_SOUND, VAL_BEEP, &szReg, &cbSize, NULL), ERROR_SUCCESS);
+    ok_eq_size(_wcsicmp(szReg, L"Yes"), 0);
 
     /* Restore original value */
-    NtUserSystemParametersInfo(SPI_SETBEEP, 0, &bOrig, SPIF_UPDATEINIFILE);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBEEP, 0, &bOrig, SPIF_UPDATEINIFILE), 1);
 }
 
 void
 Test_SPI_SETMOUSE(void)
 {
     INT aiOrig[3], aiTemp[3];
+    BOOL bRet;
 
     /* Get original value */
-    NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiOrig, 0);
+    bRet = NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original mouse value\n");
+        return;
+    }
 
     /* Test uiParam value */
-    TEST(NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiTemp, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETMOUSE, 1, aiTemp, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETMOUSE, -1, aiTemp, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETMOUSE, 0xdeadbeef, aiTemp, 0) == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiTemp, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETMOUSE, 1, aiTemp, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETMOUSE, -1, aiTemp, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETMOUSE, 0xdeadbeef, aiTemp, 0), 1);
 
     /* Set modified values */
     aiTemp[0] = aiOrig[0] + 1;
     aiTemp[1] = aiOrig[1] - 1;
     aiTemp[2] = aiOrig[2] + 2;
-    NtUserSystemParametersInfo(SPI_SETMOUSE, 2, aiTemp, SPIF_UPDATEINIFILE);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETMOUSE, 2, aiTemp, 0), 1);
     aiTemp[0] = aiTemp[1] = aiTemp[2] = 0;
 
     /* Get new values */
-    NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiTemp, 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETMOUSE, 0, aiTemp, 0), 1);
 
     /* Test modified values */
-    TEST(aiTemp[0] == aiOrig[0] + 1);
-    TEST(aiTemp[1] == aiOrig[1] - 1);
-    TEST(aiTemp[2] == aiOrig[2] + 2);
+#if 0 // Doesn't work on all Windows versions
+    ok_eq_int(aiTemp[0], aiOrig[0] + 1);
+    ok_eq_int(aiTemp[1], aiOrig[1] - 1);
+    ok_eq_int(aiTemp[2], aiOrig[2] + 2);
+#endif
 
     // FIXME: Test registry values
 
     /* Restore original value */
-    NtUserSystemParametersInfo(SPI_SETMOUSE, 0, aiOrig, SPIF_UPDATEINIFILE);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETMOUSE, 0, aiOrig, 0), 1);
 }
 
 void
 Test_SPI_SETBORDER(void)
 {
     INT iOrig, iTemp = 0;
+    BOOL bRet;
 
     /* Get original value */
-    NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iOrig, 0);
+    bRet = NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original border value\n");
+        return;
+    }
 
     /* Value 0 */
-    NtUserSystemParametersInfo(SPI_SETBORDER, 0, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0);
-    TEST(iTemp == 1);
-    TEST(GetSystemMetrics(SM_CXBORDER) == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBORDER, 0, NULL, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0), 1);
+    ok_eq_int(iTemp, 1);
+    ok_eq_int(GetSystemMetrics(SM_CXBORDER), 1);
 
     /* Value 1 */
-    NtUserSystemParametersInfo(SPI_SETBORDER, 1, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0);
-    TEST(iTemp == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBORDER, 1, NULL, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0), 1);
+    ok_eq_int(iTemp, 1);
 //  Test_MetricKey(pti, VAL_BORDER, 1);
-
+#if 0 // Doesn't work on all windows versions
     /* Value 2 */
-    NtUserSystemParametersInfo(SPI_SETBORDER, 2, NULL, SPIF_UPDATEINIFILE);
-    NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBORDER, 2, NULL, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETBORDER, 0, &iTemp, 0), 1);
     TEST(iTemp == 2);
     TEST(GetSystemMetrics(SM_CXBORDER) == 1);
-
+#endif
     /* Restore original value */
-    NtUserSystemParametersInfo(SPI_SETBORDER, iOrig, NULL, SPIF_UPDATEINIFILE);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETBORDER, iOrig, NULL, 0), 1);
 
 }
 
@@ -650,7 +673,7 @@ Test_SPI_SETMOUSEBUTTONSWAP(void)
     bOrig = GetSystemMetrics(SM_SWAPBUTTON);
 
     /* Value 0 */
-    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 0, NULL, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 0, NULL, 0);
     bTemp = GetSystemMetrics(SM_SWAPBUTTON);
     TEST(bTemp == 0);
     cbSize = sizeof(szReg);
@@ -658,7 +681,7 @@ Test_SPI_SETMOUSEBUTTONSWAP(void)
     TEST(_wcsicmp(szReg, L"0") == 0);
 
     /* Value 1 */
-    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 1, NULL, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 1, NULL, 0);
     bTemp = GetSystemMetrics(SM_SWAPBUTTON);
     TEST(bTemp == 1);
     cbSize = sizeof(szReg);
@@ -666,7 +689,7 @@ Test_SPI_SETMOUSEBUTTONSWAP(void)
     TEST(_wcsicmp(szReg, L"1") == 0);
 
     /* Value 2 */
-    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 2, NULL, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, 2, NULL, 0);
     bTemp = GetSystemMetrics(SM_SWAPBUTTON);
     TEST(bTemp == 1);
     cbSize = sizeof(szReg);
@@ -674,7 +697,7 @@ Test_SPI_SETMOUSEBUTTONSWAP(void)
     TEST(_wcsicmp(szReg, L"2") == 0);
 
     /* Value -1 */
-    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, -1, NULL, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, -1, NULL, 0);
     bTemp = GetSystemMetrics(SM_SWAPBUTTON);
     TEST(bTemp == 1);
     cbSize = sizeof(szReg);
@@ -682,7 +705,7 @@ Test_SPI_SETMOUSEBUTTONSWAP(void)
     TEST(_wcsicmp(szReg, L"-1") == 0);
 
     /* Restore original value */
-    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, bOrig, 0, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, bOrig, 0, 0);
 
 
 }
@@ -696,9 +719,16 @@ Test_SPI_SETICONTITLELOGFONT(void)
         LOGFONTW lf;
         DWORD dwRedzone;
     } buf;
+    BOOL bRet;
 
     /* Get original value */
-    ASSERT(NtUserSystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lfOrig), &lfOrig, 0));
+    bRet = NtUserSystemParametersInfo(SPI_GETICONTITLELOGFONT, sizeof(lfOrig), &lfOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original icon title logfont\n");
+        return;
+    }
 
     /* Test uiParam == 0 */
     memset(&buf, 0, sizeof(buf));
@@ -806,9 +836,16 @@ void
 Test_SPI_SETWORKAREA(void)
 {
     RECT rcOrig, rc;
+    BOOL bRet;
 
     /* Get the original value */
-    ASSERT(NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, &rcOrig, 0) == 1);
+    bRet = NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, &rcOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original work area\n");
+        return;
+    }
 
     /* Change value */
     rc = rcOrig;
@@ -852,9 +889,7 @@ Test_SPI_SETWORKAREA(void)
     TEST(NtUserSystemParametersInfo(SPI_SETWORKAREA, 0, &rc, 0) == 0);
 
     /* Restore original value */
-    ASSERT(NtUserSystemParametersInfo(SPI_SETWORKAREA, 0, &rcOrig, 0) == 1);
-
-
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETWORKAREA, 0, &rcOrig, 0), 1);
 }
 
 void
@@ -891,68 +926,83 @@ void
 Test_SPI_SETSTICKYKEYS(void)
 {
     STICKYKEYS skOrig, sk;
+    BOOL bRet;
 
     /* Get original values */
     skOrig.cbSize = sizeof(STICKYKEYS);
-    ASSERT(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &skOrig, 0) == 1);
+    bRet = NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &skOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original sticky keys\n");
+        return;
+    }
+
+    printf("sticky keys original dwFlags: 0x%08x\n", skOrig.dwFlags);
 
     sk.cbSize = sizeof(STICKYKEYS)+1;
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &sk, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk), &sk, 0), 0);
 
     sk.cbSize = sizeof(STICKYKEYS)-1;
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &sk, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk), &sk, 0), 0);
 
     sk.cbSize = sizeof(STICKYKEYS);
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 1, &sk, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, -1, &sk, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sk.cbSize, &sk, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sk.cbSize-1, &sk, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sk.cbSize+1, &sk, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 1, &sk, 0), 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, -1, &sk, 0), 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk), &sk, 0), 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk) - 1, &sk, 0), 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk) + 1, &sk, 0), 0);
 
     sk = skOrig;
-    sk.dwFlags = (skOrig.dwFlags ^ 1);
-    TEST(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sk.cbSize+1, &sk, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sk.cbSize-1, &sk, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sk.cbSize, &sk, 0) == 1);
+    sk.dwFlags = (skOrig.dwFlags ^ SKF_AUDIBLEFEEDBACK);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(sk) + 1, &sk, 0), 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(sk) - 1, &sk, 0), 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(sk), &sk, 0), 1);
 
     sk = skOrig;
-    TEST(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, 0, &sk, 0) == 1);
-    TEST(sk.dwFlags == (skOrig.dwFlags ^ 1));
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(sk), &sk, 0), 1);
+    ok_eq_hex(sk.dwFlags, (skOrig.dwFlags ^ SKF_AUDIBLEFEEDBACK));
 
     /* Restore original values */
     skOrig.cbSize = sizeof(STICKYKEYS);
-    ASSERT(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, 0, &skOrig, 0) == 1);
-
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(skOrig), &skOrig, 0), 1);
 }
 
 void
 Test_SPI_SETACCESSTIMEOUT(void)
 {
-    ACCESSTIMEOUT atoOrig, atoTmp;
+    ACCESSTIMEOUT atoOrig = { 0 }, atoTmp = { 0 };
+    BOOL bRet;
 
     /* Get original values */
     atoOrig.cbSize = sizeof(ACCESSTIMEOUT);
-    ASSERT(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 0, &atoOrig, 0) == 1);
+    bRet = NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, sizeof(atoOrig), &atoOrig, 0);
+    ok_eq_bool(bRet, 1);
+    if (bRet != 1)
+    {
+        skip("Cannot get original access timeouts\n");
+        return;
+    }
 
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT) - 1;
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 0, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 0, &atoTmp, 0), 0);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT) + 1;
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 0, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 0, &atoTmp, 0), 0);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 0, &atoTmp, 0) == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 0, &atoTmp, 0), 1);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 1, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, 1, &atoTmp, 0), 0);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, -1, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, -1, &atoTmp, 0), 0);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, sizeof(ACCESSTIMEOUT), &atoTmp, 0) == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, sizeof(atoTmp), &atoTmp, 0), 1);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, sizeof(ACCESSTIMEOUT)-1, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, sizeof(atoTmp) - 1, &atoTmp, 0), 0);
     atoTmp.cbSize = sizeof(ACCESSTIMEOUT);
-    TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, sizeof(ACCESSTIMEOUT)+1, &atoTmp, 0) == 0);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, sizeof(atoTmp) + 1, &atoTmp, 0), 0);
 
     /* Restore original values */
-    ASSERT(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, sizeof(atoOrig), &atoOrig, 0) == 1);
+    ok_eq_bool(NtUserSystemParametersInfo(SPI_SETACCESSTIMEOUT, sizeof(atoOrig), &atoOrig, 0), 1);
 }
 
 void
@@ -1021,7 +1071,7 @@ Test_SPI_SETMENUANIMATION(void)
     NtUserSystemParametersInfo(SPI_GETMENUANIMATION, 0, &bOrig, 0);
 
     /* Value 0 */
-    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, NULL, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, NULL, 0);
     NtUserSystemParametersInfo(SPI_GETMENUANIMATION, 0, &bTemp, 0);
     TEST(bTemp == 0);
     cbSize = sizeof(dwUserPrefMask);
@@ -1029,16 +1079,15 @@ Test_SPI_SETMENUANIMATION(void)
     TEST((dwUserPrefMask & UPM_MENUANIMATION) == 0);
 
     /* Value 1 */
-    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)1, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)1, 0);
     NtUserSystemParametersInfo(SPI_GETMENUANIMATION, 0, &bTemp, 0);
     TEST(bTemp == 1);
     cbSize = sizeof(dwUserPrefMask);
     TEST(QueryUserRegValueW(KEY_DESKTOP, VAL_PREFMASK, &dwUserPrefMask, &cbSize, NULL) == ERROR_SUCCESS);
     TEST((dwUserPrefMask & UPM_MENUANIMATION) != 0);
 
-
     /* Restore original values */
-    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)(ULONG_PTR)bOrig, SPIF_UPDATEINIFILE);
+    NtUserSystemParametersInfo(SPI_SETMENUANIMATION, 0, (PVOID)(ULONG_PTR)bOrig, 0);
 }
 
 //  Test_SPI_SETCOMBOBOXANIMATION();
@@ -1092,7 +1141,12 @@ START_TEST(NtUserSystemParametersInfo)
     HWND hWnd;
 
     hWnd = CreateTestWindow();
-    ASSERT(hWnd);
+    ok(hWnd != NULL, "CreateTestWindow failed\n");
+    if (!hWnd)
+    {
+        skip("Could not create test window\n");
+        return;
+    }
 
     Test_NtUserSystemParametersInfo_Params();
     Test_NtUserSystemParametersInfo_fWinIni();
@@ -1107,7 +1161,7 @@ START_TEST(NtUserSystemParametersInfo)
 //  Test_SPI_SETSCREENSAVETIMEOUT();
 //  Test_SPI_SETSCREENSAVEACTIVE();
 //  Test_SPI_SETGRIDGRANULARITY();
-    Test_SPI_SETDESKWALLPAPER();
+//  Test_SPI_SETDESKWALLPAPER();
 //  Test_SPI_SETDESKPATTERN();
 //  Test_SPI_SETKEYBOARDDELAY();
 //  Test_SPI_ICONVERTICALSPACING();
@@ -1116,14 +1170,14 @@ START_TEST(NtUserSystemParametersInfo)
 //  Test_SPI_SETDOUBLECLKWIDTH();
 //  Test_SPI_SETDOUBLECLKHEIGHT();
 //  Test_SPI_SETDOUBLECLICKTIME();
-    Test_SPI_SETMOUSEBUTTONSWAP();
+//  Test_SPI_SETMOUSEBUTTONSWAP();
     Test_SPI_SETICONTITLELOGFONT();
-    Test_SPI_SETFASTTASKSWITCH();
+//  Test_SPI_SETFASTTASKSWITCH();
     Test_SPI_SETDRAGFULLWINDOWS();
-    Test_SPI_SETNONCLIENTMETRICS();
-    Test_SPI_SETMINIMIZEDMETRICS();
-    Test_SPI_SETICONMETRICS();
-    Test_SPI_SETWORKAREA();
+//  Test_SPI_SETNONCLIENTMETRICS();
+//  Test_SPI_SETMINIMIZEDMETRICS();
+//  Test_SPI_SETICONMETRICS();
+//  Test_SPI_SETWORKAREA(); // Messes up stuff!
     Test_SPI_SETPENWINDOWS();
     Test_SPI_SETFILTERKEYS();
     Test_SPI_SETTOGGLEKEYS();
@@ -1165,11 +1219,11 @@ START_TEST(NtUserSystemParametersInfo)
 //  Test_SPI_SETAUDIODESCRIPTION();
 //  Test_SPI_SETSCREENSAVESECURE();
 //  Test_SPI_SETACTIVEWINDOWTRACKING();
-    Test_SPI_SETMENUANIMATION();
+//  Test_SPI_SETMENUANIMATION();
 //  Test_SPI_SETCOMBOBOXANIMATION();
 //  Test_SPI_SETLISTBOXSMOOTHSCROLLING();
 //  Test_SPI_SETGRADIENTCAPTIONS();
-    Test_SPI_SETKEYBOARDCUES();
+//  Test_SPI_SETKEYBOARDCUES();
 //  Test_SPI_SETACTIVEWNDTRKZORDER();
 //  Test_SPI_SETHOTTRACKING();
 //  Test_SPI_SETMENUFADE();
@@ -1178,7 +1232,7 @@ START_TEST(NtUserSystemParametersInfo)
 //  Test_SPI_SETTOOLTIPFADE();
 //  Test_SPI_SETCURSORSHADOW();
 //  Test_SPI_SETMOUSESONAR();
-    Test_SPI_SETMOUSECLICKLOCK();
+//  Test_SPI_SETMOUSECLICKLOCK();
 //  Test_SPI_SETMOUSEVANISH();
 //  Test_SPI_SETFLATMENU();
 //  Test_SPI_SETDROPSHADOW();

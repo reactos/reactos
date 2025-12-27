@@ -24,7 +24,15 @@ START_TEST(NtUserProcessConnect)
     UserConnect.ulVersion = MAKELONG(0, 5); // == USER_VERSION
     // UserConnect.dwDispatchCount;
     Status = NtUserProcessConnect(hProcess, &UserConnect, sizeof(UserConnect));
-    TEST(NT_SUCCESS(Status));
+
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+    {
+        ok_ntstatus(Status, STATUS_UNSUCCESSFUL);
+        skip("NtUserProcessConnect can only be called by CSRSS on Vista and later.\n");
+        return;
+    }
+
+    ok_ntstatus(Status, STATUS_SUCCESS);
 
     printf("UserConnect.ulVersion = 0x%lx\n", UserConnect.ulVersion);
     printf("UserConnect.ulCurrentVersion = 0x%lx\n", UserConnect.ulCurrentVersion);
