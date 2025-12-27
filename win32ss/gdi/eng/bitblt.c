@@ -228,6 +228,34 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     SURFOBJ *psoPattern;
     BOOLEAN Result;
 
+    /* Validate output surface and its scan buffer */
+    if (!OutputObj || !OutputObj->pvScan0)
+    {
+        DPRINT1("CallDibBitBlt: Invalid OutputObj or pvScan0\n");
+        return FALSE;
+    }
+
+    /* Validate input surface and its scan buffer if ROP uses source */
+    if (ROP4_USES_SOURCE(Rop4))
+    {
+        if (!InputObj || !InputObj->pvScan0)
+        {
+            DPRINT1("CallDibBitBlt: Invalid InputObj or pvScan0 for source-using ROP\n");
+            return FALSE;
+        }
+        
+        /* Validate source point is within source surface bounds */
+        if (InputPoint->x < 0 || InputPoint->y < 0 ||
+            InputPoint->x >= (LONG)InputObj->sizlBitmap.cx ||
+            InputPoint->y >= (LONG)InputObj->sizlBitmap.cy)
+        {
+            DPRINT1("CallDibBitBlt: Source point (%d,%d) out of bounds for surface (%d,%d)\n",
+                    InputPoint->x, InputPoint->y,
+                    InputObj->sizlBitmap.cx, InputObj->sizlBitmap.cy);
+            return FALSE;
+        }
+    }
+
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
     BltInfo.PatternSurface = NULL;
