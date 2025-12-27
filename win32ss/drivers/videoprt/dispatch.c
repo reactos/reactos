@@ -1053,6 +1053,16 @@ IntVideoPortForwardIrpAndWait(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension =
         (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    /* Check if we have a lower device to forward to */
+    if (DeviceExtension->NextDeviceObject == NULL)
+    {
+        /* No lower device, complete the request with success */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     IoCopyCurrentIrpStackLocationToNext(Irp);
     IoSetCompletionRoutine(Irp,
@@ -1107,8 +1117,19 @@ IntVideoPortDispatchFdoPnp(
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
             {
-                IoSkipCurrentIrpStackLocation(Irp);
-                Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+                if (DeviceExtension->NextDeviceObject != NULL)
+                {
+                    IoSkipCurrentIrpStackLocation(Irp);
+                    Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+                }
+                else
+                {
+                    /* No lower device to forward to, complete the request */
+                    Irp->IoStatus.Status = STATUS_SUCCESS;
+                    Irp->IoStatus.Information = 0;
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    Status = STATUS_SUCCESS;
+                }
             }
             else
             {
@@ -1195,9 +1216,21 @@ IntVideoPortDispatchPower(
 
     if (DeviceExtension->Common.Fdo)
     {
-        PoStartNextPowerIrp(Irp);
-        IoSkipCurrentIrpStackLocation(Irp);
-        return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        if (DeviceExtension->NextDeviceObject != NULL)
+        {
+            PoStartNextPowerIrp(Irp);
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        }
+        else
+        {
+            /* No lower device to forward to, complete the request */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = 0;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
     }
     else
     {
@@ -1226,8 +1259,19 @@ IntVideoPortDispatchSystemControl(
 
     if (DeviceExtension->Common.Fdo)
     {
-        IoSkipCurrentIrpStackLocation(Irp);
-        return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        if (DeviceExtension->NextDeviceObject != NULL)
+        {
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        }
+        else
+        {
+            /* No lower device to forward to, complete the request */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = 0;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
     }
     else
     {
