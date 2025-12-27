@@ -141,12 +141,12 @@ BEGIN
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "Now printing"
+CAPTION "Şimdi Yazdırılıyor"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
-    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Yazdırma işi başlatılıyor...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Dosya Adı)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Sayfa %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "İptal", IDCANCEL, 50, 75, 60, 20
 END
@@ -178,7 +178,7 @@ BEGIN
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "%d. Satır, %d. Sütun"
-    STRING_PRINTERROR """%s"" dosyası yazdırılamıyor.\n\nYazıcının açık olduğundan ve doğru yapılandırıldığından emin olunuz."
+    STRING_PRINTERROR """%s"" dosyası yazdırılamıyor.\n\nYazıcının, açık olduğundan ve doğru yapılandırıldığından emin olunuz."
     STRING_DEFAULTFONT "Lucida Console"
     STRING_LINE_NUMBER_OUT_OF_RANGE "Belirtilen satır numarası aralık dışındadır."
     STRING_NOWPRINTING "Yazdırılıyor..."
