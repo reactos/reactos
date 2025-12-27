@@ -204,7 +204,8 @@ GetEnvironmentVariableW(IN LPCWSTR lpName,
         return 0;
     }
 
-    lpBuffer[VarValue.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    if (lpBuffer)
+        lpBuffer[VarValue.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     return (VarValue.Length / sizeof(WCHAR));
 }
