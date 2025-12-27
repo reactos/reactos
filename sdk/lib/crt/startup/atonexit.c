@@ -32,7 +32,7 @@ void __call_atexit(void)
     /* Note: should only be called with the exit lock held */
     _PVFV *first, *last;
 
-    if (!__onexitbegin)
+    if (!__onexitbegin || (__onexitbegin == (void*)(-1)))
         return;
 
     first =  (_PVFV *)_decode_pointer(__onexitbegin);

@@ -217,6 +217,7 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            goto Quit;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -278,6 +279,7 @@ UpdateTcpIpInformation(VOID)
         else
         {
             ERR("WL: Could not reallocate memory for pszBuffer\n");
+            goto Quit;
         }
     }
     if ((lError == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -297,6 +299,7 @@ UpdateTcpIpInformation(VOID)
     if (pszBuffer != szBuffer)
         HeapFree(GetProcessHeap(), 0, pszBuffer);
 
+Quit:
     RegCloseKey(hKey);
 }
 

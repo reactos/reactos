@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE

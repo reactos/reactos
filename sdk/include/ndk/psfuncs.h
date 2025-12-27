@@ -527,7 +527,8 @@ NTAPI
 NtQueryInformationProcess(
     _In_ HANDLE ProcessHandle,
     _In_ PROCESSINFOCLASS ProcessInformationClass,
-    _Out_ PVOID ProcessInformation,
+    _Out_writes_bytes_to_opt_(ProcessInformationLength, *ReturnLength)
+        PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength,
     _Out_opt_ PULONG ReturnLength
 );
@@ -539,7 +540,8 @@ NTAPI
 NtQueryInformationThread(
     _In_ HANDLE ThreadHandle,
     _In_ THREADINFOCLASS ThreadInformationClass,
-    _Out_ PVOID ThreadInformation,
+    _Out_writes_bytes_to_opt_(ThreadInformationLength, *ReturnLength)
+        PVOID ThreadInformation,
     _In_ ULONG ThreadInformationLength,
     _Out_opt_ PULONG ReturnLength
 );
@@ -582,7 +584,7 @@ NTAPI
 NtSetInformationProcess(
     _In_ HANDLE ProcessHandle,
     _In_ PROCESSINFOCLASS ProcessInformationClass,
-    _In_ PVOID ProcessInformation,
+    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength
 );
 

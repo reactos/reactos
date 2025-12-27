@@ -5299,6 +5299,10 @@ NTSYSAPI void      WINAPI TpWaitForWork(TP_WORK *,BOOL);
 NTSYSAPI NTSTATUS  WINAPI vDbgPrintEx(ULONG,ULONG,LPCSTR,__ms_va_list);
 NTSYSAPI NTSTATUS  WINAPI vDbgPrintExWithPrefix(LPCSTR,ULONG,ULONG,LPCSTR,__ms_va_list);
 #endif
+#ifdef __REACTOS__
+// Wine has this in wincon.h, but it is not in the official SDK
+BOOL WINAPI VerifyConsoleIoHandle(_In_ HANDLE);
+#endif
 
 /* 32-bit or 64-bit only functions */
 

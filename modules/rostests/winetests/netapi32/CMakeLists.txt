@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 list(APPEND SOURCE
     access.c
     apibuf.c

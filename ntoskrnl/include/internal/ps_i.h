@@ -410,17 +410,16 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     ),
 
     /* ThreadDescriptorTableEntry is only implemented in x86 as well as the descriptor entry */
-    #if defined(_X86_)
-        /* ThreadDescriptorTableEntry */
-        IQS_SAME
-        (
-            DESCRIPTOR_TABLE_ENTRY,
-            ULONG,
-            ICIF_QUERY
-        ),
-    #else
-        IQS_NONE,
-    #endif
+#if defined(_X86_)
+    IQS_SAME
+    (
+        DESCRIPTOR_TABLE_ENTRY,
+        ULONG,
+        ICIF_QUERY
+    ),
+#else
+    IQS_NONE,
+#endif
 
     /* ThreadEnableAlignmentFaultFixup */
     IQS
@@ -555,4 +554,71 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
 
     /* ThreadCSwitchMon */
     IQS_NONE,
+
+#if 0 // Hermes will surely fix this properly
+    // Windows 7
+    /* ThreadCSwitchPmu */
+    IQS_NONE,
+    /* ThreadWow64Context */
+    IQS_NONE,
+    /* ThreadGroupInformation */
+    IQS_NONE,
+    /* ThreadUmsInformation */
+    IQS_NONE,
+    /* ThreadCounterProfiling */
+    IQS_NONE,
+    /* ThreadIdealProcessorEx */
+    IQS_NONE,
+
+    // Windows 8
+    /* ThreadCpuAccountingInformation */
+    IQS_NONE,
+
+    // Windows 8.1
+    /* ThreadSuspendCount */
+    IQS_NONE,
+
+    // Windows 10
+    /* ThreadHeterogeneousCpuPolicy */
+    IQS_NONE,
+    /* ThreadContainerId */
+    IQS_NONE,
+    /* ThreadNameInformation */
+    IQS_NONE,
+    /* ThreadSelectedCpuSets */
+    IQS_NONE,
+    /* ThreadSystemThreadInformation */
+    IQS_NONE,
+    /* ThreadActualGroupAffinity */
+    IQS_NONE,
+
+    /* ThreadDynamicCodePolicyInfo */
+    IQS_NONE,
+    /* ThreadExplicitCaseSensitivity */
+    IQS_NONE,
+    /* ThreadWorkOnBehalfTicket */
+    IQS_NONE,
+    /* ThreadSubsystemInformation */
+    IQS_NONE,
+    /* ThreadDbgkWerReportActive */
+    IQS_NONE,
+    /* ThreadAttachContainer */
+    IQS_NONE,
+    /* ThreadManageWritesToExecutableMemory */
+    IQS_NONE,
+    /* ThreadPowerThrottlingState */
+    IQS_NONE,
+    /* ThreadWorkloadClass */
+    IQS_NONE,
+    /* ThreadCreateStateChange */
+    IQS_NONE,
+    /* ThreadApplyStateChange */
+    IQS_NONE,
+    /* ThreadStrongerBadHandleChecks */
+    IQS_NONE,
+    /* ThreadEffectiveIoPriority */
+    IQS_NONE,
+    /* ThreadEffectivePagePriority */
+    IQS_NONE,
+#endif
 };

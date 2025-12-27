@@ -57,7 +57,7 @@ LlbFwGetCh(VOID)
 }
 
 ULONG
-LlbFwVideoSetDisplayMode(IN PCHAR DisplayModeName,
+LlbFwVideoSetDisplayMode(IN PCSTR DisplayModeName,
                          IN BOOLEAN Init)
 {
     /* Return text mode */

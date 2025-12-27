@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 add_idl_headers(vbscript_wine_test_idlheader vbsregexp55.idl)
 

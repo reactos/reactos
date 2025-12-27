@@ -66,7 +66,7 @@ ApplyPalette(VOID)
     /* Left panning */
     for (y = 0; y < SCREEN_HEIGHT; y++)
     {
-        Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-PanH, y));
+        Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-(LONG)PanH, y));
 
         for (x = 0; x < PanH; x++)
         {
@@ -98,7 +98,7 @@ ApplyPalette(VOID)
     }
 
     /* Bottom panning */
-    Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-PanH, SCREEN_HEIGHT));
+    Frame = (PULONG)(FrameBufferStart + FB_OFFSET(-(LONG)PanH, SCREEN_HEIGHT));
     for (x = 0; x < PanV * FrameBufferWidth; x++)
     {
         *Frame++ = CachedPalette[0];

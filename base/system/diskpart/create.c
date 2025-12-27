@@ -13,6 +13,204 @@
 
 
 BOOL
+CreateEfiPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
+{
+    PPARTENTRY PartEntry, NewPartEntry;
+    PLIST_ENTRY ListEntry;
+    ULONGLONG ullSize = 0ULL;
+    ULONGLONG ullSectorCount;
+#if 0
+    ULONGLONG ullOffset = 0ULL;
+    BOOL bNoErr = FALSE;
+#endif
+    INT i;
+    PWSTR pszSuffix = NULL;
+    NTSTATUS Status;
+
+    DPRINT1("CreateEfiPartition()\n");
+
+    if (CurrentDisk == NULL)
+    {
+        ConResPuts(StdOut, IDS_SELECT_NO_DISK);
+        return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle != PARTITION_STYLE_GPT)
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
+        return TRUE;
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (HasPrefix(argv[i], L"size=", &pszSuffix))
+        {
+            /* size=<N> (MB) */
+            DPRINT("Size : %s\n", pszSuffix);
+
+            ullSize = _wcstoui64(pszSuffix, NULL, 10);
+            if ((ullSize == 0) && (errno == ERANGE))
+            {
+                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+                return TRUE;
+            }
+        }
+        else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
+        {
+            /* offset=<N> (KB) */
+            DPRINT("Offset : %s\n", pszSuffix);
+            ConPuts(StdOut, L"The OFFSET option is not supported yet!\n");
+#if 0
+            ullOffset = _wcstoui64(pszSuffix, NULL, 10);
+            if ((ullOffset == 0) && (errno == ERANGE))
+            {
+                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+                return TRUE;
+            }
+#endif
+        }
+        else if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr - Already handled above */
+        }
+        else
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+    }
+
+    DPRINT1("Size: %I64u\n", ullSize);
+#if 0
+    DPRINT1("Offset: %I64u\n", ullOffset);
+#endif
+
+    /* Size */
+    if (ullSize != 0)
+        ullSectorCount = (ullSize * 1024 * 1024) / CurrentDisk->BytesPerSector;
+    else
+        ullSectorCount = 0;
+
+    DPRINT1("SectorCount: %I64u\n", ullSectorCount);
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    for (ListEntry = CurrentDisk->PrimaryPartListHead.Flink;
+         ListEntry != &CurrentDisk->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned)
+            continue;
+
+        if (ullSectorCount == 0)
+        {
+            DPRINT("Claim whole unused space!\n");
+            PartEntry->IsPartitioned = TRUE;
+            PartEntry->New = TRUE;
+            CopyMemory(&PartEntry->Gpt.PartitionType, &PARTITION_SYSTEM_GUID, sizeof(GUID));
+            CreateGUID(&PartEntry->Gpt.PartitionId);
+            PartEntry->Gpt.Attributes = 0ULL;
+            PartEntry->PartitionNumber = 0;
+            PartEntry->FormatState = Unformatted;
+            PartEntry->FileSystemName[0] = L'\0';
+
+            CurrentPartition = PartEntry;
+            CurrentDisk->Dirty = TRUE;
+            break;
+        }
+        else
+        {
+            if (ullSectorCount == PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim matching unused space!\n");
+                PartEntry->IsPartitioned = TRUE;
+                PartEntry->New = TRUE;
+                CopyMemory(&PartEntry->Gpt.PartitionType, &PARTITION_SYSTEM_GUID, sizeof(GUID));
+                CreateGUID(&PartEntry->Gpt.PartitionId);
+                PartEntry->Gpt.Attributes = 0ULL;
+                PartEntry->PartitionNumber = 0;
+                PartEntry->FormatState = Unformatted;
+                PartEntry->FileSystemName[0] = L'\0';
+
+                CurrentPartition = PartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+            else if (ullSectorCount < PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim part of unused space\n");
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                if (NewPartEntry == NULL)
+                {
+                    ConPuts(StdOut, L"Memory allocation failed!\n");
+                    return TRUE;
+                }
+
+                NewPartEntry->DiskEntry = PartEntry->DiskEntry;
+
+                NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
+                NewPartEntry->SectorCount.QuadPart = ullSectorCount;
+
+                NewPartEntry->LogicalPartition = FALSE;
+                NewPartEntry->IsPartitioned = TRUE;
+                NewPartEntry->New = TRUE;
+                CopyMemory(&NewPartEntry->Gpt.PartitionType, &PARTITION_SYSTEM_GUID, sizeof(GUID));
+                CreateGUID(&NewPartEntry->Gpt.PartitionId);
+                NewPartEntry->Gpt.Attributes = 0ULL;
+                NewPartEntry->PartitionNumber = 0;
+                NewPartEntry->FormatState = Unformatted;
+                NewPartEntry->FileSystemName[0] = L'\0';
+
+                PartEntry->StartSector.QuadPart += ullSectorCount;
+                PartEntry->SectorCount.QuadPart -= ullSectorCount;
+
+                InsertTailList(ListEntry, &NewPartEntry->ListEntry);
+
+                CurrentPartition = NewPartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+        }
+    }
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    UpdateGptDiskLayout(CurrentDisk, FALSE);
+    Status = WriteGptPartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
+
+    return TRUE;
+}
+
+
+BOOL
 CreateExtendedPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -33,6 +231,45 @@ CreateExtendedPartition(
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
         return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
+        return TRUE;
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
+    {
+        CREATE_DISK DiskInfo;
+        NTSTATUS Status;
+
+        DiskInfo.PartitionStyle = PARTITION_STYLE_MBR;
+        CreateSignature(&DiskInfo.Mbr.Signature);
+
+        Status = CreateDisk(CurrentDisk->DiskNumber, &DiskInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CreateDisk() failed!\n");
+            return TRUE;
+        }
+
+        CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
+        CurrentDisk->EndSector.QuadPart = min(CurrentDisk->SectorCount.QuadPart, 0x100000000) - 1;
+
+        ScanForUnpartitionedMbrDiskSpace(CurrentDisk);
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
     }
 
     for (i = 3; i < argc; i++)
@@ -74,12 +311,7 @@ CreateExtendedPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -125,7 +357,7 @@ CreateExtendedPartition(
     {
         PartEntry->IsPartitioned = TRUE;
         PartEntry->New = TRUE;
-        PartEntry->PartitionType = PARTITION_EXTENDED;
+        PartEntry->Mbr.PartitionType = PARTITION_EXTENDED;
         PartEntry->FormatState = Unformatted;
         PartEntry->FileSystemName[0] = L'\0';
 
@@ -138,7 +370,7 @@ CreateExtendedPartition(
         {
             PartEntry->IsPartitioned = TRUE;
             PartEntry->New = TRUE;
-            PartEntry->PartitionType = PARTITION_EXTENDED;
+            PartEntry->Mbr.PartitionType = PARTITION_EXTENDED;
             PartEntry->FormatState = Unformatted;
             PartEntry->FileSystemName[0] = L'\0';
 
@@ -162,7 +394,7 @@ CreateExtendedPartition(
             NewPartEntry->LogicalPartition = FALSE;
             NewPartEntry->IsPartitioned = TRUE;
             NewPartEntry->New = TRUE;
-            NewPartEntry->PartitionType = PARTITION_EXTENDED;
+            NewPartEntry->Mbr.PartitionType = PARTITION_EXTENDED;
             NewPartEntry->FormatState = Unformatted;
             NewPartEntry->FileSystemName[0] = L'\0';
 
@@ -176,8 +408,8 @@ CreateExtendedPartition(
         }
     }
 
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
+    UpdateMbrDiskLayout(CurrentDisk);
+    Status = WriteMbrPartitions(CurrentDisk);
     if (!NT_SUCCESS(Status))
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
@@ -215,6 +447,25 @@ CreateLogicalPartition(
         return TRUE;
     }
 
+    if (CurrentDisk->PartitionStyle != PARTITION_STYLE_MBR)
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
+        return TRUE;
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
     for (i = 3; i < argc; i++)
     {
         if (HasPrefix(argv[i], L"size=", &pszSuffix))
@@ -245,7 +496,7 @@ CreateLogicalPartition(
         }
         else if (HasPrefix(argv[i], L"id=", &pszSuffix))
         {
-            /* id=<Byte>|<GUID> */
+            /* id=<Byte> */
             DPRINT("Id : %s\n", pszSuffix);
 
             length = wcslen(pszSuffix);
@@ -259,12 +510,6 @@ CreateLogicalPartition(
                     return TRUE;
                 }
             }
-#if 0
-            else if ()
-            {
-                /* GUID */
-            }
-#endif
             else
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
@@ -282,12 +527,7 @@ CreateLogicalPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Already handled above */
         }
         else
         {
@@ -321,7 +561,7 @@ CreateLogicalPartition(
         {
             PartEntry->IsPartitioned = TRUE;
             PartEntry->New = TRUE;
-            PartEntry->PartitionType = PartitionType;
+            PartEntry->Mbr.PartitionType = PartitionType;
             PartEntry->FormatState = Unformatted;
             PartEntry->FileSystemName[0] = L'\0';
 
@@ -335,7 +575,7 @@ CreateLogicalPartition(
             {
                 PartEntry->IsPartitioned = TRUE;
                 PartEntry->New = TRUE;
-                PartEntry->PartitionType = PartitionType;
+                PartEntry->Mbr.PartitionType = PartitionType;
                 PartEntry->FormatState = Unformatted;
                 PartEntry->FileSystemName[0] = L'\0';
 
@@ -360,7 +600,7 @@ CreateLogicalPartition(
                 NewPartEntry->LogicalPartition = TRUE;
                 NewPartEntry->IsPartitioned = TRUE;
                 NewPartEntry->New = TRUE;
-                NewPartEntry->PartitionType = PartitionType;
+                NewPartEntry->Mbr.PartitionType = PartitionType;
                 NewPartEntry->FormatState = Unformatted;
                 NewPartEntry->FileSystemName[0] = L'\0';
 
@@ -376,8 +616,8 @@ CreateLogicalPartition(
         }
     }
 
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
+    UpdateMbrDiskLayout(CurrentDisk);
+    Status = WriteMbrPartitions(CurrentDisk);
     if (!NT_SUCCESS(Status))
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
@@ -392,7 +632,7 @@ CreateLogicalPartition(
 
 
 BOOL
-CreatePrimaryPartition(
+CreateMsrPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
@@ -404,15 +644,504 @@ CreatePrimaryPartition(
     ULONGLONG ullOffset = 0ULL;
     BOOL bNoErr = FALSE;
 #endif
-    UCHAR PartitionType = PARTITION_HUGE;
-    INT i, length;
+    INT i;
     PWSTR pszSuffix = NULL;
     NTSTATUS Status;
+
+    DPRINT1("CreateMsrPartition()\n");
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
         return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle != PARTITION_STYLE_GPT)
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
+        return TRUE;
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (HasPrefix(argv[i], L"size=", &pszSuffix))
+        {
+            /* size=<N> (MB) */
+            DPRINT("Size : %s\n", pszSuffix);
+
+            ullSize = _wcstoui64(pszSuffix, NULL, 10);
+            if ((ullSize == 0) && (errno == ERANGE))
+            {
+                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+                return TRUE;
+            }
+        }
+        else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
+        {
+            /* offset=<N> (KB) */
+            DPRINT("Offset : %s\n", pszSuffix);
+            ConPuts(StdOut, L"The OFFSET option is not supported yet!\n");
+#if 0
+            ullOffset = _wcstoui64(pszSuffix, NULL, 10);
+            if ((ullOffset == 0) && (errno == ERANGE))
+            {
+                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+                return TRUE;
+            }
+#endif
+        }
+        else if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr - Already handled above */
+        }
+        else
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+    }
+
+    DPRINT1("Size: %I64u\n", ullSize);
+#if 0
+    DPRINT1("Offset: %I64u\n", ullOffset);
+#endif
+
+    /* Size */
+    if (ullSize != 0)
+        ullSectorCount = (ullSize * 1024 * 1024) / CurrentDisk->BytesPerSector;
+    else
+        ullSectorCount = 0;
+
+    DPRINT1("SectorCount: %I64u\n", ullSectorCount);
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    for (ListEntry = CurrentDisk->PrimaryPartListHead.Flink;
+         ListEntry != &CurrentDisk->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned)
+            continue;
+
+        if (ullSectorCount == 0)
+        {
+            DPRINT("Claim whole unused space!\n");
+            PartEntry->IsPartitioned = TRUE;
+            PartEntry->New = TRUE;
+            CopyMemory(&PartEntry->Gpt.PartitionType, &PARTITION_MSFT_RESERVED_GUID, sizeof(GUID));
+            CreateGUID(&PartEntry->Gpt.PartitionId);
+            PartEntry->Gpt.Attributes = 0ULL;
+            PartEntry->PartitionNumber = 0;
+            PartEntry->FormatState = Unformatted;
+            PartEntry->FileSystemName[0] = L'\0';
+
+            CurrentPartition = PartEntry;
+            CurrentDisk->Dirty = TRUE;
+            break;
+        }
+        else
+        {
+            if (ullSectorCount == PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim matching unused space!\n");
+                PartEntry->IsPartitioned = TRUE;
+                PartEntry->New = TRUE;
+                CopyMemory(&PartEntry->Gpt.PartitionType, &PARTITION_MSFT_RESERVED_GUID, sizeof(GUID));
+                CreateGUID(&PartEntry->Gpt.PartitionId);
+                PartEntry->Gpt.Attributes = 0ULL;
+                PartEntry->PartitionNumber = 0;
+                PartEntry->FormatState = Unformatted;
+                PartEntry->FileSystemName[0] = L'\0';
+
+                CurrentPartition = PartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+            else if (ullSectorCount < PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim part of unused space\n");
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                if (NewPartEntry == NULL)
+                {
+                    ConPuts(StdOut, L"Memory allocation failed!\n");
+                    return TRUE;
+                }
+
+                NewPartEntry->DiskEntry = PartEntry->DiskEntry;
+
+                NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
+                NewPartEntry->SectorCount.QuadPart = ullSectorCount;
+
+                NewPartEntry->LogicalPartition = FALSE;
+                NewPartEntry->IsPartitioned = TRUE;
+                NewPartEntry->New = TRUE;
+                CopyMemory(&NewPartEntry->Gpt.PartitionType, &PARTITION_MSFT_RESERVED_GUID, sizeof(GUID));
+                CreateGUID(&NewPartEntry->Gpt.PartitionId);
+                NewPartEntry->Gpt.Attributes = 0ULL;
+                NewPartEntry->PartitionNumber = 0;
+                NewPartEntry->FormatState = Unformatted;
+                NewPartEntry->FileSystemName[0] = L'\0';
+
+                PartEntry->StartSector.QuadPart += ullSectorCount;
+                PartEntry->SectorCount.QuadPart -= ullSectorCount;
+
+                InsertTailList(ListEntry, &NewPartEntry->ListEntry);
+
+                CurrentPartition = NewPartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+        }
+    }
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    UpdateGptDiskLayout(CurrentDisk, FALSE);
+    Status = WriteGptPartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return TRUE;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
+
+    return TRUE;
+}
+
+
+static
+VOID
+CreatePrimaryMbrPartition(
+    _In_ ULONGLONG ullSize,
+    _In_ PWSTR pszPartitionType)
+{
+    PPARTENTRY PartEntry, NewPartEntry;
+    PLIST_ENTRY ListEntry;
+    ULONGLONG ullSectorCount;
+    UCHAR PartitionType;
+    INT length;
+    NTSTATUS Status;
+
+    if (pszPartitionType)
+    {
+        length = wcslen(pszPartitionType);
+        if ((length != 1) && (length != 2))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return;
+        }
+
+        PartitionType = (UCHAR)wcstoul(pszPartitionType, NULL, 16);
+        if ((PartitionType == 0) && (errno == ERANGE))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return;
+        }
+    }
+    else
+    {
+        PartitionType = PARTITION_HUGE;
+    }
+
+    if (GetPrimaryPartitionCount(CurrentDisk) >= 4)
+    {
+        ConPuts(StdOut, L"No space left for another primary partition!\n");
+        return;
+    }
+
+    if (ullSize != 0)
+        ullSectorCount = (ullSize * 1024 * 1024) / CurrentDisk->BytesPerSector;
+    else
+        ullSectorCount = 0;
+
+    DPRINT1("SectorCount: %I64u\n", ullSectorCount);
+
+    for (ListEntry = CurrentDisk->PrimaryPartListHead.Flink;
+         ListEntry != &CurrentDisk->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned)
+            continue;
+
+        if (ullSectorCount == 0)
+        {
+            PartEntry->IsPartitioned = TRUE;
+            PartEntry->New = TRUE;
+            PartEntry->Mbr.PartitionType = PartitionType;
+            PartEntry->FormatState = Unformatted;
+            PartEntry->FileSystemName[0] = L'\0';
+
+            CurrentPartition = PartEntry;
+            CurrentDisk->Dirty = TRUE;
+            break;
+        }
+        else
+        {
+            if (PartEntry->SectorCount.QuadPart == ullSectorCount)
+            {
+                PartEntry->IsPartitioned = TRUE;
+                PartEntry->New = TRUE;
+                PartEntry->Mbr.PartitionType = PartitionType;
+                PartEntry->FormatState = Unformatted;
+                PartEntry->FileSystemName[0] = L'\0';
+
+                CurrentPartition = PartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+            else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
+            {
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                if (NewPartEntry == NULL)
+                {
+                    ConPuts(StdOut, L"Memory allocation failed!\n");
+                    return;
+                }
+
+                NewPartEntry->DiskEntry = PartEntry->DiskEntry;
+
+                NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
+                NewPartEntry->SectorCount.QuadPart = ullSectorCount;
+
+                NewPartEntry->LogicalPartition = FALSE;
+                NewPartEntry->IsPartitioned = TRUE;
+                NewPartEntry->New = TRUE;
+                NewPartEntry->Mbr.PartitionType = PartitionType;
+                NewPartEntry->FormatState = Unformatted;
+                NewPartEntry->FileSystemName[0] = L'\0';
+
+                PartEntry->StartSector.QuadPart += ullSectorCount;
+                PartEntry->SectorCount.QuadPart -= ullSectorCount;
+
+                InsertTailList(ListEntry, &NewPartEntry->ListEntry);
+
+                CurrentPartition = NewPartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+        }
+    }
+
+    UpdateMbrDiskLayout(CurrentDisk);
+    Status = WriteMbrPartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
+}
+
+
+static
+VOID
+CreatePrimaryGptPartition(
+    _In_ ULONGLONG ullSize,
+    _In_ PWSTR pszPartitionType)
+{
+    PPARTENTRY PartEntry, NewPartEntry;
+    PLIST_ENTRY ListEntry;
+    ULONGLONG ullSectorCount;
+    GUID guidPartitionType;
+    NTSTATUS Status;
+
+    /* Partition Type */
+    if (pszPartitionType)
+    {
+        if (!StringToGUID(&guidPartitionType, pszPartitionType))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return;
+        }
+    }
+    else
+    {
+        CopyMemory(&guidPartitionType, &PARTITION_BASIC_DATA_GUID, sizeof(GUID));
+    }
+
+    /* Size */
+    if (ullSize != 0)
+        ullSectorCount = (ullSize * 1024 * 1024) / CurrentDisk->BytesPerSector;
+    else
+        ullSectorCount = 0;
+
+    DPRINT1("SectorCount: %I64u\n", ullSectorCount);
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    for (ListEntry = CurrentDisk->PrimaryPartListHead.Flink;
+         ListEntry != &CurrentDisk->PrimaryPartListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
+        if (PartEntry->IsPartitioned)
+            continue;
+
+        if (ullSectorCount == 0)
+        {
+            DPRINT("Claim whole unused space!\n");
+            PartEntry->IsPartitioned = TRUE;
+            PartEntry->New = TRUE;
+            CopyMemory(&PartEntry->Gpt.PartitionType, &guidPartitionType, sizeof(GUID));
+            CreateGUID(&PartEntry->Gpt.PartitionId);
+            PartEntry->Gpt.Attributes = 0ULL;
+            PartEntry->PartitionNumber = 0;
+            PartEntry->FormatState = Unformatted;
+            PartEntry->FileSystemName[0] = L'\0';
+
+            CurrentPartition = PartEntry;
+            CurrentDisk->Dirty = TRUE;
+            break;
+        }
+        else
+        {
+            if (ullSectorCount == PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim matching unused space!\n");
+                PartEntry->IsPartitioned = TRUE;
+                PartEntry->New = TRUE;
+                CopyMemory(&PartEntry->Gpt.PartitionType, &guidPartitionType, sizeof(GUID));
+                CreateGUID(&PartEntry->Gpt.PartitionId);
+                PartEntry->Gpt.Attributes = 0ULL;
+                PartEntry->PartitionNumber = 0;
+                PartEntry->FormatState = Unformatted;
+                PartEntry->FileSystemName[0] = L'\0';
+
+                CurrentPartition = PartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+            else if (ullSectorCount < PartEntry->SectorCount.QuadPart)
+            {
+                DPRINT("Claim part of unused space\n");
+                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
+                if (NewPartEntry == NULL)
+                {
+                    ConPuts(StdOut, L"Memory allocation failed!\n");
+                    return;
+                }
+
+                NewPartEntry->DiskEntry = PartEntry->DiskEntry;
+
+                NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
+                NewPartEntry->SectorCount.QuadPart = ullSectorCount;
+
+                NewPartEntry->LogicalPartition = FALSE;
+                NewPartEntry->IsPartitioned = TRUE;
+                NewPartEntry->New = TRUE;
+                CopyMemory(&NewPartEntry->Gpt.PartitionType, &guidPartitionType, sizeof(GUID));
+                CreateGUID(&NewPartEntry->Gpt.PartitionId);
+                NewPartEntry->Gpt.Attributes = 0ULL;
+                NewPartEntry->PartitionNumber = 0;
+                NewPartEntry->FormatState = Unformatted;
+                NewPartEntry->FileSystemName[0] = L'\0';
+
+                PartEntry->StartSector.QuadPart += ullSectorCount;
+                PartEntry->SectorCount.QuadPart -= ullSectorCount;
+
+                InsertTailList(ListEntry, &NewPartEntry->ListEntry);
+
+                CurrentPartition = NewPartEntry;
+                CurrentDisk->Dirty = TRUE;
+                break;
+            }
+        }
+    }
+
+#ifdef DUMP_PARTITION_LIST
+    DumpPartitionList(CurrentDisk);
+#endif
+
+    UpdateGptDiskLayout(CurrentDisk, FALSE);
+    Status = WriteGptPartitions(CurrentDisk);
+    if (!NT_SUCCESS(Status))
+    {
+        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
+        CurrentPartition = NULL;
+        return;
+    }
+
+    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
+}
+
+
+BOOL
+CreatePrimaryPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
+{
+    ULONGLONG ullSize = 0ULL;
+#if 0
+    ULONGLONG ullOffset = 0ULL;
+    BOOL bNoErr = FALSE;
+#endif
+    INT i;
+    PWSTR pszSuffix = NULL;
+    PWSTR pszPartitionType = NULL;
+
+    if (CurrentDisk == NULL)
+    {
+        ConResPuts(StdOut, IDS_SELECT_NO_DISK);
+        return TRUE;
+    }
+
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
+    {
+        CREATE_DISK DiskInfo;
+        NTSTATUS Status;
+
+        DiskInfo.PartitionStyle = PARTITION_STYLE_MBR;
+        CreateSignature(&DiskInfo.Mbr.Signature);
+
+        Status = CreateDisk(CurrentDisk->DiskNumber, &DiskInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CreateDisk() failed!\n");
+            return TRUE;
+        }
+
+        CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
+        CurrentDisk->EndSector.QuadPart = min(CurrentDisk->SectorCount.QuadPart, 0x100000000) - 1;
+
+        ScanForUnpartitionedMbrDiskSpace(CurrentDisk);
+    }
+
+    for (i = 3; i < argc; i++)
+    {
+        if (_wcsicmp(argv[i], L"noerr") == 0)
+        {
+            /* noerr */
+            DPRINT("NoErr\n", pszSuffix);
+            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
+#if 0
+            bNoErr = TRUE;
+#endif
+        }
     }
 
     for (i = 3; i < argc; i++)
@@ -447,29 +1176,7 @@ CreatePrimaryPartition(
         {
             /* id=<Byte>|<GUID> */
             DPRINT("Id : %s\n", pszSuffix);
-
-            length = wcslen(pszSuffix);
-            if ((length == 1) || (length == 2))
-            {
-                /* Byte */
-                PartitionType = (UCHAR)wcstoul(pszSuffix, NULL, 16);
-                if ((PartitionType == 0) && (errno == ERANGE))
-                {
-                    ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                    return TRUE;
-                }
-            }
-#if 0
-            else if ()
-            {
-                /* GUID */
-            }
-#endif
-            else
-            {
-                ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE; 
-            }
+            pszPartitionType = pszSuffix;
         }
         else if (HasPrefix(argv[i], L"align=", &pszSuffix))
         {
@@ -482,12 +1189,7 @@ CreatePrimaryPartition(
         }
         else if (_wcsicmp(argv[i], L"noerr") == 0)
         {
-            /* noerr */
-            DPRINT("NoErr\n", pszSuffix);
-            ConPuts(StdOut, L"The NOERR option is not supported yet!\n");
-#if 0
-            bNoErr = TRUE;
-#endif
+            /* noerr - Alread handled above */
         }
         else
         {
@@ -496,102 +1198,20 @@ CreatePrimaryPartition(
         }
     }
 
-    DPRINT1("Size: %I64u\n", ullSize);
+    DPRINT("Size: %I64u\n", ullSize);
 #if 0
     DPRINT1("Offset: %I64u\n", ullOffset);
 #endif
-    DPRINT1("Partition Type: %hx\n", PartitionType);
 
-    if (GetPrimaryPartitionCount(CurrentDisk) >= 4)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        ConPuts(StdOut, L"No space left for another primary partition!\n");
-        return TRUE;
+        DPRINT("Partition Type: %s\n", pszPartitionType);
+        CreatePrimaryMbrPartition(ullSize, pszPartitionType);
     }
-
-    if (ullSize != 0)
-        ullSectorCount = (ullSize * 1024 * 1024) / CurrentDisk->BytesPerSector;
-    else
-        ullSectorCount = 0;
-
-    DPRINT1("SectorCount: %I64u\n", ullSectorCount);
-
-    for (ListEntry = CurrentDisk->PrimaryPartListHead.Flink;
-         ListEntry != &CurrentDisk->PrimaryPartListHead;
-         ListEntry = ListEntry->Flink)
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
-        if (PartEntry->IsPartitioned)
-            continue;
-
-        if (ullSectorCount == 0)
-        {
-            PartEntry->IsPartitioned = TRUE;
-            PartEntry->New = TRUE;
-            PartEntry->PartitionType = PartitionType;
-            PartEntry->FormatState = Unformatted;
-            PartEntry->FileSystemName[0] = L'\0';
-
-            CurrentPartition = PartEntry;
-            CurrentDisk->Dirty = TRUE;
-            break;
-        }
-        else
-        {
-            if (PartEntry->SectorCount.QuadPart == ullSectorCount)
-            {
-                PartEntry->IsPartitioned = TRUE;
-                PartEntry->New = TRUE;
-                PartEntry->PartitionType = PartitionType;
-                PartEntry->FormatState = Unformatted;
-                PartEntry->FileSystemName[0] = L'\0';
-
-                CurrentPartition = PartEntry;
-                CurrentDisk->Dirty = TRUE;
-                break;
-            }
-            else if (PartEntry->SectorCount.QuadPart > ullSectorCount)
-            {
-                NewPartEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PPARTENTRY));
-                if (NewPartEntry == NULL)
-                {
-                    ConPuts(StdOut, L"Memory allocation failed!\n");
-                    return TRUE;
-                }
-
-                NewPartEntry->DiskEntry = PartEntry->DiskEntry;
-
-                NewPartEntry->StartSector.QuadPart = PartEntry->StartSector.QuadPart;
-                NewPartEntry->SectorCount.QuadPart = ullSectorCount;
-
-                NewPartEntry->LogicalPartition = FALSE;
-                NewPartEntry->IsPartitioned = TRUE;
-                NewPartEntry->New = TRUE;
-                NewPartEntry->PartitionType = PartitionType;
-                NewPartEntry->FormatState = Unformatted;
-                NewPartEntry->FileSystemName[0] = L'\0';
-
-                PartEntry->StartSector.QuadPart += ullSectorCount;
-                PartEntry->SectorCount.QuadPart -= ullSectorCount;
-
-                InsertTailList(ListEntry, &NewPartEntry->ListEntry);
-
-                CurrentPartition = NewPartEntry;
-                CurrentDisk->Dirty = TRUE;
-                break;
-            }
-        }
+        CreatePrimaryGptPartition(ullSize, pszPartitionType);
     }
-
-    UpdateDiskLayout(CurrentDisk);
-    Status = WritePartitions(CurrentDisk);
-    if (!NT_SUCCESS(Status))
-    {
-        ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
-        CurrentPartition = NULL;
-        return TRUE;
-    }
-
-    ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
     return TRUE;
 }

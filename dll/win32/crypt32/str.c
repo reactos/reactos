@@ -1124,46 +1124,38 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
     return ret;
 }
 
-DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT pCertContext, DWORD dwType,
- DWORD dwFlags, void *pvTypePara, LPSTR pszNameString, DWORD cchNameString)
+DWORD WINAPI CertGetNameStringA(PCCERT_CONTEXT cert, DWORD type,
+                                DWORD flags, void *type_para, LPSTR name, DWORD name_len)
 {
-    DWORD ret;
+    DWORD len, len_mb, ret;
+    LPWSTR nameW;
 
-    TRACE("(%p, %d, %08x, %p, %p, %d)\n", pCertContext, dwType, dwFlags,
-     pvTypePara, pszNameString, cchNameString);
+    TRACE("(%p, %ld, %08lx, %p, %p, %ld)\n", cert, type, flags, type_para, name, name_len);
 
-    if (pszNameString)
+    len = CertGetNameStringW(cert, type, flags, type_para, NULL, 0);
+
+    if (!(nameW = CryptMemAlloc(len * sizeof(*nameW))))
     {
-        LPWSTR wideName;
-        DWORD nameLen;
-
-        nameLen = CertGetNameStringW(pCertContext, dwType, dwFlags, pvTypePara,
-         NULL, 0);
-        wideName = CryptMemAlloc(nameLen * sizeof(WCHAR));
-        if (wideName)
-        {
-            CertGetNameStringW(pCertContext, dwType, dwFlags, pvTypePara,
-             wideName, nameLen);
-            nameLen = WideCharToMultiByte(CP_ACP, 0, wideName, nameLen,
-             pszNameString, cchNameString, NULL, NULL);
-            if (nameLen <= cchNameString)
-                ret = nameLen;
-            else
-            {
-                pszNameString[cchNameString - 1] = '\0';
-                ret = cchNameString;
-            }
-            CryptMemFree(wideName);
-        }
-        else
-        {
-            *pszNameString = '\0';
-            ret = 1;
-        }
+        ERR("No memory.\n");
+        if (name && name_len) *name = 0;
+        return 1;
     }
-    else
-        ret = CertGetNameStringW(pCertContext, dwType, dwFlags, pvTypePara,
-         NULL, 0);
+
+    len = CertGetNameStringW(cert, type, flags, type_para, nameW, len);
+    len_mb = WideCharToMultiByte(CP_ACP, 0, nameW, len, NULL, 0, NULL, NULL);
+    if (!name || !name_len)
+    {
+        CryptMemFree(nameW);
+        return len_mb;
+    }
+
+    ret = WideCharToMultiByte(CP_ACP, 0, nameW, len, name, name_len, NULL, NULL);
+    if (ret < len_mb)
+    {
+        name[0] = 0;
+        ret = 1;
+    }
+    CryptMemFree(nameW);
     return ret;
 }
 

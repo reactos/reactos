@@ -428,12 +428,27 @@ typedef enum _THREADINFOCLASS
     ThreadSuspendCount, // 0x23
 
     // Windows 10
-    ThreadHeterogeneousCpuPolic, // 0x24
+    ThreadHeterogeneousCpuPolicy, // 0x24
     ThreadContainerId,
     ThreadNameInformation,
     ThreadSelectedCpuSets,
     ThreadSystemThreadInformation,
     ThreadActualGroupAffinity,
+
+    ThreadDynamicCodePolicyInfo,
+    ThreadExplicitCaseSensitivity,
+    ThreadWorkOnBehalfTicket,
+    ThreadSubsystemInformation,
+    ThreadDbgkWerReportActive,
+    ThreadAttachContainer,
+    ThreadManageWritesToExecutableMemory,
+    ThreadPowerThrottlingState,
+    ThreadWorkloadClass,
+    ThreadCreateStateChange,
+    ThreadApplyStateChange,
+    ThreadStrongerBadHandleChecks,
+    ThreadEffectiveIoPriority,
+    ThreadEffectivePagePriority,
 
     MaxThreadInfoClass
 } THREADINFOCLASS;
