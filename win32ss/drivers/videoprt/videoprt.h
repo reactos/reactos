@@ -38,6 +38,7 @@
 #define TAG_VIDEO_PORT          'PDIV'
 #define TAG_VIDEO_PORT_BUFFER   '\0mpV'
 #define TAG_REQUEST_PACKET      'qRpV'
+#define TAG_VIDEO_ROM 'mRoV'
 
 #define GUID_STRING_LENGTH (38 * sizeof(WCHAR))
 
@@ -79,7 +80,7 @@ typedef struct _VIDEO_PORT_COMMON_EXTENSION
     BOOLEAN Fdo;
 } VIDEO_PORT_COMMON_EXTENSION, *PVIDEO_PORT_COMMON_EXTENSION;
 
-typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
+typedef struct _VIDEO_PORT_DEVICE_EXTENSION
 {
    VIDEO_PORT_COMMON_EXTENSION Common;
    ULONG DeviceNumber;
@@ -110,6 +111,9 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    USHORT AdapterNumber;
    USHORT DisplayNumber;
    ULONG NumberOfSecondaryDisplays;
+   /* Per-device ROM image storage */
+   PVOID RomImageBuffer;
+   ULONG RomImageLength;
    CHAR POINTER_ALIGNMENT MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
