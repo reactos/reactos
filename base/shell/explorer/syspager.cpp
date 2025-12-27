@@ -168,6 +168,7 @@ public:
     void RefreshToolbarMetrics(BOOL bForceRefresh);
 
 private:
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     VOID SendMouseEvent(IN WORD wIndex, IN UINT uMsg, IN WPARAM wParam);
     LRESULT OnMouseEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -175,6 +176,7 @@ private:
 
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST, WM_MOUSELAST, OnMouseEvent)
         NOTIFY_CODE_HANDLER(TTN_SHOW, OnTooltipShow)
@@ -1029,6 +1031,17 @@ VOID CNotifyToolbar::ResizeImagelist()
     }
 
     SetButtonSize(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+}
+
+LRESULT CNotifyToolbar::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    if (m_ImageList)
+    {
+        ImageList_Destroy(m_ImageList);
+        m_ImageList = NULL;
+    }
+    
+    return 0;
 }
 
 LRESULT CNotifyToolbar::OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
