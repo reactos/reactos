@@ -7,6 +7,49 @@
 
 #pragma once
 
+#include "twidbits.h"
+
+/**
+ * @brief
+ * Physical format of an RGB pixel, specified with per-component bit-masks.
+ * A bit being set defines those used for the given color component, such
+ * as Red, Green, Blue, or Reserved.
+ *
+ * @note
+ * Supports up to 32 bits-per-pixel deep pixels.
+ **/
+typedef struct _PIXEL_BITMASK
+{
+    ULONG RedMask;
+    ULONG GreenMask;
+    ULONG BlueMask;
+    ULONG ReservedMask;
+} PIXEL_BITMASK, *PPIXEL_BITMASK;
+
+
+/**
+ * @brief
+ * Calculates the number of bits per pixel ("PixelDepth") for
+ * the given pixel format, given by the pixel color masks.
+ *
+ * @remark
+ * See UEFI Spec Rev.2.10 Section 12.9 "Graphics Output Protocol":
+ * example code "GetPixelElementSize()" function.
+ **/
+FORCEINLINE
+ULONG
+PixelBitmasksToBpp(
+    _In_ ULONG RedMask,
+    _In_ ULONG GreenMask,
+    _In_ ULONG BlueMask,
+    _In_ ULONG ReservedMask)
+{
+    ULONG CompoundMask = (RedMask | GreenMask | BlueMask | ReservedMask);
+    /* Alternatively, the calculation could be done by finding the highest
+     * bit set in the combined pixel color masks, if they are packed together. */
+    return CountNumberOfBits(CompoundMask); // FindHighestSetBit(CompoundMask);
+}
+
 BOOLEAN
 VidFbInitializeVideo(
     _In_ ULONG_PTR BaseAddress,
@@ -14,7 +57,8 @@ VidFbInitializeVideo(
     _In_ UINT32 ScreenWidth,
     _In_ UINT32 ScreenHeight,
     _In_ UINT32 PixelsPerScanLine,
-    _In_ UINT32 BitsPerPixel);
+    _In_ UINT32 BitsPerPixel,
+    _In_opt_ PPIXEL_BITMASK PixelMasks);
 
 VOID
 VidFbClearScreenColor(
