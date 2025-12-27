@@ -121,6 +121,53 @@ IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( IMAGE_RESOURCE_DIRECTORY *dir,
     return NULL;
 }
 
+/*
+ * This function performs a case-insensitive comparison of a
+ * null-terminated wide string with a resource string.
+ * Unlike _wcsicmp, which lowercases the characters before comparison,
+ * this function uppercases them, because that is how resource strings
+ * are sorted (e.g. '_' comes after 'z' / 'Z').
+ */
+static
+int
+CompareResourceString(
+    const wchar_t *SearchString,
+    const IMAGE_RESOURCE_DIR_STRING_U *ResourceString)
+{
+    wchar_t const* p1 = SearchString;
+    wchar_t const* p2 = ResourceString->NameString;
+    size_t remaining = ResourceString->Length;
+    wchar_t chr1, chr2;
+
+    while (remaining-- != 0)
+    {
+        chr1 = *p1++;
+        chr2 = *p2++;
+
+        /* Quick direct comparison first */
+        if (chr1 != chr2)
+        {
+            /* No direct match, upcase both characters */
+            if ((chr1 >= 'a') && (chr1 <= 'z'))
+                chr1 -= ('a' - 'A');
+            if ((chr2 >= 'a') && (chr2 <= 'z'))
+                chr2 -= ('a' - 'A');
+
+            /* Compare again, if they don't match, return the difference */
+            if (chr1 != chr2)
+                return chr1 - chr2;
+        }
+    }
+
+    /* All characters matched, check if the search string ends here */
+    if (*p1 != 0)
+    {
+        /* The search string is longer, return a positive result */
+        return 1;
+    }
+
+    return 0;
+}
 
 /**********************************************************************
  *  find_entry_by_name
@@ -134,19 +181,17 @@ IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
     int min, max, res, pos;
-    size_t namelen;
 
     if (!((ULONG_PTR)name & 0xFFFF0000)) return find_entry_by_id( dir, (ULONG_PTR)name & 0xFFFF, root, want_dir );
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-    namelen = wcslen(name);
     min = 0;
     max = dir->NumberOfNamedEntries - 1;
     while (min <= max)
     {
         pos = (min + max) / 2;
         str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].NameOffset);
-        res = _wcsnicmp( name, str->NameString, str->Length );
-        if (!res && namelen == str->Length)
+        res = CompareResourceString(name, str);
+        if (!res)
         {
             if (!entry[pos].DataIsDirectory == !want_dir)
             {

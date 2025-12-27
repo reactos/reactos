@@ -50,4 +50,17 @@ START_TEST(_wcsicmp)
 #else
     EndSeh((is_reactos() || _winver >= _WIN32_WINNT_VISTA) ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION);
 #endif
+
+    ok_eq_int(p_wcsicmp(L"abc", L"ABC"), 0);
+    ok_eq_int(p_wcsicmp(L"ABC", L"abc"), 0);
+    ok_eq_int(p_wcsicmp(L"abc", L"abd"), -1);
+    ok_eq_int(p_wcsicmp(L"abd", L"abc"), 1);
+    ok_eq_int(p_wcsicmp(L"abcd", L"ABC"), 'd');
+    ok_eq_int(p_wcsicmp(L"ABC", L"abcd"), -'d');
+    ok_eq_int(p_wcsicmp(L"ab", L"A "), 'b' - ' ');
+    ok_eq_int(p_wcsicmp(L"AB", L"a "), 'b' - ' ');
+    ok_eq_int(p_wcsicmp(L"a ", L"aB"), ' ' - 'b');
+
+    /* This shows that _wcsicmp does a lowercase comparison. */
+    ok_eq_int(p_wcsicmp(L"_", L"a"), '_' - 'a');
 }

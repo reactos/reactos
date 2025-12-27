@@ -39,6 +39,7 @@ add_dependencies(ntdll_crt_test_lib psdk)
 list(APPEND SOURCE
     DllLoadNotification.c
     LdrEnumResources.c
+    LdrFindResource_U.c
     LdrLoadDll.c
     load_notifications.c
     locale.c
