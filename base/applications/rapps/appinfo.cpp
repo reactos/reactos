@@ -299,16 +299,24 @@ bool
 CAvailableApplicationInfo::IsCompatible() const
 {
     CStringW szBuffer;
-    if (m_Parser->GetString(DB_OSBUILD, szBuffer))
+    if (m_Parser->GetString(DB_NTVER, szBuffer))
     {
-        PWSTR start = szBuffer.GetBuffer();
-        PWSTR p;
-        UINT minb = wcstoul(start, &p, 0);
+        LPWSTR start = szBuffer.GetString();
+        LPWSTR p;
+        ULONG MinNTVer = wcstoul(start, &p, 0);
         if (p > start)
         {
-            UINT osb = GetOsBuildNumber();
-            UINT maxb = (*p == '-') ? wcstoul(++p, NULL, 0) : (*p == '+' ? UINT_MAX : 0);
-            return maxb && osb >= minb && osb <= maxb;
+            ULONG NTVersion = GetNTVersion();
+            // Treat as range if we have '-', otherwise treat it as XXX+
+            ULONG MaxNTVer = (*p == '-') ? wcstoul(++p, NULL, 0) : UINT_MAX;
+            // Handle the XXX- case (That version or lower)
+            if (MaxNTVer == 0)
+            {
+                MaxNTVer = MinNTVer;
+                MinNTVer = 0;
+            }
+
+            return NTVersion >= MinNTVer && NTVersion <= MaxNTVer;
         }
     }
     return true;
