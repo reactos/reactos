@@ -134,7 +134,16 @@ BEGIN
     IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
-/* RESCAN command string */
+/* REMOVE command strings */
+STRINGTABLE
+BEGIN
+    IDS_REMOVE_FAIL "\nDer Laufwerkbuchstabe oder der Bereitstellungspunkt konnte nicht entfernt werden.\nVergewissern Sie sich, dass der Laufwerkbuchstabe oder der Bereitstellungspunkt gültig ist.\n"
+    IDS_REMOVE_SUCCESS "\nDer Laufwerkbuchstabe oder der Bereitstellungspunkt wurde erfolgreich entfernt.\n"
+    IDS_REMOVE_NO_LETTER "\nDas gewählte Volume hat keinen Laufwerkbuchstabe oder Bereitstellungspunkt,\nder entfernt werden kann.\n"
+    IDS_REMOVE_WRONG_LETTER "\nDer angegebene Laufwerksbuchstabe ist nicht diesem Volume zugeordnet.\n"
+END
+
+/* RESCAN command strings */
 STRINGTABLE
 BEGIN
     IDS_RESCAN_START "\nPlease wait while DiskPart scans your configuration...\n"
@@ -250,7 +259,7 @@ BEGIN
     IDS_HELP_ONLINE                    "Schaltet ein Objekt online, das derzeit als offline\n              gekennzeichnet ist.\n"
     IDS_HELP_RECOVER                   "Refreshes the state of all disks in the invalid pack,\n              and resynchronizes mirrored volumes and RAID5 volumes\n              that have stale plex or parity data.\n"
     IDS_HELP_REM                       "Keine Aktion. Wird für Skriptkommentare verwendet.\n"
-    IDS_HELP_REMOVE                    "Entfernt einen Laufwerksbuchstaben oder eine\n              Bereitstellungspunktzuordnung.\n"
+    IDS_HELP_REMOVE                    "Entfernt einen Laufwerksbuchstaben oder einen\n              Bereitstellungspunkt.\n"
     IDS_HELP_REPAIR                    "Repariert ein RAID-5-Volume mit einem fehlerhaften Mitglied.\n"
     IDS_HELP_RESCAN                    "Überprüft den Computer erneut auf Datenträger oder Volumes.\n"
     IDS_HELP_RETAIN                    "Setzt eine beibehaltene Partition unter ein einfaches Volume.\n"

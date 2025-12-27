@@ -100,6 +100,11 @@
 #define IDS_LIST_VOLUME_LINE           3309
 #define IDS_LIST_VOLUME_FORMAT         3310
 
+#define IDS_REMOVE_FAIL                4000
+#define IDS_REMOVE_SUCCESS             4001
+#define IDS_REMOVE_NO_LETTER           4002
+#define IDS_REMOVE_WRONG_LETTER        4003
+
 #define IDS_RESCAN_START               4100
 #define IDS_RESCAN_END                 4101
 
