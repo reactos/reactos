@@ -313,6 +313,9 @@ EngCreateBitmap(
     PSURFACE psurf;
     HBITMAP hbmp;
 
+    /* BADF00D HACK:*/
+    if (lWidth < 0) lWidth=0;
+
     /* Allocate a surface */
     psurf = SURFACE_AllocSurface(STYPE_BITMAP,
                                  sizl.cx,
