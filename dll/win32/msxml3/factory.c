@@ -21,13 +21,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -46,6 +42,10 @@
 #include "msxml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
+
+#ifndef __REACTOS__
+extern GUID CLSID_XMLSchemaCache60;
+#endif
 
 typedef HRESULT (*ClassFactoryCreateInstanceFunc)(void**);
 typedef HRESULT (*DOMFactoryCreateInstanceFunc)(MSXML_VERSION, void**);
@@ -199,20 +199,22 @@ static inline DOMFactory *DOMFactory_from_IClassFactory(IClassFactory *iface)
 
 static ULONG WINAPI DOMClassFactory_AddRef(IClassFactory *iface )
 {
-    DOMFactory *This = DOMFactory_from_IClassFactory(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) ref = %u\n", This, ref);
+    DOMFactory *factory = DOMFactory_from_IClassFactory(iface);
+    ULONG ref = InterlockedIncrement(&factory->ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
 static ULONG WINAPI DOMClassFactory_Release(IClassFactory *iface )
 {
-    DOMFactory *This = DOMFactory_from_IClassFactory(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
-    TRACE("(%p) ref = %u\n", This, ref);
-    if(!ref) {
-        heap_free(This);
-    }
+    DOMFactory *factory = DOMFactory_from_IClassFactory(iface);
+    ULONG ref = InterlockedDecrement(&factory->ref);
+
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
+        free(factory);
+
     return ref;
 }
 
@@ -262,7 +264,7 @@ static const struct IClassFactoryVtbl DOMClassFactoryVtbl =
 
 static HRESULT DOMClassFactory_Create(const GUID *clsid, REFIID riid, void **ppv, DOMFactoryCreateInstanceFunc fnCreateInstance)
 {
-    DOMFactory *ret = heap_alloc(sizeof(DOMFactory));
+    DOMFactory *ret = malloc(sizeof(DOMFactory));
     HRESULT hres;
 
     ret->IClassFactory_iface.lpVtbl = &DOMClassFactoryVtbl;
@@ -272,7 +274,7 @@ static HRESULT DOMClassFactory_Create(const GUID *clsid, REFIID riid, void **ppv
 
     hres = IClassFactory_QueryInterface(&ret->IClassFactory_iface, riid, ppv);
     if(FAILED(hres)) {
-        heap_free(ret);
+        free(ret);
         *ppv = NULL;
     }
     return hres;
@@ -302,7 +304,7 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID riid, void **ppv )
         IsEqualCLSID( rclsid, &CLSID_DOMDocument40 )||  /* Version dep.   v 4.0 */
         IsEqualCLSID( rclsid, &CLSID_DOMDocument60 ))   /* Version dep.   v 6.0 */
     {
-        return DOMClassFactory_Create(rclsid, riid, ppv, DOMDocument_create);
+        return DOMClassFactory_Create(rclsid, riid, ppv, dom_document_create);
     }
     else if( IsEqualCLSID( rclsid, &CLSID_XMLSchemaCache )   ||
              IsEqualCLSID( rclsid, &CLSID_XMLSchemaCache26 ) ||
@@ -323,7 +325,7 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID riid, void **ppv )
              IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument40 ) ||
              IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument60 ))
     {
-        return DOMClassFactory_Create(rclsid, riid, ppv, DOMDocument_create);
+        return DOMClassFactory_Create(rclsid, riid, ppv, dom_document_create);
     }
     else if( IsEqualCLSID( rclsid, &CLSID_SAXXMLReader) ||
              IsEqualCLSID( rclsid, &CLSID_SAXXMLReader30 ) ||
