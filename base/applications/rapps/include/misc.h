@@ -85,6 +85,8 @@ ExtractFilesFromCab(LPCWSTR FullCabPath, const CStringW &szOutputDir,
 
 BOOL
 IsSystem64Bit();
+ULONG
+GetNTVersion();
 
 INT
 GetSystemColorDepth();
