@@ -27,7 +27,7 @@ list(APPEND SOURCE
     ntgdi/NtGdiExtTextOutW.c
     #ntgdi/NtGdiFlushUserBatch.c
     ntgdi/NtGdiGetBitmapBits.c
-    ntgdi/NtGdiGetDIBits.c
+    ntgdi/NtGdiGetDIBitsInternal.c
     #ntgdi/NtGdiGetFontResourceInfoInternalW.c
     ntgdi/NtGdiGetRandomRgn.c
     ntgdi/NtGdiGetStockObject.c
