@@ -1025,11 +1025,21 @@ PcVideoInit(VOID)
     /* Retrieve the initial display mode parameters */
     PcVideoGetDisplayMode();
 
+    /* If any video options have been specified, try to set a display mode */
+    if (BootMgrInfo.VideoOptions && *BootMgrInfo.VideoOptions)
+        PcVideoSetDisplayMode(BootMgrInfo.VideoOptions, TRUE);
+
     // FIXME: We don't support graphics modes yet!
     // Revert to 80x25 text mode.
     if (DisplayMode != VideoTextMode)
         PcVideoSetMode(VIDEOMODE_NORMAL_TEXT);
 }
+
+#define TRACE_printf(Format, ...) \
+do { \
+    TRACE(Format, ##__VA_ARGS__); \
+    printf(Format, ##__VA_ARGS__); \
+} while (0)
 
 VIDEODISPLAYMODE
 PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
@@ -1037,32 +1047,32 @@ PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
     USHORT VideoMode = VIDEOMODE_NORMAL_TEXT;
 
     if (!DisplayModeName || *DisplayModeName == '\0')
-    {
-        PcVideoSetBlinkBit(!Init);
-        return DisplayMode;
-    }
+        goto Quit;
 
     if (VideoCard == VIDEOCARD_CGA_OR_OTHER)
     {
-        TRACE("CGA or other display adapter detected.\n");
-        printf("CGA or other display adapter detected.\n");
-        printf("Using 80x25 text mode.\n");
+        TRACE_printf("CGA or other display adapter detected.\n");
+        TRACE_printf("Using 80x25 text mode.\n");
         VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
     else if (VideoCard == VIDEOCARD_EGA)
     {
-        TRACE("EGA display adapter detected.\n");
-        printf("EGA display adapter detected.\n");
-        printf("Using 80x25 text mode.\n");
+        TRACE_printf("EGA display adapter detected.\n");
+        TRACE_printf("Using 80x25 text mode.\n");
         VideoMode = VIDEOMODE_NORMAL_TEXT;
     }
     else /* VIDEOCARD_VGA */
     {
-        TRACE("VGA display adapter detected.\n");
+        TRACE_printf("VGA display adapter detected.\n");
 
-        if (_stricmp(DisplayModeName, "NORMAL_VGA") == 0)
+        /* Get the video option separator, if any */
+        size_t NameLen = strcspn(DisplayModeName, ",");
+        if (!NameLen)
+            goto Quit;
+
+        if (_strnicmp(DisplayModeName, "NORMAL_VGA", NameLen) == 0)
             VideoMode = VIDEOMODE_NORMAL_TEXT;
-        else if (_stricmp(DisplayModeName, "EXTENDED_VGA") == 0)
+        else if (_strnicmp(DisplayModeName, "EXTENDED_VGA", NameLen) == 0)
             VideoMode = VIDEOMODE_EXTENDED_TEXT;
         else
             VideoMode = (USHORT)strtoul(DisplayModeName, NULL, 0);
@@ -1070,14 +1080,15 @@ PcVideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 
     if (!PcVideoSetMode(VideoMode))
     {
-        printf("Error: unable to set video display mode 0x%x\n", (int)VideoMode);
-        printf("Defaulting to 80x25 text mode.\n");
+        TRACE_printf("Error: unable to set video display mode 0x%x\n", VideoMode);
+        TRACE_printf("Defaulting to 80x25 text mode.\n");
         printf("Press any key to continue.\n");
         PcConsGetCh();
 
         PcVideoSetMode(VIDEOMODE_NORMAL_TEXT);
     }
 
+Quit:
     PcVideoSetBlinkBit(!Init);
     return DisplayMode;
 }
