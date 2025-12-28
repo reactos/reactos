@@ -15,6 +15,7 @@ Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
     IDS_APP_PROMPT "DISKPART> "
 END
 
+/* ACTIVE command strings */
 STRINGTABLE
 BEGIN
     IDS_ACTIVE_FAIL "\nDie Partition konnte nicht als aktiv markiert werden.\nVergewissern Sie sich, dass diese Partition gültig ist.\n"
@@ -23,6 +24,17 @@ BEGIN
     IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
 END
 
+/* ASSIGN command strings */
+STRINGTABLE
+BEGIN
+    IDS_ASSIGN_FAIL "\nEs konnte kein Laufwerksbuchstabe oder Bereitstellungspunkt zugewiesen werden.\nVergewissern Sie sich, dass der Laufwerksbuchstabe oder der Bereitstellungspunkt gültig ist.\n"
+    IDS_ASSIGN_SUCCESS "\nDer Laufwerksbuchstabe oder der Bereitstellungspunkt wurde zugewiesen.\n"
+    IDS_ASSIGN_ALREADY_ASSIGNED "\nDer angegebene Buchstabe wurde diesem Laufwerk bereits zugewiesen.\n"
+    IDS_ASSIGN_INVALID_LETTER "\nDer angegebene Laufwerksbuchstabe ist kein gültiger Volumebuchstabe.\n"
+    IDS_ASSIGN_NO_MORE_LETTER "\nEs ist kein freier Laufwerksbuchstabe vorhanden, der diesem Volume zugewiesen werden kann.\nGeben Sie einen Laufwerksbuchstaben frei, und wiederholen Sie den Vorgang.\n"
+END
+
+/* AUTOMOUNT command strings */
 STRINGTABLE
 BEGIN
     IDS_AUTOMOUNT_ENABLED "\nDie automatische Bereitstellung von neuen Volumes ist aktiviert.\n"

@@ -18,8 +18,8 @@ remove_main(
 {
     WCHAR szMountPoint[4];
     PWSTR pszSuffix = NULL;
-    PWSTR pszLetter = NULL;
-    INT i;
+    WCHAR DriveLetter = UNICODE_NULL;
+    INT i, nExclusive = 0;
     BOOL bResult;
 
     DPRINT("remove_main()\n");
@@ -52,9 +52,10 @@ remove_main(
     {
         if (HasPrefix(argv[i], L"letter=", &pszSuffix))
         {
-            if ((wcslen(pszSuffix) == 1) && (iswalpha(*pszSuffix)))
+            if (wcslen(pszSuffix) == 1)
             {
-                pszLetter = pszSuffix;
+                DriveLetter = towupper(*pszSuffix);
+                nExclusive++;
             }
             else
             {
@@ -66,10 +67,12 @@ remove_main(
         {
             DPRINT("Mount\n", pszSuffix);
             ConPuts(StdOut, L"The MOUNT option is not supported yet!\n");
+            nExclusive++;
         }
         else if (_wcsicmp(argv[i], L"all") == 0)
         {
             ConPuts(StdOut, L"The ALL option is not supported yet!\n");
+            nExclusive++;
         }
         else if (_wcsicmp(argv[i], L"dismount") == 0)
         {
@@ -86,19 +89,33 @@ remove_main(
         }
     }
 
+    if (nExclusive > 1)
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return TRUE;
+    }
+
     DPRINT("VolumeName: %S\n", CurrentVolume->VolumeName);
     DPRINT("DeviceName: %S\n", CurrentVolume->DeviceName);
     DPRINT("DriveLetter: %C\n", CurrentVolume->DriveLetter);
 
-    if (pszLetter)
+    if (DriveLetter != UNICODE_NULL)
     {
-        if (towupper(pszLetter[0]) != CurrentVolume->DriveLetter)
+        DPRINT1("DriveLetter: %C\n", DriveLetter);
+
+        if ((DriveLetter < L'C') || (DriveLetter > L'Z'))
+        {
+            ConResPuts(StdOut, IDS_ASSIGN_INVALID_LETTER);
+            return TRUE;
+        }
+
+        if (DriveLetter != CurrentVolume->DriveLetter)
         {
             ConResPuts(StdOut, IDS_REMOVE_WRONG_LETTER);
             return TRUE;
         }
 
-        szMountPoint[0] = towupper(pszLetter[0]);
+        szMountPoint[0] = DriveLetter;
         szMountPoint[1] = L':';
         szMountPoint[2] = L'\\';
         szMountPoint[3] = UNICODE_NULL;

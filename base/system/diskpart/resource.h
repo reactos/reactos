@@ -27,9 +27,15 @@
 #define IDS_AUTOMOUNT_DISABLED         1011
 #define IDS_AUTOMOUNT_SCRUBBED         1012
 
-#define IDS_CLEAN_FAIL                 1020
-#define IDS_CLEAN_SUCCESS              1021
-#define IDS_CLEAN_SYSTEM               1022
+#define IDS_ASSIGN_FAIL                1020
+#define IDS_ASSIGN_SUCCESS             1021
+#define IDS_ASSIGN_ALREADY_ASSIGNED    1022
+#define IDS_ASSIGN_INVALID_LETTER      1023
+#define IDS_ASSIGN_NO_MORE_LETTER      1024
+
+#define IDS_CLEAN_FAIL                 1030
+#define IDS_CLEAN_SUCCESS              1031
+#define IDS_CLEAN_SYSTEM               1032
 
 #define IDS_CONVERT_GPT_ALREADY        1040
 #define IDS_CONVERT_GPT_NOT_EMPTY      1041

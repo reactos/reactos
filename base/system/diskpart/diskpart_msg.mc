@@ -310,34 +310,359 @@ SymbolicName=MSG_COMMAND_ASSIGN
 Severity=Informational
 Facility=System
 Language=English
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=German
-<Add ASSIGN command help text here>
+    Weist dem Volume mit dem Fokus einen Laufwerkbuchstaben oder
+    den Pfadnamen des eingebundenen Ordners zu.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  Der Laufwerkbuchstabe, den Sie dem Volume zuweisen
+                möchten.
+
+    MOUNT=<PATH>
+                Der Pfadname des eingebundenen Ordners, den Sie dem Volume
+                zuweisen möchten.
+
+    NOERR       Nur für Skripting. Bei einem Fehler wird die Verarbeitung
+                von Befehlen fortgesetzt, als sei der Fehler nicht aufge-
+                treten. Ohne den NOERR-Parameter wird "DiskPart" bei
+                einem Fehler mit dem entsprechenden Fehlercode beendet.
+
+    Wenn kein Laufwerkbuchstabe oder eingebundener Ordner angegeben ist,
+    wird der nächste verfügbare Laufwerkbuchstabe zugewiesen. Ein Fehler
+    wird generiert, wenn der Laufwerkbuchstabe oder Bereitstellungspunkt
+    bereits verwendet wird.
+
+    Mit dem Befehl "ASSIGN" können Sie den Laufwerkbuchstaben ändern,
+    der einem Wechseldatenträger zugeordnet ist.
+
+    Startvolumes oder Volumes, die die Auslagerungsdatei
+    enthalten, können keine Laufwerkbuchstaben zugewiesen werden. Dar\xFCber
+    hinaus können Laufwerkbuchstaben weder OEM-Partitionen
+    (sofern kein Start in Windows PE erfolgt) noch GPT-Partitionen (GUID-
+    Partitionstabelle) zugewiesen werden, die keine Basisdatenpartitionen,
+    ESP-Partitionen oder Wiederherstellungspartitionen sind.
+
+    Damit dieser Vorgang erfolgreich ausgeführt werden kann, muss ein
+    Volume ausgewählt werden.
+
+Beispiel:
+
+    ASSIGN LETTER=D
 .
 Language=Polish
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Portugese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Romanian
-<Adăugați aici textul de ajutor pentru comanda ASSIGN>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Russian
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Albanian
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Turkish
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Chinese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 Language=Taiwanese
-<Add ASSIGN command help text here>
+    Assigns a drive letter or mounted folder pathname to the volume with focus.
+
+Syntax:  ASSIGN [LETTER=<D> | MOUNT=<PATH>] [NOERR]
+
+    LETTER=<D>  The drive letter to assign to the volume.
+
+    MOUNT=<PATH>
+                The mounted folder pathname to assign to the volume.
+
+    NOERR       For scripting only. When an error is encountered, DiskPart
+                continues to process commands as if the error did not occur.
+                Without the NOERR parameter, an error causes DiskPart to exit
+                with an error code.
+
+    If no drive letter or mounted folder is specified, the next available drive
+    letter is assigned. If the drive letter or mounted folder is already in use,
+    an error is generated.
+
+    By using the ASSIGN command, you can change the drive letter associated
+    with a removable drive.
+
+    You cannot assign drive letters to boot volumes or
+    volumes that contain the paging file. In addition, you cannot assign
+    a drive letter to an Original Equipment Manufacturer (OEM) partition
+    unless booted to Windows PE, or any GUID Partition Table (GPT) partition
+    other than a basic data partition, an ESP partition or a recovery
+    partition.
+
+    A volume must be selected for this operation to succeed.
+
+Example:
+
+    ASSIGN LETTER=D
 .
 
 
