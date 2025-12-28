@@ -95,8 +95,10 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Type         : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Cluster size : %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
 END
 
 STRINGTABLE
@@ -134,7 +136,16 @@ BEGIN
     IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
-/* RESCAN command string */
+/* REMOVE command strings */
+STRINGTABLE
+BEGIN
+    IDS_REMOVE_FAIL "\nDiskPart could not remove the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_REMOVE_SUCCESS "\nDiskPart successfully removed the drive letter or mount point.\n"
+    IDS_REMOVE_NO_LETTER "\nThe selected volume has no letter or mount point to remove.\n"
+    IDS_REMOVE_WRONG_LETTER "\nThe letter you specified is not assigned to that volume.\n"
+END
+
+/* RESCAN command strings */
 STRINGTABLE
 BEGIN
     IDS_RESCAN_START "\nОжидайте окончания проверки программой DiskPart конфигурации...\n"

@@ -75,6 +75,8 @@
 #define IDS_FILESYSTEMS_FORMATTING     1181
 #define IDS_FILESYSTEMS_TYPE           1182
 #define IDS_FILESYSTEMS_CLUSTERSIZE    1183
+#define IDS_FILESYSTEMS_SERIAL_NUMBER  1184
+#define IDS_FILESYSTEMS_DEFAULT        1185
 
 #define IDS_GPT_FAIL                   1190
 #define IDS_GPT_SUCCESS                1191
@@ -97,6 +99,11 @@
 #define IDS_LIST_VOLUME_HEAD           3308
 #define IDS_LIST_VOLUME_LINE           3309
 #define IDS_LIST_VOLUME_FORMAT         3310
+
+#define IDS_REMOVE_FAIL                4000
+#define IDS_REMOVE_SUCCESS             4001
+#define IDS_REMOVE_NO_LETTER           4002
+#define IDS_REMOVE_WRONG_LETTER        4003
 
 #define IDS_RESCAN_START               4100
 #define IDS_RESCAN_END                 4101
