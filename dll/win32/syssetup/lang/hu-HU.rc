@@ -80,7 +80,7 @@ BEGIN
     LTEXT "", IDC_STATIC, 53, 79, 250, 1, SS_ETCHEDHORZ
     LTEXT "A billentyűzetkiosztás határozza meg a karaktereket,\namelyek megjelennek gépeléskor.", IDC_STATIC, 53, 86, 253, 16
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 102, 250, 16
-    LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 116, 230, 16
+    LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 122, 230, 16
     PUSHBUTTON "Test&reszabás...", IDC_CUSTOMLAYOUT, 245, 122, 60, 14
 END
 
@@ -112,9 +112,9 @@ CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komponensek regisztrálása", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "Installing start menu items", IDC_TASKTEXT2, 65, 39, 232, 8
-    LTEXT "Saving settings", IDC_TASKTEXT3, 65, 51, 232, 8
-    LTEXT "Removing temporary files", IDC_TASKTEXT4, 65, 63, 232, 8
+    LTEXT "A start menü elemeinek telepítése", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "Beállítások mentése", IDC_TASKTEXT3, 65, 51, 232, 8
+    LTEXT "Ideiglenes fájlok eltávolítása", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 97, 275, 11
 END
@@ -178,12 +178,12 @@ BEGIN
     IDS_COMPUTERSUBTITLE "Meg kell adnia egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE "Területi beállítások"
     IDS_LOCALESUBTITLE "Beállíthatja, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
-    IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
-    IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
+    IDS_LOCALETEXT "A szabványok és formátumok beállítása %s, a hely beállítása %s."
+    IDS_LAYOUTTEXT "Az alapértelmezett szövegbevitel nyelve és módja: %s billentyűzetkiosztás"
     IDS_DATETIMETITLE "Dátum és idő"
     IDS_DATETIMESUBTITLE "Beállíthatja a számítógép dátumát és óráját."
-    IDS_PROCESSTITLE "Finishing the Installation"
-    IDS_PROCESSSUBTITLE "Please wait while Setup completes the final steps."
+    IDS_PROCESSTITLE "A telepítés befejezése"
+    IDS_PROCESSSUBTITLE "Kérjük várjon amíg a telepítő befejezi az utolsó lépéseket."
     IDS_THEMESELECTIONTITLE "Megjelenés"
     IDS_THEMESELECTIONSUBTITLE "Válassza ki a kívánt témát."
 END
