@@ -9,16 +9,12 @@
 
 #pragma once
 
-#define BB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
-#define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
-
 VOID
 InitPaletteWithTable(
     _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
-VOID
-PrepareForSetPixel(VOID);
+#define PrepareForSetPixel()
 
 VOID
 SetPixel(

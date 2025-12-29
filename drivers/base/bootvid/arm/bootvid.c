@@ -10,8 +10,24 @@
 #define NDEBUG
 #include <debug.h>
 
-PUSHORT VgaArmBase;
-PHYSICAL_ADDRESS VgaPhysical;
+/* GLOBALS ********************************************************************/
+
+#define LCDTIMING0_PPL(x)       ((((x) / 16 - 1) & 0x3f) << 2)
+#define LCDTIMING1_LPP(x)       (((x) & 0x3ff) - 1)
+#define LCDCONTROL_LCDPWR       (1 << 11)
+#define LCDCONTROL_LCDEN        (1)
+#define LCDCONTROL_LCDBPP(x)    (((x) & 7) << 1)
+#define LCDCONTROL_LCDTFT       (1 << 5)
+
+#define PL110_LCDTIMING0    (PVOID)0xE0020000
+#define PL110_LCDTIMING1    (PVOID)0xE0020004
+#define PL110_LCDTIMING2    (PVOID)0xE0020008
+#define PL110_LCDUPBASE     (PVOID)0xE0020010
+#define PL110_LCDLPBASE     (PVOID)0xE0020014
+#define PL110_LCDCONTROL    (PVOID)0xE0020018
+
+static PUSHORT VgaArmBase;
+static PHYSICAL_ADDRESS VgaPhysical;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -29,13 +45,6 @@ VidpBuildColor(
 
     /* Build the 16-bit color mask */
     return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
-}
-
-VOID
-PrepareForSetPixel(VOID)
-{
-    /* Nothing to prepare */
-    NOTHING;
 }
 
 FORCEINLINE

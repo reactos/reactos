@@ -7,13 +7,8 @@
 
 #pragma once
 
-/* INCLUDES *******************************************************************/
-
-#include <drivers/pc98/video.h>
-
 /* GLOBALS ********************************************************************/
 
-#define BYTES_PER_SCANLINE (SCREEN_WIDTH / 8)
 #define FB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
 
 extern ULONG_PTR FrameBuffer;
@@ -25,8 +20,7 @@ InitPaletteWithTable(
     _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
-VOID
-PrepareForSetPixel(VOID);
+#define PrepareForSetPixel()
 
 FORCEINLINE
 VOID

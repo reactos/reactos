@@ -15,6 +15,9 @@
 
 /* GLOBALS ********************************************************************/
 
+#define BB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
+#define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
+
 static ULONG_PTR FrameBufferStart = 0;
 static ULONG FrameBufferWidth, FrameBufferHeight, PanH, PanV;
 static UCHAR BytesPerPixel;
@@ -246,13 +249,6 @@ InitPaletteWithTable(
         CachedPalette[i] = *Entry | 0xFF000000;
     }
     ApplyPalette();
-}
-
-VOID
-PrepareForSetPixel(VOID)
-{
-    /* Nothing to prepare */
-    NOTHING;
 }
 
 VOID

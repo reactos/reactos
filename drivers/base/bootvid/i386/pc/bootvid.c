@@ -12,7 +12,7 @@
 
 static BOOLEAN
 VgaInterpretCmdStream(
-    _In_ PUSHORT CmdStream)
+    _In_ const USHORT* CmdStream)
 {
     USHORT Cmd;
     UCHAR Major, Minor;
@@ -23,7 +23,8 @@ VgaInterpretCmdStream(
     USHORT ShortValue;
 
     /* First make sure that we have a Command Stream */
-    if (!CmdStream) return TRUE;
+    if (!CmdStream)
+        return TRUE;
 
     /* Loop as long as we have commands */
     while (*CmdStream != EOD)
@@ -63,7 +64,7 @@ VgaInterpretCmdStream(
                     Count = *CmdStream++;
 
                     /* Write the USHORT to the port; the buffer is what's in the command stream */
-                    WRITE_PORT_BUFFER_USHORT((PUSHORT)(VgaRegisterBase + Port), CmdStream, Count);
+                    WRITE_PORT_BUFFER_USHORT((PUSHORT)(VgaRegisterBase + Port), (PUSHORT)CmdStream, Count);
 
                     /* Move past the buffer in the command stream */
                     CmdStream += Count;

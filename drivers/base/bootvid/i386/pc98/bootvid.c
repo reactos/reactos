@@ -8,13 +8,16 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
+#include <drivers/pc98/video.h>
 
 /* GLOBALS ********************************************************************/
 
-static ULONG_PTR PegcControl = 0;
-ULONG_PTR FrameBuffer = 0;
+#define BYTES_PER_SCANLINE (SCREEN_WIDTH / 8)
 
 #define PEGC_MAX_COLORS    256
+
+static ULONG_PTR PegcControl = 0;
+ULONG_PTR FrameBuffer = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -316,12 +319,6 @@ PreserveRow(
 
     while (PixelCount--)
         WRITE_REGISTER_ULONG(NewPosition++, READ_REGISTER_ULONG(OldPosition++));
-}
-
-VOID
-PrepareForSetPixel(VOID)
-{
-    NOTHING;
 }
 
 VOID

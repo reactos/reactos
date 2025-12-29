@@ -12,7 +12,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static UCHAR lMaskTable[8] =
+static const UCHAR lMaskTable[8] =
 {
     (1 << 8) - (1 << 0),
     (1 << 7) - (1 << 0),
@@ -23,7 +23,7 @@ static UCHAR lMaskTable[8] =
     (1 << 2) - (1 << 0),
     (1 << 1) - (1 << 0)
 };
-static UCHAR rMaskTable[8] =
+static const UCHAR rMaskTable[8] =
 {
     (1 << 7),
     (1 << 7) + (1 << 6),
@@ -34,7 +34,7 @@ static UCHAR rMaskTable[8] =
     (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1),
     (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1) + (1 << 0),
 };
-UCHAR PixelMask[8] =
+const UCHAR PixelMask[8] =
 {
     (1 << 7),
     (1 << 6),
@@ -45,7 +45,7 @@ UCHAR PixelMask[8] =
     (1 << 1),
     (1 << 0),
 };
-static ULONG lookup[16] =
+static const ULONG lookup[16] =
 {
     0x0000,
     0x0100,
