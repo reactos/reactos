@@ -13,20 +13,9 @@
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
 
-/* Arch-specific includes */
-#if defined(_M_IX86) || defined(_M_AMD64)
-#if defined(SARCH_PC98)
-#include "i386/pc98/pc98.h"
-#elif defined(SARCH_XBOX)
-#include "i386/xbox/xbox.h"
-#else
-#include "i386/pc/vga.h"
-#include "i386/pc/pc.h"
-#endif
-#elif defined(_M_ARM)
-#include "arm/arm.h"
-#else
-#error Unknown architecture
+/* Module-specific header */
+#ifdef MODULE_HEADER
+#include MODULE_HEADER
 #endif
 
 /* Define if FontData has upside-down characters */
