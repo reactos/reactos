@@ -176,6 +176,7 @@ add_compile_options(-Wall -Wpointer-arith)
 
 # Disable some overzealous warnings
 add_compile_options(
+    -Wno-unknown-warning-option
     -Wno-char-subscripts
     -Wno-multichar
     -Wno-unused-value
