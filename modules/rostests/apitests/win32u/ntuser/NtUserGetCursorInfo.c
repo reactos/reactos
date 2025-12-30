@@ -7,8 +7,6 @@
 
 #include "../win32nt.h"
 
-
-
 START_TEST(NtUserGetCursorInfo)
 {
     CURSORINFO cursor;
