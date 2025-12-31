@@ -30,8 +30,9 @@ VOID PcConsPutChar(int Ch);
 BOOLEAN PcConsKbHit(VOID);
 int PcConsGetCh(VOID);
 
+VOID PcVideoInit(VOID);
 VOID PcVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+VIDEODISPLAYMODE PcVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG PcVideoGetBufferSize(VOID);
 VOID PcVideoGetFontsFromFirmware(PULONG RomFontPointers);

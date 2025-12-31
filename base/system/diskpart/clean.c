@@ -63,7 +63,7 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the logical partition */
-        if (PartEntry->PartitionType != 0)
+        if (PartEntry->Mbr.PartitionType != 0)
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);
@@ -82,8 +82,8 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the primary partition */
-        if ((PartEntry->PartitionType != 0) &&
-            (IsContainerPartition(PartEntry->PartitionType) == FALSE))
+        if ((PartEntry->Mbr.PartitionType != 0) &&
+            (IsContainerPartition(PartEntry->Mbr.PartitionType) == FALSE))
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);
@@ -99,13 +99,13 @@ clean_main(
     CurrentDisk->ExtendedPartition = NULL;
     CurrentDisk->Dirty = FALSE;
     CurrentDisk->NewDisk = TRUE;
-    CurrentDisk->NoMbr = TRUE;
+    CurrentDisk->PartitionStyle = PARTITION_STYLE_RAW;
 
     /* Wipe the layout buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDisk->LayoutBuffer);
 
-    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
     CurrentDisk->LayoutBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                                 HEAP_ZERO_MEMORY,
                                                 LayoutBufferSize);
@@ -114,6 +114,8 @@ clean_main(
         DPRINT1("Failed to allocate the disk layout buffer!\n");
         return TRUE;
     }
+
+    CurrentDisk->LayoutBuffer->PartitionStyle = PARTITION_STYLE_RAW;
 
     /* Allocate a 1MB sectors buffer */
     SectorsBuffer = RtlAllocateHeap(RtlGetProcessHeap(),

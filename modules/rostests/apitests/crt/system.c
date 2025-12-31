@@ -13,6 +13,13 @@ START_TEST(system)
     int ret;
     CHAR szCmdExe[MAX_PATH];
 
+#ifdef TEST_CRTDLL
+    DWORD dwOsVer = _WIN32_WINNT_WIN2K;
+#else
+    /* ReactOS behaves like Vista here */
+    DWORD dwOsVer = is_reactos() ? _WIN32_WINNT_VISTA : GetNTVersion();
+#endif
+
     GetSystemDirectoryA(szCmdExe, _countof(szCmdExe));
     lstrcatA(szCmdExe, "\\cmd.exe");
 
@@ -37,36 +44,36 @@ START_TEST(system)
     SetEnvironmentVariableA("COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = system("echo This is a test");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 0);
 
     SetEnvironmentVariableA("COMSPEC", NULL);
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 1);
 
     SetEnvironmentVariableA("COMSPEC", "InvalidComSpec");
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 1);
 
     SetEnvironmentVariableA("COMSPEC", szCmdExe);
     errno = 0xDEADBEEF;
     ret = system("InvalidCommandLine");
-    ok_int(errno, (GetNTVersion() >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
+    ok_int(errno, (dwOsVer >= _WIN32_WINNT_VISTA) ? 0xdeadbeef : 0);
     ok_int(ret, 1);
 }

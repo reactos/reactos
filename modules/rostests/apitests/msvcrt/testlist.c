@@ -10,10 +10,18 @@ extern void func__mbsncmp(void);
 extern void func__mbsstr(void);
 extern void func__snprintf(void);
 extern void func__snwprintf(void);
+extern void func__stricmp(void);
+extern void func__strlwr(void);
+extern void func__strnicmp(void);
+extern void func__strupr(void);
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
+extern void func__wcsicmp(void);
+extern void func__wcslwr(void);
+extern void func__wcsnicmp(void);
+extern void func__wcsupr(void);
 extern void func__wsystem(void);
 extern void func_acos(void);
 extern void func_asin(void);
@@ -68,10 +76,18 @@ const struct test winetest_testlist[] =
     { "_mbsstr", func__mbsstr },
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
+    { "_stricmp", func__stricmp },
+    { "_strlwr", func__strlwr },
+    { "_strnicmp", func__strnicmp },
+    { "_strupr", func__strupr },
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },
+    { "_wcsicmp", func__wcsicmp },
+    { "_wcslwr", func__wcslwr },
+    { "_wcsnicmp", func__wcsnicmp },
+    { "_wcsupr", func__wcsupr },
     { "_wsystem", func__wsystem },
     { "acos", func_acos },
     { "asin", func_asin },

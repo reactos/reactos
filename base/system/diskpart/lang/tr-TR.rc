@@ -25,11 +25,31 @@ Kullanım: DISKPART [/S dosya adı] [/T zaman aşımı] [/?]\n\n\
     IDS_APP_PROMPT "DISKPART> "
 END
 
+/* ACTIVE command strings */
 STRINGTABLE
 BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart, bölümü etkin olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin olarak işaretledi.\n"
     IDS_ACTIVE_ALREADY "\nGeçerli bölüm zaten etkin olarak işaretlenmiş.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
+END
+
+/* ASSIGN command strings */
+STRINGTABLE
+BEGIN
+    IDS_ASSIGN_FAIL "\nDiskPart could not assign the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_ASSIGN_SUCCESS "\nDiskPart successfully assigned the drive letter or mount point.\n"
+    IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
+    IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
+    IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+END
+
+/* AUTOMOUNT command strings */
+STRINGTABLE
+BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
 END
 
 STRINGTABLE
@@ -41,8 +61,19 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart belirtilen bölümü oluşturamadı.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturdu.\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -54,11 +85,12 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
-    IDS_DETAIL_INFO_TYPE "Tür"
-    IDS_DETAIL_INFO_STATUS "Durum"
-    IDS_DETAIL_INFO_PATH   "Yol   : %hu\n"
-    IDS_DETAIL_INFO_TARGET "Hedef : %hu\n"
+    IDS_DETAIL_DISK_DESCRIPTION "%s\n"
+    IDS_DETAIL_DISK_ID "Disk ID: %s\n"
+    IDS_DETAIL_DISK_TYPE "Tür    : %s\n"
+    IDS_DETAIL_DISK_STATUS "Durum  : %s\n"
+    IDS_DETAIL_INFO_PATH   "Yol    : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Hedef  : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Konum Yolu"
     IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu"
@@ -69,10 +101,12 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Çökme Dökümü Diski"
     IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
     IDS_DETAIL_PARTITION_NUMBER "Bölüm %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Tür                 : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Tür                 : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Gizli               : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Etkin               : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Bayt cinsinden ofset: %I64u\n"
+    IDS_DETAIL_PARTITION_REQUIRED "Required      : %s\n"
+    IDS_DETAIL_PARTITION_ATTRIBUTE "Attributes    : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nBu birime bağlı disk yok.\n"
     IDS_DETAIL_NO_VOLUME "\nBu bölümle ilişkilendirilmiş bir birim yok.\n"
 END
@@ -81,8 +115,16 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Geçerli Dosya Sistemi\n"
     IDS_FILESYSTEMS_FORMATTING "Biçimlendirme için kullanılabilen dosya sistemleri\n"
-    IDS_FILESYSTEMS_TYPE "Tür         : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Küme boyutu :  %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Tür          : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Küme boyutu  : %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GPT_FAIL "\nDiskPart failed to assign atttributes to the selected GPT partition.\n"
+    IDS_GPT_SUCCESS "\nDiskPart successfully assigned the attributes the selected GPT partition.\n"
 END
 
 STRINGTABLE
@@ -95,6 +137,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart, bölümü etkin değil olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin değil olarak işaretledi.\n"
     IDS_INACTIVE_ALREADY "\nGeçerli bölüm zaten etkin değil olarak işaretlenmiş.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */
@@ -107,12 +150,22 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
     IDS_LIST_VOLUME_HEAD "  Birim  ###  Hrf  Etiket       DS     Dür         Boyut    Durum    Bilgi\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c Birim  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
-/* RESCAN command string */
+/* REMOVE command strings */
+STRINGTABLE
+BEGIN
+    IDS_REMOVE_FAIL "\nDiskPart could not remove the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_REMOVE_SUCCESS "\nDiskPart successfully removed the drive letter or mount point.\n"
+    IDS_REMOVE_NO_LETTER "\nThe selected volume has no letter or mount point to remove.\n"
+    IDS_REMOVE_WRONG_LETTER "\nThe letter you specified is not assigned to that volume.\n"
+END
+
+/* RESCAN command strings */
 STRINGTABLE
 BEGIN
     IDS_RESCAN_START "\nDiskPart yapılandırmanızı tararken lütfen bekleyiniz...\n"
@@ -142,6 +195,11 @@ BEGIN
     IDS_SETID_SUCCESS "\nBölüm türü başarıyla değiştirildi.\n"
     IDS_SETID_INVALID_FORMAT "\nBölüm türünün biçimi geçersiz.\n"
     IDS_SETID_INVALID_TYPE "\nBölüm türü geçersiz.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */
@@ -175,7 +233,10 @@ BEGIN
     IDS_HELP_BREAK                     "Bir yansıma yığını ayır.\n"
     IDS_HELP_CLEAN                     "Diskin yapılandırma bilgisini ya da tüm bilgisini sil.\n"
     IDS_HELP_COMPACT                   "Dosyanın fiziki boyutunu düşürmeye çalışır.\n"
+
     IDS_HELP_CONVERT                   "Farklı disk biçimleri arasında dönüştür.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Bir birim, bölüm ya da sanal disk oluştur.\n"
     IDS_HELP_CREATE_PARTITION          "Bir bölüm oluşturun.\n"
@@ -246,4 +307,31 @@ BEGIN
     IDS_ERROR_MSG_BAD_ARG "Değişken işlemede hata: %s\n"
     IDS_ERROR_INVALID_ARGS "Geçersiz değişkenler\n"
     IDS_ERROR_NO_MEDIUM "Cihazda ortam yok.\n"
+END
+
+/* Bus type */
+STRINGTABLE
+BEGIN
+    IDS_BUSTYPE_UNKNOWN "Unknown"
+    IDS_BUSTYPE_SCSI    "SCSI"
+    IDS_BUSTYPE_ATAPI   "ATAPI"
+    IDS_BUSTYPE_ATA     "ATA"
+    IDS_BUSTYPE_1394    "1394"
+    IDS_BUSTYPE_SSA     "SSA"
+    IDS_BUSTYPE_FIBRE   "FibreChannel"
+    IDS_BUSTYPE_USB     "USB"
+    IDS_BUSTYPE_RAID    "RAID"
+    IDS_BUSTYPE_ISCSI   "iSCSI"
+    IDS_BUSTYPE_SAS     "SAS"
+    IDS_BUSTYPE_SATA    "SATA"
+    IDS_BUSTYPE_SD      "SD"
+    IDS_BUSTYPE_MMC     "MMC"
+    IDS_BUSTYPE_VIRTUAL "Virtual"
+    IDS_BUSTYPE_FBV     "FileBackedVirtual"
+    IDS_BUSTYPE_SPACES  "StorageSpaces"
+    IDS_BUSTYPE_NVME    "NVME"
+    IDS_BUSTYPE_SCM     "SCM"
+    IDS_BUSTYPE_UFS     "UFS"
+    IDS_BUSTYPE_NVMEOF  "NVMEOF"
+    IDS_BUSTYPE_OTHER   "Other"
 END

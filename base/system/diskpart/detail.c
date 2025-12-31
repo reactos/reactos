@@ -72,6 +72,7 @@ DetailDisk(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     BOOL bPrintHeader = TRUE;
+    WCHAR szBuffer[40];
 
     DPRINT("DetailDisk()\n");
 
@@ -89,7 +90,17 @@ DetailDisk(
 
     /* TODO: Print more disk details */
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, CurrentDisk->LayoutBuffer->Signature);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_DESCRIPTION, CurrentDisk->Description);
+    if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
+        PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
+    else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
+        swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+    else
+        wcscpy(szBuffer, L"00000000");
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_ID, szBuffer);
+    PrintBusType(szBuffer, ARRAYSIZE(szBuffer), CurrentDisk->BusType);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_TYPE, szBuffer);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, L"Online");
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
@@ -131,6 +142,7 @@ DetailPartition(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     BOOL bVolumeFound = FALSE, bPrintHeader = TRUE;
+    WCHAR szBuffer[40];
 
     DPRINT("DetailPartition()\n");
 
@@ -158,9 +170,21 @@ DetailPartition(
     /* TODO: Print more partition details */
     ConPuts(StdOut, L"\n");
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_NUMBER, PartEntry->PartitionNumber);
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, PartEntry->PartitionType);
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->BootIndicator ? L"Yes" : L"No");
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        PrintGUID(szBuffer, &PartEntry->Gpt.PartitionType);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? L"Yes" : L"No");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_REQUIRED, (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? L"Yes" : L"No");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ATTRIBUTE, PartEntry->Gpt.Attributes);
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        swprintf(szBuffer, L"%02x", PartEntry->Mbr.PartitionType);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->Mbr.BootIndicator ? L"Yes" : L"No");
+    }
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_OFFSET, PartOffset);
 
     Entry = VolumeListHead.Flink;

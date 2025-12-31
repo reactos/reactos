@@ -20,6 +20,47 @@ static PDEVICE_UNIT HardDrive = NULL;
 static PDEVICE_UNIT CdDrive = NULL;
 static BOOLEAN AtaInitialized = FALSE;
 
+/* DISK IO ERROR SUPPORT *****************************************************/
+
+static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
+
+LONG DiskReportError(BOOLEAN bShowError)
+{
+    /* Set the reference count */
+    if (bShowError) ++lReportError;
+    else            --lReportError;
+    return lReportError;
+}
+
+#if 0 // TODO: ATA/IDE error code descriptions.
+static PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
+{
+    switch (ErrorCode)
+    {
+    default: return "unknown error code";
+    }
+}
+#endif
+
+static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
+{
+    CHAR ErrorCodeString[200];
+
+    if (lReportError < 0)
+        return;
+
+#if 0 // TODO: ATA/IDE error code descriptions.
+    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
+            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
+#else
+    UNREFERENCED_PARAMETER(ErrorCode);
+    sprintf(ErrorCodeString, "%s", ErrorString);
+#endif
+
+    ERR("%s\n", ErrorCodeString);
+    UiMessageBox(ErrorCodeString);
+}
+
 /* FUNCTIONS ******************************************************************/
 
 static
@@ -77,6 +118,13 @@ XboxDiskDriveNumberToDeviceUnit(UCHAR DriveNumber)
     return NULL;
 }
 
+BOOLEAN DiskResetController(UCHAR DriveNumber)
+{
+    WARN("DiskResetController(0x%x) DISK OPERATION FAILED -- RESETTING CONTROLLER\n", DriveNumber);
+    /* No-op on XBOX */
+    return TRUE;
+}
+
 CONFIGURATION_TYPE
 DiskGetConfigType(
     _In_ UCHAR DriveNumber)
@@ -93,6 +141,12 @@ DiskGetConfigType(
         return DiskPeripheral;
 }
 
+// FIXME: Dummy for entry.S/linux.S
+VOID __cdecl DiskStopFloppyMotor(VOID)
+{
+    /* No-op on XBOX */
+}
+
 BOOLEAN
 XboxDiskReadLogicalSectors(
     IN UCHAR DriveNumber,
@@ -101,6 +155,7 @@ XboxDiskReadLogicalSectors(
     OUT PVOID Buffer)
 {
     PDEVICE_UNIT DeviceUnit;
+    BOOLEAN Success;
 
     TRACE("XboxDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
@@ -109,7 +164,10 @@ XboxDiskReadLogicalSectors(
     if (!DeviceUnit)
         return FALSE;
 
-    return AtaReadLogicalSectors(DeviceUnit, SectorNumber, SectorCount, Buffer);
+    Success = AtaReadLogicalSectors(DeviceUnit, SectorNumber, SectorCount, Buffer);
+    if (!Success)
+        DiskError("Disk Read Failed", -1);
+    return Success;
 }
 
 BOOLEAN

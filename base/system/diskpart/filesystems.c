@@ -12,128 +12,56 @@
 #include <debug.h>
 
 static
-BOOL
+VOID
 ShowFileSystemInfo(
-    PVOLENTRY VolumeEntry)
+    _In_ PVOLENTRY VolumeEntry)
 {
-    WCHAR VolumeNameBuffer[MAX_PATH];
-    UNICODE_STRING VolumeName;
-    HANDLE VolumeHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    ULONG ulSize, ulClusterSize = 0;
-    FILE_FS_FULL_SIZE_INFORMATION SizeInfo;
-    FILE_FS_FULL_SIZE_INFORMATION FullSizeInfo;
-    PFILE_FS_ATTRIBUTE_INFORMATION pAttributeInfo = NULL;
-    NTSTATUS Status;
-    BOOL Result = TRUE;
-
-    wcscpy(VolumeNameBuffer, VolumeEntry->DeviceName);
-    wcscat(VolumeNameBuffer, L"\\");
-
-    RtlInitUnicodeString(&VolumeName, VolumeNameBuffer);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &VolumeName,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&VolumeHandle,
-                        SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
-    if (!NT_SUCCESS(Status))
-    {
-        if (Status == STATUS_NO_MEDIA_IN_DEVICE)
-        {
-            ConResPuts(StdOut, IDS_ERROR_NO_MEDIUM);
-            return FALSE;
-        }
-        else if (Status == STATUS_UNRECOGNIZED_VOLUME)
-        {
-            ConResPuts(StdOut, IDS_FILESYSTEMS_CURRENT);
-            ConPuts(StdOut, L"\n");
-            ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, L"RAW");
-            ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE, 512);
-        }
-
-        return TRUE;
-    }
-
-    ulSize = sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 255 * sizeof(WCHAR);
-    pAttributeInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                     HEAP_ZERO_MEMORY,
-                                     ulSize);
-    if (pAttributeInfo == NULL)
-    {
-        Result = FALSE;
-        goto done;
-    }
-
-    Status = NtQueryVolumeInformationFile(VolumeHandle,
-                                          &IoStatusBlock,
-                                          pAttributeInfo,
-                                          ulSize,
-                                          FileFsAttributeInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        Result = FALSE;
-        goto done;
-    }
-
-    Status = NtQueryVolumeInformationFile(VolumeHandle,
-                                          &IoStatusBlock,
-                                          &FullSizeInfo,
-                                          sizeof(FILE_FS_FULL_SIZE_INFORMATION),
-                                          FileFsFullSizeInformation);
-    if (NT_SUCCESS(Status))
-    {
-        ulClusterSize  = FullSizeInfo.BytesPerSector * FullSizeInfo.SectorsPerAllocationUnit;
-    }
-    else
-    {
-        Status = NtQueryVolumeInformationFile(VolumeHandle,
-                                              &IoStatusBlock,
-                                              &SizeInfo,
-                                              sizeof(FILE_FS_SIZE_INFORMATION),
-                                              FileFsSizeInformation);
-        if (NT_SUCCESS(Status))
-        {
-            ulClusterSize  = SizeInfo.BytesPerSector * SizeInfo.SectorsPerAllocationUnit;
-        }
-    }
-
+    WCHAR szBuffer[32];
+    PWSTR pszSizeUnit = L"";
+    ULONG ulClusterSize;
 
     ConResPuts(StdOut, IDS_FILESYSTEMS_CURRENT);
     ConPuts(StdOut, L"\n");
 
-    ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, pAttributeInfo->FileSystemName);
-    ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE, ulClusterSize);
+    ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, VolumeEntry->pszFilesystem);
+
+    ulClusterSize = VolumeEntry->SectorsPerAllocationUnit * VolumeEntry->BytesPerSector;
+    if (ulClusterSize >= SIZE_10MB) /* 10 MB */
+    {
+        ulClusterSize = RoundingDivide(ulClusterSize, SIZE_1MB);
+        pszSizeUnit = L"MB";
+    }
+    else if (ulClusterSize >= SIZE_10KB) /* 10 KB */
+    {
+        ulClusterSize = RoundingDivide(ulClusterSize, SIZE_1KB);
+        pszSizeUnit = L"KB";
+    }
+
+    wsprintf(szBuffer, L"%lu %s", ulClusterSize, pszSizeUnit);
+    ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE, szBuffer);
+    ConResPrintf(StdOut, IDS_FILESYSTEMS_SERIAL_NUMBER, VolumeEntry->SerialNumber);
     ConPuts(StdOut, L"\n");
-
-done:
-    if (pAttributeInfo)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pAttributeInfo);
-
-    NtClose(VolumeHandle);
-
-    return Result;
 }
+
 
 static
 VOID
-ShowInstalledFileSystems(VOID)
+ShowInstalledFileSystems(
+    _In_ PVOLENTRY VolumeEntry)
 {
     WCHAR szBuffer[256];
+    WCHAR szDefault[32];
     BOOLEAN ret;
     DWORD dwIndex;
     UCHAR uMajor, uMinor;
     BOOLEAN bLatest;
 
+    LoadStringW(GetModuleHandle(NULL),
+                IDS_FILESYSTEMS_DEFAULT,
+                szDefault, ARRAYSIZE(szDefault));
+
     ConResPuts(StdOut, IDS_FILESYSTEMS_FORMATTING);
+    ConPuts(StdOut, L"\n");
 
     for (dwIndex = 0; ; dwIndex++)
     {
@@ -141,15 +69,20 @@ ShowInstalledFileSystems(VOID)
                                              szBuffer,
                                              &uMajor,
                                              &uMinor,
-                                            &bLatest);
+                                             &bLatest);
         if (ret == FALSE)
             break;
 
-        ConPrintf(StdOut, L"  %s\n", szBuffer);
-    }
+        if (wcscmp(szBuffer, L"FAT") == 0)
+            wcscat(szBuffer, szDefault);
 
-    ConPuts(StdOut, L"\n");
+        ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, szBuffer);
+        wcscpy(szBuffer, L"-");
+        ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE, szBuffer);
+        ConPuts(StdOut, L"\n");
+    }
 }
+
 
 BOOL
 filesystems_main(
@@ -164,10 +97,8 @@ filesystems_main(
 
     ConPuts(StdOut, L"\n");
 
-    if (ShowFileSystemInfo(CurrentVolume))
-    {
-        ShowInstalledFileSystems();
-    }
+    ShowFileSystemInfo(CurrentVolume);
+    ShowInstalledFileSystems(CurrentVolume);
 
     return TRUE;
 }

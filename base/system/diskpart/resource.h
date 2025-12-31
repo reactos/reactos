@@ -21,20 +21,40 @@
 #define IDS_ACTIVE_FAIL                1000
 #define IDS_ACTIVE_SUCCESS             1001
 #define IDS_ACTIVE_ALREADY             1002
+#define IDS_ACTIVE_NO_MBR              1003
 
-#define IDS_CLEAN_FAIL                 1020
-#define IDS_CLEAN_SUCCESS              1021
-#define IDS_CLEAN_SYSTEM               1022
+#define IDS_AUTOMOUNT_ENABLED          1010
+#define IDS_AUTOMOUNT_DISABLED         1011
+#define IDS_AUTOMOUNT_SCRUBBED         1012
+
+#define IDS_ASSIGN_FAIL                1020
+#define IDS_ASSIGN_SUCCESS             1021
+#define IDS_ASSIGN_ALREADY_ASSIGNED    1022
+#define IDS_ASSIGN_INVALID_LETTER      1023
+#define IDS_ASSIGN_NO_MORE_LETTER      1024
+
+#define IDS_CLEAN_FAIL                 1030
+#define IDS_CLEAN_SUCCESS              1031
+#define IDS_CLEAN_SYSTEM               1032
+
+#define IDS_CONVERT_GPT_ALREADY        1040
+#define IDS_CONVERT_GPT_NOT_EMPTY      1041
+#define IDS_CONVERT_GPT_SUCCESS        1042
+#define IDS_CONVERT_MBR_ALREADY        1043
+#define IDS_CONVERT_MBR_NOT_EMPTY      1044
+#define IDS_CONVERT_MBR_SUCCESS        1045
 
 #define IDS_CREATE_PARTITION_FAIL      1050
 #define IDS_CREATE_PARTITION_SUCCESS   1051
+#define IDS_CREATE_PARTITION_INVALID_STYLE 1052
 
 #define IDS_DELETE_PARTITION_FAIL      1070
 #define IDS_DELETE_PARTITION_SUCCESS   1071
 
-#define IDS_DETAIL_INFO_DISK_ID        1107
-#define IDS_DETAIL_INFO_TYPE           1108
-#define IDS_DETAIL_INFO_STATUS         1109
+#define IDS_DETAIL_DISK_DESCRIPTION    1106
+#define IDS_DETAIL_DISK_ID             1107
+#define IDS_DETAIL_DISK_TYPE           1108
+#define IDS_DETAIL_DISK_STATUS         1109
 #define IDS_DETAIL_INFO_PATH           1110
 #define IDS_DETAIL_INFO_TARGET         1111
 #define IDS_DETAIL_INFO_LUN_ID         1112
@@ -52,21 +72,27 @@
 #define IDS_DETAIL_PARTITION_HIDDEN    1132
 #define IDS_DETAIL_PARTITION_ACTIVE    1133
 #define IDS_DETAIL_PARTITION_OFFSET    1134
-
-#define IDS_DETAIL_NO_DISKS            1135
-#define IDS_DETAIL_NO_VOLUME           1136
+#define IDS_DETAIL_PARTITION_REQUIRED  1135
+#define IDS_DETAIL_PARTITION_ATTRIBUTE 1136
+#define IDS_DETAIL_NO_DISKS            1137
+#define IDS_DETAIL_NO_VOLUME           1138
 
 #define IDS_FILESYSTEMS_CURRENT        1180
 #define IDS_FILESYSTEMS_FORMATTING     1181
 #define IDS_FILESYSTEMS_TYPE           1182
 #define IDS_FILESYSTEMS_CLUSTERSIZE    1183
+#define IDS_FILESYSTEMS_SERIAL_NUMBER  1184
+#define IDS_FILESYSTEMS_DEFAULT        1185
+
+#define IDS_GPT_FAIL                   1190
+#define IDS_GPT_SUCCESS                1191
 
 #define IDS_HELP_FORMAT_STRING         1200
 
 #define IDS_INACTIVE_FAIL              1210
 #define IDS_INACTIVE_SUCCESS           1211
 #define IDS_INACTIVE_ALREADY           1212
-
+#define IDS_INACTIVE_NO_MBR            1213
 
 #define IDS_LIST_DISK_HEAD             3300
 #define IDS_LIST_DISK_LINE             3301
@@ -75,9 +101,15 @@
 #define IDS_LIST_PARTITION_LINE        3304
 #define IDS_LIST_PARTITION_FORMAT      3305
 #define IDS_LIST_PARTITION_NO_DISK     3306
-#define IDS_LIST_VOLUME_HEAD           3307
-#define IDS_LIST_VOLUME_LINE           3308
-#define IDS_LIST_VOLUME_FORMAT         3309
+#define IDS_LIST_PARTITION_NONE        3307
+#define IDS_LIST_VOLUME_HEAD           3308
+#define IDS_LIST_VOLUME_LINE           3309
+#define IDS_LIST_VOLUME_FORMAT         3310
+
+#define IDS_REMOVE_FAIL                4000
+#define IDS_REMOVE_SUCCESS             4001
+#define IDS_REMOVE_NO_LETTER           4002
+#define IDS_REMOVE_WRONG_LETTER        4003
 
 #define IDS_RESCAN_START               4100
 #define IDS_RESCAN_END                 4101
@@ -100,6 +132,7 @@
 #define IDS_SETID_INVALID_FORMAT       4452
 #define IDS_SETID_INVALID_TYPE         4453
 
+#define IDS_UNIQUID_DISK_INVALID_STYLE 4500
 
 #define IDS_STATUS_YES          31
 #define IDS_STATUS_NO           32
@@ -121,70 +154,96 @@
 #define IDS_HELP_BREAK                      64
 #define IDS_HELP_CLEAN                      65
 #define IDS_HELP_COMPACT                    66
+
 #define IDS_HELP_CONVERT                    67
+#define IDS_HELP_CONVERT_GPT                68
+#define IDS_HELP_CONVERT_MBR                69
 
-#define IDS_HELP_CREATE                     68
-#define IDS_HELP_CREATE_PARTITION           69
-#define IDS_HELP_CREATE_PARTITION_EFI       70
-#define IDS_HELP_CREATE_PARTITION_EXTENDED  71
-#define IDS_HELP_CREATE_PARTITION_LOGICAL   72
-#define IDS_HELP_CREATE_PARTITION_MSR       73
-#define IDS_HELP_CREATE_PARTITION_PRIMARY   74
-#define IDS_HELP_CREATE_VOLUME              75
-#define IDS_HELP_CREATE_VDISK               76
+#define IDS_HELP_CREATE                     70
+#define IDS_HELP_CREATE_PARTITION           71
+#define IDS_HELP_CREATE_PARTITION_EFI       72
+#define IDS_HELP_CREATE_PARTITION_EXTENDED  73
+#define IDS_HELP_CREATE_PARTITION_LOGICAL   74
+#define IDS_HELP_CREATE_PARTITION_MSR       75
+#define IDS_HELP_CREATE_PARTITION_PRIMARY   76
+#define IDS_HELP_CREATE_VOLUME              77
+#define IDS_HELP_CREATE_VDISK               78
 
-#define IDS_HELP_DELETE                     77
-#define IDS_HELP_DELETE_DISK                78
-#define IDS_HELP_DELETE_PARTITION           79
-#define IDS_HELP_DELETE_VOLUME              80
+#define IDS_HELP_DELETE                     79
+#define IDS_HELP_DELETE_DISK                80
+#define IDS_HELP_DELETE_PARTITION           81
+#define IDS_HELP_DELETE_VOLUME              82
 
-#define IDS_HELP_DETACH                     81
+#define IDS_HELP_DETACH                     83
 
-#define IDS_HELP_DETAIL                     82
-#define IDS_HELP_DETAIL_DISK                83
-#define IDS_HELP_DETAIL_PARTITION           84
-#define IDS_HELP_DETAIL_VOLUME              85
+#define IDS_HELP_DETAIL                     84
+#define IDS_HELP_DETAIL_DISK                85
+#define IDS_HELP_DETAIL_PARTITION           86
+#define IDS_HELP_DETAIL_VOLUME              87
 
-#define IDS_HELP_EXIT                       86
-#define IDS_HELP_EXPAND                     87
-#define IDS_HELP_EXTEND                     88
-#define IDS_HELP_FILESYSTEMS                89
-#define IDS_HELP_FORMAT                     90
-#define IDS_HELP_GPT                        91
-#define IDS_HELP_HELP                       92
-#define IDS_HELP_IMPORT                     93
-#define IDS_HELP_INACTIVE                   94
+#define IDS_HELP_EXIT                       88
+#define IDS_HELP_EXPAND                     89
+#define IDS_HELP_EXTEND                     90
+#define IDS_HELP_FILESYSTEMS                91
+#define IDS_HELP_FORMAT                     92
+#define IDS_HELP_GPT                        93
+#define IDS_HELP_HELP                       94
+#define IDS_HELP_IMPORT                     95
+#define IDS_HELP_INACTIVE                   96
 
-#define IDS_HELP_LIST                       95
-#define IDS_HELP_LIST_DISK                  96
-#define IDS_HELP_LIST_PARTITION             97
-#define IDS_HELP_LIST_VOLUME                98
-#define IDS_HELP_LIST_VDISK                 99
+#define IDS_HELP_LIST                       97
+#define IDS_HELP_LIST_DISK                  98
+#define IDS_HELP_LIST_PARTITION             99
+#define IDS_HELP_LIST_VOLUME               100
+#define IDS_HELP_LIST_VDISK                101
 
-#define IDS_HELP_MERGE                     100
-#define IDS_HELP_ONLINE                    101
-#define IDS_HELP_OFFLINE                   102
-#define IDS_HELP_RECOVER                   103
-#define IDS_HELP_REM                       104
-#define IDS_HELP_REMOVE                    105
-#define IDS_HELP_REPAIR                    106
-#define IDS_HELP_RESCAN                    107
-#define IDS_HELP_RETAIN                    108
-#define IDS_HELP_SAN                       109
+#define IDS_HELP_MERGE                     102
+#define IDS_HELP_ONLINE                    103
+#define IDS_HELP_OFFLINE                   104
+#define IDS_HELP_RECOVER                   105
+#define IDS_HELP_REM                       106
+#define IDS_HELP_REMOVE                    107
+#define IDS_HELP_REPAIR                    108
+#define IDS_HELP_RESCAN                    109
+#define IDS_HELP_RETAIN                    110
+#define IDS_HELP_SAN                       111
 
-#define IDS_HELP_SELECT                    110
-#define IDS_HELP_SELECT_DISK               111
-#define IDS_HELP_SELECT_PARTITION          112
-#define IDS_HELP_SELECT_VOLUME             113
-#define IDS_HELP_SELECT_VDISK              114
+#define IDS_HELP_SELECT                    112
+#define IDS_HELP_SELECT_DISK               113
+#define IDS_HELP_SELECT_PARTITION          114
+#define IDS_HELP_SELECT_VOLUME             115
+#define IDS_HELP_SELECT_VDISK              116
 
-#define IDS_HELP_SETID                     115
-#define IDS_HELP_SHRINK                    116
+#define IDS_HELP_SETID                     117
+#define IDS_HELP_SHRINK                    118
 
-#define IDS_HELP_UNIQUEID                  117
-#define IDS_HELP_UNIQUEID_DISK             118
+#define IDS_HELP_UNIQUEID                  119
+#define IDS_HELP_UNIQUEID_DISK             120
 
-#define IDS_ERROR_MSG_NO_SCRIPT  2000
-#define IDS_ERROR_MSG_BAD_ARG    2001
-#define IDS_ERROR_INVALID_ARGS   2002
-#define IDS_ERROR_NO_MEDIUM      2003
+#define IDS_ERROR_MSG_NO_SCRIPT  5000
+#define IDS_ERROR_MSG_BAD_ARG    5001
+#define IDS_ERROR_INVALID_ARGS   5002
+#define IDS_ERROR_NO_MEDIUM      5003
+
+#define IDS_BUSTYPE_UNKNOWN      5100
+#define IDS_BUSTYPE_SCSI         5101
+#define IDS_BUSTYPE_ATAPI        5102
+#define IDS_BUSTYPE_ATA          5103
+#define IDS_BUSTYPE_1394         5104
+#define IDS_BUSTYPE_SSA          5105
+#define IDS_BUSTYPE_FIBRE        5106
+#define IDS_BUSTYPE_USB          5107
+#define IDS_BUSTYPE_RAID         5108
+#define IDS_BUSTYPE_ISCSI        5109
+#define IDS_BUSTYPE_SAS          5110
+#define IDS_BUSTYPE_SATA         5111
+#define IDS_BUSTYPE_SD           5112
+#define IDS_BUSTYPE_MMC          5113
+#define IDS_BUSTYPE_VIRTUAL      5114
+#define IDS_BUSTYPE_FBV          5115
+#define IDS_BUSTYPE_SPACES       5116
+#define IDS_BUSTYPE_NVME         5117
+#define IDS_BUSTYPE_SCM          5118
+#define IDS_BUSTYPE_UFS          5119
+#define IDS_BUSTYPE_NVMEOF       5120
+#define IDS_BUSTYPE_OTHER        5121

@@ -17,10 +17,13 @@
  */
 
 #include <freeldr.h>
+#include "../../vidfb.h"
+
+UCHAR MachDefaultTextColor = COLOR_GRAY;
 
 static unsigned CurrentCursorX = 0;
 static unsigned CurrentCursorY = 0;
-static unsigned CurrentAttr = 0x0f;
+static UCHAR CurrentAttr = ATTR(COLOR_GRAY, COLOR_BLACK);
 
 VOID
 XboxConsPutChar(int c)
@@ -33,7 +36,7 @@ XboxConsPutChar(int c)
     NeedScroll = (CurrentCursorY >= Height);
     if (NeedScroll)
     {
-        XboxVideoScrollUp();
+        VidFbScrollUp(CurrentAttr);
         --CurrentCursorY;
     }
 

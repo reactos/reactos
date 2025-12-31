@@ -957,10 +957,10 @@ CreateWindowStationAndDesktops(
     SECURITY_ATTRIBUTES ApplicationDesktopSecurity;
     SECURITY_ATTRIBUTES WinlogonDesktopSecurity;
     SECURITY_ATTRIBUTES ScreenSaverDesktopSecurity;
-    PSECURITY_DESCRIPTOR WlWinstaSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlApplicationDesktopSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlWinlogonDesktopSecurityDescriptor;
-    PSECURITY_DESCRIPTOR WlScreenSaverDesktopSecurityDescriptor;
+    PSECURITY_DESCRIPTOR WlWinstaSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlApplicationDesktopSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlWinlogonDesktopSecurityDescriptor = NULL;
+    PSECURITY_DESCRIPTOR WlScreenSaverDesktopSecurityDescriptor = NULL;
     BOOL ret = FALSE;
 
     if (!CreateWinstaSecurity(&WlWinstaSecurityDescriptor))
@@ -1110,23 +1110,17 @@ cleanup:
             CloseWindowStation(Session->InteractiveWindowStation);
             Session->InteractiveWindowStation = NULL;
         }
-        if (WlWinstaSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
-        }
-        if (WlApplicationDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
-        }
-        if (WlWinlogonDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
-        }
-        if (WlScreenSaverDesktopSecurityDescriptor)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
-        }
     }
+
+    /* Free security descriptors regardless of success or failure */
+    if (WlWinstaSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinstaSecurityDescriptor);
+    if (WlApplicationDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlApplicationDesktopSecurityDescriptor);
+    if (WlWinlogonDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlWinlogonDesktopSecurityDescriptor);
+    if (WlScreenSaverDesktopSecurityDescriptor)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, WlScreenSaverDesktopSecurityDescriptor);
 
     return ret;
 }

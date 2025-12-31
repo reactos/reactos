@@ -23,11 +23,31 @@ Utilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
     IDS_APP_PROMPT "DISKPART> "
 END
 
+/* ACTIVE command strings */
 STRINGTABLE
 BEGIN
     IDS_ACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția activă.\nAsigurați-vă că partiția este validă.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca activă.\n"
     IDS_ACTIVE_ALREADY "\nPartiția curentă este deja marcată ca activă.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
+END
+
+/* ASSIGN command strings */
+STRINGTABLE
+BEGIN
+    IDS_ASSIGN_FAIL "\nDiskPart could not assign the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_ASSIGN_SUCCESS "\nDiskPart successfully assigned the drive letter or mount point.\n"
+    IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
+    IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
+    IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+END
+
+/* AUTOMOUNT command strings */
+STRINGTABLE
+BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
 END
 
 STRINGTABLE
@@ -39,8 +59,19 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart nu a reușit să creeze partiția specificată.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -52,9 +83,10 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disc ID: %08lx\n"
-    IDS_DETAIL_INFO_TYPE "Tip"
-    IDS_DETAIL_INFO_STATUS "Stare"
+    IDS_DETAIL_DISK_DESCRIPTION "%s\n"
+    IDS_DETAIL_DISK_ID "Disc ID: %s\n"
+    IDS_DETAIL_DISK_TYPE "Tip    : %s\n"
+    IDS_DETAIL_DISK_STATUS "Stare  : %s\n"
     IDS_DETAIL_INFO_PATH   "Cale   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Țintă  : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "LUN ID : %hu\n"
@@ -67,10 +99,12 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Disc cu fișier «crashdump»"
     IDS_DETAIL_INFO_CLST_DSK "Disc în «cluster»"
     IDS_DETAIL_PARTITION_NUMBER "Partiție %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Tip            : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Tip            : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Ascuns         : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Activ          : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset în octet: %I64u\n"
+    IDS_DETAIL_PARTITION_REQUIRED "Required      : %s\n"
+    IDS_DETAIL_PARTITION_ATTRIBUTE "Attributes    : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nNu există discuri atașate acestui volum.\n"
     IDS_DETAIL_NO_VOLUME "\nNu există volum asociat cu această partiție.\n"
 END
@@ -79,8 +113,16 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Fișierul de sistem curent\n"
     IDS_FILESYSTEMS_FORMATTING "Fișiere de sistem disponibile pentru formatare\n"
-    IDS_FILESYSTEMS_TYPE "Tip        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Mărimea cluster-ului: %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Tip        : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Mărimea cluster-ului: %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number       : %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GPT_FAIL "\nDiskPart failed to assign atttributes to the selected GPT partition.\n"
+    IDS_GPT_SUCCESS "\nDiskPart successfully assigned the attributes the selected GPT partition.\n"
 END
 
 STRINGTABLE
@@ -93,6 +135,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskpart nu a reușit să marcheze partiția inactivă.\nAsigurați-vă că partiția este validă.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart a marcat partiția curentă ca inactivă.\n"
     IDS_INACTIVE_ALREADY "\nPartiția curentă este deja marcată ca inactivă.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */
@@ -105,12 +148,22 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Partiție  %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNu există niciun disc pentru a afișa partiții.\nSelectați un disc apoi reîncercați.\n\n"
+    IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
     IDS_LIST_VOLUME_HEAD "  Volum  ###  Ltr  Etichetă     FS     Tip         Mărime   Stare    Informații\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c  Volum  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
-/* RESCAN command string */
+/* REMOVE command strings */
+STRINGTABLE
+BEGIN
+    IDS_REMOVE_FAIL "\nDiskPart could not remove the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_REMOVE_SUCCESS "\nDiskPart successfully removed the drive letter or mount point.\n"
+    IDS_REMOVE_NO_LETTER "\nThe selected volume has no letter or mount point to remove.\n"
+    IDS_REMOVE_WRONG_LETTER "\nThe letter you specified is not assigned to that volume.\n"
+END
+
+/* RESCAN command strings */
 STRINGTABLE
 BEGIN
     IDS_RESCAN_START "\nAșteptați-vă scanarea configurației...\n"
@@ -140,6 +193,11 @@ BEGIN
     IDS_SETID_SUCCESS "\nTipul partiției a fost schimbat cu succes.\n"
     IDS_SETID_INVALID_FORMAT "\nFormatul tipului de partiție este nevalid.\n"
     IDS_SETID_INVALID_TYPE "\nTipul partiției este nevalid.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */
@@ -173,7 +231,10 @@ BEGIN
     IDS_HELP_BREAK                     "Șterge configurația în oglindă.\n"
     IDS_HELP_CLEAN                     "Elimină informațiile de configurare, sau toate informațiile,\n              de pe disc.\n"
     IDS_HELP_COMPACT                   "Încearcă reducerea dimensiunii fizice a fișierului.\n"
+
     IDS_HELP_CONVERT                   "Convertește în diverse formate de disc.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Crează un volum, o partiție, sau un disc virtual.\n"
     IDS_HELP_CREATE_PARTITION          "Creează o partiție.\n"
@@ -244,4 +305,31 @@ BEGIN
     IDS_ERROR_MSG_BAD_ARG "Eroare la prelucrarea argumentului: %s\n"
     IDS_ERROR_INVALID_ARGS "Argumente nevalide\n"
     IDS_ERROR_NO_MEDIUM "Fără mediu în dispozitiv.\n"
+END
+
+/* Bus type */
+STRINGTABLE
+BEGIN
+    IDS_BUSTYPE_UNKNOWN "Unknown"
+    IDS_BUSTYPE_SCSI    "SCSI"
+    IDS_BUSTYPE_ATAPI   "ATAPI"
+    IDS_BUSTYPE_ATA     "ATA"
+    IDS_BUSTYPE_1394    "1394"
+    IDS_BUSTYPE_SSA     "SSA"
+    IDS_BUSTYPE_FIBRE   "FibreChannel"
+    IDS_BUSTYPE_USB     "USB"
+    IDS_BUSTYPE_RAID    "RAID"
+    IDS_BUSTYPE_ISCSI   "iSCSI"
+    IDS_BUSTYPE_SAS     "SAS"
+    IDS_BUSTYPE_SATA    "SATA"
+    IDS_BUSTYPE_SD      "SD"
+    IDS_BUSTYPE_MMC     "MMC"
+    IDS_BUSTYPE_VIRTUAL "Virtual"
+    IDS_BUSTYPE_FBV     "FileBackedVirtual"
+    IDS_BUSTYPE_SPACES  "StorageSpaces"
+    IDS_BUSTYPE_NVME    "NVME"
+    IDS_BUSTYPE_SCM     "SCM"
+    IDS_BUSTYPE_UFS     "UFS"
+    IDS_BUSTYPE_NVMEOF  "NVMEOF"
+    IDS_BUSTYPE_OTHER   "Other"
 END

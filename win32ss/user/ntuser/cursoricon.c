@@ -669,9 +669,10 @@ NtUserGetCursorInfo(
 
     _SEH2_TRY
     {
+        ProbeForWrite(pci, sizeof(CURSORINFO), 1);
+        
         if (pci->cbSize == sizeof(CURSORINFO))
         {
-            ProbeForWrite(pci, sizeof(CURSORINFO), 1);
             RtlCopyMemory(pci, &SafeCi, sizeof(CURSORINFO));
             Ret = TRUE;
         }
@@ -690,8 +691,9 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     UserLeave();
+    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
+    
     return Ret;
 }
 
