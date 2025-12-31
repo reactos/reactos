@@ -57,7 +57,7 @@ Pc98GetBootSectorLoadAddress(IN UCHAR DriveNumber)
         /* 1.44 MB floppy */
         return 0x1FE00;
     }
-    else if (DiskDrive->Type & DRIVE_FDD)
+    else if (DiskDrive->Type == DRIVE_TYPE_FDD)
     {
         return 0x1FC00;
     }
