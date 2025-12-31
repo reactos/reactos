@@ -16,7 +16,6 @@ remove_main(
     _In_ INT argc,
     _In_ LPWSTR *argv)
 {
-    WCHAR szMountPoint[4];
     PWSTR pszSuffix = NULL;
     WCHAR DriveLetter = UNICODE_NULL;
     INT i, nExclusive = 0;
@@ -114,22 +113,13 @@ remove_main(
             ConResPuts(StdOut, IDS_REMOVE_WRONG_LETTER);
             return TRUE;
         }
-
-        szMountPoint[0] = DriveLetter;
-        szMountPoint[1] = L':';
-        szMountPoint[2] = L'\\';
-        szMountPoint[3] = UNICODE_NULL;
     }
     else
     {
-        szMountPoint[0] = CurrentVolume->DriveLetter;
-        szMountPoint[1] = L':';
-        szMountPoint[2] = L'\\';
-        szMountPoint[3] = UNICODE_NULL;
+        DriveLetter = CurrentVolume->DriveLetter;
     }
 
-    DPRINT("MountPoint: %S\n", szMountPoint);
-    bResult = DeleteVolumeMountPointW(szMountPoint);
+    bResult = DeleteDriveLetter(DriveLetter);
     if (bResult == FALSE)
     {
         ConResPuts(StdOut, IDS_REMOVE_FAIL);

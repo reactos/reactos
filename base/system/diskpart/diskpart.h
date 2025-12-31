@@ -503,6 +503,32 @@ PrintBusType(
     _In_ INT cchBufferMax,
     _In_ STORAGE_BUS_TYPE Bustype);
 
+/* mountmgr.h */
+BOOL
+GetAutomountState(
+    _Out_ PBOOL State);
+
+BOOL
+SetAutomountState(
+    _In_ BOOL bEnable);
+
+BOOL
+ScrubAutomount(VOID);
+
+BOOL
+AssignDriveLetter(
+    _In_ PWSTR DeviceName,
+    _In_ WCHAR DriveLetter);
+
+BOOL
+AssignNextDriveLetter(
+    _In_ PWSTR DeviceName,
+    _Out_ PWCHAR DriveLetter);
+
+BOOL
+DeleteDriveLetter(
+    _In_ WCHAR DriveLetter);
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 

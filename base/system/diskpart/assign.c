@@ -16,7 +16,6 @@ assign_main(
     _In_ INT argc,
     _In_ LPWSTR *argv)
 {
-    WCHAR szMountPoint[4];
     PWSTR pszSuffix = NULL;
     WCHAR DriveLetter = UNICODE_NULL;
     INT i, nExclusive = 0;
@@ -105,12 +104,7 @@ assign_main(
     if (CurrentVolume->DriveLetter != UNICODE_NULL)
     {
         /* Remove the current drive letter */
-        szMountPoint[0] = CurrentVolume->DriveLetter;
-        szMountPoint[1] = L':';
-        szMountPoint[2] = L'\\';
-        szMountPoint[3] = UNICODE_NULL;
-
-        bResult = DeleteVolumeMountPointW(szMountPoint);
+        bResult = DeleteDriveLetter(CurrentVolume->DriveLetter);
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
@@ -123,13 +117,8 @@ assign_main(
     if (DriveLetter != UNICODE_NULL)
     {
         /* Assign the new drive letter */
-        szMountPoint[0] = DriveLetter;
-        szMountPoint[1] = L':';
-        szMountPoint[2] = L'\\';
-        szMountPoint[3] = UNICODE_NULL;
-
-        bResult = SetVolumeMountPointW(szMountPoint,
-                                       CurrentVolume->VolumeName);
+        bResult = AssignDriveLetter(CurrentVolume->DeviceName,
+                                    DriveLetter);
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
@@ -140,16 +129,19 @@ assign_main(
     }
     else
     {
-        /* TODO: Assign the next drive letter */
-#if 0
-        bResult = SetNextDriveLetter(CurrentVolume->VolumeName,
-                                     &CurrentVolume->DriveLetter);
+        bResult = AssignNextDriveLetter(CurrentVolume->DeviceName,
+                                        &CurrentVolume->DriveLetter);
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
             return TRUE;
         }
-#endif
+
+        if (CurrentVolume->DriveLetter == UNICODE_NULL)
+        {
+            ConResPuts(StdOut, IDS_ASSIGN_NO_MORE_LETTER);
+            return TRUE;
+        }
     }
 
     ConResPuts(StdOut, IDS_REMOVE_SUCCESS);
