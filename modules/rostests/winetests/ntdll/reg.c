@@ -3097,7 +3097,7 @@ static void test_RtlQueryRegistryValues(void)
 
 START_TEST(reg)
 {
-#if !defined(__REACTOS__) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+#if !defined(__REACTOS__) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_WIN7)
     LSTATUS status;
 #endif
 
