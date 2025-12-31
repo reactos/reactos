@@ -141,7 +141,7 @@ static void test_query_basic(void)
     ULONG i, ReturnLength;
     SYSTEM_BASIC_INFORMATION sbi, sbi2, sbi3;
 
-    /* This test also covers some basic parameter testing that should be the same for 
+    /* This test also covers some basic parameter testing that should be the same for
      * every information class
     */
 
@@ -479,7 +479,7 @@ static void test_query_timeofday(void)
     } SYSTEM_TIMEOFDAY_INFORMATION_PRIVATE;
 
     SYSTEM_TIMEOFDAY_INFORMATION_PRIVATE sti;
-  
+
     status = pNtQuerySystemInformation( SystemTimeOfDayInformation, &sti, 0, &ReturnLength );
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
     ok( 0 == ReturnLength, "ReturnLength should be 0, it is (%ld)\n", ReturnLength);
@@ -1585,6 +1585,14 @@ static void test_query_firmware(void)
     sfti->Action = SystemFirmwareTable_Get;
 
     status = pNtQuerySystemInformation(SystemFirmwareTableInformation, sfti, min_sfti_len, &len1);
+#ifdef __REACTOS__
+    if (status == STATUS_INVALID_DEVICE_REQUEST)
+    {
+        win_skip("SystemFirmwareTableInformation not available\n");
+        HeapFree(GetProcessHeap(), 0, sfti);
+        return;
+    }
+#endif
     ok(status == STATUS_BUFFER_TOO_SMALL, "Expected STATUS_BUFFER_TOO_SMALL, got %08lx\n", status);
     ok(len1 >= min_sfti_len, "Expected length >= %lu, got %lu\n", min_sfti_len, len1);
     ok(sfti->TableBufferLength == len1 - min_sfti_len,
@@ -3571,10 +3579,18 @@ static void test_thread_ideal_processor(void)
     ok(status == STATUS_INVALID_INFO_CLASS, "Unexpected status %#lx.\n", status);
 
     status = pNtQueryInformationThread( GetCurrentThread(), ThreadIdealProcessorEx, &processor, sizeof(processor) + 1, &len );
+#ifdef __REACTOS__
+    ok(status == (GetNTVersion() >= _WIN32_WINNT_WIN7 ? STATUS_INFO_LENGTH_MISMATCH : STATUS_INVALID_INFO_CLASS), "Unexpected status %#lx.\n", status);
+#else
     ok(status == STATUS_INFO_LENGTH_MISMATCH, "Unexpected status %#lx.\n", status);
+#endif
 
     status = pNtQueryInformationThread( GetCurrentThread(), ThreadIdealProcessorEx, &processor, sizeof(processor), &len );
+#ifdef __REACTOS__
+    ok(status == (GetNTVersion() >= _WIN32_WINNT_WIN7 ? STATUS_SUCCESS : STATUS_INVALID_INFO_CLASS), "Unexpected status %#lx.\n", status);
+#else
     ok(status == STATUS_SUCCESS, "Unexpected status %#lx.\n", status);
+#endif
 }
 
 static void test_thread_info(void)

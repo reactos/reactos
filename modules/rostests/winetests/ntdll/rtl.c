@@ -202,7 +202,11 @@ static void test_RtlQueryProcessDebugInformation(void)
     ok( buffer != NULL, "RtlCreateQueryDebugBuffer returned NULL" );
 
     status = RtlQueryProcessDebugInformation( GetCurrentThreadId(), PDI_HEAPS | PDI_HEAP_BLOCKS, buffer );
+#ifdef __REACTOS__
+    ok( status == (GetNTVersion() >= _WIN32_WINNT_VISTA ? STATUS_INVALID_CID : STATUS_INVALID_PARAMETER), "RtlQueryProcessDebugInformation returned %lx\n", status );
+#else
     ok( status == STATUS_INVALID_CID, "RtlQueryProcessDebugInformation returned %lx\n", status );
+#endif
 
     status = RtlQueryProcessDebugInformation( GetCurrentProcessId(), PDI_HEAPS | PDI_HEAP_BLOCKS, buffer );
     ok( !status, "RtlQueryProcessDebugInformation returned %lx\n", status );
@@ -3504,7 +3508,11 @@ static void test_DbgPrint(void)
     test_dbg_print_except = FALSE;
     test_dbg_print_except_ret = (LONG)EXCEPTION_EXECUTE_HANDLER;
     status = DbgPrint( "test_DbgPrint: %s", "Hello World" );
+#ifdef __REACTOS__
+    ok(status == (GetNTVersion() >= _WIN32_WINNT_VISTA ? 0 : 1), "DbgPrint returned %lx\n", status );
+#else
     ok( !status, "DbgPrint returned %lx\n", status );
+#endif
     ok( !test_dbg_print_except, "DBG_PRINTEXCEPTION_C received\n" );
 
 #ifdef __REACTOS__

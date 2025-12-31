@@ -1634,7 +1634,7 @@ static void test_NtMapViewOfSection(void)
 
         ok(status == STATUS_SUCCESS || status == STATUS_IMAGE_NOT_AT_BASE, "NtMapViewOfSection returned %08lx\n", status);
         ok(!((ULONG_PTR)ptr & 0xffff), "returned memory %p is not aligned to 64k\n", ptr);
-        ok(((UINT_PTR)ptr & ~get_zero_bits_mask(zero_bits)) == 0, "NtMapViewOfSection returned address %p\n", ptr);
+        ok(((UINT_PTR)ptr & ~get_zero_bits_mask(zero_bits)) == 0, "NtMapViewOfSection returned address %p, mask = 0x%Ix\n", ptr, ~get_zero_bits_mask(zero_bits));
 
         status = NtUnmapViewOfSection(process, ptr);
         ok(status == STATUS_SUCCESS, "NtUnmapViewOfSection returned %08lx\n", status);

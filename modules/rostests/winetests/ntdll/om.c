@@ -2334,17 +2334,34 @@ static void test_object_types(void)
         TYPE( L"File",          FILE, 0, 0 ),
         TYPE( L"IoCompletion",  IO_COMPLETION, 0, 0 ),
         TYPE( L"IoCompletionReserve", IO_COMPLETION_RESERVE, 0, 0 ),
+#ifdef __REACTOS__
         TYPE( L"Job",           JOB_OBJECT, 0, JOB_OBJECT_IMPERSONATE ),
+        TYPE( L"Key",           KEY, SYNCHRONIZE, KEY_CREATE_LINK ),
+#else
+        TYPE( L"Job",           JOB_OBJECT, 0, JOB_OBJECT_IMPERSONATE | 0x3C0 ),
         TYPE( L"Key",           KEY, SYNCHRONIZE, 0 ),
+#endif
         TYPE( L"KeyedEvent",    KEYEDEVENT, SYNCHRONIZE, 0 ),
         TYPE( L"Mutant",        MUTANT, 0, 0 ),
+#ifdef __REACTOS__
+        TYPE( L"Process",       PROCESS, 0, PROCESS_TERMINATE ),
+#else
         TYPE( L"Process",       PROCESS, 0, 0 ),
+#endif
         TYPE( L"Section",       SECTION, SYNCHRONIZE, 0 ),
         TYPE( L"Semaphore",     SEMAPHORE, 0, 0 ),
         TYPE( L"SymbolicLink",  SYMBOLIC_LINK, 0, 0xfffe ),
+#ifdef __REACTOS__
+        TYPE( L"Thread",        THREAD, 0, THREAD_RESUME | THREAD_QUERY_LIMITED_INFORMATION ),
+#else
         TYPE( L"Thread",        THREAD, 0, THREAD_RESUME ),
+#endif
         TYPE( L"Timer",         TIMER, 0, 0 ),
+#ifdef __REACTOS__
+        TYPE( L"Token",         TOKEN, SYNCHRONIZE, TOKEN_QUERY_SOURCE | TOKEN_IMPERSONATE | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY),
+#else
         TYPE( L"Token",         TOKEN, SYNCHRONIZE, 0 ),
+#endif
         TYPE( L"Type",          TYPE, SYNCHRONIZE, 0 ),
         TYPE( L"UserApcReserve", USER_APC_RESERVE, 0, 0 ),
         TYPE( L"WindowStation", WINSTA, 0, 0 ),
@@ -2384,6 +2401,17 @@ static void test_object_types(void)
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
+#ifdef __REACTOS__
+        if (GetNTVersion() < _WIN32_WINNT_WIN7)
+        {
+            if (!wcscmp(tests[i].name, L"IoCompletionReserve") ||
+                !wcscmp(tests[i].name, L"UserApcReserve"))
+            {
+                skip("%s not implemented before Win7\n", tests[i].name);
+                break;
+            }
+        }
+#endif
         for (j = 0; j < ARRAY_SIZE(all_types); j++)
         {
             if (!all_types[j].TypeName.Buffer) continue;
@@ -3411,6 +3439,14 @@ static void test_zero_access(void)
     CLIENT_ID cid;
     HANDLE h1, h2;
     DWORD err;
+
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        skip("Zero access tests don't work on Windows 2003\n");
+        return;
+    }
+#endif
 
     size.QuadPart = 4096;
     timeout.QuadPart = -10000;
