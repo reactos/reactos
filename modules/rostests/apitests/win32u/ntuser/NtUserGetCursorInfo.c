@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS API tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for NtUserCreateAcceleratorTable
- * COPYRIGHT:   Copyright 2025 Max Korostil (mrmks04@yandex.ru)
+ * COPYRIGHT:   Copyright 2025 Max Korostil <mrmks04@yandex.ru>
  */
 
 #include "../win32nt.h"
