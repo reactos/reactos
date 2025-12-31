@@ -54,6 +54,7 @@ extern void func_NtUserEnumDisplaySettings(void);
 extern void func_NtUserFindExistingCursorIcon(void);
 extern void func_NtUserGetAsyncKeyState(void);
 extern void func_NtUserGetClassInfo(void);
+extern void func_NtUserGetCursorInfo(void);
 //extern void func_NtUserGetIconInfo(void);
 extern void func_NtUserGetKeyboardLayoutName(void);
 extern void func_NtUserGetThreadState(void);
@@ -124,6 +125,7 @@ const struct test winetest_testlist[] =
     { "NtUserFindExistingCursorIcon", func_NtUserFindExistingCursorIcon },
     { "NtUserGetAsyncKeyState", func_NtUserGetAsyncKeyState },
     { "NtUserGetClassInfo", func_NtUserGetClassInfo },
+    { "NtUserGetCursorInfo", func_NtUserGetCursorInfo },
     //{ "NtUserGetIconInfo", func_NtUserGetIconInfo },
     { "NtUserGetKeyboardLayoutName", func_NtUserGetKeyboardLayoutName },
     { "NtUserGetThreadState", func_NtUserGetThreadState },
