@@ -4,9 +4,17 @@
 
 extern void func__snprintf(void);
 extern void func__snwprintf(void);
+extern void func__stricmp(void);
+extern void func__strlwr(void);
+extern void func__strnicmp(void);
+extern void func__strupr(void);
 extern void func__vscwprintf(void);
 extern void func__vsnprintf(void);
 extern void func__vsnwprintf(void);
+extern void func__wcsicmp(void);
+extern void func__wcslwr(void);
+extern void func__wcsnicmp(void);
+extern void func__wcsupr(void);
 extern void func_mbstowcs(void);
 extern void func_setjmp(void);
 extern void func_sprintf(void);
@@ -18,6 +26,7 @@ extern void func_wcstombs(void);
 
 extern void func_DllLoadNotification(void);
 extern void func_LdrEnumResources(void);
+extern void func_LdrFindResource_U(void);
 extern void func_LdrLoadDll(void);
 extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
@@ -129,9 +138,17 @@ const struct test winetest_testlist[] =
     // CRT tests from ../crt
     { "_snprintf", func__snprintf },
     { "_snwprintf", func__snwprintf },
+    { "_stricmp", func__stricmp },
+    { "_strlwr", func__strlwr },
+    { "_strnicmp", func__strnicmp },
+    { "_strupr", func__strupr },
     { "_vscwprintf", func__vscwprintf },
     { "_vsnprintf", func__vsnprintf },
     { "_vsnwprintf", func__vsnwprintf },
+    { "_wcsicmp", func__wcsicmp },
+    { "_wcslwr", func__wcslwr },
+    { "_wcsnicmp", func__wcsnicmp },
+    { "_wcsupr", func__wcsupr },
     { "mbstowcs", func_mbstowcs },
     { "setjmp", func_setjmp },
     { "sprintf", func_sprintf },
@@ -143,6 +160,7 @@ const struct test winetest_testlist[] =
 
     { "DllLoadNotification",            func_DllLoadNotification },
     { "LdrEnumResources",               func_LdrEnumResources },
+    { "LdrFindResource_U",              func_LdrFindResource_U },
     { "LdrLoadDll",                     func_LdrLoadDll },
     { "load_notifications",             func_load_notifications },
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },

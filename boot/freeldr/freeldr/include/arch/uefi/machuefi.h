@@ -23,7 +23,7 @@ VOID
 UefiVideoClearScreen(UCHAR Attr);
 
 VIDEODISPLAYMODE
-UefiVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 
 VOID
 UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
@@ -107,6 +107,3 @@ UefiHwIdle(VOID);
 VOID
 UefiInitializeFileSystemSupport(_In_ EFI_HANDLE ImageHandle,
                                 _In_ EFI_SYSTEM_TABLE *SystemTable);
-
-VOID
-UefiVideoScrollUp(VOID);

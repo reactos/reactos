@@ -6,16 +6,17 @@
  */
 
 #include <uefildr.h>
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
+#include "../vidfb.h"
 
 /* GLOBALS ********************************************************************/
 
-extern EFI_SYSTEM_TABLE* GlobalSystemTable;
+UCHAR MachDefaultTextColor = COLOR_GRAY;
+
 static unsigned CurrentCursorX = 0;
 static unsigned CurrentCursorY = 0;
-static unsigned CurrentAttr = 0x0f;
+static UCHAR CurrentAttr = ATTR(COLOR_GRAY, COLOR_BLACK);
+
+extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 static EFI_INPUT_KEY Key;
 static BOOLEAN ExtendedKey = FALSE;
 static char ExtendedScanCode = 0;
@@ -33,7 +34,7 @@ UefiConsPutChar(int c)
     NeedScroll = (CurrentCursorY >= Height);
     if (NeedScroll)
     {
-        UefiVideoScrollUp();
+        VidFbScrollUp(CurrentAttr);
         --CurrentCursorY;
     }
     if (c == '\r')
@@ -43,7 +44,6 @@ UefiConsPutChar(int c)
     else if (c == '\n')
     {
         CurrentCursorX = 0;
-
         if (!NeedScroll)
             ++CurrentCursorY;
     }

@@ -17,9 +17,12 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winreg.h>
 #include <wincon.h>
 #include <winioctl.h>
+#include <winuser.h>
+#include <ntsecapi.h>
 
 #include <errno.h>
 #include <strsafe.h>
@@ -48,9 +51,18 @@
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
 
+#include <ntddscsi.h>
+#include <ntddstor.h>
+#include <mountmgr.h>
+
 #include <fmifs/fmifs.h>
+#include <guiddef.h>
+#include <diskguid.h>
 
 #include "resource.h"
+
+//#define DUMP_PARTITION_TABLE
+//#define DUMP_PARTITION_LIST
 
 /* DEFINES *******************************************************************/
 
@@ -95,6 +107,19 @@ typedef enum _VOLUME_TYPE
     VOLUME_TYPE_UNKNOWN
 } VOLUME_TYPE, *PVOLUME_TYPE;
 
+typedef struct _MBR_PARTITION_DATA
+{
+    BOOLEAN BootIndicator;
+    UCHAR PartitionType;
+} MBR_PARTITION_DATA, *PMBR_PARTITION_DATA;
+
+typedef struct _GPT_PARTITION_DATA
+{
+    GUID PartitionType;
+    GUID PartitionId;
+    DWORD64 Attributes;
+} GPT_PARTITION_DATA, *PGPT_PARTITION_DATA;
+
 typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
@@ -104,8 +129,12 @@ typedef struct _PARTENTRY
     ULARGE_INTEGER StartSector;
     ULARGE_INTEGER SectorCount;
 
-    BOOLEAN BootIndicator;
-    UCHAR PartitionType;
+    union
+    {
+        MBR_PARTITION_DATA Mbr;
+        GPT_PARTITION_DATA Gpt;
+    };
+
     ULONG OnDiskPartitionNumber;
     ULONG PartitionNumber;
     ULONG PartitionIndex;
@@ -149,6 +178,10 @@ typedef struct _DISKENTRY
 {
     LIST_ENTRY ListEntry;
 
+    PWSTR Description;
+    PWSTR Location;
+    STORAGE_BUS_TYPE BusType;
+
     ULONGLONG Cylinders;
     ULONG TracksPerCylinder;
     ULONG SectorsPerTrack;
@@ -157,6 +190,9 @@ typedef struct _DISKENTRY
     ULARGE_INTEGER SectorCount;
     ULONG SectorAlignment;
     ULONG CylinderAlignment;
+
+    ULARGE_INTEGER StartSector;
+    ULARGE_INTEGER EndSector;
 
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
@@ -173,11 +209,11 @@ typedef struct _DISKENTRY
     BOOLEAN Dirty;
 
     BOOLEAN NewDisk;
-    BOOLEAN NoMbr; /* MBR is absent */
+    DWORD PartitionStyle;
 
     UNICODE_STRING DriverName;
 
-    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+    PDRIVE_LAYOUT_INFORMATION_EX LayoutBuffer;
 
     PPARTENTRY ExtendedPartition;
 
@@ -193,6 +229,7 @@ typedef struct _VOLENTRY
     ULONG VolumeNumber;
     WCHAR VolumeName[MAX_PATH];
     WCHAR DeviceName[MAX_PATH];
+    DWORD SerialNumber;
 
     WCHAR DriveLetter;
 
@@ -201,9 +238,23 @@ typedef struct _VOLENTRY
     VOLUME_TYPE VolumeType;
     ULARGE_INTEGER Size;
 
+    ULARGE_INTEGER TotalAllocationUnits;
+    ULARGE_INTEGER AvailableAllocationUnits;
+    ULONG SectorsPerAllocationUnit;
+    ULONG BytesPerSector;
+
     PVOLUME_DISK_EXTENTS pExtents;
 
 } VOLENTRY, *PVOLENTRY;
+
+#define SIZE_1KB    (1024ULL)
+#define SIZE_10KB   (10ULL * 1024ULL)
+#define SIZE_1MB    (1024ULL * 1024ULL)
+#define SIZE_10MB   (10ULL * 1024ULL * 1024ULL)
+#define SIZE_1GB    (1024ULL * 1024ULL * 1024ULL)
+#define SIZE_10GB   (10ULL * 1024ULL * 1024ULL * 1024ULL)
+#define SIZE_1TB    (1024ULL * 1024ULL * 1024ULL * 1024ULL)
+#define SIZE_10TB   (10ULL * 1024ULL * 1024ULL * 1024ULL * 1024ULL)
 
 
 /* GLOBAL VARIABLES ***********************************************************/
@@ -246,9 +297,27 @@ BOOL clean_main(INT argc, LPWSTR *argv);
 BOOL compact_main(INT argc, LPWSTR *argv);
 
 /* convert.c */
-BOOL convert_main(INT argc, LPWSTR *argv);
+NTSTATUS
+CreateDisk(
+    _In_ ULONG DiskNumber,
+    _In_ PCREATE_DISK DiskInfo);
+
+BOOL
+ConvertGPT(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+ConvertMBR(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* create.c */
+BOOL
+CreateEfiPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
 BOOL
 CreateExtendedPartition(
     _In_ INT argc,
@@ -256,6 +325,11 @@ CreateExtendedPartition(
 
 BOOL
 CreateLogicalPartition(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+BOOL
+CreateMsrPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
@@ -405,6 +479,30 @@ PWSTR
 DuplicateString(
     _In_ PWSTR pszInString);
 
+VOID
+CreateGUID(
+    _Out_ GUID *pGuid);
+
+VOID
+CreateSignature(
+    _Out_ PDWORD pSignature);
+
+VOID
+PrintGUID(
+    _Out_ PWSTR pszBuffer,
+    _In_ GUID *pGuid);
+
+BOOL
+StringToGUID(
+    _Out_ GUID *pGuid,
+    _In_ PWSTR pszString);
+
+VOID
+PrintBusType(
+    _Out_ PWSTR pszBuffer,
+    _In_ INT cchBufferMax,
+    _In_ STORAGE_BUS_TYPE Bustype);
+
 /* offline.c */
 BOOL offline_main(INT argc, LPWSTR *argv);
 
@@ -412,6 +510,18 @@ BOOL offline_main(INT argc, LPWSTR *argv);
 BOOL online_main(INT argc, LPWSTR *argv);
 
 /* partlist.c */
+#ifdef DUMP_PARTITION_TABLE
+VOID
+DumpPartitionTable(
+    _In_ PDISKENTRY DiskEntry);
+#endif
+
+#ifdef DUMP_PARTITION_LIST
+VOID
+DumpPartitionList(
+    _In_ PDISKENTRY DiskEntry);
+#endif
+
 ULONGLONG
 AlignDown(
     _In_ ULONGLONG Value,
@@ -429,13 +539,35 @@ CreateVolumeList(VOID);
 VOID
 DestroyVolumeList(VOID);
 
+VOID
+ScanForUnpartitionedMbrDiskSpace(
+    PDISKENTRY DiskEntry);
+
+VOID
+ScanForUnpartitionedGptDiskSpace(
+    PDISKENTRY DiskEntry);
+
+VOID
+ReadLayoutBuffer(
+    _In_ HANDLE FileHandle,
+    _In_ PDISKENTRY DiskEntry);
+
 NTSTATUS
-WritePartitions(
+WriteMbrPartitions(
+    _In_ PDISKENTRY DiskEntry);
+
+NTSTATUS
+WriteGptPartitions(
     _In_ PDISKENTRY DiskEntry);
 
 VOID
-UpdateDiskLayout(
+UpdateMbrDiskLayout(
     _In_ PDISKENTRY DiskEntry);
+
+VOID
+UpdateGptDiskLayout(
+    _In_ PDISKENTRY DiskEntry,
+    _In_ BOOL DeleteEntry);
 
 PPARTENTRY
 GetPrevUnpartitionedEntry(

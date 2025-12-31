@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#include "init.h"
+#include "gditools.h"
 
 #include <pseh/pseh2.h>
 
@@ -534,11 +534,10 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
 
 START_TEST(CreateDIBitmap)
 {
-    InitStuff();
+    GdiToolsInit();
     Test_CreateDIBitmap_Params();
     Test_CreateDIBitmap1();
     Test_CreateDIBitmap_DIB_PAL_COLORS();
     Test_CreateDIBitmap_RLE8();
     Test_CreateDIBitmap_CBM_CREATDIB();
 }
-
