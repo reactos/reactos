@@ -54,59 +54,6 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 
     g_mixerId = mixerId;
     return S_OK;
-
-    MIXERCAPS mixerCaps;
-    MIXERLINE mixerLine;
-    MIXERCONTROL mixerControl;
-    MIXERLINECONTROLS mixerLineControls;
-
-    g_mixerLineID = -1;
-    g_muteControlID = -1;
-
-    if (mixerGetDevCapsW(g_mixerId, &mixerCaps, sizeof(mixerCaps)))
-        return E_FAIL;
-
-    if (mixerCaps.cDestinations == 0)
-        return S_FALSE;
-
-    TRACE("mixerCaps.cDestinations %d\n", mixerCaps.cDestinations);
-
-    DWORD idx;
-    for (idx = 0; idx < mixerCaps.cDestinations; idx++)
-    {
-        mixerLine.cbStruct = sizeof(mixerLine);
-        mixerLine.dwDestination = idx;
-        if (!mixerGetLineInfoW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLine, 0))
-        {
-            if (mixerLine.dwComponentType >= MIXERLINE_COMPONENTTYPE_DST_SPEAKERS &&
-                mixerLine.dwComponentType <= MIXERLINE_COMPONENTTYPE_DST_HEADPHONES)
-                break;
-            TRACE("Destination %d was not speakers or headphones.\n");
-        }
-    }
-
-    if (idx >= mixerCaps.cDestinations)
-        return E_FAIL;
-
-    TRACE("Valid destination %d found.\n");
-
-    g_mixerLineID = mixerLine.dwLineID;
-
-    mixerLineControls.cbStruct = sizeof(mixerLineControls);
-    mixerLineControls.dwLineID = mixerLine.dwLineID;
-    mixerLineControls.cControls = 1;
-    mixerLineControls.dwControlType = MIXERCONTROL_CONTROLTYPE_MUTE;
-    mixerLineControls.pamxctrl = &mixerControl;
-    mixerLineControls.cbmxctrl = sizeof(mixerControl);
-
-    if (mixerGetLineControlsW((HMIXEROBJ)UlongToHandle(g_mixerId), &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
-        return E_FAIL;
-
-    TRACE("Found control id %d for mute: %d\n", mixerControl.dwControlID);
-
-    g_muteControlID = mixerControl.dwControlID;
-
-    return S_OK;
 }
 
 HRESULT Volume_IsMute()
