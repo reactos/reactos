@@ -273,6 +273,7 @@ CsrCaptureMessageUnicodeStringInPlace(
     _Inout_ PUNICODE_STRING String)
 {
     ASSERT(String != NULL);
+    if (!String) return;
 
     /* This is a way to capture the UNICODE string, since (Maximum)Length are also in bytes */
     CsrCaptureMessageString(CaptureBuffer,
