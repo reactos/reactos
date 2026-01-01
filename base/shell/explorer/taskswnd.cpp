@@ -276,7 +276,6 @@ public:
         if (!m_hThread)
         {
             m_bThreadRunning = FALSE;
-            CloseHandle(m_hThread);
         }
     }
 };
@@ -1557,6 +1556,13 @@ public:
 
         CloseThemeData(m_Theme);
         DeleteAllTasks();
+
+        if (m_ImageList)
+        {
+            ImageList_Destroy(m_ImageList);
+            m_ImageList = NULL;
+        }
+
         return TRUE;
     }
 
