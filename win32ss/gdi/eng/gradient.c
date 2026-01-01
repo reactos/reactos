@@ -574,7 +574,19 @@ IntEngGradientFill(
     psurf = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
     ASSERT(psurf);
 
-    if (psurf->flags & HOOK_GRADIENTFILL)
+    /*
+     * Notes from MSDN:
+     * "GDI will not call DrvGradientFill for 8bpp destination surfaces."
+     * "GDI never calls this function for palletized surfaces."
+     * https://learn.microsoft.com/en-us/windows/win32/api/winddi/nf-winddi-drvgradientfill
+     * So add an appropriate conditions for calling DrvGradientFill().
+     * Fixes improper window captions painting with native video drivers on real hardware
+     * (ATI/AMD and Nvidia).
+     * See CORE-14927 and CORE-15341.
+     */
+    if ((psurf->flags & HOOK_GRADIENTFILL)
+        && (psurf->ppal->flFlags & PAL_INDEXED)
+        && psoDest->iBitmapFormat >= BMF_16BPP)
     {
         Ret = GDIDEVFUNCS(psoDest).GradientFill(psoDest,
                                                 pco,
