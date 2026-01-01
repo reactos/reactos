@@ -10,9 +10,6 @@
 #include "diskpart.h"
 #include "diskpart_msg.h"
 
-BOOL exit_main(INT argc, LPWSTR *argv);
-BOOL rem_main(INT argc, LPWSTR *argv);
-
 
 COMMAND cmds[] =
 {
@@ -107,7 +104,7 @@ COMMAND cmds[] =
  * compares the command name to a list of available commands, and
  * determines which function to invoke.
  */
-BOOL
+EXIT_CODE
 InterpretCmd(
     int argc,
     LPWSTR *argv)
@@ -119,15 +116,15 @@ InterpretCmd(
 
     /* If no args provided */
     if (argc < 1)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* First, determine if the user wants to exit
        or to use a comment */
     if (_wcsicmp(argv[0], L"exit") == 0)
-        return FALSE;
+        return EXIT_EXIT;
 
     if (_wcsicmp(argv[0], L"rem") == 0)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
@@ -174,7 +171,7 @@ InterpretCmd(
 
     HelpCommandList();
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -182,14 +179,15 @@ InterpretCmd(
  * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
-BOOL
-InterpretScript(LPWSTR input_line)
+EXIT_CODE
+InterpretScript(
+    _In_ PWSTR input_line)
 {
-    LPWSTR args_vector[MAX_ARGS_COUNT];
+    PWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    LPWSTR ptr;
+    PWSTR ptr;
 
     memset(args_vector, 0, sizeof(args_vector));
 
@@ -238,10 +236,10 @@ InterpretMain(VOID)
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    BOOL bRun = TRUE;
+    EXIT_CODE ExitCode = EXIT_SUCCESS;
     LPWSTR ptr;
 
-    while (bRun != FALSE)
+    while (ExitCode != EXIT_EXIT)
     {
         args_count = 0;
         memset(args_vector, 0, sizeof(args_vector));
@@ -277,6 +275,6 @@ InterpretMain(VOID)
         }
 
         /* Send the string to find the command */
-        bRun = InterpretCmd(args_count, args_vector);
+        ExitCode = InterpretCmd(args_count, args_vector);
     }
 }

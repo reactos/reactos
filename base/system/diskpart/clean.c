@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 clean_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -37,7 +37,7 @@ clean_main(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* Do not allow to clean the boot disk */
@@ -45,7 +45,7 @@ clean_main(
         (CurrentDisk->BiosDiskNumber == 0))
     {
         ConResPuts(StdOut, IDS_CLEAN_SYSTEM);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 1; i < argc; i++)
@@ -112,7 +112,7 @@ clean_main(
     if (CurrentDisk->LayoutBuffer == NULL)
     {
         DPRINT1("Failed to allocate the disk layout buffer!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     CurrentDisk->LayoutBuffer->PartitionStyle = PARTITION_STYLE_RAW;
@@ -246,5 +246,5 @@ done:
     if (SectorsBuffer != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, SectorsBuffer);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

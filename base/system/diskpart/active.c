@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 active_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -24,13 +24,13 @@ active_main(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
@@ -38,7 +38,7 @@ active_main(
         if (CurrentPartition->Mbr.BootIndicator)
         {
             ConResPuts(StdOut, IDS_ACTIVE_ALREADY);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentPartition->Mbr.BootIndicator = TRUE;
@@ -59,5 +59,5 @@ active_main(
         ConResPuts(StdOut, IDS_ACTIVE_NO_MBR);
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

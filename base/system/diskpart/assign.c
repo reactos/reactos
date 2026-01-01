@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL
+EXIT_CODE
 assign_main(
     _In_ INT argc,
     _In_ LPWSTR *argv)
@@ -26,7 +26,7 @@ assign_main(
     if (CurrentVolume == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 1; i < argc; i++)
@@ -54,7 +54,7 @@ assign_main(
             else
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE; 
+                return EXIT_SUCCESS; 
             }
         }
         else if (HasPrefix(argv[i], L"mount=", &pszSuffix))
@@ -70,14 +70,14 @@ assign_main(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
     if (nExclusive > 1)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     DPRINT1("VolumeName: %S\n", CurrentVolume->VolumeName);
@@ -91,13 +91,13 @@ assign_main(
         if ((DriveLetter < L'C') || (DriveLetter > L'Z'))
         {
             ConResPuts(StdOut, IDS_ASSIGN_INVALID_LETTER);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         if (DriveLetter == CurrentVolume->DriveLetter)
         {
             ConResPuts(StdOut, IDS_ASSIGN_ALREADY_ASSIGNED);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -108,7 +108,7 @@ assign_main(
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentVolume->DriveLetter = UNICODE_NULL;
@@ -122,7 +122,7 @@ assign_main(
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentVolume->DriveLetter = DriveLetter;
@@ -134,17 +134,17 @@ assign_main(
         if (bResult == FALSE)
         {
             ConResPuts(StdOut, IDS_ASSIGN_FAIL);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         if (CurrentVolume->DriveLetter == UNICODE_NULL)
         {
             ConResPuts(StdOut, IDS_ASSIGN_NO_MORE_LETTER);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
     ConResPuts(StdOut, IDS_REMOVE_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

@@ -24,12 +24,12 @@ IsKnownPartition(
 }
 
 
-BOOL
+EXIT_CODE
 DeleteDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -270,7 +270,7 @@ DeleteGptPartition(
 }
 
 
-BOOL
+EXIT_CODE
 DeletePartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -283,13 +283,13 @@ DeletePartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 2; i < argc; i++)
@@ -320,7 +320,7 @@ DeletePartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -333,14 +333,14 @@ DeletePartition(
         DeleteGptPartition(bOverride);
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DeleteVolume(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
-    return TRUE;
+    return EXIT_SUCCESS;
 }

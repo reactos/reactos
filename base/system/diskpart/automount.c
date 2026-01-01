@@ -12,10 +12,10 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 automount_main(
-    INT argc,
-    LPWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     BOOL bDisable = FALSE, bEnable = FALSE, bScrub = FALSE;
 #if 0
@@ -134,5 +134,5 @@ automount_main(
         ConPuts(StdOut, L"\n");
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

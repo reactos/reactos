@@ -84,7 +84,7 @@ ShowInstalledFileSystems(
 }
 
 
-BOOL
+EXIT_CODE
 filesystems_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -92,7 +92,7 @@ filesystems_main(
     if (CurrentVolume == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConPuts(StdOut, L"\n");
@@ -100,5 +100,5 @@ filesystems_main(
     ShowFileSystemInfo(CurrentVolume);
     ShowInstalledFileSystems(CurrentVolume);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 setid_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -26,13 +26,13 @@ setid_main(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 1; i < argc; i++)
@@ -66,7 +66,7 @@ setid_main(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -75,7 +75,7 @@ setid_main(
         if (!StringToGUID(&CurrentPartition->Gpt.PartitionType, pszId))
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentDisk->Dirty = TRUE;
@@ -84,7 +84,7 @@ setid_main(
         if (!NT_SUCCESS(Status))
         {
             ConResPuts(StdOut, IDS_SETID_FAIL);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
@@ -95,26 +95,26 @@ setid_main(
         if (length == 0)
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         if (length > 2)
         {
             ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         PartitionType = (UCHAR)wcstoul(pszSuffix, NULL, 16);
         if ((PartitionType == 0) && (errno == ERANGE))
         {
             ConResPuts(StdErr, IDS_SETID_INVALID_FORMAT);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         if (PartitionType == 0x42)
         {
             ConResPuts(StdErr, IDS_SETID_INVALID_TYPE);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentPartition->Mbr.PartitionType = PartitionType;
@@ -124,11 +124,11 @@ setid_main(
         if (!NT_SUCCESS(Status))
         {
             ConResPuts(StdOut, IDS_SETID_FAIL);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
     ConResPuts(StdOut, IDS_SETID_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

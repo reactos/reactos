@@ -66,25 +66,32 @@
 
 /* DEFINES *******************************************************************/
 
+/* NOERR codes for the program */
+#undef EXIT_SUCCESS
+#undef EXIT_FAILURE
+
+typedef enum _EXIT_CODE
+{
+    EXIT_SUCCESS = 0,
+    EXIT_FATAL,
+    EXIT_CMD_ARG,
+    EXIT_FILE,
+    EXIT_SERVICE,
+    EXIT_SYNTAX,
+    EXIT_EXIT       /* Only used by the exit command */
+} EXIT_CODE;
+
 typedef struct _COMMAND
 {
     PWSTR cmd1;
     PWSTR cmd2;
     PWSTR cmd3;
-    BOOL (*func)(INT, WCHAR**);
+    EXIT_CODE (*func)(INT, PWSTR*);
     INT help;
     DWORD help_detail;
 } COMMAND, *PCOMMAND;
 
 extern COMMAND cmds[];
-
-/* NOERR codes for the program */
-//#define ERROR_NONE      0
-//#define ERROR_FATAL     1
-//#define ERROR_CMD_ARG   2
-//#define ERROR_FILE      3
-//#define ERROR_SERVICE   4
-//#define ERROR_SYNTAX    5
 
 #define MAX_STRING_SIZE 1024
 #define MAX_ARGS_COUNT 256
@@ -270,31 +277,58 @@ extern PVOLENTRY  CurrentVolume;
 /* PROTOTYPES *****************************************************************/
 
 /* active.c */
-BOOL active_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+active_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* add.c */
-BOOL add_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+add_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* assign.c */
-BOOL assign_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+assign_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* attach.c */
-BOOL attach_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+attach_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* attributes.h */
-BOOL attributes_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+attributes_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* automount.c */
-BOOL automount_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+automount_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* break.c */
-BOOL break_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+break_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* clean.c */
-BOOL clean_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+clean_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* compact.c */
-BOOL compact_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+compact_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* convert.c */
 NTSTATUS
@@ -302,74 +336,77 @@ CreateDisk(
     _In_ ULONG DiskNumber,
     _In_ PCREATE_DISK DiskInfo);
 
-BOOL
+EXIT_CODE
 ConvertGPT(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 ConvertMBR(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
 /* create.c */
-BOOL
+EXIT_CODE
 CreateEfiPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 CreateExtendedPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 CreateLogicalPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 CreateMsrPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 CreatePrimaryPartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
 /* delete.c */
-BOOL
+EXIT_CODE
 DeleteDisk(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 DeletePartition(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
-BOOL
+EXIT_CODE
 DeleteVolume(
     _In_ INT argc,
     _In_ PWSTR *argv);
 
 
 /* detach.c */
-BOOL detach_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+detach_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* detail.c */
-BOOL
+EXIT_CODE
 DetailDisk(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 DetailPartition(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 DetailVolume(
     INT argc,
     PWSTR *argv);
@@ -377,65 +414,102 @@ DetailVolume(
 /* diskpart.c */
 
 /* dump.c */
-BOOL
+EXIT_CODE
 DumpDisk(
     _In_ INT argc,
     _In_ LPWSTR *argv);
 
-BOOL
+EXIT_CODE
 DumpPartition(
     _In_ INT argc,
     _In_ LPWSTR *argv);
 
 
 /* expand.c */
-BOOL expand_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+expand_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* extend.c */
-BOOL extend_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+extend_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* filesystem.c */
-BOOL filesystems_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+filesystems_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* format.c */
-BOOL format_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+format_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* gpt.c */
-BOOL gpt_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+gpt_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* help.c */
-BOOL help_main(INT argc, LPWSTR *argv);
-VOID HelpCommandList(VOID);
-BOOL HelpCommand(PCOMMAND pCommand);
+EXIT_CODE
+help_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+VOID
+HelpCommandList(VOID);
+
+EXIT_CODE
+HelpCommand(
+    _In_ PCOMMAND pCommand);
 
 /* import. c */
-BOOL import_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+import_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* inactive.c */
-BOOL inactive_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+inactive_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* interpreter.c */
-BOOL InterpretScript(LPWSTR line);
-BOOL InterpretCmd(INT argc, LPWSTR *argv);
-VOID InterpretMain(VOID);
+EXIT_CODE
+InterpretScript(
+    _In_ LPWSTR line);
+
+EXIT_CODE
+InterpretCmd(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
+
+VOID
+InterpretMain(VOID);
 
 /* list.c */
-BOOL
+EXIT_CODE
 ListDisk(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 ListPartition(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 ListVolume(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 ListVirtualDisk(
     INT argc,
     PWSTR *argv);
@@ -449,7 +523,10 @@ PrintVolume(
     _In_ PVOLENTRY VolumeEntry);
 
 /* merge.c */
-BOOL merge_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+merge_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* misc.c */
 BOOL
@@ -530,10 +607,16 @@ DeleteDriveLetter(
     _In_ WCHAR DriveLetter);
 
 /* offline.c */
-BOOL offline_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+offline_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* online.c */
-BOOL online_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+online_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* partlist.c */
 #ifdef DUMP_PARTITION_TABLE
@@ -621,52 +704,76 @@ RemoveVolume(
 
 
 /* recover.c */
-BOOL recover_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+recover_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* remove.c */
-BOOL remove_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+remove_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* repair.c */
-BOOL repair_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+repair_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* rescan.c */
-BOOL rescan_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+rescan_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* retain.c */
-BOOL retain_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+retain_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* san.c */
-BOOL san_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+san_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* select.c */
-BOOL
+EXIT_CODE
 SelectDisk(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 SelectPartition(
     INT argc,
     PWSTR *argv);
 
-BOOL
+EXIT_CODE
 SelectVolume(
     INT argc,
     PWSTR *argv);
 /*
-BOOL
+EXIT_CODE
 SelectVirtualDisk(
     INT argc,
     PWSTR *argv);
 */
 /* setid.c */
-BOOL setid_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+setid_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* shrink.c */
-BOOL shrink_main(INT argc, LPWSTR *argv);
+EXIT_CODE
+shrink_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv);
 
 /* uniqueid.c */
-BOOL
+EXIT_CODE
 UniqueIdDisk(
     _In_ INT argc,
     _In_ PWSTR *argv);

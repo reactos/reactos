@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 CreateEfiPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -34,13 +34,13 @@ CreateEfiPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle != PARTITION_STYLE_GPT)
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 3; i < argc; i++)
@@ -67,7 +67,7 @@ CreateEfiPartition(
             if ((ullSize == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
@@ -91,7 +91,7 @@ CreateEfiPartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -201,16 +201,16 @@ CreateEfiPartition(
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
         CurrentPartition = NULL;
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 CreateExtendedPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -230,13 +230,13 @@ CreateExtendedPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
     {
@@ -250,7 +250,7 @@ CreateExtendedPartition(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CreateDisk() failed!\n");
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
@@ -283,7 +283,7 @@ CreateExtendedPartition(
             if ((ullSize == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
@@ -296,7 +296,7 @@ CreateExtendedPartition(
             if ((ullOffset == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
 #endif
         }
@@ -316,7 +316,7 @@ CreateExtendedPartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -328,13 +328,13 @@ CreateExtendedPartition(
     if (GetPrimaryPartitionCount(CurrentDisk) >= 4)
     {
         ConPuts(StdOut, L"No space left for an extended partition!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->ExtendedPartition != NULL)
     {
         ConPuts(StdOut, L"We already have an extended partition on this disk!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (ullSize != 0)
@@ -350,7 +350,7 @@ CreateExtendedPartition(
     if (PartEntry->IsPartitioned)
     {
         ConPuts(StdOut, L"No disk space left for an extended partition!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (ullSectorCount == 0)
@@ -414,16 +414,16 @@ CreateExtendedPartition(
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
         CurrentPartition = NULL;
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 CreateLogicalPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -444,13 +444,13 @@ CreateLogicalPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle != PARTITION_STYLE_MBR)
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 3; i < argc; i++)
@@ -477,7 +477,7 @@ CreateLogicalPartition(
             if ((ullSize == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
@@ -490,7 +490,7 @@ CreateLogicalPartition(
             if ((ullOffset == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
 #endif
         }
@@ -507,13 +507,13 @@ CreateLogicalPartition(
                 if ((PartitionType == 0) && (errno == ERANGE))
                 {
                     ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                    return TRUE;
+                    return EXIT_SUCCESS;
                 }
             }
             else
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE; 
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"align=", &pszSuffix))
@@ -532,7 +532,7 @@ CreateLogicalPartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -622,16 +622,16 @@ CreateLogicalPartition(
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
         CurrentPartition = NULL;
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 CreateMsrPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -653,13 +653,13 @@ CreateMsrPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle != PARTITION_STYLE_GPT)
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_INVALID_STYLE);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 3; i < argc; i++)
@@ -686,7 +686,7 @@ CreateMsrPartition(
             if ((ullSize == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
@@ -699,7 +699,7 @@ CreateMsrPartition(
             if ((ullOffset == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
 #endif
         }
@@ -710,7 +710,7 @@ CreateMsrPartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -820,12 +820,12 @@ CreateMsrPartition(
     {
         ConResPuts(StdOut, IDS_CREATE_PARTITION_FAIL);
         CurrentPartition = NULL;
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConResPuts(StdOut, IDS_CREATE_PARTITION_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -1090,7 +1090,7 @@ CreatePrimaryGptPartition(
 }
 
 
-BOOL
+EXIT_CODE
 CreatePrimaryPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -1107,7 +1107,7 @@ CreatePrimaryPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW)
@@ -1122,7 +1122,7 @@ CreatePrimaryPartition(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CreateDisk() failed!\n");
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
@@ -1155,7 +1155,7 @@ CreatePrimaryPartition(
             if ((ullSize == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
         }
         else if (HasPrefix(argv[i], L"offset=", &pszSuffix))
@@ -1168,7 +1168,7 @@ CreatePrimaryPartition(
             if ((ullOffset == 0) && (errno == ERANGE))
             {
                 ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
 #endif
         }
@@ -1194,7 +1194,7 @@ CreatePrimaryPartition(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -1213,5 +1213,5 @@ CreatePrimaryPartition(
         CreatePrimaryGptPartition(ullSize, pszPartitionType);
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

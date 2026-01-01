@@ -148,10 +148,10 @@ PrintDisk(
 }
 
 
-BOOL
+EXIT_CODE
 ListDisk(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
@@ -173,14 +173,14 @@ ListDisk(
 
     ConPuts(StdOut, L"\n\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 ListPartition(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -194,7 +194,7 @@ ListPartition(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_LIST_PARTITION_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
@@ -227,7 +227,7 @@ ListPartition(
         ConPuts(StdOut, L"\n");
         ConResPuts(StdOut, IDS_LIST_PARTITION_NONE);
         ConPuts(StdOut, L"\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* Header labels */
@@ -463,7 +463,7 @@ ListPartition(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -525,10 +525,10 @@ PrintVolume(
 }
 
 
-BOOL
+EXIT_CODE
 ListVolume(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
@@ -549,15 +549,15 @@ ListVolume(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 ListVirtualDisk(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     ConPuts(StdOut, L"ListVirtualDisk()!\n");
-    return TRUE;
+    return EXIT_SUCCESS;
 }

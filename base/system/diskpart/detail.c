@@ -64,7 +64,7 @@ IsPartitionInVolume(
 }
 
 
-BOOL
+EXIT_CODE
 DetailDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -79,13 +79,13 @@ DetailDisk(
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* TODO: Print more disk details */
@@ -128,11 +128,11 @@ DetailDisk(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DetailPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -149,19 +149,19 @@ DetailPartition(
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_PARTITION_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     PartEntry = CurrentPartition;
@@ -214,11 +214,11 @@ DetailPartition(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DetailVolume(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -232,13 +232,13 @@ DetailVolume(
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentVolume == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
 
@@ -271,5 +271,5 @@ DetailVolume(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

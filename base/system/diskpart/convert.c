@@ -84,7 +84,7 @@ done:
 }
 
 
-BOOL
+EXIT_CODE
 ConvertGPT(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -97,19 +97,19 @@ ConvertGPT(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
         ConResPuts(StdOut, IDS_CONVERT_GPT_ALREADY);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (GetPrimaryPartitionCount(CurrentDisk) != 0)
     {
         ConResPuts(StdOut, IDS_CONVERT_GPT_NOT_EMPTY);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
 #if 0
@@ -117,7 +117,7 @@ ConvertGPT(
     if (CurrentDisk->SectorCount.QuadPart * CurrentDisk->BytesPerSector < 128ULL * 1024ULL * 1024ULL)
     {
         ConResPuts(StdOut, IDS_CONVERT_GPT_TOO_SMALL);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 #endif
 
@@ -129,7 +129,7 @@ ConvertGPT(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CreateDisk() failed!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     CurrentDisk->StartSector.QuadPart = AlignDown(CurrentDisk->LayoutBuffer->Gpt.StartingUsableOffset.QuadPart / CurrentDisk->BytesPerSector,
@@ -140,11 +140,11 @@ ConvertGPT(
     ScanForUnpartitionedGptDiskSpace(CurrentDisk);
     ConResPuts(StdOut, IDS_CONVERT_GPT_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 ConvertMBR(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -157,20 +157,20 @@ ConvertMBR(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if ((CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR) ||
         (CurrentDisk->PartitionStyle == PARTITION_STYLE_RAW))
     {
         ConResPuts(StdOut, IDS_CONVERT_MBR_ALREADY);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (GetPrimaryPartitionCount(CurrentDisk) != 0)
     {
         ConResPuts(StdOut, IDS_CONVERT_MBR_NOT_EMPTY);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     DiskInfo.PartitionStyle = PARTITION_STYLE_MBR;
@@ -180,7 +180,7 @@ ConvertMBR(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CreateDisk() failed!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     CurrentDisk->StartSector.QuadPart = (ULONGLONG)CurrentDisk->SectorAlignment;
@@ -189,5 +189,5 @@ ConvertMBR(
     ScanForUnpartitionedMbrDiskSpace(CurrentDisk);
     ConResPuts(StdOut, IDS_CONVERT_MBR_SUCCESS);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

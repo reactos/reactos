@@ -13,7 +13,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BOOL
+EXIT_CODE
 UniqueIdDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -26,7 +26,7 @@ UniqueIdDisk(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (argc == 2)
@@ -40,13 +40,13 @@ UniqueIdDisk(
             wcscpy(szBuffer, L"00000000");
         ConPrintf(StdOut, L"Disk ID: %s\n", szBuffer);
         ConPuts(StdOut, L"\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (argc != 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 1; i < argc; i++)
@@ -74,7 +74,7 @@ UniqueIdDisk(
         else
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
     }
 
@@ -83,7 +83,7 @@ UniqueIdDisk(
         if (!StringToGUID(&CurrentDisk->LayoutBuffer->Gpt.DiskId, pszId))
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentDisk->Dirty = TRUE;
@@ -97,14 +97,14 @@ UniqueIdDisk(
             (IsHexString(pszId) == FALSE))
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         ulValue = wcstoul(pszId, NULL, 16);
         if ((ulValue == 0) && (errno == ERANGE))
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         DPRINT("New Signature: 0x%08lx\n", ulValue);
@@ -118,5 +118,5 @@ UniqueIdDisk(
         ConResPuts(StdOut, IDS_UNIQUID_DISK_INVALID_STYLE);
     }
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
