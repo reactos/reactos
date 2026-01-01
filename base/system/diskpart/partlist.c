@@ -1935,6 +1935,7 @@ AddVolumeToList(
             VolumeEntry->SerialNumber = 0;
             VolumeEntry->SectorsPerAllocationUnit = 1;
             VolumeEntry->BytesPerSector = 512;
+            VolumeEntry->VolumeType = VOLUME_TYPE_PARTITION;
         }
     }
 
