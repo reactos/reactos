@@ -484,3 +484,15 @@ BasepCheckWinSaferRestrictions(
     OUT PHANDLE NewToken,
     OUT PHANDLE JobHandle
 );
+
+ULONG
+NTAPI
+BasepUnicodeStringToOemSize(
+    IN PUNICODE_STRING String
+);
+
+ULONG
+NTAPI
+BasepOemStringToUnicodeSize(
+    IN PANSI_STRING String
+);

@@ -23,40 +23,8 @@
 
 UNICODE_STRING Restricted = RTL_CONSTANT_STRING(L"Restricted");
 BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
-PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
-PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
-PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
-PRTL_COUNT_STRINGA Basep8BitStringToUnicodeSize = BasepAnsiStringToUnicodeSize;
 
 /* FUNCTIONS ******************************************************************/
-
-ULONG
-NTAPI
-BasepUnicodeStringToOemSize(IN PUNICODE_STRING String)
-{
-    return RtlUnicodeStringToOemSize(String);
-}
-
-ULONG
-NTAPI
-BasepOemStringToUnicodeSize(IN PANSI_STRING String)
-{
-    return RtlOemStringToUnicodeSize(String);
-}
-
-ULONG
-NTAPI
-BasepUnicodeStringToAnsiSize(IN PUNICODE_STRING String)
-{
-    return RtlUnicodeStringToAnsiSize(String);
-}
-
-ULONG
-NTAPI
-BasepAnsiStringToUnicodeSize(IN PANSI_STRING String)
-{
-    return RtlAnsiStringToUnicodeSize(String);
-}
 
 HANDLE
 WINAPI
