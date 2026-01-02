@@ -3138,7 +3138,7 @@ NtUserSetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_ HKL hKL,
+    _In_opt_ HKL hKL,
     _In_ DWORD dwAction);
 
 BOOL
