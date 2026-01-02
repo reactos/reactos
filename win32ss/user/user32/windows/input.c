@@ -258,9 +258,9 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
     return ret;
 }
 
-/*
+/**
  * @implemented
- * Same as imm32!ImmSetHotKey.
+ * @note Same as imm32!ImmSetHotKey.
  */
 BOOL WINAPI
 CliImmSetHotKey(
