@@ -756,6 +756,23 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
             NpxThread = KeGetCurrentPrcb()->NpxThread;
             if (NpxThread)
             {
+                /*
+                 * Defensive: a terminating thread may have had its kernel stack
+                 * freed / InitialStack cleared while still being referenced as
+                 * NpxThread. In that case KiGetThreadNpxArea() would underflow
+                 * and crash in FXSAVE/FNSAVE.
+                 */
+                if ((NpxThread->InitialStack == NULL) ||
+                    (((ULONG_PTR)NpxThread->InitialStack & 0xF) != 0))
+                {
+                    NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                    KeGetCurrentPrcb()->NpxThread = NULL;
+                    NpxThread = NULL;
+                }
+            }
+
+            if (NpxThread)
+            {
                 /* Get the NPX frame */
                 NpxSaveArea = KiGetThreadNpxArea(NpxThread);
 
