@@ -314,6 +314,11 @@ function(set_module_type_toolchain MODULE TYPE)
             # Mark .rsrc section as non-disposable non-pageable, as bugcheck code needs to access it
             target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP)
         endif()
+
+        # win32k & dependencies require a special version of ksanitize
+        if(NOT ${TYPE} STREQUAL "kerneldll")
+            target_link_libraries(${MODULE} ksanitize)
+        endif()
     endif()
 
     if(RUNTIME_CHECKS)
