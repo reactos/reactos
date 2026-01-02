@@ -72,7 +72,7 @@ VidSetScrollRegion(
 VOID
 NTAPI
 VidDisplayStringXY(
-    _In_z_ PUCHAR String,
+    _In_ PCSTR String,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ BOOLEAN Transparent)
@@ -96,7 +96,7 @@ VidDisplayStringXY(
 VOID
 NTAPI
 VidDisplayString(
-    _In_z_ PUCHAR String)
+    _In_ PCSTR String)
 {
     /* Start looping the string */
     for (; *String; ++String)

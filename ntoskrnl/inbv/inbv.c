@@ -333,26 +333,29 @@ InbvGetDisplayState(VOID)
 BOOLEAN
 NTAPI
 InbvDisplayString(
-    _In_ PCHAR String)
+    _In_ PCSTR String)
 {
     /* Make sure we own the display */
     if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
     {
         /* If we're not allowed, return success anyway */
-        if (!InbvDisplayDebugStrings) return TRUE;
+        if (!InbvDisplayDebugStrings)
+            return TRUE;
 
         /* Check if a filter is installed */
-        if (InbvDisplayFilter) InbvDisplayFilter(&String);
+        if (InbvDisplayFilter)
+            InbvDisplayFilter(&String);
 
         /* Acquire the lock */
         InbvAcquireLock();
 
         /* Make sure we're installed and display the string */
-        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR)String);
+        if (InbvBootDriverInstalled)
+            VidDisplayString(String);
 
         /* Print the string on the EMS port */
         HeadlessDispatch(HeadlessCmdPutString,
-                         String,
+                         (PVOID)String,
                          strlen(String) + sizeof(ANSI_NULL),
                          NULL,
                          NULL);
