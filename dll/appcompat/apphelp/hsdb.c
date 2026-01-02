@@ -25,7 +25,11 @@ typedef struct _ShimData
     DWORD dwMagic;
     SDBQUERYRESULT Query;
     WCHAR szLayer[MAX_LAYER_LENGTH];
-    DWORD dwRosProcessCompatVersion;  // ReactOS specific
+    // Start ReactOS specific
+    DWORD dwRosProcessCompatVersion;
+#ifdef _M_AMD64
+    PVOID RtlGetCurrentDirectory_U_RtlpMsysDecoy;
+#endif
 } ShimData;
 
 #define SHIMDATA_MAGIC  0xAC0DEDAB
@@ -35,7 +39,9 @@ C_ASSERT(SHIMDATA_MAGIC == REACTOS_SHIMDATA_MAGIC);
 C_ASSERT(sizeof(ShimData) == sizeof(ReactOS_ShimData));
 C_ASSERT(offsetof(ShimData, dwMagic) == offsetof(ReactOS_ShimData, dwMagic));
 C_ASSERT(offsetof(ShimData, dwRosProcessCompatVersion) == offsetof(ReactOS_ShimData, dwRosProcessCompatVersion));
-
+#ifdef _M_AMD64
+C_ASSERT(offsetof(ShimData, RtlGetCurrentDirectory_U_RtlpMsysDecoy) == offsetof(ReactOS_ShimData, RtlGetCurrentDirectory_U_RtlpMsysDecoy));
+#endif
 
 static BOOL WINAPI SdbpFileExists(LPCWSTR path)
 {

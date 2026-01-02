@@ -95,6 +95,10 @@ NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
 NTSTATUS NTAPI RtlpInitializeActCtx(PVOID* pOldShimData);
 extern BOOLEAN RtlpUse16ByteSLists;
 
+#ifdef _M_AMD64
+extern ULONG NTAPI RtlGetCurrentDirectory_U_RtlpMsysDecoy(ULONG MaximumLength, PWSTR Buffer);
+#endif
+
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
 #else
@@ -1615,6 +1619,9 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
             DPRINT1("LdrpInitializeProcessCompat: Corrupt pShimData (0x%x, %u)\n", pShimData->dwMagic, pShimData->dwSize);
             return;
         }
+#ifdef _M_AMD64
+        pShimData->RtlGetCurrentDirectory_U_RtlpMsysDecoy = &RtlGetCurrentDirectory_U_RtlpMsysDecoy;   /* We need this private symbol for a MSYS shim */
+#endif
         if (pShimData->dwRosProcessCompatVersion)
         {
             if (pShimData->dwRosProcessCompatVersion == REACTOS_COMPATVERSION_IGNOREMANIFEST)
@@ -1684,6 +1691,10 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
 
                     pShimData->dwSize = sizeof(*pShimData);
                     pShimData->dwMagic = REACTOS_SHIMDATA_MAGIC;
+#ifdef _M_AMD64
+                    /* The process did not ask for shims, but we want to make sure that if the Peb->pShimData is available, the data in it is complete */
+                    pShimData->RtlGetCurrentDirectory_U_RtlpMsysDecoy = &RtlGetCurrentDirectory_U_RtlpMsysDecoy;
+#endif
 
                     Peb->pShimData = pShimData;
                     *pOldShimData = pShimData;
