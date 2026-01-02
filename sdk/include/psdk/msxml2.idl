@@ -31,6 +31,10 @@ import "oaidl.idl";
 #define vi_progid(str)
 #endif
 
+cpp_quote("#ifdef __ISAXXMLReader_INTERFACE_DEFINED__")
+cpp_quote("#undef __MSXML2_LIBRARY_DEFINED__")
+cpp_quote("#endif")
+
 [
     uuid(f5078f18-c551-11d3-89b9-0000f81fe221),
     version(3.0),
@@ -75,8 +79,8 @@ interface ISAXEntityResolver;
 interface ISAXErrorHandler;
 interface ISAXLexicalHandler;
 interface ISAXLocator;
-interface ISAXXMLReader;
 interface ISAXXMLFilter;
+interface ISAXXMLReader;
 
 interface IVBSAXAttributes;
 interface IVBSAXContentHandler;
@@ -133,6 +137,8 @@ typedef enum tagDOMNodeType
 } DOMNodeType;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef __msxml_som_enums__")
+cpp_quote("#define __msxml_som_enums__")
 typedef enum _SOMITEMTYPE
 {
     SOMITEM_SCHEMA                      = 0x1000,
@@ -260,6 +266,7 @@ typedef enum _SCHEMATYPEVARIETY
     SCHEMATYPEVARIETY_LIST      =  1,
     SCHEMATYPEVARIETY_UNION     =  2,
 } SCHEMATYPEVARIETY;
+cpp_quote("#endif /* __msxml_som_enums__ */")
 
 [
 local,
@@ -684,7 +691,7 @@ interface IXMLDOMSchemaCollection2 : IXMLDOMSchemaCollection
     HRESULT getDeclaration(
         [in] IXMLDOMNode* node,
         [out,retval]ISchemaItem** item);
-};
+}
 
 [
 local,
@@ -1258,7 +1265,7 @@ interface IXSLProcessor : IDispatch
     [id(DISPID_XMLDOM_PROCESSOR_SETSTARTMODE)]
     HRESULT setStartMode(
         [in] BSTR p, 
-        [in] BSTR uri);
+        [in, defaultvalue("")] BSTR uri);
 
     [propget, id(DISPID_XMLDOM_PROCESSOR_STARTMODE)]
     HRESULT startMode([retval, out] BSTR *p);
@@ -1286,11 +1293,7 @@ interface IXSLProcessor : IDispatch
     HRESULT addParameter(
         [in] BSTR p, 
         [in] VARIANT var, 
-#ifndef __REACTOS__
-        [in, defaultvalue(L"")] BSTR uri);
-#else
-        [in] BSTR uri);
-#endif
+        [in, defaultvalue("")] BSTR uri);
 
     [id(DISPID_XMLDOM_PROCESSOR_ADDOBJECT)]
     HRESULT addObject(
@@ -1373,7 +1376,7 @@ interface IXMLHTTPRequest : IDispatch
 
     [propput, id(14)]
     HRESULT onreadystatechange([in] IDispatch *pReadyStateSink);
-};
+}
 
 [
 object,
@@ -1747,6 +1750,7 @@ coclass XMLSchemaCache40
     [default] interface IXMLDOMSchemaCollection2;
 }
 
+#ifdef __REACTOS__
 [
     uuid(88d96a07-f192-11d4-a65f-0040963251e5)
 ]
@@ -1754,6 +1758,7 @@ coclass XMLSchemaCache60
 {
     [default] interface IXMLDOMSchemaCollection2;
 }
+#endif
 
 [
     helpstring("XML Schema Cache"),
@@ -1901,7 +1906,7 @@ interface ISAXAttributes : IUnknown
         [in] int nQName,
         [out] const WCHAR ** pValue,
         [out] int * nValue);
-};
+}
 
 [
     object,
@@ -1961,7 +1966,7 @@ interface ISAXContentHandler : IUnknown
     HRESULT skippedEntity(
         [in] const WCHAR * pName,
         [in] int nName);
-};
+}
 
 [
     object,
@@ -2001,7 +2006,7 @@ interface ISAXDeclHandler : IUnknown
         [in] int nPublicId,
         [in] const WCHAR * pSystemId,
         [in] int nSystemId);
-};
+}
 
 [
     object,
@@ -2027,7 +2032,7 @@ interface ISAXDTDHandler : IUnknown
         [in] int nSystemId,
         [in] const WCHAR * pNotationName,
         [in] int nNotationName);
-};
+}
 
 [
     object,
@@ -2040,7 +2045,7 @@ interface ISAXEntityResolver : IUnknown
         [in] const WCHAR * pPublicId,
         [in] const WCHAR * pSystemId,
         [out, retval] VARIANT * ret);
-};
+}
 
 [
     object,
@@ -2063,7 +2068,7 @@ interface ISAXErrorHandler : IUnknown
         [in] ISAXLocator * pLocator,
         [in] const WCHAR * pErrorMessage,
         [in] HRESULT hrErrorCode);
-};
+}
 
 [
     object,
@@ -2097,7 +2102,7 @@ interface ISAXLexicalHandler : IUnknown
     HRESULT comment(
         [in] const WCHAR * pChars,
         [in] int nChars);
-};
+}
 
 [
     object,
@@ -2117,12 +2122,12 @@ interface ISAXLocator : IUnknown
 
     HRESULT getSystemId(
         [out, retval] const WCHAR ** systemId);
-};
+}
 
 [
-local,
-object,
-uuid (a4f96ed0-f829-476e-81c0-cdc7bd2a0802)
+    local,
+    object,
+    uuid(a4f96ed0-f829-476e-81c0-cdc7bd2a0802)
 ]
 interface ISAXXMLReader : IUnknown
 {
@@ -2174,7 +2179,7 @@ interface ISAXXMLReader : IUnknown
         [in] VARIANT varInput);
     HRESULT parseURL(
         [in] const WCHAR * url);
-};
+}
 
 [
     local,
@@ -2187,7 +2192,7 @@ interface ISAXXMLFilter : ISAXXMLReader
         [out, retval] ISAXXMLReader ** pReader);
     HRESULT putParent(
         [in] ISAXXMLReader * reader);
-};
+}
 
 [
     object,
@@ -2236,7 +2241,7 @@ interface IVBSAXAttributes : IDispatch
 
     [id(DISPID_SAX_ATTRIBUTES_GETVALUEFROMQNAME)]
     HRESULT getValueFromQName( [in] BSTR QName, [out, retval] BSTR * value);
-};
+}
 
 [
     object,
@@ -2283,7 +2288,7 @@ interface IVBSAXContentHandler : IDispatch
 
     [id(DISPID_SAX_CONTENTHANDLER_SKIPPEDENTITY)]
     HRESULT skippedEntity( [in, out] BSTR * name);
-};
+}
 
 [
     object,
@@ -2316,7 +2321,7 @@ interface IVBSAXDeclHandler : IDispatch
         [in, out] BSTR * name,
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId);
-};
+}
 
 [
     object,
@@ -2338,7 +2343,7 @@ interface IVBSAXDTDHandler : IDispatch
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId,
         [in, out] BSTR * notationName);
-};
+}
 
 [
     object,
@@ -2353,7 +2358,7 @@ interface IVBSAXEntityResolver : IDispatch
         [in, out] BSTR * publicId,
         [in, out] BSTR * systemId,
         [out, retval] VARIANT * ret);
-};
+}
 
 [
     object,
@@ -2380,7 +2385,7 @@ interface IVBSAXErrorHandler : IDispatch
 	    [in] IVBSAXLocator * locator,
 	    [in, out] BSTR * errorMessage,
             [in] LONG errorCode);
-};
+}
 
 [
     object,
@@ -2410,7 +2415,7 @@ interface IVBSAXLexicalHandler : IDispatch
 
     [id(DISPID_SAX_LEXICALHANDLER_COMMENT)]
     HRESULT comment( [in, out] BSTR * chars);
-};
+}
 
 [
     object,
@@ -2431,7 +2436,7 @@ interface IVBSAXLocator : IDispatch
 
     [propget, id(DISPID_SAX_LOCATOR_SYSTEMID)]
     HRESULT systemId( [out, retval] BSTR * systemId);
-};
+}
 
 [
     object,
@@ -2446,7 +2451,7 @@ interface IVBSAXXMLFilter : IDispatch
     [propputref, id(DISPID_SAX_XMLFILTER_PARENT)]
     HRESULT parent( [in] IVBSAXXMLReader * reader);
 
-};
+}
 
 [
     dual,
@@ -2562,7 +2567,7 @@ interface IMXAttributes : IDispatch
 
     [id(DISPID_MX_ATTRIBUTES_SETVALUE)]
     HRESULT setValue([in] int index, [in] BSTR value);
-};
+}
 
 [
     local,
@@ -2593,7 +2598,7 @@ interface IMXReaderControl : IDispatch
 
     [id(DISPID_MX_READER_CONTROL_SUSPEND)]
     HRESULT suspend();
-};
+}
 
 [
     object,
@@ -2645,7 +2650,7 @@ interface IMXWriter :  IDispatch
 
     [id(DISPID_MX_WRITER_FLUSH)]
     HRESULT flush();
-};
+}
 
 [
     local,
@@ -2841,7 +2846,7 @@ interface ISchemaStringCollection : IDispatch
     [id(DISPID_NEWENUM), hidden, restricted, propget]
     HRESULT _newEnum(
         [out,retval] IUnknown** ppunk);
-};
+}
 
 [
     local,
@@ -2875,7 +2880,7 @@ interface ISchemaItemCollection : IDispatch
     [id(DISPID_NEWENUM), hidden, restricted, propget]
     HRESULT _newEnum(
         [out,retval]IUnknown** ppunk);
-};
+}
 
 [
     local,
@@ -2914,7 +2919,7 @@ interface ISchemaItem : IDispatch
     HRESULT writeAnnotation(
         [in] IUnknown* annotationSink,
         [out,retval] VARIANT_BOOL* isWritten);
-};
+}
 
 [
     local,
@@ -2960,7 +2965,7 @@ interface ISchema : ISchemaItem
     [id(DISPID_SOM_SCHEMALOCATIONS), propget]
     HRESULT schemaLocations(
         [out,retval] ISchemaStringCollection** schemaLocations);
-};
+}
 
 [
     local,
@@ -2978,7 +2983,7 @@ interface ISchemaParticle : ISchemaItem
     [id(DISPID_SOM_MAXOCCURS), propget]
     HRESULT maxOccurs(
         [out,retval] VARIANT* maxOccurs);
-};
+}
 
 [
     object,
@@ -3011,7 +3016,7 @@ interface ISchemaAttribute : ISchemaItem
     [id(DISPID_SOM_ISREFERENCE), propget]
     HRESULT isReference(
         [out,retval] VARIANT_BOOL* reference);
-};
+}
 
 [
     local,
@@ -3065,7 +3070,7 @@ interface ISchemaElement : ISchemaParticle
     [id(DISPID_SOM_ISREFERENCE), propget]
     HRESULT isReference(
         [out,retval] VARIANT_BOOL* reference);
-};
+}
 
 [
     local,
@@ -3144,7 +3149,7 @@ interface ISchemaType : ISchemaItem
     [id(DISPID_SOM_PATTERNS), propget]
     HRESULT patterns(
         [out,retval] ISchemaStringCollection** patterns);
-};
+}
 
 [
     local,
@@ -3178,7 +3183,7 @@ interface ISchemaComplexType : ISchemaType
     [id(DISPID_SOM_PROHIBITED), propget]
     HRESULT prohibitedSubstitutions(
         [out,retval] SCHEMADERIVATIONMETHOD* prohibited);
-};
+}
 
 [
     local,
@@ -3196,7 +3201,7 @@ interface ISchemaAttributeGroup : ISchemaItem
     [id(DISPID_SOM_ATTRIBUTES), propget]
         HRESULT attributes(
             [out,retval] ISchemaItemCollection** attributes);
-};
+}
 
 [
     local,
@@ -3210,7 +3215,7 @@ interface ISchemaModelGroup : ISchemaParticle
     [id(DISPID_SOM_PARTICLES), propget]
     HRESULT particles(
         [out,retval] ISchemaItemCollection** particles);
-};
+}
 
 [
     local,
@@ -3228,7 +3233,7 @@ interface ISchemaAny : ISchemaParticle
     [id(DISPID_SOM_PROCESSCONTENTS), propget]
     HRESULT processContents(
         [out,retval] SCHEMAPROCESSCONTENTS* processContents);
-};
+}
 
 [
     local,
@@ -3250,7 +3255,7 @@ interface ISchemaIdentityConstraint : ISchemaItem
     [id(DISPID_SOM_REFERENCEDKEY), propget]
     HRESULT referencedKey(
         [out,retval] ISchemaIdentityConstraint** key);
-};
+}
 
 [
     local,
@@ -3268,7 +3273,7 @@ interface ISchemaNotation : ISchemaItem
     [id(DISPID_SOM_PUBLICIDENTIFIER), propget]
     HRESULT publicIdentifier(
         [out,retval] BSTR* uri);
-};
+}
 
 
 [
@@ -3283,7 +3288,7 @@ coclass SAXXMLReader30
     [default] interface IVBSAXXMLReader;
     interface ISAXXMLReader;
     interface IMXReaderControl;
-};
+}
 
 [
     uuid(7c6e29bc-8b8b-4c3d-859e-af6cd158be0f)
@@ -3419,7 +3424,7 @@ coclass MXXMLWriter30
     interface IVBSAXDTDHandler;
     interface IVBSAXErrorHandler;
     interface IVBSAXLexicalHandler;
-};
+}
 
 [
     uuid(88d969c8-f192-11d4-a65f-0040963251e5),

@@ -23,10 +23,10 @@
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
 #include <libxml/xmlerror.h>
-#include <libxml/globals.h>
 #include <libxml/dict.h>
 
-#include "save.h"
+#include "private/entities.h"
+#include "private/error.h"
 
 /*
  * The XML predefined entities.
@@ -37,35 +37,35 @@ static xmlEntity xmlEntityLt = {
     NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "<", BAD_CAST "<", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0, 1
+    NULL, NULL, NULL, NULL, 0, 0, 0
 };
 static xmlEntity xmlEntityGt = {
     NULL, XML_ENTITY_DECL, BAD_CAST "gt",
     NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST ">", BAD_CAST ">", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0, 1
+    NULL, NULL, NULL, NULL, 0, 0, 0
 };
 static xmlEntity xmlEntityAmp = {
     NULL, XML_ENTITY_DECL, BAD_CAST "amp",
     NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "&", BAD_CAST "&", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0, 1
+    NULL, NULL, NULL, NULL, 0, 0, 0
 };
 static xmlEntity xmlEntityQuot = {
     NULL, XML_ENTITY_DECL, BAD_CAST "quot",
     NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "\"", BAD_CAST "\"", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0, 1
+    NULL, NULL, NULL, NULL, 0, 0, 0
 };
 static xmlEntity xmlEntityApos = {
     NULL, XML_ENTITY_DECL, BAD_CAST "apos",
     NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "'", BAD_CAST "'", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0, 1
+    NULL, NULL, NULL, NULL, 0, 0, 0
 };
 
 /**
@@ -113,7 +113,7 @@ xmlEntitiesWarn(xmlParserErrors code, const char *msg, const xmlChar *str1)
 /*
  * xmlFreeEntity : clean-up an entity record.
  */
-static void
+void
 xmlFreeEntity(xmlEntityPtr entity)
 {
     xmlDictPtr dict = NULL;
@@ -162,7 +162,6 @@ xmlCreateEntity(xmlDictPtr dict, const xmlChar *name, int type,
     }
     memset(ret, 0, sizeof(xmlEntity));
     ret->type = XML_ENTITY_DECL;
-    ret->checked = 0;
 
     /*
      * fill the structure.
@@ -604,7 +603,7 @@ xmlEncodeEntitiesInternal(xmlDocPtr doc, const xmlChar *input, int attr) {
      * allocate an translation buffer.
      */
     buffer_size = 1000;
-    buffer = (xmlChar *) xmlMalloc(buffer_size * sizeof(xmlChar));
+    buffer = (xmlChar *) xmlMalloc(buffer_size);
     if (buffer == NULL) {
         xmlEntitiesErrMemory("xmlEncodeEntities: malloc failed");
 	return(NULL);
@@ -718,8 +717,6 @@ xmlEncodeEntitiesInternal(xmlDocPtr doc, const xmlChar *input, int attr) {
 		    (((cur[0] & 0xF8) == 0xF8))) {
 		    xmlEntitiesErr(XML_CHECK_NOT_UTF8,
 			    "xmlEncodeEntities: input not UTF-8");
-		    if (doc != NULL)
-			doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
 		    snprintf(buf, sizeof(buf), "&#%d;", *cur);
 		    buf[sizeof(buf) - 1] = 0;
 		    ptr = buf;
@@ -751,8 +748,6 @@ xmlEncodeEntitiesInternal(xmlDocPtr doc, const xmlChar *input, int attr) {
 		if ((l == 1) || (!IS_CHAR(val))) {
 		    xmlEntitiesErr(XML_ERR_INVALID_CHAR,
 			"xmlEncodeEntities: char out of range\n");
-		    if (doc != NULL)
-			doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
 		    snprintf(buf, sizeof(buf), "&#%d;", *cur);
 		    buf[sizeof(buf) - 1] = 0;
 		    ptr = buf;
@@ -844,7 +839,7 @@ xmlEncodeSpecialChars(const xmlDoc *doc ATTRIBUTE_UNUSED, const xmlChar *input) 
      * allocate an translation buffer.
      */
     buffer_size = 1000;
-    buffer = (xmlChar *) xmlMalloc(buffer_size * sizeof(xmlChar));
+    buffer = (xmlChar *) xmlMalloc(buffer_size);
     if (buffer == NULL) {
         xmlEntitiesErrMemory("xmlEncodeSpecialChars: malloc failed");
 	return(NULL);
@@ -1010,7 +1005,6 @@ xmlCopyEntitiesTable(xmlEntitiesTablePtr table) {
  */
 static void
 xmlDumpEntityContent(xmlBufferPtr buf, const xmlChar *content) {
-    if (buf->alloc == XML_BUFFER_ALLOC_IMMUTABLE) return;
     if (xmlStrchr(content, '%')) {
         const xmlChar * base, *cur;
 
