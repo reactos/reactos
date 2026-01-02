@@ -2327,7 +2327,7 @@ NtUserGetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _Out_ PUINT lpuModifiers,
     _Out_ PUINT lpuVirtualKey,
-    _Out_ LPHKL lphKL);
+    _Out_opt_ LPHKL lphKL);
 
 BOOL
 NTAPI
