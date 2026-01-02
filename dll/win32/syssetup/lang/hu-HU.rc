@@ -80,7 +80,7 @@ BEGIN
     LTEXT "", IDC_STATIC, 53, 79, 250, 1, SS_ETCHEDHORZ
     LTEXT "A billentyűzetkiosztás határozza meg a karaktereket,\namelyek megjelennek gépeléskor.", IDC_STATIC, 53, 86, 253, 16
     LTEXT "%s", IDC_LAYOUTTEXT, 53, 102, 250, 16
-    LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 122, 230, 16
+    LTEXT "A billentyűzetkiosztás megváltoztatásához kattintson\na Testreszabás gombra.", IDC_STATIC, 53, 126, 230, 16
     PUSHBUTTON "Test&reszabás...", IDC_CUSTOMLAYOUT, 245, 122, 60, 14
 END
 
