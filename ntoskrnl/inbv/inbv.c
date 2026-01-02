@@ -557,7 +557,7 @@ InbvBitBlt(
 VOID
 NTAPI
 InbvBufferToScreenBlt(
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
@@ -576,7 +576,7 @@ InbvBufferToScreenBlt(
 VOID
 NTAPI
 InbvScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG X,
     _In_ ULONG Y,
     _In_ ULONG Width,
