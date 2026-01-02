@@ -696,7 +696,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
         ustr.Length = 0;
         if (!W32kDosPathNameToNtPathName(gspv.awcWallpaper, &ustr))
         {
-            ERR("RtlDosPathNameToNtPathName_U failed\n");
+            ERR("W32kDosPathNameToNtPathName failed\n");
             return 0;
         }
 
