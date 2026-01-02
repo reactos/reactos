@@ -66,7 +66,6 @@ IMEHOTKEYENTRY DefaultHotKeyTableC[] =
 #define FE_KOREAN               (1 << 3)
 
 // Sets the far-east flags
-// Win: SetFeKeyboardFlags
 VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
 {
     switch (LangID)
@@ -143,8 +142,6 @@ Failure:
     return FALSE;
 }
 
-
-/* Win: LoadPreloadKeyboardLayouts */
 VOID IntLoadPreloadKeyboardLayouts(VOID)
 {
     UINT nNumber, uFlags;
