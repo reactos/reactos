@@ -57,13 +57,21 @@ typedef struct tagBITMAPINFOHEADER
 
 typedef ULONG RGBQUAD;
 
+typedef struct _URECT
+{
+    ULONG Left;
+    ULONG Top;
+    ULONG Right;
+    ULONG Bottom;
+} URECT;
+
 /*
  * Globals
  */
 extern UCHAR VidpTextColor;
 extern ULONG VidpCurrentX;
 extern ULONG VidpCurrentY;
-extern ULONG VidpScrollRegion[4];
+extern URECT VidpScrollRegion;
 extern const UCHAR VidpFontData[256 * BOOTCHAR_HEIGHT];
 extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 

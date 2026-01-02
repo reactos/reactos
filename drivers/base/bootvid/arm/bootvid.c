@@ -117,18 +117,18 @@ DoScroll(
     PUSHORT i, j;
 
     /* Set memory positions of the scroll */
-    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * (SCREEN_WIDTH / 8)) + (VidpScrollRegion[0] >> 3)];
+    SourceOffset = &VgaArmBase[(VidpScrollRegion.Top * (SCREEN_WIDTH / 8)) + (VidpScrollRegion.Left >> 3)];
     DestOffset = &SourceOffset[Scroll * (SCREEN_WIDTH / 8)];
 
     /* Start loop */
-    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
         /* Set number of bytes to loop and start offset */
-        Offset = VidpScrollRegion[0] >> 3;
+        Offset = VidpScrollRegion.Left >> 3;
         j = SourceOffset;
 
         /* Check if this is part of the scroll region */
-        if (Offset <= (VidpScrollRegion[2] >> 3))
+        if (Offset <= (VidpScrollRegion.Right >> 3))
         {
             /* Update position */
             i = (PUSHORT)(DestOffset - SourceOffset);
@@ -146,7 +146,7 @@ DoScroll(
                 Offset++;
 
                 /* Make sure we don't go past the scroll region */
-            } while (Offset <= (VidpScrollRegion[2] >> 3));
+            } while (Offset <= (VidpScrollRegion.Right >> 3));
         }
 
         /* Move to the next line */

@@ -12,17 +12,9 @@
 /* GLOBALS ********************************************************************/
 
 UCHAR VidpTextColor = BV_COLOR_WHITE;
-
 ULONG VidpCurrentX = 0;
 ULONG VidpCurrentY = 0;
-
-ULONG VidpScrollRegion[4] =
-{
-    0,
-    0,
-    SCREEN_WIDTH  - 1,
-    SCREEN_HEIGHT - 1
-};
+URECT VidpScrollRegion = {0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1};
 
 static BOOLEAN ClearRow = FALSE;
 
@@ -66,13 +58,13 @@ VidSetScrollRegion(
     ASSERT((Left % BOOTCHAR_WIDTH) == 0);
     ASSERT((Right % BOOTCHAR_WIDTH) == BOOTCHAR_WIDTH - 1);
 
-    /* Set Scroll Region */
-    VidpScrollRegion[0] = Left;
-    VidpScrollRegion[1] = Top;
-    VidpScrollRegion[2] = Right;
-    VidpScrollRegion[3] = Bottom;
+    /* Set the scroll region */
+    VidpScrollRegion.Left = Left;
+    VidpScrollRegion.Top  = Top;
+    VidpScrollRegion.Right  = Right;
+    VidpScrollRegion.Bottom = Bottom;
 
-    /* Set current X and Y */
+    /* Set the current X and Y */
     VidpCurrentX = Left;
     VidpCurrentY = Top;
 }
@@ -114,7 +106,7 @@ VidDisplayString(
         {
             /* Modify Y position */
             VidpCurrentY += BOOTCHAR_HEIGHT + 1;
-            if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion[3])
+            if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion.Bottom)
             {
                 /* Scroll the view and clear the current row */
                 DoScroll(BOOTCHAR_HEIGHT + 1);
@@ -128,7 +120,7 @@ VidDisplayString(
             }
 
             /* Update current X */
-            VidpCurrentX = VidpScrollRegion[0];
+            VidpCurrentX = VidpScrollRegion.Left;
 
             /* No need to clear this row */
             ClearRow = FALSE;
@@ -136,7 +128,7 @@ VidDisplayString(
         else if (*String == '\r')
         {
             /* Update current X */
-            VidpCurrentX = VidpScrollRegion[0];
+            VidpCurrentX = VidpScrollRegion.Left;
 
             /* If a new-line does not follow we will clear the current row */
             if (String[1] != '\n')
@@ -156,11 +148,11 @@ VidDisplayString(
             VidpCurrentX += BOOTCHAR_WIDTH;
 
             /* Check if we should scroll */
-            if (VidpCurrentX + BOOTCHAR_WIDTH - 1 > VidpScrollRegion[2])
+            if (VidpCurrentX + BOOTCHAR_WIDTH - 1 > VidpScrollRegion.Right)
             {
                 /* Update Y position and check if we should scroll it */
                 VidpCurrentY += BOOTCHAR_HEIGHT + 1;
-                if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion[3])
+                if (VidpCurrentY + BOOTCHAR_HEIGHT > VidpScrollRegion.Bottom)
                 {
                     /* Scroll the view and clear the current row */
                     DoScroll(BOOTCHAR_HEIGHT + 1);
@@ -174,7 +166,7 @@ VidDisplayString(
                 }
 
                 /* Update current X */
-                VidpCurrentX = VidpScrollRegion[0];
+                VidpCurrentX = VidpScrollRegion.Left;
             }
         }
     }

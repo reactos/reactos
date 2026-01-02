@@ -244,14 +244,14 @@ DoScroll(
     /* Set Mode 1 */
     ReadWriteMode(1);
 
-    RowSize = (VidpScrollRegion[2] - VidpScrollRegion[0] + 1) / 8;
+    RowSize = (VidpScrollRegion.Right - VidpScrollRegion.Left + 1) / 8;
 
     /* Calculate the position in memory for the row */
-    OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion[1] + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
-    NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion[1] * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
+    OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion.Top + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
+    NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion.Top * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
 
     /* Start loop */
-    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
         __movsb(NewPosition, OldPosition, RowSize);

@@ -313,21 +313,21 @@ VOID
 DoScroll(
     _In_ ULONG Scroll)
 {
-    ULONG RowSize = VidpScrollRegion[2] - VidpScrollRegion[0] + 1;
+    ULONG RowSize = VidpScrollRegion.Right - VidpScrollRegion.Left + 1;
 
     /* Calculate the position in memory for the row */
-    PUCHAR OldPosition = BackBuffer + BB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1] + Scroll);
-    PUCHAR NewPosition = BackBuffer + BB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1]);
+    PUCHAR OldPosition = BackBuffer + BB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
+    PUCHAR NewPosition = BackBuffer + BB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
 
     /* Start loop */
-    for (ULONG Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (ULONG Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
         ULONG i;
 
         /* Scroll the row */
         RtlCopyMemory(NewPosition, OldPosition, RowSize);
 
-        PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(VidpScrollRegion[0], Top));
+        PULONG Frame = (PULONG)(FrameBufferStart + FB_OFFSET(VidpScrollRegion.Left, Top));
 
         for (i = 0; i < RowSize; ++i)
             Frame[i] = CachedPalette[NewPosition[i]];

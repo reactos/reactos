@@ -328,11 +328,11 @@ DoScroll(
     USHORT i, Line;
     PUCHAR Src, Dst;
     PULONG SrcWide, DstWide;
-    USHORT PixelCount = (VidpScrollRegion[2] - VidpScrollRegion[0]) + 1;
-    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1] + Scroll);
-    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion[0], VidpScrollRegion[1]);
+    USHORT PixelCount = (VidpScrollRegion.Right - VidpScrollRegion.Left) + 1;
+    ULONG_PTR SourceOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top + Scroll);
+    ULONG_PTR DestinationOffset = FrameBuffer + FB_OFFSET(VidpScrollRegion.Left, VidpScrollRegion.Top);
 
-    for (Line = VidpScrollRegion[1]; Line <= VidpScrollRegion[3]; Line++)
+    for (Line = VidpScrollRegion.Top; Line <= VidpScrollRegion.Bottom; Line++)
     {
         SrcWide = (PULONG)SourceOffset;
         DstWide = (PULONG)DestinationOffset;
