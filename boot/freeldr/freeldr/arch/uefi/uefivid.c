@@ -73,19 +73,19 @@ UefiInitializeVideo(VOID)
 VOID
 UefiVideoClearScreen(UCHAR Attr)
 {
-    VidFbClearScreen(Attr);
+    FbConsClearScreen(Attr);
 }
 
 VOID
 UefiVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
-    VidFbPutChar(Ch, Attr, X, Y);
+    FbConsPutChar(Ch, Attr, X, Y);
 }
 
 VOID
 UefiVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
-    VidFbGetDisplaySize(Width, Height, Depth);
+    FbConsGetDisplaySize(Width, Height, Depth);
 }
 
 VIDEODISPLAYMODE
@@ -98,13 +98,13 @@ UefiVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init)
 ULONG
 UefiVideoGetBufferSize(VOID)
 {
-    return VidFbGetBufferSize();
+    return FbConsGetBufferSize();
 }
 
 VOID
 UefiVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-    VidFbCopyOffScreenBufferToVRAM(Buffer);
+    FbConsCopyOffScreenBufferToVRAM(Buffer);
 }
 
 VOID
