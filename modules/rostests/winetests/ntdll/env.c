@@ -513,17 +513,23 @@ static void test_process_params(void)
         size - ((char *)params->Environment - (char *)params) );
     pRtlDestroyProcessParameters( params );
 
+    printf("test_process_params %lu\n", __LINE__);
     /* also test the actual parameters of the current process */
 
     ok( cur_params->Flags & PROCESS_PARAMS_FLAG_NORMALIZED, "current params not normalized\n" );
+    printf("test_process_params %lu\n", __LINE__);
 #ifdef __REACTOS__
     if (is_reactos()) size = 0; else /* ReactOS does not allocate this from the heap */
 #endif
     size = HeapSize( GetProcessHeap(), 0, cur_params );
+    printf("test_process_params %lu\n", __LINE__);
     ok( size != ~(SIZE_T)0, "not a heap block %p\n", cur_params );
+    printf("test_process_params %lu\n", __LINE__);
     ok( cur_params->AllocationSize == cur_params->Size,
         "wrong AllocationSize %lx/%lx\n", cur_params->AllocationSize, cur_params->Size );
+    printf("test_process_params %lu\n", __LINE__);
     ok( cur_params->Size == size, "wrong Size %lx/%Ix\n", cur_params->Size, size );
+    printf("test_process_params %lu\n", __LINE__);
 
     /* CurrentDirectory points outside the params, and DllPath may be null */
     pos = (UINT_PTR)cur_params->DllPath.Buffer;
@@ -536,6 +542,7 @@ static void test_process_params(void)
     pos = check_string( cur_params, &cur_params->ShellInfo, NULL, pos );
     pos = check_string( cur_params, &cur_params->RuntimeInfo, NULL, pos );
     /* environment may follow */
+    printf("test_process_params 4\n");
     str = (WCHAR *)pos;
     if (pos - (UINT_PTR)cur_params < cur_params->Size) str += get_env_length(str);
     ok( (char *)str == (char *)cur_params + cur_params->Size,
@@ -548,6 +555,7 @@ static void test_process_params(void)
 #ifdef __REACTOS__
     if (is_reactos()) size = 0; else /* ReactOS does not allocate this from the heap */
 #endif
+    printf("test_process_params 5\n");
     size = HeapSize( GetProcessHeap(), 0, initial_env );
     ok( size != ~(SIZE_T)0, "env is not a heap block %p / %p\n", cur_params, initial_env );
     ok( cur_params->EnvironmentSize == size,
