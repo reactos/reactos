@@ -273,7 +273,7 @@ ImmSetHotKey(
     _In_ DWORD dwID,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_opt_  _When_((dwAction == SETIMEHOTKEY_ADD) &&
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
                     !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
                       dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
 
