@@ -907,6 +907,17 @@ GetFamousQuote(VOID)
         "Final Surrender",
         "If you see this screen...",
         "From ReactOS with Love",
+        "Repairs not required.",
+        "Objectively existing, fundamentally working.",
+        "Oops, your important computer had been shut down!",
+        "Must I do everything myself?!",
+        "Maybe one more real hardware debug session? Pleaaaase?",
+        "We're done for! Everyone, get out!",
+        "Pull your handbrake before leaving the car.",
+        "Where is that buzz coming from? Is someone calling you?",
+        "...but we don't want to give you that!",
+        "Working as intended.",
+        "This operating system uses security cookies in order to... ah, you know.",
         // "<Place your Ad here>"
     };
 
