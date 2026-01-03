@@ -1,0 +1,12 @@
+
+set(NO_VIDEO_GRAPHICS TRUE)
+list(APPEND COMPILE_DEFINITIONS TEXT_VGA VidSetScrollRegion=_Unused_VidSetScrollRegion)
+
+set(MODULE_HEADER ${CMAKE_CURRENT_LIST_DIR}/pc.h) # For precomp.h
+list(APPEND SOURCE
+    ${MODULE_HEADER}
+    ${CMAKE_CURRENT_LIST_DIR}/cmdcnst.h
+    ${CMAKE_CURRENT_LIST_DIR}/txtbootvid.c
+    ${CMAKE_CURRENT_LIST_DIR}/vga.h)
+
+set(REACTOS_STR_FILE_DESCRIPTION "VGA Text Boot Driver")

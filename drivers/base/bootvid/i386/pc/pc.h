@@ -20,9 +20,14 @@ typedef enum
 extern VGA_GRAPHICS_CONTROLLER_STATE VgaGCState;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
+
+#ifndef TEXT_VGA
+
 extern const USHORT AT_Initialization[];
 extern const USHORT VGA_640x480[];
 extern const UCHAR PixelMask[8];
+
+#endif // !TEXT_VGA
 
 #define __inpb(Port) \
     READ_PORT_UCHAR((PUCHAR)(VgaRegisterBase + (Port)))
@@ -35,6 +40,8 @@ extern const UCHAR PixelMask[8];
 
 #define __outpw(Port, Value) \
     WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + (Port)), (USHORT)(Value))
+
+#ifndef TEXT_VGA
 
 VOID
 InitPaletteWithTable(
@@ -65,3 +72,5 @@ SetPixel(
     /* Set the new color */
     WRITE_REGISTER_UCHAR(PixelPosition, Color);
 }
+
+#endif // !TEXT_VGA
