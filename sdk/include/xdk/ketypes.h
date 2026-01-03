@@ -680,6 +680,15 @@ typedef struct _KLOCK_QUEUE_HANDLE {
   KIRQL OldIrql;
 } KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
 
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+typedef struct _KAFFINITY_EX {
+  USHORT Count;
+  USHORT Size;
+  ULONG Reserved;
+  ULONG Bitmap[1];
+} KAFFINITY_EX, *PKAFFINITY_EX;
+#endif
+
 #if defined(_AMD64_)
 
 typedef ULONG64 KSPIN_LOCK_QUEUE_NUMBER;
