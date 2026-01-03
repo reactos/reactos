@@ -9,7 +9,8 @@ function(add_bootvid _target _configfile)
     set(REACTOS_STR_INTERNAL_NAME "$<TARGET_NAME:${_target}>")
     set(REACTOS_STR_ORIGINAL_FILENAME "$<TARGET_FILE_NAME:${_target}>")
 
-    # Include the per-target definitions (COMPILE_DEFINITIONS, MODULE_HEADER, and SOURCE)
+    # Include the per-target definitions:
+    # NO_VIDEO_GRAPHICS, COMPILE_DEFINITIONS, MODULE_HEADER, and SOURCE
     include(${_configfile})
     list(APPEND SOURCE ${_bviddata_SOURCES})
 
@@ -22,8 +23,13 @@ function(add_bootvid _target _configfile)
         list(APPEND COMPILE_DEFINITIONS "MODULE_HEADER=\"${MODULE_HEADER}\"")
     endif()
 
-    # Add the common sources
-    list(APPEND SOURCE common.c console.c fontdata.c precomp.h)
+    # Add the common sources, with or without graphics support
+    list(APPEND SOURCE console.c precomp.h)
+    if(NO_VIDEO_GRAPHICS)
+        list(APPEND COMPILE_DEFINITIONS NO_VIDEO_GRAPHICS)
+    else()
+        list(APPEND SOURCE common.c fontdata.c)
+    endif()
 
     # Generate the per-target version resource file in two passes:
     # 1. Configure-time generation to replace the values with generator expressions;
