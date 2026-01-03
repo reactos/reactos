@@ -262,6 +262,22 @@ BOOL WINAPI ImmActivateLayout(_In_ HKL hKL);
 BOOL WINAPI ImmFreeLayout(_In_ HKL hKL);
 
 BOOL WINAPI
+ImmGetHotKey(
+    _In_ DWORD dwHotKey,
+    _Out_ LPUINT lpuModifiers,
+    _Out_ LPUINT lpuVKey,
+    _Out_opt_ LPHKL lphKL);
+
+BOOL WINAPI
+ImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
+
+BOOL WINAPI
 ImmWINNLSEnableIME(
     _In_opt_ HWND hWnd,
     _In_ BOOL enable);

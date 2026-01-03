@@ -66,7 +66,6 @@ IMEHOTKEYENTRY DefaultHotKeyTableC[] =
 #define FE_KOREAN               (1 << 3)
 
 // Sets the far-east flags
-// Win: SetFeKeyboardFlags
 VOID FASTCALL IntSetFeKeyboardFlags(LANGID LangID, PBYTE pbFlags)
 {
     switch (LangID)
@@ -143,8 +142,6 @@ Failure:
     return FALSE;
 }
 
-
-/* Win: LoadPreloadKeyboardLayouts */
 VOID IntLoadPreloadKeyboardLayouts(VOID)
 {
     UINT nNumber, uFlags;
@@ -258,11 +255,18 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
     return ret;
 }
 
-/*
+/**
  * @implemented
- * Same as imm32!ImmSetHotKey.
+ * @note Same as imm32!ImmSetHotKey.
  */
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL)
+BOOL WINAPI
+CliImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL)
 {
     BOOL ret;
 
