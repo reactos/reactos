@@ -2,7 +2,7 @@
  * PROJECT:     FreeLoader
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     ATA/ATAPI programmed I/O driver header file.
- * COPYRIGHT:   Copyright 2019-2025 Dmitry Borisov (di.sean@protonmail.com)
+ * COPYRIGHT:   Copyright 2019-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
@@ -31,7 +31,6 @@ typedef struct _DEVICE_UNIT
 #define ATA_DEVICE_LBA                           0x00000002
 #define ATA_DEVICE_LBA48                         0x00000004
 #define ATA_DEVICE_IS_NEC_CDR260                 0x00000008
-#define ATA_DEVICE_FLAG_IO32                     0x00000010
 } DEVICE_UNIT, *PDEVICE_UNIT;
 
 /* FUNCTIONS ******************************************************************/
