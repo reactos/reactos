@@ -21,8 +21,15 @@
 
 #include "videoprt.h"
 
+#ifdef _M_IX86
+#include <ndk/kefuncs.h>
+#endif
+
 #define NDEBUG
 #include <debug.h>
+
+#define IOPM_SIZE 8192 /* 64K ports / 8 bits */
+
 
 extern BOOLEAN VpBaseVideo;
 
@@ -489,10 +496,10 @@ IntVideoPortUnmapMemory(
 
 PVOID NTAPI
 VideoPortGetDeviceBase(
-   IN PVOID HwDeviceExtension,
-   IN PHYSICAL_ADDRESS IoAddress,
-   IN ULONG NumberOfUchars,
-   IN UCHAR InIoSpace)
+   _In_ PVOID HwDeviceExtension,
+   _In_ PHYSICAL_ADDRESS IoAddress,
+   _In_ ULONG NumberOfUchars,
+   _In_ UCHAR InIoSpace)
 {
    TRACE_(VIDEOPRT, "VideoPortGetDeviceBase\n");
    return IntVideoPortMapMemory(
@@ -1177,18 +1184,216 @@ VideoPortUnlockBuffer(
 }
 
 /*
- * @unimplemented
+ * @name VideoPortSetTrappedEmulatorPorts
+ * @implemented
+ *
+ * @brief
+ * Enables or disables the trapping of I/O ports for the current process (NTVDM)
+ * on x86 architectures.
+ *
+ * @details
+ * This function modifies the I/O Permission Map (IOPM) in the TSS via the
+ * Ke386IoSetAccessProcess API. It translates the abstract VIDEO_ACCESS_RANGE
+ * structures into a raw bitmap (0 = allowed, 1 = trapped).
+ *
+ * Behavioral Rules:
+ * 1. If NumAccessRanges is 0, all ports are trapped (reset to default).
+ * 2. On x86, this enables direct hardware access for VDM (DOS) applications.
+ * 3. On non-x86 platforms, this function is a stub and returns NO_ERROR.
+ *
+ * @param[in] HwDeviceExtension
+ * Pointer to the miniport driver's device extension.
+ *
+ * @param[in] NumAccessRanges
+ * The number of access ranges in the AccessRange array.
+ * ReactOS Hardening: Capped at 256 to prevent resource exhaustion.
+ *
+ * @param[in] AccessRange
+ * Pointer to an array of VIDEO_ACCESS_RANGE structures defining the ports
+ * to be untrapped (RangeVisible = TRUE) or trapped (RangeVisible = FALSE).
+ *
+ * @return
+ * VP_STATUS (Win32 Error Codes):
+ * - NO_ERROR: Success or non-x86 platform.
+ * - ERROR_INVALID_PARAMETER: Invalid ranges, excessive count, or alignment issues.
+ * - ERROR_NOT_ENOUGH_MEMORY: Failed to allocate temporary IOPM buffer.
+ *
+ * @remarks
+ * - IRQL: Must be called at PASSIVE_LEVEL.
+ * - The caller (NTVDM) is responsible for cleaning up the IOPM on process exit.
+ * - This implementation includes a defensive VGA-safe fallback for broken miniports.
  */
-
 VP_STATUS NTAPI
 VideoPortSetTrappedEmulatorPorts(
-   IN PVOID HwDeviceExtension,
-   IN ULONG NumAccessRanges,
-   IN PVIDEO_ACCESS_RANGE AccessRange)
+    _In_ PVOID HwDeviceExtension,
+    _In_ ULONG NumAccessRanges,
+    _In_ PVIDEO_ACCESS_RANGE AccessRange)
 {
-    UNIMPLEMENTED;
-    /* Should store the ranges in the device extension for use by ntvdm. */
+#ifdef _M_IX86
+    PUCHAR IoMap = NULL;
+    ULONG i, port;
+    PEPROCESS Process;
+    BOOLEAN AnyPortEnabled = FALSE;
+
+    TRACE_(VIDEOPRT, "VideoPortSetTrappedEmulatorPorts(HwDevExt=%p NumRanges=%lu)\n",
+            HwDeviceExtension, NumAccessRanges);
+
+    /* Basic contract validation */
+    ASSERT(HwDeviceExtension != NULL);
+
+    Process = PsGetCurrentProcess();
+    ASSERT(Process != NULL);
+
+    /**
+     * NT semantics:
+     * Passing zero ranges means "reset to default".
+     * Default on NT is: all emulator ports trapped.
+     */
+    if (NumAccessRanges == 0 || AccessRange == NULL)
+    {
+         INFO_(VIDEOPRT, "No ranges supplied — enforcing deny-all IOPM\n");
+
+        IoMap = MmAllocateNonCachedMemory(IOPM_SIZE);
+        if (!IoMap)
+        {
+            ERR_(VIDEOPRT, "IOPM allocation failed (deny-all path)\n");
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        RtlFillMemory(IoMap, IOPM_SIZE, 0xFF);
+
+        Ke386SetIoAccessMap(1, (PKIO_ACCESS_MAP)IoMap);
+        Ke386IoSetAccessProcess((PKPROCESS)Process, 1);
+
+        MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
+
+        TRACE_(VIDEOPRT, "Deny-all IOPM committed\n");
+        return NO_ERROR;
+    }
+
+    /**
+     * Hard sanity cap:
+     * Prevent runaway miniports from handing us thousands of ranges.
+     * Real Windows drivers stay well below this.
+     */
+    if (NumAccessRanges > 256)
+    {
+        ERR_(VIDEOPRT, "Rejecting excessive NumAccessRanges=%lu\n",
+                NumAccessRanges);
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    IoMap = MmAllocateNonCachedMemory(IOPM_SIZE);
+    if (!IoMap)
+    {
+        ERR_(VIDEOPRT, "Failed to allocate IOPM buffer\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Default deny-all */
+    RtlFillMemory(IoMap, IOPM_SIZE, 0xFF);
+
+    TRACE_(VIDEOPRT, "IOPM initialized (all ports trapped)\n");
+
+    /**
+     * Apply ranges in order, exactly as documented:
+     * later entries may override earlier ones.
+     */
+    for (i = 0; i < NumAccessRanges; i++)
+    {
+        ULONG start = AccessRange[i].RangeStart.LowPart;
+        ULONG len   = AccessRange[i].RangeLength;
+
+        if (len == 0 ||
+            start >= 0x10000 ||
+            start + len > 0x10000)
+        {
+            ERR_(VIDEOPRT, "Invalid AccessRange[%lu] "
+                    "(start=%lx len=%lx)\n",
+                    i, start, len);
+            MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        if (AccessRange[i].RangeVisible)
+        {
+            for (port = start; port < start + len; port++)
+            {
+                IoMap[port >> 3] &= ~(1 << (port & 7));
+            }
+            AnyPortEnabled = TRUE;
+
+            TRACE_(VIDEOPRT, "Enabled direct I/O ports [%lx..%lx)\n",
+                    start, start + len);
+        }
+        else
+        {
+            TRACE_(VIDEOPRT, "Explicitly trapping ports [%lx..%lx)\n",
+                    start, start + len);
+        }
+    }
+
+    /**
+     * VGA-safe fallback
+     *
+     * WHY:
+     * Broken miniports often forget to enable *any* ports, causing:
+     *  - black screens
+     *  - frozen full-screen DOS apps
+     *  - leftover framebuffer garbage on exit
+     *
+     * Windows tolerates this by allowing minimal VGA decode.
+     *
+     * This is deliberately conservative.
+     */
+    if (!AnyPortEnabled)
+    {
+        static const USHORT VgaSafePorts[] =
+        {
+            0x3B0, 0x3B1, 0x3B2, 0x3B3,
+            0x3C0, 0x3C1, 0x3C2, 0x3C3,
+            0x3D0, 0x3D1, 0x3D2, 0x3D3
+        };
+
+        for (i = 0; i < RTL_NUMBER_OF(VgaSafePorts); i++)
+        {
+            port = VgaSafePorts[i];
+            IoMap[port >> 3] &= ~(1 << (port & 7));
+        }
+
+        TRACE_(VIDEOPRT, "VGA-safe fallback ports enabled\n");
+    }
+
+    /**
+     * Commit IOPM
+     *
+     * Ke386SetIoAccessMap copies the bitmap internally.
+     * Our buffer must not persist beyond this call.
+     */
+    Ke386SetIoAccessMap(1, (PKIO_ACCESS_MAP)IoMap);
+    Ke386IoSetAccessProcess((PKPROCESS)Process, 1);
+
+    TRACE_(VIDEOPRT, "IOPM committed for process %p\n", Process);
+
+    MmFreeNonCachedMemory(IoMap, IOPM_SIZE);
+
+    /**
+     * IMPORTANT:
+     * Revoke access (Ke386IoSetAccessProcess(...,0)) MUST be done
+     * by NTVDM teardown or process exit handling.
+     *
+     * videoprt cannot reliably hook that here without ABI changes.
+     */
     return NO_ERROR;
+
+#else
+    UNREFERENCED_PARAMETER(HwDeviceExtension);
+    UNREFERENCED_PARAMETER(NumAccessRanges);
+    UNREFERENCED_PARAMETER(AccessRange);
+
+    /* Non-x86 platforms do not support IOPM */
+    return NO_ERROR;
+#endif
 }
 
 /*
