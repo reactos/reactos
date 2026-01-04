@@ -1097,6 +1097,11 @@ VideoPortReleaseBuffer(
 
 /*
  * @implemented
+ *
+ * NOTE:
+ * VP_LOCK_OPERATION (video.h) enum
+ * values are equivalent to LOCK_OPERATION (wdm.h)
+ * and can be passed directly to MmProbeAndLockPages.
  */
 
 PVOID NTAPI
@@ -1107,14 +1112,31 @@ VideoPortLockBuffer(
    IN VP_LOCK_OPERATION Operation)
 {
     PMDL Mdl;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    UNREFERENCED_PARAMETER(HwDeviceExtension);
 
     Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
     if (!Mdl)
     {
         return NULL;
     }
-    /* FIXME use seh */
-    MmProbeAndLockPages(Mdl, KernelMode,Operation);
+
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(Mdl, KernelMode, Operation);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        IoFreeMdl(Mdl);
+        return NULL;
+    }
     return Mdl;
 }
 
