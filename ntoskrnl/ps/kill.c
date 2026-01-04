@@ -469,6 +469,25 @@ PspExitThread(IN NTSTATUS ExitStatus)
     CurrentProcess = Thread->ThreadsProcess;
     ASSERT((Thread) == PsGetCurrentThread());
 
+#if defined(_M_IX86)
+    /*
+     * On x86, the lazy-FPU mechanism tracks the last thread that owned the
+     * FPU state in PRCB->NpxThread, and its save area lives in the thread's
+     * kernel stack (below InitialStack). If we let the thread exit while still
+     * referenced as NpxThread, later FPU saves can underflow on a NULL
+     * InitialStack (or hit freed stack memory) and crash the system.
+     */
+    if (KeI386NpxPresent)
+    {
+        PKPRCB Prcb = KeGetCurrentPrcb();
+        if (Prcb->NpxThread == &Thread->Tcb)
+        {
+            Prcb->NpxThread = NULL;
+        }
+        Thread->Tcb.NpxState = NPX_STATE_NOT_LOADED;
+    }
+#endif
+
     /* Can't terminate a thread if it attached another process */
     if (KeIsAttachedProcess())
     {
