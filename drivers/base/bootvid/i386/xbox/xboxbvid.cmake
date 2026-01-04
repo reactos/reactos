@@ -1,0 +1,8 @@
+
+list(APPEND COMPILE_DEFINITIONS SARCH_XBOX)
+
+list(APPEND SOURCE
+    ${CMAKE_CURRENT_LIST_DIR}/xbox.h
+    ${CMAKE_CURRENT_LIST_DIR}/bootvid.c)
+
+set(REACTOS_STR_FILE_DESCRIPTION "Original Xbox Boot Video Driver")
