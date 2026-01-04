@@ -1116,9 +1116,8 @@ VideoPortLockBuffer(
 
     UNREFERENCED_PARAMETER(HwDeviceExtension);
 
-    /* IoAllocateMdl must NOT be wrapped in SEH */
     Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
-    if (Mdl == NULL)
+    if (!Mdl)
     {
         return NULL;
     }
