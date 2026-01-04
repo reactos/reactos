@@ -7,9 +7,39 @@ include_directories($<TARGET_FILE_DIR:empty_dll>)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 spec2def(ntdll_apitest.exe ntdll_apitest.spec)
 
+list(APPEND SOURCE_CRT_TESTS
+    ../crt/_snprintf.c
+    ../crt/_snwprintf.c
+    ../crt/_stricmp.c
+    ../crt/_strlwr.c
+    ../crt/_strnicmp.c
+    ../crt/_strupr.c
+    ../crt/_vscwprintf.c
+    ../crt/_vsnprintf.c
+    ../crt/_vsnwprintf.c
+    ../crt/_wcsicmp.c
+    ../crt/_wcslwr.c
+    ../crt/_wcsnicmp.c
+    ../crt/_wcsupr.c
+    ../crt/mbstowcs.c
+    ../crt/setjmp.c
+    ../crt/sprintf.c
+    ../crt/strcpy.c
+    ../crt/strlen.c
+    ../crt/strtoul.c
+    ../crt/wcstombs.c
+    ../crt/wcstoul.c
+)
+
+add_library(ntdll_crt_test_lib ${SOURCE_CRT_TESTS})
+target_compile_definitions(ntdll_crt_test_lib PRIVATE TEST_NTDLL TEST_DLL_NAME="ntdll.dll")
+target_link_libraries(ntdll_crt_test_lib ${PSEH_LIB})
+add_dependencies(ntdll_crt_test_lib psdk)
+
 list(APPEND SOURCE
     DllLoadNotification.c
     LdrEnumResources.c
+    LdrFindResource_U.c
     LdrLoadDll.c
     load_notifications.c
     locale.c
@@ -47,6 +77,7 @@ list(APPEND SOURCE
     NtQueryKey.c
     NtQueryObject.c
     NtQueryOpenSubKeys.c
+    NtQuerySection.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
     NtQueryValueKey.c
@@ -92,6 +123,7 @@ list(APPEND SOURCE
     RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
+    RtlLocale.c
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
@@ -100,6 +132,7 @@ list(APPEND SOURCE
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlRemovePrivileges.c
+    RtlUnhandledExceptionFilter.c
     RtlUnicodeStringToAnsiString.c
     RtlUnicodeStringToCountedOemString.c
     RtlUnicodeToOemN.c
@@ -114,9 +147,15 @@ list(APPEND SOURCE
     precomp.h)
 
 if(ARCH STREQUAL "i386")
-    add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
+    add_asm_files(ntdll_apitest_asm
+        ../crt/i386/setjmp_helper.s
+        i386/NtContinue.S
+    )
 elseif(ARCH STREQUAL "amd64")
-    add_asm_files(ntdll_apitest_asm amd64/NtContinue.S)
+    add_asm_files(ntdll_apitest_asm
+        ../crt/amd64/setjmp_helper.s
+        amd64/NtContinue.S
+    )
 endif()
 
 list(APPEND PCH_SKIP_SOURCE
@@ -137,14 +176,17 @@ set_target_properties(ntdll_apitest
     ENABLE_EXPORTS TRUE
     DEFINE_SYMBOL "")
 
-target_link_libraries(ntdll_apitest rtl_test_lib wine uuid ${PSEH_LIB})
+target_link_libraries(ntdll_apitest ntdll_crt_test_lib rtl_test_lib wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
 add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll_apitest load_notifications empty_dll)
 
 if(NOT MSVC)
-    set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_OPTIONS "-Wno-format")
+    set_source_files_properties(
+        RtlGetFullPathName_UstrEx.c
+        RtlLocale.c
+        PROPERTIES COMPILE_OPTIONS "-Wno-format")
 endif()
 
 add_rostests_file(TARGET ntdll_apitest)

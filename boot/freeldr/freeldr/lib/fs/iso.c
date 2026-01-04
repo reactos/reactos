@@ -31,6 +31,8 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 typedef struct _ISO_VOLUME_INFO
 {
+    ULONG VolumeSizeLBN;    ///< In Logical Block Numbers (LBN)
+    ULONG LogicalBlockSize; ///< Should be SECTORSIZE
     ULONG PvdDirectorySector;
     ULONG PvdDirectoryLength;
     ULONG DirectoryPathLength;
@@ -101,16 +103,14 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
             Name[i] = ANSI_NULL;
             TRACE("Name '%s'\n", Name);
 
-            if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
+            if (_stricmp(FileName, Name) == 0)
             {
                 IsoFileInfoPointer->FileStart = Record->ExtentLocationL;
                 IsoFileInfoPointer->FileSize = Record->DataLengthL;
                 IsoFileInfoPointer->FilePointer = 0;
-                IsoFileInfoPointer->Directory = !!(Record->FileFlags & 0x02);
-
+                IsoFileInfoPointer->Attributes = Record->FileFlags;
                 return TRUE;
             }
-
         }
     }
 
@@ -187,6 +187,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     CHAR* PathPart;
     ARC_STATUS Status;
     BOOLEAN DoFullLookup;
+    UCHAR FileAttributes;
 
     TRACE("IsoLookupFile() FileName = %s\n", FileName);
 
@@ -226,6 +227,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         /* Skip leading path separator, if any */
         if (*FileName == '\\' || *FileName == '/')
             ++FileName;
+        PathPart[0] = ANSI_NULL;
 
         /* Figure out how many sub-directories we are nested in */
         NumberOfPathParts = FsGetNumPathParts(FileName);
@@ -298,6 +300,19 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         }
     }
 
+    /* Re-map the attributes to ARC file attributes */
+    FileAttributes = IsoFileInfo->Attributes;
+    IsoFileInfo->Attributes = ReadOnlyFile;
+    if (FileAttributes & ISO_ATTR_HIDDEN)
+        IsoFileInfo->Attributes |= HiddenFile;
+    if (FileAttributes & ISO_ATTR_DIRECTORY)
+        IsoFileInfo->Attributes |= DirectoryFile;
+
+    /* Copy the file name, perhaps truncated */
+    IsoFileInfo->FileNameLength = (ULONG)strlen(PathPart);
+    IsoFileInfo->FileNameLength = min(IsoFileInfo->FileNameLength, sizeof(IsoFileInfo->FileName) - 1);
+    RtlCopyMemory(IsoFileInfo->FileName, PathPart, IsoFileInfo->FileNameLength);
+
     return ESUCCESS;
 }
 
@@ -317,6 +332,14 @@ ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = FileHandle->FileSize;
     Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+
+    /* Set the ARC file attributes */
+    Information->Attributes = FileHandle->Attributes;
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = min(FileHandle->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, FileHandle->FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
 
     TRACE("IsoGetFileInformation(%lu) -> FileSize = %lu, FilePointer = 0x%lx\n",
           FileId, Information->EndingAddress.LowPart, Information->CurrentAddress.LowPart);
@@ -547,6 +570,25 @@ ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
+
+/**
+ * @brief
+ * Returns the size of the ISO-9660 volume laid on the storage media device
+ * opened via @p DeviceId.
+ *
+ * This routine is in particular used to determine the useful (volume) size
+ * of a CD-ROM media.
+ **/
+ULONGLONG
+IsoGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PISO_VOLUME_INFO Volume = IsoVolumes[DeviceId];
+    ASSERT(Volume);
+    return (ULONGLONG)Volume->VolumeSizeLBN * Volume->LogicalBlockSize;
+}
+
+
 static const DEVVTBL Iso9660FuncTable =
 {
     IsoClose,
@@ -568,11 +610,8 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
 
     TRACE("Enter IsoMount(%lu)\n", DeviceId);
 
-    /*
-     * Read the Primary Volume Descriptor
-     */
-    Position.HighPart = 0;
-    Position.LowPart = 16 * SECTORSIZE;
+    /* Read the ISO Primary Volume Descriptor */
+    Position.QuadPart = 16 * SECTORSIZE;
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
         return NULL;
@@ -580,10 +619,10 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     if (Status != ESUCCESS || Count < sizeof(PVD))
         return NULL;
 
-    /* Check if the PVD is valid */
+    /* Check whether the PVD is valid */
     if (!(Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5) && Pvd->VdVersion == 1))
     {
-        WARN("Unrecognized CDROM format\n");
+        WARN("Unrecognized CD-ROM format\n");
         return NULL;
     }
     if (Pvd->LogicalBlockSizeL != SECTORSIZE)
@@ -601,7 +640,16 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
         return NULL;
     RtlZeroMemory(Volume, sizeof(*Volume));
 
-    /* Cache the PVD information */
+    /*
+     * This is equivalent to using the RAW_ISO_VD::VolSpaceI field:
+     * https://github.com/reactos/reactos/blob/435482912c6dc0aaa4371e37b7336b2b1291e65f/drivers/filesystems/cdfs/cd.h#L126
+     * and also what MS CDFS does with the CdRvdVolSz() macro,
+     * in cdfs/strucsup.c!CdUpdateVcbFromVolDescriptor().
+     */
+    Volume->VolumeSizeLBN = Pvd->VolumeSpaceSizeL;
+    Volume->LogicalBlockSize = Pvd->LogicalBlockSizeL;
+
+    /* Cache some useful PVD information */
     Volume->PvdDirectorySector = Pvd->RootDirRecord.ExtentLocationL;
     Volume->PvdDirectoryLength = Pvd->RootDirRecord.DataLengthL;
 

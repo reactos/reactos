@@ -1,21 +1,8 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     browseui
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Common registry based settings editor
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #pragma once
@@ -24,27 +11,30 @@ class CRegTreeOptions :
     public CComCoClass<CRegTreeOptions, &CLSID_CRegTreeOptions>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IRegTreeOptions,
-    public IObjectWithSite
+    public CObjectWithSiteBase
 {
 private:
+    HWND m_hTree;
+    HIMAGELIST m_hIL;
+
 public:
     CRegTreeOptions();
     ~CRegTreeOptions();
 
-    // *** IRegTreeOptions methods ***
-    STDMETHOD(InitTree)(HWND paramC, HKEY param10, char const *param14, char const *param18) override;
-    STDMETHOD(WalkTree)(WALK_TREE_CMD paramC) override;
-    STDMETHOD(ToggleItem)(HTREEITEM paramC) override;
-    STDMETHOD(ShowHelp)(HTREEITEM paramC, unsigned long param10) override;
+    void AddItemsFromRegistry(HKEY hKey, HTREEITEM hParent, HTREEITEM hInsertAfter);
+    HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOOL Set);
+    HRESULT GetCheckState(HKEY hKey, BOOL UseDefault = FALSE);
+    HRESULT SaveCheckState(HKEY hKey, BOOL Checked);
+    void WalkTree(WALK_TREE_CMD Command, HWND hTree, HTREEITEM hTI);
 
-    // *** IObjectWithSite methods ***
-    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
-    STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
+    // *** IRegTreeOptions methods ***
+    STDMETHOD(InitTree)(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) override;
+    STDMETHOD(WalkTree)(WALK_TREE_CMD Command) override;
+    STDMETHOD(ToggleItem)(HTREEITEM hTI) override;
+    STDMETHOD(ShowHelp)(HTREEITEM hTI, unsigned long Unknown) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_REGTREEOPTIONS)
     DECLARE_NOT_AGGREGATABLE(CRegTreeOptions)
-
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CRegTreeOptions)
         COM_INTERFACE_ENTRY_IID(IID_IRegTreeOptions, IRegTreeOptions)

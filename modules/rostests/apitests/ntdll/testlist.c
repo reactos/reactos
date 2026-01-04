@@ -1,10 +1,32 @@
-#define __ROS_LONG64__
 
 #define STANDALONE
 #include <apitest.h>
 
+extern void func__snprintf(void);
+extern void func__snwprintf(void);
+extern void func__stricmp(void);
+extern void func__strlwr(void);
+extern void func__strnicmp(void);
+extern void func__strupr(void);
+extern void func__vscwprintf(void);
+extern void func__vsnprintf(void);
+extern void func__vsnwprintf(void);
+extern void func__wcsicmp(void);
+extern void func__wcslwr(void);
+extern void func__wcsnicmp(void);
+extern void func__wcsupr(void);
+extern void func_mbstowcs(void);
+extern void func_setjmp(void);
+extern void func_sprintf(void);
+extern void func_strcpy(void);
+extern void func_strlen(void);
+extern void func_strtoul(void);
+extern void func_wcstoul(void);
+extern void func_wcstombs(void);
+
 extern void func_DllLoadNotification(void);
 extern void func_LdrEnumResources(void);
+extern void func_LdrFindResource_U(void);
 extern void func_LdrLoadDll(void);
 extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
@@ -41,6 +63,7 @@ extern void func_NtQueryInformationToken(void);
 extern void func_NtQueryKey(void);
 extern void func_NtQueryObject(void);
 extern void func_NtQueryOpenSubKeys(void);
+extern void func_NtQuerySection(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQuerySystemInformation(void);
 extern void func_NtQueryValueKey(void);
@@ -88,6 +111,7 @@ extern void func_RtlImageDirectoryEntryToData(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlIntSafe(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
+extern void func_RtlLocale(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlMultipleAllocateHeap(void);
 extern void func_RtlNtPathNameToDosPathName(void);
@@ -96,6 +120,7 @@ extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlRemovePrivileges(void);
+extern void func_RtlUnhandledExceptionFilter(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUnicodeStringToCountedOemString(void);
 extern void func_RtlUnicodeToOemN(void);
@@ -110,8 +135,32 @@ extern void func_UserModeException(void);
 
 const struct test winetest_testlist[] =
 {
+    // CRT tests from ../crt
+    { "_snprintf", func__snprintf },
+    { "_snwprintf", func__snwprintf },
+    { "_stricmp", func__stricmp },
+    { "_strlwr", func__strlwr },
+    { "_strnicmp", func__strnicmp },
+    { "_strupr", func__strupr },
+    { "_vscwprintf", func__vscwprintf },
+    { "_vsnprintf", func__vsnprintf },
+    { "_vsnwprintf", func__vsnwprintf },
+    { "_wcsicmp", func__wcsicmp },
+    { "_wcslwr", func__wcslwr },
+    { "_wcsnicmp", func__wcsnicmp },
+    { "_wcsupr", func__wcsupr },
+    { "mbstowcs", func_mbstowcs },
+    { "setjmp", func_setjmp },
+    { "sprintf", func_sprintf },
+    { "strcpy", func_strcpy },
+    { "strlen", func_strlen },
+    { "strtoul", func_strtoul },
+    { "wcstoul", func_wcstoul },
+    { "wcstombs", func_wcstombs },
+
     { "DllLoadNotification",            func_DllLoadNotification },
     { "LdrEnumResources",               func_LdrEnumResources },
+    { "LdrFindResource_U",              func_LdrFindResource_U },
     { "LdrLoadDll",                     func_LdrLoadDll },
     { "load_notifications",             func_load_notifications },
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },
@@ -148,6 +197,7 @@ const struct test winetest_testlist[] =
     { "NtQueryKey",                     func_NtQueryKey },
     { "NtQueryObject",                  func_NtQueryObject },
     { "NtQueryOpenSubKeys",             func_NtQueryOpenSubKeys },
+    { "NtQuerySection",                 func_NtQuerySection },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQuerySystemInformation",       func_NtQuerySystemInformation },
     { "NtQueryValueKey",                func_NtQueryValueKey },
@@ -194,6 +244,7 @@ const struct test winetest_testlist[] =
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlIntSafe",                     func_RtlIntSafe },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
+    { "RtlLocale",                      func_RtlLocale },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlMultipleAllocateHeap",        func_RtlMultipleAllocateHeap },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
@@ -202,6 +253,7 @@ const struct test winetest_testlist[] =
     { "RtlQueryTimeZoneInformation",    func_RtlQueryTimeZoneInformation },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlRemovePrivileges",            func_RtlRemovePrivileges },
+    { "RtlUnhandledExceptionFilter",    func_RtlUnhandledExceptionFilter },
     { "RtlUnicodeStringToAnsiSize",     func_RtlxUnicodeStringToAnsiSize }, /* For some reason, starting test name with Rtlx hides it */
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUnicodeStringToCountedOemString", func_RtlUnicodeStringToCountedOemString },

@@ -13,7 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /*
    This is a hack. See CORE-1091.
 
@@ -28,8 +27,8 @@
 
 VOID FASTCALL
 IntTMWFixUp(
-   HDC hDC,
-   TMW_INTERNAL *ptm)
+   _In_ HDC hDC,
+   _Inout_ PTMW_INTERNAL ptm)
 {
     LOGFONTW lf;
     HFONT hCurrentFont;
@@ -59,11 +58,11 @@ IntTMWFixUp(
 
 BOOL FASTCALL
 GreTextOutW(
-    HDC  hdc,
-    int  nXStart,
-    int  nYStart,
-    LPCWSTR  lpString,
-    int  cchString)
+    _In_ HDC hdc,
+    _In_ INT nXStart,
+    _In_ INT nYStart,
+    _In_reads_(cchString) PCWCH lpString,
+    _In_ INT cchString)
 {
     return GreExtTextOutW(hdc, nXStart, nYStart, 0, NULL, lpString, cchString, NULL, 0);
 }
@@ -76,11 +75,11 @@ GreTextOutW(
 BOOL
 FASTCALL
 GreGetTextExtentW(
-    HDC hDC,
-    LPCWSTR lpwsz,
-    INT cwc,
-    LPSIZE psize,
-    UINT flOpts)
+    _In_ HDC hDC,
+    _In_reads_(cwc) PCWCH lpwsz,
+    _In_ INT cwc,
+    _Out_ PSIZE psize,
+    _In_ UINT flOpts)
 {
     PDC pdc;
     PDC_ATTR pdcattr;
@@ -124,7 +123,6 @@ GreGetTextExtentW(
     return Result;
 }
 
-
 /*
    fl :
    GetTextExtentExPointW = 0 and everything else that uses this.
@@ -133,14 +131,14 @@ GreGetTextExtentW(
 BOOL
 FASTCALL
 GreGetTextExtentExW(
-    HDC hDC,
-    LPCWSTR String,
-    ULONG Count,
-    ULONG MaxExtent,
-    PULONG Fit,
-    PULONG Dx,
-    LPSIZE pSize,
-    FLONG fl)
+    _In_ HDC hDC,
+    _In_ PCWCH String,
+    _In_ ULONG Count,
+    _In_ ULONG MaxExtent,
+    _Out_opt_ PULONG Fit,
+    _Out_writes_to_opt_(Count, *Fit) PULONG Dx,
+    _Out_ PSIZE pSize,
+    _In_ FLONG fl)
 {
     PDC pdc;
     PDC_ATTR pdcattr;
@@ -175,8 +173,8 @@ GreGetTextExtentExW(
                                             String,
                                             Count,
                                             MaxExtent,
-                                            (LPINT)Fit,
-                                            (LPINT)Dx,
+                                            (PINT)Fit,
+                                            (PINT)Dx,
                                             pSize,
                                             fl);
         TEXTOBJ_UnlockText(TextObj);
@@ -203,7 +201,7 @@ GreGetTextMetricsW(
 
 DWORD
 APIENTRY
-NtGdiGetCharSet(HDC hDC)
+NtGdiGetCharSet(_In_ HDC hDC)
 {
     PDC Dc;
     PDC_ATTR pdcattr;
@@ -226,8 +224,8 @@ NtGdiGetCharSet(HDC hDC)
 BOOL
 APIENTRY
 NtGdiGetRasterizerCaps(
-    OUT LPRASTERIZER_STATUS praststat,
-    IN ULONG cjBytes)
+    _Out_ LPRASTERIZER_STATUS praststat,
+    _In_ ULONG cjBytes)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     RASTERIZER_STATUS rsSafe;
@@ -265,9 +263,9 @@ NtGdiGetRasterizerCaps(
 INT
 APIENTRY
 NtGdiGetTextCharsetInfo(
-    IN HDC hdc,
-    OUT OPTIONAL LPFONTSIGNATURE lpSig,
-    IN DWORD dwFlags)
+    _In_ HDC hdc,
+    _Out_opt_ LPFONTSIGNATURE lpSig,
+    _In_ DWORD dwFlags)
 {
     PDC Dc;
     INT Ret;
@@ -324,15 +322,14 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
-    IN HDC hDC,
-    IN OPTIONAL LPWSTR UnsafeString,
-    IN ULONG Count,
-    IN ULONG MaxExtent,
-    OUT OPTIONAL PULONG UnsafeFit,
-    OUT OPTIONAL PULONG UnsafeDx,
-    OUT LPSIZE UnsafeSize,
-    IN FLONG fl
-)
+    _In_ HDC hDC,
+    _In_reads_opt_(Count) PCWCH UnsafeString,
+    _In_ ULONG Count,
+    _In_ ULONG MaxExtent,
+    _Out_opt_ PULONG UnsafeFit,
+    _Out_writes_to_opt_(Count, *UnsafeFit) PULONG UnsafeDx,
+    _Out_ PSIZE UnsafeSize,
+    _In_ FLONG fl)
 {
     PDC dc;
     PDC_ATTR pdcattr;
@@ -341,7 +338,7 @@ NtGdiGetTextExtentExW(
     NTSTATUS Status;
     BOOLEAN Result;
     INT Fit;
-    LPINT Dx;
+    PINT Dx;
     PTEXTOBJ TextObj;
 
     if ((LONG)Count < 0)
@@ -489,20 +486,22 @@ NtGdiGetTextExtentExW(
  */
 BOOL
 APIENTRY
-NtGdiGetTextExtent(HDC hdc,
-                   LPWSTR lpwsz,
-                   INT cwc,
-                   LPSIZE psize,
-                   UINT flOpts)
+NtGdiGetTextExtent(
+    _In_ HDC hdc,
+    _In_reads_(cwc) PCWCH lpwsz,
+    _In_ INT cwc,
+    _Out_ PSIZE psize,
+    _In_ UINT flOpts)
 {
     return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, flOpts);
 }
 
 BOOL
 APIENTRY
-NtGdiSetTextJustification(HDC  hDC,
-                          int  BreakExtra,
-                          int  BreakCount)
+NtGdiSetTextJustification(
+    _In_ HDC hDC,
+    _In_ INT BreakExtra,
+    _In_ INT BreakCount)
 {
     PDC pDc;
     PDC_ATTR pdcattr;
@@ -528,11 +527,10 @@ W32KAPI
 INT
 APIENTRY
 NtGdiGetTextFaceW(
-    IN HDC hDC,
-    IN INT Count,
-    OUT OPTIONAL LPWSTR FaceName,
-    IN BOOL bAliasName
-)
+    _In_ HDC hDC,
+    _In_ INT Count,
+    _Out_writes_to_opt_(Count, return) PWSTR FaceName,
+    _In_ BOOL bAliasName)
 {
     PDC Dc;
     PDC_ATTR pdcattr;
@@ -588,9 +586,9 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
-    IN HDC hDC,
-    OUT TMW_INTERNAL * pUnsafeTmwi,
-    IN ULONG cj)
+    _In_ HDC hDC,
+    _Out_ PTMW_INTERNAL pUnsafeTmwi,
+    _In_ ULONG cj)
 {
     TMW_INTERNAL Tmwi;
 

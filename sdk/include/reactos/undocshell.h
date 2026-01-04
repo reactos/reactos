@@ -1,27 +1,40 @@
 /*
- * Copyright 1999, 2000 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented shell definitions
+ * COPYRIGHT:   Copyright 1999, 2000 Juergen Schmied
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifndef __WINE_UNDOCSHELL_H
-#define __WINE_UNDOCSHELL_H
+#ifndef _UNDOCSHELL_H
+#define _UNDOCSHELL_H
+
+#pragma once
+
+#include <shellapi.h>
+
+#ifndef SHSTDAPI
+#if defined(_SHELL32_) /* DECLSPEC_IMPORT disabled because of CORE-6504: */ || TRUE
+#define SHSTDAPI_(type) type WINAPI
+#else
+#define SHSTDAPI_(type) EXTERN_C DECLSPEC_IMPORT type WINAPI
+#endif
+#define SHSTDAPI SHSTDAPI_(HRESULT)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
+
+// Because ReactOS installs as Server by default, we ignore OS_SERVERADMINUI
+// in certain places to present a Client/Server hybrid UI.
+
+// Windows defaults to FVM_DETAILS for Administrators on OS_ANYSERVER (instead of FVM_ICON).
+#define ROSPOLICY_DESKTOPFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_DRIVESFOLDER_DEFLARGEICONS 1
+#define ROSPOLICY_CONTROLSFOLDER_DEFLARGEICONS 1
+
+#define ROSPOLICY_SHELL_NODEFKEYBOARDCUES 1
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 #define DBIMF_NOGRIPPER         0x0800
@@ -77,6 +90,15 @@ BOOL WINAPI ILGetDisplayNameEx(
     LPCITEMIDLIST pidl,
     LPVOID path,
     DWORD type);
+
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_SHELL32_)
+SHSTDAPI DisplayNameOfW(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszBuf,
+    _In_ UINT cchBuf);
+#endif
 
 LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl);
 void WINAPI ILGlobalFree(LPITEMIDLIST pidl);
@@ -580,44 +602,44 @@ C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
 /* Generic structure used by several messages */
 typedef struct
 {
-  DWORD          dwReserved;
-  DWORD          dwReserved2;
-  LPCITEMIDLIST  pidl;
-  LPDWORD        lpdwUser;
-} SFVCBINFO, * LPSFVCBINFO;
-typedef const SFVCBINFO * LPCSFVCBINFO;
+    DWORD dwReserved;
+    DWORD dwReserved2;
+    LPCITEMIDLIST pidl;
+    LPDWORD lpdwUser;
+} SFVCBINFO, *LPSFVCBINFO;
+typedef const SFVCBINFO *LPCSFVCBINFO;
 
 /* SFVCB_SELECTIONCHANGED structure */
 typedef struct
 {
-  UINT           uOldState;
-  UINT           uNewState;
-  LPCITEMIDLIST  pidl;
-  LPDWORD        lpdwUser;
-} SFVSELECTSTATE, * LPSFVSELECTSTATE;
-typedef const SFVSELECTSTATE * LPCSFVSELECTSTATE;
+    UINT uOldState;
+    UINT uNewState;
+    LPCITEMIDLIST pidl;
+    LPDWORD lpdwUser;
+} SFVSELECTSTATE, *LPSFVSELECTSTATE;
+typedef const SFVSELECTSTATE *LPCSFVSELECTSTATE;
 
 /* SFVCB_COPYHOOKCALLBACK structure */
 typedef struct
 {
-  HWND    hwnd;
-  UINT    wFunc;
-  UINT    wFlags;
-  LPCSTR  pszSrcFile;
-  DWORD   dwSrcAttribs;
-  LPCSTR  pszDestFile;
-  DWORD   dwDestAttribs;
-} SFVCOPYHOOKINFO, * LPSFVCOPYHOOKINFO;
-typedef const SFVCOPYHOOKINFO * LPCSFVCOPYHOOKINFO;
+    HWND   hwnd;
+    UINT   wFunc;
+    UINT   wFlags;
+    LPCSTR pszSrcFile;
+    DWORD  dwSrcAttribs;
+    LPCSTR pszDestFile;
+    DWORD  dwDestAttribs;
+} SFVCOPYHOOKINFO, *LPSFVCOPYHOOKINFO;
+typedef const SFVCOPYHOOKINFO *LPCSFVCOPYHOOKINFO;
 
 /* SFVCB_GETDETAILSOF structure */
 typedef struct
 {
-  LPCITEMIDLIST  pidl;
-  int            fmt;
-  int            cx;
-  STRRET         lpText;
-} SFVCOLUMNINFO, * LPSFVCOLUMNINFO;
+    LPCITEMIDLIST pidl;
+    int fmt;
+    int cx;
+    STRRET lpText;
+} SFVCOLUMNINFO, *LPSFVCOLUMNINFO;
 
 /****************************************************************************
  * Misc Stuff
@@ -657,6 +679,21 @@ HRESULT WINAPI ShellExecCmdLine(
     int nShow,
     LPVOID pUnused,
     DWORD dwSeclFlags);
+
+/*
+ * Undocumented SEE_MASK_* flags for the SHELLEXECUTEINFO::fMask member
+ * used by ShellExecuteEx(). These are absent from the official Windows SDK.
+ * However they are used in shobjidl.idl to define some CMIC_MASK_* flags,
+ * these ones being mentioned in the MSDN documentation of the
+ * CMINVOKECOMMANDINFOEX structure.
+ */
+#define SEE_MASK_UNKNOWN_0x1000 0x00001000 // FIXME: Name
+#define SEE_MASK_NO_HOOKS       0x00002000 // https://www.yisu.com/ask/30968554.html
+#define SEE_MASK_HASLINKNAME    0x00010000
+#define SEE_MASK_FLAG_SEPVDM    0x00020000
+#define SEE_MASK_USE_RESERVED   0x00040000
+#define SEE_MASK_HASTITLE       0x00080000
+#define SEE_MASK_FILEANDURL     0x00400000 // https://textslashplain.com/2019/09/25/web-to-app-communication-directinvoke/
 
 HINSTANCE WINAPI
 RealShellExecuteA(
@@ -758,6 +795,13 @@ HRESULT WINAPI SHCreateDefClassObject(
 
 void WINAPI SHFreeUnusedLibraries(void);
 
+HRESULT WINAPI SHExtCoCreateInstance(
+    _In_opt_ LPCWSTR aclsid,
+    _In_opt_ const CLSID *clsid,
+    _In_opt_ LPUNKNOWN pUnkOuter,
+    _In_ REFIID refiid,
+    _Out_ LPVOID *ppv);
+
 /* SHCreateLinks flags */
 #define SHCLF_PREFIXNAME       0x01
 #define SHCLF_CREATEONDESKTOP  0x02
@@ -790,6 +834,7 @@ HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 BOOL WINAPI GUIDFromStringA(
     _In_   PCSTR psz,
     _Out_  LPGUID pguid);
+
 BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
     _Out_  LPGUID pguid);
@@ -853,6 +898,7 @@ SHInvokePrivilegedFunctionW(
 
 BOOL WINAPI
 SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName);
+
 BOOL WINAPI IsSuspendAllowed(VOID);
 
 BOOL WINAPI
@@ -940,6 +986,7 @@ LONG WINAPI SHRegQueryValueExA(
     LPDWORD lpType,
     LPBYTE lpData,
     LPDWORD lpcbData);
+
 LONG WINAPI SHRegQueryValueExW(
     HKEY hkey,
     LPCWSTR pszValue,
@@ -947,10 +994,11 @@ LONG WINAPI SHRegQueryValueExW(
     LPDWORD pdwType,
     LPVOID pvData,
     LPDWORD pcbData);
+
 #ifdef UNICODE
-    #define SHRegQueryValueEx SHRegQueryValueExW
+#define SHRegQueryValueEx SHRegQueryValueExW
 #else
-    #define SHRegQueryValueEx SHRegQueryValueExA
+#define SHRegQueryValueEx SHRegQueryValueExA
 #endif
 
 BOOL WINAPI
@@ -1213,8 +1261,47 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
 
 #include <poppack.h>
 
+#if defined(_WIN64) || defined(BUILD_WOW6432)
+    typedef UINT64 APPBAR_OUTPUT;
+#else
+    typedef HANDLE APPBAR_OUTPUT;
+#endif
+
+/*
+ * Private structures for internal AppBar messaging.
+ * These structures can be sent from 32-bit shell32 to 64-bit Explorer.
+ * See also: https://learn.microsoft.com/en-us/windows/win32/winprog64/interprocess-communication
+ * > ... only the lower 32 bits are significant, so it is safe to truncate the handle
+ * See also: https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-duplicatehandle
+ * > DuplicateHandle can be used to duplicate a handle between a 32-bit process and a 64-bit process.
+ */
+#include <pshpack8.h>
+typedef struct tagAPPBARDATAINTEROP
+{
+    DWORD cbSize; /* == sizeof(APPBARDATAINTEROP) */
+    UINT32 hWnd32;
+    UINT uCallbackMessage;
+    UINT uEdge;
+    RECT rc;
+    LONGLONG lParam64;
+} APPBARDATAINTEROP, *PAPPBARDATAINTEROP;
+typedef struct tagAPPBAR_COMMAND
+{
+    APPBARDATAINTEROP abd;
+    DWORD dwMessage;
+    APPBAR_OUTPUT hOutput; /* For shlwapi!SHAllocShared */
+    DWORD dwProcessId;
+} APPBAR_COMMAND, *PAPPBAR_COMMAND;
+#include <poppack.h>
+
+#if defined(_WIN64) || defined(BUILD_WOW6432)
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x40);
+#else
+C_ASSERT(sizeof(APPBAR_COMMAND) == 0x38);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#endif /* __WINE_UNDOCSHELL_H */
+#endif /* _UNDOCSHELL_H */

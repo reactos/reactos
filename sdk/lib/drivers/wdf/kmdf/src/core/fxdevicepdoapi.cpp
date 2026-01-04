@@ -87,7 +87,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoMarkMissing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -121,7 +121,7 @@ WDFEXPORT(WdfPdoMarkMissing)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoRequestEject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -165,7 +165,7 @@ WDFEXPORT(WdfPdoRequestEject)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoGetParent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -200,7 +200,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoRetrieveIdentificationDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -255,7 +255,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoRetrieveAddressDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -312,7 +312,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoUpdateAddressDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -360,7 +360,7 @@ WDFEXPORT(WdfPdoUpdateAddressDescription)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoAddEjectionRelationsPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -410,7 +410,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoRemoveEjectionRelationsPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -457,7 +457,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfPdoClearEjectionRelationsDevices)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

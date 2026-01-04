@@ -357,7 +357,7 @@ private:
             case IDM_MYDOCUMENTS: return CSIDL_MYDOCUMENTS;
             case IDM_MYPICTURES: return CSIDL_MYPICTURES;
             case IDM_CONTROLPANEL: return CSIDL_CONTROLS;
-            case IDM_NETWORKCONNECTIONS: return CSIDL_NETWORK;
+            case IDM_NETWORKCONNECTIONS: return CSIDL_CONNECTIONS;
             case IDM_PRINTERSANDFAXES: return CSIDL_PRINTERS;
             default: return 0;
         }
@@ -370,9 +370,6 @@ private:
             return S_FALSE;
 
         TRACE("csidl: 0x%X\n", csidl);
-
-        if (csidl == CSIDL_CONTROLS || csidl == CSIDL_NETWORK || csidl == CSIDL_PRINTERS)
-            FIXME("This CSIDL %d wrongly opens My Computer. CORE-19477\n", csidl);
 
         CComHeapPtr<ITEMIDLIST> pidl;
         SHGetSpecialFolderLocation(NULL, csidl, &pidl);

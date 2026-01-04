@@ -171,6 +171,7 @@ BEGIN
     IDS_NET_DELETE "删除"
     IDS_NET_RENAME "重命名"
     IDS_NET_PROPERTIES "属性"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u Bit/秒"
     IDS_FORMAT_KBIT "%u KBit/秒"
     IDS_FORMAT_MBIT "%u MBit/秒"
@@ -184,7 +185,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "网络设置"
     IDS_NETWORKSETTINGSSUBTITLE "安装用于连接其他网络、计算机和 Internet 的网络软件。"
     IDS_NETWORKCOMPONENTTITLE "网络组件"

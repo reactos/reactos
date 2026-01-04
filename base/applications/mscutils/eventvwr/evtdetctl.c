@@ -4,7 +4,7 @@
  * PURPOSE:     Event Details Control.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *              Copyright 2008-2016 Eric Kohl <eric.kohl@reactos.org>
- *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *              Copyright 2016-2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #include "eventvwr.h"
@@ -12,19 +12,36 @@
 
 #include <shellapi.h>
 
+/**
+ * @brief
+ * ReactOS-only feature:
+ * Enable or disable support for copying event info text using space padding
+ * between header titles and data, when pressing the SHIFT key while clicking
+ * on the "Copy" button, instead of using TABs as separators.
+ *
+ * @see CopyEventEntry().
+ **/
+#define COPY_EVTTEXT_SPACE_PADDING_MODE
+
 // FIXME:
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  (1024*10)
 extern WCHAR szTitle[];
 extern HWND hwndListView;
+
 extern BOOL
-GetEventMessage(IN LPCWSTR KeyName,
-                IN LPCWSTR SourceName,
-                IN PEVENTLOGRECORD pevlr,
-                OUT PWCHAR EventText);
+GetEventMessage(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR SourceName,
+    _In_ PEVENTLOGRECORD pevlr,
+    _Out_writes_z_(cchText) PWSTR EventText,
+    _In_ SIZE_T cchText);
 
 
 typedef struct _DETAILDATA
 {
+    /* The event record being displayed */
+    PEVENTLOGRECORD pevlr;
+
     /* Data initialized from EVENTDETAIL_INFO */
     PEVENTLOGFILTER EventLogFilter;
     INT iEventItem;
@@ -40,58 +57,69 @@ typedef struct _DETAILDATA
 
 static
 VOID
+DisplayEventData(
+    _In_ HWND hDlg,
+    _In_ PDETAILDATA pDetailData);
+
+static
+VOID
 DisplayEvent(
     _In_ HWND hDlg,
     _In_ PDETAILDATA pDetailData)
 {
+    /* Mapping of ListView column index to corresponding dialog control ID */
+    static const WORD lvColsToDlgItemIDs[] =
+    {
+        IDC_EVENTTYPESTATIC,   IDC_EVENTDATESTATIC,     IDC_EVENTTIMESTATIC,
+        IDC_EVENTSOURCESTATIC, IDC_EVENTCATEGORYSTATIC, IDC_EVENTIDSTATIC,
+        IDC_EVENTUSERSTATIC,   IDC_EVENTCOMPUTERSTATIC,
+    };
+
+    PEVENTLOGRECORD pevlr;
     PEVENTLOGFILTER EventLogFilter = pDetailData->EventLogFilter;
     INT iItem = pDetailData->iEventItem;
-    LVITEMW li;
-    PEVENTLOGRECORD pevlr;
+    USHORT i;
     BOOL bEventData;
 
-    WCHAR szEventType[MAX_PATH];
-    WCHAR szTime[MAX_PATH];
-    WCHAR szDate[MAX_PATH];
-    WCHAR szUser[MAX_PATH];
-    WCHAR szComputer[MAX_PATH];
     WCHAR szSource[MAX_PATH];
-    WCHAR szCategory[MAX_PATH];
-    WCHAR szEventID[MAX_PATH];
     WCHAR szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
 
+    /* Retrieve and cache the pointer to the selected event item */
+    LVITEMW li;
     li.mask = LVIF_PARAM;
     li.iItem = iItem;
     li.iSubItem = 0;
     ListView_GetItem(hwndListView, &li);
+    pevlr = pDetailData->pevlr = (PEVENTLOGRECORD)li.lParam;
 
-    pevlr = (PEVENTLOGRECORD)li.lParam;
-
-    ListView_GetItemText(hwndListView, iItem, 0, szEventType, ARRAYSIZE(szEventType));
-    ListView_GetItemText(hwndListView, iItem, 1, szDate, ARRAYSIZE(szDate));
-    ListView_GetItemText(hwndListView, iItem, 2, szTime, ARRAYSIZE(szTime));
-    ListView_GetItemText(hwndListView, iItem, 3, szSource, ARRAYSIZE(szSource));
-    ListView_GetItemText(hwndListView, iItem, 4, szCategory, ARRAYSIZE(szCategory));
-    ListView_GetItemText(hwndListView, iItem, 5, szEventID, ARRAYSIZE(szEventID));
-    ListView_GetItemText(hwndListView, iItem, 6, szUser, ARRAYSIZE(szUser));
-    ListView_GetItemText(hwndListView, iItem, 7, szComputer, ARRAYSIZE(szComputer));
-
-    SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, szDate);
-    SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, szTime);
-    SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, szUser);
-    SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, szSource);
-    SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, szComputer);
-    SetDlgItemTextW(hDlg, IDC_EVENTCATEGORYSTATIC, szCategory);
-    SetDlgItemTextW(hDlg, IDC_EVENTIDSTATIC, szEventID);
-    SetDlgItemTextW(hDlg, IDC_EVENTTYPESTATIC, szEventType);
+    for (i = 0; i < _countof(lvColsToDlgItemIDs); ++i)
+    {
+        PWSTR pszBuffer = szEventText;
+        if (lvColsToDlgItemIDs[i] == IDC_EVENTSOURCESTATIC)
+        {
+            /* Use a separate buffer to store the source; used below */
+            pszBuffer = szSource;
+            ListView_GetItemText(hwndListView, iItem, i,
+                                 szSource, _countof(szSource));
+        }
+        else
+        {
+            ListView_GetItemText(hwndListView, iItem, i,
+                                 szEventText, _countof(szEventText));
+        }
+        SetDlgItemTextW(hDlg, lvColsToDlgItemIDs[i], pszBuffer);
+    }
 
     bEventData = (pevlr->DataLength > 0);
     EnableDlgItem(hDlg, IDC_BYTESRADIO, bEventData);
-    EnableDlgItem(hDlg, IDC_WORDRADIO, bEventData);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, bEventData);
 
     // FIXME: At the moment we support only one event log in the filter
-    GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
+    GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr,
+                    szEventText, _countof(szEventText));
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, szEventText);
+
+    DisplayEventData(hDlg, pDetailData);
 }
 
 static
@@ -179,22 +207,17 @@ DisplayEventData(
     _In_ HWND hDlg,
     _In_ PDETAILDATA pDetailData)
 {
+    PEVENTLOGRECORD pevlr = pDetailData->pevlr;
     BOOL bDisplayWords = pDetailData->bDisplayWords;
-    INT iItem = pDetailData->iEventItem;
-    LVITEMW li;
-    PEVENTLOGRECORD pevlr;
 
     LPBYTE pData;
     UINT i, uOffset;
     UINT uBufferSize, uLineLength;
     PWCHAR pTextBuffer, pLine;
 
-    li.mask = LVIF_PARAM;
-    li.iItem = iItem;
-    li.iSubItem = 0;
-    ListView_GetItem(hwndListView, &li);
+    if (!pevlr)
+        return;
 
-    pevlr = (PEVENTLOGRECORD)li.lParam;
     if (pevlr->DataLength == 0)
     {
         SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
@@ -241,83 +264,291 @@ DisplayEventData(
     HeapFree(GetProcessHeap(), 0, pTextBuffer);
 }
 
-static
-HFONT
-CreateMonospaceFont(VOID)
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+
+static inline
+int my_cType3ToWidth(WORD wType, wchar_t ucs)
 {
-    LOGFONTW tmpFont = {0};
-    HFONT hFont;
-    HDC hDC;
-
-    hDC = GetDC(NULL);
-
-    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
-    tmpFont.lfWeight = FW_NORMAL;
-    wcscpy(tmpFont.lfFaceName, L"Courier New");
-
-    hFont = CreateFontIndirectW(&tmpFont);
-
-    ReleaseDC(NULL, hDC);
-
-    return hFont;
+    if (wType & C3_HALFWIDTH)
+        return 1;
+    else if (wType & (C3_FULLWIDTH | C3_KATAKANA | C3_HIRAGANA | C3_IDEOGRAPH))
+        return 2;
+    /*
+     * HACK for Wide Hangul characters not recognized by GetStringTypeW(CT_CTYPE3)
+     * See:
+     * https://unicode.org/reports/tr11/
+     * https://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt
+     * https://www.unicode.org/Public/UCD/latest/ucd/extracted/DerivedEastAsianWidth.txt
+     * (or the /Public/UNIDATA/ files)
+     */
+    else if ((ucs >= 0x1100 && ucs <= 0x115F) || (ucs >= 0x302E && ucs <= 0x302F) ||
+             (ucs >= 0x3131 && ucs <= 0x318E) || (ucs >= 0x3260 && ucs <= 0x327F) ||
+             (ucs >= 0xA960 && ucs <= 0xA97C) || (ucs >= 0xAC00 && ucs <= 0xD7A3))
+        return 2;
+    else if (wType & (C3_SYMBOL | C3_KASHIDA | C3_LEXICAL | C3_ALPHA))
+        return 1;
+    else // if (wType & (C3_NONSPACING | C3_DIACRITIC | C3_VOWELMARK | C3_HIGHSURROGATE | C3_LOWSURROGATE | C3_NOTAPPLICABLE))
+        return 0;
 }
 
+int my_wcwidth(wchar_t ucs)
+{
+    WORD wType = 0;
+    GetStringTypeW(CT_CTYPE3, &ucs, sizeof(ucs)/sizeof(WCHAR), &wType);
+    return my_cType3ToWidth(wType, ucs);
+}
+
+int my_wcswidth(const wchar_t *pwcs, size_t n)
+{
+    int width = 0;
+    PWORD pwType, pwt;
+
+    pwType = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, n * sizeof(WORD));
+    if (!pwType)
+        return 0;
+    if (!GetStringTypeW(CT_CTYPE3, pwcs, n, pwType))
+        goto Quit;
+
+    for (pwt = pwType; n-- > 0; ++pwt, ++pwcs)
+    {
+        width += my_cType3ToWidth(*pwt, *pwcs);
+    }
+Quit:
+    HeapFree(GetProcessHeap(), 0, pwType);
+    return width;
+}
+
+#endif // COPY_EVTTEXT_SPACE_PADDING_MODE
+
+/**
+ * @brief
+ * Retrieves the already-gathered event information, structure it in
+ * text format and copy it into the clipboard for user consumption.
+ *
+ * The copied event information has the following text format, where
+ * each text line ends with CR-LF newlines:
+ *   ```
+ *   Event Type:     <event_type>\r\n
+ *   Event Source:   <event_source>\r\n
+ *   Event Category: <event_cat>\r\n
+ *   Event ID:       <event_id>\r\n
+ *   Date:           <event_date>\r\n
+ *   Time:           <event_time>\r\n
+ *   User:           <event_user>\r\n
+ *   Computer:       <event_computer>\r\n
+ *   Description:\r\n
+ *   <event_description>\r\n
+ *   Data:\r\n
+ *   <event...
+ *    ...data...
+ *    ...if any>\r\n
+ *   ```
+ *
+ * For the single-line fields, the spacing between the header title and
+ * information is either a TAB (default), to facilitate data import in
+ * spreadsheet programs, or space-padding (when the user presses the
+ * SHIFT key while copying the data) to prettify information display.
+ * (This latter functionality is supported only if the program is compiled
+ * with the @b COPY_EVTTEXT_SPACE_PADDING_MODE define.)
+ **/
 static
 VOID
-CopyEventEntry(HWND hWnd)
+CopyEventEntry(
+    _In_ HWND hWnd)
 {
-    WCHAR tmpHeader[512];
-    WCHAR szEventType[MAX_PATH];
-    WCHAR szSource[MAX_PATH];
-    WCHAR szCategory[MAX_PATH];
-    WCHAR szEventID[MAX_PATH];
-    WCHAR szDate[MAX_PATH];
-    WCHAR szTime[MAX_PATH];
-    WCHAR szUser[MAX_PATH];
-    WCHAR szComputer[MAX_PATH];
-    WCHAR evtDesc[EVENT_MESSAGE_EVENTTEXT_BUFFER];
-    ULONG size = 0;
-    LPWSTR output;
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    static const LONG nTabWidth = 4;
+#endif
+    static const WCHAR szCRLF[] = L"\r\n";
+    struct
+    {
+        WORD uHdrID;        // Header string resource ID.
+        WORD nDlgItemID;    // Dialog control ID containing the corresponding info.
+        WORD bSameLine : 1; // Info follows header on same line (TRUE) or not (FALSE).
+        WORD bOptional : 1; // Omit if info is empty (TRUE) or keep it (FALSE).
+        PCWCH pchHdrText;   // Pointer to header string resource.
+        SIZE_T cchHdrLen;   // Header string length (number of characters).
+        SIZE_T cchInfoLen;  // Info string length (number of characters).
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+        UINT nHdrWidth;     // Display width of the header string.
+        UINT nSpacesPad;    // Padding after header in number of spaces.
+#endif
+    } CopyData[] =
+    {
+        {IDS_COPY_EVTTYPE, IDC_EVENTTYPESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTSRC , IDC_EVENTSOURCESTATIC  , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTCAT , IDC_EVENTCATEGORYSTATIC, TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTID  , IDC_EVENTIDSTATIC      , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTDATE, IDC_EVENTDATESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTTIME, IDC_EVENTTIMESTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTUSER, IDC_EVENTUSERSTATIC    , TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTCOMP, IDC_EVENTCOMPUTERSTATIC, TRUE , FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTTEXT, IDC_EVENTTEXTEDIT      , FALSE, FALSE, NULL, 0, 0},
+        {IDS_COPY_EVTDATA, IDC_EVENTDATAEDIT      , FALSE, TRUE , NULL, 0, 0},
+    };
+    USHORT i;
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    BOOL bUsePad; // Use space padding (TRUE) or not (FALSE, default).
+    UINT nMaxHdrWidth = 0;
+#endif
+    SIZE_T size = 0;
+    PWSTR output;
+    PWSTR pszDestEnd;
+    size_t cchRemaining;
     HGLOBAL hMem;
 
     /* Try to open the clipboard */
     if (!OpenClipboard(hWnd))
         return;
 
-    /* Get the formatted text needed to place the content into */
-    size += LoadStringW(hInst, IDS_COPY, tmpHeader, ARRAYSIZE(tmpHeader));
-
-    /* Grab all the information and get it ready for the clipboard */
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTYPESTATIC, szEventType, ARRAYSIZE(szEventType));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTSOURCESTATIC, szSource, ARRAYSIZE(szSource));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, ARRAYSIZE(szCategory));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTIDSTATIC, szEventID, ARRAYSIZE(szEventID));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTDATESTATIC, szDate, ARRAYSIZE(szDate));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTIMESTATIC, szTime, ARRAYSIZE(szTime));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTUSERSTATIC, szUser, ARRAYSIZE(szUser));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, ARRAYSIZE(szComputer));
-    size += GetDlgItemTextW(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ARRAYSIZE(evtDesc));
-
-    size++; /* Null-termination */
-    size *= sizeof(WCHAR);
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    /* Use space padding only if the user presses SHIFT */
+    bUsePad = !!(GetKeyState(VK_SHIFT) & 0x8000);
+#endif
 
     /*
-     * Consolidate the information into one big piece and
-     * sort out the memory needed to write to the clipboard.
+     * Grab all the information and get it ready for the clipboard.
      */
-    hMem = GlobalAlloc(GMEM_MOVEABLE, size);
-    if (hMem == NULL) goto Quit;
+
+    /* Calculate the necessary string buffer size */
+    for (i = 0; i < _countof(CopyData); ++i)
+    {
+        /* Retrieve the event info string length (without NUL terminator) */
+        CopyData[i].cchInfoLen = GetWindowTextLengthW(GetDlgItem(hWnd, CopyData[i].nDlgItemID));
+
+        /* If no data is present and is optional, ignore it */
+        if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+            continue;
+
+        /* Load the header string from resources */
+        CopyData[i].cchHdrLen = LoadStringW(hInst, CopyData[i].uHdrID, (PWSTR)&CopyData[i].pchHdrText, 0);
+        size += CopyData[i].cchHdrLen;
+
+        if (CopyData[i].bSameLine)
+        {
+            /* The header and info are on the same line */
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+            if (bUsePad)
+            {
+                /* Retrieve the maximum header string displayed
+                 * width for computing space padding later */
+                CopyData[i].nHdrWidth = my_wcswidth(CopyData[i].pchHdrText, CopyData[i].cchHdrLen);
+                nMaxHdrWidth = max(nMaxHdrWidth, CopyData[i].nHdrWidth);
+            }
+            else
+#endif
+            {
+                /* Count a TAB separator */
+                size++;
+            }
+        }
+        else
+        {
+            /* The data is on a separate line, count a newline */
+            size += _countof(szCRLF)-1;
+        }
+
+        /* Count the event info string and the newline that follows it */
+        size += CopyData[i].cchInfoLen;
+        size += _countof(szCRLF)-1;
+    }
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+    if (bUsePad)
+    {
+        /* Round nMaxHdrWidth to the next TAB width, and
+         * compute the space padding for each field */
+        UINT nSpaceWidth = 1; // my_wcwidth(L' ');
+        nMaxHdrWidth = ((nMaxHdrWidth / nTabWidth) + 1) * nTabWidth;
+        for (i = 0; i < _countof(CopyData); ++i)
+        {
+            /* If no data is present and is optional, ignore it */
+            if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+                continue;
+
+            /* If the data is on a separate line, ignore padding */
+            if (!CopyData[i].bSameLine)
+                continue;
+
+            /* Compute the padding */
+            CopyData[i].nSpacesPad = (nMaxHdrWidth - CopyData[i].nHdrWidth) / nSpaceWidth;
+            size += CopyData[i].nSpacesPad;
+        }
+    }
+#endif // COPY_EVTTEXT_SPACE_PADDING_MODE
+    /* Add NUL-termination */
+    size++;
+
+    /*
+     * Consolidate the information into a single buffer to copy in the clipboard.
+     */
+    hMem = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size * sizeof(WCHAR));
+    if (!hMem)
+        goto Quit;
 
     output = GlobalLock(hMem);
-    if (output == NULL)
+    if (!output)
     {
         GlobalFree(hMem);
         goto Quit;
     }
 
-    StringCbPrintfW(output, size,
-                    tmpHeader, szEventType, szSource, szCategory, szEventID,
-                    szDate, szTime, szUser, szComputer, evtDesc);
+    /* Build the string */
+    pszDestEnd = output;
+    cchRemaining = size;
+    for (i = 0; i < _countof(CopyData); ++i)
+    {
+        SIZE_T sizeDataStr;
+
+        /* If no data is present and is optional, ignore it */
+        if ((CopyData[i].cchInfoLen == 0) && CopyData[i].bOptional)
+            continue;
+
+        /* Copy the header string */
+        StringCchCopyNExW(pszDestEnd, cchRemaining,
+                          CopyData[i].pchHdrText, CopyData[i].cchHdrLen,
+                          &pszDestEnd, &cchRemaining, 0);
+
+        if (CopyData[i].bSameLine)
+        {
+            /* The header and info are on the same line, add
+             * either the space padding or the TAB separator */
+#ifdef COPY_EVTTEXT_SPACE_PADDING_MODE
+            if (bUsePad)
+            {
+                UINT j = CopyData[i].nSpacesPad;
+                while (j--)
+                {
+                    *pszDestEnd++ = L' ';
+                    cchRemaining--;
+                }
+            }
+            else
+#endif
+            {
+                *pszDestEnd++ = L'\t';
+                cchRemaining--;
+            }
+        }
+        else
+        {
+            /* The data is on a separate line, add a newline */
+            StringCchCopyExW(pszDestEnd, cchRemaining, szCRLF,
+                             &pszDestEnd, &cchRemaining, 0);
+        }
+
+        /* Copy the event info */
+        sizeDataStr = min(cchRemaining, CopyData[i].cchInfoLen + 1);
+        sizeDataStr = GetDlgItemTextW(hWnd, CopyData[i].nDlgItemID, pszDestEnd, sizeDataStr);
+        pszDestEnd += sizeDataStr;
+        cchRemaining -= sizeDataStr;
+
+        /* A newline follows the data */
+        StringCchCopyExW(pszDestEnd, cchRemaining, szCRLF,
+                         &pszDestEnd, &cchRemaining, 0);
+    }
+    /* NUL-terminate the buffer */
+    *pszDestEnd++ = UNICODE_NULL;
+    cchRemaining--;
 
     GlobalUnlock(hMem);
 
@@ -651,7 +882,7 @@ OnSize(HWND hDlg, PDETAILDATA pData, INT cx, INT cy)
                                   0, 0,
                                   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-        hItemWnd = GetDlgItem(hDlg, IDC_WORDRADIO);
+        hItemWnd = GetDlgItem(hDlg, IDC_WORDSRADIO);
         GetWindowRect(hItemWnd, &rect);
         MapWindowPoints(HWND_DESKTOP /*NULL*/, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
         // OffsetRect(&rect, 0, y);
@@ -730,6 +961,67 @@ OnSize(HWND hDlg, PDETAILDATA pData, INT cx, INT cy)
 
 static
 VOID
+EnableNavigationArrows(
+    _In_ HWND hDlg,
+    _In_ BOOL bEnable)
+{
+    /* Enable Previous/Next only if there is more than one item in the list */
+    if (bEnable)
+        bEnable &= (ListView_GetItemCount(hwndListView) > 1);
+    EnableDlgItem(hDlg, IDC_PREVIOUS, bEnable);
+    EnableDlgItem(hDlg, IDC_NEXT, bEnable);
+}
+
+static
+VOID
+ClearContents(
+    _In_ HWND hDlg)
+{
+    /* Disable the Previous/Next and Copy buttons */
+    EnableNavigationArrows(hDlg, FALSE);
+    EnableDlgItem(hDlg, IDC_COPY, FALSE);
+
+    /* Disable the Bytes/Words mode buttons */
+    EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
+
+    /* Clear the data fields */
+    SetDlgItemTextW(hDlg, IDC_EVENTDATESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTTIMESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTUSERSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTSOURCESTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTCOMPUTERSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTCATEGORYSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTIDSTATIC, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTTYPESTATIC, L"");
+
+    SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, L"");
+    SetDlgItemTextW(hDlg, IDC_EVENTDATAEDIT, L"");
+}
+
+static
+HFONT
+CreateMonospaceFont(VOID)
+{
+    LOGFONTW tmpFont = {0};
+    HFONT hFont;
+    HDC hDC;
+
+    hDC = GetDC(NULL);
+
+    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+    tmpFont.lfWeight = FW_NORMAL;
+    wcscpy(tmpFont.lfFaceName, L"Courier New");
+
+    hFont = CreateFontIndirectW(&tmpFont);
+
+    ReleaseDC(NULL, hDC);
+
+    return hFont;
+}
+
+static
+VOID
 InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 {
     DWORD dwMask;
@@ -759,8 +1051,22 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 
     /* Note that the RichEdit control never gets themed under WinXP+; one would have to write code to simulate Edit-control theming */
 
-    SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
+    SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDSRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
+
+    //ClearContents(hDlg);
+    if (pData->iEventItem != -1)
+    {
+        EnableNavigationArrows(hDlg, TRUE);
+        EnableDlgItem(hDlg, IDC_COPY, TRUE);
+    }
+    else
+    {
+        EnableNavigationArrows(hDlg, FALSE);
+        EnableDlgItem(hDlg, IDC_COPY, FALSE);
+    }
+    EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+    EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
 }
 
 /* Message handler for Event Details control */
@@ -806,6 +1112,8 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             pData->scPos.x = pData->scPos.y = 0;
 
             InitDetailsDlgCtrl(hDlg, pData);
+            /* NOTE: Showing the event (if any) is currently delayed to later */
+            // SendMessageW(hDlg, EVT_DISPLAY, TRUE, (LPARAM)pData->iEventItem);
 
             // OnSize(hDlg, pData, pData->cxOld, pData->cyOld);
             return (INT_PTR)TRUE;
@@ -821,17 +1129,58 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return (INT_PTR)TRUE;
 
         case EVT_SETFILTER:
+        {
+            /* Disable the display first, before changing the current filter */
+            pData->pevlr = NULL;
+            pData->iEventItem = -1;
+            ClearContents(hDlg);
             pData->EventLogFilter = (PEVENTLOGFILTER)lParam;
             return (INT_PTR)TRUE;
+        }
 
         case EVT_DISPLAY:
         {
-            pData->iEventItem = (INT)lParam;
-            if (pData->EventLogFilter)
+            if (wParam)
             {
-                /* Show event info in control */
-                DisplayEvent(hDlg, pData);
-                DisplayEventData(hDlg, pData);
+                INT iEventItem = (INT)lParam;
+
+                /* If no filter is set, don't change anything */
+                if (!pData->EventLogFilter)
+                    return (INT_PTR)TRUE;
+
+                /* If we re-enable display from previously disabled state, re-enable the buttons */
+                if ((pData->iEventItem == -1) && (iEventItem != -1))
+                {
+                    EnableNavigationArrows(hDlg, TRUE);
+                    EnableDlgItem(hDlg, IDC_COPY, TRUE);
+                }
+                else
+                /* If we disable display from previously enabled state, clear and disable it */
+                if ((pData->iEventItem != -1) && (iEventItem == -1))
+                {
+                    ClearContents(hDlg);
+                }
+
+                /* Set the new item */
+                pData->pevlr = NULL;
+                pData->iEventItem = iEventItem;
+
+                /* Display the event info, if there is one */
+                if (pData->iEventItem != -1)
+                    DisplayEvent(hDlg, pData);
+            }
+            else
+            {
+                /* Enable or disable the Previous/Next buttons,
+                 * but keep the existing contents, if any */
+                EnableNavigationArrows(hDlg, (lParam != -1));
+
+                // HACK: Disable the Bytes/Words mode buttons
+                // because we won't have access anymore to the
+                // event data. (This will be fixed in the future.)
+                pData->pevlr = NULL; // Invalidate also the cache.
+                EnableDlgItem(hDlg, IDC_BYTESRADIO, FALSE);
+                EnableDlgItem(hDlg, IDC_WORDSRADIO, FALSE);
             }
             return (INT_PTR)TRUE;
         }
@@ -843,25 +1192,33 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_NEXT:
                 {
                     BOOL bPrev = (LOWORD(wParam) == IDC_PREVIOUS);
-                    INT iItem, iSel, nItems = ListView_GetItemCount(hwndListView);
-                    WCHAR szText[200];
+                    INT nItems = ListView_GetItemCount(hwndListView);
+                    INT iItem, iSel;
 
                     if (nItems <= 0) /* No items? */
                         break;
 
+                    /* Get the index of the first selected item */
+                    iSel = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
+
                     /* Select the previous/next item from our current one */
-                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_ALL | LVNI_SELECTED);
-                    iItem = ListView_GetNextItem(hwndListView, iItem,
+                    iItem = ListView_GetNextItem(hwndListView, iSel,
                                                  (bPrev ? LVNI_ABOVE : LVNI_BELOW));
                     if (iItem < 0 || iItem >= nItems)
                     {
-                        LoadStringW(hInst,
-                                    (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
-                                    szText, _countof(szText));
-                        if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
-                            break;
+                        /* Confirm selection restart only if an item was previously
+                         * selected. If not, just proceed with default selection. */
+                        if (iSel != -1)
+                        {
+                            WCHAR szText[200];
+                            LoadStringW(hInst,
+                                        (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
+                                        szText, _countof(szText));
+                            if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) != IDYES)
+                                break;
+                        }
 
-                        /* Determine from where to restart */
+                        /* Determine where to restart from */
                         iItem = (bPrev ? (nItems - 1) : 0);
                     }
 
@@ -883,14 +1240,12 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                           LVIS_FOCUSED | LVIS_SELECTED);
                     ListView_EnsureVisible(hwndListView, iItem, FALSE);
 
+                    pData->pevlr = NULL;
                     pData->iEventItem = iItem;
 
-                    /* Show event info in control */
+                    /* Display the event info */
                     if (pData->EventLogFilter)
-                    {
                         DisplayEvent(hDlg, pData);
-                        DisplayEventData(hDlg, pData);
-                    }
                     return (INT_PTR)TRUE;
                 }
 
@@ -900,15 +1255,11 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     return (INT_PTR)TRUE;
 
                 case IDC_BYTESRADIO:
-                case IDC_WORDRADIO:
-                {
+                case IDC_WORDSRADIO:
+                    pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDSRADIO);
                     if (pData->EventLogFilter)
-                    {
-                        pData->bDisplayWords = (LOWORD(wParam) == IDC_WORDRADIO);
                         DisplayEventData(hDlg, pData);
-                    }
                     return (INT_PTR)TRUE;
-                }
 
                 default:
                     break;
@@ -958,12 +1309,4 @@ CreateEventDetailsCtrl(HINSTANCE hInstance,
     return CreateDialogParamW(hInstance,
                               MAKEINTRESOURCEW(IDD_EVENTDETAILS_CTRL),
                               hParentWnd, EventDetailsCtrl, lParam);
-}
-
-VOID
-EnableEventDetailsButtons(HWND hWnd, BOOL bEnable)
-{
-    EnableDlgItem(hWnd, IDC_PREVIOUS, bEnable);
-    EnableDlgItem(hWnd, IDC_NEXT, bEnable);
-    EnableDlgItem(hWnd, IDC_COPY, bEnable);
 }

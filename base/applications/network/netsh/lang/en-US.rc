@@ -12,32 +12,81 @@ STRINGTABLE
 BEGIN
     IDS_APP_USAGE "\nUsage: netsh [-a AliasFile] [-c Context] [-r RemoteMachine] \
 \n             [Command | -f ScriptFile]\n"
-    IDS_INVALID_COMMAND "The following command was not found: %ls.\n"
-    IDS_OPEN_FAILED     "The file %ls could not be openend.\n"
-    IDS_INVALID_SYNTAX  "The syntax supplied for this command is not valid. Check help for the correct syntax.\n\n"
+    IDS_OPEN_FAILED      "The file %ls could not be openend.\n"
+    IDS_THIS_COMMANDS    "\nCommands in this context:\n"
+    IDS_CONTEXT_COMMANDS "\nCommands in the %s-context:\n"
+    IDS_ALIAS_NOT_FOUND  "The following alias was not found: %s.\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_HEADER "\nThe following commands are available:\n"
+    IDS_HELP_HEADER       "\nThe following commands are available:\n"
+    IDS_HELP_FOOTER       "\nTo view help for a command, type the command, followed by a space, and then\n type ?.\n\n"
     IDS_SUBCONTEXT_HEADER "\nThe following sub-contexts are available:\n"
-    IDS_HLP_UP             "Goes up one context level."
-    IDS_HLP_UP_EX          "Syntax: ..\n\n        Goes up one context level.\n\n"
-    IDS_HLP_EXIT           "Exits the program."
-    IDS_HLP_EXIT_EX        "Syntax: exit\n\n        Exits the program.\n\n"
-    IDS_HLP_HELP           "Displays a list of commands."
-    IDS_HLP_HELP_EX        "Syntax: help\n\n        Displays a list of commands.\n\n"
 
-    IDS_HLP_ADD_HELPER     "Installs a helper DLL."
-    IDS_HLP_ADD_HELPER_EX  "Syntax: add helper <dll file name>\n\n        Installs the specified helper DLL in netsh.\n\n"
+    IDS_HLP_UP             "Goes up one context level.\n"
+    IDS_HLP_UP_EX          "\nUsage: %1!s!\n\n        Goes up one context level.\n"
+    IDS_HLP_EXIT           "Exits the program.\n"
+    IDS_HLP_EXIT_EX        "\nUsage: %1!s!\n\n        Exits the program.\n"
+    IDS_HLP_HELP           "Displays a list of commands.\n"
+    IDS_HLP_HELP_EX        "\nUsage: %1!s!\n\n        Displays a list of commands.\n"
+    IDS_HLP_POPD           "Changes to the context on the stack.\n"
+    IDS_HLP_POPD_EX        "\nUsage: %1!s!\n\n        Changes to the context on the stack.\n"
+    IDS_HLP_PUSHD          "Stores the current context on the stack.\n"
+    IDS_HLP_PUSHD_EX       "\nUsage: %1!s!\n\n        Stores the current context on the stack.\n"
+    IDS_HLP_EXEC           "Runs a script file.\n"
+    IDS_HLP_EXEC_EX        "\nUsage: %1!s! <script file name>\n\n        Loads the script file and runs it.\n"
+    IDS_HLP_DUMP           "Displays a configuration script.\n"
+    IDS_HLP_DUMP_EX        "\nUsage: %1!s!\n\n        Creates a script that contains the current configuration. If saved to a\n\
+        file, the script can be used to altered configuration settings.\n"
+    IDS_HLP_OFFLINE        "Sets the current mode to offline.\n"
+    IDS_HLP_OFFLINE_EX     "\nUsage: %1!s!\n\n        Sets the current mode to offline. Changes made while in offline mode\n\
+        are saved and made in the running configuration when the mode is\n        switched back to online.\n"
+    IDS_HLP_ONLINE         "Sets the current mode to online.\n"
+    IDS_HLP_ONLINE_EX      "\nUsage: %1!s!\n\n        Sets the current mode to online. Changes made while in online mode are\n\
+        immediately reflected in the running configuration. If changes are\n        made while in offline mode, they are reflected in the running\n\
+        configuration when the mode is switched back to online.\n"
+    IDS_HLP_ABORT          "Discards changes made while in offline mode.\n"
+    IDS_HLP_ABORT_EX       "\nUsage: %1!s!\n\n        Discards changes made while in the offline mode. This does not affect\n\
+        changes made while in online mode.\n"
+    IDS_HLP_COMMIT         "Commits changes made while in offline mode.\n"
+    IDS_HLP_COMMIT_EX      "\nUsage: %1!s!\n\n        Commits changes to the running configuration that were made while in\n\
+        offline mode. No action is taken for this command while in online\n        mode.\n"
+    IDS_HLP_ALIAS           "Adds an alias.\n"
+    IDS_HLP_ALIAS_EX        "\nUsage : %1!s! [alias-name] [string1 string 2 ...]\n\n        If no arguments are specified, all aliases will be displayed.\n\
+        If alias-name is specified, then the equivalent string for it\n        will be displayed (if found).\n\
+        If one or more strings are specified, then alias-name is set to\n        these strings.\n"
+    IDS_HLP_UNALIAS         "Deletes an alias.\n"
+    IDS_HLP_UNALIAS_EX      "\nUsage : %1!s! alias-name\n\n        Deletes alias alias-name.\n"
 
-    IDS_HLP_DEL_HELPER     "Removes a helper DLL."
-    IDS_HLP_DEL_HELPER_EX  "Syntax: delete helper <dll file name>\n\n        Removes the specified helper DLL from netsh.\n\n"
+    IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
+    IDS_HLP_ADD_HELPER_EX  "\nUsage: %1!s! <dll file name>\n\n        Installs the specified helper DLL in netsh.\n"
 
-    IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers."
-    IDS_HLP_SHOW_HELPER_EX "Syntax: show helper\n\n        Lists all the top-level helpers.\n\n"
+    IDS_HLP_DEL_HELPER     "Removes a helper DLL.\n"
+    IDS_HLP_DEL_HELPER_EX  "\nUsage: %1!s! <dll file name>\n\n        Removes the specified helper DLL from netsh.\n"
 
-    IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries."
-    IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries."
-    IDS_HLP_GROUP_SHOW     "Displays information."
+    IDS_HLP_SET_MACHINE    "Sets the current machine on which to operate.\n"
+    IDS_HLP_SET_MACHINE_EX "\nUsage: %1!s! [[name=]<string>]\n\n        Sets the current machine on which to operate. If a machine name\n\
+        is not specified, the local machine is used.\n"
+    IDS_HLP_SET_MODE       "Sets the current mode to online or offline.\n"
+    IDS_HLP_SET_MODE_EX    "\nUsage: %1!s! [mode=]{online|offline}\n\n        Sets the current mode to online or offline.\n"
+
+    IDS_HLP_SHOW_ALIAS     "Lists all defined aliases.\n"
+    IDS_HLP_SHOW_ALIAS_EX  "\nUsage: %1!s!\n\n        Lists all defined aliases.\n"
+    IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers.\n"
+    IDS_HLP_SHOW_HELPER_EX "\nUsage: %1!s!\n\n        Lists all the top-level helpers.\n"
+    IDS_HLP_SHOW_MODE      "Shows the current mode.\n"
+    IDS_HLP_SHOW_MODE_EX   "\nUsage: %1!s!\n\n        Shows the current mode (offline or online).\n"
+
+    IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries.\n"
+    IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries.\n"
+    IDS_HLP_GROUP_SET      "Updates configuration settings.\n"
+    IDS_HLP_GROUP_SHOW     "Displays information.\n"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_INVALID_SYNTAX   "The syntax supplied for this command is not valid. Check help for the correct syntax.\n"
+    ERROR_CMD_NOT_FOUND    "The following command was not found: %1!s!.\n"
+    ERROR_OKAY             "Ok.\n"
 END

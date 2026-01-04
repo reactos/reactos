@@ -6715,11 +6715,98 @@ RControlServiceExW(
 /* Function 52 */
 DWORD
 WINAPI
-RSendPnPMessage(
-    handle_t BindingHandle)  /* FIXME */
+RI_ScSendPnPMessage(
+    _In_ RPC_SERVICE_STATUS_HANDLE hServiceStatus,
+    _In_ DWORD dwControl,
+    _In_ DWORD dwEventType,
+    _In_ DWORD dwEventSize,
+    _In_ LPBYTE pEventData)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSCM_CONTROL_PACKET ControlPacket;
+    DWORD PacketSize;
+    PSERVICE pService;
+    ULONG_PTR Ptr;
+    DWORD dwControlsAccepted, dwCurrentState;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("RI_ScSendPnPMessage(%p %lx %lu %lu %p)\n",
+           hServiceStatus, dwControl, dwEventType, dwEventSize, pEventData);
+
+    /* FIXME: Verify the status handle */
+    pService = (PSERVICE)hServiceStatus;
+
+    /* Fail, if the service is a driver */
+    if (pService->Status.dwServiceType & SERVICE_DRIVER)
+        return ERROR_INVALID_SERVICE_CONTROL;
+
+    dwControlsAccepted = pService->Status.dwControlsAccepted;
+    dwCurrentState = pService->Status.dwCurrentState;
+
+    /* Return ERROR_SERVICE_NOT_ACTIVE if the service has not been started */
+    if (pService->lpImage == NULL || dwCurrentState == SERVICE_STOPPED)
+        return ERROR_SERVICE_NOT_ACTIVE;
+
+    /* The service cannot accept a control code if it is not running */
+    if (dwCurrentState != SERVICE_RUNNING)
+        return ERROR_SERVICE_CANNOT_ACCEPT_CTRL;
+
+    /* Check if the control code is acceptable to the service */
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_DEVICEEVENT:
+            break;
+
+        case SERVICE_CONTROL_HARDWAREPROFILECHANGE:
+            if ((dwControlsAccepted & SERVICE_ACCEPT_HARDWAREPROFILECHANGE) == 0)
+                return ERROR_INVALID_SERVICE_CONTROL;
+            break;
+
+        case SERVICE_CONTROL_POWEREVENT:
+            if ((dwControlsAccepted & SERVICE_ACCEPT_POWEREVENT) == 0)
+                return ERROR_INVALID_SERVICE_CONTROL;
+            break;
+
+        case SERVICE_CONTROL_SESSIONCHANGE:
+            if ((dwControlsAccepted & SERVICE_ACCEPT_SESSIONCHANGE) == 0)
+                return ERROR_INVALID_SERVICE_CONTROL;
+            break;
+
+        default:
+            return ERROR_INVALID_SERVICE_CONTROL;
+    }
+
+    /* Calculate the total size of the control packet:
+     * initial structure, event type and event data */
+    PacketSize = sizeof(SCM_CONTROL_PACKET) + sizeof(DWORD) + dwEventSize;
+
+    /* Allocate the control packet */
+    ControlPacket = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, PacketSize);
+    if (!ControlPacket)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ControlPacket->dwSize = PacketSize;
+    ControlPacket->dwControl = dwControl;
+
+    /* Copy the event type and event data into the control packet */
+    Ptr = ((ULONG_PTR)ControlPacket + sizeof(SCM_CONTROL_PACKET));
+    RtlCopyMemory((PULONG)Ptr, &dwEventType, sizeof(dwEventType));
+    if (dwEventSize != 0)
+    {
+        Ptr = Ptr + sizeof(dwEventType);
+        RtlCopyMemory((PULONG)Ptr, pEventData, dwEventSize);
+    }
+
+    /* Send the control packet */
+    dwError = ScmSendControlPacket(pService->lpImage->hControlPipe,
+                                   pService->lpServiceName,
+                                   dwControl,
+                                   PacketSize,
+                                   ControlPacket);
+
+    /* Free the control packet */
+    HeapFree(GetProcessHeap(), 0, ControlPacket);
+
+    return dwError;
 }
 
 

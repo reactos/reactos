@@ -394,6 +394,26 @@ CDeviceNode::UninstallDevice()
     return true;
 }
 
+bool
+CDeviceNode::HasResources()
+{
+    HKEY hKey = NULL;
+    DWORD dwError, dwSize = 0;
+
+    CStringW keyName = L"SYSTEM\\CurrentControlSet\\Enum\\";
+    keyName += m_DeviceId;
+    keyName += L"\\Control";
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &hKey);
+    if (dwError == ERROR_SUCCESS)
+    {
+        RegQueryValueExW(hKey, L"AllocConfig", NULL, NULL, NULL, &dwSize);
+        RegCloseKey(hKey);
+    }
+
+    return (dwSize != 0);
+}
+
 /* PRIVATE METHODS ******************************************************/
 
 void

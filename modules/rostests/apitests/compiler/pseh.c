@@ -26,6 +26,12 @@
 extern "C" {
 #endif
 
+#if defined(_M_IX86) && !defined(_MSC_VER)
+#define todo_pseh todo_if(1)
+#else
+#define todo_pseh
+#endif
+
 #include <wine/test.h>
 #undef subtest
 
@@ -2765,8 +2771,266 @@ struct subtest
 	int (* func)(void);
 };
 
+#ifdef _M_IX86
+
+typedef struct _SCOPETABLE_ENTRY
+{
+    unsigned long EnclosingLevel;
+    void* FilterFunc;
+    void* HandlerFunc;
+} SCOPETABLE_ENTRY, *PSCOPETABLE_ENTRY;
+
+typedef struct _EH3_EXCEPTION_REGISTRATION
+{
+    struct _EH3_EXCEPTION_REGISTRATION *Next;
+    void* ExceptionHandler;
+    PSCOPETABLE_ENTRY ScopeTable;
+    unsigned long TryLevel;
+} EH3_EXCEPTION_REGISTRATION, *PEH3_EXCEPTION_REGISTRATION;
+
+#define okx(x) ok(x, #x "\n")
+
+DECLSPEC_NOINLINE
+static void Test_structs_no_seh(void)
+{
+    PEH3_EXCEPTION_REGISTRATION EH3Registration = (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0);
+
+    /* We should always have 2 exception registrations */
+    okx(EH3Registration != NULL);
+    todo_ros okx(EH3Registration->Next != (PVOID)0xFFFFFFFF);
+    okx(EH3Registration->ExceptionHandler != NULL);
+    okx(EH3Registration->ScopeTable != NULL);
+    okx(EH3Registration->TryLevel == 0);
+}
+
+EXTERN_C
+void
+__cdecl
+_except_handler3(
+    PEXCEPTION_RECORD rec,
+    PEH3_EXCEPTION_REGISTRATION* frame,
+    PCONTEXT context,
+    void* dispatcher);
+
+DECLSPEC_NOINLINE
+static void Test_structs_seh_except(void)
+{
+    PEH3_EXCEPTION_REGISTRATION EH3Registration;
+    PSCOPETABLE_ENTRY ScopeTable;
+
+    _SEH2_TRY
+    {
+        EH3Registration = (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0);
+        okx(EH3Registration != NULL);
+        okx(EH3Registration != (PVOID)0xFFFFFFFF);
+        okx(EH3Registration->Next != (PVOID)0xFFFFFFFF);
+        okx(EH3Registration->ExceptionHandler != NULL);
+#ifdef _MSC_VER
+        okx(EH3Registration->ExceptionHandler == _except_handler3);
+#endif
+        okx(EH3Registration->ScopeTable != NULL);
+        okx(EH3Registration->TryLevel == 0);
+        ScopeTable = EH3Registration->ScopeTable;
+        okx(ScopeTable->EnclosingLevel == 0xFFFFFFFF);
+        okx(ScopeTable->FilterFunc != NULL);
+        okx(ScopeTable->HandlerFunc != NULL);
+    }
+    _SEH2_EXCEPT(1)
+    {
+    }
+    _SEH2_END;
+}
+
+DECLSPEC_NOINLINE
+static void Test_structs_seh_finally(void)
+{
+    PEH3_EXCEPTION_REGISTRATION EH3Registration;
+    PSCOPETABLE_ENTRY ScopeTable;
+
+    _SEH2_TRY
+    {
+        EH3Registration = (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0);
+        okx(EH3Registration != NULL);
+        okx(EH3Registration != (PVOID)0xFFFFFFFF);
+        okx(EH3Registration->Next != (PVOID)0xFFFFFFFF);
+        okx(EH3Registration->ExceptionHandler != NULL);
+#ifdef _MSC_VER
+        okx(EH3Registration->ExceptionHandler == _except_handler3);
+#endif
+        okx(EH3Registration->ScopeTable != NULL);
+        okx(EH3Registration->TryLevel == 0);
+        ScopeTable = EH3Registration->ScopeTable;
+        okx(ScopeTable->EnclosingLevel == 0xFFFFFFFF);
+        todo_pseh okx(ScopeTable->FilterFunc == NULL);
+        todo_pseh okx(ScopeTable->HandlerFunc != NULL);
+    }
+    _SEH2_FINALLY
+    {
+    }
+    _SEH2_END;
+}
+
+DECLSPEC_NOINLINE
+static void Test_structs_seh_nested(void)
+{
+    PEH3_EXCEPTION_REGISTRATION EH3Registration1, EH3Registration2, NextHandler;
+    PSCOPETABLE_ENTRY ScopeTable;
+
+    _SEH2_TRY
+    {
+        EH3Registration1 = (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0);
+        okx(EH3Registration1 != NULL);
+        okx(EH3Registration1 != (PVOID)0xFFFFFFFF);
+        okx(EH3Registration1->Next != (PVOID)0xFFFFFFFF);
+        NextHandler = EH3Registration1->Next;
+        okx(EH3Registration1->TryLevel == 0);
+        _SEH2_TRY
+        {
+            EH3Registration2 = (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0);
+            okx(EH3Registration2 == EH3Registration1);
+            okx(EH3Registration2->ExceptionHandler != NULL);
+#ifdef _MSC_VER
+            okx(EH3Registration2->ExceptionHandler == _except_handler3);
+#endif
+            okx(EH3Registration2->ScopeTable != NULL);
+            okx(EH3Registration2->ScopeTable == EH3Registration1->ScopeTable);
+            todo_pseh okx(EH3Registration2->TryLevel == 1);
+            ScopeTable = EH3Registration2->ScopeTable;
+            okx(ScopeTable[0].EnclosingLevel == 0xFFFFFFFF);
+            okx(ScopeTable[0].FilterFunc != NULL);
+            okx(ScopeTable[0].HandlerFunc != NULL);
+            okx(ScopeTable[1].EnclosingLevel == 0);
+            todo_pseh okx(ScopeTable[1].FilterFunc == NULL);
+            todo_pseh okx(ScopeTable[1].HandlerFunc != NULL);
+        }
+        _SEH2_FINALLY
+        {
+        }
+        _SEH2_END;
+
+        okx(EH3Registration1 == (PEH3_EXCEPTION_REGISTRATION)__readfsdword(0));
+        okx(EH3Registration1->Next == NextHandler);
+        okx(EH3Registration1->TryLevel == 0);
+    }
+    _SEH2_EXCEPT(1)
+    {
+    }
+    _SEH2_END;
+}
+
+#endif // _M_IX86
+
+void Test_collided_unwind(void)
+{
+    volatile int Flags = 0;
+    volatile int Count = 0;
+    jmp_buf JumpBuffer;
+    int ret;
+#ifdef _M_IX86
+    unsigned int Registration = __readfsdword(0);
+#endif
+
+    ret = setjmp(JumpBuffer);
+    if (ret == 0)
+    {
+        _SEH2_TRY
+        {
+            _SEH2_TRY
+            {
+                _SEH2_TRY
+                {
+                    Flags |= 1;
+                    *((volatile int*)(LONG_PTR)-1) = 123;
+                }
+                _SEH2_FINALLY
+                {
+                    Count++;
+                    Flags |= 2;
+                    if (Count) // This is to prevent the compiler from optimizing stuff out
+                        longjmp(JumpBuffer, 1);
+                    Flags |= 4;
+                }
+                _SEH2_END;
+            }
+            _SEH2_FINALLY
+            {
+                Count++;
+                Flags |= 8;
+            }
+            _SEH2_END;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Flags |= 16;
+        }
+        _SEH2_END;
+    }
+
+    ok(Flags == (1 | 2 | 8), "Flags = %x\n", Flags);
+    ok(Count == 2, "Count = %d\n", Count);
+#ifdef _M_IX86
+    ok(__readfsdword(0) == Registration, "SEH registration corrupted!\n");
+    *(unsigned int*)NtCurrentTeb() = Registration;
+#endif
+}
+
+void Do_nested_from_except(void)
+{
+    volatile unsigned int Flags = 0;
+
+    _SEH2_TRY
+    {
+        RaiseException(0xDEADBEEF, 0, 0, NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_TRY
+        {
+            _SEH2_TRY
+            {
+                Flags |= 1;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Flags |= 2;
+            }
+            _SEH2_END;
+        }
+        _SEH2_FINALLY
+        {
+            Flags |= 4;
+        }
+        _SEH2_END;
+    }
+    _SEH2_END;
+
+    ok(Flags == (1 | 4), "Flags = %x\n", Flags);
+}
+
+void Test_nested_from_except(void)
+{
+    Do_nested_from_except();
+
+#ifdef _M_IX86
+    /* Temporarily remove the SEH registration (see CORE-20316) */
+    unsigned int Registration = __readfsdword(0);
+    *(unsigned int*)NtCurrentTeb() = -1;
+    Do_nested_from_except();
+    *(unsigned int*)NtCurrentTeb() = Registration;
+#endif
+}
+
 START_TEST(pseh)
 {
+#ifdef _M_IX86
+    Test_structs_no_seh();
+    Test_structs_seh_except();
+    Test_structs_seh_finally();
+    Test_structs_seh_nested();
+#endif
+    Test_collided_unwind();
+    Test_nested_from_except();
+
 	const struct subtest testsuite[] =
 	{
 		USE_TEST(test_empty_1),

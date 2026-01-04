@@ -294,10 +294,10 @@ PreloadGlobalMessageTable(IN PVOID ImageBase)
     TotalLength = 0;
     for (MessageId = 1; MessageId != SAC_MAX_MESSAGES; MessageId++)
     {
-        /* Find this message ID in the string table*/
+        /* Find this message in the message table */
         Status2 = RtlFindMessage(ImageBase,
-                                 11,
-                                 LANG_NEUTRAL,
+                                 RT_MESSAGETABLE,
+                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                  MessageId,
                                  &MessageEntry);
         if (NT_SUCCESS(Status2))
@@ -339,10 +339,10 @@ PreloadGlobalMessageTable(IN PVOID ImageBase)
     /* Now loop over our entries again */
     for (i = 0, MessageId = 1; MessageId != SAC_MAX_MESSAGES; MessageId++)
     {
-        /* Make sure the message is still there...! */
+        /* Make sure the message is still there! */
         Status2 = RtlFindMessage(ImageBase,
-                                 11,
-                                 LANG_NEUTRAL,
+                                 RT_MESSAGETABLE,
+                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                                  MessageId,
                                  &MessageEntry);
         if (NT_SUCCESS(Status2))

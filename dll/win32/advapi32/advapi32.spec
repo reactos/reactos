@@ -306,6 +306,7 @@
 @ stdcall I_QueryTagInformation(ptr long ptr)
 @ stdcall I_ScIsSecurityProcess()
 @ stdcall I_ScPnPGetServiceName(ptr wstr long)
+@ stdcall I_ScSendPnPMessage(ptr long long ptr)
 @ stub I_ScSendTSMessage
 @ stdcall I_ScSetServiceBitsA(ptr long long long str)
 @ stdcall I_ScSetServiceBitsW(ptr long long long wstr)

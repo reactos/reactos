@@ -7,9 +7,9 @@
 
 #include "precomp.h"
 
-static const WCHAR szHostname[] = L"reactos.org";
+static const CHAR szHostname[] = "reactos.org";
 static const INTERNET_PORT ServerPort = 8443;
-static const WCHAR szServerFile[] = L"testman/webservice/";
+static const CHAR szServerFile[] = "testman/webservice/";
 
 /**
  * Constructs a CWebService object and immediately establishes a connection to the "testman" Web Service.
@@ -17,20 +17,7 @@ static const WCHAR szServerFile[] = L"testman/webservice/";
 CWebService::CWebService()
 {
     /* Zero-initialize variables */
-    m_hHTTP = NULL;
-    m_hHTTPRequest = NULL;
     m_TestID = NULL;
-
-    /* Establish an internet connection to the "testman" server */
-    m_hInet = InternetOpenW(L"rosautotest", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-
-    if(!m_hInet)
-        FATAL("InternetOpenW failed\n");
-
-    m_hHTTP = InternetConnectW(m_hInet, szHostname, ServerPort, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
-
-    if(!m_hHTTP)
-        FATAL("InternetConnectW failed\n");
 }
 
 /**
@@ -38,61 +25,8 @@ CWebService::CWebService()
  */
 CWebService::~CWebService()
 {
-    if(m_hInet)
-        InternetCloseHandle(m_hInet);
-
-    if(m_hHTTP)
-        InternetCloseHandle(m_hHTTP);
-
-    if(m_hHTTPRequest)
-        InternetCloseHandle(m_hHTTPRequest);
-
     if(m_TestID)
         delete m_TestID;
-}
-
-/**
- * Sends data to the Web Service.
- *
- * @param InputData
- * A std::string containing all the data, which is going to be submitted as HTTP POST data.
- *
- * @return
- * Returns a pointer to a char array containing the data received from the Web Service.
- * The caller needs to free that pointer.
- */
-PCHAR
-CWebService::DoRequest(const string& InputData)
-{
-    const WCHAR szHeaders[] = L"Content-Type: application/x-www-form-urlencoded";
-
-    auto_array_ptr<char> Data;
-    DWORD DataLength;
-
-    /* Post our test results to the web service */
-    m_hHTTPRequest = HttpOpenRequestW(m_hHTTP, L"POST", szServerFile, NULL, NULL, NULL, INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_COOKIES | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
-
-    if(!m_hHTTPRequest)
-        FATAL("HttpOpenRequestW failed\n");
-
-    Data.reset(new char[InputData.size() + 1]);
-    strcpy(Data, InputData.c_str());
-
-    if(!HttpSendRequestW(m_hHTTPRequest, szHeaders, lstrlenW(szHeaders), Data, (DWORD)InputData.size()))
-        FATAL("HttpSendRequestW failed\n");
-
-    /* Get the response */
-    if(!InternetQueryDataAvailable(m_hHTTPRequest, &DataLength, 0, 0))
-        FATAL("InternetQueryDataAvailable failed\n");
-
-    Data.reset(new char[DataLength + 1]);
-
-    if(!InternetReadFile(m_hHTTPRequest, Data, DataLength, &DataLength))
-        FATAL("InternetReadFile failed\n");
-
-    Data[DataLength] = 0;
-
-    return Data.release();
 }
 
 /**
@@ -118,7 +52,7 @@ CWebService::Finish(const char* TestType)
     Data += "&testid=";
     Data += m_TestID;
 
-    Response.reset(DoRequest(Data));
+    Response.reset(DoRequest(szHostname, ServerPort, szServerFile, Data));
 
     if (strcmp(Response, "OK"))
     {
@@ -150,7 +84,7 @@ CWebService::GetTestID(const char* TestType)
         Data += Configuration.GetComment();
     }
 
-    m_TestID = DoRequest(Data);
+    m_TestID = DoRequest(szHostname, ServerPort, szServerFile, Data);
 
     /* Verify that this is really a number */
     if(!IsNumber(m_TestID))
@@ -190,7 +124,7 @@ CWebService::GetSuiteID(const char* TestType, CTestInfo* TestInfo)
     Data += "&test=";
     Data += TestInfo->Test;
 
-    SuiteID.reset(DoRequest(Data));
+    SuiteID.reset(DoRequest(szHostname, ServerPort, szServerFile, Data));
 
     /* Verify that this is really a number */
     if(!IsNumber(SuiteID))
@@ -237,7 +171,7 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
     Data += "&log=";
     Data += EscapeString(TestInfo->Log);
 
-    Response.reset(DoRequest(Data));
+    Response.reset(DoRequest(szHostname, ServerPort, szServerFile, Data));
 
     if (strcmp(Response, "OK"))
     {

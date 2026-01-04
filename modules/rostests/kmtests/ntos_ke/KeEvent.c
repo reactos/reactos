@@ -160,6 +160,9 @@ TestEventConcurrent(
     LongTimeout.QuadPart = -100 * MILLISECOND;
     ShortTimeout.QuadPart = -1 * MILLISECOND;
 
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "TestEventConcurrent() is broken on Vista+.\n"))
+        return;
+
     KeInitializeEvent(Event, Type, FALSE);
 
     for (i = 0; i < ThreadCount; ++i)

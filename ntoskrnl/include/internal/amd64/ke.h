@@ -35,7 +35,7 @@ extern "C" {
 #define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
-#define X86_FEATURE_MTTR        0x00001000 /* Memory type range registers are present */
+#define X86_FEATURE_MTRR        0x00001000 /* Memory type range registers are present */
 #define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
 #define X86_FEATURE_CMOV        0x00008000 /* "Conditional move" instruction supported */
 #define X86_FEATURE_PAT         0x00010000 /* Page Attribute Table is supported */
@@ -87,6 +87,8 @@ extern "C" {
 #define APIC_EOI_REGISTER 0xFFFFFFFFFFFE00B0ULL
 
 #ifndef __ASM__
+
+extern SIZE_T KeXStateLength;
 
 #include "intrin_i.h"
 
@@ -472,6 +474,11 @@ KiGetUserModeStackAddress(void)
 }
 
 VOID
+KiGetTrapContext(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _Out_ PCONTEXT Context);
+
+VOID
 KiSetTrapContext(
     _Out_ PKTRAP_FRAME TrapFrame,
     _In_ PCONTEXT Context,
@@ -493,6 +500,11 @@ BOOLEAN
 KiProcessorFreezeHandler(
     _In_ PKTRAP_FRAME TrapFrame,
     _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KiInitializeXStateConfiguration(
+    _In_ ULONG Processor);
 
 #ifdef __cplusplus
 } // extern "C"

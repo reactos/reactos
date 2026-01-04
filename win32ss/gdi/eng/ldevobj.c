@@ -668,6 +668,7 @@ LDEVOBJ_bBuildDevmodeList(
             i++;
         }
     }
+    TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
     return TRUE;
 }
 

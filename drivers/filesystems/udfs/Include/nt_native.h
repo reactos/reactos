@@ -874,6 +874,9 @@ typedef struct _IO_STATUS_BLOCK {
 
 typedef
 VOID
+#ifdef __REACTOS__
+NTAPI
+#endif
 (*PIO_APC_ROUTINE) (
     IN PVOID ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,

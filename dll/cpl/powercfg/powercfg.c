@@ -1,12 +1,10 @@
 /*
- * PROJECT:         ReactOS Power Configuration Applet
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/powercfg.c
- * PURPOSE:         initialization of applet
- * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  Martin Rottensteiner
- *                  Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Applet initialization
+ * COPYRIGHT:   Copyright 2006-2009 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
  */
 
 #include "powercfg.h"
@@ -14,20 +12,9 @@
 #include <winreg.h>
 #include <regstr.h>
 
-#define NUM_APPLETS (1)
-
-static LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
-
-
-HINSTANCE hApplet = 0;
+HINSTANCE hApplet = NULL;
 GLOBAL_POWER_POLICY gGPP;
 TCHAR langSel[255];
-
-/* Applets */
-APPLET Applets[NUM_APPLETS] =
-{
-    {IDC_CPLICON_1, IDS_CPLNAME_1, IDS_CPLDESCRIPTION_1, Applet1}
-};
 
 static BOOL CALLBACK
 PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
@@ -77,7 +64,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
     {
         case PSCB_INITIALIZED:
         {
-            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDC_CPLICON_1));
+            hIcon = LoadIconW(hApplet, MAKEINTRESOURCEW(IDC_CPLICON));
             SendMessageW(hwndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
             break;
         }
@@ -87,7 +74,7 @@ PropSheetProc(HWND hwndDlg, UINT uMsg, LPARAM lParam)
 
 /* First Applet */
 static LONG APIENTRY
-Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
+Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     HPROPSHEETPAGE hpsp[MAX_POWER_PAGES];
     PROPSHEETHEADER psh;
@@ -99,29 +86,26 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(psh));
+    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSH_PROPTITLE | PSH_USEICONID | PSH_USECALLBACK;
     psh.hwndParent = hwnd;
     psh.hInstance = hApplet;
-    psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON_1);
-    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME_1);
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_CPLICON);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
     psh.pfnCallback = PropSheetProc;
 
     if (!GetPwrCapabilities(&spc))
-    {
         return GetLastError();
-    }
 
     if (spc.SystemBatteriesPresent)
     {
         InitPropSheetPage(&psh, IDD_POWERSCHEMESPAGE_ACDC, PowerSchemesDlgProc);
         InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, AlarmsDlgProc);
-
-        /* FIXME: Add battery page */
+        InitPropSheetPage(&psh, IDD_PROPPAGEPOWERMETER, PowerMeterDlgProc);
     }
     else
     {
@@ -130,10 +114,12 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, AdvancedDlgProc);
     if (spc.SystemS4)
     {
+        /* ACPI S4 state is supported, display the "Hibernate" page
+         * where we can enable or disable the hibernation file */
         InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, HibernateDlgProc);
     }
 
-    /* FIXME: Add UPS page */
+    // TODO: Add UPS page (check spc.UpsPresent)
 
     /* Load additional pages provided by shell extensions */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);
@@ -149,6 +135,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 }
 
 /* Control Panel Callback */
+#define NUM_APPLETS 1
 LONG CALLBACK
 CPlApplet(HWND hwndCPl,
           UINT uMsg,
@@ -160,23 +147,19 @@ CPlApplet(HWND hwndCPl,
     switch (uMsg)
     {
         case CPL_INIT:
-        {
             return TRUE;
-        }
 
         case CPL_GETCOUNT:
-        {
             return NUM_APPLETS;
-        }
 
         case CPL_INQUIRE:
             if (i < NUM_APPLETS)
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
-                CPlInfo->idIcon = Applets[i].idIcon;
-                CPlInfo->idName = Applets[i].idName;
-                CPlInfo->idInfo = Applets[i].idDescription;
+                CPlInfo->idIcon = IDC_CPLICON;
+                CPlInfo->idName = IDS_CPLNAME;
+                CPlInfo->idInfo = IDS_CPLDESCRIPTION;
             }
             else
             {
@@ -186,7 +169,7 @@ CPlApplet(HWND hwndCPl,
 
         case CPL_DBLCLK:
             if (i < NUM_APPLETS)
-                Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+                Applet(hwndCPl, uMsg, lParam1, lParam2);
             else
                 return TRUE;
             break;

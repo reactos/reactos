@@ -28,6 +28,11 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
 endif()
 
+if((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+    # Enable xsave feature
+    add_compile_options(-mxsave)
+endif()
+
 list(APPEND PCH_SKIP_SOURCE
     guid.c)
 
@@ -41,7 +46,7 @@ set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
-target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
+target_link_libraries(ntoskrnl ntoskrnl_vista cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr setjmp wdmguid poguid ioevent)
 
 if(STACK_PROTECTOR)
     target_sources(ntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
@@ -52,9 +57,7 @@ add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${PCH_SKIP_S
 add_dependencies(ntoskrnl psdk asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
-if(BUILD_MP)
-    add_subdirectory(ntkrnlmp)
-endif()
+add_subdirectory(ntkrnlmp)
 
 add_asm_files(ntdllsys_asm ntdll.S)
 add_library(ntdllsys ${ntdllsys_asm})

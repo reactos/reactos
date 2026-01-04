@@ -8,7 +8,10 @@
 
 #include "diskpart.h"
 
-BOOL compact_main(INT argc, LPWSTR *argv)
+EXIT_CODE
+compact_main(
+    _In_ INT argc, 
+    _In_ PWSTR *argv)
 {
-    return 0;
+    return EXIT_SUCCESS;
 }

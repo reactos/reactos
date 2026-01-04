@@ -38,6 +38,7 @@ list(APPEND SOURCE
     CDropTargetHelper.cpp
     CEnumIDListBase.cpp
     CExtractIcon.cpp
+    CRecycleBinCleaner.cpp
     folders.cpp
     iconcache.cpp
     propsheet.cpp
@@ -84,7 +85,7 @@ list(APPEND SOURCE
     CFolderItemVerbs.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
-    wine/appbar.c
+    appbar.c
     wine/classes.c
     wine/clipboard.c
     wine/control.c

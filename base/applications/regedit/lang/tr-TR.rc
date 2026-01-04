@@ -434,6 +434,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Yeni bir dizi değeri ekler"
     ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer ekler"
     ID_EDIT_NEW_DWORDVALUE "Yeni bir DWORD değeri ekler"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Kayıt Defteri'ne alır"
     ID_REGISTRY_EXPORTREGISTRYFILE "Kayıt Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir"
     ID_REGISTRY_LOADHIVE "Kayıt Defteri'ne bir yığın dosyasını yükler"

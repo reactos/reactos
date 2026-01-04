@@ -17,7 +17,7 @@ _invoke_matherr(
     double retval);
 
 /*!
- * @brief Handles an error condition. 
+ * @brief Handles an error condition.
  * @param fname - The name of the function that caused the error.
  * @param opcode - Opcode of the function that cause the error (see OP_* consants in fpieee.h).
  * @param value - The value to be returned, encoded as uint64_t.
@@ -42,7 +42,7 @@ _handle_error(
     double arg2,
     int nargs)
 {
-    float retval = *(double*)&value;
+    double retval = *(double*)&value;
 
     _invoke_matherr(type, fname, arg1, arg2, retval);
 

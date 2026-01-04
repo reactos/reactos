@@ -152,9 +152,9 @@ URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfl
 
 Title: Universal ATA driver for Windows
 Path: drivers/storage/ide/uniata
-Used Version: 0.47a
+Used Version: 0.47b
 License: BSD-like
-URL: http://alter.org.ua/soft/win/uni_ata/
+URL: https://alter.org.ua/soft/win/uni_ata/
 
 Title: Miniport driver for the Buslogic BT 958 SCSI Controller
 Path: drivers/storage/port/buslogic
@@ -220,9 +220,9 @@ URL: https://savannah.nongnu.org/projects/lwip/
 
 Title: FreeType
 Path: sdk/lib/3rdparty/freetype
-Used Version: 2.9.0
+Used Version: 2.10.0
 License: FTL (https://spdx.org/licenses/FTL.html)
-URL: http://www.freetype.org
+URL: https://freetype.org/
 
 Title: dosfstools
 Path: sdk/lib/fslib/vfatlib/check

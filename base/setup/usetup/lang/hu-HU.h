@@ -15,7 +15,7 @@ static MUI_ENTRY huHUSetupInitPageEntries[] =
     {
         0,
         20,
-        "K\202rem v\240rjon am\241g a Reactos telep\241t\213 inicializ\240lja mag\240t",
+        "K\202rem v\240rjon am\241g a ReactOS telep\241t\213 inicializ\240lja mag\240t",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },

@@ -403,7 +403,33 @@ SHELL_GetUIObjectOfAbsoluteItem(
 }
 
 HRESULT
-Shell_DisplayNameOf(
+SHELL_DisplayNameOf(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags,
+    _Out_ PWSTR *ppStr)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder> psfRoot;
+    if (!psf)
+    {
+        PCUITEMID_CHILD pidlChild;
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfRoot), &pidlChild);
+        if (FAILED(hr))
+            return hr;
+        psf = psfRoot;
+        pidl = pidlChild;
+    }
+    STRRET sr;
+    hr = psf->GetDisplayNameOf((PCUITEMID_CHILD)pidl, Flags, &sr);
+    return SUCCEEDED(hr) ? StrRetToStrW(&sr, pidl, ppStr) : hr;
+}
+
+/***********************************************************************
+ *    DisplayNameOfW [SHELL32.757] (Vista+)
+ */
+EXTERN_C HRESULT WINAPI
+DisplayNameOfW(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwFlags,
@@ -492,7 +518,7 @@ SHGetNameAndFlagsW(
     if (SUCCEEDED(hr))
     {
         if (pszText)
-            hr = Shell_DisplayNameOf(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
+            hr = DisplayNameOfW(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
 
         if (SUCCEEDED(hr))
         {
@@ -1672,8 +1698,7 @@ InvokeIExecuteCommand(
     if (!pEC)
         return E_INVALIDARG;
 
-    if (pSite)
-        IUnknown_SetSite(pEC, pSite);
+    CScopedSetObjectWithSite site(pEC, pSite);
     IUnknown_InitializeCommand(pEC, pszCommandName, pPB);
 
     CComPtr<IObjectWithSelection> pOWS;
@@ -1695,10 +1720,7 @@ InvokeIExecuteCommand(
     if (fMask & CMIC_MASK_PTINVOKE)
         pEC->SetPosition(pICI->ptInvoke);
 
-    HRESULT hr = pEC->Execute();
-    if (pSite)
-        IUnknown_SetSite(pEC, NULL);
-    return hr;
+    return pEC->Execute();
 }
 
 EXTERN_C HRESULT
@@ -1808,6 +1830,35 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
         return hr;
     initIcon->SetNormalIcon(swShell32Name, IconIndex);
     return initIcon->QueryInterface(riid, ppvOut);
+}
+
+int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId)
+{
+    for (UINT i = 0;; ++i)
+    {
+        const CLSID *pClsId = DCIA_GetEntry(hDCIA, i);
+        if (!pClsId)
+            break;
+        if (IsEqualGUID(*pClsId, rClsId))
+            return i; // Don't allow duplicates
+    }
+    return DSA_AppendItem((HDSA)hDCIA, const_cast<CLSID*>(&rClsId));
+}
+
+void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey)
+{
+    WCHAR szKey[200];
+    PathCombineW(szKey, L"shellex", pszSubkey);
+    HKEY hEnum;
+    if (RegOpenKeyExW(hProgId, szKey, 0, KEY_READ, &hEnum) != ERROR_SUCCESS)
+        return;
+    for (UINT i = 0; RegEnumKeyW(hEnum, i++, szKey, _countof(szKey)) == ERROR_SUCCESS;)
+    {
+        CLSID clsid;
+        if (SUCCEEDED(SHELL_GetShellExtensionRegCLSID(hEnum, szKey, &clsid)))
+            DCIA_AddEntry(hDCIA, clsid);
+    }
+    RegCloseKey(hEnum);
 }
 
 /*************************************************************************

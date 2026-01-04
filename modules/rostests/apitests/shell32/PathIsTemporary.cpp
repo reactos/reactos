@@ -20,8 +20,12 @@ static void Test_PathIsTemporaryA(void)
     GetTempPathA(_countof(szPath), szPath);
     ok_int(PathIsTemporaryA(szPath), TRUE);
 
-    PathAppendA(szPath, "TestTestTest");
-    ok_int(PathIsTemporaryA(szPath), FALSE);
+    if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
+    {
+        /* This is not reliable on Vista+ */
+        PathAppendA(szPath, "TestTestTest");
+        ok_int(PathIsTemporaryA(szPath), FALSE);
+    }
 
     CreateDirectoryA(szPath, NULL);
     ok_int(PathIsTemporaryA(szPath), TRUE);
@@ -41,8 +45,12 @@ static void Test_PathIsTemporaryW(void)
     GetTempPathW(_countof(szPath), szPath);
     ok_int(PathIsTemporaryW(szPath), TRUE);
 
-    PathAppendW(szPath, L"TestTestTest");
-    ok_int(PathIsTemporaryW(szPath), FALSE);
+    if (_WIN32_WINNT <= _WIN32_WINNT_WS03)
+    {
+        /* This is not reliable on Vista+ */
+        PathAppendW(szPath, L"TestTestTest");
+        ok_int(PathIsTemporaryW(szPath), FALSE);
+    }
 
     CreateDirectoryW(szPath, NULL);
     ok_int(PathIsTemporaryW(szPath), TRUE);

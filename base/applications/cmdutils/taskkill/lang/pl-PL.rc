@@ -1,15 +1,16 @@
 /*
- * PROJECT:     Kończy procesy
- * LICENSE:     See COPYING in the top level directory
+ * PROJECT:     Task termination utility
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Polish resource file
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ * TRANSLATORS: Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020-2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sposób użycia: taskkill [/?] [/f] [/im nazwa_procesu | /pid id_procesu]\n"
+    STRING_USAGE, "Sposób użycia: taskkill [/?] [/f] [/im nazwa_procesu | /pid id_procesu] [/t]\n"
     STRING_INVALID_OPTION, "Błąd: Określono nieznaną lub nieprawidłową opcję.\n"
     STRING_INVALID_PARAM, "Błąd: Nieprawidłowy parametr.\n"
     STRING_MISSING_OPTION, "Błąd: Nie określono opcji /im ani /pid.\n"
@@ -23,6 +24,10 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Błąd: Nie można wyliczyć listy procesów.\n"
     STRING_TERMINATE_FAILED, "Błąd: Nie można zakończyć procesu ""%1"".\n"
     STRING_SELF_TERMINATION, "Błąd: Proces nie może zakończyć sam siebie.\n"
+    // STRING_CLOSE_CHILD, "Wysłano sygnał zakończenia do procesu o identyfikatorze PID %1!u!, będącego procesem podrzędnym procesu PID %2!u!.\n"
+    STRING_CLOSE_CHILD, "Wysłano komunikat zamknięcia do okien najwyższego poziomu procesu PID %1!u!, będącego procesem podrzędnym procesu PID %2!u!.\n"
+    STRING_TERM_CHILD, "Proces o identyfikatorze PID %1!u! (podrzędny procesowi PID %2!u!) został zakończony.\n"
+    STRING_TERM_CHILD_FAILED, "Błąd: Nie można zakończyć procesu PID %1!u!, będącego procesem podrzędnym PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Błąd: Nieprawidłowa składnia. Opcja '%1' nie jest dozwolona więcej niż '%2!d!' razy.\n"
     STRING_INVALID_SYNTAX, "Błąd: Nieprawidłowa składnia.\n"
 }

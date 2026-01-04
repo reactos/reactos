@@ -369,7 +369,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
     }
     else
     {
-        /* Wine stores a section name pointer in the Flags member */
+        /* HACK for Wine: stores a section name pointer in the Flags member */
         DPRINT("Assuming static: %p inside Process: %p\n",
                DebugInfo,
                NtCurrentTeb()->ClientId.UniqueProcess);
@@ -415,7 +415,7 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         /* Remove it from the list */
         RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
 #if 0
-        /* We need to preserve Flags for RtlpFreeDebugInfo */
+        /* HACK for Wine: We need to preserve Flags for RtlpFreeDebugInfo */
         RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
 #endif
     }
@@ -819,7 +819,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  * RtlTryEnterCriticalSection
  * @implemented NT4
  *
- *     Attemps to gain ownership of the critical section without waiting.
+ *     Attempts to gain ownership of the critical section without waiting.
  *
  * Params:
  *     CriticalSection - Critical section to attempt acquiring.
@@ -831,7 +831,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *     None
  *
  *--*/
-BOOLEAN
+LOGICAL
 NTAPI
 RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -863,14 +863,14 @@ RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
     UNIMPLEMENTED;
 }
 
-ULONG
+LOGICAL
 NTAPI
 RtlIsCriticalSectionLocked(PRTL_CRITICAL_SECTION CriticalSection)
 {
     return CriticalSection->RecursionCount != 0;
 }
 
-ULONG
+LOGICAL
 NTAPI
 RtlIsCriticalSectionLockedByThread(PRTL_CRITICAL_SECTION CriticalSection)
 {

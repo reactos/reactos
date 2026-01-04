@@ -28,11 +28,11 @@ ARBITER_INSTANCE IopRootPortArbiter;
 
 extern KEVENT PiEnumerationFinished;
 
-NTSTATUS NTAPI IopPortInitialize(VOID);
-NTSTATUS NTAPI IopMemInitialize(VOID);
-NTSTATUS NTAPI IopDmaInitialize(VOID);
-NTSTATUS NTAPI IopIrqInitialize(VOID);
-NTSTATUS NTAPI IopBusNumberInitialize(VOID);
+NTSTATUS NTAPI IopArbPortInitialize(VOID);
+NTSTATUS NTAPI IopArbMemInitialize(VOID);
+NTSTATUS NTAPI IopArbDmaInitialize(VOID);
+NTSTATUS NTAPI IopArbIrqInitialize(VOID);
+NTSTATUS NTAPI IopArbBusNumberInitialize(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -50,38 +50,38 @@ IopInitializeArbiters(VOID)
 {
     NTSTATUS Status;
 
-    Status = IopPortInitialize();
+    Status = IopArbPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopPortInitialize() return %X\n", Status);
+        DPRINT1("IopArbPortInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopMemInitialize();
+    Status = IopArbMemInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopMemInitialize() return %X\n", Status);
+        DPRINT1("IopArbMemInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopDmaInitialize();
+    Status = IopArbDmaInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopDmaInitialize() return %X\n", Status);
+        DPRINT1("IopArbDmaInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopIrqInitialize();
+    Status = IopArbIrqInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopIrqInitialize() return %X\n", Status);
+        DPRINT1("IopArbIrqInitialize() return %X\n", Status);
         return Status;
     }
 
-    Status = IopBusNumberInitialize();
+    Status = IopArbBusNumberInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopBusNumberInitialize() return %X\n", Status);
+        DPRINT1("IopArbBusNumberInitialize() return %X\n", Status);
     }
 
     return Status;

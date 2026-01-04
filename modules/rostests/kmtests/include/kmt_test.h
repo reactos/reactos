@@ -18,6 +18,8 @@
 
 #include <kmt_platform.h>
 
+#define GetNTVersion() ((SharedUserData->NtMajorVersion << 8) | SharedUserData->NtMinorVersion)
+
 typedef VOID KMT_TESTFUNC(VOID);
 typedef KMT_TESTFUNC *PKMT_TESTFUNC;
 
@@ -156,6 +158,7 @@ typedef struct
 
 extern BOOLEAN KmtIsCheckedBuild;
 extern BOOLEAN KmtIsMultiProcessorBuild;
+extern BOOLEAN KmtIsVirtualMachine;
 extern PCSTR KmtMajorFunctionNames[];
 extern PDRIVER_OBJECT KmtDriverObject;
 

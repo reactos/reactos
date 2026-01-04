@@ -44,17 +44,17 @@ DWORD getICMPStats(MIB_ICMP *stats);
 /* Gets IP statistics into stats.  Returns ERROR_INVALID_PARAMETER if stats is
  * NULL, NO_ERROR otherwise.
  */
-DWORD getIPStats(PMIB_IPSTATS stats, DWORD family);
+DWORD getIPStats(HANDLE tcpFile, PMIB_IPSTATS stats);
 
 /* Gets TCP statistics into stats.  Returns ERROR_INVALID_PARAMETER if stats is
  * NULL, NO_ERROR otherwise.
  */
-DWORD getTCPStats(MIB_TCPSTATS *stats, DWORD family);
+DWORD getTCPStats(HANDLE tcpFile, MIB_TCPSTATS *stats);
 
 /* Gets UDP statistics into stats.  Returns ERROR_INVALID_PARAMETER if stats is
  * NULL, NO_ERROR otherwise.
  */
-DWORD getUDPStats(MIB_UDPSTATS *stats, DWORD family);
+DWORD getUDPStats(HANDLE tcpFile, MIB_UDPSTATS *stats);
 
 /* Route table functions */
 

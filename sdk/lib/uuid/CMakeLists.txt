@@ -37,7 +37,7 @@ list(APPEND IDL_SOURCES
 #    dxtmsft.idl
 #    dxtrans.idl
 #    dxtransp.idl
-#    emptyvc.idl
+    emptyvc.idl
     exdisp.idl
 #    filter.idl
 #    filtntfy.idl
@@ -87,6 +87,7 @@ list(APPEND IDL_SOURCES
 #    netprov.idl
     oaidl.idl
     objidl.idl
+    objidlbase.idl
     objsafe.idl
     ocidl.idl
     ocmm.idl

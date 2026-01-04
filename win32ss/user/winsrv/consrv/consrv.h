@@ -21,6 +21,7 @@
 
 #include <winnls.h>
 #include <wincon.h>
+#include <wincon_undoc.h>
 
 #define NTOS_MODE_USER
 #include <ndk/mmfuncs.h>

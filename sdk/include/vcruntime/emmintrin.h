@@ -27,7 +27,9 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128i
     unsigned __int32 m128i_u32[4];
     unsigned __int64 m128i_u64[2];
 } __m128i;
+#ifdef _STATIC_ASSERT
 _STATIC_ASSERT(sizeof(__m128i) == 16);
+#endif
 
 typedef struct _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128d
 {

@@ -8,18 +8,15 @@
 class CWebService
 {
 private:
-    HINTERNET m_hInet;
-    HINTERNET m_hHTTP;
-    HINTERNET m_hHTTPRequest;
     PCHAR m_TestID;
 
-    PCHAR DoRequest(const string& InputData);
+    virtual PCHAR DoRequest(const char* Hostname, INTERNET_PORT Port, const char* ServerFile, const string& InputData) = 0;
     void GetTestID(const char* TestType);
     PCHAR GetSuiteID(const char* TestType, CTestInfo* TestInfo);
 
 public:
     CWebService();
-    ~CWebService();
+    virtual ~CWebService();
 
     void Finish(const char* TestType);
     void Submit(const char* TestType, CTestInfo* TestInfo);

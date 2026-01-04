@@ -432,6 +432,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adds a new string value"
     ID_EDIT_NEW_BINARYVALUE "Adds a new binary value"
     ID_EDIT_NEW_DWORDVALUE "Adds a new double word value"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Imports a text file into the registry"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exports all or part of the registry to a text file"
     ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"

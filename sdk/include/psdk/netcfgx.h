@@ -323,7 +323,7 @@ DECLARE_INTERFACE_(INetCfgClass, IUnknown)
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
-    STDMETHOD_(HRESULT,FindComponent) (THIS_ INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,FindComponent) (THIS_ LPCWSTR pszwComponentId, INetCfgComponent **ppnccItem) PURE;
     STDMETHOD_(HRESULT,EnumComponents) (THIS_ IEnumNetCfgComponent **ppenumComponent) PURE;
 };
 #undef INTERFACE
@@ -333,7 +333,7 @@ DECLARE_INTERFACE_(INetCfgClass, IUnknown)
 #define INetCfgClass_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
 #define INetCfgClass_AddRef(p)              (p)->lpVtbl->AddRef(p)
 #define INetCfgClass_Release(p)             (p)->lpVtbl->Release(p)
-#define INetCfgClass_FindComponent(p,a)     (p)->lpVtbl->FindComponent(p,a)
+#define INetCfgClass_FindComponent(p,a,b)   (p)->lpVtbl->FindComponent(p,a,b)
 #define INetCfgClass_EnumComponents(p,a)    (p)->lpVtbl->EnumComponents(p,a)
 #endif
 

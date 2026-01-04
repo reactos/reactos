@@ -9284,9 +9284,6 @@ properties:
 methods:
     WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
 
-    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
-    IDispatch* constructor();
-
     [propput, id(DISPID_IHTMLAREAELEMENT_SHAPE)]
     void shape(BSTR v);
 

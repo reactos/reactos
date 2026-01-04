@@ -64,7 +64,14 @@ BOOL PerfDataInitialize(void)
      * Create the SYSTEM Sid
      */
     AllocateAndInitializeSid(&NtSidAuthority, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &SystemUserSid);
-    return TRUE;
+
+    /*
+     * Set up global info storage
+     */
+    SystemProcessorTimeInfo = (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION)HeapAlloc(GetProcessHeap(),
+                               0, sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    return SystemProcessorTimeInfo != NULL;
 }
 
 void PerfDataUninitialize(void)
@@ -176,6 +183,7 @@ void PerfDataRefresh(void)
     PSID                                       ProcessUser;
     ULONG                                      Buffer[64]; /* must be 4 bytes aligned! */
     ULONG                                      cwcUserName;
+    BOOL                                       bIsWow64;
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), NULL);
@@ -246,10 +254,12 @@ void PerfDataRefresh(void)
     /*
      * Save system processor time info
      */
-    if (SystemProcessorTimeInfo) {
-        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
+    memcpy(SystemProcessorTimeInfo, SysProcessorTimeInfo,
+           sizeof(*SystemProcessorTimeInfo) * SystemBasicInfo.NumberOfProcessors);
+
+    if (SysProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SysProcessorTimeInfo);
     }
-    SystemProcessorTimeInfo = SysProcessorTimeInfo;
 
     /*
      * Save system handle info
@@ -387,6 +397,11 @@ ReadProcOwner:
 
                     pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
                     pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+                }
+
+                if (IsWow64Process(hProcess, &bIsWow64) && bIsWow64)
+                {
+                    wcscat(pPerfData[Idx].ImageName, L" *32");
                 }
 
                 GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);

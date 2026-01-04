@@ -184,12 +184,11 @@ add_compile_options(
     -Wno-unused-local-typedefs
     -Wno-deprecated
     -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
+    -Wno-format
     -Wno-maybe-uninitialized
 )
 
-if(ARCH STREQUAL "amd64")
-    add_compile_options(-Wno-format)
-elseif(ARCH STREQUAL "arm")
+if(ARCH STREQUAL "arm")
     add_compile_options(-Wno-attributes)
 endif()
 
@@ -386,6 +385,11 @@ function(set_module_type_toolchain MODULE TYPE)
         -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
 
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # "kmdfdriver" is treated the same way as "wdmdriver" in toolchain-specific set_module_type
+        if(${TYPE} STREQUAL "kmdfdriver")
+            set(TYPE "wdmdriver")
+        endif()
+
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
 
         if(${TYPE} STREQUAL "wdmdriver")

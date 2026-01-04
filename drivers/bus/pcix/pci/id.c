@@ -31,8 +31,8 @@ PciGetDescriptionMessage(IN ULONG Identifier,
     /* Find the message identifier in the message table */
     MessageString.Buffer = NULL;
     Status = RtlFindMessage(PciDriverObject->DriverStart,
-                            11, // RT_MESSAGETABLE
-                            LANG_NEUTRAL,
+                            RT_MESSAGETABLE,
+                            MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
                             Identifier,
                             &Entry);
     if (!NT_SUCCESS(Status)) return NULL;
@@ -48,20 +48,20 @@ PciGetDescriptionMessage(IN ULONG Identifier,
         /* Grab the text */
         Description = (PWCHAR)Entry->Text;
 
-        /* Validate valid message length, ending with a newline character */
-        ASSERT(TextLength > 1);
-        ASSERT(Description[TextLength / sizeof(WCHAR)] == L'\n');
+        /* Validate the message length, ending with a newline character */
+        ASSERT(TextLength > sizeof(WCHAR));
+        ASSERT(Description[(TextLength / sizeof(WCHAR)) - 1] == L'\n');
 
         /* Allocate the buffer to hold the message string */
         Buffer = ExAllocatePoolWithTag(PagedPool, TextLength, 'BicP');
         if (!Buffer) return NULL;
 
         /* Copy the message, minus the newline character, and terminate it */
-        RtlCopyMemory(Buffer, Entry->Text, TextLength - 1);
-        Buffer[TextLength / sizeof(WCHAR)] = UNICODE_NULL;
+        RtlCopyMemory(Buffer, Description, TextLength - sizeof(WCHAR));
+        Buffer[(TextLength / sizeof(WCHAR)) - 1] = UNICODE_NULL;
 
         /* Return the length to the caller, minus the terminating NULL */
-        if (Length) *Length = TextLength - 1;
+        if (Length) *Length = TextLength - sizeof(WCHAR);
     }
     else
     {

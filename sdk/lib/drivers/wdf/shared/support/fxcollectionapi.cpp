@@ -35,7 +35,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -106,7 +106,7 @@ WDFEXPORT(WdfCollectionCreate)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -135,7 +135,7 @@ WDFEXPORT(WdfCollectionGetCount)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionAdd)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -173,7 +173,7 @@ WDFEXPORT(WdfCollectionAdd)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionRemoveItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -229,7 +229,7 @@ WDFEXPORT(WdfCollectionRemoveItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -288,7 +288,7 @@ WDFEXPORT(WdfCollectionRemove)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionGetItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -322,7 +322,7 @@ WDFEXPORT(WdfCollectionGetItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionGetFirstItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -355,7 +355,7 @@ WDFEXPORT(WdfCollectionGetFirstItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfCollectionGetLastItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

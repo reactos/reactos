@@ -152,7 +152,7 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
     ULONG IrrBit = 1UL << VectorLow;
 
     /* Setup the command register */
-    Icr.Long0 = 0;
+    Icr.LongLong = 0;
     Icr.Vector = Vector;
     Icr.MessageType = APIC_MT_Fixed;
     Icr.TriggerMode = TriggerMode;
@@ -168,7 +168,8 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
         IcrStatus.Long0 = ApicRead(APIC_ICR0);
     } while (IcrStatus.DeliveryStatus);
 
-    /* Write the low dword to send the interrupt */
+    /* Write high dword first, then low dword to send the interrupt */
+    ApicWrite(APIC_ICR1, Icr.Long1);
     ApicWrite(APIC_ICR0, Icr.Long0);
 
     /* Wait until we see the interrupt request.
@@ -176,7 +177,7 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
      */
     while (!(ApicRead(Irr) & IrrBit))
     {
-        NOTHING;
+        YieldProcessor();
     }
 
     /* Finally, restore the original interrupt state */
@@ -384,7 +385,7 @@ HalpAllocateSystemInterrupt(
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 1;
     ReDirReg.Reserved = 0;
-    ReDirReg.Destination = 0;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
 
     /* Initialize entry */
     ApicWriteIORedirectionEntry(Irq, ReDirReg);
@@ -483,7 +484,7 @@ ApicInitializeIOApic(VOID)
     ReDirReg.TriggerMode = APIC_TGM_Edge;
     ReDirReg.Mask = 1;
     ReDirReg.Reserved = 0;
-    ReDirReg.Destination = 0;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
 
     /* Loop all table entries */
     for (Index = 0; Index < APIC_MAX_IRQ; Index++)
@@ -502,9 +503,9 @@ ApicInitializeIOApic(VOID)
     ReDirReg.Vector = APIC_CLOCK_VECTOR;
     ReDirReg.MessageType = APIC_MT_Fixed;
     ReDirReg.DestinationMode = APIC_DM_Physical;
-    ReDirReg.TriggerMode = APIC_TGM_Edge;
+    ReDirReg.TriggerMode = APIC_TGM_Level;
     ReDirReg.Mask = 1;
-    ReDirReg.Destination = ApicRead(APIC_ID);
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
     ApicWriteIORedirectionEntry(APIC_CLOCK_INDEX, ReDirReg);
 }
 
@@ -674,7 +675,6 @@ HalEnableSystemInterrupt(
     IN KINTERRUPT_MODE InterruptMode)
 {
     IOAPIC_REDIRECTION_REGISTER ReDirReg;
-    PKPRCB Prcb = KeGetCurrentPrcb();
     UCHAR Index;
     ASSERT(Irql <= HIGH_LEVEL);
     ASSERT((IrqlToTpr(Irql) & 0xF0) == (Vector & 0xF0));
@@ -692,26 +692,21 @@ HalEnableSystemInterrupt(
     /* Read the redirection entry */
     ReDirReg = ApicReadIORedirectionEntry(Index);
 
-    /* Check if the interrupt was unused */
-    if (ReDirReg.Vector != Vector)
+    /* Check if the interrupt is already enabled */
+    if (ReDirReg.Mask == FALSE)
     {
-        ReDirReg.Vector = Vector;
-        ReDirReg.MessageType = APIC_MT_LowestPriority;
-        ReDirReg.DestinationMode = APIC_DM_Logical;
-        ReDirReg.Destination = 0;
+        /* If the vector matches, there is nothing more to do,
+           otherwise something is wrong. */
+        return (ReDirReg.Vector == Vector);
     }
 
-    /* Check if the destination is logical */
-    if (ReDirReg.DestinationMode == APIC_DM_Logical)
-    {
-        /* Set the bit for this cpu */
-        ReDirReg.Destination |= ApicLogicalId(Prcb->Number);
-    }
-
-    /* Set the trigger mode */
-    ReDirReg.TriggerMode = 1 - InterruptMode;
-
-    /* Now unmask it */
+    /* Set up the redirection entry */
+    ReDirReg.Vector = Vector;
+    ReDirReg.MessageType = APIC_MT_Fixed;
+    ReDirReg.DestinationMode = APIC_DM_Physical;
+    ReDirReg.Destination = ApicRead(APIC_ID) >> 24;
+    ReDirReg.TriggerMode = (InterruptMode == LevelSensitive) ?
+        APIC_TGM_Level : APIC_TGM_Edge;
     ReDirReg.Mask = FALSE;
 
     /* Write back the entry */

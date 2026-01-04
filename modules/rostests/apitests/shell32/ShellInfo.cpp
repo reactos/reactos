@@ -61,7 +61,7 @@ START_TEST(SHGetFileInfo)
     my_ok_all_flags(info.dwAttributes, SFGAO_FILESYSTEM | SFGAO_STREAM);
 
     info.dwAttributes = ~SFGAO_VALIDATE;
-    ok_int(SHGFI(L"c:", info, flags | SHGFI_ATTR_SPECIFIED), TRUE); // ROS fails this, a parsing bug in CDrivesFolder?
+    ok_int(SHGFI(L"c:", info, flags | SHGFI_ATTR_SPECIFIED), LOBYTE(GetVersion()) >= 6);
     my_ok_all_flags(info.dwAttributes, SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR);
 
     info.dwAttributes = ~SFGAO_VALIDATE;

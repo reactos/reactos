@@ -39,7 +39,7 @@ BOOLEAN VpNoVesa = FALSE;
 PKPROCESS CsrProcess = NULL;
 static ULONG VideoPortMaxObjectNumber = -1;
 BOOLEAN VideoPortUseNewKey = FALSE;
-KMUTEX VideoPortInt10Mutex;
+
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
 
@@ -570,29 +570,56 @@ Failure:
     return Status;
 }
 
-VOID
+/**
+ * @brief
+ * Attach the current thread to the CSRSS process. The caller must detach from
+ * the process by invoking IntDetachFromCSRSS() after operating in its context.
+ *
+ * @param[out]  CallingProcess
+ * Pointer to a PKPROCESS variable that receives the current process.
+ *
+ * @param[out]  ApcState
+ * Pointer to a caller-provided KAPC_STATE structure that will be initialized.
+ *
+ * @return
+ * TRUE if attachment succeeded (the CSRSS process exists); FALSE if not.
+ **/
+BOOLEAN
 FASTCALL
 IntAttachToCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _Outptr_ PKPROCESS* CallingProcess,
+    _Out_ PKAPC_STATE ApcState)
 {
+    if (!CsrProcess)
+        return FALSE;
+
     *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
     if (*CallingProcess != CsrProcess)
-    {
         KeStackAttachProcess(CsrProcess, ApcState);
-    }
+    return TRUE;
 }
 
+/**
+ * @brief
+ * Detach the current thread from the CSRSS process. This routine is
+ * to be invoked after a previous successful IntAttachToCSRSS() call.
+ *
+ * @param[in]   CallingProcess
+ * The calling process that previously invoked IntAttachToCSRSS().
+ *
+ * @param[in]   ApcState
+ * Pointer to the KAPC_STATE structure that was initialized by a
+ * previous IntAttachToCSRSS() call.
+ **/
 VOID
 FASTCALL
 IntDetachFromCSRSS(
-    PKPROCESS *CallingProcess,
-    PKAPC_STATE ApcState)
+    _In_ PKPROCESS CallingProcess,
+    _In_ PKAPC_STATE ApcState)
 {
-    if (*CallingProcess != CsrProcess)
-    {
+    ASSERT(CsrProcess);
+    if (CallingProcess != CsrProcess)
         KeUnstackDetachProcess(ApcState);
-    }
 }
 
 VOID
@@ -601,21 +628,21 @@ IntLoadRegistryParameters(VOID)
 {
     NTSTATUS Status;
     HANDLE KeyHandle;
-    UNICODE_STRING UseNewKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
-    UNICODE_STRING Path = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
+    UNICODE_STRING KeyPath;
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SystemStartOptions");
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     ULONG Length, NewLength;
 
     /* Check if we need to use new registry */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\UseNewKey");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &UseNewKeyPath,
+                               &KeyPath,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
     Status = ZwOpenKey(&KeyHandle,
-                       GENERIC_READ | GENERIC_WRITE,
+                       KEY_QUERY_VALUE,
                        &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
@@ -623,9 +650,29 @@ IntLoadRegistryParameters(VOID)
         ZwClose(KeyHandle);
     }
 
-    /* Initialize object attributes with the path we want */
+#ifdef _M_IX86
+    /* Check whether we need to use the 32-bit x86 emulator instead of V86 mode */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\DisableEmulator");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Path,
+                               &KeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        VideoPortDisableX86Emulator = TRUE;
+        ZwClose(KeyHandle);
+    }
+    DPRINT1("Using %s\n", VideoPortDisableX86Emulator ? "V86 mode" : "x86 emulator");
+#endif // _M_IX86
+
+    /* Initialize object attributes with the path we want */
+    RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyPath,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
@@ -650,7 +697,7 @@ IntLoadRegistryParameters(VOID)
     if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
     {
         VideoPortDebugPrint(Error, "ZwQueryValueKey failed (0x%x)\n", Status);
-        ObCloseHandle(KeyHandle, KernelMode);
+        ZwClose(KeyHandle);
         return;
     }
 
@@ -659,7 +706,7 @@ IntLoadRegistryParameters(VOID)
     if (!KeyInfo)
     {
         VideoPortDebugPrint(Error, "Out of memory\n");
-        ObCloseHandle(KeyHandle, KernelMode);
+        ZwClose(KeyHandle);
         return;
     }
 
@@ -670,7 +717,7 @@ IntLoadRegistryParameters(VOID)
                              KeyInfo,
                              Length,
                              &NewLength);
-    ObCloseHandle(KeyHandle, KernelMode);
+    ZwClose(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -706,10 +753,9 @@ IntLoadRegistryParameters(VOID)
     /* If we are in BASEVIDEO, create the volatile registry key for Win32k */
     if (VpBaseVideo)
     {
-        RtlInitUnicodeString(&Path, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo");
-
+        RtlInitUnicodeString(&KeyPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\GraphicsDrivers\\BaseVideo");
         InitializeObjectAttributes(&ObjectAttributes,
-                                   &Path,
+                                   &KeyPath,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    NULL,
                                    NULL);
@@ -722,7 +768,7 @@ IntLoadRegistryParameters(VOID)
                              REG_OPTION_VOLATILE,
                              NULL);
         if (NT_SUCCESS(Status))
-            ObCloseHandle(KeyHandle, KernelMode);
+            ZwClose(KeyHandle);
         else
             ERR_(VIDEOPRT, "Failed to create the BaseVideo key (0x%x)\n", Status);
     }
@@ -1154,7 +1200,7 @@ VideoPortGetRomImage(
     TRACE_(VIDEOPRT, "VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
            HwDeviceExtension, Length);
 
-    /* If the length is zero then free the existing buffer. */
+    /* If the length is zero then free the existing buffer */
     if (Length == 0)
     {
         if (RomImageBuffer != NULL)
@@ -1168,28 +1214,31 @@ VideoPortGetRomImage(
     {
         /*
          * The DDK says we shouldn't use the legacy C0000 method but get the
-         * rom base address from the corresponding pci or acpi register but
+         * ROM base address from the corresponding PCI or ACPI register but
          * lets ignore that and use C0000 anyway. We have already mapped the
-         * bios area into memory so we'll copy from there.
+         * BIOS area into memory so we'll copy from there.
          */
 
-        /* Copy the bios. */
+        /* Copy the BIOS */
         Length = min(Length, 0x10000);
         if (RomImageBuffer != NULL)
-        {
             ExFreePool(RomImageBuffer);
-        }
 
         RomImageBuffer = ExAllocatePool(PagedPool, Length);
         if (RomImageBuffer == NULL)
-        {
             return NULL;
+
+        /* Perform the copy in the CSRSS context */
+        if (IntAttachToCSRSS(&CallingProcess, &ApcState))
+        {
+            RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
+            IntDetachFromCSRSS(CallingProcess, &ApcState);
         }
-
-        IntAttachToCSRSS(&CallingProcess, &ApcState);
-        RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-        IntDetachFromCSRSS(&CallingProcess, &ApcState);
-
+        else
+        {
+            ExFreePool(RomImageBuffer);
+            RomImageBuffer = NULL;
+        }
         return RomImageBuffer;
     }
 }

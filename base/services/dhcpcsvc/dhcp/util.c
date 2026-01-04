@@ -109,6 +109,7 @@ int read_client_conf(struct interface_info *ifi) {
        char ComputerName [MAX_COMPUTERNAME_LENGTH + 1];
        LPSTR lpCompName;
        DWORD ComputerNameSize = sizeof ComputerName / sizeof ComputerName[0];
+       LPSTR lpClassIdentifier = "MSFT 5.0";
 
        if ((ifi!= NULL) && (ifi->client->config != NULL))
           config = ifi->client->config;
@@ -142,23 +143,33 @@ int read_client_conf(struct interface_info *ifi) {
        config->send_options[DHO_DHCP_CLIENT_IDENTIFIER].len =
              ifi->hw_address.hlen;
 
+        /* Set the Vendor Class ID */
+       config->send_options[DHO_DHCP_CLASS_IDENTIFIER].data = (u_int8_t*)lpClassIdentifier;
+       config->send_options[DHO_DHCP_CLASS_IDENTIFIER].len = strlen(lpClassIdentifier);
+
        /* Setup the requested option list */
        config->requested_options
            [config->requested_option_count++] = DHO_SUBNET_MASK;
        config->requested_options
-           [config->requested_option_count++] = DHO_BROADCAST_ADDRESS;
-       config->requested_options
-           [config->requested_option_count++] = DHO_TIME_OFFSET;
+           [config->requested_option_count++] = DHO_DOMAIN_NAME;
        config->requested_options
            [config->requested_option_count++] = DHO_ROUTERS;
        config->requested_options
-           [config->requested_option_count++] = DHO_DOMAIN_NAME;
-       config->requested_options
            [config->requested_option_count++] = DHO_DOMAIN_NAME_SERVERS;
        config->requested_options
-           [config->requested_option_count++] = DHO_HOST_NAME;
+           [config->requested_option_count++] = DHO_NETBIOS_NAME_SERVERS;
        config->requested_options
-           [config->requested_option_count++] = DHO_NTP_SERVERS;
+           [config->requested_option_count++] = DHO_NETBIOS_NODE_TYPE;
+       config->requested_options
+           [config->requested_option_count++] = DHO_NETBIOS_SCOPE;
+       config->requested_options
+           [config->requested_option_count++] = DHO_ROUTER_DISCOVERY;
+       config->requested_options
+           [config->requested_option_count++] = DHO_STATIC_ROUTES;
+       config->requested_options
+           [config->requested_option_count++] = 249;
+       config->requested_options
+           [config->requested_option_count++] = DHO_VENDOR_ENCAPSULATED_OPTIONS;
 
        warn("util.c read_client_conf poorly implemented!");
     return 0;

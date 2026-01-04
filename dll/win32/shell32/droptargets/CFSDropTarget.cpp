@@ -237,7 +237,6 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
     HMENU hmenu = LoadMenuW(shell32_hInstance, MAKEINTRESOURCEW(IDM_DRAGFILE));
     if (!hmenu)
         return E_OUTOFMEMORY;
-
     HMENU hpopupmenu = GetSubMenu(hmenu, 0);
 
     SHELL_LimitDropEffectToItemAttributes(pDataObject, &dwAvailableEffects);
@@ -256,7 +255,19 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
     else if (dwAvailableEffects & DROPEFFECT_LINK)
         SetMenuDefaultItem(hpopupmenu, IDM_LINKHERE, FALSE);
 
-    /* FIXME: We need to support shell extensions here */
+    CRegKeyHandleArray keys;
+    HDCIA hDCIA = DCIA_Create();
+    HDCMA hDCMA = DCMA_Create();
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlFolder(SHELL32_CreateSimpleIDListFromPath(m_sPathTarget, FILE_ATTRIBUTE_DIRECTORY));
+    if (hDCMA && hDCIA && pidlFolder)
+    {
+        AddPidlClassKeysToArray(pidlFolder, keys, keys);
+        for (UINT i = 0; i < keys; ++i)
+            DCIA_AddShellExSubkey(hDCIA, keys[i], L"DragDropHandlers");
+
+        QCMINFO qcmi = { hpopupmenu, 0, DROPIDM_EXTFIRST, DROPIDM_EXTLAST };
+        DCMA_InsertMenuItems(hDCMA, hDCIA, pidlFolder, pDataObject, keys, keys, &qcmi, 0, m_site);
+    }
 
     /* We shouldn't use the site window here because the menu should work even when we don't have a site */
     HWND hwndDummy = CreateWindowEx(0,
@@ -279,16 +290,39 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
 
     DestroyWindow(hwndDummy);
 
-    if (uCommand == 0)
-        return S_FALSE;
+    HRESULT hr = S_FALSE; // S_FALSE means we did not handle the command
+    C_ASSERT(IDM_COPYHERE < DROPIDM_EXTFIRST && IDM_MOVEHERE < DROPIDM_EXTFIRST &&
+             IDM_LINKHERE < DROPIDM_EXTFIRST && DROPIDM_EXTFIRST > 0);
+    if (uCommand >= DROPIDM_EXTFIRST && uCommand <= DROPIDM_EXTLAST)
+    {
+        CMINVOKECOMMANDINFO ici = { sizeof(ici), 0, m_hwndSite, MAKEINTRESOURCEA(uCommand - DROPIDM_EXTFIRST) };
+        ici.nShow = SW_SHOW;
+        if (m_grfKeyState & MK_SHIFT)
+            ici.fMask |= CMIC_MASK_SHIFT_DOWN;
+        if (m_grfKeyState & MK_CONTROL)
+            ici.fMask |= CMIC_MASK_CONTROL_DOWN;
+        DCMA_InvokeCommand(hDCMA, &ici);
+        hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
+    }
+    else if (uCommand == 0)
+    {
+        hr = S_OK;
+        *pdwEffect = DROPEFFECT_NONE;
+    }
     else if (uCommand == IDM_COPYHERE)
         *pdwEffect = DROPEFFECT_COPY;
     else if (uCommand == IDM_MOVEHERE)
         *pdwEffect = DROPEFFECT_MOVE;
     else if (uCommand == IDM_LINKHERE)
         *pdwEffect = DROPEFFECT_LINK;
+    else
+        hr = E_UNEXPECTED;
 
-    return S_OK;
+    DCMA_Destroy(hDCMA);
+    DCIA_Destroy(hDCIA);
+    DestroyMenu(hmenu);
+    return hr;
 }
 
 HRESULT CFSDropTarget::_RepositionItems(IShellFolderView *psfv, IDataObject *pdtobj, POINTL pt)
@@ -461,7 +495,7 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
     if (m_grfKeyState & MK_RBUTTON)
     {
         HRESULT hr = _GetEffectFromMenu(pDataObject, pt, pdwEffect, dwAvailableEffects);
-        if (FAILED_UNEXPECTEDLY(hr) || hr == S_FALSE)
+        if (FAILED_UNEXPECTEDLY(hr) || hr == S_OK)
             return hr;
     }
 
@@ -544,7 +578,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             bLinking = TRUE;
     }
 
-    if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
+    if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt)))
     {
         hr = pDataObject->GetData(&fmt, &medium);
         TRACE("CFSTR_SHELLIDLIST\n");
@@ -622,7 +656,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     // If the target is a virtual item, we ask for the friendly name because SHGDN_FORPARSING will return a GUID.
                     BOOL UseParsing = (att & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) == SFGAO_FILESYSTEM;
                     DWORD ShgdnFor = UseParsing ? SHGDN_FORPARSING : SHGDN_FOREDITING;
-                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
+                    hr = DisplayNameOfW(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
                 }
                 if (FAILED_UNEXPECTEDLY(hr))
                 {
@@ -698,11 +732,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
         _ILFreeaPidl(apidl, lpcida->cidl);
         ReleaseStgMedium(&medium);
     }
-    else if (SUCCEEDED(pDataObject->QueryGetData(&fmt2)))
+    else if (SUCCEEDED(hr = pDataObject->QueryGetData(&fmt2)))
     {
         FORMATETC fmt2;
         InitFormatEtc (fmt2, CF_HDROP, TYMED_HGLOBAL);
-        if (SUCCEEDED(pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
+        if (SUCCEEDED(hr = pDataObject->GetData(&fmt2, &medium)) /* && SUCCEEDED(pDataObject->GetData(&fmt2, &medium))*/)
         {
             WCHAR wszTargetPath[MAX_PATH + 1];
             LPWSTR pszSrcList;

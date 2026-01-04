@@ -753,6 +753,18 @@ typedef struct _ACE_HEADER {
 #define SUCCESSFUL_ACCESS_ACE_FLAG (0x40)
 #define FAILED_ACCESS_ACE_FLAG     (0x80)
 
+#define SECURITY_APP_PACKAGE_AUTHORITY          {0,0,0,0,0,15}
+#define SECURITY_APP_PACKAGE_BASE_RID           (0x000000002)
+#define SECURITY_BUILTIN_APP_PACKAGE_RID_COUNT  (0x000000002)
+#define SECURITY_APP_PACKAGE_RID_COUNT          (0x000000008)
+#define SECURITY_CAPABILITY_BASE_RID            (0x000000003)
+#define SECURITY_CAPABILITY_APP_RID             (0x000000400)
+#define SECURITY_BUILTIN_CAPABILITY_RID_COUNT   (0x000000002)
+#define SECURITY_CAPABILITY_RID_COUNT           (0x000000005)
+#define SECURITY_PARENT_PACKAGE_RID_COUNT       SECURITY_APP_PACKAGE_RID_COUNT
+#define SECURITY_CHILD_PACKAGE_RID_COUNT        (0x00000000c)
+#define SECURITY_BUILTIN_PACKAGE_ANY_PACKAGE    (0x000000001)
+
 typedef struct _ACCESS_ALLOWED_ACE {
   ACE_HEADER Header;
   ACCESS_MASK Mask;
@@ -1191,6 +1203,7 @@ typedef struct _TOKEN_ACCESS_INFORMATION {
 #define TOKEN_UIACCESS                  0x1000
 #define TOKEN_NOT_LOW                   0x2000
 
+/* See: https://microsoft.github.io/windows-docs-rs/doc/windows/Wdk/Storage/FileSystem/struct.SE_EXPORTS.html */
 typedef struct _SE_EXPORTS {
   LUID SeCreateTokenPrivilege;
   LUID SeAssignPrimaryTokenPrivilege;
@@ -1257,6 +1270,26 @@ typedef struct _SE_EXPORTS {
   PSID SeHighMandatorySid;
   PSID SeSystemMandatorySid;
   PSID SeOwnerRightsSid;
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+  PSID SeAllAppPackagesSid;
+  PSID SeUserModeDriversSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS4)
+  PSID SeProcTrustWinTcbSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  PSID SeTrustedInstallerSid;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+  LUID SeDelegateSessionUserImpersonatePrivilege;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11) // The version guard is a guess.
+  PSID SeAppSiloSid;
+  PSID SeAppSiloVolumeRootMinimalCapabilitySid;
+  PSID SeAppSiloProfilesRootMinimalCapabilitySid;
+  PSID SeAppSiloPromptForAccessCapabilitySid;
+  PSID SeAppSiloAccessToPublisherDirectoryCapabilitySid;
+#endif
 } SE_EXPORTS, *PSE_EXPORTS;
 
 typedef NTSTATUS

@@ -4,7 +4,6 @@
 #include <atlpath.h>
 #include <atlsimpcoll.h>
 
-
 enum LicenseType
 {
     LICENSE_NONE,
@@ -72,9 +71,9 @@ IsInstalledEnum(INT x)
 
 enum UninstallCommandFlags
 {
-    UCF_NONE   = 0x00,
-    UCF_MODIFY = 0x01,
-    UCF_SILENT = 0x02,
+    UCF_NONE        = 0x00,
+    UCF_SILENT      = 0x01,
+    UCF_MODIFY      = 0x02,
     UCF_SAMEPROCESS = 0x04,
 };
 DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
@@ -82,7 +81,11 @@ DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
 enum InstallerType
 {
     INSTALLER_UNKNOWN,
+    INSTALLER_EXEINZIP, // setup.exe we extract from a .zip file
     INSTALLER_GENERATE, // .zip file automatically converted to installer by rapps
+    INSTALLER_MSI,
+    INSTALLER_INNO,
+    INSTALLER_NSIS,
 };
 
 #define DB_VERSION L"Version"
@@ -90,11 +93,17 @@ enum InstallerType
 #define DB_PUBLISHER L"Publisher"
 #define DB_REGNAME L"RegName"
 #define DB_INSTALLER L"Installer"
+#define DB_INSTALLER_GENERATE L"Generate"
+#define DB_INSTALLER_EXEINZIP L"ExeInZip"
 #define DB_SCOPE L"Scope" // User or Machine
 #define DB_SAVEAS L"SaveAs"
+#define DB_SILENTARGS L"SilentParameters"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
+
+#define DB_EXEINZIPSECTION L"ExeInZip"
+#define DB_EXEINZIP_EXE L"Exe"
 
 class CAppRichEdit;
 class CConfigParser;
@@ -128,7 +137,9 @@ class CAppInfo
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) = 0;
     virtual InstallerType
-    GetInstallerType() const { return INSTALLER_UNKNOWN; }
+    GetInstallerType(bool NestedType = false) const { return INSTALLER_UNKNOWN; }
+    virtual InstallerType
+    GetInstallerInfo(CStringW &SilentParameters) const { return GetInstallerType(); }
     virtual BOOL
     UninstallApplication(UninstallCommandFlags Flags) = 0;
 };
@@ -179,7 +190,9 @@ class CAvailableApplicationInfo : public CAppInfo
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
     virtual InstallerType
-    GetInstallerType() const override;
+    GetInstallerType(bool NestedType = false) const override;
+    virtual InstallerType
+    GetInstallerInfo(CStringW &SilentParameters) const override;
     virtual BOOL
     UninstallApplication(UninstallCommandFlags Flags) override;
 };
@@ -225,7 +238,7 @@ class CInstalledApplicationInfo : public CAppInfo
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
     virtual InstallerType
-    GetInstallerType() const override;
+    GetInstallerType(bool NestedType = false) const override;
     virtual BOOL
     UninstallApplication(UninstallCommandFlags Flags) override;
 };
@@ -233,4 +246,6 @@ class CInstalledApplicationInfo : public CAppInfo
 BOOL
 UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Flags);
 BOOL
-ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive);
+ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive, bool Silent);
+HRESULT
+ExtractArchiveForExecution(PCWSTR pszArchive, const CStringW &PackageName, CStringW &TempDir, CStringW &App);

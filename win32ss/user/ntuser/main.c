@@ -8,6 +8,7 @@
 
 #include <win32k.h>
 #include <napi.h>
+#include <winbase_undoc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -462,6 +463,7 @@ InitThreadCallback(PETHREAD Thread)
     PTEB pTeb;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     PKL pDefKL;
+    BOOLEAN bFirstThread;
 
     Process = Thread->ThreadsProcess;
 
@@ -486,6 +488,7 @@ InitThreadCallback(PETHREAD Thread)
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
     ptiCurrent->pcti = &ptiCurrent->cti;
+    bFirstThread = !(ptiCurrent->ppi->W32PF_flags & W32PF_THREADCONNECTED);
 
     /* Mark the process as having threads */
     ptiCurrent->ppi->W32PF_flags |= W32PF_THREADCONNECTED;
@@ -578,6 +581,25 @@ InitThreadCallback(PETHREAD Thread)
              ptiCurrent->ppi->usi.wShowWindow = (WORD)ProcessParams->ShowWindowFlags;
           }
        }
+
+        if (bFirstThread)
+        {
+            /* Note: Only initialize once so it can be set back to 0 after being used */
+            if (ProcessParams->WindowFlags & STARTF_USEHOTKEY)
+                ptiCurrent->ppi->dwHotkey = HandleToUlong(ProcessParams->StandardInput);
+            /* TODO:
+            else if (ProcessParams->ShellInfo.Buffer)
+                ..->dwHotkey = ParseShellInfo(ProcessParams->ShellInfo.Buffer, L"hotkey.");
+            */
+
+            if (ProcessParams->WindowFlags & STARTF_SHELLPRIVATE)
+            {
+              /* We need to validate this handle because it can also be a HICON */
+                HMONITOR hMonitor = (HMONITOR)ProcessParams->StandardOutput;
+                if (hMonitor && UserGetMonitorObject(hMonitor))
+                    ptiCurrent->ppi->hMonitor = hMonitor;
+            }
+        }
     }
 
     /*

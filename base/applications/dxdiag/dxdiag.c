@@ -84,8 +84,8 @@ DestroyTabCtrlDialogs(PDXDIAG_CONTEXT pContext)
     /* destroy display dialogs */
     for(Index = 0; Index < pContext->NumDisplayAdapter; Index++)
     {
-       if (pContext->hDisplayWnd[Index])
-           DestroyWindow(pContext->hDisplayWnd[Index]);
+       if (pContext->DisplayAdapters[Index]->hDisplayWnd)
+           DestroyWindow(pContext->DisplayAdapters[Index]->hDisplayWnd);
     }
 
     /* destroy audio dialogs */
@@ -142,7 +142,7 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
         ShowWindow(pContext->hDialogs[Index], SW_HIDE);
 
     for(Index = 0; Index < pContext->NumDisplayAdapter; Index++)
-        ShowWindow(pContext->hDisplayWnd[Index], SW_HIDE);
+        ShowWindow(pContext->DisplayAdapters[Index]->hDisplayWnd, SW_HIDE);
 
     for(Index = 0; Index < pContext->NumSoundAdapter; Index++)
         ShowWindow(pContext->hSoundWnd[Index], SW_HIDE);
@@ -158,7 +158,7 @@ TabCtrl_OnSelChange(PDXDIAG_CONTEXT pContext)
 
     if (CurSel -1 < pContext->NumDisplayAdapter)
     {
-        ShowWindow(pContext->hDisplayWnd[CurSel-1], SW_SHOW);
+        ShowWindow(pContext->DisplayAdapters[CurSel-1]->hDisplayWnd, SW_SHOW);
         return;
     }
 

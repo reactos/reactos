@@ -495,6 +495,11 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    psbi = IntGetScrollbarInfoFromWindow(Window, nBar);
    Info = IntGetScrollInfoFromWindow(Window, nBar);
    pSBData = IntGetSBData(Window, nBar);
+   if (pSBData == NULL)
+   {
+      ERR("co_IntSetScrollInfo: No SBDATA for window %p, bar %d\n", UserHMGetHandle(Window), nBar);
+      return FALSE;
+   }
 
    if (lpsi->fMask & SIF_THEMED && !(Info->fMask & SIF_THEMED))
       Info->fMask |= SIF_THEMED;
@@ -687,6 +692,11 @@ co_IntGetScrollBarInfo(PWND Window, LONG idObject, PSCROLLBARINFO psbi)
 
    sbi = IntGetScrollbarInfoFromWindow(Window, Bar);
    pSBData = IntGetSBData(Window, Bar);
+   if (pSBData == NULL)
+   {
+      ERR("co_IntGetScrollBarInfo: No scrollbar info for window %p, bar %d\n", UserHMGetHandle(Window), Bar);
+      return FALSE;
+   }
 
    IntGetScrollBarRect(Window, Bar, &(sbi->rcScrollBar));
    IntCalculateThumb(Window, Bar, sbi, pSBData);
@@ -787,6 +797,7 @@ co_IntCreateScrollBars(PWND Window)
          psbi->rgstate[i] = 0;
 
       pSBData = IntGetSBData(Window, s);
+      ASSERT(pSBData != NULL);
 
       IntGetScrollBarRect(Window, s, &(psbi->rcScrollBar));
       IntCalculateThumb(Window, s, psbi, pSBData);

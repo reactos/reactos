@@ -9,10 +9,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <xmmintrin.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#include <xmmintrin.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -378,7 +378,7 @@ KiGetFeatureBits(VOID)
     if (CpuFeatures & X86_FEATURE_TSC)     FeatureBits |= KF_RDTSC;
     if (CpuFeatures & X86_FEATURE_CX8)     FeatureBits |= KF_CMPXCHG8B;
     if (CpuFeatures & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuFeatures & X86_FEATURE_MTTR)    FeatureBits |= KF_MTRR;
+    if (CpuFeatures & X86_FEATURE_MTRR)    FeatureBits |= KF_MTRR;
     if (CpuFeatures & X86_FEATURE_PGE)     FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
     if (CpuFeatures & X86_FEATURE_CMOV)    FeatureBits |= KF_CMOV;
     if (CpuFeatures & X86_FEATURE_PAT)     FeatureBits |= KF_PAT;
@@ -451,9 +451,9 @@ KiReportCpuFeatures(VOID)
         CpuFeatures = CpuInfo.Edx;
     }
 
-    DPRINT1("Supported CPU features: ");
+    DPRINT1("Supported CPU features:");
 
-#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(#kf_value " ")
+#define print_kf_bit(kf_value) if (KeFeatureBits & kf_value) DbgPrint(" " #kf_value)
     print_kf_bit(KF_V86_VIS);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
@@ -477,7 +477,7 @@ KiReportCpuFeatures(VOID)
     print_kf_bit(KF_NX_ENABLED);
 #undef print_kf_bit
 
-#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
+#define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(" " #cpu_flag)
     print_cf(X86_FEATURE_PAE);
     print_cf(X86_FEATURE_APIC);
     print_cf(X86_FEATURE_HT);

@@ -16,6 +16,11 @@ EngFileWrite(
     _In_ SIZE_T nLength,
     _Out_ PSIZE_T lpBytesWritten);
 
+NTSTATUS
+NTAPI
+EngpUpdateMonitorDevices(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice);
+
 PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(

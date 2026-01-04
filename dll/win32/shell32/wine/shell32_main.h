@@ -35,8 +35,22 @@ extern "C" {
 */
 extern HMODULE	huser32 DECLSPEC_HIDDEN;
 extern HINSTANCE shell32_hInstance DECLSPEC_HIDDEN;
+extern int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2);
 
-BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
+enum {
+    REST_SH32_ENABLESHELLEXECUTEHOOKS = 0x00060001, // POLID_EnableShellExecuteHooks
+};
+DWORD SH32_InternalRestricted(DWORD rest);
+
+/* COM */
+HRESULT WINAPI
+SH32_ExtCoCreateInstance(
+    _In_opt_ LPCWSTR aclsid,
+    _In_opt_ const CLSID *clsid,
+    _In_opt_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsCtx,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv);
 
 /* Iconcache */
 #define INVALID_INDEX -1
@@ -47,6 +61,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DE
 extern INT ShellLargeIconSize;
 extern INT ShellSmallIconSize;
 extern INT ShellIconBPP;
+BOOL WINAPI Shell_GetImageLists(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList);
 
 /* Classes Root */
 HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback);
@@ -76,9 +91,15 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes) DEC
 HRESULT SHELL32_AssocGetFSDirectoryDescription(PWSTR Buf, UINT cchBuf);
 HRESULT SHELL32_AssocGetFileDescription(PCWSTR Name, PWSTR Buf, UINT cchBuf);
 
-
 DWORD WINAPI ParseFieldA(LPCSTR src, DWORD nField, LPSTR dst, DWORD len) DECLSPEC_HIDDEN;
 DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len) DECLSPEC_HIDDEN;
+
+LONG
+PathProcessCommandW(
+    _In_ PCWSTR pszSrc,
+    _Out_writes_opt_(dwBuffSize) PWSTR pszDest,
+    _In_ INT cchDest,
+    _In_ DWORD dwFlags);
 
 /****************************************************************************
  * Class constructors
@@ -121,6 +142,11 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECL
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 HGLOBAL RenderFILENAMEA (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
+
+HRESULT SHELL_GetShellExtensionRegCLSID(
+    HKEY hKey,
+    LPCWSTR KeyName,
+    CLSID *pClsId);
 
 /* Change Notification */
 void InitChangeNotifications(void) DECLSPEC_HIDDEN;
@@ -208,6 +234,73 @@ LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT 
 
 HRESULT WINAPI DoRegisterServer(void);
 HRESULT WINAPI DoUnregisterServer(void);
+
+/* Property system */
+static inline HRESULT
+SHELL_CreateVariantBufferEx(VARIANT *pVar, UINT cb, VARTYPE vt)
+{
+    SAFEARRAY *pSA = SafeArrayCreateVector(vt, 0, cb);
+    if (pSA)
+    {
+        V_VT(pVar) = VT_ARRAY | vt;
+        V_ARRAY(pVar) = pSA;
+        return S_OK;
+    }
+    return E_OUTOFMEMORY;
+}
+
+static inline HRESULT
+SHELL_CreateVariantBuffer(VARIANT *pVar, UINT cb)
+{
+    return SHELL_CreateVariantBufferEx(pVar, cb, VT_UI1);
+}
+
+static inline HRESULT
+SHELL_InitVariantFromBuffer(VARIANT *pVar, const void *pData, UINT cb)
+{
+    HRESULT hr = SHELL_CreateVariantBuffer(pVar, cb);
+    if (SUCCEEDED(hr))
+        CopyMemory(V_ARRAY(pVar)->pvData, pData, cb);
+    return hr;
+}
+
+static inline void*
+SHELL_GetSafeArrayDataPtr(const SAFEARRAY *pSA, SIZE_T *pcb)
+{
+    if (pSA->cDims != 1)
+        return NULL;
+    LONG lob, upb;
+    SafeArrayGetLBound((SAFEARRAY*)pSA, 1, &lob);
+    SafeArrayGetUBound((SAFEARRAY*)pSA, 1, &upb);
+    *pcb = (SIZE_T)(upb - lob) + 1;
+    return pSA->pvData;
+}
+
+static inline HRESULT
+SHELL_VariantToBuffer(VARIANT *pVar, void *pData, SIZE_T cb)
+{
+    if (V_VT(pVar) != (VT_ARRAY | VT_UI1))
+        return E_INVALIDARG;
+    SIZE_T cbArr;
+    void *pArrData = SHELL_GetSafeArrayDataPtr(V_ARRAY(pVar), &cbArr);
+    if (!pArrData || cbArr < cb)
+        return E_FAIL;
+    CopyMemory(pData, pArrData, cb);
+    return (cbArr > cb) ? S_FALSE : S_OK;
+}
+
+static inline HRESULT
+SHELL_CreateSHDESCRIPTIONID(VARIANT *pVar, DWORD Id, const CLSID *pCLSID)
+{
+    HRESULT hr = SHELL_CreateVariantBuffer(pVar, sizeof(SHDESCRIPTIONID));
+    if (SUCCEEDED(hr))
+    {
+        SHDESCRIPTIONID *pDID = (SHDESCRIPTIONID*)V_ARRAY(pVar)->pvData;
+        pDID->dwDescriptionId = Id;
+        pDID->clsid = *pCLSID;
+    }
+    return hr;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

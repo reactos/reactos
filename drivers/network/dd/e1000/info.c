@@ -37,6 +37,7 @@ static NDIS_OID SupportedOidList[] =
     OID_802_3_PERMANENT_ADDRESS,
     OID_802_3_CURRENT_ADDRESS,
     OID_802_3_MAXIMUM_LIST_SIZE,
+    OID_GEN_PHYSICAL_MEDIUM,
 
     /* Statistics */
     OID_GEN_XMIT_OK,
@@ -236,6 +237,12 @@ MiniportQueryInformation(
         copyLength = sizeof(NDIS_PNP_CAPABILITIES);
 
         status = NICFillPowerManagementCapabilities(Adapter, &GenericInfo.PmCapabilities);
+        break;
+    }
+
+    case OID_GEN_PHYSICAL_MEDIUM:
+    {
+        GenericInfo.Ulong = NdisPhysicalMedium802_3;
         break;
     }
 

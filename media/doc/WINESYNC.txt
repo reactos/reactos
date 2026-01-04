@@ -15,9 +15,14 @@ wine-patches@winehq.com and ros-dev@reactos.org
 
 The following build tools are shared with Wine.
 
+base/ctf/msctf                  # Forked at Wine-10.12
+
 sdk/tools/unicode               # Synced to WineStaging-4.18
-sdk/tools/widl                  # Synced to WineStaging-4.0
-sdk/tools/wpp                   # Synced to WineStaging-2.9
+sdk/tools/widl                  # Synced to Wine-10.0
+sdk/tools/wpp                   # Synced to Wine-10.0 (Module was moved into wrc tool)
+
+The following headers are shared with Wine.
+sdk/include/psdk/rpcproxy.h     # Synced to Wine-10.0
 
 The following libraries are shared with Wine.
 
@@ -80,7 +85,6 @@ dll/win32/iccvid              # Synced to WineStaging-4.0
 dll/win32/ieframe             # Synced to WineStaging-4.18
 dll/win32/imaadp32.acm        # Synced to WineStaging-4.0
 dll/win32/imagehlp            # Synced to WineStaging-4.18
-dll/win32/imm32               # Forked at WineStaging-4.18
 dll/win32/inetcomm            # Synced to WineStaging-4.18
 dll/win32/inetmib1            # Synced to WineStaging-4.18
 dll/win32/initpki             # Synced to WineStaging-4.18
@@ -109,7 +113,6 @@ dll/win32/msadp32.acm         # Synced to WineStaging-4.0
 dll/win32/mscat32             # Synced to WineStaging-4.18
 dll/win32/mscms               # Synced to WineStaging-4.18
 dll/win32/mscoree             # Synced to Wine-1.5.4
-dll/win32/msctf               # Synced to WineStaging-4.18
 dll/win32/msftedit            # Synced to WineStaging-4.18
 dll/win32/msg711.acm          # Synced to WineStaging-4.18
 dll/win32/msgsm32.acm         # Synced to WineStaging-4.0
@@ -126,6 +129,7 @@ dll/win32/msrle32             # Synced to WineStaging-4.18
 dll/win32/mssign32            # Synced to WineStaging-4.18
 dll/win32/mssip32             # Synced to WineStaging-4.18
 dll/win32/mstask              # Synced to WineStaging-3.3
+dll/win32/msvcrt              # Synced to Wine-10.0
 dll/win32/msvcrt20            # Out of sync
 dll/win32/msvcrt40            # Out of sync
 dll/win32/msvfw32             # Synced to WineStaging-4.18
@@ -168,9 +172,9 @@ dll/win32/query               # Synced to WineStaging-4.18
 dll/win32/rasapi32            # Synced to WineStaging-3.3
 dll/win32/regapi              # Synced to WineStaging-5.7
 dll/win32/resutils            # Synced to WineStaging-3.3
-dll/win32/riched20            # Synced to Wine-6.10
+dll/win32/riched20            # Synced to Wine-10.0
 dll/win32/riched32            # Synced to WineStaging-3.3
-dll/win32/rpcrt4              # Synced to WineStaging-4.18
+dll/win32/rpcrt4              # Synced to Wine-10.0
 dll/win32/rsabase             # Synced to WineStaging-3.3
 dll/win32/rsaenh              # Synced to WineStaging-2.9
 dll/win32/sccbase             # Synced to WineStaging-4.18

@@ -159,6 +159,7 @@ InstallNetDevice(
     LPWSTR DeviceName = NULL;
     LPWSTR ExportName = NULL;
     LONG rc;
+    HKEY hInterfacesKey = NULL, hInterfaceKey = NULL;
     HKEY hKey = NULL;
     HKEY hNetworkKey = NULL;
     HKEY hLinkageKey = NULL;
@@ -256,46 +257,35 @@ InstallNetDevice(
     wcscat(ExportName, UuidString);
 
     /* Write Tcpip parameters in new service Key */
-    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hKey, NULL);
+    rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hInterfacesKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
-    rc = RegCreateKeyExW(hKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
+    rc = RegCreateKeyExW(hInterfacesKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hInterfaceKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-    RegCloseKey(hKey);
-    hKey = NULL;
 
-    rc = RegCreateKeyExW(hNetworkKey, L"Parameters\\Tcpip", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
-    if (rc != ERROR_SUCCESS)
-    {
-        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
-        goto cleanup;
-    }
-    RegCloseKey(hNetworkKey);
-    hNetworkKey = NULL;
-
-    rc = RegSetValueExW(hKey, L"DefaultGateway", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
+    rc = RegSetValueExW(hInterfaceKey, L"DefaultGateway", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
-    rc = RegSetValueExW(hKey, L"IPAddress", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
+    rc = RegSetValueExW(hInterfaceKey, L"IPAddress", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
-    rc = RegSetValueExW(hKey, L"SubnetMask", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
+    rc = RegSetValueExW(hInterfaceKey, L"SubnetMask", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
@@ -303,14 +293,12 @@ InstallNetDevice(
     }
 
     dwValue = 1;
-    rc = RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
+    rc = RegSetValueExW(hInterfaceKey, L"EnableDHCP", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
     if (rc != ERROR_SUCCESS)
     {
         ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
-    RegCloseKey(hKey);
-    hKey = NULL;
 
     /* Write 'Linkage' key in hardware key */
 #if _WIN32_WINNT >= 0x502
@@ -492,6 +480,10 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, ComponentId);
     HeapFree(GetProcessHeap(), 0, DeviceName);
     HeapFree(GetProcessHeap(), 0, ExportName);
+    if (hInterfaceKey != NULL)
+        RegCloseKey(hInterfaceKey);
+    if (hInterfacesKey != NULL)
+        RegCloseKey(hInterfacesKey);
     if (hKey != NULL)
         RegCloseKey(hKey);
     if (hNetworkKey != NULL)

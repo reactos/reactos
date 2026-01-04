@@ -64,7 +64,7 @@ IsPartitionInVolume(
 }
 
 
-BOOL
+EXIT_CODE
 DetailDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -72,24 +72,35 @@ DetailDisk(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     BOOL bPrintHeader = TRUE;
+    WCHAR szBuffer[40];
 
     DPRINT("DetailDisk()\n");
 
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* TODO: Print more disk details */
     ConPuts(StdOut, L"\n");
-    ConResPrintf(StdOut, IDS_DETAIL_INFO_DISK_ID, CurrentDisk->LayoutBuffer->Signature);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_DESCRIPTION, CurrentDisk->Description);
+    if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
+        PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
+    else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
+        swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+    else
+        wcscpy(szBuffer, L"00000000");
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_ID, szBuffer);
+    PrintBusType(szBuffer, ARRAYSIZE(szBuffer), CurrentDisk->BusType);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_TYPE, szBuffer);
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, L"Online");
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
@@ -117,11 +128,11 @@ DetailDisk(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DetailPartition(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -131,25 +142,26 @@ DetailPartition(
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
     BOOL bVolumeFound = FALSE, bPrintHeader = TRUE;
+    WCHAR szBuffer[40];
 
     DPRINT("DetailPartition()\n");
 
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_PARTITION_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     PartEntry = CurrentPartition;
@@ -158,9 +170,21 @@ DetailPartition(
     /* TODO: Print more partition details */
     ConPuts(StdOut, L"\n");
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_NUMBER, PartEntry->PartitionNumber);
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, PartEntry->PartitionType);
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
-    ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->BootIndicator ? L"Yes" : L"No");
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        PrintGUID(szBuffer, &PartEntry->Gpt.PartitionType);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? L"Yes" : L"No");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_REQUIRED, (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? L"Yes" : L"No");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ATTRIBUTE, PartEntry->Gpt.Attributes);
+    }
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        swprintf(szBuffer, L"%02x", PartEntry->Mbr.PartitionType);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->Mbr.BootIndicator ? L"Yes" : L"No");
+    }
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_OFFSET, PartOffset);
 
     Entry = VolumeListHead.Flink;
@@ -190,11 +214,11 @@ DetailPartition(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DetailVolume(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -208,13 +232,13 @@ DetailVolume(
     if (argc > 2)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentVolume == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
 
@@ -247,5 +271,5 @@ DetailVolume(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

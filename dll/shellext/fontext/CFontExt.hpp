@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt definition
  * COPYRIGHT:   Copyright 2019,2020 Mark Jansen <mark.jansen@reactos.org>
- *              Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #pragma once
@@ -18,46 +18,50 @@ class CFontExt :
     CComHeapPtr<ITEMIDLIST> m_Folder;
 
 public:
-
     CFontExt();
     ~CFontExt();
 
     // *** IShellFolder2 methods ***
-    virtual STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid);
-    virtual STDMETHODIMP EnumSearches(IEnumExtraSearch **ppenum);
-    virtual STDMETHODIMP GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay);
-    virtual STDMETHODIMP GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags);
-    virtual STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
-    virtual STDMETHODIMP GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-    virtual STDMETHODIMP MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid);
+    STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;
+    STDMETHODIMP EnumSearches(IEnumExtraSearch **ppenum) override;
+    STDMETHODIMP GetDefaultColumn(DWORD dwReserved, ULONG *pSort, ULONG *pDisplay) override;
+    STDMETHODIMP GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags) override;
+    STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override;
+    STDMETHODIMP GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
+    STDMETHODIMP MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid) override;
 
     // *** IShellFolder methods ***
-    virtual STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
-    virtual STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
-    virtual STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-    virtual STDMETHODIMP BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-    virtual STDMETHODIMP CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
-    virtual STDMETHODIMP CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-    virtual STDMETHODIMP GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
-    virtual STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-    virtual STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-    virtual STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
-
+    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten,
+                                  PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
+    STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;
+    STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid,
+                              LPVOID *ppvOut) override;
+    STDMETHODIMP BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid,
+                               LPVOID *ppvOut) override;
+    STDMETHODIMP CompareIDs(LPARAM lParam,
+                            PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override;
+    STDMETHODIMP CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override;
+    STDMETHODIMP GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override;
+    STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
+                               UINT * prgfInOut, LPVOID * ppvOut) override;
+    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override;
+    STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags,
+                           PITEMID_CHILD *pPidlOut) override;
 
     // *** IPersistFolder2 methods ***
-    virtual STDMETHODIMP GetCurFolder(LPITEMIDLIST *ppidl);
+    STDMETHODIMP GetCurFolder(LPITEMIDLIST *ppidl) override;
 
     // *** IPersistFolder methods ***
-    virtual STDMETHODIMP Initialize(LPCITEMIDLIST pidl);
+    STDMETHODIMP Initialize(LPCITEMIDLIST pidl) override;
 
     // *** IPersist methods ***
-    virtual STDMETHODIMP GetClassID(CLSID *lpClassId);
+    STDMETHODIMP GetClassID(CLSID *lpClassId) override;
 
     // *** IDropTarget methods ***
-    virtual STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
-    virtual STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
-    virtual STDMETHODIMP DragLeave();
-    virtual STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
+    STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
+    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
+    STDMETHODIMP DragLeave() override;
+    STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
 
 #if 0
     static HRESULT WINAPI log_stuff(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw)
@@ -72,10 +76,7 @@ public:
     }
 #endif
 
-protected:
-
 public:
-
     DECLARE_REGISTRY_RESOURCEID(IDR_FONTEXT)
     DECLARE_NOT_AGGREGATABLE(CFontExt)
 
@@ -89,7 +90,4 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         //COM_INTERFACE_ENTRY_FUNC_BLIND(0, log_stuff)
     END_COM_MAP()
-
-    HRESULT DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts);
-    HRESULT DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName);
 };

@@ -432,6 +432,8 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Lägger till ett nytt strängvärde"
     ID_EDIT_NEW_BINARYVALUE "Lägger till ett nytt binärt värde"
     ID_EDIT_NEW_DWORDVALUE "Lägger till ett nytt dubbelordsvärde"
+    ID_EDIT_NEW_MULTISTRINGVALUE "Adds a new multi string value"
+    ID_EDIT_NEW_EXPANDABLESTRINGVALUE "Adds a new expandable string value"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importerar en textfil till registret"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exporterar hela eller en del av registret till en textfil"
     ID_REGISTRY_LOADHIVE "Läser in registerdatafil till registret"

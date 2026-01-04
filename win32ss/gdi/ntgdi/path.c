@@ -1789,9 +1789,10 @@ PPATH FASTCALL
 IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
 {
     INT i, j, numStrokes, numOldStrokes, penWidthIn, penWidthOut;
-    PPATH flat_path, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
+    PPATH flat_path, pNewPath = NULL, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     BYTE *type;
     DWORD joint, endcap;
+    KFLOATING_SAVE fpsave;
 
     endcap = (PS_ENDCAP_MASK & penStyle);
     joint = (PS_JOIN_MASK & penStyle);
@@ -1818,11 +1819,7 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
             ERR("Expected PT_MOVETO %s, got path flag %c\n",
                     i == 0 ? "as first point" : "after PT_CLOSEFIGURE",
                     flat_path->pFlags[i]);
-            if (pStrokes)
-                ExFreePoolWithTag(pStrokes, TAG_PATH);
-            PATH_UnlockPath(flat_path);
-            PATH_Delete(flat_path->BaseObject.hHmgr);
-            return NULL;
+            goto Exit;
         }
         switch(flat_path->pFlags[i])
         {
@@ -1843,18 +1840,14 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
                     if (!pStrokes)
                     {
                        ExFreePoolWithTag(pOldStrokes, TAG_PATH);
-                       PATH_UnlockPath(flat_path);
-                       PATH_Delete(flat_path->BaseObject.hHmgr);
-                       return NULL;
+                       goto Exit;
                     }
                     RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
                     ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
                 }
                 if (!pStrokes)
                 {
-                   PATH_UnlockPath(flat_path);
-                   PATH_Delete(flat_path->BaseObject.hHmgr);
-                   return NULL;
+                   goto Exit;
                 }
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
                 if (!pStrokes[numStrokes - 1])
@@ -1875,15 +1868,18 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
                 break;
             default:
                 ERR("Got path flag %c\n", flat_path->pFlags[i]);
-                if (pStrokes)
-                    ExFreePoolWithTag(pStrokes, TAG_PATH);
-                PATH_UnlockPath(flat_path);
-                PATH_Delete(flat_path->BaseObject.hHmgr);
-                return NULL;
+                goto Exit;
         }
     }
 
     pNewPath = PATH_CreatePath( flat_path->numEntriesUsed );
+    if (pNewPath == NULL)
+    {
+        ERR("PATH_CreatePath\n");
+        goto Exit;
+    }
+
+    KeSaveFloatingPointState(&fpsave);
 
     for (i = 0; i < numStrokes; i++)
     {
@@ -2103,12 +2099,18 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
         PATH_DestroyGdiPath(pDownPath);
         ExFreePoolWithTag(pDownPath, TAG_PATH);
     }
-    if (pStrokes) ExFreePoolWithTag(pStrokes, TAG_PATH);
 
-    PATH_UnlockPath(flat_path);
-    PATH_Delete(flat_path->BaseObject.hHmgr);
     pNewPath->state = PATH_Closed;
     PATH_UnlockPath(pNewPath);
+
+    KeRestoreFloatingPointState(&fpsave);
+
+Exit:
+    if (pStrokes) ExFreePoolWithTag(pStrokes, TAG_PATH);
+    HPATH hpathToDelete = flat_path->BaseObject.hHmgr;
+    PATH_UnlockPath(flat_path);
+    PATH_Delete(hpathToDelete);
+
     return pNewPath;
 }
 

@@ -29,7 +29,7 @@ BEGIN
     STRING_FMIFS_FAIL "Nepodarilo sa lokalizovať vstupné body FMIFS.\n\n"
     STRING_UNKNOW_ARG "Neznámy argument: %s\n"
     STRING_DRIVE_PARM "Chýba nevyhnutný parameter jednotky.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nemožno získať typ jednotky"
+    STRING_ERROR_DRIVE_TYPE "Nemožno získať typ jednotky.\n"
     STRING_INSERT_DISK "Vložte novú disketu do jednotky %C:\na potom stlačte ENTER..."
     STRING_NO_VOLUME "Nemožno dotazovať zväzok"
     STRING_NO_VOLUME_SIZE "Nemožno dotazovať veľkosť zväzku"

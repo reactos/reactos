@@ -1210,7 +1210,7 @@ public:
     int SetHotKey(WORD wVirtualKeyCode, WORD wModifiers)
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        return ::SendMessage(m_hWnd, WM_SETHOTKEY, MAKEWPARAM(wVirtualKeyCode, wModifiers), 0);
+        return (int)::SendMessage(m_hWnd, WM_SETHOTKEY, MAKEWORD(wVirtualKeyCode, wModifiers), 0);
     }
 
     HICON SetIcon(HICON hIcon, BOOL bBigIcon = TRUE)

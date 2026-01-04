@@ -607,6 +607,71 @@ KdSendPacket(
 {
     PDBGKD_DEBUG_IO DebugIo;
 
+    if (PacketType == PACKET_TYPE_KD_STATE_CHANGE32 ||
+        PacketType == PACKET_TYPE_KD_STATE_CHANGE64)
+    {
+        PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange = (PDBGKD_ANY_WAIT_STATE_CHANGE)MessageHeader->Buffer;
+
+        if (WaitStateChange->NewState == DbgKdLoadSymbolsStateChange)
+            return; // Ignore: invoked anytime a new module is loaded.
+
+        /* We should not get there, unless an exception has been raised */
+        if (WaitStateChange->NewState == DbgKdExceptionStateChange)
+        {
+            PEXCEPTION_RECORD64 ExceptionRecord = &WaitStateChange->u.Exception.ExceptionRecord;
+
+            /*
+             * Claim the debugger to be present, so that KdpSendWaitContinue()
+             * can call back KdReceivePacket(PACKET_TYPE_KD_STATE_MANIPULATE),
+             * which, in turn, informs KD that the exception cannot be handled.
+             */
+            KD_DEBUGGER_NOT_PRESENT = FALSE;
+            SharedUserData->KdDebuggerEnabled |= 0x00000002;
+
+            KdIoPrintf("%s: Got exception 0x%08lx @ 0x%p, Flags 0x%08x, %s - Info[0]: 0x%p\n",
+                       __FUNCTION__,
+                       ExceptionRecord->ExceptionCode,
+                       (PVOID)(ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                       ExceptionRecord->ExceptionFlags,
+                       WaitStateChange->u.Exception.FirstChance ? "FirstChance" : "LastChance",
+                       ExceptionRecord->ExceptionInformation[0]);
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
+extern VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
+            if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
+                ((PVOID)(ULONG_PTR)ExceptionRecord->ExceptionAddress == (PVOID)RtlpBreakWithStatusInstruction))
+            {
+                PCONTEXT ContextRecord = &KeGetCurrentPrcb()->ProcessorState.ContextFrame;
+                ULONG Status =
+#if defined(_M_IX86)
+                    ContextRecord->Eax;
+#elif defined(_M_AMD64)
+                    (ULONG)ContextRecord->Rcx;
+#elif defined(_M_ARM)
+                    ContextRecord->R0;
+#else // defined(_M_ARM64)
+                    (ULONG)ContextRecord->X0;
+#endif
+                KdIoPrintf("STATUS_BREAKPOINT Status 0x%08lx\n", Status);
+            }
+// #else
+// #error Unknown architecture
+#endif
+            return;
+        }
+
+        KdIoPrintf("%s: PACKET_TYPE_KD_STATE_CHANGE32/64 NewState %d is UNIMPLEMENTED\n",
+                   __FUNCTION__, WaitStateChange->NewState);
+        return;
+    }
+    else
+    if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        KdIoPrintf("%s: PACKET_TYPE_KD_STATE_MANIPULATE for ApiNumber %lu\n",
+                   __FUNCTION__, ManipulateState->ApiNumber);
+        return;
+    }
+
     if (PacketType != PACKET_TYPE_KD_DEBUG_IO)
     {
         KdIoPrintf("%s: PacketType %d is UNIMPLEMENTED\n", __FUNCTION__, PacketType);
@@ -651,6 +716,24 @@ KdReceivePacket(
     STRING ResponseString;
     CHAR MessageBuffer[512];
 #endif
+
+    if (PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
+    {
+        /* We don't support breaks-in */
+        return KdPacketTimedOut;
+    }
+
+    if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        PDBGKD_MANIPULATE_STATE64 ManipulateState = (PDBGKD_MANIPULATE_STATE64)MessageHeader->Buffer;
+        RtlZeroMemory(MessageHeader->Buffer, MessageHeader->MaximumLength);
+
+        /* The exception (notified via DbgKdExceptionStateChange in
+         * KdSendPacket()) cannot be handled: return a failure code */
+        ManipulateState->ApiNumber = DbgKdContinueApi;
+        ManipulateState->u.Continue.ContinueStatus = DBG_EXCEPTION_NOT_HANDLED;
+        return KdPacketReceived;
+    }
 
     if (PacketType != PACKET_TYPE_KD_DEBUG_IO)
     {

@@ -161,7 +161,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Disa shërbime varen nga shërbimet e tjera, driverat e sistemit dhe ngarkimet grupet te renditura. Nëse një komponent sistem është i ndalur ose ajo nuk është në drejtimin e duhur, shërbimet e varur mund të preken.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Ky shërbim varet nga komponentet në vijim", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Ky shërbim varet nga komponentet në vijim:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "The following components depend on this service:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

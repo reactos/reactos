@@ -16,6 +16,7 @@ list(APPEND _keyboard_layouts
     kbdbu
     kbdbur
     kbdcan
+    kbdcmk
     kbdcr
     kbdcz
     kbdcz1
@@ -31,6 +32,8 @@ list(APPEND _keyboard_layouts
     kbdgneo
     kbdgr
     kbdgr1
+    kbdgre1
+    kbdgrist
     kbdhe
     kbdheb
     kbdhu

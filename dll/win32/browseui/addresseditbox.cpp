@@ -1,27 +1,10 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- * Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     The combo box of the address band
+ * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-
-/*
-This class handles the combo box of the address band.
-*/
 
 #include "precomp.h"
 
@@ -34,15 +17,12 @@ TODO:
 CAddressEditBox::CAddressEditBox() :
     fCombobox(WC_COMBOBOXEXW, this),
     fEditWindow(WC_EDITW, this),
-    fSite(NULL),
-    pidlLastParsed(NULL)
+    fSite(NULL)
 {
 }
 
 CAddressEditBox::~CAddressEditBox()
 {
-    if (pidlLastParsed)
-        ILFree(pidlLastParsed);
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *pOwner)
@@ -90,9 +70,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
     return hResult;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(PCWSTR pszPath)
 {
-    return E_NOTIMPL;
+    m_pidlLastParsed.Free();
+    m_pidlLastParsed.Attach(ILCreateFromPathW(pszPath));
+    return m_pidlLastParsed ? S_OK : E_OUTOFMEMORY;
 }
 
 BOOL CAddressEditBox::GetComboBoxText(CComHeapPtr<WCHAR>& pszText)
@@ -196,19 +178,20 @@ BOOL CAddressEditBox::ExecuteCommandLine()
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
-    ULONG eaten;
-    ULONG attributes;
-    HRESULT hr;
-    HWND topLevelWindow;
-    PIDLIST_ABSOLUTE pidlCurrent= NULL;
-    PIDLIST_RELATIVE pidlRelative = NULL;
+    ULONG eaten, attributes;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlCurrent;
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlRelative;
     CComPtr<IShellFolder> psfCurrent;
+    HRESULT hr;
+
+    ATLASSERT(!m_pidlLastParsed);
 
     CComPtr<IBrowserService> pbs;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &pbs));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    HWND topLevelWindow;
     hr = IUnknown_GetWindow(pbs, &topLevelWindow);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -231,7 +214,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        return hr;
 
     hr = pbs->GetPidl(&pidlCurrent);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -244,18 +227,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
     {
-        pidlLastParsed = ILCombine(pidlCurrent, pidlRelative);
-        ILFree(pidlRelative);
-        goto cleanup;
+        m_pidlLastParsed.Attach(ILCombine(pidlCurrent, pidlRelative));
+        return hr;
     }
 
 parseabsolute:
     /* We couldn't parse a relative path, attempt to parse an absolute path */
-    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
-
-cleanup:
-    if (pidlCurrent)
-        ILFree(pidlCurrent);
+    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &m_pidlLastParsed, &attributes);
     return hr;
 }
 
@@ -272,12 +250,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ShowFileNotFoundError(HRESULT hRet)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
+    BOOL bParsedForExec = FALSE;
     HRESULT hr;
 
     /*
      * Parse the path if it wasn't parsed
      */
-    if (!pidlLastParsed)
+    if (!m_pidlLastParsed)
     {
         hr = ParseNow(0);
 
@@ -290,8 +269,9 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
             return ShowFileNotFoundError(hr);
         }
 
-        if (!pidlLastParsed)
+        if (!m_pidlLastParsed)
             return E_FAIL;
+        bParsedForExec = TRUE;
     }
 
     /*
@@ -299,7 +279,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
      */
     CComPtr<IShellBrowser> pisb;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     /*
@@ -307,53 +287,44 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
      */
     PIDLIST_ABSOLUTE pidl;
     hr = GetAbsolutePidl(&pidl);
-    if (FAILED(hr))
-        return hr;
-
-    CComPtr<IShellFolder> psf;
-    hr = SHGetDesktopFolder(&psf);
-    if (FAILED(hr))
-        return hr;
-
-    hr = psf->CompareIDs(0, pidl, pidlLastParsed);
-
-    SHFree(pidl);
-
-    if (hr == 0)
+    if (FAILED_UNEXPECTEDLY(hr))
     {
-        if (pidlLastParsed)
-        {
-            ILFree(pidlLastParsed);
-            pidlLastParsed = NULL;
-        }
+        m_pidlLastParsed.Free();
+        return hr;
+    }
+
+    BOOL bEqual = ILIsEqual(pidl, m_pidlLastParsed);
+    ILFree(pidl);
+    if (bEqual)
+    {
+        m_pidlLastParsed.Free();
         return S_OK;
     }
 
     /*
      * Attempt to browse to the parsed pidl
      */
-    hr = pisb->BrowseObject(pidlLastParsed, 0);
+    hr = pisb->BrowseObject(m_pidlLastParsed, 0);
     if (SUCCEEDED(hr))
         return hr;
 
     /*
-     * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
+     * Browsing to the pidl failed so it's not a folder. So invoke its default command.
      */
-    HWND topLevelWindow;
-    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
-    if (FAILED(hr))
-        return hr;
+    HWND hWnd;
+    if (FAILED(IUnknown_GetWindow(pisb, &hWnd)))
+        hWnd = NULL;
 
     LPCITEMIDLIST pidlChild;
     CComPtr<IShellFolder> sf;
-    hr = SHBindToParent(pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
-    if (FAILED(hr))
-        return hr;
+    hr = SHBindToParent(m_pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    if (SUCCEEDED(hr))
+        hr = SHInvokeDefaultCommand(hWnd, sf, pidlChild);
 
-    hr = SHInvokeDefaultCommand(topLevelWindow, sf, pidlChild);
-    if (FAILED(hr))
-        return hr;
+    if (bParsedForExec)
+        m_pidlLastParsed.Free(); // Throw away the non-folder item we just parsed
 
+    RefreshAddress(); // Set the address back to a valid folder
     return hr;
 }
 
@@ -374,10 +345,15 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
     {
         case WM_COMMAND:
         {
-            if (HIWORD(wParam) == CBN_SELCHANGE)
+            if (HIWORD(wParam) == CBN_SELCHANGE && fCombobox == (HWND)lParam)
             {
-                UINT selectedIndex = SendMessageW((HWND)lParam, CB_GETCURSEL, 0, 0);
-                pidlLastParsed = ILClone((LPITEMIDLIST)SendMessageW((HWND)lParam, CB_GETITEMDATA, selectedIndex, 0));
+                INT iItem = (INT)fCombobox.SendMessage(CB_GETCURSEL);
+                PIDLIST_ABSOLUTE pidl =
+                    (PIDLIST_ABSOLUTE)fCombobox.SendMessage(CB_GETITEMDATA, iItem);
+                m_pidlLastParsed.Free();
+                if (pidl)
+                    m_pidlLastParsed.Attach(ILClone(pidl));
+
                 Execute(0);
             }
             break;
@@ -460,12 +436,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     {
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
-        if (pidlLastParsed)
-        {
-            ILFree(pidlLastParsed);
-            pidlLastParsed = NULL;
-        }
-
+        m_pidlLastParsed.Free();
         RefreshAddress();
         break;
     }

@@ -48,6 +48,8 @@ using namespace std;
 #include "CJournaledTestList.h"
 #include "CVirtualTestList.h"
 #include "CWebService.h"
+#include "CWebServiceWinInet.h"
+#include "CWebServiceLibCurl.h"
 #include "CWineTest.h"
 
 #include <rosautotestmsg.h>
@@ -79,5 +81,7 @@ bool IsNumber(const char* Input);
 string StringOut(const string& String, bool forcePrint = true);
 string UnicodeToAscii(PCWSTR UnicodeString);
 string UnicodeToAscii(const wstring& UnicodeString);
+
+extern WCHAR TestName[MAX_PATH];
 
 #endif /* _ROSAUTOTEST_H_ */

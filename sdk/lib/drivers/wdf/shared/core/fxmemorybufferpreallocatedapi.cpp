@@ -34,7 +34,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryCreatePreallocated)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -137,7 +137,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfMemoryAssignBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,

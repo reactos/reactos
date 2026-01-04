@@ -2028,7 +2028,7 @@ NdisIPnPStartDevice(
       if (NdisStatus == NDIS_STATUS_SUCCESS)
         Adapter->NdisMiniportBlock.BusType = ConfigParam->ParameterData.IntegerData;
       else
-        Adapter->NdisMiniportBlock.BusType = Isa;
+        Adapter->NdisMiniportBlock.BusType = NdisInterfaceIsa;
     }
 
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
@@ -2314,6 +2314,11 @@ NdisIDeviceIoControl(
       Irp->IoStatus.Information = Written;
       break;
 
+    case IOCTL_NDIS_RESERVED7:
+      NDIS_DbgPrint(MIN_TRACE, ("NdisIDeviceIoControl: IOCTL_NDIS_RESERVED7 UNIMPLEMENTED (CORE-13831)\n"));
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+
     default:
       NDIS_DbgPrint(MIN_TRACE, ("NdisIDeviceIoControl: unsupported control code 0x%lx\n", ControlCode));
       break;
@@ -2328,6 +2333,71 @@ NdisIDeviceIoControl(
       IoMarkIrpPending(Irp);
 
   return Status;
+}
+
+static
+NTSTATUS
+NdisIPnPRemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PLOGICAL_ADAPTER Adapter = DeviceObject->DeviceExtension;
+    
+    if (Adapter->NdisMiniportBlock.SymbolicLinkName.Buffer)
+    {
+        IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
+        RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.SymbolicLinkName);
+    }
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoSkipCurrentIrpStackLocation(Irp);
+    Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+
+    IoDetachDevice(Adapter->NdisMiniportBlock.NextDeviceObject);
+        
+    RtlFreeUnicodeString(&Adapter->NdisMiniportBlock.MiniportName);
+
+    if (Adapter->NdisMiniportBlock.PnPDeviceState == NdisPnPDeviceStarted)
+    {
+        /* Remove adapter from adapter list for this miniport */
+        ExInterlockedRemoveEntryList(&Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
+
+        /* Remove adapter from global adapter list */
+        ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
+
+        KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
+
+        Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler(Adapter);
+    }
+
+    if (Adapter->NdisMiniportBlock.EthDB)
+    {
+        EthDeleteFilter(Adapter->NdisMiniportBlock.EthDB);
+        Adapter->NdisMiniportBlock.EthDB = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.Resources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.Resources);
+        Adapter->NdisMiniportBlock.Resources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResources)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
+        Adapter->NdisMiniportBlock.AllocatedResources = NULL;
+    }
+
+    if (Adapter->NdisMiniportBlock.AllocatedResourcesTranslated)
+    {
+        ExFreePool(Adapter->NdisMiniportBlock.AllocatedResourcesTranslated);
+        Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
+    }
+
+    IoDeleteDevice(DeviceObject);
+
+    return Status;
 }
 
 NTSTATUS
@@ -2394,7 +2464,11 @@ NdisIDispatchPnp(
         Irp->IoStatus.Information |= Adapter->NdisMiniportBlock.PnPFlags;
         break;
 
+      case IRP_MN_REMOVE_DEVICE:
+        return NdisIPnPRemoveDevice(DeviceObject, Irp);
+
       default:
+        NDIS_DbgPrint(MIN_TRACE, ("Unhandled minor function: 0x%X\n", Stack->MinorFunction));
         break;
     }
 

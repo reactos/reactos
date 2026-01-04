@@ -148,9 +148,7 @@ IsActiveSessionCountLimited()
 VERSIONHELPERAPI
 IsReactOS()
 {
-    // FIXME: Find a better method!
-    WCHAR szWinDir[MAX_PATH];
-    GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+    /* Hardcoded SharedUserData and PAGE_SIZE to avoid NDK includes */
+    return *(UINT*)((ULONG_PTR)0x7FFE0000 + 4096 - sizeof(ULONG)) == 0x8EAC705;
 }
 #endif // __REACTOS__

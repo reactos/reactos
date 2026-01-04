@@ -1016,8 +1016,11 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
                 else if (!pchSecondComma) 
                     pchSecondComma = &wszCmd[i];
                 break;
-            case L' ': 
-                pchLastUnquotedSpace = &wszCmd[i];
+            case L' ':
+                if (!pchFirstComma)
+                    pchFirstComma = &wszCmd[i];
+                else
+                    pchLastUnquotedSpace = &wszCmd[i];
                 break;
         }
     }
@@ -1047,7 +1050,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     /* If an unquoted comma was found, there are at least two parts of the string:
      * - the CPL path
      * - either a dialog box number preceeded by @, or a dialog box name.
-     * If there was a second unqoted comma, there is another part of the string:
+     * If there was a second unquoted comma, there is another part of the string:
      * - the rest of the parameters. */
     else
     {
@@ -1104,7 +1107,8 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             }
         }
 
-        if (sp >= applet->count && (wszDialogBoxName[0] == L'\0' || wszDialogBoxName[0] == L'@'))
+        if (applet->count == 1 ||
+            (sp >= applet->count && (wszDialogBoxName[0] == UNICODE_NULL || wszDialogBoxName[0] == L'@')))
         {
             sp = 0;
         }

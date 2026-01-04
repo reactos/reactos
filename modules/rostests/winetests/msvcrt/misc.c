@@ -25,7 +25,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <process.h>
+#ifdef __REACTOS__
 #include <versionhelpers.h>
+#endif
 
 static inline BOOL almost_equal(double d1, double d2) {
     if(d1-d2>-1e-30 && d1-d2<1e-30)

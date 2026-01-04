@@ -55,6 +55,7 @@ DriverEntry(IN PVOID Context1,
   InitData.HwLegacyResourceList = VGAAccessRange;
   InitData.HwLegacyResourceCount = ARRAYSIZE(VGAAccessRange);
 
+  InitData.AdapterInterfaceType = Isa;
   return  VideoPortInitialize(Context1, Context2, &InitData, NULL);
 }
 

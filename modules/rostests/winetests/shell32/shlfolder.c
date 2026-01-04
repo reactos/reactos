@@ -636,6 +636,7 @@ static void test_BindToObject(void)
     IShellFolder_Release(psfDesktop);
 }
 
+#ifndef __REACTOS__ // Causes problems on Windows
 static void test_GetDisplayName(void)
 {
     BOOL result;
@@ -802,6 +803,7 @@ static void test_GetDisplayName(void)
     IShellFolder_Release(psfDesktop);
     IShellFolder_Release(psfPersonal);
 }
+#endif
 
 static void test_CallForAttributes(void)
 {
@@ -5348,7 +5350,9 @@ START_TEST(shlfolder)
     test_SHParseDisplayName();
     test_BindToObject();
     test_EnumObjects_and_CompareIDs();
+#ifndef __REACTOS__
     test_GetDisplayName();
+#endif
     test_GetAttributesOf();
     test_SHGetPathFromIDList();
     test_CallForAttributes();

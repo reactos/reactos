@@ -20,6 +20,7 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+#include "fs/stat.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
@@ -110,7 +111,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
     PEXT_FILE_INFO        FileHandle;
     CHAR            SymLinkPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH];
     CHAR            FullPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH * 2];
-    ULONG_PTR        Index;
+    SIZE_T Index;
 
     TRACE("ExtOpenFile() FileName = \"%s\"\n", FileName);
 
@@ -124,7 +125,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
 
     // If we got a symbolic link then fix up the path
     // and re-call this function
-    if ((TempExtFileInfo.Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK)
+    if (_S_ISLNK(TempExtFileInfo.Inode.Mode))
     {
         TRACE("File is a symbolic link\n");
 
@@ -208,8 +209,8 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
  */
 BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO ExtFileInfo)
 {
-    UINT32        i;
     ULONG        NumberOfPathParts;
+    ULONG        i;
     CHAR        PathPart[261];
     PVOID        DirectoryBuffer;
     ULONG        DirectoryInode = EXT_ROOT_INODE;
@@ -273,8 +274,7 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
         return FALSE;
     }
 
-    if (((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFREG) &&
-        ((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFLNK))
+    if (!_S_ISREG(InodeData.Mode) && !_S_ISLNK(InodeData.Mode))
     {
         FileSystemError("Inode is not a regular file or symbolic link.");
         return FALSE;
@@ -286,8 +286,8 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
     // If it's a regular file or a regular symbolic link
     // then get the block pointer list otherwise it must
     // be a fast symbolic link which doesn't have a block list
-    if (((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFREG) ||
-        ((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFLNK && InodeData.Size > FAST_SYMLINK_MAX_NAME_SIZE))
+    if (_S_ISREG(InodeData.Mode) ||
+        (_S_ISLNK(InodeData.Mode) && InodeData.Size > FAST_SYMLINK_MAX_NAME_SIZE))
     {
         ExtFileInfo->FileBlockList = ExtReadBlockPointerList(Volume, &InodeData);
         if (ExtFileInfo->FileBlockList == NULL)
@@ -302,17 +302,40 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
 
     ExtFileInfo->FilePointer = 0;
     ExtFileInfo->FileSize = ExtGetInodeFileSize(&InodeData);
-    RtlCopyMemory(&ExtFileInfo->Inode, &InodeData, sizeof(EXT_INODE));
+    RtlCopyMemory(&ExtFileInfo->Inode, &InodeData, sizeof(InodeData));
+
+    /* Map the attributes to ARC file attributes */
+    ExtFileInfo->Attributes = 0;
+    if (!(InodeData.Mode & (_S_IWUSR | _S_IWGRP | _S_IWOTH)))
+        ExtFileInfo->Attributes |= ReadOnlyFile;
+    if (_S_ISDIR(InodeData.Mode))
+        ExtFileInfo->Attributes |= DirectoryFile;
+
+    /* Set hidden attribute for all entries starting with '.' */
+    if ((DirectoryEntry.NameLen >= 2 && DirectoryEntry.Name[0] == '.') &&
+         ((DirectoryEntry.NameLen == 2 && DirectoryEntry.Name[1] != '.') ||
+           DirectoryEntry.NameLen >= 3))
+    {
+        ExtFileInfo->Attributes |= HiddenFile;
+    }
+
+    /* Copy the file name, perhaps truncated */
+    ExtFileInfo->FileNameLength = DirectoryEntry.NameLen; // (ULONG)strlen(PathPart);
+    ExtFileInfo->FileNameLength = min(ExtFileInfo->FileNameLength, sizeof(ExtFileInfo->FileName) - 1);
+    RtlCopyMemory(ExtFileInfo->FileName, DirectoryEntry.Name /*PathPart*/, ExtFileInfo->FileNameLength);
 
     return TRUE;
 }
 
 BOOLEAN ExtSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT_DIR_ENTRY DirectoryEntry)
 {
-    ULONG           CurrentOffset = 0;
-    PEXT_DIR_ENTRY  CurrentDirectoryEntry;
+    PEXT_DIR_ENTRY CurrentDirectoryEntry;
+    ULONG CurrentOffset = 0;
+    SIZE_T FileNameLen;
 
     TRACE("ExtSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = \"%s\"\n", DirectoryBuffer, DirectorySize, FileName);
+
+    FileNameLen = strlen(FileName);
 
     while (CurrentOffset < DirectorySize)
     {
@@ -342,11 +365,10 @@ BOOLEAN ExtSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
         }
         TRACE("\"\n\n");
 
-        if (strlen(FileName) == CurrentDirectoryEntry->NameLen &&
-            !_strnicmp(FileName, CurrentDirectoryEntry->Name, CurrentDirectoryEntry->NameLen))
+        if ((FileNameLen == CurrentDirectoryEntry->NameLen) &&
+            (_strnicmp(FileName, CurrentDirectoryEntry->Name, FileNameLen) == 0))
         {
             RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT_DIR_ENTRY));
-
             return TRUE;
         }
 
@@ -383,7 +405,7 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
     {
         // Block pointer list is NULL
         // so this better be a fast symbolic link or else
-        if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) != EXT_S_IFLNK) ||
+        if (!_S_ISLNK(ExtFileInfo->Inode.Mode) ||
             (ExtFileInfo->FileSize > FAST_SYMLINK_MAX_NAME_SIZE))
         {
             FileSystemError("Block pointer list is NULL and file is not a fast symbolic link.");
@@ -411,7 +433,7 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
 
     // Check if this is a fast symbolic link
     // if so then the read is easy
-    if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK) &&
+    if (_S_ISLNK(ExtFileInfo->Inode.Mode) &&
         (ExtFileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
     {
         TRACE("Reading fast symbolic link data\n");
@@ -680,6 +702,13 @@ BOOLEAN ExtReadSuperBlock(PEXT_VOLUME_INFO Volume)
     TRACE("DefHashVersion: %d\n", SuperBlock->DefHashVersion);
     TRACE("JournalBackupType: %d\n", SuperBlock->JournalBackupType);
     TRACE("GroupDescSize: %d\n", SuperBlock->GroupDescSize);
+    TRACE("DefaultMountOpts: %d\n", SuperBlock->DefaultMountOpts);
+    TRACE("FirstMetaBg: %d\n", SuperBlock->FirstMetaBg);
+    TRACE("MkfsTime: %d\n", SuperBlock->MkfsTime);
+    // ULONG JnlBlocks[17];
+    TRACE("BlocksCountHi: %d\n", SuperBlock->BlocksCountHi);
+    TRACE("RBlocksCountHi: %d\n", SuperBlock->RBlocksCountHi);
+    TRACE("FreeBlocksCountHi: %d\n", SuperBlock->FreeBlocksCountHi);
 
     //
     // Check the super block magic
@@ -794,7 +823,7 @@ BOOLEAN ExtReadDirectory(PEXT_VOLUME_INFO Volume, ULONG Inode, PVOID* DirectoryB
     }
 
     // Make sure it is a directory inode
-    if ((InodePointer->Mode & EXT_S_IFMT) != EXT_S_IFDIR)
+    if (!_S_ISDIR(InodePointer->Mode))
     {
         FileSystemError("Inode is not a directory.");
         return FALSE;
@@ -1096,14 +1125,10 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
 
 ULONGLONG ExtGetInodeFileSize(PEXT_INODE Inode)
 {
-    if ((Inode->Mode & EXT_S_IFMT) == EXT_S_IFDIR)
-    {
+    if (_S_ISDIR(Inode->Mode))
         return (ULONGLONG)(Inode->Size);
-    }
     else
-    {
         return ((ULONGLONG)(Inode->Size) | ((ULONGLONG)(Inode->DirACL) << 32));
-    }
 }
 
 BOOLEAN ExtCopyBlockPointersByExtents(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, PEXT4_EXTENT_HEADER ExtentHeader)
@@ -1289,6 +1314,14 @@ ARC_STATUS ExtGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     Information->EndingAddress.QuadPart = FileHandle->FileSize;
     Information->CurrentAddress.QuadPart = FileHandle->FilePointer;
 
+    /* Set the ARC file attributes */
+    Information->Attributes = FileHandle->Attributes;
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = min(FileHandle->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, FileHandle->FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
+
     TRACE("ExtGetFileInformation(%lu) -> FileSize = %llu, FilePointer = 0x%llx\n",
           FileId, Information->EndingAddress.QuadPart, Information->CurrentAddress.QuadPart);
 
@@ -1328,15 +1361,9 @@ ARC_STATUS ExtRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     ULONGLONG BytesReadBig;
     BOOLEAN Success;
 
-    //
-    // Read data
-    //
+    /* Read data */
     Success = ExtReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
     *Count = (ULONG)BytesReadBig;
-
-    //
-    // Check for success
-    //
     if (Success)
         return ESUCCESS;
     else
@@ -1366,6 +1393,30 @@ ARC_STATUS ExtSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     FileHandle->FilePointer = NewPosition.QuadPart;
     return ESUCCESS;
 }
+
+
+/**
+ * @brief
+ * Returns the size of the EXT2/3/4 volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ULONGLONG
+ExtGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PEXT_VOLUME_INFO Volume;
+    ULARGE_INTEGER BlocksCount;
+
+    Volume = ExtVolumes[DeviceId];
+    ASSERT(Volume);
+
+    BlocksCount.LowPart  = Volume->SuperBlock->BlocksCountLo;
+    BlocksCount.HighPart = Volume->SuperBlock->BlocksCountHi;
+
+    /* NOTE: Volume->BlockSizeInBytes == Volume->BlockSizeInSectors * Volume->BytesPerSector */
+    return BlocksCount.QuadPart * Volume->BlockSizeInBytes;
+}
+
 
 const DEVVTBL ExtFuncTable =
 {

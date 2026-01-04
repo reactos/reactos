@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Utilizare: taskkill [/?] [/f] [/im NumeProces | /pid IdProces]\n"
+    STRING_USAGE, "Utilizare: taskkill [/?] [/f] [/im NumeProces | /pid IdProces] [/t]\n"
     STRING_INVALID_OPTION, "Eroare: Opțiune specificată nevalidă sau necunoscută.\n"
     STRING_INVALID_PARAM, "Eroare: Parametrul de comandă specificat este nevalid.\n"
     STRING_MISSING_OPTION, "Eroare: Trebuie specificată una dintre opțiunile /im sau /pid.\n"
@@ -24,6 +24,10 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Eroare: Nu se poate enumera lista de procese.\n"
     STRING_TERMINATE_FAILED, "Eroare: Procesul «%1» nu poate fi oprit.\n"
     STRING_SELF_TERMINATION, "Eroare: Auto-terminarea nu este permisă.\n"
+    // STRING_CLOSE_CHILD, "Sent termination signal to process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "The process with PID %1!u! (child process of PID %2!u!) has been terminated.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Eroare: Sintaxă nevalidă. Opțiunea '%1' nu este permisă mai mult de '%2!d!' dată(dăți).\n"
     STRING_INVALID_SYNTAX, "Eroare: Sintaxă nevalidă.\n"
 }

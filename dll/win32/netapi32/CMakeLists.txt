@@ -1,9 +1,7 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 
-add_definitions(-D__WINESRC__)
 spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl

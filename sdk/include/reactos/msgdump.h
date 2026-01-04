@@ -2,10 +2,10 @@
  * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0)
  * PURPOSE:     Win32API message dumping
- * COPYRIGHT:   Copyright 2018-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2018-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #ifndef _INC_MSGDUMP
-#define _INC_MSGDUMP    18   /* Version 18 */
+#define _INC_MSGDUMP    19   /* Version 19 */
 
 /*
  * NOTE: MD_msgdump function in this file provides Win32API message dump feature.
@@ -15,15 +15,15 @@
 #pragma once
 
 #ifndef _INC_WINXX
-    #include "winxx.h"      /* An unofficial extension of <windowsx.h>. */
+    #include "winxx.h"      /* An unofficial extension of <windowsx.h> */
 #endif
 #ifndef _INC_SHELLAPI
     #include <shellapi.h>
 #endif
 #include <strsafe.h>
 
-#ifndef MSGDUMP_TPRINTF
-    #error Please define MSGDUMP_TPRINTF macro before #include "msgdump.h".
+#ifndef MSGDUMP_PRINTF
+    #error Please define MSGDUMP_PRINTF macro before #include "msgdump.h".
 #endif
 
 #ifndef MSGDUMP_API
@@ -31,7 +31,7 @@
 #endif
 
 #ifndef MSGDUMP_PREFIX
-    #define MSGDUMP_PREFIX TEXT("")
+    #define MSGDUMP_PREFIX ""
 #endif
 
 /* MD_msgdump function */
@@ -46,17 +46,17 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
 
 #define MSGDUMP_MAX_RECT_TEXT   64
 
-static __inline const TCHAR * MSGDUMP_API
-MD_rect_text(TCHAR *buf, size_t bufsize, const RECT *prc)
+static __inline const char * MSGDUMP_API
+MD_rect_text(CHAR *buf, size_t cch, const RECT *prc)
 {
     if (prc == NULL)
     {
-        StringCbCopy(buf, bufsize, TEXT("(null)"));
+        StringCchCopyA(buf, cch, "(null)");
     }
     else
     {
-        StringCbPrintf(buf, bufsize, TEXT("(%ld, %ld, %ld, %ld)"),
-                       prc->left, prc->top, prc->right, prc->bottom);
+        StringCchPrintfA(buf, cch, "(%ld, %ld, %ld, %ld)",
+                         prc->left, prc->top, prc->right, prc->bottom);
     }
     return buf;
 }
@@ -64,664 +64,664 @@ MD_rect_text(TCHAR *buf, size_t bufsize, const RECT *prc)
 static __inline LRESULT MSGDUMP_API
 MD_OnUnknown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szName[64];
+    char szName[64];
     if (0xC000 <= uMsg && uMsg <= 0xFFFF &&
-        GlobalGetAtomName(uMsg, szName, ARRAYSIZE(szName)))
+        GlobalGetAtomNameA(uMsg, szName, _countof(szName)))
     {
         /* RegisterWindowMessage'd message */
-        MSGDUMP_TPRINTF(TEXT("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, szName, uMsg, (void *)hwnd, (void *)wParam,
-                        (void *)lParam);
+        MSGDUMP_PRINTF("%s'%s'(%u)(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, szName, uMsg, (void *)hwnd, (void *)wParam,
+                       (void *)lParam);
         return 0;
     }
 
-    MSGDUMP_TPRINTF(TEXT("%sWM_%u(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_%u(hwnd:%p, wParam:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnUser(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_USER+%u(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)wParam, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_USER+%u(hwnd:%p, wParam:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnApp(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_APP+%u(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)wParam, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_APP+%u(hwnd:%p, wParam:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnNull(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NULL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_NULL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CREATE(hwnd:%p, lpCreateStruct:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCreateStruct);
+    MSGDUMP_PRINTF("%sWM_CREATE(hwnd:%p, lpCreateStruct:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCreateStruct);
     return TRUE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnDestroy(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DESTROY(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_DESTROY(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMove(HWND hwnd, int x, int y)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOVE(hwnd:%p, x:%d, y:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y);
+    MSGDUMP_PRINTF("%sWM_MOVE(hwnd:%p, x:%d, y:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SIZE(hwnd:%p, state:%u, cx:%d, cy:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, state, cx, cy);
+    MSGDUMP_PRINTF("%sWM_SIZE(hwnd:%p, state:%u, cx:%d, cy:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, state, cx, cy);
 }
 
 static __inline void MSGDUMP_API
 MD_OnActivate(HWND hwnd, UINT state, HWND hwndActDeact, BOOL fMinimized)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ACTIVATE(hwnd:%p, state:%u, hwndActDeact:%p, fMinimized:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, state, (void *)hwndActDeact, fMinimized);
+    MSGDUMP_PRINTF("%sWM_ACTIVATE(hwnd:%p, state:%u, hwndActDeact:%p, fMinimized:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, state, (void *)hwndActDeact, fMinimized);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSetFocus(HWND hwnd, HWND hwndOldFocus)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETFOCUS(hwnd:%p, hwndOldFocus:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndOldFocus);
+    MSGDUMP_PRINTF("%sWM_SETFOCUS(hwnd:%p, hwndOldFocus:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndOldFocus);
 }
 
 static __inline void MSGDUMP_API
 MD_OnKillFocus(HWND hwnd, HWND hwndNewFocus)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_KILLFOCUS(hwnd:%p, hwndNewFocus:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewFocus);
+    MSGDUMP_PRINTF("%sWM_KILLFOCUS(hwnd:%p, hwndNewFocus:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewFocus);
 }
 
 static __inline void MSGDUMP_API
 MD_OnEnable(HWND hwnd, BOOL fEnable)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ENABLE(hwnd:%p, fEnable:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fEnable);
+    MSGDUMP_PRINTF("%sWM_ENABLE(hwnd:%p, fEnable:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fEnable);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSetRedraw(HWND hwnd, BOOL fRedraw)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETREDRAW(hwnd:%p, fRedraw:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fRedraw);
+    MSGDUMP_PRINTF("%sWM_SETREDRAW(hwnd:%p, fRedraw:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fRedraw);
 }
 
 static __inline void MSGDUMP_API
-MD_OnSetText(HWND hwnd, LPCTSTR lpszText)
+MD_OnSetText(HWND hwnd, PCSTR lpszText)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sWM_SETTEXT(hwnd:%p, lpszText:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpszText);
+        MSGDUMP_PRINTF("%sWM_SETTEXT(hwnd:%p, lpszText:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszText);
     else
-        MSGDUMP_TPRINTF(TEXT("%sWM_SETTEXT(hwnd:%p, lpszText:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpszText);
+        MSGDUMP_PRINTF("%sWM_SETTEXT(hwnd:%p, lpszText:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszText);
 }
 
 static __inline INT MSGDUMP_API
 MD_OnGetText(HWND hwnd, int cchTextMax, LPTSTR lpszText)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETTEXT(hwnd:%p, cchTextMax:%d, lpszText:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cchTextMax, (void *)lpszText);
+    MSGDUMP_PRINTF("%sWM_GETTEXT(hwnd:%p, cchTextMax:%d, lpszText:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cchTextMax, (void *)lpszText);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_OnGetTextLength(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETTEXTLENGTH(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_GETTEXTLENGTH(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaint(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PAINT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_PAINT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnClose(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CLOSE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CLOSE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnQueryEndSession(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUERYENDSESSION(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUERYENDSESSION(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnQueryOpen(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUERYOPEN(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUERYOPEN(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnEndSession(HWND hwnd, BOOL fEnding)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ENDSESSION(hwnd:%p, fEnding:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fEnding);
+    MSGDUMP_PRINTF("%sWM_ENDSESSION(hwnd:%p, fEnding:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fEnding);
 }
 
 static __inline void MSGDUMP_API
 MD_OnQuit(HWND hwnd, int exitCode)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUIT(hwnd:%p, exitCode:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, exitCode);
+    MSGDUMP_PRINTF("%sWM_QUIT(hwnd:%p, exitCode:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, exitCode);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnEraseBkgnd(HWND hwnd, HDC hdc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ERASEBKGND(hwnd:%p, hdc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc);
+    MSGDUMP_PRINTF("%sWM_ERASEBKGND(hwnd:%p, hdc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnSysColorChange(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SYSCOLORCHANGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_SYSCOLORCHANGE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnShowWindow(HWND hwnd, BOOL fShow, UINT status)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SHOWWINDOW(hwnd:%p, fShow:%d, status:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fShow, status);
+    MSGDUMP_PRINTF("%sWM_SHOWWINDOW(hwnd:%p, fShow:%d, status:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fShow, status);
 }
 
 static __inline LRESULT MSGDUMP_API
-MD_OnSettingChange(HWND hwnd, UINT_PTR wFlag, LPCTSTR pszSection)
+MD_OnSettingChange(HWND hwnd, UINT_PTR wFlag, PCSTR pszSection)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, pszSection);
+    MSGDUMP_PRINTF("%sWM_SETTINGCHANGE(hwnd:%p, wFlag:%p, pszSection:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wFlag, pszSection);
     return 0;
 }
 
 static __inline void MSGDUMP_API
-MD_OnDevModeChange(HWND hwnd, LPCTSTR lpszDeviceName)
+MD_OnDevModeChange(HWND hwnd, PCSTR lpszDeviceName)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpszDeviceName);
+        MSGDUMP_PRINTF("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszDeviceName);
     else
-        MSGDUMP_TPRINTF(TEXT("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpszDeviceName);
+        MSGDUMP_PRINTF("%sWM_DEVMODECHANGE(hwnd:%p, lpszDeviceName:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszDeviceName);
 }
 
 static __inline void MSGDUMP_API
 MD_OnActivateApp(HWND hwnd, BOOL fActivate, DWORD dwThreadId)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ACTIVATEAPP(hwnd:%p, fActivate:%d, dwThreadId:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fActivate, dwThreadId);
+    MSGDUMP_PRINTF("%sWM_ACTIVATEAPP(hwnd:%p, fActivate:%d, dwThreadId:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fActivate, dwThreadId);
 }
 
 static __inline void MSGDUMP_API
 MD_OnFontChange(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_FONTCHANGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_FONTCHANGE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnTimeChange(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_TIMECHANGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_TIMECHANGE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnCancelMode(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CANCELMODE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CANCELMODE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnSetCursor(HWND hwnd, HWND hwndCursor, UINT codeHitTest, UINT msg)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETCURSOR(hwnd:%p, hwndCursor:%p, codeHitTest:%u, msg:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCursor, codeHitTest, msg);
+    MSGDUMP_PRINTF("%sWM_SETCURSOR(hwnd:%p, hwndCursor:%p, codeHitTest:%u, msg:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCursor, codeHitTest, msg);
     return FALSE;
 }
 
 static __inline int MSGDUMP_API
 MD_OnMouseActivate(HWND hwnd, HWND hwndTopLevel, UINT codeHitTest, UINT msg)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOUSEACTIVATE(hwnd:%p, hwndTopLevel:%p, codeHitTest:%u, msg:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTopLevel, codeHitTest, msg);
+    MSGDUMP_PRINTF("%sWM_MOUSEACTIVATE(hwnd:%p, hwndTopLevel:%p, codeHitTest:%u, msg:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTopLevel, codeHitTest, msg);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnChildActivate(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CHILDACTIVATE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CHILDACTIVATE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnQueueSync(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUEUESYNC(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUEUESYNC(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO lpMinMaxInfo)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETMINMAXINFO(hwnd:%p, lpMinMaxInfo:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpMinMaxInfo);
+    MSGDUMP_PRINTF("%sWM_GETMINMAXINFO(hwnd:%p, lpMinMaxInfo:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpMinMaxInfo);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnIconEraseBkgnd(HWND hwnd, HDC hdc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ICONERASEBKGND(hwnd:%p, hdc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc);
+    MSGDUMP_PRINTF("%sWM_ICONERASEBKGND(hwnd:%p, hdc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_OnNextDlgCtl(HWND hwnd, HWND hwndSetFocus, BOOL fNext)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NEXTDLGCTL(hwnd:%p, hwndSetFocus:%p, fNext:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndSetFocus, fNext);
+    MSGDUMP_PRINTF("%sWM_NEXTDLGCTL(hwnd:%p, hwndSetFocus:%p, fNext:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndSetFocus, fNext);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_OnSpoolerStatus(HWND hwnd, UINT status, int cJobInQueue)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SPOOLERSTATUS(hwnd:%p, status:%u, cJobInQueue:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, status, cJobInQueue);
+    MSGDUMP_PRINTF("%sWM_SPOOLERSTATUS(hwnd:%p, status:%u, cJobInQueue:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, status, cJobInQueue);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDrawItem(HWND hwnd, const DRAWITEMSTRUCT * lpDrawItem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DRAWITEM(hwnd:%p, lpDrawItem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpDrawItem);
+    MSGDUMP_PRINTF("%sWM_DRAWITEM(hwnd:%p, lpDrawItem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpDrawItem);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMeasureItem(HWND hwnd, MEASUREITEMSTRUCT * lpMeasureItem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MEASUREITEM(hwnd:%p, lpMeasureItem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpMeasureItem);
+    MSGDUMP_PRINTF("%sWM_MEASUREITEM(hwnd:%p, lpMeasureItem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpMeasureItem);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDeleteItem(HWND hwnd, const DELETEITEMSTRUCT * lpDeleteItem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DELETEITEM(hwnd:%p, lpDeleteItem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpDeleteItem);
+    MSGDUMP_PRINTF("%sWM_DELETEITEM(hwnd:%p, lpDeleteItem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpDeleteItem);
 }
 
 static __inline int MSGDUMP_API
 MD_OnVkeyToItem(HWND hwnd, UINT vk, HWND hwndListbox, int iCaret)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_VKEYTOITEM(hwnd:%p, vk:%u, hwndListbox:%p, iCaret:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, vk, (void *)hwndListbox, iCaret);
+    MSGDUMP_PRINTF("%sWM_VKEYTOITEM(hwnd:%p, vk:%u, hwndListbox:%p, iCaret:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, vk, (void *)hwndListbox, iCaret);
     return 0;
 }
 
 static __inline int MSGDUMP_API
 MD_OnCharToItem(HWND hwnd, UINT ch, HWND hwndListbox, int iCaret)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CHARTOITEM(hwnd:%p, ch:%u, hwndListbox:%p, iCaret:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, (void *)hwndListbox, iCaret);
+    MSGDUMP_PRINTF("%sWM_CHARTOITEM(hwnd:%p, ch:%u, hwndListbox:%p, iCaret:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, (void *)hwndListbox, iCaret);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnSetFont(HWND hwnd, HFONT hfont, BOOL fRedraw)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETFONT(hwnd:%p, hfont:%p, fRedraw:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hfont, fRedraw);
+    MSGDUMP_PRINTF("%sWM_SETFONT(hwnd:%p, hfont:%p, fRedraw:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hfont, fRedraw);
 }
 
 static __inline HFONT MSGDUMP_API
 MD_OnGetFont(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETFONT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_GETFONT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline HICON MSGDUMP_API
 MD_OnQueryDragIcon(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUERYDRAGICON(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUERYDRAGICON(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline int MSGDUMP_API
 MD_OnCompareItem(HWND hwnd, const COMPAREITEMSTRUCT * lpCompareItem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COMPAREITEM(hwnd:%p, lpCompareItem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCompareItem);
+    MSGDUMP_PRINTF("%sWM_COMPAREITEM(hwnd:%p, lpCompareItem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCompareItem);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnCompacting(HWND hwnd, UINT compactRatio)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COMPACTING(hwnd:%p, compactRatio:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, compactRatio);
+    MSGDUMP_PRINTF("%sWM_COMPACTING(hwnd:%p, compactRatio:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, compactRatio);
 }
 
 static __inline void MSGDUMP_API
 MD_OnCommNotify(HWND hwnd, int cid, UINT flags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COMMNOTIFY(hwnd:%p, cid:%d, flags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cid, flags);
+    MSGDUMP_PRINTF("%sWM_COMMNOTIFY(hwnd:%p, cid:%d, flags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cid, flags);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnWindowPosChanging(HWND hwnd, LPWINDOWPOS lpwpos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_WINDOWPOSCHANGING(hwnd:%p, lpwpos:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpwpos);
+    MSGDUMP_PRINTF("%sWM_WINDOWPOSCHANGING(hwnd:%p, lpwpos:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpwpos);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnWindowPosChanged(HWND hwnd, const LPWINDOWPOS lpwpos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_WINDOWPOSCHANGED(hwnd:%p, lpwpos:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpwpos);
+    MSGDUMP_PRINTF("%sWM_WINDOWPOSCHANGED(hwnd:%p, lpwpos:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpwpos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPower(HWND hwnd, int code)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_POWER(hwnd:%p, code:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, code);
+    MSGDUMP_PRINTF("%sWM_POWER(hwnd:%p, code:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, code);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COPYDATA(hwnd:%p, hwndFrom:%p, pcds:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndFrom, (void *)pcds);
+    MSGDUMP_PRINTF("%sWM_COPYDATA(hwnd:%p, hwndFrom:%p, pcds:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndFrom, (void *)pcds);
     return FALSE;
 }
 
-static __inline LPCTSTR MSGDUMP_API
+static __inline LPCSTR MSGDUMP_API
 MD_GetNotifyCode(HWND hwndFrom, UINT code)
 {
-    TCHAR szClass[24], sz[2];
-    static TCHAR s_szText[64];
+    char szClass[24], sz[2];
+    static char s_szText[64];
 
     switch (code)
     {
-        case NM_OUTOFMEMORY: return TEXT("NM_OUTOFMEMORY");
-        case NM_CLICK: return TEXT("NM_CLICK");
-        case NM_DBLCLK: return TEXT("NM_DBLCLK");
-        case NM_RETURN: return TEXT("NM_RETURN");
-        case NM_RCLICK: return TEXT("NM_RCLICK");
-        case NM_RDBLCLK: return TEXT("NM_RDBLCLK");
-        case NM_SETFOCUS: return TEXT("NM_SETFOCUS");
-        case NM_KILLFOCUS: return TEXT("NM_KILLFOCUS");
+        case NM_OUTOFMEMORY: return "NM_OUTOFMEMORY";
+        case NM_CLICK: return "NM_CLICK";
+        case NM_DBLCLK: return "NM_DBLCLK";
+        case NM_RETURN: return "NM_RETURN";
+        case NM_RCLICK: return "NM_RCLICK";
+        case NM_RDBLCLK: return "NM_RDBLCLK";
+        case NM_SETFOCUS: return "NM_SETFOCUS";
+        case NM_KILLFOCUS: return "NM_KILLFOCUS";
 #if (_WIN32_IE >= 0x0300)
-        case NM_CUSTOMDRAW: return TEXT("NM_CUSTOMDRAW");
-        case NM_HOVER: return TEXT("NM_HOVER");
+        case NM_CUSTOMDRAW: return "NM_CUSTOMDRAW";
+        case NM_HOVER: return "NM_HOVER";
 #endif
 #if (_WIN32_IE >= 0x0400)
-        case NM_NCHITTEST: return TEXT("NM_NCHITTEST");
-        case NM_KEYDOWN: return TEXT("NM_KEYDOWN");
-        case NM_RELEASEDCAPTURE: return TEXT("NM_RELEASEDCAPTURE");
-        case NM_SETCURSOR: return TEXT("NM_SETCURSOR");
-        case NM_CHAR: return TEXT("NM_CHAR");
+        case NM_NCHITTEST: return "NM_NCHITTEST";
+        case NM_KEYDOWN: return "NM_KEYDOWN";
+        case NM_RELEASEDCAPTURE: return "NM_RELEASEDCAPTURE";
+        case NM_SETCURSOR: return "NM_SETCURSOR";
+        case NM_CHAR: return "NM_CHAR";
 #endif
 #if (_WIN32_IE >= 0x0401)
-        case NM_TOOLTIPSCREATED: return TEXT("NM_TOOLTIPSCREATED");
+        case NM_TOOLTIPSCREATED: return "NM_TOOLTIPSCREATED";
 #endif
 #if (_WIN32_IE >= 0x0500)
-        case NM_LDOWN: return TEXT("NM_LDOWN");
-        case NM_RDOWN: return TEXT("NM_RDOWN");
+        case NM_LDOWN: return "NM_LDOWN";
+        case NM_RDOWN: return "NM_RDOWN";
 #endif
     }
 
     szClass[0] = 0;
-    GetClassName(hwndFrom, szClass, ARRAYSIZE(szClass));
+    GetClassNameA(hwndFrom, szClass, _countof(szClass));
     sz[0] = szClass[0];
     sz[1] = 0;
-    CharUpper(sz);
+    CharUpperA(sz);
 
-    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    if (sz[0] == 'R' && lstrcmpiA(szClass, RICHEDIT_CLASS10A) == 0)
     {
         switch (code)
         {
-            case EN_MSGFILTER: return TEXT("EN_MSGFILTER");
-            case EN_REQUESTRESIZE: return TEXT("EN_REQUESTRESIZE");
-            case EN_SELCHANGE: return TEXT("EN_SELCHANGE");
-            case EN_DROPFILES: return TEXT("EN_DROPFILES");
-            case EN_PROTECTED: return TEXT("EN_PROTECTED");
-            case EN_CORRECTTEXT: return TEXT("EN_CORRECTTEXT");
-            case EN_STOPNOUNDO: return TEXT("EN_STOPNOUNDO");
-            case EN_IMECHANGE: return TEXT("EN_IMECHANGE");
-            case EN_SAVECLIPBOARD: return TEXT("EN_SAVECLIPBOARD");
-            case EN_OLEOPFAILED: return TEXT("EN_OLEOPFAILED");
-            case EN_OBJECTPOSITIONS: return TEXT("EN_OBJECTPOSITIONS");
-            case EN_LINK: return TEXT("EN_LINK");
-            case EN_DRAGDROPDONE: return TEXT("EN_DRAGDROPDONE");
-            case EN_PARAGRAPHEXPANDED: return TEXT("EN_PARAGRAPHEXPANDED");
-            case EN_PAGECHANGE: return TEXT("EN_PAGECHANGE");
-            case EN_LOWFIRTF: return TEXT("EN_LOWFIRTF");
-            case EN_ALIGNLTR: return TEXT("EN_ALIGNLTR");
-            case EN_ALIGNRTL: return TEXT("EN_ALIGNRTL");
+            case EN_MSGFILTER: return "EN_MSGFILTER";
+            case EN_REQUESTRESIZE: return "EN_REQUESTRESIZE";
+            case EN_SELCHANGE: return "EN_SELCHANGE";
+            case EN_DROPFILES: return "EN_DROPFILES";
+            case EN_PROTECTED: return "EN_PROTECTED";
+            case EN_CORRECTTEXT: return "EN_CORRECTTEXT";
+            case EN_STOPNOUNDO: return "EN_STOPNOUNDO";
+            case EN_IMECHANGE: return "EN_IMECHANGE";
+            case EN_SAVECLIPBOARD: return "EN_SAVECLIPBOARD";
+            case EN_OLEOPFAILED: return "EN_OLEOPFAILED";
+            case EN_OBJECTPOSITIONS: return "EN_OBJECTPOSITIONS";
+            case EN_LINK: return "EN_LINK";
+            case EN_DRAGDROPDONE: return "EN_DRAGDROPDONE";
+            case EN_PARAGRAPHEXPANDED: return "EN_PARAGRAPHEXPANDED";
+            case EN_PAGECHANGE: return "EN_PAGECHANGE";
+            case EN_LOWFIRTF: return "EN_LOWFIRTF";
+            case EN_ALIGNLTR: return "EN_ALIGNLTR";
+            case EN_ALIGNRTL: return "EN_ALIGNRTL";
 #if _RICHEDIT_VER >= 0x0800
-            case EN_CLIPFORMAT: return TEXT("EN_CLIPFORMAT");
-            case EN_STARTCOMPOSITION: return TEXT("EN_STARTCOMPOSITION");
-            case EN_ENDCOMPOSITION: return TEXT("EN_ENDCOMPOSITION");
+            case EN_CLIPFORMAT: return "EN_CLIPFORMAT";
+            case EN_STARTCOMPOSITION: return "EN_STARTCOMPOSITION";
+            case EN_ENDCOMPOSITION: return "EN_ENDCOMPOSITION";
 #endif
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_LISTVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_LISTVIEWA) == 0)
     {
         switch (code)
         {
-            case LVN_ITEMCHANGING: return TEXT("LVN_ITEMCHANGING");
-            case LVN_ITEMCHANGED: return TEXT("LVN_ITEMCHANGED");
-            case LVN_INSERTITEM: return TEXT("LVN_INSERTITEM");
-            case LVN_DELETEITEM: return TEXT("LVN_DELETEITEM");
-            case LVN_DELETEALLITEMS: return TEXT("LVN_DELETEALLITEMS");
-            case LVN_BEGINLABELEDITA: return TEXT("LVN_BEGINLABELEDITA");
-            case LVN_BEGINLABELEDITW: return TEXT("LVN_BEGINLABELEDITW");
-            case LVN_ENDLABELEDITA: return TEXT("LVN_ENDLABELEDITA");
-            case LVN_ENDLABELEDITW: return TEXT("LVN_ENDLABELEDITW");
-            case LVN_COLUMNCLICK: return TEXT("LVN_COLUMNCLICK");
-            case LVN_BEGINDRAG: return TEXT("LVN_BEGINDRAG");
-            case LVN_BEGINRDRAG: return TEXT("LVN_BEGINRDRAG");
-            case LVN_ODCACHEHINT: return TEXT("LVN_ODCACHEHINT");
-            case LVN_ODFINDITEMA: return TEXT("LVN_ODFINDITEMA");
-            case LVN_ODFINDITEMW: return TEXT("LVN_ODFINDITEMW");
-            case LVN_ITEMACTIVATE: return TEXT("LVN_ITEMACTIVATE");
-            case LVN_ODSTATECHANGED: return TEXT("LVN_ODSTATECHANGED");
-            case LVN_HOTTRACK: return TEXT("LVN_HOTTRACK");
-            case LVN_GETDISPINFOA: return TEXT("LVN_GETDISPINFOA");
-            case LVN_GETDISPINFOW: return TEXT("LVN_GETDISPINFOW");
-            case LVN_SETDISPINFOA: return TEXT("LVN_SETDISPINFOA");
-            case LVN_SETDISPINFOW: return TEXT("LVN_SETDISPINFOW");
-            case LVN_KEYDOWN: return TEXT("LVN_KEYDOWN");
-            case LVN_MARQUEEBEGIN: return TEXT("LVN_MARQUEEBEGIN");
-            case LVN_GETINFOTIPA: return TEXT("LVN_GETINFOTIPA");
-            case LVN_GETINFOTIPW: return TEXT("LVN_GETINFOTIPW");
-            case LVN_INCREMENTALSEARCHA: return TEXT("LVN_INCREMENTALSEARCHA");
-            case LVN_INCREMENTALSEARCHW: return TEXT("LVN_INCREMENTALSEARCHW");
+            case LVN_ITEMCHANGING: return "LVN_ITEMCHANGING";
+            case LVN_ITEMCHANGED: return "LVN_ITEMCHANGED";
+            case LVN_INSERTITEM: return "LVN_INSERTITEM";
+            case LVN_DELETEITEM: return "LVN_DELETEITEM";
+            case LVN_DELETEALLITEMS: return "LVN_DELETEALLITEMS";
+            case LVN_BEGINLABELEDITA: return "LVN_BEGINLABELEDITA";
+            case LVN_BEGINLABELEDITW: return "LVN_BEGINLABELEDITW";
+            case LVN_ENDLABELEDITA: return "LVN_ENDLABELEDITA";
+            case LVN_ENDLABELEDITW: return "LVN_ENDLABELEDITW";
+            case LVN_COLUMNCLICK: return "LVN_COLUMNCLICK";
+            case LVN_BEGINDRAG: return "LVN_BEGINDRAG";
+            case LVN_BEGINRDRAG: return "LVN_BEGINRDRAG";
+            case LVN_ODCACHEHINT: return "LVN_ODCACHEHINT";
+            case LVN_ODFINDITEMA: return "LVN_ODFINDITEMA";
+            case LVN_ODFINDITEMW: return "LVN_ODFINDITEMW";
+            case LVN_ITEMACTIVATE: return "LVN_ITEMACTIVATE";
+            case LVN_ODSTATECHANGED: return "LVN_ODSTATECHANGED";
+            case LVN_HOTTRACK: return "LVN_HOTTRACK";
+            case LVN_GETDISPINFOA: return "LVN_GETDISPINFOA";
+            case LVN_GETDISPINFOW: return "LVN_GETDISPINFOW";
+            case LVN_SETDISPINFOA: return "LVN_SETDISPINFOA";
+            case LVN_SETDISPINFOW: return "LVN_SETDISPINFOW";
+            case LVN_KEYDOWN: return "LVN_KEYDOWN";
+            case LVN_MARQUEEBEGIN: return "LVN_MARQUEEBEGIN";
+            case LVN_GETINFOTIPA: return "LVN_GETINFOTIPA";
+            case LVN_GETINFOTIPW: return "LVN_GETINFOTIPW";
+            case LVN_INCREMENTALSEARCHA: return "LVN_INCREMENTALSEARCHA";
+            case LVN_INCREMENTALSEARCHW: return "LVN_INCREMENTALSEARCHW";
 #if NTDDI_VERSION >= 0x06000000
-            case LVN_COLUMNDROPDOWN: return TEXT("LVN_COLUMNDROPDOWN");
-            case LVN_COLUMNOVERFLOWCLICK: return TEXT("LVN_COLUMNOVERFLOWCLICK");
+            case LVN_COLUMNDROPDOWN: return "LVN_COLUMNDROPDOWN";
+            case LVN_COLUMNOVERFLOWCLICK: return "LVN_COLUMNOVERFLOWCLICK";
 #endif
-            case LVN_BEGINSCROLL: return TEXT("LVN_BEGINSCROLL");
-            case LVN_ENDSCROLL: return TEXT("LVN_ENDSCROLL");
+            case LVN_BEGINSCROLL: return "LVN_BEGINSCROLL";
+            case LVN_ENDSCROLL: return "LVN_ENDSCROLL";
 #if NTDDI_VERSION >= 0x06000000
-            case LVN_LINKCLICK: return TEXT("LVN_LINKCLICK");
-            case LVN_GETEMPTYMARKUP: return TEXT("LVN_GETEMPTYMARKUP");
+            case LVN_LINKCLICK: return "LVN_LINKCLICK";
+            case LVN_GETEMPTYMARKUP: return "LVN_GETEMPTYMARKUP";
 #endif
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_TREEVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_TREEVIEWA) == 0)
     {
         switch (code)
         {
-            case TVN_SELCHANGINGA: return TEXT("TVN_SELCHANGINGA");
-            case TVN_SELCHANGINGW: return TEXT("TVN_SELCHANGINGW");
-            case TVN_SELCHANGEDA: return TEXT("TVN_SELCHANGEDA");
-            case TVN_SELCHANGEDW: return TEXT("TVN_SELCHANGEDW");
-            case TVN_GETDISPINFOA: return TEXT("TVN_GETDISPINFOA");
-            case TVN_GETDISPINFOW: return TEXT("TVN_GETDISPINFOW");
-            case TVN_SETDISPINFOA: return TEXT("TVN_SETDISPINFOA");
-            case TVN_SETDISPINFOW: return TEXT("TVN_SETDISPINFOW");
-            case TVN_ITEMEXPANDINGA: return TEXT("TVN_ITEMEXPANDINGA");
-            case TVN_ITEMEXPANDINGW: return TEXT("TVN_ITEMEXPANDINGW");
-            case TVN_ITEMEXPANDEDA: return TEXT("TVN_ITEMEXPANDEDA");
-            case TVN_ITEMEXPANDEDW: return TEXT("TVN_ITEMEXPANDEDW");
-            case TVN_BEGINDRAGA: return TEXT("TVN_BEGINDRAGA");
-            case TVN_BEGINDRAGW: return TEXT("TVN_BEGINDRAGW");
-            case TVN_BEGINRDRAGA: return TEXT("TVN_BEGINRDRAGA");
-            case TVN_BEGINRDRAGW: return TEXT("TVN_BEGINRDRAGW");
-            case TVN_DELETEITEMA: return TEXT("TVN_DELETEITEMA");
-            case TVN_DELETEITEMW: return TEXT("TVN_DELETEITEMW");
-            case TVN_BEGINLABELEDITA: return TEXT("TVN_BEGINLABELEDITA");
-            case TVN_BEGINLABELEDITW: return TEXT("TVN_BEGINLABELEDITW");
-            case TVN_ENDLABELEDITA: return TEXT("TVN_ENDLABELEDITA");
-            case TVN_ENDLABELEDITW: return TEXT("TVN_ENDLABELEDITW");
-            case TVN_KEYDOWN: return TEXT("TVN_KEYDOWN");
-            case TVN_GETINFOTIPA: return TEXT("TVN_GETINFOTIPA");
-            case TVN_GETINFOTIPW: return TEXT("TVN_GETINFOTIPW");
-            case TVN_SINGLEEXPAND: return TEXT("TVN_SINGLEEXPAND");
+            case TVN_SELCHANGINGA: return "TVN_SELCHANGINGA";
+            case TVN_SELCHANGINGW: return "TVN_SELCHANGINGW";
+            case TVN_SELCHANGEDA: return "TVN_SELCHANGEDA";
+            case TVN_SELCHANGEDW: return "TVN_SELCHANGEDW";
+            case TVN_GETDISPINFOA: return "TVN_GETDISPINFOA";
+            case TVN_GETDISPINFOW: return "TVN_GETDISPINFOW";
+            case TVN_SETDISPINFOA: return "TVN_SETDISPINFOA";
+            case TVN_SETDISPINFOW: return "TVN_SETDISPINFOW";
+            case TVN_ITEMEXPANDINGA: return "TVN_ITEMEXPANDINGA";
+            case TVN_ITEMEXPANDINGW: return "TVN_ITEMEXPANDINGW";
+            case TVN_ITEMEXPANDEDA: return "TVN_ITEMEXPANDEDA";
+            case TVN_ITEMEXPANDEDW: return "TVN_ITEMEXPANDEDW";
+            case TVN_BEGINDRAGA: return "TVN_BEGINDRAGA";
+            case TVN_BEGINDRAGW: return "TVN_BEGINDRAGW";
+            case TVN_BEGINRDRAGA: return "TVN_BEGINRDRAGA";
+            case TVN_BEGINRDRAGW: return "TVN_BEGINRDRAGW";
+            case TVN_DELETEITEMA: return "TVN_DELETEITEMA";
+            case TVN_DELETEITEMW: return "TVN_DELETEITEMW";
+            case TVN_BEGINLABELEDITA: return "TVN_BEGINLABELEDITA";
+            case TVN_BEGINLABELEDITW: return "TVN_BEGINLABELEDITW";
+            case TVN_ENDLABELEDITA: return "TVN_ENDLABELEDITA";
+            case TVN_ENDLABELEDITW: return "TVN_ENDLABELEDITW";
+            case TVN_KEYDOWN: return "TVN_KEYDOWN";
+            case TVN_GETINFOTIPA: return "TVN_GETINFOTIPA";
+            case TVN_GETINFOTIPW: return "TVN_GETINFOTIPW";
+            case TVN_SINGLEEXPAND: return "TVN_SINGLEEXPAND";
 #ifdef TVN_ITEMCHANGINGA
-            case TVN_ITEMCHANGINGA: return TEXT("TVN_ITEMCHANGINGA");
-            case TVN_ITEMCHANGINGW: return TEXT("TVN_ITEMCHANGINGW");
-            case TVN_ITEMCHANGEDA: return TEXT("TVN_ITEMCHANGEDA");
-            case TVN_ITEMCHANGEDW: return TEXT("TVN_ITEMCHANGEDW");
-            case TVN_ASYNCDRAW: return TEXT("TVN_ASYNCDRAW");
+            case TVN_ITEMCHANGINGA: return "TVN_ITEMCHANGINGA";
+            case TVN_ITEMCHANGINGW: return "TVN_ITEMCHANGINGW";
+            case TVN_ITEMCHANGEDA: return "TVN_ITEMCHANGEDA";
+            case TVN_ITEMCHANGEDW: return "TVN_ITEMCHANGEDW";
+            case TVN_ASYNCDRAW: return "TVN_ASYNCDRAW";
 #endif
         }
     }
 
-    StringCbPrintf(s_szText, sizeof(s_szText), TEXT("%u"), code);
+    StringCchPrintfA(s_szText, _countof(s_szText), "%u", code);
     return s_szText;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnNotify(HWND hwnd, int idFrom, LPNMHDR pnmhdr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr,
-                    pnmhdr->hwndFrom, pnmhdr->idFrom,
-                    MD_GetNotifyCode(pnmhdr->hwndFrom, pnmhdr->code));
+    MSGDUMP_PRINTF("%sWM_NOTIFY(hwnd:%p, idFrom:%d, pnmhdr:%p, hwndFrom:%p, pnmhdr->idFrom:%d, code:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, idFrom, (void *)pnmhdr,
+                   pnmhdr->hwndFrom, pnmhdr->idFrom,
+                   MD_GetNotifyCode(pnmhdr->hwndFrom, pnmhdr->code));
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnContextMenu(HWND hwnd, HWND hwndContext, UINT xPos, UINT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CONTEXTMENU(hwnd:%p, hwndContext:%p, xPos:%u, yPos:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndContext, xPos, yPos);
+    MSGDUMP_PRINTF("%sWM_CONTEXTMENU(hwnd:%p, hwndContext:%p, xPos:%u, yPos:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndContext, xPos, yPos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDisplayChange(HWND hwnd, UINT bitsPerPixel, UINT cxScreen, UINT cyScreen)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DISPLAYCHANGE(hwnd:%p, bitsPerPixel:%u, cxScreen:%u, cyScreen:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, bitsPerPixel, cxScreen, cyScreen);
+    MSGDUMP_PRINTF("%sWM_DISPLAYCHANGE(hwnd:%p, bitsPerPixel:%u, cxScreen:%u, cyScreen:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, bitsPerPixel, cxScreen, cyScreen);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnNCCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCCREATE(hwnd:%p, lpCreateStruct:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCreateStruct);
+    MSGDUMP_PRINTF("%sWM_NCCREATE(hwnd:%p, lpCreateStruct:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpCreateStruct);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCDestroy(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCDESTROY(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_NCDESTROY(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnNCCalcSize(HWND hwnd, BOOL fCalcValidRects, NCCALCSIZE_PARAMS * lpcsp)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCCALCSIZE(hwnd:%p, fCalcValidRects:%d, lpcsp:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fCalcValidRects, (void *)lpcsp);
+    MSGDUMP_PRINTF("%sWM_NCCALCSIZE(hwnd:%p, fCalcValidRects:%d, lpcsp:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fCalcValidRects, (void *)lpcsp);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnNCHitTest(HWND hwnd, int x, int y)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCHITTEST(hwnd:%p, x:%d, y:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y);
+    MSGDUMP_PRINTF("%sWM_NCHITTEST(hwnd:%p, x:%d, y:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCPaint(HWND hwnd, HRGN hrgn)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCPAINT(hwnd:%p, hrgn:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hrgn);
+    MSGDUMP_PRINTF("%sWM_NCPAINT(hwnd:%p, hrgn:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hrgn);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnNCActivate(HWND hwnd, BOOL fActive, HWND hwndActDeact, BOOL fMinimized)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCACTIVATE(hwnd:%p, fActive:%d, hwndActDeact:%p, fMinimized:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActDeact, fMinimized);
+    MSGDUMP_PRINTF("%sWM_NCACTIVATE(hwnd:%p, fActive:%d, hwndActDeact:%p, fMinimized:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActDeact, fMinimized);
     return FALSE;
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnGetDlgCode(HWND hwnd, LPMSG lpmsg)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETDLGCODE(hwnd:%p, lpmsg:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpmsg);
+    MSGDUMP_PRINTF("%sWM_GETDLGCODE(hwnd:%p, lpmsg:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpmsg);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCMouseMove(HWND hwnd, int x, int y, UINT codeHitTest)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCMOUSEMOVE(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+    MSGDUMP_PRINTF("%sWM_NCMOUSEMOVE(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
 }
 
 static __inline void MSGDUMP_API
@@ -729,21 +729,21 @@ MD_OnNCLButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT codeHitTest)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCLBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCLBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCLBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCLBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCLButtonUp(HWND hwnd, int x, int y, UINT codeHitTest)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCLBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+    MSGDUMP_PRINTF("%sWM_NCLBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
 }
 
 static __inline void MSGDUMP_API
@@ -751,21 +751,21 @@ MD_OnNCRButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT codeHitTest)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCRBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCRBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCRBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCRBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCRButtonUp(HWND hwnd, int x, int y, UINT codeHitTest)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCRBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+    MSGDUMP_PRINTF("%sWM_NCRBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
 }
 
 static __inline void MSGDUMP_API
@@ -773,21 +773,21 @@ MD_OnNCMButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT codeHitTest)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCMBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCMBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCMBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+        MSGDUMP_PRINTF("%sWM_NCMBUTTONDOWN(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCMButtonUp(HWND hwnd, int x, int y, UINT codeHitTest)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCMBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
+    MSGDUMP_PRINTF("%sWM_NCMBUTTONUP(hwnd:%p, x:%d, y:%d, codeHitTest:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, codeHitTest);
 }
 
 static __inline void MSGDUMP_API
@@ -795,28 +795,28 @@ MD_OnKey(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 {
     if (fDown)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_KEYDOWN(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
+        MSGDUMP_PRINTF("%sWM_KEYDOWN(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_KEYUP(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
+        MSGDUMP_PRINTF("%sWM_KEYUP(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
     }
 }
 
 static __inline void MSGDUMP_API
-MD_OnChar(HWND hwnd, TCHAR ch, int cRepeat)
+MD_OnChar(HWND hwnd, char ch, int cRepeat)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CHAR(hwnd:%p, ch:%u, cRepeat:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF("%sWM_CHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
-MD_OnDeadChar(HWND hwnd, TCHAR ch, int cRepeat)
+MD_OnDeadChar(HWND hwnd, char ch, int cRepeat)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF("%sWM_DEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
@@ -824,122 +824,122 @@ MD_OnSysKey(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 {
     if (fDown)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_SYSKEYDOWN(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
+        MSGDUMP_PRINTF("%sWM_SYSKEYDOWN(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_SYSKEYUP(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
+        MSGDUMP_PRINTF("%sWM_SYSKEYUP(hwnd:%p, vk:%u, cRepeat:%d, flags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, vk, cRepeat, flags);
     }
 }
 
 static __inline void MSGDUMP_API
-MD_OnSysChar(HWND hwnd, TCHAR ch, int cRepeat)
+MD_OnSysChar(HWND hwnd, char ch, int cRepeat)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SYSCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF("%sWM_SYSCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
 }
 
 static __inline void MSGDUMP_API
-MD_OnSysDeadChar(HWND hwnd, TCHAR ch, int cRepeat)
+MD_OnSysDeadChar(HWND hwnd, char ch, int cRepeat)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SYSDEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
+    MSGDUMP_PRINTF("%sWM_SYSDEADCHAR(hwnd:%p, ch:%u, cRepeat:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, cRepeat);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_INITDIALOG(hwnd:%p, hwndFocus:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndFocus, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_INITDIALOG(hwnd:%p, hwndFocus:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndFocus, (void *)lParam);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COMMAND(hwnd:%p, id:%d, hwndCtl:%p, codeNotify:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, id, (void *)hwndCtl, codeNotify);
+    MSGDUMP_PRINTF("%sWM_COMMAND(hwnd:%p, id:%d, hwndCtl:%p, codeNotify:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, id, (void *)hwndCtl, codeNotify);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSysCommand(HWND hwnd, UINT cmd, int x, int y)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SYSCOMMAND(hwnd:%p, cmd:%u, x:%d, y:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cmd, x, y);
+    MSGDUMP_PRINTF("%sWM_SYSCOMMAND(hwnd:%p, cmd:%u, x:%d, y:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cmd, x, y);
 }
 
 static __inline void MSGDUMP_API
 MD_OnTimer(HWND hwnd, UINT id)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_TIMER(hwnd:%p, id:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, id);
+    MSGDUMP_PRINTF("%sWM_TIMER(hwnd:%p, id:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, id);
 }
 
 static __inline void MSGDUMP_API
 MD_OnHScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_HSCROLL(hwnd:%p, hwndCtl:%p, code:%u, pos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCtl, code, pos);
+    MSGDUMP_PRINTF("%sWM_HSCROLL(hwnd:%p, hwndCtl:%p, code:%u, pos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCtl, code, pos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnVScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_VSCROLL(hwnd:%p, hwndCtl:%p, code:%u, pos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCtl, code, pos);
+    MSGDUMP_PRINTF("%sWM_VSCROLL(hwnd:%p, hwndCtl:%p, code:%u, pos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCtl, code, pos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnInitMenu(HWND hwnd, HMENU hMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_INITMENU(hwnd:%p, hMenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu);
+    MSGDUMP_PRINTF("%sWM_INITMENU(hwnd:%p, hMenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSystemMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_INITMENUPOPUP(hwnd:%p, hMenu:%p, item:%u, fSystemMenu:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu, item, fSystemMenu);
+    MSGDUMP_PRINTF("%sWM_INITMENUPOPUP(hwnd:%p, hMenu:%p, item:%u, fSystemMenu:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu, item, fSystemMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMenuSelect(HWND hwnd, HMENU hmenu, int item, HMENU hmenuPopup, UINT flags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENUSELECT(hwnd:%p, hmenu:%p, item:%d, hmenuPopup:%p, flags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hmenu, item, (void *)hmenuPopup, flags);
+    MSGDUMP_PRINTF("%sWM_MENUSELECT(hwnd:%p, hmenu:%p, item:%d, hmenuPopup:%p, flags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hmenu, item, (void *)hmenuPopup, flags);
 }
 
 static __inline DWORD MSGDUMP_API
 MD_OnMenuChar(HWND hwnd, UINT ch, UINT flags, HMENU hmenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENUCHAR(hwnd:%p, ch:%u, flags:%u, hmenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch, flags, (void *)hmenu);
+    MSGDUMP_PRINTF("%sWM_MENUCHAR(hwnd:%p, ch:%u, flags:%u, hmenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch, flags, (void *)hmenu);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnEnterIdle(HWND hwnd, UINT source, HWND hwndSource)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ENTERIDLE(hwnd:%p, source:%u, hwndSource:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, source, (void *)hwndSource);
+    MSGDUMP_PRINTF("%sWM_ENTERIDLE(hwnd:%p, source:%u, hwndSource:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, source, (void *)hwndSource);
 }
 
 static __inline HBRUSH MSGDUMP_API
 MD_OnCtlColor(HWND hwnd, HDC hdc, HWND hwndChild, int type)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CTLCOLOR(hwnd:%p, hdc:%p, hwndChild:%p, type:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc, (void *)hwndChild, type);
+    MSGDUMP_PRINTF("%sWM_CTLCOLOR(hwnd:%p, hdc:%p, hwndChild:%p, type:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hdc, (void *)hwndChild, type);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_OnMouseMove(HWND hwnd, int x, int y, UINT keyFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOUSEMOVE(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+    MSGDUMP_PRINTF("%sWM_MOUSEMOVE(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
 }
 
 static __inline void MSGDUMP_API
@@ -947,21 +947,21 @@ MD_OnLButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT keyFlags)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_LBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_LBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_LBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_LBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnLButtonUp(HWND hwnd, int x, int y, UINT keyFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_LBUTTONUP(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+    MSGDUMP_PRINTF("%sWM_LBUTTONUP(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
 }
 
 static __inline void MSGDUMP_API
@@ -969,21 +969,21 @@ MD_OnRButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT keyFlags)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_RBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_RBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_RBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_RBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnRButtonUp(HWND hwnd, int x, int y, UINT flags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_RBUTTONUP(hwnd:%p, x:%d, y:%d, flags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, flags);
+    MSGDUMP_PRINTF("%sWM_RBUTTONUP(hwnd:%p, x:%d, y:%d, flags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, flags);
 }
 
 static __inline void MSGDUMP_API
@@ -991,117 +991,117 @@ MD_OnMButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT keyFlags)
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_MBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_MBUTTONDBLCLK(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_MBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
+        MSGDUMP_PRINTF("%sWM_MBUTTONDOWN(hwnd:%p, x:%d, y:%d, keyFlags:%u)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, x, y, keyFlags);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnMButtonUp(HWND hwnd, int x, int y, UINT flags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MBUTTONUP(hwnd:%p, x:%d, y:%d, flags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y, flags);
+    MSGDUMP_PRINTF("%sWM_MBUTTONUP(hwnd:%p, x:%d, y:%d, flags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y, flags);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMouseWheel(HWND hwnd, int xPos, int yPos, int zDelta, UINT fwKeys)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOUSEWHEEL(hwnd:%p, xPos:%d, yPos:%d, zDelta:%d, fwKeys:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, xPos, yPos, zDelta, fwKeys);
+    MSGDUMP_PRINTF("%sWM_MOUSEWHEEL(hwnd:%p, xPos:%d, yPos:%d, zDelta:%d, fwKeys:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, xPos, yPos, zDelta, fwKeys);
 }
 
 static __inline void MSGDUMP_API
 MD_OnParentNotify(HWND hwnd, UINT msg, HWND hwndChild, int idChild)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PARENTNOTIFY(hwnd:%p, msg:%u, hwndChild:%p, idChild:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, msg, (void *)hwndChild, idChild);
+    MSGDUMP_PRINTF("%sWM_PARENTNOTIFY(hwnd:%p, msg:%u, hwndChild:%p, idChild:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, msg, (void *)hwndChild, idChild);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnDeviceChange(HWND hwnd, UINT uEvent, DWORD dwEventData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DEVICECHANGE(hwnd:%p, uEvent:%u, dwEventData:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uEvent, dwEventData);
+    MSGDUMP_PRINTF("%sWM_DEVICECHANGE(hwnd:%p, uEvent:%u, dwEventData:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uEvent, dwEventData);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_MDICreate(HWND hwnd, const LPMDICREATESTRUCT lpmcs)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDICREATE(hwnd:%p, lpmcs:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpmcs);
+    MSGDUMP_PRINTF("%sWM_MDICREATE(hwnd:%p, lpmcs:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpmcs);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_MDIDestroy(HWND hwnd, HWND hwndDestroy)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIDESTROY(hwnd:%p, hwndDestroy:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndDestroy);
+    MSGDUMP_PRINTF("%sWM_MDIDESTROY(hwnd:%p, hwndDestroy:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndDestroy);
 }
 
 static __inline void MSGDUMP_API
 MD_MDIActivate(HWND hwnd, BOOL fActive, HWND hwndActivate, HWND hwndDeactivate)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIACTIVATE(hwnd:%p, fActive:%d, hwndActivate:%p, hwndDeactivate:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
+    MSGDUMP_PRINTF("%sWM_MDIACTIVATE(hwnd:%p, fActive:%d, hwndActivate:%p, hwndDeactivate:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fActive, (void *)hwndActivate, (void *)hwndDeactivate);
 }
 
 static __inline void MSGDUMP_API
 MD_MDIRestore(HWND hwnd, HWND hwndRestore)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIRESTORE(hwnd:%p, hwndRestore:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndRestore);
+    MSGDUMP_PRINTF("%sWM_MDIRESTORE(hwnd:%p, hwndRestore:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndRestore);
 }
 
 static __inline HWND MSGDUMP_API
 MD_MDINext(HWND hwnd, HWND hwndCur, BOOL fPrev)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDINEXT(hwnd:%p, hwndCur:%p, fPrev:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCur, fPrev);
+    MSGDUMP_PRINTF("%sWM_MDINEXT(hwnd:%p, hwndCur:%p, fPrev:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCur, fPrev);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_MDIMaximize(HWND hwnd, HWND hwndMaximize)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIMAXIMIZE(hwnd:%p, hwndMaximize:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndMaximize);
+    MSGDUMP_PRINTF("%sWM_MDIMAXIMIZE(hwnd:%p, hwndMaximize:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndMaximize);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_MDITile(HWND hwnd, UINT cmd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDITILE(hwnd:%p, cmd:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cmd);
+    MSGDUMP_PRINTF("%sWM_MDITILE(hwnd:%p, cmd:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cmd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_MDICascade(HWND hwnd, UINT cmd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDICASCADE(hwnd:%p, cmd:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cmd);
+    MSGDUMP_PRINTF("%sWM_MDICASCADE(hwnd:%p, cmd:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cmd);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_MDIIconArrange(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIICONARRANGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_MDIICONARRANGE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline HWND MSGDUMP_API
 MD_MDIGetActive(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIGETACTIVE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_MDIGETACTIVE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
@@ -1109,48 +1109,48 @@ MD_MDIGetActive(HWND hwnd)
     static __inline LRESULT MSGDUMP_API
     MD_OnDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_DROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_DROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_OnQueryDropObject(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_QUERYDROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_QUERYDROPOBJECT(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_OnBeginDrag(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_BEGINDRAG(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_BEGINDRAG(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_OnDragLoop(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGLOOP(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_DRAGLOOP(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_OnDragSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGSELECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_DRAGSELECT(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_OnDragMove(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_DRAGMOVE(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sWM_DRAGMOVE(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 #endif
@@ -1158,271 +1158,271 @@ MD_MDIGetActive(HWND hwnd)
 static __inline HMENU MSGDUMP_API
 MD_MDISetMenu(HWND hwnd, BOOL fRefresh, HMENU hmenuFrame, HMENU hmenuWindow)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDISETMENU(hwnd:%p, fRefresh:%d, hmenuFrame:%p, hmenuWindow:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame, (void *)hmenuWindow);
+    MSGDUMP_PRINTF("%sWM_MDISETMENU(hwnd:%p, fRefresh:%d, hmenuFrame:%p, hmenuWindow:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fRefresh, (void *)hmenuFrame, (void *)hmenuWindow);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_OnDropFiles(HWND hwnd, HDROP hdrop)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DROPFILES(hwnd:%p, hdrop:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdrop);
+    MSGDUMP_PRINTF("%sWM_DROPFILES(hwnd:%p, hdrop:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hdrop);
 }
 
 static __inline void MSGDUMP_API
 MD_OnCut(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CUT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CUT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnCopy(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_COPY(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_COPY(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaste(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PASTE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_PASTE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnClear(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CLEAR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CLEAR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnUndo(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_UNDO(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_UNDO(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline HANDLE MSGDUMP_API
 MD_OnRenderFormat(HWND hwnd, UINT fmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_RENDERFORMAT(hwnd:%p, fmt:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fmt);
+    MSGDUMP_PRINTF("%sWM_RENDERFORMAT(hwnd:%p, fmt:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fmt);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_OnRenderAllFormats(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_RENDERALLFORMATS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_RENDERALLFORMATS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDestroyClipboard(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DESTROYCLIPBOARD(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_DESTROYCLIPBOARD(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnDrawClipboard(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_DRAWCLIPBOARD(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_DRAWCLIPBOARD(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaintClipboard(HWND hwnd, HWND hwndCBViewer, const LPPAINTSTRUCT lpPaintStruct)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PAINTCLIPBOARD(hwnd:%p, hwndCBViewer:%p, lpPaintStruct:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, (void *)lpPaintStruct);
+    MSGDUMP_PRINTF("%sWM_PAINTCLIPBOARD(hwnd:%p, hwndCBViewer:%p, lpPaintStruct:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, (void *)lpPaintStruct);
 }
 
 static __inline void MSGDUMP_API
 MD_OnVScrollClipboard(HWND hwnd, HWND hwndCBViewer, UINT code, int pos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_VSCROLLCLIPBOARD(hwnd:%p, hwndCBViewer:%p, code:%u, pos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, code, pos);
+    MSGDUMP_PRINTF("%sWM_VSCROLLCLIPBOARD(hwnd:%p, hwndCBViewer:%p, code:%u, pos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, code, pos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSizeClipboard(HWND hwnd, HWND hwndCBViewer, const LPRECT lprc)
 {
-    TCHAR buf[MSGDUMP_MAX_RECT_TEXT];
-    MSGDUMP_TPRINTF(TEXT("%sWM_SIZECLIPBOARD(hwnd:%p, hwndCBViewer:%p, lprc:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer,
-                    MD_rect_text(buf, sizeof(buf), lprc));
+    char buf[MSGDUMP_MAX_RECT_TEXT];
+    MSGDUMP_PRINTF("%sWM_SIZECLIPBOARD(hwnd:%p, hwndCBViewer:%p, lprc:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer,
+                   MD_rect_text(buf, _countof(buf), lprc));
 }
 
 static __inline void MSGDUMP_API
 MD_OnAskCBFormatName(HWND hwnd, int cchMax, LPTSTR rgchName)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ASKCBFORMATNAME(hwnd:%p, cchMax:%d, rgchName:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cchMax, (void *)rgchName);
+    MSGDUMP_PRINTF("%sWM_ASKCBFORMATNAME(hwnd:%p, cchMax:%d, rgchName:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cchMax, (void *)rgchName);
 }
 
 static __inline void MSGDUMP_API
 MD_OnChangeCBChain(HWND hwnd, HWND hwndRemove, HWND hwndNext)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CHANGECBCHAIN(hwnd:%p, hwndRemove:%p, hwndNext:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndRemove, (void *)hwndNext);
+    MSGDUMP_PRINTF("%sWM_CHANGECBCHAIN(hwnd:%p, hwndRemove:%p, hwndNext:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndRemove, (void *)hwndNext);
 }
 
 static __inline void MSGDUMP_API
 MD_OnHScrollClipboard(HWND hwnd, HWND hwndCBViewer, UINT code, int pos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_HSCROLLCLIPBOARD(hwnd:%p, hwndCBViewer:%p, code:%u, pos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, code, pos);
+    MSGDUMP_PRINTF("%sWM_HSCROLLCLIPBOARD(hwnd:%p, hwndCBViewer:%p, code:%u, pos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndCBViewer, code, pos);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnQueryNewPalette(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUERYNEWPALETTE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUERYNEWPALETTE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaletteIsChanging(HWND hwnd, HWND hwndPaletteChange)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PALETTEISCHANGING(hwnd:%p, hwndPaletteChange:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndPaletteChange);
+    MSGDUMP_PRINTF("%sWM_PALETTEISCHANGING(hwnd:%p, hwndPaletteChange:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndPaletteChange);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaletteChanged(HWND hwnd, HWND hwndPaletteChange)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PALETTECHANGED(hwnd:%p, hwndPaletteChange:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndPaletteChange);
+    MSGDUMP_PRINTF("%sWM_PALETTECHANGED(hwnd:%p, hwndPaletteChange:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndPaletteChange);
 }
 
 static __inline void MSGDUMP_API
 MD_OnHotKey(HWND hwnd, int idHotKey, UINT fuModifiers, UINT vk)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_HOTKEY(hwnd:%p, idHotKey:%d, fuModifiers:%u, vk:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, idHotKey, fuModifiers, vk);
+    MSGDUMP_PRINTF("%sWM_HOTKEY(hwnd:%p, idHotKey:%d, fuModifiers:%u, vk:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, idHotKey, fuModifiers, vk);
 }
 
 static __inline INT MSGDUMP_API
-MD_OnSetHotKey(HWND hwnd, INT nCode, UINT nOptions)
+MD_OnSetHotKey(HWND hwnd, WORD wVkCode, WORD wModifiers)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETHOTKEY(hwnd:%p, nCode:%d, nOptions:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nCode, nOptions);
+    MSGDUMP_PRINTF("%sWM_SETHOTKEY(hwnd:%p, wVkCode:%u, wModifiers:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wVkCode, wModifiers);
     return 0;
 }
 
-static __inline INT MSGDUMP_API
+static __inline DWORD MSGDUMP_API
 MD_OnGetHotKey(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETHOTKEY(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_GETHOTKEY(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnPaintIcon(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PAINTICON(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_PAINTICON(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnGetObject(HWND hwnd, WPARAM wParam, DWORD dwObjId)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETOBJECT(hwnd:%p, wParam:%p, dwObjId:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, dwObjId);
+    MSGDUMP_PRINTF("%sWM_GETOBJECT(hwnd:%p, wParam:%p, dwObjId:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, dwObjId);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnCancelJournal(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CANCELJOURNAL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_CANCELJOURNAL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnInputLangChangeRequest(HWND hwnd, BOOL bFlag, HKL hKL)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_INPUTLANGCHANGEREQUEST(hwnd:%p, bFlag:%d, hKL:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, bFlag, (void *)hKL);
+    MSGDUMP_PRINTF("%sWM_INPUTLANGCHANGEREQUEST(hwnd:%p, bFlag:%d, hKL:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, bFlag, (void *)hKL);
 }
 
 static __inline void MSGDUMP_API
 MD_OnInputLangChange(HWND hwnd, DWORD dwCharSet, HKL hKL)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_INPUTLANGCHANGE(hwnd:%p, dwCharSet:0x%08lX, hKL:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwCharSet, (void *)hKL);
+    MSGDUMP_PRINTF("%sWM_INPUTLANGCHANGE(hwnd:%p, dwCharSet:0x%08lX, hKL:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwCharSet, (void *)hKL);
 }
 
 static __inline void MSGDUMP_API
 MD_OnTCard(HWND hwnd, UINT idAction, DWORD dwActionData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_TCARD(hwnd:%p, idAction:%u, dwActionData:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, idAction, dwActionData);
+    MSGDUMP_PRINTF("%sWM_TCARD(hwnd:%p, idAction:%u, dwActionData:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, idAction, dwActionData);
 }
 
 static __inline void MSGDUMP_API
 MD_OnHelp(HWND hwnd, LPHELPINFO lpHelpInfo)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_HELP(hwnd:%p, lpHelpInfo:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpHelpInfo);
+    MSGDUMP_PRINTF("%sWM_HELP(hwnd:%p, lpHelpInfo:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpHelpInfo);
 }
 
 static __inline void MSGDUMP_API
 MD_OnUserChanged(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_USERCHANGED(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_USERCHANGED(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline INT MSGDUMP_API
 MD_OnNotifyFormat(HWND hwnd, HWND hwndTarget, INT nCommand)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NOTIFYFORMAT(hwnd:%p, hwndTarget:%p, nCommand:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTarget, nCommand);
+    MSGDUMP_PRINTF("%sWM_NOTIFYFORMAT(hwnd:%p, hwndTarget:%p, nCommand:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTarget, nCommand);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnStyleChanging(HWND hwnd, UINT nStyleType, LPSTYLESTRUCT lpStyleStruct)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_STYLECHANGING(hwnd:%p, nStyleType:%u, lpStyleStruct:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nStyleType, (void *)lpStyleStruct);
+    MSGDUMP_PRINTF("%sWM_STYLECHANGING(hwnd:%p, nStyleType:%u, lpStyleStruct:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nStyleType, (void *)lpStyleStruct);
 }
 
 static __inline void MSGDUMP_API
 MD_OnStyleChanged(HWND hwnd, UINT nStyleType, const STYLESTRUCT *lpStyleStruct)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_STYLECHANGED(hwnd:%p, nStyleType:%u, lpStyleStruct:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nStyleType, (void *)lpStyleStruct);
+    MSGDUMP_PRINTF("%sWM_STYLECHANGED(hwnd:%p, nStyleType:%u, lpStyleStruct:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nStyleType, (void *)lpStyleStruct);
 }
 
 static __inline HICON MSGDUMP_API
 MD_OnGetIcon(HWND hwnd, UINT nType, LPARAM dpi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_GETICON(hwnd:%p, nType:%u, dpi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nType, (void *)dpi);
+    MSGDUMP_PRINTF("%sWM_GETICON(hwnd:%p, nType:%u, dpi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nType, (void *)dpi);
     return NULL;
 }
 
 static __inline HICON MSGDUMP_API
 MD_OnSetIcon(HWND hwnd, UINT nType, HICON hIcon)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SETICON(hwnd:%p, nType:%u, hIcon:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nType, (void *)hIcon);
+    MSGDUMP_PRINTF("%sWM_SETICON(hwnd:%p, nType:%u, hIcon:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nType, (void *)hIcon);
     return NULL;
 }
 
 static __inline void MSGDUMP_API
 MD_OnSyncPaint(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_SYNCPAINT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_SYNCPAINT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
@@ -1431,100 +1431,100 @@ MD_OnNCXButtonDown(HWND hwnd, BOOL fDoubleClick, UINT nHitTest, WORD fwButton,
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_NCXBUTTONDBLCLK(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_NCXBUTTONDOWN(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_NCXBUTTONDOWN(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCXButtonUp(HWND hwnd, UINT nHitTest, WORD fwButton, INT xPos, INT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCXBUTTONUP(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
+    MSGDUMP_PRINTF("%sWM_NCXBUTTONUP(hwnd:%p, nHitTest:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nHitTest, fwButton, xPos, yPos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeStartComposition(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_STARTCOMPOSITION(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_IME_STARTCOMPOSITION(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeEndComposition(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_ENDCOMPOSITION(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_IME_ENDCOMPOSITION(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeComposition(HWND hwnd, WORD wChar, DWORD lAttribute)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_COMPOSITION(hwnd:%p, wChar:%u, lAttribute:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wChar, lAttribute);
+    MSGDUMP_PRINTF("%sWM_IME_COMPOSITION(hwnd:%p, wChar:%u, lAttribute:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wChar, lAttribute);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMenuRButtonUp(HWND hwnd, UINT nPos, HMENU hMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENURBUTTONUP(hwnd:%p, nPos:%u, hMenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
+    MSGDUMP_PRINTF("%sWM_MENURBUTTONUP(hwnd:%p, nPos:%u, hMenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnMenuDrag(HWND hwnd, UINT nPos, HMENU hMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENUDRAG(hwnd:%p, nPos:%u, hMenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
+    MSGDUMP_PRINTF("%sWM_MENUDRAG(hwnd:%p, nPos:%u, hMenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnMenuGetObject(HWND hwnd, MENUGETOBJECTINFO *pmgoi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENUGETOBJECT(hwnd:%p, pmgoi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pmgoi);
+    MSGDUMP_PRINTF("%sWM_MENUGETOBJECT(hwnd:%p, pmgoi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pmgoi);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnUninitMenuPopup(HWND hwnd, HMENU hMenu, UINT nFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_UNINITMENUPOPUP(hwnd:%p, hMenu:%p, nFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu, nFlags);
+    MSGDUMP_PRINTF("%sWM_UNINITMENUPOPUP(hwnd:%p, hMenu:%p, nFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hMenu, nFlags);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMenuCommand(HWND hwnd, UINT nPos, HMENU hMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MENUCOMMAND(hwnd:%p, nPos:%u, hMenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
+    MSGDUMP_PRINTF("%sWM_MENUCOMMAND(hwnd:%p, nPos:%u, hMenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nPos, (void *)hMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnChangeUIState(HWND hwnd, UINT nAction, UINT nUIElement)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CHANGEUISTATE(hwnd:%p, nAction:%u, nUIElement:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nAction, nUIElement);
+    MSGDUMP_PRINTF("%sWM_CHANGEUISTATE(hwnd:%p, nAction:%u, nUIElement:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nAction, nUIElement);
 }
 
 static __inline void MSGDUMP_API
 MD_OnUpdateUIState(HWND hwnd, UINT nAction, UINT nUIElement)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_UPDATEUISTATE(hwnd:%p, nAction:%u, nUIElement:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nAction, nUIElement);
+    MSGDUMP_PRINTF("%sWM_UPDATEUISTATE(hwnd:%p, nAction:%u, nUIElement:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nAction, nUIElement);
 }
 
 static __inline UINT MSGDUMP_API
 MD_OnQueryUIState(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_QUERYUISTATE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_QUERYUISTATE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
@@ -1533,147 +1533,147 @@ MD_OnXButtonDown(HWND hwnd, BOOL fDoubleClick, WORD fwKeys, WORD fwButton, INT x
 {
     if (fDoubleClick)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_XBUTTONDBLCLK(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_XBUTTONDBLCLK(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_XBUTTONDOWN(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
+        MSGDUMP_PRINTF("%sWM_XBUTTONDOWN(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnXButtonUp(HWND hwnd, WORD fwKeys, WORD fwButton, INT xPos, INT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_XBUTTONUP(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
+    MSGDUMP_PRINTF("%sWM_XBUTTONUP(hwnd:%p, fwKeys:%u, fwButton:%u, xPos:%d, yPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fwKeys, fwButton, xPos, yPos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnEnterMenuLoop(HWND hwnd, BOOL bIsTrackPopupMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ENTERMENULOOP(hwnd:%p, bIsTrackPopupMenu:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, bIsTrackPopupMenu);
+    MSGDUMP_PRINTF("%sWM_ENTERMENULOOP(hwnd:%p, bIsTrackPopupMenu:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, bIsTrackPopupMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnExitMenuLoop(HWND hwnd, BOOL bIsTrackPopupMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_EXITMENULOOP(hwnd:%p, bIsTrackPopupMenu:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, bIsTrackPopupMenu);
+    MSGDUMP_PRINTF("%sWM_EXITMENULOOP(hwnd:%p, bIsTrackPopupMenu:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, bIsTrackPopupMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnNextMenu(HWND hwnd, INT nCode, LPMDINEXTMENU lpMDINextMenu)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NEXTMENU(hwnd:%p, nCode:%d, lpMDINextMenu:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nCode, (void *)lpMDINextMenu);
+    MSGDUMP_PRINTF("%sWM_NEXTMENU(hwnd:%p, nCode:%d, lpMDINextMenu:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nCode, (void *)lpMDINextMenu);
 }
 
 static __inline void MSGDUMP_API
 MD_OnSizing(HWND hwnd, UINT nSide, LPRECT lpRect)
 {
-    TCHAR buf[MSGDUMP_MAX_RECT_TEXT];
-    MSGDUMP_TPRINTF(TEXT("%sWM_SIZING(hwnd:%p, nSide:%u, lpRect:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nSide, MD_rect_text(buf, sizeof(buf), lpRect));
+    char buf[MSGDUMP_MAX_RECT_TEXT];
+    MSGDUMP_PRINTF("%sWM_SIZING(hwnd:%p, nSide:%u, lpRect:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nSide, MD_rect_text(buf, _countof(buf), lpRect));
 }
 
 static __inline void MSGDUMP_API
 MD_OnCaptureChanged(HWND hwnd, HWND hwndNewCapture)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_CAPTURECHANGED(hwnd:%p, hwndNewCapture:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewCapture);
+    MSGDUMP_PRINTF("%sWM_CAPTURECHANGED(hwnd:%p, hwndNewCapture:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewCapture);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMoving(HWND hwnd, UINT nSide, LPRECT lpRect)
 {
-    TCHAR buf[MSGDUMP_MAX_RECT_TEXT];
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOVING(hwnd:%p, nSide:%u, lpRect:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nSide, MD_rect_text(buf, sizeof(buf), lpRect));
+    char buf[MSGDUMP_MAX_RECT_TEXT];
+    MSGDUMP_PRINTF("%sWM_MOVING(hwnd:%p, nSide:%u, lpRect:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nSide, MD_rect_text(buf, _countof(buf), lpRect));
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnPowerBroadcast(HWND hwnd, UINT nPowerEvent, UINT nEventData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_POWERBROADCAST(hwnd:%p, nPowerEvent:%u, nEventData:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nPowerEvent, nEventData);
+    MSGDUMP_PRINTF("%sWM_POWERBROADCAST(hwnd:%p, nPowerEvent:%u, nEventData:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nPowerEvent, nEventData);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnEnterSizeMove(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_ENTERSIZEMOVE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_ENTERSIZEMOVE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnExitSizeMove(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_EXITSIZEMOVE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_EXITSIZEMOVE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline HMENU MSGDUMP_API
 MD_MDIRefreshMenu(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MDIREFRESHMENU(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_MDIREFRESHMENU(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnImeSetContext(HWND hwnd, BOOL fActive, DWORD dwShow)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_SETCONTEXT(hwnd:%p, fActive:%d, dwShow:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fActive, dwShow);
+    MSGDUMP_PRINTF("%sWM_IME_SETCONTEXT(hwnd:%p, fActive:%d, dwShow:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fActive, dwShow);
     return FALSE;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnImeNotify(HWND hwnd, WPARAM wSubMessage, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_NOTIFY(hwnd:%p, wSubMessage:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wSubMessage, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_IME_NOTIFY(hwnd:%p, wSubMessage:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wSubMessage, (void *)lParam);
     return 0;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnImeControl(HWND hwnd, WPARAM wSubMessage, LPVOID lpData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_CONTROL(hwnd:%p, wSubMessage:%p, lpData:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wSubMessage, (void *)lpData);
+    MSGDUMP_PRINTF("%sWM_IME_CONTROL(hwnd:%p, wSubMessage:%p, lpData:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wSubMessage, (void *)lpData);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeCompositionFull(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_COMPOSITIONFULL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_IME_COMPOSITIONFULL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeSelect(HWND hwnd, BOOL fSelect, HKL hKL)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_SELECT(hwnd:%p, fSelect:%d, hKL:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fSelect, (void *)hKL);
+    MSGDUMP_PRINTF("%sWM_IME_SELECT(hwnd:%p, fSelect:%d, hKL:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fSelect, (void *)hKL);
 }
 
 static __inline void MSGDUMP_API
 MD_OnImeChar(HWND hwnd, WORD wCharCode, LONG lKeyData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_CHAR(hwnd:%p, wCharCode:%u, lKeyData:%ld)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wCharCode, lKeyData);
+    MSGDUMP_PRINTF("%sWM_IME_CHAR(hwnd:%p, wCharCode:%u, lKeyData:%ld)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wCharCode, lKeyData);
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_OnImeRequest(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_IME_REQUEST(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+    MSGDUMP_PRINTF("%sWM_IME_REQUEST(hwnd:%p, wParam:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
 
@@ -1682,372 +1682,372 @@ MD_OnImeKey(HWND hwnd, BOOL fDown, UINT nVirtKey, LONG lKeyData)
 {
     if (fDown)
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_IME_KEYDOWN(hwnd:%p, nVirtKey:%u, lKeyData:%ld)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, nVirtKey, lKeyData);
+        MSGDUMP_PRINTF("%sWM_IME_KEYDOWN(hwnd:%p, nVirtKey:%u, lKeyData:%ld)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, nVirtKey, lKeyData);
     }
     else
     {
-        MSGDUMP_TPRINTF(TEXT("%sWM_IME_KEYUP(hwnd:%p, nVirtKey:%u, lKeyData:%ld)\n"),
-                       MSGDUMP_PREFIX, (void *)hwnd, nVirtKey, lKeyData);
+        MSGDUMP_PRINTF("%sWM_IME_KEYUP(hwnd:%p, nVirtKey:%u, lKeyData:%ld)\n",
+                      MSGDUMP_PREFIX, (void *)hwnd, nVirtKey, lKeyData);
     }
 }
 
 static __inline void MSGDUMP_API
 MD_OnMouseHover(HWND hwnd, UINT nFlags, INT xPos, INT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOUSEHOVER(hwnd:%p, nFlags:%u, xPos:%d, yPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nFlags, xPos, yPos);
+    MSGDUMP_PRINTF("%sWM_MOUSEHOVER(hwnd:%p, nFlags:%u, xPos:%d, yPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nFlags, xPos, yPos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnMouseLeave(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_MOUSELEAVE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_MOUSELEAVE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCMouseHover(HWND hwnd, UINT nHitTest, INT xPos, INT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCMOUSEHOVER(hwnd:%p, nHitTest:%u, xPos:%d, yPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nHitTest, xPos, yPos);
+    MSGDUMP_PRINTF("%sWM_NCMOUSEHOVER(hwnd:%p, nHitTest:%u, xPos:%d, yPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nHitTest, xPos, yPos);
 }
 
 static __inline void MSGDUMP_API
 MD_OnNCMouseLeave(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_NCMOUSELEAVE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sWM_NCMOUSELEAVE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPrint(HWND hwnd, HDC hDC, UINT uFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PRINT(hwnd:%p, hDC:%p, uFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hDC, uFlags);
+    MSGDUMP_PRINTF("%sWM_PRINT(hwnd:%p, hDC:%p, uFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hDC, uFlags);
 }
 
 static __inline void MSGDUMP_API
 MD_OnPrintClient(HWND hwnd, HDC hDC, UINT uFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_PRINTCLIENT(hwnd:%p, hDC:%p, uFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hDC, uFlags);
+    MSGDUMP_PRINTF("%sWM_PRINTCLIENT(hwnd:%p, hDC:%p, uFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hDC, uFlags);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_OnAppCommand(HWND hwnd, HWND hwndTarget, UINT cmd, UINT nDevice, UINT nKey)
 {
-    MSGDUMP_TPRINTF(TEXT("%sWM_APPCOMMAND(hwnd:%p, hwndTarget:%p, cmd:%u, nDevice:%u, nKey:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTarget, cmd, nDevice, nKey);
+    MSGDUMP_PRINTF("%sWM_APPCOMMAND(hwnd:%p, hwndTarget:%p, cmd:%u, nDevice:%u, nKey:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTarget, cmd, nDevice, nKey);
     return FALSE;
 }
 
 static __inline LONG MSGDUMP_API
 MD_Edit_OnGetSel(HWND hwnd, LPDWORD lpdwStart, LPDWORD lpdwEnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETSEL(hwnd:%p, lpdwStart:%p, lpdwEnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpdwStart, (void *)lpdwEnd);
+    MSGDUMP_PRINTF("%sEM_GETSEL(hwnd:%p, lpdwStart:%p, lpdwEnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpdwStart, (void *)lpdwEnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetSel(HWND hwnd, INT nStart, INT nEnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETSEL(hwnd:%p, nStart:%d, nEnd:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nStart, nEnd);
+    MSGDUMP_PRINTF("%sEM_SETSEL(hwnd:%p, nStart:%d, nEnd:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nStart, nEnd);
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnGetRect(HWND hwnd, LPRECT prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETRECT(hwnd:%p, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
+    MSGDUMP_PRINTF("%sEM_GETRECT(hwnd:%p, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetRect(HWND hwnd, LPCRECT prc)
 {
-    TCHAR buf[MSGDUMP_MAX_RECT_TEXT];
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETRECT(hwnd:%p, prc:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, MD_rect_text(buf, sizeof(buf), prc));
+    char buf[MSGDUMP_MAX_RECT_TEXT];
+    MSGDUMP_PRINTF("%sEM_SETRECT(hwnd:%p, prc:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, MD_rect_text(buf, _countof(buf), prc));
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetRectNP(HWND hwnd, LPCRECT prc)
 {
-    TCHAR buf[MSGDUMP_MAX_RECT_TEXT];
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETRECTNP(hwnd:%p, prc:%s)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, MD_rect_text(buf, sizeof(buf), prc));
+    char buf[MSGDUMP_MAX_RECT_TEXT];
+    MSGDUMP_PRINTF("%sEM_SETRECTNP(hwnd:%p, prc:%s)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, MD_rect_text(buf, _countof(buf), prc));
 }
 
 static __inline DWORD MSGDUMP_API
 MD_Edit_OnScroll(HWND hwnd, INT nScroll)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SCROLL(hwnd:%p, nScroll:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nScroll);
+    MSGDUMP_PRINTF("%sEM_SCROLL(hwnd:%p, nScroll:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nScroll);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnLineScroll(HWND hwnd, INT cxScroll, INT cyScroll)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_LINESCROLL(hwnd:%p, cxScroll:%d, cyScroll:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cxScroll, cyScroll);
+    MSGDUMP_PRINTF("%sEM_LINESCROLL(hwnd:%p, cxScroll:%d, cyScroll:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cxScroll, cyScroll);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnScrollCaret(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SCROLLCARET(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_SCROLLCARET(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnGetModify(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETMODIFY(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETMODIFY(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetModify(HWND hwnd, BOOL fModified)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETMODIFY(hwnd:%p, fModified:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fModified);
+    MSGDUMP_PRINTF("%sEM_SETMODIFY(hwnd:%p, fModified:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fModified);
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnGetLineCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETLINECOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETLINECOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnLineIndex(HWND hwnd, INT line)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_LINEINDEX(hwnd:%p, line:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, line);
+    MSGDUMP_PRINTF("%sEM_LINEINDEX(hwnd:%p, line:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, line);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetHandle(HWND hwnd, HLOCAL hloc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETHANDLE(hwnd:%p, hloc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hloc);
+    MSGDUMP_PRINTF("%sEM_SETHANDLE(hwnd:%p, hloc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hloc);
 }
 
 static __inline HLOCAL MSGDUMP_API
 MD_Edit_OnGetHandle(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETHANDLE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETHANDLE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnGetThumb(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETTHUMB(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETTHUMB(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnLineLength(HWND hwnd, INT ich)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_LINELENGTH(hwnd:%p, ich:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ich);
+    MSGDUMP_PRINTF("%sEM_LINELENGTH(hwnd:%p, ich:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ich);
     return 0;
 }
 
 static __inline void MSGDUMP_API
-MD_Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, LPCTSTR lpszReplace)
+MD_Edit_OnReplaceSel(HWND hwnd, BOOL fCanUndo, PCSTR lpszReplace)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sEM_REPLACESEL(hwnd:%p, fCanUndo:%d, %ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, fCanUndo, (LPCWSTR)lpszReplace);
+        MSGDUMP_PRINTF("%sEM_REPLACESEL(hwnd:%p, fCanUndo:%d, %ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, fCanUndo, (PCWSTR)lpszReplace);
     else
-        MSGDUMP_TPRINTF(TEXT("%sEM_REPLACESEL(hwnd:%p, fCanUndo:%d, %hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, fCanUndo, (LPCSTR)lpszReplace);
+        MSGDUMP_PRINTF("%sEM_REPLACESEL(hwnd:%p, fCanUndo:%d, %s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, fCanUndo, (PCSTR)lpszReplace);
 }
 
 static __inline INT MSGDUMP_API
-MD_Edit_OnGetLine(HWND hwnd, INT line, LPCTSTR lpch)
+MD_Edit_OnGetLine(HWND hwnd, INT line, PCSTR lpch)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, line, (LPCWSTR)lpch);
+        MSGDUMP_PRINTF("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, line, (PCWSTR)lpch);
     else
-        MSGDUMP_TPRINTF(TEXT("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, line, (LPCSTR)lpch);
+        MSGDUMP_PRINTF("%sEM_GETLINE(hwnd:%p, line:%d, lpch:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, line, (PCSTR)lpch);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnCanUndo(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_CANUNDO(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_CANUNDO(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnUndo(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_UNDO(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_UNDO(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnFmtLines(HWND hwnd, BOOL fAddEOL)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_UNDO(hwnd:%p, fAddEOL:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fAddEOL);
+    MSGDUMP_PRINTF("%sEM_UNDO(hwnd:%p, fAddEOL:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fAddEOL);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnLineFromChar(HWND hwnd, INT ich)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_LINEFROMCHAR(hwnd:%p, ich:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ich);
+    MSGDUMP_PRINTF("%sEM_LINEFROMCHAR(hwnd:%p, ich:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ich);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnSetTabStops(HWND hwnd, INT cTabs, LPDWORD lpdwTabs)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETTABSTOPS(hwnd:%p, cTabs:%d, lpdwTabs:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cTabs, (void *)lpdwTabs);
+    MSGDUMP_PRINTF("%sEM_SETTABSTOPS(hwnd:%p, cTabs:%d, lpdwTabs:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cTabs, (void *)lpdwTabs);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetPasswordChar(HWND hwnd, UINT ch)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETPASSWORDCHAR(hwnd:%p, ch:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ch);
+    MSGDUMP_PRINTF("%sEM_SETPASSWORDCHAR(hwnd:%p, ch:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ch);
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnEmptyUndoBuffer(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_EMPTYUNDOBUFFER(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_EMPTYUNDOBUFFER(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline INT MSGDUMP_API
 MD_Edit_OnGetFirstVisibleLine(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETFIRSTVISIBLELINE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETFIRSTVISIBLELINE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_Edit_OnSetReadOnly(HWND hwnd, BOOL fReadOnly)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETREADONLY(hwnd:%p, fReadOnly:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fReadOnly);
+    MSGDUMP_PRINTF("%sEM_SETREADONLY(hwnd:%p, fReadOnly:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fReadOnly);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetWordBreakProc(HWND hwnd, EDITWORDBREAKPROC ewbprc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETWORDBREAKPROC(hwnd:%p, ewbprc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, *(void **)&ewbprc);
+    MSGDUMP_PRINTF("%sEM_SETWORDBREAKPROC(hwnd:%p, ewbprc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, *(void **)&ewbprc);
 }
 
 static __inline EDITWORDBREAKPROC MSGDUMP_API
 MD_Edit_OnGetWordBreakProc(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETWORDBREAKPROC(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETWORDBREAKPROC(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline UINT MSGDUMP_API
 MD_Edit_OnGetPasswordChar(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETPASSWORDCHAR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETPASSWORDCHAR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetMargins(HWND hwnd, UINT fwMargin, WORD wLeft, WORD wRight)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETMARGINS(hwnd:%p, fwMargin:%u, wLeft:%d, wRight:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fwMargin, wLeft, wRight);
+    MSGDUMP_PRINTF("%sEM_SETMARGINS(hwnd:%p, fwMargin:%u, wLeft:%d, wRight:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fwMargin, wLeft, wRight);
 }
 
 static __inline DWORD MSGDUMP_API
 MD_Edit_OnGetMargins(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETMARGINS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETMARGINS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnSetLimitText(HWND hwnd, DWORD cbMax)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETLIMITTEXT(hwnd:%p, cbMax:%ld)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cbMax);
+    MSGDUMP_PRINTF("%sEM_SETLIMITTEXT(hwnd:%p, cbMax:%ld)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cbMax);
 }
 
 static __inline DWORD MSGDUMP_API
 MD_Edit_OnGetLimitText(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETLIMITTEXT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETLIMITTEXT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_Edit_OnPosFromChar(HWND hwnd, LPPOINT lpPoint, UINT wCharIndex)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_POSFROMCHAR(hwnd:%p, lpPoint:%p, wCharIndex:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpPoint, wCharIndex);
+    MSGDUMP_PRINTF("%sEM_POSFROMCHAR(hwnd:%p, lpPoint:%p, wCharIndex:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpPoint, wCharIndex);
 }
 
 static __inline LONG MSGDUMP_API
 MD_Edit_OnCharFromPos(HWND hwnd, INT x, INT y)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_CHARFROMPOS(hwnd:%p, x:%d, y:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, x, y);
+    MSGDUMP_PRINTF("%sEM_CHARFROMPOS(hwnd:%p, x:%d, y:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, x, y);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_Edit_OnSetIMEStatus(HWND hwnd, UINT uType, DWORD dwFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETIMESTATUS(hwnd:%p, uType:%u, dwFlags:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uType, dwFlags);
+    MSGDUMP_PRINTF("%sEM_SETIMESTATUS(hwnd:%p, uType:%u, dwFlags:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uType, dwFlags);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_Edit_OnGetIMEStatus(HWND hwnd, UINT uType)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETIMESTATUS(hwnd:%p, uType:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uType);
+    MSGDUMP_PRINTF("%sEM_SETIMESTATUS(hwnd:%p, uType:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uType);
     return 0;
 }
 
 static __inline HICON MSGDUMP_API
 MD_Static_OnSetIcon(HWND hwnd, HICON hIcon)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSTM_SETICON(hwnd:%p, hIcon:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hIcon);
+    MSGDUMP_PRINTF("%sSTM_SETICON(hwnd:%p, hIcon:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hIcon);
     return NULL;
 }
 
@@ -2055,1378 +2055,1378 @@ static __inline HICON MSGDUMP_API
 MD_Static_OnGetIcon(HWND hwnd)
 {
 
-    MSGDUMP_TPRINTF(TEXT("%sSTM_SETICON(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sSTM_SETICON(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline HANDLE MSGDUMP_API
 MD_Static_OnSetImage(HWND hwnd, UINT fImageType, HANDLE hImage)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSTM_SETIMAGE(hwnd:%p, fImageType:%u, hImage:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fImageType, (void *)hImage);
+    MSGDUMP_PRINTF("%sSTM_SETIMAGE(hwnd:%p, fImageType:%u, hImage:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fImageType, (void *)hImage);
     return NULL;
 }
 
 static __inline HANDLE MSGDUMP_API
 MD_Static_OnGetImage(HWND hwnd, UINT fImageType)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSTM_GETIMAGE(hwnd:%p, fImageType:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fImageType);
+    MSGDUMP_PRINTF("%sSTM_GETIMAGE(hwnd:%p, fImageType:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fImageType);
     return NULL;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnAddString(HWND hwnd, LPCTSTR lpsz)
+MD_ListBox_OnAddString(HWND hwnd, PCSTR lpsz)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_ADDSTRING(hwnd:%p, lpsz:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpsz);
+        MSGDUMP_PRINTF("%sLB_ADDSTRING(hwnd:%p, lpsz:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpsz);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_ADDSTRING(hwnd:%p, lpsz:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpsz);
+        MSGDUMP_PRINTF("%sLB_ADDSTRING(hwnd:%p, lpsz:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpsz);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnInsertString(HWND hwnd, INT index, LPCTSTR lpsz)
+MD_ListBox_OnInsertString(HWND hwnd, INT index, PCSTR lpsz)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, index, (LPCWSTR)lpsz);
+        MSGDUMP_PRINTF("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, index, (PCWSTR)lpsz);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, index, (LPCSTR)lpsz);
+        MSGDUMP_PRINTF("%sLB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, index, (PCSTR)lpsz);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnDeleteString(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_DELETESTRING(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_DELETESTRING(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSelItemRangeEx(HWND hwnd, UINT wFirst, UINT wLast)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SELITEMRANGEEX(hwnd:%p, wFirst:%u, wLast:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wFirst, wLast);
+    MSGDUMP_PRINTF("%sLB_SELITEMRANGEEX(hwnd:%p, wFirst:%u, wLast:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wFirst, wLast);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ListBox_OnResetContent(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_RESETCONTENT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_RESETCONTENT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetSel(HWND hwnd, BOOL fSelect, UINT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETSEL(hwnd:%p, fSelect:%d, index:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fSelect, index);
+    MSGDUMP_PRINTF("%sLB_SETSEL(hwnd:%p, fSelect:%d, index:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fSelect, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetCurSel(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETCURSEL(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_SETCURSEL(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetSel(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETSEL(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_GETSEL(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetCurSel(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETCURSEL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETCURSEL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetText(HWND hwnd, INT index, LPTSTR lpszBuffer)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETTEXT(hwnd:%p, lpszBuffer:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpszBuffer);
+    MSGDUMP_PRINTF("%sLB_GETTEXT(hwnd:%p, lpszBuffer:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpszBuffer);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetTextLen(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETTEXTLEN(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_GETTEXTLEN(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnSelectString(HWND hwnd, INT indexStart, LPCTSTR lpszFind)
+MD_ListBox_OnSelectString(HWND hwnd, INT indexStart, PCSTR lpszFind)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnDir(HWND hwnd, UINT uAttrs, LPCTSTR lpszFileSpec)
+MD_ListBox_OnDir(HWND hwnd, UINT uAttrs, PCSTR lpszFileSpec)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (LPCWSTR)lpszFileSpec);
+        MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCWSTR)lpszFileSpec);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (LPCSTR)lpszFileSpec);
+        MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCSTR)lpszFileSpec);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetTopIndex(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_DIR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_DIR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnFindString(HWND hwnd, INT indexStart, LPCTSTR lpszFind)
+MD_ListBox_OnFindString(HWND hwnd, INT indexStart, PCSTR lpszFind)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetSelCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETSELCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETSELCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetSelItems(HWND hwnd, UINT cItems, LPINT lpnItems)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETSELITEMS(hwnd:%p, cItems:%u, lpnItems:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cItems, (void *)lpnItems);
+    MSGDUMP_PRINTF("%sLB_GETSELITEMS(hwnd:%p, cItems:%u, lpnItems:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cItems, (void *)lpnItems);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListBox_OnSetTabStops(HWND hwnd, UINT cTabs, LPINT lpnTabs)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETTABSTOPS(hwnd:%p, cTabs:%u, lpnTabs:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cTabs, (void *)lpnTabs);
+    MSGDUMP_PRINTF("%sLB_SETTABSTOPS(hwnd:%p, cTabs:%u, lpnTabs:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cTabs, (void *)lpnTabs);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetHorizontalExtent(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETHORIZONTALEXTENT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETHORIZONTALEXTENT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ListBox_OnSetHorizontalExtent(HWND hwnd, INT cxExtent)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETHORIZONTALEXTENT(hwnd:%p, cxExtent:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cxExtent);
+    MSGDUMP_PRINTF("%sLB_SETHORIZONTALEXTENT(hwnd:%p, cxExtent:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cxExtent);
 }
 
 static __inline void MSGDUMP_API
 MD_ListBox_OnSetColumnWidth(HWND hwnd, INT cxColumn)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETCOLUMNWIDTH(hwnd:%p, cxColumn:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cxColumn);
+    MSGDUMP_PRINTF("%sLB_SETCOLUMNWIDTH(hwnd:%p, cxColumn:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cxColumn);
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnAddFile(HWND hwnd, LPCTSTR lpszFilename)
+MD_ListBox_OnAddFile(HWND hwnd, PCSTR lpszFilename)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_ADDFILE(hwnd:%p, lpszFilename:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpszFilename);
+        MSGDUMP_PRINTF("%sLB_ADDFILE(hwnd:%p, lpszFilename:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpszFilename);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_ADDFILE(hwnd:%p, lpszFilename:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpszFilename);
+        MSGDUMP_PRINTF("%sLB_ADDFILE(hwnd:%p, lpszFilename:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpszFilename);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetTopIndex(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETTOPINDEX(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_SETTOPINDEX(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetItemRect(HWND hwnd, INT index, RECT FAR *lprc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETITEMRECT(hwnd:%p, index:%d, lprc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, (void *)lprc);
+    MSGDUMP_PRINTF("%sLB_GETITEMRECT(hwnd:%p, index:%d, lprc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, (void *)lprc);
     return 0;
 }
 
 static __inline INT_PTR MSGDUMP_API
 MD_ListBox_OnGetItemData(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETITEMDATA(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_GETITEMDATA(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT_PTR MSGDUMP_API
 MD_ListBox_OnSetItemData(HWND hwnd, INT index, LPARAM dwData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETITEMDATA(hwnd:%p, index:%d, dwData:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, (void *)dwData);
+    MSGDUMP_PRINTF("%sLB_SETITEMDATA(hwnd:%p, index:%d, dwData:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, (void *)dwData);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSelItemRange(HWND hwnd, BOOL fSelect, UINT wFirst, UINT wLast)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SELITEMRANGE(hwnd:%p, fSelect:%d, wFirst:%u, wLast:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fSelect, wFirst, wLast);
+    MSGDUMP_PRINTF("%sLB_SELITEMRANGE(hwnd:%p, fSelect:%d, wFirst:%u, wLast:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fSelect, wFirst, wLast);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetAnchorIndex(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETANCHORINDEX(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_SETANCHORINDEX(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetAnchorIndex(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETANCHORINDEX(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETANCHORINDEX(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetCaretIndex(HWND hwnd, INT index, BOOL fScroll)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETCARETINDEX(hwnd:%p, index:%d, fScroll:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, fScroll);
+    MSGDUMP_PRINTF("%sLB_SETCARETINDEX(hwnd:%p, index:%d, fScroll:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, fScroll);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetCaretIndex(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETCARETINDEX(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETCARETINDEX(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetItemHeight(HWND hwnd, INT index, INT cyItem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETITEMHEIGHT(hwnd:%p, index:%d, cyItem:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, cyItem);
+    MSGDUMP_PRINTF("%sLB_SETITEMHEIGHT(hwnd:%p, index:%d, cyItem:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, cyItem);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnGetItemHeight(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETITEMHEIGHT(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLB_GETITEMHEIGHT(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ListBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCTSTR lpszFind)
+MD_ListBox_OnFindStringExact(HWND hwnd, INT indexStart, PCSTR lpszFind)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_TPRINTF(TEXT("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszFind);
+        MSGDUMP_PRINTF("%sLB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline LCID MSGDUMP_API
 MD_ListBox_OnSetLocale(HWND hwnd, LCID wLocaleID)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETLOCALE(hwnd:%p, wLocaleID:0x%08X)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wLocaleID);
+    MSGDUMP_PRINTF("%sLB_SETLOCALE(hwnd:%p, wLocaleID:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wLocaleID);
     return 0;
 }
 
 static __inline LCID MSGDUMP_API
 MD_ListBox_OnGetLocale(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_GETLOCALE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLB_GETLOCALE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListBox_OnSetCount(HWND hwnd, INT cItems)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_SETCOUNT(hwnd:%p, cItems:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cItems);
+    MSGDUMP_PRINTF("%sLB_SETCOUNT(hwnd:%p, cItems:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cItems);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListBox_OnInitStorage(HWND hwnd, UINT cItems, DWORD cb)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_INITSTORAGE(hwnd:%p, cItems:%d, cb:%lu)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cItems, cb);
+    MSGDUMP_PRINTF("%sLB_INITSTORAGE(hwnd:%p, cItems:%d, cb:%lu)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cItems, cb);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListBox_OnItemFromPoint(HWND hwnd, INT xPos, INT yPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLB_ITEMFROMPOINT(hwnd:%p, xPos:%d, yPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, xPos, yPos);
+    MSGDUMP_PRINTF("%sLB_ITEMFROMPOINT(hwnd:%p, xPos:%d, yPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, xPos, yPos);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ComboBox_OnGetEditSel(HWND hwnd, LPDWORD lpdwStart, LPDWORD lpdwEnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETEDITSEL(hwnd:%p, lpdwStart:%p, lpdwEnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpdwStart, (void *)lpdwEnd);
+    MSGDUMP_PRINTF("%sCB_GETEDITSEL(hwnd:%p, lpdwStart:%p, lpdwEnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpdwStart, (void *)lpdwEnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ComboBox_OnLimitText(HWND hwnd, UINT cchLimit)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_LIMITTEXT(hwnd:%p, cchLimit:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cchLimit);
+    MSGDUMP_PRINTF("%sCB_LIMITTEXT(hwnd:%p, cchLimit:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cchLimit);
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetEditSel(HWND hwnd, INT ichStart, INT ichEnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETEDITSEL(hwnd:%p, ichStart:%d, ichEnd:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ichStart, ichEnd);
+    MSGDUMP_PRINTF("%sCB_SETEDITSEL(hwnd:%p, ichStart:%d, ichEnd:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ichStart, ichEnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnAddString(HWND hwnd, LPCTSTR lpsz)
+MD_ComboBox_OnAddString(HWND hwnd, PCSTR lpsz)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_ADDSTRING(hwnd:%p, lpsz:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCWSTR)lpsz);
+        MSGDUMP_PRINTF("%sCB_ADDSTRING(hwnd:%p, lpsz:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCWSTR)lpsz);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_ADDSTRING(hwnd:%p, lpsz:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (LPCSTR)lpsz);
+        MSGDUMP_PRINTF("%sCB_ADDSTRING(hwnd:%p, lpsz:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (PCSTR)lpsz);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnDeleteString(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_DELETESTRING(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_DELETESTRING(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnDir(HWND hwnd, UINT uAttrs, LPCTSTR lpszFileSpec)
+MD_ComboBox_OnDir(HWND hwnd, UINT uAttrs, PCSTR lpszFileSpec)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (LPCWSTR)lpszFileSpec);
+        MSGDUMP_PRINTF("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCWSTR)lpszFileSpec);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (LPCSTR)lpszFileSpec);
+        MSGDUMP_PRINTF("%sCB_DIR(hwnd:%p, uAttrs:%u, lpszFileSpec:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, uAttrs, (PCSTR)lpszFileSpec);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_GetCurSel(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETCURSEL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETCURSEL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_GetLBText(HWND hwnd, INT index, LPTSTR lpszBuffer)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETLBTEXT(hwnd:%p, index:%d, lpszBuffer:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, (void *)lpszBuffer);
+    MSGDUMP_PRINTF("%sCB_GETLBTEXT(hwnd:%p, index:%d, lpszBuffer:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, (void *)lpszBuffer);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetLBTextLen(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETLBTEXTLEN(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_GETLBTEXTLEN(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnInsertString(HWND hwnd, INT index, LPCTSTR lpsz)
+MD_ComboBox_OnInsertString(HWND hwnd, INT index, PCSTR lpsz)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, index, (LPCWSTR)lpsz);
+        MSGDUMP_PRINTF("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, index, (PCWSTR)lpsz);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, index, (LPCSTR)lpsz);
+        MSGDUMP_PRINTF("%sCB_INSERTSTRING(hwnd:%p, index:%d, lpsz:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, index, (PCSTR)lpsz);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ComboBox_OnResetContent(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_RESETCONTENT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_RESETCONTENT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnFindString(HWND hwnd, INT indexStart, LPCTSTR lpszFind)
+MD_ComboBox_OnFindString(HWND hwnd, INT indexStart, PCSTR lpszFind)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszFind);
+        MSGDUMP_PRINTF("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszFind);
+        MSGDUMP_PRINTF("%sCB_FINDSTRING(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnSelectString(HWND hwnd, INT indexStart, LPCTSTR lpszSelect)
+MD_ComboBox_OnSelectString(HWND hwnd, INT indexStart, PCSTR lpszSelect)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszSelect);
+        MSGDUMP_PRINTF("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszSelect);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszSelect);
+        MSGDUMP_PRINTF("%sCB_SELECTSTRING(hwnd:%p, indexStart:%d, lpszSelect:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszSelect);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetCurSel(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETCURSEL(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_SETCURSEL(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ComboBox_OnShowDropDown(HWND hwnd, BOOL fShow)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SHOWDROPDOWN(hwnd:%p, fShow:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fShow);
+    MSGDUMP_PRINTF("%sCB_SHOWDROPDOWN(hwnd:%p, fShow:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fShow);
     return FALSE;
 }
 
 static __inline INT_PTR MSGDUMP_API
 MD_ComboBox_OnGetItemData(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETITEMDATA(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_GETITEMDATA(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT_PTR MSGDUMP_API
 MD_ComboBox_OnSetItemData(HWND hwnd, INT index, DWORD_PTR dwData)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETITEMDATA(hwnd:%p, index:%d, dwData:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, (void *)dwData);
+    MSGDUMP_PRINTF("%sCB_SETITEMDATA(hwnd:%p, index:%d, dwData:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, (void *)dwData);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ComboBox_OnGetDroppedControlRect(HWND hwnd, RECT FAR *lprc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETDROPPEDCONTROLRECT(hwnd:%p, lprc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lprc);
+    MSGDUMP_PRINTF("%sCB_GETDROPPEDCONTROLRECT(hwnd:%p, lprc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lprc);
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetItemHeight(HWND hwnd, INT index, INT height)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETITEMHEIGHT(hwnd:%p, index:%d, height:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index, height);
+    MSGDUMP_PRINTF("%sCB_SETITEMHEIGHT(hwnd:%p, index:%d, height:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index, height);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetItemHeight(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETITEMHEIGHT(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_SETITEMHEIGHT(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetExtendedUI(HWND hwnd, BOOL fExtended)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETEXTENDEDUI(hwnd:%p, fExtended:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fExtended);
+    MSGDUMP_PRINTF("%sCB_SETEXTENDEDUI(hwnd:%p, fExtended:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fExtended);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ComboBox_OnGetExtendedUI(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETEXTENDEDUI(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_SETEXTENDEDUI(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ComboBox_OnGetDroppedState(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETDROPPEDSTATE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETDROPPEDSTATE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
-MD_ComboBox_OnFindStringExact(HWND hwnd, INT indexStart, LPCTSTR lpszFind)
+MD_ComboBox_OnFindStringExact(HWND hwnd, INT indexStart, PCSTR lpszFind)
 {
     if (IsWindowUnicode(hwnd))
-        MSGDUMP_TPRINTF(TEXT("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCWSTR)lpszFind);
+        MSGDUMP_PRINTF("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%ls)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCWSTR)lpszFind);
     else
-        MSGDUMP_TPRINTF(TEXT("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%hs)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, indexStart, (LPCSTR)lpszFind);
+        MSGDUMP_PRINTF("%sCB_FINDSTRINGEXACT(hwnd:%p, indexStart:%d, lpszFind:%s)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, indexStart, (PCSTR)lpszFind);
     return 0;
 }
 
 static __inline LCID MSGDUMP_API
 MD_ComboBox_OnSetLocale(HWND hwnd, LCID wLocaleID)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETLOCALE(hwnd:%p, wLocaleID:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wLocaleID);
+    MSGDUMP_PRINTF("%sCB_SETLOCALE(hwnd:%p, wLocaleID:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wLocaleID);
     return 0;
 }
 
 static __inline LCID MSGDUMP_API
 MD_ComboBox_OnGetLocale(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETLOCALE(hwnd:%p, wLocaleID:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETLOCALE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetTopIndex(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETTOPINDEX(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETTOPINDEX(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetTopIndex(HWND hwnd, INT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETTOPINDEX(hwnd:%p, index:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sCB_SETTOPINDEX(hwnd:%p, index:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetHorizontalExtent(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETHORIZONTALEXTENT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETHORIZONTALEXTENT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ComboBox_OnSetHorizontalExtent(HWND hwnd, INT cxExtent)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETHORIZONTALEXTENT(hwnd:%p, cxExtent:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cxExtent);
+    MSGDUMP_PRINTF("%sCB_SETHORIZONTALEXTENT(hwnd:%p, cxExtent:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cxExtent);
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnGetDroppedWidth(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_GETDROPPEDWIDTH(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sCB_GETDROPPEDWIDTH(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnSetDroppedWidth(HWND hwnd, INT wWidth)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_SETDROPPEDWIDTH(hwnd:%p, wWidth:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, wWidth);
+    MSGDUMP_PRINTF("%sCB_SETDROPPEDWIDTH(hwnd:%p, wWidth:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, wWidth);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ComboBox_OnInitStorage(HWND hwnd, INT cItems, DWORD cb)
 {
-    MSGDUMP_TPRINTF(TEXT("%sCB_INITSTORAGE(hwnd:%p, cItems:%d, cb:%lu)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cItems, cb);
+    MSGDUMP_PRINTF("%sCB_INITSTORAGE(hwnd:%p, cItems:%d, cb:%lu)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cItems, cb);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ScrollBar_OnSetPos(HWND hwnd, INT nPos, BOOL fRedraw)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_SETPOS(hwnd:%p, nPos:%d, fRedraw:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nPos, fRedraw);
+    MSGDUMP_PRINTF("%sSBM_SETPOS(hwnd:%p, nPos:%d, fRedraw:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nPos, fRedraw);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ScrollBar_OnGetPos(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_GETPOS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sSBM_GETPOS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ScrollBar_OnSetRange(HWND hwnd, INT nMinPos, INT nMaxPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_SETRANGE(hwnd:%p, nMinPos:%d, nMaxPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nMinPos, nMaxPos);
+    MSGDUMP_PRINTF("%sSBM_SETRANGE(hwnd:%p, nMinPos:%d, nMaxPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nMinPos, nMaxPos);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ScrollBar_OnSetRangeRedraw(HWND hwnd, INT nMinPos, INT nMaxPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_SETRANGEREDRAW(hwnd:%p, nMinPos:%d, nMaxPos:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nMinPos, nMaxPos);
+    MSGDUMP_PRINTF("%sSBM_SETRANGEREDRAW(hwnd:%p, nMinPos:%d, nMaxPos:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nMinPos, nMaxPos);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ScrollBar_OnGetRange(HWND hwnd, LPINT lpnMinPos, LPINT lpnMaxPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_SETRANGEREDRAW(hwnd:%p, lpnMinPos:%p, lpnMaxPos:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpnMinPos, (void *)lpnMaxPos);
+    MSGDUMP_PRINTF("%sSBM_SETRANGEREDRAW(hwnd:%p, lpnMinPos:%p, lpnMaxPos:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpnMinPos, (void *)lpnMaxPos);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ScrollBar_OnEnableArrows(HWND hwnd, UINT fuArrowFlags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_ENABLE_ARROWS(hwnd:%p, fuArrowFlags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fuArrowFlags);
+    MSGDUMP_PRINTF("%sSBM_ENABLE_ARROWS(hwnd:%p, fuArrowFlags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fuArrowFlags);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ScrollBar_OnSetScrollInfo(HWND hwnd, BOOL fRedraw, LPSCROLLINFO lpsi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_SETSCROLLINFO(hwnd:%p, fRedraw:%d, lpsi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fRedraw, (void *)lpsi);
+    MSGDUMP_PRINTF("%sSBM_SETSCROLLINFO(hwnd:%p, fRedraw:%d, lpsi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fRedraw, (void *)lpsi);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ScrollBar_OnGetScrollInfo(HWND hwnd, LPSCROLLINFO lpsi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_GETSCROLLINFO(hwnd:%p, lpsi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsi);
+    MSGDUMP_PRINTF("%sSBM_GETSCROLLINFO(hwnd:%p, lpsi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsi);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ScrollBar_OnGetScrollBarInfo(HWND hwnd, LPSCROLLBARINFO lpsbi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sSBM_GETSCROLLBARINFO(hwnd:%p, lpsbi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsbi);
+    MSGDUMP_PRINTF("%sSBM_GETSCROLLBARINFO(hwnd:%p, lpsbi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsbi);
     return FALSE;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnGetBkColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETBKCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETBKCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetBkColor(HWND hwnd, COLORREF clrBk)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETBKCOLOR(hwnd:%p, clrBk:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clrBk);
+    MSGDUMP_PRINTF("%sLVM_SETBKCOLOR(hwnd:%p, clrBk:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clrBk);
     return FALSE;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_ListView_OnGetImageList(HWND hwnd, INT iImageList)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETIMAGELIST(hwnd:%p, iImageList:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iImageList);
+    MSGDUMP_PRINTF("%sLVM_GETIMAGELIST(hwnd:%p, iImageList:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iImageList);
     return NULL;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_ListView_OnSetImageList(HWND hwnd, INT iImageList, HIMAGELIST himl)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETIMAGELIST(hwnd:%p, iImageList:%d, himl:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iImageList, (void *)himl);
+    MSGDUMP_PRINTF("%sLVM_SETIMAGELIST(hwnd:%p, iImageList:%d, himl:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iImageList, (void *)himl);
     return NULL;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetItemCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETITEMCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetItemA(HWND hwnd, LV_ITEMA *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMA(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_GETITEMA(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetItemA(HWND hwnd, const LV_ITEMA *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMA(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_SETITEMA(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnInsertItemA(HWND hwnd, const LV_ITEMA *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTITEMA(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_INSERTITEMA(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnDeleteItem(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_DELETEITEM(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_DELETEITEM(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnDeleteAllItems(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_DELETEALLITEMS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_DELETEALLITEMS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetCallbackMask(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCALLBACKMASK(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETCALLBACKMASK(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetCallbackMask(HWND hwnd, UINT mask)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETCALLBACKMASK(hwnd:%p, mask:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, mask);
+    MSGDUMP_PRINTF("%sLVM_SETCALLBACKMASK(hwnd:%p, mask:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, mask);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetNextItem(HWND hwnd, INT i, UINT flags)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETNEXTITEM(hwnd:%p, i:%d, flags:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, flags);
+    MSGDUMP_PRINTF("%sLVM_GETNEXTITEM(hwnd:%p, i:%d, flags:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, flags);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnFindItemA(HWND hwnd, INT iStart, const LV_FINDINFOA *plvfi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_FINDITEMA(hwnd:%p, iStart:%d, plvfi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iStart, (void *)plvfi);
+    MSGDUMP_PRINTF("%sLVM_FINDITEMA(hwnd:%p, iStart:%d, plvfi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iStart, (void *)plvfi);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetItemRect(HWND hwnd, INT i, RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMRECT(hwnd:%p, i:%d, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)prc);
+    MSGDUMP_PRINTF("%sLVM_GETITEMRECT(hwnd:%p, i:%d, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)prc);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetItemPosition(HWND hwnd, INT i, INT x, INT y)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMPOSITION(hwnd:%p, i:%d, x:%d, y:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, x, y);
+    MSGDUMP_PRINTF("%sLVM_SETITEMPOSITION(hwnd:%p, i:%d, x:%d, y:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, x, y);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetItemPosition(HWND hwnd, INT i, POINT *ppt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMPOSITION(hwnd:%p, i:%d, ppt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)ppt);
+    MSGDUMP_PRINTF("%sLVM_GETITEMPOSITION(hwnd:%p, i:%d, ppt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)ppt);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetStringWidthA(HWND hwnd, LPCSTR psz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSTRINGWIDTHA(hwnd:%p, psz:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)psz);
+    MSGDUMP_PRINTF("%sLVM_GETSTRINGWIDTHA(hwnd:%p, psz:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)psz);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnHitTest(HWND hwnd, LV_HITTESTINFO *pinfo)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_HITTEST(hwnd:%p, pinfo:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pinfo);
+    MSGDUMP_PRINTF("%sLVM_HITTEST(hwnd:%p, pinfo:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pinfo);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnEnsureVisible(HWND hwnd, INT i, BOOL fPartialOK)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_ENSUREVISIBLE(hwnd:%p, i:%d, fPartialOK:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, fPartialOK);
+    MSGDUMP_PRINTF("%sLVM_ENSUREVISIBLE(hwnd:%p, i:%d, fPartialOK:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, fPartialOK);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnScroll(HWND hwnd, INT dx, INT dy)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SCROLL(hwnd:%p, dx:%d, dy:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dx, dy);
+    MSGDUMP_PRINTF("%sLVM_SCROLL(hwnd:%p, dx:%d, dy:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dx, dy);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnRedrawItems(HWND hwnd, INT iFirst, INT iLast)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_REDRAWITEMS(hwnd:%p, iFirst:%d, iLast:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iFirst, iLast);
+    MSGDUMP_PRINTF("%sLVM_REDRAWITEMS(hwnd:%p, iFirst:%d, iLast:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iFirst, iLast);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnArrange(HWND hwnd, UINT code)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_ARRANGE(hwnd:%p, code:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, code);
+    MSGDUMP_PRINTF("%sLVM_ARRANGE(hwnd:%p, code:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, code);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnEditLabelA(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_EDITLABELA(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_EDITLABELA(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return NULL;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnGetEditControl(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETEDITCONTROL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETEDITCONTROL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetColumnA(HWND hwnd, INT iCol, LV_COLUMNA *pcol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, (void *)pcol);
+    MSGDUMP_PRINTF("%sLVM_GETCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, (void *)pcol);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetColumnA(HWND hwnd, INT iCol, const LV_COLUMNA *pcol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
+    MSGDUMP_PRINTF("%sLVM_SETCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnInsertColumnA(HWND hwnd, INT iCol, const LV_COLUMNA *pcol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
+    MSGDUMP_PRINTF("%sLVM_INSERTCOLUMNA(hwnd:%p, iCol:%d, pcol:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnDeleteColumn(HWND hwnd, INT iCol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_DELETECOLUMN(hwnd:%p, iCol:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol);
+    MSGDUMP_PRINTF("%sLVM_DELETECOLUMN(hwnd:%p, iCol:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetColumnWidth(HWND hwnd, INT iCol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCOLUMNWIDTH(hwnd:%p, iCol:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol);
+    MSGDUMP_PRINTF("%sLVM_GETCOLUMNWIDTH(hwnd:%p, iCol:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetColumnWidth(HWND hwnd, INT iCol, INT cx)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETCOLUMNWIDTH(hwnd:%p, iCol:%d, cx:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, cx);
+    MSGDUMP_PRINTF("%sLVM_SETCOLUMNWIDTH(hwnd:%p, iCol:%d, cx:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, cx);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnGetHeader(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETHEADER(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETHEADER(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_ListView_OnCreateDragImage(HWND hwnd, INT i, LPPOINT lpptUpLeft)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_CREATEDRAGIMAGE(hwnd:%p, i:%d, lpptUpLeft:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lpptUpLeft);
+    MSGDUMP_PRINTF("%sLVM_CREATEDRAGIMAGE(hwnd:%p, i:%d, lpptUpLeft:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lpptUpLeft);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetViewRect(HWND hwnd, RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETVIEWRECT(hwnd:%p, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
+    MSGDUMP_PRINTF("%sLVM_GETVIEWRECT(hwnd:%p, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
     return FALSE;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnGetTextColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTEXTCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETTEXTCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetTextColor(HWND hwnd, COLORREF clrText)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTEXTCOLOR(hwnd:%p, clrText:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clrText);
+    MSGDUMP_PRINTF("%sLVM_SETTEXTCOLOR(hwnd:%p, clrText:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clrText);
     return FALSE;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnGetTextBkColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTEXTBKCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETTEXTBKCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetTextBkColor(HWND hwnd, COLORREF clrTextBk)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTEXTBKCOLOR(hwnd:%p, clrTextBk:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clrTextBk);
+    MSGDUMP_PRINTF("%sLVM_SETTEXTBKCOLOR(hwnd:%p, clrTextBk:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clrTextBk);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetTopIndex(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTOPINDEX(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETTOPINDEX(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetCountPerPage(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCOUNTPERPAGE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETCOUNTPERPAGE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetOrigin(HWND hwnd, POINT *ppt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETORIGIN(hwnd:%p, ppt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)ppt);
+    MSGDUMP_PRINTF("%sLVM_GETORIGIN(hwnd:%p, ppt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)ppt);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnUpdate(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_UPDATE(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_UPDATE(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetItemState(HWND hwnd, INT i, LV_ITEM *lvi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMSTATE(hwnd:%p, i:%d, lvi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lvi);
+    MSGDUMP_PRINTF("%sLVM_SETITEMSTATE(hwnd:%p, i:%d, lvi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lvi);
     return FALSE;
 }
 
 static __inline UINT MSGDUMP_API
 MD_ListView_OnGetItemState(HWND hwnd, INT i, UINT mask)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMSTATE(hwnd:%p, i:%d, mask:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, mask);
+    MSGDUMP_PRINTF("%sLVM_GETITEMSTATE(hwnd:%p, i:%d, mask:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, mask);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetItemTextA(HWND hwnd, INT i, LV_ITEMA *lvi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMTEXTA(hwnd:%p, i:%d, lvi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lvi);
+    MSGDUMP_PRINTF("%sLVM_GETITEMTEXTA(hwnd:%p, i:%d, lvi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)lvi);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetItemTextA(HWND hwnd, INT i, const LV_ITEMA *lvi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMTEXTA(hwnd:%p, i:%d, lvi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (const void *)lvi);
+    MSGDUMP_PRINTF("%sLVM_SETITEMTEXTA(hwnd:%p, i:%d, lvi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (const void *)lvi);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnSetItemCount(HWND hwnd, INT cItems)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMCOUNT(hwnd:%p, cItems:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cItems);
+    MSGDUMP_PRINTF("%sLVM_SETITEMCOUNT(hwnd:%p, cItems:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cItems);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSortItems(HWND hwnd, LPARAM lPrm, PFNLVCOMPARE pfnCompare)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SORTITEMS(hwnd:%p, lPrm:%p, pfnCompare:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lPrm, *(void **)&pfnCompare);
+    MSGDUMP_PRINTF("%sLVM_SORTITEMS(hwnd:%p, lPrm:%p, pfnCompare:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lPrm, *(void **)&pfnCompare);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnSetItemPosition32(HWND hwnd, INT i, const POINT *ppt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMPOSITION32(hwnd:%p, i:%d, ppt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)ppt);
+    MSGDUMP_PRINTF("%sLVM_SETITEMPOSITION32(hwnd:%p, i:%d, ppt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)ppt);
 }
 
 static __inline UINT MSGDUMP_API
 MD_ListView_OnGetSelectedCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSELECTEDCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETSELECTEDCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnGetItemSpacing(HWND hwnd, BOOL fSmall)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMSPACING(hwnd:%p, fSmall:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fSmall);
+    MSGDUMP_PRINTF("%sLVM_GETITEMSPACING(hwnd:%p, fSmall:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fSmall);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetISearchStringA(HWND hwnd, LPSTR lpsz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETISEARCHSTRINGA(hwnd:%p, lpsz:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
+    MSGDUMP_PRINTF("%sLVM_GETISEARCHSTRINGA(hwnd:%p, lpsz:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnSetIconSpacing(HWND hwnd, INT cx, INT cy)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETICONSPACING(hwnd:%p, cx:%d, cy:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cx, cy);
+    MSGDUMP_PRINTF("%sLVM_SETICONSPACING(hwnd:%p, cx:%d, cy:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cx, cy);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnSetExtendedListViewStyle(HWND hwnd, DWORD dwMask, DWORD dw)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETEXTENDEDLISTVIEWSTYLE(hwnd:%p, dwMask:0x%08lX, dw:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwMask, dw);
+    MSGDUMP_PRINTF("%sLVM_SETEXTENDEDLISTVIEWSTYLE(hwnd:%p, dwMask:0x%08lX, dw:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwMask, dw);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnGetExtendedListViewStyle(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETEXTENDEDLISTVIEWSTYLE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETEXTENDEDLISTVIEWSTYLE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetSubItemRect(HWND hwnd, INT iItem, RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSUBITEMRECT(hwnd:%p, iItem:%d, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)prc);
+    MSGDUMP_PRINTF("%sLVM_GETSUBITEMRECT(hwnd:%p, iItem:%d, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)prc);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnSubItemHitTest(HWND hwnd, WPARAM wParam, LPLVHITTESTINFO plvhti)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SUBITEMHITTEST(hwnd:%p, wParam:%p, plvhti:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)plvhti);
+    MSGDUMP_PRINTF("%sLVM_SUBITEMHITTEST(hwnd:%p, wParam:%p, plvhti:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)plvhti);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetColumnOrderArray(HWND hwnd, INT iCount, LPINT pi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETCOLUMNORDERARRAY(hwnd:%p, iCount:%d, pi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCount, (void *)pi);
+    MSGDUMP_PRINTF("%sLVM_SETCOLUMNORDERARRAY(hwnd:%p, iCount:%d, pi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCount, (void *)pi);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetColumnOrderArray(HWND hwnd, INT iCount, LPINT pi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCOLUMNORDERARRAY(hwnd:%p, iCount:%d, pi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCount, (void *)pi);
+    MSGDUMP_PRINTF("%sLVM_GETCOLUMNORDERARRAY(hwnd:%p, iCount:%d, pi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCount, (void *)pi);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnSetHotItem(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETHOTITEM(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_SETHOTITEM(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetHotItem(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETHOTITEM(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETHOTITEM(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline HCURSOR MSGDUMP_API
 MD_ListView_OnSetHotCursor(HWND hwnd, HCURSOR hcur)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETHOTCURSOR(hwnd:%p, hcur:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hcur);
+    MSGDUMP_PRINTF("%sLVM_SETHOTCURSOR(hwnd:%p, hcur:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hcur);
     return NULL;
 }
 
 static __inline HCURSOR MSGDUMP_API
 MD_ListView_OnGetHotCursor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETHOTCURSOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETHOTCURSOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnApproximateViewRect(HWND hwnd, INT iWidth, INT iHeight, INT iCount)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_APPROXIMATEVIEWRECT(hwnd:%p, iWidth:%d, iHeight:%d, iCount:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iWidth, iHeight, iCount);
+    MSGDUMP_PRINTF("%sLVM_APPROXIMATEVIEWRECT(hwnd:%p, iWidth:%d, iHeight:%d, iCount:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iWidth, iHeight, iCount);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetWorkAreas(HWND hwnd, INT nWorkAreas, const RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETWORKAREAS(hwnd:%p, nWorkAreas:%d, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nWorkAreas, (void *)prc);
+    MSGDUMP_PRINTF("%sLVM_SETWORKAREAS(hwnd:%p, nWorkAreas:%d, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nWorkAreas, (void *)prc);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetSelectionMark(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSELECTIONMARK(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETSELECTIONMARK(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnSetSelectionMark(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETSELECTIONMARK(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_SETSELECTIONMARK(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetBkImageA(HWND hwnd, const LVBKIMAGEA *plvbki)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETBKIMAGEA(hwnd:%p, plvbki:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvbki);
+    MSGDUMP_PRINTF("%sLVM_SETBKIMAGEA(hwnd:%p, plvbki:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvbki);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetBkImageA(HWND hwnd, LVBKIMAGEA *plvbki)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETBKIMAGEA(hwnd:%p, plvbki:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)plvbki);
+    MSGDUMP_PRINTF("%sLVM_GETBKIMAGEA(hwnd:%p, plvbki:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)plvbki);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetWorkAreas(HWND hwnd, INT nWorkAreas, RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETWORKAREAS(hwnd:%p, nWorkAreas:%d, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, nWorkAreas, (void *)prc);
+    MSGDUMP_PRINTF("%sLVM_GETWORKAREAS(hwnd:%p, nWorkAreas:%d, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, nWorkAreas, (void *)prc);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnSetHoverTime(HWND hwnd, DWORD dwHoverTimeMs)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETHOVERTIME(hwnd:%p, dwHoverTimeMs:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwHoverTimeMs);
+    MSGDUMP_PRINTF("%sLVM_SETHOVERTIME(hwnd:%p, dwHoverTimeMs:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwHoverTimeMs);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnGetHoverTime(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETHOVERTIME(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETHOVERTIME(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetNumberOfWorkAreas(HWND hwnd, UINT *pnWorkAreas)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETNUMBEROFWORKAREAS(hwnd:%p, pnWorkAreas:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pnWorkAreas);
+    MSGDUMP_PRINTF("%sLVM_GETNUMBEROFWORKAREAS(hwnd:%p, pnWorkAreas:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pnWorkAreas);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnSetToolTips(HWND hwnd, HWND hwndNewHwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTOOLTIPS(hwnd:%p, hwndNewHwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewHwnd);
+    MSGDUMP_PRINTF("%sLVM_SETTOOLTIPS(hwnd:%p, hwndNewHwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndNewHwnd);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetItemW(HWND hwnd, LV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMW(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_GETITEMW(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetItemW(HWND hwnd, const LV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMW(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_SETITEMW(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnInsertItemW(HWND hwnd, const LV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTITEMW(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_INSERTITEMW(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
     return 0;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnGetToolTips(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTOOLTIPS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETTOOLTIPS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSortItemsEx(HWND hwnd, PFNLVCOMPARE pfnCompare, LPARAM lPrm)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SORTITEMSEX(hwnd:%p, pfnCompare:%p, lPrm:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, *(void **)&pfnCompare, (void *)lPrm);
+    MSGDUMP_PRINTF("%sLVM_SORTITEMSEX(hwnd:%p, pfnCompare:%p, lPrm:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, *(void **)&pfnCompare, (void *)lPrm);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnFindItemW(HWND hwnd, INT iStart, const LV_FINDINFOW *plvfi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_FINDITEMW(hwnd:%p, iStart:%d, plvfi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iStart, (void *)plvfi);
+    MSGDUMP_PRINTF("%sLVM_FINDITEMW(hwnd:%p, iStart:%d, plvfi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iStart, (void *)plvfi);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetStringWidthW(HWND hwnd, LPCWSTR psz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSTRINGWIDTHW(hwnd:%p, psz:%ls)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, psz);
+    MSGDUMP_PRINTF("%sLVM_GETSTRINGWIDTHW(hwnd:%p, psz:%ls)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, psz);
     return 0;
 }
 
@@ -3434,16 +3434,16 @@ MD_ListView_OnGetStringWidthW(HWND hwnd, LPCWSTR psz)
     static __inline UINT MSGDUMP_API
     MD_ListView_OnGetGroupState(HWND hwnd, DWORD dwGroupId, DWORD dwMask)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPSTATE(hwnd:%p, dwGroupId:0x%08lX, dwMask:0x%08lX)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, dwGroupId, dwMask);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPSTATE(hwnd:%p, dwGroupId:0x%08lX, dwMask:0x%08lX)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, dwGroupId, dwMask);
         return 0;
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnGetFocusedGroup(HWND hwnd)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETFOCUSEDGROUP(hwnd:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd);
+        MSGDUMP_PRINTF("%sLVM_GETFOCUSEDGROUP(hwnd:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd);
         return 0;
     }
 #endif
@@ -3451,24 +3451,24 @@ MD_ListView_OnGetStringWidthW(HWND hwnd, LPCWSTR psz)
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetColumnW(HWND hwnd, INT iCol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETCOLUMNW(hwnd:%p, iCol:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol);
+    MSGDUMP_PRINTF("%sLVM_GETCOLUMNW(hwnd:%p, iCol:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetColumnW(HWND hwnd, INT iCol, INT cx)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETCOLUMNW(hwnd:%p, iCol:%d, cx:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, cx);
+    MSGDUMP_PRINTF("%sLVM_SETCOLUMNW(hwnd:%p, iCol:%d, cx:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, cx);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnInsertColumnW(HWND hwnd, INT iCol, const LV_COLUMNW *pcol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTCOLUMNW(hwnd:%p, iCol:%d, pcol:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
+    MSGDUMP_PRINTF("%sLVM_INSERTCOLUMNW(hwnd:%p, iCol:%d, pcol:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol, (const void *)pcol);
     return 0;
 }
 
@@ -3476,8 +3476,8 @@ MD_ListView_OnInsertColumnW(HWND hwnd, INT iCol, const LV_COLUMNW *pcol)
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetGroupRect(HWND hwnd, INT iGroupId, RECT *prc)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPRECT(hwnd:%p, iGroupId:%d, prc:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (void *)prc);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPRECT(hwnd:%p, iGroupId:%d, prc:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (void *)prc);
         return FALSE;
     }
 #endif
@@ -3485,56 +3485,56 @@ MD_ListView_OnInsertColumnW(HWND hwnd, INT iCol, const LV_COLUMNW *pcol)
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetItemTextW(HWND hwnd, INT i, LV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMTEXTW(hwnd:%p, i:%d, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_GETITEMTEXTW(hwnd:%p, i:%d, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (void *)pitem);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnSetItemTextW(HWND hwnd, INT i, const LV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMTEXTW(hwnd:%p, i:%d, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i, (const void *)pitem);
+    MSGDUMP_PRINTF("%sLVM_SETITEMTEXTW(hwnd:%p, i:%d, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i, (const void *)pitem);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetISearchStringW(HWND hwnd, LPWSTR lpsz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETISEARCHSTRINGW(hwnd:%p, lpsz:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
+    MSGDUMP_PRINTF("%sLVM_GETISEARCHSTRINGW(hwnd:%p, lpsz:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_ListView_OnEditLabelW(HWND hwnd, INT i)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_EDITLABELW(hwnd:%p, i:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, i);
+    MSGDUMP_PRINTF("%sLVM_EDITLABELW(hwnd:%p, i:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, i);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetBkImageW(HWND hwnd, const LVBKIMAGEW *plvbki)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETBKIMAGEW(hwnd:%p, plvbki:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvbki);
+    MSGDUMP_PRINTF("%sLVM_SETBKIMAGEW(hwnd:%p, plvbki:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvbki);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetBkImageW(HWND hwnd, LVBKIMAGEW *plvbki)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETBKIMAGEW(hwnd:%p, plvbki:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)plvbki);
+    MSGDUMP_PRINTF("%sLVM_GETBKIMAGEW(hwnd:%p, plvbki:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)plvbki);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnSetSelectedColumn(HWND hwnd, INT iCol)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETSELECTEDCOLUMN(hwnd:%p, iCol:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iCol);
+    MSGDUMP_PRINTF("%sLVM_SETSELECTEDCOLUMN(hwnd:%p, iCol:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iCol);
 }
 
 #ifndef LVM_SETTILEWIDTH
@@ -3544,24 +3544,24 @@ MD_ListView_OnSetSelectedColumn(HWND hwnd, INT iCol)
 static __inline LRESULT MSGDUMP_API
 MD_ListView_OnSetTileWidth(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTILEWIDTH(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+    MSGDUMP_PRINTF("%sLVM_SETTILEWIDTH(hwnd:%p, wParam:%p, lParam:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnSetView(HWND hwnd, DWORD iView)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETVIEW(hwnd:%p, iView:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iView);
+    MSGDUMP_PRINTF("%sLVM_SETVIEW(hwnd:%p, iView:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iView);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_ListView_OnGetView(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETVIEW(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETVIEW(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
@@ -3569,116 +3569,116 @@ MD_ListView_OnGetView(HWND hwnd)
     static __inline INT MSGDUMP_API
     MD_ListView_OnInsertGroup(HWND hwnd, INT iGroupId, const LVGROUP *pGroup)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTGROUP(hwnd:%p, iGroupId:%d, pGroup:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (const void *)pGroup);
+        MSGDUMP_PRINTF("%sLVM_INSERTGROUP(hwnd:%p, iGroupId:%d, pGroup:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (const void *)pGroup);
         return 0;
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnSetGroupInfo(HWND hwnd, INT iGroupId, const LVGROUP *pGroup)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_SETGROUPINFO(hwnd:%p, iGroupId:%d, pGroup:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (const void *)pGroup);
+        MSGDUMP_PRINTF("%sLVM_SETGROUPINFO(hwnd:%p, iGroupId:%d, pGroup:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (const void *)pGroup);
         return 0;
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnGetGroupInfo(HWND hwnd, INT iGroupId, LVGROUP *pGroup)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPINFO(hwnd:%p, iGroupId:%d, pGroup:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (void *)pGroup);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPINFO(hwnd:%p, iGroupId:%d, pGroup:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iGroupId, (void *)pGroup);
         return 0;
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnRemoveGroup(HWND hwnd, INT iGroupId)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_REMOVEGROUP(hwnd:%p, iGroupId:%d)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iGroupId);
+        MSGDUMP_PRINTF("%sLVM_REMOVEGROUP(hwnd:%p, iGroupId:%d)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iGroupId);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_ListView_OnMoveGroup(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_MOVEGROUP(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, wParam, lParam);
+        MSGDUMP_PRINTF("%sLVM_MOVEGROUP(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, wParam, lParam);
         return 0;
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnGetGroupCount(HWND hwnd)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPCOUNT(hwnd:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPCOUNT(hwnd:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd);
         return 0;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetGroupInfoByIndex(HWND hwnd, INT iIndex, LVGROUP *pgrp)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPINFOBYINDEX(hwnd:%p, iIndex:%d, pgrp:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iIndex, (void *)pgrp);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPINFOBYINDEX(hwnd:%p, iIndex:%d, pgrp:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iIndex, (void *)pgrp);
         return FALSE;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_ListView_OnMoveItemToGroup(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_MOVEITEMTOGROUP(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sLVM_MOVEITEMTOGROUP(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 
     static __inline void MSGDUMP_API
     MD_ListView_OnSetGroupMetrics(HWND hwnd, const LVGROUPMETRICS *pGroupMetrics)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_SETGROUPMETRICS(hwnd:%p, pGroupMetrics:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (const void *)pGroupMetrics);
+        MSGDUMP_PRINTF("%sLVM_SETGROUPMETRICS(hwnd:%p, pGroupMetrics:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (const void *)pGroupMetrics);
     }
 
     static __inline void MSGDUMP_API
     MD_ListView_OnGetGroupMetrics(HWND hwnd, LVGROUPMETRICS *pGroupMetrics)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETGROUPMETRICS(hwnd:%p, pGroupMetrics:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)pGroupMetrics);
+        MSGDUMP_PRINTF("%sLVM_GETGROUPMETRICS(hwnd:%p, pGroupMetrics:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)pGroupMetrics);
     }
 
     static __inline INT MSGDUMP_API
     MD_ListView_OnEnableGroupView(HWND hwnd, BOOL fEnable)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_ENABLEGROUPVIEW(hwnd:%p, fEnable:%d)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, fEnable);
+        MSGDUMP_PRINTF("%sLVM_ENABLEGROUPVIEW(hwnd:%p, fEnable:%d)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, fEnable);
         return 0;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnSortGroups(HWND hwnd, PFNLVGROUPCOMPARE pfnGroupCompate, void *plv)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_SORTGROUPS(hwnd:%p, pfnGroupCompate:%p, plv:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, *(void **)&pfnGroupCompate, plv);
+        MSGDUMP_PRINTF("%sLVM_SORTGROUPS(hwnd:%p, pfnGroupCompate:%p, plv:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, *(void **)&pfnGroupCompate, plv);
         return FALSE;
     }
 
     static __inline void MSGDUMP_API
     MD_ListView_OnInsertGroupSorted(HWND hwnd, const LVINSERTGROUPSORTED *structInsert)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTGROUPSORTED(hwnd:%p, structInsert:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)structInsert);
+        MSGDUMP_PRINTF("%sLVM_INSERTGROUPSORTED(hwnd:%p, structInsert:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)structInsert);
     }
 
     static __inline void MSGDUMP_API
     MD_ListView_OnRemoveAllGroups(HWND hwnd)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_REMOVEALLGROUPS(hwnd:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd);
+        MSGDUMP_PRINTF("%sLVM_REMOVEALLGROUPS(hwnd:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd);
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnHasGroup(HWND hwnd, DWORD dwGroupId)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_HASGROUP(hwnd:%p, dwGroupId:0x%08lX)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, dwGroupId);
+        MSGDUMP_PRINTF("%sLVM_HASGROUP(hwnd:%p, dwGroupId:0x%08lX)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, dwGroupId);
         return FALSE;
     }
 #endif
@@ -3686,149 +3686,149 @@ MD_ListView_OnGetView(HWND hwnd)
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetTileViewInfo(HWND hwnd, const LVTILEVIEWINFO *ptvi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTILEVIEWINFO(hwnd:%p, ptvi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)ptvi);
+    MSGDUMP_PRINTF("%sLVM_SETTILEVIEWINFO(hwnd:%p, ptvi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)ptvi);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnGetTileViewInfo(HWND hwnd, LVTILEVIEWINFO *ptvi)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTILEVIEWINFO(hwnd:%p, ptvi:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)ptvi);
+    MSGDUMP_PRINTF("%sLVM_GETTILEVIEWINFO(hwnd:%p, ptvi:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)ptvi);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetTileInfo(HWND hwnd, const LVTILEINFO *pti)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETTILEINFO(hwnd:%p, pti:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)pti);
+    MSGDUMP_PRINTF("%sLVM_SETTILEINFO(hwnd:%p, pti:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)pti);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnGetTileInfo(HWND hwnd, LVTILEINFO *pti)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETTILEINFO(hwnd:%p, pti:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pti);
+    MSGDUMP_PRINTF("%sLVM_GETTILEINFO(hwnd:%p, pti:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pti);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetInsertMark(HWND hwnd, const LVINSERTMARK *lvim)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETINSERTMARK(hwnd:%p, lvim:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)lvim);
+    MSGDUMP_PRINTF("%sLVM_SETINSERTMARK(hwnd:%p, lvim:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)lvim);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnGetInsertMark(HWND hwnd, LVINSERTMARK *lvim)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETINSERTMARK(hwnd:%p, lvim:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lvim);
+    MSGDUMP_PRINTF("%sLVM_GETINSERTMARK(hwnd:%p, lvim:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lvim);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnInsertMarkHitTest(HWND hwnd, LPPOINT point, LPLVINSERTMARK lvim)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_INSERTMARKHITTEST(hwnd:%p, point:%p, lvim:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)point, (void *)lvim);
+    MSGDUMP_PRINTF("%sLVM_INSERTMARKHITTEST(hwnd:%p, point:%p, lvim:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)point, (void *)lvim);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_ListView_OnGetInsertMarkRect(HWND hwnd, LPRECT rc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETINSERTMARKRECT(hwnd:%p, rc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)rc);
+    MSGDUMP_PRINTF("%sLVM_GETINSERTMARKRECT(hwnd:%p, rc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)rc);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnSetInsertMarkColor(HWND hwnd, COLORREF color)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETINSERTMARKCOLOR(hwnd:%p, color:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, color);
+    MSGDUMP_PRINTF("%sLVM_SETINSERTMARKCOLOR(hwnd:%p, color:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, color);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnGetInsertMarkColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETINSERTMARKCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETINSERTMARKCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnSetInfoTip(HWND hwnd, const LVSETINFOTIP *plvInfoTip)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETINFOTIP(hwnd:%p, plvInfoTip:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvInfoTip);
+    MSGDUMP_PRINTF("%sLVM_SETINFOTIP(hwnd:%p, plvInfoTip:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvInfoTip);
     return FALSE;
 }
 
 static __inline UINT MSGDUMP_API
 MD_ListView_OnGetSelectedColumn(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETSELECTEDCOLUMN(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETSELECTEDCOLUMN(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnIsGroupViewEnabled(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_ISGROUPVIEWENABLED(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_ISGROUPVIEWENABLED(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnGetOutlineColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_GETOUTLINECOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_GETOUTLINECOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_ListView_OnSetOutlineColor(HWND hwnd, COLORREF color)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_SETOUTLINECOLOR(hwnd:%p, color:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, color);
+    MSGDUMP_PRINTF("%sLVM_SETOUTLINECOLOR(hwnd:%p, color:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, color);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_ListView_OnCancelEditLabel(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_CANCELEDITLABEL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sLVM_CANCELEDITLABEL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline UINT MSGDUMP_API
 MD_ListView_OnMapIndexToID(HWND hwnd, UINT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_MAPINDEXTOID(hwnd:%p, index:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLVM_MAPINDEXTOID(hwnd:%p, index:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_ListView_OnMapIDToIndex(HWND hwnd, UINT id)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_MAPIDTOINDEX(hwnd:%p, id:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, id);
+    MSGDUMP_PRINTF("%sLVM_MAPIDTOINDEX(hwnd:%p, id:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, id);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_ListView_OnIsItemVisible(HWND hwnd, UINT index)
 {
-    MSGDUMP_TPRINTF(TEXT("%sLVM_ISITEMVISIBLE(hwnd:%p, index:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, index);
+    MSGDUMP_PRINTF("%sLVM_ISITEMVISIBLE(hwnd:%p, index:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, index);
     return FALSE;
 }
 
@@ -3836,63 +3836,63 @@ MD_ListView_OnIsItemVisible(HWND hwnd, UINT index)
     static __inline void MSGDUMP_API
     MD_ListView_OnGetEmptyText(HWND hwnd, PWSTR pszText, UINT cchText)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETEMPTYTEXT(hwnd:%p, pszText:%p, cchText:%u)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)pszText, cchText);
+        MSGDUMP_PRINTF("%sLVM_GETEMPTYTEXT(hwnd:%p, pszText:%p, cchText:%u)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)pszText, cchText);
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetFooterRect(HWND hwnd, RECT *prc)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETFOOTERRECT(hwnd:%p, prc:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
+        MSGDUMP_PRINTF("%sLVM_GETFOOTERRECT(hwnd:%p, prc:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)prc);
         return FALSE;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetFooterInfo(HWND hwnd, LVFOOTERINFO *plvfi)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETFOOTERINFO(hwnd:%p, plvfi:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)plvfi);
+        MSGDUMP_PRINTF("%sLVM_GETFOOTERINFO(hwnd:%p, plvfi:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)plvfi);
         return FALSE;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetFooterItemRect(HWND hwnd, INT iItem, RECT *prc)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETFOOTERITEMRECT(hwnd:%p, iItem:%d, prc:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)prc);
+        MSGDUMP_PRINTF("%sLVM_GETFOOTERITEMRECT(hwnd:%p, iItem:%d, prc:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)prc);
         return FALSE;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetFooterItem(HWND hwnd, INT iItem, LVFOOTERITEM *pfi)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETFOOTERITEM(hwnd:%p, iItem:%d, pfi:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)pfi);
+        MSGDUMP_PRINTF("%sLVM_GETFOOTERITEM(hwnd:%p, iItem:%d, pfi:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, iItem, (void *)pfi);
         return FALSE;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetItemIndexRect(HWND hwnd, const LVITEMINDEX *plvii, RECT *prc)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETITEMINDEXRECT(hwnd:%p, plvii:%p, prc:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)plvii, (void *)prc);
+        MSGDUMP_PRINTF("%sLVM_GETITEMINDEXRECT(hwnd:%p, plvii:%p, prc:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)plvii, (void *)prc);
         return FALSE;
     }
 
     static __inline HRESULT MSGDUMP_API
     MD_ListView_OnSetItemIndexState(HWND hwnd, const LVITEMINDEX *plvii, const LV_ITEM *lvi)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_SETITEMINDEXSTATE(hwnd:%p, plvii:%p, lvi:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvii, (const void *)lvi);
+        MSGDUMP_PRINTF("%sLVM_SETITEMINDEXSTATE(hwnd:%p, plvii:%p, lvi:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvii, (const void *)lvi);
         return 0;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_ListView_OnGetNextItemIndex(HWND hwnd, LVITEMINDEX *plvii, UINT flags)
     {
-        MSGDUMP_TPRINTF(TEXT("%sLVM_GETNEXTITEMINDEX(hwnd:%p, plvii:%p, flags:%u)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvii, flags);
+        MSGDUMP_PRINTF("%sLVM_GETNEXTITEMINDEX(hwnd:%p, plvii:%p, flags:%u)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (const void *)plvii, flags);
         return 0;
     }
 #endif
@@ -3900,272 +3900,272 @@ MD_ListView_OnIsItemVisible(HWND hwnd, UINT index)
 static __inline HTREEITEM MSGDUMP_API
 MD_TreeView_OnInsertItemA(HWND hwnd, LPTV_INSERTSTRUCTA lpis)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_INSERTITEMA(hwnd:%p, lpis:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpis);
+    MSGDUMP_PRINTF("%sTVM_INSERTITEMA(hwnd:%p, lpis:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpis);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnDeleteItem(HWND hwnd, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_DELETEITEM(hwnd:%p, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_DELETEITEM(hwnd:%p, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnExpand(HWND hwnd, HTREEITEM hitem, UINT code)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_EXPAND(hwnd:%p, hitem:%p, code:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, code);
+    MSGDUMP_PRINTF("%sTVM_EXPAND(hwnd:%p, hitem:%p, code:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, code);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnGetItemRect(HWND hwnd, UINT code, RECT *prc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMRECT(hwnd:%p, code:%u, prc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, code, (void *)prc);
+    MSGDUMP_PRINTF("%sTVM_GETITEMRECT(hwnd:%p, code:%u, prc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, code, (void *)prc);
     return FALSE;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnGetCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETCOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETCOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnGetIndent(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETINDENT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETINDENT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSetIndent(HWND hwnd, INT indent)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETINDENT(hwnd:%p, indent:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, indent);
+    MSGDUMP_PRINTF("%sTVM_SETINDENT(hwnd:%p, indent:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, indent);
     return FALSE;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_TreeView_OnGetImageList(HWND hwnd, INT iImage)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETIMAGELIST(hwnd:%p, iImage:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iImage);
+    MSGDUMP_PRINTF("%sTVM_GETIMAGELIST(hwnd:%p, iImage:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iImage);
     return NULL;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_TreeView_OnSetImageList(HWND hwnd, INT iImage, HIMAGELIST himl)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETIMAGELIST(hwnd:%p, iImage:%d, himl:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iImage, (void *)himl);
+    MSGDUMP_PRINTF("%sTVM_GETIMAGELIST(hwnd:%p, iImage:%d, himl:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iImage, (void *)himl);
     return NULL;
 }
 
 static __inline HTREEITEM MSGDUMP_API
 MD_TreeView_OnGetNextItem(HWND hwnd, HTREEITEM hitem, UINT code)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETNEXTITEM(hwnd:%p, hitem:%p, code:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, code);
+    MSGDUMP_PRINTF("%sTVM_GETNEXTITEM(hwnd:%p, hitem:%p, code:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, code);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSelectItem(HWND hwnd, UINT code, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SELECTITEM(hwnd:%p, code:%u, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, code, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_SELECTITEM(hwnd:%p, code:%u, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, code, (void *)hitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnGetItemA(HWND hwnd, TV_ITEMA *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMA(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sTVM_GETITEMA(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSetItemA(HWND hwnd, const TV_ITEMA *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETITEMA(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
+    MSGDUMP_PRINTF("%sTVM_SETITEMA(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_TreeView_OnEditLabelA(HWND hwnd, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_EDITLABELA(hwnd:%p, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_EDITLABELA(hwnd:%p, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
     return NULL;
 }
 
 static __inline HWND MSGDUMP_API
 MD_TreeView_OnGetEditControl(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETEDITCONTROL(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETEDITCONTROL(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnGetVisibleCount(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETVISIBLECOUNT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETVISIBLECOUNT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline HTREEITEM MSGDUMP_API
 MD_TreeView_OnHitTest(HWND hwnd, LPTV_HITTESTINFO lpht)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_HITTEST(hwnd:%p, lpht:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpht);
+    MSGDUMP_PRINTF("%sTVM_HITTEST(hwnd:%p, lpht:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpht);
     return NULL;
 }
 
 static __inline HIMAGELIST MSGDUMP_API
 MD_TreeView_OnCreateDragImage(HWND hwnd, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_CREATEDRAGIMAGE(hwnd:%p, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_CREATEDRAGIMAGE(hwnd:%p, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSortChildren(HWND hwnd, HTREEITEM hitem, BOOL recurse)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SORTCHILDREN(hwnd:%p, hitem:%p, recurse:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, recurse);
+    MSGDUMP_PRINTF("%sTVM_SORTCHILDREN(hwnd:%p, hitem:%p, recurse:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem, recurse);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnEnsureVisible(HWND hwnd, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_ENSUREVISIBLE(hwnd:%p, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_ENSUREVISIBLE(hwnd:%p, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSortChildrenCB(HWND hwnd, LPTV_SORTCB psort, BOOL recurse)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SORTCHILDRENCB(hwnd:%p, psort:%p, recurse:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)psort, recurse);
+    MSGDUMP_PRINTF("%sTVM_SORTCHILDRENCB(hwnd:%p, psort:%p, recurse:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)psort, recurse);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnEndEditLabelNow(HWND hwnd, BOOL fCancel)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_ENDEDITLABELNOW(hwnd:%p, fCancel:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fCancel);
+    MSGDUMP_PRINTF("%sTVM_ENDEDITLABELNOW(hwnd:%p, fCancel:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fCancel);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnGetISearchStringA(HWND hwnd, LPSTR lpsz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETISEARCHSTRINGA(hwnd:%p, lpsz:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
+    MSGDUMP_PRINTF("%sTVM_GETISEARCHSTRINGA(hwnd:%p, lpsz:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_TreeView_OnSetToolTips(HWND hwnd, HWND hwndTT)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETTOOLTIPS(hwnd:%p, hwndTT:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTT);
+    MSGDUMP_PRINTF("%sTVM_SETTOOLTIPS(hwnd:%p, hwndTT:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hwndTT);
     return NULL;
 }
 
 static __inline HWND MSGDUMP_API
 MD_TreeView_OnGetToolTips(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETTOOLTIPS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETTOOLTIPS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSetInsertMark(HWND hwnd, HTREEITEM hItem, BOOL fAfter)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETINSERTMARK(hwnd:%p, hItem:%p, fAfter:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hItem, fAfter);
+    MSGDUMP_PRINTF("%sTVM_SETINSERTMARK(hwnd:%p, hItem:%p, fAfter:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hItem, fAfter);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_TreeView_OnSetItemHeight(HWND hwnd, INT iHeight)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETITEMHEIGHT(hwnd:%p, iHeight:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, iHeight);
+    MSGDUMP_PRINTF("%sTVM_SETITEMHEIGHT(hwnd:%p, iHeight:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, iHeight);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_TreeView_OnGetItemHeight(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMHEIGHT(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETITEMHEIGHT(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnSetBkColor(HWND hwnd, COLORREF clr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETBKCOLOR(hwnd:%p, clr:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clr);
+    MSGDUMP_PRINTF("%sTVM_SETBKCOLOR(hwnd:%p, clr:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clr);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnSetTextColor(HWND hwnd, COLORREF clr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETTEXTCOLOR(hwnd:%p, clr:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clr);
+    MSGDUMP_PRINTF("%sTVM_SETTEXTCOLOR(hwnd:%p, clr:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clr);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnGetBkColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETBKCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETBKCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnGetTextColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETTEXTCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETTEXTCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnSetScrollTime(HWND hwnd, UINT uTime)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETSCROLLTIME(hwnd:%p, uTime:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uTime);
+    MSGDUMP_PRINTF("%sTVM_SETSCROLLTIME(hwnd:%p, uTime:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uTime);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnGetScrollTime(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETSCROLLTIME(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETSCROLLTIME(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
@@ -4173,8 +4173,8 @@ MD_TreeView_OnGetScrollTime(HWND hwnd)
     static __inline INT MSGDUMP_API
     MD_TreeView_OnSetBorder(HWND hwnd, DWORD dwFlags, INT xBorder, INT yBorder)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_SETBORDER(hwnd:%p, dwFlags:0x%08lX, xBorder:%d, yBorder:%d)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, dwFlags, xBorder, yBorder);
+        MSGDUMP_PRINTF("%sTVM_SETBORDER(hwnd:%p, dwFlags:0x%08lX, xBorder:%d, yBorder:%d)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, dwFlags, xBorder, yBorder);
         return 0;
     }
 #endif
@@ -4182,56 +4182,56 @@ MD_TreeView_OnGetScrollTime(HWND hwnd)
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnSetInsertMarkColor(HWND hwnd, COLORREF clr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETINSERTMARKCOLOR(hwnd:%p, clr:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clr);
+    MSGDUMP_PRINTF("%sTVM_SETINSERTMARKCOLOR(hwnd:%p, clr:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clr);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnGetInsertMarkColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETINSERTMARKCOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETINSERTMARKCOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnGetItemState(HWND hwnd, HTREEITEM hti, UINT mask)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMSTATE(hwnd:%p, hti:%p, mask:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hti, mask);
+    MSGDUMP_PRINTF("%sTVM_GETITEMSTATE(hwnd:%p, hti:%p, mask:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hti, mask);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnSetLineColor(HWND hwnd, COLORREF clr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETLINECOLOR(hwnd:%p, clr:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, clr);
+    MSGDUMP_PRINTF("%sTVM_SETLINECOLOR(hwnd:%p, clr:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, clr);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_TreeView_OnGetLineColor(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETLINECOLOR(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sTVM_GETLINECOLOR(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline HTREEITEM MSGDUMP_API
 MD_TreeView_OnMapAccIDToHTREEITEM(HWND hwnd, UINT id)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_MAPACCIDTOHTREEITEM(hwnd:%p, id:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, id);
+    MSGDUMP_PRINTF("%sTVM_MAPACCIDTOHTREEITEM(hwnd:%p, id:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, id);
     return NULL;
 }
 
 static __inline UINT MSGDUMP_API
 MD_TreeView_OnMapHTREEITEMToAccID(HWND hwnd, HTREEITEM htreeitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_MAPHTREEITEMTOACCID(hwnd:%p, htreeitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)htreeitem);
+    MSGDUMP_PRINTF("%sTVM_MAPHTREEITEMTOACCID(hwnd:%p, htreeitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)htreeitem);
     return 0;
 }
 
@@ -4239,16 +4239,16 @@ MD_TreeView_OnMapHTREEITEMToAccID(HWND hwnd, HTREEITEM htreeitem)
     static __inline DWORD MSGDUMP_API
     MD_TreeView_OnSetExtendedStyle(HWND hwnd, DWORD dw, DWORD mask)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_SETEXTENDEDSTYLE(hwnd:%p, dw:0x%08lX, mask:0x%08lX)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, dw, mask);
+        MSGDUMP_PRINTF("%sTVM_SETEXTENDEDSTYLE(hwnd:%p, dw:0x%08lX, mask:0x%08lX)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, dw, mask);
         return 0;
     }
 
     static __inline DWORD MSGDUMP_API
     MD_TreeView_OnGetExtendedStyle(HWND hwnd)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_GETEXTENDEDSTYLE(hwnd:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd);
+        MSGDUMP_PRINTF("%sTVM_GETEXTENDEDSTYLE(hwnd:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd);
         return 0;
     }
 #endif
@@ -4256,8 +4256,8 @@ MD_TreeView_OnMapHTREEITEMToAccID(HWND hwnd, HTREEITEM htreeitem)
 static __inline HTREEITEM MSGDUMP_API
 MD_TreeView_OnInsertItemW(HWND hwnd, LPTV_INSERTSTRUCTW lpis)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_INSERTITEMW(hwnd:%p, lpis:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpis);
+    MSGDUMP_PRINTF("%sTVM_INSERTITEMW(hwnd:%p, lpis:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpis);
     return NULL;
 }
 
@@ -4265,16 +4265,16 @@ MD_TreeView_OnInsertItemW(HWND hwnd, LPTV_INSERTSTRUCTW lpis)
     static __inline BOOL MSGDUMP_API
     MD_TreeView_OnSetHot(HWND hwnd, HTREEITEM hitem)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_SETHOT(hwnd:%p, hitem:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+        MSGDUMP_PRINTF("%sTVM_SETHOT(hwnd:%p, hitem:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
         return FALSE;
     }
 
     static __inline BOOL MSGDUMP_API
     MD_TreeView_OnSetAutoScrollInfo(HWND hwnd, UINT uPixPerSec, UINT uUpdateTime)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_SETAUTOSCROLLINFO(hwnd:%p, uPixPerSec:%u, uUpdateTime:%u)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, uPixPerSec, uUpdateTime);
+        MSGDUMP_PRINTF("%sTVM_SETAUTOSCROLLINFO(hwnd:%p, uPixPerSec:%u, uUpdateTime:%u)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, uPixPerSec, uUpdateTime);
         return FALSE;
     }
 #endif
@@ -4282,32 +4282,32 @@ MD_TreeView_OnInsertItemW(HWND hwnd, LPTV_INSERTSTRUCTW lpis)
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnGetItemW(HWND hwnd, TV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMW(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
+    MSGDUMP_PRINTF("%sTVM_GETITEMW(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)pitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnSetItemW(HWND hwnd, const TV_ITEMW *pitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_SETITEMW(hwnd:%p, pitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
+    MSGDUMP_PRINTF("%sTVM_SETITEMW(hwnd:%p, pitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (const void *)pitem);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_TreeView_OnGetISearchStringW(HWND hwnd, LPWSTR lpsz)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_GETISEARCHSTRINGW(hwnd:%p, lpsz:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
+    MSGDUMP_PRINTF("%sTVM_GETISEARCHSTRINGW(hwnd:%p, lpsz:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpsz);
     return FALSE;
 }
 
 static __inline HWND MSGDUMP_API
 MD_TreeView_OnEditLabelW(HWND hwnd, HTREEITEM hitem)
 {
-    MSGDUMP_TPRINTF(TEXT("%sTVM_EDITLABELW(hwnd:%p, hitem:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+    MSGDUMP_PRINTF("%sTVM_EDITLABELW(hwnd:%p, hitem:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
     return NULL;
 }
 
@@ -4315,24 +4315,24 @@ MD_TreeView_OnEditLabelW(HWND hwnd, HTREEITEM hitem)
     static __inline DWORD MSGDUMP_API
     MD_TreeView_OnGetSelectedCount(HWND hwnd)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_GETSELECTEDCOUNT(hwnd:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd);
+        MSGDUMP_PRINTF("%sTVM_GETSELECTEDCOUNT(hwnd:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd);
         return 0;
     }
 
     static __inline DWORD MSGDUMP_API
     MD_TreeView_OnShowInfoTip(HWND hwnd, HTREEITEM hitem)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_SHOWINFOTIP(hwnd:%p, hitem:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
+        MSGDUMP_PRINTF("%sTVM_SHOWINFOTIP(hwnd:%p, hitem:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)hitem);
         return 0;
     }
 
     static __inline LRESULT MSGDUMP_API
     MD_TreeView_OnGetItemPartRect(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
-        MSGDUMP_TPRINTF(TEXT("%sTVM_GETITEMPARTRECT(hwnd:%p, wParam:%p, lParam:%p)\n"),
-                        MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
+        MSGDUMP_PRINTF("%sTVM_GETITEMPARTRECT(hwnd:%p, wParam:%p, lParam:%p)\n",
+                       MSGDUMP_PREFIX, (void *)hwnd, (void *)wParam, (void *)lParam);
         return 0;
     }
 #endif
@@ -4340,328 +4340,328 @@ MD_TreeView_OnEditLabelW(HWND hwnd, HTREEITEM hitem)
 static __inline LRESULT MSGDUMP_API
 MD_RichEdit_OnCanPaste(HWND hwnd, UINT uFormat)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_CANPASTE(hwnd:%p, uFormat:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uFormat);
+    MSGDUMP_PRINTF("%sEM_CANPASTE(hwnd:%p, uFormat:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uFormat);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnDisplayBand(HWND hwnd, LPRECT lprc)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_DISPLAYBAND(hwnd:%p, lprc:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lprc);
+    MSGDUMP_PRINTF("%sEM_DISPLAYBAND(hwnd:%p, lprc:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lprc);
     return FALSE;
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnExGetSel(HWND hwnd, CHARRANGE *lpchr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_EXGETSEL(hwnd:%p, lpchr:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpchr);
+    MSGDUMP_PRINTF("%sEM_EXGETSEL(hwnd:%p, lpchr:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpchr);
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnExLimitText(HWND hwnd, DWORD cchTextMax)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_EXLIMITTEXT(hwnd:%p, cchTextMax:%ld)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, cchTextMax);
+    MSGDUMP_PRINTF("%sEM_EXLIMITTEXT(hwnd:%p, cchTextMax:%ld)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, cchTextMax);
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnExLineFromChar(HWND hwnd, DWORD ichCharPos)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_EXLINEFROMCHAR(hwnd:%p, ichCharPos:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ichCharPos);
+    MSGDUMP_PRINTF("%sEM_EXLINEFROMCHAR(hwnd:%p, ichCharPos:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ichCharPos);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnExSetSel(HWND hwnd, INT ichChar)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_EXSETSEL(hwnd:%p, ichChar:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, ichChar);
+    MSGDUMP_PRINTF("%sEM_EXSETSEL(hwnd:%p, ichChar:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, ichChar);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnFindText(HWND hwnd, UINT fuFlags, FINDTEXT *lpFindText)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_FINDTEXT(hwnd:%p, fuFlags:%u, lpFindText:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
+    MSGDUMP_PRINTF("%sEM_FINDTEXT(hwnd:%p, fuFlags:%u, lpFindText:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnFormatRange(HWND hwnd, BOOL fRender, FORMATRANGE *lpFmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_FORMATRANGE(hwnd:%p, fRender:%d, lpFmt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fRender, (void *)lpFmt);
+    MSGDUMP_PRINTF("%sEM_FORMATRANGE(hwnd:%p, fRender:%d, lpFmt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fRender, (void *)lpFmt);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnGetCharFormat(HWND hwnd, BOOL fSelection, CHARFORMAT *lpFmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETCHARFORMAT(hwnd:%p, fSelection:%d, lpFmt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fSelection, (void *)lpFmt);
+    MSGDUMP_PRINTF("%sEM_GETCHARFORMAT(hwnd:%p, fSelection:%d, lpFmt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fSelection, (void *)lpFmt);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnGetEventMask(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETEVENTMASK(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETEVENTMASK(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnGetOleInterface(HWND hwnd, LPVOID *ppObject)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETOLEINTERFACE(hwnd:%p, ppObject:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)ppObject);
+    MSGDUMP_PRINTF("%sEM_GETOLEINTERFACE(hwnd:%p, ppObject:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)ppObject);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnGetParaFormat(HWND hwnd, PARAFORMAT *lpFmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETPARAFORMAT(hwnd:%p, lpFmt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
+    MSGDUMP_PRINTF("%sEM_GETPARAFORMAT(hwnd:%p, lpFmt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnGetSelText(HWND hwnd, LPTSTR lpBuf)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETSELTEXT(hwnd:%p, lpBuf:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpBuf);
+    MSGDUMP_PRINTF("%sEM_GETSELTEXT(hwnd:%p, lpBuf:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpBuf);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnHideSelection(HWND hwnd, BOOL fHide, BOOL fChangeStyle)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_HIDESELECTION(hwnd:%p, fHide:%d, fChangeStyle:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fHide, fChangeStyle);
+    MSGDUMP_PRINTF("%sEM_HIDESELECTION(hwnd:%p, fHide:%d, fChangeStyle:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fHide, fChangeStyle);
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnPasteSpecial(HWND hwnd, UINT uFormat, REPASTESPECIAL *lpRePasteSpecial)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_PASTESPECIAL(hwnd:%p, uFormat:%u, lpRePasteSpecial:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpRePasteSpecial);
+    MSGDUMP_PRINTF("%sEM_PASTESPECIAL(hwnd:%p, uFormat:%u, lpRePasteSpecial:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpRePasteSpecial);
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnRequestResize(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_REQUESTRESIZE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_REQUESTRESIZE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnSelectionType(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SELECTIONTYPE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_SELECTIONTYPE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline COLORREF MSGDUMP_API
 MD_RichEdit_OnSetBkgndColor(HWND hwnd, BOOL fUseSysColor, COLORREF clr)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETBKGNDCOLOR(hwnd:%p, fUseSysColor:%d, clr:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fUseSysColor, clr);
+    MSGDUMP_PRINTF("%sEM_SETBKGNDCOLOR(hwnd:%p, fUseSysColor:%d, clr:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fUseSysColor, clr);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnSetCharFormat(HWND hwnd, UINT uFlags, CHARFORMAT *lpFmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETCHARFORMAT(hwnd:%p, uFlags:%u, lpFmt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uFlags, (void *)lpFmt);
+    MSGDUMP_PRINTF("%sEM_SETCHARFORMAT(hwnd:%p, uFlags:%u, lpFmt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uFlags, (void *)lpFmt);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnSetEventMask(HWND hwnd, DWORD dwMask)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETEVENTMASK(hwnd:%p, dwMask:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwMask);
+    MSGDUMP_PRINTF("%sEM_SETEVENTMASK(hwnd:%p, dwMask:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwMask);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnSetOleCallback(HWND hwnd, void *pCallback)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETOLECALLBACK(hwnd:%p, pCallback:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, pCallback);
+    MSGDUMP_PRINTF("%sEM_SETOLECALLBACK(hwnd:%p, pCallback:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, pCallback);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnSetParaFormat(HWND hwnd, PARAFORMAT *lpFmt)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETPARAFORMAT(hwnd:%p, lpFmt:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
+    MSGDUMP_PRINTF("%sEM_SETPARAFORMAT(hwnd:%p, lpFmt:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpFmt);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnSetTargetDevice(HWND hwnd, HDC hdcTarget, INT cxLineWidth)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETTARGETDEVICE(hwnd:%p, hdcTarget:%p, cxLineWidth:%d)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)hdcTarget, cxLineWidth);
+    MSGDUMP_PRINTF("%sEM_SETTARGETDEVICE(hwnd:%p, hdcTarget:%p, cxLineWidth:%d)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)hdcTarget, cxLineWidth);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnStreamIn(HWND hwnd, UINT uFormat, EDITSTREAM *lpStream)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_STREAMIN(hwnd:%p, uFormat:%u, lpStream:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
+    MSGDUMP_PRINTF("%sEM_STREAMIN(hwnd:%p, uFormat:%u, lpStream:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnStreamOut(HWND hwnd, UINT uFormat, EDITSTREAM *lpStream)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_STREAMOUT(hwnd:%p, uFormat:%u, lpStream:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
+    MSGDUMP_PRINTF("%sEM_STREAMOUT(hwnd:%p, uFormat:%u, lpStream:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, uFormat, (void *)lpStream);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnGetTextRange(HWND hwnd, TEXTRANGE *lpRange)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETTEXTRANGE(hwnd:%p, lpRange:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lpRange);
+    MSGDUMP_PRINTF("%sEM_GETTEXTRANGE(hwnd:%p, lpRange:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, (void *)lpRange);
     return 0;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnFindWordBreak(HWND hwnd, UINT code, DWORD ichStart)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_FINDWORDBREAK(hwnd:%p, code:%u, ichStart:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, code, ichStart);
+    MSGDUMP_PRINTF("%sEM_FINDWORDBREAK(hwnd:%p, code:%u, ichStart:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, code, ichStart);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_RichEdit_OnSetOptions(HWND hwnd, UINT fOperation, UINT fOptions)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETOPTIONS(hwnd:%p, fOperation:%u, fOptions:%u)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fOperation, fOptions);
+    MSGDUMP_PRINTF("%sEM_SETOPTIONS(hwnd:%p, fOperation:%u, fOptions:%u)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fOperation, fOptions);
     return 0;
 }
 
 static __inline UINT MSGDUMP_API
 MD_RichEdit_OnGetOptions(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETOPTIONS(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETOPTIONS(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnFindTextEx(HWND hwnd, UINT fuFlags, FINDTEXTEX *lpFindText)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_FINDTEXTEX(hwnd:%p, fuFlags:%u, lpFindText:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
+    MSGDUMP_PRINTF("%sEM_FINDTEXTEX(hwnd:%p, fuFlags:%u, lpFindText:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, fuFlags, (void *)lpFindText);
     return 0;
 }
 
 static __inline void *MSGDUMP_API
 MD_RichEdit_OnGetWordBreakProcEx(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETWORDBREAKPROC(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETWORDBREAKPROC(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return NULL;
 }
 
 static __inline void *MSGDUMP_API
 MD_RichEdit_OnSetWordBreakProcEx(HWND hwnd, void *pfn)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETWORDBREAKPROC(hwnd:%p, pfn:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, pfn);
+    MSGDUMP_PRINTF("%sEM_SETWORDBREAKPROC(hwnd:%p, pfn:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, pfn);
     return NULL;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnSetUndoLimit(HWND hwnd, DWORD dwMaxUndo)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETUNDOLIMIT(hwnd:%p, dwMaxUndo:%ld)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwMaxUndo);
+    MSGDUMP_PRINTF("%sEM_SETUNDOLIMIT(hwnd:%p, dwMaxUndo:%ld)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwMaxUndo);
     return 0;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnRedo(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_REDO(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_REDO(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnCanRedo(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_CANREDO(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_CANREDO(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return FALSE;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnGetUndoName(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETUNDONAME(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETUNDONAME(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline INT MSGDUMP_API
 MD_RichEdit_OnGetRedoName(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETREDONAME(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETREDONAME(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline void MSGDUMP_API
 MD_RichEdit_OnStopGroupTyping(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_STOPGROUPTYPING(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_STOPGROUPTYPING(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
 }
 
 static __inline BOOL MSGDUMP_API
 MD_RichEdit_OnSetTextMode(HWND hwnd, DWORD dwTextMode)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_SETTEXTMODE(hwnd:%p, dwTextMode:0x%08lX)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd, dwTextMode);
+    MSGDUMP_PRINTF("%sEM_SETTEXTMODE(hwnd:%p, dwTextMode:0x%08lX)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd, dwTextMode);
     return FALSE;
 }
 
 static __inline DWORD MSGDUMP_API
 MD_RichEdit_OnGetTextMode(HWND hwnd)
 {
-    MSGDUMP_TPRINTF(TEXT("%sEM_GETTEXTMODE(hwnd:%p)\n"),
-                    MSGDUMP_PREFIX, (void *)hwnd);
+    MSGDUMP_PRINTF("%sEM_GETTEXTMODE(hwnd:%p)\n",
+                   MSGDUMP_PREFIX, (void *)hwnd);
     return 0;
 }
 
 static __inline LRESULT MSGDUMP_API
 MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    TCHAR szClass[24], sz[2], szMsg[64];
+    char szClass[24], sz[2], szMsg[64];
     szClass[0] = 0;
-    GetClassName(hwnd, szClass, ARRAYSIZE(szClass));
+    GetClassNameA(hwnd, szClass, _countof(szClass));
     sz[0] = szClass[0];
     sz[1] = 0;
-    CharUpper(sz);
+    CharUpperA(sz);
 
-    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    if (sz[0] == 'R' && lstrcmpiA(szClass, RICHEDIT_CLASS10A) == 0)
     {
         switch (uMsg)
         {
@@ -4708,8 +4708,8 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    if ((sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0) ||
-        (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0))
+    if ((sz[0] == 'E' && lstrcmpiA(szClass, "EDIT") == 0) ||
+        (sz[0] == 'R' && lstrcmpiA(szClass, RICHEDIT_CLASS10A) == 0))
     {
         switch (uMsg)
         {
@@ -4753,7 +4753,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HANDLE_MSG(hwnd, EM_GETIMESTATUS, MD_Edit_OnGetIMEStatus);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, TEXT("STATIC")) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, "STATIC") == 0)
     {
         switch (uMsg)
         {
@@ -4763,7 +4763,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HANDLE_MSG(hwnd, STM_GETIMAGE, MD_Static_OnGetImage);
         }
     }
-    else if (sz[0] == TEXT('L') && lstrcmpi(szClass, TEXT("LISTBOX")) == 0)
+    else if (sz[0] == 'L' && lstrcmpiA(szClass, "LISTBOX") == 0)
     {
         switch (uMsg)
         {
@@ -4809,7 +4809,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HANDLE_MSG(hwnd, LB_ITEMFROMPOINT, MD_ListBox_OnItemFromPoint);
         }
     }
-    else if (sz[0] == TEXT('C') && lstrcmpi(szClass, TEXT("COMBOBOX")) == 0)
+    else if (sz[0] == 'C' && lstrcmpiA(szClass, "COMBOBOX") == 0)
     {
         switch (uMsg)
         {
@@ -4849,7 +4849,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HANDLE_MSG(hwnd, CB_INITSTORAGE, MD_ComboBox_OnInitStorage);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, TEXT("SCROLLBAR")) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, "SCROLLBAR") == 0)
     {
         switch (uMsg)
         {
@@ -4864,7 +4864,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             HANDLE_MSG(hwnd, SBM_GETSCROLLBARINFO, MD_ScrollBar_OnGetScrollBarInfo);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_LISTVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_LISTVIEWA) == 0)
     {
         switch (uMsg)
         {
@@ -5017,7 +5017,7 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_TREEVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_TREEVIEWA) == 0)
     {
         switch (uMsg)
         {
@@ -5350,10 +5350,10 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return MD_OnApp(hwnd, uMsg, wParam, lParam);
             }
             else if (MAXINTATOM <= uMsg && uMsg <= MAXWORD &&
-                     GetClipboardFormatName(uMsg, szMsg, _countof(szMsg)))
+                     GetClipboardFormatNameA(uMsg, szMsg, _countof(szMsg)))
             {
-                MSGDUMP_TPRINTF(TEXT("%sWM_%u[\"%s\"](hwnd:%p, wParam:%p, lParam:%p)\n"),
-                                MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, wParam, lParam);
+                MSGDUMP_PRINTF("%sWM_%u[\"%s\"](hwnd:%p, wParam:%p, lParam:%p)\n",
+                               MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, (void *)wParam, (void *)lParam);
             }
             else
             {
@@ -5367,16 +5367,16 @@ MD_msgdump(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static __inline LRESULT MSGDUMP_API
 MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult)
 {
-#define DEFINE_RESULT(WM_) case WM_: MSGDUMP_TPRINTF(TEXT("%s") TEXT(#WM_) TEXT(": hwnd:%p, lResult:%p\n"), \
-                                                     MSGDUMP_PREFIX, (void *)hwnd, lResult); break
-    TCHAR szClass[24], sz[2], szMsg[64];
+#define DEFINE_RESULT(WM_) case WM_: MSGDUMP_PRINTF("%s" #WM_ ": hwnd:%p, lResult:%p\n", \
+                                                    MSGDUMP_PREFIX, (void *)hwnd, (void *)lResult); break
+    char szClass[24], sz[2], szMsg[64];
     szClass[0] = 0;
-    GetClassName(hwnd, szClass, ARRAYSIZE(szClass));
+    GetClassNameA(hwnd, szClass, _countof(szClass));
     sz[0] = szClass[0];
     sz[1] = 0;
-    CharUpper(sz);
+    CharUpperA(sz);
 
-    if (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0)
+    if (sz[0] == 'R' && lstrcmpiA(szClass, RICHEDIT_CLASS10A) == 0)
     {
         switch (uMsg)
         {
@@ -5423,8 +5423,8 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
         }
     }
 
-    if ((sz[0] == TEXT('E') && lstrcmpi(szClass, TEXT("EDIT")) == 0) ||
-        (sz[0] == TEXT('R') && lstrcmpi(szClass, RICHEDIT_CLASS) == 0))
+    if ((sz[0] == 'E' && lstrcmpiA(szClass, "EDIT") == 0) ||
+        (sz[0] == 'R' && lstrcmpiA(szClass, RICHEDIT_CLASS10A) == 0))
     {
         switch (uMsg)
         {
@@ -5468,7 +5468,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
             DEFINE_RESULT(EM_GETIMESTATUS);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, TEXT("STATIC")) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, "STATIC") == 0)
     {
         switch (uMsg)
         {
@@ -5478,7 +5478,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
             DEFINE_RESULT(STM_GETIMAGE);
         }
     }
-    else if (sz[0] == TEXT('L') && lstrcmpi(szClass, TEXT("LISTBOX")) == 0)
+    else if (sz[0] == 'L' && lstrcmpiA(szClass, "LISTBOX") == 0)
     {
         switch (uMsg)
         {
@@ -5524,7 +5524,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
             DEFINE_RESULT(LB_ITEMFROMPOINT);
         }
     }
-    else if (sz[0] == TEXT('C') && lstrcmpi(szClass, TEXT("COMBOBOX")) == 0)
+    else if (sz[0] == 'C' && lstrcmpiA(szClass, "COMBOBOX") == 0)
     {
         switch (uMsg)
         {
@@ -5564,7 +5564,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
             DEFINE_RESULT(CB_INITSTORAGE);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, TEXT("SCROLLBAR")) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, "SCROLLBAR") == 0)
     {
         switch (uMsg)
         {
@@ -5579,7 +5579,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
             DEFINE_RESULT(SBM_GETSCROLLBARINFO);
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_LISTVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_LISTVIEWA) == 0)
     {
         switch (uMsg)
         {
@@ -5732,7 +5732,7 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
 #endif
         }
     }
-    else if (sz[0] == TEXT('S') && lstrcmpi(szClass, WC_TREEVIEW) == 0)
+    else if (sz[0] == 'S' && lstrcmpiA(szClass, WC_TREEVIEWA) == 0)
     {
         switch (uMsg)
         {
@@ -6071,24 +6071,24 @@ MD_msgresult(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT lResult
     default:
         if (WM_USER <= uMsg && uMsg < WM_APP)
         {
-            MSGDUMP_TPRINTF(TEXT("%sWM_USER+%u(hwnd:%p, lResult:%p)\n"),
-                            MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)lResult);
+            MSGDUMP_PRINTF("%sWM_USER+%u(hwnd:%p, lResult:%p)\n",
+                           MSGDUMP_PREFIX, uMsg - WM_USER, (void *)hwnd, (void *)lResult);
         }
         else if (WM_APP <= uMsg && uMsg < MAXINTATOM)
         {
-            MSGDUMP_TPRINTF(TEXT("%sWM_APP+%u(hwnd:%p, lResult:%p)\n"),
-                            MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)lResult);
+            MSGDUMP_PRINTF("%sWM_APP+%u(hwnd:%p, lResult:%p)\n",
+                           MSGDUMP_PREFIX, uMsg - WM_APP, (void *)hwnd, (void *)lResult);
         }
         else if (MAXINTATOM <= uMsg && uMsg <= MAXWORD &&
-                 GetClipboardFormatName(uMsg, szMsg, _countof(szMsg)))
+                 GetClipboardFormatNameA(uMsg, szMsg, _countof(szMsg)))
         {
-            MSGDUMP_TPRINTF(TEXT("%sWM_%u[\"%s\"](hwnd:%p, lResult:%p)\n"),
-                            MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, (void *)lResult);
+            MSGDUMP_PRINTF("%sWM_%u[\"%s\"](hwnd:%p, lResult:%p)\n",
+                           MSGDUMP_PREFIX, uMsg, szMsg, (void *)hwnd, (void *)lResult);
         }
         else
         {
-            MSGDUMP_TPRINTF(TEXT("%sWM_%u(hwnd:%p, lResult:%p)\n"),
-                            MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)lResult);
+            MSGDUMP_PRINTF("%sWM_%u(hwnd:%p, lResult:%p)\n",
+                           MSGDUMP_PREFIX, uMsg, (void *)hwnd, (void *)lResult);
         }
 #undef DEFINE_RESULT
     }

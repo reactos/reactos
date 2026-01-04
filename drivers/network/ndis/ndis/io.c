@@ -333,7 +333,7 @@ NdisMAllocateMapRegisters(
   Description.Master = TRUE;                         /* implied by calling this function */
   Description.ScatterGather = TRUE;                  /* XXX UNTRUE: All BM DMA are S/G (ms seems to do this) */
   Description.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
-  Description.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+  Description.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
   Description.DmaChannel = DmaChannel;
   Description.MaximumLength = MaximumBufferSize;
 
@@ -883,7 +883,7 @@ NdisMRegisterDmaChannel(
   DeviceDesc.Dma64BitAddresses = FALSE;
   DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
   DeviceDesc.DmaChannel = DmaDescription->DmaChannel;
-  DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+  DeviceDesc.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
   DeviceDesc.DmaWidth = DmaDescription->DmaWidth;
   DeviceDesc.DmaSpeed = DmaDescription->DmaSpeed;
   DeviceDesc.MaximumLength = MaximumLength;
@@ -1196,7 +1196,7 @@ NdisMInitializeScatterGatherDma(
     DeviceDesc.Dma32BitAddresses = TRUE; // All callers support 32-bit addresses
     DeviceDesc.Dma64BitAddresses = Dma64BitAddresses;
     DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
-    DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;
+    DeviceDesc.InterfaceType = (INTERFACE_TYPE)Adapter->NdisMiniportBlock.BusType;
     DeviceDesc.MaximumLength = MaximumPhysicalMapping;
 
     Adapter->NdisMiniportBlock.SystemAdapterObject =

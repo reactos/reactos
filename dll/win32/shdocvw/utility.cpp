@@ -3,9 +3,11 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Utility routines
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "objects.h"
+#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
@@ -138,4 +140,90 @@ IEILIsEqual(
 
     FIXME("%p, %p\n", pidl1, pidl2);
     return FALSE;
+}
+
+static VOID
+SHDOCVW_PathDeleteInvalidChars(LPWSTR pszDisplayName)
+{
+#define PATH_VALID_ELEMENT ( \
+    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
+    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
+)
+    PWCHAR pch, pchSrc;
+    for (pch = pchSrc = pszDisplayName; *pchSrc; ++pchSrc)
+    {
+        if (PathIsValidCharW(*pchSrc, PATH_VALID_ELEMENT))
+            *pch++ = *pchSrc;
+    }
+    *pch = UNICODE_NULL;
+}
+
+static HRESULT
+SHDOCVW_CreateShortcut(
+    _In_ LPCWSTR pszLnkFileName, 
+    _In_ PCIDLIST_ABSOLUTE pidlTarget,
+    _In_opt_ LPCWSTR pszDescription)
+{
+    HRESULT hr;
+
+    CComPtr<IShellLink> psl;
+    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IShellLink, &psl));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    psl->SetIDList(pidlTarget);
+
+    if (pszDescription)
+        psl->SetDescription(pszDescription);
+
+    CComPtr<IPersistFile> ppf;
+    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return ppf->Save(pszLnkFileName, TRUE);
+}
+
+/*************************************************************************
+ *      AddUrlToFavorites [SHDOCVW.106]
+ */
+EXTERN_C HRESULT WINAPI
+AddUrlToFavorites(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszUrlW,
+    _In_opt_ LPCWSTR pszTitleW,
+    _In_ BOOL fDisplayUI)
+{
+    TRACE("%p, %s, %s, %d\n", hwnd, wine_dbgstr_w(pszUrlW), wine_dbgstr_w(pszTitleW), fDisplayUI);
+
+    if (fDisplayUI)
+        FIXME("fDisplayUI\n"); // NOTE: Use SHBrowseForFolder callback
+
+    if (PathIsURLW(pszUrlW))
+        FIXME("Internet Shortcut\n");
+
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr = SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Get title
+    WCHAR szTitle[MAX_PATH];
+    if (pszTitleW)
+        StringCchCopyW(szTitle, _countof(szTitle), pszTitleW);
+    else
+        ILGetDisplayNameEx(NULL, pidl, szTitle, ILGDN_NORMAL);
+
+    // Delete invalid characters
+    SHDOCVW_PathDeleteInvalidChars(szTitle);
+
+    // Build shortcut pathname
+    WCHAR szPath[MAX_PATH];
+    if (!SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE))
+        return E_FAIL;
+    PathAppendW(szPath, szTitle);
+    PathAddExtensionW(szPath, L".lnk");
+
+    return SHDOCVW_CreateShortcut(szPath, pidl, NULL);
 }

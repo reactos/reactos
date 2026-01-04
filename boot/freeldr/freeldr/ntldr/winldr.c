@@ -246,11 +246,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* FIXME! HACK value for docking profile */
     Extension->Profile.Status = 2;
 
-    PDESCRIPTION_HEADER AcpiTable = FindAcpiTable();
-    if (AcpiTable)
+    /* Check if FreeLdr detected a ACPI table */
+    if (IsAcpiPresent())
     {
-        Extension->AcpiTable = AcpiTable;
-        Extension->AcpiTableSize = AcpiTable->Length;
+        /* Set the pointer to something for compatibility */
+        Extension->AcpiTable = (PVOID)1;
+        // FIXME: Extension->AcpiTableSize;
     }
 
     if (VersionToBoot >= _WIN32_WINNT_VISTA)
@@ -1113,7 +1114,7 @@ LoadAndBootWindows(
 
     /* Check if a RAM disk file was given */
     FileName = NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
-    if (FileName && (FileNameLength > 7))
+    if (FileName && (FileNameLength >= 7))
     {
         /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
@@ -1249,6 +1250,33 @@ LoadAndBootWindowsCommon(
 
     /* "Stop all motors", change videomode */
     MachPrepareForReactOS();
+
+    /* Show the "debug mode" notice if needed */
+    /* Match KdInitSystem() conditions */
+    if (!NtLdrGetOption(BootOptions, "CRASHDEBUG") &&
+        !NtLdrGetOption(BootOptions, "NODEBUG") &&
+        !!NtLdrGetOption(BootOptions, "DEBUG"))
+    {
+        /* Check whether there is a DEBUGPORT option */
+        PCSTR DebugPort;
+        ULONG DebugPortLength = 0;
+        DebugPort = NtLdrGetOptionEx(BootOptions, "DEBUGPORT=", &DebugPortLength);
+        if (DebugPort != NULL && DebugPortLength > 10)
+        {
+            /* Move to the debug port name */
+            DebugPort += 10; DebugPortLength -= 10;
+        }
+        else
+        {
+            /* Default to COM */
+            DebugPort = "COM"; DebugPortLength = 3;
+        }
+
+        /* It is booting in debug mode, show the banner */
+        TuiPrintf("You need to connect a debugger on port %.*s\n"
+                  "For more information, visit https://reactos.org/wiki/Debugging.\n",
+                  DebugPortLength, DebugPort);
+    }
 
     /* Debugging... */
     //DumpMemoryAllocMap();

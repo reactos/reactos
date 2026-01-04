@@ -45,6 +45,42 @@ static void test_LoadImage_DataFile(void)
     }
 }
 
+static void test_LoadIcon_SystemIds(void)
+{
+    static const WORD icomap[][2] = {
+        { 100, (WORD)(SIZE_T)IDI_APPLICATION },
+        { 101, (WORD)(SIZE_T)IDI_WARNING },
+        { 102, (WORD)(SIZE_T)IDI_QUESTION },
+        { 103, (WORD)(SIZE_T)IDI_ERROR },
+        { 104, (WORD)(SIZE_T)IDI_INFORMATION },
+        { 105, (WORD)(SIZE_T)IDI_WINLOGO }
+    };
+    HINSTANCE hInst = GetModuleHandleW(L"USER32");
+    typedef BOOL (WINAPI*SHAIE)(HICON, HICON);
+    SHAIE pfnSHAreIconsEqual;
+    HMODULE hSHLWAPI = LoadLibraryA("SHLWAPI");
+    if (!hSHLWAPI)
+    {
+        skip("Could not initialize\n");
+        return;
+    }
+    pfnSHAreIconsEqual = (SHAIE)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(548));
+    if (!pfnSHAreIconsEqual)
+    {
+        FreeLibrary(hSHLWAPI);
+        skip("Could not initialize\n");
+        return;
+    }
+
+    for (UINT i = 0; i < _countof(icomap); i++)
+    {
+        HICON hIcoRes = LoadIconW(hInst, MAKEINTRESOURCEW(icomap[i][0]));
+        HICON hIcoSys = LoadIconW(NULL, MAKEINTRESOURCEW(icomap[i][1]));
+        ok(hIcoRes && pfnSHAreIconsEqual(hIcoRes, hIcoSys), "SysIcon %d must be resource %d\n", icomap[i][1], icomap[i][0]);
+    }
+    FreeLibrary(hSHLWAPI);
+}
+
 START_TEST(LoadImage)
 {
     char path[MAX_PATH];
@@ -133,4 +169,6 @@ START_TEST(LoadImage)
     si.cb = sizeof(si);
     CreateProcessA( NULL, path, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi );
     WaitForSingleObject (pi.hProcess, INFINITE);
+
+    test_LoadIcon_SystemIds();
 }

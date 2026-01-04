@@ -2,40 +2,39 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them.\n\
+    IDS_USAGE "2つのファイルまたはファイル セットを比較し、それらの違いを表示します。\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [drive1:][path1]filename1 [drive2:][path2]filename2\n\
-FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
+   [ドライブ1:][パス1]ファイル名1 [ドライブ2:][パス2]ファイル名2\n\
+FC /B [ドライブ1:][パス1]ファイル名1 [ドライブ2:][パス2]ファイル名2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
-  [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
-  [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+  /A         各差分集合の最初の行と最後の行のみを表示します。\n\
+  /B         バイナリ比較を実行します。\n\
+  /C         大文字と小文字を区別しません。\n\
+  /L         ファイルを ASCII テキストとして比較します。\n\
+  /LBn       連続する不一致の最大数を指定された行数に設定します\n\
+             (デフォルト: 100)。\n\
+  /N         ASCII 比較の行番号を表示します。\n\
+  /OFF[LINE] オフライン属性が設定されたファイルをスキップしません。\n\
+  /T         タブをスペースに展開しません (デフォルト: 展開する)。\n\
+  /U         ファイルを UNICODE テキスト ファイルとして比較します。\n\
+  /W         比較のために空白 (タブとスペース) を圧縮します。\n\
+  /nnnn      不一致の後に一致する必要がある連続行の数を指定します\n\
+             (デフォルト: 2)。\n\
+  [ドライブ1:][パス1]ファイル名1\n\
+             比較する最初のファイルまたはファイル集合を指定します。\n\
+  [ドライブ2:][パス2]ファイル名2\n\
+             比較する 2 番目のファイルまたはファイル集合を指定します。\n"
+    IDS_NO_DIFFERENCE "FC: 違いは見つかりませんでした\n"
+    IDS_LONGER_THAN "FC: %ls は %ls より長いです\n"
+    IDS_COMPARING "ファイル %ls と %ls を比較しています\n"
+    IDS_OUT_OF_MEMORY "FC: メモリ不足\n"
+    IDS_CANNOT_READ "FC: %ls から読み取れません\n"
+    IDS_INVALID_SWITCH "FC: 無効なスイッチ\n"
+    IDS_CANNOT_OPEN "FC: %ls を開けません - そのようなファイルまたはフォルダはありません\n"
+    IDS_NEEDS_FILES "FC: ファイル指定が必要です\n"
+    IDS_CANT_USE_WILDCARD "ワイルドカード（「*」と「?」）はまだサポートされていません\n"
+    IDS_DIFFERENT "FC: ファイル %ls と %ls は異なります\n"
+    IDS_TOO_LARGE "FC: ファイル %ls が大きすぎます\n"
+    IDS_RESYNC_FAILED "再同期に失敗しました。ファイルが違いすぎます。\n"
 END

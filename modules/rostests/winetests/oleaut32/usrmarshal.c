@@ -36,6 +36,16 @@
 # define V_U2(A)  (*(A))
 #endif
 
+#ifdef __REACTOS__
+typedef struct
+{
+    IUnknown IUnknown_iface;
+    ULONG refs;
+} HeapUnknown;
+
+static const IUnknownVtbl HeapUnknown_Vtbl;
+#endif
+
 static HRESULT (WINAPI *pSafeArrayGetIID)(SAFEARRAY*,GUID*);
 static HRESULT (WINAPI *pSafeArrayGetVartype)(SAFEARRAY*,VARTYPE*);
 static HRESULT (WINAPI *pVarBstrCmp)(BSTR,BSTR,LCID,ULONG);
@@ -112,10 +122,27 @@ static ULONG get_cell_count(const SAFEARRAY *psa)
 
 static DWORD elem_wire_size(LPSAFEARRAY lpsa, SF_TYPE sftype)
 {
+#ifdef __REACTOS__
+    switch (sftype)
+    {
+    case SF_HAVEIID:
+    case SF_UNKNOWN:
+    case SF_DISPATCH:
+    case SF_BSTR:
+#else
     if (sftype == SF_BSTR)
+#endif
         return sizeof(DWORD);
+#ifdef __REACTOS__
+
+    default:
+#else
     else
+#endif
         return lpsa->cbElements;
+#ifdef __REACTOS__
+    }
+#endif
 }
 
 static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
@@ -136,7 +163,12 @@ static void check_safearray(void *buffer, LPSAFEARRAY lpsa)
     if (!pSafeArrayGetVartype || !pSafeArrayGetIID)
         return;
 
+#ifdef __REACTOS__
+    /* If FADF_HAVEIID is set, VT will be 0. */
+    if((lpsa->fFeatures & FADF_HAVEIID) || FAILED(SafeArrayGetVartype(lpsa, &vt)))
+#else
     if(FAILED(pSafeArrayGetVartype(lpsa, &vt)))
+#endif
         vt = 0;
 
     sftype = get_union_type(lpsa);
@@ -224,8 +256,15 @@ static void init_user_marshal_cb(USER_MARSHAL_CB *umcb,
 
 static void test_marshal_LPSAFEARRAY(void)
 {
+#ifdef __REACTOS__
+    HeapUnknown *heap_unknown[10];
+#endif
     unsigned char *buffer, *next;
+#ifdef __REACTOS__
+    ULONG size, expected, size2;
+#else
     ULONG size, expected;
+#endif
     LPSAFEARRAY lpsa;
     LPSAFEARRAY lpsa2 = NULL;
     SAFEARRAYBOUND sab[2];
@@ -525,6 +564,156 @@ static void test_marshal_LPSAFEARRAY(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     hr = SafeArrayDestroyDescriptor(lpsa);
     ok(hr == S_OK, "got 0x%08x\n", hr);
+
+#ifdef __REACTOS__
+    /* Test an array of VT_UNKNOWN */
+    sab[0].lLbound = 3;
+    sab[0].cElements = ARRAY_SIZE(heap_unknown);
+
+    lpsa = SafeArrayCreate(VT_UNKNOWN, 1, sab);
+
+    /*
+     * Calculate approximate expected size. Sizes are different between Windows
+     * versions, so this should calculate the smallest size that seems sane.
+     */
+    expected = 60;
+    for (i = 0; i < sab[0].cElements; i++)
+    {
+        HeapUnknown *unk;
+        VARIANT v;
+
+        unk = HeapAlloc(GetProcessHeap(), 0, sizeof(*unk));
+        unk->IUnknown_iface.lpVtbl = &HeapUnknown_Vtbl;
+        unk->refs = 1;
+
+        indices[0] = i + sab[0].lLbound;
+        heap_unknown[i] = unk;
+        hr = SafeArrayPutElement(lpsa, indices, &heap_unknown[i]->IUnknown_iface);
+        ok(hr == S_OK, "Failed to put unknown element hr 0x%x\n", hr);
+        ok(unk->refs == 2, "VT_UNKNOWN safearray elem %d, refcount %d\n", i, unk->refs);
+
+        V_VT(&v) = VT_UNKNOWN;
+        V_UNKNOWN(&v) = &unk->IUnknown_iface;
+        expected += VARIANT_UserSize(&umcb.Flags, 0, &v) - 20;
+    }
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
+    ok(size >= expected || size  >= (expected + 12 ),
+        "size should be at least %u bytes, not %u\n", expected, size);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size2 = LPSAFEARRAY_UserSize(&umcb.Flags, 1, &lpsa);
+    ok(size2 == (size + sizeof(DWORD)) || size2  == (size + sizeof(DWORD) + 12),
+            "size should be %u bytes, not %u\n", size + (ULONG) sizeof(DWORD), size2);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    memset(buffer, 0xcc, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    next = LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
+    ok((next - buffer) <= size, "Marshaled %u bytes, expected at most %u\n", (ULONG) (next - buffer), size);
+    check_safearray(buffer, lpsa);
+todo_wine
+    ok(heap_unknown[0]->refs == 3, "Unexpected refcount %d\n", heap_unknown[0]->refs);
+
+    lpsa2 = NULL;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    next = LPSAFEARRAY_UserUnmarshal(&umcb.Flags, buffer, &lpsa2);
+    ok((next - buffer) <= size, "Marshaled %u bytes, expected at most %u\n", (ULONG) (next - buffer), size);
+    ok(lpsa2 != NULL, "LPSAFEARRAY didn't unmarshal, result %p\n", next);
+
+    for (i = 0; i < ARRAY_SIZE(heap_unknown); i++)
+    {
+        IUnknown *gotvalue = NULL;
+
+        if (lpsa2)
+        {
+            indices[0] = i + sab[0].lLbound;
+            hr = SafeArrayGetElement(lpsa2, indices, &gotvalue);
+            ok(hr == S_OK, "Failed to get unk element at %d, hres 0x%x\n", i, hr);
+            if (hr == S_OK)
+            {
+                ok(gotvalue == &heap_unknown[i]->IUnknown_iface, "Interface %d mismatch, expected %p, got %p\n",
+                        i, &heap_unknown[i]->IUnknown_iface, gotvalue);
+                IUnknown_Release(gotvalue);
+            }
+        }
+    }
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
+
+    /* Set one of the elements to NULL, see how this effects size. */
+    indices[0] = 3 + sab[0].lLbound;
+    hr = SafeArrayPutElement(lpsa, indices, NULL);
+    ok(hr == S_OK, "Failed to put unknown element hr 0x%x\n", hr);
+
+    expected = 60;
+    for (i = 0; i < sab[0].cElements; i++)
+    {
+        VARIANT v;
+
+        V_VT(&v) = VT_UNKNOWN;
+        V_UNKNOWN(&v) = (i != 3) ? &heap_unknown[i]->IUnknown_iface : NULL;
+        expected += VARIANT_UserSize(&umcb.Flags, 0, &v) - 20;
+    }
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size = LPSAFEARRAY_UserSize(&umcb.Flags, 0, &lpsa);
+    ok(size >= expected || size  >= (expected + 12 ),
+        "size should be at least %u bytes, not %u\n", expected, size);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size2 = LPSAFEARRAY_UserSize(&umcb.Flags, 1, &lpsa);
+    ok(size2 == (size + sizeof(DWORD)) || size2 == (size + sizeof(DWORD) + 12),
+            "size should be %u bytes, not %u\n", size + (ULONG) sizeof(DWORD), size2);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    memset(buffer, 0xcc, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    next = LPSAFEARRAY_UserMarshal(&umcb.Flags, buffer, &lpsa);
+    ok((next - buffer) <= expected, "Marshaled %u bytes, expected at most %u bytes\n", (ULONG) (next - buffer), expected);
+    check_safearray(buffer, lpsa);
+
+    lpsa2 = NULL;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    next = LPSAFEARRAY_UserUnmarshal(&umcb.Flags, buffer, &lpsa2);
+    ok((next - buffer) <= expected, "Marshaled %u bytes, expected at most %u bytes\n", (ULONG) (next - buffer), expected);
+    ok(lpsa2 != NULL, "LPSAFEARRAY didn't unmarshal, result %p\n", next);
+
+    for (i = 0; i < ARRAY_SIZE(heap_unknown); i++)
+    {
+        IUnknown *gotvalue = NULL;
+
+        if (lpsa2)
+        {
+            indices[0] = i + sab[0].lLbound;
+            hr = SafeArrayGetElement(lpsa2, indices, &gotvalue);
+            ok(hr == S_OK, "Failed to get unk element at %d, hres 0x%x\n", i, hr);
+            if (hr == S_OK)
+            {
+                /* Our NULL interface. */
+                if (i == 3)
+                    ok(gotvalue == NULL, "Interface %d expected NULL, got %p\n", i, gotvalue);
+                else
+                {
+                    ok(gotvalue == &heap_unknown[i]->IUnknown_iface, "Interface %d mismatch, expected %p, got %p\n",
+                            i, &heap_unknown[i]->IUnknown_iface, gotvalue);
+                    IUnknown_Release(gotvalue);
+                }
+            }
+        }
+        IUnknown_Release(&heap_unknown[i]->IUnknown_iface);
+    }
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    LPSAFEARRAY_UserFree(&umcb.Flags, &lpsa2);
+
+    ok(heap_unknown[0]->refs == 1, "Unexpected refcount %d\n", heap_unknown[0]->refs);
+
+    hr = SafeArrayDestroy(lpsa);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+#endif
 }
 
 static void check_bstr(void *buffer, BSTR b)
@@ -670,11 +859,13 @@ static void test_marshal_BSTR(void)
     SysFreeString(b);
 }
 
+#ifndef __REACTOS__
 typedef struct
 {
     IUnknown IUnknown_iface;
     ULONG refs;
 } HeapUnknown;
+#endif
 
 static inline HeapUnknown *impl_from_IUnknown(IUnknown *iface)
 {

@@ -5,29 +5,55 @@
 extern "C" {
 #endif
 
-DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex );
-DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
-                                     PDWORD MediaType,
-                                     PDWORD Mtu,
-                                     PDWORD Speed );
-DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex );
-DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex );
+DWORD
+APIENTRY
+DhcpAcquireParameters(
+    _In_ PWSTR AdapterName);
+
+DWORD
+APIENTRY
+DhcpEnumClasses(
+    _In_ DWORD Unknown1,
+    _In_ PWSTR AdapterName,
+    _In_ DWORD Unknown3,
+    _In_ DWORD Unknown4);
+
+DWORD
+APIENTRY
+DhcpHandlePnPEvent(
+    _In_ DWORD Unknown1,
+    _In_ DWORD Unknown2,
+    _In_ LPWSTR AdapterName,
+    _In_ DWORD Unknown4,
+    _In_ DWORD Unknown5);
+
+DWORD
+APIENTRY
+DhcpNotifyConfigChange(
+    _In_ LPWSTR ServerName,
+    _In_ LPWSTR AdapterName,
+    _In_ BOOL NewIpAddress,
+    _In_ DWORD IpIndex,
+    _In_ DWORD IpAddress,
+    _In_ DWORD SubnetMask,
+    _In_ INT DhcpAction);
+
+DWORD
+APIENTRY
+DhcpQueryHWInfo(
+    _In_ DWORD AdapterIndex,
+    _Out_ PDWORD MediaType,
+    _Out_ PDWORD Mtu,
+    _Out_ PDWORD Speed);
+
+DWORD
+APIENTRY
+DhcpReleaseParameters(
+    _In_ PWSTR AdapterName);
+
 DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
                                              DWORD Address,
                                              DWORD Netmask );
-DWORD APIENTRY
-DhcpNotifyConfigChange(LPWSTR ServerName,
-                       LPWSTR AdapterName,
-                       BOOL NewIpAddress,
-                       DWORD IpIndex,
-                       DWORD IpAddress,
-                       DWORD SubnetMask,
-                       int DhcpAction);
-DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
-                                      PBOOL DhcpEnabled,
-                                      PDWORD DhcpServer,
-                                      time_t *LeaseObtained,
-                                      time_t *LeaseExpires );
 
 #ifdef __cplusplus
 }

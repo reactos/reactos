@@ -167,13 +167,31 @@ HRESULT
 WINAPI
 INetCfgClass_fnFindComponent(
     INetCfgClass *iface,
+    LPCWSTR pszwComponentId,
     INetCfgComponent **pComponent)
 {
-//    HRESULT hr;
-//    INetCfgClassImpl *This = (INetCfgClassImpl *)iface;
+    INetCfgClassImpl *This = (INetCfgClassImpl *)iface;
+    NetCfgComponentItem *pHead;
 
+    if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NET))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pNet;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETTRANS))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pProtocol;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETSERVICE))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pService;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETCLIENT))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pClient;
+    else
+        return E_NOINTERFACE;
 
-    /* TODO */
+    while (pHead)
+    {
+        if (!_wcsicmp(pHead->szId, pszwComponentId))
+        {
+            return INetCfgComponent_Constructor(NULL, &IID_INetCfgComponent, (LPVOID*)pComponent, pHead, This->pNetCfg);
+        }
+        pHead = pHead->pNext;
+    }
 
     return S_FALSE;
 }
@@ -184,10 +202,21 @@ INetCfgClass_fnEnumComponents(
     INetCfgClass *iface,
     IEnumNetCfgComponent **ppenumComponent)
 {
-//    INetCfgClassImpl *This = (INetCfgClassImpl *)iface;
+    INetCfgClassImpl *This = (INetCfgClassImpl *)iface;
+    NetCfgComponentItem *pHead;
 
+    if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NET))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pNet;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETTRANS))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pProtocol;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETSERVICE))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pService;
+    else if (IsEqualIID(&This->ClassGuid, &GUID_DEVCLASS_NETCLIENT))
+        pHead = ((INetCfgImpl*)(This->pNetCfg))->pClient;
+    else
+        return E_NOINTERFACE;
 
-    return E_NOINTERFACE;
+    return IEnumNetCfgComponent_Constructor (NULL, &IID_IEnumNetCfgComponent, (LPVOID*)ppenumComponent, pHead, This->pNetCfg);
 }
 
 static const INetCfgClassVtbl vt_NetCfgClass =

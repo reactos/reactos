@@ -10,6 +10,32 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
+#ifndef _SHELL32_
+
+static HRESULT WINAPI DisplayNameOfW(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl,
+                                     _In_ DWORD dwFlags, _Out_ LPWSTR pszBuf, _In_ UINT cchBuf)
+{
+    *pszBuf = UNICODE_NULL;
+    STRRET sr;
+    HRESULT hr = psf->GetDisplayNameOf(pidl, dwFlags, &sr);
+    return FAILED(hr) ? hr : StrRetToBufW(&sr, pidl, pszBuf, cchBuf);
+}
+
+static HRESULT
+GetCommandStringA(_In_ IContextMenu *pCM, _In_ UINT_PTR Id, _In_ UINT GCS,
+                  _Out_writes_(cchMax) LPSTR Buf, _In_ UINT cchMax)
+{
+    HRESULT hr = pCM->GetCommandString(Id, GCS & ~GCS_UNICODE, NULL, Buf, cchMax);
+    if (FAILED(hr))
+    {
+        WCHAR buf[MAX_PATH];
+        hr = pCM->GetCommandString(Id, GCS | GCS_UNICODE, NULL, (LPSTR)buf, _countof(buf));
+        if (SUCCEEDED(hr))
+            hr = SHUnicodeToAnsi(buf, Buf, cchMax) > 0 ? S_OK : E_FAIL;
+    }
+    return hr;
+}
+
 static HRESULT SHELL32_CoCreateInitSF(LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TARGET_INFO* ppfti,
                                 LPCITEMIDLIST pidlChild, const GUID* clsid, REFIID riid, LPVOID *ppvOut)
 {
@@ -36,6 +62,8 @@ static HRESULT SHELL32_CoCreateInitSF(LPCITEMIDLIST pidlRoot, PERSIST_FOLDER_TAR
 
     return pShellFolder->QueryInterface(riid, ppvOut);
 }
+
+#endif // _SHELL32_
 
 static void WINAPI _InsertMenuItemW(
         HMENU hMenu,
@@ -74,6 +102,28 @@ static void WINAPI _InsertMenuItemW(
     mii.wID = wID;
     mii.fType = fType;
     InsertMenuItemW(hMenu, indexMenu, fByPosition, &mii);
+}
+
+static HRESULT QueryActiveShellView(IUnknown *pUnkSite, REFGUID rService, IShellView **ppSV)
+{
+    CComPtr<IShellBrowser> pSB;
+    HRESULT hr = IUnknown_QueryService(pUnkSite, rService, IID_PPV_ARG(IShellBrowser, &pSB));
+    return SUCCEEDED(hr) ? pSB->QueryActiveShellView(ppSV) : hr;
+}
+
+static HRESULT BeginRenameOfShellViewSelection(IUnknown *pUnkSite)
+{
+    CComPtr<IShellView> pSV;
+    HRESULT hr = QueryActiveShellView(pUnkSite, SID_SShellBrowser, &pSV);
+    if (FAILED(hr))
+        return hr;
+    CComPtr<IFolderView2> pFV2;
+    if (SUCCEEDED(hr = pSV->QueryInterface(IID_PPV_ARG(IFolderView2, &pFV2))))
+        return pFV2->DoRename();
+    CComPtr<IShellView2> pSV2;
+    if (SUCCEEDED(hr = pSV->QueryInterface(IID_PPV_ARG(IShellView2, &pSV2))))
+        return pSV2->HandleRename(NULL);
+    return hr;
 }
 
 struct FolderViewColumns
@@ -795,7 +845,7 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
     if (iColumn == COL_RELEVANCE_INDEX)
     {
         // TODO: Fill once the relevance is calculated
-        return SHSetStrRet(&pDetails->str, "");
+        return SHSetStrRetEmpty(&pDetails->str);
     }
 
     ATLASSERT(iColumn == COL_NAME_INDEX);
@@ -840,11 +890,18 @@ STDMETHODIMP CFindFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
 
 STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    HRESULT hr;
     WORD wColumn = LOWORD(lParam);
     switch (wColumn)
     {
     case COL_NAME_INDEX: // Name
-        break;
+        C_ASSERT(COL_NAME_INDEX == 0); // SHELL32::SHFSF_COL_NAME
+        // We can have more than one item with the same filename, in this case, look at the path as well.
+        // When DefView wants to identify a specific item, it will use the SHCIDS_CANONICALONLY flag.
+        hr = m_pisfInner->CompareIDs(MAKELONG(0, HIWORD(lParam)), _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
+        if (hr == S_EQUAL && (lParam & (SHCIDS_CANONICALONLY | SHCIDS_ALLFIELDS)))
+            hr = CompareIDs(COL_LOCATION_INDEX, pidl1, pidl2);
+        return hr;
     case COL_LOCATION_INDEX: // Path
         return MAKE_COMPARE_HRESULT(StrCmpW(_ILGetPath(pidl1), _ILGetPath(pidl2)));
     case COL_RELEVANCE_INDEX: // Relevance
@@ -853,8 +910,7 @@ STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PC
         wColumn -= _countof(g_ColumnDefs) - 1;
         break;
     }
-    // FIXME: DefView does not like the way we sort
-    return m_pisfInner->CompareIDs(HIWORD(lParam) | wColumn, _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
+    return m_pisfInner->CompareIDs(MAKELONG(wColumn, HIWORD(lParam)), _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
 }
 
 STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
@@ -894,36 +950,46 @@ STDMETHODIMP CFindFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl
         if (FAILED(hr = pFolder->GetAttributesOf(1, &pidlChild, rgfInOut)))
             break;
     }
-    *rgfInOut &= ~SFGAO_CANRENAME; // FIXME: Handle SetNameOf
     return hr;
 }
 
 class CFindFolderContextMenu :
         public IContextMenu,
+        public IObjectWithSite,
         public CComObjectRootEx<CComMultiThreadModelNoCS>
 {
     CComPtr<IContextMenu> m_pInner;
     CComPtr<IShellFolderView> m_shellFolderView;
-    UINT m_firstCmdId;
+    IUnknown *m_pUnkSite = NULL;
+    UINT m_cidl;
+    UINT m_MyFirstId = 0;
     static const UINT ADDITIONAL_MENU_ITEMS = 2;
 
-    //// *** IContextMenu methods ***
+    // *** IContextMenu ***
     STDMETHODIMP QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
-        m_firstCmdId = idCmdFirst;
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
-        _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst++, MFT_SEPARATOR, NULL, 0);
+        if (m_cidl > 1)
+            uFlags &= ~CMF_CANRENAME;
+
+        m_MyFirstId = 0;
+        if (idCmdLast - idCmdFirst > ADDITIONAL_MENU_ITEMS)
+        {
+            // We use the last available id. For DefView, this places us at
+            // DVIDM_CONTEXTMENU_LAST which should not collide with anything.
+            // This is just a temporary fix until we are moved to shell32 and
+            // can use DFM_MERGECONTEXTMENU.
+            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdLast--, MFT_STRING,
+                             MAKEINTRESOURCEW(IDS_SEARCH_OPEN_FOLDER), MFS_ENABLED);
+            _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdLast--, MFT_SEPARATOR, NULL, 0);
+            m_MyFirstId = idCmdLast + 1;
+        }
         return m_pInner->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
     }
 
     STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
-        if (!IS_INTRESOURCE(lpcmi->lpVerb))
-        {
-            return m_pInner->InvokeCommand(lpcmi);
-        }
-
-        if (LOWORD(lpcmi->lpVerb) >= m_firstCmdId && LOWORD(lpcmi->lpVerb) < m_firstCmdId + ADDITIONAL_MENU_ITEMS)
+        WORD idCmd = IS_INTRESOURCE(lpcmi->lpVerb) ? LOWORD(lpcmi->lpVerb) : 0;
+        if (m_MyFirstId && idCmd >= m_MyFirstId && idCmd < m_MyFirstId + ADDITIONAL_MENU_ITEMS)
         {
             PCUITEMID_CHILD *apidl;
             UINT cidl;
@@ -935,20 +1001,31 @@ class CFindFolderContextMenu :
             {
                 CComHeapPtr<ITEMIDLIST> folderPidl(ILCreateFromPathW(_ILGetPath(apidl[i])));
                 if (!folderPidl)
-                    return E_OUTOFMEMORY;
+                {
+                    hResult = E_OUTOFMEMORY;
+                    break;
+                }
                 LPCITEMIDLIST child = _ILGetFSPidl(apidl[i]);
                 SHOpenFolderAndSelectItems(folderPidl, 1, &child, 0);
             }
             LocalFree(apidl); // Yes, LocalFree
-            return S_OK;
+            return hResult;
+        }
+
+        // TODO: Use GetDfmCmd instead after moving all of this to shell32
+        CHAR szVerb[42];
+        PCSTR pszVerb = !idCmd ? lpcmi->lpVerb : NULL;
+        if (!pszVerb && SUCCEEDED(GetCommandStringA(m_pInner, LOWORD(lpcmi->lpVerb), GCS_VERBA, szVerb, _countof(szVerb))))
+            pszVerb = szVerb;
+
+        if (pszVerb && !lstrcmpiA(pszVerb, "rename"))
+        {
+            // Note: We can't invoke m_pInner (CDefaultContextMenu::DoRename) because the pidl is incorrect and SelectItem will fail.
+            return BeginRenameOfShellViewSelection(m_pUnkSite);
         }
 
         // FIXME: We can't block FCIDM_SHVIEW_REFRESH here, add items on SFVM_LISTREFRESHED instead
-        CMINVOKECOMMANDINFOEX actualCmdInfo;
-        memcpy(&actualCmdInfo, lpcmi, lpcmi->cbSize);
-        if (LOWORD(lpcmi->lpVerb) < FCIDM_SHVIEW_ARRANGE) // HACKFIX for DefView using direct FCIDM_SHVIEW ids
-            actualCmdInfo.lpVerb -= ADDITIONAL_MENU_ITEMS;
-        return m_pInner->InvokeCommand((CMINVOKECOMMANDINFO *)&actualCmdInfo);
+        return m_pInner->InvokeCommand(lpcmi);
     }
 
     STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
@@ -956,8 +1033,27 @@ class CFindFolderContextMenu :
         return m_pInner->GetCommandString(idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
     }
 
+    // *** IObjectWithSite ***
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    {
+        IUnknown_Set(&m_pUnkSite, pUnkSite);
+        IUnknown_SetSite(m_pInner, pUnkSite);
+        return S_OK;
+    }
+
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
+    {
+        *ppvSite = NULL;
+        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
+    }
+
 public:
-    static HRESULT Create(IShellFolderView *pShellFolderView, IContextMenu *pInnerContextMenu, IContextMenu **pContextMenu)
+    ~CFindFolderContextMenu()
+    {
+        SetSite(NULL);
+    }
+
+    static HRESULT Create(IShellFolderView *pShellFolderView, UINT cidl, IContextMenu *pInnerContextMenu, IContextMenu **pContextMenu)
     {
         CComObject<CFindFolderContextMenu> *pObj;
         HRESULT hResult = CComObject<CFindFolderContextMenu>::CreateInstance(&pObj);
@@ -965,11 +1061,13 @@ public:
             return hResult;
         pObj->m_shellFolderView = pShellFolderView;
         pObj->m_pInner = pInnerContextMenu;
+        pObj->m_cidl = cidl;
         return pObj->QueryInterface(IID_PPV_ARG(IContextMenu, pContextMenu));
     }
 
     BEGIN_COM_MAP(CFindFolderContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
     END_COM_MAP()
 };
 
@@ -1028,7 +1126,7 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
         hr = pShellFolder->GetUIObjectOf(hwndOwner, cidl, aFSPidl, riid, prgfInOut, (void**)&pContextMenu);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-        return CFindFolderContextMenu::Create(m_shellFolderView, pContextMenu, (IContextMenu **)ppvOut);
+        return CFindFolderContextMenu::Create(m_shellFolderView, cidl, pContextMenu, (IContextMenu **)ppvOut);
     }
 
     CComPtr<IShellFolder> pFolder;
@@ -1050,8 +1148,34 @@ STDMETHODIMP CFindFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, 
 STDMETHODIMP CFindFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags,
                                     PITEMID_CHILD *pPidlOut)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!pPidlOut)
+        return E_INVALIDARG; // Our pidls are special, the caller must get it from us and not from parsing
+    *pPidlOut = NULL;
+
+    HRESULT hr;
+    CComPtr<IShellFolder> pFolder;
+    PCUITEMID_CHILD pidlChild;
+    if (FAILED_UNEXPECTEDLY(hr = GetFSFolderAndChild(pidl, &pFolder, &pidlChild)))
+        return hr;
+
+    PCWSTR pszDir = _ILGetPath(pidl);
+    PWSTR pszFull = (PWSTR)SHAlloc((wcslen(pszDir) + MAX_PATH) * sizeof(*pszDir));
+    if (!pszFull)
+        return E_OUTOFMEMORY;
+
+    PITEMID_CHILD pidlRawNew = NULL;
+    hr = pFolder->SetNameOf(hwndOwner, pidlChild, lpName, dwFlags, &pidlRawNew);
+    if (SUCCEEDED(hr) && pidlRawNew)
+    {
+        WCHAR szFileName[MAX_PATH];
+        hr = DisplayNameOfW(pFolder, pidlRawNew, SHGDN_FORPARSING | SHGDN_INFOLDER, szFileName, _countof(szFileName));
+        ILFree(pidlRawNew);
+        PathCombineW(pszFull, pszDir, szFileName);
+        if (SUCCEEDED(hr))
+            hr = ((*pPidlOut = _ILCreate(pszFull)) != NULL) ? S_OK : E_OUTOFMEMORY;
+    }
+    SHFree(pszFull);
+    return hr;
 }
 
 //// *** IShellFolderViewCB method ***
@@ -1110,6 +1234,21 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         // TODO: SFVM_GETCOLUMNSTREAM
     }
     return E_NOTIMPL;
+}
+
+//// *** IItemNameLimits methods ***
+STDMETHODIMP CFindFolder::GetMaxLength(LPCWSTR pszName, int *piMaxNameLen)
+{
+    CComPtr<IItemNameLimits> pLimits;
+    HRESULT hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IItemNameLimits, &pLimits));
+    return FAILED_UNEXPECTEDLY(hr) ? hr : pLimits->GetMaxLength(pszName, piMaxNameLen);;
+}
+
+STDMETHODIMP CFindFolder::GetValidCharacters(LPWSTR *ppwszValidChars, LPWSTR *ppwszInvalidChars)
+{
+    CComPtr<IItemNameLimits> pLimits;
+    HRESULT hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IItemNameLimits, &pLimits));
+    return FAILED_UNEXPECTEDLY(hr) ? hr : pLimits->GetValidCharacters(ppwszValidChars, ppwszInvalidChars);
 }
 
 //// *** IPersistFolder2 methods ***

@@ -21,43 +21,42 @@ extern "C" {
 #define ABS_AUTOHIDE	1
 #define ABS_ALWAYSONTOP	2
 
-#define SEE_MASK_DEFAULT	0x00000000
-#define SEE_MASK_CLASSNAME	0x00000001
-#define SEE_MASK_CLASSKEY	0x00000003
-#define SEE_MASK_IDLIST	0x00000004
-#define SEE_MASK_INVOKEIDLIST	0x0000000C
-#define SEE_MASK_ICON	0x00000010
-#define SEE_MASK_HOTKEY	0x00000020
-#define SEE_MASK_NOCLOSEPROCESS	0x00000040
-#define SEE_MASK_CONNECTNETDRV	0x00000080
-#define SEE_MASK_NOASYNC	0x00000100
-#define SEE_MASK_FLAG_DDEWAIT	SEE_MASK_NOASYNC
-#define SEE_MASK_DOENVSUBST	0x00000200
-#define SEE_MASK_FLAG_NO_UI	0x00000400
-#define SEE_MASK_UNICODE	0x00004000
-#define SEE_MASK_NO_CONSOLE	0x00008000
-/*
- * NOTE: The following 5 flags are undocumented and are not present in the
- * official Windows SDK. However they are used in shobjidl.idl to define some
- * CMIC_MASK_* flags, these ones being mentioned in the MSDN documentation of
- * the CMINVOKECOMMANDINFOEX structure.
- * I affect them this range of values which seems to be strangely empty. Of
- * course their values may differ from the real ones, however I have no way
- * of discovering them. If somebody else can verify them, it would be great.
- */
-#define SEE_MASK_UNKNOWN_0x1000 0x00001000 /* FIXME: Name */
-#define SEE_MASK_HASLINKNAME    0x00010000
-#define SEE_MASK_FLAG_SEPVDM    0x00020000
-#define SEE_MASK_USE_RESERVED   0x00040000
-#define SEE_MASK_HASTITLE       0x00080000
-/* END NOTE */
-#define SEE_MASK_ASYNCOK	0x00100000
-#define SEE_MASK_HMONITOR	0x00200000
-#define SEE_MASK_NOZONECHECKS	0x00800000
-#define SEE_MASK_NOQUERYCLASSSTORE	0x01000000
-#define SEE_MASK_WAITFORINPUTIDLE	0x02000000
-#define SEE_MASK_FLAG_LOG_USAGE	0x04000000
+#define SEE_MASK_DEFAULT        0x00000000
+#define SEE_MASK_CLASSNAME      0x00000001
+#define SEE_MASK_CLASSKEY       0x00000003
+#define SEE_MASK_IDLIST         0x00000004
+#define SEE_MASK_INVOKEIDLIST   0x0000000C
+#if (NTDDI_VERSION < NTDDI_VISTA) || defined(__REACTOS__)
+#define SEE_MASK_ICON           0x00000010
+#endif
+#define SEE_MASK_HOTKEY         0x00000020
+#define SEE_MASK_NOCLOSEPROCESS 0x00000040
+#define SEE_MASK_CONNECTNETDRV  0x00000080
+#define SEE_MASK_NOASYNC        0x00000100
+#define SEE_MASK_FLAG_DDEWAIT   SEE_MASK_NOASYNC
+#define SEE_MASK_DOENVSUBST     0x00000200
+#define SEE_MASK_FLAG_NO_UI     0x00000400
+// 0x00001000 is undocumented.
+#define SEE_MASK_UNICODE        0x00004000
+#define SEE_MASK_NO_CONSOLE     0x00008000
+// 0x00010000 .. 0x00080000 are undocumented.
+#define SEE_MASK_ASYNCOK        0x00100000
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#define SEE_MASK_HMONITOR       0x00200000
+#endif
+#if (NTDDI_VERSION >= NTDDI_WINXPSP1)
+#define SEE_MASK_NOZONECHECKS   0x00800000
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#define SEE_MASK_NOQUERYCLASSSTORE  0x01000000
+#define SEE_MASK_WAITFORINPUTIDLE   0x02000000
+#endif
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#define SEE_MASK_FLAG_LOG_USAGE     0x04000000
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 #define SEE_MASK_FLAG_HINST_IS_SITE 0x08000000
+#endif
 
 #define ABM_NEW	0
 #define ABM_REMOVE	1
@@ -319,11 +318,17 @@ typedef struct _SHELLEXECUTEINFOA {
 	LPCSTR lpDirectory;
 	int nShow;
 	HINSTANCE hInstApp;
+	/* Optional fields */
 	PVOID lpIDList;
 	LPCSTR lpClass;
 	HKEY hkeyClass;
 	DWORD dwHotKey;
-	HANDLE hIcon;
+	_ANONYMOUS_UNION union {
+		HANDLE hIcon;
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+		HANDLE hMonitor;
+#endif
+	} DUMMYUNIONNAME;
 	HANDLE hProcess;
 } SHELLEXECUTEINFOA,*LPSHELLEXECUTEINFOA;
 typedef struct _SHELLEXECUTEINFOW {
@@ -336,11 +341,17 @@ typedef struct _SHELLEXECUTEINFOW {
 	LPCWSTR lpDirectory;
 	int nShow;
 	HINSTANCE hInstApp;
+	/* Optional fields */
 	PVOID lpIDList;
 	LPCWSTR lpClass;
 	HKEY hkeyClass;
 	DWORD dwHotKey;
-	HANDLE hIcon;
+	_ANONYMOUS_UNION union {
+		HANDLE hIcon;
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+		HANDLE hMonitor;
+#endif
+	} DUMMYUNIONNAME;
 	HANDLE hProcess;
 } SHELLEXECUTEINFOW,*LPSHELLEXECUTEINFOW;
 typedef struct _SHFILEOPSTRUCTA {
@@ -494,7 +505,12 @@ FindExecutableW(
   _In_opt_ LPCWSTR lpDirectory,
   _Out_writes_(MAX_PATH) LPWSTR lpResult);
 
-UINT_PTR WINAPI SHAppBarMessage(_In_ DWORD, _Inout_ PAPPBARDATA);
+UINT_PTR
+WINAPI
+SHAppBarMessage(
+  _In_ DWORD dwMessage,
+  _Inout_ PAPPBARDATA pData);
+
 BOOL WINAPI Shell_NotifyIconA(_In_ DWORD, _In_ PNOTIFYICONDATAA);
 BOOL WINAPI Shell_NotifyIconW(_In_ DWORD, _In_ PNOTIFYICONDATAW);
 

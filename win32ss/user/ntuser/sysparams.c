@@ -79,6 +79,8 @@ static const WCHAR* VAL_CARETWIDTH = L"CaretWidth";
 static const WCHAR* VAL_SCRLLCHARS = L"WheelScrollChars";
 #endif
 static const WCHAR* VAL_USERPREFMASK = L"UserPreferencesMask";
+static const WCHAR* VAL_SNAP_ENABLED = L"WindowArrangementActive";
+static const WCHAR* VAL_SNAP_DOCKMOVING = L"DockMoving";
 
 static const WCHAR* KEY_MDALIGN = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
 static const WCHAR* VAL_MDALIGN = L"MenuDropAlignment";
@@ -100,6 +102,11 @@ static const WCHAR* KEY_SHOWSNDS = L"Control Panel\\Accessibility\\ShowSounds";
 static const WCHAR* KEY_KDBPREF = L"Control Panel\\Accessibility\\Keyboard Preference";
 static const WCHAR* KEY_SCRREAD = L"Control Panel\\Accessibility\\Blind Access";
 static const WCHAR* VAL_ON = L"On";
+
+static const WCHAR* KEY_MOUSEKEYS = L"Control Panel\\Accessibility\\MouseKeys";
+static const WCHAR* VAL_MOUSEKEYS_FLAGS = L"Flags";
+static const WCHAR* VAL_MOUSEKEYS_MAX = L"MaximumSpeed";
+static const WCHAR* VAL_MOUSEKEYS_TIMETOMAX = L"TimeToMaximumSpeed";
 
 /** Loading the settings ******************************************************/
 
@@ -214,19 +221,6 @@ SpiFixupValues(VOID)
 
 }
 
-/* Is Window Snap enabled? */
-static BOOL IntIsWindowSnapEnabled(VOID)
-{
-    WCHAR szValue[2];
-    if (RegReadUserSetting(L"Control Panel\\Desktop", L"WindowArrangementActive",
-                           REG_SZ, szValue, sizeof(szValue)))
-    {
-        szValue[RTL_NUMBER_OF(szValue) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-        return (_wtoi(szValue) != 0);
-    }
-    return TRUE;
-}
-
 static
 VOID
 SpiUpdatePerUserSystemParameters(VOID)
@@ -336,11 +330,18 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.filterkeys.cbSize = sizeof(FILTERKEYS);
     gspv.togglekeys.cbSize = sizeof(TOGGLEKEYS);
     gspv.mousekeys.cbSize = sizeof(MOUSEKEYS);
+    gspv.mousekeys.dwFlags = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_FLAGS, 62);
+    gspv.mousekeys.iMaxSpeed = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_MAX, 80);
+    gspv.mousekeys.iTimeToMaxSpeed = SpiLoadInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_TIMETOMAX, 3000);
+    gspv.mousekeys.iCtrlSpeed = 8; // FIXME
     gspv.stickykeys.cbSize = sizeof(STICKYKEYS);
     gspv.serialkeys.cbSize = sizeof(SERIALKEYS);
     gspv.soundsentry.cbSize = sizeof(SOUNDSENTRYW);
     gspv.highcontrast.cbSize = sizeof(HIGHCONTRASTW);
     gspv.animationinfo.cbSize = sizeof(ANIMATIONINFO);
+
+    g_bWindowSnapEnabled = SpiLoadInt(KEY_DESKTOP, VAL_SNAP_ENABLED, TRUE);
+    gspv.bDockMoving = SpiLoadInt(KEY_DESKTOP, VAL_SNAP_DOCKMOVING, TRUE);
 
     /* Make sure we don't use broken values */
     SpiFixupValues();
@@ -357,8 +358,6 @@ SpiUpdatePerUserSystemParameters(VOID)
     }
     gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
     gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
-
-    g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
 
 BOOL
@@ -1197,7 +1196,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             if (fl & SPIF_UPDATEINIFILE)
             {
-                // FIXME: What to do?
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_FLAGS, gspv.mousekeys.dwFlags);
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_MAX, gspv.mousekeys.iMaxSpeed);
+                SpiStoreSzInt(KEY_MOUSEKEYS, VAL_MOUSEKEYS_TIMETOMAX, gspv.mousekeys.iTimeToMaxSpeed);
             }
             return (UINT_PTR)KEY_DESKTOP;
         }
@@ -1792,6 +1793,16 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETFONTSMOOTHINGORIENTATION:
             return SpiSetDWord(&gspv.uiFontSmoothingOrientation, PtrToUlong(pvParam), KEY_DESKTOP, VAL_FONTSMOOTHINGORIENTATION, fl);
+
+        case SPI_GETWINARRANGING:
+            return SpiGetInt(pvParam, &g_bWindowSnapEnabled, fl);
+        case SPI_SETWINARRANGING:
+            return SpiSetInt(&g_bWindowSnapEnabled, uiParam, KEY_DESKTOP, VAL_SNAP_ENABLED, fl);
+
+        case SPI_GETDOCKMOVING:
+            return SpiGetInt(pvParam, &gspv.bDockMoving, fl);
+        case SPI_SETDOCKMOVING:
+            return SpiSetInt(&gspv.bDockMoving, uiParam, KEY_DESKTOP, VAL_SNAP_DOCKMOVING, fl);
 
         /* The following are undocumented, but valid SPI values */
         case 0x1010:

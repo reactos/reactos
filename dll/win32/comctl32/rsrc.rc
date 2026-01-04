@@ -31,6 +31,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION WINE_FILEVERSION
 #define WINE_PRODUCTVERSION_STR WINE_FILEVERSION_STR
 
+#ifdef __REACTOS__
+/*
+ * SIV 5.80 expects that the "product version" string of the comctl32.dll file
+ * will have the "file version" format. This value is used to determine
+ * whether tooltip support is available.
+ */
+#define REACTOS_PRODUCTVERSION REACTOS_FILEVERSION
+#endif
+
 #include "wine/wine_common_ver.rc"
 
 /* @makedep: idt_check.bmp */

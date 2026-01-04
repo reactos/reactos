@@ -264,8 +264,19 @@ co_IntInitializeDesktopGraphics(VOID)
     TEXTMETRICW tmw;
     UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
     PDESKTOP pdesk;
+    LONG lRet;
 
-    if (PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE) != DISP_CHANGE_SUCCESSFUL)
+    lRet = PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE);
+    if (lRet != DISP_CHANGE_SUCCESSFUL && !gbBaseVideo)
+    {
+        ERR("Failed to initialize graphics, switching to base video\n");
+        gbBaseVideo = TRUE;
+        EngpUpdateGraphicsDeviceList();
+        lRet = PDEVOBJ_lChangeDisplaySettings(NULL, NULL, NULL, &gpmdev, TRUE);
+        gbBaseVideo = FALSE;
+        EngpUpdateGraphicsDeviceList();
+    }
+    if (lRet != DISP_CHANGE_SUCCESSFUL)
     {
         ERR("PDEVOBJ_lChangeDisplaySettings() failed.\n");
         return FALSE;
@@ -1952,19 +1963,25 @@ NtUserBuildNameList(
 BOOL APIENTRY
 NtUserSetLogonNotifyWindow(HWND hWnd)
 {
-    if (gpidLogon != PsGetCurrentProcessId())
-    {
-        return FALSE;
-    }
+    BOOL Ret = FALSE;
+
+    UserEnterExclusive();
 
     if (!IntIsWindow(hWnd))
+        goto Leave;
+
+    if (gpidLogon != PsGetCurrentProcessId())
     {
-        return FALSE;
+        EngSetLastError(ERROR_ACCESS_DENIED);
+        goto Leave;
     }
 
     hwndSAS = hWnd;
+    Ret = TRUE;
 
-    return TRUE;
+Leave:
+    UserLeave();
+    return Ret;
 }
 
 BOOL

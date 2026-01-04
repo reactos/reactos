@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Использование: TASKKILL [/F] [/IM <образ> | /PID <процесс>]\n"
+    STRING_USAGE, "Использование: TASKKILL [/F] [/IM <образ> | /PID <процесс>] [/t]\n"
     STRING_INVALID_OPTION, "Ошибка: Указаны неверные параметры командной строки.\n"
     STRING_INVALID_PARAM, "Ошибка: Указаны неверные параметры командной строки.\n"
     STRING_MISSING_OPTION, "Ошибка: Должен быть указан параметр /im или /pid.\n"
@@ -18,6 +18,10 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Ошибка: Не удается получить список процессов.\n"
     STRING_TERMINATE_FAILED, "Ошибка: Не удается завершить процесс ""%1"".\n"
     STRING_SELF_TERMINATION, "Ошибка: Процесс не может завершить сам себя.\n"
+    // STRING_CLOSE_CHILD, "Sent termination signal to process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "The process with PID %1!u! (child process of PID %2!u!) has been terminated.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Ошибка: Неверный синтаксис. Нельзя использовать опцию '%1' больше '%2!d!' раз(а).\n"
     STRING_INVALID_SYNTAX, "Ошибка: Неверный синтаксис.\n"
 }

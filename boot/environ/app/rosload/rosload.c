@@ -1103,7 +1103,7 @@ OslMain (
     LibraryParameters.MinimumAllocationCount = 1024;
     LibraryParameters.MinimumHeapSize = 2 * 1024 * 1024;
     LibraryParameters.HeapAllocationAttributes = BlMemoryKernelRange;
-    LibraryParameters.FontBaseDirectory = L"\\Reactos\\Boot\\Fonts";
+    LibraryParameters.FontBaseDirectory = L"\\ReactOS\\Boot\\Fonts";
     LibraryParameters.DescriptorCount = 512;
 
     /* Initialize the boot library */

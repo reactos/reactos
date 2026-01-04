@@ -45,33 +45,6 @@ SHDOCVW_GetPathOfShortcut(
     return S_OK;
 }
 
-HRESULT
-SHDOCVW_CreateShortcut(
-    _In_ LPCWSTR pszLnkFileName, 
-    _In_ PCIDLIST_ABSOLUTE pidlTarget,
-    _In_opt_ LPCWSTR pszDescription)
-{
-    HRESULT hr;
-
-    CComPtr<IShellLink> psl;
-    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellLink, &psl));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    psl->SetIDList(pidlTarget);
-
-    if (pszDescription)
-        psl->SetDescription(pszDescription);
-
-    CComPtr<IPersistFile> ppf;
-    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ppf->Save(pszLnkFileName, TRUE);
-}
-
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
@@ -648,31 +621,23 @@ HRESULT CNSCBand::_AddFavorite()
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    WCHAR szCurDir[MAX_PATH];
-    if (!ILGetDisplayName(pidlCurrent, szCurDir))
-    {
-        FIXME("\n");
-        return E_FAIL;
-    }
+    CComPtr<IShellFolder> pParent;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    WCHAR szPath[MAX_PATH], szSuffix[32];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, PathFindFileNameW(szCurDir));
+    STRRET strret;
+    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    const INT ich = lstrlenW(szPath);
-    for (INT iTry = 2; iTry <= 9999; ++iTry)
-    {
-        PathAddExtensionW(szPath, L".lnk");
-        if (!PathFileExistsW(szPath))
-            break;
-        szPath[ich] = UNICODE_NULL;
-        wsprintfW(szSuffix, L" (%d)", iTry);
-        lstrcatW(szPath, szSuffix);
-    }
+    CComHeapPtr<WCHAR> pszURL;
+    hr = StrRetToStrW(&strret, NULL, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    TRACE("%S, %S\n", szCurDir, szPath);
-
-    return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
+    return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1008,6 +973,17 @@ struct CMenuTemp
     }
 };
 
+static LRESULT CALLBACK MenuMessageForwarderWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = 0;
+    IContextMenu *pCM = (IContextMenu*)GetWindowLongPtrW(hWnd, 0);
+    if (uMsg == WM_DESTROY)
+        SetWindowLongPtrW(hWnd, 0, 0);
+    else if (pCM && SHForwardContextMenuMsg(pCM, uMsg, wParam, lParam, &ret, TRUE) == S_OK)
+        return ret;
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
+
 // *** ATL event handlers ***
 LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
@@ -1068,8 +1044,13 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         return 0;
     SHELL_RemoveVerb(contextMenu, idCmdFirst, menuTemp, L"link");
 
+    HWND hWndWorker = SHCreateWorkerWindowW(MenuMessageForwarderWndProc, m_hWnd, 0,
+                                            WS_CHILD | WS_VISIBLE, NULL,
+                                            (LONG_PTR)static_cast<IContextMenu*>(contextMenu));
+    HWND hWndMenuOwner = hWndWorker ? hWndWorker : m_hWnd;
+
     enum { flags = TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON };
-    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, m_hWnd, NULL);
+    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, hWndMenuOwner, NULL);
     if (uCommand)
     {
         uCommand -= idCmdFirst;
@@ -1085,6 +1066,8 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
         hr = _ExecuteCommand(contextMenu, uCommand);
     }
+    if (hWndWorker)
+        ::DestroyWindow(hWndWorker);
 
     return TRUE;
 }

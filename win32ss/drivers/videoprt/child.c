@@ -121,6 +121,8 @@ IntVideoPortChildQueryId(
 {
     PWCHAR Buffer = NULL, StaticBuffer;
     UNICODE_STRING UnicodeStr;
+    HANDLE hKey;
+    NTSTATUS Status;
 
     switch (IrpSp->Parameters.QueryId.IdType)
     {
@@ -196,6 +198,22 @@ IntVideoPortChildQueryId(
 
                         /* Add the second null terminator */
                         Buffer[wcslen(StaticBuffer) + 1] = UNICODE_NULL;
+                    }
+
+                    /* Try to write EDID to registry (ignore errors) */
+                    Status = IoOpenDeviceRegistryKey(ChildExtension->PhysicalDeviceObject,
+                                                     PLUGPLAY_REGKEY_DEVICE,
+                                                     MAXIMUM_ALLOWED,
+                                                     &hKey);
+                    if (NT_SUCCESS(Status))
+                    {
+                        Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
+                                              hKey,
+                                              ChildExtension->EdidValid ? L"EDID" : L"BAD_EDID",
+                                              REG_BINARY,
+                                              ChildExtension->ChildDescriptor,
+                                              sizeof(ChildExtension->ChildDescriptor));
+                        ZwClose(hKey);
                     }
                     break;
                 default:

@@ -1914,10 +1914,8 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 
     SetCaretPos(pt.x, pt.y);
 
-    if (!ImmIsIME(hKL))
-        return;
-
-    EDIT_ImmSetCompositionWindow(es, pt);
+    if (IS_IME_HKL(hKL))
+        EDIT_ImmSetCompositionWindow(es, pt);
 #else
 	TRACE("%d - %dx%d\n", pos, (short)LOWORD(res), (short)HIWORD(res));
 	SetCaretPos((short)LOWORD(res), (short)HIWORD(res));
@@ -2898,6 +2896,9 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 		return;
 	}
 
+#ifdef __REACTOS__
+	if (es->text)
+#endif
 	EDIT_UnlockBuffer(es, TRUE);
 
 	if(es->is_unicode)
@@ -4035,7 +4036,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		ShowCaret(es->hwndSelf);
 	}
 #ifdef __REACTOS__
-    if (ImmIsIME(GetKeyboardLayout(0)))
+    if (IS_IME_HKL(GetKeyboardLayout(0)))
     {
         LOGFONTW lf;
         HIMC hIMC = ImmGetContext(es->hwndSelf);
@@ -5384,32 +5385,43 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
-            lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
-
-        if (wParam)
         {
-            HIMC hIMC = ImmGetContext(hwnd);
-            LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
-            if (pIC)
-            {
-                pIC->dwUIFlags &= ~0x40000;
-                ImmUnlockIMC(hIMC);
-            }
-            if (GetWin32ClientInfo()->CI_flags & CI_WOW)
-                ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
-            ImmReleaseContext(hwnd, hIMC);
-        }
+            HKL hKL = GetKeyboardLayout(0);
 
-        result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                lParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+
+            if (wParam)
+            {
+                HIMC hIMC = ImmGetContext(hwnd);
+                LPINPUTCONTEXTDX pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
+                if (pIC)
+                {
+                    pIC->dwUIFlags &= ~0x40000;
+                    ImmUnlockIMC(hIMC);
+                }
+                if (GetWin32ClientInfo()->CI_flags & CI_WOW)
+                    ImmNotifyIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+                ImmReleaseContext(hwnd, hIMC);
+            }
+
+            result = DefWindowProcT(hwnd, WM_IME_SETCONTEXT, wParam, lParam, unicode);
+        }
 #endif
 		break;
 
 	case WM_IME_STARTCOMPOSITION:
 #ifdef __REACTOS__
-        if (FALSE) /* FIXME: Condition */
-            return TRUE;
-        result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+        {
+            HKL hKL = GetKeyboardLayout(0);
+
+            /* Korean doesn't want composition window */
+            if (PRIMARYLANGID(LOWORD(hKL)) == LANG_KOREAN)
+                return TRUE;
+
+            result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
+        }
 #else
 		es->composition_start = es->selection_end;
 		es->composition_len = 0;

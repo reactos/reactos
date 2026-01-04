@@ -276,10 +276,15 @@ public:
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        CheckDlgButton(IDC_TASKBARPROP_CLOCK, (!g_TaskbarSettings.sr.HideClock) ? BST_CHECKED : BST_UNCHECKED);
+        ::EnableWindow(GetDlgItem(IDC_TASKBARPROP_CLOCK), !SHRestricted(REST_HIDECLOCK));
+        CheckDlgButton(IDC_TASKBARPROP_CLOCK, (!GetHideClock()) ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_SECONDS, g_TaskbarSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, g_TaskbarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(IDC_TASKBARPROP_DESKTOP, g_TaskbarSettings.bShowDesktopButton ? BST_CHECKED : BST_UNCHECKED);
+
+        // TODO: bHideInactiveIcons is not implemented yet, just disable for now
+        CheckDlgButton(IDC_TASKBARPROP_HIDEICONS, BST_UNCHECKED);
+        ::EnableWindow(GetDlgItem(IDC_TASKBARPROP_HIDEICONS), FALSE);
 
         _UpdateDialog();
         return TRUE;

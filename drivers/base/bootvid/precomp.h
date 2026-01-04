@@ -7,14 +7,13 @@
  *              Copyright 2020 Stanislav Motylkov <x86corez@gmail.com>
  */
 
-#ifndef _BOOTVID_PCH_
-#define _BOOTVID_PCH_
+#pragma once
 
 #include <ntifs.h>
 #include <ndk/halfuncs.h>
 #include <drivers/bootvid/bootvid.h>
 
-/* Arch specific includes */
+/* Arch-specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #if defined(SARCH_PC98)
 #include "i386/pc98/pc98.h"
@@ -30,7 +29,7 @@
 #error Unknown architecture
 #endif
 
-/* Define if FontData has upside down characters */
+/* Define if FontData has upside-down characters */
 #undef CHAR_GEN_UPSIDE_DOWN
 
 #define BOOTCHAR_HEIGHT 13
@@ -58,14 +57,22 @@ typedef struct tagBITMAPINFOHEADER
 
 typedef ULONG RGBQUAD;
 
+typedef struct _URECT
+{
+    ULONG Left;
+    ULONG Top;
+    ULONG Right;
+    ULONG Bottom;
+} URECT;
+
 /*
  * Globals
  */
 extern UCHAR VidpTextColor;
 extern ULONG VidpCurrentX;
 extern ULONG VidpCurrentY;
-extern ULONG VidpScrollRegion[4];
-extern UCHAR VidpFontData[256 * BOOTCHAR_HEIGHT];
+extern URECT VidpScrollRegion;
+extern const UCHAR VidpFontData[256 * BOOTCHAR_HEIGHT];
 extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 
 #define RGB(r, g, b)    ((RGBQUAD)(((UCHAR)(b) | ((USHORT)((UCHAR)(g))<<8)) | (((ULONG)(UCHAR)(r))<<16)))
@@ -84,4 +91,25 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 # define FONT_PTR_DELTA     (1)
 #endif
 
-#endif /* _BOOTVID_PCH_ */
+
+VOID
+PreserveRow(
+    _In_ ULONG CurrentTop,
+    _In_ ULONG TopDelta,
+    _In_ BOOLEAN Restore);
+
+VOID
+DoScroll(
+    _In_ ULONG Scroll);
+
+VOID
+DisplayCharacter(
+    _In_ CHAR Character,
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG TextColor,
+    _In_ ULONG BackColor);
+
+VOID
+ResetDisplay(
+    _In_ BOOLEAN SetMode);

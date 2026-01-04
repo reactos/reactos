@@ -12,7 +12,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static UCHAR lMaskTable[8] =
+static const UCHAR lMaskTable[8] =
 {
     (1 << 8) - (1 << 0),
     (1 << 7) - (1 << 0),
@@ -23,7 +23,7 @@ static UCHAR lMaskTable[8] =
     (1 << 2) - (1 << 0),
     (1 << 1) - (1 << 0)
 };
-static UCHAR rMaskTable[8] =
+static const UCHAR rMaskTable[8] =
 {
     (1 << 7),
     (1 << 7) + (1 << 6),
@@ -34,7 +34,7 @@ static UCHAR rMaskTable[8] =
     (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1),
     (1 << 7) + (1 << 6) + (1 << 5) + (1 << 4) + (1 << 3) + (1 << 2) + (1 << 1) + (1 << 0),
 };
-UCHAR PixelMask[8] =
+const UCHAR PixelMask[8] =
 {
     (1 << 7),
     (1 << 6),
@@ -45,7 +45,7 @@ UCHAR PixelMask[8] =
     (1 << 1),
     (1 << 0),
 };
-static ULONG lookup[16] =
+static const ULONG lookup[16] =
 {
     0x0000,
     0x0100,
@@ -117,7 +117,8 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
-    PUCHAR FontChar, PixelPtr;
+    const UCHAR* FontChar;
+    PUCHAR PixelPtr;
     ULONG Height;
     UCHAR Shift;
 
@@ -215,11 +216,11 @@ SetPaletteEntryRGB(
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
+    const ULONG* Entry = Table;
     ULONG i;
-    PULONG Entry = Table;
 
     for (i = 0; i < Count; i++, Entry++)
     {
@@ -243,14 +244,14 @@ DoScroll(
     /* Set Mode 1 */
     ReadWriteMode(1);
 
-    RowSize = (VidpScrollRegion[2] - VidpScrollRegion[0] + 1) / 8;
+    RowSize = (VidpScrollRegion.Right - VidpScrollRegion.Left + 1) / 8;
 
     /* Calculate the position in memory for the row */
-    OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion[1] + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
-    NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion[1] * (SCREEN_WIDTH / 8) + VidpScrollRegion[0] / 8);
+    OldPosition = (PUCHAR)(VgaBase + (VidpScrollRegion.Top + Scroll) * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
+    NewPosition = (PUCHAR)(VgaBase + VidpScrollRegion.Top * (SCREEN_WIDTH / 8) + VidpScrollRegion.Left / 8);
 
     /* Start loop */
-    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
 #if defined(_M_IX86) || defined(_M_AMD64)
         __movsb(NewPosition, OldPosition, RowSize);
@@ -329,7 +330,7 @@ VidCleanUp(VOID)
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

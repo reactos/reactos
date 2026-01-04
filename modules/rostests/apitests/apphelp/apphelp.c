@@ -138,13 +138,13 @@ static void test_ApphelpCheckShellObject(void)
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(objects[i], FALSE, &flags);
-        ok(res && (flags == 0), "%s 0: got %d and 0x%x%08x with 0x%x (expected TRUE and 0)\n",
+        ok(res && (flags == 0), "%s 0: got %d and 0x%lx%08lx with 0x%lx (expected TRUE and 0)\n",
             wine_dbgstr_guid(objects[i]), res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
 
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(objects[i], TRUE, &flags);
-        ok(res && (flags == 0), "%s 1: got %d and 0x%x%08x with 0x%x (expected TRUE and 0)\n",
+        ok(res && (flags == 0), "%s 1: got %d and 0x%lx%08lx with 0x%lx (expected TRUE and 0)\n",
             wine_dbgstr_guid(objects[i]), res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
 
     }
@@ -152,7 +152,7 @@ static void test_ApphelpCheckShellObject(void)
     /* NULL as pointer to flags is checked */
     SetLastError(0xdeadbeef);
     res = pApphelpCheckShellObject(&GUID_NULL, FALSE, NULL);
-    ok(res, "%s 0: got %d with 0x%x (expected != FALSE)\n", wine_dbgstr_guid(&GUID_NULL), res, GetLastError());
+    ok(res, "%s 0: got %d with 0x%lx (expected != FALSE)\n", wine_dbgstr_guid(&GUID_NULL), res, GetLastError());
 
     /* NULL as CLSID* crash on Windows */
     if (0)
@@ -160,7 +160,7 @@ static void test_ApphelpCheckShellObject(void)
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(NULL, FALSE, &flags);
-        trace("NULL as CLSID*: got %d and 0x%x%08x with 0x%x\n", res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
+        trace("NULL as CLSID*: got %d and 0x%lx%08lx with 0x%lx\n", res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
     }
 }
 
@@ -213,7 +213,7 @@ static struct
     DWORD line;
     DWORD min_ver;
     DWORD max_ver;
-    const char* tags[7*8];
+    const char* tags[99];
 } data[] = {
     {
         TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_ANY, WINVER_2003,
@@ -229,10 +229,28 @@ static struct
         }
     },
     {
-        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_WIN7, WINVER_ANY,
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_WIN7, WINVER_WIN7,
         {
             "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", "MITIGATION_OS", "BLOCK_UPGRADE",
             "INCLUDEEXCLUDEDLL", "RAC_EVENT_OFF", "TELEMETRY_OFF", "SHIM_ENGINE_OFF", "LAYER_PROPAGATION_OFF", "REINSTALL_UPGRADE", NULL
+        }
+    },
+    {
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", "MITIGATION_OS", "TRACE_PCA",
+            "INCLUDEEXCLUDEDLL", "RAC_EVENT_OFF", "TELEMETRY_OFF", "SHIM_ENGINE_OFF", "LAYER_PROPAGATION_OFF", "FORCE_CACHE", "MONITORING_OFF",
+            "QUIRK_OFF", "ELEVATED_PROP_OFF", "UPGRADE_ACTION_BLOCK_WEBSETUP", "UPGRADE_ACTION_PROCEED_TO_MEDIASETUP", NULL
+        }
+    },
+    {
+        TAG_TYPE_NULL, 0x1000, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "INCLUDE", "GENERAL", "MATCH_LOGIC_NOT", "APPLY_ALL_SHIMS", "USE_SERVICE_PACK_FILES", "MITIGATION_OS", "TRACE_PCA",
+            "INCLUDEEXCLUDEDLL", "RAC_EVENT_OFF", "TELEMETRY_OFF", "SHIM_ENGINE_OFF", "LAYER_PROPAGATION_OFF", "FORCE_CACHE", "MONITORING_OFF",
+            "QUIRK_OFF", "ELEVATED_PROP_OFF", "UPGRADE_ACTION_BLOCK_WEBSETUP", "UPGRADE_ACTION_PROCEED_TO_MEDIASETUP", "HWCOMPAT_DEVICE",
+            "HWEXCLUDE_DEVICE", "WUCOMPAT_DEVICE", "APPEND_COMMANDLINE", "COMPARE_CASE", "InvalidTag", "InvalidTag", "MATCHED_OBJECT",
+            "USE_INVENTORY", NULL
         }
     },
 
@@ -294,7 +312,7 @@ static struct
         }
     },
     {
-        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_WIN7, WINVER_WIN7,
         {
             "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERDATEHI",
             "VERDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVER", "PREVOSMINORVER", "PREVOSPLATFORMID", "PREVOSBUILDNO",
@@ -303,6 +321,39 @@ static struct
             "FLAG_TAGID", "RUNTIME_PLATFORM", "OS_SKU", "OS_PLATFORM", "APP_NAME_RC_ID", "VENDOR_NAME_RC_ID", "SUMMARY_MSG_RC_ID", "VISTA_SKU",
             "DESCRIPTION_RC_ID", "PARAMETER1_RC_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
             "CONTEXT_TAGID", "EXE_WRAPPER", "URL_ID", NULL
+        }
+    },
+    {
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERDATEHI",
+            "VERDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVER", "PREVOSMINORVER", "PREVOSPLATFORMID", "PREVOSBUILDNO",
+            "PROBLEMSEVERITY", "LANGID", "VER_LANGUAGE", "InvalidTag", "ENGINE", "HTMLHELPID", "INDEX_FLAGS", "FLAGS",
+            "DATA_VALUETYPE", "DATA_DWORD", "LAYER_TAGID", "MSI_TRANSFORM_TAGID", "LINKER_VERSION", "LINK_DATE", "UPTO_LINK_DATE", "OS_SERVICE_PACK",
+            "FLAG_TAGID", "RUNTIME_PLATFORM", "OS_SKU", "OS_PLATFORM", "APP_NAME_RC_ID", "VENDOR_NAME_RC_ID", "SUMMARY_MSG_RC_ID", "InvalidTag",
+            "DESCRIPTION_RC_ID", "PARAMETER1_RC_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
+            "CONTEXT_TAGID", "EXE_WRAPPER", "EXE_TYPE", "FROM_LINK_DATE", "REVISION_EQ", "REVISION_LE", "REVISION_GE", "DATE_EQ", "DATE_LE", "DATE_GE",
+            "CPU_MODEL_EQ", "CPU_MODEL_LE", "CPU_MODEL_GE", "CPU_FAMILY_EQ", "CPU_FAMILY_LE", "CPU_FAMILY_GE", "CREATOR_REVISION_EQ", "CREATOR_REVISION_LE",
+            "CREATOR_REVISION_GE", "SIZE_OF_IMAGE", "SHIM_CLASS", "PACKAGEID_ARCHITECTURE", "REINSTALL_UPGRADE_TYPE", "BLOCK_UPGRADE_TYPE", "ROUTING_MODE",
+            "OS_VERSION_VALUE", "CRC_CHECKSUM", "URL_ID", "QUIRK_TAGID", "InvalidTag", "MIGRATION_DATA_TYPE", "UPGRADE_DATA", "MIGRATION_DATA_TAGID", "REG_VALUE_TYPE",
+            "REG_VALUE_DATA_DWORD", "TEXT_ENCODING", NULL
+        }
+    },
+    {
+        TAG_TYPE_DWORD, 0x800, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "SIZE", "OFFSET", "CHECKSUM", "SHIM_TAGID", "PATCH_TAGID", "MODULE_TYPE", "VERDATEHI",
+            "VERDATELO", "VERFILEOS", "VERFILETYPE", "PE_CHECKSUM", "PREVOSMAJORVER", "PREVOSMINORVER", "PREVOSPLATFORMID", "PREVOSBUILDNO",
+            "PROBLEMSEVERITY", "LANGID", "VER_LANGUAGE", "OS_KIND", "ENGINE", "HTMLHELPID", "INDEX_FLAGS", "FLAGS",
+            "DATA_VALUETYPE", "DATA_DWORD", "LAYER_TAGID", "MSI_TRANSFORM_TAGID", "LINKER_VERSION", "LINK_DATE", "UPTO_LINK_DATE", "InvalidTag",
+            "FLAG_TAGID", "RUNTIME_PLATFORM", "InvalidTag", "GUEST_TARGET_PLATFORM", "APP_NAME_RC_ID", "VENDOR_NAME_RC_ID", "SUMMARY_MSG_RC_ID", "InvalidTag",
+            "DESCRIPTION_RC_ID", "PARAMETER1_RC_ID", "HWCOMPAT_HWID_COUNT", "TITLE_MSG_RC_ID_BACKUP", "SUMMARY_MSG_RC_ID_BACKUP", "InvalidTag", "InvalidTag", "InvalidTag",
+            "CONTEXT_TAGID", "EXE_WRAPPER", "EXE_TYPE", "FROM_LINK_DATE", "REVISION_EQ", "REVISION_LE", "REVISION_GE", "DATE_EQ", "DATE_LE", "DATE_GE",
+            "CPU_MODEL_EQ", "CPU_MODEL_LE", "CPU_MODEL_GE", "CPU_FAMILY_EQ", "CPU_FAMILY_LE", "CPU_FAMILY_GE", "CREATOR_REVISION_EQ", "CREATOR_REVISION_LE",
+            "CREATOR_REVISION_GE", "SIZE_OF_IMAGE", "SHIM_CLASS", "PACKAGEID_ARCHITECTURE", "REINSTALL_UPGRADE_TYPE", "BLOCK_UPGRADE_TYPE", "ROUTING_MODE",
+            "OS_VERSION_VALUE", "CRC_CHECKSUM", "URL_ID", "QUIRK_TAGID", "InvalidTag", "MIGRATION_DATA_TYPE", "UPGRADE_DATA", "MIGRATION_DATA_TAGID", "REG_VALUE_TYPE",
+            "REG_VALUE_DATA_DWORD", "TEXT_ENCODING", "UX_BLOCKTYPE_OVERRIDE", "EDITION", "FW_LINK_ID", "KB_ARTICLE_ID", "InvalidTag", "TITLE_MSG_RC_ID", "LINK_TEXT_RC_ID",
+            "LINK_TEXT_RC_ID_BACKUP", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "REQUESTED_ATTRIBUTES", "BACKUP_LABEL", NULL
         }
     },
     {
@@ -328,11 +379,30 @@ static struct
         }
     },
     {
-        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_VISTA, WINVER_ANY,
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_VISTA, WINVER_WIN7,
         {
             "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
             "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", "FLAG_MASK_FUSION", "FLAG_PROCESSPARAM",
             "FLAG_LUA", "FLAG_INSTALL", NULL
+        }
+    },
+    {
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
+            "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", "FLAG_MASK_FUSION", "FLAG_PROCESSPARAM",
+            "FLAG_LUA", "FLAG_INSTALL", "FROM_BIN_PRODUCT_VERSION", "FROM_BIN_FILE_VERSION", "PACKAGEID_VERSION", "FROM_PACKAGEID_VERSION", "UPTO_PACKAGEID_VERSION",
+            "OSMAXVERSIONTESTED", "FROM_OSMAXVERSIONTESTED", "UPTO_OSMAXVERSIONTESTED", "FLAG_MASK_WINRT", "REG_VALUE_DATA_QWORD", "QUIRK_ENABLED_UPTO_VERSION", NULL
+        }
+    },
+    {
+        TAG_TYPE_QWORD, 0x1000, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "TIME", "BIN_FILE_VERSION", "BIN_PRODUCT_VERSION", "MODTIME", "FLAG_MASK_KERNEL", "UPTO_BIN_PRODUCT_VERSION", "DATA_QWORD",
+            "FLAG_MASK_USER", "FLAGS_NTVDM1", "FLAGS_NTVDM2", "FLAGS_NTVDM3", "FLAG_MASK_SHELL", "UPTO_BIN_FILE_VERSION", "FLAG_MASK_FUSION", "FLAG_PROCESSPARAM",
+            "FLAG_LUA", "FLAG_INSTALL", "FROM_BIN_PRODUCT_VERSION", "FROM_BIN_FILE_VERSION", "PACKAGEID_VERSION", "FROM_PACKAGEID_VERSION", "UPTO_PACKAGEID_VERSION",
+            "OSMAXVERSIONTESTED", "FROM_OSMAXVERSIONTESTED", "UPTO_OSMAXVERSIONTESTED", "FLAG_MASK_WINRT", "REG_VALUE_DATA_QWORD", "QUIRK_ENABLED_VERSION_LT",
+            "SOURCE_OS", "SOURCE_OS_LTE", "SOURCE_OS_GTE", "FILESIZE", NULL
         }
     },
 
@@ -357,13 +427,40 @@ static struct
         }
     },
     {
-        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_WIN7, WINVER_ANY,
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_WIN7, WINVER_WIN7,
         {
             "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
             "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
             "PRODUCT_NAME", "PRODUCT_VERSION", "FILE_DESCRIPTION", "FILE_VERSION", "ORIGINAL_FILENAME", "INTERNAL_NAME", "LEGAL_COPYRIGHT", "16BIT_DESCRIPTION",
             "APPHELP_DETAILS", "LINK_URL", "LINK_TEXT", "APPHELP_TITLE", "APPHELP_CONTACT", "SXS_MANIFEST", "DATA_STRING", "MSI_TRANSFORM_FILE",
             "16BIT_MODULE_NAME", "LAYER_DISPLAYNAME", "COMPILER_VERSION", "ACTION_TYPE", "EXPORT_NAME", "URL", NULL
+        }
+    },
+    {
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
+            "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
+            "PRODUCT_NAME", "PRODUCT_VERSION", "FILE_DESCRIPTION", "FILE_VERSION", "ORIGINAL_FILENAME", "INTERNAL_NAME", "LEGAL_COPYRIGHT", "16BIT_DESCRIPTION",
+            "APPHELP_DETAILS", "LINK_URL", "LINK_TEXT", "APPHELP_TITLE", "APPHELP_CONTACT", "SXS_MANIFEST", "DATA_STRING", "MSI_TRANSFORM_FILE",
+            "16BIT_MODULE_NAME", "LAYER_DISPLAYNAME", "COMPILER_VERSION", "ACTION_TYPE", "EXPORT_NAME", "VENDOR_ID", "DEVICE_ID", "SUB_VENDOR_ID",
+            "SUB_SYSTEM_ID", "PACKAGEID_NAME", "PACKAGEID_PUBLISHER", "PACKAGEID_LANGUAGE", "URL", "MANUFACTURER", "MODEL", "DATE", "REG_VALUE_NAME",
+            "REG_VALUE_DATA_SZ", "MIGRATION_DATA_TEXT", NULL
+        }
+    },
+    {
+        TAG_TYPE_STRINGREF, 0x1000, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "NAME", "DESCRIPTION", "MODULE", "API", "VENDOR", "APP_NAME", "InvalidTag",
+            "COMMAND_LINE", "COMPANY_NAME", "DLLFILE", "WILDCARD_NAME", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
+            "PRODUCT_NAME", "PRODUCT_VERSION", "FILE_DESCRIPTION", "FILE_VERSION", "ORIGINAL_FILENAME", "INTERNAL_NAME", "LEGAL_COPYRIGHT", "16BIT_DESCRIPTION",
+            "APPHELP_DETAILS", "LINK_URL", "LINK_TEXT", "APPHELP_TITLE", "APPHELP_CONTACT", "SXS_MANIFEST", "DATA_STRING", "MSI_TRANSFORM_FILE",
+            "16BIT_MODULE_NAME", "LAYER_DISPLAYNAME", "COMPILER_VERSION", "ACTION_TYPE", "EXPORT_NAME", "VENDOR_ID", "DEVICE_ID", "SUB_VENDOR_ID",
+            "SUB_SYSTEM_ID", "PACKAGEID_NAME", "PACKAGEID_PUBLISHER", "PACKAGEID_LANGUAGE", "URL", "MANUFACTURER", "MODEL", "DATE", "REG_VALUE_NAME",
+            "REG_VALUE_DATA_SZ", "MIGRATION_DATA_TEXT", "APP_STORE_PRODUCT_ID", "MORE_INFO_URL", "DEST_OS_VALUE_DEF", "DEST_OS_GTE", "DEST_OS_LT", "DEST_OS",
+            "PACKAGE_STRONGNAME", "FALLBACK_XML", "LINK_TEXT_OVERRIDE", "MATCH_LOGIC_NOT_IF_SDB_CAPABILITY_EXISTS", "ESCAPE_CHARACTER", "InvalidTag",
+            "InvalidTag", "InvalidTag", "InvalidTag", "PUBLISHER", "MATCHING_LABEL", "UPTO_PRODUCT_VERSION", "UPTO_FILE_VERSION", "FROM_PRODUCT_VERSION",
+            "FROM_FILE_VERSION", "LANGUAGE", NULL
         }
     },
 
@@ -385,13 +482,44 @@ static struct
         }
     },
     {
-        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_WIN7, WINVER_WIN7,
         {
             "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
             "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
             "MSI_TRANSFORM", "MSI_TRANSFORM_REF", "MSI_PACKAGE", "FLAG", "MSI_CUSTOM_ACTION", "FLAG_REF", "ACTION", "LOOKUP",
             "CONTEXT", "CONTEXT_REF", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
             "SPC", NULL
+        }
+    },
+    {
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
+            "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
+            "MSI_TRANSFORM", "MSI_TRANSFORM_REF", "MSI_PACKAGE", "FLAG", "MSI_CUSTOM_ACTION", "FLAG_REF", "ACTION", "LOOKUP",
+            "CONTEXT", "CONTEXT_REF", "KDEVICE", "InvalidTag", "KDRIVER", "InvalidTag", "MATCHING_DEVICE", "ACPI",
+            "BIOS", "CPU", "OEM", "KFLAG", "KFLAG_REF", "KSHIM", "KSHIM_REF", "REINSTALL_UPGRADE", "KDATA", "BLOCK_UPGRADE",
+            "SPC", "QUIRK", "QUIRK_REF", "BIOS_BLOCK", "MATCHING_INFO_BLOCK", "DEVICE_BLOCK", "MIGRATION_DATA", "MIGRATION_DATA_REF",
+            "MATCHING_REG", "MATCHING_TEXT", "MACHINE_BLOCK", "OS_UPGRADE", "PACKAGE", NULL
+        }
+    },
+    {
+        TAG_TYPE_LIST, 0x800, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "DATABASE", "LIBRARY", "INEXCLUDE", "SHIM", "PATCH", "APP", "EXE",
+            "MATCHING_FILE", "SHIM_REF", "PATCH_REF", "LAYER", "FILE", "APPHELP", "LINK", "DATA",
+            "MSI_TRANSFORM", "MSI_TRANSFORM_REF", "MSI_PACKAGE", "FLAG", "MSI_CUSTOM_ACTION", "FLAG_REF", "ACTION", "LOOKUP",
+            "CONTEXT", "CONTEXT_REF", "KDEVICE", "InvalidTag", "KDRIVER", "InvalidTag", "MATCHING_DEVICE", "ACPI",
+            "BIOS", "CPU", "OEM", "KFLAG", "KFLAG_REF", "KSHIM", "KSHIM_REF", "REINSTALL_UPGRADE", "KDATA", "BLOCK_UPGRADE",
+            "InvalidTag", "QUIRK", "QUIRK_REF", "BIOS_BLOCK", "MATCHING_INFO_BLOCK", "DEVICE_BLOCK", "MIGRATION_DATA", "MIGRATION_DATA_REF",
+            "MATCHING_REG", "MATCHING_TEXT", "MACHINE_BLOCK", "OS_UPGRADE", "PACKAGE", "PICK_ONE", "MATCH_PLUGIN", "MIGRATION_SHIM",
+            "UPGRADE_DRIVER_BLOCK", "InvalidTag", "MIGRATION_SHIM_REF", "CONTAINS_FILE", "CONTAINS_HWID", "DRIVER_PACKAGE_BLOCK",
+            "DEST_OS_VALUES", "XAP", "HWCOMPAT_SOURCES", "HWCOMPAT_SOURCE_INFO", "C_STRUCT", "PROCESS_MODULE", "C_STRUCT_REF",
+            "MATCHING_WILDCARD_FILE", "MATCHING_WILDCARD_REG", "MATCHING_DIR", "MATCHING_SDB_CAPABILITY", "MATCHING_COMMAND_LINE",
+            "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
+            "BACKUP_FILE", "BACKUP_APPLICATION", "BACKUP_PACKAGE", "RESTORE_FILE", "RESTORE_APPLICATION", "RESTORE_PACKAGE",
+            "BACKUP_INCLUDE_FILE", "MATCHING_BACKUP_FILE", "MATCHING_WILDCARD_BACKUP_FILE", "RESTORE_ACTION", "MATCHING_BACKUP_LABEL",
+            "MATCHING_RESTORE_ACTION", "MATCHING_APPLICATION_ATTRIBUTES", NULL
         }
     },
     {
@@ -436,11 +564,27 @@ static struct
         }
     },
     {
-        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_WIN7, WINVER_ANY,
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_WIN7, WINVER_WIN7,
         {
             "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID", "DATA_BITS", "MSI_PACKAGE_ID", "DATABASE_ID",
             "CONTEXT_PLATFORM_ID", "CONTEXT_BRANCH_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
             "FIX_ID", "APP_ID", NULL
+        }
+    },
+    {
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_WIN8, WINVER_WIN81,
+        {
+            "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID", "DATA_BITS", "MSI_PACKAGE_ID", "DATABASE_ID",
+            "CONTEXT_PLATFORM_ID", "CONTEXT_BRANCH_ID", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag", "InvalidTag",
+            "FIX_ID", "APP_ID", "REG_VALUE_DATA_BINARY", "TEXT", NULL
+        }
+    },
+    {
+        TAG_TYPE_BINARY, 0x800, __LINE__, WINVER_WIN10, WINVER_ANY,
+        {
+            "InvalidTag", "InvalidTag", "PATCH_BITS", "FILE_BITS", "EXE_ID", "DATA_BITS", "MSI_PACKAGE_ID", "DATABASE_ID",
+            "CONTEXT_PLATFORM_ID", "CONTEXT_BRANCH_ID", "XAP_ID", "C_STRUCT_BIN_DATA", "C_STRUCT_VERSION", "InvalidTag",
+            "InvalidTag", "InvalidTag", "FIX_ID", "APP_ID", "REG_VALUE_DATA_BINARY", "TEXT", "BACKUP_ID", NULL
         }
     },
     {
@@ -588,9 +732,9 @@ static void expect_tag_skip_imp(PATTRINFO pattr, TAG tag)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_FAILED, "expected entry #%d to be failed, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
+    winetest_ok(p->type == TAG_NULL, "expected entry #%ld to be TAG_NULL, was %x\n", num, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_FAILED, "expected entry #%ld to be failed, was %ld\n", num, p->flags);
+    winetest_ok(p->qwattr == 0, "expected entry #%ld to be 0, was 0x%I64x\n", num, p->qwattr);
 }
 static void expect_tag_empty_imp(PATTRINFO pattr, TAG tag)
 {
@@ -601,9 +745,9 @@ static void expect_tag_empty_imp(PATTRINFO pattr, TAG tag)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
-    winetest_ok(p->flags == 0, "expected entry #%d to be 0, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
+    winetest_ok(p->type == TAG_NULL, "expected entry #%ld to be TAG_NULL, was %x\n", num, p->type);
+    winetest_ok(p->flags == 0, "expected entry #%ld to be 0, was %ld\n", num, p->flags);
+    winetest_ok(p->qwattr == 0, "expected entry #%ld to be 0, was 0x%I64x\n", num, p->qwattr);
 }
 
 static void expect_tag_dword_imp(PATTRINFO pattr, TAG tag, DWORD value)
@@ -615,9 +759,9 @@ static void expect_tag_dword_imp(PATTRINFO pattr, TAG tag, DWORD value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->dwattr == value, "expected entry #%d to be 0x%x, was 0x%x\n", num, value, p->dwattr);
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->dwattr == value, "expected entry #%ld to be 0x%lx, was 0x%lx\n", num, value, p->dwattr);
 }
 
 static void expect_tag_qword_imp(PATTRINFO pattr, TAG tag, QWORD value)
@@ -629,9 +773,9 @@ static void expect_tag_qword_imp(PATTRINFO pattr, TAG tag, QWORD value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == value, "expected entry #%d to be 0x%I64x, was 0x%I64x\n", num, value, p->qwattr);
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->qwattr == value, "expected entry #%ld to be 0x%I64x, was 0x%I64x\n", num, value, p->qwattr);
 }
 
 static void expect_tag_str_imp(PATTRINFO pattr, TAG tag, const WCHAR* value)
@@ -643,9 +787,9 @@ static void expect_tag_str_imp(PATTRINFO pattr, TAG tag, const WCHAR* value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->lpattr && wcscmp(p->lpattr, value) == 0, "expected entry #%d to be %s, was %s\n", num, wine_dbgstr_w(value), wine_dbgstr_w(p->lpattr));
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->lpattr && wcscmp(p->lpattr, value) == 0, "expected entry #%ld to be %s, was %s\n", num, wine_dbgstr_w(value), wine_dbgstr_w(p->lpattr));
 }
 
 #define expect_tag_skip     (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : expect_tag_skip_imp
@@ -683,10 +827,10 @@ void test_onefile(WCHAR* filename)
             if (pattrinfo[16].type != TAG_MODULE_TYPE)//SdbpSetAttrFail(&attr_info[16]); /* TAG_MODULE_TYPE (1: WIN16?) (3: WIN32?) (WIN64?), Win32VersionValue? */)
                 printf("FAIL TAG_MODULE_TYPE (%S)\n", filename);
             if (pattrinfo[16].dwattr != 3 && pattrinfo[16].dwattr != 2)
-                printf("TAG_MODULE_TYPE(%S): %d\n", filename, pattrinfo[16].dwattr);    // C:\Program Files (x86)\Windows Kits\8.1\Lib\win7\stub512.com
+                printf("TAG_MODULE_TYPE(%S): %ld\n", filename, pattrinfo[16].dwattr);    // C:\Program Files (x86)\Windows Kits\8.1\Lib\win7\stub512.com
             if (pattrinfo[16].dwattr == 2)
             {
-                printf("TAG_MODULE_TYPE(%S): %d, %d\n", filename, pattrinfo[16].dwattr, pattrinfo[0].dwattr);
+                printf("TAG_MODULE_TYPE(%S): %ld, %ld\n", filename, pattrinfo[16].dwattr, pattrinfo[0].dwattr);
             }
         }
 
@@ -695,7 +839,7 @@ void test_onefile(WCHAR* filename)
             if (pattrinfo[27].type != TAG_EXE_WRAPPER)
                 printf("FAIL TAG_EXE_WRAPPER (%S)\n", filename);
             if (pattrinfo[27].dwattr != 0)
-                printf("TAG_EXE_WRAPPER(%S): %d\n", filename, pattrinfo[27].dwattr);
+                printf("TAG_EXE_WRAPPER(%S): %ld\n", filename, pattrinfo[27].dwattr);
         }
 
         pSdbFreeFileAttributes(pattrinfo);
@@ -715,7 +859,7 @@ static void test_crc_imp(size_t len, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    winetest_ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -742,7 +886,7 @@ static void test_crc2_imp(DWORD len, int fill, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    winetest_ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -752,8 +896,6 @@ static void test_crc2_imp(DWORD len, int fill, DWORD expected)
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
 }
-
-
 
 static void test_ApplicationAttributes(void)
 {
@@ -780,8 +922,8 @@ static void test_ApplicationAttributes(void)
     DeleteFileA("testxx.exe");
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret == FALSE, "expected SdbGetFileAttributes to fail.\n");
-    ok(pattrinfo == (PATTRINFO)0xdead, "expected the pointer not to change.\n");
-    ok(num == 333, "expected the number of items not to change.\n");
+    ok(pattrinfo == (PATTRINFO)0xdead || pattrinfo == NULL, "expected the pointer not to change or to be NULL.\n");
+    ok(num == 333 || num == 0, "expected the number of items not to change or to be 0.\n");
     if (ret)
         pSdbFreeFileAttributes(pattrinfo);
 
@@ -797,24 +939,36 @@ static void test_ApplicationAttributes(void)
     //    trace("%S\n", pSdbTagToString(pattrinfo[n].type));
     //}
 
-    switch (num)
+    switch(g_WinVersion)
     {
-    case 26:
-        // 2k3
-        g_AttrInfoSize = 26;
-        break;
-    case 28:
-        // Win7+ (and maybe vista, but who cares about that?)
-        g_AttrInfoSize = 28;
-        break;
-    default:
-        ok(0, "Unknown attrinfo size: %u\n", num);
-        break;
+        case WINVER_2003:
+            g_AttrInfoSize = 26;
+            break;
+        case WINVER_VISTA:
+            g_AttrInfoSize = 27;
+            break;
+        case WINVER_WIN7:
+            g_AttrInfoSize = 28;
+            break;
+        case WINVER_WIN8:
+        case WINVER_WIN81:
+            g_AttrInfoSize = 43;
+            break;
+        case WINVER_WIN10:
+            g_AttrInfoSize = 38;
+            break;
+        default: 
+            ok(0, "Unknown attrinfo size: %lu\n", num);
+            break;
     }
 
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
+#ifndef _M_IX86
+    if (num == g_AttrInfoSize && ret && g_WinVersion < WINVER_WIN7)
+#else
     if (num == g_AttrInfoSize && ret)
+#endif
     {
         expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
         expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0x178bd629);
@@ -855,12 +1009,19 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
         expect_tag_dword(pattrinfo, TAG_SIZE, 0x800);
+#ifndef _M_IX86
+        if (g_WinVersion < WINVER_WIN7)
+            expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7caffd);
+        else
+            expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7cf1fd);
+#else
         expect_tag_dword(pattrinfo, TAG_CHECKSUM, 0xea7caffd);
+#endif
         //expect_tag_skip_range(pattrinfo, 2, 16);
         expect_tag_dword(pattrinfo, TAG_MODULE_TYPE, 0x3); /* Win32 */
         expect_tag_dword(pattrinfo, TAG_PE_CHECKSUM, 0xBAAD);
@@ -881,7 +1042,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -902,7 +1063,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -920,7 +1081,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -945,7 +1106,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1021,7 +1182,10 @@ static void test_SdbGetAppPatchDir(void)
     _SEH2_TRY
     {
         hr = pSdbGetAppPatchDir(NULL, NULL, 0);
-        ok_hex(hr, S_FALSE);
+        if (g_WinVersion < WINVER_WIN10)
+            ok_hex(hr, S_FALSE);
+        else
+            ok_hex(hr, S_OK);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1044,7 +1208,7 @@ static void test_SdbGetAppPatchDir(void)
 
     if (g_WinVersion < WINVER_WIN7)
         expect_hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-    else if (g_WinVersion < WINVER_WIN10)
+    else if (g_WinVersion <= WINVER_WIN10)
         expect_hr = S_OK;
     else
         expect_hr = TRUE;
@@ -1060,7 +1224,7 @@ static void test_SdbGetAppPatchDir(void)
         hr = pSdbGetAppPatchDir(NULL, Buffer, n);
         ok(Buffer[n] == 0xbbbb, "Expected SdbGetAppPatchDir to leave WCHAR at %d untouched, was: %d\n",
            n, Buffer[n]);
-        ok(hr == S_OK || hr == expect_hr, "Expected S_OK or 0x%x, was: 0x%x (at %d)\n", expect_hr, hr, n);
+        ok(hr == S_OK || hr == expect_hr, "Expected S_OK or 0x%lx, was: 0x%lx (at %d)\n", expect_hr, hr, n);
     }
 }
 START_TEST(apphelp)
@@ -1071,7 +1235,7 @@ START_TEST(apphelp)
 
     hdll = LoadLibraryA("apphelp.dll");
     g_WinVersion = get_module_version(hdll);
-    trace("Detected apphelp.dll version: 0x%x\n", g_WinVersion);
+    trace("Detected apphelp.dll version: 0x%lx\n", g_WinVersion);
 
 #define RESOLVE(fnc)    do { p##fnc = (void *) GetProcAddress(hdll, #fnc); ok(!!p##fnc, #fnc " not found.\n"); } while (0)
     RESOLVE(ApphelpCheckShellObject);
@@ -1089,6 +1253,10 @@ START_TEST(apphelp)
     test_ApplicationAttributes();
     test_SdbTagToString();
     test_SdbTagToStringAllTags();
+#ifndef _M_IX86
+    skip("FIXME: Need new SdbGetAppPatchDir() for non-x86!\n");
+#else
     if (pSdbGetAppPatchDir)
         test_SdbGetAppPatchDir();
+#endif
 }

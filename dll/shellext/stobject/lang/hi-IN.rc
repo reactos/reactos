@@ -31,6 +31,7 @@ BEGIN
     IDS_PWR_AC "On AC power"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! घंटे (%3!u!%%) शेष"
     IDS_PWR_MINUTES_REMAINING "%1!u! मिनट (%2!u!%%) शेष"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "हार्डवेयर सुरक्षित रूप से निकालें"

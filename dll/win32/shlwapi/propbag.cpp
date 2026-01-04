@@ -1392,7 +1392,7 @@ BOOL CViewStatePropertyBag::_CanAccessGlobalDefaultsBag() const
     if (_CanAccessFolderDefaultsBag())
         return TRUE;
 
-    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS);
+    return ((m_dwVspbFlags & SHGVSPB_GLOBALDEFAULTS) == SHGVSPB_GLOBALDEFAULTS);
 }
 
 BOOL CViewStatePropertyBag::_CanAccessInheritBag() const
@@ -1417,7 +1417,7 @@ void CViewStatePropertyBag::_ResetTryAgainFlag()
         m_bUserDefaultsBag = FALSE;
     else if ((m_dwVspbFlags & SHGVSPB_ALLUSERS) && (m_dwVspbFlags & SHGVSPB_PERFOLDER))
         m_bFolderDefaultsBag = FALSE;
-    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEAFAULTS) == SHGVSPB_GLOBALDEAFAULTS)
+    else if ((m_dwVspbFlags & SHGVSPB_GLOBALDEFAULTS) == SHGVSPB_GLOBALDEFAULTS)
         m_bGlobalDefaultsBag = FALSE;
 }
 
@@ -1678,7 +1678,7 @@ BOOL CViewStatePropertyBag::_EnsureGlobalDefaultsBag(DWORD dwMode, REFIID riid)
     if (!m_pGlobalDefaultsBag && !m_bGlobalDefaultsBag && _CanAccessGlobalDefaultsBag())
     {
         m_bGlobalDefaultsBag = TRUE;
-        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEAFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
+        _CreateBag(NULL, m_pszPath, SHGVSPB_GLOBALDEFAULTS, dwMode, riid, &m_pGlobalDefaultsBag);
     }
     return (m_pGlobalDefaultsBag != NULL);
 }

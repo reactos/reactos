@@ -27,6 +27,7 @@ endif()
 
 list(APPEND SOURCE
     common.c
+    console.c
     fontdata.c
     precomp.h)
 

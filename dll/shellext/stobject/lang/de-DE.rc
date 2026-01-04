@@ -24,6 +24,7 @@ BEGIN
     IDS_PWR_AC "Mit Wechselstrom"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! Stunden (%3!u!%%) verbleibend"
     IDS_PWR_MINUTES_REMAINING "%1!u! Min. (%2!u!%%) verbleibend"
+    IDS_PWR_FULLY_CHARGED "Fully charged"
 
     //Hotplug related strings
     IDS_HOTPLUG_REMOVE_1 "Hardware sicher entfernen"

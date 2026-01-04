@@ -21,16 +21,6 @@
 import "basetsd.h";
 import "guiddef.h";
 
-cpp_quote("#ifndef __wtypes_h__")
-cpp_quote("#define __wtypes_h__")
-cpp_quote("#endif")
-
-cpp_quote("#ifdef _MSC_VER")
-cpp_quote("#pragma warning(push)")
-cpp_quote("#pragma warning(disable:4201)")
-cpp_quote("#pragma warning(disable:4820)")
-cpp_quote("#endif")
-
 [
   uuid(D3980A60-910C-1068-9341-00DD010F2F1C),
   version(0.1),
@@ -43,7 +33,7 @@ interface IWinTypes
 /******************** BASIC WIN32 TYPES ********************/
 cpp_quote("#if 0 /* winnt.h */") /* don't redefine these */
 
-typedef unsigned char BYTE;
+typedef byte BYTE;
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
 typedef long BOOL;
@@ -120,7 +110,9 @@ typedef struct _SID {
   UCHAR SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
   [size_is(SubAuthorityCount)] ULONG SubAuthority[*];
-} SID, *PSID;
+} SID, *PISID;
+
+typedef void *PSID;
 
 typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
@@ -141,12 +133,12 @@ typedef struct _SECURITY_DESCRIPTOR {
   PSID Group;
   PACL Sacl;
   PACL Dacl;
-} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
+} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
 
 typedef struct _SECURITY_ATTRIBUTES
 {
     DWORD nLength;
-    LPVOID lpSecurityDescriptor;
+    [size_is(nLength)] LPVOID lpSecurityDescriptor;
     BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
@@ -297,7 +289,11 @@ typedef WCHAR OLECHAR;
 typedef [string] OLECHAR *LPOLESTR;
 typedef [string] const OLECHAR *LPCOLESTR;
 cpp_quote("#ifndef __WINESRC__")
-cpp_quote("#define OLESTR(str) L##str")
+cpp_quote("# ifdef WINE_UNICODE_NATIVE")
+cpp_quote("#  define OLESTR(str) L##str")
+cpp_quote("# else")
+cpp_quote("#  define OLESTR(str) u##str")
+cpp_quote("# endif")
 cpp_quote("#endif")
 
 typedef LONG SCODE;
@@ -342,22 +338,31 @@ cpp_quote("#define ROTFLAGS_ALLOWANYCLIENT 0x2")
 cpp_quote("#endif")
 
 typedef enum tagCLSCTX {
-  CLSCTX_INPROC_SERVER        = 0x1,
-  CLSCTX_INPROC_HANDLER       = 0x2,
-  CLSCTX_LOCAL_SERVER         = 0x4,
-  CLSCTX_INPROC_SERVER16      = 0x8,
-  CLSCTX_REMOTE_SERVER        = 0x10,
-  CLSCTX_INPROC_HANDLER16     = 0x20,
-  CLSCTX_INPROC_SERVERX86     = 0x40,
-  CLSCTX_INPROC_HANDLERX86    = 0x80,
-  CLSCTX_ESERVER_HANDLER      = 0x100,
-  CLSCTX_NO_CODE_DOWNLOAD     = 0x400,
-  CLSCTX_NO_CUSTOM_MARSHAL    = 0x1000,
-  CLSCTX_ENABLE_CODE_DOWNLOAD = 0x2000,
-  CLSCTX_NO_FAILURE_LOG       = 0x4000,
-  CLSCTX_DISABLE_AAA          = 0x8000,
-  CLSCTX_ENABLE_AAA           = 0x10000,
-  CLSCTX_FROM_DEFAULT_CONTEXT = 0x20000
+  CLSCTX_INPROC_SERVER          = 0x00000001,
+  CLSCTX_INPROC_HANDLER         = 0x00000002,
+  CLSCTX_LOCAL_SERVER           = 0x00000004,
+  CLSCTX_INPROC_SERVER16        = 0x00000008,
+  CLSCTX_REMOTE_SERVER          = 0x00000010,
+  CLSCTX_INPROC_HANDLER16       = 0x00000020,
+  CLSCTX_INPROC_SERVERX86       = 0x00000040,
+  CLSCTX_INPROC_HANDLERX86      = 0x00000080,
+  CLSCTX_ESERVER_HANDLER        = 0x00000100,
+  CLSCTX_NO_CODE_DOWNLOAD       = 0x00000400,
+  CLSCTX_NO_CUSTOM_MARSHAL      = 0x00001000,
+  CLSCTX_ENABLE_CODE_DOWNLOAD   = 0x00002000,
+  CLSCTX_NO_FAILURE_LOG         = 0x00004000,
+  CLSCTX_DISABLE_AAA            = 0x00008000,
+  CLSCTX_ENABLE_AAA             = 0x00010000,
+  CLSCTX_FROM_DEFAULT_CONTEXT   = 0x00020000,
+  CLSCTX_ACTIVATE_X86_SERVER    = 0x00040000,
+  CLSCTX_ACTIVATE_32_BIT_SERVER = CLSCTX_ACTIVATE_X86_SERVER,
+  CLSCTX_ACTIVATE_64_BIT_SERVER = 0x00080000,
+  CLSCTX_ENABLE_CLOAKING        = 0x00100000,
+  CLSCTX_APPCONTAINER           = 0x00400000,
+  CLSCTX_ACTIVATE_AAA_AS_IU     = 0x00800000,
+  CLSCTX_RESERVED6              = 0x01000000,
+  CLSCTX_ACTIVATE_ARM32_SERVER  = 0x02000000,
+  CLSCTX_PS_DLL                 = 0x80000000,
 } CLSCTX;
 
 cpp_quote("#define CLSCTX_INPROC (CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER)")
@@ -560,6 +565,7 @@ typedef [unique] RemotableHandle *wireHFONT;
 typedef [unique] RemotableHandle *wireHICON;
 typedef [unique] RemotableHandle *wireHMENU;
 typedef [unique] RemotableHandle *wireHWND;
+typedef [unique] RemotableHandle *wireHMONITOR;
 
 cpp_quote("#if 0") /* for IDL only (C/C++ defs are in windef.h) */
 DECLARE_WIREM_HANDLE(HACCEL);
@@ -569,6 +575,7 @@ DECLARE_WIREM_HANDLE(HFONT);
 DECLARE_WIREM_HANDLE(HICON);
 DECLARE_WIREM_HANDLE(HMENU);
 DECLARE_WIREM_HANDLE(HWND);
+DECLARE_WIREM_HANDLE(HMONITOR);
 
 typedef HICON HCURSOR;
 
@@ -639,13 +646,8 @@ cpp_quote("#ifndef _tagCY_DEFINED")
 cpp_quote("#define _tagCY_DEFINED")
 cpp_quote("typedef union tagCY {")
 cpp_quote("    struct {")
-cpp_quote("#ifdef WORDS_BIGENDIAN")
-cpp_quote("        LONG  Hi;")
-cpp_quote("        ULONG Lo;")
-cpp_quote("#else")
 cpp_quote("        ULONG Lo;")
 cpp_quote("        LONG  Hi;")
-cpp_quote("#endif")
 cpp_quote("    } DUMMYSTRUCTNAME;")
 cpp_quote("    LONGLONG int64;")
 cpp_quote("} CY;")
@@ -675,13 +677,8 @@ cpp_quote("  } DUMMYUNIONNAME;")
 cpp_quote("  ULONG Hi32;")
 cpp_quote("  union {")
 cpp_quote("    struct {")
-cpp_quote("#ifdef WORDS_BIGENDIAN")
-cpp_quote("      ULONG Mid32;")
-cpp_quote("      ULONG Lo32;")
-cpp_quote("#else")
 cpp_quote("      ULONG Lo32;")
 cpp_quote("      ULONG Mid32;")
-cpp_quote("#endif")
 cpp_quote("    } DUMMYSTRUCTNAME1;")
 cpp_quote("    ULONGLONG Lo64;")
 cpp_quote("  } DUMMYUNIONNAME1;")
@@ -847,7 +844,3 @@ typedef struct _tagpropertykey
 cpp_quote("#endif /*PROPERTYKEY_DEFINED*/")
 
 } /* interface IWinTypes */
-
-cpp_quote("#ifdef _MSC_VER")
-cpp_quote("#pragma warning(pop)")
-cpp_quote("#endif")

@@ -108,23 +108,30 @@ TestCompareIDList(IShellFolder* psf)
 
     compare(psf, dir3, desktop, S_LESSTHAN);
     compare(psf, desktop, dir3, S_GREATERTHAN);
-    compare(psf, dir3, programs, S_GREATERTHAN);
-    compare(psf, programs, dir3, S_LESSTHAN);
+    if (!g_bVista) // Only Vista fails on a default install
+    {
+        compare(psf, dir3, programs, S_GREATERTHAN);
+        compare(psf, programs, dir3, S_LESSTHAN);
+    }
     compare(psf, dir3, dir3, S_EQUAL);
 
     compare(psf, dir4, desktop, S_LESSTHAN);
     compare(psf, desktop, dir4, S_GREATERTHAN);
-    compare(psf, dir4, programs, S_GREATERTHAN);
-    compare(psf, programs, dir4, S_LESSTHAN);
+    if (!g_bVista) // Only Vista fails on a default install
+    {
+        compare(psf, dir4, programs, S_GREATERTHAN);
+        compare(psf, programs, dir4, S_LESSTHAN);
+    }
     compare(psf, dir4, dir4, S_EQUAL);
 
     // Now compare the paths against eachother.
     compare(psf, dir1, dir2, S_LESSTHAN);
     compare(psf, dir2, dir1, S_GREATERTHAN);
-
-    compare(psf, dir2, dir3, S_LESSTHAN);
-    compare(psf, dir3, dir2, S_GREATERTHAN);
-
+    if (!g_bVista) // Only Vista fails on a default install
+    {
+        compare(psf, dir2, dir3, S_LESSTHAN);
+        compare(psf, dir3, dir2, S_GREATERTHAN);
+    }
     compare(psf, dir3, dir4, S_LESSTHAN);
     compare(psf, dir4, dir3, S_GREATERTHAN);
 

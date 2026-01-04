@@ -187,10 +187,7 @@ test_GetNetworkParams(VOID)
         HeapFree(GetProcessHeap(), 0, FixedInfo);
         skip("FixedInfo->DomainName is NULL. Can't proceed\n");
     }
-    if(OrigDhcpDomainNameExists)
-        ok(strcmp(FixedInfo->DomainName, OrigDhcpDomainName) == 0, "FixedInfo->DomainName is wrong '%s' != '%s'\n", FixedInfo->DomainName, OrigDhcpDomainName);
-    else
-        ok(strcmp(FixedInfo->DomainName, OrigDomainName) == 0, "FixedInfo->DomainName is wrong '%s' != '%s'\n", FixedInfo->DomainName, OrigDomainName);
+    ok(strcmp(FixedInfo->DomainName, OrigDomainName) == 0, "FixedInfo->DomainName is wrong '%s' != '%s'\n", FixedInfo->DomainName, OrigDomainName);
     if (!OrigDhcpHostnameExists)
     {
         ErrorCode = WriteRegistryValue("DhcpHostname", ROSTESTDHCPHOST);

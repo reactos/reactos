@@ -422,7 +422,7 @@ public:
 
             LPCITEMIDLIST child;
 
-            int nkeys = _countof(keys);
+            UINT nkeys = 0;
             if (cidl == 1 && IsSymLink(apidl[0]))
             {
                 const TItemId * info;
@@ -452,16 +452,15 @@ public:
 
             if (cidl == 1 && IsFolder(apidl[0]))
             {
-                res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+                res = RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Folder", 0, KEY_READ, &keys[0]);
                 if (!NT_SUCCESS(res))
-                    return HRESULT_FROM_NT(res);
-            }
-            else
-            {
-                nkeys = 0;
+                    return HRESULT_FROM_WIN32(res);
+                nkeys++;
             }
 
             HRESULT hr = CDefFolderMenu_Create2(parent, hwndOwner, cidl, apidl, psfParent, DefCtxMenuCallback, nkeys, keys, &pcm);
+            for (UINT i = 0; i < nkeys; ++i)
+                RegCloseKey(keys[i]);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 

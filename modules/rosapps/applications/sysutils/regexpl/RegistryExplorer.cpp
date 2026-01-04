@@ -187,7 +187,7 @@ int main ()
 	Console.SetTitle(_T("Registry Explorer"));
 	Console.SetTextAttribute(pSettings->GetNormalTextAttributes());
 
-	VERIFY(SetConsoleCtrlHandler((PHANDLER_ROUTINE)HandlerRoutine,TRUE));
+	VERIFY(SetConsoleCtrlHandler(HandlerRoutine,TRUE));
 
 	if (!Console.Write(HELLO_MSG
 	//(_L(__TIMESTAMP__))

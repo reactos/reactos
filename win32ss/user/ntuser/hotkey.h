@@ -14,7 +14,7 @@ typedef struct _HOT_KEY
 #define IDHK_F12       -5
 #define IDHK_SHIFTF12  -6
 #define IDHK_WINKEY    -7
-#define IDHK_REACTOS   -8
+#define IDHK_WNDKEY    -8 /* WM_SETHOTKEY */
 
 /* Window Snap Hot Keys */
 #define IDHK_SNAP_LEFT   -10
@@ -27,7 +27,7 @@ VOID FASTCALL UnregisterThreadHotKeys(PTHREADINFO pti);
 BOOL NTAPI co_UserProcessHotKeys(WORD wVk, BOOL bIsDown);
 UINT FASTCALL DefWndGetHotKey(PWND pWnd);
 INT FASTCALL DefWndSetHotKey(PWND pWnd, WPARAM wParam);
-VOID FASTCALL StartDebugHotKeys(VOID);
+VOID FASTCALL SetDebugHotKeys(VOID);
 BOOL FASTCALL UserRegisterHotKey(PWND pWnd,int id,UINT fsModifiers,UINT vk);
 BOOL FASTCALL UserUnregisterHotKey(PWND pWnd, int id);
 

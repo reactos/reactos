@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im Prozess Name | /pid Prozess ID]\n"
+    STRING_USAGE, "Usage: taskkill [/?] [/f] [/im Prozess Name | /pid Prozess ID] [/t]\n"
     STRING_INVALID_OPTION, "Fehler: Unbekannte oder ungülige Kommandozeilenoption angegeben.\n"
     STRING_INVALID_PARAM, "Fehler: Ungültiger Kommandozeilenparameter angegeben.\n"
     STRING_MISSING_OPTION, "Fehler: Eine der Optionen /im oder /pid muss angegeben werden.\n"
@@ -16,6 +16,10 @@ STRINGTABLE
     STRING_ENUM_FAILED, "Fehler: Prozessliste kann nicht aufgebaut werden.\n"
     STRING_TERMINATE_FAILED, "Fehler: Prozess ""%1"" kann nicht beendet werden.\n"
     STRING_SELF_TERMINATION, "Fehler: Der Prozess kann sich nicht selbst beenden.\n"
+    // STRING_CLOSE_CHILD, "Sent termination signal to process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
+    STRING_TERM_CHILD, "The process with PID %1!u! (child process of PID %2!u!) has been terminated.\n"
+    STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
     STRING_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
     STRING_INVALID_SYNTAX, "Error: Invalid syntax.\n"
 }

@@ -44,7 +44,7 @@ extern "C" {
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 PWSTR
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverGetRegistryPath)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -72,13 +72,10 @@ WDFEXPORT(WdfDriverGetRegistryPath)(
     return pDriver->GetRegistryPathUnicodeString()->Buffer;
 }
 
-VOID
-RosInitWdf();
-
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -102,9 +99,6 @@ WDFEXPORT(WdfDriverCreate)(
     WDFDRIVER hDriver;
     const LONG validFlags = WdfDriverInitNonPnpDriver |
                             WdfDriverInitNoDispatchOverride;
-
-    RosInitWdf();
-    DriverGlobals = WdfDriverGlobals;
 
     hDriver = NULL;
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
@@ -354,7 +348,7 @@ WDFEXPORT(WdfDriverCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverRegisterTraceInfo)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -379,7 +373,7 @@ WDFEXPORT(WdfDriverRegisterTraceInfo)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverRetrieveVersionString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -454,7 +448,7 @@ WDFEXPORT(WdfDriverRetrieveVersionString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfDriverIsVersionAvailable)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

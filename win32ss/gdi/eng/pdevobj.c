@@ -547,7 +547,7 @@ PDEVOBJ_Create(
         {
             RtlCopyMemory(ppdev->pdmwDev, pdm, pdm->dmSize + pdm->dmDriverExtra);
             /* FIXME: this must be done in a better way */
-            pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE | DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
+            pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
         }
     }
 
@@ -562,8 +562,8 @@ PDEVOBJ_Create(
     ppdev->dwAccelerationLevel = dwAccelerationLevel;
 
     /* Copy the function table */
-    if ((ldevtype == LDEV_DEVICE_DISPLAY && dwAccelerationLevel >= 5) ||
-        pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT))
+    if (ldevtype == LDEV_DEVICE_DISPLAY && (dwAccelerationLevel >= 5 ||
+        pdm->dmFields & (DM_PANNINGWIDTH | DM_PANNINGHEIGHT)))
     {
         ULONG i;
 

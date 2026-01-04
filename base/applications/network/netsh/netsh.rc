@@ -1,4 +1,5 @@
 #include <windef.h>
+#include <netsh.h>
 
 #include "resource.h"
 

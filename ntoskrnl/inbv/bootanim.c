@@ -32,7 +32,7 @@
  * Enable this define for having fancy features
  * in the boot and shutdown screens.
  */
-// #define REACTOS_FANCY_BOOT
+#define REACTOS_FANCY_BOOT
 
 /*
  * BitBltAligned() alignments
@@ -452,7 +452,7 @@ static
 VOID
 NTAPI
 DisplayFilter(
-    _Inout_ PCHAR* String)
+    _Inout_ PCSTR* String)
 {
     /* Windows hack to skip first dots displayed by AUTOCHK */
     static BOOLEAN DotHack = TRUE;

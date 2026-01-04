@@ -348,6 +348,23 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
         iHitTestResult = SendMessageW(child, TB_HITTEST, 0, (LPARAM) &pt);
         isTracking = entry->mb->_IsTracking();
 
+        if (iHitTestResult < -1)
+        {
+            // TB_HITTEST would return negative numbers for separators
+            iHitTestResult = -iHitTestResult;
+        }
+        else if (iHitTestResult == -1)
+        {
+            // TB_HITTEST would return -1 in two cases:
+            // 1. the mouse is outside the toolbar;
+            // 2. the mouse is over the first item, and that item is a separator.
+            // Confirm the second scenario by checking first item's rect.
+            RECT rc;
+            SendMessageW(child, TB_GETITEMRECT, 1, (LPARAM)&rc);
+            if (PtInRect(&rc, pt))
+                iHitTestResult = 1;
+        }
+
         if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
         {
             // The current tracked item has changed, notify the toolbar

@@ -170,16 +170,23 @@ EngpUnlinkGraphicsDevice(
     }
 }
 
+/* Goal of this function is to:
+ * - detect new graphic devices (from registry) and initialize them
+ * - link primary device and VGA device (if available) using pVgaDevice field
+ * - handle gbBaseVideo global flag
+ * - set DISPLAY_DEVICE_PRIMARY_DEVICE on at least one device
+ * - set gpPrimaryGraphicsDevice
+ * - set gpVgaGraphicsDevice
+ */
 NTSTATUS
 EngpUpdateGraphicsDeviceList(VOID)
 {
-    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    ULONG iDevNum, ulMaxObjectNumber = 0;
     WCHAR awcDeviceName[20], awcWinDeviceName[20];
     UNICODE_STRING ustrDeviceName;
     WCHAR awcBuffer[256];
     NTSTATUS Status;
-    PGRAPHICS_DEVICE pGraphicsDevice;
-    BOOLEAN bFoundNewDevice = FALSE;
+    PGRAPHICS_DEVICE pGraphicsDevice, pNewPrimaryGraphicsDevice = NULL;
     ULONG cbValue;
     HKEY hkey;
 
@@ -191,15 +198,6 @@ EngpUpdateGraphicsDeviceList(VOID)
         return Status;
     }
 
-    /* Read the name of the VGA adapter */
-    cbValue = sizeof(awcDeviceName);
-    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
-    if (NT_SUCCESS(Status))
-    {
-        iVGACompatible = _wtoi(&awcDeviceName[sizeof("\\Device\\Video")-1]);
-        ERR("VGA adapter = %lu\n", iVGACompatible);
-    }
-
     /* Get the maximum number of adapters */
     if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
     {
@@ -208,7 +206,7 @@ EngpUpdateGraphicsDeviceList(VOID)
 
     TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
 
-    /* Loop through all adapters */
+    /* Loop through all adapters, to detect new ones */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
     {
         /* Create the adapter's key name */
@@ -237,43 +235,29 @@ EngpUpdateGraphicsDeviceList(VOID)
         /* Initialize the driver for this device */
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
         if (!pGraphicsDevice) continue;
-
-        /* Check if this is a VGA compatible adapter */
-        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
-        {
-            /* Save this as the VGA adapter */
-            if (!gpVgaGraphicsDevice || !EngpHasVgaDriver(gpVgaGraphicsDevice))
-            {
-                gpVgaGraphicsDevice = pGraphicsDevice;
-                TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
-            }
-        }
-        bFoundNewDevice = TRUE;
-
-        /* Set the first one as primary device */
-        if (!gpPrimaryGraphicsDevice || EngpHasVgaDriver(gpPrimaryGraphicsDevice))
-        {
-            gpPrimaryGraphicsDevice = pGraphicsDevice;
-            TRACE("gpPrimaryGraphicsDevice = %p\n", gpPrimaryGraphicsDevice);
-        }
     }
 
     /* Close the device map registry key */
     ZwClose(hkey);
 
-    /* Can we link VGA device to primary device? */
-    if (gpPrimaryGraphicsDevice &&
-        gpVgaGraphicsDevice &&
-        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
-        !gpPrimaryGraphicsDevice->pVgaDevice)
+    /* Choose a VGA device */
+    /* Try a device with DISPLAY_DEVICE_VGA_COMPATIBLE flag. If not found,
+     * fall back to current VGA device */
+    for (pGraphicsDevice = gpGraphicsDeviceFirst;
+         pGraphicsDevice;
+         pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
     {
-        /* Yes. Remove VGA device from global list, and attach it to primary device */
-        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
-        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
-        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
+        if (pGraphicsDevice == gpVgaGraphicsDevice)
+            continue;
+        if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE && EngpHasVgaDriver(pGraphicsDevice))
+        {
+            gpVgaGraphicsDevice = pGraphicsDevice;
+            break;
+        }
     }
 
-    if (bFoundNewDevice && gbBaseVideo)
+    /* Handle gbBaseVideo */
+    if (gbBaseVideo)
     {
         PGRAPHICS_DEVICE pToDelete;
 
@@ -304,6 +288,42 @@ EngpUpdateGraphicsDeviceList(VOID)
         }
 
         /* Unlock list */
+        EngReleaseSemaphore(ghsemGraphicsDeviceList);
+    }
+
+    /* Choose a primary device (if none already exists) */
+    if (!gpPrimaryGraphicsDevice)
+    {
+        for (pGraphicsDevice = gpGraphicsDeviceFirst;
+             pGraphicsDevice;
+             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
+        {
+            if (!EngpHasVgaDriver(pGraphicsDevice))
+            {
+                pNewPrimaryGraphicsDevice = pGraphicsDevice;
+                break;
+            }
+        }
+        if (!pNewPrimaryGraphicsDevice)
+            pNewPrimaryGraphicsDevice = gpGraphicsDeviceFirst;
+        if (pNewPrimaryGraphicsDevice)
+        {
+            pNewPrimaryGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
+            gpPrimaryGraphicsDevice = pNewPrimaryGraphicsDevice;
+        }
+    }
+
+    /* Can we link VGA device to primary device? */
+    if (gpPrimaryGraphicsDevice &&
+        gpVgaGraphicsDevice &&
+        gpPrimaryGraphicsDevice != gpVgaGraphicsDevice &&
+        !gpPrimaryGraphicsDevice->pVgaDevice)
+    {
+        /* Yes. Remove VGA device from global list, and attach it to primary device */
+        TRACE("Linking VGA device %S to primary device %S\n", gpVgaGraphicsDevice->szNtDeviceName, gpPrimaryGraphicsDevice->szNtDeviceName);
+        EngAcquireSemaphore(ghsemGraphicsDeviceList);
+        EngpUnlinkGraphicsDevice(gpVgaGraphicsDevice);
+        gpPrimaryGraphicsDevice->pVgaDevice = gpVgaGraphicsDevice;
         EngReleaseSemaphore(ghsemGraphicsDeviceList);
     }
 
@@ -492,6 +512,136 @@ VideoPortCallout(
     }
 }
 
+/* Sends a TargetDeviceRelation request to PDO
+ * On success, caller needs to free pDeviceRelations with ExFreePool()
+ */
+static
+NTSTATUS
+EngpPnPTargetRelationRequest(
+    _In_ PDEVICE_OBJECT pDeviceObject,
+    _Out_ PDEVICE_RELATIONS *pDeviceRelations)
+{
+    PIO_STACK_LOCATION IrpSp;
+    KEVENT Event;
+    PIRP pIrp;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+
+    /* Initialize an event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Build IRP */
+    pIrp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+                                        pDeviceObject,
+                                        NULL, 0,
+                                        NULL,
+                                        &Event,
+                                        &Iosb);
+    if (!pIrp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Initialize IRP */
+    pIrp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    IrpSp = IoGetNextIrpStackLocation(pIrp);
+    IrpSp->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
+    IrpSp->Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
+
+    /* Call the driver */
+    Status = IoCallDriver(pDeviceObject, pIrp);
+
+    /* Wait if neccessary */
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, 0);
+        Status = Iosb.Status;
+    }
+
+    /* Return information to the caller about the operation. */
+    if (NT_SUCCESS(Status))
+        *pDeviceRelations = (PDEVICE_RELATIONS)Iosb.Information;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+EngpUpdateMonitorDevices(
+    _In_ PGRAPHICS_DEVICE pGraphicsDevice)
+{
+    PDEVICE_RELATIONS pDeviceRelations;
+    PVIDEO_MONITOR_DEVICE pMonitorDevices;
+    ULONG i, bytesWritten, monitorCount;
+    NTSTATUS Status;
+
+    /* Request right PDO for device relations */
+    Status = EngpPnPTargetRelationRequest(pGraphicsDevice->DeviceObject, &pDeviceRelations);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("EngpPnPTargetRelationRequest() failed with status 0x%08x\n", Status);
+        return Status;
+    }
+    ASSERT(pDeviceRelations->Count == 1);
+
+    /* Invalidate relations, so that videoprt reenumerates its monitors */
+    IoSynchronousInvalidateDeviceRelations(pDeviceRelations->Objects[0], BusRelations);
+
+    /* Free returned structure */
+    for (i = 0; i < pDeviceRelations->Count; i++)
+        ObDereferenceObject(pDeviceRelations->Objects[i]);
+    ExFreePool(pDeviceRelations);
+
+    /* Now, get list of monitor PDOs */
+    Status = EngDeviceIoControl(pGraphicsDevice->DeviceObject,
+                                IOCTL_VIDEO_ENUM_MONITOR_PDO,
+                                NULL, 0,
+                                &pMonitorDevices, sizeof(pMonitorDevices),
+                                &bytesWritten);
+    if (Status != ERROR_SUCCESS)
+    {
+        ERR("EngDeviceIoControl(IOCTL_VIDEO_ENUM_MONITOR_PDO) failed with status 0x%08x\n", Status);
+        return Status;
+    }
+    ASSERT(bytesWritten == sizeof(pMonitorDevices));
+
+    /* Count number of available monitors */
+    for (monitorCount = 0; pMonitorDevices[monitorCount].pdo; ++monitorCount)
+        ;
+
+    if (pGraphicsDevice->pvMonDev)
+    {
+        /* Erase everything */
+        for (i = 0; i < pGraphicsDevice->dwMonCnt; i++)
+            ObDereferenceObject(pGraphicsDevice->pvMonDev[i].pdo);
+        ExFreePoolWithTag(pGraphicsDevice->pvMonDev, GDITAG_GDEVICE);
+        pGraphicsDevice->pvMonDev = NULL;
+        pGraphicsDevice->dwMonCnt = 0;
+    }
+
+    if (monitorCount > 0)
+    {
+        pGraphicsDevice->pvMonDev = ExAllocatePoolZero(PagedPool,
+                                                       monitorCount * sizeof(VIDEO_MONITOR_DEVICE),
+                                                       GDITAG_GDEVICE);
+        if (!pGraphicsDevice->pvMonDev)
+        {
+            for (i = 0; pMonitorDevices[i].pdo; ++i)
+                ObDereferenceObject(pMonitorDevices[i].pdo);
+            ExFreePool(pMonitorDevices);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Copy data */
+        for (i = 0; i < monitorCount; i++)
+        {
+            TRACE("%S\\Monitor%u: PDO %p HwID %u\n", pGraphicsDevice->szWinDeviceName, i, pMonitorDevices[i].pdo, pMonitorDevices[i].HwID);
+            pGraphicsDevice->pvMonDev[pGraphicsDevice->dwMonCnt++] = pMonitorDevices[i];
+        }
+    }
+
+    ExFreePool(pMonitorDevices);
+    return STATUS_SUCCESS;
+}
+
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
@@ -560,19 +710,6 @@ EngpRegisterGraphicsDevice(
     // if (Win32kCallbacks.DualviewFlags & ???)
     pGraphicsDevice->PhysDeviceHandle = Win32kCallbacks.pPhysDeviceObject;
 
-    /* FIXME: Enumerate children monitor devices for this video adapter
-     *
-     * - Force the adapter to re-enumerate its monitors:
-     *   IoSynchronousInvalidateDeviceRelations(pdo, BusRelations)
-     *
-     * - Retrieve all monitor PDOs from VideoPrt:
-     *   EngDeviceIoControl(0x%p, IOCTL_VIDEO_ENUM_MONITOR_PDO)
-     *
-     * - Initialize these fields and structures accordingly:
-     *   pGraphicsDevice->dwMonCnt
-     *   pGraphicsDevice->pvMonDev[0..dwMonCnt-1]
-     */
-
     /* Copy the device name */
     RtlStringCbCopyNW(pGraphicsDevice->szNtDeviceName,
                       sizeof(pGraphicsDevice->szNtDeviceName),
@@ -609,6 +746,9 @@ EngpRegisterGraphicsDevice(
                   pustrDescription->Length);
     pGraphicsDevice->pwszDescription[pustrDescription->Length/sizeof(WCHAR)] = 0;
 
+    /* Update list of connected monitors */
+    EngpUpdateMonitorDevices(pGraphicsDevice);
+
     /* Lock loader */
     EngAcquireSemaphore(ghsemGraphicsDeviceList);
 
@@ -620,7 +760,6 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    TRACE("Prepared %lu modes for %ls\n", pGraphicsDevice->cDevModes, pGraphicsDevice->pwszDescription);
 
     /* HACK: already in graphic mode; display wallpaper on this new display */
     if (ScreenDeviceContext)

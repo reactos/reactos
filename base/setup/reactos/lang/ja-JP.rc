@@ -8,18 +8,14 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "ReactOS セットアップウィザードへようこそ", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "このウィザードは、あなたのコンピュータに ReactOS をインストールまたはアップグレードし、追加のセットアップの準備をします。", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
-under heavy development. It is recommended to use it only for \
-evaluation and testing and not as your daily-usage OS.\n\
-It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+    GROUPBOX " 重要なお知らせ ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS はアルファ段階にあります: 機能は未完成で、現在、活発に開発されています。日常的に使用する OS としては使用せず、評価とテストにのみ使用することをオススメします。\n\
+データが破損したり、ハードウェアが損傷する恐れがあります。", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "実際のハードウェアで ReactOS を実行する場合は、データをバックアップするか、予備のコンピュータでテストしてください。", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
-    LTEXT "セットアップを続行するには [次へ] をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "セットアップを続行するには [次へ] をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -27,10 +23,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    AUTORADIOBUTTON "ReactOSをインストールする(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "ReactOSを新しくインストールします。このオプションは、あなたのファイル、設定、プログラムを維持しません。あなたはディスクとパーティションに変更を加えることができます。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "ReactOSを更新または修正する(&U)", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "インストールされたReactOSを更新または修正します。このオプションはあなたのファイル、設定、プログラムを保持します。このオプションは、このコンピュータですでにReactOSがインストール済みのときのみ利用できます。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "ReactOS をインストールする(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "ReactOS を新しくインストールします。このオプションは、あなたのファイル、設定、プログラムを維持しません。あなたはディスクとパーティションに変更を加えることができます。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "ReactOS を更新または修正する(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "インストールされた ReactOS を更新または修正します。このオプションはあなたのファイル、設定、プログラムを保持します。このオプションは、このコンピュータですでに ReactOS がインストール済みのときのみ利用できます。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -38,10 +34,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT       "ReactOS セットアップは、以下のリストのうち、一つをアップグレードできます。また、ReactOSインストールが壊れていれば、セットアップは修正を試すことができます。", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "ReactOS セットアップは、以下のリストのうち、一つをアップグレードできます。また、ReactOS インストールが壊れていれば、セットアップは修正を試すことができます。", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "アップグレードしない(&D)", IDC_SKIPUPGRADE, 218, 127, 92, 14
-    LTEXT       "次へをクリックしてOSのインストールをアップグレードするか、「アップグレードしない」をクリックして下さい。", IDC_STATIC, 7, 124, 207, 16
+    LTEXT       "次へをクリックしてOSのインストールをアップグレードするか、「アップグレードしない」をクリックしてください。", IDC_STATIC, 7, 124, 207, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -55,7 +51,7 @@ BEGIN
     COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "キーボード:", IDC_STATIC, 20, 55, 80, 10
     COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "デバイスをセットアップするために、次へをクリックして下さい。", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "デバイスをセットアップするために、次へをクリックしてください。", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
@@ -64,9 +60,9 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "Initialize(&I)", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "初期化(&I)", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "作成(&C)", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "Format(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "フォーマット(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "削除(&D)", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "ドライバ(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "上級者向け(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -83,10 +79,10 @@ BEGIN
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "拡張パーティション(&E)", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "ファイルシステム(&F):", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "クイック フォーマット(&Q)", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 98, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 143, 98, 50, 14
 END
@@ -98,20 +94,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ファイルシステム(&F):", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "クイック フォーマット(&Q)", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 61, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "高度なインストール オプション"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "ReactOS をインストールするディレクトリを選択してください(&D)", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
-    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    GROUPBOX "ブートローダー", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "FreeLoader ブートローダーのインストール位置:\n\nデフォルトでは、ブート ディスクのシステム パーティション (および BIOS ベースのコンピュータの場合はマスター ブート レコードまたはボリューム ブート レコード) にインストールされます。", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 248, 113, 50, 14
@@ -138,9 +134,9 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "インストール先フォルダ:", IDC_STATIC, 6, 89, 88, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOSがまだアルファ版であり、あなたのコンピュータやデータを壊す恐れがあることを理解しています。",
+    AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOS がまだアルファ版であり、あなたのコンピュータやデータを壊す恐れがあることを理解しています。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "すべてのインストール設定が正しいことを確認し、インストール プロセスを開始するために、インストールをクリックして下さい。", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "すべてのインストール設定が正しいことを確認し、インストール プロセスを開始するために、インストールをクリックしてください。", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -162,7 +158,7 @@ BEGIN
     LTEXT "ReactOS セットアップの最初の段階が正しく完了しました。", IDC_STATIC, 115, 50, 195, 17
     LTEXT "完了をクリックすると、あなたのコンピュータは再起動されます。", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "もしCDがドライブにあれば、取り除いて下さい。その後、あなたのコンピュータを再起動するには、完了をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "もしCDがドライブにあれば、取り除いてください。その後、あなたのコンピュータを再起動するには、完了をクリックしてください。", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* Strings */
@@ -170,10 +166,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS セットアップ"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPETITLE "インストールの種類"
+    IDS_TYPESUBTITLE "新しい ReactOS インストールをセットアップしたり、既存のインストールを更新/修復したりできます。"
+    IDS_UPDATETITLE "ReactOS のアップデートまたは修復"
+    IDS_UPDATESUBTITLE "更新または修復する既存の ReactOS インストールを選択します。"
     IDS_DEVICETITLE "基本デバイスをセットアップします"
     IDS_DEVICESUBTITLE "ディスプレイとキーボードの設定をします。"
     IDS_DRIVETITLE "インストール先パーティションとシステムフォルダをセットアップします"
@@ -184,11 +180,11 @@ BEGIN
     IDS_PROCESSSUBTITLE "パーティションを作成・フォーマットし、ファイルをコピーし、ブートローダをインストール・セットアップします。"
     IDS_RESTARTTITLE "最初の段階は完了しました"
     IDS_RESTARTSUBTITLE "セットアップの最初の段階が完了しました。第二の段階に進むために再起動します。"
-    IDS_ABORTSETUP "ReactOSはあなたのコンピュータへのインストールが完了していません。もしセットアップをここで中断すれば、ReactOSをインストールするために、セットアップを再起動する必要があります。本当に中断しますか?"
+    IDS_ABORTSETUP "ReactOS はあなたのコンピュータへのインストールが完了していません。もしセットアップをここで中断すれば、ReactOS をインストールするために、セットアップを再起動する必要があります。本当に中断しますか?"
     IDS_ABORTSETUP2 "インストールを中断しますか?"
     IDS_NO_TXTSETUP_SIF "'txtsetup.sif'が見つかりません。\nセットアップは続行できません。"
-    IDS_INSTALLBTN "&Install"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_INSTALLBTN "インストール(&I)"
+    IDS_VOLUME_NOFORMAT "未フォーマット"
 END
 
 STRINGTABLE
@@ -208,10 +204,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
-    IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBRとVBR (Default)"
+    IDS_BOOTLOADER_NOINST "インストールなし"
+    IDS_BOOTLOADER_REMOVABLE "リムーバブル メディア"
+    IDS_BOOTLOADER_SYSTEM "システム パーティション (デフォルト)"
+    IDS_BOOTLOADER_MBRVBR "MBRとVBR (デフォルト)"
     IDS_BOOTLOADER_VBRONLY "VBRのみ"
 END
 
@@ -219,88 +215,86 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "ボリューム %c: (%s) をフォーマット中 (%s 内)..."
+    IDS_FORMATTING_PROGRESS2 "ボリューム %s をフォーマット中 (%s 内)..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "ボリューム %c: (%s) をチェック中 ..."
+    IDS_CHECKING_PROGRESS2 "ボリューム %s をチェック中..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "コピーしています (%s)"
+    IDS_MOVING   "移動しています (%s から %s へ)"
+    IDS_RENAMING "名前を変更しています (%s から %s へ)"
+    IDS_DELETING "削除しています (%s)"
 
-    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
-    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
-    IDS_COPYING_FILES "Copying the files..."
+    IDS_CONFIG_SYSTEM_PARTITION "システム パーティションを構成しています..."
+    IDS_PREPARE_PARTITIONS "パーティションを準備しています..."
+    IDS_PREPARE_FILES "コピーするファイルのリストを準備しています。お待ちください..."
+    IDS_COPYING_FILES "ファイルをコピーしています..."
 
-    IDS_CREATE_REGISTRY "Creating the registry..."
-    IDS_UPDATE_REGISTRY "Updating the registry..."
+    IDS_CREATE_REGISTRY "レジストリを作成しています..."
+    IDS_UPDATE_REGISTRY "レジストリを更新しています..."
 
-    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
-    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+    // IDS_INSTALL_FINALIZE "インストールを完了しています..."
+    IDS_INSTALL_BOOTLOADER "ブートローダーをインストールしています..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
 STRINGTABLE
 BEGIN
-    IDS_REG_DONE "Done"
-    IDS_REG_REGHIVEUPDATE "Updating registry hives"
-    IDS_REG_IMPORTFILE "Importing %s"
-    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
-    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
-    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
-    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
-    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
-    IDS_REG_UNKNOWN "Unknown status %d"
+    IDS_REG_DONE "完了"
+    IDS_REG_REGHIVEUPDATE "レジストリハイブの更新"
+    IDS_REG_IMPORTFILE "%s をインポートしています"
+    IDS_REG_DISPLAYSETTINGSUPDATE "ディスプレイレジストリ設定の更新"
+    IDS_REG_LOCALESETTINGSUPDATE "ロケール設定の更新"
+    IDS_REG_ADDKBLAYOUTS "キーボードレイアウトの追加"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "キーボードレイアウト設定の更新"
+    IDS_REG_CODEPAGEINFOUPDATE "コードページ情報の追加"
+    IDS_REG_UNKNOWN "不明なステータス %d"
 END
 
 /* Error Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
-alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
-Spaces are not allowed."
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "無効な文字"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "有効な文字は次の通りです。\n\
+英数字 (a-z, A-Z, 0-9) または \n . \\ - _\n\
+スペースは使用できません。"
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
-and only contain letters, digits, dashes and periods. Spaces are not allowed."
+    IDS_ERROR_DIRECTORY_NAME_TITLE "インストール パスが無効です"
+    IDS_ERROR_DIRECTORY_NAME "ReactOS のインストールパスは DOS 8.3の命名規則に従い、英数字、ハイフン(-)、ピリオド(.)のみを含める必要があります。スペースは使用できません。"
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "パーティションの作成"
+    IDS_ERROR_CREATE_PARTITION "新しいパーティションの作成に失敗しました。"
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "パーティションを削除しますか?"
+    IDS_WARN_DELETE_PARTITION "選択したパーティションを削除してもよろしいですか?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "選択した拡張パーティションとそれに含まれるすべての論理パーティションを削除してもよろしいですか?"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "セットアップはパーティション テーブルの書き込みに失敗しました。"
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "ReactOS セットアップは、システム上でサポートされているシステム パーティションを見つけられなかったか、\
+新しいパーティションを作成できませんでした。そのようなパーティションがないと、セットアップ プログラムは ReactOS をインストールできません。\n\
+「OK」をクリックしてパーティション選択リストに戻ります。"
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "パーティションをフォーマットしようとしましたが、ボリュームが認識されませんでした。"
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "セットアップでは現在、%s 内のパーティションをフォーマットできません。\n\
+\n「OK」をクリックしてセットアップを続行します。\
+\nセットアップを終了するには、「キャンセル」をクリックします。"
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "セットアップはパーティションをフォーマットできません:\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "セットアップでは現在、%s でフォーマットされたパーティションをチェックできません。\n\
+\n「OK」をクリックしてセットアップを続行します。\
+\nセットアップを終了するには、「キャンセル」をクリックします。"
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk はいくつかのディスク エラーを検出しました。\n(ステータス 0x%08lx)。"
 
-    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
-    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
-    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
-\nClick on OK to continue anyway."
-    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
+    IDS_ERROR_WRITE_BOOT "セットアップはシステム パーティションに %s ブートコードをインストールできませんでした。"
+    IDS_ERROR_INSTALL_BOOTCODE "セットアップはブート ディスクに %s ブートコードをインストールできませんでした。"
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "セットアップはリムーバブル メディアにブートコードをインストールできませんでした。"
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "セットアップでは現在、使用しているコンピューターへのブートローダーのインストールはサポートされていません。\
+\nそれでも続行するには、「OK」をクリックしてください。"
+    IDS_ERROR_BOOTLDR_FAILED "セットアップはブートローダーをインストールできませんでした (ステータス 0x%08lx)。"
 END

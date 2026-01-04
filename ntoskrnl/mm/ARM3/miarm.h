@@ -220,24 +220,14 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MI_INITIAL_SESSION_IDS  64
 
-#if defined(_M_IX86) || defined(_M_ARM)
-//
-// PFN List Sentinel
-//
-#define LIST_HEAD 0xFFFFFFFF
+#define LIST_HEAD ULONG_PTR_MAX
 
 //
 // Because GCC cannot automatically downcast 0xFFFFFFFF to lesser-width bits,
 // we need a manual definition suited to the number of bits in the PteFrame.
 // This is used as a LIST_HEAD for the colored list
 //
-#define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
-#elif defined(_M_AMD64)
-#define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
-#define COLORED_LIST_HEAD ((1ULL << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
-#else
-#error Define these please!
-#endif
+#define COLORED_LIST_HEAD (((ULONG_PTR)1 << MI_PTE_FRAME_BITS) - 1)
 
 //
 // Returns the color of a page
@@ -796,7 +786,8 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
 
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     /* Start fresh */
     NewPte->u.Long = 0;
@@ -825,7 +816,8 @@ MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
 {
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     /* Set the protection and page */
     NewPte->u.Long = MiDetermineUserGlobalPteMask(MappingPte);
@@ -851,7 +843,8 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
 
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;
@@ -2180,6 +2173,12 @@ MiIsPfnInUse(
 
 PMMVAD
 NTAPI
+MiLocateVad(
+    _In_ PMM_AVL_TABLE Table,
+    _In_ PVOID VirtualAddress);
+
+PMMVAD
+NTAPI
 MiLocateAddress(
     IN PVOID VirtualAddress
 );
@@ -2258,10 +2257,10 @@ MiInsertBasedSection(
 NTSTATUS
 NTAPI
 MiRosUnmapViewOfSection(
-    IN PEPROCESS Process,
-    IN PVOID BaseAddress,
-    IN BOOLEAN SkipDebuggerNotify
-);
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify);
 
 VOID
 NTAPI
@@ -2324,9 +2323,9 @@ MiMakeProtectionMask(
 VOID
 NTAPI
 MiDeleteVirtualAddresses(
-    IN ULONG_PTR Va,
-    IN ULONG_PTR EndingAddress,
-    IN PMMVAD Vad
+    _In_ ULONG_PTR Va,
+    _In_ ULONG_PTR EndingAddress,
+    _In_opt_ PMMVAD Vad
 );
 
 VOID

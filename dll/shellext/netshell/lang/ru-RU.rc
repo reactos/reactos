@@ -163,6 +163,7 @@ BEGIN
     IDS_NET_DELETE "Удалить"
     IDS_NET_RENAME "Переименовать"
     IDS_NET_PROPERTIES "Свойства"
+    IDS_NET_OPEN_CONNECTIONS "Open Network Connections"
     IDS_FORMAT_BIT "%u бит/с"
     IDS_FORMAT_KBIT "%u Кбит/с"
     IDS_FORMAT_MBIT "%u Мбит/с"
@@ -176,7 +177,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKINITTITLE "Network Install"
-    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
+    IDS_NETWORKINITSUBTITLE "Installs required networking components."
     IDS_NETWORKSETTINGSTITLE "Настройки сети"
     IDS_NETWORKSETTINGSSUBTITLE "Устанавливает сетевое программное обеспечение, необходимое для соединени с другими сетями, компьютерами или Интернетом."
     IDS_NETWORKCOMPONENTTITLE "Сетевые компоненты"

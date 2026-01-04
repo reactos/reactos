@@ -6,6 +6,8 @@
  */
 
 #include "parport.h"
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -173,6 +175,7 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
                        PartialDescriptorTranslated->u.Interrupt.Level,
                        PartialDescriptorTranslated->u.Interrupt.Vector);
 
+                (VOID)PartialDescriptorTranslated;
 //                Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
 //                Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
 //                Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;

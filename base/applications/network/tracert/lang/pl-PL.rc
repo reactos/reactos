@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS trace route utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2018 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2025 Piotr Hetnarowicz <piotrhwz@gmail.com>
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -33,4 +40,7 @@ Opcje:\n\
     IDS_HOP_RESPONSE    "  raporty: "
     IDS_DEST_HOST_UNREACHABLE "Host docelowy nieosiągalny.\n"
     IDS_DEST_NET_UNREACHABLE  "Sieć docelowa nieosiągalna.\n"
+    IDS_BAD_OPTION_VALUE      "Nieprawidłowa wartość dla opcji %1!ls!.\n"
+    IDS_MISSING_OPTION_VALUE  "Należy podać wartość dla opcji %1!ls!.\n"
+    IDS_MISSING_TARGET "Należy określić adres lub nazwę docelową.\n"
 END

@@ -91,6 +91,17 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 /* Timeout in ms for sending to keyboard controller. */
 #define CONTROLLER_TIMEOUT                              250
 
+#include <pshpack1.h>
+typedef struct _PNP_DOCK_INFO
+{
+    ULONG DockLocationID;
+    ULONG SerialNumber;
+    USHORT Capabilities;
+} PNP_DOCK_INFO, *PPNP_DOCK_INFO;
+#include <poppack.h>
+
+/* FIXME: Abstract things better so we don't need to place define here */
+#if !defined(SARCH_XBOX)
 
 VOID
 PcGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize)
@@ -186,6 +197,7 @@ DetectDockingStation(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
     PDOCKING_STATE_INFORMATION DockingState;
+    PPNP_DOCK_INFO DockInfo;
     ULONG Size, Result;
 
     Result = PnpBiosGetDockStationInformation(DiskReadBuffer);
@@ -217,8 +229,14 @@ DetectDockingStation(
     DockingState->ReturnCode = Result;
     if (Result == 0)
     {
-        /* FIXME: Add more device specific data */
-        ERR("FIXME: System docked\n");
+        DockInfo = (PPNP_DOCK_INFO)DiskReadBuffer;
+        DockingState->DockLocationID = DockInfo->DockLocationID;
+        DockingState->SerialNumber = DockInfo->SerialNumber;
+        DockingState->Capabilities = DockInfo->Capabilities;
+        TRACE("System docked\n");
+        TRACE("Location: 0x%08lx\n", DockInfo->DockLocationID);
+        TRACE("Serial: 0x%08lx\n", DockInfo->SerialNumber);
+        TRACE("Capabilities: 0x%04hx\n", DockInfo->Capabilities);
     }
 
     /* Create controller key */
@@ -369,6 +387,8 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     (*BusNumber)++;
 }
+
+#endif // !SARCH_XBOX
 
 static
 VOID
@@ -696,6 +716,8 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
     }
 }
 
+/* FIXME: Abstract things better so we don't need to place define here */
+#if !defined(SARCH_XBOX)
 static
 ULONG
 PcGetSerialPort(ULONG Index, PULONG Irq)
@@ -713,6 +735,7 @@ PcGetSerialPort(ULONG Index, PULONG Irq)
 
     return (ULONG) *(BasePtr + Index);
 }
+#endif // !SARCH_XBOX
 
 /*
  * Parse the serial mouse detection options.
@@ -864,6 +887,9 @@ DetectSerialPorts(
         ControllerNumber++;
     }
 }
+
+/* FIXME: Abstract things better so we don't need to place define here */
+#if !defined(SARCH_XBOX)
 
 static VOID
 DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
@@ -1657,8 +1683,6 @@ DetectIsaBios(
     /* FIXME: Detect more ISA devices */
 }
 
-/* FIXME: Abstract things better so we don't need to place define here */
-#if !defined(SARCH_XBOX)
 static
 UCHAR
 PcGetFloppyCount(VOID)
@@ -1670,7 +1694,6 @@ PcGetFloppyCount(VOID)
 
     return ((Data & 0xF0) ? 1 : 0) + ((Data & 0x0F) ? 1 : 0);
 }
-#endif
 
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(
@@ -1753,6 +1776,9 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
                     0x0000, 0x7C00);
 }
 
+#endif // !SARCH_XBOX
+
+
 /******************************************************************************/
 
 /* FIXME: Abstract things better so we don't need to place define here */
@@ -1792,12 +1818,13 @@ MachInit(const char *CmdLine)
     MachVtbl.HwIdle = PcHwIdle;
 
     HalpCalibrateStallExecution();
+    PcVideoInit();
 }
 
 VOID
 PcPrepareForReactOS(VOID)
 {
-    /* On PC, prepare video and turn off the floppy motor */
+    /* Prepare video and turn off the floppy motor */
     PcVideoPrepareForReactOS();
     DiskStopFloppyMotor();
 }

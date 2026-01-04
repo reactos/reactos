@@ -56,6 +56,9 @@ TestSynchronizeExecution(VOID)
     KSPIN_LOCK ActualLock;
     BOOLEAN Ret;
 
+    if (skip(GetNTVersion() < _WIN32_WINNT_VISTA, "We can't create fake interrupts on Vista+.\n"))
+        return;
+
     RtlFillMemory(&Interrupt, sizeof Interrupt, 0x55);
     Interrupt.ActualLock = &ActualLock;
     KeInitializeSpinLock(Interrupt.ActualLock);

@@ -1,0 +1,64 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_HLP_INTERFACE_SHOW "Displays information.\n"
+    IDS_HLP_INTERFACE_SHOW_INTERFACE "Displays interfaces.\n"
+    IDS_HLP_INTERFACE_SHOW_INTERFACE_EX "\nUsage:\n"
+
+    IDS_HLP_IP_SHOW      "Displays IP information.\n"
+    IDS_HLP_ADDRESSES    "Displays IP address configuration.\n"
+    IDS_HLP_ADDRESSES_EX "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks: Displays the IP address configuration for a specific interface or interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area network""\n"
+    IDS_HLP_CONFIG       "Displays IP address and additional information.\n"
+    IDS_HLP_CONFIG_EX    "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks: Displays the IP address and DNS server configuration for a specific interface\nor interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area Network""\n"
+    IDS_HLP_DNS          "Displays the DNS server addresses.\n"
+    IDS_HLP_DNS_EX       "\nUsage: %1!s! [[name=]string]\n\n\
+Parameters:\n\n\
+      Tag             Value\n\
+      name            The name of a specific interface.\n\n\
+Remarks: Displays the DNS server configuration for a specific interface\nor interfaces.\n\n\
+Examples:\n\n\
+      %1!s! ""Local Area Network""\n"
+
+    IDS_HLP_WINSOCK_RESET "Resets the Winsock Catalog to a clean state.\n"
+    IDS_HLP_WINSOCK_RESET_EX "\nUsage: %1!s!\n\n\
+Remarks: Resets the Winsock Catalog to a clean state.\n"
+    IDS_HLP_WINSOCK_SHOW  "Displays information.\n"
+    IDS_HLP_WINSOCK_SHOW_CATALOG "Displays contents of Winsock Catalog.\n"
+    IDS_HLP_WINSOCK_SHOW_CATALOG_EX "\nUsage: %1!s! [[type=]full]\n\n\
+Parameters:\n\n\
+    \n"
+
+    IDS_IP_HEADER        "\nConfiguration for interface ""%s""\n"
+    IDS_DHCP_ON          "    DHCP enabled:                         Yes\n"
+    IDS_DHCP_OFF         "    DHCP enabled:                         No\n"
+    IDS_NOIPADDRESS      "    IP Address:                           None\n"
+    IDS_IPADDRESS        "    IP Address:                           %s\n"
+    IDS_IPADDRESSES      "    IP Addresses:                         %s\n"
+    IDS_NOSUBNETMASK     "    Subnet Mask:                          None\n"
+    IDS_SUBNETMASK       "    Subnet Mask:                          %s\n"
+    IDS_SUBNETMASKS      "    Subnet Masks:                         %s\n"
+
+    IDS_EMPTYLINE        "                                          %s\n"
+
+
+
+    IDS_DUMP_NEWLINE     "\n"
+    IDS_DUMP_HEADERLINE  "# ----------------------------------\n"
+
+    IDS_DUMP_IP_HEADER   "# Interface IP Configuration for ""%s""\n"
+
+
+END

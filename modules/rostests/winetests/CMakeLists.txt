@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 if(MSVC)
     add_compile_options(
         /wd4090 # C4090: 'function': different 'const' qualifiers

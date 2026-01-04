@@ -344,13 +344,7 @@ C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
 #define RTL_INIT_OBJECT_ATTRIBUTES(n, a)                        \
     RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
 
-#else /* NTOS_MODE_USER */
-//
-// Message Resource Flag
-//
-#define MESSAGE_RESOURCE_UNICODE                            0x0001
-
-#endif /* !NTOS_MODE_USER */
+#endif /* NTOS_MODE_USER */
 
 //
 // RtlImageNtHeaderEx Flags
@@ -546,7 +540,7 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 // Unhandled Exception Filter
 //
 typedef ULONG
-(NTAPI *RTLP_UNHANDLED_EXCEPTION_FILTER)(
+(NTAPI RTLP_UNHANDLED_EXCEPTION_FILTER)(
     _In_ struct _EXCEPTION_POINTERS *ExceptionInfo
 );
 typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
@@ -1397,6 +1391,15 @@ typedef struct _RTL_PERTHREAD_CURDIR
     PVOID Environment;
 } RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
 
+typedef struct _RTL_ACE_DATA
+{
+    UCHAR AceType;
+    UCHAR InheritFlags;
+    UCHAR AceFlags;
+    ACCESS_MASK Mask;
+    PSID *Sid;
+} RTL_ACE_DATA, *PRTL_ACE_DATA;
+
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege
 //
@@ -1423,8 +1426,24 @@ typedef struct _RTL_CRITICAL_SECTION_DEBUG
     LIST_ENTRY ProcessLocksList;
     ULONG EntryCount;
     ULONG ContentionCount;
-    ULONG Spare[2];
+    union
+    {
+        ULONG_PTR WineDebugString;
+        ULONG_PTR Spare[1];
+        struct
+        {
+            ULONG Flags;
+            USHORT CreatorBackTraceIndexHigh;
+            USHORT SpareWORD;
+        };
+    };
 } RTL_CRITICAL_SECTION_DEBUG, *PRTL_CRITICAL_SECTION_DEBUG, RTL_RESOURCE_DEBUG, *PRTL_RESOURCE_DEBUG;
+
+#ifdef _WIN64
+C_ASSERT(sizeof(RTL_CRITICAL_SECTION_DEBUG) == 0x30);
+#else
+C_ASSERT(sizeof(RTL_CRITICAL_SECTION_DEBUG) == 0x20);
+#endif
 
 typedef struct _RTL_CRITICAL_SECTION
 {
@@ -1888,6 +1907,23 @@ typedef struct _RTL_UNICODE_STRING_BUFFER
 } RTL_UNICODE_STRING_BUFFER, *PRTL_UNICODE_STRING_BUFFER;
 
 #ifndef NTOS_MODE_USER
+
+#ifndef MAKEINTRESOURCE
+#define MAKEINTRESOURCE(i)  ((ULONG_PTR)(USHORT)(i))
+#endif
+
+/* Predefined Resource Types */
+#ifndef RT_STRING
+#define RT_STRING       MAKEINTRESOURCE(6)
+#endif
+#ifndef RT_MESSAGETABLE
+#define RT_MESSAGETABLE MAKEINTRESOURCE(11)
+#endif
+
+//
+// Message Resource Flag
+//
+#define MESSAGE_RESOURCE_UNICODE    0x0001
 
 //
 // Message Resource Entry, Block and Data

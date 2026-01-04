@@ -724,8 +724,8 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                 if (InputBufferLength == sizeof(ULONG))
                 {
                     /* Query it */
-                    Status = CmBattSetTripPpoint(DeviceExtension,
-                                                 *(PULONG)Irp->AssociatedIrp.SystemBuffer);
+                    Status = CmBattSetTripPoint(DeviceExtension,
+                                                *(PULONG)Irp->AssociatedIrp.SystemBuffer);
                     Irp->IoStatus.Information = 0;
                 }
                 else
@@ -895,7 +895,7 @@ CmBattDisableStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
         {
             /* Reset it back to 0 */
             DeviceExtension->TripPointValue = 0;
-            Status = CmBattSetTripPpoint(DeviceExtension, 0);
+            Status = CmBattSetTripPoint(DeviceExtension, 0);
             if (!NT_SUCCESS(Status))
             {
                 /* If it failed, set unknown/invalid value */
@@ -1029,7 +1029,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 
     /* Set the trip point with ACPI and check for success */
     DeviceExtension->TripPointValue = NewTripPoint;
-    Status = CmBattSetTripPpoint(DeviceExtension, NewTripPoint);
+    Status = CmBattSetTripPoint(DeviceExtension, NewTripPoint);
     if (!(NewTripPoint) && (Capacity)) Status = STATUS_NOT_SUPPORTED;
     if (!NT_SUCCESS(Status))
     {

@@ -464,9 +464,9 @@
 464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
 465 stub -noname PathUnExpandEnvStringsForUserA
 466 stdcall -stub -noname PathUnExpandEnvStringsForUserW(ptr wstr ptr long)
-467 stub -ordinal SHRunIndirectRegClientCommand
-468 stub -noname RunIndirectRegCommand
-469 stub -noname RunRegCommand
+467 stdcall -ordinal SHRunIndirectRegClientCommand(ptr wstr) # Exported by name in Vista+
+468 stdcall -noname RunIndirectRegCommand(ptr ptr wstr wstr)
+469 stdcall -noname RunRegCommand(ptr ptr wstr)
 470 stub -noname IUnknown_ProfferServiceOld
 471 stdcall -noname SHCreatePropertyBagOnRegKey(ptr wstr long ptr ptr)
 472 stdcall -noname SHCreatePropertyBagOnProfileSection(wstr wstr long ptr ptr)
@@ -534,7 +534,7 @@
 534 stdcall -noname SHPropertyBag_ReadBOOL(ptr wstr ptr)
 535 stdcall -noname SHPropertyBag_Delete(ptr wstr)
 536 stdcall -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
-537 stub -noname SHBoolSystemParametersInfo
+537 stdcall -noname SHBoolSystemParametersInfo(long ptr)
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
 540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)

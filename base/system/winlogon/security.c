@@ -67,10 +67,11 @@ ConvertToSelfRelative(
     PSECURITY_DESCRIPTOR RelativeSd;
     DWORD DescriptorLength = 0;
 
-    /* Determine the size for our buffer to allocate */
-    if (!MakeSelfRelativeSD(AbsoluteSd, NULL, &DescriptorLength) && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    /* Determine the size for allocating our buffer */
+    if (MakeSelfRelativeSD(AbsoluteSd, NULL, &DescriptorLength) ||
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
     {
-        ERR("ConvertToSelfRelative(): Unexpected error code (error code %lu -- must be ERROR_INSUFFICIENT_BUFFER)\n", GetLastError());
+        ERR("ConvertToSelfRelative(): error %lu, expected ERROR_INSUFFICIENT_BUFFER\n", GetLastError());
         return NULL;
     }
 
@@ -80,14 +81,14 @@ ConvertToSelfRelative(
                                  DescriptorLength);
     if (RelativeSd == NULL)
     {
-        ERR("ConvertToSelfRelative(): Failed to allocate buffer for relative SD!\n");
+        ERR("ConvertToSelfRelative(): Failed to allocate buffer for relative SD\n");
         return NULL;
     }
 
     /* Convert the security descriptor now */
     if (!MakeSelfRelativeSD(AbsoluteSd, RelativeSd, &DescriptorLength))
     {
-        ERR("ConvertToSelfRelative(): Failed to convert the security descriptor to a self relative format (error code %lu)\n", GetLastError());
+        ERR("ConvertToSelfRelative(): Failed to convert the security descriptor to a self relative format (error %lu)\n", GetLastError());
         RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSd);
         return NULL;
     }

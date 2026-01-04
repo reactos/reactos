@@ -9,7 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-
 const char* DFM_TO_STR(UINT uMsg)
 {
     switch(uMsg)
@@ -30,7 +29,6 @@ const char* DFM_TO_STR(UINT uMsg)
     default: return "";
     }
 }
-
 
 static void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
 {
@@ -110,7 +108,6 @@ static HRESULT CALLBACK FontFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDa
     return E_NOTIMPL;
 }
 
-
 HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                   IShellFolder *psf, REFIID riid, LPVOID* ppvOut)
 {
@@ -133,4 +130,3 @@ HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY ap
     // We can't create a background menu
     return E_FAIL;
 }
-

@@ -40,6 +40,7 @@
 #include <shlobj.h>
 #include <initguid.h>
 #include <shlwapi_undoc.h>
+#include <shlwapi.h>
 #include <wine/debug.h>
 
 #include "shell32_main.h"
@@ -65,6 +66,21 @@ static const POLICYDATA s_PolicyTable[] =
 HANDLE g_hRestGlobalCounter = NULL;
 LONG g_nRestCountValue = -1;
 DWORD g_RestValues[_countof(s_PolicyTable)] = { 0 };
+
+#ifdef __REACTOS__
+int WINAPI SHELL_StrCmpLogicalInit(PCWSTR s1, PCWSTR s2)
+{
+    SHELL_StrCmpLogical = SHRestricted(REST_NOSTRCMPLOGICAL) ? StrCmpIW : StrCmpLogicalW;
+    return SHELL_StrCmpLogical(s1, s2);
+}
+
+int (WINAPI* SHELL_StrCmpLogical)(PCWSTR s1, PCWSTR s2) = SHELL_StrCmpLogicalInit;
+
+static void SH32_RestrictionsChanged()
+{
+    SHELL_StrCmpLogical = SHELL_StrCmpLogicalInit;
+}
+#endif
 
 /****************************************************************************
  *                  SHELL_GetCachedGlobalCounter
@@ -147,15 +163,24 @@ static BOOL SHELL_QueryRestrictionsChanged(VOID)
  *     b: 98Lite 2.0 (which uses many of these policy keys) http://www.98lite.net/
  *     c: 'The Windows 95 Registry', by John Woram, 1996 MIS: Press
  */
-DWORD WINAPI SHRestricted (RESTRICTIONS rest)
+DWORD WINAPI SHRestricted(RESTRICTIONS rest)
 {
     TRACE("(0x%08lX)\n", rest);
 
     /* If restrictions from registry have changed, reset all cached values to SHELL_NO_POLICY */
     if (SHELL_QueryRestrictionsChanged())
+    {
         FillMemory(&g_RestValues, sizeof(g_RestValues), 0xFF);
+        SH32_RestrictionsChanged();
+    }
 
     return SHRestrictionLookup(rest, NULL, s_PolicyTable, g_RestValues);
+}
+
+DWORD SH32_InternalRestricted(DWORD rest)
+{
+    /* assert((rest & 0x00060000) == 0x00060000) */
+    return SHRestricted(rest);
 }
 
 /*************************************************************************

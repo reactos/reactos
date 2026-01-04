@@ -1403,7 +1403,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1416,7 +1415,6 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1429,7 +1427,6 @@ HWND FASTCALL IntGetMessageWindow(VOID)
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1442,7 +1439,7 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     PDESKTOP pdo = pti->rpdesk;
-    if (NULL == pdo)
+    if (!pdo)
     {
         ERR("Thread doesn't have a desktop\n");
         return NULL;
@@ -1735,6 +1732,8 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
     if (HwndList)
     {
         HWND* cursor = HwndList;
+        LPARAM shellhookparam = (Message == HSHELL_LANGUAGE || Message == HSHELL_APPCOMMAND)
+                                ? lParam : (LPARAM)wParam;
 
         for (; *cursor; cursor++)
         {
@@ -1742,11 +1741,11 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
             UserPostMessage(*cursor,
                             gpsi->uiShellMsg,
                             Message,
-                            (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );
+                            shellhookparam);
 /*            co_IntPostOrSendMessage(*cursor,
                                     gpsi->uiShellMsg,
                                     Message,
-                                    (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );*/
+                                    shellhookparam);*/
         }
 
         ExFreePoolWithTag(HwndList, USERTAG_WINDOWLIST);

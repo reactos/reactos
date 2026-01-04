@@ -23,9 +23,10 @@ BEGIN
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
     LTEXT "Изберете изображение за украса на работната си площ:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Тапет за работен плот:" for the backport, because that doesn't overflow the length of the IDC_BACKGROUND_LIST below and therefore looks better
     PUSHBUTTON "&Обзор...", IDC_BROWSE_BUTTON, 188, 104, 55, 15//I used "Об&зор..." for the backport to have the &O free
-    PUSHBUTTON "&Цвят...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Разположение:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "Расп&оложение:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Цвят:", IDC_STATIC, 188, 156, 55, 9
+    PUSHBUTTON " ", IDC_COLOR_BUTTON, 188, 167, 55, 15
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 

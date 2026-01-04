@@ -53,7 +53,10 @@ static void TEST_Start(void)
 
 static void TEST_End(void)
 {
-    Sleep(500);
+    // Execution can be asynchronous; you have to wait for it to finish.
+    Sleep(2000);
+
+    // Close newly-opened window(s)
     GetWindowList(&s_List2);
     CloseNewWindows(&s_List1, &s_List2);
     FreeWindowList(&s_List1);
@@ -62,8 +65,6 @@ static void TEST_End(void)
 
 static void TEST_RealShellExecuteExA(void)
 {
-    TEST_Start();
-
     INT_PTR ret;
 
     ret = (INT_PTR)s_fnRealShellExecuteExA(
@@ -82,14 +83,10 @@ static void TEST_RealShellExecuteExA(void)
         ok_long((LONG)ret, 42);
     else
         ok_long((LONG)ret, 2);
-
-    TEST_End();
 }
 
 static void TEST_RealShellExecuteExW(void)
 {
-    TEST_Start();
-
     INT_PTR ret;
 
     ret = (INT_PTR)s_fnRealShellExecuteExW(
@@ -105,8 +102,6 @@ static void TEST_RealShellExecuteExW(void)
         NULL,
         0);
     ok_long((LONG)ret, 42);
-
-    TEST_End();
 }
 
 START_TEST(RealShellExecuteEx)
@@ -129,8 +124,12 @@ START_TEST(RealShellExecuteEx)
         return;
     }
 
+    TEST_Start();
+
     TEST_RealShellExecuteExA();
     TEST_RealShellExecuteExW();
+
+    TEST_End();
 
     FreeLibrary(s_hSHELL32);
 }

@@ -274,7 +274,7 @@ BEGIN
     BEGIN
         MENUITEM "Geräte nach &Typ",               IDM_DEVBYTYPE
         MENUITEM "Garäte nach &Verbindung",        IDM_DEVBYCONN
-        MENUITEM "Ressourcen nac&h Typ",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "Ressourcen nac&h Typ",           IDM_RESBYTYPE
         MENUITEM "Ressourcen nach V&erbindung",    IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Ausgeblendete &Geräte anzeigen", IDM_SHOWHIDDEN
@@ -313,6 +313,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "Deaktivieren"
   IDS_TOOLTIP_UPDATE        "Treibersoftware aktualisieren"
   IDS_TOOLTIP_UNINSTALL     "Deinstallieren"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Arbeitsspeicher"
+  IDS_TYPE_PORT             "Ein-/Ausgabe (E/A)"
+  IDS_TYPE_DMA              "Direkter Speicherzugriff (DMA)"
+  IDS_TYPE_IRQ              "Interruptanfrage (IRQ)"
 END
 
 /* Hints */

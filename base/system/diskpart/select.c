@@ -13,10 +13,10 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BOOL
+EXIT_CODE
 SelectDisk(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
@@ -27,7 +27,7 @@ SelectDisk(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (argc == 2)
@@ -36,7 +36,7 @@ SelectDisk(
             ConResPuts(StdOut, IDS_SELECT_NO_DISK);
         else
             ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (!_wcsicmp(argv[2], L"system"))
@@ -49,7 +49,7 @@ SelectDisk(
         CurrentDisk = DiskEntry;
         CurrentPartition = NULL;
         ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
     else if (!_wcsicmp(argv[2], L"next"))
     {
@@ -57,7 +57,7 @@ SelectDisk(
         {
             CurrentPartition = NULL;
             ConResPuts(StdErr, IDS_SELECT_DISK_ENUM_NO_START);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         if (CurrentDisk->ListEntry.Flink == &DiskListHead)
@@ -65,7 +65,7 @@ SelectDisk(
             CurrentDisk = NULL;
             CurrentPartition = NULL;
             ConResPuts(StdErr, IDS_SELECT_DISK_ENUM_FINISHED);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         Entry = CurrentDisk->ListEntry.Flink;
@@ -75,7 +75,7 @@ SelectDisk(
         CurrentDisk = DiskEntry;
         CurrentPartition = NULL;
         ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
     else if (IsDecString(argv[2]))
     {
@@ -83,7 +83,7 @@ SelectDisk(
         if ((ulValue == 0) && (errno == ERANGE))
         {
             ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-            return TRUE;
+            return EXIT_SUCCESS;
         }
 
         CurrentDisk = NULL;
@@ -98,7 +98,7 @@ SelectDisk(
                 CurrentDisk = DiskEntry;
                 CurrentPartition = NULL;
                 ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
-                return TRUE;
+                return EXIT_SUCCESS;
             }
 
             Entry = Entry->Flink;
@@ -107,18 +107,18 @@ SelectDisk(
     else
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ConResPuts(StdErr, IDS_SELECT_DISK_INVALID);
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 SelectPartition(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
@@ -130,13 +130,13 @@ SelectPartition(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_PARTITION_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (argc == 2)
@@ -145,70 +145,95 @@ SelectPartition(
             ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
         else
             ConResPrintf(StdOut, IDS_SELECT_PARTITION, CurrentPartition);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (!IsDecString(argv[2]))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ulValue = wcstoul(argv[2], NULL, 10);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
-    Entry = CurrentDisk->PrimaryPartListHead.Flink;
-    while (Entry != &CurrentDisk->PrimaryPartListHead)
+    if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-
-        if (PartEntry->PartitionType != 0)
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
         {
-            if (PartNumber == ulValue)
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
-                CurrentPartition = PartEntry;
-                ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return TRUE;
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return EXIT_SUCCESS;
+                }
+
+                PartNumber++;
             }
 
-            PartNumber++;
+            Entry = Entry->Flink;
         }
 
-        Entry = Entry->Flink;
+        Entry = CurrentDisk->LogicalPartListHead.Flink;
+        while (Entry != &CurrentDisk->LogicalPartListHead)
+        {
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
+            {
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return EXIT_SUCCESS;
+                }
+
+                PartNumber++;
+            }
+            Entry = Entry->Flink;
+        }
     }
-
-    Entry = CurrentDisk->LogicalPartListHead.Flink;
-    while (Entry != &CurrentDisk->LogicalPartListHead)
+    else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
-
-        if (PartEntry->PartitionType != 0)
+        Entry = CurrentDisk->PrimaryPartListHead.Flink;
+        while (Entry != &CurrentDisk->PrimaryPartListHead)
         {
-            if (PartNumber == ulValue)
+            PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+            if (!IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             {
-                CurrentPartition = PartEntry;
-                ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
-                return TRUE;
+                if (PartNumber == ulValue)
+                {
+                    CurrentPartition = PartEntry;
+                    ConResPrintf(StdOut, IDS_SELECT_PARTITION, PartNumber);
+                    return EXIT_SUCCESS;
+                }
+
+                PartNumber++;
             }
 
-            PartNumber++;
+            Entry = Entry->Flink;
         }
-        Entry = Entry->Flink;
     }
 
     ConResPuts(StdErr, IDS_SELECT_PARTITION_INVALID);
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 SelectVolume(
-    INT argc,
-    PWSTR *argv)
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PLIST_ENTRY Entry;
     PVOLENTRY VolumeEntry;
@@ -219,7 +244,7 @@ SelectVolume(
     if (argc > 3)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (argc == 2)
@@ -228,20 +253,20 @@ SelectVolume(
             ConResPuts(StdOut, IDS_SELECT_NO_VOLUME);
         else
             ConResPrintf(StdOut, IDS_SELECT_VOLUME, CurrentVolume->VolumeNumber);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (!IsDecString(argv[2]))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     ulValue = wcstoul(argv[2], NULL, 10);
     if ((ulValue == 0) && (errno == ERANGE))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     CurrentVolume = NULL;
@@ -262,5 +287,5 @@ SelectVolume(
     }
 
     ConResPuts(StdErr, IDS_SELECT_VOLUME_INVALID);
-    return TRUE;
+    return EXIT_SUCCESS;
 }

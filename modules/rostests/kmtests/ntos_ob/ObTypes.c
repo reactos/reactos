@@ -151,7 +151,7 @@ static OB_SECURITY_METHOD SeDefaultObjectMethod;
 
 static
 VOID
-TestObjectTypes(VOID)
+TestWin2003ObjectTypes(VOID)
 {
     ULONG Index;
 
@@ -258,5 +258,13 @@ TestObjectTypes(VOID)
 
 START_TEST(ObTypes)
 {
-    TestObjectTypes();
+    switch (GetNTVersion())
+    {
+        case _WIN32_WINNT_WS03:
+            TestWin2003ObjectTypes();
+            break;
+        default:
+            skip(FALSE, "FIXME: kmtest:ObTypes is invalid for this NT version (0x%X).\n", GetNTVersion());
+            break;
+    }
 }

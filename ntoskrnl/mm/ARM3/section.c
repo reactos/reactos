@@ -778,6 +778,7 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
     ASSERT(Vad->u2.VadFlags2.ExtendableFile == FALSE);
     ASSERT(ControlArea);
     ASSERT(ControlArea->FilePointer == NULL);
+    ASSERT(!MI_IS_MEMORY_AREA_VAD(Vad));
 
     /* Delete the actual virtual memory pages */
     MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
@@ -804,7 +805,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
                      IN PVOID BaseAddress,
                      IN ULONG Flags)
 {
-    PMEMORY_AREA MemoryArea;
     BOOLEAN Attached = FALSE;
     KAPC_STATE ApcState;
     PMMVAD Vad;
@@ -818,12 +818,22 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* Check if we need to lock the address space */
     if (!Flags) MmLockAddressSpace(&Process->Vm);
 
-    /* Check for Mm Region */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+    /* Find the VAD for the address and make sure it's a section VAD */
+    Vad = MiLocateVad(&Process->VadRoot, BaseAddress);
+    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
+    {
+        /* Couldn't find it, or invalid VAD, fail */
+        DPRINT1("No VAD or invalid VAD\n");
+        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+        return STATUS_NOT_MAPPED_VIEW;
+    }
+
+    /* Check for RosMm memory area */
+    if (MI_IS_MEMORY_AREA_VAD(Vad))
     {
         /* Call Mm API */
-        NTSTATUS Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
+        ASSERT(MI_IS_ROSMM_VAD(Vad));
+        Status = MiRosUnmapViewOfSection(Process, (PMEMORY_AREA)Vad, BaseAddress, Process->ProcessExiting);
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         return Status;
     }
@@ -843,17 +853,6 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
         DPRINT1("Process died!\n");
         if (!Flags) MmUnlockAddressSpace(&Process->Vm);
         Status = STATUS_PROCESS_IS_TERMINATING;
-        goto Quickie;
-    }
-
-    /* Find the VAD for the address and make sure it's a section VAD */
-    Vad = MiLocateAddress(BaseAddress);
-    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory))
-    {
-        /* Couldn't find it, or invalid VAD, fail */
-        DPRINT1("No VAD or invalid VAD\n");
-        if (!Flags) MmUnlockAddressSpace(&Process->Vm);
-        Status = STATUS_NOT_MAPPED_VIEW;
         goto Quickie;
     }
 
@@ -1406,7 +1405,7 @@ static
 NTSTATUS
 MiCreateDataFileMap(IN PFILE_OBJECT File,
                     OUT PSEGMENT *Segment,
-                    IN PSIZE_T MaximumSize,
+                    IN PLARGE_INTEGER MaximumSize,
                     IN ULONG SectionPageProtection,
                     IN ULONG AllocationAttributes,
                     IN ULONG IgnoreFileSizing)
@@ -1420,7 +1419,7 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
 static
 NTSTATUS
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
-                      IN PLARGE_INTEGER MaximumSize,
+                      IN ULONG64 MaximumSize,
                       IN ULONG ProtectionMask,
                       IN ULONG AllocationAttributes)
 {
@@ -1437,7 +1436,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
 
     /* Pagefile-backed sections need a known size */
-    if (!MaximumSize || !MaximumSize->QuadPart || MaximumSize->QuadPart < 0)
+    if (MaximumSize == 0)
         return STATUS_INVALID_PARAMETER_4;
 
     /* Calculate the maximum size possible, given the Prototype PTEs we'll need */
@@ -1446,13 +1445,13 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     SizeLimit <<= PAGE_SHIFT;
 
     /* Fail if this size is too big */
-    if (MaximumSize->QuadPart > SizeLimit)
+    if (MaximumSize > SizeLimit)
     {
         return STATUS_SECTION_TOO_BIG;
     }
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (PFN_COUNT)((MaximumSize->QuadPart + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    PteCount = (PFN_COUNT)((MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
@@ -1564,9 +1563,12 @@ MiGetFileObjectForVad(
     PFILE_OBJECT FileObject;
 
     /* Check if this is a RosMm memory area */
-    if (Vad->u.VadFlags.Spare != 0)
+    if (MI_IS_MEMORY_AREA_VAD(Vad))
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
+
+        /* We do not expect ARM3 memory areas here, those are kernel only */
+        ASSERT(MI_IS_ROSMM_VAD(Vad));
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
@@ -2237,7 +2239,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         /* So we always create a data file map */
         Status = MiCreateDataFileMap(File,
                                      &Segment,
-                                     (PSIZE_T)InputMaximumSize,
+                                     InputMaximumSize,
                                      SectionPageProtection,
                                      AllocationAttributes,
                                      KernelCall);
@@ -2305,7 +2307,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* So this must be a pagefile-backed section, create the mappings needed */
         Status = MiCreatePagingFileMap(&NewSegment,
-                                       InputMaximumSize,
+                                       InputMaximumSize->QuadPart,
                                        ProtectionMask,
                                        AllocationAttributes);
         if (!NT_SUCCESS(Status)) return Status;

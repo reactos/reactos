@@ -62,6 +62,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+NTAPI
 WDFEXPORT(WdfCxDeviceInitAssignWdmIrpPreprocessCallback)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -178,6 +179,7 @@ Done:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetIoInCallerContextCallback)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -251,6 +253,7 @@ Done:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetRequestAttributes)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -302,6 +305,7 @@ Done:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+NTAPI
 WDFEXPORT(WdfCxDeviceInitSetFileObjectConfig)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -453,6 +457,7 @@ Done:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 PWDFCXDEVICE_INIT
+NTAPI
 WDFEXPORT(WdfCxDeviceInitAllocate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

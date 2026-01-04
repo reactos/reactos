@@ -104,20 +104,20 @@ HKLM,"SOFTWARE\Classes\Applications\mplay32.exe\SupportedTypes",".avi",0x0000000
 HKLM,"SOFTWARE\Classes\ftp","",0x00000000,"URL:File Transfer Protocol"
 HKLM,"SOFTWARE\Classes\ftp\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\ftp","URL Protocol",0x00000000,""
-HKLM,"SOFTWARE\Classes\ftp\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+HKLM,"SOFTWARE\Classes\ftp\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 HKLM,"SOFTWARE\Classes\gopher","",0x00000000,"URL:Gopher Protocol"
 HKLM,"SOFTWARE\Classes\gopher\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\gopher","URL Protocol",0x00000000,""
 ;see http
-;HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
-HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+;HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 HKLM,"SOFTWARE\Classes\http","",0x00000000,"URL:HyperText Transfer Protocol"
-HKLM,"SOFTWARE\Classes\http\DefaultIcon","",0x00000000,"%SystemRoot%\system32\url.dll,0"
+HKLM,"SOFTWARE\Classes\http\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll,0"
 HKLM,"SOFTWARE\Classes\http\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\http","URL Protocol",0x00000000,""
-HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
 ;TODO : iexplore should use DDE
 ;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec","",0x00000000,"""%1"",,-1,0,,,,"
 ;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec","NoActivateHandler",0x00000000,""
@@ -129,14 +129,14 @@ HKLM,"SOFTWARE\Classes\https\DefaultIcon","",0x00000000,"%SystemRoot%\system32\u
 HKLM,"SOFTWARE\Classes\https\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\https","URL Protocol",0x00000000,""
 ;see http
-;HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
-HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+;HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 ; Register system default web browser
 HKLM,"SOFTWARE\Clients\StartMenuInternet","",0x00000000,"IEXPLORE.EXE"
 HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE","",0x00000000,"Internet Explorer"
-HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\DefaultIcon","",0x00000000,"%programfiles%\Internet Explorer\iexplore.exe,-7"
-HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x00000000,"%programfiles%\Internet Explorer\iexplore.exe"
+HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\DefaultIcon","",0x00020000,"%programfiles%\Internet Explorer\iexplore.exe,-7"
+HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x00020000,"%programfiles%\Internet Explorer\iexplore.exe"
 
 ; CTF
 HKLM,"SOFTWARE\Microsoft\CTF\SystemShared",,0x00000012
@@ -222,6 +222,85 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer","NoSimpleStartMenu",0x00010003,1
 
+; Application compatibility
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coolcat.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coolcat.exe","Version",2,"4.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coolcat.exe","ANSIDISPLAYNAMES",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coreldrw.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coreldrw.exe","Version",2,"9.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\coreldrw.exe","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","Version",2,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","MYCOMPUTERFIRST",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","WIN95DEFVIEW",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","OLDCREATEVIEWWND",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","IGNOREENUMRESET",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\creatr32.exe","RequiredFile",2,"trkwrite.dll"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\cutftp32.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\cutftp32.exe","Version",2,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\cutftp32.exe","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\diskjockey.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\diskjockey.exe","Version",2,"2,*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\diskjockey.exe","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 6.*",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 6.*","Version",2,"6.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 6.*","FILEOPENBOGUSCTRLID",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 7.01",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 7.01","Version",2,"7.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\dlwin.exe\DownLoader 7.01","FILEOPENBOGUSCTRLID",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\fusion.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\fusion.exe","Version",2,"5.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\fusion.exe","FILEOPENNEEDSEXT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\install.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\install.exe\Starcraft 1.03",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\install.exe\Starcraft 1.03","RequiredFile",2,"help\\star.htm"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\install.exe\Starcraft 1.03","Version",2,"Version 1.03"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\install.exe\Starcraft 1.03","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\msdev.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\msdev.exe","Version",2,"6.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\msdev.exe","FILEOPENNEEDSEXT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 6.*",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 6.*","Version",2,"6.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 6.*","FILEOPENBOGUSCTRLID",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 7.01",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 7.01","Version",2,"7.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\mswin.exe\Metastock 7.01","FILEOPENBOGUSCTRLID",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\photoed.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\photoed.exe","Version",2,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\photoed.exe","FILEOPENNEEDSEXT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\pwrplay.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\pwrplay.exe","Version",2,"6.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\pwrplay.exe","FILEOPENBOGUSCTRLID",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe","Version",2,"1,*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe","WIN95BINDTOOBJECT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe\Version 2",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe\Version 2","Version",2,"2.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\qstitch.exe\Version 2","WIN95BINDTOOBJECT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\recycle.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\recycle.exe","Version",2,"1,*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\recycle.exe","FILEOPENNEEDSEXT",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\sesapp.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\sesapp.exe","Version",2,"3.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\sesapp.exe","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\snapshot.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\snapshot.exe","RequiredFile",2,"ssres.dll"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\snapshot.exe","Version",2,"1.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\snapshot.exe","LOADCOLUMNHANDLER",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\trace.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\trace.exe","Version",2,"9.*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\trace.exe","OLDREGITEMGDN",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\uni.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\uni.exe","Version",2,"5, 5,*"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\uni.exe","ANSIDISPLAYNAMES",2,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\vcafe.exe",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\vcafe.exe","Version",2,"4.0"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Applications\vcafe.exe","FORCELFNIDLIST",2,""
+
 ; Extra Control Panel Applets
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls","Console",0x00020000,"%SystemRoot%\system32\console.dll"
@@ -269,6 +348,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Desktop
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","DefaultValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","HelpID",0x00000000,"shell.hlp#51079"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess\Policy",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess\Policy\SeparateProcess",,0x00000012
@@ -283,6 +363,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Disable
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","DefaultValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","HelpID",0x00000000,"shell.hlp#51155"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache",Grayed,0x10001,6
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","Type",0x00000000,"checkbox"
@@ -293,6 +374,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderS
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","CheckedValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","Type",0x00000000,"checkbox"
@@ -304,6 +386,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Friendl
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","HelpID",0x00000000,"shell.hlp#51149"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","Text",0x00000000,"@shell32.dll,-30499"
@@ -354,6 +437,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCraw
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","UncheckedValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","DefaultValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","HelpID",0x00000000,"shell.hlp#51147"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy\NoNetCrawling",,0x00000012
@@ -368,6 +452,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Persist
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","HelpID",0x00000000,"shell.hlp#51152"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","Type",0x00000000,"checkbox"
@@ -379,6 +464,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCom
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","HelpID",0x00000000,"shell.hlp#51130"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","Type",0x00000000,"checkbox"
@@ -412,6 +498,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInf
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","HelpID",0x00000000,"shell.hlp#51102"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip",Grayed,0x10001,4
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","Type",0x00000000,"checkbox"
@@ -438,6 +525,30 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebView
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","HelpID",0x00000000,"shell.hlp#51148"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade",Grayed,0x10001,6
+
+; Sysdm.cpl Visual Effects
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","ValueName",,"ListviewShadow"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","RegPath",,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","Text",,"@shell32.dll,-30541"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\ListviewShadow","UncheckedValue",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","SPIActionSet",0x00010001,37
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","SPIActionGet",0x00010001,38
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","Text",,"@shell32.dll,-30533"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\DragFullWindows","UncheckedValue",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","SPIActionSet",0x00010001,75
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","SPIActionGet",0x00010001,74
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","Text",,"@shell32.dll,-30535"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","Type",,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","DefaultValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","CheckedValue",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects\FontSmoothing","UncheckedValue",0x00010001,0
 
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
@@ -516,7 +627,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x0000001
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","IME File",2,"msctfime.ime"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0 ; "LoadIMM" means Cicero despite its name
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","DontLoadCTFIME",0x00010003,1 ; Disable CTF IME
 
 ; DOS Device ports
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports","COM1:",2,"9600,n,8,1"
@@ -808,7 +919,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "402", "125",\
    "427", "125",\
    "408", "130",\
-   "41f", "130",\
+   "41f", "157",\
    "418", "130",\
    "40d", "135",\
    "436", "140",\
@@ -1920,7 +2031,7 @@ HKLM,"SOFTWARE\Microsoft\Ole","EnableRemoteConnect",0x00000000,"N"
 ; SvcHost services
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","DcomLaunch",0x00010000,"DcomLaunch","PlugPlay"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"BITS","DHCP","lanmanserver","lanmanworkstation","Schedule","seclogon","Themes","W32Time","winmgmt","wuauserv"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"BITS","Browser","DHCP","lanmanserver","lanmanworkstation","Schedule","seclogon","Themes","W32Time","winmgmt","wuauserv"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Svchost","NetworkService",0x00010000,"DnsCache"
 
 ; Win32 config

@@ -34,7 +34,7 @@ BEGIN
     IDS_DHCPYES             "\tDHCP włączone . . . . . . . . . . : Tak\n"
     IDS_AUTOCONFIGNO        "\tAutokonfiguracja włączona . . . . : Nie\n"
     IDS_AUTOCONFIGYES       "\tAutokonfiguracja włączona . . . . : Tak\n"
-    IDS_IPADDRESS           "\tAdres IP. . . . . . . . . . . . . : %hs\n"
+    IDS_IPADDRESS           "\tAdres IPv4. . . . . . . . . . . . : %hs\n"
     IDS_SUBNETMASK          "\tMaska podsieci. . . . . . . . . . : %hs\n"
     IDS_DEFAULTGATEWAY      "\tBrama domyślna. . . . . . . . . . : %hs\n"
     IDS_DHCPSERVER          "\tSerwer DHCP . . . . . . . . . . . : %hs\n"
@@ -67,9 +67,11 @@ BEGIN
     IDS_DHCPNOTCONNECTED    "No operation can be performed on %ls while it has its media disconnected.\n"
     IDS_DHCPNOTENABLED      "Adapter %ls is not enabled for DHCP.\n"
     IDS_DHCPNOADAPTER       "The operation failed as no adapter is in the state permissible for \nthis operation.\n"
-    IDS_DHCPRELEASED        "IP Address for adapter %ls has already been released.\n"
+    IDS_DHCPRELEASED        "IP address for adapter %ls has already been released.\n"
     IDS_DHCPRELEASEERROR    "An error occurred while releasing interface %ls: "
     IDS_DHCPRENEWERROR      "An error occurred while renewing interface %ls: "
+    IDS_DHCPSETIDERROR      "Attempt to set the class id for adapter %ls failed: "
+    IDS_DHCPSETIDSUCCESS    "Successfully set the class id for adapter %ls.\n"
 END
 
 STRINGTABLE
@@ -98,46 +100,49 @@ END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Please keep the spacing/formatting as per en-US.rc when translating */
     IDS_USAGE
-    "\nSPOSÓB UŻYCIA:\n\
-        ipconfig [/? | /all | /renew [karta] | /release [karta] |\n\
-                  /flushdns | /displaydns | /registerdns\n\
-                  /showclassid karta |\n\
-                  /setclassid karta [identyfikator_klasy] ]\n\
+"\nSPOSÓB UŻYCIA:\n\
+    ipconfig [/? | /all | /renew [karta] | /release [karta] |\n\
+              /flushdns | /displaydns | /registerdns\n\
+              /showclassid karta |\n\
+              /setclassid karta [identyfikator_klasy] ]\n\
 \n\
-    gdzie\n\
-        karta           Nazwa połączenia\n\
-                        (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n\
+    gdzie:\n\
+    karta           Nazwa połączenia\n\
+                    (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n\
 \n\
-         Opcje:\n\
-           /?           Wyświetla ten komunikat pomocy.\n\
-           /all         Wyświetla pełne informacje o konfiguracji.\n\
-           /release     Zwalnia adres IP dla określonej karty.\n\
-           /renew       Odnawia adres IP dla określonej karty.\n\
-           /flushdns    Czyści bufor programu rozpoznającego nazwy DNS.\n\
-           /registerdns Odświeża wszystkie dzierżawy DHCP i ponownie rejestruje nazwy DNS.\n\
-           /displaydns  Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n\
-           /showclassid Wyświetla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n\
-           /setclassid  Modyfikuje identyfikator klasy DHCP.\n\
+Opcje:\n\
+    /?              Wyświetla ten komunikat pomocy.\n\
+    /all            Wyświetla pełne informacje o konfiguracji.\n\
+    /release        Zwalnia adres IPv4 dla określonej karty.\n\
+    /renew          Odnawia adres IPv4 dla określonej karty.\n\
+    /flushdns       Czyści bufor programu rozpoznającego nazwy DNS.\n\
+    /registerdns    Odświeża wszystkie dzierżawy DHCP i ponownie rejestruje\n\
+                    nazwy DNS.\n\
+    /displaydns     Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n\
+    /showclassid    Wyświetla wszystkie identyfikatory klas DHCP dozwolone\n\
+                    dla karty.\n\
+    /setclassid     Modyfikuje identyfikator klasy DHCP.\n\
 \n\
-    Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n\
-    domyślnej dla każdej karty związanej z protokołem TCP/IP.\n\
+Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n\
+domyślnej dla każdej karty związanej z protokołem TCP/IP.\n\
 \n\
-    Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n\
-    zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n\
-    związanych z protokołem TCP/IP.\n\
+Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n\
+zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n\
+związanych z protokołem TCP/IP.\n\
 \n\
-    Jeśli dla parametru Setclassid nie zostanie określony\n\
-    identyfikator_klasy, to identyfikator_klasy jest usuwany.\n\
+Jeśli dla parametru Setclassid nie zostanie określony\n\
+identyfikator_klasy, to identyfikator_klasy jest usuwany.\n\
 \n\
-    Przykłady:\n\
-        > ipconfig                   ... Pokazuje informacje.\n\
-        > ipconfig /all              ... Pokazuje szczegółowe informacje.\n\
-        > ipconfig /renew            ... Odnawia wszystkie karty.\n\
-        > ipconfig /renew EL*        ... Odnawia każde połączenie o nazwie\n\
-                                         zaczynającej się od EL\n\
-        > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n\
-                                         np. ""Połączenie lokalne 1"" lub\n\
-                                             ""Połączenie lokalne 2""\n"
+Przykłady:\n\
+    > ipconfig                   ... Pokazuje informacje.\n\
+    > ipconfig /all              ... Pokazuje szczegółowe informacje.\n\
+    > ipconfig /renew            ... Odnawia wszystkie karty.\n\
+    > ipconfig /renew EL*        ... Odnawia każde połączenie o nazwie\n\
+                                     zaczynającej się od EL\n\
+    > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n\
+                                     np. ""Połączenie lokalne 1""\n\
+                                     lub ""Połączenie lokalne 2""\n"
+    IDS_CMDLINEERROR "\nError: unrecongnized or incomplete command line.\n"
 END

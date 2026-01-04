@@ -156,7 +156,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "他のサービス、システム ドライバ、読み込み順グループなどに依存しているサービスがあります。システム コンポーネントが停止するか、または正常に実行されない場合、依存するサービスが影響されている場合があります。", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "このサービスが依存するコンポーネント", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "このサービスが依存するコンポーネント:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "次のコンポーネントがこのサービスに依存しています:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

@@ -211,10 +211,11 @@ EXCLUDE = (
     'MyEventProvider.dll',
     'redirtest1.dll',
     'redirtest2.dll',
+    'testvdd.dll',
     'win32u_2k3sp2.dll',
     'win32u_vista.dll',
     'win32u_xpsp2.dll',
-    'testvdd.dll',
+    'wlntfytests.dll',
 )
 
 IMAGE_NT_OPTIONAL_HDR32_MAGIC = 0x10b

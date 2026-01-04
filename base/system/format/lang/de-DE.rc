@@ -32,7 +32,7 @@ BEGIN
     STRING_FMIFS_FAIL "Kann FMIFS-Eingangspunkte nicht lokalisieren.\n\n"
     STRING_UNKNOW_ARG "Unbekanntes Argument: %s\n"
     STRING_DRIVE_PARM "Benötigter Laufwerksparameter fehlt.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Konnte den Laufwerkstyp nicht erhalten"
+    STRING_ERROR_DRIVE_TYPE "Konnte den Laufwerkstyp nicht erhalten.\n"
     STRING_INSERT_DISK "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund drücken Sie ENTER, wenn das Laufwerk bereit ist."
     STRING_NO_VOLUME "Kann Medium nicht abfragen"
     STRING_NO_VOLUME_SIZE "Kann Mediengröße nicht abfragen"

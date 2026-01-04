@@ -1,6 +1,8 @@
 #ifndef _UNDOCUSER_H
 #define _UNDOCUSER_H
 
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
@@ -57,7 +59,6 @@ extern "C" {
 #define WM_DRAGLOOP	        0x0000022D
 #define WM_DRAGSELECT       0x0000022E
 #define WM_DRAGMOVE	        0x0000022F
-#define WM_IME_SYSTEM       0x00000287
 #define WM_POPUPSYSTEMMENU  0x00000313
 #define WM_UAHINIT          0x0000031b
 #define WM_CBT              0x000003FF // ReactOS only.
@@ -159,10 +160,13 @@ extern "C" {
 #define DFCS_MENUARROWDOWN 0x0010
 
 //
-// Undocumented flags for CreateProcess
+// Win32-user-specific undocumented flags for CreateProcess
 //
+#ifndef STARTF_INHERITDESKTOP
 #define STARTF_INHERITDESKTOP   0x40000000
 #define STARTF_SCREENSAVER      0x80000000
+#endif
+
 
 #define MOD_WINLOGON_SAS 0x8000
 
@@ -198,12 +202,22 @@ LONG WINAPI CsrBroadcastSystemMessageExW(DWORD dwflags,
                                          WPARAM wParam,
                                          LPARAM lParam,
                                          PBSMINFO pBSMInfo);
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl);
+
+BOOL WINAPI
+CliImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
+
 HWND WINAPI SetTaskmanWindow(HWND);
 HWND WINAPI GetTaskmanWindow(VOID);
 HWND WINAPI GetProgmanWindow(VOID);
 BOOL WINAPI SetShellWindow(HWND);
 BOOL WINAPI SetShellWindowEx(HWND, HWND);
+BOOL WINAPI User32InitializeImmEntryTable(_In_ DWORD);
 
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
 BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
@@ -413,4 +427,4 @@ typedef enum tagSETIMEHOTKEY_ACTION
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#endif
+#endif /* _UNDOCUSER_H */

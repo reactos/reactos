@@ -81,6 +81,67 @@ HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZ
     return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
 }
 
+static HRESULT SH32_EvaluateValidExecApp(_Inout_ PWSTR pszCmd, _In_ SIZE_T cchMax)
+{
+    // FIXME: SHEvaluateSystemCommandTemplate is not implemented yet, using a minimal version.
+    if (!PathGetAppFromCommandLine(pszCmd, pszCmd, cchMax))
+        return E_FAIL;
+
+    UINT fPRF = PRF_VERIFYEXISTS | PRF_TRYPROGRAMEXTENSIONS | PRF_DONTFINDLNK;
+    WCHAR szCurrDir[MAX_PATH];
+    LPCWSTR pszDirsArr[2] = { szCurrDir, NULL }, *ppszDirs = NULL;
+    if (GetCurrentDirectoryW(_countof(szCurrDir), szCurrDir))
+        ppszDirs = pszDirsArr;
+    if (PathResolveW(pszCmd, ppszDirs, fPRF | (ppszDirs ? PRF_FIRSTDIRDEF : 0)))
+        return S_OK;
+    return E_FAIL;
+}
+
+HRESULT SH32_InvokeOpenWith(_In_ PCWSTR pszPath, _In_ LPCMINVOKECOMMANDINFO pici, _Out_ HANDLE *phProcess)
+{
+    if (!pszPath || !pici)
+        return HResultFromWin32(ERROR_INVALID_PARAMETER);
+
+    HRESULT hr = HResultFromWin32(ERROR_NO_ASSOCIATION);
+    SHELLEXECUTEINFOW sei = { sizeof(sei), CmicFlagsToSeeFlags(pici->fMask), pici->hwnd };
+    sei.fMask |= SEE_MASK_CLASSKEY | SEE_MASK_NOZONECHECKS;
+    sei.lpFile = pszPath;
+    sei.nShow = pici->nShow;
+    if (phProcess)
+    {
+        sei.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        sei.hProcess = NULL;
+    }
+
+    if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Unknown", 0, KEY_READ, &sei.hkeyClass))
+    {
+        // Use the internal dialog only if HKCR\Unknown\shell\openas\command exists but is invalid.
+        WCHAR szCmd[MAX_PATH * 2];
+        DWORD cch = _countof(szCmd);
+        hr = AssocQueryStringByKeyW(ASSOCF_NOTRUNCATE | ASSOCF_NOFIXUPS |
+                                    ASSOCF_IGNOREBASECLASS | ASSOCF_INIT_IGNOREUNKNOWN,
+                                    ASSOCSTR_COMMAND, sei.hkeyClass, NULL, szCmd, &cch);
+        if (SUCCEEDED(hr) && FAILED(SH32_EvaluateValidExecApp(szCmd, _countof(szCmd))))
+        {
+            OPENASINFO info = { pszPath, NULL, OAIF_EXEC | OAIF_REGISTER_EXT | OAIF_ALLOW_REGISTRATION };
+            hr = SHOpenWithDialog(sei.hwnd, &info);
+        }
+        else
+        {
+            hr = ShellExecuteExW(&sei) ? S_OK : HResultFromWin32(GetLastError());
+        }
+        RegCloseKey(sei.hkeyClass);
+    }
+    else if (!(pici->fMask & CMIC_MASK_FLAG_NO_UI))
+    {
+        SHELL_ErrorBox(sei.hwnd, hr);
+    }
+
+    if (phProcess)
+        *phProcess = sei.hProcess;
+    return hr;
+}
+
 class COpenWithList
 {
     public:
@@ -865,6 +926,7 @@ class COpenWithDialog
 
         const OPENASINFO *m_pInfo;
         COpenWithList *m_pAppList;
+        UINT m_InFlags;
         BOOL m_bListAllocated;
         HWND m_hDialog, m_hTreeView;
         HTREEITEM m_hRecommend;
@@ -1031,13 +1093,22 @@ VOID COpenWithDialog::Init(HWND hwnd)
     m_hDialog = hwnd;
     SetWindowLongPtr(hwnd, DWLP_USER, (LONG_PTR)this);
 
+    UINT fDisallow = 0;
+    PCWSTR pszExt = PathFindExtensionW(m_pInfo->pcszFile);
+    // Don't allow registration for "" nor "." nor ".exe" etc.
+    if (!pszExt || !pszExt[0] || !pszExt[1] || PathIsExeW(m_pInfo->pcszFile))
+        fDisallow |= OAIF_ALLOW_REGISTRATION | OAIF_FORCE_REGISTRATION;
+    if (SHRestricted(REST_NOFILEASSOCIATE))
+        fDisallow |= OAIF_ALLOW_REGISTRATION | OAIF_FORCE_REGISTRATION | OAIF_REGISTER_EXT;
+
     /* Handle register checkbox */
+    m_InFlags = m_pInfo->oaifInFlags & ~fDisallow;
     HWND hRegisterCheckbox = GetDlgItem(hwnd, 14003);
-    if (!(m_pInfo->oaifInFlags & OAIF_ALLOW_REGISTRATION))
+    if (!(m_InFlags & OAIF_ALLOW_REGISTRATION))
         EnableWindow(hRegisterCheckbox, FALSE);
-    if (m_pInfo->oaifInFlags & OAIF_FORCE_REGISTRATION)
+    if (m_InFlags & OAIF_FORCE_REGISTRATION)
         SendMessage(hRegisterCheckbox, BM_SETCHECK, BST_CHECKED, 0);
-    if (m_pInfo->oaifInFlags & OAIF_HIDE_REGISTRATION)
+    if (m_InFlags & OAIF_HIDE_REGISTRATION)
         ShowWindow(hRegisterCheckbox, SW_HIDE);
 
     if (m_pInfo->pcszFile)
@@ -1111,7 +1182,7 @@ VOID COpenWithDialog::Accept()
     if (pApp)
     {
         /* Set programm as default handler */
-        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED)
+        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED && (m_InFlags & OAIF_REGISTER_EXT))
         {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
             // FIXME: Update DefaultIcon registry
@@ -1119,7 +1190,7 @@ VOID COpenWithDialog::Accept()
         }
 
         /* Execute program */
-        if (m_pInfo->oaifInFlags & OAIF_EXEC)
+        if (m_InFlags & OAIF_EXEC)
             m_pAppList->Execute(pApp, m_pInfo->pcszFile);
 
         EndDialog(m_hDialog, 1);
@@ -1394,15 +1465,7 @@ COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == idChooseApp)
         {
 DoChooseApp:
-            OPENASINFO info;
-            LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
-
-            info.pcszFile = m_wszPath;
-            info.oaifInFlags = OAIF_EXEC;
-            if (pwszExt[0])
-                info.oaifInFlags |= OAIF_REGISTER_EXT | OAIF_ALLOW_REGISTRATION;
-            info.pcszClass = NULL;
-            hr = SHOpenWithDialog(lpici->hwnd, &info);
+            hr = SH32_InvokeOpenWith(m_wszPath, lpici, NULL);
         }
         else
         {

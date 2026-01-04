@@ -20,33 +20,28 @@
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
-#include <signal.h>
-#ifdef HAVE_GETOPT_H
-# include <getopt.h>
-#endif
+#include <limits.h>
+#include <sys/types.h>
 
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"
-#include "wine/wpp.h"
+#include "wpp_private.h"
 #include "header.h"
 
 static const char usage[] =
 "Usage: widl [options...] infile.idl\n"
 "   or: widl [options...] --dlldata-only name1 [name2...]\n"
 "   --acf=file         Use ACF file\n"
+"   --align=n          Set structure packing to 'n'\n"
 "   -app_config        Ignored, present for midl compatibility\n"
 "   -b arch            Set the target architecture\n"
 "   -c                 Generate client stub\n"
@@ -56,30 +51,32 @@ static const char usage[] =
 "   --help             Display this help and exit\n"
 "   -h                 Generate headers\n"
 "   -H file            Name of header file (default is infile.h)\n"
-"   -I path            Set include search dir to path (multiple -I allowed)\n"
+"   -I directory       Add directory to the include search path (multiple -I allowed)\n"
+"   -L directory       Add directory to the library search path (multiple -L allowed)\n"
 "   --local-stubs=file Write empty stubs for call_as/local methods to file\n"
 "   -m32, -m64         Set the target architecture (Win32 or Win64)\n"
 "   -N                 Do not preprocess input\n"
+"   --nostdinc         Do not search the standard include path\n"
+"   --ns_prefix        Prefix namespaces with ABI namespace\n"
 "   --oldnames         Use old naming conventions\n"
-"   --oldtlb           Use old typelib (SLTG) format\n"
+"   --oldtlb           Generate typelib in the old format (SLTG)\n"
 "   -o, --output=NAME  Set the output file name\n"
 "   -Otype             Type of stubs to generate (-Os, -Oi, -Oif)\n"
 "   -p                 Generate proxy\n"
+"   --packing=n        Set structure packing to 'n'\n"
 "   --prefix-all=p     Prefix names of client stubs / server functions with 'p'\n"
 "   --prefix-client=p  Prefix names of client stubs with 'p'\n"
 "   --prefix-server=p  Prefix names of server functions with 'p'\n"
 "   -r                 Generate registration script\n"
 "   -robust            Ignored, present for midl compatibility\n"
-"   --winrt            Enable Windows Runtime mode\n"
-"   --ns_prefix        Prefix namespaces with ABI namespace\n"
+"   --sysroot=DIR      Prefix include paths with DIR\n"
 "   -s                 Generate server stub\n"
 "   -t                 Generate typelib\n"
 "   -u                 Generate interface identifiers file\n"
 "   -V                 Print version and exit\n"
 "   -W                 Enable pedantic warnings\n"
 "   --win32, --win64   Set the target architecture (Win32 or Win64)\n"
-"   --win32-align n    Set win32 structure alignment to 'n'\n"
-"   --win64-align n    Set win64 structure alignment to 'n'\n"
+"   --winrt            Enable Windows Runtime mode\n"
 "Debug level 'n' is a bitmask with following meaning:\n"
 "    * 0x01 Tell which resource is parsed (verbose mode)\n"
 "    * 0x02 Dump internal structures\n"
@@ -92,19 +89,7 @@ static const char usage[] =
 static const char version_string[] = "Wine IDL Compiler version " PACKAGE_VERSION "\n"
 			"Copyright 2002 Ove Kaaven\n";
 
-#ifdef __i386__
-enum target_cpu target_cpu = CPU_x86;
-#elif defined(__x86_64__)
-enum target_cpu target_cpu = CPU_x86_64;
-#elif defined(__powerpc__)
-enum target_cpu target_cpu = CPU_POWERPC;
-#elif defined(__arm__)
-enum target_cpu target_cpu = CPU_ARM;
-#elif defined(__aarch64__)
-enum target_cpu target_cpu = CPU_ARM64;
-#else
-#error Unsupported CPU
-#endif
+struct target target = { 0 };
 
 int debuglevel = DEBUGLEVEL_NONE;
 int parser_debug, yy_flex_debug;
@@ -114,7 +99,6 @@ int do_everything = 1;
 static int preprocess_only = 0;
 int do_header = 0;
 int do_typelib = 0;
-int do_old_typelib = 0;
 int do_proxies = 0;
 int do_client = 0;
 int do_server = 0;
@@ -123,14 +107,14 @@ int do_idfile = 0;
 int do_dlldata = 0;
 static int no_preprocess = 0;
 int old_names = 0;
-int win32_packing = 8;
-int win64_packing = 8;
+int old_typelib = 0;
 int winrt_mode = 0;
+int interpreted_mode = 1;
 int use_abi_namespace = 0;
-static enum stub_mode stub_mode = MODE_Os;
+static int stdinc = 1;
 
 char *input_name;
-char *input_idl_name;
+char *idl_name;
 char *acf_name;
 char *header_name;
 char *local_stubs_name;
@@ -146,14 +130,20 @@ char *server_token;
 char *regscript_name;
 char *regscript_token;
 static char *idfile_name;
-char *temp_name;
+struct strarray temp_files = { 0 };
+const char *temp_dir = NULL;
 const char *prefix_client = "";
 const char *prefix_server = "";
-
-int line_number = 1;
+static const char *bindir;
+static const char *libdir;
+static const char *includedir;
+static struct strarray dlldirs;
+static char *output_name;
+static const char *sysroot = "";
 
 static FILE *idfile;
 
+unsigned int packing = 8;
 unsigned int pointer_size = 0;
 
 time_t now;
@@ -165,7 +155,9 @@ enum {
     DLLDATA_OPTION,
     DLLDATA_ONLY_OPTION,
     LOCAL_STUBS_OPTION,
+    NOSTDINC_OPTION,
     OLD_TYPELIB_OPTION,
+    PACKING_OPTION,
     PREFIX_ALL_OPTION,
     PREFIX_CLIENT_OPTION,
     PREFIX_SERVER_OPTION,
@@ -173,60 +165,47 @@ enum {
     RT_NS_PREFIX,
     RT_OPTION,
     ROBUST_OPTION,
+    SYSROOT_OPTION,
     WIN32_OPTION,
     WIN64_OPTION,
-    WIN32_ALIGN_OPTION,
-    WIN64_ALIGN_OPTION
 };
 
 static const char short_options[] =
-    "b:cC:d:D:EhH:I:m:No:O:pP:rsS:tT:uU:VW";
-static const struct option long_options[] = {
-    { "acf", 1, NULL, ACF_OPTION },
-    { "app_config", 0, NULL, APP_CONFIG_OPTION },
-    { "dlldata", 1, NULL, DLLDATA_OPTION },
-    { "dlldata-only", 0, NULL, DLLDATA_ONLY_OPTION },
-    { "help", 0, NULL, PRINT_HELP },
-    { "local-stubs", 1, NULL, LOCAL_STUBS_OPTION },
-    { "ns_prefix", 0, NULL, RT_NS_PREFIX },
-    { "oldnames", 0, NULL, OLDNAMES_OPTION },
-    { "oldtlb", 0, NULL, OLD_TYPELIB_OPTION },
-    { "output", 0, NULL, 'o' },
-    { "prefix-all", 1, NULL, PREFIX_ALL_OPTION },
-    { "prefix-client", 1, NULL, PREFIX_CLIENT_OPTION },
-    { "prefix-server", 1, NULL, PREFIX_SERVER_OPTION },
-    { "robust", 0, NULL, ROBUST_OPTION },
-    { "target", 0, NULL, 'b' },
-    { "winrt", 0, NULL, RT_OPTION },
-    { "win32", 0, NULL, WIN32_OPTION },
-    { "win64", 0, NULL, WIN64_OPTION },
-    { "win32-align", 1, NULL, WIN32_ALIGN_OPTION },
-    { "win64-align", 1, NULL, WIN64_ALIGN_OPTION },
-    { NULL, 0, NULL, 0 }
+    "b:cC:d:D:EhH:I:L:m:No:O:pP:rsS:tT:uU:VW";
+static const struct long_option long_options[] = {
+    { "acf", 1, ACF_OPTION },
+    { "align", 1, PACKING_OPTION },
+    { "app_config", 0, APP_CONFIG_OPTION },
+    { "dlldata", 1, DLLDATA_OPTION },
+    { "dlldata-only", 0, DLLDATA_ONLY_OPTION },
+    { "help", 0, PRINT_HELP },
+    { "local-stubs", 1, LOCAL_STUBS_OPTION },
+    { "nostdinc", 0, NOSTDINC_OPTION },
+    { "ns_prefix", 0, RT_NS_PREFIX },
+    { "oldnames", 0, OLDNAMES_OPTION },
+    { "oldtlb", 0, OLD_TYPELIB_OPTION },
+    { "output", 0, 'o' },
+    { "packing", 1, PACKING_OPTION },
+    { "prefix-all", 1, PREFIX_ALL_OPTION },
+    { "prefix-client", 1, PREFIX_CLIENT_OPTION },
+    { "prefix-server", 1, PREFIX_SERVER_OPTION },
+    { "robust", 0, ROBUST_OPTION },
+    { "sysroot", 1, SYSROOT_OPTION },
+    { "target", 0, 'b' },
+    { "winrt", 0, RT_OPTION },
+    { "win32", 0, WIN32_OPTION },
+    { "win64", 0, WIN64_OPTION },
+    { NULL }
 };
 
 static void rm_tempfile(void);
 
-enum stub_mode get_stub_mode(void)
-{
-    /* old-style interpreted stubs are not supported on 64-bit */
-    if (stub_mode == MODE_Oi && pointer_size == 8) return MODE_Oif;
-    return stub_mode;
-}
-
 static char *make_token(const char *name)
 {
   char *token;
-  char *slash;
   int i;
 
-  slash = strrchr(name, '/');
-  if(!slash)
-    slash = strrchr(name, '\\');
-
-  if (slash) name = slash + 1;
-
-  token = xstrdup(name);
+  token = get_basename( name );
   for (i=0; token[i]; i++) {
     if (!isalnum(token[i])) token[i] = '_';
     else token[i] = tolower(token[i]);
@@ -237,7 +216,7 @@ static char *make_token(const char *name)
 /* duplicate a basename into a valid C token */
 static char *dup_basename_token(const char *name, const char *ext)
 {
-    char *p, *ret = dup_basename( name, ext );
+    char *p, *ret = replace_extension( get_basename(name), ext, "" );
     /* map invalid characters to '_' */
     for (p = ret; *p; p++) if (!isalnum(*p)) *p = '_';
     return ret;
@@ -245,6 +224,7 @@ static char *dup_basename_token(const char *name, const char *ext)
 
 static void add_widl_version_define(void)
 {
+    char version_str[32];
     unsigned int version;
     const char *p = PACKAGE_VERSION;
 
@@ -263,58 +243,8 @@ static void add_widl_version_define(void)
     if (p)
         version += atoi(p + 1);
 
-    if (version != 0)
-    {
-        char version_str[11];
-        snprintf(version_str, sizeof(version_str), "0x%x", version);
-        wpp_add_define("__WIDL__", version_str);
-    }
-    else
-        wpp_add_define("__WIDL__", NULL);
-}
-
-/* set the target platform */
-static void set_target( const char *target )
-{
-    static const struct
-    {
-        const char     *name;
-        enum target_cpu cpu;
-    } cpu_names[] =
-    {
-        { "i386",    CPU_x86 },
-        { "i486",    CPU_x86 },
-        { "i586",    CPU_x86 },
-        { "i686",    CPU_x86 },
-        { "i786",    CPU_x86 },
-        { "amd64",   CPU_x86_64 },
-        { "x86_64",  CPU_x86_64 },
-        { "powerpc", CPU_POWERPC },
-        { "arm",     CPU_ARM },
-        { "armv5",   CPU_ARM },
-        { "armv6",   CPU_ARM },
-        { "armv7",   CPU_ARM },
-        { "arm64",   CPU_ARM64 },
-        { "aarch64", CPU_ARM64 },
-    };
-
-    unsigned int i;
-    char *p, *spec = xstrdup( target );
-
-    /* target specification is in the form CPU-MANUFACTURER-OS or CPU-MANUFACTURER-KERNEL-OS */
-
-    if (!(p = strchr( spec, '-' ))) error( "Invalid target specification '%s'\n", target );
-    *p++ = 0;
-    for (i = 0; i < sizeof(cpu_names)/sizeof(cpu_names[0]); i++)
-    {
-        if (!strcmp( cpu_names[i].name, spec ))
-        {
-            target_cpu = cpu_names[i].cpu;
-            free( spec );
-            return;
-        }
-    }
-    error( "Unrecognized CPU '%s'\n", spec );
+    snprintf(version_str, sizeof(version_str), "__WIDL__=0x%x", version);
+    wpp_add_cmdline_define(version_str);
 }
 
 /* clean things up when aborting on a signal */
@@ -327,7 +257,6 @@ static void set_everything(int x)
 {
   do_header = x;
   do_typelib = x;
-  do_old_typelib = x;
   do_proxies = x;
   do_client = x;
   do_server = x;
@@ -350,33 +279,10 @@ void end_cplusplus_guard(FILE *fp)
   fprintf(fp, "#endif\n\n");
 }
 
-typedef struct
-{
-  char *filename;
-  struct list link;
-} filename_node_t;
-
-static void add_filename_node(struct list *list, const char *name)
-{
-  filename_node_t *node = xmalloc(sizeof *node);
-  node->filename = dup_basename( name, ".idl" );
-  list_add_tail(list, &node->link);
-}
-
-static void free_filename_nodes(struct list *list)
-{
-  filename_node_t *node, *next;
-  LIST_FOR_EACH_ENTRY_SAFE(node, next, list, filename_node_t, link) {
-    list_remove(&node->link);
-    free(node->filename);
-    free(node);
-  }
-}
-
-static void write_dlldata_list(struct list *filenames, int define_proxy_delegation)
+static void write_dlldata_list( struct strarray filenames, int define_proxy_delegation)
 {
   FILE *dlldata;
-  filename_node_t *node;
+  unsigned int i;
 
   dlldata = fopen(dlldata_name, "w");
   if (!dlldata)
@@ -387,22 +293,24 @@ static void write_dlldata_list(struct list *filenames, int define_proxy_delegati
   if (define_proxy_delegation)
       fprintf(dlldata, "#define PROXY_DELEGATION\n");
 
+#ifdef __REACTOS__
   fprintf(dlldata, "#ifdef __REACTOS__\n");
   fprintf(dlldata, "#define WIN32_NO_STATUS\n");
   fprintf(dlldata, "#define WIN32_LEAN_AND_MEAN\n");
   fprintf(dlldata, "#endif\n\n");
+#endif
 
   fprintf(dlldata, "#include <objbase.h>\n");
   fprintf(dlldata, "#include <rpcproxy.h>\n\n");
   start_cplusplus_guard(dlldata);
 
-  LIST_FOR_EACH_ENTRY(node, filenames, filename_node_t, link)
-    fprintf(dlldata, "EXTERN_PROXY_FILE(%s)\n", node->filename);
+  for (i = 0; i < filenames.count; i++)
+    fprintf(dlldata, "EXTERN_PROXY_FILE(%s)\n", filenames.str[i]);
 
   fprintf(dlldata, "\nPROXYFILE_LIST_START\n");
   fprintf(dlldata, "/* Start of list */\n");
-  LIST_FOR_EACH_ENTRY(node, filenames, filename_node_t, link)
-    fprintf(dlldata, "  REFERENCE_PROXY_FILE(%s),\n", node->filename);
+  for (i = 0; i < filenames.count; i++)
+    fprintf(dlldata, "  REFERENCE_PROXY_FILE(%s),\n", filenames.str[i]);
   fprintf(dlldata, "/* End of list */\n");
   fprintf(dlldata, "PROXYFILE_LIST_END\n\n");
 
@@ -420,9 +328,8 @@ static char *eat_space(char *s)
 
 void write_dlldata(const statement_list_t *stmts)
 {
-  struct list filenames = LIST_INIT(filenames);
+  struct strarray filenames = empty_strarray;
   int define_proxy_delegation = 0;
-  filename_node_t *node;
   FILE *dlldata;
 
   if (!do_dlldata || !need_proxy_file(stmts))
@@ -453,7 +360,7 @@ void write_dlldata(const statement_list_t *stmts)
           --end;
         *end = '\0';
         if (start < end)
-          add_filename_node(&filenames, start);
+          strarray_add(&filenames, replace_extension( get_basename( start ), ".idl", "" ));
       }else if (!define_proxy_delegation && strncmp(start, delegation_define, sizeof(delegation_define)-1)) {
           define_proxy_delegation = 1;
       }
@@ -466,19 +373,15 @@ void write_dlldata(const statement_list_t *stmts)
     fclose(dlldata);
   }
 
-  LIST_FOR_EACH_ENTRY(node, &filenames, filename_node_t, link)
-    if (strcmp(proxy_token, node->filename) == 0) {
+  if (strarray_exists( &filenames, proxy_token ))
       /* We're already in the list, no need to regenerate this file.  */
-      free_filename_nodes(&filenames);
       return;
-    }
 
-  add_filename_node(&filenames, proxy_token);
-  write_dlldata_list(&filenames, define_proxy_delegation);
-  free_filename_nodes(&filenames);
+  strarray_add(&filenames, proxy_token);
+  write_dlldata_list(filenames, define_proxy_delegation);
 }
 
-static void write_id_guid(FILE *f, const char *type, const char *guid_prefix, const char *name, const UUID *uuid)
+static void write_id_guid(FILE *f, const char *type, const char *guid_prefix, const char *name, const struct uuid *uuid)
 {
   if (!uuid) return;
   fprintf(f, "MIDL_DEFINE_GUID(%s, %s_%s, 0x%08x, 0x%04x, 0x%04x, 0x%02x,0x%02x, 0x%02x,"
@@ -498,27 +401,27 @@ static void write_id_data_stmts(const statement_list_t *stmts)
       const type_t *type = stmt->u.type;
       if (type_get_type(type) == TYPE_INTERFACE)
       {
-        const UUID *uuid;
+        const struct uuid *uuid;
         if (!is_object(type) && !is_attr(type->attrs, ATTR_DISPINTERFACE))
           continue;
         uuid = get_attrp(type->attrs, ATTR_UUID);
         write_id_guid(idfile, "IID", is_attr(type->attrs, ATTR_DISPINTERFACE) ? "DIID" : "IID",
                    type->name, uuid);
-        if (type->details.iface->async_iface)
+        if (type_iface_get_async_iface(type))
         {
-          uuid = get_attrp(type->details.iface->async_iface->attrs, ATTR_UUID);
-          write_id_guid(idfile, "IID", "IID", type->details.iface->async_iface->name, uuid);
+          uuid = get_attrp(type_iface_get_async_iface(type)->attrs, ATTR_UUID);
+          write_id_guid(idfile, "IID", "IID", type_iface_get_async_iface(type)->name, uuid);
         }
       }
       else if (type_get_type(type) == TYPE_COCLASS)
       {
-        const UUID *uuid = get_attrp(type->attrs, ATTR_UUID);
+        const struct uuid *uuid = get_attrp(type->attrs, ATTR_UUID);
         write_id_guid(idfile, "CLSID", "CLSID", type->name, uuid);
       }
     }
     else if (stmt->type == STMT_LIBRARY)
     {
-      const UUID *uuid = get_attrp(stmt->u.lib->attrs, ATTR_UUID);
+      const struct uuid *uuid = get_attrp(stmt->u.lib->attrs, ATTR_UUID);
       write_id_guid(idfile, "IID", "LIBID", stmt->u.lib->name, uuid);
       write_id_data_stmts(stmt->u.lib->stmts);
     }
@@ -536,13 +439,13 @@ void write_id_data(const statement_list_t *stmts)
   }
 
   fprintf(idfile, "/*** Autogenerated by WIDL %s ", PACKAGE_VERSION);
-  fprintf(idfile, "from %s - Do not edit ***/\n\n", input_idl_name);
-
+  fprintf(idfile, "from %s - Do not edit ***/\n\n", idl_name);
+#ifdef __REACTOS__
   fprintf(idfile, "#ifdef __REACTOS__\n");
   fprintf(idfile, "#define WIN32_NO_STATUS\n");
   fprintf(idfile, "#define WIN32_LEAN_AND_MEAN\n");
   fprintf(idfile, "#endif\n\n");
-
+#endif
   fprintf(idfile, "#include <rpc.h>\n");
   fprintf(idfile, "#include <rpcndr.h>\n\n");
 
@@ -581,23 +484,10 @@ void write_id_data(const statement_list_t *stmts)
   fclose(idfile);
 }
 
-int main(int argc,char *argv[])
+static void option_callback( int optc, char *optarg )
 {
-  int optc;
-  int ret = 0;
-  int opti = 0;
-  char *output_name = NULL;
-
-  signal( SIGTERM, exit_on_signal );
-  signal( SIGINT, exit_on_signal );
-#ifdef SIGHUP
-  signal( SIGHUP, exit_on_signal );
-#endif
-
-  now = time(NULL);
-
-  while((optc = getopt_long_only(argc, argv, short_options, long_options, &opti)) != EOF) {
-    switch(optc) {
+    switch (optc)
+    {
     case DLLDATA_OPTION:
       dlldata_name = xstrdup(optarg);
       break;
@@ -608,6 +498,9 @@ int main(int argc,char *argv[])
     case LOCAL_STUBS_OPTION:
       do_everything = 0;
       local_stubs_name = xstrdup(optarg);
+      break;
+    case NOSTDINC_OPTION:
+      stdinc = 0;
       break;
     case OLDNAMES_OPTION:
       old_names = 1;
@@ -624,12 +517,15 @@ int main(int argc,char *argv[])
       break;
     case PRINT_HELP:
       fprintf(stderr, "%s", usage);
-      return 0;
+      exit(0);
     case RT_OPTION:
       winrt_mode = 1;
       break;
     case RT_NS_PREFIX:
       use_abi_namespace = 1;
+      break;
+    case SYSROOT_OPTION:
+      sysroot = xstrdup(optarg);
       break;
     case WIN32_OPTION:
       pointer_size = 4;
@@ -637,15 +533,10 @@ int main(int argc,char *argv[])
     case WIN64_OPTION:
       pointer_size = 8;
       break;
-    case WIN32_ALIGN_OPTION:
-      win32_packing = strtol(optarg, NULL, 0);
-      if(win32_packing != 2 && win32_packing != 4 && win32_packing != 8)
-          error("Packing must be one of 2, 4 or 8\n");
-      break;
-    case WIN64_ALIGN_OPTION:
-      win64_packing = strtol(optarg, NULL, 0);
-      if(win64_packing != 2 && win64_packing != 4 && win64_packing != 8)
-          error("Packing must be one of 2, 4 or 8\n");
+    case PACKING_OPTION:
+      packing = strtol(optarg, NULL, 0);
+      if(packing != 2 && packing != 4 && packing != 8)
+          error("Structure packing must be one of 2, 4 or 8\n");
       break;
     case ACF_OPTION:
       acf_name = xstrdup(optarg);
@@ -658,7 +549,8 @@ int main(int argc,char *argv[])
         /* FIXME: Support robust option */
         break;
     case 'b':
-      set_target( optarg );
+        if (!parse_target( optarg, &target ))
+            error( "Invalid target specification '%s'\n", optarg );
       break;
     case 'c':
       do_everything = 0;
@@ -687,6 +579,9 @@ int main(int argc,char *argv[])
     case 'I':
       wpp_add_include_path(optarg);
       break;
+    case 'L':
+      strarray_add( &dlldirs, optarg );
+      break;
     case 'm':
       if (!strcmp( optarg, "32" )) pointer_size = 4;
       else if (!strcmp( optarg, "64" )) pointer_size = 8;
@@ -698,11 +593,11 @@ int main(int argc,char *argv[])
       output_name = xstrdup(optarg);
       break;
     case 'O':
-      if (!strcmp( optarg, "s" )) stub_mode = MODE_Os;
-      else if (!strcmp( optarg, "i" )) stub_mode = MODE_Oi;
-      else if (!strcmp( optarg, "ic" )) stub_mode = MODE_Oif;
-      else if (!strcmp( optarg, "if" )) stub_mode = MODE_Oif;
-      else if (!strcmp( optarg, "icf" )) stub_mode = MODE_Oif;
+      if (!strcmp( optarg, "s" )) interpreted_mode = 0;
+      else if (!strcmp( optarg, "i" )) interpreted_mode = 1;
+      else if (!strcmp( optarg, "ic" )) interpreted_mode = 1;
+      else if (!strcmp( optarg, "if" )) interpreted_mode = 1;
+      else if (!strcmp( optarg, "icf" )) interpreted_mode = 1;
       else error( "Invalid argument '-O%s'\n", optarg );
       break;
     case 'p':
@@ -728,7 +623,7 @@ int main(int argc,char *argv[])
       do_typelib = 1;
       break;
     case OLD_TYPELIB_OPTION:
-      do_old_typelib = 1;
+      old_typelib = 1;
       break;
     case 'T':
       typelib_name = xstrdup(optarg);
@@ -742,39 +637,110 @@ int main(int argc,char *argv[])
       break;
     case 'V':
       printf("%s", version_string);
-      return 0;
+      exit(0);
     case 'W':
       pedantic = 1;
       break;
-    default:
-      fprintf(stderr, "%s", usage);
-      return 1;
+    case '?':
+      fprintf(stderr, "widl: %s\n\n%s", optarg, usage);
+      exit(1);
     }
-  }
+}
 
-#ifdef DEFAULT_INCLUDE_DIR
-  wpp_add_include_path(DEFAULT_INCLUDE_DIR);
+int open_typelib( const char *name )
+{
+#ifndef __REACTOS__
+    static const char *default_dirs[] = { LIBDIR "/wine", "/usr/lib/wine", "/usr/local/lib/wine" };
+#endif
+    struct target win_target = { target.cpu, PLATFORM_WINDOWS };
+    const char *pe_dir = get_arch_dir( win_target );
+    int fd;
+    unsigned int i;
+
+#define TRYOPEN(str) do { \
+        char *file = str; \
+        if ((fd = open( file, O_RDONLY | O_BINARY )) != -1) return fd; \
+        free( file ); } while(0)
+
+    for (i = 0; i < dlldirs.count; i++)
+    {
+        if (strendswith( dlldirs.str[i], "/*" ))  /* special case for wine build tree */
+        {
+            int namelen = strlen( name );
+            if (strendswith( name, ".dll" )) namelen -= 4;
+            TRYOPEN( strmake( "%.*s/%.*s%s/%s", (int)strlen(dlldirs.str[i]) - 2, dlldirs.str[i],
+                              namelen, name, pe_dir, name ));
+        }
+        else
+        {
+            TRYOPEN( strmake( "%s%s/%s", dlldirs.str[i], pe_dir, name ));
+            TRYOPEN( strmake( "%s/%s", dlldirs.str[i], name ));
+        }
+    }
+
+#ifndef __REACTOS__
+    if (stdinc)
+    {
+        if (libdir)
+        {
+            TRYOPEN( strmake( "%s/wine%s/%s", libdir, pe_dir, name ));
+            TRYOPEN( strmake( "%s/wine/%s", libdir, name ));
+        }
+        for (i = 0; i < ARRAY_SIZE(default_dirs); i++)
+        {
+            if (i && !strcmp( default_dirs[i], default_dirs[0] )) continue;
+            TRYOPEN( strmake( "%s%s/%s", default_dirs[i], pe_dir, name ));
+        }
+    }
 #endif
 
-  switch (target_cpu)
+    error( "cannot find %s\n", name );
+#undef TRYOPEN
+
+#ifdef __REACTOS__
+  return 1;
+#endif
+}
+
+int main(int argc,char *argv[])
+{
+  int i;
+  int ret = 0;
+  struct strarray files;
+
+  init_signals( exit_on_signal );
+  bindir = get_bindir( argv[0] );
+  libdir = get_libdir( bindir );
+  includedir = get_includedir( bindir );
+  target = init_argv0_target( argv[0] );
+
+  now = time(NULL);
+
+  files = parse_options( argc, argv, short_options, long_options, 1, option_callback );
+
+#ifndef __REACTOS__
+  if (stdinc)
   {
-  case CPU_x86:
-      if (pointer_size == 8) target_cpu = CPU_x86_64;
-      else pointer_size = 4;
-      break;
-  case CPU_x86_64:
-      if (pointer_size == 4) target_cpu = CPU_x86;
-      else pointer_size = 8;
-      break;
-  case CPU_ARM64:
-      if (pointer_size == 4) error( "Cannot build 32-bit code for this CPU\n" );
-      pointer_size = 8;
-      break;
-  default:
-      if (pointer_size == 8) error( "Cannot build 64-bit code for this CPU\n" );
-      pointer_size = 4;
-      break;
+      static const char *incl_dirs[] = { INCLUDEDIR, "/usr/include", "/usr/local/include" };
+
+      if (includedir)
+      {
+          wpp_add_include_path( strmake( "%s/wine/msvcrt", includedir ));
+          wpp_add_include_path( strmake( "%s/wine/windows", includedir ));
+      }
+      for (i = 0; i < ARRAY_SIZE(incl_dirs); i++)
+      {
+          if (i && !strcmp( incl_dirs[i], incl_dirs[0] )) continue;
+          wpp_add_include_path( strmake( "%s%s/wine/msvcrt", sysroot, incl_dirs[i] ));
+          wpp_add_include_path( strmake( "%s%s/wine/windows", sysroot, incl_dirs[i] ));
+      }
   }
+#endif
+
+  if (pointer_size)
+      set_target_ptr_size( &target, pointer_size );
+  else
+      pointer_size = get_target_ptr_size( target );
 
   /* if nothing specified, try to guess output type from the output file name */
   if (output_name && do_everything && !do_header && !do_typelib && !do_proxies &&
@@ -789,6 +755,7 @@ int main(int argc,char *argv[])
       else if (strendswith( output_name, "_i.c" )) do_idfile = 1;
       else if (strendswith( output_name, "_r.res" )) do_regscript = 1;
       else if (strendswith( output_name, "_t.res" )) do_typelib = 1;
+      else if (strendswith( output_name, "_l.res" )) do_typelib = 1;
       else if (strendswith( output_name, "dlldata.c" )) do_dlldata = 1;
       else do_everything = 1;
   }
@@ -797,40 +764,40 @@ int main(int argc,char *argv[])
     set_everything(TRUE);
   }
 
-  if (!output_name) output_name = dup_basename(input_name, ".idl");
-
   if (do_header + do_typelib + do_proxies + do_client +
-      do_server + do_regscript + do_idfile + do_dlldata == 1)
+      do_server + do_regscript + do_idfile + do_dlldata == 1 && output_name)
   {
-      if (do_header) header_name = output_name;
-      else if (do_typelib) typelib_name = output_name;
-      else if (do_proxies) proxy_name = output_name;
-      else if (do_client) client_name = output_name;
-      else if (do_server) server_name = output_name;
-      else if (do_regscript) regscript_name = output_name;
-      else if (do_idfile) idfile_name = output_name;
-      else if (do_dlldata) dlldata_name = output_name;
+      if (do_header && !header_name) header_name = output_name;
+      else if (do_typelib && !typelib_name) typelib_name = output_name;
+      else if (do_proxies && !proxy_name) proxy_name = output_name;
+      else if (do_client && !client_name) client_name = output_name;
+      else if (do_server && !server_name) server_name = output_name;
+      else if (do_regscript && !regscript_name) regscript_name = output_name;
+      else if (do_idfile && !idfile_name) idfile_name = output_name;
+      else if (do_dlldata && !dlldata_name) dlldata_name = output_name;
   }
 
   if (!dlldata_name && do_dlldata)
     dlldata_name = xstrdup("dlldata.c");
 
-  if(optind < argc) {
+  if (files.count) {
     if (do_dlldata && !do_everything) {
-      struct list filenames = LIST_INIT(filenames);
-      for ( ; optind < argc; ++optind)
-        add_filename_node(&filenames, argv[optind]);
+      struct strarray filenames = empty_strarray;
+      for (i = 0; i < files.count; i++)
+          strarray_add(&filenames, replace_extension( get_basename( files.str[i] ), ".idl", "" ));
 
-      write_dlldata_list(&filenames, 0 /* FIXME */ );
-      free_filename_nodes(&filenames);
+      write_dlldata_list(filenames, 0 /* FIXME */ );
       return 0;
     }
-    else if (optind != argc - 1) {
+    else if (files.count > 1) {
       fprintf(stderr, "%s", usage);
       return 1;
     }
     else
-      input_idl_name = input_name = xstrdup(argv[optind]);
+    {
+      input_name = xstrdup( files.str[0] );
+      idl_name = get_basename( input_name );
+    }
   }
   else {
     fprintf(stderr, "%s", usage);
@@ -850,40 +817,26 @@ int main(int argc,char *argv[])
                  (debuglevel & DEBUGLEVEL_PPTRACE) != 0,
                  (debuglevel & DEBUGLEVEL_PPMSG) != 0 );
 
-  if (!header_name) {
-    header_name = dup_basename(input_name, ".idl");
-    strcat(header_name, ".h");
-  }
+  if (!header_name)
+      header_name = replace_extension( get_basename(input_name), ".idl", ".h" );
 
-  if (!typelib_name && do_typelib) {
-    typelib_name = dup_basename(input_name, ".idl");
-    strcat(typelib_name, ".tlb");
-  }
+  if (!typelib_name && do_typelib)
+      typelib_name = replace_extension( get_basename(input_name), ".idl", ".tlb" );
 
-  if (!proxy_name && do_proxies) {
-    proxy_name = dup_basename(input_name, ".idl");
-    strcat(proxy_name, "_p.c");
-  }
+  if (!proxy_name && do_proxies)
+      proxy_name = replace_extension( get_basename(input_name), ".idl", "_p.c" );
 
-  if (!client_name && do_client) {
-    client_name = dup_basename(input_name, ".idl");
-    strcat(client_name, "_c.c");
-  }
+  if (!client_name && do_client)
+      client_name = replace_extension( get_basename(input_name), ".idl", "_c.c" );
 
-  if (!server_name && do_server) {
-    server_name = dup_basename(input_name, ".idl");
-    strcat(server_name, "_s.c");
-  }
+  if (!server_name && do_server)
+      server_name = replace_extension( get_basename(input_name), ".idl", "_s.c" );
 
-  if (!regscript_name && do_regscript) {
-    regscript_name = dup_basename(input_name, ".idl");
-    strcat(regscript_name, "_r.rgs");
-  }
+  if (!regscript_name && do_regscript)
+      regscript_name = replace_extension( get_basename(input_name), ".idl", "_r.rgs" );
 
-  if (!idfile_name && do_idfile) {
-    idfile_name = dup_basename(input_name, ".idl");
-    strcat(idfile_name, "_i.c");
-  }
+  if (!idfile_name && do_idfile)
+      idfile_name = replace_extension( get_basename(input_name), ".idl", "_i.c" );
 
   if (do_proxies) proxy_token = dup_basename_token(proxy_name,"_p.c");
   if (do_client) client_token = dup_basename_token(client_name,"_c.c");
@@ -891,61 +844,18 @@ int main(int argc,char *argv[])
   if (do_regscript) regscript_token = dup_basename_token(regscript_name,"_r.rgs");
 
   add_widl_version_define();
-  wpp_add_define("_WIN32", NULL);
+  wpp_add_cmdline_define("_WIN32=1");
 
   atexit(rm_tempfile);
-  if (!no_preprocess)
-  {
-    chat("Starting preprocess\n");
-
-    if (!preprocess_only)
-    {
-        FILE *output;
-        int fd;
-        char *name = xmalloc( strlen(header_name) + 8 );
-
-        strcpy( name, header_name );
-        strcat( name, ".XXXXXX" );
-
-        if ((fd = mkstemps( name, 0 )) == -1)
-            error("Could not generate a temp name from %s\n", name);
-
-        temp_name = name;
-        if (!(output = fdopen(fd, "wt")))
-            error("Could not open fd %s for writing\n", name);
-
-        ret = wpp_parse( input_name, output );
-        fclose( output );
-    }
-    else
-    {
-        ret = wpp_parse( input_name, stdout );
-    }
-
-    if(ret) exit(1);
-    if(preprocess_only) exit(0);
-    if(!(parser_in = fopen(temp_name, "r"))) {
-      fprintf(stderr, "Could not open %s for input\n", temp_name);
-      return 1;
-    }
-  }
-  else {
-    if(!(parser_in = fopen(input_name, "r"))) {
-      fprintf(stderr, "Could not open %s for input\n", input_name);
-      return 1;
-    }
-  }
+  if (preprocess_only) exit( wpp_parse( input_name, stdout ) );
+  parser_in = open_input_file( input_name );
 
   header_token = make_token(header_name);
 
   init_types();
   ret = parser_parse();
-
-  fclose(parser_in);
-
-  if(ret) {
-    exit(1);
-  }
+  close_all_inputs();
+  if (ret) exit(1);
 
   /* Everything has been done successfully, don't delete any files.  */
   set_everything(FALSE);
@@ -956,9 +866,6 @@ int main(int argc,char *argv[])
 
 static void rm_tempfile(void)
 {
-  abort_import();
-  if(temp_name)
-    unlink(temp_name);
   if (do_header)
     unlink(header_name);
   if (local_stubs_name)
@@ -975,4 +882,38 @@ static void rm_tempfile(void)
     unlink(proxy_name);
   if (do_typelib)
     unlink(typelib_name);
+  remove_temp_files();
+}
+
+char *find_input_file( const char *name, const char *parent )
+{
+    char *path;
+
+    /* don't search for a file name with a path in the include directories, for compatibility with MIDL */
+    if (strchr( name, '/' ) || strchr( name, '\\' )) path = xstrdup( name );
+    else if (!(path = wpp_find_include( name, parent ))) error_loc( "Unable to open include file %s\n", name );
+
+    return path;
+}
+
+FILE *open_input_file( const char *path )
+{
+    FILE *file;
+    char *name;
+    int ret;
+
+    if (no_preprocess)
+    {
+        if (!(file = fopen( path, "r" ))) error_loc( "Unable to open %s\n", path );
+        return file;
+    }
+
+    name = make_temp_file( "widl", NULL );
+    if (!(file = fopen( name, "wt" ))) error_loc( "Could not open %s for writing\n", name );
+    ret = wpp_parse( path, file );
+    fclose( file );
+    if (ret) exit( 1 );
+
+    if (!(file = fopen( name, "r" ))) error_loc( "Unable to open %s\n", name );
+    return file;
 }

@@ -10,9 +10,6 @@
 #include "diskpart.h"
 #include "diskpart_msg.h"
 
-BOOL exit_main(INT argc, LPWSTR *argv);
-BOOL rem_main(INT argc, LPWSTR *argv);
-
 
 COMMAND cmds[] =
 {
@@ -25,14 +22,17 @@ COMMAND cmds[] =
     {L"BREAK",       NULL,         NULL,        break_main,              IDS_HELP_BREAK,                     MSG_COMMAND_BREAK},
     {L"CLEAN",       NULL,         NULL,        clean_main,              IDS_HELP_CLEAN,                     MSG_COMMAND_CLEAN},
     {L"COMPACT",     NULL,         NULL,        compact_main,            IDS_HELP_COMPACT,                   MSG_COMMAND_COMPACT},
-    {L"CONVERT",     NULL,         NULL,        convert_main,            IDS_HELP_CONVERT,                   MSG_COMMAND_CONVERT},
+
+    {L"CONVERT",     NULL,         NULL,        NULL,                    IDS_HELP_CONVERT,                   MSG_NONE},
+    {L"CONVERT",     L"GPT",       NULL,        ConvertGPT,              IDS_HELP_CONVERT_GPT,               MSG_COMMAND_CONVERT_GPT},
+    {L"CONVERT",     L"MBR",       NULL,        ConvertMBR,              IDS_HELP_CONVERT_MBR,               MSG_COMMAND_CONVERT_MBR},
 
     {L"CREATE",      NULL,         NULL,        NULL,                    IDS_HELP_CREATE,                    MSG_NONE},
     {L"CREATE",      L"PARTITION", NULL,        NULL,                    IDS_HELP_CREATE_PARTITION,          MSG_NONE},
-//    {L"CREATE",      L"PARTITION", L"EFI",      CreateEfiPartition,      IDS_HELP_CREATE_PARTITION_EFI,      MSG_COMMAND_CREATE_PARTITION_EFI},
+    {L"CREATE",      L"PARTITION", L"EFI",      CreateEfiPartition,      IDS_HELP_CREATE_PARTITION_EFI,      MSG_COMMAND_CREATE_PARTITION_EFI},
     {L"CREATE",      L"PARTITION", L"EXTENDED", CreateExtendedPartition, IDS_HELP_CREATE_PARTITION_EXTENDED, MSG_COMMAND_CREATE_PARTITION_EXTENDED},
     {L"CREATE",      L"PARTITION", L"LOGICAL",  CreateLogicalPartition,  IDS_HELP_CREATE_PARTITION_LOGICAL,  MSG_COMMAND_CREATE_PARTITION_LOGICAL},
-//    {L"CREATE",      L"PARTITION", L"MSR",      CreateMsrPartition,      IDS_HELP_CREATE_PARTITION_MSR,      MSG_COMMAND_CREATE_PARTITION_MSR},
+    {L"CREATE",      L"PARTITION", L"MSR",      CreateMsrPartition,      IDS_HELP_CREATE_PARTITION_MSR,      MSG_COMMAND_CREATE_PARTITION_MSR},
     {L"CREATE",      L"PARTITION", L"PRIMARY",  CreatePrimaryPartition,  IDS_HELP_CREATE_PARTITION_PRIMARY,  MSG_COMMAND_CREATE_PARTITION_PRIMARY},
     {L"CREATE",      L"VOLUME",    NULL,        NULL,                    IDS_HELP_CREATE_VOLUME,             MSG_NONE},
     {L"CREATE",      L"VDISK",     NULL,        NULL,                    IDS_HELP_CREATE_VDISK,              MSG_NONE},
@@ -104,7 +104,7 @@ COMMAND cmds[] =
  * compares the command name to a list of available commands, and
  * determines which function to invoke.
  */
-BOOL
+EXIT_CODE
 InterpretCmd(
     int argc,
     LPWSTR *argv)
@@ -116,15 +116,15 @@ InterpretCmd(
 
     /* If no args provided */
     if (argc < 1)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* First, determine if the user wants to exit
        or to use a comment */
     if (_wcsicmp(argv[0], L"exit") == 0)
-        return FALSE;
+        return EXIT_EXIT;
 
     if (_wcsicmp(argv[0], L"rem") == 0)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
@@ -171,7 +171,7 @@ InterpretCmd(
 
     HelpCommandList();
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -179,14 +179,15 @@ InterpretCmd(
  * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
-BOOL
-InterpretScript(LPWSTR input_line)
+EXIT_CODE
+InterpretScript(
+    _In_ PWSTR input_line)
 {
-    LPWSTR args_vector[MAX_ARGS_COUNT];
+    PWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    LPWSTR ptr;
+    PWSTR ptr;
 
     memset(args_vector, 0, sizeof(args_vector));
 
@@ -235,10 +236,10 @@ InterpretMain(VOID)
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    BOOL bRun = TRUE;
+    EXIT_CODE ExitCode = EXIT_SUCCESS;
     LPWSTR ptr;
 
-    while (bRun != FALSE)
+    while (ExitCode != EXIT_EXIT)
     {
         args_count = 0;
         memset(args_vector, 0, sizeof(args_vector));
@@ -274,6 +275,6 @@ InterpretMain(VOID)
         }
 
         /* Send the string to find the command */
-        bRun = InterpretCmd(args_count, args_vector);
+        ExitCode = InterpretCmd(args_count, args_vector);
     }
 }

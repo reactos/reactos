@@ -130,14 +130,17 @@ done:
 unsigned long
 __stdcall
 NetrWkstaGetInfo(
-    WKSSVC_IDENTIFY_HANDLE ServerName,
-    unsigned long Level,
-    LPWKSTA_INFO *WkstaInfo)
+    _In_ WKSSVC_IDENTIFY_HANDLE ServerName,
+    _In_ unsigned long Level,
+    _Out_ LPWKSTA_INFO WkstaInfo)
 {
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength;
     LPCWSTR pszLanRoot = L"";
-    PWKSTA_INFO pWkstaInfo = NULL;
+    PWKSTA_INFO_100 pWkstaInfo100 = NULL;
+    PWKSTA_INFO_101 pWkstaInfo101 = NULL;
+    PWKSTA_INFO_102 pWkstaInfo102 = NULL;
+    PWKSTA_INFO_502 pWkstaInfo502 = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
     PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo = NULL;
@@ -204,98 +207,98 @@ NetrWkstaGetInfo(
     switch (Level)
     {
         case 100:
-            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_100));
-            if (pWkstaInfo == NULL)
+            pWkstaInfo100 = midl_user_allocate(sizeof(WKSTA_INFO_100));
+            if (pWkstaInfo100 == NULL)
             {
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            pWkstaInfo->WkstaInfo100.wki100_platform_id = PLATFORM_ID_NT;
+            pWkstaInfo100->wki100_platform_id = PLATFORM_ID_NT;
 
-            pWkstaInfo->WkstaInfo100.wki100_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo100.wki100_computername != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo100.wki100_computername, szComputerName);
+            pWkstaInfo100->wki100_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo100->wki100_computername != NULL)
+                wcscpy(pWkstaInfo100->wki100_computername, szComputerName);
 
-            pWkstaInfo->WkstaInfo100.wki100_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo100.wki100_langroup != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo100.wki100_langroup, DomainInfo->Name.Buffer);
+            pWkstaInfo100->wki100_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo100->wki100_langroup != NULL)
+                wcscpy(pWkstaInfo100->wki100_langroup, DomainInfo->Name.Buffer);
 
-            pWkstaInfo->WkstaInfo100.wki100_ver_major = VersionInfo.dwMajorVersion;
-            pWkstaInfo->WkstaInfo100.wki100_ver_minor = VersionInfo.dwMinorVersion;
+            pWkstaInfo100->wki100_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo100->wki100_ver_minor = VersionInfo.dwMinorVersion;
 
-            *WkstaInfo = pWkstaInfo;
+            WkstaInfo->WkstaInfo100 = pWkstaInfo100;
             break;
 
         case 101:
-            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_101));
-            if (pWkstaInfo == NULL)
+            pWkstaInfo101 = midl_user_allocate(sizeof(WKSTA_INFO_101));
+            if (pWkstaInfo101 == NULL)
             {
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            pWkstaInfo->WkstaInfo101.wki101_platform_id = PLATFORM_ID_NT;
+            pWkstaInfo101->wki101_platform_id = PLATFORM_ID_NT;
 
-            pWkstaInfo->WkstaInfo101.wki101_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo101.wki101_computername != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo101.wki101_computername, szComputerName);
+            pWkstaInfo101->wki101_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo101->wki101_computername != NULL)
+                wcscpy(pWkstaInfo101->wki101_computername, szComputerName);
 
-            pWkstaInfo->WkstaInfo101.wki101_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo101.wki101_langroup != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo101.wki101_langroup, DomainInfo->Name.Buffer);
+            pWkstaInfo101->wki101_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo101->wki101_langroup != NULL)
+                wcscpy(pWkstaInfo101->wki101_langroup, DomainInfo->Name.Buffer);
 
-            pWkstaInfo->WkstaInfo101.wki101_ver_major = VersionInfo.dwMajorVersion;
-            pWkstaInfo->WkstaInfo101.wki101_ver_minor = VersionInfo.dwMinorVersion;
+            pWkstaInfo101->wki101_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo101->wki101_ver_minor = VersionInfo.dwMinorVersion;
 
-            pWkstaInfo->WkstaInfo101.wki101_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo101.wki101_lanroot != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo101.wki101_lanroot, pszLanRoot);
+            pWkstaInfo101->wki101_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo101->wki101_lanroot != NULL)
+                wcscpy(pWkstaInfo101->wki101_lanroot, pszLanRoot);
 
-            *WkstaInfo = pWkstaInfo;
+            WkstaInfo->WkstaInfo101 = pWkstaInfo101;
             break;
 
         case 102:
-            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_102));
-            if (pWkstaInfo == NULL)
+            pWkstaInfo102 = midl_user_allocate(sizeof(WKSTA_INFO_102));
+            if (pWkstaInfo102 == NULL)
             {
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            pWkstaInfo->WkstaInfo102.wki102_platform_id = PLATFORM_ID_NT;
+            pWkstaInfo102->wki102_platform_id = PLATFORM_ID_NT;
 
-            pWkstaInfo->WkstaInfo102.wki102_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo102.wki102_computername != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo102.wki102_computername, szComputerName);
+            pWkstaInfo102->wki102_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo102->wki102_computername != NULL)
+                wcscpy(pWkstaInfo102->wki102_computername, szComputerName);
 
-            pWkstaInfo->WkstaInfo102.wki102_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo102.wki102_langroup != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo102.wki102_langroup, DomainInfo->Name.Buffer);
+            pWkstaInfo102->wki102_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo102->wki102_langroup != NULL)
+                wcscpy(pWkstaInfo102->wki102_langroup, DomainInfo->Name.Buffer);
 
-            pWkstaInfo->WkstaInfo102.wki102_ver_major = VersionInfo.dwMajorVersion;
-            pWkstaInfo->WkstaInfo102.wki102_ver_minor = VersionInfo.dwMinorVersion;
+            pWkstaInfo102->wki102_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo102->wki102_ver_minor = VersionInfo.dwMinorVersion;
 
-            pWkstaInfo->WkstaInfo102.wki102_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
-            if (pWkstaInfo->WkstaInfo102.wki102_lanroot != NULL)
-                wcscpy(pWkstaInfo->WkstaInfo102.wki102_lanroot, pszLanRoot);
+            pWkstaInfo102->wki102_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo102->wki102_lanroot != NULL)
+                wcscpy(pWkstaInfo102->wki102_lanroot, pszLanRoot);
 
-            pWkstaInfo->WkstaInfo102.wki102_logged_on_users = LoggedOnUsers;
+            pWkstaInfo102->wki102_logged_on_users = LoggedOnUsers;
 
-            *WkstaInfo = pWkstaInfo;
+            WkstaInfo->WkstaInfo102 = pWkstaInfo102;
             break;
 
         case 502:
-            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_502));
-            if (pWkstaInfo == NULL)
+            pWkstaInfo502 = midl_user_allocate(sizeof(WKSTA_INFO_502));
+            if (pWkstaInfo502 == NULL)
             {
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            CopyMemory(&pWkstaInfo->WkstaInfo502, &WkstaInfo502, sizeof(WKSTA_INFO_502));
+            CopyMemory(pWkstaInfo502, &WkstaInfo502, sizeof(WKSTA_INFO_502));
 
-            *WkstaInfo = pWkstaInfo;
+            WkstaInfo->WkstaInfo502 = pWkstaInfo502;
             break;
 
         default:
@@ -330,9 +333,9 @@ NetrWkstaSetInfo(
     switch (Level)
     {
         case 502:
-            if (WkstaInfo->WkstaInfo502.wki502_keep_conn >= 1 && WkstaInfo->WkstaInfo502.wki502_keep_conn <= 65535)
+            if (WkstaInfo->WkstaInfo502->wki502_keep_conn >= 1 && WkstaInfo->WkstaInfo502->wki502_keep_conn <= 65535)
             {
-                WkstaInfo502.wki502_keep_conn = WkstaInfo->WkstaInfo502.wki502_keep_conn;
+                WkstaInfo502.wki502_keep_conn = WkstaInfo->WkstaInfo502->wki502_keep_conn;
             }
             else
             {
@@ -342,9 +345,9 @@ NetrWkstaSetInfo(
 
             if (dwResult == NERR_Success)
             {
-                if (WkstaInfo->WkstaInfo502.wki502_max_cmds >= 50 && WkstaInfo->WkstaInfo502.wki502_max_cmds <= 65535)
+                if (WkstaInfo->WkstaInfo502->wki502_max_cmds >= 50 && WkstaInfo->WkstaInfo502->wki502_max_cmds <= 65535)
                 {
-                    WkstaInfo502.wki502_max_cmds = WkstaInfo->WkstaInfo502.wki502_max_cmds;
+                    WkstaInfo502.wki502_max_cmds = WkstaInfo->WkstaInfo502->wki502_max_cmds;
                 }
                 else
                 {
@@ -355,9 +358,9 @@ NetrWkstaSetInfo(
 
             if (dwResult == NERR_Success)
             {
-                if (WkstaInfo->WkstaInfo502.wki502_sess_timeout >= 60 && WkstaInfo->WkstaInfo502.wki502_sess_timeout <= 65535)
+                if (WkstaInfo->WkstaInfo502->wki502_sess_timeout >= 60 && WkstaInfo->WkstaInfo502->wki502_sess_timeout <= 65535)
                 {
-                    WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo502.wki502_sess_timeout;
+                    WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo502->wki502_sess_timeout;
                 }
                 else
                 {
@@ -368,9 +371,9 @@ NetrWkstaSetInfo(
 
             if (dwResult == NERR_Success)
             {
-                if (WkstaInfo->WkstaInfo502.wki502_dormant_file_limit != 0)
+                if (WkstaInfo->WkstaInfo502->wki502_dormant_file_limit != 0)
                 {
-                    WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo502.wki502_dormant_file_limit;
+                    WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo502->wki502_dormant_file_limit;
                 }
                 else
                 {
@@ -381,9 +384,9 @@ NetrWkstaSetInfo(
             break;
 
         case 1013:
-            if (WkstaInfo->WkstaInfo1013.wki1013_keep_conn >= 1 && WkstaInfo->WkstaInfo1013.wki1013_keep_conn <= 65535)
+            if (WkstaInfo->WkstaInfo1013->wki1013_keep_conn >= 1 && WkstaInfo->WkstaInfo1013->wki1013_keep_conn <= 65535)
             {
-                WkstaInfo502.wki502_keep_conn = WkstaInfo->WkstaInfo1013.wki1013_keep_conn;
+                WkstaInfo502.wki502_keep_conn = WkstaInfo->WkstaInfo1013->wki1013_keep_conn;
             }
             else
             {
@@ -393,9 +396,9 @@ NetrWkstaSetInfo(
             break;
 
         case 1018:
-            if (WkstaInfo->WkstaInfo1018.wki1018_sess_timeout >= 60 && WkstaInfo->WkstaInfo1018.wki1018_sess_timeout <= 65535)
+            if (WkstaInfo->WkstaInfo1018->wki1018_sess_timeout >= 60 && WkstaInfo->WkstaInfo1018->wki1018_sess_timeout <= 65535)
             {
-                WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo1018.wki1018_sess_timeout;
+                WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo1018->wki1018_sess_timeout;
             }
             else
             {
@@ -405,9 +408,9 @@ NetrWkstaSetInfo(
             break;
 
         case 1046:
-            if (WkstaInfo->WkstaInfo1046.wki1046_dormant_file_limit != 0)
+            if (WkstaInfo->WkstaInfo1046->wki1046_dormant_file_limit != 0)
             {
-                WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo1046.wki1046_dormant_file_limit;
+                WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo1046->wki1046_dormant_file_limit;
             }
             else
             {
@@ -693,14 +696,16 @@ __stdcall
 NetrWkstaUserGetInfo(
     WKSSVC_IDENTIFY_HANDLE Unused,
     unsigned long Level,
-    LPWKSTA_USER_INFO *UserInfo)
+    LPWKSTA_USER_INFO UserInfo)
 {
     MSV1_0_GETUSERINFO_REQUEST UserInfoRequest;
     PMSV1_0_GETUSERINFO_RESPONSE UserInfoResponseBuffer = NULL;
     DWORD UserInfoResponseBufferSize = 0;
     NTSTATUS Status, ProtocolStatus;
     LUID LogonId;
-    PWKSTA_USER_INFO pUserInfo;
+    PWKSTA_USER_INFO_0 pUserInfo0 = NULL;
+    PWKSTA_USER_INFO_1 pUserInfo1 = NULL;
+    PWKSTA_USER_INFO_1101 pUserInfo1101 = NULL;
     DWORD dwResult = NERR_Success;
 
     TRACE("NetrWkstaUserGetInfo(%s, %d, %p)\n", debugstr_w(Unused), Level, UserInfo);
@@ -746,120 +751,120 @@ NetrWkstaUserGetInfo(
     switch (Level)
     {
         case 0:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_0));
-            if (pUserInfo == NULL)
+            pUserInfo0 = midl_user_allocate(sizeof(WKSTA_USER_INFO_0));
+            if (pUserInfo0 == NULL)
             {
                 ERR("\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_0));
+            ZeroMemory(pUserInfo0, sizeof(WKSTA_USER_INFO_0));
 
             /* User Name */
-            pUserInfo->UserInfo0.wkui0_username =
+            pUserInfo0->wkui0_username =
                 midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo0.wkui0_username == NULL)
+            if (pUserInfo0->wkui0_username == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo0);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo0.wkui0_username,
+            ZeroMemory(pUserInfo0->wkui0_username,
                        UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo0.wkui0_username,
+            CopyMemory(pUserInfo0->wkui0_username,
                        UserInfoResponseBuffer->UserName.Buffer,
                        UserInfoResponseBuffer->UserName.Length);
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo0 = pUserInfo0;
             break;
 
         case 1:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_1));
-            if (pUserInfo == NULL)
+            pUserInfo1 = midl_user_allocate(sizeof(WKSTA_USER_INFO_1));
+            if (pUserInfo1 == NULL)
             {
                 ERR("\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1));
+            ZeroMemory(pUserInfo1, sizeof(WKSTA_USER_INFO_1));
 
             /* User Name */
-            pUserInfo->UserInfo1.wkui1_username =
+            pUserInfo1->wkui1_username =
                 midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_username == NULL)
+            if (pUserInfo1->wkui1_username == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_username,
+            ZeroMemory(pUserInfo1->wkui1_username,
                        UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_username,
+            CopyMemory(pUserInfo1->wkui1_username,
                        UserInfoResponseBuffer->UserName.Buffer,
                        UserInfoResponseBuffer->UserName.Length);
 
             /* Logon Domain Name */
-            pUserInfo->UserInfo1.wkui1_logon_domain =
+            pUserInfo1->wkui1_logon_domain =
                 midl_user_allocate(UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_logon_domain == NULL)
+            if (pUserInfo1->wkui1_logon_domain == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1->wkui1_username);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+            ZeroMemory(pUserInfo1->wkui1_logon_domain,
                        UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+            CopyMemory(pUserInfo1->wkui1_logon_domain,
                        UserInfoResponseBuffer->LogonDomainName.Buffer,
                        UserInfoResponseBuffer->LogonDomainName.Length);
 
             /* FIXME: wkui1_oth_domains */
 
             /* Logon Server */
-            pUserInfo->UserInfo1.wkui1_logon_server =
+            pUserInfo1->wkui1_logon_server =
                 midl_user_allocate(UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
-            if (pUserInfo->UserInfo1.wkui1_logon_server == NULL)
+            if (pUserInfo1->wkui1_logon_server == NULL)
             {
                 ERR("\n");
-                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
-                midl_user_free(pUserInfo->UserInfo1.wkui1_logon_domain);
-                midl_user_free(pUserInfo);
+                midl_user_free(pUserInfo1->wkui1_username);
+                midl_user_free(pUserInfo1->wkui1_logon_domain);
+                midl_user_free(pUserInfo1);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+            ZeroMemory(pUserInfo1->wkui1_logon_server,
                        UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+            CopyMemory(pUserInfo1->wkui1_logon_server,
                        UserInfoResponseBuffer->LogonServer.Buffer,
                        UserInfoResponseBuffer->LogonServer.Length);
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo1 = pUserInfo1;
             break;
 
         case 1101:
-            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_1101));
-            if (pUserInfo == NULL)
+            pUserInfo1101 = midl_user_allocate(sizeof(WKSTA_USER_INFO_1101));
+            if (pUserInfo1101 == NULL)
             {
                 ERR("Failed to allocate WKSTA_USER_INFO_1101\n");
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
 
-            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1101));
+            ZeroMemory(pUserInfo1101, sizeof(WKSTA_USER_INFO_1101));
 
             /* FIXME: wkui1101_oth_domains */
 
-            *UserInfo = pUserInfo;
+            UserInfo->UserInfo1101 = pUserInfo1101;
             break;
 
         default:
@@ -878,7 +883,7 @@ NetrWkstaUserGetInfo(
 /* Function 4 */
 unsigned long
 __stdcall
-NetrWkstaUserSetInfo (
+NetrWkstaUserSetInfo(
     WKSSVC_IDENTIFY_HANDLE Unused,
     unsigned long Level,
     LPWKSTA_USER_INFO UserInfo,
@@ -1007,7 +1012,9 @@ NetrWorkstationStatisticsGet(
     unsigned long Options,
     LPSTAT_WORKSTATION_0 *Buffer)
 {
-    PSTAT_WORKSTATION_0 pStatBuffer;
+    SYSTEM_TIMEOFDAY_INFORMATION TimeOfDayInfo;
+    PSTAT_WORKSTATION_0 pStatBuffer = NULL;
+    NTSTATUS Status;
 
     TRACE("NetrWorkstationStatisticsGet(%p %p %lu 0x%lx %p)\n",
           ServerName, ServiceName, Level, Options, Buffer);
@@ -1023,6 +1030,21 @@ NetrWorkstationStatisticsGet(
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ZeroMemory(pStatBuffer, sizeof(STAT_WORKSTATION_0));
+
+    /* Query the boot time */
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &TimeOfDayInfo,
+                                      sizeof(TimeOfDayInfo),
+                                      NULL);
+    if (NT_SUCCESS(Status))
+    {
+        ULONG Seconds = 0;
+        if (RtlTimeToSecondsSince1970(&TimeOfDayInfo.BootTime, &Seconds))
+        {
+            pStatBuffer->StatisticsStartTime.u.HighPart = 0;
+            pStatBuffer->StatisticsStartTime.u.LowPart = Seconds;
+        }
+    }
 
     // FIXME: Return the actual statistcs data!
 

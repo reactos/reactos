@@ -76,6 +76,9 @@ static BYTE GetSpecial(PCIDLIST_ABSOLUTE pidl)
 
 static HRESULT BindToObject(PCIDLIST_ABSOLUTE pidl, REFIID riid, void **ppv)
 {
+    if (GetSpecial(pidl))
+        return E_FAIL;
+
     PCUITEMID_CHILD pidlChild;
     CComPtr<IShellFolder> psf;
     HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);
@@ -882,7 +885,8 @@ void CSearchBar::TrySetFocus(UINT Source)
     {
         BOOL IsOnButton = GetDlgItem(IDC_SEARCH_BUTTON) == hWndFocus;
         BOOL IsOnSelfPane = hWndFocus == m_hWnd;
-        if (!hWndFocus || IsOnSelfPane || IsOnButton || !IsWindowChildOf(hWndFocus, m_hWnd))
-            SendMessageW(WM_NEXTDLGCTL, (WPARAM)GetDlgItem(IDC_SEARCH_FILENAME), TRUE);
+        BOOL IsInPaneChild = hWndFocus && IsWindowChildOf(hWndFocus, m_hWnd);
+        if ((cItems == 0 && !IsInPaneChild) || IsOnSelfPane || IsOnButton)
+            SendMessage(WM_NEXTDLGCTL, (WPARAM)GetDlgItem(IDC_SEARCH_FILENAME), TRUE);
     }
 }

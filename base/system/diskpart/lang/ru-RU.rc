@@ -17,11 +17,31 @@ BEGIN
     IDS_APP_PROMPT "DISKPART> "
 END
 
+/* ACTIVE command strings */
 STRINGTABLE
 BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart was unable to mark the partition active.\nMake sure the partition is valid.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart marked the current partition as active.\n"
     IDS_ACTIVE_ALREADY "\nThe current partition is already marked as active.\n"
+    IDS_ACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe ACTIVE command can only be used on an MBR disk.\n"
+END
+
+/* ASSIGN command strings */
+STRINGTABLE
+BEGIN
+    IDS_ASSIGN_FAIL "\nDiskPart could not assign the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_ASSIGN_SUCCESS "\nDiskPart successfully assigned the drive letter or mount point.\n"
+    IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
+    IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
+    IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+END
+
+/* AUTOMOUNT command strings */
+STRINGTABLE
+BEGIN
+    IDS_AUTOMOUNT_ENABLED "\nAutomatic mounting of new volumes enabled.\n"
+    IDS_AUTOMOUNT_DISABLED "\nAutomatic mounting of new volumes disabled.\n"
+    IDS_AUTOMOUNT_SCRUBBED "\nDiskPart successfully scrubbed the mount point settings in the system.\n"
 END
 
 STRINGTABLE
@@ -33,8 +53,19 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CONVERT_GPT_ALREADY "\nThe selected Disk can not be converted because it has already been GPT formatted.\n"
+    IDS_CONVERT_GPT_NOT_EMPTY "\nThe selected Disk can not be converted to the GPT format.\nSelect an empty MBR Disk for conversion.\n"
+    IDS_CONVERT_GPT_SUCCESS "\nThe selected Disk was successfully converted to the GPT format.\n"
+    IDS_CONVERT_MBR_ALREADY "\nThe selected Disk can not be converted because it has already been MBR formatted.\n"
+    IDS_CONVERT_MBR_NOT_EMPTY "\nThe selected Disk can not be converted to the MBR format.\nSelect an empty GPT Disk for conversion.\n"
+    IDS_CONVERT_MBR_SUCCESS "\nThe selected Disk was successfully converted to the MBR format.\n"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart was unable to create the specified partition.\n"
     IDS_CREATE_PARTITION_SUCCESS "\nDiskPart succeeded in creating the specified partition.\n"
+    IDS_CREATE_PARTITION_INVALID_STYLE "\nLogical or extended partitions can not be created on a GPT disk.\nCreate a primary partition on a GPT disk instead.\n"
 END
 
 STRINGTABLE
@@ -46,12 +77,13 @@ END
 /* Disk Information Labels */
 STRINGTABLE
 BEGIN
-    IDS_DETAIL_INFO_DISK_ID "Disk ID: %08lx\n"
-    IDS_DETAIL_INFO_TYPE "Тип"
-    IDS_DETAIL_INFO_STATUS "Состояние"
-    IDS_DETAIL_INFO_PATH   "Path   : %hu\n"
-    IDS_DETAIL_INFO_TARGET "Target : %hu\n"
-    IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
+    IDS_DETAIL_DISK_DESCRIPTION "%s\n"
+    IDS_DETAIL_DISK_ID "Disk ID  : %s\n"
+    IDS_DETAIL_DISK_TYPE "Тип      : %s\n"
+    IDS_DETAIL_DISK_STATUS "Состояние: %s\n"
+    IDS_DETAIL_INFO_PATH   "Path     : %hu\n"
+    IDS_DETAIL_INFO_TARGET "Target   : %hu\n"
+    IDS_DETAIL_INFO_LUN_ID "Lun ID   : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Путь к диску"
     IDS_DETAIL_INFO_CURR_RO_STATE "Текущее состояние ""Только для чтения"""
     IDS_DETAIL_INFO_RO "Только для чтения"
@@ -61,10 +93,12 @@ BEGIN
     IDS_DETAIL_INFO_CRASH_DSK "Crashdump диск"
     IDS_DETAIL_INFO_CLST_DSK "Кластерный диск"
     IDS_DETAIL_PARTITION_NUMBER "Partition %lu\n"
-    IDS_DETAIL_PARTITION_TYPE   "Type          : %02x\n"
+    IDS_DETAIL_PARTITION_TYPE   "Type          : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Hidden        : %s\n"
     IDS_DETAIL_PARTITION_ACTIVE "Active        : %s\n"
     IDS_DETAIL_PARTITION_OFFSET "Offset in Byte: %I64u\n"
+    IDS_DETAIL_PARTITION_REQUIRED "Required      : %s\n"
+    IDS_DETAIL_PARTITION_ATTRIBUTE "Attributes    : %016I64x\n"
     IDS_DETAIL_NO_DISKS "\nThere are no disks attached to this volume.\n"
     IDS_DETAIL_NO_VOLUME "\nThere is no volume associated with this partition.\n"
 END
@@ -73,8 +107,16 @@ STRINGTABLE
 BEGIN
     IDS_FILESYSTEMS_CURRENT "Current Filesystem\n"
     IDS_FILESYSTEMS_FORMATTING "Filesystems available for formatting\n"
-    IDS_FILESYSTEMS_TYPE "Type        : %s\n"
-    IDS_FILESYSTEMS_CLUSTERSIZE "Cluster size: %lu\n"
+    IDS_FILESYSTEMS_TYPE "  Type         : %s\n"
+    IDS_FILESYSTEMS_CLUSTERSIZE "  Cluster size : %s\n"
+    IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
+    IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GPT_FAIL "\nDiskPart failed to assign atttributes to the selected GPT partition.\n"
+    IDS_GPT_SUCCESS "\nDiskPart successfully assigned the attributes the selected GPT partition.\n"
 END
 
 STRINGTABLE
@@ -87,6 +129,7 @@ BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart was unable to mark the partition inactive.\nMake sure the partition is valid.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart marked the current partition as inactive.\n"
     IDS_INACTIVE_ALREADY "\nThe current partition is already marked as inactive.\n"
+    IDS_INACTIVE_NO_MBR "\nThe selected disk is not an MBR disk.\nThe INACTIVE command can only be used on an MBR disk.\n"
 END
 
 /* Detail header titles */
@@ -99,12 +142,22 @@ BEGIN
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
     IDS_LIST_PARTITION_FORMAT "%c Раздел %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nДиск с разметкой элементов не выбран.\nУкажите диск и повторите попытку.\n\n"
+    IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
     IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Label        FS     Type        Size     Status   Info\n"
     IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
     IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
 END
 
-/* RESCAN command string */
+/* REMOVE command strings */
+STRINGTABLE
+BEGIN
+    IDS_REMOVE_FAIL "\nDiskPart could not remove the drive letter or mount point.\nMake sure the drive letter or mount point is valid.\n"
+    IDS_REMOVE_SUCCESS "\nDiskPart successfully removed the drive letter or mount point.\n"
+    IDS_REMOVE_NO_LETTER "\nThe selected volume has no letter or mount point to remove.\n"
+    IDS_REMOVE_WRONG_LETTER "\nThe letter you specified is not assigned to that volume.\n"
+END
+
+/* RESCAN command strings */
 STRINGTABLE
 BEGIN
     IDS_RESCAN_START "\nОжидайте окончания проверки программой DiskPart конфигурации...\n"
@@ -134,6 +187,11 @@ BEGIN
     IDS_SETID_SUCCESS "\nThe partition type was changed successfully.\n"
     IDS_SETID_INVALID_FORMAT "\nThe format of the partition type is invalid.\n"
     IDS_SETID_INVALID_TYPE "\nThe partition type is invalid.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNIQUID_DISK_INVALID_STYLE "\nThe selected disk is neither a GPT disk nor an MBR disk.\nSelect a GPT disk or an MBR disk.\n"
 END
 
 /* Disk Status */
@@ -167,7 +225,10 @@ BEGIN
     IDS_HELP_BREAK                     "Разбиение зеркального набора.\n"
     IDS_HELP_CLEAN                     "Очистка сведений о конфигурации или всех данных на диске.\n"
     IDS_HELP_COMPACT                   "Попытки уменьшения физического размера файла.\n"
+
     IDS_HELP_CONVERT                   "Преобразование форматов диска.\n"
+    IDS_HELP_CONVERT_GPT               "Converts an MBR disk to the GPT format.\n"
+    IDS_HELP_CONVERT_MBR               "Converts a GPT disk to the MBR format.\n"
 
     IDS_HELP_CREATE                    "Создание тома, раздела или виртуального диска.\n"
     IDS_HELP_CREATE_PARTITION          "Create a partition.\n"
@@ -238,4 +299,31 @@ BEGIN
     IDS_ERROR_MSG_BAD_ARG "Ошибка обработки параметров: %s\n"
     IDS_ERROR_INVALID_ARGS "Ошибка в указании параметров\n"
     IDS_ERROR_NO_MEDIUM "No medium in device.\n"
+END
+
+/* Bus type */
+STRINGTABLE
+BEGIN
+    IDS_BUSTYPE_UNKNOWN "Unknown"
+    IDS_BUSTYPE_SCSI    "SCSI"
+    IDS_BUSTYPE_ATAPI   "ATAPI"
+    IDS_BUSTYPE_ATA     "ATA"
+    IDS_BUSTYPE_1394    "1394"
+    IDS_BUSTYPE_SSA     "SSA"
+    IDS_BUSTYPE_FIBRE   "FibreChannel"
+    IDS_BUSTYPE_USB     "USB"
+    IDS_BUSTYPE_RAID    "RAID"
+    IDS_BUSTYPE_ISCSI   "iSCSI"
+    IDS_BUSTYPE_SAS     "SAS"
+    IDS_BUSTYPE_SATA    "SATA"
+    IDS_BUSTYPE_SD      "SD"
+    IDS_BUSTYPE_MMC     "MMC"
+    IDS_BUSTYPE_VIRTUAL "Virtual"
+    IDS_BUSTYPE_FBV     "FileBackedVirtual"
+    IDS_BUSTYPE_SPACES  "StorageSpaces"
+    IDS_BUSTYPE_NVME    "NVME"
+    IDS_BUSTYPE_SCM     "SCM"
+    IDS_BUSTYPE_UFS     "UFS"
+    IDS_BUSTYPE_NVMEOF  "NVMEOF"
+    IDS_BUSTYPE_OTHER   "Other"
 END

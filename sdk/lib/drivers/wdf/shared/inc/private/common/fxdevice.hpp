@@ -1022,7 +1022,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
-    STDCALL
+    NTAPI
     Dispatch(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -1066,7 +1066,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
-    STDCALL
+    NTAPI
     DispatchWithLock(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -1763,7 +1763,7 @@ public:
 
     static
     VOID
-    STDCALL
+    NTAPI
     _InterfaceReferenceNoOp(
         __in_opt PVOID Context
         )
@@ -1774,7 +1774,7 @@ public:
 
     static
     VOID
-    STDCALL
+    NTAPI
     _InterfaceDereferenceNoOp(
         __in_opt PVOID Context
         )

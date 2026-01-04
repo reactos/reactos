@@ -793,6 +793,9 @@ interface IShellView : IOleWindow
 interface IShellView2 : IShellView
 {
     typedef GUID SHELLVIEWID;
+cpp_quote("#define SV2GV_CURRENTVIEW ((UINT)-1)")
+cpp_quote("#define SV2GV_DEFAULTVIEW ((UINT)-2)")
+
 cpp_quote("#include <pshpack8.h>")
     typedef struct _SV2CVW2_PARAMS
     {
@@ -1659,7 +1662,7 @@ cpp_quote("#define CMF_ASYNCVERBSTATE    0x00000400")
 cpp_quote("#define CMF_OPTIMIZEFORINVOKE 0x00000800")
 cpp_quote("#define CMF_SYNCCASCADEMENU   0x00001000")
 cpp_quote("#define CMF_DONOTPICKDEFAULT  0x00002000")
-cpp_quote("#define CMF_RESERVED          0xffff0000")
+cpp_quote("#define CMF_RESERVED          0xffff0000 // View specific")
 
 cpp_quote("#define GCS_VERBA         0x00000000")
 cpp_quote("#define GCS_HELPTEXTA     0x00000001")
@@ -1693,15 +1696,19 @@ cpp_quote("#define CMDSTR_VIEWLIST     WINELIB_NAME_AW(CMDSTR_VIEWLIST)")
 cpp_quote("#define CMDSTR_VIEWDETAILS  WINELIB_NAME_AW(CMDSTR_VIEWDETAILS)")
 
 cpp_quote("#define CMIC_MASK_HOTKEY         SEE_MASK_HOTKEY")
-cpp_quote("#define CMIC_MASK_ICON           SEE_MASK_ICON")
+cpp_quote("#define CMIC_MASK_ICON           SEE_MASK_ICON") // (NTDDI_VERSION < NTDDI_VISTA) || defined(__REACTOS__)
 cpp_quote("#define CMIC_MASK_FLAG_NO_UI     SEE_MASK_FLAG_NO_UI")
 cpp_quote("#define CMIC_MASK_UNICODE        SEE_MASK_UNICODE")
 cpp_quote("#define CMIC_MASK_NO_CONSOLE     SEE_MASK_NO_CONSOLE")
-cpp_quote("#define CMIC_MASK_HASLINKNAME    SEE_MASK_HASLINKNAME")
-cpp_quote("#define CMIC_MASK_FLAG_SEP_VDM   SEE_MASK_FLAG_SEPVDM")
-cpp_quote("#define CMIC_MASK_HASTITLE       SEE_MASK_HASTITLE")
+cpp_quote("#if (NTDDI_VERSION < NTDDI_VISTA) || defined(__REACTOS__)")
+cpp_quote("#define CMIC_MASK_HASLINKNAME    SEE_MASK_HASLINKNAME")  // NOTE: Depends on undocumented define
+cpp_quote("#define CMIC_MASK_HASTITLE       SEE_MASK_HASTITLE")     // NOTE: Depends on undocumented define
+cpp_quote("#endif")
+cpp_quote("#define CMIC_MASK_FLAG_SEP_VDM   SEE_MASK_FLAG_SEPVDM")  // NOTE: Depends on undocumented define
 cpp_quote("#define CMIC_MASK_ASYNCOK        SEE_MASK_ASYNCOK")
+cpp_quote("#if (NTDDI_VERSION >= NTDDI_VISTA)")
 cpp_quote("#define CMIC_MASK_NOASYNC        SEE_MASK_NOASYNC")
+cpp_quote("#endif")
 cpp_quote("#define CMIC_MASK_SHIFT_DOWN     0x10000000")
 cpp_quote("#define CMIC_MASK_PTINVOKE       0x20000000")
 cpp_quote("#define CMIC_MASK_CONTROL_DOWN   0x40000000")
@@ -2442,6 +2449,19 @@ interface IObjectWithSelection : IUnknown
     HRESULT GetSelection([in] REFIID riid, [out, iid_is(riid)] void **ppv);
 };
 
+/*****************************************************************************
+ * IRegTreeItem interface
+ */
+[
+    uuid(A9521922-0812-4d44-9EC3-7FD38C726F3D),
+    pointer_default(unique)
+]
+interface IRegTreeItem : IUnknown
+{
+    HRESULT GetCheckState([out] BOOL *pbCheck);
+    HRESULT SetCheckState([in] BOOL bCheck);
+};
+
 
 /*****************************************************************************
  * IOpenControlPanel interface (Vista+)
@@ -2803,26 +2823,38 @@ enum
 };
 
 
-cpp_quote("#define SMC_INITMENU				0x00000001")
-cpp_quote("#define SMC_CREATE				0x00000002")
-cpp_quote("#define SMC_EXITMENU				0x00000003")
-cpp_quote("#define SMC_GETINFO				0x00000005")
-cpp_quote("#define SMC_GETSFINFO			0x00000006")
-cpp_quote("#define SMC_GETOBJECT			0x00000007")
-cpp_quote("#define SMC_GETSFOBJECT			0x00000008")
-cpp_quote("#define SMC_SFEXEC				0x00000009")
-cpp_quote("#define SMC_SFSELECTITEM			0x0000000A")
-cpp_quote("#define SMC_REFRESH				0x00000010")
-cpp_quote("#define SMC_DEMOTE				0x00000011")
-cpp_quote("#define SMC_PROMOTE				0x00000012")
-cpp_quote("#define SMC_DEFAULTICON			0x00000016")
-cpp_quote("#define SMC_NEWITEM				0x00000017")
-cpp_quote("#define SMC_CHEVRONEXPAND		0x00000019")
-cpp_quote("#define SMC_DISPLAYCHEVRONTIP	0x0000002A")
-cpp_quote("#define SMC_SETSFOBJECT			0x0000002D")
-cpp_quote("#define SMC_SHCHANGENOTIFY		0x0000002E")
-cpp_quote("#define SMC_CHEVRONGETTIP		0x0000002F")
-cpp_quote("#define SMC_SFDDRESTRICTED		0x00000030")
+cpp_quote("#define SMC_INITMENU                0x00000001")
+cpp_quote("#define SMC_CREATE                  0x00000002")
+cpp_quote("#define SMC_EXITMENU                0x00000003")
+cpp_quote("#define SMC_GETINFO                 0x00000005")
+cpp_quote("#define SMC_GETSFINFO               0x00000006")
+cpp_quote("#define SMC_GETOBJECT               0x00000007")
+cpp_quote("#define SMC_GETSFOBJECT             0x00000008")
+cpp_quote("#define SMC_SFEXEC                  0x00000009")
+cpp_quote("#define SMC_SFSELECTITEM            0x0000000A")
+cpp_quote("#define SMC_REFRESH                 0x00000010")
+cpp_quote("#define SMC_DEMOTE                  0x00000011")
+cpp_quote("#define SMC_PROMOTE                 0x00000012")
+cpp_quote("#define SMC_DEFAULTICON             0x00000016")
+cpp_quote("#define SMC_NEWITEM                 0x00000017")
+cpp_quote("#define SMC_CHEVRONEXPAND           0x00000019")
+cpp_quote("#define SMC_DISPLAYCHEVRONTIP       0x0000002A")
+cpp_quote("#define SMC_SETSFOBJECT             0x0000002D")
+cpp_quote("#define SMC_SHCHANGENOTIFY          0x0000002E")
+cpp_quote("#define SMC_CHEVRONGETTIP           0x0000002F")
+cpp_quote("#define SMC_SFDDRESTRICTED          0x00000030")
+cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE70) || defined(__REACTOS__)")
+cpp_quote("#define SMC_SFEXEC_MIDDLE           0x00000031")
+cpp_quote("#define SMC_GETAUTOEXPANDSTATE      0x00000041")
+cpp_quote("#define SMC_AUTOEXPANDCHANGE        0x00000042")
+cpp_quote("#define SMC_GETCONTEXTMENUMODIFIER  0x00000043")
+cpp_quote("#define SMC_GETBKCONTEXTMENU        0x00000044")
+cpp_quote("#define SMC_OPEN                    0x00000045")
+cpp_quote("#define SMAE_EXPANDED               0x00000001")
+cpp_quote("#define SMAE_CONTRACTED             0x00000002")
+cpp_quote("#define SMAE_USER                   0x00000004")
+cpp_quote("#define SMAE_VALID                  0x00000007")
+cpp_quote("#endif")
 
 [
     uuid(4CA300A1-9B8D-11d1-8B22-00C04FD918D0),

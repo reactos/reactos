@@ -13,8 +13,8 @@ add_executable(ftp ${SOURCE} ftp.rc)
 target_compile_definitions(ftp PRIVATE lint)
 
 set_module_type(ftp win32cui)
+target_link_libraries(ftp oldnames ${PSEH_LIB})
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
-target_link_libraries(ftp oldnames)
 add_pch(ftp precomp.h SOURCE)
 
 if(MSVC)

@@ -208,20 +208,46 @@ typedef DWORD (WINAPI *QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
 
 extern CLOSEPRINTER fpClosePrinter;
 extern OPENPRINTERW fpOpenPrinterW;
+extern HANDLE hProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-HEAP_alloc(DWORD len);
+static inline
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PVOID FASTCALL
+HEAP_alloc(_In_ SIZE_T len)
+{
+    ASSERT(hProcessHeap);
+    return RtlAllocateHeap(hProcessHeap, 0, len);
+}
 
-NTSTATUS
-HEAP_strdupA2W(
-    LPWSTR* ppszW,
-    LPCSTR lpszA
-);
+static inline VOID FASTCALL
+HEAP_free(_In_ __drv_freesMem(Mem) PVOID memory)
+{
+    ASSERT(hProcessHeap);
+    RtlFreeHeap(hProcessHeap, 0, memory);
+}
 
-VOID
-HEAP_free(LPVOID memory);
+NTSTATUS FASTCALL
+HEAP_strdupA2W(_Outptr_ PWSTR* ppszW, _In_ PCSTR lpszA);
+
+/* Buffered string conversion (quicker) */
+PWSTR FASTCALL
+HEAP_strdupA2W_buf(
+    _In_ PCSTR lpszA,
+    _In_ PWSTR pszStaticBuff,
+    _In_ SIZE_T cchStaticBuff);
+
+/* Free memory allocated by HEAP_strdupA2W_buf */
+static inline VOID FASTCALL
+HEAP_strdupA2W_buf_free(
+    _In_opt_ PWSTR pszDynamicBuff,
+    _In_ PWSTR pszStaticBuff)
+{
+    if (pszDynamicBuff && pszDynamicBuff != pszStaticBuff)
+        HEAP_free(pszDynamicBuff);
+}
 
 VOID
 FASTCALL

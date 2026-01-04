@@ -241,4 +241,3 @@ void CFontCache::Read()
         Index++;
     }
 }
-

@@ -26,8 +26,10 @@
 #define WINLOGON_SAS_CLASS L"SAS Window class"
 #define WINLOGON_SAS_TITLE L"SAS window"
 
-#define HK_CTRL_ALT_DEL   0
-#define HK_CTRL_SHIFT_ESC 1
+#define IDHK_CTRL_ALT_DEL   0
+#define IDHK_CTRL_SHIFT_ESC 1
+#define IDHK_WIN_L          2
+#define IDHK_WIN_U          3
 
 // #define EWX_FLAGS_MASK  0x00000014
 // #define EWX_ACTION_MASK ~EWX_FLAGS_MASK
@@ -427,7 +429,8 @@ PlayEventSound(
 
 static
 VOID
-RestoreAllConnections(PWLSESSION Session)
+RestoreAllConnections(
+    _In_ PWLSESSION Session)
 {
     DWORD dRet;
     HANDLE hEnum;
@@ -439,9 +442,7 @@ RestoreAllConnections(PWLSESSION Session)
 
     UserProfile = (Session && Session->UserToken);
     if (!UserProfile)
-    {
         return;
-    }
 
     if (!ImpersonateLoggedOnUser(Session->UserToken))
     {
@@ -469,7 +470,7 @@ RestoreAllConnections(PWLSESSION Session)
         dSize = 0x1000;
         dCount = -1;
 
-        memset(lpRes, 0, dSize);
+        ZeroMemory(lpRes, dSize);
         dRet = WNetEnumResource(hEnum, &dCount, lpRes, &dSize);
         if (dRet == WN_SUCCESS || dRet == WN_MORE_DATA)
         {
@@ -490,18 +491,99 @@ quit:
 }
 
 static
+VOID
+CloseAllConnections(
+    _In_ PWLSESSION Session)
+{
+    if (!Session->UserToken || !ImpersonateLoggedOnUser(Session->UserToken))
+        return;
+    WNetClearConnections(NULL);
+    RevertToSelf();
+}
+
+/**
+ * @brief
+ * Frees the Profile information structure (WLX_PROFILE_V1_0
+ * or WLX_PROFILE_V2_0) allocated by the GINA.
+ **/
+static VOID
+FreeWlxProfileInfo(
+    _Inout_ PVOID Profile)
+{
+    PWLX_PROFILE_V2_0 pProfile = (PWLX_PROFILE_V2_0)Profile;
+
+    if (pProfile->dwType != WLX_PROFILE_TYPE_V1_0
+     && pProfile->dwType != WLX_PROFILE_TYPE_V2_0)
+    {
+        ERR("WL: Wrong profile info\n");
+        return;
+    }
+
+    if (pProfile->pszProfile)
+        LocalFree(pProfile->pszProfile);
+    if (pProfile->dwType >= WLX_PROFILE_TYPE_V2_0)
+    {
+        if (pProfile->pszPolicy)
+            LocalFree(pProfile->pszPolicy);
+        if (pProfile->pszNetworkDefaultUserProfile)
+            LocalFree(pProfile->pszNetworkDefaultUserProfile);
+        if (pProfile->pszServerName)
+            LocalFree(pProfile->pszServerName);
+        if (pProfile->pszEnvironment)
+            LocalFree(pProfile->pszEnvironment);
+    }
+}
+
+/**
+ * @brief
+ * Frees the MPR information structure allocated by the GINA.
+ *
+ * @note
+ * Currently used only in HandleLogon(), but will also be used
+ * by WlxChangePasswordNotify(Ex) once implemented.
+ **/
+static VOID
+FreeWlxMprInfo(
+    _Inout_ PWLX_MPR_NOTIFY_INFO MprNotifyInfo)
+{
+    if (MprNotifyInfo->pszUserName)
+        LocalFree(MprNotifyInfo->pszUserName);
+    if (MprNotifyInfo->pszDomain)
+        LocalFree(MprNotifyInfo->pszDomain);
+    if (MprNotifyInfo->pszPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszPassword, pwdLen);
+        LocalFree(MprNotifyInfo->pszPassword);
+    }
+    if (MprNotifyInfo->pszOldPassword)
+    {
+        /* Zero out the password buffer before freeing it */
+        SIZE_T pwdLen = (wcslen(MprNotifyInfo->pszOldPassword) + 1) * sizeof(WCHAR);
+        SecureZeroMemory(MprNotifyInfo->pszOldPassword, pwdLen);
+        LocalFree(MprNotifyInfo->pszOldPassword);
+    }
+}
+
+static
 BOOL
 HandleLogon(
     IN OUT PWLSESSION Session)
 {
-    PROFILEINFOW ProfileInfo;
     BOOL ret = FALSE;
 
     /* Loading personal settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
-    ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
-    if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+
+    Session->hProfileInfo = NULL;
+    if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
     {
+        HKEY hKey;
+        LONG lError;
+        BOOL bNoPopups = FALSE;
+        PROFILEINFOW ProfileInfo;
+
         if (Session->Profile == NULL
          || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
           && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
@@ -510,10 +592,28 @@ HandleLogon(
             goto cleanup;
         }
 
+        /* Check whether error messages may be displayed when loading the user profile */
+        lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"System\\CurrentControlSet\\Control\\Windows",
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
+        if (lError == ERROR_SUCCESS)
+        {
+            DWORD dwValue, dwType, cbData = sizeof(dwValue);
+            lError = RegQueryValueExW(hKey, L"NoPopupsOnBoot", NULL,
+                                      &dwType, (PBYTE)&dwValue, &cbData);
+            if ((lError == ERROR_SUCCESS) && (dwType == REG_DWORD) && (cbData == sizeof(dwValue)))
+                bNoPopups = !!dwValue;
+
+            RegCloseKey(hKey);
+        }
+
         /* Load the user profile */
-        ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
-        ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-        ProfileInfo.dwFlags = 0;
+        ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+        ProfileInfo.dwSize = sizeof(ProfileInfo);
+        if (bNoPopups)
+            ProfileInfo.dwFlags |= PI_NOUI;
         ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
         ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
         if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
@@ -528,17 +628,21 @@ HandleLogon(
             ERR("WL: LoadUserProfileW() failed\n");
             goto cleanup;
         }
+        Session->hProfileInfo = ProfileInfo.hProfile;
     }
+
+    /* Cache the username and domain */
+    Session->UserName = WlStrDup(Session->MprNotifyInfo.pszUserName);
+    Session->Domain = WlStrDup(Session->MprNotifyInfo.pszDomain);
 
     /* Create environment block for the user */
     if (!CreateUserEnvironment(Session))
     {
-        WARN("WL: SetUserEnvironment() failed\n");
+        WARN("WL: CreateUserEnvironment() failed\n");
         goto cleanup;
     }
 
-    CallNotificationDlls(Session, LogonHandler);
-
+    /* Enable per-user settings */
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
 
@@ -556,24 +660,25 @@ HandleLogon(
         goto cleanup;
     }
 
+    CallNotificationDlls(Session, LogonHandler);
+
     /* Connect remote resources */
     RestoreAllConnections(Session);
 
+    /* Start the user shell */
+    CallNotificationDlls(Session, StartShellHandler);
     if (!StartUserShell(Session))
     {
         //WCHAR StatusMsg[256];
         WARN("WL: WlxActivateUserShell() failed\n");
-        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg) / sizeof(StatusMsg[0]));
+        //LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, ARRAYSIZE(StatusMsg));
         //MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
         goto cleanup;
     }
-
-    CallNotificationDlls(Session, StartShellHandler);
+    CallNotificationDlls(Session, PostShellHandler);
 
     if (!InitializeScreenSaver(Session))
         WARN("WL: Failed to initialize screen saver\n");
-
-    Session->hProfileInfo = ProfileInfo.hProfile;
 
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
@@ -586,29 +691,43 @@ HandleLogon(
 cleanup:
     if (Session->Profile)
     {
-        HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
-        HeapFree(GetProcessHeap(), 0, Session->Profile);
+        FreeWlxProfileInfo(Session->Profile);
+        LocalFree(Session->Profile);
+        Session->Profile = NULL;
     }
-    Session->Profile = NULL;
-    if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
-    {
-        UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
-    }
+    FreeWlxMprInfo(&Session->MprNotifyInfo);
+    ZeroMemory(&Session->MprNotifyInfo, sizeof(Session->MprNotifyInfo));
+
     RemoveStatusMessage(Session);
+
     if (!ret)
     {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+        Session->UserName = Session->Domain = NULL;
+
+        if (Session->hProfileInfo)
+            UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+        Session->hProfileInfo = NULL;
+
+        /* Restore default system parameters */
+        UpdatePerUserSystemParameters(0, FALSE);
+
+        // TODO: Remove session access to window station
+        // (revert what security.c!AllowAccessOnSession() does).
         SetWindowStationUser(Session->InteractiveWindowStation,
                              &LuidNone, NULL, 0);
+
+        /* Switch back to default SYSTEM user */
         CloseHandle(Session->UserToken);
         Session->UserToken = NULL;
+        Session->LogonId = LuidNone;
     }
-
-    if (ret)
+    else // if (ret)
     {
         SwitchDesktop(Session->ApplicationDesktop);
         Session->LogonState = STATE_LOGGED_ON;
     }
-
     return ret;
 }
 
@@ -619,15 +738,15 @@ WINAPI
 LogoffShutdownThread(
     LPVOID Parameter)
 {
-    DWORD ret = 1;
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    HANDLE UserToken = LSData->Session->UserToken;
+    DWORD ret = TRUE;
     UINT uFlags;
 
-    if (LSData->Session->UserToken != NULL &&
-        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    if (UserToken && !ImpersonateLoggedOnUser(UserToken))
     {
         ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        return 0;
+        return FALSE;
     }
 
     // FIXME: To be really fixed: need to check what needs to be kept and what needs to be removed there.
@@ -638,7 +757,7 @@ LogoffShutdownThread(
     uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
 
     TRACE("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
-        uFlags, ExitReactOSInProgress ? "true" : "false");
+        uFlags, ExitReactOSInProgress ? "TRUE" : "FALSE");
 
     ExitReactOSInProgress = TRUE;
 
@@ -646,16 +765,92 @@ LogoffShutdownThread(
     if (!ExitWindowsEx(uFlags, 0))
     {
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
-        ret = 0;
+        ret = FALSE;
     }
 
-    /* Cancel all the user connections */
-    WNetClearConnections(NULL);
-
-    if (LSData->Session->UserToken)
+    if (UserToken)
         RevertToSelf();
 
     return ret;
+}
+
+static
+NTSTATUS
+RunLogoffShutdownThread(
+    _In_ PWLSESSION Session,
+    _In_opt_ PSECURITY_ATTRIBUTES psa,
+    _In_ DWORD wlxAction)
+{
+    PCSTR pDescName;
+    PLOGOFF_SHUTDOWN_DATA LSData;
+    HANDLE hThread;
+    DWORD dwExitCode;
+
+    /* Validate the action */
+    if (WLX_LOGGINGOFF(wlxAction))
+    {
+        pDescName = "Logoff";
+    }
+    else if (WLX_SHUTTINGDOWN(wlxAction))
+    {
+        pDescName = "Shutdown";
+    }
+    else
+    {
+        ASSERT(FALSE);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Prepare data for the logoff/shutdown thread */
+    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(*LSData));
+    if (!LSData)
+    {
+        ERR("Failed to allocate %s thread data\n", pDescName);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Set the flags accordingly */
+    if (WLX_LOGGINGOFF(wlxAction))
+    {
+        LSData->Flags = EWX_LOGOFF;
+        if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+            LSData->Flags |= EWX_FORCE;
+    }
+    else // if (WLX_SHUTTINGDOWN(wlxAction))
+    {
+        /* Because we are shutting down the OS, force processes termination too */
+        LSData->Flags = EWX_SHUTDOWN | EWX_FORCE;
+        if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+            LSData->Flags |= EWX_POWEROFF;
+        else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+            LSData->Flags |= EWX_REBOOT;
+    }
+
+    LSData->Session = Session;
+
+    /* Run the logoff/shutdown thread */
+    hThread = CreateThread(psa, 0, LogoffShutdownThread, LSData, 0, NULL);
+    if (!hThread)
+    {
+        ERR("Unable to create %s thread, error %lu\n", pDescName, GetLastError());
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    WaitForSingleObject(hThread, INFINITE);
+    HeapFree(GetProcessHeap(), 0, LSData);
+    if (!GetExitCodeThread(hThread, &dwExitCode))
+    {
+        ERR("Unable to get %s thread exit code (error %lu)\n", pDescName, GetLastError());
+        CloseHandle(hThread);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(hThread);
+    if (dwExitCode == 0)
+    {
+        ERR("%s thread returned failure\n", pDescName);
+        return STATUS_UNSUCCESSFUL;
+    }
+    return STATUS_SUCCESS;
 }
 
 static
@@ -664,30 +859,30 @@ WINAPI
 KillComProcesses(
     LPVOID Parameter)
 {
-    DWORD ret = 1;
-    PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    HANDLE UserToken = (HANDLE)Parameter;
+    DWORD ret = TRUE;
 
     TRACE("In KillComProcesses\n");
 
-    if (LSData->Session->UserToken != NULL &&
-        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    if (UserToken && !ImpersonateLoggedOnUser(UserToken))
     {
         ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
-        return 0;
+        return FALSE;
     }
 
     /* Attempt to kill remaining processes. No notifications needed. */
     if (!ExitWindowsEx(EWX_CALLER_WINLOGON | EWX_NONOTIFY | EWX_FORCE | EWX_LOGOFF, 0))
     {
         ERR("Unable to kill COM apps, error %lu\n", GetLastError());
-        ret = 0;
+        ret = FALSE;
     }
 
-    if (LSData->Session->UserToken)
+    if (UserToken)
         RevertToSelf();
 
     return ret;
 }
+
 
 static
 NTSTATUS
@@ -821,77 +1016,52 @@ HandleLogoff(
     _Inout_ PWLSESSION Session,
     _In_ DWORD wlxAction)
 {
-    PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
     HANDLE hThread;
-    DWORD exitCode;
     NTSTATUS Status;
-
-    /* Prepare data for logoff thread */
-    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-    if (!LSData)
-    {
-        ERR("Failed to allocate mem for thread data\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    LSData->Flags = EWX_LOGOFF;
-    if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
-    {
-        LSData->Flags |= EWX_FORCE;
-    }
-
-    LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to create a required security descriptor. Status 0x%08lx\n", Status);
-        HeapFree(GetProcessHeap(), 0, LSData);
+        ERR("Failed to create Logoff security descriptor. Status 0x%08lx\n", Status);
         return Status;
     }
 
-    /* Run logoff thread */
-    hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-    if (!hThread)
+    /* Run the Logoff thread. Log off as well if we are
+     * invoked as part of a shutdown operation. */
+    Status = RunLogoffShutdownThread(Session, psa,
+                                     WLX_LOGGINGOFF(wlxAction)
+                                        ? wlxAction
+                                        : WLX_SAS_ACTION_LOGOFF);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Unable to create logoff thread, error %lu\n", GetLastError());
+        ERR("Failed to start the Logoff thread, Status 0x%08lx\n", Status);
         DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    WaitForSingleObject(hThread, INFINITE);
-    if (!GetExitCodeThread(hThread, &exitCode))
-    {
-        ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
-        CloseHandle(hThread);
-        DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(hThread);
-    if (exitCode == 0)
-    {
-        ERR("Logoff thread returned failure\n");
-        DestroyLogoffSecurityAttributes(psa);
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
+        return Status;
     }
 
+    /* Invoke Logoff notifications on the application desktop */
+    SwitchDesktop(Session->ApplicationDesktop);
+    DisplayStatusMessage(Session, Session->ApplicationDesktop, IDS_LOGGINGOFF);
+    CallNotificationDlls(Session, LogoffHandler);
+    RemoveStatusMessage(Session);
+
+    /* The remaining Logoff steps run on the Winlogon desktop */
     SwitchDesktop(Session->WinlogonDesktop);
 
     PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
+    /* Close all user network connections */
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
+    CloseAllConnections(Session);
+    // TODO: Do any other user-specific network-related cleaning:
+    // user-added NetAPI message aliases; user cached credentials (remote login)...
+
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
 
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
-
-    // FIXME: Closing network connections!
-    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
-
-    /* Kill remaining COM apps. Only at logoff! */
-    hThread = CreateThread(psa, 0, KillComProcesses, (LPVOID)LSData, 0, NULL);
+    /* Kill remaining COM processes that may have been started by logoff scripts */
+    hThread = CreateThread(psa, 0, KillComProcesses, (PVOID)Session->UserToken, 0, NULL);
     if (hThread)
     {
         WaitForSingleObject(hThread, INFINITE);
@@ -900,20 +1070,29 @@ HandleLogoff(
 
     /* We're done with the SECURITY_DESCRIPTOR */
     DestroyLogoffSecurityAttributes(psa);
-    psa = NULL;
-
-    HeapFree(GetProcessHeap(), 0, LSData);
 
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
-    UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->UserName);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Session->Domain);
+    Session->UserName = Session->Domain = NULL;
 
-    CallNotificationDlls(Session, LogoffHandler);
+    if (Session->hProfileInfo)
+        UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+    Session->hProfileInfo = NULL;
 
-    CloseHandle(Session->UserToken);
+    /* Restore default system parameters */
     UpdatePerUserSystemParameters(0, FALSE);
-    Session->LogonState = STATE_LOGGED_OFF;
+
+    // TODO: Remove session access to window station
+    // (revert what security.c!AllowAccessOnSession() does).
+
+    /* Switch back to default SYSTEM user */
+    CloseHandle(Session->UserToken);
     Session->UserToken = NULL;
+    Session->LogonId = LuidNone;
+
+    Session->LogonState = STATE_LOGGED_OFF;
 
     return STATUS_SUCCESS;
 }
@@ -943,8 +1122,8 @@ ShutdownComputerWindowProc(
         }
         case WM_INITDIALOG:
         {
-            RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
-            SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+            /* Remove the Close menu item */
+            DeleteMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
             return TRUE;
         }
     }
@@ -971,63 +1150,31 @@ HandleShutdown(
     IN OUT PWLSESSION Session,
     IN DWORD wlxAction)
 {
-    PLOGOFF_SHUTDOWN_DATA LSData;
-    HANDLE hThread;
-    DWORD exitCode;
+    NTSTATUS Status;
+    UINT uMsgId;
     BOOLEAN Old;
 
-    // SwitchDesktop(Session->WinlogonDesktop);
-
-    /* If the system is rebooting, show the appropriate string */
+    /* Display the appropriate shutdown or reboot message */
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISRESTARTING);
+        uMsgId = IDS_REACTOSISRESTARTING;
     else
-        DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+        uMsgId = IDS_REACTOSISSHUTTINGDOWN;
 
-    /* Prepare data for shutdown thread */
-    LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-    if (!LSData)
-    {
-        ERR("Failed to allocate mem for thread data\n");
-        return STATUS_NO_MEMORY;
-    }
-    if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
-        LSData->Flags = EWX_POWEROFF;
-    else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
-        LSData->Flags = EWX_REBOOT;
-    else
-        LSData->Flags = EWX_SHUTDOWN;
-    LSData->Session = Session;
+    // SwitchDesktop(Session->WinlogonDesktop);
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
 
-    // FIXME: We may need to specify this flag to really force application kill
-    // (we are shutting down ReactOS, not just logging off so no hangs, etc...
-    // should be allowed).
-    // LSData->Flags |= EWX_FORCE;
-
-    /* Run shutdown thread */
-    hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-    if (!hThread)
-    {
-        ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    WaitForSingleObject(hThread, INFINITE);
-    HeapFree(GetProcessHeap(), 0, LSData);
-    if (!GetExitCodeThread(hThread, &exitCode))
-    {
-        ERR("Unable to get exit code of shutdown thread (error %lu)\n", GetLastError());
-        CloseHandle(hThread);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(hThread);
-    if (exitCode == 0)
-    {
-        ERR("Shutdown thread returned failure\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
+    /* Invoke Shutdown notifications and notify GINA */
     CallNotificationDlls(Session, ShutdownHandler);
+    Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
+
+    /* Run the shutdown thread. *IGNORE* all failures as we want to force shutting down! */
+    Status = RunLogoffShutdownThread(Session, NULL, wlxAction);
+    if (!NT_SUCCESS(Status))
+        ERR("Failed to start the Shutdown thread, Status 0x%08lx\n", Status);
+
+    /* Show again the shutdown message */
+    // SwitchDesktop(Session->WinlogonDesktop); // Re-enable if you notice the desktop may have switched to something else.
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, uMsgId);
 
     /* Destroy SAS window */
     UninitializeSAS(Session);
@@ -1047,7 +1194,10 @@ HandleShutdown(
             DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER),
                       GetDesktopWindow(), ShutdownComputerWindowProc);
         }
-        NtShutdownSystem(ShutdownNoReboot);
+        if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+            NtShutdownSystem(ShutdownPowerOff);
+        else // if (wlxAction == WLX_SAS_ACTION_SHUTDOWN)
+            NtShutdownSystem(ShutdownNoReboot);
     }
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
     return STATUS_SUCCESS;
@@ -1066,8 +1216,8 @@ DoGenericAction(
             {
                 if (!HandleLogon(Session))
                 {
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-                    CallNotificationDlls(Session, LogonHandler);
                 }
             }
             break;
@@ -1088,12 +1238,19 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
-            if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
             {
-                SwitchDesktop(Session->WinlogonDesktop);
-                Session->LogonState = STATE_LOCKED;
-                Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
-                CallNotificationDlls(Session, LockHandler);
+                if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
+                {
+                    Session->LogonState = STATE_LOCKED;
+                    SwitchDesktop(Session->WinlogonDesktop);
+                    /* We may be on the Logged-On SAS dialog, in which case
+                     * we need to close it if the lock action came via Win-L */
+                    CloseAllDialogWindows();
+                    CallNotificationDlls(Session, LockHandler);
+                    Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
+                }
             }
             break;
         case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
@@ -1101,8 +1258,16 @@ DoGenericAction(
         case WLX_SAS_ACTION_FORCE_LOGOFF: /* 0x09 */
         case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
-            if (Session->LogonState != STATE_LOGGED_OFF)
+            if ((Session->LogonState != STATE_INIT) &&
+                (Session->LogonState != STATE_LOGGED_OFF) &&
+                (Session->LogonState != STATE_LOGGED_OFF_SAS) &&
+                (Session->LogonState != STATE_SHUT_DOWN))
             {
+                ASSERT((Session->LogonState == STATE_LOGGED_ON) ||
+                       (Session->LogonState == STATE_LOGGED_ON_SAS) ||
+                       (Session->LogonState == STATE_LOCKED) ||
+                       (Session->LogonState == STATE_LOCKED_SAS));
+
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
                 if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
@@ -1114,30 +1279,38 @@ DoGenericAction(
             }
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
-                // FIXME: WlxShutdown should be done from inside HandleShutdown,
-                // after having displayed "ReactOS is shutting down" message.
-                Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
+                    Session->LogonState = STATE_LOGGED_OFF;
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                 }
             }
             else
             {
                 RemoveStatusMessage(Session);
+                Session->LogonState = STATE_LOGGED_OFF;
                 Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
             }
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            StartTaskManager(Session);
+            if ((Session->LogonState == STATE_LOGGED_ON) ||
+                (Session->LogonState == STATE_LOGGED_ON_SAS))
+            {
+                /* Start a Task-Manager instance on the application desktop.
+                 * If the user pressed Ctrl-Shift-Esc while being on the
+                 * Logged-On SAS dialog (on the Winlogon desktop), stay there. */
+                StartTaskManager(Session);
+            }
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
-            SwitchDesktop(Session->ApplicationDesktop);
-            Session->LogonState = STATE_LOGGED_ON;
-            CallNotificationDlls(Session, UnlockHandler);
+            if ((Session->LogonState == STATE_LOCKED) ||
+                (Session->LogonState == STATE_LOCKED_SAS))
+            {
+                CallNotificationDlls(Session, UnlockHandler);
+                SwitchDesktop(Session->ApplicationDesktop);
+                Session->LogonState = STATE_LOGGED_ON;
+            }
             break;
         default:
             WARN("Unknown SAS action 0x%lx\n", wlxAction);
@@ -1188,7 +1361,26 @@ DispatchSAS(
 
                 case STATE_LOGGED_ON:
                     Session->LogonState = STATE_LOGGED_ON_SAS;
+                    SwitchDesktop(Session->WinlogonDesktop);
                     wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
+                    if ((wlxAction == WLX_SAS_ACTION_NONE) ||
+                        (wlxAction == WLX_SAS_ACTION_TASKLIST))
+                    {
+                        /*
+                         * If the user canceled (WLX_SAS_ACTION_NONE) the
+                         * Logged-On SAS dialog, or clicked on the Task-Manager
+                         * button (WLX_SAS_ACTION_TASKLIST), switch back to
+                         * the application desktop and return to log-on state.
+                         * In the latter case, the Task-Manager is launched
+                         * by DoGenericAction(WLX_SAS_ACTION_TASKLIST), which
+                         * doesn't automatically do the switch back, because
+                         * the user may have also pressed on Ctrl-Shift-Esc
+                         * to start it while being on the Logged-On SAS dialog
+                         * and wanting to stay there.
+                         */
+                        SwitchDesktop(Session->ApplicationDesktop);
+                        Session->LogonState = STATE_LOGGED_ON;
+                    }
                     break;
 
                 case STATE_LOGGED_ON_SAS:
@@ -1246,17 +1438,28 @@ RegisterHotKeys(
     IN PWLSESSION Session,
     IN HWND hwndSAS)
 {
-    /* Register Ctrl+Alt+Del Hotkey */
-    if (!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
+    /* Register Ctrl+Alt+Del hotkey */
+    if (!RegisterHotKey(hwndSAS, IDHK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
     {
-        ERR("WL: Unable to register Ctrl+Alt+Del hotkey!\n");
+        ERR("WL: Unable to register Ctrl+Alt+Del hotkey\n");
         return FALSE;
     }
 
-    /* Register Ctrl+Shift+Esc (optional) */
-    Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
+    /* Register Ctrl+Shift+Esc "Task Manager" hotkey (optional) */
+    Session->TaskManHotkey = RegisterHotKey(hwndSAS, IDHK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
     if (!Session->TaskManHotkey)
-        WARN("WL: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
+        WARN("WL: Unable to register Ctrl+Shift+Esc hotkey\n");
+
+    /* Register Win+L "Lock Workstation" hotkey (optional) */
+    Session->LockWkStaHotkey = RegisterHotKey(hwndSAS, IDHK_WIN_L, MOD_WIN, 'L');
+    if (!Session->LockWkStaHotkey)
+        WARN("WL: Unable to register Win+L hotkey\n");
+
+    /* Register Win+U "Accessibility Utility" hotkey (optional) */
+    Session->UtilManHotkey = RegisterHotKey(hwndSAS, IDHK_WIN_U, MOD_WIN, 'U');
+    if (!Session->UtilManHotkey)
+        WARN("WL: Unable to register Win+U hotkey\n");
+
     return TRUE;
 }
 
@@ -1266,11 +1469,17 @@ UnregisterHotKeys(
     IN PWLSESSION Session,
     IN HWND hwndSAS)
 {
-    /* Unregister hotkeys */
-    UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
+    /* Unregister the hotkeys */
+    UnregisterHotKey(hwndSAS, IDHK_CTRL_ALT_DEL);
 
     if (Session->TaskManHotkey)
-        UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
+        UnregisterHotKey(hwndSAS, IDHK_CTRL_SHIFT_ESC);
+
+    if (Session->LockWkStaHotkey)
+        UnregisterHotKey(hwndSAS, IDHK_WIN_L);
+
+    if (Session->UtilManHotkey)
+        UnregisterHotKey(hwndSAS, IDHK_WIN_U);
 
     return TRUE;
 }
@@ -1326,9 +1535,9 @@ SASWindowProc(
     {
         case WM_HOTKEY:
         {
-            switch (lParam)
+            switch (wParam)
             {
-                case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
+                case IDHK_CTRL_ALT_DEL:
                 {
                     TRACE("SAS: CONTROL+ALT+DELETE\n");
                     if (!Session->Gina.UseCtrlAltDelete)
@@ -1336,11 +1545,22 @@ SASWindowProc(
                     PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
                     return TRUE;
                 }
-                case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
+                case IDHK_CTRL_SHIFT_ESC:
                 {
                     TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-                    if (Session->LogonState == STATE_LOGGED_ON)
-                        DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    return TRUE;
+                }
+                case IDHK_WIN_L:
+                {
+                    TRACE("SAS: WIN+L\n");
+                    PostMessageW(Session->SASWindow, WM_LOGONNOTIFY, LN_LOCK_WORKSTATION, 0);
+                    return TRUE;
+                }
+                case IDHK_WIN_U:
+                {
+                    TRACE("SAS: WIN+U\n");
+                    // PostMessageW(Session->SASWindow, WM_LOGONNOTIFY, LN_ACCESSIBILITY, 0);
                     return TRUE;
                 }
             }
@@ -1361,6 +1581,7 @@ SASWindowProc(
         {
             if (!GetSetupType())
                 UnregisterHotKeys(Session, hwndDlg);
+            PostQuitMessage(0);
             return TRUE;
         }
         case WM_SETTINGCHANGE:
@@ -1397,6 +1618,13 @@ SASWindowProc(
                     DispatchSAS(Session, WLX_SAS_TYPE_SCRNSVR_TIMEOUT);
                     break;
                 }
+#if 0
+                case LN_ACCESSIBILITY:
+                {
+                    ERR("LN_ACCESSIBILITY(lParam = %lu)\n", lParam);
+                    break;
+                }
+#endif
                 case LN_LOCK_WORKSTATION:
                 {
                     DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
@@ -1414,49 +1642,44 @@ SASWindowProc(
                      * Our caller (USERSRV) should have added the shutdown flag
                      * when setting also poweroff or reboot.
                      */
-                    if (Action & (EWX_POWEROFF | EWX_REBOOT))
+                    if ((Action & (EWX_POWEROFF | EWX_REBOOT)) && !(Action & EWX_SHUTDOWN))
                     {
-                        if ((Action & EWX_SHUTDOWN) == 0)
-                        {
-                            ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
+                        return STATUS_INVALID_PARAMETER;
+                    }
 
-                        /* Now we can locally remove it for performing checks */
+                    // INVESTIGATE: Our HandleLogoff/HandleShutdown may instead
+                    // take an EWX_* flags combination to determine what to do
+                    // more precisely.
+                    /* Map EWX_* flags to WLX_* actions and check for any unhandled flag */
+                    if (Action & EWX_POWEROFF)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                        Action &= ~(EWX_SHUTDOWN | EWX_POWEROFF);
+                    }
+                    else if (Action & EWX_REBOOT)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                        Action &= ~(EWX_SHUTDOWN | EWX_REBOOT);
+                    }
+                    else if (Action & EWX_SHUTDOWN)
+                    {
+                        wlxAction = WLX_SAS_ACTION_SHUTDOWN;
                         Action &= ~EWX_SHUTDOWN;
                     }
-
-                    /* Check parameters */
-                    if (Action & EWX_FORCE)
+                    else // EWX_LOGOFF
                     {
-                        // FIXME!
-                        ERR("FIXME: EWX_FORCE present for Winlogon, what to do?\n");
-                        Action &= ~EWX_FORCE;
-                    }
-                    switch (Action)
-                    {
-                        case EWX_LOGOFF:
+                        if (Action & EWX_FORCE)
+                            wlxAction = WLX_SAS_ACTION_FORCE_LOGOFF;
+                        else
                             wlxAction = WLX_SAS_ACTION_LOGOFF;
-                            break;
-                        case EWX_SHUTDOWN:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN;
-                            break;
-                        case EWX_REBOOT:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
-                            break;
-                        case EWX_POWEROFF:
-                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
-                            break;
-
-                        default:
-                        {
-                            ERR("Invalid ExitWindows action 0x%x\n", Action);
-                            return STATUS_INVALID_PARAMETER;
-                        }
+                        Action &= ~(EWX_LOGOFF | EWX_FORCE);
                     }
+                    if (Action)
+                        ERR("Unhandled EWX_* action flags: 0x%x\n", Action);
 
                     TRACE("In LN_LOGOFF, exit_in_progress == %s\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     /*
                      * In case a parallel shutdown request is done (while we are
@@ -1481,8 +1704,8 @@ SASWindowProc(
                 }
                 case LN_LOGOFF_CANCELED:
                 {
-                    ERR("Logoff canceled!!, before: exit_in_progress == %s, after will be false\n",
-                        ExitReactOSInProgress ? "true" : "false");
+                    ERR("Logoff canceled! Before: exit_in_progress == %s; After: FALSE\n",
+                        ExitReactOSInProgress ? "TRUE" : "FALSE");
 
                     ExitReactOSInProgress = FALSE;
                     return 1;

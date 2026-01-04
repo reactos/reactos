@@ -185,18 +185,34 @@ template<typename T>
 __forceinline
 T __crt_fast_encode_pointer(T ptr)
 {
-    union { T Ptr; uintptr_t Uint; } u = { ptr };
-    u.Uint ^= __security_cookie;
-    return u.Ptr;
+    return reinterpret_cast<T>(
+        reinterpret_cast<uintptr_t>(ptr) ^ __security_cookie);
+}
+
+// Workaround for nullptr encoding.
+// Casting nullptr_t to uinttptr_t is not allowed in C++. Using a union compiles,
+// but GCC will optimize it to a constant zero, which is not what we want.
+class encoded_nullptr_t
+{
+    void* m_ptr;
+public:
+    inline encoded_nullptr_t(void* P) : m_ptr(P) { };
+    template<typename T> operator T*() { return (T*)m_ptr; }
+};
+
+__forceinline
+encoded_nullptr_t __crt_fast_encode_pointer(decltype(nullptr) ptr)
+{
+    void* encoded_null = __crt_fast_encode_pointer((void*)ptr);
+    return encoded_nullptr_t(encoded_null);
 }
 
 template<typename T>
 __forceinline
 T __crt_fast_decode_pointer(T ptr)
 {
-    union { T Ptr; uintptr_t Uint; } u = { ptr };
-    u.Uint ^= __security_cookie;
-    return u.Ptr;
+    return reinterpret_cast<T>(
+        reinterpret_cast<uintptr_t>(ptr) ^ __security_cookie);
 }
 
 template<typename T>

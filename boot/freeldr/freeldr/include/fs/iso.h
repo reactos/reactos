@@ -89,14 +89,25 @@ typedef struct _PVD
 } PVD, *PPVD;
 #include <poppack.h>
 
+#define ISO_ATTR_HIDDEN     0x01    // CD_ATTRIBUTE_HIDDEN
+#define ISO_ATTR_DIRECTORY  0x02    // CD_ATTRIBUTE_DIRECTORY
+#define ISO_ATTR_ASSOC      0x04    // CD_ATTRIBUTE_ASSOC
+#define ISO_ATTR_MULTI      0x80    // CD_ATTRIBUTE_MULTI
 
 typedef struct _ISO_FILE_INFO
 {
+    // PISO_VOLUME_INFO Volume;
     ULONG FileStart;    // File start sector
     ULONG FileSize;     // File size
     ULONG FilePointer;  // File pointer
-    BOOLEAN Directory;
     ULONG DriveNumber;
+    ULONG FileNameLength;
+    UCHAR Attributes;
+    CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } ISO_FILE_INFO, *PISO_FILE_INFO;
+
+ULONGLONG
+IsoGetVolumeSize(
+    _In_ ULONG DeviceId);
 
 const DEVVTBL* IsoMount(ULONG DeviceId);

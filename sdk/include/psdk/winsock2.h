@@ -39,12 +39,6 @@
 #endif
 #endif
 
-#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
-#ifndef __ROS_LONG64__
-#define __ROS_LONG64__
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

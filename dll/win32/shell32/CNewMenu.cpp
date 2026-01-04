@@ -704,7 +704,7 @@ HRESULT
 WINAPI
 CNewMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    return S_OK;
+    return HandleMenuMsg2(uMsg, wParam, lParam, NULL);
 }
 
 HRESULT
@@ -734,19 +734,19 @@ CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plRes
             if (!lpdis || lpdis->CtlType != ODT_MENU)
                 break;
 
-            DWORD id = LOWORD(lpdis->itemID);
+            DWORD id = lpdis->itemID;
             HICON hIcon = NULL;
-            if (m_idCmdFirst + id == m_idCmdFolder)
+            if (id == m_idCmdFolder)
             {
                 hIcon = m_hIconFolder;
             }
-            else if (m_idCmdFirst + id == m_idCmdLink)
+            else if (id == m_idCmdLink)
             {
                 hIcon = m_hIconLink;
             }
             else
             {
-                SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id);
+                SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id - m_idCmdFirst);
                 if (pItem)
                     hIcon = pItem->hIcon;
             }

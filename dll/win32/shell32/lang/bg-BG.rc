@@ -363,24 +363,23 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
-IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+IDD_RUN_AS DIALOGEX 0, 0, 240, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Изпълняване като"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "От чия потребителска сметка искате да изпълните приложението?", -1, 10, 20, 220, 20
-    CHECKBOX "Сегашен потребител %s", 14000, 10, 45, 150, 10
-    LTEXT "Защита на компютъра и данните от неупълномощена дейност на приложенията", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "Този избор може да попречи на вирусите да повредят компютъра или данните ви, но може и да попречи на редовната работа на приложението.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Следният потребител:", 14002, 10, 100, 90, 10
-    LTEXT "Потребител:", -1, 20, 115, 60, 10
-    COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14
-    LTEXT "Парола:", -1, 20, 143, 53, 10
-    EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14
-    PUSHBUTTON "Добре", 14007, 57, 170, 60, 14
-    PUSHBUTTON "Отказ", 14008, 122, 170, 60, 14
+    ICON IDI_SHELL_SECURITY, -1, 7, 7, 21, 20
+    LTEXT "От чия потребителска сметка искате да изпълните приложението?", -1, 32, 12, 200, 16
+    AUTORADIOBUTTON "Сегашен потребител %s", IDC_RUNAS_CURRENT, 7, 35, 226, 10, WS_GROUP
+    AUTOCHECKBOX "&Protect my computer and data from unauthorized program activity\n\nThis option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", IDC_RUNAS_SAFER, 18, 50, 210, 62, WS_DISABLED | WS_TABSTOP | BS_MULTILINE | BS_TOP
+    AUTORADIOBUTTON "Следният потребител:", IDC_RUNAS_OTHER, 7, 110, 226, 10
+    LTEXT "Потребител:", -1, 18, 124, 54, 10
+    COMBOBOX IDC_RUNAS_NAME, 75, 122, 134, 40, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "...", IDC_RUNAS_BROWSE, 213, 122, 20, 14, WS_TABSTOP
+    LTEXT "Парола:", -1, 18, 142, 53, 10
+    EDITTEXT IDC_RUNAS_PWD, 75, 140, 134, 14, ES_LEFT | ES_PASSWORD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 129, 161, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Отказ", IDCANCEL, 183, 161, 50, 14, WS_TABSTOP
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -604,17 +603,18 @@ BEGIN
     DEFPUSHBUTTON "&Начало", IDOK, 53, 198, 60, 14
     PUSHBUTTON "&Затваряне", IDCANCEL, 118, 198, 60, 14
     LTEXT "&Обем:", -1, 7, 6, 169, 9
-    COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Файлова система", -1, 7, 35, 170, 9
-    COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
     LTEXT "&Размер на разпределените участъци", -1, 7, 64, 170, 9
-    COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+    COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Етикет на& тома:", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
     GROUPBOX "&Възможности за оразмеряване", 4610, 7, 121, 170, 49
     AUTOCHECKBOX "&Бързо оразмеряване", 28674, 16, 135, 155, 10
     AUTOCHECKBOX "&Използване на уплътняване", 28675, 16, 152, 155, 10
+    CONTROL "", 30000, "STATIC", SS_ICON | WS_TABSTOP | SS_CENTERIMAGE | SS_NOTIFY, 7, 198, 15, 14
 END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 244, 120
@@ -975,7 +975,10 @@ BEGIN
     IDS_PRINT_VERB "Разпечатване"
     IDS_CMD_VERB "Command Prompt here"
 
+    IDS_MULTIPLETYPES   "Multiple Types"
+    IDS_VARIOUSFOLDERS  "Various Folders"
     IDS_FILE_FOLDER "%u файла, %u папки"
+
     IDS_PRINTERS "Печатачи"
     IDS_FONTS "Шрифтове"
     IDS_INSTALLNEWFONT "Слагане на нов шрифт..."
@@ -999,6 +1002,10 @@ BEGIN
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
     IDS_SEARCH_BROWSEITEM "Обзор..."
+
+    IDS_RECYCLE_CLEANER_DISPLAYNAME "Recycle Bin"
+    IDS_RECYCLE_CLEANER_DESCRIPTION "The Recycle Bin contains files you have deleted from your computer. These files are not permanently removed until you empty the Recycle Bin."
+    IDS_RECYCLE_CLEANER_BUTTON_TEXT "&View Files"
 
     IDS_TITLE_MYCOMP "Моят компютър"
     IDS_TITLE_MYNET "Моята мрежа"
@@ -1034,6 +1041,10 @@ BEGIN
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
     IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+
+    IDS_VISEFFECT_DRAGFULL "Show window contents while dragging"
+    IDS_VISEFFECT_FONTSMOOTHING "Smooth edges of screen fonts"
+    IDS_VISEFFECT_LISTVIEWSHADOW "Use drop shadows for icon labels on the desktop"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"

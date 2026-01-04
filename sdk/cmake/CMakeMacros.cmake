@@ -563,9 +563,42 @@ function(add_importlibs _module)
 endfunction()
 
 # Some helper lists
-list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
-list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
-list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
+list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
+list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver)
+list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver kmdfdriver wdmdriver nativecui nativedll)
+
+# Signs a driver if it is kernelmodedriver or wdmdriver if the cert exists
+function(sign_driver_if_needed TARGET)
+    get_target_property(_type ${TARGET} REACTOS_MODULE_TYPE)
+    if(NOT _type)
+        message(STATUS "sign_driver_if_needed: No REACTOS_MODULE_TYPE for ${TARGET}")
+        return()
+    endif()
+    if(NOT (_type STREQUAL "kernelmodedriver" OR _type STREQUAL "wdmdriver"))
+        return()
+    endif()
+    if(NOT MSVC)
+        return()
+    endif()
+    if(NOT EXISTS "C:/ReactOSCerts/ReactOSDevCert.cer")
+        return()
+    endif()
+    # Get output file name
+    get_target_property(_output_name ${TARGET} OUTPUT_NAME)
+    if(NOT _output_name)
+        set(_output_name ${TARGET})
+    endif()
+    set(_driver_path "${CMAKE_CURRENT_BINARY_DIR}/${_output_name}.sys")
+    set(_driver_path "$<TARGET_FILE:${TARGET}>")
+    add_custom_command(TARGET ${TARGET} POST_BUILD
+        COMMAND SignTool sign /v /fd sha1 /s PrivateCertStore /n reactos.org /t http://timestamp.digicert.com "${_driver_path}"
+        COMMENT "Signing driver: ${_driver_path}")
+endfunction()
+
+# Example usage after driver target creation:
+# add_library(my_driver ...)
+# set_module_type(my_driver kernelmodedriver)
+# sign_driver_if_needed(my_driver)
 
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
@@ -623,6 +656,8 @@ function(set_module_type MODULE TYPE)
         set_entrypoint(${MODULE} DllMainCRTStartup 12)
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
         set_entrypoint(${MODULE} DriverEntry 8)
+    elseif(${TYPE} STREQUAL kmdfdriver)
+        set_entrypoint(${MODULE} FxDriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
         set_entrypoint(${MODULE} DllMain 12)
     elseif(TYPE STREQUAL kernel)
@@ -655,8 +690,11 @@ function(set_module_type MODULE TYPE)
     # Now do some stuff which is specific to each type
     if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         add_dependencies(${MODULE} bugcodes xdk)
-        if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
+        if((${TYPE} STREQUAL kernelmodedriver) OR
+           (${TYPE} STREQUAL kmdfdriver) OR
+           (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+            sign_driver_if_needed(${MODULE})
         endif()
     endif()
 
@@ -666,6 +704,12 @@ function(set_module_type MODULE TYPE)
             PROPERTIES
             ENABLE_EXPORTS TRUE
             DEFINE_SYMBOL "")
+    endif()
+
+    if(TYPE STREQUAL kmdfdriver)
+        target_include_directories(${MODULE} PUBLIC ${REACTOS_SOURCE_DIR}/sdk/include/wdf/kmdf/1.17)
+        add_importlibs(${MODULE} wdfldr)
+        target_link_libraries(${MODULE} wdfdriverentry)
     endif()
 
     if(${TYPE} STREQUAL win32ocx)

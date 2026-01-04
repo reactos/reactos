@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     This module is a port from FreeBSD 4.3-6.1 ATA driver (ata-dma.c, ata-chipset.c) by
-         Søren Schmidt, Copyright (c) 1998-2008
+         SÃ¸ren Schmidt, Copyright (c) 1998-2008
 
     Changed defaulting-to-generic-PIO/DMA policy
     Added PIO settings for VIA

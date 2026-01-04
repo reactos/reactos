@@ -56,7 +56,7 @@
 @ stdcall SdbGetBinaryTagData(ptr long)
 @ stdcall SdbGetDatabaseID(ptr ptr)
 @ stdcall SdbGetDatabaseInformation(ptr ptr)
-@ stub SdbGetDatabaseInformationByName
+@ stdcall SdbGetDatabaseInformationByName(wstr ptr)
 @ stub SdbGetDatabaseMatch
 @ stdcall SdbGetDatabaseVersion(wstr ptr ptr)
 @ stub SdbGetDllPath

@@ -165,7 +165,8 @@ BEGIN
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
     LTEXT "Unele servicii depind de alte servicii sau de module de sistem și de ordinea încărcării în grup. Dacă o componentă de sistem este oprită sau nu rulează corespunzător, serviciile dependente pot fi și ele afectate.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Acest serviciu depinde de următoarele componente", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Acest serviciu depinde de următoarele componente:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Următoarele componente depind de acest serviciu:", IDC_STATIC, 8, 140, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 

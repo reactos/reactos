@@ -29,14 +29,17 @@ Startup:
     mov byte ptr ds:[BSS_BootPartition], dh
 
     /* Setup a real mode stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, STACK16ADDR
+
+    /* Enable A20 address line */
+    call EnableA20
+
+    /* Relocate FreeLdr if necessary */
+    call RelocateFreeLdr
 
     /* Output first status */
     mov si, offset Msg_Starting
     call writestr
-
-    /* Enable A20 address line */
-    call EnableA20
 
     /* Check the CPU */
     call CheckFor64BitSupport
@@ -58,13 +61,13 @@ Msg_Unsupported:
 Msg_Starting:
     .ascii "Starting FreeLoader...", CR, LF, NUL
 
-Msg_LongModeSupported:
-    .ascii "Long mode support detected.", CR, LF, NUL
+//Msg_LongModeSupported:
+//    .ascii "Long mode support detected.", CR, LF, NUL
 
 .LongModeSupported:
-    /* Output status */
-    mov si, offset Msg_LongModeSupported
-    call writestr
+//    /* Output status */
+//    mov si, offset Msg_LongModeSupported
+//    call writestr
 
     /* Load the GDT */
     lgdt lXdtPrefix ds:[gdtptr]
@@ -94,14 +97,14 @@ Msg_LongModeSupported:
     xor ax, ax
     mov es, ax
 
-    /* Output status */
-    mov si, offset Msg_SwitchToLongMode
-    call writestr
+//    /* Output status */
+//    mov si, offset Msg_SwitchToLongMode
+//    call writestr
 
     jmp ExitToLongMode
 
-Msg_SwitchToLongMode:
-    .ascii "Switching to long mode....", CR, LF, NUL
+//Msg_SwitchToLongMode:
+//    .ascii "Switching to long mode....", CR, LF, NUL
 
 .align 8
 gdt:
@@ -361,12 +364,13 @@ CallbackTable:
     .word PnpBiosGetDeviceNode
     .word PnpBiosGetDockStationInformation
 
-    /* 16-bit stack pointer */
+    /* 16-bit stack pointer (the code must change it to the current stack pointer later) */
 stack16:
-    .word STACK16ADDR
+    .word 0
 
 
 #include "int386.inc"
+#include "relocator.inc"
 #include "helpers.inc"
 #include "pxe.inc"
 #include "pnp.inc"

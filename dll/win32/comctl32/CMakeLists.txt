@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -D_WINE
     -D__ROS_LONG64__
     -D_COMCTL32_)
@@ -8,7 +7,6 @@ add_definitions(
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 if(MSVC)
@@ -82,3 +80,4 @@ add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/${WINARCH}_microsoft.wind
 add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/${WINARCH}_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/${WINARCH}_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef.manifest DESTINATION reactos/winsxs/manifests FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/${WINARCH}_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef.manifest DESTINATION reactos/winsxs/manifests FOR all)
+set_wine_module_FIXME(comctl32) # CORE-5743: No ARRAY_SIZE macro

@@ -133,7 +133,9 @@ TestMmAllocatePagesForMdl(VOID)
                                                 NULL,
                                                 FALSE,
                                                 NormalPagePriority);
+#ifdef _M_IX86
         ok(SystemVa == NULL, "MmMapLockedPagesSpecifyCache succeeded for 2 GB\n");
+#endif
         if (SystemVa != NULL)
             MmUnmapLockedPages(SystemVa, Mdl);
         ok(MmGetMdlByteCount(Mdl) <= 2UL * 1024 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdl));
@@ -209,9 +211,13 @@ TestMmBuildMdlForNonPagedPool(VOID)
     ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
     ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) == 0, "MDL from non paged\n");
 
-    MmBuildMdlForNonPagedPool(Mdl);
-    ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
-    ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) != 0, "MDL from paged\n");
+    // This fails an assertion on Windows 8+ checked and can bugcheck Windows 10+ free.
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
+    {
+        MmBuildMdlForNonPagedPool(Mdl);
+        ok((Mdl->MdlFlags & MDL_PAGES_LOCKED) == 0, "MDL locked\n");
+        ok((Mdl->MdlFlags & MDL_SOURCE_IS_NONPAGED_POOL) != 0, "MDL from paged\n");
+    }
 
     IoFreeMdl(Mdl);
     ExFreePoolWithTag(Page, 'Test');
