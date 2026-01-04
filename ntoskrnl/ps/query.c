@@ -3243,6 +3243,46 @@ NtQueryInformationThread(
             ObDereferenceObject(Thread);
             break;
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+        case ThreadHideFromDebugger:
+        {
+            /* Set the return length */
+            Length = sizeof(BOOLEAN);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               Access,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* Protect write with SEH */
+            _SEH2_TRY
+            {
+                *(PBOOLEAN)ThreadInformation = Thread->HideFromDebugger;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+        }
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
         case ThreadBreakOnTermination:
 
             /* Set the return length */
