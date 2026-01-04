@@ -78,7 +78,8 @@ HWND      g_hTrayNotifyWnd = NULL;
 #define LAYOUTF_REMOVE_RIGHT_DEF_MENU 0x10
 
 // ImmGetOpenStatus cannot be used from different thread
-static inline BOOL IsImeOpen(HWND hwndIme) {
+static inline BOOL IsImeOpen(HWND hwndIme)
+{
     return (BOOL)SendMessage(hwndIme, WM_IME_CONTROL, IMC_GETOPENSTATUS, 0);
 }
 
