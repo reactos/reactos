@@ -84,7 +84,8 @@ static inline BOOL IsImeOpen(HWND hwndIme)
 }
 
 // ImmGetConversionStatus cannot be used from different thread
-static inline DWORD GetImeConversionMode(HWND hwndIme) {
+static inline DWORD GetImeConversionMode(HWND hwndIme)
+{
     return (DWORD)SendMessage(hwndIme, WM_IME_CONTROL, IMC_GETCONVERSIONMODE, 0);
 }
 
