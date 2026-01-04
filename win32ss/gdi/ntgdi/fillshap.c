@@ -419,6 +419,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL Ret = TRUE;
     ULONG nPoints = 0, nMaxPoints = 0, nInvalid = 0, i;
+    size_t cbCounts, cbPoints, cbTotal;
 
     if (!UnsafePoints || !UnsafeCounts ||
         Count == 0 || iFunc == 0 || iFunc > GdiPolyPolyRgn)
@@ -432,14 +433,20 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         ProbeForRead(UnsafePoints, Count * sizeof(POINT), 1);
         ProbeForRead(UnsafeCounts, Count * sizeof(ULONG), 1);
 
-        /* Count points and validate poligons */
+        /* Count points and validate polygons */
         for (i = 0; i < Count; i++)
         {
             if (UnsafeCounts[i] < 2)
             {
                 nInvalid++;
             }
-            nPoints += UnsafeCounts[i];
+
+            if (!NT_SUCCESS(RtlULongAdd(nPoints, UnsafeCounts[i], &nPoints)))
+            {
+                Status = STATUS_INTEGER_OVERFLOW;
+                break;
+            }
+
             nMaxPoints = max(nMaxPoints, UnsafeCounts[i]);
         }
     }
@@ -451,7 +458,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
 
     if (!NT_SUCCESS(Status))
     {
-        /* Windows doesn't set last error */
+        /* Windows doesn't set last error. Probe failure or integer overflow */
         return FALSE;
     }
 
@@ -469,18 +476,25 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return FALSE;
     }
 
+    /* Safely compute allocation size */
+    if (!NT_SUCCESS(RtlSizeTMult(Count, sizeof(ULONG), &cbCounts)) ||
+        !NT_SUCCESS(RtlSizeTMult(nPoints, sizeof(POINT), &cbPoints)) ||
+        !NT_SUCCESS(RtlSizeTAdd(cbCounts, cbPoints, &cbTotal)))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* Allocate one buffer for both counts and points */
-    pTemp = ExAllocatePoolWithTag(PagedPool,
-                                  Count * sizeof(ULONG) + nPoints * sizeof(POINT),
-                                  TAG_SHAPE);
+    pTemp = ExAllocatePoolWithTag(PagedPool, cbTotal, TAG_SHAPE);
     if (!pTemp)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    SafeCounts = pTemp;
-    SafePoints = (PVOID)(SafeCounts + Count);
+    SafeCounts = (PULONG)pTemp;
+    SafePoints = (PPOINT)(SafeCounts + Count);
 
     _SEH2_TRY
     {
