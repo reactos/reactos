@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MAX_POINTS (MAXULONG / sizeof(POINT))
+
 DBG_DEFAULT_CHANNEL(GdiLine);
 
 // Some code from the WINE project source (www.winehq.com)
@@ -545,7 +547,7 @@ GdiPolyDraw(
     PDC_ATTR pdcattr;
     POINT bzr[4];
     volatile PPOINT line_pts, line_pts_old, bzr_pts;
-    INT num_pts, num_bzr_pts, space, space_old, size;
+    INT num_pts, num_bzr_pts, space, space_old;
     ULONG i;
     BOOL result = FALSE;
 
@@ -630,18 +632,57 @@ GdiPolyDraw(
 
                if ((bzr_pts = GDI_Bezier( bzr, 4, &num_bzr_pts )))
                {
-                   size = num_pts + (cCount - i) + num_bzr_pts;
-                   if (space < size)
-                   {
-                      space_old = space;
-                      space = size * 2;
-                      line_pts_old = line_pts;
-                      line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
-                      if (!line_pts) goto Cleanup;
-                      RtlCopyMemory(line_pts, line_pts_old, space_old * sizeof(POINT));
-                      ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
-                      line_pts_old = NULL;
-                   }
+                    ULONG new_size;
+                    ULONG new_space;
+                    ULONG alloc_bytes;
+
+                    /* size = num_pts + (cCount - i) + num_bzr_pts */
+                    if (!NT_SUCCESS(RtlULongAdd(num_pts, (cCount - i), &new_size)) ||
+                        !NT_SUCCESS(RtlULongAdd(new_size, num_bzr_pts, &new_size)))
+                    {
+                        goto Cleanup;
+                    }
+
+                    if (space < (INT)new_size)
+                    {
+                        space_old = space;
+
+                        /* space = new_size * 2 */
+                        if (!NT_SUCCESS(RtlULongMult(new_size, 2, &new_space)))
+                        {
+                            goto Cleanup;
+                        }
+
+                        /* Optional hard cap (strongly recommended) */
+                        if (new_space > MAX_POINTS)
+                        {
+                            goto Cleanup;
+                        }
+
+                        /* alloc_bytes = new_space * sizeof(POINT) */
+                        if (!NT_SUCCESS(RtlULongMult(new_space, sizeof(POINT), &alloc_bytes)))
+                        {
+                            goto Cleanup;
+                        }
+
+                        line_pts_old = line_pts;
+                        line_pts = ExAllocatePoolWithTag(PagedPool,
+                                                        alloc_bytes,
+                                                        TAG_SHAPE);
+                        if (!line_pts)
+                        {
+                            goto Cleanup;
+                        }
+
+                        RtlCopyMemory(line_pts,
+                                    line_pts_old,
+                                    space_old * sizeof(POINT));
+
+                        ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
+                        line_pts_old = NULL;
+                        space = (INT)new_space;
+                    }
+
                    RtlCopyMemory( &line_pts[num_pts], &bzr_pts[1], (num_bzr_pts - 1) * sizeof(POINT) );
                    num_pts += num_bzr_pts - 1;
                    ExFreePoolWithTag(bzr_pts, TAG_BEZIER);
