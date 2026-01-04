@@ -2,27 +2,6 @@ HKCR
 {
     NoRemove Interface
     {
-        '{00000131-0000-0000-C000-000000000046}' = s 'IRemUnknown'
-        {
-            NumMethods = s 6
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000142-0000-0000-C000-000000000046}' = s 'IRemUnknown2'
-        {
-            NumMethods = s 7
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-    }
-    NoRemove CLSID
-    {
-        '{00000320-0000-0000-C000-000000000046}' = s 'PSFactoryBuffer'
-        {
-            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
-        }
-    }
-
-    NoRemove Interface
-    {
         '{00000100-0000-0000-C000-000000000046}' = s 'IEnumUnknown'
         {
             NumMethods = s 7
@@ -31,6 +10,31 @@ HKCR
         '{00000022-0000-0000-C000-000000000046}' = s 'ISurrogate'
         {
             NumMethods = s 5
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{00000101-0000-0000-C000-000000000046}' = s 'IEnumString'
+        {
+            NumMethods = s 7
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{0C733A30-2A1C-11CE-ADE5-00AA0044773D}' = s 'ISequentialStream'
+        {
+            NumMethods = s 5
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{0000000C-0000-0000-C000-000000000046}' = s 'IStream'
+        {
+            NumMethods = s 14
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{00000030-0000-0000-C000-000000000046}' = s 'ISynchronize'
+        {
+            NumMethods = s 6
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{72380D55-8D2B-43A3-8513-2B6EF31434E9}' = s 'IProcessInitControl'
+        {
+            NumMethods = s 4
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
         }
         '{0000000E-0000-0000-C000-000000000046}' = s 'IBindCtx'
@@ -73,24 +77,9 @@ HKCR
             NumMethods = s 4
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
         }
-        '{00000101-0000-0000-C000-000000000046}' = s 'IEnumString'
-        {
-            NumMethods = s 7
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
         '{00000140-0000-0000-C000-000000000046}' = s 'IClassActivator'
         {
             NumMethods = s 4
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0C733A30-2A1C-11CE-ADE5-00AA0044773D}' = s 'ISequentialStream'
-        {
-            NumMethods = s 5
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000000C-0000-0000-C000-000000000046}' = s 'IStream'
-        {
-            NumMethods = s 14
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
         }
         '{0000000D-0000-0000-C000-000000000046}' = s 'IEnumSTATSTG'
@@ -178,17 +167,7 @@ HKCR
             NumMethods = s 6
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
         }
-        '{00000030-0000-0000-C000-000000000046}' = s 'ISynchronize'
-        {
-            NumMethods = s 6
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
         '{00000026-0000-0000-C000-000000000046}' = s 'IUrlMon'
-        {
-            NumMethods = s 4
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{72380D55-8D2B-43A3-8513-2B6EF31434E9}' = s 'IProcessInitControl'
         {
             NumMethods = s 4
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
@@ -196,6 +175,11 @@ HKCR
         '{969DC708-5C76-11D1-8D86-0000F804B057}' = s 'IThumbnailExtractor'
         {
             NumMethods = s 5
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+        '{947990DE-CC28-11D2-A0F7-00805F858FB1}' = s 'IDummyHICONIncluder'
+        {
+            NumMethods = s 4
             ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
         }
     }
@@ -253,9 +237,9 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
-        '{00000323-0000-0000-C000-000000000046}' = s 'StdGlobalInterfaceTable'
+        '{00000327-0000-0000-C000-000000000046}' = s 'ObjrefMoniker'
         {
-            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
         '{0002E005-0000-0000-C000-000000000046}' = s 'Component Categories Manager'
         {
@@ -277,133 +261,5 @@ HKCR
     'CLSID' = s 'ClassMoniker'
     {
         CLSID = s '{0000031A-0000-0000-C000-000000000046}'
-    }
-
-    NoRemove Interface
-    {
-        '{00000114-0000-0000-C000-000000000046}' = s 'IOleWindow'
-        {
-            NumMethods = s 5
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000113-0000-0000-C000-000000000046}' = s 'IOleInPlaceObject'
-        {
-            NumMethods = s 9
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000115-0000-0000-C000-000000000046}' = s 'IOleInPlaceUIWindow'
-        {
-            NumMethods = s 9
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000116-0000-0000-C000-000000000046}' = s 'IOleInPlaceFrame'
-        {
-            NumMethods = s 15
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000117-0000-0000-C000-000000000046}' = s 'IOleInPlaceActiveObject'
-        {
-            NumMethods = s 10
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000119-0000-0000-C000-000000000046}' = s 'IOleInPlaceSite'
-        {
-            NumMethods = s 15
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000011A-0000-0000-C000-000000000046}' = s 'IParseDisplayName'
-        {
-            NumMethods = s 4
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000011B-0000-0000-C000-000000000046}' = s 'IOleContainer'
-        {
-            NumMethods = s 6
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000011C-0000-0000-C000-000000000046}' = s 'IOleItemContainer'
-        {
-            NumMethods = s 9
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000011D-0000-0000-C000-000000000046}' = s 'IOleLink'
-        {
-            NumMethods = s 14
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000118-0000-0000-C000-000000000046}' = s 'IOleClientSite'
-        {
-            NumMethods = s 9
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000011E-0000-0000-C000-000000000046}' = s 'IOleCache'
-        {
-            NumMethods = s 8
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000128-0000-0000-C000-000000000046}' = s 'IOleCache2'
-        {
-            NumMethods = s 10
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000129-0000-0000-C000-000000000046}' = s 'IOleCacheControl'
-        {
-            NumMethods = s 5
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000104-0000-0000-C000-000000000046}' = s 'IEnumOLEVERB'
-        {
-            NumMethods = s 7
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000112-0000-0000-C000-000000000046}' = s 'IOleObject'
-        {
-            NumMethods = s 24
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000012A-0000-0000-C000-000000000046}' = s 'IContinue'
-        {
-            NumMethods = s 4
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{0000010D-0000-0000-C000-000000000046}' = s 'IViewObject'
-        {
-            NumMethods = s 9
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000127-0000-0000-C000-000000000046}' = s 'IViewObject2'
-        {
-            NumMethods = s 10
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-        '{00000122-0000-0000-C000-000000000046}' = s 'IDropTarget'
-        {
-            NumMethods = s 7
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-    }
-    NoRemove CLSID
-    {
-        '{00000320-0000-0000-C000-000000000046}' = s 'PSFactoryBuffer'
-        {
-            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
-        }
-    }
-
-    NoRemove Interface
-    {
-        '{00000000-0000-0000-C000-000000000046}' = s 'IUnknown'
-        '{00000001-0000-0000-C000-000000000046}' = s 'IClassFactory'
-        {
-            NumMethods = s 5
-            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
-        }
-    }
-    NoRemove CLSID
-    {
-        '{00000320-0000-0000-C000-000000000046}' = s 'PSFactoryBuffer'
-        {
-            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
-        }
     }
 }
