@@ -1492,6 +1492,22 @@ typedef union {
     UINT32    OSPKE            : 1;
     UINT32    Reserved8        : 8;
     ///
+    /// [Bit 6] AVX512_VBMI2.
+    ///
+    UINT32    AVX512_VBMI2     : 1;
+    ///
+    /// [Bit 10] AVX512_VPCLMULQDQ.
+    ///
+    UINT32    AVX512_VPCLMULQDQ: 1;
+    ///
+    /// [Bit 11] AVX512_VNNI.
+    ///
+    UINT32    AVX512_VNNI      : 1;
+    ///
+    /// [Bit 12] AVX512_BITALG.
+    ///
+    UINT32    AVX512_BITALG    : 1;
+    ///
     /// [Bit 13] If 1, the following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE,
     /// IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
     ///
@@ -1550,6 +1566,10 @@ typedef union {
     ///
     UINT32    AVX512_4FMAPS                           : 1;
     ///
+    /// [Bit 8] AVX512_VP2INTERSECT.
+    ///
+    UINT32    AVX512_VP2INTERSECT                     : 1;
+    ///
     /// [Bit 14:4] Reserved.
     ///
     UINT32    Reserved4                               : 11;
@@ -1557,6 +1577,10 @@ typedef union {
     /// [Bit 15] Hybrid. If 1, the processor is identified as a hybrid part.
     ///
     UINT32    Hybrid                                  : 1;
+    ///
+    /// [Bit 23] AVX512_FP16.
+    ///
+    UINT32    AVX512_FP16                             : 1;
     ///
     /// [Bit 25:16] Reserved.
     ///
