@@ -1103,12 +1103,20 @@ START_TEST(sync)
     pRtlWakeAddressAll              = (void *)GetProcAddress(module, "RtlWakeAddressAll");
     pRtlWakeAddressSingle           = (void *)GetProcAddress(module, "RtlWakeAddressSingle");
 
+    printf("Running test_wait_on_address...\n");
     test_wait_on_address();
+    printf("Running test_event...\n");
     test_event();
+    printf("Running test_mutant...\n");
     test_mutant();
+    printf("Running test_semaphore...\n");
     test_semaphore();
+    printf("Running test_keyed_events...\n");
     test_keyed_events();
+    printf("Running test_resource...\n");
     test_resource();
+    printf("Running test_tid_alert...\n");
     test_tid_alert( argv );
+    printf("Running test_completion_port_scheduling...\n");
     test_completion_port_scheduling();
 }

@@ -193,7 +193,7 @@ static enum debugger_stages test_stage;
 
 static void CALLBACK apc_func( ULONG_PTR arg1, ULONG_PTR arg2, ULONG_PTR arg3 )
 {
-    ok( arg1 == 0x1234 + apc_count, "wrong arg1 %Ix\n", arg1 );
+    ok( arg1 == 0x1234 + apc_count, "wrong arg1 %Ix, apc_count = %u\n", arg1, apc_count );
     ok( arg2 == 0x5678, "wrong arg2 %Ix\n", arg2 );
     ok( arg3 == 0xdeadbeef, "wrong arg3 %Ix\n", arg3 );
     apc_count++;

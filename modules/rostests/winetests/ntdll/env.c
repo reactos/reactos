@@ -127,12 +127,12 @@ static void testQuery(void)
             ok( value.Length == strlen(test->val) * sizeof(WCHAR), "Wrong length %d for %s\n",
                 value.Length, test->var );
             ok((value.Length == strlen(test->val) * sizeof(WCHAR) && memcmp(bv, bn, value.Length) == 0) ||
-	       lstrcmpW(bv, bn) == 0, 
+	       lstrcmpW(bv, bn) == 0,
 	       "Wrong result for %s/%d\n", test->var, test->len);
             ok(bv[test->len] == '@', "Writing too far away in the buffer for %s/%d\n", test->var, test->len);
             break;
         case STATUS_BUFFER_TOO_SMALL:
-            ok( value.Length == strlen(test->val) * sizeof(WCHAR), 
+            ok( value.Length == strlen(test->val) * sizeof(WCHAR),
                 "Wrong returned length %d (too small buffer) for %s\n", value.Length, test->var );
             break;
         }
@@ -188,7 +188,7 @@ static void testExpand(void)
          * {"hello%foo%world%=oOH%eeck",   "hellototoworldIIIeeck"},
          * Interestingly enough, with a 8 WCHAR buffers, we get on 2k:
          *      helloIII
-         * so it seems like strings overflowing the buffer are written 
+         * so it seems like strings overflowing the buffer are written
          * (truncated) but the write cursor is not advanced :-/
          */
         {NULL, NULL}
@@ -215,7 +215,7 @@ static void testExpand(void)
 
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
         ok(nts == STATUS_BUFFER_TOO_SMALL, "Call failed (%lu)\n", nts);
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s: %lu\n", test->src, ul );
 
         us_dst.Length = 0;
@@ -224,9 +224,9 @@ static void testExpand(void)
 
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
         ok(nts == STATUS_SUCCESS, "Call failed (%lu)\n", nts);
-        ok(ul == us_dst.Length + sizeof(WCHAR), 
+        ok(ul == us_dst.Length + sizeof(WCHAR),
            "Wrong returned length for %s: %lu\n", test->src, ul);
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s: %lu\n", test->src, ul);
         ok(lstrcmpW(dst, rst) == 0, "Wrong result for %s: expecting %s\n",
            test->src, test->dst);
@@ -237,7 +237,7 @@ static void testExpand(void)
         dst[8] = '-';
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
         ok(nts == STATUS_BUFFER_TOO_SMALL, "Call failed (%lu)\n", nts);
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s (with buffer too small): %lu\n", test->src, ul);
         ok(dst[8] == '-', "Writing too far in buffer (got %c/%d)\n", dst[8], dst[8]);
     }
@@ -518,17 +518,23 @@ static void test_process_params(void)
         size - ((char *)params->Environment - (char *)params) );
     pRtlDestroyProcessParameters( params );
 
+    printf("test_process_params %lu\n", __LINE__);
     /* also test the actual parameters of the current process */
 
     ok( cur_params->Flags & PROCESS_PARAMS_FLAG_NORMALIZED, "current params not normalized\n" );
+    printf("test_process_params %lu\n", __LINE__);
 #ifdef __REACTOS__
     if ((GetNTVersion() < _WIN32_WINNT_VISTA) || is_reactos()) size = 0; else /* Win2003/ReactOS do not allocate this from the heap */
 #endif
     size = HeapSize( GetProcessHeap(), 0, cur_params );
+    printf("test_process_params %lu\n", __LINE__);
     ok( size != ~(SIZE_T)0, "not a heap block %p\n", cur_params );
+    printf("test_process_params %lu\n", __LINE__);
     ok( cur_params->AllocationSize == cur_params->Size,
         "wrong AllocationSize %lx/%lx\n", cur_params->AllocationSize, cur_params->Size );
+    printf("test_process_params %lu\n", __LINE__);
     ok( cur_params->Size == size, "wrong Size %lx/%Ix\n", cur_params->Size, size );
+    printf("test_process_params %lu\n", __LINE__);
 
     /* CurrentDirectory points outside the params, and DllPath may be null */
     pos = (UINT_PTR)cur_params->DllPath.Buffer;
@@ -541,19 +547,24 @@ static void test_process_params(void)
     pos = check_string( cur_params, &cur_params->ShellInfo, NULL, pos );
     pos = check_string( cur_params, &cur_params->RuntimeInfo, NULL, pos );
     /* environment may follow */
+    printf("test_process_params %lu\n", __LINE__);
     str = (WCHAR *)pos;
     if (pos - (UINT_PTR)cur_params < cur_params->Size) str += get_env_length(str);
+    printf("test_process_params %lu\n", __LINE__);
     ok( (char *)str == (char *)cur_params + cur_params->Size,
         "wrong end ptr %p/%p\n", str, (char *)cur_params + cur_params->Size );
+    printf("test_process_params %lu\n", __LINE__);
 
     /* initial environment is a separate block */
 
     ok( (char *)initial_env < (char *)cur_params || (char *)initial_env >= (char *)cur_params + size,
         "initial environment inside block %p / %p\n", cur_params, initial_env );
+    printf("test_process_params %lu\n", __LINE__);
 #ifdef __REACTOS__
     if ((GetNTVersion() < _WIN32_WINNT_VISTA) || is_reactos()) size = 0; else /* Win2003/ReactOS does not allocate this from the heap */
 #endif
     size = HeapSize( GetProcessHeap(), 0, initial_env );
+    printf("test_process_params %lu\n", __LINE__);
     ok( size != ~(SIZE_T)0, "env is not a heap block %p / %p\n", cur_params, initial_env );
     ok( cur_params->EnvironmentSize == size,
         "wrong len %Ix/%Ix\n", cur_params->EnvironmentSize, size );
@@ -753,8 +764,12 @@ START_TEST(env)
 
     testQuery();
     testExpand();
+    printf("Running test_process_params...\n");
     test_process_params();
+    printf("Running test_RtlSetCurrentEnvironment...\n");
     test_RtlSetCurrentEnvironment();
+    printf("Running test_RtlSetEnvironmentVariable...\n");
     test_RtlSetEnvironmentVariable();
+    printf("Running test_RtlExpandEnvironmentStrings...\n");
     test_RtlExpandEnvironmentStrings();
 }

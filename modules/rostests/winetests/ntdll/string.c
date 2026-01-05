@@ -1933,6 +1933,7 @@ static void test_printf_format(void)
 
     for (i = 0; i < ARRAY_SIZE(tests); ++i)
     {
+        printf("test_printf_format '%s'\n", tests[i].spec);
         strcpy(spec, tests[i].spec);
         winetest_push_context("%s", spec);
         strcat(spec,"|%s");
@@ -1973,14 +1974,20 @@ static void test_printf_format(void)
         ok(!strcmp(s, expected), "got %s, expected %s.\n", debugstr_a(s), debugstr_a(expected));
         if (tests[i].expectedw)
         {
+            printf("test_printf_format %u\n", __LINE__);
             wcscpy(expectedw, tests[i].expectedw);
+            printf("test_printf_format %u\n", __LINE__);
             wcscat(expectedw, L"|end");
+            printf("test_printf_format %u\n", __LINE__);
         }
         else
         {
+            printf("test_printf_format %u\n", __LINE__);
             for (j = 0; j < len; ++j)
                 expectedw[j] = expected[j];
+            printf("test_printf_format %u\n", __LINE__);
         }
+        printf("test_printf_format %u\n", __LINE__);
         expectedw[len] = 0;
         ok(!wcscmp(ws, expectedw), "got %s, expected %s.\n", debugstr_w(ws), debugstr_w(expectedw));
         winetest_pop_context();
@@ -2259,13 +2266,22 @@ START_TEST(string)
     test__snprintf_s();
     test__snwprintf();
     test__snwprintf_s();
+    printf("Running test_printf_format...\n");
     test_printf_format();
+    printf("Running test_tolower...\n");
     test_tolower();
+    printf("Running test_toupper...\n");
     test_toupper();
+    printf("Running test__strnicmp...\n");
     test__strnicmp();
+    printf("Running test_wcsicmp...\n");
     test_wcsicmp();
+    printf("Running test_sscanf...\n");
     test_sscanf();
+    printf("Running test_wctype...\n");
     test_wctype();
+    printf("Running test_ctype...\n");
     test_ctype();
+    printf("Running test_memchr...\n");
     test_memchr();
 }

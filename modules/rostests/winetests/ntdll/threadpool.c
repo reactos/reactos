@@ -600,6 +600,7 @@ static void test_tp_simple(void)
 
     semaphore = CreateSemaphoreA(NULL, 0, 1, NULL);
     ok(semaphore != NULL, "CreateSemaphoreA failed %lu\n", GetLastError());
+    printf("test_tp_simple %lu\n", __LINE__);
 
     /* post the callback using the default threadpool */
     memset(&environment, 0, sizeof(environment));
@@ -610,12 +611,14 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* allocate new threadpool */
     pool = NULL;
     status = pTpAllocPool(&pool, NULL);
     ok(!status, "TpAllocPool failed with status %lx\n", status);
     ok(pool != NULL, "expected pool != NULL\n");
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* post the callback using the new threadpool */
     memset(&environment, 0, sizeof(environment));
     environment.Version = 1;
@@ -625,6 +628,7 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test with environment version 3 */
 #if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_WIN7
     memset(&environment3, 0, sizeof(environment3));
@@ -632,6 +636,7 @@ static void test_tp_simple(void)
     environment3.Pool = pool;
     environment3.Size = sizeof(environment3);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     for (i = 0; i < 3; ++i)
     {
         environment3.CallbackPriority = TP_CALLBACK_PRIORITY_HIGH + i;
@@ -641,12 +646,14 @@ static void test_tp_simple(void)
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
 
+    printf("test_tp_simple %lu\n", __LINE__);
     environment3.CallbackPriority = 10;
     status = pTpSimpleTryPost(simple_cb, semaphore, (TP_CALLBACK_ENVIRON *)&environment3);
     ok(status == STATUS_INVALID_PARAMETER || broken(!status) /* Vista does not support priorities */,
             "TpSimpleTryPost failed with status %lx\n", status);
 #endif
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test with invalid version number */
     memset(&environment, 0, sizeof(environment));
     environment.Version = 9999;
@@ -661,12 +668,14 @@ static void test_tp_simple(void)
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* allocate a cleanup group for synchronization */
     group = NULL;
     status = pTpAllocCleanupGroup(&group);
     ok(!status, "TpAllocCleanupGroup failed with status %lx\n", status);
     ok(group != NULL, "expected pool != NULL\n");
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* use cleanup group to wait for a simple callback */
     userdata = 0;
     memset(&environment, 0, sizeof(environment));
@@ -678,6 +687,7 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, FALSE, NULL);
     ok(userdata == 1, "expected userdata = 1, got %lu\n", userdata);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test cancellation of pending simple callbacks */
     userdata = 0;
     pTpSetPoolMaxThreads(pool, 10);
@@ -693,22 +703,26 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, TRUE, NULL);
     ok(userdata < 100, "expected userdata < 100, got %lu\n", userdata);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test querying and setting the stack size */
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == nt->OptionalHeader.SizeOfStackReserve, "expected default StackReserve, got %Ix\n", stack_info.StackReserve);
     ok(stack_info.StackCommit == nt->OptionalHeader.SizeOfStackCommit, "expected default StackCommit, got %Ix\n", stack_info.StackCommit);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* threadpool does not validate the stack size values */
     stack_info.StackReserve = stack_info.StackCommit = 1;
     status = pTpSetPoolStackInformation(pool, &stack_info);
     ok(!status, "TpSetPoolStackInformation failed: %lx\n", status);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == 1, "expected 1 byte StackReserve, got %ld\n", (ULONG)stack_info.StackReserve);
     ok(stack_info.StackCommit == 1, "expected 1 byte StackCommit, got %ld\n", (ULONG)stack_info.StackCommit);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* cleanup */
     pTpReleaseCleanupGroup(group);
     pTpReleasePool(pool);
@@ -2393,23 +2407,38 @@ static void test_kernel32_tp_io(void)
 
 START_TEST(threadpool)
 {
+    printf("Running test_RtlQueueWorkItem...\n");
     test_RtlQueueWorkItem();
+    printf("Running test_RtlRegisterWait...\n");
     test_RtlRegisterWait();
 
     if (!init_threadpool())
         return;
 
+    printf("Running test_tp_simple...\n");
     test_tp_simple();
+    printf("Running test_tp_work...\n");
     test_tp_work();
+    printf("Running test_tp_work_scheduler...\n");
     test_tp_work_scheduler();
+    printf("Running test_tp_group_wait...\n");
     test_tp_group_wait();
+    printf("Running test_tp_group_cancel...\n");
     test_tp_group_cancel();
+    printf("Running test_tp_instance...\n");
     test_tp_instance();
+    printf("Running test_tp_disassociate...\n");
     test_tp_disassociate();
+    printf("Running test_tp_timer...\n");
     test_tp_timer();
+    printf("Running test_tp_window_length...\n");
     test_tp_window_length();
+    printf("Running test_tp_wait...\n");
     test_tp_wait();
+    printf("Running test_tp_multi_wait...\n");
     test_tp_multi_wait();
+    printf("Running test_tp_io...\n");
     test_tp_io();
+    printf("Running test_kernel32_tp_io...\n");
     test_kernel32_tp_io();
 }
