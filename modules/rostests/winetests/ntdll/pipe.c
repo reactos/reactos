@@ -2969,6 +2969,13 @@ static void subtest_pipe_name(const struct pipe_name_test *pnt)
     UNICODE_STRING name;
     NTSTATUS status;
 
+#ifdef __REACTOS__
+    if ((GetNTVersion() < _WIN32_WINNT_VISTA) && (wcscmp(pnt->name, L"\\Device\\NamedPipe\\\\") == 0))
+    {
+        win_skip("Skipping subtest_pipe_name for '%ws' on Windows 2003\n", pnt->name);
+        return;
+    }
+#endif
     pRtlInitUnicodeString(&name, pnt->name);
     InitializeObjectAttributes(&attr, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
     timeout.QuadPart = -100000000;
@@ -3124,6 +3131,9 @@ static void test_async_cancel_on_handle_close(void)
             ok(io.Status == 0xcccccccc, "got %#lx.\n", io.Status);
 
             if (other_process && tests[i].apc_context && !tests[i].event)
+#ifdef __REACTOS__
+                todo_if((GetNTVersion() < _WIN32_WINNT_VISTA) && !tests[i].event && !tests[i].apc && tests[i].apc_context)
+#endif
                 test_queued_completion(port, &io, STATUS_CANCELLED, 0);
             else
                 test_no_queued_completion(port);
@@ -3226,6 +3236,11 @@ START_TEST(pipe)
     test_volume_info();
     test_file_info();
     test_security_info();
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        win_skip("Skipping empty name pipe tests on Windows 2003.\n");
+    else
+#endif
     test_empty_name();
     test_pipe_names();
     test_async_cancel_on_handle_close();
