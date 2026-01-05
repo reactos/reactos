@@ -412,6 +412,13 @@ static void test_query_cpu(void)
 
     len = 0xdeadbeef;
     status = pNtQuerySystemInformation( SystemProcessorBrandString, buffer, sizeof(buffer), &len );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        ok(status == STATUS_INVALID_INFO_CLASS, "Unexpected status 0x%lx\n", status );
+    }
+    else
+#endif
     if (status != STATUS_NOT_SUPPORTED)
     {
         ok( !status, "SystemProcessorBrandString failed %lx\n", status );
@@ -638,6 +645,9 @@ static void test_query_process( BOOL extended )
             {
                 todo_wine ok( !!ti->StackBase, "Got NULL StackBase.\n" );
                 todo_wine ok( !!ti->StackLimit, "Got NULL StackLimit.\n" );
+#ifdef __REACTOS__
+                if ((GetNTVersion() >= _WIN32_WINNT_VISTA) && !is_reactos()) // Broken on Win 2003
+#endif
                 ok( !!ti->Win32StartAddress, "Got NULL Win32StartAddress.\n" );
 
                 cid.UniqueProcess = 0;
@@ -654,6 +664,10 @@ static void test_query_process( BOOL extended )
                     expected_address = tbi.TebBaseAddress;
                     if (is_wow64 && is_process_wow64)
                         expected_address = (BYTE *)expected_address - 0x2000;
+#ifdef __REACTOS__
+                    if ((GetNTVersion() < _WIN32_WINNT_VISTA) && !is_reactos()) // Broken on Win 2003
+                        expected_address = NULL;
+#endif
                     if (!is_wow64 && !is_process_wow64 && !tbi.TebBaseAddress)
                         win_skip( "Could not get TebBaseAddress, thread %lu.\n", j );
                     else
@@ -682,6 +696,14 @@ static void test_query_process( BOOL extended )
 
     HeapFree( GetProcessHeap(), 0, spi_buf);
 
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        win_skip("Skipping ClientId tests on pre-NT6.\n");
+    }
+    else
+    {
+#endif
     for (i = 1; i < 4; ++i)
     {
         InitializeObjectAttributes( &attr, NULL, 0, NULL, NULL );
@@ -719,6 +741,9 @@ static void test_query_process( BOOL extended )
 
         NtClose( handle );
     }
+#ifdef __REACTOS__
+    }
+#endif
     winetest_pop_context();
 }
 
@@ -3846,7 +3871,7 @@ static void test_system_debug_control(void)
         }
         else
         {
-            ok( status == STATUS_DEBUGGER_INACTIVE || status == STATUS_ACCESS_DENIED || status == STATUS_INFO_LENGTH_MISMATCH,
+            ok( status == STATUS_DEBUGGER_INACTIVE || status == STATUS_ACCESS_DENIED || status == STATUS_INFO_LENGTH_MISMATCH || broken(/* __REACTOS__ Win 2003: */ status == STATUS_NOT_IMPLEMENTED),
                 "class %d, got %#lx.\n", class, status );
         }
     }

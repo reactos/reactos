@@ -557,6 +557,21 @@ static void test_RtlDosPathNameToNtPathName_U(void)
         {L"\\??",           L"\\??\\C:\\??",                 7},
         {L"\\??\\",         L"\\??\\C:\\??\\",              -1},
 
+#ifdef __REACTOS__
+        {L"\\??\\/",        L"\\??\\/",                      4, L"\\??\\C:\\??\\" /* Windows 2003 */ },
+        {L"\\??\\foo",      L"\\??\\foo",                    4, L"\\??\\C:\\??\\foo" /* Windows 2003 */ },
+        {L"\\??\\foo/",     L"\\??\\foo/",                   4, L"\\??\\C:\\??\\foo\\" /* Windows 2003 */ },
+        {L"\\??\\foo/bar",  L"\\??\\foo/bar",                4, L"\\??\\C:\\??\\foo\\bar" /* Windows 2003 */ },
+        {L"\\??\\foo/.",    L"\\??\\foo/.",                  4, L"\\??\\C:\\??\\foo" /* Windows 2003 */ },
+        {L"\\??\\foo/..",   L"\\??\\foo/..",                 4, L"\\??\\C:\\??" /* Windows 2003 */ },
+        {L"\\??\\\\",       L"\\??\\\\",                    -1, L"\\??\\C:\\??\\" /* Windows 2003 */ },
+        {L"\\??\\\\\\",     L"\\??\\\\\\",                  -1, L"\\??\\C:\\??\\" /* Windows 2003 */ },
+        {L"\\??\\foo\\",    L"\\??\\foo\\",                 -1, L"\\??\\C:\\??\\foo\\" /* Windows 2003 */ },
+        {L"\\??\\foo\\bar", L"\\??\\foo\\bar",               8, L"\\??\\C:\\??\\foo\\bar" /* Windows 2003 */ },
+        {L"\\??\\foo\\.",   L"\\??\\foo\\.",                 8, L"\\??\\C:\\??\\foo" /* Windows 2003 */ },
+        {L"\\??\\foo\\..",  L"\\??\\foo\\..",                8, L"\\??\\C:\\??" /* Windows 2003 */ },
+        {L"\\??\\foo. . ",  L"\\??\\foo. . ",                4, L"\\??\\C:\\??\\foo" /* Windows 2003 */ },
+#else
         {L"\\??\\/",        L"\\??\\/",                      4},
         {L"\\??\\foo",      L"\\??\\foo",                    4},
         {L"\\??\\foo/",     L"\\??\\foo/",                   4},
@@ -570,6 +585,7 @@ static void test_RtlDosPathNameToNtPathName_U(void)
         {L"\\??\\foo\\.",   L"\\??\\foo\\.",                 8},
         {L"\\??\\foo\\..",  L"\\??\\foo\\..",                8},
         {L"\\??\\foo. . ",  L"\\??\\foo. . ",                4},
+#endif
 
         {L"CONIN$",         L"\\??\\CONIN$",                -1, L"\\??\\C:\\windows\\CONIN$"   /* win7 */ },
         {L"CONOUT$",        L"\\??\\CONOUT$",               -1, L"\\??\\C:\\windows\\CONOUT$"  /* win7 */ },
@@ -593,6 +609,11 @@ static void test_RtlDosPathNameToNtPathName_U(void)
         if (pRtlDosPathNameToNtPathName_U_WithStatus)
         {
             status = pRtlDosPathNameToNtPathName_U_WithStatus(error_paths[i], &nameW, &file_part, NULL);
+#ifdef __REACTOS__
+            if (GetNTVersion() < _WIN32_WINNT_VISTA)
+                ok(status == STATUS_OBJECT_PATH_NOT_FOUND, "Got status %#lx.\n", status);
+            else
+#endif
             ok(status == STATUS_OBJECT_NAME_INVALID, "Got status %#lx.\n", status);
         }
 

@@ -428,7 +428,7 @@ static void test_process_params(void)
     ok( size != ~(SIZE_T)0, "not a heap block %p\n", params );
     ok( params->AllocationSize == params->Size,
         "wrong AllocationSize %lx/%lx\n", params->AllocationSize, params->Size );
-    ok( params->Size < size, "wrong Size %lx/%Ix\n", params->Size, size );
+    ok( params->Size < size || /* __REACTOS__ Win 2003: */ broken(params->Size == size), "wrong Size %lx/%Ix\n", params->Size, size);
     ok( params->Flags == 0, "wrong Flags %lu\n", params->Flags );
     ok( params->DebugFlags == 0, "wrong Flags %lu\n", params->DebugFlags );
     ok( params->ConsoleHandle == 0, "wrong ConsoleHandle %p\n", params->ConsoleHandle );
@@ -465,12 +465,12 @@ static void test_process_params(void)
     ok( pos == params->Size || pos + 4 == params->Size,
         "wrong pos %Ix/%lx\n", pos, params->Size );
     pos = params->Size;
-    ok( (char *)params->Environment - (char *)params == (UINT_PTR)pos,
+    ok( (char *)params->Environment - (char *)params == (UINT_PTR)pos  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA),
         "wrong env %Ix/%Ix\n", (UINT_PTR)((char *)params->Environment - (char *)params), pos);
     pos += get_env_length(params->Environment) * sizeof(WCHAR);
     ok( align(pos, sizeof(void *)) == size ||
-        broken( align(pos, 4) == size ), "wrong size %Ix/%Ix\n", pos, size );
-    ok( params->EnvironmentSize == size - ((char *)params->Environment - (char *)params),
+        broken( align(pos, 4) == size )  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), "wrong size %Ix/%Ix\n", pos, size );
+    ok( params->EnvironmentSize == size - ((char *)params->Environment - (char *)params)  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA),
         "wrong len %Ix/%Ix\n", params->EnvironmentSize,
         size - ((char *)params->Environment - (char *)params) );
     pRtlDestroyProcessParameters( params );
@@ -482,7 +482,7 @@ static void test_process_params(void)
     ok( size != ~(SIZE_T)0, "not a heap block %p\n", params );
     ok( params->AllocationSize == params->Size,
         "wrong AllocationSize %lx/%lx\n", params->AllocationSize, params->Size );
-    ok( params->Size < size, "wrong Size %lx/%Ix\n", params->Size, size );
+    ok( params->Size < size  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), "wrong Size %lx/%Ix\n", params->Size, size );
     pos = (UINT_PTR)params->CurrentDirectory.DosPath.Buffer;
 
     if (params->CurrentDirectory.DosPath.Length == dummy_dir.Length + sizeof(WCHAR))
@@ -503,12 +503,12 @@ static void test_process_params(void)
     ok( pos == params->Size || pos + 4 == params->Size,
         "wrong pos %Ix/%lx\n", pos, params->Size );
     pos = params->Size;
-    ok( (char *)params->Environment - (char *)params == pos,
+    ok( (char *)params->Environment - (char *)params == pos || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA),
         "wrong env %Ix/%Ix\n", (UINT_PTR)((char *)params->Environment - (char *)params), pos);
     pos += get_env_length(params->Environment) * sizeof(WCHAR);
     ok( align(pos, sizeof(void *)) == size ||
-        broken( align(pos, 4) == size ), "wrong size %Ix/%Ix\n", pos, size );
-    ok( params->EnvironmentSize == size - ((char *)params->Environment - (char *)params),
+        broken( align(pos, 4) == size  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA) ), "wrong size %Ix/%Ix\n", pos, size );
+    ok( params->EnvironmentSize == size - ((char *)params->Environment - (char *)params)  || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA),
         "wrong len %Ix/%Ix\n", params->EnvironmentSize,
         size - ((char *)params->Environment - (char *)params) );
     pRtlDestroyProcessParameters( params );
