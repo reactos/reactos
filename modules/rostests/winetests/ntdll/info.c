@@ -638,6 +638,9 @@ static void test_query_process( BOOL extended )
             {
                 todo_wine ok( !!ti->StackBase, "Got NULL StackBase.\n" );
                 todo_wine ok( !!ti->StackLimit, "Got NULL StackLimit.\n" );
+#ifdef __REACTOS__
+                if ((GetNTVersion() >= _WIN32_WINNT_VISTA) && !is_reactos()) // Broken on Win 2003
+#endif
                 ok( !!ti->Win32StartAddress, "Got NULL Win32StartAddress.\n" );
 
                 cid.UniqueProcess = 0;
@@ -654,6 +657,10 @@ static void test_query_process( BOOL extended )
                     expected_address = tbi.TebBaseAddress;
                     if (is_wow64 && is_process_wow64)
                         expected_address = (BYTE *)expected_address - 0x2000;
+#ifdef __REACTOS__
+                    if ((GetNTVersion() < _WIN32_WINNT_VISTA) && !is_reactos()) // Broken on Win 2003
+                        expected_address = NULL;
+#endif
                     if (!is_wow64 && !is_process_wow64 && !tbi.TebBaseAddress)
                         win_skip( "Could not get TebBaseAddress, thread %lu.\n", j );
                     else

@@ -3412,6 +3412,14 @@ static void test_zero_access(void)
     HANDLE h1, h2;
     DWORD err;
 
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        skip("Zero access tests don't work on Windows 2003\n");
+        return;
+    }
+#endif
+
     size.QuadPart = 4096;
     timeout.QuadPart = -10000;
     swprintf( name, ARRAY_SIZE(name), L"\\Sessions\\%u\\BaseNamedObjects\\test_object", NtCurrentTeb()->Peb->SessionId );
@@ -3918,6 +3926,11 @@ START_TEST(om)
     pNtCompareObjects       =  (void *)GetProcAddress(hntdll, "NtCompareObjects");
     pNtOpenThread           =  (void *)GetProcAddress(hntdll, "NtOpenThread");
 
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        win_skip("test_null_in_object_name() doesn't work on Windows 2003\n");
+    else
+#endif
     test_null_in_object_name();
     test_case_sensitive();
     test_namespace_pipe();

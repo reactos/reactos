@@ -3226,6 +3226,11 @@ START_TEST(pipe)
     test_volume_info();
     test_file_info();
     test_security_info();
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        win_skip("Skipping empty name pipe tests on Windows 2003.\n");
+    else
+#endif
     test_empty_name();
     test_pipe_names();
     test_async_cancel_on_handle_close();
