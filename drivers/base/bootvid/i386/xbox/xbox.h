@@ -7,44 +7,17 @@
  *              Copyright 2020 Stanislav Motylkov <x86corez@gmail.com>
  */
 
-#ifndef _BOOTVID_XBOX_H_
-#define _BOOTVID_XBOX_H_
-
 #pragma once
-
-#define BB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
-#define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
-VOID
-PrepareForSetPixel(VOID);
+#define PrepareForSetPixel()
 
 VOID
 SetPixel(
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ UCHAR Color);
-
-VOID
-PreserveRow(
-    _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
-    _In_ BOOLEAN Restore);
-
-VOID
-DoScroll(
-    _In_ ULONG Scroll);
-
-VOID
-DisplayCharacter(
-    _In_ CHAR Character,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG TextColor,
-    _In_ ULONG BackColor);
-
-#endif /* _BOOTVID_XBOX_H_ */

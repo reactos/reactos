@@ -521,7 +521,8 @@ PrintVolume(
                  (VolumeEntry->pszLabel) ? VolumeEntry->pszLabel : L"",
                  (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
                  pszVolumeType,
-                 VolumeSize, pszSizeUnit);
+                 VolumeSize, pszSizeUnit,
+                 L"", L"");
 }
 
 

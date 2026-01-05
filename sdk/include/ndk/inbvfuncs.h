@@ -75,7 +75,7 @@ InbvIsBootDriverInstalled(
 BOOLEAN
 NTAPI
 InbvDisplayString(
-    _In_ PCHAR String
+    _In_ PCSTR String
 );
 
 BOOLEAN

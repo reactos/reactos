@@ -363,7 +363,7 @@ IntSetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_ HKL hKL,
+    _In_opt_ HKL hKL,
     _In_ DWORD dwAction)
 {
     PIMEHOTKEY pNode;
@@ -435,7 +435,7 @@ NtUserGetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _Out_ PUINT lpuModifiers,
     _Out_ PUINT lpuVirtualKey,
-    _Out_ LPHKL lphKL)
+    _Out_opt_ LPHKL lphKL)
 {
     PIMEHOTKEY pNode = NULL;
 
@@ -484,7 +484,7 @@ NtUserSetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_ HKL hKL,
+    _In_opt_ HKL hKL,
     _In_ DWORD dwAction)
 {
     BOOL ret;
