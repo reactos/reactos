@@ -4331,8 +4331,19 @@ static void test_file_completion_information(void)
 
         info.Flags = flag;
         status = pNtSetInformationFile(server, &io, &info, sizeof(info), FileIoCompletionNotificationInformation);
+#ifdef __REACTOS__
+        if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        {
+            ok(status == STATUS_ACCESS_DENIED, "Got unexpected status %#lx.\n", status);
+        }
+        else
+        {
+#endif
         ok(status == STATUS_SUCCESS, "Got unexpected status %#lx.\n", status);
         test_completion_flags(server, flag);
+#ifdef __REACTOS__
+        }
+#endif
 
         fci.CompletionPort = completion;
         fci.CompletionKey = CKEY_FIRST;
@@ -4340,7 +4351,11 @@ static void test_file_completion_information(void)
         status = pNtSetInformationFile(server, &io, &fci, sizeof(fci), FileCompletionInformation);
         ok(status == STATUS_SUCCESS, "Got unexpected status %#lx.\n", status);
         ok(io.Status == STATUS_SUCCESS, "Got unexpected iosb.Status %#lx.\n", io.Status);
+#ifdef __REACTOS__
+        if ((flag == FILE_SKIP_SET_EVENT_ON_HANDLE) && (GetNTVersion() >= _WIN32_WINNT_VISTA))
+#else
         if (flag == FILE_SKIP_SET_EVENT_ON_HANDLE)
+#endif
             ok(!is_signaled(server), "Expected not signaled.\n");
         else
             ok(is_signaled(server), "Expected signaled.\n");
