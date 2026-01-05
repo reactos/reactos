@@ -881,7 +881,7 @@ __INTRIN_INLINE_SSE long long _mm_cvtss_si64(__m128 __a)
 // _mm_cvt_ps2pi
 __INTRIN_INLINE_SSE __m64 _mm_cvtps_pi32(__m128 __a)
 {
-#if __has_builtin(__builtin_ia32_cvtps2pi) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_cvtps2pi((__v4sf)__a);
 #else
     return __trunc64(__builtin_ia32_cvtps2dq((__v4sf)__zeroupper64(__a)));
@@ -904,7 +904,7 @@ __INTRIN_INLINE_SSE long long _mm_cvttss_si64(__m128 __a)
 // _mm_cvtt_ps2pi
 __INTRIN_INLINE_SSE __m64 _mm_cvttps_pi32(__m128 __a)
 {
-#if __has_builtin(__builtin_ia32_cvttps2pi) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_cvttps2pi((__v4sf)__a);
 #else
     return __trunc64(__builtin_ia32_cvttps2dq((__v4sf)__zeroupper64(__a)));
@@ -929,7 +929,7 @@ __INTRIN_INLINE_SSE __m128 _mm_cvtsi64_ss(__m128 __a, long long __b)
 // _mm_cvt_pi2ps
 __INTRIN_INLINE_SSE __m128 _mm_cvtpi32_ps(__m128 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_cvtpi2ps) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return __builtin_ia32_cvtpi2ps((__v4sf)__a, (__v2si)__b);
 #else
     return (__m128)__builtin_shufflevector(
@@ -1143,7 +1143,7 @@ __INTRIN_INLINE_SSE void _mm_storer_ps(float *__p, __m128 __a)
 __INTRIN_INLINE_SSE void _mm_stream_pi(__m64 *__p, __m64 __a)
 {
 #ifdef __clang__
-#if __has_builtin(__builtin_ia32_movntq) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     __builtin_ia32_movntq((__v1di*)__p, __a);
 #else
     __builtin_nontemporal_store(__a, (__m64 *)__p);
@@ -1193,7 +1193,7 @@ __INTRIN_INLINE_SSE __m64 _mm_insert_pi16 (__m64 const __a, int const __d, int c
 // _m_pmaxsw
 __INTRIN_INLINE_SSE __m64 _mm_max_pi16(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pmaxsw) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pmaxsw((__v4hi)__a, (__v4hi)__b);
 #else
     return (__m64)__builtin_elementwise_max((__v4hi)__a, (__v4hi)__b);
@@ -1203,7 +1203,7 @@ __INTRIN_INLINE_SSE __m64 _mm_max_pi16(__m64 __a, __m64 __b)
 // _m_pmaxub
 __INTRIN_INLINE_SSE __m64 _mm_max_pu8(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pmaxub) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pmaxub((__v8qi)__a, (__v8qi)__b);
 #else
     return (__m64)__builtin_elementwise_max((__v8qu)__a, (__v8qu)__b);
@@ -1213,7 +1213,7 @@ __INTRIN_INLINE_SSE __m64 _mm_max_pu8(__m64 __a, __m64 __b)
 // _m_pminsw
 __INTRIN_INLINE_SSE __m64 _mm_min_pi16(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pminsw) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pminsw((__v4hi)__a, (__v4hi)__b);
 #else
     return (__m64)__builtin_elementwise_min((__v4hi)__a, (__v4hi)__b);
@@ -1223,7 +1223,7 @@ __INTRIN_INLINE_SSE __m64 _mm_min_pi16(__m64 __a, __m64 __b)
 // _m_pminub
 __INTRIN_INLINE_SSE __m64 _mm_min_pu8(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pminub) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pminub((__v8qi)__a, (__v8qi)__b);
 #else
     return (__m64)__builtin_elementwise_min((__v8qu)__a, (__v8qu)__b);
@@ -1233,7 +1233,7 @@ __INTRIN_INLINE_SSE __m64 _mm_min_pu8(__m64 __a, __m64 __b)
 // _m_pmovmskb
 __INTRIN_INLINE_SSE int _mm_movemask_pi8(__m64 __a)
 {
-#if __has_builtin(__builtin_ia32_pmovmskb) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return __builtin_ia32_pmovmskb((__v8qi)__a);
 #else
     return __builtin_ia32_pmovmskb128((__v16qi)__zext128(__a));
@@ -1243,7 +1243,7 @@ __INTRIN_INLINE_SSE int _mm_movemask_pi8(__m64 __a)
 // _m_pmulhuw
 __INTRIN_INLINE_SSE __m64 _mm_mulhi_pu16(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pmulhuw) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pmulhuw((__v4hi)__a, (__v4hi)__b);
 #else
     return __trunc64(__builtin_ia32_pmulhuw128((__v8hu)__zext128(__a),
@@ -1265,7 +1265,7 @@ __INTRIN_INLINE_MMX __m64 _mm_shuffle_pi16 (__m64 __a, int const __n)
 // _m_maskmovq
 __INTRIN_INLINE_SSE void _mm_maskmove_si64(__m64 __d, __m64 __n, char *__p)
 {
-#if __has_builtin(__builtin_ia32_maskmovq) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     __builtin_ia32_maskmovq((__v8qi)__d, (__v8qi)__n, __p);
 #else
   __m128i __d128  = __anyext128(__d);
@@ -1285,7 +1285,7 @@ __INTRIN_INLINE_SSE void _mm_maskmove_si64(__m64 __d, __m64 __n, char *__p)
 // _m_pavgb
 __INTRIN_INLINE_SSE __m64 _mm_avg_pu8(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pavgb) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pavgb((__v8qi)__a, (__v8qi)__b);
 #else
     return __trunc64(__builtin_ia32_pavgb128((__v16qu)__zext128(__a),
@@ -1296,7 +1296,7 @@ __INTRIN_INLINE_SSE __m64 _mm_avg_pu8(__m64 __a, __m64 __b)
 // _m_pavgw
 __INTRIN_INLINE_SSE __m64 _mm_avg_pu16(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_pavgw) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pavgw((__v4hi)__a, (__v4hi)__b);
 #else
     return __trunc64(__builtin_ia32_pavgw128((__v8hu)__zext128(__a),
@@ -1307,7 +1307,7 @@ __INTRIN_INLINE_SSE __m64 _mm_avg_pu16(__m64 __a, __m64 __b)
 // _m_psadbw
 __INTRIN_INLINE_SSE __m64 _mm_sad_pu8(__m64 __a, __m64 __b)
 {
-#if __has_builtin(__builtin_ia32_psadbw) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_psadbw((__v8qi)__a, (__v8qi)__b);
 #else
     return __trunc64(__builtin_ia32_psadbw128((__v16qi)__zext128(__a),

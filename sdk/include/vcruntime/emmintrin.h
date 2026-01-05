@@ -915,7 +915,7 @@ __INTRIN_INLINE_SSE2 int _mm_cvttsd_si32(__m128d a)
 
 __INTRIN_INLINE_MMXSSE2 __m64 _mm_cvtpd_pi32(__m128d a)
 {
-#if __has_builtin(__builtin_ia32_cvtpd2pi) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_cvtpd2pi((__v2df)a);
 #else
     return __trunc64(__builtin_ia32_cvtpd2dq((__v2df)a));
@@ -924,7 +924,7 @@ __INTRIN_INLINE_MMXSSE2 __m64 _mm_cvtpd_pi32(__m128d a)
 
 __INTRIN_INLINE_MMXSSE2 __m64 _mm_cvttpd_pi32(__m128d a)
 {
-#if __has_builtin(__builtin_ia32_cvttpd2pi) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_cvttpd2pi((__v2df)a);
 #else
     return __trunc64(__builtin_ia32_cvttpd2dq((__v2df)a));
@@ -933,7 +933,7 @@ __INTRIN_INLINE_MMXSSE2 __m64 _mm_cvttpd_pi32(__m128d a)
 
 __INTRIN_INLINE_MMXSSE2 __m128d _mm_cvtpi32_pd(__m64 a)
 {
-#if __has_builtin(__builtin_ia32_cvtpi2pd) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return __builtin_ia32_cvtpi2pd((__v2si)a);
 #else
     return (__m128d)__builtin_convertvector((__v2si)a, __v2df);
@@ -1153,7 +1153,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_add_epi32(__m128i a, __m128i b)
 
 __INTRIN_INLINE_MMXSSE2 __m64 _mm_add_si64(__m64 a, __m64 b)
 {
-#if __has_builtin(__builtin_ia32_paddq) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_paddq((__v1di)a, (__v1di)b);
 #else
     return (__m64)(((__v1du)a)[0] + ((__v1du)b)[0]);
@@ -1269,7 +1269,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_mullo_epi16(__m128i a, __m128i b)
 
 __INTRIN_INLINE_MMXSSE2 __m64 _mm_mul_su32(__m64 a, __m64 b)
 {
-#if __has_builtin(__builtin_ia32_pmuludq) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_pmuludq((__v2si)a, (__v2si)b);
 #else
     return __trunc64(__builtin_ia32_pmuludq128((__v4si)__zext128(a),
@@ -1304,7 +1304,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_sub_epi32(__m128i a, __m128i b)
 
 __INTRIN_INLINE_MMXSSE2 __m64 _mm_sub_si64(__m64 a, __m64 b)
 {
-#if __has_builtin(__builtin_ia32_psubq) || (!defined(__clang__) && defined(_MSC_VER))
+#ifdef HAS_BUILTIN_MMX
     return (__m64)__builtin_ia32_psubq((__v1di)a, (__v1di)b);
 #else
     return (__m64)(((__v1du)a)[0] - ((__v1du)b)[0]);
