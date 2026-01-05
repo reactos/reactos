@@ -432,6 +432,11 @@ static void test_process_params(void)
     ok( params->Flags == 0, "wrong Flags %lu\n", params->Flags );
     ok( params->DebugFlags == 0, "wrong Flags %lu\n", params->DebugFlags );
     ok( params->ConsoleHandle == 0, "wrong ConsoleHandle %p\n", params->ConsoleHandle );
+#ifdef __REACTOS__
+    if (GetEnvironmentVariableW(L"ROSAUTOTEST_DIR", NULL, 0))
+        ok( params->ConsoleFlags == 1, "wrong ConsoleFlags %lu\n", params->ConsoleFlags );
+    else
+#endif
     ok( params->ConsoleFlags == 0, "wrong ConsoleFlags %lu\n", params->ConsoleFlags );
     ok( params->hStdInput == 0, "wrong hStdInput %p\n", params->hStdInput );
     ok( params->hStdOutput == 0, "wrong hStdOutput %p\n", params->hStdOutput );

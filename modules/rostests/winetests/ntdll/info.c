@@ -1592,6 +1592,14 @@ static void test_query_firmware(void)
     sfti->Action = SystemFirmwareTable_Get;
 
     status = pNtQuerySystemInformation(SystemFirmwareTableInformation, sfti, min_sfti_len, &len1);
+#ifdef __REACTOS__
+    if (status == STATUS_INVALID_DEVICE_REQUEST)
+    {
+        win_skip("SystemFirmwareTableInformation not available\n");
+        HeapFree(GetProcessHeap(), 0, sfti);
+        return;
+    }
+#endif
     ok(status == STATUS_BUFFER_TOO_SMALL, "Expected STATUS_BUFFER_TOO_SMALL, got %08lx\n", status);
     ok(len1 >= min_sfti_len, "Expected length >= %lu, got %lu\n", min_sfti_len, len1);
     ok(sfti->TableBufferLength == len1 - min_sfti_len,
@@ -2427,6 +2435,11 @@ static void test_query_process_image_info(void)
     ok( info.MajorSubsystemVersion == nt->OptionalHeader.MajorSubsystemVersion,
         "wrong major version %x/%x\n",
         info.MajorSubsystemVersion, nt->OptionalHeader.MajorSubsystemVersion );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_WIN7)
+        ok( info.MinorSubsystemVersion == 0, "wrong minor version %x/%x\n", info.MinorSubsystemVersion, 0 );
+    else
+#endif
     ok( info.MinorSubsystemVersion == nt->OptionalHeader.MinorSubsystemVersion,
         "wrong minor version %x/%x\n",
         info.MinorSubsystemVersion, nt->OptionalHeader.MinorSubsystemVersion );
@@ -3578,10 +3591,18 @@ static void test_thread_ideal_processor(void)
     ok(status == STATUS_INVALID_INFO_CLASS, "Unexpected status %#lx.\n", status);
 
     status = pNtQueryInformationThread( GetCurrentThread(), ThreadIdealProcessorEx, &processor, sizeof(processor) + 1, &len );
+#ifdef __REACTOS__
+    ok(status == (GetNTVersion() >= _WIN32_WINNT_WIN7 ? STATUS_INFO_LENGTH_MISMATCH : STATUS_INVALID_INFO_CLASS), "Unexpected status %#lx.\n", status);
+#else
     ok(status == STATUS_INFO_LENGTH_MISMATCH, "Unexpected status %#lx.\n", status);
+#endif
 
     status = pNtQueryInformationThread( GetCurrentThread(), ThreadIdealProcessorEx, &processor, sizeof(processor), &len );
+#ifdef __REACTOS__
+    ok(status == (GetNTVersion() >= _WIN32_WINNT_WIN7 ? STATUS_SUCCESS : STATUS_INVALID_INFO_CLASS), "Unexpected status %#lx.\n", status);
+#else
     ok(status == STATUS_SUCCESS, "Unexpected status %#lx.\n", status);
+#endif
 }
 
 static void test_thread_info(void)
