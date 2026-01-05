@@ -5,6 +5,7 @@
  *
  * Contributors:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)
+ *   Vitaly Orekhov (vkvo2000@vivaldi.net)
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -52,11 +53,29 @@ extern "C" {
 #else /* _MSC_VER */
 
     typedef long long __v1di __attribute__((__vector_size__(8)));
+    typedef unsigned long long __v1du __attribute__ ((__vector_size__ (8)));
     typedef int __v2si __attribute__((__vector_size__(8)));
+    typedef unsigned int __v2su  __attribute__((__vector_size__(8)));
     typedef short __v4hi __attribute__((__vector_size__(8)));
+    typedef unsigned short __v4hu  __attribute__((__vector_size__(8)));
     typedef char __v8qi __attribute__((__vector_size__(8)));
+    typedef unsigned char __v8qu  __attribute__((__vector_size__(8)));
+    typedef signed char  __v8qs  __attribute__((__vector_size__(8)));
 
+    typedef long long __m128i __attribute__((__vector_size__(16), __aligned__(16)));
+    typedef long long __v2di  __attribute__((__vector_size__(16)));
+    typedef int __v4si  __attribute__((__vector_size__(16)));
+    typedef short __v8hi  __attribute__((__vector_size__(16)));
+    typedef char __v16qi __attribute__((__vector_size__(16)));
+
+#if defined(__GNUC__) // GCC will refuse to compile with "long long" type.
     typedef float __m64 __attribute__((__vector_size__(8), __aligned__(16)));
+#else
+    typedef long long __m64 __attribute__((__vector_size__(8), __aligned__(8)));
+#endif
+
+#define __trunc64(x) (__m64)__builtin_shufflevector((__v2di)(x), __extension__(__v2di){}, 0)
+#define __zext128(x) (__m128i)__builtin_shufflevector((__v2si)(x), __extension__(__v2si){}, 0, 1, 2, 3)
 
 #ifdef __clang__
 #define __INTRIN_INLINE_MMX __INTRIN_INLINE __attribute__((__target__("mmx"),__min_vector_width__(64)))
@@ -278,325 +297,556 @@ __INTRIN_INLINE_MMX void _mm_empty(void)
 // _m_from_int
 __INTRIN_INLINE_MMX __m64 _mm_cvtsi32_si64(int i)
 {
+#if __has_builtin(__builtin_ia32_vec_init_v2si) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_vec_init_v2si(i, 0);
+#else
+    return (__m64)(__v2si){i, 0};
+#endif
 }
 
 // _m_to_int
 __INTRIN_INLINE_MMX int _mm_cvtsi64_si32(__m64 m)
 {
+#if __has_builtin(__builtin_ia32_vec_ext_v2si) || (!defined(__clang__) && defined(_MSC_VER))
     return __builtin_ia32_vec_ext_v2si((__v2si)m, 0);
+#else
+    return ((__v2si)m)[0];
+#endif
 }
 
 // _m_packsswb
 __INTRIN_INLINE_MMX __m64 _mm_packs_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_packsswb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_packsswb((__v4hi)a, (__v4hi)b);
+#else
+    return __trunc64(__builtin_ia32_packsswb128(
+        (__v8hi)__builtin_shufflevector(a, b, 0, 1),
+        (__v8hi){}
+    ));
+#endif
 }
 
 // _m_packssdw
 __INTRIN_INLINE_MMX __m64 _mm_packs_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_packssdw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_packssdw((__v2si)a, (__v2si)b);
+#else
+    return __trunc64(__builtin_ia32_packssdw128(
+        (__v4si)__builtin_shufflevector(a, b, 0, 1),
+        (__v4si){}
+    ));
+#endif
 }
 
 // _m_packuswb
 __INTRIN_INLINE_MMX __m64 _mm_packs_pu16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_packuswb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_packuswb((__v4hi)a, (__v4hi)b);
+#else
+    return __trunc64(__builtin_ia32_packuswb128(
+        (__v8hi)__builtin_shufflevector(a, b, 0, 1),
+        (__v8hi){}
+    ));
+#endif    
 }
 
 // _m_punpckhbw
 __INTRIN_INLINE_MMX __m64 _mm_unpackhi_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpckhbw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpckhbw((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_shufflevector((__v8qi)a, (__v8qi)b,
+                                          4, 12, 5, 13, 6, 14, 7, 15);
+#endif
 }
 
 // _m_punpckhwd
 __INTRIN_INLINE_MMX __m64 _mm_unpackhi_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpckhwd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpckhwd((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_shufflevector((__v4hi)a, (__v4hi)b,
+                                          2, 6, 3, 7);
+#endif
 }
 
 // _m_punpckhdq
 __INTRIN_INLINE_MMX __m64 _mm_unpackhi_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpckhdq) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpckhdq((__v2si)a, (__v2si)b);
+#else
+    return (__m64)__builtin_shufflevector((__v2si)a, (__v2si)b,
+                                          1, 3);
+#endif    
 }
 
 // _m_punpcklbw
 __INTRIN_INLINE_MMX __m64 _mm_unpacklo_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpcklbw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpcklbw((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_shufflevector((__v8qi)a, (__v8qi)b,
+                                          0, 8, 1, 9, 2, 10, 3, 11);
+#endif
 }
 
 // _m_punpcklwd
 __INTRIN_INLINE_MMX __m64 _mm_unpacklo_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpcklwd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpcklwd((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_shufflevector((__v4hi)a, (__v4hi)b,
+                                          0, 4, 1, 5);
+#endif
 }
 
 // _m_punpckldq
 __INTRIN_INLINE_MMX __m64 _mm_unpacklo_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_punpckldq) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_punpckldq((__v2si)a, (__v2si)b);
+#else
+    return (__m64)__builtin_shufflevector((__v2si)a, (__v2si)b,
+                                          0, 2);
+#endif
 }
 
 // _m_paddb
 __INTRIN_INLINE_MMX __m64 _mm_add_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)(((__v8qu)a) + ((__v8qu)b));
+#endif
 }
 
 // _m_paddw
 __INTRIN_INLINE_MMX __m64 _mm_add_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)(((__v4hu)a) + ((__v4hu)b));
+#endif
 }
 
 // _m_paddd
 __INTRIN_INLINE_MMX __m64 _mm_add_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddd((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v2su)a) + ((__v2su)b));
+#endif
 }
 
 // _m_paddsb
 __INTRIN_INLINE_MMX __m64 _mm_adds_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddsb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddsb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_elementwise_add_sat((__v8qs)a, (__v8qs)b);
+#endif
 }
 
 // _m_paddsw
 __INTRIN_INLINE_MMX __m64 _mm_adds_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddsw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddsw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_elementwise_add_sat((__v4hi)a, (__v4hi)b);
+#endif
 }
 
 // _m_paddusb
 __INTRIN_INLINE_MMX __m64 _mm_adds_pu8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddusb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddusb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_elementwise_add_sat((__v8qu)a, (__v8qu)b);
+#endif
 }
 
 // _m_paddusw
 __INTRIN_INLINE_MMX __m64 _mm_adds_pu16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_paddusw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_paddusw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_elementwise_add_sat((__v4hu)a, (__v4hu)b);
+#endif
 }
 
 // _m_psubb
 __INTRIN_INLINE_MMX __m64 _mm_sub_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)(((__v8qu)a) - ((__v8qu)b));
+#endif
 }
 
 // _m_psubw
 __INTRIN_INLINE_MMX __m64 _mm_sub_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)(((__v4hu)a) - ((__v4hu)b));
+#endif
 }
 
 // _m_psubd
 __INTRIN_INLINE_MMX __m64 _mm_sub_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubd((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v2su)a) - ((__v2su)b));
+#endif
 }
 
 // _m_psubsb
 __INTRIN_INLINE_MMX __m64 _mm_subs_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubsb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubsb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_elementwise_sub_sat((__v8qs)a, (__v8qs)b);
+#endif
 }
 
 // _m_psubsw
 __INTRIN_INLINE_MMX __m64 _mm_subs_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubsw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubsw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_elementwise_sub_sat((__v4hi)a, (__v4hi)b);
+#endif
 }
 
 // _m_psubusb
 __INTRIN_INLINE_MMX __m64 _mm_subs_pu8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubusb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubusb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)__builtin_elementwise_sub_sat((__v8qu)a, (__v8qu)b);
+#endif
 }
 
 // _m_psubusw
 __INTRIN_INLINE_MMX __m64 _mm_subs_pu16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_psubusw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psubusw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)__builtin_elementwise_sub_sat((__v4hu)a, (__v4hu)b);
+#endif
 }
 
 // _m_pmaddwd
 __INTRIN_INLINE_MMX __m64 _mm_madd_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pmaddwd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pmaddwd((__v4hi)a, (__v4hi)b);
+#else
+    return __trunc64(__builtin_ia32_pmaddwd128((__v8hi)__zext128(a), (__v8hi)__zext128(b)));
+#endif
 }
 
 // _m_pmulhw
 __INTRIN_INLINE_MMX __m64 _mm_mulhi_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pmulhw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pmulhw((__v4hi)a, (__v4hi)b);
+#else
+    return __trunc64(__builtin_ia32_pmulhw128((__v8hi)__zext128(a), (__v8hi)__zext128(b)));
+#endif
 }
 
 // _m_pmullw
 __INTRIN_INLINE_MMX __m64 _mm_mullo_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pmullw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pmullw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)(((__v4hu)a) * ((__v4hu)b));
+#endif
 }
 
 // _m_psllw
 __INTRIN_INLINE_MMX __m64 _mm_sll_pi16(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psllw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psllw((__v4hi)a, (__v4hi)count);
+#else
+    return __trunc64(__builtin_ia32_psllw128((__v8hi)__zext128(a), (__v8hi)__zext128(count)));
+#endif
 }
 
 // _m_psllwi
 __INTRIN_INLINE_MMX __m64 _mm_slli_pi16(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psllwi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psllwi((__v4hi)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psllwi128((__v8hi)__zext128(a), imm8));
+#endif
 }
 
 // _m_pslld
 __INTRIN_INLINE_MMX __m64 _mm_sll_pi32(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_pslld) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pslld((__v2si)a, (__v2si)count);
+#else
+    return __trunc64(__builtin_ia32_pslld128((__v4si)__zext128(a), (__v4si)__zext128(count)));
+#endif
 }
 
 // _m_pslldi
 __INTRIN_INLINE_MMX __m64 _mm_slli_pi32(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_pslldi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pslldi((__v2si)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_pslldi128((__v4si)__zext128(a), imm8));
+#endif
 }
 
 // _m_psllq
 __INTRIN_INLINE_MMX __m64 _mm_sll_si64(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psllq) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psllq((__v1di)a, (__v1di)count);
+#else
+    return __trunc64(__builtin_ia32_psllq128((__v2di)__zext128(a), (__v2di)__zext128(count)));
+#endif
 }
 
 // _m_psllqi
 __INTRIN_INLINE_MMX __m64 _mm_slli_si64(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psllqi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psllqi((__v1di)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psllqi128((__v2di)__zext128(a), imm8));
+#endif
 }
 
 // _m_psraw
 __INTRIN_INLINE_MMX __m64 _mm_sra_pi16(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psraw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psraw((__v4hi)a, (__v4hi)count);
+#else
+    return __trunc64(__builtin_ia32_psraw128((__v8hi)__zext128(a), (__v8hi)__zext128(count)));
+#endif
 }
 
 // _m_psrawi
 __INTRIN_INLINE_MMX __m64 _mm_srai_pi16(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psrawi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrawi((__v4hi)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psrawi128((__v8hi)__zext128(a), imm8));
+#endif
 }
 
 // _m_psrad
 __INTRIN_INLINE_MMX __m64 _mm_sra_pi32(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psrad) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrad((__v2si)a, (__v2si)count);
+#else
+    return __trunc64(__builtin_ia32_psrad128((__v4si)__zext128(a), (__v4si)__zext128(count)));
+#endif
 }
 
 // _m_psradi
 __INTRIN_INLINE_MMX __m64 _mm_srai_pi32(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psradi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psradi((__v2si)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psradi128((__v4si)__zext128(a), imm8));
+#endif
 }
 
 // _m_psrlw
 __INTRIN_INLINE_MMX __m64 _mm_srl_pi16(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psrlw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrlw((__v4hi)a, (__v4hi)count);
+#else
+    return __trunc64(__builtin_ia32_psrlw128((__v8hi)__zext128(a), (__v8hi)__zext128(count)));
+#endif
 }
 
 // _m_psrlwi
 __INTRIN_INLINE_MMX __m64 _mm_srli_pi16(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psrlwi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrlwi((__v4hi)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psrlwi128((__v8hi)__zext128(a), imm8));
+#endif
 }
 
 // _m_psrld
 __INTRIN_INLINE_MMX __m64 _mm_srl_pi32(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psrld) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrld((__v2si)a, (__v2si)count);
+#else
+    return __trunc64(__builtin_ia32_psrld128((__v4si)__zext128(a), (__v4si)__zext128(count)));
+#endif
 }
 
 // _m_psrldi
 __INTRIN_INLINE_MMX __m64 _mm_srli_pi32(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psrldi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrldi((__v2si)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psrldi128((__v4si)__zext128(a), imm8));
+#endif
 }
 
 // _m_psrlq
 __INTRIN_INLINE_MMX __m64 _mm_srl_si64(__m64 a, __m64 count)
 {
+#if __has_builtin(__builtin_ia32_psrlq) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrlq((__v1di)a, (__v1di)count);
+#else
+    return __trunc64(__builtin_ia32_psrlq128((__v2di)__zext128(a), (__v2di)__zext128(count)));
+#endif
 }
 
 // _m_psrlqi
 __INTRIN_INLINE_MMX __m64 _mm_srli_si64(__m64 a, int imm8)
 {
+#if __has_builtin(__builtin_ia32_psrlqi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_psrlqi((__v1di)a, imm8);
+#else
+    return __trunc64(__builtin_ia32_psrlqi128((__v2di)__zext128(a), imm8));
+#endif
 }
 
 // _m_pand
 __INTRIN_INLINE_MMX __m64 _mm_and_si64(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pand) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pand((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v1du)a) & ((__v1du)b));
+#endif
 }
 
 // _m_pandn
 __INTRIN_INLINE_MMX __m64 _mm_andnot_si64(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pandn) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pandn((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(~((__v1du)a) & ((__v1du)b));
+#endif
 }
 
 // _m_por
 __INTRIN_INLINE_MMX __m64 _mm_or_si64(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_por) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_por((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v1du)a) | ((__v1du)b));
+#endif
 }
 
 // _m_pxor
 __INTRIN_INLINE_MMX __m64 _mm_xor_si64(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pxor) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pxor((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v1du)a) ^ ((__v1du)b));
+#endif
 }
 
 // _m_pcmpeqb
 __INTRIN_INLINE_MMX __m64 _mm_cmpeq_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpeqb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpeqb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)(((__v8qi)a) == ((__v8qi)b));
+#endif
 }
 
 // _m_pcmpgtb
 __INTRIN_INLINE_MMX __m64 _mm_cmpgt_pi8(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpgtb) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpgtb((__v8qi)a, (__v8qi)b);
+#else
+    return (__m64)((__v8qs)a > (__v8qs)b);
+#endif
 }
 
 // _m_pcmpeqw
 __INTRIN_INLINE_MMX __m64 _mm_cmpeq_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpeqw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpeqw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)(((__v4hi)a) == ((__v4hi)b));
+#endif
 }
 
 // _m_pcmpgtw
 __INTRIN_INLINE_MMX __m64 _mm_cmpgt_pi16(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpgtw) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpgtw((__v4hi)a, (__v4hi)b);
+#else
+    return (__m64)((__v4hi)a > (__v4hi)b);
+#endif
 }
 
 // _m_pcmpeqd
 __INTRIN_INLINE_MMX __m64 _mm_cmpeq_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpeqd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpeqd((__v2si)a, (__v2si)b);
+#else
+    return (__m64)(((__v2si)a) == ((__v2si)b));
+#endif
 }
 
 // _m_pcmpgtd
 __INTRIN_INLINE_MMX __m64 _mm_cmpgt_pi32(__m64 a, __m64 b)
 {
+#if __has_builtin(__builtin_ia32_pcmpgtd) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_pcmpgtd((__v2si)a, (__v2si)b);
+#else
+    return (__m64)((__v2si)a > (__v2si)b);
+#endif
 }
 
 __INTRIN_INLINE_MMX __m64 _mm_setzero_si64(void)
@@ -606,18 +856,30 @@ __INTRIN_INLINE_MMX __m64 _mm_setzero_si64(void)
 
 __INTRIN_INLINE_MMX __m64 _mm_set_pi32(int i1, int i0)
 {
+#if __has_builtin(__builtin_ia32_vec_init_v2si) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_vec_init_v2si(i0, i1);
+#else
+    return __extension__(__m64)(__v2si){i0, i1};
+#endif
 }
 
 __INTRIN_INLINE_MMX __m64 _mm_set_pi16(short s3, short s2, short s1, short s0)
 {
+#if __has_builtin(__builtin_ia32_vec_init_v4hi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_vec_init_v4hi(s0, s1, s2, s3);
+#else
+    return __extension__(__m64)(__v4hi){s0, s1, s2, s3};
+#endif
 }
 
 __INTRIN_INLINE_MMX __m64 _mm_set_pi8(char b7, char b6, char b5, char b4,
                                   char b3, char b2, char b1, char b0)
 {
+#if __has_builtin(__builtin_ia32_vec_init_v8qi) || (!defined(__clang__) && defined(_MSC_VER))
     return (__m64)__builtin_ia32_vec_init_v8qi(b0, b1, b2, b3, b4, b5, b6, b7);
+#else
+    return __extension__(__m64)(__v8qi){b0, b1, b2, b3, b4, b5, b6, b7};
+#endif
 }
 
 __INTRIN_INLINE_MMX __m64 _mm_setr_pi32(int i1, int i0)
