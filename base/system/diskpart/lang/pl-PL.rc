@@ -113,6 +113,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_FORMAT_FAIL "\nDiskPart failed to format the selected volume.\n"
+    IDS_FORMAT_SUCCESS "\nDiskPart successfully formated the selected volume.\n"
+    IDS_FORMAT_PROGRESS "\r  %3lu percent completed"
+END
+
+STRINGTABLE
+BEGIN
     IDS_GPT_FAIL "\nDiskPart failed to assign atttributes to the selected GPT partition.\n"
     IDS_GPT_SUCCESS "\nDiskPart successfully assigned the attributes the selected GPT partition.\n"
 END
