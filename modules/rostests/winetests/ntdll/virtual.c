@@ -1634,6 +1634,11 @@ static void test_NtMapViewOfSection(void)
 
         ok(status == STATUS_SUCCESS || status == STATUS_IMAGE_NOT_AT_BASE, "NtMapViewOfSection returned %08lx\n", status);
         ok(!((ULONG_PTR)ptr & 0xffff), "returned memory %p is not aligned to 64k\n", ptr);
+#ifdef __REACTOS__
+        if (GetNTVersion() < _WIN32_WINNT_WIN7 && !is_reactos())
+            win_skip("Skipping test on pre-Win7, because it's broken\n");
+        else
+#endif
         ok(((UINT_PTR)ptr & ~get_zero_bits_mask(zero_bits)) == 0, "NtMapViewOfSection returned address %p\n", ptr);
 
         status = NtUnmapViewOfSection(process, ptr);

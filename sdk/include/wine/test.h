@@ -1016,6 +1016,7 @@ extern void winetest_end_nocount(void);
 #define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
 #define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
 #define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+#define __REACTOS__WinVer_lt(Ver) ((GetNTVersion() < (Ver)))
 
 #ifdef STANDALONE
 
