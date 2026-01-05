@@ -666,9 +666,9 @@ static void test_name_limits(void)
     ok( status == STATUS_SUCCESS, "%u: NtCreateMutant failed %lx\n", str.Length, status );
     attr3.RootDirectory = ret;
     status = pNtOpenMutant( &ret2, GENERIC_ALL, &attr );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenMutant failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenMutant failed %lx\n", str.Length, status);
     status = pNtOpenMutant( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenMutant failed %lx\n", str.Length, status );
+    ok( status == (__REACTOS__WinVer_lt(_WIN32_WINNT_WIN7) ? STATUS_INVALID_HANDLE : STATUS_OBJECT_TYPE_MISMATCH), "%u: NtOpenMutant failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateSemaphore( &ret, GENERIC_ALL, &attr2, 1, 2 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateSemaphore failed %lx\n", str.Length, status );
@@ -676,7 +676,7 @@ static void test_name_limits(void)
     status = pNtOpenSemaphore( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSemaphore failed %lx\n", str.Length, status );
     status = pNtOpenSemaphore( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSemaphore failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenSemaphore failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateEvent( &ret, GENERIC_ALL, &attr2, SynchronizationEvent, 0 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateEvent failed %lx\n", str.Length, status );
@@ -684,7 +684,7 @@ static void test_name_limits(void)
     status = pNtOpenEvent( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenEvent failed %lx\n", str.Length, status );
     status = pNtOpenEvent( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenEvent failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenEvent failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateKeyedEvent( &ret, GENERIC_ALL, &attr2, 0 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateKeyedEvent failed %lx\n", str.Length, status );
@@ -692,7 +692,7 @@ static void test_name_limits(void)
     status = pNtOpenKeyedEvent( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenKeyedEvent failed %lx\n", str.Length, status );
     status = pNtOpenKeyedEvent( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenKeyedEvent failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenKeyedEvent failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateTimer( &ret, GENERIC_ALL, &attr2, NotificationTimer );
     ok( status == STATUS_SUCCESS, "%u: NtCreateTimer failed %lx\n", str.Length, status );
@@ -700,7 +700,7 @@ static void test_name_limits(void)
     status = pNtOpenTimer( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenTimer failed %lx\n", str.Length, status );
     status = pNtOpenTimer( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenTimer failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenTimer failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateIoCompletion( &ret, GENERIC_ALL, &attr2, 0 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateCompletion failed %lx\n", str.Length, status );
@@ -708,7 +708,7 @@ static void test_name_limits(void)
     status = pNtOpenIoCompletion( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenCompletion failed %lx\n", str.Length, status );
     status = pNtOpenIoCompletion( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenCompletion failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenCompletion failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateJobObject( &ret, GENERIC_ALL, &attr2 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateJobObject failed %lx\n", str.Length, status );
@@ -716,7 +716,7 @@ static void test_name_limits(void)
     status = pNtOpenJobObject( &ret2, GENERIC_ALL, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenJobObject failed %lx\n", str.Length, status );
     status = pNtOpenJobObject( &ret2, GENERIC_ALL, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenJobObject failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenJobObject failed %lx\n", str.Length, status );
     pNtClose( ret );
     status = pNtCreateDirectoryObject( &ret, GENERIC_ALL, &attr2 );
     ok( status == STATUS_SUCCESS, "%u: NtCreateDirectoryObject failed %lx\n", str.Length, status );
@@ -743,7 +743,7 @@ static void test_name_limits(void)
     status = pNtOpenSection( &ret2, SECTION_MAP_WRITE, &attr );
     ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSection failed %lx\n", str.Length, status );
     status = pNtOpenSection( &ret2, SECTION_MAP_WRITE, &attr3 );
-    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "%u: NtOpenSection failed %lx\n", str.Length, status );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH || /* __REACTOS__ */ broken(status == STATUS_INVALID_HANDLE), "%u: NtOpenSection failed %lx\n", str.Length, status );
     pNtClose( ret );
 
     str.Length = 67;
@@ -2334,17 +2334,34 @@ static void test_object_types(void)
         TYPE( L"File",          FILE, 0, 0 ),
         TYPE( L"IoCompletion",  IO_COMPLETION, 0, 0 ),
         TYPE( L"IoCompletionReserve", IO_COMPLETION_RESERVE, 0, 0 ),
+#ifdef __REACTOS__
         TYPE( L"Job",           JOB_OBJECT, 0, JOB_OBJECT_IMPERSONATE ),
+        TYPE( L"Key",           KEY, SYNCHRONIZE, KEY_CREATE_LINK ),
+#else
+        TYPE( L"Job",           JOB_OBJECT, 0, JOB_OBJECT_IMPERSONATE | 0x3C0 ),
         TYPE( L"Key",           KEY, SYNCHRONIZE, 0 ),
+#endif
         TYPE( L"KeyedEvent",    KEYEDEVENT, SYNCHRONIZE, 0 ),
         TYPE( L"Mutant",        MUTANT, 0, 0 ),
+#ifdef __REACTOS__
+        TYPE( L"Process",       PROCESS, 0, PROCESS_TERMINATE ),
+#else
         TYPE( L"Process",       PROCESS, 0, 0 ),
+#endif
         TYPE( L"Section",       SECTION, SYNCHRONIZE, 0 ),
         TYPE( L"Semaphore",     SEMAPHORE, 0, 0 ),
         TYPE( L"SymbolicLink",  SYMBOLIC_LINK, 0, 0xfffe ),
+#ifdef __REACTOS__
+        TYPE( L"Thread",        THREAD, 0, THREAD_RESUME | THREAD_QUERY_LIMITED_INFORMATION ),
+#else
         TYPE( L"Thread",        THREAD, 0, THREAD_RESUME ),
+#endif
         TYPE( L"Timer",         TIMER, 0, 0 ),
+#ifdef __REACTOS__
+        TYPE( L"Token",         TOKEN, SYNCHRONIZE, TOKEN_QUERY_SOURCE | TOKEN_IMPERSONATE | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY),
+#else
         TYPE( L"Token",         TOKEN, SYNCHRONIZE, 0 ),
+#endif
         TYPE( L"Type",          TYPE, SYNCHRONIZE, 0 ),
         TYPE( L"UserApcReserve", USER_APC_RESERVE, 0, 0 ),
         TYPE( L"WindowStation", WINSTA, 0, 0 ),
@@ -2384,6 +2401,17 @@ static void test_object_types(void)
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
+#ifdef __REACTOS__
+        if (GetNTVersion() < _WIN32_WINNT_WIN7)
+        {
+            if (!wcscmp(tests[i].name, L"IoCompletionReserve") ||
+                !wcscmp(tests[i].name, L"UserApcReserve"))
+            {
+                skip("%s not implemented before Win7\n", tests[i].name);
+                break;
+            }
+        }
+#endif
         for (j = 0; j < ARRAY_SIZE(all_types); j++)
         {
             if (!all_types[j].TypeName.Buffer) continue;

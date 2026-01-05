@@ -981,9 +981,9 @@ static void test_completion_port_scheduling(void)
     BOOL bret;
 
 #if defined(__REACTOS__)
-    if (is_reactos())
+    if ((GetNTVersion() < _WIN32_WINNT_WIN7) || is_reactos())
     {
-        skip("Skipping completion port scheduling test, because it hangs on ReactOS\n");
+        skip("Skipping completion port scheduling test, because it hangs on Windows 2003, Vista and ReactOS\n");
         return;
     }
 #endif
