@@ -780,7 +780,11 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, P
 #ifdef WAVERT
    		stream[PCM_OUT_STREAM]->SetState(KSSTATE_STOP);
 #else
+#if !defined(__REACTOS__) || (!defined(__clang__) || (__clang_major__ <= 19))
    		stream[PCM_OUT_STREAM]->SetState(KSSTATE_STOP_AC3);
+#else
+   		stream[PCM_OUT_STREAM]->SetState((KSSTATE)KSSTATE_STOP_AC3);
+#endif
 #endif
 	}
 	if ((streamIndex == PCM_OUT_STREAM) && isStreamRunning[AC3_OUT_STREAM]) {
