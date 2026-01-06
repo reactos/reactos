@@ -36,7 +36,7 @@ extern "C" {
 #define MOUNTMGR_DEVICE_NAME        L"\\Device\\MountPointManager"
 #define MOUNTMGR_DOS_DEVICE_NAME    L"\\\\.\\MountPointManager"
 #define MOUNTMGRCONTROLTYPE         ((ULONG)'m') /* Mount Manager */
-#define MOUNTDEVCONTROLTYPE          ((ULONG)'M') /* Mount Device */
+#define MOUNTDEVCONTROLTYPE         ((ULONG)'M') /* Mount Device */
 
 #ifdef DEFINE_GUID
 DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B);
@@ -93,14 +93,23 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
 
 /* Check for \??\Volume{GUID} prefix */
 #define MOUNTMGR_IS_VOLUME_NAME(s) \
-    ((s)->Length >= 48 * sizeof(WCHAR) && \
-     (s)->Buffer[0] == L'\\' && \
-     ((s)->Buffer[1] == L'?' || (s)->Buffer[1] == L'\\') && \
-     (s)->Buffer[2] == L'?' && (s)->Buffer[3] == L'\\' && \
-     (s)->Buffer[4] == L'V' && (s)->Buffer[5] == L'o' && \
-     (s)->Buffer[6] == L'l' && (s)->Buffer[7] == L'u' && \
-     (s)->Buffer[8] == L'm' && (s)->Buffer[9] == L'e' && \
-     (s)->Buffer[10] == L'{')
+  ((s)->Length >= 48 * sizeof(WCHAR) && \
+   (s)->Buffer[0] == L'\\' && \
+   ((s)->Buffer[1] == L'?' || (s)->Buffer[1] == L'\\') && \
+   (s)->Buffer[2] == L'?' && \
+   (s)->Buffer[3] == L'\\' && \
+   (s)->Buffer[4] == L'V' && \
+   (s)->Buffer[5] == L'o' && \
+   (s)->Buffer[6] == L'l' && \
+   (s)->Buffer[7] == L'u' && \
+   (s)->Buffer[8] == L'm' && \
+   (s)->Buffer[9] == L'e' && \
+   (s)->Buffer[10] == L'{' && \
+   (s)->Buffer[19] == L'-' && \
+   (s)->Buffer[24] == L'-' && \
+   (s)->Buffer[29] == L'-' && \
+   (s)->Buffer[34] == L'-' && \
+   (s)->Buffer[47] == L'}')
 
 /* DOS vs NT volume name helpers */
 #define MOUNTMGR_IS_DOS_VOLUME_NAME(s) ((s) && MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Buffer[1] == L'\\')
