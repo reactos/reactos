@@ -534,7 +534,8 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
 
 START_TEST(CreateDIBitmap)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     Test_CreateDIBitmap_Params();
     Test_CreateDIBitmap1();
     Test_CreateDIBitmap_DIB_PAL_COLORS();

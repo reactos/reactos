@@ -11,10 +11,10 @@
 
 START_TEST(RealizePalette)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     ok_int(RealizePalette(NULL), GDI_ERROR);
     ok_int(RealizePalette((HDC)UlongToHandle(0xdeadc0de)), GDI_ERROR);
     ok_int(RealizePalette((HDC)UlongToHandle(0x00010001)), 0);
     ok_int(RealizePalette(ghdcDIB32), 0);
-
 }
