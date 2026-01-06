@@ -687,7 +687,7 @@ Test_SetDIBitsToDevice()
 
 START_TEST(SetDIBitsToDevice)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
 
     Test_SetDIBitsToDevice_Params();
     Test_SetDIBitsToDevice();

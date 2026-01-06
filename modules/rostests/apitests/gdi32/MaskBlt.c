@@ -293,7 +293,8 @@ void Test_MaskBlt_Brush()
 
 START_TEST(MaskBlt)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     Test_MaskBlt_1bpp();
     Test_MaskBlt_16bpp();
     Test_MaskBlt_32bpp();

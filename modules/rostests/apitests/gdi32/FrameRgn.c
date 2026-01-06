@@ -137,6 +137,7 @@ void Test_FrameRgn()
 
 START_TEST(FrameRgn)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     Test_FrameRgn();
 }
