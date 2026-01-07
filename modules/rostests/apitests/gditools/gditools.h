@@ -41,3 +41,7 @@ PVOID
 GdiGetHandleUserData(
     _In_ HGDIOBJ hobj);
 
+BOOL
+ChangeScreenBpp(
+    _In_ ULONG cBitsPixel,
+    _Out_ PULONG pcOldBitsPixel);

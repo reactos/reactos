@@ -6,6 +6,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winddi.h>
+#include <winuser.h>
 #include <prntfont.h>
 
 #define NTOS_MODE_USER
@@ -103,6 +104,34 @@ GdiGetHandleUserData(
     }
 
     return pentry->pUser;
+}
+
+BOOL
+ChangeScreenBpp(
+    _In_ ULONG cBitsPixel,
+    _Out_ PULONG pcOldBitsPixel)
+{
+    DEVMODEW dm = { .dmSize = sizeof(dm) };
+
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm))
+    {
+        printf("EnumDisplaySettingsW failed\n");
+        return FALSE;
+    }
+
+    *pcOldBitsPixel = dm.dmBitsPerPel;
+
+    if (dm.dmBitsPerPel != cBitsPixel)
+    {
+        dm.dmBitsPerPel = cBitsPixel;
+        if (ChangeDisplaySettingsExW(NULL, &dm, NULL, CDS_UPDATEREGISTRY | CDS_GLOBAL, NULL) != DISP_CHANGE_SUCCESSFUL)
+        {
+            printf("Failed to change display settings to %lu bpp. Current bpp: %u\n", cBitsPixel, *pcOldBitsPixel);
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 #define FL_INVERT_COLORS 0x01
