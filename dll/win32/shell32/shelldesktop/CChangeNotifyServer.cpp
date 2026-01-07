@@ -454,9 +454,9 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
 
     SIZE_T cchRegPath = wcslen(szRegPath);
     LPITEMIDLIST pidls[] = { pidl1, pidl2 };
+    WCHAR szPath[MAX_PATH];
     for (SIZE_T iPidl = 0; iPidl < _countof(pidls); ++iPidl)
     {
-        WCHAR szPath[MAX_PATH];
         if (pidls[iPidl] && SHGetPathFromIDListW(pidls[iPidl], szPath))
         {
             if (_wcsnicmp(szRegPath, szPath, cchRegPath) == 0 &&
