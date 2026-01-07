@@ -342,7 +342,6 @@ NtGdiMaskBlt(
 
     if (!hdcDest)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -388,7 +387,6 @@ NtGdiMaskBlt(
     {
         WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
         if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     DCDest = apObj[0];
