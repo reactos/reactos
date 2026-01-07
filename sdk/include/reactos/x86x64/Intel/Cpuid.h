@@ -1574,7 +1574,7 @@ typedef union {
     ///
     /// [Bit 14:9] Reserved.
     ///
-    UINT32    Reserved4                               : 5;
+    UINT32    Reserved4                               : 6;
     ///
     /// [Bit 15] Hybrid. If 1, the processor is identified as a hybrid part.
     ///
