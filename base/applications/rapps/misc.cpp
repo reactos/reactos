@@ -391,6 +391,16 @@ IsSystem64Bit()
 #endif
 }
 
+ULONG
+GetNTVersion()
+{
+    RTL_OSVERSIONINFOW osvi = {0};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    RtlGetVersion(&osvi);
+
+    return (osvi.dwMajorVersion << 8) | (osvi.dwMinorVersion);
+}
+
 INT
 GetSystemColorDepth()
 {
