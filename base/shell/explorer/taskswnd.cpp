@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include "mediabtns.h"
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
@@ -375,6 +376,7 @@ class CTaskSwitchWnd :
     CComPtr<ITrayWindow> m_Tray;
 
     UINT m_ShellHookMsg;
+    UINT m_WinMMDevChgMsg;
 
     WORD m_TaskItemCount;
     WORD m_AllocatedTaskItems;
@@ -398,10 +400,12 @@ class CTaskSwitchWnd :
 
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
+    CMultimediaBackend m_Mixer;
 
 public:
     CTaskSwitchWnd() :
         m_ShellHookMsg(NULL),
+        m_WinMMDevChgMsg(NULL),
         m_TaskItemCount(0),
         m_AllocatedTaskItems(0),
         m_TaskGroups(NULL),
@@ -1530,6 +1534,11 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
+
+        /* WinMM is needed to change system volume via media buttons */
+        m_WinMMDevChgMsg = RegisterWindowMessageW(L"winmm_devicechange");
+        m_Mixer.Initialize();
+
         return TRUE;
     }
 
@@ -1598,12 +1607,12 @@ public:
             return TRUE;
         switch (uAppCmd)
         {
+            // TODO: When MMDevAPI arrives, try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to WinMM.
             case APPCOMMAND_VOLUME_MUTE:
+                return m_Mixer.Mute();
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
-                FIXME("Call the mixer API to change the global volume\n");
-                return TRUE;
+                return m_Mixer.AdjustVolume(uAppCmd, hProcessHeap);
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
         }
@@ -1692,6 +1701,13 @@ public:
         }
 
         return Ret;
+    }
+
+    LRESULT OnWinMMDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TRACE("Audio device was added or removed, invalidating mixer\n");
+        m_Mixer.Initialize();
+        return TRUE;
     }
 
     VOID HandleTaskItemClick(IN OUT PTASK_ITEM TaskItem)
@@ -2267,6 +2283,7 @@ public:
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, OnShellHook)
+        MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
         MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)

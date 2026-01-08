@@ -351,6 +351,8 @@ class CTrayWindow :
 
     HDPA m_ShellServices;
 
+    UINT m_WinMMDevChgMsg;
+
 public:
     CComPtr<ITrayBandSite> m_TrayBandSite;
 
@@ -385,6 +387,7 @@ public:
         m_RunFileDlgOwner(NULL),
         m_AutoHideState(NULL),
         m_ShellServices(NULL),
+        m_WinMMDevChgMsg(NULL),
         Flags(0)
     {
         ZeroMemory(&m_TrayRects, sizeof(m_TrayRects));
@@ -2444,6 +2447,8 @@ ChangePos:
             }
         }
 
+        m_WinMMDevChgMsg = RegisterWindowMessageW(L"winmm_devicechange");
+
         return TRUE;
     }
 
@@ -3465,6 +3470,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_ACTIVATE, OnActivate)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+        MESSAGE_HANDLER(m_WinMMDevChgMsg, OnWinMMDeviceChange)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
@@ -3474,6 +3480,13 @@ HandleTrayContextMenu:
     END_MSG_MAP()
 
     /*****************************************************************************/
+
+    LRESULT OnWinMMDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* CTaskSwitchWnd does not receive this message directly */
+        ::SendMessageW(m_TaskSwitch, uMsg, wParam, lParam);
+        return TRUE;
+    }
 
     VOID TrayProcessMessages()
     {
