@@ -16,7 +16,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtmdid.h"
+
 #include "mshtml_private.h"
+#include "htmlevent.h"
+#include "htmlscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
     IDispatch *handler_prop;
@@ -1451,8 +1468,10 @@ HRESULT get_event_handler(EventTarget *event_target, eventid_t eid, VARIANT *var
     HRESULT hres;
 
     hres = dispex_get_dprop_ref(&event_target->dispex, event_info[eid].attr_name, FALSE, &v);
-    if(SUCCEEDED(hres) && V_VT(v) != VT_EMPTY)
+    if(SUCCEEDED(hres) && V_VT(v) != VT_EMPTY) {
+        V_VT(var) = VT_EMPTY;
         return VariantCopy(var, v);
+    }
 
     data = get_event_target_data(event_target, FALSE);
     if(data && data->event_table[eid] && data->event_table[eid]->handler_prop) {
