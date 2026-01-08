@@ -67,7 +67,7 @@ GetNotificationHandler(
     DWORD dwType, dwSize;
     CHAR szFuncBuffer[128];
 
-    dwSize = sizeof(szFuncBuffer);
+    dwSize = sizeof(szFuncBuffer) - 1;
     lError = RegQueryValueExA(hDllKey,
                               pNotification,
                               NULL,
@@ -81,7 +81,7 @@ GetNotificationHandler(
     }
 
     /* NUL-terminate */
-    szFuncBuffer[dwSize / sizeof(CHAR) - 1] = ANSI_NULL;
+    szFuncBuffer[dwSize] = ANSI_NULL;
 
     return (PWLX_NOTIFY_HANDLER)GetProcAddress(hModule, szFuncBuffer);
 }
