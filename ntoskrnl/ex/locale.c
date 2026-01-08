@@ -42,11 +42,8 @@ LANGID PsDefaultUILanguageId = LANGIDFROMLCID(0x00000409);
  * Returns TRUE if the following conditions are met,
  * otherwise FALSE is returned.
  */
-static
-__inline
-BOOLEAN
-ExpValidateNlsLocaleData(
-    _In_ PKEY_VALUE_PARTIAL_INFORMATION LocaleData)
+static __inline BOOLEAN
+ExpValidateNlsLocaleData(_In_ PKEY_VALUE_PARTIAL_INFORMATION LocaleData)
 {
     PWCHAR Data;
 
@@ -98,10 +95,8 @@ ExpValidateNlsLocaleData(
  * is returned if the following locale does not exist on the system.
  * A failure NTSTATUS code is returned otherwise.
  */
-static
-NTSTATUS
-ExpValidateNlsLocaleId(
-    _In_ LCID LocaleId)
+static NTSTATUS
+ExpValidateNlsLocaleId(_In_ LCID LocaleId)
 {
     NTSTATUS Status;
     HANDLE NlsLocaleKey = NULL, AltSortKey = NULL, LangGroupKey = NULL;
@@ -110,41 +105,32 @@ ExpValidateNlsLocaleId(
     WCHAR ValueBuffer[20], LocaleIdBuffer[20];
     ULONG ReturnedLength;
     UNICODE_STRING LocaleIdString;
-    static UNICODE_STRING NlsLocaleKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
-    static UNICODE_STRING AltSortKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
-    static UNICODE_STRING LangGroupPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language Groups");
+    static UNICODE_STRING NlsLocaleKeyPath =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale");
+    static UNICODE_STRING AltSortKeyPath =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Locale\\Alternate Sorts");
+    static UNICODE_STRING LangGroupPath =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Nls\\Language Groups");
 
     /* Initialize the registry path attributes */
-    InitializeObjectAttributes(&NlsLocalKeyAttrs,
-                               &NlsLocaleKeyPath,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
+    InitializeObjectAttributes(
+        &NlsLocalKeyAttrs, &NlsLocaleKeyPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
-    InitializeObjectAttributes(&AltSortKeyAttrs,
-                               &AltSortKeyPath,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
+    InitializeObjectAttributes(&AltSortKeyAttrs, &AltSortKeyPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
-    InitializeObjectAttributes(&LangGroupKeyAttrs,
-                               &LangGroupPath,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL,
-                               NULL);
+    InitializeObjectAttributes(
+        &LangGroupKeyAttrs, &LangGroupPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     /* Copy the locale ID into a buffer */
-    swprintf(LocaleIdBuffer,
-             L"%08lx",
-             (ULONG)LocaleId);
+    Status = RtlStringCchPrintfW(LocaleIdBuffer, _countof(LocaleIdBuffer), L"%08lx", (ULONG)LocaleId);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* And build the LCID string */
     RtlInitUnicodeString(&LocaleIdString, LocaleIdBuffer);
 
     /* Open the NLS locale key */
-    Status = ZwOpenKey(&NlsLocaleKey,
-                       KEY_QUERY_VALUE,
-                       &NlsLocalKeyAttrs);
+    Status = ZwOpenKey(&NlsLocaleKey, KEY_QUERY_VALUE, &NlsLocalKeyAttrs);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open %wZ (Status 0x%lx)\n", NlsLocaleKeyPath, Status);
@@ -152,9 +138,7 @@ ExpValidateNlsLocaleId(
     }
 
     /* Open the NLS alternate sort locales key */
-    Status = ZwOpenKey(&AltSortKey,
-                       KEY_QUERY_VALUE,
-                       &AltSortKeyAttrs);
+    Status = ZwOpenKey(&AltSortKey, KEY_QUERY_VALUE, &AltSortKeyAttrs);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open %wZ (Status 0x%lx)\n", AltSortKeyPath, Status);
@@ -162,9 +146,7 @@ ExpValidateNlsLocaleId(
     }
 
     /* Open the NLS language groups key */
-    Status = ZwOpenKey(&LangGroupKey,
-                       KEY_QUERY_VALUE,
-                       &LangGroupKeyAttrs);
+    Status = ZwOpenKey(&LangGroupKey, KEY_QUERY_VALUE, &LangGroupKeyAttrs);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open %wZ (Status 0x%lx)\n", LangGroupPath, Status);
@@ -173,21 +155,13 @@ ExpValidateNlsLocaleId(
 
     /* Check if the captured locale ID exists in the list of other locales */
     BufferKey = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
-    Status = ZwQueryValueKey(NlsLocaleKey,
-                             &LocaleIdString,
-                             KeyValuePartialInformation,
-                             BufferKey,
-                             sizeof(ValueBuffer),
-                             &ReturnedLength);
+    Status = ZwQueryValueKey(
+        NlsLocaleKey, &LocaleIdString, KeyValuePartialInformation, BufferKey, sizeof(ValueBuffer), &ReturnedLength);
     if (!NT_SUCCESS(Status))
     {
         /* We failed, retry by looking at the alternate sorts locales */
-        Status = ZwQueryValueKey(AltSortKey,
-                                 &LocaleIdString,
-                                 KeyValuePartialInformation,
-                                 BufferKey,
-                                 sizeof(ValueBuffer),
-                                 &ReturnedLength);
+        Status = ZwQueryValueKey(
+            AltSortKey, &LocaleIdString, KeyValuePartialInformation, BufferKey, sizeof(ValueBuffer), &ReturnedLength);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to query value from Alternate Sorts key (Status 0x%lx)\n", Status);
@@ -196,23 +170,19 @@ ExpValidateNlsLocaleId(
     }
 
     /* Ensure the queried locale is of the right key type with a sane length */
-    if (BufferKey->Type != REG_SZ ||
-        BufferKey->DataLength < sizeof(WCHAR))
+    if (BufferKey->Type != REG_SZ || BufferKey->DataLength < sizeof(WCHAR))
     {
-        DPRINT1("The queried locale is of bad value type or length (Type %lu, DataLength %lu)\n",
-                BufferKey->Type, BufferKey->DataLength);
+        DPRINT1(
+            "The queried locale is of bad value type or length (Type %lu, DataLength %lu)\n", BufferKey->Type,
+            BufferKey->DataLength);
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Quit;
     }
 
     /* We got what we need, now query the locale from the language groups */
     RtlInitUnicodeString(&LocaleIdString, (PWSTR)BufferKey->Data);
-    Status = ZwQueryValueKey(LangGroupKey,
-                             &LocaleIdString,
-                             KeyValuePartialInformation,
-                             BufferKey,
-                             sizeof(ValueBuffer),
-                             &ReturnedLength);
+    Status = ZwQueryValueKey(
+        LangGroupKey, &LocaleIdString, KeyValuePartialInformation, BufferKey, sizeof(ValueBuffer), &ReturnedLength);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to query value from Language Groups key (Status 0x%lx)\n", Status);
@@ -251,14 +221,12 @@ Quit:
 
 NTSTATUS
 NTAPI
-ExpGetCurrentUserUILanguage(IN PCWSTR MuiName,
-                            OUT LANGID* LanguageId)
+ExpGetCurrentUserUILanguage(IN PCWSTR MuiName, OUT LANGID *LanguageId)
 {
     UCHAR ValueBuffer[256];
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName =
-        RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
     UNICODE_STRING ValueName;
     UNICODE_STRING ValueString;
     ULONG ValueLength;
@@ -273,25 +241,18 @@ ExpGetCurrentUserUILanguage(IN PCWSTR MuiName,
 
     /* Open the use key */
     Status = RtlOpenCurrentUser(KEY_READ, &UserKey);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Initialize the attributes and open the key */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               UserKey,
-                               NULL);
-    Status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE,&ObjectAttributes);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, UserKey, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
         /* Set buffer and query the current value */
         ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueName,
-                                 KeyValuePartialInformation,
-                                 ValueBuffer,
-                                 sizeof(ValueBuffer),
-                                 &ValueLength);
+        Status = ZwQueryValueKey(
+            KeyHandle, &ValueName, KeyValuePartialInformation, ValueBuffer, sizeof(ValueBuffer), &ValueLength);
         if (NT_SUCCESS(Status))
         {
             /* Success, is the value the right type? */
@@ -324,8 +285,7 @@ ExpGetCurrentUserUILanguage(IN PCWSTR MuiName,
 
 NTSTATUS
 NTAPI
-ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
-                            IN LANGID LanguageId)
+ExpSetCurrentUserUILanguage(IN PCWSTR MuiName, IN LANGID LanguageId)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
@@ -348,14 +308,11 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
 
     /* Open the use key */
     Status = RtlOpenCurrentUser(KEY_WRITE, &UserHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Initialize the attributes */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               UserHandle,
-                               NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, UserHandle, NULL);
 
     /* Validate the language ID */
     Status = ExpValidateNlsLocaleId(MAKELCID(LanguageId, SORT_DEFAULT));
@@ -366,18 +323,18 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
         if (NT_SUCCESS(Status))
         {
             /* Setup the value name */
-            ValueLength = swprintf(ValueBuffer,
-                                   L"%04lX",
-                                   (ULONG)LanguageId);
+            Status = RtlStringCchPrintfW(ValueBuffer, _countof(ValueBuffer), L"%04lX", (ULONG)LanguageId);
+            if (!NT_SUCCESS(Status))
+            {
+                ZwClose(KeyHandle);
+                ZwClose(UserHandle);
+                return Status;
+            }
+            ValueLength = (ULONG)wcslen(ValueBuffer);
 
             /* Set the length for the call and set the value */
             ValueLength = (ValueLength + 1) * sizeof(WCHAR);
-            Status = ZwSetValueKey(KeyHandle,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   ValueBuffer,
-                                   ValueLength);
+            Status = ZwSetValueKey(KeyHandle, &ValueName, 0, REG_SZ, ValueBuffer, ValueLength);
 
             /* Close the handle for this key */
             ZwClose(KeyHandle);
@@ -393,8 +350,7 @@ ExpSetCurrentUserUILanguage(IN PCWSTR MuiName,
 
 NTSTATUS
 NTAPI
-NtQueryDefaultLocale(IN BOOLEAN UserProfile,
-                     OUT PLCID DefaultLocaleId)
+NtQueryDefaultLocale(IN BOOLEAN UserProfile, OUT PLCID DefaultLocaleId)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
@@ -434,8 +390,7 @@ NtQueryDefaultLocale(IN BOOLEAN UserProfile,
 
 NTSTATUS
 NTAPI
-NtSetDefaultLocale(IN BOOLEAN UserProfile,
-                   IN LCID DefaultLocaleId)
+NtSetDefaultLocale(IN BOOLEAN UserProfile, IN LCID DefaultLocaleId)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -461,7 +416,8 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     {
         /* Open the user's key */
         Status = RtlOpenCurrentUser(KEY_WRITE, &UserKey);
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status))
+            return Status;
 
         /* Initialize the registry location */
         RtlInitUnicodeString(&KeyName, L"Control Panel\\International");
@@ -470,18 +426,14 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     else
     {
         /* Initialize the system registry location */
-        RtlInitUnicodeString(&KeyName,
-                             L"\\Registry\\Machine\\System\\CurrentControlSet"
-                             L"\\Control\\Nls\\Language");
+        RtlInitUnicodeString(
+            &KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet"
+                      L"\\Control\\Nls\\Language");
         RtlInitUnicodeString(&ValueName, L"Default");
     }
 
     /* Initialize the object attributes */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               UserKey,
-                               NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, UserKey, NULL);
 
     /* Check if we don't have a default locale yet */
     if (!DefaultLocaleId)
@@ -495,23 +447,19 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
 
         /* Query the key value */
         KeyValueInformation = (PKEY_VALUE_PARTIAL_INFORMATION)KeyValueBuffer;
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueName,
-                                 KeyValuePartialInformation,
-                                 KeyValueInformation,
-                                 sizeof(KeyValueBuffer),
-                                 &ValueLength);
+        Status = ZwQueryValueKey(
+            KeyHandle, &ValueName, KeyValuePartialInformation, KeyValueInformation, sizeof(KeyValueBuffer),
+            &ValueLength);
         if (!NT_SUCCESS(Status))
         {
             goto Cleanup;
         }
 
         /* Check if this is a REG_DWORD */
-        if ((KeyValueInformation->Type == REG_DWORD) &&
-            (KeyValueInformation->DataLength == sizeof(ULONG)))
+        if ((KeyValueInformation->Type == REG_DWORD) && (KeyValueInformation->DataLength == sizeof(ULONG)))
         {
             /* It contains the LCID as a DWORD */
-            DefaultLocaleId = *((ULONG*)KeyValueInformation->Data);
+            DefaultLocaleId = *((ULONG *)KeyValueInformation->Data);
         }
         /* Otherwise check for a REG_SZ */
         else if (KeyValueInformation->Type == REG_SZ)
@@ -543,28 +491,26 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
                 if (UserProfile)
                 {
                     /* Fill in the buffer */
-                    ValueLength = swprintf(ValueBuffer,
-                                           L"%08lx",
-                                           (ULONG)DefaultLocaleId);
+                    Status = RtlStringCchPrintfW(ValueBuffer, _countof(ValueBuffer), L"%08lx", (ULONG)DefaultLocaleId);
+                    if (!NT_SUCCESS(Status))
+                        goto Cleanup;
+                    ValueLength = (ULONG)wcslen(ValueBuffer);
                 }
                 else
                 {
                     /* Fill in the buffer */
-                    ValueLength = swprintf(ValueBuffer,
-                                           L"%04lx",
-                                           (ULONG)DefaultLocaleId & 0xFFFF);
+                    Status = RtlStringCchPrintfW(
+                        ValueBuffer, _countof(ValueBuffer), L"%04lx", (ULONG)DefaultLocaleId & 0xFFFF);
+                    if (!NT_SUCCESS(Status))
+                        goto Cleanup;
+                    ValueLength = (ULONG)wcslen(ValueBuffer);
                 }
 
                 /* Set the length for the registry call */
                 ValueLength = (ValueLength + 1) * sizeof(WCHAR);
 
                 /* Now write the actual value */
-                Status = ZwSetValueKey(KeyHandle,
-                                       &ValueName,
-                                       0,
-                                       REG_SZ,
-                                       ValueBuffer,
-                                       ValueLength);
+                Status = ZwSetValueKey(KeyHandle, &ValueName, 0, REG_SZ, ValueBuffer, ValueLength);
             }
         }
     }
@@ -608,7 +554,7 @@ Cleanup:
  */
 NTSTATUS
 NTAPI
-NtQueryInstallUILanguage(OUT LANGID* LanguageId)
+NtQueryInstallUILanguage(OUT LANGID *LanguageId)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
@@ -642,7 +588,7 @@ NtQueryInstallUILanguage(OUT LANGID* LanguageId)
  */
 NTSTATUS
 NTAPI
-NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
+NtQueryDefaultUILanguage(OUT LANGID *LanguageId)
 {
     NTSTATUS Status;
     LANGID SafeLanguageId;

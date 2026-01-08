@@ -16,19 +16,12 @@
 ULONG IopTraceLevel = 0;
 BOOLEAN PnpSystemInit = FALSE;
 
-VOID
-NTAPI
-IopTimerDispatch(
-    IN PKDPC Dpc,
-    IN PVOID DeferredContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2
-);
+VOID NTAPI
+IopTimerDispatch(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
 
 BOOLEAN
 NTAPI
-WmiInitialize(
-    VOID);
+WmiInitialize(VOID);
 
 /* DATA ********************************************************************/
 
@@ -47,11 +40,7 @@ ULONG IopAutoReboot;
 ULONG IopNumTriageDumpDataBlocks;
 PVOID IopTriageDumpDataBlocks[64];
 
-GENERIC_MAPPING IopFileMapping = {
-    FILE_GENERIC_READ,
-    FILE_GENERIC_WRITE,
-    FILE_GENERIC_EXECUTE,
-    FILE_ALL_ACCESS};
+GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ, FILE_GENERIC_WRITE, FILE_GENERIC_EXECUTE, FILE_ALL_ACCESS};
 
 extern LIST_ENTRY ShutdownListHead;
 extern LIST_ENTRY LastChanceShutdownListHead;
@@ -90,8 +79,7 @@ PLOADER_PARAMETER_BLOCK IopLoaderBlock;
 /* INIT FUNCTIONS ************************************************************/
 
 CODE_SEG("INIT")
-VOID
-NTAPI
+VOID NTAPI
 IopInitLookasideLists(VOID)
 {
     ULONG LargeIrpSize, SmallIrpSize, MdlSize;
@@ -105,43 +93,24 @@ IopInitLookasideLists(VOID)
     MdlSize = sizeof(MDL) + (23 * sizeof(PFN_NUMBER));
 
     /* Initialize the Lookaside List for I\O Completion */
-    ExInitializeSystemLookasideList(&IoCompletionPacketLookaside,
-                                    NonPagedPool,
-                                    sizeof(IOP_MINI_COMPLETION_PACKET),
-                                    IOC_TAG1,
-                                    32,
-                                    &ExSystemLookasideListHead);
+    ExInitializeSystemLookasideList(
+        &IoCompletionPacketLookaside, NonPagedPool, sizeof(IOP_MINI_COMPLETION_PACKET), IOC_TAG1, 32,
+        &ExSystemLookasideListHead);
 
     /* Initialize the Lookaside List for Large IRPs */
-    ExInitializeSystemLookasideList(&IoLargeIrpLookaside,
-                                    NonPagedPool,
-                                    LargeIrpSize,
-                                    IO_LARGEIRP,
-                                    64,
-                                    &ExSystemLookasideListHead);
-
+    ExInitializeSystemLookasideList(
+        &IoLargeIrpLookaside, NonPagedPool, LargeIrpSize, IO_LARGEIRP, 64, &ExSystemLookasideListHead);
 
     /* Initialize the Lookaside List for Small IRPs */
-    ExInitializeSystemLookasideList(&IoSmallIrpLookaside,
-                                    NonPagedPool,
-                                    SmallIrpSize,
-                                    IO_SMALLIRP,
-                                    32,
-                                    &ExSystemLookasideListHead);
+    ExInitializeSystemLookasideList(
+        &IoSmallIrpLookaside, NonPagedPool, SmallIrpSize, IO_SMALLIRP, 32, &ExSystemLookasideListHead);
 
     /* Initialize the Lookaside List for MDLs */
-    ExInitializeSystemLookasideList(&IopMdlLookasideList,
-                                    NonPagedPool,
-                                    MdlSize,
-                                    TAG_MDL,
-                                    128,
-                                    &ExSystemLookasideListHead);
+    ExInitializeSystemLookasideList(
+        &IopMdlLookasideList, NonPagedPool, MdlSize, TAG_MDL, 128, &ExSystemLookasideListHead);
 
     /* Allocate the global lookaside list buffer */
-    CurrentList = ExAllocatePoolWithTag(NonPagedPool,
-                                        4 * KeNumberProcessors *
-                                        sizeof(GENERAL_LOOKASIDE),
-                                        TAG_IO);
+    CurrentList = ExAllocatePoolWithTag(NonPagedPool, 4 * KeNumberProcessors * sizeof(GENERAL_LOOKASIDE), TAG_IO);
 
     /* Loop all processors */
     for (i = 0; i < KeNumberProcessors; i++)
@@ -158,15 +127,11 @@ IopInitLookasideLists(VOID)
         if (CurrentList)
         {
             /* Initialize the Lookaside List for mini-packets */
-            ExInitializeSystemLookasideList(CurrentList,
-                                            NonPagedPool,
-                                            sizeof(IOP_MINI_COMPLETION_PACKET),
-                                            IO_SMALLIRP_CPU,
-                                            32,
-                                            &ExSystemLookasideListHead);
+            ExInitializeSystemLookasideList(
+                CurrentList, NonPagedPool, sizeof(IOP_MINI_COMPLETION_PACKET), IO_SMALLIRP_CPU, 32,
+                &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideCompletionList].P = CurrentList;
             CurrentList++;
-
         }
         else
         {
@@ -178,15 +143,10 @@ IopInitLookasideLists(VOID)
         if (CurrentList)
         {
             /* Initialize the Lookaside List for Large IRPs */
-            ExInitializeSystemLookasideList(CurrentList,
-                                            NonPagedPool,
-                                            LargeIrpSize,
-                                            IO_LARGEIRP_CPU,
-                                            64,
-                                            &ExSystemLookasideListHead);
+            ExInitializeSystemLookasideList(
+                CurrentList, NonPagedPool, LargeIrpSize, IO_LARGEIRP_CPU, 64, &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideLargeIrpList].P = CurrentList;
             CurrentList++;
-
         }
         else
         {
@@ -198,15 +158,10 @@ IopInitLookasideLists(VOID)
         if (CurrentList)
         {
             /* Initialize the Lookaside List for Small IRPs */
-            ExInitializeSystemLookasideList(CurrentList,
-                                            NonPagedPool,
-                                            SmallIrpSize,
-                                            IO_SMALLIRP_CPU,
-                                            32,
-                                            &ExSystemLookasideListHead);
+            ExInitializeSystemLookasideList(
+                CurrentList, NonPagedPool, SmallIrpSize, IO_SMALLIRP_CPU, 32, &ExSystemLookasideListHead);
             Prcb->PPLookasideList[LookasideSmallIrpList].P = CurrentList;
             CurrentList++;
-
         }
         else
         {
@@ -218,16 +173,11 @@ IopInitLookasideLists(VOID)
         if (CurrentList)
         {
             /* Initialize the Lookaside List for MDLs */
-            ExInitializeSystemLookasideList(CurrentList,
-                                            NonPagedPool,
-                                            SmallIrpSize,
-                                            TAG_MDL,
-                                            128,
-                                            &ExSystemLookasideListHead);
+            ExInitializeSystemLookasideList(
+                CurrentList, NonPagedPool, SmallIrpSize, TAG_MDL, 128, &ExSystemLookasideListHead);
 
             Prcb->PPLookasideList[LookasideMdlList].P = CurrentList;
             CurrentList++;
-
         }
         else
         {
@@ -255,18 +205,14 @@ IopCreateObjectTypes(VOID)
 
     /* Do the Adapter Type */
     RtlInitUnicodeString(&Name, L"Adapter");
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoAdapterObjectType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoAdapterObjectType)))
+        return FALSE;
 
     /* Do the Controller Type */
     RtlInitUnicodeString(&Name, L"Controller");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoControllerObjectType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoControllerObjectType)))
+        return FALSE;
 
     /* Do the Device Type */
     RtlInitUnicodeString(&Name, L"Device");
@@ -275,10 +221,8 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
     ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
     ObjectTypeInitializer.CaseInsensitive = TRUE;
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoDeviceObjectType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDeviceObjectType)))
+        return FALSE;
 
     /* Initialize the Driver object type */
     RtlInitUnicodeString(&Name, L"Driver");
@@ -286,10 +230,8 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
     ObjectTypeInitializer.ParseProcedure = NULL;
     ObjectTypeInitializer.SecurityProcedure = NULL;
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoDriverObjectType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDriverObjectType)))
+        return FALSE;
 
     /* Initialize the I/O Completion object type */
     RtlInitUnicodeString(&Name, L"IoCompletion");
@@ -298,10 +240,8 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.InvalidAttributes |= OBJ_PERMANENT;
     ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoCompletionType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoCompletionType)))
+        return FALSE;
 
     /* Initialize the File object type  */
     RtlInitUnicodeString(&Name, L"File");
@@ -316,10 +256,8 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.QueryNameProcedure = IopQueryName;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
-    if (!NT_SUCCESS(ObCreateObjectType(&Name,
-                                       &ObjectTypeInitializer,
-                                       NULL,
-                                       &IoFileObjectType))) return FALSE;
+    if (!NT_SUCCESS(ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoFileObjectType)))
+        return FALSE;
 
     /* Success */
     return TRUE;
@@ -337,14 +275,8 @@ IopCreateRootDirectories(VOID)
 
     /* Create the '\Driver' object directory */
     RtlInitUnicodeString(&DirName, L"\\Driver");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &DirName,
-                               OBJ_PERMANENT,
-                               NULL,
-                               NULL);
-    Status = NtCreateDirectoryObject(&Handle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &ObjectAttributes);
+    InitializeObjectAttributes(&ObjectAttributes, &DirName, OBJ_PERMANENT, NULL, NULL);
+    Status = NtCreateDirectoryObject(&Handle, DIRECTORY_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create \\Driver directory: 0x%lx\n", Status);
@@ -354,14 +286,8 @@ IopCreateRootDirectories(VOID)
 
     /* Create the '\FileSystem' object directory */
     RtlInitUnicodeString(&DirName, L"\\FileSystem");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &DirName,
-                               OBJ_PERMANENT,
-                               NULL,
-                               NULL);
-    Status = NtCreateDirectoryObject(&Handle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &ObjectAttributes);
+    InitializeObjectAttributes(&ObjectAttributes, &DirName, OBJ_PERMANENT, NULL, NULL);
+    Status = NtCreateDirectoryObject(&Handle, DIRECTORY_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create \\FileSystem directory: 0x%lx\n", Status);
@@ -371,14 +297,8 @@ IopCreateRootDirectories(VOID)
 
     /* Create the '\FileSystem' object directory */
     RtlInitUnicodeString(&DirName, L"\\FileSystem\\Filters");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &DirName,
-                               OBJ_PERMANENT,
-                               NULL,
-                               NULL);
-    Status = NtCreateDirectoryObject(&Handle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &ObjectAttributes);
+    InitializeObjectAttributes(&ObjectAttributes, &DirName, OBJ_PERMANENT, NULL, NULL);
+    Status = NtCreateDirectoryObject(&Handle, DIRECTORY_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create \\FileSystem\\Filters directory: 0x%lx\n", Status);
@@ -405,40 +325,26 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFILE_OBJECT FileObject;
 
     /* Build the ARC device name */
-    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    Status = RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
     RtlInitAnsiString(&DeviceString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&DeviceName, &DeviceString, TRUE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Open it */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &DeviceName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = ZwOpenFile(&FileHandle,
-                        FILE_READ_ATTRIBUTES,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_NON_DIRECTORY_FILE);
+    InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status =
+        ZwOpenFile(&FileHandle, FILE_READ_ATTRIBUTES, &ObjectAttributes, &IoStatusBlock, 0, FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE,
-                     (ULONG_PTR)&DeviceName,
-                     Status,
-                     0,
-                     0);
+        KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE, (ULONG_PTR)&DeviceName, Status, 0, 0);
     }
 
     /* Get the DO */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
-                                       IoFileObjectType,
-                                       KernelMode,
-                                       (PVOID *)&FileObject,
-                                       NULL);
+    Status = ObReferenceObjectByHandle(FileHandle, 0, IoFileObjectType, KernelMode, (PVOID *)&FileObject, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -470,8 +376,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     CHAR Buffer[256];
     ANSI_STRING NtBootPath, RootString;
 
-    /* Initialize empty NT Boot Path */
-    RtlInitEmptyAnsiString(&NtBootPath, Buffer, sizeof(Buffer));
+    /* Setup system path */
+    RtlStringCchPrintfA(Buffer, sizeof(Buffer), "C:%s", LoaderBlock->NtBootPathName);
+    RtlInitAnsiString(&NtBootPath, Buffer);
 
     /* Initialize the lookaside lists */
     IopInitLookasideLists();
@@ -546,10 +453,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Reenumerate what HAL has added (synchronously)
      * This function call should eventually become a 2nd stage of the PnP initialization */
-    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
-                        PiActionEnumRootDevices,
-                        NULL,
-                        NULL);
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
 
     /* Make loader block available for the whole kernel */
     IopLoaderBlock = LoaderBlock;
@@ -607,9 +511,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set the ANSI_STRING for the root path */
     RootString.MaximumLength = NtSystemRoot.MaximumLength / sizeof(WCHAR);
     RootString.Length = 0;
-    RootString.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                              RootString.MaximumLength,
-                                              TAG_IO);
+    RootString.Buffer = ExAllocatePoolWithTag(PagedPool, RootString.MaximumLength, TAG_IO);
 
     /* Convert the path into the ANSI_STRING */
     Status = RtlUnicodeStringToAnsiString(&RootString, &NtSystemRoot, FALSE);
@@ -620,10 +522,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Assign drive letters */
-    IoAssignDriveLetters(LoaderBlock,
-                         &NtBootPath,
-                         (PUCHAR)RootString.Buffer,
-                         &RootString);
+    IoAssignDriveLetters(LoaderBlock, &NtBootPath, (PUCHAR)RootString.Buffer, &RootString);
 
     /* Update system root */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &RootString, FALSE);

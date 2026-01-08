@@ -1,12 +1,12 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/io/iomgr/arcname.c
-* PURPOSE:         ARC Path Initialization Functions
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl
-*                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/iomgr/arcname.c
+ * PURPOSE:         ARC Path Initialization Functions
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
+ */
 
 /* INCLUDES ******************************************************************/
 
@@ -29,9 +29,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      IN BOOLEAN SingleDisk,
-                      OUT PBOOLEAN FoundBoot);
+IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock, IN BOOLEAN SingleDisk, OUT PBOOLEAN FoundBoot);
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -48,18 +46,17 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
 
     /* Check if we only have one disk on the machine */
-    SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
-                 &ArcDiskInfo->DiskSignatureListHead);
+    SingleDisk = (ArcDiskInfo->DiskSignatureListHead.Flink->Flink == &ArcDiskInfo->DiskSignatureListHead);
 
     /* Create the global HAL partition name */
-    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
+    RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\ArcName\\%s", LoaderBlock->ArcHalDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&IoArcHalDeviceName, &ArcString, TRUE);
     if (!NT_SUCCESS(Status))
         return Status;
 
     /* Create the global system partition name */
-    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&ArcString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&IoArcBootDeviceName, &ArcString, TRUE);
     if (!NT_SUCCESS(Status))
@@ -67,15 +64,11 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Allocate memory for the string */
     Length = strlen(LoaderBlock->ArcBootDeviceName) + sizeof(ANSI_NULL);
-    IoLoaderArcBootDeviceName = ExAllocatePoolWithTag(PagedPool,
-                                                      Length,
-                                                      TAG_IO);
+    IoLoaderArcBootDeviceName = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);
     if (IoLoaderArcBootDeviceName)
     {
         /* Copy the name */
-        RtlCopyMemory(IoLoaderArcBootDeviceName,
-                      LoaderBlock->ArcBootDeviceName,
-                      Length);
+        RtlCopyMemory(IoLoaderArcBootDeviceName, LoaderBlock->ArcBootDeviceName, Length);
     }
 
     /* Check if we only found a disk, but we're booting from CD-ROM */
@@ -103,7 +96,7 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Get ARC booting device name (in net(0) something) */
-        sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+        RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
         RtlInitAnsiString(&ArcString, Buffer);
         Status = RtlAnsiStringToUnicodeString(&BootDeviceName, &ArcString, TRUE);
         if (NT_SUCCESS(Status))
@@ -186,10 +179,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
      * Given the current ReactOS state, that's good for us.
      * To sum up, this is NOT a hack or whatsoever.
      */
-    Status = IopFetchConfigurationInformation(&SymbolicLinkList,
-                                              GUID_DEVINTERFACE_CDROM,
-                                              CdRomCount,
-                                              &EnabledDisks);
+    Status = IopFetchConfigurationInformation(&SymbolicLinkList, GUID_DEVINTERFACE_CDROM, CdRomCount, &EnabledDisks);
     if (!NT_SUCCESS(Status))
     {
         NotEnabledPresent = TRUE;
@@ -201,12 +191,9 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Browse all the ARC devices trying to find the one matching boot device */
     for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
-         NextEntry != &ArcDiskInformation->DiskSignatureListHead;
-         NextEntry = NextEntry->Flink)
+         NextEntry != &ArcDiskInformation->DiskSignatureListHead; NextEntry = NextEntry->Flink)
     {
-        ArcDiskSignature = CONTAINING_RECORD(NextEntry,
-                                             ARC_DISK_SIGNATURE,
-                                             ListEntry);
+        ArcDiskSignature = CONTAINING_RECORD(NextEntry, ARC_DISK_SIGNATURE, ListEntry);
 
         if (strcmp(LoaderBlock->ArcBootDeviceName, ArcDiskSignature->ArcName) == 0)
         {
@@ -262,10 +249,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             lSymbolicLinkList += wcslen(lSymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
 
             /* Get its associated device object and file object */
-            Status = IoGetDeviceObjectPointer(&DeviceStringW,
-                                              FILE_READ_ATTRIBUTES,
-                                              &FileObject,
-                                              &DeviceObject);
+            Status = IoGetDeviceObjectPointer(&DeviceStringW, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
             /* Failure? Good bye! */
             if (!NT_SUCCESS(Status))
             {
@@ -273,15 +257,9 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
 
             /* Now, we'll ask the device its device number */
-            Irp = IoBuildDeviceIoControlRequest(IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                                                DeviceObject,
-                                                NULL,
-                                                0,
-                                                &DeviceNumber,
-                                                sizeof(DeviceNumber),
-                                                FALSE,
-                                                &Event,
-                                                &IoStatusBlock);
+            Irp = IoBuildDeviceIoControlRequest(
+                IOCTL_STORAGE_GET_DEVICE_NUMBER, DeviceObject, NULL, 0, &DeviceNumber, sizeof(DeviceNumber), FALSE,
+                &Event, &IoStatusBlock);
             /* Failure? Good bye! */
             if (!Irp)
             {
@@ -306,7 +284,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
 
             /* Finally, build proper device name */
-            sprintf(Buffer, "\\Device\\CdRom%lu", DeviceNumber.DeviceNumber);
+            RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\Device\\CdRom%lu", DeviceNumber.DeviceNumber);
             RtlInitAnsiString(&DeviceStringA, Buffer);
             Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
             if (!NT_SUCCESS(Status))
@@ -318,7 +296,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         else
         {
             /* Create device name for the cd */
-            sprintf(Buffer, "\\Device\\CdRom%lu", EnabledDisks++);
+            RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\Device\\CdRom%lu", EnabledDisks++);
             RtlInitAnsiString(&DeviceStringA, Buffer);
             Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
             if (!NT_SUCCESS(Status))
@@ -327,10 +305,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             }
 
             /* Get its device object */
-            Status = IoGetDeviceObjectPointer(&DeviceStringW,
-                                              FILE_READ_ATTRIBUTES,
-                                              &FileObject,
-                                              &DeviceObject);
+            Status = IoGetDeviceObjectPointer(&DeviceStringW, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
             if (!NT_SUCCESS(Status))
             {
                 RtlFreeUnicodeString(&DeviceStringW);
@@ -341,13 +316,8 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Initiate data for reading cd and compute checksum */
         StartingOffset.QuadPart = 0x8000;
         CheckSum = 0;
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                           DeviceObject,
-                                           PartitionBuffer,
-                                           2048,
-                                           &StartingOffset,
-                                           &Event,
-                                           &IoStatusBlock);
+        Irp = IoBuildSynchronousFsdRequest(
+            IRP_MJ_READ, DeviceObject, PartitionBuffer, 2048, &StartingOffset, &Event, &IoStatusBlock);
         if (Irp)
         {
             /* Call the driver, and wait for it if needed */
@@ -376,7 +346,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (CheckSum + ArcDiskSignature->CheckSum == 0)
         {
             /* Create ARC name */
-            sprintf(ArcBuffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+            RtlStringCchPrintfA(ArcBuffer, sizeof(ArcBuffer), "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
             RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
             Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
             if (NT_SUCCESS(Status))
@@ -413,9 +383,7 @@ Cleanup:
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      IN BOOLEAN SingleDisk,
-                      OUT PBOOLEAN FoundBoot)
+IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock, IN BOOLEAN SingleDisk, OUT PBOOLEAN FoundBoot)
 {
     PIRP Irp;
     PVOID Data;
@@ -445,10 +413,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     DiskCount = IoGetConfigurationInformation()->DiskCount;
 
     /* Get enabled disks and check if result matches */
-    Status = IopFetchConfigurationInformation(&SymbolicLinkList,
-                                              GUID_DEVINTERFACE_DISK,
-                                              DiskCount,
-                                              &EnabledDisks);
+    Status = IopFetchConfigurationInformation(&SymbolicLinkList, GUID_DEVINTERFACE_DISK, DiskCount, &EnabledDisks);
     if (!NT_SUCCESS(Status))
     {
         NotEnabledPresent = TRUE;
@@ -493,22 +458,13 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             lSymbolicLinkList += wcslen(lSymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
 
             /* Get its associated device object and file object */
-            Status = IoGetDeviceObjectPointer(&DeviceStringW,
-                                              FILE_READ_ATTRIBUTES,
-                                              &FileObject,
-                                              &DeviceObject);
+            Status = IoGetDeviceObjectPointer(&DeviceStringW, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
             if (NT_SUCCESS(Status))
             {
                 /* Now, we'll ask the device its device number */
-                Irp = IoBuildDeviceIoControlRequest(IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                                                    DeviceObject,
-                                                    NULL,
-                                                    0,
-                                                    &DeviceNumber,
-                                                    sizeof(DeviceNumber),
-                                                    FALSE,
-                                                    &Event,
-                                                    &IoStatusBlock);
+                Irp = IoBuildDeviceIoControlRequest(
+                    IOCTL_STORAGE_GET_DEVICE_NUMBER, DeviceObject, NULL, 0, &DeviceNumber, sizeof(DeviceNumber), FALSE,
+                    &Event, &IoStatusBlock);
                 /* Missing resources is a shame... No need to go farther */
                 if (!Irp)
                 {
@@ -529,8 +485,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* If we didn't get the appropriate data, just skip that disk */
                 if (!NT_SUCCESS(Status))
                 {
-                   ObDereferenceObject(FileObject);
-                   continue;
+                    ObDereferenceObject(FileObject);
+                    continue;
                 }
             }
 
@@ -556,7 +512,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         else
         {
             /* Create device name for the disk */
-            sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", DiskNumber);
+            RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\Device\\Harddisk%lu\\Partition0", DiskNumber);
             RtlInitAnsiString(&DeviceStringA, Buffer);
             Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
             if (!NT_SUCCESS(Status))
@@ -565,10 +521,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             }
 
             /* Get its device object */
-            Status = IoGetDeviceObjectPointer(&DeviceStringW,
-                                              FILE_READ_ATTRIBUTES,
-                                              &FileObject,
-                                              &DeviceObject);
+            Status = IoGetDeviceObjectPointer(&DeviceStringW, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
 
             RtlFreeUnicodeString(&DeviceStringW);
             /* This is a security measure, to ensure DiskNumber will be used */
@@ -582,15 +535,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
 
         /* Let's ask the disk for its geometry */
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            &DiskGeometry,
-                                            sizeof(DiskGeometry),
-                                            FALSE,
-                                            &Event,
-                                            &IoStatusBlock);
+        Irp = IoBuildDeviceIoControlRequest(
+            IOCTL_DISK_GET_DRIVE_GEOMETRY, DeviceObject, NULL, 0, &DiskGeometry, sizeof(DiskGeometry), FALSE, &Event,
+            &IoStatusBlock);
         /* Missing resources is a shame... No need to go farther */
         if (!Irp)
         {
@@ -615,8 +562,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
 
         /* Read the partition table */
-        Status = IoReadPartitionTableEx(DeviceObject,
-                                        &DriveLayout);
+        Status = IoReadPartitionTableEx(DeviceObject, &DriveLayout);
         if (!NT_SUCCESS(Status))
         {
             ObDereferenceObject(FileObject);
@@ -649,13 +595,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
 
         /* Read the first sector for computing checksum */
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                           DeviceObject,
-                                           PartitionBuffer,
-                                           DiskGeometry.BytesPerSector,
-                                           &StartingOffset,
-                                           &Event,
-                                           &IoStatusBlock);
+        Irp = IoBuildSynchronousFsdRequest(
+            IRP_MJ_READ, DeviceObject, PartitionBuffer, DiskGeometry.BytesPerSector, &StartingOffset, &Event,
+            &IoStatusBlock);
         if (!Irp)
         {
             ExFreePoolWithTag(PartitionBuffer, TAG_IO);
@@ -696,12 +638,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         /* Browse each ARC disk */
         for (NextEntry = ArcDiskInformation->DiskSignatureListHead.Flink;
-             NextEntry != &ArcDiskInformation->DiskSignatureListHead;
-             NextEntry = NextEntry->Flink)
+             NextEntry != &ArcDiskInformation->DiskSignatureListHead; NextEntry = NextEntry->Flink)
         {
-            ArcDiskSignature = CONTAINING_RECORD(NextEntry,
-                                                 ARC_DISK_SIGNATURE,
-                                                 ListEntry);
+            ArcDiskSignature = CONTAINING_RECORD(NextEntry, ARC_DISK_SIGNATURE, ListEntry);
 
             /*
              * If this is the only MBR disk in the ARC list and detected
@@ -709,14 +648,14 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
              * Otherwise, check whether the signatures and checksums match
              * before creating the ArcName link.
              */
-            if ((SingleDisk && (DiskCount == 1) &&
-                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||
+            if ((SingleDisk && (DiskCount == 1) && (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||
                 (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature) &&
                  (ArcDiskSignature->CheckSum + CheckSum == 0)))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0",
-                        (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
+                RtlStringCchPrintfA(
+                    Buffer, sizeof(Buffer), "\\Device\\Harddisk%lu\\Partition0",
+                    (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
                 RtlInitAnsiString(&DeviceStringA, Buffer);
                 Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -725,7 +664,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 }
 
                 /* Create ARC name */
-                sprintf(ArcBuffer, "\\ArcName\\%s", ArcDiskSignature->ArcName);
+                RtlStringCchPrintfA(ArcBuffer, sizeof(ArcBuffer), "\\ArcName\\%s", ArcDiskSignature->ArcName);
                 RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
                 Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -745,8 +684,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu",
-                            (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
+                    RtlStringCchPrintfA(
+                        Buffer, sizeof(Buffer), "\\Device\\Harddisk%lu\\Partition%lu",
+                        (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
                     RtlInitAnsiString(&DeviceStringA, Buffer);
                     Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                     if (!NT_SUCCESS(Status))
@@ -755,7 +695,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     }
 
                     /* Create partial ARC name */
-                    sprintf(ArcBuffer, "%spartition(%lu)", ArcDiskSignature->ArcName, i);
+                    RtlStringCchPrintfA(ArcBuffer, sizeof(ArcBuffer), "%spartition(%lu)", ArcDiskSignature->ArcName, i);
                     RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
 
                     /* Is that boot device? */
@@ -783,7 +723,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     }
 
                     /* Create complete ARC name */
-                    sprintf(ArcBuffer, "\\ArcName\\%spartition(%lu)", ArcDiskSignature->ArcName, i);
+                    RtlStringCchPrintfA(
+                        ArcBuffer, sizeof(ArcBuffer), "\\ArcName\\%spartition(%lu)", ArcDiskSignature->ArcName, i);
                     RtlInitAnsiString(&ArcNameStringA, ArcBuffer);
                     Status = RtlAnsiStringToUnicodeString(&ArcNameStringW, &ArcNameStringA, TRUE);
                     if (!NT_SUCCESS(Status))
@@ -806,8 +747,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                  * a matching signature, BUT a non-matching checksum: this can
                  * be the sign of a duplicate signature, or even worse a virus
                  * played with the partition table. */
-                if (ArcDiskSignature->ValidPartitionTable &&
-                    (ArcDiskSignature->Signature == Signature) &&
+                if (ArcDiskSignature->ValidPartitionTable && (ArcDiskSignature->Signature == Signature) &&
                     (ArcDiskSignature->CheckSum + CheckSum != 0))
                 {
                     DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
@@ -839,8 +779,7 @@ Cleanup:
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
-IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      OUT PANSI_STRING NtBootPath)
+IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock, OUT PANSI_STRING NtBootPath)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
@@ -851,20 +790,15 @@ IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     HANDLE LinkHandle;
 
     /* Create the Unicode name for the current ARC boot device */
-    sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+    RtlStringCchPrintfA(Buffer, sizeof(Buffer), "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
     RtlInitAnsiString(&TargetString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&TargetName, &TargetString, TRUE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Initialize the attributes and open the link */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &TargetName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenSymbolicLinkObject(&LinkHandle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
+    InitializeObjectAttributes(&ObjectAttributes, &TargetName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenSymbolicLinkObject(&LinkHandle, SYMBOLIC_LINK_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         /* We failed, free the string */
@@ -898,25 +832,21 @@ IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Setup the system root name again */
     RtlInitAnsiString(&TempString, "\\SystemRoot");
     Status = RtlAnsiStringToUnicodeString(&LinkName, &TempString, TRUE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Open the symbolic link for it */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenSymbolicLinkObject(&LinkHandle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    InitializeObjectAttributes(&ObjectAttributes, &LinkName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenSymbolicLinkObject(&LinkHandle, SYMBOLIC_LINK_ALL_ACCESS, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Destroy it */
     NtMakeTemporaryObject(LinkHandle);
     ObCloseHandle(LinkHandle, KernelMode);
 
     /* Now create the new name for it */
-    sprintf(Buffer, "%s%s", ArcString.Buffer, LoaderBlock->NtBootPathName);
+    RtlStringCchPrintfA(Buffer, sizeof(Buffer), "%s%s", ArcString.Buffer, LoaderBlock->NtBootPathName);
 
     /* Copy it into the passed parameter and null-terminate it */
     RtlCopyString(NtBootPath, &ArcString);
@@ -924,19 +854,13 @@ IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Setup the Unicode-name for the new symbolic link value */
     RtlInitAnsiString(&TargetString, Buffer);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkName,
-                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
-                               NULL,
-                               NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &LinkName, OBJ_CASE_INSENSITIVE | OBJ_PERMANENT, NULL, NULL);
     Status = RtlAnsiStringToUnicodeString(&ArcName, &TargetString, TRUE);
-    if (!NT_SUCCESS(Status)) return FALSE;
+    if (!NT_SUCCESS(Status))
+        return FALSE;
 
     /* Create it */
-    Status = NtCreateSymbolicLinkObject(&LinkHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &ArcName);
+    Status = NtCreateSymbolicLinkObject(&LinkHandle, SYMBOLIC_LINK_ALL_ACCESS, &ObjectAttributes, &ArcName);
 
     /* Free all the strings and close the handle and return success */
     RtlFreeUnicodeString(&ArcName);
@@ -971,8 +895,7 @@ IopVerifyDiskSignature(
     else if (DriveLayout->PartitionStyle == PARTITION_STYLE_GPT)
     {
         /* Verify whether the signature is GPT and compare the GUID */
-        if (ArcDiskSignature->IsGpt &&
-            IsEqualGUID((PGUID)&ArcDiskSignature->GptSignature, &DriveLayout->Gpt.DiskId))
+        if (ArcDiskSignature->IsGpt && IsEqualGUID((PGUID)&ArcDiskSignature->GptSignature, &DriveLayout->Gpt.DiskId))
         {
             /* There is no signature to return, just zero it */
             if (Signature)

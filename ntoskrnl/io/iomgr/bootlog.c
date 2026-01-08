@@ -21,7 +21,6 @@ static BOOLEAN IopLogFileEnabled = FALSE;
 static ULONG IopLogEntryCount = 0;
 static ERESOURCE IopBootLogResource;
 
-
 /* FUNCTIONS ****************************************************************/
 
 CODE_SEG("INIT")
@@ -29,9 +28,9 @@ VOID
 IopInitBootLog(BOOLEAN StartBootLog)
 {
     ExInitializeResourceLite(&IopBootLogResource);
-    if (StartBootLog) IopStartBootLog();
+    if (StartBootLog)
+        IopStartBootLog();
 }
-
 
 CODE_SEG("INIT")
 VOID
@@ -41,17 +40,14 @@ IopStartBootLog(VOID)
     IopBootLogEnabled = TRUE;
 }
 
-
 VOID
 IopStopBootLog(VOID)
 {
     IopBootLogEnabled = FALSE;
 }
 
-
 VOID
-IopBootLog(PUNICODE_STRING DriverName,
-           BOOLEAN Success)
+IopBootLog(PUNICODE_STRING DriverName, BOOLEAN Success)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     WCHAR Buffer[256];
@@ -67,29 +63,16 @@ IopBootLog(PUNICODE_STRING DriverName,
 
     ExAcquireResourceExclusiveLite(&IopBootLogResource, TRUE);
 
-    DPRINT("Boot log: %wS %wZ\n",
-           Success ? L"Loaded driver" : L"Did not load driver",
-           DriverName);
+    DPRINT("Boot log: %wS %wZ\n", Success ? L"Loaded driver" : L"Did not load driver", DriverName);
 
-    swprintf(Buffer,
-             L"%ws %wZ",
-             Success ? L"Loaded driver" : L"Did not load driver",
-             DriverName);
+    RtlStringCchPrintfW(
+        Buffer, _countof(Buffer), L"%ws %wZ", Success ? L"Loaded driver" : L"Did not load driver", DriverName);
 
-    swprintf(ValueNameBuffer,
-             L"%lu",
-             IopLogEntryCount);
+    RtlStringCchPrintfW(ValueNameBuffer, _countof(ValueNameBuffer), L"%lu", IopLogEntryCount);
 
-    RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\System\\CurrentControlSet");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = ZwOpenKey(&ControlSetKey,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet");
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = ZwOpenKey(&ControlSetKey, KEY_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
@@ -98,18 +81,8 @@ IopBootLog(PUNICODE_STRING DriverName,
     }
 
     RtlInitUnicodeString(&KeyName, L"BootLog");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                               ControlSetKey,
-                               NULL);
-    Status = ZwCreateKey(&BootLogKey,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, ControlSetKey, NULL);
+    Status = ZwCreateKey(&BootLogKey, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
@@ -119,12 +92,8 @@ IopBootLog(PUNICODE_STRING DriverName,
     }
 
     RtlInitUnicodeString(&ValueName, ValueNameBuffer);
-    Status = ZwSetValueKey(BootLogKey,
-                           &ValueName,
-                           0,
-                           REG_SZ,
-                           (PVOID)Buffer,
-                           (ULONG)(wcslen(Buffer) + 1) * sizeof(WCHAR));
+    Status =
+        ZwSetValueKey(BootLogKey, &ValueName, 0, REG_SZ, (PVOID)Buffer, (ULONG)(wcslen(Buffer) + 1) * sizeof(WCHAR));
     ZwClose(BootLogKey);
     ZwClose(ControlSetKey);
 
@@ -140,9 +109,7 @@ IopBootLog(PUNICODE_STRING DriverName,
     ExReleaseResourceLite(&IopBootLogResource);
 }
 
-
-static
-NTSTATUS
+static NTSTATUS
 IopWriteLogFile(PWSTR LogText)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -154,25 +121,12 @@ IopWriteLogFile(PWSTR LogText)
 
     DPRINT("IopWriteLogFile() called\n");
 
-    RtlInitUnicodeString(&FileName,
-                         L"\\SystemRoot\\rosboot.log");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                               NULL,
-                               NULL);
+    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\rosboot.log");
+    InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
 
-    Status = ZwCreateFile(&FileHandle,
-                          FILE_APPEND_DATA | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          0,
-                          0,
-                          FILE_OPEN,
-                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL,
-                          0);
+    Status = ZwCreateFile(
+        &FileHandle, FILE_APPEND_DATA | SYNCHRONIZE, &ObjectAttributes, &IoStatusBlock, NULL, 0, 0, FILE_OPEN,
+        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwCreateFile() failed (Status %lx)\n", Status);
@@ -181,15 +135,8 @@ IopWriteLogFile(PWSTR LogText)
 
     if (LogText != NULL)
     {
-        Status = ZwWriteFile(FileHandle,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &IoStatusBlock,
-                             LogText,
-                             (ULONG)wcslen(LogText) * sizeof(WCHAR),
-                             NULL,
-                             NULL);
+        Status = ZwWriteFile(
+            FileHandle, NULL, NULL, NULL, &IoStatusBlock, LogText, (ULONG)wcslen(LogText) * sizeof(WCHAR), NULL, NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwWriteFile() failed (Status %lx)\n", Status);
@@ -199,15 +146,7 @@ IopWriteLogFile(PWSTR LogText)
     }
 
     /* L"\r\n" */
-    Status = ZwWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         (PVOID)CrLf,
-                         2 * sizeof(WCHAR),
-                         NULL,
-                         NULL);
+    Status = ZwWriteFile(FileHandle, NULL, NULL, NULL, &IoStatusBlock, (PVOID)CrLf, 2 * sizeof(WCHAR), NULL, NULL);
 
     ZwClose(FileHandle);
 
@@ -219,9 +158,7 @@ IopWriteLogFile(PWSTR LogText)
     return Status;
 }
 
-
-static
-NTSTATUS
+static NTSTATUS
 IopCreateLogFile(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -236,25 +173,12 @@ IopCreateLogFile(VOID)
 
     ExAcquireResourceExclusiveLite(&IopBootLogResource, TRUE);
 
-    RtlInitUnicodeString(&FileName,
-                         L"\\SystemRoot\\rosboot.log");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &FileName,
-                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                               NULL,
-                               NULL);
+    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\rosboot.log");
+    InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
 
-    Status = ZwCreateFile(&FileHandle,
-                          FILE_ALL_ACCESS,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          0,
-                          0,
-                          FILE_SUPERSEDE,
-                          FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL,
-                          0);
+    Status = ZwCreateFile(
+        &FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, &IoStatusBlock, NULL, 0, 0, FILE_SUPERSEDE,
+        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwCreateFile() failed (Status %lx)\n", Status);
@@ -264,15 +188,8 @@ IopCreateLogFile(VOID)
     ByteOffset.QuadPart = (LONGLONG)0;
 
     Signature = 0xFEFF;
-    Status = ZwWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         (PVOID)&Signature,
-                         sizeof(WCHAR),
-                         &ByteOffset,
-                         NULL);
+    Status =
+        ZwWriteFile(FileHandle, NULL, NULL, NULL, &IoStatusBlock, (PVOID)&Signature, sizeof(WCHAR), &ByteOffset, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwWriteKey() failed (Status %lx)\n", Status);
@@ -282,7 +199,6 @@ IopCreateLogFile(VOID)
 
     return Status;
 }
-
 
 VOID
 IopSaveBootLogToFile(VOID)
@@ -313,7 +229,7 @@ IopSaveBootLogToFile(VOID)
         return;
     }
 
-    //Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
+    // Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
 
     if (!NT_SUCCESS(Status))
     {
@@ -330,26 +246,17 @@ IopSaveBootLogToFile(VOID)
         return;
     }
 
-
     BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 256 * sizeof(WCHAR);
-    KeyInfo = ExAllocatePool(PagedPool,
-                             BufferSize);
+    KeyInfo = ExAllocatePool(PagedPool, BufferSize);
     if (KeyInfo == NULL)
     {
         ExReleaseResourceLite(&IopBootLogResource);
         return;
     }
 
-    RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\System\\CurrentControlSet\\BootLog");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = ZwOpenKey(&KeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\BootLog");
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         ExFreePool(KeyInfo);
@@ -357,20 +264,13 @@ IopSaveBootLogToFile(VOID)
         return;
     }
 
-    for (i = 0; ; i++)
+    for (i = 0;; i++)
     {
-        swprintf(ValueNameBuffer,
-                 L"%lu", i);
+        RtlStringCchPrintfW(ValueNameBuffer, _countof(ValueNameBuffer), L"%lu", i);
 
-        RtlInitUnicodeString(&ValueName,
-                             ValueNameBuffer);
+        RtlInitUnicodeString(&ValueName, ValueNameBuffer);
 
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueName,
-                                 KeyValuePartialInformation,
-                                 KeyInfo,
-                                 BufferSize,
-                                 &ResultLength);
+        Status = ZwQueryValueKey(KeyHandle, &ValueName, KeyValuePartialInformation, KeyInfo, BufferSize, &ResultLength);
         if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
         {
             break;
@@ -394,8 +294,7 @@ IopSaveBootLogToFile(VOID)
         }
 
         /* Delete keys */
-        ZwDeleteValueKey(KeyHandle,
-                         &ValueName);
+        ZwDeleteValueKey(KeyHandle, &ValueName);
     }
 
     ZwClose(KeyHandle);
