@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
  *              Copyright 2018-2019 Luke Luo <njlyf2011@hotmail.com>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -16,17 +16,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "歡迎使用 ReactOS 安裝精靈", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "這個精靈將在您的電腦上安裝或更新 ReactOS， \
+並為接下來的第二階段安裝做好準備。", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
-under heavy development. It is recommended to use it only for \
-evaluation and testing and not as your daily-usage OS.\n\
-It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+    GROUPBOX " 重要資訊 ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS 目前處於 Alpha 測試階段：功能尚未完善且仍在積極開發中。\
+建議您將本操作系統用作評估和測試，而非作為日常使用。\n\
+本操作系統可能會導致資料損毁或對電腦硬體造成損害。", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "若您打算在真實硬體中執行 ReactOS，\
+請備份您的資料或使用非主力電腦來進行測試。", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
@@ -73,13 +72,13 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "Initialize(&I)", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "初始化(&I)", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "建立(&C)", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "Format(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "格式化(&F)", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "刪除(&D)", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "驅動程式(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "進階選項(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 14
-    // LTEXT "點選下一步檢查安裝概要。", IDC_STATIC, 7, 128, 277, 8
+    // LTEXT "按［下一步］檢查安裝概要。", IDC_STATIC, 7, 128, 277, 8
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
@@ -92,29 +91,29 @@ BEGIN
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "延伸磁碟區(&E)", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "檔案系統(&F)：", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "快速格式化(&Q)", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "確定", IDOK, 88, 98, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 143, 98, 50, 14
 END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Format Partition"
-FONT 8, "MS Shell Dlg"
+CAPTION "格式化磁碟區"
+FONT 9, "新細明體"
 BEGIN
     LTEXT "檔案系統(&F)：", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "快速格式化(&Q)", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "確定", IDOK, 88, 61, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "進階安裝選項"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
@@ -179,10 +178,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS 安裝程式"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPETITLE "安裝類型"
+    IDS_TYPESUBTITLE "您可以安裝全新的 ReactOS 系統，或者是更新／修復現有的系統。"
+    IDS_UPDATETITLE "更新或修復 ReactOS"
+    IDS_UPDATESUBTITLE "選擇您想更新或修復的現有 ReactOS 安裝。"
     IDS_DEVICETITLE "設定基本裝置"
     IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
     IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"
@@ -196,8 +195,8 @@ BEGIN
     IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
-    IDS_INSTALLBTN "&Install"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_INSTALLBTN "安裝(&I)"
+    IDS_VOLUME_NOFORMAT "未格式化"
 END
 
 STRINGTABLE
@@ -220,7 +219,7 @@ BEGIN
     IDS_BOOTLOADER_NOINST "No installation"
     IDS_BOOTLOADER_REMOVABLE "Removable media"
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (Default)"
+    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR（預設）"
     IDS_BOOTLOADER_VBRONLY "僅 VBR"
 END
 
