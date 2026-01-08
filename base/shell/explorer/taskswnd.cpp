@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include "mediabtns.h"
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
@@ -1530,6 +1531,10 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
+
+        /* WinMM is needed to change system volume via media buttons */
+        Mixer.GetMasterMixer();
+
         return TRUE;
     }
 
@@ -1598,12 +1603,12 @@ public:
             return TRUE;
         switch (uAppCmd)
         {
+            // When MMDevAPI arrives, try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to WinMM.
             case APPCOMMAND_VOLUME_MUTE:
+                return Mixer.Mute();
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
-                FIXME("Call the mixer API to change the global volume\n");
-                return TRUE;
+                return Mixer.AdjustVolume(uAppCmd, hProcessHeap);
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
         }
@@ -2279,6 +2284,9 @@ public:
     BEGIN_COM_MAP(CTaskSwitchWnd)
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     END_COM_MAP()
+
+private:
+    CMultimediaBackend Mixer;
 };
 
 HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
