@@ -2435,11 +2435,6 @@ static void test_query_process_image_info(void)
     ok( info.MajorSubsystemVersion == nt->OptionalHeader.MajorSubsystemVersion,
         "wrong major version %x/%x\n",
         info.MajorSubsystemVersion, nt->OptionalHeader.MajorSubsystemVersion );
-#ifdef __REACTOS__
-    if (GetNTVersion() < _WIN32_WINNT_WIN7)
-        ok( info.MinorSubsystemVersion == 0, "wrong minor version %x/%x\n", info.MinorSubsystemVersion, 0 );
-    else
-#endif
     ok( info.MinorSubsystemVersion == nt->OptionalHeader.MinorSubsystemVersion,
         "wrong minor version %x/%x\n",
         info.MinorSubsystemVersion, nt->OptionalHeader.MinorSubsystemVersion );
@@ -2447,6 +2442,11 @@ static void test_query_process_image_info(void)
         broken( !info.MajorOperatingSystemVersion ),  /* <= win8 */
         "wrong major OS version %x/%x\n",
         info.MajorOperatingSystemVersion, nt->OptionalHeader.MajorOperatingSystemVersion );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_WIN7)
+        ok( info.MinorOperatingSystemVersion == 0, "wrong minor version %x/%x\n", info.MinorOperatingSystemVersion, 0 );
+    else
+#endif
     ok( info.MinorOperatingSystemVersion == nt->OptionalHeader.MinorOperatingSystemVersion,
         "wrong minor OS version %x/%x\n",
         info.MinorOperatingSystemVersion, nt->OptionalHeader.MinorOperatingSystemVersion );
@@ -3915,6 +3915,11 @@ static void test_process_token(int argc, char **argv)
     ret = DuplicateTokenEx( token, TOKEN_ALL_ACCESS, NULL, SecurityAnonymous, TokenImpersonation, &token_info.Token );
     ok( ret, "got error %lu\n", GetLastError() );
     status = pNtSetInformationProcess( pi.hProcess, ProcessAccessToken, &token_info, sizeof(token_info) );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_WIN7)
+        todo_wine ok( status == STATUS_BAD_TOKEN_TYPE, "got %#lx\n", status );
+    else
+#endif
     todo_wine ok( status == STATUS_BAD_IMPERSONATION_LEVEL, "got %#lx\n", status );
     CloseHandle( token_info.Token );
 

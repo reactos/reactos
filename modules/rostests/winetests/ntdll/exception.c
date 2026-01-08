@@ -4582,6 +4582,12 @@ static void test_wow64_context(void)
         ctx.ContextFlags = WOW64_CONTEXT_ALL | CONTEXT_EXCEPTION_REQUEST;
         ret = pRtlWow64GetThreadContext( pi.hThread, &ctx );
         ok(ret == STATUS_SUCCESS, "got %#lx\n", ret);
+#ifdef __REACTOS__
+        if (GetNTVersion() <= _WIN32_WINNT_WIN7)
+            ok( ctx.ContextFlags == (WOW64_CONTEXT_ALL | CONTEXT_EXCEPTION_REQUEST),
+                "got context flags %#lx\n", ctx.ContextFlags );
+        else
+#endif
         ok( (ctx.ContextFlags & CONTEXT_EXCEPTION_REPORTING) || broken( ctx.ContextFlags == WOW64_CONTEXT_ALL ) /*Win 7*/,
             "got context flags %#lx\n", ctx.ContextFlags );
 
@@ -4812,7 +4818,9 @@ static LONG WINAPI dbg_except_continue_vectored_handler(struct _EXCEPTION_POINTE
 
     if (rec->ExceptionCode == 0xceadbeef)
     {
+#ifndef __REACTOS__ // Broken on Windows Vista and Windows 10
         ok(context->P1Home == (ULONG64)0xdeadbeeffeedcafe, "Got unexpected context->P1Home %#Ix.\n", context->P1Home);
+#endif
         context->R12 = test_kiuserexceptiondispatcher_saved_r12;
         return EXCEPTION_CONTINUE_EXECUTION;
     }
@@ -4845,6 +4853,14 @@ static void * WINAPI hook_KiUserExceptionDispatcher(EXCEPTION_RECORD *rec, CONTE
             "Got unexpected ExceptionCode %#lx.\n", rec->ExceptionCode);
 
     ok( !((ULONG_PTR)context & 15), "unaligned context %p\n", context );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_WIN8)
+    {
+        win_skip("No extended context support.\n");
+    }
+    else
+    {
+#endif
     ok( xctx->All.Offset == -sizeof(CONTEXT), "wrong All.Offset %lx\n", xctx->All.Offset );
     ok( xctx->All.Length >= sizeof(CONTEXT) + offsetof(CONTEXT_EX, align), "wrong All.Length %lx\n", xctx->All.Length );
     ok( xctx->Legacy.Offset == -sizeof(CONTEXT), "wrong Legacy.Offset %lx\n", xctx->All.Offset );
@@ -4852,6 +4868,9 @@ static void * WINAPI hook_KiUserExceptionDispatcher(EXCEPTION_RECORD *rec, CONTE
     ok( (void *)(xctx + 1) == (void *)rec, "wrong ptrs %p / %p\n", xctx, rec );
     ok( frame->rip == context->Rip, "wrong rip %Ix / %Ix\n", frame->rip, context->Rip );
     ok( frame->rsp == context->Rsp, "wrong rsp %Ix / %Ix\n", frame->rsp, context->Rsp );
+#ifdef __REACTOS__
+    }
+#endif
 
     hook_KiUserExceptionDispatcher_rip = (void *)context->Rip;
     hook_exception_address = rec->ExceptionAddress;
@@ -5118,7 +5137,9 @@ static void * WINAPI hook_KiUserApcDispatcher(CONTEXT *context)
            context, context->Rip, context->Rsp,
            (char *)context->Rsp - (char *)context, context->ContextFlags );
 
+#ifndef __REACTOS__ // Broken on Windows Vista and Windows 10
     ok( context->P1Home == 0x1234, "wrong p1 %#Ix\n", context->P1Home );
+#endif
     ok( context->P2Home == 0x5678, "wrong p2 %#Ix\n", context->P2Home );
     ok( context->P3Home == 0xdeadbeef, "wrong p3 %#Ix\n", context->P3Home );
     ok( context->P4Home == (ULONG_PTR)apc_func, "wrong p4 %#Ix / %p\n", context->P4Home, apc_func );
@@ -11891,17 +11912,27 @@ static void test_context_exception_request(void)
     }
 #endif
 
-    expected_flags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING;
+    expected_flags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING; // 0xC0010001
 
     c.ContextFlags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST;
     ret = GetThreadContext( thread, &c );
     ok( ret, "got error %lu.\n", GetLastError() );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        ok( c.ContextFlags == (expected_flags & ~CONTEXT_EXCEPTION_REPORTING), "got %#lx.\n", c.ContextFlags );
+    else
+#endif
     ok( c.ContextFlags == expected_flags, "got %#lx.\n", c.ContextFlags );
 
     c.ContextFlags = CONTEXT_CONTROL | CONTEXT_EXCEPTION_REQUEST | CONTEXT_EXCEPTION_REPORTING | CONTEXT_SERVICE_ACTIVE
                      | CONTEXT_EXCEPTION_ACTIVE;
     ret = GetThreadContext( thread, &c );
     ok( ret, "got error %lu.\n", GetLastError() );
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        ok( c.ContextFlags == (expected_flags | CONTEXT_SERVICE_ACTIVE | CONTEXT_EXCEPTION_ACTIVE), "got %#lx, expected %#lx.\n", c.ContextFlags, expected_flags );
+    else
+#endif
     ok( c.ContextFlags == expected_flags, "got %#lx.\n", c.ContextFlags );
 
     WriteRelease( &p.sync, 6 );
