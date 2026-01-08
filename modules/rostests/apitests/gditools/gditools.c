@@ -106,10 +106,24 @@ GdiGetHandleUserData(
     return pentry->pUser;
 }
 
+VOID
+PrintAvailableDisplayModes(void)
+{
+    DEVMODEW dm = { .dmSize = sizeof(dm) };
+    ULONG iMode = 0;
+
+    printf("Available display modes:\n");
+    while (EnumDisplaySettingsW(NULL, iMode++, &dm))
+    {
+        printf("  %ux%u @ %u bpp, freq: %u Hz\n",
+               dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel, dm.dmDisplayFrequency);
+    }
+}
+
 BOOL
 ChangeScreenBpp(
     _In_ ULONG cBitsPixel,
-    _Out_ PULONG pcOldBitsPixel)
+    _Out_ PDEVMODEW pdmOld)
 {
     DEVMODEW dm = { .dmSize = sizeof(dm) };
 
@@ -119,17 +133,25 @@ ChangeScreenBpp(
         return FALSE;
     }
 
-    *pcOldBitsPixel = dm.dmBitsPerPel;
+    printf("ChangeScreenBpp(%lu): Old display settings: %ux%u @ %u bpp\n",
+           cBitsPixel, dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel);
+
+    *pdmOld = dm;
 
     if (dm.dmBitsPerPel != cBitsPixel)
     {
         dm.dmBitsPerPel = cBitsPixel;
-        if (ChangeDisplaySettingsExW(NULL, &dm, NULL, CDS_UPDATEREGISTRY | CDS_GLOBAL, NULL) != DISP_CHANGE_SUCCESSFUL)
+        if (ChangeDisplaySettingsW(&dm, 0) != DISP_CHANGE_SUCCESSFUL)
         {
-            printf("Failed to change display settings to %lu bpp. Current bpp: %u\n", cBitsPixel, *pcOldBitsPixel);
+            printf("Failed to change display settings.\n");
+            PrintAvailableDisplayModes();
             return FALSE;
         }
     }
+
+    EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    printf("ChangeScreenBpp(%lu): New display settings: %ux%u @ %u bpp\n",
+           cBitsPixel, dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel);
 
     return TRUE;
 }
