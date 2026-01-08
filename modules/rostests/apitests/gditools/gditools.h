@@ -44,4 +44,4 @@ GdiGetHandleUserData(
 BOOL
 ChangeScreenBpp(
     _In_ ULONG cBitsPixel,
-    _Out_ PULONG pcOldBitsPixel);
+    _Out_ PDEVMODEW pdmOld);

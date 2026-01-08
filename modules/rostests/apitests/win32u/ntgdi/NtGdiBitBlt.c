@@ -355,8 +355,8 @@ START_TEST(NtGdiBitBlt)
 {
     ok(GdiToolsInit(), "GdiToolsInit failed\n");
 
-    ULONG cBitsPixel;
-    ChangeScreenBpp(32, &cBitsPixel);
+    DEVMODEW dmOld;
+    ChangeScreenBpp(32, &dmOld);
 
     ghdcDDB1 = CreateCompatibleDC(NULL);
     SelectObject(ghdcDDB1, ghbmp1);
@@ -371,5 +371,5 @@ START_TEST(NtGdiBitBlt)
     gbUseCLR_INVALID = FALSE;
     Test_NtGdiBitBlt_1BPP();
 
-    ChangeScreenBpp(cBitsPixel, &cBitsPixel);
+    ChangeDisplaySettingsW(&dmOld, 0);
 }
