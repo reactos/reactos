@@ -10,7 +10,7 @@
 
 #define DIBINDEX(n) MAKELONG((n),0x10FF)
 
-static HDC ghdcDDB1, ghdcDDB32;
+static HDC ghdcDDB1;
 
 static
 COLORREF
@@ -191,8 +191,6 @@ START_TEST(NtGdiLineTo)
 
     ghdcDDB1 = CreateCompatibleDC(NULL);
     ok(SelectObject(ghdcDDB1, ghbmp1) != NULL, "SelectObject failed\n");
-    ghdcDDB32 = CreateCompatibleDC(NULL);
-    ok(SelectObject(ghdcDDB32, ghbmp32) != NULL, "SelectObject failed\n");
 
     Test_NtGdiLineTo_1BPP_BW(ghdcDDB1);
     Test_NtGdiLineTo_1BPP_BW(ghdcDIB1);
