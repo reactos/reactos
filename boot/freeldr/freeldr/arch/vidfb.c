@@ -227,8 +227,8 @@ VidFbOutputChar(
     ULONG Line, Col;
 
     /* Don't display outside of the screen, nor partial characters */
-    if ((X + CHAR_WIDTH >= framebufInfo.ScreenWidth) ||
-        (Y + CHAR_HEIGHT >= (framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES)))
+    if ((X + CHAR_WIDTH - 1 >= framebufInfo.ScreenWidth) ||
+        (Y + CHAR_HEIGHT - 1 >= (framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES)))
     {
         return;
     }
