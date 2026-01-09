@@ -907,7 +907,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 typedef struct tagALIAS_MAPPING
 {
     BYTE  bFlagMask;        // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
-    BYTE  bUpdateAttr;
+    BYTE  bCommonDesktop;
     WORD  nCsidlSource;     // CSIDL_...
     WORD  nCsidlTarget;     // CSIDL_...
 } ALIAS_MAPPING, *PALIAS_MAPPING;
@@ -989,7 +989,7 @@ BOOL SHELL32_ReparentAsAliasPidl(
             if (*ppidlNew)
             {
                 // Manipulate specific byte flags in the ITEMIDLIST as needed
-                if (pEntry->bUpdateAttr && (*ppidlNew)->mkid.cb)
+                if (pEntry->bCommonDesktop && (*ppidlNew)->mkid.cb)
                 {
                     UINT cbRoot = ILGetSize(pidlTargetRoot);
                     PBYTE pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
