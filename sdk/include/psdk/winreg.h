@@ -204,7 +204,7 @@ RegEnumValueW(
   _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
   _Inout_opt_ LPDWORD lpcbData);
 
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= 0x0502)
 
 LSTATUS
 WINAPI
@@ -252,6 +252,23 @@ LSTATUS WINAPI RegLoadKeyA(_In_ HKEY, _In_opt_ LPCSTR, _In_ LPCSTR);
 LSTATUS WINAPI RegLoadKeyW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ LPCWSTR);
 
 #if (_WIN32_WINNT >= 0x0600)
+LSTATUS
+WINAPI
+RegLoadAppKeyA(
+  _In_ LPCSTR lpFile,
+  _Out_ PHKEY phkResult,
+  _In_ REGSAM samDesired,
+  _In_ DWORD dwOptions,
+  _Reserved_ DWORD Reserved);
+
+LSTATUS
+WINAPI
+RegLoadAppKeyW(
+  _In_ LPCWSTR lpFile,
+  _Out_ PHKEY phkResult,
+  _In_ REGSAM samDesired,
+  _In_ DWORD dwOptions,
+  _Reserved_ DWORD Reserved);
 
 LSTATUS
 WINAPI
@@ -274,7 +291,6 @@ RegLoadMUIStringW(
   _Out_opt_ LPDWORD pcbData,
   _In_ DWORD Flags,
   _In_opt_ LPCWSTR pszDirectory);
-
 #endif
 
 LSTATUS WINAPI RegNotifyChangeKeyValue(_In_ HKEY, _In_ BOOL, _In_ DWORD, _In_opt_ HANDLE, _In_ BOOL);
@@ -388,6 +404,13 @@ LSTATUS WINAPI RegSetKeySecurity(_In_ HKEY, _In_ SECURITY_INFORMATION, _In_ PSEC
 
 LSTATUS
 WINAPI
+RegRenameKey(
+  _In_ HKEY hKey,
+  _In_opt_ LPCWSTR lpSubKeyName,
+  _In_ LPCWSTR lpNewKeyName);
+
+LSTATUS
+WINAPI
 RegSetKeyValueA(
   _In_ HKEY hKey,
   _In_opt_ LPCSTR lpSubKey,
@@ -471,11 +494,12 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegEnumKey RegEnumKeyW
 #define RegEnumKeyEx RegEnumKeyExW
 #define RegEnumValue RegEnumValueW
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= 0x0502)
 #define RegGetValue RegGetValueW
 #endif
 #define RegLoadKey RegLoadKeyW
 #if (_WIN32_WINNT >= 0x0600)
+#define RegLoadAppKey    RegLoadAppKeyW
 #define RegLoadMUIString RegLoadMUIStringW
 #endif
 #define RegOpenKey RegOpenKeyW
@@ -516,11 +540,12 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegEnumKey RegEnumKeyA
 #define RegEnumKeyEx RegEnumKeyExA
 #define RegEnumValue RegEnumValueA
-#if (_WIN32_WINNT >= 0x0600)
+#if (_WIN32_WINNT >= 0x0502)
 #define RegGetValue RegGetValueA
 #endif
 #define RegLoadKey RegLoadKeyA
 #if (_WIN32_WINNT >= 0x0600)
+#define RegLoadAppKey    RegLoadAppKeyA
 #define RegLoadMUIString RegLoadMUIStringA
 #endif
 #define RegOpenKey RegOpenKeyA
