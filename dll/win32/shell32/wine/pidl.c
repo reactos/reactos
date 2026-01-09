@@ -908,15 +908,15 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 #define ALIAS_USER_FOLDER 0x0001
 #define ALIAS_DESKTOP     0x0002
 
-typedef struct ALIAS_MAPPING
+typedef struct tagALIAS_MAPPING
 {
-    DWORD dwFlagMask;
-    INT   nCsidlSource;
-    INT   nCsidlTarget;
+    DWORD dwFlagMask;       // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
+    INT   nCsidlSource;     // CSIDL_...
+    INT   nCsidlTarget;     // CSIDL_...
     BOOL  bForceShellBit;
-} ALIAS_MAPPING;
+} ALIAS_MAPPING, *PALIAS_MAPPING;
 
-// PIDL conversion table
+// PIDL alias table
 static const ALIAS_MAPPING g_AliasTable[] =
 {
     {
@@ -961,9 +961,9 @@ BOOL SHELL32_ReparentAliases(
     *ppidlNew = NULL;
 
     HRESULT hr;
-    for (UINT i = 0; i < _countof(g_AliasTable); ++i)
+    for (UINT iEntry = 0; iEntry < _countof(g_AliasTable); ++iEntry)
     {
-        const ALIAS_MAPPING *pEntry = &g_AliasTable[i];
+        const ALIAS_MAPPING *pEntry = &g_AliasTable[iEntry];
 
         if (!(dwFlags & pEntry->dwFlagMask))
             continue;
@@ -981,11 +981,10 @@ BOOL SHELL32_ReparentAliases(
             ILFree(pidlSourceRoot);
             continue;
         }
-
         // Found!
-        LPITEMIDLIST pidlTargetRoot = NULL;
 
         // Get the destination (logical parent)
+        LPITEMIDLIST pidlTargetRoot = NULL;
         hr = SHGetFolderLocation(hwnd, pEntry->nCsidlTarget, hToken, 0, &pidlTargetRoot);
         if (SUCCEEDED(hr))
         {
@@ -997,7 +996,7 @@ BOOL SHELL32_ReparentAliases(
                 if (pEntry->bForceShellBit && (*ppidlNew)->mkid.cb)
                 {
                     UINT cbRoot = ILGetSize(pidlTargetRoot);
-                    BYTE *pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
+                    PBYTE pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
                     *pAttr |= 0x38;
                 }
             }
@@ -1024,7 +1023,7 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 {
 #ifdef __REACTOS__
     LPITEMIDLIST pidlNew = NULL;
-    TRACE("(pidl=%p)\n", pidl);
+    TRACE("(%p)\n", pidl);
     SHELL32_ReparentAliases(NULL, NULL, pidl, &pidlNew, 0xFFFF);
     return pidlNew;
 #else
