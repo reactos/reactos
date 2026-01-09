@@ -997,7 +997,7 @@ BOOL SHELL32_ReparentAliases(
                 {
                     UINT cbRoot = ILGetSize(pidlTargetRoot);
                     PBYTE pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
-                    *pAttr |= 0x38;
+                    *pAttr |= (PT_FS | PT_FS_COMMON_FLAG);
                 }
             }
             ILFree(pidlTargetRoot);
