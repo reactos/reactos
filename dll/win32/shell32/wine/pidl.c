@@ -902,6 +902,117 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 }
 #endif
 
+#ifdef __REACTOS__
+
+// Flags for ALIAS_MAPPING.dwFlagMask (see below)
+#define ALIAS_USER_FOLDER 0x0001
+#define ALIAS_DESKTOP     0x0002
+
+typedef struct ALIAS_MAPPING
+{
+    DWORD dwFlagMask;
+    INT   nCsidlSource;
+    INT   nCsidlTarget;
+    BOOL  bForceShellBit;
+} ALIAS_MAPPING;
+
+// PIDL conversion table
+static const ALIAS_MAPPING g_AliasTable[] =
+{
+    {
+        ALIAS_USER_FOLDER,
+        CSIDL_FLAG_NO_ALIAS | CSIDL_PERSONAL,
+        CSIDL_PERSONAL,
+        FALSE
+    },
+    {
+        ALIAS_USER_FOLDER | ALIAS_DESKTOP,
+        CSIDL_FLAG_NO_ALIAS | CSIDL_COMMON_DOCUMENTS,
+        CSIDL_COMMON_DOCUMENTS,
+        FALSE
+    },
+    {
+        ALIAS_DESKTOP,
+        CSIDL_DESKTOPDIRECTORY,
+        CSIDL_DESKTOP,
+        FALSE
+    },
+    {
+        ALIAS_DESKTOP,
+        CSIDL_COMMON_DESKTOPDIRECTORY,
+        CSIDL_DESKTOP,
+        TRUE
+    }
+};
+
+/**
+ * Rename a PIDL with a real path to a logical PIDL (alias) on the shell
+ */
+BOOL SHELL32_ReparentAliases(
+    HWND hwnd,
+    HANDLE hToken,
+    LPCITEMIDLIST pidlTarget,
+    LPITEMIDLIST *ppidlNew,
+    DWORD dwFlags)
+{
+    if (!pidlTarget || !ppidlNew)
+        return FALSE;
+
+    *ppidlNew = NULL;
+
+    HRESULT hr;
+    for (UINT i = 0; i < _countof(g_AliasTable); ++i)
+    {
+        const ALIAS_MAPPING *pEntry = &g_AliasTable[i];
+
+        if (!(dwFlags & pEntry->dwFlagMask))
+            continue;
+
+        LPITEMIDLIST pidlSourceRoot = NULL;
+        hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSource, hToken, 0, &pidlSourceRoot);
+        if (FAILED(hr))
+            continue;
+
+        // Check whether the input pidlTarget is under the source folder.
+        // If it matches, ILFindChild returns a pointer to the relative path in the pidlTarget.
+        LPCITEMIDLIST pidlRelative = ILFindChild(pidlSourceRoot, pidlTarget);
+        if (!pidlRelative) // Not found?
+        {
+            ILFree(pidlSourceRoot);
+            continue;
+        }
+
+        // Found!
+        LPITEMIDLIST pidlTargetRoot = NULL;
+
+        // Get the destination (logical parent)
+        hr = SHGetFolderLocation(hwnd, pEntry->nCsidlTarget, hToken, 0, &pidlTargetRoot);
+        if (SUCCEEDED(hr))
+        {
+            // Create a new PIDL by combining the destination parent and the relative path.
+            *ppidlNew = ILCombine(pidlTargetRoot, pidlRelative);
+            if (*ppidlNew)
+            {
+                // Manipulate specific byte flags in the ITEMIDLIST as needed
+                if (pEntry->bForceShellBit && (*ppidlNew)->mkid.cb)
+                {
+                    UINT cbRoot = ILGetSize(pidlTargetRoot);
+                    BYTE *pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
+                    *pAttr |= 0x38;
+                }
+            }
+            ILFree(pidlTargetRoot);
+        }
+
+        ILFree(pidlSourceRoot);
+        break; // A match was found, so exit the loop
+    }
+
+    return (*ppidlNew != NULL);
+}
+
+#endif
+
 /*************************************************************************
  *  SHLogILFromFSIL [SHELL32.95]
  *
@@ -911,11 +1022,18 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
  */
 LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 {
+#ifdef __REACTOS__
+    LPITEMIDLIST pidlNew = NULL;
+    TRACE("(pidl=%p)\n", pidl);
+    SHELL32_ReparentAliases(NULL, NULL, pidl, &pidlNew, 0xFFFF);
+    return pidlNew;
+#else
     FIXME("(pidl=%p)\n",pidl);
 
     pdump(pidl);
 
     return 0;
+#endif
 }
 
 /*************************************************************************
