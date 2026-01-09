@@ -447,27 +447,6 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
         }
     }
 
-    // PIDL comparison failed, try path-based comparison
-    WCHAR szRegPath[MAX_PATH];
-    if (!SHGetPathFromIDListW(pidl, szRegPath))
-        RETURN(FALSE);
-
-    SIZE_T cchRegPath = wcslen(szRegPath);
-    LPITEMIDLIST pidls[] = { pidl1, pidl2 };
-    WCHAR szPath[MAX_PATH];
-    for (SIZE_T iPidl = 0; iPidl < _countof(pidls); ++iPidl)
-    {
-        if (pidls[iPidl] && SHGetPathFromIDListW(pidls[iPidl], szPath))
-        {
-            if (_wcsnicmp(szRegPath, szPath, cchRegPath) == 0 &&
-                (szPath[cchRegPath] == UNICODE_NULL || szPath[cchRegPath] == L'\\'))
-            {
-                if (pRegEntry->fRecursive || wcschr(szPath + cchRegPath + 1, L'\\') == NULL)
-                    RETURN(TRUE);
-            }
-        }
-    }
-
     RETURN(FALSE);
 #undef RETURN
 }
