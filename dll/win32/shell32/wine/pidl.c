@@ -944,7 +944,7 @@ static const ALIAS_MAPPING g_AliasTable[] =
 /**
  * Rename a PIDL with a real path to a logical PIDL (alias) on the shell
  */
-BOOL SHELL32_ReparentAliases(
+BOOL SHELL32_ReparentAsAliasPidl(
     _In_opt_ HWND hwnd,
     _In_opt_ HANDLE hToken,
     _In_ LPCITEMIDLIST pidlTarget,
@@ -1006,9 +1006,9 @@ BOOL SHELL32_ReparentAliases(
     return (*ppidlNew != NULL);
 }
 
-HRESULT SHILAliasTranslate(_In_ LPCITEMIDLIST pidl, _Out_ LPITEMIDLIST *ppidlNew, _In_ DWORD dwFlags)
+HRESULT SHILAliasTranslatePidl(_In_ LPCITEMIDLIST pidl, _Out_ LPITEMIDLIST *ppidlNew, _In_ DWORD dwFlags)
 {
-    return SHELL32_ReparentAliases(NULL, NULL, pidl, ppidlNew, dwFlags) ? S_OK : E_FAIL;
+    return SHELL32_ReparentAsAliasPidl(NULL, NULL, pidl, ppidlNew, dwFlags) ? S_OK : E_FAIL;
 }
 
 #endif
@@ -1025,7 +1025,7 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 #ifdef __REACTOS__
     LPITEMIDLIST pidlNew = NULL;
     TRACE("(%p)\n", pidl);
-    SHILAliasTranslate(pidl, &pidlNew, 0xFFFF);
+    SHILAliasTranslatePidl(pidl, &pidlNew, 0xFFFF);
     return pidlNew;
 #else
     FIXME("(pidl=%p)\n",pidl);

@@ -244,13 +244,6 @@ public:
 
 void PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags);
-
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
 DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);
 BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid);

@@ -257,16 +257,6 @@ OpenEffectiveToken(
     return ret;
 }
 
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags)
-{
-    return E_FAIL; //FIXME
-}
-
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
 {
     CComPtr<IUnknown> punk;

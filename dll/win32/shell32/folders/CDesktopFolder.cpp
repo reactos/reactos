@@ -476,7 +476,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
         if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
         {
             CComHeapPtr<ITEMIDLIST> pidlAlias;
-            if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
+            if (SUCCEEDED(SHILAliasTranslatePidl(*ppidl, &pidlAlias, 0xFFFF)))
             {
                 ILFree(*ppidl);
                 *ppidl = pidlAlias.Detach();
