@@ -954,7 +954,7 @@ GreGradientFill(
     BOOL bRet;
 
     /* Check parameters */
-    if (ulMode & GRADIENT_FILL_TRIANGLE)
+    if (ulMode == GRADIENT_FILL_TRIANGLE)
     {
         PGRADIENT_TRIANGLE pTriangle = (PGRADIENT_TRIANGLE)pMesh;
 
@@ -1018,6 +1018,18 @@ GreGradientFill(
     {
         DC_UnlockDc(pdc);
         return TRUE;
+    }
+
+    /* Offset vertex for rectangles */
+    if (ulMode == GRADIENT_FILL_RECT_H ||
+        ulMode == GRADIENT_FILL_RECT_V)
+    {
+        for (i = 0; i < nVertex; i++)
+        {
+            IntLPtoDP(pdc, (LPPOINT)&pVertex[i], 1);
+            pVertex[i].x += pdc->ptlDCOrig.x;
+            pVertex[i].y += pdc->ptlDCOrig.y;
+        }
     }
 
     ptlDitherOrg.x = ptlDitherOrg.y = 0;
