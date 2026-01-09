@@ -338,8 +338,19 @@ BOOL	pcheck	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl) DECLSPEC_HIDDEN;
 PITEMID_CHILD* _ILCopyaPidl(PCUITEMID_CHILD_ARRAY apidlsrc, UINT cidl) DECLSPEC_HIDDEN;
 LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida) DECLSPEC_HIDDEN;
-
 BOOL ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type) DECLSPEC_HIDDEN;
+HRESULT SHILAliasTranslate(_In_ LPCITEMIDLIST pidl, _Out_ LPITEMIDLIST *ppidlNew, _In_ DWORD dwFlags);
+
+BOOL SHELL32_ReparentAliases(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HANDLE hToken,
+    _In_ LPCITEMIDLIST pidlTarget,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags);
+
+// Flags for SHILAliasTranslate and SHELL32_ReparentAliases
+#define ALIAS_USER_FOLDER 0x1
+#define ALIAS_DESKTOP     0x2
 
 #ifdef __cplusplus
 } /* extern "C" */

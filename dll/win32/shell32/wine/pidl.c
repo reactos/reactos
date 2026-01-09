@@ -904,10 +904,6 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 
 #ifdef __REACTOS__
 
-// Flags for ALIAS_MAPPING.dwFlagMask (see below)
-#define ALIAS_USER_FOLDER 0x1
-#define ALIAS_DESKTOP     0x2
-
 typedef struct tagALIAS_MAPPING
 {
     BYTE  dwFlagMask;       // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
@@ -949,11 +945,11 @@ static const ALIAS_MAPPING g_AliasTable[] =
  * Rename a PIDL with a real path to a logical PIDL (alias) on the shell
  */
 BOOL SHELL32_ReparentAliases(
-    HWND hwnd,
-    HANDLE hToken,
-    LPCITEMIDLIST pidlTarget,
-    LPITEMIDLIST *ppidlNew,
-    DWORD dwFlags)
+    _In_opt_ HWND hwnd,
+    _In_opt_ HANDLE hToken,
+    _In_ LPCITEMIDLIST pidlTarget,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags)
 {
     if (!pidlTarget || !ppidlNew)
         return FALSE;
@@ -1010,6 +1006,11 @@ BOOL SHELL32_ReparentAliases(
     return (*ppidlNew != NULL);
 }
 
+HRESULT SHILAliasTranslate(_In_ LPCITEMIDLIST pidl, _Out_ LPITEMIDLIST *ppidlNew, _In_ DWORD dwFlags)
+{
+    return SHELL32_ReparentAliases(NULL, NULL, pidl, ppidlNew, dwFlags) ? S_OK : E_FAIL;
+}
+
 #endif
 
 /*************************************************************************
@@ -1024,7 +1025,7 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 #ifdef __REACTOS__
     LPITEMIDLIST pidlNew = NULL;
     TRACE("(%p)\n", pidl);
-    SHELL32_ReparentAliases(NULL, NULL, pidl, &pidlNew, 0xFFFF);
+    SHILAliasTranslate(pidl, &pidlNew, 0xFFFF);
     return pidlNew;
 #else
     FIXME("(pidl=%p)\n",pidl);
