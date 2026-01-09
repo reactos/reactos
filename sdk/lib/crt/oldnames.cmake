@@ -5,17 +5,19 @@ if(NOT MSVC)
     add_custom_command(
         OUTPUT ${LIBRARY_PRIVATE_DIR}/oldnames.a
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
-        COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:oldnames>
+        COMMAND ${CMAKE_COMMAND} -E rm -f ${LIBRARY_PRIVATE_DIR}/oldnames.a
         COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib=oldnames.a -t oldnames
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
-    set_source_files_properties(
-        ${LIBRARY_PRIVATE_DIR}/oldnames.a
-        PROPERTIES
-        EXTERNAL_OBJECT TRUE)
 
-    _add_library(oldnames STATIC EXCLUDE_FROM_ALL ${LIBRARY_PRIVATE_DIR}/oldnames.a)
-    set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
+        # Create a custom target for the import library generation
+        add_custom_target(oldnames_target DEPENDS ${LIBRARY_PRIVATE_DIR}/oldnames.a)
+
+        # Create an IMPORTED library that references the dlltool output
+        _add_library(oldnames STATIC IMPORTED GLOBAL)
+        set_target_properties(oldnames PROPERTIES IMPORTED_LOCATION ${LIBRARY_PRIVATE_DIR}/oldnames.a)
+        add_dependencies(oldnames oldnames_target)
+        set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
 else()
     add_asm_files(oldnames_asm oldnames-common.S oldnames-msvcrt.S)
     add_library(oldnames ${oldnames_asm})
