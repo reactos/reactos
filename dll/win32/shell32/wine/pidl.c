@@ -905,15 +905,15 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 #ifdef __REACTOS__
 
 // Flags for ALIAS_MAPPING.dwFlagMask (see below)
-#define ALIAS_USER_FOLDER 0x0001
-#define ALIAS_DESKTOP     0x0002
+#define ALIAS_USER_FOLDER 0x1
+#define ALIAS_DESKTOP     0x2
 
 typedef struct tagALIAS_MAPPING
 {
-    DWORD dwFlagMask;       // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
-    INT   nCsidlSource;     // CSIDL_...
-    INT   nCsidlTarget;     // CSIDL_...
-    BOOL  bForceShellBit;
+    BYTE  dwFlagMask;       // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
+    BYTE  bForceShellBit;
+    WORD  nCsidlSource;     // CSIDL_...
+    WORD  nCsidlTarget;     // CSIDL_...
 } ALIAS_MAPPING, *PALIAS_MAPPING;
 
 // PIDL alias table
@@ -921,27 +921,27 @@ static const ALIAS_MAPPING g_AliasTable[] =
 {
     {
         ALIAS_USER_FOLDER,
+        FALSE,
         CSIDL_PERSONAL | CSIDL_FLAG_NO_ALIAS,
-        CSIDL_PERSONAL,
-        FALSE
+        CSIDL_PERSONAL
     },
     {
         ALIAS_USER_FOLDER | ALIAS_DESKTOP,
+        FALSE,
         CSIDL_COMMON_DOCUMENTS | CSIDL_FLAG_NO_ALIAS,
-        CSIDL_COMMON_DOCUMENTS,
-        FALSE
+        CSIDL_COMMON_DOCUMENTS
     },
     {
         ALIAS_DESKTOP,
+        FALSE,
         CSIDL_DESKTOPDIRECTORY,
-        CSIDL_DESKTOP,
-        FALSE
+        CSIDL_DESKTOP
     },
     {
         ALIAS_DESKTOP,
+        TRUE,
         CSIDL_COMMON_DESKTOPDIRECTORY,
-        CSIDL_DESKTOP,
-        TRUE
+        CSIDL_DESKTOP
     }
 };
 
