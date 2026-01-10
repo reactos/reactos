@@ -14,19 +14,21 @@
 #include <drivers/bootvid/bootvid.h>
 
 /* Arch-specific includes */
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_M_IX86)
 #if defined(SARCH_PC98)
-#include "i386/pc98/pc98.h"
+    #include "i386/pc98/pc98.h"
 #elif defined(SARCH_XBOX)
-#include "i386/xbox/xbox.h"
-#else
-#include "i386/pc/vga.h"
-#include "i386/pc/pc.h"
+    #include "i386/xbox/xbox.h"
+#endif
+#endif // _M_IX86
+#if defined(_M_IX86) || defined(_M_AMD64)
+#if !defined(SARCH_PC98) && !defined(SARCH_XBOX)
+    #include "i386/pc/pc.h"
 #endif
 #elif defined(_M_ARM)
-#include "arm/arm.h"
+    #include "arm/arm.h"
 #else
-#error Unknown architecture
+    #error Unknown architecture
 #endif
 
 /* Define if FontData has upside-down characters */
