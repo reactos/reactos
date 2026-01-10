@@ -2084,10 +2084,10 @@ SHGetComputerDisplayNameW(
 
 typedef struct tagALIAS_MAPPING
 {
-    BYTE  bFlagMask;      // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
-    BYTE  bCommonDesktop;
-    WORD  nCsidlSrc;      // CSIDL_... (source)
-    WORD  nCsidlDest;     // CSIDL_... (destination)
+    BYTE bFlagMask;      // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
+    BYTE bCommonDesktop;
+    WORD nCsidlSrc;      // CSIDL_... (source)
+    WORD nCsidlDest;     // CSIDL_... (destination)
 } ALIAS_MAPPING, *PALIAS_MAPPING;
 
 //! PIDL alias table
