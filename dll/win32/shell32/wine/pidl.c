@@ -908,7 +908,7 @@ typedef struct tagALIAS_MAPPING
 {
     BYTE  bFlagMask;      // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
     BYTE  bCommonDesktop;
-    WORD  nCsidlSource;   // CSIDL_... (source)
+    WORD  nCsidlSrc;   // CSIDL_... (source)
     WORD  nCsidlDest;     // CSIDL_... (destination)
 } ALIAS_MAPPING, *PALIAS_MAPPING;
 
@@ -963,7 +963,7 @@ BOOL SHELL32_ReparentAsAliasPidl(
 
         // Get the source root PIDL
         LPITEMIDLIST pidlSrcRoot = NULL;
-        HRESULT hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSource, hToken, 0, &pidlSrcRoot);
+        HRESULT hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSrc, hToken, 0, &pidlSrcRoot);
         if (FAILED(hr))
             continue;
 
