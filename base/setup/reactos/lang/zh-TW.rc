@@ -288,7 +288,7 @@ BEGIN
 
     IDS_ERROR_SYSTEM_PARTITION "ReactOS 安裝程式無法從您的系統找到支援的系統分割區\n\
 或者無法建立新的分割。如果沒有這個磁碟分割，\n\
-安裝程式將無法安裝 ReactOS。 \
+安裝程式將無法安裝 ReactOS。\
 \n按［確定］返回磁碟分割選擇列表。"
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "嘗試格式化磁碟分割時發生錯誤：無法識別的磁碟區。"
@@ -299,7 +299,7 @@ BEGIN
 
     IDS_ERROR_FORMATTING_PARTITION "安裝程式無法格式化磁碟分割：\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "安裝程式現在無法檢測位於 %s 的磁碟分割。 \n\
+    IDS_ERROR_COULD_NOT_CHECK "安裝程式現在無法檢測位於 %s 的磁碟分割。\n\
 \n按［確定］繼續安裝。\
 \n按［取消］結束安裝程式。"
 
