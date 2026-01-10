@@ -913,7 +913,6 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 {
 #ifdef __REACTOS__
     LPITEMIDLIST pidlNew = NULL;
-    TRACE("(%p)\n", pidl);
     SHILAliasTranslatePidl(pidl, &pidlNew, 0xFFFF);
     return pidlNew;
 #else
