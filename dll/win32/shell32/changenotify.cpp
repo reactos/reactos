@@ -178,6 +178,7 @@ static HANDLE
 CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                         DWORD dwOwnerPID, DWORD dwTick)
 {
+    // Translate PIDLs
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAlias1, pidlAlias2;
     if (SHILAliasTranslatePidl(pidl1, &pidlAlias1, 0xFFFF) != S_OK)
         pidlAlias1.Attach(ILClone(pidl1));
