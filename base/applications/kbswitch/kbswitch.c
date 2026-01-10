@@ -1123,7 +1123,8 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
     // Is IME open?
     BOOL bImeOn = IsImeOpen(hwndIme);
 
-    // Workaround of TrackPopupMenu's bug
+    // Workaround of TrackPopupMenu's bug.
+    // NOTE: This might change IME status.
     SetForegroundWindow(hwnd);
 
     // Create IME menu
