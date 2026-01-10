@@ -36,6 +36,7 @@ add_definitions(
 if(ARCH STREQUAL "i386")
     add_definitions(
         -D__ASM_USE_THISCALL_WRAPPER
+        -DRtlUnwind=__wine_RtlUnwind # See i386/__wine_RtlUnwind.s
     )
 endif()
 
@@ -116,10 +117,6 @@ add_library(msvcrt_shared
 )
 
 target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0)
-if(ARCH STREQUAL "i386")
-    # ASM wrapper for Wine code, implemented in i386/__wine_RtlUnwind.s
-    target_compile_definitions(msvcrt_shared PRIVATE RtlUnwind=__wine_RtlUnwind)
-endif()
 add_dependencies(msvcrt_shared psdk asm)
 
 ###############################################################################
