@@ -475,6 +475,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     {
         if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
         {
+            // Use "alias" PIDL if possible
             CComHeapPtr<ITEMIDLIST> pidlAlias;
             if (SUCCEEDED(SHILAliasTranslatePidl(*ppidl, &pidlAlias, 0xFFFF)))
             {
