@@ -2184,7 +2184,7 @@ SHELL32_ReparentAsAliasPidl(
 
 //! Translate a PIDL to an "alias" PIDL.
 EXTERN_C HRESULT
-SHILAliasTranslatePidl(
+SHELL32_AliasTranslatePidl(
     _In_ LPCITEMIDLIST pidl,
     _Out_ LPITEMIDLIST *ppidlNew,
     _In_ DWORD dwFlags)

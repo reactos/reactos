@@ -913,7 +913,7 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
 {
 #ifdef __REACTOS__
     LPITEMIDLIST pidlNew = NULL;
-    SHILAliasTranslatePidl(pidl, &pidlNew, 0xFFFF);
+    SHELL32_AliasTranslatePidl(pidl, &pidlNew, 0xFFFF);
     return pidlNew;
 #else
     FIXME("(pidl=%p)\n",pidl);

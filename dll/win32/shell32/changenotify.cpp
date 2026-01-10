@@ -337,9 +337,9 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
     // Create alias PIDLs
     CComHeapPtr<ITEMIDLIST> pidl1Alias, pidl2Alias;
     if (pidl1)
-        SHILAliasTranslatePidl(pidl1, &pidl1Alias, 0xFFFF);
+        SHELL32_AliasTranslatePidl(pidl1, &pidl1Alias, 0xFFFF);
     if (pidl2)
-        SHILAliasTranslatePidl(pidl2, &pidl2Alias, 0xFFFF);
+        SHELL32_AliasTranslatePidl(pidl2, &pidl2Alias, 0xFFFF);
 
     HANDLE hTicket2 = NULL;
     if ((pidl1Alias || pidl2Alias) &&

@@ -102,7 +102,7 @@ PathProcessCommandW(
     _In_ DWORD dwFlags);
 
 HRESULT
-SHILAliasTranslatePidl(
+SHELL32_AliasTranslatePidl(
     _In_ LPCITEMIDLIST pidl,
     _Out_ LPITEMIDLIST *ppidlNew,
     _In_ DWORD dwFlags);
@@ -115,7 +115,7 @@ SHELL32_ReparentAsAliasPidl(
     _Out_ LPITEMIDLIST *ppidlNew,
     _In_ DWORD dwFlags);
 
-// Flags for SHILAliasTranslatePidl and SHELL32_ReparentAsAliasPidl
+// Flags for SHELL32_AliasTranslatePidl and SHELL32_ReparentAsAliasPidl
 #define ALIAS_USER_FOLDER 0x1
 #define ALIAS_DESKTOP     0x2
 
