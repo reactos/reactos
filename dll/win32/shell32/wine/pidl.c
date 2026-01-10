@@ -957,7 +957,7 @@ BOOL SHELL32_ReparentAsAliasPidl(
     *ppidlNew = NULL;
 
     HRESULT hr;
-    for (UINT iEntry = 0; iEntry < _countof(g_AliasTable); ++iEntry)
+    for (SIZE_T iEntry = 0; iEntry < _countof(g_AliasTable); ++iEntry)
     {
         const ALIAS_MAPPING *pEntry = &g_AliasTable[iEntry];
 
