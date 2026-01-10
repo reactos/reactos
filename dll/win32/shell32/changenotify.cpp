@@ -218,7 +218,7 @@ CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEM
     pTicket->ibOffset2 = ibOffset2;
     if (pidl1)
         CopyMemory((PBYTE)pTicket + ibOffset1, pidl1, cbPidl1);
-    if (pidl1 && pidl2)
+    if (pidl2)
         CopyMemory((PBYTE)pTicket + ibOffset2, pidl2, cbPidl2);
 
     // unlock the ticket and return
