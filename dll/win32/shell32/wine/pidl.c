@@ -977,23 +977,23 @@ BOOL SHELL32_ReparentAsAliasPidl(
         }
 
         // Found. Get the destination root PIDL
-        LPITEMIDLIST pidlTargetRoot = NULL;
-        hr = SHGetFolderLocation(hwnd, pEntry->nCsidlDest, hToken, 0, &pidlTargetRoot);
+        LPITEMIDLIST pidlDestRoot = NULL;
+        hr = SHGetFolderLocation(hwnd, pEntry->nCsidlDest, hToken, 0, &pidlDestRoot);
         if (SUCCEEDED(hr))
         {
             // Create a new PIDL by combining the destination root PIDL and the relative PIDL
-            *ppidlNew = ILCombine(pidlTargetRoot, pidlRelative);
+            *ppidlNew = ILCombine(pidlDestRoot, pidlRelative);
             if (*ppidlNew)
             {
                 // Manipulate specific flags in the PIDL if necessary
                 if (pEntry->bCommonDesktop && (*ppidlNew)->mkid.cb)
                 {
-                    UINT cbRoot = ILGetSize(pidlTargetRoot);
+                    UINT cbRoot = ILGetSize(pidlDestRoot);
                     PBYTE pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
                     *pAttr |= (PT_FS | PT_FS_COMMON_FLAG);
                 }
             }
-            ILFree(pidlTargetRoot);
+            ILFree(pidlDestRoot);
         }
 
         ILFree(pidlSourceRoot);
