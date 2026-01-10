@@ -42,7 +42,9 @@ target_link_libraries(ucrtbase
 )
 
 # Implicitly link to vcstartup
-target_link_libraries(libucrtbase INTERFACE vcstartup)
+# vcstartup must come BEFORE libucrtbase_implib so ucrtbase symbols are resolved
+get_target_property(_current_libs libucrtbase INTERFACE_LINK_LIBRARIES)
+set_property(TARGET libucrtbase PROPERTY INTERFACE_LINK_LIBRARIES vcstartup ${_current_libs})
 
 if(MSVC)
     target_link_libraries(ucrtbase runtmchk)

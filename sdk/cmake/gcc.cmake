@@ -176,7 +176,6 @@ add_compile_options(-Wall -Wpointer-arith)
 
 # Disable some overzealous warnings
 add_compile_options(
-    -Wno-unknown-warning-option
     -Wno-char-subscripts
     -Wno-multichar
     -Wno-unused-value
@@ -233,6 +232,7 @@ if(ARCH STREQUAL "i386")
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-momit-leaf-frame-pointer)
     endif()
+    add_compile_options(-Wno-error)
 elseif(ARCH STREQUAL "amd64")
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         add_compile_options(-mpreferred-stack-boundary=4)
@@ -421,7 +421,9 @@ function(add_delay_importlibs _module)
         get_filename_component(_basename "${_lib}" NAME_WE)
         target_link_libraries(${_module} lib${_basename}_delayed)
     endforeach()
-    target_link_libraries(${_module} delayimp)
+    # Use --whole-archive to ensure __delayLoadHelper2 is included regardless of link order
+    target_link_libraries(${_module} -Wl,--whole-archive delayimp -Wl,--no-whole-archive)
+    target_link_libraries(${_module} delayimp_hooks)
 endfunction()
 
 if(NOT ARCH STREQUAL "i386")
@@ -461,10 +463,15 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
     # Create a custom target for the import library generation
     add_custom_target(${_libname}_implib_target DEPENDS ${_implib_file})
 
-    # Create an IMPORTED library that references the dlltool output directly
-    _add_library(${_libname} STATIC IMPORTED GLOBAL)
-    set_target_properties(${_libname} PROPERTIES IMPORTED_LOCATION ${_implib_file})
-    add_dependencies(${_libname} ${_libname}_implib_target)
+    # Create an internal IMPORTED library that references the dlltool output directly
+    _add_library(${_libname}_implib STATIC IMPORTED GLOBAL)
+    set_target_properties(${_libname}_implib PROPERTIES IMPORTED_LOCATION ${_implib_file})
+    add_dependencies(${_libname}_implib ${_libname}_implib_target)
+
+    # Create an INTERFACE library wrapper so target_link_libraries INTERFACE works
+    # Note: Must be non-IMPORTED so that external target_link_libraries INTERFACE calls work
+    _add_library(${_libname} INTERFACE)
+    target_link_libraries(${_libname} INTERFACE ${_libname}_implib)
 
     # Do the same with delay-import libs
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}_delayed.dir)
@@ -478,9 +485,15 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
 
     add_custom_target(${_libname}_delayed_implib_target DEPENDS ${_delaylib_file})
 
-    _add_library(${_libname}_delayed STATIC IMPORTED GLOBAL)
-    set_target_properties(${_libname}_delayed PROPERTIES IMPORTED_LOCATION ${_delaylib_file})
-    add_dependencies(${_libname}_delayed ${_libname}_delayed_implib_target)
+    # Create an internal IMPORTED library for delay-import
+    _add_library(${_libname}_delayed_implib STATIC IMPORTED GLOBAL)
+    set_target_properties(${_libname}_delayed_implib PROPERTIES IMPORTED_LOCATION ${_delaylib_file})
+    add_dependencies(${_libname}_delayed_implib ${_libname}_delayed_implib_target)
+
+    # Create an INTERFACE library wrapper for delay-import
+    # Note: Must be non-IMPORTED so that external target_link_libraries INTERFACE calls work
+    _add_library(${_libname}_delayed INTERFACE)
+    target_link_libraries(${_libname}_delayed INTERFACE ${_libname}_delayed_implib)
 endfunction()
 
 function(spec2def _dllname _spec_file)
@@ -640,12 +653,19 @@ set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
 # libgcc needs kernel32 and winpthread (an appropriate CRT must be linked manually)
 target_link_libraries(libgcc INTERFACE libwinpthread libkernel32)
 
+# libgcc_eh contains C++ exception handling support (_Unwind_*, _GCC_specific_handler)
+add_library(libgcc_eh STATIC IMPORTED)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCC_EH_LOCATION)
+string(STRIP ${LIBGCC_EH_LOCATION} LIBGCC_EH_LOCATION)
+set_target_properties(libgcc_eh PROPERTIES IMPORTED_LOCATION ${LIBGCC_EH_LOCATION})
+target_link_libraries(libgcc_eh INTERFACE libgcc)
+
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
-# libsupc++ requires libgcc and stdc++compat
-target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
+# libsupc++ requires libgcc, libgcc_eh (for exception handling) and stdc++compat
+target_link_libraries(libsupc++ INTERFACE libgcc_eh stdc++compat)
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)

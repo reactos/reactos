@@ -13,7 +13,6 @@
 
 /**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
 
-/* The actual items we use */
 extern PfnDliHook __pfnDliNotifyHook2;
 extern PfnDliHook __pfnDliFailureHook2;
 

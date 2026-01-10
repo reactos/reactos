@@ -508,14 +508,9 @@ out:
         res ? res->resarray_count : 0);
 }
 
-#ifdef __REACTOS__
-int nfs41_handle_callback(void *rpc_clnt, void *cb, void * dummy)
+int nfs41_handle_callback(void *rpc_clnt, void *cb, void **reply_arg)
 {
-    struct cb_compound_res **reply = dummy;
-#else
-int nfs41_handle_callback(void *rpc_clnt, void *cb, struct cb_compound_res **reply)
-{
-#endif
+    struct cb_compound_res **reply = (struct cb_compound_res **)reply_arg;
     nfs41_rpc_clnt *rpc = (nfs41_rpc_clnt *)rpc_clnt;
     cb_req *request = (cb_req *)cb;
     uint32_t status = 0;

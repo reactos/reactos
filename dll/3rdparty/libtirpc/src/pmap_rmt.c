@@ -79,7 +79,11 @@ pmap_rmtcall(addr, prog, vers, proc, xdrargs, argsp, xdrres, resp, tout,
 	struct timeval tout;
 	u_long *port_ptr;
 {
+#ifdef _WIN32
+	SOCKET sock = INVALID_SOCKET;
+#else
 	int sock = -1;
+#endif
 	CLIENT *client;
 	struct rmtcallargs a;
 	struct rmtcallres r;

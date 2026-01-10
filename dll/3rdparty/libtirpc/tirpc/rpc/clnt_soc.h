@@ -62,7 +62,7 @@
  *	u_int recvsz;
  */
 __BEGIN_DECLS
-#ifndef __REACTOS__
+#ifdef _WIN32
 extern CLIENT *clnttcp_create(struct sockaddr_in *, u_long, u_long, SOCKET *,
 			      u_int, u_int);
 #else
@@ -111,12 +111,19 @@ __END_DECLS
  *	u_int recvsz;
  */
 __BEGIN_DECLS
-extern CLIENT *clntudp_create(struct sockaddr_in *, u_long, u_long, 
+#ifdef _WIN32
+extern CLIENT *clntudp_create(struct sockaddr_in *, u_long, u_long,
+			      struct timeval, SOCKET *);
+extern CLIENT *clntudp_bufcreate(struct sockaddr_in *, u_long, u_long,
+				 struct timeval, SOCKET *, u_int, u_int);
+#else
+extern CLIENT *clntudp_create(struct sockaddr_in *, u_long, u_long,
 			      struct timeval, int *);
 extern CLIENT *clntudp_bufcreate(struct sockaddr_in *, u_long, u_long,
 				 struct timeval, int *, u_int, u_int);
+#endif
 #ifdef INET6
-extern CLIENT *clntudp6_create(struct sockaddr_in6 *, u_long, u_long, 
+extern CLIENT *clntudp6_create(struct sockaddr_in6 *, u_long, u_long,
 			      struct timeval, int *);
 extern CLIENT *clntudp6_bufcreate(struct sockaddr_in6 *, u_long, u_long,
 				 struct timeval, int *, u_int, u_int);
