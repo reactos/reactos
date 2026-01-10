@@ -193,7 +193,7 @@ CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEM
         cbPidl1 = ILGetSize(pidlAlias1);
         ibOffset1 = DWORD_ALIGNMENT(sizeof(DELITICKET));
     }
-    if (pidlAlias2)
+    if (pidlAlias1 && pidlAlias2)
     {
         cbPidl2 = ILGetSize(pidlAlias2);
         ibOffset2 = DWORD_ALIGNMENT(ibOffset1 + cbPidl1);
