@@ -72,7 +72,6 @@ IntEngGradientFillRect(
     rcGradient.top = min(v1->y, v2->y);
     rcGradient.bottom = max(v1->y, v2->y);
     rcSG = rcGradient;
-    RECTL_vOffsetRect(&rcSG, pptlDitherOrg->x, pptlDitherOrg->y);
 
     if(Horizontal)
     {
