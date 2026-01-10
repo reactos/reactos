@@ -72,6 +72,7 @@ if(ARCH STREQUAL "i386")
     )
     list(APPEND SHARED_ASM_SOURCE
         i386/__wine_RtlUnwind.s
+        i386/exception_ptr.s
         i386/inout.s
     )
 elseif(ARCH STREQUAL "amd64")
@@ -135,7 +136,6 @@ list(APPEND MSVCRT_SOURCE
     dir.c
     environ.c
     errno.c
-    exception_ptr.c
     exit.c
     file.c
     heap.c
