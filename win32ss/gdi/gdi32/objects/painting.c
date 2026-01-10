@@ -477,7 +477,7 @@ BitBlt(
 
     if ( GdiConvertAndCheckDC(hdcDest) == NULL ) return FALSE;
 
-    return NtGdiBitBlt(hdcDest, xDest, yDest, cx, cy, hdcSrc, xSrc, ySrc, dwRop, 0, 0);
+    return NtGdiBitBlt(hdcDest, xDest, yDest, cx, cy, hdcSrc, xSrc, ySrc, dwRop, CLR_INVALID, 0);
 }
 
 BOOL
@@ -661,7 +661,7 @@ StretchBlt(
                            cxSrc,
                            cySrc,
                            dwRop,
-                           0);
+                           CLR_INVALID);
 }
 
 
@@ -714,7 +714,7 @@ MaskBlt(
                         xMask,
                         yMask,
                         dwRop,
-                        GetBkColor(hdcSrc));
+                        CLR_INVALID);
 }
 
 
@@ -761,7 +761,7 @@ PlgBlt(
                        hbmMask,
                        xMask,
                        yMask,
-                       GetBkColor(hdcSrc));
+                       CLR_INVALID);
 }
 
 BOOL
