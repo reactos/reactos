@@ -178,24 +178,17 @@ static HANDLE
 CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                         DWORD dwOwnerPID, DWORD dwTick)
 {
-    // Translate PIDLs
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAlias1, pidlAlias2;
-    if (SHILAliasTranslatePidl(pidl1, &pidlAlias1, 0xFFFF) != S_OK)
-        pidlAlias1.Attach(ILClone(pidl1));
-    if (SHILAliasTranslatePidl(pidl2, &pidlAlias2, 0xFFFF) != S_OK)
-        pidlAlias2.Attach(ILClone(pidl2));
-
     // pidl1 and pidl2 have variable length. To store them into the delivery ticket,
     // we have to consider the offsets and the sizes of pidl1 and pidl2.
     DWORD cbPidl1 = 0, cbPidl2 = 0, ibOffset1 = 0, ibOffset2 = 0;
-    if (pidlAlias1)
+    if (pidl1)
     {
-        cbPidl1 = ILGetSize(pidlAlias1);
+        cbPidl1 = ILGetSize(pidl1);
         ibOffset1 = DWORD_ALIGNMENT(sizeof(DELITICKET));
     }
-    if (pidlAlias1 && pidlAlias2)
+    if (pidl1 && pidl2)
     {
-        cbPidl2 = ILGetSize(pidlAlias2);
+        cbPidl2 = ILGetSize(pidl2);
         ibOffset2 = DWORD_ALIGNMENT(ibOffset1 + cbPidl1);
     }
 
@@ -223,10 +216,10 @@ CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEM
     pTicket->uFlags = uFlags;
     pTicket->ibOffset1 = ibOffset1;
     pTicket->ibOffset2 = ibOffset2;
-    if (pidlAlias1)
-        CopyMemory((PBYTE)pTicket + ibOffset1, pidlAlias1, cbPidl1);
-    if (pidlAlias2)
-        CopyMemory((PBYTE)pTicket + ibOffset2, pidlAlias2, cbPidl2);
+    if (pidl1)
+        CopyMemory((PBYTE)pTicket + ibOffset1, pidl1, cbPidl1);
+    if (pidl1 && pidl2)
+        CopyMemory((PBYTE)pTicket + ibOffset2, pidl2, cbPidl2);
 
     // unlock the ticket and return
     SHUnlockShared(pTicket);
