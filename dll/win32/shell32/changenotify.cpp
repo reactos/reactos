@@ -330,21 +330,45 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
     GetWindowThreadProcessId(hwndServer, &pid);
 
     // create a delivery ticket
-    HANDLE hTicket = CreateNotificationParam(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
-    if (hTicket == NULL)
+    HANDLE hTicket1 = CreateNotificationParam(wEventId, uFlags, pidl1, pidl2, pid, dwTick);
+    if (!hTicket1)
         return;
 
-    TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
+    // Create alias PIDLs
+    CComHeapPtr<ITEMIDLIST> pidl1Alias, pidl2Alias;
+    if (pidl1)
+        SHILAliasTranslatePidl(pidl1, &pidl1Alias, 0xFFFF);
+    if (pidl2)
+        SHILAliasTranslatePidl(pidl2, &pidl2Alias, 0xFFFF);
+
+    HANDLE hTicket2 = NULL;
+    if ((pidl1Alias || pidl2Alias) &&
+        (!ILIsEqual(pidl1, pidl1Alias) || !ILIsEqual(pidl2, pidl2Alias)))
+    {
+        hTicket2 = CreateNotificationParam(wEventId, uFlags, pidl1Alias, pidl2Alias,
+                                           pid, dwTick);
+        if (!hTicket2)
+        {
+            SHFreeShared(hTicket1, pid);
+            return;
+        }
+    }
+
+    TRACE("hTicket1:%p, hTicket2:%p, pid:0x%lx\n", hTicket1, hTicket2, pid);
 
     // send the ticket by using CN_DELIVER_NOTIFICATION
     if (pid != GetCurrentProcessId() ||
         (uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
     {
-        SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket1, pid);
+        if (hTicket2)
+            SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket2, pid);
     }
     else
     {
-        SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket1, pid);
+        if (hTicket2)
+            SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket2, pid);
     }
 }
 
