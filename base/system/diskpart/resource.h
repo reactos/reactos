@@ -146,6 +146,8 @@
 #define IDS_STATUS_ONLINE       36
 #define IDS_STATUS_OFFLINE      37
 #define IDS_STATUS_NO_MEDIA     38
+#define IDS_INFO_BOOT           39
+#define IDS_INFO_SYSTEM         40
 
 #define IDS_MSG_ARG_SYNTAX_ERROR   41
 

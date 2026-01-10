@@ -219,6 +219,8 @@ BEGIN
     IDS_STATUS_ONLINE "联机"
     IDS_STATUS_OFFLINE "脱机"
     IDS_STATUS_NO_MEDIA "没有媒体"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

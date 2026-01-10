@@ -218,6 +218,8 @@ BEGIN
     IDS_STATUS_ONLINE "conectat"
     IDS_STATUS_OFFLINE "neconectat"
     IDS_STATUS_NO_MEDIA "inexistent"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

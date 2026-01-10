@@ -212,6 +212,8 @@ BEGIN
     IDS_STATUS_ONLINE "Activo"
     IDS_STATUS_OFFLINE "Inactivo"
     IDS_STATUS_NO_MEDIA "sem disco"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

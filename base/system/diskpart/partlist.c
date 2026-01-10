@@ -1831,6 +1831,78 @@ GetVolumeSize(
 
 static
 VOID
+IsVolumeSystem(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    WCHAR szSystemPartition[MAX_PATH];
+    HKEY hKey;
+    DWORD dwError, dwLength;
+
+    DPRINT1("IsVolumeSystem()\n");
+
+    VolumeEntry->IsSystem = FALSE;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\Setup",
+                            0,
+                            KEY_READ,
+                            &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("\n");
+        return;
+    }
+
+    dwLength = sizeof(szSystemPartition);
+    dwError = RegQueryValueExW(hKey,
+                               L"SystemPartition",
+                               NULL,
+                               NULL,
+                               (PBYTE)szSystemPartition,
+                               &dwLength);
+    RegCloseKey(hKey);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("\n");
+        return;
+    }
+
+    DPRINT1("SystemPartition: %S\n", szSystemPartition);
+    DPRINT1("DeviceName: %S\n", VolumeEntry->DeviceName);
+
+    if (_wcsnicmp(szSystemPartition, VolumeEntry->DeviceName, wcslen(szSystemPartition)) == 0)
+        VolumeEntry->IsSystem = TRUE;
+}
+
+
+static
+VOID
+IsVolumeBoot(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    WCHAR szSystemDir[MAX_PATH];
+
+    DPRINT1("IsVolumeBoot()\n");
+
+    VolumeEntry->IsBoot = FALSE;
+
+    if (VolumeEntry->DriveLetter == UNICODE_NULL)
+        return;
+
+    GetSystemDirectoryW(szSystemDir,
+                        ARRAYSIZE(szSystemDir));
+
+    DPRINT1("SystemDirectory: %S\n", szSystemDir);
+    DPRINT1("DriveLetter: %C\n", VolumeEntry->DriveLetter);
+
+    if (szSystemDir[0] == VolumeEntry->DriveLetter)
+        VolumeEntry->IsBoot = TRUE;
+}
+
+
+static
+VOID
 AddVolumeToList(
     ULONG ulVolumeNumber,
     PWSTR pszVolumeName)
@@ -1957,6 +2029,9 @@ AddVolumeToList(
             pszPath += (nPathLength + 1);
         }
     }
+
+    IsVolumeSystem(VolumeEntry);
+    IsVolumeBoot(VolumeEntry);
 
     InsertTailList(&VolumeListHead,
                    &VolumeEntry->ListEntry);

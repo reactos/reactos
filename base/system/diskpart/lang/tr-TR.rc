@@ -220,6 +220,8 @@ BEGIN
     IDS_STATUS_ONLINE "Çevrim İçi"
     IDS_STATUS_OFFLINE "Çevrim Dışı"
     IDS_STATUS_NO_MEDIA "Ortam Yok"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

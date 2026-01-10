@@ -214,6 +214,8 @@ BEGIN
     IDS_STATUS_ONLINE "Online"
     IDS_STATUS_OFFLINE "Offline"
     IDS_STATUS_NO_MEDIA "Ska Media"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

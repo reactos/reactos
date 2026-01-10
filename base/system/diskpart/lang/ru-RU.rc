@@ -212,6 +212,8 @@ BEGIN
     IDS_STATUS_ONLINE "В сети"
     IDS_STATUS_OFFLINE "Вне сети"
     IDS_STATUS_NO_MEDIA "Нет носителя"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */

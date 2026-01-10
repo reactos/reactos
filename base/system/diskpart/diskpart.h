@@ -250,6 +250,9 @@ typedef struct _VOLENTRY
     ULONG SectorsPerAllocationUnit;
     ULONG BytesPerSector;
 
+    BOOL IsSystem;
+    BOOL IsBoot;
+
     PVOLUME_DISK_EXTENTS pExtents;
 
 } VOLENTRY, *PVOLENTRY;

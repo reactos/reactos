@@ -474,6 +474,7 @@ PrintVolume(
     ULONGLONG VolumeSize;
     PWSTR pszSizeUnit;
     PWSTR pszVolumeType;
+    WCHAR szInfoBuffer[16];
 
     VolumeSize = VolumeEntry->Size.QuadPart;
     if (VolumeSize >= SIZE_10TB) /* 10 TB */
@@ -514,6 +515,12 @@ PrintVolume(
             break;
     }
 
+    szInfoBuffer[0] = UNICODE_NULL;
+    if (VolumeEntry->IsSystem)
+        LoadStringW(GetModuleHandle(NULL), IDS_INFO_SYSTEM, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
+    else if (VolumeEntry->IsBoot)
+        LoadStringW(GetModuleHandle(NULL), IDS_INFO_BOOT, szInfoBuffer, ARRAYSIZE(szInfoBuffer));
+
     ConResPrintf(StdOut, IDS_LIST_VOLUME_FORMAT,
                  (CurrentVolume == VolumeEntry) ? L'*' : L' ',
                  VolumeEntry->VolumeNumber,
@@ -522,7 +529,8 @@ PrintVolume(
                  (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
                  pszVolumeType,
                  VolumeSize, pszSizeUnit,
-                 L"", L"");
+                 L"",
+                 szInfoBuffer);
 }
 
 
