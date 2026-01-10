@@ -962,17 +962,17 @@ BOOL SHELL32_ReparentAsAliasPidl(
             continue;
 
         // Get the source root PIDL
-        LPITEMIDLIST pidlSourceRoot = NULL;
-        HRESULT hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSource, hToken, 0, &pidlSourceRoot);
+        LPITEMIDLIST pidlSrcRoot = NULL;
+        HRESULT hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSource, hToken, 0, &pidlSrcRoot);
         if (FAILED(hr))
             continue;
 
         // Check whether the input pidlTarget is under the source folder.
         // If it matches, ILFindChild returns the relative PIDL in the pidlTarget.
-        LPCITEMIDLIST pidlRelative = ILFindChild(pidlSourceRoot, pidlTarget);
+        LPCITEMIDLIST pidlRelative = ILFindChild(pidlSrcRoot, pidlTarget);
         if (!pidlRelative) // Not found?
         {
-            ILFree(pidlSourceRoot);
+            ILFree(pidlSrcRoot);
             continue;
         }
 
@@ -996,7 +996,7 @@ BOOL SHELL32_ReparentAsAliasPidl(
             ILFree(pidlDestRoot);
         }
 
-        ILFree(pidlSourceRoot);
+        ILFree(pidlSrcRoot);
         break; // A match was found, so exit the loop
     }
 
