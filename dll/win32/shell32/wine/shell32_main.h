@@ -118,6 +118,7 @@ SHELL32_ReparentAsAliasPidl(
 // Flags for SHELL32_AliasTranslatePidl and SHELL32_ReparentAsAliasPidl
 #define ALIAS_USER_FOLDER 0x1
 #define ALIAS_DESKTOP     0x2
+#define ALIAS_ANY         0xFFFF
 
 /****************************************************************************
  * Class constructors
