@@ -1,8 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        base/applications/sndvol32/tray.c
- * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Tray pop-up for adjusting master volume and muting
+ * COPYRIGHT:   Copyright 2018-2019 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "sndvol32.h"
