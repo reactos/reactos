@@ -77,6 +77,18 @@ HWND      g_hTrayNotifyWnd = NULL;
 #define LAYOUTF_REMOVE_LEFT_DEF_MENU 0x8
 #define LAYOUTF_REMOVE_RIGHT_DEF_MENU 0x10
 
+// ImmGetOpenStatus cannot be used from different thread
+static inline BOOL IsImeOpen(HWND hwndIme)
+{
+    return (BOOL)SendMessage(hwndIme, WM_IME_CONTROL, IMC_GETOPENSTATUS, 0);
+}
+
+// ImmGetConversionStatus cannot be used from different thread
+static inline DWORD GetImeConversionMode(HWND hwndIme)
+{
+    return (DWORD)SendMessage(hwndIme, WM_IME_CONTROL, IMC_GETCONVERSIONMODE, 0);
+}
+
 static VOID
 UpdateTrayInfo(VOID)
 {
@@ -471,18 +483,15 @@ GetImeStatus(HWND hwndTarget)
     if (!hIMC)
         return IME_STATUS_NO_IME;
 
-    DWORD dwImeStatus = (ImmGetOpenStatus(hIMC) ? IME_STATUS_IME_OPEN : IME_STATUS_IME_CLOSED);
+    DWORD dwImeStatus = (IsImeOpen(hwndIme) ? IME_STATUS_IME_OPEN : IME_STATUS_IME_CLOSED);
     if (GetACP() == 949) // Korean
     {
-        DWORD dwConversion = 0, dwSentence = 0;
-        if (ImmGetConversionStatus(hIMC, &dwConversion, &dwSentence))
-        {
-            if (dwConversion & IME_CMODE_NATIVE)
-                dwImeStatus |= IME_STATUS_IME_NATIVE;
+        DWORD dwConversion = GetImeConversionMode(hwndIme);
+        if (dwConversion & IME_CMODE_NATIVE)
+            dwImeStatus |= IME_STATUS_IME_NATIVE;
 
-            if (dwConversion & IME_CMODE_FULLSHAPE)
-                dwImeStatus |= IME_STATUS_IME_FULLSHAPE;
-        }
+        if (dwConversion & IME_CMODE_FULLSHAPE)
+            dwImeStatus |= IME_STATUS_IME_FULLSHAPE;
     }
 
     return dwImeStatus;
@@ -1111,7 +1120,11 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
         return;
     }
 
-    // Workaround of TrackPopupMenu's bug
+    // Is IME open?
+    BOOL bImeOn = IsImeOpen(hwndIme);
+
+    // Workaround of TrackPopupMenu's bug.
+    // NOTE: This might change IME status.
     SetForegroundWindow(hwnd);
 
     // Create IME menu
@@ -1120,8 +1133,7 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
     HMENU hMenu = MenuFromImeMenu(pImeMenu);
 
     HKL hKL = g_ahKLs[g_iKL];
-    DWORD dwImeStatus = GetImeStatus(hwndTarget);
-    BOOL bImeOn = FALSE, bSoftOn = FALSE, bShowToolbar = FALSE;
+    BOOL bSoftOn = FALSE, bShowToolbar = FALSE;
     TCHAR szText[128];
     if (bRightButton)
     {
@@ -1145,7 +1157,6 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
             if (!IS_KOREAN_IME_HKL(hKL)) // Not Korean IME?
             {
                 // "IME ON / OFF"
-                bImeOn = (dwImeStatus == IME_STATUS_IME_OPEN);
                 UINT nId = (bImeOn ? IDS_IME_ON : IDS_IME_OFF);
                 LoadString(g_hInst, nId, szText, _countof(szText));
                 AppendMenu(hMenu, MF_STRING, ID_IMEONOFF, szText);
@@ -1197,6 +1208,9 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
     // Workaround of TrackPopupMenu's bug
     PostMessage(hwnd, WM_NULL, 0, 0);
 
+    // Back to target window
+    SetForegroundWindow(hwndTarget);
+
     if (nID) // Action!
     {
         if (nID >= ID_STARTIMEMENU) // IME internal menu ID?
@@ -1221,7 +1235,7 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
                         PostMessage(hwndIme, WM_IME_SYSTEM, IMS_CONFIGURE, (LPARAM)hKL);
                     break;
                 case ID_IMEONOFF:
-                    ImmSetOpenStatus(hIMC, !bImeOn);
+                    PostMessage(hwndIme, WM_IME_SYSTEM, IMS_SETOPENSTATUS, !bImeOn);
                     break;
                 case ID_SOFTKBDONOFF:
                     PostMessage(hwndIme, WM_IME_SYSTEM, IMS_SOFTKBDONOFF, !bSoftOn);
@@ -1241,8 +1255,6 @@ KbSwitch_OnPenIconMsg(HWND hwnd, UINT uMouseMsg)
     // Clean up
     DestroyMenu(hMenu);
     CleanupImeMenus();
-
-    SetForegroundWindow(hwndTarget);
 }
 
 // WM_COMMAND
