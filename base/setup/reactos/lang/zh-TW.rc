@@ -119,7 +119,7 @@ BEGIN
     LTEXT "請選擇 ReactOS 的安裝路徑(&D)：", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "載入程式", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "請選擇 FreeLoader 載入程式的安裝位置。\n\n預設情況下，載入程式會安裝到啟動磁碟的系統分割區。如電腦使用傳統 BIOS，它也可以安裝到主開機記錄（MBR）或磁碟區開機記錄（VBR）。", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "請選擇 FreeLoader 載入程式的安裝位置。\n\n預設情況下，載入程式會安裝到啟動磁碟的系統分割區。如電腦使用傳統 BIOS，它也可以安裝到主開機記錄 (MBR) 或磁碟區開機記錄 (VBR) 。", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "確定", IDOK, 193, 113, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 248, 113, 50, 14
@@ -218,8 +218,8 @@ STRINGTABLE
 BEGIN
     IDS_BOOTLOADER_NOINST "不安裝"
     IDS_BOOTLOADER_REMOVABLE "卸除式儲存媒體"
-    IDS_BOOTLOADER_SYSTEM "系統分割區（預設）"
-    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR（預設）"
+    IDS_BOOTLOADER_SYSTEM "系統分割區 (預設)"
+    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (預設)"
     IDS_BOOTLOADER_VBRONLY "僅 VBR"
 END
 
@@ -270,12 +270,12 @@ STRINGTABLE
 BEGIN
     IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "無效的字符"
     IDS_ERROR_INVALID_INSTALLDIR_CHAR "只可以使用以下字符：\n\
-英數字元（a-z, A-Z, 0-9），以及\n . \\ - _\n\
+英數字元 (a-z, A-Z, 0-9) ，以及\n . \\ - _\n\
 不可使用空格。"
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "無效的安裝路徑"
     IDS_ERROR_DIRECTORY_NAME " ReactOS 的安裝路徑必須跟隨 DOS 8.3 命名規則， \
-且只可以使用（半型）英文字母、數字、連字號及句號。不可使用空格。"
+且只可以使用 (半型) 英文字母、數字、連字號及句號。不可使用空格。"
 
     IDS_ERROR_CREATE_PARTITION_TITLE "建立磁碟分割"
     IDS_ERROR_CREATE_PARTITION "磁碟分割建立失敗。"
@@ -288,7 +288,7 @@ BEGIN
 
     IDS_ERROR_SYSTEM_PARTITION "ReactOS 安裝程式無法從您的系統找到支援的系統分割區\n\
 或者無法建立新的分割。如果沒有這個磁碟分割，\n\
-安裝程式將無法安裝 ReactOS。 \
+安裝程式將無法安裝 ReactOS。\
 \n按［確定］返回磁碟分割選擇列表。"
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "嘗試格式化磁碟分割時發生錯誤：無法識別的磁碟區。"
@@ -299,16 +299,16 @@ BEGIN
 
     IDS_ERROR_FORMATTING_PARTITION "安裝程式無法格式化磁碟分割：\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "安裝程式現在無法檢測位於 %s 的磁碟分割。 \n\
+    IDS_ERROR_COULD_NOT_CHECK "安裝程式現在無法檢測位於 %s 的磁碟分割。\n\
 \n按［確定］繼續安裝。\
 \n按［取消］結束安裝程式。"
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk 檢測到磁碟錯誤。\n（狀態碼：0x%08lx）。"
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk 檢測到磁碟錯誤。\n(狀態碼：0x%08lx) 。"
 
     IDS_ERROR_WRITE_BOOT "安裝程式無法安裝 %s 啟動代碼到系統分割區。"
     IDS_ERROR_INSTALL_BOOTCODE "安裝程式無法安裝 %s 啟動代碼到啟動磁碟。"
     IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "安裝程式無法安裝啟動代碼到卸除式儲存媒體。"
     IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "安裝程式現時不支援在您的電腦上安裝載入程式。\
 \n按［確定］照常繼續安裝。"
-    IDS_ERROR_BOOTLDR_FAILED "安裝程式無法安裝載入程式（狀態碼：0x%08lx）。"
+    IDS_ERROR_BOOTLDR_FAILED "安裝程式無法安裝載入程式 (狀態碼：0x%08lx) 。"
 END
