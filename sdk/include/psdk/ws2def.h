@@ -308,6 +308,12 @@ typedef USHORT ADDRESS_FAMILY;
 
 #define AI_DISABLE_IDN_ENCODING 0x00080000
 
+#ifndef USE_WS_PREFIX
+#define AI_DNS_ONLY     0x00000010
+#else
+#define WS_AI_DNS_ONLY  0x00000010
+#endif
+
 #define NS_ALL                      0
 
 #define NS_SAP                      1
