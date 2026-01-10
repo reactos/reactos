@@ -182,7 +182,7 @@ CreateNotificationParam(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEM
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlAlias1, pidlAlias2;
     if (SHILAliasTranslatePidl(pidl1, &pidlAlias1, 0xFFFF) != S_OK)
         pidlAlias1.Attach(ILClone(pidl1));
-    if (!SHILAliasTranslatePidl(pidl2, &pidlAlias2, 0xFFFF) != S_OK)
+    if (SHILAliasTranslatePidl(pidl2, &pidlAlias2, 0xFFFF) != S_OK)
         pidlAlias2.Attach(ILClone(pidl2));
 
     // pidl1 and pidl2 have variable length. To store them into the delivery ticket,
