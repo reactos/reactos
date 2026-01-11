@@ -2,6 +2,8 @@
 #include "precomp.h"
 #include "resource_1bpp.h"
 
+#define ROS_HGDI_ERROR (HANDLE)~(ULONG_PTR)0 // This makes MSVC compiler happy
+
 static void test_LoadImage_1bpp(void)
 {
     HDC hdc1, hdc2;
@@ -19,7 +21,7 @@ static void test_LoadImage_1bpp(void)
     /* Load bitmap with BITMAPINFOHEADER (40 bytes) */
     hBmp1 = LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(201), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     res_obj = SelectObject(hdc1, hBmp1);
-    if (res_obj == HGDI_ERROR || res_obj == NULL)
+    if (res_obj == ROS_HGDI_ERROR || res_obj == NULL)
     {
         skip("Could not load 1 BPP bitmap\n");
         goto Cleanup;
@@ -79,7 +81,7 @@ static void test_LoadImage_1bpp(void)
     /* Load bitmap with BITMAPCOREHEADER (12 bytes) */
     hBmp2 = LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(202), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     res_obj = SelectObject(hdc2, hBmp2);
-    if (res_obj == HGDI_ERROR || res_obj == NULL)
+    if (res_obj == ROS_HGDI_ERROR || res_obj == NULL)
     {
         skip("Could not load 1 BPP bitmap\n");
         goto Cleanup;
