@@ -1,0 +1,9 @@
+#include <windef.h>
+#include <winuser.h>
+#include <dlgs.h>
+#include "resource_1bpp.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+BPP1_TEST BITMAP "bpp1a.bmp"
+BPP2_TEST BITMAP "bpp1b.bmp"
