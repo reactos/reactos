@@ -129,7 +129,6 @@ add_dependencies(msvcrt_shared psdk asm)
 list(APPEND MSVCRT_SOURCE
     ${SHARED_SOURCE}
     ${msvcrt_shared_asm}
-    reactos/chkesp_failed.c
     reactos/misc.c
     reactos/system.cpp
     concurrency.c
