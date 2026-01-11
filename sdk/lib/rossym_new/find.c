@@ -49,74 +49,76 @@ RosSymGetAddressInformation
     ROSSYM_REGISTERS registers;
     DwarfParam params[sizeof(RosSymLineInfo->Parameters)/sizeof(RosSymLineInfo->Parameters[0])];
     DwarfSym proc = { };
-    int i;
-	int res = dwarfpctoline
-		(RosSymInfo,
-         &proc,
-		 RelativeAddress + RosSymInfo->pe->imagebase,
-		 &RosSymLineInfo->FileName,
-		 &RosSymLineInfo->FunctionName,
-		 &RosSymLineInfo->LineNumber);
-	if (res == -1) {
-        werrstr("Could not get basic function info");
-		return FALSE;
-    }
+    int i, res;
+    int param_count;
+    ULONG_PTR FullPC;
+    DwarfExpr cfa = { };
+    ULONG_PTR cfaLocation;
 
+    if (!RosSymInfo || !RosSymInfo->pe || !RosSymLineInfo)
+        return FALSE;
+
+    FullPC = RelativeAddress + RosSymInfo->pe->imagebase;
+
+    res = dwarfpctoline(RosSymInfo, &proc, FullPC,
+                        &RosSymLineInfo->FileName,
+                        &RosSymLineInfo->DirectoryName,
+                        &RosSymLineInfo->FunctionName,
+                        &RosSymLineInfo->LineNumber);
+    if (res == -1)
+        return FALSE;
+
+    RosSymLineInfo->NumParams = 0;
     if (!(RosSymLineInfo->Flags & ROSSYM_LINEINFO_HAS_REGISTERS))
         return TRUE;
 
     registers = RosSymLineInfo->Registers;
 
-    DwarfExpr cfa = { };
-    ulong cfaLocation;
-    if (dwarfregunwind
-        (RosSymInfo,
-         RelativeAddress + RosSymInfo->pe->imagebase,
-         proc.attrs.framebase.c,
-         &cfa,
-         &registers) == -1) {
+    if (dwarfregunwind(RosSymInfo,
+                       FullPC,
+                       proc.attrs.framebase.c,
+                       &cfa,
+                       &registers) == -1)
+    {
         werrstr("Can't get cfa location for %s", RosSymLineInfo->FunctionName);
         return TRUE;
     }
 
-    res = dwarfgetparams
-        (RosSymInfo,
-         &proc,
-         RelativeAddress + RosSymInfo->pe->imagebase,
-         sizeof(params)/sizeof(params[0]),
-         params);
-
-    if (res == -1) {
+    res = dwarfgetparams(RosSymInfo,
+                         &proc,
+                         FullPC,
+                         sizeof(params)/sizeof(params[0]),
+                         params);
+    if (res == -1)
+    {
         werrstr("%s: could not get params at all", RosSymLineInfo->FunctionName);
-        RosSymLineInfo->NumParams = 0;
         return TRUE;
     }
 
-    werrstr("%s: res %d", RosSymLineInfo->FunctionName, res);
-    RosSymLineInfo->NumParams = res;
-
-    res = dwarfcomputecfa(RosSymInfo, &cfa, &registers, &cfaLocation);
-    if (res == -1) {
+    if (dwarfcomputecfa(RosSymInfo, &cfa, &registers, &cfaLocation) == -1)
+    {
         werrstr("%s: could not get our own cfa", RosSymLineInfo->FunctionName);
         return TRUE;
     }
 
-    for (i = 0; i < RosSymLineInfo->NumParams; i++) {
-        werrstr("Getting arg %s, unit %x, type %x",
-                params[i].name, params[i].unit, params[i].type);
-        res = dwarfargvalue
-            (RosSymInfo,
-             &proc,
-             RelativeAddress + RosSymInfo->pe->imagebase,
-             cfaLocation,
-             &registers,
-             &params[i]);
-        if (res == -1) { RosSymLineInfo->NumParams = i; return TRUE; }
-        werrstr("%s: %x", params[i].name, params[i].value);
-        RosSymLineInfo->Parameters[i].ValueName = malloc(strlen(params[i].name)+1);
-        strcpy(RosSymLineInfo->Parameters[i].ValueName, params[i].name);
-        free(params[i].name);
-        RosSymLineInfo->Parameters[i].Value = params[i].value;
+    param_count = res;
+    for (i = 0; i < param_count; i++)
+    {
+        int arg_res = dwarfargvalue(RosSymInfo,
+                                    &proc,
+                                    FullPC,
+                                    cfaLocation,
+                                    &registers,
+                                    &params[i]);
+        if (arg_res == -1)
+        {
+            return TRUE;
+        }
+
+        RosSymLineInfo->Parameters[i].ValueName = params[i].name;
+
+        RosSymLineInfo->Parameters[i].Value = (ULONGLONG)params[i].value;
+        RosSymLineInfo->NumParams = i + 1;
     }
 
     return TRUE;
@@ -204,8 +206,18 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
                         element.attrs.datamemberloc.b.data, element.attrs.datamemberloc.b.len);
             }
 
-            if (dwarfgetarg(RosSymInfo, element.attrs.name, &instream, 0, NULL, &Aggregate->Elements[count].BaseOffset) == -1)
-                Aggregate->Elements[count].BaseOffset = -1;
+            {
+                ULONG_PTR baseOffset = 0;
+                if (dwarfgetarg(RosSymInfo, element.attrs.name, &instream, 0, NULL, &baseOffset) == -1 ||
+                    baseOffset > MAXULONG)
+                {
+                    Aggregate->Elements[count].BaseOffset = (ULONG)-1;
+                }
+                else
+                {
+                    Aggregate->Elements[count].BaseOffset = (ULONG)baseOffset;
+                }
+            }
             werrstr("tag %x name %s base %x type %x\n",
                     element.attrs.tag, element.attrs.name,
                     Aggregate->Elements[count].BaseOffset,
@@ -226,7 +238,6 @@ RosSymAggregate(PROSSYM_INFO RosSymInfo, PCHAR Type, PROSSYM_AGGREGATE Aggregate
                 return FALSE;
             type = inner;
         }
-        //dwarfdumpsym(RosSymInfo, &type);
         if (type.attrs.have.name) {
             Aggregate->Elements[count].Type = malloc(strlen(type.attrs.name) + 1);
             strcpy(Aggregate->Elements[count].Type, type.attrs.name);
