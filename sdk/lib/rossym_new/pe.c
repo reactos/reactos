@@ -14,8 +14,8 @@ PeSect *pesection(Pe *pe, const char *name)
 		if (WantName.Length == AnsiString->Length &&
 			!memcmp(AnsiString->Buffer, name, WantName.Length)) {
 			werrstr("Found %s (%d) @ %x (%x)\n", name, i,
-				   ((PCHAR)pe->imagebase)+pe->sect[i].VirtualAddress,
-				   pe->sect[i].SizeOfRawData);
+				   ((PCHAR)pe->imagebase)+pe->sect[i].hdr.VirtualAddress,
+				   pe->sect[i].hdr.SizeOfRawData);
 			return &pe->sect[i];
 		}
 	}
@@ -65,7 +65,7 @@ loaddisksection(Pe *pe, char *name, DwarfBlock *b)
 	PeSect *s;
 	if((s = pesection(pe, name)) == nil)
 		return -1;
-	return readblock(pe->fd, b, s->PointerToRawData, s->SizeOfRawData);
+	return readblock(pe->fd, b, s->hdr.PointerToRawData, s->hdr.SizeOfRawData);
 }
 
 int
@@ -75,14 +75,14 @@ loadmemsection(Pe *pe, char *name, DwarfBlock *b)
 
 	if((s = pesection(pe, name)) == nil)
 		return -1;
-	werrstr("Loading section %s (ImageBase %x RVA %x)\n", name, pe->fd, s->VirtualAddress);
-	b->data = RosSymAllocMem(s->SizeOfRawData);
-	b->len = s->SizeOfRawData;
-	PCHAR DataSource = ((char *)pe->fd) + s->VirtualAddress;
+	werrstr("Loading section %s (ImageBase %x RVA %x)\n", name, pe->fd, s->hdr.VirtualAddress);
+	b->data = RosSymAllocMem(s->hdr.SizeOfRawData);
+	b->len = s->hdr.SizeOfRawData;
+	PCHAR DataSource = ((char *)pe->fd) + s->hdr.VirtualAddress;
 	werrstr("Copying to %x from %x (%x)\n", DataSource, b->data, b->len);
-	RtlCopyMemory(b->data, DataSource, s->SizeOfRawData);
+	RtlCopyMemory(b->data, DataSource, s->hdr.SizeOfRawData);
 
-	return s->SizeOfRawData;
+	return s->hdr.SizeOfRawData;
 }
 
 void *RosSymAllocMemZero(ulong size, ulong count) {
@@ -110,19 +110,19 @@ void xfree(void *v) {
 	if (v) RosSymFreeMem(v);
 }
 
-ulong pefindrva(struct _IMAGE_SECTION_HEADER *SectionHeaders, int NumberOfSections, ulong TargetPhysical) {
+ulong pefindrva(PeSect *SectionHeaders, int NumberOfSections, ulong TargetPhysical) {
 	int i;
 	werrstr("Finding RVA for Physical %x\n", TargetPhysical);
 	for (i = 0; i < NumberOfSections; i++) {
 		werrstr("Section %d name %s Raw %x Virt %x\n",
 			   i,
 			   ANSI_NAME_STRING(&SectionHeaders[i])->Buffer,
-			   SectionHeaders[i].PointerToRawData,
-			   SectionHeaders[i].VirtualAddress);
-		if (TargetPhysical >= SectionHeaders[i].PointerToRawData &&
-			TargetPhysical < SectionHeaders[i].PointerToRawData + SectionHeaders[i].SizeOfRawData) {
-			werrstr("RVA %x\n", TargetPhysical - SectionHeaders[i].PointerToRawData + SectionHeaders[i].VirtualAddress);
-			return TargetPhysical - SectionHeaders[i].PointerToRawData + SectionHeaders[i].VirtualAddress;
+			   SectionHeaders[i].hdr.PointerToRawData,
+			   SectionHeaders[i].hdr.VirtualAddress);
+		if (TargetPhysical >= SectionHeaders[i].hdr.PointerToRawData &&
+			TargetPhysical < SectionHeaders[i].hdr.PointerToRawData + SectionHeaders[i].hdr.SizeOfRawData) {
+			werrstr("RVA %x\n", TargetPhysical - SectionHeaders[i].hdr.PointerToRawData + SectionHeaders[i].hdr.VirtualAddress);
+			return TargetPhysical - SectionHeaders[i].hdr.PointerToRawData + SectionHeaders[i].hdr.VirtualAddress;
 		}
 	}
 	return nil;

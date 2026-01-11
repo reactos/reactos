@@ -84,6 +84,7 @@ typedef struct _ROSSYM_LINEINFO {
   ROSSYM_LINEINFO_FLAGS Flags;
   ULONG LineNumber;
   char *FileName;
+  char *DirectoryName;
   char *FunctionName;
   ROSSYM_REGISTERS Registers;
   ULONG NumParams;
@@ -128,9 +129,7 @@ typedef struct _ROSSYM_INFO {
 #endif
 
 VOID RosSymInit(PROSSYM_CALLBACKS Callbacks);
-#ifndef __ROS_DWARF__
 VOID RosSymInitKernelMode(VOID);
-#endif
 VOID RosSymInitUserMode(VOID);
 
 BOOLEAN RosSymCreateFromRaw(PVOID RawData, ULONG_PTR DataSize,
@@ -164,4 +163,3 @@ VOID RosSymFreeAggregate(PROSSYM_AGGREGATE Aggregate);
 #endif /* REACTOS_ROSSYM_H_INCLUDED */
 
 /* EOF */
-

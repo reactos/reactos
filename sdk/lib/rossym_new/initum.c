@@ -7,18 +7,22 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#include <precomp.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <reactos/rossym.h>
+#include "rossympriv.h"
 
 static PVOID
 RosSymAllocMemUM(ULONG_PTR Size)
 {
-  return RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+  return HeapAlloc(GetProcessHeap(), 0, Size);
 }
 
 static VOID
 RosSymFreeMemUM(PVOID Area)
 {
-  RtlFreeHeap(RtlGetProcessHeap(), 0, Area);
+  HeapFree(GetProcessHeap(), 0, Area);
 }
 
 static BOOLEAN
@@ -30,16 +34,16 @@ RosSymGetMemUM(PVOID FileContext, ULONG_PTR *Target, PVOID SourceMem, ULONG Size
 VOID
 RosSymInitUserMode(VOID)
 {
-  static ROSSYM_CALLBACKS KmCallbacks =
+  static ROSSYM_CALLBACKS UmCallbacks =
     {
       RosSymAllocMemUM,
       RosSymFreeMemUM,
       RosSymZwReadFile,
       RosSymZwSeekFile,
-	  RosSymGetMemUM
+      RosSymGetMemUM
     };
 
-  RosSymInit(&KmCallbacks);
+  RosSymInit(&UmCallbacks);
 }
 
 /* EOF */

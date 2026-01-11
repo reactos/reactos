@@ -42,7 +42,7 @@ add_subdirectory(poguid)
 add_subdirectory(pseh)
 
 if(KDBG)
-    add_subdirectory(rossym)
+    add_subdirectory(rossym_new)
 endif()
 
 add_subdirectory(rtl)

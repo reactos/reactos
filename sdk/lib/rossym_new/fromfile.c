@@ -21,7 +21,8 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
 {
     IMAGE_DOS_HEADER DosHeader;
     IMAGE_NT_HEADERS NtHeaders;
-    PIMAGE_SECTION_HEADER SectionHeaders;
+    IMAGE_SECTION_HEADER TempSectionHeader;
+    PeSect *SectionHeaders;
     unsigned SectionIndex;
     unsigned SymbolTable, NumSymbols;
 
@@ -70,52 +71,61 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
 
     DPRINT("SymbolTable %x NumSymbols %x\n", SymbolTable, NumSymbols);
 
-    /* Load section headers */
-    if (! RosSymSeekFile(FileContext, (char *) IMAGE_FIRST_SECTION(&NtHeaders) -
-                         (char *) &NtHeaders + DosHeader.e_lfanew))
-    {
-        werrstr("Failed seeking to section headers\n");
-        return FALSE;
-    }
+    /* Allocate PeSect array */
     DPRINT("Alloc section headers\n");
     SectionHeaders = RosSymAllocMem(NtHeaders.FileHeader.NumberOfSections
-                                    * sizeof(IMAGE_SECTION_HEADER));
+                                    * sizeof(PeSect));
     if (NULL == SectionHeaders)
     {
         werrstr("Failed to allocate memory for %u section headers\n",
                 NtHeaders.FileHeader.NumberOfSections);
         return FALSE;
     }
-    if (! RosSymReadFile(FileContext, SectionHeaders,
-                         NtHeaders.FileHeader.NumberOfSections
-                         * sizeof(IMAGE_SECTION_HEADER)))
+
+    /* Load section headers and convert names */
+    if (! RosSymSeekFile(FileContext, (char *) IMAGE_FIRST_SECTION(&NtHeaders) -
+                         (char *) &NtHeaders + DosHeader.e_lfanew))
     {
+        werrstr("Failed seeking to section headers\n");
         RosSymFreeMem(SectionHeaders);
-        werrstr("Failed to read section headers\n");
         return FALSE;
     }
 
-    // Convert names to ANSI_STRINGs
     for (SectionIndex = 0; SectionIndex < NtHeaders.FileHeader.NumberOfSections;
          SectionIndex++)
     {
         ANSI_STRING astr;
-        if (SectionHeaders[SectionIndex].Name[0] != '/') {
-            DPRINT("Short name string %d, %s\n", SectionIndex, SectionHeaders[SectionIndex].Name);
+
+        if (! RosSymReadFile(FileContext, &TempSectionHeader, sizeof(IMAGE_SECTION_HEADER)))
+        {
+            werrstr("Failed to read section header %u\n", SectionIndex);
+            goto freeall;
+        }
+        RtlCopyMemory(&SectionHeaders[SectionIndex].hdr, &TempSectionHeader, sizeof(IMAGE_SECTION_HEADER));
+
+        if (TempSectionHeader.Name[0] != '/') {
+            DPRINT("Short name string %d, %s\n", SectionIndex, TempSectionHeader.Name);
             astr.Buffer = RosSymAllocMem(IMAGE_SIZEOF_SHORT_NAME);
-            memcpy(astr.Buffer, SectionHeaders[SectionIndex].Name, IMAGE_SIZEOF_SHORT_NAME);
+            memcpy(astr.Buffer, TempSectionHeader.Name, IMAGE_SIZEOF_SHORT_NAME);
             astr.MaximumLength = IMAGE_SIZEOF_SHORT_NAME;
             astr.Length = GetStrnlen(astr.Buffer, IMAGE_SIZEOF_SHORT_NAME);
         } else {
             UNICODE_STRING intConv;
             NTSTATUS Status;
             ULONG StringOffset;
+            ULONG SavedPosition;
 
-            if (!RtlCreateUnicodeStringFromAsciiz(&intConv, (PCSZ)SectionHeaders[SectionIndex].Name + 1))
+            if (!RtlCreateUnicodeStringFromAsciiz(&intConv, (PCSZ)TempSectionHeader.Name + 1))
                 goto freeall;
             Status = RtlUnicodeStringToInteger(&intConv, 10, &StringOffset);
             RtlFreeUnicodeString(&intConv);
             if (!NT_SUCCESS(Status)) goto freeall;
+
+            /* Save current position and seek to string table */
+            SavedPosition = (char *) IMAGE_FIRST_SECTION(&NtHeaders) -
+                           (char *) &NtHeaders + DosHeader.e_lfanew +
+                           (SectionIndex + 1) * sizeof(IMAGE_SECTION_HEADER);
+
             if (!RosSymSeekFile(FileContext, SymbolTable + NumSymbols * SYMBOL_SIZE + StringOffset))
                 goto freeall;
             astr.Buffer = RosSymAllocMem(MAXIMUM_DWARF_NAME_SIZE);
@@ -124,6 +134,10 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
             astr.Length = GetStrnlen(astr.Buffer, MAXIMUM_DWARF_NAME_SIZE);
             astr.MaximumLength = MAXIMUM_DWARF_NAME_SIZE;
             DPRINT("Long name %d, %s\n", SectionIndex, astr.Buffer);
+
+            /* Restore position for next section */
+            if (!RosSymSeekFile(FileContext, SavedPosition))
+                goto freeall;
         }
         *ANSI_NAME_STRING(&SectionHeaders[SectionIndex]) = astr;
     }
@@ -139,11 +153,15 @@ RosSymCreateFromFile(PVOID FileContext, PROSSYM_INFO *RosSymInfo)
     pe->imagebase = pe->loadbase = NtHeaders.OptionalHeader.ImageBase;
     pe->imagesize = NtHeaders.OptionalHeader.SizeOfImage;
     pe->codestart = NtHeaders.OptionalHeader.BaseOfCode;
+#ifdef _WIN64
+    pe->datastart = 0;
+#else
     pe->datastart = NtHeaders.OptionalHeader.BaseOfData;
+#endif
     pe->loadsection = loaddisksection;
     *RosSymInfo = dwarfopen(pe);
 
-    return TRUE;
+    return (*RosSymInfo != NULL);
 
 freeall:
     for (SectionIndex = 0; SectionIndex < NtHeaders.FileHeader.NumberOfSections;

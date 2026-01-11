@@ -9,6 +9,7 @@ Dwarf*
 dwarfopen(Pe *pe)
 {
 	Dwarf *d;
+	int res;
 
 	if(pe == nil){
 		werrstr("nil pe passed to dwarfopen");
@@ -20,12 +21,22 @@ dwarfopen(Pe *pe)
 		return nil;
 
 	d->pe = pe;
-	if(pe->loadsection(pe, ".debug_abbrev", &d->abbrev) < 0
-	|| pe->loadsection(pe, ".debug_aranges", &d->aranges) < 0
-	|| pe->loadsection(pe, ".debug_line", &d->line) < 0
-	|| pe->loadsection(pe, ".debug_info", &d->info) < 0
-    || pe->loadsection(pe, ".debug_loc", &d->loc) < 0)
-		goto err;
+	res = pe->loadsection(pe, ".debug_abbrev", &d->abbrev);
+	if(res < 0) goto err;
+	if(dwarfpreallocabbrev(d) < 0) goto err;
+
+	res = pe->loadsection(pe, ".debug_aranges", &d->aranges);
+	if(res < 0) goto err;
+
+	res = pe->loadsection(pe, ".debug_line", &d->line);
+	if(res < 0) goto err;
+
+	res = pe->loadsection(pe, ".debug_info", &d->info);
+	if(res < 0) goto err;
+
+	/* .debug_loc is optional - some modules don't have it */
+	pe->loadsection(pe, ".debug_loc", &d->loc);
+
 	pe->loadsection(pe, ".debug_pubnames", &d->pubnames);
 	pe->loadsection(pe, ".debug_frame", &d->frame);
 	pe->loadsection(pe, ".debug_ranges", &d->ranges);
@@ -34,7 +45,6 @@ dwarfopen(Pe *pe)
 	return d;
 
 err:
-	DPRINT("Failed to open dwarf\n");
 	free(d->abbrev.data);
 	free(d->aranges.data);
 	free(d->frame.data);
@@ -44,6 +54,7 @@ err:
 	free(d->str.data);
 	free(d->info.data);
     free(d->loc.data);
+	free(d->acache.buf);
 	free(d);
 	return nil;
 }
@@ -59,7 +70,8 @@ dwarfclose(Dwarf *d)
 	free(d->ranges.data);
 	free(d->str.data);
 	free(d->info.data);
+	free(d->loc.data);
+	free(d->acache.buf);
 	pefree(d->pe);
 	free(d);
 }
-

@@ -113,7 +113,7 @@ dwarfget8(DwarfBuf *b)
 	return v;
 }
 
-ulong
+ULONG_PTR
 dwarfgetaddr(DwarfBuf *b)
 {
 	static int nbad;
@@ -142,77 +142,70 @@ int n1, n2, n3, n4, n5;
 
 /* An inline function picks off the calls to dwarfget128 for 1-byte encodings,
  * more than by far the common case (99.999% on most binaries!). */
-ulong
+ULONG_PTR
 dwarfget128(DwarfBuf *b)
 {
 	static int nbad;
-	ulong c, d;
+	ULONG_PTR v = 0;
+	int shift = 0;
+	int c;
 
-	if(b->p == nil)
+	if (b->p == nil)
 		return 0;
-	c = *b->p++;
-	if(!(c&0x80))
-{n1++;
-		return c;
-}
-	c &= ~0x80;
-	d = *b->p++;
-	c |= (d&0x7F)<<7;
-	if(!(d&0x80))
-{n2++;
-		return c;
-}
-	d = *b->p++;
-	c |= (d&0x7F)<<14;
-	if(!(d&0x80))
-{n3++;
-		return c;
-}
-	d = *b->p++;
-	c |= (d&0x7F)<<21;
-	if(!(d&0x80))
-{n4++;
-		return c;
-}
-	d = *b->p++;
-	c |= (d&0x7F)<<28;
-	if(!(d&0x80))
-{n5++;
-		return c;
-}
-	while(b->p<b->ep && *b->p&0x80)
-		b->p++;
-	if(++nbad == 1)
-		werrstr("dwarf: overflow during parsing of uleb128 integer");
-	return c;
+
+	while (b->p < b->ep)
+	{
+		c = *b->p++;
+		v |= ((ULONG_PTR)(c & 0x7F)) << shift;
+		if (!(c & 0x80))
+			return v;
+
+		shift += 7;
+		if (shift >= (int)(8 * sizeof(ULONG_PTR)))
+		{
+			while (b->p < b->ep && (*b->p & 0x80))
+				b->p++;
+			if (++nbad == 1)
+				werrstr("dwarf: overflow during parsing of uleb128 integer");
+			return v;
+		}
+	}
+
+	b->p = nil;
+	return 0;
 }
 
-long
+LONG_PTR
 dwarfget128s(DwarfBuf *b)
 {
-	int nb, c;
-	ulong v;
+	int shift = 0;
+	int c = 0;
+	ULONG_PTR v = 0;
 	static int nbad;
 
-	v = 0;
-	nb = 0;
-	if(b->p==nil)
+	if (b->p == nil)
 		return 0;
-	while(b->p<b->ep){
+
+	while (b->p < b->ep)
+	{
 		c = *b->p++;
-		v |= (c & 0x7F)<<nb;
-		nb += 7;
-		if(!(c&0x80))
+		v |= ((ULONG_PTR)(c & 0x7F)) << shift;
+		shift += 7;
+		if (!(c & 0x80))
+			break;
+		if (shift >= (int)(8 * sizeof(ULONG_PTR)))
 			break;
 	}
-	if(v&(1<<(nb-1)))
-		v |= ~(((ulong)1<<nb)-1);
-	if(nb > 8*sizeof(ulong)){
-		if(0)
-		if(++nbad == 1)
-			werrstr("dwarf: overflow during parsing of sleb128 integer: got %d bits", nb);
-	}
-	return v;
-}
 
+	if (shift < (int)(8 * sizeof(ULONG_PTR)) && (c & 0x40))
+		v |= (~(ULONG_PTR)0) << shift;
+
+	if (shift >= (int)(8 * sizeof(ULONG_PTR)))
+	{
+		if (++nbad == 1)
+			werrstr("dwarf: overflow during parsing of sleb128 integer");
+	}
+
+	return (LONG_PTR)v;
+}
 

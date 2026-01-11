@@ -32,7 +32,9 @@ RtlRaiseStatus(IN NTSTATUS Status);
         RtlRaiseStatus(STATUS_ASSERTION_FAILURE); \
     } \
     } while (0)
+#ifndef offsetof
 #define offsetof(x,y) FIELD_OFFSET(x,y)
+#endif
 #define nil (0)
 
 #define nelem(arr) (sizeof((arr)[0]) / sizeof((arr)))
@@ -44,19 +46,20 @@ void *RosSymAllocMemZero(ulong num, ulong size);
 void *RosSymRealloc(void *mem, ulong newsize);
 void xfree(void *v);
 
-#define werrstr(str, ...) DPRINT(str "\n" ,##__VA_ARGS__)
-#if 0
-#ifdef NDEBUG
-#define werrstr(x, ...)
+/*
+ * werrstr is disabled in kernel mode because rossym may be called from
+ * inside the kernel debugger, which holds KdpDebuggerLock. Calling DbgPrint
+ * would try to reacquire the lock causing SPIN_LOCK_ALREADY_OWNED.
+ */
+#ifdef _NTSYSTEM_
+#define werrstr(x, ...) ((void)0)
 #else
 #define werrstr(x, ...) printf("(%s:%d) " x "\n",__FILE__,__LINE__,##__VA_ARGS__)
-#endif
 #endif
 
 #define malloc(x) RosSymAllocMem(x)
 #define mallocz(x,y) RosSymAllocMemZero(x,y)
 #define free(x) xfree(x)
 #define USED(x) (*((char *)&(x)) ^= 0)
-#define memset(x,y,z) RtlZeroMemory(x,z)
 
 #endif/*_LIBMACH_COMPAT_H_*/

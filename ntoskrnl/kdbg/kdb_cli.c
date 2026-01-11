@@ -548,12 +548,12 @@ KdbpPrintStructInternal
         if (DoRead) {
             if (!strcmp(Member->Type, "_UNICODE_STRING")) {
                 KdbpPrint("\"");
-                KdbpPrintUnicodeString(((PCHAR)BaseAddress) + Member->BaseOffset);
+                KdbpPrintUnicodeString((PCUNICODE_STRING)(((PCHAR)BaseAddress) + Member->BaseOffset));
                 KdbpPrint("\"\n");
                 continue;
             } else if (!strcmp(Member->Type, "PUNICODE_STRING")) {
                 KdbpPrint("\"");
-                KdbpPrintUnicodeString(*(((PUNICODE_STRING*)((PCHAR)BaseAddress) + Member->BaseOffset)));
+                KdbpPrintUnicodeString(*(PCUNICODE_STRING*)(((PCHAR)BaseAddress) + Member->BaseOffset));
                 KdbpPrint("\"\n");
                 continue;
             }
@@ -626,12 +626,17 @@ KdbpCmdPrintStruct(
     UNICODE_STRING ModName = {0};
     ANSI_STRING AnsiName = {0};
     CHAR Indent[100] = {0};
+    NTSTATUS Status;
     PROSSYM_INFO Info;
 
     if (Argc < 3) goto end;
     AnsiName.Length = AnsiName.MaximumLength = strlen(Argv[1]);
     AnsiName.Buffer = Argv[1];
-    RtlAnsiStringToUnicodeString(&ModName, &AnsiName, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&ModName, &AnsiName, TRUE);
+    if (!NT_SUCCESS(Status)) {
+        DPRINT1("Failed to convert module name, status=0x%lx\n", Status);
+        goto end;
+    }
     Info = KdbpSymFindCachedFile(&ModName);
 
     if (!Info || !RosSymAggregate(Info, Argv[2], &Aggregate)) {
