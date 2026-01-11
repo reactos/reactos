@@ -788,7 +788,7 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
         (parser->parse_type == REG_BINARY))
     {
         memcpy(Buffer, pos, 18);
-        Buffer[9] = UNICODE_NULL;
+        Buffer[_countof(Buffer) - 1] = UNICODE_NULL;
         ret = wcsstr(Buffer, L"00,"); // Any UNICODE characters?
         unicode_in_ansi = (ret != NULL);
     }
