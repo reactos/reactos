@@ -23,8 +23,13 @@ extern void func_rtl(void);
 extern void func_rtlbitmap(void);
 extern void func_rtlstr(void);
 extern void func_string(void);
+extern void func_sync(void);
+extern void func_thread(void);
 extern void func_threadpool(void);
 extern void func_time(void);
+extern void func_unwind(void);
+extern void func_virtual(void);
+extern void func_wow64(void);
 
 const struct test winetest_testlist[] =
 {
@@ -35,22 +40,24 @@ const struct test winetest_testlist[] =
     { "error", func_error },
     { "exception", func_exception },
     { "file", func_file },
-#ifdef _M_IX86
     { "generated", func_generated },
-#endif
     { "info", func_info },
     { "large_int", func_large_int },
     { "om", func_om },
     { "path", func_path },
     { "pipe", func_pipe },
     { "port", func_port },
-    { "process", func_process },
     { "reg", func_reg },
     { "rtl", func_rtl },
     { "rtlbitmap", func_rtlbitmap },
     { "rtlstr", func_rtlstr },
     { "string", func_string },
-    { "threadpool", func_threadpool},
+    { "sync", func_sync },
+    { "thread", func_thread },
+    { "threadpool", func_threadpool },
     { "time", func_time },
+    { "unwind", func_unwind },
+    { "virtual", func_virtual },
+    { "wow64", func_wow64 },
     { 0, 0 }
 };
