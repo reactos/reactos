@@ -17,7 +17,7 @@ static void test_LoadImage_1bpp(void)
 
     hdc1 = CreateCompatibleDC(NULL);
     /* Load bitmap with BITMAPINFOHEADER (40 bytes) */
-    hBmp1 = (HBITMAP)LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(201), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    hBmp1 = LoadImageW(GetModuleHandle(NULL), MAKEINTRESOURCEW(201), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     res_obj = SelectObject(hdc1, hBmp1);
     if (res_obj == HGDI_ERROR || res_obj == NULL)
     {
