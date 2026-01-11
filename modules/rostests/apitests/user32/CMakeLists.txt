@@ -32,7 +32,6 @@ list(APPEND SOURCE
     KbdLayout.c
     keybd_event.c
     LoadImage.c
-    LoadImage1bpp.c
     LoadImageGCC.c
     LookupIconIdFromDirectoryEx.c
     MenuUI.c
