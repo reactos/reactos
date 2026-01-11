@@ -1,4 +1,11 @@
-/* Chinese (Traditional) translation by Elton Chung aka MfldElton <elton328@gmail.com> */
+/*
+ * PROJECT:     ReactOS System Configuration Tool
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Chinese (Traditional) resource file
+ * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -152,8 +159,8 @@ BEGIN
     IDS_TOOLS_INFO_NAME "版本"
     IDS_TOOLS_INFO_DESCR "顯示版本訊息。"
     IDS_TOOLS_INFO_CMD "winver.exe"
-    IDS_TOOLS_REGEDIT_NAME "登錄表編輯器"
-    IDS_TOOLS_REGEDIT_DESCR "開啟登錄表編輯器。"
+    IDS_TOOLS_REGEDIT_NAME "登錄編輯程式"
+    IDS_TOOLS_REGEDIT_DESCR "開啟登錄編輯程式。"
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "系統內容"
     IDS_TOOLS_SYSDM_DESCR "顯示這台電腦的內容"

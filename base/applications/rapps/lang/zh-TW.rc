@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -175,9 +175,9 @@ BEGIN
     IDS_WELCOME_TEXT "從左側欄目選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站︰"
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "新增／移除程式"
+    IDS_APPWIZ_TEXT1 "選擇「應用程式」或「更新」來列出已安裝或有更新版本的應用程式。"
+    IDS_APPWIZ_TEXT2 "要移除程式或修改其已安裝的元件，請從列表中選擇該應用程式，然後按「解除安裝」或「修改」。"
 END
 
 STRINGTABLE
@@ -267,6 +267,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
+    IDS_INSTGEN_CONFIRMUNINST "您確定要解除安裝 %s 嗎？"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "安裝完成，要立即執行 %s 嗎？"
 END
