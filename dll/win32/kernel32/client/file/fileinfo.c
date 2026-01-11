@@ -669,6 +669,7 @@ GetFileAttributesW(LPCWSTR lpFileName)
                                NULL, NULL);
     /* Simply query attributes */
     Status = NtQueryAttributesFile(&ObjectAttributes, &FileInformation);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
     if (!NT_SUCCESS(Status))
     {
         /* It failed? Is it a DOS device? */
