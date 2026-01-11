@@ -101,6 +101,25 @@ PathProcessCommandW(
     _In_ INT cchDest,
     _In_ DWORD dwFlags);
 
+HRESULT
+SHELL32_AliasTranslatePidl(
+    _In_ LPCITEMIDLIST pidl,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags);
+
+BOOL
+SHELL32_ReparentAsAliasPidl(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HANDLE hToken,
+    _In_ LPCITEMIDLIST pidlTarget,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags);
+
+// Flags for SHELL32_AliasTranslatePidl and SHELL32_ReparentAsAliasPidl
+#define ALIAS_USER_FOLDER 0x1
+#define ALIAS_DESKTOP     0x2
+#define ALIAS_ANY         0xFFFF
+
 /****************************************************************************
  * Class constructors
  */
