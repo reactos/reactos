@@ -522,6 +522,7 @@ static BOOL WINAPI msvcrt_console_handler(DWORD ctrlType)
     return ret;
 }
 
+#ifndef __UCRTSUPPORT__
 /*********************************************************************
  *              __pxcptinfoptrs (MSVCRT.@)
  */
@@ -529,6 +530,7 @@ void** CDECL __pxcptinfoptrs(void)
 {
     return (void**)&msvcrt_get_thread_data()->xcptinfo;
 }
+#endif /* !__UCRTSUPPORT__ */
 
 typedef void (CDECL *float_handler)(int, int);
 
@@ -642,6 +644,7 @@ void msvcrt_free_signals(void)
     SetConsoleCtrlHandler(msvcrt_console_handler, FALSE);
 }
 
+#ifndef __UCRTSUPPORT__
 /*********************************************************************
  *		signal (MSVCRT.@)
  * Some signals may never be generated except through an explicit call to
@@ -724,6 +727,7 @@ int CDECL raise(int sig)
     }
     return 0;
 }
+#endif /* !__UCRTSUPPORT__ */
 
 /*********************************************************************
  *		_XcptFilter (MSVCRT.@)
@@ -1011,7 +1015,7 @@ struct __std_exception_data {
     char dofree;
 };
 
-#if _MSVCR_VER>=140
+#if _MSVCR_VER>=140 || defined(__UCRTSUPPORT__)
 
 /*********************************************************************
  *  __std_exception_copy (UCRTBASE.@)

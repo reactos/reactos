@@ -50,4 +50,9 @@ ___wine_RtlUnwind@16:
     pop ebp
     ret 16
 
+
+PUBLIC __imp____wine_RtlUnwind@16
+__imp____wine_RtlUnwind@16:
+    .long ___wine_RtlUnwind@16
+
 END
