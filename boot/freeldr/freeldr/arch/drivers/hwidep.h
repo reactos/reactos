@@ -2,7 +2,7 @@
  * PROJECT:     FreeLoader
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Private header for ATA/ATAPI programmed I/O driver.
- * COPYRIGHT:   Copyright 2019-2025 Dmitry Borisov (di.sean@protonmail.com)
+ * COPYRIGHT:   Copyright 2019-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
@@ -28,6 +28,8 @@
 #if defined(SARCH_XBOX)
 /* It's safe to enable the multiple mode */
 #define ATA_ENABLE_MULTIPLE_MODE
+/* nVidia PCI IDE controllers have a 32-bit data port */
+#define ATA_SUPPORT_32_BIT_IO
 #endif
 
 /* Delay of 400ns */
@@ -69,8 +71,11 @@ typedef ULONG_PTR IDE_REG;
 #define ATA_TIME_BUSY_ENUM      100     ///< 1 ms
 #define ATA_TIME_BUSY_RESET     1000000 ///< 10 s
 #define ATA_TIME_RESET_SELECT   200000  ///< 2 s
-#define ATA_TIME_DRQ_CLEAR      100     ///< 200 us
+#define ATA_TIME_DRQ_CLEAR      1000    ///< 10 ms
 #define ATA_TIME_PHASE_CHANGE   100     ///< 1 ms
+
+/* We keep the value as small as possible, since large timeout can break our error handling */
+#define ATA_TIME_DRQ_ASSERT     15      ///< 150 us
 
 #define ATA_WRITE(Port, Value) \
     WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)(Port), (Value))
