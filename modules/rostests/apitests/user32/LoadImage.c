@@ -22,7 +22,7 @@ static void test_LoadImage_1bpp(void)
     if (res_obj == HGDI_ERROR || res_obj == NULL)
     {
         skip("Could not load 1 BPP bitmap\n");
-        return;
+        goto Cleanup;
     }
     GetObject(hBmp1, sizeof(BITMAP), &bitmap1);
 
@@ -49,7 +49,7 @@ static void test_LoadImage_1bpp(void)
     if (!result)
     {
         skip("GetDIBits failed for 1 BPP bitmap\n");
-        return;
+        goto Cleanup;
     }
 
     /* Get bytes from bitmap (we know its 4x4 1BPP */
@@ -82,7 +82,7 @@ static void test_LoadImage_1bpp(void)
     if (res_obj == HGDI_ERROR || res_obj == NULL)
     {
         skip("Could not load 1 BPP bitmap\n");
-        return;
+        goto Cleanup;
     }
     GetObject(hBmp2, sizeof(BITMAP), &bitmap2);
     ok(bitmap2.bmBitsPixel == 1, "Should have been '1', but got %d\n", bitmap2.bmBitsPixel);
@@ -106,7 +106,7 @@ static void test_LoadImage_1bpp(void)
     if (!result)
     {
         skip("GetDIBits failed for 1 BPP bitmap\n");
-        return;
+        goto Cleanup;
     }
 
     /* Clear img array for new test */
@@ -135,10 +135,11 @@ static void test_LoadImage_1bpp(void)
     ok(img[14] == 0, "Got 0x%02x, expected 0\n", img[14]);
     ok(img[15] == 0, "Got 0x%02x, expected 0\n", img[15]);
 
-    GlobalUnlock(hMem);
-    GlobalFree(hMem);
-    DeleteDC(hdc1);
-    DeleteDC(hdc2);
+Cleanup:
+    if (hMem) GlobalUnlock(hMem);
+    if (hMem) GlobalFree(hMem);
+    if (hdc1) DeleteDC(hdc1);
+    if (hdc2) DeleteDC(hdc2);
 }
 
 static void test_LoadImage_DataFile(void)
