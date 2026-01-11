@@ -109,6 +109,7 @@ typedef enum _FORMATSTATE
 typedef enum _VOLUME_TYPE
 {
     VOLUME_TYPE_CDROM,
+//    VOLUME_TYPE_DVD,
     VOLUME_TYPE_PARTITION,
     VOLUME_TYPE_REMOVABLE,
     VOLUME_TYPE_UNKNOWN
@@ -226,6 +227,8 @@ typedef struct _DISKENTRY
 
     LIST_ENTRY PrimaryPartListHead;
     LIST_ENTRY LogicalPartListHead;
+
+    BOOL IsBoot;
 
 } DISKENTRY, *PDISKENTRY;
 

@@ -1830,6 +1830,42 @@ GetVolumeSize(
 
 
 static
+PDISKENTRY
+GetDiskForVolume(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+    INT i;
+
+    DPRINT("GetDiskFromVolume(%p)\n", VolumeEntry);
+
+    DPRINT("Extents: %p\n", VolumeEntry->pExtents);
+    if (VolumeEntry->pExtents == NULL)
+        return NULL;
+
+    DPRINT("Extents: %lu\n", VolumeEntry->pExtents->NumberOfDiskExtents);
+
+    Entry = DiskListHead.Flink;
+    while (Entry != &DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+        {
+            DPRINT("DiskNumber: %lu -- %lu\n", VolumeEntry->pExtents->Extents[i].DiskNumber, DiskEntry->DiskNumber);
+            if (VolumeEntry->pExtents->Extents[i].DiskNumber == DiskEntry->DiskNumber)
+                return DiskEntry;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
 VOID
 IsVolumeSystem(
     _In_ PVOLENTRY VolumeEntry)
@@ -1838,7 +1874,7 @@ IsVolumeSystem(
     HKEY hKey;
     DWORD dwError, dwLength;
 
-    DPRINT1("IsVolumeSystem()\n");
+    DPRINT("IsVolumeSystem()\n");
 
     VolumeEntry->IsSystem = FALSE;
 
@@ -1882,8 +1918,9 @@ IsVolumeBoot(
     _In_ PVOLENTRY VolumeEntry)
 {
     WCHAR szSystemDir[MAX_PATH];
+    PDISKENTRY DiskEntry;
 
-    DPRINT1("IsVolumeBoot()\n");
+    DPRINT("IsVolumeBoot()\n");
 
     VolumeEntry->IsBoot = FALSE;
 
@@ -1893,11 +1930,17 @@ IsVolumeBoot(
     GetSystemDirectoryW(szSystemDir,
                         ARRAYSIZE(szSystemDir));
 
-    DPRINT1("SystemDirectory: %S\n", szSystemDir);
-    DPRINT1("DriveLetter: %C\n", VolumeEntry->DriveLetter);
+    DPRINT("SystemDirectory: %S\n", szSystemDir);
+    DPRINT("DriveLetter: %C\n", VolumeEntry->DriveLetter);
 
     if (szSystemDir[0] == VolumeEntry->DriveLetter)
+    {
         VolumeEntry->IsBoot = TRUE;
+
+        DiskEntry = GetDiskForVolume(VolumeEntry);
+        if (DiskEntry)
+            DiskEntry->IsBoot = TRUE;
+    }
 }
 
 
@@ -1948,7 +1991,6 @@ AddVolumeToList(
         return;
     }
 
-    wcscat(VolumeEntry->DeviceName, L"\\");
     DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
 
     RtlInitUnicodeString(&Name, VolumeEntry->DeviceName);
@@ -1977,8 +2019,8 @@ AddVolumeToList(
                               szVolumeName,
                               MAX_PATH + 1,
                               &VolumeEntry->SerialNumber,
-                              NULL, //  [out, optional] LPDWORD lpMaximumComponentLength,
-                              NULL, //  [out, optional] LPDWORD lpFileSystemFlags,
+                              NULL,
+                              NULL,
                               szFilesystem,
                               MAX_PATH + 1))
     {
