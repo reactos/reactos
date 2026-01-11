@@ -708,6 +708,12 @@ typedef struct _GP_LOG_NCQ_COMMAND_ERROR {
 #define IDE_COMMAND_SECURITY_DISABLE_PASSWORD   0xF6
 #define IDE_COMMAND_NOT_VALID                   0xFF
 
+#define IDE_SET_DEFAULT_PIO_MODE(mode)      ((UCHAR)1)
+#define IDE_SET_ADVANCE_PIO_MODE(mode)      ((UCHAR)((1 << 3) | (mode)))
+#define IDE_SET_SWDMA_MODE(mode)            ((UCHAR)((1 << 4) | (mode)))
+#define IDE_SET_MWDMA_MODE(mode)            ((UCHAR)((1 << 5) | (mode)))
+#define IDE_SET_UDMA_MODE(mode)             ((UCHAR)((1 << 6) | (mode)))
+
 #define IDE_FEATURE_ENABLE_WRITE_CACHE          0x2
 #define IDE_FEATURE_SET_TRANSFER_MODE           0x3
 #define IDE_FEATURE_ENABLE_PUIS                 0x6
@@ -719,5 +725,9 @@ typedef struct _GP_LOG_NCQ_COMMAND_ERROR {
 #define IDE_FEATURE_DISABLE_PUIS                0x86
 #define IDE_FEATURE_DISABLE_SATA_FEATURE        0x90
 #define IDE_FEATURE_ENABLE_MSN                  0x95
+
+#define IDE_GP_LOG_NCQ_COMMAND_ERROR_ADDRESS        0x10
+
+#define IDE_GP_LOG_SECTOR_SIZE                      0x200
 
 #endif
