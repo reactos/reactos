@@ -775,7 +775,7 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
 #ifdef __REACTOS__
     WCHAR Buffer[10] = { 0 };
     WCHAR* ret;
-    BOOL unicode_in_ansi = FALSE;
+    BOOL unicode_in_ascii = FALSE;
     BOOL result;
 #endif
 
@@ -790,10 +790,10 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
         memcpy(Buffer, pos, 18);
         Buffer[_countof(Buffer) - 1] = UNICODE_NULL;
         ret = wcsstr(Buffer, L"00,"); // Any UNICODE characters?
-        unicode_in_ansi = (ret != NULL);
+        unicode_in_ascii = (ret != NULL);
     }
 
-    if (unicode_in_ansi)
+    if (unicode_in_ascii)
     {
         parser->is_unicode = TRUE;
         result = convert_hex_csv_to_hex(parser, &line);
@@ -817,7 +817,7 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
     }
 
 #ifdef __REACTOS__
-    if (unicode_in_ansi)
+    if (unicode_in_ascii)
     {
         parser->is_unicode = TRUE;
         prepare_hex_string_data(parser);
