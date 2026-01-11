@@ -7,6 +7,10 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/ucrt)
 
 include_directories(inc)
 
+if(DBG)
+    add_compile_definitions(_DEBUG) # TODO: define this globally
+endif()
+
 # Silence GCC/Clang warnings
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -25,6 +29,7 @@ add_compile_definitions(
 if(${ARCH} STREQUAL "i386")
     list(APPEND VCRT_COMMON_ASM_SOURCES
         i386/__security_check_cookie.s
+        i386/_chkesp.s
     )
 elseif(${ARCH} STREQUAL "amd64")
     list(APPEND VCRT_COMMON_ASM_SOURCES
@@ -95,6 +100,12 @@ list(APPEND VCRT_RUNTIME_SOURCES
     __vcrt_init.c
     purecall.cpp
 )
+
+if(${ARCH} STREQUAL "i386")
+    list(APPEND VCRT_RUNTIME_SOURCES
+        i386/_chkesp_failed.c
+    )
+endif()
 
 # Runtime library (linked into ucrtbase)
 add_library(vcruntime ${VCRT_RUNTIME_SOURCES} $<TARGET_OBJECTS:vcrt_common> $<TARGET_OBJECTS:setjmp>)
