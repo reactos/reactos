@@ -348,12 +348,10 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     if(ARCH MATCHES "64$")
         include(sdk/cmake/baseaddress64.cmake)
-    elseif(NO_ROSSYM)
-        include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)
         include(sdk/cmake/baseaddress_msvc.cmake)
     else()
-        include(sdk/cmake/baseaddress.cmake)
+        include(sdk/cmake/baseaddress_dwarf.cmake)
     endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
