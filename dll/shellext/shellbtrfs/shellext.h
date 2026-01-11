@@ -388,8 +388,9 @@ private:
     string msg;
 };
 
-#ifdef __REACTOS__
-inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); } 
+/* std::to_wstring may not be available in older GCC versions (e.g., RosBE 2.2.1 uses GCC 8.4) */
+#if defined(__REACTOS__) && defined(__GNUC__) && (__GNUC__ < 9)
+inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint16_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint32_t a) { WCHAR buffer[32]; swprintf(buffer, L"%ld", a); return wstring(buffer); }
 inline wstring to_wstring(uint64_t a) { WCHAR buffer[64]; swprintf(buffer, L"%I64d", a); return wstring(buffer); }

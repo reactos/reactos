@@ -300,6 +300,7 @@
 @ cdecl __wgetmainargs(ptr ptr ptr long ptr)
 @ extern __winitenv MSVCRT___winitenv
 @ cdecl -arch=i386 _abnormal_termination() __intrinsic_abnormal_termination
+@ cdecl -arch=!i386 -norelay __intrinsic_setjmpex(ptr ptr)
 @ cdecl -ret64 _abs64(int64)
 @ cdecl _access(str long)
 @ cdecl -version=0x600+ _access_s(str long)
@@ -475,8 +476,9 @@
 # stub -version=0x600+ _freea_s
 @ varargs -version=0x600+ _fscanf_l(ptr str ptr)
 @ varargs -version=0x600+ _fscanf_s_l(ptr str ptr)
-@ cdecl -version=0x600+ _fseeki64(ptr int64 long)
+@ cdecl _fseeki64(ptr int64 long)
 @ cdecl _fsopen(str str long)
+@ cdecl -ret64 _ftelli64(ptr)
 @ cdecl _fstat(long ptr)
 @ cdecl _fstat64(long ptr)
 @ cdecl _fstati64(long ptr)
@@ -1269,7 +1271,7 @@
 @ cdecl atol(str)
 @ cdecl bsearch(ptr ptr long long ptr)
 @ cdecl -version=0x600+ bsearch_s(ptr ptr long long ptr ptr)
-@ cdecl -version=0x600+ btowc(long)
+@ cdecl btowc(long)
 @ cdecl calloc(long long)
 @ cdecl ceil(double)
 @ cdecl -arch=!i386 ceilf(float)
@@ -1377,7 +1379,7 @@
 @ cdecl -version=0x600+ mbrlen(ptr long ptr)
 @ cdecl -version=0x600+ mbrtowc(ptr str long ptr)
 # stub -version=0x600+ mbsdup_dbg(wstr long ptr long)
-@ cdecl -version=0x600+ mbsrtowcs(ptr ptr long ptr)
+@ cdecl mbsrtowcs(ptr ptr long ptr)
 @ cdecl -version=0x600+ mbsrtowcs_s(ptr ptr long ptr long ptr)
 @ cdecl mbstowcs(ptr str long)
 @ cdecl -version=0x600+ mbstowcs_s(ptr ptr long str long) _mbstowcs_s
@@ -1407,7 +1409,7 @@
 @ cdecl -version=0x600+ qsort_s(ptr long long ptr ptr)
 @ cdecl raise(long)
 @ cdecl rand()
-@ cdecl -version=0x600+ rand_s(ptr)
+@ cdecl rand_s(ptr)
 @ cdecl realloc(ptr long)
 @ cdecl remove(str)
 @ cdecl rename(str str)
@@ -1425,6 +1427,7 @@
 @ cdecl -arch=!i386 sinhf(float)
 @ varargs sprintf(ptr str)
 @ varargs -version=0x600+ sprintf_s(ptr long str)
+@ varargs snprintf(ptr long str) _snprintf
 @ cdecl sqrt(double)
 @ cdecl -arch=!i386 sqrtf(float)
 @ cdecl srand(long)
@@ -1447,7 +1450,7 @@
 @ cdecl strncmp(str str long)
 @ cdecl strncpy(ptr str long)
 @ cdecl -version=0x600+ strncpy_s(ptr long str long)
-@ cdecl -version=0x600+ strnlen(str long)
+@ cdecl strnlen(str long)
 @ cdecl strpbrk(str str)
 @ cdecl strrchr(str long)
 @ cdecl strspn(str str)
@@ -1489,7 +1492,7 @@
 @ cdecl -version=0x600+ vfwprintf_s(ptr wstr ptr)
 @ cdecl vprintf(str ptr)
 @ cdecl -version=0x600+ vprintf_s(str ptr)
-@ cdecl -version=0x600+ vsnprintf(ptr long str ptr) _vsnprintf
+@ cdecl vsnprintf(ptr long str ptr) _vsnprintf
 @ cdecl vsprintf(ptr str ptr)
 @ cdecl -version=0x600+ vsprintf_s(ptr long str ptr)
 @ cdecl vswprintf(ptr wstr ptr) _vswprintf
@@ -1513,7 +1516,7 @@
 @ cdecl wcsncmp(wstr wstr long)
 @ cdecl wcsncpy(ptr wstr long)
 @ cdecl -version=0x600+ wcsncpy_s(ptr long wstr long)
-@ cdecl -version=0x600+ wcsnlen(wstr long)
+@ cdecl wcsnlen(wstr long)
 @ cdecl wcspbrk(wstr wstr)
 @ cdecl wcsrchr(wstr long)
 @ cdecl -version=0x600+ wcsrtombs(ptr ptr long ptr)
@@ -1528,8 +1531,9 @@
 @ cdecl -version=0x600+ wcstombs_s(ptr ptr long wstr long)
 @ cdecl wcstoul(wstr ptr long)
 @ cdecl wcsxfrm(ptr wstr long)
-@ cdecl -version=0x600+ wctob(long)
+@ cdecl wctob(long)
 @ cdecl wctomb(ptr long)
+@ cdecl wctype(str)
 @ cdecl -version=0x600+ wctomb_s(ptr ptr long long)
 @ varargs wprintf(wstr)
 @ varargs -version=0x600+ wprintf_s(wstr)

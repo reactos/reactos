@@ -46,6 +46,7 @@
 #include <mountmgr.h>
 #ifdef __REACTOS__
 #include <rtlfuncs.h>
+#include <psfuncs.h>
 #include <iotypes.h>
 #include <pseh/pseh2.h>
 #endif /* __REACTOS__ */
@@ -1920,7 +1921,7 @@ typedef struct _PEB {
 } PEB,*PPEB;
 #endif /* __REACTOS__ */
 
-#ifdef _MSC_VER
+#ifndef __REACTOS__
 __kernel_entry
 NTSTATUS NTAPI ZwQueryInformationProcess(
     IN HANDLE ProcessHandle,

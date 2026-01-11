@@ -26,9 +26,9 @@ add_subdirectory(win32u)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
-# embed RTC libs
+# Embed RTC libs - link to consumers of libwin32k
 if (STACK_PROTECTOR)
-    target_sources(libwin32k PRIVATE $<TARGET_OBJECTS:gcc_ssp_win32k>)
+    target_link_libraries(libwin32k INTERFACE gcc_ssp_win32k)
 endif()
 
 include_directories(

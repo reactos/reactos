@@ -66,8 +66,13 @@
 
 extern mutex_t	rpcsoc_lock;
 
+#ifdef _WIN32
+static CLIENT *clnt_com_create(struct sockaddr_in *, rpcprog_t, rpcvers_t,
+    SOCKET *, u_int, u_int, char *);
+#else
 static CLIENT *clnt_com_create(struct sockaddr_in *, rpcprog_t, rpcvers_t,
     int *, u_int, u_int, char *);
+#endif
 static SVCXPRT *svc_com_create(SOCKET, u_int, u_int, char *);
 static bool_t rpc_wrap_bcast(char *, struct netbuf *, struct netconfig *);
 
@@ -83,10 +88,10 @@ clnt_com_create(raddr, prog, vers, sockp, sendsz, recvsz, tp)
 	struct sockaddr_in *raddr;
 	rpcprog_t prog;
 	rpcvers_t vers;
-#ifndef __REACTOS__
+#ifdef _WIN32
 	SOCKET *sockp;
 #else
-    int *sockp;
+	int *sockp;
 #endif
 	u_int sendsz;
 	u_int recvsz;
@@ -164,7 +169,11 @@ clntudp_bufcreate(raddr, prog, vers, wait, sockp, sendsz, recvsz)
 	u_long prog;
 	u_long vers;
 	struct timeval wait;
+#ifdef _WIN32
+	SOCKET *sockp;
+#else
 	int *sockp;
+#endif
 	u_int sendsz;
 	u_int recvsz;
 {
@@ -185,7 +194,11 @@ clntudp_create(raddr, program, version, wait, sockp)
 	u_long program;
 	u_long version;
 	struct timeval wait;
+#ifdef _WIN32
+	SOCKET *sockp;
+#else
 	int *sockp;
+#endif
 {
 	return clntudp_bufcreate(raddr, program, version, wait, sockp, UDPMSGSIZE, UDPMSGSIZE);
 }
@@ -195,7 +208,11 @@ clnttcp_create(raddr, prog, vers, sockp, sendsz, recvsz)
 	struct sockaddr_in *raddr;
 	u_long prog;
 	u_long vers;
+#ifdef _WIN32
+	SOCKET *sockp;
+#else
 	int *sockp;
+#endif
 	u_int sendsz;
 	u_int recvsz;
 {
