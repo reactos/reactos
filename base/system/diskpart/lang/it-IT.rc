@@ -77,6 +77,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart ha fallito ad eliminare la partizione selezionata.\nAssicurarsi che la partizione selezionata sia valida.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart ha eliminato con successo la partizione selezionata.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */

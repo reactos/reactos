@@ -78,6 +78,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart nu a reușit să șteargă partiția selectată.\nAsigurați-vă că partiția selectată este validă pentru ștergere.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart a șters cu succes partiția selectată.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */

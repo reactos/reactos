@@ -79,6 +79,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart 無法刪除指定的磁碟分割。\n請確認已選擇的磁碟分割能夠正確地刪除。\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart 成功刪除指定的磁碟分割。\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */

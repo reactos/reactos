@@ -1866,11 +1866,74 @@ GetDiskForVolume(
 
 
 static
+PPARTENTRY
+GetPartitionForVolume(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    PLIST_ENTRY Entry1, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+    INT i;
+
+    DPRINT("GetPartitionFromVolume(%p)\n", VolumeEntry);
+
+    DPRINT("Extents: %p\n", VolumeEntry->pExtents);
+    if (VolumeEntry->pExtents == NULL)
+        return NULL;
+
+    DPRINT("Extents: %lu\n", VolumeEntry->pExtents->NumberOfDiskExtents);
+
+    Entry1 = DiskListHead.Flink;
+    while (Entry1 != &DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+
+        for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+        {
+            DPRINT("DiskNumber: %lu -- %lu\n", VolumeEntry->pExtents->Extents[i].DiskNumber, DiskEntry->DiskNumber);
+            if (VolumeEntry->pExtents->Extents[i].DiskNumber == DiskEntry->DiskNumber)
+            {
+
+                Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+                while (Entry2 != &DiskEntry->PrimaryPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+
+                    if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                        (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                        return PartEntry;
+
+                    Entry2 = Entry2->Flink;
+                }
+
+                Entry2 = DiskEntry->LogicalPartListHead.Flink;
+                while (Entry2 != &DiskEntry->LogicalPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+
+                    if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                        (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                        return PartEntry;
+
+                    Entry2 = Entry2->Flink;
+                }
+            }
+        }
+
+        Entry1 = Entry1->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
 VOID
 IsVolumeSystem(
     _In_ PVOLENTRY VolumeEntry)
 {
     WCHAR szSystemPartition[MAX_PATH];
+    PPARTENTRY PartEntry;
     HKEY hKey;
     DWORD dwError, dwLength;
 
@@ -1904,11 +1967,17 @@ IsVolumeSystem(
         return;
     }
 
-    DPRINT1("SystemPartition: %S\n", szSystemPartition);
-    DPRINT1("DeviceName: %S\n", VolumeEntry->DeviceName);
+    DPRINT("SystemPartition: %S\n", szSystemPartition);
+    DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
 
     if (_wcsnicmp(szSystemPartition, VolumeEntry->DeviceName, wcslen(szSystemPartition)) == 0)
+    {
         VolumeEntry->IsSystem = TRUE;
+
+        PartEntry = GetPartitionForVolume(VolumeEntry);
+        if (PartEntry)
+            PartEntry->IsSystem = TRUE;
+    }
 }
 
 
@@ -1919,6 +1988,7 @@ IsVolumeBoot(
 {
     WCHAR szSystemDir[MAX_PATH];
     PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
 
     DPRINT("IsVolumeBoot()\n");
 
@@ -1936,6 +2006,10 @@ IsVolumeBoot(
     if (szSystemDir[0] == VolumeEntry->DriveLetter)
     {
         VolumeEntry->IsBoot = TRUE;
+
+        PartEntry = GetPartitionForVolume(VolumeEntry);
+        if (PartEntry)
+            PartEntry->IsBoot = TRUE;
 
         DiskEntry = GetDiskForVolume(VolumeEntry);
         if (DiskEntry)

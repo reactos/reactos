@@ -70,6 +70,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart nie może usunąć wybranej partycji.\nUpewnij się, że wybrana partycja nadaje się do usunięcia.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart pomyślnie usunął wybraną partycję.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */

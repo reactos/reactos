@@ -109,7 +109,6 @@ typedef enum _FORMATSTATE
 typedef enum _VOLUME_TYPE
 {
     VOLUME_TYPE_CDROM,
-//    VOLUME_TYPE_DVD,
     VOLUME_TYPE_PARTITION,
     VOLUME_TYPE_REMOVABLE,
     VOLUME_TYPE_UNKNOWN
@@ -167,6 +166,10 @@ typedef struct _PARTENTRY
     BOOLEAN NeedsCheck;
 
     struct _FILE_SYSTEM_ITEM *FileSystem;
+
+    BOOL IsSystem;
+    BOOL IsBoot;
+
 } PARTENTRY, *PPARTENTRY;
 
 

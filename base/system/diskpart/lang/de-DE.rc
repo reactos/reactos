@@ -69,7 +69,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDie gewählte Partition konnte nicht gelöscht werden.\nVergewissern Sie sich, dass die Partition wirklich gelöscht werden kann.\n"
-    IDS_DELETE_PARTITION_SUCCESS "\nDer gewählte Partition wurde erfolgreich gelöscht.\n"
+    IDS_DELETE_PARTITION_SUCCESS "\nDie gewählte Partition wurde erfolgreich gelöscht.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nDie gewählte Partition ist möglicherweise für den Betrieb des Computers erforderlich und kann nicht gelöscht werden.\n"
 END
 
 /* Disk Information Labels */

@@ -80,6 +80,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart, seçilen bölümü silemedi.\nLütfen seçilen bölümün silmek için geçerli olduğundan emin olun.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart seçilen bölümü başarıyla sildi.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */
