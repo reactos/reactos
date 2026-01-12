@@ -41,6 +41,7 @@ BEGIN
     IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
     IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
     IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+    IDS_ASSIGN_SYSTEM_VOLUME "\nDiskPart cannot reassign the drive letter on a system, boot or pagefile volume.\n"
 END
 
 /* AUTOMOUNT command strings */

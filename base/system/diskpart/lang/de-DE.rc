@@ -32,6 +32,7 @@ BEGIN
     IDS_ASSIGN_ALREADY_ASSIGNED "\nDer angegebene Buchstabe wurde diesem Laufwerk bereits zugewiesen.\n"
     IDS_ASSIGN_INVALID_LETTER "\nDer angegebene Laufwerksbuchstabe ist kein gültiger Volumebuchstabe.\n"
     IDS_ASSIGN_NO_MORE_LETTER "\nEs ist kein freier Laufwerksbuchstabe vorhanden, der diesem Volume zugewiesen werden kann.\nGeben Sie einen Laufwerksbuchstaben frei, und wiederholen Sie den Vorgang.\n"
+    IDS_ASSIGN_SYSTEM_VOLUME "\nDer Laufwerkbuchstabe einens System-, Start- oder Auslagerungsvolumes kann nicht neu zugeordnet werden.\n"
 END
 
 /* AUTOMOUNT command strings */

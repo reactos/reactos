@@ -32,6 +32,7 @@
 #define IDS_ASSIGN_ALREADY_ASSIGNED    1022
 #define IDS_ASSIGN_INVALID_LETTER      1023
 #define IDS_ASSIGN_NO_MORE_LETTER      1024
+#define IDS_ASSIGN_SYSTEM_VOLUME       1025
 
 #define IDS_CLEAN_FAIL                 1030
 #define IDS_CLEAN_SUCCESS              1031
