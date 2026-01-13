@@ -489,7 +489,8 @@ PrintVolume(
 {
     ULONGLONG VolumeSize;
     PWSTR pszSizeUnit;
-    PWSTR pszVolumeType;
+    INT nVolumeType;
+    WCHAR szVolumeTypeBuffer[30];
     WCHAR szInfoBuffer[16];
 
     VolumeSize = VolumeEntry->Size.QuadPart;
@@ -517,19 +518,24 @@ PrintVolume(
     switch (VolumeEntry->VolumeType)
     {
         case VOLUME_TYPE_CDROM:
-            pszVolumeType = L"DVD";
+            nVolumeType = IDS_VOLUME_TYPE_DVD;
             break;
+
         case VOLUME_TYPE_PARTITION:
-            pszVolumeType = L"Partition";
+            nVolumeType = IDS_VOLUME_TYPE_PARTITION;
             break;
+
         case VOLUME_TYPE_REMOVABLE:
-            pszVolumeType = L"Removable";
+            nVolumeType = IDS_VOLUME_TYPE_REMOVABLE;
             break;
+
         case VOLUME_TYPE_UNKNOWN:
         default:
-            pszVolumeType = L"Unknown";
+            nVolumeType = IDS_VOLUME_TYPE_UNKNOWN;
             break;
     }
+
+    LoadStringW(GetModuleHandle(NULL), nVolumeType, szVolumeTypeBuffer, ARRAYSIZE(szVolumeTypeBuffer));
 
     szInfoBuffer[0] = UNICODE_NULL;
     if (VolumeEntry->IsSystem)
@@ -543,7 +549,7 @@ PrintVolume(
                  VolumeEntry->DriveLetter,
                  (VolumeEntry->pszLabel) ? VolumeEntry->pszLabel : L"",
                  (VolumeEntry->pszFilesystem) ? VolumeEntry->pszFilesystem : L"",
-                 pszVolumeType,
+                 szVolumeTypeBuffer,
                  VolumeSize, pszSizeUnit,
                  L"",
                  szInfoBuffer);
