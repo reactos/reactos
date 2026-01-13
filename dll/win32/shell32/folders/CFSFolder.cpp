@@ -1125,16 +1125,13 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                                      PCUIDLIST_RELATIVE pidl1,
                                      PCUIDLIST_RELATIVE pidl2)
 {
-    WCHAR szNameBuf1[MAX_PATH], szNameBuf2[_countof(szNameBuf1)];
+    WCHAR szNameBuf1[MAX_PATH], szNameBuf2[MAX_PATH];
     LPCWSTR pszName1 = GetItemFileName(pidl1, szNameBuf1, _countof(szNameBuf1));
     LPCWSTR pszName2 = GetItemFileName(pidl2, szNameBuf2, _countof(szNameBuf2));
     if (!pszName1 || !pszName2 || LOWORD(lParam) >= GENERICSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
-    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
-    LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
-    LPWSTR pExtension1, pExtension2;
-
+    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1), pData2 = _ILGetDataPointer(pidl2);
     HRESULT hr = CompareSortFoldersFirst(pidl1, pidl2);
     if (SUCCEEDED(hr))
         return hr;
@@ -1153,11 +1150,16 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                 result = 0;
             break;
         case SHFSF_COL_TYPE:
-            // FIXME: Compare the type strings from SHGetFileInfo
-            pExtension1 = PathFindExtensionW(pszName1);
-            pExtension2 = PathFindExtensionW(pszName2);
-            result = CompareUiStrings(pExtension1, pExtension2, lParam);
+        {
+            SHFILEINFOW info1, info2;
+            enum { flags = SHGFI_PIDL | SHGFI_TYPENAME };
+            if (SHGetFileInfoW((LPCWSTR)pidl1, 0, &info1, sizeof(info1), flags) &&
+                SHGetFileInfoW((LPCWSTR)pidl2, 0, &info2, sizeof(info2), flags))
+            {
+                result = CompareUiStrings(info1.szTypeName, info2.szTypeName, lParam);
+            }
             break;
+        }
         case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
             if (result == 0)
