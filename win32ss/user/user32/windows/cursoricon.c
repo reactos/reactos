@@ -384,11 +384,8 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             RGB(0xff, 0xff, 0xff))
         {
             /* Check if the second color is black */
-            if (RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
-                RGB(0, 0, 0))
-            {
-                return TRUE;
-            }
+            return (RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
+                RGB(0, 0, 0));
         }
 
         return FALSE;
@@ -413,11 +410,8 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
             rgb[0].rgbReserved) == RGBA(0xff, 0xff, 0xff, 0))
         {
             /* Check if the second color is black */
-            if (RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
-                rgb[1].rgbReserved) == RGBA(0, 0, 0, 0))
-            {
-                return TRUE;
-            }
+            return (RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
+                rgb[1].rgbReserved) == RGBA(0, 0, 0, 0));
         }
 
         return FALSE;
