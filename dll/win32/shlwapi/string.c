@@ -967,7 +967,10 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 
     WCHAR wideBuf[MAX_PATH];
     if (MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, wideBuf, _countof(wideBuf)) > 0)
+    {
+        wideBuf[_countof(wideBuf) - 1] = UNICODE_NULL; // SECURITY: Avoid buffer overrun
         return StrToInt64ExW(wideBuf, dwFlags, lpiRet);
+    }
 
     return FALSE;
 #else
