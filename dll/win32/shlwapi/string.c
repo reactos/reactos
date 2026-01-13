@@ -894,7 +894,7 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
     {
         result *= 10;
         result += (*lpszStr - L'0');
-        ++lpszStr
+        ++lpszStr;
     }
 
     return isNegative ? -result : result;
@@ -966,13 +966,11 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
         return FALSE;
 
     WCHAR wideBuf[MAX_PATH];
-    if (MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, wideBuf, _countof(wideBuf)) > 0)
-    {
-        wideBuf[_countof(wideBuf) - 1] = UNICODE_NULL; // SECURITY: Avoid buffer overrun
-        return StrToInt64ExW(wideBuf, dwFlags, lpiRet);
-    }
+    if (MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, wideBuf, _countof(wideBuf)) <= 0)
+        return FALSE;
 
-    return FALSE;
+    wideBuf[_countof(wideBuf) - 1] = UNICODE_NULL; // SECURITY: Avoid buffer overrun
+    return StrToInt64ExW(wideBuf, dwFlags, lpiRet);
 #else
   BOOL bNegative = FALSE;
   LONGLONG iRet = 0;
@@ -1114,7 +1112,7 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     }
 
     if (pch == start)
-        return FALSE;
+        return FALSE; // No data
 
     if (lpiRet)
         *lpiRet = isNegative ? -(LONGLONG)value : (LONGLONG)value;
