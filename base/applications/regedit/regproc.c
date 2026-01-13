@@ -142,6 +142,9 @@ struct parser
     void              *data;           /* value data */
     DWORD              data_size;      /* size of the data (in bytes) */
     BOOL               backslash;      /* TRUE if the current line contains a backslash */
+#ifdef __REACTOS__
+    BOOL               unicode_in_asc; /* TRUE if ASCII file contains Unicode entry */
+#endif
     enum parser_state  state;          /* current parser state */
 };
 
@@ -307,6 +310,24 @@ static BOOL parse_data_type(struct parser *parser, WCHAR **line)
 
     const struct data_type *ptr;
 
+#ifdef __REACTOS__
+    DWORD len = wcslen(*line);
+
+    parser->unicode_in_asc = FALSE;
+
+    if (!parser->is_unicode && len >= 15)
+    {
+        WCHAR Buffer[16] = { 0 };
+        WCHAR* ret;
+
+        memcpy(Buffer, *line, 30);
+        Buffer[_countof(Buffer) - 1] = UNICODE_NULL;
+
+        ret = wcsstr(Buffer, L"00,"); // Any UNICODE characters?
+        parser->unicode_in_asc = (ret != NULL);
+    }
+
+#endif
     for (ptr = data_types; ptr->tag; ptr++)
     {
         if (wcsncmp(ptr->tag, *line, ptr->len))
@@ -473,7 +494,11 @@ static void prepare_hex_string_data(struct parser *parser)
     if (parser->data_type == REG_EXPAND_SZ || parser->data_type == REG_MULTI_SZ ||
         parser->data_type == REG_SZ)
     {
+#ifdef __REACTOS__
+        if (parser->is_unicode || (!parser->is_unicode && parser->unicode_in_asc))
+#else
         if (parser->is_unicode)
+#endif
         {
             WCHAR *data = parser->data;
             DWORD len = parser->data_size / sizeof(WCHAR);
