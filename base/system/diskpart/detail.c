@@ -100,7 +100,10 @@ DetailDisk(
     ConResPrintf(StdOut, IDS_DETAIL_DISK_ID, szBuffer);
     PrintBusType(szBuffer, ARRAYSIZE(szBuffer), CurrentDisk->BusType);
     ConResPrintf(StdOut, IDS_DETAIL_DISK_TYPE, szBuffer);
-    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, L"Online");
+    LoadStringW(GetModuleHandle(NULL),
+                IDS_STATUS_ONLINE,
+                szBuffer, ARRAYSIZE(szBuffer));
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, szBuffer);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
@@ -180,11 +183,11 @@ DetailPartition(
         PrintGUID(szBuffer, &PartEntry->Gpt.PartitionType);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
         LoadStringW(GetModuleHandle(NULL),
-                    (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? IDS_STATUS_YES : IDS_STATUS_YES,
+                    (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? IDS_STATUS_YES : IDS_STATUS_NO,
                     szBuffer, ARRAYSIZE(szBuffer));
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, szBuffer);
         LoadStringW(GetModuleHandle(NULL),
-                    (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? IDS_STATUS_YES : IDS_STATUS_YES,
+                    (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? IDS_STATUS_YES : IDS_STATUS_NO,
                     szBuffer, ARRAYSIZE(szBuffer));
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_REQUIRED, szBuffer);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ATTRIBUTE, PartEntry->Gpt.Attributes);
@@ -195,7 +198,7 @@ DetailPartition(
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
         LoadStringW(GetModuleHandle(NULL),
-                    PartEntry->Mbr.BootIndicator ? IDS_STATUS_YES : IDS_STATUS_YES,
+                    PartEntry->Mbr.BootIndicator ? IDS_STATUS_YES : IDS_STATUS_NO,
                     szBuffer, ARRAYSIZE(szBuffer));
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, szBuffer);
     }

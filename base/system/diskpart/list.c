@@ -83,6 +83,7 @@ VOID
 PrintDisk(
     _In_ PDISKENTRY DiskEntry)
 {
+    WCHAR szBuffer[40];
     ULONGLONG DiskSize;
     ULONGLONG FreeSize;
     LPWSTR lpSizeUnit;
@@ -135,10 +136,14 @@ PrintDisk(
         lpFreeUnit = L"B";
     }
 
+    LoadStringW(GetModuleHandle(NULL),
+                IDS_STATUS_ONLINE,
+                szBuffer, ARRAYSIZE(szBuffer));
+
     ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
                  (CurrentDisk == DiskEntry) ? L'*' : L' ',
                  DiskEntry->DiskNumber,
-                 L"Online",
+                 szBuffer,
                  DiskSize,
                  lpSizeUnit,
                  FreeSize,
@@ -190,6 +195,8 @@ ListPartition(
     LPWSTR lpOffsetUnit;
     ULONG PartNumber = 1;
     BOOL bPartitionFound = FALSE;
+    WCHAR szPartitionTypeBuffer[40];
+    INT nPartitionType;
 
     if (CurrentDisk == NULL)
     {
@@ -290,10 +297,14 @@ ListPartition(
                     lpOffsetUnit = L"KB";
                 }
 
+                LoadStringW(GetModuleHandle(NULL),
+                            IsContainerPartition(PartEntry->Mbr.PartitionType) ? IDS_PARTITION_TYPE_EXTENDED : IDS_PARTITION_TYPE_PRIMARY,
+                            szPartitionTypeBuffer, ARRAYSIZE(szPartitionTypeBuffer));
+
                 ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
                              (CurrentPartition == PartEntry) ? L'*' : L' ',
                              PartNumber++,
-                             IsContainerPartition(PartEntry->Mbr.PartitionType) ? L"Extended" : L"Primary",
+                             szPartitionTypeBuffer,
                              PartSize,
                              lpSizeUnit,
                              PartOffset,
@@ -356,10 +367,13 @@ ListPartition(
                     lpOffsetUnit = L"KB";
                 }
 
+                LoadStringW(GetModuleHandle(NULL),
+                            IDS_PARTITION_TYPE_LOGICAL,
+                            szPartitionTypeBuffer, ARRAYSIZE(szPartitionTypeBuffer));
                 ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
                              (CurrentPartition == PartEntry) ? L'*' : L' ',
                              PartNumber++,
-                             L"Logical",
+                             szPartitionTypeBuffer,
                              PartSize,
                              lpSizeUnit,
                              PartOffset,
@@ -371,8 +385,6 @@ ListPartition(
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        LPWSTR lpPartitionType;
-
         Entry = CurrentDisk->PrimaryPartListHead.Flink;
         while (Entry != &CurrentDisk->PrimaryPartListHead)
         {
@@ -428,29 +440,33 @@ ListPartition(
 
                 if (IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
                 {
-                    lpPartitionType = L"Unused";
+                    nPartitionType = IDS_PARTITION_TYPE_UNUSED;
                 }
                 else if (IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_BASIC_DATA_GUID))
                 {
-                    lpPartitionType = L"Primary";
+                    nPartitionType = IDS_PARTITION_TYPE_PRIMARY;
                 }
                 else if (IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_SYSTEM_GUID))
                 {
-                    lpPartitionType = L"System";
+                    nPartitionType = IDS_PARTITION_TYPE_SYSTEM;
                 }
                 else if (IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_MSFT_RESERVED_GUID))
                 {
-                    lpPartitionType = L"Reserved";
+                    nPartitionType = IDS_PARTITION_TYPE_RESERVED;
                 }
                 else
                 {
-                    lpPartitionType = L"Other"; /* ??? */
+                    nPartitionType = IDS_PARTITION_TYPE_UNKNOWN;
                 }
+
+                LoadStringW(GetModuleHandle(NULL),
+                            nPartitionType,
+                            szPartitionTypeBuffer, ARRAYSIZE(szPartitionTypeBuffer));
 
                 ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
                              (CurrentPartition == PartEntry) ? L'*' : L' ',
                              PartNumber++,
-                             lpPartitionType,
+                             szPartitionTypeBuffer,
                              PartSize,
                              lpSizeUnit,
                              PartOffset,
@@ -567,6 +583,6 @@ ListVirtualDisk(
     _In_ INT argc,
     _In_ PWSTR *argv)
 {
-    ConPuts(StdOut, L"ListVirtualDisk()!\n");
+    ConPuts(StdOut, L"The LIST VDISK command is not implemented yet!\n");
     return EXIT_SUCCESS;
 }
