@@ -808,6 +808,9 @@ LPWSTR WINAPI StrStrNIW(LPCWSTR lpFirst, LPCWSTR lpSrch, UINT cchMax)
     return NULL;
 }
 
+#ifdef __REACTOS__
+#define IS_DIGIT(c) ((UINT)(c) - '0' <= 9)
+#endif
 /*************************************************************************
  * StrToIntA	[SHLWAPI.@]
  *
@@ -825,6 +828,30 @@ LPWSTR WINAPI StrStrNIW(LPCWSTR lpFirst, LPCWSTR lpSrch, UINT cchMax)
  */
 int WINAPI StrToIntA(LPCSTR lpszStr)
 {
+#ifdef __REACTOS__
+    TRACE("(%s)\n", debugstr_a(lpszStr));
+
+    if (!lpszStr)
+        return 0;
+
+    INT result = 0;
+    BOOL isNegative = FALSE;
+
+    if (*lpszStr == '-')
+    {
+        isNegative = TRUE;
+        lpszStr++;
+    }
+
+    while (IS_DIGIT(*lpszStr))
+    {
+        result *= 10;
+        result += (*lpszStr - '0');
+        lpszStr++;
+    }
+
+    return isNegative ? -result : result;
+#else
   int iRet = 0;
 
   TRACE("(%s)\n", debugstr_a(lpszStr));
@@ -838,6 +865,7 @@ int WINAPI StrToIntA(LPCSTR lpszStr)
   if (*lpszStr == '-' || isdigit(*lpszStr))
     StrToIntExA(lpszStr, 0, &iRet);
   return iRet;
+#endif
 }
 
 /*************************************************************************
@@ -847,6 +875,30 @@ int WINAPI StrToIntA(LPCSTR lpszStr)
  */
 int WINAPI StrToIntW(LPCWSTR lpszStr)
 {
+#ifdef __REACTOS__
+    TRACE("(%s)\n", debugstr_w(lpszStr));
+
+    if (!lpszStr)
+        return 0;
+
+    INT result = 0;
+    BOOL isNegative = FALSE;
+
+    if (*lpszStr == L'-')
+    {
+        isNegative = TRUE;
+        lpszStr++;
+    }
+
+    while (IS_DIGIT(*lpszStr))
+    {
+        result *= 10;
+        result += (*lpszStr - L'0');
+        lpszStr++;
+    }
+
+    return isNegative ? -result : result;
+#else
   int iRet = 0;
 
   TRACE("(%s)\n", debugstr_w(lpszStr));
@@ -860,6 +912,7 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
   if (*lpszStr == '-' || isdigitW(*lpszStr))
     StrToIntExW(lpszStr, 0, &iRet);
   return iRet;
+#endif
 }
 
 /*************************************************************************
@@ -885,6 +938,14 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  */
 BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
+#ifdef __REACTOS__
+    TRACE("(%s,%08X,%p)\n", debugstr_a(lpszStr), dwFlags, lpiRet);
+    LONGLONG value = 0;
+    BOOL res = StrToInt64ExA(lpszStr, dwFlags, &value);
+    if (lpiRet)
+        *lpiRet = res ? (INT)value : 0;
+    return res;
+#else
   LONGLONG li;
   BOOL bRes;
 
@@ -893,6 +954,7 @@ BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
   bRes = StrToInt64ExA(lpszStr, dwFlags, &li);
   if (bRes) *lpiRet = li;
   return bRes;
+#endif
 }
 
 /*************************************************************************
@@ -902,6 +964,18 @@ BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
  */
 BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 {
+#ifdef __REACTOS__
+    TRACE("(%s,%08X,%p)\n", debugstr_a(lpszStr), dwFlags, lpiRet);
+
+    if (!lpszStr)
+        return FALSE;
+
+    WCHAR wideBuf[MAX_PATH];
+    if (MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, wideBuf, _countof(wideBuf)) > 0)
+        return StrToInt64ExW(wideBuf, dwFlags, lpiRet);
+
+    return FALSE;
+#else
   BOOL bNegative = FALSE;
   LONGLONG iRet = 0;
 
@@ -960,6 +1034,7 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
   }
   *lpiRet = bNegative ? -iRet : iRet;
   return TRUE;
+#endif
 }
 
 /*************************************************************************
@@ -969,6 +1044,14 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
  */
 BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
+#ifdef __REACTOS__
+    TRACE("(%s,%08X,%p)\n", debugstr_w(lpszStr), dwFlags, lpiRet);
+    LONGLONG value = 0;
+    BOOL res = StrToInt64ExW(lpszStr, dwFlags, &value);
+    if (lpiRet)
+        *lpiRet = res ? (INT)value : 0;
+    return res;
+#else
   LONGLONG li;
   BOOL bRes;
 
@@ -977,6 +1060,7 @@ BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
   bRes = StrToInt64ExW(lpszStr, dwFlags, &li);
   if (bRes) *lpiRet = li;
   return bRes;
+#endif
 }
 
 /*************************************************************************
@@ -986,6 +1070,64 @@ BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
  */
 BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 {
+#ifdef __REACTOS__
+    TRACE("(%s,%08X,%p)\n", debugstr_w(lpszStr), dwFlags, lpiRet);
+
+    if (!lpszStr)
+        return FALSE;
+
+    LPCWSTR pch = lpszStr;
+
+    // Skip spaces
+    while (*pch == L' ' || *pch == L'\n' || *pch == L'\t')
+        pch++;
+
+    BOOL isNegative = FALSE;
+    if (*pch == L'+' || *pch == L'-')
+    {
+        isNegative = (*pch == L'-');
+        pch++;
+    }
+
+    ULONGLONG value = 0;
+    const WCHAR *start = pch;
+
+    if ((dwFlags & STIF_SUPPORT_HEX) && *pch == L'0' && (pch[1] == L'x' || pch[1] == L'X'))
+    {
+        pch += 2;
+        start = pch;
+        for (;;)
+        {
+            INT digit;
+            if (IS_DIGIT(*pch)) digit = *pch - L'0';
+            else if (L'a' <= *pch && *pch <= L'f') digit = *pch - L'a' + 10;
+            else if (L'A' <= *pch && *pch <= L'F') digit = *pch - L'A' + 10;
+            else break;
+
+            value *= 16;
+            value += digit;
+            pch++;
+        }
+        isNegative = FALSE;
+    }
+    else
+    {
+        while (IS_DIGIT(*pch))
+        {
+            value *= 10;
+            value += (*pch - L'0');
+            pch++;
+        }
+    }
+
+    if (pch == start)
+        return FALSE;
+
+    if (lpiRet)
+        *lpiRet = isNegative ? -(LONGLONG)value : (LONGLONG)value;
+
+    return TRUE;
+#else
   BOOL bNegative = FALSE;
   LONGLONG iRet = 0;
 
@@ -1043,6 +1185,7 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
   }
   *lpiRet = bNegative ? -iRet : iRet;
   return TRUE;
+#endif
 }
 
 /*************************************************************************
