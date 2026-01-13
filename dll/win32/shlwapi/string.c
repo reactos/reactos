@@ -840,14 +840,14 @@ int WINAPI StrToIntA(LPCSTR lpszStr)
     if (*lpszStr == '-')
     {
         isNegative = TRUE;
-        lpszStr++;
+        ++lpszStr;
     }
 
     while (IS_DIGIT(*lpszStr))
     {
         result *= 10;
         result += (*lpszStr - '0');
-        lpszStr++;
+        ++lpszStr;
     }
 
     return isNegative ? -result : result;
@@ -887,14 +887,14 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
     if (*lpszStr == L'-')
     {
         isNegative = TRUE;
-        lpszStr++;
+        ++lpszStr;
     }
 
     while (IS_DIGIT(*lpszStr))
     {
         result *= 10;
         result += (*lpszStr - L'0');
-        lpszStr++;
+        ++lpszStr
     }
 
     return isNegative ? -result : result;
@@ -1069,9 +1069,8 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     if (!lpszStr)
         return FALSE;
 
-    LPCWSTR pch = lpszStr;
-
     // Skip spaces
+    LPCWSTR pch = lpszStr;
     while (*pch == L' ' || *pch == L'\n' || *pch == L'\t')
         pch++;
 
@@ -1079,13 +1078,14 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     if (*pch == L'+' || *pch == L'-')
     {
         isNegative = (*pch == L'-');
-        pch++;
+        ++pch;
     }
 
     ULONGLONG value = 0;
-    const WCHAR *start = pch;
+    LPCWSTR start = pch;
 
-    if ((dwFlags & STIF_SUPPORT_HEX) && *pch == L'0' && (pch[1] == L'x' || pch[1] == L'X'))
+    if ((dwFlags & STIF_SUPPORT_HEX) &&
+        *pch == L'0' && (pch[1] == L'x' || pch[1] == L'X')) // "0x" or "0X"
     {
         pch += 2;
         start = pch;
@@ -1099,7 +1099,7 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 
             value *= 16;
             value += digit;
-            pch++;
+            ++pch;
         }
         isNegative = FALSE;
     }
@@ -1109,7 +1109,7 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
         {
             value *= 10;
             value += (*pch - L'0');
-            pch++;
+            ++pch;
         }
     }
 
