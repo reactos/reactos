@@ -829,8 +829,6 @@ LPWSTR WINAPI StrStrNIW(LPCWSTR lpFirst, LPCWSTR lpSrch, UINT cchMax)
 int WINAPI StrToIntA(LPCSTR lpszStr)
 {
 #ifdef __REACTOS__
-    TRACE("(%s)\n", debugstr_a(lpszStr));
-
     if (!lpszStr)
         return 0;
 
@@ -876,8 +874,6 @@ int WINAPI StrToIntA(LPCSTR lpszStr)
 int WINAPI StrToIntW(LPCWSTR lpszStr)
 {
 #ifdef __REACTOS__
-    TRACE("(%s)\n", debugstr_w(lpszStr));
-
     if (!lpszStr)
         return 0;
 
@@ -960,8 +956,6 @@ BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
 BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 {
 #ifdef __REACTOS__
-    TRACE("(%s,%08X,%p)\n", debugstr_a(lpszStr), dwFlags, lpiRet);
-
     if (!lpszStr)
         return FALSE;
 
@@ -1062,8 +1056,6 @@ BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
 BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
 {
 #ifdef __REACTOS__
-    TRACE("(%s,%08X,%p)\n", debugstr_w(lpszStr), dwFlags, lpiRet);
-
     if (!lpszStr)
         return FALSE;
 
