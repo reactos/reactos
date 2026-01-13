@@ -938,23 +938,18 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  */
 BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
-#ifdef __REACTOS__
-    TRACE("(%s,%08X,%p)\n", debugstr_a(lpszStr), dwFlags, lpiRet);
-    LONGLONG value = 0;
-    BOOL res = StrToInt64ExA(lpszStr, dwFlags, &value);
-    if (lpiRet)
-        *lpiRet = res ? (INT)value : 0;
-    return res;
-#else
   LONGLONG li;
   BOOL bRes;
 
   TRACE("(%s,%08X,%p)\n", debugstr_a(lpszStr), dwFlags, lpiRet);
 
   bRes = StrToInt64ExA(lpszStr, dwFlags, &li);
+#ifdef __REACTOS__
+  if (lpiRet) *lpiRet = bRes ? (INT)li : 0;
+#else
   if (bRes) *lpiRet = li;
-  return bRes;
 #endif
+  return bRes;
 }
 
 /*************************************************************************
@@ -1044,23 +1039,18 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
  */
 BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
-#ifdef __REACTOS__
-    TRACE("(%s,%08X,%p)\n", debugstr_w(lpszStr), dwFlags, lpiRet);
-    LONGLONG value = 0;
-    BOOL res = StrToInt64ExW(lpszStr, dwFlags, &value);
-    if (lpiRet)
-        *lpiRet = res ? (INT)value : 0;
-    return res;
-#else
   LONGLONG li;
   BOOL bRes;
 
   TRACE("(%s,%08X,%p)\n", debugstr_w(lpszStr), dwFlags, lpiRet);
 
   bRes = StrToInt64ExW(lpszStr, dwFlags, &li);
+#ifdef __REACTOS__
+  if (lpiRet) *lpiRet = bRes ? (INT)li : 0;
+#else
   if (bRes) *lpiRet = li;
-  return bRes;
 #endif
+  return bRes;
 }
 
 /*************************************************************************
