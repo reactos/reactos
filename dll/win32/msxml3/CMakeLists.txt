@@ -32,6 +32,7 @@ list(APPEND SOURCE
     nodemap.c
     parseerror.c
     pi.c
+    reactos.c
     saxreader.c
     schema.c
     selection.c
@@ -70,20 +71,25 @@ add_library(msxml3 MODULE
 
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)
-target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
+target_link_libraries(msxml3 libxml2 iconv-static uuid wine wine_dll_register zlib)
 
 if(MSVC)
     target_compile_options(msxml3 PRIVATE /FIwine/typeof.h /FImsvc.h)
 
     # Disable warning C4090: 'function': different 'const' qualifiers
     target_compile_options(msxml3 PRIVATE /wd4090)
+
+    if(ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64")
+        # Disable warning C4267: 'function': conversion from 'size_t' to 'UINT', possible loss of data
+        target_compile_options(msxml3 PRIVATE "/wd4267")
+    endif()
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msxml3 PRIVATE -Wno-incompatible-function-pointer-types)
 endif()
 
-add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
+add_importlibs(msxml3 libxslt urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

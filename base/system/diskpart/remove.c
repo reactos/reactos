@@ -88,6 +88,12 @@ remove_main(
         }
     }
 
+    if (CurrentVolume->IsBoot || CurrentVolume->IsSystem)
+    {
+        ConResPuts(StdOut, IDS_ASSIGN_SYSTEM_VOLUME);
+        return EXIT_SUCCESS;
+    }
+
     if (nExclusive > 1)
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);

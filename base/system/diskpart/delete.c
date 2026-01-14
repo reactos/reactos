@@ -324,6 +324,12 @@ DeletePartition(
         }
     }
 
+    if (CurrentPartition->IsBoot || CurrentPartition->IsSystem)
+    {
+        ConResPuts(StdOut, IDS_DELETE_PARTITION_SYSTEM);
+        return EXIT_SUCCESS;
+    }
+
     if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
     {
         DeleteMbrPartition(bOverride);

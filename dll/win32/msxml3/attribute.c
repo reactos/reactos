@@ -20,14 +20,10 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-# include <libxml/HTMLtree.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
+#include <libxml/HTMLtree.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -38,8 +34,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -101,9 +95,9 @@ static HRESULT WINAPI domattr_QueryInterface(
 static ULONG WINAPI domattr_AddRef(
     IXMLDOMAttribute *iface )
 {
-    domattr *This = impl_from_IXMLDOMAttribute( iface );
-    ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    domattr *attr = impl_from_IXMLDOMAttribute( iface );
+    ULONG ref = InterlockedIncrement( &attr->ref );
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -113,7 +107,7 @@ static ULONG WINAPI domattr_Release(
     domattr *This = impl_from_IXMLDOMAttribute( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
@@ -122,7 +116,7 @@ static ULONG WINAPI domattr_Release(
             xmlFreeNs( This->node.node->ns );
             xmlFreeNode( This->node.node );
         }
-        heap_free( This );
+        free( This );
     }
 
     return ref;
@@ -549,10 +543,11 @@ static HRESULT WINAPI domattr_get_namespaceURI(
     IXMLDOMAttribute *iface,
     BSTR* p)
 {
-    static const WCHAR w3xmlns[] = { 'h','t','t','p',':','/','/', 'w','w','w','.','w','3','.',
-        'o','r','g','/','2','0','0','0','/','x','m','l','n','s','/',0 };
     domattr *This = impl_from_IXMLDOMAttribute( iface );
     xmlNsPtr ns = This->node.node->ns;
+    BSTR nodename, pfx;
+    BOOL is6, isdefault;
+    HRESULT hr;
 
     TRACE("(%p)->(%p)\n", This, p);
 
@@ -560,22 +555,35 @@ static HRESULT WINAPI domattr_get_namespaceURI(
         return E_INVALIDARG;
 
     *p = NULL;
+    nodename = NULL;
+    hr = IXMLDOMAttribute_get_nodeName(iface, &nodename);
+    if (FAILED(hr))
+        return hr;
 
-    if (ns)
+    pfx = NULL;
+    hr = IXMLDOMAttribute_get_prefix(iface, &pfx);
+    if (FAILED(hr))
     {
-        /* special case for default namespace definition */
-        if (xmlStrEqual(This->node.node->name, xmlns))
-            *p = bstr_from_xmlChar(xmlns);
-        else if (xmlStrEqual(ns->prefix, xmlns))
-        {
-            if (xmldoc_version(This->node.node->doc) == MSXML6)
-                *p = SysAllocString(w3xmlns);
-            else
-                *p = SysAllocStringLen(NULL, 0);
-        }
-        else if (ns->href)
-            *p = bstr_from_xmlChar(ns->href);
+        SysFreeString(nodename);
+        return hr;
     }
+
+    is6 = xmldoc_version(This->node.node->doc) == MSXML6;
+    isdefault = !wcscmp(nodename, L"xmlns");
+    if (isdefault || (pfx && !wcscmp(L"xmlns", pfx)))
+    {
+        if (is6)
+            *p = SysAllocString(L"http://www.w3.org/2000/xmlns/");
+        else if (!ns || !isdefault)
+            *p = SysAllocStringLen(NULL, 0);
+        else
+            *p = SysAllocString(L"xmlns");
+    }
+    else if (ns && ns->href)
+        *p = bstr_from_xmlChar(ns->href);
+
+    SysFreeString(nodename);
+    SysFreeString(pfx);
 
     TRACE("uri: %s\n", debugstr_w(*p));
 
@@ -595,14 +603,11 @@ static HRESULT WINAPI domattr_get_prefix(
 
     *prefix = NULL;
 
-    if (ns)
-    {
-        /* special case for default namespace definition */
-        if (xmlStrEqual(This->node.node->name, xmlns))
-            *prefix = bstr_from_xmlChar(xmlns);
-        else if (ns->prefix)
-            *prefix = bstr_from_xmlChar(ns->prefix);
-    }
+    if (xmldoc_version(This->node.node->doc) != MSXML6 &&
+        xmlStrEqual(This->node.node->name, xmlns))
+        *prefix = bstr_from_xmlChar(xmlns);
+    else if (ns && ns->prefix)
+        *prefix = bstr_from_xmlChar(ns->prefix);
 
     TRACE("prefix: %s\n", debugstr_w(*prefix));
 
@@ -726,7 +731,7 @@ IUnknown* create_attribute( xmlNodePtr attribute, BOOL floating )
 {
     domattr *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -738,5 +743,3 @@ IUnknown* create_attribute( xmlNodePtr attribute, BOOL floating )
 
     return (IUnknown*)&This->IXMLDOMAttribute_iface;
 }
-
-#endif

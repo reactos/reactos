@@ -19,16 +19,15 @@
  */
 
 %{
-#include "config.h"
-#include "wine/port.h"
-
-#ifdef HAVE_LIBXML2
 #include "xslpattern.h"
 #include <libxml/xpathInternals.h>
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
+#ifdef __REACTOS__
+#define YYSTYPE XSLPATTERN_STYPE
+#endif
 
 static const xmlChar NameTest_mod_pre[] = "*[name()='";
 static const xmlChar NameTest_mod_post[] = "']";
@@ -44,6 +43,7 @@ static inline BOOL is_literal(xmlChar const* tok)
 
 static void xslpattern_error(parser_param* param, void const* scanner, char const* msg)
 {
+    param->err++;
     FIXME("%s:\n"
           "  param {\n"
           "    yyscanner=%p\n"
@@ -56,7 +56,7 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
           "  }\n"
           "  scanner=%p\n",
           msg, param->yyscanner, param->ctx, param->in, param->pos,
-          param->len, param->out, ++param->err, scanner);
+          param->len, param->out, param->err, scanner);
 }
 
 %}
@@ -70,7 +70,8 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
 
 %start XSLPattern
 
-%pure-parser
+//%define api.prefix {xslpattern_} // __REACTOS__
+%define api.pure
 %parse-param {parser_param* p}
 %parse-param {void* scanner}
 %lex-param {yyscan_t* scanner}
@@ -86,6 +87,7 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
     XSLPattern              : Expr
                             {
                                 p->out = $1;
+                                (void)xslpattern_nerrs; /* avoid unused variable warning */
                             }
     ;
 
@@ -750,5 +752,3 @@ static void xslpattern_error(parser_param* param, void const* scanner, char cons
     ;
 
 %%
-
-#endif  /* HAVE_LIBXML2 */

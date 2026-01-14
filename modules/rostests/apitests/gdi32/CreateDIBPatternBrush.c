@@ -180,7 +180,7 @@ void Test_CreateDIBPatternBrushPt_RLE8()
 
 START_TEST(CreateDIBPatternBrush)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
 
     Test_CreateDIBPatternBrush();
     Test_CreateDIBPatternBrushPt();

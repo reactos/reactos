@@ -18,7 +18,13 @@
 
 #include <freeldr.h>
 
-#define BCD_INT(bcd) (((bcd & 0xf0) >> 4) * 10 + (bcd &0x0f))
+static
+UCHAR
+BCD_INT(
+    _In_ UCHAR Bcd)
+{
+    return ((Bcd & 0xF0) >> 4) * 10 + (Bcd & 0x0F);
+}
 
 TIMEINFO*
 PcGetTime(VOID)

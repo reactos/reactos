@@ -295,10 +295,37 @@ CAvailableApplicationInfo::RetrieveLanguages()
     }
 }
 
+bool
+CAvailableApplicationInfo::IsCompatible() const
+{
+    CStringW szBuffer;
+    if (m_Parser->GetString(DB_NTVER, szBuffer))
+    {
+        LPWSTR start = szBuffer.GetString();
+        LPWSTR p;
+        ULONG MinNTVer = wcstoul(start, &p, 0);
+        if (p > start)
+        {
+            ULONG NTVersion = GetNTVersion();
+            // Treat as range if we have '-', otherwise treat it as XXX+
+            ULONG MaxNTVer = (*p == '-') ? wcstoul(++p, NULL, 0) : UINT_MAX;
+            // Handle the XXX- case (That version or lower)
+            if (MaxNTVer == 0)
+            {
+                MaxNTVer = MinNTVer;
+                MinNTVer = 0;
+            }
+
+            return NTVersion >= MinNTVer && NTVersion <= MaxNTVer;
+        }
+    }
+    return true;
+}
+
 BOOL
 CAvailableApplicationInfo::Valid() const
 {
-    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty();
+    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty() && IsCompatible();
 }
 
 BOOL

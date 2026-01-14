@@ -334,17 +334,41 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
     if (hTicket == NULL)
         return;
 
-    TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
+    // Create alias PIDLs
+    CComHeapPtr<ITEMIDLIST> pidl1Alias, pidl2Alias;
+    if (pidl1)
+        SHELL32_AliasTranslatePidl(pidl1, &pidl1Alias, ALIAS_ANY);
+    if (pidl2)
+        SHELL32_AliasTranslatePidl(pidl2, &pidl2Alias, ALIAS_ANY);
+
+    HANDLE hTicket2 = NULL;
+    if ((pidl1Alias || pidl2Alias) &&
+        (!ILIsEqual(pidl1, pidl1Alias) || !ILIsEqual(pidl2, pidl2Alias)))
+    {
+        hTicket2 = CreateNotificationParam(wEventId, uFlags, pidl1Alias, pidl2Alias,
+                                           pid, dwTick);
+        if (!hTicket2)
+        {
+            SHFreeShared(hTicket, pid);
+            return;
+        }
+    }
+
+    TRACE("hTicket:%p, hTicket2:%p, pid:0x%lx\n", hTicket, hTicket2, pid);
 
     // send the ticket by using CN_DELIVER_NOTIFICATION
     if (pid != GetCurrentProcessId() ||
         (uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
     {
         SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        if (hTicket2)
+            SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket2, pid);
     }
     else
     {
         SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+        if (hTicket2)
+            SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket2, pid);
     }
 }
 

@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -37,8 +33,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -95,26 +89,25 @@ static HRESULT WINAPI domcdata_QueryInterface(
     return S_OK;
 }
 
-static ULONG WINAPI domcdata_AddRef(
-    IXMLDOMCDATASection *iface )
+static ULONG WINAPI domcdata_AddRef(IXMLDOMCDATASection *iface)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    domcdata *cdata = impl_from_IXMLDOMCDATASection(iface);
+    ULONG ref = InterlockedIncrement(&cdata->ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
-static ULONG WINAPI domcdata_Release(
-    IXMLDOMCDATASection *iface )
+static ULONG WINAPI domcdata_Release(IXMLDOMCDATASection *iface)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
-    ULONG ref = InterlockedDecrement( &This->ref );
+    domcdata *cdata = impl_from_IXMLDOMCDATASection(iface);
+    ULONG ref = InterlockedDecrement(&cdata->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
-        destroy_xmlnode(&This->node);
-        heap_free( This );
+        destroy_xmlnode(&cdata->node);
+        free(cdata);
     }
 
     return ref;
@@ -583,11 +576,10 @@ static HRESULT WINAPI domcdata_substringData(
     IXMLDOMCDATASection *iface,
     LONG offset, LONG count, BSTR *p)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     HRESULT hr;
     BSTR data;
 
-    TRACE("(%p)->(%d %d %p)\n", This, offset, count, p);
+    TRACE("%p, %ld, %ld, %p.\n", iface, offset, count, p);
 
     if(!p)
         return E_INVALIDARG;
@@ -657,12 +649,11 @@ static HRESULT WINAPI domcdata_insertData(
     IXMLDOMCDATASection *iface,
     LONG offset, BSTR p)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     HRESULT hr;
     BSTR data;
     LONG p_len;
 
-    TRACE("(%p)->(%d %s)\n", This, offset, debugstr_w(p));
+    TRACE("%p, %ld, %s.\n", iface, offset, debugstr_w(p));
 
     /* If have a NULL or empty string, don't do anything. */
     if((p_len = SysStringLen(p)) == 0)
@@ -705,12 +696,11 @@ static HRESULT WINAPI domcdata_deleteData(
     IXMLDOMCDATASection *iface,
     LONG offset, LONG count)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     HRESULT hr;
     LONG len = -1;
     BSTR str;
 
-    TRACE("(%p)->(%d %d)\n", This, offset, count);
+    TRACE("%p, %ld, %ld.\n", iface, offset, count);
 
     hr = IXMLDOMCDATASection_get_length(iface, &len);
     if(hr != S_OK) return hr;
@@ -753,10 +743,9 @@ static HRESULT WINAPI domcdata_replaceData(
     IXMLDOMCDATASection *iface,
     LONG offset, LONG count, BSTR p)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     HRESULT hr;
 
-    TRACE("(%p)->(%d %d %s)\n", This, offset, count, debugstr_w(p));
+    TRACE("%p, %ld, %ld, %s.\n", iface, offset, count, debugstr_w(p));
 
     hr = IXMLDOMCDATASection_deleteData(iface, offset, count);
 
@@ -770,12 +759,11 @@ static HRESULT WINAPI domcdata_splitText(
     IXMLDOMCDATASection *iface,
     LONG offset, IXMLDOMText **txtNode)
 {
-    domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     IXMLDOMDocument *doc;
     LONG length = 0;
     HRESULT hr;
 
-    TRACE("(%p)->(%d %p)\n", This, offset, txtNode);
+    TRACE("%p, %ld, %p.\n", iface, offset, txtNode);
 
     if (!txtNode || offset < 0) return E_INVALIDARG;
 
@@ -887,7 +875,7 @@ IUnknown* create_cdata( xmlNodePtr text )
 {
     domcdata *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -898,5 +886,3 @@ IUnknown* create_cdata( xmlNodePtr text )
 
     return (IUnknown*)&This->IXMLDOMCDATASection_iface;
 }
-
-#endif

@@ -40,6 +40,7 @@ BEGIN
     IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
     IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
     IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+    IDS_ASSIGN_SYSTEM_VOLUME "\nDiskPart cannot reassign the drive letter on a system, boot or pagefile volume.\n"
 END
 
 /* AUTOMOUNT command strings */
@@ -78,6 +79,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart nu a reușit să șteargă partiția selectată.\nAsigurați-vă că partiția selectată este validă pentru ștergere.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart a șters cu succes partiția selectată.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */
@@ -90,14 +92,14 @@ BEGIN
     IDS_DETAIL_INFO_PATH   "Cale   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Țintă  : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "LUN ID : %hu\n"
-    IDS_DETAIL_INFO_LOC_PATH "Localizat în"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă"
-    IDS_DETAIL_INFO_RO "Nemodificabil"
-    IDS_DETAIL_INFO_BOOT_DSK "Disc inițializator"
-    IDS_DETAIL_INFO_PAGE_FILE_DSK "Disc cu fișier de paginare"
-    IDS_DETAIL_INFO_HIBER_FILE_DSK "Disc cu fișier de hibernare"
-    IDS_DETAIL_INFO_CRASH_DSK "Disc cu fișier «crashdump»"
-    IDS_DETAIL_INFO_CLST_DSK "Disc în «cluster»"
+    IDS_DETAIL_INFO_LOC_PATH "Localizat în: %s\n"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Stare curentă nemodificabilă: %s\n"
+    IDS_DETAIL_INFO_RO "Nemodificabil: %s\n"
+    IDS_DETAIL_INFO_BOOT_DSK "Disc inițializator: %s\n"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Disc cu fișier de paginare: %s\n"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Disc cu fișier de hibernare: %s\n"
+    IDS_DETAIL_INFO_CRASH_DSK "Disc cu fișier «crashdump»: %s\n"
+    IDS_DETAIL_INFO_CLST_DSK "Disc în «cluster»: %s\n"
     IDS_DETAIL_PARTITION_NUMBER "Partiție %lu\n"
     IDS_DETAIL_PARTITION_TYPE   "Tip            : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Ascuns         : %s\n"
@@ -117,6 +119,13 @@ BEGIN
     IDS_FILESYSTEMS_CLUSTERSIZE "  Mărimea cluster-ului: %s\n"
     IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number       : %08lx\n"
     IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FORMAT_FAIL "\nDiskPart failed to format the selected volume.\n"
+    IDS_FORMAT_SUCCESS "\nDiskPart successfully formated the selected volume.\n"
+    IDS_FORMAT_PROGRESS "\r  %3lu percent completed"
 END
 
 STRINGTABLE
@@ -211,6 +220,8 @@ BEGIN
     IDS_STATUS_ONLINE "conectat"
     IDS_STATUS_OFFLINE "neconectat"
     IDS_STATUS_NO_MEDIA "inexistent"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */
@@ -332,4 +343,23 @@ BEGIN
     IDS_BUSTYPE_UFS     "UFS"
     IDS_BUSTYPE_NVMEOF  "NVMEOF"
     IDS_BUSTYPE_OTHER   "Other"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_TYPE_EXTENDED "Extended"
+    IDS_PARTITION_TYPE_LOGICAL "Logical"
+    IDS_PARTITION_TYPE_PRIMARY "Primary"
+    IDS_PARTITION_TYPE_RESERVED "Reserved"
+    IDS_PARTITION_TYPE_SYSTEM "System"
+    IDS_PARTITION_TYPE_UNKNOWN "Unknown"
+    IDS_PARTITION_TYPE_UNUSED "Unused"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_TYPE_DVD "DVD"
+    IDS_VOLUME_TYPE_PARTITION "Partition"
+    IDS_VOLUME_TYPE_REMOVABLE "Removable"
+    IDS_VOLUME_TYPE_UNKNOWN "Unknown"
 END
