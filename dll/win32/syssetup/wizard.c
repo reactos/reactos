@@ -2463,7 +2463,6 @@ ProcessPageDlgProc(HWND hwndDlg,
             break;
 
         case WM_DESTROY:
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hNormalFont, TRUE);
             SetupData->hNormalFont = NULL;
             DestroyIcon(SetupData->hCheckIcon);
             SetupData->hCheckIcon = NULL;
@@ -3441,7 +3440,6 @@ InstallWizard(VOID)
         }
     }
 
-    DeleteObject(pSetupData->hNormalFont);
     DeleteObject(pSetupData->hBoldFont);
     DeleteObject(pSetupData->hTitleFont);
 
