@@ -96,6 +96,7 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
+
 static HFONT
 CreateBoldFont(VOID)
 {
