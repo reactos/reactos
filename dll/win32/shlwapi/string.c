@@ -1059,6 +1059,9 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     if (!lpszStr)
         return FALSE;
 
+    if (lpiRet)
+        *lpiRet = 0;
+
     // Skip spaces
     LPCWSTR pch = lpszStr;
     while (*pch == L' ' || *pch == L'\n' || *pch == L'\t')
