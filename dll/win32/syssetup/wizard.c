@@ -97,7 +97,7 @@ CreateTitleFont(VOID)
 }
 
 static HFONT
-CreateBoldFont(BOOL bBold)
+CreateBoldFont(VOID)
 {
     LOGFONTW tmpFont = {0};
     HFONT hBoldFont;
@@ -106,9 +106,8 @@ CreateBoldFont(BOOL bBold)
     /* Grabs the Drawing Context */
     hDc = GetDC(NULL);
 
-    tmpFont.lfCharSet = DEFAULT_CHARSET;
     tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
-    tmpFont.lfWeight = bBold ? FW_BOLD : FW_NORMAL;
+    tmpFont.lfWeight = FW_BOLD;
     wcscpy(tmpFont.lfFaceName, L"MS Shell Dlg");
 
     hBoldFont = CreateFontIndirectW(&tmpFont);
@@ -2458,11 +2457,14 @@ ProcessPageDlgProc(HWND hwndDlg,
                                     IMAGE_ICON, 16, 16, 0);
             SetupData->hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON),
                                     IMAGE_ICON, 16, 16, 0);
+            SetupData->hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
             SendDlgItemMessage(hwndDlg, IDC_CHECK1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
             break;
 
         case WM_DESTROY:
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hNormalFont, TRUE);
+            SetupData->hNormalFont = NULL;
             DestroyIcon(SetupData->hCheckIcon);
             SetupData->hCheckIcon = NULL;
             DestroyIcon(SetupData->hArrowIcon);
@@ -3424,8 +3426,7 @@ InstallWizard(VOID)
 
     /* Create title font */
     pSetupData->hTitleFont = CreateTitleFont();
-    pSetupData->hBoldFont  = CreateBoldFont(TRUE);
-    pSetupData->hNormalFont  = CreateBoldFont(FALSE);
+    pSetupData->hBoldFont  = CreateBoldFont();
 
     /* Display the wizard */
     hWnd = (HWND)PropertySheet(&psh);
