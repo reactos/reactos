@@ -2499,9 +2499,11 @@ ProcessPageDlgProc(HWND hwndDlg,
             DPRINT("PM_ITEM_START %lu\n", (ULONG)lParam);
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
+
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hNormalFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam + 1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
             SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hCheckIcon);
+
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam + 1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
             SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam + 1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
             break;
 
