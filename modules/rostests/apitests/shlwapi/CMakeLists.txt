@@ -22,6 +22,7 @@ list(APPEND SOURCE
     SHPropertyBag.cpp
     StrDup.c
     StrFormatByteSizeW.c
+    StrToInt.c
     testdata.rc
     testlist.c)
 
