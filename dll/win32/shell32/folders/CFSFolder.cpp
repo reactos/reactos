@@ -1131,7 +1131,8 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     if (!pszName1 || !pszName2 || LOWORD(lParam) >= GENERICSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
-    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1), pData2 = _ILGetDataPointer(pidl2);
+    LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
+    LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
     HRESULT hr = CompareSortFoldersFirst(pidl1, pidl2);
     if (SUCCEEDED(hr))
         return hr;
