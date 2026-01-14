@@ -39,6 +39,7 @@ BEGIN
     IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
     IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
     IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+    IDS_ASSIGN_SYSTEM_VOLUME "\nDiskPart cannot reassign the drive letter on a system, boot or pagefile volume.\n"
 END
 
 /* AUTOMOUNT command strings */
@@ -77,6 +78,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart ha fallito ad eliminare la partizione selezionata.\nAssicurarsi che la partizione selezionata sia valida.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart ha eliminato con successo la partizione selezionata.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */
@@ -89,14 +91,14 @@ BEGIN
     IDS_DETAIL_INFO_PATH   "Percorso   : %hu\n"
     IDS_DETAIL_INFO_TARGET "Target     : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID     : %hu\n"
-    IDS_DETAIL_INFO_LOC_PATH "Percorso di locazione"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Stato Sola lettura corrente"
-    IDS_DETAIL_INFO_RO "Sola lettura"
-    IDS_DETAIL_INFO_BOOT_DSK "Disco di avvio"
-    IDS_DETAIL_INFO_PAGE_FILE_DSK "Disco di pagefile"
-    IDS_DETAIL_INFO_HIBER_FILE_DSK "Disco file di ibernazione"
-    IDS_DETAIL_INFO_CRASH_DSK "Disco di crashdump"
-    IDS_DETAIL_INFO_CLST_DSK "Disco clustered"
+    IDS_DETAIL_INFO_LOC_PATH "Percorso di locazione: %s\n"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Stato Sola lettura corrente: %s\n"
+    IDS_DETAIL_INFO_RO "Sola lettura: %s\n"
+    IDS_DETAIL_INFO_BOOT_DSK "Disco di avvio: %s\n"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Disco di pagefile: %s\n"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Disco file di ibernazione: %s\n"
+    IDS_DETAIL_INFO_CRASH_DSK "Disco di crashdump: %s\n"
+    IDS_DETAIL_INFO_CLST_DSK "Disco clustered: %s\n"
     IDS_DETAIL_PARTITION_NUMBER "Partizione %lu\n"
     IDS_DETAIL_PARTITION_TYPE   "Tipo          : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Nascosto      : %s\n"
@@ -116,6 +118,13 @@ BEGIN
     IDS_FILESYSTEMS_CLUSTERSIZE "  Dimensione cluster: %s\n"
     IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number     : %08lx\n"
     IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FORMAT_FAIL "\nDiskPart failed to format the selected volume.\n"
+    IDS_FORMAT_SUCCESS "\nDiskPart successfully formated the selected volume.\n"
+    IDS_FORMAT_PROGRESS "\r  %3lu percent completed"
 END
 
 STRINGTABLE
@@ -148,9 +157,9 @@ BEGIN
     IDS_LIST_PARTITION_FORMAT "%c Partizione %-3lu  %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nNon c'è nessun disco per mostrare partizioni.\nSelezionare un disco e riprova.\n\n"
     IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
-    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Etichetta    FS     Tipo        Dimensione  Stato  Info\n"
-    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  ----------  -----  --------\n"
-    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_HEAD "  Volume ###  Ltr  Etichetta    FS     Tipo        Dimensione  Stato      Info\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  ----------  ---------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "%c Volume %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s  %-9s  %-8s\n"
 END
 
 /* REMOVE command strings */
@@ -210,6 +219,8 @@ BEGIN
     IDS_STATUS_ONLINE "Online"
     IDS_STATUS_OFFLINE "Offline"
     IDS_STATUS_NO_MEDIA "Nessun Media"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */
@@ -331,4 +342,23 @@ BEGIN
     IDS_BUSTYPE_UFS     "UFS"
     IDS_BUSTYPE_NVMEOF  "NVMEOF"
     IDS_BUSTYPE_OTHER   "Other"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_TYPE_EXTENDED "Extended"
+    IDS_PARTITION_TYPE_LOGICAL "Logical"
+    IDS_PARTITION_TYPE_PRIMARY "Primary"
+    IDS_PARTITION_TYPE_RESERVED "Reserved"
+    IDS_PARTITION_TYPE_SYSTEM "System"
+    IDS_PARTITION_TYPE_UNKNOWN "Unknown"
+    IDS_PARTITION_TYPE_UNUSED "Unused"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_TYPE_DVD "DVD"
+    IDS_VOLUME_TYPE_PARTITION "Partition"
+    IDS_VOLUME_TYPE_REMOVABLE "Removable"
+    IDS_VOLUME_TYPE_UNKNOWN "Unknown"
 END

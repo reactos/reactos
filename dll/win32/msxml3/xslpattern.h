@@ -21,14 +21,7 @@
 #ifndef __XSLPATTERN__
 #define __XSLPATTERN__
 
-#ifndef __WINE_CONFIG_H
-#error You must include config.h to use this header
-#endif
-
-#ifndef HAVE_LIBXML2
-#error You must have libxml2 to use this header
-#endif
-
+#include <stdlib.h>
 #include <libxml/tree.h>
 #include <libxml/xmlstring.h>
 #include <libxml/xpath.h>
@@ -46,14 +39,14 @@ typedef struct _parser_param {
     int err;
 } parser_param;
 
-#define YYSTYPE xmlChar*
+#define XSLPATTERN_STYPE xmlChar*
 #define YY_EXTRA_TYPE parser_param*
 
-int  xslpattern_lex(xmlChar**, void*) DECLSPEC_HIDDEN;
-int  xslpattern_lex_init(void**) DECLSPEC_HIDDEN;
-int  xslpattern_lex_destroy(void*) DECLSPEC_HIDDEN;
-void xslpattern_set_extra(parser_param*, void*) DECLSPEC_HIDDEN;
-int  xslpattern_parse(parser_param*, void*) DECLSPEC_HIDDEN;
+int  xslpattern_lex(xmlChar**, void*);
+int  xslpattern_lex_init(void**);
+int  xslpattern_lex_destroy(void*);
+void xslpattern_set_extra(parser_param*, void*);
+int  xslpattern_parse(parser_param*, void*);
 
 
 #endif /* __XSLPATTERN__ */

@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -37,8 +33,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -99,7 +93,7 @@ static ULONG WINAPI entityref_AddRef(
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -109,11 +103,12 @@ static ULONG WINAPI entityref_Release(
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
         destroy_xmlnode(&This->node);
-        heap_free( This );
+        free(This);
     }
 
     return ref;
@@ -583,7 +578,7 @@ IUnknown* create_doc_entity_ref( xmlNodePtr entity )
 {
     entityref *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -594,5 +589,3 @@ IUnknown* create_doc_entity_ref( xmlNodePtr entity )
 
     return (IUnknown*)&This->IXMLDOMEntityReference_iface;
 }
-
-#endif

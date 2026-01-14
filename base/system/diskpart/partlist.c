@@ -1830,6 +1830,195 @@ GetVolumeSize(
 
 
 static
+PDISKENTRY
+GetDiskForVolume(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    PLIST_ENTRY Entry;
+    PDISKENTRY DiskEntry;
+    INT i;
+
+    DPRINT("GetDiskFromVolume(%p)\n", VolumeEntry);
+
+    DPRINT("Extents: %p\n", VolumeEntry->pExtents);
+    if (VolumeEntry->pExtents == NULL)
+        return NULL;
+
+    DPRINT("Extents: %lu\n", VolumeEntry->pExtents->NumberOfDiskExtents);
+
+    Entry = DiskListHead.Flink;
+    while (Entry != &DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+        {
+            DPRINT("DiskNumber: %lu -- %lu\n", VolumeEntry->pExtents->Extents[i].DiskNumber, DiskEntry->DiskNumber);
+            if (VolumeEntry->pExtents->Extents[i].DiskNumber == DiskEntry->DiskNumber)
+                return DiskEntry;
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
+PPARTENTRY
+GetPartitionForVolume(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    PLIST_ENTRY Entry1, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+    INT i;
+
+    DPRINT("GetPartitionFromVolume(%p)\n", VolumeEntry);
+
+    DPRINT("Extents: %p\n", VolumeEntry->pExtents);
+    if (VolumeEntry->pExtents == NULL)
+        return NULL;
+
+    DPRINT("Extents: %lu\n", VolumeEntry->pExtents->NumberOfDiskExtents);
+
+    Entry1 = DiskListHead.Flink;
+    while (Entry1 != &DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+
+        for (i = 0; i < VolumeEntry->pExtents->NumberOfDiskExtents; i++)
+        {
+            DPRINT("DiskNumber: %lu -- %lu\n", VolumeEntry->pExtents->Extents[i].DiskNumber, DiskEntry->DiskNumber);
+            if (VolumeEntry->pExtents->Extents[i].DiskNumber == DiskEntry->DiskNumber)
+            {
+
+                Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+                while (Entry2 != &DiskEntry->PrimaryPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+
+                    if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                        (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                        return PartEntry;
+
+                    Entry2 = Entry2->Flink;
+                }
+
+                Entry2 = DiskEntry->LogicalPartListHead.Flink;
+                while (Entry2 != &DiskEntry->LogicalPartListHead)
+                {
+                    PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+
+                    if ((VolumeEntry->pExtents->Extents[i].StartingOffset.QuadPart == PartEntry->StartSector.QuadPart * PartEntry->DiskEntry->BytesPerSector) &&
+                        (VolumeEntry->pExtents->Extents[i].ExtentLength.QuadPart == PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector))
+                        return PartEntry;
+
+                    Entry2 = Entry2->Flink;
+                }
+            }
+        }
+
+        Entry1 = Entry1->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
+VOID
+IsVolumeSystem(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    WCHAR szSystemPartition[MAX_PATH];
+    PPARTENTRY PartEntry;
+    HKEY hKey;
+    DWORD dwError, dwLength;
+
+    DPRINT("IsVolumeSystem()\n");
+
+    VolumeEntry->IsSystem = FALSE;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\Setup",
+                            0,
+                            KEY_READ,
+                            &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("\n");
+        return;
+    }
+
+    dwLength = sizeof(szSystemPartition);
+    dwError = RegQueryValueExW(hKey,
+                               L"SystemPartition",
+                               NULL,
+                               NULL,
+                               (PBYTE)szSystemPartition,
+                               &dwLength);
+    RegCloseKey(hKey);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("\n");
+        return;
+    }
+
+    DPRINT("SystemPartition: %S\n", szSystemPartition);
+    DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
+
+    if (_wcsnicmp(szSystemPartition, VolumeEntry->DeviceName, wcslen(szSystemPartition)) == 0)
+    {
+        VolumeEntry->IsSystem = TRUE;
+
+        PartEntry = GetPartitionForVolume(VolumeEntry);
+        if (PartEntry)
+            PartEntry->IsSystem = TRUE;
+    }
+}
+
+
+static
+VOID
+IsVolumeBoot(
+    _In_ PVOLENTRY VolumeEntry)
+{
+    WCHAR szSystemDir[MAX_PATH];
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+    DPRINT("IsVolumeBoot()\n");
+
+    VolumeEntry->IsBoot = FALSE;
+
+    if (VolumeEntry->DriveLetter == UNICODE_NULL)
+        return;
+
+    GetSystemDirectoryW(szSystemDir,
+                        ARRAYSIZE(szSystemDir));
+
+    DPRINT("SystemDirectory: %S\n", szSystemDir);
+    DPRINT("DriveLetter: %C\n", VolumeEntry->DriveLetter);
+
+    if (szSystemDir[0] == VolumeEntry->DriveLetter)
+    {
+        VolumeEntry->IsBoot = TRUE;
+
+        PartEntry = GetPartitionForVolume(VolumeEntry);
+        if (PartEntry)
+            PartEntry->IsBoot = TRUE;
+
+        DiskEntry = GetDiskForVolume(VolumeEntry);
+        if (DiskEntry)
+            DiskEntry->IsBoot = TRUE;
+    }
+}
+
+
+static
 VOID
 AddVolumeToList(
     ULONG ulVolumeNumber,
@@ -1876,7 +2065,6 @@ AddVolumeToList(
         return;
     }
 
-    wcscat(VolumeEntry->DeviceName, L"\\");
     DPRINT("DeviceName: %S\n", VolumeEntry->DeviceName);
 
     RtlInitUnicodeString(&Name, VolumeEntry->DeviceName);
@@ -1905,8 +2093,8 @@ AddVolumeToList(
                               szVolumeName,
                               MAX_PATH + 1,
                               &VolumeEntry->SerialNumber,
-                              NULL, //  [out, optional] LPDWORD lpMaximumComponentLength,
-                              NULL, //  [out, optional] LPDWORD lpFileSystemFlags,
+                              NULL,
+                              NULL,
                               szFilesystem,
                               MAX_PATH + 1))
     {
@@ -1957,6 +2145,9 @@ AddVolumeToList(
             pszPath += (nPathLength + 1);
         }
     }
+
+    IsVolumeSystem(VolumeEntry);
+    IsVolumeBoot(VolumeEntry);
 
     InsertTailList(&VolumeListHead,
                    &VolumeEntry->ListEntry);

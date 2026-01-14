@@ -202,7 +202,16 @@ LONG WINAPI CsrBroadcastSystemMessageExW(DWORD dwflags,
                                          WPARAM wParam,
                                          LPARAM lParam,
                                          PBSMINFO pBSMInfo);
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl);
+
+BOOL WINAPI
+CliImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
+
 HWND WINAPI SetTaskmanWindow(HWND);
 HWND WINAPI GetTaskmanWindow(VOID);
 HWND WINAPI GetProgmanWindow(VOID);

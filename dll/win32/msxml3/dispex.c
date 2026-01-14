@@ -18,30 +18,18 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "msxml6.h"
-#include "msxml6did.h"
-#include "wininet.h"
-#include "urlmon.h"
-#include "winreg.h"
-#include "shlwapi.h"
+#ifdef __REACTOS__
+#include <ole2.h>
+#endif
+#include "msxml2.h"
+#include "msxml2did.h"
+#include "dispex.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
-#include "msxml_private.h"
+#include "msxml_dispex.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -53,7 +41,6 @@ static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
       0, 0, { (DWORD_PTR)(__FILE__ ": dispex_static_data") }
 };
 static CRITICAL_SECTION cs_dispex_static_data = { &cs_dispex_static_data_dbg, -1, 0, 0, 0, 0 };
-
 
 enum lib_version_t
 {
@@ -97,7 +84,7 @@ static lib_id_t lib_ids[] = {
 };
 
 static tid_id_t tid_ids[] = {
-    { &IID_NULL, LibXml_Last },
+    { &IID_NULL, LibXml2 },
     { &IID_IXMLDOMAttribute, LibXml2 },
     { &IID_IXMLDOMCDATASection, LibXml2 },
     { &IID_IXMLDOMComment, LibXml2 },
@@ -157,7 +144,7 @@ static HRESULT get_typelib(unsigned lib, ITypeLib **tl)
     if(!typelib[lib]) {
         hres = LoadRegTypeLib(lib_ids[lib].iid, lib_ids[lib].major, 0, LOCALE_SYSTEM_DEFAULT, tl);
         if(FAILED(hres)) {
-            ERR("LoadRegTypeLib failed: %08x\n", hres);
+            ERR("LoadRegTypeLib failed, hr %#lx.\n", hres);
             return hres;
         }
 
@@ -188,7 +175,7 @@ HRESULT get_typeinfo(enum tid_t tid, ITypeInfo **typeinfo)
                 return hres;
             hres = ITypeLib_GetTypeInfoOfGuid(typelib, get_riid_from_tid(tid), &ti);
             if(FAILED(hres)) {
-                ERR("GetTypeInfoOfGuid failed: %08x\n", hres);
+                ERR("GetTypeInfoOfGuid failed, hr %#lx.\n", hres);
                 return hres;
             }
         }
@@ -215,9 +202,9 @@ void release_typelib(void)
         for(i=0; i < iter->func_cnt; i++)
             SysFreeString(iter->funcs[i].name);
 
-        heap_free(iter->funcs);
-        heap_free(iter->name_table);
-        heap_free(iter);
+        free(iter->funcs);
+        free(iter->name_table);
+        free(iter);
     }
 
     for(i=0; i < ARRAY_SIZE(typeinfos); i++)
@@ -239,7 +226,7 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, DISPID id
         return;
 
     if(data->func_cnt == *size)
-        data->funcs = heap_realloc(data->funcs, (*size <<= 1)*sizeof(func_info_t));
+        data->funcs = realloc(data->funcs, (*size <<= 1) * sizeof(func_info_t));
 
     hres = ITypeInfo_GetDocumentation(dti, id, &data->funcs[data->func_cnt].name, NULL, NULL, NULL);
     if(FAILED(hres))
@@ -251,14 +238,14 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, DISPID id
     data->func_cnt++;
 }
 
-static int dispid_cmp(const void *p1, const void *p2)
+static int __cdecl dispid_cmp(const void *p1, const void *p2)
 {
     return ((const func_info_t*)p1)->id - ((const func_info_t*)p2)->id;
 }
 
-static int func_name_cmp(const void *p1, const void *p2)
+static int __cdecl func_name_cmp(const void *p1, const void *p2)
 {
-    return strcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
+    return lstrcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
 }
 
 static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
@@ -274,13 +261,13 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
 
     hres = get_typeinfo(This->data->disp_tid, &dti);
     if(FAILED(hres)) {
-        ERR("Could not get disp type info: %08x\n", hres);
+        ERR("Could not get disp type info, hr %#lx.\n", hres);
         return NULL;
     }
 
-    data = heap_alloc(sizeof(dispex_data_t));
+    data = malloc(sizeof(dispex_data_t));
     data->func_cnt = 0;
-    data->funcs = heap_alloc(size*sizeof(func_info_t));
+    data->funcs = malloc(size * sizeof(func_info_t));
     list_add_tail(&dispex_data_list, &data->entry);
 
     while(*tid) {
@@ -303,16 +290,16 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     }
 
     if(!data->func_cnt) {
-        heap_free(data->funcs);
+        free(data->funcs);
         data->funcs = NULL;
     }else if(data->func_cnt != size) {
-        data->funcs = heap_realloc(data->funcs, data->func_cnt * sizeof(func_info_t));
+        data->funcs = realloc(data->funcs, data->func_cnt * sizeof(func_info_t));
     }
 
-    qsort(data->funcs, data->func_cnt, sizeof(func_info_t), dispid_cmp);
-
     if(data->funcs) {
-        data->name_table = heap_alloc(data->func_cnt * sizeof(func_info_t*));
+        qsort(data->funcs, data->func_cnt, sizeof(func_info_t), dispid_cmp);
+
+        data->name_table = malloc(data->func_cnt * sizeof(func_info_t*));
         for(i=0; i < data->func_cnt; i++)
             data->name_table[i] = data->funcs+i;
         qsort(data->name_table, data->func_cnt, sizeof(func_info_t*), func_name_cmp);
@@ -378,26 +365,25 @@ static HRESULT WINAPI DispatchEx_GetTypeInfoCount(IDispatchEx *iface, UINT *pcti
 static HRESULT WINAPI DispatchEx_GetTypeInfo(IDispatchEx *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
+    DispatchEx *dispex = impl_from_IDispatchEx(iface);
 
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+    TRACE("%p, %u, %lx, %p.\n", iface, iTInfo, lcid, ppTInfo);
 
-    return get_typeinfo(This->data->disp_tid, ppTInfo);
+    return get_typeinfo(dispex->data->disp_tid, ppTInfo);
 }
 
 static HRESULT WINAPI DispatchEx_GetIDsOfNames(IDispatchEx *iface, REFIID riid,
                                                 LPOLESTR *rgszNames, UINT cNames,
                                                 LCID lcid, DISPID *rgDispId)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
     UINT i;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
+    TRACE("%p, %s, %p, %u, %lx, %p.\n", iface, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
 
     for(i=0; i < cNames; i++) {
-        hres = IDispatchEx_GetDispID(&This->IDispatchEx_iface, rgszNames[i], 0, rgDispId+i);
+        hres = IDispatchEx_GetDispID(iface, rgszNames[i], 0, rgDispId+i);
         if(FAILED(hres))
             return hres;
     }
@@ -409,13 +395,10 @@ static HRESULT WINAPI DispatchEx_Invoke(IDispatchEx *iface, DISPID dispIdMember,
                             REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-
-    TRACE("(%p)->(%x %s %x %x %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+    TRACE("%p, %ld, %s, %lx, %x, %p, %p, %p, %p.\n", iface, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
-    return IDispatchEx_InvokeEx(&This->IDispatchEx_iface, dispIdMember, lcid, wFlags,
-                                pDispParams, pVarResult, pExcepInfo, NULL);
+    return IDispatchEx_InvokeEx(iface, dispIdMember, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, NULL);
 }
 
 static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD grfdex, DISPID *pid)
@@ -424,10 +407,10 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     dispex_data_t *data;
     int min, max, n, c;
 
-    TRACE("(%p)->(%s %x %p)\n", This, debugstr_w(bstrName), grfdex, pid);
+    TRACE("%p, %s, %lx, %p.\n", iface, debugstr_w(bstrName), grfdex, pid);
 
     if(grfdex & ~(fdexNameCaseSensitive|fdexNameEnsure|fdexNameImplicit))
-        FIXME("Unsupported grfdex %x\n", grfdex);
+        FIXME("Unsupported grfdex %lx.\n", grfdex);
 
     data = get_dispex_data(This);
     if(!data)
@@ -439,9 +422,9 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     while(min <= max) {
         n = (min+max)/2;
 
-        c = strcmpiW(data->name_table[n]->name, bstrName);
+        c = lstrcmpiW(data->name_table[n]->name, bstrName);
         if(!c) {
-            if((grfdex & fdexNameCaseSensitive) && strcmpW(data->name_table[n]->name, bstrName))
+            if((grfdex & fdexNameCaseSensitive) && wcscmp(data->name_table[n]->name, bstrName))
                 break;
 
             *pid = data->name_table[n]->id;
@@ -501,7 +484,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     int min, max, n;
     HRESULT hres;
 
-    TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+    TRACE("%p, %ld, %lx, %x, %p, %p, %p, %p.\n", iface, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 
     if(This->data->vtbl && This->data->vtbl->invoke) {
         hres = This->data->vtbl->invoke(This->outer, id, lcid, wFlags, pdp, pvarRes, pei);
@@ -533,19 +516,19 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     }
 
     if(min > max) {
-        WARN("invalid id %x\n", id);
+        WARN("invalid id %lx.\n", id);
         return DISP_E_UNKNOWNNAME;
     }
 
     hres = get_typeinfo(data->funcs[n].tid, &ti);
     if(FAILED(hres)) {
-        ERR("Could not get type info: %08x\n", hres);
+        ERR("Could not get type info, hr %#lx.\n", hres);
         return hres;
     }
 
     hres = IUnknown_QueryInterface(This->outer, get_riid_from_tid(data->funcs[n].tid), (void**)&unk);
     if(FAILED(hres)) {
-        ERR("Could not get iface: %08x\n", hres);
+        ERR("Could not get interface, hr %#lx.\n", hres);
         ITypeInfo_Release(ti);
         return E_FAIL;
     }
@@ -561,43 +544,37 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE("Not implemented in native msxml3 (%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
+    TRACE("%p, %s, %lx.\n", iface, debugstr_w(bstrName), grfdex);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByDispID(IDispatchEx *iface, DISPID id)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE("Not implemented in native msxml3 (%p)->(%x)\n", This, id);
+    TRACE("%p, %ld.\n", iface, id);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberProperties(IDispatchEx *iface, DISPID id, DWORD grfdexFetch, DWORD *pgrfdex)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE("Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, id, grfdexFetch, pgrfdex);
+    TRACE("%p, %ld, %lx, %p.\n", iface, id, grfdexFetch, pgrfdex);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BSTR *pbstrName)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE("Not implemented in native msxml3 (%p)->(%x %p)\n", This, id, pbstrName);
+    TRACE("%p, %ld, %p.\n", iface, id, pbstrName);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE(" Not implemented in native msxml3 (%p)->(%x %x %p)\n", This, grfdex, id, pid);
+    TRACE("%p, %lx, %ld, %p.\n", iface, grfdex, id, pid);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DispatchEx_GetNameSpaceParent(IDispatchEx *iface, IUnknown **ppunk)
 {
-    DispatchEx *This = impl_from_IDispatchEx(iface);
-    TRACE("Not implemented in native msxml3 (%p)->(%p)\n", This, ppunk);
+    TRACE("%p, %p.\n", iface, ppunk);
     return E_NOTIMPL;
 }
 

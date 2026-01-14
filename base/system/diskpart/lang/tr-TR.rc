@@ -42,6 +42,7 @@ BEGIN
     IDS_ASSIGN_ALREADY_ASSIGNED "\nThe specified letter has already been assigned to this drive.\n"
     IDS_ASSIGN_INVALID_LETTER "\nThe letter you specified is not a valid volume letter.\n"
     IDS_ASSIGN_NO_MORE_LETTER "\nThere are no free drive letters to assign to this volume.\nPlease free up a drive letter and try again.\n"
+    IDS_ASSIGN_SYSTEM_VOLUME "\nDiskPart cannot reassign the drive letter on a system, boot or pagefile volume.\n"
 END
 
 /* AUTOMOUNT command strings */
@@ -80,6 +81,7 @@ STRINGTABLE
 BEGIN
     IDS_DELETE_PARTITION_FAIL "\nDiskPart, seçilen bölümü silemedi.\nLütfen seçilen bölümün silmek için geçerli olduğundan emin olun.\n"
     IDS_DELETE_PARTITION_SUCCESS "\nDiskPart seçilen bölümü başarıyla sildi.\n"
+    IDS_DELETE_PARTITION_SYSTEM "\nThe selected partition may be neccessary to the operation of your computer, and may not be deleted.\n"
 END
 
 /* Disk Information Labels */
@@ -92,14 +94,14 @@ BEGIN
     IDS_DETAIL_INFO_PATH   "Yol    : %hu\n"
     IDS_DETAIL_INFO_TARGET "Hedef  : %hu\n"
     IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
-    IDS_DETAIL_INFO_LOC_PATH "Konum Yolu"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu"
-    IDS_DETAIL_INFO_RO "Salt-Okunur"
-    IDS_DETAIL_INFO_BOOT_DSK "Önyükleme Diski"
-    IDS_DETAIL_INFO_PAGE_FILE_DSK "Sanal Bellek Diski"
-    IDS_DETAIL_INFO_HIBER_FILE_DSK "Hazırda Bekletme Dosyası Diski"
-    IDS_DETAIL_INFO_CRASH_DSK "Çökme Dökümü Diski"
-    IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
+    IDS_DETAIL_INFO_LOC_PATH "Konum Yolu: %s\n"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu: %s\n"
+    IDS_DETAIL_INFO_RO "Salt-Okunur: %s\n"
+    IDS_DETAIL_INFO_BOOT_DSK "Önyükleme Diski: %s\n"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Sanal Bellek Diski: %s\n"
+    IDS_DETAIL_INFO_HIBER_FILE_DSK "Hazırda Bekletme Dosyası Diski: %s\n"
+    IDS_DETAIL_INFO_CRASH_DSK "Çökme Dökümü Diski: %s\n"
+    IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk: %s\n"
     IDS_DETAIL_PARTITION_NUMBER "Bölüm %lu\n"
     IDS_DETAIL_PARTITION_TYPE   "Tür                 : %s\n"
     IDS_DETAIL_PARTITION_HIDDEN "Gizli               : %s\n"
@@ -119,6 +121,13 @@ BEGIN
     IDS_FILESYSTEMS_CLUSTERSIZE "  Küme boyutu  : %s\n"
     IDS_FILESYSTEMS_SERIAL_NUMBER "  Serial number: %08lx\n"
     IDS_FILESYSTEMS_DEFAULT " (Default)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FORMAT_FAIL "\nDiskPart failed to format the selected volume.\n"
+    IDS_FORMAT_SUCCESS "\nDiskPart successfully formated the selected volume.\n"
+    IDS_FORMAT_PROGRESS "\r  %3lu percent completed"
 END
 
 STRINGTABLE
@@ -151,9 +160,9 @@ BEGIN
     IDS_LIST_PARTITION_FORMAT "%c Bölüm %2lu       %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nBölümleri listelemek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_LIST_PARTITION_NONE "\nThere are no partitions on this disk to show.\n"
-    IDS_LIST_VOLUME_HEAD "  Birim  ###  Hrf  Etiket       DS     Dür         Boyut    Durum    Bilgi\n"
-    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  -------  --------\n"
-    IDS_LIST_VOLUME_FORMAT "%c Birim  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s\n"
+    IDS_LIST_VOLUME_HEAD "  Birim  ###  Hrf  Etiket       DS     Dür         Boyut    Durum      Bilgi\n"
+    IDS_LIST_VOLUME_LINE "  ----------  ---  -----------  -----  ----------  -------  ---------  --------\n"
+    IDS_LIST_VOLUME_FORMAT "%c Birim  %-3lu   %c   %-11.11s  %-5s  %-10.10s  %4I64u %-2s  %-9s  %-8s\n"
 END
 
 /* REMOVE command strings */
@@ -213,6 +222,8 @@ BEGIN
     IDS_STATUS_ONLINE "Çevrim İçi"
     IDS_STATUS_OFFLINE "Çevrim Dışı"
     IDS_STATUS_NO_MEDIA "Ortam Yok"
+    IDS_INFO_BOOT "Boot"
+    IDS_INFO_SYSTEM "System"
 END
 
 /* CMD Messages for commands */
@@ -334,4 +345,23 @@ BEGIN
     IDS_BUSTYPE_UFS     "UFS"
     IDS_BUSTYPE_NVMEOF  "NVMEOF"
     IDS_BUSTYPE_OTHER   "Other"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_TYPE_EXTENDED "Extended"
+    IDS_PARTITION_TYPE_LOGICAL "Logical"
+    IDS_PARTITION_TYPE_PRIMARY "Primary"
+    IDS_PARTITION_TYPE_RESERVED "Reserved"
+    IDS_PARTITION_TYPE_SYSTEM "System"
+    IDS_PARTITION_TYPE_UNKNOWN "Unknown"
+    IDS_PARTITION_TYPE_UNUSED "Unused"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VOLUME_TYPE_DVD "DVD"
+    IDS_VOLUME_TYPE_PARTITION "Partition"
+    IDS_VOLUME_TYPE_REMOVABLE "Removable"
+    IDS_VOLUME_TYPE_UNKNOWN "Unknown"
 END

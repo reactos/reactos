@@ -72,6 +72,7 @@ list(APPEND SOURCE
     mimeole.idl
     mlang.idl
     mmdeviceapi.idl
+    msaatext.idl
     mscoree.idl
     msctf.idl
     msdadc.idl

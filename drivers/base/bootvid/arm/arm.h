@@ -7,22 +7,6 @@
 
 #pragma once
 
-extern PUSHORT VgaArmBase;
-
-#define LCDTIMING0_PPL(x)       ((((x) / 16 - 1) & 0x3f) << 2)
-#define LCDTIMING1_LPP(x)       (((x) & 0x3ff) - 1)
-#define LCDCONTROL_LCDPWR       (1 << 11)
-#define LCDCONTROL_LCDEN        (1)
-#define LCDCONTROL_LCDBPP(x)    (((x) & 7) << 1)
-#define LCDCONTROL_LCDTFT       (1 << 5)
-
-#define PL110_LCDTIMING0    (PVOID)0xE0020000
-#define PL110_LCDTIMING1    (PVOID)0xE0020004
-#define PL110_LCDTIMING2    (PVOID)0xE0020008
-#define PL110_LCDUPBASE     (PVOID)0xE0020010
-#define PL110_LCDLPBASE     (PVOID)0xE0020014
-#define PL110_LCDCONTROL    (PVOID)0xE0020018
-
 #define READ_REGISTER_ULONG(r) (*(volatile ULONG * const)(r))
 #define WRITE_REGISTER_ULONG(r, v) (*(volatile ULONG *)(r) = (v))
 
@@ -31,32 +15,13 @@ extern PUSHORT VgaArmBase;
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count);
 
-VOID
-PrepareForSetPixel(VOID);
+#define PrepareForSetPixel()
 
 VOID
 SetPixel(
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ UCHAR Color);
-
-VOID
-PreserveRow(
-    _In_ ULONG CurrentTop,
-    _In_ ULONG TopDelta,
-    _In_ BOOLEAN Restore);
-
-VOID
-DoScroll(
-    _In_ ULONG Scroll);
-
-VOID
-DisplayCharacter(
-    _In_ CHAR Character,
-    _In_ ULONG Left,
-    _In_ ULONG Top,
-    _In_ ULONG TextColor,
-    _In_ ULONG BackColor);

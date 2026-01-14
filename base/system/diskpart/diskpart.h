@@ -166,6 +166,10 @@ typedef struct _PARTENTRY
     BOOLEAN NeedsCheck;
 
     struct _FILE_SYSTEM_ITEM *FileSystem;
+
+    BOOL IsSystem;
+    BOOL IsBoot;
+
 } PARTENTRY, *PPARTENTRY;
 
 
@@ -227,6 +231,8 @@ typedef struct _DISKENTRY
     LIST_ENTRY PrimaryPartListHead;
     LIST_ENTRY LogicalPartListHead;
 
+    BOOL IsBoot;
+
 } DISKENTRY, *PDISKENTRY;
 
 typedef struct _VOLENTRY
@@ -249,6 +255,9 @@ typedef struct _VOLENTRY
     ULARGE_INTEGER AvailableAllocationUnits;
     ULONG SectorsPerAllocationUnit;
     ULONG BytesPerSector;
+
+    BOOL IsSystem;
+    BOOL IsBoot;
 
     PVOLUME_DISK_EXTENTS pExtents;
 

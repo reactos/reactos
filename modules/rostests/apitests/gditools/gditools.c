@@ -6,6 +6,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winddi.h>
+#include <winuser.h>
 #include <prntfont.h>
 
 #define NTOS_MODE_USER
@@ -105,15 +106,66 @@ GdiGetHandleUserData(
     return pentry->pUser;
 }
 
+VOID
+PrintAvailableDisplayModes(void)
+{
+    DEVMODEW dm = { .dmSize = sizeof(dm) };
+    ULONG iMode = 0;
+
+    printf("Available display modes:\n");
+    while (EnumDisplaySettingsW(NULL, iMode++, &dm))
+    {
+        printf("  %ux%u @ %u bpp, freq: %u Hz\n",
+               dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel, dm.dmDisplayFrequency);
+    }
+}
+
+BOOL
+ChangeScreenBpp(
+    _In_ ULONG cBitsPixel,
+    _Out_ PDEVMODEW pdmOld)
+{
+    DEVMODEW dm = { .dmSize = sizeof(dm) };
+
+    if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm))
+    {
+        printf("EnumDisplaySettingsW failed\n");
+        return FALSE;
+    }
+
+    printf("ChangeScreenBpp(%lu): Old display settings: %ux%u @ %u bpp\n",
+           cBitsPixel, dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel);
+
+    *pdmOld = dm;
+
+    if (dm.dmBitsPerPel != cBitsPixel)
+    {
+        dm.dmBitsPerPel = cBitsPixel;
+        if (ChangeDisplaySettingsW(&dm, 0) != DISP_CHANGE_SUCCESSFUL)
+        {
+            printf("Failed to change display settings.\n");
+            PrintAvailableDisplayModes();
+            return FALSE;
+        }
+    }
+
+    EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    printf("ChangeScreenBpp(%lu): New display settings: %ux%u @ %u bpp\n",
+           cBitsPixel, dm.dmPelsWidth, dm.dmPelsHeight, dm.dmBitsPerPel);
+
+    return TRUE;
+}
+
 #define FL_INVERT_COLORS 0x01
 #define FL_RED_BLUE 0x02
 
+static
 BOOL
 InitPerBitDepth(
     _In_ ULONG cBitsPerPixel,
     _In_ ULONG cx,
     _In_ ULONG cy,
-    _Out_ HBITMAP *phbmp,
+    _Out_opt_ HBITMAP *phbmpDDB,
     _Out_ HDC *phdcDIB,
     _Out_ HBITMAP *phbmpDIB,
     _Out_ PVOID *ppvBits,
@@ -126,12 +178,15 @@ InitPerBitDepth(
     } bmiBuffer;
     LPBITMAPINFO pbmi = (LPBITMAPINFO)&bmiBuffer;
 
-    /* Create a bitmap */
-    *phbmp = CreateBitmap(cx, cy, 1, cBitsPerPixel, NULL);
-    if (*phbmp == NULL)
+    if (phbmpDDB != NULL)
     {
-        printf("CreateBitmap failed %lu\n", cBitsPerPixel);
-        return FALSE;
+        /* Create a bitmap */
+        *phbmpDDB = CreateBitmap(cx, cy, 1, cBitsPerPixel, NULL);
+        if (*phbmpDDB == NULL)
+        {
+            printf("CreateBitmap failed %lu\n", cBitsPerPixel);
+            return FALSE;
+        }
     }
 
     /* Setup bitmap info */
@@ -184,14 +239,17 @@ InitPerBitDepth(
         return FALSE;
     }
 
-    SelectObject(*phdcDIB, *phbmpDIB);
+    if (SelectObject(*phdcDIB, *phbmpDIB) == NULL)
+    {
+        printf("SelectObject failed for %lu bpp DIB\n", cBitsPerPixel);
+        return FALSE;
+    }
 
     return TRUE;
 }
 
 BOOL GdiToolsInit(void)
 {
-
     /* Initialize a logical palette */
     ghpal = CreatePalette((LOGPALETTE*)&gpal);
     if (!ghpal)
@@ -201,8 +259,8 @@ BOOL GdiToolsInit(void)
     }
 
     if (!InitPerBitDepth(1, 9, 9, &ghbmp1, &ghdcDIB1, &ghbmpDIB1, &gpvDIB1, 0) ||
-        !InitPerBitDepth(1, 9, 9, &ghbmp1_InvCol, &ghdcDIB1_InvCol, &ghbmpDIB1_InvCol, &gpvDIB1_InvCol, FL_INVERT_COLORS) ||
-        !InitPerBitDepth(1, 9, 9, &ghbmp1_RB, &ghdcDIB1_RB, &ghbmpDIB1_RB, &gpvDIB1_RB, FL_RED_BLUE) ||
+        !InitPerBitDepth(1, 9, 9, NULL, &ghdcDIB1_InvCol, &ghbmpDIB1_InvCol, &gpvDIB1_InvCol, FL_INVERT_COLORS) ||
+        !InitPerBitDepth(1, 9, 9, NULL, &ghdcDIB1_RB, &ghbmpDIB1_RB, &gpvDIB1_RB, FL_RED_BLUE) ||
         !InitPerBitDepth(4, 5, 5, &ghbmp4, &ghdcDIB4, &ghbmpDIB4, &gpvDIB4, 0) ||
         !InitPerBitDepth(8, 5, 5, &ghbmp8, &ghdcDIB8, &ghbmpDIB8, &gpvDIB8, 0) ||
         !InitPerBitDepth(16, 8, 8, &ghbmp16, &ghdcDIB16, &ghbmpDIB16, &gpvDIB16, 0) ||

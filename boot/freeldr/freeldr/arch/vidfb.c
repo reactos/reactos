@@ -13,8 +13,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(UI);
 
-#define VGA_CHAR_SIZE 2
-
 /* This is used to introduce artificial symmetric borders at the top and bottom */
 #define TOP_BOTTOM_LINES 0
 
@@ -32,6 +30,9 @@ typedef struct _FRAMEBUFFER_INFO
 
     ULONG PixelsPerScanLine; // aka. "Pitch" or "ScreenStride", but Stride is in bytes or bits...
     ULONG BitsPerPixel;      // aka. "PixelStride".
+
+    /* Physical format of the pixel for BPP > 8, specified by bit-mask */
+    PIXEL_BITMASK PixelMasks;
 
 /** Calculated values */
 
@@ -57,12 +58,17 @@ VidFbPrintFramebufferInfo(VOID)
     TRACE("    BitsPerPixel      : %lu\n", framebufInfo.BitsPerPixel);
     TRACE("    BytesPerPixel     : %lu\n", framebufInfo.BytesPerPixel);
     TRACE("    Delta             : %lu\n", framebufInfo.Delta);
+    TRACE("    ARGB masks:       : %08x/%08x/%08x/%08x\n",
+          framebufInfo.PixelMasks.ReservedMask,
+          framebufInfo.PixelMasks.RedMask,
+          framebufInfo.PixelMasks.GreenMask,
+          framebufInfo.PixelMasks.BlueMask);
 }
 #endif
 
 /**
  * @brief
- * Initializes internal framebuffer data based on the given parameters.
+ * Initializes internal framebuffer information based on the given parameters.
  *
  * @param[in]   BaseAddress
  * The framebuffer physical base address.
@@ -80,6 +86,10 @@ VidFbPrintFramebufferInfo(VOID)
  * @param[in]   BitsPerPixel
  * The number of usable bits (not counting the reserved ones) per pixel.
  *
+ * @param[in]   PixelMasks
+ * Optional pointer to a PIXEL_BITMASK structure describing the pixel
+ * format used by the framebuffer.
+ *
  * @return
  * TRUE if initialization is successful; FALSE if not.
  **/
@@ -90,8 +100,11 @@ VidFbInitializeVideo(
     _In_ UINT32 ScreenWidth,
     _In_ UINT32 ScreenHeight,
     _In_ UINT32 PixelsPerScanLine,
-    _In_ UINT32 BitsPerPixel)
+    _In_ UINT32 BitsPerPixel,
+    _In_opt_ PPIXEL_BITMASK PixelMasks)
 {
+    PPIXEL_BITMASK BitMasks = &framebufInfo.PixelMasks;
+
     RtlZeroMemory(&framebufInfo, sizeof(framebufInfo));
 
     framebufInfo.BaseAddress  = BaseAddress;
@@ -112,35 +125,69 @@ VidFbInitializeVideo(
         return FALSE;
     }
 
+    //ASSERT((BitsPerPixel <= 8 && !PixelMasks) || (BitsPerPixel > 8));
+    if (BitsPerPixel > 8)
+    {
+        if (!PixelMasks ||
+            (PixelMasks->RedMask   == 0 &&
+             PixelMasks->GreenMask == 0 &&
+             PixelMasks->BlueMask  == 0 /* &&
+             PixelMasks->ReservedMask == 0 */))
+        {
+            /* Determine pixel mask given color depth and color channel */
+            switch (BitsPerPixel)
+            {
+                case 32:
+                case 24: /* 8:8:8 */
+                    BitMasks->RedMask   = 0x00FF0000; // 0x00FF0000;
+                    BitMasks->GreenMask = 0x0000FF00; // 0x00FF0000 >> 8;
+                    BitMasks->BlueMask  = 0x000000FF; // 0x00FF0000 >> 16;
+                    BitMasks->ReservedMask = ((1 << (BitsPerPixel - 24)) - 1) << 24;
+                    break;
+                case 16: /* 5:6:5 */
+                    BitMasks->RedMask   = 0xF800; // 0xF800;
+                    BitMasks->GreenMask = 0x07E0; // (0xF800 >> 5) | 0x20;
+                    BitMasks->BlueMask  = 0x001F; // 0xF800 >> 11;
+                    BitMasks->ReservedMask = 0;
+                    break;
+                case 15: /* 5:5:5 */
+                    BitMasks->RedMask   = 0x7C00; // 0x7C00;
+                    BitMasks->GreenMask = 0x03E0; // 0x7C00 >> 5;
+                    BitMasks->BlueMask  = 0x001F; // 0x7C00 >> 10;
+                    BitMasks->ReservedMask = 0x8000;
+                    break;
+                default:
+                    /* Unsupported BPP */
+                    UNIMPLEMENTED;
+                    RtlZeroMemory(BitMasks, sizeof(*BitMasks));
+            }
+        }
+        else
+        {
+            /* Copy the pixel masks */
+            RtlCopyMemory(BitMasks, PixelMasks, sizeof(*BitMasks));
+        }
+    }
+    else
+    {
+        /* Palettized modes don't use masks */
+        RtlZeroMemory(BitMasks, sizeof(*BitMasks));
+    }
+
 #if DBG
     VidFbPrintFramebufferInfo();
+    {
+    ULONG BppFromMasks =
+        PixelBitmasksToBpp(BitMasks->RedMask,
+                           BitMasks->GreenMask,
+                           BitMasks->BlueMask,
+                           BitMasks->ReservedMask);
+    TRACE("BitsPerPixel = %lu , BppFromMasks = %lu\n", BitsPerPixel, BppFromMasks);
+    //ASSERT(BitsPerPixel == BppFromMasks);
+    }
 #endif
 
     return TRUE;
-}
-
-static inline
-UINT32
-VidFbAttrToSingleColor(
-    _In_ UCHAR Attr)
-{
-    UCHAR Intensity;
-    Intensity = (0 == (Attr & 0x08) ? 127 : 255);
-
-    return 0xff000000 |
-           (0 == (Attr & 0x04) ? 0 : (Intensity << 16)) |
-           (0 == (Attr & 0x02) ? 0 : (Intensity << 8)) |
-           (0 == (Attr & 0x01) ? 0 : Intensity);
-}
-
-static VOID
-VidFbAttrToColors(
-    _In_ UCHAR Attr,
-    _Out_ PUINT32 FgColor,
-    _Out_ PUINT32 BgColor)
-{
-    *FgColor = VidFbAttrToSingleColor(Attr & 0x0F);
-    *BgColor = VidFbAttrToSingleColor((Attr >> 4) & 0x0F);
 }
 
 VOID
@@ -161,15 +208,11 @@ VidFbClearScreenColor(
     }
 }
 
-VOID
-VidFbClearScreen(
-    _In_ UCHAR Attr)
-{
-    UINT32 FgColor, BgColor;
-    VidFbAttrToColors(Attr, &FgColor, &BgColor);
-    VidFbClearScreenColor(BgColor, FALSE);
-}
-
+/**
+ * @brief
+ * Displays a character at a given pixel position with specific foreground
+ * and background colors.
+ **/
 VOID
 VidFbOutputChar(
     _In_ UCHAR Char,
@@ -183,9 +226,16 @@ VidFbOutputChar(
     UCHAR Mask;
     ULONG Line, Col;
 
+    /* Don't display outside of the screen, nor partial characters */
+    if ((X + CHAR_WIDTH >= framebufInfo.ScreenWidth) ||
+        (Y + CHAR_HEIGHT >= (framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES)))
+    {
+        return;
+    }
+
     FontPtr = BitmapFont8x16 + Char * CHAR_HEIGHT;
     Pixel = (PUINT32)((PUCHAR)framebufInfo.BaseAddress +
-            (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * framebufInfo.Delta + X * CHAR_WIDTH * 4);
+            (Y + TOP_BOTTOM_LINES) * framebufInfo.Delta + X * sizeof(UINT32));
 
     for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {
@@ -199,70 +249,48 @@ VidFbOutputChar(
     }
 }
 
-VOID
-VidFbPutChar(
-    _In_ UCHAR Char,
-    _In_ UCHAR Attr,
-    _In_ ULONG X,
-    _In_ ULONG Y)
-{
-    UINT32 FgColor, BgColor;
-    VidFbAttrToColors(Attr, &FgColor, &BgColor);
-    VidFbOutputChar(Char, X, Y, FgColor, BgColor);
-}
-
+/**
+ * @brief
+ * Returns the width and height in pixels, of the whole visible area
+ * of the graphics framebuffer.
+ **/
 VOID
 VidFbGetDisplaySize(
     _Out_ PULONG Width,
     _Out_ PULONG Height,
     _Out_ PULONG Depth)
 {
-    *Width  = framebufInfo.ScreenWidth / CHAR_WIDTH;
-    *Height = (framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT;
+    *Width  = framebufInfo.ScreenWidth;
+    *Height = framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES;
     *Depth  = framebufInfo.BitsPerPixel;
 }
 
+/**
+ * @brief
+ * Returns the size in bytes, of a full graphics pixel buffer rectangle
+ * that can fill the whole visible area of the graphics framebuffer.
+ **/
 ULONG
 VidFbGetBufferSize(VOID)
 {
-    return ((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT *
-            (framebufInfo.ScreenWidth / CHAR_WIDTH) * VGA_CHAR_SIZE);
-}
-
-VOID
-VidFbCopyOffScreenBufferToVRAM(
-    _In_ PVOID Buffer)
-{
-    PUCHAR OffScreenBuffer = (PUCHAR)Buffer;
-    ULONG Line, Col;
-
-    for (Line = 0; Line < (framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT; Line++)
-    {
-        for (Col = 0; Col < framebufInfo.ScreenWidth / CHAR_WIDTH; Col++)
-        {
-            VidFbPutChar(OffScreenBuffer[0], OffScreenBuffer[1], Col, Line);
-            OffScreenBuffer += VGA_CHAR_SIZE;
-        }
-    }
+    return ((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) *
+            framebufInfo.ScreenWidth * framebufInfo.BytesPerPixel);
 }
 
 VOID
 VidFbScrollUp(
-    _In_ UCHAR Attr)
+    _In_ UINT32 Color,
+    _In_ ULONG Scroll)
 {
-    UINT32 BgColor, Dummy;
-    ULONG PixelCount = framebufInfo.ScreenWidth * CHAR_HEIGHT *
-                       (((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT) - 1);
-    PUINT32 Src = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + (CHAR_HEIGHT + TOP_BOTTOM_LINES) * framebufInfo.Delta);
     PUINT32 Dst = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + TOP_BOTTOM_LINES * framebufInfo.Delta);
-
-    VidFbAttrToColors(Attr, &Dummy, &BgColor);
+    PUINT32 Src = (PUINT32)((PUCHAR)framebufInfo.BaseAddress + (TOP_BOTTOM_LINES + Scroll) * framebufInfo.Delta);
+    ULONG PixelCount = framebufInfo.ScreenWidth * ((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) - Scroll);
 
     while (PixelCount--)
         *Dst++ = *Src++;
 
-    for (PixelCount = 0; PixelCount < framebufInfo.ScreenWidth * CHAR_HEIGHT; PixelCount++)
-        *Dst++ = BgColor;
+    for (PixelCount = 0; PixelCount < framebufInfo.ScreenWidth * Scroll; PixelCount++)
+        *Dst++ = Color;
 }
 
 #if 0
@@ -300,3 +328,156 @@ VidFbGetPaletteColor(
     /* Not supported */
 }
 #endif
+
+
+
+/*
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ *              or MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Linear framebuffer based console support
+ * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
+#define VGA_CHAR_SIZE 2
+
+#define FBCONS_WIDTH    (framebufInfo.ScreenWidth / CHAR_WIDTH)
+#define FBCONS_HEIGHT   ((framebufInfo.ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT)
+
+static inline
+UINT32
+FbConsAttrToSingleColor(
+    _In_ UCHAR Attr)
+{
+    UCHAR Intensity;
+    Intensity = (0 == (Attr & 0x08) ? 127 : 255);
+
+    return 0xff000000 |
+           (0 == (Attr & 0x04) ? 0 : (Intensity << 16)) |
+           (0 == (Attr & 0x02) ? 0 : (Intensity << 8)) |
+           (0 == (Attr & 0x01) ? 0 : Intensity);
+}
+
+/**
+ * @brief
+ * Maps a text-mode CGA-style character attribute to separate
+ * foreground and background ARGB colors.
+ **/
+static VOID
+FbConsAttrToColors(
+    _In_ UCHAR Attr,
+    _Out_ PUINT32 FgColor,
+    _Out_ PUINT32 BgColor)
+{
+    *FgColor = FbConsAttrToSingleColor(Attr & 0x0F);
+    *BgColor = FbConsAttrToSingleColor((Attr >> 4) & 0x0F);
+}
+
+VOID
+FbConsClearScreen(
+    _In_ UCHAR Attr)
+{
+    UINT32 FgColor, BgColor;
+    FbConsAttrToColors(Attr, &FgColor, &BgColor);
+    VidFbClearScreenColor(BgColor, FALSE);
+}
+
+/**
+ * @brief
+ * Displays a character at a given position with specific foreground
+ * and background colors.
+ **/
+VOID
+FbConsOutputChar(
+    _In_ UCHAR Char,
+    _In_ ULONG Column,
+    _In_ ULONG Row,
+    _In_ UINT32 FgColor,
+    _In_ UINT32 BgColor)
+{
+    /* Don't display outside of the screen */
+    if ((Column >= FBCONS_WIDTH) || (Row >= FBCONS_HEIGHT))
+        return;
+    VidFbOutputChar(Char, Column * CHAR_WIDTH, Row * CHAR_HEIGHT, FgColor, BgColor);
+}
+
+/**
+ * @brief
+ * Displays a character with specific text attributes at a given position.
+ **/
+VOID
+FbConsPutChar(
+    _In_ UCHAR Char,
+    _In_ UCHAR Attr,
+    _In_ ULONG Column,
+    _In_ ULONG Row)
+{
+    UINT32 FgColor, BgColor;
+    FbConsAttrToColors(Attr, &FgColor, &BgColor);
+    FbConsOutputChar(Char, Column, Row, FgColor, BgColor);
+}
+
+/**
+ * @brief
+ * Returns the width and height in number of CGA characters/attributes, of a
+ * full text-mode CGA-style character buffer rectangle that can fill the whole console.
+ **/
+VOID
+FbConsGetDisplaySize(
+    _Out_ PULONG Width,
+    _Out_ PULONG Height,
+    _Out_ PULONG Depth)
+{
+    // VidFbGetDisplaySize(Width, Height, Depth);
+    // *Width  /= CHAR_WIDTH;
+    // *Height /= CHAR_HEIGHT;
+    *Width  = FBCONS_WIDTH;
+    *Height = FBCONS_HEIGHT;
+    *Depth  = framebufInfo.BitsPerPixel;
+}
+
+/**
+ * @brief
+ * Returns the size in bytes, of a full text-mode CGA-style
+ * character buffer rectangle that can fill the whole console.
+ **/
+ULONG
+FbConsGetBufferSize(VOID)
+{
+    return (FBCONS_HEIGHT * FBCONS_WIDTH * VGA_CHAR_SIZE);
+}
+
+/**
+ * @brief
+ * Copies a full text-mode CGA-style character buffer rectangle to the console.
+ **/
+// TODO: Write a VidFb "BitBlt" equivalent.
+VOID
+FbConsCopyOffScreenBufferToVRAM(
+    _In_ PVOID Buffer)
+{
+    PUCHAR OffScreenBuffer = (PUCHAR)Buffer;
+    ULONG Row, Col;
+
+    // ULONG Width, Height, Depth;
+    // FbConsGetDisplaySize(&Width, &Height, &Depth);
+    ULONG Width = FBCONS_WIDTH, Height = FBCONS_HEIGHT;
+
+    for (Row = 0; Row < Height; ++Row)
+    {
+        for (Col = 0; Col < Width; ++Col)
+        {
+            FbConsPutChar(OffScreenBuffer[0], OffScreenBuffer[1], Col, Row);
+            OffScreenBuffer += VGA_CHAR_SIZE;
+        }
+    }
+}
+
+VOID
+FbConsScrollUp(
+    _In_ UCHAR Attr)
+{
+    UINT32 BgColor, Dummy;
+    FbConsAttrToColors(Attr, &Dummy, &BgColor);
+    VidFbScrollUp(BgColor, CHAR_HEIGHT);
+}

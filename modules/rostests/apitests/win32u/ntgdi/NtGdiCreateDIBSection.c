@@ -241,6 +241,16 @@ printf("dib with bitfileds: %p\n", hbmp);
 
     if (hbmp) DeleteObject(hbmp);
 
+    /* Test overlapping bitfields */
+    ((DWORD*)pbmi->bmiColors)[0] = 0x00ff00;
+    ((DWORD*)pbmi->bmiColors)[1] = 0x000ff0;
+    ((DWORD*)pbmi->bmiColors)[2] = 0x0000ff;
+    hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
+    ok(hbmp != NULL, "NtGdiCreateDIBSection failed\n");
+    ok_eq_int(GetObject(hbmp, sizeof(DIBSECTION), &dibsection), sizeof(DIBSECTION));
+    ok_eq_hex(dibsection.dsBitfields[0], 0x00ff00);
+    ok_eq_hex(dibsection.dsBitfields[1], 0x000ff0);
+    ok_eq_hex(dibsection.dsBitfields[2], 0x0000ff);
 
     /* Test BI_BITFIELDS */
     SetLastError(0);

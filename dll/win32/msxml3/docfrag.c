@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -37,8 +33,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -94,26 +88,25 @@ static HRESULT WINAPI domfrag_QueryInterface(
     return S_OK;
 }
 
-static ULONG WINAPI domfrag_AddRef(
-    IXMLDOMDocumentFragment *iface )
+static ULONG WINAPI domfrag_AddRef(IXMLDOMDocumentFragment *iface)
 {
-    domfrag *This = impl_from_IXMLDOMDocumentFragment( iface );
-    ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    domfrag *domfrag = impl_from_IXMLDOMDocumentFragment(iface);
+    ULONG ref = InterlockedIncrement(&domfrag->ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
-static ULONG WINAPI domfrag_Release(
-    IXMLDOMDocumentFragment *iface )
+static ULONG WINAPI domfrag_Release(IXMLDOMDocumentFragment *iface)
 {
-    domfrag *This = impl_from_IXMLDOMDocumentFragment( iface );
-    ULONG ref = InterlockedDecrement( &This->ref );
+    domfrag *domfrag = impl_from_IXMLDOMDocumentFragment(iface);
+    ULONG ref = InterlockedDecrement(&domfrag->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
-        destroy_xmlnode(&This->node);
-        heap_free( This );
+        destroy_xmlnode(&domfrag->node);
+        free(domfrag);
     }
 
     return ref;
@@ -588,7 +581,7 @@ IUnknown* create_doc_fragment( xmlNodePtr fragment )
 {
     domfrag *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -599,5 +592,3 @@ IUnknown* create_doc_fragment( xmlNodePtr fragment )
 
     return (IUnknown*)&This->IXMLDOMDocumentFragment_iface;
 }
-
-#endif

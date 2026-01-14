@@ -55,6 +55,7 @@ void Test_PaintRgn()
 
 START_TEST(PaintRgn)
 {
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     Test_PaintRgn();
 }

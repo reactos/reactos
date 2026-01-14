@@ -472,8 +472,8 @@ void Test_GetDIBits_BI_BITFIELDS()
 
 START_TEST(GetDIBits)
 {
-    //getchar();
-    GdiToolsInit();
+    ok(GdiToolsInit(), "GdiToolsInit failed\n");
+
     Test_GetDIBits_xBpp(1);
     Test_GetDIBits_xBpp(4);
     Test_GetDIBits_xBpp(8);

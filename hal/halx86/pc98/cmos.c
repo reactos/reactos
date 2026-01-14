@@ -33,17 +33,8 @@ static ULONG_PTR MappedNvram;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-/* Avoid double calls */
-#undef BCD_INT
-static UCHAR
-BCD_INT(
-    _In_ UCHAR Bcd)
-{
-    return ((Bcd & 0xF0) >> 4) * 10 + (Bcd & 0x0F);
-}
-
-static UCHAR
-NTAPI
+static
+UCHAR
 HalpReadNvram(
     _In_ UCHAR Register)
 {
@@ -51,8 +42,8 @@ HalpReadNvram(
 }
 
 _Requires_lock_held_(HalpSystemHardwareLock)
-static VOID
-NTAPI
+static
+VOID
 HalpWriteNvram(
     _In_ UCHAR Register,
     _In_ UCHAR Value)
@@ -63,8 +54,8 @@ HalpWriteNvram(
 }
 
 _Requires_lock_held_(HalpSystemHardwareLock)
-static UCHAR
-NTAPI
+static
+UCHAR
 HalpRtcReadByte(VOID)
 {
     UCHAR i;
@@ -86,8 +77,8 @@ HalpRtcReadByte(VOID)
 }
 
 _Requires_lock_held_(HalpSystemHardwareLock)
-static VOID
-NTAPI
+static
+VOID
 HalpRtcWriteBit(
     _In_ UCHAR Bit)
 {
@@ -101,8 +92,8 @@ HalpRtcWriteBit(
 }
 
 _Requires_lock_held_(HalpSystemHardwareLock)
-static VOID
-NTAPI
+static
+VOID
 HalpRtcWriteCommand(
     _In_ UCHAR Command)
 {

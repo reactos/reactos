@@ -100,10 +100,18 @@ DetailDisk(
     ConResPrintf(StdOut, IDS_DETAIL_DISK_ID, szBuffer);
     PrintBusType(szBuffer, ARRAYSIZE(szBuffer), CurrentDisk->BusType);
     ConResPrintf(StdOut, IDS_DETAIL_DISK_TYPE, szBuffer);
-    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, L"Online");
+    LoadStringW(GetModuleHandle(NULL),
+                IDS_STATUS_ONLINE,
+                szBuffer, ARRAYSIZE(szBuffer));
+    ConResPrintf(StdOut, IDS_DETAIL_DISK_STATUS, szBuffer);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_PATH, CurrentDisk->PathId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_TARGET, CurrentDisk->TargetId);
     ConResPrintf(StdOut, IDS_DETAIL_INFO_LUN_ID, CurrentDisk->Lun);
+
+    LoadStringW(GetModuleHandle(NULL),
+                CurrentDisk->IsBoot ? IDS_STATUS_YES : IDS_STATUS_YES,
+                szBuffer, ARRAYSIZE(szBuffer));
+    ConResPrintf(StdOut, IDS_DETAIL_INFO_BOOT_DSK, szBuffer);
 
     Entry = VolumeListHead.Flink;
     while (Entry != &VolumeListHead)
@@ -174,8 +182,14 @@ DetailPartition(
     {
         PrintGUID(szBuffer, &PartEntry->Gpt.PartitionType);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
-        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? L"Yes" : L"No");
-        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_REQUIRED, (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? L"Yes" : L"No");
+        LoadStringW(GetModuleHandle(NULL),
+                    (PartEntry->Gpt.Attributes & GPT_BASIC_DATA_ATTRIBUTE_HIDDEN) ? IDS_STATUS_YES : IDS_STATUS_NO,
+                    szBuffer, ARRAYSIZE(szBuffer));
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, szBuffer);
+        LoadStringW(GetModuleHandle(NULL),
+                    (PartEntry->Gpt.Attributes & GPT_ATTRIBUTE_PLATFORM_REQUIRED) ? IDS_STATUS_YES : IDS_STATUS_NO,
+                    szBuffer, ARRAYSIZE(szBuffer));
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_REQUIRED, szBuffer);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ATTRIBUTE, PartEntry->Gpt.Attributes);
     }
     else if (CurrentDisk->PartitionStyle == PARTITION_STYLE_MBR)
@@ -183,7 +197,10 @@ DetailPartition(
         swprintf(szBuffer, L"%02x", PartEntry->Mbr.PartitionType);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_TYPE, szBuffer);
         ConResPrintf(StdOut, IDS_DETAIL_PARTITION_HIDDEN, "");
-        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, PartEntry->Mbr.BootIndicator ? L"Yes" : L"No");
+        LoadStringW(GetModuleHandle(NULL),
+                    PartEntry->Mbr.BootIndicator ? IDS_STATUS_YES : IDS_STATUS_NO,
+                    szBuffer, ARRAYSIZE(szBuffer));
+        ConResPrintf(StdOut, IDS_DETAIL_PARTITION_ACTIVE, szBuffer);
     }
     ConResPrintf(StdOut, IDS_DETAIL_PARTITION_OFFSET, PartOffset);
 
