@@ -96,9 +96,8 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
-
 static HFONT
-CreateBoldFont(VOID)
+CreateBoldFont(BOOL bBold)
 {
     LOGFONTW tmpFont = {0};
     HFONT hBoldFont;
@@ -107,8 +106,9 @@ CreateBoldFont(VOID)
     /* Grabs the Drawing Context */
     hDc = GetDC(NULL);
 
+    tmpFont.lfCharSet = DEFAULT_CHARSET;
     tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
-    tmpFont.lfWeight = FW_BOLD;
+    tmpFont.lfWeight = bBold ? FW_BOLD : FW_NORMAL;
     wcscpy(tmpFont.lfFaceName, L"MS Shell Dlg");
 
     hBoldFont = CreateFontIndirectW(&tmpFont);
@@ -2456,11 +2456,17 @@ ProcessPageDlgProc(HWND hwndDlg,
             ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK4), SW_HIDE);
             SetupData->hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON),
                                     IMAGE_ICON, 16, 16, 0);
+            SetupData->hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON),
+                                    IMAGE_ICON, 16, 16, 0);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
             break;
 
         case WM_DESTROY:
             DestroyIcon(SetupData->hCheckIcon);
             SetupData->hCheckIcon = NULL;
+            DestroyIcon(SetupData->hArrowIcon);
+            SetupData->hArrowIcon = NULL;
             break;
 
         case WM_NOTIFY:
@@ -2491,8 +2497,10 @@ ProcessPageDlgProc(HWND hwndDlg,
             DPRINT("PM_ITEM_START %lu\n", (ULONG)lParam);
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hNormalFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam + 1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
             SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hCheckIcon);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam + 1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
             break;
 
         case PM_ITEM_END:
@@ -3416,7 +3424,8 @@ InstallWizard(VOID)
 
     /* Create title font */
     pSetupData->hTitleFont = CreateTitleFont();
-    pSetupData->hBoldFont  = CreateBoldFont();
+    pSetupData->hBoldFont  = CreateBoldFont(TRUE);
+    pSetupData->hNormalFont  = CreateBoldFont(FALSE);
 
     /* Display the wizard */
     hWnd = (HWND)PropertySheet(&psh);
@@ -3431,6 +3440,7 @@ InstallWizard(VOID)
         }
     }
 
+    DeleteObject(pSetupData->hNormalFont);
     DeleteObject(pSetupData->hBoldFont);
     DeleteObject(pSetupData->hTitleFont);
 

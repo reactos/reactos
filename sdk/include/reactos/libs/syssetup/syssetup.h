@@ -60,6 +60,8 @@ typedef struct _SETUPDATA
 
     PRODUCT_OPTION ProductOption;
     HICON hCheckIcon;
+    HICON hArrowIcon;
+    HFONT hNormalFont;
 } SETUPDATA, *PSETUPDATA;
 
 

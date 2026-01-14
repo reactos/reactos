@@ -33,6 +33,7 @@
 #define IDI_ICON4 13
 #define IDI_ICON5 14
 #define IDI_CHECKICON 15
+#define IDI_ARROWICON 16
 
 #define IDC_STATIC -1
 
