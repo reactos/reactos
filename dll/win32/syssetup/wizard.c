@@ -2452,6 +2452,13 @@ ProcessPageDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
+            SetupData->hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON),
+                                    IMAGE_ICON, 16, 16, 0);
+            break;
+
+        case WM_DESTROY:
+            DestroyIcon(SetupData->hCheckIcon);
+            SetupData->hCheckIcon = NULL;
             break;
 
         case WM_NOTIFY:
@@ -2483,6 +2490,7 @@ ProcessPageDlgProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hCheckIcon);
             break;
 
         case PM_ITEM_END:
