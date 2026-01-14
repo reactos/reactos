@@ -22,6 +22,17 @@ static VOID TEST_StrToIntA(VOID)
     BOOL ret1, ret2;
 
     n2 = n1 = 0xDEADFACE;
+    psz = NULL;
+    n0 = StrToIntA(psz);
+    ret1 = StrToIntExA(psz, 0, &n1);
+    ret2 = StrToInt64ExA(psz, 0, &n2);
+    ok_int(n0, 0);
+    ok_int(n1, 0);
+    ok_longlong(n2, 0xFFFFFFFFDEADFACE);
+    ok_int(ret1, FALSE);
+    ok_int(ret2, FALSE);
+
+    n2 = n1 = 0xDEADFACE;
     psz = "";
     n0 = StrToIntA(psz);
     ret1 = StrToIntExA(psz, 0, &n1);
@@ -94,6 +105,17 @@ static VOID TEST_StrToIntW(VOID)
     LONGLONG n2;
     LPCWSTR psz;
     BOOL ret1, ret2;
+
+    n2 = n1 = 0xDEADFACE;
+    psz = NULL;
+    n0 = StrToIntW(psz);
+    ret1 = StrToIntExW(psz, 0, &n1);
+    ret2 = StrToInt64ExW(psz, 0, &n2);
+    ok_int(n0, 0);
+    ok_int(n1, 0);
+    ok_longlong(n2, 0xFFFFFFFFDEADFACE);
+    ok_int(ret1, FALSE);
+    ok_int(ret2, FALSE);
 
     n2 = n1 = 0xDEADFACE;
     psz = L"";
