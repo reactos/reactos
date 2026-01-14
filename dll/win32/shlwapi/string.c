@@ -1059,9 +1059,6 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     if (!lpszStr)
         return FALSE;
 
-    if (lpiRet)
-        *lpiRet = 0;
-
     // Skip spaces
     LPCWSTR pch = lpszStr;
     while (*pch == L' ' || *pch == L'\n' || *pch == L'\t')
@@ -1107,7 +1104,11 @@ BOOL WINAPI StrToInt64ExW(LPCWSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
     }
 
     if (pch == start)
+    {
+        if (lpiRet)
+            *lpiRet = 0;
         return FALSE; // No data
+    }
 
     if (lpiRet)
         *lpiRet = isNegative ? -(LONGLONG)value : (LONGLONG)value;
