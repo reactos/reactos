@@ -2452,6 +2452,8 @@ ProcessPageDlgProc(HWND hwndDlg,
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
+            ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK3), SW_HIDE);
+            ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK4), SW_HIDE);
             SetupData->hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON),
                                     IMAGE_ICON, 16, 16, 0);
             break;
