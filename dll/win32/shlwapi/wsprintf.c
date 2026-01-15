@@ -418,9 +418,16 @@ INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, __ms_va_list args
                 *p++ = ' ';
         maxlen -= len;
     }
+#ifdef __REACTOS__
+    if (maxlen > 0)
+#endif
     *p = 0;
     TRACE("%s\n",debugstr_a(buffer));
+#ifdef __REACTOS__
+    return (INT)(p - buffer);
+#else
     return (maxlen > 1) ? (INT)(p - buffer) : -1;
+#endif
 }
 
 
@@ -524,9 +531,16 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list ar
                 *p++ = ' ';
         maxlen -= len;
     }
+#ifdef __REACTOS__
+    if (maxlen > 0)
+#endif
     *p = 0;
     TRACE("%s\n",debugstr_w(buffer));
+#ifdef __REACTOS__
+    return (INT)(p - buffer);
+#else
     return (maxlen > 1) ? (INT)(p - buffer) : -1;
+#endif
 }
 
 
