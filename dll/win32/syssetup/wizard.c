@@ -2459,8 +2459,6 @@ ProcessPageDlgProc(HWND hwndDlg,
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
             s_hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case WM_DESTROY:
@@ -2497,17 +2495,16 @@ ProcessPageDlgProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
 
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
-
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam + 1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam + 1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case PM_ITEM_END:
             DPRINT("PM_ITEM_END\n");
             if (lParam == ERROR_SUCCESS)
             {
+                SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
+                SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
             }
             else
             {
