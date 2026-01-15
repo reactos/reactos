@@ -19,7 +19,7 @@
   <TOOL _locID="Resource Monitor" NAME="資源監視器" PATH="%windir%\System32\resmon.exe" DEFAULT_OPT="" ADV_OPT="" HELP="監控本地電腦的性能和資源使用情況。"/>
   <TOOL _locID="Task Manager" NAME="任務管理器" PATH="%windir%\System32\taskmgr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="查看正在您的電腦上執行的程式和處理程序的詳細資訊。"/>
   <TOOL _locID="Command Prompt" NAME="命令提示字元" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="" ADV_OPT="" HELP="開啟一個命令提示字元視窗。"/>
-  <TOOL _locID="Registry Editor" NAME="註冊表編輯器" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="修改 ReactOS 的註冊表。"/>
+  <TOOL _locID="Registry Editor" NAME="登錄編輯程式" PATH="%windir%\System32\regedt32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="修改 ReactOS 的登錄資料。"/>
   <TOOL _locID="Remote Assistance" NAME="遠端協助" PATH="%windir%\System32\msra.exe" DEFAULT_OPT="" ADV_OPT="" HELP="透過網際網路，從（向）您的朋友取得（提供）協助。"/>
   <TOOL _locID="System Restore" NAME="系統還原" PATH="%windir%\System32\rstrui.exe" DEFAULT_OPT="" ADV_OPT="" HELP="將您的電腦系統恢復到上一個狀態。"/>
 </MSCONFIGTOOLS>

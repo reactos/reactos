@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
  *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -95,5 +95,5 @@ BEGIN
     IDS_NO_DIRECTORY "沒有指定路徑。"
     IDS_INVALID_PATH "指定的路徑無效。"
     IDS_INVALID_NAME "您輸入的捷徑名稱過長，或包含不能在檔案名稱中使用的字元。"
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "請選擇捷徑的目標："
 END
