@@ -2440,6 +2440,8 @@ ProcessPageDlgProc(HWND hwndDlg,
 {
     PSETUPDATA SetupData;
     PREGISTRATIONNOTIFY RegistrationNotify;
+    static HICON s_hCheckIcon, s_hArrowIcon;
+    static HFONT s_hNormalFont;
 
     /* Retrieve pointer to the global setup data */
     SetupData = (PSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
@@ -2454,21 +2456,16 @@ ProcessPageDlgProc(HWND hwndDlg,
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK3), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK4), SW_HIDE);
-            SetupData->hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON),
-                                    IMAGE_ICON, 16, 16, 0);
-            SetupData->hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON),
-                                    IMAGE_ICON, 16, 16, 0);
-            SetupData->hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
+            s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
+            s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
+            s_hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case WM_DESTROY:
-            SetupData->hNormalFont = NULL;
-            DestroyIcon(SetupData->hCheckIcon);
-            SetupData->hCheckIcon = NULL;
-            DestroyIcon(SetupData->hArrowIcon);
-            SetupData->hArrowIcon = NULL;
+            DestroyIcon(s_hCheckIcon);
+            DestroyIcon(s_hArrowIcon);
             break;
 
         case WM_NOTIFY:
@@ -2500,11 +2497,11 @@ ProcessPageDlgProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, (ULONG)lParam));
             SendDlgItemMessage(hwndDlg, IDC_PROCESSPROGRESS, PBM_SETPOS, 0, 0);
 
-            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)SetupData->hNormalFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hCheckIcon);
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
 
             SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam + 1, WM_SETFONT, (WPARAM)SetupData->hBoldFont, (LPARAM)TRUE);
-            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam + 1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)SetupData->hArrowIcon);
+            SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam + 1, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hArrowIcon);
             break;
 
         case PM_ITEM_END:
