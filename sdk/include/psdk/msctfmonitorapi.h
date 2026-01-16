@@ -16,4 +16,5 @@ EXTERN_C HRESULT WINAPI UninitLocalMsCtfMonitor(VOID);
 #define DCM_FLAGS_TASKENG 0x1
 #define DCM_FLAGS_CTFMON 0x2
 #define DCM_FLAGS_LOCALTHREADTSF 0x4
+
 EXTERN_C BOOL WINAPI DoMsCtfMonitor(_In_ DWORD dwFlags, _In_ HANDLE hEventForServiceStop);
