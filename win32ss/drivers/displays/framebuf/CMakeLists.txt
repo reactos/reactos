@@ -13,7 +13,7 @@ add_library(framebuf MODULE
 
 set_module_type(framebuf kerneldll ENTRYPOINT DrvEnableDriver 12)
 add_pch(framebuf framebuf.h SOURCE)
-target_link_libraries(framebuf libcntpr)
+target_link_libraries(framebuf ksanitize_w32k libcntpr)
 add_importlibs(framebuf win32k)
 add_dependencies(framebuf psdk)
 add_cd_file(TARGET framebuf DESTINATION reactos/system32 FOR all)

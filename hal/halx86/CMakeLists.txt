@@ -38,6 +38,7 @@ function(add_hal _halname)
     else()
         target_link_libraries(${_halname} -lgcc)
     endif()
+    target_link_libraries(${_halname} ksanitize)
 endfunction()
 
 # The components

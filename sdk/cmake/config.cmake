@@ -108,6 +108,10 @@ endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     option(STACK_PROTECTOR "Whether to enable the GCC stack checker while compiling" OFF)
+    option(SANITIZE_UB "Enable -fsanitize=undefined for GCC builds" OFF)
+endif()
+if(ARCH STREQUAL "i386" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(SANITIZE_UB ON)
 endif()
 
 set(USE_DUMMY_PSEH FALSE CACHE BOOL

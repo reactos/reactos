@@ -219,6 +219,11 @@ else()
     endif()
 endif()
 
+# GCC optimizer bug. See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85175
+if((OPTIMIZE STREQUAL "3") AND (GCC_VERSION VERSION_GREATER 8))
+    add_compile_options(-Wno-format-overflow)
+endif()
+
 # Link-time code generation
 if(LTCG)
     add_compile_options(-flto -fno-fat-lto-objects)
@@ -409,6 +414,11 @@ function(set_module_type_toolchain MODULE TYPE)
 
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
+
+        # win32k & dependencies require a special version of ksanitize
+        if(NOT ${TYPE} STREQUAL "kerneldll")
+            target_link_libraries(${MODULE} ksanitize)
+        endif()
     endif()
 endfunction()
 
