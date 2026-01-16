@@ -21,7 +21,6 @@
 #include "wincrypt.h"
 #include "winnls.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -39,7 +38,7 @@ static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %08x)\n", store, dwFlags);
+    TRACE("(%p, %08lx)\n", store, dwFlags);
     if (store->dirty)
         CertSaveStore(store->memStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
          store->type, CERT_STORE_SAVE_TO_FILE, store->file, 0);
@@ -52,7 +51,7 @@ static BOOL WINAPI CRYPT_FileWriteCert(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %d)\n", hCertStore, cert, dwFlags);
+    TRACE("(%p, %p, %ld)\n", hCertStore, cert, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -62,7 +61,7 @@ static BOOL WINAPI CRYPT_FileDeleteCert(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %08x)\n", hCertStore, pCertContext, dwFlags);
+    TRACE("(%p, %p, %08lx)\n", hCertStore, pCertContext, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -72,7 +71,7 @@ static BOOL WINAPI CRYPT_FileWriteCRL(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %d)\n", hCertStore, crl, dwFlags);
+    TRACE("(%p, %p, %ld)\n", hCertStore, crl, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -82,7 +81,7 @@ static BOOL WINAPI CRYPT_FileDeleteCRL(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %08x)\n", hCertStore, pCrlContext, dwFlags);
+    TRACE("(%p, %p, %08lx)\n", hCertStore, pCrlContext, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -92,7 +91,7 @@ static BOOL WINAPI CRYPT_FileWriteCTL(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %d)\n", hCertStore, ctl, dwFlags);
+    TRACE("(%p, %p, %ld)\n", hCertStore, ctl, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -102,7 +101,7 @@ static BOOL WINAPI CRYPT_FileDeleteCTL(HCERTSTORE hCertStore,
 {
     WINE_FILESTOREINFO *store = hCertStore;
 
-    TRACE("(%p, %p, %08x)\n", hCertStore, pCtlContext, dwFlags);
+    TRACE("(%p, %p, %08lx)\n", hCertStore, pCtlContext, dwFlags);
     store->dirty = TRUE;
     return TRUE;
 }
@@ -134,7 +133,7 @@ static BOOL WINAPI CRYPT_FileControl(HCERTSTORE hCertStore, DWORD dwFlags,
     WINE_FILESTOREINFO *store = hCertStore;
     BOOL ret;
 
-    TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,
+    TRACE("(%p, %08lx, %ld, %p)\n", hCertStore, dwFlags, dwCtrlType,
      pvCtrlPara);
 
     switch (dwCtrlType)
@@ -174,7 +173,7 @@ static BOOL WINAPI CRYPT_FileControl(HCERTSTORE hCertStore, DWORD dwFlags,
         }
         else
         {
-            WARN("unknown type %d\n", store->type);
+            WARN("unknown type %ld\n", store->type);
             ret = FALSE;
         }
         break;
@@ -192,7 +191,7 @@ static BOOL WINAPI CRYPT_FileControl(HCERTSTORE hCertStore, DWORD dwFlags,
             ret = TRUE;
         break;
     default:
-        FIXME("%d: stub\n", dwCtrlType);
+        FIXME("%ld: stub\n", dwCtrlType);
         ret = FALSE;
     }
     return ret;
@@ -245,7 +244,7 @@ WINECRYPT_CERTSTORE *CRYPT_FileOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags,
     WINECRYPT_CERTSTORE *store = NULL;
     HANDLE file = (HANDLE)pvPara;
 
-    TRACE("(%ld, %08x, %p)\n", hCryptProv, dwFlags, pvPara);
+    TRACE("(%Id, %08lx, %p)\n", hCryptProv, dwFlags, pvPara);
 
     if (!pvPara)
     {
@@ -297,7 +296,7 @@ WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
     DWORD access, create;
     HANDLE file;
 
-    TRACE("(%ld, %08x, %s)\n", hCryptProv, dwFlags, debugstr_w(fileName));
+    TRACE("(%Id, %08lx, %s)\n", hCryptProv, dwFlags, debugstr_w(fileName));
 
     if (!fileName)
     {
@@ -354,14 +353,12 @@ WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
         }
         else
         {
-            static const WCHAR spc[] = { 's','p','c',0 };
-            static const WCHAR p7c[] = { 'p','7','c',0 };
-            LPCWSTR ext = strrchrW(fileName, '.');
+            LPCWSTR ext = wcsrchr(fileName, '.');
 
             if (ext)
             {
                 ext++;
-                if (!lstrcmpiW(ext, spc) || !lstrcmpiW(ext, p7c))
+                if (!lstrcmpiW(ext, L"spc") || !lstrcmpiW(ext, L"p7c"))
                     type = CERT_STORE_SAVE_AS_PKCS7;
             }
             if (!type)
@@ -386,7 +383,7 @@ WINECRYPT_CERTSTORE *CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
     int len;
     WINECRYPT_CERTSTORE *ret = NULL;
 
-    TRACE("(%ld, %08x, %s)\n", hCryptProv, dwFlags,
+    TRACE("(%Id, %08lx, %s)\n", hCryptProv, dwFlags,
      debugstr_a(pvPara));
 
     if (!pvPara)

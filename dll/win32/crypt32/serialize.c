@@ -16,9 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
@@ -39,6 +36,86 @@ typedef struct _WINE_CERT_PROP_HEADER
     DWORD cb;
 } WINE_CERT_PROP_HEADER;
 
+struct store_CRYPT_KEY_PROV_INFO
+{
+    DWORD pwszContainerName;
+    DWORD pwszProvName;
+    DWORD dwProvType;
+    DWORD dwFlags;
+    DWORD cProvParam;
+    DWORD rgProvParam;
+    DWORD dwKeySpec;
+};
+
+struct store_CRYPT_KEY_PROV_PARAM
+{
+    DWORD dwParam;
+    DWORD pbData;
+    DWORD cbData;
+    DWORD dwFlags;
+};
+
+static DWORD serialize_KeyProvInfoProperty(const CRYPT_KEY_PROV_INFO *info, struct store_CRYPT_KEY_PROV_INFO **ret)
+{
+    struct store_CRYPT_KEY_PROV_INFO *store;
+    struct store_CRYPT_KEY_PROV_PARAM *param;
+    DWORD size = sizeof(struct store_CRYPT_KEY_PROV_INFO), i;
+    BYTE *data;
+
+    if (info->pwszContainerName)
+        size += (lstrlenW(info->pwszContainerName) + 1) * sizeof(WCHAR);
+    if (info->pwszProvName)
+        size += (lstrlenW(info->pwszProvName) + 1) * sizeof(WCHAR);
+
+    for (i = 0; i < info->cProvParam; i++)
+        size += sizeof(struct store_CRYPT_KEY_PROV_PARAM) + info->rgProvParam[i].cbData;
+
+    if (!ret) return size;
+
+    store = CryptMemAlloc(size);
+    if (!store) return 0;
+
+    param = (struct store_CRYPT_KEY_PROV_PARAM *)(store + 1);
+    data = (BYTE *)param + sizeof(struct store_CRYPT_KEY_PROV_PARAM) * info->cProvParam;
+
+    if (info->pwszContainerName)
+    {
+        store->pwszContainerName = data - (BYTE *)store;
+        lstrcpyW((LPWSTR)data, info->pwszContainerName);
+        data += (lstrlenW(info->pwszContainerName) + 1) * sizeof(WCHAR);
+    }
+    else
+        store->pwszContainerName = 0;
+
+    if (info->pwszProvName)
+    {
+        store->pwszProvName = data - (BYTE *)store;
+        lstrcpyW((LPWSTR)data, info->pwszProvName);
+        data += (lstrlenW(info->pwszProvName) + 1) * sizeof(WCHAR);
+    }
+    else
+        store->pwszProvName = 0;
+
+    store->dwProvType = info->dwProvType;
+    store->dwFlags = info->dwFlags;
+    store->cProvParam = info->cProvParam;
+    store->rgProvParam = info->cProvParam ? (BYTE *)param - (BYTE *)store : 0;
+    store->dwKeySpec = info->dwKeySpec;
+
+    for (i = 0; i < info->cProvParam; i++)
+    {
+        param[i].dwParam = info->rgProvParam[i].dwParam;
+        param[i].dwFlags = info->rgProvParam[i].dwFlags;
+        param[i].cbData = info->rgProvParam[i].cbData;
+        param[i].pbData = param[i].cbData ? data - (BYTE *)store : 0;
+        memcpy(data, info->rgProvParam[i].pbData, info->rgProvParam[i].cbData);
+        data += info->rgProvParam[i].cbData;
+    }
+
+    *ret = store;
+    return size;
+}
+
 static BOOL CRYPT_SerializeStoreElement(const void *context,
  const BYTE *encodedContext, DWORD cbEncodedContext, DWORD contextPropID,
  const WINE_CONTEXT_INTERFACE *contextInterface, DWORD dwFlags, BOOL omitHashes,
@@ -46,7 +123,7 @@ static BOOL CRYPT_SerializeStoreElement(const void *context,
 {
     BOOL ret;
 
-    TRACE("(%p, %p, %08x, %d, %p, %p)\n", context, contextInterface, dwFlags,
+    TRACE("(%p, %p, %08lx, %d, %p, %p)\n", context, contextInterface, dwFlags,
      omitHashes, pbElement, pcbElement);
 
     if (context)
@@ -63,7 +140,16 @@ static BOOL CRYPT_SerializeStoreElement(const void *context,
 
                 ret = contextInterface->getProp(context, prop, NULL, &propSize);
                 if (ret)
+                {
+                    if (prop == CERT_KEY_PROV_INFO_PROP_ID)
+                    {
+                        BYTE *info = CryptMemAlloc(propSize);
+                        contextInterface->getProp(context, prop, info, &propSize);
+                        propSize = serialize_KeyProvInfoProperty((const CRYPT_KEY_PROV_INFO *)info, NULL);
+                        CryptMemFree(info);
+                    }
                     bytesNeeded += sizeof(WINE_CERT_PROP_HEADER) + propSize;
+                }
             }
         } while (ret && prop != 0);
 
@@ -109,6 +195,14 @@ static BOOL CRYPT_SerializeStoreElement(const void *context,
                              &propSize);
                             if (ret)
                             {
+                                if (prop == CERT_KEY_PROV_INFO_PROP_ID)
+                                {
+                                    struct store_CRYPT_KEY_PROV_INFO *store;
+                                    propSize = serialize_KeyProvInfoProperty((const CRYPT_KEY_PROV_INFO *)buf, &store);
+                                    CryptMemFree(buf);
+                                    buf = (BYTE *)store;
+                                }
+
                                 hdr = (WINE_CERT_PROP_HEADER*)pbElement;
                                 hdr->propID = prop;
                                 hdr->unknown = 1;
@@ -218,6 +312,83 @@ static const WINE_CERT_PROP_HEADER *CRYPT_findPropID(const BYTE *buf,
     return ret;
 }
 
+static DWORD read_serialized_KeyProvInfoProperty(const struct store_CRYPT_KEY_PROV_INFO *store, CRYPT_KEY_PROV_INFO **ret)
+{
+    const struct store_CRYPT_KEY_PROV_PARAM *param;
+    CRYPT_KEY_PROV_INFO *info;
+    DWORD size = sizeof(CRYPT_KEY_PROV_INFO), i;
+    const BYTE *base;
+    BYTE *data;
+
+    base = (const BYTE *)store;
+    param = (const struct store_CRYPT_KEY_PROV_PARAM *)(base + store->rgProvParam);
+
+    if (store->pwszContainerName)
+        size += (lstrlenW((LPCWSTR)(base + store->pwszContainerName)) + 1) * sizeof(WCHAR);
+    if (store->pwszProvName)
+        size += (lstrlenW((LPCWSTR)(base + store->pwszProvName)) + 1) * sizeof(WCHAR);
+
+    for (i = 0; i < store->cProvParam; i++)
+        size += sizeof(CRYPT_KEY_PROV_PARAM) + param[i].cbData;
+
+    info = CryptMemAlloc(size);
+    if (!info)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return 0;
+    }
+
+    data = (BYTE *)(info + 1) + sizeof(CRYPT_KEY_PROV_PARAM) * store->cProvParam;
+
+    if (store->pwszContainerName)
+    {
+        info->pwszContainerName = (LPWSTR)data;
+        lstrcpyW(info->pwszContainerName, (LPCWSTR)((const BYTE *)store + store->pwszContainerName));
+        data += (lstrlenW(info->pwszContainerName) + 1) * sizeof(WCHAR);
+    }
+    else
+        info->pwszContainerName = NULL;
+
+    if (store->pwszProvName)
+    {
+        info->pwszProvName = (LPWSTR)data;
+        lstrcpyW(info->pwszProvName, (LPCWSTR)((const BYTE *)store + store->pwszProvName));
+        data += (lstrlenW(info->pwszProvName) + 1) * sizeof(WCHAR);
+    }
+    else
+        info->pwszProvName = NULL;
+
+    info->dwProvType = store->dwProvType;
+    info->dwFlags = store->dwFlags;
+    info->dwKeySpec = store->dwKeySpec;
+    info->cProvParam = store->cProvParam;
+
+    if (info->cProvParam)
+    {
+        DWORD i;
+
+        info->rgProvParam = (CRYPT_KEY_PROV_PARAM *)(info + 1);
+
+        for (i = 0; i < info->cProvParam; i++)
+        {
+            info->rgProvParam[i].dwParam = param[i].dwParam;
+            info->rgProvParam[i].dwFlags = param[i].dwFlags;
+            info->rgProvParam[i].cbData = param[i].cbData;
+            info->rgProvParam[i].pbData = param[i].cbData ? data : NULL;
+            memcpy(info->rgProvParam[i].pbData, base + param[i].pbData, param[i].cbData);
+            data += param[i].cbData;
+        }
+    }
+    else
+        info->rgProvParam = NULL;
+
+    TRACE("%s,%s,%lu,%08lx,%lu,%p,%lu\n", debugstr_w(info->pwszContainerName), debugstr_w(info->pwszProvName),
+          info->dwProvType, info->dwFlags, info->cProvParam, info->rgProvParam, info->dwKeySpec);
+
+    *ret = info;
+    return size;
+}
+
 static BOOL CRYPT_ReadContextProp(
  const WINE_CONTEXT_INTERFACE *contextInterface, const void *context,
  const WINE_CERT_PROP_HEADER *hdr, const BYTE *pbElement, DWORD cbElement)
@@ -233,6 +404,12 @@ static BOOL CRYPT_ReadContextProp(
     {
         SetLastError(ERROR_FILE_NOT_FOUND);
         ret = FALSE;
+    }
+    else if (hdr->propID >= CERT_FIRST_USER_PROP_ID && hdr->propID <= CERT_LAST_USER_PROP_ID)
+    {
+        CRYPT_DATA_BLOB blob = { hdr->cb, (LPBYTE)pbElement };
+
+        ret = contextInterface->setProp(context, hdr->propID, 0, &blob);
     }
     else if (hdr->propID != CERT_CERT_PROP_ID &&
      hdr->propID != CERT_CRL_PROP_ID && hdr->propID != CERT_CTL_PROP_ID)
@@ -272,12 +449,22 @@ static BOOL CRYPT_ReadContextProp(
             break;
         case CERT_KEY_PROV_INFO_PROP_ID:
         {
-            PCRYPT_KEY_PROV_INFO info =
-             (PCRYPT_KEY_PROV_INFO)pbElement;
+            CRYPT_KEY_PROV_INFO *info;
 
-            CRYPT_FixKeyProvInfoPointers(info);
-            ret = contextInterface->setProp(context,
-             hdr->propID, 0, pbElement);
+            if (read_serialized_KeyProvInfoProperty((const struct store_CRYPT_KEY_PROV_INFO *)pbElement, &info))
+            {
+                ret = contextInterface->setProp(context, hdr->propID, 0, info);
+                CryptMemFree(info);
+            }
+            else
+                ret = FALSE;
+            break;
+        }
+        case CERT_KEY_CONTEXT_PROP_ID:
+        {
+            CERT_KEY_CONTEXT ctx;
+            CRYPT_ConvertKeyContext((struct store_CERT_KEY_CONTEXT *)pbElement, &ctx);
+            ret = contextInterface->setProp(context, hdr->propID, 0, &ctx);
             break;
         }
         default:
@@ -297,7 +484,7 @@ const void *CRYPT_ReadSerializedElement(const BYTE *pbElement, DWORD cbElement,
 {
     const void *context;
 
-    TRACE("(%p, %d, %08x, %p)\n", pbElement, cbElement, dwContextTypeFlags,
+    TRACE("(%p, %ld, %08lx, %p)\n", pbElement, cbElement, dwContextTypeFlags,
      pdwContentType);
 
     if (!cbElement)
@@ -384,7 +571,7 @@ const void *CRYPT_ReadSerializedElement(const BYTE *pbElement, DWORD cbElement,
                     const WINE_CERT_PROP_HEADER *hdr =
                      (const WINE_CERT_PROP_HEADER *)pbElement;
 
-                    TRACE("prop is %d\n", hdr->propID);
+                    TRACE("prop is %ld\n", hdr->propID);
                     cbElement -= sizeof(WINE_CERT_PROP_HEADER);
                     pbElement += sizeof(WINE_CERT_PROP_HEADER);
                     if (!hdr->propID)
@@ -504,7 +691,7 @@ static BOOL CRYPT_ReadSerializedStore(void *handle,
                             {
                                 if (!contextInterface)
                                 {
-                                    WARN("prop id %d before a context id\n",
+                                    WARN("prop id %ld before a context id\n",
                                      propHdr.propID);
                                     ret = FALSE;
                                 }
@@ -698,7 +885,7 @@ static BOOL CRYPT_SavePKCSToMem(HCERTSTORE store,
     DWORD size;
     BOOL ret = TRUE;
 
-    TRACE("(%d, %p)\n", blob->pbData ? blob->cbData : 0, blob->pbData);
+    TRACE("(%ld, %p)\n", blob->pbData ? blob->cbData : 0, blob->pbData);
 
     do {
         cert = CertEnumCertificatesInStore(store, cert);
@@ -899,7 +1086,7 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
     void *handle;
     BOOL ret, closeFile = TRUE;
 
-    TRACE("(%p, %08x, %d, %d, %p, %08x)\n", hCertStore,
+    TRACE("(%p, %08lx, %ld, %ld, %p, %08lx)\n", hCertStore,
           dwMsgAndCertEncodingType, dwSaveAs, dwSaveTo, pvSaveToPara, dwFlags);
 
     switch (dwSaveAs)
@@ -917,7 +1104,7 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
             saveFunc = CRYPT_SavePKCSToFile;
         break;
     default:
-        WARN("unimplemented for %d\n", dwSaveAs);
+        WARN("unimplemented for %ld\n", dwSaveAs);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -939,7 +1126,7 @@ BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
         handle = pvSaveToPara;
         break;
     default:
-        WARN("unimplemented for %d\n", dwSaveTo);
+        WARN("unimplemented for %ld\n", dwSaveTo);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -958,7 +1145,7 @@ BOOL WINAPI CertAddSerializedElementToStore(HCERTSTORE hCertStore,
     DWORD type;
     BOOL ret;
 
-    TRACE("(%p, %p, %d, %08x, %08x, %08x, %p, %p)\n", hCertStore,
+    TRACE("(%p, %p, %ld, %08lx, %08lx, %08lx, %p, %p)\n", hCertStore,
      pbElement, cbElement, dwAddDisposition, dwFlags, dwContextTypeFlags,
      pdwContentType, ppvContext);
 
