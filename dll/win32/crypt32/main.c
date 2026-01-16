@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
+#include "winternl.h"
 #include "wincrypt.h"
 #include "winreg.h"
 #include "winuser.h"
@@ -45,15 +46,18 @@ static CRITICAL_SECTION_DEBUG prov_param_cs_debug =
 };
 static CRITICAL_SECTION prov_param_cs = { &prov_param_cs_debug, -1, 0, 0, 0, 0 };
 
-BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, PVOID pvReserved)
 {
-    switch (fdwReason)
+    switch (reason)
     {
         case DLL_PROCESS_ATTACH:
             hInstance = hInst;
             DisableThreadLibraryCalls(hInst);
             init_empty_store();
             crypt_oid_init();
+            if (__wine_init_unix_call())
+                return FALSE;
+            CRYPT32_CALL( process_attach, NULL );
             break;
         case DLL_PROCESS_DETACH:
             if (pvReserved) break;
@@ -61,6 +65,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
             crypt_sip_free();
             default_chain_engine_free();
             if (hDefProv) CryptReleaseContext(hDefProv, 0);
+            CRYPT32_CALL( process_detach, NULL );
             break;
     }
     return TRUE;
@@ -100,47 +105,47 @@ BOOL WINAPI I_CryptCreateLruCache(void *unknown, HLRUCACHE *out)
 
 BOOL WINAPI I_CryptFindLruEntry(DWORD unk0, DWORD unk1)
 {
-    FIXME("(%08x, %08x): stub!\n", unk0, unk1);
+    FIXME("(%08lx, %08lx): stub!\n", unk0, unk1);
     return FALSE;
 }
 
 BOOL WINAPI I_CryptFindLruEntryData(DWORD unk0, DWORD unk1, DWORD unk2)
 {
-    FIXME("(%08x, %08x, %08x): stub!\n", unk0, unk1, unk2);
+    FIXME("(%08lx, %08lx, %08lx): stub!\n", unk0, unk1, unk2);
     return FALSE;
 }
 
 BOOL WINAPI I_CryptCreateLruEntry(HLRUCACHE h, DWORD unk0, DWORD unk1)
 {
-    FIXME("(%p, %08x, %08x): stub!\n", h, unk0, unk1);
+    FIXME("(%p, %08lx, %08lx): stub!\n", h, unk0, unk1);
     return FALSE;
 }
 
 DWORD WINAPI I_CryptFlushLruCache(HLRUCACHE h, DWORD unk0, DWORD unk1)
 {
-    FIXME("(%p, %08x, %08x): stub!\n", h, unk0, unk1);
+    FIXME("(%p, %08lx, %08lx): stub!\n", h, unk0, unk1);
     return 0;
 }
 
 HLRUCACHE WINAPI I_CryptFreeLruCache(HLRUCACHE h, DWORD unk0, DWORD unk1)
 {
-    FIXME("(%p, %08x, %08x): stub!\n", h, unk0, unk1);
+    FIXME("(%p, %08lx, %08lx): stub!\n", h, unk0, unk1);
     return h;
 }
 
 LPVOID WINAPI CryptMemAlloc(ULONG cbSize)
 {
-    return HeapAlloc(GetProcessHeap(), 0, cbSize);
+    return malloc(cbSize);
 }
 
 LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize)
 {
-    return HeapReAlloc(GetProcessHeap(), 0, pv, cbSize);
+    return realloc(pv, cbSize);
 }
 
 VOID WINAPI CryptMemFree(LPVOID pv)
 {
-    HeapFree(GetProcessHeap(), 0, pv);
+    free(pv);
 }
 
 DWORD WINAPI I_CryptAllocTls(void)
@@ -171,7 +176,7 @@ BOOL WINAPI I_CryptFreeTls(DWORD dwTlsIndex, DWORD unknown)
 {
     BOOL ret;
 
-    TRACE("(%d, %d)\n", dwTlsIndex, unknown);
+    TRACE("(%ld, %ld)\n", dwTlsIndex, unknown);
 
     ret = TlsFree(dwTlsIndex);
     if (!ret) SetLastError( E_INVALIDARG );
@@ -180,7 +185,7 @@ BOOL WINAPI I_CryptFreeTls(DWORD dwTlsIndex, DWORD unknown)
 
 BOOL WINAPI I_CryptGetOssGlobal(DWORD x)
 {
-    FIXME("%08x\n", x);
+    FIXME("%08lx\n", x);
     return FALSE;
 }
 
@@ -252,12 +257,6 @@ HCRYPTPROV WINAPI DECLSPEC_HOTPATCH I_CryptGetDefaultCryptProv(ALG_ID algid)
 BOOL WINAPI I_CryptReadTrustedPublisherDWORDValueFromRegistry(LPCWSTR name,
  DWORD *value)
 {
-    static const WCHAR safer[] = { 
-     'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
-     'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m',
-     'C','e','r','t','i','f','i','c','a','t','e','s','\\',
-     'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r','\\',
-     'S','a','f','e','r',0 };
     HKEY key;
     LONG rc;
     BOOL ret = FALSE;
@@ -265,7 +264,7 @@ BOOL WINAPI I_CryptReadTrustedPublisherDWORDValueFromRegistry(LPCWSTR name,
     TRACE("(%s, %p)\n", debugstr_w(name), value);
 
     *value = 0;
-    rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, safer, &key);
+    rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, L"Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPublisher\\Safer", &key);
     if (rc == ERROR_SUCCESS)
     {
         DWORD size = sizeof(DWORD);
@@ -281,44 +280,44 @@ DWORD WINAPI I_CryptInstallOssGlobal(DWORD x, DWORD y, DWORD z)
 {
     static int ret = 8;
     ret++;
-    FIXME("%08x %08x %08x, return value %d\n", x, y, z,ret);
+    FIXME("%08lx %08lx %08lx, return value %d\n", x, y, z,ret);
     return ret;
 }
 
 BOOL WINAPI I_CryptInstallAsn1Module(ASN1module_t x, DWORD y, void* z)
 {
-    FIXME("(%p %08x %p): stub\n", x, y, z);
+    FIXME("(%p %08lx %p): stub\n", x, y, z);
     return TRUE;
 }
 
 BOOL WINAPI I_CryptUninstallAsn1Module(HCRYPTASN1MODULE x)
 {
-    FIXME("(%08x): stub\n", x);
+    FIXME("(%08lx): stub\n", x);
     return TRUE;
 }
 
 ASN1decoding_t WINAPI I_CryptGetAsn1Decoder(HCRYPTASN1MODULE x)
 {
-    FIXME("(%08x): stub\n", x);
+    FIXME("(%08lx): stub\n", x);
     return NULL;
 }
 
 ASN1encoding_t WINAPI I_CryptGetAsn1Encoder(HCRYPTASN1MODULE x)
 {
-    FIXME("(%08x): stub\n", x);
+    FIXME("(%08lx): stub\n", x);
     return NULL;
 }
 
 BOOL WINAPI CryptProtectMemory(void *data, DWORD len, DWORD flags)
 {
     static int fixme_once;
-    if (!fixme_once++) FIXME("(%p %u %08x): stub\n", data, len, flags);
+    if (!fixme_once++) FIXME("(%p %lu %08lx): stub\n", data, len, flags);
     return TRUE;
 }
 
 BOOL WINAPI CryptUnprotectMemory(void *data, DWORD len, DWORD flags)
 {
     static int fixme_once;
-    if (!fixme_once++) FIXME("(%p %u %08x): stub\n", data, len, flags);
+    if (!fixme_once++) FIXME("(%p %lu %08lx): stub\n", data, len, flags);
     return TRUE;
 }
