@@ -68,7 +68,7 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
     BOOL ret = TRUE;
     PCCTL_CONTEXT toAdd = NULL, existing = NULL;
 
-    TRACE("(%p, %p, %08x, %p)\n", hCertStore, pCtlContext, dwAddDisposition,
+    TRACE("(%p, %p, %08lx, %p)\n", hCertStore, pCtlContext, dwAddDisposition,
      ppStoreContext);
 
     if (dwAddDisposition != CERT_STORE_ADD_ALWAYS)
@@ -150,7 +150,7 @@ BOOL WINAPI CertAddCTLContextToStore(HCERTSTORE hCertStore,
             toAdd = CertDuplicateCTLContext(pCtlContext);
         break;
     default:
-        FIXME("Unimplemented add disposition %d\n", dwAddDisposition);
+        FIXME("Unimplemented add disposition %ld\n", dwAddDisposition);
         ret = FALSE;
     }
 
@@ -182,7 +182,7 @@ BOOL WINAPI CertAddEncodedCTLToStore(HCERTSTORE hCertStore,
      pbCtlEncoded, cbCtlEncoded);
     BOOL ret;
 
-    TRACE("(%p, %08x, %p, %d, %08x, %p)\n", hCertStore,
+    TRACE("(%p, %08lx, %p, %ld, %08lx, %p)\n", hCertStore,
      dwMsgAndCertEncodingType, pbCtlEncoded, cbCtlEncoded, dwAddDisposition,
      ppCtlContext);
 
@@ -295,7 +295,7 @@ PCCTL_CONTEXT WINAPI CertFindCTLInStore(HCERTSTORE hCertStore,
     PCCTL_CONTEXT ret;
     CtlCompareFunc compare;
 
-    TRACE("(%p, %d, %d, %d, %p, %p)\n", hCertStore, dwCertEncodingType,
+    TRACE("(%p, %ld, %ld, %ld, %p, %p)\n", hCertStore, dwCertEncodingType,
 	 dwFindFlags, dwFindType, pvFindPara, pPrevCtlContext);
 
     switch (dwFindType)
@@ -313,7 +313,7 @@ PCCTL_CONTEXT WINAPI CertFindCTLInStore(HCERTSTORE hCertStore,
         compare = compare_ctl_existing;
         break;
     default:
-        FIXME("find type %08x unimplemented\n", dwFindType);
+        FIXME("find type %08lx unimplemented\n", dwFindType);
         compare = NULL;
     }
 
@@ -370,7 +370,7 @@ PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
     DWORD contentSize = 0, size;
     PCTL_INFO ctlInfo = NULL;
 
-    TRACE("(%08x, %p, %d)\n", dwMsgAndCertEncodingType, pbCtlEncoded,
+    TRACE("(%08lx, %p, %ld)\n", dwMsgAndCertEncodingType, pbCtlEncoded,
      cbCtlEncoded);
 
     if (GET_CERT_ENCODING_TYPE(dwMsgAndCertEncodingType) != X509_ASN_ENCODING)
@@ -511,7 +511,7 @@ DWORD WINAPI CertEnumCTLContextProperties(PCCTL_CONTEXT pCTLContext,
     ctl_t *ctl = ctl_from_ptr(pCTLContext);
     DWORD ret;
 
-    TRACE("(%p, %d)\n", pCTLContext, dwPropId);
+    TRACE("(%p, %ld)\n", pCTLContext, dwPropId);
 
     if (ctl->base.properties)
         ret = ContextPropertyList_EnumPropIDs(ctl->base.properties, dwPropId);
@@ -544,7 +544,7 @@ static BOOL CTLContext_GetProperty(ctl_t *ctl, DWORD dwPropId,
     BOOL ret;
     CRYPT_DATA_BLOB blob;
 
-    TRACE("(%p, %d, %p, %p)\n", ctl, dwPropId, pvData, pcbData);
+    TRACE("(%p, %ld, %p, %p)\n", ctl, dwPropId, pvData, pcbData);
 
     if (ctl->base.properties)
         ret = ContextPropertyList_FindProperty(ctl->base.properties, dwPropId, &blob);
@@ -592,7 +592,7 @@ BOOL WINAPI CertGetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
 {
     BOOL ret;
 
-    TRACE("(%p, %d, %p, %p)\n", pCTLContext, dwPropId, pvData, pcbData);
+    TRACE("(%p, %ld, %p, %p)\n", pCTLContext, dwPropId, pvData, pcbData);
 
     switch (dwPropId)
     {
@@ -632,7 +632,7 @@ static BOOL CTLContext_SetProperty(ctl_t *ctl, DWORD dwPropId,
 {
     BOOL ret;
 
-    TRACE("(%p, %d, %08x, %p)\n", ctl, dwPropId, dwFlags, pvData);
+    TRACE("(%p, %ld, %08lx, %p)\n", ctl, dwPropId, dwFlags, pvData);
 
     if (!ctl->base.properties)
         ret = FALSE;
@@ -674,7 +674,7 @@ static BOOL CTLContext_SetProperty(ctl_t *ctl, DWORD dwPropId,
              pvData, sizeof(FILETIME));
             break;
         default:
-            FIXME("%d: stub\n", dwPropId);
+            FIXME("%ld: stub\n", dwPropId);
             ret = FALSE;
         }
     }
@@ -687,7 +687,7 @@ BOOL WINAPI CertSetCTLContextProperty(PCCTL_CONTEXT pCTLContext,
 {
     BOOL ret;
 
-    TRACE("(%p, %d, %08x, %p)\n", pCTLContext, dwPropId, dwFlags, pvData);
+    TRACE("(%p, %ld, %08lx, %p)\n", pCTLContext, dwPropId, dwFlags, pvData);
 
     /* Handle special cases for "read-only"/invalid prop IDs.  Windows just
      * crashes on most of these, I'll be safer.
