@@ -20,12 +20,14 @@ DEBUG_CHANNEL(kernel32file);
 /*
  * @implemented
  */
-BOOL WINAPI
-WriteFile(IN HANDLE hFile,
-          IN LPCVOID lpBuffer,
-          IN DWORD nNumberOfBytesToWrite OPTIONAL,
-          OUT LPDWORD lpNumberOfBytesWritten,
-          IN LPOVERLAPPED lpOverlapped OPTIONAL)
+BOOL
+WINAPI
+WriteFile(
+    _In_ HANDLE hFile,
+    _In_reads_bytes_opt_(nNumberOfBytesToWrite) LPCVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToWrite,
+    _Out_opt_ LPDWORD lpNumberOfBytesWritten,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped)
 {
     NTSTATUS Status;
 
@@ -95,20 +97,14 @@ WriteFile(IN HANDLE hFile,
             if (NT_SUCCESS(Status)) Status = Iosb.Status;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
-             */
-            *lpNumberOfBytesWritten = Iosb.Information;
-        }
-        else
+        if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
             return FALSE;
         }
+
+        if (lpNumberOfBytesWritten != NULL)
+            *lpNumberOfBytesWritten = Iosb.Information;
     }
 
     TRACE("WriteFile() succeeded\n");
