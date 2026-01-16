@@ -889,6 +889,10 @@ VideoPortGetAccessRanges(
         {
             DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
             DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+            if(DriverExtension->InitializationData.HwInterrupt != NULL) {
+                DeviceExtension->ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
+                DeviceExtension->ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
+            }
             if (Descriptor->ShareDisposition == CmResourceShareShared)
                 DeviceExtension->InterruptShared = TRUE;
             else
@@ -1213,7 +1217,7 @@ VideoPortGetBusData(
    if (BusDataType != Cmos)
    {
       /* Legacy vs. PnP behaviour */
-      if (DeviceExtension->PhysicalDeviceObject != NULL)
+      if (DeviceExtension->PhysicalDeviceObject == NULL)
          SlotNumber = DeviceExtension->SystemIoSlotNumber;
    }
 
@@ -1248,7 +1252,7 @@ VideoPortSetBusData(
    if (BusDataType != Cmos)
    {
       /* Legacy vs. PnP behaviour */
-      if (DeviceExtension->PhysicalDeviceObject != NULL)
+      if (DeviceExtension->PhysicalDeviceObject == NULL)
          SlotNumber = DeviceExtension->SystemIoSlotNumber;
    }
 
