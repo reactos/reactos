@@ -95,7 +95,7 @@ NtGdiExtEscape(
    PSURFACE psurf;
 
    /* Validate input parameters */
-   if ((InSize < 0) || (OutSize < 0))
+   if ((InSize < 0) || (OutSize < 0) || (UnsafeInData == NULL && InSize != 0))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
       return -1;
@@ -164,10 +164,10 @@ NtGdiExtEscape(
    }
 
    if (InSize)
-   {
+   {   
+      SafeInData = ExAllocatePoolWithTag(PagedPool, InSize, GDITAG_TEMP);
       _SEH2_TRY
       {
-         SafeInData = ExAllocatePoolWithTag(PagedPool, InSize, GDITAG_TEMP);
          if (SafeInData == NULL)
          {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -205,13 +205,12 @@ NtGdiExtEscape(
          _SEH2_END;
       }
 
-      SafeOutData = ExAllocatePoolWithTag(PagedPool, OutSize, GDITAG_TEMP);
+      SafeOutData = ExAllocatePoolZero(PagedPool, OutSize, GDITAG_TEMP);
       if (SafeOutData == NULL)
       {
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
          goto Exit;
       }
-      RtlZeroMemory(SafeOutData, OutSize);
    }
 
    /* Finally call the driver */
@@ -239,19 +238,10 @@ NtGdiExtEscape(
    }
 
 Exit:
-   if (ppdev != NULL)
-   {
-      if (hDC == NULL)
-      {
-         EngReleaseSemaphore(ppdev->hsemDevLock);
-      }
-      PDEVOBJ_vRelease(ppdev);
-   }
+   SURFACE_ShareUnlockSurface(psurf);
+   EngReleaseSemaphore(ppdev->hsemDevLock);
+   PDEVOBJ_vRelease(ppdev);
 
-   if (psurf != NULL)
-   {
-      SURFACE_ShareUnlockSurface(psurf);
-   }
 
    if (SafeInData != NULL)
    {
