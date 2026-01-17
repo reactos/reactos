@@ -343,7 +343,8 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
 
     HANDLE hTicket2 = NULL;
     if ((pidl1Alias || pidl2Alias) &&
-        (!ILIsEqual(pidl1, pidl1Alias) || !ILIsEqual(pidl2, pidl2Alias)))
+        ((pidl1 && pidl1Alias && !ILIsEqual(pidl1, pidl1Alias)) ||
+         (pidl2 && pidl2Alias && !ILIsEqual(pidl2, pidl2Alias)))
     {
         hTicket2 = CreateNotificationParam(wEventId, uFlags, pidl1Alias, pidl2Alias,
                                            pid, dwTick);
