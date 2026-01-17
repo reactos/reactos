@@ -6,7 +6,6 @@
  */
 
 #include <precomp.h>
-#include <process.h> // for _beginthreadex
 
 WINE_DEFAULT_DEBUG_CHANNEL(CRecycleBin);
 
