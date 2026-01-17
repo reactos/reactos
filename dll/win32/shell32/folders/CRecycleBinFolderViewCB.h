@@ -18,7 +18,6 @@ class CRecycleBinFolderViewCB
     CComHeapPtr<ITEMIDLIST> m_pidls[2];
 
     HRESULT RegisterChangeNotify(HWND hwndView);
-    HRESULT OnChangeNotify(PIDLIST_ABSOLUTE *pidls, LONG lEvent);
     HRESULT TranslatePidl(LPITEMIDLIST *ppidlNew, LPCITEMIDLIST pidl);
     void TranslateTwoPIDLs(PIDLIST_ABSOLUTE* pidls);
 
