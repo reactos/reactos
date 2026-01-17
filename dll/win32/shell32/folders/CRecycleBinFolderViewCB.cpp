@@ -76,9 +76,7 @@ HRESULT CRecycleBinFolderViewCB::RegisterChangeNotify(HWND hwndView)
 
     // Clean up
     while (iEntry > 0)
-    {
         ILFree(pidls[--iEntry]);
-    }
 
     return m_nChangeNotif ? S_OK : E_FAIL;
 }
