@@ -139,7 +139,7 @@ CRecycleBinFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
         case SFVM_QUERYFSNOTIFY: // Register change notification
         {
             // Now, we can get the view window
-            ASSERT(m_pShellView);
+            ATLASSERT(m_pShellView);
             HWND hwndView;
             HRESULT hr = m_pShellView->GetWindow(&hwndView);
             if (FAILED_UNEXPECTEDLY(hr))
