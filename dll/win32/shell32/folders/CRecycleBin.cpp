@@ -1518,6 +1518,8 @@ HRESULT CRecycleBin::ParseRecycleBinPath(
 {
     TRACE("(%p, %s, %p, %p)\n", this, debugstr_w(lpszPath), ppidl, pdwAttributes);
 
+    UNREFERENCED_PARAMETER(pbc);
+    UNREFERENCED_PARAMETER(pdwAttributes);
     if (!ppidl || !lpszPath)
         return E_INVALIDARG;
 
