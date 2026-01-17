@@ -142,10 +142,13 @@ NtGdiExtEscape(
       ppdev = pDC->ppdev;
       PDEVOBJ_vReference(ppdev);
 
+      EngAcquireSemaphore(ppdev->hsemDevLock);
+
       /* Check if we have a surface */
       psurf = pDC->dclevel.pSurface;
       if (!psurf)
       {
+         EngReleaseSemaphore(ppdev->hsemDevLock);
          DC_UnlockDc(pDC);
          PDEVOBJ_vRelease(ppdev);
          return 0;
