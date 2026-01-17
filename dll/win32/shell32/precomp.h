@@ -94,6 +94,7 @@
 #include "folders/CPrinterFolder.h"
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
+#include "folders/CRecycleBinFolderViewCB.h"
 #include "droptargets/CexeDropHandler.h"
 #include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
@@ -130,6 +131,9 @@ extern const GUID SHELL32_AdvtShortcutComponent;
 #define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
 
 #define MAX_PROPERTY_SHEET_PAGE 32
+
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
 
 extern inline
 BOOL
