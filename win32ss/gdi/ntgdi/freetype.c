@@ -56,9 +56,37 @@ typedef struct _FONTLINK_CHAIN
 typedef struct _FONTLINK_CACHE
 {
     LIST_ENTRY ListEntry;
+    DWORD LogFontCheckSum;
     LOGFONTW LogFont;
     FONTLINK_CHAIN Chain;
 } FONTLINK_CACHE, *PFONTLINK_CACHE;
+
+static SIZE_T
+IntGetCheckSumQuickly(LPCVOID ptr, SIZE_T size)
+{
+    DWORD sum = 0;
+    const DWORD* pdw = (const DWORD*)ptr;
+    SIZE_T count = size / sizeof(DWORD), remainder = size % sizeof(DWORD);
+
+    while (count >= 8)
+    {
+        sum += pdw[0]; sum += pdw[1];
+        sum += pdw[2]; sum += pdw[3];
+        sum += pdw[4]; sum += pdw[5];
+        sum += pdw[6]; sum += pdw[7];
+        pdw += 8;
+        count -= 8;
+    }
+
+    while (count--)
+        sum += *pdw++;
+
+    PBYTE pByte = (PBYTE)pdw;
+    while (remainder--)
+        sum += *pByte++;
+
+    return sum;
+}
 
 #define FONTLINK_DEFAULT_CHAR 0x30FB // U+30FB (KATAKANA MIDDLE DOT)
 
@@ -287,6 +315,7 @@ FontLink_Chain_Finish(
         return; // Out of memory
 
     pCache->LogFont = pChain->LogFont;
+    pCache->LogFontCheckSum = IntGetCheckSumQuickly(&pChain->LogFont, sizeof(pChain->LogFont));
     pCache->Chain = *pChain;
     IntRebaseList(&pCache->Chain.FontLinkList, &pChain->FontLinkList);
 
@@ -299,11 +328,16 @@ FontLink_FindCache(
 {
     PLIST_ENTRY Entry;
     PFONTLINK_CACHE pLinkCache;
+    DWORD LogFontCheckSum = IntGetCheckSumQuickly(&pLogFont, sizeof(*pLogFont));
+
     for (Entry = g_FontLinkCache.Flink; Entry != &g_FontLinkCache; Entry = Entry->Flink)
     {
         pLinkCache = CONTAINING_RECORD(Entry, FONTLINK_CACHE, ListEntry);
-        if (RtlEqualMemory(&pLinkCache->LogFont, pLogFont, sizeof(LOGFONTW)))
+        if (pLinkCache->LogFontCheckSum == LogFontCheckSum &&
+            RtlEqualMemory(&pLinkCache->LogFont, pLogFont, sizeof(LOGFONTW)))
+        {
             return pLinkCache;
+        }
     }
     return NULL;
 }
