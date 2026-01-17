@@ -706,9 +706,8 @@ HRESULT WINAPI CRecycleBin::ParseDisplayName(HWND hwnd, LPBC pbc,
         LPOLESTR pszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl,
         ULONG *pdwAttributes)
 {
-    FIXME("(%p, %s, %p, %p, %p)\n",
-          debugstr_w(pszDisplayName), pchEaten, ppidl, pdwAttributes);
-    return E_NOTIMPL;
+    FIXME("stub\n");
+    return E_NOTIMPL; // FIXME: Parse "D<Drive><UniqueId>.ext"
 }
 
 HRESULT WINAPI CRecycleBin::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
