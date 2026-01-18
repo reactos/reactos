@@ -25,7 +25,7 @@ HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,0x00020000,"%SystemRoot%\system32\she
 ; FIXME: should be "OpenHomePage" action
 HKCR,"CLSID\%CLSID_Internet%\Shell",,,"open"
 HKCR,"CLSID\%CLSID_Internet%\Shell\open",,,""
-HKCR,"CLSID\%CLSID_Internet%\Shell\open\Command",,,"rundll32.exe url,OpenURL https://google.com"
+HKCR,"CLSID\%CLSID_Internet%\Shell\open\Command",,,"rundll32.exe url,OpenURL file://C:/ReactOS/Media/reactos_start.html"
 HKCR,"CLSID\%CLSID_Internet%\ShellFolder","",,"@%SystemRoot%\system32\shell32.dll,-512"
 HKCR,"CLSID\%CLSID_Internet%\ShellFolder","Attributes",0x10001,0x24
 HKCR,"CLSID\%CLSID_Internet%\ShellFolder","HideAsDeletePerUser",,""
@@ -39,11 +39,11 @@ HKCR,"CLSID\%CLSID_InternetExplorerManager%\LocalServer32",,,"""%16422%\Internet
 [Settings.Reg]
 HKCU,"Software\Microsoft\Internet Explorer\Main","ShowGoButton",2,"yes"
 #HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://www.winehq.org"
-HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"https://reactos.org/"
+HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"file://C:/ReactOS/Media/reactos_start.html"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"https://duckduckgo.com/"
 HKCU,"Software\Microsoft\Internet Explorer\Settings","Text Color",2,"0,0,0"
 #HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"https://www.winehq.org"
-HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"https://reactos.org/"
+HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"file://C:/ReactOS/Media/reactos_start.html"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe",,,"%16422%\Internet Explorer\iexplore.exe"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe","Path",,"%16422%\Internet Explorer;"
 
