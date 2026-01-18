@@ -170,7 +170,7 @@ typedef struct _VF_DMA_ADAPTER_TRACK
     PDMA_ADAPTER    Adapter;
     PDRIVER_OBJECT  DriverObject;
 
-    DMA_OPERATIONS  OriginalOps;   // ← copy of real ops
+    DMA_OPERATIONS  OriginalOps;   // <- copy of real ops
 
     LONG            MapRegisterCount;
     BOOLEAN         AdapterReleased;
@@ -194,7 +194,7 @@ typedef struct _VF_IRP_TRACK_EXT
     PIRP Irp;
     LONG ReferenceCount;
     BOOLEAN CancelRoutineSet;
-    BOOLEAN Completed;   // ✅ REQUIRED
+    BOOLEAN Completed;
 } VF_IRP_TRACK_EXT;
 
 typedef struct _VF_THREAD_LOCK_STACK
