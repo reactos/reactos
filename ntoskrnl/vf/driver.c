@@ -6,6 +6,8 @@
  * PURPOSE:         Core Driver Verifier
  */
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <ntoskrnl.h>
 #include <ntddk.h>
 #include <ntdef.h>
@@ -14,6 +16,19 @@
 #include <wdm.h>
 #include <ndk/vftypes.h>
 #include "vf.h"
+
+static
+VF_IRP_TRACK*
+VfLookupIrp(
+    _In_ PIRP Irp
+);
+
+static
+VF_DMA_ADAPTER_TRACK*
+VfLookupDmaAdapter(
+    PDMA_ADAPTER Adapter
+);
+
 
 /* ============================================================ 
    INITIALIZE HEADER EXTERN GLOBALS
@@ -62,7 +77,7 @@ VOID NTAPI VfInitialize(VOID) {
    INTERNAL BUGCHECK
    ============================================================ */
 
-__attribute__((unused)) static VOID VfFailInternal(
+UNUSED static VOID VfFailInternal(
     IN PSTR ObjectType,
     IN VF_FAILURE_CLASS FailureClass,
     IN PULONG AssertionControl,
@@ -456,10 +471,9 @@ VfAllocateSpecialPool(
     );
     ASSERT(NT_SUCCESS(Status));
 
-    Status = MmProtectMdlSystemAddress(
-        (PMDL)((PUCHAR)Mdl + (Pages - 1) * sizeof(MDL)),
-        PAGE_NOACCESS
-    );
+        // ReactOS does not support special pool alloc
+        *OutMdl = NULL;
+        return ExAllocatePoolWithTag(NonPagedPool, Size, TAG_VFSP);
     ASSERT(NT_SUCCESS(Status));
 
     *OutMdl = Mdl;
@@ -608,13 +622,12 @@ VfTrackIrpDispatch(
 {
     VF_IRP_TRACK* Track;
     KIRQL OldIrql;
+    PLIST_ENTRY L;
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
     // IRP reuse detection
-    for (PLIST_ENTRY L = VfIrpTrackList.Flink;
-         L != &VfIrpTrackList;
-         L = L->Flink)
+    for (L = VfIrpTrackList.Flink; L != &VfIrpTrackList; L = L->Flink)
     {
         Track = CONTAINING_RECORD(L, VF_IRP_TRACK, ListEntry);
         if (Track->Irp == Irp)
@@ -650,7 +663,7 @@ VfTrackIrpDispatch(
     KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
 }
 
-   __attribute__((unused)) static
+UNUSED static
 NTSTATUS
 NTAPI
 VfIrpDispatchHook(
@@ -664,6 +677,7 @@ VfIrpDispatchHook(
     KIRQL OldIrql;
     NTSTATUS Status;
     VF_IRP_TRACK* Track;
+    PLIST_ENTRY L;
 
     /* sanity check pointers first */
     if (!DeviceObject || !DeviceObject->DriverObject || !Irp)
@@ -726,7 +740,7 @@ VfIrpDispatchHook(
 
     /* Find original dispatch */
     KeAcquireSpinLock(&VfIrpHookLock, &OldIrql);
-    for (PLIST_ENTRY L = VfIrpHookList.Flink;
+    for (L = VfIrpHookList.Flink;
          L != &VfIrpHookList;
          L = L->Flink)
     {
@@ -843,7 +857,7 @@ VfIrpDispatchHook(
     return Status;
 }
 
-__attribute__((unused)) static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
+UNUSED static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
 {
     VF_IRP_HOOK* Hook;
     KIRQL OldIrql;
@@ -909,12 +923,13 @@ VfLookupIrp(
 /* ============================================================
    PAGEABLE STUFF
    ============================================================ */
-static __attribute__((unused)) VOID VfCheckPageableCode(PVOID Address, PDRIVER_OBJECT DriverObject)
+static UNUSED VOID VfCheckPageableCode(PVOID Address, PDRIVER_OBJECT DriverObject)
 {
     KIRQL CurrentIrql = KeGetCurrentIrql();
 
     /* if address is in pageable memory.. */
-    if (!MmIsAddressValid(Address))
+    if (!MmIsNonPagedSystemAddressValid(Address)
+)
     {
         /* ..if code executes above apc level, bugcheck */
         if (CurrentIrql > APC_LEVEL)
@@ -938,6 +953,7 @@ VfIoCompleteRequest(
 )
 {
     VF_IRP_TRACK* Track;
+    KIRQL OldIrql;
 
     if (KeGetCurrentIrql() > DISPATCH_LEVEL)
     {
@@ -949,8 +965,6 @@ VfIoCompleteRequest(
             (ULONG_PTR)Irp
         );
     }
-
-    KIRQL OldIrql;
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
@@ -983,26 +997,34 @@ VfIoCompleteRequest(
     IoCompleteRequest(Irp, PriorityBoost);
 }
 
-VOID VfIoIncrementRef(PIRP Irp)
+NTSTATUS
+VfIoIncrementRef(
+    PIRP Irp
+)
 {
-    VF_IRP_TRACK_EXT* Track = Irp->Tail.Overlay.DriverContext[0];
+    LIST_ENTRY VfIrpRefList;
+    PVF_IRP_TRACK Track = NULL;   // ← pointer, initialized to NULL
+
+    UNREFERENCED_PARAMETER(VfIrpRefList);
+
     if (!Track)
     {
-        Track = ExAllocatePoolWithTag(NonPagedPool, sizeof(VF_IRP_TRACK_EXT), 'rIrV');
+        Track = (PVF_IRP_TRACK)ExAllocatePoolWithTag(
+            NonPagedPool,
+            sizeof(VF_IRP_TRACK),
+            TAG_VFSP);
+
         Track->Irp = Irp;
         Track->ReferenceCount = 1;
         Track->CancelRoutineSet = FALSE;
-        Irp->Tail.Overlay.DriverContext[0] = Track;
+    }
 
-        KIRQL OldIrql;
-        KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
-        InsertTailList(&VfIrpTrackList, &Track->ListEntry);
-        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
-    }
-    else
-    {
-        InterlockedIncrement(&Track->ReferenceCount);
-    }
+    InterlockedIncrement(&Track->ReferenceCount);
+
+    Irp->Tail.Overlay.DriverContext[0] = Track;
+    InsertTailList(&VfIrpTrackList, &Track->ListEntry);
+
+    return STATUS_SUCCESS;
 }
 
 VOID VfIoDecrementRef(PIRP Irp)
@@ -1043,10 +1065,11 @@ static VF_THREAD_LOCK_STACK* VfGetThreadLockStack(VOID)
     KIRQL OldIrql;
     PETHREAD Thread = PsGetCurrentThread();
     VF_THREAD_LOCK_STACK* Stack = NULL;
+    PLIST_ENTRY L;
 
     KeAcquireSpinLock(&VfThreadLockListLock, &OldIrql);
 
-    for (PLIST_ENTRY L = VfThreadLockList.Flink; L != &VfThreadLockList; L = L->Flink)
+    for (L = VfThreadLockList.Flink; L != &VfThreadLockList; L = L->Flink)
     {
         Stack = CONTAINING_RECORD(L, VF_THREAD_LOCK_STACK, ListEntry);
         if (Stack->Thread == Thread)
@@ -1093,11 +1116,12 @@ BOOLEAN VfCheckDeadlock(PKSPIN_LOCK NewLock, VF_THREAD_LOCK_STACK* Stack)
     for (ULONG i = 0; i < Stack->Count; i++)
     {
         PKSPIN_LOCK Held = Stack->HeldLocks[i];
-
         KIRQL OldIrql;
+        PLIST_ENTRY L;
+    
         KeAcquireSpinLock(&VfSpinlockDepLock, &OldIrql);
 
-        for (PLIST_ENTRY L = VfSpinlockDependencyList.Flink; L != &VfSpinlockDependencyList; L = L->Flink)
+        for (L = VfSpinlockDependencyList.Flink; L != &VfSpinlockDependencyList; L = L->Flink)
         {
             VF_SPINLOCK_DEPENDENCY* Edge = CONTAINING_RECORD(L, VF_SPINLOCK_DEPENDENCY, ListEntry);
             if (Edge->HeldLock == NewLock && Edge->AcquiredLock == Held)
@@ -1117,6 +1141,9 @@ BOOLEAN VfCheckDeadlock(PKSPIN_LOCK NewLock, VF_THREAD_LOCK_STACK* Stack)
 VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
 {
     KIRQL CurrentIrql = KeGetCurrentIrql();
+    VF_THREAD_LOCK_STACK* Stack = VfGetThreadLockStack();
+    KIRQL DepOldIrql;
+    KIRQL TrackOldIrql;
 
     // --- IRQL check ---
     if (CurrentIrql > DISPATCH_LEVEL)
@@ -1127,9 +1154,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
                      (ULONG_PTR)SpinLock,
                      0);
     }
-
-    // --- get per-thread lock stack ---
-    VF_THREAD_LOCK_STACK* Stack = VfGetThreadLockStack();
 
     // --- check for recursive acquisition ---
     for (ULONG i = 0; i < Stack->Count; i++)
@@ -1171,8 +1195,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
                      0);
     }
 
-    // --- insert dependency edges in global graph ---
-    KIRQL DepOldIrql;
     KeAcquireSpinLock(&VfSpinlockDepLock, &DepOldIrql);
 
     for (ULONG i = 0; i < Stack->Count; i++)
@@ -1220,7 +1242,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
     Track->AcquireIrql = *OldIrql;
     Track->OwnerThread = PsGetCurrentThread();
 
-    KIRQL TrackOldIrql;
     KeAcquireSpinLock(&VfSpinlockLock, &TrackOldIrql);
     InsertTailList(&VfSpinlockList, &Track->ListEntry);
     KeReleaseSpinLock(&VfSpinlockLock, TrackOldIrql);
@@ -1229,6 +1250,10 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
 VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
 {
     KIRQL CurrentIrql = KeGetCurrentIrql();
+    KIRQL TrackOldIrql;
+    PLIST_ENTRY L;
+    VF_THREAD_LOCK_STACK* Stack = VfGetThreadLockStack();
+    BOOLEAN Found = FALSE;
 
     // --- IRQL check ---
     if (CurrentIrql > DISPATCH_LEVEL)
@@ -1239,10 +1264,6 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
                      (ULONG_PTR)SpinLock,
                      0);
     }
-
-    // --- get per-thread lock stack ---
-    VF_THREAD_LOCK_STACK* Stack = VfGetThreadLockStack();
-    BOOLEAN Found = FALSE;
 
     // --- find the lock in stack (must be held!) ---
     for (LONG i = (LONG)Stack->Count - 1; i >= 0; i--)
@@ -1270,10 +1291,9 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
     }
 
     // --- remove global spinlock tracking ---
-    KIRQL TrackOldIrql;
     KeAcquireSpinLock(&VfSpinlockLock, &TrackOldIrql);
 
-    for (PLIST_ENTRY L = VfSpinlockList.Flink; L != &VfSpinlockList; L = L->Flink)
+    for (L = VfSpinlockList.Flink; L != &VfSpinlockList; L = L->Flink)
     {
         VF_SPINLOCK_TRACK* Track = CONTAINING_RECORD(L, VF_SPINLOCK_TRACK, ListEntry);
         if (Track->SpinLock == SpinLock && Track->OwnerThread == PsGetCurrentThread())
@@ -1327,14 +1347,17 @@ VfLookupDmaAdapter(
     PDMA_ADAPTER Adapter
 )
 {
+    PLIST_ENTRY L;
+    VF_DMA_ADAPTER_TRACK* Track;
+
     if (!Adapter)
         return NULL;
 
-    for (PLIST_ENTRY L = VfDmaAdapterList.Flink;
+    for (L = VfDmaAdapterList.Flink;
          L != &VfDmaAdapterList;
          L = L->Flink)
     {
-        VF_DMA_ADAPTER_TRACK* Track =
+        Track =
             CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
 
         if (Track->Adapter == Adapter)
@@ -1344,7 +1367,7 @@ VfLookupDmaAdapter(
     return NULL;
 }
 
-PADAPTER_OBJECT
+PDMA_ADAPTER
 VfGetDmaAdapter(
     PDEVICE_OBJECT DeviceObject,
     PVOID Context,
@@ -1391,7 +1414,7 @@ VfGetDmaAdapter(
     InsertTailList(&VfDmaAdapterList, &Track->ListEntry);
     KeReleaseSpinLock(&VfDmaLock, OldIrql);
 
-    return (PADAPTER_OBJECT)Adapter;
+    return Adapter;
 }
 
 VOID
@@ -1433,7 +1456,7 @@ VfValidateDmaAdapter(
 
 static
 BOOLEAN
-__attribute__((unused))
+UNUSED
 VfShouldInjectDmaFault(
     VF_DMA_FAULT_TYPE Type
 )
@@ -1455,11 +1478,14 @@ VfShouldInjectDmaFault(
 static VF_DMA_ADAPTER_TRACK*
 VfFindAdapter(PDMA_ADAPTER Adapter)
 {
-    for (PLIST_ENTRY L = VfDmaAdapterList.Flink;
+    PLIST_ENTRY L;
+    VF_DMA_ADAPTER_TRACK* T;
+
+    for (L = VfDmaAdapterList.Flink;
          L != &VfDmaAdapterList;
          L = L->Flink)
     {
-        VF_DMA_ADAPTER_TRACK* T =
+        T =
             CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
         if (T->Adapter == Adapter)
             return T;

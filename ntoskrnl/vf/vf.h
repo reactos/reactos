@@ -27,6 +27,7 @@ typedef struct _VF_SETTINGS {
 
 #define TAG_VFDRV  'DrFV'
 #define TAG_VFALL  'AlFV'
+#define TAG_VFSP   'pfSV'
 
 /* ============================================================
    BUGCHECK CODES (MATCH NT)
@@ -60,6 +61,12 @@ typedef struct _VF_SETTINGS {
 #define VF_VIOLATION_FIRMWARE_BIOS            0xE0
 #define VF_VIOLATION_SPINLOCK_DEPENDENCY      0x30C
 #define VF_VIOLATION_SPINLOCK_TRACK           0x30D
+
+#if defined(_MSC_VER)
+#define UNUSED
+#else
+#define UNUSED __attribute__((unused))
+#endif
 
 /* ============================================================
    GLOBAL STATE 
@@ -139,13 +146,15 @@ typedef struct _VF_DRIVER_ENTRY
 typedef struct _VF_IRP_TRACK
 {
     LIST_ENTRY ListEntry;
+    LONG ReferenceCount;
+    BOOLEAN CancelRoutineSet;
     PIRP Irp;
     PDRIVER_OBJECT DriverObject;
     UCHAR MajorFunction;
     KIRQL DispatchIrql;
     BOOLEAN PendingReturned;
     BOOLEAN Completed;
-} VF_IRP_TRACK;
+} VF_IRP_TRACK, *PVF_IRP_TRACK;
 
 typedef struct _VF_SPINLOCK_TRACK
 {
@@ -208,9 +217,9 @@ typedef struct _VF_SPINLOCK_DEPENDENCY
    FUNCTION PROTOTYPES
    ============================================================ */
 
-VOID 
+NTSTATUS
 VfIoIncrementRef(
-  PIRP Irp
+    PIRP Irp
 );
 
 VOID 
@@ -227,8 +236,9 @@ VfIoCompleteRequest(
 static
 VOID
 VfCheckPageableCode(
-  PVOID Address, PDRIVER_OBJECT DriverObject
-) __attribute__((unused));
+  PVOID Address UNUSED,
+  PDRIVER_OBJECT DriverObject UNUSED
+);
 
 VOID
 VfValidateDmaAdapter(
@@ -243,7 +253,7 @@ VfLookupDmaAdapter(
 
 static 
 BOOLEAN 
-__attribute__((unused)) 
+UNUSED 
 VfShouldInjectDmaFault(
   VF_DMA_FAULT_TYPE Type
 );
