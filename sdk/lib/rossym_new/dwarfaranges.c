@@ -8,11 +8,12 @@
 #include <debug.h>
 
 int
-dwarfaddrtounit(Dwarf *d, ulong addr, ulong *unit)
+dwarfaddrtounit(Dwarf *d, ULONG_PTR addr, ulong *unit)
 {
     DwarfBuf b;
     int segsize, i;
-    ulong len, id, off, base, size;
+    ulong len, id, off;
+    ULONG_PTR base, size;
     uchar *start, *end;
 
     memset(&b, 0, sizeof b);
@@ -58,6 +59,6 @@ dwarfaddrtounit(Dwarf *d, ulong addr, ulong *unit)
             goto underflow;
         b.p = end;
     }
-    werrstr("address 0x%lux is not listed in dwarf debugging symbols", addr);
+    werrstr("address %p is not listed in dwarf debugging symbols", (PVOID)addr);
     return -1;
 }

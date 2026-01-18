@@ -106,7 +106,7 @@ enum
 };
 
 static int parseattrs(Dwarf *d, DwarfBuf*, ulong, ulong, DwarfAbbrev*, DwarfAttrs*);
-static int getulong(DwarfBuf*, int, ulong, ulong*, int*);
+static int getulong(DwarfBuf*, int, ulong, ULONG_PTR*, int*);
 static int getuchar(DwarfBuf*, int, uchar*);
 static int getstring(Dwarf *d, DwarfBuf*, int, char**);
 static int getblock(DwarfBuf*, int, DwarfBlock*);
@@ -191,7 +191,7 @@ dwarfseeksym(Dwarf *d, ulong unit, ulong off, DwarfSym *s)
 }
 
 int
-dwarflookupfn(Dwarf *d, ulong unit, ulong pc, DwarfSym *s)
+dwarflookupfn(Dwarf *d, ulong unit, ULONG_PTR pc, DwarfSym *s)
 {
     DwarfSym compunit = { };
     if(dwarfenumunit(d, unit, &compunit) < 0)
@@ -202,7 +202,7 @@ dwarflookupfn(Dwarf *d, ulong unit, ulong pc, DwarfSym *s)
         if(s->attrs.lowpc <= pc && pc < s->attrs.highpc)
             return 0;
     }
-    werrstr("fn containing pc 0x%lux not found", pc);
+    werrstr("fn containing pc %p not found", (PVOID)pc);
     return -1;
 }
 
@@ -296,7 +296,7 @@ dwarfnextsymat(Dwarf *d, DwarfSym *parent, DwarfSym *child)
     if (!parent->attrs.haskids || !parent->childoff)
         return -1;
 
-	child->unit = parent->unit;
+    child->unit = parent->unit;
     child->aoff = parent->aoff;
     child->depth = parent->depth + 1;
     if(child->attrs.have.sibling){
@@ -464,10 +464,10 @@ parseattrs(Dwarf *d, DwarfBuf *b, ulong tag, ulong unit, DwarfAbbrev *a, DwarfAt
 }
 
 static int
-getulong(DwarfBuf *b, int form, ulong unit, ulong *u, int *type)
+getulong(DwarfBuf *b, int form, ulong unit, ULONG_PTR *u, int *type)
 {
     static int nbad;
-    uvlong uv;
+    ULONGLONG uv;
 
     switch(form){
     default:
@@ -516,7 +516,7 @@ getulong(DwarfBuf *b, int form, ulong unit, ulong *u, int *type)
         goto constant;
     case FormData8:
         uv = dwarfget8(b);
-        *u = uv;
+        *u = (ULONG_PTR)uv;
         if(uv != *u && ++nbad == 1)
             werrstr("dwarf: truncating 64-bit attribute constants");
         goto constant;
@@ -548,14 +548,13 @@ static int
 getstring(Dwarf *d, DwarfBuf *b, int form, char **s)
 {
     static int nbad;
-    ulong u, x;
+    ulong u;
 
     switch(form){
     default:
         return -1;
 
     case FormString:
-        x = b->p - d->info.data;
         *s = dwarfgetstring(b);
         for (u = 0; (*s)[u]; u++) {
             assert(isprint((*s)[u]));
@@ -626,41 +625,40 @@ void stackinit(DwarfStack *stack)
     stack->length = 0; stack->max = sizeof(stack->storage) / sizeof(stack->storage[0]);
 }
 
-void stackpush(DwarfStack *stack, ulong value)
+BOOLEAN stackpush(DwarfStack *stack, ULONG_PTR value)
 {
     if (stack->length == stack->max) {
-        ulong *newstack = malloc(sizeof(ulong)*stack->max*2);
-        memcpy(newstack, stack->data, sizeof(ulong)*stack->length);
-        if (stack->data != stack->storage)
-            free(stack->data);
-        stack->data = newstack;
-        stack->max *= 2;
+        werrstr("dwarf expr stack overflow");
+        return FALSE;
     }
-    werrstr("stack[%d] = %x", stack->length, value);
+    werrstr("stack[%d] = %llx", stack->length, (ULONGLONG)value);
     stack->data[stack->length++] = value;
+    return TRUE;
 }
 
-ulong stackpop(DwarfStack *stack)
+ULONG_PTR stackpop(DwarfStack *stack)
 {
     ASSERT(stack->length > 0);
-    ulong val = stack->data[--stack->length];
-    werrstr("pop stack[%d] -> %x", stack->length, val);
+    ULONG_PTR val = stack->data[--stack->length];
+    werrstr("pop stack[%d] -> %llx", stack->length, (ULONGLONG)val);
     return val;
 }
 
 void stackfree(DwarfStack *stack)
 {
-    if (stack->data != stack->storage)
-        free(stack->data);
+    stack->data = stack->storage;
+    stack->length = 0;
+    stack->max = sizeof(stack->storage) / sizeof(stack->storage[0]);
 }
 
 // Returns -1 on failure
-int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_REGISTERS registers, ulong *result)
+int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ULONG_PTR cfa, PROSSYM_REGISTERS registers, ULONG_PTR *result)
 {
     int ret = 0;
     DwarfStack stack = { };
     stackinit(&stack);
-    stackpush(&stack, cfa);
+#define STACK_PUSH(value) do { if (!stackpush(&stack, (value))) goto fatal; } while (0)
+    STACK_PUSH(cfa);
     while (buf->p < buf->ep) {
         int opcode = dwarfget1(buf);
         werrstr("opcode %x", opcode);
@@ -669,223 +667,225 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
             buf->p = buf->ep;
             break;
         case OpAddr:
-            if (d->addrsize == 4) {
-                stackpush(&stack, dwarfget4(buf));
-                break;
-            } else {
-                werrstr("%s: we only support 4 byte addrs", name);
+            STACK_PUSH(dwarfgetaddr(buf));
+            if (buf->p == nil)
                 goto fatal;
-            }
+            break;
         case OpConst1s: {
             signed char c = dwarfget1(buf);
-            stackpush(&stack, c);
+            STACK_PUSH(c);
         } break;
         case OpConst1u:
-            stackpush(&stack, dwarfget1(buf));
+            STACK_PUSH(dwarfget1(buf));
             break;
         case OpConst2s: {
             signed short s = dwarfget2(buf);
-            stackpush(&stack, s);
+            STACK_PUSH(s);
         } break;
         case OpConst2u:
-            stackpush(&stack, dwarfget2(buf));
+            STACK_PUSH(dwarfget2(buf));
             break;
         case OpConst4s: {
             signed int i = dwarfget4(buf);
-            stackpush(&stack, i);
+            STACK_PUSH(i);
         } break;
         case OpConst4u:
-            stackpush(&stack, dwarfget4(buf));
+            STACK_PUSH(dwarfget4(buf));
             break;
         case OpConst8s:
         case OpConst8u:
-            werrstr("const 8 not yet supported");
-            goto fatal;
+            STACK_PUSH((ULONG_PTR)dwarfget8(buf));
+            break;
         case OpConsts:
-            stackpush(&stack, dwarfget128s(buf));
+            STACK_PUSH(dwarfget128s(buf));
             break;
         case OpConstu:
-            stackpush(&stack, dwarfget128(buf));
+            STACK_PUSH(dwarfget128(buf));
             break;
         case OpDup: {
-            ulong popped = stackpop(&stack);
-            stackpush(&stack, popped);
-            stackpush(&stack, popped);
+            ULONG_PTR popped = stackpop(&stack);
+            STACK_PUSH(popped);
+            STACK_PUSH(popped);
         } break;
         case OpDrop:
             stackpop(&stack);
             break;
         case OpOver: {
             if (stack.length < 2) goto fatal;
-            stackpush(&stack, stack.data[stack.length-2]);
+            STACK_PUSH(stack.data[stack.length-2]);
         } break;
         case OpPick: {
-            ulong arg = dwarfget1(buf);
+            ULONG arg = dwarfget1(buf);
+            ULONG_PTR picked;
             if (arg >= stack.length) goto fatal;
-            arg = stack.data[stack.length-1-arg];
-            stackpush(&stack, arg);
+            picked = stack.data[stack.length - 1 - arg];
+            STACK_PUSH(picked);
         } break;
         case OpSwap: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b);
-            stackpush(&stack, a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b);
+            STACK_PUSH(a);
         } break;
         case OpRot: {
-            ulong a = stackpop(&stack), b = stackpop(&stack), c = stackpop(&stack);
-            stackpush(&stack, b);
-            stackpush(&stack, c);
-            stackpush(&stack, a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack), c = stackpop(&stack);
+            STACK_PUSH(b);
+            STACK_PUSH(c);
+            STACK_PUSH(a);
         } break;
         case OpXderef:
         case OpXderefSize:
             werrstr("Xderef not yet supported");
             goto fatal;
         case OpAbs: {
-            long a = stackpop(&stack);
-            stackpush(&stack, a < 0 ? -a : a);
+            LONG_PTR a = (LONG_PTR)stackpop(&stack);
+            STACK_PUSH(a < 0 ? -a : a);
         } break;
         case OpAnd:
-            stackpush(&stack, stackpop(&stack) & stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) & stackpop(&stack));
             break;
         case OpDiv: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b / a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b / a);
         } break;
         case OpMinus: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b - a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b - a);
         } break;
         case OpMod: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b % a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b % a);
         } break;
         case OpMul:
-            stackpush(&stack, stackpop(&stack) * stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) * stackpop(&stack));
             break;
         case OpNeg:
-            stackpush(&stack, -stackpop(&stack));
+            STACK_PUSH(-stackpop(&stack));
             break;
         case OpNot:
-            stackpush(&stack, ~stackpop(&stack));
+            STACK_PUSH(~stackpop(&stack));
             break;
         case OpOr:
-            stackpush(&stack, stackpop(&stack) | stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) | stackpop(&stack));
             break;
         case OpPlus:
-            stackpush(&stack, stackpop(&stack) + stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) + stackpop(&stack));
             break;
         case OpPlusUconst:
-            stackpush(&stack, stackpop(&stack) + dwarfget128(buf));
+            STACK_PUSH(stackpop(&stack) + dwarfget128(buf));
             break;
         case OpShl: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b << a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b << a);
         } break;
         case OpShr: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b >> a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b >> a);
         } break;
         case OpShra: {
-            ulong a = stackpop(&stack);
-            long b = stackpop(&stack);
+            ULONG_PTR a = stackpop(&stack);
+            LONG_PTR b = (LONG_PTR)stackpop(&stack);
             if (b < 0)
                 b = -(-b >> a);
             else
                 b = b >> a;
-            stackpush(&stack, b);
+            STACK_PUSH(b);
         } break;
         case OpXor:
-            stackpush(&stack, stackpop(&stack) ^ stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) ^ stackpop(&stack));
             break;
         case OpSkip:
             buf->p += dwarfget2(buf);
             break;
         case OpBra: {
-            ulong a = dwarfget2(buf);
+            ULONG a = dwarfget2(buf);
             if (stackpop(&stack))
                 buf->p += a;
         } break;
         case OpEq:
-            stackpush(&stack, stackpop(&stack) == stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) == stackpop(&stack));
             break;
         case OpGe: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b >= a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b >= a);
         } break;
         case OpGt: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b > a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b > a);
         } break;
         case OpLe: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b <= a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b <= a);
         } break;
         case OpLt: {
-            ulong a = stackpop(&stack), b = stackpop(&stack);
-            stackpush(&stack, b < a);
+            ULONG_PTR a = stackpop(&stack), b = stackpop(&stack);
+            STACK_PUSH(b < a);
         } break;
         case OpNe:
-            stackpush(&stack, stackpop(&stack) != stackpop(&stack));
+            STACK_PUSH(stackpop(&stack) != stackpop(&stack));
             break;
         case OpNop:
             break;
         case OpDeref: {
-            ulong val;
-            void* addr = (void*)stackpop(&stack);
+            ULONG_PTR val;
+            void* addr = (void*)(ULONG_PTR)stackpop(&stack);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
                  addr,
                  d->addrsize))
                 goto fatal;
-            stackpush(&stack, val);
+            STACK_PUSH(val);
         } break;
         case OpDerefSize: {
-            ulong val, size = dwarfget1(buf);
-            void* addr = (void*)stackpop(&stack);
+            ULONG_PTR val;
+            ulong size = dwarfget1(buf);
+            void* addr = (void*)(ULONG_PTR)stackpop(&stack);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
                  addr,
                  size))
                 goto fatal;
-            stackpush(&stack, val);
+            STACK_PUSH(val);
         } break;
         case OpFbreg: {
-            ulong val, offset = dwarfget128s(buf);
-            void* addr = (void*)cfa;
-            werrstr("FBREG cfa %x offset %x", cfa, offset);
+            ULONG_PTR val;
+            LONG_PTR offset = dwarfget128s(buf);
+            ULONG_PTR addr = (ULONG_PTR)cfa;
+            ULONG_PTR target = (ULONG_PTR)((LONG_PTR)addr + offset);
+            werrstr("FBREG cfa %p offset %lld", (PVOID)cfa, (LONGLONG)offset);
             if (!RosSymCallbacks.MemGetProc
                 (d->pe->fd,
                  &val,
-                 (PVOID)((ULONG_PTR)addr+offset),
+                 (PVOID)target,
                  d->addrsize))
                 goto fatal;
-            stackpush(&stack, val);
+            STACK_PUSH(val);
         } break;
         case OpPiece:
             werrstr("OpPiece not supported");
             goto fatal;
         default:
             if (opcode >= OpLit0 && opcode < OpReg0)
-                stackpush(&stack, opcode - OpLit0);
+                STACK_PUSH(opcode - OpLit0);
             else if (opcode >= OpReg0 && opcode < OpBreg0) {
                 ulong reg = opcode - OpReg0;
-                werrstr("REG[%d] value %x", reg, (ulong)registers->Registers[reg]);
-                stackpush(&stack, registers->Registers[reg]);
+                werrstr("REG[%d] value %llx", reg, registers->Registers[reg]);
+                STACK_PUSH(registers->Registers[reg]);
             } else if (opcode >= OpBreg0 && opcode < OpRegx) {
-                ulong val,
-                    reg = opcode - OpBreg0,
-                    offset = dwarfget128s(buf);
-                void* addr = (void*)(ULONG_PTR)registers->Registers[reg];
-                werrstr("BREG[%d] reg %x offset %x", reg, addr, offset);
+                ULONG_PTR val;
+                ulong reg = opcode - OpBreg0;
+                LONG_PTR offset = dwarfget128s(buf);
+                ULONG_PTR addr = (ULONG_PTR)registers->Registers[reg];
+                ULONG_PTR target = (ULONG_PTR)((LONG_PTR)addr + offset);
+                werrstr("BREG[%d] reg %p offset %lld", reg, (PVOID)addr, (LONGLONG)offset);
                 if (!RosSymCallbacks.MemGetProc
                     ((PVOID)d->pe->fd,
                      &val,
-                     (PVOID)((ULONG_PTR)addr + offset),
+                     (PVOID)target,
                      d->addrsize))
                     goto fatal;
-                stackpush(&stack, val);
+                STACK_PUSH(val);
             } else {
                 werrstr("opcode %x not supported", opcode);
                 goto fatal;
@@ -895,7 +895,7 @@ int dwarfgetarg(Dwarf *d, const char *name, DwarfBuf *buf, ulong cfa, PROSSYM_RE
     }
     if (stack.length < 1) goto fatal;
     *result = stackpop(&stack);
-    werrstr("%s: value %x", name, *result);
+    werrstr("%s: value %llx", name, (ULONGLONG)*result);
     goto finish;
 
 fatal:
@@ -905,8 +905,9 @@ finish:
     stackfree(&stack);
     return ret;
 }
+#undef STACK_PUSH
 
-int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTERS registers, DwarfParam *parameter)
+int dwarfargvalue(Dwarf *d, DwarfSym *proc, ULONG_PTR pc, ULONG_PTR cfa, PROSSYM_REGISTERS registers, DwarfParam *parameter)
 {
     int gotarg;
     DwarfSym unit = { };
@@ -914,14 +915,17 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
     if (dwarfenumunit(d, proc->unit, &unit) == -1)
         return -1;
 
-    werrstr("lookup in unit %x-%x, pc %x", unit.attrs.lowpc, unit.attrs.highpc, pc);
+    werrstr("lookup in unit %p-%p, pc %p",
+            (PVOID)unit.attrs.lowpc,
+            (PVOID)unit.attrs.highpc,
+            (PVOID)pc);
     pc -= unit.attrs.lowpc;
 
-    werrstr("paramblock %s -> unit %x type %x fde %x len %d registers %x",
+    werrstr("paramblock %s -> unit %x type %x fde %p len %d registers %p",
             parameter->name,
             parameter->unit,
             parameter->type,
-            parameter->fde,
+            (PVOID)parameter->fde,
             parameter->len,
             registers);
 
@@ -935,22 +939,23 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
     if (parameter->loctype == TConstant) {
         locbuf.p = d->loc.data + parameter->fde;
         locbuf.ep = d->loc.data + d->loc.len;
-        ulong start, end, len;
+        ULONG_PTR start, end;
+        ULONG len;
         do {
             len = 0;
-            start = dwarfget4(&locbuf);
-            end = dwarfget4(&locbuf);
+            start = dwarfgetaddr(&locbuf);
+            end = dwarfgetaddr(&locbuf);
             if (start && end) {
                 len = dwarfget2(&locbuf);
                 instream = locbuf;
                 instream.ep = instream.p + len;
                 locbuf.p = instream.ep;
             }
-            werrstr("ip %x s %x e %x (%x bytes)", pc, start, end, len);
+            werrstr("ip %p s %p e %p (%x bytes)", (PVOID)pc, (PVOID)start, (PVOID)end, len);
         } while (start && end && (start > pc || end <= pc));
     } else if (parameter->loctype == TBlock) {
         instream = locbuf;
-        instream.p = (void *)parameter->fde;
+        instream.p = (uchar *)parameter->fde;
         instream.ep = instream.p + parameter->len;
     } else {
         werrstr("Wrong block type for parameter %s", parameter->name);
@@ -964,27 +969,8 @@ int dwarfargvalue(Dwarf *d, DwarfSym *proc, ulong pc, ulong cfa, PROSSYM_REGISTE
     return 0;
 }
 
-void
-dwarfdumpsym(Dwarf *d, DwarfSym *s)
-{
-    int j;
-    werrstr("tag %x\n", s->attrs.tag);
-    for (j = 0; plist[j].name; j++) {
-        char *have = ((char*)&s->attrs) + plist[j].haveoff;
-        char *attr = ((char*)&s->attrs) + plist[j].off;
-        if (*have == TString) {
-            char *str = *((char **)attr);
-            werrstr("%s: %s\n", plist[j].namestr, str);
-        } else if (*have == TReference) {
-            DwarfVal *val = ((DwarfVal*)attr);
-            werrstr("%s: %x:%x\n", plist[j].namestr, val->b.data, val->b.len);
-        } else if (*have)
-            werrstr("%s: (%x)\n", plist[j].namestr, *have);
-    }
-}
-
 int
-dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblocks)
+dwarfgetparams(Dwarf *d, DwarfSym *s, ULONG_PTR pc, int pnum, DwarfParam *paramblocks)
 {
 	int ip = 0;
 	DwarfSym param = { };
@@ -993,19 +979,18 @@ dwarfgetparams(Dwarf *d, DwarfSym *s, ulong pc, int pnum, DwarfParam *paramblock
 		if (param.attrs.tag == TagFormalParameter &&
 			param.attrs.have.name &&
 			param.attrs.have.location) {
-			paramblocks[ip].name = malloc(strlen(param.attrs.name)+1);
-			strcpy(paramblocks[ip].name, param.attrs.name);
+			paramblocks[ip].name = param.attrs.name;
 			paramblocks[ip].unit = param.unit;
 			paramblocks[ip].type = param.attrs.type;
             paramblocks[ip].loctype = param.attrs.have.location;
             paramblocks[ip].len = param.attrs.location.b.len;
-			paramblocks[ip].fde = (ulong)param.attrs.location.b.data;
-            werrstr("param[%d] block %s -> type %x loctype %x fde %x len %x",
+			paramblocks[ip].fde = (ULONG_PTR)param.attrs.location.b.data;
+            werrstr("param[%d] block %s -> type %x loctype %x fde %p len %x",
                    ip,
                    paramblocks[ip].name,
                    paramblocks[ip].type,
                    paramblocks[ip].loctype,
-                   paramblocks[ip].fde,
+                   (PVOID)paramblocks[ip].fde,
                    paramblocks[ip].len);
             ip++;
 		}

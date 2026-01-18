@@ -14,41 +14,47 @@
 #include <debug.h>
 
 #define trace 1
+#define DWARF_CFA_MAX_STACK 8
+#define DWARF_CFA_MAX_REGS 32
 
 typedef struct State State;
 struct State
 {
-	ulong loc;
-	ulong endloc;
-	ulong iquantum;
-	ulong dquantum;
+	ULONG_PTR loc;
+	ULONG_PTR endloc;
+	ULONG_PTR iquantum;
+	LONG_PTR dquantum;
 	char *augmentation;
 	int version;
-	ulong rareg;
+	ULONG rareg;
 	DwarfBuf init;
 	DwarfExpr *cfa;
 	DwarfExpr *ra;
 	DwarfExpr *r;
 	DwarfExpr *initr;
 	int nr;
-	DwarfExpr **stack;
+	DwarfExpr *stack;
 	int nstack;
+	int stack_max;
 };
 
-static int findfde(Dwarf*, ulong, State*, DwarfBuf*);
+static int findfde(Dwarf*, ULONG_PTR, State*, DwarfBuf*);
 static int dexec(DwarfBuf*, State*, int);
 
 int
-dwarfunwind(Dwarf *d, ulong pc, DwarfExpr *cfa, DwarfExpr *ra, DwarfExpr *r, int nr)
+dwarfunwind(Dwarf *d, ULONG_PTR pc, DwarfExpr *cfa, DwarfExpr *ra, DwarfExpr *r, int nr)
 {
 	int i, ret;
 	DwarfBuf fde, b;
-	DwarfExpr *initr;
+	DwarfExpr initr[DWARF_CFA_MAX_REGS];
+	DwarfExpr stack_storage[DWARF_CFA_MAX_STACK * DWARF_CFA_MAX_REGS];
 	State s;
 
-	initr = mallocz(nr*sizeof(initr[0]), 1);
-	if(initr == 0)
+	if (nr > DWARF_CFA_MAX_REGS) {
+		werrstr("dwarf cfa regs %d > %d", nr, DWARF_CFA_MAX_REGS);
 		return -1;
+	}
+	memset(initr, 0, nr*sizeof(initr[0]));
 
 	memset(&s, 0, sizeof s);
 	s.loc = 0;
@@ -56,9 +62,11 @@ dwarfunwind(Dwarf *d, ulong pc, DwarfExpr *cfa, DwarfExpr *ra, DwarfExpr *r, int
 	s.ra = ra;
 	s.r = r;
 	s.nr = nr;
+	s.stack = stack_storage;
+	s.stack_max = DWARF_CFA_MAX_STACK;
+	s.nstack = 0;
 
 	if(findfde(d, pc, &s, &fde) < 0){
-		free(initr);
 		return -1;
 	}
 
@@ -73,9 +81,9 @@ dwarfunwind(Dwarf *d, ulong pc, DwarfExpr *cfa, DwarfExpr *ra, DwarfExpr *r, int
 	s.initr = initr;
 	memmove(initr, r, nr*sizeof(initr[0]));
 
-	if(trace) werrstr("s.loc 0x%lx pc 0x%lx", s.loc, pc);
+	if(trace) werrstr("s.loc %p pc %p", (PVOID)s.loc, (PVOID)pc);
 	while(s.loc < pc){
-		if(trace) werrstr("s.loc 0x%lx pc 0x%lx", s.loc, pc);
+		if(trace) werrstr("s.loc %p pc %p", (PVOID)s.loc, (PVOID)pc);
 		if(dexec(&fde, &s, 1) < 0)
 			goto err;
 	}
@@ -87,10 +95,6 @@ dwarfunwind(Dwarf *d, ulong pc, DwarfExpr *cfa, DwarfExpr *ra, DwarfExpr *r, int
 err:
 	ret = -1;
 out:
-	free(initr);
-	for(i=0; i<s.nstack; i++)
-		free(s.stack[i]);
-	free(s.stack);
 	return ret;
 }
 
@@ -101,13 +105,14 @@ out:
  * will keep asking for the same info over and over.
  */
 static int
-findfde(Dwarf *d, ulong pc, State *s, DwarfBuf *fde)
+findfde(Dwarf *d, ULONG_PTR pc, State *s, DwarfBuf *fde)
 {
 	static int nbad;
 	char *aug;
 	uchar *next;
 	int i, vers;
-	ulong len, id, base, size;
+	ulong len, id;
+	ULONG_PTR base, size;
 	DwarfBuf b;
 
 	if(d->frame.data == nil){
@@ -158,7 +163,7 @@ findfde(Dwarf *d, ulong pc, State *s, DwarfBuf *fde)
 		}else{	/* FDE */
 			base = dwarfgetaddr(&b);
 			size = dwarfgetaddr(&b);
-            if (trace) werrstr("FDE: base %x-%x (want pc %x)", base, base+size, pc);
+            if (trace) werrstr("FDE: base %p-%p (want pc %p)", (PVOID)base, (PVOID)(base + size), (PVOID)pc);
 			fde->p = b.p;
 			fde->ep = next;
 			s->loc = base;
@@ -167,7 +172,7 @@ findfde(Dwarf *d, ulong pc, State *s, DwarfBuf *fde)
 				return 0;
 		}
 	}
-	werrstr("cannot find call frame information for pc 0x%lx", pc);
+	werrstr("cannot find call frame information for pc %p", (PVOID)pc);
 	return -1;
 
 }
@@ -186,7 +191,7 @@ static int
 dexec(DwarfBuf *b, State *s, int locstop)
 {
 	int c;
-	long arg1, arg2;
+	LONG_PTR arg1, arg2;
 	DwarfExpr *e;
 
 	for(;;){
@@ -202,12 +207,12 @@ dexec(DwarfBuf *b, State *s, int locstop)
 			if(trace) werrstr("%r");
 			return -1;
 		}
-		if(trace) werrstr("+ loc=0x%x op 0x%x ", s->loc, c);
+		if(trace) werrstr("+ loc=%p op 0x%x ", (PVOID)s->loc, c);
 		switch(c>>6){
 		case 1:	/* advance location */
 			arg1 = c&0x3F;
 		advance:
-			if(trace) werrstr("loc += %ld", arg1*s->iquantum);
+			if(trace) werrstr("loc += %lld", (LONGLONG)(arg1 * s->iquantum));
 			s->loc += arg1 * s->iquantum;
 			if(locstop)
 				return 0;
@@ -241,7 +246,7 @@ dexec(DwarfBuf *b, State *s, int locstop)
 
 		case 0x01:	/* set location */
 			s->loc = dwarfgetaddr(b);
-			if(trace) werrstr("loc = 0x%lx", s->loc);
+			if(trace) werrstr("loc = %p", (PVOID)s->loc);
 			if(locstop)
 				return 0;
 			continue;
@@ -294,25 +299,16 @@ dexec(DwarfBuf *b, State *s, int locstop)
 			continue;
 
 		case 0x0A:	/* remember state */
-			e = malloc(s->nr*sizeof(e[0]));
 			if(trace) werrstr("push");
-			if(e == nil)
-				return -1;
-			void *newstack = malloc(s->nstack*sizeof(s->stack[0]));
-			RtlMoveMemory(newstack, s->stack, s->nstack*sizeof(s->stack[0]));
-			if (newstack) {
-				free(s->stack);
-				s->stack = newstack;
-			} else {
-				free(e);
+			if (s->nstack >= s->stack_max) {
+				werrstr("cfa state stack overflow");
 				return -1;
 			}
-			if(b->p == nil){
-				free(e);
+			if(b->p == nil)
 				return -1;
-			}
-			s->stack[s->nstack++] = e;
+			e = s->stack + (s->nstack * s->nr);
 			memmove(e, s->r, s->nr*sizeof(e[0]));
+			s->nstack++;
 			continue;
 
 		case 0x0B:	/* restore state */
@@ -321,9 +317,8 @@ dexec(DwarfBuf *b, State *s, int locstop)
 				werrstr("restore state underflow");
 				return -1;
 			}
-			e = s->stack[s->nstack-1];
+			e = s->stack + ((s->nstack - 1) * s->nr);
 			memmove(s->r, e, s->nr*sizeof(e[0]));
-			free(e);
 			s->nstack--;
 			continue;
 
@@ -331,7 +326,7 @@ dexec(DwarfBuf *b, State *s, int locstop)
 			arg1 = dwarfget128(b);
 			arg2 = dwarfget128(b);
 		defcfa:
-			if(trace) werrstr("cfa %ld(r%ld)", arg2, arg1);
+			if(trace) werrstr("cfa %lld(r%lld)", (LONGLONG)arg2, (LONGLONG)arg1);
 			if(checkreg(s, arg1) < 0)
 				return -1;
 			s->cfa->type = RuleRegOff;
@@ -341,7 +336,7 @@ dexec(DwarfBuf *b, State *s, int locstop)
 
 		case 0x0D:	/* def cfa register */
 			arg1 = dwarfget128(b);
-			if(trace) werrstr("cfa reg r%ld", arg1);
+			if(trace) werrstr("cfa reg r%lld", (LONGLONG)arg1);
 			if(s->cfa->type != RuleRegOff){
 				werrstr("change CFA register but CFA not in register+offset form");
 				return -1;
@@ -354,7 +349,7 @@ dexec(DwarfBuf *b, State *s, int locstop)
 		case 0x0E:	/* def cfa offset */
 			arg1 = dwarfget128(b);
 		cfaoffset:
-			if(trace) werrstr("cfa off %ld", arg1);
+			if(trace) werrstr("cfa off %lld", (LONGLONG)arg1);
 			if(s->cfa->type != RuleRegOff){
 				werrstr("change CFA offset but CFA not in register+offset form");
 				return -1;
@@ -401,12 +396,16 @@ dexec(DwarfBuf *b, State *s, int locstop)
 	/* not reached */
 }
 
-int dwarfcomputecfa(Dwarf *d, DwarfExpr *cfa, PROSSYM_REGISTERS registers, ulong *cfaLocation)
+int dwarfcomputecfa(Dwarf *d, DwarfExpr *cfa, PROSSYM_REGISTERS registers, ULONG_PTR *cfaLocation)
 {
     switch (cfa->type) {
     case RuleRegOff:
-        *cfaLocation = registers->Registers[cfa->reg] + cfa->offset;
-        werrstr("cfa reg %d (%x) offset %x = %x", cfa->reg, (ulong)registers->Registers[cfa->reg], cfa->offset, cfaLocation);
+        *cfaLocation = (ULONG_PTR)((LONG_PTR)registers->Registers[cfa->reg] + cfa->offset);
+        werrstr("cfa reg %d (%llx) offset %lld = %p",
+                cfa->reg,
+                (ULONGLONG)registers->Registers[cfa->reg],
+                (LONGLONG)cfa->offset,
+                (PVOID)(*cfaLocation));
         break;
     default:
         werrstr("cfa->type %x", cfa->type);
@@ -416,7 +415,7 @@ int dwarfcomputecfa(Dwarf *d, DwarfExpr *cfa, PROSSYM_REGISTERS registers, ulong
     return 0;
 }
 
-int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGISTERS registers)
+int dwarfregunwind(Dwarf *d, ULONG_PTR pc, ULONG_PTR fde, DwarfExpr *cfa, PROSSYM_REGISTERS registers)
 {
 	int i;
 	State s = { };
@@ -436,7 +435,7 @@ int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGIST
     int res = dwarfunwind(d, pc, cfa, &ra, initr, sizeof(initr) / sizeof(initr[0]));
     if (res == -1) return -1;
 
-    ulong cfaLocation;
+    ULONG_PTR cfaLocation;
 
     if (dwarfcomputecfa(d, cfa, registers, &cfaLocation) == -1)
         return -1;
@@ -453,24 +452,35 @@ int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGIST
             registers->Registers[i] = registers->Registers[r[i].reg];
             break;
         case RuleRegOff: {
+            ULONG_PTR regValue = 0;
+            ULONG_PTR addr = (ULONG_PTR)((LONG_PTR)registers->Registers[r[i].reg] + r[i].offset);
             BOOLEAN success =
                 RosSymCallbacks.MemGetProc
                 (d->pe->fd,
-                 &registers->Registers[i],
-                 r[i].offset + registers->Registers[r[i].reg],
+                 &regValue,
+                 (PVOID)addr,
                  d->addrsize);
             if (!success) return -1;
+            registers->Registers[i] = regValue;
         } break;
         case RuleCfaOffset:
         {
+            ULONG_PTR regValue = 0;
+            ULONG_PTR addr = (ULONG_PTR)((LONG_PTR)cfaLocation + r[i].offset);
             BOOLEAN success =
                 RosSymCallbacks.MemGetProc
                 (d->pe->fd,
-                 &registers->Registers[i],
-                 r[i].offset + cfaLocation,
+                 &regValue,
+                 (PVOID)addr,
                  d->addrsize);
-            werrstr("reg[%d] = %x: cfa offset (cfa %x, offset %x) -> @%x", i, (ulong)registers->Registers[i], cfaLocation, initr[i].offset, r[i].offset + cfaLocation);
+            werrstr("reg[%d] = %llx: cfa offset (cfa %p, offset %lld) -> @%p",
+                    i,
+                    (ULONGLONG)regValue,
+                    (PVOID)cfaLocation,
+                    (LONGLONG)initr[i].offset,
+                    (PVOID)addr);
             if (!success) return -1;
+            registers->Registers[i] = regValue;
         } break;
         default:
             werrstr("We don't yet support cfa rule %d in slot %d", r[i].type, i);
@@ -479,13 +489,17 @@ int dwarfregunwind(Dwarf *d, ulong pc, ulong fde, DwarfExpr *cfa, PROSSYM_REGIST
         }
     }
 
-    ulong cfaSpace[4];
+    ULONG_PTR cfaSpace[4];
     for (i = 0; i < sizeof(cfaSpace) / sizeof(cfaSpace[0]); i++) {
         RosSymCallbacks.MemGetProc
-            (d->pe->fd, &cfaSpace[i], cfaLocation + (i * 4), d->addrsize);
+            (d->pe->fd, &cfaSpace[i], (PVOID)(cfaLocation + (i * sizeof(ULONG_PTR))), d->addrsize);
     }
-    werrstr("CFA(%x) [%08x, %08x, %08x, %08x]",
-            cfaLocation, cfaSpace[0], cfaSpace[1], cfaSpace[2], cfaSpace[3]);
+    werrstr("CFA(%p) [%p, %p, %p, %p]",
+            (PVOID)cfaLocation,
+            (void*)cfaSpace[0],
+            (void*)cfaSpace[1],
+            (void*)cfaSpace[2],
+            (void*)cfaSpace[3]);
 
     return 0;
 }

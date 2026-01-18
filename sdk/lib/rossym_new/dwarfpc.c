@@ -16,6 +16,7 @@
 #define NDEBUG
 #include <debug.h>
 #define trace 0
+#define MAX_DEFINED_FILES 64
 
 enum
 {
@@ -29,28 +30,32 @@ enum
 typedef struct State State;
 struct State
 {
-    ulong addr;
-    ulong file;
-    ulong line;
-    ulong column;
-    ulong flags;
-    ulong isa;
+    ULONG_PTR addr;
+    ULONG file;
+    ULONG line;
+    ULONG column;
+    ULONG flags;
+    ULONG isa;
 };
 
 int
-dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, ulong *line)
+dwarfpctoline(Dwarf *d, DwarfSym *proc, ULONG_PTR pc, char **file, char **dir, char **function, ULONG *line)
 {
 	char *cdir;
     uchar *prog, *opcount, *end, *dirs;
-    ulong off, unit, len, vers, x, start, lastline;
-    int i, first, firstline, op, a, l, quantum, isstmt, linebase, linerange, opcodebase, nf;
+    ULONG off, unit, len, vers, x;
+    ULONG_PTR lastline;
+    int i, first, firstline, op, quantum, isstmt, linebase, linerange, opcodebase;
+    ULONG_PTR a;
+    LONG_PTR l;
     char *files, *s;
     DwarfBuf b;
     DwarfSym sym;
     State emit, cur, reset;
-    char **f, **newf;
+    char *defined_files[MAX_DEFINED_FILES];
+    ULONG defined_count = 0;
+    ULONG header_file_count = 0;
 
-    f = nil;
     memset(proc, 0, sizeof(*proc));
 
     int runit = dwarfaddrtounit(d, pc, &unit);
@@ -61,7 +66,7 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
         return -1;
 
     if(!sym.attrs.have.stmtlist){
-        werrstr("no line mapping information for 0x%x", pc);
+        werrstr("no line mapping information for %p", (PVOID)pc);
         return -1;
     }
     off = sym.attrs.stmtlist;
@@ -123,6 +128,7 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
         dwarfget128(&b);
         dwarfget128(&b);
         dwarfget128(&b);
+        header_file_count++;
     }
     dwarfget1(&b);
 
@@ -142,14 +148,13 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
 
     cur = reset;
     emit = reset;
-    nf = 0;
-    start = 0;
+    defined_count = 0;
     if(trace) werrstr("program @ %lu ... %.*H opbase = %d", b.p - d->line.data, b.ep-b.p, b.p, opcodebase);
     first = 1;
     while(b.p != nil){
         firstline = 0;
         op = dwarfget1(&b);
-        if(trace) werrstr("\tline %lu, addr 0x%x, op %d %.10H", cur.line, cur.addr, op, b.p);
+        if(trace) werrstr("\tline %lu, addr %p, op %d %.10H", cur.line, (PVOID)cur.addr, op, b.p);
         if(op >= opcodebase){
             a = (op - opcodebase) / linerange;
             l = (op - opcodebase) % linerange + linebase;
@@ -159,7 +164,7 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
         emit:
             if(first){
                 if(cur.addr > pc){
-                    werrstr("found wrong line mapping 0x%x for pc 0x%x", cur.addr, pc);
+                    werrstr("found wrong line mapping %p for pc %p", (PVOID)cur.addr, (PVOID)pc);
                     /* This is an overzealous check.  gcc can produce discontiguous ranges
                        and reorder statements, so it's possible for a future line to start
                        ahead of pc and still find a matching one. */
@@ -167,7 +172,6 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
                     firstline = 1;
                 }
                 first = 0;
-                start = cur.addr;
             }
             if(cur.addr > pc && !firstline)
                 break;
@@ -177,8 +181,15 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
             }
             emit = cur;
             if(emit.flags & EndSequence){
-                werrstr("found wrong line mapping 0x%x-0x%x for pc 0x%x", start, cur.addr, pc);
-                goto out;
+                /*
+                 * End of sequence reached but PC not found in this sequence.
+                 * The line program may have multiple sequences (e.g., .text + INIT).
+                 * Reset state and continue to the next sequence.
+                 */
+                cur = reset;
+                emit = reset;
+                first = 1;
+                continue;
             }
             cur.flags &= ~(BasicDwarfBlock|PrologueEnd|EpilogueBegin);
         }else{
@@ -196,18 +207,12 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
                     goto emit;
                 case 2:	/* set address */
                     cur.addr = dwarfgetaddr(&b);
-                    if(trace) werrstr(" set pc 0x%x", cur.addr);
+                    if(trace) werrstr(" set %p", (PVOID)cur.addr);
                     break;
                 case 3:	/* define file */
-                    newf = malloc(nf+1*sizeof(f[0]));
-                    if (newf)
-                        RtlMoveMemory(newf, f, nf*sizeof(f[0]));
-                    if(newf == nil)
-                        goto out;
-					free(f);
-                    f = newf;
-					f[nf++] = s = dwarfgetstring(&b);
-					DPRINT1("str %s", s);
+                    s = dwarfgetstring(&b);
+                    if (defined_count < MAX_DEFINED_FILES)
+                        defined_files[defined_count++] = s;
                     dwarfget128(&b);
                     dwarfget128(&b);
                     dwarfget128(&b);
@@ -223,12 +228,12 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
                 goto emit;
             case 2:	/* advance pc */
                 a = dwarfget128(&b);
-                if(trace) werrstr(" advance pc + %lu", a*quantum);
+                if(trace) werrstr(" advance pc + %Iu", (ULONG_PTR)(a * quantum));
                 cur.addr += a * quantum;
                 break;
             case 3:	/* advance line */
                 l = dwarfget128s(&b);
-                if(trace) werrstr(" advance line + %ld", l);
+                if(trace) werrstr(" advance line + %lld", (LONGLONG)l);
                 cur.line += l;
                 break;
             case 4:	/* set file */
@@ -249,12 +254,12 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
                 break;
             case 8:	/* const add pc */
                 a = (255 - opcodebase) / linerange * quantum;
-                if(trace) werrstr(" const add pc + %d", a);
+                if(trace) werrstr(" const add pc + %Iu", (ULONG_PTR)a);
                 cur.addr += a;
                 break;
             case 9:	/* fixed advance pc */
                 a = dwarfget2(&b);
-                if(trace) werrstr(" fixed advance pc + %d", a);
+                if(trace) werrstr(" fixed advance pc + %Iu", (ULONG_PTR)a);
                 cur.addr += a;
                 break;
             case 10:	/* set prologue end */
@@ -289,50 +294,66 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
     if(line)
         *line = emit.line;
 
-    /* skip over first emit.file-2 guys */
-    b.p = (uchar*)files;
-    for(i=emit.file-1; i > 0 && b.p!=nil && *b.p!=0; i--){
-        dwarfgetstring(&b);
-        dwarfget128(&b);
-        dwarfget128(&b);
-        dwarfget128(&b);
-    }
-    if(b.p == nil){
-        werrstr("problem parsing file data second time (cannot happen)");
-        goto bad;
-    }
-    if(*b.p == 0){
-        if(i >= nf){
+    if (emit.file <= header_file_count) {
+        /* Skip over first emit.file-1 file entries */
+        b.p = (uchar*)files;
+        for(i = 1; i < emit.file && b.p != nil && *b.p != 0; i++){
+            dwarfgetstring(&b);
+            dwarfget128(&b);
+            dwarfget128(&b);
+            dwarfget128(&b);
+        }
+        if(b.p == nil || *b.p == 0){
             werrstr("bad file index in mapping data");
             goto bad;
         }
-        b.p = (uchar*)f[i];
+        s = dwarfgetstring(&b);
+        i = dwarfget128(&b);		/* directory */
+        dwarfget128(&b);
+        dwarfget128(&b);
+    } else {
+        ULONG idx = emit.file - header_file_count;
+        DwarfBuf fb = b;
+
+        if (idx == 0 || idx > defined_count){
+            werrstr("bad file index in mapping data");
+            goto bad;
+        }
+
+        fb.p = (uchar*)defined_files[idx - 1];
+        fb.ep = b.ep;
+        s = dwarfgetstring(&fb);
+        i = dwarfget128(&fb);		/* directory */
+        dwarfget128(&fb);
+        dwarfget128(&fb);
     }
-    s = dwarfgetstring(&b);
-	*file = s;
-    i = dwarfget128(&b);		/* directory */
-    x = dwarfget128(&b);
-    x = dwarfget128(&b);
+    *file = s;
 
     /* fetch dir name */
 	cdir = sym.attrs.have.compdir ? sym.attrs.compdir : 0;
 
 	char *dwarfdir;
 	dwarfdir = nil;
-	b.p = dirs;
-	for (x = 1; b.p && *b.p; x++) {
-		dwarfdir = dwarfgetstring(&b);
-		if (x == i) break;
+	/* Directory index 0 means use compilation directory (cdir), not an entry from the table */
+	if (i > 0) {
+		b.p = dirs;
+		for (x = 1; b.p && *b.p; x++) {
+			char *d = dwarfgetstring(&b);
+			if (x == i) {
+				dwarfdir = d;
+				break;
+			}
+		}
 	}
 
-	if (!cdir && dwarfdir)
+	/* Use dwarfdir (from line table) if found, otherwise fall back to cdir */
+	if (dwarfdir)
 		cdir = dwarfdir;
 
-	char *filefull = malloc(strlen(cdir) + strlen(*file) + 2);
-	strcpy(filefull, cdir);
-	strcat(filefull, "/");
-	strcat(filefull, *file);
-	*file = filefull;
+	if (!cdir)
+		cdir = "";
+    if (dir)
+        *dir = cdir;
 
     *function = nil;
     lastline = 0;
@@ -349,8 +370,7 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
 				proc->attrs.have.name)
 			{
                 if (proc->attrs.lowpc <= pc && proc->attrs.highpc > pc) {
-                    *function = malloc(strlen(proc->attrs.name)+1);
-					strcpy(*function, proc->attrs.name);
+                    *function = proc->attrs.name;
                     goto done;
 				}
 			}
@@ -373,9 +393,7 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
 			{
                 if (proc->attrs.declline <= *line &&
                     proc->attrs.declline > lastline) {
-                    free(*function);
-                    *function = malloc(strlen(proc->attrs.name)+1);
-					strcpy(*function, proc->attrs.name);
+                    *function = proc->attrs.name;
                     goto done;
 				}
                 lastline = proc->attrs.declline;
@@ -386,22 +404,21 @@ dwarfpctoline(Dwarf *d, DwarfSym *proc, ulong pc, char **file, char **function, 
 
     /* free at last, free at last */
 done:
-    free(f);
     return 0;
 bad:
-    werrstr("corrupted line mapping for 0x%x", pc);
+    werrstr("corrupted line mapping for %p", (PVOID)pc);
 out:
-    free(f);
     return -1;
 }
 
 VOID RosSymFreeInfo(PROSSYM_LINEINFO LineInfo)
 {
     int i;
-	free(LineInfo->FileName);
-	LineInfo->FileName = NULL;
-	free(LineInfo->FunctionName);
-	LineInfo->FunctionName = NULL;
+    LineInfo->FileName = NULL;
+    LineInfo->DirectoryName = NULL;
+    LineInfo->FunctionName = NULL;
     for (i = 0; i < sizeof(LineInfo->Parameters)/sizeof(LineInfo->Parameters[0]); i++)
-        free(LineInfo->Parameters[i].ValueName);
+    {
+        LineInfo->Parameters[i].ValueName = NULL;
+    }
 }

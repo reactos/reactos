@@ -31,21 +31,95 @@ loadabbrevs(Dwarf *d, ulong off, DwarfAbbrev **aa)
         return -1;
     }
 
-    abbrev = malloc(nabbrev*sizeof(DwarfAbbrev) + nattr*sizeof(DwarfAttr));
-    attr = (DwarfAttr*)(abbrev+nabbrev);
-
-    if(parseabbrevs(d, off, abbrev, attr, nil, nil) < 0){
-        free(abbrev);
+    if (!d->acache.buf) {
+        werrstr("abbrev cache not preallocated");
+        return -1;
+    }
+    if (nabbrev > d->acache.maxa || nattr > d->acache.maxattr) {
+        werrstr("abbrev cache too small (%d/%d)", nabbrev, nattr);
         return -1;
     }
 
-    free(d->acache.a);
+    abbrev = d->acache.buf;
+    attr = d->acache.attrbuf;
+
+    if(parseabbrevs(d, off, abbrev, attr, nil, nil) < 0){
+        return -1;
+    }
+
     d->acache.a = abbrev;
     d->acache.na = nabbrev;
     d->acache.off = off;
 
     *aa = abbrev;
     return nabbrev;
+}
+
+int
+dwarfpreallocabbrev(Dwarf *d)
+{
+    DwarfBuf b;
+    int max_abbrev = 0;
+    int max_attr = 0;
+
+    if (!d || d->abbrev.data == nil || d->abbrev.len == 0) {
+        werrstr("missing abbrev data");
+        return -1;
+    }
+    if (d->acache.buf)
+        return 0;
+
+    memset(&b, 0, sizeof b);
+    b.d = d;
+    b.p = d->abbrev.data;
+    b.ep = d->abbrev.data + d->abbrev.len;
+
+    while (b.p && b.p < b.ep) {
+        int nabbrev = 0;
+        int nattr = 0;
+
+        for (;;) {
+            ulong num = dwarfget128(&b);
+            if (b.p == nil)
+                return -1;
+            if (num == 0)
+                break;
+            (void)dwarfget128(&b); /* tag */
+            (void)dwarfget1(&b); /* haskids */
+
+            for (;;) {
+                ulong name = dwarfget128(&b);
+                ulong form = dwarfget128(&b);
+                if (name == 0 && form == 0)
+                    break;
+                nattr++;
+            }
+            nabbrev++;
+        }
+
+        if (nabbrev > max_abbrev)
+            max_abbrev = nabbrev;
+        if (nattr > max_attr)
+            max_attr = nattr;
+
+        if (b.p == nil || b.p >= b.ep)
+            break;
+    }
+
+    if (max_abbrev == 0 || max_attr == 0) {
+        werrstr("abbrev data empty");
+        return -1;
+    }
+
+    d->acache.buf = malloc(max_abbrev*sizeof(DwarfAbbrev) +
+                           max_attr*sizeof(DwarfAttr));
+    if (!d->acache.buf)
+        return -1;
+
+    d->acache.attrbuf = (DwarfAttr*)(d->acache.buf + max_abbrev);
+    d->acache.maxa = max_abbrev;
+    d->acache.maxattr = max_attr;
+    return 0;
 }
 
 static int
@@ -133,4 +207,3 @@ dwarfgetabbrev(Dwarf *d, ulong off, ulong num)
     }
     return findabbrev(a, na, num);
 }
-
