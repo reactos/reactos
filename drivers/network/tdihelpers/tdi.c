@@ -989,11 +989,9 @@ NTSTATUS TdiSend(
                  Flags,
                  BufferLength);
 
-    TdiCall(*Irp, DeviceObject, NULL, NULL);
     /* Does not block...  The MDL is deleted in the receive completion
        routine. */
-
-    return STATUS_PENDING;
+    return TdiCall(*Irp, DeviceObject, NULL, NULL);
 }
 
 NTSTATUS TdiReceive(
@@ -1256,11 +1254,9 @@ NTSTATUS TdiSendDatagram(
                          BufferLength,
                          Addr);
 
-    TdiCall(*Irp, DeviceObject, NULL, NULL);
     /* Does not block...  The MDL is deleted in the send completion
        routine. */
-
-    return STATUS_PENDING;
+    return TdiCall(*Irp, DeviceObject, NULL, NULL);
 }
 
 NTSTATUS TdiDisconnect(
