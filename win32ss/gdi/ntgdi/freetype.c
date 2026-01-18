@@ -57,41 +57,38 @@ typedef struct _FONTLINK_CACHE
 {
     LIST_ENTRY ListEntry;
     LOGFONTW LogFont;
-    DWORD LogFontCheckSum;
+    DWORD LogFontHash;
     FONTLINK_CHAIN Chain;
 } FONTLINK_CACHE, *PFONTLINK_CACHE;
 
+// This function must be fast and low conflict.
 static DWORD
-IntGetCheckSum(LPCVOID ptr, SIZE_T size)
+IntGetHash(LPCVOID ptr, SIZE_T size)
 {
-    DWORD sum = 2166136261U; // FNV-1a offset_basis (32-bit)
-    const DWORD* pdw = (const DWORD*)ptr;
+    DWORD dwHash = 2166136261U; // FNV-1a offset_basis (32-bit)
+    const DWORD* __restrict pdw = (const DWORD*)ptr;
     SIZE_T count = size / sizeof(DWORD), remainder = size % sizeof(DWORD);
     const DWORD FNV_PRIME = 16777619U; // FNV-1a Prime (32-bit)
 
-    // 8-way loop unrolling
-    while (count >= 8)
+    // 4-way loop unrolling
+    while (count >= 4)
     {
-        sum = (sum ^ pdw[0]) * FNV_PRIME;
-        sum = (sum ^ pdw[1]) * FNV_PRIME;
-        sum = (sum ^ pdw[2]) * FNV_PRIME;
-        sum = (sum ^ pdw[3]) * FNV_PRIME;
-        sum = (sum ^ pdw[4]) * FNV_PRIME;
-        sum = (sum ^ pdw[5]) * FNV_PRIME;
-        sum = (sum ^ pdw[6]) * FNV_PRIME;
-        sum = (sum ^ pdw[7]) * FNV_PRIME;
-        pdw += 8;
-        count -= 8;
+        dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
+        dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
+        dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
+        dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
+        count -= 4;
     }
 
     while (count--)
-        sum = (sum ^ *pdw++) * FNV_PRIME;
+        dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
 
-    const BYTE* pb = (const BYTE*)pdw;
+    // Process remaining bytes (if size is not a multiple of 4)
+    const BYTE* __restrict pb = (const BYTE*)pdw;
     while (remainder--)
-        sum = (sum ^ *pb++) * FNV_PRIME;
+        dwHash = (dwHash ^ *pb++) * FNV_PRIME;
 
-    return sum;
+    return dwHash;
 }
 
 #define FONTLINK_DEFAULT_CHAR 0x30FB // U+30FB (KATAKANA MIDDLE DOT)
@@ -321,7 +318,7 @@ FontLink_Chain_Finish(
         return; // Out of memory
 
     pCache->LogFont = pChain->LogFont;
-    pCache->LogFontCheckSum = IntGetCheckSum(&pChain->LogFont, sizeof(pChain->LogFont));
+    pCache->LogFontHash = IntGetHash(&pChain->LogFont, sizeof(pChain->LogFont));
     pCache->Chain = *pChain;
     IntRebaseList(&pCache->Chain.FontLinkList, &pChain->FontLinkList);
 
@@ -334,12 +331,12 @@ FontLink_FindCache(
 {
     PLIST_ENTRY Entry;
     PFONTLINK_CACHE pLinkCache;
-    DWORD LogFontCheckSum = IntGetCheckSum(&pLogFont, sizeof(*pLogFont));
+    DWORD LogFontHash = IntGetHash(&pLogFont, sizeof(*pLogFont));
 
     for (Entry = g_FontLinkCache.Flink; Entry != &g_FontLinkCache; Entry = Entry->Flink)
     {
         pLinkCache = CONTAINING_RECORD(Entry, FONTLINK_CACHE, ListEntry);
-        if (pLinkCache->LogFontCheckSum == LogFontCheckSum &&
+        if (pLinkCache->LogFontHash == LogFontHash &&
             RtlEqualMemory(&pLinkCache->LogFont, pLogFont, sizeof(LOGFONTW)))
         {
             return pLinkCache;
@@ -3998,21 +3995,6 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
-static DWORD
-IntGetHash(IN LPCVOID pv, IN DWORD cdw)
-{
-    DWORD dwHash = cdw;
-    const DWORD *pdw = pv;
-
-    while (cdw-- > 0)
-    {
-        dwHash *= 3;
-        dwHash ^= *pdw++;
-    }
-
-    return dwHash;
-}
-
 static FT_BitmapGlyph
 IntFindGlyphCache(IN const FONT_CACHE_ENTRY *pCache)
 {
@@ -5160,7 +5142,7 @@ IntGetRealGlyph(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
+    Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed));
 
     realglyph = IntFindGlyphCache(Cache);
     if (realglyph)
