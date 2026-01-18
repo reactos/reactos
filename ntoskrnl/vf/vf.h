@@ -285,11 +285,15 @@ VfFailDriver(
     PCSTR Message
 );
 
-VOID
-__cdecl
-VfFailDeviceNode(
-    PDEVICE_OBJECT DeviceObject,
-    PCSTR Message
+VOID VfFailDeviceNode(
+    PDEVICE_OBJECT PhysicalDeviceObject,
+    ULONG BugCheckMajorCode,
+    ULONG BugCheckMinorCode,
+    VF_FAILURE_CLASS FailureClass,
+    PULONG AssertionControl,
+    PSTR DebuggerMessageText,
+    PSTR ParameterFormatString,
+    ...
 );
 
 VOID

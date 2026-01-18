@@ -1528,35 +1528,87 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
 VOID
 __cdecl
 VfFailDeviceNode(
-    PDEVICE_OBJECT DeviceObject,
-    PCSTR Message
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG BugCheckMajorCode,
+    _In_ ULONG BugCheckMinorCode,
+    _In_ VF_FAILURE_CLASS FailureClass,
+    _Inout_opt_ PULONG AssertionControl,
+    _In_opt_ PSTR DebuggerMessageText,
+    _In_opt_ PSTR ParameterFormatString,
+    ...
 )
 {
     PDRIVER_OBJECT DriverObject = NULL;
+    va_list VaList;
 
-    if (DeviceObject)
-        DriverObject = DeviceObject->DriverObject;
+    if (PhysicalDeviceObject)
+    {
+        DriverObject = PhysicalDeviceObject->DriverObject;
+    }
 
-    DbgPrint(
+    DbgPrintEx(
+        DPFLTR_VERIFIER_ID,
+        DPFLTR_ERROR_LEVEL,
         "VERIFIER: VfFailDeviceNode\n"
-        "VERIFIER: DeviceObject = %p\n"
-        "VERIFIER: DriverObject = %p\n"
-        "VERIFIER: Message = %s\n",
-        DeviceObject,
-        DriverObject,
-        Message ? Message : "(null)"
     );
 
+    DbgPrintEx(
+        DPFLTR_VERIFIER_ID,
+        DPFLTR_ERROR_LEVEL,
+        "VERIFIER: PhysicalDeviceObject %p\n"
+        "VERIFIER: DriverObject %p\n",
+        PhysicalDeviceObject,
+        DriverObject
+    );
+
+    if (DebuggerMessageText)
+    {
+        DbgPrintEx(
+            DPFLTR_VERIFIER_ID,
+            DPFLTR_ERROR_LEVEL,
+            "VERIFIER: %s\n",
+            DebuggerMessageText
+        );
+    }
+
+    if (ParameterFormatString)
+    {
+        va_start(VaList, ParameterFormatString);
+
+        vDbgPrintEx(
+            DPFLTR_VERIFIER_ID,
+            DPFLTR_ERROR_LEVEL,
+            ParameterFormatString,
+            VaList
+        );
+
+        va_end(VaList);
+
+        DbgPrintEx(
+            DPFLTR_VERIFIER_ID,
+            DPFLTR_ERROR_LEVEL,
+            "\n"
+        );
+    }
+
+    if (AssertionControl && (*AssertionControl == 0))
+    {
+        return;
+    }
+
 #if DBG
-    DbgBreakPoint();
+    if (FailureClass == VfFatalFailure)
+    {
+        DbgBreakPoint();
+    }
 #endif
 
     KeBugCheckEx(
-        VF_BUGCHECK_DRIVER_VIOLATION,
-        VF_VIOLATION_DEVICE_NODE,                       // device node violation!
-        (ULONG_PTR)DeviceObject,
+        BugCheckMajorCode,
+        BugCheckMinorCode,
+        (ULONG_PTR)PhysicalDeviceObject,
         (ULONG_PTR)DriverObject,
-        0
+        (ULONG_PTR)FailureClass
     );
 }
 
