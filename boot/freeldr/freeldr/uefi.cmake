@@ -55,6 +55,7 @@ add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMM
 
 list(APPEND FREELDR_NTLDR_SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/config.c
     ntldr/conversion.c
     ntldr/headless.c
     ntldr/inffile.c

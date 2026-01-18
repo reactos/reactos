@@ -3,6 +3,8 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Configuration Tree Routines
  * COPYRIGHT:   Copyright 2005-2006 Alex Ionescu <alex.ionescu@reactos.org>
+ *
+ * NOTE: This module is shared by both the kernel and the bootloader.
  */
 
 /* INCLUDES ******************************************************************/
