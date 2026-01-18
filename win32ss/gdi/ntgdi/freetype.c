@@ -61,29 +61,35 @@ typedef struct _FONTLINK_CACHE
     FONTLINK_CHAIN Chain;
 } FONTLINK_CACHE, *PFONTLINK_CACHE;
 
-static SIZE_T
-IntGetCheckSumQuickly(LPCVOID ptr, SIZE_T size)
+static DWORD
+IntGetCheckSum(LPCVOID ptr, SIZE_T size)
 {
-    DWORD sum = 0;
+    DWORD sum = 2166136261U; // FNV-1a offset_basis (32-bit)
     const DWORD* pdw = (const DWORD*)ptr;
     SIZE_T count = size / sizeof(DWORD), remainder = size % sizeof(DWORD);
+    const DWORD FNV_PRIME = 16777619U; // FNV-1a Prime (32-bit)
 
+    // 8-way loop unrolling
     while (count >= 8)
     {
-        sum += pdw[0]; sum += pdw[1];
-        sum += pdw[2]; sum += pdw[3];
-        sum += pdw[4]; sum += pdw[5];
-        sum += pdw[6]; sum += pdw[7];
+        sum = (sum ^ pdw[0]) * FNV_PRIME;
+        sum = (sum ^ pdw[1]) * FNV_PRIME;
+        sum = (sum ^ pdw[2]) * FNV_PRIME;
+        sum = (sum ^ pdw[3]) * FNV_PRIME;
+        sum = (sum ^ pdw[4]) * FNV_PRIME;
+        sum = (sum ^ pdw[5]) * FNV_PRIME;
+        sum = (sum ^ pdw[6]) * FNV_PRIME;
+        sum = (sum ^ pdw[7]) * FNV_PRIME;
         pdw += 8;
         count -= 8;
     }
 
     while (count--)
-        sum += *pdw++;
+        sum = (sum ^ *pdw++) * FNV_PRIME;
 
-    PBYTE pByte = (PBYTE)pdw;
+    const BYTE* pb = (const BYTE*)pdw;
     while (remainder--)
-        sum += *pByte++;
+        sum = (sum ^ *pb++) * FNV_PRIME;
 
     return sum;
 }
@@ -315,7 +321,7 @@ FontLink_Chain_Finish(
         return; // Out of memory
 
     pCache->LogFont = pChain->LogFont;
-    pCache->LogFontCheckSum = IntGetCheckSumQuickly(&pChain->LogFont, sizeof(pChain->LogFont));
+    pCache->LogFontCheckSum = IntGetCheckSum(&pChain->LogFont, sizeof(pChain->LogFont));
     pCache->Chain = *pChain;
     IntRebaseList(&pCache->Chain.FontLinkList, &pChain->FontLinkList);
 
@@ -328,7 +334,7 @@ FontLink_FindCache(
 {
     PLIST_ENTRY Entry;
     PFONTLINK_CACHE pLinkCache;
-    DWORD LogFontCheckSum = IntGetCheckSumQuickly(&pLogFont, sizeof(*pLogFont));
+    DWORD LogFontCheckSum = IntGetCheckSum(&pLogFont, sizeof(*pLogFont));
 
     for (Entry = g_FontLinkCache.Flink; Entry != &g_FontLinkCache; Entry = Entry->Flink)
     {
