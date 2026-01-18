@@ -61,7 +61,7 @@ typedef struct _FONTLINK_CACHE
     FONTLINK_CHAIN Chain;
 } FONTLINK_CACHE, *PFONTLINK_CACHE;
 
-// This function must be fast and low conflict.
+// This function has to be fast and low conflict.
 static DWORD
 IntGetHash(LPCVOID ptr, SIZE_T size)
 {
