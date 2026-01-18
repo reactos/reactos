@@ -84,7 +84,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS_SAME
     (
         HANDLE,
-        ULONG,
+        HANDLE,
         ICIF_SET
     ),
 
@@ -159,7 +159,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS
     (
         BOOLEAN,
-        CHAR,
+        ULONG,
         BOOLEAN,
         CHAR,
         ICIF_SET
@@ -195,7 +195,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS_SAME
     (
         KAFFINITY,
-        ULONG,
+        KAFFINITY,
         ICIF_SET
     ),
 
@@ -229,7 +229,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS
     (
         CHAR,
-        CHAR,
+        ULONG,
         BOOLEAN,
         CHAR,
         ICIF_SET
@@ -342,7 +342,7 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     IQS_SAME
     (
         UNICODE_STRING,
-        ULONG,
+        ULONG_PTR,
         ICIF_QUERY | ICIF_QUERY_SIZE_VARIABLE
     ),
 
