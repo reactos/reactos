@@ -56,8 +56,8 @@ typedef struct _FONTLINK_CHAIN
 typedef struct _FONTLINK_CACHE
 {
     LIST_ENTRY ListEntry;
-    DWORD LogFontCheckSum;
     LOGFONTW LogFont;
+    DWORD LogFontCheckSum;
     FONTLINK_CHAIN Chain;
 } FONTLINK_CACHE, *PFONTLINK_CACHE;
 
