@@ -176,7 +176,6 @@ add_compile_options(-Wall -Wpointer-arith)
 
 # Disable some overzealous warnings
 add_compile_options(
-    -Wno-unknown-warning-option
     -Wno-char-subscripts
     -Wno-multichar
     -Wno-unused-value
@@ -190,6 +189,12 @@ add_compile_options(
 
 if(ARCH STREQUAL "arm")
     add_compile_options(-Wno-attributes)
+endif()
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(
+        -Wno-unknown-warning-option
+    )
 endif()
 
 # Optimizations
