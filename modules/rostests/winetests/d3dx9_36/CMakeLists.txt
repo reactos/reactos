@@ -19,6 +19,9 @@ target_compile_definitions(d3dx9_36_winetest PRIVATE USE_WINE_TODOS __WINESRC__ 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
     remove_target_compile_option(d3dx9_36_winetest "/we4477")
+else()
+    # "expression does not compute the number of elements in this array"
+    target_compile_options(d3dx9_36_winetest PRIVATE -Wno-sizeof-array-div)
 endif()
 
 target_link_libraries(d3dx9_36_winetest uuid dxguid)
