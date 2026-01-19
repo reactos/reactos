@@ -84,7 +84,7 @@ IntGetHash(LPCVOID ptr, SIZE_T size)
         dwHash = (dwHash ^ *pdw++) * FNV_PRIME;
 
     // Process remaining bytes (if size is not a multiple of 4)
-    const BYTE* __restrict pb = (const BYTE*)pdw;
+    const BYTE* pb = (const BYTE*)pdw;
     while (remainder--)
         dwHash = (dwHash ^ *pb++) * FNV_PRIME;
 
