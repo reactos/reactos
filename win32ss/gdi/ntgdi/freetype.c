@@ -66,7 +66,7 @@ static DWORD
 IntGetHash(LPCVOID ptr, SIZE_T size)
 {
     DWORD dwHash = 2166136261U; // FNV-1a offset_basis (32-bit)
-    const DWORD* __restrict pdw = (const DWORD*)ptr;
+    const DWORD* pdw = (const DWORD*)ptr;
     SIZE_T count = size / sizeof(DWORD), remainder = size % sizeof(DWORD);
     const DWORD FNV_PRIME = 16777619U; // FNV-1a Prime (32-bit)
 
