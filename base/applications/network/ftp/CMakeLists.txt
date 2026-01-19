@@ -12,6 +12,10 @@ list(APPEND SOURCE
 add_executable(ftp ${SOURCE} ftp.rc)
 target_compile_definitions(ftp PRIVATE lint)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ftp PRIVATE -Wno-free-nonheap-object)
+endif()
+
 set_module_type(ftp win32cui)
 target_link_libraries(ftp oldnames ${PSEH_LIB})
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
