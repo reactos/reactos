@@ -2165,11 +2165,9 @@ SHELL32_ReparentAsAliasPidl(
             if (*ppidlNew)
             {
                 // Manipulate specific flags in the PIDL if necessary
-                if (pEntry->bCommonDesktop && (*ppidlNew)->mkid.cb)
+                if (pEntry->bCommonDesktop && (*ppidlNew)->mkid.cb >= 3)
                 {
-                    UINT cbRoot = ILGetSize(pidlDestRoot);
-                    PBYTE pAttr = (PBYTE)(*ppidlNew) + cbRoot - sizeof(USHORT);
-                    *pAttr |= (PT_FS | PT_FS_COMMON_FLAG);
+                    (*ppidlNew)->mkid.abID[0] |= (PT_FS | PT_FS_COMMON_FLAG);
                 }
             }
             ILFree(pidlDestRoot);

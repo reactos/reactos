@@ -15,7 +15,7 @@
 #include "version.h"
 #include "buildno.h"
 
-/* Define some defaults (shouldn't be overwritten by applications */
+/* Define some defaults (shouldn't be overwritten by applications) */
 #define REACTOS_DEFAULT_STR_COMPANY_NAME    "ReactOS Project"
 #define REACTOS_DEFAULT_STR_DESCRIPTION     "ReactOS Core Component"
 #define REACTOS_DEFAULT_STR_INTERNAL_NAME   ""

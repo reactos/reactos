@@ -7,14 +7,23 @@
 
 #define REACTOS_VERSION_DLL
 
-#if defined(SARCH_PC98)
-#define REACTOS_STR_FILE_DESCRIPTION  "NEC PC-98 Boot Video Driver"
-#elif defined(SARCH_XBOX)
-#define REACTOS_STR_FILE_DESCRIPTION  "Original Xbox Boot Video Driver"
-#else
-#define REACTOS_STR_FILE_DESCRIPTION  "VGA Boot Driver"
+/* Each bootvid configuration file defines REACTOS_STR_FILE_DESCRIPTION */
+#cmakedefine REACTOS_STR_FILE_DESCRIPTION    "${REACTOS_STR_FILE_DESCRIPTION}"
+#ifndef REACTOS_STR_FILE_DESCRIPTION
+#define REACTOS_STR_FILE_DESCRIPTION    "Boot Video Driver"
 #endif
 
-#define REACTOS_STR_INTERNAL_NAME     "bootvid.dll"
-#define REACTOS_STR_ORIGINAL_FILENAME "bootvid.dll"
+/* The main bootvid CMake file defines default values for
+ * REACTOS_STR_INTERNAL_NAME and REACTOS_STR_ORIGINAL_FILENAME.
+ * Each bootvid configuration file can override these values. */
+#cmakedefine REACTOS_STR_INTERNAL_NAME       "${REACTOS_STR_INTERNAL_NAME}"
+#ifndef REACTOS_STR_INTERNAL_NAME
+#define REACTOS_STR_INTERNAL_NAME       "bootvid"
+#endif
+
+#cmakedefine REACTOS_STR_ORIGINAL_FILENAME   "${REACTOS_STR_ORIGINAL_FILENAME}"
+#ifndef REACTOS_STR_ORIGINAL_FILENAME
+#define REACTOS_STR_ORIGINAL_FILENAME   "bootvid.dll"
+#endif
+
 #include <reactos/version.rc>

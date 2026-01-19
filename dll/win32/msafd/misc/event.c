@@ -106,7 +106,7 @@ WSPEventSelect(
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
@@ -181,7 +181,7 @@ WSPEnumNetworkEvents(
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForAlert(SockEvent);
         Status = IOSB.Status;
     }
 
