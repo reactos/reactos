@@ -185,6 +185,7 @@ add_compile_options(
     -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
     -Wno-format
     -Wno-maybe-uninitialized
+    -Wno-nonnull-compare
 )
 
 if(ARCH STREQUAL "arm")
