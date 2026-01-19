@@ -35,6 +35,8 @@ add_library(ddraw MODULE
 if(MSVC)
     # Disable C5286: implicit conversion from enum type 'x' to enum type 'y';
     target_compile_options(ddraw PRIVATE /wd5286)
+else()
+    target_compile_options(ddraw PRIVATE -Wno-stringop-overflow)
 endif()
 
 set_module_type(ddraw win32dll)
