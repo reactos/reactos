@@ -17,7 +17,7 @@ extern "C" {
 #include <shellapi.h>
 #include <objbase.h>
 
-#define RECYCLEBINMAXDRIVECOUNT 26
+#define RECYCLEBINMAXDRIVECOUNT ('Z' - 'A' + 1)
 
 /* Structures used by the API Interface */
 
