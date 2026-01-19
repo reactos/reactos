@@ -17,12 +17,12 @@ typedef struct _VF_SETTINGS {
 } VF_SETTINGS;
 
 /* ============================================================
-   VERIFIER FLAGS
+   VERIFIER FLAGS & TAGS
    ============================================================ */
 
 #define VF_FLAG_SPECIAL_POOL          0x00000001
-#define VF_FLAG_DMA_FAULT_INJECTION   0x00000001
-#define VF_FLAG_IRQL_CHECKING         0x00000002
+#define VF_FLAG_DMA_FAULT_INJECTION   0x00000002
+#define VF_FLAG_IRQL_CHECKING         0x00000003
 #define VF_FLAG_POOL_TRACKING         0x00000004
 
 #define TAG_VFDRV  'DrFV'
@@ -33,10 +33,12 @@ typedef struct _VF_SETTINGS {
    BUGCHECK CODES (MATCH NT)
    ============================================================ */
 
-#define VF_BUGCHECK_DRIVER_VIOLATION   0xC9
-#define VF_BUGCHECK_SPECIAL_POOL       0xF0
-#define VF_BUGCHECK_MEMORY_LEAK        0xC4
-#define VF_BUGCHECK_INVALID_FREE       0xF7
+#define VF_BUGCHECK_MEMORY_LEAK         0xC4
+#define VF_BUGCHECK_POOL_TAG_VIOLATION  0xC5
+#define VF_BUGCHECK_POOL_TYPE_VIOLATION 0xC6
+#define VF_BUGCHECK_DRIVER_VIOLATION    0xC9
+#define VF_BUGCHECK_SPECIAL_POOL        0xF0
+#define VF_BUGCHECK_INVALID_FREE        0xF7
 
 /* ============================================================
    VERIFIER VIOLATION CODES (BUGCHECK PARAM 1)
@@ -95,7 +97,6 @@ typedef struct _VF_DMA_FAULT_STATE
     VF_DMA_FAULT_TYPE FaultType;
 } VF_DMA_FAULT_STATE;
 
-extern BOOLEAN VfGlobalEnabled;
 extern VF_GLOBAL_STATE VfGlobal;
 extern BOOLEAN VfGlobalEnabled;
 extern VF_DMA_FAULT_STATE VfDmaFaultState;
@@ -128,6 +129,7 @@ typedef struct _VF_POOL_ALLOCATION
     PVOID Address;
     SIZE_T Size;
     ULONG Tag;
+    POOL_TYPE PoolType;
     BOOLEAN SpecialPool;
     PMDL Mdl;
     KIRQL AllocateIrql;
@@ -141,6 +143,8 @@ typedef struct _VF_DRIVER_ENTRY
     LIST_ENTRY PoolList;
     KSPIN_LOCK PoolLock;
     PDRIVER_UNLOAD OriginalUnload;
+    SIZE_T PoolUsage;
+    SIZE_T PoolQuota;
 } VF_DRIVER_ENTRY;
 
 typedef struct _VF_IRP_TRACK

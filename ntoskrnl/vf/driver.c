@@ -505,6 +505,22 @@ PVOID NTAPI VfAllocatePool(
     if (Driver && (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING))
         VfCheckIrqlForPool(PoolType, FALSE);
 
+    if (Driver && Driver->PoolQuota > 0)
+    {
+        KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
+
+        if ((Driver->PoolUsage + Size) > Driver->PoolQuota)
+        {
+            KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+            VfFailDriver(DriverObject, "Pool quota exceeded");
+            return NULL;
+        }
+
+        Driver->PoolUsage += Size;
+
+        KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+    }
+
     // zerosize allocations
     if (Size == 0)
     {
@@ -549,6 +565,7 @@ TrackAllocation:
     Alloc->Address      = Address;
     Alloc->Size         = Size;
     Alloc->Tag          = Tag;
+    Alloc->PoolType     = PoolType;
     Alloc->SpecialPool  = Special;
     Alloc->Mdl          = Mdl;
     Alloc->AllocateIrql = KeGetCurrentIrql();
@@ -560,7 +577,7 @@ TrackAllocation:
     return Address;
 }
 
-VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address)
+VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag, POOL_TYPE PoolType)
 {
     VF_DRIVER_ENTRY* Driver = VfFindDriver(DriverObject);
     VF_POOL_ALLOCATION* Alloc;
@@ -570,6 +587,13 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address)
     if (!Driver)
         KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, (ULONG_PTR)Address, 0, 0, 0);
 
+    if (Driver)
+    {
+        KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
+        Driver->PoolUsage -= Alloc->Size;
+        KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+    }
+
     KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
 
     for (Link = Driver->PoolList.Flink; Link != &Driver->PoolList; Link = Link->Flink)
@@ -577,6 +601,19 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address)
         Alloc = CONTAINING_RECORD(Link, VF_POOL_ALLOCATION, ListEntry);
         if (Alloc->Address == Address)
         {
+            // tag misuse
+            if (Alloc->Tag != PoolTag)
+            {
+                KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+                KeBugCheckEx(
+                    VF_BUGCHECK_POOL_TAG_VIOLATION,
+                    (ULONG_PTR)Address,
+                    (ULONG_PTR)Alloc->Tag,
+                    (ULONG_PTR)PoolTag,
+                    0
+                );
+            }
+
             RemoveEntryList(&Alloc->ListEntry);
             KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
 
@@ -590,6 +627,18 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address)
                                  (ULONG_PTR)Address);
             }
 
+            if (Alloc->PoolType != PoolType)
+            {
+                KeBugCheckEx(
+                    VF_BUGCHECK_POOL_TYPE_VIOLATION,
+                    (ULONG_PTR)Address,
+                    (ULONG_PTR)Alloc->PoolType,
+                    (ULONG_PTR)PoolType,
+                    0
+                );
+            }
+
+            // free memory
             if (Alloc->SpecialPool)
             {
                 MmUnmapLockedPages(Alloc->Address, Alloc->Mdl);
@@ -607,6 +656,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address)
     }
 
     KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+
     VfCheckPageableCode((PVOID)VfFreePool, DriverObject);
     KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, (ULONG_PTR)Address, 0, 0, 0);
 }
