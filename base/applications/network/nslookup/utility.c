@@ -7,6 +7,7 @@
  */
 
 #include "nslookup.h"
+#include <assert.h>
 
 BOOL SendRequest( PCHAR pInBuffer,
                   ULONG InBufferLength,
@@ -252,6 +253,8 @@ void ReverseIP( PCHAR pIP, PCHAR pReturn )
     int j;
     int k = 0;
 
+    assert(pReturn != pIP);
+
     j = strlen( pIP ) - 1;
     i = j;
 
@@ -261,7 +264,8 @@ void ReverseIP( PCHAR pIP, PCHAR pReturn )
     /* A */
     for( ; i > 0; i -= 1 ) if( '.' == pIP[i] ) break;
 
-    strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
+    if (j != i)
+        strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
     k += (j - i);
 
     pReturn[k] = '.';
@@ -273,7 +277,8 @@ void ReverseIP( PCHAR pIP, PCHAR pReturn )
     /* B */
     for( ; i > 0; i -= 1 ) if( '.' == pIP[i] ) break;
 
-    strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
+    if (j != i)
+        strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
     k += (j - i);
 
     pReturn[k] = '.';
@@ -285,7 +290,8 @@ void ReverseIP( PCHAR pIP, PCHAR pReturn )
     /* C */
     for( ; i > 0; i -= 1 ) if( '.' == pIP[i] ) break;
 
-    strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
+    if (j != i)
+        strncpy( &pReturn[k], &pIP[i + 1], (j - i) );
     k += (j - i);
 
     pReturn[k] = '.';
