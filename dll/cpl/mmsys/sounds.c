@@ -992,7 +992,7 @@ ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
             tvItem.item.state = TVIS_EXPANDED;
             tvItem.item.stateMask = TVIS_EXPANDED;
             tvItem.item.pszText = pLabelMap->szDesc;
-            if (pLabelContext->szValue && wcslen(pLabelContext->szValue) > 0)
+            if (pLabelContext && wcslen(pLabelContext->szValue) > 0)
             {
                 tvItem.item.iImage = IMAGE_SOUND_ASSIGNED;
                 tvItem.item.iSelectedImage = IMAGE_SOUND_ASSIGNED;
@@ -1002,7 +1002,7 @@ ShowSoundScheme(PGLOBAL_DATA pGlobalData, HWND hwndDlg)
                 tvItem.item.iImage = IMAGE_SOUND_NONE;
                 tvItem.item.iSelectedImage = IMAGE_SOUND_NONE;
             }
-            tvItem.item.lParam = (LPARAM)FindLabelContext(pGlobalData, pScheme, pAppMap->szName, pLabelMap->szName);
+            tvItem.item.lParam = (LPARAM)pLabelContext;
 
             TreeView_InsertItem(hList, &tvItem);
 
@@ -1433,7 +1433,7 @@ SoundsDlgProc(HWND hwndDlg,
                                 break;
                             }
 
-                            if (_wcsicmp(pLabelContext->szValue, (PWSTR)lResult) || (lIndex != pLabelContext->szValue[0]))
+                            if (pLabelContext && (_wcsicmp(pLabelContext->szValue, (PWSTR)lResult) || (lIndex != pLabelContext->szValue[0])))
                             {
                                 /* Update the tree view item image */
                                 item.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
