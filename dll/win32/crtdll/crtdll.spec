@@ -237,7 +237,7 @@
 @ cdecl _mktemp(str)
 @ cdecl _msize(ptr)
 @ cdecl _nextafter(double double) nextafter
-@ cdecl _onexit(ptr)
+@ extern _onexit # Declaring it as extern let us use the symbol from msvcrtex while having the __imp_ symbol defined in the import lib
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
 @ extern _osmajor_dll CRTDLL__osmajor_dll
