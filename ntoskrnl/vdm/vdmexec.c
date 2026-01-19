@@ -170,6 +170,7 @@ NTSTATUS
 NTAPI
 VdmpStartExecution(VOID)
 {
+    PULONG VdmState = KiNtVdmState;
     PETHREAD Thread = PsGetCurrentThread();
     PKTRAP_FRAME VdmFrame;
     NTSTATUS Status;
@@ -253,6 +254,7 @@ NTAPI
 VdmEndExecution(IN PKTRAP_FRAME TrapFrame,
                 IN PVDM_TIB VdmTib)
 {
+    PULONG VdmState = KiNtVdmState;
     KIRQL OldIrql;
     CONTEXT Context;
     PAGED_CODE();
