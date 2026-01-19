@@ -474,6 +474,7 @@ Quit:
     if (fc->values && (fc->values != Variables))
         cmd_free(fc->values);
 #endif
+    fc->values = NULL;
 
     return Ret;
 }
