@@ -85,7 +85,7 @@ Test_PageFileSection(void)
                                 ViewShare,
                                 MEM_COMMIT,
                                 PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_9);
+    ok_ntstatus(Status, (GetNTVersion() >= _WIN32_WINNT_WIN10) ? STATUS_INVALID_PARAMETER : STATUS_INVALID_PARAMETER_9);
 
     /* Try to map 1 page, with free base address and zero bits compatible with 64k granularity */
     BaseAddress = NULL;
@@ -102,31 +102,22 @@ Test_PageFileSection(void)
                                 0,
                                 PAGE_READWRITE);
     ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(((ULONG_PTR)BaseAddress & 0x0000FFFF) == 0, "BaseAddress not 64k aligned: %p\n", BaseAddress);
+    ok(((ULONG_PTR)BaseAddress & (ULONG_PTR)0xFFFFFFFFFFC00000ULL) == 0, "Upper bits are not all zero: %p\n", BaseAddress);
     Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-{
-    ULONG_PTR gran = 64 * 1024;
-    ULONG_PTR ZeroBits = 11;
-
-    ok_hex(gran, 0x10000);
-    gran <<= ZeroBits;
-    ok_hex(gran, 0x8000000);
-    gran >>= ZeroBits;
-    ok_hex(gran, 0x10000);
-
-    ok_hex((gran << ZeroBits) >> ZeroBits, gran);
-
-}
-
-    /* Try to map 1 page, with free base address and zero bits incompatible with 64k granularity */
+    /* Try to map 1 page, with free base address and zero bits incompatible with 64k granularity.
+     * Note: On 64 bit Windows, ZeroBits != 0 means that the upper (32 + ZeroBits) bits must be zero.
+     * While the documented maximum for ZeroBits is "less than 21", to not break 64 bit alignment,
+     * we need to keep at least 17 bits (i.e., ZeroBits must be less than 16). */
     BaseAddress = NULL;
     SectionOffset.QuadPart = 0;
     ViewSize = 0x1000;
     Status = NtMapViewOfSection(SectionHandle,
                                 NtCurrentProcess(),
                                 &BaseAddress,
-                                11,
+                                (32 - 16),
                                 0,
                                 &SectionOffset,
                                 &ViewSize,
@@ -167,7 +158,34 @@ Test_PageFileSection(void)
                                 ViewShare,
                                 0,
                                 PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_4);
+    ok_ntstatus(Status, (GetNTVersion() >= _WIN32_WINNT_WIN10) ? STATUS_INVALID_PARAMETER : STATUS_INVALID_PARAMETER_4);
+
+    /* Try using ZeroBits like a bitmask */
+    BaseAddress = NULL;
+    SectionOffset.QuadPart = 0;
+    ViewSize = 0x1000;
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0x0FFFFFFF,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+    {
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        ok(((ULONG_PTR)BaseAddress & 0x0000FFFF) == 0, "BaseAddress not 64k aligned: %p\n", BaseAddress);
+        ok(((ULONG_PTR)BaseAddress & (ULONG_PTR)0xFFFFFFFFF0000000ULL) == 0, "Upper bits are not all zero: %p\n", BaseAddress);
+    }
+    else
+    {
+        ok_ntstatus(Status, STATUS_INVALID_PARAMETER_4);
+        if (!NT_SUCCESS(Status))
+            return;
+    }
 
     /* Map 2 pages, without MEM_COMMIT */
     BaseAddress = (PVOID)0x30000000;
@@ -378,7 +396,7 @@ Test_PageFileSection(void)
                                 ViewShare,
                                 MEM_RESERVE,
                                 PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_9);
+    ok_ntstatus(Status, (GetNTVersion() >= _WIN32_WINNT_WIN10) ? STATUS_INVALID_PARAMETER : STATUS_INVALID_PARAMETER_9);
 
     /* Try to map 1 page using MEM_COMMIT */
     BaseAddress = NULL;
@@ -394,7 +412,7 @@ Test_PageFileSection(void)
                                 ViewShare,
                                 MEM_COMMIT,
                                 PAGE_READWRITE);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_9);
+    ok_ntstatus(Status, (GetNTVersion() >= _WIN32_WINNT_WIN10) ? STATUS_INVALID_PARAMETER : STATUS_INVALID_PARAMETER_9);
 
     /* Map 2 pages, but commit 1 */
     BaseAddress = NULL;
@@ -571,11 +589,14 @@ Test_PageFileSection(void)
                                 0,
                                 PAGE_READWRITE);
 #ifdef _WIN64
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_3);
+    ok_ntstatus(Status, (GetNTVersion() >= _WIN32_WINNT_WIN10) ? STATUS_INVALID_PARAMETER : STATUS_INVALID_PARAMETER_3);
 #else
     /* WoW64 returns STATUS_INVALID_PARAMETER_4 */
-    ok((Status == STATUS_INVALID_PARAMETER_4) || (Status == STATUS_INVALID_PARAMETER_3),
-       "got wrong Status: 0x%lx\n", Status);
+    if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+        ok(Status == STATUS_INVALID_PARAMETER, "got wrong Status: 0x%lx\n", Status);
+    else
+        ok((Status == STATUS_INVALID_PARAMETER_4) || (Status == STATUS_INVALID_PARAMETER_3),
+           "got wrong Status: 0x%lx\n", Status);
 #endif
 
     /* Pass 0 region size */
