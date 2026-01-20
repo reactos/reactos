@@ -24,7 +24,7 @@ typedef VOID
 (NTAPI *PELDR_IMPORTDLL_LOAD_CALLBACK)(
     _In_ PCSTR FileName);
 
-extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
+extern FLDRAPI PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
 
 BOOLEAN
 PeLdrInitializeModuleList(VOID);
