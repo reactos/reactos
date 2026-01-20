@@ -630,7 +630,7 @@ LocaleDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            /* Save pointer to the global state */
+            /* Save pointer to the state */
             pState = (PSTATE)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
 
@@ -768,6 +768,9 @@ StartDlgProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR Installer[MAX_PATH];
+
             /* Save pointer to the state */
             pState = (PSTATE)lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
@@ -775,13 +778,19 @@ StartDlgProc(
             /* Center the dialog window */
             CenterWindow(hwndDlg);
 
-            if (pState->Unattend->bEnabled)
+            /* Check whether we can find the ReactOS installer. If not,
+             * disable the "Install" button and directly start the LiveCD. */
+            *Installer = UNICODE_NULL;
+            if (!ExpandInstallerPath(L"reactos.exe", Installer, ARRAYSIZE(Installer)))
+                EnableWindow(GetDlgItem(hwndDlg, IDC_INSTALL), FALSE);
+
+            if (pState->Unattend->bEnabled || (*Installer == UNICODE_NULL))
             {
                 /* Click on the 'Run' button */
                 PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_RUN, BN_CLICKED), 0L);
             }
-
             return FALSE;
+        }
 
         case WM_DRAWITEM:
             OnDrawItem((LPDRAWITEMSTRUCT)lParam,

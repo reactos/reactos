@@ -212,7 +212,7 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
 
 /*
  * Expands the path for the ReactOS Installer "reactos.exe".
- * See also base/system/userinit/userinit.c!StartInstaller()
+ * See also base/system/userinit/userinit.c!ExpandInstallerPath()
  */
 BOOL
 ExpandInstallerPath(
