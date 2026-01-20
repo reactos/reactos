@@ -132,7 +132,7 @@ NtGdiExtEscape(
    else
    {
       PDC pDC = DC_LockDc(hDC);
-      if ( pDC == NULL )
+      if (pDC == NULL)
       {
          EngSetLastError(ERROR_INVALID_HANDLE);
          return -1;
@@ -149,8 +149,8 @@ NtGdiExtEscape(
       if (!psurf)
       {
          EngReleaseSemaphore(ppdev->hsemDevLock);
-         DC_UnlockDc(pDC);
          PDEVOBJ_vRelease(ppdev);
+         DC_UnlockDc(pDC);
          return 0;
       }
       SURFACE_ShareLockByPointer(psurf);
@@ -167,26 +167,23 @@ NtGdiExtEscape(
    }
 
    if (InSize)
-   {   
+   {
       SafeInData = ExAllocatePoolWithTag(PagedPool, InSize, GDITAG_TEMP);
+      if (SafeInData == NULL)
+      {
+         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+         goto Exit;
+      }
       _SEH2_TRY
       {
-         if (SafeInData == NULL)
-         {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Exit;
-         }
-         else
-         {
-            ProbeForRead(UnsafeInData, InSize, 1);
-            RtlCopyMemory(SafeInData, UnsafeInData, InSize);
-         }
+         ProbeForRead(UnsafeInData, InSize, 1);
+         RtlCopyMemory(SafeInData, UnsafeInData, InSize);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          Status = _SEH2_GetExceptionCode();
          SetLastNtError(Status);
-         goto Exit;
+         _SEH2_YIELD(goto Exit);
       }
       _SEH2_END;
    }
@@ -203,7 +200,7 @@ NtGdiExtEscape(
          {
             Status = _SEH2_GetExceptionCode();
             SetLastNtError(Status);
-            goto Exit;
+            _SEH2_YIELD(goto Exit);
          }
          _SEH2_END;
       }
@@ -244,7 +241,6 @@ Exit:
    SURFACE_ShareUnlockSurface(psurf);
    EngReleaseSemaphore(ppdev->hsemDevLock);
    PDEVOBJ_vRelease(ppdev);
-
 
    if (SafeInData != NULL)
    {
