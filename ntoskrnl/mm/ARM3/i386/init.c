@@ -305,26 +305,29 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 
-    //
-    // Don't let it go below the minimum
-    //
-    if (MmNonPagedSystemStart < (PVOID)0xEB000000)
+    PVOID PagedPoolEnd = (PVOID)((ULONG_PTR)MmPagedPoolStart +
+                MmSizeOfPagedPoolInBytes - 1);
+    if (MmNonPagedSystemStart < PagedPoolEnd)
     {
         //
-        // This is a hard-coded limit in the Windows NT address space
+        // Calculate the maximum system PTE area start that fits between
+        // paged pool end and nonpaged pool start.
         //
-        MmNonPagedSystemStart = (PVOID)0xEB000000;
+        MmNonPagedSystemStart = (PVOID)((ULONG_PTR)PagedPoolEnd &
+                                        ~(PDE_MAPPED_VA - 1));
+        if ((ULONG_PTR)MmNonPagedSystemStart <= (ULONG_PTR)PagedPoolEnd)
+        {
+            MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart + PDE_MAPPED_VA);
+        }
 
         //
-        // Reduce the amount of system PTEs to reach this point
+        // Ensure we still have space for system PTEs
         //
-        MmNumberOfSystemPtes = ((ULONG_PTR)MmNonPagedPoolStart -
-                                (ULONG_PTR)MmNonPagedSystemStart) >>
-                                PAGE_SHIFT;
-        MmNumberOfSystemPtes--;
-        ASSERT(MmNumberOfSystemPtes > 1000);
+        if ((ULONG_PTR)MmNonPagedSystemStart >= (ULONG_PTR)MmNonPagedPoolStart)
+        {
+            KeBugCheckEx(NO_MORE_SYSTEM_PTES, 0, MmNumberOfSystemPtes, 0, 0);
+        }
     }
-
     //
     // Check if we are in a situation where the size of the paged pool
     // is so large that it overflows into nonpaged pool
