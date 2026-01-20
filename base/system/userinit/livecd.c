@@ -111,8 +111,6 @@ IsLiveCD(VOID)
     LONG rc;
     BOOL ret = FALSE;
 
-    TRACE("IsLiveCD()\n");
-
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                        REGSTR_PATH_CURRENT_CONTROL_SET,
                        0,
@@ -152,8 +150,7 @@ cleanup:
         RegCloseKey(ControlKey);
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
 
-    TRACE("IsLiveCD() returning %d\n", ret);
-
+    TRACE("IsLiveCD() returning %u\n", ret);
     return ret;
 }
 
@@ -250,7 +247,7 @@ GetLayoutName(
 
     wsprintf(szBuf, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", szLCID);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         dwBufLen = sizeof(szDispName);
 
@@ -645,8 +642,8 @@ LocaleDlgProc(
             CreateKeyboardLayoutList(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
             if (pState->Unattend->bEnabled)
             {
-                // Advance to the next page
-                PostMessageW(hwndDlg, WM_COMMAND, MAKELONG(IDOK, BN_CLICKED), 0L);
+                /* Advance to the next page */
+                PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, BN_CLICKED), 0L);
             }
             return FALSE;
 
@@ -780,8 +777,8 @@ StartDlgProc(
 
             if (pState->Unattend->bEnabled)
             {
-                // Click on the 'Run' button
-                PostMessageW(hwndDlg, WM_COMMAND, MAKELONG(IDC_RUN, BN_CLICKED), 0L);
+                /* Click on the 'Run' button */
+                PostMessageW(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_RUN, BN_CLICKED), 0L);
             }
 
             return FALSE;

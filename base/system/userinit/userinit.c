@@ -32,7 +32,6 @@
 
 HINSTANCE hInstance;
 
-
 /* FUNCTIONS ****************************************************************/
 
 LONG
@@ -45,8 +44,6 @@ ReadRegSzKey(
     DWORD dwType;
     DWORD cbData = 0;
     LPWSTR Value;
-
-    TRACE("(%p, %s, %p)\n", hKey, debugstr_w(pszKey), pValue);
 
     rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
     if (rc != ERROR_SUCCESS)
@@ -88,8 +85,6 @@ IsConsoleShell(VOID)
     LONG rc;
     BOOL ret = FALSE;
 
-    TRACE("()\n");
-
     rc = RegOpenKeyEx(
         HKEY_LOCAL_MACHINE,
         REGSTR_PATH_CURRENT_CONTROL_SET,
@@ -129,7 +124,8 @@ cleanup:
     if (ControlKey != NULL)
         RegCloseKey(ControlKey);
     HeapFree(GetProcessHeap(), 0, SystemStartOptions);
-    TRACE("IsConsoleShell() returning %d\n", ret);
+
+    TRACE("IsConsoleShell() returning %u\n", ret);
     return ret;
 }
 
@@ -143,8 +139,6 @@ GetShell(
     WCHAR Shell[MAX_PATH];
     BOOL ConsoleShell = IsConsoleShell();
     LONG rc;
-
-    TRACE("(%p, %p)\n", CommandLine, hRootKey);
 
     rc = RegOpenKeyExW(hRootKey, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0, KEY_QUERY_VALUE, &hKey);
@@ -190,8 +184,6 @@ StartProcess(
     PROCESS_INFORMATION pi;
     WCHAR ExpandedCmdLine[MAX_PATH];
 
-    TRACE("(%s)\n", debugstr_w(CommandLine));
-
     ExpandEnvironmentStringsW(CommandLine, ExpandedCmdLine, ARRAYSIZE(ExpandedCmdLine));
 
     ZeroMemory(&si, sizeof(si));
@@ -229,8 +221,6 @@ StartShell(VOID)
     DWORD Value = 0;
     LONG rc;
     HKEY hKey;
-
-    TRACE("()\n");
 
     /* Safe Mode shell run */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -373,8 +363,6 @@ StrToColorref(
 {
     BYTE rgb[3];
 
-    TRACE("(%s)\n", debugstr_w(lpszCol));
-
     rgb[0] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     rgb[1] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
     rgb[2] = (BYTE)wcstoul(lpszCol, &lpszCol, 10);
@@ -390,8 +378,6 @@ SetUserSysColors(VOID)
     DWORD Type, Size;
     COLORREF crColor;
     LONG rc;
-
-    TRACE("()\n");
 
     rc = RegOpenKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_COLORS,
                        0, KEY_QUERY_VALUE, &hKey);
@@ -429,8 +415,6 @@ SetUserWallpaper(VOID)
     WCHAR szWallpaper[MAX_PATH + 1];
     LONG rc;
 
-    TRACE("()\n");
-
     rc = RegOpenKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
                        0, KEY_QUERY_VALUE, &hKey);
     if (rc != ERROR_SUCCESS)
@@ -467,8 +451,6 @@ SetUserWallpaper(VOID)
 static VOID
 SetUserSettings(VOID)
 {
-    TRACE("()\n");
-
     UpdatePerUserSystemParameters(1, TRUE);
     SetUserSysColors();
     SetUserWallpaper();
@@ -481,8 +463,6 @@ NotifyLogon(VOID)
 {
     HINSTANCE hModule;
     PCMP_REPORT_LOGON CMP_Report_LogOn;
-
-    TRACE("()\n");
 
     hModule = LoadLibraryW(L"setupapi.dll");
     if (!hModule)
