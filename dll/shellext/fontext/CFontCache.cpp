@@ -144,12 +144,6 @@ CStringW CFontCache::Name(size_t Index)
 
 CFontInfo* CFontCache::Find(const FontPidlEntry* fontEntry)
 {
-    if (fontEntry->Index < m_Fonts.GetCount())
-    {
-        if (m_Fonts[fontEntry->Index].Name().CompareNoCase(fontEntry->Name) == 0)
-            return &m_Fonts[fontEntry->Index];
-    }
-
     for (UINT n = 0; n < Size(); ++n)
     {
         if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name) == 0)

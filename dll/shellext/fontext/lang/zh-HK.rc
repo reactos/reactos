@@ -7,11 +7,22 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
+IDD_INSTALL DIALOG 0, 0, 205, 60
+CAPTION "Installing fonts..."
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "Installing fonts...", IDC_INSTALL_TEXT, 5, 10, 195, 10
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", 0, 5, 25, 195, 10
+    PUSHBUTTON "Cancel", IDCANCEL, 65, 40, 70, 15
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_FONTS_FOLDER "ReactOS 字型資料夾"
+    IDS_INSTALL_OK "The font files have been installed successfully."
+    IDS_INSTALL_FAILED "Failed to install the font files."
 END
-
 
 STRINGTABLE
 BEGIN
@@ -26,7 +37,6 @@ BEGIN
     IDS_COL_ATTR "屬性"
     IDS_COL_ATTR_LETTERS "RHSAC"
 END
-
 
 STRINGTABLE
 BEGIN

@@ -27,10 +27,26 @@
 extern const GUID CLSID_CFontExt;
 extern LONG g_ModuleRefCnt;
 
+class CFontExt;
+
+typedef struct tagINSTALL_FONT_DATA
+{
+    CFontExt* pFontExt = nullptr;
+    IDataObject* pDataObj = nullptr;
+    HRESULT hrResult = S_OK;
+    HWND hwnd = nullptr;
+    UINT iStep = 0;
+    UINT cSteps = 0;
+    BOOL bCanceled = FALSE;
+    LPCITEMIDLIST pidlParent = nullptr;
+    PCUIDLIST_RELATIVE* apidl = nullptr;
+} INSTALL_FONT_DATA, *PINSTALL_FONT_DATA;
+
 #include "resource.h"
 #include "fontpidl.hpp"
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
+#include "CFontFolderViewCB.h"
 
 #define FONT_HIVE   HKEY_LOCAL_MACHINE
 #define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
@@ -49,22 +65,16 @@ inline BOOL IsFontDotExt(LPCWSTR pchDotExt)
     };
     for (const LPCWSTR *pp = array; *pp; ++pp)
     {
-        if (!_wcsicmp(*pp, pchDotExt))
+        if (!StrCmpIW(*pp, pchDotExt))
             return TRUE;
     }
     return FALSE;
 }
 
-HRESULT
-InstallFontFiles(
-    _Out_ CStringW& strMessage,
-    _In_ PCUIDLIST_ABSOLUTE pidlParent,
-    _In_ UINT cidl,
-    _In_ PCUITEMID_CHILD_ARRAY apidl);
+HRESULT InstallFontFiles(_Inout_ PINSTALL_FONT_DATA pData);
 
 HRESULT
 DoInstallFontFile(
-    _Out_ CStringW& strMsg,
     _In_ PCWSTR pszFontPath,
     _In_ PCWSTR pszFontsDir,
     _In_ HKEY hkeyFonts);
@@ -72,3 +82,6 @@ DoInstallFontFile(
 HRESULT DoGetFontTitle(
     _In_ PCWSTR pszFontPath,
     _Out_ CStringW& strFontName);
+
+BOOL CheckDropFontFiles(HDROP hDrop);
+HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj);
