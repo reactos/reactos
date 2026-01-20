@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
- *              Copyright 2019-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -259,8 +259,7 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
     DWORD column = lParam & 0x0000FFFF;
     if (sortMode == SHCIDS_ALLFIELDS)
     {
-        UNIMPLEMENTED;
-        result = (int)fontEntry1->Index - (int)fontEntry2->Index;
+        result = StrCmpIW(fontEntry1->Name, fontEntry2->Name);
     }
     else
     {
@@ -278,11 +277,10 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
         case 0xffff:
             /* ROS bug? */
         case FONTEXT_COL_NAME:
-            // These items are already ordered by name
-            result = (int)fontEntry1->Index - (int)fontEntry2->Index;
+            result = StrCmpIW(fontEntry1->Name, fontEntry2->Name);
             break;
         case FONTEXT_COL_FILENAME:
-            result = _wcsicmp(PathFindFileNameW(info1->File()), PathFindFileNameW(info2->File()));
+            result = StrCmpIW(PathFindFileNameW(info1->File()), PathFindFileNameW(info2->File()));
             break;
         case FONTEXT_COL_SIZE:
             result = (int)info1->FileSize().HighPart - info2->FileSize().HighPart;
@@ -313,7 +311,6 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
 
     if (IsEqualIID(riid, IID_IDropTarget))
     {
-        ERR("IDropTarget not implemented\n");
         *ppvOut = static_cast<IDropTarget *>(this);
         AddRef();
         hr = S_OK;
@@ -325,10 +322,14 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
-        // Just create a default shell folder view, and register ourself as folder
-        SFV_CREATE sfv = { sizeof(SFV_CREATE) };
-        sfv.pshf = this;
-        hr = SHCreateShellFolderView(&sfv, (IShellView**)ppvOut);
+        CComPtr<CFontFolderViewCB> sfviewcb;
+        if (SUCCEEDED(hr = ShellObjectCreator(sfviewcb)))
+        {
+            SFV_CREATE create = { sizeof(create), this, NULL, sfviewcb };
+            hr = SHCreateShellFolderView(&create, (IShellView**)ppvOut);
+            if (SUCCEEDED(hr))
+                sfviewcb->Initialize(this, (IShellView*)*ppvOut, m_Folder);
+        }
     }
 
     return hr;
@@ -400,6 +401,12 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             ERR("IID_IDataObject with cidl == 0 UNIMPLEMENTED\n");
         }
     }
+    else if (riid == IID_IDropTarget)
+    {
+        *ppvOut = static_cast<IDropTarget*>(this);
+        AddRef();
+        return S_OK;
+    }
 
     //ERR("%s(riid=%S) UNIMPLEMENTED\n", __FUNCTION__, g2s(riid));
     return E_NOTIMPL;
@@ -469,7 +476,7 @@ STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
         return hr;
     }
 
-    if (_wcsicmp(PidlPath, FontsDir))
+    if (StrCmpIW(PidlPath, FontsDir))
     {
         ERR("CFontExt View initializing on unexpected folder: '%S'\n", PidlPath);
         return E_FAIL;
@@ -492,18 +499,38 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
 // *** IDropTarget methods ***
 STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    *pdwEffect = DROPEFFECT_NONE;
+    m_bDragAccepted = FALSE;
 
-    CDataObjectHIDA cida(pDataObj);
-    if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return cida.hr();
+    STGMEDIUM stg;
+    HDROP hDrop = GetDropFromDataObject(stg, pDataObj);
+    if (!hDrop)
+    {
+        *pdwEffect = DROPEFFECT_NONE;
+        DragLeave();
+        return E_FAIL;
+    }
 
-    *pdwEffect = DROPEFFECT_COPY;
+    m_bDragAccepted = CheckDropFontFiles(hDrop);
+    ::ReleaseStgMedium(&stg);
+
+    if (!m_bDragAccepted)
+    {
+        *pdwEffect = DROPEFFECT_NONE;
+        return E_FAIL;
+    }
+
+    *pdwEffect &= DROPEFFECT_COPY;
     return S_OK;
 }
 
 STDMETHODIMP CFontExt::DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
+    if (!m_bDragAccepted)
+    {
+        *pdwEffect = DROPEFFECT_NONE;
+        return E_FAIL;
+    }
+    *pdwEffect &= DROPEFFECT_COPY;
     return S_OK;
 }
 
@@ -512,13 +539,85 @@ STDMETHODIMP CFontExt::DragLeave()
     return S_OK;
 }
 
+DWORD WINAPI CFontExt::InstallThreadProc(LPVOID lpParameter)
+{
+    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)lpParameter;
+    ATLASSERT(pData);
+    pData->hrResult = InstallFontFiles(pData);
+    if (pData->bCanceled)
+        pData->hrResult = S_FALSE;
+    TRACE("hrResult: 0x%08X\n", pData->hrResult);
+    ::PostMessageW(pData->hwnd, WM_COMMAND, IDOK, 0);
+    pData->pDataObj->Release();
+    return 0;
+}
+
+INT_PTR CALLBACK
+CFontExt::InstallDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, PINSTALL_FONT_DATA pData)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pData->hwnd = hwnd;
+            ATLASSERT(pData->cSteps >= 0);
+            SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, pData->cSteps));
+            if (!SHCreateThread(CFontExt::InstallThreadProc, pData, CTF_COINIT, NULL))
+            {
+                WARN("!SHCreateThread\n");
+                pData->pDataObj->Release();
+                pData->hrResult = E_ABORT;
+                EndDialog(hwnd, IDABORT);
+            }
+            return TRUE;
+        }
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwnd, IDOK);
+                    break;
+                case IDCANCEL:
+                    pData->bCanceled = TRUE;
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+                case IDCONTINUE:
+                    pData->iStep += 1;
+                    ATLASSERT(pData->iStep <= pData->cSteps);
+                    SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETPOS, pData->iStep, 0);
+                    break;
+            }
+            break;
+        }
+    }
+    return 0;
+}
+
+INT_PTR CALLBACK
+CFontExt::InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)GetWindowLongPtrW(hwnd, DWLP_USER);
+    if (uMsg == WM_INITDIALOG)
+    {
+        pData = (PINSTALL_FONT_DATA)lParam;
+        SetWindowLongPtrW(hwnd, DWLP_USER, lParam);
+    }
+
+    ATLASSERT(pData);
+    ATLASSERT(pData->pFontExt);
+    return pData->pFontExt->InstallDlgProc(hwnd, uMsg, wParam, lParam, pData);
+}
+
 STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    *pdwEffect = DROPEFFECT_NONE;
-
+    // NOTE: Getting cida in the other thread fails
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
+    {
+        ERR("E_UNEXPECTED\n");
         return E_UNEXPECTED;
+    }
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
     if (!pidlParent)
@@ -532,28 +631,46 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     {
         PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
         if (!pidlRelative)
+        {
+            ERR("!pidlRelative\n");
             return E_FAIL;
-
+        }
         apidl.Add(pidlRelative);
     }
 
-    CStringW strMessage;
-    if (InstallFontFiles(strMessage, pidlParent, cida->cidl, &apidl[0]) != S_OK)
+    // Show progress dialog
+    INSTALL_FONT_DATA data;
+    data.pFontExt = this;
+    data.pDataObj = pDataObj;
+    data.pidlParent = pidlParent;
+    data.apidl = &apidl[0];
+    data.cSteps = cida->cidl;
+    pDataObj->AddRef();
+    DialogBoxParamW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDD_INSTALL),
+                    m_hwndView, CFontExt::InstallDialogProc, (LPARAM)&data);
+    if (data.bCanceled)
+        return E_ABORT;
+
+    CStringW text, title;
+    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
+    if (SUCCEEDED(data.hrResult))
     {
-        // TODO: Show message
-        return E_FAIL;
+        // Invalidate our cache
+        g_FontCache->Read();
+
+        // Notify the system that a font was added
+        SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+
+        // Show successful message
+        text.LoadStringW(IDS_INSTALL_OK);
+        MessageBoxW(m_hwndView, text, title, MB_ICONINFORMATION);
+    }
+    else
+    {
+        // Show error message
+        text.LoadStringW(IDS_INSTALL_FAILED);
+        MessageBoxW(m_hwndView, text, title, MB_ICONERROR);
     }
 
-    // Invalidate our cache
-    g_FontCache->Read();
-
-    // Notify the system that a font was added
-    SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-
-    // Notify the shell that the folder contents are changed
-    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW, g_FontCache->FontPath().GetString(), NULL);
-
-    // TODO: Show message
-
-    return S_OK;
+    return data.hrResult;
 }

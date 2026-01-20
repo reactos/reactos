@@ -12,11 +12,9 @@ struct FontPidlEntry
 {
     WORD cb;
     WORD Magic;
-    ULONG Index;        // Informative only, used for sorting
-
     WCHAR Name[1];
 };
 #include <poppack.h>
 
-LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index);
+LPITEMIDLIST _ILCreate(LPCWSTR lpString);
 const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl);

@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index)
+LPITEMIDLIST _ILCreate(LPCWSTR lpString)
 {
     // Because the FontPidlEntry contains one WCHAR, we do not need to take the null terminator into account
     size_t cbData = sizeof(FontPidlEntry) + wcslen(lpString) * sizeof(WCHAR);
@@ -19,8 +19,6 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index)
 
     pidl->cb = (WORD)cbData;
     pidl->Magic = 'fp';
-    pidl->Index = Index;
-
     wcscpy(pidl->Name, lpString);
     // Should be zero already, but make sure it is
     *(WORD*)((char*)pidl + cbData) = 0;

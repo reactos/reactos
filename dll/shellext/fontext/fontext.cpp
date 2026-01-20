@@ -102,11 +102,12 @@ STDAPI DllUnregisterServer()
 
 HRESULT
 InstallFontFiles(
-    _Out_ CStringW& strMsg,
-    _In_ PCUIDLIST_ABSOLUTE pidlParent,
-    _In_ UINT cidl,
-    _In_ PCUITEMID_CHILD_ARRAY apidl)
+    _Inout_ PINSTALL_FONT_DATA pData)
 {
+    PCUIDLIST_ABSOLUTE pidlParent = pData->pidlParent;
+    UINT cidl = pData->cSteps;
+    PCUITEMID_CHILD_ARRAY apidl = pData->apidl;
+
     CAtlArray<CStringW> FontPaths;
     for (UINT n = 0; n < cidl; ++n)
     {
@@ -138,9 +139,18 @@ InstallFontFiles(
 
     for (SIZE_T iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
     {
-        HRESULT hr = DoInstallFontFile(strMsg, FontPaths[iItem], g_FontCache->FontPath(), keyFonts);
+        if (pData->bCanceled)
+        {
+            WARN("Canceled\n");
+            return E_ABORT;
+        }
+
+        HRESULT hr = DoInstallFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+
+        if (pData->hwnd)
+            ::PostMessageW(pData->hwnd, WM_COMMAND, IDCONTINUE, 0);
     }
 
     return S_OK;
@@ -148,12 +158,13 @@ InstallFontFiles(
 
 HRESULT
 DoInstallFontFile(
-    _Out_ CStringW& strMsg,
     _In_ PCWSTR pszFontPath,
     _In_ PCWSTR pszFontsDir,
     _In_ HKEY hkeyFonts)
 {
-    WCHAR szDestFile[MAX_PATH];
+    ATLASSERT(pszFontPath);
+    ATLASSERT(pszFontsDir);
+    ATLASSERT(hkeyFonts);
 
     // Add this font to the font list, so we can query the name
     if (!AddFontResourceW(pszFontPath))
@@ -162,28 +173,52 @@ DoInstallFontFile(
         return E_FAIL;
     }
 
+    // Get the font name
     CStringW strFontName;
     HRESULT hr = DoGetFontTitle(pszFontPath, strFontName);
-
-    // We got the name, remove it again
-    RemoveFontResourceW(pszFontPath);
-
-    if (!SUCCEEDED(hr))
-    {
-        ERR("DoGetFontTitle failed (err=0x%x)!\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    // Remove it now
+    // WINDOWS BUG: Removing once is not enough
+    for (INT iTry = 0; iTry < 3; ++iTry)
+    {
+        if (!RemoveFontResourceW(pszFontPath) &&
+            !RemoveFontResourceExW(pszFontPath, FR_PRIVATE, NULL))
+        {
+            break;
+        }
     }
 
-    StringCchCopyW(szDestFile, sizeof(szDestFile), pszFontsDir);
+    // Delete font entry in registry
+    RegDeleteValueW(hkeyFonts, strFontName);
 
     LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
-    PathAppendW(szDestFile, pszFileTitle);
-    if (!CopyFileW(pszFontPath, szDestFile, FALSE))
+    ATLASSERT(pszFileTitle);
+
+    // Build destination path
+    CStringW szDestFile(pszFontsDir); // pszFontsDir has backslash at back
+    szDestFile += pszFileTitle;
+    TRACE("szDestFile: '%S'\n", (PCWSTR)szDestFile);
+
+    if (!StrCmpIW(szDestFile, pszFontPath)) // Same file?
     {
-        ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, szDestFile);
+        ERR("Wrongly same: %S\n", pszFontPath);
         return E_FAIL;
     }
 
+    // Delete file
+    if (DeleteFileW(szDestFile))
+        SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, (PCWSTR)szDestFile, NULL);
+
+    // Copy file
+    if (!CopyFileW(pszFontPath, szDestFile, FALSE))
+    {
+        ERR("CopyFileW('%S', '%S') failed\n", pszFontPath, (PCWSTR)szDestFile);
+        return E_FAIL;
+    }
+
+    // Write registry for font entry
     DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
     LONG nError = RegSetValueExW(hkeyFonts, strFontName, 0, REG_SZ,
                                  (const BYTE *)pszFileTitle, cbData);
@@ -193,6 +228,9 @@ DoInstallFontFile(
         DeleteFileW(szDestFile);
         return E_FAIL;
     }
+
+    // Notify file creation
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (PCWSTR)szDestFile, NULL);
 
     return AddFontResourceW(szDestFile) ? S_OK : E_FAIL;
 }
@@ -214,14 +252,49 @@ DoGetFontTitle(
     ret = GetFontResourceInfoW(pszFontPath, &cbInfo, pszBuffer, 1);
     DWORD dwErr = GetLastError();;
     strFontName.ReleaseBuffer();
-    if (ret)
+    if (!ret)
     {
-        TRACE("pszFontName: %S\n", (LPCWSTR)strFontName);
-        return S_OK;
+        ERR("GetFontResourceInfoW failed (err: %u)\n", dwErr);
+        return E_FAIL;
     }
 
-    ERR("GetFontResourceInfoW failed (err: %u)\n", dwErr);
-    return E_FAIL;
+    LPCWSTR pchDotExt = PathFindExtensionW(pszFontPath);
+    if (!StrCmpIW(pchDotExt, L".ttf") || !StrCmpIW(pchDotExt, L".ttc") ||
+        !StrCmpIW(pchDotExt, L".otf") || !StrCmpIW(pchDotExt, L".otc"))
+    {
+        strFontName += L" (TrueType)";
+    }
+
+    TRACE("pszFontName: %S\n", (LPCWSTR)strFontName);
+    return S_OK;
+}
+
+BOOL CheckDropFontFiles(HDROP hDrop)
+{
+    UINT cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+    if (cFiles == 0)
+        return FALSE;
+
+    for (UINT iFile = 0; iFile < cFiles; ++iFile)
+    {
+        WCHAR szFile[MAX_PATH];
+        if (!DragQueryFileW(hDrop, iFile, szFile, _countof(szFile)))
+            return FALSE;
+        LPCWSTR pchDotExt = PathFindExtensionW(szFile);
+        if (!IsFontDotExt(pchDotExt))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj)
+{
+    FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    HRESULT hr = pDataObj->GetData(&etc, &stg);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+    return reinterpret_cast<HDROP>(stg.hGlobal);
 }
 
 EXTERN_C

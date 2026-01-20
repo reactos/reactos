@@ -8,15 +8,12 @@ list(APPEND SOURCE
     CDataObject.cpp
     CEnumFonts.cpp
     CFontCache.cpp
-    CFontCache.hpp
     CFontExt.cpp
-    CFontExt.hpp
+    CFontFolderViewCB.cpp
     CFontMenu.cpp
     fontext.cpp
     fontpidl.cpp
-    fontpidl.hpp
-    precomp.h
-    resource.h)
+    precomp.h)
 
 add_library(fontext MODULE
     ${SOURCE}

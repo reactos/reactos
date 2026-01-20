@@ -47,7 +47,7 @@ public:
             if (m_Index < g_FontCache->Size())
             {
                 CStringW Name = g_FontCache->Name(m_Index);
-                LPITEMIDLIST item = _ILCreate(Name, m_Index);
+                LPITEMIDLIST item = _ILCreate(Name);
                 if (!item)
                 {
                     hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
