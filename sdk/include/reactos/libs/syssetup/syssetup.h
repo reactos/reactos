@@ -59,7 +59,6 @@ typedef struct _SETUPDATA
     UINT uPostNetworkWizardPage;
 
     PRODUCT_OPTION ProductOption;
-    HICON hCheckIcon;
 } SETUPDATA, *PSETUPDATA;
 
 
