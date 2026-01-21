@@ -77,27 +77,6 @@ WCHAR* g2s(REFCLSID iid)
     return buf[idx];
 }
 
-LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
-{
-    if (*cKeys >= 16)
-        return ERROR_MORE_DATA;
-
-    HKEY hkey;
-    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result == ERROR_SUCCESS)
-    {
-        array[*cKeys] = hkey;
-        *cKeys += 1;
-    }
-    return result;
-}
-
-void CloseRegKeyArray(HKEY* array, UINT cKeys)
-{
-    for (UINT i = 0; i < cKeys; ++i)
-        RegCloseKey(array[i]);
-}
-
 CFontExt::CFontExt()
 {
     InterlockedIncrement(&g_ModuleRefCnt);
@@ -111,6 +90,22 @@ CFontExt::~CFontExt()
 void CFontExt::SetViewWindow(HWND hwndView)
 {
     m_hwndView = hwndView;
+}
+
+HRESULT CALLBACK
+CFontExt::MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TRACE("%u, %p, %p\n", uMsg, wParam, lParam);
+    switch (uMsg)
+    {
+        case DFM_MERGECONTEXTMENU:
+            return S_OK; // Yes, I want verbs
+        case DFM_INVOKECOMMAND:
+            return S_FALSE; // Do it for me please
+        case DFM_GETDEFSTATICID:
+            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
+    }
+    return E_NOTIMPL;
 }
 
 // *** IShellFolder2 methods ***
@@ -343,7 +338,7 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
     }
     else if (riid == IID_IContextMenu)
     {
-        ERR("IContextMenu\n");
+        TRACE("IContextMenu\n");
         return CFontBkgndMenu_Create(this, hwndOwner, this, (IContextMenu**)ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
@@ -557,20 +552,4 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 {
     ATLASSERT(m_hwndView);
     return InstallFontsFromDataObject(m_hwndView, pDataObj);
-}
-
-HRESULT CALLBACK
-CFontExt::MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    TRACE("%u, %p, %p\n", uMsg, wParam, lParam);
-    switch (uMsg)
-    {
-        case DFM_MERGECONTEXTMENU:
-            return S_OK; // Yes, I want verbs
-        case DFM_INVOKECOMMAND:
-            return S_FALSE; // Do it for me please
-        case DFM_GETDEFSTATICID:
-            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
-    }
-    return E_NOTIMPL;
 }
