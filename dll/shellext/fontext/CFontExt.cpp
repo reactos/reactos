@@ -336,7 +336,7 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
         AddRef();
         hr = S_OK;
     }
-    else if (riid == IID_IContextMenu)
+    else if (IsEqualIID(riid, IID_IContextMenu))
     {
         TRACE("IContextMenu\n");
         return CFontBackgroundMenu_Create(this, hwndOwner, this, (IContextMenu**)ppvOut);
@@ -559,13 +559,13 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     {
         // Show error message
         text.LoadStringW(IDS_INSTALL_FAILED);
-        MessageBoxW(hwndView, text, title, MB_ICONERROR);
+        MessageBoxW(m_hwndView, text, title, MB_ICONERROR);
     }
     else if (hr == S_OK)
     {
         // Show successful message
         text.LoadStringW(IDS_INSTALL_OK);
-        MessageBoxW(hwndView, text, title, MB_ICONERROR);
+        MessageBoxW(m_hwndView, text, title, MB_ICONERROR);
     }
 
     return hr;

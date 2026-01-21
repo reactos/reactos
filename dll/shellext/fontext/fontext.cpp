@@ -295,7 +295,7 @@ BOOL CheckDataObject(IDataObject *pDataObj)
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
     HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
-    BOOL bOK = CheckDropFontFiles(hDrop)
+    BOOL bOK = CheckDropFontFiles(hDrop);
     ReleaseStgMedium(&stg);
     return bOK;
 }
