@@ -527,7 +527,13 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
 // *** IDropTarget methods ***
 STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    m_bDragAccepted = TRUE;
+    m_bDragAccepted = CheckDataObject(pDataObj);
+    if (!m_bDragAccepted)
+    {
+        *pdwEffect = DROPEFFECT_NONE;
+        return E_FAIL;
+    }
+
     *pdwEffect &= DROPEFFECT_COPY;
     return S_OK;
 }

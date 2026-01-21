@@ -64,8 +64,15 @@ STDMETHODIMP CFontBackgroundMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         CComPtr<IDataObject> pDataObj;
         HRESULT hr = OleGetClipboard(&pDataObj);
-        if (FAILED_UNEXPECTEDLY(hr))
+        if (FAILED_UNEXPECTEDLY(hr) || !CheckDataObject(pDataObj))
+        {
+            // Show error message
+            CStringW text, title;
+            title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
+            text.LoadStringW(IDS_INSTALL_FAILED);
+            MessageBoxW(m_hwnd, text, title, MB_ICONERROR);
             return E_FAIL;
+        }
 
         return SHSimulateDrop(m_pFontExt, pDataObj, 0, NULL, NULL);
     }
