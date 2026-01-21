@@ -109,13 +109,6 @@ STDMETHODIMP CFontBackgroundMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARA
     return E_NOTIMPL;
 }
 
-static
-HRESULT
-CFontBackgroundMenu_CreateInstance(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
-{
-    return ShellObjectCreatorInit<CFontBackgroundMenu>(pFontExt, pdcm, riid, ppv);
-}
-
 HRESULT
 APIENTRY
 CFontBackgroundMenu_Create(
@@ -130,11 +123,5 @@ CFontBackgroundMenu_Create(
     dcm.psf = psf;
     dcm.cidl = 0;
     dcm.apidl = NULL;
-    dcm.punkAssociationInfo = NULL;
-
-    HRESULT hr = CFontBackgroundMenu_CreateInstance(pFontExt, &dcm, IID_PPV_ARG(IContextMenu, ppcm));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return S_OK;
+    return ShellObjectCreatorInit<CFontBackgroundMenu>(pFontExt, &dcm, IID_PPV_ARG(IContextMenu, ppcm));
 }
