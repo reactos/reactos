@@ -2440,7 +2440,7 @@ ProcessPageDlgProc(HWND hwndDlg,
 {
     PSETUPDATA SetupData;
     PREGISTRATIONNOTIFY RegistrationNotify;
-    static HICON s_hCheckIcon, s_hArrowIcon;
+    static HICON s_hCheckIcon, s_hArrowIcon, s_hCrossIcon;
     static HFONT s_hNormalFont;
 
     /* Retrieve pointer to the global setup data */
@@ -2458,12 +2458,14 @@ ProcessPageDlgProc(HWND hwndDlg,
             ShowWindow(GetDlgItem(hwndDlg, IDC_CHECK4), SW_HIDE);
             s_hCheckIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CHECKICON), IMAGE_ICON, 16, 16, 0);
             s_hArrowIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_ARROWICON), IMAGE_ICON, 16, 16, 0);
+            s_hCrossIcon = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_CROSSICON), IMAGE_ICON, 16, 16, 0);
             s_hNormalFont = (HFONT)SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1, WM_GETFONT, 0, 0);
             break;
 
         case WM_DESTROY:
             DestroyIcon(s_hCheckIcon);
             DestroyIcon(s_hArrowIcon);
+            DestroyIcon(s_hCrossIcon);
             break;
 
         case WM_NOTIFY:
@@ -2500,13 +2502,14 @@ ProcessPageDlgProc(HWND hwndDlg,
 
         case PM_ITEM_END:
             DPRINT("PM_ITEM_END\n");
+            SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
             if (lParam == ERROR_SUCCESS)
             {
-                SendDlgItemMessage(hwndDlg, IDC_TASKTEXT1 + wParam, WM_SETFONT, (WPARAM)s_hNormalFont, (LPARAM)TRUE);
                 SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCheckIcon);
             }
             else
             {
+                SendDlgItemMessage(hwndDlg, IDC_CHECK1 + wParam, STM_SETIMAGE, IMAGE_ICON, (LPARAM)s_hCrossIcon);
                 ShowItemError(hwndDlg, (DWORD)lParam);
             }
             break;
