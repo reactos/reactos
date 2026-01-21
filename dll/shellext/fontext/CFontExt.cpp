@@ -14,6 +14,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 #define SHCIDS_ALLFIELDS 0x80000000L
 #endif
 
+HWND g_hwndView = NULL;
+
 struct FolderViewColumns
 {
     int iResource;
@@ -85,6 +87,12 @@ CFontExt::CFontExt()
 CFontExt::~CFontExt()
 {
     InterlockedDecrement(&g_ModuleRefCnt);
+}
+
+void CFontExt::SetViewWindow(HWND hwndView)
+{
+    m_hwndView = hwndView;
+    g_hwndView = hwndView;
 }
 
 // *** IShellFolder2 methods ***
@@ -315,10 +323,10 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
         AddRef();
         hr = S_OK;
     }
-    else if (IsEqualIID(riid, IID_IContextMenu))
+    else if (riid == IID_IContextMenu)
     {
-        ERR("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+        ERR("IContextMenu\n");
+        return CFontBkgndMenu_Create(this, hwndOwner, this, (IContextMenu**)ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
@@ -369,7 +377,9 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
         riid == IID_IContextMenu2 ||
         riid == IID_IContextMenu3)
     {
-        return _CFontMenu_CreateInstance(hwndOwner, cidl, apidl, this, riid, ppvOut);
+        if (cidl <= 0)
+            return E_NOTIMPL;
+        return CDefFolderMenu_Create2(m_Folder, hwndOwner, cidl, apidl, this, MenuCallBack, 0, NULL, (IContextMenu**)ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
     {
@@ -398,7 +408,12 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
         }
         else
         {
-            ERR("IID_IDataObject with cidl == 0 UNIMPLEMENTED\n");
+            CComPtr<IDataObject> pDataObj;
+            HRESULT hr = OleGetClipboard(&pDataObj);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return E_FAIL;
+            *ppvOut = pDataObj.Detach();
+            return S_OK;
         }
     }
     else if (riid == IID_IDropTarget)
@@ -499,26 +514,7 @@ STDMETHODIMP CFontExt::GetClassID(CLSID *lpClassId)
 // *** IDropTarget methods ***
 STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    m_bDragAccepted = FALSE;
-
-    STGMEDIUM stg;
-    HDROP hDrop = GetDropFromDataObject(stg, pDataObj);
-    if (!hDrop)
-    {
-        *pdwEffect = DROPEFFECT_NONE;
-        DragLeave();
-        return E_FAIL;
-    }
-
-    m_bDragAccepted = CheckDropFontFiles(hDrop);
-    ::ReleaseStgMedium(&stg);
-
-    if (!m_bDragAccepted)
-    {
-        *pdwEffect = DROPEFFECT_NONE;
-        return E_FAIL;
-    }
-
+    m_bDragAccepted = TRUE;
     *pdwEffect &= DROPEFFECT_COPY;
     return S_OK;
 }
@@ -539,138 +535,24 @@ STDMETHODIMP CFontExt::DragLeave()
     return S_OK;
 }
 
-DWORD WINAPI CFontExt::InstallThreadProc(LPVOID lpParameter)
-{
-    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)lpParameter;
-    ATLASSERT(pData);
-    pData->hrResult = InstallFontFiles(pData);
-    if (pData->bCanceled)
-        pData->hrResult = S_FALSE;
-    TRACE("hrResult: 0x%08X\n", pData->hrResult);
-    ::PostMessageW(pData->hwnd, WM_COMMAND, IDOK, 0);
-    pData->pDataObj->Release();
-    return 0;
-}
-
-INT_PTR CALLBACK
-CFontExt::InstallDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, PINSTALL_FONT_DATA pData)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            pData->hwnd = hwnd;
-            ATLASSERT(pData->cSteps >= 0);
-            SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, pData->cSteps));
-            if (!SHCreateThread(CFontExt::InstallThreadProc, pData, CTF_COINIT, NULL))
-            {
-                WARN("!SHCreateThread\n");
-                pData->pDataObj->Release();
-                pData->hrResult = E_ABORT;
-                EndDialog(hwnd, IDABORT);
-            }
-            return TRUE;
-        }
-        case WM_COMMAND:
-        {
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                    EndDialog(hwnd, IDOK);
-                    break;
-                case IDCANCEL:
-                    pData->bCanceled = TRUE;
-                    EndDialog(hwnd, IDCANCEL);
-                    break;
-                case IDCONTINUE:
-                    pData->iStep += 1;
-                    ATLASSERT(pData->iStep <= pData->cSteps);
-                    SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETPOS, pData->iStep, 0);
-                    break;
-            }
-            break;
-        }
-    }
-    return 0;
-}
-
-INT_PTR CALLBACK
-CFontExt::InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)GetWindowLongPtrW(hwnd, DWLP_USER);
-    if (uMsg == WM_INITDIALOG)
-    {
-        pData = (PINSTALL_FONT_DATA)lParam;
-        SetWindowLongPtrW(hwnd, DWLP_USER, lParam);
-    }
-
-    ATLASSERT(pData);
-    ATLASSERT(pData->pFontExt);
-    return pData->pFontExt->InstallDlgProc(hwnd, uMsg, wParam, lParam, pData);
-}
-
 STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    // NOTE: Getting cida in the other thread fails
-    CDataObjectHIDA cida(pDataObj);
-    if (!cida || cida->cidl <= 0)
+    ATLASSERT(m_hwndView);
+    return InstallFontsFromDataObject(m_hwndView, pDataObj);
+}
+
+HRESULT CALLBACK
+CFontExt::MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TRACE("%u, %p, %p\n", uMsg, wParam, lParam);
+    switch (uMsg)
     {
-        ERR("E_UNEXPECTED\n");
-        return E_UNEXPECTED;
+        case DFM_MERGECONTEXTMENU:
+            return S_OK; // Yes, I want verbs
+        case DFM_INVOKECOMMAND:
+            return S_FALSE; // Do it for me please
+        case DFM_GETDEFSTATICID:
+            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
     }
-
-    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
-    if (!pidlParent)
-    {
-        ERR("pidlParent is NULL\n");
-        return E_FAIL;
-    }
-
-    CAtlArray<PCUIDLIST_RELATIVE> apidl;
-    for (UINT n = 0; n < cida->cidl; ++n)
-    {
-        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
-        if (!pidlRelative)
-        {
-            ERR("!pidlRelative\n");
-            return E_FAIL;
-        }
-        apidl.Add(pidlRelative);
-    }
-
-    // Show progress dialog
-    INSTALL_FONT_DATA data;
-    data.pFontExt = this;
-    data.pDataObj = pDataObj;
-    data.pidlParent = pidlParent;
-    data.apidl = &apidl[0];
-    data.cSteps = cida->cidl;
-    pDataObj->AddRef();
-    DialogBoxParamW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDD_INSTALL),
-                    m_hwndView, CFontExt::InstallDialogProc, (LPARAM)&data);
-    if (data.bCanceled)
-        return E_ABORT;
-
-    CStringW text, title;
-    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
-    if (SUCCEEDED(data.hrResult))
-    {
-        // Invalidate our cache
-        g_FontCache->Read();
-
-        // Notify the system that a font was added
-        SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-
-        // Show successful message
-        text.LoadStringW(IDS_INSTALL_OK);
-        MessageBoxW(m_hwndView, text, title, MB_ICONINFORMATION);
-    }
-    else
-    {
-        // Show error message
-        text.LoadStringW(IDS_INSTALL_FAILED);
-        MessageBoxW(m_hwndView, text, title, MB_ICONERROR);
-    }
-
-    return data.hrResult;
+    return E_NOTIMPL;
 }

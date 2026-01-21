@@ -8,6 +8,40 @@
 
 #pragma once
 
+inline LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
+{
+    if (*cKeys >= 16)
+        return ERROR_MORE_DATA;
+
+    HKEY hkey;
+    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
+    if (result == ERROR_SUCCESS)
+    {
+        array[*cKeys] = hkey;
+        *cKeys += 1;
+    }
+    return result;
+}
+
+inline void CloseRegKeyArray(HKEY* array, UINT cKeys)
+{
+    for (UINT i = 0; i < cKeys; ++i)
+        RegCloseKey(array[i]);
+}
+
+struct CRegKeyHandleArray
+{
+    HKEY hKeys[16];
+    UINT cKeys;
+
+    CRegKeyHandleArray() : cKeys(0) {}
+    ~CRegKeyHandleArray() { CloseRegKeyArray(hKeys, cKeys); }
+    operator HKEY*() { return hKeys; }
+    operator UINT*() { return &cKeys; }
+    operator UINT() { return cKeys; }
+    HKEY& operator [](SIZE_T i) { return hKeys[i]; }
+};
+
 class CFontExt :
     public CComCoClass<CFontExt, &CLSID_CFontExt>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -18,18 +52,13 @@ class CFontExt :
     CComHeapPtr<ITEMIDLIST> m_Folder;
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
-    static INT_PTR CALLBACK InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    INT_PTR CALLBACK InstallDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, PINSTALL_FONT_DATA pData);
-    static DWORD WINAPI InstallThreadProc(LPVOID lpParameter);
 
 public:
     CFontExt();
     ~CFontExt();
 
-    void SetViewWindow(HWND hwndView)
-    {
-        m_hwndView = hwndView;
-    }
+    void SetViewWindow(HWND hwndView);
+    static HRESULT CALLBACK MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;
