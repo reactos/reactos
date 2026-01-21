@@ -31,8 +31,9 @@ HRESULT WINAPI CFontBkgndMenu::Initialize(CFontExt* pFontExt, const DEFCONTEXTME
 STDMETHODIMP CFontBkgndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     TRACE("%d\n", idCmdFirst);
+    CString strProp(MAKEINTRESOURCEW(IDS_PROPERTIES));
     INT idCmd = idCmdFirst;
-    AppendMenuW(hMenu, MF_STRING, idCmd++, L"Properties"); // TODO: Use resource string
+    AppendMenuW(hMenu, MF_STRING, idCmd++, strProp);
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmd - idCmdFirst);
 }
 
