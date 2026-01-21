@@ -569,21 +569,15 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     }
     else if (hr == S_OK)
     {
-        // Show successful message
-        text.LoadStringW(IDS_INSTALL_OK);
-        MessageBoxW(m_hwndView, text, title, MB_ICONINFORMATION);
-
         // Refresh font cache and notify the system about the font change
         if (g_FontCache)
             g_FontCache->Read();
 
-        SendMessageTimeoutW(HWND_BROADCAST,
-                            WM_FONTCHANGE,
-                            0,
-                            0,
-                            SMTO_ABORTIFHUNG,
-                            1000,
-                            NULL);
+        SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+
+        // Show successful message
+        text.LoadStringW(IDS_INSTALL_OK);
+        MessageBoxW(m_hwndView, text, title, MB_ICONINFORMATION);
     }
 
     return hr;
