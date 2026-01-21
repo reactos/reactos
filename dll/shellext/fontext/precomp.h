@@ -26,7 +26,6 @@
 
 extern const GUID CLSID_CFontExt;
 extern LONG g_ModuleRefCnt;
-extern HWND g_hwndView;
 
 typedef struct tagINSTALL_FONT_DATA
 {

@@ -14,8 +14,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 #define SHCIDS_ALLFIELDS 0x80000000L
 #endif
 
-HWND g_hwndView = NULL;
-
 struct FolderViewColumns
 {
     int iResource;
@@ -92,7 +90,6 @@ CFontExt::~CFontExt()
 void CFontExt::SetViewWindow(HWND hwndView)
 {
     m_hwndView = hwndView;
-    g_hwndView = hwndView;
 }
 
 // *** IShellFolder2 methods ***
