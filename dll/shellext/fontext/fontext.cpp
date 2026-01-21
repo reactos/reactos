@@ -267,9 +267,6 @@ DoGetFontTitle(
 
 BOOL CheckDropFontFiles(HDROP hDrop)
 {
-    if (!hDrop)
-        return FALSE;
-
     UINT cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
     if (cFiles == 0)
         return FALSE;

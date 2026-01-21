@@ -565,7 +565,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
     {
         // Show successful message
         text.LoadStringW(IDS_INSTALL_OK);
-        MessageBoxW(m_hwndView, text, title, MB_ICONERROR);
+        MessageBoxW(m_hwndView, text, title, MB_ICONINFORMATION);
     }
 
     return hr;
