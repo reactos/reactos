@@ -10,15 +10,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
-CFontBkgndMenu::CFontBkgndMenu()
+CFontBackgroundMenu::CFontBackgroundMenu()
 {
 }
 
-CFontBkgndMenu::~CFontBkgndMenu()
+CFontBackgroundMenu::~CFontBackgroundMenu()
 {
 }
 
-HRESULT WINAPI CFontBkgndMenu::Initialize(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm)
+HRESULT WINAPI CFontBackgroundMenu::Initialize(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm)
 {
     m_pFontExt = pFontExt;
     m_psf = pdcm->psf;
@@ -28,7 +28,7 @@ HRESULT WINAPI CFontBkgndMenu::Initialize(CFontExt* pFontExt, const DEFCONTEXTME
 }
 
 // IContextMenu
-STDMETHODIMP CFontBkgndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+STDMETHODIMP CFontBackgroundMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     TRACE("%d\n", idCmdFirst);
     CString strProp(MAKEINTRESOURCEW(IDS_PROPERTIES));
@@ -37,7 +37,7 @@ STDMETHODIMP CFontBkgndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmd - idCmdFirst);
 }
 
-STDMETHODIMP CFontBkgndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+STDMETHODIMP CFontBackgroundMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     INT idCmd = IS_INTRESOURCE(lpcmi->lpVerb) ? LOWORD(lpcmi->lpVerb) : -1;
     TRACE("%d\n", idCmd);
@@ -69,7 +69,7 @@ STDMETHODIMP CFontBkgndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     return S_OK;
 }
 
-STDMETHODIMP CFontBkgndMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+STDMETHODIMP CFontBackgroundMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
     TRACE("%d\n", idCommand);
     if (idCommand == 0)
@@ -81,13 +81,13 @@ STDMETHODIMP CFontBkgndMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, U
 }
 
 // IContextMenu2
-STDMETHODIMP CFontBkgndMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+STDMETHODIMP CFontBackgroundMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     return HandleMenuMsg2(uMsg, wParam, lParam, NULL);
 }
 
 // IContextMenu3
-STDMETHODIMP CFontBkgndMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
+STDMETHODIMP CFontBackgroundMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
 {
     if (uMsg == WM_INITMENUPOPUP)
     {
@@ -100,14 +100,14 @@ STDMETHODIMP CFontBkgndMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lPa
 
 static
 HRESULT
-CFontBkgndMenu_CreateInstance(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
+CFontBackgroundMenu_CreateInstance(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CFontBkgndMenu>(pFontExt, pdcm, riid, ppv);
+    return ShellObjectCreatorInit<CFontBackgroundMenu>(pFontExt, pdcm, riid, ppv);
 }
 
 HRESULT
 APIENTRY
-CFontBkgndMenu_Create(
+CFontBackgroundMenu_Create(
     CFontExt* pFontExt,
     HWND hwnd,
     IShellFolder* psf,
@@ -121,7 +121,7 @@ CFontBkgndMenu_Create(
     dcm.apidl = NULL;
     dcm.punkAssociationInfo = NULL;
 
-    HRESULT hr = CFontBkgndMenu_CreateInstance(pFontExt, &dcm, IID_PPV_ARG(IContextMenu, ppcm));
+    HRESULT hr = CFontBackgroundMenu_CreateInstance(pFontExt, &dcm, IID_PPV_ARG(IContextMenu, ppcm));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

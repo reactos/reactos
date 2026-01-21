@@ -339,7 +339,7 @@ STDMETHODIMP CFontExt::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppv
     else if (riid == IID_IContextMenu)
     {
         TRACE("IContextMenu\n");
-        return CFontBkgndMenu_Create(this, hwndOwner, this, (IContextMenu**)ppvOut);
+        return CFontBackgroundMenu_Create(this, hwndOwner, this, (IContextMenu**)ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {

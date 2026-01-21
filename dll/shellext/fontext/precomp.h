@@ -44,7 +44,7 @@ typedef struct tagINSTALL_FONT_DATA
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
 #include "CFontFolderViewCB.h"
-#include "CFontBkgndMenu.h"
+#include "CFontBackgroundMenu.h"
 
 #define FONT_HIVE   HKEY_LOCAL_MACHINE
 #define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
@@ -85,7 +85,7 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
 
 HRESULT
 APIENTRY
-CFontBkgndMenu_Create(
+CFontBackgroundMenu_Create(
     CFontExt* pFontExt,
     HWND hwnd,
     IShellFolder* psf,

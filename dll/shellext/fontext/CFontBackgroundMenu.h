@@ -7,7 +7,7 @@
 
 #pragma once
 
-class CFontBkgndMenu
+class CFontBackgroundMenu
     : public CComObjectRootEx<CComMultiThreadModelNoCS>
     , public IContextMenu3
 {
@@ -18,8 +18,8 @@ class CFontBkgndMenu
     LPFNDFMCALLBACK m_pfnmcb = nullptr;
 
 public:
-    CFontBkgndMenu();
-    virtual ~CFontBkgndMenu();
+    CFontBackgroundMenu();
+    virtual ~CFontBackgroundMenu();
     HRESULT WINAPI Initialize(CFontExt* pFontExt, const DEFCONTEXTMENU *pdcm);
 
     // IContextMenu
@@ -33,7 +33,7 @@ public:
     // IContextMenu3
     STDMETHODIMP HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) override;
 
-    BEGIN_COM_MAP(CFontBkgndMenu)
+    BEGIN_COM_MAP(CFontBackgroundMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
