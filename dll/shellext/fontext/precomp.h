@@ -90,19 +90,3 @@ CFontBackgroundMenu_Create(
     HWND hwnd,
     IShellFolder* psf,
     IContextMenu** ppcm);
-
-LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
-void CloseRegKeyArray(HKEY* array, UINT cKeys);
-
-struct CRegKeyHandleArray
-{
-    HKEY hKeys[16];
-    UINT cKeys;
-
-    CRegKeyHandleArray() : cKeys(0) {}
-    ~CRegKeyHandleArray() { CloseRegKeyArray(hKeys, cKeys); }
-    operator HKEY*() { return hKeys; }
-    operator UINT*() { return &cKeys; }
-    operator UINT() { return cKeys; }
-    HKEY& operator [](SIZE_T i) { return hKeys[i]; }
-};
