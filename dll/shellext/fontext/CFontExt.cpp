@@ -77,6 +77,27 @@ WCHAR* g2s(REFCLSID iid)
     return buf[idx];
 }
 
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
+{
+    if (*cKeys >= 16)
+        return ERROR_MORE_DATA;
+
+    HKEY hkey;
+    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
+    if (result == ERROR_SUCCESS)
+    {
+        array[*cKeys] = hkey;
+        *cKeys += 1;
+    }
+    return result;
+}
+
+void CloseRegKeyArray(HKEY* array, UINT cKeys)
+{
+    for (UINT i = 0; i < cKeys; ++i)
+        RegCloseKey(array[i]);
+}
+
 CFontExt::CFontExt()
 {
     InterlockedIncrement(&g_ModuleRefCnt);

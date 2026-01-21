@@ -8,26 +8,8 @@
 
 #pragma once
 
-inline LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
-{
-    if (*cKeys >= 16)
-        return ERROR_MORE_DATA;
-
-    HKEY hkey;
-    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result == ERROR_SUCCESS)
-    {
-        array[*cKeys] = hkey;
-        *cKeys += 1;
-    }
-    return result;
-}
-
-inline void CloseRegKeyArray(HKEY* array, UINT cKeys)
-{
-    for (UINT i = 0; i < cKeys; ++i)
-        RegCloseKey(array[i]);
-}
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
+void CloseRegKeyArray(HKEY* array, UINT cKeys);
 
 struct CRegKeyHandleArray
 {
