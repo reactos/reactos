@@ -267,6 +267,9 @@ DoGetFontTitle(
 
 BOOL CheckDropFontFiles(HDROP hDrop)
 {
+    if (!hDrop)
+        return FALSE;
+
     UINT cFiles = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
     if (cFiles == 0)
         return FALSE;
@@ -284,13 +287,17 @@ BOOL CheckDropFontFiles(HDROP hDrop)
     return TRUE;
 }
 
-HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj)
+BOOL CheckDataObject(IDataObject *pDataObj)
 {
+    STGMEDIUM stg;
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = pDataObj->GetData(&etc, &stg);
     if (FAILED_UNEXPECTEDLY(hr))
-        return NULL;
-    return reinterpret_cast<HDROP>(stg.hGlobal);
+        return FALSE;
+    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
+    BOOL bOK = CheckDropFontFiles(hDrop)
+    ReleaseStgMedium(&stg);
+    return bOK;
 }
 
 static DWORD WINAPI InstallThreadProc(LPVOID lpParameter)
@@ -364,12 +371,17 @@ InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
 {
-    // NOTE: Getting cida in the other thread fails
+    if (!CheckDataObject(pDataObj))
+    {
+        ERR("!CheckDataObject\n");
+        return E_FAIL;
+    }
+
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
     {
         ERR("E_UNEXPECTED\n");
-        return E_UNEXPECTED;
+        return E_FAIL;
     }
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
@@ -401,30 +413,9 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
     DialogBoxParamW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDD_INSTALL),
                     hwndView, InstallDialogProc, (LPARAM)&data);
     if (data.bCanceled)
-        return E_ABORT;
+        return S_FALSE;
 
-    CStringW text, title;
-    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
-    if (SUCCEEDED(data.hrResult))
-    {
-        // Invalidate our cache
-        g_FontCache->Read();
-
-        // Notify the system that a font was added
-        SendMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-
-        // Show successful message
-        text.LoadStringW(IDS_INSTALL_OK);
-        MessageBoxW(hwndView, text, title, MB_ICONINFORMATION);
-    }
-    else
-    {
-        // Show error message
-        text.LoadStringW(IDS_INSTALL_FAILED);
-        MessageBoxW(hwndView, text, title, MB_ICONERROR);
-    }
-
-    return data.hrResult;
+    return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
 }
 
 EXTERN_C

@@ -80,7 +80,7 @@ HRESULT DoGetFontTitle(
     _Out_ CStringW& strFontName);
 
 BOOL CheckDropFontFiles(HDROP hDrop);
-HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj);
+BOOL CheckDataObject(IDataObject *pDataObj);
 HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
 
 HRESULT

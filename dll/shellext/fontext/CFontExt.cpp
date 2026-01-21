@@ -551,5 +551,22 @@ STDMETHODIMP CFontExt::DragLeave()
 STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
     ATLASSERT(m_hwndView);
-    return InstallFontsFromDataObject(m_hwndView, pDataObj);
+    HRESULT hr = InstallFontsFromDataObject(m_hwndView, pDataObj);
+
+    CStringW text, title;
+    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        // Show error message
+        text.LoadStringW(IDS_INSTALL_FAILED);
+        MessageBoxW(hwndView, text, title, MB_ICONERROR);
+    }
+    else if (hr == S_OK)
+    {
+        // Show successful message
+        text.LoadStringW(IDS_INSTALL_OK);
+        MessageBoxW(hwndView, text, title, MB_ICONERROR);
+    }
+
+    return hr;
 }
