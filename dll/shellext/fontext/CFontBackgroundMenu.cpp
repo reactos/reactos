@@ -45,14 +45,18 @@ STDMETHODIMP CFontBackgroundMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     if (idCmd == 0 || (idCmd == -1 && !lstrcmpiA(lpcmi->lpVerb, "properties")))
     {
         // Open "Fonts" properties
-        LPITEMIDLIST pidl;
-        SHGetSpecialFolderLocation(m_hwnd, CSIDL_FONTS, &pidl);
+        LPITEMIDLIST pidl = NULL;
+        HRESULT hr = SHGetSpecialFolderLocation(m_hwnd, CSIDL_FONTS, &pidl);
+        if (FAILED_UNEXPECTEDLY(hr) || !pidl)
+            return E_FAIL;
+
         SHELLEXECUTEINFOW sei = {
             sizeof(sei), SEE_MASK_INVOKEIDLIST | SEE_MASK_ASYNCOK, NULL, L"properties",
             NULL, NULL, NULL, SW_SHOWNORMAL, NULL, const_cast<LPITEMIDLIST>(pidl)
         };
         BOOL bOK = ShellExecuteExW(&sei);
-        CoTaskMemFree(pidl);
+        if (pidl)
+            CoTaskMemFree(pidl);
         return bOK ? S_OK : E_FAIL;
     }
 
