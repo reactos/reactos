@@ -121,7 +121,5 @@ CFontBackgroundMenu_Create(
     ZeroMemory(&dcm, sizeof(dcm));
     dcm.hwnd = hwnd;
     dcm.psf = psf;
-    dcm.cidl = 0;
-    dcm.apidl = NULL;
     return ShellObjectCreatorInit<CFontBackgroundMenu>(pFontExt, &dcm, IID_PPV_ARG(IContextMenu, ppcm));
 }
