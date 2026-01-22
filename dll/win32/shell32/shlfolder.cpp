@@ -469,7 +469,7 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
             AddClassKeyToArray(wszSFA, array, cKeys);
 
             dwSize = sizeof(wszClass);
-            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
             {
                 swprintf(wszSFA, L"SystemFileAssociations\\%s", wszClass);
                 AddClassKeyToArray(wszSFA, array, cKeys);
