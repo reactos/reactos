@@ -1934,6 +1934,16 @@ static void test_printf_format(void)
     for (i = 0; i < ARRAY_SIZE(tests); ++i)
     {
         printf("test_printf_format '%s'\n", tests[i].spec);
+#ifdef __REACTOS__
+        if (GetNTVersion() < _WIN32_WINNT_VISTA)
+        {
+            if (i == 0)
+            {
+                win_skip("Skipping unsupported format test on Windows 2003.\n");
+                continue;
+            }
+        }
+#endif
         strcpy(spec, tests[i].spec);
         winetest_push_context("%s", spec);
         strcat(spec,"|%s");
