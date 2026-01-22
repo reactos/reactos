@@ -1,11 +1,10 @@
 /*
  * PROJECT:     ReactOS system libraries
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/stobject/csystray.h
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Systray shell service object
- * PROGRAMMERS: Robert Naumann
- *              David Quintana <gigaherz@gmail.com>
- *              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright 2014 Robert Naumann <gonzomdx@gmail.com>
+ *              Copyright 2014-2015 David Quintana <gigaherz@gmail.com>
+ *              Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 
 #pragma once

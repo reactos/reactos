@@ -1,11 +1,11 @@
 /*
-* PROJECT:     ReactOS system libraries
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/shellext/stobject/csystray.cpp
-* PURPOSE:     Systray shell service object implementation
-* PROGRAMMERS: David Quintana <gigaherz@gmail.com>
-*              Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
-*/
+ * PROJECT:     ReactOS system libraries
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Systray shell service object implementation
+ * COPYRIGHT:   Copyright 2014-2015 David Quintana <gigaherz@gmail.com>
+ *              Copyright 2017 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
+ */
 
 #include "precomp.h"
 
