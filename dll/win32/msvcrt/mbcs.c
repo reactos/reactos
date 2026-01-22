@@ -2513,6 +2513,11 @@ unsigned char* CDECL _mbsnbcat_l(unsigned char *dst, const unsigned char *src, s
 {
     pthreadmbcinfo mbcinfo;
 
+#ifdef __REACTOS__
+    if (!len)
+        return dst;
+#endif
+
     if (!MSVCRT_CHECK_PMT(dst && src))
         return NULL;
 
