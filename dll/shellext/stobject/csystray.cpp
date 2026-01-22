@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#include <mmddk.h>
 #include <regstr.h>
 #include <undocshell.h>
 #include <shellutils.h>
@@ -103,10 +104,11 @@ BOOL CSysTray::IsServiceEnabled(DWORD dwServiceFlag)
 
 void CSysTray::ConfigurePollTimer()
 {
-    // FIXME: VOLUME_SERVICE_FLAG should use mixerOpen(CALLBACK_WINDOW)
+    // FIXME: VOLUME_SERVICE_FLAG uses mixerOpen(CALLBACK_WINDOW) but the timer
+    //        still has to be here because CORE-20778
     // FIXME: POWER_SERVICE_FLAG should use WM_DEVICECHANGE, WM_POWERBROADCAST
 
-    DWORD fNeedsTimer = VOLUME_SERVICE_FLAG | POWER_SERVICE_FLAG;
+    DWORD fNeedsTimer = POWER_SERVICE_FLAG;
     if (this->dwServicesEnabled & fNeedsTimer)
         SetTimer(POLL_TIMER_ID, 2000, NULL);
     else
@@ -367,6 +369,7 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
     {
     case WM_NCCREATE:
     case WM_NCDESTROY:
+    case MM_MIXM_CONTROL_CHANGE:
         return FALSE;
 
     case WM_CLOSE:
@@ -392,6 +395,10 @@ BOOL CSysTray::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         if (wParam == SPI_SETMOUSEKEYS)
             MouseKeys_Update(this);
         break;
+
+    case MM_MIXM_LINE_CHANGE:
+        ProcessIconMessage(uMsg, wParam, lParam, lResult);
+        return TRUE;
 
     case WM_DESTROY:
         KillTimer(POLL_TIMER_ID);
