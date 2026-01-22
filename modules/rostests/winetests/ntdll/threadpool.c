@@ -704,6 +704,14 @@ static void test_tp_simple(void)
     ok(userdata < 100, "expected userdata < 100, got %lu\n", userdata);
 
     printf("test_tp_simple %lu\n", __LINE__);
+#ifdef __REACTOS__
+    if (!pTpQueryPoolStackInformation)
+    {
+        skip("TpQueryPoolStackInformation not available\n");
+    }
+    else
+    {
+#endif
     /* test querying and setting the stack size */
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
@@ -721,6 +729,9 @@ static void test_tp_simple(void)
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == 1, "expected 1 byte StackReserve, got %ld\n", (ULONG)stack_info.StackReserve);
     ok(stack_info.StackCommit == 1, "expected 1 byte StackCommit, got %ld\n", (ULONG)stack_info.StackCommit);
+#ifdef __REACTOS__
+    }
+#endif
 
     printf("test_tp_simple %lu\n", __LINE__);
     /* cleanup */
