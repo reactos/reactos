@@ -254,8 +254,7 @@ Pc98DiskReadLogicalSectorsLBA(
 
     /* If we get here then the read failed */
     DiskError("Disk Read Failed in LBA mode", RegsOut.b.ah);
-    ERR("Disk Read Failed in LBA mode: %x (%s) "
-        "(DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
+    ERR("Disk Read Failed in LBA mode: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
         RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
         DiskDrive->DaUa, SectorNumber, SectorCount);
 
@@ -333,13 +332,10 @@ Pc98DiskReadLogicalSectorsCHS(
              * CF - set on error, clear if successful
              * AH - status
              */
-            RegsIn.b.al = DiskDrive->DaUa;
             RegsIn.b.ah = 0x56;    /* With SEEK, and use double-density format (MFM) */
             RegsIn.w.bx = DriveGeometry.BytesPerSector * (UCHAR)NumberOfSectorsToRead;
             RegsIn.b.cl = PhysicalTrack & 0xFFFF;
             RegsIn.b.ch = BytesPerSectorToSectorLengthCode(DriveGeometry.BytesPerSector);
-            RegsIn.b.dl = PhysicalSector;
-            RegsIn.b.dh = PhysicalHead;
         }
         else
         {
@@ -358,13 +354,13 @@ Pc98DiskReadLogicalSectorsCHS(
              * CF - set on error, clear if successful
              * AH - status
              */
-            RegsIn.b.al = DiskDrive->DaUa;
             RegsIn.b.ah = 0x06;
             RegsIn.w.bx = DriveGeometry.BytesPerSector * (UCHAR)NumberOfSectorsToRead;
             RegsIn.w.cx = PhysicalTrack & 0xFFFF;
-            RegsIn.b.dl = PhysicalSector;
-            RegsIn.b.dh = PhysicalHead;
         }
+        RegsIn.b.al = DiskDrive->DaUa;
+        RegsIn.b.dl = PhysicalSector;
+        RegsIn.b.dh = PhysicalHead;
         RegsIn.w.es = (USHORT)(((ULONG_PTR)Buffer) >> 4);
         RegsIn.w.bp = ((ULONG_PTR)Buffer) & 0x0F;
 
@@ -386,8 +382,7 @@ Pc98DiskReadLogicalSectorsCHS(
         if (RetryCount >= 3)
         {
             DiskError("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
-            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) "
-                "(DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
+            ERR("Disk Read Failed in CHS mode, after retrying 3 times: %x (%s) (DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u)\n",
                 RegsOut.b.ah, DiskGetErrorCodeString(RegsOut.b.ah),
                 DiskDrive->DaUa, SectorNumber, SectorCount);
             return FALSE;
@@ -443,9 +438,7 @@ InitScsiDrive(
     /* Other devices */
     else if (ScsiParameters != 0)
     {
-        UCHAR DeviceType;
-
-        DeviceType = ScsiParameters & 0x1F;
+        UCHAR DeviceType = ScsiParameters & 0x1F;
         switch (DeviceType)
         {
             case 0x05:
@@ -639,9 +632,14 @@ InitIdeDrive(
         DiskDrive->Flags |= DRIVE_FLAGS_LBA;
 
     if (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
+    {
         DiskDrive->Type = DRIVE_TYPE_CDROM;
+        DiskDrive->Flags |= DRIVE_FLAGS_REMOVABLE;
+    }
     else
+    {
         DiskDrive->Type = DRIVE_TYPE_HDD;
+    }
 
     TRACE("InitIdeDrive(0x%x) returned:\n"
           "Cylinders  : 0x%x\n"
@@ -759,8 +757,7 @@ Pc98DiskReadLogicalSectors(
 {
     PPC98_DISK_DRIVE DiskDrive;
 
-    TRACE("Pc98DiskReadLogicalSectors() "
-          "DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
+    TRACE("Pc98DiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64u SectorCount: %u Buffer: 0x%x\n",
           DriveNumber, SectorNumber, SectorCount, Buffer);
 
     /* 16-bit BIOS addressing limitation */

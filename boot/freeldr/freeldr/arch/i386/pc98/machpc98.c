@@ -40,7 +40,8 @@ Pc98PrepareForReactOS(VOID)
 }
 
 ULONG
-Pc98GetBootSectorLoadAddress(IN UCHAR DriveNumber)
+Pc98GetBootSectorLoadAddress(
+    _In_ UCHAR DriveNumber)
 {
     PPC98_DISK_DRIVE DiskDrive;
 
