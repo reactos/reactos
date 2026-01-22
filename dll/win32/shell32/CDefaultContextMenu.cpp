@@ -751,7 +751,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         }
         else if (info.Verb.CompareNoCase(L"explore") == 0)
         {
-            idVerbRes = IDS_EXPLORE_VERB; // TODO: This string should include '&'
+            idVerbRes = IDS_EXPLORE_VERB;
             if (uFlags & CMF_EXPLORE)
             {
                 fState |= MFS_DEFAULT;
