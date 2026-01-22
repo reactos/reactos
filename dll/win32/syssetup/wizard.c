@@ -1682,6 +1682,32 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
 }
 
 
+static BOOL
+HasDaylightSavingTime(PTIMEZONE_ENTRY Entry)
+{
+    /* If StandardDate.wMonth and DaylightDate.wMonth are zero,
+     * the timezone does not observe daylight saving time */
+    return (Entry->TimezoneInfo.StandardDate.wMonth != 0 &&
+            Entry->TimezoneInfo.DaylightDate.wMonth != 0);
+}
+
+static PTIMEZONE_ENTRY
+GetSelectedTimeZoneEntry(PSETUPDATA SetupData, DWORD dwEntryIndex)
+{
+    PTIMEZONE_ENTRY Entry;
+
+    Entry = SetupData->TimeZoneListHead;
+    while (Entry != NULL)
+    {
+        if (Entry->Index == dwEntryIndex)
+            return Entry;
+
+        Entry = Entry->Next;
+    }
+
+    return SetupData->TimeZoneListHead;
+}
+
 static VOID
 ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
 {
@@ -1855,6 +1881,9 @@ DateTimePageDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            DWORD dwEntryIndex;
+            PTIMEZONE_ENTRY Entry;
+
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
@@ -1873,10 +1902,20 @@ DateTimePageDlgProc(HWND hwndDlg,
             }
             else
             {
+                /* Get the default time zone index from the registry */
+                dwEntryIndex = (DWORD)-1;
+                GetTimeZoneListIndex(&dwEntryIndex);
+
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                  SetupData, -1);
 
-                SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                /* Set the auto-daylight checkbox based on whether
+                 * the selected timezone observes DST */
+                Entry = GetSelectedTimeZoneEntry(SetupData, dwEntryIndex);
+                if (Entry != NULL && HasDaylightSavingTime(Entry))
+                {
+                    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                }
             }
             break;
         }
