@@ -3131,6 +3131,9 @@ static void test_async_cancel_on_handle_close(void)
             ok(io.Status == 0xcccccccc, "got %#lx.\n", io.Status);
 
             if (other_process && tests[i].apc_context && !tests[i].event)
+#ifdef __REACTOS__
+                todo_if((GetNTVersion() < _WIN32_WINNT_VISTA) && !tests[i].event && !tests[i].apc && tests[i].apc_context)
+#endif
                 test_queued_completion(port, &io, STATUS_CANCELLED, 0);
             else
                 test_no_queued_completion(port);
