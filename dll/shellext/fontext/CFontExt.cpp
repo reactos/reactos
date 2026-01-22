@@ -384,15 +384,51 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
+HRESULT CFontExt::CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut)
+{
+    if (cidl <= 0)
+    {
+        ERR("cidl: %u\n", cidl);
+        return E_NOTIMPL;
+    }
+
+    const FontPidlEntry* pEntry = _FontFromIL(apidl[0]);
+    if (!pEntry)
+    {
+        ERR("!pEntry\n");
+        return E_FAIL;
+    }
+    auto info = g_FontCache->Find(pEntry);
+    if (!info)
+    {
+        ERR("!info\n");
+        return E_FAIL;
+    }
+    LPCWSTR extension = PathFindExtensionW(info->File());
+
+    CRegKeyHandleArray keys;
+
+    WCHAR wszClass[MAX_PATH];
+    DWORD dwSize = sizeof(wszClass);
+    if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) != ERROR_SUCCESS ||
+        !*wszClass || AddClassKeyToArray(wszClass, keys, keys) != ERROR_SUCCESS)
+    {
+        AddClassKeyToArray(extension, keys, keys);
+
+        if (cidl == 1)
+            AddClassKeyToArray(L"Unknown", keys, keys);
+    }
+
+    return CDefFolderMenu_Create2(m_Folder, hwndOwner, cidl, apidl, this, MenuCallBack, keys, keys, (IContextMenu**)ppvOut);
+}
+
 STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     if (riid == IID_IContextMenu ||
         riid == IID_IContextMenu2 ||
         riid == IID_IContextMenu3)
     {
-        if (cidl <= 0)
-            return E_NOTIMPL;
-        return CDefFolderMenu_Create2(m_Folder, hwndOwner, cidl, apidl, this, MenuCallBack, 0, NULL, (IContextMenu**)ppvOut);
+        return CreateForegroundMenu(hwndOwner, cidl, apidl, ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
     {

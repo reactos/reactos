@@ -25,6 +25,7 @@ public:
 
     void SetViewWindow(HWND hwndView);
     static HRESULT CALLBACK MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut);
 
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;
