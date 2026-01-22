@@ -2969,6 +2969,13 @@ static void subtest_pipe_name(const struct pipe_name_test *pnt)
     UNICODE_STRING name;
     NTSTATUS status;
 
+#ifdef __REACTOS__
+    if ((GetNTVersion() < _WIN32_WINNT_VISTA) && (wcscmp(pnt->name, L"\\Device\\NamedPipe\\\\") == 0))
+    {
+        win_skip("Skipping subtest_pipe_name for '%ws' on Windows 2003\n", pnt->name);
+        return;
+    }
+#endif
     pRtlInitUnicodeString(&name, pnt->name);
     InitializeObjectAttributes(&attr, &name, OBJ_CASE_INSENSITIVE, NULL, NULL);
     timeout.QuadPart = -100000000;
