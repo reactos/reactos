@@ -225,7 +225,7 @@ static void test_RtlQueryPerformanceCounter(void)
 #define CHECK_CURRENT_TIMER(expected) \
     do { \
         ok(status == STATUS_SUCCESS, "NtSetTimerResolution failed %lx\n", status); \
-        ok(cur2 == (expected) || broken(abs((int)((expected) - cur2)) <= TIMER_LEEWAY), "expected new timer resolution %lu, got %lu\n", (expected), cur2); \
+        ok(cur2 == (expected) || broken(abs((int)((expected) - cur2)) <= TIMER_LEEWAY) || /* __REACTOS__ */ broken(GetNTVersion() < _WIN32_WINNT_VISTA), "expected new timer resolution %lu, got %lu\n", (expected), cur2); \
         set = cur2; \
         min2 = min + 20000; \
         cur2 = min2 + 1; \
