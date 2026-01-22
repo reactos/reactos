@@ -976,7 +976,7 @@ BEGIN
     IDS_VXD_FILE "Sanal Aygıt Sürücüsü"
     IDS_ANY_FILE "%s Dosyası"
 
-    IDS_OPEN_VERB "Aç"
+    IDS_OPEN_VERB "&Aç"
     IDS_EXPLORE_VERB "Araştır"
     IDS_RUNAS_VERB "Birlikte Aç..."
     IDS_EDIT_VERB "Düzenle"

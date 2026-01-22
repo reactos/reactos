@@ -745,7 +745,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
         if (info.Verb.CompareNoCase(L"open") == 0)
         {
-            idVerbRes = IDS_OPEN_VERB; // TODO: This string should include '&'
+            idVerbRes = IDS_OPEN_VERB;
             fState |= MFS_DEFAULT; /* override default when open verb is found */
             forceFirstPos++;
         }

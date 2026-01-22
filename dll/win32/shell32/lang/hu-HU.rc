@@ -966,7 +966,7 @@ BEGIN
     IDS_VXD_FILE "Virtuális eszközillesztő"
     IDS_ANY_FILE "%s fájl"
 
-    IDS_OPEN_VERB "Megnyitás"
+    IDS_OPEN_VERB "&Megnyitás"
     IDS_EXPLORE_VERB "Intéző"
     IDS_RUNAS_VERB "Futtatás mint..."
     IDS_EDIT_VERB "Szerkesztés"

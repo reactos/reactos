@@ -968,7 +968,7 @@ BEGIN
     IDS_VXD_FILE "Virtueller Gerätetreiber"
     IDS_ANY_FILE "%s-Datei"
 
-    IDS_OPEN_VERB "Öffnen"
+    IDS_OPEN_VERB "&Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"
     IDS_RUNAS_VERB "Ausführen als..."
     IDS_EDIT_VERB "Bearbeiten"

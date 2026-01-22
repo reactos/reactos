@@ -967,7 +967,7 @@ BEGIN
     IDS_VXD_FILE "Водач на привидно устройство"
     IDS_ANY_FILE "%s-file"
 
-    IDS_OPEN_VERB "Отваряне"
+    IDS_OPEN_VERB "&Отваряне"
     IDS_EXPLORE_VERB "Explore"
     IDS_RUNAS_VERB "Изпълняване като..."
     IDS_EDIT_VERB "Обработка"

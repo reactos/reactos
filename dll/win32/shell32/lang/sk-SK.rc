@@ -967,7 +967,7 @@ BEGIN
     IDS_VXD_FILE "Ovládač virtuálneho zariadenia"
     IDS_ANY_FILE "%s File"
 
-    IDS_OPEN_VERB "Otvoriť"
+    IDS_OPEN_VERB "&Otvoriť"
     IDS_EXPLORE_VERB "Explore"
     IDS_RUNAS_VERB "Spustiť ako..."
     IDS_EDIT_VERB "Upraviť"
