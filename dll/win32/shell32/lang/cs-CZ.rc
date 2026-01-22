@@ -976,7 +976,7 @@ BEGIN
     IDS_ANY_FILE "Soubor %s"
 
     IDS_OPEN_VERB "&Otevřít"
-    IDS_EXPLORE_VERB "Prozkoumat"
+    IDS_EXPLORE_VERB "&Prozkoumat"
     IDS_RUNAS_VERB "Spustit jako..."
     IDS_EDIT_VERB "Upravit"
     IDS_FIND_VERB "Najít"

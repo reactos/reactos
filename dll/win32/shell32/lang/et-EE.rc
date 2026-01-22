@@ -975,7 +975,7 @@ BEGIN
     IDS_ANY_FILE "%s-fail"
 
     IDS_OPEN_VERB "&Ava"
-    IDS_EXPLORE_VERB "Uuri"
+    IDS_EXPLORE_VERB "&Uuri"
     IDS_RUNAS_VERB "Käivita kasutajana..."
     IDS_EDIT_VERB "Muuda"
     IDS_FIND_VERB "Leia"

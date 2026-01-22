@@ -975,7 +975,7 @@ BEGIN
     IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "&Hap"
-    IDS_EXPLORE_VERB "Eksplorer"
+    IDS_EXPLORE_VERB "&Eksplorer"
     IDS_RUNAS_VERB "Ekzekuto Si..."
     IDS_EDIT_VERB "Modifiko"
     IDS_FIND_VERB "Gjej"

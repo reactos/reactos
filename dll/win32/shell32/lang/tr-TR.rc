@@ -977,7 +977,7 @@ BEGIN
     IDS_ANY_FILE "%s Dosyası"
 
     IDS_OPEN_VERB "&Aç"
-    IDS_EXPLORE_VERB "Araştır"
+    IDS_EXPLORE_VERB "A&raştır"
     IDS_RUNAS_VERB "Birlikte Aç..."
     IDS_EDIT_VERB "Düzenle"
     IDS_FIND_VERB "Bul"

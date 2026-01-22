@@ -968,7 +968,7 @@ BEGIN
     IDS_ANY_FILE "%s File"
 
     IDS_OPEN_VERB "&Otvoriť"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "E&xplore"
     IDS_RUNAS_VERB "Spustiť ako..."
     IDS_EDIT_VERB "Upraviť"
     IDS_FIND_VERB "Find"
