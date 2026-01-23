@@ -986,8 +986,6 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
         ControllerSuspended = (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND) != 0 ||
                               (FdoExtension->CommonExtension.DevicePowerState == PowerDeviceD3);
 
-        KeAcquireSpinLockAtDpcLevel(&Endpoint->EndpointSpinLock);
-
         if (ControllerSuspended)
         {
             /* Controller is suspended/off - mark endpoint as ready immediately */
@@ -1007,7 +1005,6 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
             }
         }
 
-        KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
 
         if (EndpointReady)
         {
@@ -1022,6 +1019,8 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
 
             DPRINT_CORE("USBPORT_IsrDpcHandler: Endpoint->StateLast - %x\n",
                         Endpoint->StateLast);
+            
+            KeReleaseSpinLockFromDpcLevel(&FdoExtension->EpStateChangeSpinLock);
 
             if (IsDpcHandler)
             {
@@ -1035,6 +1034,8 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
                                                   Endpoint,
                                                   INVALIDATE_ENDPOINT_WORKER_THREAD);
             }
+
+            KeAcquireSpinLockAtDpcLevel(&FdoExtension->EpStateChangeSpinLock);
         }
         else if (!ControllerSuspended)
         {

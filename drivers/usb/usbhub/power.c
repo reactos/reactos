@@ -88,15 +88,13 @@ USBH_HubESDRecoverySetD0Completion(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Clear the ESD recovery flag after successful power cycle */
         HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
-
         DPRINT("USBH_HubESDRecoverySetD0Completion: ESD recovery completed\n");
     }
     else if (HubExtension)
     {
         /* If D0 transition failed, clear the flag anyway to allow retry */
         HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
-
-        DPRINT1("USBH_HubESDRecoverySetD0Completion: ESD recovery failed with status %lX\n",
+        DPRINT1("USBH_HubESDRecoverySetD0Completion: ESD recovery failed with status 0x%08lx\n",
                 IoStatus->Status);
     }
 }
@@ -190,7 +188,6 @@ USBH_HubStartESDRecovery(IN PUSBHUB_FDO_EXTENSION HubExtension)
                                USBH_HubESDRecoverySetD3Completion,
                                &Event,
                                NULL);
-
     if (Status == STATUS_PENDING)
     {
         Status = KeWaitForSingleObject(&Event,
@@ -199,7 +196,6 @@ USBH_HubStartESDRecovery(IN PUSBHUB_FDO_EXTENSION HubExtension)
                                        FALSE,
                                        NULL);
     }
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("USBH_HubStartESDRecovery: Failed to set D3, Status - %lX\n", Status);
@@ -216,7 +212,6 @@ USBH_HubStartESDRecovery(IN PUSBHUB_FDO_EXTENSION HubExtension)
                                USBH_HubESDRecoverySetD0Completion,
                                HubExtension,
                                NULL);
-
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {
         DPRINT1("USBH_HubStartESDRecovery: Failed to set D0, Status - %lX\n", Status);
