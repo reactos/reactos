@@ -139,8 +139,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     *pSize = 0;
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + sizeof(*DiskGeometry);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -157,11 +156,10 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 //  PartialResourceList->PartialDescriptors[0].ShareDisposition =
 //  PartialResourceList->PartialDescriptors[0].Flags =
     PartialResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize =
-        sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
+        sizeof(*DiskGeometry);
 
     /* Get pointer to geometry data */
-    DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
-
+    DiskGeometry = (PVOID)&PartialResourceList->PartialDescriptors[1];
     /* Get the disk geometry */
     if (PcDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
@@ -203,8 +201,7 @@ DetectDockingStation(
     Result = PnpBiosGetDockStationInformation(DiskReadBuffer);
 
     /* Build full device descriptor */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           sizeof(DOCKING_STATE_INFORMATION);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + sizeof(*DockingState);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -223,7 +220,7 @@ DetectDockingStation(
     PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->Flags = 0;
-    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(DOCKING_STATE_INFORMATION);
+    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(*DockingState);
 
     DockingState = (PDOCKING_STATE_INFORMATION)&PartialResourceList->PartialDescriptors[1];
     DockingState->ReturnCode = Result;
@@ -269,7 +266,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     ULONG PnpBufferSize;
     ULONG PnpBufferSizeLimit;
     ULONG Size;
-    char *Ptr;
+    char* Ptr;
 
     InstData = (PCM_PNP_BIOS_INSTALLATION_CHECK)PnpBiosSupported();
     if (InstData == NULL || strncmp((CHAR*)InstData->Signature, "$PnP", 4))
@@ -322,11 +319,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PartialResourceList->PartialDescriptors[0].ShareDisposition =
         CmResourceShareUndetermined;
 
-    /* The buffer starts after PartialResourceList->PartialDescriptors[0] */
-    Ptr = (char *)(PartialResourceList + 1);
-
     /* Set installation check data */
-    memcpy (Ptr, InstData, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
+    Ptr = (char*)&PartialResourceList->PartialDescriptors[1];
+    RtlCopyMemory(Ptr, InstData, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
     Ptr += sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
     PnpBufferSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
 
@@ -352,7 +347,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 break;
             }
 
-            memcpy(Ptr, DeviceNode, DeviceNode->Size);
+            RtlCopyMemory(Ptr, DeviceNode, DeviceNode->Size);
 
             Ptr += DeviceNode->Size;
             PnpBufferSize += DeviceNode->Size;
@@ -688,8 +683,7 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
         }
 
         /* Set 'Configuration Data' value */
-        Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
-               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -820,9 +814,7 @@ DetectSerialPorts(
         RtlStringCbPrintfA(Identifier, sizeof(Identifier), "COM%ld", i + 1);
 
         /* Build full device descriptor */
-        Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-               2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
-               sizeof(CM_SERIAL_DEVICE_DATA);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[3]) + sizeof(*SerialDeviceData);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -860,10 +852,9 @@ DetectSerialPorts(
         PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
         PartialDescriptor->Flags = 0;
-        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_SERIAL_DEVICE_DATA);
+        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(*SerialDeviceData);
 
-        SerialDeviceData =
-            (PCM_SERIAL_DEVICE_DATA)&PartialResourceList->PartialDescriptors[3];
+        SerialDeviceData = (PCM_SERIAL_DEVICE_DATA)(PartialDescriptor + 1);
         SerialDeviceData->BaudClock = 1843200; /* UART Clock frequency (Hertz) */
 
         /* Create controller key */
@@ -896,7 +887,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-    ULONG Irq[MAX_LPT_PORTS] = {7, 5, (ULONG) - 1};
+    ULONG Irq[MAX_LPT_PORTS] = {7, 5, (ULONG)-1};
     CHAR Identifier[80];
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     PUSHORT BasePtr;
@@ -926,8 +917,8 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         RtlStringCbPrintfA(Identifier, sizeof(Identifier), "PARALLEL%ld", i + 1);
 
         /* Build full device descriptor */
-        Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
-        if (Irq[i] != (ULONG) - 1)
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]);
+        if (Irq[i] != (ULONG)-1)
             Size += sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
@@ -941,7 +932,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
-        PartialResourceList->Count = (Irq[i] != (ULONG) - 1) ? 2 : 1;
+        PartialResourceList->Count = (Irq[i] != (ULONG)-1) ? 2 : 1;
 
         /* Set IO Port */
         PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
@@ -953,7 +944,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialDescriptor->u.Port.Length = 3;
 
         /* Set Interrupt */
-        if (Irq[i] != (ULONG) - 1)
+        if (Irq[i] != (ULONG)-1)
         {
             PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
             PartialDescriptor->Type = CmResourceTypeInterrupt;
@@ -1066,8 +1057,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     if (DetectKeyboardDevice()) */
     {
         /* Set 'Configuration Data' value */
-        Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-               sizeof(CM_KEYBOARD_DEVICE_DATA);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + sizeof(*KeyboardData);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -1084,7 +1074,7 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
         PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
+        PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(*KeyboardData);
 
         /* Int 16h AH=02h
          * KEYBOARD - GET SHIFT FLAGS
@@ -1126,8 +1116,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
     ULONG Size;
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[3]);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -1306,7 +1295,8 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
     {
         TRACE("Detected PS2 port\n");
 
-        PartialResourceList = FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST), TAG_HW_RESOURCE_LIST);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]);
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
@@ -1314,7 +1304,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
         }
 
         /* Initialize resource descriptor */
-        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST));
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;
@@ -1336,7 +1326,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                0xFFFFFFFF,
                                NULL,
                                PartialResourceList,
-                               sizeof(CM_PARTIAL_RESOURCE_LIST),
+                               Size,
                                &ControllerKey);
 
         if (DetectPS2AuxDevice())
@@ -1344,8 +1334,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             TRACE("Detected PS2 mouse\n");
 
             /* Initialize resource descriptor */
-            Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+            Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
             PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
             if (PartialResourceList == NULL)
             {
@@ -1639,8 +1628,7 @@ DetectIsaBios(
     ULONG Size;
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
-           sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
