@@ -1355,6 +1355,32 @@ KeTerminateThread(IN KPRIORITY Increment)
     PKPROCESS Process = Thread->ApcState.Process;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
+#if defined(_M_IX86)
+    /*
+     * On x86, the lazy-FPU mechanism tracks the last thread that owned the
+     * FPU state in PRCB->NpxThread, and its save area lives in the thread's
+     * kernel stack. Since we are still running in the exiting thread's context,
+     * clear any stale PRCB references now.
+     */
+    if (KeI386NpxPresent)
+    {
+        ULONG i;
+        PKTHREAD NpxKThread = Thread;
+
+        for (i = 0; i < KeNumberProcessors; i++)
+        {
+            PKPRCB Prcb = KiProcessorBlock[i];
+            if (!Prcb) continue;
+
+            (VOID)InterlockedCompareExchangePointer((PVOID*)&Prcb->NpxThread,
+                                                    NULL,
+                                                    NpxKThread);
+        }
+
+        Thread->NpxState = NPX_STATE_NOT_LOADED;
+    }
+#endif
+
     /* Lock the process */
     KiAcquireProcessLockRaiseToSynch(Process, &LockHandle);
 

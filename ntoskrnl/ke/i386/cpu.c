@@ -1274,6 +1274,16 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
         NpxThread = KeGetCurrentPrcb()->NpxThread;
         if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
         {
+            if ((NpxThread->InitialStack == NULL))
+            {
+                NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                KeGetCurrentPrcb()->NpxThread = NULL;
+                NpxThread = NULL;
+            }
+        }
+
+        if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
+        {
             /* Get the FX frame and store the state there */
             FxSaveArea = KiGetThreadNpxArea(NpxThread);
             Ke386FxSave(FxSaveArea);
@@ -1435,6 +1445,16 @@ KeSaveFloatingPointState(
      */
     if (FsContext->CurrentThread != CurrentPrcb->NpxThread)
     {
+        if ((CurrentPrcb->NpxThread != NULL) &&
+            (CurrentPrcb->NpxThread->NpxState == NPX_STATE_LOADED))
+        {
+            if (CurrentPrcb->NpxThread->InitialStack == NULL)
+            {
+                CurrentPrcb->NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                CurrentPrcb->NpxThread = NULL;
+            }
+        }
+
         if ((CurrentPrcb->NpxThread != NULL) &&
             (CurrentPrcb->NpxThread->NpxState == NPX_STATE_LOADED))
         {
