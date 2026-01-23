@@ -18,18 +18,14 @@ class CFontExt :
     CComHeapPtr<ITEMIDLIST> m_Folder;
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
-    static INT_PTR CALLBACK InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    INT_PTR CALLBACK InstallDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, PINSTALL_FONT_DATA pData);
-    static DWORD WINAPI InstallThreadProc(LPVOID lpParameter);
 
 public:
     CFontExt();
     ~CFontExt();
 
-    void SetViewWindow(HWND hwndView)
-    {
-        m_hwndView = hwndView;
-    }
+    void SetViewWindow(HWND hwndView);
+    static HRESULT CALLBACK MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut);
 
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;

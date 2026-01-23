@@ -100,6 +100,27 @@ STDAPI DllUnregisterServer()
     return gModule.DllUnregisterServer(FALSE);
 }
 
+void CloseRegKeyArray(HKEY* array, UINT cKeys)
+{
+    for (UINT i = 0; i < cKeys; ++i)
+        RegCloseKey(array[i]);
+}
+
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
+{
+    if (*cKeys >= 16)
+        return ERROR_MORE_DATA;
+
+    HKEY hkey;
+    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
+    if (result == ERROR_SUCCESS)
+    {
+        array[*cKeys] = hkey;
+        *cKeys += 1;
+    }
+    return result;
+}
+
 HRESULT
 InstallFontFiles(
     _Inout_ PINSTALL_FONT_DATA pData)
@@ -207,10 +228,6 @@ DoInstallFontFile(
         return E_FAIL;
     }
 
-    // Delete file
-    if (DeleteFileW(szDestFile))
-        SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, (PCWSTR)szDestFile, NULL);
-
     // Copy file
     if (!CopyFileW(pszFontPath, szDestFile, FALSE))
     {
@@ -288,13 +305,135 @@ BOOL CheckDropFontFiles(HDROP hDrop)
     return TRUE;
 }
 
-HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj)
+BOOL CheckDataObject(IDataObject *pDataObj)
 {
+    STGMEDIUM stg;
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = pDataObj->GetData(&etc, &stg);
     if (FAILED_UNEXPECTEDLY(hr))
-        return NULL;
-    return reinterpret_cast<HDROP>(stg.hGlobal);
+        return FALSE;
+    HDROP hDrop = reinterpret_cast<HDROP>(stg.hGlobal);
+    BOOL bOK = CheckDropFontFiles(hDrop);
+    ReleaseStgMedium(&stg);
+    return bOK;
+}
+
+static DWORD WINAPI InstallThreadProc(LPVOID lpParameter)
+{
+    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)lpParameter;
+    ATLASSERT(pData);
+    pData->hrResult = InstallFontFiles(pData);
+    if (pData->bCanceled)
+        pData->hrResult = S_FALSE;
+    TRACE("hrResult: 0x%08X\n", pData->hrResult);
+    ::PostMessageW(pData->hwnd, WM_COMMAND, IDOK, 0);
+    pData->pDataObj->Release();
+    return 0;
+}
+
+static INT_PTR CALLBACK
+InstallDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, PINSTALL_FONT_DATA pData)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            pData->hwnd = hwnd;
+            ATLASSERT(pData->cSteps >= 0);
+            SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, pData->cSteps));
+            if (!SHCreateThread(InstallThreadProc, pData, CTF_COINIT, NULL))
+            {
+                WARN("!SHCreateThread\n");
+                pData->pDataObj->Release();
+                pData->hrResult = E_ABORT;
+                EndDialog(hwnd, IDABORT);
+            }
+            return TRUE;
+        }
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwnd, IDOK);
+                    break;
+                case IDCANCEL:
+                    pData->bCanceled = TRUE;
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+                case IDCONTINUE:
+                    pData->iStep += 1;
+                    ATLASSERT(pData->iStep <= pData->cSteps);
+                    SendDlgItemMessageW(hwnd, IDC_INSTALL_PROGRESS, PBM_SETPOS, pData->iStep, 0);
+                    break;
+            }
+            break;
+        }
+    }
+    return 0;
+}
+
+static INT_PTR CALLBACK
+InstallDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PINSTALL_FONT_DATA pData = (PINSTALL_FONT_DATA)GetWindowLongPtrW(hwnd, DWLP_USER);
+    if (uMsg == WM_INITDIALOG)
+    {
+        pData = (PINSTALL_FONT_DATA)lParam;
+        SetWindowLongPtrW(hwnd, DWLP_USER, lParam);
+    }
+
+    ATLASSERT(pData);
+    return InstallDlgProc(hwnd, uMsg, wParam, lParam, pData);
+}
+
+HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
+{
+    if (!CheckDataObject(pDataObj))
+    {
+        ERR("!CheckDataObject\n");
+        return E_FAIL;
+    }
+
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+    {
+        ERR("E_UNEXPECTED\n");
+        return E_FAIL;
+    }
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
+    if (!pidlParent)
+    {
+        ERR("pidlParent is NULL\n");
+        return E_FAIL;
+    }
+
+    CAtlArray<PCUIDLIST_RELATIVE> apidl;
+    for (UINT n = 0; n < cida->cidl; ++n)
+    {
+        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, n);
+        if (!pidlRelative)
+        {
+            ERR("!pidlRelative\n");
+            return E_FAIL;
+        }
+        apidl.Add(pidlRelative);
+    }
+
+    // Show progress dialog
+    INSTALL_FONT_DATA data;
+    data.pDataObj = pDataObj;
+    data.pidlParent = pidlParent;
+    data.apidl = &apidl[0];
+    data.cSteps = cida->cidl;
+    pDataObj->AddRef();
+    DialogBoxParamW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDD_INSTALL),
+                    hwndView, InstallDialogProc, (LPARAM)&data);
+    if (data.bCanceled)
+        return S_FALSE;
+
+    return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
 }
 
 EXTERN_C

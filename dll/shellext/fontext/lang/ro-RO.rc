@@ -23,6 +23,7 @@ BEGIN
     IDS_REACTOS_FONTS_FOLDER "Folder-ul de fonturi de ReactOS"
     IDS_INSTALL_OK "The font files have been installed successfully."
     IDS_INSTALL_FAILED "Failed to install the font files."
+    IDS_PROPERTIES "P&roperties"
 END
 
 STRINGTABLE

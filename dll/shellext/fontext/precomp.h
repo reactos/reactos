@@ -27,11 +27,8 @@
 extern const GUID CLSID_CFontExt;
 extern LONG g_ModuleRefCnt;
 
-class CFontExt;
-
 typedef struct tagINSTALL_FONT_DATA
 {
-    CFontExt* pFontExt = nullptr;
     IDataObject* pDataObj = nullptr;
     HRESULT hrResult = S_OK;
     HWND hwnd = nullptr;
@@ -47,13 +44,12 @@ typedef struct tagINSTALL_FONT_DATA
 #include "CFontCache.hpp"
 #include "CFontExt.hpp"
 #include "CFontFolderViewCB.h"
+#include "CFontBackgroundMenu.h"
 
 #define FONT_HIVE   HKEY_LOCAL_MACHINE
 #define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
 
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID* ppvOut);
-HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
-                                  IShellFolder *psf, REFIID riid, LPVOID* ppvOut);
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut);
 
@@ -84,4 +80,29 @@ HRESULT DoGetFontTitle(
     _Out_ CStringW& strFontName);
 
 BOOL CheckDropFontFiles(HDROP hDrop);
-HDROP GetDropFromDataObject(STGMEDIUM& stg, IDataObject *pDataObj);
+BOOL CheckDataObject(IDataObject *pDataObj);
+HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
+
+HRESULT
+APIENTRY
+CFontBackgroundMenu_Create(
+    CFontExt* pFontExt,
+    HWND hwnd,
+    IShellFolder* psf,
+    IContextMenu** ppcm);
+
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
+void CloseRegKeyArray(HKEY* array, UINT cKeys);
+
+struct CRegKeyHandleArray
+{
+    HKEY hKeys[16];
+    UINT cKeys;
+
+    CRegKeyHandleArray() : cKeys(0) {}
+    ~CRegKeyHandleArray() { CloseRegKeyArray(hKeys, cKeys); }
+    operator HKEY*() { return hKeys; }
+    operator UINT*() { return &cKeys; }
+    operator UINT() { return cKeys; }
+    HKEY& operator [](SIZE_T i) { return hKeys[i]; }
+};

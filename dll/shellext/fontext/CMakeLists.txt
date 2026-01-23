@@ -7,10 +7,10 @@ spec2def(fontext.dll fontext.spec)
 list(APPEND SOURCE
     CDataObject.cpp
     CEnumFonts.cpp
+    CFontBackgroundMenu.cpp
     CFontCache.cpp
     CFontExt.cpp
     CFontFolderViewCB.cpp
-    CFontMenu.cpp
     fontext.cpp
     fontpidl.cpp
     precomp.h)
