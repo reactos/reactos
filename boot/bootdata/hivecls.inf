@@ -790,6 +790,44 @@ HKCR,"MIME\Database\Rfc1766","0434",0x00000000,"xh;Xhosa"
 HKCR,"MIME\Database\Rfc1766","043D",0x00000000,"ji;Yiddish"
 HKCR,"MIME\Database\Rfc1766","0435",0x00000000,"zu;Zulu"
 
+; SystemFileAssociations
+; TODO: Add more (movie, document etc.)
+HKCR,"SystemFileAssociations\.bmp","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.dib","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.gif","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.jfif","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.jpe","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.jpeg","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.jpg","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.png","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.tif","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\.tiff","ImageOptionFlags",0x00010001,0x00000003
+HKCR,"SystemFileAssociations\audio","Details",0x00000000,"prop:Name;Size;Type;Artist;Album;Year;Track;Duration"
+HKCR,"SystemFileAssociations\audio","InfoTip",0x00000000,"prop:Artist;Album;Year;Track;Duration;Type;Bitrate;Protected;Size"
+HKCR,"SystemFileAssociations\audio","TileInfo",0x00000000,"prop:Artist;Album;Duration"
+HKCR,"SystemFileAssociations\audio\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mplay32.exe,-10"
+HKCR,"SystemFileAssociations\audio\OpenWithList\mplay32.exe","",0x00000000,""
+HKCR,"SystemFileAssociations\image","Details",0x00000000,"prop:Name;Type;Dimensions;Size;Write"
+HKCR,"SystemFileAssociations\image","InfoTip",0x00000000,"prop:Dimensions;WhenTaken;DocTitle;DocComments;CameraModel;Type;Size"
+HKCR,"SystemFileAssociations\image","TileInfo",0x00000000,"prop:Dimensions;Type;Size"
+HKCR,"SystemFileAssociations\image\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
+HKCR,"SystemFileAssociations\image\OpenWithList\mspaint.exe","",0x00000000,""
+HKCR,"SystemFileAssociations\image\OpenWithList\shimgvw.dll","",0x00000000,""
+HKCR,"SystemFileAssociations\image\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"SystemFileAssociations\image\shell\print\DropTarget","",0x00000000,"{60fd46de-f830-4894-a628-6fa81bc0190d}"
+HKCR,"SystemFileAssociations\image\shell\print\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"SystemFileAssociations\image\ShellEx\ContextMenuHandlers\ShellImagePreview","",0x00000000,"{e84fda7c-1d6a-45f6-b725-cb260c236066}"
+HKCR,"SystemFileAssociations\image\ShellEx\PropertyHandler\{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}","",0x00000000,"{3f30c968-480a-4c6c-862d-efc0897bb84b}"
+HKCR,"SystemFileAssociations\system","AlwaysShowExt",0x00000000,""
+HKCR,"SystemFileAssociations\system","EditFlags",0x00010001,0x00100001
+HKCR,"SystemFileAssociations\system","NoOpen",0x00000000,""
+HKCR,"SystemFileAssociations\system\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+HKCR,"SystemFileAssociations\text\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
+HKCR,"SystemFileAssociations\text\OpenWithList\notepad.exe","",0x00000000,""
+HKCR,"SystemFileAssociations\text\OpenWithList\wordpad.exe","",0x00000000,""
+HKCR,"SystemFileAssociations\text\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"SystemFileAssociations\text\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
