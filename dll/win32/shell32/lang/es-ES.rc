@@ -976,8 +976,8 @@ BEGIN
     IDS_VXD_FILE "Controlador de dispositivo virtual"
     IDS_ANY_FILE "Archivo %s"
 
-    IDS_OPEN_VERB "Abrir"
-    IDS_EXPLORE_VERB "Explorar"
+    IDS_OPEN_VERB "&Abrir"
+    IDS_EXPLORE_VERB "E&xplorar"
     IDS_RUNAS_VERB "Ejecutar como..."
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Buscar"

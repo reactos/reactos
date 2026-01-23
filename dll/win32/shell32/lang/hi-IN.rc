@@ -969,8 +969,8 @@ BEGIN
     IDS_VXD_FILE "वर्चुअल डिवाइस ड्राइवर"
     IDS_ANY_FILE "%s-फ़ाइल"
 
-    IDS_OPEN_VERB "ओपन"
-    IDS_EXPLORE_VERB "इक्स्प्लॉर"
+    IDS_OPEN_VERB "&ओपन"
+    IDS_EXPLORE_VERB "&इक्स्प्लॉर"
     IDS_RUNAS_VERB "रन ऐज़..."
     IDS_EDIT_VERB "संपादित करें"
     IDS_FIND_VERB "ढूंढे"

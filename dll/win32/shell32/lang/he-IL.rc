@@ -974,8 +974,8 @@ BEGIN
     IDS_VXD_FILE "מנהל התקן וירטואלי"
     IDS_ANY_FILE "קובץ %s"
 
-    IDS_OPEN_VERB "פתח"
-    IDS_EXPLORE_VERB "סייר"
+    IDS_OPEN_VERB "&פתח"
+    IDS_EXPLORE_VERB "&סייר"
     IDS_RUNAS_VERB "הרץ בתור..."
     IDS_EDIT_VERB "ערוך"
     IDS_FIND_VERB "מצא"

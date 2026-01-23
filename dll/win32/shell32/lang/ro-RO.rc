@@ -975,8 +975,8 @@ BEGIN
     IDS_VXD_FILE "Driver de dispozitiv virtual"
     IDS_ANY_FILE "Fişier-%s"
 
-    IDS_OPEN_VERB "Deschidere"
-    IDS_EXPLORE_VERB "Explorare"
+    IDS_OPEN_VERB "&Deschidere"
+    IDS_EXPLORE_VERB "E&xplorare"
     IDS_RUNAS_VERB "Executare ca…"
     IDS_EDIT_VERB "Editare"
     IDS_FIND_VERB "Căutare"

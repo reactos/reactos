@@ -972,8 +972,8 @@ BEGIN
     IDS_VXD_FILE "Controlador de dispositivo virtual"
     IDS_ANY_FILE "%s fitxategi"
 
-    IDS_OPEN_VERB "Ireki"
-    IDS_EXPLORE_VERB "Arakatu"
+    IDS_OPEN_VERB "&Ireki"
+    IDS_EXPLORE_VERB "&Arakatu"
     IDS_RUNAS_VERB "Exekutatu honela..."
     IDS_EDIT_VERB "Editatu"
     IDS_FIND_VERB "Bilatu"

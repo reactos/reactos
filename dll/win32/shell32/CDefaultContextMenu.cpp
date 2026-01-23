@@ -745,13 +745,13 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
         if (info.Verb.CompareNoCase(L"open") == 0)
         {
-            idVerbRes = IDS_OPEN_VERB; // TODO: This string should include '&'
+            idVerbRes = IDS_OPEN_VERB;
             fState |= MFS_DEFAULT; /* override default when open verb is found */
             forceFirstPos++;
         }
         else if (info.Verb.CompareNoCase(L"explore") == 0)
         {
-            idVerbRes = IDS_EXPLORE_VERB; // TODO: This string should include '&'
+            idVerbRes = IDS_EXPLORE_VERB;
             if (uFlags & CMF_EXPLORE)
             {
                 fState |= MFS_DEFAULT;

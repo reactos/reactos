@@ -976,8 +976,8 @@ BEGIN
     IDS_VXD_FILE "Sterownik urządzenia wirtualnego"
     IDS_ANY_FILE "%s-plik"
 
-    IDS_OPEN_VERB "Otwórz"
-    IDS_EXPLORE_VERB "Eksploruj"
+    IDS_OPEN_VERB "&Otwórz"
+    IDS_EXPLORE_VERB "&Eksploruj"
     IDS_RUNAS_VERB "Uruchom jako..."
     IDS_EDIT_VERB "Edytuj"
     IDS_FIND_VERB "Wyszukaj"
