@@ -115,7 +115,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp->RequestorMode,
                                        &UserHandle);
         if (NT_SUCCESS(Status))
-            FCB->State = SOCKET_STATE_BOUND;
+            FCB->SharedData.State = SOCKET_STATE_BOUND;
     }
 
     /* MSAFD relies on us returning the address file handle in the IOSB */

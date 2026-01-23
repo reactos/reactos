@@ -868,6 +868,7 @@ WSPBind(SOCKET Handle,
     NTSTATUS                Status;
     SOCKADDR_INFO           SocketInfo;
     HANDLE                  SockEvent;
+    ULONG connectSize;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -909,8 +910,10 @@ WSPBind(SOCKET Handle,
         return SOCKET_ERROR;
     }
 
+    connectSize = FIELD_OFFSET(AFD_BIND_DATA, Address.Address[SocketAddressLength]);
+
     /* See below */
-    BindData = HeapAlloc(GlobalHeap, 0, 0xA + SocketAddressLength);
+    BindData = HeapAlloc(GlobalHeap, 0, connectSize);
     if (!BindData)
     {
         return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
@@ -950,9 +953,9 @@ WSPBind(SOCKET Handle,
                                    &IOSB,
                                    IOCTL_AFD_BIND,
                                    BindData,
-                                   0xA + Socket->SharedData->SizeOfLocalAddress, /* Can't figure out a way to calculate this in C*/
+                                   connectSize,
                                    BindData,
-                                   0xA + Socket->SharedData->SizeOfLocalAddress); /* Can't figure out a way to calculate this C */
+                                   connectSize);
 
     /* Wait for return */
     if (Status == STATUS_PENDING)
@@ -2173,6 +2176,106 @@ Leave:
 
     return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
+
+BOOL
+WSPAPI
+WSPConnectEx(
+    _In_ SOCKET Handle,
+    _In_ const struct sockaddr *SocketAddress,
+    _In_ int SocketAddressLength,
+    _In_ PVOID lpSendBuffer,
+    _In_ DWORD dwSendDataLength,
+    _Out_ LPDWORD lpdwBytesSent,
+    _Inout_ LPOVERLAPPED lpOverlapped)
+{
+    IO_STATUS_BLOCK DummyIOSB;
+    PIO_STATUS_BLOCK IOSB = &DummyIOSB;
+    PAFD_SUPER_CONNECT_INFO ConnectInfo = NULL;
+    PSOCKET_INFORMATION Socket;
+    NTSTATUS Status;
+    int SocketDataLength;
+    UCHAR Buffer[128];
+
+    if (!lpOverlapped)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpSendBuffer && dwSendDataLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+        SetLastError(WSAENOTSOCK);
+        return FALSE;
+    }
+
+    
+    /* Cannot call on connectionless socket */
+    if (SocketAddressLength > ARRAYSIZE(Buffer) - sizeof(AFD_CONNECT_INFO) || Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS)
+    {
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData->State == SocketOpen)
+    {
+        /* Socket already must be bound */
+        SetLastError(WSAEINVAL);
+        return FALSE;
+    }
+
+    ConnectInfo = (PAFD_SUPER_CONNECT_INFO)Buffer;
+    ConnectInfo->SanActive = FALSE;
+
+    /* Calculate the size of SocketAddress->sa_data */
+    SocketDataLength = SocketAddressLength - FIELD_OFFSET(struct sockaddr, sa_data);
+
+    /* Set up Address in TDI Format */
+    ConnectInfo->RemoteAddress.TAAddressCount = 1;
+    ConnectInfo->RemoteAddress.Address[0].AddressLength = SocketDataLength;
+    ConnectInfo->RemoteAddress.Address[0].AddressType = SocketAddress->sa_family;
+    RtlCopyMemory(ConnectInfo->RemoteAddress.Address[0].Address,
+                  SocketAddress->sa_data,
+                  SocketDataLength);
+
+    /*
+     * Disable FD_WRITE and FD_CONNECT.
+     * The latter fixes a race condition where the FD_CONNECT is re-enabled
+     * at the end of this function right after the Async Thread disables it.
+     * This should only happen at the *next* WSPConnect.
+     */
+    if (Socket->SharedData->AsyncEvents & FD_CONNECT)
+    {
+        Socket->SharedData->AsyncDisabledEvents |= (FD_CONNECT | FD_WRITE);
+    }
+
+    IOSB = (PIO_STATUS_BLOCK)lpOverlapped;
+    IOSB->Status = STATUS_PENDING;
+
+    /* Send IOCTL */
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   lpOverlapped->hEvent,
+                                   NULL,
+                                   lpOverlapped->hEvent ? NULL : lpOverlapped,
+                                   IOSB,
+                                   IOCTL_AFD_SUPER_CONNECT,
+                                   ConnectInfo,
+                                   FIELD_OFFSET(AFD_SUPER_CONNECT_INFO, RemoteAddress.Address[0].Address[SocketDataLength]),
+                                   lpSendBuffer,
+                                   dwSendDataLength);
+
+    SetLastError(TranslateNtStatusError(Status));
+
+    return Status == STATUS_SUCCESS;
+}
+
 int
 WSPAPI
 WSPShutdown(SOCKET Handle,
@@ -2882,6 +2985,116 @@ SendToHelper:
     return (Errno == NO_ERROR) ? NO_ERROR : SOCKET_ERROR;
 }
 
+static
+INT
+NTAPI
+MsafdUpdateConnectionContext(
+    _In_ SOCKET Handle,
+    _Out_ LPINT lpErrno)
+{
+    IO_STATUS_BLOCK            DummyIOSB;
+    PIO_STATUS_BLOCK           IOSB = &DummyIOSB;
+    NTSTATUS                   Status;
+    SOCK_SHARED_INFO SharedData;
+    AFD_TDI_HANDLE_DATA HandleData;
+    HANDLE SockEvent;
+    PSOCKET_INFORMATION Socket = GetSocketStructure(Handle);
+
+    if (!Socket)
+    {
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData->State == SocketConnected)
+    {
+        return NO_ERROR;
+    }
+
+    /* Get the socket context from AFD because when ConnectEx is used, this information is not updated. */
+    Status = NtCreateEvent(&SockEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   SockEvent,
+                                   NULL,
+                                   NULL,
+                                   IOSB,
+                                   IOCTL_AFD_GET_CONTEXT,
+                                   NULL,
+                                   0,
+                                   &SharedData,
+                                   sizeof(SharedData));
+    
+    if (Status == STATUS_PENDING)
+    {
+        MsafdWaitForAlert(SockEvent);
+        Status = IOSB->Status;
+    }
+
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    ULONG flags = AFD_CONNECTION_HANDLE | AFD_ADDRESS_HANDLE;
+
+    /* Get TDI handles from AFD */
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   SockEvent,
+                                   NULL,
+                                   NULL,
+                                   IOSB,
+                                   IOCTL_AFD_GET_TDI_HANDLES,
+                                   &flags,
+                                   sizeof(flags),
+                                   &HandleData,
+                                   sizeof(HandleData));
+    
+    if (Status == STATUS_PENDING)
+    {
+        MsafdWaitForAlert(SockEvent);
+        Status = IOSB->Status;
+    }
+
+    /* Bail out if the socket was destroyed */
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    Socket->SharedData->State = SharedData.State;
+
+    if (SharedData.State == SocketConnected)
+    {
+        /* Socket is now connected, update usermode msafd socket structure, same as the end of WSPConnect */
+        Socket->TdiConnectionHandle = HandleData.TdiConnectionHandle;
+        Socket->TdiAddressHandle = HandleData.TdiAddressHandle;
+        Socket->SharedData->ConnectTime = SharedData.ConnectTime;
+
+        /* Re-enable Async Event */
+        SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+
+        /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
+        SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
+
+        Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                      Socket->Handle,
+                                      Socket->TdiAddressHandle,
+                                      Socket->TdiConnectionHandle,
+                                      WSH_NOTIFY_CONNECT);
+    }
+
+    NtClose(SockEvent);
+
+Quit:
+    if (Status == STATUS_SUCCESS)
+        return NO_ERROR;
+    if (lpErrno) *lpErrno = TranslateNtStatusError(Status);
+    return SOCKET_ERROR;
+}
+
 INT
 WSPAPI
 WSPSetSockOpt(
@@ -2902,7 +3115,7 @@ WSPSetSockOpt(
         if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-    if (!optval)
+    if (!optval && optlen)
     {
         if (lpErrno) *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
@@ -3021,6 +3234,9 @@ WSPSetSockOpt(
                                    NULL);
 
               return NO_ERROR;
+
+           case SO_UPDATE_CONNECT_CONTEXT:
+              return MsafdUpdateConnectionContext(s, lpErrno);
 
            case SO_ERROR:
               if (optlen < sizeof(INT))

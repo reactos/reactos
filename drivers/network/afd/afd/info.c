@@ -124,7 +124,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->OobInline = InfoReq->Information.Boolean;
                 break;
             case AFD_INFO_RECEIVE_WINDOW_SIZE:
-                if (FCB->State == SOCKET_STATE_CONNECTED ||
+                if (FCB->SharedData.State == SOCKET_STATE_CONNECTED ||
                     FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
                     /* FIXME: likely not right, check tcpip.sys for TDI_QUERY_MAX_DATAGRAM_INFO */
@@ -170,7 +170,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
                 break;
             case AFD_INFO_SEND_WINDOW_SIZE:
-                if (FCB->State == SOCKET_STATE_CONNECTED ||
+                if (FCB->SharedData.State == SOCKET_STATE_CONNECTED ||
                     FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
                 {
                     if (InfoReq->Information.Ulong > 0 && InfoReq->Information.Ulong < 0xFFFF &&
