@@ -909,8 +909,10 @@ WSPBind(SOCKET Handle,
         return SOCKET_ERROR;
     }
 
+    int connectSize = FIELD_OFFSET(AFD_BIND_DATA, Address.Address[SocketAddressLength]);
+
     /* See below */
-    BindData = HeapAlloc(GlobalHeap, 0, 0xA + SocketAddressLength);
+    BindData = HeapAlloc(GlobalHeap, 0, connectSize);
     if (!BindData)
     {
         return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
@@ -950,9 +952,9 @@ WSPBind(SOCKET Handle,
                                    &IOSB,
                                    IOCTL_AFD_BIND,
                                    BindData,
-                                   0xA + Socket->SharedData->SizeOfLocalAddress, /* Can't figure out a way to calculate this in C*/
+                                   connectSize,
                                    BindData,
-                                   0xA + Socket->SharedData->SizeOfLocalAddress); /* Can't figure out a way to calculate this C */
+                                   connectSize);
 
     /* Wait for return */
     if (Status == STATUS_PENDING)
@@ -2173,6 +2175,115 @@ Leave:
 
     return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
+
+BOOL
+WSPAPI
+WSPConnectEx(
+    IN SOCKET Handle,
+    IN const struct sockaddr *SocketAddress,
+    IN int SocketAddressLength,
+    IN PVOID lpSendBuffer,
+    IN DWORD dwSendDataLength,
+    OUT LPDWORD lpdwBytesSent,
+    IN OUT LPOVERLAPPED lpOverlapped)
+{
+    IO_STATUS_BLOCK            DummyIOSB;
+    PIO_STATUS_BLOCK           IOSB = &DummyIOSB;
+    PAFD_SUPER_CONNECT_INFO    ConnectInfo = NULL;
+    PSOCKET_INFORMATION        Socket;
+    NTSTATUS                   Status;
+    int                        SocketDataLength;
+    UCHAR Buffer[128];
+
+    FIXME("WSPConnectEx(%x)\n", Handle);
+
+    if (!lpOverlapped)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!lpSendBuffer && dwSendDataLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+        SetLastError(WSAENOTSOCK);
+        return FALSE;
+    }
+
+    if (SocketAddressLength > 128 - sizeof(AFD_CONNECT_INFO))
+    {
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS)
+    {
+        // cannot call on connectionless socket
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData->State == SocketOpen)
+    {
+        // Socket already must be bound
+        SetLastError(WSAEINVAL);
+        return FALSE;
+    }
+
+    ConnectInfo = (PAFD_SUPER_CONNECT_INFO)Buffer;
+    ConnectInfo->SanActive = FALSE;
+
+    /* Calculate the size of SocketAddress->sa_data */
+    SocketDataLength = SocketAddressLength - FIELD_OFFSET(struct sockaddr, sa_data);
+
+    /* Set up Address in TDI Format */
+    ConnectInfo->RemoteAddress.TAAddressCount = 1;
+    ConnectInfo->RemoteAddress.Address[0].AddressLength = SocketDataLength;
+    ConnectInfo->RemoteAddress.Address[0].AddressType = SocketAddress->sa_family;
+    RtlCopyMemory(ConnectInfo->RemoteAddress.Address[0].Address,
+                  SocketAddress->sa_data,
+                  SocketDataLength);
+
+    /*
+    * Disable FD_WRITE and FD_CONNECT
+    * The latter fixes a race condition where the FD_CONNECT is re-enabled
+    * at the end of this function right after the Async Thread disables it.
+    * This should only happen at the *next* WSPConnect
+    */
+    if (Socket->SharedData->AsyncEvents & FD_CONNECT)
+    {
+        Socket->SharedData->AsyncDisabledEvents |= FD_CONNECT | FD_WRITE;
+    }
+
+    IOSB = (PIO_STATUS_BLOCK)lpOverlapped;
+    IOSB->Status = STATUS_PENDING;
+
+    /* Send IOCTL */
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   lpOverlapped->hEvent,
+                                   NULL,
+                                   lpOverlapped->hEvent ? NULL : lpOverlapped,
+                                   IOSB,
+                                   IOCTL_AFD_SUPER_CONNECT,
+                                   ConnectInfo,
+                                   FIELD_OFFSET(AFD_SUPER_CONNECT_INFO, RemoteAddress.Address[0].Address[SocketDataLength]),
+                                   lpSendBuffer,
+                                   dwSendDataLength);
+
+    SetLastError(TranslateNtStatusError(Status));
+
+    TRACE("Ending %lx\n", Status);
+
+    return Status == S_OK ? TRUE : FALSE;
+}
+
 int
 WSPAPI
 WSPShutdown(SOCKET Handle,
@@ -2902,7 +3013,7 @@ WSPSetSockOpt(
         if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-    if (!optval)
+    if (!optval && optlen)
     {
         if (lpErrno) *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
