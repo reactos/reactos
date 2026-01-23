@@ -58,7 +58,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PRSDP_DESCRIPTOR Rsdp;
     PACPI_BIOS_DATA AcpiBiosData;
-    ULONG TableSize;
+    ULONG TableSize, Size;
 
     Rsdp = FindAcpiBios();
 
@@ -72,15 +72,15 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
 
         /* Set 'Configuration Data' value */
-        PartialResourceList = FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST) +
-                                             TableSize, TAG_HW_RESOURCE_LIST);
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + TableSize;
+        PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
             return;
         }
 
-        RtlZeroMemory(PartialResourceList, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
+        RtlZeroMemory(PartialResourceList, Size);
         PartialResourceList->Version = 0;
         PartialResourceList->Revision = 0;
         PartialResourceList->Count = 1;
@@ -91,7 +91,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         PartialDescriptor->u.DeviceSpecificData.DataSize = TableSize;
 
         /* Fill the table */
-        AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
+        AcpiBiosData = (PACPI_BIOS_DATA)(PartialDescriptor + 1);
 
         if (Rsdp->revision > 0)
         {
@@ -105,8 +105,8 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         }
 
         AcpiBiosData->Count = FreeldrDescCount;
-        memcpy(AcpiBiosData->MemoryMap, EfiMemoryMap,
-            FreeldrDescCount * sizeof(BIOS_MEMORY_MAP));
+        RtlCopyMemory(AcpiBiosData->MemoryMap, EfiMemoryMap,
+                      FreeldrDescCount * sizeof(BIOS_MEMORY_MAP));
 
         TRACE("RSDT %p, data size %x\n", Rsdp->rsdt_physical_address, TableSize);
 
@@ -119,7 +119,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                0xFFFFFFFF,
                                "ACPI BIOS",
                                PartialResourceList,
-                               sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize,
+                               Size,
                                &BiosKey);
 
         /* Increment bus number */
