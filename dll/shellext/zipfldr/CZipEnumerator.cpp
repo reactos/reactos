@@ -38,6 +38,7 @@ CZipEnumerator::GetUtf8Name(
     const BYTE* extraField,
     DWORD extraFieldLen)
 {
+    ATLASSERT(originalName);
     ATLASSERT(extraField);
 
     if (extraFieldLen < EF_HEADER_SIZE)
@@ -137,6 +138,7 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
 
 BOOL CZipEnumerator::NextUnique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
 {
+    ATLASSERT(prefix);
     SIZE_T len = wcslen(prefix);
     CStringW tmp;
     while (Next(tmp, info))
