@@ -13,7 +13,7 @@ struct CZipEnumerator
     CAtlList<CStringW> m_Returned; // for unique checking
     UINT m_nCodePage = GetZipCodePage(TRUE);
 
-    static DWORD CalculateFilenameCRC32(PCSTR filename);
+    static DWORD CalculateCRC32(PCSTR filename);
     static CStringA GetUtf8Name(PCSTR originalName, const BYTE* extraField, DWORD extraFieldLen);
 
 public:

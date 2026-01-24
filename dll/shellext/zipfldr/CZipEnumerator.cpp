@@ -33,7 +33,7 @@ BOOL CZipEnumerator::Reset()
     return TRUE;
 }
 
-DWORD CZipEnumerator::CalculateFilenameCRC32(PCSTR filename)
+DWORD CZipEnumerator::CalculateCRC32(PCSTR filename)
 {
     ATLASSERT(filename);
     DWORD crc = crc32(0, Z_NULL, 0);
@@ -58,7 +58,10 @@ CZipEnumerator::GetUtf8Name(
 
     while (ptr + EF_HEADER_SIZE <= end)
     {
-        WORD fieldId = *(WORD*)ptr, fieldSize = *(WORD*)(ptr + 2);
+        WORD fieldId, fieldSize;
+        CopyMemory(&fieldId, ptr, sizeof(fieldId));
+        CopyMemory(&fieldSize, ptr + 2, sizeof(fieldSize));
+
         if (fieldId != EF_UNIPATH)
         {
             ptr += EF_HEADER_SIZE + fieldSize;
@@ -73,8 +76,8 @@ CZipEnumerator::GetUtf8Name(
         if (version != EF_UNIPATH_VERSION)
             return "";
 
-        DWORD storedCRC = *(DWORD*)(fieldData + 1);
-        DWORD calculatedCRC = CalculateFilenameCRC32(originalName);
+        DWORD storedCRC, calculatedCRC = CalculateCRC32(originalName);
+        CopyMemory(&storedCRC, fieldData + 1, sizeof(storedCRC));
         if (storedCRC != calculatedCRC)
             return "";
 
