@@ -133,16 +133,16 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
 BOOL CZipEnumerator::NextUnique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info)
 {
     ATLASSERT(prefix);
-    SIZE_T len = wcslen(prefix);
     CStringW tmp;
+    SIZE_T cchPrefix = wcslen(prefix);
     while (Next(tmp, info))
     {
-        if (StrCmpNIW(tmp, prefix, len) != 0)
+        if (StrCmpNIW(tmp, prefix, cchPrefix) != 0)
             continue;
 
-        INT pos = tmp.Find(L'/', len);
-        folder = (pos >= 0);
-        tmp = name = folder ? tmp.Mid(len, pos - len) : tmp.Mid(len);
+        INT ichSlash = tmp.Find(L'/', cchPrefix);
+        folder = (ichSlash >= 0);
+        tmp = name = (folder ? tmp.Mid(cchPrefix, ichSlash - cchPrefix) : tmp.Mid(cchPrefix));
         tmp.MakeLower();
 
         POSITION it = m_Returned.Find(tmp);
