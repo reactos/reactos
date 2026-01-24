@@ -89,7 +89,7 @@ CFunctionGroupNode::AddNode(ULONG NodeId)
     }
     UCHAR ChanCountLSB = (WidgetCaps & 0x1);
     UCHAR ChanCountExt = (WidgetCaps >> 13) & 0x7;
-    UCHAR ChannelCount = (ChanCountExt << 1 | ChanCountLSB) + 1; 
+    UCHAR ChannelCount = (ChanCountExt << 1 | ChanCountLSB) + 1;
 
     //DPRINT("HDAUDIO: NodeId %u Channels Supported %u\n", NodeId, ChannelCount);
 
@@ -348,7 +348,7 @@ CFunctionGroupNode::ClearVisitedState()
 {
     PLIST_ENTRY Entry;
     PNODE_CONTEXT NodeContext;
-    
+
     // enumerate nodes
     Entry = m_Nodes.Flink;
     /* loop all items */
@@ -448,7 +448,7 @@ CFunctionGroupNode::GetVolumeCapabilities(
     Status = m_Adapter->TransferVerb(Verb, &Response);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("HDAUDIO: GetPinConfigurationDefault failed with %x\n", Status);
+        DPRINT1("HDAUDIO: GetVolumeCapabilities failed with %x\n", Status);
         return Status;
     }
     if (Response == 0)
