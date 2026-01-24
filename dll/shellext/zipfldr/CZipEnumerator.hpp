@@ -9,15 +9,23 @@
 struct CZipEnumerator
 {
     CComPtr<IZip> m_Zip;
-    bool m_First;
+    BOOL m_First = TRUE;
     CAtlList<CStringW> m_Returned;
-    UINT m_nCodePage;
+    UINT m_nCodePage = GetZipCodePage(TRUE);
+
+    static DWORD CalculateFilenameCRC32(PCSTR filename);
+
+    static BOOL GetUtf8Name(
+        CStringA& utf8Name,
+        PCSTR originalName,
+        const BYTE* extraField,
+        DWORD extraFieldLen);
 
 public:
     CZipEnumerator();
 
-    bool initialize(IZip* zip);
-    bool reset();
-    bool next_unique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info);
-    bool next(CStringW& name, unz_file_info64& info);
+    BOOL Initialize(IZip* zip);
+    BOOL Reset();
+    BOOL Next(CStringW& name, unz_file_info64& info);
+    BOOL NextUnique(PCWSTR prefix, CStringW& name, bool& folder, unz_file_info64& info);
 };
