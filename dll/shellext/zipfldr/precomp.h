@@ -41,6 +41,17 @@ WCHAR* guid2string(REFCLSID iid);
 #define MINIZIP_COMPATIBLE_VERSION 36
 #define MINIZIP_PASSWORD_FLAG   1
 #define MINIZIP_UTF8_FLAG       (1 << 11)
+#define MINIZIP_EF_UNIPATH_ID    0x7075  // Unicode Path extra field ID
+
+#pragma pack(push, 1)
+struct EF_UNIPATH_HEADER
+{
+    WORD wId; // MINIZIP_EF_UNIPATH_ID
+    WORD wSize;
+    BYTE bVersion;
+    DWORD dwCRC32;
+};
+#pragma pack(pop)
 
 #include "minizip/unzip.h"
 #include "minizip/ioapi.h"

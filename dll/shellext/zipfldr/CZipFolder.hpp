@@ -277,7 +277,7 @@ public:
         if (zipEntry1->ZipType != zipEntry2->ZipType)
             result = zipEntry1->ZipType - zipEntry2->ZipType;
         else
-            result = _wcsicmp(zipEntry1->Name, zipEntry2->Name);
+            result = StrCmpIW(zipEntry1->Name, zipEntry2->Name);
 
         if (!result && zipEntry1->ZipType == ZIP_PIDL_DIRECTORY)
         {
