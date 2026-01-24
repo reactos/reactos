@@ -147,12 +147,7 @@ BOOL CZipEnumerator::NextUnique(PCWSTR prefix, CStringW& name, bool& folder, unz
 
         INT pos = tmp.Find(L'/', len);
         folder = (pos >= 0);
-        if (folder)
-            name = tmp.Mid(len, pos - len);
-        else
-            name = tmp.Mid(len);
-
-        tmp = name;
+        tmp = name = folder ? tmp.Mid(len, pos - len) : tmp.Mid(len);
         tmp.MakeLower();
 
         POSITION it = m_Returned.Find(tmp);
