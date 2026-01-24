@@ -10,7 +10,7 @@ struct CZipEnumerator
 {
     CComPtr<IZip> m_Zip;
     BOOL m_First = TRUE;
-    CAtlList<CStringW> m_Returned;
+    CAtlList<CStringW> m_Returned; // for unique checking
     UINT m_nCodePage = GetZipCodePage(TRUE);
 
     static DWORD CalculateFilenameCRC32(PCSTR filename);
