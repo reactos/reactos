@@ -2,7 +2,7 @@
 add_definitions(-D__ROS_LONG64__)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_WINNT=0x502)
-add_definitions(-DWINVER=0x602 -D_WIN32_WINNT=0x602)
+add_definitions(-DWINVER=0x600 -D_WIN32_WINNT=0x600)
 
 list(APPEND SOURCE
     broadcast.c
