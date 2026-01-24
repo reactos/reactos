@@ -15,8 +15,7 @@ struct CZipEnumerator
 
     static DWORD CalculateFilenameCRC32(PCSTR filename);
 
-    static BOOL GetUtf8Name(
-        CStringA& utf8Name,
+    static CStringA GetUtf8Name(
         PCSTR originalName,
         const BYTE* extraField,
         DWORD extraFieldLen);

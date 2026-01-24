@@ -30,9 +30,8 @@ DWORD CZipEnumerator::CalculateFilenameCRC32(PCSTR filename)
     return crc;
 }
 
-BOOL
+CStringA
 CZipEnumerator::GetUtf8Name(
-    CStringA& utf8Name,
     PCSTR originalName,
     const BYTE* extraField,
     DWORD extraFieldLen)
@@ -41,7 +40,7 @@ CZipEnumerator::GetUtf8Name(
     ATLASSERT(extraField);
 
     if (extraFieldLen < EF_HEADER_SIZE)
-        return FALSE;
+        return "";
 
     const BYTE* ptr = extraField;
     const BYTE* end = extraField + extraFieldLen;
@@ -58,24 +57,21 @@ CZipEnumerator::GetUtf8Name(
         const BYTE* fieldData = ptr + EF_HEADER_SIZE;
 
         if (ptr + EF_HEADER_SIZE + fieldSize > end || fieldSize < 5 || fieldData[0] != 1)
-            return FALSE;
+            return "";
 
         DWORD storedCRC = *(DWORD*)(fieldData + 1);
         DWORD calculatedCRC = CalculateFilenameCRC32(originalName);
         if (storedCRC != calculatedCRC)
-            return FALSE;
+            return "";
 
         DWORD utf8NameLen = fieldSize - 5;
         if (utf8NameLen > 0)
-        {
-            utf8Name = CStringA((LPCSTR)(fieldData + 5), utf8NameLen);
-            return TRUE;
-        }
+            return CStringA((LPCSTR)(fieldData + 5), utf8NameLen);
 
         ptr += EF_HEADER_SIZE + fieldSize;
     }
 
-    return FALSE;
+    return "";
 }
 
 BOOL CZipEnumerator::Reset()
@@ -121,11 +117,10 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
     nameA.Replace('\\', '/');
 
     CStringA utf8Name;
-    BOOL hasUtf8Name = FALSE;
     if (info.size_file_extra > 0)
-        hasUtf8Name = GetUtf8Name(utf8Name, nameA, extra.GetData(), info.size_file_extra);
+        utf8Name = GetUtf8Name(nameA, extra.GetData(), info.size_file_extra);
 
-    if (hasUtf8Name)
+    if (utf8Name.GetLength() > 0)
         name = CA2WEX<MAX_PATH>(utf8Name, CP_UTF8);
     else if (info.flag & MINIZIP_UTF8_FLAG)
         name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
