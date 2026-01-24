@@ -19,6 +19,7 @@
 #include <debug.h>
 
 static HDEVNOTIFY device_notification_handle = NULL;
+static UINT uWinMMDeviceChange = 0;
 
 /*
     Finds all devices within the KSCATEGORY_AUDIO category and puts them
@@ -100,6 +101,11 @@ ProcessExistingDevices(VOID)
 
     SetupDiDestroyDeviceInfoList(dev_info);
 
+    uWinMMDeviceChange = RegisterWindowMessageW(L"winmm_devicechange");
+
+    if (uWinMMDeviceChange == 0)
+        DPRINT("Failed to register winmm_devicechange window message: GetLastError %u\n", GetLastError());
+
     return TRUE;
 }
 
@@ -115,6 +121,20 @@ ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device)
     list_node = CreateDeviceDescriptor(device->dbcc_name, TRUE);
     AppendAudioDeviceToList(list_node);
     DestroyDeviceDescriptor(list_node);
+
+    DWORD dwInfo = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+    BroadcastSystemMessageW(BSF_POSTMESSAGE, &dwInfo, uWinMMDeviceChange, 0, 0);
+
+    return NO_ERROR;
+}
+
+DWORD
+ProcessDeviceRemovalComplete(DEV_BROADCAST_DEVICEINTERFACE* device)
+{
+    /* If we need to clean up appended audio devices here,
+     * this has to be implemented as well. */
+    DWORD dwInfo = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+    BroadcastSystemMessageW(BSF_POSTMESSAGE, &dwInfo, uWinMMDeviceChange, 0, 0);
 
     return NO_ERROR;
 }
@@ -184,7 +204,15 @@ HandleDeviceEvent(
             return ProcessDeviceArrival(incoming_device);
         }
 
-        default :
+        case DBT_DEVICEREMOVECOMPLETE:
+        {
+            DEV_BROADCAST_DEVICEINTERFACE* removed_device =
+                (DEV_BROADCAST_DEVICEINTERFACE*)lpEventData;
+            
+            return ProcessDeviceRemovalComplete(removed_device);
+        }
+
+        default:
         {
             break;
         }
