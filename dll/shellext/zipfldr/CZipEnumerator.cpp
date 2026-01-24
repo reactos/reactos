@@ -10,6 +10,7 @@
 
 #define EF_UNIPATH 0x7075 // Unicode Path extra field ID
 #define EF_HEADER_SIZE 4 // Extra field header size (ID + size)
+#define EF_UNIPATH_VERSION 1 // Unicode Path extra field version
 
 CZipEnumerator::CZipEnumerator()
 {
@@ -64,9 +65,12 @@ CZipEnumerator::GetUtf8Name(
             continue;
         }
 
-        const BYTE* fieldData = ptr + EF_HEADER_SIZE;
+        if (fieldSize < 5 || ptr + EF_HEADER_SIZE + fieldSize > end)
+            return "";
 
-        if (ptr + EF_HEADER_SIZE + fieldSize > end || fieldSize < 5 || fieldData[0] != 1)
+        const BYTE* fieldData = ptr + EF_HEADER_SIZE;
+        BYTE version = fieldData[0];
+        if (version != EF_UNIPATH_VERSION)
             return "";
 
         DWORD storedCRC = *(DWORD*)(fieldData + 1);
