@@ -22,6 +22,16 @@ BOOL CZipEnumerator::Initialize(IZip* zip)
     return Reset();
 }
 
+BOOL CZipEnumerator::Reset()
+{
+    unzFile uf = m_Zip->getZip();
+    m_First = TRUE;
+    if (unzGoToFirstFile(uf) != UNZ_OK)
+        return FALSE;
+    m_Returned.RemoveAll();
+    return TRUE;
+}
+
 DWORD CZipEnumerator::CalculateFilenameCRC32(PCSTR filename)
 {
     ATLASSERT(filename);
@@ -72,16 +82,6 @@ CZipEnumerator::GetUtf8Name(
     }
 
     return "";
-}
-
-BOOL CZipEnumerator::Reset()
-{
-    unzFile uf = m_Zip->getZip();
-    m_First = TRUE;
-    if (unzGoToFirstFile(uf) != UNZ_OK)
-        return FALSE;
-    m_Returned.RemoveAll();
-    return TRUE;
 }
 
 BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
