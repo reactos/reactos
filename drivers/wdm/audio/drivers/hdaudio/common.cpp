@@ -546,6 +546,7 @@ CAdapterCommon::BuildFilter(
     ULONG MaximumBitsPerSample = 0;
     ULONG MinimumSampleFrequency = (ULONG)-1;
     ULONG MaximumSampleFrequency = 0;
+    ULONG AudioFormatIndex;
     UCHAR FormatPCMSupported = 0;
     UCHAR FormatFloatSupported = 0;
     UCHAR FormatAC3Supported = 0;
@@ -555,8 +556,6 @@ CAdapterCommon::BuildFilter(
     {
         PNODE_CONTEXT ConnectedNode = OutNode->FindNodeId(TargetWidgets[NodeIndex]);
         ASSERT(ConnectedNode);
-        // output / input node
-        ASSERT(ConnectedNode->NodeType == 0x00 || ConnectedNode->NodeType == 0x01);
         ChannelCount += ConnectedNode->ChannelCount;
 
         NODE_PCM_RATES NodePcmRates;
@@ -761,35 +760,39 @@ CAdapterCommon::BuildFilter(
 
     reinterpret_cast<PKSDATARANGE>(Pins[0].KsPinDescriptor.DataRanges[0]) = (PKSDATARANGE)AudioFormat;
 
-    AudioFormat->DataRange.FormatSize = sizeof(KSDATARANGE_AUDIO);
-    AudioFormat->DataRange.Flags = 0;
-    AudioFormat->DataRange.SampleSize = 0;
-    AudioFormat->DataRange.Reserved = 0;
+    for(AudioFormatIndex = 0; AudioFormatIndex < FormatsSupported; AudioFormatIndex++)
+    {
+        AudioFormat[AudioFormatIndex].DataRange.FormatSize = sizeof(KSDATARANGE_AUDIO);
+        AudioFormat[AudioFormatIndex].DataRange.Flags = 0;
+        AudioFormat[AudioFormatIndex].DataRange.SampleSize = 0;
+        AudioFormat[AudioFormatIndex].DataRange.Reserved = 0;
 
-    if (FormatPCMSupported)
-    {
-        AudioFormat->DataRange.MajorFormat = {STATIC_KSDATAFORMAT_TYPE_AUDIO};
-        AudioFormat->DataRange.SubFormat = {STATIC_KSDATAFORMAT_SUBTYPE_PCM};
-        AudioFormat->DataRange.Specifier = {STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX};
-    }
-    else if (FormatAC3Supported)
-    {
-        AudioFormat->DataRange.MajorFormat = {STATIC_KSDATAFORMAT_TYPE_AUDIO};
-        // FIXME add to header
-        // AudioFormat->DataRange.SubFormat = {KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF};
-        AudioFormat->DataRange.Specifier = {STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX};
-    }
-    else
-    {
-        // FIXME configure float
-        ASSERT(FALSE);
-    }
+        if (FormatPCMSupported)
+        {
+            AudioFormat[AudioFormatIndex].DataRange.MajorFormat = {STATIC_KSDATAFORMAT_TYPE_AUDIO};
+            AudioFormat[AudioFormatIndex].DataRange.SubFormat = {STATIC_KSDATAFORMAT_SUBTYPE_PCM};
+            AudioFormat[AudioFormatIndex].DataRange.Specifier = {STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX};
+            FormatPCMSupported = FALSE;
+        }
+        else if (FormatAC3Supported)
+        {
+            AudioFormat[AudioFormatIndex].DataRange.MajorFormat = {STATIC_KSDATAFORMAT_TYPE_AUDIO};
+            AudioFormat[AudioFormatIndex].DataRange.SubFormat = {KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF};
+            AudioFormat[AudioFormatIndex].DataRange.Specifier = {STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX};
+            FormatAC3Supported = FALSE;
+        }
+        else
+        {
+            // FIXME configure float
+            ASSERT(FALSE);
+        }
 
-    AudioFormat->MaximumChannels = ChannelCount;
-    AudioFormat->MinimumBitsPerSample = MinimumBitsPerSample;
-    AudioFormat->MaximumBitsPerSample = MaximumBitsPerSample;
-    AudioFormat->MinimumSampleFrequency = MinimumSampleFrequency;
-    AudioFormat->MaximumSampleFrequency = MaximumSampleFrequency;
+        AudioFormat[AudioFormatIndex].MaximumChannels = ChannelCount;
+        AudioFormat[AudioFormatIndex].MinimumBitsPerSample = MinimumBitsPerSample;
+        AudioFormat[AudioFormatIndex].MaximumBitsPerSample = MaximumBitsPerSample;
+        AudioFormat[AudioFormatIndex].MinimumSampleFrequency = MinimumSampleFrequency;
+        AudioFormat[AudioFormatIndex].MaximumSampleFrequency = MaximumSampleFrequency;
+    }
 
     if (NodeType == 0x00)
     {
@@ -895,6 +898,7 @@ CAdapterCommon::BuildWaveOutFilter(
     IN ULONG AssociatedPinCount,
     IN PULONG AssociatedPins,
     IN PVOID Node,
+    IN UCHAR Digital,
     OUT PPCFILTER_DESCRIPTOR *OutDescription)
 {
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
@@ -919,11 +923,10 @@ CAdapterCommon::BuildWaveOutFilter(
     ULONG SubNodeCount = 0;
     for (NodeIndex = 0; NodeIndex < AssociatedPinCount; NodeIndex++)
     {
-        // FIXME support digital pins
         ULONG NodesFound = 0;
         Status = FindConnectedWidgets(
             0x00, 0, AssociatedPins[NodeIndex], Node, SubNodeCount, TotalInputOutputWidgets, &NodesFound, TargetWidgets,
-            FALSE);
+            Digital);
         if (NT_SUCCESS(Status))
         {
             SubNodeCount += NodesFound;
@@ -932,10 +935,11 @@ CAdapterCommon::BuildWaveOutFilter(
     DPRINT1("Total I/O Nodes Found %u\n", SubNodeCount);
     if (SubNodeCount == 0)
     {
-        // nothing found or already processed
-        return STATUS_UNSUCCESSFUL;
+        return BuildFilter(Node, AssociatedPinCount, AssociatedPins, OutDescription);
+    } else {
+        return BuildFilter(Node, SubNodeCount, TargetWidgets, OutDescription);
     }
-    return BuildFilter(Node, SubNodeCount, TargetWidgets, OutDescription);
+
 }
 VOID NTAPI
 CAdapterCommon::ClearRef(IN ULONG RefValue, IN ULONG NodeCount, IN PULONG Nodes)
@@ -1028,6 +1032,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         PinNodeCount);
 
     OutNode->ClearVisitedState();
+    DPRINT1("ProcessOutputNodes----------------------------------\n");
     Status = ProcessOutputNodes(DeviceObject, Irp, PinNodeCount, PinNodes, (PVOID)OutNode);
     if (!NT_SUCCESS(Status))
     {
@@ -1036,6 +1041,16 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         ExFreePool(InputNodes);
         ExFreePool(OutputNodes);
         ExFreePool(PinNodes);
+        return Status;
+    }
+    ExFreePool(PinNodes);
+    Status = OutNode->GetNodesWithType(0x04, &PinNodeCount, &PinNodes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: GetNodesWithType failed for pin node with %x\n", Status);
+        delete OutNode;
+        ExFreePool(InputNodes);
+        ExFreePool(OutputNodes);
         return Status;
     }
     OutNode->ClearVisitedState();
@@ -1101,12 +1116,19 @@ CAdapterCommon::ProcessOutputNodes(
                 "HDAUDIO: PinNode %u EAPD % x Input %x Output %x PresenceDetectCapable %x\n", PinNodes[NodeIndex],
                 PinCaps.EAPDCapable, PinCaps.InputCapable, PinCaps.OutputCapable, PinCaps.PresenceDetectCapable);
 
+            if (!PinCaps.OutputCapable)
+            {
+                DPRINT1("HDAUDIO: PinNode %u not outputcapable %x\n", PinNodes[NodeIndex], PinCaps.OutputCapable);
+                continue;
+            }
+
             if (PinCaps.PresenceDetectCapable)
             {
                 Status = OutNode->GetPinSense(PinNodes[NodeIndex], &DevicePresent);
                 if (NT_SUCCESS(Status))
                 {
                     DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
+ #if 0
                     if (!DevicePresent)
                     {
                         // FIXME ignoring device
@@ -1115,9 +1137,11 @@ CAdapterCommon::ProcessOutputNodes(
                         PinNodes[NodeIndex] = (ULONG)-1;
                         continue;
                     }
+#endif
                 }
             }
-            if (PinCaps.EAPDCapable)
+
+            if (PinCaps.EAPDCapable && DevicePresent)
             {
                 // enable EAPD
                 DPRINT1("Enable EAPD...\n");
@@ -1130,7 +1154,7 @@ CAdapterCommon::ProcessOutputNodes(
         }
         else
         {
-            DPRINT1("PinNode %u failed to retrieve pin caps Staus %x\n", PinNodes[NodeIndex], Status);
+            DPRINT1("PinNode %u failed to retrieve pin caps Status %x\n", PinNodes[NodeIndex], Status);
             continue;
         }
         // retrieve pin configuration
@@ -1138,6 +1162,7 @@ CAdapterCommon::ProcessOutputNodes(
         Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
         if (NT_SUCCESS(Status))
         {
+#if 0
             if (PinConfiguration.PortConnectivity == 0x1)
             {
                 // no connection
@@ -1145,7 +1170,7 @@ CAdapterCommon::ProcessOutputNodes(
                 ClearRef(PinNodes[NodeIndex], PinNodeCount, PinNodes);
                 continue;
             }
-
+#endif
             if (PinConfiguration.DefaultDevice > 7)
             {
                 // not an output pin
@@ -1160,7 +1185,7 @@ CAdapterCommon::ProcessOutputNodes(
             // FIXME support digital pins
             Status = AssociatePins(
                 DeviceObject, Irp, PinConfiguration.DefaultAssociation, (PVOID)OutNode, PinNodeCount, PinNodes,
-                FALSE);
+                NodeContext->Digital);
 
         }
         else
@@ -1288,12 +1313,14 @@ CAdapterCommon::ProcessInputNodes(
             Status = OutNode->GetPinSense(PinNodes[NodeIndex], &DevicePresent);
             if (NT_SUCCESS(Status))
             {
+#if 0
                 DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
                 if (!DevicePresent)
                 {
                     DPRINT1("Ignoring Pin %u\n", PinNodes[NodeIndex]);
                     continue;
                 }
+#endif
             }
         }
 
@@ -1354,9 +1381,10 @@ CAdapterCommon::ProcessInputNodes(
             ULONG Result = 0;
             for (ULONG PinIndex = 0; PinIndex < PinsOfSameTypeCount; PinIndex++)
             {
+                PNODE_CONTEXT NodeContext = OutNode->FindNodeId(PinsOfSameType[PinIndex]);
                 Status = IsInputNodeConnectedToPin(
                     OutNode,
-                    0x0, // no digital yet
+                    NodeContext->Digital,
                     InputNodes[InputIndex], PinsOfSameType[PinIndex], PinNodeCount, &Result);
                 if (!NT_SUCCESS(Status))
                 {
@@ -1378,9 +1406,15 @@ CAdapterCommon::ProcessInputNodes(
         }
         if (FilteredInputNodeCount && PinsOfSameTypeCount)
         {
+            PNODE_CONTEXT NodeContext = OutNode->FindNodeId(PinsOfSameType[0]);
             Status = BuildInstallFilter(
-                DeviceObject, Irp, FALSE, OutNode, FilteredInputNodeCount, FilteredInputNodes, PinsOfSameTypeCount,
-                PinsOfSameType);
+                DeviceObject,
+                Irp,
+                FALSE,
+                OutNode,
+                PinsOfSameTypeCount,
+                PinsOfSameType,
+                NodeContext->Digital); // digital is unused
         }
         else
         {
@@ -1399,8 +1433,7 @@ CAdapterCommon::BuildInstallFilter(
     IN PVOID Node,
     IN ULONG AssociatedPinCount,
     IN PULONG AssociatedPins,
-    IN ULONG PinNodeCount,
-    IN PULONG Pins)
+    IN UCHAR Digital)
 {
     PPCFILTER_DESCRIPTOR FilterDescription = NULL;
     NTSTATUS Status;
@@ -1408,7 +1441,7 @@ CAdapterCommon::BuildInstallFilter(
 
     if (bOutput)
     {
-        Status = BuildWaveOutFilter(AssociatedPinCount, AssociatedPins, (PVOID)OutNode, &FilterDescription);
+        Status = BuildWaveOutFilter(AssociatedPinCount, AssociatedPins, (PVOID)OutNode, Digital, &FilterDescription);
     }
     else
     {
@@ -1420,23 +1453,13 @@ CAdapterCommon::BuildInstallFilter(
         UCHAR DefaultDevice = 0;
         UCHAR bSet = FALSE;
         PIN_CONFIGURATION_DEFAULT PinConfiguration;
-        ULONG Count = bOutput ? AssociatedPinCount : PinNodeCount;
-        for (ULONG Index = 0; Index < Count; Index++)
+
+        for (ULONG Index = 0; Index < AssociatedPinCount; Index++)
         {
+            if (AssociatedPins[Index] == (ULONG)-1)
+                continue;
 
-            if (bOutput)
-            {
-                if (AssociatedPins[Index] == (ULONG)-1)
-                    continue;
-
-                Status = OutNode->GetPinConfigurationDefault(AssociatedPins[Index], &PinConfiguration);
-            }
-            else
-            {
-                if (Pins[Index] == (ULONG)-1)
-                    continue;
-                Status = OutNode->GetPinConfigurationDefault(Pins[Index], &PinConfiguration);
-            }
+            Status = OutNode->GetPinConfigurationDefault(AssociatedPins[Index], &PinConfiguration);
             if (!NT_SUCCESS(Status))
                 continue;
 
@@ -1446,34 +1469,47 @@ CAdapterCommon::BuildInstallFilter(
             }
             else
             {
-                bSet = TRUE;
-                DefaultDevice = PinConfiguration.DefaultDevice;
+                if (PinConfiguration.PortConnectivity != 0x01) // pin is connected
+                {
+                    bSet = TRUE;
+                    DefaultDevice = PinConfiguration.DefaultDevice;
+                }
             }
         }
-
-        // lets build a subdevice name
-        LPWSTR SubdeviceWave = NULL;
-        Status = ChooseSubdeviceName(DefaultDevice, TRUE, &SubdeviceWave);
-        if (NT_SUCCESS(Status))
+        if (bSet)
         {
-            // construct wavert port
-            DPRINT1("HDAUDIO: SubdeviceName %S\n", SubdeviceWave);
-            Status = InstallDevice(
-                DeviceObject, Irp, SubdeviceWave, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
-                FilterDescription);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
-                return Status;
-            }
             // lets build a subdevice name
-            LPWSTR SubdeviceTopology = NULL;
-            Status = ChooseSubdeviceName(DefaultDevice, FALSE, &SubdeviceTopology);
+            LPWSTR SubdeviceWave = NULL;
+            Status = ChooseSubdeviceName(DefaultDevice, TRUE, &SubdeviceWave);
             if (NT_SUCCESS(Status))
             {
-                // build topology port
-                // InstallTopology(DeviceObject, Irp, SubdeviceTopology);
+                // construct wavert port
+                DPRINT1("HDAUDIO: SubdeviceName %S\n", SubdeviceWave);
+                Status = InstallDevice(
+                    DeviceObject, Irp, SubdeviceWave, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
+                    FilterDescription);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
+                    return Status;
+                }
+#if 0
+                // lets build a subdevice name
+                LPWSTR SubdeviceTopology = NULL;
+                Status = ChooseSubdeviceName(DefaultDevice, FALSE, &SubdeviceTopology);
+                if (NT_SUCCESS(Status))
+                {
+                    // build topology port
+                    // InstallTopology(DeviceObject, Irp, SubdeviceTopology);
+                }
+#endif
             }
+        }
+        else
+        {
+            // FIXME
+            // free filter descriptor
+            DPRINT1("need to free filter descriptor\n");
         }
     }
 
@@ -1493,7 +1529,7 @@ CAdapterCommon::AssociatePins(
 {
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
     NTSTATUS Status;
-
+    ULONG PinCount;
     ULONG AssociatedPinCount = 0;
     PULONG AssociatedPins = NULL;
 
@@ -1501,7 +1537,14 @@ CAdapterCommon::AssociatePins(
         OutNode->GetPinNodesWithDefaultAssociation(DefaultAssociation, Digital, &AssociatedPinCount, &AssociatedPins);
     if (NT_SUCCESS(Status))
     {
-        Status = BuildInstallFilter(DeviceObject, Irp, TRUE, OutNode, AssociatedPinCount, AssociatedPins, 0, NULL);
+        Status = BuildInstallFilter(DeviceObject, Irp, TRUE, OutNode, AssociatedPinCount, AssociatedPins, Digital);
+        if (NT_SUCCESS(Status))
+        {
+            for(PinCount = 0; PinCount < AssociatedPinCount; PinCount++)
+            {
+                ClearRef(AssociatedPins[PinCount], PinNodeCount, PinNodes);
+            }
+        }
     }
     return Status;
 }
