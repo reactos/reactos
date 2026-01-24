@@ -347,10 +347,9 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
         HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
         {
-            WCHAR szPerceivedType[MAX_PATH];
-            DWORD dwSize = sizeof(szPerceivedType);
+            DWORD dwSize = sizeof(wTemp);
             if (RegGetValueW(HKEY_CLASSES_ROOT, pExtension, L"PerceivedType", RRF_RT_REG_SZ, NULL,
-                             szPerceivedType, &dwSize) == ERROR_SUCCESS)
+                             wTemp, &dwSize) == ERROR_SUCCESS)
             {
                 WCHAR szSubKey[MAX_PATH];
                 StringCchPrintfW(szSubKey, _countof(szSubKey), L"SystemFileAssociations\\%s\\DefaultIcon", szPerceivedType);
