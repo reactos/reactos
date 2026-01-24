@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS
- * LICENSE:     GPL - See COPYING in the top level directory
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Audio Service Plug and Play
- * COPYRIGHT:   Copyright 2007 Andrew Greenwood
+ * COPYRIGHT:   Copyright 2007 Andrew Greenwood <silverblade@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "audiosrv.h"
