@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define LEGACY_STREAMING
+//#define LEGACY_STREAMING
 
 class CPortPinWaveRT : public CUnknownImpl<IPortPinWaveRT>
 {
