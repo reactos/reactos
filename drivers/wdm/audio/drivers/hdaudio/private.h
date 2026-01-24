@@ -148,6 +148,7 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
         IN ULONG AssociatedPinCount,
         IN PULONG AssociatedPins,
         IN PVOID Node,
+        IN UCHAR Digital,
         OUT PPCFILTER_DESCRIPTOR *OutDescription);
     NTSTATUS NTAPI
     BuildWaveInFilter(
@@ -165,8 +166,7 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
         IN PVOID OutNode,
         IN ULONG AssociatedPinCount,
         IN PULONG AssociatedPins,
-        IN ULONG PinNodeCount,
-        IN PULONG Pins);
+        IN UCHAR Digital);
     VOID NTAPI ClearRef(IN ULONG RefValue, IN ULONG NodeCount, IN PULONG Nodes);
     NTSTATUS
     NTAPI
@@ -335,11 +335,11 @@ class CMiniportWaveRTStream : public CUnknownImpl<IMiniportWaveRTStreamNotificat
         HDAUDIO_BUS_INTERFACE_V2 Interface;
 
         Status = m_Adapter->GetInterface(&Interface);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
+            Interface.FreeDmaEngine(Interface.Context, m_DmaEngine);
             return;
         }
-        Interface.FreeDmaEngine(Interface.Context, m_DmaEngine);
     }
 
     IMP_IMiniportWaveRTStreamNotification;
