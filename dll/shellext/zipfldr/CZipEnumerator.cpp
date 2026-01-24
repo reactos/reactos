@@ -25,8 +25,7 @@ BOOL CZipEnumerator::Initialize(IZip* zip)
 DWORD CZipEnumerator::CalculateFilenameCRC32(PCSTR filename)
 {
     ATLASSERT(filename);
-    DWORD crc = 0;
-    crc = crc32(0, Z_NULL, 0);
+    DWORD crc = crc32(0, Z_NULL, 0);
     crc = crc32(crc, (const Bytef*)filename, strlen(filename));
     return crc;
 }
