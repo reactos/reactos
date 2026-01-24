@@ -78,6 +78,12 @@ set_image_base(rosload 0x10000) # 0x200000
 set_subsystem(rosload native)
 set_entrypoint(rosload RunLoader)
 
+if(NOT MSVC)
+    # This is very weird because windows vista (NT6+) needs this to boot
+    # or it might be something with peloader???
+    add_linker_script(rosload rosload_gcc.lds)
+endif()
+
 if(ARCH STREQUAL "i386")
     target_link_libraries(rosload mini_hal)
 endif()
