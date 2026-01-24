@@ -14,6 +14,7 @@ static inline DWORD CalculateFilenameCRC32(PCSTR filename)
     return crc;
 }
 
+#define EF_UNIPATH 0x7075 // Unicode Path extra field ID
 #define MINIZIP_EF_HEADER_SIZE 4 // Extra field header size (ID + size)
 
 static inline bool
@@ -28,35 +29,32 @@ ExtractUnicodePathFromExtra(const BYTE* extraField, DWORD extraFieldLen,
 
     while (ptr + MINIZIP_EF_HEADER_SIZE <= end)
     {
-        WORD fieldId = *(WORD*)ptr;
-        WORD fieldSize = *(WORD*)(ptr + 2);
-
-        if (fieldId == MINIZIP_EF_UNIPATH_ID)
+        WORD fieldId = *(WORD*)ptr, fieldSize = *(WORD*)(ptr + 2);
+        if (fieldId != EF_UNIPATH)
         {
-            const BYTE* fieldData = ptr + MINIZIP_EF_HEADER_SIZE;
+            ptr += MINIZIP_EF_HEADER_SIZE + fieldSize;
+            continue;
+        }
 
-            if (ptr + MINIZIP_EF_HEADER_SIZE + fieldSize > end)
-                return false;
+        const BYTE* fieldData = ptr + MINIZIP_EF_HEADER_SIZE;
 
-            if (fieldSize < 5)
-                return false;
+        if (ptr + MINIZIP_EF_HEADER_SIZE + fieldSize > end)
+            return false;
 
-            BYTE version = fieldData[0];
-            if (version != 1)
-                return false;
+        if (fieldSize < 5 || fieldData[0] != 1) // size and version check
+            return false;
 
-            DWORD storedCRC = *(DWORD*)(fieldData + 1);
-            DWORD calculatedCRC = CalculateFilenameCRC32(originalName);
-            if (storedCRC != calculatedCRC)
-                return false;
+        DWORD storedCRC = *(DWORD*)(fieldData + 1);
+        DWORD calculatedCRC = CalculateFilenameCRC32(originalName);
+        if (storedCRC != calculatedCRC)
+            return false;
 
-            DWORD utf8NameLen = fieldSize - 5;
-            if (utf8NameLen > 0)
-            {
-                CStringA utf8Name((LPCSTR)(fieldData + 5), utf8NameLen);
-                unicodeName = CA2WEX<MAX_PATH>(utf8Name, CP_UTF8);
-                return true;
-            }
+        DWORD utf8NameLen = fieldSize - 5;
+        if (utf8NameLen > 0)
+        {
+            CStringA utf8Name((LPCSTR)(fieldData + 5), utf8NameLen);
+            unicodeName = CA2WEX<MAX_PATH>(utf8Name, CP_UTF8);
+            return true;
         }
 
         ptr += MINIZIP_EF_HEADER_SIZE + fieldSize;
@@ -147,9 +145,14 @@ public:
         if (err != UNZ_OK)
             return false;
 
+        CAtlArray<BYTE> extra;
+        extra.SetCount(info.size_file_extra);
+
         CStringA nameA;
         PSTR buf = nameA.GetBuffer(info.size_filename);
-        err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(), NULL, 0, NULL, 0);
+        err = unzGetCurrentFileInfo64(uf, NULL, buf, nameA.GetAllocLength(),
+            (info.size_file_extra > 0) ? extra.GetData() : NULL, info.size_file_extra,
+            NULL, 0);
         nameA.ReleaseBuffer(info.size_filename);
 
         if (err != UNZ_OK)
@@ -159,23 +162,10 @@ public:
 
         CStringW unicodeName;
         bool hasUnicodePath = false;
-
         if (info.size_file_extra > 0)
         {
-            CAtlArray<BYTE> extraField;
-            extraField.SetCount(info.size_file_extra);
-
-            err = unzGetCurrentFileInfo64(uf, NULL, NULL, 0,
-                                          extraField.GetData(), info.size_file_extra,
-                                          NULL, 0);
-            if (err == UNZ_OK)
-            {
-                hasUnicodePath = ExtractUnicodePathFromExtra(
-                    extraField.GetData(),
-                    info.size_file_extra,
-                    nameA,
-                    unicodeName);
-            }
+            hasUnicodePath = ExtractUnicodePathFromExtra(
+                extra.GetData(), info.size_file_extra, nameA, unicodeName);
         }
 
         if (hasUnicodePath)
