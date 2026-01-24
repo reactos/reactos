@@ -19,7 +19,7 @@ list(APPEND SOURCE
     CFolderViewCB.cpp
     CSendToZip.cpp
     CZipCreator.cpp
-    CZipEnumerator.hpp
+    CZipEnumerator.cpp
     CZipExtract.cpp
     CZipFolder.hpp
     CZipPassword.cpp
