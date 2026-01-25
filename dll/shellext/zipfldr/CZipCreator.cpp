@@ -12,6 +12,11 @@
 #include "minizip/iowin32.h"
 #include <process.h>
 
+static inline DWORD CalculateNameCRC32(PCSTR name)
+{
+    return crc32(0L, reinterpret_cast<const BYTE*>(name), strlen(name));
+}
+
 static CStringW DoGetZipName(PCWSTR filename)
 {
     WCHAR szPath[MAX_PATH];
@@ -315,11 +320,37 @@ unsigned CZipCreatorImpl::JustDoIt()
         }
 
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
+
+        CSimpleArray<BYTE> extraField;
+        if (nCodePage != CP_UTF8)
+        {
+            CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
+
+            // Header
+            WORD headerID = EF_UNIPATH, dataSize = 1 + 4 + strNameInZipUTF8.GetLength();
+            extraField.Add(headerID & 0xFF);
+            extraField.Add((headerID >> 8) & 0xFF);
+            extraField.Add(dataSize & 0xFF);
+            extraField.Add((dataSize >> 8) & 0xFF);
+            extraField.Add(1); // Version
+
+            // CRC32
+            DWORD nameCRC = CalculateNameCRC32(strNameInZip);
+            extraField.Add(nameCRC & 0xFF);
+            extraField.Add((nameCRC >> 8) & 0xFF);
+            extraField.Add((nameCRC >> 16) & 0xFF);
+            extraField.Add((nameCRC >> 24) & 0xFF);
+
+            // UTF-8 name
+            for (INT ich = 0; ich < strNameInZipUTF8.GetLength(); ++ich)
+                extraField.Add(strNameInZipUTF8[ich]);
+        }
+
         err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
-                                      NULL,
-                                      0,
+                                      (extraField.GetSize() > 0 ? extraField.GetData() : NULL),
+                                      extraField.GetSize(),
                                       NULL,
                                       0,
                                       NULL,
