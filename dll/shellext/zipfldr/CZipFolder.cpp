@@ -537,9 +537,8 @@ STDMETHODIMP CZipFolder::DragLeave()
 
 STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
-    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM sm;
-
+    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = pDataObj->GetData(&fe, &sm);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -547,10 +546,14 @@ STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL p
     HDROP hDrop = (HDROP)GlobalLock(sm.hGlobal);
     if (hDrop)
     {
+        // Close the ZIP file before appending (it will be automatically
+        // reopened next time getZip() is called)
         Close();
 
+        // Create creator
         CZipCreator* pCreator = CZipCreator::DoCreate(m_ZipFile);
 
+        // Add dropped files
         UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
         for (UINT i = 0; i < fileCount; i++)
         {
