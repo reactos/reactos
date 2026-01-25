@@ -8,9 +8,9 @@
 
 #include "precomp.h"
 
-#define EF_UNIPATH 0x7075 // Unicode Path extra field ID
-#define EF_HEADER_SIZE 4 // Extra field header size (ID + size)
-#define EF_UNIPATH_VERSION 1 // Unicode Path extra field version
+#define EF_UNIPATH          0x7075 // Unicode Path extra field ID
+#define EF_HEADER_SIZE      4      // Extra field header size (ID + size)
+#define EF_UNIPATH_VERSION  1      // Unicode Path extra field version
 
 CZipEnumerator::CZipEnumerator()
 {
