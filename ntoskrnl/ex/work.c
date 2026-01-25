@@ -14,9 +14,8 @@
 
 /* DATA **********************************************************************/
 
-/* Number of worker threads for each Queue */
-#define EX_HYPERCRITICAL_WORK_THREADS               1
-#define EX_DELAYED_WORK_THREADS                     3
+/* Number of worker threads for Delayed and Critical queues */
+#define EX_DELAYED_WORK_THREADS                     7
 #define EX_CRITICAL_WORK_THREADS                    5
 
 /* Magic flag for dynamic worker threads */
@@ -523,8 +522,10 @@ ExpInitializeWorkerThreads(VOID)
 {
     ULONG WorkQueueType;
     ULONG CriticalThreads, DelayedThreads;
+    MM_SYSTEMSIZE SystemSize;
     HANDLE ThreadHandle;
     PETHREAD Thread;
+    BOOLEAN IsServer;
     ULONG i;
     NTSTATUS Status;
 
@@ -533,15 +534,72 @@ ExpInitializeWorkerThreads(VOID)
     InitializeListHead(&ExpWorkerListHead);
     ExpWorkersCanSwap = TRUE;
 
-    /* Set the number of critical and delayed threads. We shouldn't hardcode */
+    /* If this system is a server then it has to setup additional worker threads */
+    IsServer = MmIsThisAnNtAsSystem();
+
+    /* Default the number of worker threads to be created, they'll be computed below */
     DelayedThreads = EX_DELAYED_WORK_THREADS;
     CriticalThreads = EX_CRITICAL_WORK_THREADS;
 
-    /* Protect against greedy registry modifications */
+    /*
+     * Compute the number of worker threads we should create based
+     * upon the memory properties of the system. The larger and bigger
+     * the system is, the more workers we are going to create to satisfy
+     * requests by drivers, filesystems and the kernel itself.
+     *
+     * For weaker systems the kernel will only setup the default number
+     * of worker threads. For systems of medium size add up additional 3
+     * worker threads but only if the system is deemed as a server.
+     * For beefy systems add 5 more worker threads and double up the number
+     * if it's also a server.
+     */
+    SystemSize = MmQuerySystemSize();
+    switch (SystemSize)
+    {
+        case MmSmallSystem:
+        {
+            break;
+        }
+
+        case MmMediumSystem:
+        {
+            if (IsServer)
+            {
+                DelayedThreads += 3;
+                CriticalThreads += 3;
+            }
+
+            break;
+        }
+
+        case MmLargeSystem:
+        {
+            DelayedThreads += 5;
+            CriticalThreads += 5;
+
+            if (IsServer)
+            {
+                DelayedThreads += EX_DELAYED_WORK_THREADS;
+                CriticalThreads += EX_CRITICAL_WORK_THREADS;
+            }
+
+            break;
+        }
+
+        /* This path is never reached, MmQuerySystemSize() only returns the following Mm*System values */
+        DEFAULT_UNREACHABLE;
+    }
+
+    /*
+     * Get an additional number of worker threads from the Registry
+     * but make sure to NOT exceed the limit of 100. Windows XP
+     * and Server 2003 systems have a limit of 16, later versions
+     * of Windows like 7 and 8.1 have a limit of 100.
+     */
     ExpAdditionalDelayedWorkerThreads =
-        min(ExpAdditionalDelayedWorkerThreads, 16);
+        min(ExpAdditionalDelayedWorkerThreads, 100);
     ExpAdditionalCriticalWorkerThreads =
-        min(ExpAdditionalCriticalWorkerThreads, 16);
+        min(ExpAdditionalCriticalWorkerThreads, 100);
 
     /* Calculate final count */
     DelayedThreads += ExpAdditionalDelayedWorkerThreads;
