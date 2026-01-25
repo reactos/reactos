@@ -315,10 +315,21 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hStopEvent;
     HANDLE hResetEvent;
     BOOL RTStreamingEnabled;
+
+    HANDLE hRTStreamingThread;
     HANDLE hNotifyRTStreamingEvent;
+    HANDLE hNotifyRTStreamingStopEvent;
+
     PUCHAR RTStreamingBuffer;
     DWORD RTStreamingBufferLength;
     DWORD RTStreamingBufferOffset;
+    DWORD RTStreamingBufferBytesWritten;
+
+    PUCHAR RTStreamingShadowBuffer;
+    DWORD RTStreamingShadowBufferLength;
+    DWORD RTStreamingShadowBufferOffset;
+
+
     BOOL ResetInProgress;
     BOOL bPaused;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
