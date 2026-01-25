@@ -26,7 +26,7 @@ public:
     {
         dwFlags = flags;
         m_Prefix = prefix;
-        if (mEnumerator.initialize(zip))
+        if (mEnumerator.Initialize(zip))
             return S_OK;
         return E_FAIL;
     }
@@ -46,7 +46,7 @@ public:
 
         while (fetched < celt)
         {
-            if (mEnumerator.next_unique(m_Prefix, name, dir, info))
+            if (mEnumerator.NextUnique(m_Prefix, name, dir, info))
             {
                 item = _ILCreate(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
                 if (!item)
@@ -74,7 +74,7 @@ public:
         unz_file_info64 info;
         while (celt--)
         {
-            if (!mEnumerator.next_unique(m_Prefix, name, dir, info))
+            if (!mEnumerator.NextUnique(m_Prefix, name, dir, info))
                 return E_FAIL;
             ;
         }
@@ -82,7 +82,7 @@ public:
     }
     STDMETHODIMP Reset()
     {
-        if (mEnumerator.reset())
+        if (mEnumerator.Reset())
             return S_OK;
         return E_FAIL;
     }
