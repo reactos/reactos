@@ -51,44 +51,45 @@ CZipEnumerator::GetUtf8Name(
     ATLASSERT(extraField);
 
     if (extraFieldLen < EF_HEADER_SIZE)
-        return "";
+        return ""; // Failure
 
-    const BYTE* ptr = extraField;
-    const BYTE* end = extraField + extraFieldLen;
+    const BYTE* pbField = extraField;
+    const BYTE* pbEnd = extraField + extraFieldLen;
 
-    while (ptr + EF_HEADER_SIZE <= end)
+    while (pbField + EF_HEADER_SIZE <= pbEnd)
     {
+        // Beware of alignment exception
         WORD fieldId, fieldSize;
-        CopyMemory(&fieldId, ptr, sizeof(fieldId));
-        CopyMemory(&fieldSize, ptr + 2, sizeof(fieldSize));
+        CopyMemory(&fieldId, pbField, sizeof(fieldId));
+        CopyMemory(&fieldSize, pbField + 2, sizeof(fieldSize));
 
         if (fieldId != EF_UNIPATH)
         {
-            ptr += EF_HEADER_SIZE + fieldSize;
+            pbField += EF_HEADER_SIZE + fieldSize; // Next field
             continue;
         }
 
-        if (fieldSize < 5 || ptr + EF_HEADER_SIZE + fieldSize > end)
+        if (fieldSize < 5 || pbField + EF_HEADER_SIZE + fieldSize > pbEnd)
             return "";
 
-        const BYTE* fieldData = ptr + EF_HEADER_SIZE;
+        const BYTE* fieldData = pbField + EF_HEADER_SIZE;
         BYTE version = fieldData[0];
         if (version != EF_UNIPATH_VERSION)
-            return "";
+            return ""; // Failure
 
         DWORD storedCRC, calculatedCRC = CalculateCRC32(originalName);
         CopyMemory(&storedCRC, fieldData + 1, sizeof(storedCRC));
         if (storedCRC != calculatedCRC)
-            return "";
+            return ""; // Failure
 
         DWORD utf8NameLen = fieldSize - 5;
         if (utf8NameLen > 0)
-            return CStringA((LPCSTR)(fieldData + 5), utf8NameLen);
+            return CStringA((LPCSTR)(fieldData + 5), utf8NameLen); // Success
 
-        ptr += EF_HEADER_SIZE + fieldSize;
+        pbField += EF_HEADER_SIZE + fieldSize; // Next field
     }
 
-    return "";
+    return ""; // Failure
 }
 
 BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
