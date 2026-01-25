@@ -163,15 +163,18 @@ struct CZipCreatorImpl
 {
     CSimpleArray<CStringW> m_items;
     CStringW m_ExistingZip;
+    CStringW m_TargetDir;
 
     unsigned JustDoIt();
 };
 
-CZipCreator* CZipCreator::DoCreate(PCWSTR pszExistingZip)
+CZipCreator* CZipCreator::DoCreate(PCWSTR pszExistingZip, PCWSTR pszTargetDir)
 {
     CZipCreator* pCreator = new CZipCreator();
     if (pszExistingZip)
         pCreator->m_pimpl->m_ExistingZip = pszExistingZip;
+    if (pszTargetDir)
+        pCreator->m_pimpl->m_TargetDir = pszTargetDir;
     return pCreator;
 }
 
@@ -321,6 +324,14 @@ unsigned CZipCreatorImpl::JustDoIt()
 
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
         CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
+        if (!m_TargetDir.IsEmpty())
+        {
+            CStringA strTargetDir = CStringA(CW2AEX<MAX_PATH>(m_TargetDir, nCodePage));
+            strNameInZip = strTargetDir + strNameInZip;
+
+            CStringA strTargetDirUTF8 = CStringA(CW2AEX<MAX_PATH>(m_TargetDir, CP_UTF8));
+            strNameInZipUTF8 = strTargetDirUTF8 + strNameInZipUTF8;
+        }
 
         CSimpleArray<BYTE> extraField;
         if (nCodePage != CP_UTF8 && strNameInZip != strNameInZipUTF8)

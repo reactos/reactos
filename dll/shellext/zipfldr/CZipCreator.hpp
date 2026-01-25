@@ -17,7 +17,7 @@ public:
 
     virtual ~CZipCreator();
 
-    static CZipCreator* DoCreate(PCWSTR pszExistingZip = NULL);
+    static CZipCreator* DoCreate(PCWSTR pszExistingZip = NULL, PCWSTR pszTargetDir = NULL);
 
     virtual void DoAddItem(PCWSTR pszFile);
     static BOOL runThread(CZipCreator* pCreator);
