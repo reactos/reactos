@@ -19,7 +19,7 @@ static FolderViewColumns g_ColumnDefs[] =
     { IDS_COL_DATE_MOD,  SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT,  15, LVCFMT_LEFT },
 };
 
-CZipFolder::CZipFolder() : m_UnzipFile(NULL)
+CZipFolder::CZipFolder()
 {
 }
 
@@ -40,6 +40,26 @@ STDMETHODIMP_(unzFile) CZipFolder::getZip()
     if (!m_UnzipFile)
         m_UnzipFile = unzOpen2_64(m_ZipFile, &g_FFunc);
     return m_UnzipFile;
+}
+
+HRESULT CZipFolder::Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
+{
+    m_ZipFile = zipFile;
+    m_ZipDir = zipDir;
+
+    m_CurDir.Attach(ILCombine(curDir, pidl));
+    return S_OK;
+}
+
+DWORD WINAPI CZipFolder::s_ExtractProc(LPVOID arg)
+{
+    CComBSTR ZipFile;
+    ZipFile.Attach((BSTR)arg);
+
+    _CZipExtract_runWizard(ZipFile);
+
+    InterlockedDecrement(&g_ModuleRefCnt);
+    return 0;
 }
 
 // Adapted from CFileDefExt::GetFileTimeString
@@ -518,6 +538,53 @@ STDMETHODIMP CZipFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     return E_INVALIDARG;
 }
 
+STDMETHODIMP CZipFolder::IsDirty()
+{
+    return S_FALSE;
+}
+
+STDMETHODIMP CZipFolder::Load(LPCOLESTR pszFileName, DWORD dwMode)
+{
+    m_ZipFile = pszFileName;
+
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr = SHParseDisplayName(pszFileName, NULL, &pidl, 0, NULL);
+    if (SUCCEEDED(hr))
+    {
+        m_CurDir.Attach(pidl.Detach());
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CZipFolder::Save(LPCOLESTR pszFileName, BOOL fRemember)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CZipFolder::SaveCompleted(LPCOLESTR pszFileName)
+{
+    return S_OK;
+}
+
+STDMETHODIMP CZipFolder::GetCurFile(LPOLESTR *ppszFileName)
+{
+    if (!ppszFileName)
+        return E_INVALIDARG;
+
+    *ppszFileName = NULL;
+
+    if (m_ZipFile.IsEmpty())
+        return S_FALSE;
+
+    *ppszFileName = (LPOLESTR)CoTaskMemAlloc((m_ZipFile.GetLength() + 1) * sizeof(WCHAR));
+    if (!*ppszFileName)
+        return E_OUTOFMEMORY;
+
+    wcscpy(*ppszFileName, m_ZipFile);
+    return S_OK;
+}
+
 STDMETHODIMP CZipFolder::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
     *pdwEffect &= DROPEFFECT_COPY;
@@ -570,24 +637,4 @@ STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL p
     ReleaseStgMedium(&sm);
 
     return S_OK;
-}
-
-STDMETHODIMP CZipFolder::Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl)
-{
-    m_ZipFile = zipFile;
-    m_ZipDir = zipDir;
-
-    m_CurDir.Attach(ILCombine(curDir, pidl));
-    return S_OK;
-}
-
-DWORD WINAPI CZipFolder::s_ExtractProc(LPVOID arg)
-{
-    CComBSTR ZipFile;
-    ZipFile.Attach((BSTR)arg);
-
-    _CZipExtract_runWizard(ZipFile);
-
-    InterlockedDecrement(&g_ModuleRefCnt);
-    return 0;
 }

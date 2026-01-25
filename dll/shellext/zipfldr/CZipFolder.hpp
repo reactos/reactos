@@ -34,7 +34,7 @@ class CZipFolder :
     //public IStorage,
     public IContextMenu,
     public IShellExtInit,
-    //public IPersistFile,
+    public IPersistFile,
     public IPersistFolder2,
     public IDropTarget,
     public IZip
@@ -42,8 +42,10 @@ class CZipFolder :
     CStringW m_ZipFile;
     CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
-    unzFile m_UnzipFile;
+    unzFile m_UnzipFile = nullptr;
 
+    static DWORD WINAPI s_ExtractProc(LPVOID arg);
+    BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult);
     static HRESULT CALLBACK ZipFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
                                                   UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -51,23 +53,24 @@ public:
     CZipFolder();
     ~CZipFolder();
 
+    HRESULT Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl);
     void Close();
 
     // *** IZip methods ***
     STDMETHODIMP_(unzFile) getZip();
 
     // *** IShellFolder2 methods ***
-    STDMETHODIMP GetDefaultSearchGUID(GUID *pguid)
+    STDMETHODIMP GetDefaultSearchGUID(GUID *pguid) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
-    STDMETHODIMP EnumSearches(IEnumExtraSearch **ppenum)
+    STDMETHODIMP EnumSearches(IEnumExtraSearch **ppenum) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
-    STDMETHODIMP GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
+    STDMETHODIMP GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay) override
     {
         if (pSort)
             *pSort = COL_NAME;
@@ -75,43 +78,41 @@ public:
             *pDisplay = COL_NAME;
         return S_OK;
     }
-    STDMETHODIMP GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
-    STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv)
+    STDMETHODIMP GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags) override;
+    STDMETHODIMP GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
-    // Adapted from CFileDefExt::GetFileTimeString
-    BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult);
-    STDMETHODIMP GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-    STDMETHODIMP MapColumnToSCID(UINT column, SHCOLUMNID *pscid)
+    STDMETHODIMP GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd) override;
+    STDMETHODIMP MapColumnToSCID(UINT column, SHCOLUMNID *pscid) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
 
     // *** IShellFolder methods ***
-    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes)
+    STDMETHODIMP ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
-    STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
+    STDMETHODIMP EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
     {
         return _CEnumZipContents_CreateInstance(this, dwFlags, m_ZipDir, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
     }
-    STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-    STDMETHODIMP BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
+    STDMETHODIMP BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override;
+    STDMETHODIMP BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
     }
-    STDMETHODIMP CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
-    STDMETHODIMP CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-    STDMETHODIMP GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
-    STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-    STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
+    STDMETHODIMP CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override;
+    STDMETHODIMP CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override;
+    STDMETHODIMP GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override;
+    STDMETHODIMP GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override;
+    STDMETHODIMP GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override;
+    STDMETHODIMP SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override
     {
         UNIMPLEMENTED;
         return E_NOTIMPL;
@@ -134,46 +135,42 @@ public:
     //STDMETHODIMP Stat(STATSTG *pstatstg, DWORD grfStatFlag);
 
     // *** IContextMenu methods ***
-    STDMETHODIMP GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax);
-    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO pici);
-    STDMETHODIMP QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    STDMETHODIMP GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax) override;
+    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO pici) override;
+    STDMETHODIMP QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
 
     // *** IShellExtInit methods ***
-    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID) override;
 
-    //// IPersistFile
-    ////STDMETHODIMP GetClassID(CLSID *pclsid);
-    //STDMETHODIMP IsDirty();
-    //STDMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode);
-    //STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember);
-    //STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName);
-    //STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName);
+    // *** IPersistFile methods ***
+    STDMETHODIMP IsDirty() override;
+    STDMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) override;
+    STDMETHODIMP Save(LPCOLESTR pszFileName, BOOL fRemember) override;
+    STDMETHODIMP SaveCompleted(LPCOLESTR pszFileName) override;
+    STDMETHODIMP GetCurFile(LPOLESTR *ppszFileName) override;
 
     //// *** IPersistFolder2 methods ***
-    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE * pidl)
+    STDMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE * pidl) override
     {
         *pidl = ILClone(m_CurDir);
         return S_OK;
     }
 
     // *** IPersistFolder methods ***
-    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl);
+    STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidl) override;
 
     // *** IPersist methods ***
-    STDMETHODIMP GetClassID(CLSID *lpClassId)
+    STDMETHODIMP GetClassID(CLSID *lpClassId) override
     {
         *lpClassId = CLSID_ZipFolderStorageHandler;
         return S_OK;
     }
 
     // *** IDropTarget methods ***
-    STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
-    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
-    STDMETHODIMP DragLeave();
-    STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect);
-
-    STDMETHODIMP Initialize(PCWSTR zipFile, PCWSTR zipDir, PCUIDLIST_ABSOLUTE curDir, PCUIDLIST_RELATIVE pidl);
-    static DWORD WINAPI s_ExtractProc(LPVOID arg);
+    STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
+    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
+    STDMETHODIMP DragLeave() override;
+    STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
 
 public:
     DECLARE_NO_REGISTRY()   // Handled manually because this object is exposed via multiple clsid's
@@ -187,10 +184,9 @@ public:
 //        COM_INTERFACE_ENTRY_IID(IID_IStorage, IStorage)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
-        //COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
+        COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
     END_COM_MAP()
 };

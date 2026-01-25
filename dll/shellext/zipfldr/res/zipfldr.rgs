@@ -66,6 +66,13 @@ HKCR
     NoRemove '.zip' = s 'CompressedFolder'
     {
         val 'Content Type' = s 'application/x-zip-compressed'
+        NoRemove shellex
+        {
+            NoRemove DropHandler
+            {
+                val '' = s '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}'
+            }
+        }
     }
 }
 HKLM
