@@ -558,7 +558,18 @@ EngpPnPTargetRelationRequest(
 
     /* Return information to the caller about the operation. */
     if (NT_SUCCESS(Status))
+    {
         *pDeviceRelations = (PDEVICE_RELATIONS)Iosb.Information;
+        /* Some drivers may return success but with NULL information */
+        if (*pDeviceRelations == NULL)
+        {
+            WARN("Driver returned success but with NULL device relations\n");
+        }
+    }
+    else
+    {
+        *pDeviceRelations = NULL;
+    }
 
     return Status;
 }
@@ -580,6 +591,14 @@ EngpUpdateMonitorDevices(
         ERR("EngpPnPTargetRelationRequest() failed with status 0x%08x\n", Status);
         return Status;
     }
+    
+    /* Check if the driver returned valid device relations */
+    if (pDeviceRelations == NULL || pDeviceRelations->Count == 0)
+    {
+        WARN("No device relations returned by driver, skipping monitor enumeration\n");
+        return STATUS_SUCCESS;
+    }
+    
     ASSERT(pDeviceRelations->Count == 1);
 
     /* Invalidate relations, so that videoprt reenumerates its monitors */

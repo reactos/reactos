@@ -1805,6 +1805,12 @@ VideoPortCheckForDeviceExistence(
 
     DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
+    if (DeviceExtension->NextDeviceObject == NULL)
+    {
+        WARN_(VIDEOPRT, "DeviceExtension->NextDeviceObject is NULL!\n");
+        return FALSE;
+    }
+
     PciDevicePresentInterface.Size = sizeof(PCI_DEVICE_PRESENT_INTERFACE);
     PciDevicePresentInterface.Version = 1;
     IoStack.Parameters.QueryInterface.Size = PciDevicePresentInterface.Size;
