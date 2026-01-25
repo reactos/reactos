@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create a zip file
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -193,7 +193,12 @@ static unsigned __stdcall
 create_zip_function(void *arg)
 {
     CZipCreator *pCreator = reinterpret_cast<CZipCreator *>(arg);
-    return pCreator->m_pimpl->JustDoIt();
+    unsigned result = pCreator->m_pimpl->JustDoIt();
+
+    if (result == 0 && pCreator->m_pidlNotify)
+        SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, (LPITEMIDLIST)pCreator->m_pidlNotify, NULL);
+
+    return result;
 }
 
 BOOL CZipCreator::runThread(CZipCreator *pCreator)
@@ -417,7 +422,11 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         WCHAR szFullPath[MAX_PATH];
         GetFullPathNameW(strZipName, _countof(szFullPath), szFullPath, NULL);
-        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+
+        if (m_ExistingZip.IsEmpty())
+            SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+        else
+            SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, szFullPath, NULL);
     }
 
     return err;

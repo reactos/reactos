@@ -620,6 +620,8 @@ STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL p
         // Create creator
         CZipCreator* pCreator = CZipCreator::DoCreate(m_ZipFile, m_ZipDir);
 
+        pCreator->SetNotifyPidl(m_CurDir);
+
         // Add dropped files
         UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
         for (UINT i = 0; i < fileCount; i++)
