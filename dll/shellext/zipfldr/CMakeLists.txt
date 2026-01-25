@@ -21,7 +21,7 @@ list(APPEND SOURCE
     CZipCreator.cpp
     CZipEnumerator.cpp
     CZipExtract.cpp
-    CZipFolder.hpp
+    CZipFolder.cpp
     CZipPassword.cpp
     Debug.cpp
     zipfldr.spec

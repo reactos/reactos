@@ -157,9 +157,18 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, PCWSTR item)
 struct CZipCreatorImpl
 {
     CSimpleArray<CStringW> m_items;
+    CStringW m_ExistingZip;
 
     unsigned JustDoIt();
 };
+
+CZipCreator* CZipCreator::DoCreate(PCWSTR pszExistingZip)
+{
+    CZipCreator* pCreator = new CZipCreator();
+    if (pszExistingZip)
+        pCreator->m_pimpl->m_ExistingZip = pszExistingZip;
+    return pCreator;
+}
 
 CZipCreator::CZipCreator() : m_pimpl(new CZipCreatorImpl)
 {
@@ -222,6 +231,19 @@ unsigned CZipCreatorImpl::JustDoIt()
 {
     // TODO: Show progress.
 
+    CStringW strZipName;
+    INT appendMode;
+    if (m_ExistingZip.IsEmpty())
+    {
+        strZipName = DoGetZipName(m_items[0]);
+        appendMode = APPEND_STATUS_CREATE;
+    }
+    else
+    {
+        strZipName = m_ExistingZip;
+        appendMode = APPEND_STATUS_ADDINZIP;
+    }
+
     if (m_items.GetSize() <= 0)
     {
         DPRINT1("GetSize() <= 0\n");
@@ -247,10 +269,10 @@ unsigned CZipCreatorImpl::JustDoIt()
     }
 
     zlib_filefunc64_def ffunc;
+    ZeroMemory(&ffunc, sizeof(ffunc));
     fill_win32_filefunc64W(&ffunc);
 
-    CStringW strZipName = DoGetZipName(m_items[0]);
-    zipFile zf = zipOpen2_64(strZipName, APPEND_STATUS_CREATE, NULL, &ffunc);
+    zipFile zf = zipOpen2_64(strZipName, appendMode, NULL, &ffunc);
     if (zf == 0)
     {
         DPRINT1("zf == 0\n");
@@ -337,7 +359,8 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     if (err)
     {
-        DeleteFileW(strZipName);
+        if (err && m_ExistingZip.IsEmpty())
+            DeleteFileW(strZipName);
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
 
