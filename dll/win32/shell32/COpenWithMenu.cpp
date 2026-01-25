@@ -877,6 +877,19 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         return FALSE;
     }
 
+#ifdef __REACTOS__
+    /* Create "DefaultIcon" key */
+    HKEY hDefIconKey;
+    if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL, &hDefIconKey,
+                        NULL) == ERROR_SUCCESS)
+    {
+        DWORD cbData = (lstrlenW(pApp->wszFilename) + 1) * sizeof(WCHAR);
+        RegSetValueExW(hDefIconKey, NULL, 0, REG_EXPAND_SZ, (PBYTE)pApp->wszFilename, cbData);
+        RegCloseKey(hDefIconKey);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+    }
+#endif
+
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
     /* FIXME: Windows does not actually copy the verb keys */
