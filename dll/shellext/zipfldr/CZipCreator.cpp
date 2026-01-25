@@ -320,12 +320,11 @@ unsigned CZipCreatorImpl::JustDoIt()
         }
 
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
+        CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
 
         CSimpleArray<BYTE> extraField;
-        if (nCodePage != CP_UTF8)
+        if (nCodePage != CP_UTF8 && strNameInZip != strNameInZipUTF8)
         {
-            CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
-
             // Header
             WORD headerID = EF_UNIPATH, dataSize = 1 + 4 + strNameInZipUTF8.GetLength();
             extraField.Add(headerID & 0xFF);
