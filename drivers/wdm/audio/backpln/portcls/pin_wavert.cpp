@@ -308,16 +308,18 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
     // get input buffer
     Property = (PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY)Request;
 
-    // referece notification event
-    Status = ObReferenceObjectByHandle(
-        Property->NotificationEvent, 0, *ExEventObjectType, UserMode, (PVOID*) &Pin->m_UserEvent, NULL);
-    if (!NT_SUCCESS(Status))
+    if (Pin->m_UserEvent == NULL)
     {
-        // failed to reference event
-        DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
-        return Status;
+        // reference notification event
+        Status = ObReferenceObjectByHandle(
+            Property->NotificationEvent, 0, *ExEventObjectType, UserMode, (PVOID*) &Pin->m_UserEvent, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            // failed to reference event
+            DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
+            return Status;
+        }
     }
-
     // register event
     Status = Pin->m_StreamNotification->UnregisterNotificationEvent(Pin->m_UserEvent);
     if (!NT_SUCCESS(Status))
@@ -389,7 +391,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT1("IPortPinWave_HandleKsProperty entered\n");
+    //DPRINT1("IPortPinWave_HandleKsProperty entered\n");
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
@@ -544,7 +546,6 @@ CPortPinWaveRT::HandleKsProperty(
     Status = PcHandlePropertyWithTable(
         Irp, m_Descriptor->FilterPropertySetCount, m_Descriptor->FilterPropertySet,
         m_Descriptor);
-    DPRINT1("Status %x\n", Status);
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
@@ -603,6 +604,8 @@ CPortPinWaveRT::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    KSRESET ResetValue;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -632,10 +635,33 @@ CPortPinWaveRT::DeviceIoControl(
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
 
         case IOCTL_KS_RESET_STATE:
-            /* FIXME UNIMPLEMENTED */
-            UNIMPLEMENTED_ONCE;
-            break;
+        {
+            Status = KsAcquireResetValue(Irp, &ResetValue);
+            DPRINT("Status %x Value %u\n", Status, ResetValue);
+            /* check for success */
+            if (NT_SUCCESS(Status))
+            {
+                //determine state of reset request
+                if (ResetValue == KSRESET_BEGIN)
+                {
+                    // start reset process
+                    // incoming read/write requests will be rejected
+                    m_ResetState = KSRESET_BEGIN;
 
+                    // cancel existing buffers
+                    m_IrpQueue->CancelBuffers();
+                }
+                else if (ResetValue == KSRESET_END)
+                {
+                    // end of reset process
+                    m_ResetState = KSRESET_END;
+                }
+            }
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
         case IOCTL_KS_WRITE_STREAM:
         case IOCTL_KS_READ_STREAM:
             return HandleKsStream(Irp);
@@ -816,6 +842,7 @@ CloseStreamRoutine(
         if (This->m_UserEvent)
         {
             This->m_StreamNotification->UnregisterNotificationEvent(This->m_UserEvent);
+            ObDereferenceObject(This->m_UserEvent);
             This->m_UserEvent = NULL;
         }
 #endif
