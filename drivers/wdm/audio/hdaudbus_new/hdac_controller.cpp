@@ -74,7 +74,7 @@ NTSTATUS GetHDACapabilities(PFDO_CONTEXT fdoCtx) {
 	SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
 		"chipset global capabilities = 0x%x\n", gcap);
 
-	fdoCtx->is64BitOK = (gcap & 0x1);
+	fdoCtx->is64BitOK = !!(gcap & 0x1);
 	SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
 		"64 bit OK? %d\n", fdoCtx->is64BitOK);
 
@@ -307,7 +307,7 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 				continue;
 
 			UINT Tag = response.Unsolicited.Tag;
-			CODEC_UNSOLIT_CALLBACK callback = codec->unsolitCallbacks[Tag];
+			CODEC_UNSOLICITED_CALLBACK callback = codec->unsolitCallbacks[Tag];
 			if (callback.inUse && callback.Routine) {
 				callback.Routine(response, callback.Context);
 			}

@@ -227,7 +227,7 @@ Fdo_EvtDevicePrepareHardware(
     SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
         "%s\n", __func__);
 
-    status = WdfFdoQueryForInterface(Device, &GUID_BUS_INTERFACE_STANDARD, (PINTERFACE)&fdoCtx->BusInterface, sizeof(BUS_INTERFACE_STANDARD), 1, NULL);
+    status = WdfFdoQueryForInterface(Device, &GUID_BUS_INTERFACE_STANDARD, (PINTERFACE)&fdoCtx->BusInterface, sizeof(BUS_INTERFACE_STANDARD), PCI_BUS_INTERFACE_STANDARD_VERSION, NULL);
     if (!NT_SUCCESS(status)) {
         return status;
     }
@@ -258,6 +258,7 @@ Fdo_EvtDevicePrepareHardware(
                 SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
                     "Found BAR4: 0x%llx (size 0x%lx)\n", pDescriptor->u.Memory.Start.QuadPart, pDescriptor->u.Memory.Length);
 
+                //BAR4 is an optional ADSP memory mapping
                 fdoCtx->m_BAR4.Base.Base = MmMapIoSpace(pDescriptor->u.Memory.Start, pDescriptor->u.Memory.Length, MmNonCached);
                 fdoCtx->m_BAR4.Len = pDescriptor->u.Memory.Length;
 
@@ -274,9 +275,9 @@ Fdo_EvtDevicePrepareHardware(
         return status;
     }
 
-    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->venId, 0, sizeof(UINT16));
-    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->devId, 2, sizeof(UINT16));
-    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->revId, 1, sizeof(UINT8));
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->venId, FIELD_OFFSET(PCI_COMMON_HEADER, VendorID), sizeof(UINT16));
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->devId, FIELD_OFFSET(PCI_COMMON_HEADER, DeviceID), sizeof(UINT16));
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->revId, FIELD_OFFSET(PCI_COMMON_HEADER, RevisionID), sizeof(UINT8));
 
     //mlcap & lctl (hda_intel_init_chip)
     if (fdoCtx->venId == VEN_INTEL) {
@@ -368,7 +369,6 @@ Fdo_EvtDevicePrepareHardware(
     if (!fdoCtx->streams) {
         return STATUS_NO_MEMORY;
     }
-    RtlZeroMemory(fdoCtx->streams, sizeof(HDAC_STREAM) * fdoCtx->numStreams);
 
     PHYSICAL_ADDRESS maxAddr;
     maxAddr.QuadPart = fdoCtx->is64BitOK ? MAXULONG64 : MAXULONG32;
@@ -452,6 +452,9 @@ Fdo_EvtDevicePrepareHardware(
 
                 if (nhltAddr != 0 && nhltSz != 0) {
                     fdoCtx->nhlt = MmMapIoSpace(nhltBaseAddr, nhltSz, MmCached);
+                    if (!fdoCtx->nhlt) {
+                        return STATUS_NO_MEMORY;
+                    }
                     fdoCtx->nhltSz = nhltSz;
                 }
             }
@@ -465,7 +468,7 @@ Fdo_EvtDevicePrepareHardware(
         SOF_TPLG sofTplg = { 0 };
         NTSTATUS status2 = GetSOFTplg(Device, &sofTplg);
         if (NT_SUCCESS(status2) && sofTplg.magic == SOFTPLG_MAGIC) {
-            fdoCtx->sofTplg = ExAllocatePoolZero(NonPagedPool, sofTplg.length, SKLHDAUDBUS_POOL_TAG);
+            fdoCtx->sofTplg = ExAllocatePoolUninitialized(NonPagedPool, sofTplg.length, SKLHDAUDBUS_POOL_TAG);
             RtlCopyMemory(fdoCtx->sofTplg, &sofTplg, sofTplg.length);
             fdoCtx->sofTplgSz = sofTplg.length;
         }
@@ -500,7 +503,7 @@ Fdo_EvtDeviceReleaseHardware(
             if (ioTargetContext->graphicsPowerRegisterOutput.DeviceHandle && ioTargetContext->graphicsPowerRegisterOutput.UnregisterCb) {
                 NTSTATUS status = ioTargetContext->graphicsPowerRegisterOutput.UnregisterCb(ioTargetContext->graphicsPowerRegisterOutput.DeviceHandle, fdoCtx);
                 if (!NT_SUCCESS(status)) {
-                    DbgPrint("Warning: unregister failed with status 0x%x\n", status);
+                    SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Warning: unregister failed with status 0x%x\n", status);
                 }
             }
         }
@@ -510,8 +513,10 @@ Fdo_EvtDeviceReleaseHardware(
         IoUnregisterPlugPlayNotification(fdoCtx->GraphicsNotificationHandle);
     }
 
-    if (fdoCtx->nhlt)
+    if (fdoCtx->nhlt) {
         MmUnmapIoSpace(fdoCtx->nhlt, fdoCtx->nhltSz);
+        fdoCtx->nhlt = NULL;
+    }
 
     if (fdoCtx->sofTplg)
         ExFreePoolWithTag(fdoCtx->sofTplg, SKLHDAUDBUS_POOL_TAG);
@@ -533,10 +538,14 @@ Fdo_EvtDeviceReleaseHardware(
         ExFreePoolWithTag(fdoCtx->streams, SKLHDAUDBUS_POOL_TAG);
     }
 
-    if (fdoCtx->m_BAR0.Base.Base)
+    if (fdoCtx->m_BAR0.Base.Base) {
         MmUnmapIoSpace(fdoCtx->m_BAR0.Base.Base, fdoCtx->m_BAR0.Len);
-    if (fdoCtx->m_BAR4.Base.Base)
+        fdoCtx->m_BAR0.Base.Base = NULL;
+    }
+    if (fdoCtx->m_BAR4.Base.Base) {
         MmUnmapIoSpace(fdoCtx->m_BAR4.Base.Base, fdoCtx->m_BAR4.Len);
+        fdoCtx->m_BAR4.Base.Base = NULL;
+    }
 
     return STATUS_SUCCESS;
 }
@@ -635,7 +644,7 @@ Fdo_EvtDeviceD0EntryPostInterrupts(
             //First attempt failed. Retry
             NTSTATUS status2 = RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_VENDOR_ID, &vendorDevice); //If this fails, something is wrong.
             if (!NT_SUCCESS(status2)) {
-                DbgPrint("Warning: Failed to wake up codec %d: 0x%x", addr, status2);
+                SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Warning: Failed to wake up codec %d: 0x%x", addr, status2);
             }
         }
     }

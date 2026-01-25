@@ -1,28 +1,25 @@
 static inline UINT8 read8(PVOID addr) {
-	UINT8 ret = *(UINT8*)addr;
-	return ret;
+	return READ_REGISTER_UCHAR((PUCHAR)addr);
 }
 
 static inline void write8(PVOID addr, UINT8 data) {
-	*(UINT8*)addr = data;
+	WRITE_REGISTER_UCHAR((PUCHAR)addr, (UCHAR)data);
 }
 
 static inline UINT16 read16(PVOID addr) {
-	UINT16 ret = *(UINT16*)addr;
-	return ret;
+	return READ_REGISTER_USHORT((PUSHORT)addr);
 }
 
 static inline void write16(PVOID addr, UINT16 data) {
-	*(UINT16*)addr = data;
+	WRITE_REGISTER_USHORT((PUSHORT)addr, (USHORT)data);
 }
 
 static inline UINT32 read32(PVOID addr) {
-	UINT32 ret = *(UINT32*)addr;
-	return ret;
+	return READ_REGISTER_ULONG((PULONG)addr);
 }
 
 static inline void write32(PVOID addr, UINT32 data) {
-	*(UINT32*)addr = data;
+	WRITE_REGISTER_ULONG((PULONG)addr, (ULONG)data);
 }
 
 static inline void pci_read_cfg_byte(PBUS_INTERFACE_STANDARD pciInterface, UINT reg, BYTE* data) {
