@@ -122,8 +122,6 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
     if (err != UNZ_OK)
         return FALSE;
 
-    nameA.Replace('\\', '/');
-
     CStringA utf8Name;
     if (info.size_file_extra > 0)
         utf8Name = GetUtf8Name(nameA, extra.GetData(), info.size_file_extra);
@@ -134,6 +132,8 @@ BOOL CZipEnumerator::Next(CStringW& name, unz_file_info64& info)
         name = CA2WEX<MAX_PATH>(nameA, CP_UTF8);
     else
         name = CA2WEX<MAX_PATH>(nameA, m_nCodePage);
+
+    name.Replace('\\', '/');
 
     return TRUE;
 }
