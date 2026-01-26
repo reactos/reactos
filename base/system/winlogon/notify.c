@@ -42,9 +42,18 @@ typedef struct _NOTIFICATION_ITEM
     BOOL bSmartCardLogon;
     DWORD dwMaxWait;
     BOOL bSfcNotification;
+#ifdef _M_IX86 // CORE-20279
+    BOOL bHasBuggyCallConv;
+#endif
     PWLX_NOTIFY_HANDLER Handler[LastHandler];
 } NOTIFICATION_ITEM, *PNOTIFICATION_ITEM;
 
+#ifdef _M_IX86 // CORE-20279
+static const PCWSTR BuggyNotifDLLs[] =
+{
+    L"ati2evxx.dll", /* Any others? */
+};
+#endif
 
 static LIST_ENTRY NotificationDllListHead;
 
@@ -135,6 +144,23 @@ LoadNotifyDll(
         return FALSE;
     }
     NotificationDll->hModule = hModule;
+
+#ifdef _M_IX86 // CORE-20279
+    /* HACK for buggy 3rd-party notification DLLs: Is this a blacklisted one
+     * that uses a CDECL calling convention instead of the correct STDCALL? */
+    PCWSTR DllFileName = wcsrchr(NotificationDll->pszDllName, L'\\');
+    if (DllFileName) ++DllFileName;
+    else DllFileName = NotificationDll->pszDllName;
+    for (USHORT i = 0; i < ARRAYSIZE(BuggyNotifDLLs); ++i)
+    {
+        if (_wcsicmp(BuggyNotifDLLs[i], DllFileName) == 0)
+        {
+            /*WARN*/ERR("Blacklisted notification DLL '%S' uses a buggy CDECL calling convention!\n", NotificationDll->pszDllName);
+            NotificationDll->bHasBuggyCallConv = TRUE;
+            break;
+        }
+    }
+#endif
 
     for (Type = LogonHandler; Type < LastHandler; ++Type)
     {
@@ -511,7 +537,14 @@ CallNotificationDll(
     /* Call the notification handler in SEH to prevent any Winlogon crashes */
     _SEH2_TRY
     {
-        pNotifyHandler(&Info);
+#ifdef _M_IX86 // CORE-20279
+        /* HACK for buggy 3rd-party notification DLLs: Handle broken ones
+         * that use a CDECL calling convention instead of the correct STDCALL */
+        if (NotificationDll->bHasBuggyCallConv)
+            ((VOID (CDECL*)(PWLX_NOTIFICATION_INFO))pNotifyHandler)(&Info);
+        else
+#endif
+            pNotifyHandler(&Info);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
