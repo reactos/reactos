@@ -396,6 +396,7 @@ DPRINT1("%s(0x%p) - CsrProcess 0x%p\n", DeviceObject, CsrProcess);
         ObReferenceObject(CsrProcess);
         INFO_(VIDEOPRT, "CsrProcess 0x%p\n", CsrProcess);
 
+DPRINT1("%s: !CsrProcess, calling IntInitializeInt10(FALSE);\n", __FUNCTION__);
         Status = IntInitializeInt10(FALSE);
         if (!NT_SUCCESS(Status))
         {

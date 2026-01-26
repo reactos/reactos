@@ -972,6 +972,7 @@ VideoPortInitialize(
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
 
+DPRINT1("%s: 1st initialization, calling IntInitializeInt10(TRUE);\n", __FUNCTION__);
         Status = IntInitializeInt10(TRUE);
         if (!NT_SUCCESS(Status))
         {
