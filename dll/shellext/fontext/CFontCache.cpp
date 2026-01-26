@@ -11,7 +11,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
 CFontCache* g_FontCache = NULL;
 
-CFontInfo::CFontInfo(LPCWSTR name, LPCWSTR value)
+CFontInfo::CFontInfo(PCWSTR name, PCWSTR value)
     : m_Name(name)
     , m_File(value)
     , m_FileRead(false)
@@ -187,7 +187,7 @@ CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
     return File;
 }
 
-void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, const CStringW& Value)
+void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, PCWSTR Value)
 {
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
@@ -219,7 +219,7 @@ void CFontCache::Read()
     if (key.Open(FONT_HIVE, FONT_KEY, KEY_READ) == ERROR_SUCCESS)
     {
         LSTATUS Status;
-        DWORD dwAllocated = 128;
+        DWORD dwAllocated = MAX_PATH;
         DWORD ilIndex = 0;
         CStringW KeyName;
         do
