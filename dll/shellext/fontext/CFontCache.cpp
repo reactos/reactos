@@ -142,11 +142,22 @@ CStringW CFontCache::Name(size_t Index)
     return m_Fonts[Index].Name();
 }
 
+CStringW CFontCache::File(size_t Index)
+{
+    if (m_Fonts.GetCount() == 0u)
+        Read();
+
+    if (Index >= m_Fonts.GetCount())
+        return CStringW();
+
+    return m_Fonts[Index].File();
+}
+
 CFontInfo* CFontCache::Find(const FontPidlEntry* fontEntry)
 {
     for (UINT n = 0; n < Size(); ++n)
     {
-        if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name) == 0)
+        if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name()) == 0)
         {
             return &m_Fonts[n];
         }
@@ -189,6 +200,13 @@ void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
         }
     }
     fonts.AddTail(CFontInfo(KeyName));
+}
+
+CStringW CFontCache::GetFontFilePath(const LPCWSTR Path) const
+{
+    if (PathIsRelativeW(Path))
+        return m_FontFolderPath + Path;
+    return Path;
 }
 
 void CFontCache::Read()

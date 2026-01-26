@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell_ad);
+WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
 void CFontFolderViewCB::Initialize(CFontExt* pFontExt, IShellView *psv, LPCITEMIDLIST pidlParent)
 {
@@ -21,67 +21,47 @@ void CFontFolderViewCB::Initialize(CFontExt* pFontExt, IShellView *psv, LPCITEMI
         ERR("!m_pidlParent\n");
 }
 
-HRESULT CFontFolderViewCB::TranslatePidl(LPITEMIDLIST* ppidlNew, LPCITEMIDLIST pidl)
+BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
 {
-    ATLASSERT(ppidlNew);
+    lEvent &= ~SHCNE_INTERRUPT;
 
-    *ppidlNew = NULL;
-
-    WCHAR szFontFile[MAX_PATH];
-    if (!SHGetPathFromIDListW(pidl, szFontFile))
-        return E_FAIL;
-
-    CStringW strFontName;
-    HRESULT hr = DoGetFontTitle(szFontFile, strFontName);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-
-    LPITEMIDLIST pidlChild = _ILCreate(strFontName);
-    if (!pidlChild)
-    {
-        ERR("!pidlChild\n");
-        return E_OUTOFMEMORY;
-    }
-
-    *ppidlNew = ILCombine(m_pidlParent, pidlChild);
-    ILFree(pidlChild);
-
-    return *ppidlNew ? S_OK : E_OUTOFMEMORY;
-}
-
-void CFontFolderViewCB::TranslateTwoPIDLs(PIDLIST_ABSOLUTE* pidls)
-{
-    ATLASSERT(pidls);
-
-    HRESULT hr;
-    if (pidls[0])
-    {
-        m_pidl0.Free();
-        hr = TranslatePidl(&m_pidl0, pidls[0]);
-        if (!FAILED_UNEXPECTEDLY(hr))
-            pidls[0] = m_pidl0;
-    }
-    if (pidls[1])
-    {
-        m_pidl1.Free();
-        hr = TranslatePidl(&m_pidl1, pidls[1]);
-        if (!FAILED_UNEXPECTEDLY(hr))
-            pidls[1] = m_pidl1;
-    }
-}
-
-BOOL CFontFolderViewCB::FilterEvent(LONG lEvent) const
-{
-    switch (lEvent & ~SHCNE_INTERRUPT)
+    switch (lEvent)
     {
         case SHCNE_CREATE:
         case SHCNE_DELETE:
         case SHCNE_RENAMEITEM:
         case SHCNE_UPDATEDIR:
-            return FALSE; // OK
+            break;
         default:
             return TRUE; // We don't want this event
     }
+
+    if (lEvent == SHCNE_DELETE)
+    {
+        const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
+        if (pEntry && !pEntry->IsAnonymous())
+        {
+            CStringW strPath = g_FontCache->GetFontFilePath(pEntry->FileName());
+            CStringW strFontName = pEntry->Name();
+
+            HKEY hKey;
+            LSTATUS error = RegOpenKeyExW(FONT_HIVE, FONT_KEY, 0, KEY_WRITE, &hKey);
+            if (error == ERROR_SUCCESS)
+            {
+                RegDeleteValueW(hKey, strFontName);
+                RegCloseKey(hKey);
+            }
+        }
+    }
+
+    if (lEvent == SHCNE_UPDATEDIR)
+    {
+        // Refresh font cache and notify the system about the font change
+        if (g_FontCache)
+            g_FontCache->Read();
+    }
+
+    return FALSE;
 }
 
 STDMETHODIMP
@@ -91,21 +71,17 @@ CFontFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         case SFVM_QUERYFSNOTIFY: // Registering change notification
         {
+            if (!m_pShellView || !m_pFontExt)
+                return E_FAIL;
             // Now, we can get the view window
-            ATLASSERT(m_pShellView);
-            ATLASSERT(m_pFontExt);
             m_pShellView->GetWindow(&m_hwndView);
             m_pFontExt->SetViewWindow(m_hwndView);
             return S_OK;
         }
         case SFVM_FSNOTIFY: // Change notification
-        {
-            if (FilterEvent((LONG)lParam))
+            if (FilterEvent((PIDLIST_ABSOLUTE*)wParam, (LONG)lParam))
                 return S_FALSE; // Don't process
-
-            TranslateTwoPIDLs((PIDLIST_ABSOLUTE*)wParam);
             return S_OK;
-        }
     }
     return E_NOTIMPL;
 }

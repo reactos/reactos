@@ -49,9 +49,11 @@ public:
 
     void SetFontDir(const LPCWSTR Path);
     const CStringW& FontPath() const { return m_FontFolderPath; }
+    CStringW GetFontFilePath(const LPCWSTR Path) const;
 
     size_t Size();
     CStringW Name(size_t Index);    // Font display name stored in the registry
+    CStringW File(size_t Index);    // Font display name stored in the registry
 
     CFontInfo* Find(const FontPidlEntry* fontEntry);
     CStringW Filename(CFontInfo* info, bool alwaysFullPath = false);

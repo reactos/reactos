@@ -436,6 +436,55 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
     return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
 }
 
+HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+    CStringW msg, title;
+    msg.Format(IDS_CONFIRM_DELETE_FONT, cidl);
+    title.LoadStringW(IDS_FONT_PREVIEW);
+    if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
+        return S_FALSE;
+
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlParent;
+    HRESULT hr = SHGetSpecialFolderLocation(hwnd, CSIDL_FONTS, &pidlParent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Delete files
+    for (UINT iItem = 0; iItem < cidl; ++iItem)
+    {
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
+        pidl.Attach(ILCombine(pidlParent, apidl[iItem]));
+        if (!pidl)
+        {
+            ERR("E_OUTOFMEMORY\n");
+            return E_OUTOFMEMORY;
+        }
+
+        WCHAR szPath[MAX_PATH];
+        if (!SHGetPathFromIDListW(pidl, szPath))
+        {
+            ERR("Not found\n");
+            return E_FAIL;
+        }
+
+        for (INT iTry = 0; iTry < 3; ++iTry)
+        {
+            if (!RemoveFontResourceW(szPath) && !RemoveFontResourceExW(szPath, FR_PRIVATE, NULL))
+                break;
+        }
+
+        DeleteFileW(szPath);
+        SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
+    }
+
+    // Refresh font cache and notify the system about the font change
+    if (g_FontCache)
+        g_FontCache->Read();
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+    return S_OK;
+}
+
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
