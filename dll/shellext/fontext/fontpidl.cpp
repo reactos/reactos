@@ -72,6 +72,8 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
 
     *(PWORD)((PBYTE)pidl + cbData) = UNICODE_NULL;
 
+    ATLASSERT(_FontFromIL((LPITEMIDLIST)pidl));
+
     return (LPITEMIDLIST)pidl;
 }
 
