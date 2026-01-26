@@ -572,6 +572,7 @@ STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
     m_Folder.Attach(ILClone(pidl));
     StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
     g_FontCache->SetFontDir(FontsDir);
+
     return S_OK;
 }
 
