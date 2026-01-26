@@ -28,37 +28,34 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
     switch (lEvent)
     {
         case SHCNE_CREATE:
+            break;
         case SHCNE_DELETE:
+        {
+            const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
+            if (pEntry && !pEntry->IsAnonymous())
+            {
+                CStringW strPath = g_FontCache->GetFontFilePath(pEntry->FileName());
+                CStringW strFontName = pEntry->Name();
+
+                HKEY hKey;
+                LSTATUS error = RegOpenKeyExW(FONT_HIVE, FONT_KEY, 0, KEY_WRITE, &hKey);
+                if (error == ERROR_SUCCESS)
+                {
+                    RegDeleteValueW(hKey, strFontName);
+                    RegCloseKey(hKey);
+                }
+            }
+            break;
+        }
         case SHCNE_RENAMEITEM:
+            break;
         case SHCNE_UPDATEDIR:
+            // Refresh font cache and notify the system about the font change
+            if (g_FontCache)
+                g_FontCache->Read();
             break;
         default:
             return TRUE; // We don't want this event
-    }
-
-    if (lEvent == SHCNE_DELETE)
-    {
-        const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
-        if (pEntry && !pEntry->IsAnonymous())
-        {
-            CStringW strPath = g_FontCache->GetFontFilePath(pEntry->FileName());
-            CStringW strFontName = pEntry->Name();
-
-            HKEY hKey;
-            LSTATUS error = RegOpenKeyExW(FONT_HIVE, FONT_KEY, 0, KEY_WRITE, &hKey);
-            if (error == ERROR_SUCCESS)
-            {
-                RegDeleteValueW(hKey, strFontName);
-                RegCloseKey(hKey);
-            }
-        }
-    }
-
-    if (lEvent == SHCNE_UPDATEDIR)
-    {
-        // Refresh font cache and notify the system about the font change
-        if (g_FontCache)
-            g_FontCache->Read();
     }
 
     return FALSE;
