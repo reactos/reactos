@@ -89,18 +89,23 @@ static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UIN
     }
 
     UINT ich = 0;
-    if ((dwAttributes & FILE_ATTRIBUTE_READONLY) && ich < cchMax - 1)
+    if ((dwAttributes & FILE_ATTRIBUTE_READONLY) && ich < cchMax)
         pszOut[ich++] = AttrLetters[0];
-    if ((dwAttributes & FILE_ATTRIBUTE_HIDDEN) && ich < cchMax - 1)
+    if ((dwAttributes & FILE_ATTRIBUTE_HIDDEN) && ich < cchMax)
         pszOut[ich++] = AttrLetters[1];
-    if ((dwAttributes & FILE_ATTRIBUTE_SYSTEM) && ich < cchMax - 1)
+    if ((dwAttributes & FILE_ATTRIBUTE_SYSTEM) && ich < cchMax)
         pszOut[ich++] = AttrLetters[2];
-    if ((dwAttributes & FILE_ATTRIBUTE_ARCHIVE) && ich < cchMax - 1)
+    if ((dwAttributes & FILE_ATTRIBUTE_ARCHIVE) && ich < cchMax)
         pszOut[ich++] = AttrLetters[3];
-    if ((dwAttributes & FILE_ATTRIBUTE_COMPRESSED) && ich < cchMax - 1)
+    if ((dwAttributes & FILE_ATTRIBUTE_COMPRESSED) && ich < cchMax)
         pszOut[ich++] = AttrLetters[4];
-    pszOut[ich] = UNICODE_NULL;
-    return S_OK;
+    if (ich < cchMax)
+    {
+        pszOut[ich] = UNICODE_NULL;
+        return S_OK;
+    }
+    ERR("Buffer too short: %u\n", cchMax);
+    return E_FAIL;
 }
 
 CFontExt::CFontExt()
