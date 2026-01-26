@@ -46,8 +46,6 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
             }
             break;
         }
-        case SHCNE_RENAMEITEM:
-            break;
         case SHCNE_UPDATEDIR:
             // Refresh font cache and notify the system about the font change
             if (g_FontCache)
