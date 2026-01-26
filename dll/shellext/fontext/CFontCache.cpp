@@ -229,8 +229,11 @@ void CFontCache::Read()
             KeyName.ReleaseBuffer(dwSize);
             if (Status == ERROR_SUCCESS)
             {
-                // Insert will create an ordered list
-                Insert(fonts, KeyName);
+                if (!KeyName.IsEmpty())
+                {
+                    // Insert will create an ordered list
+                    Insert(fonts, KeyName);
+                }
                 ilIndex++;
                 continue;
             }
