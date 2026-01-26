@@ -13,6 +13,11 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct {
+    BOOLEAN         TryingToKillTheEntireOS;
+    KFLOATING_SAVE  FloatState;
+} WIN32K_FLOATING_SAVE, *PWIN32K_FLOATING_SAVE;
+
 /* FUNCTIONS *****************************************************************/
 
 #ifdef _PREFAST_
@@ -31,8 +36,20 @@ EngRestoreFloatingPointState(
     _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer)
 {
     NTSTATUS Status;
+    PWIN32K_FLOATING_SAVE State;
 
-    Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)pBuffer);
+    State = (PWIN32K_FLOATING_SAVE)pBuffer;
+
+    if (!State->TryingToKillTheEntireOS)
+    {
+        DPRINT1("The driver has attempted to restore floating point state after already restoring it.\n");
+        DPRINT1("This (Probably ICafe AMD) driver has done an incorrect behavior.\n")
+        return FALSE;
+    }
+
+    State->TryingToKillTheEntireOS = FALSE;
+
+    Status = KeRestoreFloatingPointState(&State->FloatState);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -55,6 +72,7 @@ EngSaveFloatingPointState(
     _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
     _Inout_ ULONG cjBufferSize)
 {
+    PWIN32K_FLOATING_SAVE State;
     KFLOATING_SAVE TempBuffer;
     NTSTATUS Status;
 
@@ -66,22 +84,30 @@ EngSaveFloatingPointState(
         {
             return(0);
         }
-
         KeRestoreFloatingPointState(&TempBuffer);
-        return(sizeof(KFLOATING_SAVE));
+        return(sizeof(WIN32K_FLOATING_SAVE));
     }
 
-    if (cjBufferSize < sizeof(KFLOATING_SAVE))
+    if (cjBufferSize < sizeof(WIN32K_FLOATING_SAVE))
     {
         return(0);
     }
 
-    Status = KeSaveFloatingPointState((PKFLOATING_SAVE)pBuffer);
+    State = (PWIN32K_FLOATING_SAVE)pBuffer;
+
+    if (State->TryingToKillTheEntireOS)
+    {
+        DPRINT1("The driver has attempted to save floating point state after already saving it.\n");
+        DPRINT1("This (Probably ICafe AMD) driver has done an incorrect behavior.\n")
+    }
+
+    Status = KeSaveFloatingPointState(&State->FloatState);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
     }
 
+    State->TryingToKillTheEntireOS = TRUE;
     return TRUE;
 }
 
