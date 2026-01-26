@@ -25,10 +25,10 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
     // SECURITY: Check string length
     HRESULT hr;
     size_t cbName, cbFileName;
-    hr = StringCbLengthW(lpName, STRSAFE_MAX_CCH * sizeof(WCHAR), &cbName);
+    hr = StringCbLengthW(lpName, min(MAXWORD - 1, STRSAFE_MAX_CCH) * sizeof(WCHAR), &cbName);
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
-    hr = StringCbLengthW(lpFileName, STRSAFE_MAX_CCH * sizeof(WCHAR), &cbFileName);
+    hr = StringCbLengthW(lpFileName, min(MAXWORD - 1, STRSAFE_MAX_CCH) * sizeof(WCHAR), &cbFileName);
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
     cbName += sizeof(UNICODE_NULL);
