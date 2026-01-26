@@ -21,7 +21,10 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
     ATLASSERT(lpFileName[0]);
 
     if (!lpName[0] || !lpFileName[0])
+    {
+        ERR("Invalid parameters: lpName '%S', lpFileName '%S'\n", lpName, lpFileName);
         return NULL;
+    }
 
     // SECURITY: Check string length
     HRESULT hr;
