@@ -262,8 +262,15 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
             CStringW filePath = g_FontCache->GetFontFilePath(g_FontCache->File(iFont));
             if (filePath.CompareNoCase(lpszDisplayName) == 0)
             {
-                // Create a PIDL
                 CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
+                if (fontName.IsEmpty() || fileName.IsEmpty())
+                {
+                    ERR("Why is fileName or fontName empty? ('%S' / '%S')\n",
+                        (PCWSTR)fontName, (PCWSTR)fileName);
+                    return E_FAIL;
+                }
+
+                // Create a PIDL
                 *ppidl = _ILCreate(fontName, fileName);
                 if (*ppidl == NULL)
                     return E_OUTOFMEMORY;
@@ -272,7 +279,8 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
                     *pchEaten = wcslen(lpszDisplayName);
 
                 if (pdwAttributes && *pdwAttributes)
-                    *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY | SFGAO_FILESYSTEM);
+                    *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
+                                       SFGAO_FILESYSTEM);
 
                 return S_OK;
             }
@@ -285,8 +293,14 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
         CStringW fontName = g_FontCache->Name(iFont);
         if (fontName.CompareNoCase(lpszDisplayName) == 0) // Found?
         {
-            // Create a PIDL
             CStringW fileName = g_FontCache->File(iFont);
+            if (fileName.IsEmpty())
+            {
+                ERR("Why is fileName empty?\n");
+                continue;
+            }
+
+            // Create a PIDL
             *ppidl = _ILCreate(fontName, fileName);
             if (*ppidl == NULL)
                 return E_OUTOFMEMORY;
@@ -295,7 +309,8 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
                 *pchEaten = wcslen(lpszDisplayName);
 
             if (pdwAttributes && *pdwAttributes)
-                *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY | SFGAO_FILESYSTEM);
+                *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
+                                   SFGAO_FILESYSTEM);
 
             return S_OK;
         }

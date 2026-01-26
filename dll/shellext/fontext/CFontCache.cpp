@@ -11,8 +11,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
 CFontCache* g_FontCache = NULL;
 
-CFontInfo::CFontInfo(LPCWSTR name)
+CFontInfo::CFontInfo(LPCWSTR name, LPCWSTR value)
     : m_Name(name)
+    , m_File(value)
     , m_FileRead(false)
     , m_AttrsRead(false)
     , m_FileWriteTime({})
@@ -35,7 +36,7 @@ const CStringW& CFontInfo::File()
 {
     if (!m_FileRead)
     {
-        if (Valid())
+        if (Valid() && m_File.IsEmpty())
         {
             // Read the filename stored in the registry.
             // This can be either a filename or a full path
@@ -186,7 +187,7 @@ CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
     return File;
 }
 
-void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
+void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, const CStringW& Value)
 {
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
@@ -195,7 +196,7 @@ void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
         const CFontInfo& info = fonts.GetNext(it);
         if (info.Name().CompareNoCase(KeyName) >= 0)
         {
-            fonts.InsertBefore(lastit, CFontInfo(KeyName));
+            fonts.InsertBefore(lastit, CFontInfo(KeyName, Value));
             return;
         }
     }
@@ -225,14 +226,18 @@ void CFontCache::Read()
         {
             DWORD dwSize = dwAllocated;
             PWSTR Buffer = KeyName.GetBuffer(dwSize);
-            Status = RegEnumValueW(key.m_hKey, ilIndex, Buffer, &dwSize, NULL, NULL, NULL, NULL);
+            WCHAR szValue[MAX_PATH];
+            DWORD cbValue = sizeof(szValue);
+            Status = RegEnumValueW(key.m_hKey, ilIndex, Buffer, &dwSize, NULL, NULL,
+                                   (PBYTE)szValue, &cbValue);
             KeyName.ReleaseBuffer(dwSize);
             if (Status == ERROR_SUCCESS)
             {
-                if (!KeyName.IsEmpty())
+                szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+                if (!KeyName.IsEmpty() && szValue[0])
                 {
                     // Insert will create an ordered list
-                    Insert(fonts, KeyName);
+                    Insert(fonts, KeyName, szValue);
                 }
                 ilIndex++;
                 continue;

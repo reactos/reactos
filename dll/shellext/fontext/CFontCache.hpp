@@ -22,7 +22,7 @@ private:
     void ReadAttrs();
 
 public:
-    CFontInfo(LPCWSTR name = L"");
+    CFontInfo(LPCWSTR name = L"", LPCWSTR value = L"");
 
     const CStringW& Name() const;   // Font display name stored in the registry
     const bool Valid() const;
@@ -42,7 +42,7 @@ private:
 protected:
     CFontCache();
 
-    void Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName);
+    void Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, const CStringW& Value);
 
 public:
     void Read();
