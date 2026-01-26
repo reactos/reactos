@@ -549,20 +549,29 @@ STDMETHODIMP CFontExt::GetCurFolder(LPITEMIDLIST *ppidl)
 // *** IPersistFolder methods ***
 STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
 {
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlFontsDir;
-    SHGetSpecialFolderLocation(NULL, CSIDL_FONTS, &pidlFontsDir);
-    if (!ILIsEqual(pidl, pidlFontsDir))
+    WCHAR PidlPath[MAX_PATH + 1] = {0}, FontsDir[MAX_PATH + 1];
+    if (!SHGetPathFromIDListW(pidl, PidlPath))
     {
-        ERR("!ILIsEqual\n");
+        ERR("Unable to extract path from pidl\n");
         return E_FAIL;
     }
 
-    WCHAR FontsDir[MAX_PATH];
-    SHGetPathFromIDListW(pidlFontsDir, FontsDir);
+    HRESULT hr = SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, FontsDir);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        ERR("Unable to get fonts path (0x%x)\n", hr);
+        return hr;
+    }
+
+    if (StrCmpIW(PidlPath, FontsDir))
+    {
+        ERR("CFontExt View initializing on unexpected folder: '%S'\n", PidlPath);
+        return E_FAIL;
+    }
+
+    m_Folder.Attach(ILClone(pidl));
     StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
     g_FontCache->SetFontDir(FontsDir);
-
-    m_Folder.Attach(pidlFontsDir.Detach());
     return S_OK;
 }
 
