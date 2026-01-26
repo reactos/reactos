@@ -255,7 +255,7 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
     if (g_FontCache->Size() == 0)
         g_FontCache->Read();
 
-    if (PathFileExistsW(lpszDisplayName)) // Full path?
+    if (!PathIsRelativeW(lpszDisplayName)) // Full path?
     {
         for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
         {
