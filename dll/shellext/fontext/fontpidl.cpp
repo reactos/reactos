@@ -83,22 +83,12 @@ const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
     if (fontEntry->Magic != FONTPIDL_MAGIC)
         return NULL;
 
-    // SECURITY: Check boundary
-    if (fontEntry->ibName < sizeof(FontPidlEntry) || fontEntry->ibFileName < sizeof(FontPidlEntry))
+    // SECURITY: Check ibName and ibFileName
+    if (fontEntry->ibName < sizeof(FontPidlEntry) || fontEntry->ibFileName < sizeof(FontPidlEntry) ||
+        fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb ||
+        fontEntry->ibName % sizeof(WCHAR) != 0 || fontEntry->ibFileName % sizeof(WCHAR) != 0)
     {
-        ERR("Invalid data\n");
-        return NULL;
-    }
-    if (fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb)
-    {
-        ERR("Boundary\n");
-        return NULL;
-    }
-
-    // SECURITY: Check alignment
-    if (fontEntry->ibName % sizeof(WCHAR) != 0 || fontEntry->ibFileName % sizeof(WCHAR) != 0)
-    {
-        ERR("Alignment\n");
+        ERR("Invalid fontEntry %p (wrong ibName/ibFileName)\n", fontEntry);
         return NULL;
     }
 
