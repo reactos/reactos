@@ -2234,8 +2234,10 @@ USBH_ChangeIndicationWorker(IN PUSBHUB_FDO_EXTENSION HubExtension,
     {
         HubExtension->HubFlags |= USBHUB_FDO_FLAG_ESD_RECOVERING;
 
-        DPRINT1("USBH_ChangeIndicationWorker: USBHUB_FDO_FLAG_ESD_RECOVERING FIXME\n");
-        DbgBreakPoint();
+        DPRINT("USBH_ChangeIndicationWorker: Starting ESD recovery\n");
+
+        /* Initiate ESD recovery: power cycle the hub (D3 -> D0) */
+        USBH_HubStartESDRecovery(HubExtension);
 
         goto Exit;
     }
