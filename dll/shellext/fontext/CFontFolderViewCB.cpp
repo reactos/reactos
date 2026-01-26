@@ -34,7 +34,6 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
             const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
             if (pEntry && !pEntry->IsAnonymous())
             {
-                CStringW strPath = g_FontCache->GetFontFilePath(pEntry->FileName());
                 CStringW strFontName = pEntry->Name();
 
                 HKEY hKey;
