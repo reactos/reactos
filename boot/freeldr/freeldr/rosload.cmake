@@ -87,7 +87,7 @@ add_importlibs(rosload freeldr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(rosload PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(rosload gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)

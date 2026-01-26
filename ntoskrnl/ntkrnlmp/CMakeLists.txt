@@ -34,7 +34,7 @@ target_compile_definitions(ntkrnlmp PRIVATE CONFIG_SMP)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(ntkrnlmp PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(ntkrnlmp gcc_ssp_nt)
 endif()
 
 target_link_libraries(ntkrnlmp ntoskrnl_vista cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr setjmp wdmguid poguid ioevent)
