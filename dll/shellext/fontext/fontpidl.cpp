@@ -86,7 +86,7 @@ const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
     // SECURITY: Check boundary
     if (fontEntry->ibName < sizeof(FontPidlEntry) || fontEntry->ibFileName < sizeof(FontPidlEntry))
     {
-        ERR("Boundary\n");
+        ERR("Invalid data\n");
         return NULL;
     }
     if (fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb)
