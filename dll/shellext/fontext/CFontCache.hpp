@@ -53,7 +53,7 @@ public:
 
     size_t Size();
     CStringW Name(size_t Index);    // Font display name stored in the registry
-    CStringW File(size_t Index);    // Font display name stored in the registry
+    CStringW File(size_t Index);
 
     CFontInfo* Find(const FontPidlEntry* fontEntry);
     CStringW Filename(CFontInfo* info, bool alwaysFullPath = false);
