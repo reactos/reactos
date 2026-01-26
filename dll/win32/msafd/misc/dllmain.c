@@ -2195,8 +2195,6 @@ WSPConnectEx(
     int                        SocketDataLength;
     UCHAR Buffer[128];
 
-    FIXME("WSPConnectEx(%x)\n", Handle);
-
     if (!lpOverlapped)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2993,6 +2991,119 @@ SendToHelper:
     return (Errno == NO_ERROR) ? NO_ERROR : SOCKET_ERROR;
 }
 
+static
+INT
+NTAPI
+MsafdUpdateConnectionContext(
+    _In_ SOCKET Handle,
+    OUT LPINT lpErrno)
+{
+    IO_STATUS_BLOCK            DummyIOSB;
+    PIO_STATUS_BLOCK           IOSB = &DummyIOSB;
+    NTSTATUS                   Status;
+    SOCK_SHARED_INFO SharedData;
+    AFD_TDI_HANDLE_DATA HandleData;
+    HANDLE SockEvent;
+    PSOCKET_INFORMATION Socket = GetSocketStructure(Handle);
+
+    if (!Socket)
+    {
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+
+    if (Socket->SharedData->State == SocketConnected)
+    {
+        return NO_ERROR;
+    }
+
+    // get the socket context from AFD because when ConnectEx is used, this information is not updated.
+
+    Status = NtCreateEvent(&SockEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+        return SOCKET_ERROR;
+
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                   SockEvent,
+                                   NULL,
+                                   NULL,
+                                   IOSB,
+                                   IOCTL_AFD_GET_CONTEXT,
+                                   NULL,
+                                   0,
+                                   &SharedData,
+                                   sizeof(SharedData));
+    
+    if (Status == STATUS_PENDING)
+    {
+        MsafdWaitForAlert(SockEvent);
+        Status = IOSB->Status;
+    }
+
+    // should be connected
+    if (Status != STATUS_SUCCESS)
+    {
+        if (lpErrno) *lpErrno = TranslateNtStatusError(Status);
+        return SOCKET_ERROR;
+    }
+
+    ULONG flags = AFD_CONNECTION_HANDLE | AFD_ADDRESS_HANDLE;
+
+    // get the TDI handles
+    Status = NtDeviceIoControlFile((HANDLE)Handle,
+                                SockEvent,
+                                NULL,
+                                NULL,
+                                IOSB,
+                                IOCTL_AFD_GET_TDI_HANDLES,
+                                &flags,
+                                sizeof(flags),
+                                &HandleData,
+                                sizeof(HandleData));
+    
+    if (Status == STATUS_PENDING)
+    {
+        MsafdWaitForAlert(SockEvent);
+        Status = IOSB->Status;
+    }
+
+    // should be connected
+    if (Status != STATUS_SUCCESS)
+    {
+        if (lpErrno) *lpErrno = TranslateNtStatusError(Status);
+        return SOCKET_ERROR;
+    }
+
+    Socket->SharedData->State = SharedData.State;
+
+    if (SharedData.State == SocketConnected)
+    {
+        // Socket is now connected
+        Socket->TdiConnectionHandle = HandleData.TdiConnectionHandle;
+        Socket->TdiAddressHandle = HandleData.TdiAddressHandle;
+        Socket->SharedData->ConnectTime = SharedData.ConnectTime;
+
+        /* Re-enable Async Event */
+        SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+
+        /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
+        SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
+
+        Socket->HelperData->WSHNotify(Socket->HelperContext,
+                                        Socket->Handle,
+                                        Socket->TdiAddressHandle,
+                                        Socket->TdiConnectionHandle,
+                                        WSH_NOTIFY_CONNECT);
+    }
+
+    NtClose(SockEvent);
+    return Status == S_OK ? NO_ERROR : SOCKET_ERROR;
+}
+
 INT
 WSPAPI
 WSPSetSockOpt(
@@ -3132,6 +3243,9 @@ WSPSetSockOpt(
                                    NULL);
 
               return NO_ERROR;
+
+           case SO_UPDATE_CONNECT_CONTEXT:
+              return MsafdUpdateConnectionContext(s, lpErrno);
 
            case SO_ERROR:
               if (optlen < sizeof(INT))

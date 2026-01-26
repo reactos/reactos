@@ -161,10 +161,10 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
+    SOCK_SHARED_INFO SharedData;
     BOOLEAN Locked, Critical, NonBlocking, OobInline, TdiReceiveClosed, SendClosed;
-    UINT State, Flags, GroupID, GroupType;
+    UINT Flags, GroupID, GroupType;
     KIRQL OldIrql;
-    UINT LockCount;
     PVOID CurrentThread;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;

@@ -351,7 +351,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
     FCB->GroupID = ConnectInfo ? ConnectInfo->GroupID : 0;
     FCB->GroupType = 0; /* FIXME */
-    FCB->State = SOCKET_STATE_CREATED;
+    FCB->SharedData.State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
     FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
@@ -473,7 +473,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
-    FCB->State = SOCKET_STATE_CLOSED;
+    FCB->SharedData.State = SOCKET_STATE_CLOSED;
 
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;

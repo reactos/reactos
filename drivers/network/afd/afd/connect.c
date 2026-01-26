@@ -297,7 +297,8 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
         if( !FCB->Send.Window ) return STATUS_NO_MEMORY;
     }
 
-    FCB->State = SOCKET_STATE_CONNECTED;
+    FCB->SharedData.State = SOCKET_STATE_CONNECTED;
+    FCB->SharedData.ConnectTime = 0; // Not used
 
     Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
                          FCB->Connection.Object,
@@ -381,7 +382,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ASSERT(FCB->ConnectIrp.InFlightRequest == Irp);
     FCB->ConnectIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
                NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_CONNECT]);
@@ -409,7 +410,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         FCB->PollState |= AFD_EVENT_CONNECT_FAIL;
         FCB->PollStatus[FD_CONNECT_BIT] = Irp->IoStatus.Status;
         AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
-        FCB->State = SOCKET_STATE_BOUND;
+        FCB->SharedData.State = SOCKET_STATE_BOUND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
@@ -544,7 +545,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
    }
 
-    switch( FCB->State ) {
+    switch( FCB->SharedData.State ) {
     case SOCKET_STATE_CONNECTED:
         Status = STATUS_SUCCESS;
         break;
@@ -565,7 +566,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
 
             if( NT_SUCCESS(Status) )
-                FCB->State = SOCKET_STATE_BOUND;
+                FCB->SharedData.State = SOCKET_STATE_BOUND;
             else
                 return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
         } else
@@ -621,7 +622,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
             FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
 
-        FCB->State = SOCKET_STATE_CONNECTING;
+        FCB->SharedData.State = SOCKET_STATE_CONNECTING;
 
         AFD_DbgPrint(MID_TRACE,("Queueing IRP %p\n", Irp));
         Status = QueueUserModeIrp( FCB, Irp, FUNCTION_CONNECT );
@@ -636,7 +637,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
 
         if (Status != STATUS_PENDING)
-            FCB->State = SOCKET_STATE_BOUND;
+            FCB->SharedData.State = SOCKET_STATE_BOUND;
 
         SocketStateUnlock(FCB);
 
@@ -646,7 +647,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     default:
         AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %u for connect\n",
-                                FCB->State));
+                                FCB->SharedData.State));
         break;
     }
 
@@ -704,7 +705,7 @@ AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
    {
      AFD_DbgPrint(MIN_TRACE,("Cannot call IOCTL_CONNECTEX on connectionless socket\n",
-                                FCB->State));
+                                FCB->SharedData.State));
         if (FCB->RemoteAddress)
         {
             ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
@@ -721,7 +722,7 @@ AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
    }
 
-    switch( FCB->State ) {
+    switch( FCB->SharedData.State ) {
     case SOCKET_STATE_CONNECTED:
         Status = STATUS_SUCCESS;
         break;
@@ -776,7 +777,7 @@ AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             FCB->ConnectCallInfo->Options = FCB->ConnectOptions;
             FCB->ConnectCallInfo->OptionsLength = FCB->ConnectOptionsSize;
 
-        FCB->State = SOCKET_STATE_CONNECTING;
+        FCB->SharedData.State = SOCKET_STATE_CONNECTING;
 
         AFD_DbgPrint(MID_TRACE,("Queueing IRP %p\n", Irp));
         Status = QueueUserModeIrp( FCB, Irp, FUNCTION_CONNECTEX );
@@ -791,7 +792,7 @@ AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
 
         if (Status != STATUS_PENDING)
-            FCB->State = SOCKET_STATE_BOUND;
+            FCB->SharedData.State = SOCKET_STATE_BOUND;
 
         SocketStateUnlock(FCB);
 
@@ -801,7 +802,7 @@ AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     default:
         AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %u for connect\n",
-                                FCB->State));
+                                FCB->SharedData.State));
         break;
     }
 
