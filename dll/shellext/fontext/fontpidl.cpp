@@ -83,6 +83,7 @@ const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
     if (fontEntry->Magic != FONTPIDL_MAGIC)
         return NULL;
 
+    // The function gets an arbitrary PIDL here. Security is important.
     // SECURITY: Check ibName and ibFileName
     if (fontEntry->ibName < sizeof(FontPidlEntry) || fontEntry->ibFileName < sizeof(FontPidlEntry) ||
         fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb ||
