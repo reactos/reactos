@@ -18,7 +18,7 @@ void CFontFolderViewCB::Initialize(CFontExt* pFontExt, IShellView *psv, LPCITEMI
     m_pShellView = psv;
     m_pidlParent.Attach(ILClone(pidlParent));
     if (!m_pidlParent)
-        ERR("!m_pidlParent\n");
+        ERR("m_pidlParent was null\n");
 }
 
 BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
