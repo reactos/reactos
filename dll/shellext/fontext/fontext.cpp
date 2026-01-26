@@ -463,7 +463,7 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
         WCHAR szPath[MAX_PATH];
         if (!SHGetPathFromIDListW(pidl, szPath))
         {
-            ERR("Not found\n");
+            ERR("File not found: %S\n", szPath);
             return E_FAIL;
         }
 
