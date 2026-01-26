@@ -329,13 +329,6 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
     if (!fontEntry1 || !fontEntry2)
         return E_INVALIDARG;
 
-    if (fontEntry1->IsAnonymous() || fontEntry2->IsAnonymous())
-    {
-        if (StrCmpIW(fontEntry1->FileName(), fontEntry2->FileName()) == 0)
-            return 0;
-        return 1; // FIXME: How to compare?
-    }
-
     int result;
     DWORD sortMode = lParam & 0xFFFF0000;
     DWORD column = lParam & 0x0000FFFF;

@@ -33,7 +33,7 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
         case SHCNE_DELETE:
         {
             const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
-            if (pEntry && !pEntry->IsAnonymous())
+            if (pEntry)
             {
                 CStringW strFontName = pEntry->Name();
 

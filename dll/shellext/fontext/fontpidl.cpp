@@ -16,10 +16,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
 {
     ATLASSERT(lpName);
+    ATLASSERT(lpName[0]);
     ATLASSERT(lpFileName);
     ATLASSERT(lpFileName[0]);
 
-    if (!lpFileName[0])
+    if (!lpName[0] || !lpFileName[0])
         return NULL;
 
     // SECURITY: Check string length

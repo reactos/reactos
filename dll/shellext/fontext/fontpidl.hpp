@@ -19,7 +19,6 @@ struct FontPidlEntry
     LPWSTR FileName() { return (LPWSTR)((PBYTE)this + ibFileName); }
     LPCWSTR Name() const { return (LPCWSTR)((PBYTE)this + ibName); }
     LPCWSTR FileName() const { return (LPCWSTR)((PBYTE)this + ibFileName); }
-    BOOL IsAnonymous() const { return Name()[0] == UNICODE_NULL; }
 };
 #include <poppack.h>
 
