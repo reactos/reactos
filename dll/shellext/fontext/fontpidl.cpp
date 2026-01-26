@@ -13,7 +13,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 #define FONTPIDL_MAGIC 0x7066 // 'fp'
 #define ALIGN_DWORD(size) (((size) + 3) & ~3)
 
-LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
+PITEMID_CHILD _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
 {
     ATLASSERT(lpName);
     ATLASSERT(lpFileName);
@@ -73,12 +73,12 @@ LPITEMIDLIST _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
 
     *(PWORD)((PBYTE)pidl + cbData) = UNICODE_NULL;
 
-    ATLASSERT(_FontFromIL((LPITEMIDLIST)pidl));
+    ATLASSERT(_FontFromIL((PITEMID_CHILD)pidl));
 
-    return (LPITEMIDLIST)pidl;
+    return (PITEMID_CHILD)pidl;
 }
 
-const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
+const FontPidlEntry* _FontFromIL(PCITEMID_CHILD pidl)
 {
     if (!pidl || pidl->mkid.cb < sizeof(FontPidlEntry))
         return NULL;
