@@ -541,13 +541,14 @@ IntVideoPortFindAdapter(
 
             /* FIXME: Need to figure out what string to pass as param 3. */
             // FIXME: Handle the 'Again' parameter for legacy detection.
+DPRINT1("%s: Legacy: Calling HwFindAdapter() -->\n", __FUNCTION__);
             vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                          &DeviceExtension->MiniPortDeviceExtension,
                          DriverExtension->HwContext,
                          NULL,
                          &ConfigInfo,
                          &Again);
-
+DPRINT1("%s: <-- Legacy HwFindAdapter() returned\n", __FUNCTION__);
             if (vpStatus == ERROR_DEV_NOT_EXIST)
                 continue;
             else
@@ -557,12 +558,14 @@ IntVideoPortFindAdapter(
     else
     {
         /* FIXME: Need to figure out what string to pass as param 3. */
+DPRINT1("%s: Non-legacy: Calling HwFindAdapter()\n", __FUNCTION__);
         vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                      &DeviceExtension->MiniPortDeviceExtension,
                      DriverExtension->HwContext,
                      NULL,
                      &ConfigInfo,
                      &Again);
+DPRINT1("%s: <-- Non-legacy HwFindAdapter() returned\n", __FUNCTION__);
     }
 
     if (vpStatus != NO_ERROR)
@@ -957,6 +960,7 @@ VideoPortInitialize(
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
 
+DPRINT1("%s: 1st initialization, calling IntInitializeInt10(TRUE);\n", __FUNCTION__);
         Status = IntInitializeInt10(TRUE);
         if (!NT_SUCCESS(Status))
         {

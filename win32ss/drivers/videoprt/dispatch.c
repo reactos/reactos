@@ -385,6 +385,7 @@ IntVideoPortDispatchOpen(
         ObReferenceObject(CsrProcess);
         INFO_(VIDEOPRT, "CsrProcess 0x%p\n", CsrProcess);
 
+DPRINT1("%s: !CsrProcess, calling IntInitializeInt10(FALSE);\n", __FUNCTION__);
         Status = IntInitializeInt10(FALSE);
         if (!NT_SUCCESS(Status))
         {
@@ -401,18 +402,21 @@ IntVideoPortDispatchOpen(
     // FIXME: (Re-)initialize INBV only if DeviceObject doesn't belong to a mirror driver.
     IntVideoPortInbvInitialize();
 
+DPRINT1("%s: Calling HwInitialize() -->\n", __FUNCTION__);
     if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
     {
         Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
 
         /* Query children, now that device is opened */
+DPRINT1("%s: VideoPortEnumerateChildren()\n");
         VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
     }
     else
     {
         Status = STATUS_UNSUCCESSFUL;
     }
+DPRINT1("%s: <-- HwInitialize() returned\n", __FUNCTION__);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = FILE_OPENED;

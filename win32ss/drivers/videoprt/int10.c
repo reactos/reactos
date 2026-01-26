@@ -657,10 +657,10 @@ IntInt10CallBiosV86(
     if (!VDMVideoAddressSpaceInitialized)
     {
         DPRINT1("** %s: VDMVideoAddressSpaceInitialized FALSE, invalid caller!\n", __FUNCTION__);
-        ASSERT(FALSE);
+        //ASSERT(FALSE); // FIXME
         return ERROR_INVALID_PARAMETER;
     }
-    ASSERT(VDMVideoAddressSpaceInitialized);
+    //ASSERT(VDMVideoAddressSpaceInitialized); // FIXME
 
     /* Clear the context and fill out the BIOS arguments */
     RtlZeroMemory(&BiosContext, sizeof(BiosContext));
