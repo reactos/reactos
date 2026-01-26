@@ -1114,9 +1114,7 @@ IntVideoPortDispatchFdoPnp(
                 {
                     PDEVICE_RELATIONS TargetList;
 
-                    TargetList = ExAllocatePoolWithTag(PagedPool,
-                                                       sizeof(DEVICE_RELATIONS),
-                                                       TAG_VIDEO_PORT);
+                    TargetList = ExAllocatePoolZero(PagedPool, sizeof(*TargetList), TAG_VIDEO_PORT);
                     if (TargetList == NULL)
                     {
                         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1124,7 +1122,6 @@ IntVideoPortDispatchFdoPnp(
                     }
                     else
                     {
-                        RtlZeroMemory(TargetList, sizeof(DEVICE_RELATIONS));
                         TargetList->Count++;
                         TargetList->Objects[0] = DeviceObject;
                         ObReferenceObject(DeviceObject);

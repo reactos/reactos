@@ -582,23 +582,24 @@ EngpUpdateMonitorDevices(
     }
     ASSERT(pDeviceRelations->Count == 1);
 
-    /* Invalidate relations, so that videoprt reenumerates its monitors */
-    /* Only do this for valid PDOs - check by trying to open registry key */
+    /* 
+     * Invalidate relations, so that videoprt reenumerates its monitors
+     * Only do this for valid PDOs - check by trying to open registry key 
+     */
     HANDLE hkRegistry;
-    NTSTATUS RegistryStatus;
-    RegistryStatus = IoOpenDeviceRegistryKey(pDeviceRelations->Objects[0],
-                                             PLUGPLAY_REGKEY_DRIVER,
-                                             MAXIMUM_ALLOWED,
-                                             &hkRegistry);
-    if (NT_SUCCESS(RegistryStatus))
+    Status = IoOpenDeviceRegistryKey(pDeviceRelations->Objects[0],
+                                        PLUGPLAY_REGKEY_DRIVER,
+                                        KEY_READ,
+                                        &hkRegistry);
+    if (NT_SUCCESS(Status))
     {
         ZwClose(hkRegistry);
         IoSynchronousInvalidateDeviceRelations(pDeviceRelations->Objects[0], BusRelations);
     }
     else
     {
-        /* Legacy device without valid PDO - skip invalidation */
-        /* This is expected for non-PnP devices like VGA */
+        /* Legacy device without valid PDO - skip invalidation.
+         * This is expected for non-PnP devices like VGA. */
     }
 
     /* Free returned structure */
