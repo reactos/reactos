@@ -28,6 +28,7 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
     switch (lEvent)
     {
         case SHCNE_CREATE:
+        case SHCNE_RENAMEITEM:
             break;
         case SHCNE_DELETE:
         {
