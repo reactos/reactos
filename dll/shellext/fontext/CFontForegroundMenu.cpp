@@ -205,8 +205,14 @@ STDMETHODIMP CFontForegroundMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARA
     return E_NOTIMPL;
 }
 
-HRESULT _CFontMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
-                                  IShellFolder *psf, REFIID riid, LPVOID* ppvOut)
+HRESULT
+_CFontForegroundMenu_CreateInstance(
+    HWND hwnd,
+    UINT cidl,
+    PCUITEMID_CHILD_ARRAY apidl,
+    IShellFolder *psf,
+    REFIID riid,
+    LPVOID* ppvOut)
 {
     DEFCONTEXTMENU dcm;
     ZeroMemory(&dcm, sizeof(dcm));

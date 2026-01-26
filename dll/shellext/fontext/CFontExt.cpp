@@ -455,7 +455,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
         riid == IID_IContextMenu2 ||
         riid == IID_IContextMenu3)
     {
-        return _CFontMenu_CreateInstance(hwndOwner, cidl, apidl, this, riid, ppvOut);
+        return _CFontForegroundMenu_CreateInstance(hwndOwner, cidl, apidl, this, riid, ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
     {
