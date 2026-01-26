@@ -440,7 +440,7 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
     CStringW msg, title;
     msg.Format(IDS_CONFIRM_DELETE_FONT, cidl);
-    title.LoadStringW(IDS_FONT_PREVIEW);
+    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
     if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
         return S_FALSE;
 
