@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     CFontMenu implementation
+ * PURPOSE:     Fonts folder foreground menu implementation
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
  */
 
