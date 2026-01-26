@@ -88,7 +88,8 @@ const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl)
         fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb ||
         fontEntry->ibName % sizeof(WCHAR) != 0 || fontEntry->ibFileName % sizeof(WCHAR) != 0)
     {
-        ERR("Invalid fontEntry %p (wrong ibName/ibFileName)\n", fontEntry);
+        ERR("Invalid fontEntry %p (ibName %d, ibFileName %d, cb %d)\n", fontEntry,
+            fontEntry->ibName, fontEntry->ibFileName, fontEntry->cb);
         return NULL;
     }
 
