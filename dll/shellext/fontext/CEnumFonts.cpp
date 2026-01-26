@@ -48,10 +48,13 @@ public:
             {
                 CStringW Name = g_FontCache->Name(m_Index);
                 CStringW FileName = g_FontCache->File(m_Index);
-                if (Name.IsEmpty() || FileName.IsEmpty())
+                if (Name.IsEmpty())
                 {
-                    ERR("Why is Name or FileName empty? ('%S' / '%S')\n",
-                        (PCWSTR)Name, (PCWSTR)FileName);
+                    ERR("Why is Name empty?\n");
+                }
+                else if (FileName.IsEmpty())
+                {
+                    ERR("Why is FileName empty?\n");
                 }
                 else
                 {

@@ -263,10 +263,14 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
             if (filePath.CompareNoCase(lpszDisplayName) == 0)
             {
                 CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
-                if (fontName.IsEmpty() || fileName.IsEmpty())
+                if (fontName.IsEmpty())
                 {
-                    ERR("Why is fileName or fontName empty? ('%S' / '%S')\n",
-                        (PCWSTR)fontName, (PCWSTR)fileName);
+                    ERR("Why is fileName empty?\n");
+                    return E_FAIL;
+                }
+                if (fileName.IsEmpty())
+                {
+                    ERR("Why is fileName empty?\n");
                     return E_FAIL;
                 }
 
@@ -291,6 +295,12 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
     for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
     {
         CStringW fontName = g_FontCache->Name(iFont);
+        if (fontName.IsEmpty())
+        {
+            ERR("Why is fontName empty?\n");
+            continue;
+        }
+
         if (fontName.CompareNoCase(lpszDisplayName) == 0) // Found?
         {
             CStringW fileName = g_FontCache->File(iFont);
