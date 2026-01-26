@@ -467,6 +467,7 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
             return E_FAIL;
         }
 
+        // WINDOWS BUG: Removing once is not enough
         for (INT iTry = 0; iTry < 3; ++iTry)
         {
             if (!RemoveFontResourceW(szPath) && !RemoveFontResourceExW(szPath, FR_PRIVATE, NULL))
@@ -481,6 +482,7 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     if (g_FontCache)
         g_FontCache->Read();
 
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
     SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
     return S_OK;
 }

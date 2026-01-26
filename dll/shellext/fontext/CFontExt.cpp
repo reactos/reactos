@@ -624,6 +624,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         if (g_FontCache)
             g_FontCache->Read();
 
+        SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
         SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
 
         // Show successful message
