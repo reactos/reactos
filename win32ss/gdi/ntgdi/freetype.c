@@ -532,6 +532,19 @@ GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
     return NULL;
 }
 
+static void
+LogFont2Face_Cleanup(void)
+{
+    PLIST_ENTRY pHead = &s_LogFont2FaceCacheList;
+    while (!IsListEmpty(pHead))
+    {
+        PLIST_ENTRY Entry = RemoveHeadList(pHead);
+        PLOGFONT2FACE_CACHE pCache = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
+        ExFreePoolWithTag(pCache, TAG_FONT);
+    }
+    s_LogFont2FaceCacheCount = 0;
+}
+
 static BOOL
 FontLink_PrepareFontInfo(
     _Inout_ PFONTLINK pFontLink)
@@ -1119,6 +1132,9 @@ FreeFontSupport(VOID)
 
     // Cleanup the FontLink cache
     FontLink_CleanupCache();
+
+    // Cleanup LOGFONT2FACE
+    LogFont2Face_Cleanup();
 
     // Free font cache list
     pHead = &g_FontCacheListHead;
