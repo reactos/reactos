@@ -877,7 +877,6 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         return FALSE;
     }
 
-#ifdef __REACTOS__
     /* Create "DefaultIcon" key */
     HKEY hDefIconKey;
     if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL, &hDefIconKey,
@@ -888,7 +887,6 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         RegCloseKey(hDefIconKey);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
     }
-#endif
 
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
