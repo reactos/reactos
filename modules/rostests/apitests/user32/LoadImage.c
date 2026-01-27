@@ -57,22 +57,22 @@ static void test_LoadImage_1bpp(void)
     /* Get bytes from bitmap (we know its 4x4 1BPP */
     memcpy(img, lpBits, 16);
 
-    ok(img[0] == 0x60 || broken(img[0] == 0) /* Vista Testbot */, "got %x expected 0x60\n", img[0]);
+    ok(img[0] == 0x60, "Got 0x%02x, expected x60\n", img[0]);
     ok(img[1] == 0, "Got 0x%02x, expected 0\n", img[1]);
     ok(img[2] == 0, "Got 0x%02x, expected 0\n", img[2]);
     ok(img[3] == 0, "Got 0x%02x, expected 0\n", img[3]);
 
-    ok(img[4] == 0x90 || broken(img[4] == 0xf0) /* Vista Testbot */, "got %x expected 0x90\n", img[4]);
+    ok(img[4] == 0x90, "Got 0x%02x, expected x90\n", img[4]);
     ok(img[5] == 0, "Got 0x%02x, expected 0x60\n", img[5]);
     ok(img[6] == 0, "Got 0x%02x, expected 0\n", img[6]);
     ok(img[7] == 0, "Got 0x%02x, expected 0\n", img[7]);
 
-    ok(img[8] == 0x90 || broken(img[8] == 0xf0) /* Vista Testbot */, "got %x expected 0x90\n", img[8]);
+    ok(img[8] == 0x90, "Got 0x%02x, expected x90\n", img[8]);
     ok(img[9] == 0, "Got 0x%02x, expected 0\n", img[9]);
     ok(img[10] == 0, "Got 0x%02x, expected 0\n", img[10]);
     ok(img[11] == 0, "Got 0x%02x, expected 0\n", img[11]);
 
-    ok(img[12] == 0x60 || broken(img[12] == 0xf0) /* Vista Testbot */, "got %x expected 0x90\n", img[12]);
+    ok(img[12] == 0x60, "Got 0x%02x, expected x60\n", img[12]);
     ok(img[13] == 0, "Got 0x%02x, expected 0x60\n", img[13]);
     ok(img[14] == 0, "Got 0x%02x, expected 0\n", img[14]);
     ok(img[15] == 0, "Got 0x%02x, expected 0\n", img[15]);
@@ -117,22 +117,22 @@ static void test_LoadImage_1bpp(void)
     /* Get bytes from bitmap (we know its 4x4 1BPP */
     memcpy(img, lpBits, 16);
 
-    ok(img[0] == 0x60, "Got 0x%02x, expected 0x60\n", img[0]);
+    ok(img[0] == 0x60 || broken(img[0] == 0) /* Vista Testbot */, "Got 0x%02x, expected x60\n", img[0]);
     ok(img[1] == 0, "Got 0x%02x, expected 0\n", img[1]);
     ok(img[2] == 0, "Got 0x%02x, expected 0\n", img[2]);
     ok(img[3] == 0, "Got 0x%02x, expected 0\n", img[3]);
 
-    ok(img[4] == 0x90, "Got 0x%02x, expected x90\n", img[4]);
+    ok(img[4] == 0x90 || broken(img[4] == 0xf0) /* Vista Testbot */, "Got 0x%02x, expected x90\n", img[4]);
     ok(img[5] == 0, "Got 0x%02x, expected 0x60\n", img[5]);
     ok(img[6] == 0, "Got 0x%02x, expected 0\n", img[6]);
     ok(img[7] == 0, "Got 0x%02x, expected 0\n", img[7]);
 
-    ok(img[8] == 0x90, "Got 0x%02x, expected 0x90\n", img[8]);
+    ok(img[8] == 0x90 || broken(img[8] == 0xf0) /* Vista Testbot */, "Got 0x%02x, expected x90\n", img[8]);
     ok(img[9] == 0, "Got 0x%02x, expected 0\n", img[9]);
     ok(img[10] == 0, "Got 0x%02x, expected 0\n", img[10]);
     ok(img[11] == 0, "Got 0x%02x, expected 0\n", img[11]);
 
-    ok(img[12] == 0x60, "Got 0x%02x, expected x60\n", img[12]);
+    ok(img[12] == 0x60 || broken(img[12] == 0xf0) /* Vista Testbot */, "Got 0x%02x, expected x60\n", img[12]);
     ok(img[13] == 0, "Got 0x%02x, expected 0x60\n", img[13]);
     ok(img[14] == 0, "Got 0x%02x, expected 0\n", img[14]);
     ok(img[15] == 0, "Got 0x%02x, expected 0\n", img[15]);
