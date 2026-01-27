@@ -511,11 +511,31 @@ static RTL_STATIC_LIST_HEAD(s_LogFont2FaceCacheList); // The list of LOGFONT2FAC
 #define LOGFONT2FACE_CACHE_SIZE 64
 static ULONG s_LogFont2FaceCacheCount = 0;
 
+static PSHARED_FACE
+GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
+{
+    PLIST_ENTRY Entry;
+    for (Entry = s_LogFont2FaceCacheList.Flink; Entry != &s_LogFont2FaceCacheList;
+         Entry = Entry->Flink)
+    {
+        PLOGFONT2FACE_CACHE pEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
+        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
+        {
+            // Move to top
+            RemoveEntryList(&pEntry->ListEntry);
+            InsertHeadList(&s_LogFont2FaceCacheList, &pEntry->ListEntry);
+
+            return pEntry->SharedFace;
+        }
+    }
+
+    return NULL;
+}
+
 static BOOL
 FontLink_PrepareFontInfo(
     _Inout_ PFONTLINK pFontLink)
 {
-    PLIST_ENTRY Entry;
     LOGFONT2FACE_CACHE *pCacheEntry;
     FONTOBJ *pFontObj;
     ULONG MatchPenalty;
@@ -531,18 +551,9 @@ FontLink_PrepareFontInfo(
         return TRUE;
 
     // Check cache
-    for (Entry = s_LogFont2FaceCacheList.Flink; Entry != &s_LogFont2FaceCacheList; Entry = Entry->Flink)
-    {
-        pCacheEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
-        if (RtlEqualMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW)))
-        {
-            RemoveEntryList(&pCacheEntry->ListEntry);
-            InsertTailList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
-
-            pFontLink->SharedFace = pCacheEntry->SharedFace;
-            return TRUE;
-        }
-    }
+    pFontLink->SharedFace = GetSharedFaceFromLogFont(&pFontLink->LogFont);
+    if (pFontLink->SharedFace)
+        return TRUE;
 
     MatchPenalty = MAXULONG;
     pFontObj = NULL;
@@ -568,7 +579,8 @@ FontLink_PrepareFontInfo(
 
     if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_CACHE_SIZE) // Too many cache?
     {
-        PLIST_ENTRY OldestEntry = RemoveHeadList(&s_LogFont2FaceCacheList);
+        // Remove tail one
+        PLIST_ENTRY OldestEntry = RemoveTailList(&s_LogFont2FaceCacheList);
         PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
         ExFreePoolWithTag(pOldCache, TAG_FONT);
         s_LogFont2FaceCacheCount--;
@@ -578,9 +590,11 @@ FontLink_PrepareFontInfo(
     pCacheEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE_CACHE), TAG_FONT);
     if (pCacheEntry)
     {
+        // Populate
         RtlCopyMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW));
         pCacheEntry->SharedFace = pFontLink->SharedFace;
-        InsertTailList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
+        // Add to top
+        InsertHeadList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
         s_LogFont2FaceCacheCount++;
     }
 
