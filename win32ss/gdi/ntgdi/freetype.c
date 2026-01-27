@@ -2544,6 +2544,7 @@ IntGdiRemoveFontResource(
         pchFile += cchFile + 1;
     }
 
+    LogFont2Face_Cleanup();
     return TRUE;
 }
 
