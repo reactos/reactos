@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create a zip file
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2019-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -11,6 +11,11 @@
 #include "minizip/zip.h"
 #include "minizip/iowin32.h"
 #include <process.h>
+
+static inline DWORD CalculateNameCRC32(PCSTR name)
+{
+    return crc32(0L, reinterpret_cast<const BYTE*>(name), strlen(name));
+}
 
 static CStringW DoGetZipName(PCWSTR filename)
 {
@@ -157,9 +162,21 @@ DoAddFilesFromItem(CSimpleArray<CStringW>& files, PCWSTR item)
 struct CZipCreatorImpl
 {
     CSimpleArray<CStringW> m_items;
+    CStringW m_ExistingZip;
+    CStringW m_TargetDir;
 
     unsigned JustDoIt();
 };
+
+CZipCreator* CZipCreator::DoCreate(PCWSTR pszExistingZip, PCWSTR pszTargetDir)
+{
+    CZipCreator* pCreator = new CZipCreator();
+    if (pszExistingZip)
+        pCreator->m_pimpl->m_ExistingZip = pszExistingZip;
+    if (pszTargetDir)
+        pCreator->m_pimpl->m_TargetDir = pszTargetDir;
+    return pCreator;
+}
 
 CZipCreator::CZipCreator() : m_pimpl(new CZipCreatorImpl)
 {
@@ -176,7 +193,12 @@ static unsigned __stdcall
 create_zip_function(void *arg)
 {
     CZipCreator *pCreator = reinterpret_cast<CZipCreator *>(arg);
-    return pCreator->m_pimpl->JustDoIt();
+    unsigned result = pCreator->m_pimpl->JustDoIt();
+
+    if (result == 0 && pCreator->m_pidlNotify)
+        SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, (LPITEMIDLIST)pCreator->m_pidlNotify, NULL);
+
+    return result;
 }
 
 BOOL CZipCreator::runThread(CZipCreator *pCreator)
@@ -222,6 +244,19 @@ unsigned CZipCreatorImpl::JustDoIt()
 {
     // TODO: Show progress.
 
+    CStringW strZipName;
+    INT appendMode;
+    if (m_ExistingZip.IsEmpty())
+    {
+        strZipName = DoGetZipName(m_items[0]);
+        appendMode = APPEND_STATUS_CREATE;
+    }
+    else
+    {
+        strZipName = m_ExistingZip;
+        appendMode = APPEND_STATUS_ADDINZIP;
+    }
+
     if (m_items.GetSize() <= 0)
     {
         DPRINT1("GetSize() <= 0\n");
@@ -247,10 +282,10 @@ unsigned CZipCreatorImpl::JustDoIt()
     }
 
     zlib_filefunc64_def ffunc;
+    ZeroMemory(&ffunc, sizeof(ffunc));
     fill_win32_filefunc64W(&ffunc);
 
-    CStringW strZipName = DoGetZipName(m_items[0]);
-    zipFile zf = zipOpen2_64(strZipName, APPEND_STATUS_CREATE, NULL, &ffunc);
+    zipFile zf = zipOpen2_64(strZipName, appendMode, NULL, &ffunc);
     if (zf == 0)
     {
         DPRINT1("zf == 0\n");
@@ -293,11 +328,44 @@ unsigned CZipCreatorImpl::JustDoIt()
         }
 
         CStringA strNameInZip = DoGetNameInZip(strBaseName, strFile, nCodePage);
+        CStringA strNameInZipUTF8 = DoGetNameInZip(strBaseName, strFile, CP_UTF8);
+        if (!m_TargetDir.IsEmpty())
+        {
+            CStringA strTargetDir = CStringA(CW2AEX<MAX_PATH>(m_TargetDir, nCodePage));
+            strNameInZip = strTargetDir + strNameInZip;
+
+            CStringA strTargetDirUTF8 = CStringA(CW2AEX<MAX_PATH>(m_TargetDir, CP_UTF8));
+            strNameInZipUTF8 = strTargetDirUTF8 + strNameInZipUTF8;
+        }
+
+        CSimpleArray<BYTE> extraField;
+        if (nCodePage != CP_UTF8 && strNameInZip != strNameInZipUTF8)
+        {
+            // Header
+            WORD headerID = EF_UNIPATH, dataSize = 1 + 4 + strNameInZipUTF8.GetLength();
+            extraField.Add(headerID & 0xFF);
+            extraField.Add((headerID >> 8) & 0xFF);
+            extraField.Add(dataSize & 0xFF);
+            extraField.Add((dataSize >> 8) & 0xFF);
+            extraField.Add(1); // Version
+
+            // CRC32
+            DWORD nameCRC = CalculateNameCRC32(strNameInZip);
+            extraField.Add(nameCRC & 0xFF);
+            extraField.Add((nameCRC >> 8) & 0xFF);
+            extraField.Add((nameCRC >> 16) & 0xFF);
+            extraField.Add((nameCRC >> 24) & 0xFF);
+
+            // UTF-8 name
+            for (INT ich = 0; ich < strNameInZipUTF8.GetLength(); ++ich)
+                extraField.Add(strNameInZipUTF8[ich]);
+        }
+
         err = zipOpenNewFileInZip4_64(zf,
                                       strNameInZip,
                                       &zi,
-                                      NULL,
-                                      0,
+                                      (extraField.GetSize() > 0 ? extraField.GetData() : NULL),
+                                      extraField.GetSize(),
                                       NULL,
                                       0,
                                       NULL,
@@ -337,7 +405,8 @@ unsigned CZipCreatorImpl::JustDoIt()
 
     if (err)
     {
-        DeleteFileW(strZipName);
+        if (err && m_ExistingZip.IsEmpty())
+            DeleteFileW(strZipName);
 
         CStringW strTitle(MAKEINTRESOURCEW(IDS_ERRORTITLE));
 
@@ -353,7 +422,11 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         WCHAR szFullPath[MAX_PATH];
         GetFullPathNameW(strZipName, _countof(szFullPath), szFullPath, NULL);
-        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+
+        if (m_ExistingZip.IsEmpty())
+            SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, szFullPath, NULL);
+        else
+            SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, szFullPath, NULL);
     }
 
     return err;
