@@ -500,6 +500,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 static BOOL
 MatchFontName(PSHARED_FACE SharedFace, PUNICODE_STRING Name1, FT_UShort NameID, FT_UShort LangID);
 
+// Define LOGFONT-to-face mapping
 typedef struct _LOGFONT2FACE_CACHE
 {
     LIST_ENTRY ListEntry;
@@ -521,14 +522,12 @@ GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
         PLOGFONT2FACE_CACHE pEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
         if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
         {
-            // Move to top
+            // Move to head
             RemoveEntryList(&pEntry->ListEntry);
             InsertHeadList(&s_LogFont2FaceCacheList, &pEntry->ListEntry);
-
             return pEntry->SharedFace;
         }
     }
-
     return NULL;
 }
 
@@ -603,7 +602,7 @@ FontLink_PrepareFontInfo(
         // Populate
         RtlCopyMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW));
         pCacheEntry->SharedFace = pFontLink->SharedFace;
-        // Add to top
+        // Add to head
         InsertHeadList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
         s_LogFont2FaceCacheCount++;
     }
