@@ -557,11 +557,8 @@ FontLink_PrepareFontInfo(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (pFontLink->bIgnore)
-        return FALSE;
-
-    if (pFontLink->SharedFace)
-        return TRUE;
+    if (pFontLink->bIgnore) return FALSE;
+    if (pFontLink->SharedFace) return TRUE;
 
     // Check cache
     pFontLink->SharedFace = GetSharedFaceFromLogFont(&pFontLink->LogFont);
