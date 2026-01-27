@@ -4642,9 +4642,9 @@ FontLink_Chain_FindGlyph(
     PLIST_ENTRY Entry;
     PFONTLINK pFontLink;
     UINT glyph_index;
-    FT_Face face = *ppFace; // Currently selected font
+    FT_Face oldFace = *ppFace;
 
-    glyph_index = (bUseIndex ? CodePoint : get_glyph_index(face, CodePoint));
+    glyph_index = (bUseIndex ? CodePoint : get_glyph_index(oldFace, CodePoint));
     if (glyph_index != 0)
         return glyph_index;
 
@@ -4658,24 +4658,21 @@ FontLink_Chain_FindGlyph(
             continue;
 
         FT_Face linkedFace = pFontLink->SharedFace->Face;
-        if (linkedFace == face)
-            continue;
-
-        glyph_index = get_glyph_index(linkedFace, CodePoint);
-        if (glyph_index != 0 && linkedFace != face)
+        if (linkedFace != oldFace && linkedFace != *ppFace)
         {
-            /* This operation is heavy */
-            TextIntUpdateSize(NULL, pChain->pBaseTextObj,
-                              CONTAINING_RECORD(pFontLink->SharedFace, FONTGDI, SharedFace),
-                              TRUE);
-            face = linkedFace; // Update current font
+            glyph_index = get_glyph_index(linkedFace, CodePoint);
+            if (glyph_index != 0)
+            {
+                /* This operation is heavy */
+                TextIntUpdateSize(NULL, pChain->pBaseTextObj,
+                                  CONTAINING_RECORD(pFontLink->SharedFace, FONTGDI, SharedFace),
+                                  TRUE);
+                *ppFace = linkedFace; // Found
+                return glyph_index;
+            }
         }
 
-        if (glyph_index != 0)
-        {
-            *ppFace = face; // Found
-            return glyph_index;
-        }
+        oldFace = linkedFace;
     }
 
     /* Not found */
