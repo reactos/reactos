@@ -4636,7 +4636,7 @@ FontLink_Chain_FindGlyph(
     _Inout_ PFONTLINK_CHAIN pChain,
     _Out_ PFONT_CACHE_ENTRY pCache,
     _Inout_ FT_Face *ppFace,
-    _In_ DWORD wch,
+    _In_ DWORD CodePoint,
     _In_ BOOL bUseIndex)
 {
     PLIST_ENTRY Entry;
@@ -4644,7 +4644,7 @@ FontLink_Chain_FindGlyph(
     UINT glyph_index;
     FT_Face face = *ppFace; // Currently selected font
 
-    glyph_index = (bUseIndex ? wch : get_glyph_index(face, wch));
+    glyph_index = (bUseIndex ? CodePoint : get_glyph_index(face, CodePoint));
     if (glyph_index != 0)
         return glyph_index;
 
@@ -4661,7 +4661,7 @@ FontLink_Chain_FindGlyph(
         if (linkedFace == face)
             continue;
 
-        glyph_index = get_glyph_index(linkedFace, wch);
+        glyph_index = get_glyph_index(linkedFace, CodePoint);
         if (glyph_index != 0 && linkedFace != face)
         {
             /* This operation is heavy */
