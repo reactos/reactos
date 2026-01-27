@@ -500,23 +500,23 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 static BOOL
 MatchFontName(PSHARED_FACE SharedFace, PUNICODE_STRING Name1, FT_UShort NameID, FT_UShort LangID);
 
-typedef struct _FONT_LINK_CACHE_ENTRY
+typedef struct _LOGFONT2FACE_CACHE
 {
     LIST_ENTRY ListEntry;
     LOGFONTW LogFont;
     PSHARED_FACE SharedFace;
-} FONT_LINK_CACHE_ENTRY, *PFONT_LINK_CACHE_ENTRY;
+} LOGFONT2FACE_CACHE, *PLOGFONT2FACE_CACHE;
 
-static RTL_STATIC_LIST_HEAD(s_FontLinkCacheList); // The list of FONT_LINK_CACHE_ENTRY
-#define MAX_FONTLINK_CACHE_SIZE 64
-static ULONG s_FontLinkCacheCount = 0;
+static RTL_STATIC_LIST_HEAD(s_LogFont2FaceCacheList); // The list of LOGFONT2FACE_CACHE
+#define LOGFONT2FACE_CACHE_SIZE 64
+static ULONG s_LogFont2FaceCacheCount = 0;
 
 static BOOL
 FontLink_PrepareFontInfo(
     _Inout_ PFONTLINK pFontLink)
 {
     PLIST_ENTRY Entry;
-    FONT_LINK_CACHE_ENTRY *pCacheEntry;
+    LOGFONT2FACE_CACHE *pCacheEntry;
     FONTOBJ *pFontObj;
     ULONG MatchPenalty;
     PPROCESSINFO Win32Process;
@@ -531,13 +531,14 @@ FontLink_PrepareFontInfo(
         return TRUE;
 
     // Check cache
-    for (Entry = s_FontLinkCacheList.Flink; Entry != &s_FontLinkCacheList; Entry = Entry->Flink)
+    for (Entry = s_LogFont2FaceCacheList.Flink; Entry != &s_LogFont2FaceCacheList; Entry = Entry->Flink)
     {
-        pCacheEntry = CONTAINING_RECORD(Entry, FONT_LINK_CACHE_ENTRY, ListEntry);
+        pCacheEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
         if (RtlEqualMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW)))
         {
             RemoveEntryList(&pCacheEntry->ListEntry);
-            InsertTailList(&s_FontLinkCacheList, &pCacheEntry->ListEntry);
+            InsertTailList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
+
             pFontLink->SharedFace = pCacheEntry->SharedFace;
             return TRUE;
         }
@@ -565,22 +566,22 @@ FontLink_PrepareFontInfo(
     pFontGDI = ObjToGDI(pFontObj, FONT);
     pFontLink->SharedFace = pFontGDI->SharedFace;
 
-    if (s_FontLinkCacheCount >= MAX_FONTLINK_CACHE_SIZE) // Too many cache?
+    if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_CACHE_SIZE) // Too many cache?
     {
-        PLIST_ENTRY OldestEntry = RemoveHeadList(&s_FontLinkCacheList);
-        PFONT_LINK_CACHE_ENTRY pOldCache = CONTAINING_RECORD(OldestEntry, FONT_LINK_CACHE_ENTRY, ListEntry);
-        ExFreePoolWithTag(pOldCache, GDITAG_TEXT);
-        s_FontLinkCacheCount--;
+        PLIST_ENTRY OldestEntry = RemoveHeadList(&s_LogFont2FaceCacheList);
+        PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
+        ExFreePoolWithTag(pOldCache, TAG_FONT);
+        s_LogFont2FaceCacheCount--;
     }
 
     // Add new cache
-    pCacheEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_LINK_CACHE_ENTRY), GDITAG_TEXT);
+    pCacheEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE_CACHE), TAG_FONT);
     if (pCacheEntry)
     {
         RtlCopyMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW));
         pCacheEntry->SharedFace = pFontLink->SharedFace;
-        InsertTailList(&s_FontLinkCacheList, &pCacheEntry->ListEntry);
-        s_FontLinkCacheCount++;
+        InsertTailList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
+        s_LogFont2FaceCacheCount++;
     }
 
     return TRUE;
