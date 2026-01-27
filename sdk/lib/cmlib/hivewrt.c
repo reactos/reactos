@@ -79,6 +79,9 @@ HvpValidateBaseHeader(
  * it lacks the implementation for growing the log file size.
  * See the FIXME comment below for further details.
  */
+#if defined(__GNUC__)
+__attribute__((unused))
+#endif
 static
 BOOLEAN
 CMAPI
@@ -503,8 +506,9 @@ HvSyncHive(
     KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
 #endif
 
-    /* Update the hive log file if present */
-    if (RegistryHive->Log)
+#if (NTDDI_VERSION > NTDDI_VISTA)
+     /* Update the hive log file if present */
+    if (RegistryHive->LogDataPresent[0] || RegistryHive->LogDataPresent[1])
     {
         if (!HvpWriteLog(RegistryHive))
         {
@@ -515,6 +519,7 @@ HvSyncHive(
             return FALSE;
         }
     }
+#endif
 
     /* Update the primary hive file */
     if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_PRIMARY))
@@ -526,8 +531,9 @@ HvSyncHive(
         return FALSE;
     }
 
+#if (NTDDI_VERSION > NTDDI_VISTA)
     /* Update the alternate hive file if present */
-    if (RegistryHive->Alternate)
+    if (RegistryHive->CurrentLog == HFILE_TYPE_ALTERNATE)
     {
         if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_ALTERNATE))
         {
@@ -538,6 +544,7 @@ HvSyncHive(
             return FALSE;
         }
     }
+#endif
 
     /* Clear dirty bitmap. */
     RtlClearAllBits(&RegistryHive->DirtyVector);
@@ -546,8 +553,10 @@ HvSyncHive(
 #if !defined(CMLIB_HOST) && !defined(_BLDR_)
     IoSetThreadHardErrorMode(HardErrors);
 #endif
+
     return TRUE;
 }
+
 
 /**
  * @unimplemented
@@ -636,7 +645,10 @@ HvWriteAlternateHive(
 {
     ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
-    ASSERT(RegistryHive->Alternate);
+
+#if (NTDDI_VERSION > NTDDI_VISTA)
+    ASSERT(RegistryHive->CurrentLog == HFILE_TYPE_ALTERNATE);
+#endif
 
 #if !defined(_BLDR_)
     /* Update hive header modification time */
