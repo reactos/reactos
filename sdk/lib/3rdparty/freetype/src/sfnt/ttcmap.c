@@ -1242,6 +1242,17 @@
 
     num_segs = num_segs2 >> 1;
 
+#ifdef __REACTOS__
+    /* HACK: Sanity Check to fix CORE-12549 */
+    if (num_segs > 200) // arial at 127 is max I have seen
+    {
+        FT_ERROR(("tt_cmap4_char_map_binary: "
+                  "Segments (%d) too big for '%s-%s'\n", num_segs,
+                  face->name_table.names[1].string, face->name_table.names[2].string));
+        return 0;
+    }
+#endif
+
     /* make compiler happy */
     mid = num_segs;
     end = 0xFFFFU;
