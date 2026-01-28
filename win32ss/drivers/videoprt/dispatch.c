@@ -964,9 +964,8 @@ IntVideoPortPnPStartDevice(
           DeviceExtension->InterruptVector);
 
     /* Create adapter device object */
-    return IntVideoPortFindAdapter(DriverObject,
-                                   DriverExtension,
-                                   DeviceObject);
+    return IntVideoPortFindAdapter(DriverObject, DriverExtension,
+                                   DeviceObject, FALSE);
 }
 
 
