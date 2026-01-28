@@ -1137,7 +1137,15 @@ IntVideoPortDispatchFdoPnp(
                 case BusRelations:
                     Status = IntVideoPortQueryBusRelations(DeviceObject, Irp);
                     Irp->IoStatus.Status = Status;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    }
+                    else if (DeviceExtension->NextDeviceObject != NULL)
+                    {
+                        IoSkipCurrentIrpStackLocation(Irp);
+                        Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+                    }
                     break;
 
                 default:
@@ -1148,10 +1156,8 @@ IntVideoPortDispatchFdoPnp(
                     }
                     else
                     {
-                        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-                        Irp->IoStatus.Information = 0;
+                        Status = Irp->IoStatus.Status;
                         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                        Status = STATUS_NOT_SUPPORTED;
                     }
                     break;
             }
