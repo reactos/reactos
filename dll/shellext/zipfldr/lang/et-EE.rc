@@ -91,7 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "See kaust juba sisaldab faili nimega '%1'.\nKas tahad seda asendada?"
     IDS_PASSWORD_FILE_TEXT "The file '%1' is password protected. Please enter the password."
     IDS_PASSWORD_ZIP_TEXT "Please specify the password to use when extracting this zip file."
-    IDS_QUERYDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "Ekstrakti &kõik..."
     IDS_HELPTEXT "Ekstraktib kausta sisu"

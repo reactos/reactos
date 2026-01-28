@@ -92,7 +92,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "这个文件夹中已经包含一个叫 %1 的文件。\n您想要替换它吗？"
     IDS_PASSWORD_FILE_TEXT "文件“%1”有密码保护。请输入密码。"
     IDS_PASSWORD_ZIP_TEXT "请指定用于解压该 ZIP 归档时使用的密码。"
-    IDS_QUERYDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "解压全部(&A)..."
     IDS_HELPTEXT "解压文件夹内容"

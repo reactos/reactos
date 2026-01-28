@@ -68,7 +68,7 @@
 #define IDS_OVERWRITEFILE_TEXT  9000
 #define IDS_PASSWORD_FILE_TEXT  9001
 #define IDS_PASSWORD_ZIP_TEXT   9002
-#define IDS_QUERYDELETE_TEXT    9003
+#define IDS_CONFIRMDELETE_TEXT    9003
 
 /* Context menu / ExplorerCommand strings */
 #define IDS_MENUITEM        10039

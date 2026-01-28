@@ -91,7 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "В данной папке уже есть файл '%1!ls!'.\nВы хотите заменить его?"
     IDS_PASSWORD_FILE_TEXT "Файл '%1' защищён паролем. Пожалуйста введите пароль."
     IDS_PASSWORD_ZIP_TEXT "Пожалуйста укажите пароль для извлечения этого zip архива."
-    IDS_QUERYDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "&Извлечь всё..."
     IDS_HELPTEXT "Извлекает содержимое архива"

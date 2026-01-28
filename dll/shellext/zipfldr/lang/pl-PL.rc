@@ -92,7 +92,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Ten folder zawiera już plik o nazwie '%1'.\nCzy chcesz zamienić istniejący plik?"
     IDS_PASSWORD_FILE_TEXT "Plik '%1' jest chroniony hasłem. Wprowadź hasło w polu poniżej"
     IDS_PASSWORD_ZIP_TEXT "Wprowadź hasło do użycia podczas wyodrębniania zawartości tego pliku zip."
-    IDS_QUERYDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "Wy&odrębnij wszystkie..."
     IDS_HELPTEXT "Wyodrębnia zawartość folderów"

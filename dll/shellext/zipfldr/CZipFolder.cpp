@@ -93,7 +93,7 @@ BOOL CZipFolder::_GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UIN
 
 HRESULT CZipFolder::DoDeleteItems(CComPtr<IDataObject> pDataObj)
 {
-    CStringW message(MAKEINTRESOURCEW(IDS_QUERYDELETE_TEXT));
+    CStringW message(MAKEINTRESOURCEW(IDS_CONFIRMDELETE_TEXT));
     CStringW title(MAKEINTRESOURCEW(IDS_FRIENDLYNAME));
     if (MessageBoxW(m_hwnd, message, title, MB_ICONWARNING | MB_YESNOCANCEL) != IDYES)
         return S_FALSE;

@@ -92,7 +92,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Acest folder conţine deja un fişier denumit '%1'.\nÎnlocuiţi fişierul existent?"
     IDS_PASSWORD_FILE_TEXT "Fișierul '%1' este protejat prin parolă. Introduceţi parola în caseta de mai jos."
     IDS_PASSWORD_ZIP_TEXT "Vă rugăm să specificați parola pe care doriți să o folosiți când extrageți acest fișier zip."
-    IDS_QUERYDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "E&xtragere totală..."
     IDS_HELPTEXT "Se extrage conţinutul folderului"
