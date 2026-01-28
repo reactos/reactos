@@ -533,8 +533,9 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
             pqcminfo->idCmdFirst += HRESULT_CODE(hr);
             return S_OK;
         }
-        case DFM_INVOKECOMMAND:
         case DFM_INVOKECOMMANDEX:
+            return E_NOTIMPL;
+        case DFM_INVOKECOMMAND:
         {
             if (wParam == DFM_CMD_DELETE)
                 return pThis->DoDeleteItems(pdtobj);
@@ -545,11 +546,6 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
                 DPRINT1("E_NOINTERFACE\n");
                 return E_NOINTERFACE;
             }
-
-            if (IS_INTRESOURCE(wParam))
-                DPRINT1("cmd: %d\n", LOWORD(wParam));
-            else
-                DPRINT1("cmd: %s\n", (LPSTR)wParam);
 
             CMINVOKECOMMANDINFO ici = { sizeof(ici) };
             ici.hwnd = hwnd;
