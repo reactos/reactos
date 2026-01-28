@@ -421,11 +421,11 @@ IntVideoPortEnumBuses(
 }
 
 NTSTATUS
-NTAPI
 IntVideoPortFindAdapter(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
-    IN PDEVICE_OBJECT DeviceObject)
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+    _In_ _When_(LegacyDetection, _Null_) PDEVICE_OBJECT DeviceObject,
+    _In_ BOOLEAN LegacyDetection)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
@@ -433,8 +433,23 @@ IntVideoPortFindAdapter(
     VIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
-    BOOL LegacyDetection = FALSE;
     BOOLEAN VgaResourcesReleased = FALSE;
+
+    if (LegacyDetection)
+    {
+        ASSERT(DeviceObject == NULL);
+        Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
+                                                       DriverExtension,
+                                                       NULL, // no DeviceExtension->PhysicalDeviceObject
+                                                       DriverExtension->InitializationData.StartingDeviceNumber,
+                                                       0,
+                                                       &DeviceObject);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
+            return Status;
+        }
+    }
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     DeviceExtension->IsVgaDriver = IntIsVgaSaveDriverName(DriverObject);
@@ -469,20 +484,21 @@ IntVideoPortFindAdapter(
     // FIXME: Check the adapter key and update VideoDebugLevel variable.
 
     /*
-     * Call miniport HwVidFindAdapter entry point to detect if
-     * particular device is present. There are two possible code
-     * paths. The first one is for Legacy drivers (NT4) and cases
-     * when we don't have information about what bus we're on. The
-     * second case is the standard one for Plug & Play drivers.
+     * Call the miniport HwVidFindAdapter entry point to detect if this
+     * particular device is present. There are two possible code paths.
+     * The first one is for Legacy drivers (NT4) and cases when we don't
+     * have information about what bus we're on. The second case is the
+     * standard one for Plug & Play drivers.
      */
     if (DeviceExtension->PhysicalDeviceObject == NULL)
     {
-        LegacyDetection = TRUE;
+        ASSERT(LegacyDetection == TRUE);
         DeviceExtension->IsLegacyDevice = TRUE;
         DeviceExtension->IsLegacyDetect = TRUE;
     }
     else
     {
+        ASSERT(LegacyDetection == FALSE);
         DeviceExtension->IsLegacyDevice = FALSE;
     }
 
@@ -533,13 +549,9 @@ IntVideoPortFindAdapter(
                          &Again);
 
             if (vpStatus == ERROR_DEV_NOT_EXIST)
-            {
                 continue;
-            }
             else
-            {
                 break;
-            }
         }
     }
     else
@@ -1014,14 +1026,12 @@ VideoPortInitialize(
         INFO_(VIDEOPRT, "Legacy detection for adapter interface %d\n",
               HwInitializationData->AdapterInterfaceType);
 
-        /* FIXME: Move the code for legacy detection
-           to another function and call it here */
+        /* Enable legacy detection, will be invoked below */
         LegacyDetection = TRUE;
     }
 
     /*
-     * NOTE:
-     * The driver extension can be already allocated in case that we were
+     * NOTE: The driver extension can be already allocated in case we were
      * called by legacy driver and failed detecting device. Some miniport
      * drivers in that case adjust parameters and call VideoPortInitialize
      * again.
@@ -1032,7 +1042,7 @@ VideoPortInitialize(
         Status = IoAllocateDriverObjectExtension(DriverObject,
                                                  DriverObject,
                                                  sizeof(VIDEO_PORT_DRIVER_EXTENSION),
-                                                 (PVOID *)&DriverExtension);
+                                                 (PVOID*)&DriverExtension);
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "IoAllocateDriverObjectExtension failed 0x%x\n", Status);
@@ -1076,12 +1086,11 @@ VideoPortInitialize(
         }
     }
 
-    /* Copy the correct miniport initialization data to the device extension. */
+    /* Copy the correct miniport initialization data to the device extension */
     RtlCopyMemory(&DriverExtension->InitializationData,
                   HwInitializationData,
                   HwInitializationData->HwInitDataSize);
-    if (HwInitializationData->HwInitDataSize <
-            sizeof(VIDEO_HW_INITIALIZATION_DATA))
+    if (HwInitializationData->HwInitDataSize < sizeof(VIDEO_HW_INITIALIZATION_DATA))
     {
         RtlZeroMemory((PVOID)((ULONG_PTR)&DriverExtension->InitializationData +
                               HwInitializationData->HwInitDataSize),
@@ -1091,46 +1100,26 @@ VideoPortInitialize(
     DriverExtension->HwContext = HwContext;
 
     /*
-     * Plug & Play drivers registers the device in AddDevice routine.
+     * Plug & Play drivers register the device in the AddDevice routine.
      * For legacy drivers we must do it now.
      */
     if (LegacyDetection)
     {
-        PDEVICE_OBJECT DeviceObject;
-
-        if (HwInitializationData->HwInitDataSize != SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
-        {
-            /* Power management */
+        /* Power management */
+        if (HwInitializationData->HwInitDataSize > SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
             DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
-        }
 
-        Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
-                                                       DriverExtension,
-                                                       NULL,
-                                                       DriverExtension->InitializationData.StartingDeviceNumber,
-                                                       0,
-                                                       &DeviceObject);
+        Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, NULL, TRUE);
         if (!NT_SUCCESS(Status))
-        {
-            ERR_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
-            return Status;
-        }
-
-        Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-        if (!NT_SUCCESS(Status))
-            ERR_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
-
+            ERR_(VIDEOPRT, "IntVideoPortFindAdapter(Legacy) returned 0x%x\n", Status);
         return Status;
     }
-    else
-    {
-        DriverObject->DriverExtension->AddDevice = IntVideoPortAddDevice;
-        DriverObject->MajorFunction[IRP_MJ_PNP] = IntVideoPortDispatchPnp;
-        DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
-        DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = IntVideoPortDispatchSystemControl;
 
-        return STATUS_SUCCESS;
-    }
+    DriverObject->DriverExtension->AddDevice = IntVideoPortAddDevice;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = IntVideoPortDispatchPnp;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = IntVideoPortDispatchSystemControl;
+    return STATUS_SUCCESS;
 }
 
 /*
