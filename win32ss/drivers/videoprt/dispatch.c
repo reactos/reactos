@@ -902,12 +902,12 @@ IntVideoPortPnPStartDevice(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     PCM_RESOURCE_LIST AllocatedResources;
 
-    /* Get the initialization data we saved in VideoPortInitialize.*/
+    /* Get the initialization data we saved in VideoPortInitialize */
     DriverObject = DeviceObject->DriverObject;
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    /* Store some resources in the DeviceExtension. */
+    /* Store some resources in the DeviceExtension */
     AllocatedResources = Stack->Parameters.StartDevice.AllocatedResources;
     if (AllocatedResources != NULL)
     {
@@ -935,7 +935,8 @@ IntVideoPortPnPStartDevice(
         FullList = AllocatedResources->List;
         ASSERT(AllocatedResources->Count == 1);
         INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
-              FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+              FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber,
+              FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
 
         /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
         ASSERT(FullList->InterfaceType == PCIBus);
@@ -962,10 +963,9 @@ IntVideoPortPnPStartDevice(
           DeviceExtension->InterruptLevel,
           DeviceExtension->InterruptVector);
 
-    /* Create adapter device object. */
-    return IntVideoPortFindAdapter(DriverObject,
-                                   DriverExtension,
-                                   DeviceObject);
+    /* Create adapter device object */
+    return IntVideoPortFindAdapter(DriverObject, DriverExtension,
+                                   DeviceObject, FALSE);
 }
 
 
