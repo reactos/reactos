@@ -4,7 +4,7 @@
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang <henrytang2@hotmail.com>
  *              Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "請訪問 <A HREF=""https://reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "請瀏覽 <A HREF=""https://reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "查看著作權訊息(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -77,7 +77,7 @@ CAPTION "系統設定"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本資訊", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS 是以伺服器作業系統為基礎構建並以此報告。核取此方塊以變更（僅對應用程式有效）。", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS 是以伺服器作業系統為基礎構建並以此報告。選擇這個核取方塊以變更 (僅對應用程式有效) 。", IDC_STATIC, 15, 15, 183, 41
     CONTROL "報告為工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "確定", IDOK, 166, 83, 50, 14
 END
@@ -240,15 +240,15 @@ CAPTION "虛擬記憶體"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "磁碟機［磁碟機標籤］", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "頁面文件大小(MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "頁面文件大小 (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "所選磁碟機的分頁檔大小", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "磁碟︰", IDC_STATIC, 20, 80, 20, 8
     LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "可用空間︰", IDC_STATIC, 20, 92, 56, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "初始大小(MB)(&I)︰", -1, 22, 118, 75, 9
-    LTEXT "最大值(MB)(&X)︰", -1, 22, 131, 75, 9
+    LTEXT "初始大小 (MB)(&I)︰", -1, 22, 118, 75, 9
+    LTEXT "最大值 (MB)(&X)︰", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "自訂大小(&C)︰", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
     AUTORADIOBUTTON "系統管理的大小(&Y)", IDC_SYSMANSIZE, 20, 145, 88, 9
     AUTORADIOBUTTON "無分頁文件(&N)", IDC_NOPAGEFILE, 20, 158, 78,9
@@ -333,33 +333,33 @@ BEGIN
 END
 
 IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
-CAPTION "Visual Effects"
-FONT 8, "MS Shell Dlg"
+CAPTION "視覺效果"
+FONT 9, "新細明體"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   LTEXT "Select the settings you want to use for the appearance and performance of ReactOS on this computer.", IDC_STATIC, 7, 6, 208, 18
+   LTEXT "選擇您要在這部電腦的 ReactOS 上執行的與外觀及效能相關的設定。", IDC_STATIC, 7, 6, 208, 18
    CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
 END
 
 IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
-CAPTION "Advanced"
-FONT 8, "MS Shell Dlg"
+CAPTION "進階"
+FONT 9, "新細明體"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
-   GROUPBOX "CPU scheduling", IDC_STATIC, 7, 8, 213, 46
-   LTEXT "Adjust for best performance of:", IDC_STATIC, 14, 23, 199, 8
-   AUTORADIOBUTTON "&Programs", IDC_CPUCLIENT, 14, 36, 75, 12
-   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
-   GROUPBOX "Virtual memory", IDC_STATIC, 7, 60, 213, 57
-   LTEXT "A paging file is an area on the hard disk that ReactOS uses as if it were RAM.", IDC_STATIC, 14, 74, 199, 16
-   PUSHBUTTON "&Change...", IDC_CHANGESWAP, 163, 97, 50, 14
+   GROUPBOX "中央處理器排程", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "按下列選項調整最佳效能：", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "程式(&P)", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "背景服務(&S)", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "虛擬記憶體", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "分頁檔是讓 ReactOS 當成記憶體 (RAM) 使用的硬碟區域。", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "變更(&C)...", IDC_CHANGESWAP, 163, 97, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "系統"
     IDS_CPLSYSTEMDESCRIPTION "查看您的電腦系統的資訊並更改各種系統及硬體設定"
-    IDS_PERFORMANCEOPTIONS "Performance Options"
+    IDS_PERFORMANCEOPTIONS "效能選項"
     IDS_MEGABYTE "MB 記憶體"
     IDS_GIGABYTE "GB 記憶體"
     IDS_TERABYTE "TB 記憶體"
@@ -369,8 +369,8 @@ BEGIN
     IDS_UPTIME_FORMAT "%lu 天， %02lu:%02lu:%02lu"
     IDS_VARIABLE "變量"
     IDS_VALUE "值"
-    IDS_NO_DUMP "（無）"
-    IDS_MINI_DUMP "小記憶體傾印（64KB）"
+    IDS_NO_DUMP "(無)"
+    IDS_MINI_DUMP "小記憶體傾印 (64KB)"
     IDS_KERNEL_DUMP "核心記憶體傾印"
     IDS_FULL_DUMP "完全記憶體傾印"
     IDS_USERPROFILE_NAME "名稱"
@@ -387,10 +387,10 @@ BEGIN
     IDS_USERPROFILE_ACCOUNT_DELETED "帳戶已刪除"
 	IDS_USERPROFILE_TYPE_TEXT "當 %s 登入這臺電腦時, 作業系統應使用遠端設定檔，還是遠端設定檔的本機快取複本。"
     IDS_MESSAGEBOXTITLE "系統控制臺小程序"
-    IDS_WARNINITIALSIZE "為分頁文件的初始大小輸入一個數字值。"
-    IDS_WARNMAXIMUMSIZE "為分頁文件的最大大小輸入一個數字值。"
-    IDS_WARNINITIALRANGE "The initial paging file size must be between 2 MB and %lu MB on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum paging file size must be larger than or equal to its initial size, and less than %lu MB on the selected drive."
+    IDS_WARNINITIALSIZE "請為分頁檔的初始大小輸入一個數字值。"
+    IDS_WARNMAXIMUMSIZE "請為分頁檔的最大大小輸入一個數字值。"
+    IDS_WARNINITIALRANGE "所選磁碟的初始分頁檔大小必須介於 2 MB 到 %lu MB 之間。"
+    IDS_WARNMAXIMUMRANGE "所選磁碟的最大分頁檔大小必須大於或等於其初始大小，並小於 %lu MB。"
     IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "受管理的系統"
@@ -402,5 +402,5 @@ BEGIN
     IDS_HWPROFILE_WARNING "警告"
     IDS_ENVIRONMENT_WARNING "您所做的任何更改都將被丟棄，變數的值將編輯為文字。"
     IDS_ENVIRONMENT_WARNING_TITLE "系統內容"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_FILE_BROWSE_FILTER "所有檔案 (*.*)\0*.*\0"
 END
