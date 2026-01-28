@@ -512,14 +512,23 @@ static RTL_STATIC_LIST_HEAD(s_LogFont2FaceCacheList); // The list of LOGFONT2FAC
 #define LOGFONT2FACE_CACHE_SIZE 64
 static ULONG s_LogFont2FaceCacheCount = 0;
 
+static void SharedFace_AddRef(PSHARED_FACE Ptr);
+static void SharedFace_Release(PSHARED_FACE Ptr);
+
+static void
+LogFont2Face_Destroy(PLOGFONT2FACE_CACHE pCache)
+{
+    SharedFace_Release(pCache->SharedFace);
+    ExFreePoolWithTag(pCache, TAG_FONT);
+}
+
 static PSHARED_FACE
 GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    PLIST_ENTRY Entry;
-    for (Entry = s_LogFont2FaceCacheList.Flink; Entry != &s_LogFont2FaceCacheList;
-         Entry = Entry->Flink)
+    PLIST_ENTRY Entry, pHead = &s_LogFont2FaceCacheList;
+    for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
     {
         PLOGFONT2FACE_CACHE pEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
         if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
@@ -534,26 +543,46 @@ GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
 }
 
 static void
-LogFont2Face_Cleanup(BOOL bWithLock)
+LogFont2Face_Cleanup(
+    _In_ BOOL bWithLock,
+    _Inout_opt_ PSHARED_FACE SharedFace)
 {
     if (bWithLock)
         IntLockFreeType();
 
-    PLIST_ENTRY pHead = &s_LogFont2FaceCacheList;
-    while (!IsListEmpty(pHead))
+    PLIST_ENTRY pHead = &s_LogFont2FaceCacheList, pEntry;
+    PLOGFONT2FACE_CACHE pCache;
+
+    if (SharedFace)
     {
-        PLIST_ENTRY Entry = RemoveHeadList(pHead);
-        PLOGFONT2FACE_CACHE pCache = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
-        ExFreePoolWithTag(pCache, TAG_FONT);
+        for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
+        {
+            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE_CACHE, ListEntry);
+            if (pCache->SharedFace == SharedFace)
+            {
+                RemoveEntryList(&pCache->ListEntry);
+                LogFont2Face_Destroy(pCache);
+                --s_LogFont2FaceCacheCount;
+            }
+        }
     }
-    s_LogFont2FaceCacheCount = 0;
+    else
+    {
+        while (!IsListEmpty(pHead))
+        {
+            pEntry = RemoveHeadList(pHead);
+            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE_CACHE, ListEntry);
+            LogFont2Face_Destroy(pCache);
+        }
+        s_LogFont2FaceCacheCount = 0;
+    }
 
     if (bWithLock)
         IntUnLockFreeType();
 }
 
 static void
-LogFont2Face_AddCache(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
+LogFont2Face_Add(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
@@ -562,7 +591,7 @@ LogFont2Face_AddCache(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
         // Remove tail one
         PLIST_ENTRY OldestEntry = RemoveTailList(&s_LogFont2FaceCacheList);
         PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
-        ExFreePoolWithTag(pOldCache, TAG_FONT);
+        LogFont2Face_Destroy(pOldCache);
         s_LogFont2FaceCacheCount--;
     }
 
@@ -573,6 +602,7 @@ LogFont2Face_AddCache(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
         // Populate
         RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
         pEntry->SharedFace = SharedFace;
+        SharedFace_AddRef(SharedFace);
         // Add to head
         InsertHeadList(&s_LogFont2FaceCacheList, &pEntry->ListEntry);
         s_LogFont2FaceCacheCount++;
@@ -619,7 +649,9 @@ FontLink_PrepareFontInfo(
     pFontGDI = ObjToGDI(pFontObj, FONT);
     pFontLink->SharedFace = pFontGDI->SharedFace;
 
-    LogFont2Face_AddCache(&pFontLink->LogFont, pFontLink->SharedFace);
+    if (pFontLink->LogFont.lfFaceName[0])
+        LogFont2Face_Add(&pFontLink->LogFont, pFontLink->SharedFace);
+
     return TRUE;
 }
 
@@ -1143,7 +1175,7 @@ FreeFontSupport(VOID)
     FontLink_CleanupCache();
 
     // Cleanup LOGFONT2FACE
-    LogFont2Face_Cleanup(FALSE);
+    LogFont2Face_Cleanup(FALSE, NULL);
 
     // Free font cache list
     pHead = &g_FontCacheListHead;
@@ -2511,6 +2543,7 @@ IntGdiRemoveFontResourceSingle(
         ASSERT(FontGDI);
         if (FontGDI->Filename && _wcsicmp(FontGDI->Filename, pszFileTitle) == 0)
         {
+            LogFont2Face_Cleanup(TRUE, FontGDI->SharedFace);
             RemoveEntryList(&FontEntry->ListEntry);
             CleanupFontEntry(FontEntry);
             if (dwFlags & AFRX_WRITE_REGISTRY)
@@ -2557,7 +2590,6 @@ IntGdiRemoveFontResource(
         pchFile += cchFile + 1;
     }
 
-    LogFont2Face_Cleanup(TRUE);
     return TRUE;
 }
 
