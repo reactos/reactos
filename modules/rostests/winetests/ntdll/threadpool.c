@@ -1944,11 +1944,13 @@ static void test_tp_multi_wait(void)
     DWORD result;
     int i;
 
+    printf("test_tp_multi_wait %lu\n", __LINE__);
     semaphore = CreateSemaphoreW(NULL, 0, 512, NULL);
     ok(semaphore != NULL, "failed to create semaphore\n");
     multi_wait_info.semaphore = semaphore;
 
     /* allocate new threadpool */
+    printf("test_tp_multi_wait %lu\n", __LINE__);
     pool = NULL;
     status = pTpAllocPool(&pool, NULL);
     ok(!status, "TpAllocPool failed with status %lx\n", status);
@@ -1962,6 +1964,7 @@ static void test_tp_multi_wait(void)
     memset(&environment, 0, sizeof(environment));
     environment.Version = 1;
     environment.Pool = pool;
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* create semaphores and corresponding wait objects */
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
@@ -1976,6 +1979,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* release all semaphores and wait for callback */
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
@@ -1989,6 +1993,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* repeat the same test in reverse order */
     for (i = ARRAY_SIZE(semaphores) - 1; i >= 0; i--)
@@ -2002,6 +2007,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* test timeout of wait objects */
     multi_wait_info.result = 0;
@@ -2010,12 +2016,14 @@ static void test_tp_multi_wait(void)
         when.QuadPart = (ULONGLONG)50 * -10000;
         pTpSetWait(waits[i], semaphores[i], &when);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
     {
         result = WaitForSingleObject(semaphore, 2000);
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     ok(multi_wait_info.result >> 16, "expected multi_wait_info.result >> 16 != 0\n");
 
@@ -2024,6 +2032,7 @@ static void test_tp_multi_wait(void)
     {
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     Sleep(50);
 
@@ -2032,6 +2041,7 @@ static void test_tp_multi_wait(void)
         pTpReleaseWait(waits[i]);
         NtClose(semaphores[i]);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     pTpReleasePool(pool);
     CloseHandle(semaphore);
