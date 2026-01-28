@@ -572,6 +572,7 @@ EngpUpdateMonitorDevices(
     PVIDEO_MONITOR_DEVICE pMonitorDevices;
     ULONG i, bytesWritten, monitorCount;
     NTSTATUS Status;
+    HANDLE hkRegistry;
 
     /* Request right PDO for device relations */
     Status = EngpPnPTargetRelationRequest(pGraphicsDevice->DeviceObject, &pDeviceRelations);
@@ -582,15 +583,12 @@ EngpUpdateMonitorDevices(
     }
     ASSERT(pDeviceRelations->Count == 1);
 
-    /* 
-     * Invalidate relations, so that videoprt reenumerates its monitors
-     * Only do this for valid PDOs - check by trying to open registry key 
-     */
-    HANDLE hkRegistry;
+    /* Invalidate relations, so that videoprt reenumerates its monitors.
+     * Only do this for valid PDOs - check by trying to open registry key. */
     Status = IoOpenDeviceRegistryKey(pDeviceRelations->Objects[0],
-                                        PLUGPLAY_REGKEY_DRIVER,
-                                        KEY_READ,
-                                        &hkRegistry);
+                                     PLUGPLAY_REGKEY_DRIVER,
+                                     KEY_READ,
+                                     &hkRegistry);
     if (NT_SUCCESS(Status))
     {
         ZwClose(hkRegistry);
