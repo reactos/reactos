@@ -283,6 +283,12 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Compute non paged pool limits and size */
     MiComputeNonPagedPoolVa(MiNumberOfFreePages);
 
+    MmSizeOfPagedPoolInBytes = 2 * MmMaximumNonPagedPoolInBytes;
+    if (MmSizeOfPagedPoolInBytes > ((ULONG_PTR)(PVOID)0xEB000000 - (ULONG_PTR)MmPagedPoolStart))
+    { 
+        MmSizeOfPagedPoolInBytes = (ULONG_PTR)(PVOID)0xEB000000 - (ULONG_PTR)MmPagedPoolStart;
+    }
+
     //
     // Now calculate the nonpaged pool expansion VA region
     //
