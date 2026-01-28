@@ -305,20 +305,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 
-    PVOID PagedPoolEnd = (PVOID)((ULONG_PTR)MmPagedPoolStart +
-                MmSizeOfPagedPoolInBytes - 1);
+    PVOID PagedPoolEnd = Add2Ptr(MmPagedPoolStart, MmSizeOfPagedPoolInBytes);
     if (MmNonPagedSystemStart < PagedPoolEnd)
     {
         //
         // Calculate the maximum system PTE area start that fits between
         // paged pool end and nonpaged pool start.
         //
-        MmNonPagedSystemStart = (PVOID)((ULONG_PTR)PagedPoolEnd &
-                                        ~(PDE_MAPPED_VA - 1));
-        if ((ULONG_PTR)MmNonPagedSystemStart <= (ULONG_PTR)PagedPoolEnd)
-        {
-            MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart + PDE_MAPPED_VA);
-        }
+        MmNonPagedSystemStart = ALIGN_UP_POINTER_BY(PagedPoolEnd, PDE_MAPPED_VA);
 
         //
         // Ensure we still have space for system PTEs
