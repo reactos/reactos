@@ -515,6 +515,8 @@ static ULONG s_LogFont2FaceCacheCount = 0;
 static PSHARED_FACE
 GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
 {
+    ASSERT_FREETYPE_LOCK_HELD();
+
     PLIST_ENTRY Entry;
     for (Entry = s_LogFont2FaceCacheList.Flink; Entry != &s_LogFont2FaceCacheList;
          Entry = Entry->Flink)
