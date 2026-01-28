@@ -829,6 +829,20 @@ static void test_NtDeleteKey(void)
     ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08lx\n", status);
 
     status = pNtDeleteKey(hkey);
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_WIN7)
+    {
+        /* On older Windows versions the key cannot be deleted, when it still has values in it */
+        ok(status == STATUS_CANNOT_DELETE, "NtDeleteKey unexpected status: 0x%08lx\n", status);
+        RtlInitUnicodeString(&string, L"custtest");
+        pNtDeleteValueKey(hkey, &string);
+        RtlInitUnicodeString(&string, L"deletetest");
+        pNtDeleteValueKey(hkey, &string);
+        RtlInitUnicodeString(&string, L"stringtest");
+        pNtDeleteValueKey(hkey, &string);
+        status = pNtDeleteKey(hkey);
+    }
+#endif
     ok(status == STATUS_SUCCESS, "NtDeleteKey Failed: 0x%08lx\n", status);
 
     status = pNtQueryKey(hkey, KeyNameInformation, buffer, sizeof(buffer), &size);
