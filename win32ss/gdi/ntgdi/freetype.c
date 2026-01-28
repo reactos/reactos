@@ -552,11 +552,37 @@ LogFont2Face_Cleanup(BOOL bWithLock)
         IntUnLockFreeType();
 }
 
+static void
+LogFont2Face_AddCache(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_CACHE_SIZE) // Too many cache?
+    {
+        // Remove tail one
+        PLIST_ENTRY OldestEntry = RemoveTailList(&s_LogFont2FaceCacheList);
+        PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
+        ExFreePoolWithTag(pOldCache, TAG_FONT);
+        s_LogFont2FaceCacheCount--;
+    }
+
+    // Add new cache
+    PLOGFONT2FACE_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE_CACHE), TAG_FONT);
+    if (pEntry)
+    {
+        // Populate
+        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
+        pEntry->SharedFace = SharedFace;
+        // Add to head
+        InsertHeadList(&s_LogFont2FaceCacheList, &pEntry->ListEntry);
+        s_LogFont2FaceCacheCount++;
+    }
+}
+
 static BOOL
 FontLink_PrepareFontInfo(
     _Inout_ PFONTLINK pFontLink)
 {
-    LOGFONT2FACE_CACHE *pCacheEntry;
     FONTOBJ *pFontObj;
     ULONG MatchPenalty;
     PPROCESSINFO Win32Process;
@@ -593,27 +619,7 @@ FontLink_PrepareFontInfo(
     pFontGDI = ObjToGDI(pFontObj, FONT);
     pFontLink->SharedFace = pFontGDI->SharedFace;
 
-    if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_CACHE_SIZE) // Too many cache?
-    {
-        // Remove tail one
-        PLIST_ENTRY OldestEntry = RemoveTailList(&s_LogFont2FaceCacheList);
-        PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
-        ExFreePoolWithTag(pOldCache, TAG_FONT);
-        s_LogFont2FaceCacheCount--;
-    }
-
-    // Add new cache
-    pCacheEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE_CACHE), TAG_FONT);
-    if (pCacheEntry)
-    {
-        // Populate
-        RtlCopyMemory(&pCacheEntry->LogFont, &pFontLink->LogFont, sizeof(LOGFONTW));
-        pCacheEntry->SharedFace = pFontLink->SharedFace;
-        // Add to head
-        InsertHeadList(&s_LogFont2FaceCacheList, &pCacheEntry->ListEntry);
-        s_LogFont2FaceCacheCount++;
-    }
-
+    LogFont2Face_AddCache(&pFontLink->LogFont, pFontLink->SharedFace);
     return TRUE;
 }
 
