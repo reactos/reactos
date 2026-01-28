@@ -4642,49 +4642,56 @@ static UINT
 FontLink_Chain_FindGlyph(
     _Inout_ PFONTLINK_CHAIN pChain,
     _Out_ PFONT_CACHE_ENTRY pCache,
-    _Inout_ FT_Face *ppFace,
-    _In_ DWORD CodePoint,
-    _In_ BOOL bUseIndex)
+    _Inout_ FT_Face *pFace,
+    _In_ UINT code,
+    _In_ BOOL fCodeAsIndex)
 {
-    PLIST_ENTRY Head, Entry;
     PFONTLINK pFontLink;
-    UINT glyph_index;
-    FT_Face oldFace = *ppFace;
+    PLIST_ENTRY Entry, Head;
+    UINT index;
+    FT_Face face;
 
-    glyph_index = (bUseIndex ? CodePoint : get_glyph_index(oldFace, CodePoint));
-    if (glyph_index != 0)
-        return glyph_index;
+    // Try the default font at first
+    index = get_glyph_index_flagged(pChain->pDefFace, code, fCodeAsIndex);
+    if (index)
+    {
+        DPRINT("code: 0x%08X, index: 0x%08X, fCodeAsIndex:%d\n", code, index, fCodeAsIndex);
+        pCache->Hashed.Face = *pFace = pChain->pDefFace;
+        return index; // The glyph is found on the default font
+    }
 
-    if (!FontLink_Chain_IsPopulated(pChain))
+    if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
+    {
         FontLink_Chain_Populate(pChain);
+        FontLink_Chain_Dump(pChain);
+    }
 
+    // Now the chain is populated. Looking for the target glyph...
     Head = &pChain->FontLinkList;
-    for (Entry = Head; Entry != Head; Entry = Entry->Flink)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         pFontLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
         if (!FontLink_PrepareFontInfo(pFontLink))
-            continue;
+            continue; // This link is not useful, check the next one
 
-        FT_Face linkedFace = pFontLink->SharedFace->Face;
-        if (linkedFace != oldFace && linkedFace != *ppFace)
-        {
-            glyph_index = get_glyph_index(linkedFace, CodePoint);
-            if (glyph_index != 0)
-            {
-                /* This operation is heavy */
-                TextIntUpdateSize(NULL, pChain->pBaseTextObj,
-                                  CONTAINING_RECORD(pFontLink->SharedFace, FONTGDI, SharedFace),
-                                  TRUE);
-                *ppFace = linkedFace; // Found
-                return glyph_index;
-            }
-        }
+        face = pFontLink->SharedFace->Face;
+        index = get_glyph_index(face, code);
+        if (!index)
+            continue; // The glyph does not exist, continue searching
 
-        oldFace = linkedFace;
+        // The target glyph is found in the chain
+        DPRINT("code: 0x%08X, index: 0x%08X\n", code, index);
+        pCache->Hashed.Face = *pFace = face;
+        FT_Set_Transform(face, &pCache->Hashed.matTransform, NULL);
+        return index;
     }
 
-    /* Not found */
-    return get_glyph_index(*ppFace, s_chFontLinkDefaultChar);
+    // No target glyph found in the chain: use default glyph
+    code = s_chFontLinkDefaultChar;
+    index = get_glyph_index(*pFace, code);
+    DPRINT("code: 0x%08X, index: 0x%08X\n", code, index);
+    pCache->Hashed.Face = *pFace = pChain->pDefFace;
+    return index;
 }
 
 /*
