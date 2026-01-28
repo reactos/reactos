@@ -13,9 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct {
-    BOOLEAN         TryingToKillTheEntireOS;
-    KFLOATING_SAVE  FloatState;
+typedef struct _WIN32K_FLOATING_SAVE
+{
+    KFLOATING_SAVE FloatState;
+    BOOLEAN TryingToKillTheEntireOS;
 } WIN32K_FLOATING_SAVE, *PWIN32K_FLOATING_SAVE;
 
 /* FUNCTIONS *****************************************************************/
@@ -36,14 +37,12 @@ EngRestoreFloatingPointState(
     _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer)
 {
     NTSTATUS Status;
-    PWIN32K_FLOATING_SAVE State;
-
-    State = (PWIN32K_FLOATING_SAVE)pBuffer;
+    PWIN32K_FLOATING_SAVE State = (PWIN32K_FLOATING_SAVE)pBuffer;
 
     if (!State->TryingToKillTheEntireOS)
     {
         DPRINT1("The driver has attempted to restore floating point state after already restoring it.\n");
-        DPRINT1("This (Probably ICafe AMD) driver has done an incorrect behavior.\n")
+        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n")
         return FALSE;
     }
 
