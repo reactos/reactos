@@ -884,7 +884,7 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
     {
         RegSetString(hDefIconKey, NULL, pApp->wszFilename, REG_EXPAND_SZ);
         RegCloseKey(hDefIconKey);
-        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
     }
 
     /* Copy static verbs from Classes\Applications key */
@@ -1193,11 +1193,7 @@ VOID COpenWithDialog::Accept()
     {
         /* Set programm as default handler */
         if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED && (m_InFlags & OAIF_REGISTER_EXT))
-        {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
-            // FIXME: Update DefaultIcon registry
-            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
-        }
 
         /* Execute program */
         if (m_InFlags & OAIF_EXEC)
