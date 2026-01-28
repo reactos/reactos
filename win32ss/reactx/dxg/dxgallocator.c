@@ -1,13 +1,12 @@
 /*
- * PROJECT:     ReactOS Kernel
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactX Graphics Legacy Kernel
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     DirectDraw video memory allocator
  * COPYRIGHT:   Copyright 2026 Justin Miller <justin.miller@reactos.org>
  */
 
 #include <dxg_int.h>
 
-_Ret_maybenull_
 FLATPTR
 WINAPI
 DdrawMemAlloc(
@@ -52,9 +51,8 @@ DdrawMemAlloc(
     else
     {
         /* Handle rectangular memory allocation */
-        DWORD RowPitch = pvmh->stride ? pvmh->stride : Width;
-        RequiredBytes = RowPitch * Height;
-        Width = RowPitch;
+        Width = pvmh->stride ? pvmh->stride : Width;
+        RequiredBytes = Width * Height;
     }
     MemPtr = MemBase + CurrentPos;
 
