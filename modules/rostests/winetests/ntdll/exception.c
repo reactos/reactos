@@ -1898,7 +1898,8 @@ static void test_restore_context(void)
     EXCEPTION_RECORD rec;
     _JUMP_BUFFER buf;
     CONTEXT ctx;
-    int i, pass;
+    LONG pass;
+    int i;
 
     if (!pRtlUnwindEx || !pRtlRestoreContext || !pRtlCaptureContext || !p_setjmp)
     {

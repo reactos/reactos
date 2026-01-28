@@ -48,7 +48,7 @@ enum nfs41_callback_op {
     OP_CB_ILLEGAL           = 10044
 };
 
-int nfs41_handle_callback(void *, void *, void *);
+int nfs41_handle_callback(void *, void *, void **);
 
 /* OP_CB_LAYOUTRECALL */
 struct cb_recall_file {
@@ -285,7 +285,7 @@ struct cb_compound_res {
 
 /* callback_xdr.c */
 bool_t proc_cb_compound_args(XDR *xdr, struct cb_compound_args *args);
-bool_t proc_cb_compound_res(XDR *xdr, struct cb_compound_res *res);
+int proc_cb_compound_res(void *xdr, void *res);
 
 /* callback_server.c */
 struct __nfs41_session;

@@ -3,9 +3,9 @@ add_subdirectory(nt_0600)
 
 spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
-# Embed RTC libs
+# Embed RTC libs - link to consumers of libntdll
 if (STACK_PROTECTOR)
-    target_sources(libntdll PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(libntdll INTERFACE gcc_ssp_nt)
 endif()
 
 add_definitions(

@@ -216,10 +216,16 @@ static int handle_symlink(nfs41_upcall *upcall)
 
     if (args->set) {
         nfs41_file_info info, createattrs;
-
-        /* don't send windows slashes to the server */
+        char *target_copy;
         char *p;
-        for (p = args->target_set; *p; p++) if (*p == '\\') *p = '/';
+
+        /* don't send windows slashes to the server - make a mutable copy */
+        target_copy = _strdup(args->target_set);
+        if (target_copy == NULL) {
+            status = ERROR_OUTOFMEMORY;
+            goto out;
+        }
+        for (p = target_copy; *p; p++) if (*p == '\\') *p = '/';
 
         if (state->file.fh.len) {
             /* the check in handle_open() didn't catch that we're creating
@@ -233,6 +239,7 @@ static int handle_symlink(nfs41_upcall *upcall)
                 eprintf("nfs41_remove() for symlink=%s failed with %s\n",
                     args->target_set, nfs_error_string(status));
                 status = map_symlink_errors(status);
+                free(target_copy);
                 goto out;
             }
         }
@@ -243,7 +250,8 @@ static int handle_symlink(nfs41_upcall *upcall)
         createattrs.attrmask.arr[1] = FATTR4_WORD1_MODE;
         createattrs.mode = 0777;
         status = nfs41_create(state->session, NF4LNK, &createattrs,
-            args->target_set, &state->parent, &state->file, &info);
+            target_copy, &state->parent, &state->file, &info);
+        free(target_copy);
         if (status) {
             eprintf("nfs41_create() for symlink=%s failed with %s\n",
                 args->target_set, nfs_error_string(status));

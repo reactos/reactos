@@ -345,7 +345,8 @@ authsspi_refresh(AUTH *auth, void *tmp)
 	struct rpc_sspi_data *gd;
 	struct rpc_sspi_init_res gr;
     sspi_buffer_desc *recv_tokenp, send_token;
-	uint32_t maj_stat, call_stat, ret_flags, i;
+	ULONG maj_stat, ret_flags;
+	uint32_t call_stat, i;
     unsigned long flags = 
         ISC_REQ_MUTUAL_AUTH|ISC_REQ_INTEGRITY|ISC_REQ_ALLOCATE_MEMORY;
     SecBufferDesc out_desc, in_desc;
@@ -721,7 +722,7 @@ uint32_t sspi_verify_mic(void *dummy, u_int seq, sspi_buffer_desc *bufin,
     log_hexdump(0, "sspi_verify_mic: calculating checksum over", bufin->value, bufin->length, 0);
     log_hexdump(0, "sspi_verify_mic: received checksum ", bufout->value, bufout->length, 0);
 
-    return VerifySignature(ctx, &desc, seq, qop_state);
+    return VerifySignature(ctx, &desc, seq, (PULONG)qop_state);
 }
 
 void sspi_release_buffer(sspi_buffer_desc *buf)

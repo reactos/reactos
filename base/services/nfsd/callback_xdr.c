@@ -635,8 +635,10 @@ out:
     return res->xdr_ok;
 }
 
-bool_t proc_cb_compound_res(XDR *xdr, struct cb_compound_res *res)
+int proc_cb_compound_res(void *xdr_arg, void *res_arg)
 {
+    XDR *xdr = xdr_arg;
+    struct cb_compound_res *res = res_arg;
     bool_t result;
 
     if (res == NULL)

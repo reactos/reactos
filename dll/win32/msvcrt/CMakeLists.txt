@@ -204,11 +204,32 @@ add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)
 # Let consumers of msvcrt have the right defines
 target_compile_definitions(libmsvcrt INTERFACE _DLL __USE_CRTIMP)
 
-# Embed msvcrtex into libmsvcrt
-target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:msvcrtex>)
+# Embed msvcrtex into libmsvcrt - link to consumers
+# msvcrtex must come BEFORE libmsvcrt_implib so CRT startup symbols are resolved
+# libkernel32 must come AFTER msvcrtex to resolve kernel32 references (Sleep, TlsGetValue, etc.)
+# libntdll is needed for amd64 (RtlCaptureContext, RtlLookupFunctionEntry, RtlVirtualUnwind, RtlAddFunctionTable)
+# Use RESCAN group to handle circular dependency between msvcrtex and kernel32/ntdll
+# Note: Use _implib variants (IMPORTED libs) as RESCAN doesn't work with INTERFACE libs
+get_target_property(_current_libs libmsvcrt INTERFACE_LINK_LIBRARIES)
+set(_libmsvcrt_link_group_supported FALSE)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    if(DEFINED CMAKE_CXX_LINK_GROUP_USING_RESCAN_SUPPORTED AND CMAKE_CXX_LINK_GROUP_USING_RESCAN_SUPPORTED)
+        set(_libmsvcrt_link_group_supported TRUE)
+    elseif(DEFINED CMAKE_LINK_GROUP_USING_RESCAN_SUPPORTED AND CMAKE_LINK_GROUP_USING_RESCAN_SUPPORTED)
+        set(_libmsvcrt_link_group_supported TRUE)
+    endif()
+endif()
 
-# Embed RTC libs
+if(_libmsvcrt_link_group_supported)
+    set_property(TARGET libmsvcrt PROPERTY INTERFACE_LINK_LIBRARIES
+        "$<LINK_GROUP:RESCAN,msvcrtex,${_current_libs},libkernel32_implib,libntdll_implib>")
+else()
+    # Keep link order for toolchains without RESCAN support (e.g. MSVC/clang-cl).
+    set_property(TARGET libmsvcrt PROPERTY INTERFACE_LINK_LIBRARIES
+        "msvcrtex;${_current_libs};libkernel32_implib;libntdll_implib")
+endif()
+
+# Embed RTC libs - link to consumers of libmsvcrt
 if (STACK_PROTECTOR)
-    target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:gcc_ssp_msvcrt>)
-    target_link_libraries(libmsvcrt INTERFACE libkernel32) # For OutputDebugStringA
+    target_link_libraries(libmsvcrt INTERFACE gcc_ssp_msvcrt libkernel32) # libkernel32 for OutputDebugStringA
 endif()
