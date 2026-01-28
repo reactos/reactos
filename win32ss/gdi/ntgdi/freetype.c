@@ -2431,6 +2431,9 @@ IntGdiAddFontResourceEx(
         pchFile += cchFile + 1;
     }
 
+    /* Prepare for better LOGFONT-to-face matching */
+    LogFont2Face_Cleanup(TRUE, NULL);
+
     return ret;
 }
 
