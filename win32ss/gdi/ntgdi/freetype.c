@@ -4641,7 +4641,7 @@ FontLink_Chain_FindGlyph(
     _In_ DWORD CodePoint,
     _In_ BOOL bUseIndex)
 {
-    PLIST_ENTRY Entry;
+    PLIST_ENTRY Head, Entry;
     PFONTLINK pFontLink;
     UINT glyph_index;
     FT_Face oldFace = *ppFace;
@@ -4653,7 +4653,8 @@ FontLink_Chain_FindGlyph(
     if (!FontLink_Chain_IsPopulated(pChain))
         FontLink_Chain_Populate(pChain);
 
-    for (Entry = pChain->FontLinkList.Flink; Entry != &pChain->FontLinkList; Entry = Entry->Flink)
+    Head = &pChain->FontLinkList;
+    for (Entry = Head; Entry != Head; Entry = Entry->Flink)
     {
         pFontLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
         if (!FontLink_PrepareFontInfo(pFontLink))
