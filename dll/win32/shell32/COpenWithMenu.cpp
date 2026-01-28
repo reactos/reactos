@@ -882,8 +882,7 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
     if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL,
                         &hDefIconKey, NULL) == ERROR_SUCCESS)
     {
-        DWORD cbData = (lstrlenW(pApp->wszFilename) + 1) * sizeof(WCHAR);
-        RegSetValueExW(hDefIconKey, NULL, 0, REG_EXPAND_SZ, (PBYTE)pApp->wszFilename, cbData);
+        RegSetString(hDefIconKey, NULL, pApp->wszFilename, REG_EXPAND_SZ);
         RegCloseKey(hDefIconKey);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
     }
