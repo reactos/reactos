@@ -582,11 +582,8 @@ FontLink_PrepareFontInfo(
     Win32Process = PsGetCurrentProcessWin32Process();
     FindBestFontFromList(&pFontObj, &MatchPenalty, &pFontLink->LogFont,
                          &Win32Process->PrivateFontListHead);
-    if (!pFontObj) // Not found?
-    {
-        // Search system fonts
-        FindBestFontFromList(&pFontObj, &MatchPenalty, &pFontLink->LogFont, &g_FontListHead);
-    }
+    // Search system fonts
+    FindBestFontFromList(&pFontObj, &MatchPenalty, &pFontLink->LogFont, &g_FontListHead);
     if (!pFontObj) // Not found?
     {
         pFontLink->bIgnore = TRUE;
