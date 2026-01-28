@@ -36,7 +36,6 @@ IDB_SAVEAS     BITMAP "res/save.bmp"
 IDB_MODIFY     BITMAP "res/modify.bmp"
 IDB_HELP_TOC   BITMAP "res/help_toc.bmp"
 
-/* @makedep: res/systemfileassociations.rgs */
 1 WINE_REGISTRY "res/systemfileassociations.rgs"
 
 IDR_ACCELERATOR ACCELERATORS
