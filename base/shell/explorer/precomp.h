@@ -31,6 +31,7 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 #include <atlsimpcoll.h>
+#include <mmddk.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
