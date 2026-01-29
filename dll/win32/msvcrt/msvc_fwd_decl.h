@@ -39,6 +39,8 @@ int __thiscall type_info_before(type_info* _this, const type_info *rhs);
 void __thiscall type_info_dtor(type_info* _this);
 const char* __thiscall type_info_name(type_info* _this);
 const char* __thiscall type_info_raw_name(type_info* _this);
+struct __type_info_node;
+const char * __thiscall type_info_name_internal_method(type_info * _this, struct __type_info_node *node);
 
 #undef bad_cast
 #undef bad_typeid

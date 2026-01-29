@@ -36,6 +36,7 @@ add_definitions(
 if(ARCH STREQUAL "i386")
     add_definitions(
         -D__ASM_USE_THISCALL_WRAPPER
+        -DRtlUnwind=__wine_RtlUnwind # See i386/__wine_RtlUnwind.s
     )
 endif()
 
@@ -71,6 +72,7 @@ if(ARCH STREQUAL "i386")
     )
     list(APPEND SHARED_ASM_SOURCE
         i386/__wine_RtlUnwind.s
+        i386/exception_ptr.s
         i386/inout.s
     )
 elseif(ARCH STREQUAL "amd64")
@@ -113,13 +115,10 @@ add_asm_files(msvcrt_shared_asm ${SHARED_ASM_SOURCE})
 add_library(msvcrt_shared
     ${SHARED_SOURCE}
     ${msvcrt_shared_asm}
+    reactos/ucrt_tls_sup.c
 )
 
-target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0)
-if(ARCH STREQUAL "i386")
-    # ASM wrapper for Wine code, implemented in i386/__wine_RtlUnwind.s
-    target_compile_definitions(msvcrt_shared PRIVATE RtlUnwind=__wine_RtlUnwind)
-endif()
+target_compile_definitions(msvcrt_shared PRIVATE _MSVCR_VER=0 __UCRTSUPPORT__)
 add_dependencies(msvcrt_shared psdk asm)
 
 ###############################################################################
@@ -129,7 +128,6 @@ add_dependencies(msvcrt_shared psdk asm)
 list(APPEND MSVCRT_SOURCE
     ${SHARED_SOURCE}
     ${msvcrt_shared_asm}
-    reactos/chkesp_failed.c
     reactos/misc.c
     reactos/system.cpp
     concurrency.c
@@ -139,7 +137,6 @@ list(APPEND MSVCRT_SOURCE
     dir.c
     environ.c
     errno.c
-    exception_ptr.c
     exit.c
     file.c
     heap.c

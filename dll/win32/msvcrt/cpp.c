@@ -610,6 +610,7 @@ void throw_exception(const char* msg)
     _CxxThrowException(&e, &exception_exception_type);
 }
 
+#ifndef __UCRTSUPPORT__
 /******************************************************************
  *		?set_terminate@@YAP6AXXZP6AXXZ@Z (MSVCRT.@)
  *
@@ -639,6 +640,7 @@ terminate_function CDECL _get_terminate(void)
     TRACE("returning %p\n", data->terminate_handler);
     return data->terminate_handler;
 }
+#endif /* !__UCRTSUPPORT__ */
 
 /******************************************************************
  *		?set_unexpected@@YAP6AXXZP6AXXZ@Z (MSVCRT.@)
@@ -682,6 +684,7 @@ _se_translator_function CDECL _set_se_translator(_se_translator_function func)
     return previous;
 }
 
+#ifndef __UCRTSUPPORT__
 /******************************************************************
  *		?terminate@@YAXXZ (MSVCRT.@)
  *
@@ -711,6 +714,7 @@ void CDECL unexpected(void)
     if (data->unexpected_handler) data->unexpected_handler();
     terminate();
 }
+#endif /* !__UCRTSUPPORT__ */
 
 
 /******************************************************************
@@ -898,7 +902,7 @@ void WINAPI _CxxThrowException( void *object, const cxx_exception_type *type )
     for (;;) RaiseException( CXX_EXCEPTION, EXCEPTION_NONCONTINUABLE, CXX_EXCEPTION_PARAMS, args );
 }
 
-#if _MSVCR_VER >= 80
+#if _MSVCR_VER >= 80 || defined(__UCRTSUPPORT__)
 
 /*********************************************************************
  * ?_is_exception_typeof@@YAHABVtype_info@@PAU_EXCEPTION_POINTERS@@@Z
@@ -971,7 +975,7 @@ void* __cdecl __AdjustPointer(void *obj, const this_ptr_offsets *off)
 
 #endif
 
-#if _MSVCR_VER >= 140
+#if _MSVCR_VER >= 140 || defined(__UCRTSUPPORT__)
 
 typedef struct
 {
