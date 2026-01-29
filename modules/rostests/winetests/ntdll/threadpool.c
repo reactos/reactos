@@ -18,11 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "ntdll_test.h"
+#include <stdarg.h>
 
-#ifdef __REACTOS__
-typedef void (CALLBACK *PTP_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,void*,void*,IO_STATUS_BLOCK*,PTP_IO);
-#endif
+#include "ntstatus.h"
+#define WIN32_NO_STATUS
+#include "windef.h"
+#include "winbase.h"
+#include "winternl.h"
+#include "wine/test.h"
 
 static NTSTATUS (WINAPI *pTpAllocCleanupGroup)(TP_CLEANUP_GROUP **);
 static NTSTATUS (WINAPI *pTpAllocIoCompletion)(TP_IO **,HANDLE,PTP_IO_CALLBACK,void *,TP_CALLBACK_ENVIRON *);
@@ -584,7 +587,7 @@ static void test_tp_simple(void)
     IMAGE_NT_HEADERS *nt = RtlImageNtHeader( NtCurrentTeb()->Peb->ImageBaseAddress );
     TP_POOL_STACK_INFORMATION stack_info;
     TP_CALLBACK_ENVIRON environment;
-#ifndef __REACTOS__
+#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_WIN7
     TP_CALLBACK_ENVIRON_V3 environment3;
 #endif
     TP_CLEANUP_GROUP *group;
@@ -597,6 +600,7 @@ static void test_tp_simple(void)
 
     semaphore = CreateSemaphoreA(NULL, 0, 1, NULL);
     ok(semaphore != NULL, "CreateSemaphoreA failed %lu\n", GetLastError());
+    printf("test_tp_simple %lu\n", __LINE__);
 
     /* post the callback using the default threadpool */
     memset(&environment, 0, sizeof(environment));
@@ -607,12 +611,14 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* allocate new threadpool */
     pool = NULL;
     status = pTpAllocPool(&pool, NULL);
     ok(!status, "TpAllocPool failed with status %lx\n", status);
     ok(pool != NULL, "expected pool != NULL\n");
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* post the callback using the new threadpool */
     memset(&environment, 0, sizeof(environment));
     environment.Version = 1;
@@ -622,13 +628,15 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
-#ifndef __REACTOS__ // Windows 7
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test with environment version 3 */
+#if !defined(__REACTOS__) || _WIN32_WINNT >= _WIN32_WINNT_WIN7
     memset(&environment3, 0, sizeof(environment3));
     environment3.Version = 3;
     environment3.Pool = pool;
     environment3.Size = sizeof(environment3);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     for (i = 0; i < 3; ++i)
     {
         environment3.CallbackPriority = TP_CALLBACK_PRIORITY_HIGH + i;
@@ -638,12 +646,14 @@ static void test_tp_simple(void)
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
 
+    printf("test_tp_simple %lu\n", __LINE__);
     environment3.CallbackPriority = 10;
     status = pTpSimpleTryPost(simple_cb, semaphore, (TP_CALLBACK_ENVIRON *)&environment3);
     ok(status == STATUS_INVALID_PARAMETER || broken(!status) /* Vista does not support priorities */,
             "TpSimpleTryPost failed with status %lx\n", status);
 #endif
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test with invalid version number */
     memset(&environment, 0, sizeof(environment));
     environment.Version = 9999;
@@ -658,12 +668,14 @@ static void test_tp_simple(void)
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* allocate a cleanup group for synchronization */
     group = NULL;
     status = pTpAllocCleanupGroup(&group);
     ok(!status, "TpAllocCleanupGroup failed with status %lx\n", status);
     ok(group != NULL, "expected pool != NULL\n");
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* use cleanup group to wait for a simple callback */
     userdata = 0;
     memset(&environment, 0, sizeof(environment));
@@ -675,6 +687,7 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, FALSE, NULL);
     ok(userdata == 1, "expected userdata = 1, got %lu\n", userdata);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* test cancellation of pending simple callbacks */
     userdata = 0;
     pTpSetPoolMaxThreads(pool, 10);
@@ -690,22 +703,37 @@ static void test_tp_simple(void)
     pTpReleaseCleanupGroupMembers(group, TRUE, NULL);
     ok(userdata < 100, "expected userdata < 100, got %lu\n", userdata);
 
+    printf("test_tp_simple %lu\n", __LINE__);
+#ifdef __REACTOS__
+    if (!pTpQueryPoolStackInformation)
+    {
+        skip("TpQueryPoolStackInformation not available\n");
+    }
+    else
+    {
+#endif
     /* test querying and setting the stack size */
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == nt->OptionalHeader.SizeOfStackReserve, "expected default StackReserve, got %Ix\n", stack_info.StackReserve);
     ok(stack_info.StackCommit == nt->OptionalHeader.SizeOfStackCommit, "expected default StackCommit, got %Ix\n", stack_info.StackCommit);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* threadpool does not validate the stack size values */
     stack_info.StackReserve = stack_info.StackCommit = 1;
     status = pTpSetPoolStackInformation(pool, &stack_info);
     ok(!status, "TpSetPoolStackInformation failed: %lx\n", status);
 
+    printf("test_tp_simple %lu\n", __LINE__);
     status = pTpQueryPoolStackInformation(pool, &stack_info);
     ok(!status, "TpQueryPoolStackInformation failed: %lx\n", status);
     ok(stack_info.StackReserve == 1, "expected 1 byte StackReserve, got %ld\n", (ULONG)stack_info.StackReserve);
     ok(stack_info.StackCommit == 1, "expected 1 byte StackCommit, got %ld\n", (ULONG)stack_info.StackCommit);
+#ifdef __REACTOS__
+    }
+#endif
 
+    printf("test_tp_simple %lu\n", __LINE__);
     /* cleanup */
     pTpReleaseCleanupGroup(group);
     pTpReleasePool(pool);
@@ -1916,11 +1944,13 @@ static void test_tp_multi_wait(void)
     DWORD result;
     int i;
 
+    printf("test_tp_multi_wait %lu\n", __LINE__);
     semaphore = CreateSemaphoreW(NULL, 0, 512, NULL);
     ok(semaphore != NULL, "failed to create semaphore\n");
     multi_wait_info.semaphore = semaphore;
 
     /* allocate new threadpool */
+    printf("test_tp_multi_wait %lu\n", __LINE__);
     pool = NULL;
     status = pTpAllocPool(&pool, NULL);
     ok(!status, "TpAllocPool failed with status %lx\n", status);
@@ -1934,6 +1964,7 @@ static void test_tp_multi_wait(void)
     memset(&environment, 0, sizeof(environment));
     environment.Version = 1;
     environment.Pool = pool;
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* create semaphores and corresponding wait objects */
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
@@ -1948,6 +1979,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* release all semaphores and wait for callback */
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
@@ -1961,6 +1993,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* repeat the same test in reverse order */
     for (i = ARRAY_SIZE(semaphores) - 1; i >= 0; i--)
@@ -1974,6 +2007,7 @@ static void test_tp_multi_wait(void)
 
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     /* test timeout of wait objects */
     multi_wait_info.result = 0;
@@ -1982,12 +2016,14 @@ static void test_tp_multi_wait(void)
         when.QuadPart = (ULONGLONG)50 * -10000;
         pTpSetWait(waits[i], semaphores[i], &when);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     for (i = 0; i < ARRAY_SIZE(semaphores); i++)
     {
         result = WaitForSingleObject(semaphore, 2000);
         ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     ok(multi_wait_info.result >> 16, "expected multi_wait_info.result >> 16 != 0\n");
 
@@ -1996,6 +2032,7 @@ static void test_tp_multi_wait(void)
     {
         pTpSetWait(waits[i], semaphores[i], NULL);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     Sleep(50);
 
@@ -2004,6 +2041,7 @@ static void test_tp_multi_wait(void)
         pTpReleaseWait(waits[i]);
         NtClose(semaphores[i]);
     }
+    printf("test_tp_multi_wait %lu\n", __LINE__);
 
     pTpReleasePool(pool);
     CloseHandle(semaphore);
@@ -2039,11 +2077,7 @@ static DWORD WINAPI io_wait_thread(void *arg)
 static void test_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-#ifdef __REACTOS__
     OVERLAPPED ovl = {0}, ovl2 = {0};
-#else
-    OVERLAPPED ovl = {}, ovl2 = {};
-#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
@@ -2263,11 +2297,7 @@ static void CALLBACK kernel32_io_cb(TP_CALLBACK_INSTANCE *instance, void *userda
 static void test_kernel32_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
-#ifdef __REACTOS__
     OVERLAPPED ovl = {0}, ovl2 = {0};
-#else
-    OVERLAPPED ovl = {}, ovl2 = {};
-#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
@@ -2398,23 +2428,38 @@ static void test_kernel32_tp_io(void)
 
 START_TEST(threadpool)
 {
+    printf("Running test_RtlQueueWorkItem...\n");
     test_RtlQueueWorkItem();
+    printf("Running test_RtlRegisterWait...\n");
     test_RtlRegisterWait();
 
     if (!init_threadpool())
         return;
 
+    printf("Running test_tp_simple...\n");
     test_tp_simple();
+    printf("Running test_tp_work...\n");
     test_tp_work();
+    printf("Running test_tp_work_scheduler...\n");
     test_tp_work_scheduler();
+    printf("Running test_tp_group_wait...\n");
     test_tp_group_wait();
+    printf("Running test_tp_group_cancel...\n");
     test_tp_group_cancel();
+    printf("Running test_tp_instance...\n");
     test_tp_instance();
+    printf("Running test_tp_disassociate...\n");
     test_tp_disassociate();
+    printf("Running test_tp_timer...\n");
     test_tp_timer();
+    printf("Running test_tp_window_length...\n");
     test_tp_window_length();
+    printf("Running test_tp_wait...\n");
     test_tp_wait();
+    printf("Running test_tp_multi_wait...\n");
     test_tp_multi_wait();
+    printf("Running test_tp_io...\n");
     test_tp_io();
+    printf("Running test_kernel32_tp_io...\n");
     test_kernel32_tp_io();
 }
