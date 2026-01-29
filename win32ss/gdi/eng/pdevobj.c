@@ -337,7 +337,6 @@ PDEVOBJ_pSurface(
     return ppdev->pSurface;
 }
 
-#ifdef NATIVE_REACTX
 BOOL
 PDEVOBJ_bEnableDirectDraw(
     _Inout_ PPDEVOBJ ppdev)
@@ -386,7 +385,6 @@ PDEVOBJ_vSwitchDirectDraw(
     TRACE("DxDdDynamicModeChange(ppdev %p, ppdev2 %p)\n", ppdev, ppdev2);
     pfnDdDynamicModeChange((HDEV)ppdev, (HDEV)ppdev2, 0);
 }
-#endif
 
 VOID
 PDEVOBJ_vEnableDisplay(
@@ -417,9 +415,7 @@ PDEVOBJ_bDisableDisplay(
     if (ppdev->flFlags & PDEV_DISABLED)
         return TRUE;
 
-#ifdef NATIVE_REACTX
     PDEVOBJ_vSuspendDirectDraw(ppdev);
-#endif
 
     TRACE("DrvAssertMode(dhpdev %p, FALSE)\n", ppdev->dhpdev);
     assertVal = ppdev->pfn.AssertMode(ppdev->dhpdev, FALSE);
@@ -604,7 +600,6 @@ PDEVOBJ_Create(
         return NULL;
     }
 
-#ifdef NATIVE_REACTX
     /* Enable DirectDraw */
     if (!PDEVOBJ_bEnableDirectDraw(ppdev))
     {
@@ -613,7 +608,6 @@ PDEVOBJ_Create(
         EngUnloadImage(pldev);
         return NULL;
     }
-#endif
 
     /* Remove some acceleration capabilities from driver */
     PDEVOBJ_vFilterDriverHooks(ppdev);
@@ -698,10 +692,8 @@ PDEVOBJ_bDynamicModeChange(
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
     ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
 
-#ifdef NATIVE_REACTX
     /* Switch DirectDraw mode */
     PDEVOBJ_vSwitchDirectDraw(ppdev, ppdev2);
-#endif
 
     return TRUE;
 }
@@ -732,10 +724,8 @@ PDEVOBJ_bSwitchMode(
     if (!PDEVOBJ_bDisableDisplay(ppdev))
     {
         DPRINT1("PDEVOBJ_bDisableDisplay() failed\n");
-#ifdef NATIVE_REACTX
         /* Resume DirectDraw in case of failure */
         PDEVOBJ_vResumeDirectDraw(ppdev);
-#endif
         goto leave;
     }
 
@@ -756,11 +746,9 @@ PDEVOBJ_bSwitchMode(
         goto leave2;
     }
 
-#ifdef NATIVE_REACTX
     /* 4. Temporarily suspend DirectDraw for mode change */
     PDEVOBJ_vSuspendDirectDraw(ppdev);
     PDEVOBJ_vSuspendDirectDraw(ppdevTmp);
-#endif
 
     /* 5. Switch the PDEVs */
     if (!PDEVOBJ_bDynamicModeChange(ppdev, ppdevTmp))
@@ -770,20 +758,16 @@ PDEVOBJ_bSwitchMode(
         goto leave2;
     }
 
-#ifdef NATIVE_REACTX
     /* 6. Resume DirectDraw */
     PDEVOBJ_vResumeDirectDraw(ppdev);
     PDEVOBJ_vResumeDirectDraw(ppdevTmp);
-#endif
 
     /* Release temp PDEV */
     PDEVOBJ_vRelease(ppdevTmp);
 
-#ifdef NATIVE_REACTX
     /* Re-initialize DirectDraw data */
     ppdev->pEDDgpl->hDev = (HDEV)ppdev;
     ppdev->pEDDgpl->dhpdev = ppdev->dhpdev;
-#endif
 
     /* Update primary display capabilities */
     if (ppdev == gpmdev->ppdevGlobal)
