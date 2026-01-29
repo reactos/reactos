@@ -6210,7 +6210,7 @@ FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontO
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (s_FontLookupCacheCount >= FONT_LOOKUP_CACHE_SIZE) // Too many cache?
+    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cache?
     {
         // Remove tail one
         PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
