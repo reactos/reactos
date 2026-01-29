@@ -325,6 +325,28 @@ FontLink_CleanupCache(VOID)
     g_nFontLinkCacheCount = 0;
 }
 
+typedef struct _FONT_LOOKUP_CACHE
+{
+    LIST_ENTRY ListEntry;
+    LOGFONTW LogFont;
+    PSHARED_FACE SharedFace;
+    FONTOBJ *pFontObj;
+} FONT_LOOKUP_CACHE, *PFONT_LOOKUP_CACHE;
+
+static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_CACHE
+#define FONT_LOOKUP_CACHE_SIZE 64
+static ULONG s_FontLookupCacheCount = 0;
+
+static void SharedFace_AddRef(PSHARED_FACE Ptr);
+static void SharedFace_Release(PSHARED_FACE Ptr);
+
+static void
+FontLookUp_Destroy(PFONT_LOOKUP_CACHE pCache)
+{
+    SharedFace_Release(pCache->SharedFace);
+    ExFreePoolWithTag(pCache, TAG_FONT);
+}
+
 /* The ranges of the surrogate pairs */
 #define HIGH_SURROGATE_MIN 0xD800U
 #define HIGH_SURROGATE_MAX 0xDBFFU
@@ -496,119 +518,6 @@ static __inline VOID
 FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
                      const LOGFONTW *LogFont,
                      const PLIST_ENTRY Head);
-
-static BOOL
-MatchFontName(PSHARED_FACE SharedFace, PUNICODE_STRING Name1, FT_UShort NameID, FT_UShort LangID);
-
-typedef struct _FONT_LOOKUP_CACHE
-{
-    LIST_ENTRY ListEntry;
-    LOGFONTW LogFont;
-    PSHARED_FACE SharedFace;
-    FONTOBJ *pFontObj;
-} FONT_LOOKUP_CACHE, *PFONT_LOOKUP_CACHE;
-
-static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_CACHE
-#define FONT_LOOKUP_CACHE_SIZE 64
-static ULONG s_FontLookupCacheCount = 0;
-
-static void SharedFace_AddRef(PSHARED_FACE Ptr);
-static void SharedFace_Release(PSHARED_FACE Ptr);
-
-static void
-FontLookUp_Destroy(PFONT_LOOKUP_CACHE pCache)
-{
-    SharedFace_Release(pCache->SharedFace);
-    ExFreePoolWithTag(pCache, TAG_FONT);
-}
-
-static PFONT_LOOKUP_CACHE
-FontLookUp_Lookup(const LOGFONTW *pLogFont)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    PLIST_ENTRY Entry, pHead = &s_FontLookupCacheList;
-    for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
-    {
-        PFONT_LOOKUP_CACHE pEntry = CONTAINING_RECORD(Entry, FONT_LOOKUP_CACHE, ListEntry);
-        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
-        {
-            // Move to head
-            RemoveEntryList(&pEntry->ListEntry);
-            InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
-            return pEntry;
-        }
-    }
-    return NULL;
-}
-
-static void
-FontLookUp_Cleanup(
-    _In_ BOOL bWithLock,
-    _Inout_opt_ PSHARED_FACE SharedFace)
-{
-    if (bWithLock)
-        IntLockFreeType();
-
-    PLIST_ENTRY pHead = &s_FontLookupCacheList, pEntry;
-    PFONT_LOOKUP_CACHE pCache;
-
-    if (SharedFace)
-    {
-        for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
-        {
-            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
-            if (pCache->SharedFace == SharedFace)
-            {
-                RemoveEntryList(&pCache->ListEntry);
-                FontLookUp_Destroy(pCache);
-                --s_FontLookupCacheCount;
-            }
-        }
-    }
-    else
-    {
-        while (!IsListEmpty(pHead))
-        {
-            pEntry = RemoveHeadList(pHead);
-            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
-            FontLookUp_Destroy(pCache);
-        }
-        s_FontLookupCacheCount = 0;
-    }
-
-    if (bWithLock)
-        IntUnLockFreeType();
-}
-
-static void
-FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontObj)
-{
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    if (s_FontLookupCacheCount >= FONT_LOOKUP_CACHE_SIZE) // Too many cache?
-    {
-        // Remove tail one
-        PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
-        PFONT_LOOKUP_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, FONT_LOOKUP_CACHE, ListEntry);
-        FontLookUp_Destroy(pOldCache);
-        s_FontLookupCacheCount--;
-    }
-
-    // Add new cache
-    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_LOOKUP_CACHE), TAG_FONT);
-    if (pEntry)
-    {
-        // Populate
-        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
-        pEntry->SharedFace = SharedFace;
-        SharedFace_AddRef(SharedFace);
-        pEntry->pFontObj = pFontObj;
-        // Add to head
-        InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
-        s_FontLookupCacheCount++;
-    }
-}
 
 PSHARED_FACE IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj);
 
@@ -1098,6 +1007,45 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
     ZwClose(KeyHandle);
 
     return NT_SUCCESS(Status);
+}
+
+static void
+FontLookUp_Cleanup(
+    _In_ BOOL bWithLock,
+    _Inout_opt_ PSHARED_FACE SharedFace)
+{
+    if (bWithLock)
+        IntLockFreeType();
+
+    PLIST_ENTRY pHead = &s_FontLookupCacheList, pEntry;
+    PFONT_LOOKUP_CACHE pCache;
+
+    if (SharedFace)
+    {
+        for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
+        {
+            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
+            if (pCache->SharedFace == SharedFace)
+            {
+                RemoveEntryList(&pCache->ListEntry);
+                FontLookUp_Destroy(pCache);
+                --s_FontLookupCacheCount;
+            }
+        }
+    }
+    else
+    {
+        while (!IsListEmpty(pHead))
+        {
+            pEntry = RemoveHeadList(pHead);
+            pCache = CONTAINING_RECORD(pEntry, FONT_LOOKUP_CACHE, ListEntry);
+            FontLookUp_Destroy(pCache);
+        }
+        s_FontLookupCacheCount = 0;
+    }
+
+    if (bWithLock)
+        IntUnLockFreeType();
 }
 
 BOOL FASTCALL
@@ -6232,6 +6180,55 @@ IntPopulateTextObjAndFontGdi(
         FontGdi->RequestWeight = FW_NORMAL;
 
     TextObj->fl |= TEXTOBJECT_INIT;
+}
+
+static PFONT_LOOKUP_CACHE
+FontLookUp_Lookup(const LOGFONTW *pLogFont)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    PLIST_ENTRY Entry, pHead = &s_FontLookupCacheList;
+    for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
+    {
+        PFONT_LOOKUP_CACHE pEntry = CONTAINING_RECORD(Entry, FONT_LOOKUP_CACHE, ListEntry);
+        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
+        {
+            // Move to head
+            RemoveEntryList(&pEntry->ListEntry);
+            InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
+            return pEntry;
+        }
+    }
+    return NULL;
+}
+
+static void
+FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontObj)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    if (s_FontLookupCacheCount >= FONT_LOOKUP_CACHE_SIZE) // Too many cache?
+    {
+        // Remove tail one
+        PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
+        PFONT_LOOKUP_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, FONT_LOOKUP_CACHE, ListEntry);
+        FontLookUp_Destroy(pOldCache);
+        s_FontLookupCacheCount--;
+    }
+
+    // Add new cache
+    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_LOOKUP_CACHE), TAG_FONT);
+    if (pEntry)
+    {
+        // Populate
+        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
+        pEntry->SharedFace = SharedFace;
+        SharedFace_AddRef(SharedFace);
+        pEntry->pFontObj = pFontObj;
+        // Add to head
+        InsertHeadList(&s_FontLookupCacheList, &pEntry->ListEntry);
+        s_FontLookupCacheCount++;
+    }
 }
 
 PSHARED_FACE
