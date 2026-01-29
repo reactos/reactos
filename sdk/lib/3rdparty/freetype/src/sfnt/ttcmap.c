@@ -1247,7 +1247,7 @@
     if (num_segs > 200) // arial at 127 is max I have seen
     {
         FT_ERROR(("tt_cmap4_char_map_binary: "
-                  "Segments (%d) too big for '%s-%s'\n", num_segs,
+                  "Number of segments (%lu) too large for '%s-%s'\n", num_segs,
                   face->name_table.names[1].string, face->name_table.names[2].string));
         return 0;
     }
