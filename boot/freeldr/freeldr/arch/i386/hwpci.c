@@ -128,8 +128,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         TRACE("Table size: %u\n", Table->TableSize);
 
         /* Set 'Configuration Data' value */
-        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
-               2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[2]) + Table->TableSize;
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -222,9 +221,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             if (i == 0)
             {
                 /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors) +
-                       sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
+                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
                        sizeof(PCI_REGISTRY_INFO);
                 PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
@@ -250,8 +247,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             else
             {
                 /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors);
+                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
                 PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {

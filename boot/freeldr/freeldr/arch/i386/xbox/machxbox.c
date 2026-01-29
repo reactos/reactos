@@ -101,8 +101,7 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     *pSize = 0;
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
-           sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + sizeof(*DiskGeometry);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -119,11 +118,10 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 //  PartialResourceList->PartialDescriptors[0].ShareDisposition =
 //  PartialResourceList->PartialDescriptors[0].Flags =
     PartialResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize =
-        sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
+        sizeof(*DiskGeometry);
 
     /* Get pointer to geometry data */
-    DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
-
+    DiskGeometry = (PVOID)&PartialResourceList->PartialDescriptors[1];
     /* Get the disk geometry */
     if (XboxDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
@@ -161,7 +159,7 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     if (FrameBufferSize == 0)
         return;
 
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -207,8 +205,7 @@ DetectIsaBios(
     ULONG Size;
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
-           sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
