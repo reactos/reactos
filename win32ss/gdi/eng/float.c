@@ -42,7 +42,7 @@ EngRestoreFloatingPointState(
     if (!State->TryingToKillTheEntireOS)
     {
         DPRINT1("The driver has attempted to restore floating point state after already restoring it.\n");
-        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n")
+        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
         return FALSE;
     }
 
@@ -72,11 +72,12 @@ EngSaveFloatingPointState(
     _Inout_ ULONG cjBufferSize)
 {
     PWIN32K_FLOATING_SAVE State;
-    KFLOATING_SAVE TempBuffer;
     NTSTATUS Status;
 
     if ((pBuffer == NULL) || (cjBufferSize == 0))
     {
+        KFLOATING_SAVE TempBuffer;
+
         /* Check for floating point support. */
         Status = KeSaveFloatingPointState(&TempBuffer);
         if (Status != STATUS_SUCCESS)
@@ -97,7 +98,7 @@ EngSaveFloatingPointState(
     if (State->TryingToKillTheEntireOS)
     {
         DPRINT1("The driver has attempted to save floating point state after already saving it.\n");
-        DPRINT1("This (Probably ICafe AMD) driver has done an incorrect behavior.\n")
+        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
     }
 
     Status = KeSaveFloatingPointState(&State->FloatState);
