@@ -23,10 +23,6 @@
 
 #include <k32.h>
 
-#define NDEBUG
-#include <debug.h>
-
-
 /*************************************************************************
  *           FoldStringA    (KERNEL32.@)
  *

@@ -9,9 +9,6 @@
 
 #include <k32.h>
 
-#define NDEBUG
-#include <debug.h>
-
 /* Forward declarations (may be missing from headers depending on SDK level) */
 _Success_(return > 0)
 DWORD

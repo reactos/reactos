@@ -360,8 +360,8 @@ static const NLS_FORMAT_NODE *NLS_GetFormats(LCID lcid, DWORD dwFlags)
  */
 DWORD NLS_GetAnsiCodePage(LCID lcid, DWORD dwFlags)
 {
-  const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
-  return node ? node->dwCodePage : 0;
+    const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
+    return node ? node->dwCodePage : 0;
 }
 
 /**************************************************************************
