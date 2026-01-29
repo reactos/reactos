@@ -138,6 +138,8 @@ BOOL WINAPI IContextMenu_Invoke(
 BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
+HRESULT WINAPI SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
+
 /****************************************************************************
  * SHChangeNotifyRegister API
  */

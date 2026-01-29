@@ -11,6 +11,7 @@ list(APPEND SOURCE
     CFontCache.cpp
     CFontExt.cpp
     CFontFolderViewCB.cpp
+    CFontForegroundMenu.cpp
     fontext.cpp
     fontpidl.cpp
     precomp.h)
