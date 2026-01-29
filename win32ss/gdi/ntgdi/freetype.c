@@ -6181,6 +6181,23 @@ IntPopulateTextObjAndFontGdi(
     TextObj->fl |= TEXTOBJECT_INIT;
 }
 
+static void
+IntPopulateFontGdi(FONTOBJ *pFontObj, const LOGFONTW *pLogFont)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    PFONTGDI FontGdi = ObjToGDI(pFontObj, FONT);
+    IntFontType(FontGdi);
+    FontGdi->flType = pFontObj->flFontType;
+    FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
+    FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+    FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
+    if (pLogFont->lfWeight != FW_DONTCARE)
+        FontGdi->RequestWeight = pLogFont->lfWeight;
+    else
+        FontGdi->RequestWeight = FW_NORMAL;
+}
+
 static PFONT_LOOKUP_CACHE
 FontLookUp_Lookup(const LOGFONTW *pLogFont)
 {
@@ -6274,6 +6291,8 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
 
     if (TextObj)
         IntPopulateTextObjAndFontGdi(TextObj, pFontObj, pLogFont, &SubstitutedLogFont);
+    else
+        IntPopulateFontGdi(pFontObj, pLogFont);
 
     if (!pLookup)
         FontLookUp_Add(pLogFont, pFontGDI->SharedFace, pFontObj);
