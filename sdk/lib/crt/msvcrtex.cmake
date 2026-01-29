@@ -90,8 +90,11 @@ endif()
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
 add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 
-add_library(msvcrtex OBJECT ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
+add_library(msvcrtex STATIC ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
+
+# msvcrtex depends on msvcrt and kernel32
+target_link_libraries(msvcrtex INTERFACE libmsvcrt libkernel32)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
@@ -105,7 +108,7 @@ set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 if(NOT MSVC)
-    target_link_libraries(msvcrtex oldnames)
+    target_link_libraries(msvcrtex INTERFACE oldnames)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

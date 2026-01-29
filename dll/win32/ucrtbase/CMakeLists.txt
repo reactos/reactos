@@ -42,7 +42,7 @@ target_link_libraries(ucrtbase
 )
 
 # Implicitly link to vcstartup
-target_link_libraries(libucrtbase vcstartup)
+target_link_libraries(libucrtbase INTERFACE vcstartup)
 
 if(MSVC)
     target_link_libraries(ucrtbase runtmchk)

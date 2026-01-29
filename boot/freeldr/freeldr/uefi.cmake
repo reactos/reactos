@@ -140,7 +140,7 @@ target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(uefildr PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(uefildr gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)
