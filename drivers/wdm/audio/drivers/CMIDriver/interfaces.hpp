@@ -75,7 +75,11 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define UInt8	BYTE
 #define Int32   LONG
 
+#if !defined(__REACTOS__) || (!defined(__clang__) || (__clang_major__ <= 19))
 #define KSSTATE_STOP_AC3  (KSSTATE)5
+#else
+#define KSSTATE_STOP_AC3  5
+#endif
 #define KSSTATE_RUN_AC3   (KSSTATE)6
 
 // Interface ICMITopology
