@@ -13,6 +13,12 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _WIN32K_FLOATING_SAVE
+{
+    KFLOATING_SAVE FloatState;
+    BOOLEAN IsFloatingPointSaved;
+} WIN32K_FLOATING_SAVE, *PWIN32K_FLOATING_SAVE;
+
 /* FUNCTIONS *****************************************************************/
 
 #ifdef _PREFAST_
@@ -31,8 +37,18 @@ EngRestoreFloatingPointState(
     _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer)
 {
     NTSTATUS Status;
+    PWIN32K_FLOATING_SAVE State = (PWIN32K_FLOATING_SAVE)pBuffer;
 
-    Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)pBuffer);
+    if (!State->IsFloatingPointSaved)
+    {
+        DPRINT1("The driver has attempted to restore floating point state after already restoring it.\n");
+        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
+        return FALSE;
+    }
+
+    State->IsFloatingPointSaved = FALSE;
+
+    Status = KeRestoreFloatingPointState(&State->FloatState);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -55,33 +71,44 @@ EngSaveFloatingPointState(
     _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
     _Inout_ ULONG cjBufferSize)
 {
-    KFLOATING_SAVE TempBuffer;
+    PWIN32K_FLOATING_SAVE State;
     NTSTATUS Status;
 
     if ((pBuffer == NULL) || (cjBufferSize == 0))
     {
+        KFLOATING_SAVE TempBuffer;
+
         /* Check for floating point support. */
         Status = KeSaveFloatingPointState(&TempBuffer);
         if (Status != STATUS_SUCCESS)
         {
             return(0);
         }
-
         KeRestoreFloatingPointState(&TempBuffer);
-        return(sizeof(KFLOATING_SAVE));
+        return sizeof(WIN32K_FLOATING_SAVE);
     }
 
-    if (cjBufferSize < sizeof(KFLOATING_SAVE))
+    if (cjBufferSize < sizeof(WIN32K_FLOATING_SAVE))
     {
         return(0);
     }
 
-    Status = KeSaveFloatingPointState((PKFLOATING_SAVE)pBuffer);
+    /* Per MSDN, "This buffer must be zero-initialized, and must be in nonpaged memory." */
+    State = (PWIN32K_FLOATING_SAVE)pBuffer;
+
+    if (State->IsFloatingPointSaved)
+    {
+        DPRINT1("The driver has attempted to save floating point state after already saving it.\n");
+        DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
+    }
+
+    Status = KeSaveFloatingPointState(&State->FloatState);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
     }
 
+    State->IsFloatingPointSaved = TRUE;
     return TRUE;
 }
 
