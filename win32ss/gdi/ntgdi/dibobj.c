@@ -36,6 +36,25 @@ static const RGBQUAD DefLogPaletteQuads[20] =   /* Copy of Default Logical Palet
     { 0xff, 0xff, 0xff, 0x00 }
 };
 
+static
+BOOL
+DIB_ValidatePixelFormat(
+    WORD bpp,
+    DWORD compr)
+{
+    switch (bpp)
+    {
+        case 0: return ((compr != BI_JPEG) && (compr != BI_PNG));
+        case 1: return (compr == BI_RGB);
+        case 4: return ((compr == BI_RGB) || (compr == BI_RLE4));
+        case 8: return ((compr == BI_RGB) || (compr == BI_RLE8));
+        case 24: return (compr == BI_RGB);
+        case 16: return ((compr == BI_RGB) || (compr == BI_BITFIELDS));
+        case 32: return ((compr == BI_RGB) || (compr == BI_BITFIELDS));
+    }
+    return FALSE;
+}
+
 PPALETTE
 NTAPI
 CreateDIBPalette(
@@ -758,7 +777,7 @@ GreGetDIBitsInternal(
                                     &size);
     if(bitmap_type == -1)
     {
-        DPRINT1("Wrong bitmap format\n");
+        DPRINT("Wrong bitmap format\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         ScanLines = 0;
         goto done;
@@ -1294,6 +1313,24 @@ NtGdiStretchDIBitsInternal(
     /* Check if the header size is large enough */
     if ((pbmiSafe->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
         (pbmiSafe->bmiHeader.biSize > cjMaxInfo))
+    {
+        ExFreePoolWithTag(pbmiSafe, 'imBG');
+        return 0;
+    }
+
+    BOOL bIsValid = FALSE;
+    if (pbmiSafe->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        PBITMAPCOREINFO pbci = (PBITMAPCOREINFO)pbmiSafe;
+        bIsValid = DIB_ValidatePixelFormat(pbci->bmciHeader.bcBitCount, BI_RGB);
+    }
+    else if (pbmiSafe->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
+    {
+        bIsValid = DIB_ValidatePixelFormat(pbmiSafe->bmiHeader.biBitCount,
+                                           pbmiSafe->bmiHeader.biCompression);
+    }
+
+    if (!bIsValid)
     {
         ExFreePoolWithTag(pbmiSafe, 'imBG');
         return 0;
@@ -2108,6 +2145,7 @@ FASTCALL
 DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
                    LONG *height, WORD *planes, WORD *bpp, DWORD *compr, DWORD *size )
 {
+    int ret = -1;
     if (header->biSize == sizeof(BITMAPCOREHEADER))
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)header;
@@ -2117,9 +2155,9 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *bpp    = core->bcBitCount;
         *compr  = BI_RGB;
         *size   = 0;
-        return 0;
+        ret = 0;
     }
-    if (header->biSize >= sizeof(BITMAPINFOHEADER)) /* Assume BITMAPINFOHEADER */
+    else if (header->biSize >= sizeof(BITMAPINFOHEADER)) /* Assume BITMAPINFOHEADER */
     {
         *width  = header->biWidth;
         *height = header->biHeight;
@@ -2127,10 +2165,21 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *bpp    = header->biBitCount;
         *compr  = header->biCompression;
         *size   = header->biSizeImage;
-        return 1;
+        ret = 1;
     }
-    DPRINT1("(%u): unknown/wrong size for header\n", header->biSize );
-    return -1;
+    else
+    {
+        DPRINT1("(%u): unknown/wrong size for header\n", header->biSize );
+        return -1;
+    }
+
+    if (!DIB_ValidatePixelFormat(*bpp, *compr))
+    {
+        DPRINT("(%u bpp, %lu compr): invalid format\n", *bpp, *compr);
+        return -1;
+    }
+
+    return ret;
 }
 
 /***********************************************************************
