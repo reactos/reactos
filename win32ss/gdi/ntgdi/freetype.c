@@ -6186,7 +6186,7 @@ IntPopulateFontGdi(PFONTGDI FontGdi, const FONTOBJ *pFontObj, const LOGFONTW *pL
 }
 
 static PFONT_LOOKUP_CACHE
-FontLookUp_Lookup(const LOGFONTW *pLogFont)
+FontLookUp_LookUp(const LOGFONTW *pLogFont)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
@@ -6248,10 +6248,10 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
            SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
 
     FONTOBJ *pFontObj;
-    PFONT_LOOKUP_CACHE pLookup = FontLookUp_Lookup(pLogFont);
-    if (pLookup)
+    PFONT_LOOKUP_CACHE pLookUp = FontLookUp_LookUp(pLogFont);
+    if (pLookUp)
     {
-        pFontObj = pLookup->pFontObj;
+        pFontObj = pLookUp->pFontObj;
     }
     else
     {
@@ -6281,7 +6281,7 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
 
     IntPopulateFontGdi(pFontGDI, pFontObj, pLogFont);
 
-    if (!pLookup)
+    if (!pLookUp)
         FontLookUp_Add(pLogFont, pFontGDI->SharedFace, pFontObj);
 
     return pFontGDI->SharedFace;
