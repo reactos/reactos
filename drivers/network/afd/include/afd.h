@@ -43,6 +43,7 @@
 
 #define TAG_AFD_CONNECT_OPTIONS            'ocfA'
 #define TAG_AFD_DISCONNECT_OPTIONS         'odfA'
+#define TAG_AFD_SUPER_CONNECT_BUFFER       'sdfA'
 #define TAG_AFD_ACCEPT_QUEUE               'qafA'
 #define TAG_AFD_POLL_HANDLE                'hpfA'
 #define TAG_AFD_FCB                        'cffA'
@@ -88,7 +89,8 @@ typedef struct IPADDR_ENTRY {
 #define FUNCTION_ACCEPT                 4
 #define FUNCTION_DISCONNECT             5
 #define FUNCTION_CLOSE                  6
-#define MAX_FUNCTIONS                   7
+#define FUNCTION_CONNECTEX              7
+#define MAX_FUNCTIONS                   8
 
 #define IN_FLIGHT_REQUESTS              5
 
@@ -159,10 +161,10 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
+    SOCK_SHARED_INFO SharedData;
     BOOLEAN Locked, Critical, NonBlocking, OobInline, TdiReceiveClosed, SendClosed;
-    UINT State, Flags, GroupID, GroupType;
+    UINT Flags, GroupID, GroupType;
     KIRQL OldIrql;
-    UINT LockCount;
     PVOID CurrentThread;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
@@ -198,6 +200,8 @@ typedef struct _AFD_FCB {
     PVOID DisconnectOptions;
     UINT FilledDisconnectOptions;
     UINT DisconnectOptionsSize;
+    PVOID OnConnectSendBuffer;
+    UINT OnConnectSendBufferSize;
     LIST_ENTRY PendingIrpList[MAX_FUNCTIONS];
     LIST_ENTRY DatagramList;
     LIST_ENTRY PendingConnections;
@@ -216,7 +220,10 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB );
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB );
 NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-		       PIO_STACK_LOCATION IrpSp);
+                       PIO_STACK_LOCATION IrpSp);
+NTSTATUS NTAPI
+AfdStreamSocketSuperConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+		                    PIO_STACK_LOCATION IrpSp);
 NTSTATUS NTAPI
 AfdGetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	          PIO_STACK_LOCATION IrpSp);

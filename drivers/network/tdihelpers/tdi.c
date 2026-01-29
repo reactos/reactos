@@ -357,9 +357,7 @@ NTSTATUS TdiConnect(
                     ConnectionCallInfo,
                     ConnectionReturnInfo);
 
-    TdiCall(*Irp, DeviceObject, NULL, NULL);
-
-    return STATUS_PENDING;
+    return TdiCall(*Irp, DeviceObject, NULL, NULL);
 }
 
 
