@@ -1479,7 +1479,7 @@ IntVideoPortEnumerateChildren(
     VIDEO_CHILD_ENUM_INFO ChildEnumInfo;
     BOOLEAN bHaveLastMonitorID = FALSE;
     UCHAR LastMonitorID[10];
-    ULONG Unused;
+    ULONG Uid, Unused;
     UINT i;
     PDEVICE_OBJECT ChildDeviceObject;
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
@@ -1541,7 +1541,7 @@ IntVideoPortEnumerateChildren(
                      &ChildEnumInfo,
                      &ChildExtension->ChildType,
                      ChildExtension->ChildDescriptor,
-                     &ChildExtension->ChildId,
+                     &Uid,
                      &Unused);
         if (Status == VIDEO_ENUM_MORE_DEVICES)
         {
