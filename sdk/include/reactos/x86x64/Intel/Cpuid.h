@@ -1490,7 +1490,24 @@ typedef union {
     /// RDPKRU/WRPKRU instructions).
     ///
     UINT32    OSPKE            : 1;
-    UINT32    Reserved8        : 8;
+    UINT32    Reserved8        : 1;
+    ///
+    /// [Bit 6] AVX512_VBMI2.
+    ///
+    UINT32    AVX512_VBMI2     : 1;
+    UINT32    Reserved         : 3;
+    ///
+    /// [Bit 10] AVX512_VPCLMULQDQ.
+    ///
+    UINT32    AVX512_VPCLMULQDQ: 1;
+    ///
+    /// [Bit 11] AVX512_VNNI.
+    ///
+    UINT32    AVX512_VNNI      : 1;
+    ///
+    /// [Bit 12] AVX512_BITALG.
+    ///
+    UINT32    AVX512_BITALG    : 1;
     ///
     /// [Bit 13] If 1, the following MSRs are supported: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE,
     /// IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE.
@@ -1549,18 +1566,31 @@ typedef union {
     /// [Bit 3] AVX512_4FMAPS. (Intel Xeon Phi only.)
     ///
     UINT32    AVX512_4FMAPS                           : 1;
+    UINT32    Reserved                                : 4;
     ///
-    /// [Bit 14:4] Reserved.
+    /// [Bit 8] AVX512_VP2INTERSECT.
     ///
-    UINT32    Reserved4                               : 11;
+    UINT32    AVX512_VP2INTERSECT                     : 1;
+    ///
+    /// [Bit 14:9] Reserved.
+    ///
+    UINT32    Reserved4                               : 6;
     ///
     /// [Bit 15] Hybrid. If 1, the processor is identified as a hybrid part.
     ///
     UINT32    Hybrid                                  : 1;
     ///
-    /// [Bit 25:16] Reserved.
+    /// [Bit 22:16] Reserved.
     ///
-    UINT32    Reserved5                               : 10;
+    UINT32    Reserved                                : 7;
+    ///
+    /// [Bit 23] AVX512_FP16.
+    ///
+    UINT32    AVX512_FP16                             : 1;
+    ///
+    /// [Bit 25:24] Reserved.
+    ///
+    UINT32    Reserved5                               : 2;
     ///
     /// [Bit 26] Enumerates support for indirect branch restricted speculation
     /// (IBRS) and the indirect branch pre-dictor barrier (IBPB). Processors
