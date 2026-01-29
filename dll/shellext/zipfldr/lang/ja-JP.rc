@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
     IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
     IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "展開ウィザード"
     IDS_WIZ_DEST_TITLE "展開先を選んで下さい"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "'%1'という名前のファイルがフォルダ内に既に存在します。\n置き換えしますか?"
     IDS_PASSWORD_FILE_TEXT "ファイル '%1' はパスワードで保護されています。パスワードを入力下さい。"
     IDS_PASSWORD_ZIP_TEXT "この zip ファイルを展開するときに使うパスワードを指定して下さい。"
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "すべて展開(&A)..."
     IDS_HELPTEXT "フォルダ内容の展開"

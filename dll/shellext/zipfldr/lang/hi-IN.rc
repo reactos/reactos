@@ -66,6 +66,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
     IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
     IDS_UNKNOWNERROR "Unknown error 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "निष्कर्षण विज़ार्ड"
     IDS_WIZ_DEST_TITLE "एक गंतव्य चुनें"

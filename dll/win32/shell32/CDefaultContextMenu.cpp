@@ -1056,7 +1056,9 @@ CDefaultContextMenu::QueryContextMenu(
 
 HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bLink)
 {
-    HRESULT hr;
+    HRESULT hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_PASTE);
+    if (hr == S_OK)
+        return hr;
 
     CComPtr<IDataObject> pda;
     hr = OleGetClipboard(&pda);
@@ -1115,11 +1117,15 @@ CDefaultContextMenu::DoOpenOrExplore(LPCMINVOKECOMMANDINFOEX lpcmi)
 
 HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
+    HRESULT hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_LINK);
+    if (hr == S_OK)
+        return hr;
+
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
     CComPtr<IDropTarget> pDT;
-    HRESULT hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
+    hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1130,11 +1136,15 @@ HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFOEX lpcmi)
 
 HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
+    HRESULT hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_DELETE);
+    if (hr == S_OK)
+        return hr;
+
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
     CComPtr<IDropTarget> pDT;
-    HRESULT hr = CRecyclerDropTarget_CreateInstance(IID_PPV_ARG(IDropTarget, &pDT));
+    hr = CRecyclerDropTarget_CreateInstance(IID_PPV_ARG(IDropTarget, &pDT));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1177,6 +1187,10 @@ HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFOEX lpcmi)
 {
     CComPtr<IShellBrowser> psb;
     HRESULT hr;
+
+    hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_RENAME);
+    if (hr == S_OK)
+        return hr;
 
     if (!m_site || !m_cidl)
         return E_FAIL;

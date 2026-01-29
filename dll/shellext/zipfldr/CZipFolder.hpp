@@ -43,7 +43,12 @@ class CZipFolder :
     CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile = nullptr;
+    CComPtr<IDataObject> m_pDataObj;
+    HWND m_hwnd = nullptr;
 
+    HRESULT DeleteItems(CComPtr<IDataObject> pDataObj);
+    HRESULT DoDeleteItems(CComPtr<IDataObject> pDataObj);
+    HRESULT CopyZipEntry(unzFile uf, zipFile zf, unz_file_info64* info, LPCSTR nameA);
     static DWORD WINAPI s_ExtractProc(LPVOID arg);
     BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult);
     static HRESULT CALLBACK ZipFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
