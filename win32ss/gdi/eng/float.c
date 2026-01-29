@@ -16,7 +16,7 @@
 typedef struct _WIN32K_FLOATING_SAVE
 {
     KFLOATING_SAVE FloatState;
-    BOOLEAN TryingToKillTheEntireOS;
+    BOOLEAN IsFloatingPointSaved;
 } WIN32K_FLOATING_SAVE, *PWIN32K_FLOATING_SAVE;
 
 /* FUNCTIONS *****************************************************************/
@@ -39,14 +39,14 @@ EngRestoreFloatingPointState(
     NTSTATUS Status;
     PWIN32K_FLOATING_SAVE State = (PWIN32K_FLOATING_SAVE)pBuffer;
 
-    if (!State->TryingToKillTheEntireOS)
+    if (!State->IsFloatingPointSaved)
     {
         DPRINT1("The driver has attempted to restore floating point state after already restoring it.\n");
         DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
         return FALSE;
     }
 
-    State->TryingToKillTheEntireOS = FALSE;
+    State->IsFloatingPointSaved = FALSE;
 
     Status = KeRestoreFloatingPointState(&State->FloatState);
     if (!NT_SUCCESS(Status))
@@ -85,7 +85,7 @@ EngSaveFloatingPointState(
             return(0);
         }
         KeRestoreFloatingPointState(&TempBuffer);
-        return(sizeof(WIN32K_FLOATING_SAVE));
+        return sizeof(WIN32K_FLOATING_SAVE);
     }
 
     if (cjBufferSize < sizeof(WIN32K_FLOATING_SAVE))
@@ -93,9 +93,10 @@ EngSaveFloatingPointState(
         return(0);
     }
 
+    /* Per MSDN, "This buffer must be zero-initialized, and must be in nonpaged memory." */
     State = (PWIN32K_FLOATING_SAVE)pBuffer;
 
-    if (State->TryingToKillTheEntireOS)
+    if (State->IsFloatingPointSaved)
     {
         DPRINT1("The driver has attempted to save floating point state after already saving it.\n");
         DPRINT1("This (probably ICafe AMD) driver has done an incorrect behavior.\n");
@@ -107,7 +108,7 @@ EngSaveFloatingPointState(
         return FALSE;
     }
 
-    State->TryingToKillTheEntireOS = TRUE;
+    State->IsFloatingPointSaved = TRUE;
     return TRUE;
 }
 
