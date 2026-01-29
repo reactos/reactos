@@ -337,7 +337,6 @@ static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_C
 #define FONT_LOOKUP_CACHE_SIZE 64
 static ULONG s_FontLookupCacheCount = 0;
 
-static void SharedFace_AddRef(PSHARED_FACE Ptr);
 static void SharedFace_Release(PSHARED_FACE Ptr);
 
 static void
