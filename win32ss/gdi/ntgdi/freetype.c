@@ -6240,6 +6240,11 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
     ASSERT_FREETYPE_LOCK_HELD();
     ASSERT(pLogFont);
 
+    LOGFONTW LogFont = *pLogFont;
+    RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
+    RtlStringCchCopyW(LogFont.lfFaceName, _countof(LogFont.lfFaceName), pLogFont->lfFaceName);
+    pLogFont = &LogFont;
+
     /* Substitute */
     LOGFONTW SubstitutedLogFont = *pLogFont;
     SubstituteFontRecurse(&SubstitutedLogFont);
