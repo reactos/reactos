@@ -334,7 +334,7 @@ typedef struct _FONT_LOOKUP_CACHE
 } FONT_LOOKUP_CACHE, *PFONT_LOOKUP_CACHE;
 
 static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_CACHE
-#define FONT_LOOKUP_CACHE_SIZE 64
+#define MAX_FONT_LOOKUP_CACHE 64
 static ULONG s_FontLookupCacheCount = 0;
 
 static void SharedFace_Release(PSHARED_FACE Ptr);
