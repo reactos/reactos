@@ -419,9 +419,10 @@ DPRINT1("%s: <-- HwInitialize() returned SUCCESS\n", __FUNCTION__);
         Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
 
-        /* Query children, now that device is opened */
-DPRINT1("%s: VideoPortEnumerateChildren()\n"); // TODO: I'm not sure this is the correct thing to do!
-        VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
+//        /* Query children, now that device is opened */
+//DPRINT1("%s: VideoPortEnumerateChildren()\n"); // TODO: I'm not sure this is the correct thing to do!
+//        VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
+DPRINT1("%s: Do **NOT** call VideoPortEnumerateChildren() !!\n");
     }
     else
     {
