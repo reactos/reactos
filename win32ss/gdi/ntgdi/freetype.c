@@ -501,42 +501,42 @@ static BOOL
 MatchFontName(PSHARED_FACE SharedFace, PUNICODE_STRING Name1, FT_UShort NameID, FT_UShort LangID);
 
 // Define LOGFONT-to-face mapping
-typedef struct _LOGFONT2FACE_CACHE
+typedef struct _LOGFONT2FACE
 {
     LIST_ENTRY ListEntry;
     LOGFONTW LogFont;
     PSHARED_FACE SharedFace;
-} LOGFONT2FACE_CACHE, *PLOGFONT2FACE_CACHE;
+} LOGFONT2FACE, *PLOGFONT2FACE;
 
-static RTL_STATIC_LIST_HEAD(s_LogFont2FaceCacheList); // The list of LOGFONT2FACE_CACHE
-#define LOGFONT2FACE_CACHE_SIZE 64
+static RTL_STATIC_LIST_HEAD(s_LogFont2FaceCacheList); // The list of LOGFONT2FACE
+#define LOGFONT2FACE_SIZE 64
 static ULONG s_LogFont2FaceCacheCount = 0;
 
 static void SharedFace_AddRef(PSHARED_FACE Ptr);
 static void SharedFace_Release(PSHARED_FACE Ptr);
 
 static void
-LogFont2Face_Destroy(PLOGFONT2FACE_CACHE pCache)
+LogFont2Face_Destroy(PLOGFONT2FACE pCache)
 {
     SharedFace_Release(pCache->SharedFace);
     ExFreePoolWithTag(pCache, TAG_FONT);
 }
 
-static PSHARED_FACE
-GetSharedFaceFromLogFont(const LOGFONTW *pLogFont)
+static PLOGFONT2FACE
+LogFont2Face_Lookup(const LOGFONTW *pLogFont)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
     PLIST_ENTRY Entry, pHead = &s_LogFont2FaceCacheList;
     for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
     {
-        PLOGFONT2FACE_CACHE pEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE_CACHE, ListEntry);
+        PLOGFONT2FACE pEntry = CONTAINING_RECORD(Entry, LOGFONT2FACE, ListEntry);
         if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
         {
             // Move to head
             RemoveEntryList(&pEntry->ListEntry);
             InsertHeadList(&s_LogFont2FaceCacheList, &pEntry->ListEntry);
-            return pEntry->SharedFace;
+            return pEntry;
         }
     }
     return NULL;
@@ -551,13 +551,13 @@ LogFont2Face_Cleanup(
         IntLockFreeType();
 
     PLIST_ENTRY pHead = &s_LogFont2FaceCacheList, pEntry;
-    PLOGFONT2FACE_CACHE pCache;
+    PLOGFONT2FACE pCache;
 
     if (SharedFace)
     {
         for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
         {
-            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE_CACHE, ListEntry);
+            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE, ListEntry);
             if (pCache->SharedFace == SharedFace)
             {
                 RemoveEntryList(&pCache->ListEntry);
@@ -571,7 +571,7 @@ LogFont2Face_Cleanup(
         while (!IsListEmpty(pHead))
         {
             pEntry = RemoveHeadList(pHead);
-            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE_CACHE, ListEntry);
+            pCache = CONTAINING_RECORD(pEntry, LOGFONT2FACE, ListEntry);
             LogFont2Face_Destroy(pCache);
         }
         s_LogFont2FaceCacheCount = 0;
@@ -586,17 +586,17 @@ LogFont2Face_Add(LPLOGFONTW LogFont, PSHARED_FACE SharedFace)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_CACHE_SIZE) // Too many cache?
+    if (s_LogFont2FaceCacheCount >= LOGFONT2FACE_SIZE) // Too many cache?
     {
         // Remove tail one
         PLIST_ENTRY OldestEntry = RemoveTailList(&s_LogFont2FaceCacheList);
-        PLOGFONT2FACE_CACHE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE_CACHE, ListEntry);
+        PLOGFONT2FACE pOldCache = CONTAINING_RECORD(OldestEntry, LOGFONT2FACE, ListEntry);
         LogFont2Face_Destroy(pOldCache);
         s_LogFont2FaceCacheCount--;
     }
 
     // Add new cache
-    PLOGFONT2FACE_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE_CACHE), TAG_FONT);
+    PLOGFONT2FACE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(LOGFONT2FACE), TAG_FONT);
     if (pEntry)
     {
         // Populate
@@ -626,9 +626,12 @@ FontLink_PrepareFontInfo(
         return TRUE;
 
     // Check cache
-    pFontLink->SharedFace = GetSharedFaceFromLogFont(&pFontLink->LogFont);
-    if (pFontLink->SharedFace)
+    PLOGFONT2FACE pLogFont2FaceEntry = LogFont2Face_Lookup(&pFontLink->LogFont);
+    if (pLogFont2FaceEntry)
+    {
+        pFontLink->SharedFace = pLogFont2FaceEntry->SharedFace;
         return TRUE;
+    }
 
     MatchPenalty = MAXULONG;
     pFontObj = NULL;
