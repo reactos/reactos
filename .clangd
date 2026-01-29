@@ -1,0 +1,22 @@
+If:
+  PathMatch: [.*\.rc, .*\.asm, .*\_stubs.*, .*\_impalias.*, .*\cmake_pch.*, output-*-*/]
+Index:
+  Background: Skip
+
+CompileFlags:
+  Add: [-ferror-limit=0]
+
+Index:
+  StandardLibrary: Yes
+
+Hover:
+  ShowAKA: Yes
+
+Completion:
+  HeaderInsertion: Never
+
+Style:
+  AngledHeaders: [sdk/*/\.*]
+
+Documentation:
+  CommentFormat: Doxygen
