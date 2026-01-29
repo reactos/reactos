@@ -23,6 +23,8 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(MEMORY);
 
+#define MM_RESERVED_PAGES MM_SIZE_TO_PAGES(0x200000)
+
 PVOID    PageLookupTableAddress = NULL;
 PFN_NUMBER TotalPagesInLookupTable = 0;
 PFN_NUMBER FreePagesInLookupTable = 0;
@@ -622,7 +624,7 @@ PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount
     {
         TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
         /* Allocate "low" pages */
-        for (Index=1; Index < LastFreePageHint; Index++)
+        for (Index=1+MM_RESERVED_PAGES; Index < LastFreePageHint; Index++)
         {
             if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
             {
