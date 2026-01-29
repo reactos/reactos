@@ -28,6 +28,14 @@
 
 #define NDEBUG
 #include <debug.h>
+#undef ERR_
+#undef WARN_
+#undef INFO_
+#undef TRACE_
+#define TRACE_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define INFO_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define WARN_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define ERR_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -184,6 +192,8 @@ IntVideoPortCreateAdapterDeviceObject(
     WCHAR DeviceBuffer[20];
     UNICODE_STRING DeviceName;
     PDEVICE_OBJECT DeviceObject_;
+
+DPRINT1("%s(dro 0x%p, ext 0x%p, PDO 0x%p)\n", __FUNCTION__, DriverObject, DriverExtension, PhysicalDeviceObject);
 
     if (DeviceObject == NULL)
         DeviceObject = &DeviceObject_;
@@ -435,6 +445,8 @@ IntVideoPortFindAdapter(
     UCHAR Again = FALSE;
     BOOLEAN VgaResourcesReleased = FALSE;
 
+DPRINT1("%s(0x%p, 0x%p, 0x%p, %s)\n", __FUNCTION__, DriverObject, DriverExtension, DeviceObject, LegacyDetection ? "Legacy" : "Non-legacy");
+
     if (LegacyDetection)
     {
         ASSERT(DeviceObject == NULL);
@@ -541,13 +553,14 @@ IntVideoPortFindAdapter(
 
             /* FIXME: Need to figure out what string to pass as param 3. */
             // FIXME: Handle the 'Again' parameter for legacy detection.
+DPRINT1("%s: Legacy: Calling HwFindAdapter() -->\n", __FUNCTION__);
             vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                          &DeviceExtension->MiniPortDeviceExtension,
                          DriverExtension->HwContext,
                          NULL,
                          &ConfigInfo,
                          &Again);
-
+DPRINT1("%s: <-- Legacy HwFindAdapter() returned\n", __FUNCTION__);
             if (vpStatus == ERROR_DEV_NOT_EXIST)
                 continue;
             else
@@ -557,12 +570,14 @@ IntVideoPortFindAdapter(
     else
     {
         /* FIXME: Need to figure out what string to pass as param 3. */
+DPRINT1("%s: Non-legacy: Calling HwFindAdapter()\n", __FUNCTION__);
         vpStatus = DriverExtension->InitializationData.HwFindAdapter(
                      &DeviceExtension->MiniPortDeviceExtension,
                      DriverExtension->HwContext,
                      NULL,
                      &ConfigInfo,
                      &Again);
+DPRINT1("%s: <-- Non-legacy HwFindAdapter() returned\n", __FUNCTION__);
     }
 
     if (vpStatus != NO_ERROR)
@@ -1473,6 +1488,8 @@ IntVideoPortEnumerateChildren(
     PDEVICE_OBJECT ChildDeviceObject;
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
 
+DPRINT1("%s(0x%p)\n", __FUNCTION__, DeviceObject);
+
     INFO_(VIDEOPRT, "Starting child device probe\n");
     DeviceExtension = DeviceObject->DeviceExtension;
     if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
@@ -1525,6 +1542,7 @@ IntVideoPortEnumerateChildren(
         ChildEnumInfo.ChildIndex = ChildExtension->ChildId;
 
         INFO_(VIDEOPRT, "Probing child: %d\n", ChildEnumInfo.ChildIndex);
+DPRINT1("%s: Calling HwGetVideoChildDescriptor() -->\n", __FUNCTION__);
         Status = DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor(
                      DeviceExtension->MiniPortDeviceExtension,
                      &ChildEnumInfo,
@@ -1532,6 +1550,7 @@ IntVideoPortEnumerateChildren(
                      ChildExtension->ChildDescriptor,
                      &Uid,
                      &Unused);
+DPRINT1("%s: <-- HwGetVideoChildDescriptor() returned 0x%08lx\n", __FUNCTION__, Status);
         if (Status == VIDEO_ENUM_MORE_DEVICES)
         {
             if (ChildExtension->ChildType == Monitor)

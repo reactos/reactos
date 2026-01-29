@@ -27,6 +27,14 @@
 
 #define NDEBUG
 #include <debug.h>
+#undef ERR_
+#undef WARN_
+#undef INFO_
+#undef TRACE_
+#define TRACE_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define INFO_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define WARN_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
+#define ERR_(ch, fmt, ...) DPRINT1(fmt, ##__VA_ARGS__)
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -342,6 +350,8 @@ IntVideoPortAddDevice(
     /* Get the initialization data we saved in VideoPortInitialize. */
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 
+DPRINT1("%s(0x%p, PDO 0x%p, Ext 0x%p)\n", __FUNCTION__, DriverObject, PhysicalDeviceObject, DriverExtension);
+
     /* Create adapter device object. */
     Status = IntVideoPortCreateAdapterDeviceObject(DriverObject,
                                                    DriverExtension,
@@ -376,6 +386,7 @@ IntVideoPortDispatchOpen(
 
     TRACE_(VIDEOPRT, "IntVideoPortDispatchOpen\n");
 
+DPRINT1("%s(0x%p) - CsrProcess 0x%p\n", DeviceObject, CsrProcess);
     if (!CsrProcess)
     {
         /* We know the first open call is from the CSRSS process.
@@ -400,18 +411,22 @@ IntVideoPortDispatchOpen(
 
     // FIXME: (Re-)initialize INBV only if DeviceObject doesn't belong to a mirror driver.
     IntVideoPortInbvInitialize();
-
+DPRINT1("%s: Calling HwInitialize() -->\n", __FUNCTION__);
     if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
     {
+DPRINT1("%s: <-- HwInitialize() returned SUCCESS\n", __FUNCTION__);
         Status = STATUS_SUCCESS;
         InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
 
         /* Query children, now that device is opened */
+DPRINT1("%s: VideoPortEnumerateChildren()\n"); // TODO: I'm not sure this is the correct thing to do!
         VideoPortEnumerateChildren(DeviceExtension->MiniPortDeviceExtension, NULL);
     }
     else
     {
+DPRINT1("%s: <-- HwInitialize() returned FAILURE\n", __FUNCTION__);
         Status = STATUS_UNSUCCESSFUL;
+        // IoInvalidateDeviceState(DeviceExtension->PhysicalDeviceObject);
     }
 
     Irp->IoStatus.Status = Status;
@@ -907,6 +922,8 @@ IntVideoPortPnPStartDevice(
     DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+DPRINT1("%s(0x%p, driver 0x%p)\n", __FUNCTION__, DeviceObject, DriverObject);
+
     /* Store some resources in the DeviceExtension */
     AllocatedResources = Stack->Parameters.StartDevice.AllocatedResources;
     if (AllocatedResources != NULL)
@@ -994,6 +1011,8 @@ IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     ULONG i;
     PLIST_ENTRY CurrentEntry;
     NTSTATUS Status;
+
+DPRINT1("%s(0x%p)\n", __FUNCTION__, DeviceObject);
 
     if (InterlockedCompareExchange((PLONG)&DeviceExtension->DeviceOpened, 0, 0) == 0)
     {
@@ -1202,6 +1221,8 @@ IntVideoPortDispatchPnp(
     IN PIRP Irp)
 {
     PVIDEO_PORT_COMMON_EXTENSION CommonExtension = DeviceObject->DeviceExtension;
+
+DPRINT1("%s(0x%p, %s)\n", __FUNCTION__, DeviceObject, CommonExtension->Fdo ? "FDO" : "PDO");
 
     if (CommonExtension->Fdo)
         return IntVideoPortDispatchFdoPnp(DeviceObject, Irp);
