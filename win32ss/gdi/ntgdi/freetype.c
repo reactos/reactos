@@ -6134,29 +6134,27 @@ MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
 }
 
 static void
-IntPopulateTextObjAndFontGdi(
+IntPopulateTextObj(
     PTEXTOBJ TextObj,
+    PFONTGDI FontGdi,
     FONTOBJ *pFontObj,
     const LOGFONTW *pLogFont,
     PLOGFONTW SubstitutedLogFont)
 {
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    PFONTGDI FontGdi = ObjToGDI(pFontObj, FONT);
-    PSHARED_FACE SharedFace = FontGdi->SharedFace;
-
     ASSERT_FREETYPE_LOCK_HELD();
 
     TextObj->Font = pFontObj;
     TextObj->TextFace[0] = UNICODE_NULL;
 
+    PSHARED_FACE SharedFace = FontGdi->SharedFace;
     if (MatchFontNames(SharedFace, SubstitutedLogFont->lfFaceName))
     {
         RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
     }
     else
     {
-        Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+        UNICODE_STRING Name;
+        NTSTATUS Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
         if (NT_SUCCESS(Status))
         {
             /* truncated copy */
@@ -6168,25 +6166,14 @@ IntPopulateTextObjAndFontGdi(
     // Need hdev, when freetype is loaded need to create DEVOBJ for
     // Consumer and Producer.
     TextObj->Font->iUniq = 1; // Now it can be cached.
-    IntFontType(FontGdi);
-    FontGdi->flType = TextObj->Font->flFontType;
-    FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
-    FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
-    FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
-    if (pLogFont->lfWeight != FW_DONTCARE)
-        FontGdi->RequestWeight = pLogFont->lfWeight;
-    else
-        FontGdi->RequestWeight = FW_NORMAL;
-
     TextObj->fl |= TEXTOBJECT_INIT;
 }
 
 static void
-IntPopulateFontGdi(FONTOBJ *pFontObj, const LOGFONTW *pLogFont)
+IntPopulateFontGdi(PFONTGDI FontGdi, const FONTOBJ *pFontObj, const LOGFONTW *pLogFont)
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    PFONTGDI FontGdi = ObjToGDI(pFontObj, FONT);
     IntFontType(FontGdi);
     FontGdi->flType = pFontObj->flFontType;
     FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
@@ -6290,9 +6277,9 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
     PFONTGDI pFontGDI = ObjToGDI(pFontObj, FONT);
 
     if (TextObj)
-        IntPopulateTextObjAndFontGdi(TextObj, pFontObj, pLogFont, &SubstitutedLogFont);
-    else
-        IntPopulateFontGdi(pFontObj, pLogFont);
+        IntPopulateTextObj(TextObj, pFontGDI, pFontObj, pLogFont, &SubstitutedLogFont);
+
+    IntPopulateFontGdi(pFontGDI, pFontObj, pLogFont);
 
     if (!pLookup)
         FontLookUp_Add(pLogFont, pFontGDI->SharedFace, pFontObj);
