@@ -354,7 +354,7 @@ ffs(int mask)
 {
     long index;
     if (_BitScanForward(&index, mask) == 0) return 0;
-    return index;
+    return index + 1;
 }
 #else
 #define ffs __builtin_ffs
