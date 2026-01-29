@@ -157,14 +157,14 @@ struct DirEntry
   ULARGE_INTEGER size;
 };
 
-HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsName, ILockBytes **pLockBytes) DECLSPEC_HIDDEN;
+HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsName, ILockBytes **pLockBytes);
 
 /*************************************************************************
  * Ole Convert support
  */
 
-HRESULT STORAGE_CreateOleStream(IStorage*, DWORD) DECLSPEC_HIDDEN;
-HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName) DECLSPEC_HIDDEN;
+HRESULT STORAGE_CreateOleStream(IStorage*, DWORD);
+HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName);
 
 enum swmr_mode
 {
@@ -356,8 +356,8 @@ static inline HRESULT StorageBaseImpl_UnlockTransaction(StorageBaseImpl *This, B
  * StorageBaseImpl stream list handlers
  */
 
-void StorageBaseImpl_AddStream(StorageBaseImpl * stg, StgStreamImpl * strm) DECLSPEC_HIDDEN;
-void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm) DECLSPEC_HIDDEN;
+void StorageBaseImpl_AddStream(StorageBaseImpl * stg, StgStreamImpl * strm);
+void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm);
 
 /* Number of BlockChainStream objects to cache in a StorageImpl */
 #define BLOCKCHAIN_CACHE_SIZE 4
@@ -466,7 +466,7 @@ static inline StgStreamImpl *impl_from_IStream( IStream *iface )
 StgStreamImpl* StgStreamImpl_Construct(
 		StorageBaseImpl* parentStorage,
     DWORD            grfMode,
-    DirRef           dirEntry) DECLSPEC_HIDDEN;
+    DirRef           dirEntry);
 
 
 /* Range lock constants.
@@ -555,18 +555,17 @@ StgStreamImpl* StgStreamImpl_Construct(
  * are abstractions used to read values from file buffers without having to
  * worry about bit order
  */
-void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value) DECLSPEC_HIDDEN;
-void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value) DECLSPEC_HIDDEN;
+void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value);
+void StorageUtl_WriteWord(void *buffer, ULONG offset, WORD value);
+void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value);
+void StorageUtl_WriteDWord(void *buffer, ULONG offset, DWORD value);
 void StorageUtl_ReadULargeInteger(const BYTE* buffer, ULONG offset,
- ULARGE_INTEGER* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
- const ULARGE_INTEGER *value) DECLSPEC_HIDDEN;
-void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value) DECLSPEC_HIDDEN;
+ ULARGE_INTEGER* value);
+void StorageUtl_WriteULargeInteger(void *buffer, ULONG offset, const ULARGE_INTEGER *value);
+void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value);
+void StorageUtl_WriteGUID(void *buffer, ULONG offset, const GUID* value);
 void StorageUtl_CopyDirEntryToSTATSTG(StorageBaseImpl *storage,STATSTG* destination,
- const DirEntry* source, int statFlags) DECLSPEC_HIDDEN;
+ const DirEntry* source, int statFlags);
 
 
 #endif /* __STORAGE32_H__ */
