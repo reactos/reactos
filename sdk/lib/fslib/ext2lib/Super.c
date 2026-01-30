@@ -49,8 +49,11 @@ void ext2_print_super(PEXT2_SUPER_BLOCK pExt2Sb)
     DPRINT("     Reserved Block Default UID: %u\n", pExt2Sb->s_def_resuid);
     DPRINT("     Reserved Block Default GID: %u\n", pExt2Sb->s_def_resgid);
     DPRINT("     uuid = ");
-    for (i=0; i < 16; i++)
-        DbgPrint("%x ", pExt2Sb->s_uuid[i]);
+    for (i = 0; i < 16; i++) {
+        DbgPrint("%02x", pExt2Sb->s_uuid[i]);
+        if (i == 3 || i == 5 || i == 7 || i == 9)
+            DbgPrint("-");
+    }
     DbgPrint("\n");
 
     DPRINT("     volume label name: ");
