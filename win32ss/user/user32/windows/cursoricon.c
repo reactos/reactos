@@ -371,15 +371,24 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (((const BITMAPCOREINFO*)info)->bmciHeader.bcBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb->rgbtRed == 0) && (rgb->rgbtGreen == 0) && (rgb->rgbtBlue == 0))
+        if (RGB(rgb[0].rgbtRed, rgb[0].rgbtGreen, rgb[0].rgbtBlue) ==
+            RGB(0, 0, 0))
         {
-            rgb++;
-
             /* Check if the second color is white */
-            return ((rgb->rgbtRed == 0xff) && (rgb->rgbtGreen == 0xff)
-                 && (rgb->rgbtBlue == 0xff));
+            return RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
+                RGB(0xff, 0xff, 0xff);
         }
-        else return FALSE;
+
+        /* Check if the first color is white */
+        if (RGB(rgb[0].rgbtRed, rgb[0].rgbtGreen, rgb[0].rgbtBlue) ==
+            RGB(0xff, 0xff, 0xff))
+        {
+            /* Check if the second color is black */
+            return (RGB(rgb[1].rgbtRed, rgb[1].rgbtGreen, rgb[1].rgbtBlue) ==
+                RGB(0, 0, 0));
+        }
+
+        return FALSE;
     }
     else  /* assume BITMAPINFOHEADER */
     {
@@ -388,16 +397,24 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
         if (info->bmiHeader.biBitCount != 1) return FALSE;
 
         /* Check if the first color is black */
-        if ((rgb->rgbRed == 0) && (rgb->rgbGreen == 0) &&
-            (rgb->rgbBlue == 0) && (rgb->rgbReserved == 0))
+        if (RGBA(rgb[0].rgbRed, rgb[0].rgbGreen, rgb[0].rgbBlue,
+            rgb[0].rgbReserved) == RGBA(0, 0, 0, 0))
         {
-            rgb++;
-
             /* Check if the second color is white */
-            return ((rgb->rgbRed == 0xff) && (rgb->rgbGreen == 0xff)
-                 && (rgb->rgbBlue == 0xff) && (rgb->rgbReserved == 0));
+            return RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
+                rgb[1].rgbReserved) == RGBA(0xff, 0xff, 0xff, 0);
         }
-        else return FALSE;
+
+        /* Check if the first color is white */
+        if (RGBA(rgb[0].rgbRed, rgb[0].rgbGreen, rgb[0].rgbBlue,
+            rgb[0].rgbReserved) == RGBA(0xff, 0xff, 0xff, 0))
+        {
+            /* Check if the second color is black */
+            return (RGBA(rgb[1].rgbRed, rgb[1].rgbGreen, rgb[1].rgbBlue,
+                rgb[1].rgbReserved) == RGBA(0, 0, 0, 0));
+        }
+
+        return FALSE;
     }
 }
 
