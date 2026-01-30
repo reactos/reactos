@@ -1186,7 +1186,7 @@ VideoPortVerifyAccessRanges(
     else
     {
         /* Track VGA access ranges on success for fallback handling */
-        if (DeviceExtension->IsVgaDriver)
+        if (DeviceExtension->IsVgaDriver && AccessRanges != VgaRanges)
         {
             KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
             if (VgaRanges)
