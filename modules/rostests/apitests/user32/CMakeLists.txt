@@ -71,7 +71,8 @@ list(APPEND PCH_SKIP_SOURCE
 add_executable(user32_apitest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
-    user32_apitest.rc)
+    user32_apitest.rc
+    user32_apitest_1bpp.rc)
 
 target_link_libraries(user32_apitest wine ${PSEH_LIB})
 set_module_type(user32_apitest win32cui)
