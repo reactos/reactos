@@ -877,6 +877,16 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
         return FALSE;
     }
 
+    /* Create "DefaultIcon" key */
+    HKEY hDefIconKey;
+    if (RegCreateKeyExW(hKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE, NULL,
+                        &hDefIconKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetString(hDefIconKey, NULL, pApp->wszFilename, REG_EXPAND_SZ);
+        RegCloseKey(hDefIconKey);
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+    }
+
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
     /* FIXME: Windows does not actually copy the verb keys */
@@ -1183,11 +1193,7 @@ VOID COpenWithDialog::Accept()
     {
         /* Set programm as default handler */
         if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED && (m_InFlags & OAIF_REGISTER_EXT))
-        {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
-            // FIXME: Update DefaultIcon registry
-            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
-        }
 
         /* Execute program */
         if (m_InFlags & OAIF_EXEC)
