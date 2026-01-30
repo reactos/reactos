@@ -998,7 +998,7 @@ IntVideoPortQueryBusRelations(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (InterlockedCompareExchange((PLONG)&DeviceExtension->DeviceOpened, 0, 0) == 0)
     {
         /* Device not opened. Don't enumerate children yet */
-        WARN_(VIDEOPRT, "Skipping child enumeration because device is not opened");
+        WARN_(VIDEOPRT, "Skipping child enumeration because device is not opened\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     /* Query children of the device. */
