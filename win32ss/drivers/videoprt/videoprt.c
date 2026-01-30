@@ -248,6 +248,13 @@ IntVideoPortCreateAdapterDeviceObject(
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
+    /* 
+     * Miniport owns this blob; many miniports assume it's initially zeroed.
+     * Removing this crashes the NVIDIA gpu driver
+     */
+    RtlZeroMemory(DeviceExtension->MiniPortDeviceExtension,
+                  DriverExtension->InitializationData.HwDeviceExtensionSize);
+
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
                                    DeviceExtension->AdapterNumber,

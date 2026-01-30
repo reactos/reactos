@@ -885,7 +885,7 @@ VideoPortGetAccessRanges(
         return ERROR_NOT_ENOUGH_MEMORY;
 
     /* Return the slot number if the caller wants it */
-    if (Slot != NULL) *Slot = DeviceExtension->SystemIoBusNumber;
+    if (Slot != NULL) *Slot = DeviceExtension->SystemIoSlotNumber;
 
     FullList = AllocatedResources->List;
     ASSERT(AllocatedResources->Count == 1);
