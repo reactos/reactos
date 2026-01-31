@@ -2443,7 +2443,7 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
  *
  */
 HRESULT WINAPI SHCreateStdEnumFmtEtc(
-    UINT cFormats,
+	UINT cFormats,
 	const FORMATETC *lpFormats,
 	LPENUMFORMATETC *ppenumFormatetc)
 {
@@ -2451,9 +2451,9 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 	HRESULT hRes;
 	TRACE("cf=%d fe=%p pef=%p\n", cFormats, lpFormats, ppenumFormatetc);
 
-    hRes = IEnumFORMATETC_Constructor(cFormats, lpFormats, &pef);
-    if (FAILED(hRes))
-        return hRes;
+	hRes = IEnumFORMATETC_Constructor(cFormats, lpFormats, &pef);
+	if (FAILED(hRes))
+	    return hRes;
 
 	IEnumFORMATETC_AddRef(pef);
 	hRes = IEnumFORMATETC_QueryInterface(pef, &IID_IEnumFORMATETC, (LPVOID*)ppenumFormatetc);
