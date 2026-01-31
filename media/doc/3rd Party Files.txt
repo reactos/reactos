@@ -177,7 +177,7 @@ URL: https://code.google.com/archive/p/cmediadrivers/
 Title: PCI hardware IDs database
 Path: hal/halx86/legacy/bus/pci_classes.ids
 Path: hal/halx86/legacy/bus/pci_vendors.ids
-Used Version: 2023.06.19
+Used Version: 2026.01.31
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: https://pci-ids.ucw.cz/
 URL: https://github.com/pciutils/pciids

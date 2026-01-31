@@ -3,10 +3,10 @@
 #
 
 #
-#	List of PCI ID's
+#	List of PCI IDs
 #
-#	Version: 2023.06.19
-#	Date:    2023-06-19 03:15:02
+#	Version: 2026.01.31
+#	Date:    2026-01-31 03:15:01
 #
 #	Maintained by Albert Pool, Martin Mares, and other volunteers from
 #	the PCI ID Project at https://pci-ids.ucw.cz/.
@@ -35,6 +35,11 @@ C 00  Unclassified device
 	05  Image coprocessor
 C 01  Mass storage controller
 	00  SCSI storage controller
+		00  Vendor specific
+		11  SCSI storage device (SOP target port using PQI)
+		12  SCSI controller (SOP target port using PQI)
+		13  SCSI storage device & controller (SOP target port using PQI)
+		21  SCSI storage device (SOP target port using NVMe)
 	01  IDE interface
 		00  ISA Compatibility mode-only controller
 		05  PCI native mode-only controller
@@ -47,6 +52,7 @@ C 01  Mass storage controller
 	02  Floppy disk controller
 	03  IPI bus controller
 	04  RAID bus controller
+		00  Vendor specific
 	05  ATA controller
 		20  ADMA single stepping
 		30  ADMA continuous operation
@@ -59,12 +65,14 @@ C 01  Mass storage controller
 	08  Non-Volatile memory controller
 		01  NVMHCI
 		02  NVM Express
+		03  NVM Express administrative controller
 	09  Universal Flash Storage controller
 		00  Vendor specific
 		01  UFSHCI
 	80  Mass storage controller
 C 02  Network controller
 	00  Ethernet controller
+		01  Ethernet Controller with IDPF Compliant Interface
 	01  Token ring network controller
 	02  FDDI network controller
 	03  ATM network controller
@@ -86,13 +94,15 @@ C 04  Multimedia controller
 	01  Multimedia audio controller
 	02  Computer telephony device
 	03  Audio device
+		00  HDA compatible
+		80  HDA compatible with vendor specific extensions
 	80  Multimedia controller
 C 05  Memory controller
 	00  RAM memory
 	01  FLASH memory
 	02  CXL
 		00  CXL Memory Device - vendor specific
-		10  CXL Memory Device (CXL 2.x)
+		10  CXL Memory Device (CXL 2.0 or later)
 	80  Memory controller
 C 06  Bridge
 	00  Host bridge
@@ -160,6 +170,7 @@ C 08  Generic system peripheral
 	04  PCI Hot-plug controller
 	05  SD Host controller
 	06  IOMMU
+	07  Root Complex Event Collector
 	80  System peripheral
 	99  Timing Card
 # PTP Grandmaster Source Clock
@@ -207,6 +218,7 @@ C 0c  Serial bus controller
 		02  BT (Block Transfer)
 	08  SERCOS interface
 	09  CANBUS
+	0a  MIPI I3C
 	80  Serial bus controller
 C 0d  Wireless controller
 	00  IRDA controller
@@ -214,8 +226,10 @@ C 0d  Wireless controller
 	10  RF controller
 	11  Bluetooth
 	12  Broadband
-	20  802.1a controller
-	21  802.1b controller
+	20  802.11a 5 GHz controller
+	21  802.11b 2.4 GHz controller
+	40  Cellular controller/modem
+	41  Cellular controller/modem plus Ethernet (802.11)
 	80  Wireless controller
 C 0e  Intelligent controller
 	00  I2O
