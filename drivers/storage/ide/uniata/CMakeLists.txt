@@ -31,6 +31,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(uniata PRIVATE -Wno-narrowing -Wno-unused-but-set-variable)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(uniata PRIVATE -Wno-misleading-indentation)
+endif()
+
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(uniata PRIVATE -Wno-unused-const-variable)
 endif()
