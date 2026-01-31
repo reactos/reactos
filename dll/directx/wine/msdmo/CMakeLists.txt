@@ -14,6 +14,10 @@ add_library(msdmo MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(msdmo PRIVATE -Wno-array-parameter)
+endif()
+
 set_module_type(msdmo win32dll)
 target_link_libraries(msdmo uuid wine mediaobj_guid)
 add_importlibs(msdmo user32 advapi32 ole32 msvcrt kernel32 ntdll)
