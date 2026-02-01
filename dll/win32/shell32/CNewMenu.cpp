@@ -83,7 +83,7 @@ void CNewMenu::UnloadAllItems()
 CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 {
     HKEY hKey;
-    WCHAR wszBuf[MAX_PATH], wszValue[MAX_PATH];
+    WCHAR wszBuf[MAX_PATH];
     PBYTE pData = NULL;
     DWORD cbData;
 
@@ -93,6 +93,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
+        WCHAR wszValue[MAX_PATH];
         cbData = sizeof(wszValue);
         if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszValue,
                          &cbData) != ERROR_SUCCESS || !wszValue[0])
