@@ -337,15 +337,6 @@ static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_C
 #define MAX_FONT_LOOKUP_CACHE 64
 static ULONG s_FontLookupCacheCount = 0;
 
-static void SharedFace_Release(PSHARED_FACE Ptr);
-
-static void
-FontLookUp_Destroy(PFONT_LOOKUP_CACHE pCache)
-{
-    SharedFace_Release(pCache->SharedFace);
-    ExFreePoolWithTag(pCache, TAG_FONT);
-}
-
 /* The ranges of the surrogate pairs */
 #define HIGH_SURROGATE_MIN 0xD800U
 #define HIGH_SURROGATE_MAX 0xDBFFU
@@ -666,9 +657,11 @@ SharedFaceCache_Release(PSHARED_FACE_CACHE Cache)
 }
 
 static void
-SharedFace_Release(PSHARED_FACE Ptr)
+SharedFace_Release(PSHARED_FACE Ptr, BOOL bDoLock)
 {
-    IntLockFreeType();
+    if (bDoLock)
+        IntLockFreeType();
+
     ASSERT(Ptr->RefCount > 0);
 
     if (Ptr->RefCount <= 0)
@@ -685,7 +678,9 @@ SharedFace_Release(PSHARED_FACE Ptr)
         SharedFaceCache_Release(&Ptr->UserLanguage);
         ExFreePoolWithTag(Ptr, TAG_FONT);
     }
-    IntUnLockFreeType();
+
+    if (bDoLock)
+        IntUnLockFreeType();
 }
 
 
@@ -705,7 +700,7 @@ CleanupFontEntryEx(PFONT_ENTRY FontEntry, PFONTGDI FontGDI)
         RtlFreeUnicodeString(&FontEntry->FaceName);
 
     EngFreeMem(FontGDI);
-    SharedFace_Release(SharedFace);
+    SharedFace_Release(SharedFace, TRUE);
     ExFreePoolWithTag(FontEntry, TAG_FONT);
 }
 
@@ -1009,11 +1004,19 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
 }
 
 static void
+FontLookUp_Destroy(PFONT_LOOKUP_CACHE pCache)
+{
+    ASSERT_FREETYPE_LOCK_HELD();
+    SharedFace_Release(pCache->SharedFace, FALSE);
+    ExFreePoolWithTag(pCache, TAG_FONT);
+}
+
+static void
 FontLookUp_Cleanup(
-    _In_ BOOL bWithLock,
+    _In_ BOOL bDoLock,
     _Inout_opt_ PSHARED_FACE SharedFace)
 {
-    if (bWithLock)
+    if (bDoLock)
         IntLockFreeType();
 
     PLIST_ENTRY pHead = &s_FontLookupCacheList, pEntry;
@@ -1043,7 +1046,7 @@ FontLookUp_Cleanup(
         s_FontLookupCacheCount = 0;
     }
 
-    if (bWithLock)
+    if (bDoLock)
         IntUnLockFreeType();
 }
 
@@ -1783,7 +1786,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     Entry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY), TAG_FONT);
     if (!Entry)
     {
-        SharedFace_Release(SharedFace);
+        SharedFace_Release(SharedFace, TRUE);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0; /* failure */
     }
@@ -1792,7 +1795,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), GDITAG_RFONT);
     if (!FontGDI)
     {
-        SharedFace_Release(SharedFace);
+        SharedFace_Release(SharedFace, TRUE);
         ExFreePoolWithTag(Entry, TAG_FONT);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0; /* failure */
@@ -1807,7 +1810,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         if (FontGDI->Filename == NULL)
         {
             EngFreeMem(FontGDI);
-            SharedFace_Release(SharedFace);
+            SharedFace_Release(SharedFace, TRUE);
             ExFreePoolWithTag(Entry, TAG_FONT);
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0; /* failure */
@@ -1826,7 +1829,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             if (FontGDI->Filename)
                 ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
             EngFreeMem(FontGDI);
-            SharedFace_Release(SharedFace);
+            SharedFace_Release(SharedFace, TRUE);
             ExFreePoolWithTag(Entry, TAG_FONT);
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0; /* failure */
@@ -1906,7 +1909,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         if (FontGDI->Filename)
             ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
         EngFreeMem(FontGDI);
-        SharedFace_Release(SharedFace);
+        SharedFace_Release(SharedFace, TRUE);
         ExFreePoolWithTag(Entry, TAG_FONT);
         return 0;
     }
@@ -2358,7 +2361,7 @@ IntGdiAddFontResourceEx(
     }
 
     /* Prepare for better LOGFONT-to-face matching */
-    FontLookUp_Cleanup(TRUE, NULL);
+    FontLookUp_Cleanup(FALSE, NULL);
 
     return ret;
 }
