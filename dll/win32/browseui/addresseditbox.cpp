@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     The combo box of the address band
  * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -230,14 +230,42 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         if (FAILED_UNEXPECTEDLY(hr))
             goto parseabsolute;
 
+        ATLASSERT(address && address[0]);
+
         WCHAR szPath[MAX_PATH], szFullPath[MAX_PATH];
-        if (PathIsRelativeW(address) && SHGetPathFromIDListW(pidlCurrent, szPath))
+        if (SHGetPathFromIDListW(pidlCurrent, szPath)) // File-system?
         {
-            PathAppendW(szPath, address);
-            if (GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL))
+            if (PathIsRelativeW(address)) // Relative path?
             {
-                address.Free();
-                SHStrDupW(szFullPath, &address);
+                PathAppendW(szPath, address);
+                if (GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL))
+                {
+                    address.Free();
+                    SHStrDupW(szFullPath, &address);
+                }
+            }
+            else if (address[0] == L'\\' && address[1] != L'\\') // Drive letter omitted?
+            {
+                // GetFullPathNameW won't resolve drive letter
+                INT iDrive = PathGetDriveNumberW(szPath);
+                if (iDrive >= 0)
+                {
+                    PathBuildRootW(szPath, iDrive);
+                    PathAppendW(szPath, &address[1]);
+                    if (GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL))
+                    {
+                        address.Free();
+                        SHStrDupW(szFullPath, &address);
+                    }
+                }
+            }
+            else if (StrChrW(address, L'.') && PathFileExistsW(address)) // Trailing relative path?
+            {
+                if (GetFullPathNameW(address, _countof(szFullPath), szFullPath, NULL))
+                {
+                    address.Free();
+                    SHStrDupW(szFullPath, &address);
+                }
             }
         }
     }
