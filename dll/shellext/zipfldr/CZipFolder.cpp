@@ -503,7 +503,6 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
     CZipFolder* pThis = static_cast<CZipFolder*>(psf);
     if (!pThis)
     {
-        DPRINT1("!pThis\n");
         return E_FAIL;
     }
     pThis->m_pDataObj = pdtobj;
