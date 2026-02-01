@@ -2361,7 +2361,7 @@ IntGdiAddFontResourceEx(
     }
 
     /* Prepare for better LOGFONT-to-face matching */
-    FontLookUp_Cleanup(FALSE, NULL);
+    FontLookUp_Cleanup(TRUE, NULL);
 
     return ret;
 }
