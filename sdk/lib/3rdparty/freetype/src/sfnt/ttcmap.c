@@ -1242,7 +1242,7 @@
         if (!bWarnOnce)
         {
             FT_ERROR(( "Bad cmap table number. Probable update font error in file\n"
-                       "'%s'\n Please reboot and try again.\n", __FILE__ ));
+                       "'%s'\nPlease reboot and try again.\n", __FILE__ ));
             bWarnOnce++;
         }
         return 0;
