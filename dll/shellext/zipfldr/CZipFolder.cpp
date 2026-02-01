@@ -630,37 +630,28 @@ STDMETHODIMP CZipFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, L
 
 STDMETHODIMP CZipFolder::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
 {
+    if (idCmd != 0)
+        return E_INVALIDARG;
+
     switch (uFlags)
     {
         case GCS_VERBA:
-            if (idCmd == 0)
-                return StringCchCopyA(pszName, cchMax, EXTRACT_VERBA);
-            break;
+            return StringCchCopyA(pszName, cchMax, EXTRACT_VERBA);
         case GCS_VERBW:
-            if (idCmd == 0)
-                return StringCchCopyW((PWSTR)pszName, cchMax, EXTRACT_VERBW);
-            break;
+            return StringCchCopyW((PWSTR)pszName, cchMax, EXTRACT_VERBW);
         case GCS_HELPTEXTA:
-            if (idCmd == 0)
-            {
-                CStringA helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
-                return StringCchCopyA(pszName, cchMax, helpText);
-            }
-            break;
+        {
+            CStringA helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
+            return StringCchCopyA(pszName, cchMax, helpText);
+        }
         case GCS_HELPTEXTW:
-            if (idCmd == 0)
-            {
-                CStringW helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
-                return StringCchCopyW((PWSTR)pszName, cchMax, helpText);
-            }
-            break;
+        {
+            CStringW helpText(MAKEINTRESOURCEA(IDS_HELPTEXT));
+            return StringCchCopyW((PWSTR)pszName, cchMax, helpText);
+        }
         case GCS_VALIDATEA:
         case GCS_VALIDATEW:
-        {
-            if (idCmd == 0)
-                return S_OK;
-            break;
-        }
+            return S_OK;
     }
 
     return E_INVALIDARG;
