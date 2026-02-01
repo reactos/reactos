@@ -502,9 +502,8 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
 {
     CZipFolder* pThis = static_cast<CZipFolder*>(psf);
     if (!pThis)
-    {
         return E_FAIL;
-    }
+
     pThis->m_pDataObj = pdtobj;
 
     switch (uMsg)
@@ -660,9 +659,7 @@ STDMETHODIMP CZipFolder::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwR
 STDMETHODIMP CZipFolder::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
 {
     if (!pici || (pici->cbSize != sizeof(CMINVOKECOMMANDINFO) && pici->cbSize != sizeof(CMINVOKECOMMANDINFOEX)))
-    {
         return E_INVALIDARG;
-    }
 
     if (pici->lpVerb == MAKEINTRESOURCEA(0) ||
         (!IS_INTRESOURCE(pici->lpVerb) && !strcmp(pici->lpVerb, EXTRACT_VERBA)))
