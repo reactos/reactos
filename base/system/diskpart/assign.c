@@ -150,7 +150,7 @@ assign_main(
         }
     }
 
-    ConResPuts(StdOut, IDS_REMOVE_SUCCESS);
+    ConResPuts(StdOut, IDS_ASSIGN_SUCCESS);
 
     return EXIT_SUCCESS;
 }
