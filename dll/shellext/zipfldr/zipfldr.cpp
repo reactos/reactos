@@ -33,6 +33,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ZipFolderStorageHandler, CZipFolder)
     OBJECT_ENTRY(CLSID_ZipFolderContextMenu, CZipFolder)
     OBJECT_ENTRY(CLSID_ZipFolderSendTo, CSendToZip)
+    //OBJECT_ENTRY(CLSID_ZipFolderDropHandler, CZipFolderDropHandler) // FIXME: Add this
 END_OBJECT_MAP()
 
 CZipFldrModule gModule;

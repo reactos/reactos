@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Não é possível extrair o ficheiro '%1'."
     IDS_DECOMPRESSERROR "Método de compressão %d não suportado. Pretende continuar?"
     IDS_UNKNOWNERROR "Erro desconhecido 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Assistente de extracção"
     IDS_WIZ_DEST_TITLE "Seleccione um destino"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um arquivo chamado '%1'.\nDeseja substituí-lo?"
     IDS_PASSWORD_FILE_TEXT "O arquivo '%1' está protegido. Por favor, digite a palavra-passe."
     IDS_PASSWORD_ZIP_TEXT "Especifique a palavra-passe a ser usada ao extrair este arquivo zip."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "Extrair &todos..."
     IDS_HELPTEXT "Extrair o conteúdo da pasta"

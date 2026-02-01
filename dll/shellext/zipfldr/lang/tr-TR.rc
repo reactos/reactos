@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Dosya '%1' çıkartılamadı."
     IDS_DECOMPRESSERROR "Desteklenmeyen sıkıştırma yöntemi: %d. Devam etmek ister misiniz?"
     IDS_UNKNOWNERROR "Bilinmeyen hata 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Çıkartma Sihirbazı"
     IDS_WIZ_DEST_TITLE "Hedef Belirle"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Bu dizin zaten '%1' adında bir dosya içeriyor.\nBunu değiştirmek istiyor musunuz?"
     IDS_PASSWORD_FILE_TEXT "'%1' dosyası şifre korumalı. Lütfen şifre giriniz."
     IDS_PASSWORD_ZIP_TEXT "Lütfen bu zip dosyasını çıkartırken kullanılacak şifreyi belirtin."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "&Hepsini Çıkart..."
     IDS_HELPTEXT "Dizin içeriğini çıkartır"

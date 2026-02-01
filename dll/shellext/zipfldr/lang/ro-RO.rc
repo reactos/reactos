@@ -80,6 +80,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Nu s-a putut extrage fișierul '%1'."
     IDS_DECOMPRESSERROR "Metoda de compresie %d nu este suportată. Doriți să continuați?"
     IDS_UNKNOWNERROR "Eroare necunoscută 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Expert extragere"
     IDS_WIZ_DEST_TITLE "Selectare destinaţie"
@@ -91,6 +92,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Acest folder conţine deja un fişier denumit '%1'.\nÎnlocuiţi fişierul existent?"
     IDS_PASSWORD_FILE_TEXT "Fișierul '%1' este protejat prin parolă. Introduceţi parola în caseta de mai jos."
     IDS_PASSWORD_ZIP_TEXT "Vă rugăm să specificați parola pe care doriți să o folosiți când extrageți acest fișier zip."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "E&xtragere totală..."
     IDS_HELPTEXT "Se extrage conţinutul folderului"

@@ -53,6 +53,7 @@
 #define IDS_CANTEXTRACTFILE 115
 #define IDS_DECOMPRESSERROR 116
 #define IDS_UNKNOWNERROR    117
+#define IDS_CANTDELETEFILE  118
 
 /* Wizard titles */
 #define IDS_WIZ_TITLE           8000
@@ -67,13 +68,12 @@
 #define IDS_OVERWRITEFILE_TEXT  9000
 #define IDS_PASSWORD_FILE_TEXT  9001
 #define IDS_PASSWORD_ZIP_TEXT   9002
-
+#define IDS_CONFIRMDELETE_TEXT  9003
 
 /* Context menu / ExplorerCommand strings */
 #define IDS_MENUITEM        10039
 #define IDS_HELPTEXT        10041
 #define IDS_FRIENDLYNAME    10195
-
 
 #ifndef IDC_STATIC
 #define IDC_STATIC -1
