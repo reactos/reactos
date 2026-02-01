@@ -124,7 +124,7 @@ HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
         if (pEntry)
         {
             CStringW fullPath = m_ZipDir + pEntry->Name;
-            // For folders, end with a slash (to determine a forward match)
+            // For folders, end with a slash
             if (pEntry->ZipType == ZIP_PIDL_DIRECTORY && fullPath.Right(1) != L"/")
                 fullPath += L"/";
             targetPaths.AddTail(fullPath);
