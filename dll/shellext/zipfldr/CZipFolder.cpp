@@ -552,7 +552,7 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
         }
         case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
             return S_FALSE;
-        case DFM_WM_INITMENUPOPUP: // FIXME: Make it effective
+        case DFM_WM_INITMENUPOPUP: // FIXME: Make it effective in `CDefViewBckgrndMenu`
         {
             // Disable [Paste] / [Paste link] menu items
             ::EnableMenuItem((HMENU)wParam, FCIDM_SHVIEW_INSERT, MF_BYCOMMAND | MF_GRAYED);
