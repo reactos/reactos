@@ -6157,6 +6157,7 @@ IntPopulateTextObj(
     else
     {
         UNICODE_STRING Name;
+        RtlInitUnicodeString(&Name, NULL);
         NTSTATUS Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
         if (NT_SUCCESS(Status))
         {
