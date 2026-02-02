@@ -219,7 +219,6 @@ AssignDriveLetter(
                   DeviceName,
                   DeviceNameLength);
 
-DPRINT1("\n");
     Status = OpenMountManager(&MountMgrHandle, GENERIC_READ | GENERIC_WRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -228,7 +227,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
     Status = NtDeviceIoControlFile(MountMgrHandle,
                                    NULL,
                                    NULL,
@@ -246,7 +244,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
 done:
     if (MountMgrHandle)
         NtClose(MountMgrHandle);
@@ -270,7 +267,7 @@ AssignNextDriveLetter(
     NTSTATUS Status;
     BOOL Ret = TRUE;
 
-    DPRINT1("AssignNextDriveLetter(%S %p)\n", DeviceName, DriveLetter);
+    DPRINT("AssignNextDriveLetter(%S %p)\n", DeviceName, DriveLetter);
 
     DeviceNameLength = wcslen(DeviceName) * sizeof(WCHAR);
 
@@ -288,7 +285,6 @@ AssignNextDriveLetter(
                   DeviceName,
                   DeviceNameLength);
 
-DPRINT1("\n");
     Status = OpenMountManager(&MountMgrHandle, GENERIC_READ | GENERIC_WRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -297,7 +293,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
     Status = NtDeviceIoControlFile(MountMgrHandle,
                                    NULL,
                                    NULL,
@@ -315,7 +310,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
 done:
     if (MountMgrHandle)
         NtClose(MountMgrHandle);
@@ -342,12 +336,13 @@ DeleteDriveLetter(
     PMOUNTMGR_MOUNT_POINTS OutputBuffer = NULL;
     WCHAR DosDeviceName[30];
     ULONG InputBufferLength, DosDeviceNameLength;
+    ULONG OutputBufferLength = 0x1000;
     HANDLE MountMgrHandle = NULL;
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     BOOL Ret = TRUE;
 
-    DPRINT1("DeleteDriveLetter(%c)\n", DriveLetter);
+    DPRINT("DeleteDriveLetter(%c)\n", DriveLetter);
 
     /* Setup the device name of the letter to delete */
     swprintf(DosDeviceName, L"\\DosDevices\\%c:", DriveLetter);
@@ -363,13 +358,12 @@ DeleteDriveLetter(
     }
 
     /* Fill it in */
-//    RtlZeroMemory(InputBuffer, InputBufferLength);
     InputBuffer->SymbolicLinkNameOffset = sizeof(MOUNTMGR_MOUNT_POINT);
     InputBuffer->SymbolicLinkNameLength = DosDeviceNameLength;
     RtlCopyMemory(&InputBuffer[1], DosDeviceName, DosDeviceNameLength);
 
     /* Allocate big enough output buffer (we don't care about the output) */
-    OutputBuffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 0x1000);
+    OutputBuffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, OutputBufferLength);
     if (OutputBuffer == NULL)
     {
         DPRINT1("OutputBuffer allocation failed!\n");
@@ -377,7 +371,8 @@ DeleteDriveLetter(
         goto done;
     }
 
-DPRINT1("\n");
+    OutputBuffer->Size = OutputBufferLength;
+
     Status = OpenMountManager(&MountMgrHandle, GENERIC_READ | GENERIC_WRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -386,7 +381,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
     Status = NtDeviceIoControlFile(MountMgrHandle,
                                    NULL,
                                    NULL,
@@ -396,7 +390,7 @@ DPRINT1("\n");
                                    InputBuffer,
                                    InputBufferLength,
                                    OutputBuffer,
-                                   0x1000);
+                                   OutputBufferLength);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtDeviceIoControlFile() failed (Status 0x%08lx)\n", Status);
@@ -404,7 +398,6 @@ DPRINT1("\n");
         goto done;
     }
 
-DPRINT1("\n");
 done:
     if (MountMgrHandle)
         NtClose(MountMgrHandle);
