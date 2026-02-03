@@ -15,17 +15,12 @@
  *
  */
 
-#include "precomp.h"
-#include <mbctype.h>
 #include <sys/stat.h>
-#include <internal/wine/msvcrt.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include <mbstring.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(crtdll);
+#include <windef.h>
 
 /* from msvcrt */
 extern void __getmainargs( int *argc, char ***argv, char ***envp,
