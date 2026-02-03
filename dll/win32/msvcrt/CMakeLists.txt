@@ -180,9 +180,6 @@ add_library(msvcrt MODULE
 target_compile_definitions(msvcrt PRIVATE _MSVCR_VER=0)
 set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(msvcrt msvcrt_static crtmath dbgrpt vcruntime wine chkstk ${PSEH_LIB})
-if(ARCH STREQUAL "i386")
-    target_link_libraries(msvcrt chkesp)
-endif()
 add_importlibs(msvcrt kernel32 kernel32_vista ntdll)
 add_delay_importlibs(msvcrt user32 advapi32)
 
