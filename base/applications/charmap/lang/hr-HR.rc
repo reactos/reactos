@@ -55,7 +55,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Ovaj je program slobodan softver; možete ga distribuirati i/ili mijenjati pod uvjetima GNU Opće javne licence koju je objavila Free Software Foundation; bilo verzija 2 Licence, ili (po vašem izboru) bilo koja kasnija verzija.\r\n\r\nOvaj se program distribuira u nadi da će biti koristan, ali BEZ IKAKVOG JAMSTVA; čak i bez implicitnog jamstva o PRODAVANJU ili PRIKLADNOSTI ZA ODREĐENU SVRHU.  Pogledajte GNU Opću javnu licencu za više detalja.\r\n\r\nKopiju GNU Opće javne licence trebali ste dobiti zajedno s ovim programom; ako niste, pišite Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 SAD."
+    IDS_LICENSE "Ovaj je program slobodan softver; možete ga redistribuirati i/ili mijenjati pod uvjetima GNU Opće javne licence koju je objavila Free Software Foundation; bilo verzija 2 Licence, ili (po vašem izboru) bilo koja kasnija verzija.\r\n\r\nOvaj se program distribuira u nadi da će biti koristan, ali BEZ IKAKVOG JAMSTVA; čak i bez implicitnog jamstva o PRODAVANJU ili PRIKLADNOSTI ZA ODREĐENU SVRHU.  Pogledajte GNU Opću javnu licencu za više detalja.\r\n\r\nKopiju GNU Opće javne licence trebali ste dobiti zajedno s ovim programom; ako niste, pišite Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 SAD."
     IDS_ABOUT "O programu"
     IDS_TITLE "Mapa znakova"
     IDS_UNICODE "Unicode"
