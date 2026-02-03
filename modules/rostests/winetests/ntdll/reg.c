@@ -838,7 +838,9 @@ static void test_NtDeleteKey(void)
         while (NtEnumerateValueKey(hkey, 0, KeyValueBasicInformation, info, sizeof(buffer), &size) >= 0)
         {
             string = (UNICODE_STRING){ info->NameLength, info->NameLength, info->Name };
-            NtDeleteValueKey(hkey, &string);
+            printf("Deleting value %wZ\n", &string);
+            status = NtDeleteValueKey(hkey, &string);
+            ok(status == STATUS_SUCCESS, "NtDeleteValueKey failed: 0x%08lx\n", status);
         }
         status = pNtDeleteKey(hkey);
     }
