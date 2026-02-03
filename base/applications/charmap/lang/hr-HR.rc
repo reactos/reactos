@@ -4,8 +4,8 @@
  * PURPOSE:     Croatian resource file
  * TRANSLATOR:  Copyright 2026 Ivan Ivo <ivan.ivo4445@gmail.com>
  */
-LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
 
+LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
 FONT 8, "MS Shell Dlg", 0, 0
