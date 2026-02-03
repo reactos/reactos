@@ -1451,11 +1451,6 @@ KeSaveFloatingPointState(
                 CurrentPrcb->NpxThread->NpxState = NPX_STATE_NOT_LOADED;
                 FxSaveAreaFrame->NpxSavedCpu = 0;
             }
-            else
-            {
-                /* The thread is dead, just clear the PRCB pointer */
-                CurrentPrcb->NpxThread = NULL;
-            }
         }
 
         /* The new NPX thread is the current thread */
@@ -1695,17 +1690,14 @@ KiRundownThread(IN PKTHREAD Thread)
         Prcb = KiProcessorBlock[i];
         if (Prcb->NpxThread == Thread)
         {
-             if (Prcb == KeGetCurrentPrcb())
-             {
-                 /* This is the current PRCB, clear it and init FPU */
-                 Prcb->NpxThread = NULL;
-                 Ke386FnInit();
-             }
-             else
-             {
-                 /* This is another PRCB, clear the pointer */
-                 InterlockedCompareExchangePointer((PVOID*)&Prcb->NpxThread, NULL, Thread);
-             }
+            if (InterlockedCompareExchangePointer((PVOID*)&Prcb->NpxThread, NULL, Thread) == Thread)
+            {
+                if (Prcb == KeGetCurrentPrcb())
+                {
+                    /* This is the current PRCB, init FPU */
+                    Ke386FnInit();
+                }
+            }
         }
     }
 }

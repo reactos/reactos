@@ -768,11 +768,6 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
                     /* Update NPX state */
                     NpxThread->NpxState = NPX_STATE_NOT_LOADED;
                 }
-                else
-                {
-                    /* The thread is dead, just clear the PRCB pointer */
-                    KeGetCurrentPrcb()->NpxThread = NULL;
-                }
            }
 
             /* Load FPU state */
