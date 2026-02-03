@@ -1,10 +1,10 @@
-LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
 /*
  * PROJECT:     ReactOS Character Map
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Croatian resource file
  * TRANSLATOR:  Copyright 2026 Ivan Ivo <ivan.ivo4445@gmail.com>
  */
+LANGUAGE LANG_CROATIAN, SUBLANG_DEFAULT
 
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
