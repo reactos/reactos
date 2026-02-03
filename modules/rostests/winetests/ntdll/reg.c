@@ -834,12 +834,12 @@ static void test_NtDeleteKey(void)
     {
         /* On older Windows versions the key cannot be deleted, when it still has values in it */
         ok(status == STATUS_CANNOT_DELETE, "NtDeleteKey unexpected status: 0x%08lx\n", status);
-        RtlInitUnicodeString(&string, L"custtest");
-        pNtDeleteValueKey(hkey, &string);
-        RtlInitUnicodeString(&string, L"deletetest");
-        pNtDeleteValueKey(hkey, &string);
-        RtlInitUnicodeString(&string, L"stringtest");
-        pNtDeleteValueKey(hkey, &string);
+        PKEY_VALUE_BASIC_INFORMATION info = (PKEY_VALUE_BASIC_INFORMATION)buffer;
+        while (NtEnumerateValueKey(hkey, 0, KeyValueBasicInformation, info, sizeof(buffer), &size) >= 0)
+        {
+            string = (UNICODE_STRING){ info->NameLength, info->NameLength, info->Name };
+            NtDeleteValueKey(hkey, &string);
+        }
         status = pNtDeleteKey(hkey);
     }
 #endif
