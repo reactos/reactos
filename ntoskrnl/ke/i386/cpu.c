@@ -1438,15 +1438,24 @@ KeSaveFloatingPointState(
         if ((CurrentPrcb->NpxThread != NULL) &&
             (CurrentPrcb->NpxThread->NpxState == NPX_STATE_LOADED))
         {
-            /* Get the FX frame */
-            FxSaveAreaFrame = KiGetThreadNpxArea(CurrentPrcb->NpxThread);
+            /* Check if the thread has a valid stack */
+            if (CurrentPrcb->NpxThread->InitialStack != NULL)
+            {
+                /* Get the FX frame */
+                FxSaveAreaFrame = KiGetThreadNpxArea(CurrentPrcb->NpxThread);
 
-            /* Save the FPU state */
-            Ke386SaveFpuState(FxSaveAreaFrame);
+                /* Save the FPU state */
+                Ke386SaveFpuState(FxSaveAreaFrame);
 
-            /* NPX thread has lost its state */
-            CurrentPrcb->NpxThread->NpxState = NPX_STATE_NOT_LOADED;
-            FxSaveAreaFrame->NpxSavedCpu = 0;
+                /* NPX thread has lost its state */
+                CurrentPrcb->NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                FxSaveAreaFrame->NpxSavedCpu = 0;
+            }
+            else
+            {
+                /* The thread is dead, just clear the PRCB pointer */
+                CurrentPrcb->NpxThread = NULL;
+            }
         }
 
         /* The new NPX thread is the current thread */
@@ -1669,4 +1678,34 @@ KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
 
     /* Capture the control state */
     KiSaveProcessorControlState(State);
+}
+
+VOID
+NTAPI
+KiRundownThread(IN PKTHREAD Thread)
+{
+    ULONG i;
+    PKPRCB Prcb;
+    extern CCHAR KeNumberProcessors;
+    extern PKPRCB KiProcessorBlock[];
+
+    /* Loop all processors */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb->NpxThread == Thread)
+        {
+             if (Prcb == KeGetCurrentPrcb())
+             {
+                 /* This is the current PRCB, clear it and init FPU */
+                 Prcb->NpxThread = NULL;
+                 Ke386FnInit();
+             }
+             else
+             {
+                 /* This is another PRCB, clear the pointer */
+                 InterlockedCompareExchangePointer((PVOID*)&Prcb->NpxThread, NULL, Thread);
+             }
+        }
+    }
 }
