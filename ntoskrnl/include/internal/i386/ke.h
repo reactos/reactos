@@ -390,18 +390,9 @@ KeGetCurrentThread(VOID)
     return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
 }
 
-FORCEINLINE
 VOID
-KiRundownThread(IN PKTHREAD Thread)
-{
-    /* Check if this is the NPX Thread */
-    if (KeGetCurrentPrcb()->NpxThread == Thread)
-    {
-        /* Clear it */
-        KeGetCurrentPrcb()->NpxThread = NULL;
-        Ke386FnInit();
-    }
-}
+NTAPI
+KiRundownThread(IN PKTHREAD Thread);
 
 CODE_SEG("INIT")
 VOID
