@@ -4,7 +4,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2024 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2026 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
@@ -31,6 +31,7 @@
 
 #include <gdi/eng/floatobj.h>
 #include "font.h"
+#include "text.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -72,21 +73,6 @@ static BOOL s_fFontLinkUseSymbol = FALSE;
 #define MAX_FONTLINK_CACHE 128
 static RTL_STATIC_LIST_HEAD(g_FontLinkCache); // The list of FONTLINK_CACHE
 static LONG g_nFontLinkCacheCount = 0;
-
-static SIZE_T
-SZZ_GetSize(_In_ PCZZWSTR pszz)
-{
-    SIZE_T ret = 0, cch;
-    const WCHAR *pch = pszz;
-    while (*pch)
-    {
-        cch = wcslen(pch) + 1;
-        ret += cch;
-        pch += cch;
-    }
-    ++ret;
-    return ret * sizeof(WCHAR);
-}
 
 static inline NTSTATUS
 FontLink_LoadSettings(VOID)
@@ -336,21 +322,6 @@ typedef struct _FONT_LOOKUP_CACHE
 static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_CACHE
 #define MAX_FONT_LOOKUP_CACHE 64
 static ULONG s_FontLookupCacheCount = 0;
-
-/* The ranges of the surrogate pairs */
-#define HIGH_SURROGATE_MIN 0xD800U
-#define HIGH_SURROGATE_MAX 0xDBFFU
-#define LOW_SURROGATE_MIN  0xDC00U
-#define LOW_SURROGATE_MAX  0xDFFFU
-
-#define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
-#define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
-
-static inline DWORD
-Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
-{
-    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
-}
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
@@ -1253,46 +1224,6 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
     return FALSE;
 }
 
-static VOID
-IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING *pString)
-{
-    SIZE_T cbLength = pString->Length;
-
-    if (cbBuffer < sizeof(UNICODE_NULL))
-        return;
-
-    if (cbLength > cbBuffer - sizeof(UNICODE_NULL))
-        cbLength = cbBuffer - sizeof(UNICODE_NULL);
-
-    RtlCopyMemory(pszBuffer, pString->Buffer, cbLength);
-    pszBuffer[cbLength / sizeof(WCHAR)] = UNICODE_NULL;
-}
-
-static NTSTATUS
-DuplicateUnicodeString(
-    _In_ PCUNICODE_STRING Source,
-    _Out_ PUNICODE_STRING Destination)
-{
-    NTSTATUS Status = STATUS_NO_MEMORY;
-    UNICODE_STRING Tmp;
-
-    Tmp.Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_USTR);
-    if (Tmp.Buffer)
-    {
-        Tmp.MaximumLength = Source->MaximumLength;
-        Tmp.Length = 0;
-        RtlCopyUnicodeString(&Tmp, Source);
-
-        Destination->MaximumLength = Tmp.MaximumLength;
-        Destination->Length = Tmp.Length;
-        Destination->Buffer = Tmp.Buffer;
-
-        Status = STATUS_SUCCESS;
-    }
-
-    return Status;
-}
-
 static BOOL
 SubstituteFontRecurse(PLOGFONTW pLogFont)
 {
@@ -2161,7 +2092,7 @@ IntGdiAddFontResourceSingle(
     }
     else
     {
-        Status = DuplicateUnicodeString(FileName, &PathName);
+        Status = IntDuplicateUnicodeString(FileName, &PathName);
         if (!NT_SUCCESS(Status))
             return 0;   /* failure */
     }
@@ -2366,23 +2297,6 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
-/* Borrowed from shlwapi */
-static PWSTR
-PathFindFileNameW(_In_ PCWSTR pszPath)
-{
-    PCWSTR lastSlash = pszPath;
-    while (*pszPath)
-    {
-        if ((*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':') &&
-            pszPath[1] && pszPath[1] != '\\' && pszPath[1] != L'/')
-        {
-            lastSlash = pszPath + 1;
-        }
-        pszPath++;
-    }
-    return (PWSTR)lastSlash;
-}
-
 /* Delete registry font entries */
 static VOID
 IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
@@ -2447,7 +2361,7 @@ IntGdiRemoveFontResourceSingle(
     }
     else
     {
-        Status = DuplicateUnicodeString(FileName, &PathName);
+        Status = IntDuplicateUnicodeString(FileName, &PathName);
         if (!NT_SUCCESS(Status))
             return FALSE; /* Failure */
     }
@@ -2522,16 +2436,6 @@ IntGdiRemoveFontResource(
         pchFile += cchFile + 1;
     }
 
-    return TRUE;
-}
-
-/* Borrowed from shlwapi!PathIsRelativeW */
-BOOL WINAPI PathIsRelativeW(LPCWSTR lpszPath)
-{
-    if (!lpszPath || !*lpszPath)
-        return TRUE;
-    if (*lpszPath == L'\\' || (*lpszPath && lpszPath[1] == L':'))
-        return FALSE;
     return TRUE;
 }
 
@@ -3505,20 +3409,6 @@ CharSetFromLangID(LANGID LangID)
     }
 }
 
-static void
-SwapEndian(LPVOID pvData, DWORD Size)
-{
-    BYTE b, *pb = pvData;
-    Size /= 2;
-    while (Size-- > 0)
-    {
-        b = pb[0];
-        pb[0] = pb[1];
-        pb[1] = b;
-        ++pb; ++pb;
-    }
-}
-
 static NTSTATUS
 IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID)
@@ -3546,11 +3436,11 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     /* use cache if available */
     if (NameID == TT_NAME_ID_FONT_FAMILY && Cache->FontFamily.Buffer)
     {
-        return DuplicateUnicodeString(&Cache->FontFamily, pNameW);
+        return IntDuplicateUnicodeString(&Cache->FontFamily, pNameW);
     }
     if (NameID == TT_NAME_ID_FULL_NAME && Cache->FullName.Buffer)
     {
-        return DuplicateUnicodeString(&Cache->FullName, pNameW);
+        return IntDuplicateUnicodeString(&Cache->FullName, pNameW);
     }
 
     BestIndex = -1;
@@ -3630,7 +3520,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                 if (Status == STATUS_SUCCESS)
                 {
                     /* Convert UTF-16 big endian to little endian */
-                    SwapEndian(pNameW->Buffer, pNameW->Length);
+                    IntSwapEndian(pNameW->Buffer, pNameW->Length);
                 }
             }
             else
@@ -3662,13 +3552,13 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         {
             ASSERT_FREETYPE_LOCK_HELD();
             if (!Cache->FontFamily.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FontFamily);
+                IntDuplicateUnicodeString(pNameW, &Cache->FontFamily);
         }
         else if (NameID == TT_NAME_ID_FULL_NAME)
         {
             ASSERT_FREETYPE_LOCK_HELD();
             if (!Cache->FullName.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FullName);
+                IntDuplicateUnicodeString(pNameW, &Cache->FullName);
         }
     }
 
