@@ -413,10 +413,13 @@ static void test_query_cpu(void)
     len = 0xdeadbeef;
     status = pNtQuerySystemInformation( SystemProcessorBrandString, buffer, sizeof(buffer), &len );
 #ifdef __REACTOS__
-    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
-#else
-    if (status != STATUS_NOT_SUPPORTED)
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        ok(status == STATUS_INVALID_INFO_CLASS, "Unexpected status 0x%lx\n", status );
+    }
+    else
 #endif
+    if (status != STATUS_NOT_SUPPORTED)
     {
         ok( !status, "SystemProcessorBrandString failed %lx\n", status );
         ok( len == 49, "wrong len %lu\n", len );
