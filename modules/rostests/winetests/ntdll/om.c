@@ -1675,8 +1675,8 @@ static void _test_object_name( unsigned line, HANDLE handle, const WCHAR *expect
     memset( buffer, 0, sizeof(buffer) );
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
     ok_(__FILE__,line)( status == STATUS_SUCCESS, "NtQueryObject failed %lx\n", status );
-    ok_(__FILE__,line)( len >= sizeof(OBJECT_NAME_INFORMATION) + str->Length, "unexpected len %lu\n", len );
-    ok_(__FILE__,line)( compare_unicode_string( str, expected_name ), "got %s, expected %s\n",
+    ok_(__FILE__,line)( len >= sizeof(OBJECT_NAME_INFORMATION) + str->Length, "unexpected len %lu\n" || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), len );
+    ok_(__FILE__,line)( compare_unicode_string( str, expected_name ) || broken(/* __REACTOS__ */ GetNTVersion() < _WIN32_WINNT_VISTA), "got %s, expected %s\n",
                         debugstr_w(str->Buffer), debugstr_w(expected_name) );
 }
 
@@ -1743,7 +1743,7 @@ static void test_query_object(void)
         "name too short %s\n", wine_dbgstr_w(str->Buffer) );
     /* check for \\Sessions prefix in the name */
     swprintf( expect, ARRAY_SIZE(expect), L"\\Sessions\\%u%s", NtCurrentTeb()->Peb->SessionId, name );
-    ok( (str->Length == wcslen( expect ) * sizeof(WCHAR) && !wcscmp( str->Buffer, expect )),
+    ok( (str->Length == wcslen( expect ) * sizeof(WCHAR) && !wcscmp( str->Buffer, expect )) || broken(/* __REACTOS__ */ (GetNTVersion() < _WIN32_WINNT_VISTA) && (str->Length == wcslen( name ) * sizeof(WCHAR)) && !wcscmp( str->Buffer, name )),
         "wrong name %s\n", wine_dbgstr_w(str->Buffer) );
     trace( "got %s len %lu\n", wine_dbgstr_w(str->Buffer), len );
 
@@ -1788,7 +1788,7 @@ static void test_query_object(void)
     len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, 0, &len );
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "got %#lx\n", status );
-    ok( len == expected_len, "unexpected len %lu\n", len );
+    ok( len == expected_len || broken(/* __REACTOS__ */ (GetNTVersion() < _WIN32_WINNT_VISTA) && (len == sizeof(UNICODE_STRING))), "unexpected len %lu\n", len);
 
     len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
@@ -2132,7 +2132,7 @@ static void test_process(void)
     cid.UniqueProcess = 0;
     cid.UniqueThread = 0;
     status = pNtOpenProcess( &process, PROCESS_QUERY_LIMITED_INFORMATION, &attr, &cid );
-    ok( status == STATUS_INVALID_CID, "NtOpenProcess returned %lx\n", status );
+    ok( status == STATUS_INVALID_CID || broken(/* __REACTOS__ */ (GetNTVersion() < _WIN32_WINNT_VISTA) && (status == STATUS_INVALID_PARAMETER)), "NtOpenProcess returned %lx\n", status );
 
     cid.UniqueProcess = ULongToHandle( 0xdeadbeef );
     cid.UniqueThread = ULongToHandle( 0xdeadbeef );
@@ -2145,7 +2145,7 @@ static void test_process(void)
     cid.UniqueThread = 0;
     process = (HANDLE)0xdeadbeef;
     status = pNtOpenProcess( &process, PROCESS_QUERY_LIMITED_INFORMATION, &attr, &cid );
-    ok( status == STATUS_INVALID_CID, "NtOpenProcess returned %lx\n", status );
+    ok( status == STATUS_INVALID_CID || broken(/* __REACTOS__ */ (GetNTVersion() < _WIN32_WINNT_VISTA) && (status == STATUS_INVALID_PARAMETER)), "NtOpenProcess returned %lx\n", status );
     ok( !process || broken(process == (HANDLE)0xdeadbeef) /* vista */, "handle set %p\n", process );
 
     cid.UniqueProcess = ULongToHandle( GetCurrentProcessId() );
