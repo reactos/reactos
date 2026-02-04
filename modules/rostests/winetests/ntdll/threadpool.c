@@ -206,6 +206,27 @@ static void CALLBACK rtl_wait_apc_cb(ULONG_PTR userdata)
         ReleaseSemaphore(rtl_wait_apc_semaphore, 1, NULL);
 }
 
+static
+NTSTATUS
+RtlRegisterWait_ctx(
+    unsigned int line,
+    PHANDLE phNewWaitObject,
+    HANDLE hObject,
+    WAITORTIMERCALLBACK Callback,
+    PVOID pvContext,
+    ULONG ulMilliseconds,
+    ULONG ulFlags)
+{
+    NTSTATUS status;
+    winetest_push_context("Line %u", line);
+    status = RtlRegisterWait(phNewWaitObject, hObject, Callback, pvContext, ulMilliseconds, ulFlags);
+    winetest_pop_context();
+    return status;
+}
+
+#define RtlRegisterWait(phNewWaitObject, hObject, Callback, pvContext, ulMilliseconds, ulFlags) \
+    RtlRegisterWait_ctx(__LINE__, phNewWaitObject, hObject, Callback, pvContext, ulMilliseconds, ulFlags)
+
 static void test_RtlRegisterWait(void)
 {
     HANDLE wait1, event, thread;
