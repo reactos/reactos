@@ -95,16 +95,14 @@ WriteFile(IN HANDLE hFile,
             if (NT_SUCCESS(Status)) Status = Iosb.Status;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
-             */
-            *lpNumberOfBytesWritten = Iosb.Information;
-        }
-        else
+        /*
+         * lpNumberOfBytesWritten must not be NULL here, in fact Win doesn't
+         * check that case either and crashes (only after the operation
+         * completed).
+         */
+        *lpNumberOfBytesWritten = Iosb.Information;
+        
+        if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
             return FALSE;
@@ -219,16 +217,14 @@ ReadFile(IN HANDLE hFile,
             return TRUE;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
-             * check that case either and crashes (only after the operation
-             * completed).
-             */
-            *lpNumberOfBytesRead = Iosb.Information;
-        }
-        else
+        /*
+         * lpNumberOfBytesRead must not be NULL here, in fact Win doesn't
+         * check that case either and crashes (only after the operation
+         * completed).
+         */
+        *lpNumberOfBytesRead = Iosb.Information;
+
+        if (!NT_SUCCESS(Status))
         {
             BaseSetLastNTError(Status);
             return FALSE;
