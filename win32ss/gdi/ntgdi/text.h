@@ -171,7 +171,12 @@ SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
 VOID IntSwapEndian(_Inout_ LPVOID pvData, _In_ DWORD Size);
 PWSTR PathFindFileNameW(_In_ PCWSTR pszPath);
 BOOL PathIsRelativeW(_In_ LPCWSTR lpszPath);
-VOID IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING *pString);
+
+VOID
+IntUnicodeStringToBuffer(
+    _Out_ LPWSTR pszBuffer,
+    _In_ SIZE_T cbBuffer,
+    _In_ const UNICODE_STRING *pString);
 
 NTSTATUS
 IntDuplicateUnicodeString(
@@ -188,7 +193,7 @@ IntDuplicateUnicodeString(
 #define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
 
 static inline DWORD
-Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
+Utf32FromSurrogatePair(_In_ DWORD ch0, _In_ DWORD ch1)
 {
     return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
 }

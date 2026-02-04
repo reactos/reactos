@@ -109,7 +109,10 @@ BOOL PathIsRelativeW(_In_ LPCWSTR lpszPath)
 }
 
 VOID
-IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING *pString)
+IntUnicodeStringToBuffer(
+    _Out_ LPWSTR pszBuffer,
+    _In_ SIZE_T cbBuffer,
+    _In_ const UNICODE_STRING *pString)
 {
     SIZE_T cbLength = pString->Length;
 
