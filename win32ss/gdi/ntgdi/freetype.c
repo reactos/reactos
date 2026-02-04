@@ -185,7 +185,6 @@ FontLink_LoadDefaultCharset(VOID)
 static inline VOID
 FontLink_Destroy(_Inout_ PFONTLINK pLink)
 {
-    ASSERT(pLink);
     ExFreePoolWithTag(pLink, TAG_FONT);
 }
 
@@ -235,23 +234,6 @@ FontLink_AddCache(
         pCache = CONTAINING_RECORD(Entry, FONTLINK_CACHE, ListEntry);
         FontLink_Chain_Free(&pCache->Chain);
         ExFreePoolWithTag(pCache, TAG_FONT);
-    }
-}
-
-static inline VOID
-IntRebaseList(
-    _Inout_ PLIST_ENTRY pNewHead,
-    _Inout_ PLIST_ENTRY pOldHead)
-{
-    PLIST_ENTRY Entry;
-
-    ASSERT(pNewHead != pOldHead);
-
-    InitializeListHead(pNewHead);
-    while (!IsListEmpty(pOldHead))
-    {
-        Entry = RemoveTailList(pOldHead);
-        InsertHeadList(pNewHead, Entry);
     }
 }
 

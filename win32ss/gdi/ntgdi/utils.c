@@ -26,6 +26,23 @@ SZZ_GetSize(_In_ PCZZWSTR pszz)
     return ret * sizeof(WCHAR);
 }
 
+VOID
+IntRebaseList(
+    _Inout_ PLIST_ENTRY pNewHead,
+    _Inout_ PLIST_ENTRY pOldHead)
+{
+    PLIST_ENTRY Entry;
+
+    ASSERT(pNewHead != pOldHead);
+
+    InitializeListHead(pNewHead);
+    while (!IsListEmpty(pOldHead))
+    {
+        Entry = RemoveTailList(pOldHead);
+        InsertHeadList(pNewHead, Entry);
+    }
+}
+
 LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees)
 {
     nTenthsOfDegrees %= 360 * 10;

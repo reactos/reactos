@@ -28,6 +28,11 @@ PWSTR PathFindFileNameW(_In_ PCWSTR pszPath);
 BOOL PathIsRelativeW(_In_ LPCWSTR lpszPath);
 
 VOID
+IntRebaseList(
+    _Inout_ PLIST_ENTRY pNewHead,
+    _Inout_ PLIST_ENTRY pOldHead);
+
+VOID
 IntUnicodeStringToBuffer(
     _Out_ LPWSTR pszBuffer,
     _In_ SIZE_T cbBuffer,
@@ -94,7 +99,7 @@ static inline SIZE_T FASTCALL
 IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
 {
     RtlCopyMemory(pb, pName->Buffer, pName->Length);
-    *(WCHAR *)&pb[pName->Length] = UNICODE_NULL;
+    *(WCHAR*)&pb[pName->Length] = UNICODE_NULL;
     return pName->Length + sizeof(UNICODE_NULL);
 }
 
