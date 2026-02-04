@@ -367,7 +367,8 @@ static void test_NtOpenKey(void)
     status = pNtOpenKeyEx(&subkey, KEY_ALL_ACCESS, &attr, 0);
     ok(status == STATUS_SUCCESS, "NtOpenKeyEx failed: 0x%08lx\n", status);
 
-    pNtDeleteKey( subkey );
+    status = pNtDeleteKey( subkey );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( subkey );
     pNtClose( key );
 
@@ -457,7 +458,8 @@ static void test_NtCreateKey(void)
     pRtlCreateUnicodeStringFromAsciiz( &str, "test_subkey\\" );
     status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
     ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08lx\n", status );
-    pNtDeleteKey( subkey );
+    status = pNtDeleteKey( subkey );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( subkey );
     pRtlFreeUnicodeString( &str );
 
@@ -468,16 +470,19 @@ static void test_NtCreateKey(void)
     status = pNtCreateKey( &subkey2, am, &attr, 0, 0, 0, 0 );
     ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08lx\n", status );
     pRtlFreeUnicodeString( &str );
-    pNtDeleteKey( subkey2 );
+    status = pNtDeleteKey( subkey2 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( subkey2 );
-    pNtDeleteKey( subkey );
+    status = pNtDeleteKey( subkey );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( subkey );
 
     pRtlCreateUnicodeStringFromAsciiz( &str, "test_subkey" );
     status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
     ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08lx\n", status );
     pRtlFreeUnicodeString( &str );
-    pNtDeleteKey( subkey );
+    status = pNtDeleteKey( subkey );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( subkey );
 
     attr.RootDirectory = 0;
@@ -835,13 +840,19 @@ static void test_NtDeleteKey(void)
         /* On older Windows versions the key cannot be deleted, when it still has values in it */
         ok(status == STATUS_CANNOT_DELETE, "NtDeleteKey unexpected status: 0x%08lx\n", status);
         PKEY_VALUE_BASIC_INFORMATION info = (PKEY_VALUE_BASIC_INFORMATION)buffer;
-        while (NtEnumerateValueKey(hkey, 0, KeyValueBasicInformation, info, sizeof(buffer), &size) >= 0)
+        while ((status = NtEnumerateKey(hkey, 0, KeyValueBasicInformation, info, sizeof(buffer), &size)) >= 0)
+        {
+            string = (UNICODE_STRING){ info->NameLength, info->NameLength, info->Name };
+            printf("got subkey %wZ\n", &string);
+        }
+        while ((status = NtEnumerateValueKey(hkey, 0, KeyValueBasicInformation, info, sizeof(buffer), &size)) >= 0)
         {
             string = (UNICODE_STRING){ info->NameLength, info->NameLength, info->Name };
             printf("Deleting value %wZ\n", &string);
             status = NtDeleteValueKey(hkey, &string);
             ok(status == STATUS_SUCCESS, "NtDeleteValueKey failed: 0x%08lx\n", status);
         }
+        ok(status == STATUS_NO_MORE_ENTRIES, "NtEnumerateValueKey unexpected status: 0x%08lx\n", status);
         status = pNtDeleteKey(hkey);
     }
 #endif
@@ -1674,9 +1685,11 @@ static void test_redirection(void)
     ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
-    pNtDeleteKey( root32 );
+    status = pNtDeleteKey( root32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( root32 );
-    pNtDeleteKey( root64 );
+    status = pNtDeleteKey( root64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( root64 );
 
     /* Software\Classes is shared/reflected so behavior is different */
@@ -1719,7 +1732,8 @@ static void test_redirection(void)
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Wow6432Node\\Wine", KEY_WOW64_64KEY, ptr_size == 64 ? 32 : 0 );
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Wow6432Node\\Wine", KEY_WOW64_32KEY, ptr_size == 64 ? 32 : 64 );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Wine", 0, ptr_size == 32 ? 0 : 64 );
@@ -1729,7 +1743,8 @@ static void test_redirection(void)
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Wow6432Node\\Wine", KEY_WOW64_64KEY, 0 );
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Wow6432Node\\Wine", KEY_WOW64_32KEY, 0 );
 
-    pNtDeleteKey( key64 );
+    status = pNtDeleteKey( key64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key64 );
 
     pRtlInitUnicodeString( &str, L"\\Registry\\Machine\\Software\\Classes" );
@@ -1747,7 +1762,8 @@ static void test_redirection(void)
     attr.RootDirectory = key64;
     status = pNtCreateKey( &key, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
     ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08lx\n", status );
-    pNtDeleteKey( key );
+    status = pNtDeleteKey( key );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key );
 
     attr.RootDirectory = root32;
@@ -1777,7 +1793,8 @@ static void test_redirection(void)
     check_key_value( root32, "Wine", KEY_WOW64_64KEY, 64 );
     check_key_value( root32, "Wine", KEY_WOW64_32KEY, 64 );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     check_key_value( root64, "Wine", 0, 0 );
@@ -1787,7 +1804,8 @@ static void test_redirection(void)
     check_key_value( root32, "Wine", KEY_WOW64_64KEY, 0 );
     check_key_value( root32, "Wine", KEY_WOW64_32KEY, 0 );
 
-    pNtDeleteKey( key64 );
+    status = pNtDeleteKey( key64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key64 );
 
     attr.RootDirectory = root32;
@@ -1805,7 +1823,8 @@ static void test_redirection(void)
     check_key_value( root32, "Wine", KEY_WOW64_64KEY, 32 );
     check_key_value( root32, "Wine", KEY_WOW64_32KEY, 32 );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     pNtClose( root64 );
@@ -1853,7 +1872,8 @@ static void test_redirection(void)
     ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08lx\n", status );
     pNtClose( key );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     attr.RootDirectory = root64;
@@ -1866,10 +1886,12 @@ static void test_redirection(void)
         "NtOpenKey failed: 0x%08lx\n", status );
     if (!status) pNtClose( key );
 
-    pNtDeleteKey( key64 );
+    status = pNtDeleteKey( key64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key64 );
 
-    pNtDeleteKey( root );
+    status = pNtDeleteKey( root );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( root );
 
     attr.RootDirectory = root64;
@@ -1925,7 +1947,8 @@ static void test_redirection(void)
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Interface\\Wine", KEY_WOW64_64KEY, 64 );
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Interface\\Wine", KEY_WOW64_32KEY, ptr_size );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     check_key_value( root64, "Wine", 0, ptr_size == 64 ? 0 : 64 );
@@ -1939,7 +1962,8 @@ static void test_redirection(void)
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Interface\\Wine", KEY_WOW64_64KEY, ptr_size == 64 ? 0 : 64 );
     check_key_value( 0, "\\Registry\\Machine\\Software\\Classes\\Interface\\Wine", KEY_WOW64_32KEY, 0 );
 
-    pNtDeleteKey( key64 );
+    status = pNtDeleteKey( key64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key64 );
 
     pRtlInitUnicodeString( &str, L"Wine" );
@@ -1958,7 +1982,8 @@ static void test_redirection(void)
     check_key_value( root32, "Wine", KEY_WOW64_64KEY, 32 );
     check_key_value( root32, "Wine", KEY_WOW64_32KEY, 32 );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 
     pNtClose( root64 );
@@ -2037,7 +2062,8 @@ static void test_redirection(void)
     check_enum_value( L"\\Registry\\Machine\\Software\\Wow6432Node\\Classes",
                       KEY_ALL_ACCESS, ptr_size == 32 ? subkeys64 : subkeys32, TRUE );
 
-    pNtDeleteKey( key32 );
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose( key32 );
 }
 
@@ -2450,8 +2476,10 @@ static void test_NtRenameKey(void)
         ok(!!wcsstr(info->Name, L"renamed_subkey"), "Unexpected subkey name %s.\n", wine_dbgstr_w(info->Name));
     }
 
-    pNtDeleteKey(subkey);
-    pNtDeleteKey(key);
+    status = pNtDeleteKey(subkey);
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
+    status = pNtDeleteKey(key);
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status );
     pNtClose(subkey);
     pNtClose(key);
 }
