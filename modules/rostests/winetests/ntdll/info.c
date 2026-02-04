@@ -693,6 +693,14 @@ static void test_query_process( BOOL extended )
 
     HeapFree( GetProcessHeap(), 0, spi_buf);
 
+#ifdef __REACTOS__
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        win_skip("Skipping ClientId tests on pre-NT6.\n");
+    }
+    else
+    {
+#endif
     for (i = 1; i < 4; ++i)
     {
         InitializeObjectAttributes( &attr, NULL, 0, NULL, NULL );
@@ -730,6 +738,9 @@ static void test_query_process( BOOL extended )
 
         NtClose( handle );
     }
+#ifdef __REACTOS__
+    }
+#endif
     winetest_pop_context();
 }
 
@@ -3877,7 +3888,7 @@ static void test_system_debug_control(void)
         }
         else
         {
-            ok( status == STATUS_DEBUGGER_INACTIVE || status == STATUS_ACCESS_DENIED || status == STATUS_INFO_LENGTH_MISMATCH,
+            ok( status == STATUS_DEBUGGER_INACTIVE || status == STATUS_ACCESS_DENIED || status == STATUS_INFO_LENGTH_MISMATCH || broken(/* __REACTOS__ Win 2003: */ status == STATUS_NOT_IMPLEMENTED),
                 "class %d, got %#lx.\n", class, status );
         }
     }
