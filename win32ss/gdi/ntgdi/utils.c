@@ -7,10 +7,9 @@
 
 #include <win32k.h>
 
-POINTL g_PointZero = { 0, 0 };
+extern UNICODE_STRING g_FontRegPath;
 
-UNICODE_STRING g_FontRegPath =
-    RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
+POINTL g_PointZero = { 0, 0 };
 
 SIZE_T
 SZZ_GetSize(_In_ PCZZWSTR pszz)
@@ -27,6 +26,85 @@ SZZ_GetSize(_In_ PCZZWSTR pszz)
     return ret * sizeof(WCHAR);
 }
 
+LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees)
+{
+    nTenthsOfDegrees %= 360 * 10;
+    if (nTenthsOfDegrees >= 0)
+        return nTenthsOfDegrees;
+    return nTenthsOfDegrees + 360 * 10;
+}
+
+LPCWSTR FASTCALL IntNameFromCharSet(_In_ BYTE CharSet)
+{
+    switch (CharSet)
+    {
+        case ANSI_CHARSET: return L"ANSI";
+        case DEFAULT_CHARSET: return L"Default";
+        case SYMBOL_CHARSET: return L"Symbol";
+        case SHIFTJIS_CHARSET: return L"Shift_JIS";
+        case HANGUL_CHARSET: return L"Hangul";
+        case GB2312_CHARSET: return L"GB 2312";
+        case CHINESEBIG5_CHARSET: return L"Chinese Big5";
+        case OEM_CHARSET: return L"OEM";
+        case JOHAB_CHARSET: return L"Johab";
+        case HEBREW_CHARSET: return L"Hebrew";
+        case ARABIC_CHARSET: return L"Arabic";
+        case GREEK_CHARSET: return L"Greek";
+        case TURKISH_CHARSET: return L"Turkish";
+        case VIETNAMESE_CHARSET: return L"Vietnamese";
+        case THAI_CHARSET: return L"Thai";
+        case EASTEUROPE_CHARSET: return L"Eastern European";
+        case RUSSIAN_CHARSET: return L"Russian";
+        case MAC_CHARSET: return L"Mac";
+        case BALTIC_CHARSET: return L"Baltic";
+        default: return L"Unknown";
+    }
+}
+
+/* See https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2008/bb165625(v=vs.90) */
+BYTE IntCharSetFromLangID(_In_ LANGID LangID)
+{
+    /* FIXME: Add more and fix if wrong */
+    switch (PRIMARYLANGID(LangID))
+    {
+        case LANG_CHINESE:
+            switch (SUBLANGID(LangID))
+            {
+                case SUBLANG_CHINESE_TRADITIONAL:
+                    return CHINESEBIG5_CHARSET;
+                case SUBLANG_CHINESE_SIMPLIFIED:
+                default:
+                    break;
+            }
+            return GB2312_CHARSET;
+
+        case LANG_CZECH: case LANG_HUNGARIAN: case LANG_POLISH:
+        case LANG_SLOVAK: case LANG_SLOVENIAN: case LANG_ROMANIAN:
+            return EASTEUROPE_CHARSET;
+
+        case LANG_RUSSIAN: case LANG_BULGARIAN: case LANG_MACEDONIAN:
+        case LANG_SERBIAN: case LANG_UKRAINIAN:
+            return RUSSIAN_CHARSET;
+
+        case LANG_ARABIC:       return ARABIC_CHARSET;
+        case LANG_GREEK:        return GREEK_CHARSET;
+        case LANG_HEBREW:       return HEBREW_CHARSET;
+        case LANG_JAPANESE:     return SHIFTJIS_CHARSET;
+        case LANG_KOREAN:       return JOHAB_CHARSET;
+        case LANG_TURKISH:      return TURKISH_CHARSET;
+        case LANG_THAI:         return THAI_CHARSET;
+        case LANG_LATVIAN:      return BALTIC_CHARSET;
+        case LANG_VIETNAMESE:   return VIETNAMESE_CHARSET;
+
+        case LANG_ENGLISH: case LANG_BASQUE: case LANG_CATALAN:
+        case LANG_DANISH: case LANG_DUTCH: case LANG_FINNISH:
+        case LANG_FRENCH: case LANG_GERMAN: case LANG_ITALIAN:
+        case LANG_NORWEGIAN: case LANG_PORTUGUESE: case LANG_SPANISH:
+        case LANG_SWEDISH: default:
+            return ANSI_CHARSET;
+    }
+}
+
 VOID IntSwapEndian(_Inout_ LPVOID pvData, _In_ DWORD Size)
 {
     BYTE b, *pb = pvData;
@@ -40,7 +118,7 @@ VOID IntSwapEndian(_Inout_ LPVOID pvData, _In_ DWORD Size)
     }
 }
 
-/* Borrowed from shlwapi */
+/* Borrowed from shlwapi!PathFindFileNameW */
 PWSTR PathFindFileNameW(_In_ PCWSTR pszPath)
 {
     PCWSTR lastSlash = pszPath;

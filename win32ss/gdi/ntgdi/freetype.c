@@ -339,6 +339,10 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 
 FT_Library  g_FreeTypeLibrary;
 
+/* registry */
+UNICODE_STRING g_FontRegPath =
+    RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
+
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
 static PFAST_MUTEX      g_FreeTypeLock;
@@ -1102,14 +1106,6 @@ FreeFontSupport(VOID)
 
     ExFreePoolWithTag(g_FreeTypeLock, TAG_INTERNAL_SYNC);
     g_FreeTypeLock = NULL;
-}
-
-static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
-{
-    nTenthsOfDegrees %= 360 * 10;
-    if (nTenthsOfDegrees >= 0)
-        return nTenthsOfDegrees;
-    return nTenthsOfDegrees + 360 * 10;
 }
 
 static VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
@@ -2015,34 +2011,6 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     return FaceCount;
 }
 
-static LPCWSTR FASTCALL
-NameFromCharSet(BYTE CharSet)
-{
-    switch (CharSet)
-    {
-        case ANSI_CHARSET: return L"ANSI";
-        case DEFAULT_CHARSET: return L"Default";
-        case SYMBOL_CHARSET: return L"Symbol";
-        case SHIFTJIS_CHARSET: return L"Shift_JIS";
-        case HANGUL_CHARSET: return L"Hangul";
-        case GB2312_CHARSET: return L"GB 2312";
-        case CHINESEBIG5_CHARSET: return L"Chinese Big5";
-        case OEM_CHARSET: return L"OEM";
-        case JOHAB_CHARSET: return L"Johab";
-        case HEBREW_CHARSET: return L"Hebrew";
-        case ARABIC_CHARSET: return L"Arabic";
-        case GREEK_CHARSET: return L"Greek";
-        case TURKISH_CHARSET: return L"Turkish";
-        case VIETNAMESE_CHARSET: return L"Vietnamese";
-        case THAI_CHARSET: return L"Thai";
-        case EASTEUROPE_CHARSET: return L"Eastern European";
-        case RUSSIAN_CHARSET: return L"Russian";
-        case MAC_CHARSET: return L"Mac";
-        case BALTIC_CHARSET: return L"Baltic";
-        default: return L"Unknown";
-    }
-}
-
 static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
 /* Adds the font resource from the specified file to the system */
@@ -2185,7 +2153,7 @@ IntGdiAddFontResourceSingle(
         else if (LoadFont.CharSet != DEFAULT_CHARSET)
         {
             /* Append " (CharSetName)" */
-            CharSetName = NameFromCharSet(LoadFont.CharSet);
+            CharSetName = IntNameFromCharSet(LoadFont.CharSet);
             Length = LoadFont.RegValueName.Length +
                      (wcslen(CharSetName) + 3) * sizeof(WCHAR) +
                      sizeof(UNICODE_NULL);
@@ -2750,7 +2718,6 @@ IntGetFontRenderMode(LOGFONTW *logfont)
     return FT_RENDER_MODE_NORMAL;
 }
 
-
 NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
@@ -2839,7 +2806,6 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 
     return TRUE;
 }
-
 
 static BOOL face_has_symbol_charmap(FT_Face ft_face)
 {
@@ -3076,15 +3042,6 @@ static NTSTATUS
 IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID);
 
-typedef struct FONT_NAMES
-{
-    UNICODE_STRING FamilyNameW;     /* family name (TT_NAME_ID_FONT_FAMILY) */
-    UNICODE_STRING FaceNameW;       /* face name (TT_NAME_ID_FULL_NAME) */
-    UNICODE_STRING StyleNameW;      /* style name (TT_NAME_ID_FONT_SUBFAMILY) */
-    UNICODE_STRING FullNameW;       /* unique name (TT_NAME_ID_UNIQUE_ID) */
-    ULONG OtmSize;                  /* size of OUTLINETEXTMETRICW with extra data */
-} FONT_NAMES, *LPFONT_NAMES;
-
 static __inline void FASTCALL
 IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
 {
@@ -3111,38 +3068,6 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
               Names->StyleNameW.Length + sizeof(UNICODE_NULL) +
               Names->FullNameW.Length + sizeof(UNICODE_NULL);
     Names->OtmSize = OtmSize;
-}
-
-static __inline SIZE_T FASTCALL
-IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
-{
-    RtlCopyMemory(pb, pName->Buffer, pName->Length);
-    *(WCHAR *)&pb[pName->Length] = UNICODE_NULL;
-    return pName->Length + sizeof(UNICODE_NULL);
-}
-
-static __inline BYTE *FASTCALL
-IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
-{
-    BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
-
-    /* family name */
-    Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FamilyNameW, pb);
-
-    /* face name */
-    Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FaceNameW, pb);
-
-    /* style name */
-    Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->StyleNameW, pb);
-
-    /* unique name (full name) */
-    Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FullNameW, pb);
-
-    return pb;
 }
 
 static __inline void FASTCALL
@@ -3316,51 +3241,6 @@ skip_os2:
     IntFreeFontNames(&FontNames);
 
     return Cache->OutlineRequiredSize;
-}
-
-/* See https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2008/bb165625(v=vs.90) */
-static BYTE
-CharSetFromLangID(LANGID LangID)
-{
-    /* FIXME: Add more and fix if wrong */
-    switch (PRIMARYLANGID(LangID))
-    {
-        case LANG_CHINESE:
-            switch (SUBLANGID(LangID))
-            {
-                case SUBLANG_CHINESE_TRADITIONAL:
-                    return CHINESEBIG5_CHARSET;
-                case SUBLANG_CHINESE_SIMPLIFIED:
-                default:
-                    break;
-            }
-            return GB2312_CHARSET;
-
-        case LANG_CZECH: case LANG_HUNGARIAN: case LANG_POLISH:
-        case LANG_SLOVAK: case LANG_SLOVENIAN: case LANG_ROMANIAN:
-            return EASTEUROPE_CHARSET;
-
-        case LANG_RUSSIAN: case LANG_BULGARIAN: case LANG_MACEDONIAN:
-        case LANG_SERBIAN: case LANG_UKRAINIAN:
-            return RUSSIAN_CHARSET;
-
-        case LANG_ARABIC:       return ARABIC_CHARSET;
-        case LANG_GREEK:        return GREEK_CHARSET;
-        case LANG_HEBREW:       return HEBREW_CHARSET;
-        case LANG_JAPANESE:     return SHIFTJIS_CHARSET;
-        case LANG_KOREAN:       return JOHAB_CHARSET;
-        case LANG_TURKISH:      return TURKISH_CHARSET;
-        case LANG_THAI:         return THAI_CHARSET;
-        case LANG_LATVIAN:      return BALTIC_CHARSET;
-        case LANG_VIETNAMESE:   return VIETNAMESE_CHARSET;
-
-        case LANG_ENGLISH: case LANG_BASQUE: case LANG_CATALAN:
-        case LANG_DANISH: case LANG_DUTCH: case LANG_FINNISH:
-        case LANG_FRENCH: case LANG_GERMAN: case LANG_ITALIAN:
-        case LANG_NORWEGIAN: case LANG_PORTUGUESE: case LANG_SPANISH:
-        case LANG_SWEDISH: default:
-            return ANSI_CHARSET;
-    }
 }
 
 static NTSTATUS
@@ -5493,7 +5373,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     BYTE    Byte;
     LONG    Long;
     BOOL    fNeedScaling = FALSE;
-    const BYTE UserCharSet = CharSetFromLangID(gusLanguageID);
+    const BYTE UserCharSet = IntCharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
     WCHAR* ActualNameW;
 

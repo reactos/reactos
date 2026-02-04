@@ -10,7 +10,19 @@
 extern POINTL g_PointZero;
 extern UNICODE_STRING g_FontRegPath;
 
+typedef struct FONT_NAMES
+{
+    UNICODE_STRING FamilyNameW;     /* family name (TT_NAME_ID_FONT_FAMILY) */
+    UNICODE_STRING FaceNameW;       /* face name (TT_NAME_ID_FULL_NAME) */
+    UNICODE_STRING StyleNameW;      /* style name (TT_NAME_ID_FONT_SUBFAMILY) */
+    UNICODE_STRING FullNameW;       /* unique name (TT_NAME_ID_UNIQUE_ID) */
+    ULONG OtmSize;                  /* size of OUTLINETEXTMETRICW with extra data */
+} FONT_NAMES, *LPFONT_NAMES;
+
 SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
+LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees);
+LPCWSTR FASTCALL IntNameFromCharSet(_In_ BYTE CharSet);
+BYTE IntCharSetFromLangID(_In_ LANGID LangID);
 VOID IntSwapEndian(_Inout_ LPVOID pvData, _In_ DWORD Size);
 PWSTR PathFindFileNameW(_In_ PCWSTR pszPath);
 BOOL PathIsRelativeW(_In_ LPCWSTR lpszPath);
@@ -76,4 +88,36 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     }
 
     return lValue;
+}
+
+static inline SIZE_T FASTCALL
+IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
+{
+    RtlCopyMemory(pb, pName->Buffer, pName->Length);
+    *(WCHAR *)&pb[pName->Length] = UNICODE_NULL;
+    return pName->Length + sizeof(UNICODE_NULL);
+}
+
+static inline BYTE *FASTCALL
+IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
+{
+    BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
+
+    /* family name */
+    Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
+    pb += IntStoreName(&Names->FamilyNameW, pb);
+
+    /* face name */
+    Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
+    pb += IntStoreName(&Names->FaceNameW, pb);
+
+    /* style name */
+    Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
+    pb += IntStoreName(&Names->StyleNameW, pb);
+
+    /* unique name (full name) */
+    Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
+    pb += IntStoreName(&Names->FullNameW, pb);
+
+    return pb;
 }
