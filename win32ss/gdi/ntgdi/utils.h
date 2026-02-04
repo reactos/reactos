@@ -10,15 +10,6 @@
 extern POINTL g_PointZero;
 extern UNICODE_STRING g_FontRegPath;
 
-typedef struct FONT_NAMES
-{
-    UNICODE_STRING FamilyNameW;     /* family name (TT_NAME_ID_FONT_FAMILY) */
-    UNICODE_STRING FaceNameW;       /* face name (TT_NAME_ID_FULL_NAME) */
-    UNICODE_STRING StyleNameW;      /* style name (TT_NAME_ID_FONT_SUBFAMILY) */
-    UNICODE_STRING FullNameW;       /* unique name (TT_NAME_ID_UNIQUE_ID) */
-    ULONG OtmSize;                  /* size of OUTLINETEXTMETRICW with extra data */
-} FONT_NAMES, *LPFONT_NAMES;
-
 SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
 LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees);
 LPCWSTR FASTCALL IntNameFromCharSet(_In_ BYTE CharSet);
@@ -94,14 +85,3 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 
     return lValue;
 }
-
-static inline SIZE_T FASTCALL
-IntStoreName(_In_ const UNICODE_STRING *pName, _Out_ PBYTE pb)
-{
-    RtlCopyMemory(pb, pName->Buffer, pName->Length);
-    *(WCHAR*)&pb[pName->Length] = UNICODE_NULL;
-    return pName->Length + sizeof(UNICODE_NULL);
-}
-
-PBYTE FASTCALL
-IntStoreFontNames(_In_ const FONT_NAMES *Names, _Out_ OUTLINETEXTMETRICW *Otm);

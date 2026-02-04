@@ -319,27 +319,3 @@ IntEngFillPolygon(
 
     IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &g_PointZero);
 }
-
-PBYTE FASTCALL
-IntStoreFontNames(_In_ const FONT_NAMES *Names, _Out_ OUTLINETEXTMETRICW *Otm)
-{
-    PBYTE pb = (PBYTE)Otm + sizeof(OUTLINETEXTMETRICW);
-
-    /* family name */
-    Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FamilyNameW, pb);
-
-    /* face name */
-    Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FaceNameW, pb);
-
-    /* style name */
-    Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->StyleNameW, pb);
-
-    /* unique name (full name) */
-    Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FullNameW, pb);
-
-    return pb;
-}
