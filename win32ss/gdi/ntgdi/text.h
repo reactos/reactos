@@ -166,34 +166,3 @@ BOOL WINAPI GreGetTextMetricsW( _In_  HDC hdc, _Out_ LPTEXTMETRICW lptm);
 
 #define IntUnLockProcessPrivateFonts(W32Process) \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&W32Process->PrivateFontListLock)
-
-SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
-VOID IntSwapEndian(_Inout_ LPVOID pvData, _In_ DWORD Size);
-PWSTR PathFindFileNameW(_In_ PCWSTR pszPath);
-BOOL PathIsRelativeW(_In_ LPCWSTR lpszPath);
-
-VOID
-IntUnicodeStringToBuffer(
-    _Out_ LPWSTR pszBuffer,
-    _In_ SIZE_T cbBuffer,
-    _In_ const UNICODE_STRING *pString);
-
-NTSTATUS
-IntDuplicateUnicodeString(
-    _In_ PCUNICODE_STRING Source,
-    _Out_ PUNICODE_STRING Destination);
-
-/* The ranges of the surrogate pairs */
-#define HIGH_SURROGATE_MIN 0xD800U
-#define HIGH_SURROGATE_MAX 0xDBFFU
-#define LOW_SURROGATE_MIN  0xDC00U
-#define LOW_SURROGATE_MAX  0xDFFFU
-
-#define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
-#define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
-
-static inline DWORD
-Utf32FromSurrogatePair(_In_ DWORD ch0, _In_ DWORD ch1)
-{
-    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
-}

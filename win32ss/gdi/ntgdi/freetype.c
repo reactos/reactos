@@ -7,8 +7,6 @@
  *                  Copyright 2016-2026 Katayama Hirofumi MZ.
  */
 
-/** Includes ******************************************************************/
-
 #include <win32k.h>
 
 #include FT_GLYPH_H
@@ -31,7 +29,7 @@
 
 #include <gdi/eng/floatobj.h>
 #include "font.h"
-#include "text.h"
+#include "utils.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -335,17 +333,11 @@ static ULONG s_FontLookupCacheCount = 0;
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
-static POINTL PointZero = { 0, 0 };
 
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
 FT_Library  g_FreeTypeLibrary;
-
-/* registry */
-static UNICODE_STRING g_FontRegPath =
-    RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
-
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
@@ -681,7 +673,6 @@ CleanupFontEntry(PFONT_ENTRY FontEntry)
     CleanupFontEntryEx(FontEntry, FontEntry->Font);
 }
 
-
 static __inline void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
 {
     pt->x.value = vec->x >> 6;
@@ -700,7 +691,6 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 {
     return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
 }
-
 
 #if DBG
 VOID DumpFontEntry(PFONT_ENTRY FontEntry)
@@ -2295,42 +2285,6 @@ IntGdiAddFontResourceEx(
     FontLookUp_Cleanup(TRUE, NULL);
 
     return ret;
-}
-
-/* Delete registry font entries */
-static VOID
-IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
-{
-    NTSTATUS Status;
-    HKEY hKey;
-    WCHAR szName[MAX_PATH], szValue[MAX_PATH];
-    ULONG dwIndex, NameLength, ValueSize, dwType;
-
-    Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
-    if (!NT_SUCCESS(Status))
-        return;
-
-    for (dwIndex = 0;;)
-    {
-        NameLength = RTL_NUMBER_OF(szName);
-        ValueSize = sizeof(szValue);
-        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, &dwType, szValue, &ValueSize);
-        if (!NT_SUCCESS(Status))
-            break;
-
-        if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
-        {
-            ++dwIndex;
-            continue;
-        }
-
-        /* Delete the found value */
-        Status = RegDeleteValueW(hKey, szName);
-        if (!NT_SUCCESS(Status))
-            break;
-    }
-
-    ZwClose(hKey);
 }
 
 static BOOL FASTCALL
@@ -6776,23 +6730,6 @@ NtGdiGetFontFamilyInfo(
     return GotCount;
 }
 
-static inline
-LONG
-ScaleLong(LONG lValue, PFLOATOBJ pef)
-{
-    FLOATOBJ efTemp;
-
-    /* Check if we have scaling different from 1 */
-    if (!FLOATOBJ_Equal(pef, (PFLOATOBJ)&gef1))
-    {
-        /* Need to multiply */
-        FLOATOBJ_SetLong(&efTemp, lValue);
-        FLOATOBJ_Mul(&efTemp, pef);
-        lValue = FLOATOBJ_GetLong(&efTemp);
-    }
-
-    return lValue;
-}
 
 /*
  * Calculate X and Y disposition of the text.
@@ -6882,88 +6819,6 @@ IntGetTextDisposition(
     *pY64 = Y64;
     return TRUE;
 }
-
-VOID APIENTRY
-IntEngFillPolygon(
-    IN OUT PDC dc,
-    IN POINTL *pPoints,
-    IN UINT cPoints,
-    IN BRUSHOBJ *BrushObj)
-{
-    SURFACE *psurf = dc->dclevel.pSurface;
-    RECT Rect;
-    UINT i;
-    INT x, y;
-
-    ASSERT_DC_PREPARED(dc);
-    ASSERT(psurf != NULL);
-
-    Rect.left = Rect.right = pPoints[0].x;
-    Rect.top = Rect.bottom = pPoints[0].y;
-    for (i = 1; i < cPoints; ++i)
-    {
-        x = pPoints[i].x;
-        if (x < Rect.left)
-            Rect.left = x;
-        else if (Rect.right < x)
-            Rect.right = x;
-
-        y = pPoints[i].y;
-        if (y < Rect.top)
-            Rect.top = y;
-        else if (Rect.bottom < y)
-            Rect.bottom = y;
-    }
-
-    IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &PointZero);
-}
-
-VOID
-FASTCALL
-IntEngFillBox(
-    IN OUT PDC dc,
-    IN INT X,
-    IN INT Y,
-    IN INT Width,
-    IN INT Height,
-    IN BRUSHOBJ *BrushObj)
-{
-    RECTL DestRect;
-    SURFACE *psurf = dc->dclevel.pSurface;
-
-    ASSERT_DC_PREPARED(dc);
-    ASSERT(psurf != NULL);
-
-    if (Width < 0)
-    {
-        X += Width;
-        Width = -Width;
-    }
-
-    if (Height < 0)
-    {
-        Y += Height;
-        Height = -Height;
-    }
-
-    DestRect.left = X;
-    DestRect.right = X + Width;
-    DestRect.top = Y;
-    DestRect.bottom = Y + Height;
-
-    IntEngBitBlt(&psurf->SurfObj,
-                 NULL,
-                 NULL,
-                 (CLIPOBJ *)&dc->co,
-                 NULL,
-                 &DestRect,
-                 NULL,
-                 NULL,
-                 BrushObj,
-                 &PointZero,
-                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-}
-
 
 BOOL
 APIENTRY
@@ -7360,7 +7215,7 @@ IntExtTextOutW(
                                &DestRect,
                                (PPOINTL)&MaskRect,
                                &dc->eboText.BrushObject,
-                               &PointZero))
+                               &g_PointZero))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
