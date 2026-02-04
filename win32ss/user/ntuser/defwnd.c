@@ -645,6 +645,7 @@ IntDefWindowProc(
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
    USER_REFERENCE_ENTRY Ref;
+   PWND Parent;
 
    if (Msg > WM_USER) return 0;
 
@@ -743,9 +744,10 @@ IntDefWindowProc(
                co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
             break;
          }
-         UserRefObjectCo(Wnd->spwndParent, &Ref);
-         lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
-         UserDerefObjectCo(Wnd->spwndParent);
+         Parent = Wnd->spwndParent;
+         UserRefObjectCo(Parent, &Ref);
+         lResult = co_IntSendMessage(UserHMGetHandle(Parent), WM_APPCOMMAND, wParam, lParam);
+         UserDerefObjectCo(Parent);
          break;
 
       case WM_POPUPSYSTEMMENU:
