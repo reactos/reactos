@@ -645,7 +645,6 @@ IntDefWindowProc(
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    LRESULT lResult = 0;
    USER_REFERENCE_ENTRY Ref;
-   PWND Parent;
 
    if (Msg > WM_USER) return 0;
 
@@ -737,6 +736,8 @@ IntDefWindowProc(
          return IntClientShutdown(Wnd, wParam, lParam);
 
       case WM_APPCOMMAND:
+      {
+         PWND Parent;
          if ( (Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
                Wnd != co_GetDesktopWindow(Wnd) )
          {
@@ -749,6 +750,7 @@ IntDefWindowProc(
          lResult = co_IntSendMessage(UserHMGetHandle(Parent), WM_APPCOMMAND, wParam, lParam);
          UserDerefObjectCo(Parent);
          break;
+      }
 
       case WM_POPUPSYSTEMMENU:
          /* This is an undocumented message used by the windows taskbar to
