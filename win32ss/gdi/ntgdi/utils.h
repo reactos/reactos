@@ -96,33 +96,12 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 }
 
 static inline SIZE_T FASTCALL
-IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
+IntStoreName(_In_ const UNICODE_STRING *pName, _Out_ PBYTE pb)
 {
     RtlCopyMemory(pb, pName->Buffer, pName->Length);
     *(WCHAR*)&pb[pName->Length] = UNICODE_NULL;
     return pName->Length + sizeof(UNICODE_NULL);
 }
 
-static inline BYTE *FASTCALL
-IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
-{
-    BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
-
-    /* family name */
-    Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FamilyNameW, pb);
-
-    /* face name */
-    Otm->otmpFaceName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FaceNameW, pb);
-
-    /* style name */
-    Otm->otmpStyleName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->StyleNameW, pb);
-
-    /* unique name (full name) */
-    Otm->otmpFullName = (LPSTR)(pb - (BYTE*) Otm);
-    pb += IntStoreName(&Names->FullNameW, pb);
-
-    return pb;
-}
+PBYTE FASTCALL
+IntStoreFontNames(_In_ const FONT_NAMES *Names, _Out_ OUTLINETEXTMETRICW *Otm);
