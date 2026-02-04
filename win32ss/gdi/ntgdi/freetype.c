@@ -6198,7 +6198,7 @@ FontLookUp_LookUp(const LOGFONTW *pLogFont)
     for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
     {
         PFONT_LOOKUP_CACHE pEntry = CONTAINING_RECORD(Entry, FONT_LOOKUP_CACHE, ListEntry);
-        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
+        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(*pLogFont)))
         {
             // Move to head
             RemoveEntryList(&pEntry->ListEntry);
@@ -6214,7 +6214,7 @@ FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontO
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cache?
+    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cached entries?
     {
         // Remove tail one
         PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
@@ -6223,12 +6223,12 @@ FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontO
         s_FontLookupCacheCount--;
     }
 
-    // Add new cache
-    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_LOOKUP_CACHE), TAG_FONT);
+    // Add new cache entry
+    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(*pEntry), TAG_FONT);
     if (pEntry)
     {
         // Populate
-        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
+        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(*LogFont));
         pEntry->SharedFace = SharedFace;
         SharedFace_AddRef(SharedFace);
         pEntry->pFontObj = pFontObj;
@@ -6242,7 +6242,6 @@ PSHARED_FACE
 IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
 {
     ASSERT_FREETYPE_LOCK_HELD();
-    ASSERT(pLogFont);
 
     LOGFONTW LogFont = *pLogFont;
     RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
@@ -7389,7 +7388,10 @@ IntExtTextOutW(
 
         /* Do chars > space & not DEL & not nbsp have a glyphSize.cx of zero? */
         if (ch0 > L' ' && ch0 != del && ch0 != nbsp && glyphSize.cx == 0)
-            DPRINT1("WARNING: WChar 0x%04x has a glyphSize.cx of zero\n", ch0);
+        {
+            DPRINT1("WARNING: family_name '%s' WChar 0x%04x has a glyphSize.cx of zero\n",
+                    face->family_name, ch0);
+        }
 
         /* Don't ignore spaces or non-breaking spaces when computing offset.
          * This completes the fix of CORE-11787. */
