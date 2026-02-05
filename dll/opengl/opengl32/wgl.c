@@ -653,6 +653,15 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     struct wgl_context* old_ctx = get_context(IntGetCurrentRC());
     const GLCLTPROCTABLE* apiTable;
     LONG thread_id = (LONG)GetCurrentThreadId();
+    TEB* teb = NtCurrentTeb();
+
+    /* Validate TEB before proceeding */
+    if (!teb)
+    {
+        ERR("TEB is NULL, cannot make context current.\n");
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
     if(ctx)
     {
@@ -752,6 +761,10 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
             SetLastError( ERROR_INVALID_HANDLE );
             return FALSE;
         }
+        
+        /* Clear current context when hglrc is NULL */
+        IntMakeCurrent(NULL, NULL, NULL);
+        IntSetCurrentDispatchTable(NULL);
     }
 
     return TRUE;
