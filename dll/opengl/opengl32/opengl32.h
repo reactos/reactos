@@ -141,27 +141,21 @@ FORCEINLINE
 HGLRC
 IntGetCurrentRC(void)
 {
-    TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
-    return teb->glCurrentRC;
+    return NtCurrentTeb()->glCurrentRC;
 }
 
 FORCEINLINE
 HDC
 IntGetCurrentDC(void)
 {
-    TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
-    return teb->glReserved2;
+    return NtCurrentTeb()->glReserved2;
 }
 
 static inline
 struct wgl_dc_data*
 IntGetCurrentDcData(void)
 {
-    TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
-    return teb->glSectionInfo;
+    return NtCurrentTeb()->glSectionInfo;
 }
 
 FORCEINLINE
