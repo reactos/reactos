@@ -67,6 +67,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 set_module_type(ntdll_winetest win32cui)
-add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(ntdll_winetest user32 ole32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_rostests_file(TARGET ntdll_winetest)
 target_compile_definitions(ntdll_winetest PRIVATE wcsnicmp=_wcsnicmp)

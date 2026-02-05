@@ -817,42 +817,6 @@ static void test_NtQueryValueKey(void)
     pNtClose(key);
 }
 
-#ifdef __REACTOS__
-static void delete_subkeys_and_values(HKEY hkey)
-{
-    NTSTATUS status;
-    DWORD size;
-    char buffer[200];
-    UNICODE_STRING string;
-    PKEY_BASIC_INFORMATION keyInfo = (PKEY_BASIC_INFORMATION)buffer;
-    while ((status = NtEnumerateKey(hkey, 0, KeyBasicInformation, keyInfo, sizeof(buffer), &size)) >= 0)
-    {
-        string = (UNICODE_STRING){ keyInfo->NameLength, keyInfo->NameLength, keyInfo->Name };
-        printf("got subkey %wZ\n", &string);
-        HANDLE hsubkey;
-        OBJECT_ATTRIBUTES attr = { sizeof(OBJECT_ATTRIBUTES), hkey, &string, OBJ_CASE_INSENSITIVE, NULL, NULL };
-        status = NtOpenKey(&hsubkey, KEY_ALL_ACCESS, &attr);
-        ok(status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08lx\n", status);
-        delete_subkeys_and_values(hsubkey);
-        status = pNtDeleteKey(hsubkey);
-        NtClose(hsubkey);
-        ok(status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08lx\n", status);
-        if (status != STATUS_SUCCESS) break;
-    }
-    ok(status == STATUS_NO_MORE_ENTRIES, "NtEnumerateKey unexpected status: 0x%08lx\n", status);
-    PKEY_VALUE_BASIC_INFORMATION valInfo = (PKEY_VALUE_BASIC_INFORMATION)buffer;
-    while ((status = NtEnumerateValueKey(hkey, 0, KeyValueBasicInformation, valInfo, sizeof(buffer), &size)) >= 0)
-    {
-        string = (UNICODE_STRING){ valInfo->NameLength, valInfo->NameLength, valInfo->Name };
-        printf("Deleting value %wZ\n", &string);
-        status = NtDeleteValueKey(hkey, &string);
-        ok(status == STATUS_SUCCESS, "NtDeleteValueKey failed: 0x%08lx\n", status);
-        if (status != STATUS_SUCCESS) break;
-    }
-    ok(status == STATUS_NO_MORE_ENTRIES, "NtEnumerateValueKey unexpected status: 0x%08lx\n", status);
-}
-#endif
-
 static void test_NtDeleteKey(void)
 {
     UNICODE_STRING string;
@@ -873,9 +837,9 @@ static void test_NtDeleteKey(void)
 #ifdef __REACTOS__
     if (GetNTVersion() < _WIN32_WINNT_WIN7)
     {
-        /* On older Windows versions the key cannot be deleted, when it still has keys/values in it */
+        /* On older Windows versions the key cannot be deleted, if it still has keys/values in it */
         ok(status == STATUS_CANNOT_DELETE, "NtDeleteKey unexpected status: 0x%08lx\n", status);
-        delete_subkeys_and_values(hkey);
+        RegDeleteTreeW(hkey, NULL);
         status = pNtDeleteKey(hkey);
     }
 #endif
