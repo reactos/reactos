@@ -1151,10 +1151,11 @@ VideoPortInitialize(
  * @implemented
  */
 VOID
+__cdecl
 VideoPortDebugPrint(
-    IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
-    IN PCHAR DebugMessage,
-    ...)
+    _In_ VIDEO_DEBUG_LEVEL DebugPrintLevel,
+    _In_ PSTR DebugMessage,
+    _In_ ...)
 {
     va_list ap;
 
@@ -1162,7 +1163,7 @@ VideoPortDebugPrint(
         DebugPrintLevel = Error;
 
     va_start(ap, DebugMessage);
-    vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
+    vDbgPrintEx(DPFLTR_VIDEO_ID, DebugPrintLevel, DebugMessage, ap);
     va_end(ap);
 }
 
