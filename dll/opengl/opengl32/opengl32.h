@@ -120,24 +120,39 @@ IntGetCurrentDispatchTable(void)
 }
 
 FORCEINLINE
+void
+IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
+{
+    NtCurrentTeb()->glTable = (void*)table;
+}
+
+FORCEINLINE
+void
+IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
+{
+    TEB* CurrentTeb = NtCurrentTeb();
+
+    CurrentTeb->glCurrentRC = hglrc;
+    CurrentTeb->glReserved2 = hdc;
+    CurrentTeb->glSectionInfo = dc_data;
+}
+
+FORCEINLINE
 HGLRC
 IntGetCurrentRC(void)
 {
-    return NtCurrentTeb()->glCurrentRC;
+    TEB* teb = NtCurrentTeb();
+    if (!teb) return NULL;
+    return teb->glCurrentRC;
 }
 
 FORCEINLINE
 HDC
 IntGetCurrentDC(void)
 {
-    return NtCurrentTeb()->glReserved2;
-}
-
-static inline
-struct wgl_dc_data*
-IntGetCurrentDcData(void)
-{
-    return NtCurrentTeb()->glSectionInfo;
+    TEB* teb = NtCurrentTeb();
+    if (!teb) return NULL;
+    return teb->glReserved2;
 }
 
 static inline
