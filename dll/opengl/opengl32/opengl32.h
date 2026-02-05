@@ -120,45 +120,24 @@ IntGetCurrentDispatchTable(void)
 }
 
 FORCEINLINE
-void
-IntSetCurrentDispatchTable(const GLDISPATCHTABLE* table)
-{
-    NtCurrentTeb()->glTable = (void*)table;
-}
-
-FORCEINLINE
-void
-IntMakeCurrent(HGLRC hglrc, HDC hdc, struct wgl_dc_data* dc_data)
-{
-    TEB* CurrentTeb = NtCurrentTeb();
-
-    CurrentTeb->glCurrentRC = hglrc;
-    CurrentTeb->glReserved2 = hdc;
-    CurrentTeb->glSectionInfo = dc_data;
-}
-
-FORCEINLINE
 HGLRC
 IntGetCurrentRC(void)
 {
-    TEB* teb = NtCurrentTeb();
-    if (!teb) {
-        ERR("TEB is NULL - serious thread state issue detected\n");
-        return NULL;
-    }
-    return teb->glCurrentRC;
+    return NtCurrentTeb()->glCurrentRC;
 }
 
 FORCEINLINE
 HDC
 IntGetCurrentDC(void)
 {
-    TEB* teb = NtCurrentTeb();
-    if (!teb) {
-        ERR("TEB is NULL - serious thread state issue detected\n");
-        return NULL;
-    }
-    return teb->glReserved2;
+    return NtCurrentTeb()->glReserved2;
+}
+
+static inline
+struct wgl_dc_data*
+IntGetCurrentDcData(void)
+{
+    return NtCurrentTeb()->glSectionInfo;
 }
 
 static inline
@@ -166,10 +145,7 @@ struct wgl_dc_data*
 IntGetCurrentDcData(void)
 {
     TEB* teb = NtCurrentTeb();
-    if (!teb) {
-        ERR("TEB is NULL - serious thread state issue detected\n");
-        return NULL;
-    }
+    if (!teb) return NULL;
     return teb->glSectionInfo;
 }
 
