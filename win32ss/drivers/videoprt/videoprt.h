@@ -269,6 +269,11 @@ extern ULONG NumOfVgaRanges;
 
 BOOLEAN
 FASTCALL
+IntIsVgaSaveDriver(
+    _In_ PDRIVER_OBJECT DriverObject);
+
+BOOLEAN
+FASTCALL
 IntAttachToCSRSS(
     _Outptr_ PKPROCESS* CallingProcess,
     _Out_ PKAPC_STATE ApcState);

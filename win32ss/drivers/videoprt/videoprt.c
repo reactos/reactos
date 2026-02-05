@@ -49,8 +49,10 @@ ULONG NumOfVgaRanges = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BOOLEAN
-IntIsVgaSaveDriverName(_In_ PDRIVER_OBJECT DriverObject)
+BOOLEAN
+FASTCALL
+IntIsVgaSaveDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     static const UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
     return RtlEqualUnicodeString(&VgaSave, &DriverObject->DriverName, TRUE);
@@ -444,7 +446,7 @@ IntVideoPortFindAdapter(
     BOOLEAN VgaResourcesReleased = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriverName(DriverObject);
+    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriver(DriverObject);
     DeviceExtension->IsVgaDetect = DeviceExtension->IsVgaDriver;
     DeviceExtension->IsLegacyDetect = FALSE;
     DeviceExtension->ReportDevice = FALSE;
