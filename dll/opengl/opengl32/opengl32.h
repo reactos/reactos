@@ -142,7 +142,10 @@ HGLRC
 IntGetCurrentRC(void)
 {
     TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
+    if (!teb) {
+        ERR("TEB is NULL - serious thread state issue detected\n");
+        return NULL;
+    }
     return teb->glCurrentRC;
 }
 
@@ -151,7 +154,10 @@ HDC
 IntGetCurrentDC(void)
 {
     TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
+    if (!teb) {
+        ERR("TEB is NULL - serious thread state issue detected\n");
+        return NULL;
+    }
     return teb->glReserved2;
 }
 
@@ -160,7 +166,10 @@ struct wgl_dc_data*
 IntGetCurrentDcData(void)
 {
     TEB* teb = NtCurrentTeb();
-    if (!teb) return NULL;
+    if (!teb) {
+        ERR("TEB is NULL - serious thread state issue detected\n");
+        return NULL;
+    }
     return teb->glSectionInfo;
 }
 
