@@ -50,7 +50,8 @@ ULONG NumOfVgaRanges = 0;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static BOOLEAN
-IntIsVgaSaveDriverName(_In_ PDRIVER_OBJECT DriverObject)
+IntIsVgaSaveDriver(
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     static const UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
     return RtlEqualUnicodeString(&VgaSave, &DriverObject->DriverName, TRUE);
@@ -245,12 +246,13 @@ IntVideoPortCreateAdapterDeviceObject(
     DeviceExtension->SessionId = -1;
     DeviceExtension->AdapterNumber = AdapterNumber;
     DeviceExtension->DisplayNumber = DisplayNumber;
+    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriver(DriverObject);
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
     /* 
      * Miniport owns this blob; many miniports assume it's initially zeroed.
-     * Removing this crashes the NVIDIA gpu driver
+     * Removing this crashes the NVIDIA GPU driver.
      */
     RtlZeroMemory(DeviceExtension->MiniPortDeviceExtension,
                   DriverExtension->InitializationData.HwDeviceExtensionSize);
@@ -444,12 +446,11 @@ IntVideoPortFindAdapter(
     BOOLEAN VgaResourcesReleased = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriverName(DriverObject);
     DeviceExtension->IsVgaDetect = DeviceExtension->IsVgaDriver;
     DeviceExtension->IsLegacyDetect = FALSE;
     DeviceExtension->ReportDevice = FALSE;
 
-    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
+    /* Setup a ConfigInfo structure that we will pass to HwFindAdapter */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
     ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
     ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
