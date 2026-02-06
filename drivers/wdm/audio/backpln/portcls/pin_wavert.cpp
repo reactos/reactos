@@ -548,7 +548,7 @@ CPortPinWaveRT::HandleKsProperty(
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT); 
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     return Status;
 
@@ -811,7 +811,6 @@ CloseStreamRoutine(
 
         DPRINT("Before UnregisterNotificationEvent\n");
 #ifdef LEGACY_STREAMING
-       
         This->m_StreamNotification->UnregisterNotificationEvent(&This->m_NotificationEvent);
 #else
         if (This->m_UserEvent)
@@ -822,6 +821,7 @@ CloseStreamRoutine(
 #endif
         DPRINT("Before StreamNotification->Release\n");
         This->m_StreamNotification->Release();
+        This->m_StreamNotification = NULL;
     }
 
     Status = This->m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&ISubDevice);
