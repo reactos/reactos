@@ -394,6 +394,75 @@ KeRaiseUserException(
 
 #endif
 
+#ifndef NONAMELESSUNION
+
+FORCEINLINE
+LARGE_INTEGER
+KiReadSystemTime(
+    _In_ volatile const KSYSTEM_TIME *SystemTime)
+{
+    LARGE_INTEGER Time;
+
+#ifdef _WIN64
+    /* Do a single atomic read */
+    Time.QuadPart = *(volatile LONG64*)SystemTime;
+#else
+    /* Read in a loop until we get a match */
+    for (;;)
+    {
+        Time.HighPart = SystemTime->High1Time;
+        Time.LowPart = SystemTime->LowPart;
+        if (Time.HighPart == SystemTime->High2Time)
+            break;
+        YieldProcessor();
+    }
+#endif
+    return Time;
+}
+
+#ifndef NTOS_MODE_USER
+
+FORCEINLINE
+VOID
+KiWriteSystemTime(
+    _Out_ volatile KSYSTEM_TIME *SystemTime,
+    _In_ LARGE_INTEGER NewTime)
+{
+    /* Update High2Time first to indicate an update in progress */
+    SystemTime->High2Time = NewTime.HighPart;
+
+#ifdef _WIN64
+    /* Do a single 'atomic' write. This isn't actually guaranteed to be atomic,
+       if the address isn't 64 bit aligned. But as long as the entire 64 bits
+       are within a single cache line, we should be good (on x64 at least,
+       when it comes to ARM64, all bets are off) This is also what Windows does. */
+    *(LONG64*)SystemTime = NewTime.QuadPart;
+#else
+    /* Update low part, then high part to allow readers detect partial updates. */
+    SystemTime->LowPart = NewTime.LowPart;
+    SystemTime->High1Time = NewTime.HighPart;
+#endif
+}
+
+#endif // !NTOS_MODE_USER
+
+FORCEINLINE
+ULONG64
+KiTickCountToMs(_In_ LARGE_INTEGER TickCount)
+{
+#ifdef _WIN64
+    /* Native math is optimal on 64 bit */
+    return (TickCount.QuadPart * SharedUserData->TickCountMultiplier) >> 24;
+#else
+    /* This is optimal on 32 bit (overflows after ~20,000 years) */
+    ULONG Multiplier = SharedUserData->TickCountMultiplier;
+    return (UInt32x32To64(TickCount.LowPart, Multiplier) >> 24) +
+            UInt32x32To64(TickCount.HighPart << 8, Multiplier);
+#endif
+}
+
+#endif // !NONAMELESSUNION
+
 //
 // Native Calls
 //
