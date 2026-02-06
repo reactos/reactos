@@ -314,20 +314,30 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hNotifyEvent;
     HANDLE hStopEvent;
     HANDLE hResetEvent;
+    BOOL bClosed;
+    BOOL LegacyStreaming;
     BOOL RTStreamingEnabled;
-
+    BOOL RTStreamingStarted;
     HANDLE hRTStreamingThread;
+    HANDLE hRTStreamingCompletionThread;
     HANDLE hNotifyRTStreamingEvent;
     HANDLE hNotifyRTStreamingStopEvent;
 
+    BOOL RTStreamingCompletionStarted;
+    HANDLE hNotifyRTStreamingCompletionStopEvent;
+    HANDLE hNotifyRTStreamingCompletionEvent;
+    HANDLE hNotifyRTStreamingCompletionReadyEvent;
+    HANDLE hNotifyRTStreamingCompletionFinishEvent;
+    PVOID RTStreamingCompletionContext;
+
     PUCHAR RTStreamingBuffer;
-    DWORD RTStreamingBufferLength;
-    DWORD RTStreamingBufferOffset;
-    DWORD RTStreamingBufferBytesWritten;
+    LONG RTStreamingBufferLength;
+    volatile LONG RTStreamingBufferOffset;
+    volatile LONG RTStreamingBufferBytesWritten;
 
     PUCHAR RTStreamingShadowBuffer;
-    DWORD RTStreamingShadowBufferLength;
-    DWORD RTStreamingShadowBufferOffset;
+    LONG RTStreamingShadowBufferLength;
+    volatile LONG RTStreamingShadowBufferOffset;
 
 
     BOOL ResetInProgress;

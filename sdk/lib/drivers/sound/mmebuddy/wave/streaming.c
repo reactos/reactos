@@ -253,8 +253,12 @@ CompleteIO(
 
     // AUDIO-BRANCH DIFF
     // completion callback is performed in a thread
-    DoWaveStreaming(SoundDeviceInstance);
-
+    if (SoundDeviceInstance->LegacyStreaming &&
+        SoundDeviceInstance->bPaused == FALSE &&
+        SoundDeviceInstance->bClosed == FALSE)
+    {
+        DoWaveStreaming(SoundDeviceInstance);
+    }
     //CompleteWavePortion(SoundDeviceInstance, dwNumberOfBytesTransferred);
 
     FreeMemory(lpOverlapped);
