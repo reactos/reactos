@@ -204,41 +204,6 @@ IntDuplicateUnicodeString(
     return Status;
 }
 
-/* Delete registry font entries */
-VOID IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
-{
-    NTSTATUS Status;
-    HKEY hKey;
-    WCHAR szName[MAX_PATH], szValue[MAX_PATH];
-    ULONG dwIndex, NameLength, ValueSize, dwType;
-
-    Status = RegOpenKey(g_FontRegPath.Buffer, &hKey);
-    if (!NT_SUCCESS(Status))
-        return;
-
-    for (dwIndex = 0;;)
-    {
-        NameLength = RTL_NUMBER_OF(szName);
-        ValueSize = sizeof(szValue);
-        Status = RegEnumValueW(hKey, dwIndex, szName, &NameLength, &dwType, szValue, &ValueSize);
-        if (!NT_SUCCESS(Status))
-            break;
-
-        if (dwType != REG_SZ || _wcsicmp(szValue, pszFileName) != 0)
-        {
-            ++dwIndex;
-            continue;
-        }
-
-        /* Delete the found value */
-        Status = RegDeleteValueW(hKey, szName);
-        if (!NT_SUCCESS(Status))
-            break;
-    }
-
-    ZwClose(hKey);
-}
-
 VOID
 FASTCALL
 IntEngFillBox(

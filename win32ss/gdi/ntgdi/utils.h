@@ -49,8 +49,6 @@ Utf32FromSurrogatePair(_In_ DWORD ch0, _In_ DWORD ch1)
     return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
 }
 
-VOID IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags);
-
 VOID
 FASTCALL
 IntEngFillBox(
