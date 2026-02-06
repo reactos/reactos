@@ -38,6 +38,7 @@ protected:
 
     KSRTAUDIO_HWLATENCY m_Latency;
 #ifndef LEGACY_STREAMING
+    PKPROCESS m_UserProcess;
     PVOID m_UserAddress;
     PKEVENT m_UserEvent;
 #else
@@ -216,6 +217,9 @@ PinWaveRTAudioGetBufferWithNotification(IN PIRP Irp, IN PKSIDENTIFIER Request, I
     // get output buffer
     Buffer = (PKSRTAUDIO_BUFFER)Data;
 
+    // get current process
+    Pin->m_UserProcess = (PKPROCESS)IoGetCurrentProcess();
+
     // map buffer
     Pin->m_UserAddress = MmMapLockedPagesSpecifyCache(
         Pin->m_Mdl, UserMode, Pin->m_CacheType, Property->BaseAddress, FALSE, NormalPagePriority);
@@ -320,7 +324,7 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
             return Status;
         }
     }
-    // register event
+    // unregister event
     Status = Pin->m_StreamNotification->UnregisterNotificationEvent(Pin->m_UserEvent);
     if (!NT_SUCCESS(Status))
     {
@@ -328,6 +332,7 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
         DPRINT1("RegisterNotificationEvent failed with %x\n", Status);
         return Status;
     }
+    Pin->m_UserEvent = NULL;
 
     // done
     Irp->IoStatus.Information = 0;
@@ -827,8 +832,29 @@ CloseStreamRoutine(
             This->m_CommonBufferOffset = 0;
         }
 #else
+        if (This->m_UserAddress)
+        {
+            KAPC_STATE ApcState;
+            PKPROCESS Process = (PKPROCESS)PsGetCurrentProcess();
+            if (Process != This->m_UserProcess)
+            {
+                DPRINT1("Before KeStackAttachProcess\n");
+                KeStackAttachProcess(This->m_UserProcess, &ApcState);
+            }
+
+            MmUnmapLockedPages(This->m_UserAddress, This->m_Mdl);
+
+            if (Process != This->m_UserProcess)
+            {
+                DPRINT1("Before KeUnstackDetachProcess\n");
+                KeUnstackDetachProcess(&ApcState);
+            }
+
+            This->m_UserAddress = NULL;
+        }
         if (This->m_CommonBufferSize)
         {
+            DPRINT("Before FreeBufferWithNotification\n");
             This->m_StreamNotification->FreeBufferWithNotification(This->m_Mdl, This->m_CommonBufferSize);
             This->m_Mdl = NULL;
             This->m_CommonBufferSize = 0;
@@ -904,14 +930,6 @@ CPortPinWaveRT::Close(
 {
     PCLOSESTREAM_CONTEXT Ctx;
 
-#ifndef LEGACY_STREAMING
-    if (m_UserAddress)
-    {
-        MmUnmapLockedPages(m_UserAddress, m_Mdl);
-        m_UserAddress = NULL;
-    }
-#endif
-
     if (m_Stream)
     {
         Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
@@ -940,7 +958,6 @@ CPortPinWaveRT::Close(
         // Return result
         return STATUS_PENDING;
     }
-
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
