@@ -20,6 +20,7 @@
 #include <dmusicks.h>
 #include <kcom.h>
 #include <pseh/pseh2.h>
+#include <ntifs.h>
 
 #include "interfaces.hpp"
 
