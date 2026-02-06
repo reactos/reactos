@@ -20,7 +20,7 @@ MMixerInitializeRTStreamingBuffer(
     IN HANDLE PinHandle,
     IN ULONG RequestedBufferSize,
     IN ULONG NotificationCount,
-    OUT PVOID* RTStreamingBuffer,
+    OUT PUCHAR *RTStreamingBuffer,
     OUT PULONG RTStreamingBufferLength)
 {
     KSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION Property;

@@ -272,7 +272,7 @@ MMixerInitializeRTStreamingBuffer(
     IN HANDLE DeviceHandle,
     IN ULONG RequestedBufferSize,
     IN ULONG NotificationCount,
-    OUT PVOID *RTStreamingBuffer,
+    OUT PUCHAR *RTStreamingBuffer,
     OUT PULONG RTStreamingBufferLength);
 
 MIXER_STATUS
