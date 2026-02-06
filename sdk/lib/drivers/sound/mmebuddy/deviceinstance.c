@@ -270,6 +270,8 @@ DestroySoundDeviceInstance(
         return MMSYSERR_NOTSUPPORTED;
     }
 
+    SoundDeviceInstance->bClosed = TRUE;
+
     /* Stop the streaming thread */
     if ( SoundDeviceInstance->Thread )
     {

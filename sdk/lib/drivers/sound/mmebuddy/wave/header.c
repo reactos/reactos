@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 /*
     This structure gets used locally within functions as a way to shuttle data
     to the sound thread. It's safe to use locally since CallSoundThread will
@@ -180,6 +179,9 @@ WriteWaveHeader(
     if ( ! FunctionTable->CommitWaveBuffer )
         return MMSYSERR_NOTSUPPORTED;
 
+    if ( SoundDeviceInstance->ResetInProgress)
+        return MMSYSERR_NOTSUPPORTED;
+
     /*
         A few minor sanity checks - any custom checks should've been carried
         out during wave header preparation etc.
@@ -221,6 +223,9 @@ EnqueueWaveHeader(
 {
     PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
+    ASSERT(SoundDeviceInstance);
+    ASSERT(WaveHeader);
+
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( Parameter );
 
@@ -238,9 +243,16 @@ EnqueueWaveHeader(
         SoundDeviceInstance->TailWaveHeader = WaveHeader;
 
         /* Only do wave streaming when the stream has not been paused */
-        if (SoundDeviceInstance->bPaused == FALSE)
+        if (SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE)
         {
-            DoWaveStreaming(SoundDeviceInstance);
+            if (SoundDeviceInstance->RTStreamingEnabled)
+            {
+                InitiateSoundStreaming(SoundDeviceInstance);
+            }
+            else
+            {
+                DoWaveStreaming(SoundDeviceInstance);
+            }
         }
     }
     else
@@ -258,7 +270,7 @@ EnqueueWaveHeader(
             DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
             /* Only do wave streaming when the stream has not been paused */
-            if ( SoundDeviceInstance->bPaused == FALSE )
+            if ( SoundDeviceInstance->LegacyStreaming && SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE )
             {
                 DoWaveStreaming(SoundDeviceInstance);
             }
