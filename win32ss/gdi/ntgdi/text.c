@@ -43,8 +43,8 @@ IntTMWFixUp(
     DPRINT("Font Facename is '%S'.\n", lf.lfFaceName);
     if ((_wcsicmp(lf.lfFaceName, L"Courier") == 0) ||
         (_wcsicmp(lf.lfFaceName, L"FixedSys") == 0) ||
-        //(_wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
-        //(_wcsicmp(lf.lfFaceName, L"MS Sans Serif") == 0) ||
+        (_wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
+        (_wcsicmp(lf.lfFaceName, L"MS Sans Serif") == 0) ||
         (_wcsicmp(lf.lfFaceName, L"MS Serif") == 0) ||
         (_wcsicmp(lf.lfFaceName, L"System") == 0) ||
         (_wcsicmp(lf.lfFaceName, L"Terminal") == 0) ||
