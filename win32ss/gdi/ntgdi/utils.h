@@ -8,7 +8,6 @@
 #pragma once
 
 extern POINTL g_PointZero;
-extern UNICODE_STRING g_FontRegPath;
 
 SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
 LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees);

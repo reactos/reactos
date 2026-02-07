@@ -322,7 +322,7 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 FT_Library  g_FreeTypeLibrary;
 
 /* registry */
-UNICODE_STRING g_FontRegPath =
+static UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
 /* The FreeType library is not thread safe, so we have
