@@ -3797,13 +3797,7 @@ IntFindGlyphCache(IN const FONT_CACHE_ENTRY *pCache)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         if (FontEntry->dwHash == dwHash &&
-            FontEntry->Hashed.GlyphIndex == pCache->Hashed.GlyphIndex &&
-            FontEntry->Hashed.Face == pCache->Hashed.Face &&
-            FontEntry->Hashed.lfHeight == pCache->Hashed.lfHeight &&
-            FontEntry->Hashed.lfWidth == pCache->Hashed.lfWidth &&
-            FontEntry->Hashed.AspectValue == pCache->Hashed.AspectValue &&
-            memcmp(&FontEntry->Hashed.matTransform, &pCache->Hashed.matTransform,
-                   sizeof(FT_Matrix)) == 0)
+            RtlEqualMemory(&FontEntry->Hashed, &pCache->Hashed, sizeof(FontEntry->Hashed)))
         {
             break;
         }
@@ -4998,6 +4992,9 @@ TextIntGetTextExtentPoint(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
     Cache.Hashed.lfWidth = plf->lfWidth;
+    Cache.Hashed.lfCharSet = plf->lfCharSet;
+    RtlStringCchCopyW(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName), plf->lfFaceName);
+    IntCanonicalizeBufferString(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName));
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -6894,6 +6891,9 @@ IntExtTextOutW(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
     Cache.Hashed.lfWidth = plf->lfWidth;
+    Cache.Hashed.lfCharSet = plf->lfCharSet;
+    RtlStringCchCopyW(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName), plf->lfFaceName);
+    IntCanonicalizeBufferString(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName));
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
