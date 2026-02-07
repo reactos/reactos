@@ -1,0 +1,113 @@
+SplineFontDB: 3.0
+FontName: wine_nul
+FullName: wine_nul
+FamilyName: wine_nul
+Weight: Medium
+Copyright: Copyright (c) 2020 Remi Bernon for CodeWeavers
+Version: 001.000
+ItalicAngle: 0
+UnderlinePosition: -205
+UnderlineWidth: 102
+Ascent: 1638
+Descent: 410
+InvalidEm: 0
+sfntRevision: 0x00010000
+LayerCount: 2
+Layer: 0 1 "Back" 1
+Layer: 1 1 "Fore" 0
+XUID: [1021 905 592216984 1247726]
+FSType: 32767
+OS2Version: 2
+OS2_WeightWidthSlopeOnly: 0
+OS2_UseTypoMetrics: 1
+CreationTime: 1607427474
+ModificationTime: 1607428497
+PfmFamily: 17
+TTFWeight: 500
+TTFWidth: 5
+LineGap: 184
+VLineGap: 0
+Panose: 2 0 6 3 0 0 0 0 0 0
+OS2TypoAscent: 0
+OS2TypoAOffset: 1
+OS2TypoDescent: 0
+OS2TypoDOffset: 1
+OS2TypoLinegap: 184
+OS2WinAscent: 1638
+OS2WinAOffset: 0
+OS2WinDescent: 410
+OS2WinDOffset: 0
+HheadAscent: 0
+HheadAOffset: 1
+HheadDescent: 0
+HheadDOffset: 1
+OS2SubXSize: 1331
+OS2SubYSize: 1433
+OS2SubXOff: 0
+OS2SubYOff: 286
+OS2SupXSize: 1331
+OS2SupYSize: 1433
+OS2SupXOff: 0
+OS2SupYOff: 983
+OS2StrikeYSize: 102
+OS2StrikeYPos: 530
+OS2Vendor: 'Wine'
+OS2CodePages: 00000001.00000000
+OS2UnicodeRanges: 00000001.00000000.00000000.00000000
+MarkAttachClasses: 1
+DEI: 91125
+ShortTable: cvt  2
+  68
+  1297
+EndShort
+ShortTable: maxp 16
+  1
+  0
+  4
+  8
+  2
+  0
+  0
+  2
+  0
+  1
+  1
+  0
+  64
+  46
+  0
+  0
+EndShort
+LangName: 1033 "" "" "" "Wine : wine_nul : 4-11-2010"
+GaspTable: 1 65535 2 0
+Encoding: ISO8859-1
+UnicodeInterp: none
+NameList: Adobe Glyph List
+DisplaySize: -24
+AntiAlias: 1
+FitToEm: 1
+WinInfo: 0 76 22
+BeginPrivate: 0
+EndPrivate
+BeginChars: 256 1
+
+StartChar: uni0000
+Encoding: 0 0 0
+Width: 2048
+LayerCount: 2
+Fore
+SplineSet
+667 1485 m 5,0,-1
+ 1327 1485 l 1,1,-1
+ 1327 0 l 1,2,-1
+ 667 0 l 1,3,-1
+ 667 1485 l 5,0,-1
+601 1575 m 1,0,-1
+ 1405 1575 l 1,1,-1
+ 1405 -63 l 1,2,-1
+ 601 -63 l 1,3,-1
+ 601 1575 l 1,0,-1
+EndSplineSet
+EndChar
+EndChars
+EndSplineFont
