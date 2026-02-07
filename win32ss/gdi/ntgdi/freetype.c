@@ -5405,9 +5405,7 @@ ftGdiGetFontData(
     return Result;
 }
 
-#define GOT_PENALTY(name, value) do { \
-    Penalty += (value); \
-} while (0)
+#define GOT_PENALTY(name, value) Penalty += (value);
 
 // NOTE: See Table 1. of https://learn.microsoft.com/en-us/previous-versions/ms969909(v=msdn.10)
 static UINT
