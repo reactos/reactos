@@ -7770,17 +7770,21 @@ NtGdiGetCharWidthW(
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
 
+#if 0 // Raster font is able not to have charmap
             if(Safepwc)
                 ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
             ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
+#endif
         }
-
-        IntLockFreeType();
-        FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
+        else
+        {
+            IntLockFreeType();
+            FT_Set_Charmap(face, found);
+            IntUnLockFreeType();
+        }
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
