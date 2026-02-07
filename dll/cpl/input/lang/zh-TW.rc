@@ -3,8 +3,8 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
-*/
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -13,17 +13,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "設定"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    GROUPBOX "預設輸入語言(&L)", -1, 5, 5, 246, 55
+    LTEXT "選擇一個已安裝的輸入語言，以便在電腦啟動後使用。", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    GROUPBOX "已安裝的服務(&I)", -1, 5, 65, 246, 125
     LTEXT "為列表中顯示的每個輸入語言選擇服務。請按［新增］和［刪除］按鈕來修改這個列表。", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "新增(&D)...", IDC_ADD_BUTTON, 175, 105, 70, 14
     PUSHBUTTON "刪除(&R)", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "內容(&P)...", IDC_PROP_BUTTON, 175, 145, 70, 14
     GROUPBOX "偏好設定", -1, 5, 195, 245, 30
-    PUSHBUTTON "Language &Bar...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "語言列(&B)...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
     PUSHBUTTON "按鍵設定(&K)...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
@@ -34,7 +34,7 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "系統配置", -1, 7, 7, 240, 70
     AUTOCHECKBOX "關閉進階的文字服務(&T)", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "選擇此核取方塊以關閉所有程式中的進階的文字服務。\n不推薦東亞使用者使用，因為這個選項將關閉語言欄。", -1, 14, 40, 230, 35
+    LTEXT "選擇這個核取方塊以在所有程式中關閉進階的文字服務。\n不推薦東亞地區使用者使用，因為這個選項將關閉語言列。", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -42,14 +42,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "進階按鍵設定"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "要關閉 Caps Lock", -1, 7, 7, 258, 26
+    GROUPBOX "關閉 Caps Lock 的方式", -1, 7, 7, 258, 26
     AUTORADIOBUTTON "按 CAPS LOCK 鍵(&L)", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
     AUTORADIOBUTTON "按 SHIFT 鍵(&F)", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "輸入語言的快捷鍵", -1, 7, 37, 258, 95
     LTEXT "操作", -1, 14, 47, 60, 9
-    RTEXT "按鍵順序(&K)", -1, 177, 47, 79, 9
+    RTEXT "按鍵組合(&K)", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
-    PUSHBUTTON "更改按鍵順序(&C)...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    PUSHBUTTON "更改按鍵組合(&C)...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
     DEFPUSHBUTTON "確定", IDOK, 66, 140, 70, 14
     PUSHBUTTON "取消", IDCANCEL, 146, 140, 70, 14
 END
@@ -69,19 +69,19 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "更改按鍵順序"
+CAPTION "更改按鍵組合"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
     AUTOCHECKBOX "切換輸入語言(&S)", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "Shift", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
-    AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
+    AUTORADIOBUTTON "Ctrl(&C)", IDC_CTRL_LANG, 29, 31, 30, 11
     AUTORADIOBUTTON "左 ALT(&A)", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
     AUTOCHECKBOX "切換鍵盤布局(&W)", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
-    AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
+    AUTORADIOBUTTON "Ctrl(&T)", IDC_CTRL_LAYOUT, 30, 81, 30, 11
     AUTORADIOBUTTON "左 ALT(&L)", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "確定", IDOK, 172, 9, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 172, 27, 50, 14
@@ -111,14 +111,14 @@ BEGIN
     IDS_WHATS_THIS "這是什麼？"
     IDS_LANGUAGE "語言"
     IDS_LAYOUT "鍵盤布局"
-    IDS_REM_QUESTION "確定要刪除選擇的鍵盤布局嗎？"
+    IDS_REM_QUESTION "確定要刪除所選的鍵盤布局嗎？"
     IDS_CONFIRMATION "確認"
     IDS_LAYOUT_EXISTS "這個布局已經存在。"
     IDS_LAYOUT_EXISTS2 "這個布局已經存在且無法新增"
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "左 Alt+Shift"
     IDS_SWITCH_BET_INLANG "在輸入語言間切換"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "您必須重新啟動電腦才能套用更改。要立即重新開機嗎？"
 END
 
 STRINGTABLE
@@ -164,7 +164,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "中文（繁體） - 速成"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "中文（繁體） - Unicode"
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "中文（繁體） - 美國鍵盤"
-    IDS_COLEMAK_LAYOUT "Colemak"
+    IDS_COLEMAK_LAYOUT "闊碼鍵盤"
     IDS_CROATIAN_LAYOUT "克羅埃西亞文"
     IDS_CZECH_LAYOUT "捷克文"
     IDS_CZECH_PROGRAMMERS_LAYOUT "捷克文（程式設計師）"
@@ -187,8 +187,8 @@ BEGIN
     IDS_GERMAN_IBM_LAYOUT "德文(（IBM）"
     IDS_GERMAN_NEO_11_LAYOUT "德文（NEO-1.1）"
     IDS_GERMAN_RISTOME_LAYOUT "德文（RISTOME）"
-    IDS_GERMAN_EXTENDED1_LAYOUT "German Extended (E1)"
-    IDS_GERMAN_EXTENDED2_LAYOUT "German Extended (E2)"
+    IDS_GERMAN_EXTENDED1_LAYOUT "德文延伸 (E1)"
+    IDS_GERMAN_EXTENDED2_LAYOUT "德文延伸 (E2)"
     IDS_GREEK_LAYOUT "希臘文"
     IDS_GREEK_220_LAYOUT "希臘文（220）"
     IDS_GREEK_220_LATIN_LAYOUT "希臘文（220）拉丁文"
