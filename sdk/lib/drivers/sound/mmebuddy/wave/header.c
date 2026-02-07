@@ -223,8 +223,8 @@ EnqueueWaveHeader(
 {
     PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
-    ASSERT(SoundDeviceInstance);
-    ASSERT(WaveHeader);
+    SND_ASSERT(SoundDeviceInstance);
+    SND_ASSERT(WaveHeader);
 
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( Parameter );
