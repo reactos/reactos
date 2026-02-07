@@ -5424,7 +5424,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     BOOL    fNeedScaling = FALSE;
     const BYTE UserCharSet = IntCharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
-    PCWSTR ActualNameW;
+    WCHAR* ActualNameW;
 
     ASSERT(Otm);
     ASSERT(LogFont);
