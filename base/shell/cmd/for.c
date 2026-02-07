@@ -304,7 +304,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     /* Allocate a large enough variables array if needed */
     if (NumTokens <= ARRAYSIZE(Variables))
     {
-        fc->values = Variables;
+        fc->values = Variables; 
     }
     else
     {
@@ -474,6 +474,7 @@ Quit:
     if (fc->values && (fc->values != Variables))
         cmd_free(fc->values);
 #endif
+    fc->values = NULL;
 
     return Ret;
 }
