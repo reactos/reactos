@@ -36,14 +36,19 @@ class CZipFolder :
     public IShellExtInit,
     public IPersistFile,
     public IPersistFolder2,
-    public IDropTarget,
+    public IDropTarget, // FIXME: This IDropTarget is a HACK. Must be CZipFolderDropHandler. See com_apitest:zipfldr.
     public IZip
 {
     CStringW m_ZipFile;
     CStringW m_ZipDir;
     CComHeapPtr<ITEMIDLIST> m_CurDir;
     unzFile m_UnzipFile = nullptr;
+    CComPtr<IDataObject> m_pDataObj;
+    HWND m_hwnd = nullptr;
 
+    HRESULT DeleteItems(CComPtr<IDataObject> pDataObj);
+    HRESULT DoDeleteItems(CComPtr<IDataObject> pDataObj);
+    HRESULT CopyZipEntry(unzFile uf, zipFile zf, unz_file_info64* info, LPCSTR nameA);
     static DWORD WINAPI s_ExtractProc(LPVOID arg);
     BOOL _GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UINT cchResult);
     static HRESULT CALLBACK ZipFolderMenuCallback(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
@@ -166,7 +171,7 @@ public:
         return S_OK;
     }
 
-    // *** IDropTarget methods ***
+    // *** IDropTarget methods *** // FIXME: This is a HACK. Must be CZipFolderDropHandler. See com_apitest:zipfldr.
     STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
     STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
     STDMETHODIMP DragLeave() override;
@@ -187,6 +192,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget) // FIXME: This is a HACK. Must be CZipFolderDropHandler. See com_apitest:zipfldr.
+        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersistFolder)
     END_COM_MAP()
 };
