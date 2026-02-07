@@ -4697,7 +4697,7 @@ ftGdiGetGlyphOutline(
         return 1; /* FIXME */
     }
 
-    if (ft_face->glyph->format != ft_glyph_format_outline && iFormat != GGO_BITMAP)
+    if (ft_face->glyph->format != FT_GLYPH_FORMAT_OUTLINE && iFormat != GGO_BITMAP)
     {
         DPRINT1("Loaded a bitmap\n");
         return GDI_ERROR;
@@ -4719,7 +4719,7 @@ ftGdiGetGlyphOutline(
 
         switch (ft_face->glyph->format)
         {
-        case ft_glyph_format_bitmap:
+        case FT_GLYPH_FORMAT_BITMAP:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
             INT w = min( pitch, (ft_face->glyph->bitmap.width + 7) >> 3 );
@@ -4733,7 +4733,7 @@ ftGdiGetGlyphOutline(
             break;
         }
 
-        case ft_glyph_format_outline:
+        case FT_GLYPH_FORMAT_OUTLINE:
         {
             ft_bitmap.width = width;
             ft_bitmap.rows = height;
@@ -4781,7 +4781,7 @@ ftGdiGetGlyphOutline(
 
         switch (ft_face->glyph->format)
         {
-        case ft_glyph_format_bitmap:
+        case FT_GLYPH_FORMAT_BITMAP:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
             INT h = min( height, ft_face->glyph->bitmap.rows );
@@ -4800,7 +4800,7 @@ ftGdiGetGlyphOutline(
             }
             break;
         }
-        case ft_glyph_format_outline:
+        case FT_GLYPH_FORMAT_OUTLINE:
         {
             ft_bitmap.width = width;
             ft_bitmap.rows = height;
