@@ -325,18 +325,12 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT((ULONG_PTR)MmSystemPteSpaceStart < (ULONG_PTR)MmPfnDatabase);
 
     /* Make sure the System PTE VA space doesn't overlap the PFN DB */
-
-    SIZE_T MaxSystemPtePages;
-    SIZE_T SystemPteSpaceSize;
-
     SIZE_T MaxSystemPtePages = ((ULONG_PTR)MmPfnDatabase -
                             (ULONG_PTR)MmSystemPteSpaceStart) >> PAGE_SHIFT;
     ASSERT(MaxSystemPtePages > 1000);
 
     MmNumberOfSystemPtes = (ULONG)(MaxSystemPtePages - 1);
     ASSERT(MmNumberOfSystemPtes > 1000);
-
-    SystemPteSpaceSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
 
     //
     // Non paged pool comes after the PFN database
