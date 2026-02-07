@@ -1857,6 +1857,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         if (!Error)
         {
             FontGDI->CharSet = WinFNT.charset;
+            FontGDI->OriginalWeight = WinFNT.weight;
         }
         IntUnLockFreeType();
     }
@@ -2868,11 +2869,11 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar      = pFNT->default_char + pFNT->first_char;
         TM->tmBreakChar        = pFNT->break_char + pFNT->first_char;
         TM->tmPitchAndFamily   = pFNT->pitch_and_family;
-        TM->tmWeight       = FontGDI->RequestWeight;
+        TM->tmWeight           = pFNT->weight;
         TM->tmItalic       = FontGDI->RequestItalic;
         TM->tmUnderlined   = FontGDI->RequestUnderline;
         TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-        TM->tmCharSet      = FontGDI->CharSet;
+        TM->tmCharSet      = pFNT->charset;
         return;
     }
 
@@ -4135,6 +4136,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->Magic              = FONTGDI_MAGIC;
         FontGDI->lfHeight           = lfHeight;
         FontGDI->lfWidth            = lfWidth;
+        FontGDI->CharSet            = WinFNT.charset;
+        FontGDI->OriginalWeight     = WinFNT.weight;
         return 0;
     }
 
@@ -5402,7 +5405,9 @@ ftGdiGetFontData(
     return Result;
 }
 
-#define GOT_PENALTY(name, value) Penalty += (value)
+#define GOT_PENALTY(name, value) do { \
+    Penalty += (value); \
+} while (0)
 
 // NOTE: See Table 1. of https://learn.microsoft.com/en-us/previous-versions/ms969909(v=msdn.10)
 static UINT
@@ -5416,7 +5421,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     BOOL    fNeedScaling = FALSE;
     const BYTE UserCharSet = IntCharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
-    WCHAR* ActualNameW;
+    PCWSTR ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     ASSERT(Otm);
     ASSERT(LogFont);
@@ -5512,8 +5517,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             GOT_PENALTY("DefaultPitchFixed", 1);
         }
     }
-
-    ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     if (LogFont->lfFaceName[0] != UNICODE_NULL)
     {
