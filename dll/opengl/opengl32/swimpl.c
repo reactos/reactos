@@ -578,6 +578,30 @@ static const char* renderer_string(void)
     return "ReactOS SW Implementation";
 }
 
+/* Helper function to validate context before use */
+static BOOL validate_context(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
+{
+    if (!dc_data)
+    {
+        ERR("Invalid dc_data parameter\n");
+        return FALSE;
+    }
+    
+    if (!dhglrc)
+    {
+        ERR("Invalid dhglrc parameter\n");
+        return FALSE;
+    }
+    
+    if (!dc_data->sw_data)
+    {
+        ERR("dc_data->sw_data is NULL\n");
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
 static inline void PUT_PIXEL_8(BYTE* Buffer, BYTE Value)
 {
     *Buffer = Value;
@@ -1393,6 +1417,13 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     struct sw_framebuffer* fb = dc_data->sw_data;
     UINT width, height;
 
+    /* Validate parameters first */
+    if (!validate_context(dc_data, dhglrc))
+    {
+        ERR("Invalid context parameters in sw_SetContext\n");
+        return FALSE;
+    }
+
     /* Get framebuffer size */
     if(dc_data->flags & WGL_DC_OBJ_DC)
     {
@@ -1450,6 +1481,18 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     if(!height) height = 1;
 
     /* Also make the mesa context current to mesa */
+    if (!sw_ctx->gl_ctx)
+    {
+        ERR("sw_ctx->gl_ctx is NULL in sw_SetContext\n");
+        return FALSE;
+    }
+    
+    if (!fb->gl_buffer)
+    {
+        ERR("fb->gl_buffer is NULL in sw_SetContext\n");
+        return FALSE;
+    }
+    
     gl_make_current(sw_ctx->gl_ctx, fb->gl_buffer);
 
     /* Setup our functions */
@@ -1491,7 +1534,24 @@ void sw_ReleaseContext(DHGLRC dhglrc)
 
 BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
 {
-    struct sw_framebuffer* fb = dc_data->sw_data;
+    struct sw_framebuffer* fb;
+    
+    /* Validate parameters */
+    if (!dc_data || !dc_data->sw_data)
+    {
+        ERR("Invalid dc_data or sw_data in sw_SwapBuffers\n");
+        return FALSE;
+    }
+    
+    fb = dc_data->sw_data;
+    
+    /* Validate framebuffer */
+    if (!fb->pixel_format || !fb->gl_visual)
+    {
+        ERR("Invalid framebuffer state in sw_SwapBuffers\n");
+        return FALSE;
+    }
+
     char Buffer[sizeof(BITMAPINFOHEADER) + 3 * sizeof(DWORD)];
     BITMAPINFO *bmi = (BITMAPINFO*)Buffer;
     BYTE Bpp = fb->pixel_format->cColorBits;
