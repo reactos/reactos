@@ -552,7 +552,11 @@
     case FT_PIXEL_MODE_LCD_V:
     case FT_PIXEL_MODE_BGRA:
       {
+#ifdef __REACTOS__
+        FT_Int    old_target_pitch, target_pitch;
+#else
         FT_Int    pad, old_target_pitch, target_pitch;
+#endif
         FT_ULong  old_size;
 
 
@@ -566,6 +570,10 @@
         target->rows       = source->rows;
         target->width      = source->width;
 
+#ifdef __REACTOS__
+        target->pitch = ( target->width + alignment - 1 ) & ~( alignment - 1 );
+        target_pitch = target->pitch;
+#else
         pad = 0;
         if ( alignment > 0 )
         {
@@ -575,6 +583,7 @@
         }
 
         target_pitch = (FT_Int)source->width + pad;
+#endif
 
         if ( target_pitch > 0                                               &&
              (FT_ULong)target->rows > FT_ULONG_MAX / (FT_ULong)target_pitch )
@@ -584,7 +593,9 @@
                           old_size, target->rows * (FT_UInt)target_pitch ) )
           return error;
 
+#ifndef __REACTOS__
         target->pitch = target->pitch < 0 ? -target_pitch : target_pitch;
+#endif
       }
       break;
 
