@@ -5421,10 +5421,11 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     BOOL    fNeedScaling = FALSE;
     const BYTE UserCharSet = IntCharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
-    PCWSTR ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
+    PCWSTR ActualNameW;
 
     ASSERT(Otm);
     ASSERT(LogFont);
+    ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     /* FIXME: IntSizeSynth Penalty 20 */
     /* FIXME: SmallPenalty Penalty 1 */
