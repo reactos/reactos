@@ -1447,6 +1447,7 @@ FontLink_Chain_Populate(
         lfBase.lfCharSet = DEFAULT_CHARSET;
 
     // Use cache if any
+    IntCanonicalizeLogFont(&lfBase);
     pLinkCache = FontLink_FindCache(&lfBase);
     if (pLinkCache)
     {
@@ -4944,11 +4945,14 @@ IntGetRealGlyph(
 
     glyph = Cache->Hashed.Face->glyph;
 
-    if (Cache->Hashed.Aspect.Emu.Bold)
-        FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
+    if (FT_IS_SCALABLE(Cache->Hashed.Face))
+    {
+        if (Cache->Hashed.Aspect.Emu.Bold)
+            FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
 
-    if (Cache->Hashed.Aspect.Emu.Italic)
-        FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+        if (Cache->Hashed.Aspect.Emu.Italic)
+            FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+    }
 
     realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
 
@@ -4984,6 +4988,7 @@ TextIntGetTextExtentPoint(
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
+    RtlZeroMemory(&Cache.Hashed, sizeof(Cache.Hashed));
     Cache.Hashed.Face = FontGDI->SharedFace->Face;
     if (NULL != Fit)
     {
@@ -6011,8 +6016,7 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
     ASSERT_FREETYPE_LOCK_HELD();
 
     LOGFONTW LogFont = *pLogFont;
-    RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
-    RtlStringCchCopyW(LogFont.lfFaceName, _countof(LogFont.lfFaceName), pLogFont->lfFaceName);
+    IntCanonicalizeLogFont(&LogFont);
     pLogFont = &LogFont;
 
     /* Substitute */
@@ -6884,6 +6888,7 @@ IntExtTextOutW(
     ASSERT(FontGDI);
 
     IntLockFreeType();
+    RtlZeroMemory(&Cache.Hashed, sizeof(Cache.Hashed));
     Cache.Hashed.Face = face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;

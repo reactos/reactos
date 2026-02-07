@@ -82,3 +82,19 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
 
     return lValue;
 }
+
+static inline void
+IntCanonicalizeBufferString(_Out_ LPWSTR pszBuffer, _In_ size_t cchMax)
+{
+    ASSERT(cchMax > 0);
+    pszBuffer[cchMax - 1] = UNICODE_NULL;
+    size_t cch = wcslen(pszBuffer);
+    ASSERT(cch < cchMax);
+    RtlZeroMemory(&pszBuffer[cch], (cchMax - cch) * sizeof(WCHAR));
+}
+
+static inline void
+IntCanonicalizeLogFont(PLOGFONTW pLogFont)
+{
+    IntCanonicalizeBufferString(pLogFont->lfFaceName, _countof(pLogFont->lfFaceName));
+}
