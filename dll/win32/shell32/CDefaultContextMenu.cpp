@@ -1779,12 +1779,10 @@ CDefaultContextMenu::GetCommandString(
 
     UINT CmdId = LOWORD(idCommand);
 
-    if (m_pfnmcb)
+    if (m_pfnmcb && (uFlags == GCS_VERBA || uFlags == GCS_VERBW))
     {
-        HRESULT hr = E_FAIL;
         WPARAM wParam = MAKEWPARAM(idCommand, uMaxNameLen);
-        if (uFlags == GCS_VERBA || uFlags == GCS_VERBW)
-            hr = m_pfnmcb(m_psf, m_hwnd, m_pDataObj, DFM_GETVERBA, wParam, (LPARAM)lpszName);
+        HRESULT hr = m_pfnmcb(m_psf, m_hwnd, m_pDataObj, uFlags, wParam, (LPARAM)lpszName);
         if (hr == S_OK)
             return S_OK;
     }
