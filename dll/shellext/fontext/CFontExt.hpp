@@ -22,7 +22,7 @@ class CFontExt :
     UINT m_cidl = 0;
     PCUITEMID_CHILD_ARRAY m_apidl = nullptr;
 
-    static HRESULT CALLBACK FontExtMenuCallback(
+    static HRESULT CALLBACK MenuCallback(
         IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
         UINT uMsg, WPARAM wParam, LPARAM lParam);
     void PreviewItems();
