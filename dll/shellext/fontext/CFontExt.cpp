@@ -491,7 +491,6 @@ HRESULT CALLBACK CFontExt::MenuCallback(
     if (!pThis)
         return E_FAIL;
 
-    pThis->m_pDataObj = pdtobj;
 
     switch (uMsg)
     {
