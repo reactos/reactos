@@ -491,7 +491,6 @@ HRESULT CALLBACK CFontExt::MenuCallback(
     if (!pThis)
         return E_FAIL;
 
-
     switch (uMsg)
     {
         case DFM_MERGECONTEXTMENU:
