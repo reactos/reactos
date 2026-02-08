@@ -247,7 +247,15 @@ EnqueueWaveHeader(
         {
             if (SoundDeviceInstance->RTStreamingEnabled)
             {
-                InitiateSoundStreaming(SoundDeviceInstance);
+                /* queue a thread when application does submit multiple buffers */
+                if (WaveHeader->dwBufferLength < SoundDeviceInstance->RTStreamingShadowBufferLength)
+                {
+                   InitiateSoundStreaming(SoundDeviceInstance);
+                }
+                else
+                {
+                    DoWaveStreaming(SoundDeviceInstance);
+                }
             }
             else
             {
@@ -330,22 +338,22 @@ CompleteWaveHeader(
 
         SND_TRACE(L"Relinking nodes\n");
 
-        while ( CurrHdr != Header )
+        while ( CurrHdr != Header && CurrHdr != NULL)
         {
             PrevHdr = CurrHdr;
             CurrHdr = CurrHdr->lpNext;
             SND_ASSERT( CurrHdr );
         }
 
-        SND_ASSERT( PrevHdr );
-
-        PrevHdr->lpNext = CurrHdr->lpNext;
-
-        /* If this is the tail node, update the tail */
-        if ( Header->lpNext == NULL )
+        if (PrevHdr && CurrHdr)
         {
-            SND_TRACE(L"Updating tail node\n");
-            SoundDeviceInstance->TailWaveHeader = PrevHdr;
+            PrevHdr->lpNext = CurrHdr->lpNext;
+            /* If this is the tail node, update the tail */
+            if ( Header->lpNext == NULL )
+            {
+                SND_TRACE(L"Updating tail node\n");
+                SoundDeviceInstance->TailWaveHeader = PrevHdr;
+            }
         }
     }
 
