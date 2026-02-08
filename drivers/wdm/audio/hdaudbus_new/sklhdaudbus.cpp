@@ -40,7 +40,10 @@ __in PUNICODE_STRING RegistryPath
 	//  Default to NonPagedPoolNx for non paged pool allocations where supported.
 	//
 
+#ifndef __REACTOS__
+	// FIXME: disabled for now, since it's unimplemented in ReactOS
 	ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+#endif
 
 	WDF_DRIVER_CONFIG_INIT(&config, SklHdAudBusEvtDeviceAdd);
 
