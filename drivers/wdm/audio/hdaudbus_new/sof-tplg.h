@@ -1,5 +1,11 @@
 #define SOFTPLG_MAGIC '$SOF'
 
+#ifdef __REACTOS__
+// Downgrade unsupported NT6.2+ features.
+#define NonPagedPoolNx NonPagedPool
+#define NonPagedPoolNxCacheAligned NonPagedPoolCacheAligned
+#endif
+
 typedef struct _SOF_TPLG {
 	UINT32 magic;
 	UINT32 length;
