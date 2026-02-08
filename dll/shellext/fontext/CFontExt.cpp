@@ -80,7 +80,6 @@ WCHAR* g2s(REFCLSID iid)
 static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
 {
     CStringW AttrLetters(MAKEINTRESOURCEW(IDS_COL_ATTR_LETTERS));
-    AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
 
     if (AttrLetters.GetLength() != 5)
     {
