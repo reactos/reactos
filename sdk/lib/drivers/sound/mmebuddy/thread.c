@@ -79,6 +79,11 @@ CallSoundThread(
     VALIDATE_MMSYS_PARAMETER( RequestHandler );
 
     Thread = SoundDeviceInstance->Thread;
+    if ( ! Thread)
+    {
+        SND_TRACE("Thread already destroyed\n");
+        return MMSYSERR_NOTSUPPORTED;
+    }
 
     SND_TRACE(L"Waiting for READY event\n");
     WaitForSingleObject(Thread->Events.Ready, INFINITE);
