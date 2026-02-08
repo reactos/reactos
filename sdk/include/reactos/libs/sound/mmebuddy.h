@@ -331,12 +331,12 @@ typedef struct _SOUND_DEVICE_INSTANCE
     PVOID RTStreamingCompletionContext;
 
     PUCHAR RTStreamingBuffer;
-    LONG RTStreamingBufferLength;
+    ULONG RTStreamingBufferLength;
     volatile LONG RTStreamingBufferOffset;
     volatile LONG RTStreamingBufferBytesWritten;
 
     PUCHAR RTStreamingShadowBuffer;
-    LONG RTStreamingShadowBufferLength;
+    ULONG RTStreamingShadowBufferLength;
     volatile LONG RTStreamingShadowBufferOffset;
 
 
