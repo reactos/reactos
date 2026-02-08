@@ -65,20 +65,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #endif
 
 /* CRT Internal data */
-#include <internal/atexit.h>
-#include <internal/console.h>
 #include <internal/ieee.h>
-#include <internal/locale.h>
 #include <internal/math.h>
-#include <internal/mbstring.h>
-#include <internal/misc.h>
-#include <internal/mtdll.h>
-#include <internal/popen.h>
-#include <internal/rterror.h>
 #include <internal/safecrt.h>
-#include <internal/time.h>
-#if !defined(_LIBCNT_) && !defined(_MSVCRTEX_)
-#include <internal/tls.h>
-#endif
 
 #endif /* _CRT_PRECOMP_H */
