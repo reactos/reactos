@@ -280,7 +280,7 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
                 CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
                 if (fontName.IsEmpty())
                 {
-                    ERR("Why is fileName empty?\n");
+                    ERR("Why is fontName empty?\n");
                     return E_FAIL;
                 }
                 if (fileName.IsEmpty())
