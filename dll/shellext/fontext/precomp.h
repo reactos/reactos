@@ -20,6 +20,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlcoll.h>
+#include <atlsimpcoll.h>
 #include <atlstr.h>
 #include <wine/debug.h>
 #include <shellutils.h>

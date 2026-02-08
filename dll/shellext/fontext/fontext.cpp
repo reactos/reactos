@@ -111,14 +111,14 @@ LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
     if (*cKeys >= 16)
         return ERROR_MORE_DATA;
 
-    HKEY hkey;
-    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result == ERROR_SUCCESS)
+    CRegKey key;
+    LSTATUS error = key.Open(HKEY_CLASSES_ROOT, szClass, KEY_READ | KEY_QUERY_VALUE);
+    if (error == ERROR_SUCCESS)
     {
-        array[*cKeys] = hkey;
+        array[*cKeys] = key.Detach();
         *cKeys += 1;
     }
-    return result;
+    return error;
 }
 
 HRESULT
@@ -477,9 +477,22 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
         SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
     }
 
-    // Refresh font cache and notify the system about the font change
-    if (g_FontCache)
-        g_FontCache->Read();
+    // Delete registry values and mark the entry as deleted
+    CRegKey key;
+    if (key.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) == ERROR_SUCCESS)
+    {
+        for (UINT iItem = 0; iItem < cidl; ++iItem)
+        {
+            const FontPidlEntry* pEntry = _FontFromIL(apidl[iItem]);
+            if (pEntry)
+            {
+                CStringW strFontName = pEntry->Name();
+                key.DeleteValue(strFontName);
+                g_FontCache->MarkDeleted(pEntry);
+            }
+        }
+        key.Close();
+    }
 
     SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
     SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);

@@ -29,28 +29,12 @@ BOOL CFontFolderViewCB::FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const
     {
         case SHCNE_CREATE:
         case SHCNE_RENAMEITEM:
-            break;
-        case SHCNE_DELETE:
-        {
-            const FontPidlEntry* pEntry = _FontFromIL(apidls[0]);
-            if (pEntry)
-            {
-                CStringW strFontName = pEntry->Name();
-
-                HKEY hKey;
-                LSTATUS error = RegOpenKeyExW(FONT_HIVE, FONT_KEY, 0, KEY_WRITE, &hKey);
-                if (error == ERROR_SUCCESS)
-                {
-                    RegDeleteValueW(hKey, strFontName);
-                    RegCloseKey(hKey);
-                }
-            }
-            break;
-        }
         case SHCNE_UPDATEDIR:
             // Refresh font cache and notify the system about the font change
             if (g_FontCache)
                 g_FontCache->Read();
+            break;
+        case SHCNE_DELETE:
             break;
         default:
             return TRUE; // We don't want this event
@@ -74,9 +58,11 @@ CFontFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
             return S_OK;
         }
         case SFVM_FSNOTIFY: // Change notification
+        {
             if (FilterEvent((PIDLIST_ABSOLUTE*)wParam, (LONG)lParam))
                 return S_FALSE; // Don't process
             return S_OK;
+        }
     }
     return E_NOTIMPL;
 }

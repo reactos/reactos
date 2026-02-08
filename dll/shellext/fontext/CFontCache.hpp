@@ -12,8 +12,8 @@ class CFontInfo
 private:
     CStringW m_Name;
     CStringW m_File;
+    BOOL m_bMarkDeleted = FALSE;
     bool m_FileRead;
-
     bool m_AttrsRead;
     LARGE_INTEGER m_FileSize;
     FILETIME m_FileWriteTime;
@@ -27,6 +27,9 @@ public:
     const CStringW& Name() const;   // Font display name stored in the registry
     const bool Valid() const;
 
+    BOOL IsMarkDeleted() const { return m_bMarkDeleted; }
+    void MarkDeleted() { m_bMarkDeleted = TRUE; }
+
     const CStringW& File();         // Full path or file, depending on how it's stored in the registry
     const LARGE_INTEGER& FileSize();
     const FILETIME& FileWriteTime();
@@ -36,7 +39,7 @@ public:
 class CFontCache
 {
 private:
-    CAtlArray<CFontInfo> m_Fonts;
+    CSimpleArray<CFontInfo> m_Fonts;
     CStringW m_FontFolderPath;
 
 protected:
@@ -56,6 +59,8 @@ public:
     CStringW File(size_t Index);
 
     CFontInfo* Find(const FontPidlEntry* fontEntry);
+    BOOL IsMarkDeleted(size_t Index) const;
+    void MarkDeleted(const FontPidlEntry* fontEntry);
     CStringW Filename(CFontInfo* info, bool alwaysFullPath = false);
 
     friend class CFontExtModule;

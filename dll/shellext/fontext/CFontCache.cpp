@@ -44,7 +44,7 @@ const CStringW& CFontInfo::File()
             if (key.Open(FONT_HIVE, FONT_KEY, KEY_READ) == ERROR_SUCCESS)
             {
                 CStringW Value;
-                DWORD dwAllocated = 128;
+                DWORD dwAllocated = MAX_PATH;
                 LSTATUS Status;
                 do
                 {
@@ -126,18 +126,18 @@ void CFontCache::SetFontDir(const LPCWSTR Path)
 
 size_t CFontCache::Size()
 {
-    if (m_Fonts.GetCount() == 0u)
+    if (m_Fonts.GetSize() == 0)
         Read();
 
-    return m_Fonts.GetCount();
+    return m_Fonts.GetSize();
 }
 
 CStringW CFontCache::Name(size_t Index)
 {
-    if (m_Fonts.GetCount() == 0u)
+    if (m_Fonts.GetSize() == 0u)
         Read();
 
-    if (Index >= m_Fonts.GetCount())
+    if ((INT)Index >= m_Fonts.GetSize())
         return CStringW();
 
     return m_Fonts[Index].Name();
@@ -145,10 +145,10 @@ CStringW CFontCache::Name(size_t Index)
 
 CStringW CFontCache::File(size_t Index)
 {
-    if (m_Fonts.GetCount() == 0u)
+    if (m_Fonts.GetSize() == 0u)
         Read();
 
-    if (Index >= m_Fonts.GetCount())
+    if ((INT)Index >= m_Fonts.GetSize())
         return CStringW();
 
     return m_Fonts[Index].File();
@@ -156,16 +156,39 @@ CStringW CFontCache::File(size_t Index)
 
 CFontInfo* CFontCache::Find(const FontPidlEntry* fontEntry)
 {
-    for (UINT n = 0; n < Size(); ++n)
+    if (m_Fonts.GetSize() == 0)
+        Read();
+
+    for (INT i = 0; i < m_Fonts.GetSize(); ++i)
     {
-        if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name()) == 0)
+        if (m_Fonts[i].Name().CompareNoCase(fontEntry->Name()) == 0)
         {
-            return &m_Fonts[n];
+            return &m_Fonts[i];
         }
     }
     return nullptr;
 }
 
+BOOL CFontCache::IsMarkDeleted(size_t Index) const
+{
+    if ((INT)Index >= m_Fonts.GetSize())
+        return FALSE;
+    return m_Fonts[Index].IsMarkDeleted();
+}
+
+// The item has to exist until just the moment that display of the item has deleted,
+// because UI for change notification should work on the existent items.
+void CFontCache::MarkDeleted(const FontPidlEntry* fontEntry)
+{
+    for (INT i = 0; i < m_Fonts.GetSize(); ++i)
+    {
+        if (m_Fonts[i].Name().CompareNoCase(fontEntry->Name()) == 0)
+        {
+            m_Fonts[i].MarkDeleted();
+            break;
+        }
+    }
+}
 
 CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
 {
@@ -189,6 +212,12 @@ CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
 
 void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, PCWSTR Value)
 {
+    CFontInfo newInfo(KeyName, Value);
+
+    CStringW strFontFile = g_FontCache->GetFontFilePath(newInfo.File());
+    if (!PathFileExistsW(strFontFile))
+        return;
+
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
     {
@@ -196,11 +225,12 @@ void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, PCW
         const CFontInfo& info = fonts.GetNext(it);
         if (info.Name().CompareNoCase(KeyName) >= 0)
         {
-            fonts.InsertBefore(lastit, CFontInfo(KeyName, Value));
+            fonts.InsertBefore(lastit, newInfo);
             return;
         }
     }
-    fonts.AddTail(CFontInfo(KeyName));
+
+    fonts.AddTail(newInfo);
 }
 
 CStringW CFontCache::GetFontFilePath(const LPCWSTR Path) const
@@ -252,12 +282,8 @@ void CFontCache::Read()
     }
 
     // Move the fonts from a list to an array (for easy indexing)
-    m_Fonts.SetCount(fonts.GetCount());
-    size_t Index = 0;
+    m_Fonts.RemoveAll();
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
-    {
-        m_Fonts[Index] = fonts.GetNext(it);
-        Index++;
-    }
+        m_Fonts.Add(fonts.GetNext(it));
 }
