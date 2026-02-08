@@ -16,7 +16,6 @@ class CFontExt :
     public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
-    CComPtr<IDataObject> m_pDataObj;
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
     UINT m_cidl = 0;
