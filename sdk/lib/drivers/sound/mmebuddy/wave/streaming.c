@@ -85,11 +85,9 @@ DoWaveStreaming(
         /* Is this header entirely committed? */
         if ( HeaderExtension->BytesCommitted == Header->dwBufferLength )
         {
-            {
-                /* Move on to the next header */
-                SND_ASSERT(Header != Header->lpNext);
-                Header = Header->lpNext;
-            }
+            /* Move on to the next header */
+            SND_ASSERT(Header != Header->lpNext);
+            Header = Header->lpNext;
         }
         else
         {
@@ -105,9 +103,18 @@ DoWaveStreaming(
             BytesRemaining = Header->dwBufferLength - HeaderExtension->BytesCommitted;
 
             /* We can commit anything up to the buffer size limit */
-            BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
-                            SoundDeviceInstance->FrameSize :
-                            BytesRemaining;
+            if (SoundDeviceInstance->RTStreamingEnabled)
+            {
+                /* no limit for RT streaming */
+                BytesToCommit = BytesRemaining;
+            }
+            else
+            {
+                /* We can commit anything up to the buffer size limit */
+                BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
+                                SoundDeviceInstance->FrameSize :
+                                BytesRemaining;
+            }
 
             /* Should always have something to commit by this point */
             SND_ASSERT( BytesToCommit > 0 );
