@@ -11,8 +11,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
 CFontCache* g_FontCache = NULL;
 
-CFontInfo::CFontInfo(LPCWSTR name)
+CFontInfo::CFontInfo(PCWSTR name, PCWSTR value)
     : m_Name(name)
+    , m_File(value)
     , m_FileRead(false)
     , m_AttrsRead(false)
     , m_FileWriteTime({})
@@ -35,7 +36,7 @@ const CStringW& CFontInfo::File()
 {
     if (!m_FileRead)
     {
-        if (Valid())
+        if (Valid() && m_File.IsEmpty())
         {
             // Read the filename stored in the registry.
             // This can be either a filename or a full path
@@ -43,7 +44,7 @@ const CStringW& CFontInfo::File()
             if (key.Open(FONT_HIVE, FONT_KEY, KEY_READ) == ERROR_SUCCESS)
             {
                 CStringW Value;
-                DWORD dwAllocated = 128;
+                DWORD dwAllocated = MAX_PATH;
                 LSTATUS Status;
                 do
                 {
@@ -125,35 +126,69 @@ void CFontCache::SetFontDir(const LPCWSTR Path)
 
 size_t CFontCache::Size()
 {
-    if (m_Fonts.GetCount() == 0u)
+    if (m_Fonts.GetSize() == 0)
         Read();
 
-    return m_Fonts.GetCount();
+    return m_Fonts.GetSize();
 }
 
 CStringW CFontCache::Name(size_t Index)
 {
-    if (m_Fonts.GetCount() == 0u)
+    if (m_Fonts.GetSize() == 0u)
         Read();
 
-    if (Index >= m_Fonts.GetCount())
+    if ((INT)Index >= m_Fonts.GetSize())
         return CStringW();
 
     return m_Fonts[Index].Name();
 }
 
+CStringW CFontCache::File(size_t Index)
+{
+    if (m_Fonts.GetSize() == 0u)
+        Read();
+
+    if ((INT)Index >= m_Fonts.GetSize())
+        return CStringW();
+
+    return m_Fonts[Index].File();
+}
+
 CFontInfo* CFontCache::Find(const FontPidlEntry* fontEntry)
 {
-    for (UINT n = 0; n < Size(); ++n)
+    if (m_Fonts.GetSize() == 0)
+        Read();
+
+    for (INT i = 0; i < m_Fonts.GetSize(); ++i)
     {
-        if (m_Fonts[n].Name().CompareNoCase(fontEntry->Name) == 0)
+        if (m_Fonts[i].Name().CompareNoCase(fontEntry->Name()) == 0)
         {
-            return &m_Fonts[n];
+            return &m_Fonts[i];
         }
     }
     return nullptr;
 }
 
+BOOL CFontCache::IsMarkDeleted(size_t Index) const
+{
+    if ((INT)Index >= m_Fonts.GetSize())
+        return FALSE;
+    return m_Fonts[Index].IsMarkDeleted();
+}
+
+// The item must exist until its visibility is removed, because the change
+// notification UI must work for existing items.
+void CFontCache::MarkDeleted(const FontPidlEntry* fontEntry)
+{
+    for (INT i = 0; i < m_Fonts.GetSize(); ++i)
+    {
+        if (m_Fonts[i].Name().CompareNoCase(fontEntry->Name()) == 0)
+        {
+            m_Fonts[i].MarkDeleted();
+            break;
+        }
+    }
+}
 
 CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
 {
@@ -175,8 +210,14 @@ CStringW CFontCache::Filename(CFontInfo* info, bool alwaysFullPath)
     return File;
 }
 
-void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
+void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, PCWSTR Value)
 {
+    CFontInfo newInfo(KeyName, Value);
+
+    CStringW strFontFile = g_FontCache->GetFontFilePath(newInfo.File());
+    if (!PathFileExistsW(strFontFile))
+        return;
+
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
     {
@@ -184,11 +225,19 @@ void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName)
         const CFontInfo& info = fonts.GetNext(it);
         if (info.Name().CompareNoCase(KeyName) >= 0)
         {
-            fonts.InsertBefore(lastit, CFontInfo(KeyName));
+            fonts.InsertBefore(lastit, newInfo);
             return;
         }
     }
-    fonts.AddTail(CFontInfo(KeyName));
+
+    fonts.AddTail(newInfo);
+}
+
+CStringW CFontCache::GetFontFilePath(const LPCWSTR Path) const
+{
+    if (PathIsRelativeW(Path))
+        return m_FontFolderPath + Path;
+    return Path;
 }
 
 void CFontCache::Read()
@@ -200,19 +249,26 @@ void CFontCache::Read()
     if (key.Open(FONT_HIVE, FONT_KEY, KEY_READ) == ERROR_SUCCESS)
     {
         LSTATUS Status;
-        DWORD dwAllocated = 128;
+        DWORD dwAllocated = MAX_PATH;
         DWORD ilIndex = 0;
         CStringW KeyName;
         do
         {
             DWORD dwSize = dwAllocated;
             PWSTR Buffer = KeyName.GetBuffer(dwSize);
-            Status = RegEnumValueW(key.m_hKey, ilIndex, Buffer, &dwSize, NULL, NULL, NULL, NULL);
+            WCHAR szValue[MAX_PATH];
+            DWORD cbValue = sizeof(szValue);
+            Status = RegEnumValueW(key.m_hKey, ilIndex, Buffer, &dwSize, NULL, NULL,
+                                   (PBYTE)szValue, &cbValue);
             KeyName.ReleaseBuffer(dwSize);
             if (Status == ERROR_SUCCESS)
             {
-                // Insert will create an ordered list
-                Insert(fonts, KeyName);
+                szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+                if (!KeyName.IsEmpty() && szValue[0])
+                {
+                    // Insert will create an ordered list
+                    Insert(fonts, KeyName, szValue);
+                }
                 ilIndex++;
                 continue;
             }
@@ -226,12 +282,8 @@ void CFontCache::Read()
     }
 
     // Move the fonts from a list to an array (for easy indexing)
-    m_Fonts.SetCount(fonts.GetCount());
-    size_t Index = 0;
+    m_Fonts.RemoveAll();
     POSITION it = fonts.GetHeadPosition();
     while (it != NULL)
-    {
-        m_Fonts[Index] = fonts.GetNext(it);
-        Index++;
-    }
+        m_Fonts.Add(fonts.GetNext(it));
 }
