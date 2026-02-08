@@ -82,7 +82,7 @@ static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UIN
 #define MAX_ATTRS sizeof("RHSAC")
     CStringW AttrLetters(MAKEINTRESOURCEW(IDS_COL_ATTR_LETTERS));
 
-    if (AttrLetters.GetLength() != 5)
+    if (AttrLetters.GetLength() + 1 != MAX_ATTRS)
     {
         ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
         return E_FAIL;
