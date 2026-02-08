@@ -506,7 +506,7 @@ HRESULT CALLBACK CFontExt::MenuCallback(
         case DFM_GETVERBA:
         case DFM_GETVERBW:
         {
-            // Replace default "open" command action
+            // Replace default "open" verb action
             UINT idCmd = LOWORD(wParam), cchMax = HIWORD(wParam);
             if (idCmd == 0)
             {
