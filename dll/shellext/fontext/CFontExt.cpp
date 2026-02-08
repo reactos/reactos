@@ -569,7 +569,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             return E_FAIL;
         m_cidl = cidl;
         m_apidl = apidl;
-        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, FontExtMenuCallback,
+        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, MenuCallback,
                                       0, NULL, (IContextMenu**)ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
