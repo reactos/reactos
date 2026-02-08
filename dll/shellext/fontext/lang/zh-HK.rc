@@ -20,9 +20,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_FONTS_FOLDER "ReactOS 字型資料夾"
-    IDS_INSTALL_OK "The font files have been installed successfully."
-    IDS_INSTALL_FAILED "Failed to install the font files."
-    IDS_PROPERTIES "P&roperties"
+    IDS_INSTALL_OK "The font(s) have been installed successfully."
+    IDS_INSTALL_FAILED "Failed to install the font(s)."
+    IDS_CONFIRM_DELETE_FONT "Do you want to delete the font(s)?"
 END
 
 STRINGTABLE

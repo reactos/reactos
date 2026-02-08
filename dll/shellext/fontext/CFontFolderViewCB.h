@@ -11,23 +11,19 @@ class CFontFolderViewCB
     : public CComObjectRootEx<CComMultiThreadModelNoCS>
     , public IShellFolderViewCB
 {
-    CFontExt* m_pFontExt = nullptr; // Not ref-counted!
-    IShellView* m_pShellView = nullptr; // Not ref-counted!
+    CFontExt* m_pFontExt;
+    CComPtr<IShellView> m_pShellView;
     HWND m_hwndView = nullptr;
     CComHeapPtr<ITEMIDLIST> m_pidlParent;
-    CComHeapPtr<ITEMIDLIST> m_pidl0;
-    CComHeapPtr<ITEMIDLIST> m_pidl1;
 
-    HRESULT TranslatePidl(LPITEMIDLIST* ppidlNew, LPCITEMIDLIST pidl);
-    void TranslateTwoPIDLs(PIDLIST_ABSOLUTE* pidls);
-    BOOL FilterEvent(LONG lEvent) const;
+    BOOL FilterEvent(PIDLIST_ABSOLUTE* apidls, LONG lEvent) const;
 
 public:
     CFontFolderViewCB() { }
     void Initialize(CFontExt* pFontExt, IShellView *psv, LPCITEMIDLIST pidlParent);
 
     // IShellFolderViewCB
-    STDMETHOD(MessageSFVCB)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
     DECLARE_NO_REGISTRY()
     DECLARE_NOT_AGGREGATABLE(CFontFolderViewCB)

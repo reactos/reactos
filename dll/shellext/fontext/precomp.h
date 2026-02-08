@@ -50,6 +50,8 @@ typedef struct tagINSTALL_FONT_DATA
 #define FONT_KEY    L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts"
 
 HRESULT _CEnumFonts_CreateInstance(CFontExt* zip, DWORD flags, REFIID riid, LPVOID* ppvOut);
+HRESULT _CFontForegroundMenu_CreateInstance(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
+                                            IShellFolder *psf, REFIID riid, LPVOID* ppvOut);
 HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
                                     REFIID riid, LPVOID* ppvOut);
 
@@ -82,6 +84,8 @@ HRESULT DoGetFontTitle(
 BOOL CheckDropFontFiles(HDROP hDrop);
 BOOL CheckDataObject(IDataObject *pDataObj);
 HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
+HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
+void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry);
 
 HRESULT
 APIENTRY

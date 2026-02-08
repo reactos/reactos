@@ -436,6 +436,77 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
     return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
 }
 
+HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+    CStringW msg, title;
+    msg.Format(IDS_CONFIRM_DELETE_FONT, cidl);
+    title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
+    if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
+        return S_FALSE;
+
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlParent;
+    HRESULT hr = SHGetSpecialFolderLocation(hwnd, CSIDL_FONTS, &pidlParent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Delete files
+    for (UINT iItem = 0; iItem < cidl; ++iItem)
+    {
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
+        pidl.Attach(ILCombine(pidlParent, apidl[iItem]));
+        if (!pidl)
+        {
+            ERR("E_OUTOFMEMORY\n");
+            return E_OUTOFMEMORY;
+        }
+
+        WCHAR szPath[MAX_PATH];
+        if (!SHGetPathFromIDListW(pidl, szPath))
+        {
+            ERR("File not found: %S\n", szPath);
+            return E_FAIL;
+        }
+
+        // WINDOWS BUG: Removing once is not enough
+        for (INT iTry = 0; iTry < 3; ++iTry)
+        {
+            if (!RemoveFontResourceW(szPath) && !RemoveFontResourceExW(szPath, FR_PRIVATE, NULL))
+                break;
+        }
+
+        DeleteFileW(szPath);
+        SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
+    }
+
+    // Refresh font cache and notify the system about the font change
+    if (g_FontCache)
+        g_FontCache->Read();
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
+    SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+    return S_OK;
+}
+
+void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
+{
+    CStringW Path = g_FontCache->GetFontFilePath(fontEntry->FileName());
+    if (Path.IsEmpty())
+        return;
+
+    // '/d' disables the install button
+    WCHAR FontPathArg[MAX_PATH + 3];
+    StringCchPrintfW(FontPathArg, _countof(FontPathArg), L"/d %s", Path.GetString());
+    PathQuoteSpacesW(FontPathArg + 3);
+
+    SHELLEXECUTEINFOW si = { sizeof(si) };
+    si.fMask = SEE_MASK_DOENVSUBST;
+    si.hwnd = hwnd;
+    si.lpFile = L"%SystemRoot%\\System32\\fontview.exe";
+    si.lpParameters = FontPathArg;
+    si.nShow = SW_SHOWNORMAL;
+    ShellExecuteExW(&si);
+}
+
 EXTERN_C
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {

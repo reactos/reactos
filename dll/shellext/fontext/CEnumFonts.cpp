@@ -46,16 +46,28 @@ public:
 
             if (m_Index < g_FontCache->Size())
             {
-                CStringW Name = g_FontCache->Name(m_Index);
-                LPITEMIDLIST item = _ILCreate(Name);
-                if (!item)
+                CStringW Name = g_FontCache->Name(m_Index), FileName = g_FontCache->File(m_Index);
+                if (Name.IsEmpty())
                 {
-                    hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
-                    break;
+                    ERR("Why is Name empty?\n");
                 }
-                rgelt[Fetched] = item;
+                else if (FileName.IsEmpty())
+                {
+                    ERR("Why is FileName empty?\n");
+                }
+                else
+                {
+                    // Create a PIDL
+                    PITEMID_CHILD item = _ILCreate(Name, FileName);
+                    if (!item)
+                    {
+                        hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
+                        break;
+                    }
+                    rgelt[Fetched] = item;
+                    Fetched++;
+                }
                 m_Index++;
-                Fetched++;
             }
             else
             {

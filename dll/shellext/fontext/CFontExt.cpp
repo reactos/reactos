@@ -77,6 +77,37 @@ WCHAR* g2s(REFCLSID iid)
     return buf[idx];
 }
 
+static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
+{
+    CStringW AttrLetters;
+    AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
+
+    if (AttrLetters.GetLength() != 5)
+    {
+        ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
+        return E_FAIL;
+    }
+
+    UINT ich = 0;
+    if ((dwAttributes & FILE_ATTRIBUTE_READONLY) && ich < cchMax)
+        pszOut[ich++] = AttrLetters[0];
+    if ((dwAttributes & FILE_ATTRIBUTE_HIDDEN) && ich < cchMax)
+        pszOut[ich++] = AttrLetters[1];
+    if ((dwAttributes & FILE_ATTRIBUTE_SYSTEM) && ich < cchMax)
+        pszOut[ich++] = AttrLetters[2];
+    if ((dwAttributes & FILE_ATTRIBUTE_ARCHIVE) && ich < cchMax)
+        pszOut[ich++] = AttrLetters[3];
+    if ((dwAttributes & FILE_ATTRIBUTE_COMPRESSED) && ich < cchMax)
+        pszOut[ich++] = AttrLetters[4];
+    if (ich < cchMax)
+    {
+        pszOut[ich] = UNICODE_NULL;
+        return S_OK;
+    }
+    ERR("Buffer too short: %u\n", cchMax);
+    return E_FAIL;
+}
+
 CFontExt::CFontExt()
 {
     InterlockedIncrement(&g_ModuleRefCnt);
@@ -92,20 +123,19 @@ void CFontExt::SetViewWindow(HWND hwndView)
     m_hwndView = hwndView;
 }
 
-HRESULT CALLBACK
-CFontExt::MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void CFontExt::DeleteItems()
 {
-    TRACE("%u, %p, %p\n", uMsg, wParam, lParam);
-    switch (uMsg)
+    DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
+}
+
+void CFontExt::PreviewItems()
+{
+    for (UINT i = 0; i < m_cidl; ++i)
     {
-        case DFM_MERGECONTEXTMENU:
-            return S_OK; // Yes, I want verbs
-        case DFM_INVOKECOMMAND:
-            return S_FALSE; // Do it for me please
-        case DFM_GETDEFSTATICID:
-            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
+        const FontPidlEntry* fontEntry = _FontFromIL(m_apidl[i]);
+        if (fontEntry)
+            RunFontViewer(m_hwndView, fontEntry);
     }
-    return E_NOTIMPL;
 }
 
 // *** IShellFolder2 methods ***
@@ -179,13 +209,11 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
     auto info = g_FontCache->Find(fontEntry);
     if (info == nullptr)
     {
-        ERR("Unable to query info about %S\n", fontEntry->Name);
+        ERR("Unable to query info about %S\n", fontEntry->Name());
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
     int ret;
-    CStringA AttrLetters;
-    DWORD dwAttributes;
     SYSTEMTIME time;
     switch (iColumn)
     {
@@ -208,27 +236,13 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         GetTimeFormatA(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &psd->str.cStr[ret], MAX_PATH - ret);
         return S_OK;
     case FONTEXT_COL_ATTR:
-        AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
-        if (AttrLetters.GetLength() != 5)
         {
-            ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
-            return E_FAIL;
+            WCHAR szAttr[8];
+            HRESULT hr = FONTEXT_GetAttributeString(info->FileAttributes(), szAttr, _countof(szAttr));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+            return SHSetStrRet(&psd->str, szAttr);
         }
-        psd->str.uType = STRRET_CSTR;
-        dwAttributes = info->FileAttributes();
-        ret = 0;
-        if (dwAttributes & FILE_ATTRIBUTE_READONLY)
-            psd->str.cStr[ret++] = AttrLetters[0];
-        if (dwAttributes & FILE_ATTRIBUTE_HIDDEN)
-            psd->str.cStr[ret++] = AttrLetters[1];
-        if (dwAttributes & FILE_ATTRIBUTE_SYSTEM)
-            psd->str.cStr[ret++] = AttrLetters[2];
-        if (dwAttributes & FILE_ATTRIBUTE_ARCHIVE)
-            psd->str.cStr[ret++] = AttrLetters[3];
-        if (dwAttributes & FILE_ATTRIBUTE_COMPRESSED)
-            psd->str.cStr[ret++] = AttrLetters[4];
-        psd->str.cStr[ret] = '\0';
-        return S_OK;
     default:
         break;
     }
@@ -246,8 +260,89 @@ STDMETHODIMP CFontExt::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
 // *** IShellFolder2 methods ***
 STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    ERR("%s() UNIMPLEMENTED\n", __FUNCTION__);
-    return E_NOTIMPL;
+    if (!lpszDisplayName || !ppidl)
+        return E_INVALIDARG;
+
+    *ppidl = NULL;
+    if (pchEaten) *pchEaten = 0;
+
+    // Load font cache
+    if (g_FontCache->Size() == 0)
+        g_FontCache->Read();
+
+    if (!PathIsRelativeW(lpszDisplayName)) // Full path?
+    {
+        for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
+        {
+            CStringW filePath = g_FontCache->GetFontFilePath(g_FontCache->File(iFont));
+            if (filePath.CompareNoCase(lpszDisplayName) == 0)
+            {
+                CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
+                if (fontName.IsEmpty())
+                {
+                    ERR("Why is fileName empty?\n");
+                    return E_FAIL;
+                }
+                if (fileName.IsEmpty())
+                {
+                    ERR("Why is fileName empty?\n");
+                    return E_FAIL;
+                }
+
+                // Create a PIDL
+                *ppidl = _ILCreate(fontName, fileName);
+                if (*ppidl == NULL)
+                    return E_OUTOFMEMORY;
+
+                if (pchEaten)
+                    *pchEaten = wcslen(lpszDisplayName);
+
+                if (pdwAttributes && *pdwAttributes)
+                    *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
+                                       SFGAO_FILESYSTEM);
+
+                return S_OK;
+            }
+        }
+    }
+
+    // Search font name
+    for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
+    {
+        CStringW fontName = g_FontCache->Name(iFont);
+        if (fontName.IsEmpty())
+        {
+            ERR("Why is fontName empty?\n");
+            continue;
+        }
+
+        if (fontName.CompareNoCase(lpszDisplayName) == 0) // Found?
+        {
+            CStringW fileName = g_FontCache->File(iFont);
+            if (fileName.IsEmpty())
+            {
+                ERR("Why is fileName empty?\n");
+                continue;
+            }
+
+            // Create a PIDL
+            *ppidl = _ILCreate(fontName, fileName);
+            if (*ppidl == NULL)
+                return E_OUTOFMEMORY;
+
+            if (pchEaten)
+                *pchEaten = wcslen(lpszDisplayName);
+
+            if (pdwAttributes && *pdwAttributes)
+                *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
+                                   SFGAO_FILESYSTEM);
+
+            return S_OK;
+        }
+    }
+
+    // Not found
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
 STDMETHODIMP CFontExt::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
@@ -271,7 +366,6 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
 {
     const FontPidlEntry* fontEntry1 = _FontFromIL(pidl1);
     const FontPidlEntry* fontEntry2 = _FontFromIL(pidl2);
-
     if (!fontEntry1 || !fontEntry2)
         return E_INVALIDARG;
 
@@ -280,7 +374,7 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
     DWORD column = lParam & 0x0000FFFF;
     if (sortMode == SHCIDS_ALLFIELDS)
     {
-        result = StrCmpIW(fontEntry1->Name, fontEntry2->Name);
+        result = StrCmpIW(fontEntry1->Name(), fontEntry2->Name());
     }
     else
     {
@@ -289,7 +383,7 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
 
         if (!info1 || !info2)
         {
-            ERR("Unable to find font %S or %S in cache!\n", fontEntry1->Name, fontEntry2->Name);
+            ERR("Unable to find font %S or %S in cache!\n", fontEntry1->Name(), fontEntry2->Name());
             return E_INVALIDARG;
         }
 
@@ -298,22 +392,32 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
         case 0xffff:
             /* ROS bug? */
         case FONTEXT_COL_NAME:
-            result = StrCmpIW(fontEntry1->Name, fontEntry2->Name);
+            result = StrCmpIW(fontEntry1->Name(), fontEntry2->Name());
             break;
         case FONTEXT_COL_FILENAME:
             result = StrCmpIW(PathFindFileNameW(info1->File()), PathFindFileNameW(info2->File()));
             break;
         case FONTEXT_COL_SIZE:
-            result = (int)info1->FileSize().HighPart - info2->FileSize().HighPart;
-            if (result == 0)
-                result = (int)info1->FileSize().LowPart - info2->FileSize().LowPart;
+            {
+                ULONGLONG size1 = info1->FileSize().QuadPart, size2 = info2->FileSize().QuadPart;
+                result = (size1 < size2) ? -1 : ((size1 > size2) ? 1 : 0);
+            }
             break;
         case FONTEXT_COL_MODIFIED:
             result = CompareFileTime(&info1->FileWriteTime(), &info2->FileWriteTime());
             break;
         case FONTEXT_COL_ATTR:
-            // FIXME: how to compare attributes?
-            result = (int)info1->FileAttributes() - info2->FileAttributes();
+            {
+                HRESULT hr;
+                WCHAR szAttr1[8], szAttr2[8];
+                hr = FONTEXT_GetAttributeString(info1->FileAttributes(), szAttr1, _countof(szAttr1));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+                hr = FONTEXT_GetAttributeString(info2->FileAttributes(), szAttr2, _countof(szAttr2));
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+                result = _wcsicmp(szAttr1, szAttr2);
+            }
             break;
         default:
             ERR("Unimplemented column %u\n", column);
@@ -361,16 +465,11 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     if (!rgfInOut || !cidl || !apidl)
         return E_INVALIDARG;
 
-    DWORD rgf = 0;
+    DWORD rgf = (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY | SFGAO_FILESYSTEM);
     while (cidl > 0 && *apidl)
     {
         const FontPidlEntry* fontEntry = _FontFromIL(*apidl);
-        if (fontEntry)
-        {
-            // We don't support delete yet
-            rgf |= (/*SFGAO_CANDELETE |*/ SFGAO_HASPROPSHEET | SFGAO_CANCOPY | SFGAO_FILESYSTEM);
-        }
-        else
+        if (!fontEntry)
         {
             rgf = 0;
             break;
@@ -380,46 +479,84 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
         cidl--;
     }
 
-    *rgfInOut = rgf;
+    *rgfInOut &= rgf;
     return S_OK;
 }
 
-HRESULT CFontExt::CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut)
+HRESULT CALLBACK CFontExt::FontExtMenuCallback(
+    IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
+    UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (cidl <= 0)
-    {
-        ERR("cidl: %u\n", cidl);
-        return E_NOTIMPL;
-    }
-
-    const FontPidlEntry* pEntry = _FontFromIL(apidl[0]);
-    if (!pEntry)
-    {
-        ERR("!pEntry\n");
+    CFontExt* pThis = static_cast<CFontExt*>(psf);
+    if (!pThis)
         return E_FAIL;
-    }
-    auto info = g_FontCache->Find(pEntry);
-    if (!info)
+
+    pThis->m_pDataObj = pdtobj;
+
+    switch (uMsg)
     {
-        ERR("!info\n");
-        return E_FAIL;
+        case DFM_MERGECONTEXTMENU:
+        {
+            QCMINFO* pqcminfo = (QCMINFO*)lParam;
+            // Insert [Preview] menu item
+            CString strPreview(MAKEINTRESOURCEW(IDS_FONT_PREVIEW));
+            ::InsertMenuW(pqcminfo->hmenu, 0, MF_BYPOSITION | MF_STRING,
+                          pqcminfo->idCmdFirst++, strPreview); // Command 0
+            // Make it default
+            ::SetMenuDefaultItem(pqcminfo->hmenu, pqcminfo->idCmdFirst - 1, FALSE);
+            return S_OK;
+        }
+        case DFM_GETVERBA:
+        case DFM_GETVERBW:
+        {
+            // Replace default "open" command action
+            UINT idCmd = LOWORD(wParam), cchMax = HIWORD(wParam);
+            if (idCmd == 0)
+            {
+                if (uMsg == DFM_GETVERBA)
+                    lstrcpynA((LPSTR)lParam, "open", cchMax);
+                else
+                    lstrcpynW((LPWSTR)lParam, L"open", cchMax);
+                return S_OK;
+            }
+            break;
+        }
+        case DFM_INVOKECOMMANDEX:
+            return E_NOTIMPL;
+        case DFM_INVOKECOMMAND:
+        {
+            if (wParam == 0)
+            {
+                pThis->PreviewItems();
+                return S_OK;
+            }
+            if (wParam == DFM_CMD_COPY)
+                return S_FALSE;
+            if (wParam == DFM_CMD_DELETE)
+            {
+                pThis->DeleteItems();
+                return S_OK;
+            }
+            if (wParam == DFM_CMD_PASTE)
+                return S_FALSE;
+            if (wParam == DFM_CMD_PROPERTIES)
+                return S_FALSE;
+            ERR("wParam: %p\n", wParam);
+            return E_FAIL;
+        }
+        case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+            return S_FALSE;
+        case DFM_WM_INITMENUPOPUP:
+        {
+            HMENU hMenu = (HMENU)wParam;
+            // Delete default [Open] menu item
+            ::DeleteMenu(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
+            // Disable [Paste link] menu item
+            ::EnableMenuItem(hMenu, FCIDM_SHVIEW_INSERTLINK, MF_BYCOMMAND | MF_GRAYED);
+            break;
+        }
     }
-    LPCWSTR extension = PathFindExtensionW(info->File());
-
-    CRegKeyHandleArray keys;
-
-    WCHAR wszClass[MAX_PATH];
-    DWORD dwSize = sizeof(wszClass);
-    if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) != ERROR_SUCCESS ||
-        !*wszClass || AddClassKeyToArray(wszClass, keys, keys) != ERROR_SUCCESS)
-    {
-        AddClassKeyToArray(extension, keys, keys);
-
-        if (cidl == 1)
-            AddClassKeyToArray(L"Unknown", keys, keys);
-    }
-
-    return CDefFolderMenu_Create2(m_Folder, hwndOwner, cidl, apidl, this, MenuCallBack, keys, keys, (IContextMenu**)ppvOut);
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
@@ -428,7 +565,12 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
         riid == IID_IContextMenu2 ||
         riid == IID_IContextMenu3)
     {
-        return CreateForegroundMenu(hwndOwner, cidl, apidl, ppvOut);
+        if (cidl <= 0)
+            return E_FAIL;
+        m_cidl = cidl;
+        m_apidl = apidl;
+        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, FontExtMenuCallback,
+                                      0, NULL, (IContextMenu**)ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
     {
@@ -438,10 +580,8 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             if (fontEntry)
             {
                 DWORD dwAttributes = FILE_ATTRIBUTE_NORMAL;
-                CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry));
-                // Just create a default icon extractor based on the filename
-                // We might want to create a preview with the font to get really fancy one day.
-                return SHCreateFileExtractIconW(File, dwAttributes, riid, ppvOut);
+                CStringW strFileName = g_FontCache->GetFontFilePath(fontEntry->FileName());
+                return SHCreateFileExtractIconW(strFileName, dwAttributes, riid, ppvOut);
             }
         }
         else
@@ -502,7 +642,7 @@ STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPS
         }
     }
 
-    return SHSetStrRet(strRet, fontEntry->Name);
+    return SHSetStrRet(strRet, fontEntry->Name());
 }
 
 STDMETHODIMP CFontExt::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
@@ -609,6 +749,7 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         if (g_FontCache)
             g_FontCache->Read();
 
+        SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
         SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
 
         // Show successful message

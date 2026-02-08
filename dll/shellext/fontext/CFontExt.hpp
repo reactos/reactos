@@ -16,16 +16,23 @@ class CFontExt :
     public IDropTarget
 {
     CComHeapPtr<ITEMIDLIST> m_Folder;
+    CComPtr<IDataObject> m_pDataObj;
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
+    UINT m_cidl = 0;
+    PCUITEMID_CHILD_ARRAY m_apidl = nullptr;
+
+    static HRESULT CALLBACK FontExtMenuCallback(
+        IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
+        UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void PreviewItems();
+    void DeleteItems();
 
 public:
     CFontExt();
     ~CFontExt();
 
     void SetViewWindow(HWND hwndView);
-    static HRESULT CALLBACK MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut);
 
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;
