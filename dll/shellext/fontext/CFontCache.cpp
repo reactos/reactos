@@ -145,7 +145,7 @@ CStringW CFontCache::Name(size_t Index)
 
 CStringW CFontCache::File(size_t Index)
 {
-    if (m_Fonts.GetSize() == 0u)
+    if (m_Fonts.GetSize() == 0)
         Read();
 
     if ((INT)Index >= m_Fonts.GetSize())
