@@ -176,8 +176,8 @@ BOOL CFontCache::IsMarkDeleted(size_t Index) const
     return m_Fonts[Index].IsMarkDeleted();
 }
 
-// The item has to exist until just the moment that display of the item has deleted,
-// because UI for change notification should work on the existent items.
+// The item must exist until its visibility is removed, because the change
+// notification UI must work for existing items.
 void CFontCache::MarkDeleted(const FontPidlEntry* fontEntry)
 {
     for (INT i = 0; i < m_Fonts.GetSize(); ++i)
