@@ -43,7 +43,14 @@ typedef struct ClassMoniker
     IMoniker IMoniker_iface;
     IROTData IROTData_iface;
     LONG ref;
-    CLSID clsid; /* clsid identified by this moniker */
+
+    struct
+    {
+        CLSID clsid;
+        DWORD data_len;
+    } header;
+    WCHAR *data;
+
     IUnknown *pMarshal; /* custom marshaler */
 } ClassMoniker;
 
@@ -57,27 +64,34 @@ static inline ClassMoniker *impl_from_IROTData(IROTData *iface)
     return CONTAINING_RECORD(iface, ClassMoniker, IROTData_iface);
 }
 
+static const IMonikerVtbl ClassMonikerVtbl;
+
+static ClassMoniker *unsafe_impl_from_IMoniker(IMoniker *iface)
+{
+    if (iface->lpVtbl != &ClassMonikerVtbl)
+        return NULL;
+    return CONTAINING_RECORD(iface, ClassMoniker, IMoniker_iface);
+}
+
 /*******************************************************************************
  *        ClassMoniker_QueryInterface
  *******************************************************************************/
-static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
+static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker *iface, REFIID riid, void **ppvObject)
 {
     ClassMoniker *This = impl_from_IMoniker(iface);
 
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
+    TRACE("%p, %s, %p.\n", iface, debugstr_guid(riid), ppvObject);
 
-    /* Perform a sanity check on the parameters.*/
     if (!ppvObject)
         return E_POINTER;
 
-    /* Initialize the return parameter */
     *ppvObject = 0;
 
-    /* Compare the riid with the interface IDs implemented by this object.*/
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IPersist, riid) ||
         IsEqualIID(&IID_IPersistStream, riid) ||
-        IsEqualIID(&IID_IMoniker, riid))
+        IsEqualIID(&IID_IMoniker, riid) ||
+        IsEqualGUID(&CLSID_ClassMoniker, riid))
     {
         *ppvObject = iface;
     }
@@ -93,11 +107,9 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
         return IUnknown_QueryInterface(This->pMarshal, riid, ppvObject);
     }
 
-    /* Check that we obtained an interface.*/
     if (!*ppvObject)
         return E_NOINTERFACE;
 
-    /* Query Interface always increases the reference count by one when it is successful */
     IMoniker_AddRef(iface);
 
     return S_OK;
@@ -115,23 +127,18 @@ static ULONG WINAPI ClassMoniker_AddRef(IMoniker* iface)
     return InterlockedIncrement(&This->ref);
 }
 
-/******************************************************************************
- *        ClassMoniker_Release
- ******************************************************************************/
 static ULONG WINAPI ClassMoniker_Release(IMoniker* iface)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
-    ULONG ref;
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
+    ULONG ref = InterlockedDecrement(&moniker->ref);
 
-    TRACE("(%p)\n",This);
+    TRACE("%p, refcount %lu.\n", iface, ref);
 
-    ref = InterlockedDecrement(&This->ref);
-
-    /* destroy the object if there are no more references to it */
-    if (ref == 0)
+    if (!ref)
     {
-        if (This->pMarshal) IUnknown_Release(This->pMarshal);
-        HeapFree(GetProcessHeap(),0,This);
+        if (moniker->pMarshal) IUnknown_Release(moniker->pMarshal);
+        free(moniker->data);
+        free(moniker);
     }
 
     return ref;
@@ -142,7 +149,7 @@ static ULONG WINAPI ClassMoniker_Release(IMoniker* iface)
  ******************************************************************************/
 static HRESULT WINAPI ClassMoniker_GetClassID(IMoniker* iface,CLSID *pClassID)
 {
-    TRACE("(%p,%p),stub!\n",iface,pClassID);
+    TRACE("(%p, %p)\n", iface, pClassID);
 
     if (pClassID==NULL)
         return E_POINTER;
@@ -166,52 +173,55 @@ static HRESULT WINAPI ClassMoniker_IsDirty(IMoniker* iface)
     return S_FALSE;
 }
 
-/******************************************************************************
- *        ClassMoniker_Load
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Load(IMoniker* iface,IStream* pStm)
+static HRESULT WINAPI ClassMoniker_Load(IMoniker *iface, IStream *stream)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
+    ULONG length;
     HRESULT hr;
-    DWORD zero;
 
-    TRACE("(%p)\n", pStm);
+    TRACE("%p, %p\n", iface, stream);
 
-    hr = IStream_Read(pStm, &This->clsid, sizeof(This->clsid), NULL);
-    if (hr != S_OK) return STG_E_READFAULT;
+    hr = IStream_Read(stream, &moniker->header, sizeof(moniker->header), &length);
+    if (hr != S_OK || length != sizeof(moniker->header)) return STG_E_READFAULT;
 
-    hr = IStream_Read(pStm, &zero, sizeof(zero), NULL);
-    if ((hr != S_OK) || (zero != 0)) return STG_E_READFAULT;
+    if (moniker->header.data_len)
+    {
+        free(moniker->data);
+        if (!(moniker->data = malloc(moniker->header.data_len)))
+        {
+            WARN("Failed to allocate moniker data of size %lu.\n", moniker->header.data_len);
+            moniker->header.data_len = 0;
+            return E_OUTOFMEMORY;
+        }
+        hr = IStream_Read(stream, moniker->data, moniker->header.data_len, &length);
+        if (hr != S_OK || length != moniker->header.data_len) return STG_E_READFAULT;
+    }
 
     return S_OK;
 }
 
-/******************************************************************************
- *        ClassMoniker_Save
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
+static HRESULT WINAPI ClassMoniker_Save(IMoniker *iface, IStream *stream, BOOL clear_dirty)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
     HRESULT hr;
-    DWORD zero = 0;
 
-    TRACE("(%p, %s)\n", pStm, fClearDirty ? "TRUE" : "FALSE");
+    TRACE("%p, %p, %d\n", iface, stream, clear_dirty);
 
-    hr = IStream_Write(pStm, &This->clsid, sizeof(This->clsid), NULL);
-    if (FAILED(hr)) return hr;
+    hr = IStream_Write(stream, &moniker->header, sizeof(moniker->header), NULL);
 
-    return IStream_Write(pStm, &zero, sizeof(zero), NULL);
+    if (SUCCEEDED(hr) && moniker->header.data_len)
+        hr = IStream_Write(stream, moniker->data, moniker->header.data_len, NULL);
+
+    return hr;
 }
 
-/******************************************************************************
- *        ClassMoniker_GetSizeMax
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_GetSizeMax(IMoniker* iface,
-                                          ULARGE_INTEGER* pcbSize)/* Pointer to size of stream needed to save object */
+static HRESULT WINAPI ClassMoniker_GetSizeMax(IMoniker *iface, ULARGE_INTEGER *size)
 {
-    TRACE("(%p)\n", pcbSize);
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
 
-    pcbSize->QuadPart = sizeof(CLSID) + sizeof(DWORD);
+    TRACE("%p, %p\n", iface, size);
+
+    size->QuadPart = sizeof(moniker->header) + moniker->header.data_len;
 
     return S_OK;
 }
@@ -225,7 +235,7 @@ static HRESULT WINAPI ClassMoniker_BindToObject(IMoniker* iface,
                                             REFIID riid,
                                             VOID** ppvResult)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
     BIND_OPTS2 bindopts;
     IClassActivator *pActivator;
     HRESULT hr;
@@ -236,7 +246,7 @@ static HRESULT WINAPI ClassMoniker_BindToObject(IMoniker* iface,
     IBindCtx_GetBindOptions(pbc, (BIND_OPTS *)&bindopts);
 
     if (!pmkToLeft)
-        return CoGetClassObject(&This->clsid, bindopts.dwClassContext, NULL,
+        return CoGetClassObject(&moniker->header.clsid, bindopts.dwClassContext, NULL,
                                 riid, ppvResult);
     else
     {
@@ -244,7 +254,7 @@ static HRESULT WINAPI ClassMoniker_BindToObject(IMoniker* iface,
                                    (void **)&pActivator);
         if (FAILED(hr)) return hr;
 
-        hr = IClassActivator_GetClassObject(pActivator, &This->clsid,
+        hr = IClassActivator_GetClassObject(pActivator, &moniker->header.clsid,
                                             bindopts.dwClassContext,
                                             bindopts.locale, riid, ppvResult);
 
@@ -267,16 +277,10 @@ static HRESULT WINAPI ClassMoniker_BindToStorage(IMoniker* iface,
     return IMoniker_BindToObject(iface, pbc, pmkToLeft, riid, ppvResult);
 }
 
-/******************************************************************************
- *        ClassMoniker_Reduce
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Reduce(IMoniker* iface,
-                                      IBindCtx* pbc,
-                                      DWORD dwReduceHowFar,
-                                      IMoniker** ppmkToLeft,
-                                      IMoniker** ppmkReduced)
+static HRESULT WINAPI ClassMoniker_Reduce(IMoniker* iface, IBindCtx *pbc,
+        DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced)
 {
-    TRACE("(%p,%p,%d,%p,%p)\n",iface,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
+    TRACE("%p, %p, %ld, %p, %p.\n", iface, pbc, dwReduceHowFar, ppmkToLeft, ppmkReduced);
 
     if (!ppmkReduced)
         return E_POINTER;
@@ -287,79 +291,23 @@ static HRESULT WINAPI ClassMoniker_Reduce(IMoniker* iface,
 
     return MK_S_REDUCED_TO_SELF;
 }
-/******************************************************************************
- *        ClassMoniker_ComposeWith
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_ComposeWith(IMoniker* iface,
-                                           IMoniker* pmkRight,
-                                           BOOL fOnlyIfNotGeneric,
-                                           IMoniker** ppmkComposite)
+
+static HRESULT WINAPI ClassMoniker_ComposeWith(IMoniker *iface, IMoniker *right,
+        BOOL only_if_not_generic, IMoniker **result)
 {
-    HRESULT res=S_OK;
-    DWORD mkSys,mkSys2;
-    IEnumMoniker* penumMk=0;
-    IMoniker *pmostLeftMk=0;
-    IMoniker* tempMkComposite=0;
+    DWORD order;
 
-    TRACE("(%p,%d,%p)\n", pmkRight, fOnlyIfNotGeneric, ppmkComposite);
+    TRACE("%p, %p, %d, %p.\n", iface, right, only_if_not_generic, result);
 
-    if ((ppmkComposite==NULL)||(pmkRight==NULL))
-	return E_POINTER;
+    if (!result || !right)
+        return E_POINTER;
 
-    *ppmkComposite=0;
+    *result = NULL;
 
-    IMoniker_IsSystemMoniker(pmkRight,&mkSys);
+    if (is_anti_moniker(right, &order))
+        return S_OK;
 
-    /* If pmkRight is an anti-moniker, the returned moniker is NULL */
-    if(mkSys==MKSYS_ANTIMONIKER)
-        return res;
-
-    else
-        /* if pmkRight is a composite whose leftmost component is an anti-moniker,           */
-        /* the returned moniker is the composite after the leftmost anti-moniker is removed. */
-
-         if(mkSys==MKSYS_GENERICCOMPOSITE){
-
-            res=IMoniker_Enum(pmkRight,TRUE,&penumMk);
-
-            if (FAILED(res))
-                return res;
-
-            res=IEnumMoniker_Next(penumMk,1,&pmostLeftMk,NULL);
-
-            IMoniker_IsSystemMoniker(pmostLeftMk,&mkSys2);
-
-            if(mkSys2==MKSYS_ANTIMONIKER){
-
-                IMoniker_Release(pmostLeftMk);
-
-                tempMkComposite=iface;
-                IMoniker_AddRef(iface);
-
-                while(IEnumMoniker_Next(penumMk,1,&pmostLeftMk,NULL)==S_OK){
-
-                    res=CreateGenericComposite(tempMkComposite,pmostLeftMk,ppmkComposite);
-
-                    IMoniker_Release(tempMkComposite);
-                    IMoniker_Release(pmostLeftMk);
-
-                    tempMkComposite=*ppmkComposite;
-                    IMoniker_AddRef(tempMkComposite);
-                }
-                return res;
-            }
-            else
-                return CreateGenericComposite(iface,pmkRight,ppmkComposite);
-         }
-         /* If pmkRight is not an anti-moniker, the method combines the two monikers into a generic
-          composite if fOnlyIfNotGeneric is FALSE; if fOnlyIfNotGeneric is TRUE, the method returns
-          a NULL moniker and a return value of MK_E_NEEDGENERIC */
-          else
-            if (!fOnlyIfNotGeneric)
-                return CreateGenericComposite(iface,pmkRight,ppmkComposite);
-
-            else
-                return MK_E_NEEDGENERIC;
+    return only_if_not_generic ? MK_E_NEEDGENERIC : CreateGenericComposite(iface, right, result);
 }
 
 /******************************************************************************
@@ -377,49 +325,29 @@ static HRESULT WINAPI ClassMoniker_Enum(IMoniker* iface,BOOL fForward, IEnumMoni
     return S_OK;
 }
 
-/******************************************************************************
- *        ClassMoniker_IsEqual
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
+static HRESULT WINAPI ClassMoniker_IsEqual(IMoniker *iface, IMoniker *other)
 {
+    ClassMoniker *moniker = impl_from_IMoniker(iface), *other_moniker;
 
-    CLSID clsid;
-    LPOLESTR dispName1,dispName2;
-    IBindCtx* bind;
-    HRESULT res = S_FALSE;
+    TRACE("%p, %p.\n", iface, other);
 
-    TRACE("(%p,%p)\n",iface,pmkOtherMoniker);
+    if (!other)
+        return E_INVALIDARG;
 
-    if (!pmkOtherMoniker) return S_FALSE;
+    other_moniker = unsafe_impl_from_IMoniker(other);
+    if (!other_moniker)
+        return S_FALSE;
 
-
-    /* check if both are ClassMoniker */
-    if(FAILED (IMoniker_GetClassID(pmkOtherMoniker,&clsid))) return S_FALSE;
-    if(!IsEqualCLSID(&clsid,&CLSID_ClassMoniker)) return S_FALSE;
-
-    /* check if both displaynames are the same */
-    if(SUCCEEDED ((res = CreateBindCtx(0,&bind)))) {
-        if(SUCCEEDED (IMoniker_GetDisplayName(iface,bind,NULL,&dispName1))) {
-	    if(SUCCEEDED (IMoniker_GetDisplayName(pmkOtherMoniker,bind,NULL,&dispName2))) {
-                if(wcscmp(dispName1,dispName2)==0) res = S_OK;
-                CoTaskMemFree(dispName2);
-            }
-            CoTaskMemFree(dispName1);
-	}
-    }
-    return res;
+    return IsEqualGUID(&moniker->header.clsid, &other_moniker->header.clsid) ? S_OK : S_FALSE;
 }
 
-/******************************************************************************
- *        ClassMoniker_Hash
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Hash(IMoniker* iface,DWORD* pdwHash)
+static HRESULT WINAPI ClassMoniker_Hash(IMoniker *iface, DWORD *hash)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
 
-    TRACE("(%p)\n", pdwHash);
+    TRACE("%p, %p\n", iface, hash);
 
-    *pdwHash = This->clsid.Data1;
+    *hash = moniker->header.clsid.Data1;
 
     return S_OK;
 }
@@ -464,39 +392,27 @@ static HRESULT WINAPI ClassMoniker_Inverse(IMoniker* iface,IMoniker** ppmk)
     return CreateAntiMoniker(ppmk);
 }
 
-/******************************************************************************
- *        ClassMoniker_CommonPrefixWith
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
+static HRESULT WINAPI ClassMoniker_CommonPrefixWith(IMoniker *iface, IMoniker *other, IMoniker **prefix)
 {
-    DWORD mkSys;
-    
-    TRACE("(%p, %p)\n", pmkOther, ppmkPrefix);
+    ClassMoniker *moniker = impl_from_IMoniker(iface), *other_moniker;
 
-    *ppmkPrefix = NULL;
+    TRACE("%p, %p, %p\n", iface, other, prefix);
 
-    IMoniker_IsSystemMoniker(pmkOther, &mkSys);
+    *prefix = NULL;
 
-    /* If the other moniker is an class moniker that is equal to this moniker, this method sets *ppmkPrefix */
-    /* to this moniker and returns MK_S_US */
+    other_moniker = unsafe_impl_from_IMoniker(other);
 
-    if (mkSys == MKSYS_CLASSMONIKER)
+    if (other_moniker)
     {
-        if (IMoniker_IsEqual(iface, pmkOther) == S_OK)
-        {
-            *ppmkPrefix = iface;
+        if (!IsEqualGUID(&moniker->header.clsid, &other_moniker->header.clsid)) return MK_E_NOPREFIX;
 
-            IMoniker_AddRef(iface);
+        *prefix = iface;
+        IMoniker_AddRef(iface);
 
-            return MK_S_US;
-        }
-        else
-            return MK_E_NOPREFIX;
+        return MK_S_US;
     }
-    else
-        /* otherwise, the method calls the MonikerCommonPrefixWith function. This function correctly handles */
-        /* the case where the other moniker is a generic composite. */
-        return MonikerCommonPrefixWith(iface, pmkOther, ppmkPrefix);
+
+    return MonikerCommonPrefixWith(iface, other, prefix);
 }
 
 /******************************************************************************
@@ -514,52 +430,52 @@ static HRESULT WINAPI ClassMoniker_RelativePathTo(IMoniker* iface,IMoniker* pmOt
     return MK_E_NOTBINDABLE;
 }
 
-/******************************************************************************
- *        ClassMoniker_GetDisplayName
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_GetDisplayName(IMoniker* iface,
-                                              IBindCtx* pbc,
-                                              IMoniker* pmkToLeft,
-                                              LPOLESTR *ppszDisplayName)
+static HRESULT WINAPI ClassMoniker_GetDisplayName(IMoniker *iface,
+        IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *name)
 {
-    ClassMoniker *This = impl_from_IMoniker(iface);
-    static const WCHAR wszClsidPrefix[] = {'c','l','s','i','d',':',0};
+    ClassMoniker *moniker = impl_from_IMoniker(iface);
+    static const int name_len = CHARS_IN_GUID + 5 /* prefix */;
+    const GUID *guid = &moniker->header.clsid;
 
-    TRACE("(%p, %p, %p)\n", pbc, pmkToLeft, ppszDisplayName);
+    TRACE("%p, %p, %p, %p.\n", iface, pbc, pmkToLeft, name);
 
-    if (!ppszDisplayName)
+    if (!name)
         return E_POINTER;
 
     if (pmkToLeft)
         return E_INVALIDARG;
 
-    *ppszDisplayName = CoTaskMemAlloc(sizeof(wszClsidPrefix) + (CHARS_IN_GUID-2) * sizeof(WCHAR));
+    if (!(*name = CoTaskMemAlloc(name_len * sizeof(WCHAR) + moniker->header.data_len)))
+        return E_OUTOFMEMORY;
 
-    StringFromGUID2(&This->clsid, *ppszDisplayName+ARRAY_SIZE(wszClsidPrefix)-2, CHARS_IN_GUID);
+    swprintf(*name, name_len, L"clsid:%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+            guid->Data1, guid->Data2, guid->Data3, guid->Data4[0], guid->Data4[1], guid->Data4[2],
+            guid->Data4[3], guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
 
-    /* note: this overwrites the opening curly bracket of the CLSID string generated above */
-    memcpy(*ppszDisplayName, wszClsidPrefix, sizeof(wszClsidPrefix)-sizeof(WCHAR));
+    if (moniker->header.data_len)
+        lstrcatW(*name, moniker->data);
+    lstrcatW(*name, L":");
 
-    /* note: this overwrites the closing curly bracket of the CLSID string generated above */
-    (*ppszDisplayName)[ARRAY_SIZE(wszClsidPrefix)-2+CHARS_IN_GUID-2] = ':';
-    (*ppszDisplayName)[ARRAY_SIZE(wszClsidPrefix)-2+CHARS_IN_GUID-1] = '\0';
+    TRACE("Returning %s\n", debugstr_w(*name));
 
-    TRACE("string is %s\n", debugstr_w(*ppszDisplayName));
     return S_OK;
 }
 
-/******************************************************************************
- *        ClassMoniker_ParseDisplayName
- ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_ParseDisplayName(IMoniker* iface,
-                                                IBindCtx* pbc,
-                                                IMoniker* pmkToLeft,
-                                                LPOLESTR pszDisplayName,
-                                                ULONG* pchEaten,
-                                                IMoniker** ppmkOut)
+static HRESULT WINAPI ClassMoniker_ParseDisplayName(IMoniker *iface, IBindCtx *pbc,
+        IMoniker *pmkToLeft, LPOLESTR display_name, ULONG *eaten, IMoniker **result)
 {
-    FIXME("(%p, %p, %s, %p, %p)\n", pbc, pmkToLeft, debugstr_w(pszDisplayName), pchEaten, ppmkOut);
-    return E_NOTIMPL;
+    IParseDisplayName *parser;
+    HRESULT hr;
+
+    TRACE("%p, %p, %p, %s, %p, %p\n", iface, pbc, pmkToLeft, debugstr_w(display_name), eaten, result);
+
+    if (SUCCEEDED(hr = IMoniker_BindToObject(iface, pbc, pmkToLeft, &IID_IParseDisplayName, (void **)&parser)))
+    {
+        hr = IParseDisplayName_ParseDisplayName(parser, pbc, display_name, eaten, result);
+        IParseDisplayName_Release(parser);
+    }
+
+    return hr;
 }
 
 /******************************************************************************
@@ -624,7 +540,7 @@ static HRESULT WINAPI ClassMonikerROTData_GetComparisonData(IROTData* iface,
 {
     ClassMoniker *This = impl_from_IROTData(iface);
 
-    TRACE("(%p, %u, %p)\n", pbData, cbMax, pcbData);
+    TRACE("%p, %p, %lu, %p.\n", iface, pbData, cbMax, pcbData);
 
     *pcbData = 2*sizeof(CLSID);
     if (cbMax < *pcbData)
@@ -633,14 +549,11 @@ static HRESULT WINAPI ClassMonikerROTData_GetComparisonData(IROTData* iface,
     /* write CLSID of the moniker */
     memcpy(pbData, &CLSID_ClassMoniker, sizeof(CLSID));
     /* write CLSID the moniker represents */
-    memcpy(pbData+sizeof(CLSID), &This->clsid, sizeof(CLSID));
+    memcpy(pbData+sizeof(CLSID), &This->header.clsid, sizeof(CLSID));
 
     return S_OK;
 }
 
-/********************************************************************************/
-/* Virtual function table for the ClassMoniker class which  include IPersist,*/
-/* IPersistStream and IMoniker functions.                                       */
 static const IMonikerVtbl ClassMonikerVtbl =
 {
     ClassMoniker_QueryInterface,
@@ -678,19 +591,32 @@ static const IROTDataVtbl ROTDataVtbl =
     ClassMonikerROTData_GetComparisonData
 };
 
-/******************************************************************************
- *         ClassMoniker_Construct (local function)
- *******************************************************************************/
-static HRESULT ClassMoniker_Construct(ClassMoniker* This, REFCLSID rclsid)
+static HRESULT create_class_moniker(const CLSID *clsid, const WCHAR *data,
+        unsigned int data_len, IMoniker **moniker)
 {
-    TRACE("(%p,%s)\n",This,debugstr_guid(rclsid));
+    ClassMoniker *object;
 
-    /* Initialize the virtual function table. */
-    This->IMoniker_iface.lpVtbl = &ClassMonikerVtbl;
-    This->IROTData_iface.lpVtbl = &ROTDataVtbl;
-    This->ref           = 0;
-    This->clsid         = *rclsid;
-    This->pMarshal      = NULL;
+    if (!(object = calloc(1, sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    object->IMoniker_iface.lpVtbl = &ClassMonikerVtbl;
+    object->IROTData_iface.lpVtbl = &ROTDataVtbl;
+    object->ref = 1;
+    object->header.clsid = *clsid;
+    if (data_len)
+    {
+        object->header.data_len = (data_len + 1) * sizeof(WCHAR);
+
+        if (!(object->data = malloc(object->header.data_len)))
+        {
+            IMoniker_Release(&object->IMoniker_iface);
+            return E_OUTOFMEMORY;
+        }
+        memcpy(object->data, data, data_len * sizeof(WCHAR));
+        object->data[data_len] = 0;
+    }
+
+    *moniker = &object->IMoniker_iface;
 
     return S_OK;
 }
@@ -698,108 +624,62 @@ static HRESULT ClassMoniker_Construct(ClassMoniker* This, REFCLSID rclsid)
 /******************************************************************************
  *        CreateClassMoniker	[OLE32.@]
  ******************************************************************************/
-HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker **ppmk)
+HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker **moniker)
 {
-    ClassMoniker* newClassMoniker;
-    HRESULT       hr;
+    TRACE("%s, %p\n", debugstr_guid(rclsid), moniker);
 
-    TRACE("(%s,%p)\n", debugstr_guid(rclsid), ppmk);
-
-    newClassMoniker = HeapAlloc(GetProcessHeap(), 0, sizeof(ClassMoniker));
-
-    if (!newClassMoniker)
-        return STG_E_INSUFFICIENTMEMORY;
-
-    hr = ClassMoniker_Construct(newClassMoniker, rclsid);
-
-    if (FAILED(hr))
-    {
-        HeapFree(GetProcessHeap(), 0, newClassMoniker);
-        return hr;
-    }
-
-    return ClassMoniker_QueryInterface(&newClassMoniker->IMoniker_iface, &IID_IMoniker,
-                                       (void**)ppmk);
+    return create_class_moniker(rclsid, NULL, 0, moniker);
 }
 
-HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName, LPDWORD pchEaten,
-                                           IMoniker **ppmk)
+HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, const WCHAR *display_name,
+        DWORD *eaten, IMoniker **moniker)
 {
-    HRESULT hr;
-    LPCWSTR s = wcschr(szDisplayName, ':');
-    LPCWSTR end;
+    const WCHAR *end, *s;
+    BOOL has_braces;
+    WCHAR uuid[37];
     CLSID clsid;
-    BYTE table[256];
-    int i;
+    HRESULT hr;
+    int len;
 
-    if (!s)
+    s = display_name;
+
+    /* Skip prefix */
+    if (wcsnicmp(s, L"clsid:", 6)) return MK_E_SYNTAX;
+    s += 6;
+
+    /* Terminating marker is optional */
+    if (!(end = wcschr(s, ':')))
+        end = s + lstrlenW(s);
+
+    len = end - s;
+    if (len < 36)
         return MK_E_SYNTAX;
 
-    s++;
+    if ((has_braces = *s == '{')) s++;
 
-    for (end = s; *end && (*end != ':'); end++)
-        ;
+    memcpy(uuid, s, 36 * sizeof(WCHAR));
+    uuid[36] = 0;
 
-    TRACE("parsing %s\n", debugstr_wn(s, end - s));
-
-    /* validate the CLSID string */
-    if (s[0] == '{')
+    if (UuidFromStringW(uuid, &clsid))
     {
-        if ((end - s != 38) || (s[37] != '}'))
-            return MK_E_SYNTAX;
+        WARN("Failed to parse clsid string.\n");
+        return MK_E_SYNTAX;
+    }
+
+    s += 36;
+    if (has_braces)
+    {
+        if (*s != '}') return MK_E_SYNTAX;
         s++;
     }
-    else
-    {
-        if (end - s != 36)
-            return MK_E_SYNTAX;
-    }
 
-    for (i=0; i<36; i++)
-    {
-        if ((i == 8)||(i == 13)||(i == 18)||(i == 23))
-        {
-            if (s[i] != '-')
-                return MK_E_SYNTAX;
-            continue;
-        }
-        if (!(((s[i] >= '0') && (s[i] <= '9'))  ||
-              ((s[i] >= 'a') && (s[i] <= 'f'))  ||
-              ((s[i] >= 'A') && (s[i] <= 'F'))))
-            return MK_E_SYNTAX;
-    }
+    /* Consume terminal marker */
+    len = end - s;
+    if (*end == ':') end++;
 
-    /* quick lookup table */
-    memset(table, 0, 256);
-
-    for (i = 0; i < 10; i++)
-        table['0' + i] = i;
-    for (i = 0; i < 6; i++)
-    {
-        table['A' + i] = i+10;
-        table['a' + i] = i+10;
-    }
-
-    /* in form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX */
-
-    clsid.Data1 = (table[s[0]] << 28 | table[s[1]] << 24 | table[s[2]] << 20 | table[s[3]] << 16 |
-                   table[s[4]] << 12 | table[s[5]] << 8  | table[s[6]] << 4  | table[s[7]]);
-    clsid.Data2 = table[s[9]] << 12  | table[s[10]] << 8 | table[s[11]] << 4 | table[s[12]];
-    clsid.Data3 = table[s[14]] << 12 | table[s[15]] << 8 | table[s[16]] << 4 | table[s[17]];
-
-    /* these are just sequential bytes */
-    clsid.Data4[0] = table[s[19]] << 4 | table[s[20]];
-    clsid.Data4[1] = table[s[21]] << 4 | table[s[22]];
-    clsid.Data4[2] = table[s[24]] << 4 | table[s[25]];
-    clsid.Data4[3] = table[s[26]] << 4 | table[s[27]];
-    clsid.Data4[4] = table[s[28]] << 4 | table[s[29]];
-    clsid.Data4[5] = table[s[30]] << 4 | table[s[31]];
-    clsid.Data4[6] = table[s[32]] << 4 | table[s[33]];
-    clsid.Data4[7] = table[s[34]] << 4 | table[s[35]];
-
-    hr = CreateClassMoniker(&clsid, ppmk);
+    hr = create_class_moniker(&clsid, len ? s : NULL, len, moniker);
     if (SUCCEEDED(hr))
-        *pchEaten = (*end == ':' ? end + 1 : end) - szDisplayName;
+        *eaten = end - display_name;
     return hr;
 }
 
