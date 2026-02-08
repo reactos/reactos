@@ -233,7 +233,7 @@ void CFontCache::Insert(CAtlList<CFontInfo>& fonts, const CStringW& KeyName, PCW
     fonts.AddTail(newInfo);
 }
 
-CStringW CFontCache::GetFontFilePath(const LPCWSTR Path) const
+CStringW CFontCache::GetFontFilePath(const PCWSTR Path) const
 {
     if (PathIsRelativeW(Path))
         return m_FontFolderPath + Path;
