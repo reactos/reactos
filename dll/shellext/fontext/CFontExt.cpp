@@ -237,7 +237,7 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         return S_OK;
     case FONTEXT_COL_ATTR:
         {
-            WCHAR szAttr[8];
+            WCHAR szAttr[MAX_ATTRS];
             HRESULT hr = FONTEXT_GetAttributeString(info->FileAttributes(), szAttr, _countof(szAttr));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
