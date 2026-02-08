@@ -149,7 +149,7 @@ CStringW CFontCache::File(size_t Index)
         Read();
 
     if ((INT)Index >= m_Fonts.GetSize())
-        return CStringW();
+        return L"";
 
     return m_Fonts[Index].File();
 }
