@@ -79,6 +79,7 @@ WCHAR* g2s(REFCLSID iid)
 
 static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
 {
+#define MAX_ATTRS sizeof("RHSAC")
     CStringW AttrLetters(MAKEINTRESOURCEW(IDS_COL_ATTR_LETTERS));
 
     if (AttrLetters.GetLength() != 5)
