@@ -483,7 +483,7 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
-HRESULT CALLBACK CFontExt::FontExtMenuCallback(
+HRESULT CALLBACK CFontExt::MenuCallback(
     IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
     UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
