@@ -409,7 +409,7 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
         case FONTEXT_COL_ATTR:
             {
                 HRESULT hr;
-                WCHAR szAttr1[8], szAttr2[8];
+                WCHAR szAttr1[MAX_ATTRS], szAttr2[MAX_ATTRS];
                 hr = FONTEXT_GetAttributeString(info1->FileAttributes(), szAttr1, _countof(szAttr1));
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
