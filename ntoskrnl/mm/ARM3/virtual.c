@@ -1344,16 +1344,133 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
                      IN OUT PSIZE_T RegionSize,
                      OUT PIO_STATUS_BLOCK IoStatusBlock)
 {
+    PMMVAD Vad;
+    PMMSUPPORT AddressSpace;
+    ULONG_PTR StartingAddress, EndingAddress;
+    NTSTATUS Status = STATUS_SUCCESS;
+    TABLE_SEARCH_RESULT Result;
+    PSECTION_OBJECT_POINTERS SectionObjectPointer = NULL;
+    LARGE_INTEGER Offset;
+    ULONG Length;
+    PFILE_OBJECT FileObject = NULL;
+
     PAGED_CODE();
 
-    UNIMPLEMENTED;
-
-    // Report actual state.
-    IoStatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+    /* Set default return values */
     IoStatusBlock->Information = 0;
+    IoStatusBlock->Status = STATUS_SUCCESS;
 
-    // Pretend success.
-    return STATUS_SUCCESS; // STATUS_NOT_IMPLEMENTED
+    /* Align the addresses */
+    StartingAddress = (ULONG_PTR)PAGE_ALIGN(*BaseAddress);
+    if (*RegionSize == 0)
+    {
+        EndingAddress = StartingAddress;
+    }
+    else
+    {
+        EndingAddress = (ULONG_PTR)*BaseAddress + *RegionSize - 1;
+    }
+
+    /* Lock the address space */
+    AddressSpace = &Process->Vm;
+    MmLockAddressSpace(AddressSpace);
+
+    /* Make sure the process isn't already dead */
+    if (Process->VmDeleted)
+    {
+        Status = STATUS_PROCESS_IS_TERMINATING;
+        goto ReleaseAndReturn;
+    }
+
+    /* Get the VAD */
+    Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
+                                       EndingAddress >> PAGE_SHIFT,
+                                       &Process->VadRoot,
+                                       (PMMADDRESS_NODE*)&Vad);
+
+    if (Result != TableFoundNode)
+    {
+        DPRINT("Could not find a VAD for this allocation\n");
+        Status = STATUS_ADDRESS_NOT_ASSOCIATED;
+        goto ReleaseAndReturn;
+    }
+
+    /* Handle 0 RegionSize */
+    if (*RegionSize == 0)
+    {
+        EndingAddress = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+        *RegionSize = EndingAddress - StartingAddress + 1;
+        *BaseAddress = (PVOID)StartingAddress;
+    }
+
+    /* Make sure the range is within the VAD */
+    if (((StartingAddress >> PAGE_SHIFT) < Vad->StartingVpn) ||
+        ((EndingAddress >> PAGE_SHIFT) > Vad->EndingVpn))
+    {
+        DPRINT("Address range spans multiple VADs\n");
+        Status = STATUS_ADDRESS_NOT_ASSOCIATED;
+        goto ReleaseAndReturn;
+    }
+
+    /* Check for ROSMM VAD */
+    if (MI_IS_ROSMM_VAD(Vad))
+    {
+        PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
+        if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+        {
+            PMM_SECTION_SEGMENT Segment = MemoryArea->SectionData.Segment;
+            if (Segment->FileObject && Segment->FileObject->SectionObjectPointer)
+            {
+                FileObject = Segment->FileObject;
+                SectionObjectPointer = FileObject->SectionObjectPointer;
+                Offset.QuadPart = MemoryArea->SectionData.ViewOffset + (StartingAddress - (Vad->StartingVpn << PAGE_SHIFT));
+                Length = (*RegionSize > 0xFFFFFFFF) ? 0xFFFFFFFF : (ULONG)*RegionSize;
+            }
+        }
+    }
+    else
+    {
+        /* ARM3 VAD */
+        if (Vad->u.VadFlags.PrivateMemory == 0 && Vad->ControlArea != NULL && Vad->ControlArea->FilePointer != NULL)
+        {
+             FileObject = Vad->ControlArea->FilePointer;
+             SectionObjectPointer = FileObject->SectionObjectPointer;
+             Offset.QuadPart = ((LONGLONG)Vad->u2.VadFlags2.FileOffset << 16) + (StartingAddress - (Vad->StartingVpn << PAGE_SHIFT));
+             Length = (*RegionSize > 0xFFFFFFFF) ? 0xFFFFFFFF : (ULONG)*RegionSize;
+        }
+    }
+
+    if (SectionObjectPointer)
+    {
+        /* Reference the file object to keep it alive */
+        ObReferenceObject(FileObject);
+
+        /* Unlock address space before doing IO */
+        MmUnlockAddressSpace(AddressSpace);
+
+        /* Flush the segment */
+        Status = MmFlushSegment(SectionObjectPointer, &Offset, Length, IoStatusBlock);
+
+        /* Dereference the file object */
+        ObDereferenceObject(FileObject);
+    }
+    else
+    {
+        /* Unlock address space */
+        MmUnlockAddressSpace(AddressSpace);
+
+        /* Nothing to flush, but success */
+        Status = STATUS_SUCCESS;
+        IoStatusBlock->Status = Status;
+    }
+
+    return Status;
+
+ReleaseAndReturn:
+    /* Unlock address space */
+    MmUnlockAddressSpace(AddressSpace);
+    IoStatusBlock->Status = Status;
+    return Status;
 }
 
 ULONG
@@ -4008,6 +4125,8 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
     PVOID CapturedBaseAddress;
     SIZE_T CapturedBytesToFlush;
     IO_STATUS_BLOCK LocalStatusBlock;
+    KAPC_STATE ApcState;
+    BOOLEAN Attached = FALSE;
     PAGED_CODE();
 
     //
@@ -4079,12 +4198,26 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     //
+    // Check if we should attach
+    //
+    if (Process != PsGetCurrentProcess())
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
+
+    //
     // Do it
     //
     Status = MmFlushVirtualMemory(Process,
                                   &CapturedBaseAddress,
                                   &CapturedBytesToFlush,
                                   &LocalStatusBlock);
+
+    //
+    // Detach if needed
+    //
+    if (Attached) KeUnstackDetachProcess(&ApcState);
 
     //
     // Release reference
