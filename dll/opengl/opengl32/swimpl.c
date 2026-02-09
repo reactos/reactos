@@ -1537,9 +1537,9 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
     struct sw_framebuffer* fb;
     
     /* Validate parameters */
-    if (!dc_data || !dc_data->sw_data)
+    if (!dc_data->sw_data)
     {
-        ERR("Invalid dc_data or sw_data in sw_SwapBuffers\n");
+        ERR("sw_data is NULL in sw_SwapBuffers\n");
         return FALSE;
     }
     
