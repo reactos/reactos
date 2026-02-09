@@ -676,6 +676,13 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
             oldBk = SetBkColor( hdc, GetSysColor( COLOR_HIGHLIGHT ) );
             oldText = SetTextColor( hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
         }
+#ifdef __REACTOS__
+        else
+        {   
+            HBRUSH br = GetCurrentObject(hdc, OBJ_BRUSH);
+            FillRect(hdc, rect, br);
+        }
+#endif
 
         TRACE("[%p]: painting %d (%s) action=%02x rect=%s\n",
               descr->self, index, debugstr_w(item_str), action,
@@ -684,9 +691,24 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                            ETO_OPAQUE | ETO_CLIPPED, rect, NULL, 0, NULL );
         else if (!(descr->style & LBS_USETABSTOPS))
+#ifdef __REACTOS__
+        {
+            RECT rc = *rect;
+            if (!selected)
+            {
+                SIZE sz;
+                GetTextExtentPoint32(hdc, item_str, lstrlenW(item_str), &sz);
+                rc.right = min(sz.cx, rc.right);
+            }
+            ExtTextOutW( hdc, rect->left + 1, rect->top,
+                         ETO_OPAQUE | ETO_CLIPPED, &rc, item_str,
+                         lstrlenW(item_str), NULL);
+        }
+#else
             ExtTextOutW( hdc, rect->left + 1, rect->top,
                          ETO_OPAQUE | ETO_CLIPPED, rect, item_str,
                          lstrlenW(item_str), NULL );
+#endif
         else
 	{
 	    /* Output empty string to paint background in the full width. */
@@ -1173,8 +1195,13 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
         if (rect.top < descr->height)
         {
             rect.bottom = descr->height;
+#ifdef __REACTOS__
+            HBRUSH br = GetCurrentObject(hdc, OBJ_BRUSH);
+            FillRect(hdc, &rect, br);
+#else
             ExtTextOutW( hdc, 0, 0, ETO_OPAQUE | ETO_CLIPPED,
                            &rect, NULL, 0, NULL );
+#endif
         }
         if (rect.right < descr->width)
         {
@@ -1182,8 +1209,13 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
             rect.right  = descr->width;
             rect.top    = 0;
             rect.bottom = descr->height;
+#ifdef __REACTOS__
+            HBRUSH br = GetCurrentObject(hdc, OBJ_BRUSH);
+            FillRect(hdc, &rect, br);
+#else
             ExtTextOutW( hdc, 0, 0, ETO_OPAQUE | ETO_CLIPPED,
                            &rect, NULL, 0, NULL );
+#endif
         }
     }
     if (oldFont) SelectObject( hdc, oldFont );
