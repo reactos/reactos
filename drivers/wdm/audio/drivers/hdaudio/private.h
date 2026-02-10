@@ -62,7 +62,7 @@ typedef struct
 
 typedef struct
 {
-    UCHAR MuteCapable : 1; 
+    UCHAR MuteCapable : 1;
     UCHAR Steps : 7;
     UCHAR NumSteps : 7;
     UCHAR Offset : 7;
@@ -261,7 +261,6 @@ class CFunctionGroupNode
   public:
     CFunctionGroupNode(UCHAR CodecAddress, UCHAR NodeId, CAdapterCommon *AdapterCommon)
         : m_Adapter(AdapterCommon), m_StartNodeId(NodeId), m_CodecAddress(CodecAddress), m_SubNodeCount(0)
-          
     {
         InitializeListHead(&m_Nodes);
     }
@@ -332,6 +331,15 @@ class CMiniportWaveRTStream : public CUnknownImpl<IMiniportWaveRTStreamNotificat
     }
     virtual ~CMiniportWaveRTStream()
     {
+        NTSTATUS Status;
+        HDAUDIO_BUS_INTERFACE_V2 Interface;
+
+        Status = m_Adapter->GetInterface(&Interface);
+        if (!NT_SUCCESS(Status))
+        {
+            return;
+        }
+        Interface.FreeDmaEngine(Interface.Context, m_DmaEngine);
     }
 
     IMP_IMiniportWaveRTStreamNotification;
