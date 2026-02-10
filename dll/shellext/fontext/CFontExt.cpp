@@ -541,6 +541,11 @@ HRESULT CALLBACK CFontExt::FontExtMenuCallback(
                 return S_FALSE;
             if (wParam == DFM_CMD_PROPERTIES)
                 return S_FALSE;
+            if (wParam == DFM_CMD_MOVE)
+            {
+                ERR("DFM_CMD_MOVE not supported\n");
+                return E_NOTIMPL;
+            }
             ERR("wParam: %p\n", wParam);
             return E_FAIL;
         }
