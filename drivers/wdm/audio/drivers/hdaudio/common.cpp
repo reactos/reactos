@@ -736,15 +736,6 @@ CAdapterCommon::BuildFilter(
     Pins[0].KsPinDescriptor.Mediums = &StandardPinMedium;
     Pins[0].KsPinDescriptor.DataRangesCount = 1;
 
-    Pins[0].KsPinDescriptor.DataRanges =
-        (const PKSDATARANGE *)ExAllocatePoolZero(NonPagedPool, sizeof(PKSDATARANGE *) * 1, TAG_HDAUDIO);
-    if (!Pins[0].KsPinDescriptor.DataRanges)
-    {
-        ExFreePool(Pins);
-        ExFreePool(Description);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
     // FIXME handle multiple formats
     ASSERT(FormatsSupported == 1);
 
@@ -757,8 +748,6 @@ CAdapterCommon::BuildFilter(
         ExFreePool(Description);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    reinterpret_cast<PKSDATARANGE>(Pins[0].KsPinDescriptor.DataRanges[0]) = (PKSDATARANGE)AudioFormat;
 
     for(AudioFormatIndex = 0; AudioFormatIndex < FormatsSupported; AudioFormatIndex++)
     {
@@ -794,6 +783,8 @@ CAdapterCommon::BuildFilter(
         AudioFormat[AudioFormatIndex].MaximumSampleFrequency = MaximumSampleFrequency;
     }
 
+    Pins[0].KsPinDescriptor.DataRanges = (PKSDATARANGE *)&AudioFormat;
+
     if (NodeType == 0x00)
     {
         Pins[0].KsPinDescriptor.DataFlow = KSPIN_DATAFLOW_IN;
@@ -818,24 +809,15 @@ CAdapterCommon::BuildFilter(
     Pins[1].KsPinDescriptor.MediumsCount = 1;
     Pins[1].KsPinDescriptor.Mediums = &StandardPinMedium;
     Pins[1].KsPinDescriptor.DataRangesCount = 1;
-    Pins[1].KsPinDescriptor.DataRanges =
-        (PKSDATARANGE *)ExAllocatePoolZero(NonPagedPool, sizeof(PKSDATARANGE *) * 1, TAG_HDAUDIO);
-    if (!Pins[1].KsPinDescriptor.DataRanges)
-    {
-        ExFreePool(Pins);
-        ExFreePool(Description);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     PKSDATARANGE BridgeAudioFormat =
-        (PKSDATARANGE)ExAllocatePoolZero(NonPagedPool, sizeof(KSDATARANGE_AUDIO), TAG_HDAUDIO);
+        (PKSDATARANGE)ExAllocatePoolZero(NonPagedPool, sizeof(KSDATARANGE), TAG_HDAUDIO);
     if (!BridgeAudioFormat)
     {
         ExFreePool(Pins);
         ExFreePool(Description);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    reinterpret_cast<PKSDATARANGE>(Pins[1].KsPinDescriptor.DataRanges[0]) = BridgeAudioFormat;
 
     BridgeAudioFormat->FormatSize = sizeof(KSDATARANGE);
     BridgeAudioFormat->Flags = 0;
@@ -844,6 +826,9 @@ CAdapterCommon::BuildFilter(
     BridgeAudioFormat->MajorFormat = {STATIC_KSDATAFORMAT_TYPE_AUDIO};
     BridgeAudioFormat->SubFormat = {STATIC_KSDATAFORMAT_SUBTYPE_ANALOG};
     BridgeAudioFormat->Specifier = {STATIC_KSDATAFORMAT_SPECIFIER_NONE};
+
+    Pins[1].KsPinDescriptor.DataRanges = &BridgeAudioFormat;
+
     if (NodeType == 0x0)
     {
         Pins[1].KsPinDescriptor.DataFlow = KSPIN_DATAFLOW_OUT;
