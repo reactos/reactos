@@ -310,10 +310,10 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
             if (NT_SUCCESS(Status))
             {
                 ULONG Verb = 0;
-                Verb |= PartialInformation->Data[0] << 24;
-                Verb |= PartialInformation->Data[1] << 16;
-                Verb |= PartialInformation->Data[2] << 8;
-                Verb |= PartialInformation->Data[3] << 0;
+                Verb |= PartialInformation->Data[0] << 0;
+                Verb |= PartialInformation->Data[1] << 8;
+                Verb |= PartialInformation->Data[2] << 16;
+                Verb |= PartialInformation->Data[3] << 24;
                 ExFreePool(PartialInformation);
                 DPRINT1("KeyName %wZ Value %x\n", &KeyName, Verb);
                 HDAUDIO_CODEC_TRANSFER Transfer;
@@ -963,7 +963,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         DPRINT1("HDAUDIO: Failed to get vendor revision %x\n", Status);
         return Status;
     }
-#if 0
+
     // transfer init verbs
     Status = TransferInitVerbs(DeviceObject);
     if (!NT_SUCCESS(Status))
@@ -971,7 +971,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         DPRINT1("HDAUDIO: TransferInitVerbs failed %x\n", Status);
         return Status;
     }
-#endif
+
     // now enum widgets
     CFunctionGroupNode *OutNode = nullptr;
     Status = HDAUDIO_EnumFunctionGroupWidgets(m_CodecAddress, m_FunctionGroupStartNode, this, &OutNode);
