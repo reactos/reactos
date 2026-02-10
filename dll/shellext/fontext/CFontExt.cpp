@@ -79,10 +79,10 @@ WCHAR* g2s(REFCLSID iid)
 
 static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
 {
-#define MAX_ATTRS sizeof("RHSAC")
-    CStringW AttrLetters(MAKEINTRESOURCEW(IDS_COL_ATTR_LETTERS));
+    CStringW AttrLetters;
+    AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
 
-    if (AttrLetters.GetLength() + 1 != MAX_ATTRS)
+    if (AttrLetters.GetLength() != 5)
     {
         ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
         return E_FAIL;
@@ -125,10 +125,7 @@ void CFontExt::SetViewWindow(HWND hwndView)
 
 HRESULT CFontExt::DeleteItems()
 {
-    HRESULT hr = DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        ERR("DoDeleteFontFiles failed: 0x%08lx\n", hr);
-    return hr;
+    return DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
 }
 
 void CFontExt::PreviewItems()
@@ -240,7 +237,7 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         return S_OK;
     case FONTEXT_COL_ATTR:
         {
-            WCHAR szAttr[MAX_ATTRS];
+            WCHAR szAttr[8];
             HRESULT hr = FONTEXT_GetAttributeString(info->FileAttributes(), szAttr, _countof(szAttr));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
@@ -283,7 +280,7 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
                 CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
                 if (fontName.IsEmpty())
                 {
-                    ERR("Why is fontName empty?\n");
+                    ERR("Why is fileName empty?\n");
                     return E_FAIL;
                 }
                 if (fileName.IsEmpty())
@@ -412,7 +409,7 @@ STDMETHODIMP CFontExt::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUID
         case FONTEXT_COL_ATTR:
             {
                 HRESULT hr;
-                WCHAR szAttr1[MAX_ATTRS], szAttr2[MAX_ATTRS];
+                WCHAR szAttr1[8], szAttr2[8];
                 hr = FONTEXT_GetAttributeString(info1->FileAttributes(), szAttr1, _countof(szAttr1));
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
@@ -486,13 +483,15 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
-HRESULT CALLBACK CFontExt::MenuCallback(
+HRESULT CALLBACK CFontExt::FontExtMenuCallback(
     IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
     UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CFontExt* pThis = static_cast<CFontExt*>(psf);
     if (!pThis)
         return E_FAIL;
+
+    pThis->m_pDataObj = pdtobj;
 
     switch (uMsg)
     {
@@ -510,7 +509,7 @@ HRESULT CALLBACK CFontExt::MenuCallback(
         case DFM_GETVERBA:
         case DFM_GETVERBW:
         {
-            // Replace default "open" verb action
+            // Replace default "open" command action
             UINT idCmd = LOWORD(wParam), cchMax = HIWORD(wParam);
             if (idCmd == 0)
             {
@@ -570,7 +569,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             return E_FAIL;
         m_cidl = cidl;
         m_apidl = apidl;
-        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, MenuCallback,
+        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, FontExtMenuCallback,
                                       0, NULL, (IContextMenu**)ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)
