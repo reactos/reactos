@@ -23,8 +23,8 @@ class CMiniportWaveRT : public CUnknownImpl<IMiniportWaveRT>
         CFunctionGroupNode *Node,
         CAdapterCommon *Adapter,
         PPCFILTER_DESCRIPTOR Filter)
-        : m_AssociatedPinCount(AssociatedPinCount), m_Node(Node), m_AssociatedPins(AssociatedPinIds),
-          m_FilterDescription(Filter), m_Port(0), m_Adapter(Adapter)
+        : m_Port(0), m_AssociatedPinCount(AssociatedPinCount), m_AssociatedPins(AssociatedPinIds), m_Node(Node),
+          m_Adapter(Adapter), m_FilterDescription(Filter)
     {
     }
     virtual ~CMiniportWaveRT()
@@ -32,13 +32,13 @@ class CMiniportWaveRT : public CUnknownImpl<IMiniportWaveRT>
     }
 
   private:
+    PPORTWAVERT m_Port;
     ULONG m_AssociatedPinCount;
     PULONG m_AssociatedPins;
-    CAdapterCommon *m_Adapter;
     CFunctionGroupNode *m_Node;
-    PIN_CONFIGURATION_DEFAULT m_PinConfiguration;
+    CAdapterCommon *m_Adapter;
     PPCFILTER_DESCRIPTOR m_FilterDescription;
-    PPORTWAVERT m_Port;
+    PIN_CONFIGURATION_DEFAULT m_PinConfiguration;
     HDAUDIO_BUS_INTERFACE_V2 m_Interface;
 };
 

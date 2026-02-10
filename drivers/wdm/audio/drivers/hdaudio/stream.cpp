@@ -44,7 +44,7 @@ CMiniportWaveRTStream::AllocateAudioBuffer(
     MEMORY_CACHING_TYPE* CacheType)
 {
     return m_Interface.AllocateDmaBufferWithNotification(
-        m_Interface.Context, m_DmaEngine, 1, RequestedBufferSize, AudioBufferMdl, ActualSize, OffsetFromFirstPage,
+        m_Interface.Context, m_DmaEngine, 1, RequestedBufferSize, AudioBufferMdl, (PSIZE_T)ActualSize, (PSIZE_T)OffsetFromFirstPage,
         &m_StreamId, &m_FifoSize);
 }
 
@@ -149,8 +149,8 @@ CMiniportWaveRTStream::AllocateBufferWithNotification(
     MEMORY_CACHING_TYPE* CacheType)
 {
     return m_Interface.AllocateDmaBufferWithNotification(
-        m_Interface.Context, m_DmaEngine, NotificationCount, RequestedBufferSize, AudioBufferMdl, ActualSize,
-        OffsetFromFirstPage, &m_StreamId, &m_FifoSize);
+        m_Interface.Context, m_DmaEngine, NotificationCount, RequestedBufferSize, AudioBufferMdl, (PSIZE_T)ActualSize,
+        (PSIZE_T)OffsetFromFirstPage, &m_StreamId, &m_FifoSize);
 }
 
 NTSTATUS
