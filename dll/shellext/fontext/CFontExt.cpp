@@ -123,9 +123,12 @@ void CFontExt::SetViewWindow(HWND hwndView)
     m_hwndView = hwndView;
 }
 
-void CFontExt::DeleteItems()
+HRESULT CFontExt::DeleteItems()
 {
-    DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
+    HRESULT hr = DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        ERR("DoDeleteFontFiles failed: 0x%08lx\n", hr);
+    return hr;
 }
 
 void CFontExt::PreviewItems()

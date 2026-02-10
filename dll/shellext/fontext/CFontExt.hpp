@@ -25,7 +25,7 @@ class CFontExt :
         IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
         UINT uMsg, WPARAM wParam, LPARAM lParam);
     void PreviewItems();
-    void DeleteItems();
+    HRESULT DeleteItems();
 
 public:
     CFontExt();
