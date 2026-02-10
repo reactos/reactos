@@ -40,7 +40,7 @@ public:
         HRESULT hr = S_OK;
         ULONG Fetched = 0;
 
-        while (celt--)
+        while (celt)
         {
             if (m_Index >= g_FontCache->Size())
             {
@@ -48,11 +48,7 @@ public:
                 break;
             }
 
-            if (g_FontCache->IsMarkDeleted(m_Index))
-            {
-                ++celt;
-            }
-            else
+            if (!g_FontCache->IsMarkDeleted(m_Index))
             {
                 CStringW Name = g_FontCache->Name(m_Index), FileName = g_FontCache->File(m_Index);
                 if (Name.IsEmpty() || FileName.IsEmpty())
@@ -68,8 +64,8 @@ public:
                         hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
                         break;
                     }
-                    rgelt[Fetched] = item;
-                    Fetched++;
+                    rgelt[Fetched++] = item;
+                    --celt;
                 }
             }
             m_Index++;
