@@ -451,20 +451,14 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     // Delete files
     for (UINT iItem = 0; iItem < cidl; ++iItem)
     {
-        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
-        pidl.Attach(ILCombine(pidlParent, apidl[iItem]));
-        if (!pidl)
+        const FontPidlEntry* pEntry = _FontFromIL(apidl[iItem]);
+        if (!pEntry)
         {
-            ERR("E_OUTOFMEMORY\n");
-            return E_OUTOFMEMORY;
-        }
-
-        WCHAR szPath[MAX_PATH];
-        if (!SHGetPathFromIDListW(pidl, szPath))
-        {
-            ERR("File not found: %S\n", szPath);
+            ERR("Invalid pEntry: %p\n", pEntry);
             return E_FAIL;
         }
+
+        CStringW szPath = g_FontCache->GetFontFilePath(pEntry->FileName());
 
         // WINDOWS BUG: Removing once is not enough
         for (INT iTry = 0; iTry < 3; ++iTry)
@@ -474,7 +468,10 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
         }
 
         DeleteFileW(szPath);
-        SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
+
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl(ILCombine(pidlParent, apidl[iItem]));
+        if (pidl)
+            SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
     }
 
     // Delete registry values and mark the entry as deleted
