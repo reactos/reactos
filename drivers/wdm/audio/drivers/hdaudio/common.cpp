@@ -974,7 +974,7 @@ CAdapterCommon::Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         DPRINT1("HDAUDIO: Failed to get vendor revision %x\n", Status);
         return Status;
     }
-#if 1
+#if 0
     // transfer init verbs
     Status = TransferInitVerbs(DeviceObject);
     if (!NT_SUCCESS(Status))
@@ -1187,7 +1187,7 @@ CAdapterCommon::IsInputNodeConnectedToPin(
     if (!ConnectedPins)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    OutNode->ClearVisitedState();    
+    OutNode->ClearVisitedState();
     ULONG FoundNodes = 0;
     NTSTATUS Status = FindConnectedWidgets(0x04, 0, InputNodeId, Node, 0, PinNodeCount, &FoundNodes, ConnectedPins, Digital);
     if (!NT_SUCCESS(Status))
