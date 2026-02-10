@@ -507,9 +507,9 @@ HRESULT CALLBACK CFontExt::MenuCallback(
             if (idCmd == 0)
             {
                 if (uMsg == DFM_GETVERBA)
-                    lstrcpynA((LPSTR)lParam, "open", cchMax);
+                    lstrcpynA((PSTR)lParam, "open", cchMax);
                 else
-                    lstrcpynW((LPWSTR)lParam, L"open", cchMax);
+                    lstrcpynW((PWSTR)lParam, L"open", cchMax);
                 return S_OK;
             }
             break;

@@ -1781,8 +1781,9 @@ CDefaultContextMenu::GetCommandString(
 
     if (m_pfnmcb && (uFlags == GCS_VERBA || uFlags == GCS_VERBW))
     {
+        UINT uMsg = (uFlags == GCS_VERBA) ? DFM_GETVERBA : DFM_GETVERBW;
         WPARAM wParam = MAKEWPARAM(idCommand, uMaxNameLen);
-        HRESULT hr = m_pfnmcb(m_psf, m_hwnd, m_pDataObj, uFlags, wParam, (LPARAM)lpszName);
+        HRESULT hr = m_pfnmcb(m_psf, m_hwnd, m_pDataObj, uMsg, wParam, (LPARAM)lpszName);
         if (hr == S_OK)
             return S_OK;
     }
