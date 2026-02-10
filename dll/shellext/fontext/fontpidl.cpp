@@ -52,6 +52,7 @@ PITEMID_CHILD _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
         return NULL;
     }
 
+    ZeroMemory(pidl, cbData + sizeof(WORD));
     pidl->cb = (WORD)cbData;
     pidl->Magic = FONTPIDL_MAGIC;
     pidl->ibName = (WORD)ibName;
