@@ -11,7 +11,7 @@ class CFontFolderViewCB
     : public CComObjectRootEx<CComMultiThreadModelNoCS>
     , public IShellFolderViewCB
 {
-    CFontExt* m_pFontExt;
+    CFontExt* m_pFontExt = nullptr;
     CComPtr<IShellView> m_pShellView;
     HWND m_hwndView = nullptr;
     CComHeapPtr<ITEMIDLIST> m_pidlParent;
