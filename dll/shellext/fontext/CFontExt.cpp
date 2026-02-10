@@ -483,15 +483,13 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
-HRESULT CALLBACK CFontExt::FontExtMenuCallback(
+HRESULT CALLBACK CFontExt::MenuCallback(
     IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
     UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CFontExt* pThis = static_cast<CFontExt*>(psf);
     if (!pThis)
         return E_FAIL;
-
-    pThis->m_pDataObj = pdtobj;
 
     switch (uMsg)
     {
@@ -574,7 +572,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
             return E_FAIL;
         m_cidl = cidl;
         m_apidl = apidl;
-        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, FontExtMenuCallback,
+        return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, MenuCallback,
                                       0, NULL, (IContextMenu**)ppvOut);
     }
     else if (riid == IID_IExtractIconA || riid == IID_IExtractIconW)

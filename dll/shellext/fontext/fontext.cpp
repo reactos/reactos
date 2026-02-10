@@ -438,8 +438,8 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
 
 HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
-    CStringW msg, title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
-    msg.Format(IDS_CONFIRM_DELETE_FONT, cidl);
+    CStringW msg(MAKEINTRESOURCEW(IDS_CONFIRM_DELETE_FONT));
+    CStringW title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
     if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
         return S_FALSE;
 
