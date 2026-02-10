@@ -24,6 +24,7 @@ BEGIN
     IDS_INSTALL_FAILED "Failed to install the font(s)."
     IDS_CONFIRM_DELETE_FONT "Do you want to delete the font(s)?"
     IDS_PROPERTIES "P&roperties"
+    IDS_CANTDELETEFONT "Failed to delete the font(s)."
 END
 
 STRINGTABLE

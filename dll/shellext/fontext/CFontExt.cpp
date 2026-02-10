@@ -123,19 +123,14 @@ void CFontExt::SetViewWindow(HWND hwndView)
     m_hwndView = hwndView;
 }
 
-HRESULT CFontExt::DeleteItems()
+HRESULT CFontExt::DeleteItems(IDataObject* pDataObj)
 {
-    return DoDeleteFontFiles(m_hwndView, m_cidl, m_apidl);
+    return DoDeleteFontFiles(m_hwndView, pDataObj);
 }
 
-void CFontExt::PreviewItems()
+HRESULT CFontExt::PreviewItems(IDataObject* pDataObj)
 {
-    for (UINT i = 0; i < m_cidl; ++i)
-    {
-        const FontPidlEntry* fontEntry = _FontFromIL(m_apidl[i]);
-        if (fontEntry)
-            RunFontViewer(m_hwndView, fontEntry);
-    }
+    return DoPreviewFontFiles(m_hwndView, pDataObj);
 }
 
 // *** IShellFolder2 methods ***
@@ -525,14 +520,14 @@ HRESULT CALLBACK CFontExt::MenuCallback(
         {
             if (wParam == 0)
             {
-                pThis->PreviewItems();
+                pThis->PreviewItems(pdtobj);
                 return S_OK;
             }
             if (wParam == DFM_CMD_COPY)
                 return S_FALSE;
             if (wParam == DFM_CMD_DELETE)
             {
-                pThis->DeleteItems();
+                pThis->DeleteItems(pdtobj);
                 return S_OK;
             }
             if (wParam == DFM_CMD_PASTE)
@@ -570,8 +565,7 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
     {
         if (cidl <= 0)
             return E_FAIL;
-        m_cidl = cidl;
-        m_apidl = apidl;
+
         return CDefFolderMenu_Create2(NULL, hwndOwner, cidl, apidl, this, MenuCallback,
                                       0, NULL, (IContextMenu**)ppvOut);
     }

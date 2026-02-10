@@ -9,6 +9,7 @@
 #define IDS_INSTALL_FAILED       153
 #define IDS_CONFIRM_DELETE_FONT  154
 #define IDS_PROPERTIES           155
+#define IDS_CANTDELETEFONT       156
 
 #define IDS_COL_NAME            301
 #define IDS_COL_FILENAME        304

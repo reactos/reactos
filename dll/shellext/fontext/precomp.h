@@ -83,7 +83,8 @@ HRESULT DoGetFontTitle(
 BOOL CheckDropFontFiles(HDROP hDrop);
 BOOL CheckDataObject(IDataObject *pDataObj);
 HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
-HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
+HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj);
+HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj);
 void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry);
 
 HRESULT

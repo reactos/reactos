@@ -18,14 +18,12 @@ class CFontExt :
     CComHeapPtr<ITEMIDLIST> m_Folder;
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
-    UINT m_cidl = 0;
-    PCUITEMID_CHILD_ARRAY m_apidl = nullptr;
 
     static HRESULT CALLBACK MenuCallback(
         IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
         UINT uMsg, WPARAM wParam, LPARAM lParam);
-    void PreviewItems();
-    HRESULT DeleteItems();
+    HRESULT PreviewItems(IDataObject* pDataObj);
+    HRESULT DeleteItems(IDataObject* pDataObj);
 
 public:
     CFontExt();

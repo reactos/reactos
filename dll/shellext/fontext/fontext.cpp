@@ -436,22 +436,47 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
     return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
 }
 
-HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj)
 {
-    CStringW msg(MAKEINTRESOURCEW(IDS_CONFIRM_DELETE_FONT));
-    CStringW title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
-    if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
-        return S_FALSE;
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+    {
+        ERR("Invalid IDataObject\n");
+        return E_FAIL;
+    }
 
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlParent;
-    HRESULT hr = SHGetSpecialFolderLocation(hwnd, CSIDL_FONTS, &pidlParent);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
+    {
+        PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+        const FontPidlEntry* fontEntry = _FontFromIL(pidlChild);
+        if (fontEntry)
+            RunFontViewer(hwnd, fontEntry);
+    }
+
+    return S_OK;
+}
+
+HRESULT DeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
+{
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+    {
+        ERR("E_FAIL\n");
+        return E_FAIL;
+    }
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
+    if (!pidlParent)
+    {
+        ERR("pidlParent is NULL\n");
+        return E_FAIL;
+    }
 
     // Delete files
-    for (UINT iItem = 0; iItem < cidl; ++iItem)
+    for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
     {
-        const FontPidlEntry* pEntry = _FontFromIL(apidl[iItem]);
+        PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+        const FontPidlEntry* pEntry = _FontFromIL(pidlChild);
         if (!pEntry)
         {
             ERR("Invalid pEntry: %p\n", pEntry);
@@ -467,20 +492,27 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
                 break;
         }
 
-        DeleteFileW(szPath);
+        if (!DeleteFileW(szPath))
+        {
+            ERR("Unable to delete font file: %S: %ld\n", (PCWSTR)szPath, GetLastError());
+            return E_FAIL;
+        }
 
-        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl(ILCombine(pidlParent, apidl[iItem]));
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl(ILCombine(pidlParent, pidlChild));
         if (pidl)
             SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
+        else
+            ERR("Out of memory\n");
     }
 
     // Delete registry values and mark the entry as deleted
     CRegKey key;
     if (key.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) == ERROR_SUCCESS)
     {
-        for (UINT iItem = 0; iItem < cidl; ++iItem)
+        for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
         {
-            const FontPidlEntry* pEntry = _FontFromIL(apidl[iItem]);
+            PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+            const FontPidlEntry* pEntry = _FontFromIL(pidlChild);
             if (pEntry)
             {
                 CStringW strFontName = pEntry->Name();
@@ -491,7 +523,26 @@ HRESULT DoDeleteFontFiles(HWND hwnd, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
         key.Close();
     }
 
-    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
+    return S_OK;
+}
+
+HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
+{
+    CStringW title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
+    CStringW msg(MAKEINTRESOURCEW(IDS_CONFIRM_DELETE_FONT));
+    if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
+        return S_FALSE;
+
+    HRESULT hr = DeleteFontFiles(hwnd, pDataObj);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        msg.LoadString(IDS_CANTDELETEFONT);
+        MessageBoxW(hwnd, msg, title, MB_ICONERROR);
+        return hr;
+    }
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts",
+                        SMTO_ABORTIFHUNG, 1000, NULL);
     SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
     return S_OK;
 }
