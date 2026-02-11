@@ -318,9 +318,10 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
         if (fontName.CompareNoCase(lpszDisplayName) == 0) // Found?
         {
             CStringW fileName = g_FontCache->File(iFont);
-            if (fileName.IsEmpty())
+            CStringW filePath = g_FontCache->GetFontFilePath(fileName);
+            if (!PathFileExistsW(filePath))
             {
-                ERR("Why is fileName empty?\n");
+                ERR("'%S' does not exist\n", (PCWSTR)filePath);
                 continue;
             }
 
