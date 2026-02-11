@@ -242,43 +242,49 @@ CStringW CFontCache::GetFontFilePath(const PCWSTR Path) const
 
 void CFontCache::Read()
 {
-    CAtlList<CFontInfo> fonts;
     CRegKey key;
+    LSTATUS error = key.Open(FONT_HIVE, FONT_KEY, KEY_READ);
+    if (error != ERROR_SUCCESS)
+    {
+        ERR("Can't open registry: %ld\n", error);
+        return;
+    }
+
+    CComHeapPtr<WCHAR> Name, Value;
+    DWORD cchName = MAX_PATH, cchValue = MAX_PATH;
+    if (!Name.Allocate(cchName) || !Value.Allocate(cchValue))
+    {
+        ERR("Out of memory\n");
+        return;
+    }
 
     // Enumerate all registered font names
-    if (key.Open(FONT_HIVE, FONT_KEY, KEY_READ) == ERROR_SUCCESS)
+    CAtlList<CFontInfo> fonts;
+    for (DWORD iItem = 0;; ++iItem)
     {
-        LSTATUS Status;
-        DWORD dwAllocated = MAX_PATH;
-        DWORD ilIndex = 0;
-        CStringW KeyName;
-        do
+        DWORD cbName = cchName * sizeof(WCHAR), cbValue = cchValue * sizeof(WCHAR);
+        error = RegEnumValueW(key, iItem, Name, &cbName, NULL, NULL, (PBYTE)(PWSTR)Value, &cbValue);
+        if (error == ERROR_MORE_DATA)
         {
-            DWORD dwSize = dwAllocated;
-            PWSTR Buffer = KeyName.GetBuffer(dwSize);
-            WCHAR szValue[MAX_PATH];
-            DWORD cbValue = sizeof(szValue);
-            Status = RegEnumValueW(key.m_hKey, ilIndex, Buffer, &dwSize, NULL, NULL,
-                                   (PBYTE)szValue, &cbValue);
-            KeyName.ReleaseBuffer(dwSize);
-            if (Status == ERROR_SUCCESS)
+            cchName += 128;
+            cchValue += 128;
+            if (!Name.Reallocate(cchName) || !Value.Reallocate(cchValue))
             {
-                szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
-                if (!KeyName.IsEmpty() && szValue[0])
-                {
-                    // Insert will create an ordered list
-                    Insert(fonts, KeyName, szValue);
-                }
-                ilIndex++;
-                continue;
-            }
-            if (Status == ERROR_NO_MORE_ITEMS)
+                ERR("Out of memory\n");
                 break;
-            else if (Status == ERROR_MORE_DATA)
-            {
-                dwAllocated += 128;
             }
-        } while (Status == ERROR_MORE_DATA || Status == ERROR_SUCCESS);
+            --iItem;
+            continue;
+        }
+
+        if (error != ERROR_SUCCESS)
+            break;
+
+        if (Name[0] && Value[0])
+        {
+            // Insert will create an ordered list (sorted)
+            Insert(fonts, (PCWSTR)Name, (PCWSTR)Value);
+        }
     }
 
     // Move the fonts from a list to an array (for easy indexing)
