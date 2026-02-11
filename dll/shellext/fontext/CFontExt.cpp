@@ -125,12 +125,16 @@ void CFontExt::SetViewWindow(HWND hwndView)
 
 HRESULT CFontExt::DeleteItems(IDataObject* pDataObj)
 {
-    return DoDeleteFontFiles(m_hwndView, pDataObj);
+    HRESULT hr = DoDeleteFontFiles(m_hwndView, pDataObj);
+    FAILED_UNEXPECTEDLY(hr);
+    return S_OK; // Override default action
 }
 
 HRESULT CFontExt::PreviewItems(IDataObject* pDataObj)
 {
-    return DoPreviewFontFiles(m_hwndView, pDataObj);
+    HRESULT hr = DoPreviewFontFiles(m_hwndView, pDataObj);
+    FAILED_UNEXPECTEDLY(hr);
+    return S_OK; // Override default action
 }
 
 // *** IShellFolder2 methods ***
