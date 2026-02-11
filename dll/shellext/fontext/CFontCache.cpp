@@ -262,8 +262,9 @@ void CFontCache::Read()
     CAtlList<CFontInfo> fonts;
     for (DWORD iItem = 0;; ++iItem)
     {
-        DWORD cbName = cchName * sizeof(WCHAR), cbValue = cchValue * sizeof(WCHAR);
-        error = RegEnumValueW(key, iItem, Name, &cbName, NULL, NULL, (PBYTE)(PWSTR)Value, &cbValue);
+        DWORD cchName2 = cchName, cbValue = cchValue * sizeof(WCHAR);
+        error = RegEnumValueW(key, iItem, Name, &cchName2, NULL, NULL,
+                              (PBYTE)(PWSTR)Value, &cbValue);
         if (error == ERROR_MORE_DATA)
         {
             cchName += 128;
