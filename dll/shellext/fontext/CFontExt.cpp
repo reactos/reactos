@@ -259,11 +259,17 @@ STDMETHODIMP CFontExt::MapColumnToSCID(UINT iColumn, SHCOLUMNID *pscid)
 // *** IShellFolder2 methods ***
 STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes)
 {
-    if (!lpszDisplayName || !ppidl)
+    if (!lpszDisplayName || !lpszDisplayName[0] || !ppidl)
         return E_INVALIDARG;
 
     *ppidl = NULL;
     if (pchEaten) *pchEaten = 0;
+
+    if (lpszDisplayName[0] == L':' && lpszDisplayName[1] == L':')
+    {
+        ERR("lpszDisplayName: %S\n", lpszDisplayName);
+        return E_NOTIMPL;
+    }
 
     // Load font cache
     if (g_FontCache->Size() == 0)
@@ -273,61 +279,21 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
     {
         for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
         {
-            CStringW filePath = g_FontCache->GetFontFilePath(g_FontCache->File(iFont));
-            if (filePath.CompareNoCase(lpszDisplayName) == 0)
-            {
-                CStringW fontName = g_FontCache->Name(iFont), fileName = g_FontCache->File(iFont);
-                if (fontName.IsEmpty())
-                {
-                    ERR("Why is fontName empty?\n");
-                    return E_FAIL;
-                }
-                if (fileName.IsEmpty())
-                {
-                    ERR("Why is fileName empty?\n");
-                    return E_FAIL;
-                }
-
-                // Create a PIDL
-                *ppidl = _ILCreate(fontName, fileName);
-                if (*ppidl == NULL)
-                    return E_OUTOFMEMORY;
-
-                if (pchEaten)
-                    *pchEaten = wcslen(lpszDisplayName);
-
-                if (pdwAttributes && *pdwAttributes)
-                    *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
-                                       SFGAO_FILESYSTEM);
-
-                return S_OK;
-            }
-        }
-    }
-
-    // Search font name
-    for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
-    {
-        CStringW fontName = g_FontCache->Name(iFont);
-        if (fontName.IsEmpty())
-        {
-            ERR("Why is fontName empty?\n");
-            continue;
-        }
-
-        if (fontName.CompareNoCase(lpszDisplayName) == 0) // Found?
-        {
             CStringW fileName = g_FontCache->File(iFont);
-            CStringW filePath = g_FontCache->GetFontFilePath(fileName);
-            if (!PathFileExistsW(filePath))
-            {
-                ERR("'%S' does not exist\n", (PCWSTR)filePath);
+            if (fileName.IsEmpty())
                 continue;
-            }
+
+            CStringW filePath = g_FontCache->GetFontFilePath(fileName);
+            if (filePath.CompareNoCase(lpszDisplayName) != 0)
+                continue;
+
+            CStringW fontName = g_FontCache->Name(iFont);
+            if (fontName.IsEmpty())
+                continue;
 
             // Create a PIDL
             *ppidl = _ILCreate(fontName, fileName);
-            if (*ppidl == NULL)
+            if (!*ppidl)
                 return E_OUTOFMEMORY;
 
             if (pchEaten)
@@ -339,6 +305,32 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
 
             return S_OK;
         }
+    }
+
+    // Search font name
+    for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
+    {
+        CStringW fontName = g_FontCache->Name(iFont);
+        if (fontName.CompareNoCase(lpszDisplayName) != 0)
+            continue;
+
+        CStringW fileName = g_FontCache->File(iFont);
+        if (fileName.IsEmpty())
+            continue;
+
+        // Create a PIDL
+        *ppidl = _ILCreate(fontName, fileName);
+        if (*ppidl == NULL)
+            return E_OUTOFMEMORY;
+
+        if (pchEaten)
+            *pchEaten = wcslen(lpszDisplayName);
+
+        if (pdwAttributes && *pdwAttributes)
+            *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
+                               SFGAO_FILESYSTEM);
+
+        return S_OK;
     }
 
     // Not found
