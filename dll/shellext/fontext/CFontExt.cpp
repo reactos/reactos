@@ -519,17 +519,11 @@ HRESULT CALLBACK CFontExt::MenuCallback(
         case DFM_INVOKECOMMAND:
         {
             if (wParam == 0)
-            {
-                pThis->PreviewItems(pdtobj);
-                return S_OK;
-            }
+                return pThis->PreviewItems(pdtobj);
             if (wParam == DFM_CMD_COPY)
                 return S_FALSE;
             if (wParam == DFM_CMD_DELETE)
-            {
-                pThis->DeleteItems(pdtobj);
-                return S_OK;
-            }
+                return pThis->DeleteItems(pdtobj);
             if (wParam == DFM_CMD_PASTE)
                 return S_FALSE;
             if (wParam == DFM_CMD_PROPERTIES)
