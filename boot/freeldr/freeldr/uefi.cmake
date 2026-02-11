@@ -6,7 +6,7 @@
 ##
 
 include_directories(BEFORE
-    ${REACTOS_SOURCE_DIR}/boot/environ/include/efi
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/edk2
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi)
