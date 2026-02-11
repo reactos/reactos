@@ -1783,7 +1783,7 @@ CDefaultContextMenu::GetCommandString(
     {
         UINT uMsg = (uFlags == GCS_VERBA) ? DFM_GETVERBA : DFM_GETVERBW;
         WPARAM wParam = MAKEWPARAM(idCommand, uMaxNameLen);
-        HRESULT hr = _DoCallback(uMsg, wParam, (LPARAM)lpszName);
+        HRESULT hr = _DoCallback(uMsg, wParam, lpszName);
         if (hr == S_OK)
             return S_OK;
     }
