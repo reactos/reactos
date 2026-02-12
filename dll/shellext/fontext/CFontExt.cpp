@@ -263,64 +263,36 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
         return E_INVALIDARG;
 
     *ppidl = NULL;
-    if (pchEaten) *pchEaten = 0;
+    if (pchEaten)
+        *pchEaten = 0;
 
     if (lpszDisplayName[0] == L':' && lpszDisplayName[1] == L':')
-    {
-        ERR("lpszDisplayName: %S\n", lpszDisplayName);
-        return E_NOTIMPL;
-    }
+        return E_INVALIDARG;
+
+    if (PathIsRelativeW(lpszDisplayName)) // Not full path?
+        return E_INVALIDARG;
 
     // Load font cache
     if (g_FontCache->Size() == 0)
         g_FontCache->Read();
 
-    if (!PathIsRelativeW(lpszDisplayName)) // Full path?
-    {
-        for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
-        {
-            CStringW fileName = g_FontCache->File(iFont);
-            if (fileName.IsEmpty())
-                continue;
-
-            CStringW filePath = g_FontCache->GetFontFilePath(fileName);
-            if (filePath.CompareNoCase(lpszDisplayName) != 0)
-                continue;
-
-            CStringW fontName = g_FontCache->Name(iFont);
-            if (fontName.IsEmpty())
-                continue;
-
-            // Create a PIDL
-            *ppidl = _ILCreate(fontName, fileName);
-            if (!*ppidl)
-                return E_OUTOFMEMORY;
-
-            if (pchEaten)
-                *pchEaten = wcslen(lpszDisplayName);
-
-            if (pdwAttributes && *pdwAttributes)
-                *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
-                                   SFGAO_FILESYSTEM);
-
-            return S_OK;
-        }
-    }
-
-    // Search font name
     for (SIZE_T iFont = 0; iFont < g_FontCache->Size(); ++iFont)
     {
-        CStringW fontName = g_FontCache->Name(iFont);
-        if (fontName.CompareNoCase(lpszDisplayName) != 0)
-            continue;
-
         CStringW fileName = g_FontCache->File(iFont);
         if (fileName.IsEmpty())
             continue;
 
+        CStringW filePath = g_FontCache->GetFontFilePath(fileName);
+        if (filePath.CompareNoCase(lpszDisplayName) != 0)
+            continue;
+
+        CStringW fontName = g_FontCache->Name(iFont);
+        if (fontName.IsEmpty())
+            continue;
+
         // Create a PIDL
         *ppidl = _ILCreate(fontName, fileName);
-        if (*ppidl == NULL)
+        if (!*ppidl)
             return E_OUTOFMEMORY;
 
         if (pchEaten)
@@ -333,8 +305,7 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
         return S_OK;
     }
 
-    // Not found
-    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND); // Not found
 }
 
 STDMETHODIMP CFontExt::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
