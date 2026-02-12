@@ -326,6 +326,13 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     WinLdrpDumpMemoryDescriptors(LoaderBlock); //FIXME: Delete!
 
+#ifdef UEFIBOOT
+    extern PVOID OsLoaderBase;
+    extern SIZE_T OsLoaderSize;
+    /* UEFILDR can be in above the 2GB ish range, we don't want to map the whole area */
+    Status = MempSetupPaging((ULONG_PTR)OsLoaderBase / PAGE_SIZE, OsLoaderSize / PAGE_SIZE, FALSE);
+#endif
+
     // Map our loader image, so we can continue running
     /*Status = MempSetupPaging(OsLoaderBase >> MM_PAGE_SHIFT, OsLoaderSize >> MM_PAGE_SHIFT);
     if (!Status)

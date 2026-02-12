@@ -215,16 +215,6 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
             }
         }
 
-        /* Sometimes our loader can be loaded into higher memory than we ever allocate */
-        if (MemoryType == LoaderLoadedProgram)
-        {
-            if (((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT) > LoaderPagesSpanned)
-            {
-                /* This value needs to be adjusted if this occurs */
-                LoaderPagesSpanned = ((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT);
-            }
-        }
-
         /* We really don't want to touch these reserved spots at all */
         if (MemoryType != LoaderReserve)
         {
