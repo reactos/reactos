@@ -606,12 +606,12 @@ STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_
 
 STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!pidl)
-        return E_NOTIMPL;
+    if (!pidl || !strRet)
+        return E_INVALIDARG;
 
     // Validate that this pidl is the last one
-    PCUIDLIST_RELATIVE curpidl = ILGetNext(pidl);
-    if (curpidl->mkid.cb != 0)
+    PCUIDLIST_RELATIVE nextPidl = ILGetNext(pidl);
+    if (nextPidl && nextPidl->mkid.cb != 0)
     {
         ERR("ERROR, unhandled PIDL!\n");
         return E_FAIL;
@@ -623,11 +623,14 @@ STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPS
 
     if (dwFlags & SHGDN_FORPARSING)
     {
-        CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry), true);
-        if (!File.IsEmpty())
+        CStringW fileName = fontEntry->FileName();
+        if (!(dwFlags & SHGDN_INFOLDER))
         {
-            return SHSetStrRet(strRet, File);
+            CStringW fullPath = g_FontCache->GetFontFilePath(fileName);
+            if (!fullPath.IsEmpty())
+                return SHSetStrRet(strRet, fullPath);
         }
+        return SHSetStrRet(strRet, fileName);
     }
 
     return SHSetStrRet(strRet, fontEntry->Name());
@@ -674,7 +677,7 @@ STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)
         return E_FAIL;
     }
 
-    m_Folder.Attach(ILClone(pidl));
+    m_Folder.Attach(ILCreateFromPathW(FontsDir));
     StringCchCatW(FontsDir, _countof(FontsDir), L"\\");
     g_FontCache->SetFontDir(FontsDir);
 
