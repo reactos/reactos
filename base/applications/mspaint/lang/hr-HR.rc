@@ -275,5 +275,3 @@ BEGIN
     IDS_CANTSENDMAIL "Neuspješno slanje e-pošte."
     IDS_LOSECOLOR "Informacije o boji će biti izgubljene u ovoj operaciji. Želite li nastaviti?"
 END
-
-
