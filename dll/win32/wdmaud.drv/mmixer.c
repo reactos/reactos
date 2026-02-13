@@ -1059,9 +1059,21 @@ RTStreamingThreadProc(
 {
     NTSTATUS Status;
     PVOID WaitObjects[2];
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    MMRESULT Result;
+
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
 
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)Parameter;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
 
     WaitObjects[0] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingStopEvent;
     WaitObjects[1] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingEvent;
@@ -1078,40 +1090,57 @@ RTStreamingThreadProc(
 
         DWORD Length = SoundDeviceInstance->RTStreamingBufferLength / 2;
         LONG BytesCopied = 0;
-        if (SoundDeviceInstance->RTStreamingShadowBufferOffset)
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
-            SoundDeviceInstance->RTStreamingStarted = TRUE;
-            LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
-            BytesCopied = min(Length, SoundDeviceInstance->RTStreamingShadowBufferOffset);
-            BytesCopied = min(BytesCopied, Length - OffsetInBuffer);
+            if (SoundDeviceInstance->RTStreamingShadowBufferOffset)
+            {
+                SoundDeviceInstance->RTStreamingStarted = TRUE;
+                LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+                BytesCopied = min(Length, SoundDeviceInstance->RTStreamingShadowBufferOffset);
+                BytesCopied = min(BytesCopied, Length - OffsetInBuffer);
             //DPRINT1("RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied, SoundDeviceInstance->RTStreamingBuffer);
-            RtlCopyMemory(
-                &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
-                SoundDeviceInstance->RTStreamingShadowBuffer,
-                BytesCopied);
-            RtlMoveMemory(SoundDeviceInstance->RTStreamingShadowBuffer,
+                RtlCopyMemory(
+                    &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
+                    SoundDeviceInstance->RTStreamingShadowBuffer,
+                    BytesCopied);
+                RtlMoveMemory(SoundDeviceInstance->RTStreamingShadowBuffer,
                           &SoundDeviceInstance->RTStreamingShadowBuffer[BytesCopied],
                           SoundDeviceInstance->RTStreamingShadowBufferLength - BytesCopied);
-            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, -BytesCopied);
-            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferBytesWritten, BytesCopied);
-            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied);
-            InterlockedCompareExchange(&SoundDeviceInstance->RTStreamingBufferOffset, 0, SoundDeviceInstance->RTStreamingBufferLength);
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, -BytesCopied);
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferBytesWritten, BytesCopied);
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied);
+                InterlockedCompareExchange(&SoundDeviceInstance->RTStreamingBufferOffset, 0, SoundDeviceInstance->RTStreamingBufferLength);
+            }
+            if (BytesCopied == 0)
+            {
+                // insert silence glitch
+                LONG Remaining = Length - BytesCopied;
+                LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+                Remaining = min(Remaining, SoundDeviceInstance->RTStreamingBufferLength - SoundDeviceInstance->RTStreamingBufferOffset);
+                Remaining = min(Remaining, Length - OffsetInBuffer);
+                DPRINT1("Silence glitch: RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, Remaining, SoundDeviceInstance->RTStreamingBuffer);
+                ASSERT(SoundDeviceInstance);
+                ASSERT(SoundDeviceInstance->RTStreamingBuffer);
+                RtlZeroMemory(
+                    &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
+                    Remaining
+                );
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferOffset, Remaining);
+                InterlockedCompareExchange(&SoundDeviceInstance->RTStreamingBufferOffset, 0, SoundDeviceInstance->RTStreamingBufferLength);
+            }
         }
-        if (BytesCopied == 0)
+        else if (DeviceType == WAVE_IN_DEVICE_TYPE)
         {
-            // insert silence glitch
-            LONG Remaining = Length - BytesCopied;
-            LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
-            Remaining = min(Remaining, SoundDeviceInstance->RTStreamingBufferLength - SoundDeviceInstance->RTStreamingBufferOffset);
-            Remaining = min(Remaining, Length - OffsetInBuffer);
-            DPRINT1("Silence glitch: RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, Remaining, SoundDeviceInstance->RTStreamingBuffer);
-            ASSERT(SoundDeviceInstance);
-            ASSERT(SoundDeviceInstance->RTStreamingBuffer);
-            RtlZeroMemory(
-                &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
-                Remaining
-            );
-            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferOffset, Remaining);
+            SoundDeviceInstance->RTStreamingStarted = TRUE;
+            LONG OffsetInStreamingBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+            LONG OffsetInStreamingShadowBuffer = SoundDeviceInstance->RTStreamingShadowBufferOffset;
+            BytesCopied = min(Length - OffsetInStreamingBuffer, SoundDeviceInstance->RTStreamingShadowBufferLength - OffsetInStreamingShadowBuffer);
+            RtlCopyMemory(
+                    &SoundDeviceInstance->RTStreamingShadowBuffer[SoundDeviceInstance->RTStreamingShadowBufferOffset],
+                    &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
+                    BytesCopied);
+            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, BytesCopied);
+            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied);
             InterlockedCompareExchange(&SoundDeviceInstance->RTStreamingBufferOffset, 0, SoundDeviceInstance->RTStreamingBufferLength);
         }
     }
@@ -1205,19 +1234,43 @@ WdmAudCommitWaveBufferByMMixer(
                 Status = STATUS_CANCELLED;
                 break;
             }
-            DWORD BytesCopied = min(Length - Offset, SoundDeviceInstance->RTStreamingShadowBufferLength - SoundDeviceInstance->RTStreamingShadowBufferOffset);
-            ASSERT(SoundDeviceInstance->RTStreamingShadowBuffer);
-            RtlCopyMemory(
-                &SoundDeviceInstance->RTStreamingShadowBuffer[SoundDeviceInstance->RTStreamingShadowBufferOffset],
-                &(((PUCHAR)OffsetPtr)[Offset]),
-                BytesCopied
-            );
-            InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, BytesCopied);
-            Offset += BytesCopied;
-            if (Offset < Length)
+            if (DeviceType == WAVE_OUT_DEVICE_TYPE)
             {
-                //DPRINT1("Waiting...\n");
-                Sleep(1);
+                DWORD BytesCopied = min(Length - Offset, SoundDeviceInstance->RTStreamingShadowBufferLength - SoundDeviceInstance->RTStreamingShadowBufferOffset);
+                ASSERT(SoundDeviceInstance->RTStreamingShadowBuffer);
+                RtlCopyMemory(
+                    &SoundDeviceInstance->RTStreamingShadowBuffer[SoundDeviceInstance->RTStreamingShadowBufferOffset],
+                    &(((PUCHAR)OffsetPtr)[Offset]),
+                    BytesCopied
+                );
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, BytesCopied);
+                Offset += BytesCopied;
+                if (Offset < Length)
+                {
+                    //DPRINT1("Waiting...\n");
+                    Sleep(1);
+                }
+            }
+            else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+            {
+                while(SoundDeviceInstance->RTStreamingShadowBufferOffset == 0)
+                {
+                    //DPRINT1("Waiting...\n");
+                    Sleep(1);
+                }
+
+                LONG BytesCopied = min(Length - Offset, SoundDeviceInstance->RTStreamingShadowBufferOffset);
+                ASSERT(SoundDeviceInstance->RTStreamingShadowBuffer);
+                RtlCopyMemory(
+                    &(((PUCHAR)OffsetPtr)[Offset]),
+                    SoundDeviceInstance->RTStreamingShadowBuffer,
+                    BytesCopied
+                );
+                InterlockedExchangeAdd(&SoundDeviceInstance->RTStreamingShadowBufferOffset, -BytesCopied);
+                RtlMoveMemory(SoundDeviceInstance->RTStreamingShadowBuffer,
+                              &SoundDeviceInstance->RTStreamingShadowBuffer[BytesCopied],
+                              SoundDeviceInstance->RTStreamingShadowBufferLength - BytesCopied);
+                Offset += BytesCopied;
             }
         }
         PCOMPLETION_CONTEXT Context = AllocateMemory(sizeof(COMPLETION_CONTEXT));
