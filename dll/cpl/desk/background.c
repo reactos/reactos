@@ -400,8 +400,7 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
             backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
             backgroundItem->bWallpaper = TRUE;
 
-            hr = StringCbCopy(backgroundItem->szDisplayName,
-                              sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+            hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
             if (FAILED(hr))
             {
                 RegCloseKey(regKey);
@@ -410,8 +409,7 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 
             PathRemoveExtension(backgroundItem->szDisplayName);
 
-            hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename),
-                              wallpaperFilename);
+            hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
             if (FAILED(hr))
             {
                 RegCloseKey(regKey);
