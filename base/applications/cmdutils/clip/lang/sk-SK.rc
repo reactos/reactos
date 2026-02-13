@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     ReactOS Clip Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2025 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nNapíšte ""CLIP /?"" pre informácie o používaní.\n"
+    IDS_HELP "\nPresmerováva výstup programu v príkazovom riadku do schránky.\n\n\
+CLIP [/?]\n\n\
+    /?  Zobrazí túto nápovedu.\n"
+END
