@@ -1,7 +1,7 @@
 LANGUAGE LANG_BENGALI, SUBLANG_BENGALI_INDIA
 
 IDD_CHARMAP DIALOGEX 6, 6, 292, 224
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
 BEGIN
     LTEXT "ফন্ট(&F):", IDC_STATIC, 6, 7, 24, 9
@@ -36,7 +36,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
 CAPTION "ক্যারেক্টার ম্যাপ সম্পর্কে"
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 8, "MS Shell Dlg"
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "ক্যারেক্টার ম্যাপ v0.1\nকপিরাইট (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
