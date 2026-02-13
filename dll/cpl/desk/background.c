@@ -426,8 +426,8 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
             listItem.lParam     = pData->listViewItemCount;
             (void)ListView_InsertItem(hwndBackgroundList, &listItem);
 
-            ++i;
-            ++pData->listViewItemCount;
+            i++;
+            pData->listViewItemCount++;
         }
 
         RegCloseKey(regKey);
