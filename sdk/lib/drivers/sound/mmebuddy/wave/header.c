@@ -221,6 +221,9 @@ EnqueueWaveHeader(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
     PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
     SND_ASSERT(SoundDeviceInstance);
@@ -235,6 +238,18 @@ EnqueueWaveHeader(
     /* Set the "in queue" flag */
     WaveHeader->dwFlags |= WHDR_INQUEUE;
 
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
     if ( ! SoundDeviceInstance->HeadWaveHeader )
     {
         /* This is the first header in the queue */
@@ -242,26 +257,36 @@ EnqueueWaveHeader(
         SoundDeviceInstance->HeadWaveHeader = WaveHeader;
         SoundDeviceInstance->TailWaveHeader = WaveHeader;
 
-        /* Only do wave streaming when the stream has not been paused */
-        if (SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE)
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
-            if (SoundDeviceInstance->RTStreamingEnabled)
+            /* Only do wave streaming when the stream has not been paused */
+            if (SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE)
             {
-                /* queue a thread when application does submit multiple buffers */
-                if (WaveHeader->dwBufferLength < SoundDeviceInstance->RTStreamingShadowBufferLength)
+                if (SoundDeviceInstance->RTStreamingEnabled)
                 {
-                   InitiateSoundStreaming(SoundDeviceInstance);
+                    /* queue a thread when application does submit multiple buffers */
+                    if (WaveHeader->dwBufferLength < SoundDeviceInstance->RTStreamingShadowBufferLength)
+                    {
+                        InitiateSoundStreaming(SoundDeviceInstance);
+                    }
+                    else
+                    {
+                        DoWaveStreaming(SoundDeviceInstance);
+                    }
                 }
                 else
                 {
                     DoWaveStreaming(SoundDeviceInstance);
                 }
             }
-            else
+        } else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+        {
+            if (SoundDeviceInstance->RTStreamingStarted)
             {
                 DoWaveStreaming(SoundDeviceInstance);
             }
         }
+
     }
     else
     {
