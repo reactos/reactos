@@ -111,14 +111,14 @@ LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
     if (*cKeys >= 16)
         return ERROR_MORE_DATA;
 
-    HKEY hkey;
-    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result == ERROR_SUCCESS)
+    CRegKey key;
+    LSTATUS error = key.Open(HKEY_CLASSES_ROOT, szClass, KEY_READ | KEY_QUERY_VALUE);
+    if (error == ERROR_SUCCESS)
     {
-        array[*cKeys] = hkey;
+        array[*cKeys] = key.Detach();
         *cKeys += 1;
     }
-    return result;
+    return error;
 }
 
 HRESULT
@@ -434,6 +434,137 @@ HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj)
         return S_FALSE;
 
     return FAILED_UNEXPECTEDLY(data.hrResult) ? E_FAIL : S_OK;
+}
+
+HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj)
+{
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+    {
+        ERR("Invalid IDataObject\n");
+        return E_FAIL;
+    }
+
+    for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
+    {
+        PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+        const FontPidlEntry* fontEntry = _FontFromIL(pidlChild);
+        if (fontEntry)
+            RunFontViewer(hwnd, fontEntry);
+    }
+
+    return S_OK;
+}
+
+HRESULT DeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
+{
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+    {
+        ERR("E_FAIL\n");
+        return E_FAIL;
+    }
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(cida);
+    if (!pidlParent)
+    {
+        ERR("pidlParent is NULL\n");
+        return E_FAIL;
+    }
+
+    // Delete files
+    for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
+    {
+        PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+        const FontPidlEntry* pEntry = _FontFromIL(pidlChild);
+        if (!pEntry)
+        {
+            ERR("Invalid pEntry: %p\n", pEntry);
+            return E_FAIL;
+        }
+
+        CStringW szPath = g_FontCache->GetFontFilePath(pEntry->FileName());
+
+        // WINDOWS BUG: Removing once is not enough
+        for (INT iTry = 0; iTry < 3; ++iTry)
+        {
+            if (!RemoveFontResourceW(szPath) && !RemoveFontResourceExW(szPath, FR_PRIVATE, NULL))
+                break;
+        }
+
+        if (!DeleteFileW(szPath))
+        {
+            ERR("Unable to delete font file: %S: %ld\n", (PCWSTR)szPath, GetLastError());
+            return E_FAIL;
+        }
+
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl(ILCombine(pidlParent, pidlChild));
+        if (pidl)
+            SHChangeNotify(SHCNE_DELETE, SHCNF_IDLIST, (LPCITEMIDLIST)pidl, NULL);
+        else
+            ERR("Out of memory\n");
+    }
+
+    // Delete registry values and mark the entry as deleted
+    CRegKey key;
+    if (key.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) == ERROR_SUCCESS)
+    {
+        for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
+        {
+            PCUIDLIST_RELATIVE pidlChild = HIDA_GetPIDLItem(cida, iItem);
+            const FontPidlEntry* pEntry = _FontFromIL(pidlChild);
+            if (pEntry)
+            {
+                CStringW strFontName = pEntry->Name();
+                key.DeleteValue(strFontName);
+                g_FontCache->MarkDeleted(pEntry);
+            }
+        }
+        key.Close();
+    }
+
+    return S_OK;
+}
+
+HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
+{
+    CStringW title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
+    CStringW msg(MAKEINTRESOURCEW(IDS_CONFIRM_DELETE_FONT));
+    if (MessageBoxW(hwnd, msg, title, MB_YESNOCANCEL | MB_ICONWARNING) != IDYES)
+        return S_FALSE;
+
+    HRESULT hr = DeleteFontFiles(hwnd, pDataObj);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        msg.LoadString(IDS_CANTDELETEFONT);
+        MessageBoxW(hwnd, msg, title, MB_ICONERROR);
+        return hr;
+    }
+
+    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts",
+                        SMTO_ABORTIFHUNG, 1000, NULL);
+    SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+    return S_OK;
+}
+
+void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry)
+{
+    CStringW Path = g_FontCache->GetFontFilePath(fontEntry->FileName());
+    if (Path.IsEmpty())
+        return;
+
+    // '/d' disables the install button
+    WCHAR FontPathArg[MAX_PATH + 3];
+    StringCchPrintfW(FontPathArg, _countof(FontPathArg), L"/d %s", Path.GetString());
+    PathQuoteSpacesW(FontPathArg + 3);
+
+    SHELLEXECUTEINFOW si = { sizeof(si) };
+    si.fMask = SEE_MASK_DOENVSUBST;
+    si.hwnd = hwnd;
+    si.lpFile = L"%SystemRoot%\\System32\\fontview.exe";
+    si.lpParameters = FontPathArg;
+    si.nShow = SW_SHOWNORMAL;
+    ShellExecuteExW(&si);
 }
 
 EXTERN_C

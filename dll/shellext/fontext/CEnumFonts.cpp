@@ -42,25 +42,33 @@ public:
 
         while (celt)
         {
-            celt--;
-
-            if (m_Index < g_FontCache->Size())
-            {
-                CStringW Name = g_FontCache->Name(m_Index);
-                LPITEMIDLIST item = _ILCreate(Name);
-                if (!item)
-                {
-                    hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
-                    break;
-                }
-                rgelt[Fetched] = item;
-                m_Index++;
-                Fetched++;
-            }
-            else
+            if (m_Index >= g_FontCache->Size())
             {
                 hr = S_FALSE;
+                break;
             }
+
+            if (!g_FontCache->IsMarkDeleted(m_Index))
+            {
+                CStringW Name = g_FontCache->Name(m_Index), FileName = g_FontCache->File(m_Index);
+                if (Name.IsEmpty() || FileName.IsEmpty())
+                {
+                    ERR("Why is Name or FileName empty?\n");
+                }
+                else
+                {
+                    // Create a PIDL
+                    PITEMID_CHILD item = _ILCreate(Name, FileName);
+                    if (!item)
+                    {
+                        hr = Fetched ? S_FALSE : E_OUTOFMEMORY;
+                        break;
+                    }
+                    rgelt[Fetched++] = item;
+                    --celt;
+                }
+            }
+            m_Index++;
         }
 
         if (pceltFetched)
@@ -70,7 +78,12 @@ public:
 
     STDMETHODIMP Skip(ULONG celt) override
     {
-        m_Index += celt;
+        for (ULONG i = 0; i < celt && m_Index < g_FontCache->Size(); ++i)
+        {
+            while (m_Index < g_FontCache->Size() && g_FontCache->IsMarkDeleted(m_Index))
+                ++m_Index;
+            ++m_Index;
+        }
         return S_OK;
     }
 

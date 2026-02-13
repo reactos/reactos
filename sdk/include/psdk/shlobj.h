@@ -417,6 +417,8 @@ PathMakeUniqueName(
     _In_opt_ PCWSTR pszLongPlate,
     _In_opt_ PCWSTR pszDir);
 
+HRESULT WINAPI SHMultiFileProperties(_In_ IDataObject *pDataObject, _In_ DWORD dwFlags);
+
 /*****************************************************************************
  * IContextMenu interface
  */

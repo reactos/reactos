@@ -1159,6 +1159,10 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCo
     if (!m_cidl || !m_pDataObj)
         return E_FAIL;
 
+    HRESULT hr = _DoInvokeCommandCallback(lpcmi, bCopy ? DFM_CMD_COPY : DFM_CMD_MOVE);
+    if (hr == S_OK)
+        return hr;
+
     FORMATETC formatetc;
     InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
     STGMEDIUM medium = {0};
@@ -1174,7 +1178,7 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFOEX lpcmi, BOOL bCo
     if (SUCCEEDED(IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellFolderView, &psfv))))
         psfv->SetPoints(m_pDataObj);
 
-    HRESULT hr = OleSetClipboard(m_pDataObj);
+    hr = OleSetClipboard(m_pDataObj);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1774,6 +1778,15 @@ CDefaultContextMenu::GetCommandString(
     }
 
     UINT CmdId = LOWORD(idCommand);
+
+    if (uFlags == GCS_VERBA || uFlags == GCS_VERBW)
+    {
+        UINT uMsg = (uFlags == GCS_VERBA) ? DFM_GETVERBA : DFM_GETVERBW;
+        WPARAM wParam = MAKEWPARAM(idCommand, uMaxNameLen);
+        HRESULT hr = _DoCallback(uMsg, wParam, lpszName);
+        if (hr == S_OK)
+            return S_OK;
+    }
 
     if (!m_DynamicEntries.IsEmpty() && CmdId >= m_iIdSHEFirst && CmdId < m_iIdSHELast)
     {

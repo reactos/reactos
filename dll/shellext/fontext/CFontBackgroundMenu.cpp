@@ -67,9 +67,8 @@ STDMETHODIMP CFontBackgroundMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         if (FAILED_UNEXPECTEDLY(hr) || !CheckDataObject(pDataObj))
         {
             // Show error message
-            CStringW text, title;
-            title.LoadStringW(IDS_REACTOS_FONTS_FOLDER);
-            text.LoadStringW(IDS_INSTALL_FAILED);
+            CStringW text(MAKEINTRESOURCEW(IDS_INSTALL_FAILED));
+            CStringW title(MAKEINTRESOURCEW(IDS_REACTOS_FONTS_FOLDER));
             MessageBoxW(m_hwnd, text, title, MB_ICONERROR);
             return E_FAIL;
         }
