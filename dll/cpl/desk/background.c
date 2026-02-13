@@ -387,21 +387,21 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
                 }
             }
 
-            SHGetFileInfoW(wallpaperFilename,
-                           0,
-                           &sfi,
-                           sizeof(sfi),
-                           SHGFI_ICON | SHGFI_SMALLICON |
-                           SHGFI_DISPLAYNAME);
-            sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+            if (!SHGetFileInfoW(wallpaperFilename, 0, &sfi, sizeof(sfi),
+                                SHGFI_ICON | SHGFI_SMALLICON | SHGFI_DISPLAYNAME))
+            {
+                RegCloseKey(regKey);
+                return;
+            }
 
-            i++;
+            sfi.iIcon = ImageList_AddIcon(himl, sfi.hIcon);
+            DestroyIcon(sfi.hIcon);
 
             backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
-
             backgroundItem->bWallpaper = TRUE;
 
-            hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+            hr = StringCbCopy(backgroundItem->szDisplayName,
+                              sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
             if (FAILED(hr))
             {
                 RegCloseKey(regKey);
@@ -410,28 +410,26 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 
             PathRemoveExtension(backgroundItem->szDisplayName);
 
-            hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
+            hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename),
+                              wallpaperFilename);
             if (FAILED(hr))
             {
                 RegCloseKey(regKey);
                 return;
             }
 
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
+            ZeroMemory(&listItem, sizeof(listItem));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.state      = 0;
+            listItem.state      = LVIS_SELECTED;
+            listItem.stateMask  = LVIS_SELECTED;
             listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
             listItem.iItem      = pData->listViewItemCount;
             listItem.lParam     = pData->listViewItemCount;
-
             (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-            ListView_SetItemState(hwndBackgroundList,
-                                  pData->listViewItemCount,
-                                  LVIS_SELECTED,
-                                  LVIS_SELECTED);
 
-            pData->listViewItemCount++;
+            ++i;
+            ++pData->listViewItemCount;
         }
 
         RegCloseKey(regKey);
