@@ -1,5 +1,15 @@
 /* Hardware Abstraction Layer Types */
 
+$if (_WDMDDK_)
+typedef NTSTATUS
+NTAPI
+PROCESSOR_HALT_ROUTINE(
+    _Inout_opt_ PVOID Context
+);
+
+typedef PROCESSOR_HALT_ROUTINE *PPROCESSOR_HALT_ROUTINE;
+$endif (_WDMDDK_)
+
 $if (_NTDDK_)
 typedef BOOLEAN
 (NTAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
@@ -382,8 +392,6 @@ typedef struct _HAL_AMLI_BAD_IO_ADDRESS_LIST {
   PHALIOREADWRITEHANDLER IOHandler;
 } HAL_AMLI_BAD_IO_ADDRESS_LIST, *PHAL_AMLI_BAD_IO_ADDRESS_LIST;
 
-#if defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
-
 typedef VOID
 (NTAPI *PHALMCAINTERFACELOCK)(VOID);
 
@@ -421,6 +429,24 @@ typedef ERROR_SEVERITY
   _In_ PMCA_EXCEPTION Exception);
 
 #endif
+
+#if defined(_ARM_) || defined(_ARM64_)
+
+struct _KTRAP_FRAME;
+struct _KEXCEPTION_FRAME;
+
+typedef PVOID PCMC_EXCEPTION;
+typedef PVOID PCPE_EXCEPTION;
+
+typedef
+VOID
+(NTAPI *PDRIVER_EXCPTN_CALLBACK)(
+    _In_ PVOID Context,
+    _In_ struct _KTRAP_FRAME *TrapFrame,
+    _In_ struct _KEXCEPTION_FRAME *ExceptionFrame,
+    _In_ PVOID Exception);
+
+#endif /* defined(_ARM_) || defined(_ARM64_) */
 
 #if defined(_X86_) || defined(_IA64_)
 typedef
@@ -505,8 +531,6 @@ typedef struct _CPE_DRIVER_INFO {
   PKDEFERRED_ROUTINE DpcCallback;
   PVOID DeviceContext;
 } CPE_DRIVER_INFO, *PCPE_DRIVER_INFO;
-
-#endif // defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
 
 #if defined(_IA64_)
 
