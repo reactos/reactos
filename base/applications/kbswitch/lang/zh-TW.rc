@@ -1,9 +1,10 @@
 /*
- * PROJECT:    ReactOS KBSwitch
- * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       base/applications/kbswitch/lang/zh-TW.rc
- * PURPOSE:    Chinese (Traditional) Language File for KBSwitch
- * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
+ * PROJECT:     ReactOS KBSwitch
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/kbswitch/lang/zh-TW.rc
+ * PURPOSE:     Chinese (Traditional) Language File for KBSwitch
+ * TRANSLATORS: Copyright 2009 Elton Chung aka MfldElton <elton328@gmail.com>
+ *              Copyright 2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -20,10 +21,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IME_ON "Input System (IME) - ON"
-    IDS_IME_OFF "Input System (IME) - OFF"
-    IDS_SOFTKBD_ON "Soft Keyboard - ON"
-    IDS_SOFTKBD_OFF "Soft Keyboard - OFF"
-    IDS_SHOWTOOLBAR "Show Toolbar"
-    IDS_INPUTSYSTEM "Input System (IME) configuration..."
+    IDS_IME_ON "輸入法 (IME) - 開"
+    IDS_IME_OFF "輸入法 (IME) - 關"
+    IDS_SOFTKBD_ON "虛擬鍵盤 - 開"
+    IDS_SOFTKBD_OFF "虛擬鍵盤 - 關"
+    IDS_SHOWTOOLBAR "顯示工具列"
+    IDS_INPUTSYSTEM "輸入法 (IME) 設定..."
 END

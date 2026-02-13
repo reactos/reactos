@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
- *              Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2020-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -187,7 +187,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "多聲道"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "By moving the sliders below you can adjust the volume of all speakers connected to this computer.", 9506, 8, 4, 212, 24
+    LTEXT "移動下方滑桿以調整所有連接至這部電腦的揚聲器的音量。", 9506, 8, 4, 212, 24
     LTEXT "低", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 29, 108, 17
@@ -220,7 +220,7 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP, 87, 162, 108, 17
     LTEXT "高", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "同時移動所有滑動指示器(&M)", 9504, 5, 185, 216, 9
+    AUTOCHECKBOX "同時移動所有滑桿(&M)", 9504, 5, 185, 216, 9
     PUSHBUTTON "恢復預設值(&D)", 9505, 110, 199, 110, 14
 END
 
@@ -255,7 +255,7 @@ BEGIN
     5828 "裝置連線"
     5829 "裝置中斷連線"
     5830 "裝置未能連線"
-    5831 "清空回收站"
+    5831 "清空資源回收筒"
     5832 "電池不足警報"
     5833 "最大化"
     5834 "選單命令"

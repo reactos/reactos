@@ -2,7 +2,7 @@
  * PROJECT:     Safely Remove Hardware Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
- * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
+ * TRANSLATOR:  Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -25,15 +25,15 @@ BEGIN
 END
 
 IDD_CONFIRM_STOP_HARDWARE_DIALOG DIALOGEX 32, 10, 256, 148
-CAPTION "Stop a Hardware Device"
+CAPTION "停止硬體裝置"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
+FONT 9, "新細明體"
 BEGIN
-    LTEXT "Confirm devices to be stopped, choose OK to continue.", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "ReactOS will attempt to stop the following devices. After the devices are stopped they may be removed safely.", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "確認需要停止的裝置，然後按［確定］繼續。", IDC_STATIC, 7, 8, 241, 14, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "ReactOS 會嘗試停止下列裝置。當裝置停止後，您便可以安全地移除裝置。", IDC_STATIC, 7, 22, 240, 18, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_CONFIRM_STOP_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 8, 45, 240, 78
-    DEFPUSHBUTTON "OK", IDOK, 144, 127, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 198, 127, 50, 14
+    DEFPUSHBUTTON "確定", IDOK, 144, 127, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 198, 127, 50, 14
 END
 
 
@@ -54,7 +54,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "安全地移除硬體"
-    IDS_CPLDESCRIPTION "Safely unplug or eject devices from your computer."
-    IDS_UNKNOWN_DEVICE "Unknown Device"
-    IDS_EJECT_ERROR_FORMAT "Failed to remove device (0x%x)\0"
+    IDS_CPLDESCRIPTION "安全地從您的電腦拔除或退出裝置。"
+    IDS_UNKNOWN_DEVICE "不明的裝置"
+    IDS_EJECT_ERROR_FORMAT "移除裝置失敗 (0x%x)\0"
 END
