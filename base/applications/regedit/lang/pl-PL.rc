@@ -35,7 +35,7 @@ Opcje:\n\
   /D                 Usuń określony klucz rejestru.\n\
   /E                 Eksportuj zawartość określonego klucza rejestru do pliku.\n\
                      Jeżeli nie określono klucza, cały rejestr zostanie eksportowany.\n\
-  /S                 Tryb Cichy. Komunikaty nie będą wyświetlane.\n\
+  /S                 Tryb cichy. Komunikaty nie będą wyświetlane.\n\
   /V                 Uruchom interfejs graficzny w trybie zaawansowanym. Ignorowane.\n\
   /?                 Wyświetl tę informację i zakończ.\n\
   [nazwa_pliku]      Lokalizacja pliku posiadającego informacje rejestru do importu.\n\
