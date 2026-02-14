@@ -75,6 +75,7 @@ UpdateDstCheckbox(HWND hwndDlg)
     if (bHasDst)
     {
         BOOL bAutoDaylight = GetAutoDaylight();
+
         EnableWindow(hwndCheckbox, TRUE);
         SendMessageW(hwndCheckbox,
                      BM_SETCHECK,
