@@ -69,7 +69,7 @@ BEGIN
     IDS_DHCPNOADAPTER       "Operacja nie powiodła się, ponieważ żadna karta nie jest\nw stanie zezwalającym na tę operację.\n"
     IDS_DHCPRELEASED        "Adres IP dla karty %ls został zwolniony.\n"
     IDS_DHCPRELEASEERROR    "Wystąpił błąd podczas zwalniania interfejsu %ls: "
-    IDS_DHCPRENEWERROR      "Wystąpił błąd podczas zwalniania interfejsu %ls: "
+    IDS_DHCPRENEWERROR      "Wystąpił błąd podczas wznawiania interfejsu %ls: "
 END
 
 STRINGTABLE
