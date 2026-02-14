@@ -40,15 +40,9 @@ GetSelectedTimeZoneEntry(HWND hwndCombo)
     if (dwIndex == CB_ERR)
         return NULL;
 
-    i = 0;
-    Entry = TimeZoneListHead;
-    while (i < dwIndex)
+    for (Entry = TimeZoneListHead, i = 0; i < dwIndex; i++, Entry = Entry->Next)
     {
-        if (Entry == NULL)
-            return NULL;
-
-        i++;
-        Entry = Entry->Next;
+        if (Entry == NULL) return NULL;
     }
 
     return Entry;
