@@ -2887,20 +2887,33 @@ DismountVolume(
     WCHAR Buffer[MAX_PATH];
 
     /* Check whether the partition is valid and was mounted by the system */
-    if (!PartEntry->IsPartitioned ||
-        IsContainerPartition(PartEntry->Mbr.PartitionType)   ||
-        !IsRecognizedPartition(PartEntry->Mbr.PartitionType) ||
-        PartEntry->FormatState == UnknownFormat ||
-        // NOTE: If FormatState == Unformatted but *FileSystem != 0 this means
-        // it has been usually mounted with RawFS and thus needs to be dismounted.
-/*        !*PartEntry->FileSystem || */
-        PartEntry->PartitionNumber == 0)
+    if (PartEntry->DiskEntry->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        /* The partition is not mounted, so just return success */
-        return STATUS_SUCCESS;
-    }
+        if (!PartEntry->IsPartitioned ||
+            IsContainerPartition(PartEntry->Mbr.PartitionType)   ||
+            !IsRecognizedPartition(PartEntry->Mbr.PartitionType) ||
+            PartEntry->FormatState == UnknownFormat ||
+            // NOTE: If FormatState == Unformatted but *FileSystem != 0 this means
+            // it has been usually mounted with RawFS and thus needs to be dismounted.
+/*            !*PartEntry->FileSystem || */
+            PartEntry->PartitionNumber == 0)
+        {
+            /* The partition is not mounted, so just return success */
+            return STATUS_SUCCESS;
+        }
 
-    ASSERT(PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED);
+        ASSERT(PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED);
+    }
+    else if (PartEntry->DiskEntry->PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        if (!PartEntry->IsPartitioned ||
+            IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID) ||
+            (PartEntry->FormatState == UnknownFormat))
+        {
+            /* The partition is not mounted, so just return success */
+            return STATUS_SUCCESS;
+        }
+    }
 
     /* Open the volume */
     StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),

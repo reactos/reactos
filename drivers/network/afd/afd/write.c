@@ -48,7 +48,7 @@ static NTSTATUS NTAPI SendComplete
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
@@ -280,7 +280,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
@@ -350,7 +350,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         PTDI_CONNECTION_INFORMATION TargetAddress;
 
         /* Check that the socket is bound */
-        if( FCB->State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
+        if( FCB->SharedData.State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
         {
             AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
@@ -453,9 +453,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp, 0 );
     }
 
-    AFD_DbgPrint(MID_TRACE,("Socket state %u\n", FCB->State));
+    AFD_DbgPrint(MID_TRACE,("Socket state %u\n", FCB->SharedData.State));
 
-    if( FCB->State != SOCKET_STATE_CONNECTED ) {
+    if( FCB->SharedData.State != SOCKET_STATE_CONNECTED ) {
         AFD_DbgPrint(MID_TRACE,("Socket not connected\n"));
         UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_CONNECTION, Irp, 0 );
@@ -583,8 +583,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->EventSelectDisabled &= ~AFD_EVENT_SEND;
 
     /* Check that the socket is bound */
-    if( FCB->State != SOCKET_STATE_BOUND &&
-        FCB->State != SOCKET_STATE_CREATED)
+    if( FCB->SharedData.State != SOCKET_STATE_BOUND &&
+        FCB->SharedData.State != SOCKET_STATE_CREATED)
     {
         AFD_DbgPrint(MIN_TRACE,("Invalid socket state\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
@@ -599,7 +599,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !(SendReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
-    if (FCB->State == SOCKET_STATE_CREATED)
+    if (FCB->SharedData.State == SOCKET_STATE_CREATED)
     {
         if (FCB->LocalAddress)
         {
@@ -614,7 +614,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
 
             if( NT_SUCCESS(Status) )
-                FCB->State = SOCKET_STATE_BOUND;
+                FCB->SharedData.State = SOCKET_STATE_BOUND;
             else
                 return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
         } else

@@ -437,11 +437,11 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     context->icd_data = dc_data->icd_data;
     context->pixelformat = dc_data->pixelformat;
     context->thread_id = 0;
+    context->magic = 'GLRC';
 
     /* Insert into the list */
     InsertTailList(&ContextListHead, &context->ListEntry);
 
-    context->magic = 'GLRC';
     TRACE("Success!\n");
     return (HGLRC)context;
 }
@@ -504,8 +504,10 @@ HGLRC WINAPI wglCreateLayerContext(HDC hdc, int iLayerPlane)
     context->icd_data = dc_data->icd_data;
     context->pixelformat = dc_data->pixelformat;
     context->thread_id = 0;
-
     context->magic = 'GLRC';
+
+    /* Insert into the list */
+    InsertTailList(&ContextListHead, &context->ListEntry);
 
     release_dc_data(dc_data);
     return (HGLRC)context;

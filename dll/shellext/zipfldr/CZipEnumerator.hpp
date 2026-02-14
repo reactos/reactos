@@ -6,6 +6,8 @@
  *              Copyright 2023-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#define EF_UNIPATH 0x7075 // Unicode Path extra field ID
+
 struct CZipEnumerator
 {
     CComPtr<IZip> m_Zip;

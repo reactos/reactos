@@ -19,13 +19,17 @@ class CFontExt :
     BOOL m_bDragAccepted = FALSE;
     HWND m_hwndView = nullptr;
 
+    static HRESULT CALLBACK MenuCallback(
+        IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
+        UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT PreviewItems(IDataObject* pDataObj);
+    HRESULT DeleteItems(IDataObject* pDataObj);
+
 public:
     CFontExt();
     ~CFontExt();
 
     void SetViewWindow(HWND hwndView);
-    static HRESULT CALLBACK MenuCallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT CreateForegroundMenu(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, LPVOID* ppvOut);
 
     // *** IShellFolder2 methods ***
     STDMETHODIMP GetDefaultSearchGUID(GUID *lpguid) override;
@@ -93,6 +97,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
+        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         //COM_INTERFACE_ENTRY_FUNC_BLIND(0, log_stuff)
     END_COM_MAP()

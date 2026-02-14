@@ -170,8 +170,6 @@ PropSheetPageLifetimeCallback(HWND hWnd, UINT uMsg, PROPSHEETPAGEW *pPSP)
     return TRUE;
 }
 
-EXTERN_C HRESULT WINAPI
-SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
 HRESULT
 SHELL32_ShowPropertiesDialog(IDataObject *pdtobj);
 HRESULT

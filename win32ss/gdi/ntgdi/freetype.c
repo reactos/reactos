@@ -4,10 +4,8 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2024 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2026 Katayama Hirofumi MZ.
  */
-
-/** Includes ******************************************************************/
 
 #include <win32k.h>
 
@@ -31,6 +29,7 @@
 
 #include <gdi/eng/floatobj.h>
 #include "font.h"
+#include "utils.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -72,21 +71,6 @@ static BOOL s_fFontLinkUseSymbol = FALSE;
 #define MAX_FONTLINK_CACHE 128
 static RTL_STATIC_LIST_HEAD(g_FontLinkCache); // The list of FONTLINK_CACHE
 static LONG g_nFontLinkCacheCount = 0;
-
-static SIZE_T
-SZZ_GetSize(_In_ PCZZWSTR pszz)
-{
-    SIZE_T ret = 0, cch;
-    const WCHAR *pch = pszz;
-    while (*pch)
-    {
-        cch = wcslen(pch) + 1;
-        ret += cch;
-        pch += cch;
-    }
-    ++ret;
-    return ret * sizeof(WCHAR);
-}
 
 static inline NTSTATUS
 FontLink_LoadSettings(VOID)
@@ -201,7 +185,6 @@ FontLink_LoadDefaultCharset(VOID)
 static inline VOID
 FontLink_Destroy(_Inout_ PFONTLINK pLink)
 {
-    ASSERT(pLink);
     ExFreePoolWithTag(pLink, TAG_FONT);
 }
 
@@ -251,23 +234,6 @@ FontLink_AddCache(
         pCache = CONTAINING_RECORD(Entry, FONTLINK_CACHE, ListEntry);
         FontLink_Chain_Free(&pCache->Chain);
         ExFreePoolWithTag(pCache, TAG_FONT);
-    }
-}
-
-static inline VOID
-IntRebaseList(
-    _Inout_ PLIST_ENTRY pNewHead,
-    _Inout_ PLIST_ENTRY pOldHead)
-{
-    PLIST_ENTRY Entry;
-
-    ASSERT(pNewHead != pOldHead);
-
-    InitializeListHead(pNewHead);
-    while (!IsListEmpty(pOldHead))
-    {
-        Entry = RemoveTailList(pOldHead);
-        InsertHeadList(pNewHead, Entry);
     }
 }
 
@@ -337,21 +303,6 @@ static RTL_STATIC_LIST_HEAD(s_FontLookupCacheList); // The list of FONT_LOOKUP_C
 #define MAX_FONT_LOOKUP_CACHE 64
 static ULONG s_FontLookupCacheCount = 0;
 
-/* The ranges of the surrogate pairs */
-#define HIGH_SURROGATE_MIN 0xD800U
-#define HIGH_SURROGATE_MAX 0xDBFFU
-#define LOW_SURROGATE_MIN  0xDC00U
-#define LOW_SURROGATE_MAX  0xDFFFU
-
-#define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
-#define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
-
-static inline DWORD
-Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
-{
-    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
-}
-
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
@@ -364,7 +315,6 @@ Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
-static POINTL PointZero = { 0, 0 };
 
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
@@ -372,9 +322,8 @@ static POINTL PointZero = { 0, 0 };
 FT_Library  g_FreeTypeLibrary;
 
 /* registry */
-static UNICODE_STRING g_FontRegPath =
+UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
-
 
 /* The FreeType library is not thread safe, so we have
    to serialize access to it */
@@ -710,7 +659,6 @@ CleanupFontEntry(PFONT_ENTRY FontEntry)
     CleanupFontEntryEx(FontEntry, FontEntry->Font);
 }
 
-
 static __inline void FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
 {
     pt->x.value = vec->x >> 6;
@@ -729,7 +677,6 @@ static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 {
     return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
 }
-
 
 #if DBG
 VOID DumpFontEntry(PFONT_ENTRY FontEntry)
@@ -1143,14 +1090,6 @@ FreeFontSupport(VOID)
     g_FreeTypeLock = NULL;
 }
 
-static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
-{
-    nTenthsOfDegrees %= 360 * 10;
-    if (nTenthsOfDegrees >= 0)
-        return nTenthsOfDegrees;
-    return nTenthsOfDegrees + 360 * 10;
-}
-
 static VOID FASTCALL IntEscapeMatrix(FT_Matrix *pmat, LONG lfEscapement)
 {
     FT_Vector vecAngle;
@@ -1251,46 +1190,6 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
     }
 
     return FALSE;
-}
-
-static VOID
-IntUnicodeStringToBuffer(LPWSTR pszBuffer, SIZE_T cbBuffer, const UNICODE_STRING *pString)
-{
-    SIZE_T cbLength = pString->Length;
-
-    if (cbBuffer < sizeof(UNICODE_NULL))
-        return;
-
-    if (cbLength > cbBuffer - sizeof(UNICODE_NULL))
-        cbLength = cbBuffer - sizeof(UNICODE_NULL);
-
-    RtlCopyMemory(pszBuffer, pString->Buffer, cbLength);
-    pszBuffer[cbLength / sizeof(WCHAR)] = UNICODE_NULL;
-}
-
-static NTSTATUS
-DuplicateUnicodeString(
-    _In_ PCUNICODE_STRING Source,
-    _Out_ PUNICODE_STRING Destination)
-{
-    NTSTATUS Status = STATUS_NO_MEMORY;
-    UNICODE_STRING Tmp;
-
-    Tmp.Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_USTR);
-    if (Tmp.Buffer)
-    {
-        Tmp.MaximumLength = Source->MaximumLength;
-        Tmp.Length = 0;
-        RtlCopyUnicodeString(&Tmp, Source);
-
-        Destination->MaximumLength = Tmp.MaximumLength;
-        Destination->Length = Tmp.Length;
-        Destination->Buffer = Tmp.Buffer;
-
-        Status = STATUS_SUCCESS;
-    }
-
-    return Status;
 }
 
 static BOOL
@@ -1729,9 +1628,7 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
     UINT nCount = 0;
 
     if (CodePageRange1 == 0)
-    {
         return (nIndex < 0) ? 1 : DEFAULT_CHARSET;
-    }
 
     for (BitIndex = 0; BitIndex < MAXTCIINDEX; ++BitIndex)
     {
@@ -2094,34 +1991,6 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     return FaceCount;
 }
 
-static LPCWSTR FASTCALL
-NameFromCharSet(BYTE CharSet)
-{
-    switch (CharSet)
-    {
-        case ANSI_CHARSET: return L"ANSI";
-        case DEFAULT_CHARSET: return L"Default";
-        case SYMBOL_CHARSET: return L"Symbol";
-        case SHIFTJIS_CHARSET: return L"Shift_JIS";
-        case HANGUL_CHARSET: return L"Hangul";
-        case GB2312_CHARSET: return L"GB 2312";
-        case CHINESEBIG5_CHARSET: return L"Chinese Big5";
-        case OEM_CHARSET: return L"OEM";
-        case JOHAB_CHARSET: return L"Johab";
-        case HEBREW_CHARSET: return L"Hebrew";
-        case ARABIC_CHARSET: return L"Arabic";
-        case GREEK_CHARSET: return L"Greek";
-        case TURKISH_CHARSET: return L"Turkish";
-        case VIETNAMESE_CHARSET: return L"Vietnamese";
-        case THAI_CHARSET: return L"Thai";
-        case EASTEUROPE_CHARSET: return L"Eastern European";
-        case RUSSIAN_CHARSET: return L"Russian";
-        case MAC_CHARSET: return L"Mac";
-        case BALTIC_CHARSET: return L"Baltic";
-        default: return L"Unknown";
-    }
-}
-
 static const UNICODE_STRING DosPathPrefix = RTL_CONSTANT_STRING(L"\\??\\");
 
 /* Adds the font resource from the specified file to the system */
@@ -2161,7 +2030,7 @@ IntGdiAddFontResourceSingle(
     }
     else
     {
-        Status = DuplicateUnicodeString(FileName, &PathName);
+        Status = IntDuplicateUnicodeString(FileName, &PathName);
         if (!NT_SUCCESS(Status))
             return 0;   /* failure */
     }
@@ -2264,7 +2133,7 @@ IntGdiAddFontResourceSingle(
         else if (LoadFont.CharSet != DEFAULT_CHARSET)
         {
             /* Append " (CharSetName)" */
-            CharSetName = NameFromCharSet(LoadFont.CharSet);
+            CharSetName = IntNameFromCharSet(LoadFont.CharSet);
             Length = LoadFont.RegValueName.Length +
                      (wcslen(CharSetName) + 3) * sizeof(WCHAR) +
                      sizeof(UNICODE_NULL);
@@ -2366,26 +2235,8 @@ IntGdiAddFontResourceEx(
     return ret;
 }
 
-/* Borrowed from shlwapi */
-static PWSTR
-PathFindFileNameW(_In_ PCWSTR pszPath)
-{
-    PCWSTR lastSlash = pszPath;
-    while (*pszPath)
-    {
-        if ((*pszPath == L'\\' || *pszPath == L'/' || *pszPath == L':') &&
-            pszPath[1] && pszPath[1] != '\\' && pszPath[1] != L'/')
-        {
-            lastSlash = pszPath + 1;
-        }
-        pszPath++;
-    }
-    return (PWSTR)lastSlash;
-}
-
 /* Delete registry font entries */
-static VOID
-IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
+VOID IntDeleteRegFontEntries(_In_ PCWSTR pszFileName, _In_ DWORD dwFlags)
 {
     NTSTATUS Status;
     HKEY hKey;
@@ -2447,7 +2298,7 @@ IntGdiRemoveFontResourceSingle(
     }
     else
     {
-        Status = DuplicateUnicodeString(FileName, &PathName);
+        Status = IntDuplicateUnicodeString(FileName, &PathName);
         if (!NT_SUCCESS(Status))
             return FALSE; /* Failure */
     }
@@ -2522,16 +2373,6 @@ IntGdiRemoveFontResource(
         pchFile += cchFile + 1;
     }
 
-    return TRUE;
-}
-
-/* Borrowed from shlwapi!PathIsRelativeW */
-BOOL WINAPI PathIsRelativeW(LPCWSTR lpszPath)
-{
-    if (!lpszPath || !*lpszPath)
-        return TRUE;
-    if (*lpszPath == L'\\' || (*lpszPath && lpszPath[1] == L':'))
-        return FALSE;
     return TRUE;
 }
 
@@ -2892,7 +2733,6 @@ IntGetFontRenderMode(LOGFONTW *logfont)
     return FT_RENDER_MODE_NORMAL;
 }
 
-
 NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
@@ -2981,7 +2821,6 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 
     return TRUE;
 }
-
 
 static BOOL face_has_symbol_charmap(FT_Face ft_face)
 {
@@ -3255,18 +3094,18 @@ IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
     Names->OtmSize = OtmSize;
 }
 
-static __inline SIZE_T FASTCALL
-IntStoreName(const UNICODE_STRING *pName, BYTE *pb)
+static inline SIZE_T FASTCALL
+IntStoreName(_In_ const UNICODE_STRING *pName, _Out_ PBYTE pb)
 {
     RtlCopyMemory(pb, pName->Buffer, pName->Length);
-    *(WCHAR *)&pb[pName->Length] = UNICODE_NULL;
+    *(WCHAR*)&pb[pName->Length] = UNICODE_NULL;
     return pName->Length + sizeof(UNICODE_NULL);
 }
 
-static __inline BYTE *FASTCALL
-IntStoreFontNames(const FONT_NAMES *Names, OUTLINETEXTMETRICW *Otm)
+PBYTE FASTCALL
+IntStoreFontNames(_In_ const FONT_NAMES *Names, _Out_ OUTLINETEXTMETRICW *Otm)
 {
-    BYTE *pb = (BYTE *)Otm + sizeof(OUTLINETEXTMETRICW);
+    PBYTE pb = (PBYTE)Otm + sizeof(OUTLINETEXTMETRICW);
 
     /* family name */
     Otm->otmpFamilyName = (LPSTR)(pb - (BYTE*) Otm);
@@ -3460,65 +3299,6 @@ skip_os2:
     return Cache->OutlineRequiredSize;
 }
 
-/* See https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2008/bb165625(v=vs.90) */
-static BYTE
-CharSetFromLangID(LANGID LangID)
-{
-    /* FIXME: Add more and fix if wrong */
-    switch (PRIMARYLANGID(LangID))
-    {
-        case LANG_CHINESE:
-            switch (SUBLANGID(LangID))
-            {
-                case SUBLANG_CHINESE_TRADITIONAL:
-                    return CHINESEBIG5_CHARSET;
-                case SUBLANG_CHINESE_SIMPLIFIED:
-                default:
-                    break;
-            }
-            return GB2312_CHARSET;
-
-        case LANG_CZECH: case LANG_HUNGARIAN: case LANG_POLISH:
-        case LANG_SLOVAK: case LANG_SLOVENIAN: case LANG_ROMANIAN:
-            return EASTEUROPE_CHARSET;
-
-        case LANG_RUSSIAN: case LANG_BULGARIAN: case LANG_MACEDONIAN:
-        case LANG_SERBIAN: case LANG_UKRAINIAN:
-            return RUSSIAN_CHARSET;
-
-        case LANG_ARABIC:       return ARABIC_CHARSET;
-        case LANG_GREEK:        return GREEK_CHARSET;
-        case LANG_HEBREW:       return HEBREW_CHARSET;
-        case LANG_JAPANESE:     return SHIFTJIS_CHARSET;
-        case LANG_KOREAN:       return JOHAB_CHARSET;
-        case LANG_TURKISH:      return TURKISH_CHARSET;
-        case LANG_THAI:         return THAI_CHARSET;
-        case LANG_LATVIAN:      return BALTIC_CHARSET;
-        case LANG_VIETNAMESE:   return VIETNAMESE_CHARSET;
-
-        case LANG_ENGLISH: case LANG_BASQUE: case LANG_CATALAN:
-        case LANG_DANISH: case LANG_DUTCH: case LANG_FINNISH:
-        case LANG_FRENCH: case LANG_GERMAN: case LANG_ITALIAN:
-        case LANG_NORWEGIAN: case LANG_PORTUGUESE: case LANG_SPANISH:
-        case LANG_SWEDISH: default:
-            return ANSI_CHARSET;
-    }
-}
-
-static void
-SwapEndian(LPVOID pvData, DWORD Size)
-{
-    BYTE b, *pb = pvData;
-    Size /= 2;
-    while (Size-- > 0)
-    {
-        b = pb[0];
-        pb[0] = pb[1];
-        pb[1] = b;
-        ++pb; ++pb;
-    }
-}
-
 static NTSTATUS
 IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID)
@@ -3535,23 +3315,15 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
 
     /* select cache */
     if (PRIMARYLANGID(LangID) == LANG_ENGLISH)
-    {
         Cache = &SharedFace->EnglishUS;
-    }
     else
-    {
         Cache = &SharedFace->UserLanguage;
-    }
 
     /* use cache if available */
     if (NameID == TT_NAME_ID_FONT_FAMILY && Cache->FontFamily.Buffer)
-    {
-        return DuplicateUnicodeString(&Cache->FontFamily, pNameW);
-    }
+        return IntDuplicateUnicodeString(&Cache->FontFamily, pNameW);
     if (NameID == TT_NAME_ID_FULL_NAME && Cache->FullName.Buffer)
-    {
-        return DuplicateUnicodeString(&Cache->FullName, pNameW);
-    }
+        return IntDuplicateUnicodeString(&Cache->FullName, pNameW);
 
     BestIndex = -1;
     BestScore = 0;
@@ -3561,14 +3333,10 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     {
         Error = FT_Get_Sfnt_Name(Face, i, &Name);
         if (Error)
-        {
             continue;   /* failure */
-        }
 
         if (Name.name_id != NameID)
-        {
             continue;   /* mismatched */
-        }
 
         if (Name.platform_id != TT_PLATFORM_MICROSOFT ||
             (Name.encoding_id != TT_MS_ID_UNICODE_CS &&
@@ -3630,7 +3398,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                 if (Status == STATUS_SUCCESS)
                 {
                     /* Convert UTF-16 big endian to little endian */
-                    SwapEndian(pNameW->Buffer, pNameW->Length);
+                    IntSwapEndian(pNameW->Buffer, pNameW->Length);
                 }
             }
             else
@@ -3662,13 +3430,13 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         {
             ASSERT_FREETYPE_LOCK_HELD();
             if (!Cache->FontFamily.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FontFamily);
+                IntDuplicateUnicodeString(pNameW, &Cache->FontFamily);
         }
         else if (NameID == TT_NAME_ID_FULL_NAME)
         {
             ASSERT_FREETYPE_LOCK_HELD();
             if (!Cache->FullName.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FullName);
+                IntDuplicateUnicodeString(pNameW, &Cache->FullName);
         }
     }
 
@@ -3983,8 +3751,7 @@ GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
     return TRUE;
 }
 
-BOOL
-FASTCALL
+BOOL FASTCALL
 ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 {
     if ( lprs )
@@ -4452,8 +4219,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     return FT_Request_Size(face, &req);
 }
 
-BOOL
-FASTCALL
+BOOL FASTCALL
 TextIntUpdateSize(PDC dc,
                   PTEXTOBJ TextObj,
                   PFONTGDI FontGDI,
@@ -5311,7 +5077,6 @@ TextIntGetTextExtentPoint(
     return TRUE;
 }
 
-
 INT
 FASTCALL
 ftGdiGetTextCharsetInfo(
@@ -5649,7 +5414,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     BYTE    Byte;
     LONG    Long;
     BOOL    fNeedScaling = FALSE;
-    const BYTE UserCharSet = CharSetFromLangID(gusLanguageID);
+    const BYTE UserCharSet = IntCharSetFromLangID(gusLanguageID);
     const TEXTMETRICW * TM = &Otm->otmTextMetrics;
     WCHAR* ActualNameW;
 
@@ -6198,7 +5963,7 @@ FontLookUp_LookUp(const LOGFONTW *pLogFont)
     for (Entry = pHead->Flink; Entry != pHead; Entry = Entry->Flink)
     {
         PFONT_LOOKUP_CACHE pEntry = CONTAINING_RECORD(Entry, FONT_LOOKUP_CACHE, ListEntry);
-        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(LOGFONTW)))
+        if (RtlEqualMemory(&pEntry->LogFont, pLogFont, sizeof(*pLogFont)))
         {
             // Move to head
             RemoveEntryList(&pEntry->ListEntry);
@@ -6214,7 +5979,7 @@ FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontO
 {
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cache?
+    if (s_FontLookupCacheCount >= MAX_FONT_LOOKUP_CACHE) // Too many cached entries?
     {
         // Remove tail one
         PLIST_ENTRY OldestEntry = RemoveTailList(&s_FontLookupCacheList);
@@ -6223,12 +5988,12 @@ FontLookUp_Add(const LOGFONTW *LogFont, PSHARED_FACE SharedFace, FONTOBJ *pFontO
         s_FontLookupCacheCount--;
     }
 
-    // Add new cache
-    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_LOOKUP_CACHE), TAG_FONT);
+    // Add new cache entry
+    PFONT_LOOKUP_CACHE pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(*pEntry), TAG_FONT);
     if (pEntry)
     {
         // Populate
-        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(LOGFONTW));
+        RtlCopyMemory(&pEntry->LogFont, LogFont, sizeof(*LogFont));
         pEntry->SharedFace = SharedFace;
         SharedFace_AddRef(SharedFace);
         pEntry->pFontObj = pFontObj;
@@ -6242,7 +6007,6 @@ PSHARED_FACE
 IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
 {
     ASSERT_FREETYPE_LOCK_HELD();
-    ASSERT(pLogFont);
 
     LOGFONTW LogFont = *pLogFont;
     RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
@@ -6887,23 +6651,6 @@ NtGdiGetFontFamilyInfo(
     return GotCount;
 }
 
-static inline
-LONG
-ScaleLong(LONG lValue, PFLOATOBJ pef)
-{
-    FLOATOBJ efTemp;
-
-    /* Check if we have scaling different from 1 */
-    if (!FLOATOBJ_Equal(pef, (PFLOATOBJ)&gef1))
-    {
-        /* Need to multiply */
-        FLOATOBJ_SetLong(&efTemp, lValue);
-        FLOATOBJ_Mul(&efTemp, pef);
-        lValue = FLOATOBJ_GetLong(&efTemp);
-    }
-
-    return lValue;
-}
 
 /*
  * Calculate X and Y disposition of the text.
@@ -6993,88 +6740,6 @@ IntGetTextDisposition(
     *pY64 = Y64;
     return TRUE;
 }
-
-VOID APIENTRY
-IntEngFillPolygon(
-    IN OUT PDC dc,
-    IN POINTL *pPoints,
-    IN UINT cPoints,
-    IN BRUSHOBJ *BrushObj)
-{
-    SURFACE *psurf = dc->dclevel.pSurface;
-    RECT Rect;
-    UINT i;
-    INT x, y;
-
-    ASSERT_DC_PREPARED(dc);
-    ASSERT(psurf != NULL);
-
-    Rect.left = Rect.right = pPoints[0].x;
-    Rect.top = Rect.bottom = pPoints[0].y;
-    for (i = 1; i < cPoints; ++i)
-    {
-        x = pPoints[i].x;
-        if (x < Rect.left)
-            Rect.left = x;
-        else if (Rect.right < x)
-            Rect.right = x;
-
-        y = pPoints[i].y;
-        if (y < Rect.top)
-            Rect.top = y;
-        else if (Rect.bottom < y)
-            Rect.bottom = y;
-    }
-
-    IntFillPolygon(dc, dc->dclevel.pSurface, BrushObj, pPoints, cPoints, Rect, &PointZero);
-}
-
-VOID
-FASTCALL
-IntEngFillBox(
-    IN OUT PDC dc,
-    IN INT X,
-    IN INT Y,
-    IN INT Width,
-    IN INT Height,
-    IN BRUSHOBJ *BrushObj)
-{
-    RECTL DestRect;
-    SURFACE *psurf = dc->dclevel.pSurface;
-
-    ASSERT_DC_PREPARED(dc);
-    ASSERT(psurf != NULL);
-
-    if (Width < 0)
-    {
-        X += Width;
-        Width = -Width;
-    }
-
-    if (Height < 0)
-    {
-        Y += Height;
-        Height = -Height;
-    }
-
-    DestRect.left = X;
-    DestRect.right = X + Width;
-    DestRect.top = Y;
-    DestRect.bottom = Y + Height;
-
-    IntEngBitBlt(&psurf->SurfObj,
-                 NULL,
-                 NULL,
-                 (CLIPOBJ *)&dc->co,
-                 NULL,
-                 &DestRect,
-                 NULL,
-                 NULL,
-                 BrushObj,
-                 &PointZero,
-                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-}
-
 
 BOOL
 APIENTRY
@@ -7389,7 +7054,10 @@ IntExtTextOutW(
 
         /* Do chars > space & not DEL & not nbsp have a glyphSize.cx of zero? */
         if (ch0 > L' ' && ch0 != del && ch0 != nbsp && glyphSize.cx == 0)
-            DPRINT1("WARNING: WChar 0x%04x has a glyphSize.cx of zero\n", ch0);
+        {
+            DPRINT1("WARNING: family_name '%s' WChar 0x%04x has a glyphSize.cx of zero\n",
+                    face->family_name, ch0);
+        }
 
         /* Don't ignore spaces or non-breaking spaces when computing offset.
          * This completes the fix of CORE-11787. */
@@ -7468,7 +7136,7 @@ IntExtTextOutW(
                                &DestRect,
                                (PPOINTL)&MaskRect,
                                &dc->eboText.BrushObject,
-                               &PointZero))
+                               &g_PointZero))
             {
                 DPRINT1("Failed to MaskBlt a glyph!\n");
             }
@@ -7856,7 +7524,6 @@ NtGdiGetCharABCWidthsW(
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-
         if(Safepwch)
             ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
 
@@ -8123,13 +7790,10 @@ NtGdiGetCharWidthW(
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
         if (Safepwc)
-        {
             glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], (fl & GCW_INDICES));
-        }
         else
-        {
             glyph_index = get_glyph_index_flagged(face, i, (fl & GCW_INDICES));
-        }
+
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
         if (!fl)
             SafeBuffF[i - FirstChar] = (FLOAT) ((face->glyph->advance.x + 32) >> 6);
@@ -8313,9 +7977,7 @@ NtGdiGetGlyphIndicesW(
     {
         Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
         if (Buffer[i] == 0)
-        {
             Buffer[i] = DefChar;
-        }
     }
     IntUnLockFreeType();
 
@@ -8332,18 +7994,12 @@ NtGdiGetGlyphIndicesW(
 
 ErrorRet:
     if (Buffer != NULL)
-    {
         ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    }
     if (Safepwc != NULL)
-    {
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
-    }
 
     if (NT_SUCCESS(Status))
         return cwc;
 
     return GDI_ERROR;
 }
-
-/* EOF */

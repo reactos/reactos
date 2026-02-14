@@ -20,6 +20,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlcoll.h>
+#include <atlsimpcoll.h>
 #include <atlstr.h>
 #include <wine/debug.h>
 #include <shellutils.h>
@@ -82,6 +83,9 @@ HRESULT DoGetFontTitle(
 BOOL CheckDropFontFiles(HDROP hDrop);
 BOOL CheckDataObject(IDataObject *pDataObj);
 HRESULT InstallFontsFromDataObject(HWND hwndView, IDataObject* pDataObj);
+HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj);
+HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj);
+void RunFontViewer(HWND hwnd, const FontPidlEntry* fontEntry);
 
 HRESULT
 APIENTRY

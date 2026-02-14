@@ -17,7 +17,8 @@ static
 VOID
 PrintSize(
     _In_ ULONGLONG ullSize,
-    _Out_ PWSTR pszSizeBuffer)
+    _Out_ PWSTR pszOutBuffer,
+    _In_ ULONG ulOutBufferSize)
 {
     WCHAR szUnitBuffer[8];
     INT nUnitId;
@@ -51,7 +52,10 @@ PrintSize(
                 nUnitId,
                 szUnitBuffer, ARRAYSIZE(szUnitBuffer));
 
-    swprintf(pszSizeBuffer, L"%4I64u %-2s", ullSize, szUnitBuffer);
+    swprintf(pszOutBuffer, L"%4I64u %-2s", ullSize, szUnitBuffer);
+    StringCchPrintfW(pszOutBuffer,
+                     ulOutBufferSize,
+                     L"%4I64u %-2s", ullSize, szUnitBuffer);
 }
 
 
@@ -133,10 +137,10 @@ PrintDisk(
 
     DiskSize = DiskEntry->SectorCount.QuadPart *
                (ULONGLONG)DiskEntry->BytesPerSector;
-    PrintSize(DiskSize, szDiskSizeBuffer);
+    PrintSize(DiskSize, szDiskSizeBuffer, ARRAYSIZE(szDiskSizeBuffer));
 
     FreeSize = GetFreeDiskSize(DiskEntry);
-    PrintSize(FreeSize, szFreeSizeBuffer);
+    PrintSize(FreeSize, szFreeSizeBuffer, ARRAYSIZE(szFreeSizeBuffer));
 
     LoadStringW(GetModuleHandle(NULL),
                 IDS_STATUS_ONLINE,
@@ -252,10 +256,10 @@ ListPartition(
             if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartSize, szSizeBuffer);
+                PrintSize(PartSize, szSizeBuffer, ARRAYSIZE(szSizeBuffer));
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartOffset, szOffsetBuffer);
+                PrintSize(PartOffset, szOffsetBuffer, ARRAYSIZE(szOffsetBuffer));
 
                 LoadStringW(GetModuleHandle(NULL),
                             IsContainerPartition(PartEntry->Mbr.PartitionType) ? IDS_PARTITION_TYPE_EXTENDED : IDS_PARTITION_TYPE_PRIMARY,
@@ -280,10 +284,10 @@ ListPartition(
             if (PartEntry->Mbr.PartitionType != PARTITION_ENTRY_UNUSED)
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartSize, szSizeBuffer);
+                PrintSize(PartSize, szSizeBuffer, ARRAYSIZE(szSizeBuffer));
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartOffset, szOffsetBuffer);
+                PrintSize(PartOffset, szOffsetBuffer, ARRAYSIZE(szOffsetBuffer));
 
                 LoadStringW(GetModuleHandle(NULL),
                             IDS_PARTITION_TYPE_LOGICAL,
@@ -309,10 +313,10 @@ ListPartition(
             if (!IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             {
                 PartSize = PartEntry->SectorCount.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartSize, szSizeBuffer);
+                PrintSize(PartSize, szSizeBuffer, ARRAYSIZE(szSizeBuffer));
 
                 PartOffset = PartEntry->StartSector.QuadPart * CurrentDisk->BytesPerSector;
-                PrintSize(PartOffset, szOffsetBuffer);
+                PrintSize(PartOffset, szOffsetBuffer, ARRAYSIZE(szOffsetBuffer));
 
                 if (IsEqualGUID(&PartEntry->Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
                 {
@@ -388,7 +392,7 @@ PrintVolume(
 
     LoadStringW(GetModuleHandle(NULL), nVolumeType, szVolumeTypeBuffer, ARRAYSIZE(szVolumeTypeBuffer));
 
-    PrintSize(VolumeEntry->Size.QuadPart, szSizeBuffer);
+    PrintSize(VolumeEntry->Size.QuadPart, szSizeBuffer, ARRAYSIZE(szSizeBuffer));
 
     szInfoBuffer[0] = UNICODE_NULL;
     if (VolumeEntry->IsSystem)

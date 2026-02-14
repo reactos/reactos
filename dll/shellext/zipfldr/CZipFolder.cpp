@@ -91,6 +91,191 @@ BOOL CZipFolder::_GetFileTimeString(LPFILETIME lpFileTime, PWSTR pwszResult, UIN
     return TRUE;
 }
 
+HRESULT CZipFolder::DoDeleteItems(CComPtr<IDataObject> pDataObj)
+{
+    CStringW message(MAKEINTRESOURCEW(IDS_CONFIRMDELETE_TEXT));
+    CStringW title(MAKEINTRESOURCEW(IDS_FRIENDLYNAME));
+    if (MessageBoxW(m_hwnd, message, title, MB_ICONWARNING | MB_YESNOCANCEL) != IDYES)
+        return S_FALSE;
+
+    HRESULT hr = DeleteItems(pDataObj);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        message.LoadString(IDS_CANTDELETEFILE);
+        MessageBoxW(m_hwnd, message, title, MB_ICONERROR);
+    }
+
+    return hr;
+}
+
+HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
+{
+
+    CDataObjectHIDA cida(pDataObj);
+    if (!cida || cida->cidl <= 0)
+        return E_FAIL;
+
+    // Get the target paths
+    CAtlList<CStringW> targetPaths;
+    for (UINT iFile = 0; iFile < cida->cidl; ++iFile)
+    {
+        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(cida, iFile);
+        const ZipPidlEntry* pEntry = _ZipFromIL(pidlRelative);
+        if (pEntry)
+        {
+            CStringW fullPath = m_ZipDir + pEntry->Name;
+            // For folders, end with a slash
+            if (pEntry->ZipType == ZIP_PIDL_DIRECTORY && fullPath.Right(1) != L"/")
+                fullPath += L"/";
+            targetPaths.AddTail(fullPath);
+        }
+    }
+
+    // Create a temporary file
+    WCHAR szTempPath[MAX_PATH], szTempFile[MAX_PATH];
+    GetTempPathW(MAX_PATH, szTempPath);
+    GetTempFileNameW(szTempPath, L"ZIP", 0, szTempFile);
+
+    // Close the current handle to work with the ZIP file
+    Close();
+
+    zlib_filefunc64_def ffunc = {};
+    fill_win32_filefunc64W(&ffunc);
+
+    HRESULT hr = S_OK;
+    unzFile uf = unzOpen2_64(m_ZipFile, &ffunc);
+    zipFile zf = zipOpen2_64(szTempFile, APPEND_STATUS_CREATE, NULL, &ffunc);
+
+    if (!uf || !zf)
+    {
+        DPRINT1("Cannot open file\n");
+        if (uf) unzClose(uf);
+        if (zf) zipClose(zf, NULL);
+        return E_FAIL;
+    }
+
+    // Scan all entries in the original ZIP
+    if (unzGoToFirstFile(uf) == UNZ_OK)
+    {
+        do
+        {
+            // Read file entry
+            unz_file_info64 info;
+            char szNameA[MAX_PATH];
+            if (unzGetCurrentFileInfo64(uf, &info, szNameA, sizeof(szNameA), NULL, 0, NULL, 0) != UNZ_OK)
+                continue;
+
+            // Read extra field
+            CAtlArray<BYTE> extra;
+            if (info.size_file_extra > 0)
+            {
+                extra.SetCount(info.size_file_extra);
+                unzGetCurrentFileInfo64(uf, NULL, NULL, 0, extra.GetData(), info.size_file_extra, NULL, 0);
+            }
+
+            CStringA utf8Name = CZipEnumerator::GetUtf8Name(szNameA, extra.GetData(), (DWORD)extra.GetCount());
+            CStringW currentEntryName;
+            if (utf8Name.GetLength() > 0)
+                currentEntryName = (LPWSTR)CA2WEX<MAX_PATH>(utf8Name, CP_UTF8);
+            else if (info.flag & MINIZIP_UTF8_FLAG)
+                currentEntryName = (LPWSTR)CA2WEX<MAX_PATH>(szNameA, CP_UTF8);
+            else
+                currentEntryName = (LPWSTR)CA2WEX<MAX_PATH>(szNameA, CP_ACP);
+
+            currentEntryName.Replace(L'\\', L'/');
+
+            // Check if it is on the deletion target list
+            bool bSkip = false;
+            POSITION pos = targetPaths.GetHeadPosition();
+            while (pos)
+            {
+                const CStringW& target = targetPaths.GetNext(pos);
+                // Check for an exact match (file) or a prefix match (folder)
+                if (currentEntryName == target || currentEntryName.Left(target.GetLength()) == target)
+                {
+                    bSkip = true;
+                    break;
+                }
+            }
+
+            if (!bSkip)
+            {
+                // If not to be deleted, copy to new ZIP
+                hr = CopyZipEntry(uf, zf, &info, szNameA);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    break;
+            }
+        } while (unzGoToNextFile(uf) == UNZ_OK);
+    }
+
+    unzClose(uf);
+    zipClose(zf, NULL);
+
+    // Replace the original file with the temporary file
+    if (SUCCEEDED(hr) && ReplaceFileW(m_ZipFile, szTempFile, NULL, 0, NULL, NULL))
+    {
+        // Notify the shell that the folder contents have changed
+        SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, m_CurDir, NULL);
+    }
+    else
+    {
+        DPRINT1("Failed to replace file\n");
+        DeleteFileW(szTempFile);
+        hr = E_FAIL;
+    }
+
+    return hr;
+}
+
+HRESULT CZipFolder::CopyZipEntry(unzFile uf, zipFile zf, unz_file_info64* info, LPCSTR nameA)
+{
+    // Get extra field
+    CAtlArray<BYTE> extra;
+    if (info->size_file_extra > 0)
+    {
+        extra.SetCount(info->size_file_extra);
+        if (unzGetCurrentFileInfo64(uf, NULL, NULL, 0, extra.GetData(),
+                                    info->size_file_extra, NULL, 0) != UNZ_OK)
+        {
+            DPRINT1("Cannot get extra fields\n");
+            return E_FAIL;
+        }
+    }
+
+    if (unzOpenCurrentFile(uf) != UNZ_OK)
+    {
+        DPRINT1("Cannot open current file\n");
+        return E_FAIL;
+    }
+
+    zip_fileinfo zi = {0};
+    zi.dosDate = info->dosDate;
+    zi.internal_fa = info->internal_fa;
+    zi.external_fa = info->external_fa;
+
+    INT err = zipOpenNewFileInZip3_64(zf, nameA, &zi,
+                                      extra.GetData(), (UINT)extra.GetCount(),
+                                      extra.GetData(), (UINT)extra.GetCount(),
+                                      NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 0,
+                                      -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
+                                      NULL, 0, info->flag);
+    if (err)
+    {
+        DPRINT1("err: %d\n", err);
+        unzCloseCurrentFile(uf);
+        return E_FAIL;
+    }
+
+    BYTE buffer[4096];
+    INT read;
+    while ((read = unzReadCurrentFile(uf, buffer, sizeof(buffer))) > 0)
+        zipWriteInFileInZip(zf, buffer, read);
+
+    zipCloseFileInZip(zf);
+    unzCloseCurrentFile(uf);
+    return S_OK;
+}
+
 STDMETHODIMP CZipFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
     if (!pcsFlags || iColumn >= _countof(g_ColumnDefs))
@@ -236,6 +421,8 @@ STDMETHODIMP CZipFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCU
 
 STDMETHODIMP CZipFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
+    m_hwnd = hwndOwner ? hwndOwner : m_hwnd;
+
     static const GUID UnknownIID = // {93F81976-6A0D-42C3-94DD-AA258A155470}
     {0x93F81976, 0x6A0D, 0x42C3, {0x94, 0xDD, 0xAA, 0x25, 0x8A, 0x15, 0x54, 0x70}};
     if (riid == IID_IShellView)
@@ -281,8 +468,8 @@ STDMETHODIMP CZipFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
 
     //static DWORD dwFileAttrs = SFGAO_STREAM | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | SFGAO_CANCOPY | SFGAO_CANMOVE;
     //static DWORD dwFolderAttrs = SFGAO_FOLDER | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | SFGAO_STORAGE | SFGAO_CANCOPY | SFGAO_CANMOVE;
-    static DWORD dwFileAttrs = SFGAO_STREAM;
-    static DWORD dwFolderAttrs = SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE | SFGAO_DROPTARGET;
+    static DWORD dwFileAttrs = SFGAO_CANDELETE | SFGAO_STREAM;
+    static DWORD dwFolderAttrs = SFGAO_CANDELETE | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE | SFGAO_DROPTARGET;
 
     while (cidl > 0 && *apidl)
     {
@@ -304,6 +491,7 @@ STDMETHODIMP CZipFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         cidl--;
     }
 
+    *rgfInOut &= ~SFGAO_FILESYSTEM;
     *rgfInOut &= ~SFGAO_VALIDATE;
     return S_OK;
 }
@@ -312,13 +500,22 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
     IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
     UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    CZipFolder* pThis = static_cast<CZipFolder*>(psf);
+    if (!pThis)
+        return E_FAIL;
+
+    pThis->m_pDataObj = pdtobj;
+
     switch (uMsg)
     {
         case DFM_MERGECONTEXTMENU:
         {
             CComQIIDPtr<I_ID(IContextMenu)> spContextMenu(psf);
             if (!spContextMenu)
+            {
+                DPRINT1("E_NOINTERFACE\n");
                 return E_NOINTERFACE;
+            }
 
             QCMINFO *pqcminfo = (QCMINFO *)lParam;
             HRESULT hr = spContextMenu->QueryContextMenu(pqcminfo->hmenu,
@@ -332,24 +529,43 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
             pqcminfo->idCmdFirst += HRESULT_CODE(hr);
             return S_OK;
         }
+        case DFM_INVOKECOMMANDEX:
+            return E_NOTIMPL;
         case DFM_INVOKECOMMAND:
         {
+            if (wParam == DFM_CMD_DELETE)
+                return pThis->DoDeleteItems(pdtobj);
+
             CComQIIDPtr<I_ID(IContextMenu)> spContextMenu(psf);
             if (!spContextMenu)
+            {
+                DPRINT1("E_NOINTERFACE\n");
                 return E_NOINTERFACE;
+            }
 
             CMINVOKECOMMANDINFO ici = { sizeof(ici) };
-            ici.lpVerb = MAKEINTRESOURCEA(wParam);
+            ici.hwnd = hwnd;
+            ici.lpVerb = (LPSTR)wParam;
+            ici.nShow = SW_SHOWNORMAL;
+
             return spContextMenu->InvokeCommand(&ici);
         }
         case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
             return S_FALSE;
+        case DFM_WM_INITMENUPOPUP: // FIXME: Make it effective in `CDefViewBckgrndMenu`
+        {
+            // Disable [Paste] / [Paste link] menu items
+            ::EnableMenuItem((HMENU)wParam, FCIDM_SHVIEW_INSERT, MF_BYCOMMAND | MF_GRAYED);
+            ::EnableMenuItem((HMENU)wParam, FCIDM_SHVIEW_INSERTLINK, MF_BYCOMMAND | MF_GRAYED);
+            break;
+        }
     }
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CZipFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
+    m_hwnd = hwndOwner ? hwndOwner : m_hwnd;
     if ((riid == IID_IExtractIconA || riid == IID_IExtractIconW) && cidl == 1)
     {
         const ZipPidlEntry* zipEntry = _ZipFromIL(*apidl);
@@ -445,7 +661,8 @@ STDMETHODIMP CZipFolder::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
     if (!pici || (pici->cbSize != sizeof(CMINVOKECOMMANDINFO) && pici->cbSize != sizeof(CMINVOKECOMMANDINFOEX)))
         return E_INVALIDARG;
 
-    if (pici->lpVerb == MAKEINTRESOURCEA(0) || (HIWORD(pici->lpVerb) && !strcmp(pici->lpVerb, EXTRACT_VERBA)))
+    if (pici->lpVerb == MAKEINTRESOURCEA(0) ||
+        (!IS_INTRESOURCE(pici->lpVerb) && !strcmp(pici->lpVerb, EXTRACT_VERBA)))
     {
         BSTR ZipFile = m_ZipFile.AllocSysString();
         InterlockedIncrement(&g_ModuleRefCnt);
@@ -458,6 +675,13 @@ STDMETHODIMP CZipFolder::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
             return S_OK;
         }
     }
+
+    if (pici->lpVerb == MAKEINTRESOURCEA(DFM_CMD_DELETE) ||
+        (!IS_INTRESOURCE(pici->lpVerb) && !strcmp(pici->lpVerb, "delete")))
+    {
+        return DoDeleteItems(m_pDataObj);
+    }
+
     return E_INVALIDARG;
 }
 
@@ -470,10 +694,8 @@ STDMETHODIMP CZipFolder::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCm
         CStringW menuText(MAKEINTRESOURCEW(IDS_MENUITEM));
 
         if (indexMenu)
-        {
             InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-        }
-        InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_STRING, idCmd++, menuText);
+        InsertMenuW(hmenu, indexMenu++, MF_BYPOSITION | MF_STRING, idCmd++, menuText); // Command 0
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, idCmd - idCmdFirst);

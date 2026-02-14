@@ -200,6 +200,7 @@ list(APPEND SOURCE
     gdi/ntgdi/region.c
     gdi/ntgdi/stockobj.c
     gdi/ntgdi/text.c
+    gdi/ntgdi/utils.c
     gdi/ntgdi/wingl.c
     gdi/ntgdi/xformobj.c
     gdi/eng/stubs.c
