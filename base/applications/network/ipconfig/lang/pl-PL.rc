@@ -66,7 +66,7 @@ BEGIN
     IDS_DNSFLUSHSUCCESS     "Bufor programu rozpoznającego nazwy DNS został\npomyślnie wyczyszczony.\n"
     IDS_DHCPNOTCONNECTED    "Nie można wykonywać operacji na karcie %ls podczas gdy\nnośnik tej karty jest odłączony.\n"
     IDS_DHCPNOTENABLED      "Karta %ls nie jest włączona dla DHCP.\n"
-    IDS_DHCPNOADAPTER       "Operacja nie powiodła się, ponieważ żadna karta nie jest \nw stanie zezwalającym na tę operację.\n"
+    IDS_DHCPNOADAPTER       "Operacja nie powiodła się, ponieważ żadna karta nie jest\nw stanie zezwalającym na tę operację.\n"
     IDS_DHCPRELEASED        "Adres IP dla karty %ls został zwolniony.\n"
     IDS_DHCPRELEASEERROR    "Wystąpił błąd podczas zwalniania interfejsu %ls: "
     IDS_DHCPRENEWERROR      "Wystąpił błąd podczas zwalniania interfejsu %ls: "
