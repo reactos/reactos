@@ -1,6 +1,11 @@
+See original FreeType:
+
+- https://freetype.org/
+- https://sourceforge.net/projects/freetype/files/freetype2/
+
 # Technical notes on ReactOS FreeType 2.10.4
 
-- Now woff/woff2 are supported.
+- Now woff/woff2 are supported (not handled yet).
 - Reduced memory leaks.
 
 # Technical notes on ReactOS FreeType 2.10.0
