@@ -92,7 +92,7 @@ extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindName(const WCHAR *name);
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
-extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen );
+extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t *haddr, u_int8_t hlen );
 extern HANDLE InitRpc(VOID);
 extern VOID ShutdownRpc(VOID);
 extern VOID ApiInit(VOID);

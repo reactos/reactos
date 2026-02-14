@@ -72,5 +72,8 @@ if(MSVC)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(libtiff PRIVATE -Wno-unused-but-set-variable)
+    target_compile_options(libtiff PRIVATE
+        -Wno-unused-but-set-variable
+        -Wno-array-parameter
+    )
 endif()

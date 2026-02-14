@@ -104,7 +104,7 @@ typedef struct { int reg; } __wine_jmp_buf;
 #endif
 #endif
 
-DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( __wine_jmp_buf *buf, int retval );
+DECLSPEC_NORETURN extern void __cdecl __wine_longjmp( jmp_buf buf, int retval );
 DECLSPEC_NORETURN extern void __cdecl __wine_rtl_unwind( EXCEPTION_REGISTRATION_RECORD* frame, EXCEPTION_RECORD *record,
                                                          void (*target)(void) );
 
