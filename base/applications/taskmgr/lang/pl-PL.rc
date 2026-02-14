@@ -373,7 +373,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Ustawia procesowi priorytet poniżej normalnego"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Ustawia procesowi priorytet niski"
     ID_PROCESS_PAGE_PROPERTIES "Wyświetla właściwości pliku procesowego"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Otwiera lokalizacje pliku procesowego"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Otwiera lokalizację pliku procesowego"
 END
 
 STRINGTABLE
