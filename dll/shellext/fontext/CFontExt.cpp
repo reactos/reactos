@@ -79,14 +79,7 @@ WCHAR* g2s(REFCLSID iid)
 
 static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
 {
-    CStringW AttrLetters;
-    AttrLetters.LoadString(IDS_COL_ATTR_LETTERS);
-
-    if (AttrLetters.GetLength() != 5)
-    {
-        ERR("IDS_COL_ATTR_LETTERS does not contain 5 letters!\n");
-        return E_FAIL;
-    }
+    PCWSTR AttrLetters = L"RHSAC"; // Read-only, Hidden, System, Archive, Compressed
 
     UINT ich = 0;
     if ((dwAttributes & FILE_ATTRIBUTE_READONLY) && ich < cchMax)
@@ -298,7 +291,7 @@ STDMETHODIMP CFontExt::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszD
         if (pchEaten)
             *pchEaten = wcslen(lpszDisplayName);
 
-        if (pdwAttributes && *pdwAttributes)
+        if (pdwAttributes)
             *pdwAttributes &= (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY |
                                SFGAO_FILESYSTEM);
 
@@ -428,6 +421,12 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     if (!rgfInOut || !cidl || !apidl)
         return E_INVALIDARG;
 
+    if (cidl <= 0)
+    {
+        *rgfInOut = 0;
+        return S_OK;
+    }
+
     DWORD rgf = (SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_CANCOPY | SFGAO_FILESYSTEM);
     while (cidl > 0 && *apidl)
     {
@@ -443,6 +442,8 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     }
 
     *rgfInOut &= rgf;
+    *rgfInOut &= ~SFGAO_VALIDATE; // Make sure SFGAO_VALIDATE is cleared, some apps depend on that
+
     return S_OK;
 }
 
@@ -711,8 +712,8 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         if (g_FontCache)
             g_FontCache->Read();
 
-        SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts", SMTO_ABORTIFHUNG, 1000, NULL);
-        SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+        PostMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts");
+        PostMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 
         // Show successful message
         text.LoadStringW(IDS_INSTALL_OK);
