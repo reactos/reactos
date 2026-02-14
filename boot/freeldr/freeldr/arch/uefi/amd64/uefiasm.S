@@ -32,6 +32,14 @@ _exituefi:
     xor rbp, rbp
     mov rsp, qword ptr UefiServiceStack[rip]
 
+    /*
+     * Maintain the MS x64 ABI for calls into C/firmware:
+     * - 16-byte alignment at call site
+     * - 32-byte shadow space reserved by the caller
+     */
+    and rsp, -16
+    sub rsp, HEX(20)
+
     /* Call the entry routine, passing the parameters */
     mov rax, UefiExitBootServices[rip]
     call rax
@@ -57,9 +65,18 @@ _exituefi:
 // void _changestack(VOID)
 PUBLIC _changestack
 _changestack:
+    /* Preserve the current stack pointer as an argument */
     mov rax, rsp
+
+    /* Switch to the basic stack top */
     mov rsp, BasicStack[rip]
-    push rax
+
+    /* Ensure proper MS x64 ABI alignment and shadow space */
+    and rsp, -16
+    sub rsp, HEX(20)
+
+    /* ExecuteLoaderCleanly(PVOID PreviousStack) */
+    mov rcx, rax
     call ExecuteLoaderCleanly[rip]
     ret
 

@@ -329,7 +329,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 #ifdef UEFIBOOT
     extern PVOID OsLoaderBase;
     extern SIZE_T OsLoaderSize;
-    /* UEFILDR can be in above the 2GB ish range, we don't want to map the whole area */
+    /* UEFILDR can be above the 2GB-ish range, we don't want to map the whole area */
     Status = MempSetupPaging((ULONG_PTR)OsLoaderBase / PAGE_SIZE, OsLoaderSize / PAGE_SIZE, FALSE);
 #endif
 

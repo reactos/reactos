@@ -82,6 +82,7 @@ Quit:
     return 0;
 }
 
+DECLSPEC_NORETURN
 void
 ExecuteLoaderCleanly(PVOID PreviousStack)
 {
@@ -89,6 +90,7 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
     UefiServiceStack = PreviousStack;
 
     RunLoader();
+    Reboot();
     UNREACHABLE;
 }
 
