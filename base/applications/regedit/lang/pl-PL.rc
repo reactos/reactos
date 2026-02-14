@@ -51,25 +51,25 @@ Usage examples:\n\
     STRING_HELP "Wpisz ""regedit /?"" by wyświetlić pomoc.\n"
     STRING_NO_FILENAME "regedit: Brak określonego pliku.\n"
     STRING_NO_REG_KEY "regedit: Nie określono klucza rejestru do usunięcia.\n"
-    STRING_FILE_NOT_FOUND "regedit: Plik '%1' nie został znaleziony.\n"
-    STRING_CANNOT_OPEN_FILE "regedit: Niie można otworzyć pliku '%1'.\n"
-    STRING_UNHANDLED_ACTION "regedit: nieiobsługiwana akcja.\n"
+    STRING_FILE_NOT_FOUND "regedit: Nie odnaleziono pliku '%1'.\n"
+    STRING_CANNOT_OPEN_FILE "regedit: Nie można otworzyć pliku '%1'.\n"
+    STRING_UNHANDLED_ACTION "regedit: Nieobsługiwana akcja.\n"
     STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
-    STRING_INVALID_HEX "regedit: niepoprawna wartość szesnastkowa (hex).\n"
-    STRING_CSV_HEX_ERROR "regedit: nie można przekonwertować danych szesnastkowych (hexadecimal). Niepoprawna wartość została znaleziona w '%1'.\n"
-    STRING_ESCAPE_SEQUENCE "regedit: Nierozpoznawalna sekwencja wyjścia [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Niewspierany typ danych rejestru [0x%1!x!]\n"
-    STRING_UNEXPECTED_EOL "regedit: Niespodziwane zakończenie linii w '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: Linia '%1' jest nierozpoznawalna.\n"
-    STRING_SETVALUE_FAILED "regedit: nie można dodać wartości rejestru '%1' do '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: nie można otworzyć linii '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Niiewspierany typ danych rejestru [0x%1!x!] napotkany w '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: Wartość rejestru The registry value '%1' will be exported as binary data.\n"
+    STRING_INVALID_HEX "regedit: Niepoprawna wartość szesnastkowa.\n"
+    STRING_CSV_HEX_ERROR "regedit: Nie można przekonwertować danych szesnastkowych. Napotkano nieprawidłową wartość przy '%1'.\n"
+    STRING_ESCAPE_SEQUENCE "regedit: Nierozpoznana sekwencja wyjścia [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Nieobsługiwany typ danych rejestru [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: Niespodziewane zakończenie linii w '%1'.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: Nierozpoznana linia '%1'.\n"
+    STRING_SETVALUE_FAILED "regedit: Nie można dodać wartości rejestru '%1' do '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Nie można otworzyć klucza rejestru '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Nieobsługiwany typ danych rejestru [0x%1!x!] napotkany przy '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: Wartość rejestru '%1' zostanie wyeksportowana jako dane binarne.\n"
     STRING_INVALID_SYSTEM_KEY "regedit: Niepoprawny klucz systemowy [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Nie można wyeksportować  '%1'. The specified registry key was not found.\n"
-    STRING_DELETE_FAILED "regedit: nie można usunąć klucza '%1'.\n"
-    STRING_UNKNOWN_TYPE "nieznany typ"
-    STRING_INVALID_LINE_SYNTAX, "regedit: Linia posiada niepoprawną składnie.\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: Nie można wyeksportować '%1'. Nie odnaleziono określonego klucza rejestru.\n"
+    STRING_DELETE_FAILED "regedit: Nie można usunąć klucza rejestru '%1'.\n"
+    STRING_UNKNOWN_TYPE "Typ nieznany"
+    STRING_INVALID_LINE_SYNTAX, "regedit: Linia zawiera niepoprawną składnię.\n"
 END
 
 /* Menus */
@@ -315,9 +315,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_REQUIREMENTS_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 200, 66
-    RTEXT "Typ Interfejsu:", IDC_STATIC, 10, 80, 62, 8
+    RTEXT "Typ interfejsu:", IDC_STATIC, 10, 80, 62, 8
     LTEXT "", IDC_REQINTERFACETYPE, 77, 80, 76, 8
-    RTEXT "Bus Number:", IDC_STATIC, 10, 90, 62, 8        // imagine "Numer Busu"
+    RTEXT "Numer szyny:", IDC_STATIC, 10, 90, 62, 8
     LTEXT "", IDC_REQBUSNUMBER, 77, 90, 76, 8
     RTEXT "Typ Slotu:", IDC_STATIC, 10, 100, 62, 8
     LTEXT "", IDC_REQSLOTNUMBER, 77, 100, 76, 8
@@ -359,9 +359,9 @@ BEGIN
     LTEXT "", IDC_REQ_MEMORY_LENGTH, 77, 20, 76, 8
     RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_MEMORY_ALIGN, 77, 30, 76, 8
-    RTEXT "Minimalny Adres Adres:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "Minimalny adres:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MIN, 77, 40, 76, 8
-    RTEXT "Maksymalny Adres:", IDC_STATIC, 10, 50, 61, 8
+    RTEXT "Maksymalny adres:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MAX, 77, 50, 76, 8
     RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_MEMORY_SHARE, 77, 60, 76, 8
