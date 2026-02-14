@@ -1709,14 +1709,9 @@ static PTIMEZONE_ENTRY
 GetTimeZoneEntryByIndex(PSETUPDATA SetupData, DWORD dwComboIndex)
 {
     PTIMEZONE_ENTRY Entry;
-    DWORD i = 0;
+    DWORD i;
 
-    Entry = SetupData->TimeZoneListHead;
-    while (Entry != NULL && i < dwComboIndex)
-    {
-        i++;
-        Entry = Entry->Next;
-    }
+    for (Entry = SetupData->TimeZoneListHead, i = 0; Entry != NULL && i < dwComboIndex; i++, Entry = Entry->Next);
 
     return Entry;
 }
