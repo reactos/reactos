@@ -2,7 +2,7 @@
 
 ## Overview
 
-ReactOS' FreeType is a little-hacked FreeType. See also original FreeType:
+ReactOS FreeType is a slightly hacked version of FreeType. See also the original FreeType:
 
 - https://freetype.org/
 - https://sourceforge.net/projects/freetype/files/freetype2/
