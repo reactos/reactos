@@ -177,7 +177,7 @@ BEGIN
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Dodaj/Usuń programy"
-    IDS_APPWIZ_TEXT1 "Wybierz ""Aplikacje"" lub ""Aktualizacje"" by wyświetlić listę aplikacji lub aktualizacji w Twoim systemie."
+    IDS_APPWIZ_TEXT1 "Wybierz ""Aplikacje"" lub ""Uaktualnienia"" by wyświetlić listę aplikacji lub aktualizacji w Twoim systemie."
     IDS_APPWIZ_TEXT2 "Aby usunąć program lub zmodyfikować jego komponenty, wybierz program z listy i kliknij ""Odinstaluj"" lub ""Modyfikuj""."
 END
 
