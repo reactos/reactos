@@ -1,3 +1,8 @@
+# Technical notes on ReactOS FreeType 2.10.4
+
+- Now woff/woff2 are supported.
+- Reduced memory leaks.
+
 # Technical notes on ReactOS FreeType 2.10.0
 
 - FreeType in ReactOS is a static library. ftfd.dll (win32ss/drivers/font/ftfd) actually uses FreeType.

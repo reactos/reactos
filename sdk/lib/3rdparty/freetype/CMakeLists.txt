@@ -1,5 +1,5 @@
 
-  set(SOURCES
+set(SOURCES
     src/autofit/autofit.c
     src/base/ftbase.c
     src/base/ftbbox.c
@@ -38,6 +38,7 @@
     src/type1/type1.c
     src/type42/type42.c
     src/winfonts/winfnt.c
+
     src/base/ftsystem.c
     builds/windows/ftdebug.c
 )
@@ -45,10 +46,7 @@
 add_library(freetype STATIC ${SOURCES})
 target_compile_definitions(freetype PRIVATE FT2_BUILD_LIBRARY)
 target_compile_definitions(freetype PRIVATE _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
-
-target_include_directories(freetype PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/freetype/config)
+target_include_directories(freetype PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND (ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64"))
     # error C4312: 'type cast': conversion from 'unsigned long' to 'void *' of greater size
