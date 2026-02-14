@@ -20,12 +20,8 @@
 #include FT_SFNT_NAMES_H
 #include FT_SYNTHESIS_H
 #include FT_TRUETYPE_IDS_H
-
-#ifndef FT_INTERNAL_INTERNAL_H
-    #define  FT_INTERNAL_INTERNAL_H  <freetype/internal/internal.h>
-    #include FT_INTERNAL_INTERNAL_H
-#endif
-#include FT_INTERNAL_TRUETYPE_TYPES_H
+#include FT_MODULE_H
+#include <freetype/internal/ftcalc.h> // INT_TO_FIXED
 
 #include <gdi/eng/floatobj.h>
 #include "font.h"
