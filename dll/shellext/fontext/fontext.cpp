@@ -440,10 +440,7 @@ HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj)
 {
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
-    {
-        ERR("Invalid IDataObject\n");
         return E_FAIL;
-    }
 
     for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
     {
