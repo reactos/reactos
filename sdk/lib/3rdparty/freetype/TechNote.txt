@@ -1,14 +1,20 @@
-See original FreeType:
+# Technical notes on ReactOS FreeType
+
+## Overview
+
+ReactOS' FreeType is a little-hacked FreeType. See also original FreeType:
 
 - https://freetype.org/
 - https://sourceforge.net/projects/freetype/files/freetype2/
 
-# Technical notes on ReactOS FreeType 2.10.4
+## ReactOS FreeType 2.10.4
 
 - Now woff/woff2 are supported (not handled yet).
 - Reduced memory leaks.
+- rm -fr sdk/lib/3rdparty/freetype/src/gxvalid
+- rm -fr sdk/lib/3rdparty/freetype/src/otvalid
 
-# Technical notes on ReactOS FreeType 2.10.0
+## ReactOS FreeType 2.10.0
 
 - FreeType in ReactOS is a static library. ftfd.dll (win32ss/drivers/font/ftfd) actually uses FreeType.
 - As usual for 3rd party libraries, the parts that differ are wrapped by #ifdef __REACTOS__ ... #endif.
