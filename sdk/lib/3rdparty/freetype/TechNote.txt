@@ -9,7 +9,7 @@ ReactOS FreeType is a slightly hacked version of FreeType. See also the original
 
 ## ReactOS FreeType 2.10.4
 
-- Now woff/woff2 are supported (not handled yet).
+- Now woff/woff2 formats are supported (not handled yet).
 - Reduced memory leaks.
 - rm -fr sdk/lib/3rdparty/freetype/src/gxvalid
 - rm -fr sdk/lib/3rdparty/freetype/src/otvalid
