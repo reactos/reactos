@@ -538,9 +538,8 @@ HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
         return hr;
     }
 
-    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts",
-                        SMTO_ABORTIFHUNG, 1000, NULL);
-    SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+    PostMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts");
+    PostMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     return S_OK;
 }
 
