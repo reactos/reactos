@@ -31,6 +31,12 @@ Is64BitSystem(VOID)
 #endif
 }
 
+#ifdef _WIN64
+#define IsWow64() FALSE
+#else
+#define IsWow64() Is64BitSystem()
+#endif
+
 static
 ULONG
 SizeOfMdl(VOID)
@@ -128,7 +134,7 @@ START_TEST(NtReadFile)
     ok_hex(Status, STATUS_SUCCESS);
 
     /* non-cached, too large -- fails to allocate MDL
-     * Note: this returns STATUS_SUCCESS on Win7 -- higher MDL size limit */
+     * Note: this returns STATUS_SUCCESS on Vista+ -- higher MDL size limit */
     Status = NtReadFile(FileHandle,
                         NULL,
                         NULL,
@@ -138,7 +144,34 @@ START_TEST(NtReadFile)
                         LargeMdlMaxDataSize + PAGE_SIZE,
                         &ByteOffset,
                         NULL);
-    ok_hex(Status, STATUS_INSUFFICIENT_RESOURCES);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        ok_hex(Status, STATUS_SUCCESS);
+    else
+        ok_hex(Status, STATUS_INSUFFICIENT_RESOURCES);
+
+    /* Invalid buffer address */
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatus,
+                        LongToPtr(-1),
+                        PAGE_SIZE,
+                        &ByteOffset,
+                        NULL);
+    ok_hex(Status, STATUS_ACCESS_VIOLATION);
+
+    /* Buffer probing fails */
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatus,
+                        Buffer,
+                        2 * LargeMdlMaxDataSize,
+                        &ByteOffset,
+                        NULL);
+    ok_hex(Status, STATUS_ACCESS_VIOLATION); // Different to NtWriteFile
 
     /* non-cached, unaligned -- fails with invalid parameter */
     Status = NtReadFile(FileHandle,
@@ -150,7 +183,7 @@ START_TEST(NtReadFile)
                         LargeMdlMaxDataSize + 1,
                         &ByteOffset,
                         NULL);
-    ok_hex(Status, STATUS_INVALID_PARAMETER);
+    ok_hex(Status, STATUS_INVALID_PARAMETER); // Different to NtWriteFile
 
     DispositionInfo.DeleteFile = TRUE;
     Status = NtSetInformationFile(FileHandle,

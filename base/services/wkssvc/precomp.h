@@ -17,6 +17,7 @@
 #include <ntsecapi.h>
 #include <ntmsv1_0.h>
 //#include <ntstatus.h>
+#include <ndk/exfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>

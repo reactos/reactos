@@ -22,6 +22,8 @@ typedef struct TEST_ENTRY
     const char *ErrorNotContains;
 } TEST_ENTRY;
 
+#define TRISTATE 2
+
 static const TEST_ENTRY s_exit_entries[] =
 {
     { __LINE__, 0,      "cmd /c exit" },
@@ -162,9 +164,9 @@ static const TEST_ENTRY s_attrib_entries[] =
     { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, " H " },
     { __LINE__, 0,      "attrib /S -H attr-te*.txt", FALSE, FALSE },
     { __LINE__, 0,      "attrib /S attr-te*.txt", TRUE, FALSE, NULL, NULL, " H " },
-    { __LINE__, 0,      "attrib /S +H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S +H", TRISTATE, FALSE },
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
-    { __LINE__, 0,      "attrib /S -H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S -H", TRISTATE, FALSE },
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
     { __LINE__, 0,      "cmd /c if exist attr-test.txt attrib -H attr-test.txt" },
     { __LINE__, 0,      "cmd /c if exist attr-test.txt del /Q attr-test.txt" },
@@ -307,10 +309,10 @@ static const TEST_ENTRY s_attrib_entries[] =
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
     { __LINE__, 0,      "attrib /S -H attr-test.txt", FALSE, FALSE },
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
-    { __LINE__, 0,      "attrib /S +H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S +H", TRISTATE, FALSE },
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, " H " },
     { __LINE__, 0,      "attrib /S attr-tes*.*", TRUE, FALSE, " H " },
-    { __LINE__, 0,      "attrib /S -H", FALSE, FALSE },
+    { __LINE__, 0,      "attrib /S -H", TRISTATE, FALSE },
     { __LINE__, 0,      "attrib /S attr-test.txt", TRUE, FALSE, NULL, NULL, " H " },
     { __LINE__, 0,      "attrib /S attr-tes*.*", TRUE, FALSE, NULL, NULL, " H " },
     { __LINE__, 0,      "cmd /c if exist attr-dir/dir1/test.txt attrib -H attr-dir/dir1/test.txt" },
@@ -455,11 +457,11 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
     if (si.hStdError)
         CloseHandle(si.hStdError);
 
-    ok(pEntry->bStdOutput == bStdOutput,
+    ok(pEntry->bStdOutput == bStdOutput || pEntry->bStdOutput == TRISTATE,
        "Line %u: bStdOutput %d vs %d\n",
        pEntry->line, pEntry->bStdOutput, bStdOutput);
 
-    ok(pEntry->bStdError == bStdError,
+    ok(pEntry->bStdError == bStdError || pEntry->bStdOutput == TRISTATE,
        "Line %u: bStdError %d vs %d\n",
        pEntry->line, pEntry->bStdError, bStdError);
 

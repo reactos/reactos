@@ -1,0 +1,66 @@
+/*
+ * FILE:        base/applications/network/route/lang/en-US.rc
+ * PURPOSE:     English translations for ReactOS Route Command
+ * TRANSLATORS:
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE1 "\n\
+Manipulates the network routing tables.\n\n\
+ROUTE [-f] [-p] command [destination]\n\
+                [MASK netmask] [gateway] [METRIC metric]\n\n\
+  -f           Cleans the routing table of all gateway entries prior to\n\
+               executing the command. Can be used with the ADD and\n\
+               DELETE command.\n\n\
+  -p           Makes a route persistent between boots of the system. By\n\
+               default, routes are not persistent when the system is\n\
+               restarted. Can be used with the ADD command.\n\n\
+  command      One of the following options:\n\
+                 PRINT   Prints the routes.\n\
+                 ADD     Add a new route.\n\
+                 DELETE  Deletes a route.\n\
+  destination  Specifies the Host.\n\
+  netmask      Specifies a network mask value for the route entry.\n\
+               If not specified, it defaults to 255.255.255.255.\n\
+  gateway      Specifies the Gateway.\n\
+  metric       Specifies the Metric, ie. cost for the destination.\n\
+  interface    Specifies the interface number for the specifies route.\n"
+
+    IDS_USAGE2 "\n\
+route add usage:\n\
+route add <target> [mask <mask>] <gw> [metric <m>]\n\
+  Adds a route to the IP route table.\n\
+  <target> is the network or host to add a route to.\n\
+  <mask>   is the netmask to use (autodetected if unspecified)\n\
+  <gw>     is the gateway to use to access the network\n\
+  <m>      is the metric to use (lower is preferred)\n"
+
+    IDS_USAGE3 "\n\
+Examples:\n\
+    > route PRINT               ... prints all routes\n\
+    > route PRINT 156*          ... prints all routes that match 156*\n\
+    > route ADD 156.0.0.0 MASK 255.0.0.0 156.0.1.12 METRIC 5\n\
+             destination^       netmask^   gateway^  metric^\n\n\
+    > route DELETE 156.0.0.0    ... deletes a route\n\
+    > route DELETE 156*         ... deletes all routes that match 156*\n"
+
+    IDS_ROUTE_ADD_ERROR "Route addition failed\n"
+    IDS_ROUTE_DEL_ERROR "Route deletion failed\n"
+    IDS_ROUTE_ENUM_ERROR "Route enumeration failed\n"
+    IDS_SEPARATOR "===========================================================================\n"
+    IDS_INTERFACE_LIST "Interface List\n"
+    IDS_INTERFACE_ENTRY "0x%-2lx ........................... %s\n"
+    IDS_ETHERNET_ENTRY "0x%-2lx ...%s...... %s\n"
+    IDS_IPV4_ROUTE_TABLE "\nIPv4 Route Table\n"
+    IDS_ACTIVE_ROUTES "Active Routes:\n"
+    IDS_ROUTES_ENTRY "  %15s  %15s  %15s  %15s  %6ld\n"
+    IDS_PERSISTENT_ROUTES "Persistent Routes:\n"
+    IDS_PERSISTENT_ENTRY "  %15s  %15s  %15s  %8s\n"
+    IDS_DEFAULT_GATEWAY "Default Gateway:%18s\n"
+    IDS_ROUTES_HEADER "Network Destination        Netmask          Gateway        Interface  Metric\n"
+    IDS_PERSISTENT_HEADER "Network Destination        Netmask          Gateway    Metric\n"
+    IDS_NONE "  None\n"
+END

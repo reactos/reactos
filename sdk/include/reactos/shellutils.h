@@ -622,6 +622,54 @@ struct CCoInitBase
 typedef CCoInitBase<CoInitialize, CoUninitialize> CCoInit;
 typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
 
+class CObjectWithSiteBase :
+    public IObjectWithSite
+{
+public:
+    IUnknown* m_pUnkSite;
+
+    CObjectWithSiteBase() : m_pUnkSite(NULL) {}
+    virtual ~CObjectWithSiteBase() { SetSite(NULL); }
+
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    {
+#if defined(__WINE_SHLWAPI_H) && !defined(NO_SHLWAPI)
+        IUnknown_Set(&m_pUnkSite, pUnkSite);
+#else
+        IUnknown *punkOrg = m_pUnkSite;
+        if (punkOrg)
+            punkOrg->Release();
+        m_pUnkSite = pUnkSite;
+        if (pUnkSite)
+            pUnkSite->AddRef();
+#endif
+        return S_OK;
+    }
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
+    {
+        *ppvSite = NULL;
+        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
+    }
+};
+
+#if defined(_INC_SHLWAPI) && !defined(NO_SHLWAPI)
+struct CScopedSetObjectWithSite
+{
+    IUnknown *m_pObj;
+    explicit CScopedSetObjectWithSite(IUnknown *pObj, IUnknown *pSite) : m_pObj(pObj)
+    {
+        if (pSite)
+            IUnknown_SetSite(pObj, pSite);
+        else
+            m_pObj = NULL;
+    }
+    ~CScopedSetObjectWithSite()
+    {
+        IUnknown_SetSite(m_pObj, NULL);
+    }
+};
+#endif
 #endif /* __cplusplus */
 
 #define S_LESSTHAN 0xffff
@@ -629,11 +677,22 @@ typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+#ifdef _UNDOCSHELL_H
+/* The SEE_MASK_* defines that are undocumented, are defined in reactos/undocshell.h */
 #define SEE_CMIC_COMMON_BASICFLAGS (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_UNICODE | \
                                     SEE_MASK_NO_CONSOLE | SEE_MASK_FLAG_NO_UI | SEE_MASK_FLAG_SEPVDM | \
                                     SEE_MASK_FLAG_LOG_USAGE | SEE_MASK_NOZONECHECKS)
 #define SEE_CMIC_COMMON_FLAGS      (SEE_CMIC_COMMON_BASICFLAGS | SEE_MASK_HOTKEY | SEE_MASK_ICON | \
                                     SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE)
+
+#define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
+static inline UINT SeeFlagsToCmicFlags(UINT flags)
+{
+    if ((flags & (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)) == SEE_MASK_CLASSNAME)
+        flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
+    return flags & SEE_CMIC_COMMON_FLAGS;
+}
+#endif // _UNDOCSHELL_H
 
 static inline BOOL SHELL_IsContextMenuMsg(UINT uMsg)
 {

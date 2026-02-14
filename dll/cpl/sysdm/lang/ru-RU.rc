@@ -323,10 +323,34 @@ BEGIN
     DEFPUSHBUTTON "ОК", IDOK, 106, 140, 54, 15
 END
 
+IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
+CAPTION "Визуальные эффекты"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   LTEXT "Выберите настройки, которые вы хотите использовать для внешнего вида и производительности ReactOS на этом компьютере.", IDC_STATIC, 7, 6, 208, 27
+   CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
+END
+
+IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
+CAPTION "Дополнительно"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   GROUPBOX "Распределение времени процессора", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "Оптимизировать работу:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Программ", IDC_CPUCLIENT, 14, 36, 46, 12
+   AUTORADIOBUTTON "&Служб, работающих в фоновом режиме", IDC_CPUSERVER, 59, 36, 150, 14
+   GROUPBOX "Виртуальная память", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "Файл подкачки - это область на жёстком диске, используемая для хранения страниц виртуальной памяти.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Изменить...", IDC_CHANGESWAP, 163, 97, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Система"
     IDS_CPLSYSTEMDESCRIPTION "Просмотр информации о вашем компьютере и изменение различных системных и аппаратных параметров."
+    IDS_PERFORMANCEOPTIONS "Параметры быстродействия"
     IDS_MEGABYTE "Мб ОЗУ"
     IDS_GIGABYTE "Гб ОЗУ"
     IDS_TERABYTE "Тб ОЗУ"

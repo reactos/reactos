@@ -768,7 +768,7 @@ SnapWindow(HWND hWnd)
     }
 
     hbmOld = NtGdiSelectBitmap(hdcMem, hbm);
-    NtGdiBitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY, 0, 0);
+    NtGdiBitBlt(hdcMem, 0, 0, cx, cy, hdc, 0, 0, SRCCOPY, CLR_INVALID, 0);
     NtGdiSelectBitmap(hdcMem, hbmOld);
     IntGdiDeleteDC(hdcMem, FALSE);
 
@@ -821,12 +821,17 @@ IntLanguageToggle(
     _In_ BOOL bSameLang,
     _In_ INT nKeyState)
 {
-    PWND pWnd = pFocusQueue->spwndFocus;
-    HWND hWnd;
-    WPARAM wParam = 0;
+    PWND pWnd;
     PTHREADINFO pti;
     PKL pkl;
+    WPARAM wParam = 0;
 
+    if (!pFocusQueue)
+    {
+        ERR("IntLanguageToggle(): NULL pFocusQueue\n");
+        return;
+    }
+    pWnd = pFocusQueue->spwndFocus;
     if (!pWnd)
         pWnd = pFocusQueue->spwndActive;
     if (!pWnd)
@@ -843,8 +848,7 @@ IntLanguageToggle(
     if (gSystemFS & pkl->dwFontSigs)
         wParam |= INPUTLANGCHANGE_SYSCHARSET;
 
-    hWnd = UserHMGetHandle(pWnd);
-    UserPostMessage(hWnd, WM_INPUTLANGCHANGEREQUEST, wParam, (LPARAM)pkl->hkl);
+    UserPostMessage(UserHMGetHandle(pWnd), WM_INPUTLANGCHANGEREQUEST, wParam, (LPARAM)pkl->hkl);
 }
 
 /* Check Language Toggle by [Left Alt]+Shift or Ctrl+Shift */

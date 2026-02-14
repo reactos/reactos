@@ -101,6 +101,38 @@ static bool CLSIDPrefix(T& String, CLSID& Clsid)
     return false;
 }
 
+struct CLoggingServiceProvider : public IServiceProvider
+{
+    HRESULT WINAPI QueryInterface(REFIID riid, void **ppv) override
+    {
+        static const QITAB c_tab[] =
+        {
+            QITABENT(CLoggingServiceProvider, IServiceProvider),
+            { NULL }
+        };
+        return ::QISearch(this, c_tab, riid, ppv);
+    }
+    ULONG WINAPI AddRef() override { return 1; }
+    ULONG WINAPI Release() override { return 1; }
+
+    HRESULT WINAPI QueryService(REFGUID rcls, REFIID riid, void **ppv) override
+    {
+        WCHAR szCls[42], szIid[42];
+        wprintf(L"INFO: QS %ls:%ls\n",
+                StringFromGUID2(rcls, szCls, _countof(szCls)) ? szCls : L"?",
+                StringFromGUID2(riid, szIid, _countof(szIid)) ? szIid : L"?");
+        if (ppv)
+            *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+};
+
+static IServiceProvider* GetLoggingServiceProvider()
+{
+    static CLoggingServiceProvider g_SP;
+    return &g_SP;
+}
+
 static HRESULT GetUIObjectOfAbsolute(LPCITEMIDLIST pidl, REFIID riid, void** ppv)
 {
     CComPtr<IShellFolder> shellFolder;
@@ -675,6 +707,10 @@ int wmain(int argc, WCHAR **argv)
                 {
                     if (argv[n][0] != '-' && argv[n][0] != '/')
                         break;
+                    else if (isCmd(argc, argv, n, L"MIN"))
+                        sei.nShow = SW_SHOWMINNOACTIVE;
+                    else if (isCmd(argc, argv, n, L"MAX"))
+                        sei.nShow = SW_SHOWMAXIMIZED;
                     else if (isCmd(argc, argv, n, L"INVOKE"))
                         sei.fMask |= SEE_MASK_INVOKEIDLIST;
                     else if (isCmd(argc, argv, n, L"NOUI"))
@@ -683,6 +719,22 @@ int wmain(int argc, WCHAR **argv)
                         sei.fMask |= SEE_MASK_ASYNCOK ;
                     else if (isCmd(argc, argv, n, L"NOASYNC"))
                         sei.fMask |= SEE_MASK_NOASYNC;
+                    else if (isCmd(argc, argv, n, L"NOCONSOLE"))
+                        sei.fMask |= SEE_MASK_NO_CONSOLE;
+                    else if (isCmd(argc, argv, n, L"1000"))
+                        sei.fMask |= 0x00001000; // Unknown flag
+                    else if (isCmd(argc, argv, n, L"NOHOOKS"))
+                        sei.fMask |= 0x00002000;
+                    else if (isCmd(argc, argv, n, L"SITE"))
+                    {
+                        sei.fMask |= 0x08000000; // SEE_MASK_FLAG_HINST_IS_SITE
+                        sei.hInstApp = (HINSTANCE)GetLoggingServiceProvider();
+                    }
+                    else if (isCmd(argc, argv, n, L"FILL"))
+                    {
+                        sei.hInstApp = (HINSTANCE)UlongToHandle(0xCAFE);
+                        sei.hProcess = UlongToHandle(0xDEADF00D);
+                    }
                     else
                         wprintf(L"WARN: Ignoring switch %s\n", argv[n]);
                 }

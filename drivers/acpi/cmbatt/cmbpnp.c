@@ -678,8 +678,13 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
     FdoExtension->Tag = 0;
     FdoExtension->InterruptTime = KeQueryInterruptTime();
-    FdoExtension->TripPointSet = CmBattSetTripPpoint(FdoExtension, 0) !=
+    FdoExtension->TripPointSet = CmBattSetTripPoint(FdoExtension, 0) !=
                                  STATUS_OBJECT_NAME_NOT_FOUND;
+    if (!FdoExtension->TripPointSet)
+    {
+        DbgPrint("**** Battery ID 0x%x (PDO: 0x%p, FDO: 0x%p) doesn't support _BTP method\n",
+                 FdoExtension->DeviceId, DeviceObject, FdoDeviceObject);
+    }
 
     /* Setup the battery miniport information structure */
     RtlZeroMemory(&MiniportInfo, sizeof(MiniportInfo));

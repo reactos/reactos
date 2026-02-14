@@ -116,7 +116,7 @@ BEGIN
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
     AUTOCHECKBOX "&Bu bir taşınabilir bilgisayardır", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Dock Durumu Bilinmiyor", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Bi&lgisayar Dock İstasyonuna Yerleştirilniş", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "Bi&lgisayar Dock İstasyonuna Yerleştirilmiş", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "Bilgi&sayar Dock İstasyonuna Yerleştirilmemiş", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Donanım Profilleri Seçimi", IDC_STATIC, 10, 138, 192, 42
     AUTOCHECKBOX "&ReactOS başladığında bu profili bir seçenek olarak her zaman dahil et", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
@@ -325,10 +325,34 @@ BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 106, 140, 54, 15
 END
 
+IDD_VISUALEFFECTS DIALOGEX 6, 18, 227, 204
+CAPTION "Visual Effects"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   LTEXT "Select the settings you want to use for the appearance and performance of ReactOS on this computer.", IDC_STATIC, 7, 6, 208, 18
+   CONTROL "", IDC_TREE, "SysTreeView32", TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 32, 213, 168
+END
+
+IDD_ADVANCEDPERF DIALOGEX 6, 18, 227, 128
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+   GROUPBOX "CPU scheduling", IDC_STATIC, 7, 8, 213, 46
+   LTEXT "Adjust for best performance of:", IDC_STATIC, 14, 23, 199, 8
+   AUTORADIOBUTTON "&Programs", IDC_CPUCLIENT, 14, 36, 75, 12
+   AUTORADIOBUTTON "Background &services", IDC_CPUSERVER, 96, 36, 85, 12
+   GROUPBOX "Virtual memory", IDC_STATIC, 7, 60, 213, 57
+   LTEXT "A paging file is an area on the hard disk that ReactOS uses as if it were RAM.", IDC_STATIC, 14, 74, 199, 16
+   PUSHBUTTON "&Change...", IDC_CHANGESWAP, 163, 97, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
     IDS_CPLSYSTEMDESCRIPTION "Bilgisayar hakkında bilgi görüntüler ve türlü sistem ve donanım ayarlarını değiştirir."
+    IDS_PERFORMANCEOPTIONS "Performance Options"
     IDS_MEGABYTE "MB Bellek"
     IDS_GIGABYTE "GB Bellek"
     IDS_TERABYTE "TB Bellek"
@@ -371,5 +395,5 @@ BEGIN
     IDS_HWPROFILE_WARNING "Uyarı"
     IDS_ENVIRONMENT_WARNING "Yapılan tüm değişiklikler atılacak ve değişkenin değeri metin olarak düzenlenecektir."
     IDS_ENVIRONMENT_WARNING_TITLE "Sistem özellikleri"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_FILE_BROWSE_FILTER "Tüm Dosyalar (*.*)\0*.*\0"
 END

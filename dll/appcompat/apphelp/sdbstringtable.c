@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS Application compatibility module
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Shim database string table builder
- * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2025 Mark Jansen <mark.jansen@reactos.org>
  */
 
 #if !defined(SDBWRITE_HOSTTOOL)

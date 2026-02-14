@@ -273,7 +273,7 @@ BEGIN
     BEGIN
         MENUITEM "種類別デバイス(&E)",           IDM_DEVBYTYPE
         MENUITEM "接続別デバイス(&V)",           IDM_DEVBYCONN
-        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE, GRAYED
+        MENUITEM "種類別リソース(&Y)",           IDM_RESBYTYPE
         MENUITEM "接続別リソース(&N)",           IDM_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "隠しデバイスを表示(&W)",       IDM_SHOWHIDDEN
@@ -312,6 +312,14 @@ BEGIN
   IDS_TOOLTIP_DISABLE       "無効にする"
   IDS_TOOLTIP_UPDATE        "更新ドライバ ソフトウェア"
   IDS_TOOLTIP_UNINSTALL     "アンインストール"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_TYPE_MEMORY           "Memory"
+  IDS_TYPE_PORT             "Input/output (IO)"
+  IDS_TYPE_DMA              "Direct Memory Access (DMA)"
+  IDS_TYPE_IRQ              "Interrupt request (IRQ)"
 END
 
 /* Hints */

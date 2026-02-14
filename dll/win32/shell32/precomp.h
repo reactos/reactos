@@ -94,6 +94,7 @@
 #include "folders/CPrinterFolder.h"
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
+#include "folders/CRecycleBinFolderViewCB.h"
 #include "droptargets/CexeDropHandler.h"
 #include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
@@ -131,6 +132,9 @@ extern const GUID SHELL32_AdvtShortcutComponent;
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
+
 extern inline
 BOOL
 CALLBACK
@@ -166,8 +170,6 @@ PropSheetPageLifetimeCallback(HWND hWnd, UINT uMsg, PROPSHEETPAGEW *pPSP)
     return TRUE;
 }
 
-EXTERN_C HRESULT WINAPI
-SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
 HRESULT
 SHELL32_ShowPropertiesDialog(IDataObject *pdtobj);
 HRESULT
@@ -179,21 +181,39 @@ SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO);
 HRESULT
 SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl);
 
+typedef HDSA HDCMA; // DynamicContextMenuArray
+typedef struct _DCMENTRY
+{
+    IContextMenu *pCM;
+    UINT idCmdFirst;
+    UINT idCmdLast;
+} DCMENTRY;
+#define DCMA_Create() ( (HDCMA)DSA_Create(sizeof(DCMENTRY), 4) )
+void DCMA_Destroy(HDCMA hDCMA);
+#define DCMA_GetEntry(hDCMA, iItem) ( (DCMENTRY*)DSA_GetItemPtr((HDSA)(hDCMA), (iItem)) )
+HRESULT DCMA_InvokeCommand(HDCMA hDCMA, CMINVOKECOMMANDINFO *pICI);
+
+UINT
+DCMA_InsertMenuItems(
+    _In_ HDCMA hDCMA,
+    _In_ HDCIA hDCIA,
+    _In_opt_ LPCITEMIDLIST pidlFolder,
+    _In_opt_ IDataObject *pDO,
+    _In_opt_ HKEY *pKeys,
+    _In_opt_ UINT nKeys,
+    _In_ QCMINFO *pQCMI,
+    _In_opt_ UINT fCmf,
+    _In_opt_ IUnknown *pUnkSite);
+
 HRESULT
 SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg);
+PCSTR
+MapFcidmCmdToVerb(_In_ UINT_PTR CmdId);
 UINT
 MapVerbToDfmCmd(_In_ LPCSTR verba);
 UINT
 GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
 #define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHRunControlPanel((cpl), (hwnd))
-
-#define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
-static inline UINT SeeFlagsToCmicFlags(UINT flags)
-{
-    if (flags & SEE_MASK_CLASSNAME)
-        flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
-    return flags & SEE_CMIC_COMMON_FLAGS;
-}
 
 
 // CStubWindow32 --- The owner window of file property sheets.
@@ -226,13 +246,6 @@ public:
 
 void PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
 
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags);
-
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
 DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);
 BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid);
@@ -262,6 +275,13 @@ SHELL_GetUIObjectOfAbsoluteItem(
     _In_opt_ HWND hWnd,
     _In_ PCIDLIST_ABSOLUTE pidl,
     _In_ REFIID riid, _Out_ void **ppvObj);
+
+HRESULT
+SHELL_DisplayNameOf(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags,
+    _Out_ PWSTR *ppStr);
 
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);

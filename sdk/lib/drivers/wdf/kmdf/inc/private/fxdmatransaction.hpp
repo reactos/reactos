@@ -1008,7 +1008,7 @@ protected:
 
     static
     IO_ALLOCATION_ACTION
-    STDCALL
+    NTAPI
     _AdapterControl(
         __in PDEVICE_OBJECT  DeviceObject,
         __in PIRP            Irp,

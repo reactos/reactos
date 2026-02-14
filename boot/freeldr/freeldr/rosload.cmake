@@ -35,12 +35,6 @@ if(ARCH STREQUAL "i386")
         ntldr/arch/i386/winldr.c
         ntldr/headless.c)
 
-    if(SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox")
-        # These machine types require built-in bitmap font
-        list(APPEND ROSLOAD_SOURCE
-            arch/vgafont.c)
-    endif()
-
     list(APPEND ROSLOAD_ASM_SOURCE
         arch/i386/drvmap.S
         arch/i386/linux.S)
@@ -93,7 +87,7 @@ add_importlibs(rosload freeldr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(rosload PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(rosload gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)

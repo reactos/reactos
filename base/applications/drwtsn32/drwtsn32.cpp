@@ -117,7 +117,7 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
     case EXCEPTION_DEBUG_EVENT:
         if (evt.u.Exception.dwFirstChance)
         {
-            switch(evt.u.Exception.ExceptionRecord.ExceptionCode)
+            switch((NTSTATUS)evt.u.Exception.ExceptionRecord.ExceptionCode)
             {
             case EXCEPTION_BREAKPOINT:
                 if (!data.FirstBPHit)

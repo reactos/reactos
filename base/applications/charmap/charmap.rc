@@ -21,6 +21,9 @@ IDI_ICON ICON "res/charmap.ico"
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
+#ifdef LANGUAGE_BN_IN
+    #include "lang/bn-IN.rc"
+#endif
 #ifdef LANGUAGE_CA_ES
     #include "lang/ca-ES.rc"
 #endif
@@ -47,6 +50,9 @@ IDI_ICON ICON "res/charmap.ico"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_HR_HR
+    #include "lang/hr-HR.rc"
 #endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"

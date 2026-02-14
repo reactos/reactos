@@ -34,6 +34,7 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 typedef struct tagDISKCONTEXT
 {
     UCHAR DriveNumber;
+    BOOLEAN IsFloppy;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
     ULONGLONG SectorCount;
@@ -77,6 +78,8 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     Information->EndingAddress.QuadPart   = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
     Information->CurrentAddress.QuadPart  = Context->SectorNumber * Context->SectorSize;
 
+    Information->Type = (Context->IsFloppy ? FloppyDiskPeripheral : DiskPeripheral);
+
     return ESUCCESS;
 }
 
@@ -84,6 +87,7 @@ static ARC_STATUS
 DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
+    CONFIGURATION_TYPE DriveType;
     UCHAR DriveNumber;
     ULONG DrivePartition, SectorSize;
     ULONGLONG SectorOffset = 0;
@@ -100,19 +104,16 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (!DissectArcPath(Path, NULL, &DriveNumber, &DrivePartition))
         return EINVAL;
 
-    if (DrivePartition == 0xff)
+    DriveType = DiskGetConfigType(DriveNumber);
+    if (DriveType == CdromController)
     {
         /* This is a CD-ROM device */
         SectorSize = 2048;
     }
     else
     {
-        /*
-         * This is either a floppy disk device (DrivePartition == 0) or
-         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF)
-         * but it doesn't matter which one because they both have 512 bytes
-         * per sector.
-         */
+        /* This is either a floppy disk or a hard disk device, but it doesn't
+         * matter which one because they both have 512 bytes per sector */
         SectorSize = 512;
     }
 
@@ -145,6 +146,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         return ENOMEM;
 
     Context->DriveNumber = DriveNumber;
+    Context->IsFloppy = (DriveType == FloppyDiskPeripheral);
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
     Context->SectorCount = SectorCount;
@@ -399,23 +401,6 @@ EnumerateHarddisks(OUT PBOOLEAN BootDriveReported)
     return DiskCount;
 }
 
-// FIXME: Copied from pcdisk.c
-// Actually this function is REALLY PC-specific!!
-static BOOLEAN
-DiskIsDriveRemovable(UCHAR DriveNumber)
-{
-    /*
-     * Hard disks use drive numbers >= 0x80 . So if the drive number
-     * indicates a hard disk then return FALSE.
-     * 0x49 is our magic ramdisk drive, so return FALSE for that too.
-     */
-    if ((DriveNumber >= 0x80) || (DriveNumber == 0x49))
-        return FALSE;
-
-    /* The drive is a floppy diskette so return TRUE */
-    return TRUE;
-}
-
 static BOOLEAN
 DiskGetBootPath(BOOLEAN IsPxe)
 {
@@ -474,23 +459,25 @@ PcInitializeBootDevices(VOID)
 {
     UCHAR DiskCount;
     BOOLEAN BootDriveReported = FALSE;
-    ULONG i;
+    CONFIGURATION_TYPE DriveType;
 
     DiskCount = EnumerateHarddisks(&BootDriveReported);
 
     /* Initialize FrLdrBootPath, the boot path we're booting from (the "SystemPartition") */
     DiskGetBootPath(PxeInit());
 
-    /* Add it, if it's a floppy or cdrom */
+    /* Add it, if it's a floppy or CD-ROM */
+    DriveType = DiskGetConfigType(FrldrBootDrive);
     if ((FrldrBootDrive >= FIRST_BIOS_DISK && !BootDriveReported) ||
-        DiskIsDriveRemovable(FrldrBootDrive))
+        (DriveType == FloppyDiskPeripheral || DriveType == CdromController))
     {
-        /* TODO: Check if it's really a CDROM drive */
+        /* TODO: Check if it's really a CD-ROM drive */
 
         PMASTER_BOOT_RECORD Mbr;
         PULONG Buffer;
         ULONG Checksum = 0;
         ULONG Signature;
+        ULONG i;
 
         /* Read the MBR */
         if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, DiskReadBuffer))

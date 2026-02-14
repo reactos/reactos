@@ -271,7 +271,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORK "Réseaux"
-    IDS_CONNECTIONS "Connections réseau"
+    IDS_CONNECTIONS "Connexions réseau"
     IDS_DRIVES "Lecteurs"
     IDS_SEARCH_COMPUTER "Rechercher un ordinateur..."
     IDS_SETTINGS_MENU "Paramètres du menu"

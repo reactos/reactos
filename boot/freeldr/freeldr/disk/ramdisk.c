@@ -12,6 +12,9 @@
 #include <freeldr.h>
 #include "../ntldr/ntldropts.h"
 
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(DISK);
+
 /* GLOBALS ********************************************************************/
 
 PVOID gInitRamDiskBase = NULL;
@@ -37,6 +40,7 @@ static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Infor
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.QuadPart = RamDiskImageLength;
     Information->CurrentAddress.QuadPart = RamDiskOffset;
+    Information->Type = DiskPeripheral;
 
     return ESUCCESS;
 }
@@ -119,27 +123,49 @@ RamDiskLoadVirtualFile(
     UiDrawProgressBarCenter("Loading RamDisk...");
 
     /* Try opening the Ramdisk file */
+    TRACE("RamDiskLoadVirtualFile: Opening '%s', '%s'\n",
+          FileName, DefaultPath ? DefaultPath : "n/a");
     Status = FsOpenFile(FileName, DefaultPath, OpenReadOnly, &RamFileId);
     if (Status != ESUCCESS)
         return Status;
 
-    /* Get the file size */
+    /* Get the file or device size */
     Status = ArcGetFileInformation(RamFileId, &Information);
     if (Status != ESUCCESS)
     {
         ArcClose(RamFileId);
         return Status;
     }
+    /* NOTE: For partitions, StartingAddress/EndingAddress are the start/end
+     * positions of the partition as byte offsets from the start of the disk */
+    Information.EndingAddress.QuadPart -= Information.StartingAddress.QuadPart;
+    Information.StartingAddress.QuadPart = 0ULL;
+
+    /* If we are actually opening a RAW device, retrieve instead its usable volume size */
+    if (Information.FileNameLength == 0 && Information.FileName[0] == ANSI_NULL &&
+        (Information.Type == DiskPeripheral || Information.Type == FloppyDiskPeripheral))
+    {
+        ULONGLONG VolumeSize;
+        Status = FsGetVolumeSize(RamFileId, &VolumeSize);
+        if (Status != ESUCCESS)
+            ERR("Couldn't retrieve volume size on device '%s', falling back to RAW size\n", FileName);
+        else
+            Information.EndingAddress.QuadPart = VolumeSize;
+    }
+
+    TRACE("RAMDISK size: %I64u (High: %lu ; Low: %lu)\n",
+          Information.EndingAddress.QuadPart,
+          Information.EndingAddress.HighPart,
+          Information.EndingAddress.LowPart);
 
     /* FIXME: For now, limit RAM disks to 4GB */
-    if (Information.EndingAddress.HighPart != 0)
+    if (Information.EndingAddress.HighPart != 0) // (RamDiskFileSize >= 0x100000000ULL)
     {
         ArcClose(RamFileId);
         UiMessageBox("RAM disk too big.");
         return ENOMEM;
     }
     RamDiskFileSize = Information.EndingAddress.QuadPart;
-    ASSERT(RamDiskFileSize < 0x100000000); // See FIXME above.
 
     /* Allocate memory for it */
     ChunkSize = 8 * 1024 * 1024;
@@ -157,49 +183,46 @@ RamDiskLoadVirtualFile(
     }
 
     /*
-     * Read it in chunks
+     * Read it in chunks, starting at the beginning
      */
-    Percent = 0;
-    for (TotalRead = 0; TotalRead < RamDiskFileSize; TotalRead += ChunkSize)
+    Position.QuadPart = 0;
+    Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
+        goto ReadFailure;
+
+    for (TotalRead = 0, Percent = 0;
+         TotalRead < RamDiskFileSize;
+         TotalRead += ChunkSize, Percent += PercentPerChunk)
     {
-        /* Check if we're at the last chunk */
+        /* If we are at the last chunk, read only what's remaining */
         if ((RamDiskFileSize - TotalRead) < ChunkSize)
-        {
-            /* Only need the actual data required */
             ChunkSize = (ULONG)(RamDiskFileSize - TotalRead);
-        }
 
         /* Update progress */
         UiUpdateProgressBar(Percent, NULL);
-        Percent += PercentPerChunk;
 
-        /* Copy the contents */
-        Position.QuadPart = TotalRead;
-        Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
-        if (Status == ESUCCESS)
-        {
-            Status = ArcRead(RamFileId,
-                             (PVOID)((ULONG_PTR)RamDiskBase + (ULONG_PTR)TotalRead),
-                             ChunkSize,
-                             &Count);
-        }
-
-        /* Check for success */
+        /* Copy the data */
+        Status = ArcRead(RamFileId,
+                         (PVOID)((ULONG_PTR)RamDiskBase + (ULONG_PTR)TotalRead),
+                         ChunkSize,
+                         &Count);
         if ((Status != ESUCCESS) || (Count != ChunkSize))
         {
-            MmFreeMemory(RamDiskBase);
-            RamDiskBase = NULL;
-            RamDiskFileSize = 0;
-            ArcClose(RamFileId);
-            UiMessageBox("Failed to read RAM disk.");
-            return ((Status != ESUCCESS) ? Status : EIO);
+            Status = ((Status != ESUCCESS) ? Status : EIO);
+            goto ReadFailure;
         }
     }
     UiUpdateProgressBar(100, NULL);
-
     ArcClose(RamFileId);
-
     return ESUCCESS;
+
+ReadFailure:
+    MmFreeMemory(RamDiskBase);
+    RamDiskBase = NULL;
+    RamDiskFileSize = 0;
+    ArcClose(RamFileId);
+    UiMessageBox("Failed to read RAM disk.");
+    return Status;
 }
 
 ARC_STATUS
@@ -208,6 +231,11 @@ RamDiskInitialize(
     IN PCSTR LoadOptions OPTIONAL,
     IN PCSTR DefaultPath OPTIONAL)
 {
+    TRACE("RamDiskInitialize(%s, '%s', '%s')\n",
+          InitRamDisk ? "INIT" : "REGULAR",
+          LoadOptions ? LoadOptions : "n/a",
+          DefaultPath ? DefaultPath : "n/a");
+
     /* Reset the RAMDISK device */
     if ((RamDiskBase != gInitRamDiskBase) &&
         (RamDiskFileSize != gInitRamDiskSize) &&

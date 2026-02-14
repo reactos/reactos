@@ -2148,6 +2148,8 @@ typedef struct _DMA_TRANSFER_INFO
 #define DMA_TRANSFER_CONTEXT_SIZE_V1 64
 #endif
 
+#define DMA_SYNCHRONOUS_CALLBACK  0x01
+
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
   EjectionRelations,
@@ -7469,7 +7471,7 @@ typedef
 _Function_class_(SET_D3COLD_SUPPORT)
 _IRQL_requires_(PASSIVE_LEVEL)
 VOID
-SET_D3COLD_SUPPORT(
+(NTAPI SET_D3COLD_SUPPORT)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _In_ BOOLEAN D3ColdSupport);
 
@@ -7515,7 +7517,7 @@ typedef
 _Function_class_(GET_IDLE_WAKE_INFO)
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-GET_IDLE_WAKE_INFO(
+(NTAPI GET_IDLE_WAKE_INFO)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _In_ SYSTEM_POWER_STATE SystemPowerState,
   _Out_ PDEVICE_WAKE_DEPTH DeepestWakeableDstate);
@@ -7526,7 +7528,7 @@ typedef
 _Function_class_(GET_D3COLD_CAPABILITY)
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-GET_D3COLD_CAPABILITY(
+(NTAPI GET_D3COLD_CAPABILITY)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _Out_ PBOOLEAN D3ColdSupported);
 
@@ -7543,7 +7545,7 @@ typedef
 _Function_class_(GET_D3COLD_LAST_TRANSITION_STATUS)
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
-GET_D3COLD_LAST_TRANSITION_STATUS(
+(NTAPI GET_D3COLD_LAST_TRANSITION_STATUS)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _Out_ PD3COLD_LAST_TRANSITION_STATUS LastTransitionStatus);
 
@@ -7567,7 +7569,7 @@ typedef
 _Function_class_(D3COLD_REQUEST_CORE_POWER_RAIL)
 _IRQL_requires_(PASSIVE_LEVEL)
 VOID
-D3COLD_REQUEST_CORE_POWER_RAIL(
+(NTAPI D3COLD_REQUEST_CORE_POWER_RAIL)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _In_ BOOLEAN CorePowerRailNeeded);
 
@@ -7577,7 +7579,7 @@ typedef
 _Function_class_(D3COLD_REQUEST_AUX_POWER)
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-D3COLD_REQUEST_AUX_POWER(
+(NTAPI D3COLD_REQUEST_AUX_POWER)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _In_ ULONG AuxPowerInMilliWatts,
   _Out_ PULONG RetryInSeconds);
@@ -7588,7 +7590,7 @@ typedef
 _Function_class_(D3COLD_REQUEST_PERST_DELAY)
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS
-D3COLD_REQUEST_PERST_DELAY(
+(NTAPI D3COLD_REQUEST_PERST_DELAY)(
   _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
   _In_ ULONG DelayInMicroSeconds);
 

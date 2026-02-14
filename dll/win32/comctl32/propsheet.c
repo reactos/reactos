@@ -3255,6 +3255,10 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
 		{
                     PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
 
+#ifdef __REACTOS__
+                    if (psInfo == NULL) break;
+#endif
+
                     /* don't overwrite ID_PSRESTARTWINDOWS or ID_PSREBOOTSYSTEM */
                     if (psInfo->result == 0)
                         psInfo->result = IDOK;
@@ -3750,7 +3754,22 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   
     case WM_SYSCOLORCHANGE:
       COMCTL32_RefreshSysColors();
+#ifndef __REACTOS__
       return FALSE;
+#else
+    case WM_DISPLAYCHANGE:
+    case WM_WININICHANGE:
+    {
+      PropSheetInfo* psInfo = GetPropW(hwnd, PropSheetInfoStr);
+      INT i;
+      for (i = 0; i < psInfo->nPages; i++)
+      {
+         HWND hwndPage = psInfo->proppage[i].hwndPage;
+         SendMessageW(hwndPage, uMsg, wParam, lParam);
+      }
+      return FALSE;
+    }
+#endif
 
     case PSM_GETCURRENTPAGEHWND:
     {

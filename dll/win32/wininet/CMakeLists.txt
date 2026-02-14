@@ -7,8 +7,7 @@ add_definitions(
     -D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D_WINE
-    -D__ROS_LONG64__)
+    -D_WINE)
 
 spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
 

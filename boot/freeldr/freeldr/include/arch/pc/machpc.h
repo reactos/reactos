@@ -30,8 +30,9 @@ VOID PcConsPutChar(int Ch);
 BOOLEAN PcConsKbHit(VOID);
 int PcConsGetCh(VOID);
 
+VOID PcVideoInit(VOID);
 VOID PcVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+VIDEODISPLAYMODE PcVideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG PcVideoGetBufferSize(VOID);
 VOID PcVideoGetFontsFromFirmware(PULONG RomFontPointers);
@@ -55,6 +56,10 @@ BOOLEAN PcFindPciBios(PPCI_REGISTRY_INFO BusData);
 /* Platform-specific boot drive and partition numbers */
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber);
 
 LONG DiskReportError(BOOLEAN bShowError);
 BOOLEAN DiskResetController(UCHAR DriveNumber);

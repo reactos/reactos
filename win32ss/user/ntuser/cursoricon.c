@@ -155,7 +155,7 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
            return;
 
         // Set Small Window Icon and do not link.
-        if ( id == OIC_WINLOGO+1 )
+        if ( id == OIC_INTERNAL_WINSMALL )
         {
             pcur->CURSORF_flags |= CURSORF_GLOBAL;
             UserReferenceObject(pcur);
@@ -669,9 +669,10 @@ NtUserGetCursorInfo(
 
     _SEH2_TRY
     {
+        ProbeForWrite(pci, sizeof(CURSORINFO), 1);
+        
         if (pci->cbSize == sizeof(CURSORINFO))
         {
-            ProbeForWrite(pci, sizeof(CURSORINFO), 1);
             RtlCopyMemory(pci, &SafeCi, sizeof(CURSORINFO));
             Ret = TRUE;
         }
@@ -690,8 +691,9 @@ NtUserGetCursorInfo(
         SetLastNtError(Status);
     }
 
-    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
     UserLeave();
+    TRACE("Leave NtUserGetCursorInfo, ret=%i\n", Ret);
+    
     return Ret;
 }
 

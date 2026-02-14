@@ -190,7 +190,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -619,7 +619,7 @@ Returns:
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptQueueDpcForIsr)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -659,7 +659,7 @@ Returns:
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptQueueWorkItemForIsr)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -701,7 +701,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptSynchronize)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -759,7 +759,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptAcquireLock)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -807,7 +807,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL + 1)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptReleaseLock)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -855,7 +855,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptEnable)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -902,7 +902,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptDisable)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -949,7 +949,7 @@ Returns:
 
 _Must_inspect_result_
 struct _KINTERRUPT*
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptWdmGetInterrupt)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -986,7 +986,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptGetInfo)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1047,7 +1047,7 @@ Returns:
 }
 
 WDFDEVICE
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1086,7 +1086,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptSetPolicy)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1156,7 +1156,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptSetExtendedPolicy)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1249,7 +1249,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Post_satisfies_(return == 1 || return == 0)
 BOOLEAN
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptTryToAcquireLock)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1311,7 +1311,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptReportActive)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1357,7 +1357,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfInterruptReportInactive)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -262,6 +262,10 @@
 #define IDS_SHORTCUT_RUN_MIN     4168
 #define IDS_SHORTCUT_RUN_MAX     4169
 
+/* FS property sheet */
+#define IDS_MULTIPLETYPES       8705
+#define IDS_VARIOUSFOLDERS      8709
+
 #define IDS_MENU_EMPTY           34561
 
 /* Note: those strings are referenced from the registry */
@@ -361,20 +365,23 @@
 
 #define IDS_REMOVE_EXT                              30522
 
+#define IDS_VISEFFECT_DRAGFULL                      30533
+#define IDS_VISEFFECT_FONTSMOOTHING                 30535
+#define IDS_VISEFFECT_LISTVIEWSHADOW                30541
+
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530 // FIXME: "Animations in taskbar"
 #define IDS_LINK_INVALID                            30531
 #define IDS_COPYTOMENU                              30532
-#define IDS_COPYTOTITLE                             30533
+#define IDS_COPYTOTITLE                             60005 // Outside of any Microsoft range to avoid collisions
 #define IDS_COPYITEMS                               30534
-#define IDS_COPYBUTTON                              30535
+#define IDS_COPYBUTTON                              60007
 #define IDS_MOVETOMENU                              30536
 #define IDS_MOVETOTITLE                             30537
 #define IDS_MOVEITEMS                               30538
 #define IDS_MOVEBUTTON                              30539 // FIXME: "Slide open combo boxes"
 
 #define IDS_SYSTEMFOLDER                            30540 // FIXME: "Show translucent selection rectangle"
-#define IDS_DESKTOPLABELDROPSHADOW                  30541
 #define IDS_FOLDERTYPEBACKGROUNDIMAGE               30543
 
 #define IDS_LOG_OFF_DESC                            35000
@@ -391,6 +398,15 @@
 #define IDC_RUNDLG_ICON        12297
 #define IDC_RUNDLG_EDITPATH    12298
 #define IDC_RUNDLG_LABEL       12305
+
+/* Run As dialog */
+#define IDD_RUN_AS          1007
+#define IDC_RUNAS_CURRENT   100
+#define IDC_RUNAS_OTHER     101
+#define IDC_RUNAS_SAFER     102
+#define IDC_RUNAS_NAME      103
+#define IDC_RUNAS_BROWSE    104
+#define IDC_RUNAS_PWD       105
 
 /* ShellAbout dialog */
 #define IDD_ABOUT                     2
@@ -540,7 +556,6 @@
 #define IDC_LOG_OFF_TEXT_STATIC             15005
 
 /* Other dialogs */
-#define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
@@ -849,7 +864,9 @@
 /* Shell view commands */
 #define FCIDM_SHVIEW_ARRANGE         0x7001
 #define FCIDM_SHVIEW_VIEW            0x7002
+#define FCIDM_SHVIEW_CREATELINK      0x7010
 #define FCIDM_SHVIEW_DELETE          0x7011
+#define FCIDM_SHVIEW_RENAME          0x7012
 #define FCIDM_SHVIEW_PROPERTIES      0x7013
 #define FCIDM_SHVIEW_CUT             0x7018
 #define FCIDM_SHVIEW_COPY            0x7019
@@ -861,24 +878,23 @@
 #define FCIDM_SHVIEW_SELECTALL       0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
-#define FCIDM_SHVIEW_BIGICON     0x7029 //FIXME
-#define FCIDM_SHVIEW_SMALLICON   0x702A //FIXME
-#define FCIDM_SHVIEW_LISTVIEW    0x702B //FIXME
-#define FCIDM_SHVIEW_REPORTVIEW  0x702C //FIXME
+#define FCIDM_SHVIEW_BIGICON     0x7029
+#define FCIDM_SHVIEW_SMALLICON   0x702A
+#define FCIDM_SHVIEW_LISTVIEW    0x702B
+#define FCIDM_SHVIEW_REPORTVIEW  0x702C
+#define FCIDM_SHVIEW_TILEVIEW    0x702E
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
 #define FCIDM_SHVIEW_SNAPTOGRID  0x7032
 #define FCIDM_SHVIEW_ALIGNTOGRID 0x7033
 
 #define FCIDM_SHVIEW_HELP       0x7041
-#define FCIDM_SHVIEW_RENAME     0x7050
-#define FCIDM_SHVIEW_CREATELINK 0x7051
 #define FCIDM_SHVIEW_NEWLINK    0x7052
 #define FCIDM_SHVIEW_NEWFOLDER  0x7053
 
-#define FCIDM_SHVIEW_REFRESH 0x7100 /* FIXME */
 #define FCIDM_SHVIEW_EXPLORE 0x7101 /* FIXME */
 #define FCIDM_SHVIEW_OPEN    0x7102 /* FIXME */
+#define FCIDM_SHVIEW_REFRESH 0x7103
 
 #define FCIDM_TB_UPFOLDER   0xA001
 #define FCIDM_TB_NEWFOLDER  0xA002
@@ -886,6 +902,7 @@
 #define FCIDM_TB_REPORTVIEW 0xA004
 #define FCIDM_TB_DESKTOP    0xA005  /* FIXME */
 
+#define MENU_SHV_FILE 210
 #define IDM_UNDO (FCIDM_SHVIEW_UNDO - 0x7000)
 #define IDM_CUT (FCIDM_SHVIEW_CUT - 0x7000)
 #define IDM_COPY (FCIDM_SHVIEW_COPY - 0x7000)
@@ -893,9 +910,10 @@
 #define IDM_CREATELINK (FCIDM_SHVIEW_CREATELINK - 0x7000)
 #define IDM_DELETE (FCIDM_SHVIEW_DELETE - 0x7000)
 #define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
-#define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
 #define IDM_COPYTO (FCIDM_SHVIEW_COPYTO - 0x7000)
 #define IDM_MOVETO (FCIDM_SHVIEW_MOVETO - 0x7000)
+#define MENU_SHV_FILEPROPERTIES 211
+#define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
 
 #define IDM_DRAGFILE 0xce
 #define IDM_COPYHERE 0x7
@@ -942,3 +960,4 @@
 #define IDR_COPYASPATHMENU      161
 #define IDR_RECYCLEBINCLEANER   162
 #define IDR_EXPLORER            163
+#define IDR_SYSTEMFILEASSOC     164

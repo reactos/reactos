@@ -31,6 +31,12 @@ Is64BitSystem(VOID)
 #endif
 }
 
+#ifdef _WIN64
+#define IsWow64() FALSE
+#else
+#define IsWow64() Is64BitSystem()
+#endif
+
 static
 ULONG
 SizeOfMdl(VOID)
@@ -133,7 +139,7 @@ START_TEST(NtWriteFile)
     ok_hex(Status, STATUS_SUCCESS);
 
     /* non-cached, too large -- fails to allocate MDL
-     * Note: this returns STATUS_SUCCESS on Win7 -- higher MDL size limit */
+     * Note: this returns STATUS_SUCCESS on Vista+ -- higher MDL size limit */
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
@@ -143,7 +149,34 @@ START_TEST(NtWriteFile)
                          LargeMdlMaxDataSize + PAGE_SIZE,
                          &ByteOffset,
                          NULL);
-    ok_hex(Status, STATUS_INSUFFICIENT_RESOURCES);
+    if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+        ok_hex(Status, STATUS_SUCCESS);
+    else
+        ok_hex(Status, STATUS_INSUFFICIENT_RESOURCES);
+
+    /* Invalid buffer address */
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatus,
+                         LongToPtr(-1),
+                         PAGE_SIZE,
+                         &ByteOffset,
+                         NULL);
+    ok_hex(Status, IsWow64() ? STATUS_INVALID_PARAMETER : STATUS_ACCESS_VIOLATION); // Different to NtReadFile
+
+    /* Buffer probing fails */
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatus,
+                         Buffer,
+                         2 * LargeMdlMaxDataSize,
+                         &ByteOffset,
+                         NULL);
+    ok_hex(Status, Is64BitSystem() ? STATUS_INVALID_USER_BUFFER: STATUS_INSUFFICIENT_RESOURCES); // Different to NtReadFile
 
     /* non-cached, unaligned -- fails with invalid parameter */
     Status = NtWriteFile(FileHandle,

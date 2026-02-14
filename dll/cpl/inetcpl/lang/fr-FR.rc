@@ -119,7 +119,7 @@ END
 IDD_CONNECTIONS DIALOG 0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "Connections"
+CAPTION "Connexions"
 BEGIN
     GROUPBOX        "Configuration automatique", IDC_STATIC, 4, 4, 312, 56
     AUTOCHECKBOX    "Utiliser Web Proxy Auto-Discovery (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP

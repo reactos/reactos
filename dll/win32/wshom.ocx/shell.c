@@ -18,6 +18,7 @@
 
 #ifdef __REACTOS__
 #include <wchar.h>
+#define STATUS_PENDING ((DWORD)0x00000103)
 #endif
 
 #include "wshom_private.h"

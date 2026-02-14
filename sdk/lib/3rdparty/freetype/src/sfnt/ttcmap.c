@@ -1233,6 +1233,21 @@
     FT_UInt   gindex   = 0;
     FT_Byte*  p;
 
+#ifdef __REACTOS__
+    static FT_UInt bWarnOnce = 0;
+    /* FIXME: HACK for ReactOS not updating fonts when new font copied
+     * over existing one. Verify that the table number is 4. CORE-12549 */
+    if (TT_PEEK_USHORT(cmap->data) != 4)
+    {
+        if (!bWarnOnce)
+        {
+            FT_ERROR(( "Bad cmap table number. Probable update font error in file\n"
+                       "'%s'\nPlease reboot and try again.\n", __FILE__ ));
+            bWarnOnce++;
+        }
+        return 0;
+    }
+#endif
 
     p = cmap->data + 6;
     num_segs2 = FT_PAD_FLOOR( TT_PEEK_USHORT( p ), 2 );

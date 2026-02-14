@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atlstr.h>
+#include "appinfo.h"
 
 #ifdef _M_IX86
 #define CurrentArchitecture L"x86"
@@ -84,6 +85,8 @@ ExtractFilesFromCab(LPCWSTR FullCabPath, const CStringW &szOutputDir,
 
 BOOL
 IsSystem64Bit();
+ULONG
+GetNTVersion();
 
 INT
 GetSystemColorDepth();
@@ -159,3 +162,9 @@ struct CScopedMutex
 
     bool Acquired() const { return m_hMutex != NULL; }
 };
+
+InstallerType
+GuessInstallerType(LPCWSTR Installer, UINT &ExtraInfo);
+
+BOOL
+GetSilentInstallParameters(InstallerType InstallerType, UINT ExtraInfo, LPCWSTR Installer, CStringW &Parameters);

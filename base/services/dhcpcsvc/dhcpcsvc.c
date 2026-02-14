@@ -19,265 +19,161 @@ SERVICE_STATUS ServiceStatus;
 HANDLE hStopEvent = NULL;
 HANDLE hAdapterStateChangedEvent = NULL;
 
-static HANDLE PipeHandle = INVALID_HANDLE_VALUE;
 extern SOCKET DhcpSocket;
 
-DWORD APIENTRY
-DhcpCApiInitialize(LPDWORD Version)
+
+void __RPC_FAR * __RPC_USER MIDL_user_allocate(SIZE_T len)
 {
-    DWORD PipeMode;
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
 
-    /* Wait for the pipe to be available */
-    if (!WaitNamedPipeW(DHCP_PIPE_NAME, NMPWAIT_USE_DEFAULT_WAIT))
+void __RPC_USER MIDL_user_free(void __RPC_FAR * ptr)
+{
+    HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+handle_t __RPC_USER
+PDHCP_SERVER_NAME_bind(
+    _In_ PDHCP_SERVER_NAME pszServerName)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    DPRINT("PDHCP_SERVER_NAME_bind() called\n");
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      pszServerName,
+                                      L"\\pipe\\dhcpcsvc",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
     {
-        /* No good, we failed */
-        return GetLastError();
+        DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
     }
 
-    /* It's available, let's try to open it */
-    PipeHandle = CreateFileW(DHCP_PIPE_NAME,
-                             GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             NULL,
-                             OPEN_EXISTING,
-                             0,
-                             NULL);
-
-    /* Check if we succeeded in opening the pipe */
-    if (PipeHandle == INVALID_HANDLE_VALUE)
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
     {
-        /* We didn't */
-        return GetLastError();
+        DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
     }
 
-    /* Change the pipe into message mode */
-    PipeMode = PIPE_READMODE_MESSAGE;
-    if (!SetNamedPipeHandleState(PipeHandle, &PipeMode, NULL, NULL))
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
     {
-        /* Mode change failed */
-        CloseHandle(PipeHandle);
-        PipeHandle = INVALID_HANDLE_VALUE;
-        return GetLastError();
+        DPRINT1("RpcStringFree returned 0x%x\n", status);
     }
-    else
+
+    return hBinding;
+}
+
+void __RPC_USER
+PDHCP_SERVER_NAME_unbind(
+    _In_ PDHCP_SERVER_NAME pszServerName,
+    _In_ handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    DPRINT("PDHCP_SERVER_NAME_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
     {
-        /* We're good to go */
-        *Version = 2;
-        return NO_ERROR;
+        DPRINT1("RpcBindingFree returned 0x%x\n", status);
     }
 }
 
-VOID APIENTRY
+/*!
+ * Initializes the DHCP interface
+ *
+ * \param[out] Version
+ *        Returns the DHCP Interface Version
+ *
+ * \return ERROR_SUCCESS on success
+ *
+ * \remarks DhcpCApiInitialized must be called before any other DHCP Function.
+ */
+DWORD
+APIENTRY
+DhcpCApiInitialize(
+    _Out_ LPDWORD Version)
+{
+    *Version = 2;
+    return ERROR_SUCCESS;
+}
+
+/*!
+ * Cleans up the DHCP interface
+ *
+ * \remarks Other DHCP Functions must not be called after DhcpCApiCleanup.
+ */
+VOID
+APIENTRY
 DhcpCApiCleanup(VOID)
 {
-    CloseHandle(PipeHandle);
-    PipeHandle = INVALID_HANDLE_VALUE;
 }
 
-
-/* FIXME: The adapter name should be a unicode string */
+/*!
+ * Renews a DHCP Lease
+ *
+ * \param[in] AdapterName
+ *        Name (GUID) of the Adapter
+ *
+ * \return ERROR_SUCCESS on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
 DWORD
 APIENTRY
 DhcpAcquireParameters(
-    _In_ PSTR AdapterName)
+    _In_ PWSTR AdapterName)
 {
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
+    DWORD ret;
 
-    DPRINT1("DhcpAcquireParameters(%s)\n", AdapterName);
+    DPRINT("DhcpAcquireParameters(%S)\n", AdapterName);
 
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqAcquireParams;
-    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
+    RpcTryExcept
     {
-        /* Pipe transaction failed */
-        return GetLastError();
+        ret = Client_AcquireParameters(NULL, AdapterName);
     }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
-    return Reply.Reply;
+    return ret;
 }
 
-/* FIXME: The adapter name should be a unicode string */
 DWORD
 APIENTRY
-DhcpReleaseParameters(
-    _In_ PSTR AdapterName)
+DhcpEnumClasses(
+    _In_ DWORD Unknown1,
+    _In_ PWSTR AdapterName,
+    _In_ DWORD Unknown3,
+    _In_ DWORD Unknown4)
 {
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    DPRINT1("DhcpReleaseParameters(%s)\n", AdapterName);
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqReleaseParams;
-    strcpy(Req.Body.AcquireParams.AdapterName, AdapterName);
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return GetLastError();
-    }
-
-    return Reply.Reply;
+    DPRINT1("DhcpEnumClasses(%lx %S %lx %lx)\n",
+            Unknown1, AdapterName, Unknown3, Unknown4);
+    return 0;
 }
 
-DWORD APIENTRY
-DhcpQueryHWInfo(DWORD AdapterIndex,
-                PDWORD MediaType,
-                PDWORD Mtu,
-                PDWORD Speed)
+DWORD
+APIENTRY
+DhcpHandlePnPEvent(
+    _In_ DWORD Unknown1,
+    _In_ DWORD Unknown2,
+    _In_ PWSTR AdapterName,
+    _In_ DWORD Unknown4,
+    _In_ DWORD Unknown5)
 {
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqQueryHWInfo;
-    Req.AdapterIndex = AdapterIndex;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return 0;
-    }
-
-    if (Reply.Reply == 0)
-        return 0;
-
-    *MediaType = Reply.QueryHWInfo.MediaType;
-    *Mtu = Reply.QueryHWInfo.Mtu;
-    *Speed = Reply.QueryHWInfo.Speed;
-    return 1;
-}
-
-DWORD APIENTRY
-DhcpLeaseIpAddress(DWORD AdapterIndex)
-{
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqLeaseIpAddress;
-    Req.AdapterIndex = AdapterIndex;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return 0;
-    }
-
-    return Reply.Reply;
-}
-
-DWORD APIENTRY
-DhcpReleaseIpAddressLease(DWORD AdapterIndex)
-{
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqReleaseIpAddress;
-    Req.AdapterIndex = AdapterIndex;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return 0;
-    }
-
-    return Reply.Reply;
-}
-
-DWORD APIENTRY
-DhcpRenewIpAddressLease(DWORD AdapterIndex)
-{
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqRenewIpAddress;
-    Req.AdapterIndex = AdapterIndex;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return 0;
-    }
-
-    return Reply.Reply;
-}
-
-DWORD APIENTRY
-DhcpStaticRefreshParams(DWORD AdapterIndex,
-                        DWORD Address,
-                        DWORD Netmask)
-{
-    COMM_DHCP_REQ Req;
-    COMM_DHCP_REPLY Reply;
-    DWORD BytesRead;
-    BOOL Result;
-
-    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
-
-    Req.Type = DhcpReqStaticRefreshParams;
-    Req.AdapterIndex = AdapterIndex;
-    Req.Body.StaticRefreshParams.IPAddress = Address;
-    Req.Body.StaticRefreshParams.Netmask = Netmask;
-
-    Result = TransactNamedPipe(PipeHandle,
-                               &Req, sizeof(Req),
-                               &Reply, sizeof(Reply),
-                               &BytesRead, NULL);
-    if (!Result)
-    {
-        /* Pipe transaction failed */
-        return 0;
-    }
-
-    return Reply.Reply;
+    DPRINT1("DhcpHandlePnPEvent(%lx %lx %S %lx %lx)\n",
+            Unknown1, Unknown2, AdapterName, Unknown4, Unknown5);
+    return 0;
 }
 
 /*!
@@ -291,6 +187,9 @@ DhcpStaticRefreshParams(DWORD AdapterIndex,
  *
  * \param[in] NewIpAddress
  *        TRUE if IP address changes
+
+ * \param[in] IpIndex
+ *        ...
  *
  * \param[in] IpAddress
  *        New IP address (network byte order)
@@ -303,22 +202,136 @@ DhcpStaticRefreshParams(DWORD AdapterIndex,
  *        1 - enable DHCP
  *        2 - disable DHCP
  *
- * \return non-zero on success
+ * \return ERROR_SUCCESS on success
  *
  * \remarks Undocumented by Microsoft
  */
-DWORD APIENTRY
-DhcpNotifyConfigChange(LPWSTR ServerName,
-                       LPWSTR AdapterName,
-                       BOOL NewIpAddress,
-                       DWORD IpIndex,
-                       DWORD IpAddress,
-                       DWORD SubnetMask,
-                       INT DhcpAction)
+DWORD
+APIENTRY
+DhcpNotifyConfigChange(
+    _In_ LPWSTR ServerName,
+    _In_ LPWSTR AdapterName,
+    _In_ BOOL NewIpAddress,
+    _In_ DWORD IpIndex,
+    _In_ DWORD IpAddress,
+    _In_ DWORD SubnetMask,
+    _In_ INT DhcpAction)
 {
     DPRINT1("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
-    return 0;
+    DPRINT1("DhcpNotifyConfigChange(%S %S %lu %lu %lu %lu %d)\n",
+            ServerName, AdapterName, NewIpAddress, IpIndex, IpAddress, SubnetMask, DhcpAction);
+
+    if (AdapterName == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;
 }
+
+DWORD APIENTRY
+DhcpQueryHWInfo(DWORD AdapterIndex,
+                PDWORD MediaType,
+                PDWORD Mtu,
+                PDWORD Speed)
+{
+    DWORD ret;
+
+    DPRINT("DhcpQueryHWInfo()\n");
+
+    RpcTryExcept
+    {
+        ret = Client_QueryHWInfo(NULL, AdapterIndex, MediaType, Mtu, Speed);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return (ret == ERROR_SUCCESS) ? 1 : 0;
+}
+
+/*!
+ * Releases a DHCP Lease
+ *
+ * \param[in] AdapterName
+ *        Name (GUID) of the Adapter
+ *
+ * \return ERROR_SUCCESS on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
+DWORD
+APIENTRY
+DhcpReleaseParameters(
+    _In_ PWSTR AdapterName)
+{
+    DWORD ret;
+
+    DPRINT("DhcpReleaseParameters(%S)\n", AdapterName);
+
+    RpcTryExcept
+    {
+        ret = Client_ReleaseParameters(NULL, AdapterName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+/*!
+ * Removes all DNS Registrations which were added by the DHCP Client
+ *
+ * \return ERROR_SUCCESS on success
+ */
+DWORD
+WINAPI
+DhcpRemoveDNSRegistrations(VOID)
+{
+    DWORD ret;
+
+    DPRINT("DhcpRemoveDNSRegistrations()\n");
+
+    RpcTryExcept
+    {
+        ret = Client_RemoveDNSRegistrations(NULL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+DWORD
+APIENTRY
+DhcpStaticRefreshParams(DWORD AdapterIndex,
+                        DWORD Address,
+                        DWORD Netmask)
+{
+    DWORD ret;
+
+    DPRINT("DhcpStaticRefreshParams()\n");
+
+    RpcTryExcept
+    {
+        ret = Client_StaticRefreshParams(NULL, AdapterIndex, Address, Netmask);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return (ret == ERROR_SUCCESS) ? 1 : 0;
+}
+
 
 DWORD APIENTRY
 DhcpRequestParams(DWORD Flags,
@@ -432,7 +445,7 @@ ServiceMain(DWORD argc, LPWSTR* argv)
 
     UpdateServiceStatus(SERVICE_START_PENDING);
 
-    hPipeThread = PipeInit(hStopEvent);
+    hPipeThread = InitRpc();
     if (hPipeThread == INVALID_HANDLE_VALUE)
     {
         DbgPrint("DHCPCSVC: PipeInit() failed!\n");
@@ -447,6 +460,7 @@ ServiceMain(DWORD argc, LPWSTR* argv)
     if (hDiscoveryThread == INVALID_HANDLE_VALUE)
     {
         DbgPrint("DHCPCSVC: StartAdapterDiscovery() failed!\n");
+        ShutdownRpc();
         stop_client();
         CloseHandle(hAdapterStateChangedEvent);
         CloseHandle(hStopEvent);
@@ -465,6 +479,7 @@ ServiceMain(DWORD argc, LPWSTR* argv)
 
     DH_DbgPrint(MID_TRACE,("DHCPCSVC: DHCP service is shutting down\n"));
 
+    ShutdownRpc();
     stop_client();
 
     DPRINT("Wait for pipe thread to close! %p\n", hPipeThread);

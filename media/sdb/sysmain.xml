@@ -1,7 +1,6 @@
 <SDB>
     <DATABASE>
         <NAME>ReactOS compatibility fix database</NAME>
-        <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{11111111-1111-1111-1111-111111111111}</DATABASE_ID>
         <LIBRARY>
             <INCLUDE MODULE="kernel32.dll" />
@@ -271,6 +270,10 @@
                 <FLAG_MASK_KERNEL>8</FLAG_MASK_KERNEL>
             </FLAG>
 
+            <FLAG NAME="RendererFull3D">
+                <!-- ReactOS specific (CORE-20322) -->
+                <FLAG_MASK_KERNEL>0x8000000000000000</FLAG_MASK_KERNEL>
+            </FLAG>
         </LIBRARY>
 
         <!-- Backwards compatibility layers, incomplete! -->
@@ -441,6 +444,9 @@
         </LAYER>
         <LAYER NAME="GetDiskFreeSpace2GB">
             <FLAG_REF NAME="GetDiskFreeSpace2GB" />
+        </LAYER>
+        <LAYER NAME="RendererFull3D">
+            <FLAG_REF NAME="RendererFull3D" />
         </LAYER>
 
         <!-- Applications -->

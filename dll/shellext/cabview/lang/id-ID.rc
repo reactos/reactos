@@ -1,0 +1,20 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATOR:  Copyright 2026 Mas Ahmad Muhammad <m.charly81@gmail.com>
+ */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Nama"
+    IDS_COL_SIZE    "Ukuran"
+    IDS_COL_TYPE    "Jenis"
+    IDS_COL_MDATE   "Tanggal dimodifikasi"
+    IDS_COL_PATH    "Jalur"
+    IDS_COL_ATT     "Atribut"
+
+    IDS_EXTRACT     "Ekstrak..."
+    IDS_EXTRACTALL  "Ekstr&ak Semua..."
+END

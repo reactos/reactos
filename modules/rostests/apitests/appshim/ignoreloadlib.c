@@ -270,6 +270,14 @@ START_TEST(ignoreloadlib)
     dwErrorMode = GetErrorMode();
     trace("Error mode: 0x%x\n", dwErrorMode);
 
+#ifdef _M_IX86
+    if (g_WinVersion > _WIN32_WINNT_WS03 && g_WinVersion < _WIN32_WINNT_WIN8)
+    {
+        g_h111 = g_hSentinelModule;
+        g_h0 = g_hSentinelModule;
+    }
+#endif
+
     for (n = 0; n < num_shims; ++n)
     {
         ok_str(hook[n].LibraryName, "KERNEL32.DLL");

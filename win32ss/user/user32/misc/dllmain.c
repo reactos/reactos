@@ -537,7 +537,7 @@ DllMain(
                 {
                     WCHAR szImmFile[MAX_PATH];
                     InitializeImmEntryTable();
-                    User32GetImmFileName(szImmFile, _countof(szImmFile));
+                    User32GetSystemFilePath(szImmFile, _countof(szImmFile), L"imm32.dll");
                     hImm32 = GetModuleHandleW(szImmFile);
                 }
 

@@ -44,16 +44,240 @@ static const WCHAR szCurrentPowerPolicies[] =
 static const WCHAR szPolicies[] = L"Policies";
 static const WCHAR szName[] = L"Name";
 static const WCHAR szDescription[] = L"Description";
-static const WCHAR szSemaphoreName[] = L"PowerProfileRegistrySemaphore";
 static const WCHAR szDiskMax[] = L"DiskSpindownMax";
 static const WCHAR szDiskMin[] = L"DiskSpindownMin";
 static const WCHAR szLastID[] = L"LastID";
 
-UINT g_LastID = (UINT)-1;
+static UINT g_LastID = (UINT)-1;
+static HANDLE PPRegSemaphore = NULL;
+
+
+/**
+ * @brief
+ * Creates a security descriptor for the registry semaphore.
+ *
+ * @param[out]  PowrProfSd
+ * A pointer to an allocated security descriptor for the semaphore.
+ *
+ * @return
+ * Returns TRUE if the function succeeds, otherwise FALSE is returned.
+ *
+ * @remarks
+ * Authenticated users are only given a subset of specific rights for
+ * the semaphore access, local system and administrators have full power.
+ **/
+static BOOLEAN
+CreatePwrProfSemaphoreSecurity(
+    _Out_ PSECURITY_DESCRIPTOR *PowrProfSd)
+{
+    BOOLEAN Success = FALSE;
+    PSID AuthenticatedUsersSid = NULL, SystemSid = NULL, AdminsSid = NULL;
+    PACL Dacl = NULL;
+    PSECURITY_DESCRIPTOR RelSd = NULL;
+    ULONG DaclSize, RelSDSize = 0;
+    SECURITY_DESCRIPTOR AbsSd;
+    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_AUTHENTICATED_USER_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &AuthenticatedUsersSid))
+    {
+        return FALSE;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  1,
+                                  SECURITY_LOCAL_SYSTEM_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &SystemSid))
+    {
+        goto Quit;
+    }
+
+    if (!AllocateAndInitializeSid(&NtAuthority,
+                                  2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
+                                  &AdminsSid))
+    {
+        goto Quit;
+    }
+
+    if (!InitializeSecurityDescriptor(&AbsSd, SECURITY_DESCRIPTOR_REVISION))
+        goto Quit;
+
+    /* Compute the size needed for the DACL and allocate it */
+    DaclSize = sizeof(ACL) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AuthenticatedUsersSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid) +
+               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid);
+
+    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
+    if (!Dacl || !InitializeAcl(Dacl, DaclSize, ACL_REVISION))
+        goto Quit;
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SYNCHRONIZE | READ_CONTROL | SEMAPHORE_MODIFY_STATE | SEMAPHORE_QUERY_STATE,
+                             AuthenticatedUsersSid))
+    {
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SEMAPHORE_ALL_ACCESS,
+                             SystemSid))
+    {
+        goto Quit;
+    }
+
+    if (!AddAccessAllowedAce(Dacl,
+                             ACL_REVISION,
+                             SEMAPHORE_ALL_ACCESS,
+                             AdminsSid))
+    {
+        goto Quit;
+    }
+
+    if (!SetSecurityDescriptorDacl(&AbsSd, TRUE, Dacl, FALSE))
+        goto Quit;
+
+    if (!SetSecurityDescriptorOwner(&AbsSd, AdminsSid, FALSE))
+        goto Quit;
+
+    if (!SetSecurityDescriptorGroup(&AbsSd, SystemSid, FALSE))
+        goto Quit;
+
+    /* Retrieve the size needed for the relative SD */
+    if (MakeSelfRelativeSD(&AbsSd, NULL, &RelSDSize) ||
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+    {
+        goto Quit;
+    }
+
+    /* Build the relative SD */
+    RelSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RelSDSize);
+    if (!RelSd || !MakeSelfRelativeSD(&AbsSd, RelSd, &RelSDSize))
+    {
+        if (RelSd)
+            HeapFree(GetProcessHeap(), 0, RelSd);
+        goto Quit;
+    }
+
+    *PowrProfSd = RelSd;
+    Success = TRUE;
+
+Quit:
+    if (Dacl)
+        HeapFree(GetProcessHeap(), 0, Dacl);
+
+    if (AdminsSid)
+        FreeSid(AdminsSid);
+
+    if (SystemSid)
+        FreeSid(SystemSid);
+
+    if (AuthenticatedUsersSid)
+        FreeSid(AuthenticatedUsersSid);
+
+    return Success;
+}
+
+/**
+ * @brief
+ * Creates or opens a registry-synchronizing semaphore, with access for
+ * SYNCHRONIZE | READ_CONTROL | SEMAPHORE_MODIFY_STATE | SEMAPHORE_QUERY_STATE
+ * by everyone.
+ *
+ * @note
+ * Because this semaphore aims at synchronizing registry accesses for both
+ * the global HKEY_LOCAL_MACHINE and the per-user HKEY_CURRENT_USER, this
+ * Windows <= 2003 - compatible mechanism isn't fully reliable. On Win7+,
+ * synchronization is ensured with the help of the "User-mode Power Service"
+ * ("Power", umpo.dll), using RPC calls.
+ * https://redplait.blogspot.com/2010/11/umpodll-rpc-interfaces.html
+ **/
+static BOOLEAN
+CreatePwrProfSemaphore(VOID)
+{
+    SECURITY_ATTRIBUTES SecAttrs;
+    PSECURITY_DESCRIPTOR Sd;
+    HANDLE hSemaphore;
+    DWORD dwError;
+
+    while (TRUE)
+    {
+    /* Return early if we have already obtained the semaphore handle */
+    if (PPRegSemaphore)
+        return TRUE;
+
+    /*
+     * Suppose first that the semaphore already exists and try only to open it
+     * with the necessary access rights. The semaphore may have been created
+     * by another instance from a different user (e.g. powrprof.dll loaded by
+     * a LocalSystem service) and attempting to create-or-open it instead would
+     * fail with ERROR_ACCESS_DENIED.
+     */
+    hSemaphore = OpenSemaphoreW(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE | SEMAPHORE_QUERY_STATE,
+                                FALSE, L"PowerProfileRegistrySemaphore");
+    if (hSemaphore)
+        break;
+    dwError = GetLastError();
+    if (dwError == ERROR_ACCESS_DENIED)
+    {
+        ERR("Couldn't open POWRPROF semaphore: %ld\n", dwError);
+        return FALSE;
+    }
+
+    /* The semaphore may not exist. Create it so that all logged-in users
+     * can access it with the necessary but limited access rights. */
+    if (!CreatePwrProfSemaphoreSecurity(&Sd))
+    {
+        ERR("Couldn't create POWRPROF semaphore security descriptor\n");
+        return FALSE;
+    }
+    // TODO: Consider using no SD (or no security attributes i.e. falling back to defaults?) if creating the SD failed.
+
+    SecAttrs.nLength = sizeof(SecAttrs);
+    SecAttrs.lpSecurityDescriptor = Sd;
+    SecAttrs.bInheritHandle = FALSE;
+
+    hSemaphore = CreateSemaphoreW(&SecAttrs, 1, 1, L"PowerProfileRegistrySemaphore");
+    dwError = GetLastError();
+    HeapFree(GetProcessHeap(), 0, Sd);
+    if (hSemaphore)
+        break;
+
+    /* If a process from a different user created the semaphore in the
+     * meantime, we failed with ERROR_ACCESS_DENIED. Then, retry again
+     * by only opening the semaphore this time. Otherwise, bail out. */
+    if (dwError != ERROR_ACCESS_DENIED)
+    {
+        ERR("Couldn't create POWRPROF semaphore: %ld\n", dwError);
+        return FALSE;
+    }
+    }
+
+    /* Store the handle; if another thread already succeeded, close the handle */
+    if (InterlockedCompareExchangePointer((PVOID*)&PPRegSemaphore, hSemaphore, NULL) != NULL)
+        CloseHandle(hSemaphore);
+    return TRUE;
+}
+
+static BOOLEAN
+AcquirePwrProfSemaphore(VOID)
+{
+    if (!PPRegSemaphore && !CreatePwrProfSemaphore())
+        return FALSE;
+    return (WaitForSingleObject(PPRegSemaphore, INFINITE) == WAIT_OBJECT_0);
+}
+
 
 BOOLEAN WINAPI WritePwrPolicy(PUINT puiID, PPOWER_POLICY pPowerPolicy);
-
-HANDLE PPRegSemaphore = NULL;
 
 NTSTATUS WINAPI
 CallNtPowerInformation(POWER_INFORMATION_LEVEL InformationLevel,
@@ -393,7 +617,8 @@ GetPwrDiskSpindownRange(PUINT RangeMax, PUINT RangeMin)
         return FALSE;
     }
 
-    WaitForSingleObject(PPRegSemaphore, INFINITE);
+    if (!AcquirePwrProfSemaphore())
+        return FALSE;
 
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szPowerCfgSubKey, 0, KEY_READ, &hKey);
     if (Ret != ERROR_SUCCESS)
@@ -462,7 +687,7 @@ IsPwrHibernateAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS4 && PowerCaps.HiberFilePresent; // IsHiberfilPresent();
+    return IS_PWR_HIBERNATE_ALLOWED(&PowerCaps);
 }
 
 BOOLEAN WINAPI
@@ -481,7 +706,7 @@ IsPwrShutdownAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS5;
+    return IS_PWR_POWEROFF_ALLOWED(&PowerCaps);
 }
 
 BOOLEAN WINAPI
@@ -500,7 +725,9 @@ IsPwrSuspendAllowed(VOID)
         return FALSE;
     }
 
-    return PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3;
+    // NOTE for possible future wine-syncs: wine erroneously use '&&'
+    // instead of: PowerCaps.SystemS1 || PowerCaps.SystemS2 || PowerCaps.SystemS3;
+    return IS_PWR_SUSPEND_ALLOWED(&PowerCaps);
 }
 
 DWORD WINAPI
@@ -583,7 +810,6 @@ DWORD WINAPI PowerWriteACValueIndex(HKEY key, const GUID *scheme, const GUID *su
    return ERROR_SUCCESS;
 }
 
-#ifdef __REACTOS__
 DWORD WINAPI PowerWriteDCValueIndex(
    HKEY       key,
    const GUID *scheme,
@@ -626,7 +852,6 @@ PowerReadACValue(HKEY RootPowerKey, const GUID *Scheme, const GUID *SubGroup, co
    FIXME("(%p,%s,%s,%s,%p,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Type, Buffer, BufferSize);
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
-#endif
 
 BOOLEAN WINAPI
 ReadGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
@@ -937,172 +1162,6 @@ CheckPowerActionPolicy(PPOWER_ACTION_POLICY pPAP, SYSTEM_POWER_CAPABILITIES Powe
     };
 }
 
-/**
- * @brief
- * Creates a security descriptor for the power
- * management registry semaphore.
- *
- * @param[out] PowrProfSd
- * A pointer to an allocated security descriptor
- * for the semaphore.
- *
- * @return
- * Returns TRUE if the function succeeds, otherwise
- * FALSE is returned.
- *
- * @remarks
- * Authenticated users are only given a subset of specific
- * rights for the semaphore access, local system and admins
- * have full power.
- */
-static BOOLEAN
-CreatePowrProfSemaphoreSecurity(_Out_ PSECURITY_DESCRIPTOR *PowrProfSd)
-{
-    BOOLEAN Success = FALSE;
-    PACL Dacl;
-    ULONG DaclSize, RelSDSize = 0;
-    PSID AuthenticatedUsersSid = NULL, SystemSid = NULL, AdminsSid = NULL;
-    SECURITY_DESCRIPTOR AbsSd;
-    PSECURITY_DESCRIPTOR RelSd = NULL;
-    static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-
-    if (!AllocateAndInitializeSid(&NtAuthority,
-                                  1,
-                                  SECURITY_AUTHENTICATED_USER_RID,
-                                  0, 0, 0, 0, 0, 0, 0,
-                                  &AuthenticatedUsersSid))
-    {
-        return FALSE;
-    }
-
-    if (!AllocateAndInitializeSid(&NtAuthority,
-                                  1,
-                                  SECURITY_LOCAL_SYSTEM_RID,
-                                  0, 0, 0, 0, 0, 0, 0,
-                                  &SystemSid))
-    {
-        goto Quit;
-    }
-
-    if (!AllocateAndInitializeSid(&NtAuthority,
-                                  2,
-                                  SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0,
-                                  &AdminsSid))
-    {
-        goto Quit;
-    }
-
-    if (!InitializeSecurityDescriptor(&AbsSd, SECURITY_DESCRIPTOR_REVISION))
-    {
-        goto Quit;
-    }
-
-    DaclSize = sizeof(ACL) +
-               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AuthenticatedUsersSid) +
-               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(SystemSid) +
-               sizeof(ACCESS_ALLOWED_ACE) + GetLengthSid(AdminsSid);
-
-    Dacl = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, DaclSize);
-    if (!Dacl)
-    {
-        goto Quit;
-    }
-
-    if (!InitializeAcl(Dacl, DaclSize, ACL_REVISION))
-    {
-        goto Quit;
-    }
-
-    if (!AddAccessAllowedAce(Dacl,
-                             ACL_REVISION,
-                             SYNCHRONIZE | STANDARD_RIGHTS_READ | 0x3,
-                             AuthenticatedUsersSid))
-    {
-        goto Quit;
-    }
-
-    if (!AddAccessAllowedAce(Dacl,
-                             ACL_REVISION,
-                             SEMAPHORE_ALL_ACCESS,
-                             SystemSid))
-    {
-        goto Quit;
-    }
-
-    if (!AddAccessAllowedAce(Dacl,
-                             ACL_REVISION,
-                             SEMAPHORE_ALL_ACCESS,
-                             AdminsSid))
-    {
-        goto Quit;
-    }
-
-    if (!SetSecurityDescriptorDacl(&AbsSd, TRUE, Dacl, FALSE))
-    {
-        goto Quit;
-    }
-
-    if (!SetSecurityDescriptorOwner(&AbsSd, AdminsSid, FALSE))
-    {
-        goto Quit;
-    }
-
-    if (!SetSecurityDescriptorGroup(&AbsSd, SystemSid, FALSE))
-    {
-        goto Quit;
-    }
-
-    if (!MakeSelfRelativeSD(&AbsSd, NULL, &RelSDSize) && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-    {
-        RelSd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, RelSDSize);
-        if (RelSd == NULL)
-        {
-            goto Quit;
-        }
-
-        if (!MakeSelfRelativeSD(&AbsSd, RelSd, &RelSDSize))
-        {
-            goto Quit;
-        }
-    }
-
-    *PowrProfSd = RelSd;
-    Success = TRUE;
-
-Quit:
-    if (AuthenticatedUsersSid)
-    {
-        FreeSid(AuthenticatedUsersSid);
-    }
-
-    if (SystemSid)
-    {
-        FreeSid(SystemSid);
-    }
-
-    if (AdminsSid)
-    {
-        FreeSid(AdminsSid);
-    }
-
-    if (Dacl)
-    {
-        HeapFree(GetProcessHeap(), 0, Dacl);
-    }
-
-    if (!Success)
-    {
-        if (RelSd)
-        {
-            HeapFree(GetProcessHeap(), 0, RelSd);
-        }
-    }
-
-    return Success;
-}
-
 static VOID
 FixSystemPowerState(PSYSTEM_POWER_STATE Psps, SYSTEM_POWER_CAPABILITIES PowerCaps)
 {
@@ -1375,8 +1434,6 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         {
             HKEY hKey;
             LONG Err;
-            SECURITY_ATTRIBUTES SecAttrs;
-            PSECURITY_DESCRIPTOR Sd;
 
             DisableThreadLibraryCalls(hinstDLL);
 
@@ -1403,26 +1460,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
                 RegCloseKey(hKey);
             }
 
-            if (!CreatePowrProfSemaphoreSecurity(&Sd))
-            {
-                ERR("Couldn't create POWRPROF semaphore security descriptor!\n");
-                return FALSE;
-            }
-
-            SecAttrs.nLength = sizeof(SECURITY_ATTRIBUTES);
-            SecAttrs.lpSecurityDescriptor = Sd;
-            SecAttrs.bInheritHandle = FALSE;
-
-            PPRegSemaphore = CreateSemaphoreW(&SecAttrs, 1, 1, szSemaphoreName);
-            HeapFree(GetProcessHeap(), 0, Sd);
-            if (PPRegSemaphore == NULL)
-            {
-                ERR("Couldn't create Semaphore: %d\n", GetLastError());
-                return FALSE;
-            }
             break;
         }
         case DLL_PROCESS_DETACH:
+            if (lpvReserved) break;
             CloseHandle(PPRegSemaphore);
             break;
     }

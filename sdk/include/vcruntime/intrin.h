@@ -5,6 +5,7 @@
 #ifndef RC_INVOKED
 
 #include <vcruntime.h>
+#include <intrin0.inl.h>
 #include <setjmp.h>
 #include <stddef.h>
 
@@ -22,6 +23,11 @@
 //#include <arm_neon.h>
 #include <armintr.h>
 #endif /* _M_ARM */
+
+#if defined(_M_ARM64)
+#include <arm64intr.h>
+//#include <arm64_neon.h>
+#endif /* _M_ARM64 */
 
 #if defined(__cplusplus)
 extern "C" {
@@ -1000,6 +1006,10 @@ int _isunordered(double, double);
 int _isunorderedf(float, float);
 
 #endif /* _M_ARM */
+
+#ifdef _M_ARM64
+unsigned __int64 __getReg(int);
+#endif
 
 #if defined(_M_CEE_PURE)
 

@@ -24,95 +24,101 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID NTAPI
-IntInterfaceReference(PVOID Context)
+VOID
+NTAPI
+IntInterfaceReference(
+    _In_ PVOID Context)
 {
-   /* Do nothing */
+    /* Do nothing */
 }
 
-VOID NTAPI
-IntInterfaceDereference(PVOID Context)
+VOID
+NTAPI
+IntInterfaceDereference(
+    _In_ PVOID Context)
 {
-   /* Do nothing */
+    /* Do nothing */
 }
 
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortQueryServices(
-  IN PVOID HwDeviceExtension,
-  IN VIDEO_PORT_SERVICES ServicesType,
-  IN OUT PINTERFACE Interface)
+    _In_ PVOID HwDeviceExtension,
+    _In_ VIDEO_PORT_SERVICES ServicesType,
+    _Inout_ PINTERFACE Interface)
 {
-   TRACE_(VIDEOPRT, "VideoPortQueryServices - ServicesType: 0x%x\n", ServicesType);
+    TRACE_(VIDEOPRT, "VideoPortQueryServices - ServicesType: 0x%x\n", ServicesType);
 
-   switch (ServicesType)
-   {
-      case VideoPortServicesInt10:
-         if (Interface->Version >= VIDEO_PORT_INT10_INTERFACE_VERSION_1 ||
-             Interface->Size >= sizeof(VIDEO_PORT_INT10_INTERFACE))
-         {
-            VIDEO_PORT_INT10_INTERFACE *Int10Interface =
-               (VIDEO_PORT_INT10_INTERFACE *)Interface;
-
-            Interface->InterfaceReference = IntInterfaceReference;
-            Interface->InterfaceDereference = IntInterfaceDereference;
-            Int10Interface->Int10AllocateBuffer = IntInt10AllocateBuffer;
-            Int10Interface->Int10FreeBuffer = IntInt10FreeBuffer;
-            Int10Interface->Int10ReadMemory = IntInt10ReadMemory;
-            Int10Interface->Int10WriteMemory = IntInt10WriteMemory;
-            Int10Interface->Int10CallBios = IntInt10CallBios;
-            return NO_ERROR;
-         }
-         break;
-
-      case VideoPortServicesAGP:
-         if ((Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 &&
-              Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2)) ||
-             (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1 &&
-              Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE)))
-         {
-            if (NT_SUCCESS(IntAgpGetInterface(HwDeviceExtension, Interface)))
+    switch (ServicesType)
+    {
+        case VideoPortServicesInt10:
+            if (Interface->Version >= VIDEO_PORT_INT10_INTERFACE_VERSION_1 ||
+                Interface->Size >= sizeof(VIDEO_PORT_INT10_INTERFACE))
             {
-               return NO_ERROR;
+                PVIDEO_PORT_INT10_INTERFACE Int10Interface =
+                    (PVIDEO_PORT_INT10_INTERFACE)Interface;
+
+                Interface->InterfaceReference = IntInterfaceReference;
+                Interface->InterfaceDereference = IntInterfaceDereference;
+                Int10Interface->Int10AllocateBuffer = IntInt10AllocateBuffer;
+                Int10Interface->Int10FreeBuffer = IntInt10FreeBuffer;
+                Int10Interface->Int10ReadMemory = IntInt10ReadMemory;
+                Int10Interface->Int10WriteMemory = IntInt10WriteMemory;
+                Int10Interface->Int10CallBios = IntInt10CallBios;
+                return NO_ERROR;
             }
-         }
-         break;
+            break;
 
-      case VideoPortServicesI2C:
-          UNIMPLEMENTED;
-          return ERROR_INVALID_FUNCTION;
+        case VideoPortServicesAGP:
+            if ((Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 &&
+                 Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2)) ||
+                (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1 &&
+                 Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE)))
+            {
+                if (NT_SUCCESS(IntAgpGetInterface(HwDeviceExtension, Interface)))
+                {
+                    return NO_ERROR;
+                }
+            }
+            break;
 
-      case VideoPortServicesHeadless:
-         UNIMPLEMENTED;
-         return ERROR_INVALID_FUNCTION;
+        case VideoPortServicesI2C:
+            UNIMPLEMENTED;
+            return ERROR_INVALID_FUNCTION;
 
-      default:
-         break;
-   }
+        case VideoPortServicesHeadless:
+            UNIMPLEMENTED;
+            return ERROR_INVALID_FUNCTION;
 
-   return ERROR_INVALID_FUNCTION;
+        default:
+            break;
+    }
+
+    return ERROR_INVALID_FUNCTION;
 }
 
-BOOLEAN NTAPI
+BOOLEAN
+NTAPI
 VideoPortGetAgpServices(
-   IN PVOID HwDeviceExtension,
-   OUT PVIDEO_PORT_AGP_SERVICES AgpServices)
+    _In_ PVOID HwDeviceExtension,
+    _Out_ PVIDEO_PORT_AGP_SERVICES AgpServices)
 {
-   VIDEO_PORT_AGP_INTERFACE Interface;
-   VP_STATUS Status;
+    VIDEO_PORT_AGP_INTERFACE Interface;
+    VP_STATUS Status;
 
-   TRACE_(VIDEOPRT, "VideoPortGetAgpServices\n");
+    TRACE_(VIDEOPRT, "VideoPortGetAgpServices\n");
 
-   Interface.Size = sizeof(Interface);
-   Interface.Version = VIDEO_PORT_AGP_INTERFACE_VERSION_1;
+    Interface.Size = sizeof(Interface);
+    Interface.Version = VIDEO_PORT_AGP_INTERFACE_VERSION_1;
 
-   Status = VideoPortQueryServices(HwDeviceExtension, VideoPortServicesAGP,
-                                   (PINTERFACE)&Interface);
-   if (Status != NO_ERROR)
-   {
-      WARN_(VIDEOPRT, "VideoPortQueryServices() failed!\n");
-      return FALSE;
-   }
+    Status = VideoPortQueryServices(HwDeviceExtension, VideoPortServicesAGP,
+                                    (PINTERFACE)&Interface);
+    if (Status != NO_ERROR)
+    {
+        WARN_(VIDEOPRT, "VideoPortQueryServices() failed!\n");
+        return FALSE;
+    }
 
-   RtlCopyMemory(AgpServices, &Interface.AgpReservePhysical, sizeof(VIDEO_PORT_AGP_SERVICES));
-   return TRUE;
+    RtlCopyMemory(AgpServices, &Interface.AgpReservePhysical, sizeof(*AgpServices));
+    return TRUE;
 }

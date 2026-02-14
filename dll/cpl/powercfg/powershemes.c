@@ -1,16 +1,15 @@
 /*
- * PROJECT:         ReactOS Power Configuration Applet
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/powershemes.c
- * PURPOSE:         powerschemes tab of applet
- * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
- *                  Johannes Anderwald (johannes.anderwald@reactos.org)
- *                  Martin Rottensteiner
- *                  Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Power Schemes tab
+ * COPYRIGHT:   Copyright 2006 Alexander Wurzinger <lohnegrim@gmx.net>
+ *              Copyright 2006 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *              Copyright 2006 Martin Rottensteiner <2005only@pianonote.at>
+ *              Copyright 2007 Dmitry Chapyshev <lentind@yandex.ru>
+ *              Copyright 2019 Eric Kohl <eric.kohl@reactos.org>
  */
 
 #include "powercfg.h"
-#include <debug.h>
 
 typedef struct _POWER_SCHEME
 {
@@ -208,25 +207,27 @@ Pos_InitData(
     SYSTEM_POWER_CAPABILITIES spc;
 
     if (!GetPwrCapabilities(&spc))
-    {
         return FALSE;
-    }
 
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBY),
-               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+               IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
-               (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+               IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     if (spc.SystemBatteriesPresent)
+    {
         ShowWindow(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
-                   (spc.SystemS1 || spc.SystemS2 || spc.SystemS3) ? SW_SHOW : SW_HIDE);
+                   IS_PWR_SUSPEND_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
+    }
 
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATE),
-               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+               IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST),
-               (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+               IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
     if (spc.SystemBatteriesPresent)
+    {
         ShowWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST),
-                   (spc.HiberFilePresent) ? SW_SHOW : SW_HIDE);
+                   IS_PWR_HIBERNATE_ALLOWED(&spc) ? SW_SHOW : SW_HIDE);
+    }
 
     return TRUE;
 }
@@ -269,7 +270,7 @@ LoadConfig(
 
     pPageData->pSelectedPowerScheme = pScheme;
 
-    if (LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))
+    if (LoadString(hApplet, IDS_CONFIG1, szTemp, _countof(szTemp)))
     {
         _stprintf(szConfig, szTemp, pScheme->pszName);
         SetWindowText(GetDlgItem(hwndDlg, IDC_GRPDETAIL), szConfig);
@@ -392,7 +393,7 @@ Pos_InitPage(HWND hwndDlg)
 
         for (ifrom = imin; ifrom < (IDS_TIMEOUT15 + 1); ifrom++)
         {
-            if (LoadString(hApplet, ifrom, szName, MAX_PATH))
+            if (LoadString(hApplet, ifrom, szName, _countof(szName)))
             {
                 index = SendMessage(hwnd,
                                      CB_ADDSTRING,
@@ -408,7 +409,7 @@ Pos_InitPage(HWND hwndDlg)
             }
         }
 
-        if (LoadString(hApplet, IDS_TIMEOUT16, szName, MAX_PATH))
+        if (LoadString(hApplet, IDS_TIMEOUT16, szName, _countof(szName)))
         {
             index = SendMessage(hwnd,
                                  CB_ADDSTRING,
@@ -549,9 +550,9 @@ DelScheme(
     if (pScheme == (PPOWER_SCHEME)CB_ERR)
         return FALSE;
 
-    LoadStringW(hApplet, IDS_DEL_SCHEME_TITLE, szTitleBuffer, ARRAYSIZE(szTitleBuffer));
-    LoadStringW(hApplet, IDS_DEL_SCHEME, szRawBuffer, ARRAYSIZE(szRawBuffer));
-    StringCchPrintfW(szCookedBuffer, ARRAYSIZE(szCookedBuffer), szRawBuffer, pScheme->pszName);
+    LoadStringW(hApplet, IDS_DEL_SCHEME_TITLE, szTitleBuffer, _countof(szTitleBuffer));
+    LoadStringW(hApplet, IDS_DEL_SCHEME, szRawBuffer, _countof(szRawBuffer));
+    StringCchPrintfW(szCookedBuffer, _countof(szCookedBuffer), szRawBuffer, pScheme->pszName);
 
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
@@ -599,7 +600,7 @@ SavePowerScheme(
 
     pPageData = pSaveSchemeData->pPageData;
 
-    GetDlgItemText(hwndDlg, IDC_SCHEMENAME, szSchemeName, ARRAYSIZE(szSchemeName));
+    GetDlgItemText(hwndDlg, IDC_SCHEMENAME, szSchemeName, _countof(szSchemeName));
 
     pScheme = AddPowerScheme(pPageData,
                              -1,

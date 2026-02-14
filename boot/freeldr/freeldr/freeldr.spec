@@ -65,7 +65,7 @@
 @ cdecl PeLdrAllocateDataTableEntry()
 @ cdecl PeLdrCheckForLoadedDll()
 @ cdecl PeLdrFreeDataTableEntry()
-@ cdecl PeLdrImportDllLoadCallback()
+@ extern PeLdrImportDllLoadCallback
 @ cdecl PeLdrInitSecurityCookie()
 @ cdecl PeLdrLoadBootImage()
 @ cdecl PeLdrLoadImage()

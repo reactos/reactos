@@ -417,8 +417,16 @@ DiskGetPartitionEntry(
         }
         case PARTITION_STYLE_GPT:
         {
+#ifdef UEFIBOOT
+            BOOLEAN UefiGetGptPartitionEntry(
+                IN UCHAR DriveNumber,
+                IN ULONG PartitionNumber,
+                OUT PPARTITION_TABLE_ENTRY PartitionTableEntry);
+            return UefiGetGptPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+#else
             FIXME("DiskGetPartitionEntry() unimplemented for GPT\n");
             return FALSE;
+#endif
         }
         case PARTITION_STYLE_RAW:
         {

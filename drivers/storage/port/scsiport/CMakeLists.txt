@@ -1,9 +1,12 @@
 
 spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
-# Embed RTC libs
+include_directories(
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sptilib)
+
+# Link GCC stack protector lib
 if (STACK_PROTECTOR)
-    target_sources(libscsiport PRIVATE $<TARGET_OBJECTS:gcc_ssp_scsiport>)
+    target_link_libraries(libscsiport INTERFACE gcc_ssp_scsiport)
 endif()
 
 list(APPEND SOURCE
@@ -27,5 +30,6 @@ add_library(scsiport MODULE
 
 add_pch(scsiport scsiport.h "${PCH_SKIP_SOURCE}")
 set_module_type(scsiport kernelmodedriver)
+target_link_libraries(scsiport sptilib ${PSEH_LIB})
 add_importlibs(scsiport ntoskrnl hal)
 add_cd_file(TARGET scsiport DESTINATION reactos/system32/drivers NO_CAB FOR all)

@@ -240,6 +240,75 @@ USBD_ValidateConfigurationDescriptor(
   _Out_ PUCHAR *Offset,
   _In_opt_ ULONG Tag);
 
+/* UsbdEx lib */
+
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+USBD_QueryUsbCapability(
+    _In_ USBD_HANDLE USBDHandle,
+    _In_ const GUID* CapabilityType,
+    _In_ ULONG       OutputBufferLength,
+    _When_(OutputBufferLength == 0, _Pre_null_)
+    _When_(OutputBufferLength != 0 && ResultLength == NULL, _Out_writes_bytes_(OutputBufferLength))
+    _When_(OutputBufferLength != 0 && ResultLength != NULL, _Out_writes_bytes_to_opt_(OutputBufferLength, *ResultLength))
+        PUCHAR                        OutputBuffer,
+    _Out_opt_ 
+    _When_(ResultLength != NULL, _Deref_out_range_(<=,OutputBufferLength))
+        PULONG                        ResultLength
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+USBD_AssignUrbToIoStackLocation(
+    _In_ USBD_HANDLE USBDHandle,
+    _In_ PIO_STACK_LOCATION IoStackLocation,
+    _In_ PURB Urb
+);
+
+_Must_inspect_result_
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+USBD_CreateHandle(
+    _In_      PDEVICE_OBJECT DeviceObject,
+    _In_      PDEVICE_OBJECT TargetDeviceObject,
+    _In_      ULONG          USBDClientContractVersion,
+    _In_      ULONG          PoolTag,
+    _Out_     USBD_HANDLE   *USBDHandle
+);
+
+VOID
+USBD_CloseHandle(
+    _In_ USBD_HANDLE USBDHandle
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
+NTSTATUS
+USBD_UrbAllocate(
+    _In_ USBD_HANDLE USBDHandle,
+    _Outptr_result_bytebuffer_(sizeof(URB)) PURB *Urb
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
+NTSTATUS
+USBD_IsochUrbAllocate(
+    _In_ USBD_HANDLE USBDHandle,
+    _In_ ULONG NumberOfIsochPacket,
+    _Outptr_result_bytebuffer_(sizeof(struct _URB_ISOCH_TRANSFER) 
+                               + (NumberOfIsochPackets * sizeof(USBD_ISO_PACKET_DESCRIPTOR))
+                               - sizeof(USBD_ISO_PACKET_DESCRIPTOR)) 
+    PURB *Urb
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+USBD_UrbFree(
+    _In_ USBD_HANDLE USBDHandle,
+    _In_ PURB Urb
+);
+
 #endif
 
 #endif /* ! _USBD_ */

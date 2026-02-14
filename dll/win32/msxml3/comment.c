@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -37,8 +33,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -95,26 +89,25 @@ static HRESULT WINAPI domcomment_QueryInterface(
     return S_OK;
 }
 
-static ULONG WINAPI domcomment_AddRef(
-    IXMLDOMComment *iface )
+static ULONG WINAPI domcomment_AddRef(IXMLDOMComment *iface)
 {
-    domcomment *This = impl_from_IXMLDOMComment( iface );
-    ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    domcomment *comment = impl_from_IXMLDOMComment(iface);
+    ULONG ref = InterlockedIncrement(&comment->ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
-static ULONG WINAPI domcomment_Release(
-    IXMLDOMComment *iface )
+static ULONG WINAPI domcomment_Release(IXMLDOMComment *iface)
 {
-    domcomment *This = impl_from_IXMLDOMComment( iface );
-    ULONG ref = InterlockedDecrement( &This->ref );
+    domcomment *comment = impl_from_IXMLDOMComment(iface);
+    ULONG ref = InterlockedDecrement(&comment->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
-        destroy_xmlnode(&This->node);
-        heap_free( This );
+        destroy_xmlnode(&comment->node);
+        free(comment);
     }
 
     return ref;
@@ -581,15 +574,12 @@ static HRESULT WINAPI domcomment_get_length(
     return hr;
 }
 
-static HRESULT WINAPI domcomment_substringData(
-    IXMLDOMComment *iface,
-    LONG offset, LONG count, BSTR *p)
+static HRESULT WINAPI domcomment_substringData(IXMLDOMComment *iface, LONG offset, LONG count, BSTR *p)
 {
-    domcomment *This = impl_from_IXMLDOMComment( iface );
     HRESULT hr;
     BSTR data;
 
-    TRACE("(%p)->(%d %d %p)\n", This, offset, count, p);
+    TRACE("%p, %ld, %ld, %p.\n", iface, offset, count, p);
 
     if(!p)
         return E_INVALIDARG;
@@ -659,12 +649,11 @@ static HRESULT WINAPI domcomment_insertData(
     IXMLDOMComment *iface,
     LONG offset, BSTR p)
 {
-    domcomment *This = impl_from_IXMLDOMComment( iface );
     HRESULT hr;
     BSTR data;
     LONG p_len;
 
-    TRACE("(%p)->(%d %s)\n", This, offset, debugstr_w(p));
+    TRACE("%p, %ld, %s.\n", iface, offset, debugstr_w(p));
 
     /* If have a NULL or empty string, don't do anything. */
     if((p_len = SysStringLen(p)) == 0)
@@ -711,7 +700,7 @@ static HRESULT WINAPI domcomment_deleteData(
     LONG len = -1;
     BSTR str;
 
-    TRACE("(%p)->(%d %d)\n", iface, offset, count);
+    TRACE("%p, %ld, %ld.\n", iface, offset, count);
 
     hr = IXMLDOMComment_get_length(iface, &len);
     if(hr != S_OK) return hr;
@@ -754,10 +743,9 @@ static HRESULT WINAPI domcomment_replaceData(
     IXMLDOMComment *iface,
     LONG offset, LONG count, BSTR p)
 {
-    domcomment *This = impl_from_IXMLDOMComment( iface );
     HRESULT hr;
 
-    TRACE("(%p)->(%d %d %s)\n", This, offset, count, debugstr_w(p));
+    TRACE("%p, %ld, %ld, %s.\n", iface, offset, count, debugstr_w(p));
 
     hr = IXMLDOMComment_deleteData(iface, offset, count);
 
@@ -838,7 +826,7 @@ IUnknown* create_comment( xmlNodePtr comment )
 {
     domcomment *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -849,5 +837,3 @@ IUnknown* create_comment( xmlNodePtr comment )
 
     return (IUnknown*)&This->IXMLDOMComment_iface;
 }
-
-#endif

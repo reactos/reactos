@@ -1988,12 +1988,11 @@ SetVDMCurrentDirectories(DWORD cchCurDirs, PCHAR lpszzCurDirs)
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
-VDMConsoleOperation (
-    DWORD   Unknown0,
-    DWORD   Unknown1
-    )
+VDMConsoleOperation(
+    _In_ DWORD iFunction,
+    _Inout_opt_ LPVOID lpData)
 {
     STUB;
     return 0;

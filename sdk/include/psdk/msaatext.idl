@@ -1,0 +1,140 @@
+/*
+ * PROJECT:     ReactOS PSDK
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Providing <msaatext.h> header
+ * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+  object,
+  uuid(4c896039-7b6d-49e6-a8c1-45116a98292b),
+  pointer_default(unique)
+]
+interface IAccClientDocMgr : IUnknown
+{
+    HRESULT GetDocuments([out] IEnumUnknown **enumUnknown);
+    HRESULT LookupByHWND(
+        [in] HWND hWnd,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppunk);
+    HRESULT LookupByPoint(
+        [in] POINT pt,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppunk);
+    HRESULT GetFocused(
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppunk);
+}
+
+[
+  object,
+  uuid(1dc4cb5f-d737-474d-ade9-5ccfc9bc1cc9),
+  pointer_default(unique)
+]
+interface IAccDictionary : IUnknown
+{
+    HRESULT GetLocalizedString(
+        [in] REFGUID Term,
+        [in] LCID lcid,
+        [out] BSTR *pResult,
+        [out] LCID *plcid);
+    HRESULT GetParentTerm(
+        [in] REFGUID Term,
+        [out] GUID *pParentTerm);
+    HRESULT GetMnemonicString(
+        [in] REFGUID Term,
+        [out] BSTR *pResult);
+    HRESULT LookupMnemonicTerm(
+        [in] BSTR bstrMnemonic,
+        [out] GUID *pTerm);
+    HRESULT ConvertValueToString(
+        [in] REFGUID Term,
+        [in] LCID lcid,
+        [in] VARIANT varValue,
+        [out] BSTR *pbstrResult,
+        [out] LCID *plcid);
+}
+
+[
+  object,
+  uuid(ad7c73cf-6dd5-4855-abc2-b04bad5b9153),
+  pointer_default(unique)
+]
+interface IAccServerDocMgr : IUnknown
+{
+    HRESULT NewDocument(
+        [in] REFIID riid,
+        [in, iid_is(riid)] IUnknown *punk);
+    HRESULT RevokeDocument([in] IUnknown *punk);
+    HRESULT OnDocumentFocus([in] IUnknown *punk);
+}
+
+[
+  object,
+  uuid(0a53eb6c-1908-4742-8cff-2cee2e93f94c),
+  pointer_default(unique)
+]
+interface ICoCreatedLocally : IUnknown
+{
+    HRESULT LocalInit(
+        [in] IUnknown *punkLocalObject,
+        [in] REFIID riidParam,
+        [in, iid_is(riidParam)] IUnknown *punkParam,
+        [in] VARIANT varParam);
+}
+
+[
+  object,
+  uuid(03de00aa-f272-41e3-99cb-03c5e8114ea0),
+  pointer_default(unique)
+]
+interface ICoCreateLocally : IUnknown
+{
+    HRESULT CoCreateLocally(
+        [in] REFCLSID rclsid,
+        [in] DWORD dwClsContext,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **punk,
+        [in] REFIID riidParam,
+        [in, iid_is(riidParam)] IUnknown *punkParam,
+        [in] VARIANT varParam);
+}
+
+[
+  object,
+  uuid(b5f8fb3b-393f-4f7c-84cb-504924c2705a),
+  pointer_default(unique)
+]
+interface ITfMSAAControl : IUnknown
+{
+    HRESULT SystemEnableMSAA();
+    HRESULT SystemDisableMSAA();
+}
+
+[
+  object,
+  uuid(401518ec-db00-4611-9b29-2a0e4b9afa85),
+  pointer_default(unique)
+]
+interface IVersionInfo : IUnknown
+{
+    HRESULT GetSubcomponentCount(
+        [in] ULONG ulSub,
+        [out] ULONG *ulCount);
+    HRESULT GetImplementationID(
+        [in] ULONG ulSub,
+        [out] GUID *implid);
+    HRESULT GetBuildVersion(
+        [in] ULONG ulSub,
+        [out] DWORD *pdwMajor,
+        [out] DWORD *pdwMinor);
+    HRESULT GetComponentDescription(
+        [in] ULONG ulSub,
+        [out] BSTR *pImplStr);
+    HRESULT GetInstanceDescription(
+        [in] ULONG ulSub,
+        [out] BSTR *pImplStr);
+}

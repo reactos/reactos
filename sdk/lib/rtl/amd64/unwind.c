@@ -1,8 +1,8 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * PURPOSE:         Unwinding related functions
- * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS runtime library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Unwinding related functions
+ * COPYRIGHT:   Copyright 2010-2025 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -661,6 +661,46 @@ RtlpIsStackPointerValid(
            ((StackPointer & 7) == 0);
 }
 
+EXCEPTION_DISPOSITION
+RtlpExecuteHandlerForUnwindHandler(
+    _Inout_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ PCONTEXT ContextRecord,
+    _In_ PDISPATCHER_CONTEXT DispatcherContext)
+{
+    /* Get a pointer to the register home space for RtlpExecuteHandlerForUnwind */
+    PULONG64 HomeSpace = (PULONG64)EstablisherFrame + 6;
+
+    /* Get the ExceptionFlags value, which was saved in the home space */
+    ULONG ExceptionFlags = (ULONG)HomeSpace[0];
+
+    /* Get the DispatcherContext, which was saved in the home space */
+    PDISPATCHER_CONTEXT PreviousDispatcherContext = (PDISPATCHER_CONTEXT)HomeSpace[3];
+
+    /* Check if the original call to RtlpExecuteHandlerForUnwind was an unwind */
+    if (IS_UNWINDING(ExceptionFlags))
+    {
+        /* Check if the current call to this function is due to unwinding */
+        if (IS_UNWINDING(ExceptionRecord->ExceptionFlags))
+        {
+            /* We are unwinding over the call to a termination handler. This
+               could be due to an exception or longjmp. We need to make sure
+               to not run this termination handler again. To achieve that,
+               we copy the contents of the original dispatcher context back
+               over the current dispatcher context and return
+               ExceptionCollidedUnwind. RtlUnwindInternal will take the
+               original context, and continue unwing there. */
+            *DispatcherContext = *PreviousDispatcherContext;
+            return ExceptionCollidedUnwind;
+        }
+    }
+
+    // TODO: properly handle nested exceptions
+
+    return ExceptionContinueSearch;
+}
+
+
 /*!
     \remark The implementation is based on the description in this blog: http://www.nynaeve.net/?p=106
 
@@ -704,7 +744,8 @@ RtlpUnwindInternal(
     UnwindContext = *ContextRecord;
 
     /* Set up the constant fields of the dispatcher context */
-    DispatcherContext.ContextRecord = &UnwindContext;
+    DispatcherContext.ContextRecord =
+        (HandlerType == UNW_FLAG_UHANDLER) ? ContextRecord : &UnwindContext;
     DispatcherContext.HistoryTable = HistoryTable;
     DispatcherContext.TargetIp = (ULONG64)TargetIp;
 
@@ -793,12 +834,11 @@ RtlpUnwindInternal(
              /* Loop all nested handlers */
             do
             {
-                /// TODO: call RtlpExecuteHandlerForUnwind instead
                 /* Call the language specific handler */
-                Disposition = ExceptionRoutine(ExceptionRecord,
-                                               (PVOID)EstablisherFrame,
-                                               ContextRecord,
-                                               &DispatcherContext);
+                Disposition = RtlpExecuteHandlerForUnwind(ExceptionRecord,
+                                                          (PVOID)EstablisherFrame,
+                                                          ContextRecord,
+                                                          &DispatcherContext);
 
                 /* Clear exception flags for the next iteration */
                 ExceptionRecord->ExceptionFlags &= ~(EXCEPTION_TARGET_UNWIND |
@@ -828,12 +868,39 @@ RtlpUnwindInternal(
 
                 if (Disposition == ExceptionCollidedUnwind)
                 {
-                    /// TODO
-                    __debugbreak();
+                    /* We collided with another unwind, so we need to continue
+                       "after" the handler, skipping the termination handler
+                       that resulted in this unwind. The installed handler has
+                       already copied the original dispatcher context, we now
+                       need to copy back the original context. */
+                    UnwindContext = *ContextRecord = *DispatcherContext.ContextRecord;
+
+                    /* The original context was from "before" the unwind, so we
+                       need to do an additional virtual unwind to restore the
+                       unwind contxt. */
+                    RtlVirtualUnwind(HandlerType,
+                                     DispatcherContext.ImageBase,
+                                     UnwindContext.Rip,
+                                     DispatcherContext.FunctionEntry,
+                                     &UnwindContext,
+                                     &DispatcherContext.HandlerData,
+                                     &EstablisherFrame,
+                                     NULL);
+
+                    /* Restore the context pointer and establisher frame. */
+                    DispatcherContext.ContextRecord = &UnwindContext;
+                    EstablisherFrame = DispatcherContext.EstablisherFrame;
+
+                    /* Set the exception flags to indicate that we collided
+                       with an unwind and continue the handler loop, which
+                       will run any additional handlers from the previous
+                       unwind. */
+                    ExceptionRecord->ExceptionFlags |= EXCEPTION_COLLIDED_UNWIND;
+                    continue;
                 }
 
                 /* This must be ExceptionContinueSearch now */
-                if (Disposition != ExceptionContinueSearch)
+                else if (Disposition != ExceptionContinueSearch)
                 {
                     __debugbreak();
                     RtlRaiseStatus(STATUS_INVALID_DISPOSITION);
@@ -1136,30 +1203,77 @@ RtlpCaptureNonVolatileContextPointers(
 }
 
 VOID
+RtlGetUnwindContext(
+    _Out_ PCONTEXT Context,
+    _In_ DWORD64 TargetFrame)
+{
+    KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
+    ULONG ContextFlags = Context->ContextFlags & ~CONTEXT_AMD64;
+
+    /* Capture pointers to the non-volatiles up to the target frame */
+    RtlpCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
+
+    /* Copy the nonvolatiles from the captured locations */
+    if (ContextFlags & CONTEXT_INTEGER)
+    {
+        Context->Rbx = *ContextPointers.Rbx;
+        Context->Rsi = *ContextPointers.Rsi;
+        Context->Rdi = *ContextPointers.Rdi;
+        Context->R12 = *ContextPointers.R12;
+        Context->R13 = *ContextPointers.R13;
+        Context->R14 = *ContextPointers.R14;
+        Context->R15 = *ContextPointers.R15;
+    }
+    if (ContextFlags & CONTEXT_FLOATING_POINT)
+    {
+        Context->Xmm6 = *ContextPointers.Xmm6;
+        Context->Xmm7 = *ContextPointers.Xmm7;
+        Context->Xmm8 = *ContextPointers.Xmm8;
+        Context->Xmm9 = *ContextPointers.Xmm9;
+        Context->Xmm10 = *ContextPointers.Xmm10;
+        Context->Xmm11 = *ContextPointers.Xmm11;
+        Context->Xmm12 = *ContextPointers.Xmm12;
+        Context->Xmm13 = *ContextPointers.Xmm13;
+        Context->Xmm14 = *ContextPointers.Xmm14;
+        Context->Xmm15 = *ContextPointers.Xmm15;
+    }
+}
+
+VOID
 RtlSetUnwindContext(
     _In_ PCONTEXT Context,
     _In_ DWORD64 TargetFrame)
 {
     KNONVOLATILE_CONTEXT_POINTERS ContextPointers;
+    ULONG ContextFlags = Context->ContextFlags & ~CONTEXT_AMD64;
 
     /* Capture pointers to the non-volatiles up to the target frame */
     RtlpCaptureNonVolatileContextPointers(&ContextPointers, TargetFrame);
 
     /* Copy the nonvolatiles to the captured locations */
-    *ContextPointers.R12 = Context->R12;
-    *ContextPointers.R13 = Context->R13;
-    *ContextPointers.R14 = Context->R14;
-    *ContextPointers.R15 = Context->R15;
-    *ContextPointers.Xmm6 = Context->Xmm6;
-    *ContextPointers.Xmm7 = Context->Xmm7;
-    *ContextPointers.Xmm8 = Context->Xmm8;
-    *ContextPointers.Xmm9 = Context->Xmm9;
-    *ContextPointers.Xmm10 = Context->Xmm10;
-    *ContextPointers.Xmm11 = Context->Xmm11;
-    *ContextPointers.Xmm12 = Context->Xmm12;
-    *ContextPointers.Xmm13 = Context->Xmm13;
-    *ContextPointers.Xmm14 = Context->Xmm14;
-    *ContextPointers.Xmm15 = Context->Xmm15;
+    if (ContextFlags & CONTEXT_INTEGER)
+    {
+        *ContextPointers.Rbx = Context->Rbx;
+        *ContextPointers.Rsi = Context->Rsi;
+        *ContextPointers.Rdi = Context->Rdi;
+        *ContextPointers.R12 = Context->R12;
+        *ContextPointers.R13 = Context->R13;
+        *ContextPointers.R14 = Context->R14;
+        *ContextPointers.R15 = Context->R15;
+    }
+    if (ContextFlags & CONTEXT_FLOATING_POINT)
+    {
+        *ContextPointers.Xmm6 = Context->Xmm6;
+        *ContextPointers.Xmm7 = Context->Xmm7;
+        *ContextPointers.Xmm8 = Context->Xmm8;
+        *ContextPointers.Xmm9 = Context->Xmm9;
+        *ContextPointers.Xmm10 = Context->Xmm10;
+        *ContextPointers.Xmm11 = Context->Xmm11;
+        *ContextPointers.Xmm12 = Context->Xmm12;
+        *ContextPointers.Xmm13 = Context->Xmm13;
+        *ContextPointers.Xmm14 = Context->Xmm14;
+        *ContextPointers.Xmm15 = Context->Xmm15;
+    }
 }
 
 VOID
@@ -1179,6 +1293,34 @@ RtlRestoreContext(
             PVOID (*Consolidate)(EXCEPTION_RECORD*) = (PVOID)ExceptionRecord->ExceptionInformation[0];
             // FIXME: This should be called through an asm wrapper to allow handling recursive unwinding
             ContextRecord->Rip = (ULONG64)Consolidate(ExceptionRecord);
+        }
+        else if ((ExceptionRecord->ExceptionCode == STATUS_LONGJUMP) &&
+                 (ExceptionRecord->NumberParameters >= 1))
+        {
+            _JUMP_BUFFER* JumpBuffer = (_JUMP_BUFFER*)ExceptionRecord->ExceptionInformation[0];
+            ContextRecord->Rbx = JumpBuffer->Rbx;
+            ContextRecord->Rsp = JumpBuffer->Rsp;
+            ContextRecord->Rbp = JumpBuffer->Rbp;
+            ContextRecord->Rsi = JumpBuffer->Rsi;
+            ContextRecord->Rdi = JumpBuffer->Rdi;
+            ContextRecord->R12 = JumpBuffer->R12;
+            ContextRecord->R13 = JumpBuffer->R13;
+            ContextRecord->R14 = JumpBuffer->R14;
+            ContextRecord->R15 = JumpBuffer->R15;
+            ContextRecord->Rip = JumpBuffer->Rip;
+            ContextRecord->MxCsr = JumpBuffer->MxCsr;
+            ContextRecord->FltSave.MxCsr = JumpBuffer->MxCsr;
+            ContextRecord->FltSave.ControlWord = JumpBuffer->FpCsr;
+            ContextRecord->Xmm6 = *(M128A*)&JumpBuffer->Xmm6;
+            ContextRecord->Xmm7 = *(M128A*)&JumpBuffer->Xmm7;
+            ContextRecord->Xmm8 = *(M128A*)&JumpBuffer->Xmm8;
+            ContextRecord->Xmm9 = *(M128A*)&JumpBuffer->Xmm9;
+            ContextRecord->Xmm10 = *(M128A*)&JumpBuffer->Xmm10;
+            ContextRecord->Xmm11 = *(M128A*)&JumpBuffer->Xmm11;
+            ContextRecord->Xmm12 = *(M128A*)&JumpBuffer->Xmm12;
+            ContextRecord->Xmm13 = *(M128A*)&JumpBuffer->Xmm13;
+            ContextRecord->Xmm14 = *(M128A*)&JumpBuffer->Xmm14;
+            ContextRecord->Xmm15 = *(M128A*)&JumpBuffer->Xmm15;
         }
     }
 

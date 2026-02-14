@@ -59,6 +59,7 @@ typedef struct
 
     UINT DhcpEnabled;
     UINT AutoconfigActive;
+    DWORD Metric;
     DWORD Index;
     TcpFilterSettings *pFilter;
     TcpipAdvancedDNSDlgSettings *pDNS;
@@ -707,7 +708,17 @@ InitializeTcpipAdvancedIpDlg(
     EnableWindow(GetDlgItem(hwndDlg, IDC_GWMOD), FALSE);
     EnableWindow(GetDlgItem(hwndDlg, IDC_GWDEL), FALSE);
 
-    SendDlgItemMessageW(hwndDlg, IDC_METRIC, EM_LIMITTEXT, 4, 0);
+    SendDlgItemMessageW(hwndDlg, IDC_IFMETRIC, EM_LIMITTEXT, 4, 0);
+    if (This->pCurrentConfig->Metric)
+    {
+        EnableWindow(GetDlgItem(hwndDlg, IDC_IFMETRIC), TRUE);
+        SetDlgItemInt(hwndDlg, IDC_IFMETRIC, This->pCurrentConfig->Metric, FALSE);
+    }
+    else
+    {
+        CheckDlgButton(hwndDlg, IDC_IFAUTOMETRIC, BST_CHECKED);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_IFMETRIC), FALSE);
+    }
 }
 
 INT_PTR
@@ -744,7 +755,7 @@ TcpipAdvGwDlg(
                     SendDlgItemMessageW(hwndDlg, IDC_OK, WM_SETTEXT, 0, (LPARAM)szBuffer);
                 }
                 EnableWindow(GetDlgItem(hwndDlg, IDC_OK), FALSE);
-                CheckDlgButton(hwndDlg, IDC_USEMETRIC, BST_CHECKED);
+                CheckDlgButton(hwndDlg, IDC_GWAUTOMETRIC, BST_CHECKED);
             }
             else
             {
@@ -758,31 +769,31 @@ TcpipAdvGwDlg(
 
                 if (pGwSettings->Metric)
                 {
-                    SetDlgItemInt(hwndDlg, IDC_METRIC, pGwSettings->Metric, FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), TRUE);
+                    SetDlgItemInt(hwndDlg, IDC_GWMETRIC, pGwSettings->Metric, FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRIC), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRICTXT), TRUE);
                 }
                 else
                 {
-                    CheckDlgButton(hwndDlg, IDC_USEMETRIC, BST_CHECKED);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), FALSE);
+                    CheckDlgButton(hwndDlg, IDC_GWAUTOMETRIC, BST_CHECKED);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRIC), FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRICTXT), FALSE);
                 }
             }
             return TRUE;
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_USEMETRIC)
+            if (LOWORD(wParam) == IDC_GWAUTOMETRIC)
             {
-                if (IsDlgButtonChecked(hwndDlg, IDC_USEMETRIC) == BST_CHECKED)
+                if (IsDlgButtonChecked(hwndDlg, IDC_GWAUTOMETRIC) == BST_CHECKED)
                 {
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), FALSE);
-                    SendDlgItemMessageW(hwndDlg, IDC_METRIC, WM_SETTEXT, 0, (LPARAM)L"");
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRIC), FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRICTXT), FALSE);
+                    SendDlgItemMessageW(hwndDlg, IDC_GWMETRIC, WM_SETTEXT, 0, (LPARAM)L"");
                 }
                 else
                 {
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRICTXT), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRIC), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GWMETRICTXT), TRUE);
                 }
                 break;
             }
@@ -802,8 +813,8 @@ TcpipAdvGwDlg(
                     find.flags = LVFI_STRING;
                     find.psz = pGwSettings->szIP;
 
-                    if (IsDlgButtonChecked(hwndDlg, IDC_USEMETRIC) == BST_UNCHECKED)
-                        pGwSettings->Metric = GetDlgItemInt(hwndDlg, IDC_METRIC, NULL, FALSE);
+                    if (IsDlgButtonChecked(hwndDlg, IDC_GWAUTOMETRIC) == BST_UNCHECKED)
+                        pGwSettings->Metric = GetDlgItemInt(hwndDlg, IDC_GWMETRIC, NULL, FALSE);
                     else
                         pGwSettings->Metric = 0;
 
@@ -1318,6 +1329,17 @@ TcpipAdvancedIpDlg(
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
                     return TRUE;
                 }
+
+                if (IsDlgButtonChecked(hwndDlg, IDC_IFAUTOMETRIC) != BST_CHECKED)
+                {
+                    UINT val = GetDlgItemInt(hwndDlg, IDC_IFMETRIC, NULL, FALSE);
+                    if ((val < 1) || (val > 9999))
+                    {
+                        DisplayError(IDS_METRIC_RANGE, IDS_TCPIP, MB_ICONWARNING);
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, TRUE);
+                        return TRUE;
+                    }
+                }
             }
             else if (lppsn->hdr.code == PSN_APPLY)
             {
@@ -1328,17 +1350,23 @@ TcpipAdvancedIpDlg(
                 This->pCurrentConfig->Ip = NULL;
                 StoreIPSettings(GetDlgItem(hwndDlg, IDC_IPLIST), This, TRUE);
                 StoreIPSettings(GetDlgItem(hwndDlg, IDC_GWLIST), This, FALSE);
+
+                if (IsDlgButtonChecked(hwndDlg, IDC_IFAUTOMETRIC) == BST_CHECKED)
+                    This->pCurrentConfig->Metric = 0;
+                else
+                    This->pCurrentConfig->Metric = GetDlgItemInt(hwndDlg, IDC_IFMETRIC, NULL, FALSE);
+
                 SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
             break;
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_AUTOMETRIC)
+            if (LOWORD(wParam) == IDC_IFAUTOMETRIC)
             {
-                if (IsDlgButtonChecked(hwndDlg, IDC_AUTOMETRIC) == BST_CHECKED)
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), FALSE);
+                if (IsDlgButtonChecked(hwndDlg, IDC_IFAUTOMETRIC) == BST_CHECKED)
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_IFMETRIC), FALSE);
                 else
-                    EnableWindow(GetDlgItem(hwndDlg, IDC_METRIC), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_IFMETRIC), TRUE);
             }
             else if (LOWORD(wParam) == IDC_IPADD)
             {
@@ -1475,6 +1503,7 @@ TcpipAdvancedIpDlg(
                 DeleteItemFromList(GetDlgItem(hwndDlg, IDC_GWLIST));
                 break;
             }
+            break;
     }
     return FALSE;
 }
@@ -2838,6 +2867,10 @@ LoadDNSSettings(
         dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain);
         RegQueryValueExW(hKey, L"Domain", NULL, NULL, (LPBYTE)This->pCurrentConfig->pDNS->szDomain, &dwSize);
 
+        dwSize = sizeof(DWORD);
+        if (RegQueryValueExW(hKey, L"InterfaceMetric", NULL, NULL, (LPBYTE)&This->pCurrentConfig->Metric, &dwSize) != ERROR_SUCCESS)
+            This->pCurrentConfig->Metric = 0;
+
         RegCloseKey(hKey);
     }
 
@@ -3335,6 +3368,11 @@ INetCfgComponentControl_fnApplyRegistryChanges(
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
+        if (pCurrentConfig->Metric)
+            RegSetValueExW(hKey, L"InterfaceMetric", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->Metric, sizeof(DWORD));
+        else
+            RegDeleteValueW(hKey, L"InterfaceMetric");
+
         if (pCurrentConfig->pDNS)
         {
             RegSetValueExW(hKey, L"RegisterAdapterName", 0, REG_DWORD, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, sizeof(DWORD));

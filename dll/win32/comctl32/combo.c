@@ -425,7 +425,11 @@ static LRESULT COMBO_Create( HWND hwnd, LPHEADCOMBO lphc, HWND hwndParent, LONG 
 
   /* M$ IE 3.01 actually creates (and rapidly destroys) an ownerless combobox */
 
+#ifdef __REACTOS__
+  if(TRUE)
+#else
   if( lphc->owner || !(style & WS_VISIBLE) )
+#endif
   {
       UINT lbeStyle   = 0;
       UINT lbeExStyle = 0;

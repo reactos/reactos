@@ -284,7 +284,7 @@ private:
 
     static
     VOID
-    STDCALL
+    NTAPI
     _QueryCapsWorkItem(
         __in MdDeviceObject DeviceObject,
         __in PVOID Context
@@ -575,7 +575,7 @@ private:
 
     static
     VOID
-    STDCALL
+    NTAPI
     _RemoveAndReenumerateSelf(
         __in PVOID Context
         );

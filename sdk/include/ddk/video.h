@@ -1067,9 +1067,9 @@ VPAPI
 VP_STATUS
 NTAPI
 VideoPortQueryServices(
-  IN PVOID HwDeviceExtension,
-  IN VIDEO_PORT_SERVICES ServicesType,
-  IN OUT PINTERFACE Interface);
+    _In_ PVOID HwDeviceExtension,
+    _In_ VIDEO_PORT_SERVICES ServicesType,
+    _Inout_ PINTERFACE Interface);
 
 VPAPI
 BOOLEAN

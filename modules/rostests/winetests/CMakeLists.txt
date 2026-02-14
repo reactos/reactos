@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 if(MSVC)
     add_compile_options(
         /wd4090 # C4090: 'function': different 'const' qualifiers
@@ -78,6 +76,8 @@ add_subdirectory(msvcrt)
 add_subdirectory(msvcrtd)
 add_subdirectory(msvfw32)
 add_subdirectory(msxml3)
+add_subdirectory(msxml4)
+add_subdirectory(msxml6)
 add_subdirectory(netapi32)
 add_subdirectory(netcfgx)
 add_subdirectory(ntdll)

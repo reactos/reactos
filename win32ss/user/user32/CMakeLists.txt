@@ -4,7 +4,7 @@ spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/wine
     ${REACTOS_SOURCE_DIR}/win32ss/include
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng)
 
@@ -84,10 +84,6 @@ add_library(user32 MODULE
 set_module_type(user32 win32dll UNICODE ENTRYPOINT DllMain 12)
 target_link_libraries(user32 user32_vista_static user32_optional_vista user32_wsprintf wine win32ksys ${PSEH_LIB})
 add_dependencies(user32 asm)
-
-if(MSVC AND (ARCH STREQUAL "i386"))
-    target_sources(user32 PRIVATE $<TARGET_OBJECTS:ftol2_sse>)
-endif()
 
 add_delay_importlibs(user32 usp10 libpng)
 add_importlibs(user32 gdi32 advapi32 kernel32 ntdll)

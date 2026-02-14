@@ -295,10 +295,37 @@ CAvailableApplicationInfo::RetrieveLanguages()
     }
 }
 
+bool
+CAvailableApplicationInfo::IsCompatible() const
+{
+    CStringW szBuffer;
+    if (m_Parser->GetString(DB_NTVER, szBuffer))
+    {
+        LPWSTR start = szBuffer.GetString();
+        LPWSTR p;
+        ULONG MinNTVer = wcstoul(start, &p, 0);
+        if (p > start)
+        {
+            ULONG NTVersion = GetNTVersion();
+            // Treat as range if we have '-', otherwise treat it as XXX+
+            ULONG MaxNTVer = (*p == '-') ? wcstoul(++p, NULL, 0) : UINT_MAX;
+            // Handle the XXX- case (That version or lower)
+            if (MaxNTVer == 0)
+            {
+                MaxNTVer = MinNTVer;
+                MinNTVer = 0;
+            }
+
+            return NTVersion >= MinNTVer && NTVersion <= MaxNTVer;
+        }
+    }
+    return true;
+}
+
 BOOL
 CAvailableApplicationInfo::Valid() const
 {
-    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty();
+    return !szDisplayName.IsEmpty() && !m_szUrlDownload.IsEmpty() && IsCompatible();
 }
 
 BOOL
@@ -375,16 +402,46 @@ CAvailableApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
     UrlDownload = m_szUrlDownload;
 }
 
+static InstallerType
+GetInstallerTypeFromString(const CStringW &Installer)
+{
+    if (Installer.CompareNoCase(L"Inno") == 0)
+        return INSTALLER_INNO;
+    if (Installer.CompareNoCase(L"NSIS") == 0)
+        return INSTALLER_NSIS;
+    return INSTALLER_UNKNOWN;
+}
+
 InstallerType
-CAvailableApplicationInfo::GetInstallerType() const
+CAvailableApplicationInfo::GetInstallerType(bool NestedType) const
 {
     CStringW str;
     m_Parser->GetString(DB_INSTALLER, str);
     if (str.CompareNoCase(DB_INSTALLER_GENERATE) == 0)
+    {
         return INSTALLER_GENERATE;
-    if (str.CompareNoCase(DB_INSTALLER_EXEINZIP) == 0)
+    }
+    else if (str.CompareNoCase(DB_INSTALLER_EXEINZIP) == 0)
+    {
+        if (NestedType)
+        {
+            CStringW nested;
+            m_Parser->GetSectionString(DB_EXEINZIPSECTION, DB_INSTALLER, nested);
+            InstallerType it = GetInstallerTypeFromString(nested);
+            if (it != INSTALLER_UNKNOWN)
+                return it;
+        }
         return INSTALLER_EXEINZIP;
+    }
     return INSTALLER_UNKNOWN;
+}
+
+InstallerType
+CAvailableApplicationInfo::GetInstallerInfo(CStringW &SilentParameters) const
+{
+    InstallerType it = GetInstallerType(true);
+    m_Parser->GetString(DB_SILENTARGS, SilentParameters);
+    return it;
 }
 
 BOOL
@@ -584,7 +641,7 @@ CInstalledApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
 }
 
 InstallerType
-CInstalledApplicationInfo::GetInstallerType() const
+CInstalledApplicationInfo::GetInstallerType(bool NestedType) const
 {
     CRegKey reg;
     if (reg.Open(m_hKey, GENERATE_ARPSUBKEY, KEY_READ) == ERROR_SUCCESS)

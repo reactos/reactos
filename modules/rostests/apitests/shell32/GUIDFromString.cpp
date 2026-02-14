@@ -34,10 +34,9 @@ static void TEST_GUIDFromStringA(void)
     }
     _SEH2_END;
 
-    if (IsWindowsVistaOrGreater())
-        ok_int(ret, FALSE);
-    else
-        ok_int(ret, 0xDEADBEEF);
+    ok(ret == FALSE ||             // Win8+
+       ret == (int)(0xDEADBEEF),   // Win2k3-Win7
+       "Wrong value for ret (0x%X)\n", ret);
     ok_int(memcmp(&guid, &invalid_guid, sizeof(guid)) == 0, TRUE);
 
     guid = invalid_guid;
@@ -81,10 +80,9 @@ static void TEST_GUIDFromStringW(void)
     }
     _SEH2_END;
 
-    if (IsWindowsVistaOrGreater())
-        ok_int(ret, 0xDEADBEEF);
-    else
-        ok_int(ret, FALSE);
+    ok(ret == (int)(0xDEADBEEF) || // Win8+
+       ret == FALSE,               // Win2k3-Win7
+       "Wrong value for ret (0x%X)\n", ret);
     ok_int(memcmp(&guid, &invalid_guid, sizeof(guid)) == 0, TRUE);
 
     guid = invalid_guid;

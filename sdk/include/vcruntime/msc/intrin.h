@@ -380,6 +380,10 @@ void _sgdt(void *Destination);
 #pragma intrinsic(__sev)
 #endif
 
+#if defined(_M_ARM64)
+#pragma intrinsic(__getReg)
+#endif
+
 /** Secure virtual machine **/
 #if defined(_M_IX86) || defined(_M_AMD64)
 #pragma intrinsic(__svm_clgi)

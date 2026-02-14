@@ -333,6 +333,7 @@ static const union cptable *get_codepage_table( unsigned int codepage )
 #endif // !__REACTOS__
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /***********************************************************************
  *              charset_cmp (internal)
  */
@@ -362,6 +363,7 @@ static UINT find_charset( const WCHAR *name )
     if (entry) return entry->codepage;
     return 0;
 }
+#endif // 0 See kernel32_vista
 #endif // (WINVER >= 0x0600)
 
 static LANGID get_default_sublang( LANGID lang )
@@ -383,6 +385,7 @@ static LANGID get_default_sublang( LANGID lang )
 }
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /***********************************************************************
  *           find_locale_id_callback
  */
@@ -467,7 +470,7 @@ done:
     }
     return (data->matches < 4);  /* no need to continue for perfect match */
 }
-
+#endif // 0 See kernel32_vista
 
 /***********************************************************************
  *		parse_locale_name
@@ -476,6 +479,7 @@ done:
  * Unix format is: lang[_country][.charset][@modifier]
  * Windows format is: lang[-script][-country][_modifier]
  */
+#if 0 // See kernel32_vista
 static void parse_locale_name( const WCHAR *str, struct locale_name *name )
 {
     static const WCHAR sepW[] = {'-','_','.','@',0};
@@ -576,7 +580,8 @@ done:
     EnumResourceLanguagesW( kernel32_handle, (LPCWSTR)RT_STRING, (LPCWSTR)LOCALE_ILANGUAGE,
                             find_locale_id_callback, (LPARAM)name );
 }
-#endif
+#endif // 0 See kernel32_vista
+#endif // (WINVER >= 0x0600)
 
 
 /***********************************************************************
@@ -1400,6 +1405,7 @@ LANGID WINAPI GetSystemDefaultUILanguage(void)
 }
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /***********************************************************************
  *           LocaleNameToLCID  (KERNEL32.@)
  */
@@ -1430,8 +1436,10 @@ LCID WINAPI LocaleNameToLCID( LPCWSTR name, DWORD flags )
 
     return locale_name.lcid;
 }
+#endif
 
 
+#if 0 // See kernel32_vista
 /***********************************************************************
  *           LCIDToLocaleName  (KERNEL32.@)
  */
@@ -1441,6 +1449,7 @@ INT WINAPI LCIDToLocaleName( LCID lcid, LPWSTR name, INT count, DWORD flags )
 
     return GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, name, count );
 }
+#endif
 #endif
 
 
@@ -1807,6 +1816,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
 }
 
 #if (WINVER >= 0x0600)
+#if 0 // See kernel32_vista
 /******************************************************************************
  *           GetLocaleInfoEx (KERNEL32.@)
  */
@@ -1839,7 +1849,9 @@ INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
 
     return GetLocaleInfoW(lcid, info, buffer, len);
 }
+#endif
 
+#if 0 // See kernel32_vista
 BOOL
 WINAPI
 IsValidLocaleName(
@@ -1849,17 +1861,7 @@ IsValidLocaleName(
     TRACE( "IsValidLocaleName not implemented (lpLocaleName=%s)\n", debugstr_w(lpLocaleName));
     return TRUE;
 }
-
-INT
-WINAPI
-GetUserDefaultLocaleName(
-  LPWSTR lpLocaleName,
-  INT    cchLocaleName
-)
-{
-    TRACE( "GetUserDefaultLocaleName not implemented (lpLocaleName=%s, cchLocaleName=%d)\n", debugstr_w(lpLocaleName), cchLocaleName);
-    return 0;
-}
+#endif
 #endif
 
 /******************************************************************************
@@ -3013,6 +3015,7 @@ struct enum_locale_ex_data
     LPARAM            lparam;
 };
 
+#if 0
 static BOOL CALLBACK enum_locale_ex_proc( HMODULE module, LPCWSTR type,
                                           LPCWSTR name, WORD lang, LONG_PTR lparam )
 {
@@ -3053,7 +3056,7 @@ BOOL WINAPI EnumSystemLocalesEx( LOCALE_ENUMPROCEX proc, DWORD flags, LPARAM lpa
                             enum_locale_ex_proc, (LONG_PTR)&data );
     return TRUE;
 }
-
+#endif
 
 /***********************************************************************
  *           VerLanguageNameA  (KERNEL32.@)
@@ -3897,77 +3900,6 @@ INT WINAPI LCMapStringA(LCID lcid, DWORD flags, LPCSTR src, INT srclen,
 
 map_string_exit:
     if (srcW != bufW) HeapFree(GetProcessHeap(), 0, srcW);
-    return ret;
-}
-
-/*************************************************************************
- *           FoldStringA    (KERNEL32.@)
- *
- * Map characters in a string.
- *
- * PARAMS
- *  dwFlags [I] Flags controlling chars to map (MAP_ constants from "winnls.h")
- *  src     [I] String to map
- *  srclen  [I] Length of src, or -1 if src is NUL terminated
- *  dst     [O] Destination for mapped string
- *  dstlen  [I] Length of dst, or 0 to find the required length for the mapped string
- *
- * RETURNS
- *  Success: The length of the string written to dst, including the terminating NUL. If
- *           dstlen is 0, the value returned is the same, but nothing is written to dst,
- *           and dst may be NULL.
- *  Failure: 0. Use GetLastError() to determine the cause.
- */
-INT WINAPI FoldStringA(DWORD dwFlags, LPCSTR src, INT srclen,
-                       LPSTR dst, INT dstlen)
-{
-    INT ret = 0, srclenW = 0;
-    WCHAR *srcW = NULL, *dstW = NULL;
-
-    if (!src || !srclen || dstlen < 0 || (dstlen && !dst) || src == dst)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    srclenW = MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
-                                  src, srclen, NULL, 0);
-    srcW = HeapAlloc(GetProcessHeap(), 0, srclenW * sizeof(WCHAR));
-
-    if (!srcW)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto FoldStringA_exit;
-    }
-
-    MultiByteToWideChar(CP_ACP, dwFlags & MAP_COMPOSITE ? MB_COMPOSITE : 0,
-                        src, srclen, srcW, srclenW);
-
-    dwFlags = (dwFlags & ~MAP_PRECOMPOSED) | MAP_FOLDCZONE;
-
-    ret = FoldStringW(dwFlags, srcW, srclenW, NULL, 0);
-    if (ret && dstlen)
-    {
-        dstW = HeapAlloc(GetProcessHeap(), 0, ret * sizeof(WCHAR));
-
-        if (!dstW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto FoldStringA_exit;
-        }
-
-        ret = FoldStringW(dwFlags, srcW, srclenW, dstW, ret);
-        if (!WideCharToMultiByte(CP_ACP, 0, dstW, ret, dst, dstlen, NULL, NULL))
-        {
-            ret = 0;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        }
-    }
-
-    HeapFree(GetProcessHeap(), 0, dstW);
-
-FoldStringA_exit:
-    HeapFree(GetProcessHeap(), 0, srcW);
     return ret;
 }
 

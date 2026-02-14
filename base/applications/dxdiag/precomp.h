@@ -28,10 +28,16 @@
 
 typedef struct
 {
+    HWND hDisplayWnd;
+    GUID guid;
+} DXDIAG_DISPLAY, *PDXDIAG_DISPLAY;
+
+typedef struct
+{
     HWND hMainDialog;
     HWND hTabCtrl;
     ULONG NumDisplayAdapter;
-    HWND * hDisplayWnd;
+    PDXDIAG_DISPLAY * DisplayAdapters;
     ULONG NumSoundAdapter;
     HWND * hSoundWnd;
     HWND hDialogs[5];
@@ -53,10 +59,10 @@ INT_PTR CALLBACK NetworkPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 INT_PTR CALLBACK HelpPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* DirectDraw tests */
-VOID DDTests(VOID);
+VOID DDTests(GUID *lpDevice);
 
 /* Direct3D tests */
-VOID D3DTests(VOID);
+VOID D3DTests(GUID *lpDevice);
 
 /* DirectSound initialization */
 void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext);

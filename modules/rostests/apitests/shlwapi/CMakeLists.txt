@@ -7,6 +7,7 @@ include_directories($<TARGET_FILE_DIR:shlwapi_resource_dll>)
 list(APPEND SOURCE
     AssocQueryString.c
     IShellFolderHelpers.cpp
+    IsQSForward.cpp
     PathFileExistsDefExtAndAttributesW.c
     PathFindOnPath.c
     PathIsUNC.c
@@ -21,6 +22,7 @@ list(APPEND SOURCE
     SHPropertyBag.cpp
     StrDup.c
     StrFormatByteSizeW.c
+    StrToInt.c
     testdata.rc
     testlist.c)
 

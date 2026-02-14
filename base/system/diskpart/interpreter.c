@@ -10,39 +10,39 @@
 #include "diskpart.h"
 #include "diskpart_msg.h"
 
-BOOL exit_main(INT argc, LPWSTR *argv);
-BOOL rem_main(INT argc, LPWSTR *argv);
-
 
 COMMAND cmds[] =
 {
     {L"ACTIVE",      NULL,         NULL,        active_main,             IDS_HELP_ACTIVE,                    MSG_COMMAND_ACTIVE},
-    {L"ADD",         NULL,         NULL,        add_main,                IDS_HELP_ADD,                       MSG_COMMAND_ADD},
+//    {L"ADD",         NULL,         NULL,        add_main,                IDS_HELP_ADD,                       MSG_COMMAND_ADD},
     {L"ASSIGN",      NULL,         NULL,        assign_main,             IDS_HELP_ASSIGN,                    MSG_COMMAND_ASSIGN},
-    {L"ATTACH",      NULL,         NULL,        attach_main,             IDS_HELP_ATTACH,                    MSG_COMMAND_ATTACH},
-    {L"ATTRIBUTES",  NULL,         NULL,        attributes_main,         IDS_HELP_ATTRIBUTES,                MSG_COMMAND_ATTRIBUTES},
+//    {L"ATTACH",      NULL,         NULL,        attach_main,             IDS_HELP_ATTACH,                    MSG_COMMAND_ATTACH},
+//    {L"ATTRIBUTES",  NULL,         NULL,        attributes_main,         IDS_HELP_ATTRIBUTES,                MSG_COMMAND_ATTRIBUTES},
     {L"AUTOMOUNT",   NULL,         NULL,        automount_main,          IDS_HELP_AUTOMOUNT,                 MSG_COMMAND_AUTOMOUNT},
-    {L"BREAK",       NULL,         NULL,        break_main,              IDS_HELP_BREAK,                     MSG_COMMAND_BREAK},
+//    {L"BREAK",       NULL,         NULL,        break_main,              IDS_HELP_BREAK,                     MSG_COMMAND_BREAK},
     {L"CLEAN",       NULL,         NULL,        clean_main,              IDS_HELP_CLEAN,                     MSG_COMMAND_CLEAN},
-    {L"COMPACT",     NULL,         NULL,        compact_main,            IDS_HELP_COMPACT,                   MSG_COMMAND_COMPACT},
-    {L"CONVERT",     NULL,         NULL,        convert_main,            IDS_HELP_CONVERT,                   MSG_COMMAND_CONVERT},
+//    {L"COMPACT",     NULL,         NULL,        compact_main,            IDS_HELP_COMPACT,                   MSG_COMMAND_COMPACT},
+
+    {L"CONVERT",     NULL,         NULL,        NULL,                    IDS_HELP_CONVERT,                   MSG_NONE},
+    {L"CONVERT",     L"GPT",       NULL,        ConvertGPT,              IDS_HELP_CONVERT_GPT,               MSG_COMMAND_CONVERT_GPT},
+    {L"CONVERT",     L"MBR",       NULL,        ConvertMBR,              IDS_HELP_CONVERT_MBR,               MSG_COMMAND_CONVERT_MBR},
 
     {L"CREATE",      NULL,         NULL,        NULL,                    IDS_HELP_CREATE,                    MSG_NONE},
     {L"CREATE",      L"PARTITION", NULL,        NULL,                    IDS_HELP_CREATE_PARTITION,          MSG_NONE},
-//    {L"CREATE",      L"PARTITION", L"EFI",      CreateEfiPartition,      IDS_HELP_CREATE_PARTITION_EFI,      MSG_COMMAND_CREATE_PARTITION_EFI},
+    {L"CREATE",      L"PARTITION", L"EFI",      CreateEfiPartition,      IDS_HELP_CREATE_PARTITION_EFI,      MSG_COMMAND_CREATE_PARTITION_EFI},
     {L"CREATE",      L"PARTITION", L"EXTENDED", CreateExtendedPartition, IDS_HELP_CREATE_PARTITION_EXTENDED, MSG_COMMAND_CREATE_PARTITION_EXTENDED},
     {L"CREATE",      L"PARTITION", L"LOGICAL",  CreateLogicalPartition,  IDS_HELP_CREATE_PARTITION_LOGICAL,  MSG_COMMAND_CREATE_PARTITION_LOGICAL},
-//    {L"CREATE",      L"PARTITION", L"MSR",      CreateMsrPartition,      IDS_HELP_CREATE_PARTITION_MSR,      MSG_COMMAND_CREATE_PARTITION_MSR},
+    {L"CREATE",      L"PARTITION", L"MSR",      CreateMsrPartition,      IDS_HELP_CREATE_PARTITION_MSR,      MSG_COMMAND_CREATE_PARTITION_MSR},
     {L"CREATE",      L"PARTITION", L"PRIMARY",  CreatePrimaryPartition,  IDS_HELP_CREATE_PARTITION_PRIMARY,  MSG_COMMAND_CREATE_PARTITION_PRIMARY},
-    {L"CREATE",      L"VOLUME",    NULL,        NULL,                    IDS_HELP_CREATE_VOLUME,             MSG_NONE},
-    {L"CREATE",      L"VDISK",     NULL,        NULL,                    IDS_HELP_CREATE_VDISK,              MSG_NONE},
+//    {L"CREATE",      L"VOLUME",    NULL,        NULL,                    IDS_HELP_CREATE_VOLUME,             MSG_NONE},
+//    {L"CREATE",      L"VDISK",     NULL,        NULL,                    IDS_HELP_CREATE_VDISK,              MSG_NONE},
 
     {L"DELETE",      NULL,         NULL,        NULL,                    IDS_HELP_DELETE,                    MSG_NONE},
-    {L"DELETE",      L"DISK",      NULL,        DeleteDisk,              IDS_HELP_DELETE_DISK,               MSG_COMMAND_DELETE_DISK},
+//    {L"DELETE",      L"DISK",      NULL,        DeleteDisk,              IDS_HELP_DELETE_DISK,               MSG_COMMAND_DELETE_DISK},
     {L"DELETE",      L"PARTITION", NULL,        DeletePartition,         IDS_HELP_DELETE_PARTITION,          MSG_COMMAND_DELETE_PARTITION},
-    {L"DELETE",      L"VOLUME",    NULL,        DeleteVolume,            IDS_HELP_DELETE_VOLUME,             MSG_COMMAND_DELETE_VOLUME},
+//    {L"DELETE",      L"VOLUME",    NULL,        DeleteVolume,            IDS_HELP_DELETE_VOLUME,             MSG_COMMAND_DELETE_VOLUME},
 
-    {L"DETACH",      NULL,         NULL,        detach_main,             IDS_HELP_DETACH,                    MSG_COMMAND_DETACH},
+//    {L"DETACH",      NULL,         NULL,        detach_main,             IDS_HELP_DETACH,                    MSG_COMMAND_DETACH},
 
     {L"DETAIL",      NULL,         NULL,        NULL,                    IDS_HELP_DETAIL,                    MSG_NONE},
     {L"DETAIL",      L"DISK",      NULL,        DetailDisk,              IDS_HELP_DETAIL_DISK,               MSG_COMMAND_DETAIL_DISK},
@@ -54,31 +54,31 @@ COMMAND cmds[] =
     {L"DUMP",        L"PARTITION", NULL,        DumpPartition,           IDS_NONE,                           MSG_NONE},
     {L"EXIT",        NULL,         NULL,        NULL,                    IDS_HELP_EXIT,                      MSG_COMMAND_EXIT},
 
-    {L"EXPAND",      NULL,         NULL,        expand_main,             IDS_HELP_EXPAND,                    MSG_COMMAND_EXPAND},
-    {L"EXTEND",      NULL,         NULL,        extend_main,             IDS_HELP_EXTEND,                    MSG_COMMAND_EXTEND},
+//    {L"EXPAND",      NULL,         NULL,        expand_main,             IDS_HELP_EXPAND,                    MSG_COMMAND_EXPAND},
+//    {L"EXTEND",      NULL,         NULL,        extend_main,             IDS_HELP_EXTEND,                    MSG_COMMAND_EXTEND},
     {L"FILESYSTEMS", NULL,         NULL,        filesystems_main,        IDS_HELP_FILESYSTEMS,               MSG_COMMAND_FILESYSTEMS},
     {L"FORMAT",      NULL,         NULL,        format_main,             IDS_HELP_FORMAT,                    MSG_COMMAND_FORMAT},
     {L"GPT",         NULL,         NULL,        gpt_main,                IDS_HELP_GPT,                       MSG_COMMAND_GPT},
     {L"HELP",        NULL,         NULL,        help_main,               IDS_HELP_HELP,                      MSG_COMMAND_HELP},
-    {L"IMPORT",      NULL,         NULL,        import_main,             IDS_HELP_IMPORT,                    MSG_COMMAND_IMPORT},
+//    {L"IMPORT",      NULL,         NULL,        import_main,             IDS_HELP_IMPORT,                    MSG_COMMAND_IMPORT},
     {L"INACTIVE",    NULL,         NULL,        inactive_main,           IDS_HELP_INACTIVE,                  MSG_COMMAND_INACTIVE},
 
     {L"LIST",        NULL,         NULL,        NULL,                    IDS_HELP_LIST,                      MSG_NONE},
     {L"LIST",        L"DISK",      NULL,        ListDisk,                IDS_HELP_LIST_DISK,                 MSG_COMMAND_LIST_DISK},
     {L"LIST",        L"PARTITION", NULL,        ListPartition,           IDS_HELP_LIST_PARTITION,            MSG_COMMAND_LIST_PARTITION},
     {L"LIST",        L"VOLUME",    NULL,        ListVolume,              IDS_HELP_LIST_VOLUME,               MSG_COMMAND_LIST_VOLUME},
-    {L"LIST",        L"VDISK",     NULL,        ListVirtualDisk,         IDS_HELP_LIST_VDISK,                MSG_COMMAND_LIST_VDISK},
+//    {L"LIST",        L"VDISK",     NULL,        ListVirtualDisk,         IDS_HELP_LIST_VDISK,                MSG_COMMAND_LIST_VDISK},
 
-    {L"MERGE",       NULL,         NULL,        merge_main,              IDS_HELP_MERGE,                     MSG_COMMAND_MERGE},
-    {L"OFFLINE",     NULL,         NULL,        offline_main,            IDS_HELP_OFFLINE,                   MSG_COMMAND_OFFLINE},
-    {L"ONLINE",      NULL,         NULL,        online_main,             IDS_HELP_ONLINE,                    MSG_COMMAND_ONLINE},
-    {L"RECOVER",     NULL,         NULL,        recover_main,            IDS_HELP_RECOVER,                   MSG_COMMAND_RECOVER},
+//    {L"MERGE",       NULL,         NULL,        merge_main,              IDS_HELP_MERGE,                     MSG_COMMAND_MERGE},
+//    {L"OFFLINE",     NULL,         NULL,        offline_main,            IDS_HELP_OFFLINE,                   MSG_COMMAND_OFFLINE},
+//    {L"ONLINE",      NULL,         NULL,        online_main,             IDS_HELP_ONLINE,                    MSG_COMMAND_ONLINE},
+//    {L"RECOVER",     NULL,         NULL,        recover_main,            IDS_HELP_RECOVER,                   MSG_COMMAND_RECOVER},
     {L"REM",         NULL,         NULL,        NULL,                    IDS_HELP_REM,                       MSG_COMMAND_REM},
     {L"REMOVE",      NULL,         NULL,        remove_main,             IDS_HELP_REMOVE,                    MSG_COMMAND_REMOVE},
-    {L"REPAIR",      NULL,         NULL,        repair_main,             IDS_HELP_REPAIR,                    MSG_COMMAND_REPAIR},
+//    {L"REPAIR",      NULL,         NULL,        repair_main,             IDS_HELP_REPAIR,                    MSG_COMMAND_REPAIR},
     {L"RESCAN",      NULL,         NULL,        rescan_main,             IDS_HELP_RESCAN,                    MSG_COMMAND_RESCAN},
-    {L"RETAIN",      NULL,         NULL,        retain_main,             IDS_HELP_RETAIN,                    MSG_COMMAND_RETAIN},
-    {L"SAN",         NULL,         NULL,        san_main,                IDS_HELP_SAN,                       MSG_COMMAND_SAN},
+//    {L"RETAIN",      NULL,         NULL,        retain_main,             IDS_HELP_RETAIN,                    MSG_COMMAND_RETAIN},
+//    {L"SAN",         NULL,         NULL,        san_main,                IDS_HELP_SAN,                       MSG_COMMAND_SAN},
 
     {L"SELECT",      NULL,         NULL,        NULL,                    IDS_HELP_SELECT,                    MSG_NONE},
     {L"SELECT",      L"DISK",      NULL,        SelectDisk,              IDS_HELP_SELECT_DISK,               MSG_COMMAND_SELECT_DISK},
@@ -88,7 +88,7 @@ COMMAND cmds[] =
 
     {L"SET",         NULL,         NULL,        setid_main,              IDS_HELP_SETID,                     MSG_COMMAND_SETID},
     {L"SETID",       NULL,         NULL,        setid_main,              IDS_HELP_SETID,                     MSG_COMMAND_SETID},
-    {L"SHRINK",      NULL,         NULL,        shrink_main,             IDS_HELP_SHRINK,                    MSG_COMMAND_SHRINK},
+//    {L"SHRINK",      NULL,         NULL,        shrink_main,             IDS_HELP_SHRINK,                    MSG_COMMAND_SHRINK},
 
     {L"UNIQUEID",    NULL,         NULL,        NULL,                    IDS_HELP_UNIQUEID,                  MSG_NONE},
     {L"UNIQUEID",    L"DISK",      NULL,        UniqueIdDisk,            IDS_HELP_UNIQUEID_DISK,             MSG_COMMAND_UNIQUEID_DISK},
@@ -104,7 +104,7 @@ COMMAND cmds[] =
  * compares the command name to a list of available commands, and
  * determines which function to invoke.
  */
-BOOL
+EXIT_CODE
 InterpretCmd(
     int argc,
     LPWSTR *argv)
@@ -116,15 +116,15 @@ InterpretCmd(
 
     /* If no args provided */
     if (argc < 1)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* First, determine if the user wants to exit
        or to use a comment */
     if (_wcsicmp(argv[0], L"exit") == 0)
-        return FALSE;
+        return EXIT_EXIT;
 
     if (_wcsicmp(argv[0], L"rem") == 0)
-        return TRUE;
+        return EXIT_SUCCESS;
 
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
@@ -171,7 +171,7 @@ InterpretCmd(
 
     HelpCommandList();
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
@@ -179,14 +179,15 @@ InterpretCmd(
  * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
-BOOL
-InterpretScript(LPWSTR input_line)
+EXIT_CODE
+InterpretScript(
+    _In_ PWSTR input_line)
 {
-    LPWSTR args_vector[MAX_ARGS_COUNT];
+    PWSTR args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    LPWSTR ptr;
+    PWSTR ptr;
 
     memset(args_vector, 0, sizeof(args_vector));
 
@@ -235,10 +236,10 @@ InterpretMain(VOID)
     INT args_count = 0;
     BOOL bWhiteSpace = TRUE;
     BOOL bQuote = FALSE;
-    BOOL bRun = TRUE;
+    EXIT_CODE ExitCode = EXIT_SUCCESS;
     LPWSTR ptr;
 
-    while (bRun != FALSE)
+    while (ExitCode != EXIT_EXIT)
     {
         args_count = 0;
         memset(args_vector, 0, sizeof(args_vector));
@@ -274,6 +275,6 @@ InterpretMain(VOID)
         }
 
         /* Send the string to find the command */
-        bRun = InterpretCmd(args_count, args_vector);
+        ExitCode = InterpretCmd(args_count, args_vector);
     }
 }

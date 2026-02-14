@@ -10,6 +10,7 @@ Wallpapers
 |"ReactOS Mizu 4x3.png"          | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
 |"ReactOS Mizu 16x9 A.png"       | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
 |"ReactOS Mizu 16x9 B.png"       | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
+|"ReactOS Nebula 1920x1080.jpg"  | Community member _twotime on Discord          | https://jira.reactos.org/browse/RELEASE-7              |
 |--------------------------------|-----------------------------------------------|--------------------------------------------------------|
 
 You can also download the other wallpapers from the "ReactOS Standard Wallpapers" package in the ReactOS Applications Manager.

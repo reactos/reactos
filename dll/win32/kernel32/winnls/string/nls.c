@@ -297,7 +297,11 @@ IntGetCodePageEntry(UINT CodePage)
     HANDLE SectionHandle = INVALID_HANDLE_VALUE, FileHandle;
     PBYTE SectionMapping;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    union
+    {
+        SECURITY_DESCRIPTOR AlignedSd;
+        UCHAR Buffer[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    } SecurityDescriptor;
     ANSI_STRING AnsiName;
     UNICODE_STRING UnicodeName;
     WCHAR FileName[MAX_PATH + 1];
@@ -389,7 +393,7 @@ IntGetCodePageEntry(UINT CodePage)
                                &UnicodeName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               SecurityDescriptor);
+                               &SecurityDescriptor);
 
     /* Try to open the section first */
     Status = NtOpenSection(&SectionHandle,
@@ -2054,6 +2058,7 @@ GetCPInfo(UINT CodePage,
         {
             case CP_UTF7:
             case CP_UTF8:
+                RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
                 CodePageInfo->DefaultChar[0] = 0x3f;
                 CodePageInfo->DefaultChar[1] = 0;
                 CodePageInfo->LeadByte[0] = CodePageInfo->LeadByte[1] = 0;
@@ -2066,6 +2071,7 @@ GetCPInfo(UINT CodePage,
         return FALSE;
     }
 
+    RtlZeroMemory(CodePageInfo, sizeof(*CodePageInfo));
     if (CodePageEntry->CodePageTable.DefaultChar & 0xff00)
     {
         CodePageInfo->DefaultChar[0] = (CodePageEntry->CodePageTable.DefaultChar & 0xff00) >> 8;

@@ -3,9 +3,9 @@ include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 add_definitions(-D_VIDEOPORT_)
 spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
-# Embed RTC libs
+# Link GCC stack protector lib
 if (STACK_PROTECTOR)
-    target_sources(libvideoprt PRIVATE $<TARGET_OBJECTS:gcc_ssp_videoprt>)
+    target_link_libraries(libvideoprt INTERFACE gcc_ssp_videoprt)
 endif()
 
 list(APPEND SOURCE

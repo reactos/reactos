@@ -31,7 +31,7 @@ Notes:
 Revision History:
 
     Some parts of hardware-specific code were taken from FreeBSD 4.3-6.1 ATA driver by
-         Søren Schmidt, Copyright (c) 1998-2007
+         SÃ¸ren Schmidt, Copyright (c) 1998-2007
 
     Some parts of device detection code were taken from from standard ATAPI.SYS from NT4 DDK by
          Mike Glass (MGlass)

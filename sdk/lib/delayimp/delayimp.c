@@ -1,11 +1,9 @@
 /*
- * PROJECT:         ReactOS SDK Library
- * LICENSE:         LGPL, see LGPL.txt in top level directory.
- * FILE:            lib/sdk/delayimp/delayimp.c
- * PURPOSE:         Library for delay importing from dlls
- * PROGRAMMERS:     Timo Kreuzer <timo.kreuzer@reactos.org>
- *                  Mark Jansen
- *
+ * PROJECT:     ReactOS delayimport Library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Implementation of delayimport library
+ * COPYRIGHT:   Copyright 2009 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2016 Mark Jansen
  */
 
 #include <stdarg.h>
@@ -16,8 +14,8 @@
 /**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
 
 /* The actual items we use */
-PfnDliHook __pfnDliNotifyHook2;
-PfnDliHook __pfnDliFailureHook2;
+extern PfnDliHook __pfnDliNotifyHook2;
+extern PfnDliHook __pfnDliFailureHook2;
 
 #if !defined(__GNUC__)
 /* The fallback symbols */

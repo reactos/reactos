@@ -475,8 +475,9 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     {
         if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
         {
+            // Use "alias" PIDL if possible
             CComHeapPtr<ITEMIDLIST> pidlAlias;
-            if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
+            if (SUCCEEDED(SHELL32_AliasTranslatePidl(*ppidl, &pidlAlias, ALIAS_ANY)))
             {
                 ILFree(*ppidl);
                 *ppidl = pidlAlias.Detach();
@@ -657,21 +658,10 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
-            HKEY hKeys[16];
-            UINT cKeys = 0;
-            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
-
-            DEFCONTEXTMENU dcm;
-            dcm.hwnd = hwndOwner;
-            dcm.pcmcb = this;
-            dcm.pidlFolder = pidlRoot;
-            dcm.psf = this;
-            dcm.cidl = 0;
-            dcm.apidl = NULL;
-            dcm.cKeys = cKeys;
-            dcm.aKeys = hKeys;
-            dcm.punkAssociationInfo = NULL;
-            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
+        CRegKeyHandleArray keys;
+        AddClassKeyToArray(L"Directory\\Background", keys, keys);
+        DEFCONTEXTMENU dcm = { hwndOwner, this, pidlRoot, this, 0, NULL, NULL, keys, keys };
+        hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
@@ -795,29 +785,19 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             /* Do not use the context menu of the CFSFolder here. */
             /* We need to pass a pointer of the CDesktopFolder so as the data object that the context menu gets is rooted to the desktop */
             /* Otherwise operations like that involve items from both user and shared desktop will not work */
-            HKEY hKeys[16];
-            UINT cKeys = 0;
+            CRegKeyHandleArray keys;
             if (self)
             {
-                AddClsidKeyToArray(CLSID_ShellDesktop, hKeys, &cKeys);
-                AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+                AddClsidKeyToArray(CLSID_ShellDesktop, keys, keys);
+                AddClassKeyToArray(L"Folder", keys, keys);
             }
             else if (cidl > 0)
             {
-                AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
+                AddFSClassKeysToArray(cidl, apidl, keys, keys);
             }
 
-            DEFCONTEXTMENU dcm;
-            dcm.hwnd = hwndOwner;
-            dcm.pcmcb = this;
-            dcm.pidlFolder = pidlRoot;
-            dcm.psf = this;
-            dcm.cidl = cidl;
-            dcm.apidl = apidl;
-            dcm.cKeys = cKeys;
-            dcm.aKeys = hKeys;
-            dcm.punkAssociationInfo = NULL;
-            hr = SHCreateDefaultContextMenu (&dcm, riid, &pObj);
+            DEFCONTEXTMENU dcm = { hwndOwner, this, pidlRoot, this, cidl, apidl, NULL, keys, keys };
+            hr = SHCreateDefaultContextMenu(&dcm, riid, &pObj);
         }
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
@@ -1049,7 +1029,15 @@ HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IData
     enum { IDC_PROPERTIES };
     if (uMsg == DFM_INVOKECOMMAND && wParam == (pdtobj ? DFM_CMD_PROPERTIES : IDC_PROPERTIES))
     {
-        return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL;
+        if (pdtobj)
+        {
+            PIDLIST_ABSOLUTE pidl = SHELL_DataObject_ILCloneFullItem(pdtobj, 0);
+            BOOL bIsSelf = _ILIsDesktop(pidl); // Context menu on Desktop item in the shell tree?
+            ILFree(pidl);
+            if (!bIsSelf)
+                return SHELL32_ShowPropertiesDialog(pdtobj); // File selection
+        }
+        return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL; // Background
     }
     else if (uMsg == DFM_MERGECONTEXTMENU && !pdtobj) // Add Properties item when called for directory background
     {
@@ -1098,6 +1086,11 @@ HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPAR
 {
     switch (uMsg)
     {
+        #if ROSPOLICY_DESKTOPFOLDER_DEFLARGEICONS
+        case SFVM_DEFVIEWMODE:                     // CDesktopBrowser always forces FVM_ICON.
+            *((FOLDERVIEWMODE*)lParam) = FVM_ICON; // This sets the default for generic browsers.
+            return S_OK;
+        #endif
         case SFVM_VIEWRELEASE:
             m_pShellView = NULL;
             return S_OK;

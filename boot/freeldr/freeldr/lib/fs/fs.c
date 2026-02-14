@@ -257,7 +257,7 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
          pEntry = pEntry->Flink)
     {
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
-        if (strncmp(pDevice->DeviceName, DeviceName, Length) == 0)
+        if ((strlen(pDevice->DeviceName) == Length) && (strncmp(pDevice->DeviceName, DeviceName, Length) == 0))
             break;
     }
 
@@ -530,6 +530,83 @@ FsOpenFile(
 
     /* Open the file */
     return ArcOpen(FullPath, OpenMode, FileId);
+}
+
+/**
+ * @brief
+ * Returns the (useful) size of a file-system volume laid on the
+ * storage media device opened via @p DeviceId.
+ **/
+ARC_STATUS
+FsGetVolumeSize(
+    _In_ ULONG DeviceId,
+    _Out_ PULONGLONG VolumeSize)
+{
+    DEVICE* pDevice;
+    const DEVVTBL* FuncTable;
+    PCWSTR ServiceName;
+    ULONGLONG (*pFsGetVolumeSize)(_In_ ULONG DeviceId);
+
+    /* Check whether this file actually references a device */
+    pDevice = FsGetDeviceById(DeviceId);
+    if (!pDevice)
+        return EBADF; /* It doesn't, fail */
+
+    *VolumeSize = 0;
+
+    // TODO: Mount the device, if not already done?
+#if 1 // FIXME: TEMP HACK!
+    if (!pDevice->FileFuncTable && (pDevice->ReferenceCount <= 1))
+    {
+        for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
+        {
+            pDevice->FileFuncTable = FileSystems[fs](DeviceId);
+            if (pDevice->FileFuncTable)
+                break;
+        }
+    }
+#endif
+    // TODO: Use a virtual table function member for easily handling other file systems.
+
+    /* Check that the device is mounted (non-NULL FileFuncTable)
+     * and there is an associated "service" (file-system) name. */
+    FuncTable = pDevice->FileFuncTable;
+    ServiceName = (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : NULL;
+    if (!ServiceName)
+    {
+        ERR("Non-mounted device %lu\n", DeviceId);
+        return ENXIO;
+    }
+
+    /* HACK: Since we don't currently use a virtual table function member,
+     * we instead do a manual lookup over the file-system name.
+     * The ordering follows that of the FileSystems[] table. */
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"cdfs"))
+        pFsGetVolumeSize = IsoGetVolumeSize;
+    else
+#endif
+    if (!_wcsicmp(ServiceName, L"fastfat") || !_wcsicmp(ServiceName, L"vfatfs"))
+        pFsGetVolumeSize = FatGetVolumeSize;
+    else
+    if (!_wcsicmp(ServiceName, L"btrfs"))
+        pFsGetVolumeSize = BtrFsGetVolumeSize;
+    else
+#ifndef _M_ARM
+    if (!_wcsicmp(ServiceName, L"ntfs"))
+        pFsGetVolumeSize = NtfsGetVolumeSize;
+    else
+    if (!_wcsicmp(ServiceName, L"ext2fs"))
+        pFsGetVolumeSize = ExtGetVolumeSize;
+    else
+#endif
+    {
+        ERR("Unsupported file system '%S' on storage device %lu\n", ServiceName, DeviceId);
+        return EIO; // ENXIO;
+    }
+    *VolumeSize = pFsGetVolumeSize(DeviceId);
+    return ESUCCESS;
 }
 
 /*

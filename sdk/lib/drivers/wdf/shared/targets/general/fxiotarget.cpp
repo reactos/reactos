@@ -2402,7 +2402,7 @@ Return Value:
 
 _Must_inspect_result_
 NTSTATUS
-STDCALL
+NTAPI
 FxIoTarget::_RequestCompletionRoutine(
     MdDeviceObject DeviceObject,
     MdIrp Irp,

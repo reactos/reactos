@@ -257,16 +257,6 @@ OpenEffectiveToken(
     return ret;
 }
 
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags)
-{
-    return E_FAIL; //FIXME
-}
-
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
 {
     CComPtr<IUnknown> punk;
@@ -400,6 +390,29 @@ SHELL_GetUIObjectOfAbsoluteItem(
         }
     }
     return hr;
+}
+
+HRESULT
+SHELL_DisplayNameOf(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ UINT Flags,
+    _Out_ PWSTR *ppStr)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder> psfRoot;
+    if (!psf)
+    {
+        PCUITEMID_CHILD pidlChild;
+        hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfRoot), &pidlChild);
+        if (FAILED(hr))
+            return hr;
+        psf = psfRoot;
+        pidl = pidlChild;
+    }
+    STRRET sr;
+    hr = psf->GetDisplayNameOf((PCUITEMID_CHILD)pidl, Flags, &sr);
+    return SUCCEEDED(hr) ? StrRetToStrW(&sr, pidl, ppStr) : hr;
 }
 
 /***********************************************************************
@@ -1675,8 +1688,7 @@ InvokeIExecuteCommand(
     if (!pEC)
         return E_INVALIDARG;
 
-    if (pSite)
-        IUnknown_SetSite(pEC, pSite);
+    CScopedSetObjectWithSite site(pEC, pSite);
     IUnknown_InitializeCommand(pEC, pszCommandName, pPB);
 
     CComPtr<IObjectWithSelection> pOWS;
@@ -1698,10 +1710,7 @@ InvokeIExecuteCommand(
     if (fMask & CMIC_MASK_PTINVOKE)
         pEC->SetPosition(pICI->ptInvoke);
 
-    HRESULT hr = pEC->Execute();
-    if (pSite)
-        IUnknown_SetSite(pEC, NULL);
-    return hr;
+    return pEC->Execute();
 }
 
 EXTERN_C HRESULT
@@ -1811,6 +1820,35 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
         return hr;
     initIcon->SetNormalIcon(swShell32Name, IconIndex);
     return initIcon->QueryInterface(riid, ppvOut);
+}
+
+int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId)
+{
+    for (UINT i = 0;; ++i)
+    {
+        const CLSID *pClsId = DCIA_GetEntry(hDCIA, i);
+        if (!pClsId)
+            break;
+        if (IsEqualGUID(*pClsId, rClsId))
+            return i; // Don't allow duplicates
+    }
+    return DSA_AppendItem((HDSA)hDCIA, const_cast<CLSID*>(&rClsId));
+}
+
+void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey)
+{
+    WCHAR szKey[200];
+    PathCombineW(szKey, L"shellex", pszSubkey);
+    HKEY hEnum;
+    if (RegOpenKeyExW(hProgId, szKey, 0, KEY_READ, &hEnum) != ERROR_SUCCESS)
+        return;
+    for (UINT i = 0; RegEnumKeyW(hEnum, i++, szKey, _countof(szKey)) == ERROR_SUCCESS;)
+    {
+        CLSID clsid;
+        if (SUCCEEDED(SHELL_GetShellExtensionRegCLSID(hEnum, szKey, &clsid)))
+            DCIA_AddEntry(hDCIA, clsid);
+    }
+    RegCloseKey(hEnum);
 }
 
 /*************************************************************************
@@ -2042,4 +2080,112 @@ SHGetComputerDisplayNameW(
 
     // Build a string like "Description (SERVERNAME)"
     return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
+}
+
+typedef struct tagALIAS_MAPPING
+{
+    BYTE bFlagMask;      // The combination of ALIAS_USER_FOLDER and/or ALIAS_DESKTOP
+    BYTE bCommonDesktop;
+    WORD nCsidlSrc;      // CSIDL_... (source)
+    WORD nCsidlDest;     // CSIDL_... (destination)
+} ALIAS_MAPPING, *PALIAS_MAPPING;
+
+//! PIDL alias table
+static const ALIAS_MAPPING g_AliasTable[] =
+{
+    {
+        ALIAS_USER_FOLDER,
+        FALSE,
+        CSIDL_PERSONAL | CSIDL_FLAG_NO_ALIAS,
+        CSIDL_PERSONAL
+    },
+    {
+        ALIAS_USER_FOLDER | ALIAS_DESKTOP,
+        FALSE,
+        CSIDL_COMMON_DOCUMENTS | CSIDL_FLAG_NO_ALIAS,
+        CSIDL_COMMON_DOCUMENTS
+    },
+    {
+        ALIAS_DESKTOP,
+        FALSE,
+        CSIDL_DESKTOPDIRECTORY,
+        CSIDL_DESKTOP
+    },
+    {
+        ALIAS_DESKTOP,
+        TRUE,
+        CSIDL_COMMON_DESKTOPDIRECTORY,
+        CSIDL_DESKTOP
+    }
+};
+
+//! Translate a PIDL to an "alias" PIDL.
+EXTERN_C BOOL
+SHELL32_ReparentAsAliasPidl(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HANDLE hToken,
+    _In_ LPCITEMIDLIST pidlTarget,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags)
+{
+    if (!pidlTarget || !ppidlNew)
+        return FALSE;
+
+    *ppidlNew = NULL;
+
+    for (SIZE_T iEntry = 0; iEntry < _countof(g_AliasTable); ++iEntry)
+    {
+        const ALIAS_MAPPING *pEntry = &g_AliasTable[iEntry];
+
+        if (!(dwFlags & pEntry->bFlagMask))
+            continue;
+
+        // Get the source root PIDL
+        LPITEMIDLIST pidlSrcRoot = NULL;
+        HRESULT hr = SHGetFolderLocation(hwnd, pEntry->nCsidlSrc, hToken, 0, &pidlSrcRoot);
+        if (FAILED(hr))
+            continue;
+
+        // Check whether the input pidlTarget is under the source folder.
+        // If it matches, ILFindChild returns the relative PIDL in the pidlTarget.
+        LPCITEMIDLIST pidlRelative = ILFindChild(pidlSrcRoot, pidlTarget);
+        if (!pidlRelative) // Not found?
+        {
+            ILFree(pidlSrcRoot);
+            continue;
+        }
+
+        // Found. Get the destination root PIDL
+        LPITEMIDLIST pidlDestRoot = NULL;
+        hr = SHGetFolderLocation(hwnd, pEntry->nCsidlDest, hToken, 0, &pidlDestRoot);
+        if (SUCCEEDED(hr))
+        {
+            // Create a new PIDL by combining the destination root PIDL and the relative PIDL
+            *ppidlNew = ILCombine(pidlDestRoot, pidlRelative);
+            if (*ppidlNew)
+            {
+                // Manipulate specific flags in the PIDL if necessary
+                if (pEntry->bCommonDesktop && (*ppidlNew)->mkid.cb >= 3)
+                {
+                    (*ppidlNew)->mkid.abID[0] |= (PT_FS | PT_FS_COMMON_FLAG);
+                }
+            }
+            ILFree(pidlDestRoot);
+        }
+
+        ILFree(pidlSrcRoot);
+        break; // A match was found, so exit the loop
+    }
+
+    return (*ppidlNew != NULL);
+}
+
+//! Translate a PIDL to an "alias" PIDL.
+EXTERN_C HRESULT
+SHELL32_AliasTranslatePidl(
+    _In_ LPCITEMIDLIST pidl,
+    _Out_ LPITEMIDLIST *ppidlNew,
+    _In_ DWORD dwFlags)
+{
+    return SHELL32_ReparentAsAliasPidl(NULL, NULL, pidl, ppidlNew, dwFlags) ? S_OK : E_FAIL;
 }

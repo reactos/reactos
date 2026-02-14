@@ -45,28 +45,28 @@ typedef struct _WDF_LIBRARY_INFO *PWDF_LIBRARY_INFO;
 
 typedef
 VOID
-(*WDFFUNC)(
+(NTAPI *WDFFUNC)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYCOMMISSION)(
+(NTAPI *PFNLIBRARYCOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYDECOMMISSION)(
+(NTAPI *PFNLIBRARYDECOMMISSION)(
     VOID
     );
 
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __deref_out   PWDF_COMPONENT_GLOBALS   * ComponentGlobals,
     __deref_inout PVOID                    * Context
@@ -75,7 +75,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PFNLIBRARYUNREGISTERCLIENT)(
+(NTAPI *PFNLIBRARYUNREGISTERCLIENT)(
     __in PWDF_BIND_INFO             Info,
     __in PWDF_COMPONENT_GLOBALS     DriverGlobals
     );
@@ -83,7 +83,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PWDF_REGISTER_LIBRARY)(
+(NTAPI *PWDF_REGISTER_LIBRARY)(
     __in  PWDF_LIBRARY_INFO   LibraryInfo,
     __in  PUNICODE_STRING     ServicePath,
     __in  PCUNICODE_STRING    LibraryDeviceName
@@ -92,7 +92,7 @@ NTSTATUS
 typedef
 _Must_inspect_result_
 NTSTATUS
-(*PWDF_VERSION_BIND)(
+(NTAPI *PWDF_VERSION_BIND)(
     __in  PDRIVER_OBJECT           DriverObject,
     __in  PUNICODE_STRING          RegistryPath,
     __in  PWDF_BIND_INFO           Info,
@@ -101,7 +101,7 @@ NTSTATUS
 
 typedef
 NTSTATUS
-(*PWDF_VERSION_UNBIND)(
+(NTAPI *PWDF_VERSION_UNBIND)(
     __in PUNICODE_STRING         RegistryPath,
     __in PWDF_BIND_INFO          Info,
     __in PWDF_COMPONENT_GLOBALS  Globals
@@ -157,8 +157,8 @@ typedef struct _WDF_LOADER_INTERFACE {
     PWDF_LDR_DIAGNOSTICS_VALUE_BY_NAME_AS_ULONG DiagnosticsValueByNameAsULONG;
 } WDF_LOADER_INTERFACE,  *PWDF_LOADER_INTERFACE;
 
-VOID
 __inline
+VOID
 WDF_LOADER_INTERFACE_INIT(
     PWDF_LOADER_INTERFACE Interface
     )
@@ -192,6 +192,7 @@ typedef struct _CLIENT_INFO {
 //-----------------------------------------------------------------------------
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 WdfVersionBind(
     __in    PDRIVER_OBJECT DriverObject,
     __in    PUNICODE_STRING RegistryPath,
@@ -200,6 +201,7 @@ WdfVersionBind(
     );
 
 NTSTATUS
+NTAPI
 WdfVersionUnbind(
     __in PUNICODE_STRING RegistryPath,
     __in PWDF_BIND_INFO BindInfo,
@@ -208,6 +210,7 @@ WdfVersionUnbind(
 
 _Must_inspect_result_
 NTSTATUS
+NTAPI
 WdfRegisterLibrary(
     __in PWDF_LIBRARY_INFO LibraryInfo,
     __in PUNICODE_STRING ServicePath,
@@ -218,7 +221,7 @@ WdfRegisterLibrary(
 #pragma alloc_text (PAGE, WdfVersionBind)
 #pragma alloc_text (PAGE, WdfVersionUnbind)
 #pragma alloc_text (PAGE, WdfRegisterLibrary)
-// #pragma alloc_text (PAGE, WdfRegisterClassLibrary)
+#pragma alloc_text (PAGE, WdfRegisterClassLibrary)
 #endif
 
 #ifdef __cplusplus

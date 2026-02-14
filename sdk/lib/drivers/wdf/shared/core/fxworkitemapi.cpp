@@ -40,7 +40,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
-STDCALL
+NTAPI
 WDFEXPORT(WdfWorkItemCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -145,7 +145,7 @@ Notes:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfWorkItemEnqueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -182,7 +182,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
-STDCALL
+NTAPI
 WDFEXPORT(WdfWorkItemGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -222,7 +222,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfWorkItemFlush)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

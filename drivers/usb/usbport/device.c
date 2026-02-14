@@ -1389,17 +1389,27 @@ USBPORT_InitializeDevice(IN PUSBPORT_DEVICE_HANDLE DeviceHandle,
 
     if (NT_SUCCESS(Status))
     {
-        ASSERT(TransferedLen == sizeof(USB_DEVICE_DESCRIPTOR));
-        ASSERT(DeviceHandle->DeviceDescriptor.bLength >= sizeof(USB_DEVICE_DESCRIPTOR));
-        ASSERT(DeviceHandle->DeviceDescriptor.bDescriptorType == USB_DEVICE_DESCRIPTOR_TYPE);
+        /* Some devices may return a short transfer here; accept it if the
+           header through bMaxPacketSize0 was received earlier during
+           USBPORT_CreateDevice. */
+        if (TransferedLen < sizeof(USB_DEVICE_DESCRIPTOR))
+        {
+            DPRINT1("USBPORT_InitializeDevice: Short device descriptor len %lu\n",
+                    TransferedLen);
+        }
 
+        /* Use the known bMaxPacketSize0 (was obtained prior to SetAddress) */
         MaxPacketSize = DeviceHandle->DeviceDescriptor.bMaxPacketSize0;
 
-        ASSERT((MaxPacketSize == 8) ||
-               (MaxPacketSize == 16) ||
-               (MaxPacketSize == 32) ||
-               (MaxPacketSize == 64));
+        if (!(MaxPacketSize == 8 || MaxPacketSize == 16 ||
+              MaxPacketSize == 32 || MaxPacketSize == 64))
+        {
+            DPRINT1("USBPORT_InitializeDevice: Invalid MPS0 %u\n", MaxPacketSize);
+            Status = STATUS_DEVICE_DATA_ERROR;
+            goto ExitError;
+        }
 
+        /* Mark USB2 hub flag when identifiable (bDeviceClass available in header) */
         if (DeviceHandle->DeviceSpeed == UsbHighSpeed &&
             DeviceHandle->DeviceDescriptor.bDeviceClass == USB_DEVICE_CLASS_HUB)
         {

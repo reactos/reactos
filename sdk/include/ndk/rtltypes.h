@@ -540,7 +540,7 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 // Unhandled Exception Filter
 //
 typedef ULONG
-(NTAPI *RTLP_UNHANDLED_EXCEPTION_FILTER)(
+(NTAPI RTLP_UNHANDLED_EXCEPTION_FILTER)(
     _In_ struct _EXCEPTION_POINTERS *ExceptionInfo
 );
 typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
@@ -1390,6 +1390,15 @@ typedef struct _RTL_PERTHREAD_CURDIR
     PUNICODE_STRING ImageName;
     PVOID Environment;
 } RTL_PERTHREAD_CURDIR, *PRTL_PERTHREAD_CURDIR;
+
+typedef struct _RTL_ACE_DATA
+{
+    UCHAR AceType;
+    UCHAR InheritFlags;
+    UCHAR AceFlags;
+    ACCESS_MASK Mask;
+    PSID *Sid;
+} RTL_ACE_DATA, *PRTL_ACE_DATA;
 
 //
 // Private State structure for RtlAcquirePrivilege/RtlReleasePrivilege

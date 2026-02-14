@@ -118,7 +118,7 @@ Appuyer sur ENTREE pour conserver la même date."
 DEL [/N /P /T /Q /W /Y /Z] fichier ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] fichier ...\n\
 ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
-  fichier  Specifie le(s) fichier(s) à effacer.\n\n\
+  fichier  Spécifie le(s) fichier(s) à effacer.\n\n\
   /N    Rien.\n\
   /P    Demande. Demande avant d'effacer pour chaque fichier.\n\
   /T    Total. Affiche le total de fichiers effacés et l'espace disque libéré.\n\

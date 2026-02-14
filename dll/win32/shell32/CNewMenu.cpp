@@ -93,8 +93,21 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
-        TRACE("Failed to open key\n");
-        return NULL;
+        WCHAR wszValue[MAX_PATH];
+        cbData = sizeof(wszValue);
+        if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszValue,
+                         &cbData) != ERROR_SUCCESS || !wszValue[0])
+        {
+            TRACE("Failed to open key\n");
+            return NULL;
+        }
+        wszValue[_countof(wszValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s\\%s\\ShellNew", pwszExt, wszValue);
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        {
+            TRACE("Failed to open key\n");
+            return NULL;
+        }
     }
 
     /* Find first valid value */

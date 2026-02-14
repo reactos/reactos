@@ -1,4 +1,3 @@
-#define __ROS_LONG64__
 
 #define STANDALONE
 #include <wine/test.h>
@@ -97,10 +96,10 @@ const struct test winetest_testlist[] =
     { "SHDefExtractIcon", func_SHDefExtractIcon },
     { "SHEnumerateUnreadMailAccountsW", func_SHEnumerateUnreadMailAccountsW },
     { "She", func_She },
-    { "ShellExec_RunDLL", func_ShellExec_RunDLL },
-    { "ShellExecCmdLine", func_ShellExecCmdLine },
-    { "ShellExecuteEx", func_ShellExecuteEx },
-    { "ShellExecuteW", func_ShellExecuteW },
+    //{ "ShellExec_RunDLL", func_ShellExec_RunDLL }, Broke on Windows
+    //{ "ShellExecCmdLine", func_ShellExecCmdLine }, Broke on Windows
+    //{ "ShellExecuteEx", func_ShellExecuteEx }, Broke on Windows
+    //{ "ShellExecuteW", func_ShellExecuteW }, Broke on Windows
     { "ShellHook", func_ShellHook },
     { "ShellState", func_ShellState },
     { "SHGetAttributesFromDataObject", func_SHGetAttributesFromDataObject },

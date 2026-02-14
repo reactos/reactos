@@ -1403,7 +1403,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 PWND FASTCALL UserGetDesktopWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1416,7 +1415,6 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1429,7 +1427,6 @@ HWND FASTCALL IntGetMessageWindow(VOID)
 PWND FASTCALL UserGetMessageWindow(VOID)
 {
     PDESKTOP pdo = IntGetActiveDesktop();
-
     if (!pdo)
     {
         TRACE("No active desktop\n");
@@ -1442,7 +1439,7 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
     PDESKTOP pdo = pti->rpdesk;
-    if (NULL == pdo)
+    if (!pdo)
     {
         ERR("Thread doesn't have a desktop\n");
         return NULL;
@@ -1992,7 +1989,7 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cxWallpaper,
                                         gspv.cyWallpaper,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                 }
                 else if (gspv.WallpaperMode == wmTile)
                 {
@@ -2010,7 +2007,7 @@ IntPaintDesktop(HDC hDC)
                                         0,
                                         0,
                                         SRCCOPY,
-                                        0,
+                                        CLR_INVALID,
                                         0);
                         }
                     }
@@ -2030,7 +2027,7 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cxWallpaper,
                                         gspv.cyWallpaper,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                     }
                 }
                 else if (gspv.WallpaperMode == wmFill)
@@ -2048,7 +2045,7 @@ IntPaintDesktop(HDC hDC)
                                         wallpaperWidth,
                                         wallpaperHeight,
                                         SRCCOPY,
-                                        0);
+                                        CLR_INVALID);
                     }
                 }
                 else
@@ -2062,7 +2059,7 @@ IntPaintDesktop(HDC hDC)
                                 0,
                                 0,
                                 SRCCOPY,
-                                0,
+                                CLR_INVALID,
                                 0);
                 }
                 NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);

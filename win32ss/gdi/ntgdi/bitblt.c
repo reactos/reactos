@@ -342,7 +342,6 @@ NtGdiMaskBlt(
 
     if (!hdcDest)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -388,7 +387,6 @@ NtGdiMaskBlt(
     {
         WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiMaskBlt\n", hdcDest, hdcSrc);
         if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     DCDest = apObj[0];
@@ -485,7 +483,7 @@ NtGdiMaskBlt(
             goto cleanup;
 
         /* Create the XLATEOBJ. */
-        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        EXLATEOBJ_vInitXlateFromDCsEx(&exlo, DCSrc, DCDest, crBackColor);
         XlateObj = &exlo.xlo;
     }
 
@@ -735,7 +733,7 @@ GreStretchBltMask(
             goto failed;
 
         /* Create the XLATEOBJ. */
-        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        EXLATEOBJ_vInitXlateFromDCsEx(&exlo, DCSrc, DCDest, dwBackColor);
         XlateObj = &exlo.xlo;
     }
 
@@ -1443,8 +1441,7 @@ NtGdiSetPixel(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return -1;
+        return CLR_INVALID;
     }
 
     /* Check if the DC has no surface (empty mem or info DC) */
@@ -1452,7 +1449,7 @@ NtGdiSetPixel(
     {
         /* Fail! */
         DC_UnlockDc(pdc);
-        return -1;
+        return CLR_INVALID;
     }
 
     if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
@@ -1492,13 +1489,13 @@ NtGdiSetPixel(
     pdc->pdcattr->ulDirty_ = ulDirty;
 
     /// FIXME: we shouldn't dereference pSurface while the PDEV is not locked!
-    /* Initialize an XLATEOBJ from the target surface to RGB */
+    /* Initialize an XLATEOBJ from the target surface to RGB without using BkColor */
     EXLATEOBJ_vInitialize(&exlo,
                           pdc->dclevel.pSurface->ppal,
                           &gpalRGB,
-                          0,
-                          pdc->pdcattr->crBackgroundClr,
-                          pdc->pdcattr->crForegroundClr);
+                          CLR_INVALID,
+                          CLR_INVALID,
+                          CLR_INVALID);
 
     /* Translate the color back to RGB */
     crColor = XLATEOBJ_iXlate(&exlo.xlo, iSolidColor);
@@ -1509,8 +1506,8 @@ NtGdiSetPixel(
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 
-    /* Return the new RGB color or -1 on failure */
-    return bResult ? crColor : -1;
+    /* Return the new RGB color or CLR_INVALID (-1) on failure */
+    return bResult ? crColor : CLR_INVALID;
 }
 
 COLORREF
@@ -1583,13 +1580,13 @@ NtGdiGetPixel(
         RECTL rclDest = {0, 0, 1, 1};
         EXLATEOBJ exlo;
 
-        /* Translate from the source palette to RGB color */
+        /* Translate from the source palette to RGB color without BkColor */
         EXLATEOBJ_vInitialize(&exlo,
                               psurfSrc->ppal,
                               &gpalRGB,
-                              0,
-                              RGB(0xff,0xff,0xff),
-                              RGB(0,0,0));
+                              CLR_INVALID,
+                              CLR_INVALID,
+                              CLR_INVALID);
 
         /* Call the copy bits function */
         EngCopyBits(&psurfDest->SurfObj,

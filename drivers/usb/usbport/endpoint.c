@@ -410,9 +410,17 @@ USBPORT_SetEndpointState(IN PUSBPORT_ENDPOINT Endpoint,
         Endpoint->FrameNumber = Packet->Get32BitFrameNumber(FdoExtension->MiniPortExt);
         KeReleaseSpinLock(&FdoExtension->MiniportSpinLock, OldIrql);
 
-        ExInterlockedInsertTailList(&FdoExtension->EpStateChangeList,
-                                    &Endpoint->StateChangeLink,
-                                    &FdoExtension->EpStateChangeSpinLock);
+        KIRQL StateChangeOldIrql;
+        KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &StateChangeOldIrql);
+
+        if (Endpoint->StateChangeLink.Flink == NULL &&
+            Endpoint->StateChangeLink.Blink == NULL)
+        {
+            InsertTailList(&FdoExtension->EpStateChangeList,
+                          &Endpoint->StateChangeLink);
+        }
+
+        KeReleaseSpinLock(&FdoExtension->EpStateChangeSpinLock, StateChangeOldIrql);
 
         KeAcquireSpinLock(&FdoExtension->MiniportSpinLock, &OldIrql);
         Packet->InterruptNextSOF(FdoExtension->MiniPortExt);
@@ -505,6 +513,24 @@ USBPORT_DeleteEndpoint(IN PDEVICE_OBJECT FdoDevice,
     DPRINT1("USBPORT_DeleteEndpoint: Endpoint - %p\n", Endpoint);
 
     FdoExtension = FdoDevice->DeviceExtension;
+
+    /* 
+     * Remove endpoint from EpStateChangeList if it's still there.
+     * This prevents the DPC handler from accessing a deleted endpoint.
+     */
+    KIRQL StateChangeOldIrql;
+    KeAcquireSpinLock(&FdoExtension->EpStateChangeSpinLock, &StateChangeOldIrql);
+
+    if (Endpoint->StateChangeLink.Flink != NULL &&
+        Endpoint->StateChangeLink.Blink != NULL)
+    {
+        RemoveEntryList(&Endpoint->StateChangeLink);
+    }
+    
+    Endpoint->StateChangeLink.Flink = NULL;
+    Endpoint->StateChangeLink.Blink = NULL;
+    
+    KeReleaseSpinLock(&FdoExtension->EpStateChangeSpinLock, StateChangeOldIrql);
 
     if ((Endpoint->WorkerLink.Flink && Endpoint->WorkerLink.Blink) ||
         Endpoint->LockCounter != -1)

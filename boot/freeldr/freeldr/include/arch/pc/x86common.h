@@ -12,10 +12,13 @@
 #define BIOSCALLBUFFER      HEX(4000) /* Buffer to store temporary data for any Int386() call */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
-#define STACKLOW            HEX(7000)
+#define STACKLOW            HEX(8000)
 #define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
+#define TEMPDATA16_BASE     HEX(7000)
+#define TEMPCODE16_BASE     HEX(7400)
+#define TEMPCODE_BASE     HEX(200000)
 #define MEMORY_MARGIN      HEX(88000) /* We need this much memory */
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
@@ -30,25 +33,26 @@
 #define MAX_DISKREADBUFFER_SIZE HEX(FE00)
 
 /* These addresses specify the realmode "BSS section" layout */
-#define BSS_RealModeEntry        (BSS_START +  0)
-#define BSS_CallbackReturn       (BSS_START +  4)
-#define BSS_RegisterSet          (BSS_START +  8) /* size = 40 */
-#define BSS_IntVector            (BSS_START + 52)
-#define BSS_PxeEntryPoint        (BSS_START + 56)
-#define BSS_PxeBufferSegment     (BSS_START + 60)
-#define BSS_PxeBufferOffset      (BSS_START + 64)
-#define BSS_PxeFunction          (BSS_START + 68)
-#define BSS_PxeResult            (BSS_START + 72)
-#define BSS_PnpBiosEntryPoint    (BSS_START + 76)
-#define BSS_PnpBiosDataSegment   (BSS_START + 80)
-#define BSS_PnpBiosBufferSegment (BSS_START + 84)
-#define BSS_PnpBiosBufferOffset  (BSS_START + 88)
-#define BSS_PnpNodeSize          (BSS_START + 92)
-#define BSS_PnpNodeCount         (BSS_START + 96)
-#define BSS_PnpNodeNumber        (BSS_START + 100)
-#define BSS_PnpResult            (BSS_START + 104)
-#define BSS_BootDrive            (BSS_START + 108) // 1 byte
-#define BSS_BootPartition        (BSS_START + 109) // 1 byte
+#define BSS_RealModeEntry               (BSS_START +  0)
+#define BSS_CallbackReturn              (BSS_START +  4)
+#define BSS_RegisterSet                 (BSS_START +  8) /* size = 40 */
+#define BSS_IntVector                   (BSS_START + 52)
+#define BSS_PxeEntryPoint               (BSS_START + 56)
+#define BSS_PxeBufferSegment            (BSS_START + 60)
+#define BSS_PxeBufferOffset             (BSS_START + 64)
+#define BSS_PxeFunction                 (BSS_START + 68)
+#define BSS_PxeResult                   (BSS_START + 72)
+#define BSS_PnpBiosEntryPoint           (BSS_START + 76)
+#define BSS_PnpBiosDataSegment          (BSS_START + 80)
+#define BSS_PnpBiosBufferSegment        (BSS_START + 84)
+#define BSS_PnpBiosBufferOffset         (BSS_START + 88)
+#define BSS_PnpNodeSize                 (BSS_START + 92)
+#define BSS_PnpNodeCount                (BSS_START + 96)
+#define BSS_PnpNodeNumber               (BSS_START + 100)
+#define BSS_PnpResult                   (BSS_START + 104)
+#define BSS_BootDrive                   (BSS_START + 108) // 1 byte
+#define BSS_BootPartition               (BSS_START + 109) // 1 byte
+#define BSS_CurrentSegmentBaseAddress   (BSS_START + 110) // 2 bytes
 
 
 /* Realmode function IDs */
@@ -73,7 +77,9 @@
 #define RMODE_DS    HEX(20)    /* RMode data selector, base 0 limit 64k */
 //#else
 /* Long mode selectors */
-#define LMODE_CS HEX(10)
-#define LMODE_DS HEX(18)
-#define CMODE_CS HEX(30)
+#define LMODE_CS    HEX(10)
+#define LMODE_DS    HEX(18)
+#define L_RMODE_CS  HEX(20)
+#define L_RMODE_DS  HEX(28)
+#define CMODE_CS    HEX(30)
 //#endif

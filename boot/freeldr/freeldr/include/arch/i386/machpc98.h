@@ -63,7 +63,7 @@ int Pc98ConsGetCh(VOID);
 
 VOID Pc98VideoInit(VOID);
 VOID Pc98VideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE Pc98VideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
+VIDEODISPLAYMODE Pc98VideoSetDisplayMode(PCSTR DisplayMode, BOOLEAN Init);
 VOID Pc98VideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG Pc98VideoGetBufferSize(VOID);
 VOID Pc98VideoGetFontsFromFirmware(PULONG RomFontPointers);
@@ -140,6 +140,10 @@ typedef struct _PC98_DISK_DRIVE
 /* Platform-specific boot drive and partition numbers */
 extern UCHAR FrldrBootDrive;
 extern ULONG FrldrBootPartition;
+
+CONFIGURATION_TYPE
+DiskGetConfigType(
+    _In_ UCHAR DriveNumber);
 
 LONG DiskReportError(BOOLEAN bShowError);
 BOOLEAN DiskResetController(IN PPC98_DISK_DRIVE DiskDrive);

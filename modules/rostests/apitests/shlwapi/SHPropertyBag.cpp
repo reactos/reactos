@@ -95,6 +95,13 @@ public:
                 if (lstrcmpiW(pszPropName, L"RECTL2.top") == 0)
                     return E_FAIL;
 
+                if (lstrcmpiW(pszPropName, L"Str1") == 0)
+                {
+                    V_VT(pvari) = VT_BSTR;
+                    V_BSTR(pvari) = SysAllocString(L"TestString");
+                    return S_OK;
+                }
+
                 if (lstrcmpiW(pszPropName, L"GUID1") == 0)
                 {
                     V_VT(pvari) = (VT_UI1 | VT_ARRAY);
@@ -612,28 +619,34 @@ static void SHPropertyBag_OnRegKey(void)
     pPropBag->Release();
 
     // Create as write-only IPropertyBag2
+    IPropertyBag2 *pPropBag2;
     hr = SHCreatePropertyBagOnRegKey(hKey, L"PropBagTest", STGM_WRITE,
-                                     IID_IPropertyBag2, (void **)&pPropBag);
+                                     IID_IPropertyBag2, (void **)&pPropBag2);
     ok_long(hr, S_OK);
 
     // Write UI4
+    PROPBAG2 propBag2 = {};
+    propBag2.dwType = PROPBAG2_TYPE_DATA;
+    propBag2.vt = VT_UI4;
+    propBag2.pstrName = const_cast<LPOLESTR>(L"Name1");
     VariantInit(&vari);
     V_VT(&vari) = VT_UI4;
     V_UI4(&vari) = 0xDEADFACE;
-    hr = pPropBag->Write(L"Name3", &vari);
+    hr = pPropBag2->Write(1, &propBag2, &vari);
     ok_long(hr, E_NOTIMPL);
     VariantClear(&vari);
 
     // Read UI4
     VariantInit(&vari);
     V_UI4(&vari) = 0xFEEDF00D;
-    hr = pPropBag->Read(L"Name3", &vari, NULL);
+    HRESULT hrPropBag;
+    hr = pPropBag2->Read(1, &propBag2, NULL, &vari, &hrPropBag);
     ok_long(hr, E_NOTIMPL);
     ok_int(V_VT(&vari), VT_EMPTY);
     ok_long(V_UI4(&vari), 0xFEEDF00D);
     VariantClear(&vari);
 
-    pPropBag->Release();
+    pPropBag2->Release();
 
     // Clean up
     RegDeleteKeyW(hKey, L"PropBagTest");

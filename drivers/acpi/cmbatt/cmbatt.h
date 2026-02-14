@@ -260,7 +260,7 @@ CmBattGetBixData(
 
 NTSTATUS
 NTAPI
-CmBattSetTripPpoint(
+CmBattSetTripPoint(
     PCMBATT_DEVICE_EXTENSION DeviceExtension,
     ULONG AlarmValue
 );

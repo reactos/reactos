@@ -12,7 +12,7 @@
 
 static BOOLEAN
 VgaInterpretCmdStream(
-    _In_ PUSHORT CmdStream)
+    _In_ const USHORT* CmdStream)
 {
     USHORT Cmd;
     UCHAR Major, Minor;
@@ -23,7 +23,8 @@ VgaInterpretCmdStream(
     USHORT ShortValue;
 
     /* First make sure that we have a Command Stream */
-    if (!CmdStream) return TRUE;
+    if (!CmdStream)
+        return TRUE;
 
     /* Loop as long as we have commands */
     while (*CmdStream != EOD)
@@ -63,7 +64,7 @@ VgaInterpretCmdStream(
                     Count = *CmdStream++;
 
                     /* Write the USHORT to the port; the buffer is what's in the command stream */
-                    WRITE_PORT_BUFFER_USHORT((PUSHORT)(VgaRegisterBase + Port), CmdStream, Count);
+                    WRITE_PORT_BUFFER_USHORT((PUSHORT)(VgaRegisterBase + Port), (PUSHORT)CmdStream, Count);
 
                     /* Move past the buffer in the command stream */
                     CmdStream += Count;
@@ -440,7 +441,7 @@ VidInitialize(
     /* Set the VGA Memory Base */
     VgaBase = Base;
 
-    /* Now check if we have to set the mode */
+    /* Check whether we have to set the video mode */
     if (SetMode)
     {
         /* Clear the current position */
@@ -460,27 +461,18 @@ VidInitialize(
         }
     }
 
-    /* VGA is ready */
     return TRUE;
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    /* Clear the current position */
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    /* Clear the screen with HAL if we were asked to */
-    if (HalReset)
+    /* Reset the video mode with HAL if requested */
+    if (SetMode && !HalResetDisplay())
     {
-        if (!HalResetDisplay())
-        {
-            /* The HAL didn't handle the display, fully re-initialize the VGA */
-            VgaInterpretCmdStream(VGA_640x480);
-        }
+        /* The HAL didn't handle the display, fully re-initialize the VGA */
+        VgaInterpretCmdStream(VGA_640x480);
     }
 
     /* Always re-initialize the AC registers */

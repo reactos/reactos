@@ -21,22 +21,18 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <assert.h>
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/xmlerror.h>
-# include <libxml/tree.h>
-# include <libxml/xmlschemas.h>
-# include <libxml/schemasInternals.h>
-# include <libxml/hash.h>
-# include <libxml/parser.h>
-# include <libxml/parserInternals.h>
-# include <libxml/xmlIO.h>
-# include <libxml/xmlversion.h>
-# include <libxml/xpath.h>
-#endif
+#include <libxml/xmlerror.h>
+#include <libxml/tree.h>
+#include <libxml/xmlschemas.h>
+#include <libxml/schemasInternals.h>
+#include <libxml/hash.h>
+#include <libxml/parser.h>
+#include <libxml/parserInternals.h>
+#include <libxml/xmlIO.h>
+#include <libxml/xmlversion.h>
+#include <libxml/xpath.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -48,15 +44,7 @@
 
 #include "msxml_private.h"
 
-#ifdef HAVE_LIBXML2
-
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
-
-#if LIBXML_VERSION >= 20908
-#define XMLHASH_CONST const
-#else
-#define XMLHASH_CONST
-#endif
 
 /* We use a chained hashtable, which can hold any number of schemas
  * TODO: grow/shrink hashtable depending on load factor
@@ -255,22 +243,17 @@ static void LIBXML2_LOG_CALLBACK parser_warning(void* ctx, char const* msg, ...)
     va_end(ap);
 }
 
-#ifdef HAVE_XMLSCHEMASSETPARSERSTRUCTUREDERRORS
-static void parser_serror(void* ctx, xmlErrorPtr err)
+static void parser_serror(void* ctx, const xmlError* err)
 {
     LIBXML2_CALLBACK_SERROR(Schema_parse, err);
 }
-#endif
 
 static inline xmlSchemaPtr Schema_parse(xmlSchemaParserCtxtPtr spctx)
 {
     TRACE("(%p)\n", spctx);
 
     xmlSchemaSetParserErrors(spctx, parser_error, parser_warning, NULL);
-#ifdef HAVE_XMLSCHEMASSETPARSERSTRUCTUREDERRORS
     xmlSchemaSetParserStructuredErrors(spctx, parser_serror, NULL);
-#endif
-
     return xmlSchemaParse(spctx);
 }
 
@@ -290,12 +273,10 @@ static void LIBXML2_LOG_CALLBACK validate_warning(void* ctx, char const* msg, ..
     va_end(ap);
 }
 
-#ifdef HAVE_XMLSCHEMASSETVALIDSTRUCTUREDERRORS
-static void validate_serror(void* ctx, xmlErrorPtr err)
+static void validate_serror(void* ctx, const xmlError* err)
 {
     LIBXML2_CALLBACK_SERROR(Schema_validate_tree, err);
 }
-#endif
 
 static HRESULT schema_cache_get_item(IUnknown *iface, LONG index, VARIANT *item)
 {
@@ -318,9 +299,7 @@ static inline HRESULT Schema_validate_tree(xmlSchemaPtr schema, xmlNodePtr tree)
      *       we probably need to validate the schema here. */
     svctx = xmlSchemaNewValidCtxt(schema);
     xmlSchemaSetValidErrors(svctx, validate_error, validate_warning, NULL);
-#ifdef HAVE_XMLSCHEMASSETVALIDSTRUCTUREDERRORS
     xmlSchemaSetValidStructuredErrors(svctx, validate_serror, NULL);
-#endif
 
     if (tree->type == XML_DOCUMENT_NODE)
         err = xmlSchemaValidateDoc(svctx, (xmlDocPtr)tree);
@@ -755,7 +734,7 @@ void schemasInit(void)
     /* Resource is loaded as raw data,
      * need a null-terminated string */
     while (buf[datatypes_len - 1] != '>') datatypes_len--;
-    datatypes_src = heap_alloc(datatypes_len + 1);
+    datatypes_src = malloc(datatypes_len + 1);
     memcpy(datatypes_src, buf, datatypes_len);
     datatypes_src[datatypes_len] = 0;
 
@@ -769,21 +748,21 @@ void schemasInit(void)
 void schemasCleanup(void)
 {
     xmlSchemaFree(datatypes_schema);
-    heap_free(datatypes_src);
+    free(datatypes_src);
     xmlSetExternalEntityLoader(_external_entity_loader);
 }
 
 static LONG cache_entry_add_ref(cache_entry* entry)
 {
     LONG ref = InterlockedIncrement(&entry->ref);
-    TRACE("(%p)->(%d)\n", entry, ref);
+    TRACE("%p, refcount %ld.\n", entry, ref);
     return ref;
 }
 
 static LONG cache_entry_release(cache_entry* entry)
 {
     LONG ref = InterlockedDecrement(&entry->ref);
-    TRACE("(%p)->(%d)\n", entry, ref);
+    TRACE("%p, refcount %ld.\n", entry, ref);
 
     if (ref == 0)
     {
@@ -801,7 +780,7 @@ static LONG cache_entry_release(cache_entry* entry)
             xmlSchemaFree(entry->schema);
         }
 
-        heap_free(entry);
+        free(entry);
     }
     return ref;
 }
@@ -815,7 +794,7 @@ static inline schema_cache* impl_from_IXMLDOMSchemaCollection2(IXMLDOMSchemaColl
 
 static inline schema_cache* impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection* iface)
 {
-    return CONTAINING_RECORD((IXMLDOMSchemaCollection2 *)iface, schema_cache, IXMLDOMSchemaCollection2_iface);
+    return CONTAINING_RECORD(iface, schema_cache, IXMLDOMSchemaCollection2_iface);
 }
 
 static inline schema_cache* unsafe_impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection *iface)
@@ -875,7 +854,7 @@ static BOOL link_datatypes(xmlDocPtr schema)
 
 static cache_entry* cache_entry_from_xsd_doc(xmlDocPtr doc, xmlChar const* nsURI, MSXML_VERSION v)
 {
-    cache_entry* entry = heap_alloc(sizeof(cache_entry));
+    cache_entry* entry = malloc(sizeof(cache_entry));
     xmlSchemaParserCtxtPtr spctx;
     xmlDocPtr new_doc = xmlCopyDoc(doc, 1);
 
@@ -897,7 +876,7 @@ static cache_entry* cache_entry_from_xsd_doc(xmlDocPtr doc, xmlChar const* nsURI
     {
         FIXME("failed to parse doc\n");
         xmlFreeDoc(new_doc);
-        heap_free(entry);
+        free(entry);
         entry = NULL;
     }
     xmlSchemaFreeParserCtxt(spctx);
@@ -906,7 +885,7 @@ static cache_entry* cache_entry_from_xsd_doc(xmlDocPtr doc, xmlChar const* nsURI
 
 static cache_entry* cache_entry_from_xdr_doc(xmlDocPtr doc, xmlChar const* nsURI, MSXML_VERSION version)
 {
-    cache_entry* entry = heap_alloc(sizeof(cache_entry));
+    cache_entry* entry = malloc(sizeof(cache_entry));
     xmlSchemaParserCtxtPtr spctx;
     xmlDocPtr new_doc = xmlCopyDoc(doc, 1), xsd_doc = XDR_to_XSD_doc(doc, nsURI);
 
@@ -929,7 +908,7 @@ static cache_entry* cache_entry_from_xdr_doc(xmlDocPtr doc, xmlChar const* nsURI
         FIXME("failed to parse doc\n");
         xmlFreeDoc(new_doc);
         xmlFreeDoc(xsd_doc);
-        heap_free(entry);
+        free(entry);
         entry = NULL;
     }
     xmlSchemaFreeParserCtxt(spctx);
@@ -942,7 +921,7 @@ static cache_entry* cache_entry_from_url(VARIANT url, xmlChar const* nsURI, MSXM
     cache_entry* entry;
     IXMLDOMDocument3* domdoc = NULL;
     xmlDocPtr doc = NULL;
-    HRESULT hr = DOMDocument_create(version, (void**)&domdoc);
+    HRESULT hr = dom_document_create(version, (void **)&domdoc);
     VARIANT_BOOL b = VARIANT_FALSE;
     CacheEntryType type = CacheEntryType_Invalid;
 
@@ -957,7 +936,7 @@ static cache_entry* cache_entry_from_url(VARIANT url, xmlChar const* nsURI, MSXM
     hr = IXMLDOMDocument3_load(domdoc, url, &b);
     if (hr != S_OK)
     {
-        ERR("IXMLDOMDocument3_load() returned 0x%08x\n", hr);
+        ERR("load() returned %#lx.\n", hr);
         if (b != VARIANT_TRUE)
         {
             FIXME("Failed to load doc at %s\n", debugstr_w(V_BSTR(&url)));
@@ -986,7 +965,7 @@ static cache_entry* cache_entry_from_url(VARIANT url, xmlChar const* nsURI, MSXM
     return entry;
 }
 
-static void cache_free(void* data, XMLHASH_CONST xmlChar* name /* ignored */)
+static void cache_free(void* data, const xmlChar* name /* ignored */)
 {
     cache_entry_release((cache_entry*)data);
 }
@@ -999,7 +978,7 @@ static int cache_free_uri(schema_cache *cache, const xmlChar *uri)
     for (i = 0; i < cache->count; i++)
         if (xmlStrEqual(cache->uris[i], uri))
         {
-            heap_free(cache->uris[i]);
+            free(cache->uris[i]);
             return i;
         }
 
@@ -1016,14 +995,14 @@ static void cache_add_entry(schema_cache *cache, const xmlChar *uri, cache_entry
         if (cache->count == cache->allocated)
         {
             cache->allocated *= 2;
-            cache->uris = heap_realloc(cache->uris, cache->allocated*sizeof(xmlChar*));
+            cache->uris = realloc(cache->uris, cache->allocated * sizeof(xmlChar*));
         }
         i = cache->count++;
     }
     else
         i = cache_free_uri(cache, uri);
 
-    cache->uris[i] = heap_strdupxmlChar(uri);
+    cache->uris[i] = strdupxmlChar(uri);
     xmlHashAddEntry(cache->cache, uri, entry);
 }
 
@@ -1080,7 +1059,7 @@ HRESULT cache_from_doc_ns(IXMLDOMSchemaCollection2 *iface, xmlnode *node)
                     continue;
                 }
 
-                entry = heap_alloc(sizeof(cache_entry));
+                entry = malloc(sizeof(cache_entry));
                 entry->type = CacheEntryType_NS;
                 entry->ref = 1;
                 entry->schema = NULL;
@@ -1147,7 +1126,7 @@ static ULONG WINAPI schema_cache_AddRef(IXMLDOMSchemaCollection2* iface)
 {
     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
     LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
     return ref;
 }
 
@@ -1155,17 +1134,17 @@ static ULONG WINAPI schema_cache_Release(IXMLDOMSchemaCollection2* iface)
 {
     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
     LONG ref = InterlockedDecrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
 
-    if (ref == 0)
+    if (!ref)
     {
         int i;
 
         for (i = 0; i < This->count; i++)
-            heap_free(This->uris[i]);
-        heap_free(This->uris);
+            free(This->uris[i]);
+        free(This->uris);
         xmlHashFree(This->cache, cache_free);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -1235,7 +1214,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                 }
                 else
                 {
-                    heap_free(name);
+                    free(name);
                     return E_FAIL;
                 }
 
@@ -1266,7 +1245,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                         BSTR xml;
 
                         IXMLDOMNode_get_xml(domnode, &xml);
-                        DOMDocument_create(This->version, (void**)&domdoc);
+                        dom_document_create(This->version, (void **)&domdoc);
                         IXMLDOMDocument_loadXML(domdoc, xml, &b);
                         SysFreeString(xml);
                         doc = xmlNodePtr_from_domnode((IXMLDOMNode*)domdoc, XML_DOCUMENT_NODE)->doc;
@@ -1281,7 +1260,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                 if (!doc)
                 {
                     IXMLDOMNode_Release(domnode);
-                    heap_free(name);
+                    free(name);
                     return E_INVALIDARG;
                 }
                 type = cache_type_from_xmlDocPtr(doc);
@@ -1308,7 +1287,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                 }
                 else
                 {
-                    heap_free(name);
+                    free(name);
                     return E_FAIL;
                 }
 
@@ -1318,10 +1297,10 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
 
         default:
             FIXME("arg type is not supported, %s\n", debugstr_variant(&var));
-            heap_free(name);
+            free(name);
             return E_INVALIDARG;
     }
-    heap_free(name);
+    free(name);
     return S_OK;
 }
 
@@ -1347,7 +1326,7 @@ static HRESULT WINAPI schema_cache_get(IXMLDOMSchemaCollection2* iface, BSTR uri
 
     name = uri ? xmlchar_from_wchar(uri) : xmlchar_from_wchar(emptyW);
     entry = (cache_entry*) xmlHashLookup(This->cache, name);
-    heap_free(name);
+    free(name);
 
     /* TODO: this should be read-only */
     if (entry && entry->doc)
@@ -1367,7 +1346,7 @@ static HRESULT WINAPI schema_cache_remove(IXMLDOMSchemaCollection2* iface, BSTR 
 
     name = uri ? xmlchar_from_wchar(uri) : xmlchar_from_wchar(emptyW);
     cache_remove_entry(This, name);
-    heap_free(name);
+    free(name);
     return S_OK;
 }
 
@@ -1388,7 +1367,7 @@ static HRESULT WINAPI schema_cache_get_namespaceURI(IXMLDOMSchemaCollection2* if
 {
     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
 
-    TRACE("(%p)->(%i %p)\n", This, index, uri);
+    TRACE("%p, %ld, %p.\n", iface, index, uri);
 
     if (!uri)
         return E_POINTER;
@@ -1403,7 +1382,7 @@ static HRESULT WINAPI schema_cache_get_namespaceURI(IXMLDOMSchemaCollection2* if
     return S_OK;
 }
 
-static void cache_copy(void* data, void* dest, XMLHASH_CONST xmlChar* name)
+static void cache_copy(void* data, void* dest, const xmlChar* name)
 {
     schema_cache* This = (schema_cache*) dest;
     cache_entry* entry = (cache_entry*) data;
@@ -1621,7 +1600,7 @@ static dispex_static_data_t schemacache_dispex = {
 
 HRESULT SchemaCache_create(MSXML_VERSION version, void** obj)
 {
-    schema_cache* This = heap_alloc(sizeof(schema_cache));
+    schema_cache* This = malloc(sizeof(schema_cache));
     if (!This)
         return E_OUTOFMEMORY;
 
@@ -1631,7 +1610,7 @@ HRESULT SchemaCache_create(MSXML_VERSION version, void** obj)
     This->cache = xmlHashCreate(DEFAULT_HASHTABLE_SIZE);
     This->allocated = 10;
     This->count = 0;
-    This->uris = heap_alloc(This->allocated*sizeof(xmlChar*));
+    This->uris = malloc(This->allocated * sizeof(xmlChar*));
     This->ref = 1;
     This->version = version;
     This->validateOnLoad = VARIANT_TRUE;
@@ -1641,14 +1620,3 @@ HRESULT SchemaCache_create(MSXML_VERSION version, void** obj)
     *obj = &This->IXMLDOMSchemaCollection2_iface;
     return S_OK;
 }
-
-#else
-
-HRESULT SchemaCache_create(MSXML_VERSION version, void** obj)
-{
-    MESSAGE("This program tried to use a SchemaCache object, but\n"
-            "libxml2 support was not present at compile time.\n");
-    return E_NOTIMPL;
-}
-
-#endif

@@ -156,8 +156,8 @@ static void test_query_cpu(void)
     ok( sizeof(sci) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
 
     /* Check if we have some return values */
-    trace("Processor FeatureSet : %08x\n", sci.FeatureSet);
-    ok( sci.FeatureSet != 0, "Expected some features for this processor, got %08x\n", sci.FeatureSet);
+    trace("Processor FeatureSet : %08x\n", sci.ProcessorFeatureBits);
+    ok( sci.ProcessorFeatureBits != 0, "Expected some features for this processor, got %08x\n", sci.ProcessorFeatureBits);
 }
 
 static void test_query_performance(void)
@@ -458,9 +458,9 @@ static void test_query_module(void)
     ULONG ReturnLength;
     ULONG ModuleCount, i;
 
-    ULONG SystemInformationLength = sizeof(SYSTEM_MODULE_INFORMATION);
-    SYSTEM_MODULE_INFORMATION* smi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength); 
-    SYSTEM_MODULE* sm;
+    ULONG SystemInformationLength = sizeof(RTL_PROCESS_MODULES);
+    RTL_PROCESS_MODULES* smi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength); 
+    RTL_PROCESS_MODULE_INFORMATION* sm;
 
     /* Request the needed length */
     status = pNtQuerySystemInformation(SystemModuleInformation, smi, 0, &ReturnLength);
@@ -480,7 +480,7 @@ static void test_query_module(void)
     /* Loop through all the modules/drivers, Wine doesn't get here (yet) */
     for (i = 0; i < ModuleCount ; i++)
     {
-        ok( i == sm->Id, "Id (%d) should have matched %u\n", sm->Id, i);
+        ok( i == sm->LoadOrderIndex, "LoadOrderIndex (%d) should have matched %u\n", sm->LoadOrderIndex, i);
         sm++;
     }
 
@@ -590,19 +590,19 @@ static void test_query_handle_ex(void)
     ReturnLength = 0xdeadbeef;
     status = pNtQuerySystemInformation(SystemExtendedHandleInformation, shi, SystemInformationLength, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
-    ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle[shi->Count]);
+    ExpectedLength = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handles[shi->NumberOfHandles]);
     ok( ReturnLength == ExpectedLength, "Expected length %u, got %u\n", ExpectedLength, ReturnLength );
-    ok( shi->Count > 1, "Expected more than 1 handle, got %u\n", (DWORD)shi->Count );
+    ok( shi->NumberOfHandles > 1, "Expected more than 1 handle, got %u\n", (DWORD)shi->NumberOfHandles );
 
-    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
-        found = (shi->Handle[i].UniqueProcessId == GetCurrentProcessId()) &&
-                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    for (i = 0, found = FALSE; i < shi->NumberOfHandles && !found; i++)
+        found = (shi->Handles[i].UniqueProcessId == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handles[i].HandleValue == EventHandle);
     ok( found, "Expected to find event handle %p (pid %x) in handle list\n", EventHandle, GetCurrentProcessId() );
 
     if (!found)
     {
-        for (i = 0; i < shi->Count; i++)
-            trace( "%d: handle %x pid %x\n", i, (DWORD)shi->Handle[i].HandleValue, (DWORD)shi->Handle[i].UniqueProcessId );
+        for (i = 0; i < shi->NumberOfHandles; i++)
+            trace( "%d: handle %x pid %x\n", i, (DWORD)shi->Handles[i].HandleValue, (DWORD)shi->Handles[i].UniqueProcessId );
     }
 
     CloseHandle(EventHandle);
@@ -610,9 +610,9 @@ static void test_query_handle_ex(void)
     ReturnLength = 0xdeadbeef;
     status = pNtQuerySystemInformation(SystemExtendedHandleInformation, shi, SystemInformationLength, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status );
-    for (i = 0, found = FALSE; i < shi->Count && !found; i++)
-        found = (shi->Handle[i].UniqueProcessId == GetCurrentProcessId()) &&
-                ((HANDLE)(ULONG_PTR)shi->Handle[i].HandleValue == EventHandle);
+    for (i = 0, found = FALSE; i < shi->NumberOfHandles && !found; i++)
+        found = (shi->Handles[i].UniqueProcessId == GetCurrentProcessId()) &&
+                ((HANDLE)(ULONG_PTR)shi->Handles[i].HandleValue == EventHandle);
     ok( !found, "Unexpectedly found event handle in handle list\n" );
 
     status = pNtQuerySystemInformation(SystemExtendedHandleInformation, NULL, SystemInformationLength, &ReturnLength);
@@ -635,21 +635,21 @@ static void test_query_cache(void)
     for (i = sizeof(buffer); i>= expected; i--)
     {
         ReturnLength = 0xdeadbeef;
-        status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+        status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
         ok(!status && (ReturnLength == expected),
             "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
     }
 
     /* buffer too small for the full result.
        Up to win7, the function succeeds with a partial result. */
-    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
     if (!status)
     {
         expected = offsetof(SYSTEM_CACHE_INFORMATION, MinimumWorkingSet);
         for (; i>= expected; i--)
         {
             ReturnLength = 0xdeadbeef;
-            status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+            status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
             ok(!status && (ReturnLength == expected),
                 "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
         }
@@ -657,7 +657,7 @@ static void test_query_cache(void)
 
     /* buffer too small for the result, this call will always fail */
     ReturnLength = 0xdeadbeef;
-    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, i, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH &&
         ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
         "%d: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", i, status, ReturnLength, expected);
@@ -665,7 +665,7 @@ static void test_query_cache(void)
     if (0) {
         /* this crashes on some vista / win7 machines */
         ReturnLength = 0xdeadbeef;
-        status = pNtQuerySystemInformation(SystemCacheInformation, sci, 0, &ReturnLength);
+        status = pNtQuerySystemInformation(SystemFileCacheInformation, sci, 0, &ReturnLength);
         ok( status == STATUS_INFO_LENGTH_MISMATCH &&
             ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
             "0: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", status, ReturnLength, expected);
@@ -1129,7 +1129,9 @@ static void test_query_process_vm(void)
     NTSTATUS status;
     ULONG ReturnLength;
     VM_COUNTERS pvi;
+#ifndef __REACTOS__
     ULONG old_size = FIELD_OFFSET(VM_COUNTERS,PrivatePageCount);
+#endif
     HANDLE process;
     SIZE_T prev_size;
     const SIZE_T alloc_size = 16 * 1024 * 1024;
@@ -1139,8 +1141,10 @@ static void test_query_process_vm(void)
     ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
         "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_HANDLE(W2K3), got %08x\n", status);
 
+#ifndef __REACTOS__
     status = pNtQueryInformationProcess(NULL, ProcessVmCounters, &pvi, old_size, NULL);
     ok( status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %08x\n", status);
+#endif
 
     /* Windows XP and W2K3 will report success for a size of 44 AND 48 !
        Windows W2K will only report success for 44.
@@ -1150,13 +1154,17 @@ static void test_query_process_vm(void)
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, 24, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
+#ifndef __REACTOS__
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, old_size, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( old_size == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+#endif
 
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, 46, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+#ifndef __REACTOS__
     ok( ReturnLength == old_size || ReturnLength == sizeof(pvi), "Inconsistent length %d\n", ReturnLength);
+#endif
 
     /* Check if we have some return values */
     dump_vm_counters("VM counters for GetCurrentProcess", &pvi);
@@ -1582,12 +1590,20 @@ static void test_query_process_debug_object_handle(int argc, char **argv)
     debug_object = (HANDLE)0xdeadbeef;
     status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugObjectHandle,
             &debug_object, sizeof(debug_object), NULL);
+#ifndef __REACTOS__
     todo_wine
+#endif
     ok(status == STATUS_SUCCESS,
        "Expected NtQueryInformationProcess to return STATUS_SUCCESS, got 0x%08x\n", status);
+#ifndef __REACTOS__
     todo_wine
+#endif
     ok(debug_object != NULL,
        "Expected debug object handle to be non-NULL, got %p\n", debug_object);
+#ifdef __REACTOS__
+    status = NtClose( debug_object );
+    ok( !status, "NtClose failed %x\n", status );
+#endif
 
     for (;;)
     {
@@ -1987,7 +2003,7 @@ static void test_queryvirtualmemory(void)
     module = GetModuleHandleA( "ntdll.dll" );
     memset(msn, 0, sizeof(*msn));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(*msn), &readcount);
     ok( status == STATUS_BUFFER_OVERFLOW, "Expected STATUS_BUFFER_OVERFLOW, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
 
@@ -1995,7 +2011,7 @@ static void test_queryvirtualmemory(void)
     module = GetModuleHandleA( "ntdll.dll" );
     memset(msn, 0, sizeof(*msn));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(*msn) - 1, &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(*msn) - 1, &readcount);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
 
@@ -2004,7 +2020,7 @@ static void test_queryvirtualmemory(void)
     memset(msn, 0x55, sizeof(*msn));
     memset(buffer_name, 0x77, sizeof(buffer_name));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), module, MemoryMappedFilenameInformation, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     ok( readcount > 0, "Expected readcount to be > 0\n");
     trace ("Section Name: %s\n", wine_dbgstr_w(msn->SectionFileName.Buffer));
@@ -2016,7 +2032,7 @@ static void test_queryvirtualmemory(void)
     trace("Check section name of non mapped memory\n");
     memset(msn, 0, sizeof(buffer_name));
     readcount = 0;
-    status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemorySectionName, msn, sizeof(buffer_name), &readcount);
+    status = pNtQueryVirtualMemory(NtCurrentProcess(), &buffer_name, MemoryMappedFilenameInformation, msn, sizeof(buffer_name), &readcount);
     ok( status == STATUS_INVALID_ADDRESS, "Expected STATUS_INVALID_ADDRESS, got %08x\n", status);
     ok( readcount == 0 || broken(readcount != 0) /* wow64 */, "Expected readcount to be 0\n");
 

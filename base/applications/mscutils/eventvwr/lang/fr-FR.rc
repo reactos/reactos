@@ -149,7 +149,7 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 210, 165, 10, 14
     LTEXT "jours", IDC_STATIC, 215, 168, 20, 8
     PUSHBUTTON "Paramètres par &défaut", IDC_RESTOREDEFAULTS, 156, 183, 80, 14
-    AUTOCHECKBOX "Utiliser une connection à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    AUTOCHECKBOX "Utiliser une connexion à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Effacer le journal", ID_CLEARLOG, 180, 213, 65, 14
 END
 

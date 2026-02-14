@@ -426,6 +426,13 @@ typedef struct tagLISTVIEW_INFO
 
 static const WCHAR themeClass[] = {'L','i','s','t','V','i','e','w',0};
 
+enum key_state
+{
+    SHIFT_KEY = 0x1,
+    CTRL_KEY = 0x2,
+    SPACE_KEY = 0x4,
+};
+
 /*
  * forward declarations
  */
@@ -439,7 +446,7 @@ static BOOL LISTVIEW_GetViewRect(const LISTVIEW_INFO *, LPRECT);
 static void LISTVIEW_UpdateSize(LISTVIEW_INFO *);
 static LRESULT LISTVIEW_Command(LISTVIEW_INFO *, WPARAM, LPARAM);
 static INT LISTVIEW_GetStringWidthT(const LISTVIEW_INFO *, LPCWSTR, BOOL);
-static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *, INT, BOOL);
+static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *, INT, DWORD);
 static UINT LISTVIEW_GetItemState(const LISTVIEW_INFO *, INT, UINT);
 static BOOL LISTVIEW_SetItemState(LISTVIEW_INFO *, INT, const LVITEMW *);
 static LRESULT LISTVIEW_VScroll(LISTVIEW_INFO *, INT, INT);
@@ -1989,7 +1996,7 @@ static INT LISTVIEW_ProcessLetterKeys(LISTVIEW_INFO *infoPtr, WPARAM charCode, L
     }
 
     if (nItem != -1)
-        LISTVIEW_KeySelection(infoPtr, nItem, FALSE);
+        LISTVIEW_KeySelection(infoPtr, nItem, 0);
 
     return 0;
 }
@@ -3815,24 +3822,11 @@ static void LISTVIEW_SetSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     infoPtr->nSelectionMark = nItem;
 }
 
-/***
- * DESCRIPTION:
- * Set selection(s) with keyboard.
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- * [I] nItem : item index
- * [I] space : VK_SPACE code sent
- *
- * RETURN:
- *   SUCCESS : TRUE (needs to be repainted)
- *   FAILURE : FALSE (nothing has changed)
- */
-static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, BOOL space)
+/* Change item selection with key input. */
+static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, DWORD keys)
 {
-  /* FIXME: pass in the state */
-  WORD wShift = GetKeyState(VK_SHIFT) & 0x8000;
-  WORD wCtrl = GetKeyState(VK_CONTROL) & 0x8000;
+  WORD wShift = !!(keys & SHIFT_KEY);
+  WORD wCtrl = !!(keys & CTRL_KEY);
   BOOL bResult = FALSE;
 
   TRACE("nItem=%d, wShift=%d, wCtrl=%d\n", nItem, wShift, wCtrl);
@@ -3851,7 +3845,7 @@ static BOOL LISTVIEW_KeySelection(LISTVIEW_INFO *infoPtr, INT nItem, BOOL space)
         LVITEMW lvItem;
         lvItem.state = ~LISTVIEW_GetItemState(infoPtr, nItem, LVIS_SELECTED);
         lvItem.stateMask = LVIS_SELECTED;
-        if (space)
+        if (keys & SPACE_KEY)
         {
             LISTVIEW_SetItemState(infoPtr, nItem, &lvItem);
             if (lvItem.state & LVIS_SELECTED)
@@ -10223,7 +10217,18 @@ static LRESULT LISTVIEW_KeyDown(LISTVIEW_INFO *infoPtr, INT nVirtualKey, LONG lK
   }
 
   if ((nItem != -1) && (nItem != infoPtr->nFocusedItem || nVirtualKey == VK_SPACE))
-      LISTVIEW_KeySelection(infoPtr, nItem, nVirtualKey == VK_SPACE);
+  {
+      DWORD keys = 0;
+
+      if (GetKeyState(VK_SHIFT) & 0x8000)
+          keys |= SHIFT_KEY;
+      if (GetKeyState(VK_CONTROL) & 0x8000)
+          keys |= CTRL_KEY;
+      if (nVirtualKey == VK_SPACE)
+          keys |= SPACE_KEY;
+
+      LISTVIEW_KeySelection(infoPtr, nItem, keys);
+  }
 
   return 0;
 }
@@ -12013,6 +12018,7 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         wParam == SPI_SETNONCLIENTMETRICS ||
         (!wParam && !lParam))
     {
+      HFONT hOldDefaultFont = infoPtr->hDefaultFont;
       BOOL bDefaultOrNullFont = (infoPtr->hDefaultFont == infoPtr->hFont || !infoPtr->hFont);
       LOGFONTW logFont;
       SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -12025,7 +12031,12 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
 
       if (bDefaultOrNullFont)
+      {
         infoPtr->hFont = infoPtr->hDefaultFont;
+        // Check if we just deleted the font the header is using
+        if (infoPtr->hwndHeader && hOldDefaultFont == GetWindowFont(infoPtr->hwndHeader))
+            SendMessageW(infoPtr->hwndHeader, WM_SETFONT, (WPARAM)infoPtr->hFont, TRUE);
+      }
 
       LISTVIEW_SaveTextMetrics(infoPtr);
       LISTVIEW_UpdateItemSize(infoPtr);

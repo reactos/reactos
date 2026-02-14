@@ -21,19 +21,53 @@
  */
 
 #include "precomp.h"
+#include <winbase_undoc.h>
 #include <undocshell.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
-#ifndef STARTF_SHELLPRIVATE
-#define STARTF_SHELLPRIVATE 0x400 // From kernel32.h
-#endif
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
                 const SHELLEXECUTEINFOW *sei, LPSHELLEXECUTEINFOW sei_out);
+
+static int Win32ErrFromHInst(HINSTANCE hInst)
+{
+    if ((SIZE_T)hInst > 32)
+        return ERROR_SUCCESS;
+    switch ((SIZE_T)hInst)
+    {
+    case SE_ERR_FNF:
+    case SE_ERR_PNF:
+    case SE_ERR_ACCESSDENIED:
+    case SE_ERR_OOM:
+        return (UINT)(SIZE_T)hInst;
+    case SE_ERR_SHARE:
+        return ERROR_SHARING_VIOLATION;
+    case SE_ERR_DDETIMEOUT:
+    case SE_ERR_DDEFAIL:
+    case SE_ERR_DDEBUSY:
+        return ERROR_DDE_FAIL;
+    case SE_ERR_DLLNOTFOUND:
+        return ERROR_DLL_NOT_FOUND;
+    //case SE_ERR_ASSOCINCOMPLETE: Note: Windows treats this as a success code
+    case SE_ERR_NOASSOC:
+        return ERROR_NO_ASSOCIATION;
+    case 10:
+        return ERROR_OLD_WIN_VERSION;
+    case 12:
+        return ERROR_APP_WRONG_OS;
+    case 15:
+        return ERROR_RMODE_APP;
+    case 16:
+        return ERROR_SINGLE_INSTANCE_APP;
+    case 20:
+        return ERROR_INVALID_DLL;
+    }
+    return -1;
+}
 
 // Is the current process a rundll32.exe?
 static BOOL SHELL_InRunDllProcess(VOID)
@@ -47,6 +81,70 @@ static BOOL SHELL_InRunDllProcess(VOID)
     s_bInDllProcess = GetModuleFileNameW(NULL, szModule, _countof(szModule)) &&
                       (StrStrIW(PathFindFileNameW(szModule), L"rundll") != NULL);
     return s_bInDllProcess;
+}
+
+static UINT_PTR InvokeOpenWith(HWND hWndOwner, SHELLEXECUTEINFOW &sei)
+{
+    extern HRESULT SH32_InvokeOpenWith(PCWSTR, LPCMINVOKECOMMANDINFO, HANDLE *);
+
+    HANDLE *phProc = (sei.fMask & SEE_MASK_NOCLOSEPROCESS) ? &sei.hProcess : NULL;
+    UINT fCmic = (sei.fMask & SEE_CMIC_COMMON_BASICFLAGS) | CMIC_MASK_FLAG_NO_UI;
+    CMINVOKECOMMANDINFO ici = { sizeof(ici), fCmic, hWndOwner };
+    ici.nShow = SW_SHOW;
+    HRESULT hr = SH32_InvokeOpenWith(sei.lpFile, &ici, phProc);
+    SetLastError(ERROR_NO_ASSOCIATION);
+    return SUCCEEDED(hr) ? 42 : SE_ERR_NOASSOC;
+}
+
+static HRESULT InvokeShellExecuteHook(PCWSTR pszClsid, LPSHELLEXECUTEINFOW pSEI)
+{
+    CComPtr<IUnknown> pUnk;
+    if (FAILED(SHExtCoCreateInstance(pszClsid, NULL, NULL, IID_PPV_ARG(IUnknown, &pUnk))))
+        return S_FALSE;
+    CComPtr<IShellExecuteHookW> pWide;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_PPV_ARG(IShellExecuteHookW, &pWide))))
+        return pWide->Execute(pSEI);
+    HRESULT hr = S_FALSE;
+#if 0 // TODO
+    CComPtr<IShellExecuteHookA> pAnsi;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_PPV_ARG(IShellExecuteHookA, &pAnsi))))
+    {
+        SHELLEXECUTEINFOA sei = *(SHELLEXECUTEINFOA*)pSEI;
+        // TODO: Convert the strings
+        hr = pAnsi->Execute(sei);
+        pSEI->hProcess = sei.hProcess;
+        pSEI->hInstApp = sei.hInstApp;
+    }
+#endif
+    return hr;
+}
+
+static HRESULT TryShellExecuteHooks(LPSHELLEXECUTEINFOW pSEI)
+{
+    // https://devblogs.microsoft.com/oldnewthing/20080910-00/?p=20933 claims hooks
+    // were removed in Vista but this is incorrect, they are disabled by default.
+    // https://groups.google.com/g/microsoft.public.platformsdk.shell/c/ixdOX1--IKk
+    // says they are now controlled by the EnableShellExecuteHooks policy.
+    if (pSEI->fMask & SEE_MASK_NO_HOOKS)
+        return S_FALSE;
+    if (LOBYTE(GetVersion()) >= 6 && !SH32_InternalRestricted(REST_SH32_ENABLESHELLEXECUTEHOOKS))
+        return S_FALSE;
+
+    HRESULT hr = S_FALSE;
+    HKEY hKey;
+    LRESULT res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, REGSTR_PATH_EXPLORER L"\\ShellExecuteHooks", 0, KEY_READ, &hKey);
+    if (res != ERROR_SUCCESS)
+        return S_FALSE;
+    for (UINT i = 0; hr == S_FALSE; ++i)
+    {
+        WCHAR szClsid[42];
+        DWORD cch = _countof(szClsid);
+        if (RegEnumValueW(hKey, i, szClsid, &cch, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+            break;
+        hr = InvokeShellExecuteHook(szClsid, pSEI);
+    }
+    RegCloseKey(hKey);
+    return hr;
 }
 
 static void ParseNoTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
@@ -468,6 +566,158 @@ static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR psz
     return hr;
 }
 
+static HWND SHELL_GetUsableDialogOwner(HWND hWnd)
+{
+    // Explicitly block the shell desktop listview from becoming the owner (IContextMenu calling ShellExecute)
+    HWND hProgman = GetShellWindow();
+    if (hWnd && IsWindowVisible(hWnd) && hWnd != GetDesktopWindow() &&
+        hWnd != hProgman && !IsChild(hProgman, hWnd))
+    {
+        return hWnd;
+    }
+    return NULL;
+}
+
+/*************************************************************************
+ *    PromptAndRunProcessAs [Internal]
+ */
+typedef struct _RUNASDLGDATA
+{
+    LPWSTR Name, Domain;
+    BOOL Safer;
+    UINT LogonFlags;
+    WCHAR NameBuffer[MAX_PATH];
+    WCHAR Password[MAX_PATH];
+} RUNASDLGDATA;
+
+static
+INT_PTR
+CALLBACK
+RunAsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    RUNASDLGDATA *pData = (RUNASDLGDATA *)GetWindowLongPtrW(hwnd, DWLP_USER);
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)(pData = (RUNASDLGDATA *)lParam));
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, EM_LIMITTEXT, _countof(pData->NameBuffer)-1, 0);
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, EM_LIMITTEXT, _countof(pData->Password)-1, 0);
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_OTHER, BM_CLICK, 0, 0);
+
+            HWND hCtl = GetDlgItem(hwnd, IDC_RUNAS_CURRENT);
+            WCHAR fmtbuf[200], buf[_countof(fmtbuf) + _countof(pData->NameBuffer)];
+            DWORD cch = _countof(pData->NameBuffer);
+            if (GetUserNameW(pData->NameBuffer, &cch))
+            {
+                SendMessageW(hCtl, WM_GETTEXT, _countof(fmtbuf), (LPARAM)buf);
+                StringCchPrintfW(fmtbuf, _countof(fmtbuf), buf, L"(%s)"); // Change "Blah blah %s" to "Blah blah (%s)"
+                StringCchPrintfW(buf, _countof(buf), fmtbuf, pData->NameBuffer);
+                SendMessageW(hCtl, WM_SETTEXT, 0, (LPARAM)buf);
+                SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, CB_ADDSTRING, 0, (LPARAM)pData->NameBuffer);
+            }
+            SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, CB_SETCURSEL, 0, 0);
+            return TRUE;
+        }
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                    break;
+
+                case IDOK:
+                {
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_NAME, WM_GETTEXT, _countof(pData->NameBuffer), (LPARAM)pData->NameBuffer);
+                    SendDlgItemMessageW(hwnd, IDC_RUNAS_PWD, WM_GETTEXT, _countof(pData->Password), (LPARAM)pData->Password);
+                    pData->Name = pData->NameBuffer;
+                    pData->Domain = wcsstr(pData->Name, L"\\");
+                    if (pData->Domain)
+                    {
+                        LPWSTR tmp = pData->Domain + 1;
+                        pData->Domain[0] = UNICODE_NULL;
+                        pData->Domain = pData->Name;
+                        pData->Name = tmp;
+                    }
+                    pData->LogonFlags = GetKeyState(VK_SHIFT) < 0 ? LOGON_NETCREDENTIALS_ONLY : LOGON_WITH_PROFILE;
+                    pData->Safer = IsDlgButtonChecked(hwnd, IDC_RUNAS_SAFER);
+                    if (!IsDlgButtonChecked(hwnd, IDC_RUNAS_OTHER))
+                        pData->Name = NULL;
+                    EndDialog(hwnd, IDOK);
+                    break;
+                }
+
+                case IDC_RUNAS_BROWSE:
+                    return SHELL_ErrorBox(hwnd, ERROR_NOT_SUPPORTED); // TODO
+            }
+            break;
+    }
+    return FALSE;
+}
+
+static
+HRESULT
+PromptAndRunProcessAs(
+    _In_opt_ HWND hwnd,
+    _In_ LPWSTR Cmd,
+    _In_ DWORD CreationFlags,
+    _In_opt_ LPWSTR Env,
+    _In_opt_ LPCWSTR Dir,
+    _In_ STARTUPINFOW *pSI,
+    _Out_ PROCESS_INFORMATION *pPI)
+{
+    RUNASDLGDATA data;
+    UINT error;
+    INT_PTR dlgret;
+    hwnd = SHELL_GetUsableDialogOwner(hwnd);
+
+again:
+    dlgret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN_AS),
+                             hwnd, RunAsDlgProc, (LPARAM)&data);
+    if (dlgret == IDOK && data.Name)
+    {
+        if (CreateProcessWithLogonW(data.Name, data.Domain, data.Password, data.LogonFlags,
+                                    NULL, Cmd, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
+        switch (error)
+        {
+            case ERROR_LOGON_FAILURE:
+            case ERROR_NO_SUCH_USER:
+            case ERROR_INVALID_ACCOUNT_NAME:
+            case ERROR_ACCOUNT_DISABLED:
+            case ERROR_ACCOUNT_RESTRICTION:
+            case ERROR_INVALID_LOGON_HOURS:
+            case ERROR_PASSWORD_EXPIRED:
+                SHELL_ErrorBox(hwnd, error);
+                goto again;
+        }
+    }
+    else if (dlgret == IDOK)
+    {
+        // TODO: Use the Safer API if requested to
+        if (CreateProcessW(NULL, Cmd, NULL, NULL, FALSE, CreationFlags, Env, Dir, pSI, pPI))
+            error = ERROR_SUCCESS;
+        else
+            error = GetLastError();
+    }
+    else if (dlgret == IDCANCEL)
+    {
+        SetLastError(ERROR_CANCELLED);
+        pPI->hProcess = NULL;
+        return S_FALSE;
+    }
+    else
+    {
+        pPI->hProcess = NULL;
+        return E_FAIL;
+    }
+    SecureZeroMemory(&data, sizeof(data));
+    return HRESULT_FROM_WIN32(error);
+}
+
 /*************************************************************************
  *    SHELL_ExecuteW [Internal]
  *
@@ -478,9 +728,9 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     STARTUPINFOW  startup;
     PROCESS_INFORMATION info;
     UINT_PTR retval = SE_ERR_NOASSOC;
-    UINT gcdret = 0;
+    UINT gcdret = 0, lasterror = 0;
     WCHAR curdir[MAX_PATH];
-    DWORD dwCreationFlags;
+    DWORD dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     const WCHAR *lpDirectory = NULL;
 
     TRACE("Execute %s from directory %s\n", debugstr_w(lpCmd), debugstr_w(psei->lpDirectory));
@@ -505,7 +755,6 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
-    dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
         dwCreationFlags |= CREATE_NEW_CONSOLE;
     if (psei->fMask & SEE_MASK_FLAG_SEPVDM)
@@ -536,8 +785,25 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
             startup.dwFlags |= STARTF_SHELLPRIVATE;
     }
 
-    if (CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE, dwCreationFlags, env,
-                       lpDirectory, &startup, &info))
+    BOOL createdProcess;
+    if (psei->lpVerb && !StrCmpIW(L"runas", psei->lpVerb))
+    {
+        HRESULT hr = PromptAndRunProcessAs(psei->hwnd, (LPWSTR)lpCmd, dwCreationFlags,
+                                                 env, lpDirectory, &startup, &info);
+        createdProcess = hr == S_OK;
+        if (hr == S_FALSE)
+        {
+            retval = 33; // Pretend cancel is success.
+            goto done;
+        }
+    }
+    else
+    {
+        createdProcess = CreateProcessW(NULL, (LPWSTR)lpCmd, NULL, NULL, FALSE,
+                                        dwCreationFlags, env, lpDirectory, &startup, &info);
+    }
+
+    if (createdProcess)
     {
         /* Give 30 seconds to the app to come up, if desired. Probably only needed
            when starting app immediately before making a DDE connection. */
@@ -552,20 +818,23 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
             CloseHandle( info.hProcess );
         CloseHandle( info.hThread );
     }
-    else if ((retval = GetLastError()) >= 32)
+    else if ((retval = lasterror = GetLastError()) >= 32)
     {
         WARN("CreateProcess returned error %ld\n", retval);
         retval = ERROR_BAD_FORMAT;
     }
 
+done:
     TRACE("returning %lu\n", retval);
-
     psei_out->hInstApp = (HINSTANCE)retval;
 
     if (gcdret)
+    {
         if (!SetCurrentDirectoryW(curdir))
             ERR("cannot return to directory %s\n", debugstr_w(curdir));
-
+        if (lasterror)
+            RestoreLastError(lasterror);
+    }
     return retval;
 }
 
@@ -699,14 +968,14 @@ static UINT SHELL_FindExecutableByVerb(LPCWSTR lpVerb, LPWSTR key, LPWSTR classn
     HKEY hkeyClass;
     WCHAR verb[MAX_PATH];
 
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, classname, 0, 0x02000000, &hkeyClass))
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, classname, 0, KEY_READ, &hkeyClass))
         return SE_ERR_NOASSOC;
     if (!HCR_GetDefaultVerbW(hkeyClass, lpVerb, verb, ARRAY_SIZE(verb)))
         return SE_ERR_NOASSOC;
     RegCloseKey(hkeyClass);
 
     /* Looking for ...buffer\shell\<verb>\command */
-    wcscat(classname, L"\\shell\\");
+    wcscat(classname, L"\\shell\\"); // FIXME: Use HCR_GetExecuteCommandW or AssocAPI
     wcscat(classname, verb);
     wcscat(classname, L"\\command");
 
@@ -1363,48 +1632,21 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
 /* FIXME: is this already implemented somewhere else? */
 static HKEY ShellExecute_GetClassKey(const SHELLEXECUTEINFOW *sei)
 {
-    LPCWSTR ext = NULL, lpClass = NULL;
-    CHeapPtr<WCHAR, CLocalAllocator> cls;
-    DWORD type = 0, sz = 0;
-    HKEY hkey = 0;
-    LONG r;
-
-    if (sei->fMask & SEE_MASK_CLASSALL)
+    if ((sei->fMask & SEE_MASK_CLASSALL) == SEE_MASK_CLASSKEY)
         return sei->hkeyClass;
 
+    HKEY hKey = NULL;
     if (sei->fMask & SEE_MASK_CLASSNAME)
-        lpClass = sei->lpClass;
-    else
     {
-        ext = PathFindExtensionW(sei->lpFile);
-        TRACE("ext = %s\n", debugstr_w(ext));
-        if (!ext)
-            return hkey;
-
-        r = RegOpenKeyW(HKEY_CLASSES_ROOT, ext, &hkey);
-        if (r != ERROR_SUCCESS)
-            return hkey;
-
-        r = RegQueryValueExW(hkey, NULL, 0, &type, NULL, &sz);
-        if (r == ERROR_SUCCESS && type == REG_SZ)
-        {
-            sz += sizeof (WCHAR);
-            cls.Allocate(sz / sizeof(WCHAR));
-            cls[0] = 0;
-            RegQueryValueExW(hkey, NULL, 0, &type, (LPBYTE)(LPWSTR)cls, &sz);
-        }
-
-        RegCloseKey( hkey );
-        lpClass = cls;
+        TRACE("class = %s\n", debugstr_w(sei->lpClass));
+        RegOpenKeyExW(HKEY_CLASSES_ROOT, sei->lpClass, 0, KEY_READ, &hKey);
+        return hKey;
     }
-
-    TRACE("class = %s\n", debugstr_w(lpClass));
-
-    hkey = 0;
-    if (lpClass)
-        RegOpenKeyW( HKEY_CLASSES_ROOT, lpClass, &hkey);
-
-    return hkey;
+    PCWSTR ext = PathFindExtensionW(sei->lpFile);
+    TRACE("ext = %s\n", debugstr_w(ext));
+    if (!StrIsNullOrEmpty(ext) && SUCCEEDED(HCR_GetProgIdKeyOfExtension(ext, &hKey, FALSE)))
+        return hKey;
+    return NULL;
 }
 
 static HRESULT shellex_get_dataobj( LPSHELLEXECUTEINFOW sei, CComPtr<IDataObject>& dataObj)
@@ -1412,7 +1654,7 @@ static HRESULT shellex_get_dataobj( LPSHELLEXECUTEINFOW sei, CComPtr<IDataObject
     CComHeapPtr<ITEMIDLIST> allocatedPidl;
     LPITEMIDLIST pidl = NULL;
 
-    if (sei->fMask & SEE_MASK_CLASSALL)
+    if (sei->fMask & SEE_MASK_CLASSALL) // FIXME: This makes no sense? SEE_MASK_IDLIST?
     {
         pidl = (LPITEMIDLIST)sei->lpIDList;
     }
@@ -1655,6 +1897,7 @@ static LONG ShellExecute_FromContextMenuHandlers( LPSHELLEXECUTEINFOW sei )
     if (!hkey)
         return ERROR_FUNCTION_FAILED;
 
+    // FIXME: Words cannot describe how broken this is, all of it needs to die
     r = RegOpenKeyW(hkey, L"shellex\\ContextMenuHandlers", &hkeycm);
     if (r == ERROR_SUCCESS)
     {
@@ -1682,7 +1925,7 @@ static LONG ShellExecute_FromContextMenuHandlers( LPSHELLEXECUTEINFOW sei )
     return r;
 }
 
-static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR lpstrProtocol, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc);
+static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc);
 
 static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
 {
@@ -1907,7 +2150,7 @@ static UINT_PTR SHELL_execute_url(LPCWSTR lpFile, LPCWSTR wcmd, LPSHELLEXECUTEIN
     if (psei->lpVerb && *psei->lpVerb)
         len += lstrlenW(psei->lpVerb);
     else
-        len += lstrlenW(L"open");
+        len += lstrlenW(L"open"); // FIXME: Use HCR_GetExecuteCommandW or AssocAPI
     lpstrProtocol.Allocate(len);
     memcpy(lpstrProtocol, lpFile, iSize * sizeof(WCHAR));
     lpstrProtocol[iSize] = '\0';
@@ -1921,13 +2164,12 @@ static UINT_PTR SHELL_execute_url(LPCWSTR lpFile, LPCWSTR wcmd, LPSHELLEXECUTEIN
     return retval;
 }
 
-static void do_error_dialog(UINT_PTR retval, HWND hwnd, WCHAR* filename)
+static void do_error_dialog(UINT_PTR retval, HWND hwnd, PCWSTR filename)
 {
     WCHAR msg[2048];
     DWORD_PTR msgArguments[3]  = { (DWORD_PTR)filename, 0, 0 };
-    DWORD error_code;
+    const DWORD error_code = GetLastError();
 
-    error_code = GetLastError();
     if (retval == SE_ERR_NOASSOC)
         LoadStringW(shell32_hInstance, IDS_SHLEXEC_NOASSOC, msg, ARRAY_SIZE(msg));
     else
@@ -1940,6 +2182,7 @@ static void do_error_dialog(UINT_PTR retval, HWND hwnd, WCHAR* filename)
                        (va_list*)msgArguments);
 
     MessageBoxW(hwnd, msg, NULL, MB_ICONERROR);
+    SetLastError(error_code); // Restore
 }
 
 static WCHAR *expand_environment( const WCHAR *str )
@@ -1973,6 +2216,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     BOOL appKnownSingular = FALSE;
 
     /* make a local copy of the LPSHELLEXECUTEINFO structure and work with this from now on */
+    sei->hProcess = NULL;
     SHELLEXECUTEINFOW sei_tmp = *sei;
 
     TRACE("mask=0x%08x hwnd=%p verb=%s file=%s parm=%s dir=%s show=0x%08x class=%s\n",
@@ -1982,7 +2226,19 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
           ((sei_tmp.fMask & SEE_MASK_CLASSALL) == SEE_MASK_CLASSNAME) ?
           debugstr_w(sei_tmp.lpClass) : "not used");
 
-    sei->hProcess = NULL;
+    // Call hooks before expanding and resolving strings
+    HRESULT hr = TryShellExecuteHooks(sei);
+    if (hr != S_FALSE)
+    {
+        int err = Win32ErrFromHInst(sei->hInstApp);
+        if (err <= 0)
+        {
+            sei->hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
+        SetLastError(err);
+        return FALSE;
+    }
 
     /* make copies of all path/command strings */
     CHeapPtr<WCHAR, CLocalAllocator> wszApplicationName;
@@ -2099,16 +2355,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
         LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
-
-        CComPtr<IShellExecuteHookW> pSEH;
-        HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
-        if (SUCCEEDED(hr))
-        {
-            hr = pSEH->Execute(&sei_tmp);
-            if (hr == S_OK)
-                return TRUE;
-        }
-
         hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
         if (FAILED(hr))
         {
@@ -2133,7 +2379,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_INVOKEIDLIST)
     {
-        HRESULT hr = ShellExecute_ContextMenuVerb(&sei_tmp);
+        hr = ShellExecute_ContextMenuVerb(&sei_tmp);
         if (SUCCEEDED(hr))
         {
             sei->hInstApp = (HINSTANCE)42;
@@ -2173,7 +2419,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
          StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
     {
         CComHeapPtr<ITEMIDLIST> pidlParsed;
-        HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
+        hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
         if (SUCCEEDED(hr) && SHELL_InvokePidl(&sei_tmp, pidlParsed))
         {
             sei_tmp.hInstApp = (HINSTANCE)UlongToHandle(42);
@@ -2196,7 +2442,10 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         CHeapPtr<WCHAR, CLocalAllocator> buf;
         DWORD size = MAX_PATH;
         if (!buf.Allocate(size) || FAILED(PathCreateFromUrlW(sei_tmp.lpFile, buf, &size, 0)))
-            return SE_ERR_OOM;
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
 
         wszApplicationName.Attach(buf.Detach());
         sei_tmp.lpFile = wszApplicationName;
@@ -2332,7 +2581,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         /* if so, prefix lpFile with http:// and call ShellExecute */
         WCHAR lpstrTmpFile[256];
         strcpyW(lpstrTmpFile, L"http://");
-        strcatW(lpstrTmpFile, lpFile);
+        strcatW(lpstrTmpFile, lpFile); // FIXME: Possible buffer overflow
+        // FIXME: This will not correctly return the hProcess to the caller
         retval = (UINT_PTR)ShellExecuteW(sei_tmp.hwnd, sei_tmp.lpVerb, lpstrTmpFile, NULL, NULL, 0);
     }
 
@@ -2340,18 +2590,10 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if (retval <= 32 && !(sei_tmp.fMask & SEE_MASK_FLAG_NO_UI))
     {
-        OPENASINFO Info;
-
-        //FIXME
-        // need full path
-
-        Info.pcszFile = wszApplicationName;
-        Info.pcszClass = NULL;
-        Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_EXEC;
-
-        //if (SHOpenWithDialog(sei_tmp.hwnd, &Info) != S_OK)
-        DBG_UNREFERENCED_LOCAL_VARIABLE(Info);
-        do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
+        if (retval == SE_ERR_NOASSOC && !(sei->fMask & SEE_MASK_CLASSALL))
+            retval = InvokeOpenWith(sei_tmp.hwnd, *sei);
+        if (retval <= 32)
+            do_error_dialog(retval, sei_tmp.hwnd, lpFile);
     }
 
     sei->hInstApp = (HINSTANCE)(retval > 32 ? 33 : retval);
@@ -2372,7 +2614,7 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
           debugstr_a(lpParameters), debugstr_a(lpDirectory), iShowCmd);
 
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
     sei.hwnd = hWnd;
     sei.lpVerb = lpVerb;
     sei.lpFile = lpFile;
@@ -2395,7 +2637,14 @@ static DWORD
 ShellExecute_Normal(_Inout_ LPSHELLEXECUTEINFOW sei)
 {
     // FIXME
-    return SHELL_execute(sei, SHELL_ExecuteW) ? ERROR_SUCCESS : ERROR_FILE_NOT_FOUND;
+    if (SHELL_execute(sei, SHELL_ExecuteW))
+        return ERROR_SUCCESS;
+    DWORD err = GetLastError();
+#if DBG
+    if (!err)
+        DbgPrint("FIXME: Failed with error 0 on '%ls'\n", sei->lpFile);
+#endif
+    return err ? err : ERROR_FILE_NOT_FOUND;
 }
 
 static VOID
@@ -2533,7 +2782,7 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
 
     TRACE("\n");
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_FLAG_NO_UI;
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
     sei.hwnd = hwnd;
     sei.lpVerb = lpVerb;
     sei.lpFile = lpFile;
@@ -2594,14 +2843,8 @@ EXTERN_C HINSTANCE WINAPI WOWShellExecute(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFil
 EXTERN_C void WINAPI
 OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
 {
-    OPENASINFO info;
+    OPENASINFO info = { cmdline, NULL, OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC };
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_w(cmdline), cmdshow);
-
-    ZeroMemory(&info, sizeof(info));
-    info.pcszFile = cmdline;
-    info.pcszClass = NULL;
-    info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
-
     SHOpenWithDialog(hwnd, &info);
 }
 
@@ -2702,7 +2945,7 @@ HRESULT WINAPI ShellExecCmdLine(
     if (dwSeclFlags & SECL_RUNAS)
     {
         dwSize = 0;
-        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
+        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_COMMAND, lpCommand, L"runas", NULL, &dwSize);
         if (SUCCEEDED(hr) && dwSize != 0)
         {
             pszVerb = L"runas";

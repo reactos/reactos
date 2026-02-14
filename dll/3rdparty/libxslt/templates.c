@@ -9,9 +9,27 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
 
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
 #include <libxml/globals.h>
+#include <libxml/xmlerror.h>
+#include <libxml/tree.h>
+#include <libxml/dict.h>
+#include <libxml/xpathInternals.h>
+#include <libxml/parserInternals.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "variables.h"
+#include "functions.h"
+#include "templates.h"
+#include "transform.h"
+#include "namespaces.h"
+#include "attributes.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_TEMPLATES
@@ -133,7 +151,7 @@ xsltEvalXPathStringNs(xsltTransformContextPtr ctxt, xmlXPathCompExprPtr comp,
     if (res != NULL) {
 	if (res->type != XPATH_STRING)
 	    res = xmlXPathConvertString(res);
-	if (res->type == XPATH_STRING) {
+	if ((res != NULL) && (res->type == XPATH_STRING)) {
             ret = res->stringval;
 	    res->stringval = NULL;
 	} else {
@@ -211,7 +229,7 @@ xsltEvalTemplateString(xsltTransformContextPtr ctxt,
     insert = xmlNewDocNode(ctxt->output, NULL,
 	                   (const xmlChar *)"fake", NULL);
     if (insert == NULL) {
-	xsltTransformError(ctxt, NULL, contextNode,
+	xsltTransformError(ctxt, NULL, inst,
 		"Failed to create temporary node\n");
 	return(NULL);
     }

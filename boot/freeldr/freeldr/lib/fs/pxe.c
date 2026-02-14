@@ -131,12 +131,33 @@ static ARC_STATUS PxeClose(ULONG FileId)
 
 static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
+    PCSTR FileName;
+
     if (_OpenFile == NO_FILE || FileId != _OpenFile)
         return EBADF;
 
     RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = _FileSize;
     Information->CurrentAddress.LowPart = _FilePosition;
+
+    Information->Type = NetworkPeripheral;
+
+    /* Set the ARC file attributes */
+    Information->Attributes = ReadOnlyFile;
+
+    /* Search for the last path separator. Slashes are used as separators,
+     * for supporting TFTP servers on POSIX systems (see PxeOpen()) */
+    FileName = strrchr(_OpenFileName, '/');
+    if (FileName)
+        ++FileName; // Go past it.
+    else
+        FileName = _OpenFileName; // No separator: file name without directory.
+
+    /* Copy the file name, perhaps truncated, and NUL-terminated */
+    Information->FileNameLength = (ULONG)strlen(FileName);
+    Information->FileNameLength = min(Information->FileNameLength, sizeof(Information->FileName) - 1);
+    RtlCopyMemory(Information->FileName, FileName, Information->FileNameLength);
+    Information->FileName[Information->FileNameLength] = ANSI_NULL;
 
     TRACE("PxeGetFileInformation(%lu) -> FileSize = %lu, FilePointer = 0x%lx\n",
           FileId, Information->EndingAddress.LowPart, Information->CurrentAddress.LowPart);
@@ -163,7 +184,8 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         ++Path;
 
     /* Retrieve the path length without NULL terminator */
-    PathLen = min(strlen(Path), sizeof(_OpenFileName) - 1);
+    PathLen = strlen(Path);
+    PathLen = min(PathLen, sizeof(_OpenFileName) - 1);
 
     /* Lowercase the path and always use slashes as separators,
      * for supporting TFTP servers on POSIX systems */

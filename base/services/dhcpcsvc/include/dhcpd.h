@@ -156,6 +156,7 @@ struct client_lease {
 	struct iaddr		 address;
 	char			*server_name;
 #ifdef __REACTOS__
+	u_int32_t		 lease;
 	time_t			 obtained;
 	struct iaddr		 serveraddress;
 #endif
@@ -175,7 +176,8 @@ enum dhcp_state {
 	S_BOUND,
 	S_RENEWING,
 	S_REBINDING,
-	S_STATIC
+	S_STATIC,
+	S_RELEASED
 };
 
 struct client_config {
@@ -203,6 +205,7 @@ struct client_config {
 				 bootp_policy;
 	struct string_list	*medium;
 	struct iaddrlist	*reject_list;
+	char			*user_class;
 };
 
 struct client_state {
@@ -405,19 +408,23 @@ void dhcpnak(struct packet *);
 void send_discover(void *);
 void send_request(void *);
 void send_decline(void *);
+void send_release(void *);
 
 void state_reboot(void *);
 void state_init(void *);
+void state_release(void *);
 void state_selecting(void *);
 void state_requesting(void *);
 void state_bound(void *);
 void state_panic(void *);
 
 void bind_lease(struct interface_info *);
+void unbind_lease(struct interface_info *);
 
 void make_discover(struct interface_info *, struct client_lease *);
 void make_request(struct interface_info *, struct client_lease *);
 void make_decline(struct interface_info *, struct client_lease *);
+void make_release(struct interface_info *, struct client_lease *);
 
 void free_client_lease(struct client_lease *);
 void rewrite_client_leases(struct interface_info *);

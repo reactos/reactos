@@ -85,7 +85,7 @@ BOOL NTAPI InitMetrics(VOID);
 LONG NTAPI UserGetSystemMetrics(ULONG Index);
 BOOL FASTCALL UserIsDBCSEnabled(VOID);
 BOOL FASTCALL UserIsIMMEnabled(VOID);
-BOOL FASTCALL UserIsCiceroEnabled(VOID);
+BOOL FASTCALL UserIsCTFIMEEnabled(VOID);
 
 /*************** KEYBOARD.C ***************/
 
@@ -170,9 +170,15 @@ BOOL FASTCALL GetLayeredStatus(PWND pWnd);
 
 /************** INPUT CONTEXT **************/
 
-PIMC FASTCALL UserCreateInputContext(ULONG_PTR dwClientImcData);
-VOID UserFreeInputContext(PVOID Object);
-BOOLEAN UserDestroyInputContext(PVOID Object);
-PVOID AllocInputContextObject(PDESKTOP pDesk, PTHREADINFO pti, SIZE_T Size, PVOID* HandleOwner);
+PIMC FASTCALL UserCreateInputContext(_In_ ULONG_PTR dwClientImcData);
+VOID UserFreeInputContext(_In_opt_ PVOID Object);
+BOOLEAN UserDestroyInputContext(_In_opt_ PVOID Object);
+
+PVOID
+AllocInputContextObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* HandleOwner);
 
 /* EOF */

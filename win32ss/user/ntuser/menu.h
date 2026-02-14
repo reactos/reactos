@@ -169,4 +169,12 @@ PWND MENU_IsMenuActive(VOID);
 void MENU_EndMenu( PWND pwnd );
 void FASTCALL MENU_InitSysMenuPopup(PMENU menu, DWORD style, DWORD clsStyle, LONG HitTest );
 INT FASTCALL IntMenuItemFromPoint(PWND pWnd, HMENU hMenu, POINT ptScreen);
-BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y, PWND pWnd, LPTPMPARAMS lpTpm);
+
+BOOL FASTCALL
+IntTrackPopupMenuEx(
+    _Inout_ PMENU menu,
+    _In_ UINT wFlags,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ PWND pWnd,
+    _In_opt_ const TPMPARAMS *lpTpm);

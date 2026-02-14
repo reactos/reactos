@@ -15,7 +15,7 @@ static MUI_ENTRY huHUSetupInitPageEntries[] =
     {
         0,
         20,
-        "K\202rem v\240rjon am\241g a Reactos telep\241t\213 inicializ\240lja mag\240t",
+        "K\202rem v\240rjon am\241g a ReactOS telep\241t\213 inicializ\240lja mag\240t",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1310,7 +1310,7 @@ static MUI_ENTRY huHUBootLoaderSelectPageEntries[] =
     {
         6,
         8,
-        "Please select where Setup should install the bootloader:",
+        "K\202rj\201k v\240lassza ki, hogy a telep\241t\213 hov\240 helyezze el rendszerbet\224lt\213t:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

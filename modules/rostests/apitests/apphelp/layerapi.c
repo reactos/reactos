@@ -84,10 +84,10 @@ static void expect_LayerValue_imp(BOOL bMachine, const char* valueName, const ch
         lstatus = RegQueryValueExA(key, valueName, NULL, &dwType, (LPBYTE)data, &dwDataLen);
         if (value)
         {
-            winetest_ok(lstatus == ERROR_SUCCESS, "Expected to get a valid value, err: %u\n", lstatus);
+            winetest_ok(lstatus == ERROR_SUCCESS, "Expected to get a valid value, err: %lu\n", lstatus);
             if (lstatus == ERROR_SUCCESS)
             {
-                winetest_ok(dwType == REG_SZ, "Expected the type to be REG_SZ, was: %u\n", dwType);
+                winetest_ok(dwType == REG_SZ, "Expected the type to be REG_SZ, was: %lu\n", dwType);
                 winetest_ok(!strcmp(data, value), "Expected the data to be: '%s', was: '%s'\n", value, data);
             }
         }
@@ -118,15 +118,15 @@ void expect_Sdb_imp(PCSTR path, DWORD type, BOOL result, DWORD lenResult, PCSTR 
 
     winetest_ok(pSdbGetPermLayerKeys(pathW, buffer, &dwBufSize, type) == result, "Expected pSdbGetPermLayerKeys to %s\n", (result ? "succeed" : "fail"));
     if (!result && lenResult == 0xffffffff)
-        winetest_ok(dwBufSize == 0 || dwBufSize == sizeof(buffer), "Expected dwBufSize to be 0 or %u, was %u\n", sizeof(buffer), dwBufSize);
+        winetest_ok(dwBufSize == 0 || dwBufSize == sizeof(buffer), "Expected dwBufSize to be 0 or %u, was %lu\n", sizeof(buffer), dwBufSize);
     else
         winetest_ok(dwBufSize == lenResult ||
             /* W2k3 is off by 2 when concatenating user / machine */
             broken(g_WinVersion < WINVER_VISTA && type == (GPLK_MACHINE|GPLK_USER) && (lenResult + 2) == dwBufSize),
-                "Expected dwBufSize to be %u, was %u\n", lenResult, dwBufSize);
+                "Expected dwBufSize to be %lu, was %lu\n", lenResult, dwBufSize);
     if (result)
     {
-        winetest_ok(lstrlenW(buffer) * sizeof(WCHAR) + sizeof(WCHAR) == lenResult, "Expected lstrlenW(buffer)*2+2 to be %u, was %u\n",
+        winetest_ok(lstrlenW(buffer) * sizeof(WCHAR) + sizeof(WCHAR) == lenResult, "Expected lstrlenW(buffer)*2+2 to be %lu, was %u\n",
             lenResult, lstrlenW(buffer) * sizeof(WCHAR) + sizeof(WCHAR));
     }
     WideCharToMultiByte(CP_ACP, 0, buffer, -1, resultBuffer, sizeof(resultBuffer), NULL, NULL);
@@ -280,7 +280,7 @@ static void test_SdbGetPermLayerKeys(void)
     ok(pSdbGetPermLayerKeys(pathW, NULL, NULL, 0) == FALSE, "Expected pSdbGetPermLayerKeys to fail\n");
     ok(pSdbGetPermLayerKeys(pathW, buffer, NULL, 0) == FALSE, "Expected pSdbGetPermLayerKeys to fail\n");
     ok(pSdbGetPermLayerKeys(pathW, buffer, &dwBufSize, 0) == FALSE, "Expected pSdbGetPermLayerKeys to fail\n");
-    ok(dwBufSize == 0, "Expected dwBufSize to be %u, was %u\n", 0, dwBufSize);
+    ok(dwBufSize == 0, "Expected dwBufSize to be %u, was %lu\n", 0, dwBufSize);
 
     /* It fails on a nonexisting file */
     expect_Sdb(tmp, GPLK_USER | GPLK_MACHINE, FALSE, 0xffffffff, "");
@@ -678,18 +678,18 @@ static void test_Sign_Media(void)
     }
 
     ret = GetTempPathA(MAX_PATH, workdir);
-    ok(ret, "GetTempPathA error: %d\n", GetLastError());
+    ok(ret, "GetTempPathA error: %ld\n", GetLastError());
     PathAppendA(workdir, "apphelp_test");
 
     ret = CreateDirectoryA(workdir, NULL);
-    ok(ret, "CreateDirectoryA error: %d\n", GetLastError());
+    ok(ret, "CreateDirectoryA error: %ld\n", GetLastError());
 
     PathCombineA(subdir, workdir, "sub");
     ret = CreateDirectoryA(subdir, NULL);
-    ok(ret, "CreateDirectoryA error: %d\n", GetLastError());
+    ok(ret, "CreateDirectoryA error: %ld\n", GetLastError());
 
     ret = DefineDosDeviceA(DDD_NO_BROADCAST_SYSTEM, drive, workdir);
-    ok(ret, "DefineDosDeviceA error: %d\n", GetLastError());
+    ok(ret, "DefineDosDeviceA error: %ld\n", GetLastError());
     if(ret)
     {
         ret = RedirectIat(GetModuleHandleA("apphelp.dll"), "kernel32.dll", "GetDriveTypeW",
@@ -699,7 +699,7 @@ static void test_Sign_Media(void)
         if(ret)
         {
             ret = create_file(workdir, "test.exe", 'a', 4);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             ok(wrapSdbSetPermLayerKeys2(drive, "test.exe", "TEST", 0), "Expected wrapSdbSetPermLayerKeys2 to succeed\n");
             /* 4 */
@@ -708,7 +708,7 @@ static void test_Sign_Media(void)
             ok(wrapSdbSetPermLayerKeys2(drive, "test.exe", "", 0), "Expected wrapSdbSetPermLayerKeys2 to succeed\n");
 
             ret = create_file(workdir, "test.txt", 'a', 1);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(workdir, 2, "test.exe", "test.txt"))
             {
@@ -724,7 +724,7 @@ static void test_Sign_Media(void)
             }
 
             ret = create_file(workdir, "test.zz", 'a', 0x1000);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(workdir, 3, "test.exe", "test.txt", "test.zz"))
             {
@@ -740,7 +740,7 @@ static void test_Sign_Media(void)
             }
 
             ret = create_file(subdir, "test.exe", 'a', 0x10203);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(subdir, 1, "test.exe"))
             {
@@ -756,7 +756,7 @@ static void test_Sign_Media(void)
             }
 
             ret = create_file(subdir, "test.bbb", 'a', 0);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(subdir, 2, "test.bbb", "test.exe"))
             {
@@ -772,7 +772,7 @@ static void test_Sign_Media(void)
             }
 
             ret = create_file(subdir, "TEST.txt", 'a', 0x30201);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(subdir, 3, "test.bbb", "test.exe", "TEST.txt"))
             {
@@ -788,7 +788,7 @@ static void test_Sign_Media(void)
             }
 
             ret = create_file(subdir, "TEST.aaa", 'a', 0x3a2a1);
-            ok(ret, "create_file error: %d\n", GetLastError());
+            ok(ret, "create_file error: %ld\n", GetLastError());
 
             if (!expect_files(subdir, 4, "TEST.aaa", "test.bbb", "test.exe", "TEST.txt"))
             {
@@ -807,27 +807,27 @@ static void test_Sign_Media(void)
             ok(ret, "Expected restore_iat to succeed\n");
 
             ret = delete_file(subdir, "test.bbb");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(subdir, "TEST.aaa");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(subdir, "TEST.txt");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(subdir, "test.exe");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(workdir, "test.zz");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(workdir, "test.txt");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
             ret = delete_file(workdir, "test.exe");
-            ok(ret, "delete_file error: %d\n", GetLastError());
+            ok(ret, "delete_file error: %ld\n", GetLastError());
         }
         ret = DefineDosDeviceA(DDD_REMOVE_DEFINITION | DDD_NO_BROADCAST_SYSTEM, drive, NULL);
-        ok(ret, "DefineDosDeviceA error: %d\n", GetLastError());
+        ok(ret, "DefineDosDeviceA error: %ld\n", GetLastError());
     }
     ret = RemoveDirectoryA(subdir);
-    ok(ret, "RemoveDirectoryA error: %d\n", GetLastError());
+    ok(ret, "RemoveDirectoryA error: %ld\n", GetLastError());
     ret = RemoveDirectoryA(workdir);
-    ok(ret, "RemoveDirectoryA error: %d\n", GetLastError());
+    ok(ret, "RemoveDirectoryA error: %ld\n", GetLastError());
 }
 
 

@@ -32,6 +32,9 @@
 #define IDI_ICON3 12
 #define IDI_ICON4 13
 #define IDI_ICON5 14
+#define IDI_CHECKICON 15
+#define IDI_ARROWICON 16
+#define IDI_CROSSICON 17
 
 #define IDC_STATIC -1
 
@@ -74,6 +77,10 @@
 #define IDC_TASKBITMAP2       1068
 #define IDC_TASKBITMAP3       1069
 #define IDC_TASKBITMAP4       1070
+#define IDC_CHECK1            1071
+#define IDC_CHECK2            1072
+#define IDC_CHECK3            1073
+#define IDC_CHECK4            1074
 
 #define IDD_FINISHPAGE        1080
 #define IDC_FINISHTITLE       1081

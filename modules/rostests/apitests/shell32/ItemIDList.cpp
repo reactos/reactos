@@ -13,6 +13,8 @@ enum {
     DIRBIT = 1, FILEBIT = 2,
     PT_COMPUTER_REGITEM = 0x2E,
     PT_INTERNET_URL     = 0x61,
+    PT_CONTROLS_OLDREGITEM = 0x70,
+    PT_CONTROLS_NEWREGITEM = 0x71,
 };
 
 static BYTE GetPIDLType(LPCITEMIDLIST pidl)
@@ -49,6 +51,13 @@ static int FileStruct_Att(LPCITEMIDLIST pidl)
     return p ? p->att : (UINT(1) << 31);
 }
 
+static HRESULT ParseDisplayName(PWSTR pszPath, LPITEMIDLIST *ppidl, IBindCtx *pBC = NULL)
+{
+    CComPtr<IShellFolder> pSF;
+    HRESULT hr = SHGetDesktopFolder(&pSF);
+    return FAILED(hr) ? hr : pSF->ParseDisplayName(NULL, pBC, pszPath, NULL, ppidl, NULL);
+}
+
 static HRESULT GetDisplayNameOf(IShellFolder *pSF, LPCITEMIDLIST pidl, UINT Flags, PWSTR Buf, UINT Cap)
 {
     STRRET sr;
@@ -56,6 +65,14 @@ static HRESULT GetDisplayNameOf(IShellFolder *pSF, LPCITEMIDLIST pidl, UINT Flag
     if (SUCCEEDED(hr))
         hr = StrRetToBufW(&sr, pidl, Buf, Cap);
     return hr;
+}
+
+static HRESULT GetDisplayNameOf(PCIDLIST_ABSOLUTE pidl, UINT Flags, PWSTR Buf, UINT Cap)
+{
+    CComPtr<IShellFolder> pSF;
+    PCUITEMID_CHILD pidlChild;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pSF), &pidlChild);
+    return FAILED(hr) ? hr : GetDisplayNameOf(pSF, pidlChild, Flags, Buf, Cap);
 }
 
 #define TEST_CLSID(pidl, type, offset, clsid) \
@@ -160,7 +177,7 @@ START_TEST(SHSimpleIDListFromPath)
     }
 
     LPITEMIDLIST pidl;
-    ok_int((pidl = SHSimpleIDListFromPath(L"c:")) != NULL, TRUE);
+    ok_int((pidl = SHSimpleIDListFromPath(L"c:")) != NULL, LOBYTE(GetVersion()) >= 6);
     ILFree(pidl);
     ok_int((pidl = SHSimpleIDListFromPath(L"c:\\")) != NULL, TRUE);
     ILFree(pidl);
@@ -217,9 +234,32 @@ START_TEST(PIDL)
 
     pidl = SHCloneSpecialIDList(NULL, CSIDL_PRINTERS, FALSE);
     if (pidl)
-        TEST_CLSID(ILFindLastID(pidl), 0x71, 14, CLSID_Printers);
+    {
+        // Accept both the old and new format from the special folder API (NT5 vs NT6)
+        LPITEMIDLIST pidlLeaf = ILFindLastID(pidl);
+        if (LOBYTE(GetVersion()) < 6)
+            TEST_CLSID(pidlLeaf, PT_CONTROLS_OLDREGITEM, 4, CLSID_Printers);
+        else
+            TEST_CLSID(pidlLeaf, PT_CONTROLS_NEWREGITEM, 14, CLSID_Printers);
+
+        // The Control Panel should always return the new format when parsing
+        LPITEMIDLIST pidl2;
+        WCHAR szParse[MAX_PATH];
+        if (SUCCEEDED(GetDisplayNameOf(pidl, SHGDN_FORPARSING, szParse, _countof(szParse))) &&
+            SUCCEEDED(ParseDisplayName(szParse, &pidl2)))
+        {
+            TEST_CLSID(ILFindLastID(pidl2), PT_CONTROLS_NEWREGITEM, 14, CLSID_Printers);
+            ILFree(pidl2);
+        }
+        else
+        {
+            skip("Failed to parse in Control Panel\n");
+        }
+    }
     else
+    {
         skip("?\n");
+    }
     ILFree(pidl);
 
 

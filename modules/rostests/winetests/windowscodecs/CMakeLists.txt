@@ -3,8 +3,6 @@ add_definitions(
     -DUSE_WINE_TODOS
     -DWINETEST_USE_DBGSTR_LONGLONG)
 
-remove_definitions(-D__ROS_LONG64__)
-
 list(APPEND SOURCE
     bitmap.c
     bmpformat.c

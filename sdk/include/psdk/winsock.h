@@ -15,12 +15,6 @@
 #include <windows.h>
 #endif
 
-#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
-#ifndef __ROS_LONG64__
-#define __ROS_LONG64__
-#endif
-#endif
-
 #define _GNU_H_WINDOWS32_SOCKETS
 
 #ifdef __cplusplus

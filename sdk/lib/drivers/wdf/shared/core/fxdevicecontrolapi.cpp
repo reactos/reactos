@@ -32,7 +32,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
-STDCALL
+NTAPI
 WDFEXPORT(WdfControlFinishInitializing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -52,7 +52,7 @@ WDFEXPORT(WdfControlFinishInitializing)(
     MxDeviceObject device(pDevice->GetDeviceObject());
 
     if (pDevice->IsLegacy()) {
-        // pDevice->m_PkgWmi->Register(); __REACTOS__
+        pDevice->m_PkgWmi->Register();
         device.SetFlags(device.GetFlags() & ~DO_DEVICE_INITIALIZING);
     }
     else {

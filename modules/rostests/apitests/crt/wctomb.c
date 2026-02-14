@@ -18,6 +18,17 @@
 #define todo_static todo_if(1)
 #else
 #define todo_static
+typedef int (__cdecl *PFN_wctomb)(char *mbchar, wchar_t wchar);
+static PFN_wctomb p_wctomb;
+
+static BOOL Init(void)
+{
+    HMODULE hdll = LoadLibraryA(TEST_DLL_NAME);
+    p_wctomb = (PFN_wctomb)GetProcAddress(hdll, "wctomb");
+    ok(p_wctomb != NULL, "Failed to load wctomb from %s\n", TEST_DLL_NAME);
+    return (p_wctomb != NULL);
+}
+#define wctomb p_wctomb
 #endif
 
 START_TEST(wctomb)
@@ -27,6 +38,14 @@ START_TEST(wctomb)
     char *loc;
     unsigned int codepage = ___lc_codepage_func();
     wchar_t wchSrc[2] = {L'R', 0414}; // 0414 corresponds to a Russian character in Windows-1251
+
+#ifndef TEST_STATIC_CRT
+    if (!Init())
+    {
+        skip("Skipping tests, because wctomb is not available\n");
+        return;
+    }
+#endif
 
     chDest = AllocateGuarded(sizeof(*chDest));
     if (!chDest)

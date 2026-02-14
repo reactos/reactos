@@ -42,6 +42,7 @@ static const NDIS_OID NvpSupportedOidList[] =
     OID_802_3_CURRENT_ADDRESS,
     OID_802_3_MULTICAST_LIST,
     OID_802_3_MAXIMUM_LIST_SIZE,
+    OID_GEN_PHYSICAL_MEDIUM,
 
     /* Statistics */
     OID_GEN_XMIT_OK,
@@ -1196,6 +1197,12 @@ MiniportQueryInformation(
         case OID_802_3_MAXIMUM_LIST_SIZE:
         {
             GenericInfo.Ulong = NVNET_MULTICAST_LIST_SIZE;
+            break;
+        }
+
+        case OID_GEN_PHYSICAL_MEDIUM:
+        {
+            GenericInfo.Ulong = NdisPhysicalMedium802_3;
             break;
         }
 

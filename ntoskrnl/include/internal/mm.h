@@ -109,8 +109,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define PAGE_WRITETHROUGH                   (1024)
 #define PAGE_SYSTEM                         (2048)
 
-#define SEC_PHYSICALMEMORY                  (0x80000000)
-
 #define MC_USER                             (0)
 #define MC_SYSTEM                           (1)
 #define MC_MAXIMUM                          (2)
@@ -147,7 +145,8 @@ typedef ULONG_PTR SWAPENTRY;
      PAGE_EXECUTE_READWRITE | \
      PAGE_EXECUTE_WRITECOPY | \
      PAGE_NOACCESS | \
-     PAGE_NOCACHE)
+     PAGE_NOCACHE | \
+     PAGE_WRITECOMBINE)
 
 #define PAGE_IS_READABLE                    \
     (PAGE_READONLY | \

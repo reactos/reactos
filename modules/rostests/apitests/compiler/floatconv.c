@@ -38,12 +38,6 @@
 #define ULONGLONG_OVERFLOW 0x8000000000000000ull
 #endif
 
-#ifdef __GNUC__
-#define todo_gcc todo_ros
-#else
-#define todo_gcc
-#endif
-
 __declspec(noinline)
 long cast_float_to_long(float f)
 {
@@ -157,8 +151,10 @@ void Test_float(void)
     ok_eq_ulonglong(cast_float_to_ulonglong(9223371487098961920.0f), 9223371487098961920ull); // 0x7FFFFF8000000000
     ok_eq_ulonglong(cast_float_to_ulonglong(9223372036854775808.0f), 9223372036854775808ull); // 0x8000000000000000
     ok_eq_ulonglong(cast_float_to_ulonglong(18446743523953737727.9f), 18446742974197923840ull); // 0xFFFFFF0000000000
-    todo_gcc ok_eq_ulonglong(cast_float_to_ulonglong(18446743523953737728.0f), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
-    todo_gcc ok_eq_ulonglong(cast_float_to_ulonglong(20000000000000000000.0f), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+#ifndef __GNUC__ // GCC inlines the conversion, we cannot fix this
+    ok_eq_ulonglong(cast_float_to_ulonglong(18446743523953737728.0f), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+    ok_eq_ulonglong(cast_float_to_ulonglong(20000000000000000000.0f), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+#endif
 
     // float to unsigned long long cast (negative values)
     ok_eq_ulonglong(cast_float_to_ulonglong(-0.0f), 0ull);
@@ -245,9 +241,11 @@ void Test_double(void)
     ok_eq_ulonglong(cast_double_to_ulonglong(9223372036854774784.0), 9223372036854774784ull); // 0x7FFFFFFFFFFFFC00
     ok_eq_ulonglong(cast_double_to_ulonglong(9223372036854775808.0), 9223372036854775808ull); // 0x8000000000000000
     ok_eq_ulonglong(cast_double_to_ulonglong(18446744073709550591.9), 18446744073709549568ull); // 0xFFFFFFFFFFFFF800
-    todo_gcc ok_eq_ulonglong(cast_double_to_ulonglong(18446744073709550592.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
-    todo_gcc ok_eq_ulonglong(cast_double_to_ulonglong(18446744073709551616.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
-    todo_gcc ok_eq_ulonglong(cast_double_to_ulonglong(20000000000000000000.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+#ifndef __GNUC__ // GCC inlines the conversion, we cannot fix this
+    ok_eq_ulonglong(cast_double_to_ulonglong(18446744073709550592.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+    ok_eq_ulonglong(cast_double_to_ulonglong(18446744073709551616.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+    ok_eq_ulonglong(cast_double_to_ulonglong(20000000000000000000.0), ULONGLONG_OVERFLOW); // 0x8000000000000000 / 0xFFFFFFFFFFFFFFFF
+#endif
 
     // float to unsigned long long cast (negative values)
     ok_eq_ulonglong(cast_double_to_ulonglong(-0.0), 0ull);

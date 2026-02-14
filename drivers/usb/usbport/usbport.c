@@ -961,62 +961,97 @@ USBPORT_IsrDpcHandler(IN PDEVICE_OBJECT FdoDevice,
         return;
     }
 
-    for (List = ExInterlockedRemoveHeadList(&FdoExtension->EpStateChangeList,
-                                            &FdoExtension->EpStateChangeSpinLock);
-         List != NULL;
-         List = ExInterlockedRemoveHeadList(&FdoExtension->EpStateChangeList,
-                                            &FdoExtension->EpStateChangeSpinLock))
+    /* Process the state change list.
+     * - Always process the list (don't flush during suspend)
+     * - If controller is suspended/off, mark endpoints as ready immediately
+     * - Don't request interrupts if suspended */
+    KeAcquireSpinLockAtDpcLevel(&FdoExtension->EpStateChangeSpinLock);
+    List = FdoExtension->EpStateChangeList.Flink;
+    while (List != &FdoExtension->EpStateChangeList)
     {
+        BOOLEAN EndpointReady = FALSE;
+        PLIST_ENTRY NextList;
+        BOOLEAN ControllerSuspended;
+
         Endpoint = CONTAINING_RECORD(List,
                                      USBPORT_ENDPOINT,
                                      StateChangeLink);
 
         DPRINT_CORE("USBPORT_IsrDpcHandler: Endpoint - %p\n", Endpoint);
 
-        KeAcquireSpinLockAtDpcLevel(&Endpoint->EndpointSpinLock);
+        /* Save the next entry before we potentially remove this one */
+        NextList = List->Flink;
 
-        KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
-        FrameNumber = Packet->Get32BitFrameNumber(FdoExtension->MiniPortExt);
-        KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
+        /* Check if controller is suspended/off  */
+        ControllerSuspended = (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND) != 0 ||
+                              (FdoExtension->CommonExtension.DevicePowerState == PowerDeviceD3);
 
-        if (FrameNumber <= Endpoint->FrameNumber &&
-            !(Endpoint->Flags & ENDPOINT_FLAG_NUKE))
+        if (ControllerSuspended)
         {
-            KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
-
-            ExInterlockedInsertHeadList(&FdoExtension->EpStateChangeList,
-                                        &Endpoint->StateChangeLink,
-                                        &FdoExtension->EpStateChangeSpinLock);
-
-            KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
-            Packet->InterruptNextSOF(FdoExtension->MiniPortExt);
-            KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
-
-            break;
-        }
-
-        KeReleaseSpinLockFromDpcLevel(&Endpoint->EndpointSpinLock);
-
-        KeAcquireSpinLockAtDpcLevel(&Endpoint->StateChangeSpinLock);
-        Endpoint->StateLast = Endpoint->StateNext;
-        KeReleaseSpinLockFromDpcLevel(&Endpoint->StateChangeSpinLock);
-
-        DPRINT_CORE("USBPORT_IsrDpcHandler: Endpoint->StateLast - %x\n",
-                    Endpoint->StateLast);
-
-        if (IsDpcHandler)
-        {
-            USBPORT_InvalidateEndpointHandler(FdoDevice,
-                                              Endpoint,
-                                              INVALIDATE_ENDPOINT_ONLY);
+            /* Controller is suspended/off - mark endpoint as ready immediately */
+            EndpointReady = TRUE;
         }
         else
         {
-            USBPORT_InvalidateEndpointHandler(FdoDevice,
-                                              Endpoint,
-                                              INVALIDATE_ENDPOINT_WORKER_THREAD);
+            KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
+            FrameNumber = Packet->Get32BitFrameNumber(FdoExtension->MiniPortExt);
+            KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
+
+            /* Check if the endpoint is ready to be processed */
+            if (FrameNumber > Endpoint->FrameNumber ||
+                (Endpoint->Flags & ENDPOINT_FLAG_NUKE))
+            {
+                EndpointReady = TRUE;
+            }
         }
+
+
+        if (EndpointReady)
+        {
+            /* Endpoint is ready - remove it from the list and process it */
+            RemoveEntryList(&Endpoint->StateChangeLink);
+            Endpoint->StateChangeLink.Flink = NULL;
+            Endpoint->StateChangeLink.Blink = NULL;
+
+            KeAcquireSpinLockAtDpcLevel(&Endpoint->StateChangeSpinLock);
+            Endpoint->StateLast = Endpoint->StateNext;
+            KeReleaseSpinLockFromDpcLevel(&Endpoint->StateChangeSpinLock);
+
+            DPRINT_CORE("USBPORT_IsrDpcHandler: Endpoint->StateLast - %x\n",
+                        Endpoint->StateLast);
+            
+            KeReleaseSpinLockFromDpcLevel(&FdoExtension->EpStateChangeSpinLock);
+
+            if (IsDpcHandler)
+            {
+                USBPORT_InvalidateEndpointHandler(FdoDevice,
+                                                  Endpoint,
+                                                  INVALIDATE_ENDPOINT_ONLY);
+            }
+            else
+            {
+                USBPORT_InvalidateEndpointHandler(FdoDevice,
+                                                  Endpoint,
+                                                  INVALIDATE_ENDPOINT_WORKER_THREAD);
+            }
+
+            KeAcquireSpinLockAtDpcLevel(&FdoExtension->EpStateChangeSpinLock);
+        }
+        else if (!ControllerSuspended)
+        {
+            /* Endpoint is not ready yet - leave it in the list and request interrupt.
+             * Don't request interrupts if controller is suspended. */
+            KeAcquireSpinLockAtDpcLevel(&FdoExtension->MiniportSpinLock);
+            Packet->InterruptNextSOF(FdoExtension->MiniPortExt);
+            KeReleaseSpinLockFromDpcLevel(&FdoExtension->MiniportSpinLock);
+        }
+        /* If suspended and not ready, leave it in list but don't request interrupt */
+
+        /* Move to the next entry */
+        List = NextList;
     }
+
+    KeReleaseSpinLockFromDpcLevel(&FdoExtension->EpStateChangeSpinLock);
 
     if (IsDpcHandler)
     {

@@ -1314,11 +1314,9 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
 NTSTATUS
 NTAPI
 PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
-                       IN PPNP_BUS_INFORMATION* Buffer)
+                       OUT PPNP_BUS_INFORMATION* Buffer)
 {
     PPNP_BUS_INFORMATION BusInfo;
-
-    UNREFERENCED_PARAMETER(Buffer);
 
     /* Allocate a structure for the bus information */
     BusInfo = ExAllocatePoolWithTag(PagedPool,
@@ -1330,6 +1328,9 @@ PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
     BusInfo->BusTypeGuid = GUID_BUS_TYPE_PCI;
     BusInfo->LegacyBusType = PCIBus;
     BusInfo->BusNumber = PdoExtension->ParentFdoExtension->BaseBus;
+
+    *Buffer = BusInfo;
+
     return STATUS_SUCCESS;
 }
 

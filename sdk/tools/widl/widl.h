@@ -21,6 +21,7 @@
 #ifndef __WIDL_WIDL_H
 #define __WIDL_WIDL_H
 
+#include "../tools.h"
 #include "widltypes.h"
 
 #include <time.h>
@@ -38,7 +39,6 @@ extern int pedantic;
 extern int do_everything;
 extern int do_header;
 extern int do_typelib;
-extern int do_old_typelib;
 extern int do_proxies;
 extern int do_client;
 extern int do_server;
@@ -46,13 +46,13 @@ extern int do_regscript;
 extern int do_idfile;
 extern int do_dlldata;
 extern int old_names;
-extern int win32_packing;
-extern int win64_packing;
+extern int old_typelib;
 extern int winrt_mode;
+extern int interpreted_mode;
 extern int use_abi_namespace;
 
 extern char *input_name;
-extern char *input_idl_name;
+extern char *idl_name;
 extern char *acf_name;
 extern char *header_name;
 extern char *header_token;
@@ -69,26 +69,12 @@ extern char *regscript_name;
 extern char *regscript_token;
 extern const char *prefix_client;
 extern const char *prefix_server;
+extern unsigned int packing;
 extern unsigned int pointer_size;
+extern struct target target;
 extern time_t now;
 
-extern int line_number;
-extern int char_number;
-
-enum target_cpu
-{
-    CPU_x86, CPU_x86_64, CPU_POWERPC, CPU_ARM, CPU_ARM64, CPU_LAST = CPU_ARM64
-};
-
-extern enum target_cpu target_cpu;
-
-enum stub_mode
-{
-    MODE_Os,  /* inline stubs */
-    MODE_Oi,  /* old-style interpreted stubs */
-    MODE_Oif  /* new-style fully interpreted stubs */
-};
-extern enum stub_mode get_stub_mode(void);
+extern int open_typelib( const char *name );
 
 extern void write_header(const statement_list_t *stmts);
 extern void write_id_data(const statement_list_t *stmts);
@@ -103,5 +89,41 @@ extern void write_dlldata(const statement_list_t *stmts);
 
 extern void start_cplusplus_guard(FILE *fp);
 extern void end_cplusplus_guard(FILE *fp);
+
+/* attribute.c */
+
+extern attr_t *attr_int( struct location where, enum attr_type attr_type, unsigned int val );
+extern attr_t *attr_ptr( struct location where, enum attr_type attr_type, void *val );
+
+extern int is_attr( const attr_list_t *list, enum attr_type attr_type );
+extern int is_ptrchain_attr( const var_t *var, enum attr_type attr_type );
+extern int is_aliaschain_attr( const type_t *type, enum attr_type attr_type );
+
+extern unsigned int get_attrv( const attr_list_t *list, enum attr_type attr_type );
+extern void *get_attrp( const attr_list_t *list, enum attr_type attr_type );
+extern void *get_aliaschain_attrp( const type_t *type, enum attr_type attr_type );
+
+typedef int (*map_attrs_filter_t)( attr_list_t *, const attr_t * );
+extern attr_list_t *append_attr( attr_list_t *list, attr_t *attr );
+extern attr_list_t *append_attr_list( attr_list_t *new_list, attr_list_t *old_list );
+extern attr_list_t *append_attribs( attr_list_t *, attr_list_t * );
+extern attr_list_t *map_attrs( const attr_list_t *list, map_attrs_filter_t filter );
+extern attr_list_t *move_attr( attr_list_t *dst, attr_list_t *src, enum attr_type type );
+
+extern attr_list_t *check_apicontract_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_coclass_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_dispiface_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_enum_attrs( attr_list_t *attrs );
+extern attr_list_t *check_enum_member_attrs( attr_list_t *attrs );
+extern attr_list_t *check_field_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_function_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_interface_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_library_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_module_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_runtimeclass_attrs( const char *name, attr_list_t *attrs );
+extern attr_list_t *check_struct_attrs( attr_list_t *attrs );
+extern attr_list_t *check_typedef_attrs( attr_list_t *attrs );
+extern attr_list_t *check_union_attrs( attr_list_t *attrs );
+extern void check_arg_attrs( const var_t *arg );
 
 #endif

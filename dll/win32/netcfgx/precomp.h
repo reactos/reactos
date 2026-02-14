@@ -24,6 +24,8 @@
 #include <commctrl.h>
 #include <cfgmgr32.h>
 
+#include <netcfgx_undoc.h>
+
 #include <wine/debug.h>
 
 #include "resource.h"
@@ -51,7 +53,21 @@ typedef struct tagNetCfgComponentItem
     LPWSTR pszBinding;
     struct tagNetCfgComponentItem * pNext;
     INetCfgComponentControl * pNCCC;
-}NetCfgComponentItem;
+} NetCfgComponentItem;
+
+typedef struct
+{
+    const INetCfg * lpVtbl;
+    const INetCfgLock * lpVtblLock;
+    const INetCfgPnpReconfigCallback *lpVtblPnpReconfigCallback;
+    LONG                       ref;
+    BOOL bInitialized;
+    HANDLE hMutex;
+    NetCfgComponentItem *pNet;
+    NetCfgComponentItem * pService;
+    NetCfgComponentItem * pClient;
+    NetCfgComponentItem * pProtocol;
+} INetCfgImpl;
 
 /* netcfg_iface.c */
 HRESULT WINAPI INetCfg_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
