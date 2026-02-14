@@ -1696,13 +1696,10 @@ GetSelectedTimeZoneEntry(PSETUPDATA SetupData, DWORD dwEntryIndex)
 {
     PTIMEZONE_ENTRY Entry;
 
-    Entry = SetupData->TimeZoneListHead;
-    while (Entry != NULL)
+    for (Entry = SetupData->TimeZoneListHead; Entry != NULL; Entry = Entry->Next)
     {
         if (Entry->Index == dwEntryIndex)
             return Entry;
-
-        Entry = Entry->Next;
     }
 
     return SetupData->TimeZoneListHead;
