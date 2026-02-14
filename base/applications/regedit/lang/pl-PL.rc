@@ -26,7 +26,7 @@ BEGIN
     STRING_USAGE "Sposób użycia:\n\
   regedit [opcje] [nazwa_pliku] [klucz_rejestru]\n\n\
 Opcje:\n\
-  [brak opcji]            Uruchom graficzną wersje tego programu.\n\
+  [brak opcji]       Uruchom wersję graficzną tego programu.\n\
   /L:system.dat      Lokalizacja pliku system.dat do modyfikacji..\n\
                      Zgodne z innymi opcjami. Ignorowane.\n\
   /R:user.dat        Lokalizacja pliku user.dat do modyfikacji.\n\
