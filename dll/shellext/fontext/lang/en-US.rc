@@ -33,7 +33,6 @@ BEGIN
     IDS_COL_SIZE "Size"
     IDS_COL_MODIFIED "Modified"
     IDS_COL_ATTR "Attributes"
-    IDS_COL_ATTR_LETTERS "RHSAC"
 END
 
 
