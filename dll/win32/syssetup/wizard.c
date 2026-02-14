@@ -1702,7 +1702,7 @@ GetSelectedTimeZoneEntry(PSETUPDATA SetupData, DWORD dwEntryIndex)
             return Entry;
     }
 
-    return SetupData->TimeZoneListHead;
+    return NULL;
 }
 
 static PTIMEZONE_ENTRY
