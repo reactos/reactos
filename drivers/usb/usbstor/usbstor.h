@@ -235,7 +235,7 @@ FreeItem(
 NTSTATUS
 USBSTOR_SyncUrbRequest(
     IN PDEVICE_OBJECT DeviceObject,
-    OUT PURB UrbRequest);
+    IN PURB Urb);
 
 NTSTATUS
 USBSTOR_GetMaxLUN(
