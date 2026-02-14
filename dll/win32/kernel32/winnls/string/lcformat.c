@@ -27,6 +27,8 @@
 #include <k32.h>
 #include "japanese.h"   /* Japanese eras */
 
+#include "lcformat_private.h"
+
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(nls);
@@ -350,6 +352,16 @@ static const NLS_FORMAT_NODE *NLS_GetFormats(LCID lcid, DWORD dwFlags)
     }
   }
   return node;
+}
+
+/*
+ * NLS_GetAnsiCodePage <internal>
+ * Helper used by ANSI entrypoints to determine the locale codepage.
+ */
+DWORD NLS_GetAnsiCodePage(LCID lcid, DWORD dwFlags)
+{
+    const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
+    return node ? node->dwCodePage : 0;
 }
 
 /**************************************************************************
@@ -1096,96 +1108,6 @@ INT WINAPI GetTimeFormatW(LCID lcid, DWORD dwFlags, const SYSTEMTIME* lpTime,
                                 lpFormat, lpTimeStr, cchOut);
 }
 
-/**************************************************************************
- *              GetNumberFormatA	(KERNEL32.@)
- *
- * Format a number string for a given locale.
- *
- * PARAMS
- *  lcid        [I] Locale to format for
- *  dwFlags     [I] LOCALE_ flags from "winnls.h"
- *  lpszValue   [I] String to format
- *  lpFormat    [I] Formatting overrides
- *  lpNumberStr [O] Destination for formatted string
- *  cchOut      [I] Size of lpNumberStr, or 0 to calculate the resulting size
- *
- * NOTES
- *  - lpszValue can contain only '0' - '9', '-' and '.'.
- *  - If lpFormat is non-NULL, dwFlags must be 0. In this case lpszValue will
- *    be formatted according to the format details returned by GetLocaleInfoA().
- *  - This function rounds the number string if the number of decimals exceeds the
- *    locales normal number of decimal places.
- *  - If cchOut is 0, this function does not write to lpNumberStr.
- *  - The Ascii version of this function fails if lcid is Unicode only.
- *
- * RETURNS
- *  Success: The number of character written to lpNumberStr, or that would
- *           have been written, if cchOut is 0.
- *  Failure: 0. Use GetLastError() to determine the cause.
- */
-INT WINAPI GetNumberFormatA(LCID lcid, DWORD dwFlags,
-                            LPCSTR lpszValue,  const NUMBERFMTA *lpFormat,
-                            LPSTR lpNumberStr, int cchOut)
-{
-  DWORD cp = CP_ACP;
-  WCHAR szDec[8], szGrp[8], szIn[128], szOut[128];
-  NUMBERFMTW fmt;
-  const NUMBERFMTW *pfmt = NULL;
-  INT iRet;
-
-  TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_a(lpszValue),
-        lpFormat, lpNumberStr, cchOut);
-
-  if (NLS_IsUnicodeOnlyLcid(lcid))
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
-
-  if (!(dwFlags & LOCALE_USE_CP_ACP))
-  {
-    const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
-    if (!node)
-    {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return 0;
-    }
-
-    cp = node->dwCodePage;
-  }
-
-  if (lpFormat)
-  {
-    memcpy(&fmt, lpFormat, sizeof(fmt));
-    pfmt = &fmt;
-    if (lpFormat->lpDecimalSep)
-    {
-      MultiByteToWideChar(cp, 0, lpFormat->lpDecimalSep, -1, szDec, ARRAY_SIZE(szDec));
-      fmt.lpDecimalSep = szDec;
-    }
-    if (lpFormat->lpThousandSep)
-    {
-      MultiByteToWideChar(cp, 0, lpFormat->lpThousandSep, -1, szGrp, ARRAY_SIZE(szGrp));
-      fmt.lpThousandSep = szGrp;
-    }
-  }
-
-  if (lpszValue)
-    MultiByteToWideChar(cp, 0, lpszValue, -1, szIn, ARRAY_SIZE(szIn));
-
-  if (cchOut > (int) ARRAY_SIZE(szOut))
-    cchOut = ARRAY_SIZE(szOut);
-
-  szOut[0] = '\0';
-
-  iRet = GetNumberFormatW(lcid, dwFlags, lpszValue ? szIn : NULL, pfmt,
-                          lpNumberStr ? szOut : NULL, cchOut);
-
-  if (szOut[0] && lpNumberStr)
-    WideCharToMultiByte(cp, 0, szOut, -1, lpNumberStr, cchOut, 0, 0);
-  return iRet;
-}
-
 /* Number parsing state flags */
 #define NF_ISNEGATIVE 0x1  /* '-' found */
 #define NF_ISREAL     0x2  /* '.' found */
@@ -1461,101 +1383,6 @@ INT WINAPI GetNumberFormatEx(LPCWSTR name, DWORD flags,
   return GetNumberFormatW(lcid, flags, value, format, number, numout);
 }
 #endif /* _WIN32_WINNT >= 0x600 */
-
-/**************************************************************************
- *              GetCurrencyFormatA	(KERNEL32.@)
- *
- * Format a currency string for a given locale.
- *
- * PARAMS
- *  lcid          [I] Locale to format for
- *  dwFlags       [I] LOCALE_ flags from "winnls.h"
- *  lpszValue     [I] String to format
- *  lpFormat      [I] Formatting overrides
- *  lpCurrencyStr [O] Destination for formatted string
- *  cchOut        [I] Size of lpCurrencyStr, or 0 to calculate the resulting size
- *
- * NOTES
- *  - lpszValue can contain only '0' - '9', '-' and '.'.
- *  - If lpFormat is non-NULL, dwFlags must be 0. In this case lpszValue will
- *    be formatted according to the format details returned by GetLocaleInfoA().
- *  - This function rounds the currency if the number of decimals exceeds the
- *    locales number of currency decimal places.
- *  - If cchOut is 0, this function does not write to lpCurrencyStr.
- *  - The Ascii version of this function fails if lcid is Unicode only.
- *
- * RETURNS
- *  Success: The number of character written to lpNumberStr, or that would
- *           have been written, if cchOut is 0.
- *  Failure: 0. Use GetLastError() to determine the cause.
- */
-INT WINAPI GetCurrencyFormatA(LCID lcid, DWORD dwFlags,
-                              LPCSTR lpszValue,  const CURRENCYFMTA *lpFormat,
-                              LPSTR lpCurrencyStr, int cchOut)
-{
-  DWORD cp = CP_ACP;
-  WCHAR szDec[8], szGrp[8], szCy[8], szIn[128], szOut[128];
-  CURRENCYFMTW fmt;
-  const CURRENCYFMTW *pfmt = NULL;
-  INT iRet;
-
-  TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_a(lpszValue),
-        lpFormat, lpCurrencyStr, cchOut);
-
-  if (NLS_IsUnicodeOnlyLcid(lcid))
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
-
-  if (!(dwFlags & LOCALE_USE_CP_ACP))
-  {
-    const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
-    if (!node)
-    {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return 0;
-    }
-
-    cp = node->dwCodePage;
-  }
-
-  if (lpFormat)
-  {
-    memcpy(&fmt, lpFormat, sizeof(fmt));
-    pfmt = &fmt;
-    if (lpFormat->lpDecimalSep)
-    {
-      MultiByteToWideChar(cp, 0, lpFormat->lpDecimalSep, -1, szDec, ARRAY_SIZE(szDec));
-      fmt.lpDecimalSep = szDec;
-    }
-    if (lpFormat->lpThousandSep)
-    {
-      MultiByteToWideChar(cp, 0, lpFormat->lpThousandSep, -1, szGrp, ARRAY_SIZE(szGrp));
-      fmt.lpThousandSep = szGrp;
-    }
-    if (lpFormat->lpCurrencySymbol)
-    {
-      MultiByteToWideChar(cp, 0, lpFormat->lpCurrencySymbol, -1, szCy, ARRAY_SIZE(szCy));
-      fmt.lpCurrencySymbol = szCy;
-    }
-  }
-
-  if (lpszValue)
-    MultiByteToWideChar(cp, 0, lpszValue, -1, szIn, ARRAY_SIZE(szIn));
-
-  if (cchOut > (int) ARRAY_SIZE(szOut))
-    cchOut = ARRAY_SIZE(szOut);
-
-  szOut[0] = '\0';
-
-  iRet = GetCurrencyFormatW(lcid, dwFlags, lpszValue ? szIn : NULL, pfmt,
-                            lpCurrencyStr ? szOut : NULL, cchOut);
-
-  if (szOut[0] && lpCurrencyStr)
-    WideCharToMultiByte(cp, 0, szOut, -1, lpCurrencyStr, cchOut, 0, 0);
-  return iRet;
-}
 
 /* Formatting states for Currencies. We use flags to avoid code duplication. */
 #define CF_PARENS       0x1  /* Parentheses      */
@@ -1877,24 +1704,7 @@ int WINAPI GetCurrencyFormatEx(LPCWSTR localename, DWORD flags, LPCWSTR value,
  *        alternate calendars is determined.
  */
 
-enum enum_callback_type {
-    CALLBACK_ENUMPROC,
-    CALLBACK_ENUMPROCEX,
-    CALLBACK_ENUMPROCEXEX
-};
-
-struct enumdateformats_context {
-    enum enum_callback_type type;  /* callback kind */
-    union {
-        DATEFMT_ENUMPROCW    callback;     /* user callback pointer */
-        DATEFMT_ENUMPROCEXW  callbackex;
-        DATEFMT_ENUMPROCEXEX callbackexex;
-    } u;
-    LCID   lcid;    /* locale of interest */
-    DWORD  flags;
-    LPARAM lParam;
-    BOOL   unicode; /* A vs W callback type, only for regular and Ex callbacks */
-};
+/* Types for Enum* internals are declared in lcformat_private.h */
 
 /******************************************************************************
  * NLS_EnumDateFormats <internal>
@@ -1907,7 +1717,7 @@ struct enumdateformats_context {
  *    Success: TRUE.
  *    Failure: FALSE. Use GetLastError() to determine the cause.
  */
-static BOOL NLS_EnumDateFormats(const struct enumdateformats_context *ctxt)
+BOOL NLS_EnumDateFormats(const struct enumdateformats_context *ctxt)
 {
     WCHAR bufW[256];
     char bufA[256];
@@ -2005,25 +1815,6 @@ BOOL WINAPI EnumDateFormatsExW(DATEFMT_ENUMPROCEXW proc, LCID lcid, DWORD flags)
 }
 
 /**************************************************************************
- *              EnumDateFormatsA	(KERNEL32.@)
- *
- * FIXME: MSDN mentions only LOCALE_USE_CP_ACP, should we handle
- * LOCALE_NOUSEROVERRIDE here as well?
- */
-BOOL WINAPI EnumDateFormatsA(DATEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
-{
-    struct enumdateformats_context ctxt;
-
-    ctxt.type = CALLBACK_ENUMPROC;
-    ctxt.u.callback = (DATEFMT_ENUMPROCW)proc;
-    ctxt.lcid = lcid;
-    ctxt.flags = flags;
-    ctxt.unicode = FALSE;
-
-    return NLS_EnumDateFormats(&ctxt);
-}
-
-/**************************************************************************
  *              EnumDateFormatsW	(KERNEL32.@)
  */
 BOOL WINAPI EnumDateFormatsW(DATEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
@@ -2058,19 +1849,7 @@ BOOL WINAPI EnumDateFormatsExEx(DATEFMT_ENUMPROCEXEX proc, const WCHAR *locale, 
 }
 #endif /* _WIN32_WINNT >= 0x600 */
 
-struct enumtimeformats_context {
-    enum enum_callback_type type;  /* callback kind */
-    union {
-        TIMEFMT_ENUMPROCW  callback;     /* user callback pointer */
-        TIMEFMT_ENUMPROCEX callbackex;
-    } u;
-    LCID   lcid;    /* locale of interest */
-    DWORD  flags;
-    LPARAM lParam;
-    BOOL   unicode; /* A vs W callback type, only for regular and Ex callbacks */
-};
-
-static BOOL NLS_EnumTimeFormats(struct enumtimeformats_context *ctxt)
+BOOL NLS_EnumTimeFormats(struct enumtimeformats_context *ctxt)
 {
     WCHAR bufW[256];
     char bufA[256];
@@ -2122,32 +1901,6 @@ static BOOL NLS_EnumTimeFormats(struct enumtimeformats_context *ctxt)
 }
 
 /**************************************************************************
- *              EnumTimeFormatsA	(KERNEL32.@)
- *
- * FIXME: MSDN mentions only LOCALE_USE_CP_ACP, should we handle
- * LOCALE_NOUSEROVERRIDE here as well?
- */
-BOOL WINAPI EnumTimeFormatsA(TIMEFMT_ENUMPROCA proc, LCID lcid, DWORD flags)
-{
-    struct enumtimeformats_context ctxt;
-
-    /* EnumTimeFormatsA doesn't support flags, EnumTimeFormatsW does. */
-    if (flags & ~LOCALE_USE_CP_ACP)
-    {
-        SetLastError(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
-
-    ctxt.type = CALLBACK_ENUMPROC;
-    ctxt.u.callback = (TIMEFMT_ENUMPROCW)proc;
-    ctxt.lcid = lcid;
-    ctxt.flags = flags;
-    ctxt.unicode = FALSE;
-
-    return NLS_EnumTimeFormats(&ctxt);
-}
-
-/**************************************************************************
  *              EnumTimeFormatsW	(KERNEL32.@)
  */
 BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW proc, LCID lcid, DWORD flags)
@@ -2182,19 +1935,6 @@ BOOL WINAPI EnumTimeFormatsEx(TIMEFMT_ENUMPROCEX proc, const WCHAR *locale, DWOR
 }
 #endif /* _WIN32_WINNT >= 0x600 */
 
-struct enumcalendar_context {
-    enum enum_callback_type type;  /* callback kind */
-    union {
-        CALINFO_ENUMPROCW    callback;     /* user callback pointer */
-        CALINFO_ENUMPROCEXW  callbackex;
-        CALINFO_ENUMPROCEXEX callbackexex;
-    } u;
-    LCID    lcid;     /* locale of interest */
-    CALID   calendar; /* specific calendar or ENUM_ALL_CALENDARS */
-    CALTYPE caltype;  /* calendar information type */
-    LPARAM  lParam;   /* user input parameter passed to callback, for ExEx case only */
-    BOOL    unicode;  /* A vs W callback type, only for regular and Ex callbacks */
-};
 
 /******************************************************************************
  * NLS_EnumCalendarInfo <internal>
@@ -2216,7 +1956,7 @@ struct enumcalendar_context {
  * TODO
  *    The above note should be respected by GetCalendarInfoA.
  */
-static BOOL NLS_EnumCalendarInfo(const struct enumcalendar_context *ctxt)
+BOOL NLS_EnumCalendarInfo(const struct enumcalendar_context *ctxt)
 {
   WCHAR *buf, *opt = NULL, *iter = NULL;
   CALID calendar = ctxt->calendar;
@@ -2332,26 +2072,6 @@ cleanup:
 }
 
 /******************************************************************************
- *		EnumCalendarInfoA	[KERNEL32.@]
- */
-BOOL WINAPI EnumCalendarInfoA( CALINFO_ENUMPROCA calinfoproc,LCID locale,
-                               CALID calendar,CALTYPE caltype )
-{
-  struct enumcalendar_context ctxt;
-
-  TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-
-  ctxt.type = CALLBACK_ENUMPROC;
-  ctxt.u.callback = (CALINFO_ENUMPROCW)calinfoproc;
-  ctxt.lcid = locale;
-  ctxt.calendar = calendar;
-  ctxt.caltype = caltype;
-  ctxt.lParam = 0;
-  ctxt.unicode = FALSE;
-  return NLS_EnumCalendarInfo(&ctxt);
-}
-
-/******************************************************************************
  *		EnumCalendarInfoW	[KERNEL32.@]
  */
 BOOL WINAPI EnumCalendarInfoW( CALINFO_ENUMPROCW calinfoproc,LCID locale,
@@ -2374,22 +2094,6 @@ BOOL WINAPI EnumCalendarInfoW( CALINFO_ENUMPROCW calinfoproc,LCID locale,
 /******************************************************************************
  *		EnumCalendarInfoExA	[KERNEL32.@]
  */
-BOOL WINAPI EnumCalendarInfoExA( CALINFO_ENUMPROCEXA calinfoproc,LCID locale,
-                                 CALID calendar,CALTYPE caltype )
-{
-  struct enumcalendar_context ctxt;
-
-  TRACE("(%p,0x%08x,0x%08x,0x%08x)\n", calinfoproc, locale, calendar, caltype);
-
-  ctxt.type = CALLBACK_ENUMPROCEX;
-  ctxt.u.callbackex = (CALINFO_ENUMPROCEXW)calinfoproc;
-  ctxt.lcid = locale;
-  ctxt.calendar = calendar;
-  ctxt.caltype = caltype;
-  ctxt.lParam = 0;
-  ctxt.unicode = FALSE;
-  return NLS_EnumCalendarInfo(&ctxt);
-}
 
 /******************************************************************************
  *		EnumCalendarInfoExW	[KERNEL32.@]
@@ -2432,61 +2136,6 @@ BOOL WINAPI EnumCalendarInfoExEx( CALINFO_ENUMPROCEXEX calinfoproc, LPCWSTR loca
   return NLS_EnumCalendarInfo(&ctxt);
 }
 #endif /* _WIN32_WINNT >= 0x600 */
-
-/*********************************************************************
- *	GetCalendarInfoA				(KERNEL32.@)
- *
- */
-int WINAPI GetCalendarInfoA(LCID lcid, CALID Calendar, CALTYPE CalType,
-			    LPSTR lpCalData, int cchData, LPDWORD lpValue)
-{
-    int ret, cchDataW = cchData;
-    LPWSTR lpCalDataW = NULL;
-#ifdef __REACTOS__
-    DWORD cp = CP_ACP;
-    if (!(CalType & CAL_USE_CP_ACP))
-    {
-        DWORD dwFlags = ((CalType & CAL_NOUSEROVERRIDE) ? LOCALE_NOUSEROVERRIDE : 0);
-        const NLS_FORMAT_NODE *node = NLS_GetFormats(lcid, dwFlags);
-        if (!node)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
-        cp = node->dwCodePage;
-    }
-    if ((CalType & 0xFFFF) == CAL_SABBREVERASTRING)
-    {
-        /* NOTE: CAL_SABBREVERASTRING is not supported in GetCalendarInfoA */
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-#endif
-
-    if (NLS_IsUnicodeOnlyLcid(lcid))
-    {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return 0;
-    }
-
-    if (!cchData && !(CalType & CAL_RETURN_NUMBER))
-        cchDataW = GetCalendarInfoW(lcid, Calendar, CalType, NULL, 0, NULL);
-    if (!(lpCalDataW = HeapAlloc(GetProcessHeap(), 0, cchDataW*sizeof(WCHAR))))
-        return 0;
-
-    ret = GetCalendarInfoW(lcid, Calendar, CalType, lpCalDataW, cchDataW, lpValue);
-    if(ret && lpCalDataW && lpCalData)
-#ifdef __REACTOS__
-        ret = WideCharToMultiByte(cp, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
-#else
-        ret = WideCharToMultiByte(CP_ACP, 0, lpCalDataW, -1, lpCalData, cchData, NULL, NULL);
-#endif
-    else if (CalType & CAL_RETURN_NUMBER)
-        ret *= sizeof(WCHAR);
-    HeapFree(GetProcessHeap(), 0, lpCalDataW);
-
-    return ret;
-}
 
 /*********************************************************************
  *	GetCalendarInfoW				(KERNEL32.@)
@@ -2819,16 +2468,6 @@ int WINAPI GetCalendarInfoEx(LPCWSTR locale, CALID calendar, LPCWSTR lpReserved,
 }
 #endif
 
-/*********************************************************************
- *	SetCalendarInfoA				(KERNEL32.@)
- *
- */
-int WINAPI	SetCalendarInfoA(LCID Locale, CALID Calendar, CALTYPE CalType, LPCSTR lpCalData)
-{
-    FIXME("(%08x,%08x,%08x,%s): stub\n",
-	  Locale, Calendar, CalType, debugstr_a(lpCalData));
-    return 0;
-}
 
 /*********************************************************************
  *	SetCalendarInfoW				(KERNEL32.@)

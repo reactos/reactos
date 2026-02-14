@@ -464,18 +464,6 @@ GetFirmwareEnvironmentVariableW(
     return GetFirmwareEnvironmentVariableExW(lpName, lpGuid, pBuffer, nSize, NULL);
 }
 
-_Success_(return > 0)
-DWORD
-WINAPI
-GetFirmwareEnvironmentVariableA(
-    _In_ LPCSTR lpName,
-    _In_ LPCSTR lpGuid,
-    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
-    _In_ DWORD nSize)
-{
-    return GetFirmwareEnvironmentVariableExA(lpName, lpGuid, pBuffer, nSize, NULL);
-}
-
 BOOL
 WINAPI
 SetFirmwareEnvironmentVariableW(
@@ -485,21 +473,6 @@ SetFirmwareEnvironmentVariableW(
     _In_ DWORD nSize)
 {
     return SetFirmwareEnvironmentVariableExW(lpName,
-                                             lpGuid,
-                                             pValue,
-                                             nSize,
-                                             VARIABLE_ATTRIBUTE_NON_VOLATILE);
-}
-
-BOOL
-WINAPI
-SetFirmwareEnvironmentVariableA(
-    _In_ LPCSTR lpName,
-    _In_ LPCSTR lpGuid,
-    _In_reads_bytes_opt_(nSize) PVOID pValue,
-    _In_ DWORD nSize)
-{
-    return SetFirmwareEnvironmentVariableExA(lpName,
                                              lpGuid,
                                              pValue,
                                              nSize,
