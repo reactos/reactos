@@ -71,9 +71,21 @@ UpdateDstCheckbox(HWND hwndDlg)
     Entry = GetSelectedTimeZoneEntry(hwndCombo);
     bHasDst = HasDaylightSaving(Entry);
 
-    /* Enable/disable and check/uncheck the checkbox based on DST support */
-    EnableWindow(hwndCheckbox, bHasDst);
-    SendMessageW(hwndCheckbox, BM_SETCHECK, bHasDst ? BST_CHECKED : BST_UNCHECKED, 0);
+    /* Enable or disable the checkbox based on DST support, and respect user preference when DST is supported */
+    if (bHasDst)
+    {
+        BOOL bAutoDaylight = GetAutoDaylight();
+        EnableWindow(hwndCheckbox, TRUE);
+        SendMessageW(hwndCheckbox,
+                     BM_SETCHECK,
+                     bAutoDaylight ? BST_CHECKED : BST_UNCHECKED,
+                     0);
+    }
+    else
+    {
+        EnableWindow(hwndCheckbox, FALSE);
+        SendMessageW(hwndCheckbox, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
 }
 
 static
