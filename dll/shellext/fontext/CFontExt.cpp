@@ -79,7 +79,7 @@ WCHAR* g2s(REFCLSID iid)
 
 static HRESULT FONTEXT_GetAttributeString(DWORD dwAttributes, LPWSTR pszOut, UINT cchMax)
 {
-    PCWSTR AttrLetters = L"RHSAC"; // Read-oly, Hidden, System, Archive, Compressed
+    PCWSTR AttrLetters = L"RHSAC"; // Read-only, Hidden, System, Archive, Compressed
 
     UINT ich = 0;
     if ((dwAttributes & FILE_ATTRIBUTE_READONLY) && ich < cchMax)
