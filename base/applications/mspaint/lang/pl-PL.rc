@@ -272,7 +272,7 @@ BEGIN
     IDS_VERTICAL "Pionowe"
     IDS_PRINTRES "%d x %d piksel/cm"
     IDS_CANTPASTE "Nie można wkleić ze schowka. Format danych jest nieprawidłowy lub nieobsługiwany."
-    IDS_SAVEERROR "Nie można zapisać bitmapy do pliku::\n\n%s"
+    IDS_SAVEERROR "Nie można zapisać bitmapy do pliku:\n\n%s"
     IDS_CANTSENDMAIL "Nie można wysłać wiadomości e-mail."
     IDS_LOSECOLOR "Informacje o kolorach zostaną utracone podczas tej operacji. Czy na pewno chcesz kontynuować?"
 END
