@@ -33,7 +33,7 @@ Opcje:\n\
                      Zgodne z innymi opcjami. Ignorowane.\n\
   /C                 Importuj zawartość pliku rejestru.\n\
   /D                 Usuń określony klucz rejestru.\n\
-  /E                 Eksportuj zawartość określonego klucza rejstru do pliku.\n\
+  /E                 Eksportuj zawartość określonego klucza rejestru do pliku.\n\
                      Jeżeli nie określono klucza, cały rejestr zostanie eksportowany.\n\
   /S                 Tryb Cichy. Komunikaty nie będą wyświetlane.\n\
   /V                 Uruchom interfejs graficzny w trybie zaawansowanym. Ignorowane.\n\
