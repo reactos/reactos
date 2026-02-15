@@ -295,16 +295,16 @@ LinuxBootFailed:
         ArcClose(LinuxInitrdFile);
 
     if (LinuxBootSector != NULL)
-        MmFreeMemory(LinuxBootSector);
+        MmFreeMemoryWithType(LinuxBootSector, LoaderSystemCode);
 
     if (LinuxSetupSector != NULL)
-        MmFreeMemory(LinuxSetupSector);
+        MmFreeMemoryWithType(LinuxSetupSector, LoaderSystemCode);
 
     if (LinuxKernelLoadAddress != NULL)
-        MmFreeMemory(LinuxKernelLoadAddress);
+        MmFreeMemoryWithType(LinuxKernelLoadAddress, LoaderSystemCode);
 
     if (LinuxInitrdLoadAddress != NULL)
-        MmFreeMemory(LinuxInitrdLoadAddress);
+        MmFreeMemoryWithType(LinuxInitrdLoadAddress, LoaderSystemCode);
 
     LinuxBootSector = NULL;
     LinuxSetupSector = NULL;

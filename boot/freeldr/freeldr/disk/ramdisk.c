@@ -217,7 +217,7 @@ RamDiskLoadVirtualFile(
     return ESUCCESS;
 
 ReadFailure:
-    MmFreeMemory(RamDiskBase);
+    MmFreeMemoryWithType(RamDiskBase, LoaderXIPRom);
     RamDiskBase = NULL;
     RamDiskFileSize = 0;
     ArcClose(RamFileId);
@@ -242,7 +242,7 @@ RamDiskInitialize(
         (gInitRamDiskSize != 0))
     {
         /* This is not the initial Ramdisk, so we can free the allocated memory */
-        MmFreeMemory(RamDiskBase);
+        MmFreeMemoryWithType(RamDiskBase, LoaderXIPRom);
     }
     RamDiskBase = NULL;
     RamDiskFileSize = 0;

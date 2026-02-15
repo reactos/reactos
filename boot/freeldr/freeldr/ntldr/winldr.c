@@ -350,7 +350,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     {
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", DllName);
-        MmFreeMemory(DriverBase);
+        MmFreeMemoryWithType(DriverBase, LoaderBootDriver);
         return FALSE;
     }
 
@@ -368,7 +368,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
         /* Cleanup and bail out */
         ERR("PeLdrScanImportDescriptorTable('%s') failed\n", FullPath);
         PeLdrFreeDataTableEntry(*DriverDTE);
-        MmFreeMemory(DriverBase);
+        MmFreeMemoryWithType(DriverBase, LoaderBootDriver);
         return FALSE;
     }
 
@@ -551,7 +551,7 @@ LoadModule(
     {
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
-        MmFreeMemory(BaseAddress);
+        MmFreeMemoryWithType(BaseAddress, MemoryType);
         return NULL;
     }
 
@@ -778,7 +778,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         ERR("LoadModule('%s') failed\n", HalFileName);
         UiMessageBox("Could not load %s", HalFileName);
         PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemory(KernelBase);
+        MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
         return FALSE;
     }
 
@@ -902,13 +902,13 @@ Quit:
         if (KdDllDTE)
             PeLdrFreeDataTableEntry(KdDllDTE);
         if (KdDllBase) // Optional
-            MmFreeMemory(KdDllBase);
+            MmFreeMemoryWithType(KdDllBase, LoaderSystemCode);
 
         PeLdrFreeDataTableEntry(HalDTE);
-        MmFreeMemory(HalBase);
+        MmFreeMemoryWithType(HalBase, LoaderHalCode);
 
         PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemory(KernelBase);
+        MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
     }
 
     return Success;
