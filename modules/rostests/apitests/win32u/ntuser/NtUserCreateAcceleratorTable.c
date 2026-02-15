@@ -16,7 +16,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     HACCEL hAccel = NULL;
     ACCEL Entries[5] = {0};
     ULONG EntriesCount = 0x80000005;
-    BOOL bHung = FALSE;
+    BOOL bCrashed = FALSE;
     LPACCEL pEntries;
 
     /* Try heap overflow */
@@ -27,17 +27,17 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok_hdl(hAccel, NULL);
 
     /* Try NULL Entries argument */
     SetLastError(0xdeadbeef);
-    bHung = FALSE;
+    bCrashed = FALSE;
     hAccel = NULL;
     _SEH2_TRY
     {
@@ -45,17 +45,17 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok_hdl(hAccel, NULL);
 
     /* Try invalid Entries argument */
     SetLastError(0xdeadbeef);
-    bHung = FALSE;
+    bCrashed = FALSE;
     hAccel = NULL;
     _SEH2_TRY
     {
@@ -63,17 +63,17 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), ERROR_NOACCESS);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok_hdl(hAccel, NULL);
 
     /* Try EntriesCount = 0 */
     SetLastError(0xdeadbeef);
-    bHung = FALSE;
+    bCrashed = FALSE;
     hAccel = NULL;
     _SEH2_TRY
     {
@@ -81,17 +81,17 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok_hdl(hAccel, NULL);
 
     /* Try minimum */
     SetLastError(0xdeadbeef);
-    bHung = FALSE;
+    bCrashed = FALSE;
     hAccel = NULL;
     _SEH2_TRY
     {
@@ -99,12 +99,12 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok(hAccel != NULL, "hAccel is NULL\n");
 
     if (hAccel != NULL)
@@ -112,7 +112,7 @@ START_TEST(NtUserCreateAcceleratorTable)
 
     /* Try correct parameters */
     SetLastError(0xdeadbeef);
-    bHung = FALSE;
+    bCrashed = FALSE;
     hAccel = NULL;
     _SEH2_TRY
     {
@@ -120,12 +120,12 @@ START_TEST(NtUserCreateAcceleratorTable)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        bHung = TRUE;
+        bCrashed = TRUE;
     }
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_bool_false(bHung, "bHung");
+    ok_bool_false(bCrashed, "bCrashed");
     ok(hAccel != NULL, "hAccel is NULL\n");
 
     if (hAccel != NULL)
@@ -140,7 +140,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     else
     {
         SetLastError(0xdeadbeef);
-        bHung = FALSE;
+        bCrashed = FALSE;
         hAccel = NULL;
         _SEH2_TRY
         {
@@ -148,12 +148,12 @@ START_TEST(NtUserCreateAcceleratorTable)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            bHung = TRUE;
+            bCrashed = TRUE;
         }
         _SEH2_END;
 
         ok_long(GetLastError(), 0xdeadbeef);
-        ok_bool_false(bHung, "bHung");
+        ok_bool_false(bCrashed, "bCrashed");
         ok(hAccel != NULL, "hAccel is NULL\n");
 
         if (hAccel != NULL)
@@ -171,7 +171,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     else
     {
         SetLastError(0xdeadbeef);
-        bHung = FALSE;
+        bCrashed = FALSE;
         hAccel = NULL;
         _SEH2_TRY
         {
@@ -179,12 +179,12 @@ START_TEST(NtUserCreateAcceleratorTable)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            bHung = TRUE;
+            bCrashed = TRUE;
         }
         _SEH2_END;
 
         ok_long(GetLastError(), 0xdeadbeef);
-        ok_bool_false(bHung, "bHung");
+        ok_bool_false(bCrashed, "bCrashed");
         ok(hAccel != NULL, "hAccel is NULL\n");
 
         if (hAccel != NULL)
