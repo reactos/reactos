@@ -424,7 +424,7 @@ PeLdrpLoadAndScanReferencedDll(
     {
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullDllName);
-        MmFreeMemory(BasePA);
+        MmFreeMemoryWithType(BasePA, LoaderBootDriver);
         return Success;
     }
 
@@ -443,7 +443,7 @@ PeLdrpLoadAndScanReferencedDll(
         /* Cleanup and bail out */
         ERR("PeLdrScanImportDescriptorTable() failed\n");
         PeLdrFreeDataTableEntry(*DataTableEntry);
-        MmFreeMemory(BasePA);
+        MmFreeMemoryWithType(BasePA, LoaderBootDriver);
         return Success;
     }
 
@@ -1035,7 +1035,7 @@ PeLdrLoadImageEx(
 
 Failure:
     /* Cleanup and bail out */
-    MmFreeMemory(PhysicalBase);
+    MmFreeMemoryWithType(PhysicalBase, MemoryType);
     return FALSE;
 }
 
@@ -1078,7 +1078,7 @@ PeLdrLoadBootImage(
     {
         /* Cleanup and bail out */
         ERR("Failed to allocate DTE for '%s'\n", FilePath);
-        MmFreeMemory(*ImageBase);
+        MmFreeMemoryWithType(*ImageBase, LoaderLoadedProgram);
         return FALSE;
     }
 
@@ -1089,7 +1089,7 @@ PeLdrLoadBootImage(
         /* Cleanup and bail out */
         ERR("Failed to resolve imports for '%s'\n", FilePath);
         PeLdrFreeDataTableEntry(*DataTableEntry);
-        MmFreeMemory(*ImageBase);
+        MmFreeMemoryWithType(*ImageBase, LoaderLoadedProgram);
         return FALSE;
     }
 
