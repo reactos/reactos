@@ -76,7 +76,7 @@
 #define MI_MIN_SECONDARY_COLORS                 8
 #define MI_SECONDARY_COLORS                     64
 #define MI_MAX_SECONDARY_COLORS                 1024
-#define MI_NUMBER_SYSTEM_PTES                   22000
+#define MI_NUMBER_SYSTEM_PTES                   22000 * 22
 #define MI_MAX_FREE_PAGE_LISTS                  4
 #define MI_HYPERSPACE_PTES                     (256 - 1)
 #define MI_ZERO_PTES                           (32)
