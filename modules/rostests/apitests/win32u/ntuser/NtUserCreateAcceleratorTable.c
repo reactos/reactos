@@ -17,7 +17,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     ACCEL Entries[5] = {0};
     ULONG EntriesCount = 0x80000005;
     BOOL bHung = FALSE;
-    LPACCEL pEntries = NULL;
+    LPACCEL pEntries;
 
     /* Try heap overflow */
     SetLastError(0xdeadbeef);
@@ -38,6 +38,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     /* Try NULL Entries argument */
     SetLastError(0xdeadbeef);
     bHung = FALSE;
+    hAccel = NULL;
     _SEH2_TRY
     {
         hAccel = NtUserCreateAcceleratorTable(NULL, MIN_VALID_NUMBER);
@@ -55,6 +56,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     /* Try invalid Entries argument */
     SetLastError(0xdeadbeef);
     bHung = FALSE;
+    hAccel = NULL;
     _SEH2_TRY
     {
         hAccel = NtUserCreateAcceleratorTable((LPACCEL)(ULONG_PTR)0xC0FEC0FE, MIN_VALID_NUMBER);
@@ -72,6 +74,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     /* Try EntriesCount = 0 */
     SetLastError(0xdeadbeef);
     bHung = FALSE;
+    hAccel = NULL;
     _SEH2_TRY
     {
         hAccel = NtUserCreateAcceleratorTable(Entries, MIN_VALID_NUMBER - 1);
@@ -89,6 +92,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     /* Try minimum */
     SetLastError(0xdeadbeef);
     bHung = FALSE;
+    hAccel = NULL;
     _SEH2_TRY
     {
         hAccel = NtUserCreateAcceleratorTable(Entries, MIN_VALID_NUMBER);
@@ -103,12 +107,13 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
 
-    if (!bHung && hAccel != NULL)
+    if (hAccel != NULL)
         DestroyAcceleratorTable(hAccel);
 
     /* Try correct parameters */
     SetLastError(0xdeadbeef);
     bHung = FALSE;
+    hAccel = NULL;
     _SEH2_TRY
     {
         hAccel = NtUserCreateAcceleratorTable(Entries, _countof(Entries));
@@ -123,7 +128,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     ok_int(bHung, FALSE);
     ok(hAccel != NULL, "hAccel is NULL\n");
 
-    if (!bHung && hAccel != NULL)
+    if (hAccel != NULL)
         DestroyAcceleratorTable(hAccel);
 
     /* Try maximum */
@@ -136,6 +141,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     {
         SetLastError(0xdeadbeef);
         bHung = FALSE;
+        hAccel = NULL;
         _SEH2_TRY
         {
             hAccel = NtUserCreateAcceleratorTable(pEntries, MAX_VALID_NUMBER);
@@ -150,7 +156,7 @@ START_TEST(NtUserCreateAcceleratorTable)
         ok_int(bHung, FALSE);
         ok(hAccel != NULL, "hAccel is NULL\n");
 
-        if (!bHung && hAccel != NULL)
+        if (hAccel != NULL)
             DestroyAcceleratorTable(hAccel);
 
         HeapFree(GetProcessHeap(), 0, pEntries);
@@ -166,6 +172,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     {
         SetLastError(0xdeadbeef);
         bHung = FALSE;
+        hAccel = NULL;
         _SEH2_TRY
         {
             hAccel = NtUserCreateAcceleratorTable(pEntries, MAX_VALID_NUMBER + 1);
@@ -180,7 +187,7 @@ START_TEST(NtUserCreateAcceleratorTable)
         ok_int(bHung, FALSE);
         ok(hAccel != NULL, "hAccel is NULL\n");
 
-        if (!bHung && hAccel != NULL)
+        if (hAccel != NULL)
             DestroyAcceleratorTable(hAccel);
 
         HeapFree(GetProcessHeap(), 0, pEntries);
