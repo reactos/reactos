@@ -27,7 +27,6 @@ AddMemoryDescriptor(
 
 /* GLOBALS *******************************************************************/
 
-extern ULONG LoaderPagesSpanned;
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 
@@ -212,16 +211,6 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
             {
                 /* We failed to reserve the page, so change its type */
                 MemoryType = LoaderFirmwareTemporary;
-            }
-        }
-
-        /* Sometimes our loader can be loaded into higher memory than we ever allocate */
-        if (MemoryType == LoaderLoadedProgram)
-        {
-            if (((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT) > LoaderPagesSpanned)
-            {
-                /* This value needs to be adjusted if this occurs */
-                LoaderPagesSpanned = ((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT);
             }
         }
 
