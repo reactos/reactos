@@ -1,12 +1,11 @@
 /****************************************************************************
  *
- * otvmod.h
+ * woff2tags.h
  *
- *   FreeType's OpenType validation module implementation
- *   (specification).
+ *   WOFFF2 Font table tags (specification).
  *
- * Copyright (C) 2004-2019 by
- * David Turner, Robert Wilhelm, and Werner Lemberg.
+ * Copyright (C) 2019-2020 by
+ * Nikhil Ramakrishnan, David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
  * modified, and distributed under the terms of the FreeType project
@@ -17,23 +16,24 @@
  */
 
 
-#ifndef OTVMOD_H_
-#define OTVMOD_H_
+#ifndef WOFF2TAGS_H
+#define WOFF2TAGS_H
 
 
-#include <ft2build.h>
-#include FT_MODULE_H
+#include <freetype/internal/ftobjs.h>
+#include <freetype/internal/compiler-macros.h>
 
 
 FT_BEGIN_HEADER
 
 
-  FT_EXPORT_VAR( const FT_Module_Class )  otv_module_class;
+  FT_LOCAL( FT_ULong )
+  woff2_known_tags( FT_Byte  index );
 
 
 FT_END_HEADER
 
-#endif /* OTVMOD_H_ */
+#endif /* WOFF2TAGS_H */
 
 
 /* END */
