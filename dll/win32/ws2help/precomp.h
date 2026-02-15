@@ -12,7 +12,9 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#define _WIN32_WINNT 0x502
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0502
+#endif
 #define NTOS_MODE_USER
 #define INCL_WINSOCK_API_TYPEDEFS 1
 
