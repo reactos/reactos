@@ -23,53 +23,53 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "Usage:\n\
-  regedit [options] [filename] [reg_key]\n\n\
-Options:\n\
-  [no option]    Launch the graphical version of this program.\n\
-  /L:system.dat  The location of the system.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /R:user.dat    The location of the user.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /C             Import the contents of a registry file.\n\
-  /D             Delete a specified registry key.\n\
-  /E             Export the contents of a specified registry key to a file.\n\
-                 If no key is specified, the entire registry is exported.\n\
-  /S             Silent mode. No messages will be displayed.\n\
-  /V             Launch the GUI in advanced mode. Ignored.\n\
-  /?             Display this information and exit.\n\
-  [filename]     The location of the file containing registry information to\n\
-                 be imported. When used with [/E], this option specifies the\n\
-                 file location where registry information will be exported.\n\
-  [reg_key]      The registry key to be modified.\n\
+    STRING_USAGE "Sposób użycia:\n\
+  regedit [opcje] [nazwa_pliku] [klucz_rejestru]\n\n\
+Opcje:\n\
+  [brak opcji]       Uruchom wersję graficzną tego programu.\n\
+  /L:system.dat      Lokalizacja pliku system.dat do modyfikacji..\n\
+                     Zgodne z innymi opcjami. Ignorowane.\n\
+  /R:user.dat        Lokalizacja pliku user.dat do modyfikacji.\n\
+                     Zgodne z innymi opcjami. Ignorowane.\n\
+  /C                 Importuj zawartość pliku rejestru.\n\
+  /D                 Usuń określony klucz rejestru.\n\
+  /E                 Eksportuj zawartość określonego klucza rejestru do pliku.\n\
+                     Jeżeli nie określono klucza, cały rejestr zostanie eksportowany.\n\
+  /S                 Tryb cichy. Komunikaty nie będą wyświetlane.\n\
+  /V                 Uruchom interfejs graficzny w trybie zaawansowanym. Ignorowane.\n\
+  /?                 Wyświetl tę informację i zakończ.\n\
+  [nazwa_pliku]      Lokalizacja pliku posiadającego informacje rejestru do importu.\n\
+                     Kiedy użyte z [/E], ta opcja określa lokalizację pliku, gdzie\n\
+                     informacje rejestru będą eksportowane.\n\
+  [klucz_rejestru]   Klucz rejestru do modyfikacji.\n\
 \n\
 Usage examples:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
   regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
-    STRING_INVALID_SWITCH "regedit: Invalid or unrecognized switch [%1]\n"
-    STRING_HELP "Type ""regedit /?"" for help.\n"
-    STRING_NO_FILENAME "regedit: No filename was specified.\n"
-    STRING_NO_REG_KEY "regedit: No registry key was specified for removal.\n"
-    STRING_FILE_NOT_FOUND "regedit: The file '%1' was not found.\n"
-    STRING_CANNOT_OPEN_FILE "regedit: Unable to open the file '%1'.\n"
-    STRING_UNHANDLED_ACTION "regedit: Unhandled action.\n"
+    STRING_INVALID_SWITCH "regedit: Niepoprawna lub nieznana opcja [%1]\n"
+    STRING_HELP "Wpisz ""regedit /?"" by wyświetlić pomoc.\n"
+    STRING_NO_FILENAME "regedit: Brak określonego pliku.\n"
+    STRING_NO_REG_KEY "regedit: Nie określono klucza rejestru do usunięcia.\n"
+    STRING_FILE_NOT_FOUND "regedit: Nie odnaleziono pliku '%1'.\n"
+    STRING_CANNOT_OPEN_FILE "regedit: Nie można otworzyć pliku '%1'.\n"
+    STRING_UNHANDLED_ACTION "regedit: Nieobsługiwana akcja.\n"
     STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
-    STRING_INVALID_HEX "regedit: Invalid hexadecimal value.\n"
-    STRING_CSV_HEX_ERROR "regedit: Unable to convert hexadecimal data. An invalid value was encountered at '%1'.\n"
-    STRING_ESCAPE_SEQUENCE "regedit: Unrecognized escape sequence [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Unsupported registry data type [0x%1!x!]\n"
-    STRING_UNEXPECTED_EOL "regedit: Unexpected end of line in '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: The line '%1' was not recognized.\n"
-    STRING_SETVALUE_FAILED "regedit: Unable to add the registry value '%1' to '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Unable to open the registry key '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Unsupported registry data type [0x%1!x!] encountered in '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: The registry value '%1' will be exported as binary data.\n"
-    STRING_INVALID_SYSTEM_KEY "regedit: Invalid system key [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Unable to export '%1'. The specified registry key was not found.\n"
-    STRING_DELETE_FAILED "regedit: Unable to delete the registry key '%1'.\n"
-    STRING_UNKNOWN_TYPE "Unknown Type"
-    STRING_INVALID_LINE_SYNTAX, "regedit: The line contains invalid syntax.\n"
+    STRING_INVALID_HEX "regedit: Niepoprawna wartość szesnastkowa.\n"
+    STRING_CSV_HEX_ERROR "regedit: Nie można przekonwertować danych szesnastkowych. Napotkano nieprawidłową wartość przy '%1'.\n"
+    STRING_ESCAPE_SEQUENCE "regedit: Nierozpoznana sekwencja wyjścia [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Nieobsługiwany typ danych rejestru [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: Niespodziewane zakończenie linii w '%1'.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: Nierozpoznana linia '%1'.\n"
+    STRING_SETVALUE_FAILED "regedit: Nie można dodać wartości rejestru '%1' do '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Nie można otworzyć klucza rejestru '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Nieobsługiwany typ danych rejestru [0x%1!x!] napotkany przy '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: Wartość rejestru '%1' zostanie wyeksportowana jako dane binarne.\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: Niepoprawny klucz systemowy [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: Nie można wyeksportować '%1'. Nie odnaleziono określonego klucza rejestru.\n"
+    STRING_DELETE_FAILED "regedit: Nie można usunąć klucza rejestru '%1'.\n"
+    STRING_UNKNOWN_TYPE "Typ nieznany"
+    STRING_INVALID_LINE_SYNTAX, "regedit: Linia zawiera niepoprawną składnię.\n"
 END
 
 /* Menus */
@@ -315,14 +315,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_REQUIREMENTS_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 200, 66
-    RTEXT "Interface Type:", IDC_STATIC, 10, 80, 62, 8
+    RTEXT "Typ interfejsu:", IDC_STATIC, 10, 80, 62, 8
     LTEXT "", IDC_REQINTERFACETYPE, 77, 80, 76, 8
-    RTEXT "Bus Number:", IDC_STATIC, 10, 90, 62, 8
+    RTEXT "Numer szyny:", IDC_STATIC, 10, 90, 62, 8
     LTEXT "", IDC_REQBUSNUMBER, 77, 90, 76, 8
-    RTEXT "Slot Type:", IDC_STATIC, 10, 100, 62, 8
+    RTEXT "Typ Slotu:", IDC_STATIC, 10, 100, 62, 8
     LTEXT "", IDC_REQSLOTNUMBER, 77, 100, 76, 8
     DEFPUSHBUTTON "OK", IDOK, 62, 115, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_REQUIREMENT, 118, 115, 50, 14, WS_DISABLED
+    PUSHBUTTON "Pokaż...", IDC_SHOW_REQUIREMENT, 118, 115, 50, 14, WS_DISABLED
 END
 
 IDD_EDIT_REQUIREMENTS_PORT DIALOGEX 32, 24, 158, 135
@@ -342,9 +342,9 @@ BEGIN
     LTEXT "", IDC_REQ_PORT_MAX, 77, 50, 76, 8
     RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_PORT_SHARE, 77, 60, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opcje", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternatywne", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferowane", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
@@ -353,40 +353,40 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "Memory"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Access:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Dostęp:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_MEMORY_ACCESS, 77, 10, 76, 8
-    RTEXT "Length:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Długość:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_MEMORY_LENGTH, 77, 20, 76, 8
     RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_MEMORY_ALIGN, 77, 30, 76, 8
-    RTEXT "Minimum Address:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "Minimalny adres:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MIN, 77, 40, 76, 8
-    RTEXT "Maximum Address:", IDC_STATIC, 10, 50, 61, 8
+    RTEXT "Maksymalny adres:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MAX, 77, 50, 76, 8
     RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_MEMORY_SHARE, 77, 60, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opcje", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternatywne", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferowane", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
 IDD_EDIT_REQUIREMENTS_INT DIALOGEX 32, 24, 158, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Interrupt"
+CAPTION "Przerwanie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Type:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Typ:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_INT_TYPE, 77, 10, 76, 8
-    RTEXT "Minimum Vector:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Minimalny wektor:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_INT_MIN, 77, 20, 76, 8
-    RTEXT "Maximum Vector:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Maksymalny wektor:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_INT_MAX, 77, 30, 76, 8
     RTEXT "Share Disposition:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_INT_SHARE, 77, 40, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opcje", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternatywne", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferowane", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
@@ -518,7 +518,7 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Wszystkie pliki (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
-    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES "Pliki tekstowe (*.txt)"
     IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
@@ -617,16 +617,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FIELD_KEY_NAME "Key Name:"
-    IDS_FIELD_CLASS_NAME "Class Name:"
-    IDS_NO_CLASS_NAME "<NO CLASS>"
+    IDS_FIELD_KEY_NAME "Nazwa klucza:"
+    IDS_FIELD_CLASS_NAME "Nazwa klasy:"
+    IDS_NO_CLASS_NAME "<BRAK KLASY>"
     IDS_NULL_TIMESTAMP "<NULL>"
-    IDS_FIELD_NAME "  Name:"
-    IDS_FIELD_TYPE "  Type:"
-    IDS_FIELD_DATA "  Data:"
-    IDS_FIELD_LASTWRITE "Last Write Time:"
-    IDS_UNKNOWN "<UNKNOWN>"
-    IDS_VALUE_INDEX "Value %d"
+    IDS_FIELD_NAME "  Nazwa:"
+    IDS_FIELD_TYPE "  Typ:"
+    IDS_FIELD_DATA "  Dane:"
+    IDS_FIELD_LASTWRITE "Czas ostatniego wpisu:"
+    IDS_UNKNOWN "<NIEZNANE>"
+    IDS_VALUE_INDEX "Wartość %d"
 END
 
 STRINGTABLE
