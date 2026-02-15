@@ -38,16 +38,12 @@ GetSelectedTimeZoneEntry(HWND hwndCombo)
 
     dwIndex = (DWORD)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
     if (dwIndex == CB_ERR)
-    {
         return NULL;
-    }
 
     for (Entry = TimeZoneListHead, i = 0; i < dwIndex; i++, Entry = Entry->Next)
     {
         if (Entry == NULL)
-        {
             return NULL;
-        }
     }
 
     return Entry;
@@ -101,15 +97,11 @@ GetLargerTimeZoneEntry(
     while (Entry != NULL)
     {
         if (Entry->TimezoneInfo.Bias < Bias)
-        {
             return Entry;
-        }
         if (Entry->TimezoneInfo.Bias == Bias)
         {
             if (_wcsicmp(Entry->Description, lpDescription) > 0)
-            {
                 return Entry;
-            }
         }
 
         Entry = Entry->Next;
