@@ -46,6 +46,7 @@
 @ cdecl MmAllocateHighestMemoryBelowAddress()
 @ cdecl MmAllocateMemoryAtAddress()
 @ cdecl MmAllocateMemoryWithType()
+@ cdecl MmFreeMemoryWithType()
 @ cdecl MmFreeMemory()
 @ cdecl MmGetBiosMemoryMap()
 @ cdecl MmGetHighestPhysicalPage()
