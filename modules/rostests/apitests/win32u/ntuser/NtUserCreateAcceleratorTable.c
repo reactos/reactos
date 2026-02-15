@@ -32,7 +32,7 @@ START_TEST(NtUserCreateAcceleratorTable)
     _SEH2_END;
 
     ok_long(GetLastError(), 0xdeadbeef);
-    ok_int(bHung, FALSE);
+    ok_bool_false(bHung);
     ok_hdl(hAccel, NULL);
 
     /* Try NULL Entries argument */
