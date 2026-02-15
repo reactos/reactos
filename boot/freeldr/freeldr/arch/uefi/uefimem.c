@@ -127,9 +127,9 @@ UefiConvertToFreeldrDesc(EFI_MEMORY_TYPE EfiMemoryType)
         case EfiUnusableMemory:
             return LoaderBad;
         case EfiACPIReclaimMemory:
-            return LoaderFirmwareTemporary;
+            return LoaderSpecialMemory;
         case EfiACPIMemoryNVS:
-            return LoaderReserve;
+            return LoaderSpecialMemory;
         case EfiMemoryMappedIO:
             return LoaderReserve;
         case EfiMemoryMappedIOPortSpace:

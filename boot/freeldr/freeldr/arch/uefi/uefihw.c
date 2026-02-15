@@ -18,8 +18,6 @@ DBG_DEFAULT_CHANNEL(WARNING);
 extern EFI_SYSTEM_TABLE * GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 extern UCHAR PcBiosDiskCount;
-extern EFI_MEMORY_DESCRIPTOR* EfiMemoryMap;
-extern UINT32 FreeldrDescCount;
 
 /* From uefivid.c */
 extern ULONG_PTR VramAddress;
@@ -74,8 +72,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         AcpiPresent = TRUE;
 
         /* Calculate the table size */
-        TableSize = FreeldrDescCount * sizeof(BIOS_MEMORY_MAP) +
-            sizeof(ACPI_BIOS_DATA) - sizeof(BIOS_MEMORY_MAP);
+        TableSize = sizeof(ACPI_BIOS_DATA);
 
         /* Set 'Configuration Data' value */
         Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) + TableSize;
@@ -110,9 +107,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
         }
 
-        AcpiBiosData->Count = FreeldrDescCount;
-        RtlCopyMemory(AcpiBiosData->MemoryMap, EfiMemoryMap,
-                      FreeldrDescCount * sizeof(BIOS_MEMORY_MAP));
+        AcpiBiosData->Count = 0;
 
         TRACE("RSDT %p, data size %x\n", Rsdp->rsdt_physical_address, TableSize);
 
