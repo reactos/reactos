@@ -624,17 +624,18 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN PCSTR BootPath,
                 IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
 {
-    BOOLEAN Success;
+    BOOLEAN Success = FALSE;
     PCSTR Option;
     ULONG OptionLength;
-    PVOID KernelBase, HalBase, KdDllBase = NULL;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
+    PVOID KernelBase = NULL, HalBase = NULL, KdDllBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE = NULL, KdDllDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
     CHAR KdDllName[MAX_PATH];
 
     if (!KernelDTE) return FALSE;
+    *KernelDTE = NULL;
 
     /* Initialize SystemRoot\System32 path */
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
@@ -767,7 +768,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     {
         ERR("LoadModule('%s') failed\n", KernelFileName);
         UiMessageBox("Could not load %s", KernelFileName);
-        return FALSE;
+        goto Quit;
     }
 
     /* Load the HAL */
@@ -777,9 +778,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
         UiMessageBox("Could not load %s", HalFileName);
-        PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
-        return FALSE;
+        goto Quit;
     }
 
     /* Load the Kernel Debugger Transport DLL */
@@ -904,11 +903,15 @@ Quit:
         if (KdDllBase) // Optional
             MmFreeMemoryWithType(KdDllBase, LoaderSystemCode);
 
-        PeLdrFreeDataTableEntry(HalDTE);
-        MmFreeMemoryWithType(HalBase, LoaderHalCode);
+        if (HalDTE)
+            PeLdrFreeDataTableEntry(HalDTE);
+        if (HalBase)
+            MmFreeMemoryWithType(HalBase, LoaderHalCode);
 
-        PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
+        if (*KernelDTE)
+            PeLdrFreeDataTableEntry(*KernelDTE);
+        if (KernelBase)
+            MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
     }
 
     return Success;
