@@ -101,6 +101,168 @@ Test_ThreadBasicInformationClass(void)
     HeapFree(GetProcessHeap(), 0, ThreadInfoBasic);
 }
 
+static ULONG
+NTAPI
+DummyThread(
+    _In_ PVOID Parameter)
+{
+    HANDLE hWaitEvent = (HANDLE)Parameter;
+    NTSTATUS Status;
+
+    /* Indefinitely wait for the kill signal */
+    Status = NtWaitForSingleObject(hWaitEvent, FALSE, NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    NtTerminateThread(NtCurrentThread(), Status);
+    return Status;
+}
+
+static
+void
+Test_ThreadHideFromDebuggerClass(void)
+{
+    NTSTATUS Status;
+    HANDLE hWaitEvent = NULL, hThread = NULL;
+    BOOLEAN IsThreadHidden;
+    ULONG UlongData;
+    BOOL IsWow64 = FALSE;
+
+    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+    {
+        skip("Skipping test as NtQueryInformationThread(ThreadHideFromDebugger) isn't supported prior to Vista\n");
+        return;
+    }
+    IsWow64Process(GetCurrentProcess(), &IsWow64);
+
+    Status = NtCreateEvent(&hWaitEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           NotificationEvent,
+                           FALSE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(hWaitEvent != NULL, "Expected not NULL, got NULL\n");
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Could not create the stop event! (Status 0x%08lx)\n", Status);
+        goto Quit;
+    }
+
+    /* Create the dummy thread and wait for it to start up */
+    Status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 FALSE,
+                                 0,
+                                 0,
+                                 0,
+                                 DummyThread,
+                                 (PVOID)hWaitEvent,
+                                 &hThread,
+                                 NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok(hThread != NULL, "Expected not NULL, got NULL\n");
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to create the dummy thread (Status 0x%08lx)\n", Status);
+        goto Quit;
+    }
+
+
+    /* Verify that the thread is debuggable by default */
+    IsThreadHidden = 0xCC;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadHideFromDebugger,
+                                      &IsThreadHidden,
+                                      sizeof(IsThreadHidden),
+                                      NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_bool_false(IsThreadHidden, "IsThreadHidden is");
+
+    /* Make the thread hidden from the debugger -- The wrong way (1) */
+    IsThreadHidden = TRUE;
+    Status = NtSetInformationThread(hThread,
+                                    ThreadHideFromDebugger,
+                                    &IsThreadHidden,
+                                    sizeof(IsThreadHidden));
+    if (IsWow64)
+        ok_ntstatus(Status, STATUS_DATATYPE_MISALIGNMENT);
+    else
+        ok_ntstatus(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The thread is still debuggable */
+    IsThreadHidden = 0xCC;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadHideFromDebugger,
+                                      &IsThreadHidden,
+                                      sizeof(IsThreadHidden),
+                                      NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_bool_false(IsThreadHidden, "IsThreadHidden is");
+
+    /* Make the thread hidden from the debugger -- The wrong way (2) */
+    UlongData = TRUE;
+    Status = NtSetInformationThread(hThread,
+                                    ThreadHideFromDebugger,
+                                    &UlongData,
+                                    sizeof(UlongData));
+    ok_ntstatus(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The thread is still debuggable */
+    IsThreadHidden = 0xCC;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadHideFromDebugger,
+                                      &IsThreadHidden,
+                                      sizeof(IsThreadHidden),
+                                      NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_bool_false(IsThreadHidden, "IsThreadHidden is");
+
+    /* Make the thread hidden from the debugger -- The wrong way (3) */
+    UlongData = TRUE;
+    Status = NtSetInformationThread(hThread,
+                                    ThreadHideFromDebugger,
+                                    &UlongData,
+                                    sizeof(BOOLEAN));
+    ok_ntstatus(Status, STATUS_INFO_LENGTH_MISMATCH);
+
+    /* The thread is still debuggable */
+    IsThreadHidden = 0xCC;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadHideFromDebugger,
+                                      &IsThreadHidden,
+                                      sizeof(IsThreadHidden),
+                                      NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_bool_false(IsThreadHidden, "IsThreadHidden is");
+
+    /* Make the thread hidden from the debugger -- This way works! */
+    Status = NtSetInformationThread(hThread,
+                                    ThreadHideFromDebugger,
+                                    NULL, 0);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Verify that the thread is now hidden from the debugger */
+    IsThreadHidden = 0xCC;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadHideFromDebugger,
+                                      &IsThreadHidden,
+                                      sizeof(IsThreadHidden),
+                                      NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_bool_true(IsThreadHidden, "IsThreadHidden is");
+
+
+    /* Send the kill signal and wait for the thread to terminate */
+    NtSetEvent(hWaitEvent, NULL);
+    NtWaitForSingleObject(hThread, FALSE, NULL);
+    /* Close the thread */
+    NtTerminateThread(hThread, STATUS_SUCCESS);
+    NtClose(hThread);
+Quit:
+    /* Close the event */
+    if (hWaitEvent)
+        NtClose(hWaitEvent);
+}
+
 static
 void
 Test_ThreadQueryAlignmentProbe(void)
@@ -136,5 +298,6 @@ Test_ThreadQueryAlignmentProbe(void)
 START_TEST(NtQueryInformationThread)
 {
     Test_ThreadBasicInformationClass();
+    Test_ThreadHideFromDebuggerClass();
     Test_ThreadQueryAlignmentProbe();
 }
