@@ -164,7 +164,6 @@ PropertyItemDispatch(
 
     // sanity check
     PC_ASSERT(Descriptor);
-    PC_ASSERT(Descriptor->UnknownMiniport);
 
     // get instance / value size
     InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength;
@@ -187,8 +186,9 @@ PropertyItemDispatch(
         // filter / pin property request dont use node field
         PropertyRequest->Node = MAXULONG;
     }
-    else if (InstanceSize >= sizeof(KSNODEPROPERTY))
+    else
     {
+        ASSERT(InstanceSize >= sizeof(KSNODEPROPERTY));
         // request is for a node
         InstanceSize -= sizeof(KSNODEPROPERTY);
         Instance = (PVOID)((ULONG_PTR)Instance + sizeof(KSNODEPROPERTY));
@@ -198,12 +198,6 @@ PropertyItemDispatch(
 
         // store node id
         PropertyRequest->Node = NodeProperty->NodeId;
-    }
-    else
-    {
-        // invalid buffer size
-        FreeItem(PropertyRequest, TAG_PORTCLASS);
-        return STATUS_INVALID_BUFFER_SIZE;
     }
 
     // store instance size
@@ -215,7 +209,7 @@ PropertyItemDispatch(
     PropertyRequest->Value = Data;
 
     // now scan the property set for the attached property set item stored in Relations member
-    if (PropertySet)
+    if (PropertySet && (!(Property->Flags & KSPROPERTY_TYPE_TOPOLOGY)))
     {
         // sanity check
         PC_ASSERT(IsEqualGUIDAligned(Property->Set, *PropertySet->Set));
@@ -233,15 +227,14 @@ PropertyItemDispatch(
             }
         }
     }
-
-    // check if there has been a property set item attached
-    if (!PropertyRequest->PropertyItem)
+    else
     {
         // is topology node id valid
         if (PropertyRequest->Node < Descriptor->DeviceDescriptor->NodeCount)
         {
             // get node descriptor
-            NodeDescriptor = (PPCNODE_DESCRIPTOR) ((ULONG_PTR)Descriptor->DeviceDescriptor->Nodes + PropertyRequest->Node * Descriptor->DeviceDescriptor->NodeSize);
+            NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)Descriptor->DeviceDescriptor->Nodes +
+                                                  PropertyRequest->Node * Descriptor->DeviceDescriptor->NodeSize);
 
             // get node automation table
             NodeAutomation = (PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable;
@@ -251,7 +244,7 @@ PropertyItemDispatch(
             {
                 // now scan the properties and check if it supports this request
                 PropertyItem = (PPCPROPERTY_ITEM)NodeAutomation->Properties;
-                for(Index = 0; Index < NodeAutomation->PropertyCount; Index++)
+                for (Index = 0; Index < NodeAutomation->PropertyCount; Index++)
                 {
                     // are they same property
                     if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Set))
@@ -278,11 +271,23 @@ PropertyItemDispatch(
         // now call the handler
         UNICODE_STRING GuidBuffer;
         RtlStringFromGUID(Property->Set, &GuidBuffer);
-        DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+        DPRINT("Calling Verb %x Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+                PropertyRequest->Verb,
                 PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
                 PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
         RtlFreeUnicodeString(&GuidBuffer);
-        Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+
+        _SEH2_TRY
+        {
+            Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail the IRP */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
         DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
@@ -313,11 +318,12 @@ PcAddToPropertyTable(
     PKSPROPERTY_SET NewPropertySet;
     PKSPROPERTY_ITEM FilterPropertyItem, NewFilterPropertyItem;
     LPGUID Guid;
-    //UNICODE_STRING GuidBuffer;
+    UNICODE_STRING GuidBuffer;
 
-ASSERT(PropertyItem->Set);
-	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
-   // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
+    ASSERT(PropertyItem->Set);
+    RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
+    DPRINT("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
+    RtlFreeUnicodeString(&GuidBuffer);
 
     //DPRINT1("FilterPropertySetCount %lu\n", SubDeviceDescriptor->FilterPropertySetCount);
     // first step check if the property set is present already
@@ -447,13 +453,6 @@ ASSERT(PropertyItem->Set);
             FilterPropertyItem->SetPropertyHandler = PropertyItemDispatch;
         }
 
-        // are set operation supported
-        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
-        {
-            // setup handler
-            FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
-        }
-
         // are get operations supported
         if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
         {
@@ -481,6 +480,31 @@ ASSERT(PropertyItem->Set);
     else
     {
         // property set item handler already present
+        // now replace initialize property item
+#if 0
+        DPRINT1("Replacing existing handler\n");
+        FilterPropertyItem = (PKSPROPERTY_ITEM)&SubDeviceDescriptor->FilterPropertySet[PropertySetIndex]
+                                 .PropertyItem[PropertySetItemIndex];
+        // are any set operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_SET)
+        {
+            // setup handler
+            FilterPropertyItem->SetPropertyHandler = PropertyItemDispatch;
+        }
+
+        // are get operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
+        {
+            // setup handler
+            FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
+        }
+
+        // are basic support operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_BASICSUPPORT)
+        {
+            // setup handler
+            FilterPropertyItem->SupportHandler = PropertyItemDispatch;
+        }
 
         if (bNode)
         {
@@ -492,6 +516,7 @@ ASSERT(PropertyItem->Set);
             // node properties should not be exposed on a filter & pin
             ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations != NULL);
         }
+#endif
     }
 
     // done
@@ -746,16 +771,20 @@ PcCreateSubdeviceDescriptor(
     InitializeListHead(&Descriptor->SymbolicLinkList);
     InitializeListHead(&Descriptor->PhysicalConnectionList);
 
-    //FIXME add driver category guids
-    Descriptor->Interfaces = (GUID*)AllocateItem(NonPagedPool, sizeof(GUID) * InterfaceCount, TAG_PORTCLASS);
+    // add driver category guids
+    Descriptor->Interfaces = (GUID*)AllocateItem(NonPagedPool, sizeof(GUID) * (InterfaceCount + FilterDescription->CategoryCount), TAG_PORTCLASS);
     if (!Descriptor->Interfaces)
         goto cleanup;
 
     // copy interface guids
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
-    Descriptor->InterfaceCount = InterfaceCount;
+    RtlCopyMemory(
+        &Descriptor->Interfaces[InterfaceCount], FilterDescription->Categories,
+        sizeof(GUID) * FilterDescription->CategoryCount);
 
-    //DumpFilterDescriptor(FilterDescription);
+    Descriptor->InterfaceCount = InterfaceCount + FilterDescription->CategoryCount;
+
+    DumpFilterDescriptor(FilterDescription);
 
     // are any property sets supported by the portcls
     if (FilterPropertiesCount)
