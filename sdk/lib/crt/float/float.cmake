@@ -5,7 +5,7 @@ list(APPEND CRT_FLOAT_SOURCE
     float/_controlfp_s.c
     float/copysign.c
     float/fpclass.c
-    float/fpecode.c
+    #float/fpecode.c
     float/scalb.c
 )
 
