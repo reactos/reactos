@@ -7,8 +7,6 @@
 
 #include <win32k.h>
 
-extern UNICODE_STRING g_FontRegPath;
-
 POINTL g_PointZero = { 0, 0 };
 
 SIZE_T

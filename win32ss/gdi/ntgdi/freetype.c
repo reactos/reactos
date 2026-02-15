@@ -322,7 +322,7 @@ static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
 FT_Library  g_FreeTypeLibrary;
 
 /* registry */
-UNICODE_STRING g_FontRegPath =
+static UNICODE_STRING g_FontRegPath =
     RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
 /* The FreeType library is not thread safe, so we have
@@ -1447,6 +1447,7 @@ FontLink_Chain_Populate(
         lfBase.lfCharSet = DEFAULT_CHARSET;
 
     // Use cache if any
+    IntCanonicalizeLogFont(&lfBase);
     pLinkCache = FontLink_FindCache(&lfBase);
     if (pLinkCache)
     {
@@ -1857,6 +1858,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         if (!Error)
         {
             FontGDI->CharSet = WinFNT.charset;
+            FontGDI->OriginalWeight = WinFNT.weight;
         }
         IntUnLockFreeType();
     }
@@ -2868,11 +2870,11 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmDefaultChar      = pFNT->default_char + pFNT->first_char;
         TM->tmBreakChar        = pFNT->break_char + pFNT->first_char;
         TM->tmPitchAndFamily   = pFNT->pitch_and_family;
-        TM->tmWeight       = FontGDI->RequestWeight;
+        TM->tmWeight           = pFNT->weight;
         TM->tmItalic       = FontGDI->RequestItalic;
         TM->tmUnderlined   = FontGDI->RequestUnderline;
         TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-        TM->tmCharSet      = FontGDI->CharSet;
+        TM->tmCharSet      = pFNT->charset;
         return;
     }
 
@@ -3795,13 +3797,7 @@ IntFindGlyphCache(IN const FONT_CACHE_ENTRY *pCache)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         if (FontEntry->dwHash == dwHash &&
-            FontEntry->Hashed.GlyphIndex == pCache->Hashed.GlyphIndex &&
-            FontEntry->Hashed.Face == pCache->Hashed.Face &&
-            FontEntry->Hashed.lfHeight == pCache->Hashed.lfHeight &&
-            FontEntry->Hashed.lfWidth == pCache->Hashed.lfWidth &&
-            FontEntry->Hashed.AspectValue == pCache->Hashed.AspectValue &&
-            memcmp(&FontEntry->Hashed.matTransform, &pCache->Hashed.matTransform,
-                   sizeof(FT_Matrix)) == 0)
+            RtlEqualMemory(&FontEntry->Hashed, &pCache->Hashed, sizeof(FontEntry->Hashed)))
         {
             break;
         }
@@ -4135,6 +4131,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->Magic              = FONTGDI_MAGIC;
         FontGDI->lfHeight           = lfHeight;
         FontGDI->lfWidth            = lfWidth;
+        FontGDI->CharSet            = WinFNT.charset;
+        FontGDI->OriginalWeight     = WinFNT.weight;
         return 0;
     }
 
@@ -4699,7 +4697,7 @@ ftGdiGetGlyphOutline(
         return 1; /* FIXME */
     }
 
-    if (ft_face->glyph->format != ft_glyph_format_outline && iFormat != GGO_BITMAP)
+    if (ft_face->glyph->format != FT_GLYPH_FORMAT_OUTLINE && iFormat != GGO_BITMAP)
     {
         DPRINT1("Loaded a bitmap\n");
         return GDI_ERROR;
@@ -4721,7 +4719,7 @@ ftGdiGetGlyphOutline(
 
         switch (ft_face->glyph->format)
         {
-        case ft_glyph_format_bitmap:
+        case FT_GLYPH_FORMAT_BITMAP:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
             INT w = min( pitch, (ft_face->glyph->bitmap.width + 7) >> 3 );
@@ -4735,7 +4733,7 @@ ftGdiGetGlyphOutline(
             break;
         }
 
-        case ft_glyph_format_outline:
+        case FT_GLYPH_FORMAT_OUTLINE:
         {
             ft_bitmap.width = width;
             ft_bitmap.rows = height;
@@ -4783,7 +4781,7 @@ ftGdiGetGlyphOutline(
 
         switch (ft_face->glyph->format)
         {
-        case ft_glyph_format_bitmap:
+        case FT_GLYPH_FORMAT_BITMAP:
         {
             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
             INT h = min( height, ft_face->glyph->bitmap.rows );
@@ -4802,7 +4800,7 @@ ftGdiGetGlyphOutline(
             }
             break;
         }
-        case ft_glyph_format_outline:
+        case FT_GLYPH_FORMAT_OUTLINE:
         {
             ft_bitmap.width = width;
             ft_bitmap.rows = height;
@@ -4941,11 +4939,14 @@ IntGetRealGlyph(
 
     glyph = Cache->Hashed.Face->glyph;
 
-    if (Cache->Hashed.Aspect.Emu.Bold)
-        FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
+    if (FT_IS_SCALABLE(Cache->Hashed.Face))
+    {
+        if (Cache->Hashed.Aspect.Emu.Bold)
+            FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
 
-    if (Cache->Hashed.Aspect.Emu.Italic)
-        FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+        if (Cache->Hashed.Aspect.Emu.Italic)
+            FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+    }
 
     realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
 
@@ -4981,6 +4982,7 @@ TextIntGetTextExtentPoint(
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
+    RtlZeroMemory(&Cache.Hashed, sizeof(Cache.Hashed));
     Cache.Hashed.Face = FontGDI->SharedFace->Face;
     if (NULL != Fit)
     {
@@ -4990,6 +4992,9 @@ TextIntGetTextExtentPoint(
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
     Cache.Hashed.lfWidth = plf->lfWidth;
+    Cache.Hashed.lfCharSet = plf->lfCharSet;
+    RtlStringCchCopyW(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName), plf->lfFaceName);
+    IntCanonicalizeBufferString(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName));
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -5420,6 +5425,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
 
     ASSERT(Otm);
     ASSERT(LogFont);
+    ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     /* FIXME: IntSizeSynth Penalty 20 */
     /* FIXME: SmallPenalty Penalty 1 */
@@ -5512,8 +5518,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             GOT_PENALTY("DefaultPitchFixed", 1);
         }
     }
-
-    ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
 
     if (LogFont->lfFaceName[0] != UNICODE_NULL)
     {
@@ -6009,8 +6013,7 @@ IntRealizeFont(const LOGFONTW *pLogFont, _Inout_opt_ PTEXTOBJ TextObj)
     ASSERT_FREETYPE_LOCK_HELD();
 
     LOGFONTW LogFont = *pLogFont;
-    RtlZeroMemory(&LogFont.lfFaceName, sizeof(LogFont.lfFaceName));
-    RtlStringCchCopyW(LogFont.lfFaceName, _countof(LogFont.lfFaceName), pLogFont->lfFaceName);
+    IntCanonicalizeLogFont(&LogFont);
     pLogFont = &LogFont;
 
     /* Substitute */
@@ -6882,11 +6885,15 @@ IntExtTextOutW(
     ASSERT(FontGDI);
 
     IntLockFreeType();
+    RtlZeroMemory(&Cache.Hashed, sizeof(Cache.Hashed));
     Cache.Hashed.Face = face = FontGDI->SharedFace->Face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     Cache.Hashed.lfHeight = plf->lfHeight;
     Cache.Hashed.lfWidth = plf->lfWidth;
+    Cache.Hashed.lfCharSet = plf->lfCharSet;
+    RtlStringCchCopyW(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName), plf->lfFaceName);
+    IntCanonicalizeBufferString(Cache.Hashed.lfFaceName, _countof(Cache.Hashed.lfFaceName));
     Cache.Hashed.Aspect.Emu.Bold = EMUBOLD_NEEDED(FontGDI->OriginalWeight, plf->lfWeight);
     Cache.Hashed.Aspect.Emu.Italic = (plf->lfItalic && !FontGDI->OriginalItalic);
 
@@ -7767,17 +7774,21 @@ NtGdiGetCharWidthW(
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
 
+#if 0 // Raster font is able not to have charmap
             if(Safepwc)
                 ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
             ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
+#endif
         }
-
-        IntLockFreeType();
-        FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
+        else
+        {
+            IntLockFreeType();
+            FT_Set_Charmap(face, found);
+            IntUnLockFreeType();
+        }
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;

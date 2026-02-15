@@ -8,7 +8,6 @@
 #pragma once
 
 extern POINTL g_PointZero;
-extern UNICODE_STRING g_FontRegPath;
 
 SIZE_T SZZ_GetSize(_In_ PCZZWSTR pszz);
 LONG IntNormalizeAngle(_In_ LONG nTenthsOfDegrees);
@@ -82,4 +81,20 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     }
 
     return lValue;
+}
+
+static inline void
+IntCanonicalizeBufferString(_Out_ LPWSTR pszBuffer, _In_ size_t cchMax)
+{
+    ASSERT(cchMax > 0);
+    pszBuffer[cchMax - 1] = UNICODE_NULL;
+    size_t cch = wcslen(pszBuffer);
+    ASSERT(cch < cchMax);
+    RtlZeroMemory(&pszBuffer[cch], (cchMax - cch) * sizeof(WCHAR));
+}
+
+static inline void
+IntCanonicalizeLogFont(PLOGFONTW pLogFont)
+{
+    IntCanonicalizeBufferString(pLogFont->lfFaceName, _countof(pLogFont->lfFaceName));
 }
