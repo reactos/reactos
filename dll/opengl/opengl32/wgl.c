@@ -754,6 +754,10 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
             SetLastError( ERROR_INVALID_HANDLE );
             return FALSE;
         }
+        
+        /* Clear current context when hglrc is NULL */
+        IntMakeCurrent(NULL, NULL, NULL);
+        IntSetCurrentDispatchTable(NULL);
     }
 
     return TRUE;
