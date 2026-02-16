@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
- * TRANSLATOR:  Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * TRANSLATOR:  Copyright 2018-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
@@ -13,9 +13,9 @@ BEGIN
     IDS_COL_TYPE    "種類"
     IDS_COL_SIZE    "サイズ"
     IDS_COL_MDATE   "変更日"
-    IDS_COL_PATH    "Path"
-    IDS_COL_ATT     "Attributes"
+    IDS_COL_PATH    "パス"
+    IDS_COL_ATT     "属性"
 
-    IDS_EXTRACT     "Extract..."
-    IDS_EXTRACTALL  "Extract &All..."
+    IDS_EXTRACT     "展開..."
+    IDS_EXTRACTALL  "すべて展開(&A)..."
 END
