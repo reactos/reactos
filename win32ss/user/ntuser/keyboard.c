@@ -21,10 +21,11 @@ INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
 
 /* State for Alt+Numpad character entry */
-static enum {
+static enum _ALTNUM_STATE
+{
     ALTNUM_INACTIVE,
-    ALTNUM_ACTIVE,
-    ALTNUM_OEM_PREFIX
+    ALTNUM_OEM,
+    ALTNUM_ACP
 } gAltNumPadState = ALTNUM_INACTIVE;
 
 static ULONG gAltNumPadValue = 0;
@@ -913,71 +914,69 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
     wSimpleVk = IntSimplifyVk(wVk);
-	
-	/*
+
+    /*
      * Handle Alt+Numpad character composition.
-     * TODO: Inserting unicode characters
+     * TODO: Handle unicode characters.
      */
     if (bIsDown &&
         IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
         !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
     {
+        TRACE("VK_MENU && !VK_CONTROL - wScanCode: 0x%04x ; wVk: 0x%04x ; wSimpleVk: 0x%04x\n",
+              wScanCode, wVk, wSimpleVk);
+
         /* Check if the incoming key is a numpad digit */
         if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
         {
             UINT uDigit = wVk - VK_NUMPAD0;
 
+            /* Initialize the Alt+Numpad state if necessary */
             if (gAltNumPadState == ALTNUM_INACTIVE)
-            {
-                gAltNumPadState = (uDigit == 0) ? ALTNUM_ACTIVE : ALTNUM_OEM_PREFIX;
-            }
+                gAltNumPadState = (uDigit == 0) ? ALTNUM_ACP : ALTNUM_OEM;
 
-            if (gAltNumPadState != ALTNUM_OEM_PREFIX || gAltNumPadValue != 0)
-            {
-                /* Protect against overflow */
-                if (gAltNumPadValue < (MAXULONG / 10))
-                {
-                    gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
-                }
-            }
+            /* Build the decimal value; the value can overflow
+             * and be truncated (same behaviour as on Windows) */
+            gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
 
             return TRUE;
         }
         /* Check if the incoming key is not the menu key itself/alone */
         else if (wVk != VK_MENU)
         {
+            /* Reset the Alt+Numpad state */
             gAltNumPadState = ALTNUM_INACTIVE;
             gAltNumPadValue = 0;
         }
     }
+    TRACE("gAltNumPadState: %lu, gAltNumPadValue: %lu\n",
+          gAltNumPadState, gAltNumPadValue);
 
-    /*
-     * Check for the end of an Alt+Numpad sequence, which is triggered by the
-     * release of the ALT key.
-     */
-    if (!bIsDown && (wSimpleVk == VK_MENU) && (gAltNumPadState != ALTNUM_INACTIVE))
+    /* Check for the end of an Alt+Numpad sequence, triggered by the release of the ALT key */
+    if ((gAltNumPadState != ALTNUM_INACTIVE) && !bIsDown && (wSimpleVk == VK_MENU))
     {
-        PUSER_MESSAGE_QUEUE pQueue = IntGetFocusMessageQueue();
+        pFocusQueue = IntGetFocusMessageQueue();
 
-        if (gAltNumPadValue != 0 && pQueue && pQueue->ptiKeyboard)
+        TRACE("End of Alt+Numpad\n");
+        if (gAltNumPadValue != 0 && pFocusQueue && pFocusQueue->ptiKeyboard)
         {
             NTSTATUS Status;
             WCHAR wchUnicodeChar;
             CHAR cAnsiChar = (CHAR)(gAltNumPadValue % 256);
-            MSG msgChar;
 
-            if (gAltNumPadState == ALTNUM_OEM_PREFIX)
+            if (gAltNumPadState == ALTNUM_OEM)
             {
-                /* The sequence started with '0', use the OEM->Unicode function */
+                /* Use the OEM->Unicode function */
                 Status = RtlOemToUnicodeN(&wchUnicodeChar,
-                                            sizeof(wchUnicodeChar),
-                                            NULL,
-                                            &cAnsiChar,
-                                            sizeof(cAnsiChar));
+                                          sizeof(wchUnicodeChar),
+                                          NULL,
+                                          &cAnsiChar,
+                                          sizeof(cAnsiChar));
             }
-            else
+            else if (gAltNumPadState == ALTNUM_ACP)
             {
-                 /* Otherwise, use the standard MultiByte->Unicode function (uses ACP) */
+                /* The sequence started with '0', use the ANSI codepage
+                 * (ACP)-aware MultiByte->Unicode function */
                 Status = RtlMultiByteToUnicodeN(&wchUnicodeChar,
                                                 sizeof(wchUnicodeChar),
                                                 NULL,
@@ -986,18 +985,20 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             }
 
             if (NT_SUCCESS(Status))
-             {
-                msgChar.hwnd = pQueue->spwndFocus ? UserHMGetHandle(pQueue->spwndFocus) : NULL;
+            {
+                MSG msgChar;
+                msgChar.hwnd = pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : NULL;
                 msgChar.message = WM_CHAR;
                 msgChar.wParam = wchUnicodeChar;
                 msgChar.lParam = 1;
                 msgChar.time = dwTime;
                 msgChar.pt = gpsi->ptCursor;
 
-                MsqPostMessage(pQueue->ptiKeyboard, &msgChar, FALSE, QS_KEY, 0, 0);
+                MsqPostMessage(pFocusQueue->ptiKeyboard, &msgChar, FALSE, QS_KEY, 0, 0);
             }
         }
 
+        /* Reset the Alt+Numpad state */
         gAltNumPadState = ALTNUM_INACTIVE;
         gAltNumPadValue = 0;
     }
