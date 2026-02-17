@@ -893,38 +893,33 @@ IntCheckLanguageToggle(
     return TRUE;
 }
 
-/*
- * UserSendKeyboardInput
+/**
+ * @brief   Handles Alt+Numpad character composition.
  *
- * Process keyboard input from input devices and SendInput API
- */
-BOOL NTAPI
-ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD dwTime, DWORD dwExtraInfo)
+ * @param[in]   wVk
+ * The virtual key code of the key being input, in its "simplified"
+ * shift-less version, as given by IntSimplifyVk().
+ *
+ * @param[in]   bIsDown
+ * TRUE if the current key is being pressed; FALSE if it is released.
+ *
+ * @return
+ * TRUE if no further key processing needs to be done;
+ * FALSE if regular key processing has to be done by the caller.
+ **/
+static BOOL
+IntHandleAltNumpad(
+    _In_ WORD wVk,
+    _In_ BOOL bIsDown,
+    _In_ DWORD dwTime /*,
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue */)
 {
-    WORD wSimpleVk = 0, wFixedVk, wVk2;
-    PUSER_MESSAGE_QUEUE pFocusQueue;
-    PTHREADINFO pti;
-    BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
-    BOOL bIsDown = (dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
-    BOOL bPacket = (dwFlags & KEYEVENTF_UNICODE) ? TRUE : FALSE;
-    BOOL bWasSimpleDown = FALSE, bPostMsg = TRUE, bIsSimpleDown;
-    MSG Msg;
-    static BOOL bMenuDownRecently = FALSE;
-    BOOL bLangToggled = FALSE;
-
-    /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
-    wSimpleVk = IntSimplifyVk(wVk);
-
-    /*
-     * Handle Alt+Numpad character composition.
-     * TODO: Handle unicode characters.
-     */
+    // TODO: Handle Unicode characters.
     if (bIsDown &&
         IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
         !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
     {
-        TRACE("VK_MENU && !VK_CONTROL - wScanCode: 0x%04x ; wVk: 0x%04x ; wSimpleVk: 0x%04x\n",
-              wScanCode, wVk, wSimpleVk);
+        TRACE("VK_MENU && !VK_CONTROL - wVk: 0x%04x\n", wVk);
 
         /* Check if the incoming key is a numpad digit */
         if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
@@ -939,7 +934,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
              * and be truncated (same behaviour as on Windows) */
             gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
 
-            return TRUE;
+            return TRUE; /* No key processing needs to be done */
         }
         /* Check if the incoming key is not the menu key itself/alone */
         else if (wVk != VK_MENU)
@@ -953,17 +948,26 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
           gAltNumPadState, gAltNumPadValue);
 
     /* Check for the end of an Alt+Numpad sequence, triggered by the release of the ALT key */
-    if ((gAltNumPadState != ALTNUM_INACTIVE) && !bIsDown && (wSimpleVk == VK_MENU))
+    if ((gAltNumPadState != ALTNUM_INACTIVE) && !bIsDown && (wVk == VK_MENU))
     {
-        pFocusQueue = IntGetFocusMessageQueue();
+        PUSER_MESSAGE_QUEUE pFocusQueue = IntGetFocusMessageQueue();
 
         TRACE("End of Alt+Numpad\n");
         if (gAltNumPadValue != 0 && pFocusQueue && pFocusQueue->ptiKeyboard)
         {
             NTSTATUS Status;
             WCHAR wchUnicodeChar;
-            CHAR cAnsiChar = (CHAR)(gAltNumPadValue % 256);
+            /*
+             * NOTE: the input value is considered modulo 256, because it
+             * is stored to a 1-byte CHAR. Other applications that hook and
+             * reimplement the Alt+Numpad system (e.g. WordPad, ...) store
+             * the value instead in a 2-byte WORD, hence they consider the
+             * value modulo 65536.
+             * See: https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951
+             */
+            CHAR cAnsiChar = (CHAR)(gAltNumPadValue & 0xFF);
 
+            /* Convert the input character value to Unicode */
             if (gAltNumPadState == ALTNUM_OEM)
             {
                 /* Use the OEM->Unicode function */
@@ -984,6 +988,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                                                 sizeof(cAnsiChar));
             }
 
+            /* Post the Unicode character to the focused message queue if conversion succeeded */
             if (NT_SUCCESS(Status))
             {
                 MSG msgChar;
@@ -1003,6 +1008,31 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
         gAltNumPadValue = 0;
     }
 
+    return FALSE; /* More key processing has to be done */
+}
+
+/*
+ * UserSendKeyboardInput
+ *
+ * Process keyboard input from input devices and SendInput API
+ */
+BOOL NTAPI
+ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD dwTime, DWORD dwExtraInfo)
+{
+    WORD wSimpleVk, wFixedVk, wVk2;
+    PUSER_MESSAGE_QUEUE pFocusQueue;
+    PTHREADINFO pti;
+    BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
+    BOOL bIsDown = (dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
+    BOOL bPacket = (dwFlags & KEYEVENTF_UNICODE) ? TRUE : FALSE;
+    BOOL bWasSimpleDown = FALSE, bPostMsg = TRUE, bIsSimpleDown;
+    MSG Msg;
+    static BOOL bMenuDownRecently = FALSE;
+    BOOL bLangToggled = FALSE;
+
+    /* Get virtual key without shifts (VK_(L|R)* -> VK_*) */
+    wSimpleVk = IntSimplifyVk(wVk);
+
     if (PRIMARYLANGID(gusLanguageID) == LANG_JAPANESE)
     {
         /* Japanese special! */
@@ -1014,6 +1044,10 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                 wSimpleVk = VK_OEM_FINISH;
         }
     }
+
+    /* Handle Alt+Numpad character composition */
+    if (IntHandleAltNumpad(wSimpleVk, bIsDown, dwTime))
+        return TRUE;
 
     bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
 
@@ -1051,9 +1085,9 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     /* If we have a focus queue, post a keyboard message */
     pFocusQueue = IntGetFocusMessageQueue();
     TRACE("ProcessKeyEvent Q 0x%p Active pWnd 0x%p Focus pWnd 0x%p\n",
-           pFocusQueue,
-           (pFocusQueue ?  pFocusQueue->spwndActive : 0),
-           (pFocusQueue ?  pFocusQueue->spwndFocus : 0));
+          pFocusQueue,
+          (pFocusQueue ? pFocusQueue->spwndActive : NULL),
+          (pFocusQueue ? pFocusQueue->spwndFocus : NULL));
 
     /* If it is F10 or ALT is down and CTRL is up, it's a system key */
     if ( wVk == VK_F10 ||
@@ -1139,7 +1173,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
             // Snap from Active Window, Focus can be null.
-            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : 0);
+            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : NULL);
         }
         else
             SnapWindow(NULL); // Snap Desktop.
@@ -1701,7 +1735,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
-    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : 0;
+    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
 
     if (!pKbdTbl || cchSize < 1)
     {
