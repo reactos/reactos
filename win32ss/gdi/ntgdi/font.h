@@ -43,11 +43,13 @@ typedef struct _FONT_CACHE_HASHED
     FT_Face Face;
     LONG lfHeight;
     LONG lfWidth;
+    LONG lfCharSet;
     _ANONYMOUS_UNION union {
         DWORD AspectValue;
         FONT_ASPECT Aspect;
     } DUMMYUNIONNAME;
     FT_Matrix matTransform;
+    WCHAR lfFaceName[LF_FACESIZE];
 } FONT_CACHE_HASHED, *PFONT_CACHE_HASHED;
 
 #include <poppack.h>
