@@ -67,28 +67,22 @@ set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
 If you don't use GDB, don't enable this.")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(DBG FALSE CACHE BOOL
-"Whether to compile for debugging.")
-else()
+if(MSVC_IDE)
+# HACK for MSVC_IDE.
     set(DBG TRUE CACHE BOOL
 "Whether to compile for debugging.")
+else()
+cmake_dependent_option(DBG "Whether to compile for debugging." TRUE
+                       "CMAKE_BUILD_TYPE STREQUAL Debug" FALSE)
 endif()
 
 if(MSVC)
-    set(KDBG FALSE CACHE BOOL
-"Whether to compile in the integrated kernel debugger.")
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
-    else()
-        set(_WINKD_ TRUE CACHE BOOL "Whether to compile with the KD protocol.")
-    endif()
+    set(KDBG FALSE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
+    cmake_dependent_option(_WINKD_ "Whether to compile with the KD protocol." TRUE
+                           "CMAKE_BUILD_TYPE STREQUAL Debug" FALSE)
 else()
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set(KDBG FALSE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
-    else()
-        set(KDBG TRUE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
-    endif()
+    cmake_dependent_option(KDBG "Whether to compile in the integrated kernel debugger." TRUE
+                           "CMAKE_BUILD_TYPE STREQUAL Debug" FALSE)
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
