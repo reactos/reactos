@@ -16,10 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include "config.h"
 
-#include <hlguids.h>
-#include <htiface.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "hlguids.h"
+#include "shlguid.h"
+#include "wininet.h"
+#include "shlwapi.h"
+#include "htiface.h"
+#include "shdeprecated.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlscript.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define CONTENT_LENGTH "Content-Length"
 #define UTF8_STR "utf-8"
@@ -904,6 +927,8 @@ static HRESULT on_start_nsrequest(nsChannelBSC *This)
 {
     nsresult nsres;
 
+    This->nschannel->binding = This;
+
     /* FIXME: it's needed for http connections from BindToObject. */
     if(!This->nschannel->response_status)
         This->nschannel->response_status = 200;
@@ -949,11 +974,15 @@ static void on_stop_nsrequest(nsChannelBSC *This, HRESULT result)
             WARN("OnStopRequest failed: %08x\n", nsres);
     }
 
-    if(This->nschannel && This->nschannel->load_group) {
-        nsres = nsILoadGroup_RemoveRequest(This->nschannel->load_group,
-                (nsIRequest*)&This->nschannel->nsIHttpChannel_iface, NULL, request_result);
-        if(NS_FAILED(nsres))
-            ERR("RemoveRequest failed: %08x\n", nsres);
+    if(This->nschannel) {
+        if(This->nschannel->load_group) {
+            nsres = nsILoadGroup_RemoveRequest(This->nschannel->load_group,
+                    (nsIRequest*)&This->nschannel->nsIHttpChannel_iface, NULL, request_result);
+            if(NS_FAILED(nsres))
+                ERR("RemoveRequest failed: %08x\n", nsres);
+        }
+        if(This->nschannel->binding == This)
+            This->nschannel->binding = NULL;
     }
 }
 
@@ -1194,8 +1223,11 @@ static void nsChannelBSC_destroy(BSCallback *bsc)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
 
-    if(This->nschannel)
+    if(This->nschannel) {
+        if(This->nschannel->binding == This)
+            This->nschannel->binding = NULL;
         nsIHttpChannel_Release(&This->nschannel->nsIHttpChannel_iface);
+    }
     if(This->nslistener)
         nsIStreamListener_Release(This->nslistener);
     if(This->nscontext)

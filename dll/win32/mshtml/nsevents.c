@@ -16,7 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtmcid.h"
+#include "shlguid.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "htmlscript.h"
+#include "htmlevent.h"
+#include "binding.h"
+#include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static const PRUnichar blurW[]      = {'b','l','u','r',0};
 static const PRUnichar focusW[]     = {'f','o','c','u','s',0};

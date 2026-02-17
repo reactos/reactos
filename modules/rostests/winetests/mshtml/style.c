@@ -16,7 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "mshtmhst.h"
+#include "docobj.h"
 
 static int strcmp_wa(LPCWSTR strw, const char *stra)
 {
@@ -2622,6 +2634,7 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
 {
     IHTMLCurrentStyle2 *current_style2;
     IHTMLCurrentStyle3 *current_style3;
+    IHTMLCurrentStyle4 *current_style4;
     VARIANT_BOOL b;
     BSTR str;
     HRESULT hres;
@@ -2887,6 +2900,21 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     ok(hres == S_OK, "get_textTransform failed: %08x\n", hres);
     SysFreeString(str);
 
+    hres = IHTMLCurrentStyle_get_styleFloat(current_style, &str);
+    ok(hres == S_OK, "get_styleFloat failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "none"), "styleFloat = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_overflowX(current_style, &str);
+    ok(hres == S_OK, "get_overflowX failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "hidden"), "overflowX = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    hres = IHTMLCurrentStyle_get_overflowY(current_style, &str);
+    ok(hres == S_OK, "get_overflowY failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "hidden"), "overflowY = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
     current_style2 = get_current_style2_iface((IUnknown*)current_style);
 
     b = 100;
@@ -2905,6 +2933,16 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     SysFreeString(str);
 
     IHTMLCurrentStyle3_Release(current_style3);
+
+    hres = IHTMLCurrentStyle_QueryInterface(current_style, &IID_IHTMLCurrentStyle4, (void**)&current_style4);
+    ok(hres == S_OK, "Could not get IHTMLCurrentStyle4 iface: %08x\n", hres);
+
+    hres = IHTMLCurrentStyle4_get_minWidth(current_style4, &v);
+    ok(hres == S_OK, "get_minWidth failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(minWidth) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    IHTMLCurrentStyle4_Release(current_style4);
 }
 
 static const char basic_test_str[] = "<html><body><div id=\"divid\"></div/</body></html>";

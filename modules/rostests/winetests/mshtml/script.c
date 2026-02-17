@@ -16,9 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include <activdbg.h>
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "wininet.h"
+#include "docobj.h"
+#include "dispex.h"
+#include "hlink.h"
+#include "mshtml.h"
+#include "mshtmhst.h"
+#include "initguid.h"
+#include "activscp.h"
+#include "activdbg.h"
+#include "objsafe.h"
+#include "mshtmdid.h"
+#include "mshtml_test.h"
 
 DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
@@ -1907,6 +1926,23 @@ static void test_func(IDispatchEx *obj)
     hres = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dp, &var, &ei, NULL);
     ok(hres == S_OK || broken(E_ACCESSDENIED), "InvokeEx failed: %08x\n", hres);
     if(SUCCEEDED(hres)) {
+        DISPID named_args[2] = { DISPID_THIS, 0xdeadbeef };
+        VARIANT args[2];
+
+        ok(V_VT(&var) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&var));
+        ok(!strcmp_wa(V_BSTR(&var), "[object]"), "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        VariantClear(&var);
+
+        dp.rgdispidNamedArgs = named_args;
+        dp.cNamedArgs = 2;
+        dp.cArgs = 2;
+        dp.rgvarg = &var;
+        V_VT(args) = VT_DISPATCH;
+        V_DISPATCH(args) = (IDispatch*)obj;
+        V_VT(args+1) = VT_I4;
+        V_I4(args+1) = 3;
+        hres = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dp, &var, &ei, NULL);
+        ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
         ok(V_VT(&var) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&var));
         ok(!strcmp_wa(V_BSTR(&var), "[object]"), "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
         VariantClear(&var);

@@ -16,7 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define MAX_ARGS 16
 
@@ -602,6 +617,7 @@ static HRESULT dispex_value(DispatchEx *This, LCID lcid, WORD flags, DISPPARAMS 
 static HRESULT typeinfo_invoke(DispatchEx *This, func_info_t *func, WORD flags, DISPPARAMS *dp, VARIANT *res,
         EXCEPINFO *ei)
 {
+    DISPPARAMS params = {dp->rgvarg+dp->cNamedArgs, NULL, dp->cArgs-dp->cNamedArgs, 0};
     ITypeInfo *ti;
     IUnknown *unk;
     UINT argerr=0;
@@ -619,7 +635,7 @@ static HRESULT typeinfo_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
         return E_FAIL;
     }
 
-    hres = ITypeInfo_Invoke(ti, unk, func->id, flags, dp, res, ei, &argerr);
+    hres = ITypeInfo_Invoke(ti, unk, func->id, flags, &params, res, ei, &argerr);
 
     IUnknown_Release(unk);
     return hres;

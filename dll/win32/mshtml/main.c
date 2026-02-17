@@ -20,46 +20,78 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <advpub.h>
-#include <rpcproxy.h>
-#include <mlang.h>
-#include <initguid.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "advpub.h"
+#include "shlwapi.h"
+#include "optary.h"
+#include "rpcproxy.h"
+#include "shlguid.h"
+#include "mlang.h"
+
+#include "wine/debug.h"
+
+#define INIT_GUID
+#include "mshtml_private.h"
+#include "resource.h"
+#include "pluginhost.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 HINSTANCE hInst;
 DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
+#ifdef __REACTOS__
+#include <initguid.h>
 void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*);
 nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*);
 nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*);
 void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt);
 void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*);
 void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*);
+#endif // __REACTOS__
 
 static HINSTANCE shdoclc = NULL;
 static HDC display_dc;
 static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
 static IMultiLanguage2 *mlang;
 
+static BOOL ensure_mlang(void)
+{
+    IMultiLanguage2 *new_mlang;
+    HRESULT hres;
+
+    if(mlang)
+        return TRUE;
+
+    hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IMultiLanguage2, (void**)&new_mlang);
+    if(FAILED(hres)) {
+        ERR("Could not create CMultiLanguage instance\n");
+        return FALSE;
+    }
+
+    if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
+        IMultiLanguage2_Release(new_mlang);
+
+    return TRUE;
+}
+
 UINT cp_from_charset_string(BSTR charset)
 {
     MIMECSETINFO info;
     HRESULT hres;
 
-    if(!mlang) {
-        IMultiLanguage2 *new_mlang;
-
-        hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
-                &IID_IMultiLanguage2, (void**)&new_mlang);
-        if(FAILED(hres)) {
-            ERR("Could not create CMultiLanguage instance\n");
-            return CP_UTF8;
-        }
-
-        if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
-            IMultiLanguage2_Release(new_mlang);
-    }
+    if(!ensure_mlang())
+        return CP_UTF8;
 
     hres = IMultiLanguage2_GetCharsetInfo(mlang, charset, &info);
     if(FAILED(hres)) {
@@ -68,6 +100,23 @@ UINT cp_from_charset_string(BSTR charset)
     }
 
     return info.uiInternetEncoding;
+}
+
+BSTR charset_string_from_cp(UINT cp)
+{
+    MIMECPINFO info;
+    HRESULT hres;
+
+    if(!ensure_mlang())
+        return SysAllocString(NULL);
+
+    hres = IMultiLanguage2_GetCodePageInfo(mlang, cp, GetUserDefaultUILanguage(), &info);
+    if(FAILED(hres)) {
+        ERR("GetCodePageInfo failed: %08x\n", hres);
+        return SysAllocString(NULL);
+    }
+
+    return SysAllocString(info.wszWebCharset);
 }
 
 static void thread_detach(void)
@@ -487,6 +536,10 @@ static HRESULT register_server(BOOL do_register)
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
         heap_free(pse[i].pszValue);
 
+#ifndef __REACTOS__
+    if(FAILED(hres))
+        ERR("RegInstall failed: %08x\n", hres);
+#else // __REACTOS__
     if(FAILED(hres)) {
         ERR("RegInstall failed: %08x\n", hres);
         return hres;
@@ -506,7 +559,7 @@ static HRESULT register_server(BOOL do_register)
 
     if(FAILED(hres))
         ERR("typelib registration failed: %08x\n", hres);
-
+#endif // __REACTOS__
     return hres;
 }
 
