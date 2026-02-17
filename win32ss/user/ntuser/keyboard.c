@@ -20,6 +20,16 @@ DWORD gdwLanguageToggleKey = 1;
 INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
 
+/* State for Alt+Numpad character entry */
+static enum _ALTNUM_STATE
+{
+    ALTNUM_INACTIVE,
+    ALTNUM_OEM,
+    ALTNUM_ACP
+} gAltNumPadState = ALTNUM_INACTIVE;
+
+static ULONG gAltNumPadValue = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -883,6 +893,124 @@ IntCheckLanguageToggle(
     return TRUE;
 }
 
+/**
+ * @brief   Handles Alt+Numpad character composition.
+ *
+ * @param[in]   wVk
+ * The virtual key code of the key being input, in its "simplified"
+ * shift-less version, as given by IntSimplifyVk().
+ *
+ * @param[in]   bIsDown
+ * TRUE if the current key is being pressed; FALSE if it is released.
+ *
+ * @return
+ * TRUE if no further key processing needs to be done;
+ * FALSE if regular key processing has to be done by the caller.
+ **/
+static BOOL
+IntHandleAltNumpad(
+    _In_ WORD wVk,
+    _In_ BOOL bIsDown,
+    _In_ DWORD dwTime /*,
+    _In_ PUSER_MESSAGE_QUEUE pFocusQueue */)
+{
+    // TODO: Handle Unicode characters.
+    if (bIsDown &&
+        IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
+    {
+        TRACE("VK_MENU && !VK_CONTROL - wVk: 0x%04x\n", wVk);
+
+        /* Check if the incoming key is a numpad digit */
+        if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
+        {
+            UINT uDigit = wVk - VK_NUMPAD0;
+
+            /* Initialize the Alt+Numpad state if necessary */
+            if (gAltNumPadState == ALTNUM_INACTIVE)
+                gAltNumPadState = (uDigit == 0) ? ALTNUM_ACP : ALTNUM_OEM;
+
+            /* Build the decimal value; the value can overflow
+             * and be truncated (same behaviour as on Windows) */
+            gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
+
+            return TRUE; /* No key processing needs to be done */
+        }
+        /* Check if the incoming key is not the menu key itself/alone */
+        else if (wVk != VK_MENU)
+        {
+            /* Reset the Alt+Numpad state */
+            gAltNumPadState = ALTNUM_INACTIVE;
+            gAltNumPadValue = 0;
+        }
+    }
+    TRACE("gAltNumPadState: %lu, gAltNumPadValue: %lu\n",
+          gAltNumPadState, gAltNumPadValue);
+
+    /* Check for the end of an Alt+Numpad sequence, triggered by the release of the ALT key */
+    if ((gAltNumPadState != ALTNUM_INACTIVE) && !bIsDown && (wVk == VK_MENU))
+    {
+        PUSER_MESSAGE_QUEUE pFocusQueue = IntGetFocusMessageQueue();
+
+        TRACE("End of Alt+Numpad\n");
+        if (gAltNumPadValue != 0 && pFocusQueue && pFocusQueue->ptiKeyboard)
+        {
+            NTSTATUS Status;
+            WCHAR wchUnicodeChar;
+            /*
+             * NOTE: the input value is considered modulo 256, because it
+             * is stored to a 1-byte CHAR. Other applications that hook and
+             * reimplement the Alt+Numpad system (e.g. WordPad, ...) store
+             * the value instead in a 2-byte WORD, hence they consider the
+             * value modulo 65536.
+             * See: https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951
+             */
+            CHAR cAnsiChar = (CHAR)(gAltNumPadValue & 0xFF);
+
+            /* Convert the input character value to Unicode */
+            if (gAltNumPadState == ALTNUM_OEM)
+            {
+                /* Use the OEM->Unicode function */
+                Status = RtlOemToUnicodeN(&wchUnicodeChar,
+                                          sizeof(wchUnicodeChar),
+                                          NULL,
+                                          &cAnsiChar,
+                                          sizeof(cAnsiChar));
+            }
+            else if (gAltNumPadState == ALTNUM_ACP)
+            {
+                /* The sequence started with '0', use the ANSI codepage
+                 * (ACP)-aware MultiByte->Unicode function */
+                Status = RtlMultiByteToUnicodeN(&wchUnicodeChar,
+                                                sizeof(wchUnicodeChar),
+                                                NULL,
+                                                &cAnsiChar,
+                                                sizeof(cAnsiChar));
+            }
+
+            /* Post the Unicode character to the focused message queue if conversion succeeded */
+            if (NT_SUCCESS(Status))
+            {
+                MSG msgChar;
+                msgChar.hwnd = pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : NULL;
+                msgChar.message = WM_CHAR;
+                msgChar.wParam = wchUnicodeChar;
+                msgChar.lParam = 1;
+                msgChar.time = dwTime;
+                msgChar.pt = gpsi->ptCursor;
+
+                MsqPostMessage(pFocusQueue->ptiKeyboard, &msgChar, FALSE, QS_KEY, 0, 0);
+            }
+        }
+
+        /* Reset the Alt+Numpad state */
+        gAltNumPadState = ALTNUM_INACTIVE;
+        gAltNumPadValue = 0;
+    }
+
+    return FALSE; /* More key processing has to be done */
+}
+
 /*
  * UserSendKeyboardInput
  *
@@ -891,7 +1019,7 @@ IntCheckLanguageToggle(
 BOOL NTAPI
 ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD dwTime, DWORD dwExtraInfo)
 {
-    WORD wSimpleVk = 0, wFixedVk, wVk2;
+    WORD wSimpleVk, wFixedVk, wVk2;
     PUSER_MESSAGE_QUEUE pFocusQueue;
     PTHREADINFO pti;
     BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
@@ -916,6 +1044,10 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
                 wSimpleVk = VK_OEM_FINISH;
         }
     }
+
+    /* Handle Alt+Numpad character composition */
+    if (IntHandleAltNumpad(wSimpleVk, bIsDown, dwTime))
+        return TRUE;
 
     bWasSimpleDown = IS_KEY_DOWN(gafAsyncKeyState, wSimpleVk);
 
@@ -953,9 +1085,9 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     /* If we have a focus queue, post a keyboard message */
     pFocusQueue = IntGetFocusMessageQueue();
     TRACE("ProcessKeyEvent Q 0x%p Active pWnd 0x%p Focus pWnd 0x%p\n",
-           pFocusQueue,
-           (pFocusQueue ?  pFocusQueue->spwndActive : 0),
-           (pFocusQueue ?  pFocusQueue->spwndFocus : 0));
+          pFocusQueue,
+          (pFocusQueue ? pFocusQueue->spwndActive : NULL),
+          (pFocusQueue ? pFocusQueue->spwndFocus : NULL));
 
     /* If it is F10 or ALT is down and CTRL is up, it's a system key */
     if ( wVk == VK_F10 ||
@@ -1041,7 +1173,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
             // Snap from Active Window, Focus can be null.
-            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : 0);
+            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : NULL);
         }
         else
             SnapWindow(NULL); // Snap Desktop.
@@ -1603,7 +1735,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
     /* Get current keyboard layout */
     pti = PsGetCurrentThreadWin32Thread();
-    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : 0;
+    pKbdTbl = pti ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
 
     if (!pKbdTbl || cchSize < 1)
     {
