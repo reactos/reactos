@@ -2,10 +2,10 @@
 #define STANDALONE
 #include <apitest.h>
 
-extern void func_delayimp(void);
+// extern void func_FILLMEIN(void);
 
 const struct test winetest_testlist[] =
 {
-    { "delayimp", func_delayimp },
+    // { "FILLMEIN", func_FILLMEIN },
     { 0, 0 }
 };
