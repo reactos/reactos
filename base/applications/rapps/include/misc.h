@@ -97,6 +97,8 @@ UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 
+BOOL
+IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2);
 HRESULT
 RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam = 0);
 LPCWSTR
