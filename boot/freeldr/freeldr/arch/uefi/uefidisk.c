@@ -99,6 +99,7 @@ PVOID DiskReadBuffer;
 static PVOID DiskReadBufferRaw;
 static ULONG DiskReadBufferAlignment;
 static BOOLEAN DiskReadBufferFromPool;
+static BOOLEAN DiskReadBufferFallbackPool = FALSE;
 UCHAR PcBiosDiskCount;
 
 UCHAR FrldrBootDrive;
@@ -150,10 +151,19 @@ UefiEnsureDiskReadBufferAligned(
 
     if (DiskReadBufferRaw != NULL && DiskReadBufferFromPool)
     {
-        GlobalSystemTable->BootServices->FreePool(DiskReadBufferRaw);
+        if (DiskReadBufferFallbackPool)
+        {
+            MmFreeMemory(DiskReadBufferRaw);
+        }
+        else
+        {
+            GlobalSystemTable->BootServices->FreePool(DiskReadBufferRaw);
+        }
+        
         DiskReadBufferRaw = NULL;
         DiskReadBuffer = NULL;
         DiskReadBufferFromPool = FALSE;
+        DiskReadBufferFallbackPool = FALSE;
     }
 
     Status = GlobalSystemTable->BootServices->AllocatePool(EfiLoaderData,
@@ -161,10 +171,22 @@ UefiEnsureDiskReadBufferAligned(
                                                            (void**)&DiskReadBufferRaw);
     if (EFI_ERROR(Status) || DiskReadBufferRaw == NULL)
     {
-        ERR("Failed to allocate aligned disk read buffer (align %lu)\n", RequiredAlignment);
-        DiskReadBuffer = NULL;
-        return FALSE;
+        /* This can sometimes happen on Mac firmware and probably happens on other EFI 1.x devices as well. */
+        WARN("Failed to allocate aligned disk read buffer using AllocatePool, trying MmAllocateMemoryWithType (buffer size = 0x%X, alignment %lu)\n",
+             DiskReadBufferSize, RequiredAlignment);
+        DiskReadBufferRaw = MmAllocateMemoryWithType(DiskReadBufferSize + RequiredAlignment,
+                                                     LoaderFirmwareTemporary);
+        if (DiskReadBufferRaw == NULL)
+        {
+            /* That failed too */
+            ERR("Failed to allocate aligned disk read buffer (buffer size = 0x%X, alignment %lu)\n",
+                DiskReadBufferSize, RequiredAlignment);
+            return FALSE;
+        }
+        
+        DiskReadBufferFallbackPool = TRUE;
     }
+    
     DiskReadBufferFromPool = TRUE;
 
     DiskReadBuffer = (PVOID)ALIGN_UP_POINTER_BY(DiskReadBufferRaw, RequiredAlignment);
