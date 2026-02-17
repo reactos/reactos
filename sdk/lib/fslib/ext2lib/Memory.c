@@ -218,7 +218,7 @@ bool ext2_get_free_blocks(PEXT2_FILESYS fs, ULONG start, ULONG finish,
 }
 
 
-bool write_inode_tables(PEXT2_FILESYS fs)
+bool write_inode_tables(PEXT2_FILESYS fs, IN OUT PFORMAT_CONTEXT Context)
 {
     bool    retval;
     ULONG   blk, num;
@@ -239,6 +239,7 @@ bool write_inode_tables(PEXT2_FILESYS fs)
             zero_blocks(0, 0, 0, 0, 0);
             return false;
         }
+        Ext2UpdateProgress(Context, 1UL);
     }
 
     zero_blocks(0, 0, 0, 0, 0);

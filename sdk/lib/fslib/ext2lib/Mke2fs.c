@@ -522,7 +522,7 @@ void ext2_update_dynamic_rev(PEXT2_FILESYS fs)
 }
 
 
-bool ext2_flush(PEXT2_FILESYS fs)
+bool ext2_flush(PEXT2_FILESYS fs, IN OUT PFORMAT_CONTEXT Context)
 {
     ULONG       i,j,maxgroup,sgrp;
     ULONG       group_block;
@@ -622,6 +622,7 @@ bool ext2_flush(PEXT2_FILESYS fs)
 
     next_group:
         group_block += EXT2_BLOCKS_PER_GROUP(fs->ext2_sb);
+        Ext2UpdateProgress(Context, 1UL);
 
     }
 
@@ -815,7 +816,7 @@ Ext2Format(
     EXT2_SUPER_BLOCK Ext2Sb;
     /* File Sys Structure */
     EXT2_FILESYS     FileSys;
-    ULONG Percent;
+    FORMAT_CONTEXT   Context;
     ULONG rsv;
     ULONG blocks;
     ULONG start;
@@ -825,9 +826,15 @@ Ext2Format(
     UNREFERENCED_PARAMETER(BackwardCompatible);
     UNREFERENCED_PARAMETER(MediaType);
 
+    Context.TotalCount = 0;
+    Context.CurrentCount = 0;
+    Context.Callback = Callback;
+    Context.Success = FALSE;
+    Context.Percent = 0;
+
     if (Callback != NULL)
     {
-        Callback(PROGRESS, 0, (PVOID)&Percent);
+        Callback(PROGRESS, 0, (PVOID)&Context.Percent);
     }
 
 
@@ -882,6 +889,7 @@ Ext2Format(
         goto clean_up;
     }
 
+    Context.TotalCount = FileSys.group_desc_count * 2;
 
     zap_sector(&FileSys, 2, 6);
 
@@ -957,7 +965,7 @@ Ext2Format(
         goto clean_up;
     }
 
-    write_inode_tables(&FileSys);
+    write_inode_tables(&FileSys, &Context);
 
     create_root_dir(&FileSys);
     create_lost_and_found(&FileSys);
@@ -973,7 +981,7 @@ Ext2Format(
         DPRINT1("Mke2fs: Slow format not supported yet\n");
     }
 
-    if (!ext2_flush(&FileSys))
+    if (!ext2_flush(&FileSys, &Context))
     {
         DPRINT1("Mke2fs: Warning, had trouble writing out superblocks.\n");
         goto clean_up;
@@ -999,7 +1007,34 @@ clean_up:
 
     Ext2CloseDevice(&FileSys);
 
-    return NT_SUCCESS(Status);
+    bool success = NT_SUCCESS(Status);
+
+     if (Callback) {
+        Callback(DONE, 0, (PVOID)&success);
+    }
+
+    return success;
+}
+
+VOID
+Ext2UpdateProgress(PFORMAT_CONTEXT Context,
+               ULONG Increment)
+{
+    ULONG NewPercent;
+
+    Context->CurrentCount += (ULONGLONG)Increment;
+
+    NewPercent = (Context->CurrentCount * 100ULL) / Context->TotalCount;
+
+    if (NewPercent > Context->Percent)
+    {
+        Context->Percent = NewPercent;
+        if (Context->Callback != NULL)
+        {
+            Context->Callback(PROGRESS, 0, &Context->Percent);
+        }
+    }
+
 }
 
 BOOLEAN
