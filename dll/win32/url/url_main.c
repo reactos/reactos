@@ -89,7 +89,7 @@ BOOL WINAPI InetIsOffline(DWORD flags)
     PIP_ADAPTER_ADDRESSES Adapters = (PIP_ADAPTER_ADDRESSES)HeapAlloc(GetProcessHeap(), 0, Size);
 
     if (!Adapters)
-        return FALSE;
+        return TRUE;
 
     GetAdaptersAddresses(AF_UNSPEC, 0, Adapters, &Size);
 
