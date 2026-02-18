@@ -143,22 +143,18 @@ int __cdecl WinMainCRTStartup (void);
 int __cdecl WinMainCRTStartup (void)
 {
   int ret = 255;
-#ifdef __SEH__
-  asm ("\t.l_startw:\n"
-    "\t.seh_handler __C_specific_handler, @except\n"
-    "\t.seh_handlerdata\n"
-    "\t.long 1\n"
-    "\t.rva .l_startw, .l_endw, _gnu_exception_handler ,.l_endw\n"
-    "\t.text"
-    );
-#endif
-  mingw_app_type = 1;
-  __security_init_cookie ();
-  ret = __tmainCRTStartup ();
-#ifdef __SEH__
-  asm ("\tnop\n"
-    "\t.l_endw: nop\n");
-#endif
+
+  _SEH2_TRY
+  {
+      mingw_app_type = 1;
+      __security_init_cookie ();
+      ret = __tmainCRTStartup ();
+  }
+  _SEH2_EXCEPT(_gnu_exception_handler(_SEH2_GetExceptionInformation()))
+  {
+      ret = _SEH2_GetExceptionCode();
+  }
+  _SEH2_END;
   return ret;
 }
 
@@ -178,22 +174,17 @@ int __cdecl mainCRTStartup (void)
       return -1;
   }
 #endif
-#ifdef __SEH__
-  asm ("\t.l_start:\n"
-    "\t.seh_handler __C_specific_handler, @except\n"
-    "\t.seh_handlerdata\n"
-    "\t.long 1\n"
-    "\t.rva .l_start, .l_end, _gnu_exception_handler ,.l_end\n"
-    "\t.text"
-    );
-#endif
-  mingw_app_type = 0;
-  __security_init_cookie ();
-  ret = __tmainCRTStartup ();
-#ifdef __SEH__
-  asm ("\tnop\n"
-    "\t.l_end: nop\n");
-#endif
+  _SEH2_TRY
+  {
+      mingw_app_type = 0;
+      __security_init_cookie ();
+      ret = __tmainCRTStartup ();
+  }
+  _SEH2_EXCEPT(_gnu_exception_handler(_SEH2_GetExceptionInformation()))
+  {
+      ret = _SEH2_GetExceptionCode();
+  }
+  _SEH2_END;
   return ret;
 }
 
