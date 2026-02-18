@@ -2070,7 +2070,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             usableWidth = 7;
 
         UINT maxItemsPerPage = (usableWidth - 7) / 5;
-        maxItemsPerPage = max(min(maxItemsPerPage, 1), 9);
+        maxItemsPerPage = min(max(maxItemsPerPage, 1), 9);
 
         UINT numDigits = 0;
         for (UINT tmpCount = 1; tmpCount <= pCandList->dwCount; (tmpCount *= 10), ++numDigits)
