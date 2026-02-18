@@ -167,13 +167,15 @@ BOOL IntIsLogOnSession(void)
     if (!NT_SUCCESS(Status))
         return g_bIsLogOnSession;
 
-    Status = NtQueryInformationToken(hToken, TokenStatistics, &tokenStats, sizeof(tokenStats), &returnLength);
+    Status = NtQueryInformationToken(hToken, TokenStatistics, &tokenStats, sizeof(tokenStats),
+                                     &returnLength);
     NtClose(hToken);
 
     if (!NT_SUCCESS(Status))
         return g_bIsLogOnSession;
 
-    g_bIsLogOnSession = RtlEqualMemory(&tokenStats.AuthenticationId, &systemLuid, sizeof(systemLuid));
+    g_bIsLogOnSession = RtlEqualMemory(&tokenStats.AuthenticationId, &systemLuid,
+                                       sizeof(systemLuid));
     return g_bIsLogOnSession;
 }
 
@@ -493,14 +495,15 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     return cch;
 }
 
-void IntFillImeCompStrCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+void IntFillImeCompStrCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     if (!pCompStr || !pCompStr->dwCompStrLen)
         return;
 
     PWCHAR pchSrc = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-    PBYTE pbAttrIndex = (PBYTE)pchSrc + pCompStr->dwCompStrLen + 2;
+    size_t cbCompStr = pCompStr->dwCompStrLen + sizeof(UNICODE_NULL);
+    PBYTE pbAttrIndex = (PBYTE)pchSrc + cbCompStr;
     PCHAR_INFO pDest = &pDisplay->CharInfo[cch];
 
     DWORD dwCharCount = pCompStr->dwCompStrLen / sizeof(WCHAR);
@@ -564,7 +567,8 @@ UINT IntFillImeSpaceCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     return ichFinal;
 }
 
-//! Converts the current Traditional Chinese IME status into a string for display (CHAR_INFO array).
+//! Converts the current Traditional Chinese IME status into a string for
+// display (CHAR_INFO array).
 BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     UINT cch = 0;
@@ -576,7 +580,7 @@ BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
             if (pEntry->bHasAnyCand)
                 IntFillImeCandidatesCHT(pEntry, pDisplay, cch);
             else
-                IntFillImeCompStrCHSCHT(pEntry, pDisplay, cch);
+                IntFillImeCompStrCHSorCHT(pEntry, pDisplay, cch);
         }
         cch = IntFillImeSpaceCHSCHT(pEntry, pDisplay, cch);
     }
@@ -815,7 +819,7 @@ BOOL IntFillImeDisplayCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
             if (pEntry->bHasAnyCand)
                 cch = IntFillImeCandidatesCHS(pEntry, pDisplay, cch);
             else
-                IntFillImeCompStrCHSCHT(pEntry, pDisplay, cch);
+                IntFillImeCompStrCHSorCHT(pEntry, pDisplay, cch);
         }
         cch = IntFillImeSpaceCHSCHT(pEntry, pDisplay, cch);
     }
@@ -2106,7 +2110,8 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         else
             nPageCountNeeded = (pCandList->dwCount / maxItemsPerPage + 10);
 
-        if (pEntry->pdwCandPageStart && pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+        if (pEntry->pdwCandPageStart &&
+            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2164,8 +2169,11 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                                                 usableWidth, labelWidth, pEntry);
 
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[currentPage]);
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex, pEntry->pdwCandPageStart[currentPage + 1] - pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
+                     pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
+                     pEntry->pdwCandPageStart[currentPage + 1] -
+                     pEntry->pdwCandPageStart[currentPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
@@ -2243,7 +2251,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (nPageCountNeeded < 100)
             nPageCountNeeded = 100;
 
-        if (pEntry->pdwCandPageStart && pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+        if (pEntry->pdwCandPageStart &&
+            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2270,7 +2279,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             WCHAR* szText = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[itemIdx]);
             UINT strW = IntGetStringWidth(szText);
 
-            if (currentX + strW + 3 > usableWidth || (itemIdx - pEntry->pdwCandPageStart[sepIdx-1]) >= 9)
+            if (currentX + strW + 3 > usableWidth ||
+                (itemIdx - pEntry->pdwCandPageStart[sepIdx-1]) >= 9)
             {
                 pEntry->pdwCandPageStart[sepIdx++] = itemIdx;
                 currentX = strW + 3;
@@ -2280,6 +2290,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 currentX += strW + 3;
             }
         }
+
         pEntry->pdwCandPageStart[sepIdx] = pCandList->dwCount;
         pEntry->dwCandIndexMax = sepIdx;
 
@@ -2300,8 +2311,11 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                                                 usableWidth, 0, pEntry);
 
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[currentPage]);
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex, pEntry->pdwCandPageStart[currentPage + 1] - pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
+                     pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
+                     pEntry->pdwCandPageStart[currentPage + 1] -
+                     pEntry->pdwCandPageStart[currentPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
@@ -2317,7 +2331,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
     return TRUE;
 }
 
-BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
+BOOL
+IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
 {
     for (DWORD dwIndex = 0; dwIndex < MAX_CANDLIST; ++dwIndex)
     {
@@ -2374,7 +2389,8 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
         if (nPageCountNeeded < 100)
             nPageCountNeeded = 100;
 
-        if (pEntry->pdwCandPageStart && pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+        if (pEntry->pdwCandPageStart &&
+            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2395,7 +2411,8 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
 
             pEntry->pdwCandPageStart[0] = 0;
             sepIdx = 1;
-            for (totalItems = pEntry->dwCandOffset; totalItems < pCandList->dwCount; totalItems += 9)
+            for (totalItems = pEntry->dwCandOffset; totalItems < pCandList->dwCount;
+                 totalItems += 9)
             {
                 pEntry->pdwCandPageStart[sepIdx++] = totalItems;
             }
@@ -2412,13 +2429,15 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
             sepIdx = 1;
             totalItems = 1;
 
-            UINT currentX = IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0])) + 3;
+            UINT currentX =
+                IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0])) + 3;
             UINT usableWidth = screenX - labelWidth;
 
             for (DWORD i = 1; i < pCandList->dwCount; i++)
             {
                 UINT strW = IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[i]));
-                if (currentX + strW + 3 > usableWidth || (i - pEntry->pdwCandPageStart[sepIdx-1]) >= 9)
+                if (currentX + strW + 3 > usableWidth ||
+                    (i - pEntry->pdwCandPageStart[sepIdx - 1]) >= 9)
                 {
                     pEntry->pdwCandPageStart[sepIdx++] = i;
                     currentX = strW + 3;
@@ -2451,9 +2470,11 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
                                                      screenX, labelWidth, pEntry, bIsCode);
 
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
+                     pEntry->pdwCandPageStart[currentPage]);
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage + 1] - pEntry->pdwCandPageStart[currentPage]);
+                     pEntry->pdwCandPageStart[currentPage + 1] -
+                     pEntry->pdwCandPageStart[currentPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
