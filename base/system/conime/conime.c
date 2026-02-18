@@ -2087,7 +2087,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         UINT numDigits = 0;
         for (UINT tmpCount = 1; tmpCount <= pCandList->dwCount; tmpCount *= 10)
         {
-            if (tmpCount > MAXUINT / 10)
+            if (tmpCount > MAXDWORD / 10)
                 break;
             ++numDigits;
         }
@@ -2357,7 +2357,7 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
             UINT digits = 0;
             for (UINT tmp = 1; tmp <= pCandList->dwCount; tmp *= 10)
             {
-                if (tmp > MAXUINT / 10)
+                if (tmp > MAXDWORD / 10)
                     break;
                 ++digits;
             }
@@ -3115,7 +3115,7 @@ ConIme_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         case WM_IME_SYSTEM:
-            if (wParam == 0x1A || wParam == 0x1B) // FIXME: Magic number
+            if (wParam == IMS_CONSOLEIME_1A || wParam == IMS_CONSOLEIME_1B)
             {
                 ConIme_OnImeSystem(hWnd, wParam, lParam);
                 return TRUE;
