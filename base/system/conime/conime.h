@@ -44,12 +44,14 @@
 
 #define _GCS_SINGLECHAR 0x2000
 
+#define IMEDISPLAY_MAX_X 160
+
 // IME display-related
 typedef struct tagIMEDISPLAY
 {
     UINT uCharInfoLen;
     BOOL bFlag;
-    CHAR_INFO CharInfo[160];
+    CHAR_INFO CharInfo[IMEDISPLAY_MAX_X];
 } IMEDISPLAY, *PIMEDISPLAY; // 0x288
 
 // Keyboard layout info
