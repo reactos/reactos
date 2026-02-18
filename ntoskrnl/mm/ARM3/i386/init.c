@@ -250,22 +250,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPFN Pfn1;
     ULONG Flags;
 
-#if defined(_GLOBAL_PAGES_ARE_AWESOME_)
-
-    /* Check for global bit */
-    if (KeFeatureBits & KF_GLOBAL_PAGE)
-    {
-        /* Set it on the template PTE and PDE */
-        ValidKernelPte.u.Hard.Global = TRUE;
-        ValidKernelPde.u.Hard.Global = TRUE;
-    }
-
-#endif
-
-    /* Now templates are ready */
-    TempPte = ValidKernelPte;
-    TempPde = ValidKernelPde;
-
     //
     // Set CR3 for the system process
     //
@@ -362,6 +346,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(PageFrameIndex != 0);
     DPRINT("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
     DPRINT("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
+
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+    MiInitializeGlobalPages();
+#endif
+
+    /* Now templates are ready */
+    TempPte = ValidKernelPte;
+    TempPde = ValidKernelPde;
 
     /* Convert nonpaged pool size from bytes to pages */
     MmMaximumNonPagedPoolInPages = MmMaximumNonPagedPoolInBytes >> PAGE_SHIFT;
@@ -501,7 +493,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[1] = PageFrameIndex << PAGE_SHIFT;
 
     /* Flush the TLB */
-    KeFlushCurrentTb();
+    KxFlushEntireCurrentTb();
 
     /* Release the lock */
     MiReleasePfnLock(OldIrql);

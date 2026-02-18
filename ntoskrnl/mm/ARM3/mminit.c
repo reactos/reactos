@@ -597,6 +597,119 @@ MiInitializeColorTables(VOID)
     }
 }
 
+#ifdef _GLOBAL_PAGES_ARE_AWESOME_
+
+CODE_SEG("INIT")
+static
+VOID
+MiInitGlobalPagesForPtes(_Inout_ PMMPTE StartingPte, _Inout_ PMMPTE EndingPte)
+{
+    PMMPTE PointerPte;
+
+    /* Loop the PTEs */
+    for (PointerPte = StartingPte; PointerPte <= EndingPte; PointerPte++)
+    {
+        if (!PointerPte->u.Hard.Valid) continue;
+
+        /* Set the global bit */
+        PointerPte->u.Hard.Global = MiIsGlobalPte(PointerPte);
+    }
+}
+
+CODE_SEG("INIT")
+static
+VOID
+MiInitGlobalPagesForPdes(_Inout_ PMMPDE StartingPde, _Inout_ PMMPDE EndingPde)
+{
+    PMMPDE PointerPde;
+    PMMPTE StartingPte;
+
+    /* Loop the PDEs */
+    for (PointerPde = StartingPde; PointerPde <= EndingPde; PointerPde++)
+    {
+        if (!PointerPde->u.Hard.Valid) continue;
+
+        /* Loop all PTEs for this PDE */
+        StartingPte = (PMMPTE)MiPteToAddress(PointerPde);
+        MiInitGlobalPagesForPtes(StartingPte, StartingPte + PTE_PER_PAGE - 1);
+    }
+}
+
+#if (_MI_PAGING_LEVELS >= 3)
+CODE_SEG("INIT")
+static
+VOID
+MiInitGlobalPagesForPpes(_Inout_ PMMPPE StartingPpe, _Inout_ PMMPPE EndingPpe)
+{
+    PMMPPE PointerPpe;
+    PMMPDE StartingPde;
+
+    /* Loop the PPEs */
+    for (PointerPpe = StartingPpe; PointerPpe <= EndingPpe; PointerPpe++)
+    {
+        if (!PointerPpe->u.Hard.Valid) continue;
+
+        StartingPde = (PMMPDE)MiPteToAddress(PointerPpe);
+        MiInitGlobalPagesForPdes(StartingPde, StartingPde + PDE_PER_PAGE - 1);
+    }
+}
+#endif
+
+#if (_MI_PAGING_LEVELS >= 4)
+CODE_SEG("INIT")
+static
+VOID
+MiInitGlobalPagesForPxes(_Inout_ PMMPXE StartingPxe, _Inout_ PMMPXE EndingPxe)
+{
+    PMMPXE PointerPxe;
+    PMMPPE StartingPpe;
+
+    /* Loop the PXEs */
+    for (PointerPxe = StartingPxe; PointerPxe <= EndingPxe; PointerPxe++)
+    {
+        if (!PointerPxe->u.Hard.Valid) continue;
+
+        StartingPpe = (PMMPPE)MiPteToAddress(PointerPxe);
+        MiInitGlobalPagesForPpes(StartingPpe, StartingPpe + PPE_PER_PAGE - 1);
+    }
+}
+#endif // (_MI_PAGING_LEVELS >= 4)
+
+CODE_SEG("INIT")
+VOID
+MiInitializeGlobalPages(VOID)
+{
+    /* Make sure everything is set up */
+    ASSERT(MmSystemRangeStart != NULL);
+    ASSERT(MmHyperSpaceEnd != NULL);
+    ASSERT(MmSessionBase != NULL);
+    ASSERT(MiSessionSpaceEnd != NULL);
+
+    /* Check for global bit */
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        /* Set it on the template PTE and PDE */
+        ValidKernelPte.u.Hard.Global = TRUE;
+        //ValidKernelPde.u.Hard.Global = TRUE; // FIXME: disabled for now
+    }
+
+#if (_MI_PAGING_LEVELS >= 4)
+    MiInitGlobalPagesForPxes(MiAddressToPxe((PVOID)MI_REAL_SYSTEM_RANGE_START),
+                             MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS));
+#elif (_MI_PAGING_LEVELS >= 3)
+    MiInitGlobalPagesForPpes(MiAddressToPpe(MmSystemRangeStart),
+                             MiAddressToPpe(MI_HIGHEST_SYSTEM_ADDRESS));
+#else
+    MiInitGlobalPagesForPdes(MiAddressToPde(MmSystemRangeStart),
+                             MiAddressToPde(MI_HIGHEST_SYSTEM_ADDRESS));
+#endif
+
+    /* Flush the entire TLB on this processor */
+    KxFlushEntireCurrentTb();
+}
+
+#endif // (_GLOBAL_PAGES_ARE_AWESOME_)
+
 #ifndef _M_AMD64
 CODE_SEG("INIT")
 BOOLEAN
@@ -1182,7 +1295,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Release the PFN lock and flush the TLB */
     DPRINT("Loader pages freed: %lx\n", LoaderPages);
     MiReleasePfnLock(OldIrql);
-    KeFlushCurrentTb();
+    KeFlushEntireTb(TRUE, TRUE);
 
     /* Free our run structure */
     ExFreePoolWithTag(Buffer, 'lMmM');
