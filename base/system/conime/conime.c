@@ -278,10 +278,10 @@ void ConIme_OnEnd(HWND hwnd, UINT uMsg)
 
 BOOL IntGrowEntries(void)
 {
-    SIZE_T cGrow = 5;
-    SIZE_T cNewCount = g_cEntries + cGrow;
-    SIZE_T cbOld = sizeof(PCONSOLE_ENTRY) * g_cEntries;
-    SIZE_T cbNew = sizeof(PCONSOLE_ENTRY) * cNewCount;
+    size_t cGrow = 5;
+    size_t cNewCount = g_cEntries + cGrow;
+    size_t cbOld = sizeof(PCONSOLE_ENTRY) * g_cEntries;
+    size_t cbNew = sizeof(PCONSOLE_ENTRY) * cNewCount;
     PCONSOLE_ENTRY* ppEntries = LocalAlloc(LPTR, cbNew);
     if (!ppEntries)
         return FALSE;
@@ -2495,7 +2495,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
     CopyData.dwData = MAGIC_SEND_GUIDELINE;
 
     BOOL ret = FALSE;
-    SIZE_T cbGuideLine = ImmGetGuideLineW(hIMC, GGL_STRING, NULL, 0);
+    size_t cbGuideLine = ImmGetGuideLineW(hIMC, GGL_STRING, NULL, 0);
     if (!cbGuideLine)
     {
         CopyData.cbData = 0;
@@ -2505,7 +2505,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
     }
     else
     {
-        SIZE_T cbAlloc = cbGuideLine + sizeof(UNICODE_NULL);
+        size_t cbAlloc = cbGuideLine + sizeof(UNICODE_NULL);
         PWSTR pszGuideLine = (PWSTR)LocalAlloc(LPTR, cbAlloc);
         if (pszGuideLine)
         {
