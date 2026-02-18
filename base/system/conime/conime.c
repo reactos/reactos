@@ -2471,6 +2471,8 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
+        if (!pEntry->pCandInfo)
+            return FALSE;
         PCANDINFO pCI = pEntry->pCandInfo;
         pCI->dwAttrsOffset = 2 * screenX + 4;
 
