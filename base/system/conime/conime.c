@@ -6,23 +6,26 @@
  */
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wincon.h>
 #include <imm.h>
-#include <stddef.h>
+#include <immdev.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include <immdev.h>
-#include <wincon_undoc.h>
 #include <undocuser.h>
 #include <imm32_undoc.h>
-#include "conime.h"
-#include "resource.h"
+#include <wincon_undoc.h>
 #include <strsafe.h>
 
 #define NTOS_MODE_USER
-#include <ndk/umtypes.h>
-#include <ndk/pstypes.h>
 #include <ndk/ntndk.h>
+
+#include "conime.h"
+#include "resource.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(conime);
