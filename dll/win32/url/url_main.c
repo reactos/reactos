@@ -98,7 +98,10 @@ BOOL WINAPI InetIsOffline(DWORD flags)
     while (Current) 
     {
         if (Current->OperStatus == IfOperStatusUp)
+        {
+            HeapFree(Adapters);
             return FALSE;
+        }
         Current = Current->Next;
     }
 
