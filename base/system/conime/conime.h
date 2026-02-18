@@ -115,7 +115,7 @@ typedef struct tagCONENTRY
     DWORD dwCandOffset;
     DWORD dwCandIndexMax;
     PDWORD pdwCandPageStart;
-    DWORD dwCandPageCount;
+    DWORD cbCandPageData;
     BOOL bSkipPageMsg;
     DWORD dwImeProp;
     BOOL bConsoleEnabled;

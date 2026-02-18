@@ -225,7 +225,7 @@ void IntFreeConsoleEntries(void)
             {
                 LocalFree(pEntry->pdwCandPageStart);
                 pEntry->pdwCandPageStart = NULL;
-                pEntry->dwCandPageCount = 0;
+                pEntry->cbCandPageData = 0;
             }
 
             if (pEntry->pKLInfo)
@@ -2120,7 +2120,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             nPageCountNeeded = (pCandList->dwCount / maxItemsPerPage + 10);
 
         if (pEntry->pdwCandPageStart &&
-            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+            pEntry->cbCandPageData != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2129,7 +2129,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
-            pEntry->dwCandPageCount = nPageCountNeeded * sizeof(DWORD);
+            pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
         if (bOpen)
@@ -2261,7 +2261,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             nPageCountNeeded = 100;
 
         if (pEntry->pdwCandPageStart &&
-            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+            pEntry->cbCandPageData != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2269,7 +2269,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
-            pEntry->dwCandPageCount = nPageCountNeeded * sizeof(DWORD);
+            pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
         if (bOpen)
@@ -2399,7 +2399,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             nPageCountNeeded = 100;
 
         if (pEntry->pdwCandPageStart &&
-            pEntry->dwCandPageCount != nPageCountNeeded * sizeof(DWORD))
+            pEntry->cbCandPageData != nPageCountNeeded * sizeof(DWORD))
         {
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
@@ -2407,7 +2407,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
-            pEntry->dwCandPageCount = nPageCountNeeded * sizeof(DWORD);
+            pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
         DWORD sepIdx = 0;
