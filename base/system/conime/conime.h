@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Console IME
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Implementing IME Input for Far-East Asian
+ * PURPOSE:     Implementing Console IME Input for Far-East Asian
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -12,25 +12,20 @@
 #define LANGID_JAPANESE 0x411 // Japanese language
 #define LANGID_KOREAN 0x412 // Korean language
 
-#define CODEPAGE_CHINESE_SIMPLIFIED 936 // Simplified Chinese GB2312 codepage
-#define CODEPAGE_CHINESE_TRADITIONAL 950 // Traditional Chinese Big5 codepage
-#define CODEPAGE_JAPANESE 932 // Japanese Shift_JIS codepage
-#define CODEPAGE_KOREAN 949 // Korean codepage
-
-#define WM_USER_INIT (WM_USER + 0x00)
-#define WM_USER_UNINIT (WM_USER + 0x01)
-#define WM_USER_SWITCHIME (WM_USER + 0x02)
-#define WM_USER_DEACTIVATE (WM_USER + 0x03)
-#define WM_USER_SIMHOTKEY (WM_USER + 0x04)
-#define WM_USER_GETIMESTATE (WM_USER + 0x05)
-#define WM_USER_SETIMESTATE (WM_USER + 0x06)
-#define WM_USER_SETSCREENSIZE (WM_USER + 0x07)
-#define WM_USER_SENDIMESTATUS (WM_USER + 0x08)
-#define WM_USER_CHANGEKEYBOARD (WM_USER + 0x09)
-#define WM_USER_SETCODEPAGE (WM_USER + 0x0A)
-#define WM_USER_GO (WM_USER + 0x0B)
-#define WM_USER_GONEXT (WM_USER + 0x0C)
-#define WM_USER_GOBACK (WM_USER + 0x0D)
+#define WM_USER_INIT (WM_USER + 0x00) // 0x400
+#define WM_USER_UNINIT (WM_USER + 0x01) // 0x401
+#define WM_USER_SWITCHIME (WM_USER + 0x02) // 0x402
+#define WM_USER_DEACTIVATE (WM_USER + 0x03) // 0x403
+#define WM_USER_SIMHOTKEY (WM_USER + 0x04) // 0x404
+#define WM_USER_GETIMESTATE (WM_USER + 0x05) // 0x405
+#define WM_USER_SETIMESTATE (WM_USER + 0x06) // 0x406
+#define WM_USER_SETSCREENSIZE (WM_USER + 0x07) // 0x407
+#define WM_USER_SENDIMESTATUS (WM_USER + 0x08) // 0x408
+#define WM_USER_CHANGEKEYBOARD (WM_USER + 0x09) // 0x409
+#define WM_USER_SETCODEPAGE (WM_USER + 0x0A) // 0x40A
+#define WM_USER_GO (WM_USER + 0x0B) // 0x40B
+#define WM_USER_GONEXT (WM_USER + 0x0C) // 0x40C
+#define WM_USER_GOBACK (WM_USER + 0x0D) // 0x40D
 
 #define WM_ROUTE 0x800
 #define WM_ROUTE_KEYDOWN (WM_KEYDOWN + WM_ROUTE) // 0x900
@@ -44,24 +39,32 @@
 
 #define _GCS_SINGLECHAR 0x2000
 
+#define IMEDISPLAY_MAX_X 160
+
+// IME display-related
 typedef struct tagIMEDISPLAY
 {
     UINT uCharInfoLen;
     BOOL bFlag;
-    CHAR_INFO CharInfo[160];
+    CHAR_INFO CharInfo[IMEDISPLAY_MAX_X];
 } IMEDISPLAY, *PIMEDISPLAY; // 0x288
 
+// Keyboard layout info
 typedef struct tagKLINFO
 {
     HKL hKL;
-    DWORD dwImeState;
+    DWORD dwConversion;
 } KLINFO, *PKLINFO;
 
-// Flags for KLINFO.dwImeState
-#define IME_STATE_OPEN 0x20000000
-#define IME_STATE_DEACTIVATE 0x40000000
-#define IME_STATE_MASK (IME_STATE_OPEN | IME_STATE_DEACTIVATE)
+// Flags for KLINFO.dwConversion
+#define _IME_CMODE_OPEN 0x20000000
+#define _IME_CMODE_DEACTIVATE 0x40000000
+#define _IME_CMODE_MASK (_IME_CMODE_OPEN | _IME_CMODE_DEACTIVATE)
 
+#define MAX_CANDLIST 32
+#define MAX_ATTR_COLORS 8
+
+// IME composition string info
 typedef struct tagCOMPSTRINFO
 {
     DWORD dwSize;
@@ -71,18 +74,18 @@ typedef struct tagCOMPSTRINFO
     DWORD dwCompStrOffset;
     DWORD dwResultStrLen;
     DWORD dwResultStrOffset;
-    WORD  wAttrColor[8];
-} COMPSTRINFO, *PCOMPSTRINFO; // 0x2C
+    WORD  awAttrColor[MAX_ATTR_COLORS];
+} COMPSTRINFO, *PCOMPSTRINFO;
 
+// IME candidate info
 typedef struct tagCANDINFO
 {
     DWORD dwAttrsOffset;
     WCHAR szCandStr[ANYSIZE_ARRAY];
 } CANDINFO, *PCANDINFO;
 
-#define MAX_CANDLIST 32
-
-typedef struct tagCONSOLE_ENTRY
+// Console entry
+typedef struct tagCONENTRY
 {
     HANDLE hConsole;
     HWND hwndConsole;
@@ -99,7 +102,7 @@ typedef struct tagCONSOLE_ENTRY
     WCHAR szMode[10];
     BOOL bInComposition;
     PCOMPSTRINFO pCompStr;
-    WORD AttrColors[8];
+    WORD awAttrColor[MAX_ATTR_COLORS]; // See COMPSTRINFO.awAttrColor
     BOOL bHasAnyCand;
     PCANDIDATELIST apCandList[MAX_CANDLIST]; // See acbCandList below
     PCANDINFO pCandInfo;
@@ -108,11 +111,11 @@ typedef struct tagCONSOLE_ENTRY
     DWORD dwCandOffset;
     DWORD dwCandIndexMax;
     PDWORD pdwCandPageStart;
-    DWORD dwCandPageCount;
+    DWORD cbCandPageData;
     BOOL bSkipPageMsg;
     DWORD dwImeProp;
     BOOL bConsoleEnabled;
     BOOL bWndEnabled;
     INT cKLs;
     PKLINFO pKLInfo;
-} CONSOLE_ENTRY, *PCONSOLE_ENTRY;
+} CONENTRY, *PCONENTRY;
