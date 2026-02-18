@@ -2086,7 +2086,11 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
 
         UINT numDigits = 0;
         for (UINT tmpCount = 1; tmpCount <= pCandList->dwCount; tmpCount *= 10)
-            numDigits++;
+        {
+            if (tmpCount > MAXUINT / 10)
+                break;
+            ++numDigits;
+        }
 
         UINT labelWidth = 2 * numDigits + 1;
 
@@ -2352,7 +2356,11 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCan
         {
             UINT digits = 0;
             for (UINT tmp = 1; tmp <= pCandList->dwCount; tmp *= 10)
-                digits++;
+            {
+                if (tmp > MAXUINT / 10)
+                    break;
+                ++digits;
+            }
             labelWidth = 2 * digits + 1;
         }
 
