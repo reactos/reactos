@@ -456,7 +456,7 @@ void IntFillImeCandidatesCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
     for (PWCHAR pchSrc = pCandInfo->szCandStr; *pchSrc; ++pchSrc, ++pbAttrIndex, ++pDest)
     {
         pDest->Char.UnicodeChar = *pchSrc;
-        if (*pbAttrIndex < 8)
+        if (*pbAttrIndex < _countof(pCompStr->awAttrColor))
             pDest->Attributes = pCompStr->awAttrColor[*pbAttrIndex];
     }
 }
@@ -502,9 +502,7 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 
 void IntFillImeCompStrCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
-    UINT maxX = pEntry->ScreenSize.X;
-    if (maxX > IMEDISPLAY_MAX_X)
-        maxX = IMEDISPLAY_MAX_X;
+    UINT maxX = max(pEntry->ScreenSize.X, IMEDISPLAY_MAX_X);
 
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     if (!pCompStr || !pCompStr->dwCompStrLen)
@@ -520,9 +518,9 @@ void IntFillImeCompStrCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     {
         pDest->Char.UnicodeChar = pchSrc[ich];
 
-        BYTE colorIndex = pbAttrIndex[ich];
-        if (colorIndex < 8)
-            pDest->Attributes = pCompStr->awAttrColor[colorIndex];
+        BYTE ibColor = pbAttrIndex[ich];
+        if (ibColor < _countof(pCompStr->awAttrColor))
+            pDest->Attributes = pCompStr->awAttrColor[ibColor];
     }
 }
 
@@ -537,9 +535,7 @@ UINT IntGetCharInfoWidth(PCHAR_INFO pCharInfo, UINT cch)
 //! Adjusts the width of the status display and pads it with spaces
 UINT IntFillImeSpaceCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
-    UINT maxX = pEntry->ScreenSize.X;
-    if (maxX > IMEDISPLAY_MAX_X)
-        maxX = IMEDISPLAY_MAX_X;
+    UINT maxX = max(pEntry->ScreenSize.X, IMEDISPLAY_MAX_X);
 
     UINT index = cch;
     UINT width = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
@@ -769,7 +765,8 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     if (pCompStr->dwCompStrLen > 0)
     {
         PWCHAR pszComp = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-        PBYTE pbAttrs = (PBYTE)pszComp + (pCompStr->dwCompStrLen + sizeof(UNICODE_NULL));
+        size_t cbCompStr = pCompStr->dwCompStrLen + sizeof(UNICODE_NULL);
+        PBYTE pbAttrs = (PBYTE)pszComp + cbCompStr;
 
         while (displayCols < 10)
         {
@@ -800,17 +797,14 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     PWCHAR pszCand = pCandInfo->szCandStr;
     PBYTE pbCandAttrs = (PBYTE)pCandInfo + pCandInfo->dwAttrsOffset;
 
-    if (*pszCand)
+    while (*pszCand)
     {
-        while (*pszCand)
-        {
-            pDisplay->CharInfo[cch].Char.UnicodeChar = *pszCand;
-            pDisplay->CharInfo[cch].Attributes = pCompStr->awAttrColor[*pbCandAttrs];
-            ++cch;
+        pDisplay->CharInfo[cch].Char.UnicodeChar = *pszCand;
+        pDisplay->CharInfo[cch].Attributes = pCompStr->awAttrColor[*pbCandAttrs];
+        ++cch;
 
-            ++pszCand;
-            ++pbCandAttrs;
-        }
+        ++pszCand;
+        ++pbCandAttrs;
     }
 
     return cch;
@@ -2087,13 +2081,8 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = pEntry->ScreenSize.X;
-        if (screenX > 128)
-            screenX = 128;
-        if (screenX < 12)
-            screenX = 12;
-
-        UINT usableWidth = screenX - 8; // Margin?
+        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
+        UINT usableWidth = screenX - 8;
         if (usableWidth < 7)
             usableWidth = 7;
 
@@ -2246,26 +2235,20 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = pEntry->ScreenSize.X;
-        if (screenX > 128)
-            screenX = 128;
-        if (screenX < 12)
-            screenX = 12;
+        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
 
         INT usableWidth = (INT)screenX - 25;
+
         UINT maxItemsPerPage;
         if (usableWidth <= 7)
-        {
             maxItemsPerPage = 1;
-        }
         else
-        {
             maxItemsPerPage = (UINT)((usableWidth - 7) / 5);
-        }
+
         if (maxItemsPerPage > 9)
             maxItemsPerPage = 9;
 
-        DWORD nPageCountNeeded = (pCandList->dwCount / maxItemsPerPage + 10);
+        DWORD nPageCountNeeded = pCandList->dwCount / maxItemsPerPage + 10;
         if (nPageCountNeeded < 100)
             nPageCountNeeded = 100;
 
@@ -2385,11 +2368,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = pEntry->ScreenSize.X;
-        if (screenX > 128)
-            screenX = 128;
-        if (screenX < 12)
-            screenX = 12;
+        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
 
         UINT maxItems = (screenX - 7) / 5;
         if (maxItems > 9) maxItems = 9;
