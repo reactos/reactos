@@ -25,7 +25,7 @@
 #include <ndk/ntndk.h>
 
 #include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(comime);
+WINE_DEFAULT_DEBUG_CHANNEL(conime);
 
 // Special values for COPYDATASTRUCT.dwData
 #define MAGIC_SEND_COMPSTR 0x4B425930 // 'KBY0'
