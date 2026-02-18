@@ -1175,7 +1175,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
         return FALSE;
 
     pKLInfo->hKL = NULL;
-    pKLInfo->dwImeState = 0;
+    pKLInfo->dwConversion = 0;
     pEntry->cKLs = 1;
 
     HIMC hIMC = ImmCreateContext();
@@ -2524,22 +2524,22 @@ DWORD IntGetImeState(HWND hWnd, HANDLE hConsole)
 
     HIMC hIMC = ImmGetContext(hWnd);
     if (!hIMC)
-        return IME_STATE_DEACTIVATE;
+        return _IME_CMODE_DEACTIVATE;
 
     ImmGetConversionStatus(hIMC, &pEntry->dwConversion, &pEntry->dwSentence);
     pEntry->bOpened = IntIsImeOpen(hIMC, pEntry);
     ImmReleaseContext(hWnd, hIMC);
-    return pEntry->dwConversion + (pEntry->bOpened ? IME_STATE_OPEN : 0);
+    return pEntry->dwConversion + (pEntry->bOpened ? _IME_CMODE_OPEN : 0);
 }
 
 //! Sets the IME state for a specific console entry.
-BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwImeState)
+BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
-    if (dwImeState & IME_STATE_DEACTIVATE)
+    if (dwConversion & _IME_CMODE_DEACTIVATE)
     {
         ImmSetActiveContextConsoleIME(hwnd, FALSE);
         ImmAssociateContext(hwnd, NULL);
@@ -2556,11 +2556,11 @@ BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwImeState)
     if (!hIMC)
         return TRUE;
 
-    BOOL bOpened = !!(dwImeState & IME_STATE_OPEN);
+    BOOL bOpened = !!(dwConversion & _IME_CMODE_OPEN);
     pEntry->bOpened = bOpened;
     ImmSetOpenStatus(hIMC, bOpened);
 
-    DWORD dwConversion = (dwImeState & ~IME_STATE_MASK);
+    DWORD dwConversion = (dwConversion & ~_IME_CMODE_MASK);
     if (pEntry->dwConversion != dwConversion)
     {
         pEntry->dwConversion = dwConversion;
@@ -2900,8 +2900,8 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
 
         pEntry->pKLInfo[iKL].hKL = hOldKL;
 
-        DWORD dwConversion = pEntry->dwConversion | (pEntry->bOpened ? IME_STATE_OPEN : 0);
-        pEntry->pKLInfo[iKL].dwImeState = dwConversion;
+        DWORD dwConversion = pEntry->dwConversion | (pEntry->bOpened ? _IME_CMODE_OPEN : 0);
+        pEntry->pKLInfo[iKL].dwConversion = dwConversion;
     }
 
     ActivateKeyboardLayout(hNewKL, 0);
@@ -2927,7 +2927,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
             if (pEntry->pKLInfo[iKL].hKL != hNewKL)
                 continue;
 
-            IntSetImeState(hwnd, hConsole, pEntry->pKLInfo[iKL].dwImeState);
+            IntSetImeState(hwnd, hConsole, pEntry->pKLInfo[iKL].dwConversion);
             ConIme_SendImeStatus(hwnd);
 
             if (IntFillImeDisplay(pEntry, pDisplay))
@@ -2938,7 +2938,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
     }
     else // Non-IME HKL?
     {
-        IntSetImeState(hwnd, hConsole, pEntry->dwConversion & ~IME_STATE_OPEN);
+        IntSetImeState(hwnd, hConsole, pEntry->dwConversion & ~_IME_CMODE_OPEN);
         pDisplay->uCharInfoLen = 0;
         pDisplay->bFlag = 1;
         IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);

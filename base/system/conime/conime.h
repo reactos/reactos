@@ -56,13 +56,13 @@ typedef struct tagIMEDISPLAY
 typedef struct tagKLINFO
 {
     HKL hKL;
-    DWORD dwImeState;
+    DWORD dwConversion;
 } KLINFO, *PKLINFO;
 
-// Flags for KLINFO.dwImeState
-#define IME_STATE_OPEN 0x20000000
-#define IME_STATE_DEACTIVATE 0x40000000
-#define IME_STATE_MASK (IME_STATE_OPEN | IME_STATE_DEACTIVATE)
+// Flags for KLINFO.dwConversion
+#define _IME_CMODE_OPEN 0x20000000
+#define _IME_CMODE_DEACTIVATE 0x40000000
+#define _IME_CMODE_MASK (_IME_CMODE_OPEN | _IME_CMODE_DEACTIVATE)
 
 // IME composition string info
 typedef struct tagCOMPSTRINFO
