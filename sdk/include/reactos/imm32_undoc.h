@@ -46,8 +46,8 @@ extern "C" {
 #define IMS_IMEACTIVATE         0x17
 #define IMS_IMEDEACTIVATE       0x18
 #define IMS_ACTIVATELAYOUT      0x19
-#define IMS_CONSOLEIME_1A       0x1A // FIXME: name
-#define IMS_CONSOLEIME_1B       0x1B // FIXME: name
+#define IMS_CONSOLEIME_1A       0x1A /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1A), used internally by conime for Windows compatibility. */
+#define IMS_CONSOLEIME_1B       0x1B /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1B), used internally by conime for Windows compatibility. */
 #define IMS_GETIMEMENU          0x1C
 #define IMS_IMEMENUITEMSELECTED 0x1D
 #define IMS_GETCONTEXT          0x1E
