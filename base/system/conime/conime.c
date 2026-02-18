@@ -2129,6 +2129,8 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
+            if (!pEntry->pdwCandPageStart)
+                return FALSE;
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
@@ -2269,6 +2271,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
+            if (!pEntry->pdwCandPageStart)
+                return FALSE;
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
@@ -2407,6 +2411,8 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
+            if (!pEntry->pdwCandPageStart)
+                return FALSE;
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
