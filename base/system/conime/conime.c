@@ -251,13 +251,18 @@ void IntFreeConsoleEntries(void)
     LeaveCriticalSection(&g_csLock);
 }
 
+static void IntSetCurrentConsole(HANDLE hConsole)
+{
+    g_hConsole = hConsole;
+}
+
 //! Finds the CONENTRY structure corresponding to the specified console handle.
 PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
 {
     EnterCriticalSection(&g_csLock);
 
     if (!g_hConsole)
-        g_hConsole = hConsole;
+        IntSetCurrentConsole(hConsole);
 
     PCONENTRY pFound = NULL;
     for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
@@ -971,9 +976,7 @@ BOOL ConIme_OnSwitchIme(HWND hwnd, HANDLE hConsole, HKL hKL)
     }
 
     ImmSetActiveContextConsoleIME(hwnd, TRUE);
-
-    g_hConsole = hConsole;
-
+    IntSetCurrentConsole(hConsole);
     ConIme_OnNotifySetOpenStatus(hwnd);
 
     if (pEntry->pCompStr)
