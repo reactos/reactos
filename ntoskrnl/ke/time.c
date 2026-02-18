@@ -22,31 +22,16 @@ BOOLEAN KiTimeAdjustmentEnabled = FALSE;
 
 FORCEINLINE
 VOID
-KiWriteSystemTime(volatile KSYSTEM_TIME *SystemTime, ULARGE_INTEGER NewTime)
-{
-#ifdef _WIN64
-    /* Do a single atomic write */
-    *(ULONGLONG*)SystemTime = NewTime.QuadPart;
-#else
-    /* Update in 3 steps, so that a reader can recognize partial updates */
-    SystemTime->High1Time = NewTime.HighPart;
-    SystemTime->LowPart = NewTime.LowPart;
-#endif
-    SystemTime->High2Time = NewTime.HighPart;
-}
-
-FORCEINLINE
-VOID
 KiCheckForTimerExpiration(
     PKPRCB Prcb,
     PKTRAP_FRAME TrapFrame,
-    ULARGE_INTEGER InterruptTime)
+    LARGE_INTEGER InterruptTime)
 {
     ULONG Hand;
 
     /* Check for timer expiration */
     Hand = KeTickCount.LowPart & (TIMER_TABLE_SIZE - 1);
-    if (KiTimerTableListHead[Hand].Time.QuadPart <= InterruptTime.QuadPart)
+    if (KiTimerTableListHead[Hand].Time.QuadPart <= (ULONG64)InterruptTime.QuadPart)
     {
         /* Check if we are already doing expiration */
         if (!Prcb->TimerRequest)
@@ -66,7 +51,7 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
                    IN KIRQL Irql)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    ULARGE_INTEGER CurrentTime, InterruptTime;
+    LARGE_INTEGER CurrentTime, InterruptTime;
     LONG OldTickOffset;
 
     /* Check if this tick is being skipped */
