@@ -59,7 +59,7 @@ void IntFormatNumber(PWSTR pszBuffer, UINT value, UINT width)
         do
         {
             divisor *= 10;
-            tempWidth--;
+            --tempWidth;
         } while (tempWidth);
     }
 
@@ -167,7 +167,7 @@ BOOL IntIsLogOnSession(void)
     HANDLE hToken;
     ULONG returnLength;
     TOKEN_STATISTICS tokenStats;
-    const LUID systemLuid = SYSTEM_LUID;
+    static const LUID systemLuid = SYSTEM_LUID;
 
     Status = NtOpenProcessToken(INVALID_HANDLE_VALUE, TOKEN_QUERY, &hToken);
     if (!NT_SUCCESS(Status))
