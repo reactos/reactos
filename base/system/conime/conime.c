@@ -2561,11 +2561,11 @@ BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
     pEntry->bOpened = bOpened;
     ImmSetOpenStatus(hIMC, bOpened);
 
-    DWORD dwConversion = (dwConversion & ~_IME_CMODE_MASK);
+    DWORD dwImeConversion = (dwConversion & ~_IME_CMODE_MASK);
     if (pEntry->dwConversion != dwConversion)
     {
-        pEntry->dwConversion = dwConversion;
-        ImmSetConversionStatus(hIMC, dwConversion, pEntry->dwSentence);
+        pEntry->dwConversion = dwImeConversion;
+        ImmSetConversionStatus(hIMC, dwImeConversion, pEntry->dwSentence);
     }
 
     ImmReleaseContext(hwnd, hIMC);
