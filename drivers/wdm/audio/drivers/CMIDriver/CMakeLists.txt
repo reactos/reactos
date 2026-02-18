@@ -31,7 +31,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(cmipci PRIVATE -Wno-enum-constexpr-conversion)
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "16" AND
+       CMAKE_C_COMPILER_VERSION VERSION_LESS "20.1")
+        target_compile_options(cmipci PRIVATE -Wno-enum-constexpr-conversion)
+    endif()
 endif()
 
 add_pch(cmipci precomp.h "${PCH_SKIP_SOURCE}")

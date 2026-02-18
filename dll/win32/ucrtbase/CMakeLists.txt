@@ -22,11 +22,9 @@ add_library(ucrtbase SHARED
     ucrtbase.def
 )
 
-if(NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ucrtbase PRIVATE -Wno-builtin-declaration-mismatch)
-endif()
-
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Silence warnings in ucrtbase_stubs.c
     target_compile_options(ucrtbase PRIVATE -Wno-incompatible-library-redeclaration)
 endif()

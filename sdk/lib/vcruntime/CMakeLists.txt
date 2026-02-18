@@ -14,10 +14,10 @@ endif()
 # Silence GCC/Clang warnings
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(
-        -Wno-builtin-declaration-mismatch
-        -Wno-unused-function
-    )
+    add_compile_options(-Wno-unused-function)
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-Wno-builtin-declaration-mismatch)
+    endif()
 endif()
 
 add_compile_definitions(

@@ -37,10 +37,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Silence GCC/Clang warnings
     add_compile_options(
-        -Wno-unknown-warning-option
         -Wno-unused-function
         -Wno-unknown-pragmas
-        -Wno-builtin-declaration-mismatch
         -Wno-parentheses
         -Wno-unused-variable
         -Wno-sign-compare
@@ -63,6 +61,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
         -Wno-ignored-attributes
         -Wno-uninitialized
     )
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-Wno-builtin-declaration-mismatch)
+    endif()
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>)
 endif()
 

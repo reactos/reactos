@@ -158,9 +158,9 @@ endif()
 add_compile_options(/w14115)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc>")
     add_compile_options(
-        -Wno-unknown-warning-option
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>
+        $<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc>
         -Wno-multichar
         -Wno-char-subscripts
         -Wno-microsoft-enum-forward-reference

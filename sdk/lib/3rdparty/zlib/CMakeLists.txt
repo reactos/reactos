@@ -31,7 +31,7 @@ list(APPEND MINIZIP_SOURCE
     contrib/minizip/zip.c
     contrib/minizip/zip.h)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
     add_compile_options(-Wno-deprecated-non-prototype)
 endif()
 
