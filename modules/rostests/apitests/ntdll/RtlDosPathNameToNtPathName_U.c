@@ -133,7 +133,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 	      memcmp(NtName.Buffer, L"\\??\\", 8) == 0;
 	check_result(bOK, "NtName does not start with \"\\??\\\"");
 	if (!bOK) {
-		return;
+        goto _exit;
 	}
 
 	if (pwszExpected) {
@@ -148,7 +148,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 			printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
 			printf("Expected: %2Iu chars \"%S\"\n", lenExp, pwszExpected);
 			printf("Actual  : %2Iu chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
-			return;
+            goto _exit;
 		}
 	} else
 	if (NtName.Length)
@@ -170,7 +170,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 			printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
 			printf("Expected: %2Iu chars \"%S\"\n", lenExp, pwszExpectedPartName);
 			printf("Actual  : %2Iu chars \"%S\"\n", lenAct, lenAct ? PartName : L"(null)");
-			return;
+            goto _exit;
 		}
 	} else
 	if (PartName)
@@ -179,6 +179,10 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		printf("input:  : %2Iu chars \"%S\"\n", wcslen(pwsz), pwsz);
 		printf("Actual  : %2Iu chars %S\n", wcslen(PartName), PartName);
 	}
+
+_exit:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtName.Buffer);
+    RtlReleaseRelativeName(&RelativeName);
 }
 
 // NULL Expected means result is expected to be NULL too.

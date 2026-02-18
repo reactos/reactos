@@ -4,7 +4,7 @@
  * FILE:            reactos/dll/win32/fmifs/query.c
  * PURPOSE:         Query volume information
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -88,6 +88,7 @@ QueryDeviceInformation(
     GET_LENGTH_INFORMATION LengthInformation;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DeviceName;
+    BOOLEAN FreeDeviceName;
     HANDLE FileHandle;
     NTSTATUS Status;
     WCHAR DiskDevice[MAX_PATH];
@@ -115,11 +116,13 @@ QueryDeviceInformation(
         if (!QueryDosDeviceW(DriveName, DiskDevice, ARRAYSIZE(DiskDevice)))
             return FALSE;
         RtlInitUnicodeString(&DeviceName, DiskDevice);
+        FreeDeviceName = FALSE;
     }
     else
     {
         /* Trim the trailing backslash since we will work with a device object */
         DeviceName.Length -= sizeof(WCHAR);
+        FreeDeviceName = TRUE;
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -134,6 +137,10 @@ QueryDeviceInformation(
                         &Iosb,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    if (FreeDeviceName)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DeviceName.Buffer);
+    }
     if (!NT_SUCCESS(Status))
         return FALSE;
 

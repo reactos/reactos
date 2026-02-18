@@ -796,8 +796,10 @@ Test_ImageSection(void)
     if (!NT_SUCCESS(Status))
     {
         skip("Failed to open file %s\n", wine_dbgstr_wn(FileName.Buffer, FileName.Length / sizeof(WCHAR)));
+        RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
         return;
     }
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
 
     /* Create a data section with write access */
     Status = NtCreateSection(&DataSectionHandle,
@@ -1056,6 +1058,7 @@ Test_ImageSection2(void)
                         &IoStatusBlock,
                         FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileName.Buffer);
     ok_ntstatus(Status, STATUS_SUCCESS);
     printf("Opened file with handle %p\n", FileHandle);
 
