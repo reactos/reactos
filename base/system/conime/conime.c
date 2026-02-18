@@ -905,6 +905,8 @@ void IntSendConversionStatusCHT(HWND hwnd, PCONENTRY pEntry)
 void IntSendConversionStatusJPNorKOR(HWND hwnd, PCONENTRY pEntry)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
+    if (!pCompStr)
+        return;
 
     COPYDATASTRUCT CopyData;
     CopyData.dwData = MAGIC_SEND_COMPSTR;
@@ -1814,7 +1816,7 @@ UINT IntFormatCandLineJPNorKOR(
             break;
 
         if (i == pCandList->dwSelection)
-            FillMemory(pbCurrentAttr, cchSrc + 2, 1);
+            FillMemory(pbCurrentAttr, cchSrc + 2, FOREGROUND_BLUE);
 
         *pszCurrentPos++ = (WCHAR)(L'0' + candNum);
         *pszCurrentPos++ = L':';
@@ -1925,7 +1927,7 @@ UINT IntFormatCandLineCHT(
             break;
 
         if (i == pCandList->dwSelection)
-            FillMemory(pbCurrentAttr, cchSrc + 3, 1);
+            FillMemory(pbCurrentAttr, cchSrc + 2, FOREGROUND_BLUE);
 
         *pszCurrentStr++ = (WCHAR)(L'0' + candidateNum);
         *pszCurrentStr++ = L':';
@@ -2014,7 +2016,7 @@ UINT IntFormatCandLineCHS(
             break;
 
         if (i == pCandList->dwSelection)
-            FillMemory(pbCurrentAttr, cchSrc + 2, 1);
+            FillMemory(pbCurrentAttr, cchSrc + 2, FOREGROUND_BLUE);
 
         *pszCurrentPos++ = (WCHAR)(L'0' + candidateNum);
         *pszCurrentPos++ = L':';
