@@ -3165,7 +3165,7 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     }
 
     INT x, y, cx, cy, cxScreen, cyMenu;
-    HWND hWnd = NULL;
+    HWND hWnd;
 
     // Register window class
     WNDCLASSEXW wc = { sizeof(wc) };
@@ -3177,7 +3177,7 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     wc.lpszClassName = L"ConsoleIMEClass";
     ATOM atom = RegisterClassExW(&wc);
     if (!atom)
-        goto Cleanup;
+        goto Cleanup1;
 
     // Create main window
     cxScreen = GetSystemMetrics(SM_CXSCREEN);
@@ -3189,7 +3189,7 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     hWnd = CreateWindowW(L"ConsoleIMEClass", L"", WS_OVERLAPPEDWINDOW,
                          x, y, cx, cy, NULL, NULL, hInstance, NULL);
     if (!hWnd)
-        goto Cleanup;
+        goto Cleanup2;
 
     // Console IME registration and threaded input synchronization
     if (RegisterConsoleIME(hWnd, &g_dwAttachToThreadId) &&
@@ -3198,19 +3198,20 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
         SetEvent(hStartUpEvent);
         CloseHandle(hStartUpEvent);
         DeleteCriticalSection(&g_csLock);
-        return TRUE;
+        return TRUE; // Success
     }
 
-Cleanup:
     if (g_dwAttachToThreadId)
         UnregisterConsoleIME();
 
     if (hWnd)
         DestroyWindow(hWnd);
 
+Cleanup2:
     if (atom)
         UnregisterClassW(L"ConsoleIMEClass", hInstance);
 
+Cleanup1:
     if (hStartUpEvent)
     {
         SetEvent(hStartUpEvent); // Set to release the waiting side even if it fails
@@ -3218,7 +3219,7 @@ Cleanup:
     }
 
     DeleteCriticalSection(&g_csLock);
-    return FALSE;
+    return FALSE; // Failed
 }
 
 INT WINAPI
