@@ -2166,7 +2166,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         {
             if (pEntry->pCandInfo)
                 LocalFree(pEntry->pCandInfo);
-            pEntry->pCandInfo = (PCANDINFO)LocalAlloc(LPTR, cbCandInfo);
+            pEntry->pCandInfo = LocalAlloc(LPTR, cbCandInfo);
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
@@ -2467,7 +2467,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         {
             if (pEntry->pCandInfo)
                 LocalFree(pEntry->pCandInfo);
-            pEntry->pCandInfo = (PCANDINFO)LocalAlloc(LPTR, cbCandInfo);
+            pEntry->pCandInfo = LocalAlloc(LPTR, cbCandInfo);
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
@@ -2568,7 +2568,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
     else
     {
         size_t cbAlloc = cbGuideLine + sizeof(UNICODE_NULL);
-        PWSTR pszGuideLine = (PWSTR)LocalAlloc(LPTR, cbAlloc);
+        PWSTR pszGuideLine = LocalAlloc(LPTR, cbAlloc);
         if (pszGuideLine)
         {
             ImmGetGuideLineW(hIMC, GGL_STRING, pszGuideLine, cbGuideLine);
@@ -2964,7 +2964,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
         if (iKL >= pEntry->cKLs)
         {
             INT newCount = pEntry->cKLs + 1;
-            PKLINFO phNewKLs = (PKLINFO)LocalAlloc(LPTR, newCount * sizeof(KLINFO));
+            PKLINFO phNewKLs = LocalAlloc(LPTR, newCount * sizeof(KLINFO));
             if (!phNewKLs)
                 return;
 
