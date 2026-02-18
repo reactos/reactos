@@ -54,6 +54,11 @@ NTAPI
 ExGetCurrentProcessorCpuUsage(
     PULONG CpuUsage);
 
+
+NTSTATUS
+NdisQueryPciBusInterface(
+    IN PLOGICAL_ADAPTER Adapter);
+
 /* portability fixes */
 #ifdef _M_AMD64
 #define KfReleaseSpinLock KeReleaseSpinLock

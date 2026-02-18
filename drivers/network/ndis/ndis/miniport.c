@@ -2073,6 +2073,9 @@ NdisIPnPStartDevice(
     }
   WrapperContext.SlotNumber = Adapter->NdisMiniportBlock.SlotNumber;
 
+  if (Adapter->NdisMiniportBlock.BusType == NdisInterfacePci)
+    Status = NdisQueryPciBusInterface(Adapter);
+
   NdisCloseConfiguration(ConfigHandle);
 
   /* Set handlers (some NDIS macros require these) */
@@ -2247,6 +2250,14 @@ NdisIPnPStopDevice(
     {
       ExFreePool(Adapter->NdisMiniportBlock.AllocatedResourcesTranslated);
       Adapter->NdisMiniportBlock.AllocatedResourcesTranslated = NULL;
+    }
+
+    if (Adapter->BusInterface.SetBusData != NULL)
+    {
+      if (Adapter->BusInterface.InterfaceDereference)
+        Adapter->BusInterface.InterfaceDereference(Adapter->BusInterface.Context);
+
+      Adapter->BusInterface.SetBusData = NULL;
     }
 
   if (Adapter->NdisMiniportBlock.Resources)
