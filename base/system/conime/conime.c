@@ -405,14 +405,14 @@ BOOL IntGetLayoutText(PCONENTRY pEntry)
         INT iEntry;
         for (iEntry = 0; iEntry < _countof(awchTable); iEntry += COLUMN_COUNT)
         {
-            if (RtlEqualMemory(pszText, &awchTable[COLUMN_COUNT * iEntry], 2 * sizeof(WCHAR)))
+            if (RtlEqualMemory(pszText, &awchTable[iEntry], 2 * sizeof(WCHAR)))
                 break;
         }
 
         if (iEntry < _countof(awchTable))
         {
             StringCchCopyW(pEntry->szMode, _countof(pEntry->szMode),
-                           &awchTable[COLUMN_COUNT * iEntry + 2]);
+                           &awchTable[iEntry + 2]);
         }
     }
 
