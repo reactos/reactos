@@ -44,6 +44,7 @@
 
 #define _GCS_SINGLECHAR 0x2000
 
+// IME display-related
 typedef struct tagIMEDISPLAY
 {
     UINT uCharInfoLen;
@@ -51,6 +52,7 @@ typedef struct tagIMEDISPLAY
     CHAR_INFO CharInfo[160];
 } IMEDISPLAY, *PIMEDISPLAY; // 0x288
 
+// Keyboard layout info
 typedef struct tagKLINFO
 {
     HKL hKL;
@@ -62,6 +64,7 @@ typedef struct tagKLINFO
 #define IME_STATE_DEACTIVATE 0x40000000
 #define IME_STATE_MASK (IME_STATE_OPEN | IME_STATE_DEACTIVATE)
 
+// IME composition string info
 typedef struct tagCOMPSTRINFO
 {
     DWORD dwSize;
@@ -72,8 +75,9 @@ typedef struct tagCOMPSTRINFO
     DWORD dwResultStrLen;
     DWORD dwResultStrOffset;
     WORD  wAttrColor[8];
-} COMPSTRINFO, *PCOMPSTRINFO; // 0x2C
+} COMPSTRINFO, *PCOMPSTRINFO;
 
+// IME candidate info
 typedef struct tagCANDINFO
 {
     DWORD dwAttrsOffset;
@@ -82,6 +86,7 @@ typedef struct tagCANDINFO
 
 #define MAX_CANDLIST 32
 
+// Console entry
 typedef struct tagCONSOLE_ENTRY
 {
     HANDLE hConsole;
