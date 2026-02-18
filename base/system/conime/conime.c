@@ -955,7 +955,7 @@ void IntSendConversionStatus(HWND hwnd)
     }
 }
 
-//! Switches IME context when the console is activated.
+//! WM_USER_SWITCHIME
 BOOL ConIme_OnSwitchIme(HWND hwnd, HANDLE hConsole, HKL hKL)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -989,6 +989,7 @@ BOOL ConIme_OnSwitchIme(HWND hwnd, HANDLE hConsole, HKL hKL)
     return TRUE;
 }
 
+//! WM_USER_DEACTIVATE
 BOOL ConIme_OnDeactivate(HWND hwnd, HANDLE hConsole)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -1008,6 +1009,7 @@ BOOL ConIme_OnDeactivate(HWND hwnd, HANDLE hConsole)
     return TRUE;
 }
 
+//! WM_USER_SETSCREENSIZE
 BOOL ConIme_SetScreenSize(HWND hwnd, HANDLE hConsole, COORD ScreenSize)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -1044,7 +1046,7 @@ BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
             return TRUE; // Allow
     }
 
-    if ((HIWORD(hKL) & 0xF000) != 0xE000 || LOWORD(hKL) == wTargetLang)
+    if (!IS_IME_HKL(hKL) || LOWORD(hKL) == wTargetLang)
         return TRUE; // Allow
 
     if (iDirection == 0)
@@ -1080,7 +1082,7 @@ BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
 
             HKL hKL = phKLs[iNext];
             LANGID wLangId = LOWORD(hKL);
-            if (!(HIWORD(hKL) & 0xF000) || wLangId == wTargetLang)
+            if (!IS_IME_HKL(hKL) || wLangId == wTargetLang)
             {
                 PostMessageW(pEntry->hwndConsole, WM_USER + 0x0F, (WPARAM)hKL, 0);
                 break;
@@ -1092,7 +1094,7 @@ BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
     return FALSE; // Deny
 }
 
-//! Sends the current status of the IME to the console window.
+//! WM_USER_SENDIMESTATUS
 BOOL ConIme_SendImeStatus(HWND hWnd)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
@@ -1207,6 +1209,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     return TRUE;
 }
 
+//! WM_USER_UNINIT
 BOOL ConIme_OnUnInit(HWND hwnd, HANDLE hConsole)
 {
     EnterCriticalSection(&g_csLock);
@@ -1220,6 +1223,7 @@ BOOL ConIme_OnUnInit(HWND hwnd, HANDLE hConsole)
     return ret;
 }
 
+//! WM_USER_INIT
 BOOL ConIme_OnInit(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
 {
     if (IntFindConsoleEntry(hConsole))
@@ -2524,6 +2528,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
     return ret;
 }
 
+//! WM_USER_GETIMESTATE
 DWORD IntGetImeState(HWND hWnd, HANDLE hConsole)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -2540,7 +2545,7 @@ DWORD IntGetImeState(HWND hWnd, HANDLE hConsole)
     return pEntry->dwConversion + (pEntry->bOpened ? _IME_CMODE_OPEN : 0);
 }
 
-//! Sets the IME state for a specific console entry.
+//! WM_USER_SETIMESTATE
 BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -2579,6 +2584,7 @@ BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
     return TRUE;
 }
 
+//! WM_USER_SETCODEPAGE
 BOOL ConIme_SetCodePage(HWND hwnd, HANDLE hConsole, BOOL bOutput, WORD wCodePage)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -2593,6 +2599,7 @@ BOOL ConIme_SetCodePage(HWND hwnd, HANDLE hConsole, BOOL bOutput, WORD wCodePage
     return TRUE;
 }
 
+//! WM_IME_SYSTEM
 BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
@@ -2767,7 +2774,7 @@ BOOL ConIme_OnKeyChar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
-//! Handler for special messages in the 0x900 range (console IME key messages).
+//! WM_ROUTE_...
 LRESULT ConIme_OnRoute(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WPARAM wch = wParam;
@@ -2807,6 +2814,7 @@ LRESULT ConIme_OnRoute(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return ret;
 }
 
+//! WM_USER_SIMHOTKEY
 BOOL ConIme_SimulateHotKey(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     return ImmSimulateHotKey(hwnd, (DWORD)lParam);
@@ -2872,6 +2880,7 @@ void ConIme_OnImeEndComposition(HWND hWnd)
     }
 }
 
+//! WM_USER_CHANGEKEYBOARD
 void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
 {
     PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
@@ -2882,7 +2891,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
 
     HKL hOldKL = pEntry->hKL;
 
-    if ((HIWORD(hOldKL) & 0xF000) == 0xE000) // IME HKL?
+    if (IS_IME_HKL(hOldKL)) // IME HKL?
     {
         INT iKL;
         PKLINFO pKLInfo = pEntry->pKLInfo;
@@ -2928,7 +2937,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
     CopyData.cbData = sizeof(*pDisplay);
     CopyData.lpData = pDisplay;
 
-    if ((HIWORD(hNewKL) & 0xF000) == 0xE000) // IME HKL?
+    if (IS_IME_HKL(hNewKL)) // IME HKL?
     {
         for (INT iKL = 0; iKL < pEntry->cKLs; ++iKL)
         {
@@ -3085,7 +3094,7 @@ ConIme_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         case WM_IME_SYSTEM:
-            if (wParam == 0x1A || wParam == 0x1B)
+            if (wParam == 0x1A || wParam == 0x1B) // FIXME: Magic number
             {
                 ConIme_OnImeSystem(hWnd, wParam, lParam);
                 return TRUE;
@@ -3121,12 +3130,11 @@ BOOL IntIsConImeOnSystemProcessEnabled(VOID)
                                   0, KEY_QUERY_VALUE, &hKey);
     if (error == ERROR_SUCCESS)
     {
-        DWORD dwValue = FALSE;
-        DWORD cbValue = sizeof(dwValue);
+        DWORD dwValue = FALSE, cbValue = sizeof(dwValue);
         error = RegQueryValueExW(hKey, L"EnableConImeOnSystemProcess", NULL, NULL,
                                  (PBYTE)&dwValue, &cbValue);
         if (error == ERROR_SUCCESS)
-            bIsConImeOnSystemProcessEnabled = (dwValue != 0);
+            bIsConImeOnSystemProcessEnabled = !!dwValue;
         RegCloseKey(hKey);
     }
 
@@ -3234,6 +3242,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT nCmd
     MSG msg;
     _SEH2_TRY
     {
+        // Main loop
         while (GetMessageW(&msg, NULL, 0, 0))
         {
             TranslateMessage(&msg);
