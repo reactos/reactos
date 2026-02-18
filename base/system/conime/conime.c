@@ -1188,7 +1188,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     if (!hIMC)
     {
         LocalFree(pKLInfo);
-        LocalFree(pEntry);
+        pEntry->pKLInfo = NULL;
         return FALSE;
     }
 
