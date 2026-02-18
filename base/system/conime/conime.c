@@ -1184,6 +1184,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     HIMC hIMC = ImmCreateContext();
     if (!hIMC)
     {
+        LocalFree(pKLInfo);
         LocalFree(pEntry);
         return FALSE;
     }
