@@ -43,17 +43,18 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 #ifdef _WIN64
 DWORD gdwDesktopSectionSize = 20 * 1024; // 20 MB (Windows 7 style)
 #else
-DWORD gdwDesktopSectionSize = 3 * 1024; // 3 MB (Windows 2003 style)
+DWORD gdwDesktopSectionSize = 3 * 1024;  // 3 MB (Windows 2003 style)
 #endif
 DWORD gdwNOIOSectionSize    = 128;
 DWORD gdwWinlogonSectionSize = 128;
 
-/* Currently active desktop */
-PDESKTOP gpdeskInputDesktop = NULL;
+PDESKTOP gpdeskInputDesktop = NULL;     ///< Currently active desktop.
 HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread = NULL;
 HCURSOR gDesktopCursor = NULL;
 PKEVENT gpDesktopThreadStartedEvent = NULL;
+PKEVENT gpDesktopSwitchEvent = NULL;    ///< WinSta0_DesktopSwitch event.
+HANDLE ghDesktopSwitchEvent = NULL;     ///< WinSta0_DesktopSwitch handle in CSRSS process.
 
 /* OBJECT CALLBACKS **********************************************************/
 
@@ -1246,8 +1247,8 @@ Quit:
  * Validates the desktop handle.
  *
  * Remarks
- *    If the function succeeds, the handle remains referenced. If the
- *    fucntion fails, last error is set.
+ *    If the function succeeds, the handle remains referenced.
+ *    If the function fails, last error is set.
  */
 
 NTSTATUS FASTCALL
@@ -2982,14 +2983,14 @@ NtUserSwitchDesktop(HDESK hdesk)
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of desktop handle 0x%p failed\n", hdesk);
-        goto Exit; // Return FALSE
+        goto Exit;
     }
 
     if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
     {
         ObDereferenceObject(pdesk);
         ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
-        goto Exit; // Return FALSE
+        goto Exit;
     }
 
     if (pdesk == gpdeskInputDesktop)
@@ -3001,22 +3002,22 @@ NtUserSwitchDesktop(HDESK hdesk)
     }
 
     /*
-     * Don't allow applications switch the desktop if it's locked, unless the caller
-     * is the logon application itself
+     * Don't allow applications switch the desktop if it's locked,
+     * unless the caller is the logon application itself.
      */
     if ((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
         gpidLogon != PsGetCurrentProcessId())
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
-        goto Exit; // Return FALSE
+        goto Exit;
     }
 
     if (pdesk->rpwinstaParent != InputWindowStation)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
-        goto Exit; // Return FALSE
+        goto Exit;
     }
 
     /* FIXME: Fail if the process is associated with a secured
@@ -3037,14 +3038,24 @@ NtUserSwitchDesktop(HDESK hdesk)
         IntHideDesktop(gpdeskInputDesktop);
     }
 
-    /* Set the active desktop in the desktop's window station. */
+    /* Set the active desktop in the desktop's window station */
     InputWindowStation->ActiveDesktop = pdesk;
 
-    /* Set the global state. */
+    /* Set the global state */
     gpdeskInputDesktop = pdesk;
 
     /* Show the new desktop window */
     co_IntShowDesktop(pdesk, UserGetSystemMetrics(SM_CXSCREEN), UserGetSystemMetrics(SM_CYSCREEN), bRedrawDesktop);
+
+    // TODO: Request hard-error popups to be re-spawn to the new desktop.
+
+    /* Notify waiters that a desktop has been switched on the
+     * interactive window station: pulse the legacy (NT 3.5+)
+     * event and send the desktop-switch notification (Vista+) */
+    KePulseEvent(gpDesktopSwitchEvent, EVENT_INCREMENT, FALSE);
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+    IntNotifyWinEvent(EVENT_SYSTEM_DESKTOPSWITCH, NULL, OBJID_WINDOW, CHILDID_SELF, 0);
+#endif
 
     TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n", gpdeskInputDesktop);
     ObDereferenceObject(pdesk);
