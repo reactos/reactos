@@ -42,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(conime);
 
 // Global variables
 HANDLE g_hConsole = NULL;
-PCONENTRY* g_ppEntries = NULL;
+PCONENTRY* g_ppEntries = NULL; // begins from &g_ppEntries[1] (g_ppEntries[0] is ignored)
 UINT g_cEntries = 0;
 HIMC g_hOldIMC = NULL;
 DWORD g_dwAttachToThreadId = 0;
@@ -253,16 +253,19 @@ PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
     if (!g_hConsole)
         g_hConsole = hConsole;
 
-    PCONENTRY pEntry = NULL;
+    PCONENTRY pFound = NULL;
     for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
     {
-        pEntry = g_ppEntries[iEntry];
+        PCONENTRY pEntry = g_ppEntries[iEntry];
         if (pEntry && pEntry->hConsole == hConsole && !pEntry->bWndEnabled)
+        {
+            pFound = pEntry;
             break;
+        }
     }
 
     LeaveCriticalSection(&g_csLock);
-    return pEntry;
+    return pFound;
 }
 
 //! Terminate Console IME.
@@ -555,7 +558,9 @@ UINT IntFillImeSpaceCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
             PCHAR_INFO pChar = &pDisplay->CharInfo[ich];
             pChar->Char.UnicodeChar = L' ';
 
-            if (ich >= cch || ich >= index)
+            if (ich < cch)
+                pChar->Attributes = pDisplay->CharInfo[ich].Attributes;
+            else
                 pChar->Attributes = _FOREGROUND_WHITE;
         }
     }
@@ -1405,7 +1410,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
     }
 
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
-    ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - sizeof(DWORD));
+    ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - offsetof(COMPSTRINFO, dwCompAttrLen));
     CopyMemory(pCompStr->awAttrColor, pEntry->awAttrColor, sizeof(pCompStr->awAttrColor));
 
     PWCHAR pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
@@ -2059,7 +2064,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
+        UINT screenX = max(min(pEntry->ScreenSize.X, 128), 12);
         UINT usableWidth = screenX - 8;
         if (usableWidth < 7)
             usableWidth = 7;
@@ -2210,7 +2215,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
+        UINT screenX = max(min(pEntry->ScreenSize.X, 128), 12);
 
         INT usableWidth = (INT)screenX - 25;
 
@@ -2224,7 +2229,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             maxItemsPerPage = 9;
 
         DWORD nPageCountNeeded = pCandList->dwCount / maxItemsPerPage + 10;
-        if (nPageCountNeeded < 100)
+        if (nPageCountNeeded > 100)
             nPageCountNeeded = 100;
 
         if (pEntry->pdwCandPageStart &&
@@ -2345,7 +2350,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDIDATELIST pCandList = pEntry->apCandList[dwIndex];
         ImmGetCandidateListW(hIMC, dwIndex, pCandList, cbList);
 
-        UINT screenX = min(max(pEntry->ScreenSize.X, 128), 12);
+        UINT screenX = max(min(pEntry->ScreenSize.X, 128), 12);
 
         UINT maxItems = (screenX - 7) / 5;
         if (maxItems > 9) maxItems = 9;
@@ -2369,7 +2374,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         }
 
         DWORD nPageCountNeeded = (pCandList->dwCount / maxItems + 10);
-        if (nPageCountNeeded < 100)
+        if (nPageCountNeeded > 100)
             nPageCountNeeded = 100;
 
         if (pEntry->pdwCandPageStart &&
@@ -2605,7 +2610,7 @@ BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
     ImmSetOpenStatus(hIMC, bOpened);
 
     DWORD dwImeConversion = (dwConversion & ~_IME_CMODE_MASK);
-    if (pEntry->dwConversion != dwConversion)
+    if (pEntry->dwConversion != dwImeConversion)
     {
         pEntry->dwConversion = dwImeConversion;
         ImmSetConversionStatus(hIMC, dwImeConversion, pEntry->dwSentence);
