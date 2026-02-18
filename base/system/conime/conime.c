@@ -529,17 +529,18 @@ UINT IntFillImeSpaceCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     if (maxX > 160)
         maxX = 160;
 
-    UINT index = cch, width = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
-    if (width > maxX)
+    UINT index = cch;
+    UINT width = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
+    if (width > maxX && cch > 0)
     {
-        PCHAR_INFO pCharInfo = &pDisplay->CharInfo[cch];
+        PCHAR_INFO pCharInfo = &pDisplay->CharInfo[cch - 1];
         do
         {
             BOOL isDouble = IntIsDoubleWidthChar(pCharInfo->Char.UnicodeChar);
             width -= (isDouble + 1);
             pCharInfo--;
             index--;
-        } while (width > maxX);
+        } while (width > maxX && index > 0);
     }
 
     UINT remainingSpace = maxX - width;
