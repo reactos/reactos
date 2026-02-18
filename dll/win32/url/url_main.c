@@ -99,13 +99,13 @@ BOOL WINAPI InetIsOffline(DWORD flags)
     {
         if (Current->OperStatus == IfOperStatusUp)
         {
-            HeapFree(Adapters);
+            HeapFree(GetProcessHeap(), 0, Adapters);
             return FALSE;
         }
         Current = Current->Next;
     }
 
-    HeapFree(Adapters);
+    HeapFree(GetProcessHeap(), 0, Adapters);
 
     return TRUE;
 }
