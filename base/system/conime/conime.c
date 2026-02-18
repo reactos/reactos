@@ -50,6 +50,36 @@ BOOL g_bIsLogOnSession = FALSE;
 BOOL g_bDisabled = FALSE;
 CRITICAL_SECTION g_csLock;
 
+UINT IntFormatNumber(PWSTR pszBuffer, UINT value, UINT width)
+{
+    UINT divisor = 1;
+    if (width > 1)
+    {
+        UINT tempWidth = width - 1;
+        do
+        {
+            divisor *= 10;
+            tempWidth--;
+        } while (tempWidth);
+    }
+
+    for (UINT i = divisor; i > 0; i /= 10, pszBuffer++)
+    {
+        *pszBuffer = (WCHAR)(L'0' + (value / i));
+
+        if ((value / i) == 0)
+        {
+            WCHAR prevChar = *(pszBuffer - 1);
+            if (prevChar == L' ' || prevChar == L'/')
+                *pszBuffer = L' ';
+        }
+
+        value %= i;
+    }
+
+    return 0;
+}
+
 //! Determines if a Unicode character should be rendered as "Double Width" (2 columns).
 BOOL IntIsDoubleWidthChar(WCHAR wch)
 {
@@ -145,35 +175,6 @@ BOOL IntIsLogOnSession(void)
 
     g_bIsLogOnSession = RtlEqualMemory(&tokenStats.AuthenticationId, &systemLuid, sizeof(systemLuid));
     return g_bIsLogOnSession;
-}
-
-UINT IntFormatImeIndex(PWSTR pszBuffer, UINT value, UINT width)
-{
-    UINT divisor = 1;
-    if (width > 1)
-    {
-        UINT tempWidth = width - 1;
-        do {
-            divisor *= 10;
-            tempWidth--;
-        } while (tempWidth);
-    }
-
-    for (UINT i = divisor; i > 0; i /= 10, pszBuffer++)
-    {
-        *pszBuffer = (WCHAR)(L'0' + (value / i));
-
-        if ((value / i) == 0)
-        {
-            WCHAR prevChar = *(pszBuffer - 1);
-            if (prevChar == L' ' || prevChar == L'/')
-                *pszBuffer = L' ';
-        }
-
-        value %= i;
-    }
-
-    return 0;
 }
 
 //! Finds the ENTRY structure corresponding to the specified console handle.
@@ -679,7 +680,7 @@ DoSetAttributes:
     }
 
     pDisplay->uCharInfoLen = cch;
-    pDisplay->bFlag = 1;
+    pDisplay->bFlag = TRUE;
     return TRUE;
 }
 
@@ -1847,10 +1848,10 @@ UINT IntFormatCandLineJPNorKOR(
                 pszCurrentPos += pad;
             }
             UINT half = (labelWidth - 1) >> 1;
-            IntFormatImeIndex(pszCurrentPos, pCandList->dwSelection + 1, half);
+            IntFormatNumber(pszCurrentPos, pCandList->dwSelection + 1, half);
             pszCurrentPos += half;
             *pszCurrentPos++ = L'/';
-            IntFormatImeIndex(pszCurrentPos, pCandList->dwCount, half);
+            IntFormatNumber(pszCurrentPos, pCandList->dwCount, half);
             pszCurrentPos += half;
         }
 
@@ -1941,9 +1942,9 @@ UINT IntFormatCandLineCHT(
         PWSTR pszLabelPos = pszCurrentStr + 1;
         UINT halfLabel = (labelWidth - 1) >> 1;
 
-        IntFormatImeIndex(pszLabelPos, pCandList->dwSelection + 1, halfLabel);
+        IntFormatNumber(pszLabelPos, pCandList->dwSelection + 1, halfLabel);
         pszLabelPos[halfLabel] = L'/';
-        IntFormatImeIndex(&pszLabelPos[halfLabel + 1], pCandList->dwCount, halfLabel);
+        IntFormatNumber(&pszLabelPos[halfLabel + 1], pCandList->dwCount, halfLabel);
         pszLabelPos[labelWidth] = UNICODE_NULL;
     }
 
@@ -2940,7 +2941,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
     {
         IntSetImeState(hwnd, hConsole, pEntry->dwConversion & ~_IME_CMODE_OPEN);
         pDisplay->uCharInfoLen = 0;
-        pDisplay->bFlag = 1;
+        pDisplay->bFlag = TRUE;
         IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     }
 
