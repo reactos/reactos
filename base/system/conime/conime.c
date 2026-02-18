@@ -1734,8 +1734,10 @@ void IntDoImeComp(HWND hwnd, DWORD dwFlags, WCHAR wch)
     }
 }
 
+//! WM_IME_COMPOSITION
 void ConIme_OnImeComposition(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
+    TRACE("WM_IME_COMPOSITION\n");
     if (!lParam)
         IntDoImeComp(hwnd, 0, wParam);
     if (lParam & GCS_RESULTSTR)
@@ -2775,24 +2777,31 @@ BOOL ConIme_OnImeNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
     switch (wParam)
     {
         case IMN_OPENSTATUSWINDOW:
+            TRACE("IMN_OPENSTATUSWINDOW\n");
             ConIme_SendImeStatus(hWnd);
             break;
         case IMN_OPENCANDIDATE:
+            TRACE("IMN_OPENCANDIDATE\n");
             ConIme_OnNotifyOpenCandidate(hWnd, lParam, TRUE);
             break;
         case IMN_CHANGECANDIDATE:
+            TRACE("IMN_CHANGECANDIDATE\n");
             ConIme_OnNotifyChangeCandidate(hWnd, lParam);
             break;
         case IMN_CLOSECANDIDATE:
+            TRACE("IMN_CLOSECANDIDATE\n");
             ConIme_OnNotifyCloseCandidate(hWnd, (DWORD)lParam);
             break;
         case IMN_SETCONVERSIONMODE:
+            TRACE("IMN_SETCONVERSIONMODE\n");
             ConIme_SendImeStatus(hWnd);
             return FALSE; // Return FALSE to allow default processing to continue
         case IMN_SETOPENSTATUS:
+            TRACE("IMN_SETOPENSTATUS\n");
             ConIme_OnNotifySetOpenStatus(hWnd);
             return FALSE;
         case IMN_GUIDELINE:
+            TRACE("IMN_GUIDELINE\n");
             ConIme_OnNotifyGuideLine(hWnd);
             break;
         default:
@@ -2804,6 +2813,7 @@ BOOL ConIme_OnImeNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 BOOL ConIme_OnKeyChar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    TRACE("(%p, %u, %p, %p)\n", hwnd, uMsg, wParam, lParam);
     PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (pEntry)
         return PostMessageW(pEntry->hwndConsole, uMsg + WM_ROUTE, wParam, lParam);
@@ -2855,6 +2865,7 @@ LRESULT ConIme_OnRoute(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 //! WM_USER_SIMHOTKEY
 BOOL ConIme_SimulateHotKey(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
+    TRACE("WM_USER_SIMHOTKEY\n");
     return ImmSimulateHotKey(hwnd, (DWORD)lParam);
 }
 
@@ -2895,6 +2906,7 @@ void ConIme_OnDisable(void)
 //! WM_IME_STARTCOMPOSITION
 void ConIme_OnImeStartComposition(HWND hwnd)
 {
+    TRACE("WM_IME_STARTCOMPOSITION\n");
     PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (pEntry)
         pEntry->bInComposition = TRUE;
@@ -2903,6 +2915,8 @@ void ConIme_OnImeStartComposition(HWND hwnd)
 //! WM_IME_ENDCOMPOSITION
 void ConIme_OnImeEndComposition(HWND hWnd)
 {
+    TRACE("WM_IME_ENDCOMPOSITION\n");
+
     // Find the currently active console entry
     PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
@@ -3041,6 +3055,7 @@ LRESULT ConIme_OnUser(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_USER_GOBACK:
             return ConIme_OnGo(hWnd, (HANDLE)wParam, (HKL)lParam, -1);
         default:
+            ERR("Unknown uMsg %u\n", uMsg);
             return FALSE;
     }
 }
