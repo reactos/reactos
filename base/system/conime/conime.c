@@ -177,7 +177,7 @@ BOOL IntIsLogOnSession(void)
     return g_bIsLogOnSession;
 }
 
-//! Finds the ENTRY structure corresponding to the specified console handle.
+//! Finds the CONENTRY structure corresponding to the specified console handle.
 PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
 {
     EnterCriticalSection(&g_csLock);
@@ -457,7 +457,7 @@ void IntFillImeCandidatesCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
     }
 }
 
-//! Builds a buffer for displaying the IME status
+//! Builds a buffer for displaying the Traditional Chinese IME mode.
 UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 {
     UINT nTotalWidth = 0;
@@ -566,6 +566,7 @@ UINT IntFillImeSpaceCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     return ichFinal;
 }
 
+//! Converts the current Traditional Chinese IME status into a string for display (CHAR_INFO array).
 BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     UINT cch = 0;
@@ -592,20 +593,17 @@ inline void IntCopyUnicodeToCharInfo(PCHAR_INFO* ppDest, const WCHAR* pszSrc)
     if (!ppDest || !*ppDest || !pszSrc)
         return;
 
-    PCHAR_INFO pCurrent = *ppDest;
-    while (*pszSrc)
+    PCHAR_INFO pCurrent;
+    for (pCurrent = *ppDest; *pszSrc; ++pCurrent)
     {
-        pCurrent->Char.UnicodeChar = *pszSrc;
+        pCurrent->Char.UnicodeChar = *pszSrc++;
         pCurrent->Attributes = 0;
-        ++pCurrent;
-        ++pszSrc;
     }
 
     *ppDest = pCurrent;
 }
 
-//! Converts the current Japanese IME conversion mode, phrase conversion mode, and
-// input method into a string for display (CharInfo array).
+//! Converts the current Japanese IME status into a string for display (CHAR_INFO array).
 BOOL IntFillImeDisplayJPN(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     PCHAR_INFO pChar = pDisplay->CharInfo;
@@ -685,6 +683,7 @@ DoSetAttributes:
     return TRUE;
 }
 
+//! Converts the current Korean IME status into a string for display (CHAR_INFO array).
 BOOL IntFillImeDisplayKOR(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     pDisplay->CharInfo[0].Char.UnicodeChar = L' ';
@@ -694,6 +693,7 @@ BOOL IntFillImeDisplayKOR(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
     return TRUE;
 }
 
+//! Builds a buffer for displaying the Simplified Chinese IME mode.
 INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     DWORD dwConversion = pEntry->dwConversion;
@@ -743,7 +743,8 @@ INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     return cch;
 }
 
-//! Combine the Simplified Chinese IME composition string and candidate list and fill the buffer
+//! Fills the status buffer with characters and attributes from the
+// Simplified Chinese IME candidate list
 UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
@@ -804,7 +805,7 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     return cch;
 }
 
-//! Constructs IME status information for Simplified Chinese (CHS).
+//! Converts the current Simplified Chinese IME status into a string for display (CHAR_INFO array).
 BOOL IntFillImeDisplayCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     UINT cch = 0;
@@ -825,6 +826,7 @@ BOOL IntFillImeDisplayCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
     return TRUE;
 }
 
+//! Converts the current IME status into a string for display (CHAR_INFO array).
 BOOL IntFillImeDisplay(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     LANGID wLangId = LOWORD(pEntry->hKL);
@@ -1140,7 +1142,7 @@ BOOL ConIme_OnInputLangChange(HWND hwnd, WPARAM wParam, HKL hKL)
     return TRUE;
 }
 
-//! Initializes and allocates an ENTRY structure for the new console connection.
+//! Initializes and allocates a CONENTRY structure for the new console connection.
 BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
 {
     PCONENTRY pEntry = NULL;
@@ -2688,6 +2690,7 @@ BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandid
     return TRUE;
 }
 
+//! IMN_CLOSECANDIDATE
 BOOL ConIme_OnNotifyCloseCandidate(HWND hwnd, DWORD dwCandidates)
 {
     PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
@@ -2859,7 +2862,7 @@ void ConIme_OnImeStartComposition(HWND hwnd)
         pEntry->bInComposition = TRUE;
 }
 
-//! Releases the composition string buffer when the input session ends.
+//! WM_IME_ENDCOMPOSITION
 void ConIme_OnImeEndComposition(HWND hWnd)
 {
     // Find the currently active console entry
