@@ -253,6 +253,7 @@ void IntFreeConsoleEntries(void)
 
 static void IntSetCurrentConsole(HANDLE hConsole)
 {
+    TRACE("g_hConsole: %p\n", hConsole);
     g_hConsole = hConsole;
 }
 
