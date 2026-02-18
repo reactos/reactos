@@ -1178,7 +1178,7 @@ static const WCHAR Program_FilesW[] = L"Program Files";
 static const WCHAR Program_Files_Common_FilesW[] = L"Program Files\\Common Files";
 static const WCHAR Start_Menu_ProgramsW[] = L"Start Menu\\Programs";
 static const WCHAR Start_Menu_Admin_ToolsW[] = L"Start Menu\\Programs\\Administrative Tools";
-static const WCHAR Start_Menu_StartupW[] = L"Start Menu\\Programs\\StartUp";
+static const WCHAR Start_Menu_StartupW[] = L"Start Menu\\Programs\\Startup";
 #endif
 
 /* Long strings that are repeated many times: keep them here */
