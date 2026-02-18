@@ -2596,7 +2596,7 @@ BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 //! Closes the IME candidate list for Traditional Chinese (CHT).
-BOOL IntSendCandidateCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2625,7 +2625,7 @@ BOOL IntSendCandidateCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCa
 }
 
 //! Closes the IME candidate list for Japanese/Korean.
-BOOL IntSendCandidateJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PCANDIDATELIST* apCandList = pEntry->apCandList;
     for (DWORD iCand = 0; iCand < MAX_CANDLIST; ++iCand)
@@ -2644,7 +2644,7 @@ BOOL IntSendCandidateJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD
 }
 
 //! Closes process for IME candidate list for Simplified Chinese (CHS).
-BOOL IntSendCandidateCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2689,14 +2689,14 @@ BOOL ConIme_OnNotifyCloseCandidate(HWND hwnd, DWORD dwCandidates)
     switch (wLang)
     {
         case LANGID_CHINESE_SIMPLIFIED:
-            IntSendCandidateCHS(hwnd, hIMC, pEntry, dwCandidates);
+            IntSendCandidatesCHS(hwnd, hIMC, pEntry, dwCandidates);
             break;
         case LANGID_CHINESE_TRADITIONAL:
-            IntSendCandidateCHT(hwnd, hIMC, pEntry, dwCandidates);
+            IntSendCandidatesCHT(hwnd, hIMC, pEntry, dwCandidates);
             break;
         case LANGID_JAPANESE:
         case LANGID_KOREAN:
-            IntSendCandidateJPNorKOR(hwnd, hIMC, pEntry, dwCandidates);
+            IntSendCandidatesJPNorKOR(hwnd, hIMC, pEntry, dwCandidates);
             break;
         default:
             ret = FALSE;
