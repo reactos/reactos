@@ -2654,7 +2654,7 @@ BOOL IntSendCandidateJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD
 //! Closes process for IME candidate list for Simplified Chinese (CHS).
 BOOL IntSendCandidateCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
-    PIMEDISPLAY pDisplay = LocalAlloc(0x40u, 0x288u);
+    PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
         return FALSE;
 
