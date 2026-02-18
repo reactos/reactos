@@ -1194,7 +1194,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     pEntry->bConsoleEnabled = TRUE;
     pEntry->ScreenSize.X = 80;
     pEntry->AttrColors[0] = COMMON_LVB_UNDERSCORE | 0x7;
-    pEntry->AttrColors[1] = BACKGROUND_BLUE | _FOREGROUND_WHITE;;
+    pEntry->AttrColors[1] = BACKGROUND_BLUE | _FOREGROUND_WHITE;
     pEntry->AttrColors[2] = COMMON_LVB_UNDERSCORE | _FOREGROUND_WHITE;
     pEntry->AttrColors[3] = COMMON_LVB_UNDERSCORE | _BACKGROUND_WHITE | FOREGROUND_BLUE;
     pEntry->AttrColors[4] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
