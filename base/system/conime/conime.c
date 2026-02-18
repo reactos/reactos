@@ -1185,7 +1185,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     if (!hIMC)
     {
         LocalFree(pEntry);
-        return 0;
+        return FALSE;
     }
 
     pEntry->hNewIMC = hIMC;
