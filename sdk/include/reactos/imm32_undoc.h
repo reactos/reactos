@@ -288,6 +288,14 @@ ImmSystemHandler(
     _Inout_opt_ WPARAM wParam,
     _Inout_opt_ LPARAM lParam);
 
+DWORD WINAPI
+ImmCallImeConsoleIME(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _Out_ LPUINT puVK);
+
 BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);
 BOOL WINAPI ImmIMPQueryIMEA(_Inout_ LPIMEPROA pImePro);
