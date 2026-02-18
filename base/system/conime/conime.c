@@ -3106,6 +3106,29 @@ ConIme_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+//! Is Console IME on system process enabled?
+BOOL IntIsConImeOnSystemProcessEnabled(VOID)
+{
+    BOOL bIsConImeOnSystemProcessEnabled = FALSE;
+
+    HKEY hKey;
+    LSTATUS error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console",
+                                  0, KEY_QUERY_VALUE, &hKey);
+    if (error == ERROR_SUCCESS)
+    {
+        DWORD dwValue = FALSE;
+        DWORD cbValue = sizeof(dwValue);
+        error = RegQueryValueExW(hKey, L"EnableConImeOnSystemProcess", NULL, NULL,
+                                 (PBYTE)&dwValue, &cbValue);
+        if (error == ERROR_SUCCESS)
+            bIsConImeOnSystemProcessEnabled = (dwValue != 0);
+        RegCloseKey(hKey);
+    }
+
+    return bIsConImeOnSystemProcessEnabled;
+}
+
 //! Initialize Console IME instance
 BOOL ConIme_InitInstance(HINSTANCE hInstance)
 {
@@ -3115,24 +3138,9 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     ATOM atom = 0;
     HANDLE hStartUpEvent;
 
-    // Is Console IME enabled?
-    BOOL bIsConImeEnabled = FALSE;
-    DWORD dwValue = FALSE;
-    HKEY hKey;
-    LSTATUS error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Console",
-                                  0, KEY_QUERY_VALUE, &hKey);
-    if (error == ERROR_SUCCESS)
-    {
-        DWORD cbValue = sizeof(dwValue);
-        error = RegQueryValueExW(hKey, L"EnableConImeOnSystemProcess", NULL, NULL,
-                                 (PBYTE)&dwValue, &cbValue);
-        if (error == ERROR_SUCCESS)
-            bIsConImeEnabled = (dwValue != 0);
-        RegCloseKey(hKey);
-    }
+    BOOL bIsConImeOnSystemProcessEnabled = IntIsConImeOnSystemProcessEnabled();
 
-    if (!bIsConImeEnabled && IntIsLogOnSession())
+    if (!bIsConImeOnSystemProcessEnabled && IntIsLogOnSession())
         return FALSE;
 
     const UINT cEntries = 10;
