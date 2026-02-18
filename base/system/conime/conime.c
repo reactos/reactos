@@ -1248,7 +1248,12 @@ BOOL ConIme_OnInit(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
 //! WM_CREATE
 inline BOOL ConIme_OnCreate(HWND hwnd)
 {
-    g_hOldIMC = ImmGetContext(hwnd);
+    HIMC hIMC = ImmGetContext(hwnd);
+    if (hIMC)
+    {
+        g_hOldIMC = hIMC;
+        ImmReleaseContext(hwnd, hIMC);
+    }
     return TRUE;
 }
 
