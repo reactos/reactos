@@ -1252,7 +1252,7 @@ void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
 
     DWORD dwCompLen = 0; // composition string length (in bytes, excluding)
     DWORD dwAttrLen = 0; // attribute info length (in bytes)
-    size_t cbNeeded;
+    size_t cbCompStr, cbNeeded;
     COPYDATASTRUCT CopyData;
 
     if (dwFlags & GCS_COMPSTR)
@@ -1283,7 +1283,8 @@ void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
         goto EXIT;
     }
 
-    cbNeeded = sizeof(COMPSTRINFO) + (dwCompLen + sizeof(UNICODE_NULL)) + (dwAttrLen + 1);
+    cbCompStr = dwCompLen + sizeof(UNICODE_NULL);
+    cbNeeded = sizeof(COMPSTRINFO) + cbCompStr + (dwAttrLen + 1);
     if (pEntry->pCompStr && pEntry->pCompStr->dwSize < cbNeeded)
     {
         LocalFree(pEntry->pCompStr);
@@ -1303,7 +1304,7 @@ void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
     CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
 
     PWCHAR pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-    PBYTE pAttrDest = (PBYTE)pszDest + (dwCompLen + sizeof(UNICODE_NULL));
+    PBYTE pAttrDest = (PBYTE)pszDest + cbCompStr;
 
     if (dwFlags & GCS_COMPSTR)
     {
@@ -1325,7 +1326,7 @@ void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
         pCompStr->dwCompStrLen = dwCompLen;
         pCompStr->dwCompStrOffset = sizeof(COMPSTRINFO);
         pCompStr->dwCompAttrLen = dwAttrLen;
-        pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + (dwCompLen + sizeof(UNICODE_NULL));
+        pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + cbCompStr;
     }
     else if (dwFlags & GCS_RESULTSTR)
     {
@@ -1361,7 +1362,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
 
     DWORD dwCompLen = 0; // composition string length (in bytes, excluding)
     DWORD dwAttrLen = 0; // attribute info length (in bytes)
-    size_t cbNeeded;
+    size_t cbCompStr, cbNeeded;
     COPYDATASTRUCT CopyData;
 
     if (dwFlags & GCS_COMPSTR)
@@ -1392,7 +1393,8 @@ void IntDoImeCompCHS(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
         goto EXIT;
     }
 
-    cbNeeded = sizeof(COMPSTRINFO) + (dwCompLen + sizeof(UNICODE_NULL)) + (dwAttrLen + 1);
+    cbCompStr = dwCompLen + sizeof(UNICODE_NULL);
+    cbNeeded = sizeof(COMPSTRINFO) + cbCompStr + (dwAttrLen + 1);
     if (pEntry->pCompStr && cbNeeded > pEntry->pCompStr->dwSize)
     {
         LocalFree(pEntry->pCompStr);
@@ -1412,7 +1414,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
     CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
 
     PWCHAR pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-    PBYTE pAttrDest = (PBYTE)pszDest + (dwCompLen + sizeof(UNICODE_NULL));
+    PBYTE pAttrDest = (PBYTE)pszDest + cbCompStr;
 
     if (dwFlags & GCS_COMPSTR)
     {
@@ -1428,7 +1430,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
         pCompStr->dwCompStrLen = dwCompLen;
         pCompStr->dwCompStrOffset = sizeof(COMPSTRINFO);
         pCompStr->dwCompAttrLen = dwAttrLen;
-        pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + (dwCompLen + sizeof(UNICODE_NULL));
+        pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + cbCompStr;
     }
     else if (dwFlags & GCS_RESULTSTR)
     {
@@ -1475,7 +1477,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
     DWORD dwCompLen = 0; // composition string length (in bytes)
     DWORD dwAttrLen = 0; // attribute info length (in bytes)
     COPYDATASTRUCT CopyData;
-    size_t cbNeeded;
+    size_t cbCompStr, cbNeeded;
     PCOMPSTRINFO pCompStr;
     PWCHAR pszDest;
     PBYTE pAttrDest;
@@ -1504,7 +1506,8 @@ void IntDoImeCompCHT(HWND hWnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
         goto EXIT;
     }
 
-    cbNeeded = sizeof(COMPSTRINFO) + dwCompLen + dwAttrLen + sizeof(UNICODE_NULL) + 1;
+    cbCompStr = dwCompLen + sizeof(UNICODE_NULL);
+    cbNeeded = sizeof(COMPSTRINFO) + cbCompStr + (dwAttrLen + 1);
     if (pEntry->pCompStr && cbNeeded > pEntry->pCompStr->dwSize)
     {
         LocalFree(pEntry->pCompStr);
@@ -1524,7 +1527,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
     CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
 
     pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-    pAttrDest = (PBYTE)pszDest + dwCompLen + sizeof(UNICODE_NULL);
+    pAttrDest = (PBYTE)pszDest + cbCompStr;
 
     if (dwFlags & GCS_COMPSTR)
     {
@@ -1545,7 +1548,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
 
         pCompStr->dwCompAttrLen = dwAttrLen;
         if (dwAttrLen)
-            pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + (dwCompLen + sizeof(UNICODE_NULL));
+            pCompStr->dwCompAttrOffset = sizeof(COMPSTRINFO) + cbCompStr;
         else
             pCompStr->dwCompAttrOffset = 0;
     }
@@ -1588,7 +1591,7 @@ void IntDoImeCompKOR(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags, WCHAR wch)
 
     DWORD dwCompLen = 0; // composition string length (in bytes)
     DWORD dwAttrLen = 0; // attribute info length (in bytes)
-    size_t cbNeeded;
+    size_t cbCompStr, cbNeeded;
     PCOMPSTRINFO pCompStr;
     PWCHAR pszDest;
     PBYTE pAttrDest;
@@ -1628,7 +1631,8 @@ void IntDoImeCompKOR(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags, WCHAR wch)
         goto EXIT;
     }
 
-    cbNeeded = sizeof(COMPSTRINFO) + dwCompLen + dwAttrLen + 3;
+    cbCompStr = dwCompLen + sizeof(UNICODE_NULL);
+    cbNeeded = sizeof(COMPSTRINFO) + cbCompStr + (dwAttrLen + 1);
     if (pEntry->pCompStr && pEntry->pCompStr->dwSize < cbNeeded)
     {
         LocalFree(pEntry->pCompStr);
@@ -1648,7 +1652,7 @@ void IntDoImeCompKOR(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags, WCHAR wch)
     CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
 
     pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
-    pAttrDest = (PBYTE)pszDest + dwCompLen + sizeof(UNICODE_NULL);
+    pAttrDest = (PBYTE)pszDest + cbCompStr;
 
     if (dwFlags & _GCS_SINGLECHAR)
     {
