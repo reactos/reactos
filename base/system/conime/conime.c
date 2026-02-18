@@ -50,7 +50,7 @@ BOOL g_bIsLogOnSession = FALSE;
 BOOL g_bDisabled = FALSE;
 CRITICAL_SECTION g_csLock;
 
-UINT IntFormatNumber(PWSTR pszBuffer, UINT value, UINT width)
+void IntFormatNumber(PWSTR pszBuffer, UINT value, UINT width)
 {
     UINT divisor = 1;
     if (width > 1)
@@ -63,21 +63,23 @@ UINT IntFormatNumber(PWSTR pszBuffer, UINT value, UINT width)
         } while (tempWidth);
     }
 
-    for (UINT i = divisor; i > 0; i /= 10, pszBuffer++)
+    for (UINT i = divisor, ich = 0; i > 0; i /= 10, ich++)
     {
-        *pszBuffer = (WCHAR)(L'0' + (value / i));
+        UINT digit = value / i;
+        value %= i;
 
-        if ((value / i) == 0)
+        if (digit == 0 && ich > 0)
         {
-            WCHAR prevChar = *(pszBuffer - 1);
+            WCHAR prevChar = pszBuffer[ich - 1];
             if (prevChar == L' ' || prevChar == L'/')
-                *pszBuffer = L' ';
+            {
+                pszBuffer[ich] = L' ';
+                continue;
+            }
         }
 
-        value %= i;
+        pszBuffer[ich] = (WCHAR)(L'0' + digit);
     }
-
-    return 0;
 }
 
 //! Determines if a Unicode character should be rendered as "Double Width" (2 columns).
