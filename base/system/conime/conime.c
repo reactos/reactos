@@ -40,9 +40,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(conime);
 #define _FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 #define _BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
 
-#define _ATTR_WHAT_1 0x10
-#define _ATTR_WHAT_2 0x20
-
 // Global variables
 HANDLE g_hConsole = NULL;
 PCONSOLE_ENTRY* g_ppEntries = NULL;
@@ -1328,9 +1325,9 @@ void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
 
         LONG cursorPos = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, NULL, 0);
         if (cursorPos >= 0 && (DWORD)cursorPos < dwAttrLen)
-            pAttrDest[cursorPos] |= _ATTR_WHAT_1;
+            pAttrDest[cursorPos] |= BACKGROUND_BLUE;
         else
-            pAttrDest[0] |= _ATTR_WHAT_2;
+            pAttrDest[0] |= BACKGROUND_GREEN;
 
         pCompStr->dwCompStrLen = dwCompLen;
         pCompStr->dwCompStrOffset = sizeof(COMPSTRINFO);
