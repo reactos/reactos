@@ -136,19 +136,22 @@ INT IntGetStringWidth(PCWSTR pch)
     return cch;
 }
 
-BOOL IntSendCopyDataToConsole(HWND hWnd, HWND hwndSender, PCOPYDATASTRUCT pCopyData)
+BOOL IntSendDataToConsole(HWND hwndConsole, HWND hwndSender, PCOPYDATASTRUCT pCopyData)
 {
-    if (!hWnd || !IsWindow(hWnd))
+    TRACE("IntSendDataToConsole(%p, %p): 0x%lX, 0x%lX\n", hwndConsole, hwndSender,
+          pCopyData->dwData, pCopyData->cbData);
+
+    if (!hwndConsole || !IsWindow(hwndConsole))
     {
-        ERR("%p is null or invalid window\n", hWnd);
+        ERR("%p is null or invalid window\n", hwndConsole);
         return FALSE;
     }
 
     DWORD_PTR result;
-    if (!SendMessageTimeoutW(hWnd, WM_COPYDATA, (WPARAM)hwndSender, (LPARAM)pCopyData,
+    if (!SendMessageTimeoutW(hwndConsole, WM_COPYDATA, (WPARAM)hwndSender, (LPARAM)pCopyData,
                              SMTO_ABORTIFHUNG, 3000, &result))
     {
-        ERR("SendMessageTimeoutW(%p) failed\n", hWnd);
+        ERR("SendMessageTimeoutW(%p) failed\n", hwndConsole);
         return FALSE;
     }
 
@@ -861,7 +864,7 @@ BOOL ConIme_OnNotifySetOpenStatus(HWND hwndTarget)
             CopyData.lpData = pDisplay;
 
             if (IntFillImeDisplay(pEntry, pDisplay))
-                IntSendCopyDataToConsole(pEntry->hwndConsole, hwndTarget, &CopyData);
+                IntSendDataToConsole(pEntry->hwndConsole, hwndTarget, &CopyData);
 
             LocalFree(pDisplay);
         }
@@ -886,7 +889,7 @@ void IntSendConversionStatusCHT(HWND hwnd, PCONENTRY pEntry)
     CopyData.dwData = MAGIC_SEND_IMEDISPLAY;
     CopyData.lpData = pDisplay;
     if (IntFillImeDisplayCHT(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
     LocalFree(pDisplay);
 }
@@ -901,7 +904,7 @@ void IntSendConversionStatusJPNorKOR(HWND hwnd, PCONENTRY pEntry)
     CopyData.dwData = MAGIC_SEND_COMPSTR;
     CopyData.lpData = pCompStr;
     CopyData.cbData = pCompStr->dwSize;
-    IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+    IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 }
 
 void IntSendConversionStatusCHS(HWND hwnd, PCONENTRY pEntry)
@@ -915,7 +918,7 @@ void IntSendConversionStatusCHS(HWND hwnd, PCONENTRY pEntry)
     CopyData.dwData = MAGIC_SEND_IMEDISPLAY;
     CopyData.lpData = pDisplay;
     if (IntFillImeDisplayCHS(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
     LocalFree(pDisplay);
 }
@@ -1103,7 +1106,7 @@ BOOL ConIme_SendImeStatus(HWND hWnd)
         CopyData.cbData = sizeof(*pDisplay);
         CopyData.lpData = pDisplay;
         if (IntFillImeDisplay(pEntry, pDisplay))
-            IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+            IntSendDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
 
         LocalFree(pDisplay);
         ret = TRUE;
@@ -1342,7 +1345,7 @@ void IntDoImeCompJPN(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
     CopyData.dwData = MAGIC_SEND_COMPSTR;
     CopyData.cbData = pCompStr->dwSize;
     CopyData.lpData = pCompStr;
-    IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+    IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
 EXIT:
     ImmReleaseContext(hwnd, hIMC);
@@ -1445,7 +1448,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
         CopyData.dwData = MAGIC_SEND_COMPSTR;
         CopyData.cbData = pCompStr->dwSize;
         CopyData.lpData = pCompStr;
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
         goto EXIT;
     }
 
@@ -1453,7 +1456,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
     CopyData.cbData = sizeof(IMEDISPLAY);
     CopyData.lpData = pDisplay;
     if (IntFillImeDisplayCHS(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
 EXIT:
     if (pDisplay)
@@ -1568,7 +1571,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONENTRY pEntry, DWORD dwFlags)
         CopyData.dwData = MAGIC_SEND_COMPSTR;
         CopyData.cbData = pCompStr->dwSize;
         CopyData.lpData = pCompStr;
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
         goto EXIT;
     }
 
@@ -1576,7 +1579,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONENTRY pEntry, DWORD dwFlags)
     CopyData.cbData = sizeof(*pDisplay);
     CopyData.dwData = MAGIC_SEND_IMEDISPLAY;
     if (IntFillImeDisplayCHT(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
 
 EXIT:
     if (pDisplay)
@@ -1694,7 +1697,7 @@ void IntDoImeCompKOR(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags, WCHAR wch)
     CopyData.dwData = MAGIC_SEND_COMPSTR;
     CopyData.cbData = pCompStr->dwSize;
     CopyData.lpData = pCompStr;
-    IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+    IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
 EXIT:
     ImmReleaseContext(hwnd, hIMC);
@@ -2171,7 +2174,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         CopyData.lpData = pDisplay;
 
         if (IntFillImeDisplayCHT(pEntry, pDisplay))
-            IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+            IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     }
 
     LocalFree(pDisplay);
@@ -2316,7 +2319,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         CopyData.lpData = pDisplay;
 
         if (IntFillImeDisplayCHS(pEntry, pDisplay))
-            IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+            IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     }
 
     LocalFree(pDisplay);
@@ -2472,7 +2475,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         CopyData.dwData = MAGIC_SEND_CANDLIST;
         CopyData.cbData = cbCandInfo;
         CopyData.lpData = pCI;
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     }
 
     return TRUE;
@@ -2542,7 +2545,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
     {
         CopyData.cbData = 0;
         CopyData.lpData = NULL;
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
         ret = TRUE;
     }
     else
@@ -2555,7 +2558,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
 
             CopyData.cbData = cbAlloc;
             CopyData.lpData = pszGuideLine;
-            IntSendCopyDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
+            IntSendDataToConsole(pEntry->hwndConsole, hWnd, &CopyData);
 
             LocalFree(pszGuideLine);
             ret = TRUE;
@@ -2648,7 +2651,7 @@ BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
     CopyData.lpData = &wParam;
     CopyData.dwData = MAGIC_SEND_IMESYSTEM;
     CopyData.cbData = sizeof(wParam);
-    IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+    IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     return TRUE;
 }
 
@@ -2675,7 +2678,7 @@ BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandid
     CopyData.cbData = sizeof(*pDisplay);
     CopyData.lpData = pDisplay;
     if (IntFillImeDisplayCHT(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
     LocalFree(pDisplay);
     return TRUE;
@@ -2696,7 +2699,7 @@ BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwC
     }
 
     COPYDATASTRUCT CopyData = { MAGIC_SEND_CANDLIST };
-    IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+    IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     return TRUE;
 }
 
@@ -2723,7 +2726,7 @@ BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandid
     CopyData.cbData = sizeof(*pDisplay);
     CopyData.lpData = pDisplay;
     if (IntFillImeDisplayCHS(pEntry, pDisplay))
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
     LocalFree(pDisplay);
     return TRUE;
@@ -2987,7 +2990,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
             ConIme_SendImeStatus(hwnd);
 
             if (IntFillImeDisplay(pEntry, pDisplay))
-                IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+                IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 
             break;
         }
@@ -2997,7 +3000,7 @@ void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
         IntSetImeState(hwnd, hConsole, pEntry->dwConversion & ~_IME_CMODE_OPEN);
         pDisplay->uCharInfoLen = 0;
         pDisplay->bFlag = TRUE;
-        IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
+        IntSendDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
     }
 
     LocalFree(pDisplay);
