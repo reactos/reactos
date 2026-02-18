@@ -2164,16 +2164,14 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         pCI->dwAttrsOffset = 2 * usableWidth + 4;
 
         PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
-        UINT currentPage = IntFormatCandLineCHT(pCandList, pCI->szCandStr, pbAttrs,
-                                                usableWidth, labelWidth, pEntry);
+        UINT iPage = IntFormatCandLineCHT(pCandList, pCI->szCandStr, pbAttrs, usableWidth,
+                                          labelWidth, pEntry);
 
         // Send page messages
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[iPage]);
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage + 1] -
-                     pEntry->pdwCandPageStart[currentPage]);
+                     pEntry->pdwCandPageStart[iPage + 1] - pEntry->pdwCandPageStart[iPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
@@ -2309,16 +2307,14 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         pCI->dwAttrsOffset = 2 * usableWidth + 4;
 
         PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
-        UINT currentPage = IntFormatCandLineCHS(pCandList, pCI->szCandStr, pbAttrs,
-                                                usableWidth, 0, pEntry);
+        UINT iPage = IntFormatCandLineCHS(pCandList, pCI->szCandStr, pbAttrs, usableWidth, 0,
+                                          pEntry);
 
         // Send page messages
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[iPage]);
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage + 1] -
-                     pEntry->pdwCandPageStart[currentPage]);
+                     pEntry->pdwCandPageStart[iPage + 1] - pEntry->pdwCandPageStart[iPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
@@ -2467,16 +2463,14 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         pCI->dwAttrsOffset = 2 * screenX + 4;
 
         PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
-        UINT currentPage = IntFormatCandLineJPNorKOR(pCandList, pCI->szCandStr, pbAttrs,
-                                                     screenX, labelWidth, pEntry, bIsCode);
+        UINT iPage = IntFormatCandLineJPNorKOR(pCandList, pCI->szCandStr, pbAttrs,
+                                               screenX, labelWidth, pEntry, bIsCode);
 
         // Send page messages
         pEntry->bSkipPageMsg = TRUE;
-        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage]);
+        ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex, pEntry->pdwCandPageStart[iPage]);
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESIZE, dwIndex,
-                     pEntry->pdwCandPageStart[currentPage + 1] -
-                     pEntry->pdwCandPageStart[currentPage]);
+                     pEntry->pdwCandPageStart[iPage + 1] - pEntry->pdwCandPageStart[iPage]);
         pEntry->bSkipPageMsg = FALSE;
 
         COPYDATASTRUCT CopyData;
@@ -2783,31 +2777,24 @@ BOOL ConIme_OnImeNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case IMN_OPENSTATUSWINDOW:
             ConIme_SendImeStatus(hWnd);
             break;
-
         case IMN_OPENCANDIDATE:
             ConIme_OnNotifyOpenCandidate(hWnd, lParam, TRUE);
             break;
-
         case IMN_CHANGECANDIDATE:
             ConIme_OnNotifyChangeCandidate(hWnd, lParam);
             break;
-
         case IMN_CLOSECANDIDATE:
             ConIme_OnNotifyCloseCandidate(hWnd, (DWORD)lParam);
             break;
-
         case IMN_SETCONVERSIONMODE:
             ConIme_SendImeStatus(hWnd);
             return FALSE; // Return FALSE to allow default processing to continue
-
         case IMN_SETOPENSTATUS:
             ConIme_OnNotifySetOpenStatus(hWnd);
             return FALSE;
-
         case IMN_GUIDELINE:
             ConIme_OnNotifyGuideLine(hWnd);
             break;
-
         default:
             return FALSE;
     }
