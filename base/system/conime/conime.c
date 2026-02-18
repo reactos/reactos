@@ -3132,14 +3132,7 @@ BOOL IntIsConImeOnSystemProcessEnabled(VOID)
 //! Initialize Console IME instance
 BOOL ConIme_InitInstance(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wc;
-    INT x, y, cx, cy, cxScreen, cyMenu;
-    HWND hWnd = NULL;
-    ATOM atom = 0;
-    HANDLE hStartUpEvent;
-
     BOOL bIsConImeOnSystemProcessEnabled = IntIsConImeOnSystemProcessEnabled();
-
     if (!bIsConImeOnSystemProcessEnabled && IntIsLogOnSession())
         return FALSE;
 
@@ -3153,20 +3146,27 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     g_cEntries = cEntries;
 
     // Open a startup synchronization event
-    hStartUpEvent = OpenEventW(EVENT_MODIFY_STATE, FALSE, L"ConsoleIME_StartUp_Event");
+    HANDLE hStartUpEvent = OpenEventW(EVENT_MODIFY_STATE, FALSE, L"ConsoleIME_StartUp_Event");
     if (!hStartUpEvent)
-        goto Cleanup;
+    {
+        LocalFree(g_ppEntries);
+        g_ppEntries = NULL;
+        DeleteCriticalSection(&g_csLock);
+        return FALSE;
+    }
+
+    INT x, y, cx, cy, cxScreen, cyMenu;
+    HWND hWnd = NULL;
 
     // Register window class
-    ZeroMemory(&wc, sizeof(wc));
-    wc.cbSize        = sizeof(wc);
+    WNDCLASSEXW wc = { sizeof(wc) };
     wc.lpfnWndProc   = ConIme_WndProc;
     wc.hInstance     = hInstance;
     wc.hIcon         = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_MAINICON));
     wc.hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wc.lpszClassName = L"ConsoleIMEClass";
-    atom = RegisterClassExW(&wc);
+    ATOM atom = RegisterClassExW(&wc);
     if (!atom)
         goto Cleanup;
 
@@ -3222,7 +3222,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT nCmd
     ImmDisableTextFrameService(0xFFFFFFFF);
 
     if (!ConIme_InitInstance(hInstance))
+    {
+        ERR("ConIme_InitInstance failed\n");
         return 0;
+    }
 
     MSG msg;
     _SEH2_TRY
@@ -3235,6 +3238,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT nCmd
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        ERR("Exception\n");
         msg.wParam = -1;
     }
     _SEH2_END;
