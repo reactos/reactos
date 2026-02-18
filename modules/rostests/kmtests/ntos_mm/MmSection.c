@@ -568,6 +568,25 @@ TestPhysicalMemorySection(VOID)
     RtlFillMemory(MyPage + 2 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0xab);
     RtlFillMemory(MyPage + 3 * PAGE_SIZE / 4, PAGE_SIZE / 4, 0xef);
 
+    /* Get the virtual address for the physical, compare, and check that modifications are reflected */
+    Mapping = MmGetVirtualForPhysical(MyPagePhysical);
+    ok(Mapping != NULL, "MmGetVirtualForPhysical failed expected mapping got NULL\n");
+    EqualBytes = RtlCompareMemory(Mapping, MyPage, PAGE_SIZE);
+    ok_eq_size(EqualBytes, PAGE_SIZE);
+
+    MappingBytes = Mapping;
+    ok(MappingBytes[5] == 0x23, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+    ok(MyPage[5] == 0x23, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+    MyPage[5] = 0x44;
+    ok(MappingBytes[5] == 0x44, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+    ok(MyPage[5] == 0x44, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+    MappingBytes[5] = 0x88;
+    ok(MappingBytes[5] == 0x88, "Mapping[5] = 0x%x\n", MappingBytes[5]);
+    ok(MyPage[5] == 0x88, "MyPage[5] = 0x%x\n", MyPage[5]);
+
+
     ZeroPageContents = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'ZPmK');
     if (skip(ZeroPageContents != NULL, "Out of memory\n"))
     {
