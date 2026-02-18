@@ -24,6 +24,7 @@
 #include "shellapi.h"
 #include "shlwapi.h"
 #include "intshcut.h"
+#include "iphlpapi.h"
 #include "winuser.h"
 #include "commctrl.h"
 #include "prsht.h"
@@ -71,12 +72,39 @@ DWORD WINAPI AddMIMEFileTypesPS(VOID * unknown1, LPPROPSHEETHEADERA lppsh)
 /***********************************************************************
  * InetIsOffline    (URL.@)
  *
+ * Check the internet is offline or not
+ * 
+ * PARAMS
+ *  flags  [I] Must be zero
+ * 
+ * RETURNS
+ * Online: FALSE
+ * Offline: TRUE
  */
 BOOL WINAPI InetIsOffline(DWORD flags)
 {
-    FIXME("(%08x): stub!\n", flags);
+    ULONG Size = 0;
+    GetAdaptersAddresses(AF_UNSPEC, 0, NULL, &Size);
 
-    return FALSE;
+    PIP_ADAPTER_ADDRESSES Adapters = malloc(Size);
+
+    if (!Adapters)
+        return FALSE;
+
+    GetAdaptersAddresses(AF_UNSPEC, 0, Adapters, &Size);
+
+    PIP_ADAPTER_ADDRESSES Current = Adapters;
+
+    while (Current) 
+    {
+        if (Current->OperStatus == IfOperStatusUp)
+            return FALSE;
+        Current = Current->Next;
+    }
+
+    free(Adapters);
+
+    return TRUE;
 }
 
 /***********************************************************************
