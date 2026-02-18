@@ -3270,6 +3270,7 @@ Cleanup1:
     }
 
     DeleteCriticalSection(&g_csLock);
+    LocalFree(g_ppEntries);
     return FALSE; // Failed
 }
 
