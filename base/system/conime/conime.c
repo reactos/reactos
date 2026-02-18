@@ -375,8 +375,9 @@ BOOL IntGetLayoutText(PCONSOLE_ENTRY pEntry)
 
     // Build registry path
     WCHAR szKeyPath[MAX_PATH];
-    lstrcpyW(szKeyPath, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
-    lstrcatW(szKeyPath, szLayoutName);
+    StringCchCopyW(szKeyPath, _countof(szKeyPath),
+                   L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\");
+    StringCchCatW(szKeyPath, _countof(szKeyPath), szLayoutName);
 
     HKEY hKey;
     LSTATUS error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKeyPath, 0, KEY_QUERY_VALUE, &hKey);
@@ -1775,9 +1776,10 @@ UINT IntFormatCandLineJPNorKOR(
         WideCharToMultiByte(CP_OEMCP, 0, pwchCand, 1, asz, _countof(asz), NULL, NULL);
 
         wsprintfW(szCharCode, L"[%04X] ", MAKEWORD(asz[0], asz[1]));
-        wcscpy(pszCurrentPos, szCharCode);
 
-        UINT codeLen = lstrlenW(szCharCode);
+        size_t codeLen = wcslen(szCharCode);
+        StringCchCopyW(pszCurrentPos, codeLen + 1, szCharCode);
+
         currentX = codeLen;
         pszCurrentPos += codeLen;
         pbCurrentAttr += codeLen;
@@ -1788,7 +1790,7 @@ UINT IntFormatCandLineJPNorKOR(
     for (DWORD i = iStart; i < iEnd; i++)
     {
         const WCHAR* pszSrc = (const WCHAR*)((PBYTE)pCandList + pCandList->dwOffset[i]);
-        UINT cchSrc = lstrlenW(pszSrc);
+        size_t cchSrc = wcslen(pszSrc);
         UINT strWidth = IntGetStringWidth(pszSrc);
         BOOL bTruncated = FALSE;
 
@@ -1801,6 +1803,7 @@ UINT IntFormatCandLineJPNorKOR(
                 if (currentX + tmpW > width - labelWidth - 3)
                     break;
             }
+
             cchSrc = (j > 0) ? j - 1 : 0;
             strWidth = tmpW;
             bTruncated = TRUE;
@@ -1898,19 +1901,20 @@ UINT IntFormatCandLineCHT(
     for (DWORD i = iStart; i < iEnd; i++)
     {
         const WCHAR* pszSrc = (const WCHAR*)((PBYTE)pCandList + pCandList->dwOffset[i]);
-        UINT cchSrc = lstrlenW(pszSrc);
+        size_t cchSrc = wcslen(pszSrc);
         UINT strWidth = IntGetStringWidth(pszSrc);
         BOOL bTruncated = FALSE;
 
         if (currentX + strWidth + 3 > usableWidth)
         {
-            UINT tmpW = 0, j;
+            size_t tmpW = 0, j;
             for (j = 0; j < cchSrc; j++)
             {
                 tmpW += IntIsDoubleWidthChar(pszSrc[j]) + 1;
                 if (currentX + tmpW > usableWidth - 3)
                     break;
             }
+
             cchSrc = (j > 0) ? j - 1 : 0;
             strWidth = tmpW;
             bTruncated = TRUE;
@@ -1986,20 +1990,20 @@ UINT IntFormatCandLineCHS(
     for (DWORD i = iStart; i < iEnd; i++)
     {
         const WCHAR* pszSrc = (const WCHAR*)((PBYTE)pCandList + pCandList->dwOffset[i]);
-        UINT cchSrc = lstrlenW(pszSrc);
+        size_t cchSrc = wcslen(pszSrc);
         UINT strWidth = IntGetStringWidth(pszSrc);
         BOOL bTruncated = FALSE;
 
         if (strWidth + currentX + 3 > usableWidth)
         {
-            UINT tmpW = 0;
-            UINT j = 0;
+            size_t tmpW = 0, j = 0;
             for (j = 0; j < cchSrc; j++)
             {
                 tmpW += IntIsDoubleWidthChar(pszSrc[j]) + 1;
                 if (currentX + tmpW > usableWidth - 3)
                     break;
             }
+
             cchSrc = (j > 0) ? j - 1 : 0;
             strWidth = tmpW;
             bTruncated = TRUE;
