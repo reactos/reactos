@@ -2397,8 +2397,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
-        DWORD iSep = 0;
-        DWORD totalItems = 0;
+        DWORD iItem, iSep = 1;
 
         if (bIsCode)
         {
@@ -2406,15 +2405,11 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 pEntry->dwCandOffset = pCandList->dwSelection % 9;
 
             pEntry->pdwCandPageStart[0] = 0;
-            iSep = 1;
-            for (totalItems = pEntry->dwCandOffset; totalItems < pCandList->dwCount;
-                 totalItems += 9)
-            {
-                pEntry->pdwCandPageStart[iSep++] = totalItems;
-            }
+            for (iItem = pEntry->dwCandOffset; iItem < pCandList->dwCount; iItem += 9)
+                pEntry->pdwCandPageStart[iSep++] = iItem;
 
-            if (totalItems > pCandList->dwCount)
-                totalItems = pCandList->dwCount;
+            if (iItem > pCandList->dwCount)
+                iItem = pCandList->dwCount;
         }
         else
         {
@@ -2422,8 +2417,6 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 pEntry->dwCandOffset = 0;
 
             pEntry->pdwCandPageStart[0] = pEntry->dwCandOffset;
-            iSep = 1;
-            totalItems = 1;
 
             UINT currentX =
                 IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0])) + 3;
@@ -2444,10 +2437,10 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 }
             }
 
-            totalItems = pCandList->dwCount;
+            iItem = pCandList->dwCount;
         }
 
-        pEntry->pdwCandPageStart[iSep] = totalItems;
+        pEntry->pdwCandPageStart[iSep] = iItem;
         pEntry->dwCandIndexMax = iSep;
 
         DWORD cbCandInfo = 3 * screenX + 4;
