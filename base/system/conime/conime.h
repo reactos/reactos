@@ -66,6 +66,9 @@ typedef struct tagKLINFO
 #define _IME_CMODE_DEACTIVATE 0x40000000
 #define _IME_CMODE_MASK (_IME_CMODE_OPEN | _IME_CMODE_DEACTIVATE)
 
+#define MAX_CANDLIST 32
+#define MAX_ATTR_COLORS 8
+
 // IME composition string info
 typedef struct tagCOMPSTRINFO
 {
@@ -76,7 +79,7 @@ typedef struct tagCOMPSTRINFO
     DWORD dwCompStrOffset;
     DWORD dwResultStrLen;
     DWORD dwResultStrOffset;
-    WORD  awAttrColor[8];
+    WORD  awAttrColor[MAX_ATTR_COLORS];
 } COMPSTRINFO, *PCOMPSTRINFO;
 
 // IME candidate info
@@ -85,8 +88,6 @@ typedef struct tagCANDINFO
     DWORD dwAttrsOffset;
     WCHAR szCandStr[ANYSIZE_ARRAY];
 } CANDINFO, *PCANDINFO;
-
-#define MAX_CANDLIST 32
 
 // Console entry
 typedef struct tagCONENTRY
@@ -106,7 +107,7 @@ typedef struct tagCONENTRY
     WCHAR szMode[10];
     BOOL bInComposition;
     PCOMPSTRINFO pCompStr;
-    WORD awAttrColor[8];
+    WORD awAttrColor[MAX_ATTR_COLORS];
     BOOL bHasAnyCand;
     PCANDIDATELIST apCandList[MAX_CANDLIST]; // See acbCandList below
     PCANDINFO pCandInfo;
