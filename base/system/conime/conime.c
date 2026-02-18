@@ -467,19 +467,16 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     PWCHAR pLayoutSrc = pEntry->szLayoutText;
 
     UINT width;
-    for (width = 0; *pLayoutSrc && width < 4;)
+    for (width = 0; *pLayoutSrc && width < 5 - 1;)
     {
         WCHAR wch = *pLayoutSrc++;
         pDisplay->CharInfo[cch++].Char.UnicodeChar = wch;
         width += IntIsDoubleWidthChar(wch) + 1;
     }
 
-    if (width < 5)
-    {
-        UINT paddingCount = 5 - width;
-        for (UINT i = 0; i < paddingCount; ++i)
-            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
-    }
+    INT paddingCount = 5 - width;
+    for (INT i = 0; i < paddingCount; ++i)
+        pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
 
     WCHAR modeChar;
     if (pEntry->dwConversion & IME_CMODE_FULLSHAPE)
@@ -720,14 +717,9 @@ INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
         }
     }
 
-    if (width < 9)
-    {
-        INT paddingCount = 9 - width;
-        for (INT i = 0; i < paddingCount; i++)
-        {
-            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
-        }
-    }
+    INT paddingCount = 9 - width;
+    for (INT i = 0; i < paddingCount; i++)
+        pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
 
     WCHAR modeChar;
     if (dwConversion & IME_CMODE_FULLSHAPE)
@@ -781,12 +773,9 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
         }
     }
 
-    if (displayCols < 10)
-    {
-        UINT padCount = 10 - displayCols;
-        for (UINT i = 0; i < padCount; i++)
-            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
-    }
+    INT padCount = 10 - displayCols;
+    for (INT i = 0; i < padCount; i++)
+        pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
 
     pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
@@ -2088,17 +2077,13 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             usableWidth = 7;
 
         UINT maxItemsPerPage = (usableWidth - 7) / 5;
-        if (maxItemsPerPage == 0)
-            maxItemsPerPage = 1;
-        if (maxItemsPerPage > 9)
-            maxItemsPerPage = 9;
+        maxItemsPerPage = max(min(maxItemsPerPage, 1), 9);
 
         UINT numDigits = 0;
-        for (UINT tmpCount = 1; tmpCount <= pCandList->dwCount; tmpCount *= 10)
+        for (UINT tmpCount = 1; tmpCount <= pCandList->dwCount; (tmpCount *= 10), ++numDigits)
         {
             if (tmpCount > MAXDWORD / 10)
                 break;
-            ++numDigits;
         }
 
         UINT labelWidth = 2 * numDigits + 1;
