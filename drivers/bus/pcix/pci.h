@@ -229,6 +229,7 @@ typedef struct _PCI_FDO_EXTENSION
         BOOLEAN EnableSERR;
     } HotPlugParameters;
     LONG BusHackFlags;
+    LONG PciPmeInterfaceCount;
 } PCI_FDO_EXTENSION, *PPCI_FDO_EXTENSION;
 
 typedef struct _PCI_FUNCTION_RESOURCES
