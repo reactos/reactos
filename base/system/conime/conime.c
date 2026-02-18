@@ -2599,7 +2599,7 @@ BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-//! Closes the IME candidate list for Traditional Chinese (CHT).
+//! Sends candidate list for Traditional Chinese (CHT).
 BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
@@ -2628,7 +2628,7 @@ BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
     return TRUE;
 }
 
-//! Closes the IME candidate list for Japanese/Korean.
+//! Sends the IME candidate list for Japanese/Korean.
 BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PCANDIDATELIST* apCandList = pEntry->apCandList;
@@ -2647,7 +2647,7 @@ BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWOR
     return TRUE;
 }
 
-//! Closes process for IME candidate list for Simplified Chinese (CHS).
+//! Sends the IME candidate list for Simplified Chinese (CHS).
 BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
