@@ -108,7 +108,7 @@ BOOL IntSendCopyDataToConsole(HWND hWnd, HWND hwndSender, PCOPYDATASTRUCT pCopyD
 {
     if (!hWnd || !IsWindow(hWnd))
     {
-        ERR("%p is not null\n", hWnd);
+        ERR("%p is null or invalid window\n", hWnd);
         return FALSE;
     }
 
