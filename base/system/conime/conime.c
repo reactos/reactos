@@ -464,19 +464,15 @@ UINT IntFillImeModeCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     while (*pLayoutSrc && nTotalWidth < 4)
     {
         WCHAR wch = *pLayoutSrc++;
-        pDisplay->CharInfo[cch].Char.UnicodeChar = wch;
+        pDisplay->CharInfo[cch++].Char.UnicodeChar = wch;
         nTotalWidth += IntIsDoubleWidthChar(wch) + 1;
-        cch++;
     }
 
     if (nTotalWidth < 5)
     {
         UINT paddingCount = 5 - nTotalWidth;
-        for (UINT i = 0; i < paddingCount; i++)
-        {
-            pDisplay->CharInfo[cch].Char.UnicodeChar = L' ';
-            cch++;
-        }
+        for (UINT i = 0; i < paddingCount; ++i)
+            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
     }
 
     WCHAR modeChar;
@@ -498,7 +494,7 @@ UINT IntFillImeModeCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     return cch;
 }
 
-void IntFillImeCompStrCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cchStart)
+void IntFillImeCompStrCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     if (!pCompStr || !pCompStr->dwCompStrLen)
@@ -506,7 +502,7 @@ void IntFillImeCompStrCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT c
 
     PWCHAR pchSrc = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
     PBYTE pbAttrIndex = (PBYTE)pchSrc + pCompStr->dwCompStrLen + 2;
-    PCHAR_INFO pDest = &pDisplay->CharInfo[cchStart];
+    PCHAR_INFO pDest = &pDisplay->CharInfo[cch];
 
     DWORD dwCharCount = pCompStr->dwCompStrLen / sizeof(WCHAR);
     for (DWORD ich = 0; ich < dwCharCount; ich++, pDest++)
@@ -660,8 +656,7 @@ BOOL IntFillImeDisplayJPN(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
     else if (dwSentence & IME_SMODE_PHRASEPREDICT)
         wchSentence = L'\x9023'; // L'連'
 
-    pDisplay->CharInfo[cch].Char.UnicodeChar = wchSentence;
-    ++cch;
+    pDisplay->CharInfo[cch++].Char.UnicodeChar = wchSentence;
     ++pChar;
 
     // Input method (kana input / romaji input) detection
@@ -702,13 +697,13 @@ INT IntFillImeModeCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     DWORD dwConversion = pEntry->dwConversion;
     UINT width = 0;
 
-    for (PWCHAR pLayoutSrc = pEntry->szLayoutText; *pLayoutSrc; pLayoutSrc++, cch++)
+    for (PWCHAR pLayoutSrc = pEntry->szLayoutText; *pLayoutSrc; pLayoutSrc++)
     {
         WCHAR wch = *pLayoutSrc;
         if (wch == 0x8F93) // U+8F93 L'输'
             break;
 
-        pDisplay->CharInfo[cch].Char.UnicodeChar = wch;
+        pDisplay->CharInfo[cch++].Char.UnicodeChar = wch;
 
         width += (IntIsDoubleWidthChar(wch) + 1);
         if (width >= 9)
@@ -724,8 +719,7 @@ INT IntFillImeModeCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
         INT paddingCount = 9 - width;
         for (INT i = 0; i < paddingCount; i++)
         {
-            pDisplay->CharInfo[cch].Char.UnicodeChar = L' ';
-            cch++;
+            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
         }
     }
 
@@ -735,9 +729,8 @@ INT IntFillImeModeCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     else
         modeChar = 0x534A; // U+534A L'半'
 
-    pDisplay->CharInfo[cch].Char.UnicodeChar = modeChar;
-    pDisplay->CharInfo[cch].Char.UnicodeChar = L':';
-    cch += 2;
+    pDisplay->CharInfo[cch++].Char.UnicodeChar = modeChar;
+    pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
     if (cch > 0)
     {
@@ -768,12 +761,12 @@ UINT IntFillImeCandidatesCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT c
         {
             pDisplay->CharInfo[cch].Char.UnicodeChar = *pszComp;
             pDisplay->CharInfo[cch].Attributes = pCompStr->wAttrColor[*pbAttrs];
+            ++cch;
 
-            cch++;
             strPosByte += sizeof(WCHAR);
             displayCols += IntIsDoubleWidthChar(*pszComp) + 1;
-            pszComp++;
-            pbAttrs++;
+            ++pszComp;
+            ++pbAttrs;
 
             if (strPosByte >= pCompStr->dwCompStrLen)
                 break;
@@ -783,12 +776,11 @@ UINT IntFillImeCandidatesCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT c
     if (displayCols < 10)
     {
         UINT padCount = 10 - displayCols;
-        for (UINT i = 0; i < padCount; i++, cch++)
-            pDisplay->CharInfo[cch].Char.UnicodeChar = L' ';
+        for (UINT i = 0; i < padCount; i++)
+            pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
     }
 
-    pDisplay->CharInfo[cch].Char.UnicodeChar = L':';
-    cch++;
+    pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
     PCANDINFO pCandInfo = pEntry->pCandInfo;
     PWCHAR pszCand = pCandInfo->szCandStr;
@@ -800,10 +792,10 @@ UINT IntFillImeCandidatesCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT c
         {
             pDisplay->CharInfo[cch].Char.UnicodeChar = *pszCand;
             pDisplay->CharInfo[cch].Attributes = pCompStr->wAttrColor[*pbCandAttrs];
+            ++cch;
 
-            cch++;
-            pszCand++;
-            pbCandAttrs++;
+            ++pszCand;
+            ++pbCandAttrs;
         }
     }
 
