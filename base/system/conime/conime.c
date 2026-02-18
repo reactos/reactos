@@ -2011,7 +2011,7 @@ UINT IntFormatCandLineCHS(
         if (i == pCandList->dwSelection)
             FillMemory(pbCurrentAttr, cchSrc + 2, 1);
 
-        *pszCurrentPos++ = (WCHAR)(L'0', candidateNum);
+        *pszCurrentPos++ = (WCHAR)(L'0' + candidateNum);
         *pszCurrentPos++ = L':';
         CopyMemory(pszCurrentPos, pszSrc, cchSrc * sizeof(WCHAR));
         pszCurrentPos += cchSrc;
