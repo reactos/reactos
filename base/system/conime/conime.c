@@ -425,8 +425,8 @@ BOOL IntGetLayoutText(PCONENTRY pEntry)
 
 BOOL IntIsImeOpen(HIMC hIMC, PCONENTRY pEntry)
 {
-    LANGID langId = LOWORD(pEntry->hKL);
-    switch (langId)
+    LANGID wLangId = LOWORD(pEntry->hKL);
+    switch (wLangId)
     {
         case LANGID_CHINESE_SIMPLIFIED:
         case LANGID_CHINESE_TRADITIONAL:
@@ -599,7 +599,7 @@ BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
     return TRUE;
 }
 
-inline void IntCopyUnicodeToCharInfo(PCHAR_INFO* ppDest, const WCHAR* pszSrc)
+inline void IntCopyUnicodeToCharInfo(PCHAR_INFO* ppDest, PCWSTR pszSrc)
 {
     if (!ppDest || !*ppDest || !pszSrc)
         return;
@@ -951,8 +951,8 @@ void IntSendConversionStatus(HWND hwnd)
     if (!pEntry || !pEntry->bInComposition)
         return;
 
-    LANGID langId = LOWORD(pEntry->hKL);
-    switch (langId)
+    LANGID wLangId = LOWORD(pEntry->hKL);
+    switch (wLangId)
     {
         case LANGID_CHINESE_SIMPLIFIED:
             IntSendConversionStatusCHS(hwnd, pEntry);
@@ -2141,21 +2141,19 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->dwCandOffset = 0;
 
         pEntry->pdwCandPageStart[0] = pEntry->dwCandOffset;
-        UINT currentX = 0;
-        UINT sepIdx = 1;
-        UINT itemIdx = 0;
 
-        WCHAR* firstStr = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[0]);
-        currentX = IntGetStringWidth(firstStr) + 3;
+        PWCHAR firstStr = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0]);
+        UINT currentX = IntGetStringWidth(firstStr) + 3;
 
-        for (itemIdx = 1; itemIdx < pCandList->dwCount; itemIdx++)
+        UINT iItem = 0, iSep = 1;
+        for (iItem = 1; iItem < pCandList->dwCount && iSep < nPageCountNeeded - 1; ++iItem)
         {
-            WCHAR* szText = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[itemIdx]);
+            PWCHAR szText = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[iItem]);
             UINT strW = IntGetStringWidth(szText);
 
             if (currentX + strW + 3 > (usableWidth - labelWidth))
             {
-                pEntry->pdwCandPageStart[sepIdx++] = itemIdx;
+                pEntry->pdwCandPageStart[iSep++] = iItem;
                 currentX = strW + 3;
             }
             else
@@ -2163,8 +2161,9 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 currentX += strW + 3;
             }
         }
-        pEntry->pdwCandPageStart[sepIdx] = pCandList->dwCount;
-        pEntry->dwCandIndexMax = sepIdx;
+
+        pEntry->pdwCandPageStart[iSep] = pCandList->dwCount;
+        pEntry->dwCandIndexMax = iSep;
 
         UINT cbCandInfo = 3 * usableWidth + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
@@ -2183,8 +2182,8 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDINFO pCI = pEntry->pCandInfo;
         pCI->dwAttrsOffset = 2 * usableWidth + 4;
 
-        UINT currentPage = IntFormatCandLineCHT(pCandList, pCI->szCandStr,
-                                                (PBYTE)pCI + pCI->dwAttrsOffset,
+        PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
+        UINT currentPage = IntFormatCandLineCHT(pCandList, pCI->szCandStr, pbAttrs,
                                                 usableWidth, labelWidth, pEntry);
 
         pEntry->bSkipPageMsg = TRUE;
@@ -2291,22 +2290,20 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->dwCandOffset = 0;
 
         pEntry->pdwCandPageStart[0] = pEntry->dwCandOffset;
-        UINT currentX = 0;
-        UINT sepIdx = 1;
-        UINT itemIdx = 0;
 
-        WCHAR* szFirstStr = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[0]);
-        currentX = IntGetStringWidth(szFirstStr) + 3;
+        PWCHAR szFirstStr = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0]);
+        UINT currentX = IntGetStringWidth(szFirstStr) + 3;
 
-        for (itemIdx = 1; itemIdx < pCandList->dwCount; itemIdx++)
+        UINT iItem = 0, iSep = 1;
+        for (iItem = 1; iItem < pCandList->dwCount; iItem++)
         {
-            WCHAR* szText = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[itemIdx]);
+            WCHAR* szText = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[iItem]);
             UINT strW = IntGetStringWidth(szText);
 
             if (currentX + strW + 3 > usableWidth ||
-                (itemIdx - pEntry->pdwCandPageStart[sepIdx-1]) >= 9)
+                (iItem - pEntry->pdwCandPageStart[iSep-1]) >= 9)
             {
-                pEntry->pdwCandPageStart[sepIdx++] = itemIdx;
+                pEntry->pdwCandPageStart[iSep++] = iItem;
                 currentX = strW + 3;
             }
             else
@@ -2315,8 +2312,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             }
         }
 
-        pEntry->pdwCandPageStart[sepIdx] = pCandList->dwCount;
-        pEntry->dwCandIndexMax = sepIdx;
+        pEntry->pdwCandPageStart[iSep] = pCandList->dwCount;
+        pEntry->dwCandIndexMax = iSep;
 
         DWORD cbCandInfo = 3 * usableWidth + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
@@ -2335,8 +2332,8 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDINFO pCI = pEntry->pCandInfo;
         pCI->dwAttrsOffset = 2 * usableWidth + 4;
 
-        UINT currentPage = IntFormatCandLineCHS(pCandList, pCI->szCandStr,
-                                                (PBYTE)pCI + pCI->dwAttrsOffset,
+        PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
+        UINT currentPage = IntFormatCandLineCHS(pCandList, pCI->szCandStr, pbAttrs,
                                                 usableWidth, 0, pEntry);
 
         pEntry->bSkipPageMsg = TRUE;
@@ -2433,7 +2430,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
-        DWORD sepIdx = 0;
+        DWORD iSep = 0;
         DWORD totalItems = 0;
 
         if (bIsCode)
@@ -2442,11 +2439,11 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 pEntry->dwCandOffset = pCandList->dwSelection % 9;
 
             pEntry->pdwCandPageStart[0] = 0;
-            sepIdx = 1;
+            iSep = 1;
             for (totalItems = pEntry->dwCandOffset; totalItems < pCandList->dwCount;
                  totalItems += 9)
             {
-                pEntry->pdwCandPageStart[sepIdx++] = totalItems;
+                pEntry->pdwCandPageStart[iSep++] = totalItems;
             }
 
             if (totalItems > pCandList->dwCount)
@@ -2458,7 +2455,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 pEntry->dwCandOffset = 0;
 
             pEntry->pdwCandPageStart[0] = pEntry->dwCandOffset;
-            sepIdx = 1;
+            iSep = 1;
             totalItems = 1;
 
             UINT currentX =
@@ -2469,9 +2466,9 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             {
                 UINT strW = IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[i]));
                 if (currentX + strW + 3 > usableWidth ||
-                    (i - pEntry->pdwCandPageStart[sepIdx - 1]) >= 9)
+                    (i - pEntry->pdwCandPageStart[iSep - 1]) >= 9)
                 {
-                    pEntry->pdwCandPageStart[sepIdx++] = i;
+                    pEntry->pdwCandPageStart[iSep++] = i;
                     currentX = strW + 3;
                 }
                 else
@@ -2482,8 +2479,9 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
 
             totalItems = pCandList->dwCount;
         }
-        pEntry->pdwCandPageStart[sepIdx] = totalItems;
-        pEntry->dwCandIndexMax = sepIdx;
+
+        pEntry->pdwCandPageStart[iSep] = totalItems;
+        pEntry->dwCandIndexMax = iSep;
 
         DWORD cbCandInfo = 3 * screenX + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
@@ -2501,8 +2499,8 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PCANDINFO pCI = pEntry->pCandInfo;
         pCI->dwAttrsOffset = 2 * screenX + 4;
 
-        UINT currentPage = IntFormatCandLineJPNorKOR(pCandList, pCI->szCandStr,
-                                                     (PBYTE)pCI + pCI->dwAttrsOffset,
+        PBYTE pbAttrs = (PBYTE)pCI + pCI->dwAttrsOffset;
+        UINT currentPage = IntFormatCandLineJPNorKOR(pCandList, pCI->szCandStr, pbAttrs,
                                                      screenX, labelWidth, pEntry, bIsCode);
 
         pEntry->bSkipPageMsg = TRUE;
@@ -2540,8 +2538,8 @@ BOOL ConIme_OnNotifyOpenCandidate(HWND hwnd, LPARAM lParam, BOOL bOpen)
 
     pEntry->bHasAnyCand = TRUE;
 
-    LANGID langId = LOWORD(pEntry->hKL);
-    switch (langId)
+    LANGID wLangId = LOWORD(pEntry->hKL);
+    switch (wLangId)
     {
         case LANGID_CHINESE_SIMPLIFIED:
             IntSendCandListCHS(hwnd, hIMC, pEntry, (DWORD)lParam, bOpen);
