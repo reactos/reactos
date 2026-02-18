@@ -2073,7 +2073,12 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             screenX = 12;
 
         UINT usableWidth = screenX - 8; // Margin?
+        if (usableWidth < 7)
+            usableWidth = 7;
+
         UINT maxItemsPerPage = (usableWidth - 7) / 5;
+        if (maxItemsPerPage == 0)
+            maxItemsPerPage = 1;
         if (maxItemsPerPage > 9)
             maxItemsPerPage = 9;
 
