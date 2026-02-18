@@ -2825,13 +2825,13 @@ LRESULT ConIme_OnRoute(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    UINT vkey, uKeyState = (!!(HIWORD(lParam) & KF_UP)) | KF_EXTENDED;
-    LRESULT ret = ImmCallImeConsoleIME(hwnd, uKeyState, wParam, lParam, &vkey);
+    UINT vkey, uKeyMsg = ((HIWORD(lParam) & KF_UP) ? WM_KEYUP : WM_KEYDOWN);
+    LRESULT ret = ImmCallImeConsoleIME(hwnd, uKeyMsg, wParam, lParam, &vkey);
 
     if (!(ret & IPHK_HOTKEY))
     {
         if (ret & IPHK_PROCESSBYIME)
-            return ImmTranslateMessage(hwnd, uKeyState, wParam, lParam);
+            return ImmTranslateMessage(hwnd, uKeyMsg, wParam, lParam);
         else if ((ret & IPHK_CHECKCTRL) || uMsg == WM_ROUTE_CHAR || uMsg == WM_ROUTE_SYSCHAR)
             return ConIme_OnKeyChar(hwnd, uMsg - WM_ROUTE, wch, lParam);
         else
