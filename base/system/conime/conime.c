@@ -42,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(conime);
 
 // Global variables
 HANDLE g_hConsole = NULL;
-PCONSOLE_ENTRY* g_ppEntries = NULL;
+PCONENTRY* g_ppEntries = NULL;
 UINT g_cEntries = 0;
 HIMC g_hOldIMC = NULL;
 DWORD g_dwAttachToThreadId = 0;
@@ -178,14 +178,14 @@ BOOL IntIsLogOnSession(void)
 }
 
 //! Finds the ENTRY structure corresponding to the specified console handle.
-PCONSOLE_ENTRY IntFindConsoleEntry(HANDLE hConsole)
+PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
 {
     EnterCriticalSection(&g_csLock);
 
     if (!g_hConsole)
         g_hConsole = hConsole;
 
-    PCONSOLE_ENTRY pEntry = NULL;
+    PCONENTRY pEntry = NULL;
     for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
     {
         pEntry = g_ppEntries[iEntry];
@@ -208,7 +208,7 @@ void ConIme_OnEnd(HWND hwnd, UINT uMsg)
     {
         for (UINT iEntry = 1; iEntry < g_cEntries; iEntry++)
         {
-            PCONSOLE_ENTRY pEntry = g_ppEntries[iEntry];
+            PCONENTRY pEntry = g_ppEntries[iEntry];
             if (!pEntry)
                 continue;
 
@@ -277,15 +277,15 @@ BOOL IntGrowEntries(void)
 {
     size_t cGrow = 5;
     size_t cNewCount = g_cEntries + cGrow;
-    size_t cbOld = sizeof(PCONSOLE_ENTRY) * g_cEntries;
-    size_t cbNew = sizeof(PCONSOLE_ENTRY) * cNewCount;
-    PCONSOLE_ENTRY* ppEntries = LocalAlloc(LPTR, cbNew);
+    size_t cbOld = sizeof(PCONENTRY) * g_cEntries;
+    size_t cbNew = sizeof(PCONENTRY) * cNewCount;
+    PCONENTRY* ppEntries = LocalAlloc(LPTR, cbNew);
     if (!ppEntries)
         return FALSE;
 
     CopyMemory(ppEntries, g_ppEntries, cbOld);
 
-    PCONSOLE_ENTRY* ppOldEntries = g_ppEntries;
+    PCONENTRY* ppOldEntries = g_ppEntries;
     g_ppEntries = ppEntries;
     g_cEntries = cNewCount;
     LocalFree(ppOldEntries);
@@ -294,7 +294,7 @@ BOOL IntGrowEntries(void)
 }
 
 //! Frees the resources associated with the console entry.
-BOOL ConIme_UnInitEntry(HWND hwnd, PCONSOLE_ENTRY pEntry)
+BOOL ConIme_UnInitEntry(HWND hwnd, PCONENTRY pEntry)
 {
     if (!pEntry->bConsoleEnabled)
     {
@@ -347,7 +347,7 @@ BOOL ConIme_UnInitEntry(HWND hwnd, PCONSOLE_ENTRY pEntry)
 
 //! Gets the name of the current keyboard layout or IME and stores it in the entry.
 //  If necessary, sets the input mode abbreviation (szMode) from an internal table.
-BOOL IntGetLayoutText(PCONSOLE_ENTRY pEntry)
+BOOL IntGetLayoutText(PCONENTRY pEntry)
 {
     pEntry->szMode[0] = pEntry->szLayoutText[0] = UNICODE_NULL;
 
@@ -419,7 +419,7 @@ BOOL IntGetLayoutText(PCONSOLE_ENTRY pEntry)
     return TRUE;
 }
 
-BOOL IntIsImeOpen(HIMC hIMC, PCONSOLE_ENTRY pEntry)
+BOOL IntIsImeOpen(HIMC hIMC, PCONENTRY pEntry)
 {
     LANGID langId = LOWORD(pEntry->hKL);
     switch (langId)
@@ -439,7 +439,7 @@ BOOL IntIsImeOpen(HIMC hIMC, PCONSOLE_ENTRY pEntry)
 
 //! Fills the status buffer with characters and attributes from the
 // Traditional Chinese IME candidate list
-void IntFillImeCandidatesCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
+void IntFillImeCandidatesCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     PCANDINFO pCandInfo = pEntry->pCandInfo;
@@ -458,7 +458,7 @@ void IntFillImeCandidatesCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT i
 }
 
 //! Builds a buffer for displaying the IME status
-UINT IntFillImeModeCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
+UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 {
     UINT nTotalWidth = 0;
     PWCHAR pLayoutSrc = pEntry->szLayoutText;
@@ -496,7 +496,7 @@ UINT IntFillImeModeCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     return cch;
 }
 
-void IntFillImeCompStrCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+void IntFillImeCompStrCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     if (!pCompStr || !pCompStr->dwCompStrLen)
@@ -526,7 +526,7 @@ UINT IntGetCharInfoWidth(PCHAR_INFO pCharInfo, UINT cch)
 }
 
 //! Adjusts the width of the status display and pads it with spaces
-UINT IntFillImeSpaceCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+UINT IntFillImeSpaceCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     UINT maxX = pEntry->ScreenSize.X;
     if (maxX > 160)
@@ -566,7 +566,7 @@ UINT IntFillImeSpaceCHSCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch
     return ichFinal;
 }
 
-BOOL IntFillImeDisplayCHT(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
+BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     UINT cch = 0;
     if (ImmIsIME(pEntry->hKL))
@@ -606,7 +606,7 @@ inline void IntCopyUnicodeToCharInfo(PCHAR_INFO* ppDest, const WCHAR* pszSrc)
 
 //! Converts the current Japanese IME conversion mode, phrase conversion mode, and
 // input method into a string for display (CharInfo array).
-BOOL IntFillImeDisplayJPN(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
+BOOL IntFillImeDisplayJPN(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     PCHAR_INFO pChar = pDisplay->CharInfo;
     DWORD dwConversion = pEntry->dwConversion, dwSentence = pEntry->dwSentence;
@@ -685,7 +685,7 @@ DoSetAttributes:
     return TRUE;
 }
 
-BOOL IntFillImeDisplayKOR(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
+BOOL IntFillImeDisplayKOR(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     pDisplay->CharInfo[0].Char.UnicodeChar = L' ';
     pDisplay->CharInfo[0].Attributes = _FOREGROUND_WHITE;
@@ -694,7 +694,7 @@ BOOL IntFillImeDisplayKOR(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
     return TRUE;
 }
 
-INT IntFillImeModeCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     DWORD dwConversion = pEntry->dwConversion;
     UINT width = 0;
@@ -744,7 +744,7 @@ INT IntFillImeModeCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 }
 
 //! Combine the Simplified Chinese IME composition string and candidate list and fill the buffer
-UINT IntFillImeCandidatesCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
 
@@ -805,7 +805,7 @@ UINT IntFillImeCandidatesCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay, UINT c
 }
 
 //! Constructs IME status information for Simplified Chinese (CHS).
-BOOL IntFillImeDisplayCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
+BOOL IntFillImeDisplayCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     UINT cch = 0;
     if (ImmIsIME(pEntry->hKL))
@@ -825,7 +825,7 @@ BOOL IntFillImeDisplayCHS(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
     return TRUE;
 }
 
-BOOL IntFillImeDisplay(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
+BOOL IntFillImeDisplay(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
 {
     LANGID wLangId = LOWORD(pEntry->hKL);
     switch (wLangId)
@@ -847,7 +847,7 @@ BOOL IntFillImeDisplay(PCONSOLE_ENTRY pEntry, PIMEDISPLAY pDisplay)
 BOOL ConIme_OnNotifySetOpenStatus(HWND hwndTarget)
 {
     // Find active console entries
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -887,7 +887,7 @@ BOOL ConIme_OnNotifySetOpenStatus(HWND hwndTarget)
     return bSuccess;
 }
 
-void IntSendConversionStatusCHT(HWND hwnd, PCONSOLE_ENTRY pEntry)
+void IntSendConversionStatusCHT(HWND hwnd, PCONENTRY pEntry)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -903,7 +903,7 @@ void IntSendConversionStatusCHT(HWND hwnd, PCONSOLE_ENTRY pEntry)
     LocalFree(pDisplay);
 }
 
-void IntSendConversionStatusJPNorKOR(HWND hwnd, PCONSOLE_ENTRY pEntry)
+void IntSendConversionStatusJPNorKOR(HWND hwnd, PCONENTRY pEntry)
 {
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
 
@@ -914,7 +914,7 @@ void IntSendConversionStatusJPNorKOR(HWND hwnd, PCONSOLE_ENTRY pEntry)
     IntSendCopyDataToConsole(pEntry->hwndConsole, hwnd, &CopyData);
 }
 
-void IntSendConversionStatusCHS(HWND hwnd, PCONSOLE_ENTRY pEntry)
+void IntSendConversionStatusCHS(HWND hwnd, PCONENTRY pEntry)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -932,7 +932,7 @@ void IntSendConversionStatusCHS(HWND hwnd, PCONSOLE_ENTRY pEntry)
 
 void IntSendConversionStatus(HWND hwnd)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry || !pEntry->bInComposition)
         return;
 
@@ -955,7 +955,7 @@ void IntSendConversionStatus(HWND hwnd)
 //! WM_USER_SWITCHIME
 BOOL ConIme_OnSwitchIme(HWND hwnd, HANDLE hConsole, HKL hKL)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -989,7 +989,7 @@ BOOL ConIme_OnSwitchIme(HWND hwnd, HANDLE hConsole, HKL hKL)
 //! WM_USER_DEACTIVATE
 BOOL ConIme_OnDeactivate(HWND hwnd, HANDLE hConsole)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -1009,7 +1009,7 @@ BOOL ConIme_OnDeactivate(HWND hwnd, HANDLE hConsole)
 //! WM_USER_SETSCREENSIZE
 BOOL ConIme_SetScreenSize(HWND hwnd, HANDLE hConsole, COORD ScreenSize)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -1020,7 +1020,7 @@ BOOL ConIme_SetScreenSize(HWND hwnd, HANDLE hConsole, COORD ScreenSize)
 //! Handles keyboard layout switch requests.
 BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE; // Deny
 
@@ -1094,7 +1094,7 @@ BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
 //! WM_USER_SENDIMESTATUS
 BOOL ConIme_SendImeStatus(HWND hWnd)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -1129,7 +1129,7 @@ BOOL ConIme_SendImeStatus(HWND hWnd)
 
 BOOL ConIme_OnInputLangChange(HWND hwnd, WPARAM wParam, HKL hKL)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -1143,7 +1143,7 @@ BOOL ConIme_OnInputLangChange(HWND hwnd, WPARAM wParam, HKL hKL)
 //! Initializes and allocates an ENTRY structure for the new console connection.
 BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
 {
-    PCONSOLE_ENTRY pEntry = NULL;
+    PCONENTRY pEntry = NULL;
 
     for (UINT iEntry = 1; ; ++iEntry)
     {
@@ -1156,7 +1156,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
         pEntry = g_ppEntries[iEntry];
         if (!pEntry)
         {
-            pEntry = LocalAlloc(LPTR, sizeof(CONSOLE_ENTRY));
+            pEntry = LocalAlloc(LPTR, sizeof(CONENTRY));
             if (!pEntry)
                 return FALSE;
 
@@ -1173,7 +1173,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
             break;
     }
 
-    ZeroMemory(pEntry, sizeof(CONSOLE_ENTRY));
+    ZeroMemory(pEntry, sizeof(CONENTRY));
     PKLINFO pKLInfo = pEntry->pKLInfo = LocalAlloc(LPTR, sizeof(KLINFO));
     if (!pEntry->pKLInfo)
         return FALSE;
@@ -1210,7 +1210,7 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
 BOOL ConIme_OnUnInit(HWND hwnd, HANDLE hConsole)
 {
     EnterCriticalSection(&g_csLock);
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     BOOL ret;
     if (pEntry)
         ret = ConIme_UnInitEntry(hwnd, pEntry);
@@ -1250,7 +1250,7 @@ inline BOOL ConIme_OnCreate(HWND hwnd)
 }
 
 //! Processes Japanese IME Composition and Result strings.
-void IntDoImeCompJPN(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
+void IntDoImeCompJPN(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
 {
     HIMC hIMC = ImmGetContext(hwnd);
     if (!hIMC)
@@ -1353,7 +1353,7 @@ EXIT:
 }
 
 //! Notifies the input composition status of the Chinese (Simplified) IME to the console
-void IntDoImeCompCHS(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
+void IntDoImeCompCHS(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
 {
     HIMC hIMC = ImmGetContext(hwnd);
     if (!hIMC)
@@ -1467,7 +1467,7 @@ EXIT:
 
 //! Processes the input composition status of the Chinese (Traditional) IME and
 // notifies the console
-void IntDoImeCompCHT(HWND hWnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags)
+void IntDoImeCompCHT(HWND hWnd, PCONENTRY pEntry, DWORD dwFlags)
 {
     HIMC hIMC = ImmGetContext(hWnd);
     if (!hIMC)
@@ -1589,7 +1589,7 @@ EXIT:
 }
 
 //! Processes the Korean IME input composition state and notifies the console
-void IntDoImeCompKOR(HWND hwnd, PCONSOLE_ENTRY pEntry, DWORD dwFlags, WCHAR wch)
+void IntDoImeCompKOR(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags, WCHAR wch)
 {
     HIMC hIMC = ImmGetContext(hwnd);
     if (!hIMC)
@@ -1706,7 +1706,7 @@ EXIT:
 
 void IntDoImeComp(HWND hwnd, DWORD dwFlags, WCHAR wch)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return;
 
@@ -1747,7 +1747,7 @@ UINT IntFormatCandLineJPNorKOR(
     PBYTE pbAttrsDest,
     UINT width,
     UINT labelWidth,
-    PCONSOLE_ENTRY pEntry,
+    PCONENTRY pEntry,
     BOOL bIsCode)
 {
     if (pCandList->dwSelection >= pCandList->dwCount)
@@ -1874,7 +1874,7 @@ UINT IntFormatCandLineCHT(
     PBYTE pbAttrsDest,
     UINT width,
     UINT labelWidth,
-    PCONSOLE_ENTRY pEntry)
+    PCONENTRY pEntry)
 {
     if (pCandList->dwSelection >= pCandList->dwCount)
         pCandList->dwSelection = 0;
@@ -1965,7 +1965,7 @@ UINT IntFormatCandLineCHS(
     PBYTE pbAttrsDest,
     UINT width,
     UINT labelWidth,
-    PCONSOLE_ENTRY pEntry)
+    PCONENTRY pEntry)
 {
     if (pCandList->dwSelection >= pCandList->dwCount)
         pCandList->dwSelection = 0;
@@ -2034,7 +2034,7 @@ UINT IntFormatCandLineCHS(
     return pageIndex;
 }
 
-BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
+BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2164,7 +2164,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCan
     return TRUE;
 }
 
-BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
+BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2292,7 +2292,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCan
     return TRUE;
 }
 
-BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
+BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates, BOOL bOpen)
 {
     for (DWORD dwIndex = 0; dwIndex < MAX_CANDLIST; ++dwIndex)
     {
@@ -2441,7 +2441,7 @@ BOOL IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD 
 //  list process.
 BOOL ConIme_OnNotifyOpenCandidate(HWND hwnd, LPARAM lParam, BOOL bOpen)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2484,7 +2484,7 @@ inline BOOL ConIme_OnNotifyChangeCandidate(HWND hwnd, LPARAM lParam)
 //! Handles guideline notifications (error messages, etc.) from IME
 BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2528,7 +2528,7 @@ BOOL ConIme_OnNotifyGuideLine(HWND hWnd)
 //! WM_USER_GETIMESTATE
 DWORD IntGetImeState(HWND hWnd, HANDLE hConsole)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return 0;
 
@@ -2545,7 +2545,7 @@ DWORD IntGetImeState(HWND hWnd, HANDLE hConsole)
 //! WM_USER_SETIMESTATE
 BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2584,7 +2584,7 @@ BOOL IntSetImeState(HWND hwnd, HANDLE hConsole, DWORD dwConversion)
 //! WM_USER_SETCODEPAGE
 BOOL ConIme_SetCodePage(HWND hwnd, HANDLE hConsole, BOOL bOutput, WORD wCodePage)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2599,7 +2599,7 @@ BOOL ConIme_SetCodePage(HWND hwnd, HANDLE hConsole, BOOL bOutput, WORD wCodePage
 //! WM_IME_SYSTEM
 BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2612,7 +2612,7 @@ BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 //! Sends candidate list for Traditional Chinese (CHT).
-BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2641,7 +2641,7 @@ BOOL IntSendCandidatesCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
 }
 
 //! Sends the IME candidate list for Japanese/Korean.
-BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates)
 {
     PCANDIDATELIST* apCandList = pEntry->apCandList;
     for (DWORD iCand = 0; iCand < MAX_CANDLIST; ++iCand)
@@ -2660,7 +2660,7 @@ BOOL IntSendCandidatesJPNorKOR(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWOR
 }
 
 //! Sends the IME candidate list for Simplified Chinese (CHS).
-BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
+BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidates)
 {
     PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
@@ -2690,7 +2690,7 @@ BOOL IntSendCandidatesCHS(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwC
 
 BOOL ConIme_OnNotifyCloseCandidate(HWND hwnd, DWORD dwCandidates)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -2765,7 +2765,7 @@ BOOL ConIme_OnImeNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 BOOL ConIme_OnKeyChar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (pEntry)
         return PostMessageW(pEntry->hwndConsole, uMsg + WM_ROUTE, wParam, lParam);
     return FALSE;
@@ -2823,7 +2823,7 @@ void ConIme_OnEnable(void)
     EnterCriticalSection(&g_csLock);
     for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
     {
-        PCONSOLE_ENTRY pEntry = g_ppEntries[iEntry];
+        PCONENTRY pEntry = g_ppEntries[iEntry];
         if (pEntry && pEntry->hConsole)
         {
             // Enable the console window and bring it to the front
@@ -2842,7 +2842,7 @@ void ConIme_OnEnable(void)
 //! WM_ENABLE
 void ConIme_OnDisable(void)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (pEntry && pEntry->hConsole)
     {
         pEntry->bConsoleEnabled = FALSE;
@@ -2854,7 +2854,7 @@ void ConIme_OnDisable(void)
 //! WM_IME_STARTCOMPOSITION
 void ConIme_OnImeStartComposition(HWND hwnd)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (pEntry)
         pEntry->bInComposition = TRUE;
 }
@@ -2863,7 +2863,7 @@ void ConIme_OnImeStartComposition(HWND hwnd)
 void ConIme_OnImeEndComposition(HWND hWnd)
 {
     // Find the currently active console entry
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return;
 
@@ -2880,7 +2880,7 @@ void ConIme_OnImeEndComposition(HWND hWnd)
 //! WM_USER_CHANGEKEYBOARD
 void ConIme_OnChangeKeyboard(HWND hwnd, HANDLE hConsole, HKL hNewKL)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(hConsole);
     if (!pEntry)
         pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry || !pEntry->pKLInfo)
@@ -3006,7 +3006,7 @@ LRESULT ConIme_OnUser(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 //! WM_INPUTLANGCHANGEREQUEST
 LRESULT ConIme_OnInputLangChangeRequest(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE_ENTRY pEntry = IntFindConsoleEntry(g_hConsole);
+    PCONENTRY pEntry = IntFindConsoleEntry(g_hConsole);
     if (!pEntry)
         return FALSE;
 
@@ -3146,7 +3146,7 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
         return FALSE;
 
     const UINT cEntries = 10;
-    g_ppEntries = LocalAlloc(LPTR, cEntries * sizeof(PCONSOLE_ENTRY));
+    g_ppEntries = LocalAlloc(LPTR, cEntries * sizeof(PCONENTRY));
     if (!g_ppEntries)
         return FALSE;
 

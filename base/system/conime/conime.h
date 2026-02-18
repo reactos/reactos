@@ -87,7 +87,7 @@ typedef struct tagCANDINFO
 #define MAX_CANDLIST 32
 
 // Console entry
-typedef struct tagCONSOLE_ENTRY
+typedef struct tagCONENTRY
 {
     HANDLE hConsole;
     HWND hwndConsole;
@@ -120,4 +120,4 @@ typedef struct tagCONSOLE_ENTRY
     BOOL bWndEnabled;
     INT cKLs;
     PKLINFO pKLInfo;
-} CONSOLE_ENTRY, *PCONSOLE_ENTRY;
+} CONENTRY, *PCONENTRY;
