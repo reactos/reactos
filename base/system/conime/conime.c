@@ -179,31 +179,8 @@ BOOL IntIsLogOnSession(void)
     return g_bIsLogOnSession;
 }
 
-//! Finds the CONENTRY structure corresponding to the specified console handle.
-PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
+void IntFreeConsoleEntries(void)
 {
-    EnterCriticalSection(&g_csLock);
-
-    if (!g_hConsole)
-        g_hConsole = hConsole;
-
-    PCONENTRY pEntry = NULL;
-    for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
-    {
-        pEntry = g_ppEntries[iEntry];
-        if (pEntry && pEntry->hConsole == hConsole && !pEntry->bWndEnabled)
-            break;
-    }
-
-    LeaveCriticalSection(&g_csLock);
-    return pEntry;
-}
-
-//! Terminate Console IME.
-void ConIme_OnEnd(HWND hwnd, UINT uMsg)
-{
-    ImmAssociateContext(hwnd, g_hOldIMC);
-
     EnterCriticalSection(&g_csLock);
 
     if (g_ppEntries)
@@ -266,6 +243,34 @@ void ConIme_OnEnd(HWND hwnd, UINT uMsg)
     }
 
     LeaveCriticalSection(&g_csLock);
+}
+
+//! Finds the CONENTRY structure corresponding to the specified console handle.
+PCONENTRY IntFindConsoleEntry(HANDLE hConsole)
+{
+    EnterCriticalSection(&g_csLock);
+
+    if (!g_hConsole)
+        g_hConsole = hConsole;
+
+    PCONENTRY pEntry = NULL;
+    for (UINT iEntry = 1; iEntry < g_cEntries; ++iEntry)
+    {
+        pEntry = g_ppEntries[iEntry];
+        if (pEntry && pEntry->hConsole == hConsole && !pEntry->bWndEnabled)
+            break;
+    }
+
+    LeaveCriticalSection(&g_csLock);
+    return pEntry;
+}
+
+//! Terminate Console IME.
+void ConIme_OnEnd(HWND hwnd, UINT uMsg)
+{
+    ImmAssociateContext(hwnd, g_hOldIMC);
+
+    IntFreeConsoleEntries();
 
     if (g_dwAttachToThreadId && (uMsg != WM_ENDSESSION || !g_bIsLogOnSession))
     {
@@ -3209,8 +3214,6 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     HANDLE hStartUpEvent = OpenEventW(EVENT_MODIFY_STATE, FALSE, L"ConsoleIME_StartUp_Event");
     if (!hStartUpEvent)
     {
-        LocalFree(g_ppEntries);
-        g_ppEntries = NULL;
         DeleteCriticalSection(&g_csLock);
         return FALSE;
     }
@@ -3248,7 +3251,6 @@ BOOL ConIme_InitInstance(HINSTANCE hInstance)
     {
         SetEvent(hStartUpEvent);
         CloseHandle(hStartUpEvent);
-        DeleteCriticalSection(&g_csLock);
         return TRUE; // Success
     }
 
@@ -3270,7 +3272,6 @@ Cleanup1:
     }
 
     DeleteCriticalSection(&g_csLock);
-    LocalFree(g_ppEntries);
     return FALSE; // Failed
 }
 
@@ -3286,6 +3287,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT nCmd
     if (!ConIme_InitInstance(hInstance))
     {
         ERR("ConIme_InitInstance failed\n");
+        IntFreeConsoleEntries();
         return 0;
     }
 
@@ -3305,6 +3307,9 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT nCmd
         msg.wParam = -1;
     }
     _SEH2_END;
+
+    IntFreeConsoleEntries();
+    DeleteCriticalSection(&g_csLock);
 
     return (INT)msg.wParam;
 }
