@@ -86,7 +86,7 @@ BOOL WINAPI InetIsOffline(DWORD flags)
     ULONG Size = 0;
     GetAdaptersAddresses(AF_UNSPEC, 0, NULL, &Size);
 
-    PIP_ADAPTER_ADDRESSES Adapters = malloc(Size);
+    PIP_ADAPTER_ADDRESSES Adapters = HeapAlloc(GetProcessHeap(), Size);
 
     if (!Adapters)
         return FALSE;
@@ -102,7 +102,7 @@ BOOL WINAPI InetIsOffline(DWORD flags)
         Current = Current->Next;
     }
 
-    free(Adapters);
+    HeapFree(Adapters);
 
     return TRUE;
 }
