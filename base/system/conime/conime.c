@@ -2130,7 +2130,10 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
             if (!pEntry->pdwCandPageStart)
+            {
+                LocalFree(pDisplay);
                 return FALSE;
+            }
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
@@ -2169,6 +2172,11 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             if (pEntry->pCandInfo)
                 LocalFree(pEntry->pCandInfo);
             pEntry->pCandInfo = LocalAlloc(LPTR, cbCandInfo);
+            if (!pEntry->pCandInfo)
+            {
+                LocalFree(pDisplay);
+                return FALSE;
+            }
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
@@ -2272,7 +2280,10 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
             if (!pEntry->pdwCandPageStart)
+            {
+                LocalFree(pDisplay);
                 return FALSE;
+            }
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
@@ -2313,6 +2324,11 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             if (pEntry->pCandInfo)
                 LocalFree(pEntry->pCandInfo);
             pEntry->pCandInfo = LocalAlloc(LPTR, cbCandInfo);
+            if (!pEntry->pCandInfo)
+            {
+                LocalFree(pDisplay);
+                return FALSE;
+            }
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
@@ -2364,7 +2380,8 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (!pEntry->apCandList[dwIndex])
         {
             pEntry->apCandList[dwIndex] = LocalAlloc(LPTR, cbList);
-            if (!pEntry->apCandList[dwIndex]) return FALSE;
+            if (!pEntry->apCandList[dwIndex])
+                return FALSE;
             pEntry->acbCandList[dwIndex] = cbList;
         }
 
@@ -2474,6 +2491,8 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             if (pEntry->pCandInfo)
                 LocalFree(pEntry->pCandInfo);
             pEntry->pCandInfo = LocalAlloc(LPTR, cbCandInfo);
+            if (!pEntry->pCandInfo)
+                return FALSE;
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
