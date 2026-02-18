@@ -2209,8 +2209,16 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         if (screenX < 12)
             screenX = 12;
 
-        UINT usableWidth = screenX - 25;
-        UINT maxItemsPerPage = (usableWidth - 7) / 5;
+        INT usableWidth = (INT)screenX - 25;
+        UINT maxItemsPerPage;
+        if (usableWidth <= 7)
+        {
+            maxItemsPerPage = 1;
+        }
+        else
+        {
+            maxItemsPerPage = (UINT)((usableWidth - 7) / 5);
+        }
         if (maxItemsPerPage > 9)
             maxItemsPerPage = 9;
 
