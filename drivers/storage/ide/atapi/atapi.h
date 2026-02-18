@@ -1,461 +1,917 @@
 /*
- * PROJECT:         ReactOS Storage Stack
- * LICENSE:         DDK - see license.txt in the root dir
- * FILE:            drivers/storage/atapi/atapi.h
- * PURPOSE:         ATAPI IDE miniport driver
- * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
+ * PROJECT:     ReactOS ATA Port Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Common header file
+ * COPYRIGHT:   Copyright 2024-2025 Dmitry Borisov <di.sean@protonmail.com>
  */
 
-#include <srb.h>
+#pragma once
+
+#include <ntddk.h>
+#include <ntstrsafe.h>
+#include <ntintsafe.h>
+
+#include <wmilib.h>
+#include <initguid.h>
+#include <wdmguid.h>
+#include <wmistr.h>
+#include <wmidata.h>
+
+#include <ata.h>
+#include <ide.h>
 #include <scsi.h>
+#include <ntddscsi.h>
+#include <ntdddisk.h>
 
-//
-// IDE register definition
-//
+#include <sptilib.h>
+#include <section_attribs.h>
+#include <debug/driverdbg.h>
+#include <reactos/drivers/ata/acpi.h>
+#include <reactos/drivers/ata/ntddata.h>
+#include <reactos/drivers/ata/identify_funcs.h>
 
-typedef struct _IDE_REGISTERS_1 {
-    USHORT Data;
-    UCHAR BlockCount;
-    UCHAR BlockNumber;
-    UCHAR CylinderLow;
-    UCHAR CylinderHigh;
-    UCHAR DriveSelect;
-    UCHAR Command;
-} IDE_REGISTERS_1, *PIDE_REGISTERS_1;
+typedef struct _ATAPORT_CHANNEL_EXTENSION ATAPORT_CHANNEL_EXTENSION, *PATAPORT_CHANNEL_EXTENSION;
+typedef struct _ATAPORT_DEVICE_EXTENSION ATAPORT_DEVICE_EXTENSION, *PATAPORT_DEVICE_EXTENSION;
+typedef struct _ATAPORT_PORT_DATA ATAPORT_PORT_DATA, *PATAPORT_PORT_DATA;
+typedef struct _ATAPORT_IO_CONTEXT ATAPORT_IO_CONTEXT, *PATAPORT_IO_CONTEXT;
 
-typedef struct _IDE_REGISTERS_2 {
-    UCHAR AlternateStatus;
-    UCHAR DriveAddress;
-} IDE_REGISTERS_2, *PIDE_REGISTERS_2;
+typedef union _ATA_SCSI_ADDRESS
+{
+    /*
+     * The ordering between Lun, TargetId, and PathId fields is important
+     * with address comparison.
+     */
+    struct
+    {
+        /**
+         * The lun number 0-7.
+         * @sa ATA_MAX_LUN_COUNT
+         */
+        UCHAR Lun;
 
-typedef struct _IDE_REGISTERS_3 {
-    ULONG Data;
-    UCHAR Others[4];
-} IDE_REGISTERS_3, *PIDE_REGISTERS_3;
+        /**
+         * PATA:
+         * The device number 0 - Master, 1 - Slave,
+         * 2 - Master (PC-98), 3 - Slave (PC-98).
+         *
+         * AHCI:
+         * The device number 0-15.
+         */
+        UCHAR TargetId;
 
-//
-// Device Extension Device Flags
-//
+        /**
+         * PATA:
+         * The PCI channel number 0-1 or 0 for legacy channels.
+         *
+         * AHCI:
+         * The port number 0-31.
+         */
+        UCHAR PathId;
 
-#define DFLAGS_DEVICE_PRESENT        0x0001    // Indicates that some device is present.
-#define DFLAGS_ATAPI_DEVICE          0x0002    // Indicates whether Atapi commands can be used.
-#define DFLAGS_TAPE_DEVICE           0x0004    // Indicates whether this is a tape device.
-#define DFLAGS_INT_DRQ               0x0008    // Indicates whether device interrupts as DRQ is set after
-                                               // receiving Atapi Packet Command
-#define DFLAGS_REMOVABLE_DRIVE       0x0010    // Indicates that the drive has the 'removable' bit set in
-                                               // identify data (offset 128)
-#define DFLAGS_MEDIA_STATUS_ENABLED  0x0020    // Media status notification enabled
-#define DFLAGS_ATAPI_CHANGER         0x0040    // Indicates atapi 2.5 changer present.
-#define DFLAGS_SANYO_ATAPI_CHANGER   0x0080    // Indicates multi-platter device, not conforming to the 2.5 spec.
-#define DFLAGS_CHANGER_INITED        0x0100    // Indicates that the init path for changers has already been done.
-//
-// Used to disable 'advanced' features.
-//
+        UCHAR IsValid;
+    };
+    ULONG AsULONG;
+} ATA_SCSI_ADDRESS, *PATA_SCSI_ADDRESS;
 
-#define MAX_ERRORS                     4
+typedef VOID
+(STOP_IO_CALLBACK)(
+    _In_ PATAPORT_IO_CONTEXT Device);
+typedef STOP_IO_CALLBACK *PSTOP_IO_CALLBACK;
 
-//
-// ATAPI command definitions
-//
+typedef struct _ATAPORT_IO_CONTEXT
+{
+    ATA_IO_CONTEXT_COMMON;
 
-#define ATAPI_MODE_SENSE   0x5A
-#define ATAPI_MODE_SELECT  0x55
-#define ATAPI_FORMAT_UNIT  0x24
+    ULONG DeviceFlags;
+#define DEVICE_PIO_ONLY                          0x00000001
+#define DEVICE_LBA_MODE                          0x00000002
+#define DEVICE_LBA48                             0x00000004
+#define DEVICE_HAS_FUA                           0x00000008
+#define DEVICE_NCQ                               0x00000010
+#define DEVICE_HAS_MEDIA_STATUS                  0x00000020
+#define DEVICE_SENSE_DATA_REPORTING              0x00000040
+#define DEVICE_IS_SUPER_FLOPPY                   0x00000080
+#define DEVICE_IS_PDO_REMOVABLE                  0x00000100
+#define DEVICE_UNINITIALIZED                     0x00000200
+#define DEVICE_PNP_STARTED                       0x00000400
+#define DEVICE_DESCRIPTOR_SENSE                  0x00000800
+#define DEVICE_PIO_VIA_DMA                       0x00001000
+#define DEVICE_PIO_FOR_LBA48_XFER                0x00002000
 
-//
-// ATAPI Command Descriptor Block
-//
+    PULONG PowerIdleCounter;
+    PVOID LocalBuffer;
+    ATA_SCSI_ADDRESS AtaScsiAddress;
+    PATAPORT_PORT_DATA PortData;
+    KSPIN_LOCK QueueLock;
 
-typedef struct _MODE_SENSE_10 {
-        UCHAR OperationCode;
-        UCHAR Reserved1;
-        UCHAR PageCode : 6;
-        UCHAR Pc : 2;
-        UCHAR Reserved2[4];
-        UCHAR ParameterListLengthMsb;
-        UCHAR ParameterListLengthLsb;
-        UCHAR Reserved3[3];
-} MODE_SENSE_10, *PMODE_SENSE_10;
+    LONG QueueFlags;
+#define QUEUE_FLAG_FROZEN_PORT_BUSY          0x00000001
+#define QUEUE_FLAG_FROZEN_SLOT               0x00000002
+#define QUEUE_FLAG_FROZEN_PNP                0x00000004
+#define QUEUE_FLAG_SIGNAL_STOP               0x00000008
+#define QUEUE_FLAG_FROZEN_QUEUE_FREEZE       0x00000010
+#define QUEUE_FLAG_FROZEN_POWER              0x00000020
+#define QUEUE_FLAG_FROZEN_REMOVED            0x00000040
+#define QUEUE_FLAG_FROZEN_QUEUE_LOCK         0x00080000
 
-typedef struct _MODE_SELECT_10 {
-        UCHAR OperationCode;
-        UCHAR Reserved1 : 4;
-        UCHAR PFBit : 1;
-        UCHAR Reserved2 : 3;
-        UCHAR Reserved3[5];
-        UCHAR ParameterListLengthMsb;
-        UCHAR ParameterListLengthLsb;
-        UCHAR Reserved4[3];
-} MODE_SELECT_10, *PMODE_SELECT_10;
+#define QUEUE_FLAGS_FROZEN \
+    (QUEUE_FLAG_FROZEN_PORT_BUSY | \
+     QUEUE_FLAG_FROZEN_SLOT | \
+     QUEUE_FLAG_FROZEN_PNP | \
+     QUEUE_FLAG_FROZEN_QUEUE_FREEZE | \
+     QUEUE_FLAG_FROZEN_POWER | \
+     QUEUE_FLAG_FROZEN_REMOVED | \
+     QUEUE_FLAG_FROZEN_QUEUE_LOCK)
 
-typedef struct _MODE_PARAMETER_HEADER_10 {
-    UCHAR ModeDataLengthMsb;
-    UCHAR ModeDataLengthLsb;
-    UCHAR MediumType;
-    UCHAR Reserved[5];
-}MODE_PARAMETER_HEADER_10, *PMODE_PARAMETER_HEADER_10;
+#define QUEUE_FLAGS_FROZEN_NOT_BYPASS \
+    (QUEUE_FLAGS_FROZEN & ~(QUEUE_FLAG_FROZEN_QUEUE_FREEZE | QUEUE_FLAG_FROZEN_QUEUE_LOCK))
 
-//
-// IDE command definitions
-//
+    USHORT Cylinders;
+    USHORT Heads;
+    USHORT SectorsPerTrack;
+    ULONG64 TotalSectors;
+    ULONG MaxRequestsBitmap;
+    ULONG FreeRequestsBitmap;
+    PATA_DEVICE_REQUEST Requests;
+    LIST_ENTRY DeviceQueueList;
+    PLIST_ENTRY NextDeviceQueueEntry;
+    KEVENT QueueStoppedEvent;
+    PSCSI_REQUEST_BLOCK QuiescenceSrb;
+#if DBG
+    struct
+    {
+        ULONG RequestsStarted;
+        ULONG RequestsCompleted;
+    } Statistics;
+#endif
+} ATAPORT_IO_CONTEXT, *PATAPORT_IO_CONTEXT;
 
-#define IDE_COMMAND_ATAPI_RESET      0x08
-#define IDE_COMMAND_RECALIBRATE      0x10
-#define IDE_COMMAND_READ             0x20
-#define IDE_COMMAND_WRITE            0x30
-#define IDE_COMMAND_VERIFY           0x40
-#define IDE_COMMAND_SEEK             0x70
-#define IDE_COMMAND_SET_DRIVE_PARAMETERS 0x91
-#define IDE_COMMAND_ATAPI_PACKET     0xA0
-#define IDE_COMMAND_ATAPI_IDENTIFY   0xA1
-#define IDE_COMMAND_READ_MULTIPLE    0xC4
-#define IDE_COMMAND_WRITE_MULTIPLE   0xC5
-#define IDE_COMMAND_SET_MULTIPLE     0xC6
-#define IDE_COMMAND_READ_DMA         0xC8
-#define IDE_COMMAND_WRITE_DMA             0xCA
-#define IDE_COMMAND_GET_MEDIA_STATUS      0xDA
-#define IDE_COMMAND_ENABLE_MEDIA_STATUS   0xEF
-#define IDE_COMMAND_IDENTIFY              0xEC
-#define IDE_COMMAND_MEDIA_EJECT           0xED
+#include "include/debug.h"
+#include "include/scsiex.h"
+#include "include/devevent.h"
 
-//
-// IDE status definitions
-//
+#if defined(_MSC_VER)
+#pragma section("PAGECONS", read)
+#endif
 
-#define IDE_STATUS_ERROR             0x01
-#define IDE_STATUS_INDEX             0x02
-#define IDE_STATUS_CORRECTED_ERROR   0x04
-#define IDE_STATUS_DRQ               0x08
-#define IDE_STATUS_DSC               0x10
-#define IDE_STATUS_DRDY              0x40
-#define IDE_STATUS_IDLE              0x50
-#define IDE_STATUS_BUSY              0x80
+/** Pageable read-only data */
+#define ATAPORT_PAGED_DATA    DATA_SEG("PAGECONS")
 
-//
-// IDE drive select/head definitions
-//
+#define DECLARE_PAGED_UNICODE_STRING(Variable, Str) \
+  static const ATAPORT_PAGED_DATA WCHAR Variable##_buffer[] = Str; \
+  UNICODE_STRING Variable = { sizeof(Str) - sizeof(WCHAR), sizeof(Str), (PWCH)Variable##_buffer } \
 
-#define IDE_DRIVE_SELECT_1           0xA0
-#define IDE_DRIVE_SELECT_2           0x10
+#define DECLARE_PAGED_STRING(v, n) \
+    static const ATAPORT_PAGED_DATA CHAR (v)[] = (n)
 
-//
-// IDE drive control definitions
-//
+#define DECLARE_PAGED_WSTRING(v, n) \
+    static const ATAPORT_PAGED_DATA WCHAR (v)[] = (n)
 
-#define IDE_DC_DISABLE_INTERRUPTS    0x02
-#define IDE_DC_RESET_CONTROLLER      0x04
-#define IDE_DC_REENABLE_CONTROLLER   0x00
+#define ASSUME(cond) \
+    do { \
+        ASSERT(cond); \
+        __assume(cond); \
+    } while (0)
 
-//
-// IDE error definitions
-//
+#define ATAPORT_TAG             'PedI'
 
-#define IDE_ERROR_BAD_BLOCK          0x80
-#define IDE_ERROR_DATA_ERROR         0x40
-#define IDE_ERROR_MEDIA_CHANGE       0x20
-#define IDE_ERROR_ID_NOT_FOUND       0x10
-#define IDE_ERROR_MEDIA_CHANGE_REQ   0x08
-#define IDE_ERROR_COMMAND_ABORTED    0x04
-#define IDE_ERROR_END_OF_MEDIA       0x02
-#define IDE_ERROR_ILLEGAL_LENGTH     0x01
+#define IS_FDO(p) \
+    ((((PATAPORT_COMMON_EXTENSION)(p))->Flags & DO_IS_FDO) != 0)
 
-//
-// ATAPI register definition
-//
+#define IS_ATAPI(Device) \
+    (((Device)->TransportFlags & DEVICE_IS_ATAPI) != 0)
 
-typedef struct _ATAPI_REGISTERS_1 {
-    USHORT Data;
-    UCHAR InterruptReason;
-    UCHAR Unused1;
-    UCHAR ByteCountLow;
-    UCHAR ByteCountHigh;
-    UCHAR DriveSelect;
-    UCHAR Command;
-} ATAPI_REGISTERS_1, *PATAPI_REGISTERS_1;
+/**
+ * @brief
+ * The maximum length of identifier strings for ATA devices excluding the terminating NULL.
+ *
+ * @sa
+ * See MSDN note:
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
+ *
+ * and
+ * IDENTIFY_DEVICE_DATA.SerialNumber
+ * IDENTIFY_DEVICE_DATA.ModelNumber
+ * IDENTIFY_DEVICE_DATA.FirmwareRevision
+ */
+/*@{*/
+#define ATAPORT_FN_FIELD   40
+#define ATAPORT_SN_FIELD   40
+#define ATAPORT_RN_FIELD   8
+/*@}*/
 
-typedef struct _ATAPI_REGISTERS_2 {
-    UCHAR AlternateStatus;
-    UCHAR DriveAddress;
-} ATAPI_REGISTERS_2, *PATAPI_REGISTERS_2;
+#define ATA_RESERVED_PAGES       4
 
-//
-// ATAPI interrupt reasons
-//
+#define ATA_MAX_LUN_COUNT        8
 
-#define ATAPI_IR_COD 0x01
-#define ATAPI_IR_IO  0x02
+/* Maximum size (ATA Information VPD page) */
+#define ATA_LOCAL_BUFFER_SIZE    572
 
-//
-// IDENTIFY data
-//
+#define MAX_SLOTS        32
 
-typedef struct _IDENTIFY_DATA {
-    USHORT GeneralConfiguration;            // 00 00
-    USHORT NumberOfCylinders;               // 02  1
-    USHORT Reserved1;                       // 04  2
-    USHORT NumberOfHeads;                   // 06  3
-    USHORT UnformattedBytesPerTrack;        // 08  4
-    USHORT UnformattedBytesPerSector;       // 0A  5
-    USHORT SectorsPerTrack;                 // 0C  6
-    USHORT VendorUnique1[3];                // 0E  7-9
-    USHORT SerialNumber[10];                // 14  10-19
-    USHORT BufferType;                      // 28  20
-    USHORT BufferSectorSize;                // 2A  21
-    USHORT NumberOfEccBytes;                // 2C  22
-    USHORT FirmwareRevision[4];             // 2E  23-26
-    USHORT ModelNumber[20];                 // 36  27-46
-    UCHAR  MaximumBlockTransfer;            // 5E  47
-    UCHAR  VendorUnique2;                   // 5F
-    USHORT DoubleWordIo;                    // 60  48
-    USHORT Capabilities;                    // 62  49
-    USHORT Reserved2;                       // 64  50
-    UCHAR  VendorUnique3;                   // 66  51
-    UCHAR  PioCycleTimingMode;              // 67
-    UCHAR  VendorUnique4;                   // 68  52
-    UCHAR  DmaCycleTimingMode;              // 69
-    USHORT TranslationFieldsValid:1;        // 6A  53
-    USHORT Reserved3:15;
-    USHORT NumberOfCurrentCylinders;        // 6C  54
-    USHORT NumberOfCurrentHeads;            // 6E  55
-    USHORT CurrentSectorsPerTrack;          // 70  56
-    ULONG  CurrentSectorCapacity;           // 72  57-58
-    USHORT CurrentMultiSectorSetting;       //     59
-    ULONG  UserAddressableSectors;          //     60-61
-    USHORT SingleWordDMASupport : 8;        //     62
-    USHORT SingleWordDMAActive : 8;
-    USHORT MultiWordDMASupport : 8;         //     63
-    USHORT MultiWordDMAActive : 8;
-    USHORT AdvancedPIOModes : 8;            //     64
-    USHORT Reserved4 : 8;
-    USHORT MinimumMWXferCycleTime;          //     65
-    USHORT RecommendedMWXferCycleTime;      //     66
-    USHORT MinimumPIOCycleTime;             //     67
-    USHORT MinimumPIOCycleTimeIORDY;        //     68
-    USHORT Reserved5[2];                    //     69-70
-    USHORT ReleaseTimeOverlapped;           //     71
-    USHORT ReleaseTimeServiceCommand;       //     72
-    USHORT MajorRevision;                   //     73
-    USHORT MinorRevision;                   //     74
-    USHORT Reserved6[50];                   //     75-126
-    USHORT SpecialFunctionsEnabled;         //     127
-    USHORT Reserved7[128];                  //     128-255
-} IDENTIFY_DATA, *PIDENTIFY_DATA;
+#define QUEUE_ENTRY_FROM_IRP(Irp) \
+    ((PREQUEST_QUEUE_ENTRY)&(((PIRP)(Irp))->Tail.Overlay.DriverContext[0]))
 
-//
-// Identify data without the Reserved4.
-//
+#define IRP_FROM_QUEUE_ENTRY(QueueEntry) \
+    (PIRP)CONTAINING_RECORD(QueueEntry, IRP, Tail.Overlay.DriverContext[0])
 
-typedef struct _IDENTIFY_DATA2 {
-    USHORT GeneralConfiguration;            // 00
-    USHORT NumberOfCylinders;               // 02
-    USHORT Reserved1;                       // 04
-    USHORT NumberOfHeads;                   // 06
-    USHORT UnformattedBytesPerTrack;        // 08
-    USHORT UnformattedBytesPerSector;       // 0A
-    USHORT SectorsPerTrack;                 // 0C
-    USHORT VendorUnique1[3];                // 0E
-    USHORT SerialNumber[10];                // 14
-    USHORT BufferType;                      // 28
-    USHORT BufferSectorSize;                // 2A
-    USHORT NumberOfEccBytes;                // 2C
-    USHORT FirmwareRevision[4];             // 2E
-    USHORT ModelNumber[20];                 // 36
-    UCHAR  MaximumBlockTransfer;            // 5E
-    UCHAR  VendorUnique2;                   // 5F
-    USHORT DoubleWordIo;                    // 60
-    USHORT Capabilities;                    // 62
-    USHORT Reserved2;                       // 64
-    UCHAR  VendorUnique3;                   // 66
-    UCHAR  PioCycleTimingMode;              // 67
-    UCHAR  VendorUnique4;                   // 68
-    UCHAR  DmaCycleTimingMode;              // 69
-    USHORT TranslationFieldsValid:1;        // 6A
-    USHORT Reserved3:15;
-    USHORT NumberOfCurrentCylinders;        // 6C
-    USHORT NumberOfCurrentHeads;            // 6E
-    USHORT CurrentSectorsPerTrack;          // 70
-    ULONG  CurrentSectorCapacity;           // 72
-} IDENTIFY_DATA2, *PIDENTIFY_DATA2;
+typedef struct _REQUEST_QUEUE_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    PVOID Context;
+    ULONG SortKey;
+} REQUEST_QUEUE_ENTRY, *PREQUEST_QUEUE_ENTRY;
 
-#define IDENTIFY_DATA_SIZE sizeof(IDENTIFY_DATA)
+/* Check for Irp->Tail.Overlay.DriverContext */
+C_ASSERT(sizeof(REQUEST_QUEUE_ENTRY) <= 4 * sizeof(PVOID));
 
-//
-// IDENTIFY capability bit definitions.
-//
+#define ASSERT_REQUEST(Request) \
+    ASSERT((Request) && (Request)->Signature == ATA_DEVICE_REQUEST_SIGNATURE)
 
-#define IDENTIFY_CAPABILITIES_DMA_SUPPORTED 0x0100
-#define IDENTIFY_CAPABILITIES_LBA_SUPPORTED 0x0200
+C_ASSERT(REQUEST_FLAG_DATA_IN == SRB_FLAGS_DATA_IN);
+C_ASSERT(REQUEST_FLAG_DATA_OUT == SRB_FLAGS_DATA_OUT);
+C_ASSERT(REQUEST_FLAG_NO_KEEP_AWAKE == SRB_FLAGS_NO_KEEP_AWAKE);
 
-//
-// IDENTIFY DMA timing cycle modes.
-//
+typedef struct _ATAPORT_PORT_DATA
+{
+    ULONG PortFlags;
+#define PORT_FLAG_IS_SIMPLEX                      0x00000001
+#define PORT_FLAG_PIO_VIA_DMA                     0x00000002
+#define PORT_FLAG_IS_EXTERNAL                     0x00000004
+#define PORT_FLAG_NCQ                             0x00000008
+#define PORT_FLAG_IS_AHCI                         0x00000010
+#define PORT_FLAG_SYMLINK_CREATED                 0x00000020
+#define PORT_FLAG_IO_TIMER_ACTIVE                 0x00000040
+#define PORT_FLAG_CHANNEL_ATTACHED                0x00000080
+#define PORT_FLAG_PIO_ONLY                        0x00000100
+#define PORT_FLAG_PIO_FOR_LBA48_XFER              0x00000200
+#define PORT_FLAG_EXIT_THREAD                     0x80000000
 
-#define IDENTIFY_DMA_CYCLES_MODE_0 0x00
-#define IDENTIFY_DMA_CYCLES_MODE_1 0x01
-#define IDENTIFY_DMA_CYCLES_MODE_2 0x02
+    PVOID ChannelContext;
+    PCHANNEL_ALLOCATE_SLOT AllocateSlot;
+    PCHANNEL_PREPARE_PRD_TABLE PreparePrdTable;
+    PCHANNEL_PREPARE_IO PrepareIo;
+    PCHANNEL_START_IO StartIo;
+    PDMA_ADAPTER DmaAdapter;
+    PDEVICE_OBJECT ChannelObject;
+    PATA_DEVICE_REQUEST Slots[MAX_SLOTS];
+    LONG TimerCount[MAX_SLOTS];
+    PKINTERRUPT InterruptObject;
+    ULONG ActiveSlotsBitmap;
+    volatile LONG InterruptFlags;
+#define PORT_INT_FLAG_IS_IO_ACTIVE                0x00000001
+#define PORT_INT_FLAG_IGNORE_LINK_IRQ             0x00000002
 
+    KSPIN_LOCK QueueLock;
+    LIST_ENTRY PortQueueList;
+    ULONG ActiveTimersBitmap;
+    ULONG FreeSlotsBitmap;
+    ULONG LastUsedSlot;
+    ULONG QueueFlags;
+#define PORT_QUEUE_FLAG_EXCLUSIVE_MODE            0x00000001
+#define PORT_QUEUE_FLAG_SIGNAL_STOP               0x00000002
 
-typedef struct _BROKEN_CONTROLLER_INFORMATION {
-    PCHAR   VendorId;
-    ULONG   VendorIdLength;
-    PCHAR   DeviceId;
-    ULONG   DeviceIdLength;
-}BROKEN_CONTROLLER_INFORMATION, *PBROKEN_CONTROLLER_INFORMATION;
+    /**
+     * <0: we have native queued commands pending.
+     * =0: the slot queue is empty.
+     * >0: we have non-queued commands pending.
+     */
+    LONG AllocatedSlots;
 
-BROKEN_CONTROLLER_INFORMATION const BrokenAdapters[] = {
-    { "1095", 4, "0640", 4},
-    { "1039", 4, "0601", 4}
-};
+    volatile LONG ReservedMappingLock;
+    PVOID ReservedVaSpace;
+    PCONTROLLER_OBJECT HwSyncObject;
+    PCHANNEL_ABORT_CHANNEL AbortChannel;
+    PCHANNEL_RESET_CHANNEL ResetChannel;
+    PCHANNEL_ENUMERATE_CHANNEL EnumerateChannel;
+    PCHANNEL_IDENTIFY_DEVICE IdentifyDevice;
+    PCHANNEL_SET_MODE SetTransferMode;
+    PCHANNEL_SET_DEVICE_DATA SetDeviceData;
+    PCHANNEL_GET_INIT_TASK_FILE GetInitTaskFile;
+    PCHANNEL_DOWNGRADE_INTERFACE_SPEED DowngradeInterfaceSpeed;
+    PCONTROLLER_ATTACH_CHANNEL AttachChannel;
+    KEVENT QueueStoppedEvent;
+    ULONG MaximumTransferLength;
+    ULONG MaximumPhysicalPages;
+    ULONG MaxTargetId;
+    ULONG QueueDepth;
+    ULONG PortNumber;
+    ULONG MaxSlotsBitmap;
+    PVOID LocalBuffer;
+    SCATTER_GATHER_LIST LocalSgList;
+    ATA_WORKER_CONTEXT Worker;
+} ATAPORT_PORT_DATA, *PATAPORT_PORT_DATA;
 
-#define BROKEN_ADAPTERS (sizeof(BrokenAdapters) / sizeof(BROKEN_CONTROLLER_INFORMATION))
+typedef struct _ATAPORT_COMMON_EXTENSION
+{
+    _Write_guarded_by_(_Global_interlock_)
+    volatile LONG PageFiles;
 
-typedef struct _NATIVE_MODE_CONTROLLER_INFORMATION {
-    PCHAR   VendorId;
-    ULONG   VendorIdLength;
-    PCHAR   DeviceId;
-    ULONG   DeviceIdLength;
-}NATIVE_MODE_CONTROLLER_INFORMATION, *PNATIVE_MODE_CONTROLLER_INFORMATION;
+    _Write_guarded_by_(_Global_interlock_)
+    volatile LONG HibernateFiles;
 
-NATIVE_MODE_CONTROLLER_INFORMATION const NativeModeAdapters[] = {
-    { "10ad", 4, "0105", 4}
-};
-#define NUM_NATIVE_MODE_ADAPTERS (sizeof(NativeModeAdapters) / sizeof(NATIVE_MODE_CONTROLLER_INFORMATION))
+    _Write_guarded_by_(_Global_interlock_)
+    volatile LONG DumpFiles;
 
-//
-// Beautification macros
-//
+    /** PNP device power state. */
+    DEVICE_POWER_STATE DevicePowerState;
 
-#define GetStatus(BaseIoAddress, Status) \
-    Status = ScsiPortReadPortUchar(&BaseIoAddress->AlternateStatus);
+    /** PNP system power state. */
+    SYSTEM_POWER_STATE SystemPowerState;
 
-#define GetBaseStatus(BaseIoAddress, Status) \
-    Status = ScsiPortReadPortUchar(&BaseIoAddress->Command);
+    union
+    {
+        /** Lower device object. This applies to FDO only. */
+        PDEVICE_OBJECT LowerDeviceObject;
 
-#define WriteCommand(BaseIoAddress, Command) \
-    ScsiPortWritePortUchar(&BaseIoAddress->Command, Command);
+        /** Parent FDO. This applies to PDO only. */
+        PVOID FdoExt;
+    };
 
+    ULONG Flags;
+#define DO_IS_FDO        0x80000000
 
+    PDEVICE_OBJECT Self;
 
-#define ReadBuffer(BaseIoAddress, Buffer, Count) \
-    ScsiPortReadPortBufferUshort(&BaseIoAddress->Data, \
-                                 Buffer, \
-                                 Count);
+    IO_REMOVE_LOCK RemoveLock;
+} ATAPORT_COMMON_EXTENSION, *PATAPORT_COMMON_EXTENSION;
 
-#define WriteBuffer(BaseIoAddress, Buffer, Count) \
-    ScsiPortWritePortBufferUshort(&BaseIoAddress->Data, \
-                                  Buffer, \
-                                  Count);
+typedef struct _ATAPORT_CHANNEL_EXTENSION
+{
+    /** Common data, must be the first member. */
+    ATAPORT_COMMON_EXTENSION Common;
 
-#define ReadBuffer2(BaseIoAddress, Buffer, Count) \
-    ScsiPortReadPortBufferUlong(&BaseIoAddress->Data, \
-                             Buffer, \
-                             Count);
+    ATAPORT_PORT_DATA PortData;
 
-#define WriteBuffer2(BaseIoAddress, Buffer, Count) \
-    ScsiPortWritePortBufferUlong(&BaseIoAddress->Data, \
-                              Buffer, \
-                              Count);
+    PDEVICE_OBJECT Pdo;
+    KSPIN_LOCK PdoListLock;
+    SINGLE_LIST_ENTRY PdoList;
+    ULONG DeviceObjectNumber;
+    ULONG ScsiPortNumber;
+    UNICODE_STRING StorageInterfaceName;
+} ATAPORT_CHANNEL_EXTENSION, *PATAPORT_CHANNEL_EXTENSION;
 
-#define WaitOnBusy(BaseIoAddress, Status) \
-{ \
-    ULONG i; \
-    for (i=0; i<20000; i++) { \
-        GetStatus(BaseIoAddress, Status); \
-        if (Status & IDE_STATUS_BUSY) { \
-            ScsiPortStallExecution(150); \
-            continue; \
-        } else { \
-            break; \
-        } \
-    } \
+typedef struct _ATAPORT_DEVICE_EXTENSION
+{
+    /** Common data, must be the first member. */
+    ATAPORT_COMMON_EXTENSION Common;
+
+    ATAPORT_IO_CONTEXT Device;
+    ATA_WORKER_DEVICE_CONTEXT Worker;
+
+    BOOLEAN ReportedMissing;
+    BOOLEAN RemovalPending;
+    BOOLEAN NotPresent;
+    BOOLEAN DeviceClaimed;
+
+    /** PDO list entry. */
+    SINGLE_LIST_ENTRY ListEntry;
+
+    /** Power IRP queue list. */
+    LIST_ENTRY PowerIrpQueueList;
+
+    /** 512-byte block of device identify data. */
+    union
+    {
+        IDENTIFY_DEVICE_DATA IdentifyDeviceData;
+        IDENTIFY_PACKET_DATA IdentifyPacketData;
+    };
+
+    /** Standard inquiry data. */
+    INQUIRYDATA InquiryData;
+
+    /** Device strings for PNP and IOCTL operations. */
+    /*@{*/
+    _Field_z_ DECLSPEC_ALIGN(2) CHAR FriendlyName[ATAPORT_FN_FIELD + sizeof(ANSI_NULL)];
+    _Field_z_ DECLSPEC_ALIGN(2) CHAR RevisionNumber[ATAPORT_RN_FIELD + sizeof(ANSI_NULL)];
+    _Field_z_ DECLSPEC_ALIGN(2) CHAR SerialNumber[ATAPORT_SN_FIELD + sizeof(ANSI_NULL)];
+    /*@}*/
+
+    /**
+     * Current device type.
+     * @sa ATA_DEVICE_TYPE
+     *
+     * Passed to storprop.dll through registry (REG_DWORD).
+     * @sa DD_ATA_REG_ATA_DEVICE_TYPE
+     */
+    ULONG DeviceType;
+
+    /**
+     * Bit map for the user-specified transfer modes on the device.
+     *
+     * Maintained by storprop.dll and always retrieved from the registry by the driver (REG_DWORD).
+     * @sa DD_ATA_REG_XFER_MODE_ALLOWED
+     */
+    ULONG TransferModeUserAllowedMask;
+
+    /**
+     * Bit map for enabled/active transfer modes on the device.
+     * Holds the value based off of identify data.
+     */
+    ULONG TransferModeCurrentBitmap;
+
+    /**
+     * Bit map for supported transfer modes on the device.
+     * Holds the value based off of identify data.
+     *
+     * Passed to storprop.dll through registry (REG_DWORD).
+     * @sa DD_ATA_REG_XFER_MODE_SUPPORTED
+     */
+    ULONG TransferModeSupportedBitmap;
+
+    /**
+     * Selected transfer modes on the device as a bit map
+     * with 1 or 2 bits set: +1 for PIO mode (always set) and +1 for DMA mode (may be disabled).
+     *
+     * Passed to storprop.dll through registry (REG_DWORD).
+     * @sa DD_ATA_REG_XFER_MODE_SELECTED
+     */
+    ULONG TransferModeSelectedBitmap;
+
+    /**
+     * Bit map for allowed transfer modes on the device.
+     * DMA errors cause the upper bits to be cleared until PIO mode is reached.
+     */
+    ULONG TransferModeAllowedMask;
+
+    /**
+     * The minimum cycle time in nanoseconds that the device can support
+     * for PIO and DMA transfer modes. -1 if not supported.
+     *
+     * @sa IDE_ACPI_TIMING_MODE_NOT_SUPPORTED
+     */
+    /*@{*/
+    ULONG MinimumPioCycleTime;
+    ULONG MinimumSingleWordDmaCycleTime;
+    ULONG MinimumMultiWordDmaCycleTime;
+    ULONG MinimumUltraDmaCycleTime;
+    /*@}*/
+
+    /** List of ATA commands to the drive created by the ACPI firmware. */
+    PVOID GtfDataBuffer;
+
+    /** Tracks the last time a DMA error was encountered. */
+    LARGE_INTEGER LastDmaErrorTime;
+
+    /** WMI data provider interface. */
+    WMILIB_CONTEXT WmiLibInfo;
+} ATAPORT_DEVICE_EXTENSION, *PATAPORT_DEVICE_EXTENSION;
+
+C_ASSERT(QUEUE_FLAG_FROZEN_QUEUE_FREEZE == SRB_FLAGS_BYPASS_FROZEN_QUEUE);
+C_ASSERT(QUEUE_FLAG_FROZEN_QUEUE_LOCK == SRB_FLAGS_BYPASS_LOCKED_QUEUE);
+
+#include "include/atahw.h"
+
+extern UNICODE_STRING AtapDriverRegistryPath;
+extern BOOLEAN AtapInPEMode;
+
+typedef enum
+{
+    GetDeviceType,
+    GetGenericType,
+    GetPeripheralId
+} DEVICE_TYPE_NAME;
+
+FORCEINLINE
+BOOLEAN
+AtaPortQueueEmpty(
+    _In_ PATAPORT_PORT_DATA PortData)
+{
+    ULONG SlotsBitmap;
+
+    SlotsBitmap = PortData->Worker.PausedSlotsBitmap | PortData->FreeSlotsBitmap;
+
+    return (SlotsBitmap == PortData->MaxSlotsBitmap);
 }
 
-#define WaitOnBaseBusy(BaseIoAddress, Status) \
-{ \
-    ULONG i; \
-    for (i=0; i<20000; i++) { \
-        GetBaseStatus(BaseIoAddress, Status); \
-        if (Status & IDE_STATUS_BUSY) { \
-            ScsiPortStallExecution(150); \
-            continue; \
-        } else { \
-            break; \
-        } \
-    } \
+FORCEINLINE
+ATA_SCSI_ADDRESS
+AtaMarshallScsiAddress(
+    _In_ ULONG PathId,
+    _In_ ULONG TargetId,
+    _In_ ULONG Lun)
+{
+    ATA_SCSI_ADDRESS AtaScsiAddress;
+
+    AtaScsiAddress.Lun = Lun;
+    AtaScsiAddress.TargetId = TargetId;
+    AtaScsiAddress.PathId = PathId;
+
+    /* This is used for address comparison. See AtaFdoFindNextDeviceByPath() */
+    AtaScsiAddress.IsValid = 0xAA;
+
+    return AtaScsiAddress;
 }
 
-#define WaitForDrq(BaseIoAddress, Status) \
-{ \
-    ULONG i; \
-    for (i=0; i<1000; i++) { \
-        GetStatus(BaseIoAddress, Status); \
-        if (Status & IDE_STATUS_BUSY) { \
-            ScsiPortStallExecution(100); \
-        } else if (Status & IDE_STATUS_DRQ) { \
-            break; \
-        } else { \
-            ScsiPortStallExecution(200); \
-        } \
-    } \
+FORCEINLINE
+BOOLEAN
+IsPowerOfTwo(
+    _In_ ULONG x)
+{
+    /* Also exclude zero numbers */
+    return (x != 0) && ((x & (x - 1)) == 0);
 }
 
+/* atapi.c ********************************************************************/
 
-#define WaitShortForDrq(BaseIoAddress, Status) \
-{ \
-    ULONG i; \
-    for (i=0; i<2; i++) { \
-        GetStatus(BaseIoAddress, Status); \
-        if (Status & IDE_STATUS_BUSY) { \
-            ScsiPortStallExecution(100); \
-        } else if (Status & IDE_STATUS_DRQ) { \
-            break; \
-        } else { \
-            ScsiPortStallExecution(100); \
-        } \
-    } \
-}
+_Dispatch_type_(IRP_MJ_CREATE)
+_Dispatch_type_(IRP_MJ_CLOSE)
+CODE_SEG("PAGE")
+DRIVER_DISPATCH_PAGED AtaDispatchCreateClose;
 
-#define AtapiSoftReset(BaseIoAddress,DeviceNumber) \
-{\
-    UCHAR statusByte; \
-    ULONG i = 1000*1000;\
-    ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)(((DeviceNumber & 0x1) << 4) | 0xA0)); \
-    ScsiPortStallExecution(500);\
-    ScsiPortWritePortUchar(&BaseIoAddress->Command, IDE_COMMAND_ATAPI_RESET); \
-    while ((ScsiPortReadPortUchar(&BaseIoAddress->Command) & IDE_STATUS_BUSY) && i--)\
-        ScsiPortStallExecution(30);\
-    ScsiPortWritePortUchar(&BaseIoAddress->DriveSelect,(UCHAR)((DeviceNumber << 4) | 0xA0)); \
-    WaitOnBusy( ((PIDE_REGISTERS_2)((PUCHAR)BaseIoAddress + 0x206)), statusByte); \
-    ScsiPortStallExecution(500);\
-}
+CODE_SEG("PAGE")
+DRIVER_ADD_DEVICE AtaAddChannel;
 
-#define IdeHardReset(BaseIoAddress,result) \
-{\
-    UCHAR statusByte;\
-    ULONG i;\
-    ScsiPortWritePortUchar(&BaseIoAddress->AlternateStatus,IDE_DC_RESET_CONTROLLER );\
-    ScsiPortStallExecution(50 * 1000);\
-    ScsiPortWritePortUchar(&BaseIoAddress->AlternateStatus,IDE_DC_REENABLE_CONTROLLER);\
-    for (i = 0; i < 1000 * 1000; i++) {\
-        statusByte = ScsiPortReadPortUchar(&BaseIoAddress->AlternateStatus);\
-        if (statusByte != IDE_STATUS_IDLE && statusByte != 0x0) {\
-            ScsiPortStallExecution(5);\
-        } else {\
-            break;\
-        }\
-    }\
-    if (i == 1000*1000) {\
-        result = FALSE;\
-    }\
-    result = TRUE;\
-}
+CODE_SEG("PAGE")
+DRIVER_UNLOAD AtaUnload;
 
-#define IS_RDP(OperationCode)\
-    ((OperationCode == SCSIOP_ERASE)||\
-    (OperationCode == SCSIOP_LOAD_UNLOAD)||\
-    (OperationCode == SCSIOP_LOCATE)||\
-    (OperationCode == SCSIOP_REWIND) ||\
-    (OperationCode == SCSIOP_SPACE)||\
-    (OperationCode == SCSIOP_SEEK)||\
-    (OperationCode == SCSIOP_WRITE_FILEMARKS))
+CODE_SEG("INIT")
+DRIVER_INITIALIZE DriverEntry;
 
+IO_WORKITEM_ROUTINE AtaStorageNotificationWorker;
+KDEFERRED_ROUTINE AtaStorageNotificationlDpc;
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaOpenRegistryKey(
+    _Out_ PHANDLE KeyHandle,
+    _In_ HANDLE RootKey,
+    _In_ PUNICODE_STRING KeyName,
+    _In_ BOOLEAN Create);
+
+CODE_SEG("PAGE")
+VOID
+AtaGetRegistryKey(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ UCHAR TargetId,
+    _In_ PCWSTR KeyName,
+    _Out_ PULONG KeyValue,
+    _In_ ULONG DefaultValue);
+
+CODE_SEG("PAGE")
+VOID
+AtaSetRegistryKey(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ UCHAR TargetId,
+    _In_ PCWSTR KeyName,
+    _In_ ULONG KeyValue);
+
+VOID
+AtaSetPortRegistryKey(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ PCWSTR KeyName,
+    _In_ ULONG KeyValue);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPnpQueryInterface(
+    _In_ PATAPORT_COMMON_EXTENSION CommonExt,
+    _In_ const GUID* Guid,
+    _Out_ PVOID Interface,
+    _In_ ULONG Version,
+    _In_ ULONG Size);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPnpRepeatRequest(
+    _In_ PATAPORT_COMMON_EXTENSION CommonExt,
+    _In_ PIRP Irp,
+    _In_opt_ PDEVICE_CAPABILITIES DeviceCapabilities);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPnpQueryDeviceUsageNotification(
+    _In_ PATAPORT_COMMON_EXTENSION CommonExt,
+    _In_ PIRP Irp);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPnpQueryPnpDeviceState(
+    _In_ PATAPORT_COMMON_EXTENSION CommonExt,
+    _In_ PIRP Irp);
+
+CODE_SEG("PAGE")
+VOID
+AtaPnpInitializeCommonExtension(
+    _In_ PATAPORT_COMMON_EXTENSION CommonExt,
+    _In_ PDEVICE_OBJECT SelfDeviceObject,
+    _In_ ULONG Flags);
+
+/* data.c *********************************************************************/
+
+CODE_SEG("PAGE")
+PCSTR
+AtaTypeCodeToName(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ DEVICE_TYPE_NAME Type);
+
+/* dev_config.c ***************************************************************/
+
+NTSTATUS
+AtaPortDeviceProcessConfig(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+/* dev_error.c ****************************************************************/
+
+NTSTATUS
+AtaPortDeviceProcessError(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+/* dev_identify.c *************************************************************/
+
+NTSTATUS
+AtaDeviceSendIdentify(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ UCHAR Command);
+
+ATA_DEVICE_STATUS
+AtaPortIdentifyDevice(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+/* dev_power.c ****************************************************************/
+
+_Dispatch_type_(IRP_MJ_POWER)
+DRIVER_DISPATCH_RAISED AtaDispatchPower;
+
+VOID
+AtaDeviceFlushPowerIrpQueue(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+UCHAR
+AtaDeviceGetFlushCacheCommand(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+NTSTATUS
+AtaPortDeviceProcessPowerChange(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+NTSTATUS
+AtaPortCheckDevicePowerState(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+/* dev_timings.c **************************************************************/
+
+VOID
+AtaPortSelectTimings(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ BOOLEAN ForceCompatibleTimings);
+
+/* enum.c *********************************************************************/
+
+PUCHAR
+AtaCopyIdStringUnsafe(
+    _Out_writes_bytes_all_(Length) PUCHAR Destination,
+    _In_reads_bytes_(Length) PUCHAR Source,
+    _In_ ULONG Length);
+
+PCHAR
+AtaCopyIdStringSafe(
+    _Out_writes_bytes_all_(MaxLength) PCHAR Destination,
+    _In_reads_bytes_(MaxLength) PUCHAR Source,
+    _In_ ULONG MaxLength,
+    _In_ CHAR DefaultCharacter);
+
+VOID
+AtaSwapIdString(
+    _Inout_updates_bytes_(WordCount * sizeof(USHORT)) PVOID Buffer,
+    _In_range_(>, 0) ULONG WordCount);
+
+VOID
+AtaDeviceSetAddressingMode(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaFdoQueryBusRelations(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ PIRP Irp);
+
+/* fdo.c **********************************************************************/
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaFdoStartDevice(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ PCM_RESOURCE_LIST ResourcesTranslated);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaFdoRemoveDevice(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ PIRP Irp,
+    _In_ BOOLEAN FinalRemove);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaFdoPnp(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _Inout_ PIRP Irp);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+PATAPORT_DEVICE_EXTENSION
+AtaFdoFindDeviceByPath(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ ATA_SCSI_ADDRESS AtaScsiAddress,
+    _In_ PVOID ReferenceTag);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+PATAPORT_DEVICE_EXTENSION
+AtaFdoFindNextDeviceByPath(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _Inout_ PATA_SCSI_ADDRESS AtaScsiAddress,
+    _In_ BOOLEAN SearchRemoveDev,
+    _In_ PVOID ReferenceTag);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaFdoDeviceListInsert(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ BOOLEAN DoInsert);
+
+/* ioctl.c ********************************************************************/
+
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
+DRIVER_DISPATCH_RAISED AtaDispatchDeviceControl;
+
+/* pata_legacy.c **************************************************************/
+
+#if defined(ATA_DETECT_LEGACY_DEVICES)
+CODE_SEG("INIT")
+VOID
+AtaDetectLegacyChannels(
+    _In_ PDRIVER_OBJECT DriverObject);
+#endif
+
+/* pdo.c **********************************************************************/
+
+IO_COMPLETION_ROUTINE AtaPdoCompletionRoutine;
+
+_Dispatch_type_(IRP_MJ_PNP)
+CODE_SEG("PAGE")
+DRIVER_DISPATCH_PAGED AtaDispatchPnp;
+
+CODE_SEG("PAGE")
+VOID
+AtaPdoFreeDevice(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+CODE_SEG("PAGE")
+PATAPORT_DEVICE_EXTENSION
+AtaPdoCreateDevice(
+    _In_ PATAPORT_CHANNEL_EXTENSION ChanExt,
+    _In_ ATA_SCSI_ADDRESS AtaScsiAddress);
+
+/* portstate.c ****************************************************************/
+
+KSTART_ROUTINE AtaPortWorkerThread;
+KDEFERRED_ROUTINE AtaPortWorkerSignalDpc;
+REQUEST_COMPLETION_ROUTINE AtaPortCompleteInternalRequest;
+PORT_NOTIFICATION AtaPortNotification;
+
+NTSTATUS
+AtaPortSendRequest(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+VOID
+AtaPortTimeout(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_ ULONG Slot);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaPortSignalWorkerThread(
+    _In_ PATAPORT_PORT_DATA PortData);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaDeviceQueueEvent(
+    _In_ PATAPORT_PORT_DATA PortData,
+    _In_opt_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ ATA_PORT_ACTION Action);
+
+/* satl.c *********************************************************************/
+
+BOOLEAN
+AtaReqDmaTransferToPioTransfer(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+CODE_SEG("PAGE")
+VOID
+AtaCreateStandardInquiryData(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt);
+
+UCHAR
+AtaReqExecuteScsi(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PATA_DEVICE_REQUEST Request,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+UCHAR
+AtaReqSetFixedAtaSenseData(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+VOID
+AtaReqBuildReadLogTaskFile(
+    _In_ PATA_DEVICE_REQUEST Request,
+    _In_ UCHAR LogAddress,
+    _In_ UCHAR PageNumber,
+    _In_ USHORT LogPageCount);
+
+/* scsi.c *********************************************************************/
+
+_Dispatch_type_(IRP_MJ_SCSI)
+DRIVER_DISPATCH_RAISED AtaDispatchScsi;
+
+IO_TIMER_ROUTINE AtaPortIoTimer;
+KDEFERRED_ROUTINE AtaReqCompletionDpc;
+extern SLIST_HEADER AtapCompletionQueueList;
+extern KDPC AtapCompletionDpc;
+
+VOID
+AtaReqCompleteFailedRequest(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+UCHAR
+AtaReqSetFixedSenseData(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ SCSI_SENSE_CODE SenseCode);
+
+VOID
+AtaReqSetLbaInformation(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ ULONG64 Lba);
+
+BOOLEAN
+AtaReqAllocateMdl(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+VOID
+AtaReqSendRequest(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+VOID
+AtaReqStartCompletionDpc(
+    _In_ PATA_DEVICE_REQUEST Request);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaReqFreezeQueue(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ ULONG ReasonFlags);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaReqThawQueue(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ ULONG ReasonFlags);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaReqWaitForOutstandingIoToComplete(
+    _In_ PATAPORT_IO_CONTEXT Device,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+DECLSPEC_NOINLINE_FROM_PAGED
+VOID
+AtaReqFlushDeviceQueue(
+    _In_ PATAPORT_IO_CONTEXT Device);
+
+/* smart.c ********************************************************************/
+
+UCHAR
+AtaReqSmartIoControl(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PATA_DEVICE_REQUEST Request,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPdoHandleMiniportSmartVersion(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPdoHandleMiniportIdentify(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
+
+/* wmi.c **********************************************************************/
+
+_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+CODE_SEG("PAGE")
+DRIVER_DISPATCH_PAGED AtaDispatchWmi;
+
+CODE_SEG("PAGE")
+NTSTATUS
+AtaPdoWmiRegistration(
+    _In_ PATAPORT_DEVICE_EXTENSION DevExt,
+    _In_ BOOLEAN Register);

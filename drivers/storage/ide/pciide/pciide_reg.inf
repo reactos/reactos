@@ -1,0 +1,8 @@
+; PCI IDE driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","Group",0x00000000,"System Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","ImagePath",0x00020000,"system32\drivers\pciide.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\pciide","Tag",0x00010001,0x00000010
