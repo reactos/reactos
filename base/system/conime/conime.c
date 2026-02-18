@@ -464,19 +464,19 @@ void IntFillImeCandidatesCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
 //! Builds a buffer for displaying the Traditional Chinese IME mode.
 UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 {
-    UINT nTotalWidth = 0;
     PWCHAR pLayoutSrc = pEntry->szLayoutText;
 
-    while (*pLayoutSrc && nTotalWidth < 4)
+    UINT width;
+    for (width = 0; *pLayoutSrc && width < 4;)
     {
         WCHAR wch = *pLayoutSrc++;
         pDisplay->CharInfo[cch++].Char.UnicodeChar = wch;
-        nTotalWidth += IntIsDoubleWidthChar(wch) + 1;
+        width += IntIsDoubleWidthChar(wch) + 1;
     }
 
-    if (nTotalWidth < 5)
+    if (width < 5)
     {
-        UINT paddingCount = 5 - nTotalWidth;
+        UINT paddingCount = 5 - width;
         for (UINT i = 0; i < paddingCount; ++i)
             pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
     }
@@ -491,11 +491,8 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
     pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
     pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
-    if (cch > 0)
-    {
-        for (UINT i = 0; i < cch; i++)
-            pDisplay->CharInfo[i].Attributes = _FOREGROUND_WHITE;
-    }
+    for (UINT i = 0; i < cch; i++)
+        pDisplay->CharInfo[i].Attributes = _FOREGROUND_WHITE;
 
     return cch;
 }
@@ -1768,15 +1765,14 @@ UINT IntFormatCandLineJPNorKOR(
     if (pCandList->dwSelection >= pCandList->dwCount)
         pCandList->dwSelection = 0;
 
-    UINT pageIndex = pEntry->dwCandIndexMax;
-    if (pageIndex > 0)
+    UINT pageIndex;
+    for (pageIndex = pEntry->dwCandIndexMax; pageIndex > 0; --pageIndex)
     {
-        while (pageIndex > 0 && pCandList->dwSelection < pEntry->pdwCandPageStart[pageIndex])
-            pageIndex--;
+        if (pCandList->dwSelection >= pEntry->pdwCandPageStart[pageIndex])
+            break;
     }
 
-    if (width)
-        ZeroMemory(pbAttrsDest, width);
+    ZeroMemory(pbAttrsDest, width);
 
     PWSTR pszCurrentPos = pszCandStrDest;
     PBYTE pbCurrentAttr = pbAttrsDest;
@@ -1791,19 +1787,19 @@ UINT IntFormatCandLineJPNorKOR(
         PCWCH pwchCand = (PCWCH)((PBYTE)pCandList + pCandList->dwOffset[pCandList->dwSelection]);
         WideCharToMultiByte(CP_OEMCP, 0, pwchCand, 1, asz, _countof(asz), NULL, NULL);
 
-        wsprintfW(szCharCode, L"[%04X] ", MAKEWORD(asz[0], asz[1]));
+        StringCchPrintfW(szCharCode, _countof(szCharCode), L"[%04X] ", MAKEWORD(asz[0], asz[1]));
 
-        size_t codeLen = wcslen(szCharCode);
-        StringCchCopyW(pszCurrentPos, codeLen + 1, szCharCode);
+        size_t cchCode = wcslen(szCharCode);
+        StringCchCopyW(pszCurrentPos, cchCode + 1, szCharCode);
 
-        currentX = codeLen;
-        pszCurrentPos += codeLen;
-        pbCurrentAttr += codeLen;
+        currentX = cchCode;
+        pszCurrentPos += cchCode;
+        pbCurrentAttr += cchCode;
     }
 
     DWORD iStart = pEntry->pdwCandPageStart[pageIndex];
     DWORD iEnd = pEntry->pdwCandPageStart[pageIndex + 1];
-    for (DWORD i = iStart; i < iEnd; i++)
+    for (DWORD i = iStart; i < iEnd; ++i)
     {
         const WCHAR* pszSrc = (const WCHAR*)((PBYTE)pCandList + pCandList->dwOffset[i]);
         size_t cchSrc = wcslen(pszSrc);
@@ -1869,12 +1865,16 @@ UINT IntFormatCandLineJPNorKOR(
                 wmemset(pszCurrentPos, L' ', pad);
                 pszCurrentPos += pad;
             }
-            UINT half = (labelWidth - 1) >> 1;
-            IntFormatNumber(pszCurrentPos, pCandList->dwSelection + 1, half);
-            pszCurrentPos += half;
+
+            UINT halfLabel = (labelWidth - 1) / 2;
+
+            IntFormatNumber(pszCurrentPos, pCandList->dwSelection + 1, halfLabel);
+            pszCurrentPos += halfLabel;
+
             *pszCurrentPos++ = L'/';
-            IntFormatNumber(pszCurrentPos, pCandList->dwCount, half);
-            pszCurrentPos += half;
+
+            IntFormatNumber(pszCurrentPos, pCandList->dwCount, halfLabel);
+            pszCurrentPos += halfLabel;
         }
 
         *pszCurrentPos = UNICODE_NULL;
@@ -1894,15 +1894,14 @@ UINT IntFormatCandLineCHT(
     if (pCandList->dwSelection >= pCandList->dwCount)
         pCandList->dwSelection = 0;
 
-    UINT pageIndex = pEntry->dwCandIndexMax;
-    if (pageIndex > 0)
+    UINT pageIndex;
+    for (pageIndex = pEntry->dwCandIndexMax; pageIndex > 0; --pageIndex)
     {
-        while (pageIndex > 0 && pCandList->dwSelection < pEntry->pdwCandPageStart[pageIndex])
-            pageIndex--;
+        if (pCandList->dwSelection >= pEntry->pdwCandPageStart[pageIndex])
+            break;
     }
 
-    if (width)
-        ZeroMemory(pbAttrsDest, width);
+    ZeroMemory(pbAttrsDest, width);
 
     PWSTR pszCurrentStr = pszCandStrDest;
     PBYTE pbCurrentAttr = pbAttrsDest;
@@ -1963,10 +1962,13 @@ UINT IntFormatCandLineCHT(
     {
         *pszCurrentStr = L' ';
         PWSTR pszLabelPos = pszCurrentStr + 1;
-        UINT halfLabel = (labelWidth - 1) >> 1;
+
+        UINT halfLabel = (labelWidth - 1) / 2;
 
         IntFormatNumber(pszLabelPos, pCandList->dwSelection + 1, halfLabel);
+
         pszLabelPos[halfLabel] = L'/';
+
         IntFormatNumber(&pszLabelPos[halfLabel + 1], pCandList->dwCount, halfLabel);
         pszLabelPos[labelWidth] = UNICODE_NULL;
     }
@@ -1985,15 +1987,14 @@ UINT IntFormatCandLineCHS(
     if (pCandList->dwSelection >= pCandList->dwCount)
         pCandList->dwSelection = 0;
 
-    UINT pageIndex = pEntry->dwCandIndexMax;
-    if (pageIndex > 0)
+    UINT pageIndex;
+    for (pageIndex = pEntry->dwCandIndexMax; pageIndex > 0; --pageIndex)
     {
-        while (pageIndex > 0 && pCandList->dwSelection < pEntry->pdwCandPageStart[pageIndex])
-            pageIndex--;
+        if (pCandList->dwSelection >= pEntry->pdwCandPageStart[pageIndex])
+            break;
     }
 
-    if (width)
-        ZeroMemory(pbAttrsDest, width);
+    ZeroMemory(pbAttrsDest, width);
 
     PWSTR pszCurrentPos = pszCandStrDest;
     PBYTE pbCurrentAttr = pbAttrsDest;
@@ -2175,6 +2176,7 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         UINT currentPage = IntFormatCandLineCHT(pCandList, pCI->szCandStr, pbAttrs,
                                                 usableWidth, labelWidth, pEntry);
 
+        // Send page messages
         pEntry->bSkipPageMsg = TRUE;
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
                      pEntry->pdwCandPageStart[currentPage]);
@@ -2319,6 +2321,7 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         UINT currentPage = IntFormatCandLineCHS(pCandList, pCI->szCandStr, pbAttrs,
                                                 usableWidth, 0, pEntry);
 
+        // Send page messages
         pEntry->bSkipPageMsg = TRUE;
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
                      pEntry->pdwCandPageStart[currentPage]);
@@ -2473,8 +2476,6 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->dwSystemLineSize = cbCandInfo;
         }
 
-        if (!pEntry->pCandInfo)
-            return FALSE;
         PCANDINFO pCI = pEntry->pCandInfo;
         pCI->dwAttrsOffset = 2 * screenX + 4;
 
@@ -2482,6 +2483,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         UINT currentPage = IntFormatCandLineJPNorKOR(pCandList, pCI->szCandStr, pbAttrs,
                                                      screenX, labelWidth, pEntry, bIsCode);
 
+        // Send page messages
         pEntry->bSkipPageMsg = TRUE;
         ImmNotifyIME(hIMC, NI_SETCANDIDATE_PAGESTART, dwIndex,
                      pEntry->pdwCandPageStart[currentPage]);
