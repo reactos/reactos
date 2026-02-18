@@ -486,7 +486,7 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 
     if (cch > 0)
     {
-        for (UINT i = 0; i <= cch; i++)
+        for (UINT i = 0; i < cch; i++)
             pDisplay->CharInfo[i].Attributes = _FOREGROUND_WHITE;
     }
 
