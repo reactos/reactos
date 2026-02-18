@@ -5,62 +5,132 @@
  * COPYRIGHT:       Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)
  */
 
-/* Note: ns16550 code from cportlib.c */
-
 /* INCLUDES *******************************************************************/
 
-#include <intrin.h>
-#include <ioaccess.h>
-#include <ntstatus.h>
-#include <cportlib/cportlib.h>
+/*
+ * Some PC-98 models have a second internal COM port (2ndCCU).
+ * It is a 16550-compatible UART controller with I/O port address 238-23F and IRQ5.
+ */
+#define API_FUNCTION static
+#define METHOD(Name) Name##16550
+#include "cport.c"
+
 #include <drivers/pc98/serial.h>
 #include <drivers/pc98/sysport.h>
 #include <drivers/pc98/pit.h>
 #include <drivers/pc98/cpu.h>
 
+#define IS_COM1(IoBase)        ((IoBase) == UlongToPtr(0x30))
+#define IS_NS16550(IoBase)     ((IoBase) == UlongToPtr(0x238))
+
+/* ioaccess.h header extension */
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count)   __inbytestring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count)  __outbytestring(H2I(port), buffer, count)
+
 /* GLOBALS ********************************************************************/
 
-#define TIMEOUT_COUNT 1024 * 200
-
-static struct
-{
-    PUCHAR Address;
-    BOOLEAN HasFifo;
-    BOOLEAN FifoEnabled;
-    UCHAR RingIndicator;
-} Rs232ComPort[] =
-{
-    { (PUCHAR)0x030, FALSE, FALSE, 0 },
-    { (PUCHAR)0x238, FALSE, FALSE, 0 }
-};
-
-static BOOLEAN IsNekoProject = FALSE;
+static BOOLEAN IsNp21W;
+static BOOLEAN HasFifo;
+static BOOLEAN IsFifoEnabled;
 
 /* FUNCTIONS ******************************************************************/
 
-static BOOLEAN
-CpIsNekoProject(VOID)
+static
+BOOLEAN
+CpiIsNekoProject(VOID)
 {
     UCHAR Input[4] = "NP2";
-    UCHAR Output[4] = {0};
-    UCHAR i;
+    UCHAR Output[4] = { 0 };
 
-    for (i = 0; i < 3; i++)
-        WRITE_PORT_UCHAR((PUCHAR)0x7EF, Input[i]);
+    if (READ_PORT_UCHAR((PUCHAR)0x7EF) != 0x00)
+        return FALSE;
 
-    for (i = 0; i < 3; i++)
-        Output[i] = READ_PORT_UCHAR((PUCHAR)0x7EF);
+    WRITE_PORT_BUFFER_UCHAR((PUCHAR)0x7EF, Input, 3);
+    READ_PORT_BUFFER_UCHAR((PUCHAR)0x7EF, Output, 3);
 
     return (*(PULONG)Input == *(PULONG)Output);
 }
 
-static VOID
-CpWait(VOID)
+static
+ULONG
+CpiGetPitTickRate(VOID)
 {
-    UCHAR i;
+    if (READ_PORT_UCHAR((PUCHAR)0x42) & 0x20)
+        return TIMER_FREQUENCY_1;
+    else
+        return TIMER_FREQUENCY_2;
+}
+
+static
+VOID
+CpiWait(VOID)
+{
+    ULONG i;
 
     for (i = 0; i < 6; i++)
         WRITE_PORT_UCHAR((PUCHAR)CPU_IO_o_ARTIC_DELAY, 0);
+}
+
+static
+BOOLEAN
+Cpi8251HasFifo(VOID)
+{
+    UCHAR IntValue1, IntValue2;
+
+    IntValue1 = READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_IIR);
+    IntValue2 = READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_IIR);
+
+    return !!((IntValue1 ^ IntValue2) & SR_8251F_IIR_FIFO_DET);
+}
+
+static
+BOOLEAN
+Cpi8251IsPortResponding(
+    _In_ PUCHAR IoBase)
+{
+    UCHAR Data, Status;
+
+    Data = READ_PORT_UCHAR(IoBase);
+    Status = READ_PORT_UCHAR(IoBase + 2);
+
+    return ((Data & Status) != 0xFF && (Data | Status) != 0x00);
+}
+
+static
+BOOLEAN
+CpiDoesPortExist8251(
+    _In_ PUCHAR IoBase)
+{
+    if (Cpi8251IsPortResponding(IoBase))
+        return TRUE;
+
+    /*
+     * Setting FIFO mode effectively disables the data and status ports
+     * by wiring them to 0xFF, making the detection attempt fail.
+     * The FIFO mode may have been enabled earlier by the kernel bootloader,
+     * so try to disable it, and retry.
+     */
+    if (IS_COM1(IoBase))
+    {
+        BOOLEAN WasDetected;
+        UCHAR FifoControl;
+
+        if (!Cpi8251HasFifo())
+            return FALSE;
+
+        /* Disable the FIFO logic */
+        FifoControl = READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR);
+        WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, 0);
+
+        WasDetected = Cpi8251IsPortResponding(IoBase);
+
+        /* Restore the previous state */
+        WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, FifoControl);
+
+        return WasDetected;
+    }
+
+    return FALSE;
 }
 
 VOID
@@ -69,26 +139,24 @@ CpEnableFifo(
     IN PUCHAR Address,
     IN BOOLEAN Enable)
 {
-    /* Set FIFO and clear the receive/transmit buffers */
-    if (Address == Rs232ComPort[0].Address && Rs232ComPort[0].HasFifo)
+    UCHAR Value;
+
+    if (IS_NS16550(Address))
     {
-        if (Enable)
-            WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_FIFO_CONTROL,
-                             SER_FCR_ENABLE | SER_FCR_RCVR_RESET | SER_FCR_TXMT_RESET);
-        else
-            WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_FIFO_CONTROL, SER_FCR_DISABLE);
-        Rs232ComPort[0].FifoEnabled = Enable;
+        CpEnableFifo16550(Address, Enable);
+        return;
     }
-    else if (Address == Rs232ComPort[1].Address && Rs232ComPort[1].HasFifo)
-    {
-        if (Enable)
-            WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_FIFO_CONTROL,
-                             SER_FCR_ENABLE | SER_FCR_RCVR_RESET | SER_FCR_TXMT_RESET);
-        else
-            WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_FIFO_CONTROL, SER_FCR_DISABLE);
-        Rs232ComPort[1].FifoEnabled = Enable;
-    }
-    CpWait();
+
+    if (!HasFifo)
+        return;
+
+    IsFifoEnabled = Enable;
+
+    if (Enable)
+        Value = SR_8251F_FCR_ENABLE | SR_8251F_FCR_RCVR_RESET | SR_8251F_FCR_TXMT_RESET;
+    else
+        Value = 0;
+    WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, Value);
 }
 
 VOID
@@ -97,285 +165,74 @@ CpSetBaud(
     IN PCPPORT Port,
     IN ULONG BaudRate)
 {
-    UCHAR Lcr;
-    USHORT Count;
-    TIMER_CONTROL_PORT_REGISTER TimerControl;
+    ULONG i;
 
-    if (Port->Address == Rs232ComPort[0].Address)
+    if (IS_NS16550(Port->Address))
     {
-        if (Rs232ComPort[0].HasFifo)
-            WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_DIVISOR_LATCH, SER1_DLR_MODE_LEGACY);
-
-        TimerControl.BcdMode = FALSE;
-        TimerControl.OperatingMode = PitOperatingMode3;
-        TimerControl.AccessMode = PitAccessModeLowHigh;
-        TimerControl.Channel = PitChannel2;
-        if (IsNekoProject)
-        {
-            /* The horrible text input lag happens by about 6 seconds on my PC */
-            Count = 3;
-        }
-        else
-        {
-            Count = (READ_PORT_UCHAR((PUCHAR)0x42) & 0x20) ?
-                    (TIMER_FREQUENCY_1 / (BaudRate * 16)) : (TIMER_FREQUENCY_2 / (BaudRate * 16));
-        }
-        Write8253Timer(TimerControl, Count);
-
-        /* Save baud rate in port */
-        Port->BaudRate = BaudRate;
+        CpSetBaud16550(Port, BaudRate);
+        return;
     }
-    else if (Port->Address == Rs232ComPort[1].Address)
+
+    if (IS_COM1(Port->Address))
     {
-        /* Set the DLAB on */
-        Lcr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_LINE_CONTROL);
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_LINE_CONTROL, Lcr | SER2_LCR_DLAB);
+        TIMER_CONTROL_PORT_REGISTER TimerControl;
+        SYSTEM_CONTROL_PORT_C_REGISTER SystemControl;
+        USHORT Count;
 
-        /* Set the baud rate */
-        Count = SER2_CLOCK_RATE / BaudRate;
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_DIVISOR_LATCH_LSB, Count & 0xFF);
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_DIVISOR_LATCH_MSB, (Count >> 8) & 0xFF);
-
-        /* Reset DLAB */
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_LINE_CONTROL, Lcr & ~SER2_LCR_DLAB);
-
-        /* Save baud rate in port */
-        Port->BaudRate = BaudRate;
-    }
-}
-
-NTSTATUS
-NTAPI
-CpInitialize(
-    IN PCPPORT Port,
-    IN PUCHAR Address,
-    IN ULONG BaudRate)
-{
-    SYSTEM_CONTROL_PORT_C_REGISTER SystemControl;
-    UCHAR FifoStatus;
-
-    if (Port == NULL || Address == NULL || BaudRate == 0)
-        return STATUS_INVALID_PARAMETER;
-
-    if (!CpDoesPortExist(Address))
-        return STATUS_NOT_FOUND;
-
-    /* Initialize port data */
-    Port->Address = Address;
-    Port->BaudRate = 0;
-    Port->Flags = 0;
-
-    IsNekoProject = CpIsNekoProject();
-
-    if (Port->Address == Rs232ComPort[0].Address)
-    {
-        /* FIFO test */
-        FifoStatus = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_INTERRUPT_ID) & SER1_IIR_FIFOS_ENABLED;
-        CpWait();
-        Rs232ComPort[0].HasFifo = ((READ_PORT_UCHAR((PUCHAR)SER1_IO_i_INTERRUPT_ID) & SER1_IIR_FIFOS_ENABLED) != FifoStatus);
-
-        /* Disable the interrupts */
+        /* Disable the serial interrupts */
         SystemControl.Bits = READ_PORT_UCHAR((PUCHAR)PPI_IO_i_PORT_C);
         SystemControl.InterruptEnableRxReady = FALSE;
         SystemControl.InterruptEnableTxEmpty = FALSE;
         SystemControl.InterruptEnableTxReady = FALSE;
         WRITE_PORT_UCHAR((PUCHAR)PPI_IO_o_PORT_C, SystemControl.Bits);
 
-        /* Turn off FIFO */
-        if (Rs232ComPort[0].HasFifo)
-            CpEnableFifo(Address, FALSE);
+        /* Disable V-FAST mode */
+        if (HasFifo)
+            WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_DLR, SR_8251F_DLR_MODE_LEGACY);
+
+        Count = (CpiGetPitTickRate() / 16) / BaudRate;
 
         /* Set the baud rate */
-        CpSetBaud(Port, BaudRate);
+        TimerControl.BcdMode = FALSE;
+        TimerControl.OperatingMode = PitOperatingMode3;
+        TimerControl.AccessMode = PitAccessModeLowHigh;
+        TimerControl.Channel = PitChannel2;
+        Write8253Timer(TimerControl, Count);
 
-        /* Software reset */
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND, 0);
-        CpWait();
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND, 0);
-        CpWait();
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND, 0);
-        CpWait();
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND, SER1_COMMMAND_IR);
-        CpWait();
-
-        /* Mode instruction - asynchronous mode, 8 data bits, 1 stop bit, no parity, 16x clock divisor */
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND,
-                         SER1_MODE_LENGTH_8 | SER1_MODE_1_STOP | SER1_MODE_CLOCKx16);
-        CpWait();
-
-        /* Command instruction - transmit enable, turn on DTR and RTS, receive enable, clear error flag */
-        WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND,
-                         SER1_COMMMAND_TxEN | SER1_COMMMAND_DTR |
-                         SER1_COMMMAND_RxEN | SER1_COMMMAND_ER | SER1_COMMMAND_RTS);
-        CpWait();
-
-        /* Disable the interrupts again */
-        WRITE_PORT_UCHAR((PUCHAR)PPI_IO_o_PORT_C, SystemControl.Bits);
-
-        /* Turn on FIFO */
-        if (Rs232ComPort[0].HasFifo)
-            CpEnableFifo(Address, TRUE);
-
-        /* Read junk out of the data register */
-        if (Rs232ComPort[0].HasFifo)
-            (VOID)READ_PORT_UCHAR((PUCHAR)SER1_IO_i_RECEIVER_BUFFER);
-        else
-            (VOID)READ_PORT_UCHAR((PUCHAR)SER1_IO_i_DATA);
-
-        return STATUS_SUCCESS;
+        /* Unlock the legacy registers (0x30 and 0x32) */
+        if (HasFifo)
+            WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, 0);
     }
-    else if (Port->Address == Rs232ComPort[1].Address)
+
+    /* Software reset */
+    for (i = 0; i < 3; ++i)
     {
-        /* Disable the interrupts */
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_LINE_CONTROL, 0);
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_INTERRUPT_EN, 0);
-
-        /* Turn on DTR, RTS and OUT2 */
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL,
-                         SER2_MCR_DTR_STATE | SER2_MCR_RTS_STATE | SER2_MCR_OUT_2);
-
-        /* Set the baud rate */
-        CpSetBaud(Port, BaudRate);
-
-        /* Set 8 data bits, 1 stop bit, no parity, no break */
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_LINE_CONTROL,
-                         SER2_LCR_LENGTH_8 | SER2_LCR_ST1 | SER2_LCR_NO_PARITY);
-
-        /* FIFO test */
-        Rs232ComPort[1].HasFifo = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_INTERRUPT_ID) & SER2_IIR_HAS_FIFO;
-
-        /* Turn on FIFO */
-        if (Rs232ComPort[1].HasFifo)
-            CpEnableFifo(Address, TRUE);
-
-        /* Read junk out of the RBR */
-        (VOID)READ_PORT_UCHAR((PUCHAR)SER2_IO_i_RECEIVER_BUFFER);
-
-        return STATUS_SUCCESS;
+        WRITE_PORT_UCHAR(Port->Address + 2, 0);
+        CpiWait();
     }
+    WRITE_PORT_UCHAR(Port->Address + 2, SR_8251A_COMMMAND_IR);
+    CpiWait();
 
-    return STATUS_NOT_FOUND;
-}
+    /* Mode instruction */
+    WRITE_PORT_UCHAR(Port->Address + 2,
+                     SR_8251A_MODE_LENGTH_8 |SR_8251A_MODE_1_STOP | SR_8251A_MODE_CLOCKx16);
+    CpiWait();
 
-static BOOLEAN
-ComPortTest1(IN PUCHAR Address)
-{
-    /*
-     * See "Building Hardware and Firmware to Complement Microsoft Windows Headless Operation"
-     * Out-of-Band Management Port Device Requirements:
-     * The device must act as a 16550 or 16450 UART.
-     * Windows Server 2003 will test this device using the following process:
-     *     1. Save off the current modem status register.
-     *     2. Place the UART into diagnostic mode (The UART is placed into loopback mode
-     *        by writing SERIAL_MCR_LOOP to the modem control register).
-     *     3. The modem status register is read and the high bits are checked. This means
-     *        SERIAL_MSR_CTS, SERIAL_MSR_DSR, SERIAL_MSR_RI and SERIAL_MSR_DCD should
-     *        all be clear.
-     *     4. Place the UART in diagnostic mode and turn on OUTPUT (Loopback Mode and
-     *         OUTPUT are both turned on by writing (SERIAL_MCR_LOOP | SERIAL_MCR_OUT1)
-     *         to the modem control register).
-     *     5. The modem status register is read and the ring indicator is checked.
-     *        This means SERIAL_MSR_RI should be set.
-     *     6. Restore original modem status register.
-     *
-     * REMARK: Strangely enough, the Virtual PC 2007 virtual machine
-     *         doesn't pass this test.
-     */
+    /* Command instruction */
+    WRITE_PORT_UCHAR(Port->Address + 2,
+                     SR_8251A_COMMMAND_TxEN |
+                     SR_8251A_COMMMAND_DTR |
+                     SR_8251A_COMMMAND_RxEN |
+                     SR_8251A_COMMMAND_ER |
+                     SR_8251A_COMMMAND_RTS);
+    CpiWait();
 
-    BOOLEAN RetVal = FALSE;
-    UCHAR Mcr, Msr;
-
-    /* Save the Modem Control Register */
-    Mcr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_MODEM_CONTROL);
-
-    /* Enable loop (diagnostic) mode (set Bit 4 of the MCR) */
-    WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL, SER2_MCR_LOOPBACK);
-
-    /* Clear all modem output bits */
-    WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL, SER2_MCR_LOOPBACK);
-
-    /* Read the Modem Status Register */
-    Msr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_MODEM_STATUS);
-
-    /*
-     * The upper nibble of the MSR (modem output bits) must be
-     * equal to the lower nibble of the MCR (modem input bits).
-     */
-    if ((Msr & (SER_MSR_CTS | SER_MSR_DSR | SER_MSR_RI | SER_MSR_DCD)) == 0x00)
+    /* Restore the FIFO state */
+    if (IsFifoEnabled)
     {
-        /* Set all modem output bits */
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL,
-                         SER2_MCR_OUT_1 | SER2_MCR_LOOPBACK); // Windows
-/* ReactOS
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL,
-                         SER2_MCR_DTR_STATE | SER2_MCR_RTS_STATE |
-                         SER2_MCR_OUT_1 | SER2_MCR_OUT_2 | SER2_MCR_LOOPBACK);
-*/
-
-        /* Read the Modem Status Register */
-        Msr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_MODEM_STATUS);
-
-        /*
-         * The upper nibble of the MSR (modem output bits) must be
-         * equal to the lower nibble of the MCR (modem input bits).
-         */
-        if (Msr & SER_MSR_RI) // Windows
-        // if (Msr & (SER_MSR_CTS | SER_MSR_DSR | SER_MSR_RI | SER_MSR_DCD) == 0xF0) // ReactOS
-        {
-            RetVal = TRUE;
-        }
+        WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR,
+                         SR_8251F_FCR_ENABLE | SR_8251F_FCR_RCVR_RESET | SR_8251F_FCR_TXMT_RESET);
     }
-
-    /* Restore the MCR */
-    WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL, Mcr);
-
-    return RetVal;
-}
-
-static BOOLEAN
-ComPortTest2(IN PUCHAR Address)
-{
-    /*
-     * This test checks whether the 16450/16550 scratch register is available.
-     * If not, the serial port is considered as unexisting.
-     */
-
-    UCHAR Byte = 0;
-
-    do
-    {
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_SCRATCH, Byte);
-
-        if (READ_PORT_UCHAR((PUCHAR)SER2_IO_i_SCRATCH) != Byte)
-            return FALSE;
-
-    }
-    while (++Byte != 0);
-
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-CpDoesPortExist(IN PUCHAR Address)
-{
-    UCHAR Data, Status;
-
-    if (Address == Rs232ComPort[0].Address || Address == (PUCHAR)0x41)
-    {
-        Data = READ_PORT_UCHAR(Address);
-        Status = READ_PORT_UCHAR(Address + 2);
-        if ((Data & Status) == 0xFF || (Data | Status) == 0x00)
-            return FALSE;
-        else
-            return TRUE;
-    }
-    else if (Address == Rs232ComPort[1].Address)
-    {
-        return (ComPortTest1(Address) || ComPortTest2(Address));
-    }
-
-    return FALSE;
 }
 
 UCHAR
@@ -385,58 +242,40 @@ CpReadLsr(
     IN UCHAR ExpectedValue)
 {
     UCHAR Lsr, Msr;
-    SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
 
-    if (Port->Address == Rs232ComPort[0].Address)
+    if (IS_NS16550(Port->Address))
+        return CpReadLsr16550(Port, ExpectedValue);
+
+    if (IsFifoEnabled)
     {
-        /* Read the LSR and check if the expected value is present */
-        if (Rs232ComPort[0].HasFifo)
-        {
-            Lsr = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_LINE_STATUS);
-            if (!(Lsr & ExpectedValue))
-            {
-                Msr = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_MODEM_STATUS);
+        Lsr = READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_LSR);
 
-                /* If the ring indicator reaches 3, we've seen this on/off twice */
-                Rs232ComPort[0].RingIndicator |= (Msr & SER_MSR_RI) ? 1 : 2;
-                if (Rs232ComPort[0].RingIndicator == 3)
-                    Port->Flags |= CPPORT_FLAG_MODEM_CONTROL;
-            }
-        }
-        else
-        {
-            Lsr = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_STATUS);
-            if (!(Lsr & ExpectedValue))
-            {
-                SystemControl.Bits = READ_PORT_UCHAR((PUCHAR)PPI_IO_i_PORT_B);
-
-                /* If the ring indicator reaches 3, we've seen this on/off twice */
-                Rs232ComPort[0].RingIndicator |= SystemControl.RingIndicator ? 1 : 2;
-                if (Rs232ComPort[0].RingIndicator == 3)
-                    Port->Flags |= CPPORT_FLAG_MODEM_CONTROL;
-            }
-        }
-
-        return Lsr;
-    }
-    else if (Port->Address == Rs232ComPort[1].Address)
-    {
-        /* Read the LSR and check if the expected value is present */
-        Lsr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_LINE_STATUS);
         if (!(Lsr & ExpectedValue))
         {
-            Msr = READ_PORT_UCHAR((PUCHAR)SER2_IO_i_MODEM_STATUS);
+            Msr = READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_MSR);
 
-            /* If the indicator reaches 3, we've seen this on/off twice */
-            Rs232ComPort[1].RingIndicator |= (Msr & SER_MSR_RI) ? 1 : 2;
-            if (Rs232ComPort[1].RingIndicator == 3)
-                Port->Flags |= CPPORT_FLAG_MODEM_CONTROL;
+            RingIndicator |= (Msr & SR_8251F_MSR_RI) ? 1 : 2;
         }
+    }
+    else
+    {
+        Lsr = READ_PORT_UCHAR(Port->Address + 2);
 
-        return Lsr;
+        if (!(Lsr & ExpectedValue))
+        {
+            SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
+
+            SystemControl.Bits = READ_PORT_UCHAR((PUCHAR)PPI_IO_i_PORT_B);
+
+            RingIndicator |= SystemControl.RingIndicator ? 1 : 2;
+        }
     }
 
-    return 0;
+    /* If the ring indicator reaches 3, we've seen this on/off twice */
+    if (RingIndicator == 3)
+        Port->Flags |= CPPORT_FLAG_MODEM_CONTROL;
+
+    return Lsr;
 }
 
 USHORT
@@ -447,113 +286,78 @@ CpGetByte(
     IN BOOLEAN Wait,
     IN BOOLEAN Poll)
 {
-    UCHAR Lsr;
-    ULONG LimitCount = Wait ? TIMEOUT_COUNT : 1;
-    UCHAR SuccessFlags, ErrorFlags;
-    BOOLEAN FifoEnabled;
+    ULONG RetryCount;
+    UCHAR RxReadyFlags, ErrorFlags;
+
+    if (IS_NS16550(Port->Address))
+        return CpGetByte16550(Port, Byte, Wait, Poll);
 
     /* Handle early read-before-init */
     if (!Port->Address)
         return CP_GET_NODATA;
 
-    if (Port->Address == Rs232ComPort[0].Address)
+    // FIXME HACK: NP21/W emulation bug, needs to be fixed on the emulator side.
+    // Do a read from 0x136 to receive bytes by an emulated serial port.
+    if (IsNp21W)
+        (VOID)READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_IIR);
+
+    if (IsFifoEnabled)
     {
-        SuccessFlags = Rs232ComPort[0].HasFifo ? SER1_LSR_RxRDY : SER1_STATUS_RxRDY;
-        ErrorFlags = Rs232ComPort[0].HasFifo ? (SER1_LSR_PE | SER1_LSR_OE) :
-                                               (SER1_STATUS_FE | SER1_STATUS_PE | SER1_STATUS_OE);
-
-        /* If "wait" mode enabled, spin many times, otherwise attempt just once */
-        while (LimitCount--)
-        {
-            /* Read LSR for data ready */
-            Lsr = CpReadLsr(Port, SuccessFlags);
-            if (Lsr & SuccessFlags)
-            {
-                /* If an error happened, clear the byte and fail */
-                if (Lsr & ErrorFlags)
-                {
-                    /* Save the last FIFO state */
-                    FifoEnabled = Rs232ComPort[0].FifoEnabled;
-
-                    /* Turn off FIFO */
-                    if (FifoEnabled)
-                        CpEnableFifo(Port->Address, FALSE);
-
-                    /* Clear error flag */
-                    WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_MODE_COMMAND,
-                                     SER1_COMMMAND_TxEN | SER1_COMMMAND_DTR |
-                                     SER1_COMMMAND_RxEN | SER1_COMMMAND_ER | SER1_COMMMAND_RTS);
-
-                    /* Turn on FIFO */
-                    if (FifoEnabled)
-                        CpEnableFifo(Port->Address, TRUE);
-
-                    *Byte = 0;
-                    return CP_GET_ERROR;
-                }
-
-                /* If only polling was requested by caller, return now */
-                if (Poll)
-                    return CP_GET_SUCCESS;
-
-                /* Otherwise read the byte and return it */
-                if (Rs232ComPort[0].HasFifo)
-                    *Byte = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_RECEIVER_BUFFER);
-                else
-                    *Byte = READ_PORT_UCHAR((PUCHAR)SER1_IO_i_DATA);
-
-                /* TODO: Handle CD if port is in modem control mode */
-
-                /* Byte was read */
-                return CP_GET_SUCCESS;
-            }
-            else if (IsNekoProject && Rs232ComPort[0].HasFifo)
-            {
-                /*
-                 * Neko Project 21/W doesn't set RxRDY without reading any data from 0x136.
-                 * TODO: Check real hardware behavior.
-                 */
-                (VOID)READ_PORT_UCHAR((PUCHAR)SER1_IO_i_INTERRUPT_ID);
-            }
-        }
-
-        /* Reset LSR, no data was found */
-        CpReadLsr(Port, 0);
+        RxReadyFlags = SR_8251F_LSR_RxRDY;
+        ErrorFlags = SR_8251F_LSR_PE | SR_8251F_LSR_OE;
     }
-    else if (Port->Address == Rs232ComPort[1].Address)
+    else
     {
-        /* If "wait" mode enabled, spin many times, otherwise attempt just once */
-        while (LimitCount--)
-        {
-            /* Read LSR for data ready */
-            Lsr = CpReadLsr(Port, SER2_LSR_DR);
-            if ((Lsr & SER2_LSR_DR) == SER2_LSR_DR)
-            {
-                /* If an error happened, clear the byte and fail */
-                if (Lsr & (SER2_LSR_FE | SER2_LSR_PE | SER2_LSR_OE))
-                {
-                    *Byte = 0;
-                    return CP_GET_ERROR;
-                }
-
-                /* If only polling was requested by caller, return now */
-                if (Poll)
-                    return CP_GET_SUCCESS;
-
-                /* Otherwise read the byte and return it */
-                *Byte = READ_PORT_UCHAR((UCHAR)SER2_IO_i_RECEIVER_BUFFER);
-
-                /* TODO: Handle CD if port is in modem control mode */
-
-                /* Byte was read */
-                return CP_GET_SUCCESS;
-            }
-        }
-
-        /* Reset LSR, no data was found */
-        CpReadLsr(Port, 0);
+        RxReadyFlags = SR_8251A_STATUS_RxRDY;
+        ErrorFlags = SR_8251A_STATUS_FE | SR_8251A_STATUS_OE | SR_8251A_STATUS_PE;
     }
 
+    /* Poll for data ready */
+    for (RetryCount = Wait ? TIMEOUT_COUNT : 1; RetryCount > 0; RetryCount--)
+    {
+        UCHAR Lsr = CpReadLsr(Port, RxReadyFlags);
+        PUCHAR DataReg;
+
+        if (!(Lsr & RxReadyFlags))
+            continue;
+
+        /* Handle error condition */
+        if (Lsr & ErrorFlags)
+        {
+            if (IsFifoEnabled)
+                WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, 0);
+
+            /* Clear error flag */
+            WRITE_PORT_UCHAR(Port->Address + 2,
+                             SR_8251A_COMMMAND_TxEN |
+                             SR_8251A_COMMMAND_DTR |
+                             SR_8251A_COMMMAND_RxEN |
+                             SR_8251A_COMMMAND_ER |
+                             SR_8251A_COMMMAND_RTS);
+
+            if (IsFifoEnabled)
+                WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, SR_8251F_FCR_ENABLE);
+
+            *Byte = 0;
+            return CP_GET_ERROR;
+        }
+
+        if (Poll)
+            return CP_GET_SUCCESS;
+
+        if (IsFifoEnabled)
+            DataReg = UlongToPtr(SER_8251F_REG_RBR);
+        else
+            DataReg = Port->Address;
+        *Byte = READ_PORT_UCHAR(DataReg);
+
+        // TODO: Handle CD if port is in modem control mode
+
+        return CP_GET_SUCCESS;
+    }
+
+    /* Reset LSR, no data was found */
+    CpReadLsr(Port, 0);
     return CP_GET_NODATA;
 }
 
@@ -563,32 +367,91 @@ CpPutByte(
     IN PCPPORT Port,
     IN UCHAR Byte)
 {
-    if (Port->Address == Rs232ComPort[0].Address)
+    PUCHAR DataReg;
+    UCHAR TxReadyFlags;
+
+    if (IS_NS16550(Port->Address))
     {
-        /* TODO: Check if port is in modem control to handle CD */
-
-        if (Rs232ComPort[0].HasFifo)
-        {
-            while ((CpReadLsr(Port, SER1_LSR_TxRDY) & SER1_LSR_TxRDY) == 0)
-                NOTHING;
-
-            WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_TRANSMITTER_BUFFER, Byte);
-        }
-        else
-        {
-            while ((CpReadLsr(Port, SER1_STATUS_TxRDY) & SER1_STATUS_TxRDY) == 0)
-                NOTHING;
-
-            WRITE_PORT_UCHAR((PUCHAR)SER1_IO_o_DATA, Byte);
-        }
+        CpPutByte16550(Port, Byte);
+        return;
     }
-    else if (Port->Address == Rs232ComPort[1].Address)
+
+    if (IsFifoEnabled)
     {
-        /* TODO: Check if port is in modem control to handle CD */
+        DataReg = UlongToPtr(SER_8251F_REG_RBR);
+        TxReadyFlags = SR_8251F_LSR_TxEMPTY;
 
-        while ((CpReadLsr(Port, SER2_LSR_THR_EMPTY) & SER2_LSR_THR_EMPTY) == 0)
-            NOTHING;
-
-        WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_TRANSMITTER_BUFFER, Byte);
+        /*
+         * Unlike 16550, a call to CpDoesPortExist for the 8251 will succeed even
+         * when if the user has not plug the serial port into PC-98 machine.
+         * To avoid an infinite loop, we need to check if the other side is ready
+         * to receive data.
+         */
+        if (!(READ_PORT_UCHAR((PUCHAR)SER_8251F_REG_MSR) & SR_8251F_MSR_CTS))
+            return;
     }
+    else
+    {
+        DataReg = Port->Address;
+        TxReadyFlags = SR_8251A_STATUS_TxEMPTY;
+    }
+
+    while (!(CpReadLsr(Port, TxReadyFlags) & TxReadyFlags))
+        NOTHING;
+
+    WRITE_PORT_UCHAR(DataReg, Byte);
+}
+
+NTSTATUS
+NTAPI
+CpInitialize(
+    IN PCPPORT Port,
+    IN PUCHAR Address,
+    IN ULONG BaudRate)
+{
+    PUCHAR DataReg;
+
+    if (IS_NS16550(Address))
+        return CpInitialize16550(Port, Address, BaudRate);
+
+    if (Port == NULL || Address == NULL || BaudRate == 0)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!CpDoesPortExist(Address))
+        return STATUS_NOT_FOUND;
+
+    /* Initialize port data */
+    Port->Address  = Address;
+    Port->BaudRate = 0;
+    Port->Flags    = 0;
+
+    if (IS_COM1(Address))
+    {
+        IsNp21W = CpiIsNekoProject();
+        HasFifo = Cpi8251HasFifo();
+    }
+
+    /* Perform port initialization */
+    CpSetBaud(Port, BaudRate);
+    CpEnableFifo(Address, TRUE);
+
+    /* Read junk out of the data register */
+    if (IsFifoEnabled)
+        DataReg = UlongToPtr(SER_8251F_REG_RBR);
+    else
+        DataReg = Port->Address;
+    READ_PORT_UCHAR(DataReg);
+
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+CpDoesPortExist(
+    IN PUCHAR Address)
+{
+    if (IS_NS16550(Address))
+        return CpDoesPortExist16550(Address);
+
+    return CpiDoesPortExist8251(Address);;
 }

@@ -38,6 +38,13 @@
 
 /* GLOBALS ********************************************************************/
 
+#if !defined(API_FUNCTION)
+#define API_FUNCTION
+#endif
+#if !defined(METHOD)
+#define METHOD(Name)  Name
+#endif
+
 // Wait timeout value
 #define TIMEOUT_COUNT   1024 * 200
 
@@ -46,10 +53,12 @@ UCHAR RingIndicator;
 
 /* FUNCTIONS ******************************************************************/
 
+API_FUNCTION
 VOID
 NTAPI
-CpEnableFifo(IN PUCHAR  Address,
-             IN BOOLEAN Enable)
+METHOD(CpEnableFifo)(
+    IN PUCHAR  Address,
+    IN BOOLEAN Enable)
 {
     /* Set FIFO and clear the receive/transmit buffers */
     WRITE_PORT_UCHAR(Address + FIFO_CONTROL_REGISTER,
@@ -57,10 +66,12 @@ CpEnableFifo(IN PUCHAR  Address,
                             : SERIAL_FCR_DISABLE);
 }
 
+API_FUNCTION
 VOID
 NTAPI
-CpSetBaud(IN PCPPORT Port,
-          IN ULONG   BaudRate)
+METHOD(CpSetBaud)(
+    IN PCPPORT Port,
+    IN ULONG   BaudRate)
 {
     UCHAR Lcr;
     ULONG Mode = CLOCK_RATE / BaudRate;
@@ -80,11 +91,13 @@ CpSetBaud(IN PCPPORT Port,
     Port->BaudRate = BaudRate;
 }
 
+API_FUNCTION
 NTSTATUS
 NTAPI
-CpInitialize(IN PCPPORT Port,
-             IN PUCHAR  Address,
-             IN ULONG   BaudRate)
+METHOD(CpInitialize)(
+    IN PCPPORT Port,
+    IN PUCHAR  Address,
+    IN ULONG   BaudRate)
 {
     /* Validity checks */
     if (Port == NULL || Address == NULL || BaudRate == 0)
@@ -219,17 +232,21 @@ ComPortTest2(IN PUCHAR Address)
     return TRUE;
 }
 
+API_FUNCTION
 BOOLEAN
 NTAPI
-CpDoesPortExist(IN PUCHAR Address)
+METHOD(CpDoesPortExist)(
+    IN PUCHAR Address)
 {
     return ( ComPortTest1(Address) || ComPortTest2(Address) );
 }
 
+API_FUNCTION
 UCHAR
 NTAPI
-CpReadLsr(IN PCPPORT Port,
-          IN UCHAR   ExpectedValue)
+METHOD(CpReadLsr)(
+    IN PCPPORT Port,
+    IN UCHAR   ExpectedValue)
 {
     UCHAR Lsr, Msr;
 
@@ -248,12 +265,14 @@ CpReadLsr(IN PCPPORT Port,
     return Lsr;
 }
 
+API_FUNCTION
 USHORT
 NTAPI
-CpGetByte(IN  PCPPORT Port,
-          OUT PUCHAR  Byte,
-          IN  BOOLEAN Wait,
-          IN  BOOLEAN Poll)
+METHOD(CpGetByte)(
+    IN  PCPPORT Port,
+    OUT PUCHAR  Byte,
+    IN  BOOLEAN Wait,
+    IN  BOOLEAN Poll)
 {
     UCHAR Lsr;
     ULONG LimitCount = Wait ? TIMEOUT_COUNT : 1;
@@ -298,10 +317,12 @@ CpGetByte(IN  PCPPORT Port,
     return CP_GET_NODATA;
 }
 
+API_FUNCTION
 VOID
 NTAPI
-CpPutByte(IN PCPPORT Port,
-          IN UCHAR   Byte)
+METHOD(CpPutByte)(
+    IN PCPPORT Port,
+    IN UCHAR   Byte)
 {
     /* Check if port is in modem control to handle CD */
     // while (Port->Flags & CPPORT_FLAG_MODEM_CONTROL)  // Commented for the moment.
