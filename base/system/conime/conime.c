@@ -2120,25 +2120,25 @@ BOOL IntSendCandListCHT(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PWCHAR firstStr = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0]);
         UINT currentX = IntGetStringWidth(firstStr) + 3;
 
-        UINT iItem = 0, iSep = 1;
-        for (iItem = 1; iItem < pCandList->dwCount && iSep < nPageCountNeeded - 1; ++iItem)
+        UINT iItem = 0, iCand = 1;
+        for (iItem = 1; iItem < pCandList->dwCount && iCand < nPageCountNeeded - 1; ++iItem)
         {
             PWCHAR szText = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[iItem]);
-            UINT strW = IntGetStringWidth(szText);
+            UINT strWidth = IntGetStringWidth(szText);
 
-            if (currentX + strW + 3 > (usableWidth - labelWidth))
+            if (currentX + strWidth + 3 > (usableWidth - labelWidth))
             {
-                pEntry->pdwCandPageStart[iSep++] = iItem;
-                currentX = strW + 3;
+                pEntry->pdwCandPageStart[iCand++] = iItem;
+                currentX = strWidth + 3;
             }
             else
             {
-                currentX += strW + 3;
+                currentX += strWidth + 3;
             }
         }
 
-        pEntry->pdwCandPageStart[iSep] = pCandList->dwCount;
-        pEntry->dwCandIndexMax = iSep;
+        pEntry->pdwCandPageStart[iCand] = pCandList->dwCount;
+        pEntry->dwCandIndexMax = iCand;
 
         UINT cbCandInfo = 3 * usableWidth + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
@@ -2264,26 +2264,26 @@ BOOL IntSendCandListCHS(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
         PWCHAR szFirstStr = (PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0]);
         UINT currentX = IntGetStringWidth(szFirstStr) + 3;
 
-        UINT iItem = 0, iSep = 1;
-        for (iItem = 1; iItem < pCandList->dwCount; iItem++)
+        UINT iItem = 0, iCand = 1;
+        for (iItem = 1; iItem < pCandList->dwCount && iCand < nPageCountNeeded - 1; iItem++)
         {
             WCHAR* szText = (WCHAR*)((BYTE*)pCandList + pCandList->dwOffset[iItem]);
-            UINT strW = IntGetStringWidth(szText);
+            UINT strWidth = IntGetStringWidth(szText);
 
-            if (currentX + strW + 3 > usableWidth ||
-                (iItem - pEntry->pdwCandPageStart[iSep-1]) >= 9)
+            if (currentX + strWidth + 3 > usableWidth ||
+                (iItem - pEntry->pdwCandPageStart[iCand-1]) >= 9)
             {
-                pEntry->pdwCandPageStart[iSep++] = iItem;
-                currentX = strW + 3;
+                pEntry->pdwCandPageStart[iCand++] = iItem;
+                currentX = strWidth + 3;
             }
             else
             {
-                currentX += strW + 3;
+                currentX += strWidth + 3;
             }
         }
 
-        pEntry->pdwCandPageStart[iSep] = pCandList->dwCount;
-        pEntry->dwCandIndexMax = iSep;
+        pEntry->pdwCandPageStart[iCand] = pCandList->dwCount;
+        pEntry->dwCandIndexMax = iCand;
 
         DWORD cbCandInfo = 3 * usableWidth + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
@@ -2345,6 +2345,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             LocalFree(pEntry->apCandList[dwIndex]);
             pEntry->apCandList[dwIndex] = NULL;
         }
+
         if (!pEntry->apCandList[dwIndex])
         {
             pEntry->apCandList[dwIndex] = LocalAlloc(LPTR, cbList);
@@ -2389,6 +2390,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             LocalFree(pEntry->pdwCandPageStart);
             pEntry->pdwCandPageStart = NULL;
         }
+
         if (!pEntry->pdwCandPageStart)
         {
             pEntry->pdwCandPageStart = LocalAlloc(LPTR, nPageCountNeeded * sizeof(DWORD));
@@ -2397,7 +2399,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
             pEntry->cbCandPageData = nPageCountNeeded * sizeof(DWORD);
         }
 
-        DWORD iItem, iSep = 1;
+        DWORD iItem, iCand = 1;
 
         if (bIsCode)
         {
@@ -2406,7 +2408,7 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
 
             pEntry->pdwCandPageStart[0] = 0;
             for (iItem = pEntry->dwCandOffset; iItem < pCandList->dwCount; iItem += 9)
-                pEntry->pdwCandPageStart[iSep++] = iItem;
+                pEntry->pdwCandPageStart[iCand++] = iItem;
 
             if (iItem > pCandList->dwCount)
                 iItem = pCandList->dwCount;
@@ -2422,26 +2424,27 @@ IntSendCandListJPNorKOR(HWND hwnd, HIMC hIMC, PCONENTRY pEntry, DWORD dwCandidat
                 IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[0])) + 3;
             UINT usableWidth = screenX - labelWidth;
 
-            for (DWORD i = 1; i < pCandList->dwCount; i++)
+            for (DWORD i = 1; i < pCandList->dwCount; ++i)
             {
-                UINT strW = IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[i]));
-                if (currentX + strW + 3 > usableWidth ||
-                    (i - pEntry->pdwCandPageStart[iSep - 1]) >= 9)
+                UINT strWidth =
+                    IntGetStringWidth((PWCHAR)((PBYTE)pCandList + pCandList->dwOffset[i]));
+                if (currentX + strWidth + 3 > usableWidth ||
+                    (i - pEntry->pdwCandPageStart[iCand - 1]) >= 9)
                 {
-                    pEntry->pdwCandPageStart[iSep++] = i;
-                    currentX = strW + 3;
+                    pEntry->pdwCandPageStart[iCand++] = i;
+                    currentX = strWidth + 3;
                 }
                 else
                 {
-                    currentX += strW + 3;
+                    currentX += strWidth + 3;
                 }
             }
 
             iItem = pCandList->dwCount;
         }
 
-        pEntry->pdwCandPageStart[iSep] = iItem;
-        pEntry->dwCandIndexMax = iSep;
+        pEntry->pdwCandPageStart[iCand] = iItem;
+        pEntry->dwCandIndexMax = iCand;
 
         DWORD cbCandInfo = 3 * screenX + 4;
         if (pEntry->dwSystemLineSize < cbCandInfo)
