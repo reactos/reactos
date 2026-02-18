@@ -74,7 +74,7 @@ typedef struct tagCOMPSTRINFO
     DWORD dwCompStrOffset;
     DWORD dwResultStrLen;
     DWORD dwResultStrOffset;
-    WORD  wAttrColor[8];
+    WORD  awAttrColor[8];
 } COMPSTRINFO, *PCOMPSTRINFO;
 
 // IME candidate info
@@ -104,7 +104,7 @@ typedef struct tagCONENTRY
     WCHAR szMode[10];
     BOOL bInComposition;
     PCOMPSTRINFO pCompStr;
-    WORD AttrColors[8];
+    WORD awAttrColor[8];
     BOOL bHasAnyCand;
     PCANDIDATELIST apCandList[MAX_CANDLIST]; // See acbCandList below
     PCANDINFO pCandInfo;

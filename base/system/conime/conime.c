@@ -40,6 +40,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(conime);
 #define _FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 #define _BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
 
+#define IMEDISPLAY_MAX_X 160
+
 // Global variables
 HANDLE g_hConsole = NULL;
 PCONENTRY* g_ppEntries = NULL;
@@ -457,7 +459,7 @@ void IntFillImeCandidatesCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT iCand)
     {
         pDest->Char.UnicodeChar = *pchSrc;
         if (*pbAttrIndex < 8)
-            pDest->Attributes = pCompStr->wAttrColor[*pbAttrIndex];
+            pDest->Attributes = pCompStr->awAttrColor[*pbAttrIndex];
     }
 }
 
@@ -502,6 +504,10 @@ UINT IntFillImeModeCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, INT cch)
 
 void IntFillImeCompStrCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
+    UINT maxX = pEntry->ScreenSize.X;
+    if (maxX > IMEDISPLAY_MAX_X)
+        maxX = IMEDISPLAY_MAX_X;
+
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     if (!pCompStr || !pCompStr->dwCompStrLen)
         return;
@@ -512,13 +518,13 @@ void IntFillImeCompStrCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     PCHAR_INFO pDest = &pDisplay->CharInfo[cch];
 
     DWORD dwCharCount = pCompStr->dwCompStrLen / sizeof(WCHAR);
-    for (DWORD ich = 0; ich < dwCharCount; ich++, pDest++)
+    for (DWORD ich = 0; ich < dwCharCount && ich < maxX; ich++, pDest++)
     {
         pDest->Char.UnicodeChar = pchSrc[ich];
 
         BYTE colorIndex = pbAttrIndex[ich];
         if (colorIndex < 8)
-            pDest->Attributes = pCompStr->wAttrColor[colorIndex];
+            pDest->Attributes = pCompStr->awAttrColor[colorIndex];
     }
 }
 
@@ -531,11 +537,11 @@ UINT IntGetCharInfoWidth(PCHAR_INFO pCharInfo, UINT cch)
 }
 
 //! Adjusts the width of the status display and pads it with spaces
-UINT IntFillImeSpaceCHSCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
+UINT IntFillImeSpaceCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
     UINT maxX = pEntry->ScreenSize.X;
-    if (maxX > 160)
-        maxX = 160;
+    if (maxX > IMEDISPLAY_MAX_X)
+        maxX = IMEDISPLAY_MAX_X;
 
     UINT index = cch;
     UINT width = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
@@ -587,7 +593,7 @@ BOOL IntFillImeDisplayCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
             else
                 IntFillImeCompStrCHSorCHT(pEntry, pDisplay, cch);
         }
-        cch = IntFillImeSpaceCHSCHT(pEntry, pDisplay, cch);
+        cch = IntFillImeSpaceCHSorCHT(pEntry, pDisplay, cch);
     }
 
     pDisplay->bFlag = FALSE;
@@ -770,7 +776,7 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
         while (displayCols < 10)
         {
             pDisplay->CharInfo[cch].Char.UnicodeChar = *pszComp;
-            pDisplay->CharInfo[cch].Attributes = pCompStr->wAttrColor[*pbAttrs];
+            pDisplay->CharInfo[cch].Attributes = pCompStr->awAttrColor[*pbAttrs];
             ++cch;
 
             strPosByte += sizeof(WCHAR);
@@ -801,7 +807,7 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
         while (*pszCand)
         {
             pDisplay->CharInfo[cch].Char.UnicodeChar = *pszCand;
-            pDisplay->CharInfo[cch].Attributes = pCompStr->wAttrColor[*pbCandAttrs];
+            pDisplay->CharInfo[cch].Attributes = pCompStr->awAttrColor[*pbCandAttrs];
             ++cch;
 
             ++pszCand;
@@ -826,7 +832,7 @@ BOOL IntFillImeDisplayCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
             else
                 IntFillImeCompStrCHSorCHT(pEntry, pDisplay, cch);
         }
-        cch = IntFillImeSpaceCHSCHT(pEntry, pDisplay, cch);
+        cch = IntFillImeSpaceCHSorCHT(pEntry, pDisplay, cch);
     }
     pDisplay->bFlag = FALSE;
     pDisplay->uCharInfoLen = cch;
@@ -1206,14 +1212,14 @@ BOOL ConIme_InitEntry(HWND hwnd, HANDLE hConsole, HWND hwndConsole)
     pEntry->hwndConsole = hwndConsole;
     pEntry->bConsoleEnabled = TRUE;
     pEntry->ScreenSize.X = 80;
-    pEntry->AttrColors[0] = COMMON_LVB_UNDERSCORE | 0x7;
-    pEntry->AttrColors[1] = BACKGROUND_BLUE | _FOREGROUND_WHITE;
-    pEntry->AttrColors[2] = COMMON_LVB_UNDERSCORE | _FOREGROUND_WHITE;
-    pEntry->AttrColors[3] = COMMON_LVB_UNDERSCORE | _BACKGROUND_WHITE | FOREGROUND_BLUE;
-    pEntry->AttrColors[4] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
-    pEntry->AttrColors[5] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
-    pEntry->AttrColors[6] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
-    pEntry->AttrColors[7] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
+    pEntry->awAttrColor[0] = COMMON_LVB_UNDERSCORE | 0x7;
+    pEntry->awAttrColor[1] = BACKGROUND_BLUE | _FOREGROUND_WHITE;
+    pEntry->awAttrColor[2] = COMMON_LVB_UNDERSCORE | _FOREGROUND_WHITE;
+    pEntry->awAttrColor[3] = COMMON_LVB_UNDERSCORE | _BACKGROUND_WHITE | FOREGROUND_BLUE;
+    pEntry->awAttrColor[4] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
+    pEntry->awAttrColor[5] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
+    pEntry->awAttrColor[6] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
+    pEntry->awAttrColor[7] = COMMON_LVB_UNDERSCORE | FOREGROUND_RED;
     IntGetLayoutText(pEntry);
     return TRUE;
 }
@@ -1324,7 +1330,7 @@ void IntDoImeCompJPN(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
 
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - offsetof(COMPSTRINFO, dwCompAttrLen));
-    CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
+    CopyMemory(pCompStr->awAttrColor, pEntry->awAttrColor, sizeof(pCompStr->awAttrColor));
 
     PWCHAR pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
     PBYTE pAttrDest = (PBYTE)pszDest + cbCompStr;
@@ -1434,7 +1440,7 @@ void IntDoImeCompCHS(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags)
 
     PCOMPSTRINFO pCompStr = pEntry->pCompStr;
     ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - sizeof(DWORD));
-    CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
+    CopyMemory(pCompStr->awAttrColor, pEntry->awAttrColor, sizeof(pCompStr->awAttrColor));
 
     PWCHAR pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
     PBYTE pAttrDest = (PBYTE)pszDest + cbCompStr;
@@ -1547,7 +1553,7 @@ void IntDoImeCompCHT(HWND hWnd, PCONENTRY pEntry, DWORD dwFlags)
 
     pCompStr = pEntry->pCompStr;
     ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - sizeof(DWORD));
-    CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
+    CopyMemory(pCompStr->awAttrColor, pEntry->awAttrColor, sizeof(pCompStr->awAttrColor));
 
     pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
     pAttrDest = (PBYTE)pszDest + cbCompStr;
@@ -1672,7 +1678,7 @@ void IntDoImeCompKOR(HWND hwnd, PCONENTRY pEntry, DWORD dwFlags, WCHAR wch)
 
     pCompStr = pEntry->pCompStr;
     ZeroMemory(&pCompStr->dwCompAttrLen, pCompStr->dwSize - offsetof(COMPSTRINFO, dwCompAttrLen));
-    CopyMemory(pCompStr->wAttrColor, pEntry->AttrColors, sizeof(pCompStr->wAttrColor));
+    CopyMemory(pCompStr->awAttrColor, pEntry->awAttrColor, sizeof(pCompStr->awAttrColor));
 
     pszDest = (PWCHAR)&pCompStr[1]; // bottom of COMPSTRINFO
     pAttrDest = (PBYTE)pszDest + cbCompStr;
