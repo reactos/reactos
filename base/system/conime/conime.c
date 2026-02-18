@@ -2598,7 +2598,7 @@ BOOL ConIme_OnImeSystem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 //! Closes the IME candidate list for Traditional Chinese (CHT).
 BOOL IntSendCandidateCHT(HWND hwnd, HIMC hIMC, PCONSOLE_ENTRY pEntry, DWORD dwCandidates)
 {
-    PIMEDISPLAY pDisplay = LocalAlloc(0x40u, 0x288u);
+    PIMEDISPLAY pDisplay = LocalAlloc(LPTR, sizeof(IMEDISPLAY));
     if (!pDisplay)
         return FALSE;
 
