@@ -526,41 +526,38 @@ UINT IntGetCharInfoWidth(PCHAR_INFO pCharInfo, UINT cch)
     return ret;
 }
 
+inline UINT IntGetCharDisplayWidth(WCHAR wch)
+{
+    return IntIsDoubleWidthChar(wch) ? 2 : 1;
+}
+
 //! Adjusts the width of the status display and pads it with spaces
 UINT IntFillImeSpaceCHSorCHT(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
 {
-    UINT maxX = max(pEntry->ScreenSize.X, IMEDISPLAY_MAX_X);
+    const UINT maxX = max(pEntry->ScreenSize.X, IMEDISPLAY_MAX_X);
 
+    UINT currentWidth = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
     UINT index = cch;
-    UINT width = IntGetCharInfoWidth(pDisplay->CharInfo, cch);
-    if (width > maxX && cch > 0)
+    while (currentWidth > maxX && index > 0)
     {
-        PCHAR_INFO pCharInfo = &pDisplay->CharInfo[cch - 1];
-        do
-        {
-            BOOL isDouble = IntIsDoubleWidthChar(pCharInfo->Char.UnicodeChar);
-            width -= (isDouble + 1);
-            pCharInfo--;
-            index--;
-        } while (width > maxX && index > 0);
+        --index;
+        WCHAR wch = pDisplay->CharInfo[index].Char.UnicodeChar;
+        currentWidth -= IntGetCharDisplayWidth(wch);
     }
 
-    UINT remainingSpace = maxX - width;
-    UINT ichFinal = index;
+    const UINT remainingSpace = maxX - currentWidth;
+    const UINT ichFinal = index + remainingSpace;
 
     if (remainingSpace > 0)
     {
-        PCHAR_INFO pCharInfo = &pDisplay->CharInfo[index];
-        ichFinal = index + remainingSpace;
-        for (UINT i = 0; i < remainingSpace; i++, pCharInfo++)
-            pCharInfo->Char.UnicodeChar = L' ';
-    }
+        for (UINT ich = index; ich < ichFinal; ++ich)
+        {
+            PCHAR_INFO pChar = &pDisplay->CharInfo[ich];
+            pChar->Char.UnicodeChar = L' ';
 
-    if (cch < ichFinal)
-    {
-        PCHAR_INFO pCharInfo = &pDisplay->CharInfo[cch];
-        for (UINT i = 0; i < ichFinal - cch; i++, pCharInfo++)
-            pCharInfo->Attributes = _FOREGROUND_WHITE;
+            if (ich >= cch || ich >= index)
+                pChar->Attributes = _FOREGROUND_WHITE;
+        }
     }
 
     return ichFinal;
@@ -673,11 +670,8 @@ BOOL IntFillImeDisplayJPN(PCONENTRY pEntry, PIMEDISPLAY pDisplay)
     }
 
 DoSetAttributes:
-    if (cch > 0)
-    {
-        for (UINT i = 0; i < cch; i++)
-            pDisplay->CharInfo[i].Attributes = _FOREGROUND_WHITE;
-    }
+    for (UINT ich = 0; ich < cch; ich++)
+        pDisplay->CharInfo[ich].Attributes = _FOREGROUND_WHITE;
 
     pDisplay->uCharInfoLen = cch;
     pDisplay->bFlag = TRUE;
@@ -718,7 +712,7 @@ INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     }
 
     INT paddingCount = 9 - width;
-    for (INT i = 0; i < paddingCount; i++)
+    for (INT i = 0; i < paddingCount; ++i)
         pDisplay->CharInfo[cch++].Char.UnicodeChar = L' ';
 
     WCHAR modeChar;
@@ -730,11 +724,8 @@ INT IntFillImeModeCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     pDisplay->CharInfo[cch++].Char.UnicodeChar = modeChar;
     pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
-    if (cch > 0)
-    {
-        for (INT i = 0; i < cch; i++)
-            pDisplay->CharInfo[i].Attributes = _FOREGROUND_WHITE;
-    }
+    for (UINT ich = 0; ich < cch; ich++)
+        pDisplay->CharInfo[ich].Attributes = _FOREGROUND_WHITE;
 
     return cch;
 }
@@ -780,16 +771,13 @@ UINT IntFillImeCandidatesCHS(PCONENTRY pEntry, PIMEDISPLAY pDisplay, UINT cch)
     pDisplay->CharInfo[cch++].Char.UnicodeChar = L':';
 
     PCANDINFO pCandInfo = pEntry->pCandInfo;
-    PWCHAR pszCand = pCandInfo->szCandStr;
     PBYTE pbCandAttrs = (PBYTE)pCandInfo + pCandInfo->dwAttrsOffset;
 
-    while (*pszCand)
+    for (PWCHAR pszCand = pCandInfo->szCandStr; *pszCand; ++pszCand)
     {
         pDisplay->CharInfo[cch].Char.UnicodeChar = *pszCand;
         pDisplay->CharInfo[cch].Attributes = pCompStr->awAttrColor[*pbCandAttrs];
         ++cch;
-
-        ++pszCand;
         ++pbCandAttrs;
     }
 
