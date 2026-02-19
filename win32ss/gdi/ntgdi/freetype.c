@@ -2822,6 +2822,35 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
     return TRUE;
 }
 
+static BOOL
+IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PFONTGDI FontGDI, _Out_ WCHAR* pDefChar)
+{
+    ASSERT_FREETYPE_LOCK_NOT_HELD();
+
+    if (FT_IS_SFNT(Face))
+    {
+        IntLockFreeType();
+        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+        if (pOS2)
+            *pDefChar = pOS2->usDefaultChar;
+        IntUnLockFreeType();
+        return !!pOS2;
+    }
+
+    if (!FT_IS_SCALABLE(Face))
+    {
+        FT_WinFNT_HeaderRec WinFNT;
+        IntLockFreeType();
+        FT_Error error = FT_Get_WinFNT_Header(Face, &WinFNT);
+        IntUnLockFreeType();
+        if (!error)
+            *pDefChar = WinFNT.default_char;
+        return !error;
+    }
+
+    return FALSE;
+}
+
 static BOOL face_has_symbol_charmap(FT_Face ft_face)
 {
     int i;
@@ -7811,35 +7840,6 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
-static BOOL
-IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PFONTGDI FontGDI, _Out_ WCHAR* pDefChar)
-{
-    ASSERT_FREETYPE_LOCK_NOT_HELD();
-
-    if (FT_IS_SFNT(Face))
-    {
-        IntLockFreeType();
-        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-        if (pOS2)
-            *pDefChar = pOS2->usDefaultChar;
-        IntUnLockFreeType();
-        return !!pOS2;
-    }
-
-    if (!FT_IS_SCALABLE(Face))
-    {
-        FT_WinFNT_HeaderRec WinFNT;
-        IntLockFreeType();
-        FT_Error error = FT_Get_WinFNT_Header(Face, &WinFNT);
-        IntUnLockFreeType();
-        if (!error)
-            *pDefChar = WinFNT.default_char;
-        return !error;
-    }
-
-    return FALSE;
-}
-
 /*
 * @implemented
 */
@@ -7938,7 +7938,7 @@ NtGdiGetGlyphIndicesW(
         if (IntGetFontDefaultChar(Face, FontGDI, &DefChar))
             DefChar = get_glyph_index(Face, DefChar);
         else
-            DefChar = 0xFFFF;
+            DefChar = 0;
     }
 
     /* Allocate for Safepwc */
