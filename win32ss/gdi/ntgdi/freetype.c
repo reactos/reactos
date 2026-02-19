@@ -7811,6 +7811,34 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+static BOOL
+IntGetFontDefaultChar(FT_Face Face, PFONTGDI FontGDI, WCHAR* pDefChar)
+{
+    ASSERT_FREETYPE_LOCK_NOT_HELD();
+
+    if (FT_IS_SFNT(Face))
+    {
+        IntLockFreeType();
+        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+        if (pOS2)
+            *pDefChar = (pOS2->usDefaultChar ? pOS2->usDefaultChar : 0);
+        IntUnLockFreeType();
+        return !!pOS2;
+    }
+
+    if (!FT_IS_SCALABLE(Face))
+    {
+        FT_WinFNT_HeaderRec WinFNT;
+        IntLockFreeType();
+        FT_Error error = FT_Get_WinFNT_Header(Face, &WinFNT);
+        IntUnLockFreeType();
+        if (!error)
+            *pDefChar = WinFNT.default_char;
+        return !error;
+    }
+
+    return FALSE;
+}
 
 /*
 * @implemented
@@ -7835,16 +7863,16 @@ NtGdiGetGlyphIndicesW(
     PFONTGDI FontGDI;
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    OUTLINETEXTMETRICW *potm;
     INT i;
     WCHAR DefChar = 0xffff;
     PWSTR Buffer = NULL;
-    ULONG Size, pwcSize;
+    WCHAR StackBuffer[256];
+    ULONG pwcSize;
     PWSTR Safepwc = NULL;
+    WCHAR pwcStack[256];
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
     FT_Face Face;
-    TT_OS2 *pOS2;
 
     if (cwc < 0)
     {
@@ -7883,11 +7911,12 @@ NtGdiGetGlyphIndicesW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
     TEXTOBJ_UnlockText(TextObj);
 
+    Face = FontGDI->SharedFace->Face;
+
     if (cwc == 0)
     {
         if (!UnSafepwc && !UnSafepgi)
         {
-            Face = FontGDI->SharedFace->Face;
             return Face->num_glyphs;
         }
         else
@@ -7897,11 +7926,19 @@ NtGdiGetGlyphIndicesW(
         }
     }
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
-    if (!Buffer)
+    /* Allocate for Buffer */
+    if (cwc * sizeof(WORD) <= sizeof(StackBuffer))
     {
-        DPRINT1("ExAllocatePoolWithTag\n");
-        return GDI_ERROR;
+        Buffer = StackBuffer; /* Faster */
+    }
+    else
+    {
+        Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
+        if (!Buffer)
+        {
+            DPRINT1("ExAllocatePoolWithTag\n");
+            return GDI_ERROR;
+        }
     }
 
     /* Get DefChar */
@@ -7911,47 +7948,27 @@ NtGdiGetGlyphIndicesW(
     }
     else
     {
-        Face = FontGDI->SharedFace->Face;
-        if (FT_IS_SFNT(Face))
-        {
-            IntLockFreeType();
-            pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
-            IntUnLockFreeType();
-        }
+        if (IntGetFontDefaultChar(Face, FontGDI, &DefChar))
+            DefChar = get_glyph_index(Face, DefChar);
         else
-        {
-            ASSERT_FREETYPE_LOCK_NOT_HELD();
-            Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL, FALSE);
-            if (!Size)
-            {
-                Status = STATUS_UNSUCCESSFUL;
-                DPRINT1("!Size\n");
-                goto ErrorRet;
-            }
-            potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
-            if (!potm)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                DPRINT1("!potm\n");
-                goto ErrorRet;
-            }
-            ASSERT_FREETYPE_LOCK_NOT_HELD();
-            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm, FALSE);
-            if (Size)
-                DefChar = potm->otmTextMetrics.tmDefaultChar;
-            ExFreePoolWithTag(potm, GDITAG_TEXT);
-        }
+            DefChar = 0xFFFF;
     }
 
     /* Allocate for Safepwc */
     pwcSize = cwc * sizeof(WCHAR);
-    Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-    if (!Safepwc)
+    if (pwcSize <= sizeof(pwcStack))
     {
-        Status = STATUS_NO_MEMORY;
-        DPRINT1("!Safepwc\n");
-        goto ErrorRet;
+        Safepwc = pwcStack; /* Faster */
+    }
+    else
+    {
+        Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
+        if (!Safepwc)
+        {
+            Status = STATUS_NO_MEMORY;
+            DPRINT1("!Safepwc\n");
+            goto ErrorRet;
+        }
     }
 
     _SEH2_TRY
@@ -7975,7 +7992,8 @@ NtGdiGetGlyphIndicesW(
     IntLockFreeType();
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
+        /* NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs. */
+        Buffer[i] = get_glyph_index(Face, Safepwc[i]);
         if (Buffer[i] == 0)
             Buffer[i] = DefChar;
     }
@@ -7993,9 +8011,9 @@ NtGdiGetGlyphIndicesW(
     _SEH2_END;
 
 ErrorRet:
-    if (Buffer != NULL)
+    if (Buffer && Buffer != StackBuffer)
         ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    if (Safepwc != NULL)
+    if (Safepwc && Safepwc != pwcStack)
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
     if (NT_SUCCESS(Status))
