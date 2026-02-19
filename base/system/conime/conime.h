@@ -12,11 +12,6 @@
 #define LANGID_JAPANESE 0x411 // Japanese language
 #define LANGID_KOREAN 0x412 // Korean language
 
-#define CODEPAGE_CHINESE_SIMPLIFIED 936 // Simplified Chinese GB2312 codepage
-#define CODEPAGE_CHINESE_TRADITIONAL 950 // Traditional Chinese Big5 codepage
-#define CODEPAGE_JAPANESE 932 // Japanese Shift_JIS codepage
-#define CODEPAGE_KOREAN 949 // Korean codepage
-
 #define WM_USER_INIT (WM_USER + 0x00) // 0x400
 #define WM_USER_UNINIT (WM_USER + 0x01) // 0x401
 #define WM_USER_SWITCHIME (WM_USER + 0x02) // 0x402

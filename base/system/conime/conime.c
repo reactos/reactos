@@ -19,6 +19,7 @@
 #include <undocuser.h>
 #include <imm32_undoc.h>
 #include <wincon_undoc.h>
+#include <cjkcode.h>
 #include <strsafe.h>
 
 #define NTOS_MODE_USER
@@ -1027,16 +1028,16 @@ BOOL ConIme_OnGo(HWND hwnd, HANDLE hConsole, HKL hKL, INT iDirection)
     LANGID wTargetLang = 0;
     switch (pEntry->nOutputCodePage)
     {
-        case CODEPAGE_CHINESE_SIMPLIFIED: // Simplified Chinese codepage (GB2312)
+        case CP_CHINESE_SIMPLIFIED:
             wTargetLang = LANGID_CHINESE_SIMPLIFIED;
             break;
-        case CODEPAGE_CHINESE_TRADITIONAL: // Traditional Chinese codepage (Big5)
+        case CP_CHINESE_TRADITIONAL:
             wTargetLang = LANGID_CHINESE_TRADITIONAL;
             break;
-        case CODEPAGE_JAPANESE: // Japanese codepage
+        case CP_JAPANESE:
             wTargetLang = LANGID_JAPANESE;
             break;
-        case CODEPAGE_KOREAN: // Korean codepage (Unified Hangul Code)
+        case CP_KOREAN:
             wTargetLang = LANGID_KOREAN;
             break;
         default:
@@ -1723,16 +1724,16 @@ void IntDoImeComp(HWND hwnd, DWORD dwFlags, WCHAR wch)
 
     switch (pEntry->nOutputCodePage)
     {
-        case CODEPAGE_CHINESE_SIMPLIFIED:
+        case CP_CHINESE_SIMPLIFIED:
             IntDoImeCompCHS(hwnd, pEntry, dwFlags);
             break;
-        case CODEPAGE_CHINESE_TRADITIONAL:
+        case CP_CHINESE_TRADITIONAL:
             IntDoImeCompCHT(hwnd, pEntry, dwFlags);
             break;
-        case CODEPAGE_JAPANESE:
+        case CP_JAPANESE:
             IntDoImeCompJPN(hwnd, pEntry, dwFlags);
             break;
-        case CODEPAGE_KOREAN:
+        case CP_KOREAN:
             IntDoImeCompKOR(hwnd, pEntry, dwFlags, wch);
             break;
     }
