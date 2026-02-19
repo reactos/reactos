@@ -7926,15 +7926,8 @@ NtGdiGetGlyphIndicesW(
         goto ErrorRet;
     }
 
-    // The next is approximately the same as 'pwcSize = cwc * sizeof(WORD)':
-    Status = RtlSizeTMult(cwc, sizeof(WORD), &pwcSize);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("0x%lX * 2: overflow\n", cwc);
-        goto ErrorRet;
-    }
-
     // Allocate Buffer and Safepwc
+    pwcSize = cwc * sizeof(WORD);
     if (pwcSize <= sizeof(StackBuffer) && pwcSize <= sizeof(pwcStack))
     {
         // Stack is faster than dynamic allocation
