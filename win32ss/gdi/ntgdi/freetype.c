@@ -7871,7 +7871,7 @@ NtGdiGetGlyphIndicesW(
     WCHAR DefChar;
     PWORD Buffer = NULL;
     WORD StackBuffer[256];
-    ULONG pwcSize;
+    size_t pwcSize;
     PWSTR Safepwc = NULL;
     WCHAR pwcStack[256];
     LPCWSTR UnSafepwc = pwc;
@@ -7927,7 +7927,7 @@ NtGdiGetGlyphIndicesW(
     }
 
     // The next is approximately the same as 'pwcSize = cwc * sizeof(WORD)':
-    Status = RtlULongMult(cwc, sizeof(WORD), &pwcSize);
+    Status = RtlSizeTMult(cwc, sizeof(WORD), &pwcSize);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("0x%lX * 2: overflow\n", cwc);
