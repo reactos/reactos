@@ -7920,14 +7920,10 @@ NtGdiGetGlyphIndicesW(
     if (cwc == 0)
     {
         if (!UnSafepwc && !UnSafepgi)
-        {
             return Face->num_glyphs;
-        }
-        else
-        {
-            Status = STATUS_UNSUCCESSFUL;
-            goto ErrorRet;
-        }
+
+        Status = STATUS_UNSUCCESSFUL;
+        goto ErrorRet;
     }
 
     /* The next is pproximately the same as 'pwcSize = cwc * sizeof(WORD)': */
