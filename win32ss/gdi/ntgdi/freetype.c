@@ -7840,6 +7840,7 @@ IntGetFontDefaultChar(FT_Face Face, PFONTGDI FontGDI, WCHAR* pDefChar)
         return !error;
     }
 
+    /* FIXME: Support more font types */
     return FALSE;
 }
 
