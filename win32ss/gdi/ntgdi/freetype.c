@@ -7814,12 +7814,16 @@ NtGdiGetCharWidthW(
 static BOOL
 IntGetFontDefaultChar(FT_Face Face, PFONTGDI FontGDI, WCHAR* pDefChar)
 {
+    TT_OS2 *pOS2;
+    FT_WinFNT_HeaderRec WinFNT;
+    FT_Error error;
+
     ASSERT_FREETYPE_LOCK_NOT_HELD();
 
     if (FT_IS_SFNT(Face))
     {
         IntLockFreeType();
-        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+        pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
         if (pOS2)
             *pDefChar = (pOS2->usDefaultChar ? pOS2->usDefaultChar : 0);
         IntUnLockFreeType();
@@ -7828,9 +7832,8 @@ IntGetFontDefaultChar(FT_Face Face, PFONTGDI FontGDI, WCHAR* pDefChar)
 
     if (!FT_IS_SCALABLE(Face))
     {
-        FT_WinFNT_HeaderRec WinFNT;
         IntLockFreeType();
-        FT_Error error = FT_Get_WinFNT_Header(Face, &WinFNT);
+        error = FT_Get_WinFNT_Header(Face, &WinFNT);
         IntUnLockFreeType();
         if (!error)
             *pDefChar = WinFNT.default_char;
