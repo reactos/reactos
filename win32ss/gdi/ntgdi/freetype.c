@@ -7912,9 +7912,8 @@ NtGdiGetGlyphIndicesW(
         return GDI_ERROR;
     }
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-    TEXTOBJ_UnlockText(TextObj);
-
     Face = FontGDI->SharedFace->Face;
+    TEXTOBJ_UnlockText(TextObj);
 
     if (cwc == 0)
     {
