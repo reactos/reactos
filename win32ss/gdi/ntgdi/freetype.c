@@ -7926,7 +7926,7 @@ NtGdiGetGlyphIndicesW(
         goto ErrorRet;
     }
 
-    // The next is pproximately the same as 'pwcSize = cwc * sizeof(WORD)':
+    // The next is approximately the same as 'pwcSize = cwc * sizeof(WORD)':
     Status = RtlULongMult(cwc, sizeof(WORD), &pwcSize);
     if (!NT_SUCCESS(Status))
     {
