@@ -7823,7 +7823,7 @@ IntGetFontDefaultChar(FT_Face Face, WCHAR* pDefChar)
     if (FT_IS_SFNT(Face))
     {
         IntLockFreeType();
-        pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+        pOS2 = FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
         if (pOS2)
             *pDefChar = (pOS2->usDefaultChar ? pOS2->usDefaultChar : 0);
         IntUnLockFreeType();
