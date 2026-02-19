@@ -7863,12 +7863,14 @@ NtGdiGetGlyphIndicesW(
     PFONTGDI FontGDI;
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    INT iwc, jwc;
+    INT iwc, jwc, kwc;
     ULONG charCode;
     WCHAR DefChar = 0xFFFF;
     PWSTR Buffer = NULL;
+    WCHAR StackBuffer[256];
     ULONG pwcSize;
     PWSTR Safepwc = NULL;
+    WCHAR pwcStack[256];
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
     FT_Face Face;
@@ -7925,11 +7927,19 @@ NtGdiGetGlyphIndicesW(
         }
     }
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
-    if (!Buffer)
+    /* Allocate for Buffer */
+    if (cwc * sizeof(WORD) <= sizeof(StackBuffer))
     {
-        DPRINT1("ExAllocatePoolWithTag\n");
-        return GDI_ERROR;
+        Buffer = StackBuffer; /* Faster */
+    }
+    else
+    {
+        Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
+        if (!Buffer)
+        {
+            DPRINT1("ExAllocatePoolWithTag\n");
+            return GDI_ERROR;
+        }
     }
 
     /* Get DefChar */
@@ -7943,12 +7953,19 @@ NtGdiGetGlyphIndicesW(
 
     /* Allocate for Safepwc */
     pwcSize = cwc * sizeof(WCHAR);
-    Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-    if (!Safepwc)
+    if (pwcSize <= sizeof(pwcStack))
     {
-        Status = STATUS_NO_MEMORY;
-        DPRINT1("!Safepwc\n");
-        goto ErrorRet;
+        Safepwc = pwcStack; /* Faster */
+    }
+    else
+    {
+        Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
+        if (!Safepwc)
+        {
+            Status = STATUS_NO_MEMORY;
+            DPRINT1("!Safepwc\n");
+            goto ErrorRet;
+        }
     }
 
     _SEH2_TRY
@@ -7985,6 +8002,10 @@ NtGdiGetGlyphIndicesW(
     }
     IntUnLockFreeType();
 
+    /* Fill trailing data by DefChar */
+    for (kwc = jwc; kwc < cwc; ++kwc)
+        Buffer[kwc] = DefChar;
+
     _SEH2_TRY
     {
         ProbeForWrite(UnSafepgi, jwc * sizeof(WORD), 1);
@@ -7997,9 +8018,9 @@ NtGdiGetGlyphIndicesW(
     _SEH2_END;
 
 ErrorRet:
-    if (Buffer != NULL)
+    if (Buffer && Buffer != StackBuffer)
         ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    if (Safepwc != NULL)
+    if (Safepwc && Safepwc != pwcStack)
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
     if (NT_SUCCESS(Status))
