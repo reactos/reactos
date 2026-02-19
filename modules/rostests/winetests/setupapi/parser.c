@@ -71,13 +71,13 @@ static const char tmpfilename[] = ".\\tmp.inf";
                     "verybig=" A1200 "\n"
 
 /* create a new file with specified contents and open it */
-static HINF test_file_contents( const char *data, UINT *err_line )
+static HINF test_file_contents( const char *data, int size, UINT *err_line )
 {
     DWORD res;
     HANDLE handle = CreateFileA( tmpfilename, GENERIC_READ|GENERIC_WRITE,
                                  FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, 0 );
     if (handle == INVALID_HANDLE_VALUE) return 0;
-    if (!WriteFile( handle, data, strlen(data), &res, NULL )) trace( "write error\n" );
+    if (!WriteFile( handle, data, size, &res, NULL )) trace( "write error\n" );
     CloseHandle( handle );
     return SetupOpenInfFileA( tmpfilename, 0, INF_STYLE_WIN4, err_line );
 }
@@ -102,50 +102,53 @@ static const char *get_line_text( INFCONTEXT *context )
 static const struct
 {
     const char *data;
+    int data_size;
     DWORD error;
     UINT err_line;
     BOOL todo;
 } invalid_files[] =
 {
-    /* file contents                                         expected error (or 0)     errline  todo */
-    { "\r\n",                                                ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "abcd\r\n",                                            ERROR_WRONG_INF_STYLE,       0,    TRUE },
-    { "[Version]\r\n",                                       ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[Version]\nSignature=",                               ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[Version]\nSignature=foo",                            ERROR_WRONG_INF_STYLE,       0,    FALSE },
-    { "[version]\nsignature=$chicago$",                      0,                           0,    FALSE },
-    { "[VERSION]\nSIGNATURE=$CHICAGO$",                      0,                           0,    FALSE },
-    { "[Version]\nSignature=$chicago$,abcd",                 0,                           0,    FALSE },
-    { "[Version]\nabc=def\nSignature=$chicago$",             0,                           0,    FALSE },
-    { "[Version]\nabc=def\n[Version]\nSignature=$chicago$",  0,                           0,    FALSE },
-    { STD_HEADER,                                            0,                           0,    FALSE },
-    { STD_HEADER "[]\r\n",                                   0,                           0,    FALSE },
-    { STD_HEADER "]\r\n",                                    0,                           0,    FALSE },
-    { STD_HEADER "[" A255 "]\r\n",                           0,                           0,    FALSE },
-    { STD_HEADER "[ab\r\n",                                  ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER "\n\n[ab\x1a]\n",                           ERROR_BAD_SECTION_NAME_LINE, 5,    FALSE },
-    { STD_HEADER "[" A256 "]\r\n",                           ERROR_SECTION_NAME_TOO_LONG, 3,    FALSE },
-    { "[abc]\n" STD_HEADER,                                  0,                           0,    FALSE },
-    { "abc\r\n" STD_HEADER,                                  ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { ";\n;\nabc\r\n" STD_HEADER,                            ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
-    { ";\n;\nab\nab\n" STD_HEADER,                           ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
-    { ";aa\n;bb\n" STD_HEADER,                               0,                           0,    FALSE },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
-    { "garbage1\ngarbage2\n[abc]\n" STD_HEADER,              ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { "garbage1\ngarbage2\n[Strings]\n" STD_HEADER,          0,                           0,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,    ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER, 0,                          0,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,         ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER,     0,                           0,    FALSE },
-    { "garbage1\ngarbage2\n" STD_HEADER "[abc]\n",           ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
-    { "garbage1\ngarbage2\n" STD_HEADER "[Strings]\n",       0,                           0,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n", ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n", 0,                       0,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n",      ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
-    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n",  0,                           0,    FALSE },
+#define C(s) s, sizeof(s)-1
+    /* file contents                                            expected error (or 0)     errline  todo */
+    { C("\r\n"),                                                ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("abcd\r\n"),                                            ERROR_WRONG_INF_STYLE,       0,    TRUE },
+    { C("[Version]\r\n"),                                       ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[Version]\nSignature="),                               ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[Version]\nSignature=foo"),                            ERROR_WRONG_INF_STYLE,       0,    FALSE },
+    { C("[version]\nsignature=$chicago$"),                      0,                           0,    FALSE },
+    { C("[VERSION]\nSIGNATURE=$CHICAGO$"),                      0,                           0,    FALSE },
+    { C("[Version]\nSignature=$chicago$,abcd"),                 0,                           0,    FALSE },
+    { C("[Version]\nabc=def\nSignature=$chicago$"),             0,                           0,    FALSE },
+    { C("[Version]\nabc=def\n[Version]\nSignature=$chicago$"),  0,                           0,    FALSE },
+    { C(STD_HEADER),                                            0,                           0,    FALSE },
+    { C(STD_HEADER "[]\r\n"),                                   0,                           0,    FALSE },
+    { C(STD_HEADER "]\r\n"),                                    0,                           0,    FALSE },
+    { C(STD_HEADER "[" A255 "]\r\n"),                           0,                           0,    FALSE },
+    { C(STD_HEADER "[ab\r\n"),                                  ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { C(STD_HEADER "\n\n[ab\x1a]\n"),                           ERROR_BAD_SECTION_NAME_LINE, 5,    FALSE },
+    { C(STD_HEADER "[" A256 "]\r\n"),                           ERROR_SECTION_NAME_TOO_LONG, 3,    FALSE },
+    { C("[abc]\n" STD_HEADER),                                  0,                           0,    FALSE },
+    { C("abc\r\n" STD_HEADER),                                  ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C(";\n;\nabc\r\n" STD_HEADER),                            ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { C(";\n;\nab\nab\n" STD_HEADER),                           ERROR_EXPECTED_SECTION_NAME, 3,    FALSE },
+    { C(";aa\n;bb\n" STD_HEADER),                               0,                           0,    FALSE },
+    { C(STD_HEADER " [TestSection\x00]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [Test\x00Section]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [TestSection\x00]\n"),                     0,                           0,    TRUE },
+    { C(STD_HEADER " [Test\x00Section]\n"),                     0,                           0,    TRUE },
+    { C("garbage1\ngarbage2\n[abc]\n" STD_HEADER),              ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C("garbage1\ngarbage2\n[Strings]\n" STD_HEADER),          0,                           0,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER),    ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER), 0,                          0,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER),         ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER),     0,                           0,    FALSE },
+    { C("garbage1\ngarbage2\n" STD_HEADER "[abc]\n"),           ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { C("garbage1\ngarbage2\n" STD_HEADER "[Strings]\n"),       0,                           0,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n"), ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(";comment\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n"), 0,                       0,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n"),      ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { C(" \t\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n"),  0,                           0,    FALSE },
+#undef C
 };
 
 static void test_invalid_files(void)
@@ -159,15 +162,15 @@ static void test_invalid_files(void)
     {
         SetLastError( 0xdeadbeef );
         err_line = 0xdeadbeef;
-        hinf = test_file_contents( invalid_files[i].data, &err_line );
+        hinf = test_file_contents( invalid_files[i].data, invalid_files[i].data_size, &err_line );
         err = GetLastError();
-        trace( "hinf=%p err=0x%x line=%d\n", hinf, err, err_line );
+        trace( "hinf=%p err=0x%lx line=%d\n", hinf, err, err_line );
         if (invalid_files[i].error)  /* should fail */
         {
             ok( hinf == INVALID_HANDLE_VALUE, "file %u: Open succeeded\n", i );
             todo_wine_if (invalid_files[i].todo)
             {
-                ok( err == invalid_files[i].error, "file %u: Bad error %u/%u\n",
+                ok( err == invalid_files[i].error, "file %u: Bad error %lu/%lu\n",
                     i, err, invalid_files[i].error );
                 ok( err_line == invalid_files[i].err_line, "file %u: Bad error line %d/%d\n",
                     i, err_line, invalid_files[i].err_line );
@@ -175,8 +178,11 @@ static void test_invalid_files(void)
         }
         else  /* should succeed */
         {
-            ok( hinf != INVALID_HANDLE_VALUE, "file %u: Open failed\n", i );
-            ok( err == 0, "file %u: Error code set to %u\n", i, err );
+            todo_wine_if (invalid_files[i].todo)
+            {
+                ok( hinf != INVALID_HANDLE_VALUE, "file %u: Open failed\n", i );
+                ok( err == 0, "file %u: Error code set to %lu\n", i, err );
+            }
         }
         SetupCloseInfFile( hinf );
     }
@@ -233,24 +239,24 @@ static void test_section_names(void)
     for (i = 0; i < ARRAY_SIZE(section_names); i++)
     {
         SetLastError( 0xdeadbeef );
-        hinf = test_file_contents( section_names[i].data, &err_line );
-        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
+        hinf = test_file_contents( section_names[i].data, strlen(section_names[i].data), &err_line );
+        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %lu\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
         ret = SetupGetLineCountA( hinf, section_names[i].section );
         err = GetLastError();
-        trace( "hinf=%p ret=%d err=0x%x\n", hinf, ret, err );
+        trace( "hinf=%p ret=%ld err=0x%lx\n", hinf, ret, err );
         if (ret != -1)
         {
             ok( !section_names[i].error, "line %u: section name %s found\n",
                 i, section_names[i].section );
-            ok( !err, "line %u: bad error code %u\n", i, err );
+            ok( !err, "line %u: bad error code %lu\n", i, err );
         }
         else
         {
             ok( section_names[i].error, "line %u: section name %s not found\n",
                 i, section_names[i].section );
-            ok( err == section_names[i].error, "line %u: bad error %u/%u\n",
+            ok( err == section_names[i].error, "line %u: bad error %lu/%lu\n",
                 i, err, section_names[i].error );
         }
         SetupCloseInfFile( hinf );
@@ -262,9 +268,8 @@ static void test_enum_sections(void)
     static const char *contents = STD_HEADER "[s1]\nfoo=bar\n[s2]\nbar=foo\n[s3]\n[strings]\na=b\n";
 
     BOOL ret;
-    DWORD len;
     HINF hinf;
-    UINT err, index;
+    UINT err, index, len;
     char buffer[256];
 
     if (!pSetupEnumInfSectionsA)
@@ -273,7 +278,7 @@ static void test_enum_sections(void)
         return;
     }
 
-    hinf = test_file_contents( contents, &err );
+    hinf = test_file_contents( contents, strlen(contents), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     for (index = 0; ; index++)
@@ -294,7 +299,7 @@ static void test_enum_sections(void)
 
         SetLastError( 0xdeadbeef );
         ret = pSetupEnumInfSectionsA( hinf, index, buffer, sizeof(buffer), &len );
-        ok( ret, "SetupEnumInfSectionsA failed err %u\n", GetLastError() );
+        ok( ret, "SetupEnumInfSectionsA failed err %lu\n", GetLastError() );
         ok( len == 3 || len == 8, "wrong len %u\n", len );
         ok( !lstrcmpiA( buffer, "version" ) || !lstrcmpiA( buffer, "s1" ) ||
             !lstrcmpiA( buffer, "s2" ) || !lstrcmpiA( buffer, "s3" ) || !lstrcmpiA( buffer, "strings" ),
@@ -309,84 +314,89 @@ static void test_enum_sections(void)
 static const struct
 {
     const char *data;
+    int data_size;
     const char *key;
     const char *fields[10];
 } key_names[] =
 {
-/* file contents          expected key       expected fields */
- { "ab=cd",                "ab",            { "cd" } },
- { "ab=cd,ef,gh,ij",       "ab",            { "cd", "ef", "gh", "ij" } },
- { "ab",                   "ab",            { "ab" } },
- { "ab,cd",                NULL,            { "ab", "cd" } },
- { "ab,cd=ef",             NULL,            { "ab", "cd=ef" } },
- { "=abcd,ef",             "",              { "abcd", "ef" } },
+#define C(s) s, sizeof(s)-1
+/* file contents            expected key       expected fields */
+ { C("ab=cd"),                "ab",            { "cd" } },
+ { C("ab=cd,ef,gh,ij"),       "ab",            { "cd", "ef", "gh", "ij" } },
+ { C("ab"),                   "ab",            { "ab" } },
+ { C("ab,cd"),                NULL,            { "ab", "cd" } },
+ { C("ab,cd=ef"),             NULL,            { "ab", "cd=ef" } },
+ { C("=abcd,ef"),             "",              { "abcd", "ef" } },
  /* backslashes */
- { "ba\\\ncd=ef",          "bacd",          { "ef" } },
- { "ab  \\  \ncd=ef",      "abcd",          { "ef" } },
- { "ab\\\ncd,ef",          NULL,            { "abcd", "ef" } },
- { "ab  \\ ;cc\ncd=ef",    "abcd",          { "ef" } },
- { "ab \\ \\ \ncd=ef",     "abcd",          { "ef" } },
- { "ba \\ dc=xx",          "ba \\ dc",      { "xx" } },
- { "ba \\\\ \nc=d",        "bac",           { "d" } },
- { "a=b\\\\c",             "a",             { "b\\\\c" } },
- { "ab=cd \\ ",            "ab",            { "cd" } },
- { "ba=c \\ \n \\ \n a",   "ba",            { "ca" } },
- { "ba=c \\ \n \\ a",      "ba",            { "c\\ a" } },
- { "  \\ a= \\ b",         "\\ a",          { "\\ b" } },
+ { C("ba\\\ncd=ef"),          "bacd",          { "ef" } },
+ { C("ab  \\  \ncd=ef"),      "abcd",          { "ef" } },
+ { C("ab\\\ncd,ef"),          NULL,            { "abcd", "ef" } },
+ { C("ab  \\ ;cc\ncd=ef"),    "abcd",          { "ef" } },
+ { C("ab \\ \\ \ncd=ef"),     "abcd",          { "ef" } },
+ { C("ba \\ dc=xx"),          "ba \\ dc",      { "xx" } },
+ { C("ba \\\\ \nc=d"),        "bac",           { "d" } },
+ { C("a=b\\\\c"),             "a",             { "b\\\\c" } },
+ { C("ab=cd \\ "),            "ab",            { "cd" } },
+ { C("ba=c \\ \n \\ \n a"),   "ba",            { "ca" } },
+ { C("ba=c \\ \n \\ a"),      "ba",            { "c\\ a" } },
+ { C("  \\ a= \\ b"),         "\\ a",          { "\\ b" } },
  /* quotes */
- { "Ab\"Cd\"=Ef",          "AbCd",          { "Ef" } },
- { "Ab\"Cd=Ef\"",          "AbCd=Ef",       { "AbCd=Ef" } },
- { "ab\"\"\"cd,ef=gh\"",   "ab\"cd,ef=gh",  { "ab\"cd,ef=gh" } },
- { "ab\"\"cd=ef",          "abcd",          { "ef" } },
- { "ab\"\"cd=ef,gh",       "abcd",          { "ef", "gh" } },
- { "ab=cd\"\"ef",          "ab",            { "cdef" } },
- { "ab=cd\",\"ef",         "ab",            { "cd,ef" } },
- { "ab=cd\",ef",           "ab",            { "cd,ef" } },
- { "ab=cd\",ef\\\nab",     "ab",            { "cd,ef\\" } },
+ { C("Ab\"Cd\"=Ef"),          "AbCd",          { "Ef" } },
+ { C("Ab\"Cd=Ef\""),          "AbCd=Ef",       { "AbCd=Ef" } },
+ { C("ab\"\"\"cd,ef=gh\""),   "ab\"cd,ef=gh",  { "ab\"cd,ef=gh" } },
+ { C("ab\"\"cd=ef"),          "abcd",          { "ef" } },
+ { C("ab\"\"cd=ef,gh"),       "abcd",          { "ef", "gh" } },
+ { C("ab=cd\"\"ef"),          "ab",            { "cdef" } },
+ { C("ab=cd\",\"ef"),         "ab",            { "cd,ef" } },
+ { C("ab=cd\",ef"),           "ab",            { "cd,ef" } },
+ { C("ab=cd\",ef\\\nab"),     "ab",            { "cd,ef\\" } },
 
  /* single quotes (unhandled)*/
- { "HKLM,A,B,'C',D",       NULL,            { "HKLM", "A","B","'C'","D" } },
+ { C("HKLM,A,B,'C',D"),       NULL,            { "HKLM", "A","B","'C'","D" } },
  /* spaces */
- { " a b = c , d \n",      "a b",           { "c", "d" } },
- { " a b = c ,\" d\" \n",  "a b",           { "c", " d" } },
- { " a b\r = c\r\n",       "a b",           { "c" } },
+ { C(" a b = c , d \n"),      "a b",           { "c", "d" } },
+ { C(" a b = c ,\" d\" \n"),  "a b",           { "c", " d" } },
+ { C(" a b\r = c\r\n"),       "a b",           { "c" } },
  /* empty fields */
- { "a=b,,,c,,,d",          "a",             { "b", "", "", "c", "", "", "d" } },
- { "a=b,\"\",c,\" \",d",   "a",             { "b", "", "c", " ", "d" } },
- { "=,,b",                 "",              { "", "", "b" } },
- { ",=,,b",                NULL,            { "", "=", "", "b" } },
- { "a=\n",                 "a",             { "" } },
- { "=",                    "",              { "" } },
+ { C("a=b,,,c,,,d"),          "a",             { "b", "", "", "c", "", "", "d" } },
+ { C("a=b,\"\",c,\" \",d"),   "a",             { "b", "", "c", " ", "d" } },
+ { C("=,,b"),                 "",              { "", "", "b" } },
+ { C(",=,,b"),                NULL,            { "", "=", "", "b" } },
+ { C("a=\n"),                 "a",             { "" } },
+ { C("="),                    "",              { "" } },
  /* eof */
- { "ab=c\032d",            "ab",            { "c" } },
- { "ab\032=cd",            "ab",            { "ab" } },
+ { C("ab=c\032d"),            "ab",            { "c" } },
+ { C("ab\032=cd"),            "ab",            { "ab" } },
  /* nulls */
- { "abcd=ef\x0gh",         "abcd",          { "ef" } },
+ { C("abcd=ef\x0gh"),         "abcd",          { "ef gh" } },
+ { C("foo=%bar%\n[Strings]\nbar=bbb\0\n"), "foo", { "bbb" } },
+ { C("foo=%bar%\n[Strings]\nbar=bbb \0\n"), "foo", { "bbb" } },
+ { C("foo=%bar%\n[Strings]\nbar=aaa\0bbb \0\n"), "foo", { "aaa bbb" } },
  /* multiple sections with same name */
- { "[Test2]\nab\n[Test]\nee=ff\n",  "ee",    { "ff" } },
+ { C("[Test2]\nab\n[Test]\nee=ff\n"),  "ee",    { "ff" } },
  /* string substitution */
- { "%foo%=%bar%\n" STR_SECTION,     "aaa",   { "bbb" } },
- { "%foo%xx=%bar%yy\n" STR_SECTION, "aaaxx", { "bbbyy" } },
- { "%% %foo%=%bar%\n" STR_SECTION,  "% aaa", { "bbb" } },
- { "%f\"o\"o%=ccc\n" STR_SECTION,   "aaa",   { "ccc" } },
- { "abc=%bar;bla%\n" STR_SECTION,   "abc",   { "%bar" } },
- { "loop=%loop%\n" STR_SECTION,     "loop",  { "%loop2%" } },
- { "%per%%cent%=100\n" STR_SECTION, "12",    { "100" } },
- { "a=%big%\n" STR_SECTION,         "a",     { A400 } },
- { "a=%verybig%\n" STR_SECTION,     "a",     { A511 } },  /* truncated to 511, not on Vista/W2K8 */
- { "a=%big%%big%%big%%big%\n" STR_SECTION,   "a", { A400 A400 A400 A400 } },
- { "a=%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION,   "a", { A400 A400 A400 A400 A400 A400 A400 A400 A400 } },
- { "a=%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION,   "a", { A4097 /*MAX_INF_STRING_LENGTH+1*/ } },
+ { C("%foo%=%bar%\n" STR_SECTION),     "aaa",   { "bbb" } },
+ { C("%foo%xx=%bar%yy\n" STR_SECTION), "aaaxx", { "bbbyy" } },
+ { C("%% %foo%=%bar%\n" STR_SECTION),  "% aaa", { "bbb" } },
+ { C("%f\"o\"o%=ccc\n" STR_SECTION),   "aaa",   { "ccc" } },
+ { C("abc=%bar;bla%\n" STR_SECTION),   "abc",   { "%bar" } },
+ { C("loop=%loop%\n" STR_SECTION),     "loop",  { "%loop2%" } },
+ { C("%per%%cent%=100\n" STR_SECTION), "12",    { "100" } },
+ { C("a=%big%\n" STR_SECTION),         "a",     { A400 } },
+ { C("a=%verybig%\n" STR_SECTION),     "a",     { A511 } },  /* truncated to 511, not on Vista/W2K8 */
+ { C("a=%big%%big%%big%%big%\n" STR_SECTION),   "a", { A400 A400 A400 A400 } },
+ { C("a=%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION),   "a", { A400 A400 A400 A400 A400 A400 A400 A400 A400 } },
+ { C("a=%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%%big%\n" STR_SECTION),   "a", { A4097 /*MAX_INF_STRING_LENGTH+1*/ } },
 
  /* Prove expansion of system entries removes extra \'s and string
     replacements doesn't                                            */
- { "ab=\"%24%\"\n" STR_SECTION,           "ab", { "C:\\" } },
- { "ab=\"%mydrive%\"\n" STR_SECTION,      "ab", { "C:\\" } },
- { "ab=\"%24%\\fred\"\n" STR_SECTION,     "ab", { "C:\\fred" } },
- { "ab=\"%mydrive%\\fred\"\n" STR_SECTION,"ab", { "C:\\\\fred" } },
+ { C("ab=\"%24%\"\n" STR_SECTION),           "ab", { "C:\\" } },
+ { C("ab=\"%mydrive%\"\n" STR_SECTION),      "ab", { "C:\\" } },
+ { C("ab=\"%24%\\fred\"\n" STR_SECTION),     "ab", { "C:\\fred" } },
+ { C("ab=\"%mydrive%\\fred\"\n" STR_SECTION),"ab", { "C:\\\\fred" } },
  /* Confirm duplicate \'s kept */
- { "ab=\"%24%\\\\fred\"",      "ab",            { "C:\\\\fred" } },
- { "ab=C:\\\\FRED",            "ab",            { "C:\\\\FRED" } },
+ { C("ab=\"%24%\\\\fred\""),      "ab",            { "C:\\\\fred" } },
+ { C("ab=C:\\\\FRED"),            "ab",            { "C:\\\\FRED" } },
 };
 
 /* check the key of a certain line */
@@ -398,12 +408,12 @@ static const char *check_key( INFCONTEXT *context, const char *wanted )
     if (!key)
     {
         ok( !wanted, "missing key %s\n", wanted );
-        ok( err == 0 || err == ERROR_INVALID_PARAMETER, "last error set to %u\n", err );
+        ok( err == 0 || err == ERROR_INVALID_PARAMETER, "last error set to %lu\n", err );
     }
     else
     {
         ok( !strcmp( key, wanted ), "bad key %s/%s\n", key, wanted );
-        ok( err == 0, "last error set to %u\n", err );
+        ok( err == 0, "last error set to %lu\n", err );
     }
     return key;
 }
@@ -421,15 +431,29 @@ static void test_key_names(void)
 
     for (i = 0; i < ARRAY_SIZE(key_names); i++)
     {
+        int data_size;
+
         strcpy( buffer, STD_HEADER "[Test]\n" );
-        strcat( buffer, key_names[i].data );
+        data_size = strlen(buffer);
+        memcpy( buffer + data_size, key_names[i].data, key_names[i].data_size );
+        data_size += key_names[i].data_size;
         SetLastError( 0xdeadbeef );
-        hinf = test_file_contents( buffer, &err_line );
-        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %u\n", i, GetLastError() );
+        hinf = test_file_contents( buffer, data_size, &err_line );
+        ok( hinf != INVALID_HANDLE_VALUE, "line %u: open failed err %lu\n", i, GetLastError() );
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
+        ret = SetupFindFirstLineA( hinf, "Test", key_names[i].key, &context );
+        ok(ret, "Test %d: failed to find key %s\n", i, key_names[i].key);
+
+        if (!strncmp( key_names[i].data, "%foo%", strlen( "%foo%" ) ))
+        {
+            ret = SetupFindFirstLineA( hinf, "Test", "%foo%", &context );
+            ok(!ret, "SetupFindFirstLine() should not match unsubstituted keys\n");
+            ok(GetLastError() == ERROR_LINE_NOT_FOUND, "got wrong error %lu\n", GetLastError());
+        }
+
         ret = SetupFindFirstLineA( hinf, "Test", 0, &context );
-        ok(ret, "SetupFindFirstLineA failed: le=%u\n", GetLastError());
+        ok(ret, "SetupFindFirstLineA failed: le=%lu\n", GetLastError());
         if (!ret)
         {
             SetupCloseInfFile( hinf );
@@ -445,15 +469,15 @@ static void test_key_names(void)
             err = GetLastError();
             if (field)
             {
-                ok( err == 0, "line %u: bad error %u\n", i, err );
+                ok( err == 0, "line %u: bad error %lu\n", i, err );
                 if (key_names[i].fields[index])
                 {
-                    if (i == 49)
+                    if (i == 52)
                         ok( !strcmp( field, key_names[i].fields[index] ) ||
                             !strcmp( field, A1200), /* Vista, W2K8 */
                             "line %u: bad field %s/%s\n",
                             i, field, key_names[i].fields[index] );
-                    else if (i == 52)
+                    else if (i == 55)
                         ok( !strcmp( field, key_names[i].fields[index] ) ||
                             !strcmp( field, A4096), /* Win10 >= 1709 */
                             "line %u: bad field %s/%s\n",
@@ -475,7 +499,7 @@ static void test_key_names(void)
             else
             {
                 ok( err == 0 || err == ERROR_INVALID_PARAMETER,
-                    "line %u: bad error %u\n", i, err );
+                    "line %u: bad error %lu\n", i, err );
                 if (key_names[i].fields[index])
                     ok( 0, "line %u: missing field %s\n", i, key_names[i].fields[index] );
             }
@@ -499,13 +523,13 @@ static void test_close_inf_file(void)
     SetupCloseInfFile(NULL);
     ok(GetLastError() == 0xdeadbeef ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Win9x, WinMe */
-        "Expected 0xdeadbeef, got %u\n", GetLastError());
+        "Expected 0xdeadbeef, got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     SetupCloseInfFile(INVALID_HANDLE_VALUE);
     ok(GetLastError() == 0xdeadbeef ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Win9x, WinMe */
-        "Expected 0xdeadbeef, got %u\n", GetLastError());
+        "Expected 0xdeadbeef, got %lu\n", GetLastError());
 }
 
 static const char *contents = "[Version]\n"
@@ -550,7 +574,7 @@ static void test_pSetupGetField(void)
         unicode = FALSE;
     }
 
-    hinf = test_file_contents( contents, &err );
+    hinf = test_file_contents( contents, strlen(contents), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     ret = SetupFindFirstLineA( hinf, "FileBranchInfo", NULL, &context );
@@ -586,7 +610,7 @@ static void test_pSetupGetField(void)
         fieldW = pSetupGetFieldW( &context, 4 );
         ok( fieldW == NULL, "Expected NULL, got %p\n", fieldW );
         ok( GetLastError() == ERROR_INVALID_PARAMETER,
-            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+            "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError() );
     }
     else
     {
@@ -599,7 +623,7 @@ static void test_pSetupGetField(void)
         fieldA = pSetupGetFieldA( &context, 4 );
         ok( fieldA == NULL, "Expected NULL, got %p\n", fieldA );
         ok( GetLastError() == ERROR_INVALID_PARAMETER,
-            "Expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError() );
+            "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError() );
     }
 
     SetupCloseInfFile( hinf );
@@ -641,7 +665,7 @@ static void test_SetupGetIntField(void)
         strcat( buffer, keys[i].key );
         strcat( buffer, "=" );
         strcat( buffer, keys[i].fields );
-        hinf = test_file_contents( buffer, &err);
+        hinf = test_file_contents( buffer, strlen(buffer), &err);
         ok( hinf != NULL, "Expected valid INF file\n" );
 
         SetupFindFirstLineA( hinf, "TestSection", keys[i].key, &context );
@@ -653,13 +677,13 @@ static void test_SetupGetIntField(void)
             ok( retb, "%u: Expected success\n", i );
             ok( GetLastError() == ERROR_SUCCESS ||
                 GetLastError() == 0xdeadbeef /* win9x, NT4 */,
-                "%u: Expected ERROR_SUCCESS or 0xdeadbeef, got %u\n", i, GetLastError() );
+                "%u: Expected ERROR_SUCCESS or 0xdeadbeef, got %lu\n", i, GetLastError() );
         }
         else
         {
             ok( !retb, "%u: Expected failure\n", i );
             ok( GetLastError() == keys[i].err,
-                "%u: Expected %d, got %u\n", i, keys[i].err, GetLastError() );
+                "%u: Expected %ld, got %lu\n", i, keys[i].err, GetLastError() );
         }
         ok( intfield == keys[i].value, "%u: Expected %d, got %d\n", i, keys[i].value, intfield );
 
@@ -685,98 +709,98 @@ static void test_GLE(void)
     int bufsize = MAX_INF_STRING_LENGTH;
     DWORD retsize;
 
-    hinf = test_file_contents( inf, &err );
+    hinf = test_file_contents( inf, strlen(inf), &err );
     ok( hinf != NULL, "Expected valid INF file\n" );
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "ImNotThere", NULL, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "ImNotThere", "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", NULL, &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindFirstLineA( hinf, "Sectionname", "Keyname1", &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindNextMatchLineA( &context, "ImNotThere", &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupFindNextMatchLineA( &context, "Keyname2", &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retl = SetupGetLineCountA( hinf, "ImNotThere");
-    ok(retl == -1, "Expected -1, got %d\n", retl);
+    ok(retl == -1, "Expected -1, got %ld\n", retl);
     ok(GetLastError() == ERROR_SECTION_NOT_FOUND,
-        "Expected ERROR_SECTION_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_SECTION_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retl = SetupGetLineCountA( hinf, "Sectionname");
-    ok(retl == 2, "Expected 2, got %d\n", retl);
+    ok(retl == 2, "Expected 2, got %ld\n", retl);
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "ImNotThere", "ImNotThere", buf, bufsize, &retsize);
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "Sectionname", "ImNotThere", buf, bufsize, &retsize);
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineTextA( NULL, hinf, "Sectionname", "Keyname1", buf, bufsize, &retsize);
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "ImNotThere", 1, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "Sectionname", 1, &context );
     ok(retb, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
-        "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+        "Expected ERROR_SUCCESS, got %08lx\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     retb = SetupGetLineByIndexA( hinf, "Sectionname", 3, &context );
     ok(!retb, "Expected failure\n");
     ok(GetLastError() == ERROR_LINE_NOT_FOUND,
-        "Expected ERROR_LINE_NOT_FOUND, got %08x\n", GetLastError());
+        "Expected ERROR_LINE_NOT_FOUND, got %08lx\n", GetLastError());
 
     SetupCloseInfFile( hinf );
 }
