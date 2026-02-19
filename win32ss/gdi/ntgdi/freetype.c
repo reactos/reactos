@@ -7811,8 +7811,7 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
-static BOOL
-IntGetFontDefaultChar(FT_Face Face, WCHAR* pDefChar)
+static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
 {
     TT_OS2 *pOS2;
     FT_WinFNT_HeaderRec WinFNT;
@@ -7868,7 +7867,7 @@ NtGdiGetGlyphIndicesW(
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     INT i;
-    WCHAR DefChar;
+    WCHAR DefChar = 0xffff;
     PWORD Buffer = NULL;
     WORD StackBuffer[256];
     size_t pwcSize;
@@ -7947,7 +7946,6 @@ NtGdiGetGlyphIndicesW(
     }
 
     /* Get DefChar */
-    DefChar = 0xFFFF;
     if (!(iMode & GGI_MARK_NONEXISTING_GLYPHS) && IntGetFontDefaultChar(Face, &DefChar))
     {
         IntLockFreeType();
