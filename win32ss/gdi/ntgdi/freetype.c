@@ -7824,7 +7824,7 @@ static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
         IntLockFreeType();
         pOS2 = FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
         if (pOS2)
-            *pDefChar = (pOS2->usDefaultChar ? pOS2->usDefaultChar : 0);
+            *pDefChar = pOS2->usDefaultChar;
         IntUnLockFreeType();
         return !!pOS2;
     }
