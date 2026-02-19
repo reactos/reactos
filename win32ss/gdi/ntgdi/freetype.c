@@ -7937,15 +7937,8 @@ NtGdiGetGlyphIndicesW(
     else // Dynamic allocation
     {
         Buffer = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-        if (!Buffer)
-        {
-            Status = STATUS_NO_MEMORY;
-            DPRINT1("ExAllocatePoolWithTag\n");
-            goto ErrorRet;
-        }
-
         Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-        if (!Safepwc)
+        if (!Buffer || !Safepwc)
         {
             Status = STATUS_NO_MEMORY;
             DPRINT1("ExAllocatePoolWithTag\n");
