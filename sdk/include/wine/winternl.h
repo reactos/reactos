@@ -65,6 +65,11 @@ typedef struct _RTL_BALANCED_NODE
         ULONG_PTR ParentValue;
     } DUMMYUNIONNAME2;
 } RTL_BALANCED_NODE, *PRTL_BALANCED_NODE;
+
+#define NT_SUCCESS(status)      (((NTSTATUS)(status)) >= 0)
+#define NT_INFORMATION(status)  ((((NTSTATUS)(status)) & 0xc0000000) == 0x40000000)
+#define NT_WARNING(status)      ((((NTSTATUS)(status)) & 0xc0000000) == 0x80000000)
+#define NT_ERROR(status)        ((((NTSTATUS)(status)) & 0xc0000000) == 0xc0000000)
 #endif // _NTDEF_
 
 typedef struct _CONTEXT_CHUNK
