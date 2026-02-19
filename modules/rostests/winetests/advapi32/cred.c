@@ -51,19 +51,19 @@ static void test_CredReadA(void)
     SetLastError(0xdeadbeef);
     ret = pCredReadA(TEST_TARGET_NAME, -1, 0, &cred);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredReadA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredReadA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pCredReadA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0xdeadbeef, &cred);
     ok(!ret && ( GetLastError() == ERROR_INVALID_FLAGS || GetLastError() == ERROR_INVALID_PARAMETER ),
-        "CredReadA should have failed with ERROR_INVALID_FLAGS or ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredReadA should have failed with ERROR_INVALID_FLAGS or ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pCredReadA(NULL, CRED_TYPE_GENERIC, 0, &cred);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredReadA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredReadA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 }
 
@@ -75,7 +75,7 @@ static void test_CredWriteA(void)
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(NULL, 0);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredWriteA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredWriteA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     new_cred.Flags = 0;
@@ -93,7 +93,7 @@ static void test_CredWriteA(void)
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredWriteA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredWriteA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     new_cred.TargetName = (char *)TEST_TARGET_NAME;
@@ -105,63 +105,63 @@ static void test_CredWriteA(void)
     {
         ok(GetLastError() == ERROR_SUCCESS ||
            GetLastError() == ERROR_IO_PENDING, /* Vista */
-           "Expected ERROR_IO_PENDING, got %d\n", GetLastError());
+           "Expected ERROR_IO_PENDING, got %ld\n", GetLastError());
     }
     else
     {
         ok(GetLastError() == ERROR_BAD_USERNAME ||
            GetLastError() == ERROR_NO_SUCH_LOGON_SESSION, /* Vista */
            "CredWrite with username without domain should return ERROR_BAD_USERNAME"
-           "or ERROR_NO_SUCH_LOGON_SESSION not %d\n", GetLastError());
+           "or ERROR_NO_SUCH_LOGON_SESSION not %ld\n", GetLastError());
     }
 
     new_cred.UserName = NULL;
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
     ok(!ret && GetLastError() == ERROR_BAD_USERNAME,
-        "CredWriteA with NULL username should have failed with ERROR_BAD_USERNAME instead of %d\n",
+        "CredWriteA with NULL username should have failed with ERROR_BAD_USERNAME instead of %ld\n",
         GetLastError());
 
     new_cred.UserName = (char *)"winetest";
     new_cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
-    ok(ret || broken(!ret), "CredWriteA failed with error %u\n", GetLastError());
+    ok(ret || broken(!ret), "CredWriteA failed with error %lu\n", GetLastError());
     if (ret)
     {
         ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_DOMAIN_PASSWORD, 0);
-        ok(ret, "CredDeleteA failed with error %u\n", GetLastError());
+        ok(ret, "CredDeleteA failed with error %lu\n", GetLastError());
     }
     new_cred.Type = CRED_TYPE_GENERIC;
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
-    ok(ret || broken(!ret), "CredWriteA failed with error %u\n", GetLastError());
+    ok(ret || broken(!ret), "CredWriteA failed with error %lu\n", GetLastError());
     if  (ret)
     {
         ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0);
-        ok(ret, "CredDeleteA failed with error %u\n", GetLastError());
+        ok(ret, "CredDeleteA failed with error %lu\n", GetLastError());
     }
     new_cred.Persist = CRED_PERSIST_SESSION;
     ret = pCredWriteA(&new_cred, 0);
-    ok(ret, "CredWriteA failed with error %u\n", GetLastError());
+    ok(ret, "CredWriteA failed with error %lu\n", GetLastError());
 
     ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0);
-    ok(ret, "CredDeleteA failed with error %u\n", GetLastError());
+    ok(ret, "CredDeleteA failed with error %lu\n", GetLastError());
 
     new_cred.Type = CRED_TYPE_DOMAIN_PASSWORD;
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
-    ok(ret || broken(!ret), "CredWriteA failed with error %u\n", GetLastError());
+    ok(ret || broken(!ret), "CredWriteA failed with error %lu\n", GetLastError());
     if (ret)
     {
         ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_DOMAIN_PASSWORD, 0);
-        ok(ret, "CredDeleteA failed with error %u\n", GetLastError());
+        ok(ret, "CredDeleteA failed with error %lu\n", GetLastError());
     }
     new_cred.UserName = NULL;
     SetLastError(0xdeadbeef);
     ret = pCredWriteA(&new_cred, 0);
     ok(!ret, "CredWriteA succeeded\n");
-    ok(GetLastError() == ERROR_BAD_USERNAME, "got %u\n", GetLastError());
+    ok(GetLastError() == ERROR_BAD_USERNAME, "got %lu\n", GetLastError());
 }
 
 static void test_CredDeleteA(void)
@@ -171,13 +171,13 @@ static void test_CredDeleteA(void)
     SetLastError(0xdeadbeef);
     ret = pCredDeleteA(TEST_TARGET_NAME, -1, 0);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredDeleteA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredDeleteA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0xdeadbeef);
     ok(!ret && ( GetLastError() == ERROR_INVALID_FLAGS || GetLastError() == ERROR_INVALID_PARAMETER /* Vista */ ),
-        "CredDeleteA should have failed with ERROR_INVALID_FLAGS or ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredDeleteA should have failed with ERROR_INVALID_FLAGS or ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 }
 
@@ -208,7 +208,7 @@ if(0)
     SetLastError(0xdeadbeef);
     ret = pCredReadDomainCredentialsA(NULL, 0, &count, &creds);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-        "CredReadDomainCredentialsA should have failed with ERROR_INVALID_PARAMETER instead of %d\n",
+        "CredReadDomainCredentialsA should have failed with ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -216,7 +216,7 @@ if(0)
     count = 2;
     ret = pCredReadDomainCredentialsA(&info, 0, &count, &creds);
     ok(!ret && GetLastError() == ERROR_NOT_FOUND,
-        "CredReadDomainCredentialsA should have failed with ERROR_NOT_FOUND instead of %d\n",
+        "CredReadDomainCredentialsA should have failed with ERROR_NOT_FOUND instead of %ld\n",
         GetLastError());
     ok(count ==0 && creds == NULL, "CredReadDomainCredentialsA must not return any result\n");
 
@@ -227,7 +227,7 @@ if(0)
     ok(!ret, "CredReadDomainCredentialsA should have failed\n");
     ok(GetLastError() == ERROR_NOT_FOUND ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
-        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %d\n",
+        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 
     info.DnsServerName = NULL;
@@ -237,7 +237,7 @@ if(0)
     ok(!ret, "CredReadDomainCredentialsA should have failed\n");
     ok(GetLastError() == ERROR_NOT_FOUND ||
         GetLastError() == ERROR_INVALID_PARAMETER, /* Vista, W2K8 */
-        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %d\n",
+        "Expected ERROR_NOT_FOUND or ERROR_INVALID_PARAMETER instead of %ld\n",
         GetLastError());
 }
 
@@ -245,15 +245,15 @@ static void check_blob(int line, DWORD cred_type, PCREDENTIALA cred)
 {
     if (cred_type == CRED_TYPE_DOMAIN_PASSWORD)
     {
-        todo_ros
-        ok_(__FILE__, line)(cred->CredentialBlobSize == 0, "expected CredentialBlobSize of 0 but got %d\n", cred->CredentialBlobSize);
-        todo_ros
+        todo_wine
+        ok_(__FILE__, line)(cred->CredentialBlobSize == 0, "expected CredentialBlobSize of 0 but got %ld\n", cred->CredentialBlobSize);
+        todo_wine
         ok_(__FILE__, line)(!cred->CredentialBlob, "expected NULL credentials but got %p\n", cred->CredentialBlob);
     }
     else
     {
         DWORD size=sizeof(TEST_PASSWORD);
-        ok_(__FILE__, line)(cred->CredentialBlobSize == size, "expected CredentialBlobSize of %u but got %u\n", size, cred->CredentialBlobSize);
+        ok_(__FILE__, line)(cred->CredentialBlobSize == size, "expected CredentialBlobSize of %lu but got %lu\n", size, cred->CredentialBlobSize);
         ok_(__FILE__, line)(cred->CredentialBlob != NULL, "CredentialBlob should be present\n");
         if (cred->CredentialBlob)
             ok_(__FILE__, line)(!memcmp(cred->CredentialBlob, TEST_PASSWORD, size), "wrong CredentialBlob\n");
@@ -283,7 +283,7 @@ static void test_generic(void)
 
     ret = pCredWriteA(&new_cred, 0);
     ok(ret || broken(GetLastError() == ERROR_NO_SUCH_LOGON_SESSION),
-       "CredWriteA failed with error %d\n", GetLastError());
+       "CredWriteA failed with error %ld\n", GetLastError());
     if (!ret)
     {
         skip("couldn't write generic credentials, skipping tests\n");
@@ -291,7 +291,7 @@ static void test_generic(void)
     }
 
     ret = pCredEnumerateA(NULL, 0, &count, &creds);
-    ok(ret, "CredEnumerateA failed with error %d\n", GetLastError());
+    ok(ret, "CredEnumerateA failed with error %ld\n", GetLastError());
 
     for (i = 0; i < count; i++)
     {
@@ -299,12 +299,12 @@ static void test_generic(void)
         {
             ok(creds[i]->Type == CRED_TYPE_GENERIC ||
                creds[i]->Type == CRED_TYPE_DOMAIN_PASSWORD, /* Vista */
-               "expected creds[%d]->Type CRED_TYPE_GENERIC or CRED_TYPE_DOMAIN_PASSWORD but got %d\n", i, creds[i]->Type);
-            ok(!creds[i]->Flags, "expected creds[%d]->Flags 0 but got 0x%x\n", i, creds[i]->Flags);
-            ok(!strcmp(creds[i]->Comment, "Comment"), "expected creds[%d]->Comment \"Comment\" but got \"%s\"\n", i, creds[i]->Comment);
+               "expected creds[%ld]->Type CRED_TYPE_GENERIC or CRED_TYPE_DOMAIN_PASSWORD but got %ld\n", i, creds[i]->Type);
+            ok(!creds[i]->Flags, "expected creds[%ld]->Flags 0 but got 0x%lx\n", i, creds[i]->Flags);
+            ok(!strcmp(creds[i]->Comment, "Comment"), "expected creds[%ld]->Comment \"Comment\" but got \"%s\"\n", i, creds[i]->Comment);
             check_blob(__LINE__, creds[i]->Type, creds[i]);
-            ok(creds[i]->Persist, "expected creds[%d]->Persist CRED_PERSIST_ENTERPRISE but got %d\n", i, creds[i]->Persist);
-            ok(!strcmp(creds[i]->UserName, "winetest"), "expected creds[%d]->UserName \"winetest\" but got \"%s\"\n", i, creds[i]->UserName);
+            ok(creds[i]->Persist, "expected creds[%ld]->Persist CRED_PERSIST_ENTERPRISE but got %ld\n", i, creds[i]->Persist);
+            ok(!strcmp(creds[i]->UserName, "winetest"), "expected creds[%ld]->UserName \"winetest\" but got \"%s\"\n", i, creds[i]->UserName);
             found = TRUE;
         }
     }
@@ -312,11 +312,11 @@ static void test_generic(void)
     ok(found, "credentials not found\n");
 
     ret = pCredReadA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0, &cred);
-    ok(ret, "CredReadA failed with error %d\n", GetLastError());
+    ok(ret, "CredReadA failed with error %ld\n", GetLastError());
     pCredFree(cred);
 
     ret = pCredDeleteA(TEST_TARGET_NAME, CRED_TYPE_GENERIC, 0);
-    ok(ret, "CredDeleteA failed with error %d\n", GetLastError());
+    ok(ret, "CredDeleteA failed with error %ld\n", GetLastError());
 }
 
 static void test_domain_password(DWORD cred_type)
@@ -346,21 +346,21 @@ static void test_domain_password(DWORD cred_type)
              "or are disabled. Skipping\n");
         return;
     }
-    ok(ret, "CredWriteA failed with error %d\n", GetLastError());
+    ok(ret, "CredWriteA failed with error %ld\n", GetLastError());
 
     ret = pCredEnumerateA(NULL, 0, &count, &creds);
-    ok(ret, "CredEnumerateA failed with error %d\n", GetLastError());
+    ok(ret, "CredEnumerateA failed with error %ld\n", GetLastError());
 
     for (i = 0; i < count; i++)
     {
         if (creds[i]->TargetName && !strcmp(creds[i]->TargetName, TEST_TARGET_NAME))
         {
-            ok(creds[i]->Type == cred_type, "expected creds[%d]->Type CRED_TYPE_DOMAIN_PASSWORD but got %d\n", i, creds[i]->Type);
-            ok(!creds[i]->Flags, "expected creds[%d]->Flags 0 but got 0x%x\n", i, creds[i]->Flags);
-            ok(!strcmp(creds[i]->Comment, "Comment"), "expected creds[%d]->Comment \"Comment\" but got \"%s\"\n", i, creds[i]->Comment);
+            ok(creds[i]->Type == cred_type, "expected creds[%ld]->Type CRED_TYPE_DOMAIN_PASSWORD but got %ld\n", i, creds[i]->Type);
+            ok(!creds[i]->Flags, "expected creds[%ld]->Flags 0 but got 0x%lx\n", i, creds[i]->Flags);
+            ok(!strcmp(creds[i]->Comment, "Comment"), "expected creds[%ld]->Comment \"Comment\" but got \"%s\"\n", i, creds[i]->Comment);
             check_blob(__LINE__, cred_type, creds[i]);
-            ok(creds[i]->Persist, "expected creds[%d]->Persist CRED_PERSIST_ENTERPRISE but got %d\n", i, creds[i]->Persist);
-            ok(!strcmp(creds[i]->UserName, "test\\winetest"), "expected creds[%d]->UserName \"winetest\" but got \"%s\"\n", i, creds[i]->UserName);
+            ok(creds[i]->Persist, "expected creds[%ld]->Persist CRED_PERSIST_ENTERPRISE but got %ld\n", i, creds[i]->Persist);
+            ok(!strcmp(creds[i]->UserName, "test\\winetest"), "expected creds[%ld]->UserName \"winetest\" but got \"%s\"\n", i, creds[i]->UserName);
             found = TRUE;
         }
     }
@@ -368,7 +368,7 @@ static void test_domain_password(DWORD cred_type)
     ok(found, "credentials not found\n");
 
     ret = pCredReadA(TEST_TARGET_NAME, cred_type, 0, &cred);
-    ok(ret, "CredReadA failed with error %d\n", GetLastError());
+    ok(ret, "CredReadA failed with error %ld\n", GetLastError());
     if (ret)  /* don't check the values of cred, if CredReadA failed. */
     {
         check_blob(__LINE__, cred_type, cred);
@@ -376,7 +376,7 @@ static void test_domain_password(DWORD cred_type)
     }
 
     ret = pCredDeleteA(TEST_TARGET_NAME, cred_type, 0);
-    ok(ret, "CredDeleteA failed with error %d\n", GetLastError());
+    ok(ret, "CredDeleteA failed with error %ld\n", GetLastError());
 }
 
 static void test_CredMarshalCredentialA(void)
@@ -397,7 +397,7 @@ static void test_CredMarshalCredentialA(void)
     ret = pCredMarshalCredentialA( 0, NULL, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     memset( cert.rgbHashOfCert, 0, sizeof(cert.rgbHashOfCert) );
     cert.cbSize = sizeof(cert);
@@ -405,28 +405,28 @@ static void test_CredMarshalCredentialA(void)
     ret = pCredMarshalCredentialA( 0, &cert, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     str = (char *)0xdeadbeef;
     SetLastError( 0xdeadbeef );
     ret = pCredMarshalCredentialA( 0, &cert, &str );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     ok( str == (char *)0xdeadbeef, "got %p\n", str );
 
     SetLastError( 0xdeadbeef );
     ret = pCredMarshalCredentialA( CertCredential, NULL, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     if (0) { /* crash */
     SetLastError( 0xdeadbeef );
     ret = pCredMarshalCredentialA( CertCredential, &cert, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     }
 
     cert.cbSize = 0;
@@ -435,13 +435,13 @@ static void test_CredMarshalCredentialA(void)
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     ok( str == (char *)0xdeadbeef, "got %p\n", str );
 
     cert.cbSize = sizeof(cert) + 4;
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@BAAAAAAAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -450,7 +450,7 @@ static void test_CredMarshalCredentialA(void)
     cert.rgbHashOfCert[0] = 2;
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@BCAAAAAAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -458,7 +458,7 @@ static void test_CredMarshalCredentialA(void)
     cert.rgbHashOfCert[0] = 255;
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@B-DAAAAAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -467,7 +467,7 @@ static void test_CredMarshalCredentialA(void)
     cert.rgbHashOfCert[1] = 1;
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@BBEAAAAAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -477,7 +477,7 @@ static void test_CredMarshalCredentialA(void)
     cert.rgbHashOfCert[2] = 1;
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@BBEQAAAAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -489,7 +489,7 @@ static void test_CredMarshalCredentialA(void)
     cert.rgbHashOfCert[3] = 'e';
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@BXlmblBAAAAAAAAAAAAAAAAAAAAA" ), "got %s\n", str );
     pCredFree( str );
@@ -497,7 +497,7 @@ static void test_CredMarshalCredentialA(void)
     memset( cert.rgbHashOfCert, 0xff, sizeof(cert.rgbHashOfCert) );
     str = NULL;
     ret = pCredMarshalCredentialA( CertCredential, &cert, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@B--------------------------P" ), "got %s\n", str );
     pCredFree( str );
@@ -508,7 +508,7 @@ static void test_CredMarshalCredentialA(void)
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     ok( str == (char *)0xdeadbeef, "got %p\n", str );
 
     username.UserName = emptyW;
@@ -517,13 +517,13 @@ static void test_CredMarshalCredentialA(void)
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     ok( str == (char *)0xdeadbeef, "got %p\n", str );
 
     username.UserName = tW;
     str = NULL;
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@CCAAAAA0BA" ), "got %s\n", str );
     pCredFree( str );
@@ -531,7 +531,7 @@ static void test_CredMarshalCredentialA(void)
     username.UserName = teW;
     str = NULL;
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@CEAAAAA0BQZAA" ), "got %s\n", str );
     pCredFree( str );
@@ -539,7 +539,7 @@ static void test_CredMarshalCredentialA(void)
     username.UserName = tesW;
     str = NULL;
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@CGAAAAA0BQZAMHA" ), "got %s\n", str );
     pCredFree( str );
@@ -547,7 +547,7 @@ static void test_CredMarshalCredentialA(void)
     username.UserName = testW;
     str = NULL;
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@CIAAAAA0BQZAMHA0BA" ), "got %s\n", str );
     pCredFree( str );
@@ -555,7 +555,7 @@ static void test_CredMarshalCredentialA(void)
     username.UserName = test1W;
     str = NULL;
     ret = pCredMarshalCredentialA( UsernameTargetCredential, &username, &str );
-    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( ret, "unexpected failure %lu\n", GetLastError() );
     ok( str != NULL, "str not set\n" );
     ok( !lstrcmpA( str, "@@CKAAAAA0BQZAMHA0BQMAA" ), "got %s\n", str );
     pCredFree( str );
@@ -627,14 +627,14 @@ static void test_CredUnmarshalCredentialA(void)
     ret = pCredUnmarshalCredentialA( NULL, NULL, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     cert = NULL;
     SetLastError( 0xdeadbeef );
     ret = pCredUnmarshalCredentialA( NULL, NULL, (void **)&cert );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     type = 0;
     cert = NULL;
@@ -642,23 +642,23 @@ static void test_CredUnmarshalCredentialA(void)
     ret = pCredUnmarshalCredentialA( NULL, &type, (void **)&cert );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     if (0) { /* crash */
     SetLastError( 0xdeadbeef );
     ret = pCredUnmarshalCredentialA( "@@BAAAAAAAAAAAAAAAAAAAAAAAAAAA", &type, NULL );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
 
     SetLastError( 0xdeadbeef );
     ret = pCredUnmarshalCredentialA( "@@BAAAAAAAAAAAAAAAAAAAAAAAAAAA", NULL, (void **)&cert );
     error = GetLastError();
     ok( !ret, "unexpected success\n" );
-    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+    ok( error == ERROR_INVALID_PARAMETER, "got %lu\n", error );
     }
 
-    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
         SetLastError(0xdeadbeef);
         type = 0;
@@ -667,7 +667,7 @@ static void test_CredUnmarshalCredentialA(void)
         error = GetLastError();
         if (tests[i].unmarshaled)
         {
-            ok(ret, "[%u] unexpected failure %u\n", i, error);
+            ok(ret, "[%u] unexpected failure %lu\n", i, error);
             ok(type == tests[i].type, "[%u] got %u\n", i, type);
             ok(p != NULL, "[%u] returned pointer is NULL\n", i);
             if (tests[i].type == CertCredential)
@@ -675,7 +675,7 @@ static void test_CredUnmarshalCredentialA(void)
                 cert = p;
                 hash = tests[i].unmarshaled;
                 ok(cert->cbSize == sizeof(*cert),
-                   "[%u] wrong size %u\n", i, cert->cbSize);
+                   "[%u] wrong size %lu\n", i, cert->cbSize);
                 for (j = 0; j < sizeof(cert->rgbHashOfCert); j++)
                     ok(cert->rgbHashOfCert[j] == hash[j], "[%u] wrong data\n", i);
             }
@@ -690,7 +690,7 @@ static void test_CredUnmarshalCredentialA(void)
         else
         {
             ok(!ret, "[%u] unexpected success\n", i);
-            ok(error == ERROR_INVALID_PARAMETER, "[%u] got %u\n", i, error);
+            ok(error == ERROR_INVALID_PARAMETER, "[%u] got %lu\n", i, error);
             ok(type == tests[i].type, "[%u] got %u\n", i, type);
             ok(p == NULL, "[%u] returned pointer is not NULL\n", i);
         }
@@ -752,11 +752,11 @@ static void test_CredIsMarshaledCredentialA(void)
         SetLastError(0xdeadbeef);
         res = pCredIsMarshaledCredentialA(ptr[i]);
         if (expected)
-            ok(res != FALSE, "%d: got %d and %u for %s (expected TRUE)\n", i, res, GetLastError(), ptr[i]);
+            ok(res != FALSE, "%d: got %d and %lu for %s (expected TRUE)\n", i, res, GetLastError(), ptr[i]);
         else
         {
             /* Windows returns ERROR_INVALID_PARAMETER here, but that's not documented */
-            ok(!res, "%d: got %d and %u for %s (expected FALSE)\n", i, res, GetLastError(), ptr[i]);
+            ok(!res, "%d: got %d and %lu for %s (expected FALSE)\n", i, res, GetLastError(), ptr[i]);
         }
     }
 }
@@ -789,10 +789,10 @@ START_TEST(cred)
         BOOL ret;
         DWORD i;
         ret = pCredGetSessionTypes(CRED_TYPE_MAXIMUM, persists);
-        ok(ret, "CredGetSessionTypes failed with error %d\n", GetLastError());
-        ok(persists[0] == CRED_PERSIST_NONE, "persists[0] = %u instead of CRED_PERSIST_NONE\n", persists[0]);
+        ok(ret, "CredGetSessionTypes failed with error %ld\n", GetLastError());
+        ok(persists[0] == CRED_PERSIST_NONE, "persists[0] = %lu instead of CRED_PERSIST_NONE\n", persists[0]);
         for (i=0; i < CRED_TYPE_MAXIMUM; i++)
-            ok(persists[i] <= CRED_PERSIST_ENTERPRISE, "bad value for persists[%u]: %u\n", i, persists[i]);
+            ok(persists[i] <= CRED_PERSIST_ENTERPRISE, "bad value for persists[%lu]: %lu\n", i, persists[i]);
     }
     else
         memset(persists, CRED_PERSIST_ENTERPRISE, sizeof(persists));
@@ -809,7 +809,7 @@ START_TEST(cred)
     else
         test_generic();
 
-        trace("domain password:\n");
+    trace("domain password:\n");
     if (persists[CRED_TYPE_DOMAIN_PASSWORD] == CRED_PERSIST_NONE)
         skip("CRED_TYPE_DOMAIN_PASSWORD credentials are not supported or are disabled. Skipping\n");
     else
