@@ -7868,9 +7868,9 @@ NtGdiGetGlyphIndicesW(
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     INT i;
-    WCHAR DefChar = 0xffff;
-    PWSTR Buffer = NULL;
-    WCHAR StackBuffer[256];
+    WCHAR DefChar;
+    PWORD Buffer = NULL;
+    WORD StackBuffer[256];
     ULONG pwcSize;
     PWSTR Safepwc = NULL;
     WCHAR pwcStack[256];
@@ -7930,49 +7930,47 @@ NtGdiGetGlyphIndicesW(
         }
     }
 
-    /* Allocate for Buffer */
-    if (cwc * sizeof(WORD) <= sizeof(StackBuffer))
+    /* The next is pproximately the same as 'pwcSize = cwc * sizeof(WORD)': */
+    Status = RtlULongMult(cwc, sizeof(WORD), &pwcSize);
+    if (!NT_SUCCESS(Status))
     {
-        Buffer = StackBuffer; /* Faster */
+        DPRINT1("0x%lX * 2: overflow\n", cwc);
+        goto ErrorRet;
     }
-    else
+
+    /* Allocate Buffer and Safepwc */
+    if (pwcSize <= sizeof(StackBuffer) && pwcSize <= sizeof(pwcStack))
     {
-        Buffer = ExAllocatePoolWithTag(PagedPool, cwc * sizeof(WORD), GDITAG_TEXT);
+        /* Stack is faster than dynamic allocation */
+        Buffer = StackBuffer;
+        Safepwc = pwcStack;
+    }
+    else /* Dynamic allocation */
+    {
+        Buffer = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
         if (!Buffer)
         {
+            Status = STATUS_NO_MEMORY;
             DPRINT1("ExAllocatePoolWithTag\n");
-            return GDI_ERROR;
+            goto ErrorRet;
         }
-    }
 
-    /* Get DefChar */
-    if (iMode & GGI_MARK_NONEXISTING_GLYPHS)
-    {
-        DefChar = 0xffff;
-    }
-    else
-    {
-        if (IntGetFontDefaultChar(Face, FontGDI, &DefChar))
-            DefChar = get_glyph_index(Face, DefChar);
-        else
-            DefChar = 0xFFFF;
-    }
-
-    /* Allocate for Safepwc */
-    pwcSize = cwc * sizeof(WCHAR);
-    if (pwcSize <= sizeof(pwcStack))
-    {
-        Safepwc = pwcStack; /* Faster */
-    }
-    else
-    {
         Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
         if (!Safepwc)
         {
             Status = STATUS_NO_MEMORY;
-            DPRINT1("!Safepwc\n");
+            DPRINT1("ExAllocatePoolWithTag\n");
             goto ErrorRet;
         }
+    }
+
+    /* Get DefChar */
+    DefChar = 0xFFFF;
+    if (!(iMode & GGI_MARK_NONEXISTING_GLYPHS) && IntGetFontDefaultChar(Face, FontGDI, &DefChar))
+    {
+        IntLockFreeType();
+        DefChar = get_glyph_index(Face, DefChar);
+        IntUnLockFreeType();
     }
 
     _SEH2_TRY
@@ -7993,10 +7991,10 @@ NtGdiGetGlyphIndicesW(
     }
 
     /* Get glyph indeces */
+    /* NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs. */
     IntLockFreeType();
     for (i = 0; i < cwc; i++)
     {
-        /* NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs. */
         Buffer[i] = get_glyph_index(Face, Safepwc[i]);
         if (Buffer[i] == 0)
             Buffer[i] = DefChar;
