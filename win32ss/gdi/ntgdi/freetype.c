@@ -7840,7 +7840,7 @@ IntGetFontDefaultChar(FT_Face Face, WCHAR* pDefChar)
         return !error;
     }
 
-    /* FIXME: Support more font types */
+    // FIXME: Support more font types
     return FALSE;
 }
 
@@ -7926,7 +7926,7 @@ NtGdiGetGlyphIndicesW(
         goto ErrorRet;
     }
 
-    /* The next is pproximately the same as 'pwcSize = cwc * sizeof(WORD)': */
+    // The next is pproximately the same as 'pwcSize = cwc * sizeof(WORD)':
     Status = RtlULongMult(cwc, sizeof(WORD), &pwcSize);
     if (!NT_SUCCESS(Status))
     {
@@ -7934,14 +7934,14 @@ NtGdiGetGlyphIndicesW(
         goto ErrorRet;
     }
 
-    /* Allocate Buffer and Safepwc */
+    // Allocate Buffer and Safepwc
     if (pwcSize <= sizeof(StackBuffer) && pwcSize <= sizeof(pwcStack))
     {
-        /* Stack is faster than dynamic allocation */
+        // Stack is faster than dynamic allocation
         Buffer = StackBuffer;
         Safepwc = pwcStack;
     }
-    else /* Dynamic allocation */
+    else // Dynamic allocation
     {
         Buffer = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
         if (!Buffer)
@@ -7965,7 +7965,7 @@ NtGdiGetGlyphIndicesW(
     if (!(iMode & GGI_MARK_NONEXISTING_GLYPHS) && IntGetFontDefaultChar(Face, &DefChar))
     {
         IntLockFreeType();
-        DefChar = get_glyph_index(Face, DefChar);
+        DefChar = get_glyph_index(Face, DefChar); // Convert to glyph index
         IntUnLockFreeType();
     }
 
@@ -7987,7 +7987,7 @@ NtGdiGetGlyphIndicesW(
     }
 
     /* Get glyph indeces */
-    /* NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs. */
+    // NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs.
     IntLockFreeType();
     for (i = 0; i < cwc; i++)
     {
