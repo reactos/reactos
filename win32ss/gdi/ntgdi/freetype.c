@@ -7819,7 +7819,7 @@ static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
 
     ASSERT_FREETYPE_LOCK_NOT_HELD();
 
-    if (FT_IS_SFNT(Face))
+    if (FT_IS_SFNT(Face)) // TrueType / OpenType
     {
         IntLockFreeType();
         pOS2 = FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
@@ -7829,7 +7829,7 @@ static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
         return !!pOS2;
     }
 
-    if (!FT_IS_SCALABLE(Face))
+    if (!FT_IS_SCALABLE(Face)) // *.fon / *.fnt
     {
         IntLockFreeType();
         error = FT_Get_WinFNT_Header(Face, &WinFNT);
@@ -7839,8 +7839,8 @@ static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
         return !error;
     }
 
-    // FIXME: Support more font types
-    return FALSE;
+    *pDefChar = 0; // .notdef
+    return TRUE;
 }
 
 /*
