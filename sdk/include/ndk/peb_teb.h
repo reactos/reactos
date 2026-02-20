@@ -118,7 +118,10 @@ typedef struct STRUCT(_PEB)
     ULONG TlsBitmapBits[2];
     PTR(PVOID) ReadOnlySharedMemoryBase;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PTR(PVOID) HotpatchInformation;
+    union {
+        PTR(PVOID) ReadOnlySharedMemoryHeap;
+        PTR(PVOID) HotpatchInformation;
+    };
 #else
     PTR(PVOID) ReadOnlySharedMemoryHeap;
 #endif

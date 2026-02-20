@@ -1093,8 +1093,11 @@ HvLoadHive(
 #else
         {
             /* Check if this hive has a log at hand to begin with */
-            #if (NTDDI_VERSION < NTDDI_VISTA)
-            if (!Hive->Log)
+            #if (NTDDI_VERSION > NTDDI_VISTA)
+            if (Hive->CurrentLog != HFILE_TYPE_LOG &&
+                Hive->CurrentLog != HFILE_TYPE_ALTERNATE &&
+                Hive->LogDataPresent[0] == 0 &&
+                Hive->LogDataPresent[1] == 0)
             {
                 DPRINT1("The hive has no log for header recovery\n");
                 return STATUS_REGISTRY_CORRUPT;
@@ -1387,9 +1390,8 @@ HvInitialize(
     Hive->BaseBlockAlloc = sizeof(HBASE_BLOCK); // == HBLOCK_SIZE
 
     Hive->Version = HSYS_MINOR;
-#if (NTDDI_VERSION < NTDDI_VISTA)
-    Hive->Log = (FileType == HFILE_TYPE_LOG);
-    Hive->Alternate = (FileType == HFILE_TYPE_ALTERNATE);
+#if (NTDDI_VERSION > NTDDI_VISTA)
+    Hive->CurrentLog = FileType;
 #endif
     Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
