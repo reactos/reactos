@@ -75,7 +75,7 @@ struct _DISK_GEOMETRY_EX;
 /* Structures not exposed to drivers */
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
-#if defined(_NTHAL_INCLUDED_)
+#if defined(_NTHAL_INCLUDED_) || defined(__REACTOS__)
 typedef struct _KAFFINITY_EX *PKAFFINITY_EX;
 #endif
 typedef struct _PEB *PPEB;
@@ -104,6 +104,7 @@ $include (mmtypes.h)
 $include (pstypes.h)
 $include (rtltypes.h)
 $include (setypes.h)
+$include (wheatypes.h)
 
 #if defined(_M_IX86)
 $include(x86/ke.h)
