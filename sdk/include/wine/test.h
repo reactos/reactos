@@ -59,11 +59,17 @@ extern int report_success;
 /* running in interactive mode? */
 extern int winetest_interactive;
 
+/* report failed flaky tests as failures (BOOL) */
+extern int winetest_report_flaky;
+
 /* current platform */
 extern const char *winetest_platform;
 
 extern void winetest_set_location( const char* file, int line );
 extern void winetest_subtest(const char* name);
+extern void winetest_start_flaky( int is_flaky );
+extern int winetest_loop_flaky(void);
+extern void winetest_end_flaky(void);
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
@@ -176,6 +182,13 @@ extern void winetest_pop_context(void);
 #define trace    trace_(__FILE__, __LINE__)
 #define wait_child_process wait_child_process_(__FILE__, __LINE__)
 #define ignore_exceptions ignore_exceptions_(__FILE__, __LINE__)
+
+#define flaky_if(is_flaky) for (winetest_start_flaky(is_flaky); \
+                                winetest_loop_flaky(); \
+                                winetest_end_flaky())
+#define flaky                   flaky_if(TRUE)
+#define flaky_wine              flaky_if(winetest_platform_is_wine)
+#define flaky_wine_if(is_flaky) flaky_if((is_flaky) && winetest_platform_is_wine)
 
 #define todo_if(is_todo) for (winetest_start_todo(is_todo); \
                               winetest_loop_todo(); \
@@ -298,6 +311,7 @@ static const struct test *current_test; /* test currently being run */
 
 static LONG successes;       /* number of successful tests */
 static LONG failures;        /* number of failures */
+static LONG winetest_flaky_failures;  /* number of failures inside flaky block */
 static LONG skipped;         /* number of skipped test chunks */
 static LONG todo_successes;  /* number of successful tests inside todo block */
 static LONG todo_failures;   /* number of failures inside todo block */
@@ -307,6 +321,8 @@ typedef struct
 {
     const char* current_file;        /* file of current check */
     int current_line;                /* line of current check */
+    unsigned int flaky_level;        /* current flaky nesting level */
+    int flaky_do_loop;
     unsigned int todo_level;         /* current todo nesting level */
     unsigned int nocount_level;
     int todo_do_loop;
@@ -461,10 +477,19 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (condition)
         {
-            winetest_print_context( "Test succeeded inside todo block: " );
-            vfprintf(stdout, msg, args);
-            if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&todo_failures);
+            if (data->flaky_level)
+            {
+                winetest_print_context( "Test succeeded inside flaky todo block: " );
+                vfprintf(stdout, msg, args);
+                InterlockedIncrement( &winetest_flaky_failures );
+            }
+            else
+            {
+                winetest_print_context( "Test succeeded inside todo block: " );
+                vfprintf(stdout, msg, args);
+                if ((data->nocount_level & 2) == 0)
+                    InterlockedIncrement( &todo_failures );
+            }
             return 0;
         }
         else
@@ -484,10 +509,19 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
     {
         if (!condition)
         {
-            winetest_print_context( "Test failed: " );
-            vfprintf(stdout, msg, args);
-            if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&failures);
+            if (data->flaky_level)
+            {
+                winetest_print_context( "Test marked flaky: " );
+                vfprintf(stdout, msg, args);
+                InterlockedIncrement( &winetest_flaky_failures );
+            }
+            else
+            {
+                winetest_print_context( "Test failed: " );
+                vfprintf(stdout, msg, args);
+                if ((data->nocount_level & 2) == 0)
+                    InterlockedIncrement( &failures );
+            }
             return 0;
         }
         else
@@ -564,6 +598,39 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
     else
         winetest_vok(0, msg, valist);
     __winetest_va_end(valist);
+}
+
+/* If is_flaky is true, indicates that the next test may occasionally fail due
+ * to unavoidable outside race conditions. Such failures will be flagged as
+ * flaky so they can be ignored by automated testing tools.
+ *
+ * Remarks:
+ * - This is not meant to paper over race conditions within the test itself.
+ *   Those are bugs and should be fixed.
+ * - This is not meant to be used for tests that normally succeed but
+ *   systematically fail on a specific platform or locale.
+ * - The failures should be rare to start with. If a test fails 25% of the time
+ *   it is probably wrong.
+ */
+void winetest_start_flaky( int is_flaky )
+{
+    tls_data* data=get_tls_data();
+    data->flaky_level = (data->flaky_level << 1) | (is_flaky != 0);
+    data->flaky_do_loop = 1;
+}
+
+int winetest_loop_flaky(void)
+{
+    tls_data* data=get_tls_data();
+    int do_flaky = data->flaky_do_loop;
+    data->flaky_do_loop = 0;
+    return do_flaky;
+}
+
+void winetest_end_flaky(void)
+{
+    tls_data* data=get_tls_data();
+    data->flaky_level >>= 1;
 }
 
 void winetest_start_todo( int is_todo )

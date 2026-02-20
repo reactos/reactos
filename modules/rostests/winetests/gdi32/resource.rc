@@ -31,3 +31,24 @@ vertical.ttf RCDATA vertical.ttf
 
 /* @makedep: wine_longname.ttf */
 wine_longname.ttf RCDATA wine_longname.ttf
+
+/* @makedep: wine_ttfnames.ttf */
+wine_ttfnames.ttf RCDATA wine_ttfnames.ttf
+
+/* @makedep: wine_ttfnames_bold.ttf */
+wine_ttfnames_bold.ttf RCDATA wine_ttfnames_bold.ttf
+
+/* @makedep: wine_langnames.ttf */
+wine_langnames.ttf RCDATA wine_langnames.ttf
+
+/* @makedep: wine_langnames2.ttf */
+wine_langnames2.ttf RCDATA wine_langnames2.ttf
+
+/* @makedep: wine_langnames3.ttf */
+wine_langnames3.ttf RCDATA wine_langnames3.ttf
+
+/* @makedep: wine_nul.ttf */
+wine_nul.ttf RCDATA wine_nul.ttf
+
+/* @makedep: wine_heavy.ttf */
+wine_heavy.ttf RCDATA wine_heavy.ttf
