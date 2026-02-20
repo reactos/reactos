@@ -23,8 +23,8 @@
  */
 HANDLE
 WINAPI
-CreateJobObjectA(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 IN LPCSTR lpName)
+CreateJobObjectA(_In_ LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 _In_ LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertWin32AnsiObjectApiToUnicodeApi(JobObject, lpName, lpJobAttributes);
@@ -35,8 +35,8 @@ CreateJobObjectA(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
  */
 HANDLE
 WINAPI
-CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 IN LPCWSTR lpName)
+CreateJobObjectW(_In_ LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 _In_ LPCWSTR lpName)
 {
     /* Create the NT object */
     CreateNtObjectFromWin32Api(JobObject, JobObject, JOB_OBJECT_ALL_ACCESS, lpJobAttributes, lpName);
@@ -47,9 +47,9 @@ CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
  */
 HANDLE
 WINAPI
-OpenJobObjectW(IN DWORD dwDesiredAccess,
-               IN BOOL bInheritHandle,
-               IN LPCWSTR lpName)
+OpenJobObjectW(_In_ DWORD dwDesiredAccess,
+               _In_ BOOL bInheritHandle,
+               _In_ LPCWSTR lpName)
 {
     /* Open the NT object */
     OpenNtObjectFromWin32Api(JobObject, dwDesiredAccess, bInheritHandle, lpName);
@@ -61,9 +61,9 @@ OpenJobObjectW(IN DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
-OpenJobObjectA(IN DWORD dwDesiredAccess,
-               IN BOOL bInheritHandle,
-               IN LPCSTR lpName)
+OpenJobObjectA(_In_ DWORD dwDesiredAccess,
+               _In_ BOOL bInheritHandle,
+               _In_ LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertOpenWin32AnsiObjectApiToUnicodeApi(JobObject, dwDesiredAccess, bInheritHandle, lpName);
@@ -74,9 +74,9 @@ OpenJobObjectA(IN DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
-IsProcessInJob(IN HANDLE ProcessHandle,
-               IN HANDLE JobHandle,
-               OUT PBOOL Result)
+IsProcessInJob(_In_ HANDLE ProcessHandle,
+               _In_opt_ HANDLE JobHandle,
+               _Out_ PBOOL Result)
 {
     NTSTATUS Status;
 
@@ -96,8 +96,8 @@ IsProcessInJob(IN HANDLE ProcessHandle,
  */
 BOOL
 WINAPI
-AssignProcessToJobObject(IN HANDLE hJob,
-                         IN HANDLE hProcess)
+AssignProcessToJobObject(_In_ HANDLE hJob,
+                         _In_ HANDLE hProcess)
 {
     NTSTATUS Status;
 
@@ -116,11 +116,13 @@ AssignProcessToJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-QueryInformationJobObject(IN HANDLE hJob,
-                          IN JOBOBJECTINFOCLASS JobObjectInformationClass,
-                          IN LPVOID lpJobObjectInformation,
-                          IN DWORD cbJobObjectInformationLength,
-                          OUT LPDWORD lpReturnLength)
+QueryInformationJobObject(
+    _In_opt_ HANDLE hJob,
+    _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+    _Out_writes_bytes_to_(cbJobObjectInformationLength, *lpReturnLength) LPVOID
+    lpJobObjectInformation,
+    _In_ DWORD cbJobObjectInformationLength,
+    _Out_opt_ LPDWORD lpReturnLength)
 {
     NTSTATUS Status;
     PVOID JobInfo;
@@ -209,10 +211,11 @@ QueryInformationJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-SetInformationJobObject(IN HANDLE hJob,
-                        IN JOBOBJECTINFOCLASS JobObjectInformationClass,
-                        IN LPVOID lpJobObjectInformation,
-                        IN DWORD cbJobObjectInformationLength)
+SetInformationJobObject(
+    _In_ HANDLE hJob,
+    _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+    _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
+    _In_ DWORD cbJobObjectInformationLength)
 {
     NTSTATUS Status;
     PVOID JobInfo;
@@ -315,8 +318,8 @@ SetInformationJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-TerminateJobObject(IN HANDLE hJob,
-                   IN UINT uExitCode)
+TerminateJobObject(_In_ HANDLE hJob,
+                   _In_ UINT uExitCode)
 {
     NTSTATUS Status;
 
