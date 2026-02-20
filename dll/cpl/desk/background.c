@@ -418,14 +418,17 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 
             ZeroMemory(&listItem, sizeof(listItem));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.state      = LVIS_SELECTED;
-            listItem.stateMask  = LVIS_SELECTED;
+            listItem.state      = 0;
             listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
             listItem.iItem      = pData->listViewItemCount;
             listItem.lParam     = pData->listViewItemCount;
             (void)ListView_InsertItem(hwndBackgroundList, &listItem);
 
+            ListView_SetItemState(hwndBackgroundList,
+                                  pData->listViewItemCount,
+                                  LVIS_SELECTED,
+                                  LVIS_SELECTED);
             i++;
             pData->listViewItemCount++;
         }
