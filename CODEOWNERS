@@ -488,6 +488,11 @@ amd64/                                      @tkreuzer
 #   S: Upstream
 /dll/directx/wine/  @DarkFire01
 
+# Driver Verifier
+#   M: MuerteSeguraZ, Alex Mendoza
+#   S: Mantained
+/ntoskrnl/vf @MuerteSeguraZ
+
 # Translations
 # This is the list of translation teams in ReactOS GitHub organization.
 # If you want to be part of one - hit us at https://chat.reactos.org/
