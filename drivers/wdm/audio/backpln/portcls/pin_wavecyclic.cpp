@@ -21,7 +21,7 @@ public:
         POOL_TYPE PoolType,
         ULONG Tag)
     {
-        return ExAllocatePoolWithTag(PoolType, Size, Tag);
+        return ExAllocatePoolZero(PoolType, Size, Tag);
     }
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -52,7 +52,7 @@ public:
         m_Descriptor(nullptr),
         m_EventListLock(0),
         m_EventList({nullptr}),
-        m_ResetState(KSRESET_BEGIN),
+        m_ResetState(KSRESET_END),
         m_Delay(0)
     {
     }
@@ -770,7 +770,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
             if (Gap > BufferLength)
             {
                 // insert silence samples
-                DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
+                //DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
@@ -874,28 +874,16 @@ CPortPinWaveCyclic::DeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PKSPROPERTY Property;
-    UNICODE_STRING GuidString;
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
     ULONG Data = 0;
     KSRESET ResetValue;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
         /* handle property with subdevice descriptor */
         Status = PcHandlePropertyWithTable(Irp,  m_Descriptor->FilterPropertySetCount, m_Descriptor->FilterPropertySet, m_Descriptor);
-
-        if (Status == STATUS_NOT_FOUND)
-        {
-            Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-            RtlStringFromGUID(Property->Set, &GuidString);
-            DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-            RtlFreeUnicodeString(&GuidString);
-        }
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
@@ -1033,8 +1021,20 @@ CPortPinWaveCyclic::Close(
         // remove member from service group
         m_ServiceGroup->RemoveMember(PSERVICESINK(this));
 
-        // do not release service group, it is released by the miniport object
+        // release service group
+        m_ServiceGroup->Release();
+
+        // freed
         m_ServiceGroup = NULL;
+    }
+
+    if (m_DmaChannel)
+    {
+        // release reference
+        m_DmaChannel->Release();
+
+        // freed
+        m_DmaChannel = NULL;
     }
 
     if (m_Stream)
@@ -1226,7 +1226,19 @@ CPortPinWaveCyclic::Init(
     DPRINT1("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
 
     if (!NT_SUCCESS(Status))
+    {
+        if (m_DmaChannel)
+        {
+            m_DmaChannel->Release();
+            m_DmaChannel = NULL;
+        }
+        if (m_ServiceGroup)
+        {
+            m_ServiceGroup->Release();
+            m_ServiceGroup = NULL;
+        }
         return Status;
+    }
 
     ISubdevice * Subdevice = NULL;
     // get subdevice interface
