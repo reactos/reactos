@@ -72,6 +72,15 @@ DoWaveStreaming(
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
             ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
+        /* Is there any work to do? */
+        Header = SoundDeviceInstance->HeadWaveHeader;
+
+        if ( ! Header )
+        {
+            SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
+            return;
+        }
+
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
 

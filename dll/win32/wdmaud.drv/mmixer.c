@@ -553,8 +553,6 @@ WdmAudSetWaveDeviceFormatByMMixer(
                 Instance->RTStreamingShadowBufferLength = Instance->RTStreamingBufferLength;
                 Instance->RTStreamingBufferBytesWritten = 0;
                 Instance->RTStreamingEnabled = TRUE;
-                Instance->hRTStreamingThread = CreateThread(NULL, 0, RTStreamingThreadProc, (LPVOID)Instance, 0, NULL);
-                Instance->hRTStreamingCompletionThread = CreateThread(NULL, 0, RTStreamingCompletionThreadProc, (LPVOID)Instance, 0, NULL);
                 DPRINT1("RT Audio Stream enabled\n");
             }
         }
@@ -812,9 +810,17 @@ WdmAudSetWaveStateByMMixer(
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
+            SoundDeviceInstance->hRTStreamingThread = CreateThread(NULL, 0, RTStreamingThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
+            SoundDeviceInstance->hRTStreamingCompletionThread = CreateThread(NULL, 0, RTStreamingCompletionThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
         }
         else
         {
+            if (SoundDeviceInstance->RTStreamingStarted ||
+                SoundDeviceInstance->RTStreamingCompletionStarted)
+            {
+                SetEvent(SoundDeviceInstance->hNotifyRTStreamingStopEvent);
+                SetEvent(SoundDeviceInstance->hNotifyRTStreamingCompletionStopEvent);
+            }
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
             MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
@@ -1225,6 +1231,13 @@ WdmAudCommitWaveBufferByMMixer(
 
     if (SoundDeviceInstance->RTStreamingEnabled)
     {
+        if (SoundDeviceInstance->hRTStreamingThread == NULL && SoundDeviceInstance->hRTStreamingCompletionThread == NULL)
+        {
+            // winmm@PlaySound directly calls waveOutWrite
+            SoundDeviceInstance->hRTStreamingThread = CreateThread(NULL, 0, RTStreamingThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
+            SoundDeviceInstance->hRTStreamingCompletionThread = CreateThread(NULL, 0, RTStreamingCompletionThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
+        }
+
         Status = STATUS_SUCCESS;
         DWORD Offset = 0;
         while(Offset < Length)
