@@ -264,15 +264,7 @@ EnqueueWaveHeader(
             {
                 if (SoundDeviceInstance->RTStreamingEnabled)
                 {
-                    /* queue a thread when application does submit multiple buffers */
-                    if (WaveHeader->dwBufferLength < SoundDeviceInstance->RTStreamingShadowBufferLength)
-                    {
-                        InitiateSoundStreaming(SoundDeviceInstance);
-                    }
-                    else
-                    {
-                        DoWaveStreaming(SoundDeviceInstance);
-                    }
+                    InitiateSoundStreaming(SoundDeviceInstance);
                 }
                 else
                 {
