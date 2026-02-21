@@ -156,6 +156,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         RtlCopyMemory(&PartialResourceList->PartialDescriptors[2],
                       Table, Table->TableSize);
 
+        TableKey = NULL;
         FldrCreateComponentKey(BusKey,
                                PeripheralClass,
                                RealModeIrqRoutingTable,
@@ -166,6 +167,11 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &TableKey);
+        if (!TableKey)
+        {
+            ERR("Failed to create PCI IRQ routing table component key\n");
+            FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+        }
     }
 }
 
@@ -197,6 +203,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         RtlZeroMemory(PartialResourceList, Size);
 
         /* Create new bus key */
+        BiosKey = NULL;
         FldrCreateComponentKey(SystemKey,
                                AdapterClass,
                                MultiFunctionAdapter,
@@ -207,6 +214,12 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                PartialResourceList,
                                Size,
                                &BiosKey);
+        if (!BiosKey)
+        {
+            ERR("Failed to create PCI BIOS component key\n");
+            FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+            return;
+        }
 
         /* Increment bus number */
         (*BusNumber)++;
@@ -261,6 +274,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             }
 
             /* Create the bus key */
+            BusKey = NULL;
             FldrCreateComponentKey(SystemKey,
                                    AdapterClass,
                                    MultiFunctionAdapter,
@@ -271,6 +285,15 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                    PartialResourceList,
                                    Size,
                                    &BusKey);
+
+            /* Check if component creation succeeded */
+            if (!BusKey)
+            {
+                ERR("Failed to create PCI bus component key! Ignoring remaining PCI buses. (i = %lu, NoBuses = %lu)\n",
+                    i, (ULONG)BusData.NoBuses);
+                FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+                return;
+            }
 
             /* Increment bus number */
             (*BusNumber)++;
