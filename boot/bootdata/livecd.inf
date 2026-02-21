@@ -7,6 +7,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
 
 [AddReg]
 
+; Input Methods
+HKCU,"Control Panel\Input Method","EnableHexNumpad",0x00000000,"1"
+
 ; Default locale for the keyboard layout
 HKCU,"Keyboard Layout\Preload","1",0x00000000,"00000409"
 
