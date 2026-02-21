@@ -16,10 +16,44 @@
 
 /* GLOBALS ********************************************************************/
 
-static ULONG KsecRandomSeed = 0x62b409a1;
-
+static struct
+{
+    ULONGLONG Key[2];      /* 128-bit key */
+    ULONGLONG Counter[2];  /* 128-bit counter (CTR nonce + counter) */
+    BOOLEAN Initialized;
+} KsecSpeckCtx;
 
 /* FUNCTIONS ******************************************************************/
+
+#define SPECK_ROUNDS 32
+
+static __forceinline VOID
+SpeckEncryptBlock(_Inout_ ULONGLONG *X, _Inout_ ULONGLONG *Y,
+                  _In_reads_(2) const ULONGLONG *Key)
+{
+    ULONGLONG k0 = Key[0];
+    ULONGLONG k1 = Key[1];
+    ULONG i;
+
+    for (i = 0; i < SPECK_ROUNDS; ++i)
+    {
+        *X = (_rotr64(*X, 8) + *Y) ^ k0;
+        *Y = _rotl64(*Y, 3) ^ *X;
+
+        /* simple key schedule (inline) */
+        k1 = (_rotr64(k1, 8) + k0) ^ i;
+        k0 = _rotl64(k0, 3) ^ k1;
+    }
+}
+
+static __forceinline VOID
+KsecIncrementCounter(_Inout_ ULONGLONG Ctr[2])
+{
+    if (++Ctr[0] == 0)
+    {
+        ++Ctr[1];
+    }
+}
 
 NTSTATUS
 NTAPI
@@ -27,66 +61,39 @@ KsecGenRandom(
     PVOID Buffer,
     SIZE_T Length)
 {
-    LARGE_INTEGER TickCount;
-    ULONG i, RandomValue;
-    PULONG P;
+    UCHAR Block[16];
+    PUCHAR Out = (PUCHAR)Buffer;
+    SIZE_T Offset = 0;
+    ULONGLONG X, Y;
 
-    /* Try to generate a more random seed */
-    KeQueryTickCount(&TickCount);
-    KsecRandomSeed ^= _rotl(TickCount.LowPart, (KsecRandomSeed % 23));
+    /* Ensure cipher is initialized */
+    if (!KsecSpeckCtx.Initialized)
+        return STATUS_NOT_READY;
 
-    P = Buffer;
-    for (i = 0; i < Length / sizeof(ULONG); i++)
+    while (Offset < Length)
     {
-        P[i] = RtlRandomEx(&KsecRandomSeed);
-    }
+        /* Encrypt current counter to produce keystream block */
+        X = KsecSpeckCtx.Counter[0];
+        Y = KsecSpeckCtx.Counter[1];
 
-    Length &= (sizeof(ULONG) - 1);
-    if (Length > 0)
-    {
-        RandomValue = RtlRandomEx(&KsecRandomSeed);
-        RtlCopyMemory(&P[i], &RandomValue, Length);
+        SpeckEncryptBlock(&X, &Y, KsecSpeckCtx.Key);
+
+        RtlCopyMemory(Block, &X, sizeof(ULONGLONG));
+        RtlCopyMemory(Block + sizeof(ULONGLONG), &Y, sizeof(ULONGLONG));
+
+        /* Increment CTR for next block */
+        KsecIncrementCounter(KsecSpeckCtx.Counter);
+
+        /* Copy as much as needed */
+        SIZE_T ToCopy = min(16, Length - Offset);
+        RtlCopyMemory(Out + Offset, Block, ToCopy);
+
+        Offset += ToCopy;
     }
 
     return STATUS_SUCCESS;
 }
-
 VOID
-NTAPI
-KsecReadMachineSpecificCounters(
-    _Out_ PKSEC_MACHINE_SPECIFIC_COUNTERS MachineSpecificCounters)
-{
-#if defined(_M_IX86) || defined(_M_AMD64)
-    /* Check if RDTSC is available */
-    if (ExIsProcessorFeaturePresent(PF_RDTSC_INSTRUCTION_AVAILABLE))
-    {
-        /* Read the TSC value */
-        MachineSpecificCounters->Tsc = __rdtsc();
-    }
-#if 0 // FIXME: investigate what the requirements are for these
-    /* Read the CPU event counter MSRs */
-    //MachineSpecificCounters->Ctr0 = __readmsr(0x12);
-    //MachineSpecificCounters->Ctr1 = __readmsr(0x13);
-
-    /* Check if this is an MMX capable CPU */
-    if (ExIsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE))
-    {
-        /* Read the CPU performance counters 0 and 1 */
-        MachineSpecificCounters->Pmc0 = __readpmc(0);
-        MachineSpecificCounters->Pmc1 = __readpmc(1);
-    }
-#endif
-#elif defined(_M_ARM)
-    /* Read the Cycle Counter Register */
-    MachineSpecificCounters->Ccr = _MoveFromCoprocessor(CP15_PMCCNTR);
-#else
-    #error Implement me!
-#endif
-}
-
-/*!
- *  \see http://blogs.msdn.com/b/michael_howard/archive/2005/01/14/353379.aspx (DEAD_LINK)
- */
 NTSTATUS
 NTAPI
 KsecGatherEntropyData(
@@ -98,110 +105,114 @@ KsecGatherEntropyData(
     PWSTR String;
     ULONG ReturnLength;
     NTSTATUS Status;
+    UCHAR Digest[16];
 
-    /* Query some generic values */
+    /* Collect entropy sources (unchanged) */
     EntropyData->CurrentProcessId = PsGetCurrentProcessId();
     EntropyData->CurrentThreadId = PsGetCurrentThreadId();
     KeQueryTickCount(&EntropyData->TickCount);
     KeQuerySystemTime(&EntropyData->SystemTime);
-    EntropyData->PerformanceCounter = KeQueryPerformanceCounter(
-                                            &EntropyData->PerformanceFrequency);
+    EntropyData->PerformanceCounter =
+        KeQueryPerformanceCounter(&EntropyData->PerformanceFrequency);
 
-    /* Check if we have a TEB/PEB for the process environment */
     Teb = PsGetCurrentThread()->Tcb.Teb;
     if (Teb != NULL)
     {
         Peb = Teb->ProcessEnvironmentBlock;
 
-        /* Initialize the MD4 context */
         MD4Init(&Md4Context);
         _SEH2_TRY
         {
-            /* Get the end of the environment */
             String = Peb->ProcessParameters->Environment;
             while (*String)
             {
                 String += wcslen(String) + 1;
             }
 
-            /* Update the MD4 context from the environment data */
             MD4Update(&Md4Context,
                       (PUCHAR)Peb->ProcessParameters->Environment,
-                      (ULONG)((PUCHAR)String - (PUCHAR)Peb->ProcessParameters->Environment));
+                      (ULONG)((PUCHAR)String -
+                              (PUCHAR)Peb->ProcessParameters->Environment));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Simply ignore the exception */
         }
         _SEH2_END;
 
-        /* Finalize and copy the MD4 hash */
         MD4Final(&Md4Context);
-        RtlCopyMemory(&EntropyData->EnvironmentHash, Md4Context.digest, 16);
+        RtlCopyMemory(&EntropyData->EnvironmentHash,
+                      Md4Context.digest, 16);
     }
 
-    /* Read some machine specific hardware counters */
-    KsecReadMachineSpecificCounters(&EntropyData->MachineSpecificCounters);
+    /* Hardware counters */
+    KsecReadMachineSpecificCounters(
+        &EntropyData->MachineSpecificCounters);
 
-    /* Query processor performance information */
-    Status = ZwQuerySystemInformation(SystemProcessorPerformanceInformation,
-                                      &EntropyData->SystemProcessorPerformanceInformation,
-                                      sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    /* System info queries (unchanged) */
+    Status = ZwQuerySystemInformation(
+        SystemProcessorPerformanceInformation,
+        &EntropyData->SystemProcessorPerformanceInformation,
+        sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Query system performance information */
-    Status = ZwQuerySystemInformation(SystemPerformanceInformation,
-                                      &EntropyData->SystemPerformanceInformation,
-                                      sizeof(SYSTEM_PERFORMANCE_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ZwQuerySystemInformation(
+        SystemPerformanceInformation,
+        &EntropyData->SystemPerformanceInformation,
+        sizeof(SYSTEM_PERFORMANCE_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Query exception information */
-    Status = ZwQuerySystemInformation(SystemExceptionInformation,
-                                      &EntropyData->SystemExceptionInformation,
-                                      sizeof(SYSTEM_EXCEPTION_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ZwQuerySystemInformation(
+        SystemExceptionInformation,
+        &EntropyData->SystemExceptionInformation,
+        sizeof(SYSTEM_EXCEPTION_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Query lookaside information */
-    Status = ZwQuerySystemInformation(SystemLookasideInformation,
-                                      &EntropyData->SystemLookasideInformation,
-                                      sizeof(SYSTEM_LOOKASIDE_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ZwQuerySystemInformation(
+        SystemLookasideInformation,
+        &EntropyData->SystemLookasideInformation,
+        sizeof(SYSTEM_LOOKASIDE_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Query interrupt information */
-    Status = ZwQuerySystemInformation(SystemInterruptInformation,
-                                      &EntropyData->SystemInterruptInformation,
-                                      sizeof(SYSTEM_INTERRUPT_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ZwQuerySystemInformation(
+        SystemInterruptInformation,
+        &EntropyData->SystemInterruptInformation,
+        sizeof(SYSTEM_INTERRUPT_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Query process information */
-    Status = ZwQuerySystemInformation(SystemProcessInformation,
-                                      &EntropyData->SystemProcessInformation,
-                                      sizeof(SYSTEM_PROCESS_INFORMATION),
-                                      &ReturnLength);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ZwQuerySystemInformation(
+        SystemProcessInformation,
+        &EntropyData->SystemProcessInformation,
+        sizeof(SYSTEM_PROCESS_INFORMATION),
+        &ReturnLength);
+    if (!NT_SUCCESS(Status)) return Status;
+
+
+    MD4Init(&Md4Context);
+    MD4Update(&Md4Context,
+              (PUCHAR)EntropyData,
+              sizeof(KSEC_ENTROPY_DATA));
+    MD4Final(&Md4Context);
+
+    RtlCopyMemory(Digest, Md4Context.digest, 16);
+
+    /* Seed key (128-bit) */
+    RtlCopyMemory(KsecSpeckCtx.Key, Digest, 16);
+
+    /* Seed counter using timing + hash mix */
+    KsecSpeckCtx.Counter[0] =
+        EntropyData->PerformanceCounter.QuadPart ^
+        *(ULONGLONG*)&Digest[0];
+
+    KsecSpeckCtx.Counter[1] =
+        EntropyData->TickCount.QuadPart ^
+        *(ULONGLONG*)&Digest[8];
+
+    KsecSpeckCtx.Initialized = TRUE;
 
     return STATUS_SUCCESS;
 }
