@@ -37,6 +37,11 @@ add_library(shlwapi MODULE
     shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # FIXME: This is some nonsense that triggers GCC 13+ warnings
+    target_compile_options(shlwapi PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>")
+endif()
+
 # our C++ atlbase.h conflicts with the one from wine, so only use wine includes for C
 # Unfortunately, we can't use different includes for C & C++ in VS generator, so use an object library to achieve this
 target_include_directories(shlwapi BEFORE PRIVATE

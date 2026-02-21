@@ -13,8 +13,8 @@
 struct IMAGE_PART
 {
     CRect m_rcPart;
-    HBITMAP m_hbmImage;
-    BOOL m_bPartial;
+    HBITMAP m_hbmImage = NULL;
+    BOOL m_bPartial = FALSE;
 
     void clear();
 };

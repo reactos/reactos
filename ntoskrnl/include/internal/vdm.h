@@ -43,12 +43,6 @@
 #define TRAMPOLINE_BOP                                  0xFEC4C4
 
 //
-// VDM State Pointer
-//
-#define VdmState                                        \
-    (PULONG)FIXED_NTVDMSTATE_LINEAR_PC_AT
-
-//
 // VDM Event Types
 //
 typedef enum _VdmEventClass

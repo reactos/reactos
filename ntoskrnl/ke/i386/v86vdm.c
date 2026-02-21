@@ -652,7 +652,7 @@ Ke386CallBios(IN ULONG Int,
     VdmTib->Size = sizeof(VDM_TIB);
 
     /* Set a blank VDM state */
-    *VdmState = 0;
+    *KiNtVdmState = 0;
 
     /* Copy the context */
     RtlCopyMemory(&VdmTib->VdmContext, Context, ContextSize);
