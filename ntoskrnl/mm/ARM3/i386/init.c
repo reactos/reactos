@@ -245,7 +245,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
-    SIZE_T NonPagedSystemSize;
     KIRQL OldIrql;
     PMMPFN Pfn1;
     ULONG Flags;
@@ -295,42 +294,11 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
            MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
 
     //
-    // Now calculate the nonpaged system VA region, which includes the
-    // nonpaged pool expansion (above) and the system PTEs. Note that it is
-    // then aligned to a PDE boundary (4MB).
-    //
-    NonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
-    MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
-                                    NonPagedSystemSize);
-    MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
-                                    ~(PDE_MAPPED_VA - 1));
-
-    //
-    // Don't let it go below the minimum
-    //
-    if (MmNonPagedSystemStart < (PVOID)0xEB000000)
-    {
-        //
-        // This is a hard-coded limit in the Windows NT address space
-        //
-        MmNonPagedSystemStart = (PVOID)0xEB000000;
-
-        //
-        // Reduce the amount of system PTEs to reach this point
-        //
-        MmNumberOfSystemPtes = ((ULONG_PTR)MmNonPagedPoolStart -
-                                (ULONG_PTR)MmNonPagedSystemStart) >>
-                                PAGE_SHIFT;
-        MmNumberOfSystemPtes--;
-        ASSERT(MmNumberOfSystemPtes > 1000);
-    }
-
-    //
     // Check if we are in a situation where the size of the paged pool
-    // is so large that it overflows into nonpaged pool
+    // is so large that it overflows into nonpaged pool expansion VA
     //
     if (MmSizeOfPagedPoolInBytes >
-        ((ULONG_PTR)MmNonPagedSystemStart - (ULONG_PTR)MmPagedPoolStart))
+        ((ULONG_PTR)NonPagedPoolExpansionVa - (ULONG_PTR)MmPagedPoolStart))
     {
         //
         // We need some recalculations here
@@ -346,6 +314,23 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MmPfnDatabase = (PVOID)0xB0000000;
     ASSERT(((ULONG_PTR)MmPfnDatabase & (PDE_MAPPED_VA - 1)) == 0);
+
+    //
+    // Use the gap between loader mappings and PFN database for
+    //  System PTEs: place it right after the loader mappings
+    // using MmBootImageSize (LoaderPagesSpanned, PDE-aligned).
+    //
+    MmSystemPteSpaceStart = (PVOID)((ULONG_PTR)KSEG0_BASE + MmBootImageSize);
+    ASSERT(((ULONG_PTR)MmSystemPteSpaceStart & (PDE_MAPPED_VA - 1)) == 0);
+    ASSERT((ULONG_PTR)MmSystemPteSpaceStart < (ULONG_PTR)MmPfnDatabase);
+
+    /* Make sure the System PTE VA space doesn't overlap the PFN DB */
+    SIZE_T MaxSystemPtePages = ((ULONG_PTR)MmPfnDatabase -
+                            (ULONG_PTR)MmSystemPteSpaceStart) >> PAGE_SHIFT;
+    ASSERT(MaxSystemPtePages > 1000);
+
+    MmNumberOfSystemPtes = (ULONG)(MaxSystemPtePages - 1);
+    ASSERT(MmNumberOfSystemPtes > 1000);
 
     //
     // Non paged pool comes after the PFN database
@@ -368,9 +353,27 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     //
     // Now we need some pages to create the page tables for the NP system VA
-    // which includes system PTEs and expansion NP
+    // which includes the System PTE VA region (below the PFN DB)
     //
-    StartPde = MiAddressToPde(MmNonPagedSystemStart);
+    StartPde = MiAddressToPde(MmSystemPteSpaceStart);
+    EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmSystemPteSpaceStart +
+                                    ((MmNumberOfSystemPtes + 1) * PAGE_SIZE) - 1));
+    while (StartPde <= EndPde)
+    {
+        TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
+        MI_WRITE_VALID_PTE(StartPde, TempPde);
+
+        PointerPte = MiPteToAddress(StartPde);
+        RtlZeroMemory(PointerPte, PAGE_SIZE);
+
+        StartPde++;
+    }
+
+    //
+    // Now allocate the page tables for the nonpaged pool expansion VA region
+    // (top-of-kernel VA). This keeps existing nonpaged pool expansion behavior.
+    //
+    StartPde = MiAddressToPde(NonPagedPoolExpansionVa);
     EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
     while (StartPde <= EndPde)
     {
@@ -443,8 +446,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Sanity check: make sure we have properly defined the system PTE space
     //
-    ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
-           MiAddressToPte(MmNonPagedPoolExpansionStart));
+    ASSERT(((ULONG_PTR)MmSystemPteSpaceStart +
+            ((MmNumberOfSystemPtes + 1) * PAGE_SIZE)) <=
+           (ULONG_PTR)MmPfnDatabase);
 
     /* Now go ahead and initialize the nonpaged pool */
     MiInitializeNonPagedPool();
@@ -471,12 +475,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitializePool(NonPagedPool, 0);
 
     //
-    // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
+    // Initialize the System PTE allocator at the requested VA start.
     //
-    PointerPte = MiAddressToPte(MmNonPagedSystemStart);
-    MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
-                           PointerPte;
-    MmNumberOfSystemPtes--;
+    PointerPte = MiAddressToPte(MmSystemPteSpaceStart);
     DPRINT("Final System PTE count: %lu (%lu bytes)\n",
            MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
 

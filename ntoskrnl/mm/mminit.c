@@ -91,7 +91,7 @@ MiInitSystemMemoryAreas(VOID)
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
     // System PTE space
-    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
+    MiCreateArm3StaticMemoryArea(MmSystemPteSpaceStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
 
     // Nonpaged pool expansion space
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolExpansionStart, (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)MmNonPagedPoolExpansionStart, FALSE);
@@ -124,6 +124,61 @@ MiInitSystemMemoryAreas(VOID)
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
+#ifdef _M_IX86
+CODE_SEG("INIT")
+VOID
+NTAPI
+MiDbgDumpAddressSpace(VOID)
+{
+    //
+    // Print the memory layout
+    //
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            KSEG0_BASE,
+            (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
+            "Boot Loaded Image");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSystemPteSpaceStart,
+            (PVOID)((ULONG_PTR)MmSystemPteSpaceStart +
+                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE),
+            "System PTE Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmPfnDatabase,
+            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+            "PFN Database");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmNonPagedPoolStart,
+            (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
+            "ARM3 Non Paged Pool");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MiSystemViewStart,
+            (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
+            "System View Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSessionBase,
+            MiSessionSpaceEnd,
+            "Session Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PTE_BASE, PTE_TOP,
+            "Page Tables");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PDE_BASE, PDE_TOP,
+            "Page Directories");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            HYPER_SPACE, HYPER_SPACE_END,
+            "Hyperspace");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmSystemCacheStart, MmSystemCacheEnd,
+            "System Cache");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmPagedPoolStart,
+            (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
+            "ARM3 Paged Pool");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
+            "Non Paged Pool Expansion PTE Space");
+}
+#else
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -169,12 +224,15 @@ MiDbgDumpAddressSpace(VOID)
             (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
             "ARM3 Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+            MmSystemPteSpaceStart,
+            (PVOID)((ULONG_PTR)MmSystemPteSpaceStart +
+                    ((MmNumberOfSystemPtes + 1) * PAGE_SIZE)),
             "System PTE Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
             "Non Paged Pool Expansion PTE Space");
 }
+#endif
 
 CODE_SEG("INIT")
 NTSTATUS
