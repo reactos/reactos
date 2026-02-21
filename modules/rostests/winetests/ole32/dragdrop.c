@@ -72,7 +72,7 @@ struct method_call
     HRESULT set_ret;
     DWORD set_param;
 
-    int called_todo : 1;
+    BOOL called_todo;
 };
 
 const struct method_call *call_ptr;
@@ -89,7 +89,7 @@ static HRESULT check_expect_(enum method func, DWORD expect_param, DWORD *set_pa
         if (call_ptr->method == func) break;
     } while ((++call_ptr)->method != end_seq);
 
-    ok_( file, line )( expect_param == call_ptr->expect_param, "%s: unexpected param %08x expected %08x\n",
+    ok_( file, line )( expect_param == call_ptr->expect_param, "%s: unexpected param %08lx expected %08lx\n",
                        method_names[func], expect_param, call_ptr->expect_param );
     if (set_param) *set_param = call_ptr->set_param;
     hr = call_ptr->set_ret;
@@ -260,9 +260,10 @@ struct method_call call_lists[][30] =
 };
 
 static int droptarget_refs;
+static int test_reentrance;
 
 /* helper macros to make tests a bit leaner */
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error %#08lx\n", hr)
 
 static HRESULT WINAPI DropTarget_QueryInterface(IDropTarget* iface, REFIID riid,
                                                 void** ppvObject)
@@ -359,7 +360,34 @@ static HRESULT WINAPI DropSource_QueryContinueDrag(
     BOOL fEscapePressed,
     DWORD grfKeyState)
 {
-    return check_expect(DS_QueryContinueDrag, 0, NULL);
+    HRESULT hr = check_expect(DS_QueryContinueDrag, 0, NULL);
+    if (test_reentrance)
+    {
+        MSG msg;
+        BOOL r;
+        int num = 0;
+
+        HWND hwnd = GetCapture();
+        ok(hwnd != 0, "Expected capture window\n");
+
+        /* send some fake events that should be ignored */
+        r = PostMessageA(hwnd, WM_MOUSEMOVE, 0, 0);
+        r &= PostMessageA(hwnd, WM_LBUTTONDOWN, 0, 0);
+        r &= PostMessageA(hwnd, WM_LBUTTONUP, 0, 0);
+        r &= PostMessageA(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+        ok(r, "Unable to post messages\n");
+
+        /* run the message loop for this thread */
+        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+            num++;
+        }
+
+        ok(num >= 4, "Expected at least 4 messages but %d were processed\n", num);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI DropSource_GiveFeedback(
@@ -402,7 +430,7 @@ static HRESULT WINAPI EnumFORMATETC_Next(IEnumFORMATETC *iface,
     static FORMATETC format = { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     HRESULT hr = check_expect(EnumFMT_Next, 0, NULL);
 
-    ok(celt == 1, "celt = %d\n", celt);
+    ok(celt == 1, "celt = %ld\n", celt);
     ok(rgelt != NULL, "rgelt == NULL\n");
     ok(pceltFetched == NULL, "pceltFetched != NULL\n");
 
@@ -596,18 +624,18 @@ static void test_Register_Revoke(void)
     hr = RegisterDragDrop(hwnd, &DropTarget);
     ok(hr == E_OUTOFMEMORY ||
         broken(hr == CO_E_NOTINITIALIZED), /* NT4 */
-        "RegisterDragDrop without OLE initialized should have returned E_OUTOFMEMORY instead of 0x%08x\n", hr);
+        "RegisterDragDrop without OLE initialized should have returned E_OUTOFMEMORY instead of 0x%08lx\n", hr);
 
     OleInitialize(NULL);
 
     hr = RegisterDragDrop(hwnd, NULL);
-    ok(hr == E_INVALIDARG, "RegisterDragDrop with NULL IDropTarget * should return E_INVALIDARG instead of 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "RegisterDragDrop with NULL IDropTarget * should return E_INVALIDARG instead of 0x%08lx\n", hr);
 
     hr = RegisterDragDrop(NULL, &DropTarget);
-    ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
+    ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08lx\n", hr);
 
     hr = RegisterDragDrop((HWND)0xdeadbeef, &DropTarget);
-    ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with garbage hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
+    ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with garbage hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08lx\n", hr);
 
     ok(droptarget_refs == 0, "DropTarget refs should be zero not %d\n", droptarget_refs);
     hr = RegisterDragDrop(hwnd, &DropTarget);
@@ -618,7 +646,7 @@ static void test_Register_Revoke(void)
     ok(prop == &DropTarget, "expected IDropTarget pointer %p, got %p\n", &DropTarget, prop);
 
     hr = RegisterDragDrop(hwnd, &DropTarget);
-    ok(hr == DRAGDROP_E_ALREADYREGISTERED, "RegisterDragDrop with already registered hwnd should return DRAGDROP_E_ALREADYREGISTERED instead of 0x%08x\n", hr);
+    ok(hr == DRAGDROP_E_ALREADYREGISTERED, "RegisterDragDrop with already registered hwnd should return DRAGDROP_E_ALREADYREGISTERED instead of 0x%08lx\n", hr);
 
     ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
     OleUninitialize();
@@ -634,7 +662,7 @@ static void test_Register_Revoke(void)
     }
 
     hr = RevokeDragDrop(NULL);
-    ok(hr == DRAGDROP_E_INVALIDHWND, "RevokeDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
+    ok(hr == DRAGDROP_E_INVALIDHWND, "RevokeDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08lx\n", hr);
 
     DestroyWindow(hwnd);
 
@@ -646,12 +674,12 @@ static void test_Register_Revoke(void)
         NULL, NULL, NULL);
 
     hr = RegisterDragDrop(hwnd, &DropTarget);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
 
     DestroyWindow(hwnd);
 
     hr = RevokeDragDrop(hwnd);
-    ok(hr == DRAGDROP_E_INVALIDHWND, "got 0x%08x\n", hr);
+    ok(hr == DRAGDROP_E_INVALIDHWND, "got 0x%08lx\n", hr);
 
     OleUninitialize();
 }
@@ -670,48 +698,51 @@ static void test_DoDragDrop(void)
     ok(IsWindow(hwnd), "failed to create window\n");
 
     hr = OleInitialize(NULL);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
 
     hr = RegisterDragDrop(hwnd, &DropTarget);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(hr == S_OK, "got 0x%08lx\n", hr);
 
     /* incomplete arguments set */
     hr = DoDragDrop(NULL, NULL, 0, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(NULL, &DropSource, 0, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(&DataObject, NULL, 0, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(NULL, NULL, 0, &effect);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(&DataObject, &DropSource, 0, NULL);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(NULL, &DropSource, 0, &effect);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     hr = DoDragDrop(&DataObject, NULL, 0, &effect);
-    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+    ok(hr == E_INVALIDARG, "got 0x%08lx\n", hr);
 
     ShowWindow(hwnd, SW_SHOW);
     GetWindowRect(hwnd, &rect);
     ok(SetCursorPos(rect.left+50, rect.top+50), "SetCursorPos failed\n");
 
-    for (seq = 0; seq < ARRAY_SIZE(call_lists); seq++)
+    for (test_reentrance = 0; test_reentrance < 2; test_reentrance++)
     {
-        DWORD effect_in;
-        trace("%d\n", seq);
-        call_ptr = call_lists[seq];
-        effect_in = call_ptr->set_param;
-        call_ptr++;
+        for (seq = 0; seq < ARRAY_SIZE(call_lists); seq++)
+        {
+            DWORD effect_in;
+            trace("%d\n", seq);
+            call_ptr = call_lists[seq];
+            effect_in = call_ptr->set_param;
+            call_ptr++;
 
-        hr = DoDragDrop(&DataObject, &DropSource, effect_in, &effect);
-        check_expect(DoDragDrop_ret, hr, NULL);
-        check_expect(DoDragDrop_effect_out, effect, NULL);
+            hr = DoDragDrop(&DataObject, &DropSource, effect_in, &effect);
+            check_expect(DoDragDrop_ret, hr, NULL);
+            check_expect(DoDragDrop_effect_out, effect, NULL);
+        }
     }
 
     OleUninitialize();

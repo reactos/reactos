@@ -194,6 +194,15 @@ static __inline const char *wine_dbgstr_w( const WCHAR *s )
     return wine_dbgstr_wn( s, -1 );
 }
 
+#if defined(__hstring_h__) && defined(__WINSTRING_H_)
+static inline const char *wine_dbgstr_hstring( HSTRING hstr )
+{
+    UINT32 len;
+    const WCHAR *str = WindowsGetStringRawBuffer( hstr, &len );
+    return wine_dbgstr_wn( str, len );
+}
+#endif
+
 static __inline const char *wine_dbgstr_guid( const GUID *id )
 {
     if (!id) return "(null)";
@@ -388,6 +397,10 @@ static __inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_d
 static __inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 static __inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static __inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
+
+#if defined(__hstring_h__) && defined(__WINSTRING_H_)
+static inline const char *debugstr_hstring( struct HSTRING__ *s ) { return wine_dbgstr_hstring( s ); }
+#endif
 
 #if defined(__oaidl_h__) && defined(V_VT)
 static __inline const char *debugstr_vt( VARTYPE vt ) { return wine_dbgstr_vt( vt ); }

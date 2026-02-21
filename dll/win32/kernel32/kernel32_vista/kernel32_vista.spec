@@ -56,6 +56,7 @@
 @ stdcall RegisterApplicationRestart(wstr long)
 @ stdcall SetFileBandwidthReservation(ptr long long long ptr ptr)
 @ stdcall SetThreadPreferredUILanguages(long wstr ptr)
+@ stdcall CompareStringOrdinal(ptr long ptr long long)
 
 @ stdcall GetNamedPipeClientProcessId(ptr ptr)
 @ stdcall SetThreadDescription(ptr wstr) # Win 10

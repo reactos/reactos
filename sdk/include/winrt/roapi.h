@@ -9,6 +9,7 @@
 #define __ROAPI_H_
 
 #include <sal.h>
+#include <activation.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +27,33 @@ typedef enum RO_INIT_TYPE
     RO_INIT_MULTITHREADED  = 1,
 } RO_INIT_TYPE;
 
+DECLARE_HANDLE(APARTMENT_SHUTDOWN_REGISTRATION_COOKIE);
+
+#ifdef __cplusplus
+typedef struct {} *RO_REGISTRATION_COOKIE;
+#else
+typedef struct _RO_REGISTRATION_COOKIE *RO_REGISTRATION_COOKIE;
+#endif
+
+ROAPI
+_Check_return_
+HRESULT
+WINAPI
+RoActivateInstance(
+    _In_ HSTRING classid,
+    _Out_ IInspectable **instance
+);
+
+ROAPI
+_Check_return_
+HRESULT
+WINAPI
+RoGetActivationFactory(
+    _In_ HSTRING classid, 
+    _In_ REFIID iid, 
+    _Out_ void **class_factory
+);
+
 ROAPI
 _Check_return_
 HRESULT
@@ -37,6 +65,8 @@ ROAPI
 void
 WINAPI
 RoUninitialize(void);
+
+typedef HRESULT (WINAPI *PFNGETACTIVATIONFACTORY)(_In_ HSTRING classId, _Out_ IActivationFactory ** factory);
 
 #ifdef __cplusplus
 } // extern "C"

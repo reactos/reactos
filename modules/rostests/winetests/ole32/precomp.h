@@ -4,10 +4,6 @@
 
 #include <stdio.h>
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #define COBJMACROS
 #define CONST_VTABLE
 
@@ -15,6 +11,7 @@
 
 #include <winnls.h>
 #include <winreg.h>
+#include <wincon.h>
 #include <wingdi.h>
 #define USE_COM_CONTEXT_DEF
 #include <ole2.h>

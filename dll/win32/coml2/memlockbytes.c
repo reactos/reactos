@@ -24,8 +24,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -120,8 +118,8 @@ HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL global, BOOL delete_on_release,
   /*
    * Initialize the size of the array to the size of the handle.
    */
-  lockbytes->byteArraySize.u.HighPart = 0;
-  lockbytes->byteArraySize.u.LowPart  = GlobalSize(lockbytes->supportHandle);
+  lockbytes->byteArraySize.HighPart = 0;
+  lockbytes->byteArraySize.LowPart  = GlobalSize(lockbytes->supportHandle);
 
   *ret = &lockbytes->ILockBytes_iface;
 
@@ -160,22 +158,22 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* iface, HGLOBAL* phglobal)
   /* It is not our lockbytes implementation, so use a more generic way */
   hres = ILockBytes_Stat(iface,&stbuf,STATFLAG_NONAME);
   if (hres != S_OK) {
-     ERR("Cannot ILockBytes_Stat, %x\n",hres);
+     ERR("Cannot ILockBytes_Stat, %lx\n",hres);
      return hres;
   }
   TRACE("cbSize is %s\n", wine_dbgstr_longlong(stbuf.cbSize.QuadPart));
-  *phglobal = GlobalAlloc( GMEM_MOVEABLE|GMEM_SHARE, stbuf.cbSize.u.LowPart);
+  *phglobal = GlobalAlloc( GMEM_MOVEABLE|GMEM_SHARE, stbuf.cbSize.LowPart);
   if (!*phglobal)
     return E_INVALIDARG;
   memset(&start,0,sizeof(start));
-  hres = ILockBytes_ReadAt(iface, start, GlobalLock(*phglobal), stbuf.cbSize.u.LowPart, &xread);
+  hres = ILockBytes_ReadAt(iface, start, GlobalLock(*phglobal), stbuf.cbSize.LowPart, &xread);
   GlobalUnlock(*phglobal);
   if (hres != S_OK) {
-    FIXME("%p->ReadAt failed with %x\n",iface,hres);
+    FIXME("%p->ReadAt failed with %lx\n",iface,hres);
     return hres;
   }
-  if (stbuf.cbSize.u.LowPart != xread) {
-    FIXME("Read size is not requested size %d vs %d?\n",stbuf.cbSize.u.LowPart, xread);
+  if (stbuf.cbSize.LowPart != xread) {
+    FIXME("Read size is not requested size %ld vs %ld?\n",stbuf.cbSize.LowPart, xread);
   }
   return S_OK;
 }
@@ -279,15 +277,14 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
   /*
    * Make sure the offset is valid.
    */
-  if (ulOffset.u.LowPart > This->byteArraySize.u.LowPart)
+  if (ulOffset.LowPart > This->byteArraySize.LowPart)
     return E_FAIL;
 
   /*
    * Using the known size of the array, calculate the number of bytes
    * to read.
    */
-  bytesToReadFromBuffer = min(This->byteArraySize.u.LowPart -
-                              ulOffset.u.LowPart, cb);
+  bytesToReadFromBuffer = min(This->byteArraySize.LowPart - ulOffset.LowPart, cb);
 
   /*
    * Lock the buffer in position and copy the data.
@@ -295,7 +292,7 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_ReadAt(
   supportBuffer = GlobalLock(This->supportHandle);
 
   memcpy(pv,
-         (char *) supportBuffer + ulOffset.u.LowPart,
+         (char *) supportBuffer + ulOffset.LowPart,
          bytesToReadFromBuffer);
 
   /*
@@ -354,14 +351,14 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
   }
   else
   {
-    newSize.u.HighPart = 0;
-    newSize.u.LowPart = ulOffset.u.LowPart + cb;
+    newSize.HighPart = 0;
+    newSize.LowPart = ulOffset.LowPart + cb;
   }
 
   /*
    * Verify if we need to grow the stream
    */
-  if (newSize.u.LowPart > This->byteArraySize.u.LowPart)
+  if (newSize.LowPart > This->byteArraySize.LowPart)
   {
     /* grow stream */
     if (ILockBytes_SetSize(iface, newSize) == STG_E_MEDIUMFULL)
@@ -373,7 +370,7 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_WriteAt(
    */
   supportBuffer = GlobalLock(This->supportHandle);
 
-  memcpy((char *) supportBuffer + ulOffset.u.LowPart, pv, cb);
+  memcpy((char *) supportBuffer + ulOffset.LowPart, pv, cb);
 
   /*
    * Return the number of bytes written.
@@ -415,22 +412,22 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_SetSize(
   /*
    * As documented.
    */
-  if (libNewSize.u.HighPart != 0)
+  if (libNewSize.HighPart != 0)
     return STG_E_INVALIDFUNCTION;
 
-  if (This->byteArraySize.u.LowPart == libNewSize.u.LowPart)
+  if (This->byteArraySize.LowPart == libNewSize.LowPart)
     return S_OK;
 
   /*
    * Re allocate the HGlobal to fit the new size of the stream.
    */
-  supportHandle = GlobalReAlloc(This->supportHandle, libNewSize.u.LowPart, 0);
+  supportHandle = GlobalReAlloc(This->supportHandle, libNewSize.LowPart, GMEM_MOVEABLE);
 
   if (supportHandle == 0)
     return STG_E_MEDIUMFULL;
 
   This->supportHandle = supportHandle;
-  This->byteArraySize.u.LowPart = libNewSize.u.LowPart;
+  This->byteArraySize.LowPart = libNewSize.LowPart;
 
   return S_OK;
 }

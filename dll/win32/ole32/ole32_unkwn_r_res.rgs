@@ -1,0 +1,19 @@
+HKCR
+{
+    NoRemove Interface
+    {
+        '{00000000-0000-0000-C000-000000000046}' = s 'IUnknown'
+        '{00000001-0000-0000-C000-000000000046}' = s 'IClassFactory'
+        {
+            NumMethods = s 5
+            ProxyStubClsid32 = s '{00000320-0000-0000-C000-000000000046}'
+        }
+    }
+    NoRemove CLSID
+    {
+        '{00000320-0000-0000-C000-000000000046}' = s 'PSFactoryBuffer'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

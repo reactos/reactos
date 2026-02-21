@@ -247,6 +247,7 @@ typedef interface IRpcChannelBuffer IRpcChannelBuffer;
 #include <stdlib.h>
 #endif
 
+#include <combaseapi.h>
 #include <wtypes.h>
 #include <unknwn.h>
 #include <objidl.h>
@@ -280,6 +281,8 @@ typedef enum tagCOINIT
     COINIT_DISABLE_OLE1DDE    = 0x4, /* Don't use DDE for Ole1 support */
     COINIT_SPEED_OVER_MEMORY  = 0x8  /* Trade memory for speed */
 } COINIT;
+
+DECLARE_HANDLE(CO_MTA_USAGE_COOKIE);
 
 _Check_return_ HRESULT WINAPI CoInitialize(_In_opt_ LPVOID lpReserved);
 
@@ -530,6 +533,20 @@ CoLockObjectExternal(
   _In_ BOOL fLastUnlockReleases);
 
 BOOL WINAPI CoIsHandlerConnected(_In_ LPUNKNOWN pUnk);
+
+_Check_return_
+HRESULT
+WINAPI
+CoDisableCallCancellation(
+  _In_opt_ void *reserved
+);
+
+_Check_return_
+HRESULT
+WINAPI
+CoEnableCallCancellation(
+  _In_opt_ void *reserved
+);
 
 /* security */
 

@@ -24,8 +24,6 @@
 #include <string.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -128,7 +126,7 @@ static HRESULT WINAPI EnumSTATDATA_Next(IEnumSTATDATA *iface, ULONG num, LPSTATD
     DWORD count = 0;
     HRESULT hr = S_OK;
 
-    TRACE("(%d, %p, %p)\n", num, data, fetched);
+    TRACE("%p, %lu, %p, %p.\n", iface, num, data, fetched);
 
     while(num--)
     {
@@ -153,7 +151,7 @@ static HRESULT WINAPI EnumSTATDATA_Skip(IEnumSTATDATA *iface, ULONG num)
 {
     EnumSTATDATA *This = impl_from_IEnumSTATDATA(iface);
 
-    TRACE("(%d)\n", num);
+    TRACE("%p, %lu.\n", iface, num);
 
     if(This->index + num >= This->num_of_elems)
     {
@@ -309,7 +307,7 @@ static ULONG WINAPI OleAdviseHolderImpl_AddRef(IOleAdviseHolder *iface)
   OleAdviseHolderImpl *This = impl_from_IOleAdviseHolder(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)->(ref=%d)\n", This, ref - 1);
+  TRACE("%p, refcount %lu.\n", iface, ref);
 
   return ref;
 }
@@ -320,9 +318,9 @@ static ULONG WINAPI OleAdviseHolderImpl_AddRef(IOleAdviseHolder *iface)
 static ULONG WINAPI OleAdviseHolderImpl_Release(IOleAdviseHolder *iface)
 {
   OleAdviseHolderImpl *This = impl_from_IOleAdviseHolder(iface);
-  ULONG ref;
-  TRACE("(%p)->(ref=%d)\n", This, This->ref);
-  ref = InterlockedDecrement(&This->ref);
+  ULONG ref = InterlockedDecrement(&This->ref);
+
+  TRACE("%p, refcount %lu.\n", iface, ref);
 
   if (ref == 0) OleAdviseHolderImpl_Destructor(This);
 
@@ -382,7 +380,7 @@ static HRESULT WINAPI OleAdviseHolderImpl_Unadvise(IOleAdviseHolder *iface,
   OleAdviseHolderImpl *This = impl_from_IOleAdviseHolder(iface);
   DWORD index;
 
-  TRACE("(%p)->(%u)\n", This, dwConnection);
+  TRACE("%p, %lu.\n", iface, dwConnection);
 
   /* The connection number is 1 more than the index, see OleAdviseHolder_Advise */
   index = dwConnection - 1;
@@ -609,8 +607,9 @@ static HRESULT WINAPI DataAdviseHolder_QueryInterface(IDataAdviseHolder *iface,
 static ULONG WINAPI DataAdviseHolder_AddRef(IDataAdviseHolder *iface)
 {
   DataAdviseHolder *This = impl_from_IDataAdviseHolder(iface);
-  TRACE("(%p) (ref=%d)\n", This, This->ref);
-  return InterlockedIncrement(&This->ref);
+  ULONG ref = InterlockedIncrement(&This->ref);
+  TRACE("%p, refcount %lu.\n", iface, ref);
+  return ref;
 }
 
 /************************************************************************
@@ -619,10 +618,10 @@ static ULONG WINAPI DataAdviseHolder_AddRef(IDataAdviseHolder *iface)
 static ULONG WINAPI DataAdviseHolder_Release(IDataAdviseHolder *iface)
 {
   DataAdviseHolder *This = impl_from_IDataAdviseHolder(iface);
-  ULONG ref;
-  TRACE("(%p) (ref=%d)\n", This, This->ref);
+  ULONG ref = InterlockedDecrement(&This->ref);
 
-  ref = InterlockedDecrement(&This->ref);
+  TRACE("%p, refcount %lu.\n", iface, ref);
+
   if (ref==0) DataAdviseHolder_Destructor(This);
 
   return ref;
@@ -641,8 +640,7 @@ static HRESULT WINAPI DataAdviseHolder_Advise(IDataAdviseHolder *iface,
   STATDATA new_conn;
   DataAdviseHolder *This = impl_from_IDataAdviseHolder(iface);
 
-  TRACE("(%p)->(%p, %p, %08x, %p, %p)\n", This, pDataObject, pFetc, advf,
-	pAdvise, pdwConnection);
+  TRACE("%p, %p, %p, %#lx, %p, %p.\n", iface, pDataObject, pFetc, advf, pAdvise, pdwConnection);
 
   if (pdwConnection==NULL)
     return E_POINTER;
@@ -709,7 +707,8 @@ static HRESULT WINAPI DataAdviseHolder_Unadvise(IDataAdviseHolder *iface,
 {
   DataAdviseHolder *This = impl_from_IDataAdviseHolder(iface);
   DWORD index;
-  TRACE("(%p)->(%u)\n", This, dwConnection);
+
+  TRACE("%p, %lu.\n", iface, dwConnection);
 
   /* The connection number is 1 more than the index, see DataAdviseHolder_Advise */
   index = dwConnection - 1;
@@ -756,7 +755,7 @@ static HRESULT WINAPI DataAdviseHolder_SendOnDataChange(IDataAdviseHolder *iface
     IEnumSTATDATA *pEnum;
     HRESULT hr;
 
-    TRACE("(%p)->(%p, %08x, %08x)\n", iface, data_obj, dwReserved, advf);
+    TRACE("%p, %p, %#lx, %#lx.\n", iface, data_obj, dwReserved, advf);
 
     hr = IDataAdviseHolder_EnumAdvise(iface, &pEnum);
     if (SUCCEEDED(hr))
@@ -766,7 +765,7 @@ static HRESULT WINAPI DataAdviseHolder_SendOnDataChange(IDataAdviseHolder *iface
         {
             STGMEDIUM stg;
             stg.tymed = TYMED_NULL;
-            stg.u.pstg = NULL;
+            stg.pstg = NULL;
             stg.pUnkForRelease = NULL;
 
             if(!(statdata.advf & ADVF_NODATA))
