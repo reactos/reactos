@@ -1,815 +1,851 @@
-/*
-* COPYRIGHT:       See COPYING in the top level directory
-* PROJECT:         ReactOS Kernel Streaming
-* FILE:            drivers/wdm/audio/hdaudbus/fdo.cpp
-* PURPOSE:         HDA Driver Entry
-* PROGRAMMER:      Johannes Anderwald
-*/
+#include "driver.h"
+#include "nhlt.h"
+#include "sof-tplg.h"
 
-#include "hdaudbus.h"
+EVT_WDF_DEVICE_PREPARE_HARDWARE Fdo_EvtDevicePrepareHardware;
+EVT_WDF_DEVICE_RELEASE_HARDWARE Fdo_EvtDeviceReleaseHardware;
+EVT_WDF_DEVICE_D0_ENTRY Fdo_EvtDeviceD0Entry;
+EVT_WDF_DEVICE_D0_ENTRY_POST_INTERRUPTS_ENABLED Fdo_EvtDeviceD0EntryPostInterrupts;
+EVT_WDF_DEVICE_D0_EXIT Fdo_EvtDeviceD0Exit;
+EVT_WDF_DEVICE_SELF_MANAGED_IO_INIT Fdo_EvtDeviceSelfManagedIoInit;
 
-BOOLEAN
+void CheckHDAGraphicsRegistryKeys(PFDO_CONTEXT fdoCtx);
+
+NTSTATUS
 NTAPI
-HDA_InterruptService(
-    IN PKINTERRUPT  Interrupt,
-    IN PVOID  ServiceContext)
+HDAGraphicsPowerInterfaceCallback(
+    PVOID NotificationStruct,
+    PVOID Context
+);
+
+NTSTATUS
+NTAPI
+Fdo_Initialize(
+    _In_ PFDO_CONTEXT FdoCtx
+);
+
+NTSTATUS
+NTAPI
+Fdo_Create(
+	_Inout_ PWDFDEVICE_INIT DeviceInit
+)
 {
-    PDEVICE_OBJECT DeviceObject;
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG InterruptStatus;
-    UCHAR RirbStatus, CorbStatus;
+    WDF_CHILD_LIST_CONFIG      config;
+	WDF_OBJECT_ATTRIBUTES attributes;
+	WDF_PNPPOWER_EVENT_CALLBACKS pnpPowerCallbacks;
+    PFDO_CONTEXT fdoCtx;
+    WDFDEVICE wdfDevice;
+    NTSTATUS status;
 
-    /* get device extension */
-    DeviceObject = static_cast<PDEVICE_OBJECT>(ServiceContext);
-    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
-    ASSERT(DeviceExtension->IsFDO == TRUE);
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
 
-    // Check if this interrupt is ours
-    InterruptStatus = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_INTR_STATUS));
+    WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&pnpPowerCallbacks);
+    pnpPowerCallbacks.EvtDevicePrepareHardware = Fdo_EvtDevicePrepareHardware;
+    pnpPowerCallbacks.EvtDeviceReleaseHardware = Fdo_EvtDeviceReleaseHardware;
+    pnpPowerCallbacks.EvtDeviceD0Entry = Fdo_EvtDeviceD0Entry;
+    pnpPowerCallbacks.EvtDeviceD0EntryPostInterruptsEnabled = Fdo_EvtDeviceD0EntryPostInterrupts;
+    pnpPowerCallbacks.EvtDeviceD0Exit = Fdo_EvtDeviceD0Exit;
+    pnpPowerCallbacks.EvtDeviceSelfManagedIoInit = Fdo_EvtDeviceSelfManagedIoInit;
+    WdfDeviceInitSetPnpPowerEventCallbacks(DeviceInit, &pnpPowerCallbacks);
 
-    DPRINT("HDA_InterruptService %lx\n", InterruptStatus);
-    if ((InterruptStatus & INTR_STATUS_GLOBAL) == 0)
-        return FALSE;
+    //
+    // WDF_ DEVICE_LIST_CONFIG describes how the framework should handle
+    // dynamic child enumeration on behalf of the driver writer.
+    // Since we are a bus driver, we need to specify identification description
+    // for our child devices. This description will serve as the identity of our
+    // child device. Since the description is opaque to the framework, we
+    // have to provide bunch of callbacks to compare, copy, or free
+    // any other resources associated with the description.
+    //
+    WDF_CHILD_LIST_CONFIG_INIT(&config,
+        sizeof(PDO_IDENTIFICATION_DESCRIPTION),
+        Bus_EvtDeviceListCreatePdo // callback to create a child device.
+    );
 
-    // Controller or stream related?
-    if (InterruptStatus & INTR_STATUS_CONTROLLER) {
-        RirbStatus = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_STATUS);
-        CorbStatus = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_STATUS);
+    //
+    // This function pointer will be called when the framework needs to copy a
+    // identification description from one location to another.  An implementation
+    // of this function is only necessary if the description contains description
+    // relative pointer values (like  LIST_ENTRY for instance) .
+    // If set to NULL, the framework will use RtlCopyMemory to copy an identification .
+    // description. In this sample, it's not required to provide these callbacks.
+    // they are added just for illustration.
+    //
+    config.EvtChildListIdentificationDescriptionDuplicate =
+        Bus_EvtChildListIdentificationDescriptionDuplicate;
 
-        // Check for incoming responses
-        if (RirbStatus) {
-            WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_STATUS, RirbStatus);
+    //
+    // This function pointer will be called when the framework needs to compare
+    // two identificaiton descriptions.  If left NULL a call to RtlCompareMemory
+    // will be used to compare two identificaiton descriptions.
+    //
+    config.EvtChildListIdentificationDescriptionCompare =
+        Bus_EvtChildListIdentificationDescriptionCompare;
+    //
+    // This function pointer will be called when the framework needs to free a
+    // identification description.  An implementation of this function is only
+    // necessary if the description contains dynamically allocated memory
+    // (by the driver writer) that needs to be freed. The actual identification
+    // description pointer itself will be freed by the framework.
+    //
+    config.EvtChildListIdentificationDescriptionCleanup =
+        Bus_EvtChildListIdentificationDescriptionCleanup;
 
-            if (DeviceExtension->RirbLength == 0)
-            {
-                /* HACK: spurious interrupt */
-                return FALSE;
+    //
+    // Tell the framework to use the built-in childlist to track the state
+    // of the device based on the configuration we just created.
+    //
+    WdfFdoInitSetDefaultChildListConfig(DeviceInit,
+        &config,
+        WDF_NO_OBJECT_ATTRIBUTES);
+
+    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attributes, FDO_CONTEXT);
+    status = WdfDeviceCreate(&DeviceInit, &attributes, &wdfDevice);
+    if (!NT_SUCCESS(status)) {
+        SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT,
+            "WdfDriverCreate failed %x\n", status);
+        goto Exit;
+    }
+
+    /*{
+        WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS IdleSettings;
+
+        WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS_INIT(&IdleSettings, IdleCannotWakeFromS0);
+        IdleSettings.IdleTimeoutType = SystemManagedIdleTimeoutWithHint;
+        IdleSettings.IdleTimeout = 1000;
+        IdleSettings.UserControlOfIdleSettings = IdleDoNotAllowUserControl;
+
+        WdfDeviceAssignS0IdleSettings(wdfDevice, &IdleSettings);
+    }*/
+
+    {
+        WDF_DEVICE_STATE deviceState;
+        WDF_DEVICE_STATE_INIT(&deviceState);
+
+        deviceState.NotDisableable = WdfFalse;
+        WdfDeviceSetDeviceState(wdfDevice, &deviceState);
+    }
+
+    fdoCtx = Fdo_GetContext(wdfDevice);
+    fdoCtx->WdfDevice = wdfDevice;
+
+    status = Fdo_Initialize(fdoCtx);
+    if (!NT_SUCCESS(status))
+    {
+        goto Exit;
+    }
+
+    CheckHDAGraphicsRegistryKeys(fdoCtx);
+
+Exit:
+    return status;
+}
+
+NTSTATUS
+NTAPI
+Fdo_Initialize(
+    _In_ PFDO_CONTEXT FdoCtx
+)
+{
+    NTSTATUS status;
+    WDFDEVICE device;
+    WDF_INTERRUPT_CONFIG interruptConfig;
+
+    device = FdoCtx->WdfDevice;
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
+
+    //
+    // Create an interrupt object for hardware notifications
+    //
+    WDF_INTERRUPT_CONFIG_INIT(
+        &interruptConfig,
+        hda_interrupt,
+        hda_dpc);
+
+    status = WdfInterruptCreate(
+        device,
+        &interruptConfig,
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &FdoCtx->Interrupt);
+
+    if (!NT_SUCCESS(status))
+    {
+        SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_PNP,
+            "Error creating WDF interrupt object - %!STATUS!",
+            status);
+
+        return status;
+    }
+    
+
+    status = WdfWaitLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &FdoCtx->GraphicsDevicesCollectionWaitLock);
+    if (!NT_SUCCESS(status))
+    {
+        SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_PNP,
+            "Error creating WDF wait lock - %!STATUS!",
+            status);
+
+        return status;
+    }
+    
+    status = WdfCollectionCreate(WDF_NO_OBJECT_ATTRIBUTES, &FdoCtx->GraphicsDevicesCollection);
+
+    if (!NT_SUCCESS(status))
+    {
+        SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_PNP,
+            "Error creating WDF collection - %!STATUS!",
+            status);
+        
+        return status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+Fdo_EvtDevicePrepareHardware(
+    _In_ WDFDEVICE Device,
+    _In_ WDFCMRESLIST ResourcesRaw,
+    _In_ WDFCMRESLIST ResourcesTranslated
+)
+{
+    UNREFERENCED_PARAMETER(ResourcesRaw);
+
+    BOOLEAN fBar0Found = FALSE;
+    BOOLEAN fBar4Found = FALSE;
+    NTSTATUS status;
+    PFDO_CONTEXT fdoCtx;
+    ULONG resourceCount;
+
+    fdoCtx = Fdo_GetContext(Device);
+    resourceCount = WdfCmResourceListGetCount(ResourcesTranslated);
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
+
+    status = WdfFdoQueryForInterface(Device, &GUID_BUS_INTERFACE_STANDARD, (PINTERFACE)&fdoCtx->BusInterface, sizeof(BUS_INTERFACE_STANDARD), PCI_BUS_INTERFACE_STANDARD_VERSION, NULL);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    for (ULONG i = 0; i < resourceCount; i++)
+    {
+        PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
+
+        pDescriptor = WdfCmResourceListGetDescriptor(
+            ResourcesTranslated, i);
+
+        switch (pDescriptor->Type)
+        {
+        case CmResourceTypeMemory:
+            //Look for BAR0 and BAR4
+            if (fBar0Found == FALSE) {
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found BAR0: 0x%llx (size 0x%lx)\n", pDescriptor->u.Memory.Start.QuadPart, pDescriptor->u.Memory.Length);
+
+                fdoCtx->m_BAR0.Base.Base = MmMapIoSpace(pDescriptor->u.Memory.Start, pDescriptor->u.Memory.Length, MmNonCached);
+                fdoCtx->m_BAR0.Len = pDescriptor->u.Memory.Length;
+
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Mapped to %p\n", fdoCtx->m_BAR0.Base.baseptr);
+                fBar0Found = TRUE;
             }
+            else if (fBar4Found == FALSE) {
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found BAR4: 0x%llx (size 0x%lx)\n", pDescriptor->u.Memory.Start.QuadPart, pDescriptor->u.Memory.Length);
 
-            if ((RirbStatus & RIRB_STATUS_RESPONSE) != 0) {
-                IoRequestDpc(DeviceObject, NULL, NULL);
+                //BAR4 is an optional ADSP memory mapping
+                fdoCtx->m_BAR4.Base.Base = MmMapIoSpace(pDescriptor->u.Memory.Start, pDescriptor->u.Memory.Length, MmNonCached);
+                fdoCtx->m_BAR4.Len = pDescriptor->u.Memory.Length;
+
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Mapped to %p\n", fdoCtx->m_BAR4.Base.baseptr);
+                fBar4Found = TRUE;
             }
-
-            if ((RirbStatus & RIRB_STATUS_OVERRUN) != 0)
-                DPRINT1("hda: RIRB Overflow\n");
-        }
-
-        // Check for sending errors
-        if (CorbStatus) {
-            WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_STATUS, CorbStatus);
-
-            if ((CorbStatus & CORB_STATUS_MEMORY_ERROR) != 0)
-                DPRINT1("hda: CORB Memory Error!\n");
+            break;
         }
     }
-#if 0
-    if ((intrStatus & INTR_STATUS_STREAM_MASK) != 0) {
-        for (uint32 index = 0; index < HDA_MAX_STREAMS; index++) {
-            if ((intrStatus & (1 << index)) != 0) {
-                if (controller->streams[index]) {
-                    if (stream_handle_interrupt(controller,
-                        controller->streams[index], index)) {
-                        handled = B_INVOKE_SCHEDULER;
+
+    if (fdoCtx->m_BAR0.Base.Base == NULL) {
+        status = STATUS_NOT_FOUND; //BAR0 is required
+        return status;
+    }
+
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->venId, FIELD_OFFSET(PCI_COMMON_HEADER, VendorID), sizeof(UINT16));
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->devId, FIELD_OFFSET(PCI_COMMON_HEADER, DeviceID), sizeof(UINT16));
+    fdoCtx->BusInterface.GetBusData(fdoCtx->BusInterface.Context, PCI_WHICHSPACE_CONFIG, &fdoCtx->revId, FIELD_OFFSET(PCI_COMMON_HEADER, RevisionID), sizeof(UINT8));
+
+    //mlcap & lctl (hda_intel_init_chip)
+    if (fdoCtx->venId == VEN_INTEL) {
+        //read bus capabilities
+
+        unsigned int cur_cap;
+        unsigned int offset;
+        unsigned int counter = 0;
+
+        offset = hda_read16(fdoCtx, LLCH);
+
+#define HDAC_MAX_CAPS 10
+
+        /* Lets walk the linked capabilities list */
+        do {
+            cur_cap = read32(fdoCtx->m_BAR0.Base.baseptr + offset);
+
+            SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                "Capability version: 0x%x\n",
+                (cur_cap & HDA_CAP_HDR_VER_MASK) >> HDA_CAP_HDR_VER_OFF);
+
+            SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                "HDA capability ID: 0x%x\n",
+                (cur_cap & HDA_CAP_HDR_ID_MASK) >> HDA_CAP_HDR_ID_OFF);
+
+            if (cur_cap == (unsigned int)-1) {
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Invalid capability reg read\n");
+                break;
+            }
+
+            switch ((cur_cap & HDA_CAP_HDR_ID_MASK) >> HDA_CAP_HDR_ID_OFF) {
+            case HDA_ML_CAP_ID:
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found ML capability\n");
+                fdoCtx->mlcap = fdoCtx->m_BAR0.Base.baseptr + offset;
+                break;
+
+            case HDA_GTS_CAP_ID:
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found GTS capability offset=%x\n", offset);
+                break;
+
+            case HDA_PP_CAP_ID:
+                /* PP capability found, the Audio DSP is present */
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found PP capability offset=%x\n", offset);
+                fdoCtx->ppcap = fdoCtx->m_BAR0.Base.baseptr + offset;
+                break;
+
+            case HDA_SPB_CAP_ID:
+                /* SPIB capability found, handler function */
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found SPB capability\n");
+                fdoCtx->spbcap = fdoCtx->m_BAR0.Base.baseptr + offset;
+                break;
+
+            case HDA_DRSM_CAP_ID:
+                /* DMA resume  capability found, handler function */
+                SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                    "Found DRSM capability\n");
+                break;
+
+            default:
+                SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Unknown capability %d\n", cur_cap);
+                cur_cap = 0;
+                break;
+            }
+
+            counter++;
+
+            if (counter > HDAC_MAX_CAPS) {
+                SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "We exceeded HDAC capabilities!!!\n");
+                break;
+            }
+
+            /* read the offset of next capability */
+            offset = cur_cap & HDA_CAP_HDR_NXT_PTR_MASK;
+
+        } while (offset);
+    }
+
+    status = GetHDACapabilities(fdoCtx);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    fdoCtx->streams = (PHDAC_STREAM)ExAllocatePoolZero(NonPagedPool, sizeof(HDAC_STREAM) * fdoCtx->numStreams, SKLHDAUDBUS_POOL_TAG);
+    if (!fdoCtx->streams) {
+        return STATUS_NO_MEMORY;
+    }
+
+    PHYSICAL_ADDRESS maxAddr;
+    maxAddr.QuadPart = fdoCtx->is64BitOK ? MAXULONG64 : MAXULONG32;
+
+    fdoCtx->posbuf = MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
+    if (!fdoCtx->posbuf) {
+        return STATUS_NO_MEMORY;
+    }
+
+    RtlZeroMemory(fdoCtx->posbuf, PAGE_SIZE);
+
+    fdoCtx->rb = (UINT8 *)MmAllocateContiguousMemory(PAGE_SIZE, maxAddr);
+    if (!fdoCtx->rb) {
+        return STATUS_NO_MEMORY;
+    }
+
+    RtlZeroMemory(fdoCtx->rb, PAGE_SIZE);
+
+    //Init Streams
+    {
+        UINT8 i;
+        UINT8 streamTags[2] = { 0, 0 };
+
+        for (i = 0; i < fdoCtx->numStreams; i++) {
+            int isCapture = (i >= fdoCtx->captureIndexOff &&
+                i < fdoCtx->captureIndexOff + fdoCtx->captureStreams);
+            /* stream tag must be unique throughout
+             * the stream direction group,
+             * valid values 1...15
+             * use separate stream tag
+             */
+            UINT8 tag = ++streamTags[isCapture];
+
+            {
+                UINT64 idx = i;
+
+                PHDAC_STREAM stream = &fdoCtx->streams[i];
+                stream->FdoContext = fdoCtx;
+                /* offset: SDI0=0x80, SDI1=0xa0, ... SDO3=0x160 */
+                stream->sdAddr = fdoCtx->m_BAR0.Base.baseptr + (0x20 * idx + 0x80);
+                /* int mask: SDI0=0x01, SDI1=0x02, ... SDO3=0x80 */
+                stream->int_sta_mask = 1 << i;
+                stream->idx = i;
+                if (fdoCtx->venId == VEN_INTEL)
+                    stream->streamTag = tag;
+                else
+                    stream->streamTag = i + 1;
+
+                stream->posbuf = (UINT32 *)(((UINT8 *)fdoCtx->posbuf) + (idx * 8));
+
+                stream->spib_addr = NULL;
+                if (fdoCtx->spbcap) {
+                    stream->spib_addr = fdoCtx->spbcap + HDA_SPB_BASE + (HDA_SPB_INTERVAL * idx) + HDA_SPB_SPIB;
+                }
+
+                stream->bdl = (PHDAC_BDLENTRY)MmAllocateContiguousMemory(BDL_SIZE, maxAddr);
+                if (stream->bdl) {
+                    RtlZeroMemory(stream->bdl, BDL_SIZE);
+                }
+            }
+
+            SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+                "Stream tag (idx %d): %d\n", i, tag);
+        }
+    }
+
+    fdoCtx->nhlt = NULL;
+    fdoCtx->nhltSz = 0;
+
+    { //Check NHLT for Intel SST
+        NTSTATUS status2 = NHLTCheckSupported(Device);
+        if (NT_SUCCESS(status2)) {
+            UINT64 nhltAddr;
+            UINT64 nhltSz;
+
+            status2 = NHLTQueryTableAddress(Device, &nhltAddr, &nhltSz);
+
+            if (NT_SUCCESS(status2)) {
+                PHYSICAL_ADDRESS nhltBaseAddr;
+                nhltBaseAddr.QuadPart = nhltAddr;
+
+                if (nhltAddr != 0 && nhltSz != 0) {
+                    fdoCtx->nhlt = MmMapIoSpace(nhltBaseAddr, nhltSz, MmCached);
+                    if (!fdoCtx->nhlt) {
+                        return STATUS_NO_MEMORY;
                     }
+                    fdoCtx->nhltSz = nhltSz;
                 }
-                else {
-                    dprintf("hda: Stream interrupt for unconfigured stream "
-                        "%ld!\n", index);
+            }
+        }
+    }
+
+    fdoCtx->sofTplg = NULL;
+    fdoCtx->sofTplgSz = 0;
+
+    { //Check topology for Intel SOF
+        SOF_TPLG sofTplg = { 0 };
+        NTSTATUS status2 = GetSOFTplg(Device, &sofTplg);
+        if (NT_SUCCESS(status2) && sofTplg.magic == SOFTPLG_MAGIC) {
+            fdoCtx->sofTplg = ExAllocatePoolUninitialized(NonPagedPool, sofTplg.length, SKLHDAUDBUS_POOL_TAG);
+            RtlCopyMemory(fdoCtx->sofTplg, &sofTplg, sofTplg.length);
+            fdoCtx->sofTplgSz = sofTplg.length;
+        }
+    }
+
+    status = STATUS_SUCCESS;
+
+    return status;
+}
+
+NTSTATUS
+NTAPI
+Fdo_EvtDeviceReleaseHardware(
+    _In_ WDFDEVICE Device,
+    _In_ WDFCMRESLIST ResourcesTranslated
+)
+{
+    PFDO_CONTEXT fdoCtx;
+
+    UNREFERENCED_PARAMETER(ResourcesTranslated);
+
+    fdoCtx = Fdo_GetContext(Device);
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
+
+    if (fdoCtx->GraphicsDevicesCollection) {
+        for (ULONG i = 0; i < WdfCollectionGetCount(fdoCtx->GraphicsDevicesCollection); i++) {
+            WDFIOTARGET ioTarget = (WDFIOTARGET)WdfCollectionGetItem(fdoCtx->GraphicsDevicesCollection, i);
+            PGRAPHICSIOTARGET_CONTEXT ioTargetContext = GraphicsIoTarget_GetContext(ioTarget);
+
+            if (ioTargetContext->graphicsPowerRegisterOutput.DeviceHandle && ioTargetContext->graphicsPowerRegisterOutput.UnregisterCb) {
+                NTSTATUS status = ioTargetContext->graphicsPowerRegisterOutput.UnregisterCb(ioTargetContext->graphicsPowerRegisterOutput.DeviceHandle, fdoCtx);
+                if (!NT_SUCCESS(status)) {
+                    SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Warning: unregister failed with status 0x%x\n", status);
                 }
+            }
+        }
+    }
+
+    if (fdoCtx->GraphicsNotificationHandle) {
+        IoUnregisterPlugPlayNotification(fdoCtx->GraphicsNotificationHandle);
+    }
+
+    if (fdoCtx->nhlt) {
+        MmUnmapIoSpace(fdoCtx->nhlt, fdoCtx->nhltSz);
+        fdoCtx->nhlt = NULL;
+    }
+
+    if (fdoCtx->sofTplg)
+        ExFreePoolWithTag(fdoCtx->sofTplg, SKLHDAUDBUS_POOL_TAG);
+
+    if (fdoCtx->posbuf)
+        MmFreeContiguousMemory(fdoCtx->posbuf);
+    if (fdoCtx->rb)
+        MmFreeContiguousMemory(fdoCtx->rb);
+
+    if (fdoCtx->streams) {
+        for (UINT32 i = 0; i < fdoCtx->numStreams; i++) {
+            PHDAC_STREAM stream = &fdoCtx->streams[i];
+            if (stream->bdl) {
+                MmFreeContiguousMemory(stream->bdl);
+                stream->bdl = NULL;
+            }
+        }
+
+        ExFreePoolWithTag(fdoCtx->streams, SKLHDAUDBUS_POOL_TAG);
+    }
+
+    if (fdoCtx->m_BAR0.Base.Base) {
+        MmUnmapIoSpace(fdoCtx->m_BAR0.Base.Base, fdoCtx->m_BAR0.Len);
+        fdoCtx->m_BAR0.Base.Base = NULL;
+    }
+    if (fdoCtx->m_BAR4.Base.Base) {
+        MmUnmapIoSpace(fdoCtx->m_BAR4.Base.Base, fdoCtx->m_BAR4.Len);
+        fdoCtx->m_BAR4.Base.Base = NULL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+#define ENABLE_HDA 1
+
+NTSTATUS
+NTAPI
+Fdo_EvtDeviceD0Entry(
+    _In_ WDFDEVICE Device,
+    _In_ WDF_POWER_DEVICE_STATE PreviousState
+)
+{
+    UNREFERENCED_PARAMETER(PreviousState);
+
+    NTSTATUS status;
+    PFDO_CONTEXT fdoCtx;
+
+    fdoCtx = Fdo_GetContext(Device);
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
+
+    status = STATUS_SUCCESS;
+
+    if (fdoCtx->venId == VEN_INTEL) {
+        UINT32 val;
+        pci_read_cfg_dword(&fdoCtx->BusInterface, INTEL_HDA_CGCTL, &val);
+        val = val & ~INTEL_HDA_CGCTL_MISCBDCGE;
+        pci_write_cfg_dword(&fdoCtx->BusInterface, INTEL_HDA_CGCTL, val);
+    }
+    else if (fdoCtx->venId == VEN_AMD || fdoCtx->venId == VEN_ATI) {
+        update_pci_byte(&fdoCtx->BusInterface, ATI_SB450_HDAUDIO_MISC_CNTR2_ADDR, 0x07, ATI_SB450_HDAUDIO_ENABLE_SNOOP);
+    }
+    else if (fdoCtx->venId == VEN_NVIDIA) {
+        update_pci_byte(&fdoCtx->BusInterface, NVIDIA_HDA_TRANSREG_ADDR, 0x0f, NVIDIA_HDA_ENABLE_COHBIT);
+        update_pci_byte(&fdoCtx->BusInterface, NVIDIA_HDA_ISTRM_COH, 0x01, NVIDIA_HDA_ENABLE_COHBIT);
+        update_pci_byte(&fdoCtx->BusInterface, NVIDIA_HDA_OSTRM_COH, 0x01, NVIDIA_HDA_ENABLE_COHBIT);
+    }
+
+    //Reset CORB / RIRB
+    RtlZeroMemory(&fdoCtx->corb, sizeof(fdoCtx->corb));
+    RtlZeroMemory(&fdoCtx->rirb, sizeof(fdoCtx->rirb));
+    fdoCtx->processRirb = FALSE;
+
+    status = StartHDAController(fdoCtx);
+
+    if (fdoCtx->venId == VEN_INTEL) {
+        UINT32 val;
+        pci_read_cfg_dword(&fdoCtx->BusInterface, INTEL_HDA_CGCTL, &val);
+        val = val | INTEL_HDA_CGCTL_MISCBDCGE;
+        pci_write_cfg_dword(&fdoCtx->BusInterface, INTEL_HDA_CGCTL, val);
+
+        hda_update32(fdoCtx, VS_EM2, HDA_VS_EM2_DUM, HDA_VS_EM2_DUM);
+    }
+
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "hda bus initialized\n");
+
+    return status;
+}
+
+NTSTATUS
+NTAPI
+Fdo_EvtDeviceD0EntryPostInterrupts(
+    _In_ WDFDEVICE Device,
+    _In_ WDF_POWER_DEVICE_STATE PreviousState
+)
+{
+    UNREFERENCED_PARAMETER(PreviousState);
+
+    NTSTATUS status;
+    PFDO_CONTEXT fdoCtx;
+
+    status = STATUS_SUCCESS;
+    fdoCtx = Fdo_GetContext(Device);
+
+#if ENABLE_HDA
+    for (UINT8 addr = 0; addr < HDA_MAX_CODECS; addr++) {
+        KeInitializeEvent(&fdoCtx->rirb.xferEvent[addr], NotificationEvent, FALSE);
+        if (((fdoCtx->codecMask >> addr) & 0x1) == 0)
+            continue;
+
+        if (fdoCtx->UseSGPCCodec && fdoCtx->GraphicsCodecAddress == addr)
+            continue;
+
+        UINT32 cmdTmpl = (addr << 28) | (AC_NODE_ROOT << 20) |
+            (AC_VERB_PARAMETERS << 8);
+
+        ULONG vendorDevice;
+        if (!NT_SUCCESS(RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_VENDOR_ID, &vendorDevice))) { //Some codecs might need a kickstart
+            //First attempt failed. Retry
+            NTSTATUS status2 = RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_VENDOR_ID, &vendorDevice); //If this fails, something is wrong.
+            if (!NT_SUCCESS(status2)) {
+                SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_INIT, "Warning: Failed to wake up codec %d: 0x%x", addr, status2);
             }
         }
     }
 #endif
-    return TRUE;
-}
 
-VOID
-NTAPI
-HDA_DpcForIsr(
-    _In_ PKDPC Dpc,
-    _In_opt_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp,
-    _In_opt_ PVOID Context)
-{
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG Response, ResponseFlags, Cad;
-    USHORT WritePos;
-    PHDA_CODEC_ENTRY Codec;
-
-    /* get device extension */
-    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
-    ASSERT(DeviceExtension->IsFDO == TRUE);
-
-    WritePos = (READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) + 1) % DeviceExtension->RirbLength;
-
-    for (; DeviceExtension->RirbReadPos != WritePos; DeviceExtension->RirbReadPos = (DeviceExtension->RirbReadPos + 1) % DeviceExtension->RirbLength)
-    {
-        Response = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].response;
-        ResponseFlags = DeviceExtension->RirbBase[DeviceExtension->RirbReadPos].flags;
-        Cad = ResponseFlags & RESPONSE_FLAGS_CODEC_MASK;
-        DPRINT1("Response %lx ResponseFlags %lx Cad %lx\n", Response, ResponseFlags, Cad);
-
-        /* get codec */
-        Codec = DeviceExtension->Codecs[Cad];
-        if (Codec == NULL)
-        {
-            DPRINT1("hda: response for unknown codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
-            continue;
-        }
-
-        /* check response count */
-        if (Codec->ResponseCount >= MAX_CODEC_RESPONSES)
-        {
-            DPRINT1("too many responses for codec %x Response %x ResponseFlags %x\n", Cad, Response, ResponseFlags);
-            continue;
-        }
-
-        // FIXME handle unsolicited responses
-        ASSERT((ResponseFlags & RESPONSE_FLAGS_UNSOLICITED) == 0);
-
-        /* store response */
-        Codec->Responses[Codec->ResponseCount] = Response;
-        Codec->ResponseCount++;
-        KeReleaseSemaphore(&Codec->ResponseSemaphore, IO_NO_INCREMENT, 1, FALSE);
-    }
-}
-
-
-NTSTATUS
-HDA_SendVerbs(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PHDA_CODEC_ENTRY Codec,
-    IN PULONG Verbs,
-    OUT PULONG Responses,
-    IN ULONG Count)
-{
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG Sent = 0, ReadPosition, WritePosition, Queued;
-
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(DeviceExtension->IsFDO);
-
-    /* reset response count */
-    Codec->ResponseCount = 0;
-
-    while (Sent < Count) {
-        ReadPosition = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
-
-        Queued = 0;
-
-        while (Sent < Count) {
-            WritePosition = (DeviceExtension->CorbWritePos + 1) % DeviceExtension->CorbLength;
-
-            if (WritePosition == ReadPosition) {
-                // There is no space left in the ring buffer; execute the
-                // queued commands and wait until
-                break;
-            }
-
-            DeviceExtension->CorbBase[WritePosition] = Verbs[Sent++];
-            DeviceExtension->CorbWritePos = WritePosition;
-            Queued++;
-        }
-
-        WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), DeviceExtension->CorbWritePos);
-    }
-
-    while (Queued--)
-    {
-        LARGE_INTEGER Timeout;
-        Timeout.QuadPart = -1000LL * 10000; // 1 sec
-
-        NTSTATUS waitStatus = KeWaitForSingleObject(&Codec->ResponseSemaphore,
-                                                    Executive,
-                                                    KernelMode,
-                                                    FALSE,
-                                                    &Timeout);
-
-        if (waitStatus == STATUS_TIMEOUT)
-        {
-            DPRINT1("HDA_SendVerbs: timeout! Queued: %u\n", Queued);
-            return STATUS_INVALID_DEVICE_REQUEST;
-        }
-    }
-
-    if (Responses != NULL) {
-        memcpy(Responses, Codec->Responses, Codec->ResponseCount * sizeof(ULONG));
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-HDA_InitCodec(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG codecAddress)
-{
-    PHDA_CODEC_ENTRY Entry;
-    ULONG verbs[3];
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    CODEC_RESPONSE Response;
-    ULONG NodeId, GroupType;
-    NTSTATUS Status;
-    PHDA_CODEC_AUDIO_GROUP AudioGroup;
-    PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
-
-    /* lets allocate the entry */
-    Entry = (PHDA_CODEC_ENTRY)AllocateItem(NonPagedPool, sizeof(HDA_CODEC_ENTRY));
-    if (!Entry)
-    {
-        DPRINT1("hda: failed to allocate memory\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* init codec */
-    Entry->Addr = codecAddress;
-    KeInitializeSemaphore(&Entry->ResponseSemaphore, 0, MAX_CODEC_RESPONSES);
-
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    /* store codec */
-    DeviceExtension->Codecs[codecAddress] = Entry;
-
-    verbs[0] = MAKE_VERB(codecAddress, 0, VID_GET_PARAMETER, PID_VENDOR_ID);
-    verbs[1] = MAKE_VERB(codecAddress, 0, VID_GET_PARAMETER, PID_REVISION_ID);
-    verbs[2] = MAKE_VERB(codecAddress, 0, VID_GET_PARAMETER, PID_SUB_NODE_COUNT);
-
-    /* get basic info */
-    Status = HDA_SendVerbs(DeviceObject, Entry, verbs, (PULONG)&Response, 3);
-    if (!NT_SUCCESS(Status))
-    {
-        FreeItem(Entry);
-        DeviceExtension->Codecs[codecAddress] = NULL;
-        return Status;
-    }
-
-    /* store codec details */
-    Entry->Major = Response.major;
-    Entry->Minor = Response.minor;
-    Entry->ProductId = Response.device;
-    Entry->Revision = Response.revision;
-    Entry->Stepping = Response.stepping;
-    Entry->VendorId = Response.vendor;
-
-    DPRINT1("hda Codec %ld Vendor: %04lx Product: %04lx, Revision: %lu.%lu.%lu.%lu NodeStart %u NodeCount %u \n", codecAddress, Response.vendor,
-        Response.device, Response.major, Response.minor, Response.revision, Response.stepping, Response.start, Response.count);
-
-    for (NodeId = Response.start; NodeId < Response.start + Response.count; NodeId++) {
-
-        /* get function type */
-        verbs[0] = MAKE_VERB(codecAddress, NodeId, VID_GET_PARAMETER, PID_FUNCTION_GROUP_TYPE);
-
-        Status = HDA_SendVerbs(DeviceObject, Entry, verbs, &GroupType, 1);
-        DPRINT1("Status %x NodeId %u GroupType %x\n", Status, NodeId, GroupType);
-
-
-        if (NT_SUCCESS(Status) &&
-            (GroupType & FUNCTION_GROUP_NODETYPE_MASK) == FUNCTION_GROUP_NODETYPE_AUDIO)
-        {
-            if (Entry->AudioGroupCount >= HDA_MAX_AUDIO_GROUPS)
-            {
-                DPRINT1("Too many audio groups in node %u. Skipping.\n", NodeId);
-                break;
-            }
-
-            AudioGroup = (PHDA_CODEC_AUDIO_GROUP)AllocateItem(NonPagedPool, sizeof(HDA_CODEC_AUDIO_GROUP));
-            if (!AudioGroup)
-            {
-                DPRINT1("hda: insufficient memory\n");
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            /* init audio group */
-            AudioGroup->NodeId = NodeId;
-            AudioGroup->FunctionGroup = FUNCTION_GROUP_NODETYPE_AUDIO;
-
-            // Found an Audio Function Group!
-            DPRINT1("NodeId %x found an audio function group!\n", NodeId);
-
-            Status = IoCreateDevice(DeviceObject->DriverObject, sizeof(HDA_PDO_DEVICE_EXTENSION), NULL, FILE_DEVICE_SOUND, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &AudioGroup->ChildPDO);
-            if (!NT_SUCCESS(Status))
-            {
-                FreeItem(AudioGroup);
-                DPRINT1("hda failed to create device object %x\n", Status);
-                return Status;
-            }
-
-            /* init child pdo*/
-            ChildDeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)AudioGroup->ChildPDO->DeviceExtension;
-            ChildDeviceExtension->IsFDO = FALSE;
-            ChildDeviceExtension->ReportedMissing = FALSE;
-            ChildDeviceExtension->Codec = Entry;
-            ChildDeviceExtension->AudioGroup = AudioGroup;
-            ChildDeviceExtension->FDO = DeviceObject;
-
-            /* setup flags */
-            AudioGroup->ChildPDO->Flags |= DO_POWER_PAGABLE;
-            AudioGroup->ChildPDO->Flags &= ~DO_DEVICE_INITIALIZING;
-
-            /* add audio group*/
-            Entry->AudioGroups[Entry->AudioGroupCount] = AudioGroup;
-            Entry->AudioGroupCount++;
-        }
-    }
-    return STATUS_SUCCESS;
-
+    return status;
 }
 
 NTSTATUS
 NTAPI
-HDA_InitCorbRirbPos(
-    IN PDEVICE_OBJECT DeviceObject)
+Fdo_EvtDeviceD0Exit(
+    _In_ WDFDEVICE Device,
+    _In_ WDF_POWER_DEVICE_STATE TargetState
+)
 {
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    UCHAR corbSize, value, rirbSize;
-    PHYSICAL_ADDRESS HighestPhysicalAddress, CorbPhysicalAddress;
-    ULONG Index;
-    USHORT corbReadPointer, rirbWritePointer, interruptValue, corbControl, rirbControl;
+    UNREFERENCED_PARAMETER(TargetState);
 
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    NTSTATUS status;
+    PFDO_CONTEXT fdoCtx;
 
-    // Determine and set size of CORB
-    corbSize = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE);
-    if ((corbSize & CORB_SIZE_CAP_256_ENTRIES) != 0) {
-        DeviceExtension->CorbLength = 256;
+    fdoCtx = Fdo_GetContext(Device);
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_256_ENTRIES);
-    }
-    else if (corbSize & CORB_SIZE_CAP_16_ENTRIES) {
-        DeviceExtension->CorbLength = 16;
+    status = StopHDAController(fdoCtx);
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_16_ENTRIES);
-    }
-    else if (corbSize & CORB_SIZE_CAP_2_ENTRIES) {
-        DeviceExtension->CorbLength = 2;
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "%s\n", __func__);
 
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE) & ~HDAC_CORB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_SIZE, value | CORB_SIZE_2_ENTRIES);
-    }
-
-    // Determine and set size of RIRB
-    rirbSize = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE);
-    if (rirbSize & RIRB_SIZE_CAP_256_ENTRIES) {
-        DeviceExtension->RirbLength = 256;
-
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_256_ENTRIES);
-    }
-    else if (rirbSize & RIRB_SIZE_CAP_16_ENTRIES) {
-        DeviceExtension->RirbLength = 16;
-
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_16_ENTRIES);
-    }
-    else if (rirbSize & RIRB_SIZE_CAP_2_ENTRIES) {
-        DeviceExtension->RirbLength = 2;
-
-        value = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE) & ~HDAC_RIRB_SIZE_MASK;
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_SIZE, value | RIRB_SIZE_2_ENTRIES);
-    }
-
-    /* init corb */
-    HighestPhysicalAddress.QuadPart = 0x00000000FFFFFFFF;
-    DeviceExtension->CorbBase = (PULONG)MmAllocateContiguousMemory(PAGE_SIZE * 3, HighestPhysicalAddress);
-    ASSERT(DeviceExtension->CorbBase != NULL);
-
-    // FIXME align rirb 128bytes
-    ASSERT(DeviceExtension->CorbLength == 256);
-    ASSERT(DeviceExtension->RirbLength == 256);
-
-    CorbPhysicalAddress = MmGetPhysicalAddress(DeviceExtension->CorbBase);
-    ASSERT(CorbPhysicalAddress.QuadPart != 0LL);
-
-    // Program CORB/RIRB for these locations
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_CORB_BASE_LOWER), CorbPhysicalAddress.LowPart);
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_CORB_BASE_UPPER), CorbPhysicalAddress.HighPart);
-
-    DeviceExtension->RirbBase = (PRIRB_RESPONSE)((ULONG_PTR)DeviceExtension->CorbBase + PAGE_SIZE);
-    CorbPhysicalAddress.QuadPart += PAGE_SIZE;
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_RIRB_BASE_LOWER), CorbPhysicalAddress.LowPart);
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_RIRB_BASE_UPPER), CorbPhysicalAddress.HighPart);
-
-    // Program DMA position update
-    DeviceExtension->StreamPositions = (PVOID)((ULONG_PTR)DeviceExtension->RirbBase + PAGE_SIZE);
-    CorbPhysicalAddress.QuadPart += PAGE_SIZE;
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_LOWER), CorbPhysicalAddress.LowPart);
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_UPPER), CorbPhysicalAddress.HighPart);
-
-    value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS)) & ~HDAC_CORB_WRITE_POS_MASK;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), value);
-
-    // Reset CORB read pointer. Preserve bits marked as RsvdP.
-    // After setting the reset bit, we must wait for the hardware
-    // to acknowledge it, then manually unset it and wait for that
-    // to be acknowledged as well.
-    corbReadPointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
-
-    corbReadPointer |= CORB_READ_POS_RESET;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS), corbReadPointer);
-
-    for (Index = 0; Index < 10; Index++) {
-        KeStallExecutionProcessor(100);
-        corbReadPointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
-        if ((corbReadPointer & CORB_READ_POS_RESET) != 0)
-            break;
-    }
-    if ((corbReadPointer & CORB_READ_POS_RESET) == 0) {
-        DPRINT1("hda: CORB read pointer reset not acknowledged\n");
-
-        // According to HDA spec v1.0a ch3.3.21, software must read the
-        // bit as 1 to verify that the reset completed. However, at least
-        // some nVidia HDA controllers do not update the bit after reset.
-        // Thus don't fail here on nVidia controllers.
-        //if (controller->pci_info.vendor_id != PCI_VENDOR_NVIDIA)
-        //	return B_BUSY;
-    }
-
-    corbReadPointer &= ~CORB_READ_POS_RESET;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS), corbReadPointer);
-    for (Index = 0; Index < 10; Index++) {
-        KeStallExecutionProcessor(100);
-        corbReadPointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_READ_POS));
-        if ((corbReadPointer & CORB_READ_POS_RESET) == 0)
-            break;
-    }
-    if ((corbReadPointer & CORB_READ_POS_RESET) != 0) {
-        DPRINT1("hda: CORB read pointer reset failed\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    // Reset RIRB write pointer
-    rirbWritePointer = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS)) & ~RIRB_WRITE_POS_RESET;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_WRITE_POS), rirbWritePointer | RIRB_WRITE_POS_RESET);
-
-    // Generate interrupt for every response
-    interruptValue = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RESPONSE_INTR_COUNT)) & ~HDAC_RESPONSE_INTR_COUNT_MASK;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RESPONSE_INTR_COUNT), interruptValue | 1);
-
-    // Setup cached read/write indices
-    DeviceExtension->RirbReadPos = 1;
-    DeviceExtension->CorbWritePos = 0;
-
-    // Gentlemen, start your engines...
-    corbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_CONTROL)) & ~HDAC_CORB_CONTROL_MASK;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_CONTROL), corbControl | CORB_CONTROL_RUN | CORB_CONTROL_MEMORY_ERROR_INTR);
-
-    rirbControl = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_CONTROL)) & ~HDAC_RIRB_CONTROL_MASK;
-    WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_RIRB_CONTROL), rirbControl | RIRB_CONTROL_DMA_ENABLE | RIRB_CONTROL_OVERRUN_INTR | RIRB_CONTROL_RESPONSE_INTR);
-
-    return STATUS_SUCCESS;
+    return status;
 }
 
-NTSTATUS
+void
 NTAPI
-HDA_ResetController(
-    IN PDEVICE_OBJECT DeviceObject)
+Fdo_EnumerateCodec(
+    PFDO_CONTEXT fdoCtx,
+    UINT8 addr
+)
 {
-    USHORT ValCapabilities;
-    ULONG Index;
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG InputStreams, OutputStreams, BiDirStreams, Control;
-    UCHAR corbControl, rirbControl;
+    UINT32 cmdTmpl = (addr << 28) | (AC_NODE_ROOT << 20) |
+        (AC_VERB_PARAMETERS << 8);
+    ULONG funcType = 0, vendorDevice, subsysId, revId, nodeCount;
+    if (!NT_SUCCESS(RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_VENDOR_ID, &vendorDevice))) {
+        return;
+    }
+    if (!NT_SUCCESS(RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_REV_ID, &revId))) {
+        return;
+    }
+    if (!NT_SUCCESS(RunSingleHDACmd(fdoCtx, cmdTmpl | AC_PAR_NODE_COUNT, &nodeCount))) {
+        return;
+    }
 
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    fdoCtx->numCodecs += 1;
 
-    /* read caps */
-    ValCapabilities = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_GLOBAL_CAP));
+    UINT8 startID = (nodeCount >> 16) & 0xFF;
+    nodeCount = (nodeCount & 0x7FFF);
 
-    InputStreams = GLOBAL_CAP_INPUT_STREAMS(ValCapabilities);
-    OutputStreams = GLOBAL_CAP_OUTPUT_STREAMS(ValCapabilities);
-    BiDirStreams = GLOBAL_CAP_BIDIR_STREAMS(ValCapabilities);
-
-    DPRINT1("NumInputStreams %u\n", InputStreams);
-    DPRINT1("NumOutputStreams %u\n", OutputStreams);
-    DPRINT1("NumBiDirStreams %u\n", BiDirStreams);
-
-    /* stop all streams */
-    for (Index = 0; Index < InputStreams; Index++)
+    UINT16 mainFuncGrp = 0;
     {
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_CONTROL0 + HDAC_STREAM_BASE + HDAC_INPUT_STREAM_OFFSET(Index), 0);
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_STATUS + HDAC_STREAM_BASE + HDAC_INPUT_STREAM_OFFSET(Index), 0);
-    }
-
-    for (Index = 0; Index < OutputStreams; Index++) {
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_CONTROL0 + HDAC_STREAM_BASE + HDAC_OUTPUT_STREAM_OFFSET(InputStreams, Index), 0);
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_STATUS + HDAC_STREAM_BASE + HDAC_OUTPUT_STREAM_OFFSET(InputStreams, Index), 0);
-    }
-
-    for (Index = 0; Index < BiDirStreams; Index++) {
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_CONTROL0 + HDAC_STREAM_BASE + HDAC_BIDIR_STREAM_OFFSET(InputStreams, OutputStreams, Index), 0);
-        WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_STREAM_STATUS + HDAC_STREAM_BASE + HDAC_BIDIR_STREAM_OFFSET(InputStreams, OutputStreams, Index), 0);
-    }
-
-    // stop DMA
-    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL) & ~HDAC_CORB_CONTROL_MASK;
-    WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL, Control);
-
-    Control = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL) & ~HDAC_RIRB_CONTROL_MASK;
-    WRITE_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL, Control);
-
-    for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(100);
-
-        corbControl = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_CORB_CONTROL);
-        rirbControl = READ_REGISTER_UCHAR(DeviceExtension->RegBase + HDAC_RIRB_CONTROL);
-        if (corbControl == 0 && rirbControl == 0)
-            break;
-    }
-    if (corbControl != 0 || rirbControl != 0) {
-        DPRINT1("hda: unable to stop dma\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    // reset DMA position buffer
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_LOWER), 0);
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_DMA_POSITION_BASE_UPPER), 0);
-
-    // Set reset bit - it must be asserted for at least 100us
-    Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL), Control & ~GLOBAL_CONTROL_RESET);
-
-    for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(100);
-
-        Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
-        if ((Control & GLOBAL_CONTROL_RESET) == 0)
-            break;
-    }
-    if ((Control & GLOBAL_CONTROL_RESET) != 0)
-    {
-        DPRINT1("hda: unable to reset controller\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    // Unset reset bit
-    Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL), Control | GLOBAL_CONTROL_RESET);
-
-    for (int timeout = 0; timeout < 10; timeout++) {
-        KeStallExecutionProcessor(100);
-
-        Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
-        if ((Control & GLOBAL_CONTROL_RESET) != 0)
-            break;
-    }
-    if ((Control & GLOBAL_CONTROL_RESET) == 0) {
-        DPRINT1("hda: unable to exit reset\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    // Wait for codecs to finish their own reset (apparently needs more
-    // time than documented in the specs)
-    KeStallExecutionProcessor(1000);
-
-    // Enable unsolicited responses
-    Control = READ_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL));
-    WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_GLOBAL_CONTROL), Control | GLOBAL_CONTROL_UNSOLICITED);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-HDA_FDOStartDevice(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    PCM_RESOURCE_LIST Resources;
-    ULONG Index;
-    USHORT Value;
-
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(DeviceExtension->IsFDO == TRUE);
-
-    /* forward irp to lower device */
-    if (!IoForwardIrpSynchronously(DeviceExtension->LowerDevice, Irp))
-    {
-        ASSERT(FALSE);
-        return STATUS_INVALID_DEVICE_REQUEST;
-    }
-    Status = Irp->IoStatus.Status;
-    if (!NT_SUCCESS(Status))
-    {
-        // failed to start
-        DPRINT1("HDA_StartDevice Lower device failed to start %x\n", Status);
-        return Status;
-    }
-
-    /* get current irp stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    Resources = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
-    for (Index = 0; Index < Resources->List[0].PartialResourceList.Count; Index++)
-    {
-        PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor = &Resources->List[0].PartialResourceList.PartialDescriptors[Index];
-
-        if (Descriptor->Type == CmResourceTypeMemory)
-        {
-            DeviceExtension->RegLength = Descriptor->u.Memory.Length;
-            DeviceExtension->RegBase = (PUCHAR)MmMapIoSpace(Descriptor->u.Memory.Start, Descriptor->u.Memory.Length, MmNonCached);
-            if (DeviceExtension->RegBase == NULL)
-            {
-                DPRINT1("[HDAB] Failed to map registers\n");
-                Status = STATUS_UNSUCCESSFUL;
+        UINT16 nid = startID;
+        for (UINT32 i = 0; i < nodeCount; i++, nid++) {
+            UINT32 cmd = (addr << 28) | (nid << 20) |
+                (AC_VERB_PARAMETERS << 8) | AC_PAR_FUNCTION_TYPE;
+            if (!NT_SUCCESS(RunSingleHDACmd(fdoCtx, cmd, &funcType))) {
+                continue;
+            }
+            switch (funcType & 0xFF) {
+            case AC_GRP_AUDIO_FUNCTION:
+            case AC_GRP_MODEM_FUNCTION:
+                mainFuncGrp = nid;
                 break;
             }
         }
-        else if (Descriptor->Type == CmResourceTypeInterrupt)
-        {
-            Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
-                HDA_InterruptService,
-                DeviceObject,
-                NULL,
-                Descriptor->u.Interrupt.Vector,
-                Descriptor->u.Interrupt.Level,
-                Descriptor->u.Interrupt.Level,
-                (KINTERRUPT_MODE)(Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED),
-                (Descriptor->ShareDisposition != CmResourceShareDeviceExclusive),
-                Descriptor->u.Interrupt.Affinity,
-                FALSE);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("[HDAB] Failed to connect interrupt. Status=%lx\n", Status);
-                break;
-            }
-
-        }
     }
 
-    if (NT_SUCCESS(Status))
-    {
-        // Get controller into valid state
-        Status = HDA_ResetController(DeviceObject);
-        if (!NT_SUCCESS(Status)) return Status;
+    UINT32 cmd = (addr << 28) | (mainFuncGrp << 20) |
+        (AC_VERB_GET_SUBSYSTEM_ID << 8);
+    RunSingleHDACmd(fdoCtx, cmd, &subsysId);
 
-        // Setup CORB/RIRB/DMA POS
-        Status = HDA_InitCorbRirbPos(DeviceObject);
-        if (!NT_SUCCESS(Status)) return Status;
+    PDO_IDENTIFICATION_DESCRIPTION description;
+    //
+    // Initialize the description with the information about the detected codec.
+    //
+    WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(
+        &description.Header,
+        sizeof(description)
+    );
 
+    description.FdoContext = fdoCtx;
 
-        // Don't enable codec state change interrupts. We don't handle
-        // them, as we want to use the STATE_STATUS register to identify
-        // available codecs. We'd have to clear that register in the interrupt
-        // handler to 'ack' the codec change.
-        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE)) & ~HDAC_WAKE_ENABLE_MASK;
-        WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_WAKE_ENABLE), Value);
+    description.CodecIds.CtlrDevId = fdoCtx->devId;
+    description.CodecIds.CtlrVenId = fdoCtx->venId;
 
-        // Enable controller interrupts
-        WRITE_REGISTER_ULONG((PULONG)(DeviceExtension->RegBase + HDAC_INTR_CONTROL), INTR_CONTROL_GLOBAL_ENABLE | INTR_CONTROL_CONTROLLER_ENABLE);
+    description.CodecIds.CodecAddress = addr;
+    if (fdoCtx->UseSGPCCodec && addr == fdoCtx->GraphicsCodecAddress)
+        description.CodecIds.IsGraphicsCodec = TRUE;
+    else
+        description.CodecIds.IsGraphicsCodec = FALSE;
 
-        KeStallExecutionProcessor(1000);
+    description.CodecIds.FunctionGroupStartNode = startID;
 
-        Value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_STATE_STATUS));
-        if (!Value) {
-            DPRINT1("hda: bad codec status\n");
-            return STATUS_UNSUCCESSFUL;
-        }
-        WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_STATE_STATUS), Value);
+    description.CodecIds.IsDSP = FALSE;
 
-        // Create codecs
-        DPRINT1("Codecs %lx\n", Value);
-        for (Index = 0; Index < HDA_MAX_CODECS; Index++) {
-            if ((Value & (1 << Index)) != 0) {
-                HDA_InitCodec(DeviceObject, Index);
-            }
-        }
-    }
+    description.CodecIds.FuncId = funcType & 0xFF;
+    description.CodecIds.VenId = (vendorDevice >> 16) & 0xFFFF;
+    description.CodecIds.DevId = vendorDevice & 0xFFFF;
+    description.CodecIds.SubsysId = subsysId;
+    description.CodecIds.RevId = (revId >> 8) & 0xFFFF;
 
-    return Status;
+    //
+    // Call the framework to add this child to the childlist. This call
+    // will internaly call our DescriptionCompare callback to check
+    // whether this device is a new device or existing device. If
+    // it's a new device, the framework will call DescriptionDuplicate to create
+    // a copy of this description in nonpaged pool.
+    // The actual creation of the child device will happen when the framework
+    // receives QUERY_DEVICE_RELATION request from the PNP manager in
+    // response to InvalidateDeviceRelations call made as part of adding
+    // a new child.
+    //
+    WdfChildListAddOrUpdateChildDescriptionAsPresent(
+        WdfFdoGetDefaultChildList(fdoCtx->WdfDevice), &description.Header,
+        NULL); // AddressDescription
 }
 
 NTSTATUS
 NTAPI
-HDA_FDORemoveDevice(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp)
+Fdo_EvtDeviceSelfManagedIoInit(
+    _In_ WDFDEVICE Device
+)
 {
-    NTSTATUS Status;
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    ULONG CodecIndex, AFGIndex;
-    PHDA_CODEC_ENTRY CodecEntry;
-    PDEVICE_OBJECT ChildPDO;
-    PHDA_PDO_DEVICE_EXTENSION ChildDeviceExtension;
+    NTSTATUS status = STATUS_SUCCESS;
+    PFDO_CONTEXT fdoCtx;
 
-    /* get device extension */
-    DeviceExtension = static_cast<PHDA_FDO_DEVICE_EXTENSION>(DeviceObject->DeviceExtension);
-    ASSERT(DeviceExtension->IsFDO == TRUE);
+    fdoCtx = Fdo_GetContext(Device);
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoSkipCurrentIrpStackLocation(Irp);
-    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+    WdfChildListBeginScan(WdfFdoGetDefaultChildList(Device));
 
-    IoDetachDevice(DeviceExtension->LowerDevice);
-
-    if (DeviceExtension->RegBase != NULL)
-    {
-        MmUnmapIoSpace(DeviceExtension->RegBase,
-                       DeviceExtension->RegLength);
-    }
-    if (DeviceExtension->Interrupt != NULL)
-    {
-        IoDisconnectInterrupt(DeviceExtension->Interrupt);
-    }
-    if (DeviceExtension->CorbBase != NULL)
-    {
-        MmFreeContiguousMemory(DeviceExtension->CorbBase);
-    }
-
-    for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
-    {
-        CodecEntry = DeviceExtension->Codecs[CodecIndex];
-        if (CodecEntry == NULL)
-        {
-            continue;
-        }
-
-        ASSERT(CodecEntry->AudioGroupCount <= HDA_MAX_AUDIO_GROUPS);
-        for (AFGIndex = 0; AFGIndex < CodecEntry->AudioGroupCount; AFGIndex++)
-        {
-            ChildPDO = CodecEntry->AudioGroups[AFGIndex]->ChildPDO;
-            if (ChildPDO != NULL)
-            {
-                ChildDeviceExtension = static_cast<PHDA_PDO_DEVICE_EXTENSION>(ChildPDO->DeviceExtension);
-                ChildDeviceExtension->Codec = NULL;
-                ChildDeviceExtension->AudioGroup = NULL;
-                ChildDeviceExtension->FDO = NULL;
-                ChildDeviceExtension->ReportedMissing = TRUE;
-                HDA_PDORemoveDevice(ChildPDO);
-            }
-            FreeItem(CodecEntry->AudioGroups[AFGIndex]);
-        }
-        FreeItem(CodecEntry);
-    }
-
-    IoDeleteDevice(DeviceObject);
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-HDA_FDOQueryBusRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    ULONG DeviceCount, CodecIndex, AFGIndex;
-    PHDA_FDO_DEVICE_EXTENSION DeviceExtension;
-    PHDA_CODEC_ENTRY Codec;
-    PDEVICE_RELATIONS DeviceRelations;
-
-    /* get device extension */
-    DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    ASSERT(DeviceExtension->IsFDO == TRUE);
-
-    DeviceCount = 0;
-    for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
-    {
-        if (DeviceExtension->Codecs[CodecIndex] == NULL)
+    fdoCtx->numCodecs = 0;
+#if ENABLE_HDA
+    for (UINT8 addr = 0; addr < HDA_MAX_CODECS; addr++) {
+        fdoCtx->codecs[addr] = NULL;
+        if (((fdoCtx->codecMask >> addr) & 0x1) == 0)
             continue;
 
-        Codec = DeviceExtension->Codecs[CodecIndex];
-        DeviceCount += Codec->AudioGroupCount;
-    }
-
-    if (DeviceCount == 0)
-        return STATUS_UNSUCCESSFUL;
-
-    DeviceRelations = (PDEVICE_RELATIONS)AllocateItem(NonPagedPool, sizeof(DEVICE_RELATIONS) + (DeviceCount > 1 ? sizeof(PDEVICE_OBJECT) * (DeviceCount - 1) : 0));
-    if (!DeviceRelations)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    DeviceRelations->Count = 0;
-    for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
-    {
-        if (DeviceExtension->Codecs[CodecIndex] == NULL)
+        if (fdoCtx->UseSGPCCodec && fdoCtx->GraphicsCodecAddress == addr)
             continue;
 
-        Codec = DeviceExtension->Codecs[CodecIndex];
-        ASSERT(Codec->AudioGroupCount <= HDA_MAX_AUDIO_GROUPS);
-        for (AFGIndex = 0; AFGIndex < Codec->AudioGroupCount; AFGIndex++)
-        {
-            DeviceRelations->Objects[DeviceRelations->Count] = Codec->AudioGroups[AFGIndex]->ChildPDO;
-            ObReferenceObject(Codec->AudioGroups[AFGIndex]->ChildPDO);
-            DeviceRelations->Count++;
-        }
+        Fdo_EnumerateCodec(fdoCtx, addr);
     }
 
-    /* FIXME handle existing device relations */
-    ASSERT(Irp->IoStatus.Information == 0);
+    if (fdoCtx->mlcap) {
+        IoRegisterPlugPlayNotification(
+            EventCategoryDeviceInterfaceChange,
+            PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+            (PVOID)&GUID_DEVINTERFACE_GRAPHICSPOWER,
+            WdfDriverWdmGetDriverObject(WdfDeviceGetDriver(fdoCtx->WdfDevice)),
+            HDAGraphicsPowerInterfaceCallback,
+            (PVOID)fdoCtx,
+            &fdoCtx->GraphicsNotificationHandle
+        );
 
-    /* store device relations */
-    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+    }
+#endif
 
-    /* done */
-    return STATUS_SUCCESS;
+    fdoCtx->dspInterruptCallback = NULL;
+    if (fdoCtx->m_BAR4.Base.Base) { //Populate ADSP if present
+        PDO_IDENTIFICATION_DESCRIPTION description;
+        //
+        // Initialize the description with the information about the detected codec.
+        //
+        WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(
+            &description.Header,
+            sizeof(description)
+        );
+
+        description.FdoContext = fdoCtx;
+
+        description.CodecIds.CtlrDevId = fdoCtx->devId;
+        description.CodecIds.CtlrVenId = fdoCtx->venId;
+
+        description.CodecIds.CodecAddress = 0x10000000;
+        description.CodecIds.IsDSP = TRUE;
+
+        //
+        // Call the framework to add this child to the childlist. This call
+        // will internaly call our DescriptionCompare callback to check
+        // whether this device is a new device or existing device. If
+        // it's a new device, the framework will call DescriptionDuplicate to create
+        // a copy of this description in nonpaged pool.
+        // The actual creation of the child device will happen when the framework
+        // receives QUERY_DEVICE_RELATION request from the PNP manager in
+        // response to InvalidateDeviceRelations call made as part of adding
+        // a new child.
+        //
+        status = WdfChildListAddOrUpdateChildDescriptionAsPresent(
+            WdfFdoGetDefaultChildList(Device), &description.Header,
+            NULL); // AddressDescription
+    }
+
+    WdfChildListEndScan(WdfFdoGetDefaultChildList(Device));
+
+    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
+        "hda scan complete\n");
+    return status;
 }
