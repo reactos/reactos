@@ -20,6 +20,11 @@ target_link_libraries(rshell
     cpprt
     atl_classes)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # FIXME: GCC 13+ warning, should be fixed properly
+    target_compile_options(rshell PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-overloaded-virtual>")
+endif()
+
 add_importlibs(rshell
     browseui
     uxtheme
