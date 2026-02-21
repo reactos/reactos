@@ -202,6 +202,11 @@ extern void winetest_pop_context(void);
 #define skip_2k3_crash if (_winver < 0x600) skip("Test skipped, because it crashes on win 2003\n"); else
 #define skip_2k3_fail if (_winver < 0x600) skip("Test skipped, because it fails on win 2003\n"); else
 
+#define winetest_platform_is_wine !strcmp(winetest_platform, "wine")
+#define flaky_if(is_flaky)      // TODO: define me
+#define flaky                   flaky_if(TRUE)
+#define flaky_wine              flaky_if(winetest_platform_is_wine)
+
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #ifdef NONAMELESSUNION
