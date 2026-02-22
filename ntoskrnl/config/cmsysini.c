@@ -16,6 +16,7 @@ POBJECT_TYPE CmpKeyObjectType;
 PCMHIVE CmiVolatileHive;
 LIST_ENTRY CmpHiveListHead;
 ERESOURCE CmpRegistryLock;
+extern ERESOURCE CmpNotificationLock;
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 KEVENT CmpLoadWorkerEvent;
@@ -177,8 +178,9 @@ CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
         /* Don't do anything if we don't have a notify block */
         if (!KeyBody->NotifyBlock) return;
 
-        /* This shouldn't happen yet */
-        ASSERT(FALSE);
+        /* Flush NotifyBlock */
+        CmpFlushNotify(KeyBody, FALSE);
+        ASSERT(KeyBody->NotifyBlock == NULL);
     }
 }
 
@@ -1647,6 +1649,9 @@ CmInitSystem1(VOID)
 
     /* Initialize registry lock */
     ExInitializeResourceLite(&CmpRegistryLock);
+
+    /* Initialize notification lock */
+    ExInitializeResourceLite(&CmpNotificationLock);
 
     /* Initialize the cache */
     CmpInitializeCache();
