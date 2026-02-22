@@ -112,6 +112,7 @@ PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount);    // Returns
 VOID MmInitPageLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount);    // Inits the page lookup table according to the memory types in the memory map
 VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY PageAllocated);    // Marks the specified pages as allocated or free in the lookup table
 VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY MemoryType);    // Allocates the specified pages in the lookup table
+BOOLEAN MmFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER StartPage, TYPE_OF_MEMORY MemoryType, BOOLEAN IgnoreMemoryType);
 PFN_NUMBER MmCountFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount);    // Returns the number of free pages in the lookup table
 PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, BOOLEAN FromEnd);    // Returns the page number of the first available page range from the beginning or end of memory
 PFN_NUMBER MmFindAvailablePagesBeforePage(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, PFN_NUMBER LastPage);    // Returns the page number of the first available page range before the specified page
@@ -127,6 +128,7 @@ BOOLEAN    MmInitializeMemoryManager(VOID);
 VOID    MmInitializeHeap(PVOID PageLookupTable);
 PVOID    MmAllocateMemory(SIZE_T MemorySize);
 PVOID    MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType);
+VOID    MmFreeMemoryWithType(PVOID MemoryPointer, MEMORY_TYPE MemoryType);
 VOID    MmFreeMemory(PVOID MemoryPointer);
 PVOID    MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID    MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);

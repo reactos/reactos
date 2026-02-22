@@ -350,7 +350,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     {
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", DllName);
-        MmFreeMemory(DriverBase);
+        MmFreeMemoryWithType(DriverBase, LoaderBootDriver);
         return FALSE;
     }
 
@@ -368,7 +368,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
         /* Cleanup and bail out */
         ERR("PeLdrScanImportDescriptorTable('%s') failed\n", FullPath);
         PeLdrFreeDataTableEntry(*DriverDTE);
-        MmFreeMemory(DriverBase);
+        MmFreeMemoryWithType(DriverBase, LoaderBootDriver);
         return FALSE;
     }
 
@@ -551,7 +551,7 @@ LoadModule(
     {
         /* Cleanup and bail out */
         ERR("PeLdrAllocateDataTableEntry('%s') failed\n", FullFileName);
-        MmFreeMemory(BaseAddress);
+        MmFreeMemoryWithType(BaseAddress, MemoryType);
         return NULL;
     }
 
@@ -624,17 +624,18 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
                 IN PCSTR BootPath,
                 IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
 {
-    BOOLEAN Success;
+    BOOLEAN Success = FALSE;
     PCSTR Option;
     ULONG OptionLength;
-    PVOID KernelBase, HalBase, KdDllBase = NULL;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
+    PVOID KernelBase = NULL, HalBase = NULL, KdDllBase = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE = NULL, KdDllDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
     CHAR KdDllName[MAX_PATH];
 
     if (!KernelDTE) return FALSE;
+    *KernelDTE = NULL;
 
     /* Initialize SystemRoot\System32 path */
     RtlStringCbCopyA(DirPath, sizeof(DirPath), BootPath);
@@ -767,7 +768,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     {
         ERR("LoadModule('%s') failed\n", KernelFileName);
         UiMessageBox("Could not load %s", KernelFileName);
-        return FALSE;
+        goto Quit;
     }
 
     /* Load the HAL */
@@ -777,9 +778,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     {
         ERR("LoadModule('%s') failed\n", HalFileName);
         UiMessageBox("Could not load %s", HalFileName);
-        PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemory(KernelBase);
-        return FALSE;
+        goto Quit;
     }
 
     /* Load the Kernel Debugger Transport DLL */
@@ -902,13 +901,17 @@ Quit:
         if (KdDllDTE)
             PeLdrFreeDataTableEntry(KdDllDTE);
         if (KdDllBase) // Optional
-            MmFreeMemory(KdDllBase);
+            MmFreeMemoryWithType(KdDllBase, LoaderSystemCode);
 
-        PeLdrFreeDataTableEntry(HalDTE);
-        MmFreeMemory(HalBase);
+        if (HalDTE)
+            PeLdrFreeDataTableEntry(HalDTE);
+        if (HalBase)
+            MmFreeMemoryWithType(HalBase, LoaderHalCode);
 
-        PeLdrFreeDataTableEntry(*KernelDTE);
-        MmFreeMemory(KernelBase);
+        if (*KernelDTE)
+            PeLdrFreeDataTableEntry(*KernelDTE);
+        if (KernelBase)
+            MmFreeMemoryWithType(KernelBase, LoaderSystemCode);
     }
 
     return Success;

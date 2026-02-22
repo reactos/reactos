@@ -567,6 +567,67 @@ VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, P
     }
 }
 
+BOOLEAN MmFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER StartPage, TYPE_OF_MEMORY MemoryType, BOOLEAN IgnoreMemoryType)
+{
+    BOOLEAN                         Result = FALSE;
+    PPAGE_LOOKUP_TABLE_ITEM         RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PPAGE_LOOKUP_TABLE_ITEM         StartPageLookupEntry;
+    PFN_NUMBER                      Index;
+
+    if (StartPage == 0)
+    {
+        ERR("Cannot free NULL memory!\n");
+        goto result;
+    }
+
+    if (StartPage < MmLowestPhysicalPage)
+    {
+        ERR("Cannot free memory below MmLowestPhysicalPage!\n");
+        goto result;
+    }
+
+    StartPage -= MmLowestPhysicalPage;
+    StartPageLookupEntry = &RealPageLookupTable[StartPage];
+
+    if (StartPage >= TotalPageCount ||
+        StartPageLookupEntry->PageAllocationLength > TotalPageCount ||
+        (StartPage + StartPageLookupEntry->PageAllocationLength) > TotalPageCount)
+    {
+        ERR("Cannot free out of range memory!\n");
+        goto result;
+    }
+
+    if (StartPageLookupEntry->PageAllocationLength == 0)
+    {
+        ERR("Cannot free memory with invalid AllocationLength\n");
+        goto result;
+    }
+
+    if (!IgnoreMemoryType && StartPageLookupEntry->PageAllocated != MemoryType)
+    {
+        ERR("Cannot free memory with unexpected different memory type (Expected %s but got %s)\n",
+            MmGetSystemMemoryMapTypeString(MemoryType), MmGetSystemMemoryMapTypeString(StartPageLookupEntry->PageAllocated));
+        goto result;
+    }
+    else if (IgnoreMemoryType)
+    {
+        WARN("Ignoring memory type to free this page! Use MmFreeMemoryWithType instead!\n");
+    }
+
+    for (Index = 0; Index < StartPageLookupEntry->PageAllocationLength; Index++)
+    {
+        StartPageLookupEntry[Index].PageAllocated = LoaderFree;
+    }
+
+    TRACE("Freed memory on page %u with page count of %u\n", StartPage, StartPageLookupEntry->PageAllocationLength);
+
+    StartPageLookupEntry->PageAllocationLength = 0;
+    Result = TRUE;
+
+result:
+    return Result;
+}
+
 PFN_NUMBER MmCountFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
     PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
