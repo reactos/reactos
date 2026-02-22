@@ -1,10 +1,10 @@
 /****************************************************************************
  *
- * otvgpos.h
+ * sfwoff.h
  *
- *   OpenType GPOS table validator (specification).
+ *   WOFFF format management (specification).
  *
- * Copyright (C) 2004-2019 by
+ * Copyright (C) 1996-2020 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -16,21 +16,25 @@
  */
 
 
-#ifndef OTVGPOS_H_
-#define OTVGPOS_H_
+#ifndef SFWOFF_H_
+#define SFWOFF_H_
+
+
+#include <freetype/internal/sfnt.h>
+#include <freetype/internal/ftobjs.h>
 
 
 FT_BEGIN_HEADER
 
 
-  FT_LOCAL( void )
-  otv_GPOS_subtable_validate( FT_Bytes       table,
-                              OTV_Validator  valid );
+  FT_LOCAL( FT_Error )
+  woff_open_font( FT_Stream  stream,
+                  TT_Face    face );
 
 
 FT_END_HEADER
 
-#endif /* OTVGPOS_H_ */
+#endif /* SFWOFF_H_ */
 
 
 /* END */

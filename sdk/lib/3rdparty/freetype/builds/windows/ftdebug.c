@@ -2,9 +2,9 @@
  *
  * ftdebug.c
  *
- *   Debugging and logging component (body).
+ *   Debugging and logging component for Win32 (body).
  *
- * Copyright (C) 1996-2019 by
+ * Copyright (C) 1996-2020 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -41,12 +41,19 @@
    */
 
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_INTERNAL_DEBUG_H
+#include <freetype/freetype.h>
+#include <freetype/internal/ftdebug.h>
 
 
 #ifdef FT_DEBUG_LEVEL_ERROR
+
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef __REACTOS__
+#include <windows.h>
+#endif
 
   /* documentation is in ftdebug.h */
 
@@ -55,15 +62,18 @@
   FT_Message( const char*  fmt,
               ... )
   {
-    va_list  ap;
+    static char  buf[8192];
+    va_list      ap;
 
 
     va_start( ap, fmt );
     vfprintf( stderr, fmt, ap );
+    /* send the string to the debugger as well */
+    vsprintf( buf, fmt, ap );
+    OutputDebugStringA( buf );
     va_end( ap );
   }
 #endif
-
 
   /* documentation is in ftdebug.h */
 
@@ -72,17 +82,18 @@
   FT_Panic( const char*  fmt,
             ... )
   {
-    va_list  ap;
+    static char  buf[8192];
+    va_list      ap;
 
 
     va_start( ap, fmt );
-    vfprintf( stderr, fmt, ap );
+    vsprintf( buf, fmt, ap );
+    OutputDebugStringA( buf );
     va_end( ap );
 
     exit( EXIT_FAILURE );
   }
 #endif
-
 
   /* documentation is in ftdebug.h */
 
@@ -111,7 +122,6 @@
 #endif /* FT_DEBUG_LEVEL_ERROR */
 
 
-
 #ifdef FT_DEBUG_LEVEL_TRACE
 
   /* array of trace levels, initialized to 0; */
@@ -130,7 +140,7 @@
 
   static const char*  ft_trace_toggles[trace_count + 1] =
   {
-#include FT_INTERNAL_TRACE_H
+#include <freetype/internal/fttrace.h>
     NULL
   };
 
@@ -200,7 +210,7 @@
   FT_BASE_DEF( void )
   ft_debug_init( void )
   {
-    const char*  ft2_debug = ft_getenv( "FT2_DEBUG" );
+    const char*  ft2_debug = getenv( "FT2_DEBUG" );
 
 
     if ( ft2_debug )
