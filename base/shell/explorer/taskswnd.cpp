@@ -1,24 +1,13 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Task window implementation
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2026 Vitaly Orekhov <vkvo2000@vivaldi.net>
  */
 
 #include "precomp.h"
+#include "mediabtns.h"
 #include <commoncontrols.h>
 #include <regstr.h>
 #include <shlwapi_undoc.h>
@@ -1542,6 +1531,10 @@ public:
 #if DUMP_TASKS != 0
         SetTimer(hwnd, 1, 5000, NULL);
 #endif
+
+        /* WinMM is needed to change system volume via media buttons */
+        Mixer.GetMasterMixer();
+
         return TRUE;
     }
 
@@ -1610,12 +1603,12 @@ public:
             return TRUE;
         switch (uAppCmd)
         {
+            // When MMDevAPI arrives, try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to WinMM.
             case APPCOMMAND_VOLUME_MUTE:
+                return Mixer.Mute();
             case APPCOMMAND_VOLUME_DOWN:
             case APPCOMMAND_VOLUME_UP:
-                // TODO: Try IMMDeviceEnumerator::GetDefaultAudioEndpoint first and then fall back to mixer.
-                FIXME("Call the mixer API to change the global volume\n");
-                return TRUE;
+                return Mixer.AdjustVolume(uAppCmd, hProcessHeap);
             case APPCOMMAND_BROWSER_SEARCH:
                 return SHFindFiles(NULL, NULL);
         }
@@ -2291,6 +2284,9 @@ public:
     BEGIN_COM_MAP(CTaskSwitchWnd)
         COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     END_COM_MAP()
+
+private:
+    CMultimediaBackend Mixer;
 };
 
 HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
