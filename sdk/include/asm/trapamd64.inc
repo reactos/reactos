@@ -5,6 +5,9 @@
  * COPYRIGHT:   Copyright 2011-2024 Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
+EXTERN KiSwitchToKernelDebugRegisters:PROC
+EXTERN KiSwitchToUserDebugRegisters:PROC
+
 MACRO(ASSERT_TRAP_FRAME_INTS_ENABLED, Register)
 #if DBG
     LOCAL IntsAreEnabled
@@ -157,6 +160,14 @@ MACRO(EnterTrap, Flags)
 
     ASSERT_IRQL_PASSIVE
 
+    mov rax, gs:[PcCurrentThread]
+    test byte ptr [rax + ThDebugActive], 1
+    jz kernel_mode_entry
+
+    /* Switch to kernel debug registers */
+    mov rcx, rbp
+    call KiSwitchToKernelDebugRegisters
+
 kernel_mode_entry:
 
 //    if (Flags AND TF_IRQL)
@@ -164,22 +175,6 @@ kernel_mode_entry:
         mov rax, cr8
         mov [rbp + KTRAP_FRAME_PreviousIrql], al
 //    endif
-
-    if (Flags AND TF_DEBUG)
-        /* Save debug registers */
-        mov rax, dr0
-        mov [rbp + KTRAP_FRAME_Dr0], rax
-        mov rax, dr1
-        mov [rbp + KTRAP_FRAME_Dr1], rax
-        mov rax, dr2
-        mov [rbp + KTRAP_FRAME_Dr2], rax
-        mov rax, dr3
-        mov [rbp + KTRAP_FRAME_Dr3], rax
-        mov rax, dr6
-        mov [rbp + KTRAP_FRAME_Dr6], rax
-        mov rax, dr7
-        mov [rbp + KTRAP_FRAME_Dr7], rax
-    endif
 
     /* Make sure the direction flag is cleared */
     cld
@@ -189,6 +184,7 @@ ENDM
  *  ExitTrap - Restore registers and free stack space
  */
 MACRO(ExitTrap, Flags)
+    LOCAL no_debug_registers
     LOCAL kernel_mode_return
 
     ASSERT_TRAP_FRAME_IRQL_VALID rbp
@@ -209,6 +205,16 @@ MACRO(ExitTrap, Flags)
     /* Check if we came from user mode */
     test byte ptr [rbp + KTRAP_FRAME_SegCs], 1
     jz kernel_mode_return
+
+    mov rax, gs:[PcCurrentThread]
+    test byte ptr [rax + ThDebugActive], 1
+    jz no_debug_registers
+
+    /* Switch to kernel debug registers */
+    mov rcx, rbp
+    call KiSwitchToKernelDebugRegisters
+
+no_debug_registers:
 
     if (Flags AND TF_CHECKUSERAPC)
         mov r10, gs:[PcCurrentThread]
