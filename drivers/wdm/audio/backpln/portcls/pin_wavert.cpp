@@ -11,8 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define LEGACY_STREAMING
-
 class CPortPinWaveRT : public CUnknownImpl<IPortPinWaveRT>
 {
 public:
@@ -37,27 +35,15 @@ protected:
     KSAUDIO_POSITION m_Position;
 
     KSRTAUDIO_HWLATENCY m_Latency;
-#ifndef LEGACY_STREAMING
     PKPROCESS m_UserProcess;
     PVOID m_UserAddress;
     PKEVENT m_UserEvent;
-#else
-    KEVENT m_NotificationEvent;
-    KEVENT m_StopEvent;
-    PKSWORKER m_Worker;
-    PWORK_QUEUE_ITEM m_WorkItem;
-#endif
+
     PUCHAR m_CommonBuffer;
     ULONG m_CommonBufferSize;
     ULONG m_CommonBufferOffset;
 
-    IIrpQueue * m_IrpQueue;
-
     BOOL m_Capture;
-
-    ULONG m_TotalPackets;
-    ULONG m_PreCompleted;
-    ULONG m_PostCompleted;
 
     MEMORY_CACHING_TYPE m_CacheType;
     PMDL m_Mdl;
@@ -65,8 +51,6 @@ protected:
     PSUBDEVICE_DESCRIPTOR m_Descriptor;
     KSPIN_LOCK m_EventListLock;
     LIST_ENTRY m_EventList;
-
-    KSRESET m_ResetState;
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
@@ -89,8 +73,6 @@ typedef struct
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
-
-#ifndef LEGACY_STREAMING
 
 NTSTATUS NTAPI PinWaveRTAudioGetAudioBuffer(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveRTAudioGetHwLatency(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
@@ -338,7 +320,7 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
     Irp->IoStatus.Information = 0;
     return STATUS_SUCCESS;
 }
-#endif
+
 //==================================================================================================================================
 
 NTSTATUS
@@ -433,21 +415,7 @@ CPortPinWaveRT::HandleKsProperty(
 
                     DPRINT("Setting state %u %x\n", *State, Status);
                     if (NT_SUCCESS(Status))
-                    {
-                        if (*State == KSSTATE_RUN && m_State == KSSTATE_PAUSE )
-                        {
-#ifdef LEGACY_STREAMING
-                            KsQueueWorkItem(m_Worker, m_WorkItem);
-#endif
-                        }
-                        else if (m_State == KSSTATE_RUN && *State == KSSTATE_PAUSE)
-                        {
-#ifdef LEGACY_STREAMING
-                            KeSetEvent(&m_StopEvent, 0, FALSE);
-#endif
-                        }
                         m_State = *State;
-                    }
                 }
                 Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -570,47 +538,11 @@ CPortPinWaveRT::HandleKsProperty(
 
 NTSTATUS
 NTAPI
-CPortPinWaveRT::HandleKsStream(
-    IN PIRP Irp)
-{
-    NTSTATUS Status;
-    ULONG Data;
-
-    /* increment total number of packets */
-    InterlockedIncrement((PLONG)&m_TotalPackets);
-
-    /* is the device not currently reset */
-    if (m_ResetState == KSRESET_END)
-    {
-        /* add the mapping */
-        Status = m_IrpQueue->AddMapping(Irp, &Data);
-
-        /* check for success */
-        if (NT_SUCCESS(Status))
-        {
-            //DPRINT("New Packet Total %u State %x MinData %u PacketSize %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData(), Data);
-            m_Position.WriteOffset += Data;
-            Status = STATUS_PENDING;
-        }
-    }
-    else
-    {
-        /* reset request is currently in progress */
-        Status = STATUS_DEVICE_NOT_READY;
-        DPRINT1("NotReady\n");
-    }
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 CPortPinWaveRT::DeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status;
-    KSRESET ResetValue;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -638,38 +570,6 @@ CPortPinWaveRT::DeviceIoControl(
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
-
-        case IOCTL_KS_RESET_STATE:
-        {
-            Status = KsAcquireResetValue(Irp, &ResetValue);
-            DPRINT("Status %x Value %u\n", Status, ResetValue);
-            /* check for success */
-            if (NT_SUCCESS(Status))
-            {
-                //determine state of reset request
-                if (ResetValue == KSRESET_BEGIN)
-                {
-                    // start reset process
-                    // incoming read/write requests will be rejected
-                    m_ResetState = KSRESET_BEGIN;
-
-                    // cancel existing buffers
-                    m_IrpQueue->CancelBuffers();
-                }
-                else if (ResetValue == KSRESET_END)
-                {
-                    // end of reset process
-                    m_ResetState = KSRESET_END;
-                }
-            }
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
-        }
-        case IOCTL_KS_WRITE_STREAM:
-        case IOCTL_KS_READ_STREAM:
-            return HandleKsStream(Irp);
 
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
@@ -709,63 +609,6 @@ CPortPinWaveRT::Flush(
     return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
 }
 
-#ifdef LEGACY_STREAMING
-VOID
-NTAPI
-WorkerStreamRoutine(
-    IN PVOID Context)
-{
-    CPortPinWaveRT *This;
-    NTSTATUS Status;
-    PUCHAR Buffer;
-    ULONG Length;
-    ULONG BytesWritten;
-    ULONG TotalBytesAvailable;
-    ULONG TotalBytesWritten;
-    PVOID WaitObjects[2];
-
-    This = (CPortPinWaveRT *)Context;
-    WaitObjects[0] = (PVOID)&This->m_StopEvent;
-    WaitObjects[1] = (PVOID)&This->m_NotificationEvent;
-
-    DPRINT1("WorkerStreamRoutine entered Irql %u\n", KeGetCurrentIrql());
-    while (TRUE)
-    {
-        Status = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, Executive, KernelMode, FALSE, NULL, NULL);
-        if (Status == STATUS_WAIT_0)
-        {
-            DPRINT1("WorkerStreamRoutine StopEvent\n");
-            break;
-        }
-
-        TotalBytesAvailable = This->m_CommonBufferSize;
-        TotalBytesWritten = 0;
-
-        while (NT_SUCCESS(This->m_IrpQueue->GetMapping(&Buffer, &Length)))
-        {
-            BytesWritten = min(TotalBytesAvailable, Length);
-            //DPRINT("Copying bytes Offset %u BytesWritten %u Length %u\n", TotalBytesWritten, BytesWritten, Length);
-            if (This->m_Capture)
-            {
-                RtlCopyMemory(Buffer, &This->m_CommonBuffer[TotalBytesWritten], BytesWritten);
-            }
-            else
-            {
-                RtlCopyMemory(&This->m_CommonBuffer[TotalBytesWritten], Buffer, BytesWritten);
-            }
-            RtlCopyMemory(&This->m_CommonBuffer[TotalBytesWritten], Buffer, BytesWritten);
-            TotalBytesAvailable -= BytesWritten;
-            TotalBytesWritten += BytesWritten;
-            This->m_IrpQueue->UpdateMapping(BytesWritten);
-            if (TotalBytesAvailable == 0)
-                break;
-
-        }
-        KeClearEvent(&This->m_NotificationEvent);
-    }
-}
-#endif
-
 VOID
 NTAPI
 CloseStreamRoutine(
@@ -782,16 +625,7 @@ CloseStreamRoutine(
     This = (CPortPinWaveRT*)Ctx->Pin;
 
     DPRINT("CloseStreamRoutine entered Irql %u\n", KeGetCurrentIrql());
-#ifdef LEGACY_STREAMING
-    if (This->m_Worker)
-    {
-        if (This->m_State != KSSTATE_STOP)
-        {
-            KeSetEvent(&This->m_StopEvent, 0, FALSE);
-        }
-        KsUnregisterWorker(This->m_Worker);
-    }
-#endif
+
     if (This->m_Stream)
     {
         if (This->m_State != KSSTATE_STOP)
@@ -822,16 +656,6 @@ CloseStreamRoutine(
 
     if (This->m_StreamNotification)
     {
-#ifdef LEGACY_STREAMING
-        if (This->m_CommonBuffer)
-        {
-            DPRINT("Before FreeBufferWithNotification\n");
-            This->m_StreamNotification->FreeBufferWithNotification(This->m_Mdl, This->m_CommonBufferSize);
-            This->m_Mdl = NULL;
-            This->m_CommonBufferSize = 0;
-            This->m_CommonBufferOffset = 0;
-        }
-#else
         if (This->m_UserAddress)
         {
             KAPC_STATE ApcState;
@@ -859,19 +683,13 @@ CloseStreamRoutine(
             This->m_Mdl = NULL;
             This->m_CommonBufferSize = 0;
         }
-#endif
-
         DPRINT("Before UnregisterNotificationEvent\n");
-#ifdef LEGACY_STREAMING
-        This->m_StreamNotification->UnregisterNotificationEvent(&This->m_NotificationEvent);
-#else
         if (This->m_UserEvent)
         {
             This->m_StreamNotification->UnregisterNotificationEvent(This->m_UserEvent);
             ObDereferenceObject(This->m_UserEvent);
             This->m_UserEvent = NULL;
         }
-#endif
         DPRINT("Before StreamNotification->Release\n");
         This->m_StreamNotification->Release();
         This->m_StreamNotification = NULL;
@@ -892,11 +710,6 @@ CloseStreamRoutine(
     {
         FreeItem(This->m_Format, TAG_PORTCLASS);
         This->m_Format = NULL;
-    }
-
-    if (This->m_IrpQueue)
-    {
-        This->m_IrpQueue->Release();
     }
 
     // complete the irp
@@ -1073,24 +886,11 @@ CPortPinWaveRT::Init(
 
     RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
 
-    Status = NewIrpQueue(&m_IrpQueue);
-    if (!NT_SUCCESS(Status))
-    {
-        goto cleanup;
-    }
-
-    Status = m_IrpQueue->Init(ConnectDetails, KsPinDescriptor, 0, 0, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        goto cleanup;
-    }
-
     Status = NewPortWaveRTStream(&m_PortStream);
     if (!NT_SUCCESS(Status))
     {
         goto cleanup;
     }
-
     if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
         m_Capture = FALSE;
@@ -1132,13 +932,8 @@ CPortPinWaveRT::Init(
         &m_Descriptor, SubDeviceDescriptor->InterfaceCount, SubDeviceDescriptor->Interfaces,
         0, /* FIXME KSINTERFACE_STANDARD with KSINTERFACE_STANDARD_STREAMING / KSINTERFACE_STANDARD_LOOPED_STREAMING */
         NULL,
-#ifndef LEGACY_STREAMING
         sizeof(PinWaveRTPropertySet) / sizeof(KSPROPERTY_SET),
         PinWaveRTPropertySet,
-#else
-        0,
-        NULL,
-#endif
         0,
         0,
         0,
@@ -1165,67 +960,10 @@ CPortPinWaveRT::Init(
         DPRINT("QueryInterface failed with %x\n", Status);
         goto cleanup;
     }
-#ifdef LEGACY_STREAMING
-    Status = m_StreamNotification->AllocateBufferWithNotification(
-        1, PAGE_SIZE*2, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("AllocateAudioBuffer failed with %x\n", Status);
-        goto cleanup;
-    }
-    DPRINT1("Common Buffer Size %u Offset %u\n", m_CommonBufferSize, m_CommonBufferOffset);
-
-    KeInitializeEvent(&m_StopEvent, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&m_NotificationEvent, NotificationEvent, FALSE);
-    Status = m_StreamNotification->RegisterNotificationEvent(&m_NotificationEvent);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("RegisterNotificationEvent failed with %x\n", Status);
-        goto cleanup;
-    }
-
-    Status = KsRegisterWorker(DelayedWorkQueue, &m_Worker);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("RegisterNotificationEvent failed with %x\n", Status);
-        goto cleanup;
-    }
-
-    m_CommonBuffer = (PUCHAR)MmGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority) + m_CommonBufferOffset;
-    if (!m_CommonBuffer)
-    {
-        DPRINT("Failed to get system address %x\n", Status);
-        IoFreeMdl(m_Mdl);
-        m_Mdl = NULL;
-        goto cleanup;
-    }
-
-    DPRINT("CommonBuffer %p\n", m_CommonBuffer);
-
-    // silence buffer
-    RtlFillMemory(m_CommonBuffer, m_CommonBufferSize, 0x00);
-
-    m_WorkItem = (PWORK_QUEUE_ITEM)AllocateItem(NonPagedPool, sizeof(WORK_QUEUE_ITEM), TAG_PORTCLASS);
-    if (m_WorkItem)
-    {
-        DPRINT1("Initializingwork queue item\n");
-        ExInitializeWorkItem(m_WorkItem, WorkerStreamRoutine, (PVOID)this);
-    }
-#endif
     m_State = KSSTATE_STOP;
-
-    // initialize reset state
-    m_ResetState = KSRESET_END;
-
     return STATUS_SUCCESS;
 
 cleanup:
-    if (m_IrpQueue)
-    {
-        m_IrpQueue->Release();
-        m_IrpQueue = NULL;
-    }
-
     if (m_Format)
     {
         FreeItem(m_Format, TAG_PORTCLASS);
