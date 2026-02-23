@@ -82,5 +82,14 @@ extern Defragment *StartDefragThread (wstring Drive, DefragType Method, HANDLE &
 extern wchar_t *AddCommas (wchar_t *Result, uint64 Number);
 
 
+template <size_t _Size>
+inline
+_Success_(return >= 0) int __CRTDECL swprintf(wchar_t (&_Buffer)[_Size], wchar_t const* _Format, ...)
+{
+    va_list _ArgList;
+    va_start(_ArgList, _Format);
+    return vswprintf(_Buffer, _Size, _Format, _ArgList);
+}
+
 #endif // UNFRAG_H
 
