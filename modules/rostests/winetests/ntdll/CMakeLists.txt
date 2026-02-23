@@ -1,6 +1,5 @@
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/wine)
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-D__WINESRC__ -DWINETEST_USE_DBGSTR_LONGLONG)
 
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)

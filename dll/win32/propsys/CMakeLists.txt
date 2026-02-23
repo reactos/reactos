@@ -1,5 +1,4 @@
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-D_PROPSYS_)
 spec2def(propsys.dll propsys.spec ADD_IMPORTLIB)
 

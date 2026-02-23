@@ -7,8 +7,6 @@ list(REMOVE_ITEM INCLUDE_DIRS "${REACTOS_SOURCE_DIR}/sdk/include/crt")
 set_property(DIRECTORY . PROPERTY INCLUDE_DIRECTORIES ${INCLUDE_DIRS})
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/ucrt)
 
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
-
 add_compile_definitions(
     _UCRT
     _CORECRT_BUILD
