@@ -117,22 +117,73 @@ CcShutdownSystem(VOID)
     /* NOTHING TO DO */
 }
 
-/*
- * @unimplemented
- */
+NTKERNELAPI
 LARGE_INTEGER
 NTAPI
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN BcbListHeld
-    )
+CcGetFlushedValidData(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ BOOLEAN BcbListHeld)
 {
-	LARGE_INTEGER i;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    PROS_VACB Vacb;
+    LARGE_INTEGER Result;
+    LONGLONG LowestDirty = MAXLONGLONG;
+    KIRQL OldIrql;
 
-	UNIMPLEMENTED;
+    //
+    // SectionObjectPointer is NOT optional by annotation.
+    // Only check SharedCacheMap.
+    //
+    if (SectionObjectPointer->SharedCacheMap == NULL)
+    {
+        Result.QuadPart = MAXLONGLONG;
+        return Result;
+    }
 
-	i.QuadPart = 0;
-	return i;
+    SharedCacheMap = (PROS_SHARED_CACHE_MAP)SectionObjectPointer->SharedCacheMap;
+
+    //
+    // Correct double-locking required to use CacheMapLock.
+    // First MasterLock, then CacheMapLock at DPC level.
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    if (SharedCacheMap->DirtyPages == 0)
+    {
+        Result = SharedCacheMap->ValidDataLength;
+
+        KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+        return Result;
+    }
+
+    for (PLIST_ENTRY Entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+         Entry != &SharedCacheMap->CacheMapVacbListHead;
+         Entry = Entry->Flink)
+    {
+        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, CacheMapVacbListEntry);
+
+        if (Vacb->BaseAddress == NULL || Vacb->PageOut)
+            continue;
+
+        if (Vacb->Dirty &&
+            Vacb->FileOffset.QuadPart < LowestDirty)
+        {
+            LowestDirty = Vacb->FileOffset.QuadPart;
+        }
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    if (LowestDirty == MAXLONGLONG)
+        Result = SharedCacheMap->ValidDataLength;
+    else
+        Result.QuadPart = LowestDirty;
+
+    return Result;
 }
 
 /*
