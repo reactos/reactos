@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     aes.c
+    aes-ctr.c
     des.c
     md4.c
     md5.c
