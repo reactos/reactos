@@ -80,6 +80,11 @@ KsecGenRandom(
 
 VOID
 NTAPI
+KsecInitializeGenRandomSupport(
+    VOID);
+
+VOID
+NTAPI
 KsecInitializeEncryptionSupport (
     VOID);
 

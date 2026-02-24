@@ -1,54 +1,49 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Drivers
- * PURPOSE:         Kernel Security Support Provider Interface Driver
- *
- * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Kernel Security Support Provider Interface Driver
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Random number generation and entropy gathering
+ * COPYRIGHT:   Copyright 2025 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "ksecdd.h"
 #include <sha2.h>
+#include <aes-ctr.h>
 
 #define NDEBUG
 #include <debug.h>
 
-
 /* GLOBALS ********************************************************************/
 
-static ULONG KsecRandomSeed = 0x62b409a1;
-
+static AES_CTR_CTX KsecRngContext;
 
 /* FUNCTIONS ******************************************************************/
+
+VOID
+NTAPI
+KsecInitializeGenRandomSupport(
+    VOID)
+{
+    KSEC_ENTROPY_DATA EntropyData;
+
+    /* Gather entropy data */
+    KsecGatherEntropyData(&EntropyData);
+
+    /* Initialize the AES-CTR DRBG with the gathered entropy */
+    AES_CTR_Init(&KsecRngContext, EntropyData.Hash, sizeof(EntropyData.Hash));
+
+    /* Erase the temp data */
+    RtlSecureZeroMemory(&EntropyData, sizeof(EntropyData));
+}
 
 NTSTATUS
 NTAPI
 KsecGenRandom(
-    PVOID Buffer,
-    SIZE_T Length)
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ SIZE_T Length)
 {
-    LARGE_INTEGER TickCount;
-    ULONG i, RandomValue;
-    PULONG P;
-
-    /* Try to generate a more random seed */
-    KeQueryTickCount(&TickCount);
-    KsecRandomSeed ^= _rotl(TickCount.LowPart, (KsecRandomSeed % 23));
-
-    P = Buffer;
-    for (i = 0; i < Length / sizeof(ULONG); i++)
-    {
-        P[i] = RtlRandomEx(&KsecRandomSeed);
-    }
-
-    Length &= (sizeof(ULONG) - 1);
-    if (Length > 0)
-    {
-        RandomValue = RtlRandomEx(&KsecRandomSeed);
-        RtlCopyMemory(&P[i], &RandomValue, Length);
-    }
-
+    AES_CTR_GenRandomBytes(&KsecRngContext, Buffer, Length);
     return STATUS_SUCCESS;
 }
 
