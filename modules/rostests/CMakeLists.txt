@@ -1,6 +1,10 @@
 
 start_module_group(rostests)
 
+if(NOT MSVC)
+    add_link_options("-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/test-section.lds")
+endif()
+
 add_definitions(-DHAVE_APITEST)
 
 if(MSVC_IDE)
