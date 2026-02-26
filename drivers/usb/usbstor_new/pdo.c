@@ -674,14 +674,14 @@ USBSTOR_PdoHandleQueryInstanceId(
         //
         // using serial number from device
         //
-        swprintf(Buffer, L"%s&%c", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
+        _swprintf(Buffer, L"%s&%c", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
     }
     else
     {
         //
         // use instance count and LUN
         //
-        swprintf(Buffer, L"%04lu&%c", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
+        _swprintf(Buffer, L"%04lu&%c", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
     }
 
     //

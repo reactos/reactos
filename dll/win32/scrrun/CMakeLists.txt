@@ -28,6 +28,7 @@ add_library(scrrun MODULE
 
 add_dependencies(scrrun scrrun_idlheader stdole2)
 set_module_type(scrrun win32dll)
+target_compile_definitions(scrrun PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(scrrun uuid wine oldnames)
 add_importlibs(scrrun oleaut32 version advapi32 msvcrt kernel32 ntdll)
 add_pch(scrrun precomp.h "${PCH_SKIP_SOURCE}")

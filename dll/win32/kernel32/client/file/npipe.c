@@ -141,10 +141,10 @@ CreatePipe(PHANDLE hReadPipe,
     PipeId = InterlockedIncrement(&ProcessPipeId);
 
     /* Create the pipe name */
-    swprintf(Buffer,
-             L"\\Device\\NamedPipe\\Win32Pipes.%p.%08x",
-             NtCurrentTeb()->ClientId.UniqueProcess,
-             PipeId);
+    _swprintf(Buffer,
+              L"\\Device\\NamedPipe\\Win32Pipes.%p.%08x",
+              NtCurrentTeb()->ClientId.UniqueProcess,
+              PipeId);
     RtlInitUnicodeString(&PipeName, Buffer);
 
     /* Always use case insensitive */

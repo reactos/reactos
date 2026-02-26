@@ -738,7 +738,7 @@ StartRecDlgProc(HWND hwndDlg,
                         iTimeout = SendDlgItemMessage(hwndDlg, IDC_STRRECLISTUPDWN, UDM_GETPOS, (WPARAM)0, (LPARAM)0);
                     else
                         iTimeout = 0;
-                    swprintf(szTimeout, L"%i", iTimeout);
+                    _swprintf(szTimeout, L"%i", iTimeout);
 
                     lResult = SendDlgItemMessageW(hwndDlg, IDC_STRECOSCOMBO, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
                     if (lResult == CB_ERR)

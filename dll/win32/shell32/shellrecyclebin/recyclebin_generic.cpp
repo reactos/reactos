@@ -108,7 +108,7 @@ STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
         return HRESULT_FROM_WIN32(GetLastError());
     }
 #else
-    swprintf(szVolume, L"%c:\\", szFullName[0]);
+    _swprintf(szVolume, L"%c:\\", szFullName[0]);
 #endif
 
     /* Skip namespace (if any): "\\.\" or "\\?\" */
@@ -148,7 +148,7 @@ STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
             continue;
 
         WCHAR szVolumeName[MAX_PATH];
-        swprintf(szVolumeName, L"%c:\\", L'A' + i);
+        _swprintf(szVolumeName, L"%c:\\", L'A' + i);
         if (GetDriveTypeW(szVolumeName) != DRIVE_FIXED)
             continue;
 

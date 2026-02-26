@@ -636,8 +636,8 @@ InsertIpAddressToListView(
         li.iItem = itemCount;
         li.iSubItem = 0;
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                 FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+        _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         li.pszText = szBuffer;
         li.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&li);
@@ -646,13 +646,13 @@ InsertIpAddressToListView(
             if (bSubMask)
             {
                 dwIpAddr = pAddr->u.Subnetmask;
-                swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                         FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+                _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                          FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             }
             else
             {
                 if (pAddr->u.Metric)
-                    swprintf(szBuffer, L"%u", pAddr->u.Metric);
+                    _swprintf(szBuffer, L"%u", pAddr->u.Metric);
                 else
                     LoadStringW(netcfgx_hInstance, IDS_AUTOMATIC, szBuffer, sizeof(szBuffer)/sizeof(WCHAR));
             }
@@ -1437,7 +1437,7 @@ TcpipAdvancedIpDlg(
                     {
                         if (Gw.Metric)
                         {
-                            swprintf(szBuffer, L"%u", Gw.Metric);
+                            _swprintf(szBuffer, L"%u", Gw.Metric);
                             li.iSubItem = 1;
                             li.pszText = szBuffer;
                             SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -1479,7 +1479,7 @@ TcpipAdvancedIpDlg(
                         (void)SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
                         if (Gw.Metric)
                         {
-                            swprintf(szBuffer, L"%u", Gw.Metric);
+                            _swprintf(szBuffer, L"%u", Gw.Metric);
                             li.iSubItem = 1;
                             li.pszText = szBuffer;
                             SendDlgItemMessageW(hwndDlg, IDC_GWLIST, LVM_SETITEMW, 0, (LPARAM)&li);
@@ -1605,8 +1605,8 @@ InitializeTcpipAdvancedDNSDlg(
     while(pAddr)
     {
         dwIpAddr = pAddr->IpAddress;
-        swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                 FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+        _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                  FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
 
         SendDlgItemMessageW(hwndDlg, IDC_DNSADDRLIST, LB_ADDSTRING, 0, (LPARAM)szBuffer);
         pAddr = pAddr->Next;
@@ -1878,7 +1878,7 @@ TcpipAdvancedDnsDlg(
                         if (LoadStringW(netcfgx_hInstance, IDS_DNS_SUFFIX, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
                         {
                             szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
-                            swprintf(szBuffer, szFormat, szSuffix);
+                            _swprintf(szBuffer, szFormat, szSuffix);
                             if (LoadStringW(netcfgx_hInstance, IDS_TCPIP, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
                                 szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
                             else
@@ -2854,7 +2854,7 @@ LoadDNSSettings(
     if (FAILED(StringFromCLSID(&This->NetCfgInstanceId, &pStr)))
         return E_FAIL;
 
-    swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
+    _swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
     CoTaskMemFree(pStr);
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
@@ -2952,7 +2952,7 @@ LoadFilterSettings(
     if (FAILED(StringFromCLSID(&This->NetCfgInstanceId, &pStr)))
         return E_FAIL;
 
-    swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
+    _swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
     CoTaskMemFree(pStr);
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -3251,17 +3251,17 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.Subnetmask;
-            swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
         {
-            swprintf(szBuffer, L"%u", pTemp->u.Metric);
+            _swprintf(szBuffer, L"%u", pTemp->u.Metric);
         }
 
         dwSize += wcslen(szBuffer) + 1;
@@ -3281,17 +3281,17 @@ CreateMultiSzString(IP_ADDR * pAddr, COPY_TYPE Type, LPDWORD Size, BOOL bComma)
         if (Type == IPADDR)
         {
             dwIpAddr = pTemp->IpAddress;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(pStr, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }else if (Type == SUBMASK)
         {
             dwIpAddr = pTemp->u.Subnetmask;
-            swprintf(pStr, L"%lu.%lu.%lu.%lu",
-                    FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(pStr, L"%lu.%lu.%lu.%lu",
+                      FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr), THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
         }
         else if (Type == METRIC)
         {
-            swprintf(pStr, L"%u", pTemp->u.Metric);
+            _swprintf(pStr, L"%u", pTemp->u.Metric);
         }
 
         if (bComma)
@@ -3363,7 +3363,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
     if (FAILED(StringFromCLSID(&This->NetCfgInstanceId, &pStr)))
         return E_FAIL;
 
-    swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
+    _swprintf(szBuffer, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s", pStr);
     CoTaskMemFree(pStr);
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)

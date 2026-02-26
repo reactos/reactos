@@ -184,16 +184,16 @@ CFSDropTarget::_GetUniqueFileName(LPCWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR 
     }
 
     if (!bShortcut)
-        swprintf(pwszTarget, L"%s%s%s", wszLink, pwszBasePath, pwszExt);
+        _swprintf(pwszTarget, L"%s%s%s", wszLink, pwszBasePath, pwszExt);
     else
-        swprintf(pwszTarget, L"%s%s", pwszBasePath, pwszExt);
+        _swprintf(pwszTarget, L"%s%s", pwszBasePath, pwszExt);
 
     for (UINT i = 2; PathFileExistsW(pwszTarget); ++i)
     {
         if (!bShortcut)
-            swprintf(pwszTarget, L"%s%s (%u)%s", wszLink, pwszBasePath, i, pwszExt);
+            _swprintf(pwszTarget, L"%s%s (%u)%s", wszLink, pwszBasePath, i, pwszExt);
         else
-            swprintf(pwszTarget, L"%s (%u)%s", pwszBasePath, i, pwszExt);
+            _swprintf(pwszTarget, L"%s (%u)%s", pwszBasePath, i, pwszExt);
     }
 
     return TRUE;

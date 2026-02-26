@@ -3,9 +3,6 @@
 # Global compile options
 ###############################################################################
 
-# Use conforming swprintfs
-remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
-
 # This requires NT6
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)

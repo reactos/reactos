@@ -290,7 +290,7 @@ UserEnumDisplayDevices(
     }
     else
     {
-        swprintf(pdispdev->DeviceName, L"%ws\\Monitor%u", pGraphicsDevice->szWinDeviceName, iDevNum);
+        _swprintf(pdispdev->DeviceName, L"%ws\\Monitor%u", pGraphicsDevice->szWinDeviceName, iDevNum);
         if (pdo)
         {
             Status = IoGetDeviceProperty(pdo,

@@ -228,19 +228,19 @@ START_TEST(RtlDoesFileExists)
         StartSeh() RtlDoesFileExists_UstrEx(NULL, TRUE);    EndSeh(STATUS_ACCESS_VIOLATION);
     }
 
-    swprintf(FileName, L"C:\\%ls", CustomPath);
+    _swprintf(FileName, L"C:\\%ls", CustomPath);
     /* Make sure this directory doesn't exist */
     while (GetFileAttributesW(FileName) != INVALID_FILE_ATTRIBUTES)
     {
         wcscat(CustomPath, L"X");
-        swprintf(FileName, L"C:\\%ls", CustomPath);
+        _swprintf(FileName, L"C:\\%ls", CustomPath);
     }
     Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
     Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
     Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE)
@@ -271,24 +271,24 @@ START_TEST(RtlDoesFileExists)
         CloseHandle(Handle);
     }
 
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\SomeProgram.exe", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\SomeProgram.exe", CustomPath);
     Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE) CloseHandle(Handle);
 
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\With Space", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\With Space", CustomPath);
     Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE) CloseHandle(Handle);
 
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\Without", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\Without", CustomPath);
     Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE) CloseHandle(Handle);
 
     for (i = 0; i < sizeof(Tests) / sizeof(Tests[0]); i++)
     {
-        swprintf(FileName, Tests[i].FileName, CustomPath);
+        _swprintf(FileName, Tests[i].FileName, CustomPath);
         StartSeh()
             Ret = RtlDoesFileExists_U(FileName);
             ok_bool_file(Ret, Tests[i].Exists, FileName);
@@ -336,23 +336,23 @@ START_TEST(RtlDoesFileExists)
         }
     }
 
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\Without", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\Without", CustomPath);
     Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed (%lu), test might leave stale file\n", GetLastError());
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\With Space", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\With Space", CustomPath);
     Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed (%lu), test might leave stale file\n", GetLastError());
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\SomeProgram.exe", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\SomeProgram.exe", CustomPath);
     Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed (%lu), test might leave stale file\n", GetLastError());
 
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
     Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed (%lu), test might leave stale file\n", GetLastError());
-    swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
+    _swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
     Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed (%lu), test might leave stale directory\n", GetLastError());
-    swprintf(FileName, L"C:\\%ls", CustomPath);
+    _swprintf(FileName, L"C:\\%ls", CustomPath);
     Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed (%lu), test might leave stale directory\n", GetLastError());
 }

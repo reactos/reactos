@@ -120,7 +120,7 @@ GetRecordTypeName(WORD wType)
              return TypeArray[i].pszRecordName;
     }
 
-    swprintf(szType, L"%hu", wType);
+    _swprintf(szType, L"%hu", wType);
 
     return szType;
 }
@@ -307,7 +307,7 @@ GetInterfaceFriendlyName(
     if (PathSize >= 255)
         return;
 
-    swprintf(Path, L"%s%s%s", PrePath, &lpDeviceName[dwPrefixLength], PostPath);
+    _swprintf(Path, L"%s%s%s", PrePath, &lpDeviceName[dwPrefixLength], PostPath);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       Path,
@@ -1294,9 +1294,9 @@ SetClassId(
 
     if (pFoundAdapter)
     {
-        swprintf(szKeyName,
-                 L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%S",
-                 pFoundAdapter->AdapterName);
+        _swprintf(szKeyName,
+                  L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%S",
+                  pFoundAdapter->AdapterName);
 
         ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             szKeyName,

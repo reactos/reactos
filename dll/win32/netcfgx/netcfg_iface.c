@@ -376,7 +376,7 @@ EnumerateNetworkComponent(
     hr = StringFromCLSID(pGuid, &pszGuid);
     if (SUCCEEDED(hr))
     {
-        swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
+        _swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             hr = EnumClientServiceProtocol(hKey, pGuid, pHead);
@@ -644,7 +644,7 @@ ApplyOrCancelChanges(
                 {
                     if (StringFromCLSID(&pHead->InstanceId, &pszGuid) == NOERROR)
                     {
-                        swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
+                        _swprintf(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\%s", pszGuid);
                         CoTaskMemFree(pszGuid);
 
                         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)

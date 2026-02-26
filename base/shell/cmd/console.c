@@ -157,7 +157,7 @@ BOOL ConPrintfVPaging(PCON_PAGER Pager, BOOL StartPaging, LPWSTR szFormat, va_li
     if (szFormat == NULL)
         return TRUE;
 
-    /*len =*/ vswprintf(szOut, szFormat, arg_ptr);
+    /*len =*/ _vswprintf(szOut, szFormat, arg_ptr);
 
     // return ConPutsPaging(Pager, PagePrompt, StartPaging, szOut);
     return ConWritePaging(Pager, PagePrompt, StartPaging,

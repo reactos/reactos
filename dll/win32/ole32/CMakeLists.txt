@@ -8,7 +8,8 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -DENTRY_PREFIX=OLE32_
     -DPROXY_CLSID=CLSID_PSFactoryBuffer
-    -DWINE_REGISTER_DLL)
+    -DWINE_REGISTER_DLL
+    -D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(ole32.dll ole32.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 generate_idl_iids(dcom.idl)

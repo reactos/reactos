@@ -262,7 +262,7 @@ static void Test_NetworkShare(void)
         return;
     }
 
-    swprintf(RemotePathBuffer, L"\\\\localhost\\%s\\%s", ShareName, FileName);
+    _swprintf(RemotePathBuffer, L"\\\\localhost\\%s\\%s", ShareName, FileName);
     hFile = CreateFileW(RemotePathBuffer,
                         GENERIC_READ,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -282,7 +282,7 @@ static void Test_NetworkShare(void)
 
     /* Expected string for VOLUME_NAME_DOS:
        L"\\\\?\\UNC\\localhost\\TestShare\\kernel32_apitest.exe" */
-    swprintf(ExpectedString, L"\\\\?\\UNC\\localhost\\%s\\%s", ShareName, FileName);
+    _swprintf(ExpectedString, L"\\\\?\\UNC\\localhost\\%s\\%s", ShareName, FileName);
     ExpectedStringLength = wcslen(ExpectedString);
     SetLastError(0xdeadbeef);
     memset(Buffer, 0xCC, sizeof(Buffer));
@@ -315,7 +315,7 @@ static void Test_NetworkShare(void)
 
     /* Expected string for VOLUME_NAME_NT (2):
        L"\\Device\\Mup\\localhost\\TestShare\\kernel32_apitest.exe" */
-    swprintf(ExpectedString, L"\\Device\\Mup\\localhost\\%s\\%s", ShareName, FileName);
+    _swprintf(ExpectedString, L"\\Device\\Mup\\localhost\\%s\\%s", ShareName, FileName);
     ExpectedStringLength = wcslen(ExpectedString);
     SetLastError(0xdeadbeef);
     memset(Buffer, 0xCC, sizeof(Buffer));
@@ -333,7 +333,7 @@ static void Test_NetworkShare(void)
 
     /* Expected string for VOLUME_NAME_NONE:
        L"\\localhost\\TestShare\\kernel32_apitest.exe" */
-    swprintf(ExpectedString, L"\\localhost\\%s\\%s", ShareName,  FileName);
+    _swprintf(ExpectedString, L"\\localhost\\%s\\%s", ShareName,  FileName);
     ExpectedStringLength = wcslen(ExpectedString);
     SetLastError(0xdeadbeef);
     memset(Buffer, 0xCC, sizeof(Buffer));

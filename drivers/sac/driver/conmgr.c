@@ -807,7 +807,7 @@ DoLineParsing:
         if (ChannelIBufferLength(CurrentChannel) == (SAC_VTUTF8_COL_WIDTH - 2))
         {
             /* Delete the last character, replacing it with this one instead */
-            swprintf(StringBuffer, L"\b%c", Char);
+            _swprintf(StringBuffer, L"\b%c", Char);
             SacPutString(StringBuffer);
 
             /* Omit the last two characters from the buffer */
@@ -821,7 +821,7 @@ DoLineParsing:
         }
 
         /* Nothing of interest happened, just write the character back */
-        swprintf(StringBuffer, L"%c", Char);
+        _swprintf(StringBuffer, L"%c", Char);
         SacPutString(StringBuffer);
     }
 

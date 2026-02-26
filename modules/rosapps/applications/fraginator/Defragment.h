@@ -14,7 +14,7 @@
 #include "Mutex.h"
 
 
-extern int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename, uint32 totalWidth);
+extern int FitName (wchar_t *destination, size_t destsize, const wchar_t *path, const wchar_t *filename, uint32 totalWidth);
 
 
 typedef struct DefragReport

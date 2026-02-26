@@ -521,7 +521,7 @@ PrepareFoldersToScan(
                 nType = GetDriveTypeW(drive);
                 if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
                 {
-                    Buffer += 1 + swprintf(Buffer, drive);
+                    Buffer += 1 + _swprintf(Buffer, drive);
                 }
             }
         }

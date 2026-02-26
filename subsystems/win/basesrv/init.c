@@ -425,7 +425,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 
     if (SessionId != 0)
     {
-        swprintf(BnoBuffer, L"\\Sessions\\%ld\\BaseNamedObjects", SessionId);
+        _swprintf(BnoBuffer, L"\\Sessions\\%ld\\BaseNamedObjects", SessionId);
     }
     else
     {

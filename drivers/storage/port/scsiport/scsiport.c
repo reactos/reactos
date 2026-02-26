@@ -951,9 +951,9 @@ ScsiPortInitialize(
     {
         WCHAR NameBuffer[27];
         /* Create a unicode device name */
-        swprintf(NameBuffer,
-                 L"\\Device\\ScsiPort%lu",
-                 SystemConfig->ScsiPortCount);
+        _swprintf(NameBuffer,
+                  L"\\Device\\ScsiPort%lu",
+                  SystemConfig->ScsiPortCount);
         if (!RtlCreateUnicodeString(&DeviceName, NameBuffer))
         {
             DPRINT1("Failed to allocate memory for device name!\n");
@@ -2451,7 +2451,7 @@ TryNextAd:
         if (NT_SUCCESS(Status))
         {
             /* Create name for it */
-            swprintf(StrBuffer, L"ScsiAdapter\\%lu",
+            _swprintf(StrBuffer, L"ScsiAdapter\\%lu",
                 InternalConfigInfo->AdapterNumber);
 
             RtlInitUnicodeString(&UnicodeString, StrBuffer);
@@ -2514,7 +2514,7 @@ TryNextAd:
 
     if (InternalConfigInfo->ServiceKey != NULL)
     {
-        swprintf(DeviceBuffer, L"Device%lu", InternalConfigInfo->AdapterNumber);
+        _swprintf(DeviceBuffer, L"Device%lu", InternalConfigInfo->AdapterNumber);
         RtlInitUnicodeString(&UnicodeString, DeviceBuffer);
 
         /* Open the service key */

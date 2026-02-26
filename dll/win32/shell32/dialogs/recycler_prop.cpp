@@ -112,7 +112,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                     dwSerial = -1;
                 }
 
-                swprintf(szVolume, L"%s (%c:)", szName, szDrive[0]);
+                _swprintf(szVolume, L"%s (%c:)", szName, szDrive[0]);
                 ZeroMemory(&li, sizeof(li));
                 li.mask = LVIF_TEXT | LVIF_PARAM;
                 li.iSubItem = 0;
@@ -129,7 +129,7 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                             pItem->FreeBytesAvailable = FreeBytesAvailable;
                             pItem->dwSerial = dwSerial;
 
-                            swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\BitBucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
+                            _swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\BitBucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
 
                             dwSize = sizeof(DWORD);
                             if (RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize))
@@ -207,7 +207,7 @@ static BOOL StoreDriveSettings(HWND hwndDlg)
         if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&li))
         {
             pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
-            swprintf(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
+            _swprintf(szSerial, L"%04X-%04X", LOWORD(pItem->dwSerial), HIWORD(pItem->dwSerial));
             if (RegCreateKeyExW(hKey, szSerial, 0, NULL, 0, KEY_WRITE, NULL, &hSubKey, NULL) == ERROR_SUCCESS)
             {
                 dwSize = sizeof(DWORD);

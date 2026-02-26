@@ -185,7 +185,7 @@ public:
     {
         if (pszDest == NULL)
             return ::_vscwprintf(pszFormat, args);
-        return ::vswprintf(pszDest, pszFormat, args);
+        return ::_vswprintf(pszDest, pszFormat, args);
     }
 
     static LPWSTR

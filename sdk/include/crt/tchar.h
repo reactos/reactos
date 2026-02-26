@@ -141,7 +141,7 @@ extern "C" {
 #define _ftprintf_l _fwprintf_l
 #define _ftprintf_p _fwprintf_p
 #define _ftprintf_p_l _fwprintf_p_l
-#define _stprintf swprintf
+#define _stprintf _swprintf
 #define _stprintf_l __swprintf_l
 #define _stprintf_p _swprintf_p
 #define _stprintf_p_l _swprintf_p_l

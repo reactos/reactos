@@ -78,7 +78,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
     hOldFont = SelectObject(hDC, pData->hCaptionFont);
     GetTextMetrics(hDC, &tm);
 
-    swprintf(szCaption, L"%s%s", pData->szTypeFaceName, pData->szFormat);
+    _swprintf(szCaption, L"%s%s", pData->szTypeFaceName, pData->szFormat);
     TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
     y += tm.tmHeight + SPACING1;
 
@@ -93,15 +93,15 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
     /* Output Character set */
     SelectObject(hDC, pData->hCharSetFont);
     GetTextMetrics(hDC, &tm);
-    swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
+    _swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
     TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
     y += tm.tmHeight + 1;
 
-    swprintf(szCaption, L"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    _swprintf(szCaption, L"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
     TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
     y += tm.tmHeight + 1;
 
-    swprintf(szCaption, L"0123456789.:,;(\"~!@#$%%^&*')");
+    _swprintf(szCaption, L"0123456789.:,;(\"~!@#$%%^&*')");
     TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
     y += tm.tmHeight + 1;
 
@@ -119,7 +119,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
         GetTextMetrics(hDC, &tm);
         y += tm.tmHeight + 1;
         SelectObject(hDC, pData->hSizeFont);
-        swprintf(szSize, L"%d", pData->nSizes[i]);
+        _swprintf(szSize, L"%d", pData->nSizes[i]);
         TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, (INT)wcslen(szSize));
     }
     SelectObject(hDC, hOldFont);
@@ -199,17 +199,17 @@ Display_SetTypeFace(HWND hwnd, PLOGFONTW pLogFont)
             EnumFontFamProcW, (LPARAM)&fOpenType, 0);
 
         if (fOpenType)
-            swprintf(pData->szFormat, L" (OpenType)");
+            _swprintf(pData->szFormat, L" (OpenType)");
         else
-            swprintf(pData->szFormat, L" (TrueType)");
+            _swprintf(pData->szFormat, L" (TrueType)");
     }
     else if (tm.tmPitchAndFamily & TMPF_VECTOR)
     {
-        swprintf(pData->szFormat, L" (Vector)");
+        _swprintf(pData->szFormat, L" (Vector)");
     }
     else
     {
-        swprintf(pData->szFormat, L" (Raster)");
+        _swprintf(pData->szFormat, L" (Raster)");
     }
 
     for (i = 0; i < MAX_SIZES; i++)
@@ -518,7 +518,7 @@ Display_GetFullName(HWND hwnd, INT length, PWSTR ptr)
 
     if (ptr != NULL && length >= len)
     {
-        swprintf(ptr, L"%s%s", pData->szTypeFaceName, pData->szFormat);
+        _swprintf(ptr, L"%s%s", pData->szTypeFaceName, pData->szFormat);
     }
 
     return (LRESULT)len;

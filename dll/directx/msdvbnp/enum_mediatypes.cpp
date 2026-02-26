@@ -67,7 +67,7 @@ CEnumMediaTypes::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CEnumMediaTypes::QueryInterface: NoInterface for %s\n", lpstr);
+    _swprintf(Buffer, L"CEnumMediaTypes::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -167,7 +167,7 @@ CEnumMediaTypes_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    _swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 

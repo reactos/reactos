@@ -83,7 +83,7 @@ CBDAFrequencyFilter::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
+    _swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 DebugBreak();
@@ -122,7 +122,7 @@ CBDAFrequencyFilter::put_Frequency(ULONG ulFrequency)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Frequency: m_NodeId %lu ulFrequency %lu hr %lx\n", m_NodeId, ulFrequency, hr);
+    _swprintf(Buffer, L"CBDAFrequencyFilter::put_Frequency: m_NodeId %lu ulFrequency %lu hr %lx\n", m_NodeId, ulFrequency, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -152,7 +152,7 @@ CBDAFrequencyFilter::put_Polarity(Polarisation Polarity)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu Polarity %lu hr %lx\n", m_NodeId, Polarity, hr);
+    _swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu Polarity %lu hr %lx\n", m_NodeId, Polarity, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -182,7 +182,7 @@ CBDAFrequencyFilter::put_Range(ULONG ulRange)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Range: m_NodeId %lu ulRange %lu hr %lx\n", m_NodeId, ulRange, hr);
+    _swprintf(Buffer, L"CBDAFrequencyFilter::put_Range: m_NodeId %lu ulRange %lu hr %lx\n", m_NodeId, ulRange, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -212,7 +212,7 @@ CBDAFrequencyFilter::put_Bandwidth(ULONG ulBandwidth)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Bandwidth: m_NodeId %lu ulBandwidth %lu hr %lx\n", m_NodeId, ulBandwidth, hr);
+    _swprintf(Buffer, L"CBDAFrequencyFilter::put_Bandwidth: m_NodeId %lu ulBandwidth %lu hr %lx\n", m_NodeId, ulBandwidth, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -241,7 +241,7 @@ CBDAFrequencyFilter::put_FrequencyMultiplier(ULONG ulMultiplier)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_FrequencyMultiplier: m_NodeId %lu ulMultiplier %lu hr %lx\n", m_NodeId, ulMultiplier, hr);
+    _swprintf(Buffer, L"CBDAFrequencyFilter::put_FrequencyMultiplier: m_NodeId %lu ulMultiplier %lu hr %lx\n", m_NodeId, ulMultiplier, hr);
     OutputDebugStringW(Buffer);
 #endif
 

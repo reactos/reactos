@@ -324,7 +324,7 @@ CInputPin::QueryInterface(
 
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CInputPin::QueryInterface: NoInterface for %s\n", lpstr);
+    _swprintf(Buffer, L"CInputPin::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -619,7 +619,7 @@ CInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly)
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CInputPin::NotifyAllocator hr %lx bReadOnly, %u cbAlign %u cbBuffer %u cbPrefix %u cBuffers %u\n", hr, bReadOnly, Properties.cbAlign, Properties.cbBuffer, Properties.cbPrefix, Properties.cBuffers);
+    _swprintf(Buffer, L"CInputPin::NotifyAllocator hr %lx bReadOnly, %u cbAlign %u cbBuffer %u cbPrefix %u cBuffers %u\n", hr, bReadOnly, Properties.cbAlign, Properties.cbBuffer, Properties.cbPrefix, Properties.cBuffers);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -664,7 +664,7 @@ CInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CInputPin::GetAllocatorRequirements hr %lx m_hPin %p cBuffers %u cbBuffer %u cbAlign %u cbPrefix %u\n", hr, m_hPin, pProps->cBuffers, pProps->cbBuffer, pProps->cbAlign, pProps->cbPrefix);
+    _swprintf(Buffer, L"CInputPin::GetAllocatorRequirements hr %lx m_hPin %p cBuffers %u cbBuffer %u cbAlign %u cbPrefix %u\n", hr, m_hPin, pProps->cBuffers, pProps->cbBuffer, pProps->cbAlign, pProps->cbPrefix);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -1465,7 +1465,7 @@ CInputPin::CreatePin(
     {
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"CInputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
+        _swprintf(Buffer, L"CInputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
         OutputDebugStringW(Buffer);
 #endif
         hr = E_FAIL;
@@ -1570,7 +1570,7 @@ CInputPin::CreatePinHandle(
         StringFromIID(m_MediaFormat.formattype, &pFormat);
 
         WCHAR Buffer[200];
-        swprintf(Buffer, L"CInputPin::CreatePinHandle Major %s SubType %s Format %s pbFormat %p cbFormat %u\n", pMajor, pSub, pFormat, pmt->pbFormat, pmt->cbFormat);
+        _swprintf(Buffer, L"CInputPin::CreatePinHandle Major %s SubType %s Format %s pbFormat %p cbFormat %u\n", pMajor, pSub, pFormat, pmt->pbFormat, pmt->cbFormat);
         CoTaskMemFree(pMajor);
         CoTaskMemFree(pSub);
         CoTaskMemFree(pFormat);
@@ -1669,7 +1669,7 @@ CInputPin::GetSupportedSets(
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
-    swprintf(Buffer, L"CInputPin::GetSupportedSets NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    _swprintf(Buffer, L"CInputPin::GetSupportedSets NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
     OutputDebugStringW(Buffer);
 #endif
 

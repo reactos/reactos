@@ -25,7 +25,7 @@ public:
         InterlockedDecrement(&m_Ref);
 
             WCHAR Buffer[100];
-            swprintf(Buffer, L"CTuningSpace::Release : %p Ref %lu\n", this, m_Ref);
+            _swprintf(Buffer, L"CTuningSpace::Release : %p Ref %lu\n", this, m_Ref);
             OutputDebugStringW(Buffer);
 
         if (!m_Ref)
@@ -106,7 +106,7 @@ CTuningSpace::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CTuningSpace::QueryInterface: NoInterface for %s", lpstr);
+    _swprintf(Buffer, L"CTuningSpace::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -215,7 +215,7 @@ CTuningSpace::get__NetworkType(GUID *NetworkTypeGuid)
 {
 #ifdef MSVIDCTL_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CTuningSpace::get__NetworkType : %p stub\n", NetworkTypeGuid);
+    _swprintf(Buffer, L"CTuningSpace::get__NetworkType : %p stub\n", NetworkTypeGuid);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -345,7 +345,7 @@ CTuningSpace_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CTuningSpace_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    _swprintf(Buffer, L"CTuningSpace_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 

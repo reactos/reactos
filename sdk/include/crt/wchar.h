@@ -1074,7 +1074,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ _Printf_format_string_ const wchar_t *_Format,
     va_list _ArgList);
 
-#if defined __cplusplus || defined _CRT_NON_CONFORMING_SWPRINTFS
+#if defined _CRT_NON_CONFORMING_SWPRINTFS
   _CRTIMP
   int
   __cdecl

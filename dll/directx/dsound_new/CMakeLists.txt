@@ -25,6 +25,7 @@ add_library(dsound MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
 
 set_module_type(dsound win32dll)
+target_compile_definitions(dsound PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(dsound dxguid uuid)
 add_importlibs(dsound winmm ole32 advapi32 setupapi ksuser user32 msvcrt kernel32 ntdll)
 add_pch(dsound precomp.h SOURCE)

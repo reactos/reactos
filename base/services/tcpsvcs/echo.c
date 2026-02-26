@@ -25,7 +25,7 @@ EchoIncomingPackets(SOCKET sock)
         readBytes = recv(sock, readBuffer, RECV_BUF, 0);
         if (readBytes > 0)
         {
-            swprintf(logBuf, L"Received %d bytes from client", readBytes);
+            _swprintf(logBuf, L"Received %d bytes from client", readBytes);
             LogEvent(logBuf, 0, 0, LOG_FILE);
 
             totalSentBytes = 0;
@@ -34,7 +34,7 @@ EchoIncomingPackets(SOCKET sock)
                 retVal = send(sock, readBuffer + totalSentBytes, readBytes - totalSentBytes, 0);
                 if (retVal > 0)
                 {
-                    swprintf(logBuf, L"Sent %d bytes back to client", retVal);
+                    _swprintf(logBuf, L"Sent %d bytes back to client", retVal);
                     LogEvent(logBuf, 0, 0, LOG_FILE);
                     totalSentBytes += retVal;
                 }

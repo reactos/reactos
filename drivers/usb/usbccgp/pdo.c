@@ -186,7 +186,7 @@ USBCCGP_PdoAppendInterfaceNumber(
 
     while (*DeviceId)
     {
-        StringLength = swprintf(String, L"%s&MI_%02x", DeviceId, InterfaceNumber) + 1;
+        StringLength = _swprintf(String, L"%s&MI_%02x", DeviceId, InterfaceNumber) + 1;
         Length = wcslen(DeviceId) + 1;
         DPRINT("String %p\n", String);
 
@@ -252,7 +252,7 @@ USBCCGP_PdoHandleQueryId(
                 // append interface number
                 //
                 ASSERT(Irp->IoStatus.Information);
-                swprintf(Buffer, L"%s&MI_%02x", (LPWSTR)Irp->IoStatus.Information, PDODeviceExtension->FunctionDescriptor->FunctionNumber);
+                _swprintf(Buffer, L"%s&MI_%02x", (LPWSTR)Irp->IoStatus.Information, PDODeviceExtension->FunctionDescriptor->FunctionNumber);
                 DPRINT("BusQueryDeviceID %S\n", Buffer);
 
                 ExFreePool((PVOID)Irp->IoStatus.Information);
@@ -292,7 +292,7 @@ USBCCGP_PdoHandleQueryId(
         //
         // use function number
         //
-        swprintf(Buffer, L"%04x", PDODeviceExtension->FunctionDescriptor->FunctionNumber);
+        _swprintf(Buffer, L"%04x", PDODeviceExtension->FunctionDescriptor->FunctionNumber);
         Irp->IoStatus.Information = (ULONG_PTR)Buffer;
         return STATUS_SUCCESS;
     }

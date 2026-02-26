@@ -525,7 +525,7 @@ FdoRemoveAdapter(
     WCHAR dosNameBuffer[12];
     UNICODE_STRING dosDeviceName;
 
-    swprintf(dosNameBuffer, L"\\??\\Scsi%lu:", DeviceExtension->PortNumber);
+    _swprintf(dosNameBuffer, L"\\??\\Scsi%lu:", DeviceExtension->PortNumber);
     RtlInitUnicodeString(&dosDeviceName, dosNameBuffer);
 
     IoDeleteSymbolicLink(&dosDeviceName); // don't check the result
@@ -617,7 +617,7 @@ FdoStartAdapter(
     IoStartTimer(PortExtension->Common.DeviceObject);
 
     // Create the dos device link
-    swprintf(dosNameBuffer, L"\\??\\Scsi%u:", PortExtension->PortNumber);
+    _swprintf(dosNameBuffer, L"\\??\\Scsi%u:", PortExtension->PortNumber);
     RtlInitUnicodeString(&dosDeviceName, dosNameBuffer);
     status = IoCreateSymbolicLink(&dosDeviceName, &PortExtension->DeviceName);
     if (!NT_SUCCESS(status))

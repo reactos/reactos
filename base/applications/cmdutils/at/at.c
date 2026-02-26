@@ -484,7 +484,7 @@ PrintJobDetails(
         {
             if (pBuffer->DaysOfMonth & (1 << i))
             {
-                swprintf(szDateBuffer, L" %d", i + 1);
+                _swprintf(szDateBuffer, L" %d", i + 1);
                 nDateLength = wcslen(szDateBuffer);
                 if (nScheduleLength + nDateLength <= 55)
                 {
@@ -511,7 +511,7 @@ PrintJobDetails(
         {
             if (pBuffer->DaysOfWeek & (1 << i))
             {
-                swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[i]);
+                _swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[i]);
                 nDateLength = wcslen(szDateBuffer);
                 if (nScheduleLength + nDateLength <= 55)
                 {
@@ -612,7 +612,7 @@ PrintAllJobs(
             {
                 if (pBuffer[i].DaysOfMonth & (1 << j))
                 {
-                    swprintf(szDateBuffer, L" %d", j + 1);
+                    _swprintf(szDateBuffer, L" %d", j + 1);
                     nDateLength = wcslen(szDateBuffer);
                     if (nScheduleLength + nDateLength <= 19)
                     {
@@ -639,7 +639,7 @@ PrintAllJobs(
             {
                 if (pBuffer[i].DaysOfWeek & (1 << j))
                 {
-                    swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[j]);
+                    _swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[j]);
                     nDateLength = wcslen(szDateBuffer);
                     if (nScheduleLength + nDateLength <= 55)
                     {

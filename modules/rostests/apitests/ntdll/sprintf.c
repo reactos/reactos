@@ -53,7 +53,7 @@ my_swprintf(wchar_t *buf, const wchar_t *format, ...)
 }
 
 #define sprintf(buf, format, ...) my_sprintf(buf, format, __VA_ARGS__);
-#define swprintf(buf, format, ...) my_swprintf((wchar_t*)buf, format, __VA_ARGS__);
+#define _swprintf(buf, format, ...) my_swprintf((wchar_t*)buf, format, __VA_ARGS__);
 
 void
 test_c()

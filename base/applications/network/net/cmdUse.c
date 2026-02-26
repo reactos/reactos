@@ -70,7 +70,7 @@ PrintError(DWORD Status)
     WCHAR szStatusBuffer[16];
     LPWSTR Buffer;
 
-    swprintf(szStatusBuffer, L"%lu", Status);
+    _swprintf(szStatusBuffer, L"%lu", Status);
     PrintMessageStringV(3502, szStatusBuffer);
 
     if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))

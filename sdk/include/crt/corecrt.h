@@ -17,6 +17,10 @@ extern "C" {
 #define _CRTRESTRICT
 #endif
 
+#ifndef _CRT_SECURE_CPP_NOTHROW
+    #define _CRT_SECURE_CPP_NOTHROW throw()
+#endif
+
 #ifndef DEFINED_localeinfo_struct
 typedef struct localeinfo_struct
 {

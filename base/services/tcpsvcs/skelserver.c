@@ -84,14 +84,14 @@ AcceptConnections(SOCKET listeningSocket,
                 sock = accept(listeningSocket, (SOCKADDR*)&client, &addrSize);
                 if (sock != INVALID_SOCKET)
                 {
-                    swprintf(logBuf,
+                    _swprintf(logBuf,
                              L"Accepted connection to %s server from %S:%d",
                              lpName,
                              inet_ntoa(client.sin_addr),
                              ntohs(client.sin_port));
                     LogEvent(logBuf, 0, 0, LOG_FILE);
 
-                    swprintf(logBuf, L"Creating worker thread for %s", lpName);
+                    _swprintf(logBuf, L"Creating worker thread for %s", lpName);
                     LogEvent(logBuf, 0, 0, LOG_FILE);
 
                     if (!bShutdown)
@@ -103,7 +103,7 @@ AcceptConnections(SOCKET listeningSocket,
                         }
                         else
                         {
-                            swprintf(logBuf, L"Failed to start worker thread for the %s server",
+                            _swprintf(logBuf, L"Failed to start worker thread for the %s server",
                                      lpName);
                             LogEvent(logBuf, 0, 0, LOG_FILE);
                         }
@@ -149,7 +149,7 @@ ShutdownConnection(SOCKET sock,
             ret = recv(sock, readBuffer, BUF, 0);
             if (ret >= 0)
             {
-                swprintf(logBuf, L"FYI, received %d unexpected bytes during shutdown", ret);
+                _swprintf(logBuf, L"FYI, received %d unexpected bytes during shutdown", ret);
                 LogEvent(logBuf, 0, 0, LOG_FILE);
             }
         } while (ret > 0);
@@ -170,7 +170,7 @@ StartServer(LPVOID lpParam)
 
     pServices = (PSERVICES)lpParam;
 
-    swprintf(logBuf, L"Starting %s server", pServices->lpName);
+    _swprintf(logBuf, L"Starting %s server", pServices->lpName);
     LogEvent(logBuf, 0, 0, LOG_FILE);
 
     if (!bShutdown)
@@ -178,7 +178,7 @@ StartServer(LPVOID lpParam)
         listeningSocket = SetUpListener(htons(pServices->Port));
         if (!bShutdown && listeningSocket != INVALID_SOCKET)
         {
-            swprintf(logBuf,
+            _swprintf(logBuf,
                      L"%s is waiting for connections on port %d",
                      pServices->lpName,
                      pServices->Port);
@@ -192,7 +192,7 @@ StartServer(LPVOID lpParam)
         }
     }
 
-    swprintf(logBuf, L"Exiting %s thread", pServices->lpName);
+    _swprintf(logBuf, L"Exiting %s thread", pServices->lpName);
     LogEvent(logBuf, 0, 0, LOG_FILE);
     ExitThread(0);
 }

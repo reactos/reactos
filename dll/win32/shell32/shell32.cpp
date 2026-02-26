@@ -47,7 +47,7 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     numFormat.lpThousandSep = szSeparator;
     numFormat.NegativeOrder = 0;
 
-    swprintf(szValue, L"%lu", lValue);
+    _swprintf(szValue, L"%lu", lValue);
 
     if (GetNumberFormatW(LOCALE_USER_DEFAULT,
                          0,

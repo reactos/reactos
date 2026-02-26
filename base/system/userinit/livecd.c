@@ -318,7 +318,7 @@ SetKeyboardLayout(
     if (ulLayoutId == (ULONG)CB_ERR)
         return;
 
-    swprintf(szLayoutId, L"%08lx", ulLayoutId);
+    _swprintf(szLayoutId, L"%08lx", ulLayoutId);
 
     hKl = LoadKeyboardLayoutW(szLayoutId, KLF_ACTIVATE | KLF_REPLACELANG | KLF_SETFORPROCESS);
     SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hKl, SPIF_SENDCHANGE);
@@ -519,7 +519,7 @@ InitializeDefaultUserLocale(
     {
         lcid = *pNewLcid;
 
-        swprintf(szBuffer, L"%08lx", lcid);
+        _swprintf(szBuffer, L"%08lx", lcid);
         RegSetValueExW(hLocaleKey,
                        L"Locale",
                        0,

@@ -49,7 +49,7 @@ VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName)
 
             WCHAR buf[(sizeof(sha) * 2) + 1];
             for (UINT i = 0; i < sizeof(sha); i++)
-                swprintf(buf + 2 * i, L"%02x", ((unsigned char *)sha)[i]);
+                _swprintf(buf + 2 * i, L"%02x", ((unsigned char *)sha)[i]);
             /* does the resulting SHA1 match with the provided one? */
             if (!_wcsicmp(buf, lpSHA1Hash))
                 ret = TRUE;
