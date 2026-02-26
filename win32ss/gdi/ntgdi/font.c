@@ -1312,6 +1312,7 @@ NtGdiHfontCreate(
   return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
 }
 
+//! This function is called from GetCharWidthA/W/I, GetCharWidth32A/W, and GetCharWidthFloatA/W,
 BOOL NTAPI
 NtGdiGetCharWidthW(
     _In_ HDC hDC,
