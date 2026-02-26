@@ -7676,11 +7676,6 @@ GreGetCharWidthW(
     PINT SafeBuffI;
     PFLOAT SafeBuffF;
 
-    if (fl == 0)
-        SafeBuffF = (PFLOAT)Buffer;
-    else
-        SafeBuffI = (PINT)Buffer;
-
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
@@ -7725,6 +7720,11 @@ GreGetCharWidthW(
     IntLockFreeType();
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
+
+    if (!fl)
+        SafeBuffF = (PFLOAT)Buffer;
+    else
+        SafeBuffI = (PINT)Buffer;
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
