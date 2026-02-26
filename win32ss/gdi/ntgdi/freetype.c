@@ -7655,7 +7655,7 @@ NtGdiGetCharABCWidthsW(
 /*
 * @implemented
 */
-BOOL NTAPI
+BOOL APIENTRY
 GreGetCharWidthW(
     _In_ HDC hDC,
     _In_ UINT FirstChar,
