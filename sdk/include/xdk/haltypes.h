@@ -438,8 +438,7 @@ struct _KEXCEPTION_FRAME;
 typedef PVOID PCMC_EXCEPTION;
 typedef PVOID PCPE_EXCEPTION;
 
-typedef
-VOID
+typedef VOID
 (NTAPI *PDRIVER_EXCPTN_CALLBACK)(
     _In_ PVOID Context,
     _In_ struct _KTRAP_FRAME *TrapFrame,
