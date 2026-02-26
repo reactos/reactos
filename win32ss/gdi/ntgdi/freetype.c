@@ -7747,7 +7747,7 @@ GreGetCharWidthW(
     return TRUE;
 }
 
-static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _In_ PWCHAR pDefChar)
+static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _Out_ PWCHAR pDefChar)
 {
     TT_OS2 *pOS2;
     FT_WinFNT_HeaderRec WinFNT;
@@ -7875,7 +7875,6 @@ NtGdiGetGlyphIndicesW(
         if (!Buffer || !Safepwc)
         {
             Status = STATUS_NO_MEMORY;
-            DPRINT1("ExAllocatePoolWithTag\n");
             goto ErrorRet;
         }
     }
