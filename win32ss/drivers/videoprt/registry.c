@@ -501,11 +501,7 @@ IntCreateVideoSubkeys(
     INFO_(VIDEOPRT, "IntCreateVideoSubkeys: Created Services\\%wZ\\Video\n", &ServiceName);
 
     /* Create \Registry\Machine\System\CCS\Control\Video\{GUID}\Video subkey */
-    GuidVideoPathLength = (USHORT)(
-        ControlVideoPathName.Length +
-        VideoIdString->Length +
-        sizeof(L"\\Video"));
-
+    GuidVideoPathLength = (USHORT)(ControlVideoPathName.Length + VideoIdString->Length + sizeof(L"\\Video"));
     GuidVideoPath.Length = 0;
     GuidVideoPath.MaximumLength = GuidVideoPathLength;
     GuidVideoPath.Buffer = ExAllocatePoolWithTag(PagedPool, GuidVideoPathLength, TAG_VIDEO_PORT);
