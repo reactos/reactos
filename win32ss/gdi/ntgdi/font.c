@@ -1326,8 +1326,8 @@ NtGdiGetCharWidthW(
     PVOID pTmpBuffer = NULL;
     PWCHAR pSafePwc = NULL;
     NTSTATUS Status;
-    WCHAR StackPwc[100];
-    INT StackBuffer[100];
+    WCHAR StackPwc[40];
+    INT StackBuffer[40];
 
     if (!Count)
         return FALSE;

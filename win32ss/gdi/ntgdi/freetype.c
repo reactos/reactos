@@ -7805,10 +7805,10 @@ NtGdiGetGlyphIndicesW(
     INT i;
     WCHAR DefChar = 0xffff;
     PWORD Buffer = NULL;
-    WORD StackBuffer[256];
+    WORD StackBuffer[40];
     size_t pwcSize;
     PWSTR Safepwc = NULL;
-    WCHAR pwcStack[256];
+    WCHAR pwcStack[40];
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
     FT_Face Face;
