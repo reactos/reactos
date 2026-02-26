@@ -410,6 +410,8 @@ IntCreateVideoSubkeys(
 {
     static UNICODE_STRING VideoSubKeyName = RTL_CONSTANT_STRING(L"Video");
     static UNICODE_STRING ServiceValueName = RTL_CONSTANT_STRING(L"Service");
+    static UNICODE_STRING ControlVideoPathName =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\");
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ServiceName;
@@ -500,7 +502,7 @@ IntCreateVideoSubkeys(
 
     /* Create \Registry\Machine\System\CCS\Control\Video\{GUID}\Video subkey */
     GuidVideoPathLength = (USHORT)(
-        sizeof(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\") - sizeof(UNICODE_NULL) +
+        ControlVideoPathName.Length +
         VideoIdString->Length +
         sizeof(L"\\Video"));
 
@@ -513,8 +515,7 @@ IntCreateVideoSubkeys(
         goto Cleanup;
     }
 
-    RtlAppendUnicodeToString(&GuidVideoPath,
-        L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\");
+    RtlAppendUnicodeStringToString(&GuidVideoPath, &ControlVideoPathName);
     RtlAppendUnicodeStringToString(&GuidVideoPath, VideoIdString);
     RtlAppendUnicodeToString(&GuidVideoPath, L"\\Video");
 
