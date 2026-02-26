@@ -166,3 +166,12 @@ BOOL WINAPI GreGetTextMetricsW( _In_  HDC hdc, _Out_ LPTEXTMETRICW lptm);
 
 #define IntUnLockProcessPrivateFonts(W32Process) \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&W32Process->PrivateFontListLock)
+
+BOOL NTAPI
+GreGetCharWidthW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH Safepwc,
+    _In_ ULONG fl,
+    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID pTmpBuffer);
