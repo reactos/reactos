@@ -7,11 +7,6 @@
 
 #pragma once
 
-#define LANGID_CHINESE_SIMPLIFIED 0x804 // Simplified Chinese language
-#define LANGID_CHINESE_TRADITIONAL 0x404 // Traditional Chinese language
-#define LANGID_JAPANESE 0x411 // Japanese language
-#define LANGID_KOREAN 0x412 // Korean language
-
 #define WM_USER_INIT (WM_USER + 0x00) // 0x400
 #define WM_USER_UNINIT (WM_USER + 0x01) // 0x401
 #define WM_USER_SWITCHIME (WM_USER + 0x02) // 0x402

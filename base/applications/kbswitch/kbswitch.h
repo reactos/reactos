@@ -11,18 +11,13 @@
 #include <tchar.h>
 #include <strsafe.h>
 #include <ime/indicml.h> /* INDICATOR_CLASS, INDICM_... */
+#include <cjkcode.h> /* LANGID_... */
 
 #include "resource.h"
 #include "indicdll/resource.h"
 
 #define CCH_LAYOUT_ID       8   // Character Count of a layout ID like "00000409"
 #define CCH_ULONG_DEC       10  // Maximum Character Count of a ULONG in decimal
-
-// Far East Language IDs
-#define LANGID_CHINESE_SIMPLIFIED MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
-#define LANGID_CHINESE_TRADITIONAL MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL)
-#define LANGID_JAPANESE MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
-#define LANGID_KOREAN MAKELANGID(LANG_KOREAN, SUBLANG_DEFAULT)
 
 #define WM_LANG_CHANGED    (WM_USER + 10200)
 #define WM_WINDOW_ACTIVATE (WM_USER + 10300)
