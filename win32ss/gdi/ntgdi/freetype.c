@@ -7661,8 +7661,8 @@ GreGetCharWidthW(
     _In_ UINT FirstChar,
     _In_ UINT Count,
     _In_reads_opt_(Count) PCWCH Safepwc,
-    _In_ ULONG fl,
-    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID pTmpBuffer)
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID Buffer)
 {
     PDC dc;
     PDC_ATTR pdcattr;
@@ -7677,9 +7677,9 @@ GreGetCharWidthW(
     PFLOAT SafeBuffF;
 
     if (fl == 0)
-        SafeBuffF = (PFLOAT)pTmpBuffer;
+        SafeBuffF = (PFLOAT)Buffer;
     else
-        SafeBuffI = (PINT)pTmpBuffer;
+        SafeBuffI = (PINT)Buffer;
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)

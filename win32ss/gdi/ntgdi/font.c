@@ -1319,7 +1319,7 @@ NtGdiGetCharWidthW(
     _In_ UINT Count,
     _In_reads_opt_(Count) PCWCH UnSafepwc,
     _In_ FLONG fl,
-    _Out_writes_bytes_(Count * sizeof(ULONG)) PVOID Buffer)
+    _Out_writes_bytes_(Count * sizeof(INT)) PVOID Buffer)
 {
     BOOL ret = FALSE;
     PVOID pTmpBuffer = NULL;
@@ -1331,7 +1331,7 @@ NtGdiGetCharWidthW(
 
     if (UnSafepwc)
     {
-        if (Count <= MAX_TEXT_BUFFER / sizeof(WCHAR) && Count * sizeof(WCHAR) > 0)
+        if (Count <= MAX_TEXT_BUFFER / sizeof(WCHAR))
             pSafePwc = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
 
         if (!pSafePwc)
@@ -1343,7 +1343,7 @@ NtGdiGetCharWidthW(
     }
 
     if (Count <= MAX_TEXT_BUFFER / sizeof(INT))
-        pTmpBuffer = ExAllocatePoolWithTag(PagedPool, sizeof(INT) * Count, GDITAG_TEXT);
+        pTmpBuffer = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
 
     if (!pTmpBuffer)
         goto Cleanup;
@@ -1351,7 +1351,7 @@ NtGdiGetCharWidthW(
     ret = GreGetCharWidthW(hDC, FirstChar, Count, pSafePwc, fl, pTmpBuffer);
     if (ret)
     {
-        Status = MmCopyToCaller(Buffer, pTmpBuffer, Count * sizeof(ULONG));
+        Status = MmCopyToCaller(Buffer, pTmpBuffer, Count * sizeof(INT));
         ret = NT_SUCCESS(Status);
     }
 
