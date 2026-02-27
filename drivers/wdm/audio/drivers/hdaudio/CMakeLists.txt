@@ -8,6 +8,7 @@ list(APPEND SOURCE
     miniport.cpp
     topology.cpp
     prophnd.cpp
+    purecall.cpp
     stream.cpp
     guid.cpp)
 
