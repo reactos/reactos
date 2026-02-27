@@ -5,4 +5,4 @@
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#define IDI_MAINICON                        2
+#define IDI_MAINICON 100
