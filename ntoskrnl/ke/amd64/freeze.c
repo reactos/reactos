@@ -35,7 +35,7 @@
 
 /* NOT INCLUDES ANYMORE ******************************************************/
 
-PKPRCB KiFreezeOwner;
+PVOID volatile KiFreezeOwner;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -77,7 +77,7 @@ KiProcessorFreezeHandler(
             if (ContinueStatus == ContinueSuccess)
             {
                 /* Release the freeze owner */
-                KiFreezeOwner->IpiFrozen = IPI_FROZEN_STATE_THAW;
+                ((PKPRCB)KiFreezeOwner)->IpiFrozen = IPI_FROZEN_STATE_THAW;
             }
         }
 
