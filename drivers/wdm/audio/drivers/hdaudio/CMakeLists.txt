@@ -6,6 +6,8 @@ list(APPEND SOURCE
     common.cpp
     functiongroupnode.cpp
     miniport.cpp
+    topology.cpp
+    prophnd.cpp
     stream.cpp
     guid.cpp)
 
