@@ -1,14 +1,14 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/drivers/hdaudio/stream.cpp
- * PURPOSE:         HDAudio Driver
- * PROGRAMMER:      Johannes Anderwald
+ * PROJECT:         ReactOS HDAudio Driver
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         WaveRT streaming
+ * COPYRIGHT:       Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *                  Copyright 2025-2026 Oleg Dubinskiy <oleg.dubinskiy@reactos.org>
  */
 
 #include "private.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -76,7 +76,9 @@ NTAPI
 CMiniportWaveRTStream::GetHWLatency(
     IN KSRTAUDIO_HWLATENCY* hwLatency)
 {
-    UNIMPLEMENTED_ONCE;
+    hwLatency->FifoSize = m_FifoSize;
+    hwLatency->ChipsetDelay = 250; // FIXME
+    hwLatency->CodecDelay = 3401; // FIXME
 }
 
 VOID
@@ -224,7 +226,7 @@ HDAUDIO_AllocateStream(
                 PKSDATARANGE_AUDIO PinRange = (PKSDATARANGE_AUDIO)PinDataRange;
                 PKSDATAFORMAT_WAVEFORMATEX RequestFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
 
-                if (RequestFormat->WaveFormatEx.nChannels > PinRange->MaximumChannels)
+                if (RequestFormat->WaveFormatEx.nChannels > MAX_CHANNELS)
                 {
                     DPRINT1(
                         "ChannelsCount %u not supported, MaxChannels %u\n", RequestFormat->WaveFormatEx.nChannels,
@@ -232,25 +234,25 @@ HDAUDIO_AllocateStream(
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec < PinRange->MinimumSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec < MIN_SAMPLE_FREQUENCY)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.nSamplesPerSec > PinRange->MaximumSampleFrequency)
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec > MAX_SAMPLE_FREQUENCY)
                 {
                     DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample < PinRange->MinimumBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample < MIN_BITS_PER_SAMPLE)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;
                 }
 
-                if (RequestFormat->WaveFormatEx.wBitsPerSample > PinRange->MaximumBitsPerSample)
+                if (RequestFormat->WaveFormatEx.wBitsPerSample > MAX_BITS_PER_SAMPLE)
                 {
                     DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
                     return STATUS_NOT_SUPPORTED;

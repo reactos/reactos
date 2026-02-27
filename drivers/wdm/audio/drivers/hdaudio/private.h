@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/drivers/hdaudio/hdaudio.h
- * PURPOSE:         HDAudio Driver
- * PROGRAMMER:      Johannes Anderwald
+ * PROJECT:         ReactOS HDAudio Driver
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Internal definitions
+ * COPYRIGHT:       Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *                  Copyright 2025-2026 Oleg Dubinskiy <oleg.dubinskiy@reactos.org>
  */
 
 #pragma once
@@ -16,6 +16,7 @@
 #include <ddk/ntstrsafe.h>
 
 #include "hda_verbs.h"
+#include "tables.h"
 
 #define TAG_HDAUDIO 'UADH'
 
@@ -127,7 +128,7 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
 {
   public:
     STDMETHODIMP QueryInterface(REFIID InterfaceId, PVOID *Interface);
-    NTSTATUS NTAPI Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+    NTSTATUS NTAPI Initialize(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PRESOURCELIST ResourceList);
     NTSTATUS NTAPI AcquireBusInterface(IN PDEVICE_OBJECT DeviceObject);
     VOID NTAPI GetResourceInformation();
     NTSTATUS NTAPI GetVendorRevisionId();
@@ -138,47 +139,57 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
         IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp,
         IN LPWSTR Name,
+        IN BOOLEAN bTopology,
+        IN REFGUID PortClassId,
+        IN PRESOURCELIST ResourceList,
         IN ULONG AssociatedPinsCount,
         IN PULONG AssociatedPinIds,
         IN PVOID FunctionGroupNode,
-        IN PPCFILTER_DESCRIPTOR FilterDescription);
+        IN PPCFILTER_DESCRIPTOR FilterDescription,
+        OUT PUNKNOWN *OutPortUnknown);
     NTSTATUS NTAPI ChooseSubdeviceName(UCHAR DefaultDevice, UCHAR Wave, OUT LPWSTR *OutSubdeviceName);
     NTSTATUS NTAPI
-    BuildWaveOutFilter(
+    BuildWaveOutFormat(
         IN ULONG AssociatedPinCount,
         IN PULONG AssociatedPins,
         IN PVOID Node,
-        IN UCHAR Digital,
-        OUT PPCFILTER_DESCRIPTOR *OutDescription);
+        IN UCHAR Digital);
     NTSTATUS NTAPI
-    BuildWaveInFilter(
+    BuildWaveInFormat(
         IN ULONG AssociatedPinCount,
         IN PULONG AssociatedPins,
-        IN PVOID Node,
-        OUT PPCFILTER_DESCRIPTOR *OutDescription);
+        IN PVOID Node);
     NTSTATUS NTAPI
-    BuildFilter(IN PVOID Node, IN ULONG NodeCount, IN PULONG TargetWidgets, OUT PPCFILTER_DESCRIPTOR *OutDescription);
+    BuildWaveFormat(
+        IN PVOID Node,
+        IN ULONG NodeCount,
+        IN PULONG TargetWidgets);
     NTSTATUS NTAPI
     BuildInstallFilter(
         IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp,
         IN ULONG bOutput,
         IN PVOID OutNode,
+        IN PRESOURCELIST ResourceList,
         IN ULONG AssociatedPinCount,
         IN PULONG AssociatedPins,
         IN UCHAR Digital);
     VOID NTAPI ClearRef(IN ULONG RefValue, IN ULONG NodeCount, IN PULONG Nodes);
     NTSTATUS
     NTAPI
-    ProcessOutputNodes(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN ULONG PinNodeCount, IN PULONG PinNodes, IN PVOID Node);
-
-
-
+    ProcessOutputNodes(
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp,
+        IN PRESOURCELIST ResourceList,
+        IN ULONG PinNodeCount,
+        IN PULONG PinNodes,
+        IN PVOID Node);
     NTSTATUS
     NTAPI
     ProcessInputNodes(
         IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp,
+        IN PRESOURCELIST ResourceList,
         IN ULONG PinNodeCount,
         IN PULONG PinNodes,
         IN PVOID Node,
@@ -190,6 +201,7 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
     AssociatePins(
         IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp,
+        IN PRESOURCELIST ResourceList,
         IN UCHAR DefaultAssociation,
         IN PVOID Node,
         IN ULONG PinNodeCount,
@@ -247,6 +259,13 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
     {
     }
 
+    friend NTSTATUS NTAPI PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_ChannelConfig(IN PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_SpeakerGeometry(IN PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI PropertyHandler_Mute(IN PPCPROPERTY_REQUEST PropertyRequest);
+    friend NTSTATUS NTAPI EventHandler_Volume(IN PPCEVENT_REQUEST EventRequest);
+
   private:
     HDAUDIO_BUS_INTERFACE_V2 Interface;
     UCHAR m_CodecAddress;
@@ -254,6 +273,10 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
     UINT16 RevisionId;
     UINT16 VendorId;
     UCHAR m_Tags[64];
+    PUNKNOWN m_TopoInPortUnknown;
+    PUNKNOWN m_WaveRTInPortUnknown;
+    PUNKNOWN m_TopoOutPortUnknown;
+    PUNKNOWN m_WaveRTOutPortUnknown;
 };
 
 class CFunctionGroupNode
@@ -280,6 +303,8 @@ class CFunctionGroupNode
     NTSTATUS NTAPI GetAmplifierDetails(IN ULONG NodeId, IN ULONG Input, OUT PAMPLIFIER_CAPABILITIES Caps);
     NTSTATUS NTAPI GetPinCapabilities(IN ULONG NodeId, OUT PPIN_CAPABILITIES PinCaps);
     NTSTATUS NTAPI GetPinSense(IN ULONG NodeId, IN PULONG DevicePresent);
+    NTSTATUS NTAPI GetVolume(IN ULONG NodeId, OUT PUCHAR Direct, OUT PLONG Volume);
+    NTSTATUS NTAPI SetVolume(IN ULONG NodeId, IN UCHAR Direct, IN LONG Volume);
     NTSTATUS NTAPI GetVolumeCapabilities(IN ULONG NodeId, IN PUCHAR Delta, IN PUCHAR NumSteps);
     NTSTATUS NTAPI GetPinNodesWithDefaultAssociation(IN UCHAR DefaultAssociation, IN UCHAR Digital, OUT PULONG NodeCount, OUT PULONG * Nodes);
     VOID NTAPI ClearVisitedState();
@@ -296,6 +321,12 @@ class CFunctionGroupNode
     NTAPI
     SetEAPD(IN ULONG NodeId, IN UCHAR Enable);
 
+    UCHAR
+    GetStartNodeId()
+    {
+        return m_StartNodeId;
+    }
+
   private:
     CAdapterCommon *m_Adapter;
     UCHAR m_StartNodeId;
@@ -303,6 +334,80 @@ class CFunctionGroupNode
     ULONG m_StartSubNode;
     ULONG m_SubNodeCount;
     LIST_ENTRY m_Nodes;
+};
+
+class CMiniportTopology : public CUnknownImpl<IMiniportTopology>
+{
+  public:
+    STDMETHODIMP QueryInterface(REFIID InterfaceId, PVOID *Interface);
+    IMP_IMiniportTopology;
+    CMiniportTopology(
+        IUnknown *OuterUnknown,
+        ULONG AssociatedPinCount,
+        PULONG AssociatedPinIds,
+        CFunctionGroupNode *Node,
+        CAdapterCommon *Adapter,
+        PPCFILTER_DESCRIPTOR Filter)
+        : m_Port(0), m_AssociatedPinCount(AssociatedPinCount), m_AssociatedPins(AssociatedPinIds), m_Node(Node),
+          m_Adapter(Adapter), m_FilterDescription(Filter)
+    {
+    }
+    virtual ~CMiniportTopology()
+    {
+    }
+
+    CFunctionGroupNode*
+    GetNode()
+    {
+        return m_Node;
+    }
+
+  private:
+    PPORTTOPOLOGY m_Port;
+    ULONG m_AssociatedPinCount;
+    PULONG m_AssociatedPins;
+    CFunctionGroupNode *m_Node;
+    CAdapterCommon *m_Adapter;
+    PPCFILTER_DESCRIPTOR m_FilterDescription;
+    PIN_CONFIGURATION_DEFAULT m_PinConfiguration;
+    HDAUDIO_BUS_INTERFACE_V2 m_Interface;
+};
+
+class CMiniportWaveRT : public CUnknownImpl<IMiniportWaveRT>
+{
+  public:
+    STDMETHODIMP QueryInterface(REFIID InterfaceId, PVOID *Interface);
+    IMP_IMiniportWaveRT;
+    CMiniportWaveRT(
+        IUnknown *OuterUnknown,
+        ULONG AssociatedPinCount,
+        PULONG AssociatedPinIds,
+        CFunctionGroupNode *Node,
+        CAdapterCommon *Adapter,
+        PPCFILTER_DESCRIPTOR Filter)
+        : m_Port(0), m_AssociatedPinCount(AssociatedPinCount), m_AssociatedPins(AssociatedPinIds), m_Node(Node),
+          m_Adapter(Adapter), m_FilterDescription(Filter)
+    {
+    }
+    virtual ~CMiniportWaveRT()
+    {
+    }
+
+    CFunctionGroupNode*
+    GetNode()
+    {
+        return m_Node;
+    }
+
+  private:
+    PPORTWAVERT m_Port;
+    ULONG m_AssociatedPinCount;
+    PULONG m_AssociatedPins;
+    CFunctionGroupNode *m_Node;
+    CAdapterCommon *m_Adapter;
+    PPCFILTER_DESCRIPTOR m_FilterDescription;
+    PIN_CONFIGURATION_DEFAULT m_PinConfiguration;
+    HDAUDIO_BUS_INTERFACE_V2 m_Interface;
 };
 
 class CMiniportWaveRTStream : public CUnknownImpl<IMiniportWaveRTStreamNotification>
@@ -368,7 +473,8 @@ NTSTATUS
 HDAUDIO_InitializeCommonAdapter(
     CAdapterCommon* CommonAdapter,
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
+    IN PIRP Irp,
+    IN PRESOURCELIST ResourceList
 );
 
 typedef struct
@@ -376,6 +482,15 @@ typedef struct
     ULONG_PTR Reserved[4]; // used by portcls
     CAdapterCommon *AdapterCommon;
 }HDAUDIO_DEVICE_EXTENSION, *PHDAUDIO_DEVICE_EXTENSION;
+
+NTSTATUS
+HDAUDIO_NewMiniportTopology(
+    OUT PMINIPORTTOPOLOGY* OutMiniport,
+    IN ULONG AssociatedPinsCount,
+    IN PULONG AssociatedPinIds,
+    IN CFunctionGroupNode * Node,
+    IN CAdapterCommon * Adapter,
+    IN PPCFILTER_DESCRIPTOR FilterDescription);
 
 NTSTATUS
 HDAUDIO_NewMiniportWaveRT(
