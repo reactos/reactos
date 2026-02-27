@@ -7714,6 +7714,7 @@ GreGetCharWidthW(
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
             EngSetLastError(ERROR_INVALID_HANDLE);
+            TEXTOBJ_UnlockText(TextObj);
             return FALSE;
         }
 
