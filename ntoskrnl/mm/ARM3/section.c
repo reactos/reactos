@@ -373,9 +373,10 @@ MiInsertInSystemSpace(IN PMMSESSION Session,
 
     /* Compute the base address */
     Base = (PVOID)((ULONG_PTR)Session->SystemSpaceViewStart + (i * MI_SYSTEM_VIEW_BUCKET_SIZE));
+    NT_ASSERT(((ULONG_PTR)Base & (MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) == 0);
 
     /* Get the hash entry for this allocation */
-    Entry = ((ULONG_PTR)Base & ~(MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) + Buckets;
+    Entry = (ULONG_PTR)Base + Buckets;
     Hash = (Entry >> 16) % Session->SystemSpaceHashKey;
 
     /* Loop hash entries until a free one is found */
