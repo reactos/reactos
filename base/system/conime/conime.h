@@ -42,7 +42,7 @@ typedef struct tagIMEDISPLAY
     UINT uCharInfoLen;
     BOOL bFlag;
     CHAR_INFO CharInfo[IMEDISPLAY_MAX_X];
-} IMEDISPLAY, *PIMEDISPLAY; // 0x288
+} IMEDISPLAY, *PIMEDISPLAY;
 
 // Keyboard layout info
 typedef struct tagKLINFO
