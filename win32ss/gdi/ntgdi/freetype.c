@@ -7709,6 +7709,7 @@ GreGetCharWidthW(
                 break;
             }
         }
+        // NOTE: The raster font can have no charmap.
         if (found)
             FT_Set_Charmap(face, found);
         IntUnLockFreeType();
