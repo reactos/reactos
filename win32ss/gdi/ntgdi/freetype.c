@@ -7699,6 +7699,7 @@ GreGetCharWidthW(
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
     {
+        // FIXME: Select better charmap
         for (i = 0; i < (UINT)face->num_charmaps; i++)
         {
             charmap = face->charmaps[i];
