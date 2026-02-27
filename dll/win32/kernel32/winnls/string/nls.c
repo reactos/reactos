@@ -297,7 +297,11 @@ IntGetCodePageEntry(UINT CodePage)
     HANDLE SectionHandle = INVALID_HANDLE_VALUE, FileHandle;
     PBYTE SectionMapping;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UCHAR SecurityDescriptor[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    union
+    {
+        SECURITY_DESCRIPTOR AlignedSd;
+        UCHAR Buffer[NLS_SECTION_SECURITY_DESCRIPTOR_SIZE];
+    } SecurityDescriptor;
     ANSI_STRING AnsiName;
     UNICODE_STRING UnicodeName;
     WCHAR FileName[MAX_PATH + 1];
@@ -389,7 +393,7 @@ IntGetCodePageEntry(UINT CodePage)
                                &UnicodeName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               SecurityDescriptor);
+                               &SecurityDescriptor);
 
     /* Try to open the section first */
     Status = NtOpenSection(&SectionHandle,

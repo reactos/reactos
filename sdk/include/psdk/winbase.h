@@ -1289,6 +1289,10 @@ BOOL WINAPI AccessCheckAndAuditAlarmW(LPCWSTR,LPVOID,LPWSTR,LPWSTR,PSECURITY_DES
 VOID WINAPI AcquireSRWLockExclusive(PSRWLOCK);
 VOID WINAPI AcquireSRWLockShared(PSRWLOCK);
 #endif
+#if (_WIN32_WINNT >= 0x0601)
+BOOLEAN WINAPI TryAcquireSRWLockExclusive(PSRWLOCK);
+BOOLEAN WINAPI TryAcquireSRWLockShared(PSRWLOCK);
+#endif
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI ActivateActCtx(_Inout_opt_ HANDLE, _Out_ ULONG_PTR*);
 #endif
@@ -1972,6 +1976,13 @@ BOOL WINAPI GetModuleHandleExW(DWORD,LPCWSTR,HMODULE*);
 WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathA(LPCSTR ExeName);
 WINBASEAPI BOOL WINAPI NeedCurrentDirectoryForExePathW(LPCWSTR ExeName);
 #endif
+
+WINBASEAPI
+BOOL
+WINAPI
+GetNamedPipeClientProcessId(
+    _In_ HANDLE Pipe,
+    _Out_ PULONG ClientProcessId);
 
 BOOL
 WINAPI

@@ -180,20 +180,12 @@ typedef struct _WKSTA_USER_INFO_1101
 {
     [string] wchar_t *wkui1101_oth_domains;
 } WKSTA_USER_INFO_1101, *PWKSTA_USER_INFO_1101, *LPWKSTA_USER_INFO_1101;
-/*
+
 typedef [switch_type(unsigned long)] union _WKSTA_USER_INFO
 {
     [case(0)] LPWKSTA_USER_INFO_0 UserInfo0;
     [case(1)] LPWKSTA_USER_INFO_1 UserInfo1;
     [case(1101)] LPWKSTA_USER_INFO_1101 UserInfo1101;
-    [default] ;
-} WKSTA_USER_INFO, *PWKSTA_USER_INFO, *LPWKSTA_USER_INFO;
-*/
-typedef [switch_type(unsigned long)] union _WKSTA_USER_INFO
-{
-    [case(0)] WKSTA_USER_INFO_0 UserInfo0;
-    [case(1)] WKSTA_USER_INFO_1 UserInfo1;
-    [case(1101)] WKSTA_USER_INFO_1101 UserInfo1101;
     [default] ;
 } WKSTA_USER_INFO, *PWKSTA_USER_INFO, *LPWKSTA_USER_INFO;
 
@@ -206,7 +198,6 @@ typedef struct _WKSTA_TRANSPORT_INFO_0
     unsigned long wkti0_wan_ish;
 } WKSTA_TRANSPORT_INFO_0, *PWKSTA_TRANSPORT_INFO_0, *LPWKSTA_TRANSPORT_INFO_0;
 
-/*
 typedef [switch_type(unsigned long)] union _WKSTA_INFO
 {
     [case(100)] LPWKSTA_INFO_100 WkstaInfo100;
@@ -216,18 +207,6 @@ typedef [switch_type(unsigned long)] union _WKSTA_INFO
     [case(1013)] LPWKSTA_INFO_1013 WkstaInfo1013;
     [case(1018)] LPWKSTA_INFO_1018 WkstaInfo1018;
     [case(1046)] LPWKSTA_INFO_1046 WkstaInfo1046;
-    [default] ;
-} WKSTA_INFO, *PWKSTA_INFO, *LPWKSTA_INFO;
-*/
-typedef [switch_type(unsigned long)] union _WKSTA_INFO
-{
-    [case(100)] WKSTA_INFO_100 WkstaInfo100;
-    [case(101)] WKSTA_INFO_101 WkstaInfo101;
-    [case(102)] WKSTA_INFO_102 WkstaInfo102;
-    [case(502)] WKSTA_INFO_502 WkstaInfo502;
-    [case(1013)] WKSTA_INFO_1013 WkstaInfo1013;
-    [case(1018)] WKSTA_INFO_1018 WkstaInfo1018;
-    [case(1046)] WKSTA_INFO_1046 WkstaInfo1046;
     [default] ;
 } WKSTA_INFO, *PWKSTA_INFO, *LPWKSTA_INFO;
 
@@ -398,8 +377,7 @@ interface wkssvc
     NetrWkstaGetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
         [in] unsigned long Level,
-        [out, switch_is(Level)] LPWKSTA_INFO *WkstaInfo);
-//        [out, switch_is(Level)] LPWKSTA_INFO WkstaInfo);
+        [out, switch_is(Level)] LPWKSTA_INFO WkstaInfo);
 
     /* Function 1 */
     unsigned long
@@ -426,8 +404,7 @@ interface wkssvc
     NetrWkstaUserGetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE Unused,
         [in] unsigned long Level,
-        [out, switch_is(Level)] LPWKSTA_USER_INFO *UserInfo);
-//        [out, switch_is(Level)] LPWKSTA_USER_INFO UserInfo);
+        [out, switch_is(Level)] LPWKSTA_USER_INFO UserInfo);
 
     /* Function 4 */
     unsigned long

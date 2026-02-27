@@ -1816,7 +1816,7 @@ static void test_DataTags(HSDB hsdb)
     ok_hex(dwRet, ERROR_SUCCESS);
     ok_hex(dwDataType, REG_QWORD);
     ok_hex(dwBufferSize, sizeof(QWORD));
-    ok(*(QWORD*)Buffer == 4294967295ull, "unexpected value 0x%I64x, expected 4294967295\n", *(QWORD*)Buffer);
+    ok(*(QWORD*)Buffer == 0x123456789ull, "unexpected value 0x%I64x, expected 0x123456789\n", *(QWORD*)Buffer);
     ok(tiData != NULL && tiData != 0x111111, "Expected tiData, got NULL\n");
     ok_hex(pSdbGetTagFromTagID(pdb, tiData), TAG_DATA);
 

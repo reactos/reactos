@@ -17,6 +17,7 @@
 
 #ifdef LIBXML_SCHEMAS_ENABLED
 
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <float.h>
@@ -25,7 +26,6 @@
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
 #include <libxml/hash.h>
-#include <libxml/valid.h>
 #include <libxml/xpath.h>
 #include <libxml/uri.h>
 
@@ -33,7 +33,7 @@
 #include <libxml/schemasInternals.h>
 #include <libxml/xmlschemastypes.h>
 
-#define DEBUG
+#include "private/error.h"
 
 #ifndef LIBXML_XPATH_ENABLED
 extern double xmlXPathNAN;
@@ -383,18 +383,61 @@ xmlSchemaAddParticle(void)
     return (ret);
 }
 
+static void
+xmlSchemaFreeTypeEntry(void *type, const xmlChar *name ATTRIBUTE_UNUSED) {
+    xmlSchemaFreeType((xmlSchemaTypePtr) type);
+}
+
+/**
+ * xmlSchemaCleanupTypesInternal:
+ *
+ * Cleanup the default XML Schemas type library
+ */
+static void
+xmlSchemaCleanupTypesInternal(void) {
+    xmlSchemaParticlePtr particle;
+
+    /*
+    * Free xs:anyType.
+    */
+    if (xmlSchemaTypeAnyTypeDef != NULL) {
+        /* Attribute wildcard. */
+        xmlSchemaFreeWildcard(xmlSchemaTypeAnyTypeDef->attributeWildcard);
+        /* Content type. */
+        particle = (xmlSchemaParticlePtr) xmlSchemaTypeAnyTypeDef->subtypes;
+        /* Wildcard. */
+        xmlSchemaFreeWildcard((xmlSchemaWildcardPtr)
+            particle->children->children->children);
+        xmlFree((xmlSchemaParticlePtr) particle->children->children);
+        /* Sequence model group. */
+        xmlFree((xmlSchemaModelGroupPtr) particle->children);
+        xmlFree((xmlSchemaParticlePtr) particle);
+        xmlSchemaTypeAnyTypeDef->subtypes = NULL;
+        xmlSchemaTypeAnyTypeDef = NULL;
+    }
+
+    xmlHashFree(xmlSchemaTypesBank, xmlSchemaFreeTypeEntry);
+    xmlSchemaTypesBank = NULL;
+    /* Note that the xmlSchemaType*Def pointers aren't set to NULL. */
+}
+
 /*
  * xmlSchemaInitTypes:
  *
  * Initialize the default XML Schemas type library
+ *
+ * Returns 0 on success, -1 on error.
  */
-void
+int
 xmlSchemaInitTypes(void)
 {
     if (xmlSchemaTypesInitialized != 0)
-        return;
+        return (0);
     xmlSchemaTypesBank = xmlHashCreate(40);
-
+    if (xmlSchemaTypesBank == NULL) {
+	xmlSchemaTypeErrMemory(NULL, NULL);
+        goto error;
+    }
 
     /*
     * 3.4.7 Built-in Complex Type Definition
@@ -402,6 +445,8 @@ xmlSchemaInitTypes(void)
     xmlSchemaTypeAnyTypeDef = xmlSchemaInitBasicType("anyType",
                                                      XML_SCHEMAS_ANYTYPE,
 						     NULL);
+    if (xmlSchemaTypeAnyTypeDef == NULL)
+        goto error;
     xmlSchemaTypeAnyTypeDef->baseType = xmlSchemaTypeAnyTypeDef;
     xmlSchemaTypeAnyTypeDef->contentType = XML_SCHEMA_CONTENT_MIXED;
     /*
@@ -415,14 +460,14 @@ xmlSchemaInitTypes(void)
 	/* First particle. */
 	particle = xmlSchemaAddParticle();
 	if (particle == NULL)
-	    return;
+	    goto error;
 	xmlSchemaTypeAnyTypeDef->subtypes = (xmlSchemaTypePtr) particle;
 	/* Sequence model group. */
 	sequence = (xmlSchemaModelGroupPtr)
 	    xmlMalloc(sizeof(xmlSchemaModelGroup));
 	if (sequence == NULL) {
 	    xmlSchemaTypeErrMemory(NULL, "allocating model group component");
-	    return;
+	    goto error;
 	}
 	memset(sequence, 0, sizeof(xmlSchemaModelGroup));
 	sequence->type = XML_SCHEMA_TYPE_SEQUENCE;
@@ -430,7 +475,7 @@ xmlSchemaInitTypes(void)
 	/* Second particle. */
 	particle = xmlSchemaAddParticle();
 	if (particle == NULL)
-	    return;
+	    goto error;
 	particle->minOccurs = 0;
 	particle->maxOccurs = UNBOUNDED;
 	sequence->children = (xmlSchemaTreeItemPtr) particle;
@@ -438,7 +483,7 @@ xmlSchemaInitTypes(void)
 	wild = (xmlSchemaWildcardPtr) xmlMalloc(sizeof(xmlSchemaWildcard));
 	if (wild == NULL) {
 	    xmlSchemaTypeErrMemory(NULL, "allocating wildcard component");
-	    return;
+	    goto error;
 	}
 	memset(wild, 0, sizeof(xmlSchemaWildcard));
 	wild->type = XML_SCHEMA_TYPE_ANY;
@@ -452,7 +497,7 @@ xmlSchemaInitTypes(void)
 	if (wild == NULL) {
 	    xmlSchemaTypeErrMemory(NULL, "could not create an attribute "
 		"wildcard on anyType");
-	    return;
+	    goto error;
 	}
 	memset(wild, 0, sizeof(xmlSchemaWildcard));
 	wild->any = 1;
@@ -462,66 +507,106 @@ xmlSchemaInitTypes(void)
     xmlSchemaTypeAnySimpleTypeDef = xmlSchemaInitBasicType("anySimpleType",
                                                            XML_SCHEMAS_ANYSIMPLETYPE,
 							   xmlSchemaTypeAnyTypeDef);
+    if (xmlSchemaTypeAnySimpleTypeDef == NULL)
+        goto error;
     /*
     * primitive datatypes
     */
     xmlSchemaTypeStringDef = xmlSchemaInitBasicType("string",
                                                     XML_SCHEMAS_STRING,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeStringDef == NULL)
+        goto error;
     xmlSchemaTypeDecimalDef = xmlSchemaInitBasicType("decimal",
                                                      XML_SCHEMAS_DECIMAL,
 						     xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeDecimalDef == NULL)
+        goto error;
     xmlSchemaTypeDateDef = xmlSchemaInitBasicType("date",
                                                   XML_SCHEMAS_DATE,
 						  xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeDateDef == NULL)
+        goto error;
     xmlSchemaTypeDatetimeDef = xmlSchemaInitBasicType("dateTime",
                                                       XML_SCHEMAS_DATETIME,
 						      xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeDatetimeDef == NULL)
+        goto error;
     xmlSchemaTypeTimeDef = xmlSchemaInitBasicType("time",
                                                   XML_SCHEMAS_TIME,
 						  xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeTimeDef == NULL)
+        goto error;
     xmlSchemaTypeGYearDef = xmlSchemaInitBasicType("gYear",
                                                    XML_SCHEMAS_GYEAR,
 						   xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeGYearDef == NULL)
+        goto error;
     xmlSchemaTypeGYearMonthDef = xmlSchemaInitBasicType("gYearMonth",
                                                         XML_SCHEMAS_GYEARMONTH,
 							xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeGYearMonthDef == NULL)
+        goto error;
     xmlSchemaTypeGMonthDef = xmlSchemaInitBasicType("gMonth",
                                                     XML_SCHEMAS_GMONTH,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeGMonthDef == NULL)
+        goto error;
     xmlSchemaTypeGMonthDayDef = xmlSchemaInitBasicType("gMonthDay",
                                                        XML_SCHEMAS_GMONTHDAY,
 						       xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeGMonthDayDef == NULL)
+        goto error;
     xmlSchemaTypeGDayDef = xmlSchemaInitBasicType("gDay",
                                                   XML_SCHEMAS_GDAY,
 						  xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeGDayDef == NULL)
+        goto error;
     xmlSchemaTypeDurationDef = xmlSchemaInitBasicType("duration",
                                                       XML_SCHEMAS_DURATION,
 						      xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeDurationDef == NULL)
+        goto error;
     xmlSchemaTypeFloatDef = xmlSchemaInitBasicType("float",
                                                    XML_SCHEMAS_FLOAT,
 						   xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeFloatDef == NULL)
+        goto error;
     xmlSchemaTypeDoubleDef = xmlSchemaInitBasicType("double",
                                                     XML_SCHEMAS_DOUBLE,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeDoubleDef == NULL)
+        goto error;
     xmlSchemaTypeBooleanDef = xmlSchemaInitBasicType("boolean",
                                                      XML_SCHEMAS_BOOLEAN,
 						     xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeBooleanDef == NULL)
+        goto error;
     xmlSchemaTypeAnyURIDef = xmlSchemaInitBasicType("anyURI",
                                                     XML_SCHEMAS_ANYURI,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeAnyURIDef == NULL)
+        goto error;
     xmlSchemaTypeHexBinaryDef = xmlSchemaInitBasicType("hexBinary",
                                                      XML_SCHEMAS_HEXBINARY,
 						     xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeHexBinaryDef == NULL)
+        goto error;
     xmlSchemaTypeBase64BinaryDef
         = xmlSchemaInitBasicType("base64Binary", XML_SCHEMAS_BASE64BINARY,
 	xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeBase64BinaryDef == NULL)
+        goto error;
     xmlSchemaTypeNotationDef = xmlSchemaInitBasicType("NOTATION",
                                                     XML_SCHEMAS_NOTATION,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeNotationDef == NULL)
+        goto error;
     xmlSchemaTypeQNameDef = xmlSchemaInitBasicType("QName",
                                                    XML_SCHEMAS_QNAME,
 						   xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeQNameDef == NULL)
+        goto error;
 
     /*
      * derived datatypes
@@ -529,69 +614,113 @@ xmlSchemaInitTypes(void)
     xmlSchemaTypeIntegerDef = xmlSchemaInitBasicType("integer",
                                                      XML_SCHEMAS_INTEGER,
 						     xmlSchemaTypeDecimalDef);
+    if (xmlSchemaTypeIntegerDef == NULL)
+        goto error;
     xmlSchemaTypeNonPositiveIntegerDef =
         xmlSchemaInitBasicType("nonPositiveInteger",
                                XML_SCHEMAS_NPINTEGER,
 			       xmlSchemaTypeIntegerDef);
+    if (xmlSchemaTypeNonPositiveIntegerDef == NULL)
+        goto error;
     xmlSchemaTypeNegativeIntegerDef =
         xmlSchemaInitBasicType("negativeInteger", XML_SCHEMAS_NINTEGER,
 	xmlSchemaTypeNonPositiveIntegerDef);
+    if (xmlSchemaTypeNegativeIntegerDef == NULL)
+        goto error;
     xmlSchemaTypeLongDef =
         xmlSchemaInitBasicType("long", XML_SCHEMAS_LONG,
 	xmlSchemaTypeIntegerDef);
+    if (xmlSchemaTypeLongDef == NULL)
+        goto error;
     xmlSchemaTypeIntDef = xmlSchemaInitBasicType("int", XML_SCHEMAS_INT,
 	xmlSchemaTypeLongDef);
+    if (xmlSchemaTypeIntDef == NULL)
+        goto error;
     xmlSchemaTypeShortDef = xmlSchemaInitBasicType("short",
                                                    XML_SCHEMAS_SHORT,
 						   xmlSchemaTypeIntDef);
+    if (xmlSchemaTypeShortDef == NULL)
+        goto error;
     xmlSchemaTypeByteDef = xmlSchemaInitBasicType("byte",
                                                   XML_SCHEMAS_BYTE,
 						  xmlSchemaTypeShortDef);
+    if (xmlSchemaTypeByteDef == NULL)
+        goto error;
     xmlSchemaTypeNonNegativeIntegerDef =
         xmlSchemaInitBasicType("nonNegativeInteger",
                                XML_SCHEMAS_NNINTEGER,
 			       xmlSchemaTypeIntegerDef);
+    if (xmlSchemaTypeNonNegativeIntegerDef == NULL)
+        goto error;
     xmlSchemaTypeUnsignedLongDef =
         xmlSchemaInitBasicType("unsignedLong", XML_SCHEMAS_ULONG,
 	xmlSchemaTypeNonNegativeIntegerDef);
+    if (xmlSchemaTypeUnsignedLongDef == NULL)
+        goto error;
     xmlSchemaTypeUnsignedIntDef =
         xmlSchemaInitBasicType("unsignedInt", XML_SCHEMAS_UINT,
 	xmlSchemaTypeUnsignedLongDef);
+    if (xmlSchemaTypeUnsignedIntDef == NULL)
+        goto error;
     xmlSchemaTypeUnsignedShortDef =
         xmlSchemaInitBasicType("unsignedShort", XML_SCHEMAS_USHORT,
 	xmlSchemaTypeUnsignedIntDef);
+    if (xmlSchemaTypeUnsignedShortDef == NULL)
+        goto error;
     xmlSchemaTypeUnsignedByteDef =
         xmlSchemaInitBasicType("unsignedByte", XML_SCHEMAS_UBYTE,
 	xmlSchemaTypeUnsignedShortDef);
+    if (xmlSchemaTypeUnsignedByteDef == NULL)
+        goto error;
     xmlSchemaTypePositiveIntegerDef =
         xmlSchemaInitBasicType("positiveInteger", XML_SCHEMAS_PINTEGER,
 	xmlSchemaTypeNonNegativeIntegerDef);
+    if (xmlSchemaTypePositiveIntegerDef == NULL)
+        goto error;
     xmlSchemaTypeNormStringDef = xmlSchemaInitBasicType("normalizedString",
                                                         XML_SCHEMAS_NORMSTRING,
 							xmlSchemaTypeStringDef);
+    if (xmlSchemaTypeNormStringDef == NULL)
+        goto error;
     xmlSchemaTypeTokenDef = xmlSchemaInitBasicType("token",
                                                    XML_SCHEMAS_TOKEN,
 						   xmlSchemaTypeNormStringDef);
+    if (xmlSchemaTypeTokenDef == NULL)
+        goto error;
     xmlSchemaTypeLanguageDef = xmlSchemaInitBasicType("language",
                                                       XML_SCHEMAS_LANGUAGE,
 						      xmlSchemaTypeTokenDef);
+    if (xmlSchemaTypeLanguageDef == NULL)
+        goto error;
     xmlSchemaTypeNameDef = xmlSchemaInitBasicType("Name",
                                                   XML_SCHEMAS_NAME,
 						  xmlSchemaTypeTokenDef);
+    if (xmlSchemaTypeNameDef == NULL)
+        goto error;
     xmlSchemaTypeNmtokenDef = xmlSchemaInitBasicType("NMTOKEN",
                                                      XML_SCHEMAS_NMTOKEN,
 						     xmlSchemaTypeTokenDef);
+    if (xmlSchemaTypeNmtokenDef == NULL)
+        goto error;
     xmlSchemaTypeNCNameDef = xmlSchemaInitBasicType("NCName",
                                                     XML_SCHEMAS_NCNAME,
 						    xmlSchemaTypeNameDef);
+    if (xmlSchemaTypeNCNameDef == NULL)
+        goto error;
     xmlSchemaTypeIdDef = xmlSchemaInitBasicType("ID", XML_SCHEMAS_ID,
 						    xmlSchemaTypeNCNameDef);
+    if (xmlSchemaTypeIdDef == NULL)
+        goto error;
     xmlSchemaTypeIdrefDef = xmlSchemaInitBasicType("IDREF",
                                                    XML_SCHEMAS_IDREF,
 						   xmlSchemaTypeNCNameDef);
+    if (xmlSchemaTypeIdrefDef == NULL)
+        goto error;
     xmlSchemaTypeEntityDef = xmlSchemaInitBasicType("ENTITY",
                                                     XML_SCHEMAS_ENTITY,
 						    xmlSchemaTypeNCNameDef);
+    if (xmlSchemaTypeEntityDef == NULL)
+        goto error;
     /*
     * Derived list types.
     */
@@ -599,25 +728,31 @@ xmlSchemaInitTypes(void)
     xmlSchemaTypeEntitiesDef = xmlSchemaInitBasicType("ENTITIES",
                                                       XML_SCHEMAS_ENTITIES,
 						      xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeEntitiesDef == NULL)
+        goto error;
     xmlSchemaTypeEntitiesDef->subtypes = xmlSchemaTypeEntityDef;
     /* IDREFS */
     xmlSchemaTypeIdrefsDef = xmlSchemaInitBasicType("IDREFS",
                                                     XML_SCHEMAS_IDREFS,
 						    xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeIdrefsDef == NULL)
+        goto error;
     xmlSchemaTypeIdrefsDef->subtypes = xmlSchemaTypeIdrefDef;
 
     /* NMTOKENS */
     xmlSchemaTypeNmtokensDef = xmlSchemaInitBasicType("NMTOKENS",
                                                       XML_SCHEMAS_NMTOKENS,
 						      xmlSchemaTypeAnySimpleTypeDef);
+    if (xmlSchemaTypeNmtokensDef == NULL)
+        goto error;
     xmlSchemaTypeNmtokensDef->subtypes = xmlSchemaTypeNmtokenDef;
 
     xmlSchemaTypesInitialized = 1;
-}
+    return (0);
 
-static void
-xmlSchemaFreeTypeEntry(void *type, const xmlChar *name ATTRIBUTE_UNUSED) {
-    xmlSchemaFreeType((xmlSchemaTypePtr) type);
+error:
+    xmlSchemaCleanupTypesInternal();
+    return (-1);
 }
 
 /**
@@ -626,34 +761,16 @@ xmlSchemaFreeTypeEntry(void *type, const xmlChar *name ATTRIBUTE_UNUSED) {
  * DEPRECATED: This function will be made private. Call xmlCleanupParser
  * to free global state but see the warnings there. xmlCleanupParser
  * should be only called once at program exit. In most cases, you don't
- * have call cleanup functions at all.
+ * have to call cleanup functions at all.
  *
  * Cleanup the default XML Schemas type library
  */
 void
 xmlSchemaCleanupTypes(void) {
-    if (xmlSchemaTypesInitialized == 0)
-	return;
-    /*
-    * Free xs:anyType.
-    */
-    {
-	xmlSchemaParticlePtr particle;
-	/* Attribute wildcard. */
-	xmlSchemaFreeWildcard(xmlSchemaTypeAnyTypeDef->attributeWildcard);
-	/* Content type. */
-	particle = (xmlSchemaParticlePtr) xmlSchemaTypeAnyTypeDef->subtypes;
-	/* Wildcard. */
-	xmlSchemaFreeWildcard((xmlSchemaWildcardPtr)
-	    particle->children->children->children);
-	xmlFree((xmlSchemaParticlePtr) particle->children->children);
-	/* Sequence model group. */
-	xmlFree((xmlSchemaModelGroupPtr) particle->children);
-	xmlFree((xmlSchemaParticlePtr) particle);
-	xmlSchemaTypeAnyTypeDef->subtypes = NULL;
+    if (xmlSchemaTypesInitialized != 0) {
+        xmlSchemaCleanupTypesInternal();
+        xmlSchemaTypesInitialized = 0;
     }
-    xmlHashFree(xmlSchemaTypesBank, xmlSchemaFreeTypeEntry);
-    xmlSchemaTypesInitialized = 0;
 }
 
 /**
@@ -748,8 +865,9 @@ xmlSchemaIsBuiltInTypeFacet(xmlSchemaTypePtr type, int facetType)
 xmlSchemaTypePtr
 xmlSchemaGetBuiltInType(xmlSchemaValType type)
 {
-    if (xmlSchemaTypesInitialized == 0)
-	xmlSchemaInitTypes();
+    if ((xmlSchemaTypesInitialized == 0) &&
+	(xmlSchemaInitTypes() < 0))
+        return (NULL);
     switch (type) {
 
 	case XML_SCHEMAS_ANYSIMPLETYPE:
@@ -1081,8 +1199,9 @@ xmlSchemaFreeValue(xmlSchemaValPtr value) {
  */
 xmlSchemaTypePtr
 xmlSchemaGetPredefinedType(const xmlChar *name, const xmlChar *ns) {
-    if (xmlSchemaTypesInitialized == 0)
-	xmlSchemaInitTypes();
+    if ((xmlSchemaTypesInitialized == 0) &&
+	(xmlSchemaInitTypes() < 0))
+        return (NULL);
     if (name == NULL)
 	return(NULL);
     return((xmlSchemaTypePtr) xmlHashLookup2(xmlSchemaTypesBank, name, ns));
@@ -1177,25 +1296,6 @@ static const long dayInLeapYearByMonth[12] =
         ((IS_LEAP(year) ?					\
                 dayInLeapYearByMonth[month - 1] :		\
                 dayInYearByMonth[month - 1]) + day)
-
-#ifdef DEBUG
-#define DEBUG_DATE(dt)                                                  \
-    xmlGenericError(xmlGenericErrorContext,                             \
-        "type=%o %04ld-%02u-%02uT%02u:%02u:%03f",                       \
-        dt->type,dt->value.date.year,dt->value.date.mon,                \
-        dt->value.date.day,dt->value.date.hour,dt->value.date.min,      \
-        dt->value.date.sec);                                            \
-    if (dt->value.date.tz_flag)                                         \
-        if (dt->value.date.tzo != 0)                                    \
-            xmlGenericError(xmlGenericErrorContext,                     \
-                "%+05d\n",dt->value.date.tzo);                          \
-        else                                                            \
-            xmlGenericError(xmlGenericErrorContext, "Z\n");             \
-    else                                                                \
-        xmlGenericError(xmlGenericErrorContext,"\n")
-#else
-#define DEBUG_DATE(dt)
-#endif
 
 /**
  * _xmlSchemaParseGYear:
@@ -2251,8 +2351,9 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
     xmlChar *norm = NULL;
     int ret = 0;
 
-    if (xmlSchemaTypesInitialized == 0)
-        xmlSchemaInitTypes();
+    if ((xmlSchemaTypesInitialized == 0) &&
+	(xmlSchemaInitTypes() < 0))
+        return (-1);
     if (type == NULL)
         return (-1);
 
@@ -3034,6 +3135,8 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
 			    value = norm;
 		    }
 		    tmpval = xmlStrdup(value);
+                    if (tmpval == NULL)
+                        goto error;
 		    for (cur = tmpval; *cur; ++cur) {
 			if (*cur < 32 || *cur >= 127 || *cur == ' ' ||
 			    *cur == '<' || *cur == '>' || *cur == '"' ||
@@ -3220,8 +3323,7 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
                     if (v == NULL)
                         goto error;
                     base =
-                        (xmlChar *) xmlMallocAtomic((i + pad + 1) *
-                                                    sizeof(xmlChar));
+                        (xmlChar *) xmlMallocAtomic(i + pad + 1);
                     if (base == NULL) {
 		        xmlSchemaTypeErrMemory(node, "allocating base64 data");
                         xmlFree(v);
@@ -4141,9 +4243,15 @@ xmlSchemaCompareDates (xmlSchemaValPtr x, xmlSchemaValPtr y)
 
         if (!y->value.date.tz_flag) {
             p1 = xmlSchemaDateNormalize(x, 0);
+            if (p1 == NULL)
+                return -2;
             p1d = _xmlSchemaDateCastYMToDays(p1) + p1->value.date.day;
             /* normalize y + 14:00 */
             q1 = xmlSchemaDateNormalize(y, (14 * SECS_PER_HOUR));
+            if (q1 == NULL) {
+		xmlSchemaFreeValue(p1);
+                return -2;
+            }
 
             q1d = _xmlSchemaDateCastYMToDays(q1) + q1->value.date.day;
             if (p1d < q1d) {
@@ -4162,6 +4270,11 @@ xmlSchemaCompareDates (xmlSchemaValPtr x, xmlSchemaValPtr y)
 		    int ret = 0;
                     /* normalize y - 14:00 */
                     q2 = xmlSchemaDateNormalize(y, -(14 * SECS_PER_HOUR));
+                    if (q2 == NULL) {
+                        xmlSchemaFreeValue(p1);
+                        xmlSchemaFreeValue(q1);
+                        return -2;
+                    }
                     q2d = _xmlSchemaDateCastYMToDays(q2) + q2->value.date.day;
                     if (p1d > q2d)
                         ret = 1;
@@ -4185,10 +4298,16 @@ xmlSchemaCompareDates (xmlSchemaValPtr x, xmlSchemaValPtr y)
         }
     } else if (y->value.date.tz_flag) {
         q1 = xmlSchemaDateNormalize(y, 0);
+        if (q1 == NULL)
+            return -2;
         q1d = _xmlSchemaDateCastYMToDays(q1) + q1->value.date.day;
 
         /* normalize x - 14:00 */
         p1 = xmlSchemaDateNormalize(x, -(14 * SECS_PER_HOUR));
+        if (p1 == NULL) {
+	    xmlSchemaFreeValue(q1);
+            return -2;
+        }
         p1d = _xmlSchemaDateCastYMToDays(p1) + p1->value.date.day;
 
         if (p1d < q1d) {
@@ -4207,6 +4326,11 @@ xmlSchemaCompareDates (xmlSchemaValPtr x, xmlSchemaValPtr y)
 	        int ret = 0;
                 /* normalize x + 14:00 */
                 p2 = xmlSchemaDateNormalize(x, (14 * SECS_PER_HOUR));
+                if (p2 == NULL) {
+                    xmlSchemaFreeValue(p1);
+                    xmlSchemaFreeValue(q1);
+                    return -2;
+                }
                 p2d = _xmlSchemaDateCastYMToDays(p2) + p2->value.date.day;
 
                 if (p2d > q1d) {
@@ -4236,9 +4360,15 @@ xmlSchemaCompareDates (xmlSchemaValPtr x, xmlSchemaValPtr y)
     if (x->type == y->type) {
         int ret = 0;
         q1 = xmlSchemaDateNormalize(y, 0);
+        if (q1 == NULL)
+            return -2;
         q1d = _xmlSchemaDateCastYMToDays(q1) + q1->value.date.day;
 
         p1 = xmlSchemaDateNormalize(x, 0);
+        if (p1 == NULL) {
+	    xmlSchemaFreeValue(q1);
+            return -2;
+        }
         p1d = _xmlSchemaDateCastYMToDays(p1) + p1->value.date.day;
 
         if (p1d < q1d) {

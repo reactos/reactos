@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -47,8 +43,6 @@
  *  - note that an attribute node have a text child in DOM but not in the XPath data model
  *    thus the child is inaccessible by an XPath query
  */
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -135,7 +129,7 @@ static ULONG WINAPI xmlnodelist_AddRef(
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -145,12 +139,13 @@ static ULONG WINAPI xmlnodelist_Release(
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
-    if ( ref == 0 )
+    TRACE("%p, refcount %lu.\n", iface, ref);
+
+    if (!ref)
     {
         xmldoc_release( This->parent->doc );
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        heap_free( This );
+        free( This );
     }
 
     return ref;
@@ -213,7 +208,7 @@ static HRESULT WINAPI xmlnodelist_get_item(
     xmlNodePtr curr;
     LONG nodeIndex = 0;
 
-    TRACE("(%p)->(%d %p)\n", This, index, listItem);
+    TRACE("%p, %ld, %p.\n", iface, index, listItem);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -323,13 +318,13 @@ static HRESULT xmlnodelist_get_dispid(IUnknown *iface, BSTR name, DWORD flags, D
     WCHAR *ptr;
     int idx = 0;
 
-    for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
+    for(ptr = name; *ptr >= '0' && *ptr <= '9'; ptr++)
         idx = idx*10 + (*ptr-'0');
     if(*ptr)
         return DISP_E_UNKNOWNNAME;
 
     *dispid = DISPID_DOM_COLLECTION_BASE + idx;
-    TRACE("ret %x\n", *dispid);
+    TRACE("ret %lx\n", *dispid);
     return S_OK;
 }
 
@@ -338,7 +333,7 @@ static HRESULT xmlnodelist_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fl
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( (IXMLDOMNodeList*)iface );
 
-    TRACE("(%p)->(%x %x %x %p %p %p)\n", This, id, lcid, flags, params, res, ei);
+    TRACE("%p, %ld, %lx, %x, %p, %p, %p.\n", iface, id, lcid, flags, params, res, ei);
 
     if (id >= DISPID_DOM_COLLECTION_BASE && id <= DISPID_DOM_COLLECTION_MAX)
     {
@@ -422,7 +417,7 @@ IXMLDOMNodeList* create_children_nodelist( xmlNodePtr node )
 {
     xmlnodelist *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -437,5 +432,3 @@ IXMLDOMNodeList* create_children_nodelist( xmlNodePtr node )
 
     return &This->IXMLDOMNodeList_iface;
 }
-
-#endif

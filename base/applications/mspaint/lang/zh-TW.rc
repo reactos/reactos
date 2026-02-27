@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
- *              Copyright 2021 Chan Chilung <eason066@gmail.com>
+ *              Copyright 2021-2026 Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "複製(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼上(&P)\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "裁剪選中區域(&S)", IDM_CROPSELECTION
         MENUITEM "刪除選中區域(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "反轉選擇(&I)", IDM_EDITINVERTSELECTION
         MENUITEM "全選(&A)\tCtrl+A", IDM_EDITSELECTALL
@@ -110,7 +110,7 @@ BEGIN
         MENUITEM "複製(&C)\tCtrl+C", IDM_EDITCOPY
         MENUITEM "貼上(&P)\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "裁剪選中區域(&S)", IDM_CROPSELECTION
         MENUITEM "刪除選中區域(&L)\tDel", IDM_EDITDELETESELECTION
         MENUITEM "全選(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
@@ -263,14 +263,14 @@ BEGIN
     IDS_PERCENTAGE "所佔百分比必須介於 1 和 500 之間。"
     IDS_ANGLE "角度必須介於 -89 和 89 之間。"
     IDS_LOADERRORTEXT "無法載入檔案 %s。"
-    IDS_ENLARGEPROMPTTEXT "剪貼簿中的圖像比點陣圖大。\n你想擴大點陣圖嗎？"
+    IDS_ENLARGEPROMPTTEXT "剪貼簿中的圖像比點陣圖大。\n您想擴大點陣圖嗎？"
     IDS_BOLD "粗體"
     IDS_ITALIC "斜體"
     IDS_UNDERLINE "底線"
     IDS_VERTICAL "垂直"
-    IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_PRINTRES "%d x %d 畫素／cm"
+    IDS_CANTPASTE "無法從剪貼簿貼上。資料格式可能不正確或不支援。"
+    IDS_SAVEERROR "無法儲存點陣圖到檔案：\n\n%s"
+    IDS_CANTSENDMAIL "無法傳送郵件。"
+    IDS_LOSECOLOR "這個操作會導致色彩資訊丟失。您確定要繼續嗎？"
 END

@@ -4,9 +4,9 @@ spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/sptilib)
 
-# Embed RTC libs
+# Link GCC stack protector lib
 if (STACK_PROTECTOR)
-    target_sources(libscsiport PRIVATE $<TARGET_OBJECTS:gcc_ssp_scsiport>)
+    target_link_libraries(libscsiport INTERFACE gcc_ssp_scsiport)
 endif()
 
 list(APPEND SOURCE

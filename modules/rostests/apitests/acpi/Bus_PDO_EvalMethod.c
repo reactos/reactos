@@ -59,6 +59,7 @@ typedef struct _EVAL_TEST_ENTRY
 #define STM_TEST_FLAG_SET_IN_BUFFER                (1 << 9 )
 #define STM_TEST_FLAG_SET_IRP_BUFFER               (1 << 10)
 #define STM_TEST_FLAG_BAD_ARG_TYPE                 (1 << 11)
+#define STM_TEST_FLAG_IS_TODO                      (1 << 12)
 
 #define GTM_TEST_FLAG_BAD_SIGNARUTE                (1 << 0)
 #define GTM_TEST_FLAG_BUFFER_HAS_SIGNARUTE         (1 << 1)
@@ -69,6 +70,7 @@ typedef struct _EVAL_TEST_ENTRY
 #define GTM_TEST_FLAG_INC_OUT_BUFFER               (1 << 6)
 #define GTM_TEST_FLAG_DEC_OUT_BUFFER               (1 << 7)
 #define GTM_TEST_FLAG_SET_OUT_BUFFER               (1 << 8)
+#define GTM_TEST_FLAG_IS_TODO                      (1 << 9)
 
 #define GTM_TEST_FLAG_METHOD_SUCCESS \
     (GTM_TEST_FLAG_BUFFER_HAS_SIGNARUTE | \
@@ -622,8 +624,8 @@ static const EVAL_TEST_ENTRY DrvpSmtTests[] =
     { __LINE__, STM_TEST_FLAG_LARGE_ARG_BUFFER, STATUS_ACPI_INVALID_ARGTYPE },
     { __LINE__, STM_TEST_FLAG_SUB_IN_BUFFER, STATUS_SUCCESS, 1 },
     { __LINE__, STM_TEST_FLAG_SUB_IN_BUFFER, STATUS_SUCCESS, 9 },
-    { __LINE__, STM_TEST_FLAG_SUB_IRP_BUFFER, STATUS_SUCCESS, 1 },
-    { __LINE__, STM_TEST_FLAG_SUB_IRP_BUFFER, STATUS_SUCCESS, 9 },
+    { __LINE__, STM_TEST_FLAG_SUB_IRP_BUFFER | STM_TEST_FLAG_IS_TODO, STATUS_SUCCESS, 1 },
+    { __LINE__, STM_TEST_FLAG_SUB_IRP_BUFFER | STM_TEST_FLAG_IS_TODO, STATUS_SUCCESS, 9 },
     { __LINE__, STM_TEST_FLAG_SET_IN_BUFFER, STATUS_SUCCESS, 0 },
     { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INFO_LENGTH_MISMATCH, 0 },
     { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INFO_LENGTH_MISMATCH,
@@ -636,13 +638,13 @@ static const EVAL_TEST_ENTRY DrvpSmtTests[] =
                 sizeof(ACPI_EVAL_INPUT_BUFFER) - 2 },
     { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INFO_LENGTH_MISMATCH,
                 sizeof(ACPI_EVAL_INPUT_BUFFER) - 1 },
-    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INSUFFICIENT_RESOURCES,
+    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER | STM_TEST_FLAG_IS_TODO, STATUS_INSUFFICIENT_RESOURCES,
                 sizeof(ACPI_EVAL_INPUT_BUFFER) },
-    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INSUFFICIENT_RESOURCES,
+    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER | STM_TEST_FLAG_IS_TODO, STATUS_INSUFFICIENT_RESOURCES,
                 sizeof(ACPI_EVAL_INPUT_BUFFER) + 1 },
-    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER, STATUS_INSUFFICIENT_RESOURCES,
+    { __LINE__, STM_TEST_FLAG_SET_IRP_BUFFER | STM_TEST_FLAG_IS_TODO, STATUS_INSUFFICIENT_RESOURCES,
                 sizeof(ACPI_EVAL_INPUT_BUFFER) + 2 },
-    { __LINE__, STM_TEST_FLAG_BAD_ARG_TYPE, STATUS_SUCCESS, 0 },
+    { __LINE__, STM_TEST_FLAG_BAD_ARG_TYPE | STM_TEST_FLAG_IS_TODO, STATUS_SUCCESS, 0 },
     { __LINE__, STM_TEST_FLAG_CHANGE_ARG_COUNT, STATUS_ACPI_INCORRECT_ARGUMENT_COUNT, 0 },
 
 #if 0
@@ -665,7 +667,7 @@ static const EVAL_TEST_ENTRY DrvpGtmTests[] =
     { __LINE__, GTM_TEST_FLAG_METHOD_SUCCESS |
                 GTM_TEST_FLAG_INC_OUT_BUFFER, STATUS_SUCCESS, 1 },
     { __LINE__, GTM_TEST_FLAG_METHOD_SUCCESS |
-                GTM_TEST_FLAG_DEC_OUT_BUFFER, STATUS_BUFFER_OVERFLOW, 1 },
+                GTM_TEST_FLAG_DEC_OUT_BUFFER | GTM_TEST_FLAG_IS_TODO, STATUS_BUFFER_OVERFLOW, 1 },
     { __LINE__, GTM_TEST_FLAG_SET_OUT_BUFFER, STATUS_SUCCESS, 0 },
     { __LINE__, GTM_TEST_FLAG_SET_OUT_BUFFER, STATUS_BUFFER_TOO_SMALL, 1 },
     { __LINE__, GTM_TEST_FLAG_SET_OUT_BUFFER, STATUS_BUFFER_TOO_SMALL,
@@ -693,7 +695,7 @@ static const EVAL_TEST_ENTRY DrvpGtmTests[] =
     { __LINE__, GTM_TEST_FLAG_BAD_SIGNARUTE, STATUS_INVALID_PARAMETER_1 },
     { __LINE__, GTM_TEST_FLAG_BAD_SIGNARUTE | GTM_TEST_FLAG_SET_OUT_BUFFER,
                 STATUS_INVALID_PARAMETER_1, 0 },
-    { __LINE__, GTM_TEST_FLAG_BAD_SIGNARUTE | GTM_TEST_FLAG_SET_OUT_BUFFER,
+    { __LINE__, GTM_TEST_FLAG_BAD_SIGNARUTE | GTM_TEST_FLAG_SET_OUT_BUFFER | GTM_TEST_FLAG_IS_TODO,
                 STATUS_BUFFER_TOO_SMALL,
                 sizeof(ACPI_EVAL_OUTPUT_BUFFER) - 1 },
     { __LINE__, GTM_TEST_FLAG_BAD_SIGNARUTE | GTM_TEST_FLAG_SET_OUT_BUFFER,
@@ -851,7 +853,8 @@ DrvEvaluateStmObject(
     DrvpEvalTestEntry = TestEntry;
     Status = DrvCallAcpiDriver(InputBuffer, IrpBufferSize, NULL, 0);
 
-    ok_eq_hex_ex(TestEntry, Status, TestEntry->Status);
+    todo_if(!is_reactos() && (TestEntry->Flags & STM_TEST_FLAG_IS_TODO))
+        ok_eq_hex_ex(TestEntry, Status, TestEntry->Status);
 }
 
 static
@@ -917,7 +920,8 @@ DrvEvaluateGtmObject(
     /* Evaluate the _GTM method */
     Status = DrvCallAcpiDriver(&InputBuffer, sizeof(InputBuffer), OutputBuffer, OutputBufferSize);
 
-    ok_eq_hex_ex(TestEntry, Status, TestEntry->Status);
+    todo_if(!is_reactos() && (TestEntry->Flags & GTM_TEST_FLAG_IS_TODO) && (Status != TestEntry->Status))
+        ok_eq_hex_ex(TestEntry, Status, TestEntry->Status);
 
     if (TestEntry->Flags & GTM_TEST_FLAG_BUFFER_HAS_SIGNARUTE)
         Signature = ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE;
@@ -947,13 +951,15 @@ DrvEvaluateGtmObject(
         Type = ACPI_METHOD_ARGUMENT_BUFFER;
     else
         Type = ACPI_METHOD_ARGUMENT_INTEGER;
-    ok_eq_uint_ex(TestEntry, Argument->Type, Type);
+    todo_if(!is_reactos() && (TestEntry->Flags & GTM_TEST_FLAG_IS_TODO) && (Type != Argument->Type))
+        ok_eq_uint_ex(TestEntry, Argument->Type, Type);
 
     if (TestEntry->Flags & GTM_TEST_FLAG_ARG_HAS_DATA_LENGTH)
         DataLength = sizeof(ACPI_EVAL_OUTPUT_BUFFER);
     else
         DataLength = 0;
-    ok_eq_uint_ex(TestEntry, Argument->DataLength, DataLength);
+    todo_if(!is_reactos() && (TestEntry->Flags & GTM_TEST_FLAG_IS_TODO) && (DataLength != Argument->DataLength))
+        ok_eq_uint_ex(TestEntry, Argument->DataLength, DataLength);
 
     if ((TestEntry->Flags & GTM_TEST_FLAG_ARG_HAS_BUFFER_TYPE) && NT_SUCCESS(TestEntry->Status))
     {

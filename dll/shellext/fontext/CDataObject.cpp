@@ -73,7 +73,7 @@ HRESULT _CDataObject_CreateInstance(PCIDLIST_ABSOLUTE folder, UINT cidl, PCUITEM
             }
             else
             {
-                ERR("No file found for %S\n", fontEntry->Name);
+                ERR("No file found for %S\n", fontEntry->Name());
             }
         }
     }

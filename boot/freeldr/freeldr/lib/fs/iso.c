@@ -31,6 +31,8 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 typedef struct _ISO_VOLUME_INFO
 {
+    ULONG VolumeSizeLBN;    ///< In Logical Block Numbers (LBN)
+    ULONG LogicalBlockSize; ///< Should be SECTORSIZE
     ULONG PvdDirectorySector;
     ULONG PvdDirectoryLength;
     ULONG DirectoryPathLength;
@@ -568,6 +570,25 @@ ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
+
+/**
+ * @brief
+ * Returns the size of the ISO-9660 volume laid on the storage media device
+ * opened via @p DeviceId.
+ *
+ * This routine is in particular used to determine the useful (volume) size
+ * of a CD-ROM media.
+ **/
+ULONGLONG
+IsoGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PISO_VOLUME_INFO Volume = IsoVolumes[DeviceId];
+    ASSERT(Volume);
+    return (ULONGLONG)Volume->VolumeSizeLBN * Volume->LogicalBlockSize;
+}
+
+
 static const DEVVTBL Iso9660FuncTable =
 {
     IsoClose,
@@ -589,11 +610,8 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
 
     TRACE("Enter IsoMount(%lu)\n", DeviceId);
 
-    /*
-     * Read the Primary Volume Descriptor
-     */
-    Position.HighPart = 0;
-    Position.LowPart = 16 * SECTORSIZE;
+    /* Read the ISO Primary Volume Descriptor */
+    Position.QuadPart = 16 * SECTORSIZE;
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
         return NULL;
@@ -601,10 +619,10 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     if (Status != ESUCCESS || Count < sizeof(PVD))
         return NULL;
 
-    /* Check if the PVD is valid */
+    /* Check whether the PVD is valid */
     if (!(Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5) && Pvd->VdVersion == 1))
     {
-        WARN("Unrecognized CDROM format\n");
+        WARN("Unrecognized CD-ROM format\n");
         return NULL;
     }
     if (Pvd->LogicalBlockSizeL != SECTORSIZE)
@@ -622,7 +640,16 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
         return NULL;
     RtlZeroMemory(Volume, sizeof(*Volume));
 
-    /* Cache the PVD information */
+    /*
+     * This is equivalent to using the RAW_ISO_VD::VolSpaceI field:
+     * https://github.com/reactos/reactos/blob/435482912c6dc0aaa4371e37b7336b2b1291e65f/drivers/filesystems/cdfs/cd.h#L126
+     * and also what MS CDFS does with the CdRvdVolSz() macro,
+     * in cdfs/strucsup.c!CdUpdateVcbFromVolDescriptor().
+     */
+    Volume->VolumeSizeLBN = Pvd->VolumeSpaceSizeL;
+    Volume->LogicalBlockSize = Pvd->LogicalBlockSizeL;
+
+    /* Cache some useful PVD information */
     Volume->PvdDirectorySector = Pvd->RootDirRecord.ExtentLocationL;
     Volume->PvdDirectoryLength = Pvd->RootDirRecord.DataLengthL;
 

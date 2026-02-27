@@ -12,14 +12,19 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+HMODULE hModule = NULL;
+
 /* FUNCTIONS ******************************************************************/
 
 DWORD
 RunScript(
     _In_ LPCWSTR filename)
 {
-    FILE *script;
     WCHAR tmp_string[MAX_STRING_SIZE];
+    FILE *script;
+    DWORD dwError = ERROR_SUCCESS;
 
     /* Open the file for processing */
     script = _wfopen(filename, L"r");
@@ -32,18 +37,50 @@ RunScript(
     /* Read and process the script */
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
-        if (InterpretScript(tmp_string) == FALSE)
-        {
-            fclose(script);
-            return ERROR_SUCCESS; /* FIXME */
-        }
+        dwError = InterpretLine(tmp_string);
+        if (dwError != ERROR_SUCCESS)
+            break;
     }
 
     /* Close the file */
     fclose(script);
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
+
+
+LPWSTR
+MergeStrings(
+    _In_ LPWSTR pszStringArray[],
+    _In_ INT nCount)
+{
+    LPWSTR pszOutString = NULL;
+    INT i, nLength;
+
+    if ((pszStringArray == NULL) || (nCount == 0))
+        return NULL;
+
+    nLength = 0;
+    for (i = 0; i < nCount; i++)
+        nLength += wcslen(pszStringArray[i]);
+
+    if (nLength > 0)
+        nLength += nCount; /* Space characters and terminating zero */
+
+    pszOutString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(WCHAR));
+    if (pszOutString == NULL)
+        return NULL;
+
+    for (i = 0; i < nCount; i++)
+    {
+        if (i != 0)
+            wcscat(pszOutString, L" ");
+        wcscat(pszOutString, pszStringArray[i]);
+    }
+
+    return pszOutString;
+}
+
 
 /*
  * wmain():
@@ -54,144 +91,177 @@ wmain(
     _In_ int argc,
     _In_ const LPWSTR argv[])
 {
-    LPCWSTR tmpBuffer = NULL;
-    LPCWSTR pszFileName = NULL;
+    LPCWSTR pszScriptFileName = NULL;
+    LPCWSTR pszAliasFileName = NULL;
+    LPCWSTR pszContext = NULL;
+    LPWSTR pszCommand = NULL;
     int index;
-    int result = EXIT_SUCCESS;
-    BOOL bDone = FALSE;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("wmain(%S)\n", GetCommandLineW());
+
+    hModule = GetModuleHandle(NULL);
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
     /* FIXME: Init code goes here */
+    InitAliases();
     CreateRootHelper();
     CreateRootContext();
     LoadHelpers();
 
-    if (argc < 2)
+    /* Process the command arguments */
+    for (index = 1; index < argc; index++)
     {
-        /* If there are no command arguments, then go straight to the interpreter */
-        InterpretInteractive();
-    }
-    else
-    {
-        /* If there are command arguments, then process them */
-        for (index = 1; index < argc; index++)
+        if ((_wcsicmp(argv[index], L"-?") == 0) ||
+            (_wcsicmp(argv[index], L"/?") == 0) ||
+            (_wcsicmp(argv[index], L"?") == 0))
         {
-            if ((argv[index][0] == '/')||
-                (argv[index][0] == '-'))
+            /* Help option */
+            ConResPuts(StdOut, IDS_APP_USAGE);
+            dwError = ERROR_SUCCESS;
+            goto done;
+        }
+        else if ((_wcsicmp(argv[index], L"-a") == 0) ||
+                 (_wcsicmp(argv[index], L"/a") == 0))
+        {
+            /* Aliasfile option */
+            if ((index + 1) < argc)
             {
-                tmpBuffer = argv[index] + 1;
+                index++;
+                ConPuts(StdOut, L"\nThe -a option is not implemented yet\n");
+                pszAliasFileName = argv[index];
             }
             else
             {
-                if (pszFileName != NULL)
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
+            }
+        }
+        else if ((_wcsicmp(argv[index], L"-c") == 0) ||
+                 (_wcsicmp(argv[index], L"/c") == 0))
+        {
+            /* Context option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                pszContext = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
+            }
+        }
+        else if ((_wcsicmp(argv[index], L"-f") == 0) ||
+                 (_wcsicmp(argv[index], L"/f") == 0))
+        {
+            /* File option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                pszScriptFileName = argv[index];
+            }
+            else
+            {
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
+                goto done;
+            }
+        }
+        else if ((_wcsicmp(argv[index], L"-r") == 0) ||
+                 (_wcsicmp(argv[index], L"/r") == 0))
+        {
+            /* Remote option */
+            if ((index + 1) < argc)
+            {
+                index++;
+                pszMachine = HeapAlloc(GetProcessHeap(), 0, (wcslen(argv[index]) + 1) * sizeof(WCHAR));
+                if (pszMachine == NULL)
                 {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
+                    dwError = ERROR_NOT_ENOUGH_MEMORY;
+                    PrintError(hModule, dwError);
                     goto done;
                 }
 
-                /* Run a command from the command line */
-                if (InterpretCommand((LPWSTR*)&argv[index], argc - index, &bDone) != ERROR_SUCCESS)
-                    result = EXIT_FAILURE;
-                goto done;
-            }
-
-            if (_wcsicmp(tmpBuffer, L"?") == 0)
-            {
-                /* Help option */
-                ConResPuts(StdOut, IDS_APP_USAGE);
-                result = EXIT_SUCCESS;
-                goto done;
-            }
-            else if (_wcsicmp(tmpBuffer, L"a") == 0)
-            {
-                /* Aliasfile option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -a option is not implemented yet\n");
-//                    aliasfile = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"c") == 0)
-            {
-                /* Context option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -c option is not implemented yet\n");
-//                    context = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"f") == 0)
-            {
-                /* File option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    pszFileName = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
-            }
-            else if (_wcsicmp(tmpBuffer, L"r") == 0)
-            {
-                /* Remote option */
-                if ((index + 1) < argc)
-                {
-                    index++;
-                    ConPuts(StdOut, L"\nThe -r option is not implemented yet\n");
-//                    remote = argv[index];
-                }
-                else
-                {
-                    ConResPuts(StdOut, IDS_APP_USAGE);
-                    result = EXIT_FAILURE;
-                }
+                wcscpy(pszMachine, argv[index]);
             }
             else
             {
-                /* Invalid command */
-                ConResPrintf(StdOut, IDS_INVALID_COMMAND, argv[index]);
-                result = EXIT_FAILURE;
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
                 goto done;
             }
         }
-
-        /* Now we process the filename if it exists */
-        if (pszFileName != NULL)
+        else
         {
-            if (RunScript(pszFileName) == FALSE)
+            if (pszScriptFileName != NULL)
             {
-                result = EXIT_FAILURE;
+                ConResPuts(StdOut, IDS_APP_USAGE);
+                dwError = ERROR_INVALID_SYNTAX;
                 goto done;
             }
+            else if (pszCommand == NULL)
+            {
+                pszCommand = MergeStrings((LPWSTR*)&argv[index], argc - index);
+                if (pszCommand == NULL)
+                {
+                    dwError = ERROR_NOT_ENOUGH_MEMORY;
+                    PrintError(hModule, dwError);
+                    goto done;
+                }
+
+                break;
+            }
         }
+    }
+
+    /* Run the alias file */
+    if (pszAliasFileName != NULL)
+    {
+        dwError = RunScript(pszAliasFileName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    /* Set a context */
+    if (pszContext)
+    {
+        dwError = InterpretLine((LPWSTR)pszContext);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    /* Run a script, the command line instruction or the interactive interpeter */
+    if (pszScriptFileName != NULL)
+    {
+        dwError = RunScript(pszScriptFileName);
+    }
+    else if (pszCommand != NULL)
+    {
+        dwError = InterpretLine(pszCommand);
+    }
+    else
+    {
+        InterpretInteractive();
     }
 
 done:
     /* FIXME: Cleanup code goes here */
+    if (pszMachine != NULL)
+        HeapFree(GetProcessHeap(), 0, pszMachine);
+
+    if (pszCommand != NULL)
+        HeapFree(GetProcessHeap(), 0, pszCommand);
+
     CleanupContext();
     UnloadHelpers();
+    DestroyAliases();
 
-    return result;
+    return (dwError == ERROR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 VOID
@@ -201,6 +271,15 @@ FreeQuotedString(
 {
     DPRINT("FreeQuotedString(%S)\n", pszQuotedString);
     HeapFree(GetProcessHeap(), 0, pszQuotedString);
+}
+
+VOID
+WINAPI
+FreeString(
+    _In_ LPWSTR pszString)
+{
+    DPRINT("FreeString(%S)\n", pszString);
+    LocalFree(pszString);
 }
 
 LPWSTR
@@ -216,9 +295,47 @@ MakeQuotedString(
     if (pszQuotedString == NULL)
         return NULL;
 
-    swprintf(pszQuotedString, L"\"%s\"", pszQuotedString);
+    swprintf(pszQuotedString, L"\"%s\"", pszString);
 
     return pszQuotedString;
+}
+
+LPWSTR
+CDECL
+MakeString(
+    _In_ HANDLE hModule,
+    _In_ DWORD dwMsgId,
+    ...)
+{
+    LPWSTR pszInBuffer, pszOutBuffer = NULL;
+    DWORD dwLength;
+    va_list ap;
+
+    DPRINT("MakeString(%p %lu ...)\n", hModule, dwMsgId);
+
+    va_start(ap, dwMsgId);
+
+    pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+    if (pszInBuffer == NULL)
+        return NULL;
+
+    dwLength = LoadStringW(hModule, dwMsgId, pszInBuffer, HUGE_BUFFER_SIZE);
+    if (dwLength > 0)
+        goto done;
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                   pszInBuffer,
+                   0,
+                   0,
+                   (LPWSTR)&pszOutBuffer,
+                   0,
+                   &ap);
+
+done:
+    if (pszInBuffer)
+        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+
+    return pszOutBuffer;
 }
 
 DWORD
@@ -324,8 +441,81 @@ PrintError(
     _In_ DWORD dwErrId,
     ...)
 {
-    DPRINT1("PrintError()\n");
-    return 1;
+    PWSTR pszInBuffer = NULL, pszOutBuffer = NULL;
+    DWORD dwLength = 0;
+    va_list ap;
+
+    DPRINT("PrintError(%p %lu ...)\n", hModule, dwErrId);
+
+    va_start(ap, dwErrId);
+
+    pszOutBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+    if (pszOutBuffer == NULL)
+        goto done;
+
+    if (hModule)
+    {
+        pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+        if (pszInBuffer == NULL)
+            goto done;
+
+        dwLength = LoadStringW(hModule, dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
+        if (dwLength == 0)
+            goto done;
+
+        dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
+                                  pszInBuffer,
+                                  0,
+                                  0,
+                                  pszOutBuffer,
+                                  HUGE_BUFFER_SIZE,
+                                  &ap);
+    }
+    else
+    {
+        if ((dwErrId > NETSH_ERROR_BASE) && (dwErrId < NETSH_ERROR_END))
+        {
+            pszInBuffer = HeapAlloc(GetProcessHeap(), 0, HUGE_BUFFER_SIZE * sizeof(WCHAR));
+            if (pszInBuffer == NULL)
+                goto done;
+
+            dwLength = LoadStringW(GetModuleHandle(NULL), dwErrId, pszInBuffer, HUGE_BUFFER_SIZE);
+            if (dwLength == 0)
+                goto done;
+
+            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_STRING,
+                                      pszInBuffer,
+                                      0,
+                                      0L,
+                                      pszOutBuffer,
+                                      HUGE_BUFFER_SIZE,
+                                      &ap);
+        }
+        else
+        {
+            dwLength = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
+                                      NULL,
+                                      dwErrId,
+                                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                      pszOutBuffer,
+                                      HUGE_BUFFER_SIZE,
+                                      &ap);
+        }
+    }
+
+    va_end(ap);
+
+    if (dwLength > 0)
+        ConPuts(StdOut, pszOutBuffer);
+
+done:
+    if (pszOutBuffer)
+        HeapFree(GetProcessHeap(), 0, pszOutBuffer);
+
+    if (pszInBuffer)
+        HeapFree(GetProcessHeap(), 0, pszInBuffer);
+
+    return dwLength;
 }
 
 DWORD

@@ -155,7 +155,7 @@ AcpiHwLowSetGpe (
 
     case ACPI_GPE_DISABLE:
 
-        ACPI_CLEAR_BIT (EnableMask, RegisterBit);
+        ACPI_CLEAR_BIT (EnableMask, (UINT64)RegisterBit);
         break;
 
     default:

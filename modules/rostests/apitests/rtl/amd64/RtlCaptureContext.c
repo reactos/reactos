@@ -124,13 +124,13 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex(CapturedContext.FltSave.StatusWord, OriginalContext.FltSave.StatusWord);
     ok_eq_hex(CapturedContext.FltSave.TagWord, OriginalContext.FltSave.TagWord);
     ok_eq_hex(CapturedContext.FltSave.Reserved1, 0x00);
-    ok_eq_hex(CapturedContext.FltSave.MxCsr_Mask, 0xffff);
-    ok_eq_hex(CapturedContext.FltSave.ErrorOpcode, 0x00000083);
-    ok_eq_hex(CapturedContext.FltSave.ErrorOffset, 0x00850084);
-    ok_eq_hex(CapturedContext.FltSave.ErrorSelector, 0x0086);
+    ok_eq_hex(CapturedContext.FltSave.MxCsr_Mask, 0x2ffff);
+    ok_eq_hex(CapturedContext.FltSave.ErrorOpcode, 0x0000);
+    ok_eq_hex(CapturedContext.FltSave.ErrorOffset, 0x00000000);
+    ok_eq_hex(CapturedContext.FltSave.ErrorSelector, 0x0000);
     ok_eq_hex(CapturedContext.FltSave.Reserved2, 0x0000);
-    ok_eq_hex(CapturedContext.FltSave.DataOffset, 0x00890088);
-    ok_eq_hex(CapturedContext.FltSave.DataSelector, 0x008a);
+    ok_eq_hex(CapturedContext.FltSave.DataOffset, 0x00000000);
+    ok_eq_hex(CapturedContext.FltSave.DataSelector, 0x0000);
     ok_eq_hex(CapturedContext.FltSave.Reserved3, 0x0000);
 
     /* We get the value from OriginalContext.MxCsr, since we set that later in the wrapper */

@@ -1652,9 +1652,9 @@ FileTypesDlg_CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     PFILE_TYPE_ENTRY entry1 = (PFILE_TYPE_ENTRY)lParam1, entry2 = (PFILE_TYPE_ENTRY)lParam2;
     int x = 0;
     if (pG->SortCol == 1)
-        x = wcsicmp(GetTypeName(entry1, pG), GetTypeName(entry2, pG));
+        x = StrCmpIW(GetTypeName(entry1, pG), GetTypeName(entry2, pG));
     if (!x && !(x = entry1->IsExtension() - entry2->IsExtension()))
-        x = wcsicmp(entry1->FileExtension, entry2->FileExtension);
+        x = StrCmpIW(entry1->FileExtension, entry2->FileExtension);
     return x * pG->SortReverse;
 }
 

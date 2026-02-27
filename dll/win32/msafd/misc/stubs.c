@@ -72,22 +72,6 @@ WSPAcceptEx(
 
 BOOL
 WSPAPI
-WSPConnectEx(
-    IN SOCKET s,
-    IN const struct sockaddr *name,
-    IN int namelen,
-    IN PVOID lpSendBuffer,
-    IN DWORD dwSendDataLength,
-    OUT LPDWORD lpdwBytesSent,
-    IN OUT LPOVERLAPPED lpOverlapped)
-{
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
-BOOL
-WSPAPI
 WSPDisconnectEx(
   IN SOCKET hSocket,
   IN LPOVERLAPPED lpOverlapped,

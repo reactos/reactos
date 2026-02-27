@@ -1041,7 +1041,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     DriveLayoutEx->PartitionStyle = PARTITION_STYLE_GPT;
     /* Translate LBA -> Offset */
     DriveLayoutEx->Gpt.StartingUsableOffset.QuadPart = EfiHeader->FirstUsableLBA * Disk->SectorSize;
-    DriveLayoutEx->Gpt.UsableLength.QuadPart = EfiHeader->LastUsableLBA - EfiHeader->FirstUsableLBA * Disk->SectorSize;
+    DriveLayoutEx->Gpt.UsableLength.QuadPart = (EfiHeader->LastUsableLBA - EfiHeader->FirstUsableLBA) * Disk->SectorSize;
     DriveLayoutEx->Gpt.MaxPartitionCount = EfiHeader->NumberOfEntries;
     DriveLayoutEx->Gpt.DiskId = EfiHeader->DiskGUID;
 

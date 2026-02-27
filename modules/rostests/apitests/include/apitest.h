@@ -1,8 +1,6 @@
 #ifndef _APITEST_H
 #define _APITEST_H
 
-// #define __ROS_LONG64__
-
 /* The user must #define STANDALONE if it uses this header in testlist.c */
 #define WIN32_NO_STATUS
 #include <wine/test.h>

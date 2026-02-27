@@ -41,7 +41,7 @@ extern "C" {
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTKERNELAPI
 PMDL
-STDCALL
+NTAPI
 IoAllocateMdl(
     __in_opt __drv_aliasesMem PVOID VirtualAddress,
     __in ULONG Length,
@@ -53,7 +53,7 @@ IoAllocateMdl(
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
-STDCALL
+NTAPI
 IoFreeMdl(
     PMDL Mdl
     );

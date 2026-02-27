@@ -24,6 +24,13 @@
  * that will be removed in a future FreeLdr version */
 #define HAS_DEPRECATED_OPTIONS
 
+#ifndef _FRLDRLIB_
+#define FLDRAPI DECLSPEC_IMPORT
+#else
+#define FLDRAPI
+#endif
+
+
 #define UINT64_C(val) val##ULL
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 

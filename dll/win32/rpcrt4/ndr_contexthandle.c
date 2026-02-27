@@ -19,9 +19,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdlib.h>
+
 #include "ndr_misc.h"
 #include "rpc_assoc.h"
 #include "rpcndr.h"
+#include "cguid.h"
 
 #include "wine/debug.h"
 #include "wine/list.h"
@@ -139,7 +142,7 @@ RPC_STATUS WINAPI RpcSmDestroyClientContext(void **ContextHandle)
     if (che)
     {
         RpcBindingFree(&che->handle);
-        HeapFree(GetProcessHeap(), 0, che);
+        free(che);
     }
 
     return status;
@@ -179,14 +182,14 @@ static RPC_STATUS ndr_update_context_handle(NDR_CCONTEXT *CContext,
                 return RPC_X_SS_CONTEXT_MISMATCH;
             list_remove(&che->entry);
             RpcBindingFree(&che->handle);
-            HeapFree(GetProcessHeap(), 0, che);
+            free(che);
             che = NULL;
         }
     }
     /* if there's no existing entry matching the GUID, allocate one */
     else if (!(che = context_entry_from_guid(&chi->uuid)))
     {
-        che = HeapAlloc(GetProcessHeap(), 0, sizeof *che);
+        che = malloc(sizeof *che);
         if (!che)
             return RPC_X_NO_MEMORY;
         che->magic = NDR_CONTEXT_HANDLE_MAGIC;
@@ -209,7 +212,7 @@ void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *CContext,
 {
     RPC_STATUS status;
 
-    TRACE("*%p=(%p) %p %p %08x\n",
+    TRACE("*%p=(%p) %p %p %08lx\n",
           CContext, *CContext, hBinding, pBuff, DataRepresentation);
 
     EnterCriticalSection(&ndr_context_cs);
@@ -257,7 +260,7 @@ void WINAPI NDRSContextMarshall2(RPC_BINDING_HANDLE hBinding,
     RPC_STATUS status;
     ndr_context_handle *ndr = pBuff;
 
-    TRACE("(%p %p %p %p %p %u)\n",
+    TRACE("(%p %p %p %p %p %lu)\n",
           hBinding, SContext, pBuff, userRunDownIn, CtxGuard, Flags);
 
     if (!binding->server || !binding->Assoc)
@@ -297,7 +300,7 @@ void WINAPI NDRSContextMarshall2(RPC_BINDING_HANDLE hBinding,
 NDR_SCONTEXT WINAPI NDRSContextUnmarshall(void *pBuff,
                                           ULONG DataRepresentation)
 {
-    TRACE("(%p %08x)\n", pBuff, DataRepresentation);
+    TRACE("(%p %08lx)\n", pBuff, DataRepresentation);
     return NDRSContextUnmarshall2(I_RpcGetCurrentCallHandle(), pBuff,
                                   DataRepresentation, NULL,
                                   RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
@@ -310,7 +313,7 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshallEx(RPC_BINDING_HANDLE hBinding,
                                             void *pBuff,
                                             ULONG DataRepresentation)
 {
-    TRACE("(%p %p %08x)\n", hBinding, pBuff, DataRepresentation);
+    TRACE("(%p %p %08lx)\n", hBinding, pBuff, DataRepresentation);
     return NDRSContextUnmarshall2(hBinding, pBuff, DataRepresentation, NULL,
                                   RPC_CONTEXT_HANDLE_DEFAULT_FLAGS);
 }
@@ -328,7 +331,7 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall2(RPC_BINDING_HANDLE hBinding,
     RPC_STATUS status;
     const ndr_context_handle *context_ndr = pBuff;
 
-    TRACE("(%p %p %08x %p %u)\n",
+    TRACE("(%p %p %08lx %p %lu)\n",
           hBinding, pBuff, DataRepresentation, CtxGuard, Flags);
 
     if (!binding->server || !binding->Assoc)
@@ -342,7 +345,7 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall2(RPC_BINDING_HANDLE hBinding,
     {
         if (context_ndr->attributes)
         {
-            ERR("non-null attributes 0x%x\n", context_ndr->attributes);
+            ERR("non-null attributes 0x%lx\n", context_ndr->attributes);
             status = RPC_X_SS_CONTEXT_MISMATCH;
         }
         else

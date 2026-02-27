@@ -1694,18 +1694,21 @@ Quit:
 
 static void IntSendParentNotify( PWND pWindow, UINT msg )
 {
+    PWND Parent;
+
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
          !(pWindow->ExStyle & WS_EX_NOPARENTNOTIFY))
     {
-        if (VerifyWnd(pWindow->spwndParent) && !UserIsDesktopWindow(pWindow->spwndParent))
+        Parent = pWindow->spwndParent;
+        if (VerifyWnd(Parent) && !UserIsDesktopWindow(Parent))
         {
             USER_REFERENCE_ENTRY Ref;
-            UserRefObjectCo(pWindow->spwndParent, &Ref);
-            co_IntSendMessage( UserHMGetHandle(pWindow->spwndParent),
+            UserRefObjectCo(Parent, &Ref);
+            co_IntSendMessage( UserHMGetHandle(Parent),
                                WM_PARENTNOTIFY,
                                MAKEWPARAM( msg, pWindow->IDMenu),
                                (LPARAM)UserHMGetHandle(pWindow) );
-            UserDerefObjectCo(pWindow->spwndParent);
+            UserDerefObjectCo(Parent);
         }
     }
 }

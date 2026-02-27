@@ -570,7 +570,7 @@ DefWndScreenshot(PWND pWnd)
     hdc2 = NtGdiCreateCompatibleDC(hdc);
     NtGdiSelectBitmap(hdc2, hbitmap);
 
-    NtGdiBitBlt(hdc2, 0, 0, w, h, hdc, 0, 0, SRCCOPY, 0, 0);
+    NtGdiBitBlt(hdc2, 0, 0, w, h, hdc, 0, 0, SRCCOPY, CLR_INVALID, 0);
 
     UserSetClipboardData(CF_BITMAP, hbitmap, &scd);
 
@@ -736,6 +736,8 @@ IntDefWindowProc(
          return IntClientShutdown(Wnd, wParam, lParam);
 
       case WM_APPCOMMAND:
+      {
+         PWND Parent;
          if ( (Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD &&
                Wnd != co_GetDesktopWindow(Wnd) )
          {
@@ -743,10 +745,12 @@ IntDefWindowProc(
                co_IntShellHookNotify(HSHELL_APPCOMMAND, wParam, lParam);
             break;
          }
-         UserRefObjectCo(Wnd->spwndParent, &Ref);
-         lResult = co_IntSendMessage(UserHMGetHandle(Wnd->spwndParent), WM_APPCOMMAND, wParam, lParam);
-         UserDerefObjectCo(Wnd->spwndParent);
+         Parent = Wnd->spwndParent;
+         UserRefObjectCo(Parent, &Ref);
+         lResult = co_IntSendMessage(UserHMGetHandle(Parent), WM_APPCOMMAND, wParam, lParam);
+         UserDerefObjectCo(Parent);
          break;
+      }
 
       case WM_POPUPSYSTEMMENU:
          /* This is an undocumented message used by the windows taskbar to

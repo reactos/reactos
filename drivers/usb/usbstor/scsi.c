@@ -474,7 +474,9 @@ USBSTOR_SendCBWRequest(
     Context->cbw.Tag = PtrToUlong(Irp);
     Context->cbw.DataTransferLength = Request->DataTransferLength;
     Context->cbw.Flags = ((UCHAR)Request->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) << 1;
-    Context->cbw.LUN = PDODeviceExtension->LUN;
+
+    // Per Bulk Only Transfer, LUN is 4 bits; clamp just in case
+    Context->cbw.LUN = (UCHAR)(PDODeviceExtension->LUN & 0x0F);
     Context->cbw.CommandBlockLength = Request->CdbLength;
 
     RtlCopyMemory(&Context->cbw.CommandBlock, Request->Cdb, Request->CdbLength);
@@ -552,8 +554,21 @@ USBSTOR_HandleExecuteSCSI(
 
     DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x, Length %lu\n", SrbGetCdb(Request)->CDB10.OperationCode, Request->DataTransferLength);
 
-    // check that we're sending to the right LUN
-    ASSERT(SrbGetCdb(Request)->CDB10.LogicalUnitNumber == PDODeviceExtension->LUN);
+    /*
+     * Some stacks/devices don’t propagate the LUN in the CDB10 header bits.
+     * USB BOT uses CBW.bCBWLUN for addressing.
+     *
+     * TODO: There's actually a bigger bug here though,
+     * while the above CAN HAPPPEN:
+     * Card Readers multiplex their card slots for example, but we can deal with
+     * that as we put more effort into fixing the USB stack.
+     */
+    if (SrbGetCdb(Request)->CDB10.LogicalUnitNumber != PDODeviceExtension->LUN)
+    {
+        DPRINT1("USBSTOR_HandleExecuteSCSI: CDB LUN %lu != PDO LUN %lu (using CBW LUN)\n",
+                (ULONG)SrbGetCdb(Request)->CDB10.LogicalUnitNumber,
+                (ULONG)PDODeviceExtension->LUN);
+    }
 
     return USBSTOR_SendCBWRequest(PDODeviceExtension->LowerDeviceObject->DeviceExtension, Irp);
 }

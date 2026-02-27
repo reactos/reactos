@@ -35,14 +35,15 @@ set_entrypoint(ucrtbase __acrt_DllMain 12)
 
 target_link_libraries(ucrtbase
     ucrt
-    ucrtsupport
+    msvcrt_shared
     crtmath
     vcruntime
+    chkstk
     wine
 )
 
 # Implicitly link to vcstartup
-target_link_libraries(libucrtbase vcstartup)
+target_link_libraries(libucrtbase INTERFACE vcstartup)
 
 if(MSVC)
     target_link_libraries(ucrtbase runtmchk)

@@ -2023,7 +2023,8 @@ co_WinPosSetWindowPos(
       Window->state |= WNDS_SENDNCPAINT;
    }
 
-   if (!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE))
+   if ((!(WinPos.flags & SWP_NOREDRAW) && ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)) ||
+       ((WinPos.flags & SWP_NOZORDER) && (WinPos.flags & SWP_NOOWNERZORDER)))
    {
       /* Determine the new visible region */
       VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE,
@@ -2135,7 +2136,7 @@ co_WinPosSetWindowPos(
                          CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                          CopyRect.top + (OldWindowRect.top - NewWindowRect.top),
                          SRCCOPY,
-                         0,
+                         CLR_INVALID,
                          0);
 
             UserReleaseDC(Window, Dc, FALSE);

@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS -DD3D_COMPILER_VERSION=43)
 
 add_executable(d3dcompiler_43_winetest

@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(mlang_winetest mlang.c testlist.c)
 set_module_type(mlang_winetest win32cui)

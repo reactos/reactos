@@ -44,10 +44,10 @@ HexDump(
 }
 
 
-BOOL
+EXIT_CODE
 DumpDisk(
     _In_ INT argc,
-    _In_ LPWSTR *argv)
+    _In_ PWSTR *argv)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK Iosb;
@@ -64,14 +64,14 @@ DumpDisk(
     if (argc == 2)
     {
         ConResPuts(StdOut, IDS_HELP_CMD_DUMP_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 #endif
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     Sector = _wcstoi64(argv[2], &endptr, 0);
@@ -79,7 +79,7 @@ DumpDisk(
         (Sector < 0))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     pSectorBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CurrentDisk->BytesPerSector);
@@ -138,14 +138,14 @@ done:
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pSectorBuffer);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
-BOOL
+EXIT_CODE
 DumpPartition(
     _In_ INT argc,
-    _In_ LPWSTR *argv)
+    _In_ PWSTR *argv)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK Iosb;
@@ -163,20 +163,20 @@ DumpPartition(
     if (argc == 2)
     {
         ConResPuts(StdOut, IDS_HELP_CMD_DUMP_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 #endif
 
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     if (CurrentPartition == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_PARTITION);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     Sector = _wcstoi64(argv[2], &endptr, 0);
@@ -184,7 +184,7 @@ DumpPartition(
         (Sector < 0))
     {
         ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     pSectorBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CurrentDisk->BytesPerSector);
@@ -244,5 +244,5 @@ done:
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, pSectorBuffer);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

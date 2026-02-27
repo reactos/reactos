@@ -2838,6 +2838,132 @@ HotkeyThread(LPVOID Parameter)
     return 0;
 }
 
+
+static PCWSTR
+GetLocalSetupDllPath(VOID)
+{
+    static WCHAR SetupDllPath[MAX_PATH] = L"";
+    static BOOL Init = FALSE;
+    BOOL Success;
+    DWORD PathSize;
+
+    /* Don't rebuild the path if we did it already */
+    if (Init)
+        return SetupDllPath;
+    Init = TRUE;
+
+    /*
+     * Retrieve the full path of the current running Setup instance.
+     * From this we build the suitable path to the Setup DLL.
+     */
+    PathSize = GetModuleFileNameW(NULL, SetupDllPath, _countof(SetupDllPath));
+    SetupDllPath[_countof(SetupDllPath) - 1] = UNICODE_NULL; // Ensure NULL-termination (see WinXP bug)
+
+    Success = ((PathSize != 0) && (PathSize < _countof(SetupDllPath)) &&
+               (GetLastError() != ERROR_INSUFFICIENT_BUFFER));
+    if (Success)
+    {
+        /* Find the last path separator, remove it as well as the file name */
+        PWCHAR pch = wcsrchr(SetupDllPath, L'\\');
+        if (!pch)
+            pch = SetupDllPath;
+
+        /* The Setup DLL is inside the System32 sub-directory */
+        PathSize = _countof(SetupDllPath) - (pch - SetupDllPath);
+        Success = SUCCEEDED(StringCchCopyW(pch, PathSize, L"\\system32"));
+    }
+    if (!Success)
+    {
+        /* Failure: invalidate the path; the DLL won't be found and delay-loaded */
+        *SetupDllPath = UNICODE_NULL;
+    }
+
+    return SetupDllPath;
+}
+
+#ifndef DECLARE_UNICODE_STRING_SIZE
+#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \
+  WCHAR _var ## _buffer[_size]; \
+  UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer }
+#endif
+#include <ndk/exfuncs.h> // For NtRaiseHardError()
+#define DELAYIMP_INSECURE_WRITABLE_HOOKS
+#include <delayimp.h>
+
+/**
+ * @brief
+ * Controls the delay-loading of Setup DLLs from a suitable path.
+ *
+ * @see
+ * https://stackoverflow.com/a/75325443
+ * https://devblogs.microsoft.com/oldnewthing/20170126-00/?p=95265
+ **/
+static FARPROC
+WINAPI setupDelayHook(unsigned dliNotify, PDelayLoadInfo pdli)
+{
+    static CHAR dllPath[MAX_PATH];
+    static PCWSTR setupDllPath = NULL;
+
+    switch (dliNotify)
+    {
+        case dliNotePreLoadLibrary:
+        {
+            // NOTE: Add any other needed setup-specific DLLs there.
+            if (_stricmp(pdli->szDll, "setuplib.dll") == 0)
+            {
+                if (!setupDllPath)
+                    setupDllPath = GetLocalSetupDllPath();
+                if (setupDllPath && *setupDllPath &&
+                    SUCCEEDED(StringCchPrintfA(dllPath, _countof(dllPath), "%S\\%s",
+                                               setupDllPath, pdli->szDll)))
+                {
+                    pdli->szDll = dllPath; /* Set szDll to the new path */
+                }
+            }
+            break; /* Load the DLL using the modified path */
+        }
+
+        case dliFailLoadLib:
+        {
+            /*
+             * Library loading failed.
+             * Raise a hard error instead of the default
+             * exception, and "cleanly" kill the process.
+             */
+            ANSI_STRING DllPathA;
+            DECLARE_UNICODE_STRING_SIZE(DllPathU, MAX_PATH);
+            ULONG_PTR Parameters[] = {(ULONG_PTR)&DllPathU};
+            ULONG Response;
+
+            RtlInitAnsiString(&DllPathA, pdli->szDll);
+            RtlAnsiStringToUnicodeString(&DllPathU, &DllPathA, FALSE);
+            NtRaiseHardError(STATUS_DLL_NOT_FOUND | HARDERROR_OVERRIDE_ERRORMODE,
+                             _countof(Parameters),
+                             0x1,
+                             Parameters,
+                             OptionOk,
+                             &Response);
+            ExitProcess(-1);
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief
+ * Custom delay-loading hooks for loading the Setup DLLs from a suitable path.
+ **/
+// NOTE: MSVC 2015 Update 3 makes this a const variable.
+// #if (_MSC_VER > 1900) || (_MSC_VER == 1900 && _MSC_FULL_VER >= 190024210) ...
+/*ExternC*/ PfnDliHook __pfnDliNotifyHook2  = setupDelayHook;
+/*ExternC*/ PfnDliHook __pfnDliFailureHook2 = setupDelayHook;
+
+
 int WINAPI
 _tWinMain(HINSTANCE hInst,
           HINSTANCE hPrevInstance,

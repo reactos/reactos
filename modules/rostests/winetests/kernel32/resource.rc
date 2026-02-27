@@ -24,3 +24,9 @@
 {
     MENUITEM "foo", 1
 }
+
+/* @makedep: wine_test.manifest */
+124 24 wine_test.manifest
+#ifdef __REACTOS__
+DUMMY.DLL TESTDLL "dummy.dll"
+#endif

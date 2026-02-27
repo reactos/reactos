@@ -18,7 +18,7 @@ DisplayServerStatistics(VOID)
     LARGE_INTEGER LargeValue;
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
-    WORD wHour;
+    WCHAR DateBuffer[32], TimeBuffer[32];
     INT nPaddedLength = 35;
     NET_API_STATUS Status;
 
@@ -44,21 +44,22 @@ DisplayServerStatistics(VOID)
     FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
     FileTimeToSystemTime(&LocalFileTime, &SystemTime);
 
-    wHour = SystemTime.wHour;
-    if (wHour == 0)
-    {
-        wHour = 12;
-    }
-    else if (wHour > 12)
-    {
-        wHour = wHour - 12;
-    }
+    GetDateFormatW(LOCALE_USER_DEFAULT,
+                   DATE_SHORTDATE,
+                   &SystemTime,
+                   NULL,
+                   DateBuffer,
+                   ARRAYSIZE(DateBuffer));
+
+    GetTimeFormatW(LOCALE_USER_DEFAULT,
+                   0,
+                   &SystemTime,
+                   NULL,
+                   TimeBuffer,
+                   ARRAYSIZE(TimeBuffer));
 
     PrintMessageString(4600);
-    ConPrintf(StdOut, L" %d/%d/%d %d:%02d %s\n\n\n",
-              SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
-              wHour, SystemTime.wMinute,
-              (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
+    ConPrintf(StdOut, L" %s %s\n\n\n", DateBuffer, TimeBuffer);
 
     PrintPaddedMessageString(4601, nPaddedLength);
     ConPrintf(StdOut, L"%lu\n", StatisticsInfo->sts0_sopens);
@@ -131,7 +132,7 @@ DisplayWorkstationStatistics(VOID)
     LARGE_INTEGER LargeValue;
     FILETIME FileTime, LocalFileTime;
     SYSTEMTIME SystemTime;
-    WORD wHour;
+    WCHAR DateBuffer[32], TimeBuffer[32];
     INT nPaddedLength = 47;
     NET_API_STATUS Status;
 
@@ -142,7 +143,7 @@ DisplayWorkstationStatistics(VOID)
         goto done;
 
     Status = NetStatisticsGet(NULL,
-                              SERVICE_SERVER,
+                              SERVICE_WORKSTATION,
                               0,
                               0,
                               (LPBYTE*)&StatisticsInfo);
@@ -159,21 +160,22 @@ DisplayWorkstationStatistics(VOID)
     FileTimeToLocalFileTime(&FileTime, &LocalFileTime);
     FileTimeToSystemTime(&LocalFileTime, &SystemTime);
 
-    wHour = SystemTime.wHour;
-    if (wHour == 0)
-    {
-        wHour = 12;
-    }
-    else if (wHour > 12)
-    {
-        wHour = wHour - 12;
-    }
+    GetDateFormatW(LOCALE_USER_DEFAULT,
+                   DATE_SHORTDATE,
+                   &SystemTime,
+                   NULL,
+                   DateBuffer,
+                   ARRAYSIZE(DateBuffer));
+
+    GetTimeFormatW(LOCALE_USER_DEFAULT,
+                   0,
+                   &SystemTime,
+                   NULL,
+                   TimeBuffer,
+                   ARRAYSIZE(TimeBuffer));
 
     PrintMessageString(4600);
-    ConPrintf(StdOut, L" %d/%d/%d %d:%02d %s\n\n\n",
-              SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
-              wHour, SystemTime.wMinute,
-              (SystemTime.wHour >= 1 && SystemTime.wHour < 13) ? L"AM" : L"PM");
+    ConPrintf(StdOut, L" %s %s\n\n\n", DateBuffer, TimeBuffer);
 
     PrintPaddedMessageString(4630, nPaddedLength);
     ConPrintf(StdOut, L"%I64u\n", StatisticsInfo->BytesReceived.QuadPart);

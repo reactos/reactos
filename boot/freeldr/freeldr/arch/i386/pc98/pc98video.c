@@ -9,8 +9,8 @@
 
 #include <freeldr.h>
 #include <drivers/pc98/video.h>
+#include "../../vgafont.h"
 
-extern UCHAR BitmapFont8x16[];
 extern BOOLEAN HiResoMachine;
 
 /* GLOBALS ********************************************************************/
@@ -20,9 +20,6 @@ extern BOOLEAN HiResoMachine;
 #define TEXT_CHAR_SIZE 2
 UCHAR TextCols;
 UCHAR TextLines;
-
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 400
@@ -185,7 +182,7 @@ Pc98VideoClearScreen(UCHAR Attr)
 }
 
 VIDEODISPLAYMODE
-Pc98VideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
+Pc98VideoSetDisplayMode(PCSTR DisplayModeName, BOOLEAN Init)
 {
     /* Not supported by hardware */
     return VideoTextMode;
@@ -321,7 +318,7 @@ Pc98VideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
     UCHAR R = (Attr & 0x40) ? 0xFF : 0;
     UCHAR I = (Attr & 0x80) ? 0xFF : 0;
     ULONG VramOffset = X + (Y * CHAR_HEIGHT) * BYTES_PER_SCANLINE;
-    PUCHAR FontPtr = BitmapFont8x16 + Ch * 16;
+    const UCHAR* FontPtr = BitmapFont8x16 + Ch * CHAR_HEIGHT;
     BOOLEAN CGFont = UseCGFont && (Ch != LIGHT_FILL && Ch != MEDIUM_FILL && Ch != DARK_FILL);
 
     if (CGFont)
@@ -347,34 +344,35 @@ Pc98VideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 
     for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {
+        UCHAR CharLine = FontPtr[Line];
         if (CGFont)
         {
             if (CGAccelDraw)
             {
                 /* Character is already displayed by GDC (Text RAM),
                  * so display only background for it. */
-                FontPtr[Line] = 0;
+                CharLine = 0;
             }
             else
             {
                 /* Obtain glyph data from CG Window */
                 WRITE_PORT_UCHAR((PUCHAR)KCG_IO_o_LINE, Line | 0x20);
-                FontPtr[Line] = READ_PORT_UCHAR((PUCHAR)KCG_IO_i_PATTERN);
+                CharLine = READ_PORT_UCHAR((PUCHAR)KCG_IO_i_PATTERN);
             }
         }
         if (Attr & 0x0F)
         {
-            *(PUCHAR)(VramPlaneB + VramOffset + Line * BYTES_PER_SCANLINE) = B | ((Attr & 0x01) ? FontPtr[Line] : 0);
-            *(PUCHAR)(VramPlaneG + VramOffset + Line * BYTES_PER_SCANLINE) = G | ((Attr & 0x02) ? FontPtr[Line] : 0);
-            *(PUCHAR)(VramPlaneR + VramOffset + Line * BYTES_PER_SCANLINE) = R | ((Attr & 0x04) ? FontPtr[Line] : 0);
-            *(PUCHAR)(VramPlaneI + VramOffset + Line * BYTES_PER_SCANLINE) = I | ((Attr & 0x08) ? FontPtr[Line] : 0);
+            *(PUCHAR)(VramPlaneB + VramOffset + Line * BYTES_PER_SCANLINE) = B | ((Attr & 0x01) ? CharLine : 0);
+            *(PUCHAR)(VramPlaneG + VramOffset + Line * BYTES_PER_SCANLINE) = G | ((Attr & 0x02) ? CharLine : 0);
+            *(PUCHAR)(VramPlaneR + VramOffset + Line * BYTES_PER_SCANLINE) = R | ((Attr & 0x04) ? CharLine : 0);
+            *(PUCHAR)(VramPlaneI + VramOffset + Line * BYTES_PER_SCANLINE) = I | ((Attr & 0x08) ? CharLine : 0);
         }
         else
         {
-            *(PUCHAR)(VramPlaneB + VramOffset + Line * BYTES_PER_SCANLINE) = B & ~FontPtr[Line];
-            *(PUCHAR)(VramPlaneG + VramOffset + Line * BYTES_PER_SCANLINE) = G & ~FontPtr[Line];
-            *(PUCHAR)(VramPlaneR + VramOffset + Line * BYTES_PER_SCANLINE) = R & ~FontPtr[Line];
-            *(PUCHAR)(VramPlaneI + VramOffset + Line * BYTES_PER_SCANLINE) = I & ~FontPtr[Line];
+            *(PUCHAR)(VramPlaneB + VramOffset + Line * BYTES_PER_SCANLINE) = B & ~CharLine;
+            *(PUCHAR)(VramPlaneG + VramOffset + Line * BYTES_PER_SCANLINE) = G & ~CharLine;
+            *(PUCHAR)(VramPlaneR + VramOffset + Line * BYTES_PER_SCANLINE) = R & ~CharLine;
+            *(PUCHAR)(VramPlaneI + VramOffset + Line * BYTES_PER_SCANLINE) = I & ~CharLine;
         }
     }
 }

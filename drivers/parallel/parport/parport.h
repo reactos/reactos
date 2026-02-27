@@ -15,9 +15,6 @@
 
 #include "hardware.h"
 
-//#define NDEBUG
-#include <debug.h>
-
 typedef enum
 {
     dsStopped,

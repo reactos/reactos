@@ -28,6 +28,7 @@ list(APPEND SOURCE
     ndr_marshall.c
     ndr_ole.c
     ndr_stubless.c
+    ros_extra.c
     rpc_assoc.c
     rpc_async.c
     rpc_binding.c
@@ -36,15 +37,17 @@ list(APPEND SOURCE
     rpcrt4_main.c
     rpc_server.c
     rpc_transport.c
+    thunks.c
     unix_func.c
     ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c)
 
 if(MSVC)
-    add_asm_files(rpcrt4_asm msvc.S)
+    add_asm_files(rpcrt4_asm msvc.S thunks-msvc.s)
 endif()
 
 list(APPEND PCH_SKIP_SOURCE
     ndr_typelib.c
+    thunks.c
     ${CMAKE_CURRENT_BINARY_DIR}/ndr_types_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c)
@@ -62,8 +65,8 @@ if(MSVC)
 endif()
 
 set_module_type(rpcrt4 win32dll)
-target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB} oldnames)
-add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32 oleaut32)
+target_link_libraries(rpcrt4 wine wine_dll_register uuid ${PSEH_LIB} oldnames)
+add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32 ole32 oleaut32)
 add_importlibs(rpcrt4 advapi32 advapi32_vista kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(rpcrt4 ndr_types_header)
 add_pch(rpcrt4 precomp.h "${PCH_SKIP_SOURCE}")

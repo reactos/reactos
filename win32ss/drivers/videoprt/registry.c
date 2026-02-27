@@ -23,6 +23,9 @@
 #include <ndk/obfuncs.h>
 #include <stdio.h>
 
+#define CONST_STR_SIZE(x) (sizeof(x) - sizeof(x[0]))
+#define CONST_STR_LEN(x)  (sizeof(x)/sizeof(x[0]) - 1)
+
 #define NDEBUG
 #include <debug.h>
 
@@ -107,7 +110,7 @@ IntCopyRegistryKey(
         Status = ZwOpenKey(&SourceSubKeyHandle, KEY_READ, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "failed to open the source key.\n");
+            ERR_(VIDEOPRT, "Failed to open the source key\n");
             goto Cleanup;
         }
 
@@ -126,7 +129,7 @@ IntCopyRegistryKey(
                              NULL);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "failed to create the destination key.\n");
+            ERR_(VIDEOPRT, "Failed to create the destination key\n");
             ObCloseHandle(SourceSubKeyHandle, KernelMode);
             goto Cleanup;
         }
@@ -136,7 +139,7 @@ IntCopyRegistryKey(
         if (!NT_SUCCESS(Status))
         {
             /* Just warn, but continue with the remaining sub-keys */
-            WARN_(VIDEOPRT, "failed to copy subkey '%wZ'.\n", &NameString);
+            WARN_(VIDEOPRT, "Failed to copy subkey '%wZ'\n", &NameString);
         }
 
         /* Close the sub-key handles */
@@ -211,7 +214,7 @@ IntCopyRegistryKey(
         if (!NT_SUCCESS(Status))
         {
             /* Just warn, but continue with the remaining sub-keys */
-            WARN_(VIDEOPRT, "failed to set value '%wZ'.\n", &NameString);
+            WARN_(VIDEOPRT, "Failed to set value '%wZ'\n", &NameString);
         }
 
         /* Next subkey */
@@ -221,7 +224,7 @@ IntCopyRegistryKey(
 Cleanup:
     /* Free the buffer and return the failure code */
     if (InfoBuffer != NULL)
-		ExFreePoolWithTag(InfoBuffer, TAG_VIDEO_PORT_BUFFER);
+        ExFreePoolWithTag(InfoBuffer, TAG_VIDEO_PORT_BUFFER);
     return Status;
 }
 
@@ -285,9 +288,7 @@ IntCopyRegistryValue(
     ExFreePoolWithTag(ValueInformation, TAG_VIDEO_PORT_BUFFER);
 
     if (!NT_SUCCESS(Status))
-    {
-        ERR_(VIDEOPRT, "ZwSetValueKey failed: status 0x%lx\n", Status);
-    }
+        ERR_(VIDEOPRT, "ZwSetValueKey failed, status 0x%lx\n", Status);
 
     return Status;
 }
@@ -312,7 +313,7 @@ IntSetupDeviceSettingsKey(
                                      &DevInstRegKey);
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "Failed to open device software key. Status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "Failed to open device software key, status 0x%lx\n", Status);
         return Status;
     }
 
@@ -329,7 +330,7 @@ IntSetupDeviceSettingsKey(
 
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "Failed to open settings key, status 0x%lx\n", Status);
         return Status;
     }
 
@@ -342,7 +343,7 @@ IntSetupDeviceSettingsKey(
     Status = ZwOpenKey(&SourceKeyHandle, KEY_READ, &ObjectAttributes);
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "ZwOpenKey failed for settings key: status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "ZwOpenKey failed for settings key, status 0x%lx\n", Status);
         ObCloseHandle(DestKeyHandle, KernelMode);
         return Status;
     }
@@ -396,7 +397,7 @@ IntDuplicateUnicodeString(
         DestinationString->MaximumLength = DestMaxLength;
 
         if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
-            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
+            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     return STATUS_SUCCESS;
@@ -427,7 +428,7 @@ IntCreateNewRegistryPath(
                                            &DeviceExtension->RegistryPath,
                                            &DeviceExtension->NewRegistryPath);
         if (!NT_SUCCESS(Status))
-            ERR_(VIDEOPRT, "IntDuplicateUnicodeString() failed with status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "IntDuplicateUnicodeString() failed, status 0x%lx\n", Status);
         return Status;
     }
 
@@ -438,7 +439,7 @@ IntCreateNewRegistryPath(
                                      &DevInstRegKey);
     if (Status != STATUS_SUCCESS)
     {
-        ERR_(VIDEOPRT, "IoOpenDeviceRegistryKey failed: status 0x%lx\n", Status);
+        ERR_(VIDEOPRT, "IoOpenDeviceRegistryKey failed, status 0x%lx\n", Status);
         return Status;
     }
 
@@ -456,7 +457,7 @@ IntCreateNewRegistryPath(
         Status = ExUuidCreate(&VideoId);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "ExUuidCreate failed: status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "ExUuidCreate failed, status 0x%lx\n", Status);
             ObCloseHandle(DevInstRegKey, KernelMode);
             return Status;
         }
@@ -465,7 +466,7 @@ IntCreateNewRegistryPath(
         Status = RtlStringFromGUID(&VideoId, &VideoIdString);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "RtlStringFromGUID failed: status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "RtlStringFromGUID failed, status 0x%lx\n", Status);
             ObCloseHandle(DevInstRegKey, KernelMode);
             return Status;
         }
@@ -488,7 +489,7 @@ IntCreateNewRegistryPath(
                                ValueInformation->DataLength);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "ZwSetValueKey failed: status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "ZwSetValueKey failed, status 0x%lx\n", Status);
             ObCloseHandle(DevInstRegKey, KernelMode);
             return Status;
         }
@@ -515,7 +516,7 @@ IntCreateNewRegistryPath(
                                                                     TAG_VIDEO_PORT);
     if (DeviceExtension->NewRegistryPath.Buffer == NULL)
     {
-        ERR_(VIDEOPRT, "Failed to allocate key name buffer.\n");
+        ERR_(VIDEOPRT, "Failed to allocate key name buffer\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -535,7 +536,7 @@ IntCreateNewRegistryPath(
                                       DeviceExtension->NewRegistryPath.Buffer);
     }
 
-    /* Append a the instance path */ /// \todo HACK
+    /* Append the instance path */ /// \todo HACK
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"\\");
     InstanceIdBuffer = DeviceExtension->NewRegistryPath.Buffer +
         DeviceExtension->NewRegistryPath.Length / sizeof(WCHAR);
@@ -554,7 +555,8 @@ IntCreateNewRegistryPath(
                                       DeviceExtension->NewRegistryPath.Buffer);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "Failed create key '%wZ'\n", &DeviceExtension->NewRegistryPath);
+            ERR_(VIDEOPRT, "Failed to create key '%wZ', status 0x%lx\n",
+                 &DeviceExtension->NewRegistryPath, Status);
             return Status;
         }
 
@@ -567,7 +569,7 @@ IntCreateNewRegistryPath(
         Status = ZwOpenKey(&NewKey, KEY_WRITE, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "Failed to open settings key, status 0x%lx\n", Status);
             return Status;
         }
 
@@ -580,7 +582,7 @@ IntCreateNewRegistryPath(
         Status = ZwOpenKey(&SettingsKey, KEY_READ, &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            ERR_(VIDEOPRT, "Failed to open settings key. Status 0x%lx\n", Status);
+            ERR_(VIDEOPRT, "Failed to open settings key, status 0x%lx\n", Status);
             ObCloseHandle(NewKey, KernelMode);
             return Status;
         }
@@ -603,11 +605,11 @@ IntCreateRegistryPath(
     IN ULONG DeviceNumber,
     OUT PUNICODE_STRING DeviceRegistryPath)
 {
-    static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
-    static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
-    static WCHAR ControlSet[] = L"CONTROLSET";
-    static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
-    static WCHAR Insert2[] = L"\\Device";
+    static const WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
+    static const WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
+    static const WCHAR ControlSet[] = L"CONTROLSET";
+    static const WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+    static const WCHAR Insert2[] = L"\\Device";
     UNICODE_STRING DeviceNumberString;
     WCHAR DeviceNumberBuffer[20];
     BOOLEAN Valid;
@@ -629,26 +631,26 @@ IntCreateRegistryPath(
 
     /* Check if path begins with \\REGISTRY\\MACHINE\\SYSTEM\\ */
     Valid = (DriverRegistryPath->Length > sizeof(RegistryMachineSystem) &&
-             0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
-                            wcslen(RegistryMachineSystem)));
+             _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
+                       CONST_STR_LEN(RegistryMachineSystem)) == 0);
     if (Valid)
     {
-        AfterControlSet.Buffer += wcslen(RegistryMachineSystem);
-        AfterControlSet.Length -= sizeof(RegistryMachineSystem) - sizeof(UNICODE_NULL);
+        AfterControlSet.Buffer += CONST_STR_LEN(RegistryMachineSystem);
+        AfterControlSet.Length -= CONST_STR_SIZE(RegistryMachineSystem);
 
         /* Check if path contains CURRENTCONTROLSET */
         if (AfterControlSet.Length > sizeof(CurrentControlSet) &&
-            0 == _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, wcslen(CurrentControlSet)))
+            _wcsnicmp(AfterControlSet.Buffer, CurrentControlSet, CONST_STR_LEN(CurrentControlSet)) == 0)
         {
-            AfterControlSet.Buffer += wcslen(CurrentControlSet);
-            AfterControlSet.Length -= sizeof(CurrentControlSet) - sizeof(UNICODE_NULL);
+            AfterControlSet.Buffer += CONST_STR_LEN(CurrentControlSet);
+            AfterControlSet.Length -= CONST_STR_SIZE(CurrentControlSet);
         }
         /* Check if path contains CONTROLSETnum */
         else if (AfterControlSet.Length > sizeof(ControlSet) &&
-                 0 == _wcsnicmp(AfterControlSet.Buffer, ControlSet, wcslen(ControlSet)))
+                 _wcsnicmp(AfterControlSet.Buffer, ControlSet, CONST_STR_LEN(ControlSet)) == 0)
         {
-            AfterControlSet.Buffer += wcslen(ControlSet);
-            AfterControlSet.Length -= sizeof(ControlSet) - sizeof(UNICODE_NULL);
+            AfterControlSet.Buffer += CONST_STR_LEN(ControlSet);
+            AfterControlSet.Length -= CONST_STR_SIZE(ControlSet);
             while (AfterControlSet.Length > 0 &&
                     *AfterControlSet.Buffer >= L'0' &&
                     *AfterControlSet.Buffer <= L'9')
@@ -686,7 +688,7 @@ IntCreateRegistryPath(
             wcsncpy(DeviceRegistryPath->Buffer,
                     DriverRegistryPath->Buffer,
                     AfterControlSet.Buffer - DriverRegistryPath->Buffer);
-            DeviceRegistryPath->Length = (AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
+            DeviceRegistryPath->Length = (ULONG_PTR)AfterControlSet.Buffer - (ULONG_PTR)DriverRegistryPath->Buffer;
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
             RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);
@@ -694,7 +696,6 @@ IntCreateRegistryPath(
 
             /* Check if registry key exists */
             Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, DeviceRegistryPath->Buffer));
-
             if (!Valid)
                 ExFreePoolWithTag(DeviceRegistryPath->Buffer, TAG_VIDEO_PORT);
         }
@@ -724,8 +725,8 @@ IntCreateRegistryPath(
         RtlAppendUnicodeStringToString(DeviceRegistryPath, &DeviceNumberString);
     }
 
-    DPRINT("Formatted registry key '%wZ' -> '%wZ'\n",
-           DriverRegistryPath, DeviceRegistryPath);
+    INFO_(VIDEOPRT, "Formatted registry key '%wZ' -> '%wZ'\n",
+          DriverRegistryPath, DeviceRegistryPath);
 
     return STATUS_SUCCESS;
 }

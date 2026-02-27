@@ -616,6 +616,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping",,0x00000012
 
 ; Global Console settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console","EnableConImeOnSystemProcess",0x00010003,0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\Nls","00000409",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont","0",2,"Lucida Console"
 
@@ -626,7 +627,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HotFix",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x00000012
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","IME File",2,"msctfime.ime"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0 ; "LoadIMM" means Cicero despite its name
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","DontLoadCTFIME",0x00010003,1 ; Disable CTF IME
 
 ; DOS Device ports
@@ -919,7 +920,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones","IndexMapping",0x
    "402", "125",\
    "427", "125",\
    "408", "130",\
-   "41f", "130",\
+   "41f", "157",\
    "418", "130",\
    "40d", "135",\
    "436", "140",\

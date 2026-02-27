@@ -129,7 +129,8 @@ GetContextSubContext(
 }
 
 
-BOOL
+static
+DWORD
 InterpretCommand(
     _In_ LPWSTR *argv,
     _In_ DWORD dwArgCount,
@@ -141,11 +142,10 @@ InterpretCommand(
     INTERPRETER_STATE State = STATE_ANALYZE;
     DWORD dwArgIndex = 0;
     DWORD dwError = ERROR_SUCCESS;
-    BOOL bFound = TRUE;
 
     /* If no args provided */
     if (dwArgCount == 0)
-        return TRUE;
+        return ERROR_SUCCESS;
 
     if (pCurrentContext == NULL)
         pCurrentContext = pRootContext;
@@ -155,7 +155,7 @@ InterpretCommand(
         ((_wcsicmp(argv[0], L"?") == 0) || (_wcsicmp(argv[0], L"help") == 0)))
     {
         PrintContextHelp(pCurrentContext);
-        return TRUE;
+        return ERROR_SUCCESS;
     }
 
     pTempContext = pCurrentContext;
@@ -205,13 +205,14 @@ InterpretCommand(
                 if (pCommand->pfnCmdHandler != NULL)
                 {
                     dwArgIndex++;
-                    dwError = pCommand->pfnCmdHandler(NULL, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
+                    dwError = pCommand->pfnCmdHandler(pszMachine, argv, dwArgIndex, dwArgCount, 0, NULL, bDone);
                     if (dwError != ERROR_SUCCESS)
                     {
                         if (dwError == ERROR_SHOW_USAGE)
+                        {
                             PrintCommandHelp(pTempContext, pGroup, pCommand);
-                        else
-                            ConPrintf(StdOut, L"Command: %s  Error: %lu\n\n", pCommand->pwszCmdToken, dwError);
+                            dwError = ERROR_SUPPRESS_OUTPUT;
+                        }
                     }
                     else
                     {
@@ -256,7 +257,7 @@ InterpretCommand(
                     break;
                 }
 
-                bFound = FALSE;
+                dwError = ERROR_CMD_NOT_FOUND;
                 State = STATE_DONE;
                 break;
 
@@ -266,7 +267,7 @@ InterpretCommand(
                 if (pTempSubContext == pCurrentContext)
                 {
                     if (dwArgIndex != (dwArgCount - 1))
-                        bFound = FALSE;
+                        dwError = ERROR_CMD_NOT_FOUND;
 
                     State = STATE_DONE;
                     break;
@@ -276,6 +277,8 @@ InterpretCommand(
                 {
                     DPRINT("Set current context\n");
                     pCurrentContext = pTempSubContext;
+                    if (pCurrentContext->pfnConnectFn)
+                        dwError = pCurrentContext->pfnConnectFn(pszMachine);
                     State = STATE_DONE;
                     break;
                 }
@@ -300,7 +303,7 @@ InterpretCommand(
 
                 if (pTempContext->pParentContext == NULL)
                 {
-                    bFound = FALSE;
+                    dwError = ERROR_CMD_NOT_FOUND;
                     State = STATE_DONE;
                     break;
                 }
@@ -312,12 +315,13 @@ InterpretCommand(
                 break;
 
             case STATE_DONE:
-                DPRINT("STATE_DONE\n");
-                return bFound;
+                DPRINT("STATE_DONE dwError %ld\n", dwError);
+                return dwError;
         }
     }
 
-    return TRUE;
+    /* Done */
+    return ERROR_SUCCESS;
 } 
 
 
@@ -325,8 +329,8 @@ InterpretCommand(
  * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
-BOOL
-InterpretScript(
+DWORD
+InterpretLine(
     _In_ LPWSTR pszInputLine)
 {
     LPWSTR args_vector[MAX_ARGS_COUNT];
@@ -365,7 +369,7 @@ InterpretScript(
 
 VOID
 PrintPrompt(
-    PCONTEXT_ENTRY pContext)
+    _In_ PCONTEXT_ENTRY pContext)
 {
     if (pContext != pRootContext)
     {
@@ -386,6 +390,7 @@ InterpretInteractive(VOID)
     BOOL bWhiteSpace = TRUE;
     BOOL bDone = FALSE;
     LPWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
 
     for (;;)
     {
@@ -393,6 +398,8 @@ InterpretInteractive(VOID)
         memset(args_vector, 0, sizeof(args_vector));
 
         /* Shown just before the input where the user places commands */
+        if (pszMachine)
+            ConPrintf(StdOut, L"[%s] ", pszMachine);
         PrintPrompt(pCurrentContext);
         ConPuts(StdOut, L">");
 
@@ -419,10 +426,15 @@ InterpretInteractive(VOID)
             ptr++;
         }
 
-        if (InterpretCommand(args_vector, dwArgCount, &bDone) == FALSE)
+        dwError = InterpretCommand(args_vector, dwArgCount, &bDone);
+        if ((dwError != ERROR_SUCCESS) && (dwError != ERROR_SUPPRESS_OUTPUT))
         {
-            ConResPrintf(StdErr, IDS_INVALID_COMMAND, input_line);
+            PWSTR pszCommandString = MergeStrings(args_vector, dwArgCount);
+            PrintError(NULL, dwError, pszCommandString);
+            HeapFree(GetProcessHeap(), 0, pszCommandString);
         }
+        if (dwError != ERROR_SUPPRESS_OUTPUT)
+            ConPuts(StdOut, L"\n");
 
         if (bDone)
             break;

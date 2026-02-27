@@ -138,13 +138,13 @@ static void test_ApphelpCheckShellObject(void)
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(objects[i], FALSE, &flags);
-        ok(res && (flags == 0), "%s 0: got %d and 0x%x%08x with 0x%x (expected TRUE and 0)\n",
+        ok(res && (flags == 0), "%s 0: got %d and 0x%lx%08lx with 0x%lx (expected TRUE and 0)\n",
             wine_dbgstr_guid(objects[i]), res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
 
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(objects[i], TRUE, &flags);
-        ok(res && (flags == 0), "%s 1: got %d and 0x%x%08x with 0x%x (expected TRUE and 0)\n",
+        ok(res && (flags == 0), "%s 1: got %d and 0x%lx%08lx with 0x%lx (expected TRUE and 0)\n",
             wine_dbgstr_guid(objects[i]), res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
 
     }
@@ -152,7 +152,7 @@ static void test_ApphelpCheckShellObject(void)
     /* NULL as pointer to flags is checked */
     SetLastError(0xdeadbeef);
     res = pApphelpCheckShellObject(&GUID_NULL, FALSE, NULL);
-    ok(res, "%s 0: got %d with 0x%x (expected != FALSE)\n", wine_dbgstr_guid(&GUID_NULL), res, GetLastError());
+    ok(res, "%s 0: got %d with 0x%lx (expected != FALSE)\n", wine_dbgstr_guid(&GUID_NULL), res, GetLastError());
 
     /* NULL as CLSID* crash on Windows */
     if (0)
@@ -160,7 +160,7 @@ static void test_ApphelpCheckShellObject(void)
         flags = 0xdeadbeef;
         SetLastError(0xdeadbeef);
         res = pApphelpCheckShellObject(NULL, FALSE, &flags);
-        trace("NULL as CLSID*: got %d and 0x%x%08x with 0x%x\n", res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
+        trace("NULL as CLSID*: got %d and 0x%lx%08lx with 0x%lx\n", res, (ULONG)(flags >> 32), (ULONG)flags, GetLastError());
     }
 }
 
@@ -732,9 +732,9 @@ static void expect_tag_skip_imp(PATTRINFO pattr, TAG tag)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_FAILED, "expected entry #%d to be failed, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
+    winetest_ok(p->type == TAG_NULL, "expected entry #%ld to be TAG_NULL, was %x\n", num, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_FAILED, "expected entry #%ld to be failed, was %ld\n", num, p->flags);
+    winetest_ok(p->qwattr == 0, "expected entry #%ld to be 0, was 0x%I64x\n", num, p->qwattr);
 }
 static void expect_tag_empty_imp(PATTRINFO pattr, TAG tag)
 {
@@ -745,9 +745,9 @@ static void expect_tag_empty_imp(PATTRINFO pattr, TAG tag)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == TAG_NULL, "expected entry #%d to be TAG_NULL, was %x\n", num, p->type);
-    winetest_ok(p->flags == 0, "expected entry #%d to be 0, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == 0, "expected entry #%d to be 0, was 0x%I64x\n", num, p->qwattr);
+    winetest_ok(p->type == TAG_NULL, "expected entry #%ld to be TAG_NULL, was %x\n", num, p->type);
+    winetest_ok(p->flags == 0, "expected entry #%ld to be 0, was %ld\n", num, p->flags);
+    winetest_ok(p->qwattr == 0, "expected entry #%ld to be 0, was 0x%I64x\n", num, p->qwattr);
 }
 
 static void expect_tag_dword_imp(PATTRINFO pattr, TAG tag, DWORD value)
@@ -759,9 +759,9 @@ static void expect_tag_dword_imp(PATTRINFO pattr, TAG tag, DWORD value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->dwattr == value, "expected entry #%d to be 0x%x, was 0x%x\n", num, value, p->dwattr);
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->dwattr == value, "expected entry #%ld to be 0x%lx, was 0x%lx\n", num, value, p->dwattr);
 }
 
 static void expect_tag_qword_imp(PATTRINFO pattr, TAG tag, QWORD value)
@@ -773,9 +773,9 @@ static void expect_tag_qword_imp(PATTRINFO pattr, TAG tag, QWORD value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->qwattr == value, "expected entry #%d to be 0x%I64x, was 0x%I64x\n", num, value, p->qwattr);
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->qwattr == value, "expected entry #%ld to be 0x%I64x, was 0x%I64x\n", num, value, p->qwattr);
 }
 
 static void expect_tag_str_imp(PATTRINFO pattr, TAG tag, const WCHAR* value)
@@ -787,9 +787,9 @@ static void expect_tag_str_imp(PATTRINFO pattr, TAG tag, const WCHAR* value)
         return;
 
     p = &pattr[num];
-    winetest_ok(p->type == tag, "expected entry #%d to be %x, was %x\n", num, tag, p->type);
-    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%d to be available, was %d\n", num, p->flags);
-    winetest_ok(p->lpattr && wcscmp(p->lpattr, value) == 0, "expected entry #%d to be %s, was %s\n", num, wine_dbgstr_w(value), wine_dbgstr_w(p->lpattr));
+    winetest_ok(p->type == tag, "expected entry #%ld to be %x, was %x\n", num, tag, p->type);
+    winetest_ok(p->flags == ATTRIBUTE_AVAILABLE, "expected entry #%ld to be available, was %lx\n", num, p->flags);
+    winetest_ok(p->lpattr && wcscmp(p->lpattr, value) == 0, "expected entry #%ld to be %s, was %s\n", num, wine_dbgstr_w(value), wine_dbgstr_w(p->lpattr));
 }
 
 #define expect_tag_skip     (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : expect_tag_skip_imp
@@ -827,10 +827,10 @@ void test_onefile(WCHAR* filename)
             if (pattrinfo[16].type != TAG_MODULE_TYPE)//SdbpSetAttrFail(&attr_info[16]); /* TAG_MODULE_TYPE (1: WIN16?) (3: WIN32?) (WIN64?), Win32VersionValue? */)
                 printf("FAIL TAG_MODULE_TYPE (%S)\n", filename);
             if (pattrinfo[16].dwattr != 3 && pattrinfo[16].dwattr != 2)
-                printf("TAG_MODULE_TYPE(%S): %d\n", filename, pattrinfo[16].dwattr);    // C:\Program Files (x86)\Windows Kits\8.1\Lib\win7\stub512.com
+                printf("TAG_MODULE_TYPE(%S): %ld\n", filename, pattrinfo[16].dwattr);    // C:\Program Files (x86)\Windows Kits\8.1\Lib\win7\stub512.com
             if (pattrinfo[16].dwattr == 2)
             {
-                printf("TAG_MODULE_TYPE(%S): %d, %d\n", filename, pattrinfo[16].dwattr, pattrinfo[0].dwattr);
+                printf("TAG_MODULE_TYPE(%S): %ld, %ld\n", filename, pattrinfo[16].dwattr, pattrinfo[0].dwattr);
             }
         }
 
@@ -839,7 +839,7 @@ void test_onefile(WCHAR* filename)
             if (pattrinfo[27].type != TAG_EXE_WRAPPER)
                 printf("FAIL TAG_EXE_WRAPPER (%S)\n", filename);
             if (pattrinfo[27].dwattr != 0)
-                printf("TAG_EXE_WRAPPER(%S): %d\n", filename, pattrinfo[27].dwattr);
+                printf("TAG_EXE_WRAPPER(%S): %ld\n", filename, pattrinfo[27].dwattr);
         }
 
         pSdbFreeFileAttributes(pattrinfo);
@@ -859,7 +859,7 @@ static void test_crc_imp(size_t len, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    winetest_ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -886,7 +886,7 @@ static void test_crc2_imp(DWORD len, int fill, DWORD expected)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     winetest_ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     winetest_ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    winetest_ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    winetest_ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -958,11 +958,11 @@ static void test_ApplicationAttributes(void)
             g_AttrInfoSize = 38;
             break;
         default: 
-            ok(0, "Unknown attrinfo size: %u\n", num);
+            ok(0, "Unknown attrinfo size: %lu\n", num);
             break;
     }
 
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
 #ifndef _M_IX86
     if (num == g_AttrInfoSize && ret && g_WinVersion < WINVER_WIN7)
@@ -1009,7 +1009,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1042,7 +1042,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1063,7 +1063,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1081,7 +1081,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1106,7 +1106,7 @@ static void test_ApplicationAttributes(void)
     ret = pSdbGetFileAttributes(path, &pattrinfo, &num);
     ok(ret != FALSE, "expected SdbGetFileAttributes to succeed.\n");
     ok(pattrinfo != (PATTRINFO)0xdead, "expected a valid pointer.\n");
-    ok(num == g_AttrInfoSize, "expected %u items, got %d.\n", g_AttrInfoSize, num);
+    ok(num == g_AttrInfoSize, "expected %lu items, got %ld.\n", g_AttrInfoSize, num);
 
     if (num == g_AttrInfoSize && ret)
     {
@@ -1224,7 +1224,7 @@ static void test_SdbGetAppPatchDir(void)
         hr = pSdbGetAppPatchDir(NULL, Buffer, n);
         ok(Buffer[n] == 0xbbbb, "Expected SdbGetAppPatchDir to leave WCHAR at %d untouched, was: %d\n",
            n, Buffer[n]);
-        ok(hr == S_OK || hr == expect_hr, "Expected S_OK or 0x%x, was: 0x%x (at %d)\n", expect_hr, hr, n);
+        ok(hr == S_OK || hr == expect_hr, "Expected S_OK or 0x%lx, was: 0x%lx (at %d)\n", expect_hr, hr, n);
     }
 }
 START_TEST(apphelp)
@@ -1235,7 +1235,7 @@ START_TEST(apphelp)
 
     hdll = LoadLibraryA("apphelp.dll");
     g_WinVersion = get_module_version(hdll);
-    trace("Detected apphelp.dll version: 0x%x\n", g_WinVersion);
+    trace("Detected apphelp.dll version: 0x%lx\n", g_WinVersion);
 
 #define RESOLVE(fnc)    do { p##fnc = (void *) GetProcAddress(hdll, #fnc); ok(!!p##fnc, #fnc " not found.\n"); } while (0)
     RESOLVE(ApphelpCheckShellObject);

@@ -42,8 +42,10 @@ WCHAR* guid2string(REFCLSID iid);
 #define MINIZIP_PASSWORD_FLAG   1
 #define MINIZIP_UTF8_FLAG       (1 << 11)
 
+#include "minizip/zip.h"
 #include "minizip/unzip.h"
 #include "minizip/ioapi.h"
+#include "minizip/iowin32.h"
 
 extern zlib_filefunc64_def g_FFunc;
 

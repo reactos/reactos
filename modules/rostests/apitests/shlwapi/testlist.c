@@ -18,6 +18,7 @@ extern void func_SHLoadRegUIString(void);
 extern void func_SHPropertyBag(void);
 extern void func_StrDup(void);
 extern void func_StrFormatByteSizeW(void);
+extern void func_StrToInt(void);
 
 const struct test winetest_testlist[] =
 {
@@ -38,5 +39,6 @@ const struct test winetest_testlist[] =
     { "SHPropertyBag", func_SHPropertyBag },
     { "StrDup", func_StrDup },
     { "StrFormatByteSizeW", func_StrFormatByteSizeW },
+    { "StrToInt", func_StrToInt },
     { 0, 0 }
 };

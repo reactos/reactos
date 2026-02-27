@@ -83,8 +83,16 @@
 #else
 # define __WINE_ALLOC_SIZE(...)
 #endif
+#if defined(__GNUC__) && (__GNUC__ > 10) && !defined(malloc)
+#define __WINE_DEALLOC(...) __attribute__((malloc (__VA_ARGS__)))
+#else
 #define __WINE_DEALLOC(...)
+#endif
+#if defined(__GNUC__) && (__GNUC__ > 2) && !defined(malloc)
+#define __WINE_MALLOC __attribute__((malloc))
+#else
 #define __WINE_MALLOC
+#endif
 /*#endif*/
 
 #ifdef __GNUC__
@@ -4579,8 +4587,7 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
 #elif defined (_M_ARM64)
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
-    //UNIMPLEMENTED;
-    return 0;
+    return (struct _TEB *)__getReg(18);
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {

@@ -9,6 +9,7 @@
 
 #include <win32k.h>
 #include <jpnvkeys.h>
+#include <cjkcode.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
 
@@ -16,12 +17,6 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 #define INVALID_HOTKEY     ((UINT)-1)
 #define MOD_KEYS           (MOD_CONTROL | MOD_SHIFT | MOD_ALT | MOD_WIN)
 #define MOD_LEFT_RIGHT     (MOD_LEFT | MOD_RIGHT)
-
-#define LANGID_CHINESE_SIMPLIFIED   MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED)
-#define LANGID_JAPANESE             MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)
-#define LANGID_KOREAN               MAKELANGID(LANG_KOREAN,   SUBLANG_KOREAN)
-#define LANGID_CHINESE_TRADITIONAL  MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_TRADITIONAL)
-#define LANGID_NEUTRAL              MAKELANGID(LANG_NEUTRAL,  SUBLANG_NEUTRAL)
 
 HIMC ghIMC = NULL;
 BOOL gfImeOpen = (BOOL)-1;
@@ -363,7 +358,7 @@ IntSetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_ HKL hKL,
+    _In_opt_ HKL hKL,
     _In_ DWORD dwAction)
 {
     PIMEHOTKEY pNode;
@@ -435,7 +430,7 @@ NtUserGetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _Out_ PUINT lpuModifiers,
     _Out_ PUINT lpuVirtualKey,
-    _Out_ LPHKL lphKL)
+    _Out_opt_ LPHKL lphKL)
 {
     PIMEHOTKEY pNode = NULL;
 
@@ -484,7 +479,7 @@ NtUserSetImeHotKey(
     _In_ DWORD dwHotKeyId,
     _In_ UINT uModifiers,
     _In_ UINT uVirtualKey,
-    _In_ HKL hKL,
+    _In_opt_ HKL hKL,
     _In_ DWORD dwAction)
 {
     BOOL ret;

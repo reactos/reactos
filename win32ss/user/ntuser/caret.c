@@ -66,7 +66,7 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
                                 0,
                                 0,
                                 SRCINVERT,
-                                0,
+                                CLR_INVALID,
                                 0);
             NtGdiSelectBitmap(hdcMem, hbmOld);
             GreDeleteObject(hdcMem);
@@ -182,11 +182,10 @@ co_IntDestroyCaret(PTHREADINFO Win32Thread)
 BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds)
 {
-   /* Don't save the new value to the registry! */
-
-   gpsi->dtCaretBlink = uMSeconds;
-
-   return TRUE;
+    /* Don't save the new value to the registry! */
+    ASSERT(gpsi);
+    gpsi->dtCaretBlink = uMSeconds;
+    return TRUE;
 }
 
 BOOL FASTCALL
@@ -380,15 +379,16 @@ UINT
 APIENTRY
 NtUserGetCaretBlinkTime(VOID)
 {
-   UINT ret;
+    UINT ret;
 
-   UserEnterShared();
+    UserEnterShared();
 
-   ret = gpsi->dtCaretBlink;
+    ASSERT(gpsi);
+    ret = gpsi->dtCaretBlink;
 
-   UserLeave();
+    UserLeave();
 
-   return ret;
+    return ret;
 }
 
 BOOL

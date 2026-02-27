@@ -1,5 +1,4 @@
 #include <precomp.h>
-#include <internal/wine/msvcrt.h>
 
 /*********************************************************************
  *              _wtoi64_l (MSVCRT.@)

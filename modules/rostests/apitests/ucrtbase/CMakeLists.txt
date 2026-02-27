@@ -5,14 +5,10 @@ list(REMOVE_ITEM INCLUDE_DIRS "${REACTOS_SOURCE_DIR}/sdk/include/crt")
 set_property(DIRECTORY . PROPERTY INCLUDE_DIRECTORIES ${INCLUDE_DIRS})
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/ucrt)
 
-add_definitions(
-    -DTEST_UCRTBASE
-    -DUSE_WINE_TODOS
-)
-
 list(APPEND SOURCE
     ../crt/_finite.c
     ../crt/_isnan.c
+    ../crt/_wsystem.c
     ../crt/acos.c
     ../crt/asin.c
     ../crt/atan.c
@@ -25,7 +21,9 @@ list(APPEND SOURCE
     ../crt/setjmp.c
     ../crt/sin.c
     ../crt/sqrt.c
+    ../crt/system.c
     ../crt/tan.c
+    ../crt/wctomb.c
     testlist.c
 )
 
@@ -41,6 +39,7 @@ endif()
 
 add_executable(ucrtbase_apitest ${SOURCE} ${ucrtbase_apitest_asm})
 set_module_type(ucrtbase_apitest win32cui)
+target_compile_definitions(ucrtbase_apitest PRIVATE USE_WINE_TODOS TEST_UCRTBASE TEST_DLL_NAME="ucrtbase.dll")
 
 target_link_libraries(ucrtbase_apitest ${PSEH_LIB} chkstk)
 if(NOT MSVC)
@@ -48,5 +47,5 @@ if(NOT MSVC)
     target_link_libraries(ucrtbase_apitest -lgcc)
 endif()
 
-add_importlibs(ucrtbase_apitest ucrtbase kernel32)
+add_importlibs(ucrtbase_apitest ucrtbase kernel32 ntdll)
 add_rostests_file(TARGET ucrtbase_apitest)

@@ -649,7 +649,7 @@ ImmGetHotKey(
     _In_ DWORD dwHotKey,
     _Out_ LPUINT lpuModifiers,
     _Out_ LPUINT lpuVKey,
-    _Out_ LPHKL lphKL)
+    _Out_opt_ LPHKL lphKL)
 {
     TRACE("(0x%lX, %p, %p, %p)\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
     if (lpuModifiers && lpuVKey)

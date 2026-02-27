@@ -1977,7 +1977,7 @@ UDFMarkNotAllocatedAsAllocated(
     // length of existing Not-Alloc-Not-Rec frag
     sLen = (( (((uint32)Offset) & (LBS-1)) + Length+LBS-1) & ~(LBS-1)) >> BSh;
     // required allocation length increment (in bytes)
-    aLen = (uint32)( ((Offset+Length+LBS-1) & ~(LBS-1)) - (Offset & ~(LBS-1)));
+    aLen = (uint32)( ((Offset+Length+LBS-1) & ~(UINT64)(LBS-1)) - (Offset & ~(UINT64)(LBS-1)));
 
     // try to extend previous frag or allocate space _after_ it to
     // avoid backward seeks, if previous frag is not Not-Rec-Not-Alloc
@@ -2146,7 +2146,7 @@ UDFMarkAllocatedAsNotXXX(
     // length of existing Alloc-(Not-)Rec frag (in sectors)
     sLen = (( (((uint32)Offset) & (LBS-1)) + Length+LBS-1) & ~(LBS-1)) >> BSh;
     // required deallocation length increment (in bytes)
-    aLen = (uint32)( ((Offset+Length+LBS-1) & ~(LBS-1)) - (Offset & ~(LBS-1)) );
+    aLen = (uint32)( ((Offset+Length+LBS-1) & ~(UINT64)(LBS-1)) - (Offset & ~(UINT64)(LBS-1)) );
 
     l=0;
     for(j=0; j<i; j++) {
@@ -2376,8 +2376,8 @@ UDFResizeExtent(
                         lim = (((uint32)UDF_MAX_EXTENT_LENGTH) >> BSh) & ~(LBS-1);
                     }
                     // required last extent length
-                    req_s = s + (uint32)( (((Length + LBS - 1) & ~(LBS-1)) -
-                                           ((l      + LBS - 1) & ~(LBS-1))   ) >> BSh);
+                    req_s = s + (uint32)( (((Length + LBS - 1) & ~(UINT64)(LBS-1)) -
+                                           ((l      + LBS - 1) & ~(UINT64)(LBS-1))   ) >> BSh);
                     if(lim > req_s) {
                         lim = req_s;
                     }
@@ -2449,8 +2449,8 @@ UDFResizeExtent(
                         lim = (((uint32)UDF_MAX_EXTENT_LENGTH) >> BSh) & ~(LBS-1);
                     }
                     // required last extent length
-                    req_s = s + (uint32)( (((Length + LBS - 1) & ~(LBS-1)) -
-                                           ((l      + LBS - 1) & ~(LBS-1))   ) >> BSh);
+                    req_s = s + (uint32)( (((Length + LBS - 1) & ~(UINT64)(LBS-1)) -
+                                           ((l      + LBS - 1) & ~(UINT64)(LBS-1))   ) >> BSh);
                     if(lim > req_s) {
                         lim = req_s;
                     }

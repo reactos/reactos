@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_definitions(-DUSE_WINE_TODOS)
 add_executable(lz32_winetest lzexpand_main.c testlist.c)
 set_module_type(lz32_winetest win32cui)

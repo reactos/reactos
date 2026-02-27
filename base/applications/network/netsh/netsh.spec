@@ -3,13 +3,13 @@
 @ stub DisplayMessageM
 @ stub DisplayMessageToConsole
 @ stdcall FreeQuotedString(wstr)
-@ stub FreeString
+@ stdcall FreeString(wstr)
 @ stub GenericMonitor
 @ stub GetEnumString
 @ stub GetHostMachineInfo
 @ stub InitializeConsole
 @ stdcall MakeQuotedString(wstr)
-@ stub MakeString
+@ varargs MakeString(ptr long)
 @ stub MatchCmdLine
 @ stdcall MatchEnumTag(ptr wstr long ptr ptr)
 @ stub MatchTagsInCmdLine

@@ -786,7 +786,8 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
 
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     /* Start fresh */
     NewPte->u.Long = 0;
@@ -815,7 +816,8 @@ MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
 {
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     /* Set the protection and page */
     NewPte->u.Long = MiDetermineUserGlobalPteMask(MappingPte);
@@ -841,7 +843,8 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
 
     /* Check that we are not setting valid a page that should not be */
     ASSERT(ProtectionMask & MM_PROTECT_ACCESS);
-    ASSERT((ProtectionMask & MM_GUARDPAGE) == 0);
+    ASSERT((ProtectionMask & MM_PROTECT_SPECIAL) != MM_GUARDPAGE);
+    ASSERT(ProtectionMask != MM_OUTSWAPPED_KSTACK && ((ProtectionMask & ~MM_OUTSWAPPED_KSTACK) == 0));
 
     NewPte->u.Hard.Valid = TRUE;
     NewPte->u.Hard.Owner = TRUE;

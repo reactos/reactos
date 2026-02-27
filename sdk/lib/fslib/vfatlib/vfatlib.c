@@ -60,8 +60,9 @@ VfatFormat(
     DISK_GEOMETRY DiskGeometry;
     IO_STATUS_BLOCK Iosb;
     HANDLE FileHandle;
-    PARTITION_INFORMATION PartitionInfo;
+    PARTITION_INFORMATION_EX PartitionInfo;
     FORMAT_CONTEXT Context;
+    FAT_TYPE FatType = FAT_UNKNOWN;
     NTSTATUS Status, LockStatus;
 
     DPRINT("VfatFormat(DriveRoot '%wZ')\n", DriveRoot);
@@ -128,94 +129,139 @@ VfatFormat(
                                        NULL,
                                        NULL,
                                        &Iosb,
-                                       IOCTL_DISK_GET_PARTITION_INFO,
+                                       IOCTL_DISK_GET_PARTITION_INFO_EX,
                                        NULL,
                                        0,
                                        &PartitionInfo,
-                                       sizeof(PARTITION_INFORMATION));
+                                       sizeof(PARTITION_INFORMATION_EX));
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("IOCTL_DISK_GET_PARTITION_INFO failed with status 0x%08x\n", Status);
+            DPRINT("IOCTL_DISK_GET_PARTITION_INFO_EX failed with status 0x%08x\n", Status);
             NtClose(FileHandle);
             return FALSE;
         }
     }
     else
     {
-        PartitionInfo.PartitionType = 0;
+        PartitionInfo.PartitionStyle = PARTITION_STYLE_MBR;
+        PartitionInfo.Mbr.PartitionType = 0;
         PartitionInfo.StartingOffset.QuadPart = 0ULL;
         PartitionInfo.PartitionLength.QuadPart =
             DiskGeometry.Cylinders.QuadPart *
             (ULONGLONG)DiskGeometry.TracksPerCylinder *
             (ULONGLONG)DiskGeometry.SectorsPerTrack *
             (ULONGLONG)DiskGeometry.BytesPerSector;
-        PartitionInfo.HiddenSectors = 0;
+        PartitionInfo.Mbr.HiddenSectors = 0;
         PartitionInfo.PartitionNumber = 0;
-        PartitionInfo.BootIndicator = FALSE;
+        PartitionInfo.Mbr.BootIndicator = FALSE;
         PartitionInfo.RewritePartition = FALSE;
-        PartitionInfo.RecognizedPartition = FALSE;
+        PartitionInfo.Mbr.RecognizedPartition = FALSE;
     }
 
     /* If it already has a FAT FS, we'll use that type.
      * If it doesn't, we will determine the FAT type based on size and offset */
-    if (PartitionInfo.PartitionType != PARTITION_FAT_12 &&
-        PartitionInfo.PartitionType != PARTITION_FAT_16 &&
-        PartitionInfo.PartitionType != PARTITION_HUGE &&
-        PartitionInfo.PartitionType != PARTITION_XINT13 &&
-        PartitionInfo.PartitionType != PARTITION_FAT32 &&
-        PartitionInfo.PartitionType != PARTITION_FAT32_XINT13)
+
+    if (PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR)
     {
-        /* Determine the correct type based upon size and offset (copied from usetup) */
+        if (PartitionInfo.Mbr.PartitionType == PARTITION_FAT_12)
+        {
+            FatType = FAT_12;
+        }
+        else if (PartitionInfo.Mbr.PartitionType == PARTITION_FAT_16 ||
+                 PartitionInfo.Mbr.PartitionType == PARTITION_HUGE ||
+                 PartitionInfo.Mbr.PartitionType == PARTITION_XINT13)
+        {
+            FatType = FAT_16;
+        }
+        else if (PartitionInfo.Mbr.PartitionType == PARTITION_FAT32 ||
+                 PartitionInfo.Mbr.PartitionType == PARTITION_FAT32_XINT13)
+        {
+            FatType = FAT_32;
+        }
+
+        if (FatType == FAT_UNKNOWN)
+        {
+            /* Determine the correct type based upon size and offset (copied from usetup) */
+            if (PartitionInfo.PartitionLength.QuadPart < (4200LL * 1024LL))
+            {
+                /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+                FatType = FAT_12;
+            }
+            else if (PartitionInfo.StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
+            {
+                /* Partition starts below the 8.4GB boundary ==> CHS partition */
+
+                if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
+                {
+                    /* FAT16 CHS partition (partition size < 32MB) */
+                    FatType = FAT_16;
+                }
+                else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                {
+                    /* FAT16 CHS partition (partition size < 512MB) */
+                    FatType = FAT_16;
+                }
+                else
+                {
+                    /* FAT32 CHS partition (partition size >= 512MB) */
+                    FatType = FAT_32;
+                }
+            }
+            else
+            {
+                /* Partition starts above the 8.4GB boundary ==> LBA partition */
+
+                if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                {
+                    /* FAT16 LBA partition (partition size < 512MB) */
+                    FatType = FAT_16;
+                }
+                else
+                {
+                    /* FAT32 LBA partition (partition size >= 512MB) */
+                    FatType = FAT_32;
+                }
+            }
+        }
+
+        DPRINT("PartitionType 0x%x\n", PartitionInfo.Mbr.PartitionType);
+        DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset.QuadPart);
+        DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength.QuadPart);
+        DPRINT("HiddenSectors %lu\n", PartitionInfo.Mbr.HiddenSectors);
+        DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
+        DPRINT("BootIndicator 0x%x\n", PartitionInfo.Mbr.BootIndicator);
+        DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
+        DPRINT("RecognizedPartition %d\n", PartitionInfo.Mbr.RecognizedPartition);
+    }
+    else if (PartitionInfo.PartitionStyle == PARTITION_STYLE_GPT)
+    {
         if (PartitionInfo.PartitionLength.QuadPart < (4200LL * 1024LL))
         {
             /* FAT12 CHS partition (disk is smaller than 4.1MB) */
-            PartitionInfo.PartitionType = PARTITION_FAT_12;
+            FatType = FAT_12;
         }
-        else if (PartitionInfo.StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
+        else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
         {
-            /* Partition starts below the 8.4GB boundary ==> CHS partition */
-
-            if (PartitionInfo.PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
-            {
-                /* FAT16 CHS partition (partition size < 32MB) */
-                PartitionInfo.PartitionType = PARTITION_FAT_16;
-            }
-            else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-            {
-                /* FAT16 CHS partition (partition size < 512MB) */
-                PartitionInfo.PartitionType = PARTITION_HUGE;
-            }
-            else
-            {
-                /* FAT32 CHS partition (partition size >= 512MB) */
-                PartitionInfo.PartitionType = PARTITION_FAT32;
-            }
+            /* FAT16 partition (partition size < 512MB) */
+            FatType = FAT_16;
+        }
+        else if (PartitionInfo.PartitionLength.QuadPart <= (32LL * 1024LL * 1024LL * 1024LL))
+        {
+            /* FAT32 partition (partition size < 32GB) */
+            FatType = FAT_32;
         }
         else
         {
-            /* Partition starts above the 8.4GB boundary ==> LBA partition */
-
-            if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-            {
-                /* FAT16 LBA partition (partition size < 512MB) */
-                PartitionInfo.PartitionType = PARTITION_XINT13;
-            }
-            else
-            {
-                /* FAT32 LBA partition (partition size >= 512MB) */
-                PartitionInfo.PartitionType = PARTITION_FAT32_XINT13;
-            }
+            DPRINT1("The partition ist too large (> 32 GB) for the FAT file system!\n");
+            NtClose(FileHandle);
+            return FALSE;
         }
-    }
 
-    DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
-    DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset.QuadPart);
-    DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength.QuadPart);
-    DPRINT("HiddenSectors %lu\n", PartitionInfo.HiddenSectors);
-    DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
-    DPRINT("BootIndicator 0x%x\n", PartitionInfo.BootIndicator);
-    DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
-    DPRINT("RecognizedPartition %d\n", PartitionInfo.RecognizedPartition);
+        DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset.QuadPart);
+        DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength.QuadPart);
+        DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
+        DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
+    }
 
     if (Callback != NULL)
     {
@@ -238,7 +284,7 @@ VfatFormat(
         DPRINT1("WARNING: Failed to lock volume for formatting! Format may fail! (Status: 0x%x)\n", LockStatus);
     }
 
-    if (PartitionInfo.PartitionType == PARTITION_FAT_12)
+    if (FatType == FAT_12)
     {
         /* FAT12 */
         Status = Fat12Format(FileHandle,
@@ -249,9 +295,7 @@ VfatFormat(
                              ClusterSize,
                              &Context);
     }
-    else if (PartitionInfo.PartitionType == PARTITION_FAT_16 ||
-             PartitionInfo.PartitionType == PARTITION_HUGE ||
-             PartitionInfo.PartitionType == PARTITION_XINT13)
+    else if (FatType == FAT_16)
     {
         /* FAT16 */
         Status = Fat16Format(FileHandle,
@@ -262,8 +306,7 @@ VfatFormat(
                              ClusterSize,
                              &Context);
     }
-    else if (PartitionInfo.PartitionType == PARTITION_FAT32 ||
-             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13)
+    else if (FatType == FAT_32)
     {
         /* FAT32 */
         Status = Fat32Format(FileHandle,

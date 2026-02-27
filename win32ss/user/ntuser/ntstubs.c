@@ -36,7 +36,7 @@ NtUserBitBltSysBmp(
                     nXSrc,
                     nYSrc,
                     dwRop,
-                        0,
+              CLR_INVALID,
                         0);
 
    UserLeave();

@@ -421,8 +421,8 @@ FDO_HandlePnp(
             /* Delete the device object */
             IoDeleteDevice(DeviceObject);
 
-            /* Request completed */
-            break;
+            /* The lower driver completes the IRP for removal */
+            return Status;
         }
         case IRP_MN_START_DEVICE:
         {

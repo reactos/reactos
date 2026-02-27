@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     The combo box of the address band
  * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *              Copyright 2023-2026 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -184,7 +184,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     CComPtr<IShellFolder> psfCurrent;
     HRESULT hr;
 
-    ATLASSERT(!m_pidlLastParsed);
+    m_pidlLastParsed.Free();
 
     CComPtr<IBrowserService> pbs;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &pbs));
@@ -220,15 +220,61 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     if (FAILED_UNEXPECTEDLY(hr))
         goto parseabsolute;
 
-    hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
-    if (FAILED_UNEXPECTEDLY(hr))
-        goto parseabsolute;
+    if (!pidlCurrent->mkid.cb)
+    {
+        psfCurrent = psfDesktop;
+    }
+    else
+    {
+        hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
+        if (FAILED_UNEXPECTEDLY(hr))
+            goto parseabsolute;
 
-    hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
+        ATLASSERT(address && address[0]);
+
+        WCHAR szPath[MAX_PATH], szFullPath[MAX_PATH];
+        if (SHGetPathFromIDListW(pidlCurrent, szPath)) // File-system?
+        {
+            if (PathIsRelativeW(address)) // Relative path?
+            {
+                PathAppendW(szPath, address);
+                if (GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL))
+                {
+                    address.Free();
+                    SHStrDupW(szFullPath, &address);
+                }
+            }
+            else if (address[0] == L'\\' && address[1] != L'\\') // Drive letter omitted?
+            {
+                // GetFullPathNameW won't resolve drive letter
+                INT iDrive = PathGetDriveNumberW(szPath);
+                if (iDrive >= 0)
+                {
+                    PathBuildRootW(szPath, iDrive);
+                    PathAppendW(szPath, &address[1]);
+                    if (GetFullPathNameW(szPath, _countof(szFullPath), szFullPath, NULL))
+                    {
+                        address.Free();
+                        SHStrDupW(szFullPath, &address);
+                    }
+                }
+            }
+            else if (StrChrW(address, L'.') && PathFileExistsW(address)) // Trailing relative path?
+            {
+                if (GetFullPathNameW(address, _countof(szFullPath), szFullPath, NULL))
+                {
+                    address.Free();
+                    SHStrDupW(szFullPath, &address);
+                }
+            }
+        }
+    }
+
+    hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
     {
         m_pidlLastParsed.Attach(ILCombine(pidlCurrent, pidlRelative));
-        return hr;
+        return S_OK;
     }
 
 parseabsolute:
@@ -271,6 +317,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 
         if (!m_pidlLastParsed)
             return E_FAIL;
+
         bParsedForExec = TRUE;
     }
 
@@ -304,7 +351,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     /*
      * Attempt to browse to the parsed pidl
      */
-    hr = pisb->BrowseObject(m_pidlLastParsed, 0);
+    hr = pisb->BrowseObject(m_pidlLastParsed, SBSP_SAMEBROWSER | SBSP_ABSOLUTE);
     if (SUCCEEDED(hr))
         return hr;
 

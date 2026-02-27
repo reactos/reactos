@@ -63,7 +63,7 @@ CreateDIBPalette(
         cColors = 1 << cBitsPixel;
 
         /* Allocate the palette */
-        ppal = PALETTE_AllocPalette(PAL_INDEXED,
+        ppal = PALETTE_AllocPalette(PAL_INDEXED | PAL_DIBSECTION,
                                     cColors,
                                     NULL,
                                     0,
@@ -221,7 +221,7 @@ CreateDIBPalette(
         }
 
         /* Allocate the bitfield palette */
-        ppal = PALETTE_AllocPalette(PAL_BITFIELDS,
+        ppal = PALETTE_AllocPalette(PAL_BITFIELDS | PAL_DIBSECTION,
                                     0,
                                     NULL,
                                     flRedMask,
@@ -1391,13 +1391,13 @@ NtGdiStretchDIBitsInternal(
         {
             NtGdiBitBlt(hdc, xDst, yDst, cxDst, cyDst,
                         hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                        dwRop, 0, 0);
+                        dwRop, CLR_INVALID, 0);
         }
         else
         {
             NtGdiStretchBlt(hdc, xDst, yDst, cxDst, cyDst,
                             hdcMem, xSrc, abs(pbmiSafe->bmiHeader.biHeight) - cySrc - ySrc,
-                            cxSrc, cySrc, dwRop, 0);
+                            cxSrc, cySrc, dwRop, CLR_INVALID);
         }
 
         /* cleanup */

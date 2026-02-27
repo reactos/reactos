@@ -45,7 +45,7 @@ __inline int c99_snprintf(char *outBuf, size_t size, const char *format, ...)
 #endif /* defined(_MSC_VER) && _MSC_VER < 1900 */
 
 #define HAVE_SYS_STAT_H
-#define HAVE__STAT
+#define HAVE_STAT
 
 #endif /* __LIBXSLT_WIN32_CONFIG__ */
 

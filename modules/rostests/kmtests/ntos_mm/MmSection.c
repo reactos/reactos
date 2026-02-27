@@ -646,6 +646,31 @@ TestPhysicalMemorySection(VOID)
             ok_eq_hex(Status, STATUS_SUCCESS);
         }
 
+        /* Map the zero page with write combining */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &ZeroPagePhysical,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE | PAGE_WRITECOMBINE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (!skip(NT_SUCCESS(Status), "No view\n"))
+        {
+            ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
+            EqualBytes = RtlCompareMemory(Mapping,
+                                          ZeroPageContents,
+                                          PAGE_SIZE);
+            ok_eq_size(EqualBytes, PAGE_SIZE);
+            Status = ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
         /* Map our NP page, compare, and check that modifications are reflected */
         Mapping = NULL;
         ViewSize = PAGE_SIZE;

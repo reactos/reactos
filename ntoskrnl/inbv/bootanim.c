@@ -452,7 +452,7 @@ static
 VOID
 NTAPI
 DisplayFilter(
-    _Inout_ PCHAR* String)
+    _Inout_ PCSTR* String)
 {
     /* Windows hack to skip first dots displayed by AUTOCHK */
     static BOOLEAN DotHack = TRUE;

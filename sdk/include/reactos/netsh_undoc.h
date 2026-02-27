@@ -6,10 +6,22 @@ WINAPI
 FreeQuotedString(
     _In_ LPWSTR pszQuotedString);
 
+VOID
+WINAPI
+FreeString(
+    _In_ LPWSTR pszString);
+
 LPWSTR
 WINAPI
 MakeQuotedString(
     _In_ LPWSTR pszString);
+
+LPWSTR
+CDECL
+MakeString(
+    _In_ HANDLE hModule,
+    _In_ DWORD dwMsgId,
+    ...);
 
 DWORD
 WINAPI 

@@ -6,7 +6,7 @@
 ##
 
 include_directories(BEFORE
-    ${REACTOS_SOURCE_DIR}/boot/environ/include/efi
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/edk2
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include
     ${REACTOS_SOURCE_DIR}/boot/freeldr/freeldr/include/arch/uefi)
@@ -21,6 +21,7 @@ list(APPEND UEFILDR_ARC_SOURCE
     arch/uefi/uefisetup.c
     arch/uefi/uefiutil.c
     arch/uefi/uefivid.c
+    arch/vidfb.c
     arch/vgafont.c)
 
 if(ARCH STREQUAL "i386")
@@ -59,7 +60,7 @@ add_library(uefifreeldr_common
     ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
-target_compile_definitions(uefifreeldr_common PRIVATE UEFIBOOT)
+target_compile_definitions(uefifreeldr_common PRIVATE _FRLDRLIB_ UEFIBOOT)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Prevent using SSE (no support in freeldr)
@@ -139,7 +140,7 @@ target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(uefildr PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(uefildr gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)

@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 add_definitions(-DUSE_WINE_TODOS)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

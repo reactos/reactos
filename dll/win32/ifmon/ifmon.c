@@ -26,6 +26,8 @@ InitHelperDll(
     dwError = RegisterInterfaceHelper();
     if (dwError == ERROR_SUCCESS)
         dwError = RegisterIpHelper();
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegisterWinsockHelper();
 
     return dwError;
 }

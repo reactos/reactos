@@ -32,7 +32,7 @@ struct IPSFactoryBuffer;
 
 PFORMAT_STRING ComputeConformanceOrVariance(
     MIDL_STUB_MESSAGE *pStubMsg, unsigned char *pMemory,
-    PFORMAT_STRING pFormat, ULONG_PTR def, ULONG_PTR *pCount) DECLSPEC_HIDDEN;
+    PFORMAT_STRING pFormat, ULONG_PTR def, ULONG_PTR *pCount);
 
 static inline PFORMAT_STRING ComputeConformance(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory, PFORMAT_STRING pFormat, ULONG def)
 {
@@ -56,12 +56,12 @@ typedef void           (WINAPI *NDR_BUFFERSIZE)(PMIDL_STUB_MESSAGE, unsigned cha
 typedef ULONG          (WINAPI *NDR_MEMORYSIZE)(PMIDL_STUB_MESSAGE,                 PFORMAT_STRING);
 typedef void           (WINAPI *NDR_FREE)      (PMIDL_STUB_MESSAGE, unsigned char*, PFORMAT_STRING);
 
-extern const NDR_MARSHALL   NdrMarshaller[] DECLSPEC_HIDDEN;
-extern const NDR_UNMARSHALL NdrUnmarshaller[] DECLSPEC_HIDDEN;
-extern const NDR_BUFFERSIZE NdrBufferSizer[] DECLSPEC_HIDDEN;
-extern const NDR_MEMORYSIZE NdrMemorySizer[] DECLSPEC_HIDDEN;
-extern const NDR_FREE       NdrFreer[] DECLSPEC_HIDDEN;
+extern const NDR_MARSHALL   NdrMarshaller[];
+extern const NDR_UNMARSHALL NdrUnmarshaller[];
+extern const NDR_BUFFERSIZE NdrBufferSizer[];
+extern const NDR_MEMORYSIZE NdrMemorySizer[];
+extern const NDR_FREE       NdrFreer[];
 
-ULONG ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat) DECLSPEC_HIDDEN;
+ULONG ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat);
 
 #endif  /* __WINE_NDR_MISC_H */

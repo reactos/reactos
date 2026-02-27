@@ -63,49 +63,63 @@ enum NS_MODE_CHANGE
 
 typedef
 DWORD
-(WINAPI *PGET_RESOURCE_STRING_FN)(
+(WINAPI GET_RESOURCE_STRING_FN)(
     _In_ DWORD dwMsgID,
     _Out_ LPWSTR lpBuffer,
     _In_ DWORD nBufferMax);
 
+typedef GET_RESOURCE_STRING_FN *PGET_RESOURCE_STRING_FN;
+
 typedef
 DWORD
-(WINAPI *PNS_DLL_INIT_FN)(
+(WINAPI NS_DLL_INIT_FN)(
     _In_ DWORD dwNetshVersion,
     _Out_ PVOID pReserved);
 
+typedef NS_DLL_INIT_FN *PNS_DLL_INIT_FN;
+
 typedef
 DWORD
-(WINAPI *PNS_HELPER_START_FN)(
+(WINAPI NS_HELPER_START_FN)(
     _In_ const GUID *pguidParent,
     _In_ DWORD dwVersion);
 
+typedef NS_HELPER_START_FN *PNS_HELPER_START_FN;
+
 typedef
 DWORD
-(WINAPI *PNS_HELPER_STOP_FN)(
+(WINAPI NS_HELPER_STOP_FN)(
     _In_ DWORD dwReserved);
 
+typedef NS_HELPER_STOP_FN *PNS_HELPER_STOP_FN;
+
 typedef
 DWORD
-(WINAPI *PNS_CONTEXT_COMMIT_FN)(
+(WINAPI NS_CONTEXT_COMMIT_FN)(
     _In_ DWORD dwAction);
 
-typedef
-DWORD
-(WINAPI *PNS_CONTEXT_CONNECT_FN)(
-    _In_ LPCWSTR pwszMachine);
+typedef NS_CONTEXT_COMMIT_FN *PNS_CONTEXT_COMMIT_FN;
 
 typedef
 DWORD
-(WINAPI *PNS_CONTEXT_DUMP_FN)(
+(WINAPI NS_CONTEXT_CONNECT_FN)(
+    _In_ LPCWSTR pwszMachine);
+
+typedef NS_CONTEXT_CONNECT_FN *PNS_CONTEXT_CONNECT_FN;
+
+typedef
+DWORD
+(WINAPI NS_CONTEXT_DUMP_FN)(
     _In_ LPCWSTR pwszRouter,
     _In_ LPWSTR *ppwcArguments,
     _In_ DWORD dwArgCount,
     _In_ LPCVOID pvData);
 
+typedef NS_CONTEXT_DUMP_FN *PNS_CONTEXT_DUMP_FN;
+
 typedef
 BOOL
-(WINAPI *PNS_OSVERSIONCHECK)(
+(WINAPI NS_OSVERSIONCHECK)(
     _In_ UINT CIMOSType,
     _In_ UINT CIMOSProductSuite,
     _In_ LPCWSTR CIMOSVersion,
@@ -115,9 +129,11 @@ BOOL
     _In_ UINT uiReserved,
     _In_ DWORD dwReserved);
 
+typedef NS_OSVERSIONCHECK *PNS_OSVERSIONCHECK;
+
 typedef
 DWORD
-(WINAPI *PFN_HANDLE_CMD)(
+(WINAPI FN_HANDLE_CMD)(
     _In_ LPCWSTR pwszMachine,
     _In_ LPWSTR *ppwcArguments,
     _In_ DWORD dwCurrentIndex,
@@ -126,6 +142,7 @@ DWORD
     _In_ LPCVOID pvData,
     _Out_ BOOL *pbDone);
 
+typedef FN_HANDLE_CMD *PFN_HANDLE_CMD;
 
 typedef struct _CMD_ENTRY
 {

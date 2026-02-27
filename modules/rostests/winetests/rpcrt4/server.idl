@@ -95,6 +95,29 @@ cpp_quote("#ifndef SKIP_TYPE_DECLS")
 
     int s;
   } sun_t;
+
+  typedef struct
+  {
+    signed char a, b, c, d, e;
+  } chars_t;
+
+  typedef struct
+  {
+    int i;
+    hyper j;
+  } ints_t;
+
+  typedef struct
+  {
+    int i;
+    float f;
+  } flts_t;
+
+  typedef struct
+  {
+    int i;
+    double d;
+  } dbls_t;
 cpp_quote("#endif")
 
   int int_return(void);
@@ -107,6 +130,20 @@ cpp_quote("#endif")
   hyper sum_hyper(hyper x, hyper y);
   int sum_hyper_int(hyper x, hyper y);
   int sum_char_hyper(signed char x, hyper y);
+  int sum_ints(int a, ints_t x, ints_t y);
+  int sum_chars(int a, chars_t x, chars_t y);
+  int sum_flts(int a, flts_t x, flts_t y);
+  int sum_dbls(int a, dbls_t x, dbls_t y);
+  int sum_iiff(int x0, int y0, float x1, float y1);
+  int sum_ifif(int x0, float y0, int x1, float y1);
+  int sum_iidd(int x0, int y0, double x1, double y1);
+  int sum_idid(int x0, double y0, int x1, double y1);
+  int sum_ififififififif(int x0, float y0, int x1, float y1, int x2, float y2, int x3, float y3, int x4, float y4, int x5, float y5, int x6, float y6);
+  int sum_ididididididid(int x0, double y0, int x1, double y1, int x2, double y2, int x3, double y3, int x4, double y4, int x5, double y5, int x6, double y6);
+  int sum_idfdifdfifdfidifdidf(int x0, double y0, float z0, double y1, int x1, float z1, double y2, float z2, int x2, float z3, double y3, float z4, int x3, double y4, int x4, float z5, double y5, int x5, double y6, float z6);
+  int sum_ididididididididididid(int x0, double y0, int x1, double y1, int x2, double y2, int x3, double y3, int x4, double y4, int x5, double y5, int x6, double y6, int x7, double y7, int x8, double y8);
+  int sum_iidiidiidiidiidiidiidiidiidiidiid(int x0, int x1, double y0, int x2, int x3, double y1, int x4, int x5, double y2, int x6, int x7, double y3, int x8, int x9, double y4, int x10, int x11, double y5, int x12, int x13, double y6, int x14, int x15, double y7, int x16, int x17, double y8);
+  int sum_iyiy(int x0, hyper y0, int x1, hyper y1);
   void square_out(int x, [out] int *y);
   void square_ref([in, out] int *x);
   int str_length([string] const char *s);
@@ -171,6 +208,30 @@ cpp_quote("#ifndef SKIP_TYPE_DECLS")
 
   typedef struct
   {
+    int n;
+    [size_is(n)] int *ca;
+  } cs_blob_t;
+
+  typedef struct
+  {
+/* FIXME: widl generates incorrect correlation descriptor and the tests crash */
+#if 0
+    int dummy[1]; /* to make offset to conformant array unique */
+#endif
+    cs_blob_t blob;
+  } cs_data_t;
+
+  typedef struct
+  {
+/* FIXME: widl generates incorrect correlation descriptor and the tests crash */
+#if 0
+    int dummy[2]; /* to make offset to conformant array unique */
+#endif
+    cs_data_t data;
+  } cs_container_t;
+
+  typedef struct
+  {
     int *pn;
     [size_is(*pn)] int *ca1;
     [size_is(n * 2)] int *ca2;
@@ -191,6 +252,9 @@ cpp_quote("#endif")
   int sum_cpsc(cpsc_t *cpsc);
   int get_cpsc(int n, [out] cpsc_t *cpsc );
   int sum_complex_array(int n, [size_is(n)] refpint_t pi[]);
+  int sum_blob([in] cs_blob_t *blob);
+  int sum_data([in] cs_data_t *data);
+  int sum_container([in] cs_container_t *container);
 
 cpp_quote("#ifndef SKIP_TYPE_DECLS")
   typedef [wire_marshal(int)] void *puint_t;
@@ -458,4 +522,6 @@ cpp_quote("#endif")
   ctx_handle_t get_handle();
   void get_handle_by_ptr([out] ctx_handle_t *r);
   void test_handle(ctx_handle_t ctx_handle);
+
+  void test_I_RpcBindingInqLocalClientPID([in] unsigned int protseq, [in] handle_t binding);
 }

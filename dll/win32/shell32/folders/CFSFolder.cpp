@@ -346,7 +346,17 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
         LPCWSTR pExtension = ExtensionFromPidl(pidl, extbuf, _countof(extbuf));
         HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
-            WARN("Could not open DefaultIcon key!\n");
+        {
+            DWORD dwSize = sizeof(wTemp);
+            if (RegGetValueW(HKEY_CLASSES_ROOT, pExtension, L"PerceivedType", RRF_RT_REG_SZ, NULL,
+                             wTemp, &dwSize) == ERROR_SUCCESS)
+            {
+                WCHAR szSubKey[MAX_PATH];
+                StringCchPrintfW(szSubKey, _countof(szSubKey),
+                                 L"SystemFileAssociations\\%s\\DefaultIcon", wTemp);
+                RegOpenKeyExW(HKEY_CLASSES_ROOT, szSubKey, 0, KEY_READ, &hkey);
+            }
+        }
 
         DWORD dwSize = sizeof(wTemp);
         if (hkey && !SHQueryValueExW(hkey, NULL, NULL, NULL, wTemp, &dwSize))
@@ -1133,8 +1143,6 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
 
     LPPIDLDATA pData1 = _ILGetDataPointer(pidl1);
     LPPIDLDATA pData2 = _ILGetDataPointer(pidl2);
-    LPWSTR pExtension1, pExtension2;
-
     HRESULT hr = CompareSortFoldersFirst(pidl1, pidl2);
     if (SUCCEEDED(hr))
         return hr;
@@ -1153,11 +1161,16 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                 result = 0;
             break;
         case SHFSF_COL_TYPE:
-            // FIXME: Compare the type strings from SHGetFileInfo
-            pExtension1 = PathFindExtensionW(pszName1);
-            pExtension2 = PathFindExtensionW(pszName2);
-            result = CompareUiStrings(pExtension1, pExtension2, lParam);
+        {
+            SHFILEINFOW info1, info2;
+            enum { flags = SHGFI_PIDL | SHGFI_TYPENAME };
+            if (SHGetFileInfoW((LPCWSTR)pidl1, 0, &info1, sizeof(info1), flags) &&
+                SHGetFileInfoW((LPCWSTR)pidl2, 0, &info2, sizeof(info2), flags))
+            {
+                result = CompareUiStrings(info1.szTypeName, info2.szTypeName, lParam);
+            }
             break;
+        }
         case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
             if (result == 0)

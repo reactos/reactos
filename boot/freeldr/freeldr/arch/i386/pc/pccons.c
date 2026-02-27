@@ -18,110 +18,104 @@
 
 #include <freeldr.h>
 
-#define TEXTMODE_BUFFER      0xb8000
-#define TEXTMODE_BUFFER_SIZE 0x8000
-
-#define TEXT_COLS  80
-#define TEXT_LINES 25
-
 VOID
 PcConsPutChar(int Ch)
 {
-  REGS Regs;
+    REGS Regs;
 
-  /* If we are displaying a CR '\n' then do a LF also */
-  if ('\n' == Ch)
+    /* If we are displaying a CR '\n' then do a LF also */
+    if (Ch == '\n')
     {
-      /* Display the LF */
-      PcConsPutChar('\r');
+        /* Display the LF */
+        PcConsPutChar('\r');
     }
 
-  /* If we are displaying a TAB '\t' then display 8 spaces ' ' */
-  if ('\t' == Ch)
+    /* If we are displaying a TAB '\t' then display 8 spaces ' ' */
+    if (Ch == '\t')
     {
-      /* Display the 8 spaces ' ' */
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      PcConsPutChar(' ');
-      return;
+        /* Display the 8 spaces ' ' */
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        PcConsPutChar(' ');
+        return;
     }
 
-  /* Int 10h AH=0Eh
-   * VIDEO - TELETYPE OUTPUT
-   *
-   * AH = 0Eh
-   * AL = character to write
-   * BH = page number
-   * BL = foreground color (graphics modes only)
-   */
-  Regs.b.ah = 0x0E;
-  Regs.b.al = Ch;
-  Regs.w.bx = 1;
-  Int386(0x10, &Regs, &Regs);
+    /* Int 10h AH=0Eh
+     * VIDEO - TELETYPE OUTPUT
+     *
+     * AH = 0Eh
+     * AL = character to write
+     * BH = page number
+     * BL = foreground color (graphics modes only)
+     */
+    Regs.b.ah = 0x0E;
+    Regs.b.al = Ch;
+    Regs.w.bx = 1;
+    Int386(0x10, &Regs, &Regs);
 }
 
 BOOLEAN
 PcConsKbHit(VOID)
 {
-  REGS Regs;
+    REGS Regs;
 
-  /* Int 16h AH=01h
-   * KEYBOARD - CHECK FOR KEYSTROKE
-   *
-   * AH = 01h
-   * Return:
-   * ZF set if no keystroke available
-   * ZF clear if keystroke available
-   * AH = BIOS scan code
-   * AL = ASCII character
-   */
-  Regs.b.ah = 0x01;
-  Int386(0x16, &Regs, &Regs);
+    /* Int 16h AH=01h
+     * KEYBOARD - CHECK FOR KEYSTROKE
+     *
+     * AH = 01h
+     * Return:
+     * ZF set if no keystroke available
+     * ZF clear if keystroke available
+     * AH = BIOS scan code
+     * AL = ASCII character
+     */
+    Regs.b.ah = 0x01;
+    Int386(0x16, &Regs, &Regs);
 
-  return 0 == (Regs.x.eflags & EFLAGS_ZF);
+    return !(Regs.x.eflags & EFLAGS_ZF);
 }
 
 int
 PcConsGetCh(void)
 {
-  REGS Regs;
-  static BOOLEAN ExtendedKey = FALSE;
-  static char ExtendedScanCode = 0;
+    REGS Regs;
+    static BOOLEAN ExtendedKey = FALSE;
+    static char ExtendedScanCode = 0;
 
-  /* If the last time we were called an
-   * extended key was pressed then return
-   * that keys scan code. */
-  if (ExtendedKey)
+    /* If the last time we were called an
+     * extended key was pressed then return
+     * that keys scan code. */
+    if (ExtendedKey)
     {
-      ExtendedKey = FALSE;
-      return ExtendedScanCode;
+        ExtendedKey = FALSE;
+        return ExtendedScanCode;
     }
 
-  /* Int 16h AH=00h
-   * KEYBOARD - GET KEYSTROKE
-   *
-   * AH = 00h
-   * Return:
-   * AH = BIOS scan code
-   * AL = ASCII character
-   */
-  Regs.b.ah = 0x00;
-  Int386(0x16, &Regs, &Regs);
+    /* Int 16h AH=00h
+     * KEYBOARD - GET KEYSTROKE
+     *
+     * AH = 00h
+     * Return:
+     * AH = BIOS scan code
+     * AL = ASCII character
+     */
+    Regs.b.ah = 0x00;
+    Int386(0x16, &Regs, &Regs);
 
-  /* Check for an extended keystroke */
-  if (0 == Regs.b.al)
+    /* Check for an extended keystroke */
+    if (Regs.b.al == 0)
     {
-      ExtendedKey = TRUE;
-      ExtendedScanCode = Regs.b.ah;
+        ExtendedKey = TRUE;
+        ExtendedScanCode = Regs.b.ah;
     }
 
-  /* Return keystroke */
-  return Regs.b.al;
+    /* Return keystroke */
+    return Regs.b.al;
 }
 
 /* EOF */

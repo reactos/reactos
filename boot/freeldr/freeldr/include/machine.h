@@ -43,7 +43,7 @@ typedef struct tagMACHVTBL
     int (*ConsGetCh)(VOID);
 
     VOID (*VideoClearScreen)(UCHAR Attr);
-    VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOLEAN Init);
+    VIDEODISPLAYMODE (*VideoSetDisplayMode)(PCSTR DisplayMode, BOOLEAN Init);
     VOID (*VideoGetDisplaySize)(PULONG Width, PULONG Height, PULONG Depth);
     ULONG (*VideoGetBufferSize)(VOID);
     VOID (*VideoGetFontsFromFirmware)(PULONG RomFontPointers);

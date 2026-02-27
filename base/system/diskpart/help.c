@@ -42,7 +42,7 @@ HelpCommandList(VOID)
 }
 
 
-BOOL
+EXIT_CODE
 HelpCommand(
     PCOMMAND pCommand)
 {
@@ -110,14 +110,17 @@ HelpCommand(
 
     ConPuts(StdOut, L"\n");
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 
 /* help_main(char *arg):
  * main entry point for the help command. Gives help to users who needs it.
  */
-BOOL help_main(INT argc, LPWSTR *argv)
+EXIT_CODE
+help_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     PCOMMAND cmdptr;
     PCOMMAND cmdptr1 = NULL;
@@ -127,7 +130,7 @@ BOOL help_main(INT argc, LPWSTR *argv)
     if (argc == 1)
     {
         HelpCommandList();
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* Scan internal command table */
@@ -172,5 +175,5 @@ BOOL help_main(INT argc, LPWSTR *argv)
 
     HelpCommandList();
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

@@ -95,6 +95,12 @@ struct threaddata
     struct context_handle_list *context_handle_list;
 };
 
+struct interface_header
+{
+    unsigned int length;
+    RPC_SYNTAX_IDENTIFIER id;
+};
+
 /***********************************************************************
  * DllMain
  *
@@ -130,7 +136,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
                 ERR("tdata->connection should be NULL but is still set to %p\n", tdata->connection);
             if (tdata->server_binding)
                 ERR("tdata->server_binding should be NULL but is still set to %p\n", tdata->server_binding);
-            HeapFree(GetProcessHeap(), 0, tdata);
+            free(tdata);
         }
         break;
 
@@ -157,7 +163,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  */
 RPC_STATUS WINAPI RpcStringFreeA(RPC_CSTR* String)
 {
-  HeapFree( GetProcessHeap(), 0, *String);
+  free(*String);
   if (String) *String = NULL;
 
   return RPC_S_OK;
@@ -174,9 +180,28 @@ RPC_STATUS WINAPI RpcStringFreeA(RPC_CSTR* String)
  */
 RPC_STATUS WINAPI RpcStringFreeW(RPC_WSTR* String)
 {
-  HeapFree( GetProcessHeap(), 0, *String);
+  free(*String);
   if (String) *String = NULL;
 
+  return RPC_S_OK;
+}
+
+/*************************************************************************
+ *           RpcIfInqId   [RPCRT4.@]
+ *
+ * Get interface UUID and version.
+ */
+RPC_STATUS WINAPI RpcIfInqId(RPC_IF_HANDLE if_handle, RPC_IF_ID *if_id)
+{
+  struct interface_header *header = (struct interface_header *)if_handle;
+
+  TRACE("(%p,%p)\n", if_handle, if_id);
+
+  if_id->Uuid = header->id.SyntaxGUID;
+  if_id->VersMajor = header->id.SyntaxVersion.MajorVersion;
+  if_id->VersMinor = header->id.SyntaxVersion.MinorVersion;
+  TRACE("UUID:%s VersMajor:%hu VersMinor:%hu.\n", debugstr_guid(&if_id->Uuid), if_id->VersMajor,
+        if_id->VersMinor);
   return RPC_S_OK;
 }
 
@@ -347,11 +372,11 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
     DWORD status = RPC_S_OK;
 
     ULONG buflen = sizeof(IP_ADAPTER_INFO);
-    PIP_ADAPTER_INFO adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
+    PIP_ADAPTER_INFO adapter = malloc(buflen);
 
     if (GetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
-        HeapFree(GetProcessHeap(), 0, adapter);
-        adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
+        free(adapter);
+        adapter = malloc(buflen);
     }
 
     if (GetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
@@ -367,7 +392,7 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
         status = RPC_S_UUID_LOCAL_ONLY;
     }
 
-    HeapFree(GetProcessHeap(), 0, adapter);
+    free(adapter);
     return status;
 }
 
@@ -513,18 +538,26 @@ unsigned short WINAPI UuidHash(UUID *uuid, RPC_STATUS *Status)
  */
 RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, RPC_CSTR* StringUuid)
 {
-  *StringUuid = HeapAlloc( GetProcessHeap(), 0, sizeof(char) * 37);
+  *StringUuid = malloc(37);
 
   if(!(*StringUuid))
     return RPC_S_OUT_OF_MEMORY;
 
   if (!Uuid) Uuid = &uuid_nil;
 
+#ifdef __REACTOS__
   sprintf( (char*)*StringUuid, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
                  Uuid->Data1, Uuid->Data2, Uuid->Data3,
                  Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
                  Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
                  Uuid->Data4[6], Uuid->Data4[7] );
+#else
+  sprintf( (char*)*StringUuid, "%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                 Uuid->Data1, Uuid->Data2, Uuid->Data3,
+                 Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
+                 Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
+                 Uuid->Data4[6], Uuid->Data4[7] );
+#endif
 
   return RPC_S_OK;
 }
@@ -543,11 +576,19 @@ RPC_STATUS WINAPI UuidToStringW(UUID *Uuid, RPC_WSTR* StringUuid)
 
   if (!Uuid) Uuid = &uuid_nil;
 
+#ifdef __REACTOS__
   sprintf(buf, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
                Uuid->Data1, Uuid->Data2, Uuid->Data3,
                Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
                Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
                Uuid->Data4[6], Uuid->Data4[7] );
+#else
+  sprintf(buf, "%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+               Uuid->Data1, Uuid->Data2, Uuid->Data3,
+               Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
+               Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
+               Uuid->Data4[6], Uuid->Data4[7] );
+#endif
 
   *StringUuid = RPCRT4_strdupAtoW(buf);
 
@@ -647,16 +688,6 @@ RPC_STATUS WINAPI UuidFromStringW(RPC_WSTR s, UUID *uuid)
     return RPC_S_OK;
 }
 
-/***********************************************************************
- *              DllRegisterServer (RPCRT4.@)
- */
-
-HRESULT WINAPI DllRegisterServer( void )
-{
-    FIXME( "(): stub\n" );
-    return S_OK;
-}
-
 #define MAX_RPC_ERROR_TEXT 256
 
 /******************************************************************************
@@ -715,7 +746,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, RPC_CSTR buffer)
  */
 void * WINAPI I_RpcAllocate(unsigned int Size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, Size);
+    return malloc(Size);
 }
 
 /******************************************************************************
@@ -723,7 +754,7 @@ void * WINAPI I_RpcAllocate(unsigned int Size)
  */
 void WINAPI I_RpcFree(void *Object)
 {
-    HeapFree(GetProcessHeap(), 0, Object);
+    free(Object);
 }
 
 /******************************************************************************
@@ -739,7 +770,7 @@ void WINAPI I_RpcFree(void *Object)
  */
 LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
 {
-    TRACE("(%d)\n", status);
+    TRACE("(%ld)\n", status);
     switch (status)
     {
     case ERROR_ACCESS_DENIED: return STATUS_ACCESS_DENIED;
@@ -858,7 +889,7 @@ LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
  */
 int WINAPI RpcExceptionFilter(ULONG ExceptionCode)
 {
-    TRACE("0x%x\n", ExceptionCode);
+    TRACE("0x%lx\n", ExceptionCode);
     switch (ExceptionCode)
     {
     case STATUS_DATATYPE_MISALIGNMENT:
@@ -907,7 +938,7 @@ RPC_STATUS RPC_ENTRY RpcErrorSaveErrorInfo(RPC_ERROR_ENUM_HANDLE *EnumHandle, vo
  */
 RPC_STATUS RPC_ENTRY RpcErrorLoadErrorInfo(void *ErrorBlob, SIZE_T BlobSize, RPC_ERROR_ENUM_HANDLE *EnumHandle)
 {
-    FIXME("(%p %lu %p): stub\n", ErrorBlob, BlobSize, EnumHandle);
+    FIXME("(%p %Iu %p): stub\n", ErrorBlob, BlobSize, EnumHandle);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -925,7 +956,7 @@ RPC_STATUS RPC_ENTRY RpcErrorGetNextRecord(RPC_ERROR_ENUM_HANDLE *EnumHandle, BO
  */
 RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG Timeout)
 {
-    FIXME("(%d): stub\n", Timeout);
+    FIXME("(%ld): stub\n", Timeout);
     return RPC_S_OK;
 }
 
@@ -934,10 +965,10 @@ static struct threaddata *get_or_create_threaddata(void)
     struct threaddata *tdata = NtCurrentTeb()->ReservedForNtRpc;
     if (!tdata)
     {
-        tdata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*tdata));
+        tdata = calloc(1, sizeof(*tdata));
         if (!tdata) return NULL;
 
-        InitializeCriticalSection(&tdata->cs);
+        InitializeCriticalSectionEx(&tdata->cs, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
         tdata->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": threaddata.cs");
         tdata->thread_id = GetCurrentThreadId();
 
@@ -984,7 +1015,7 @@ void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext)
 
     if (!tdata) return;
 
-    context_handle_list = HeapAlloc(GetProcessHeap(), 0, sizeof(*context_handle_list));
+    context_handle_list = malloc(sizeof(*context_handle_list));
     if (!context_handle_list) return;
 
     context_handle_list->context_handle = SContext;
@@ -1007,7 +1038,7 @@ void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext)
                 prev->next = current->next;
             else
                 tdata->context_handle_list = current->next;
-            HeapFree(GetProcessHeap(), 0, current);
+            free(current);
             return;
         }
     }
@@ -1026,7 +1057,7 @@ NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void)
     tdata->context_handle_list = context_handle_list->next;
 
     context_handle = context_handle_list->context_handle;
-    HeapFree(GetProcessHeap(), 0, context_handle_list);
+    free(context_handle_list);
     return context_handle;
 }
 
@@ -1064,7 +1095,7 @@ RPC_STATUS RPC_ENTRY RpcCancelThreadEx(void* ThreadHandle, LONG Timeout)
 {
     DWORD target_tid;
 
-    FIXME("(%p, %d)\n", ThreadHandle, Timeout);
+    FIXME("(%p, %ld)\n", ThreadHandle, Timeout);
 
     target_tid = GetThreadId(ThreadHandle);
     if (!target_tid)
@@ -1072,7 +1103,7 @@ RPC_STATUS RPC_ENTRY RpcCancelThreadEx(void* ThreadHandle, LONG Timeout)
 
     if (Timeout)
     {
-        FIXME("(%p, %d)\n", ThreadHandle, Timeout);
+        FIXME("(%p, %ld)\n", ThreadHandle, Timeout);
         return RPC_S_OK;
     }
     else

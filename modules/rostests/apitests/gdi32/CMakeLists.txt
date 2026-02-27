@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/win32ss)
+include_directories(${REACTOS_SOURCE_DIR}/win32ss ../gditools)
 
 list(APPEND SOURCE
     AddFontMemResourceEx.c
@@ -76,8 +76,7 @@ list(APPEND SOURCE
     SetWindowExtEx.c
     SetWorldTransform.c
     StretchBlt.c
-    TextTransform.c
-    init.c)
+    TextTransform.c)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
@@ -87,7 +86,7 @@ add_executable(gdi32_apitest
     ${PCH_SKIP_SOURCE}
     resource.rc)
 
-target_link_libraries(gdi32_apitest ${PSEH_LIB} win32ksys)
+target_link_libraries(gdi32_apitest ${PSEH_LIB} gditools win32ksys)
 set_module_type(gdi32_apitest win32cui)
 add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32 ntdll)
 add_pch(gdi32_apitest precomp.h "${PCH_SKIP_SOURCE}")

@@ -1,5 +1,4 @@
 project(appcompat)
-add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     dispmode.c

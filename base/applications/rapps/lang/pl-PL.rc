@@ -176,9 +176,9 @@ BEGIN
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Dodaj/Usuń programy"
+    IDS_APPWIZ_TEXT1 "Wybierz ""Aplikacje"" lub ""Uaktualnienia"" by wyświetlić listę aplikacji lub aktualizacji w Twoim systemie."
+    IDS_APPWIZ_TEXT2 "Aby usunąć program lub zmodyfikować jego komponenty, wybierz program z listy i kliknij ""Odinstaluj"" lub ""Modyfikuj""."
 END
 
 STRINGTABLE
@@ -211,7 +211,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Szczegóły"
     IDS_APP_DISPLAY_LIST "Lista"
     IDS_APP_DISPLAY_TILE "Kafelki"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "Brak wyników wyszukiwania"
     IDS_CFG_SAVE_WINDOW_POS "Zapisz pozycję okna"
     IDS_CFG_UPDATE_AVLIST "Aktualizuj listę dostępnych programów przy każdym uruchomieniu"
     IDS_CFG_LOG_ENABLED "Zapisuj dziennik instalacji i usuwania programów"
@@ -268,6 +268,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
-    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
+    IDS_INSTGEN_CONFIRMUNINST "Czy na pewno chcesz odinstalować %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Instalacja ukończona, czy chcesz teraz uruchomić %s?"
 END

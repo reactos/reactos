@@ -80,8 +80,8 @@ typedef struct _EBRUSHOBJ
     COLORADJUSTMENT *pca;
 //    DWORD       dwUnknown2c;
 //    DWORD       dwUnknown30;
-    SURFACE *   psurfTrg;
-    struct _PALETTE *   ppalSurf;
+    _Notnull_ SURFACE *   psurfTrg;
+    _Notnull_ struct _PALETTE *   ppalSurf;
     struct _PALETTE *   ppalDC;
     struct _PALETTE *   ppalDIB;
 //    DWORD       dwUnknown44;

@@ -967,8 +967,8 @@ BEGIN
     IDS_VXD_FILE "Dispositivo de Driver Virtual"
     IDS_ANY_FILE "%s-file"
 
-    IDS_OPEN_VERB "Abrir"
-    IDS_EXPLORE_VERB "Explorar"
+    IDS_OPEN_VERB "&Abrir"
+    IDS_EXPLORE_VERB "E&xplorar"
     IDS_RUNAS_VERB "Executar como..."
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Procurar"

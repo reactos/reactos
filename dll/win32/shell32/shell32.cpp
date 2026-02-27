@@ -432,6 +432,7 @@ static HRESULT UpdateRegistryFromResource(BOOL Register)
     {
         IDR_FOLDEROPTIONS,
         IDR_EXPLORER,
+        IDR_SYSTEMFILEASSOC,
     };
     HRESULT hr = S_OK;
     for (SIZE_T i = 0; i < _countof(resid) && SUCCEEDED(hr); ++i)

@@ -2,15 +2,22 @@
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
 add_definitions(
+    -DCONST_VTABLE
     -DUSE_WINE_TODOS
     -DWINETEST_USE_DBGSTR_LONGLONG
-    -DPROXY_DELEGATION)
+    -DPROXY_DELEGATION
+    -Dstrdup=_strdup
+)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 set(OLD_IDL_FLAGS ${IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_ -Os --prefix-client=mixed_)
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)
+set(IDL_FLAGS ${OLD_IDL_FLAGS})
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_ -Os --prefix-client=)
+add_rpc_files(client explicit_handle.idl)
+add_rpc_files(server explicit_handle.idl)
 set(IDL_FLAGS ${OLD_IDL_FLAGS})
 set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_ -Oicf --prefix-client=interp_)
 add_rpc_files(client server_interp.idl)
@@ -27,6 +34,8 @@ list(APPEND SOURCE
     server.c
     testlist.c
     ${CMAKE_CURRENT_BINARY_DIR}/cstub_p.c
+    ${CMAKE_CURRENT_BINARY_DIR}/explicit_handle_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/explicit_handle_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_s.c

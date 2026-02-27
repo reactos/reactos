@@ -118,6 +118,7 @@ struct connection_ops {
   RPC_STATUS (*impersonate_client)(RpcConnection *conn);
   RPC_STATUS (*revert_to_self)(RpcConnection *conn);
   RPC_STATUS (*inquire_auth_client)(RpcConnection *, RPC_AUTHZ_HANDLE *, RPC_WSTR *, ULONG *, ULONG *, ULONG *, ULONG);
+  RPC_STATUS (*inquire_client_pid)(RpcConnection *conn, ULONG *pid);
 };
 
 /* don't know what MS's structure looks like */
@@ -142,43 +143,38 @@ typedef struct _RpcBinding
   LPWSTR CookieAuth;
 } RpcBinding;
 
-LPSTR RPCRT4_strndupA(LPCSTR src, INT len) DECLSPEC_HIDDEN;
-LPWSTR RPCRT4_strndupW(LPCWSTR src, INT len) DECLSPEC_HIDDEN;
-LPSTR RPCRT4_strdupWtoA(LPCWSTR src) DECLSPEC_HIDDEN;
-LPWSTR RPCRT4_strdupAtoW(LPCSTR src) DECLSPEC_HIDDEN;
-void RPCRT4_strfree(LPSTR src) DECLSPEC_HIDDEN;
+LPWSTR RPCRT4_strndupW(LPCWSTR src, INT len);
+LPSTR RPCRT4_strdupWtoA(LPCWSTR src);
+LPWSTR RPCRT4_strdupAtoW(LPCSTR src);
 
-#define RPCRT4_strdupA(x) RPCRT4_strndupA((x),-1)
-#define RPCRT4_strdupW(x) RPCRT4_strndupW((x),-1)
-
-RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc, CredHandle cred, TimeStamp exp, ULONG cbMaxToken, RPC_AUTH_IDENTITY_HANDLE identity, RpcAuthInfo **ret) DECLSPEC_HIDDEN;
-ULONG RpcAuthInfo_AddRef(RpcAuthInfo *AuthInfo) DECLSPEC_HIDDEN;
-ULONG RpcAuthInfo_Release(RpcAuthInfo *AuthInfo) DECLSPEC_HIDDEN;
-BOOL RpcAuthInfo_IsEqual(const RpcAuthInfo *AuthInfo1, const RpcAuthInfo *AuthInfo2) DECLSPEC_HIDDEN;
-ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
-ULONG RpcQualityOfService_Release(RpcQualityOfService *qos) DECLSPEC_HIDDEN;
-BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2) DECLSPEC_HIDDEN;
+RPC_STATUS RpcAuthInfo_Create(ULONG AuthnLevel, ULONG AuthnSvc, CredHandle cred, TimeStamp exp, ULONG cbMaxToken, RPC_AUTH_IDENTITY_HANDLE identity, RpcAuthInfo **ret);
+ULONG RpcAuthInfo_AddRef(RpcAuthInfo *AuthInfo);
+ULONG RpcAuthInfo_Release(RpcAuthInfo *AuthInfo);
+BOOL RpcAuthInfo_IsEqual(const RpcAuthInfo *AuthInfo1, const RpcAuthInfo *AuthInfo2);
+ULONG RpcQualityOfService_AddRef(RpcQualityOfService *qos);
+ULONG RpcQualityOfService_Release(RpcQualityOfService *qos);
+BOOL RpcQualityOfService_IsEqual(const RpcQualityOfService *qos1, const RpcQualityOfService *qos2);
 
 RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server, LPCSTR Protseq,
     LPCSTR NetworkAddr, LPCSTR Endpoint, LPCWSTR NetworkOptions, RpcAuthInfo* AuthInfo,
-    RpcQualityOfService *QOS, LPCWSTR CookieAuth) DECLSPEC_HIDDEN;
-RpcConnection *RPCRT4_GrabConnection( RpcConnection *conn ) DECLSPEC_HIDDEN;
-void RPCRT4_ReleaseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_IsServerListening(const char *protseq, const char *endpoint) DECLSPEC_HIDDEN;
+    RpcQualityOfService *QOS, LPCWSTR CookieAuth);
+RpcConnection *RPCRT4_GrabConnection( RpcConnection *conn );
+void RPCRT4_ReleaseConnection(RpcConnection* Connection);
+RPC_STATUS RPCRT4_OpenClientConnection(RpcConnection* Connection);
+RPC_STATUS RPCRT4_CloseConnection(RpcConnection* Connection);
+RPC_STATUS RPCRT4_IsServerListening(const char *protseq, const char *endpoint);
 
-RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection) DECLSPEC_HIDDEN;
-void       RPCRT4_AddRefBinding(RpcBinding* Binding) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding) DECLSPEC_HIDDEN;
+RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint);
+RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid);
+RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection);
+void       RPCRT4_AddRefBinding(RpcBinding* Binding);
+RPC_STATUS RPCRT4_ReleaseBinding(RpcBinding* Binding);
 RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
                               const RPC_SYNTAX_IDENTIFIER *TransferSyntax, const RPC_SYNTAX_IDENTIFIER *InterfaceId,
-                              BOOL *from_cache) DECLSPEC_HIDDEN;
-RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection) DECLSPEC_HIDDEN;
+                              BOOL *from_cache);
+RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection);
 
-void rpcrt4_conn_release_and_wait(RpcConnection *connection) DECLSPEC_HIDDEN;
+void rpcrt4_conn_release_and_wait(RpcConnection *connection);
 
 static inline const char *rpcrt4_conn_get_name(const RpcConnection *Connection)
 {
@@ -258,14 +254,14 @@ static inline RPC_STATUS rpcrt4_conn_inquire_auth_client(
 }
 
 /* floors 3 and up */
-RPC_STATUS RpcTransport_GetTopOfTower(unsigned char *tower_data, size_t *tower_size, const char *protseq, const char *networkaddr, const char *endpoint) DECLSPEC_HIDDEN;
-RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data, size_t tower_size, char **protseq, char **networkaddr, char **endpoint) DECLSPEC_HIDDEN;
+RPC_STATUS RpcTransport_GetTopOfTower(unsigned char *tower_data, size_t *tower_size, const char *protseq, const char *networkaddr, const char *endpoint);
+RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data, size_t tower_size, char **protseq, char **networkaddr, char **endpoint);
 
-void RPCRT4_SetThreadCurrentConnection(RpcConnection *Connection) DECLSPEC_HIDDEN;
-void RPCRT4_SetThreadCurrentCallHandle(RpcBinding *Binding) DECLSPEC_HIDDEN;
-RpcBinding *RPCRT4_GetThreadCurrentCallHandle(void) DECLSPEC_HIDDEN;
-void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext) DECLSPEC_HIDDEN;
-void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext) DECLSPEC_HIDDEN;
-NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void) DECLSPEC_HIDDEN;
+void RPCRT4_SetThreadCurrentConnection(RpcConnection *Connection);
+void RPCRT4_SetThreadCurrentCallHandle(RpcBinding *Binding);
+RpcBinding *RPCRT4_GetThreadCurrentCallHandle(void);
+void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext);
+void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext);
+NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void);
 
 #endif

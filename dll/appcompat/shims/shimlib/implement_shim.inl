@@ -40,13 +40,18 @@ PHOOKAPI WINAPI SHIM_OBJ_NAME(GetHookAPIs)(DWORD fdwReason, PCSTR pszCmdLine, PD
     SHIM_OBJ_NAME(g_pAPIHooks) = (PHOOKAPI)ShimLib_ShimMalloc(sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
     if (SHIM_NUM_HOOKS)
         ZeroMemory(SHIM_OBJ_NAME(g_pAPIHooks), sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
-    *pdwHookCount = SHIM_NUM_HOOKS;
 
 #ifdef SHIM_NOTIFY_FN
     if (!SHIM_NOTIFY_FN(fdwReason, NULL))
+    {
+        *pdwHookCount = 0;
+        /* Do not free the memory here */
+        SHIM_FAIL("%s failed during attach\n", SHIM_OBJ_NAME(Notify));
         return NULL;
+    }
 #endif
 
+    *pdwHookCount = SHIM_NUM_HOOKS;
 #if SHIM_NUM_HOOKS > 0
     SHIM_SETUP_HOOKS
 #endif

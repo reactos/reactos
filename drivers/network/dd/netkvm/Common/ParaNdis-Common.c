@@ -134,7 +134,7 @@ static const tConfigurationEntries defaultConfiguration =
 {
     { "Promiscuous",    0,  0,  1 },
     { "Priority",       0,  0,  1 },
-    { "ConnectRate",    100,10,10000 },
+    { "ConnectRate",    10000,100,10 },
     { "DoLog",          1,  0,  1 },
     { "DebugLevel",     2,  0,  8 },
     { "ConnectTimer",   0,  0,  300000 },

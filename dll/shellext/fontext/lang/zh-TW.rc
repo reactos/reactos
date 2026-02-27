@@ -7,11 +7,25 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
+IDD_INSTALL DIALOG 0, 0, 205, 60
+CAPTION "Installing fonts..."
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "新細明體"
+BEGIN
+    LTEXT "Installing fonts...", IDC_INSTALL_TEXT, 5, 10, 195, 10
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", 0, 5, 25, 195, 10
+    PUSHBUTTON "Cancel", IDCANCEL, 65, 40, 70, 15
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_FONTS_FOLDER "ReactOS 字型資料夾"
+    IDS_INSTALL_OK "The font(s) have been installed successfully."
+    IDS_INSTALL_FAILED "Failed to install the font(s)."
+    IDS_CONFIRM_DELETE_FONT "Do you want to delete the font(s)?"
+    IDS_PROPERTIES "P&roperties"
+    IDS_CANTDELETEFONT "Failed to delete the font(s)."
 END
-
 
 STRINGTABLE
 BEGIN
@@ -24,9 +38,7 @@ BEGIN
     IDS_COL_SIZE "檔案大小"
     IDS_COL_MODIFIED "修改日期"
     IDS_COL_ATTR "屬性"
-    IDS_COL_ATTR_LETTERS "RHSAC"
 END
-
 
 STRINGTABLE
 BEGIN

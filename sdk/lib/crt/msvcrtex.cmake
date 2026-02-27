@@ -48,6 +48,7 @@ if(ARCH STREQUAL "i386")
     if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
         list(APPEND MSVCRTEX_ASM_SOURCE
             except/i386/__CxxFrameHandler3.s
+            math/i386/ftol2_asm.s
             math/i386/ftoul2_legacy_asm.s)
         list(APPEND MSVCRTEX_SOURCE
             except/i386/CxxHandleV8Frame.c)
@@ -89,17 +90,11 @@ endif()
 set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
 add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 
-add_library(msvcrtex OBJECT ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
+add_library(msvcrtex STATIC ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
 
-if(MSVC AND (ARCH STREQUAL "i386"))
-    # user32.dll needs this as a stand-alone object file
-    add_asm_files(ftol2_asm math/i386/ftol2_asm.s)
-    add_library(ftol2_sse OBJECT ${ftol2_asm})
-    target_compile_definitions(ftol2_sse PRIVATE $<TARGET_PROPERTY:msvcrtex,COMPILE_DEFINITIONS>)
-    set_target_properties(ftol2_sse PROPERTIES LINKER_LANGUAGE C)
-endif()
-
+# msvcrtex depends on msvcrt and kernel32
+target_link_libraries(msvcrtex INTERFACE libmsvcrt libkernel32)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
@@ -113,7 +108,7 @@ set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 if(NOT MSVC)
-    target_link_libraries(msvcrtex oldnames)
+    target_link_libraries(msvcrtex INTERFACE oldnames)
 endif()
 
 add_dependencies(msvcrtex psdk asm)

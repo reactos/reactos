@@ -233,10 +233,6 @@ SwitchToReal16Address:
     nop
 
 
-    /* 16-bit stack pointer */
-stack16:
-    .word STACK16ADDR
-
     /* 32-bit stack pointer */
 stack32:
     .long STACKADDR

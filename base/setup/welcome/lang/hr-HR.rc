@@ -1,0 +1,45 @@
+/*
+ * PROJECT:     ReactOS "Welcome"/AutoRun application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Croatian resource file
+ * TRANSLATOR:  Copyright 2026 Ivan Ivo <ivan.ivo4445@gmail.com>
+ */
+
+LANGUAGE LANG_CROATIAN, SUBLANG_CROATIAN_CROATIA
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS - Dobrodošli"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Dobrodošli u ReactOS.\n\nOdaberite temu s lijeve strane."
+    IDS_FONTNAME "Tahoma"
+    IDS_CHECKTEXT "&Prikaži ovaj dijalog ponovno"
+    IDS_CLOSETEXT "&Izlaz"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&Instalacija"
+    IDS_TOPIC_BUTTON1 "&Pregled CD-a"
+    IDS_TOPIC_BUTTON2 "&Izlaz"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "Instalacija"
+    IDS_TOPIC_TITLE1 "Pregled CD-a"
+    IDS_TOPIC_TITLE2 "Izlaz"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "Pokrenite novu instalaciju ReactOS-a ili nadogradite postojeću."
+    IDS_TOPIC_DESC1 "Pregledajte sadržaj CD-a."
+    IDS_TOPIC_DESC2 "Zatvorite ovu aplikaciju."
+END

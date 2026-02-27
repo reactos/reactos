@@ -967,8 +967,8 @@ BEGIN
     IDS_VXD_FILE "Pilote de périphérique virtuel"
     IDS_ANY_FILE "Fichier %s"
 
-    IDS_OPEN_VERB "Ouvrir"
-    IDS_EXPLORE_VERB "Explorer"
+    IDS_OPEN_VERB "&Ouvrir"
+    IDS_EXPLORE_VERB "E&xplorer"
     IDS_RUNAS_VERB "Exécuter en tant que..."
     IDS_EDIT_VERB "Éditer"
     IDS_FIND_VERB "Chercher"

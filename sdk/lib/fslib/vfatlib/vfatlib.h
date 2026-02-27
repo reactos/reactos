@@ -109,12 +109,21 @@ typedef struct _FORMAT_CONTEXT
     ULONG Percent;
 } FORMAT_CONTEXT, *PFORMAT_CONTEXT;
 
+typedef enum
+{
+    FAT_UNKNOWN,
+    FAT_12,
+    FAT_16,
+    FAT_32
+} FAT_TYPE;
+
+
 #include "common.h"
 
 
 NTSTATUS
 Fat12Format(HANDLE FileHandle,
-            PPARTITION_INFORMATION PartitionInfo,
+            PPARTITION_INFORMATION_EX PartitionInfo,
             PDISK_GEOMETRY DiskGeometry,
             PUNICODE_STRING Label,
             BOOLEAN QuickFormat,
@@ -123,7 +132,7 @@ Fat12Format(HANDLE FileHandle,
 
 NTSTATUS
 Fat16Format(HANDLE FileHandle,
-            PPARTITION_INFORMATION PartitionInfo,
+            PPARTITION_INFORMATION_EX PartitionInfo,
             PDISK_GEOMETRY DiskGeometry,
             PUNICODE_STRING Label,
             BOOLEAN QuickFormat,
@@ -132,7 +141,7 @@ Fat16Format(HANDLE FileHandle,
 
 NTSTATUS
 Fat32Format(HANDLE FileHandle,
-            PPARTITION_INFORMATION PartitionInfo,
+            PPARTITION_INFORMATION_EX PartitionInfo,
             PDISK_GEOMETRY DiskGeometry,
             PUNICODE_STRING Label,
             BOOLEAN QuickFormat,

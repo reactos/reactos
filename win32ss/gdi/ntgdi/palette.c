@@ -149,6 +149,9 @@ PALETTE_AllocPalette(
         /* Check color count */
         if ((cColors == 0) || (cColors > 1024)) return NULL;
 
+        /* Mark 2 color indexed palettes as monochrome */
+        if (cColors == 2) iMode |= PAL_MONOCHROME;
+
         /* Allocate enough space for the palete entries */
         cjSize += cColors * sizeof(PALETTEENTRY);
     }
@@ -263,6 +266,7 @@ PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor)
     ULONG ulDiff, ulColorDiff, ulMinimalDiff = 0xFFFFFF;
     ULONG i, ulBestIndex = 0;
     PALETTEENTRY peColor = *(PPALETTEENTRY)&iColor;
+    ASSERT(ppal->flFlags & PAL_INDEXED);
 
     /* Loop all palette entries */
     for (i = 0; i < ppal->NumColors; i++)
@@ -294,6 +298,7 @@ NTAPI
 PALETTE_ulGetNearestBitFieldsIndex(PALETTE* ppal, ULONG ulColor)
 {
     ULONG ulNewColor;
+    ASSERT(ppal->flFlags & PAL_BITFIELDS);
 
     // FIXME: HACK, should be stored already
     ppal->ulRedShift = CalculateShift(RGB(0xff,0,0), ppal->RedMask);
@@ -311,6 +316,10 @@ ULONG
 NTAPI
 PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG ulColor)
 {
+    if (ppal->flFlags & PAL_RGB)
+        return ulColor;
+    if (ppal->flFlags & PAL_BGR)
+        return RGB(GetBValue(ulColor), GetGValue(ulColor), GetRValue(ulColor));
     if (ppal->flFlags & PAL_INDEXED) // Use fl & PALINDEXED
         return PALETTE_ulGetNearestPaletteIndex(ppal, ulColor);
     else

@@ -26,61 +26,60 @@
  */
 BOOL
 WINAPI
-QueryFullProcessImageNameW(HANDLE hProcess,
-                           DWORD dwFlags,
-                           LPWSTR lpExeName,
-                           PDWORD pdwSize)
+QueryFullProcessImageNameW(
+    _In_ HANDLE hProcess,
+    _In_ DWORD dwFlags,
+    _Out_writes_to_(*lpdwSize, *lpdwSize) LPWSTR lpExeName,
+    _Inout_ PDWORD lpdwSize)
 {
-    BYTE Buffer[sizeof(UNICODE_STRING) + MAX_PATH * sizeof(WCHAR)];
-    UNICODE_STRING *DynamicBuffer = NULL;
-    UNICODE_STRING *Result = NULL;
+    BOOL bRet = FALSE;
+    DWORD dwBufferSize;
+    PUNICODE_STRING pBuffer;
     NTSTATUS Status;
-    DWORD Needed;
+
+    if (dwFlags & ~PROCESS_NAME_NATIVE)
+    {
+        BaseSetLastNTError(STATUS_INVALID_PARAMETER_2);
+        return FALSE;
+    }
+
+    dwBufferSize = sizeof(UNICODE_STRING) + *lpdwSize * sizeof(WCHAR);
+    pBuffer = (PUNICODE_STRING)RtlAllocateHeap(RtlGetProcessHeap(), 0, dwBufferSize);
+    if (!pBuffer)
+    {
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return FALSE;
+    }
 
     Status = NtQueryInformationProcess(hProcess,
-                                       ProcessImageFileName,
-                                       Buffer,
-                                       sizeof(Buffer) - sizeof(WCHAR),
-                                       &Needed);
-    if (Status == STATUS_INFO_LENGTH_MISMATCH)
+                                       (dwFlags & PROCESS_NAME_NATIVE) ? ProcessImageFileName : ProcessImageFileNameWin32,
+                                       pBuffer,
+                                       dwBufferSize,
+                                       NULL);
+    if (NT_SUCCESS(Status))
     {
-        DynamicBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Needed + sizeof(WCHAR));
-        if (!DynamicBuffer)
+        DWORD dwCch = pBuffer->Length / sizeof(WCHAR);
+        if (dwCch >= *lpdwSize)
         {
-            BaseSetLastNTError(STATUS_NO_MEMORY);
-            return FALSE;
+            BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
         }
-
-        Status = NtQueryInformationProcess(hProcess,
-                                           ProcessImageFileName,
-                                           (LPBYTE)DynamicBuffer,
-                                           Needed,
-                                           &Needed);
-        Result = DynamicBuffer;
+        else
+        {
+            RtlCopyMemory(lpExeName, pBuffer->Buffer, pBuffer->Length);
+            lpExeName[dwCch] = UNICODE_NULL;
+            *lpdwSize = dwCch;
+            bRet = TRUE;
+        }
     }
-    else Result = (PUNICODE_STRING)Buffer;
-
-    if (!NT_SUCCESS(Status)) goto Cleanup;
-
-    if (Result->Length / sizeof(WCHAR) + 1 > *pdwSize)
+    else
     {
-        Status = STATUS_BUFFER_TOO_SMALL;
-        goto Cleanup;
-    }
-
-    *pdwSize = Result->Length / sizeof(WCHAR);
-    memcpy(lpExeName, Result->Buffer, Result->Length);
-    lpExeName[*pdwSize] = 0;
-
-Cleanup:
-    RtlFreeHeap(RtlGetProcessHeap(), 0, DynamicBuffer);
-
-    if (!NT_SUCCESS(Status))
-    {
+        if (Status == STATUS_INFO_LENGTH_MISMATCH)
+            Status = STATUS_BUFFER_TOO_SMALL;
         BaseSetLastNTError(Status);
     }
 
-    return !Status;
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
+    return bRet;
 }
 
 
@@ -89,39 +88,44 @@ Cleanup:
  */
 BOOL
 WINAPI
-QueryFullProcessImageNameA(HANDLE hProcess,
-                           DWORD dwFlags,
-                           LPSTR lpExeName,
-                           PDWORD pdwSize)
+QueryFullProcessImageNameA(
+    _In_ HANDLE hProcess,
+    _In_ DWORD dwFlags,
+    _Out_writes_to_(*lpdwSize, *lpdwSize) LPSTR lpExeName,
+    _Inout_ PDWORD lpdwSize)
 {
-    DWORD pdwSizeW = *pdwSize;
-    BOOL Result;
-    LPWSTR lpExeNameW;
+    BOOL bRet = FALSE;
+    DWORD dwSize;
+    PWSTR pszFullName;
 
-    lpExeNameW = RtlAllocateHeap(RtlGetProcessHeap(),
-                                 HEAP_ZERO_MEMORY,
-                                 *pdwSize * sizeof(WCHAR));
-    if (!lpExeNameW)
+    dwSize = *lpdwSize;
+    pszFullName = (PWSTR)RtlAllocateHeap(RtlGetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    if (!pszFullName)
     {
         BaseSetLastNTError(STATUS_NO_MEMORY);
         return FALSE;
     }
 
-    Result = QueryFullProcessImageNameW(hProcess, dwFlags, lpExeNameW, &pdwSizeW);
+    if (QueryFullProcessImageNameW(hProcess, dwFlags, pszFullName, &dwSize))
+    {
+        INT iCch;
+        iCch = WideCharToMultiByte(CP_ACP,
+                                   WC_NO_BEST_FIT_CHARS,
+                                   pszFullName,
+                                   dwSize + 1,
+                                   lpExeName,
+                                   *lpdwSize,
+                                   NULL,
+                                   NULL);
+        if (iCch)
+        {
+            *lpdwSize = iCch - 1;
+            bRet = TRUE;
+        }
+    }
 
-    if (Result)
-        Result = (0 != WideCharToMultiByte(CP_ACP, 0,
-                                           lpExeNameW,
-                                           -1,
-                                           lpExeName,
-                                           *pdwSize,
-                                           NULL, NULL));
-
-    if (Result)
-        *pdwSize = strlen(lpExeName);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpExeNameW);
-    return Result;
+    RtlFreeHeap(RtlGetProcessHeap(), 0, pszFullName);
+    return bRet;
 }
 
 

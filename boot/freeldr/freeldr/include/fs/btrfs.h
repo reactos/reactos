@@ -422,4 +422,8 @@ typedef struct {
     CHAR FileName[RTL_FIELD_SIZE(FILEINFORMATION, FileName)];
 } btrfs_file_info, *pbtrfs_file_info;
 
+ULONGLONG
+BtrFsGetVolumeSize(
+    _In_ ULONG DeviceId);
+
 const DEVVTBL* BtrFsMount(ULONG DeviceId);

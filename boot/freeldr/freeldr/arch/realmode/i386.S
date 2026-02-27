@@ -25,10 +25,17 @@ RealModeEntryPoint:
     mov ss, ax
 
     /* Setup the stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, STACK16ADDR
 
     /* Enable A20 address line */
     call EnableA20
+
+    /* Relocate FreeLdr if necessary */
+    call RelocateFreeLdr
+
+    /* Output first status */
+    mov si, offset Msg_Starting
+    call writestr
 
     /* Save real mode entry point in shared memory */
     mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
@@ -54,6 +61,8 @@ RealModeEntryPoint:
 
     jmp exit_to_protected
 
+Msg_Starting:
+    .ascii "Starting FreeLoader...", CR, LF, NUL
 
 /* This is the entry point from protected mode */
 switch_to_real16:
@@ -95,11 +104,7 @@ inrmode:
     mov sp, word ptr ds:[stack16]
 
     /* Load IDTR with real mode value */
-#ifdef _USE_ML
-    lidt fword ptr rmode_idtptr
-#else
-    lidt rmode_idtptr
-#endif
+    lidt lXdtPrefix ds:[rmode_idtptr]
 
     sti /* These are ok now */
 
@@ -120,11 +125,7 @@ exit_to_protected:
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr gdtptr
-#else
-    lgdt gdtptr
-#endif
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Enable Protected Mode */
     mov eax, cr0
@@ -151,9 +152,9 @@ CallbackTable:
     .word PnpBiosGetDockStationInformation
 
 
-    /* 16-bit stack pointer */
+    /* 16-bit stack pointer (the code must change it to the current stack pointer later) */
 stack16:
-    .word    STACK16ADDR
+    .word 0
 
 
 .align 4    /* force 4-byte alignment */
@@ -199,6 +200,7 @@ rmode_idtptr:
     .long 0             /* Base Address */
 
 #include "int386.inc"
+#include "relocator.inc"
 #if defined(SARCH_PC98)
 #include "helpers_pc98.inc"
 #else

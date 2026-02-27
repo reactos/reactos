@@ -967,8 +967,8 @@ BEGIN
     IDS_VXD_FILE "Virtuell enhetdriver"
     IDS_ANY_FILE "%s fil"
 
-    IDS_OPEN_VERB "Åpne"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_OPEN_VERB "Å&pne"
+    IDS_EXPLORE_VERB "E&xplore"
     IDS_RUNAS_VERB "Kjør som..."
     IDS_EDIT_VERB "Rediger"
     IDS_FIND_VERB "Finn"

@@ -3,7 +3,6 @@
  *
  * Copyright 1999-2000	Bertho A. Stultiens (BS)
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -18,18 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * History:
- * 24-Apr-2000 BS	Restructured the lot to fit the new scanner
- *			and reintegrate into the wine-tree.
- * 01-Jan-2000 BS	FIXME: win16 preprocessor calculates with
- *			16 bit ints and overflows...?
- * 26-Dec-1999 BS	Started this file
- *
  */
 
 %{
 #include "config.h"
-#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +29,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "../tools.h"
+#include "utils.h"
 #include "wpp_private.h"
 
 
@@ -81,9 +74,9 @@
 	if(cv_signed(v1) && cv_signed(v2))		\
 		r.val.sll = v1.val.sll OP v2.val.sll;	\
 	else if(cv_signed(v1) && !cv_signed(v2))	\
-		r.val.sll = v1.val.sll OP (wrc_sll_t) v2.val.ull; \
+		r.val.sll = v1.val.sll OP (__int64) v2.val.ull; \
 	else if(!cv_signed(v1) && cv_signed(v2))	\
-		r.val.sll = (wrc_sll_t) v1.val.ull OP v2.val.sll; \
+		r.val.sll = (__int64) v1.val.ull OP v2.val.sll; \
 	else						\
 		r.val.ull = v1.val.ull OP v2.val.ull;
 
@@ -93,7 +86,7 @@
 	case SIZE_INT:		BIN_OP_INT(r, v1, v2, OP); break;	\
 	case SIZE_LONG:		BIN_OP_LONG(r, v1, v2, OP); break;	\
 	case SIZE_LONGLONG:	BIN_OP_LONGLONG(r, v1, v2, OP); break;	\
-	default: pp_internal_error(__FILE__, __LINE__, "Invalid type indicator (0x%04x)", v1.type);	\
+	default: assert(0);                                             \
 	}
 
 
@@ -108,8 +101,7 @@ static void cast_to_slong(cval_t *v);
 static void cast_to_ulong(cval_t *v);
 static void cast_to_sll(cval_t *v);
 static void cast_to_ull(cval_t *v);
-static marg_t *new_marg(char *str, def_arg_t type);
-static marg_t *add_new_marg(char *str, def_arg_t type);
+static char *add_new_marg(char *str);
 static int marg_index(char *id);
 static mtext_t *new_mtext(char *str, int idx, def_exp_t type);
 static mtext_t *combine_mtext(mtext_t *tail, mtext_t *mtp);
@@ -118,29 +110,32 @@ static char *merge_text(char *s1, char *s2);
 /*
  * Local variables
  */
-static marg_t **macro_args;	/* Macro parameters array while parsing */
+static char   **macro_args;	/* Macro parameters array while parsing */
 static int	nmacro_args;
+static int	macro_variadic; /* Macro arguments end with (or consist entirely of) '...' */
 
 %}
+
+%define api.prefix {ppy_}
 
 %union{
 	int		sint;
 	unsigned int	uint;
 	long		slong;
 	unsigned long	ulong;
-	wrc_sll_t	sll;
-	wrc_ull_t	ull;
+	__int64		sll;
+	unsigned __int64 ull;
 	int		*iptr;
 	char		*cptr;
 	cval_t		cval;
-	marg_t		*marg;
+	char		*marg;
 	mtext_t		*mtext;
 }
 
 %token tRCINCLUDE
 %token tIF tIFDEF tIFNDEF tELSE tELIF tENDIF tDEFINED tNL
 %token tINCLUDE tLINE tGCCLINE tERROR tWARNING tPRAGMA tPPIDENT
-%token tUNDEF tMACROEND tCONCAT tELIPSIS tSTRINGIZE
+%token tUNDEF tMACROEND tCONCAT tELLIPSIS tSTRINGIZE
 %token <cptr> tIDENT tLITERAL tMACRO tDEFINE
 %token <cptr> tDQSTRING tSQSTRING tIQSTRING
 %token <uint> tUINT
@@ -227,8 +222,6 @@ preprocessor
 			break;
 		case if_error:
 			break;
-		default:
-			pp_internal_error(__FILE__, __LINE__, "Invalid pp_if_state (%d) in #elif directive", s);
 		}
 		}
 	| tELSE tNL		{
@@ -253,8 +246,6 @@ preprocessor
 			break;
 		case if_error:
 			break;
-		default:
-			pp_internal_error(__FILE__, __LINE__, "Invalid pp_if_state (%d) in #else directive", s);
 		}
 		}
 	| tENDIF tNL		{
@@ -277,35 +268,25 @@ preprocessor
 	| tUNDEF tIDENT tNL	{ pp_del_define($2); free($2); }
 	| tDEFINE opt_text tNL	{ pp_add_define($1, $2); free($1); free($2); }
 	| tMACRO res_arg allmargs tMACROEND opt_mtexts tNL	{
-		pp_add_macro($1, macro_args, nmacro_args, $5);
+		pp_add_macro($1, macro_args, nmacro_args, macro_variadic, $5);
 		}
-	| tLINE tSINT tDQSTRING	tNL	{ if($3) pp_writestring("# %d %s\n", $2 , $3); free($3); }
-	| tGCCLINE tSINT tDQSTRING tNL	{ if($3) pp_writestring("# %d %s\n", $2 , $3); free($3); }
+	| tLINE tSINT tDQSTRING	tNL	{ if($3) fprintf(ppy_out, "# %d %s\n", $2 , $3); free($3); }
+	| tGCCLINE tSINT tDQSTRING tNL	{ if($3) fprintf(ppy_out, "# %d %s\n", $2 , $3); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tNL
-		{ if($3) pp_writestring("# %d %s %d\n", $2, $3, $4); free($3); }
+	        { if($3) fprintf(ppy_out, "# %d %s %d\n", $2, $3, $4); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tNL
-		{ if($3) pp_writestring("# %d %s %d %d\n", $2 ,$3, $4, $5); free($3); }
+		{ if($3) fprintf(ppy_out, "# %d %s %d %d\n", $2 ,$3, $4, $5); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tSINT  tNL
-		{ if($3) pp_writestring("# %d %s %d %d %d\n", $2 ,$3 ,$4 ,$5, $6); free($3); }
+	        { if($3) fprintf(ppy_out, "# %d %s %d %d %d\n", $2 ,$3 ,$4 ,$5, $6); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tSINT tSINT tNL
-		{ if($3) pp_writestring("# %d %s %d %d %d %d\n", $2 ,$3 ,$4 ,$5, $6, $7); free($3); }
+		{ if($3) fprintf(ppy_out, "# %d %s %d %d %d %d\n", $2 ,$3 ,$4 ,$5, $6, $7); free($3); }
 	| tGCCLINE tNL		/* The null-token */
 	| tERROR opt_text tNL	{ ppy_error("#error directive: '%s'", $2); free($2); }
 	| tWARNING opt_text tNL	{ ppy_warning("#warning directive: '%s'", $2); free($2); }
-	| tPRAGMA opt_text tNL	{ pp_writestring("#pragma %s\n", $2 ? $2 : ""); free($2); }
-	| tPPIDENT opt_text tNL	{ if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", $2); free($2); }
+	| tPRAGMA opt_text tNL	{ fprintf(ppy_out, "#pragma %s\n", $2 ? $2 : ""); free($2); }
+	| tPPIDENT opt_text tNL	{ if(pedantic) ppy_warning("#ident ignored (arg: '%s')", $2); free($2); }
         | tRCINCLUDE tRCINCLUDEPATH {
-                if($2)
-                {
-                        int nl=strlen($2) +3;
-                        char *fn=pp_xmalloc(nl);
-                        if(fn)
-                        {
-                                sprintf(fn,"\"%s\"",$2);
-                                pp_do_include(fn,1);
-                        }
-                        free($2);
-                }
+                pp_do_include(strmake( "\"%s\"", $2 ),1);
 	}
 	| tRCINCLUDE tDQSTRING {
 		pp_do_include($2,1);
@@ -325,19 +306,20 @@ text	: tLITERAL		{ $$ = $1; }
 	| text tSQSTRING	{ $$ = merge_text($1, $2); }
 	;
 
-res_arg	: /* Empty */	{ macro_args = NULL; nmacro_args = 0; }
+res_arg	: /* Empty */	{ macro_args = NULL; nmacro_args = 0; macro_variadic = 0; }
 	;
 
-allmargs: /* Empty */		{ $$ = 0; macro_args = NULL; nmacro_args = 0; }
+allmargs: /* Empty */		{ $$ = 0; macro_args = NULL; nmacro_args = 0; macro_variadic = 0; }
 	| emargs		{ $$ = nmacro_args; }
 	;
 
 emargs	: margs			{ $$ = $1; }
-	| margs ',' tELIPSIS	{ $$ = add_new_marg(NULL, arg_list); nmacro_args *= -1; }
+	| margs ',' tELLIPSIS	{ macro_variadic = 1; }
+	| tELLIPSIS	{ macro_args = NULL; nmacro_args = 0; macro_variadic = 1; }
 	;
 
-margs	: margs ',' tIDENT	{ $$ = add_new_marg($3, arg_single); }
-	| tIDENT		{ $$ = add_new_marg($1, arg_single); }
+margs	: margs ',' tIDENT	{ $$ = add_new_marg($3); }
+	| tIDENT		{ $$ = add_new_marg($1); }
 	;
 
 opt_mtexts
@@ -539,42 +521,21 @@ static int boolean(cval_t *v)
 {
 	switch(v->type)
 	{
-	case cv_sint:	return v->val.si != (int)0;
-	case cv_uint:	return v->val.ui != (unsigned int)0;
-	case cv_slong:	return v->val.sl != (long)0;
-	case cv_ulong:	return v->val.ul != (unsigned long)0;
-	case cv_sll:	return v->val.sll != (wrc_sll_t)0;
-	case cv_ull:	return v->val.ull != (wrc_ull_t)0;
+	case cv_sint:	return v->val.si != 0;
+	case cv_uint:	return v->val.ui != 0;
+	case cv_slong:	return v->val.sl != 0;
+	case cv_ulong:	return v->val.ul != 0;
+	case cv_sll:	return v->val.sll != 0;
+	case cv_ull:	return v->val.ull != 0;
 	}
 	return 0;
 }
 
-static marg_t *new_marg(char *str, def_arg_t type)
+static char *add_new_marg(char *str)
 {
-	marg_t *ma = pp_xmalloc(sizeof(marg_t));
-	if(!ma)
-		return NULL;
-	ma->arg = str;
-	ma->type = type;
-	ma->nnl = 0;
-	return ma;
-}
-
-static marg_t *add_new_marg(char *str, def_arg_t type)
-{
-	marg_t **new_macro_args;
-	marg_t *ma;
-	if(!str)
-		return NULL;
-	new_macro_args = pp_xrealloc(macro_args, (nmacro_args+1) * sizeof(macro_args[0]));
-	if(!new_macro_args)
-		return NULL;
-	macro_args = new_macro_args;
-	ma = new_marg(str, type);
-	if(!ma)
-		return NULL;
-	macro_args[nmacro_args] = ma;
-	nmacro_args++;
+	char *ma;
+	macro_args = xrealloc(macro_args, (nmacro_args+1) * sizeof(macro_args[0]));
+	macro_args[nmacro_args++] = ma = xstrdup(str);
 	return ma;
 }
 
@@ -585,7 +546,7 @@ static int marg_index(char *id)
 		return -1;
 	for(t = 0; t < nmacro_args; t++)
 	{
-		if(!strcmp(id, macro_args[t]->arg))
+		if(!strcmp(id, macro_args[t]))
 			break;
 	}
 	return t < nmacro_args ? t : -1;
@@ -593,9 +554,8 @@ static int marg_index(char *id)
 
 static mtext_t *new_mtext(char *str, int idx, def_exp_t type)
 {
-	mtext_t *mt = pp_xmalloc(sizeof(mtext_t));
-	if(!mt)
-		return NULL;
+	mtext_t *mt = xmalloc(sizeof(mtext_t));
+
 	if(str == NULL)
 		mt->subst.argidx = idx;
 	else
@@ -615,11 +575,7 @@ static mtext_t *combine_mtext(mtext_t *tail, mtext_t *mtp)
 
 	if(tail->type == exp_text && mtp->type == exp_text)
 	{
-		char *new_text;
-		new_text = pp_xrealloc(tail->subst.text, strlen(tail->subst.text)+strlen(mtp->subst.text)+1);
-		if(!new_text)
-			return mtp;
-		tail->subst.text = new_text;
+		tail->subst.text = xrealloc(tail->subst.text, strlen(tail->subst.text)+strlen(mtp->subst.text)+1);
 		strcat(tail->subst.text, mtp->subst.text);
 		free(mtp->subst.text);
 		free(mtp);
@@ -683,22 +639,9 @@ static mtext_t *combine_mtext(mtext_t *tail, mtext_t *mtp)
 
 static char *merge_text(char *s1, char *s2)
 {
-	int l1;
-	int l2;
-	char *snew;
-	if(!s1)
-		return s2;
-	if(!s2)
-		return s1;
-	l1 = strlen(s1);
-	l2 = strlen(s2);
-	snew = pp_xrealloc(s1, l1+l2+1);
-	if(!snew)
-	{
-		free(s2);
-		return s1;
-	}
-	s1 = snew;
+	int l1 = strlen(s1);
+	int l2 = strlen(s2);
+	s1 = xrealloc(s1, l1+l2+1);
 	memcpy(s1+l1, s2, l2+1);
 	free(s2);
 	return s1;

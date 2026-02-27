@@ -71,8 +71,13 @@ ReadRegSzKey(
     OUT LPWSTR *pValue);
 
 BOOL
-IsLiveCD(VOID);
+ExpandInstallerPath(
+    IN LPCWSTR lpInstallerName,
+    OUT LPWSTR lpInstallerPath,
+    IN SIZE_T PathSize);
 
+BOOL
+IsLiveCD(VOID);
 
 VOID
 RunLiveCD(

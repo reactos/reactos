@@ -75,6 +75,7 @@ extern LONG winetest_get_failures(void);
 extern LONG winetest_get_successes(void);
 extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
+extern void winetest_ignore_exceptions( BOOL ignore );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
@@ -100,6 +101,14 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
     while (*str1 && (*str1 == *str2)) { str1++; str2++; }
     return *str1 - *str2;
 }
+
+#ifdef __REACTOS__
+/* ReactOS specific extensions, useful for patches */
+#define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
+#define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
+#define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
+#define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+#endif
 
 #ifdef STANDALONE
 
@@ -131,7 +140,7 @@ extern int winetest_vok( int condition, const char *msg, __winetest_va_list ap )
 extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
-# define WINETEST_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+# define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
@@ -141,7 +150,7 @@ extern void __winetest_cdecl winetest_push_context( const char *fmt, ... ) __att
 extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
-# define WINETEST_PRINTF_ATTR(fmt,args)
+# define __WINE_PRINTF_ATTR(fmt,args)
 extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
 extern void __winetest_cdecl winetest_skip( const char *msg, ... );
 extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
@@ -158,6 +167,7 @@ extern void winetest_pop_context(void);
 #define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
 #define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
 #define wait_child_process_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_wait_child_process
+#define ignore_exceptions_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_ignore_exceptions
 
 #define subtest  subtest_(__FILE__, __LINE__)
 #define ok       ok_(__FILE__, __LINE__)
@@ -165,6 +175,7 @@ extern void winetest_pop_context(void);
 #define win_skip win_skip_(__FILE__, __LINE__)
 #define trace    trace_(__FILE__, __LINE__)
 #define wait_child_process wait_child_process_(__FILE__, __LINE__)
+#define ignore_exceptions ignore_exceptions_(__FILE__, __LINE__)
 
 #define todo_if(is_todo) for (winetest_start_todo(is_todo); \
                               winetest_loop_todo(); \
@@ -381,6 +392,26 @@ static void __winetest_cdecl winetest_printf( const char *msg, ... )
     __winetest_va_end( valist );
 }
 
+static void __winetest_cdecl winetest_vprintf(const char* msg, __winetest_va_list valist);
+static void __winetest_cdecl winetest_vprintf(const char *msg, __winetest_va_list valist)
+{
+    tls_data *data = get_tls_data();
+
+    fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
+    vfprintf(stdout, msg, valist);
+}
+
+static void winetest_print_location( const char *msg, ... )
+{
+    tls_data *data = get_tls_data();
+    va_list valist;
+
+    winetest_printf( "%s:%d ", data->current_file, data->current_line );
+    va_start( valist, msg );
+    winetest_vprintf( msg, valist );
+    va_end( valist );
+}
+
 static void __winetest_cdecl winetest_print_context( const char *msgtype )
 {
     tls_data *data = get_tls_data();
@@ -396,6 +427,11 @@ void winetest_subtest(const char* name)
     tls_data* data = get_tls_data();
     fprintf(stdout, __winetest_file_line_prefix ": Subtest %s\n",
         data->current_file, data->current_line, name);
+}
+
+void winetest_ignore_exceptions( BOOL ignore )
+{
+    winetest_print_location( "IgnoreExceptions=%d\n", ignore ? 1 : 0 );
 }
 
 int broken( int condition )

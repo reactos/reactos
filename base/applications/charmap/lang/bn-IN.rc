@@ -1,0 +1,56 @@
+LANGUAGE LANG_BENGALI, SUBLANG_BENGALI_INDIA
+
+IDD_CHARMAP DIALOGEX 6, 6, 292, 224
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
+BEGIN
+    LTEXT "ফন্ট(&F):", IDC_STATIC, 6, 7, 24, 9
+    COMBOBOX IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+             WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+    PUSHBUTTON "সাহায্য(&H)", IDC_CMHELP, 249, 5, 35, 13
+    CONTROL "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+            WS_VSCROLL, 20, 22, 266, 156
+    LTEXT "অনুলিপি করার অক্ষর(&a):", IDC_STATIC, 6, 188, 66, 9
+    CONTROL "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER |
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+    DEFPUSHBUTTON "নির্বাচন করুন(&S)", IDC_SELECT, 194, 186, 44, 13
+    PUSHBUTTON "অনুলিপি করুন(&C)", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+    CONTROL "উন্নত দৃশ্য(&v)", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX |
+            WS_TABSTOP, 8, 208, 95, 10
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "অক্ষর সেট(&t):", IDC_STATIC, 8, 8, 48, 8
+    COMBOBOX IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "গ্রুপ করার ধরন(&G):", IDC_STATIC, 8, 28, 50, 8
+    COMBOBOX IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "অনুসন্ধান(&r)", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+    EDITTEXT IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+    LTEXT "অনুসন্ধান করুন(&e):", IDC_STATIC, 8, 48, 42, 8
+    LTEXT "ইউনিকোড(&U):", IDC_STATIC, 200, 8, 30, 8
+    EDITTEXT IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
+CAPTION "ক্যারেক্টার ম্যাপ সম্পর্কে"
+FONT 8, "MS Shell Dlg"
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+    LTEXT "ক্যারেক্টার ম্যাপ v0.1\nকপিরাইট (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+    PUSHBUTTON "বন্ধ করুন(&C)", IDOK, 75, 162, 44, 15
+    ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+    EDITTEXT IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL |
+             WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE "এটি একটি মুক্ত সফটওয়্যার; ফ্রি সফটওয়্যার ফাউন্ডেশন দ্বারা প্রকাশিত GNU জেনারেল পাবলিক লাইসেন্সের শর্তানুসারে আপনি এটি পুনর্বিতরণ করতে পারেন এবং/অথবা পরিবর্তন করতে পারেন; হয় লাইসেন্সের সংস্করণ ২, অথবা (আপনার পছন্দ অনুযায়ী) পরবর্তী যেকোনো সংস্করণ।\r\n\r\nএই প্রোগ্রামটি এই আশায় বিতরণ করা হয়েছে যে এটি কার্যকর হবে, কিন্তু কোনো ওয়ারেন্টি ছাড়াই; এমনকি একটি নির্দিষ্ট উদ্দেশ্যে ব্যবসায়িক বা উপযুক্ততার অন্তর্নিহিত ওয়ারেন্টি ছাড়াই। আরও বিস্তারিত জানার জন্য GNU জেনারেল পাবলিক লাইসেন্স দেখুন।\r\n\r\nআপনি এই প্রোগ্রামের সাথে GNU জেনারেল পাবলিক লাইসেন্সের একটি অনুলিপি পেয়েছেন; যদি না পান, তবে Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA-এ লিখুন।"
+    IDS_ABOUT "সম্পর্কে(&b)..."
+    IDS_TITLE "ক্যারেক্টার ম্যাপ"
+    IDS_UNICODE "ইউনিকোড"
+    IDS_ALL "সমস্ত"
+END

@@ -18,7 +18,7 @@ foreach(_file ${TEXTFILES})
     list(APPEND _converted_files ${_converted_file})
 endforeach()
 
-set_source_files_properties(lautus.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
+set_source_files_properties(lautus.rc PROPERTIES OBJECT_DEPENDS "${_converted_files};xdk")
 add_library(lautus.msstyles MODULE lautus.rc)
 set_module_type(lautus.msstyles module)
 set_target_properties(lautus.msstyles PROPERTIES SUFFIX "")

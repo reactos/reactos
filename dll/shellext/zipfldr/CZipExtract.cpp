@@ -566,9 +566,9 @@ public:
         }
 
         CZipEnumerator zipEnum;
-        if (!zipEnum.initialize(this))
+        if (!zipEnum.Initialize(this))
         {
-            DPRINT1("ERROR, zipEnum.initialize\n");
+            DPRINT1("ERROR, zipEnum.Initialize\n");
             Close();
             return false;
         }
@@ -583,7 +583,7 @@ public:
         unz_file_info64 Info;
         int CurrentFile = 0;
         bool bOverwriteAll = false;
-        while (zipEnum.next(Name, Info))
+        while (zipEnum.Next(Name, Info))
         {
             if (*bCancel)
             {

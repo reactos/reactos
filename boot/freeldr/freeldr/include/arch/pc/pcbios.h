@@ -81,7 +81,9 @@ typedef struct _ACPI_BIOS_DATA
 
 typedef struct _DOCKING_STATE_INFORMATION
 {
-    USHORT Unused[5];
+    ULONG DockLocationID;
+    ULONG SerialNumber;
+    USHORT Capabilities;
     USHORT ReturnCode;
 } DOCKING_STATE_INFORMATION, *PDOCKING_STATE_INFORMATION;
 

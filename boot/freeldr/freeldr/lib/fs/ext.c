@@ -702,6 +702,13 @@ BOOLEAN ExtReadSuperBlock(PEXT_VOLUME_INFO Volume)
     TRACE("DefHashVersion: %d\n", SuperBlock->DefHashVersion);
     TRACE("JournalBackupType: %d\n", SuperBlock->JournalBackupType);
     TRACE("GroupDescSize: %d\n", SuperBlock->GroupDescSize);
+    TRACE("DefaultMountOpts: %d\n", SuperBlock->DefaultMountOpts);
+    TRACE("FirstMetaBg: %d\n", SuperBlock->FirstMetaBg);
+    TRACE("MkfsTime: %d\n", SuperBlock->MkfsTime);
+    // ULONG JnlBlocks[17];
+    TRACE("BlocksCountHi: %d\n", SuperBlock->BlocksCountHi);
+    TRACE("RBlocksCountHi: %d\n", SuperBlock->RBlocksCountHi);
+    TRACE("FreeBlocksCountHi: %d\n", SuperBlock->FreeBlocksCountHi);
 
     //
     // Check the super block magic
@@ -1386,6 +1393,30 @@ ARC_STATUS ExtSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     FileHandle->FilePointer = NewPosition.QuadPart;
     return ESUCCESS;
 }
+
+
+/**
+ * @brief
+ * Returns the size of the EXT2/3/4 volume laid on the storage media device
+ * opened via @p DeviceId.
+ **/
+ULONGLONG
+ExtGetVolumeSize(
+    _In_ ULONG DeviceId)
+{
+    PEXT_VOLUME_INFO Volume;
+    ULARGE_INTEGER BlocksCount;
+
+    Volume = ExtVolumes[DeviceId];
+    ASSERT(Volume);
+
+    BlocksCount.LowPart  = Volume->SuperBlock->BlocksCountLo;
+    BlocksCount.HighPart = Volume->SuperBlock->BlocksCountHi;
+
+    /* NOTE: Volume->BlockSizeInBytes == Volume->BlockSizeInSectors * Volume->BytesPerSector */
+    return BlocksCount.QuadPart * Volume->BlockSizeInBytes;
+}
+
 
 const DEVVTBL ExtFuncTable =
 {

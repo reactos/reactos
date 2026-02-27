@@ -35,6 +35,8 @@
 
 /* DEFINES *******************************************************************/
 
+#define HUGE_BUFFER_SIZE  2048
+
 #define MAX_STRING_SIZE 1024
 #define MAX_ARGS_COUNT 256
 
@@ -110,8 +112,10 @@ typedef struct _CONTEXT_ENTRY
     PWSTR pszContextName;
     GUID Guid;
     HMODULE hModule;
-    PNS_CONTEXT_DUMP_FN pfnDumpFn;
     ULONG ulPriority;
+    PNS_CONTEXT_COMMIT_FN pfnCommitFn;
+    PNS_CONTEXT_DUMP_FN pfnDumpFn;
+    PNS_CONTEXT_CONNECT_FN pfnConnectFn;
 
     PCOMMAND_ENTRY pCommandListHead;
     PCOMMAND_ENTRY pCommandListTail;
@@ -131,7 +135,51 @@ extern PCONTEXT_ENTRY pCurrentContext;
 
 extern PHELPER_ENTRY pHelperListHead;
 
+extern HMODULE hModule;
+extern PWSTR pszMachine;
+
 /* PROTOTYPES *****************************************************************/
+
+/* alias.c */
+
+VOID
+InitAliases(VOID);
+
+VOID
+DestroyAliases(VOID);
+
+DWORD
+WINAPI
+AliasCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone);
+
+DWORD
+WINAPI
+ShowAliasCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone);
+
+DWORD
+WINAPI
+UnaliasCommand(
+    LPCWSTR pwszMachine,
+    LPWSTR *argv,
+    DWORD dwCurrentIndex,
+    DWORD dwArgCount,
+    DWORD dwFlags,
+    LPCVOID pvData,
+    BOOL *pbDone);
 
 /* context.c */
 
@@ -214,15 +262,10 @@ ShowHelperCommand(
 
 
 /* interpreter.c */
-BOOL
-InterpretScript(
-    _In_ LPWSTR pszFileName);
 
-BOOL
-InterpretCommand(
-    _In_ LPWSTR *argv,
-    _In_ DWORD dwArgCount,
-    _Inout_ PBOOL bDone);
+DWORD
+InterpretLine(
+    _In_ LPWSTR pszFileName);
 
 VOID
 InterpretInteractive(VOID);
@@ -232,5 +275,10 @@ InterpretInteractive(VOID);
 DWORD
 RunScript(
     _In_ LPCWSTR filename);
+
+LPWSTR
+MergeStrings(
+    _In_ LPWSTR pszStringArray[],
+    _In_ INT nCount);
 
 #endif /* PRECOMP_H */

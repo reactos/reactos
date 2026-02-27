@@ -6,11 +6,11 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include "winlogon.h"
 
-/* GLOBALS ******************************************************************/
+/* GLOBALS *******************************************************************/
 
 typedef VOID (WINAPI *PWLX_NOTIFY_HANDLER)(PWLX_NOTIFICATION_INFO pInfo);
 
@@ -45,9 +45,7 @@ typedef struct _NOTIFICATION_ITEM
     PWLX_NOTIFY_HANDLER Handler[LastHandler];
 } NOTIFICATION_ITEM, *PNOTIFICATION_ITEM;
 
-
 static LIST_ENTRY NotificationDllListHead;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -415,7 +413,6 @@ done:
     RegCloseKey(hDllKey);
 }
 
-
 BOOL
 InitNotifications(VOID)
 {
@@ -467,7 +464,6 @@ InitNotifications(VOID)
     return TRUE;
 }
 
-
 static
 VOID
 CallNotificationDll(
@@ -511,7 +507,55 @@ CallNotificationDll(
     /* Call the notification handler in SEH to prevent any Winlogon crashes */
     _SEH2_TRY
     {
+#ifdef _M_IX86 // CORE-20279
+        /* Workaround for buggy 3rd-party notification DLLs: Handle broken ones
+         * that use a CDECL calling convention instead of the correct STDCALL */
+        BOOLEAN Success;
+    #if defined(__GNUC__)
+        register ULONG_PTR StackPtr;
+        __asm__ __volatile__
+        (
+            "movl %%esp, %[StackPtr]\n\t"   // Save current ESP
+            /*"leal %[Info], %%eax\n\t"       // Push parameter
+            "pushl %%eax\n\t"*/ "pushl %[Info]\n\t"
+            "call *%[pNotifyHandler]\n\t"   // Invoke STDCALL notification handler
+            "cmpl %%esp, %[StackPtr]\n\t"   // Check whether ESP is messed up
+            "je 1f\n\t"                     // Exit if everything is fine
+            "movl %[StackPtr], %%esp\n\t"   // Restore correct ESP
+            "1:\n\t"
+            //"seteb %[Success]"              // Set success or failure
+            :
+              [StackPtr]"=&S"(StackPtr), [Success]/*"=rm"*/"=@cce"(Success)
+            :
+              [pNotifyHandler]"m"(pNotifyHandler), [Info]/*"m"(Info)*/"r"(&Info)
+            :
+              /*"%esp", "%eax",*/ "cc", "memory"
+        );
+    #elif defined(_MSC_VER) // && !defined(__clang__)
+        __asm
+        {
+            mov esi, esp                // Save current ESP
+            lea eax, dword ptr [Info]   // Push parameter
+            push eax
+            call [pNotifyHandler]       // Invoke STDCALL notification handler
+            cmp esi, esp                // Check whether ESP is messed up
+            je l1f                      // Exit if everything is fine
+            mov esp, esi                // Restore correct ESP
+            l1f:
+            sete byte ptr [Success]     // Set success or failure
+        }
+    #else
+    #error Unsupported compiler
+    #endif
+        if (!Success)
+        {
+            ERR("WL: The notification DLL '%ws' uses a wrong calling convention or number of parameters. "
+                "Please contact your software vendor for a fixed DLL!\n",
+                NotificationDll->pszDllName);
+        }
+#else
         pNotifyHandler(&Info);
+#endif // _M_IX86
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -524,7 +568,6 @@ CallNotificationDll(
     if (UserToken)
         RevertToSelf();
 }
-
 
 VOID
 CallNotificationDlls(
@@ -587,7 +630,6 @@ CallNotificationDlls(
             CallNotificationDll(Notification, Type, &Info);
     }
 }
-
 
 VOID
 CleanupNotifications(VOID)

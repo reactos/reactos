@@ -102,10 +102,6 @@ typedef struct
     MIXERCONTROL_DATA Header;
     LONG SignedMinimum;
     LONG SignedMaximum;
-    LONG SteppingDelta;
-    ULONG InputSteppingDelta;
-    ULONG ValuesCount;
-    PLONG Values;
 }MIXERVOLUME_DATA, *LPMIXERVOLUME_DATA;
 
 typedef struct

@@ -279,7 +279,7 @@ NTSTATUS NTAPI ReceiveComplete
     ASSERT(FCB->ReceiveIrp.InFlightRequest == Irp);
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
@@ -295,7 +295,7 @@ NTSTATUS NTAPI ReceiveComplete
         }
         SocketStateUnlock( FCB );
         return STATUS_FILE_CLOSED;
-    } else if( FCB->State == SOCKET_STATE_LISTENING ) {
+    } else if( FCB->SharedData.State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
         SocketStateUnlock( FCB );
         return STATUS_INVALID_PARAMETER;
@@ -433,10 +433,10 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
 
     if( !(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS) &&
-        FCB->State != SOCKET_STATE_CONNECTED &&
-        FCB->State != SOCKET_STATE_CONNECTING ) {
+        FCB->SharedData.State != SOCKET_STATE_CONNECTED &&
+        FCB->SharedData.State != SOCKET_STATE_CONNECTING ) {
         AFD_DbgPrint(MIN_TRACE,("Called recv on wrong kind of socket (s%x)\n",
-                                FCB->State));
+                                FCB->SharedData.State));
         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
                                        Irp, 0 );
     }
@@ -558,7 +558,7 @@ PacketSocketRecvComplete(
     ASSERT(FCB->ReceiveIrp.InFlightRequest == Irp);
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
-    if( FCB->State == SOCKET_STATE_CLOSED ) {
+    if( FCB->SharedData.State == SOCKET_STATE_CLOSED ) {
         /* Cleanup our IRP queue because the FCB is being destroyed */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
@@ -712,7 +712,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
 
     /* Check that the socket is bound */
-    if( FCB->State != SOCKET_STATE_BOUND )
+    if( FCB->SharedData.State != SOCKET_STATE_BOUND )
     {
         AFD_DbgPrint(MIN_TRACE,("Invalid socket state\n"));
         return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);

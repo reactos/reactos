@@ -1310,7 +1310,7 @@ static MUI_ENTRY huHUBootLoaderSelectPageEntries[] =
     {
         6,
         8,
-        "Please select where Setup should install the bootloader:",
+        "K\202rj\201k v\240lassza ki, hogy a telep\241t\213 hov\240 helyezze el rendszerbet\224lt\213t:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

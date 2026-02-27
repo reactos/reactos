@@ -190,6 +190,7 @@ WdfDeviceAddQueryInterface(
 //
 FORCEINLINE
 VOID
+NTAPI
 WdfDeviceInterfaceReferenceNoOp(
     _In_ PVOID Context
     )
@@ -199,6 +200,7 @@ WdfDeviceInterfaceReferenceNoOp(
 
 FORCEINLINE
 VOID
+NTAPI
 WdfDeviceInterfaceDereferenceNoOp(
     _In_ PVOID Context
     )

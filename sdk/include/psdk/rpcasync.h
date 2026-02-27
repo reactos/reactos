@@ -23,6 +23,14 @@
 #pragma warning(disable:4820)
 #endif
 
+#ifdef RPC_NO_WINDOWS_H
+# include <windef.h>
+#endif
+
+#ifdef __RPC_WIN64__
+# include <pshpack8.h>
+#endif
+
 typedef struct tagRPC_ERROR_ENUM_HANDLE
 {
     ULONG Signature;
@@ -157,6 +165,10 @@ typedef struct _RPC_ASYNC_STATE
 } RPC_ASYNC_STATE, *PRPC_ASYNC_STATE;
 
 #define RpcAsyncGetCallHandle(async) (((PRPC_ASYNC_STATE)async)->RuntimeInfo)
+
+#ifdef __RPC_WIN64__
+# include <poppack.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

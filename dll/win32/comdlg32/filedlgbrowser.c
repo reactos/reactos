@@ -246,7 +246,11 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface, REF
         return S_OK;
     }
 
+#ifdef __REACTOS__
+    TRACE("unsupported interface, %s\n", debugstr_guid(riid));
+#else
     FIXME("unsupported interface, %s\n", debugstr_guid(riid));
+#endif
     return E_NOINTERFACE;
 }
 
@@ -616,7 +620,11 @@ static HRESULT WINAPI IShellBrowserImpl_SendControlMsg(IShellBrowser *iface,
         lres = SendDlgItemMessageA( This->hwndOwner, IDC_TOOLBAR, uMsg, wParam, lParam);
 	break;
       default:
+#ifdef __REACTOS__
+        TRACE("ctrl id: %x\n", id);
+#else
         FIXME("ctrl id: %x\n", id);
+#endif
         return E_NOTIMPL;
     }
     if (pret) *pret = lres;

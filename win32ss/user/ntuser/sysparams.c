@@ -294,7 +294,8 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
     gspv.iWheelScrollLines = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLLINES, 3);
     gspv.dwMouseClickLockTime = SpiLoadDWord(KEY_DESKTOP, VAL_CLICKLOCKTIME, 1200);
-    gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
+    if (gpsi)
+        gpsi->dtCaretBlink = SpiLoadInt(KEY_DESKTOP, VAL_CARETRATE, 530);
     gspv.dwCaretWidth = SpiLoadDWord(KEY_DESKTOP, VAL_CARETWIDTH, 1);
     gspv.dwUserPrefMask = SpiLoadUserPrefMask(UPM_DEFAULT);
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
@@ -351,10 +352,10 @@ SpiUpdatePerUserSystemParameters(VOID)
 
     if (gbSpiInitialized && gpsi)
     {
-       if (gspv.bKbdPref) gpsi->dwSRVIFlags |= SRVINFO_KBDPREF;
-       if (SPITESTPREF(UPM_KEYBOARDCUES)) gpsi->PUSIFlags |= PUSIF_KEYBOARDCUES;
-       if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
-       if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
+        if (gspv.bKbdPref) gpsi->dwSRVIFlags |= SRVINFO_KBDPREF;
+        if (SPITESTPREF(UPM_KEYBOARDCUES)) gpsi->PUSIFlags |= PUSIF_KEYBOARDCUES;
+        if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
+        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
     gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
     gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);

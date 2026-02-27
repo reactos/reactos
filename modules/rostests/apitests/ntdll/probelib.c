@@ -18,6 +18,13 @@ QuerySetProcessValidator(
 {
     NTSTATUS Status, SpecialStatus = STATUS_SUCCESS;
 
+    if ((PsProcessInfoClass[InfoClassIndex].RequiredSizeQUERY == 0) &&
+        (PsProcessInfoClass[InfoClassIndex].RequiredSizeSET == 0))
+    {
+        skip("FIXME: Skipping test for InfoClass %lu, because PsProcessInfoClass[] doesn't have it.\n", InfoClassIndex);
+        return;
+    }
+
     /* Before doing anything, check if we want query or set validation */
     switch (ValidationMode)
     {
@@ -72,13 +79,30 @@ QuerySetProcessValidator(
                 case ProcessIoPortHandlers:
                 case ProcessEnableAlignmentFaultFixup:
                 case ProcessAffinityMask:
-                case ProcessForegroundInformation:
                 {
                     SpecialStatus = STATUS_INVALID_INFO_CLASS;
                     break;
                 }
 
+                case ProcessForegroundInformation:
+                {
+                    if (ExpectedStatus != STATUS_DATATYPE_MISALIGNMENT)
+                    {
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    }
+                    break;
+                }
+
                 /* These classes don't exist in Server 2003 */
+                case ProcessImageFileNameWin32:
+                {
+                    /* Need to fix up the length */
+                    if (InfoLength == sizeof(UNICODE_STRING))
+                    {
+                        InfoLength += MAX_PATH * sizeof(WCHAR);
+                    }
+                    /* Fall through */
+                }
                 case ProcessIoPriority:
                 case ProcessTlsInformation:
                 case ProcessCycleTime:
@@ -86,14 +110,24 @@ QuerySetProcessValidator(
                 case ProcessInstrumentationCallback:
                 case ProcessThreadStackAllocation:
                 case ProcessWorkingSetWatchEx:
-                case ProcessImageFileNameWin32:
                 case ProcessImageFileMapping:
                 case ProcessAffinityUpdateMode:
                 case ProcessMemoryAllocationMode:
                 {
-                    SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    if (GetNTVersion() < _WIN32_WINNT_VISTA)
+                    {
+                        SpecialStatus = STATUS_INVALID_INFO_CLASS;
+                    }
                     break;
                 }
+
+#ifndef _M_IX86
+                case ProcessLdtInformation:
+                {
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+                    break;
+                }
+#endif
             }
 
             /* Query the information */
@@ -104,7 +138,7 @@ QuerySetProcessValidator(
                                                NULL);
 
             /* And probe the results we've got */
-            ok(Status == ExpectedStatus || Status == SpecialStatus || Status == STATUS_DATATYPE_MISALIGNMENT,
+            ok(Status == ExpectedStatus || Status == SpecialStatus,
                 "0x%lx or special status (0x%lx) expected but got 0x%lx for class information %lu in query information process operation!\n", ExpectedStatus, SpecialStatus, Status, InfoClassIndex);
             break;
         }
@@ -115,7 +149,11 @@ QuerySetProcessValidator(
             {
                 case ProcessIoPortHandlers:
                 {
+#ifndef _M_IX86
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+#else
                     SpecialStatus = STATUS_INVALID_PARAMETER;
+#endif
                     break;
                 }
 
@@ -125,6 +163,8 @@ QuerySetProcessValidator(
                  */
                 case ProcessWorkingSetWatch:
                 {
+                    if (ExpectedStatus == STATUS_ACCESS_VIOLATION)
+                        ExpectedStatus = STATUS_SUCCESS;
                     SpecialStatus = STATUS_PORT_ALREADY_SET;
                     break;
                 }
@@ -187,6 +227,15 @@ QuerySetProcessValidator(
                     SpecialStatus = STATUS_ACCESS_VIOLATION;
                     break;
                 }
+
+#ifndef _M_IX86
+                case ProcessLdtInformation:
+                case ProcessLdtSize:
+                {
+                    SpecialStatus = STATUS_NOT_IMPLEMENTED;
+                    break;
+                }
+#endif
             }
 
             /* Set the information */
@@ -196,7 +245,7 @@ QuerySetProcessValidator(
                                              InfoLength);
 
             /* And probe the results we've got */
-            ok(Status == ExpectedStatus || Status == SpecialStatus || Status == STATUS_DATATYPE_MISALIGNMENT || Status == STATUS_SUCCESS,
+            ok(Status == ExpectedStatus || Status == SpecialStatus,
                 "0x%lx or special status (0x%lx) expected but got 0x%lx for class information %lu in set information process operation!\n", ExpectedStatus, SpecialStatus, Status, InfoClassIndex);
             break;
         }

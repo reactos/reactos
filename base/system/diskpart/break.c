@@ -8,8 +8,11 @@
 
 #include "diskpart.h"
 
-BOOL break_main(INT argc, LPWSTR *argv)
+EXIT_CODE
+break_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
     ConPuts(StdOut, L"\nTODO: Add code later since Win 7 Home Premium doesn't have this feature.\n");
-    return TRUE;
+    return EXIT_SUCCESS;
 }

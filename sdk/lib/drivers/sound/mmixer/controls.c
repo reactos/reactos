@@ -159,6 +159,7 @@ MMixerAddMixerControl(
         PKSPROPERTY_DESCRIPTION Desc;
         PKSPROPERTY_MEMBERSHEADER Members;
         PKSPROPERTY_STEPPING_LONG Range;
+        LPMIXERVOLUME_DATA VolumeData;
 
         MixerControl->Control.Bounds.dwMinimum = 0;
         MixerControl->Control.Bounds.dwMaximum = 0xFFFF;
@@ -179,55 +180,38 @@ MMixerAddMixerControl(
         /* get node volume level info */
         Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), Desc, Length, &BytesReturned);
 
+        VolumeData = (LPMIXERVOLUME_DATA)MixerContext->Alloc(sizeof(*VolumeData));
+        if (!VolumeData)
+            return MM_STATUS_NO_MEMORY;
+
         if (Status == MM_STATUS_SUCCESS)
         {
-            LPMIXERVOLUME_DATA VolumeData;
-            ULONG Steps, MaxRange, Index;
-            LONG Value;
-
             Members = (PKSPROPERTY_MEMBERSHEADER)(Desc + 1);
             Range = (PKSPROPERTY_STEPPING_LONG)(Members + 1);
 
             DPRINT("NodeIndex %u Range Min %d Max %d Steps %x UMin %x UMax %x\n", NodeIndex, Range->Bounds.SignedMinimum, Range->Bounds.SignedMaximum, Range->SteppingDelta, Range->Bounds.UnsignedMinimum, Range->Bounds.UnsignedMaximum);
 
-            MaxRange = Range->Bounds.UnsignedMaximum - Range->Bounds.UnsignedMinimum;
+            /* Store mixer control info there */
+            VolumeData->Header.dwControlID = MixerControl->Control.dwControlID;
+            VolumeData->SignedMinimum = Range->Bounds.SignedMinimum;
+            VolumeData->SignedMaximum = Range->Bounds.SignedMaximum;
 
-            if (MaxRange)
+            /* Fallback to defaults if: 1) the range is not defined (typically is 0) */
+            if (VolumeData->SignedMinimum == VolumeData->SignedMaximum)
             {
-                ASSERT(MaxRange);
-                VolumeData = (LPMIXERVOLUME_DATA)MixerContext->Alloc(sizeof(MIXERVOLUME_DATA));
-                if (!VolumeData)
-                    return MM_STATUS_NO_MEMORY;
-
-                Steps = MaxRange / Range->SteppingDelta + 1;
-
-                /* store mixer control info there */
-                VolumeData->Header.dwControlID = MixerControl->Control.dwControlID;
-                VolumeData->SignedMaximum = Range->Bounds.SignedMaximum;
-                VolumeData->SignedMinimum = Range->Bounds.SignedMinimum;
-                VolumeData->SteppingDelta = Range->SteppingDelta;
-                VolumeData->ValuesCount = Steps;
-                VolumeData->InputSteppingDelta = 0x10000 / Steps;
-
-                VolumeData->Values = (PLONG)MixerContext->Alloc(sizeof(LONG) * Steps);
-                if (!VolumeData->Values)
-                {
-                    MixerContext->Free(Desc);
-                    MixerContext->Free(VolumeData);
-                    return MM_STATUS_NO_MEMORY;
-                }
-
-                Value = Range->Bounds.SignedMinimum;
-                for (Index = 0; Index < Steps; Index++)
-                {
-                    VolumeData->Values[Index] = Value;
-                    // HACK: use '- 1' to make the left and right volume controls behave independently.
-                    Value += Range->SteppingDelta - 1;
-                }
-                MixerControl->ExtraData = VolumeData;
-           }
-       }
-       MixerContext->Free(Desc);
+                VolumeData->SignedMinimum = -96 * 0x10000; // -96 DB
+                VolumeData->SignedMaximum = 0; // 0 DB
+            }
+        }
+        else
+        {
+            /* or 2) when some failure occurs */
+            VolumeData->Header.dwControlID = MixerControl->Control.dwControlID;
+            VolumeData->SignedMinimum = -96 * 0x10000; // -96 DB
+            VolumeData->SignedMaximum = 0; // 0 DB
+        }
+        MixerControl->ExtraData = VolumeData;
+        MixerContext->Free(Desc);
     }
 
     DPRINT("Status %x Name %S\n", Status, MixerControl->Control.szName);

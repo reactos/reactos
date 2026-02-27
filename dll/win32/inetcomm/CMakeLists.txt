@@ -1,5 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
 spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
