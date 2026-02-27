@@ -290,7 +290,8 @@ MiInsertInSystemSpace(IN PMMSESSION Session,
                       IN PCONTROL_AREA ControlArea)
 {
     PVOID Base;
-    ULONG Entry, Hash, i, HashSize;
+    ULONG Hash, i, HashSize;
+    ULONG_PTR Entry;
     PMMVIEW OldTable;
     PAGED_CODE();
 
