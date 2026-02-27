@@ -66,7 +66,7 @@ pmap_getmaps(address)
 	 struct sockaddr_in *address;
 {
 	struct pmaplist *head = NULL;
-	SOCKET sock = INVALID_SOCKET;
+	int sock = RPC_ANYSOCK;
 	struct timeval minutetimeout;
 	CLIENT *client;
 
