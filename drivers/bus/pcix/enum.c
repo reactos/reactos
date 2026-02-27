@@ -112,12 +112,21 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                 /* Base BAR resources */
                 case CmResourceTypePort:
                 case CmResourceTypeMemory:
+                {
+                    /*
+                     * Skip legacy/shared resources (e.g., VGA ports 0x3B0-0x3DF, memory 0xA0000).
+                     * should not be placed in the ResourceArray.
+                     */
+                    if (Partial->ShareDisposition != CmResourceShareDeviceExclusive && Partial->ShareDisposition != CmResourceShareDriverExclusive)
+                    {
+                        break;
+                    }
 
                     /* Set it as the base */
                     ASSERT(BaseResource == NULL);
                     BaseResource = Partial;
                     break;
-
+                }
                 /* Interrupt resource */
                 case CmResourceTypeInterrupt:
 
