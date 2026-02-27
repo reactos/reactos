@@ -7699,7 +7699,6 @@ GreGetCharWidthW(
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
     {
-        IntLockFreeType();
         for (i = 0; i < (UINT)face->num_charmaps; i++)
         {
             charmap = face->charmaps[i];
@@ -7709,10 +7708,20 @@ GreGetCharWidthW(
                 break;
             }
         }
-        // NOTE: The raster font can have no charmap.
+
+        if (!found && FT_IS_SFNT(face)) // Not found and (TrueType or OpenType)?
+        {
+            DPRINT1("WARNING: Could not find desired charmap!\n");
+            EngSetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+
         if (found)
+        {
+            IntLockFreeType();
             FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
+            IntUnLockFreeType();
+        }
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
