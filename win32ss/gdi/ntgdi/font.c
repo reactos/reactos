@@ -1329,18 +1329,15 @@ NtGdiGetCharWidthW(
     WCHAR StackPwc[40];
     INT StackBuffer[40];
 
-    if (!Count)
+    if (!Count || Count > MAX_TEXT_BUFFER / sizeof(INT))
         return FALSE;
 
     if (UnSafepwc)
     {
-        if (Count <= MAX_TEXT_BUFFER / sizeof(WCHAR))
-        {
-            if (Count <= _countof(StackPwc))
-                pSafePwc = StackPwc;
-            else
-                pSafePwc = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
-        }
+        if (Count <= _countof(StackPwc))
+            pSafePwc = StackPwc;
+        else
+            pSafePwc = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
 
         if (!pSafePwc)
             return FALSE;
@@ -1350,13 +1347,10 @@ NtGdiGetCharWidthW(
             goto Cleanup;
     }
 
-    if (Count <= MAX_TEXT_BUFFER / sizeof(INT))
-    {
-        if (Count <= _countof(StackBuffer))
-            pTmpBuffer = StackBuffer;
-        else
-            pTmpBuffer = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
-    }
+    if (Count <= _countof(StackBuffer))
+        pTmpBuffer = StackBuffer;
+    else
+        pTmpBuffer = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
 
     if (!pTmpBuffer)
         goto Cleanup;
