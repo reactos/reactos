@@ -1,14 +1,14 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/drivers/hdaudio/hdaudio.cpp
- * PURPOSE:         HDAudio Driver
- * PROGRAMMER:      Johannes Anderwald
+ * PROJECT:         ReactOS HDAudio Driver
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         HdAudio main entry point
+ * COPYRIGHT:       Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *                  Copyright 2025-2026 Oleg Dubinskiy <oleg.dubinskiy@reactos.org>
  */
 
 #include "private.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern "C" DRIVER_INITIALIZE DriverEntry;
@@ -68,8 +68,9 @@ HDAUDIO_DeviceControl(
         DPRINT1("HDAUDIO: Failed to allocate common adapter %x\n", Status);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
     // init common adapter
-    Status = HDAUDIO_InitializeCommonAdapter(DeviceExtension->AdapterCommon, DeviceObject, Irp);
+    Status = HDAUDIO_InitializeCommonAdapter(DeviceExtension->AdapterCommon, DeviceObject, Irp, ResourceList);
     if (!NT_SUCCESS(Status))
     {
         // failed to initialize common adapter
@@ -100,6 +101,7 @@ HDAUDIO_AddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
+    UNICODE_STRING SymbolicLinkName;
     NTSTATUS Status;
 
     // check parameters
@@ -110,7 +112,26 @@ HDAUDIO_AddDevice(
     Status = PcAddAdapterDevice(DriverObject, PhysicalDeviceObject, HDAUDIO_StartDevice, 50, PORT_CLASS_DEVICE_EXTENSION_SIZE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("PcAddAdapterDevice failed with %x\n", Status);
+        DPRINT1("HDAUDIO: PcAddAdapterDevice failed with %x\n", Status);
+        return Status;
+    }
+
+    // register device interface
+    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+                                       &GUID_HDAUDIO_BUS_INTERFACE_V2,
+                                       NULL,
+                                       &SymbolicLinkName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: IoRegisterDeviceInterface failed with %x\n", Status);
+        return Status;
+    }
+
+    // enable device interface
+    Status = IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: IoSetDeviceInterfaceState failed with %x\n", Status);
     }
     return Status;
 }

@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/hdaudbus/hda_verbs.h
- * PURPOSE:         HDAUDBUS Driver
- * PROGRAMMER:      Coolstar TODO
-                    Johannes Anderwald
+ * PROJECT:         ReactOS HDAudio Driver
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         HdAudio verbs definitions
+ * COPYRIGHT:       Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *                  Copyright 2025-2026 Oleg Dubinskiy <oleg.dubinskiy@reactos.org>
  */
 
 #if !defined(_HDA_VERBS_H_)

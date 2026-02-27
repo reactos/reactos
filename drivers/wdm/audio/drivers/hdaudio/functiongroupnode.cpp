@@ -1,14 +1,14 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/drivers/hdaudio/functiongroupnode.cpp
- * PURPOSE:         HDAudio Driver
- * PROGRAMMER:      Johannes Anderwald
+ * PROJECT:         ReactOS HDAudio Driver
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Function group nodes
+ * COPYRIGHT:       Copyright 2025 Johannes Anderwald <johannes.anderwald@reactos.org>
+ *                  Copyright 2025-2026 Oleg Dubinskiy <oleg.dubinskiy@reactos.org>
  */
 
 #include "private.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS
@@ -431,6 +431,51 @@ CFunctionGroupNode::GetNodesWithType(IN UCHAR NodeType, OUT PULONG NodeCount, OU
         *NodesAddress = NULL;
     }
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CFunctionGroupNode::GetVolume(
+    IN ULONG NodeId,
+    OUT PUCHAR Direct,
+    OUT PLONG Volume)
+{
+    ULONG Verb;
+    ULONG Response = 0;
+    NTSTATUS Status;
+
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_GET_VOLUME_KNOB_CONTROL << 8);
+    Status = m_Adapter->TransferVerb(Verb, &Response);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: GetVolume failed with %x\n", Status);
+        return Status;
+    }
+    if (Response == 0)
+        return STATUS_UNSUCCESSFUL;
+    *Direct = (Response >> 7) & 0x1;
+    *Volume = (Response & 0x7F);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CFunctionGroupNode::SetVolume(
+    IN ULONG NodeId,
+    IN UCHAR Direct,
+    IN LONG Volume)
+{
+    ULONG Verb;
+    ULONG Response = 0;
+    NTSTATUS Status;
+
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_SET_VOLUME_KNOB_CONTROL << 8) | Direct | Volume;
+    Status = m_Adapter->TransferVerb(Verb, &Response);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: SetVolume failed with %x\n", Status);
+    }
+    return Status;
 }
 
 NTSTATUS
