@@ -39,6 +39,7 @@ list(APPEND SOURCE
     GdiGetLocalDC.c
     GdiReleaseLocalDC.c
     GdiSetAttrs.c
+    GetCharWidth.c
     GetClipBox.c
     GetClipRgn.c
     GetCurrentObject.c
