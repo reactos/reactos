@@ -807,10 +807,9 @@ BOOL
 WINAPI
 GetCharWidthA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -856,10 +855,9 @@ BOOL
 WINAPI
 GetCharWidth32A(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -905,10 +903,9 @@ BOOL
 APIENTRY
 GetCharWidthFloatA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    PFLOAT	pxBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    PFLOAT pxBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -1050,8 +1047,7 @@ GetCharWidthI(HDC hdc,
               UINT giFirst,
               UINT cgi,
               LPWORD pgi,
-              LPINT lpBuffer
-             )
+              LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsI\n");
 
