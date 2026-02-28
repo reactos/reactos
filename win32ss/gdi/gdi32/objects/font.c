@@ -716,7 +716,12 @@ GetCharWidthFloatW(HDC hdc,
                    PFLOAT pxBuffer)
 {
     DPRINT("GetCharWidthsFloatW\n");
-    if ((!pxBuffer) || (iFirstChar > iLastChar))
+    if ((!pxBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -741,7 +746,12 @@ GetCharWidthW(HDC hdc,
               LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsW\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -766,7 +776,12 @@ GetCharWidth32W(HDC hdc,
                 LPINT lpBuffer)
 {
     DPRINT("GetCharWidths32W\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -824,6 +839,12 @@ GetCharWidthA(
 
     DPRINT("GetCharWidthsA\n");
 
+    if (!GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
@@ -867,6 +888,12 @@ GetCharWidth32A(
 
     DPRINT("GetCharWidths32A\n");
 
+    if (!GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
         return FALSE;
@@ -909,6 +936,12 @@ GetCharWidthFloatA(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsFloatA\n");
+
+    if (!GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -1041,6 +1074,13 @@ GetCharWidthI(HDC hdc,
              )
 {
     DPRINT("GetCharWidthsI\n");
+
+    if (!GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     if (!lpBuffer || (!pgi && (giFirst == MAXUSHORT))) // Cannot be at max.
     {
         SetLastError(ERROR_INVALID_PARAMETER);
