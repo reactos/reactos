@@ -68,6 +68,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     LONG Height = RECTL_lGetHeight(DestRect);
     LONG Width = RECTL_lGetWidth(DestRect);
     BOOLEAN XorBit = !!XLATEOBJ_iXlate(pxlo, 0);
+    BOOLEAN IgnoreSrc = XorBit ^ !XLATEOBJ_iXlate(pxlo, 1);
     BOOLEAN Overlap = FALSE;
     BYTE *DstStart, *DstEnd, *SrcStart, *SrcEnd;
 
@@ -103,7 +104,18 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
     /* We allocate a new buffer when the two buffers overlap */
     Overlap = ((SrcStart >= DstStart) && (SrcStart < DstEnd)) || ((SrcEnd >= DstStart) && (SrcEnd < DstEnd));
 
-    if (!Overlap)
+    if (IgnoreSrc)
+    {
+        LONG y;
+        for (y = 0; y < Height; y++)
+        {
+            for(LONG x = 0; x < Width; x++)
+            {
+                DIB_1BPP_PutPixel(DestSurf, DestRect->left + x, DestRect->top + y, XorBit);
+            }
+        }
+    }
+    else if (!Overlap)
     {
         LONG y;
         for (y = 0; y < Height; y++)

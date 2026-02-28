@@ -22,15 +22,11 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-# include <libxml/xpath.h>
-# include <libxml/xpathInternals.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -51,8 +47,6 @@
  *  - supports IXMLDOMSelection
  *
  */
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -161,7 +155,7 @@ static ULONG WINAPI domselection_AddRef(
 {
     domselection *This = impl_from_IXMLDOMSelection( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -171,13 +165,13 @@ static ULONG WINAPI domselection_Release(
     domselection *This = impl_from_IXMLDOMSelection( iface );
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     if ( ref == 0 )
     {
         xmlXPathFreeObject(This->result);
         xmldoc_release(This->node->doc);
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -238,7 +232,7 @@ static HRESULT WINAPI domselection_get_item(
 {
     domselection *This = impl_from_IXMLDOMSelection( iface );
 
-    TRACE("(%p)->(%d %p)\n", This, index, listItem);
+    TRACE("%p, %ld, %p.\n", iface, index, listItem);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -474,7 +468,7 @@ static ULONG WINAPI enumvariant_AddRef(IEnumVARIANT *iface )
 {
     enumvariant *This = impl_from_IEnumVARIANT( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -483,11 +477,11 @@ static ULONG WINAPI enumvariant_Release(IEnumVARIANT *iface )
     enumvariant *This = impl_from_IEnumVARIANT( iface );
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     if ( ref == 0 )
     {
         if (This->own) IUnknown_Release(This->outer);
-        heap_free(This);
+        free(This);
     }
 
     return ref;
@@ -502,7 +496,7 @@ static HRESULT WINAPI enumvariant_Next(
     enumvariant *This = impl_from_IEnumVARIANT( iface );
     ULONG ret_count = 0;
 
-    TRACE("(%p)->(%u %p %p)\n", This, celt, var, fetched);
+    TRACE("%p, %lu, %p, %p.\n", iface, celt, var, fetched);
 
     if (fetched) *fetched = 0;
 
@@ -519,7 +513,7 @@ static HRESULT WINAPI enumvariant_Next(
         ret_count++;
     }
 
-    if (fetched) (*fetched)++;
+    if (fetched) *fetched = ret_count;
 
     /* we need to advance one step more for some reason */
     if (ret_count)
@@ -535,16 +529,18 @@ static HRESULT WINAPI enumvariant_Skip(
     IEnumVARIANT *iface,
     ULONG celt)
 {
-    enumvariant *This = impl_from_IEnumVARIANT( iface );
-    FIXME("(%p)->(%u): stub\n", This, celt);
+    FIXME("%p, %lu: stub\n", iface, celt);
+
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI enumvariant_Reset(IEnumVARIANT *iface)
 {
     enumvariant *This = impl_from_IEnumVARIANT( iface );
-    FIXME("(%p): stub\n", This);
-    return E_NOTIMPL;
+
+    TRACE("%p\n", This);
+    This->pos = 0;
+    return S_OK;
 }
 
 static HRESULT WINAPI enumvariant_Clone(
@@ -570,7 +566,7 @@ HRESULT create_enumvariant(IUnknown *outer, BOOL own, const struct enumvariant_f
 {
     enumvariant *This;
 
-    This = heap_alloc(sizeof(enumvariant));
+    This = malloc(sizeof(enumvariant));
     if (!This) return E_OUTOFMEMORY;
 
     This->IEnumVARIANT_iface.lpVtbl = &EnumVARIANTVtbl;
@@ -593,13 +589,13 @@ static HRESULT domselection_get_dispid(IUnknown *iface, BSTR name, DWORD flags, 
     WCHAR *ptr;
     int idx = 0;
 
-    for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
+    for(ptr = name; *ptr >= '0' && *ptr <= '9'; ptr++)
         idx = idx*10 + (*ptr-'0');
     if(*ptr)
         return DISP_E_UNKNOWNNAME;
 
     *dispid = DISPID_DOM_COLLECTION_BASE + idx;
-    TRACE("ret %x\n", *dispid);
+    TRACE("ret %lx\n", *dispid);
     return S_OK;
 }
 
@@ -608,7 +604,7 @@ static HRESULT domselection_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD f
 {
     domselection *This = impl_from_IXMLDOMSelection( (IXMLDOMSelection*)iface );
 
-    TRACE("(%p)->(%x %x %x %p %p %p)\n", This, id, lcid, flags, params, res, ei);
+    TRACE("%p, %ld, %lx, %x, %p, %p, %p.\n", iface, id, lcid, flags, params, res, ei);
 
     V_VT(res) = VT_DISPATCH;
     V_DISPATCH(res) = NULL;
@@ -760,14 +756,14 @@ static void XSLPattern_OP_IGEq(xmlXPathParserContextPtr pctx, int nargs)
     xmlFree(arg2);
 }
 
-static void query_serror(void* ctx, xmlErrorPtr err)
+static void query_serror(void* ctx, const xmlError* err)
 {
     LIBXML2_CALLBACK_SERROR(domselection_create, err);
 }
 
 HRESULT create_selection(xmlNodePtr node, xmlChar* query, IXMLDOMNodeList **out)
 {
-    domselection *This = heap_alloc(sizeof(domselection));
+    domselection *This = malloc(sizeof(domselection));
     xmlXPathContextPtr ctxt = xmlXPathNewContext(node->doc);
     HRESULT hr;
 
@@ -777,7 +773,7 @@ HRESULT create_selection(xmlNodePtr node, xmlChar* query, IXMLDOMNodeList **out)
     if (!This || !ctxt || !query)
     {
         xmlXPathFreeContext(ctxt);
-        heap_free(This);
+        free(This);
         return E_OUTOFMEMORY;
     }
 
@@ -792,6 +788,7 @@ HRESULT create_selection(xmlNodePtr node, xmlChar* query, IXMLDOMNodeList **out)
     ctxt->error = query_serror;
     ctxt->node = node;
     registerNamespaces(ctxt);
+    xmlXPathContextSetCache(ctxt, 1, -1, 0);
 
     if (is_xpathmode(This->node->doc))
     {
@@ -836,5 +833,3 @@ cleanup:
     xmlXPathFreeContext(ctxt);
     return hr;
 }
-
-#endif

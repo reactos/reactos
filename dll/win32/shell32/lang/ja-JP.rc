@@ -964,8 +964,8 @@ BEGIN
     IDS_VXD_FILE "仮想デバイス ドライバ"
     IDS_ANY_FILE "%s ファイル"
 
-    IDS_OPEN_VERB "開く"
-    IDS_EXPLORE_VERB "エクスプローラで開く"
+    IDS_OPEN_VERB "開く(&O)"
+    IDS_EXPLORE_VERB "エクスプローラで開く(&X)"
     IDS_RUNAS_VERB "別のユーザーとして実行..."
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"

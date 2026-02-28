@@ -8,6 +8,7 @@ list(APPEND SOURCE
     dd.c
     ddraw.c
     ddsurf.c
+    dxgallocator.c
     eng.c
     historic.c
     dxg_int.h)

@@ -94,6 +94,7 @@
 #include "folders/CPrinterFolder.h"
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
+#include "folders/CRecycleBinFolderViewCB.h"
 #include "droptargets/CexeDropHandler.h"
 #include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
@@ -131,6 +132,9 @@ extern const GUID SHELL32_AdvtShortcutComponent;
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
+
 extern inline
 BOOL
 CALLBACK
@@ -166,8 +170,6 @@ PropSheetPageLifetimeCallback(HWND hWnd, UINT uMsg, PROPSHEETPAGEW *pPSP)
     return TRUE;
 }
 
-EXTERN_C HRESULT WINAPI
-SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
 HRESULT
 SHELL32_ShowPropertiesDialog(IDataObject *pdtobj);
 HRESULT
@@ -243,13 +245,6 @@ public:
 };
 
 void PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
-
-HRESULT
-Shell_TranslateIDListAlias(
-    _In_ LPCITEMIDLIST pidl,
-    _In_ HANDLE hToken,
-    _Out_ LPITEMIDLIST *ppidlAlias,
-    _In_ DWORD dwFlags);
 
 BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
 DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);

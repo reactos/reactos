@@ -67,11 +67,21 @@ VOID
 #define HALP_LOW_STUB_SIZE_IN_PAGES 3
 #endif
 
-/* Conversion functions */
-#define BCD_INT(bcd)            \
-    (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
-#define INT_BCD(int)            \
-    (UCHAR)(((int / 10) << 4) + (int % 10))
+FORCEINLINE
+UCHAR
+BCD_INT(
+    _In_ UCHAR Bcd)
+{
+    return ((Bcd & 0xF0) >> 4) * 10 + (Bcd & 0x0F);
+}
+
+FORCEINLINE
+UCHAR
+INT_BCD(
+    _In_ CSHORT Int)
+{
+    return ((Int / 10) << 4) + (Int % 10);
+}
 
 typedef
 BOOLEAN

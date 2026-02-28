@@ -37,11 +37,12 @@ ShowHeader(VOID)
  * opens the file, reads the contents, convert the text into readable
  * code for the computer, and then execute commands in order.
  */
-BOOL
+EXIT_CODE
 RunScript(LPCWSTR filename)
 {
     FILE *script;
     WCHAR tmp_string[MAX_STRING_SIZE];
+    EXIT_CODE Result;
 
     /* Open the file for processing */
     script = _wfopen(filename, L"r");
@@ -55,17 +56,18 @@ RunScript(LPCWSTR filename)
     /* Read and process the script */
     while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
-        if (InterpretScript(tmp_string) == FALSE)
+        Result = InterpretScript(tmp_string);
+        if (Result != EXIT_SUCCESS)
         {
             fclose(script);
-            return FALSE;
+            return (Result == EXIT_EXIT) ? EXIT_SUCCESS : Result;
         }
     }
 
     /* Close the file */
     fclose(script);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }
 
 /*
@@ -117,7 +119,7 @@ int wmain(int argc, const LPWSTR argv[])
             {
                 /* If there is no flag, then return an error */
                 ConResPrintf(StdErr, IDS_ERROR_MSG_BAD_ARG, argv[index]);
-                result = EXIT_FAILURE;
+                result = EXIT_SYNTAX;
                 goto done;
             }
 
@@ -156,7 +158,7 @@ int wmain(int argc, const LPWSTR argv[])
             {
                 /* Assume that the flag doesn't exist. */
                 ConResPrintf(StdErr, IDS_ERROR_MSG_BAD_ARG, tmpBuffer);
-                result = EXIT_FAILURE;
+                result = EXIT_SYNTAX;
                 goto done;
             }
         }
@@ -172,17 +174,15 @@ int wmain(int argc, const LPWSTR argv[])
             if (timeout > 0)
                 Sleep(timeout * 1000);
 
-            if (RunScript(script) == FALSE)
-            {
-                result = EXIT_FAILURE;
+            result = RunScript(script);
+            if (result != EXIT_SUCCESS)
                 goto done;
-            }
         }
         else
         {
             /* Exit failure since the user wanted to run a script */
             ConResPrintf(StdErr, IDS_ERROR_MSG_NO_SCRIPT, script);
-            result = EXIT_FAILURE;
+            result = EXIT_SYNTAX;
             goto done;
         }
     }

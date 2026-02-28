@@ -9,7 +9,27 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <string.h>
+
+#ifndef	XSLT_NEED_TRIO
+#include <stdio.h>
+#else
+#include <trio.h>
+#endif
+
+#include <libxml/xmlmemory.h>
+#include <libxml/tree.h>
+#include <libxml/hash.h>
+#include <libxml/xmlerror.h>
+#include <libxml/uri.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "namespaces.h"
+#include "imports.h"
 
 /************************************************************************
  *									*

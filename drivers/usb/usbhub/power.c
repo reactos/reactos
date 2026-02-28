@@ -72,6 +72,33 @@ USBH_HubESDRecoverySetD3Completion(IN PDEVICE_OBJECT DeviceObject,
                FALSE);
 }
 
+VOID
+NTAPI
+USBH_HubESDRecoverySetD0Completion(IN PDEVICE_OBJECT DeviceObject,
+                                   IN UCHAR MinorFunction,
+                                   IN POWER_STATE PowerState,
+                                   IN PVOID Context,
+                                   IN PIO_STATUS_BLOCK IoStatus)
+{
+    PUSBHUB_FDO_EXTENSION HubExtension = (PUSBHUB_FDO_EXTENSION)Context;
+
+    DPRINT("USBH_HubESDRecoverySetD0Completion: HubExtension - %p\n", HubExtension);
+
+    if (HubExtension && NT_SUCCESS(IoStatus->Status))
+    {
+        /* Clear the ESD recovery flag after successful power cycle */
+        HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
+        DPRINT("USBH_HubESDRecoverySetD0Completion: ESD recovery completed\n");
+    }
+    else if (HubExtension)
+    {
+        /* If D0 transition failed, clear the flag anyway to allow retry */
+        HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
+        DPRINT1("USBH_HubESDRecoverySetD0Completion: ESD recovery failed with status 0x%08lx\n",
+                IoStatus->Status);
+    }
+}
+
 NTSTATUS
 NTAPI
 USBH_HubSetD0(IN PUSBHUB_FDO_EXTENSION HubExtension)
@@ -125,6 +152,70 @@ USBH_HubSetD0(IN PUSBHUB_FDO_EXTENSION HubExtension)
     while (HubExtension->HubFlags & USBHUB_FDO_FLAG_WAKEUP_START)
     {
         USBH_Wait(10);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+USBH_HubStartESDRecovery(IN PUSBHUB_FDO_EXTENSION HubExtension)
+{
+    PUSBHUB_FDO_EXTENSION RootHubDevExt;
+    NTSTATUS Status;
+    KEVENT Event;
+    POWER_STATE PowerState;
+
+    DPRINT("USBH_HubStartESDRecovery: HubExtension - %p\n", HubExtension);
+
+    RootHubDevExt = USBH_GetRootHubExtension(HubExtension);
+
+    if (RootHubDevExt->SystemPowerState.SystemState != PowerSystemWorking)
+    {
+        Status = STATUS_INVALID_DEVICE_STATE;
+        HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
+        return Status;
+    }
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* First, set the hub to D3 (power off) */
+    PowerState.DeviceState = PowerDeviceD3;
+
+    Status = PoRequestPowerIrp(HubExtension->LowerPDO,
+                               IRP_MN_SET_POWER,
+                               PowerState,
+                               USBH_HubESDRecoverySetD3Completion,
+                               &Event,
+                               NULL);
+    if (Status == STATUS_PENDING)
+    {
+        Status = KeWaitForSingleObject(&Event,
+                                       Suspended,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("USBH_HubStartESDRecovery: Failed to set D3, Status - %lX\n", Status);
+        HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
+        return Status;
+    }
+
+    /* Now set it back to D0 (power on) to complete the recovery */
+    PowerState.DeviceState = PowerDeviceD0;
+
+    Status = PoRequestPowerIrp(HubExtension->LowerPDO,
+                               IRP_MN_SET_POWER,
+                               PowerState,
+                               USBH_HubESDRecoverySetD0Completion,
+                               HubExtension,
+                               NULL);
+    if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
+    {
+        DPRINT1("USBH_HubStartESDRecovery: Failed to set D0, Status - %lX\n", Status);
+        HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_ESD_RECOVERING;
     }
 
     return Status;

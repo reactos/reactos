@@ -59,7 +59,7 @@ NTHALAPI
 VOID
 NTAPI
 HalDisplayString(
-    _In_ PCHAR String
+    _In_ PCSTR String
 );
 
 //

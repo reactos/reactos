@@ -8,7 +8,10 @@
 
 #include "diskpart.h"
 
-BOOL offline_main(INT argc, LPWSTR *argv)
+EXIT_CODE
+offline_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
-    return TRUE;
+    return EXIT_SUCCESS;
 }

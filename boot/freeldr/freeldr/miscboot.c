@@ -38,6 +38,10 @@ LoadAndBootSector(
     _In_ PCHAR Argv[],
     _In_ PCHAR Envp[])
 {
+#if defined(SARCH_XBOX)
+    UiMessageBox("Boot sector booting is not supported on XBOX.");
+    return ENOEXEC;
+#endif
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR BootPath;

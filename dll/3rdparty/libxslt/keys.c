@@ -9,7 +9,25 @@
  * daniel@veillard.com
  */
 
-#include "precomp.h"
+#define IN_LIBXSLT
+#include "libxslt.h"
+
+#include <string.h>
+
+#include <libxml/xmlmemory.h>
+#include <libxml/tree.h>
+#include <libxml/valid.h>
+#include <libxml/hash.h>
+#include <libxml/xmlerror.h>
+#include <libxml/parserInternals.h>
+#include <libxml/xpathInternals.h>
+#include <libxml/xpath.h>
+#include "xslt.h"
+#include "xsltInternals.h"
+#include "xsltutils.h"
+#include "imports.h"
+#include "templates.h"
+#include "keys.h"
 
 #ifdef WITH_XSLT_DEBUG
 #define WITH_XSLT_DEBUG_KEYS
@@ -276,6 +294,8 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
 #endif
 
     key = xsltNewKeyDef(name, nameURI);
+    if (key == NULL)
+        return(-1);
     key->match = xmlStrdup(match);
     key->use = xmlStrdup(use);
     key->inst = inst;
@@ -809,31 +829,17 @@ fprintf(stderr, "xsltInitCtxtKey %s : %d\n", keyDef->name, ctxt->keyInitLevel);
 		keylist = xmlXPathNodeSetCreate(cur);
 		if (keylist == NULL)
 		    goto error;
-		xmlHashAddEntry(table->keys, str, keylist);
+		if (xmlHashAddEntry(table->keys, str, keylist) < 0) {
+                    xmlXPathFreeNodeSet(keylist);
+                    goto error;
+                }
 	    } else {
 		/*
 		* TODO: How do we know if this function failed?
 		*/
 		xmlXPathNodeSetAdd(keylist, cur);
 	    }
-	    switch (cur->type) {
-		case XML_ELEMENT_NODE:
-		case XML_TEXT_NODE:
-		case XML_CDATA_SECTION_NODE:
-		case XML_PI_NODE:
-		case XML_COMMENT_NODE:
-		    cur->psvi = keyDef;
-		    break;
-		case XML_ATTRIBUTE_NODE:
-		    ((xmlAttrPtr) cur)->psvi = keyDef;
-		    break;
-		case XML_DOCUMENT_NODE:
-		case XML_HTML_DOCUMENT_NODE:
-		    ((xmlDocPtr) cur)->psvi = keyDef;
-		    break;
-		default:
-		    break;
-	    }
+            xsltSetSourceNodeFlags(ctxt, cur, XSLT_SOURCE_NODE_HAS_KEY);
 	    xmlFree(str);
 	    str = NULL;
 

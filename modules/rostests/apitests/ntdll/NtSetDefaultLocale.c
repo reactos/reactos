@@ -9,28 +9,50 @@
 
 START_TEST(NtSetDefaultLocale)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, ExpectedStatus;
+
+    if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+    {
+        ExpectedStatus = STATUS_SUCCESS;
+    }
+    else if (GetNTVersion() >= _WIN32_WINNT_VISTA)
+    {
+        ExpectedStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+    else
+    {
+        ExpectedStatus = STATUS_INVALID_PARAMETER;
+    }
 
     Status = NtSetDefaultLocale(TRUE, 0xffffffff);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0xfffffffe);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0x7fffffff);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0x7ffffffe);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0x80000000);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0x80000001);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
 
     Status = NtSetDefaultLocale(TRUE, 0x10000);
-    ok_ntstatus(Status, STATUS_INVALID_PARAMETER);
+    ok_ntstatus(Status, ExpectedStatus);
+
+    if (GetNTVersion() >= _WIN32_WINNT_WIN10)
+    {
+        ExpectedStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        ExpectedStatus = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     Status = NtSetDefaultLocale(TRUE, 1);
     ok_ntstatus(Status, STATUS_OBJECT_NAME_NOT_FOUND);

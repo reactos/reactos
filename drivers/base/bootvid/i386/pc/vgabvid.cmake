@@ -1,0 +1,11 @@
+
+set(MODULE_HEADER ${CMAKE_CURRENT_LIST_DIR}/pc.h) # For precomp.h
+list(APPEND SOURCE
+    ${MODULE_HEADER}
+    ${CMAKE_CURRENT_LIST_DIR}/cmdcnst.h
+    ${CMAKE_CURRENT_LIST_DIR}/bootvid.c
+    ${CMAKE_CURRENT_LIST_DIR}/bootdata.c
+    ${CMAKE_CURRENT_LIST_DIR}/vga.h
+    ${CMAKE_CURRENT_LIST_DIR}/vga.c)
+
+set(REACTOS_STR_FILE_DESCRIPTION "VGA Boot Driver")

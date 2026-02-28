@@ -237,7 +237,7 @@ done:
 
 NTSTATUS
 Fat12Format(IN HANDLE FileHandle,
-            IN PPARTITION_INFORMATION PartitionInfo,
+            IN PPARTITION_INFORMATION_EX PartitionInfo,
             IN PDISK_GEOMETRY DiskGeometry,
             IN PUNICODE_STRING Label,
             IN BOOLEAN QuickFormat,
@@ -289,7 +289,7 @@ Fat12Format(IN HANDLE FileHandle,
     BootSector.FATSectors = 0;  /* Set later. See below. */
     BootSector.SectorsPerTrack = DiskGeometry->SectorsPerTrack;
     BootSector.Heads = DiskGeometry->TracksPerCylinder;
-    BootSector.HiddenSectors = PartitionInfo->HiddenSectors;
+    BootSector.HiddenSectors = (PartitionInfo->PartitionStyle == PARTITION_STYLE_MBR) ? PartitionInfo->Mbr.HiddenSectors : 0;
     BootSector.SectorsHuge = (SectorCount >= 0x10000) ? (unsigned long)SectorCount : 0;
     BootSector.Drive = (DiskGeometry->MediaType == FixedMedia) ? 0x80 : 0x00;
     BootSector.ExtBootSignature = 0x29;

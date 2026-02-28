@@ -75,9 +75,6 @@ struct LISTVIEW_SORT_INFO
     }
 };
 
-#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
-#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
-
 // For the context menu of the def view, the id of the items are based on 1 because we need
 // to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled
 #define CONTEXT_MENU_BASE_ID 1

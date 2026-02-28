@@ -1,0 +1,14 @@
+HKCR
+{
+    NoRemove SystemFileAssociations
+    {
+        NoRemove image
+        {
+            NoRemove DefaultIcon = e '%%SystemRoot%%\system32\shell32.dll,-152'
+            NoRemove OpenWithList
+            {
+                NoRemove shimgvw.dll
+            }
+        }
+    }
+}

@@ -21,14 +21,10 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/parserInternals.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/parserInternals.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -39,8 +35,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -97,7 +91,7 @@ static ULONG WINAPI domtext_AddRef(
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     return ref;
 }
 
@@ -107,11 +101,11 @@ static ULONG WINAPI domtext_Release(
     domtext *This = impl_from_IXMLDOMText( iface );
     ULONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %lu.\n", iface, ref);
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        heap_free( This );
+        free(This);
     }
 
     return ref;
@@ -674,11 +668,10 @@ static HRESULT WINAPI domtext_substringData(
     IXMLDOMText *iface,
     LONG offset, LONG count, BSTR *p)
 {
-    domtext *This = impl_from_IXMLDOMText( iface );
     HRESULT hr;
     BSTR data;
 
-    TRACE("(%p)->(%d %d %p)\n", This, offset, count, p);
+    TRACE("%p, %ld, %ld, %p.\n", iface, offset, count, p);
 
     if(!p)
         return E_INVALIDARG;
@@ -748,12 +741,11 @@ static HRESULT WINAPI domtext_insertData(
     IXMLDOMText *iface,
     LONG offset, BSTR p)
 {
-    domtext *This = impl_from_IXMLDOMText( iface );
     HRESULT hr;
     BSTR data;
     LONG p_len;
 
-    TRACE("(%p)->(%d %s)\n", This, offset, debugstr_w(p));
+    TRACE("%p, %ld, %s.\n", iface, offset, debugstr_w(p));
 
     /* If have a NULL or empty string, don't do anything. */
     if((p_len = SysStringLen(p)) == 0)
@@ -800,7 +792,7 @@ static HRESULT WINAPI domtext_deleteData(
     LONG len = -1;
     BSTR str;
 
-    TRACE("(%p)->(%d %d)\n", iface, offset, count);
+    TRACE("%p, %ld, %ld.\n", iface, offset, count);
 
     hr = IXMLDOMText_get_length(iface, &len);
     if(hr != S_OK) return hr;
@@ -843,10 +835,9 @@ static HRESULT WINAPI domtext_replaceData(
     IXMLDOMText *iface,
     LONG offset, LONG count, BSTR p)
 {
-    domtext *This = impl_from_IXMLDOMText( iface );
     HRESULT hr;
 
-    TRACE("(%p)->(%d %d %s)\n", This, offset, count, debugstr_w(p));
+    TRACE("%p, %ld, %ld, %s.\n", iface, offset, count, debugstr_w(p));
 
     hr = IXMLDOMText_deleteData(iface, offset, count);
 
@@ -860,10 +851,9 @@ static HRESULT WINAPI domtext_splitText(
     IXMLDOMText *iface,
     LONG offset, IXMLDOMText **txtNode)
 {
-    domtext *This = impl_from_IXMLDOMText( iface );
     LONG length = 0;
 
-    TRACE("(%p)->(%d %p)\n", This, offset, txtNode);
+    TRACE("%p, %ld, %p.\n", iface, offset, txtNode);
 
     if (!txtNode || offset < 0) return E_INVALIDARG;
 
@@ -951,7 +941,7 @@ IUnknown* create_text( xmlNodePtr text )
 {
     domtext *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -962,5 +952,3 @@ IUnknown* create_text( xmlNodePtr text )
 
     return (IUnknown*)&This->IXMLDOMText_iface;
 }
-
-#endif

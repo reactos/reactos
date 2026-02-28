@@ -1222,6 +1222,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
+    if (IsNEC_98)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     /*
      * Set up dispatch routines
      */

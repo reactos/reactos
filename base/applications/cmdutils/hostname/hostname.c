@@ -7,7 +7,7 @@
  */
 
 #include <stdlib.h>
-#include <conio.h>
+#include <stdio.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -39,7 +39,7 @@ int wmain(int argc, WCHAR* argv[])
         if (bSuccess)
         {
             /* Print out the host name */
-            _cwprintf(L"%s\n", HostName);
+            wprintf(L"%s\n", HostName);
         }
 
         /* If a larger buffer has been allocated, free it */
@@ -50,7 +50,7 @@ int wmain(int argc, WCHAR* argv[])
         {
             /* Fail in case of error */
             LoadStringW(GetModuleHandle(NULL), IDS_ERROR, Msg, _countof(Msg));
-            _cwprintf(L"%s %lu.\n", Msg, GetLastError());
+            wprintf(L"%s %lu.\n", Msg, GetLastError());
             return 1;
         }
     }
@@ -60,14 +60,14 @@ int wmain(int argc, WCHAR* argv[])
         {
             /* The program doesn't allow the user to set the host name */
             LoadStringW(GetModuleHandle(NULL), IDS_NOSET, Msg, _countof(Msg));
-            _cwprintf(L"%s\n", Msg);
+            wprintf(L"%s\n", Msg);
             return 1;
         }
         else
         {
             /* Let the user know what the program does */
             LoadStringW(GetModuleHandle(NULL), IDS_USAGE, Msg, _countof(Msg));
-            _cwprintf(L"\n%s\n\n", Msg);
+            wprintf(L"\n%s\n\n", Msg);
         }
     }
 

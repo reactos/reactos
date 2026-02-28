@@ -8,7 +8,10 @@
 
 #include "diskpart.h"
 
-BOOL expand_main(INT argc, LPWSTR *argv)
+EXIT_CODE
+expand_main(
+    _In_ INT argc,
+    _In_ PWSTR *argv)
 {
-    return TRUE;
+    return EXIT_SUCCESS;
 }

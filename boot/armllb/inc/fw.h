@@ -33,7 +33,7 @@ LlbFwGetCh(
 
 ULONG
 LlbFwVideoSetDisplayMode(
-    IN PCHAR DisplayModeName,
+    IN PCSTR DisplayModeName,
     IN BOOLEAN Init
 );
 

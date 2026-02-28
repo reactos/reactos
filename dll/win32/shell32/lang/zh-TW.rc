@@ -976,8 +976,8 @@ BEGIN
     IDS_VXD_FILE "虛擬裝置驅動程式"
     IDS_ANY_FILE "%s-檔案"
 
-    IDS_OPEN_VERB "開啟"
-    IDS_EXPLORE_VERB "檔案總管"
+    IDS_OPEN_VERB "開啟(&O)"
+    IDS_EXPLORE_VERB "檔案總管(&X)"
     IDS_RUNAS_VERB "執行身分..."
     IDS_EDIT_VERB "編輯"
     IDS_FIND_VERB "搜尋"

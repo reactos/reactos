@@ -461,6 +461,7 @@
 @ stdcall NtQuerySystemEnvironmentValue(ptr ptr long ptr)
 @ stdcall NtQuerySystemEnvironmentValueEx(ptr ptr ptr ptr ptr)
 @ stdcall NtQuerySystemInformation(long long long long)
+@ stdcall -stub -version=0x601+ NtQuerySystemInformationEx(long ptr long ptr long ptr)
 @ stdcall NtQuerySystemTime(ptr)
 @ stdcall NtQueryTimer(ptr long ptr long ptr)
 @ stdcall NtQueryTimerResolution(long long long)
@@ -1888,7 +1889,7 @@
 @ varargs swprintf(ptr wstr)
 @ cdecl -arch=i386,x86_64 tan(double)
 @ cdecl tolower(long)
-@ cdecl toupper(long)
+@ cdecl toupper(long) toupper_nt_mb
 @ cdecl towlower(long)
 @ cdecl towupper(long)
 @ stdcall vDbgPrintEx(long long str ptr)

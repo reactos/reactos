@@ -48,6 +48,7 @@ Win32SS:
 - changed-files:
   - any-glob-to-any-file:
     - base/ctf/**
+    - base/system/conime/**
     - win32ss/user/imm32/**
     - win32ss/user/ntuser/ime.c
     - win32ss/user/user32/misc/imm.c

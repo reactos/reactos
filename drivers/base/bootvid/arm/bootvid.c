@@ -10,8 +10,24 @@
 #define NDEBUG
 #include <debug.h>
 
-PUSHORT VgaArmBase;
-PHYSICAL_ADDRESS VgaPhysical;
+/* GLOBALS ********************************************************************/
+
+#define LCDTIMING0_PPL(x)       ((((x) / 16 - 1) & 0x3f) << 2)
+#define LCDTIMING1_LPP(x)       (((x) & 0x3ff) - 1)
+#define LCDCONTROL_LCDPWR       (1 << 11)
+#define LCDCONTROL_LCDEN        (1)
+#define LCDCONTROL_LCDBPP(x)    (((x) & 7) << 1)
+#define LCDCONTROL_LCDTFT       (1 << 5)
+
+#define PL110_LCDTIMING0    (PVOID)0xE0020000
+#define PL110_LCDTIMING1    (PVOID)0xE0020004
+#define PL110_LCDTIMING2    (PVOID)0xE0020008
+#define PL110_LCDUPBASE     (PVOID)0xE0020010
+#define PL110_LCDLPBASE     (PVOID)0xE0020014
+#define PL110_LCDCONTROL    (PVOID)0xE0020018
+
+static PUSHORT VgaArmBase;
+static PHYSICAL_ADDRESS VgaPhysical;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -29,13 +45,6 @@ VidpBuildColor(
 
     /* Build the 16-bit color mask */
     return ((Red & 0x1F) << 11) | ((Green & 0x1F) << 6) | ((Blue & 0x1F));
-}
-
-VOID
-PrepareForSetPixel(VOID)
-{
-    /* Nothing to prepare */
-    NOTHING;
 }
 
 FORCEINLINE
@@ -62,7 +71,7 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor)
 {
-    PUCHAR FontChar;
+    const UCHAR* FontChar;
     ULONG i, j, XOffset;
 
     /* Get the font line for this character */
@@ -108,18 +117,18 @@ DoScroll(
     PUSHORT i, j;
 
     /* Set memory positions of the scroll */
-    SourceOffset = &VgaArmBase[(VidpScrollRegion[1] * (SCREEN_WIDTH / 8)) + (VidpScrollRegion[0] >> 3)];
+    SourceOffset = &VgaArmBase[(VidpScrollRegion.Top * (SCREEN_WIDTH / 8)) + (VidpScrollRegion.Left >> 3)];
     DestOffset = &SourceOffset[Scroll * (SCREEN_WIDTH / 8)];
 
     /* Start loop */
-    for (Top = VidpScrollRegion[1]; Top <= VidpScrollRegion[3]; ++Top)
+    for (Top = VidpScrollRegion.Top; Top <= VidpScrollRegion.Bottom; ++Top)
     {
         /* Set number of bytes to loop and start offset */
-        Offset = VidpScrollRegion[0] >> 3;
+        Offset = VidpScrollRegion.Left >> 3;
         j = SourceOffset;
 
         /* Check if this is part of the scroll region */
-        if (Offset <= (VidpScrollRegion[2] >> 3))
+        if (Offset <= (VidpScrollRegion.Right >> 3))
         {
             /* Update position */
             i = (PUSHORT)(DestOffset - SourceOffset);
@@ -137,7 +146,7 @@ DoScroll(
                 Offset++;
 
                 /* Make sure we don't go past the scroll region */
-            } while (Offset <= (VidpScrollRegion[2] >> 3));
+            } while (Offset <= (VidpScrollRegion.Right >> 3));
         }
 
         /* Move to the next line */
@@ -209,7 +218,7 @@ VidpInitializeDisplay(VOID)
 
 VOID
 InitPaletteWithTable(
-    _In_ PULONG Table,
+    _In_reads_(Count) const ULONG* Table,
     _In_ ULONG Count)
 {
     UNIMPLEMENTED;
@@ -251,24 +260,13 @@ VidInitialize(
 }
 
 VOID
-NTAPI
-VidResetDisplay(
-    _In_ BOOLEAN HalReset)
+ResetDisplay(
+    _In_ BOOLEAN SetMode)
 {
-    //
-    // Clear the current position
-    //
-    VidpCurrentX = 0;
-    VidpCurrentY = 0;
-
-    //
-    // Re-initialize the VGA Display
-    //
+    /* Re-initialize the display */
     VidpInitializeDisplay();
 
-    //
-    // Re-initialize the palette and fill the screen black
-    //
+    /* Re-initialize the palette and fill the screen black */
     InitializePalette();
     VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
 }
@@ -284,7 +282,7 @@ VidCleanUp(VOID)
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
+    _Out_writes_bytes_all_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

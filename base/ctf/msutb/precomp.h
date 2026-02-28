@@ -25,6 +25,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <strsafe.h>
+#include <cjkcode.h>
 
 #include "resource.h"
 #include <cicreg.h>

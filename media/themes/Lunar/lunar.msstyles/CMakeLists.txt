@@ -14,7 +14,7 @@ foreach(_file ${TEXTFILES})
     list(APPEND _converted_files ${_converted_file})
 endforeach()
 
-set_source_files_properties(lunar.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
+set_source_files_properties(lunar.rc PROPERTIES OBJECT_DEPENDS "${_converted_files};xdk")
 add_library(lunar.msstyles MODULE lunar.rc)
 set_module_type(lunar.msstyles module)
 set_target_properties(lunar.msstyles PROPERTIES SUFFIX "")

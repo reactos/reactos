@@ -1,7 +1,8 @@
 #define INITGUID
 
-#include <windef.h>
+#include "shimgvw.h"
 #include "comsup.h"
+#include <rpcproxy.h>
 
 LONG LockCount;
 LONG ObjectCount;
@@ -18,16 +19,14 @@ DllInitServer(VOID)
 STDAPI
 DllRegisterServer(VOID)
 {
-    /* Always return S_OK, since there is currently nothing that can go wrong */
-    return S_OK;
+    return __wine_register_resources(g_hInstance);
 }
 
 
 STDAPI
 DllUnregisterServer(VOID)
 {
-    /* Always return S_OK, since there is currently nothing that can go wrong */
-    return S_OK;
+    return __wine_unregister_resources(g_hInstance);
 }
 
 

@@ -52,10 +52,8 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     if (!FindApmBios())
         return;
 
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
-           sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-
     /* Set 'Configuration Data' value */
+    Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {

@@ -128,8 +128,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         TRACE("Table size: %u\n", Table->TableSize);
 
         /* Set 'Configuration Data' value */
-        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
-               2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
+        Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[2]) + Table->TableSize;
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
@@ -154,9 +153,8 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
         PartialDescriptor->u.DeviceSpecificData.DataSize = Table->TableSize;
 
-        memcpy(&PartialResourceList->PartialDescriptors[2],
-               Table,
-               Table->TableSize);
+        RtlCopyMemory(&PartialResourceList->PartialDescriptors[2],
+                      Table, Table->TableSize);
 
         FldrCreateComponentKey(BusKey,
                                PeripheralClass,
@@ -179,8 +177,8 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCI_REGISTRY_INFO BusData;
     PCONFIGURATION_COMPONENT_DATA BiosKey;
-    ULONG Size;
     PCONFIGURATION_COMPONENT_DATA BusKey;
+    ULONG Size;
     ULONG i;
 
     /* Report the PCI BIOS */
@@ -222,10 +220,8 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             if (i == 0)
             {
                 /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors) +
-                       sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
-                       sizeof(PCI_REGISTRY_INFO);
+                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors[1]) +
+                       sizeof(BusData);
                 PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {
@@ -239,19 +235,19 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                 PartialResourceList->Version = 1;
                 PartialResourceList->Revision = 1;
                 PartialResourceList->Count = 1;
+
                 PartialDescriptor = &PartialResourceList->PartialDescriptors[0];
                 PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
                 PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-                PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(PCI_REGISTRY_INFO);
-                memcpy(&PartialResourceList->PartialDescriptors[1],
-                       &BusData,
-                       sizeof(PCI_REGISTRY_INFO));
+                PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(BusData);
+
+                RtlCopyMemory(&PartialResourceList->PartialDescriptors[1],
+                              &BusData, sizeof(BusData));
             }
             else
             {
                 /* Set 'Configuration Data' value */
-                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
-                                    PartialDescriptors);
+                Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors);
                 PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
                 if (!PartialResourceList)
                 {

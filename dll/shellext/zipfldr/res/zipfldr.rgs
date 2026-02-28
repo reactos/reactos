@@ -16,6 +16,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
         }
+        '{ED9D80B9-D157-457B-9192-0E7280313BF0}' = s 'Compressed (zipped) Folder DropHandler'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
         '{888DCA60-FC0A-11CF-8F0F-00C04FD7D062}' = s 'Compressed (zipped) Folder SendTo Target'
         {
             val EditFlags = d '0x01'
@@ -61,11 +65,30 @@ HKCR
                 {
                 }
             }
+            NoRemove DropHandler = s '{E88DCCE0-B7B3-11D1-A9F0-00AA0060FA31}'
+            {
+                val 'FIXME' = s 'This is a HACK! It must be {ED9D80B9-D157-457B-9192-0E7280313BF0}'
+            }
         }
     }
     NoRemove '.zip' = s 'CompressedFolder'
     {
         val 'Content Type' = s 'application/x-zip-compressed'
+        val 'PerceivedType' = s 'compressed'
+        NoRemove CompressedFolder
+        {
+            NoRemove ShellNew
+            {
+                val 'Data' = b '504b0506000000000000000000000000000000000000'
+            }
+            NoRemove OpenWithProgids
+            {
+                val 'CompressedFolder' = s ''
+            }
+            NoRemove PersistentHandler = s '{098F2470-BAE0-11CD-B579-08002B30BFEB}'
+            {
+            }
+        }
     }
 }
 HKLM

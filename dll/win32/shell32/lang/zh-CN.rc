@@ -977,8 +977,8 @@ BEGIN
     IDS_VXD_FILE "虚拟设备驱动程序"
     IDS_ANY_FILE "%s-文件"
 
-    IDS_OPEN_VERB "打开"
-    IDS_EXPLORE_VERB "资源管理器"
+    IDS_OPEN_VERB "打开(&O)"
+    IDS_EXPLORE_VERB "资源管理器(&X)"
     IDS_RUNAS_VERB "运行方式..."
     IDS_EDIT_VERB "编辑"
     IDS_FIND_VERB "查找"

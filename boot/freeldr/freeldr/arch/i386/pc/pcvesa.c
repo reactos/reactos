@@ -25,31 +25,31 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 #include <pshpack2.h>
 typedef struct
 {
-    UCHAR    Signature[4];                // (ret) signature ("VESA")
+    UCHAR Signature[4];             // (ret) signature ("VESA")
                                     // (call) VESA 2.0 request signature ("VBE2"), required to receive
                                     // version 2.0 info
-    USHORT    VesaVersion;                // VESA version number (one-digit minor version -- 0102h = v1.2)
-    ULONG OemNamePtr;                    // pointer to OEM name
+    USHORT VesaVersion;             // VESA version number (one-digit minor version -- 0102h = v1.2)
+    ULONG OemNamePtr;               // Pointer to OEM name
                                     // "761295520" for ATI
-    ULONG    Capabilities;                // capabilities flags (see #00078)
-    ULONG    SupportedModeListPtr;        // pointer to list of supported VESA and OEM video modes
+    ULONG Capabilities;             // Capabilities flags (see #00078)
+    ULONG SupportedModeListPtr;     // Pointer to list of supported VESA and OEM video modes
                                     // (list of words terminated with FFFFh)
-    USHORT    TotalVideoMemory;            // total amount of video memory in 64K blocks
+    USHORT TotalVideoMemory;        // Total amount of video memory in 64K blocks
 
     // ---VBE v1.x ---
-    //UCHAR    Reserved[236];
+    //UCHAR Reserved[236];
 
     // ---VBE v2.0 ---
-    USHORT    OemSoftwareVersion;            // OEM software version (BCD, high byte = major, low byte = minor)
-    ULONG    VendorNamePtr;                // pointer to vendor name
-    ULONG    ProductNamePtr;                // pointer to product name
-    ULONG    ProductRevisionStringPtr;    // pointer to product revision string
-    USHORT    VBE_AF_Version;                // (if capabilities bit 3 set) VBE/AF version (BCD)
+    USHORT OemSoftwareVersion;      // OEM software version (BCD, high byte = major, low byte = minor)
+    ULONG VendorNamePtr;            // Pointer to vendor name
+    ULONG ProductNamePtr;           // Pointer to product name
+    ULONG ProductRevisionStringPtr; // Pointer to product revision string
+    USHORT VBE_AF_Version;          // (if capabilities bit 3 set) VBE/AF version (BCD)
                                     // 0100h for v1.0P
-    ULONG    AcceleratedModeListPtr;        // (if capabilities bit 3 set) pointer to list of supported
-                                    // accelerated video modes (list of words terminated with FFFFh)
-    UCHAR    Reserved[216];                // reserved for VBE implementation
-    UCHAR    ScratchPad[256];            // OEM scratchpad (for OEM strings, etc.)
+    ULONG AcceleratedModeListPtr;   // (if capabilities bit 3 set) pointer to list of supported
+                                    // Accelerated video modes (list of words terminated with FFFFh)
+    UCHAR Reserved[216];            // Reserved for VBE implementation
+    UCHAR ScratchPad[256];          // OEM scratchpad (for OEM strings, etc.)
 } VESA_SVGA_INFO, *PVESA_SVGA_INFO;
 #include <poppack.h>
 
@@ -88,7 +88,7 @@ typedef struct
 #if 0
 static VOID BiosSetVideoFont8x16(VOID)
 {
-    REGS    Regs;
+    REGS Regs;
 
     // Int 10h AX=1114h
     // VIDEO - TEXT-MODE CHARGEN - LOAD ROM 8x16 CHARACTER SET (VGA)
@@ -108,7 +108,7 @@ static VOID VideoSetTextCursorPosition(ULONG X, ULONG Y)
 
 static ULONG VideoGetTextCursorPositionX(VOID)
 {
-    REGS    Regs;
+    REGS Regs;
 
     // Int 10h AH=03h
     // VIDEO - GET CURSOR POSITION AND SIZE
@@ -133,7 +133,7 @@ static ULONG VideoGetTextCursorPositionX(VOID)
 
 static ULONG VideoGetTextCursorPositionY(VOID)
 {
-    REGS    Regs;
+    REGS Regs;
 
     // Int 10h AH=03h
     // VIDEO - GET CURSOR POSITION AND SIZE
@@ -159,10 +159,10 @@ static ULONG VideoGetTextCursorPositionY(VOID)
 
 USHORT BiosIsVesaSupported(VOID)
 {
-    REGS            Regs;
-    PVESA_SVGA_INFO    SvgaInfo = (PVESA_SVGA_INFO)BIOSCALLBUFFER;
-    //USHORT*            VideoModes;
-    //USHORT            Index;
+    REGS Regs;
+    PVESA_SVGA_INFO SvgaInfo = (PVESA_SVGA_INFO)BIOSCALLBUFFER;
+    //USHORT* VideoModes;
+    //USHORT Index;
 
     TRACE("BiosIsVesaSupported()\n");
 
@@ -237,7 +237,6 @@ USHORT BiosIsVesaSupported(VOID)
     return SvgaInfo->VesaVersion;
 }
 
-
 BOOLEAN
 BiosIsVesaDdcSupported(VOID)
 {
@@ -266,7 +265,6 @@ BiosIsVesaDdcSupported(VOID)
 
     return (Regs.b.ah == 0);
 }
-
 
 BOOLEAN
 BiosVesaReadEdid(VOID)

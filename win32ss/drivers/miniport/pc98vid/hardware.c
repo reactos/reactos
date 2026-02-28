@@ -227,6 +227,9 @@ Pc98VidSetCurrentMode(
     TextSync();
     TextSync();
 
+    /* Turn off the text layer */
+    WRITE_GDC1_COMMAND(GDC_COMMAND_STOP2);
+
     /* START */
     WRITE_GDC2_COMMAND(GDC_COMMAND_BCTRL_START);
 

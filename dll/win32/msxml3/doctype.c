@@ -20,13 +20,9 @@
 
 #define COBJMACROS
 
-#include "config.h"
-
 #include <stdarg.h>
-#ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-#endif
+#include <libxml/parser.h>
+#include <libxml/xmlerror.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -38,8 +34,6 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
-
-#ifdef HAVE_LIBXML2
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -86,26 +80,25 @@ static HRESULT WINAPI domdoctype_QueryInterface(
     return S_OK;
 }
 
-static ULONG WINAPI domdoctype_AddRef(
-    IXMLDOMDocumentType *iface )
+static ULONG WINAPI domdoctype_AddRef(IXMLDOMDocumentType *iface)
 {
-    domdoctype *This = impl_from_IXMLDOMDocumentType( iface );
-    LONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p)->(%d)\n", This, ref);
+    domdoctype *doctype = impl_from_IXMLDOMDocumentType(iface);
+    LONG ref = InterlockedIncrement(&doctype->ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
     return ref;
 }
 
-static ULONG WINAPI domdoctype_Release(
-    IXMLDOMDocumentType *iface )
+static ULONG WINAPI domdoctype_Release(IXMLDOMDocumentType *iface)
 {
-    domdoctype *This = impl_from_IXMLDOMDocumentType( iface );
-    ULONG ref = InterlockedDecrement(&This->ref);
+    domdoctype *doctype = impl_from_IXMLDOMDocumentType(iface);
+    ULONG ref = InterlockedDecrement(&doctype->ref);
 
-    TRACE("(%p)->(%d)\n", This, ref);
+    TRACE("%p, refcount %ld.\n", iface, ref);
 
-    if(!ref) {
-        destroy_xmlnode(&This->node);
-        heap_free(This);
+    if (!ref)
+    {
+        destroy_xmlnode(&doctype->node);
+        free(doctype);
     }
 
     return ref;
@@ -577,7 +570,7 @@ IUnknown* create_doc_type( xmlNodePtr doctype )
 {
     domdoctype *This;
 
-    This = heap_alloc( sizeof *This );
+    This = malloc(sizeof(*This));
     if ( !This )
         return NULL;
 
@@ -589,5 +582,3 @@ IUnknown* create_doc_type( xmlNodePtr doctype )
 
     return (IUnknown*)&This->IXMLDOMDocumentType_iface;
 }
-
-#endif

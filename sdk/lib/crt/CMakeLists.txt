@@ -1,11 +1,8 @@
 
 include_directories(include)
-#include_directories(.)
 
 add_definitions(-D_CRTBLD)
 
-include(conio/conio.cmake)
-include(direct/direct.cmake)
 include(except/except.cmake)
 include(float/float.cmake)
 include(math/math.cmake)
@@ -13,22 +10,16 @@ include(mbstring/mbstring.cmake)
 include(mem/mem.cmake)
 include(misc/misc.cmake)
 include(printf/printf.cmake)
-include(process/process.cmake)
 include(search/search.cmake)
 include(startup/startup.cmake)
-include(stdio/stdio.cmake)
 include(stdlib/stdlib.cmake)
 include(string/string.cmake)
-include(time/time.cmake)
-include(wine/wine.cmake)
 include(wstring/wstring.cmake)
 
-include(crt.cmake)
 include(crtmath.cmake)
 include(libcntpr.cmake)
 include(msvcrtex.cmake)
 include(oldnames.cmake)
-include(ucrtsupport.cmake)
 
 add_library(user32_wsprintf
     printf/streamout.c
@@ -56,3 +47,10 @@ if(MSVC AND ARCH STREQUAL "i386")
     set_target_properties(ftol2 PROPERTIES LINKER_LANGUAGE "C")
     add_dependencies(ftol2 asm)
 endif()
+
+add_library(dbgrpt misc/dbgrpt.cpp)
+target_link_libraries(dbgrpt chkstk ${PSEH_LIB})
+target_compile_definitions(dbgrpt PRIVATE
+    _MT
+    _DEBUG)
+add_dependencies(dbgrpt psdk asm)

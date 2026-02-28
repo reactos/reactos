@@ -25,7 +25,6 @@
 #include <libxml/uri.h>
 #include <libxml/valid.h>
 #include <libxml/HTMLtree.h>
-#include <libxml/globals.h>
 #include <libxml/SAX2.h>
 
 #ifdef LIBXML_LEGACY_ENABLED

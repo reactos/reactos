@@ -351,7 +351,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
     FCB->GroupID = ConnectInfo ? ConnectInfo->GroupID : 0;
     FCB->GroupType = 0; /* FIXME */
-    FCB->State = SOCKET_STATE_CREATED;
+    FCB->SharedData.State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
     FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
@@ -473,7 +473,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
-    FCB->State = SOCKET_STATE_CLOSED;
+    FCB->SharedData.State = SOCKET_STATE_CLOSED;
 
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;
@@ -493,6 +493,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
 
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_CONNECT]));
+    ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_CONNECTEX]));
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]));
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_RECV]));
     ASSERT(IsListEmpty(&FCB->PendingIrpList[FUNCTION_PREACCEPT]));
@@ -551,6 +552,9 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (FCB->RemoteAddress)
         ExFreePoolWithTag(FCB->RemoteAddress, TAG_AFD_TRANSPORT_ADDRESS);
+
+    if (FCB->OnConnectSendBuffer)
+        ExFreePoolWithTag(FCB->OnConnectSendBuffer, TAG_AFD_SUPER_CONNECT_BUFFER);
 
     if( FCB->Connection.Object )
     {
@@ -952,6 +956,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_AFD_CONNECT:
             return AfdStreamSocketConnect( DeviceObject, Irp, IrpSp );
 
+        case IOCTL_AFD_SUPER_CONNECT:
+            return AfdStreamSocketSuperConnect(DeviceObject, Irp, IrpSp);
+
         case IOCTL_AFD_START_LISTEN:
             return AfdListenSocket( DeviceObject, Irp, IrpSp );
 
@@ -1230,6 +1237,10 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
 
         case IOCTL_AFD_CONNECT:
             Function = FUNCTION_CONNECT;
+            break;
+
+        case IOCTL_AFD_SUPER_CONNECT:
+            Function = FUNCTION_CONNECTEX;
             break;
 
         case IOCTL_AFD_WAIT_FOR_LISTEN:

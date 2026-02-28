@@ -4070,9 +4070,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
         IsAttached = TRUE;
     }
 
-    /* FIXME: We should keep this, but it would break code checking equality */
-    Protect &= ~PAGE_NOCACHE;
-
     Section = SectionObject;
     AddressSpace = &Process->Vm;
 

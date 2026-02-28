@@ -5350,9 +5350,14 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // ARM3 does not yet handle protected VM
+    // Don't allow freeing of protected VADs (PEB/TEB/shared user page)
     //
-    ASSERT(Vad->u.VadFlags.NoChange == 0);
+    if (Vad->u.VadFlags.NoChange != 0)
+    {
+        DPRINT1("Attempt to free protected VAD\n");
+        Status = STATUS_INVALID_PAGE_PROTECTION;
+        goto FailPath;
+    }
 
     //
     //  Now we can try the operation. First check if this is a RELEASE or a DECOMMIT

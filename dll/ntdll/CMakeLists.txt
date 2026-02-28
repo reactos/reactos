@@ -3,9 +3,9 @@ add_subdirectory(nt_0600)
 
 spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
-# Embed RTC libs
+# Link GCC stack protector lib
 if (STACK_PROTECTOR)
-    target_sources(libntdll PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(libntdll INTERFACE gcc_ssp_nt)
 endif()
 
 add_definitions(
@@ -40,7 +40,9 @@ list(APPEND SOURCE
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE dispatch/i386/dispatch.S)
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND ASM_SOURCE dispatch/amd64/dispatch.S)
+    list(APPEND ASM_SOURCE
+        dispatch/amd64/dispatch.S
+        compat/amd64/msys2.S)
 elseif(ARCH STREQUAL "arm")
     list(APPEND ASM_SOURCE dispatch/arm/stubs_asm.s)
 else()
@@ -71,7 +73,7 @@ if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
 endif()
 
 if (STACK_PROTECTOR)
-    target_sources(ntdll PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(ntdll gcc_ssp_nt)
 endif()
 
 add_pch(ntdll include/ntdll.h "${PCH_SKIP_SOURCE}")

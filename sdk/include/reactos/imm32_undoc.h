@@ -46,6 +46,8 @@ extern "C" {
 #define IMS_IMEACTIVATE         0x17
 #define IMS_IMEDEACTIVATE       0x18
 #define IMS_ACTIVATELAYOUT      0x19
+#define IMS_CONSOLEIME_1A       0x1A /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1A), used internally by conime for Windows compatibility. */
+#define IMS_CONSOLEIME_1B       0x1B /* Undocumented console IME WM_IME_SYSTEM subcommand (0x1B), used internally by conime for Windows compatibility. */
 #define IMS_GETIMEMENU          0x1C
 #define IMS_IMEMENUITEMSELECTED 0x1D
 #define IMS_GETCONTEXT          0x1E
@@ -262,6 +264,22 @@ BOOL WINAPI ImmActivateLayout(_In_ HKL hKL);
 BOOL WINAPI ImmFreeLayout(_In_ HKL hKL);
 
 BOOL WINAPI
+ImmGetHotKey(
+    _In_ DWORD dwHotKey,
+    _Out_ LPUINT lpuModifiers,
+    _Out_ LPUINT lpuVKey,
+    _Out_opt_ LPHKL lphKL);
+
+BOOL WINAPI
+ImmSetHotKey(
+    _In_ DWORD dwID,
+    _In_ UINT uModifiers,
+    _In_ UINT uVirtualKey,
+    _In_opt_ _When_((dwAction == SETIMEHOTKEY_ADD) &&
+                    !(IME_HOTKEY_DSWITCH_FIRST <= dwHotKeyId &&
+                      dwHotKeyId <= IME_HOTKEY_DSWITCH_LAST), _Null_) HKL hKL);
+
+BOOL WINAPI
 ImmWINNLSEnableIME(
     _In_opt_ HWND hWnd,
     _In_ BOOL enable);
@@ -271,6 +289,14 @@ ImmSystemHandler(
     _In_ HIMC hIMC,
     _Inout_opt_ WPARAM wParam,
     _Inout_opt_ LPARAM lParam);
+
+DWORD WINAPI
+ImmCallImeConsoleIME(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam,
+    _Out_ LPUINT puVK);
 
 BOOL WINAPI ImmIMPGetIMEA(_In_opt_ HWND hWnd, _Out_ LPIMEPROA pImePro);
 BOOL WINAPI ImmIMPGetIMEW(_In_opt_ HWND hWnd, _Out_ LPIMEPROW pImePro);

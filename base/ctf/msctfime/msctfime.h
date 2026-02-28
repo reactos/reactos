@@ -24,6 +24,7 @@
 #include <ctffunc.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <cjkcode.h>
 
 #include <cicbase.h>
 #include <cicarray.h>

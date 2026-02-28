@@ -14,7 +14,7 @@ foreach(_file ${TEXTFILES})
     list(APPEND _converted_files ${_converted_file})
 endforeach()
 
-set_source_files_properties(mizu.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
+set_source_files_properties(mizu.rc PROPERTIES OBJECT_DEPENDS "${_converted_files};xdk")
 add_library(mizu.msstyles MODULE mizu.rc)
 set_module_type(mizu.msstyles module)
 set_target_properties(mizu.msstyles PROPERTIES SUFFIX "")

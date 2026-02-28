@@ -964,8 +964,8 @@ BEGIN
     IDS_VXD_FILE "Driver Perangkat Maya"
     IDS_ANY_FILE "Berkas %s"
 
-    IDS_OPEN_VERB "Buka"
-    IDS_EXPLORE_VERB "Jelajahi"
+    IDS_OPEN_VERB "&Buka"
+    IDS_EXPLORE_VERB "&Jelajahi"
     IDS_RUNAS_VERB "Jalankan sebagai..."
     IDS_EDIT_VERB "Edit"
     IDS_FIND_VERB "Cari"

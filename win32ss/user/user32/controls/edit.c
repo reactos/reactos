@@ -1914,7 +1914,7 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 
     SetCaretPos(pt.x, pt.y);
 
-    if (IS_IME_HKL(hKL))
+    if (ImmIsIME(hKL))
         EDIT_ImmSetCompositionWindow(es, pt);
 #else
 	TRACE("%d - %dx%d\n", pos, (short)LOWORD(res), (short)HIWORD(res));
@@ -4036,7 +4036,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 		ShowCaret(es->hwndSelf);
 	}
 #ifdef __REACTOS__
-    if (IS_IME_HKL(GetKeyboardLayout(0)))
+    if (ImmIsIME(GetKeyboardLayout(0)))
     {
         LOGFONTW lf;
         HIMC hIMC = ImmGetContext(es->hwndSelf);

@@ -24,6 +24,7 @@ list(APPEND SOURCE
     filesystems.c
     format.c
     gpt.c
+    guid.c
     help.c
     import.c
     inactive.c
@@ -31,6 +32,7 @@ list(APPEND SOURCE
     list.c
     merge.c
     misc.c
+    mountmgr.c
     offline.c
     online.c
     partlist.c
@@ -53,7 +55,7 @@ add_dependencies(diskpart diskpart_msg)
 
 set_module_type(diskpart win32cui UNICODE)
 target_link_libraries(diskpart conutils ${PSEH_LIB})
-add_importlibs(diskpart fmifs advapi32 msvcrt kernel32 ntdll)
+add_importlibs(diskpart fmifs advapi32 msvcrt user32 kernel32 ntdll)
 
 if(MSVC)
     add_importlibs(diskpart ntdll)

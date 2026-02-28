@@ -187,6 +187,7 @@ START_TEST(DllLoadNotification)
     Status = pfnLdrRegisterDllNotification(0, DllLoadCallback, &hNotifiedDllBase, &Cookie2);
     ok_eq_bool(NT_SUCCESS(Status), TRUE);
     ok(Cookie2 != NULL, "Cookie2 is NULL\n");
+    ok(Cookie2 != Cookie1, "Cookie2 is equal to Cookie1\n");
 
     /* Load the test DLL */
     hTestDll = LoadLibraryW(g_szDllPath);
@@ -219,7 +220,8 @@ START_TEST(DllLoadNotification)
     if (FreeLibrary(hTestDll))
     {
         /* The count will decrease 1 because the last callback still there */
-        ok_eq_long(g_lDllLoadCount, 1L);
+        ok(g_lDllLoadCount == 1L || /* Vista */ broken(g_lDllLoadCount == 2L),
+           "Wrong g_lDllLoadCount: %lu, expected 1\n", g_lDllLoadCount);
     }
     else
     {

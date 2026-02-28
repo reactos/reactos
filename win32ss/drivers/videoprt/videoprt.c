@@ -42,8 +42,19 @@ BOOLEAN VideoPortUseNewKey = FALSE;
 
 KSPIN_LOCK HwResetAdaptersLock;
 RTL_STATIC_LIST_HEAD(HwResetAdaptersList);
+KMUTEX VgaSyncLock;
+PVIDEO_PORT_DEVICE_EXTENSION VgaDeviceExtension = NULL;
+PVIDEO_ACCESS_RANGE VgaRanges = NULL;
+ULONG NumOfVgaRanges = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static BOOLEAN
+IntIsVgaSaveDriverName(_In_ PDRIVER_OBJECT DriverObject)
+{
+    static const UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
+    return RtlEqualUnicodeString(&VgaSave, &DriverObject->DriverName, TRUE);
+}
 
 ULONG
 NTAPI
@@ -237,6 +248,13 @@ IntVideoPortCreateAdapterDeviceObject(
 
     InitializeListHead(&DeviceExtension->ChildDeviceList);
 
+    /* 
+     * Miniport owns this blob; many miniports assume it's initially zeroed.
+     * Removing this crashes the NVIDIA gpu driver
+     */
+    RtlZeroMemory(DeviceExtension->MiniPortDeviceExtension,
+                  DriverExtension->InitializationData.HwDeviceExtensionSize);
+
     /* Get the registry path associated with this device. */
     Status = IntCreateRegistryPath(&DriverExtension->RegistryPath,
                                    DeviceExtension->AdapterNumber,
@@ -423,8 +441,13 @@ IntVideoPortFindAdapter(
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
     BOOL LegacyDetection = FALSE;
+    BOOLEAN VgaResourcesReleased = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension->IsVgaDriver = IntIsVgaSaveDriverName(DriverObject);
+    DeviceExtension->IsVgaDetect = DeviceExtension->IsVgaDriver;
+    DeviceExtension->IsLegacyDetect = FALSE;
+    DeviceExtension->ReportDevice = FALSE;
 
     /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
     RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
@@ -462,7 +485,25 @@ IntVideoPortFindAdapter(
     if (DeviceExtension->PhysicalDeviceObject == NULL)
     {
         LegacyDetection = TRUE;
+        DeviceExtension->IsLegacyDevice = TRUE;
+        DeviceExtension->IsLegacyDetect = TRUE;
     }
+    else
+    {
+        DeviceExtension->IsLegacyDevice = FALSE;
+    }
+
+     /* If we already have a VGA miniport and are about to probe for additional adapters,
+      * release its resources temporarily so conflicts are visible during detection.
+      * We'll reclaim them later if no new adapter successfully claims them. */
+    KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+    if (VgaDeviceExtension)
+    {
+        INFO_(VIDEOPRT, "Temporarily releasing VGA resources for adapter probing\n");
+        IntVideoPortReleaseResources(VgaDeviceExtension);
+        VgaResourcesReleased = TRUE;
+    }
+    KeReleaseMutex(&VgaSyncLock, FALSE);
 
     if (LegacyDetection)
     {
@@ -521,7 +562,28 @@ IntVideoPortFindAdapter(
 
     if (vpStatus != NO_ERROR)
     {
-        ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", vpStatus);
+        ERR_(VIDEOPRT, "HwFindAdapter failed (vpStatus=0x%X) bus=%u iface=%u legacy=%u vga=%u detect(VGA=%u LEGACY=%u)\n",
+              vpStatus,
+              DeviceExtension->SystemIoBusNumber,
+              DeviceExtension->AdapterInterfaceType,
+              DeviceExtension->IsLegacyDevice,
+              DeviceExtension->IsVgaDriver,
+              DeviceExtension->IsVgaDetect,
+              DeviceExtension->IsLegacyDetect);
+        /* If we released VGA resources, reclaim them so VGA fallback still works */
+        if (VgaResourcesReleased)
+        {
+            if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+            {
+                INFO_(VIDEOPRT, "Reclaiming VGA resources after failed probe\n");
+                if (VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                                NumOfVgaRanges,
+                                                VgaRanges) != NO_ERROR)
+                {
+                    WARN_(VIDEOPRT, "Failed to reclaim VGA resources after probe failure\n");
+                }
+            }
+        }
         Status = STATUS_UNSUCCESSFUL;
         goto Failure;
     }
@@ -559,6 +621,75 @@ IntVideoPortFindAdapter(
                                     &HwResetAdaptersLock);
     }
 
+    if (DeviceExtension->IsVgaDriver)
+    {
+        KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+        if (VgaDeviceExtension == NULL)
+        {
+            VgaDeviceExtension = DeviceExtension;
+        }
+        KeReleaseMutex(&VgaSyncLock, FALSE);
+    }
+
+    DeviceExtension->IsVgaDetect = FALSE;
+    DeviceExtension->IsLegacyDetect = FALSE;
+
+    /* For legacy (non-PnP) adapters we should report a detected device so that
+     * a PDO exists for higher layers to enumerate consistently (mirrors ScsiPort).*/
+    if (DeviceExtension->IsLegacyDevice && !DeviceExtension->ReportDevice)
+    {
+        PDEVICE_OBJECT ReportedPdo = NULL;
+        NTSTATUS repStatus = IoReportDetectedDevice(DriverObject,
+                                                    DeviceExtension->AdapterInterfaceType,
+                                                    DeviceExtension->SystemIoBusNumber,
+                                                    DeviceExtension->SystemIoSlotNumber,
+                                                    NULL,
+                                                    NULL,
+                                                    FALSE,
+                                                    &ReportedPdo);
+        if (!NT_SUCCESS(repStatus))
+        {
+            WARN_(VIDEOPRT, "IoReportDetectedDevice failed 0x%08lx (bus=%u slot=%u)\n",
+                  repStatus,
+                  DeviceExtension->SystemIoBusNumber,
+                  DeviceExtension->SystemIoSlotNumber);
+        }
+        else
+        {
+            INFO_(VIDEOPRT, "Reported legacy adapter PDO %p (bus=%u slot=%u)\n",
+                  ReportedPdo,
+                  DeviceExtension->SystemIoBusNumber,
+                  DeviceExtension->SystemIoSlotNumber);
+            DeviceExtension->ReportDevice = TRUE;
+        }
+    }
+
+    /* Attempt to reclaim VGA resources after probing if a VGA device exists */
+    if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+    {
+        VP_STATUS vr;
+        INFO_(VIDEOPRT, "Attempt VGA reclaim after probe (ranges=%lu)\n", NumOfVgaRanges);
+        vr = VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                         NumOfVgaRanges,
+                                         VgaRanges);
+        if (vr != NO_ERROR)
+        {
+            /* Another driver has taken VGA resources; drop fallback state */
+            WARN_(VIDEOPRT, "VGA reclaim failed (vpStatus=0x%X); releasing fallback state\n", vr);
+            KeWaitForMutexObject(&VgaSyncLock, Executive, KernelMode, FALSE, NULL);
+            ExFreePoolWithTag(VgaRanges, TAG_VIDEO_PORT);
+            VgaRanges = NULL;
+            NumOfVgaRanges = 0;
+            VgaDeviceExtension = NULL;
+            KeReleaseMutex(&VgaSyncLock, FALSE);
+
+        }
+        else
+        {
+            INFO_(VIDEOPRT, "VGA reclaim succeeded\n");
+        }
+    }
+
     INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
     return STATUS_SUCCESS;
 
@@ -566,6 +697,21 @@ Failure:
     RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
     if (DeviceExtension->NextDeviceObject)
         IoDetachDevice(DeviceExtension->NextDeviceObject);
+
+    /* Explicitly reclaim VGA resources on complete failure */
+    if (VgaResourcesReleased)
+    {
+        if (VgaDeviceExtension && VgaRanges && NumOfVgaRanges)
+        {
+            INFO_(VIDEOPRT, "Final reclaim attempt of VGA resources during failure cleanup\n");
+            if (VideoPortVerifyAccessRanges(&VgaDeviceExtension->MiniPortDeviceExtension,
+                                            NumOfVgaRanges,
+                                            VgaRanges) != NO_ERROR)
+            {
+                WARN_(VIDEOPRT, "VGA reclaim failed during failure cleanup\n");
+            }
+        }
+    }
     IoDeleteDevice(DeviceObject);
     return Status;
 }
@@ -802,6 +948,7 @@ VideoPortInitialize(
     {
         FirstInitialization = TRUE;
         KeInitializeMutex(&VideoPortInt10Mutex, 0);
+        KeInitializeMutex(&VgaSyncLock, 0);
         KeInitializeSpinLock(&HwResetAdaptersLock);
         IntLoadRegistryParameters();
     }
@@ -1339,7 +1486,7 @@ IntVideoPortEnumerateChildren(
     VIDEO_CHILD_ENUM_INFO ChildEnumInfo;
     BOOLEAN bHaveLastMonitorID = FALSE;
     UCHAR LastMonitorID[10];
-    ULONG Unused;
+    ULONG Uid, Unused;
     UINT i;
     PDEVICE_OBJECT ChildDeviceObject;
     PVIDEO_PORT_CHILD_EXTENSION ChildExtension;
@@ -1401,7 +1548,7 @@ IntVideoPortEnumerateChildren(
                      &ChildEnumInfo,
                      &ChildExtension->ChildType,
                      ChildExtension->ChildDescriptor,
-                     &ChildExtension->ChildId,
+                     &Uid,
                      &Unused);
         if (Status == VIDEO_ENUM_MORE_DEVICES)
         {

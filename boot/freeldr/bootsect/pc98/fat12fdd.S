@@ -481,8 +481,7 @@ msgDiskError:
 msgNotFoundError:
     .ascii "NFE", CR, LF, NUL
 msgAnyKey:
-//  .ascii "Press any key", NUL
-    .ascii "Press key", NULL
+    .ascii "Press any key", NUL
 filename:
     .ascii "FREELDR SYS"
 

@@ -19,7 +19,7 @@ foreach(_file ${TEXTFILES})
     list(APPEND _converted_files ${_converted_file})
 endforeach()
 
-set_source_files_properties(modern.rc PROPERTIES OBJECT_DEPENDS "${_converted_files}")
+set_source_files_properties(modern.rc PROPERTIES OBJECT_DEPENDS "${_converted_files};xdk")
 add_library(modern.msstyles MODULE modern.rc)
 set_module_type(modern.msstyles module)
 set_target_properties(modern.msstyles PROPERTIES SUFFIX "")

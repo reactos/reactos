@@ -830,8 +830,15 @@ HRESULT WINAPI CRecycleBin::CreateViewObject(HWND hwndOwner, REFIID riid, void *
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this };
-        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppv);
+        CComPtr<CRecycleBinFolderViewCB> sfviewcb;
+        hr = ShellObjectCreator(sfviewcb);
+        if (SUCCEEDED(hr))
+        {
+            SFV_CREATE create = { sizeof(create), this, NULL, sfviewcb };
+            hr = SHCreateShellFolderView(&create, (IShellView**)ppv);
+            if (SUCCEEDED(hr))
+                sfviewcb->Initialize(this, (IShellView*)*ppv, this->pidl);
+        }
     }
     else
         return hr;
@@ -1093,15 +1100,6 @@ HRESULT WINAPI CRecycleBin::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         HRESULT hr = SHEmptyRecycleBinW(lpcmi->hwnd, NULL, 0);
         TRACE("result %x\n", hr);
-        if (hr != S_OK)
-            return hr;
-#if 0   // This is a nasty hack because lpcmi->hwnd might not be a shell browser.
-        // Not required with working SHChangeNotify.
-        CComPtr<IShellView> pSV;
-        LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessage(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-        if (lpSB && SUCCEEDED(lpSB->QueryActiveShellView(&pSV)))
-            pSV->Refresh();
-#endif
         return hr;
     }
     else if (CmdId == IDC_PROPERTIES)
@@ -1501,4 +1499,59 @@ HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryR
     }
 
     return S_OK;
+}
+
+/**************************************************************************
+ * CRecycleBin::ParseRecycleBinPath
+ *
+ * Parses a filesystem path that points to an item in a drive's recycle bin
+ * and creates a PIDL for it.
+ *
+ * Input:  "C:\$Recycle.Bin\S-1-5-21-xxx\Dc1.txt"
+ * Output: Complex PIDL representing the recycled item
+ */
+HRESULT CRecycleBin::ParseRecycleBinPath(
+    LPCWSTR lpszPath,
+    LPBC pbc,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
+{
+    TRACE("(%p, %s, %p, %p)\n", this, debugstr_w(lpszPath), ppidl, pdwAttributes);
+
+    UNREFERENCED_PARAMETER(pbc);
+    UNREFERENCED_PARAMETER(pdwAttributes);
+    if (!ppidl || !lpszPath)
+        return E_INVALIDARG;
+
+    *ppidl = NULL;
+
+    if (!lpszPath[0] || lpszPath[1] != L':' || lpszPath[2] != L'\\')
+        return E_INVALIDARG;
+
+    CComPtr<IEnumIDList> pList;
+    HRESULT hr = EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &pList);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    for (;;)
+    {
+        CComHeapPtr<ITEMIDLIST> pidl;
+        ULONG cFetched;
+        hr = pList->Next(1, &pidl, &cFetched);
+        if (hr != S_OK)
+            break;
+
+        const BBITEMDATA *pData = ValidateItem(pidl);
+        if (!pData)
+            continue;
+
+        LPCWSTR pszItemPath = GetItemRecycledFullPath(*pData);
+        if (!_wcsicmp(lpszPath, pszItemPath))
+        {
+            *ppidl = pidl.Detach();
+            return S_OK;
+        }
+    }
+
+    return E_FAIL;
 }

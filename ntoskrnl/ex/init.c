@@ -1804,7 +1804,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString((PCHAR)MsgEntry->Text);
+                InbvDisplayString((PCSTR)MsgEntry->Text);
             }
         }
     }
@@ -1824,7 +1824,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString((PCHAR)MsgEntry->Text);
+                InbvDisplayString((PCSTR)MsgEntry->Text);
             }
 
             /* Setup boot logging */

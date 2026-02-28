@@ -16,16 +16,16 @@ set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 
-# Embed RTC libs
+# Link GCC stack protector lib
 if (STACK_PROTECTOR)
-    target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(libntoskrnl INTERFACE gcc_ssp_nt)
 endif()
 
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang optimises strcmp calls to memcmp.
-    target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
+    target_link_libraries(libntoskrnl INTERFACE memcmp)
 endif()
 
 if((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
@@ -49,7 +49,7 @@ source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${N
 target_link_libraries(ntoskrnl ntoskrnl_vista cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr setjmp wdmguid poguid ioevent)
 
 if(STACK_PROTECTOR)
-    target_sources(ntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(ntoskrnl gcc_ssp_nt)
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)

@@ -7,12 +7,13 @@
  */
 
 #include "precomp.h"
+#include "vga.h"
 
 //
 // Minimal Attribute Controller Registers initialization command stream.
 // Compatible EGA.
 //
-USHORT AT_Initialization[] =
+const USHORT AT_Initialization[] =
 {
     /* Reset ATC to index mode */
     IB,
@@ -43,7 +44,7 @@ USHORT AT_Initialization[] =
 // 640x480 256-color 60Hz mode (BIOS mode 12) set command stream for VGA.
 // Adapted from win32ss/drivers/miniport/vga_new/vgadata.c
 //
-USHORT VGA_640x480[] =
+const USHORT VGA_640x480[] =
 {
     /* Write the Sequencer Registers */
     OWM,

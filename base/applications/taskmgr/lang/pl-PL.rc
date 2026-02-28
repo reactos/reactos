@@ -147,7 +147,7 @@ BEGIN
         END
         MENUITEM "Ustaw &koligację...", ID_PROCESS_PAGE_SETAFFINITY
         MENUITEM SEPARATOR
-        MENUITEM "&Właściwości", ID_PROCESS_PAGE_PROPERTIES
+        MENUITEM "Wł&aściwości", ID_PROCESS_PAGE_PROPERTIES
         MENUITEM "O&twórz lokalizację pliku", ID_PROCESS_PAGE_OPENFILELOCATION
     END
 END

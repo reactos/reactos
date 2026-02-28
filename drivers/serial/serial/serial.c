@@ -28,6 +28,11 @@ DriverEntry(
 {
 	ULONG i;
 
+    if (IsNEC_98)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = SerialAddDevice;
 

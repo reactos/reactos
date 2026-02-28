@@ -79,6 +79,7 @@ BEGIN
     IDS_CANTEXTRACTFILE "Datei '%1' konnte nicht extrahiert werden."
     IDS_DECOMPRESSERROR "Kompressionsverfahren %d wird nicht unterstützt. Dennoch fortfahren?"
     IDS_UNKNOWNERROR "Unbekannter Fehler 0x%08x."
+    IDS_CANTDELETEFILE "Failed to delete the file(s)."
 
     IDS_WIZ_TITLE "Extrahier-Assistent"
     IDS_WIZ_DEST_TITLE "Ziel auswählen"
@@ -90,6 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei '%1'.\nMöchten Sie die existierende Datei ersetzen?"
     IDS_PASSWORD_FILE_TEXT "Die Datei '%1' ist passwort-geschützt. Bitte geben Sie das Passwort ein."
     IDS_PASSWORD_ZIP_TEXT "Bitte geben Sie das Passwort ein, um Dateien dieses Archivs zu extrahieren."
+    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
 
     IDS_MENUITEM "&Alle Extrahieren..."
     IDS_HELPTEXT "Ordnerinhalt extrahieren"

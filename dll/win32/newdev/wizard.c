@@ -684,32 +684,23 @@ CHSourceDlgProc(
                 case IDC_BROWSE:
                 {
                     BROWSEINFOW bi = { 0 };
-                    LPITEMIDLIST pidl;
+                    LPITEMIDLIST pidl = NULL;
                     WCHAR Title[MAX_PATH];
-                    WCHAR CustomSearchPath[MAX_PATH] = { 0 };
-                    INT len, idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETCURSEL, 0, 0);
                     LoadStringW(hDllInstance, IDS_BROWSE_FOR_FOLDER_TITLE, Title, _countof(Title));
 
-                    if (idx == CB_ERR)
-                        len = GetWindowTextLengthW(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
-                    else
-                        len = (INT)SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXTLEN, idx, 0);
-
-                    if (len < _countof(CustomSearchPath))
+                    if (PrepareFoldersToScan(DevInstData,
+                        FALSE,
+                        TRUE,
+                        GetDlgItem(hwndDlg, IDC_COMBO_PATH)))
                     {
-                        if (idx == CB_ERR)
-                            GetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), CustomSearchPath, _countof(CustomSearchPath));
-                        else
-                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_GETLBTEXT, idx, (LPARAM)CustomSearchPath);
+                        bi.hwndOwner = hwndDlg;
+                        bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
+                        bi.lpszTitle = Title;
+                        bi.lpfn = BrowseCallbackProc;
+                        bi.lParam = (LPARAM)DevInstData;
+                        pidl = SHBrowseForFolderW(&bi);
                     }
-                    DevInstData->CustomSearchPath = CustomSearchPath;
 
-                    bi.hwndOwner = hwndDlg;
-                    bi.ulFlags = BIF_USENEWUI | BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT | BIF_NONEWFOLDERBUTTON;
-                    bi.lpszTitle = Title;
-                    bi.lpfn = BrowseCallbackProc;
-                    bi.lParam = (LPARAM)DevInstData;
-                    pidl = SHBrowseForFolderW(&bi);
                     if (pidl)
                     {
                         WCHAR Directory[MAX_PATH];
@@ -717,6 +708,9 @@ CHSourceDlgProc(
 
                         if (SHGetPathFromIDListW(pidl, Directory))
                         {
+                            /* Remove previous item selection */
+                            SendDlgItemMessageW(hwndDlg, IDC_COMBO_PATH, CB_SETCURSEL, -1, 0);
+
                             /* Set the IDC_COMBO_PATH text */
                             SetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), Directory);
                         }

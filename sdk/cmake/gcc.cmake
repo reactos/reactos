@@ -285,51 +285,51 @@ if(SEPARATE_DBG)
     endif()
 
     set(CMAKE_C_LINK_EXECUTABLE
-        "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "<CMAKE_C_COMPILER> -Wl,--start-group <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         ${strip_debug})
     set(CMAKE_CXX_LINK_EXECUTABLE
-        "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "<CMAKE_CXX_COMPILER> -Wl,--start-group <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         ${strip_debug})
     set(CMAKE_C_CREATE_SHARED_LIBRARY
-        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "<CMAKE_C_COMPILER> -Wl,--start-group <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         ${strip_debug})
     set(CMAKE_CXX_CREATE_SHARED_LIBRARY
-        "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "<CMAKE_CXX_COMPILER> -Wl,--start-group <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         ${strip_debug})
     set(CMAKE_RC_CREATE_SHARED_LIBRARY
-        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "<CMAKE_C_COMPILER> -Wl,--start-group <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${CMAKE_STRIP} --only-keep-debug <TARGET> -o ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         ${strip_debug})
 elseif(NO_ROSSYM)
     # Dwarf-based build
     message(STATUS "Generating a dwarf-based build (no rsym)")
-    set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-    set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-    set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-    set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
+    set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> -Wl,--start-group ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -Wl,--start-group ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
 else()
     # Normal rsym build
     get_target_property(RSYM native-rsym IMPORTED_LOCATION)
 
     set(CMAKE_C_LINK_EXECUTABLE
-        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
     set(CMAKE_CXX_LINK_EXECUTABLE
-        "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "<CMAKE_CXX_COMPILER> -Wl,--start-group ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
     set(CMAKE_C_CREATE_SHARED_LIBRARY
-        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
     set(CMAKE_CXX_CREATE_SHARED_LIBRARY
-        "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "<CMAKE_CXX_COMPILER> -Wl,--start-group ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group"
         "${RSYM} -s ${REACTOS_SOURCE_DIR} <TARGET> <TARGET>")
     set(CMAKE_RC_CREATE_SHARED_LIBRARY
-        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+        "<CMAKE_C_COMPILER> -Wl,--start-group ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES> -Wl,--end-group")
 endif()
 
 set(CMAKE_C_CREATE_SHARED_MODULE ${CMAKE_C_CREATE_SHARED_LIBRARY})
@@ -443,48 +443,46 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg __dbg_ar
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
+    # Note: previously we re-archived the import library created by dlltool into
+    # a thin archive ('ar crT'). This is broken with binutils 2.40+ (bug #31614)
+    # and leads to a linker crash. The new method of using an IMPORTED library
+    # avoids this. It does no longer allow to embed new object files into the
+    # import libraries, but this is replaced by linking the additinal libraries
+    # to the import library.
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}.dir)
     add_custom_command(
         OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}.a
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
-        COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}>
+        COMMAND ${CMAKE_COMMAND} -E rm -f ${LIBRARY_PRIVATE_DIR}/${_libname}.a
         COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-lib=${_libname}.a -t ${_libname}
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
-    # We create a static library with the importlib thus created as object. AR will extract the obj files and archive it again as a thin lib
-    set_source_files_properties(
-        ${LIBRARY_PRIVATE_DIR}/${_libname}.a
-        PROPERTIES
-        EXTERNAL_OBJECT TRUE)
-    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL
-        ${LIBRARY_PRIVATE_DIR}/${_libname}.a)
-    set_target_properties(${_libname}
-        PROPERTIES
-        LINKER_LANGUAGE "C"
-        PREFIX "")
+    # Create a custom target for the import library generation
+    add_custom_target(${_libname}_implib_target DEPENDS ${LIBRARY_PRIVATE_DIR}/${_libname}.a)
+
+    # Create an IMPORTED library that references the dlltool output
+    _add_library(${_libname} STATIC IMPORTED GLOBAL)
+    set_target_properties(${_libname} PROPERTIES IMPORTED_LOCATION ${LIBRARY_PRIVATE_DIR}/${_libname}.a)
+    add_dependencies(${_libname} ${_libname}_implib_target)
 
     # Do the same with delay-import libs
     set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}_delayed.dir)
     add_custom_command(
         OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
         # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
-        COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}_delayed>
+        COMMAND ${CMAKE_COMMAND} -E rm -f ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
         COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-delaylib=${_libname}_delayed.a -t ${_libname}_delayed
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
-    # We create a static library with the importlib thus created. AR will extract the obj files and archive it again as a thin lib
-    set_source_files_properties(
-        ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
-        PROPERTIES
-        EXTERNAL_OBJECT TRUE)
-    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL
-        ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a)
-    set_target_properties(${_libname}_delayed
-        PROPERTIES
-        LINKER_LANGUAGE "C"
-        PREFIX "")
+    # Create a custom target for the delay-import library generation
+    add_custom_target(${_libname}_delayed_implib_target DEPENDS ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a)
+
+    # Create an IMPORTED library for delay-import
+    _add_library(${_libname}_delayed STATIC IMPORTED GLOBAL)
+    set_target_properties(${_libname}_delayed PROPERTIES IMPORTED_LOCATION ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a)
+    add_dependencies(${_libname}_delayed ${_libname}_delayed_implib_target)
 endfunction()
 
 function(spec2def _dllname _spec_file)

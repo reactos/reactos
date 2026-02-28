@@ -380,7 +380,6 @@ NtUserEnumDisplayDevices(
     PDISPLAY_DEVICEW pDisplayDevice,
     DWORD dwFlags)
 {
-    static const UNICODE_STRING ustrDisplay = RTL_CONSTANT_STRING(L"DISPLAY");
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
     DISPLAY_DEVICEW dispdev;
@@ -412,7 +411,7 @@ NtUserEnumDisplayDevices(
         }
         _SEH2_END
 
-        if (ustrDevice.Length > 0 && !RtlEqualUnicodeString(&ustrDevice, &ustrDisplay, TRUE))
+        if (ustrDevice.Length > 0)
             pustrDevice = &ustrDevice;
         else
             pustrDevice = NULL;

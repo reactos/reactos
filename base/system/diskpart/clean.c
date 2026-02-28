@@ -12,7 +12,7 @@
 #include <debug.h>
 
 
-BOOL
+EXIT_CODE
 clean_main(
     _In_ INT argc,
     _In_ PWSTR *argv)
@@ -37,7 +37,7 @@ clean_main(
     if (CurrentDisk == NULL)
     {
         ConResPuts(StdOut, IDS_SELECT_NO_DISK);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     /* Do not allow to clean the boot disk */
@@ -45,7 +45,7 @@ clean_main(
         (CurrentDisk->BiosDiskNumber == 0))
     {
         ConResPuts(StdOut, IDS_CLEAN_SYSTEM);
-        return TRUE;
+        return EXIT_SUCCESS;
     }
 
     for (i = 1; i < argc; i++)
@@ -63,7 +63,7 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the logical partition */
-        if (PartEntry->PartitionType != 0)
+        if (PartEntry->Mbr.PartitionType != 0)
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);
@@ -82,8 +82,8 @@ clean_main(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         /* Dismount the primary partition */
-        if ((PartEntry->PartitionType != 0) &&
-            (IsContainerPartition(PartEntry->PartitionType) == FALSE))
+        if ((PartEntry->Mbr.PartitionType != 0) &&
+            (IsContainerPartition(PartEntry->Mbr.PartitionType) == FALSE))
         {
             DismountVolume(PartEntry);
             VolumeEntry = GetVolumeFromPartition(PartEntry);
@@ -99,21 +99,23 @@ clean_main(
     CurrentDisk->ExtendedPartition = NULL;
     CurrentDisk->Dirty = FALSE;
     CurrentDisk->NewDisk = TRUE;
-    CurrentDisk->NoMbr = TRUE;
+    CurrentDisk->PartitionStyle = PARTITION_STYLE_RAW;
 
     /* Wipe the layout buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentDisk->LayoutBuffer);
 
-    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
-                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
+    LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION_EX) +
+                       ((4 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION_EX));
     CurrentDisk->LayoutBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                                 HEAP_ZERO_MEMORY,
                                                 LayoutBufferSize);
     if (CurrentDisk->LayoutBuffer == NULL)
     {
         DPRINT1("Failed to allocate the disk layout buffer!\n");
-        return TRUE;
+        return EXIT_SUCCESS;
     }
+
+    CurrentDisk->LayoutBuffer->PartitionStyle = PARTITION_STYLE_RAW;
 
     /* Allocate a 1MB sectors buffer */
     SectorsBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -244,5 +246,5 @@ done:
     if (SectorsBuffer != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, SectorsBuffer);
 
-    return TRUE;
+    return EXIT_SUCCESS;
 }

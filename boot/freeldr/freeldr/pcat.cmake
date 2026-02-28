@@ -58,6 +58,10 @@ if(ARCH STREQUAL "i386")
         # arch/i386/i386bug.c
         arch/i386/i386idt.c)
 
+    if(SARCH STREQUAL "xbox")
+        list(APPEND PCATLDR_ARC_SOURCE
+            arch/vidfb.c)
+    endif()
     if(SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox")
         # These machine types require built-in bitmap font
         list(APPEND PCATLDR_ARC_SOURCE
@@ -69,10 +73,8 @@ if(ARCH STREQUAL "i386")
             # FIXME: Abstract things better so we don't need to include /pc/* here
             arch/i386/pc/machpc.c       # machxbox.c depends on it
             arch/i386/pc/pcbeep.c       # machxbox.c depends on it
-            arch/i386/pc/pcdisk.c       # hwdisk.c depends on it
             arch/i386/pc/pchw.c         # Many files depends on it
             arch/i386/pc/pcmem.c        # hwacpi.c/xboxmem.c depends on it
-            arch/i386/pc/pcvesa.c       # machpc.c depends on it
             arch/i386/xbox/machxbox.c
             arch/i386/xbox/xboxcons.c
             arch/i386/xbox/xboxdisk.c
@@ -87,7 +89,7 @@ if(ARCH STREQUAL "i386")
 
     elseif(SARCH STREQUAL "pc98")
         list(APPEND PCATLDR_ARC_SOURCE
-            arch/i386/pc/pcmem.c
+            arch/i386/pc/pcmem.c        # pc98mem.c depends on it
             arch/i386/pc98/machpc98.c
             arch/i386/pc98/pc98beep.c
             arch/i386/pc98/pc98cons.c
@@ -156,6 +158,7 @@ add_library(freeldr_common
     ${FREELDR_BOOTLIB_SOURCE}
     ${PCATLDR_BOOTMGR_SOURCE}
 )
+target_compile_definitions(freeldr_common PRIVATE _FRLDRLIB_)
 
 if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # We need to reduce the binary size
@@ -225,7 +228,7 @@ target_link_libraries(freeldr_pe freeldr_common cportlib libcntpr blrtl)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_sources(freeldr_pe PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_link_libraries(freeldr_pe gcc_ssp_nt)
 endif()
 
 if(RUNTIME_CHECKS)
