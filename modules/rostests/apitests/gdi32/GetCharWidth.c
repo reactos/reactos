@@ -70,6 +70,11 @@ static void Test_CharWidthI(HDC hDC)
     ok_err(ERROR_INVALID_PARAMETER);
 
     SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthI(NULL, 0, 1, awBuffer, anWidths);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_HANDLE);
+
+    SetLastError(0xBEEFCAFE);
     ret = GetCharWidthI(hDC, 0, 1, awBuffer, NULL);
     ok_int(ret, FALSE);
     ok_err(ERROR_INVALID_PARAMETER);

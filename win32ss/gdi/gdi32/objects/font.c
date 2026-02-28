@@ -1051,18 +1051,15 @@ GetCharWidthI(HDC hdc,
 {
     DPRINT("GetCharWidthsI\n");
 
-    if (!GdiValidateHandle(hdc))
+    if (!lpBuffer || (!pgi && HIWORD(giFirst)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    if (!lpBuffer || (!pgi && (giFirst == MAXUSHORT))) // Cannot be at max.
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    if (!cgi) return TRUE;
+    if (!cgi)
+        return TRUE;
+
     return NtGdiGetCharWidthW( hdc,
                                giFirst,
                                cgi,
