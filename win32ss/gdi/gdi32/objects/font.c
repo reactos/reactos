@@ -706,7 +706,6 @@ GetCharABCWidthsFloatW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -731,7 +730,6 @@ GetCharWidthFloatW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -756,7 +754,6 @@ GetCharWidthW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -779,10 +776,8 @@ GetCharWidth32W(HDC hdc,
                                lpBuffer);
 }
 
-
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
