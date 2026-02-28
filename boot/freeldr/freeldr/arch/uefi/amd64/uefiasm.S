@@ -41,8 +41,7 @@ _exituefi:
     sub rsp, HEX(20)
 
     /* Call the entry routine, passing the parameters */
-    mov rax, UefiExitBootServices[rip]
-    call rax
+    call UefiExitBootServices
 
     /* Retore old stack */
     mov rsp, rbx
@@ -53,11 +52,47 @@ _exituefi:
     pop rsi
     pop rbp
 
+    /*
+     * We are now outside firmware services and about to replace the GDT.
+     * Keep maskable interrupts disabled during this transition window.
+     */
+    cli
+
 #ifdef _USE_ML
     lgdt fword ptr [_gdtptr]
 #else
     lgdt cs:[_gdtptr][rip] /* GAS isn't my friend - avoid letting it generate absolute addressing */
 #endif
+
+    /*
+     * Reload CS with a valid selector from the new GDT.
+     * The UEFI firmware's CS (e.g. 0x38) may exceed our GDT limit,
+     * so we must load CS=0x10 (long mode code segment) via far return.
+     */
+#ifdef _USE_ML
+    lea rax, [reload_cs]
+#else
+    lea rax, reload_cs[rip]
+#endif
+    push HEX(10)
+    push rax
+#ifdef _USE_ML
+    db HEX(48), HEX(CB)
+#else
+    .byte HEX(48), HEX(CB) /* retfq */
+#endif
+
+reload_cs:
+    /* Reload data segments with DS selector 0x18 */
+    mov ax, HEX(18)
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    /* SS must use a ring-0 writable data selector */
+    mov ax, HEX(28)
+    mov ss, ax
 
     /* All done */
     ret
@@ -77,7 +112,7 @@ _changestack:
 
     /* ExecuteLoaderCleanly(PVOID PreviousStack) */
     mov rcx, rax
-    call ExecuteLoaderCleanly[rip]
+    call ExecuteLoaderCleanly
     ret
 
 .align 8
@@ -89,10 +124,11 @@ gdt:
     .word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
     .word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
     .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode CS */
+    .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 38: long mode CS (UEFI selector compatibility) */
 
 /* GDT table pointer */
 _gdtptr:
-    .word HEX(37) /* Limit */
+    .word HEX(3F) /* Limit */
 #ifdef _USE_ML
     .quad gdt     /* Base Address */
 #else
