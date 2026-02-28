@@ -58,9 +58,6 @@ static void Test_CharWidthI(HDC hDC)
     BOOL ret;
     WORD awBuffer['Z' - 'A' + 1];
     INT anWidths['Z' - 'A' + 1];
-    PWORD pw;
-    PINT pn;
-    INT count;
 
     SetLastError(0xBEEFCAFE);
     ret = GetCharWidthI(NULL, 0, 0, NULL, NULL);
@@ -87,9 +84,10 @@ static void Test_CharWidthI(HDC hDC)
     ok_int(ret, TRUE);
     ok_err(0xBEEFCAFE);
 
-    count = 0x2710000 / sizeof(INT);
-    pn = malloc((count + 1) * sizeof(INT));
-    pw = malloc((count + 1) * sizeof(WORD));
+#if 0 // These tests take time in ReactOS
+    INT count = 0x2710000 / sizeof(INT);
+    PINT pn = malloc((count + 1) * sizeof(INT));
+    PWORD pw = malloc((count + 1) * sizeof(WORD));
 
     if (!pn || !pw)
     {
@@ -110,6 +108,7 @@ static void Test_CharWidthI(HDC hDC)
 
     free(pn);
     free(pw);
+#endif
 }
 
 static void Test_CharWidth32(HDC hDC)

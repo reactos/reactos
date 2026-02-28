@@ -7745,7 +7745,6 @@ GreGetCharWidthW(
         else
             glyph_index = get_glyph_index_flagged(face, i, (fl & GCW_INDICES));
 
-        DPRINT1("i:%d, glyph_index: 0x%08X\n", i, glyph_index);
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
         if (!fl)
