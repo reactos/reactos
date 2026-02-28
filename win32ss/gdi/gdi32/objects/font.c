@@ -716,12 +716,7 @@ GetCharWidthFloatW(HDC hdc,
                    PFLOAT pxBuffer)
 {
     DPRINT("GetCharWidthsFloatW\n");
-    if ((!pxBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    if (!GdiValidateHandle(hdc))
+    if ((!pxBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -746,12 +741,7 @@ GetCharWidthW(HDC hdc,
               LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsW\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    if (!GdiValidateHandle(hdc))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -776,12 +766,7 @@ GetCharWidth32W(HDC hdc,
                 LPINT lpBuffer)
 {
     DPRINT("GetCharWidths32W\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar) || (iLastChar & 0xFFFF0000))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    if (!GdiValidateHandle(hdc))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
