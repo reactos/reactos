@@ -7,7 +7,53 @@
 
 #include "precomp.h"
 
-static void Test_CharWidth(HDC hDC)
+static void Test_CharWidthA(HDC hDC)
+{
+    BOOL ret;
+    INT anBuffer['Z' - 'A' + 1];
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(NULL, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(NULL, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(NULL, 'A', 'Z', anBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(NULL, 'B', 'A', anBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(hDC, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(hDC, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(hDC, 'A', 'Z', anBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthA(hDC, 'A', 'B', anBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+}
+
+static void Test_CharWidthW(HDC hDC)
 {
     BOOL ret;
     INT anBuffer['Z' - 'A' + 1];
@@ -116,7 +162,53 @@ static void Test_CharWidthI(HDC hDC)
 #endif
 }
 
-static void Test_CharWidth32(HDC hDC)
+static void Test_CharWidth32A(HDC hDC)
+{
+    BOOL ret;
+    INT anBuffer['Z' - 'A' + 1];
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(NULL, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(NULL, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(NULL, 'A', 'Z', anBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(NULL, 'B', 'A', anBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(hDC, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(hDC, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(hDC, 'A', 'Z', anBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidth32A(hDC, 'A', 'B', anBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+}
+
+static void Test_CharWidth32W(HDC hDC)
 {
     BOOL ret;
     INT anBuffer['Z' - 'A' + 1];
@@ -162,7 +254,53 @@ static void Test_CharWidth32(HDC hDC)
     ok_err(0xBEEFCAFE);
 }
 
-static void Test_CharWidthFloat(HDC hDC)
+static void Test_CharWidthFloatA(HDC hDC)
+{
+    BOOL ret;
+    FLOAT aeBuffer['Z' - 'A' + 1];
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(NULL, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(NULL, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(NULL, 'A', 'Z', aeBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(NULL, 'B', 'A', aeBuffer);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(hDC, 'A', 'Z', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(hDC, 'B', 'A', NULL);
+    ok_int(ret, FALSE);
+    ok_err(ERROR_INVALID_PARAMETER); //
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(hDC, 'A', 'Z', aeBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+
+    SetLastError(0xBEEFCAFE);
+    ret = GetCharWidthFloatA(hDC, 'A', 'B', aeBuffer);
+    ok_int(ret, TRUE);
+    ok_err(0xBEEFCAFE);
+}
+
+static void Test_CharWidthFloatW(HDC hDC)
 {
     BOOL ret;
     FLOAT aeBuffer['Z' - 'A' + 1];
@@ -211,9 +349,12 @@ static void Test_CharWidthFloat(HDC hDC)
 START_TEST(GetCharWidth)
 {
     HDC hDC = CreateCompatibleDC(NULL);
-    Test_CharWidth(hDC);
+    Test_CharWidthA(hDC);
+    Test_CharWidthW(hDC);
     Test_CharWidthI(hDC);
-    Test_CharWidth32(hDC);
-    Test_CharWidthFloat(hDC);
+    Test_CharWidth32A(hDC);
+    Test_CharWidth32W(hDC);
+    Test_CharWidthFloatA(hDC);
+    Test_CharWidthFloatW(hDC);
     DeleteDC(hDC);
 }

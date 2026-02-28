@@ -715,7 +715,8 @@ GetCharWidthFloatW(HDC hdc,
                    PFLOAT pxBuffer)
 {
     DPRINT("GetCharWidthsFloatW\n");
-    if ((!pxBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
+    if ((!pxBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -739,7 +740,8 @@ GetCharWidthW(HDC hdc,
               LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsW\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -763,7 +765,8 @@ GetCharWidth32W(HDC hdc,
                 LPINT lpBuffer)
 {
     DPRINT("GetCharWidths32W\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) || !GdiValidateHandle(hdc))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -818,7 +821,7 @@ GetCharWidthA(
 
     DPRINT("GetCharWidthsA\n");
 
-    if (!GdiValidateHandle(hdc))
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -866,7 +869,7 @@ GetCharWidth32A(
 
     DPRINT("GetCharWidths32A\n");
 
-    if (!GdiValidateHandle(hdc))
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -914,7 +917,7 @@ GetCharWidthFloatA(
 
     DPRINT("GetCharWidthsFloatA\n");
 
-    if (!GdiValidateHandle(hdc))
+    if (!pxBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
