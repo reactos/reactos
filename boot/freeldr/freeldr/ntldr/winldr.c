@@ -1007,6 +1007,10 @@ LoadAndBootWindows(
     {
         OperatingSystemVersion = _WIN32_WINNT_WS03;
     }
+    else if (_stricmp(ArgValue, "Windows2000") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_WIN2K;
+    }
     else if (_stricmp(ArgValue, "WindowsNT40") == 0)
     {
         OperatingSystemVersion = _WIN32_WINNT_NT4;
