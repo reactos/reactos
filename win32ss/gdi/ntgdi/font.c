@@ -1370,3 +1370,64 @@ Cleanup:
         ExFreePoolWithTag(pSafePwc, GDITAG_TEXT);
     return ret;
 }
+
+/* This function is called from GetCharABCWidthsA/W/I and GetCharABCWidthsFloatA/W. */
+BOOL NTAPI
+NtGdiGetCharABCWidthsW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ ULONG Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
+{
+    BOOL ret = FALSE;
+    PVOID SafeBuff = NULL;
+    PWCHAR Safepwch = NULL;
+    ULONG cbABCs;
+    NTSTATUS Status;
+    WCHAR Stackpwch[28];
+    ABC StackABCs[28];
+
+    if (!Buffer || (UnSafepwch && !Count) || Count > MAX_TEXT_BUFFER / sizeof(ABC))
+        return FALSE;
+
+    if (UnSafepwch)
+    {
+        UINT pwchSize = Count * sizeof(WCHAR);
+        if (Count <= _countof(Stackpwch))
+            Safepwch = Stackpwch;
+        else
+            Safepwch = ExAllocatePoolWithTag(PagedPool, pwchSize, GDITAG_TEXT);
+
+        if (!Safepwch)
+            return FALSE;
+
+        Status = MmCopyFromCaller(Safepwch, UnSafepwch, pwchSize);
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+    }
+
+    cbABCs = Count * sizeof(ABC);
+    if (Count <= _countof(StackABCs))
+        SafeBuff = StackABCs;
+    else
+        SafeBuff = ExAllocatePoolWithTag(PagedPool, cbABCs, GDITAG_TEXT);
+
+    if (SafeBuff)
+    {
+        ret = GreGetCharABCWidthsW(hDC, FirstChar, Count, Safepwch, fl, SafeBuff);
+        if (ret)
+        {
+            Status = MmCopyToCaller(Buffer, SafeBuff, cbABCs);
+            ret = NT_SUCCESS(Status);
+        }
+    }
+
+Cleanup:
+    if (Safepwch && Safepwch != Stackpwch)
+        ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
+    if (SafeBuff && SafeBuff != StackABCs)
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
+    return ret;
+}

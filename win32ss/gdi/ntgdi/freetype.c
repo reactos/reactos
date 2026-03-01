@@ -7451,93 +7451,36 @@ cleanup:
 
 
 /*
-* @implemented
-*/
-BOOL
-APIENTRY
-NtGdiGetCharABCWidthsW(
+ * @implemented
+ */
+BOOL APIENTRY
+GreGetCharABCWidthsW(
     _In_ HDC hDC,
     _In_ UINT FirstChar,
     _In_ ULONG Count,
-    _In_reads_opt_(Count) PCWCH UnSafepwch,
+    _In_reads_opt_(Count) PCWCH Safepwch,
     _In_ FLONG fl,
-    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID Buffer)
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID SafeBuffer)
 {
-    LPABC SafeBuff;
-    LPABCFLOAT SafeBuffF = NULL;
+    PABC SafeBuffI;
+    PABCFLOAT SafeBuffF;
     PDC dc;
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
     FT_CharMap charmap, found = NULL;
-    UINT i, glyph_index, BufferSize;
-    HFONT hFont = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR Safepwch = NULL;
-    LOGFONTW *plf;
-
-    if (!Buffer)
-    {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (UnSafepwch)
-    {
-        UINT pwchSize = Count * sizeof(WCHAR);
-        Safepwch = ExAllocatePoolWithTag(PagedPool, pwchSize, GDITAG_TEXT);
-
-        if(!Safepwch)
-        {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
-        }
-
-        _SEH2_TRY
-        {
-            ProbeForRead(UnSafepwch, pwchSize, 1);
-            RtlCopyMemory(Safepwch, UnSafepwch, pwchSize);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-        SetLastNtError(Status);
-        return FALSE;
-    }
-
-    BufferSize = Count * sizeof(ABC); // Same size!
-    SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, GDITAG_TEXT);
-    if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
-    if (SafeBuff == NULL)
-    {
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
+    UINT i, glyph_index;
+    HFONT hFont = NULL;
+    PLOGFONTW plf;
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
+
     pdcattr = dc->pdcattr;
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
@@ -7546,11 +7489,6 @@ NtGdiGetCharABCWidthsW(
 
     if (TextObj == NULL)
     {
-        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -7560,6 +7498,7 @@ NtGdiGetCharABCWidthsW(
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
     {
+        IntLockFreeType();
         for (i = 0; i < (UINT)face->num_charmaps; i++)
         {
             charmap = face->charmaps[i];
@@ -7569,21 +7508,8 @@ NtGdiGetCharABCWidthsW(
                 break;
             }
         }
-
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-            if(Safepwch)
-                ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
-        IntLockFreeType();
-        FT_Set_Charmap(face, found);
+        if (found)
+            FT_Set_Charmap(face, found);
         IntUnLockFreeType();
     }
 
@@ -7594,18 +7520,20 @@ NtGdiGetCharABCWidthsW(
     IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FT_Set_Transform(face, NULL, NULL);
 
+    if (!fl)
+        SafeBuffF = SafeBuffer;
+    else
+        SafeBuffI = SafeBuffer;
+
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
         int adv, lsb, bbx, left, right;
 
         if (Safepwch)
-        {
             glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], (fl & GCABCW_INDICES));
-        }
         else
-        {
             glyph_index = get_glyph_index_flagged(face, i, (fl & GCABCW_INDICES));
-        }
+
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
         left = (INT)face->glyph->metrics.horiBearingX  & -64;
@@ -7628,27 +7556,15 @@ NtGdiGetCharABCWidthsW(
         }
         else
         {
-            SafeBuff[i - FirstChar].abcA = lsb;
-            SafeBuff[i - FirstChar].abcB = bbx;
-            SafeBuff[i - FirstChar].abcC = adv - lsb - bbx;
+            SafeBuffI[i - FirstChar].abcA = lsb;
+            SafeBuffI[i - FirstChar].abcB = bbx;
+            SafeBuffI[i - FirstChar].abcC = adv - lsb - bbx;
         }
     }
+
     IntUnLockFreeType();
     TEXTOBJ_UnlockText(TextObj);
-    Status = MmCopyToCaller(Buffer, SafeBuff, BufferSize);
 
-    ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-    if(Safepwch)
-        ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return FALSE;
-    }
-
-    DPRINT("NtGdiGetCharABCWidths Worked!\n");
     return TRUE;
 }
 

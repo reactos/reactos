@@ -175,3 +175,12 @@ GreGetCharWidthW(
     _In_reads_opt_(Count) PCWCH Safepwc,
     _In_ ULONG fl,
     _Out_writes_bytes_(Count * sizeof(INT)) PVOID pTmpBuffer);
+
+BOOL APIENTRY
+GreGetCharABCWidthsW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ ULONG Count,
+    _In_reads_opt_(Count) PCWCH Safepwch,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(ABC)) PVOID SafeBuffer);
