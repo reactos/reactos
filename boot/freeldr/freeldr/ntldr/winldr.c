@@ -1195,7 +1195,7 @@ LoadAndBootWindowsCommon(
 
     /* Detect hardware */
     UiUpdateProgressBar(20, "Detecting hardware...");
-    LoaderBlock->ConfigurationRoot = MachHwDetect(BootOptions);
+    LoaderBlock->ConfigurationRoot = MachHwDetect(OperatingSystemVersion, BootOptions);
 
     /* Initialize the PE loader import-DLL callback, so that we can obtain
      * feedback (for example during SOS) on the PE images that get loaded. */
