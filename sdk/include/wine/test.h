@@ -186,21 +186,31 @@ extern void winetest_pop_context(void);
 
 #endif /* __GNUC__ */
 
-#define subtest_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_subtest
-#define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok
-#define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
-#define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
-#define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
-#define wait_child_process_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_wait_child_process
-#define ignore_exceptions_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_ignore_exceptions
+#ifdef WINETEST_NO_LINE_NUMBERS
+# define subtest_(file, line)  (winetest_set_location(file, 0), 0) ? (void)0 : winetest_subtest
+# define ignore_exceptions_(file, line)  (winetest_set_location(file, 0), 0) ? (void)0 : winetest_ignore_exceptions
+# define ok_(file, line)       (winetest_set_location(file, 0), 0) ? (void)0 : winetest_ok
+# define skip_(file, line)     (winetest_set_location(file, 0), 0) ? (void)0 : winetest_skip
+# define win_skip_(file, line) (winetest_set_location(file, 0), 0) ? (void)0 : winetest_win_skip
+# define trace_(file, line)    (winetest_set_location(file, 0), 0) ? (void)0 : winetest_trace
+# define wait_child_process_(file, line) (winetest_set_location(file, 0), 0) ? (void)0 : winetest_wait_child_process
+#else
+# define subtest_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_subtest
+# define ignore_exceptions_(file, line)  (winetest_set_location(file, line), 0) ? (void)0 : winetest_ignore_exceptions
+# define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok
+# define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
+# define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
+# define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
+# define wait_child_process_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_wait_child_process
+#endif
 
 #define subtest  subtest_(__FILE__, __LINE__)
+#define ignore_exceptions  ignore_exceptions_(__FILE__, __LINE__)
 #define ok       ok_(__FILE__, __LINE__)
 #define skip     skip_(__FILE__, __LINE__)
 #define win_skip win_skip_(__FILE__, __LINE__)
 #define trace    trace_(__FILE__, __LINE__)
 #define wait_child_process wait_child_process_(__FILE__, __LINE__)
-#define ignore_exceptions ignore_exceptions_(__FILE__, __LINE__)
 
 #define todo_if(is_todo) for (winetest_start_todo(is_todo); \
                               winetest_loop_todo(); \
