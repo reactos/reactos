@@ -29,13 +29,14 @@ Author:
 //
 typedef enum _VF_FAILURE_CLASS
 {
+    VfFatalFailure = 0,
+    VfNonFatalFailure,
+    VfPoolOverflow,
+    VfIrqlViolation,
+    VfSpecialPool,
     VFFAILURE_FAIL_IN_FIELD,
     VFFAILURE_FAIL_LOGO,
     VFFAILURE_FAIL_UNDER_DEBUGGER,
-    VF_BUGCHECK_POOL_OVERFLOW,
-    VF_BUGCHECK_IRQL_VIOLATION,
-    VfFatalFailure = 0,
-    VfNonFatalFailure,
 } VF_FAILURE_CLASS, *PVF_FAILURE_CLASS;
 
 //
@@ -46,6 +47,6 @@ typedef enum _VF_OBJECT_TYPE
     VFOBJTYPE_DRIVER,
     VFOBJTYPE_DEVICE,
     VFOBJTYPE_SYSTEM_BIOS
-} VF_OBJECT_TYPE, PVF_OBJECT_TYPE;
+} VF_OBJECT_TYPE, *PVF_OBJECT_TYPE;  // <-- this was missing an asterisk (*PVF_OBJECT_TYPE not PVF_OBJECT_TYPE)
 
 #endif // _VFTYPES_H

@@ -9,9 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include "../../vf/vf.h"
 #define NDEBUG
 #include <debug.h>
-
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
@@ -1937,7 +1937,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if (ExpPoolFlags & POOL_FLAG_VERIFIER)
         {
-            DPRINT1("Driver Verifier is not yet supported\n");
+            PDRIVER_OBJECT Driver = VfGetDriverByAddress(_ReturnAddress());
+            if (Driver)
+                return VfAllocatePool(Driver, PoolType, NumberOfBytes, Tag);
         }
 
         //

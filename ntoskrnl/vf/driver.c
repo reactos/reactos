@@ -15,27 +15,27 @@
 #include <debug.h>
 #include <wdm.h>
 #include <ndk/vftypes.h>
+#include <mm/ARM3/miarm.h>
 #include "vf.h"
 
-static
-VF_IRP_TRACK*
-VfLookupIrp(
-    _In_ PIRP Irp
-);
+/*
+ * internal forward declarations
+ * (these are NOT in the header to keep them fully internal)
+ */
+static UNUSED VF_IRP_TRACK*  VfLookupIrp(_In_ PIRP Irp);
+static VF_IRP_TRACK*         VfLookupIrpLocked(_In_ PIRP Irp);
+static VF_DMA_ADAPTER_TRACK* VfLookupDmaAdapter(PDMA_ADAPTER Adapter);
+static VF_DMA_ADAPTER_TRACK* VfFindAdapter(PDMA_ADAPTER Adapter);
+static BOOLEAN UNUSED        VfShouldInjectDmaFault(VF_DMA_FAULT_TYPE Type);
+static VOID UNUSED           VfCheckPageableCode(PVOID Address, PDRIVER_OBJECT DriverObject);
 
-static
-VF_DMA_ADAPTER_TRACK*
-VfLookupDmaAdapter(
-    PDMA_ADAPTER Adapter
-);
 
-
-/* ============================================================ 
-   INITIALIZE HEADER EXTERN GLOBALS
+/* ============================================================
+   initialize header extern globals
    ============================================================ */
 VF_GLOBAL_STATE VfGlobal = { 0 };
-BOOLEAN VfGlobalEnabled = FALSE;  
-VF_SETTINGS VfSettings;    
+BOOLEAN VfGlobalEnabled = FALSE;
+VF_SETTINGS VfSettings;
 VF_DMA_FAULT_STATE VfDmaFaultState = {
     FALSE,
     0,
@@ -43,35 +43,103 @@ VF_DMA_FAULT_STATE VfDmaFaultState = {
     VfDmaFaultNone
 };
 
+LIST_ENTRY VfDriverList;
+LIST_ENTRY VfIrpTrackList;
+LIST_ENTRY VfIrpHookList;
+LIST_ENTRY VfSpinlockList;
+LIST_ENTRY VfDmaAdapterList;
+LIST_ENTRY VfThreadLockList;
+LIST_ENTRY VfSpinlockDependencyList;
+
+KSPIN_LOCK VfSpinlockLock;
+KSPIN_LOCK VfDmaLock;
+KSPIN_LOCK VfDriverListLock;
+KSPIN_LOCK VfIrpTrackLock;
+KSPIN_LOCK VfIrpHookLock;
+KSPIN_LOCK VfThreadLockListLock;
+KSPIN_LOCK VfSpinlockDepLock;
+
 /* ============================================================
-   INITIALIZATION
+   HELPER(S)
+   ============================================================ */
+PDRIVER_OBJECT
+VfGetDriverByAddress(PVOID Address)
+{
+    PLIST_ENTRY Entry;
+    PLIST_ENTRY VfLink;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    VF_DRIVER_ENTRY* VfEntry;
+    KIRQL OldIrql;
+
+    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+        return NULL;
+
+    KeAcquireSpinLock(&PsLoadedModuleSpinLock, &OldIrql);
+
+    for (Entry = PsLoadedModuleList.Flink;
+         Entry != &PsLoadedModuleList;
+         Entry = Entry->Flink)
+    {
+        LdrEntry = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        if (Address >= LdrEntry->DllBase &&
+            Address < (PVOID)((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage))
+        {
+            for (VfLink = VfDriverList.Flink;
+                 VfLink != &VfDriverList;
+                 VfLink = VfLink->Flink)
+            {
+                VfEntry = CONTAINING_RECORD(VfLink, VF_DRIVER_ENTRY, ListEntry);
+                if (VfEntry->DriverObject->DriverSection == LdrEntry)
+                {
+                    DPRINT1("VF: Match! Driver %p owns address %p\n", VfEntry->DriverObject, Address);
+                    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+                    return VfEntry->DriverObject;
+                }
+            }
+        }
+    }
+
+    KeReleaseSpinLock(&PsLoadedModuleSpinLock, OldIrql);
+    return NULL;
+}
+
+/* ============================================================
+   INIT
    ============================================================ */
 
-VOID NTAPI VfInitialize(VOID) { 
-    InitializeListHead(&VfDriverList); 
-    KeInitializeSpinLock(&VfDriverListLock); 
+VOID NTAPI VfInitialize(VOID)
+{
+    InitializeListHead(&VfDriverList);
+    KeInitializeSpinLock(&VfDriverListLock);
 
-    InitializeListHead(&VfIrpTrackList); 
+    InitializeListHead(&VfIrpTrackList);
     KeInitializeSpinLock(&VfIrpTrackLock);
 
-    InitializeListHead(&VfIrpHookList); 
-    KeInitializeSpinLock(&VfIrpHookLock); 
+    InitializeListHead(&VfIrpHookList);
+    KeInitializeSpinLock(&VfIrpHookLock);
 
-    InitializeListHead(&VfSpinlockList); 
+    InitializeListHead(&VfSpinlockList);
     KeInitializeSpinLock(&VfSpinlockLock);
 
-    InitializeListHead(&VfDmaAdapterList); 
-    KeInitializeSpinLock(&VfDmaLock); 
+    InitializeListHead(&VfDmaAdapterList);
+    KeInitializeSpinLock(&VfDmaLock);
 
-    InitializeListHead(&VfThreadLockList); 
+    InitializeListHead(&VfThreadLockList);
     KeInitializeSpinLock(&VfThreadLockListLock);
 
-    InitializeListHead(&VfSpinlockDependencyList); 
-    KeInitializeSpinLock(&VfSpinlockDepLock); 
+    InitializeListHead(&VfSpinlockDependencyList);
+    KeInitializeSpinLock(&VfSpinlockDepLock);
 
-    /* TODO: read registry HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Verifier in future commit / when ROS adds it. */ 
-    VfGlobalEnabled = TRUE; 
-    DPRINT1("VF: Driver Verifier initialized\n"); }
+    VfGlobal.Enabled = TRUE;
+    VfGlobalEnabled  = TRUE;
+
+    ExpPoolFlags |= POOL_FLAG_VERIFIER;
+
+    /* TODO: read registry HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Verifier
+     * in future commit / when os adds it. */
+    DPRINT1("VF: Driver Verifier initialized\n");
+}
 
 /* ============================================================
    INTERNAL BUGCHECK
@@ -99,33 +167,31 @@ UNUSED static VOID VfFailInternal(
 
     if (AssertionControl && *AssertionControl)
     {
-        switch (FailureClass)
+        if (FailureClass == VfPoolOverflow)
         {
-            case VF_BUGCHECK_POOL_OVERFLOW:
-                KeBugCheckEx(VF_BUGCHECK_POOL_OVERFLOW,
-                             (ULONG_PTR)ParamFormat,
-                             (ULONG_PTR)ObjectType,
-                             0, 0);
-                break;
-
-            case VF_BUGCHECK_IRQL_VIOLATION:
-                KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
-                             (ULONG_PTR)ObjectType,
-                             0, 0, 0);
-                break;
-
-            case VF_FLAG_SPECIAL_POOL:
-                KeBugCheckEx(VF_BUGCHECK_SPECIAL_POOL,
-                             (ULONG_PTR)ObjectType,
-                             (ULONG_PTR)ParamFormat,
-                             0, 0);
-                break;
-
-            default:
-                KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
-                             (ULONG_PTR)FailureClass,
-                             0, 0, (ULONG_PTR)ObjectType);
-                break;
+            KeBugCheckEx(VF_BUGCHECK_POOL_TAG_VIOLATION,
+                         (ULONG_PTR)ParamFormat,
+                         (ULONG_PTR)ObjectType,
+                         0, 0);
+        }
+        else if (FailureClass == VfIrqlViolation)
+        {
+            KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+                         (ULONG_PTR)ObjectType,
+                         0, 0, 0);
+        }
+        else if (FailureClass == VfSpecialPool)
+        {
+            KeBugCheckEx(VF_BUGCHECK_SPECIAL_POOL,
+                         (ULONG_PTR)ObjectType,
+                         (ULONG_PTR)ParamFormat,
+                         0, 0);
+        }
+        else
+        {
+            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+                         (ULONG_PTR)FailureClass,
+                         0, 0, (ULONG_PTR)ObjectType);
         }
     }
 }
@@ -201,9 +267,14 @@ VfAllocateAdapterChannel(
 
     T = VfFindAdapter(Adapter);
     if (!T)
+    {
+        KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, (ULONG_PTR)Adapter, 0, 0);
+    }
 
     if (T->MapRegisterCount != 0)
+    {
+        KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(
             VF_BUGCHECK_DRIVER_VIOLATION,
             VfDmaFaultAllocateChannel,
@@ -211,6 +282,7 @@ VfAllocateAdapterChannel(
             T->MapRegisterCount,
             0
         );
+    }
 
     T->MapRegisterCount = NumberOfMapRegisters;
     T->AdapterReleased = FALSE;
@@ -251,17 +323,17 @@ VfFreeAdapterChannel(
     PDMA_ADAPTER Adapter
 )
 {
-    VfValidateDmaAdapter(Adapter);
-
     VF_DMA_ADAPTER_TRACK* Track;
     KIRQL OldIrql;
 
-    KeAcquireSpinLock(&VfDmaLock, &OldIrql);
     VfValidateDmaAdapter(Adapter);
+
+    KeAcquireSpinLock(&VfDmaLock, &OldIrql);
     Track = VfLookupDmaAdapter(Adapter);
 
     if (!Track || Track->MapRegisterCount <= 0)
     {
+        KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
                      VF_VIOLATION_INVALID_DMA_ADAPTER,
                      (ULONG_PTR)Adapter,
@@ -304,7 +376,7 @@ VfMapTransfer(
             );
         }
 
-        /* Increment BEFORE mapping (matches Windows behavior) */
+        /* increment BEFORE map */
         InterlockedIncrement(&T->MapRegisterCount);
 
         Pa = T->OriginalOps.MapTransfer(
@@ -391,6 +463,7 @@ VfEnableDmaFaultInjection(
     VfDmaFaultState.Probability = Probability;
     VfDmaFaultState.Counter     = 0;
 }
+
 /* ============================================================
    POOL TRACKING
    ============================================================ */
@@ -435,56 +508,21 @@ VfAllocateSpecialPool(
 
     High.QuadPart = MAXULONG_PTR;
 
-    // We need: 1 guard + data + 1 guard
-    TotalSize = Size + (2 * PAGE_SIZE);
-    Pages = BYTES_TO_PAGES(TotalSize);
+    /*
+     * reactos doesn't support MmProtectMdlSystemAddress guard pages. :(
+    */
+    UNREFERENCED_PARAMETER(Mdl);
+    UNREFERENCED_PARAMETER(Mapping);
+    UNREFERENCED_PARAMETER(Low);
+    UNREFERENCED_PARAMETER(High);
+    UNREFERENCED_PARAMETER(Skip);
+    UNREFERENCED_PARAMETER(Base);
+    UNREFERENCED_PARAMETER(TotalSize);
+    UNREFERENCED_PARAMETER(Pages);
+    UNREFERENCED_PARAMETER(Status);
 
-    Mdl = MmAllocatePagesForMdl(Low, High, Skip, Pages * PAGE_SIZE);
-    if (!Mdl)
-        return NULL;
-
-    Mapping = MmMapLockedPagesSpecifyCache(
-        Mdl,
-        KernelMode,
-        MmCached,
-        NULL,
-        FALSE,
-        NormalPagePriority
-    );
-
-    if (!Mapping)
-    {
-        MmFreePagesFromMdl(Mdl);
-        ExFreePool(Mdl);
-        return NULL;
-    }
-
-    Base = (PUCHAR)Mapping;
-
-    Status = MmProtectMdlSystemAddress(Mdl, PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-        goto Fail;
-
-    Status = MmProtectMdlSystemAddress(
-        (PMDL)((PUCHAR)Mdl + 0 * sizeof(MDL)),
-        PAGE_NOACCESS
-    );
-    ASSERT(NT_SUCCESS(Status));
-
-        // ReactOS does not support special pool alloc
-        *OutMdl = NULL;
-        return ExAllocatePoolWithTag(NonPagedPool, Size, TAG_VFSP);
-    ASSERT(NT_SUCCESS(Status));
-
-    *OutMdl = Mdl;
-
-    return Base + (Pages * PAGE_SIZE) - PAGE_SIZE - Size;
-
-Fail:
-    MmUnmapLockedPages(Mapping, Mdl);
-    MmFreePagesFromMdl(Mdl);
-    ExFreePool(Mdl);
-    return NULL;
+    *OutMdl = NULL;
+    return ExAllocatePoolWithTag(NonPagedPool, Size, TAG_VFSP);
 }
 
 PVOID NTAPI VfAllocatePool(
@@ -501,7 +539,6 @@ PVOID NTAPI VfAllocatePool(
     BOOLEAN Special = FALSE;
     KIRQL OldIrql;
 
-    // only accept IRQL rules (paged pool cannot be allocated at dispatch level OR higher)
     if (Driver && (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING))
         VfCheckIrqlForPool(PoolType, FALSE);
 
@@ -517,17 +554,15 @@ PVOID NTAPI VfAllocatePool(
         }
 
         Driver->PoolUsage += Size;
-
         KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
     }
 
-    // zerosize allocations
+    /* for zero size allocations we return dummy non-null pointer like windows does */
     if (Size == 0)
     {
-        // windows returns a dummy non-null pointer for zerosize allocs
         static UCHAR DummyZero;
         Address = &DummyZero;
-        goto TrackAllocation; 
+        goto TrackAllocation;
     }
 
     if (Driver && (Driver->VerifierFlags & VF_FLAG_SPECIAL_POOL))
@@ -558,9 +593,7 @@ TrackAllocation:
 
     Alloc = ExAllocatePoolWithTag(NonPagedPool, sizeof(VF_POOL_ALLOCATION), TAG_VFALL);
     if (!Alloc)
-    {
         return Address;
-    }
 
     Alloc->Address      = Address;
     Alloc->Size         = Size;
@@ -632,8 +665,12 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
                 );
             }
 
-            /* free the memory */
-            if (Alloc->SpecialPool)
+            /*
+             * free the memory. if SpecialPool is true but Mdl is null it means
+             * we fell back to plain ExAllocatePoolWithTag,
+             * so just call ExFreePool
+             */
+            if (Alloc->SpecialPool && Alloc->Mdl != NULL)
             {
                 MmUnmapLockedPages(Alloc->Address, Alloc->Mdl);
                 MmFreePagesFromMdl(Alloc->Mdl);
@@ -649,10 +686,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
         }
     }
 
-    /* not found: release lock and bugcheck */
     KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-
-    VfCheckPageableCode((PVOID)VfFreePool, DriverObject);
     KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, (ULONG_PTR)Address, 0, 0, 0);
 }
 
@@ -671,12 +705,13 @@ VfTrackIrpDispatch(
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
-    // IRP reuse detection
+    /* IRP reuse detection */
     for (L = VfIrpTrackList.Flink; L != &VfIrpTrackList; L = L->Flink)
     {
         Track = CONTAINING_RECORD(L, VF_IRP_TRACK, ListEntry);
         if (Track->Irp == Irp)
         {
+            KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
                 VF_BUGCHECK_DRIVER_VIOLATION,
                 VF_VIOLATION_REUSED_IRP,
@@ -694,12 +729,17 @@ VfTrackIrpDispatch(
     );
 
     if (!Track)
+    {
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, 0, 0, 0);
+    }
 
+    RtlZeroMemory(Track, sizeof(*Track));
     Track->Irp            = Irp;
     Track->DriverObject   = DeviceObject->DriverObject;
     Track->MajorFunction  = IoGetCurrentIrpStackLocation(Irp)->MajorFunction;
     Track->DispatchIrql   = KeGetCurrentIrql();
+    Track->ReferenceCount = 1;
     Track->PendingReturned = FALSE;
     Track->Completed      = FALSE;
 
@@ -724,7 +764,6 @@ VfIrpDispatchHook(
     VF_IRP_TRACK* Track;
     PLIST_ENTRY L;
 
-    /* sanity check pointers first */
     if (!DeviceObject || !DeviceObject->DriverObject || !Irp)
     {
 #if DBG
@@ -760,7 +799,6 @@ VfIrpDispatchHook(
         );
     }
 
-    /* major function sanity */
     if (Stack->MajorFunction > IRP_MJ_MAXIMUM_FUNCTION)
     {
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
@@ -770,20 +808,10 @@ VfIrpDispatchHook(
                      (ULONG_PTR)Irp);
     }
 
-    /* IRQL check */
-    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
-    {
-        KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL,
-                     KeGetCurrentIrql(),
-                     DISPATCH_LEVEL,
-                     (ULONG_PTR)DeviceObject,
-                     (ULONG_PTR)Irp);
-    }
-
-    /* Increment reference for tracking */
+    /* increment reference for tracking */
     VfIoIncrementRef(Irp);
 
-    /* Find original dispatch */
+    /* find original dispatch */
     KeAcquireSpinLock(&VfIrpHookLock, &OldIrql);
     for (L = VfIrpHookList.Flink;
          L != &VfIrpHookList;
@@ -800,12 +828,10 @@ VfIrpDispatchHook(
 
     if (!Original)
     {
-        // no dispatch? complete immediately then
         VfIoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NOT_SUPPORTED;
     }
 
-    /* irp reuse detection */
     if (Irp->IoStatus.Status != STATUS_PENDING &&
         Irp->IoStatus.Status != 0)
     {
@@ -829,19 +855,23 @@ VfIrpDispatchHook(
         );
     }
 
-    /* Call original driver */
+    /* call THE original driver */
     Status = Original(DeviceObject, Irp);
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
-
-    Track = VfLookupIrp(Irp);
+    Track = VfLookupIrpLocked(Irp);
 
     if (!Track)
+    {
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, (ULONG_PTR)Irp, 0, 0);
+    }
 
     if (Status == STATUS_PENDING)
     {
         if (!Irp->PendingReturned)
+        {
+            KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
                 VF_BUGCHECK_DRIVER_VIOLATION,
                 VF_VIOLATION_IRP_NOT_MARKED_PENDING,
@@ -849,12 +879,14 @@ VfIrpDispatchHook(
                 0,
                 0
             );
-
+        }
         Track->PendingReturned = TRUE;
     }
     else
     {
         if (Irp->PendingReturned)
+        {
+            KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
                 VF_BUGCHECK_DRIVER_VIOLATION,
                 VF_VIOLATION_INVALID_IRP_STATE,
@@ -862,11 +894,11 @@ VfIrpDispatchHook(
                 Status,
                 0
             );
+        }
     }
 
     KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
 
-    /* SUCCESS but IoStatus.Status not set */
     if (NT_SUCCESS(Status) && Irp->IoStatus.Status == STATUS_PENDING)
     {
         KeBugCheckEx(
@@ -889,7 +921,6 @@ VfIrpDispatchHook(
         );
     }
 
-    /* If driver returned success but IRP is still marked pending, this is a violation */
     if (Status != STATUS_PENDING && Irp->PendingReturned)
     {
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
@@ -907,29 +938,21 @@ UNUSED static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
     VF_IRP_HOOK* Hook;
     KIRQL OldIrql;
 
-    // alloc hook struct
     Hook = ExAllocatePoolWithTag(NonPagedPool,
                                  sizeof(VF_IRP_HOOK),
                                  'hIrV');
     if (!Hook)
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_LEAKED_RESOURCES, (ULONG_PTR)DriverObject, 0, 0);
 
-    // zero the structure to avoid uninitialized mem
     RtlZeroMemory(Hook, sizeof(VF_IRP_HOOK));
-
     Hook->DriverObject = DriverObject;
 
-    // hook EVERY major function
     for (ULONG i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
-        // save the original dispatch
         Hook->OriginalMajor[i] = DriverObject->MajorFunction[i];
-
-        // wrap with our verifier hook
         DriverObject->MajorFunction[i] = VfIrpDispatchHook;
     }
 
-    // insert hook into the global list
     KeAcquireSpinLock(&VfIrpHookLock, &OldIrql);
     InsertTailList(&VfIrpHookList, &Hook->ListEntry);
     KeReleaseSpinLock(&VfIrpHookLock, OldIrql);
@@ -937,17 +960,22 @@ UNUSED static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
     DPRINT1("VF: IRP dispatch hooks installed for driver %p\n", DriverObject);
 }
 
+VOID VfHookDriverUnload(PDRIVER_OBJECT DriverObject)
+{
+    VF_DRIVER_ENTRY* Entry = VfFindDriver(DriverObject);
+    if (!Entry) return;
+    Entry->OriginalUnload = DriverObject->DriverUnload;
+    DriverObject->DriverUnload = VfDriverUnload;
+}
+
 static
 VF_IRP_TRACK*
-VfLookupIrp(
+VfLookupIrpLocked(
     _In_ PIRP Irp
 )
 {
     PLIST_ENTRY Entry;
     VF_IRP_TRACK* Track;
-    KIRQL OldIrql;
-
-    KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
     for (Entry = VfIrpTrackList.Flink;
          Entry != &VfIrpTrackList;
@@ -955,14 +983,27 @@ VfLookupIrp(
     {
         Track = CONTAINING_RECORD(Entry, VF_IRP_TRACK, ListEntry);
         if (Track->Irp == Irp)
-        {
-            KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             return Track;
-        }
     }
 
-    KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
     return NULL;
+}
+
+static
+UNUSED
+VF_IRP_TRACK*
+VfLookupIrp(
+    _In_ PIRP Irp
+)
+{
+    VF_IRP_TRACK* Track;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
+    Track = VfLookupIrpLocked(Irp);
+    KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
+
+    return Track;
 }
 
 /* ============================================================
@@ -972,18 +1013,15 @@ static UNUSED VOID VfCheckPageableCode(PVOID Address, PDRIVER_OBJECT DriverObjec
 {
     KIRQL CurrentIrql = KeGetCurrentIrql();
 
-    /* if address is in pageable memory.. */
-    if (!MmIsNonPagedSystemAddressValid(Address)
-)
+    if (!MmIsNonPagedSystemAddressValid(Address))
     {
-        /* ..if code executes above apc level, bugcheck */
         if (CurrentIrql > APC_LEVEL)
         {
             KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
-                         VF_VIOLATION_PAGEABLE_CODE,                          // VF_PAGEABLE_CODE
-                         (ULONG_PTR)Address,             // address
-                         CurrentIrql,                    // current IRQL
-                         (ULONG_PTR)DriverObject);       // driver
+                         VF_VIOLATION_PAGEABLE_CODE,
+                         (ULONG_PTR)Address,
+                         CurrentIrql,
+                         (ULONG_PTR)DriverObject);
         }
     }
 }
@@ -1013,8 +1051,10 @@ VfIoCompleteRequest(
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
-    Track = VfLookupIrp(Irp);
+    Track = VfLookupIrpLocked(Irp);
     if (!Track)
+    {
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(
             VF_BUGCHECK_DRIVER_VIOLATION,
             VF_VIOLATION_COMPLETING_UNKNOWN_IRP,
@@ -1022,8 +1062,11 @@ VfIoCompleteRequest(
             0,
             0
         );
+    }
 
     if (Track->Completed)
+    {
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(
             VF_BUGCHECK_DRIVER_VIOLATION,
             VF_VIOLATION_DOUBLE_COMPLETE,
@@ -1031,9 +1074,9 @@ VfIoCompleteRequest(
             0,
             0
         );
+    }
 
     Track->Completed = TRUE;
-
     RemoveEntryList(&Track->ListEntry);
     ExFreePool(Track);
 
@@ -1047,51 +1090,84 @@ VfIoIncrementRef(
     PIRP Irp
 )
 {
-    LIST_ENTRY VfIrpRefList;
-    PVF_IRP_TRACK Track = NULL;   // ← pointer, initialized to NULL
+    KIRQL OldIrql;
+    PVF_IRP_TRACK Track;
 
-    UNREFERENCED_PARAMETER(VfIrpRefList);
+    KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
+
+    Track = VfLookupIrpLocked(Irp);
+
+    if (Track)
+    {
+        InterlockedIncrement(&Track->ReferenceCount);
+        Track->CancelRoutineSet = (Irp->CancelRoutine != NULL);
+        Irp->Tail.Overlay.DriverContext[0] = Track;
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
+        return STATUS_SUCCESS;
+    }
+
+    /*
+     * if no existing entry -> allocate a new one
+     * since ReferenceCount starts at 1 we do NOT increment again
+     */
+    Track = (PVF_IRP_TRACK)ExAllocatePoolWithTag(
+        NonPagedPool,
+        sizeof(VF_IRP_TRACK),
+        TAG_VFSP);
 
     if (!Track)
     {
-        Track = (PVF_IRP_TRACK)ExAllocatePoolWithTag(
-            NonPagedPool,
-            sizeof(VF_IRP_TRACK),
-            TAG_VFSP);
-
-        Track->Irp = Irp;
-        Track->ReferenceCount = 1;
-        Track->CancelRoutineSet = FALSE;
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    InterlockedIncrement(&Track->ReferenceCount);
+    RtlZeroMemory(Track, sizeof(*Track));
+    Track->Irp            = Irp;
+    Track->ReferenceCount = 1;
+    Track->CancelRoutineSet = (Irp->CancelRoutine != NULL);
 
-    Irp->Tail.Overlay.DriverContext[0] = Track;
     InsertTailList(&VfIrpTrackList, &Track->ListEntry);
+    Irp->Tail.Overlay.DriverContext[0] = Track;
 
+    KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
     return STATUS_SUCCESS;
 }
 
 VOID VfIoDecrementRef(PIRP Irp)
 {
-    VF_IRP_TRACK_EXT* Track = Irp->Tail.Overlay.DriverContext[0];
+    PVF_IRP_TRACK Track = (PVF_IRP_TRACK)Irp->Tail.Overlay.DriverContext[0];
+    KIRQL OldIrql;
+    BOOLEAN ShouldFree;
+    BOOLEAN WasCompleted;
+
     if (!Track)
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
 
+    KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
+
     if (InterlockedDecrement(&Track->ReferenceCount) < 0)
     {
+        KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
     }
 
-    if (Track->ReferenceCount == 0)
+    ShouldFree   = (Track->ReferenceCount == 0);
+    WasCompleted = Track->Completed;
+
+    if (ShouldFree)
     {
         RemoveEntryList(&Track->ListEntry);
-        ExFreePool(Track);
         Irp->Tail.Overlay.DriverContext[0] = NULL;
     }
 
-    if (Track->Completed)
+    KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
+
+    /* check completed BEFORE freeing the track */
+    if (WasCompleted)
     {
+        if (ShouldFree)
+            ExFreePool(Track);
+
         KeBugCheckEx(
             VF_BUGCHECK_DRIVER_VIOLATION,
             VF_VIOLATION_DOUBLE_COMPLETE,
@@ -1100,6 +1176,9 @@ VOID VfIoDecrementRef(PIRP Irp)
             0
         );
     }
+
+    if (ShouldFree)
+        ExFreePool(Track);
 }
 
 /* ============================================================
@@ -1124,8 +1203,13 @@ static VF_THREAD_LOCK_STACK* VfGetThreadLockStack(VOID)
         }
     }
 
-    // not found? -> create new
     Stack = ExAllocatePoolWithTag(NonPagedPool, sizeof(VF_THREAD_LOCK_STACK), 'tLkV');
+    if (!Stack)
+    {
+        KeReleaseSpinLock(&VfThreadLockListLock, OldIrql);
+        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_SPINLOCK_TRACK, 0, 0, 0);
+    }
+
     RtlZeroMemory(Stack, sizeof(VF_THREAD_LOCK_STACK));
     Stack->Thread = Thread;
     Stack->Count = 0;
@@ -1163,7 +1247,7 @@ BOOLEAN VfCheckDeadlock(PKSPIN_LOCK NewLock, VF_THREAD_LOCK_STACK* Stack)
         PKSPIN_LOCK Held = Stack->HeldLocks[i];
         KIRQL OldIrql;
         PLIST_ENTRY L;
-    
+
         KeAcquireSpinLock(&VfSpinlockDepLock, &OldIrql);
 
         for (L = VfSpinlockDependencyList.Flink; L != &VfSpinlockDependencyList; L = L->Flink)
@@ -1171,7 +1255,7 @@ BOOLEAN VfCheckDeadlock(PKSPIN_LOCK NewLock, VF_THREAD_LOCK_STACK* Stack)
             VF_SPINLOCK_DEPENDENCY* Edge = CONTAINING_RECORD(L, VF_SPINLOCK_DEPENDENCY, ListEntry);
             if (Edge->HeldLock == NewLock && Edge->AcquiredLock == Held)
             {
-                // if it found a back-edge -> cycle detected
+                /* back-edge found -> cycle */
                 KeReleaseSpinLock(&VfSpinlockDepLock, OldIrql);
                 return TRUE;
             }
@@ -1190,7 +1274,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
     KIRQL DepOldIrql;
     KIRQL TrackOldIrql;
 
-    // --- IRQL check ---
     if (CurrentIrql > DISPATCH_LEVEL)
     {
         KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
@@ -1200,7 +1283,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
                      0);
     }
 
-    // --- check for recursive acquisition ---
     for (ULONG i = 0; i < Stack->Count; i++)
     {
         if (Stack->HeldLocks[i] == SpinLock)
@@ -1213,7 +1295,6 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
         }
     }
 
-    // --- lock order inversion detection ---
     if (Stack->Count > 0)
     {
         PKSPIN_LOCK LastLock = Stack->HeldLocks[Stack->Count - 1];
@@ -1227,10 +1308,8 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
         }
     }
 
-    // --- ensure stack capacity ---
     VfEnsureLockStackCapacity(Stack);
 
-    // --- deadlock detection via global dependency graph ---
     if (VfCheckDeadlock(SpinLock, Stack))
     {
         KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
@@ -1264,13 +1343,13 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
 
     KeReleaseSpinLock(&VfSpinlockDepLock, DepOldIrql);
 
-    // --- acquire the actual spinlock ---
+    /* acquire the ACTUAL spinlock */
     KeAcquireSpinLock(SpinLock, OldIrql);
 
-    // --- track in per-thread stack ---
+    /* track in per-thread stack */
     Stack->HeldLocks[Stack->Count++] = SpinLock;
 
-    // --- global spinlock tracking ---
+    /* global spinlock tracking */
     VF_SPINLOCK_TRACK* Track = ExAllocatePoolWithTag(NonPagedPool,
                                                      sizeof(VF_SPINLOCK_TRACK),
                                                      'sIrV');
@@ -1283,7 +1362,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
                      0);
     }
 
-    Track->SpinLock = SpinLock;
+    Track->SpinLock    = SpinLock;
     Track->AcquireIrql = *OldIrql;
     Track->OwnerThread = PsGetCurrentThread();
 
@@ -1300,7 +1379,6 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
     VF_THREAD_LOCK_STACK* Stack = VfGetThreadLockStack();
     BOOLEAN Found = FALSE;
 
-    // --- IRQL check ---
     if (CurrentIrql > DISPATCH_LEVEL)
     {
         KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
@@ -1310,16 +1388,12 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
                      0);
     }
 
-    // --- find the lock in stack (must be held!) ---
     for (LONG i = (LONG)Stack->Count - 1; i >= 0; i--)
     {
         if (Stack->HeldLocks[i] == SpinLock)
         {
-            // remove it by shifting others down
             for (LONG j = i; j < (LONG)Stack->Count - 1; j++)
-            {
                 Stack->HeldLocks[j] = Stack->HeldLocks[j + 1];
-            }
             Stack->Count--;
             Found = TRUE;
             break;
@@ -1335,7 +1409,6 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
                      0);
     }
 
-    // --- remove global spinlock tracking ---
     KeAcquireSpinLock(&VfSpinlockLock, &TrackOldIrql);
 
     for (L = VfSpinlockList.Flink; L != &VfSpinlockList; L = L->Flink)
@@ -1351,12 +1424,11 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
 
     KeReleaseSpinLock(&VfSpinlockLock, TrackOldIrql);
 
-    // --- release the actual spinlock ---
     KeReleaseSpinLock(SpinLock, OldIrql);
 }
 
 /* ============================================================
-   DMA ADAPATER VERIFICATION
+   DMA ADAPTER VERIFICATION
    ============================================================ */
 VOID
 NTAPI
@@ -1402,9 +1474,7 @@ VfLookupDmaAdapter(
          L != &VfDmaAdapterList;
          L = L->Flink)
     {
-        Track =
-            CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
-
+        Track = CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
         if (Track->Adapter == Adapter)
             return Track;
     }
@@ -1427,7 +1497,6 @@ VfGetDmaAdapter(
     if (!Adapter)
         return NULL;
 
-    // alloc tracker
     Track = ExAllocatePoolWithTag(
         NonPagedPool,
         sizeof(VF_DMA_ADAPTER_TRACK),
@@ -1443,18 +1512,14 @@ VfGetDmaAdapter(
             0,
             0
         );
-        return NULL; // unreachable, but required
+        return NULL; /* unreachable */
     }
 
     RtlZeroMemory(Track, sizeof(*Track));
-
-    // copy the original dma operations
-    Track->OriginalOps = *Adapter->DmaOperations;
-
-    Track->Adapter = Adapter;
+    Track->OriginalOps  = *Adapter->DmaOperations;
+    Track->Adapter      = Adapter;
     Track->DriverObject = DeviceObject->DriverObject;
 
-    // add to the global list
     KeAcquireSpinLock(&VfDmaLock, &OldIrql);
     InsertTailList(&VfDmaAdapterList, &Track->ListEntry);
     KeReleaseSpinLock(&VfDmaLock, OldIrql);
@@ -1530,13 +1595,13 @@ VfFindAdapter(PDMA_ADAPTER Adapter)
          L != &VfDmaAdapterList;
          L = L->Flink)
     {
-        T =
-            CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
+        T = CONTAINING_RECORD(L, VF_DMA_ADAPTER_TRACK, ListEntry);
         if (T->Adapter == Adapter)
             return T;
     }
     return NULL;
 }
+
 /* ============================================================
    DRIVER UNLOAD VERIFICATION
    ============================================================ */
@@ -1551,7 +1616,6 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
 
     if (!IsListEmpty(&Driver->PoolList))
     {
-        /* detected memory leak! */
         KeBugCheckEx(VF_BUGCHECK_MEMORY_LEAK,
                      (ULONG_PTR)DriverObject,
                      0, 0, 0);
@@ -1587,65 +1651,38 @@ VfFailDeviceNode(
     va_list VaList;
 
     if (PhysicalDeviceObject)
-    {
         DriverObject = PhysicalDeviceObject->DriverObject;
-    }
 
-    DbgPrintEx(
-        DPFLTR_VERIFIER_ID,
-        DPFLTR_ERROR_LEVEL,
-        "VERIFIER: VfFailDeviceNode\n"
-    );
+    DbgPrintEx(DPFLTR_VERIFIER_ID, DPFLTR_ERROR_LEVEL,
+               "VERIFIER: VfFailDeviceNode\n");
 
-    DbgPrintEx(
-        DPFLTR_VERIFIER_ID,
-        DPFLTR_ERROR_LEVEL,
-        "VERIFIER: PhysicalDeviceObject %p\n"
-        "VERIFIER: DriverObject %p\n",
-        PhysicalDeviceObject,
-        DriverObject
-    );
+    DbgPrintEx(DPFLTR_VERIFIER_ID, DPFLTR_ERROR_LEVEL,
+               "VERIFIER: PhysicalDeviceObject %p\n"
+               "VERIFIER: DriverObject %p\n",
+               PhysicalDeviceObject,
+               DriverObject);
 
     if (DebuggerMessageText)
     {
-        DbgPrintEx(
-            DPFLTR_VERIFIER_ID,
-            DPFLTR_ERROR_LEVEL,
-            "VERIFIER: %s\n",
-            DebuggerMessageText
-        );
+        DbgPrintEx(DPFLTR_VERIFIER_ID, DPFLTR_ERROR_LEVEL,
+                   "VERIFIER: %s\n", DebuggerMessageText);
     }
 
     if (ParameterFormatString)
     {
         va_start(VaList, ParameterFormatString);
-
-        vDbgPrintEx(
-            DPFLTR_VERIFIER_ID,
-            DPFLTR_ERROR_LEVEL,
-            ParameterFormatString,
-            VaList
-        );
-
+        vDbgPrintEx(DPFLTR_VERIFIER_ID, DPFLTR_ERROR_LEVEL,
+                    ParameterFormatString, VaList);
         va_end(VaList);
-
-        DbgPrintEx(
-            DPFLTR_VERIFIER_ID,
-            DPFLTR_ERROR_LEVEL,
-            "\n"
-        );
+        DbgPrintEx(DPFLTR_VERIFIER_ID, DPFLTR_ERROR_LEVEL, "\n");
     }
 
     if (AssertionControl && (*AssertionControl == 0))
-    {
         return;
-    }
 
 #if DBG
     if (FailureClass == VfFatalFailure)
-    {
         DbgBreakPoint();
-    }
 #endif
 
     KeBugCheckEx(
@@ -1678,8 +1715,8 @@ VfFailDriver(
 
     KeBugCheckEx(
         VF_BUGCHECK_DRIVER_VIOLATION,
-        VF_VIOLATION_LEAKED_RESOURCES,                      
-        (ULONG_PTR)DriverObject,    // offending driver
+        VF_VIOLATION_LEAKED_RESOURCES,
+        (ULONG_PTR)DriverObject,
         (ULONG_PTR)_ReturnAddress(),
         0
     );
@@ -1703,7 +1740,7 @@ VfFailSystemBIOS(
 
     KeBugCheckEx(
         VF_BUGCHECK_DRIVER_VIOLATION,
-        VF_VIOLATION_FIRMWARE_BIOS,                       // firmware / bios violation
+        VF_VIOLATION_FIRMWARE_BIOS,
         (ULONG_PTR)Message,
         (ULONG_PTR)_ReturnAddress(),
         0

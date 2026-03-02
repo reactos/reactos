@@ -22,8 +22,8 @@ typedef struct _VF_SETTINGS {
 
 #define VF_FLAG_SPECIAL_POOL          0x00000001
 #define VF_FLAG_DMA_FAULT_INJECTION   0x00000002
-#define VF_FLAG_IRQL_CHECKING         0x00000004 // previous was wrong  (0x00000003)
-#define VF_FLAG_POOL_TRACKING         0x00000008 // previous overlapped (0x00000004)
+#define VF_FLAG_IRQL_CHECKING         0x00000004
+#define VF_FLAG_POOL_TRACKING         0x00000008
 
 #define TAG_VFDRV  'DrFV'
 #define TAG_VFALL  'AlFV'
@@ -34,16 +34,16 @@ typedef struct _VF_SETTINGS {
  * ALWAYS 0xC4 FOR DRIVER VERIFIER MEMORY/POOL ISSUES
    ============================================================ */
 
-#define VF_BUGCHECK_MEMORY_LEAK         0xC4
+#define VF_BUGCHECK_MEMORY_LEAK          0xC4
 #define VF_BUGCHECK_POOL_TAG_VIOLATION   0xC4
-#define VF_BUGCHECK_POOL_TYPE_VIOLATION 0xC4
-#define VF_BUGCHECK_DRIVER_VIOLATION    0xC9
-#define VF_BUGCHECK_SPECIAL_POOL          0xC4
-#define VF_BUGCHECK_INVALID_FREE          0xC4
+#define VF_BUGCHECK_POOL_TYPE_VIOLATION  0xC4
+#define VF_BUGCHECK_DRIVER_VIOLATION     0xC9
+#define VF_BUGCHECK_SPECIAL_POOL         0xC4
+#define VF_BUGCHECK_INVALID_FREE         0xC4
+#define VF_BUGCHECK_IRQL_VIOLATION       0xC1
 
 /* ============================================================
-   VERIFIER VIOLATION CODES (BUGCHECK PARAM 1, UPDATED FOR CORRECT
-                             WINDBG DECODING)
+   VERIFIER VIOLATION CODES (BUGCHECK PARAM 1)
    ============================================================ */
 
 #define VF_VIOLATION_COMPLETING_UNKNOWN_IRP   0x01
@@ -73,7 +73,7 @@ typedef struct _VF_SETTINGS {
 #endif
 
 /* ============================================================
-   GLOBAL STATE 
+   GLOBAL STATE
    ============================================================ */
 typedef struct _VF_GLOBAL_STATE
 {
@@ -104,22 +104,24 @@ extern BOOLEAN VfGlobalEnabled;
 extern VF_DMA_FAULT_STATE VfDmaFaultState;
 
 /* LIST ENTRIES */
-LIST_ENTRY VfDriverList;
-LIST_ENTRY VfIrpTrackList;
-LIST_ENTRY VfIrpHookList;
-LIST_ENTRY VfSpinlockList;
-LIST_ENTRY VfDmaAdapterList;
-LIST_ENTRY VfThreadLockList;
-LIST_ENTRY VfSpinlockDependencyList;
+extern LIST_ENTRY VfDriverList;
+extern LIST_ENTRY VfIrpTrackList;
+extern LIST_ENTRY VfIrpHookList;
+extern LIST_ENTRY VfSpinlockList;
+extern LIST_ENTRY VfDmaAdapterList;
+extern LIST_ENTRY VfThreadLockList;
+extern LIST_ENTRY VfSpinlockDependencyList;
 
 /* LOCKS */
-KSPIN_LOCK VfSpinlockLock;
-KSPIN_LOCK VfDmaLock;
-KSPIN_LOCK VfDriverListLock;
-KSPIN_LOCK VfIrpTrackLock;
-KSPIN_LOCK VfIrpHookLock;
-KSPIN_LOCK VfThreadLockListLock;
-KSPIN_LOCK VfSpinlockDepLock;
+extern KSPIN_LOCK VfSpinlockLock;
+extern KSPIN_LOCK VfDmaLock;
+extern KSPIN_LOCK VfDriverListLock;
+extern KSPIN_LOCK VfIrpTrackLock;
+extern KSPIN_LOCK VfIrpHookLock;
+extern KSPIN_LOCK VfThreadLockListLock;
+extern KSPIN_LOCK VfSpinlockDepLock;
+
+// note that all these are declared extern so it doesn't conflict with other definitions in other files.
 
 /* ============================================================
    STRUCTURES
@@ -151,16 +153,19 @@ typedef struct _VF_DRIVER_ENTRY
 
 typedef struct _VF_IRP_TRACK
 {
-    LIST_ENTRY ListEntry;
-    LONG ReferenceCount;
-    BOOLEAN CancelRoutineSet;
-    PIRP Irp;
+    LIST_ENTRY  ListEntry;
+    PIRP        Irp;
     PDRIVER_OBJECT DriverObject;
-    UCHAR MajorFunction;
-    KIRQL DispatchIrql;
-    BOOLEAN PendingReturned;
-    BOOLEAN Completed;
+    LONG        ReferenceCount;
+    UCHAR       MajorFunction;
+    KIRQL       DispatchIrql;
+    BOOLEAN     PendingReturned;
+    BOOLEAN     Completed;
+    BOOLEAN     CancelRoutineSet;
 } VF_IRP_TRACK, *PVF_IRP_TRACK;
+
+/* since VF_IRP_TRACK_EXT no longer exists we just use VF_IRP_TRACK everywhere */
+typedef VF_IRP_TRACK VF_IRP_TRACK_EXT;
 
 typedef struct _VF_SPINLOCK_TRACK
 {
@@ -175,9 +180,7 @@ typedef struct _VF_DMA_ADAPTER_TRACK
     LIST_ENTRY      ListEntry;
     PDMA_ADAPTER    Adapter;
     PDRIVER_OBJECT  DriverObject;
-
-    DMA_OPERATIONS  OriginalOps;   // <- copy of real ops
-
+    DMA_OPERATIONS  OriginalOps;
     LONG            MapRegisterCount;
     BOOLEAN         AdapterReleased;
 } VF_DMA_ADAPTER_TRACK;
@@ -193,15 +196,6 @@ typedef struct _VF_IRP_HOOK
     PDRIVER_OBJECT DriverObject;
     PDRIVER_DISPATCH OriginalMajor[IRP_MJ_MAXIMUM_FUNCTION + 1];
 } VF_IRP_HOOK;
-
-typedef struct _VF_IRP_TRACK_EXT
-{
-    LIST_ENTRY ListEntry;
-    PIRP Irp;
-    LONG ReferenceCount;
-    BOOLEAN CancelRoutineSet;
-    BOOLEAN Completed;
-} VF_IRP_TRACK_EXT;
 
 typedef struct _VF_THREAD_LOCK_STACK
 {
@@ -228,9 +222,9 @@ VfIoIncrementRef(
     PIRP Irp
 );
 
-VOID 
+VOID
 VfIoDecrementRef(
-  PIRP Irp
+    PIRP Irp
 );
 
 VOID
@@ -239,41 +233,9 @@ VfIoCompleteRequest(
     CCHAR PriorityBoost
 );
 
-static
-VOID
-VfCheckPageableCode(
-  PVOID Address UNUSED,
-  PDRIVER_OBJECT DriverObject UNUSED
-);
-
 VOID
 VfValidateDmaAdapter(
-  PDMA_ADAPTER Adapter
-);
-
-static 
-VF_DMA_ADAPTER_TRACK* 
-VfLookupDmaAdapter(
-  PDMA_ADAPTER Adapter
-);
-
-static 
-BOOLEAN 
-UNUSED 
-VfShouldInjectDmaFault(
-  VF_DMA_FAULT_TYPE Type
-);
-
-static 
-VF_DMA_ADAPTER_TRACK*
-VfFindAdapter(
     PDMA_ADAPTER Adapter
-);
-
-static
-VF_IRP_TRACK*
-VfLookupIrp(
-    _In_ PIRP Irp
 );
 
 __declspec(dllexport)
@@ -291,15 +253,42 @@ VfFailDriver(
     PCSTR Message
 );
 
-VOID VfFailDeviceNode(
-    PDEVICE_OBJECT PhysicalDeviceObject,
-    ULONG BugCheckMajorCode,
-    ULONG BugCheckMinorCode,
-    VF_FAILURE_CLASS FailureClass,
-    PULONG AssertionControl,
-    PSTR DebuggerMessageText,
-    PSTR ParameterFormatString,
+VOID
+__cdecl
+VfFailDeviceNode(
+    _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG BugCheckMajorCode,
+    _In_ ULONG BugCheckMinorCode,
+    _In_ VF_FAILURE_CLASS FailureClass,
+    _Inout_opt_ PULONG AssertionControl,
+    _In_opt_ PSTR DebuggerMessageText,
+    _In_opt_ PSTR ParameterFormatString,
     ...
+);
+
+VOID NTAPI VfRegisterDriver(
+    PDRIVER_OBJECT DriverObject
+);
+
+VOID NTAPI VfInitialize(
+    VOID
+);
+
+PDRIVER_OBJECT
+VfGetDriverByAddress(
+    PVOID Address
+);
+
+PVOID NTAPI
+VfAllocatePool(
+    PDRIVER_OBJECT DriverObject,
+    POOL_TYPE PoolType,
+    SIZE_T Size,
+    ULONG Tag
+);
+
+VOID VfHookDriverUnload(
+    PDRIVER_OBJECT DriverObject
 );
 
 VOID
