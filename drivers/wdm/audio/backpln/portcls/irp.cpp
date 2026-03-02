@@ -98,7 +98,7 @@ PortClsPnp(
                 return Status;
             }
 
-            // release resource list
+            // Release resource list
             resource_list->Release();
 
             // store device power state
@@ -310,7 +310,7 @@ PortClsPower(
                 DeviceExtension->AdapterPowerManagement->PowerChangeState(PowerState);
             }
 
-            // call all registered IPowerNotify interfaces via ISubdevice interface
+            // Call all registered IPowerNotify interfaces via ISubdevice interface
             KIRQL OldLevel;
             KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
 
@@ -319,21 +319,21 @@ PortClsPower(
             {
                 PENTRY_POWER_NOTIFY PowerEntry = CONTAINING_RECORD(Entry, ENTRY_POWER_NOTIFY, Entry);
 
-                // move to next entry
+                // Move to next entry
                 Entry = Entry->Flink;
 
-                // release lock
+                // Release lock
                 KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
 
-                // call entry
+                // Call entry
                 DPRINT1("Calling %p\n", PowerEntry->PowerNotify);
                 PowerEntry->PowerNotify->PowerChangeNotify(PowerState);
 
-                // reacquire lock
+                // Reacquire lock
                 KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
             }
 
-            // release lock
+            // Release lock
             KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
 
             // store new power state

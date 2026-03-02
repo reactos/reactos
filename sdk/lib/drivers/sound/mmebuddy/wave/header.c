@@ -179,7 +179,7 @@ WriteWaveHeader(
     if ( ! FunctionTable->CommitWaveBuffer )
         return MMSYSERR_NOTSUPPORTED;
 
-    if ( SoundDeviceInstance->ResetInProgress)
+    if (SoundDeviceInstance->ResetInProgress)
         return MMSYSERR_NOTSUPPORTED;
 
     /*
@@ -239,13 +239,13 @@ EnqueueWaveHeader(
     WaveHeader->dwFlags |= WHDR_INQUEUE;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
-    if ( ! MMSUCCESS(Result) )
+    if (!MMSUCCESS(Result))
     {
         return TranslateInternalMmResult(Result);
     }
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
-    if ( ! MMSUCCESS(Result) )
+    if (!MMSUCCESS(Result))
     {
         return TranslateInternalMmResult(Result);
     }

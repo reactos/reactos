@@ -15,7 +15,7 @@
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/iofuncs.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
@@ -489,7 +489,7 @@ WdmAudSetWaveDeviceFormatByMMixer(
     MMRESULT Result;
     BOOL bWaveIn;
 
-    DPRINT1("SetWaveDeviceFormatByMMixer\n");
+    DPRINT("SetWaveDeviceFormatByMMixer\n");
     Result = GetSoundDeviceFromInstance(Instance, &SoundDevice);
 
     if ( ! MMSUCCESS(Result) )
@@ -514,13 +514,13 @@ WdmAudSetWaveDeviceFormatByMMixer(
             &Instance->RTStreamingBufferLength);
         if (MixerStatus == MM_STATUS_SUCCESS)
         {
-            DPRINT1("RTStreamingBuffer %p Length %u\n",
+            DPRINT("RTStreamingBuffer %p Length %u\n",
             Instance->RTStreamingBuffer,
             Instance->RTStreamingBufferLength);
 
             Instance->LegacyStreaming = FALSE;
             // clear buffer
-            RtlFillMemory(Instance->RTStreamingBuffer, Instance->RTStreamingBufferLength, 0x00);
+            RtlZeroMemory(Instance->RTStreamingBuffer, Instance->RTStreamingBufferLength);
             // set offset
             Instance->RTStreamingBufferOffset = 0;
             Instance->hNotifyRTStreamingEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -553,7 +553,7 @@ WdmAudSetWaveDeviceFormatByMMixer(
                 Instance->RTStreamingShadowBufferLength = Instance->RTStreamingBufferLength;
                 Instance->RTStreamingBufferBytesWritten = 0;
                 Instance->RTStreamingEnabled = TRUE;
-                DPRINT1("RT Audio Stream enabled\n");
+                DPRINT("RT Audio Stream enabled\n");
             }
         }
         else
@@ -650,7 +650,7 @@ WdmAudCloseSoundDeviceByMMixer(
         if (SoundDeviceInstance->RTStreamingEnabled)
         {
             SoundDeviceInstance->RTStreamingEnabled = FALSE;
-            DPRINT1("signaling stop\n");
+            DPRINT("signaling stop\n");
             SetEvent(SoundDeviceInstance->hNotifyRTStreamingStopEvent);
             SetEvent(SoundDeviceInstance->hNotifyRTStreamingCompletionStopEvent);
             do
@@ -658,7 +658,7 @@ WdmAudCloseSoundDeviceByMMixer(
                 Sleep(1);
             }while(SoundDeviceInstance->RTStreamingStarted || SoundDeviceInstance->RTStreamingCompletionStarted);
 
-            DPRINT1("closing device handling\n");
+            DPRINT("closing device handling\n");
             CloseHandle(Handle);
             SoundDeviceInstance->RTStreamingBuffer = NULL;
             SoundDeviceInstance->RTStreamingBufferLength = 0;
@@ -855,7 +855,7 @@ WdmAudResetStreamByMMixer(
 
     if (SoundDeviceInstance->RTStreamingEnabled)
     {
-        DPRINT1("ResetStream %u\n", bStartReset);
+        DPRINT("ResetStream %u\n", bStartReset);
         SoundDeviceInstance->ResetInProgress = bStartReset;
         SoundDeviceInstance->RTStreamingBufferBytesWritten = 0;
 
@@ -1084,13 +1084,13 @@ RTStreamingThreadProc(
     WaitObjects[0] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingStopEvent;
     WaitObjects[1] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingEvent;
 
-    DPRINT1("RTStreamingThreadProc entered %p\n", SoundDeviceInstance);
+    DPRINT("RTStreamingThreadProc entered %p\n", SoundDeviceInstance);
     while (SoundDeviceInstance->RTStreamingEnabled)
     {
         Status = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
         if (Status == STATUS_WAIT_0)
         {
-            DPRINT1("RTStreamingThreadProc StopEvent\n");
+            DPRINT("RTStreamingThreadProc StopEvent\n");
             break;
         }
 
@@ -1101,10 +1101,10 @@ RTStreamingThreadProc(
             if (SoundDeviceInstance->RTStreamingShadowBufferOffset)
             {
                 SoundDeviceInstance->RTStreamingStarted = TRUE;
-                LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+                ULONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
                 BytesCopied = min(Length, SoundDeviceInstance->RTStreamingShadowBufferOffset);
                 BytesCopied = min(BytesCopied, Length - OffsetInBuffer);
-            //DPRINT1("RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied, SoundDeviceInstance->RTStreamingBuffer);
+                DPRINT("RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied, SoundDeviceInstance->RTStreamingBuffer);
                 RtlCopyMemory(
                     &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
                     SoundDeviceInstance->RTStreamingShadowBuffer,
@@ -1119,12 +1119,12 @@ RTStreamingThreadProc(
             }
             if (BytesCopied == 0)
             {
-                // insert silence glitch
-                LONG Remaining = Length - BytesCopied;
-                LONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+                /* Insert silence glitch */
+                ULONG Remaining = Length - BytesCopied;
+                ULONG OffsetInBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
                 Remaining = min(Remaining, SoundDeviceInstance->RTStreamingBufferLength - SoundDeviceInstance->RTStreamingBufferOffset);
                 Remaining = min(Remaining, Length - OffsetInBuffer);
-                DPRINT1("Silence glitch: RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, Remaining, SoundDeviceInstance->RTStreamingBuffer);
+                DPRINT("Silence glitch: RTStreamingBufferOffset %u Remaining %u Buffer %p\n",SoundDeviceInstance->RTStreamingBufferOffset, Remaining, SoundDeviceInstance->RTStreamingBuffer);
                 ASSERT(SoundDeviceInstance);
                 ASSERT(SoundDeviceInstance->RTStreamingBuffer);
                 RtlZeroMemory(
@@ -1138,8 +1138,8 @@ RTStreamingThreadProc(
         else if (DeviceType == WAVE_IN_DEVICE_TYPE)
         {
             SoundDeviceInstance->RTStreamingStarted = TRUE;
-            LONG OffsetInStreamingBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
-            LONG OffsetInStreamingShadowBuffer = SoundDeviceInstance->RTStreamingShadowBufferOffset;
+            ULONG OffsetInStreamingBuffer = SoundDeviceInstance->RTStreamingBufferOffset % Length;
+            ULONG OffsetInStreamingShadowBuffer = SoundDeviceInstance->RTStreamingShadowBufferOffset;
             BytesCopied = min(Length - OffsetInStreamingBuffer, SoundDeviceInstance->RTStreamingShadowBufferLength - OffsetInStreamingShadowBuffer);
             RtlCopyMemory(
                     &SoundDeviceInstance->RTStreamingShadowBuffer[SoundDeviceInstance->RTStreamingShadowBufferOffset],
@@ -1151,7 +1151,7 @@ RTStreamingThreadProc(
         }
     }
     //RtlZeroMemory(SoundDeviceInstance->RTStreamingBuffer, SoundDeviceInstance->RTStreamingBufferLength);
-    DPRINT1("Exiting thread\n");
+    DPRINT("Exiting thread\n");
     SoundDeviceInstance->RTStreamingStarted = FALSE;
     return 0;
 }
@@ -1179,14 +1179,14 @@ RTStreamingCompletionThreadProc(
     WaitObjects[0] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingCompletionStopEvent;
     WaitObjects[1] = (PVOID)SoundDeviceInstance->hNotifyRTStreamingCompletionEvent;
 
-    DPRINT1("RTStreamingCompletionThreadProc entered %p\n", SoundDeviceInstance);
+    DPRINT("RTStreamingCompletionThreadProc entered %p\n", SoundDeviceInstance);
     while (SoundDeviceInstance->RTStreamingEnabled)
     {
         SoundDeviceInstance->RTStreamingCompletionStarted = TRUE;
         Status = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
         if (Status == STATUS_WAIT_0)
         {
-            DPRINT1("RTStreamingCompletionThreadProc StopEvent\n");
+            DPRINT("RTStreamingCompletionThreadProc StopEvent\n");
             break;
         }
         else if (Status == WAIT_OBJECT_0 + 1)
@@ -1200,7 +1200,7 @@ RTStreamingCompletionThreadProc(
             FreeMemory(Context);
         }
     }
-    DPRINT1("Exiting completion thread\n");
+    DPRINT("Exiting completion thread\n");
     SoundDeviceInstance->RTStreamingCompletionStarted = FALSE;
     return MMSYSERR_NOERROR;
 }
@@ -1233,7 +1233,7 @@ WdmAudCommitWaveBufferByMMixer(
     {
         if (SoundDeviceInstance->hRTStreamingThread == NULL && SoundDeviceInstance->hRTStreamingCompletionThread == NULL)
         {
-            // winmm@PlaySound directly calls waveOutWrite
+            /* winmm@PlaySound directly calls waveOutWrite */
             SoundDeviceInstance->hRTStreamingThread = CreateThread(NULL, 0, RTStreamingThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
             SoundDeviceInstance->hRTStreamingCompletionThread = CreateThread(NULL, 0, RTStreamingCompletionThreadProc, (LPVOID)SoundDeviceInstance, 0, NULL);
         }
@@ -1260,7 +1260,7 @@ WdmAudCommitWaveBufferByMMixer(
                 Offset += BytesCopied;
                 if (Offset < Length)
                 {
-                    //DPRINT1("Waiting...\n");
+                    DPRINT("Waiting...\n");
                     Sleep(1);
                 }
             }
@@ -1268,7 +1268,7 @@ WdmAudCommitWaveBufferByMMixer(
             {
                 while(SoundDeviceInstance->RTStreamingShadowBufferOffset == 0)
                 {
-                    //DPRINT1("Waiting...\n");
+                    DPRINT("Waiting...\n");
                     Sleep(1);
                 }
 

@@ -770,7 +770,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
             if (Gap > BufferLength)
             {
                 // insert silence samples
-                //DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
+                DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
@@ -1021,19 +1021,19 @@ CPortPinWaveCyclic::Close(
         // remove member from service group
         m_ServiceGroup->RemoveMember(PSERVICESINK(this));
 
-        // release service group
+        // Release service group
         m_ServiceGroup->Release();
 
-        // freed
+        // Freed
         m_ServiceGroup = NULL;
     }
 
     if (m_DmaChannel)
     {
-        // release reference
+        // Release reference
         m_DmaChannel->Release();
 
-        // freed
+        // Freed
         m_DmaChannel = NULL;
     }
 

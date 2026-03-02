@@ -270,23 +270,23 @@ CPortWaveCyclic::Init(
     Status = UnknownMiniport->QueryInterface(IID_IPowerNotify, (PVOID*)&PowerNotify);
     if (NT_SUCCESS(Status))
     {
-        // get device extension
+        // Get device extension
         DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         PENTRY_POWER_NOTIFY Notify = (PENTRY_POWER_NOTIFY)AllocateItem(NonPagedPool, sizeof(ENTRY_POWER_NOTIFY), TAG_PORTCLASS);
         if (Notify)
         {
             KIRQL OldLevel;
 
-            // setup item
+            // Setup item
             Notify->PowerNotify = PowerNotify;
 
-            // acquire lock
+            // Acquire lock
             KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
 
-            // insert item
+            // Insert item
             InsertTailList(&DeviceExtension->PowerNotifyList, &Notify->Entry);
 
-            // release lock
+            // Release lock
             KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
         }
         // store reference
@@ -598,6 +598,6 @@ NewPortWaveCyclic(
         delete Port;
     }
 
-    DPRINT1("NewPortWaveCyclic %p Status %u\n", Port, Status);
+    DPRINT("NewPortWaveCyclic %p Status %u\n", Port, Status);
     return Status;
 }

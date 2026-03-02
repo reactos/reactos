@@ -75,7 +75,7 @@ DoWaveStreaming(
         /* Is there any work to do? */
         Header = SoundDeviceInstance->HeadWaveHeader;
 
-        if ( ! Header )
+        if (!Header)
         {
             SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
             return;
@@ -114,7 +114,7 @@ DoWaveStreaming(
             /* We can commit anything up to the buffer size limit */
             if (SoundDeviceInstance->RTStreamingEnabled)
             {
-                /* no limit for RT streaming */
+                /* No limit for RT streaming */
                 BytesToCommit = BytesRemaining;
             }
             else

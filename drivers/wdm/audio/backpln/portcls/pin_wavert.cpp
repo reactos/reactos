@@ -119,18 +119,18 @@ PinWaveRTAudioGetHwLatency(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID D
     PSUBDEVICE_DESCRIPTOR Descriptor;
     CPortPinWaveRT *Pin;
 
-    // get sub device descriptor
+    // Get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check
+    // Sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    // cast to pin impl
+    // Cast to pin impl
     Pin = (CPortPinWaveRT *)Descriptor->PortPin;
 
-    // cast to output buffer
+    // Cast to output buffer
     HwLatency = (PKSRTAUDIO_HWLATENCY)Data;
 
     if (Request->Flags & KSPROPERTY_TYPE_GET)
@@ -139,7 +139,7 @@ PinWaveRTAudioGetHwLatency(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID D
         Irp->IoStatus.Information = sizeof(KSRTAUDIO_HWLATENCY);
         return STATUS_SUCCESS;
     }
-    // not supported
+    // Not supported
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -169,18 +169,18 @@ PinWaveRTAudioGetBufferWithNotification(IN PIRP Irp, IN PKSIDENTIFIER Request, I
     PKSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION Property;
     PKSRTAUDIO_BUFFER Buffer;
 
-    // get sub device descriptor
+    // Get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check
+    // Sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    // cast to pin impl
+    // Cast to pin impl
     Pin = (CPortPinWaveRT *)Descriptor->PortPin;
 
-    // get input buffer
+    // Get input buffer
     Property = (PKSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION)Request;
 
     Status = Pin->m_StreamNotification->AllocateBufferWithNotification(
@@ -192,17 +192,17 @@ PinWaveRTAudioGetBufferWithNotification(IN PIRP Irp, IN PKSIDENTIFIER Request, I
         &Pin->m_CacheType);
     if (!NT_SUCCESS(Status))
     {
-        // failed to allocate buffer
+        // Failed to allocate buffer
         DPRINT1("AllocateBufferWithNotification failed with %x\n", Status);
         return Status;
     }
-    // get output buffer
+    // Get output buffer
     Buffer = (PKSRTAUDIO_BUFFER)Data;
 
-    // get current process
+    // Get current process
     Pin->m_UserProcess = (PKPROCESS)IoGetCurrentProcess();
 
-    // map buffer
+    // Map buffer
     Pin->m_UserAddress = MmMapLockedPagesSpecifyCache(
         Pin->m_Mdl, UserMode, Pin->m_CacheType, Property->BaseAddress, FALSE, NormalPagePriority);
     if (!Pin->m_UserAddress)
@@ -211,13 +211,13 @@ PinWaveRTAudioGetBufferWithNotification(IN PIRP Irp, IN PKSIDENTIFIER Request, I
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    // return result
+    // Return result
     Buffer->BufferAddress = Pin->m_UserAddress;
     Buffer->ActualBufferSize = Pin->m_CommonBufferSize;
     Buffer->CallMemoryBarrier = Pin->m_CacheType == MmWriteCombined;
 
     Irp->IoStatus.Information = sizeof(KSRTAUDIO_BUFFER);
-    DPRINT1("PinWaveRTAudioGetBufferWithNotification success\n");
+    DPRINT("PinWaveRTAudioGetBufferWithNotification success\n");
     return STATUS_SUCCESS;
 }
 
@@ -230,44 +230,44 @@ PinWaveRTAudioRegisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request, I
     NTSTATUS Status;
     PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY Property;
 
-    DPRINT1("PinWaveRTAudioRegisterNotificationEvent entered\n");
+    DPRINT("PinWaveRTAudioRegisterNotificationEvent entered\n");
 
-    // get sub device descriptor
+    // Get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check
+    // Sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    // cast to pin impl
+    // Cast to pin impl
     Pin = (CPortPinWaveRT *)Descriptor->PortPin;
 
-    // get input buffer
+    // Get input buffer
     Property = (PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY)Request;
 
-    // referece notification event
+    // Referece notification event
     Status = ObReferenceObjectByHandle(
         Property->NotificationEvent, 0, *ExEventObjectType, UserMode, (PVOID*) &Pin->m_UserEvent, NULL);
     if (!NT_SUCCESS(Status))
     {
-        // failed to reference event
+        // Failed to reference event
         DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
         return Status;
     }
 
-    // register event
+    // Register event
     Status = Pin->m_StreamNotification->RegisterNotificationEvent(Pin->m_UserEvent);
     if (!NT_SUCCESS(Status))
     {
-        // failed to reference event
+        // Failed to reference event
         DPRINT1("RegisterNotificationEvent failed with %x\n", Status);
         return Status;
     }
 
-    // done
+    // Done
     Irp->IoStatus.Information = 0;
-    DPRINT1("PinWaveRTAudioRegisterNotificationEvent success\n");
+    DPRINT("PinWaveRTAudioRegisterNotificationEvent success\n");
     return STATUS_SUCCESS;
 }
 
@@ -280,43 +280,43 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
     NTSTATUS Status;
     PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY Property;
 
-    // get sub device descriptor
+    // Get sub device descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
-    // sanity check
+    // Sanity check
     PC_ASSERT(Descriptor);
     PC_ASSERT(Descriptor->PortPin);
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    // cast to pin impl
+    // Cast to pin impl
     Pin = (CPortPinWaveRT *)Descriptor->PortPin;
 
-    // get input buffer
+    // Get input buffer
     Property = (PKSRTAUDIO_NOTIFICATION_EVENT_PROPERTY)Request;
 
     if (Pin->m_UserEvent == NULL)
     {
-        // reference notification event
+        // Reference notification event
         Status = ObReferenceObjectByHandle(
             Property->NotificationEvent, 0, *ExEventObjectType, UserMode, (PVOID*) &Pin->m_UserEvent, NULL);
         if (!NT_SUCCESS(Status))
         {
-            // failed to reference event
+            // Failed to reference event
             DPRINT1("ObReferenceObjectByHandle failed with %x\n", Status);
             return Status;
         }
     }
-    // unregister event
+    // Unregister event
     Status = Pin->m_StreamNotification->UnregisterNotificationEvent(Pin->m_UserEvent);
     if (!NT_SUCCESS(Status))
     {
-        // failed to reference event
+        // Failed to reference event
         DPRINT1("RegisterNotificationEvent failed with %x\n", Status);
         return Status;
     }
     Pin->m_UserEvent = NULL;
 
-    // done
+    // Done
     Irp->IoStatus.Information = 0;
     return STATUS_SUCCESS;
 }
@@ -378,7 +378,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //DPRINT1("IPortPinWave_HandleKsProperty entered\n");
+    DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
@@ -662,7 +662,7 @@ CloseStreamRoutine(
             PKPROCESS Process = (PKPROCESS)PsGetCurrentProcess();
             if (Process != This->m_UserProcess)
             {
-                DPRINT1("Before KeStackAttachProcess\n");
+                DPRINT("Before KeStackAttachProcess\n");
                 KeStackAttachProcess(This->m_UserProcess, &ApcState);
             }
 
@@ -670,7 +670,7 @@ CloseStreamRoutine(
 
             if (Process != This->m_UserProcess)
             {
-                DPRINT1("Before KeUnstackDetachProcess\n");
+                DPRINT("Before KeUnstackDetachProcess\n");
                 KeUnstackDetachProcess(&ApcState);
             }
 
@@ -910,7 +910,7 @@ CPortPinWaveRT::Init(
     if (!NT_SUCCESS(Status))
         goto cleanup;
 
-    // get subdevice interface
+    // Get subdevice interface
     Status = Port->QueryInterface(IID_ISubdevice, (PVOID *)&Subdevice);
 
     if (!NT_SUCCESS(Status))
@@ -919,12 +919,12 @@ CPortPinWaveRT::Init(
     Status = Subdevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        // failed to get descriptor
+        // Failed to get descriptor
         Subdevice->Release();
         goto cleanup;
     }
 
-    /* initialize event management */
+    // Initialize event management
     InitializeListHead(&m_EventList);
     KeInitializeSpinLock(&m_EventListLock);
 
@@ -948,7 +948,7 @@ CPortPinWaveRT::Init(
     m_Descriptor->EventList = &m_EventList;
     m_Descriptor->EventListLock = &m_EventListLock;
 
-    // release subdevice descriptor
+    // Release subdevice descriptor
     Subdevice->Release();
 
     m_Stream->GetHWLatency(&m_Latency);

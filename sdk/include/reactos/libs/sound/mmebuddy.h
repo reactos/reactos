@@ -339,7 +339,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
     ULONG RTStreamingShadowBufferLength;
     volatile LONG RTStreamingShadowBufferOffset;
 
-
     BOOL ResetInProgress;
     BOOL bPaused;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;

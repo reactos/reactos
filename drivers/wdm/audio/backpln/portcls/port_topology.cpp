@@ -259,11 +259,11 @@ CPortTopology::Init(
         m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
     }
 
-    // does the Miniport adapter support IPowerNotify interface*/
+    // Does the Miniport adapter support IPowerNotify interface?
     Status = UnknownMiniport->QueryInterface(IID_IPowerNotify, (PVOID *)&PowerNotify);
     if (NT_SUCCESS(Status))
     {
-        // get device extension
+        // Get device extension
         DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         PENTRY_POWER_NOTIFY Notify =
             (PENTRY_POWER_NOTIFY)AllocateItem(NonPagedPool, sizeof(ENTRY_POWER_NOTIFY), TAG_PORTCLASS);
@@ -271,16 +271,16 @@ CPortTopology::Init(
         {
             KIRQL OldLevel;
 
-            // setup item
+            // Setup item
             Notify->PowerNotify = PowerNotify;
 
-            // acquire lock
+            // Acquire lock
             KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
 
-            // insert item
+            // Insert item
             InsertTailList(&DeviceExtension->PowerNotifyList, &Notify->Entry);
 
-            // release lock
+            // Release lock
             KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
         }
     }
