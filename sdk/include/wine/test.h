@@ -27,6 +27,11 @@
 #include <winbase.h>
 #include <stdio.h> // In the future: replace by <wine/debug.h>
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
 #ifdef __WINE_CONFIG_H
 #error config.h should not be used in Wine tests
 #endif
@@ -313,8 +318,8 @@ static inline void winetest_set_location( const char *file, int line )
 # define __winetest_file_line_prefix "%s:%d"
 #endif
 
-static inline int winetest_printf( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
-static inline int winetest_printf( const char *msg, ... )
+static int winetest_printf( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
+static int winetest_printf( const char *msg, ... )
 {
     struct winetest_thread_data *data = winetest_get_thread_data();
     va_list valist;
@@ -1083,6 +1088,10 @@ int main( int argc, char **argv )
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
 #endif
 
 #endif  /* __WINE_WINE_TEST_H */
