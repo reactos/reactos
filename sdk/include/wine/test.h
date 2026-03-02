@@ -45,6 +45,12 @@
 #error wine/debug.h should not be used in Wine tests
 #endif
 
+#ifdef __GNUC__
+# define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+#else /* __GNUC__ */
+# define __WINE_PRINTF_ATTR(fmt,args)
+#endif /* __GNUC__ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -114,45 +120,8 @@ extern void winetest_print_unlock(void);
 extern int winetest_vprintf( const char *msg, va_list args );
 extern int winetest_get_time(void);
 
-extern void winetest_start_nocount(unsigned int flags);
-extern int winetest_loop_nocount(void);
-extern void winetest_end_nocount(void);
 extern int winetest_get_mainargs( char*** pargv );
-extern LONG winetest_get_successes(void);
 extern void winetest_wait_child_process( HANDLE process );
-
-extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
-extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
-extern const char *wine_dbgstr_guid( const GUID *guid );
-extern const char *wine_dbgstr_point( const POINT *guid );
-extern const char *wine_dbgstr_size( const SIZE *guid );
-extern const char *wine_dbgstr_rect( const RECT *rect );
-#ifdef WINETEST_USE_DBGSTR_LONGLONG
-extern const char *wine_dbgstr_longlong( ULONGLONG ll );
-#endif
-static inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
-static inline const char *debugstr_an( const CHAR *s, intptr_t n ) { return wine_dbgstr_an( s, n ); }
-static inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
-static inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
-static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
-static inline const char *wine_dbgstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
-static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
-
-/* strcmpW is available for tests compiled under Wine, but not in standalone
- * builds under Windows, so we reimplement it under a different name. */
-static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
-{
-    while (*str1 && (*str1 == *str2)) { str1++; str2++; }
-    return *str1 - *str2;
-}
-
-#ifdef __REACTOS__
-/* ReactOS specific extensions, useful for patches */
-#define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
-#define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
-#define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
-#define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
-#endif
 
 #ifdef STANDALONE
 #define START_TEST(name) \
@@ -162,16 +131,6 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #else
 #define START_TEST(name) EXTERN_C void func_##name(void)
 #endif
-
-#ifdef __GNUC__
-# define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
-extern void winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
-
-#else /* __GNUC__ */
-# define __WINE_PRINTF_ATTR(fmt,args)
-extern void winetest_print(const char* msg, ...);
-
-#endif /* __GNUC__ */
 
 #ifdef WINETEST_NO_LINE_NUMBERS
 # define subtest_(file, line)  (winetest_set_location(file, 0), 0) ? (void)0 : winetest_subtest
@@ -220,61 +179,12 @@ extern void winetest_print(const char* msg, ...);
 #define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
 
-#define ros_skip_flaky          for (winetest_start_nocount(3); \
-                                     winetest_loop_nocount(); \
-                                     winetest_end_nocount())
-
-#define disable_success_count   for (winetest_start_nocount(1); \
-                                     winetest_loop_nocount(); \
-                                     winetest_end_nocount())
-
-#define skip_2k3_crash if (_winver < 0x600) skip("Test skipped, because it crashes on win 2003\n"); else
-#define skip_2k3_fail if (_winver < 0x600) skip("Test skipped, because it fails on win 2003\n"); else
-
 #define winetest_platform_is_wine !strcmp(winetest_platform, "wine")
 #define flaky_if(is_flaky)      // TODO: define me
 #define flaky                   flaky_if(TRUE)
 #define flaky_wine              flaky_if(winetest_platform_is_wine)
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
-#ifdef NONAMELESSUNION
-# define U(x)  (x).u
-# define U1(x) (x).u1
-# define U2(x) (x).u2
-# define U3(x) (x).u3
-# define U4(x) (x).u4
-# define U5(x) (x).u5
-# define U6(x) (x).u6
-# define U7(x) (x).u7
-# define U8(x) (x).u8
-#else
-# define U(x)  (x)
-# define U1(x) (x)
-# define U2(x) (x)
-# define U3(x) (x)
-# define U4(x) (x)
-# define U5(x) (x)
-# define U6(x) (x)
-# define U7(x) (x)
-# define U8(x) (x)
-#endif
-
-#ifdef NONAMELESSSTRUCT
-# define S(x)  (x).s
-# define S1(x) (x).s1
-# define S2(x) (x).s2
-# define S3(x) (x).s3
-# define S4(x) (x).s4
-# define S5(x) (x).s5
-#else
-# define S(x)  (x)
-# define S1(x) (x)
-# define S2(x) (x)
-# define S3(x) (x)
-# define S4(x) (x)
-# define S5(x) (x)
-#endif
 
 /* Records the location of the next check.
  * See the xxx_(file, line) macros.
@@ -743,24 +653,6 @@ struct winetest_thread_data *winetest_get_thread_data(void)
     return data;
 }
 
-/* allocate some tmp space for a string */
-static char *get_temp_buffer( size_t n )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    char *res = data->str_pos;
-
-    if (res + n >= &data->strings[sizeof(data->strings)]) res = data->strings;
-    data->str_pos = res + n;
-    return res;
-}
-
-/* release extra space that we requested in gimme1() */
-static void release_temp_buffer( char *ptr, size_t size )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    data->str_pos = ptr + size;
-}
-
 static void exit_process( int code )
 {
     fflush( stdout );
@@ -791,6 +683,343 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
+}
+
+int winetest_get_time(void)
+{
+    return GetTickCount();
+}
+
+int winetest_get_mainargs( char*** pargv )
+{
+    *pargv = winetest_argv;
+    return winetest_argc;
+}
+
+void winetest_wait_child_process( HANDLE process )
+{
+    DWORD exit_code = 1;
+
+    if (WaitForSingleObject( process, 30000 ))
+        fprintf( stdout, "%s: child process wait failed\n", current_test->name );
+    else
+        GetExitCodeProcess( process, &exit_code );
+
+    if (exit_code)
+    {
+        if (exit_code > 255)
+        {
+            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned)exit_code );
+            InterlockedIncrement( &winetest_failures );
+        }
+        else
+        {
+            fprintf( stdout, "%s: %u failures in child process\n",
+                     current_test->name, (unsigned)exit_code );
+            while (exit_code-- > 0)
+                InterlockedIncrement(&winetest_failures);
+        }
+    }
+}
+
+/* Find a test by name */
+static const struct test *find_test( const char *name )
+{
+    const struct test *test;
+    const char *p;
+    size_t len;
+
+    if ((p = strrchr( name, '/' ))) name = p + 1;
+    if ((p = strrchr( name, '\\' ))) name = p + 1;
+    len = strlen(name);
+    if (len > 2 && !strcmp( name + len - 2, ".c" )) len -= 2;
+
+    for (test = winetest_testlist; test->name; test++)
+    {
+        if (!strncmp( test->name, name, len ) && !test->name[len]) break;
+    }
+    return test->name ? test : NULL;
+}
+
+
+/* Display list of valid tests */
+static void list_tests(void)
+{
+    const struct test *test;
+
+    fprintf( stdout, "Valid test names:\n" );
+    for (test = winetest_testlist; test->name; test++) fprintf( stdout, "    %s\n", test->name );
+}
+
+/* Disable false-positive claiming "test" would be NULL-dereferenced */
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:28182)
+#endif
+
+/* Run a named test, and return exit status */
+static int run_test( const char *name )
+{
+    const struct test *test;
+    int status;
+
+    if (!(test = find_test( name )))
+    {
+        fprintf( stdout, "Fatal: test '%s' does not exist.\n", name );
+        exit_process(1);
+    }
+    winetest_successes = winetest_failures = winetest_todo_successes = winetest_todo_failures = 0;
+    tls_index=TlsAlloc();
+    current_test = test;
+    test->func();
+
+    /* show test results even if traces are disabled */
+    /*if (winetest_debug)*/
+    {
+        fprintf( stdout, "\n%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
+                 test->name, (int)(winetest_successes + winetest_failures + winetest_todo_successes + winetest_todo_failures),
+                 (int)winetest_todo_successes, (int)(winetest_failures + winetest_todo_failures),
+                 (winetest_failures + winetest_todo_failures != 1) ? "failures" : "failure",
+                 (int)winetest_skipped );
+    }
+    status = (winetest_failures + winetest_todo_failures < 255) ? winetest_failures + winetest_todo_failures : 255;
+    return status;
+}
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
+/* Display usage and exit */
+static void usage( const char *argv0 )
+{
+    fprintf( stdout, "Usage: %s test_name\n\n", argv0 );
+    list_tests();
+    exit_process(1);
+}
+
+/* trap unhandled exceptions */
+static LONG CALLBACK exc_filter( EXCEPTION_POINTERS *ptrs )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    char elapsed[64];
+
+    winetest_print_lock();
+    if (data->current_file)
+        printf( "%s:%d: this is the last test seen before the exception\n",
+                data->current_file, data->current_line );
+    if (winetest_color) printf( winetest_color_bright_red );
+    printf( "%04x:%s:%s unhandled exception %08x at %p\n",
+            (UINT)GetCurrentProcessId(), current_test->name, winetest_elapsed( elapsed ),
+            (UINT)ptrs->ExceptionRecord->ExceptionCode, ptrs->ExceptionRecord->ExceptionAddress );
+    if (winetest_color) printf( winetest_color_reset );
+    fflush( stdout );
+    winetest_print_unlock();
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+/* check if we're running under wine */
+static BOOL running_under_wine(void)
+{
+    HMODULE module = GetModuleHandleA( "ntdll.dll" );
+    if (!module) return FALSE;
+    return (GetProcAddress( module, "wine_server_call" ) != NULL);
+}
+
+/* main function */
+int main( int argc, char **argv )
+{
+    char p[128];
+
+    setvbuf (stdout, NULL, _IONBF, 0);
+    winetest_mutex = CreateMutexA(NULL, FALSE, "winetest_print_mutex");
+
+    winetest_argc = argc;
+    winetest_argv = argv;
+
+    if (GetEnvironmentVariableA( "WINETEST_PLATFORM", p, sizeof(p) )) winetest_platform = _strdup(p);
+    if (GetEnvironmentVariableA( "WINETEST_DEBUG", p, sizeof(p) )) winetest_debug = atoi(p);
+    if (GetEnvironmentVariableA( "WINETEST_INTERACTIVE", p, sizeof(p) )) winetest_interactive = atoi(p);
+    if (GetEnvironmentVariableA( "WINETEST_REPORT_SUCCESS", p, sizeof(p) )) winetest_report_success = atoi(p);
+
+    if (!winetest_interactive) SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX );
+
+    if (!argv[1])
+    {
+        if (winetest_testlist[0].name && !winetest_testlist[1].name)  /* only one test */
+            return run_test( winetest_testlist[0].name );
+        usage( argv[0] );
+    }
+    if (!strcmp( argv[1], "--list" ))
+    {
+        list_tests();
+        return 0;
+    }
+    return run_test(argv[1]);
+}
+
+#endif  /* STANDALONE */
+
+#ifdef __REACTOS__
+
+// These can go away, once all winetests are synced
+#ifdef NONAMELESSUNION
+# define U(x)  (x).u
+# define U1(x) (x).u1
+# define U2(x) (x).u2
+# define U3(x) (x).u3
+# define U4(x) (x).u4
+# define U5(x) (x).u5
+# define U6(x) (x).u6
+# define U7(x) (x).u7
+# define U8(x) (x).u8
+#else
+# define U(x)  (x)
+# define U1(x) (x)
+# define U2(x) (x)
+# define U3(x) (x)
+# define U4(x) (x)
+# define U5(x) (x)
+# define U6(x) (x)
+# define U7(x) (x)
+# define U8(x) (x)
+#endif
+
+#ifdef NONAMELESSSTRUCT
+# define S(x)  (x).s
+# define S1(x) (x).s1
+# define S2(x) (x).s2
+# define S3(x) (x).s3
+# define S4(x) (x).s4
+# define S5(x) (x).s5
+#else
+# define S(x)  (x)
+# define S1(x) (x)
+# define S2(x) (x)
+# define S3(x) (x)
+# define S4(x) (x)
+# define S5(x) (x)
+#endif
+
+// FIXME: Should include wine/debug.h instead
+extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
+extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
+extern const char *wine_dbgstr_guid( const GUID *guid );
+extern const char *wine_dbgstr_point( const POINT *guid );
+extern const char *wine_dbgstr_size( const SIZE *guid );
+extern const char *wine_dbgstr_rect( const RECT *rect );
+#ifdef WINETEST_USE_DBGSTR_LONGLONG
+extern const char *wine_dbgstr_longlong( ULONGLONG ll );
+#endif
+static inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
+static inline const char *debugstr_an( const CHAR *s, intptr_t n ) { return wine_dbgstr_an( s, n ); }
+static inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
+static inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbgstr_wn( s, n ); }
+static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
+static inline const char *wine_dbgstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
+static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
+
+/* strcmpW is available for tests compiled under Wine, but not in standalone
+ * builds under Windows, so we reimplement it under a different name. */
+static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
+{
+    while (*str1 && (*str1 == *str2)) { str1++; str2++; }
+    return *str1 - *str2;
+}
+
+extern LONG winetest_get_successes(void);
+extern void winetest_print(const char* msg, ...) __WINE_PRINTF_ATTR( 1, 2);
+
+extern void winetest_start_nocount(unsigned int flags);
+extern int winetest_loop_nocount(void);
+extern void winetest_end_nocount(void);
+
+// hack for ntdll winetest (this is defined in excpt.h)
+#undef exception_info
+
+// Some helpful definitions
+
+#define ros_skip_flaky          for (winetest_start_nocount(3); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
+
+#define disable_success_count   for (winetest_start_nocount(1); \
+                                     winetest_loop_nocount(); \
+                                     winetest_end_nocount())
+
+#define skip_2k3_crash if (_winver < 0x600) skip("Test skipped, because it crashes on win 2003\n"); else
+#define skip_2k3_fail if (_winver < 0x600) skip("Test skipped, because it fails on win 2003\n"); else
+
+#define ok_hex_(file, line, expression, result) \
+    do { \
+        int _value = (expression); \
+        int _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
+           #expression, _result, _value); \
+    } while (0)
+#define ok_hex(expression, result)      ok_hex_(__FILE__, __LINE__, expression, result)
+
+#define ok_dec_(file, line, expression, result) \
+    do { \
+        int _value = (expression); \
+        int _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
+           #expression, _result, _value); \
+    } while (0)
+#define ok_dec(expression, result)      ok_dec_(__FILE__, __LINE__, expression, result)
+
+#define ok_ptr_(file, line, expression, result) \
+    do { \
+        const void *_value = (expression); \
+        const void *_result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+           #expression, _result, _value); \
+    } while (0)
+#define ok_ptr(expression, result)      ok_ptr_(__FILE__, __LINE__, expression, result)
+
+#define ok_size_t_(file, line, expression, result) \
+    do { \
+        size_t _value = (expression); \
+        size_t _result = (result); \
+        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
+           #expression, _result, _value); \
+    } while (0)
+#define ok_size_t(expression, result)   ok_size_t_(__FILE__, __LINE__, expression, result)
+
+#define ok_char(expression, result) ok_hex(expression, result)
+
+#define ok_err_(file, line, error) \
+    ok_(file, line)(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
+#define ok_err(error)      ok_err_(__FILE__, __LINE__, error)
+
+#define ok_str_(file, line, x, y) \
+    ok_(file, line)(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+#define ok_str(x, y)      ok_str_(__FILE__, __LINE__, x, y)
+
+#define ok_wstr_(file, line, x, y) \
+    ok_(file, line)(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+#define ok_wstr(x, y)     ok_wstr_(__FILE__, __LINE__, x, y)
+
+#define ok_long(expression, result) ok_hex(expression, result)
+#define ok_int(expression, result) ok_dec(expression, result)
+#define ok_int_(file, line, expression, result) ok_dec_(file, line, expression, result)
+#define ok_ntstatus(status, expected) ok_hex(status, expected)
+#define ok_hdl ok_ptr
+
+#define is_reactos() \
+    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
+
+/* ReactOS specific extensions, useful for patches */
+#define KUSER_SHARED_DATA_UMPTR 0x7FFE0000
+#define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
+#define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
+#define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+
+#ifdef STANDALONE
+
+LONG winetest_get_successes(void)
+{
+    return winetest_successes;
 }
 
 void winetest_print(const char* msg, ...)
@@ -832,46 +1061,22 @@ void winetest_end_nocount(void)
     data->nocount_level >>= 2;
 }
 
-int winetest_get_time(void)
+/* allocate some tmp space for a string */
+static char *get_temp_buffer( size_t n )
 {
-    return GetTickCount();
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    char *res = data->str_pos;
+
+    if (res + n >= &data->strings[sizeof(data->strings)]) res = data->strings;
+    data->str_pos = res + n;
+    return res;
 }
 
-int winetest_get_mainargs( char*** pargv )
+/* release extra space that we requested in gimme1() */
+static void release_temp_buffer( char *ptr, size_t size )
 {
-    *pargv = winetest_argv;
-    return winetest_argc;
-}
-
-LONG winetest_get_successes(void)
-{
-    return winetest_successes;
-}
-
-void winetest_wait_child_process( HANDLE process )
-{
-    DWORD exit_code = 1;
-
-    if (WaitForSingleObject( process, 30000 ))
-        fprintf( stdout, "%s: child process wait failed\n", current_test->name );
-    else
-        GetExitCodeProcess( process, &exit_code );
-
-    if (exit_code)
-    {
-        if (exit_code > 255)
-        {
-            fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned)exit_code );
-            InterlockedIncrement( &winetest_failures );
-        }
-        else
-        {
-            fprintf( stdout, "%s: %u failures in child process\n",
-                     current_test->name, (unsigned)exit_code );
-            while (exit_code-- > 0)
-                InterlockedIncrement(&winetest_failures);
-        }
-    }
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    data->str_pos = ptr + size;
 }
 
 const char *wine_dbgstr_an( const CHAR *str, intptr_t n )
@@ -1055,207 +1260,7 @@ const char *wine_dbgstr_longlong( ULONGLONG ll )
 }
 #endif
 
-/* Find a test by name */
-static const struct test *find_test( const char *name )
-{
-    const struct test *test;
-    const char *p;
-    size_t len;
-
-    if ((p = strrchr( name, '/' ))) name = p + 1;
-    if ((p = strrchr( name, '\\' ))) name = p + 1;
-    len = strlen(name);
-    if (len > 2 && !strcmp( name + len - 2, ".c" )) len -= 2;
-
-    for (test = winetest_testlist; test->name; test++)
-    {
-        if (!strncmp( test->name, name, len ) && !test->name[len]) break;
-    }
-    return test->name ? test : NULL;
-}
-
-
-/* Display list of valid tests */
-static void list_tests(void)
-{
-    const struct test *test;
-
-    fprintf( stdout, "Valid test names:\n" );
-    for (test = winetest_testlist; test->name; test++) fprintf( stdout, "    %s\n", test->name );
-}
-
-/* Disable false-positive claiming "test" would be NULL-dereferenced */
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable:28182)
 #endif
-
-/* Run a named test, and return exit status */
-static int run_test( const char *name )
-{
-    const struct test *test;
-    int status;
-
-    if (!(test = find_test( name )))
-    {
-        fprintf( stdout, "Fatal: test '%s' does not exist.\n", name );
-        exit_process(1);
-    }
-    winetest_successes = winetest_failures = winetest_todo_successes = winetest_todo_failures = 0;
-    tls_index=TlsAlloc();
-    current_test = test;
-    test->func();
-
-    /* show test results even if traces are disabled */
-    /*if (winetest_debug)*/
-    {
-        fprintf( stdout, "\n%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, (int)(winetest_successes + winetest_failures + winetest_todo_successes + winetest_todo_failures),
-                 (int)winetest_todo_successes, (int)(winetest_failures + winetest_todo_failures),
-                 (winetest_failures + winetest_todo_failures != 1) ? "failures" : "failure",
-                 (int)winetest_skipped );
-    }
-    status = (winetest_failures + winetest_todo_failures < 255) ? winetest_failures + winetest_todo_failures : 255;
-    return status;
-}
-
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
-/* Display usage and exit */
-static void usage( const char *argv0 )
-{
-    fprintf( stdout, "Usage: %s test_name\n\n", argv0 );
-    list_tests();
-    exit_process(1);
-}
-
-/* trap unhandled exceptions */
-static LONG CALLBACK exc_filter( EXCEPTION_POINTERS *ptrs )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    char elapsed[64];
-
-    winetest_print_lock();
-    if (data->current_file)
-        printf( "%s:%d: this is the last test seen before the exception\n",
-                data->current_file, data->current_line );
-    if (winetest_color) printf( winetest_color_bright_red );
-    printf( "%04x:%s:%s unhandled exception %08x at %p\n",
-            (UINT)GetCurrentProcessId(), current_test->name, winetest_elapsed( elapsed ),
-            (UINT)ptrs->ExceptionRecord->ExceptionCode, ptrs->ExceptionRecord->ExceptionAddress );
-    if (winetest_color) printf( winetest_color_reset );
-    fflush( stdout );
-    winetest_print_unlock();
-    return EXCEPTION_EXECUTE_HANDLER;
-}
-
-/* check if we're running under wine */
-static BOOL running_under_wine(void)
-{
-    HMODULE module = GetModuleHandleA( "ntdll.dll" );
-    if (!module) return FALSE;
-    return (GetProcAddress( module, "wine_server_call" ) != NULL);
-}
-
-/* main function */
-int main( int argc, char **argv )
-{
-    char p[128];
-
-    setvbuf (stdout, NULL, _IONBF, 0);
-    winetest_mutex = CreateMutexA(NULL, FALSE, "winetest_print_mutex");
-
-    winetest_argc = argc;
-    winetest_argv = argv;
-
-    if (GetEnvironmentVariableA( "WINETEST_PLATFORM", p, sizeof(p) )) winetest_platform = _strdup(p);
-    if (GetEnvironmentVariableA( "WINETEST_DEBUG", p, sizeof(p) )) winetest_debug = atoi(p);
-    if (GetEnvironmentVariableA( "WINETEST_INTERACTIVE", p, sizeof(p) )) winetest_interactive = atoi(p);
-    if (GetEnvironmentVariableA( "WINETEST_REPORT_SUCCESS", p, sizeof(p) )) winetest_report_success = atoi(p);
-
-    if (!winetest_interactive) SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX );
-
-    if (!argv[1])
-    {
-        if (winetest_testlist[0].name && !winetest_testlist[1].name)  /* only one test */
-            return run_test( winetest_testlist[0].name );
-        usage( argv[0] );
-    }
-    if (!strcmp( argv[1], "--list" ))
-    {
-        list_tests();
-        return 0;
-    }
-    return run_test(argv[1]);
-}
-
-#endif  /* STANDALONE */
-
-// hack for ntdll winetest (this is defined in excpt.h)
-#undef exception_info
-
-// Some helpful definitions
-
-#define ok_hex_(file, line, expression, result) \
-    do { \
-        int _value = (expression); \
-        int _result = (result); \
-        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
-           #expression, _result, _value); \
-    } while (0)
-#define ok_hex(expression, result)      ok_hex_(__FILE__, __LINE__, expression, result)
-
-#define ok_dec_(file, line, expression, result) \
-    do { \
-        int _value = (expression); \
-        int _result = (result); \
-        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
-           #expression, _result, _value); \
-    } while (0)
-#define ok_dec(expression, result)      ok_dec_(__FILE__, __LINE__, expression, result)
-
-#define ok_ptr_(file, line, expression, result) \
-    do { \
-        const void *_value = (expression); \
-        const void *_result = (result); \
-        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
-           #expression, _result, _value); \
-    } while (0)
-#define ok_ptr(expression, result)      ok_ptr_(__FILE__, __LINE__, expression, result)
-
-#define ok_size_t_(file, line, expression, result) \
-    do { \
-        size_t _value = (expression); \
-        size_t _result = (result); \
-        ok_(file, line)(_value == _result, "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
-           #expression, _result, _value); \
-    } while (0)
-#define ok_size_t(expression, result)   ok_size_t_(__FILE__, __LINE__, expression, result)
-
-#define ok_char(expression, result) ok_hex(expression, result)
-
-#define ok_err_(file, line, error) \
-    ok_(file, line)(GetLastError() == (error), "Wrong last error. Expected " #error ", got 0x%lx\n", GetLastError())
-#define ok_err(error)      ok_err_(__FILE__, __LINE__, error)
-
-#define ok_str_(file, line, x, y) \
-    ok_(file, line)(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
-#define ok_str(x, y)      ok_str_(__FILE__, __LINE__, x, y)
-
-#define ok_wstr_(file, line, x, y) \
-    ok_(file, line)(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
-#define ok_wstr(x, y)     ok_wstr_(__FILE__, __LINE__, x, y)
-
-#define ok_long(expression, result) ok_hex(expression, result)
-#define ok_int(expression, result) ok_dec(expression, result)
-#define ok_int_(file, line, expression, result) ok_dec_(file, line, expression, result)
-#define ok_ntstatus(status, expected) ok_hex(status, expected)
-#define ok_hdl ok_ptr
-
-#define is_reactos() \
-    (*(unsigned*)((size_t)0x7FFE0FFC) == 0x8EAC705)
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -1264,5 +1269,7 @@ int main( int argc, char **argv )
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
+
+#endif // __REACTOS__
 
 #endif  /* __WINE_WINE_TEST_H */
