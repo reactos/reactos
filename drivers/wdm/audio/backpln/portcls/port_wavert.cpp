@@ -155,7 +155,7 @@ CPortWaveRT::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortWaveRT_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortWaveRT_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -285,7 +285,7 @@ CPortWaveRT::Init(
 
     if (ResourceList)
     {
-        // increment reference on resource list
+        // Increment reference on resource list
         ResourceList->AddRef();
     }
 
