@@ -305,6 +305,29 @@ static inline void winetest_set_location( const char *file, int line )
     data->current_line=line;
 }
 
+/* Define WINETEST_MSVC_IDE_FORMATTING to alter the output format winetest will use for file/line numbers.
+   This alternate format makes the file/line numbers clickable in visual studio, to directly jump to them. */
+#if defined(WINETEST_MSVC_IDE_FORMATTING)
+# define __winetest_file_line_prefix "%s(%d)"
+#else
+# define __winetest_file_line_prefix "%s:%d"
+#endif
+
+static inline int winetest_printf( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
+static inline int winetest_printf( const char *msg, ... )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    va_list valist;
+    int ret;
+
+    fprintf( stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line );
+    va_start( valist, msg );
+    ret = vfprintf( stdout, msg, valist );
+    va_end( valist );
+
+    return ret;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -315,14 +338,6 @@ static inline void winetest_set_location( const char *file, int line )
 #ifdef STANDALONE
 
 #include <stdio.h>
-
-/* Define WINETEST_MSVC_IDE_FORMATTING to alter the output format winetest will use for file/line numbers.
-   This alternate format makes the file/line numbers clickable in visual studio, to directly jump to them. */
-#if defined(WINETEST_MSVC_IDE_FORMATTING)
-# define __winetest_file_line_prefix "%s(%d)"
-#else
-# define __winetest_file_line_prefix "%s:%d"
-#endif
 
 struct test
 {
@@ -415,22 +430,6 @@ static void exit_process( int code )
 {
     fflush( stdout );
     ExitProcess( code );
-}
-
-#ifdef __GNUC__
-static void winetest_printf( const char *msg, ... ) __attribute__((format(printf,1,2)));
-#else
-static void winetest_printf(const char* msg, ...);
-#endif
-static void winetest_printf( const char *msg, ... )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    va_list valist;
-
-    fprintf( stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line );
-    va_start( valist, msg );
-    vfprintf( stdout, msg, valist );
-    va_end( valist );
 }
 
 static void winetest_vprintf(const char* msg, va_list valist);
