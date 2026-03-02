@@ -5175,7 +5175,7 @@ RtlIsValidLocaleName(
 
 #endif /* Win Vista or ReactOS Ntdll build */
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || (defined(__REACTOS__) && defined(_NTDLLBUILD_))
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || (defined(__REACTOS__))
 
 // NTSYSAPI
 BOOLEAN
