@@ -756,14 +756,18 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
             NpxThread = KeGetCurrentPrcb()->NpxThread;
             if (NpxThread)
             {
-                /* Get the NPX frame */
-                NpxSaveArea = KiGetThreadNpxArea(NpxThread);
+                /* Check if it has a valid stack */
+                if (NpxThread->InitialStack != NULL)
+                {
+                    /* Get the NPX frame */
+                    NpxSaveArea = KiGetThreadNpxArea(NpxThread);
 
-                /* Save FPU state */
-                Ke386SaveFpuState(NpxSaveArea);
+                    /* Save FPU state */
+                    Ke386SaveFpuState(NpxSaveArea);
 
-                /* Update NPX state */
-                NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                    /* Update NPX state */
+                    NpxThread->NpxState = NPX_STATE_NOT_LOADED;
+                }
            }
 
             /* Load FPU state */
