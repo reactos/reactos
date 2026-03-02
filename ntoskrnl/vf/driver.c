@@ -248,6 +248,31 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
             Entry->VerifierFlags);
 }
 
+VOID VfUnregisterDriver(PDRIVER_OBJECT DriverObject) 
+{
+    VF_DRIVER_ENTRY* Entry;
+    KIRQL OldIrql;
+
+    DPRINT1("VF: VfUnregisterDriver called for %p\n", DriverObject);
+
+    KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
+    Entry = VfFindDriver(DriverObject);
+    if (Entry)
+    {
+        RemoveEntryList(&Entry->ListEntry);
+    }
+    KeReleaseSpinLock(&VfDriverListLock, OldIrql);
+
+    if (Entry)
+    {
+        /* restore original unload (IF we hooked it) */
+        if (DriverObject->DriverUnload == VfDriverUnload)
+            DriverObject->DriverUnload = Entry->OriginalUnload;
+
+        ExFreePool(Entry);
+    }
+}
+
 /* ============================================================
    ADAPTER CHANNEL
    ============================================================ */

@@ -660,7 +660,8 @@ IopInitializeDriverModule(
         // return a special status value in case of failure
         Status = STATUS_FAILED_DRIVER_ENTRY;
         /* unregister since init failed */
-        // TODO: VfUnregisterDriver(driverObject);
+        if (VfGlobalEnabled)
+            VfUnregisterDriver(driverObject);
     }
     else if (VfGlobalEnabled)
     {

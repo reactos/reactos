@@ -270,6 +270,10 @@ VOID NTAPI VfRegisterDriver(
     PDRIVER_OBJECT DriverObject
 );
 
+VOID VfUnregisterDriver(
+    PDRIVER_OBJECT DriverObject
+);
+
 VOID NTAPI VfInitialize(
     VOID
 );
