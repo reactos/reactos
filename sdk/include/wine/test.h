@@ -54,13 +54,38 @@ extern "C" {
 /* debug level */
 extern int winetest_debug;
 
-extern int winetest_report_success;
+/* trace timing information */
+extern int winetest_time;
+extern int winetest_start_time, winetest_last_time;
 
 /* running in interactive mode? */
 extern int winetest_interactive;
 
+/* report failed flaky tests as failures (BOOL) */
+extern int winetest_report_flaky;
+
+/* report successful tests (BOOL) */
+extern int winetest_report_success;
+
+/* silence todos and skips above this threshold */
+extern int winetest_mute_threshold;
+
 /* current platform */
 extern const char *winetest_platform;
+extern int winetest_platform_is_wine;
+
+/* use ANSI escape codes for output coloring */
+extern int winetest_color;
+
+extern LONG winetest_successes;       /* number of successful tests */
+extern LONG winetest_failures;        /* number of failures */
+extern LONG winetest_flaky_failures;  /* number of failures inside flaky block */
+extern LONG winetest_skipped;         /* number of skipped test chunks */
+extern LONG winetest_todo_successes;  /* number of successful tests inside todo block */
+extern LONG winetest_todo_failures;   /* number of failures inside todo block */
+extern LONG winetest_muted_traces;    /* number of silenced traces */
+extern LONG winetest_muted_skipped;   /* same as skipped but silent */
+extern LONG winetest_muted_todo_successes; /* same as todo_successes but silent */
 
 extern void winetest_set_location( const char* file, int line );
 extern void winetest_subtest(const char* name);
@@ -265,14 +290,28 @@ extern const struct test winetest_testlist[];
 /* debug level */
 int winetest_debug = 1;
 
+/* trace timing information */
+int winetest_time = 0;
+int winetest_start_time, winetest_last_time;
+
 /* interactive mode? */
 int winetest_interactive = 0;
 
 /* current platform */
 const char *winetest_platform = "windows";
+int winetest_platform_is_wine = 0;
+
+/* report failed flaky tests as failures (BOOL) */
+int winetest_report_flaky = 0;
 
 /* report successful tests (BOOL) */
 int winetest_report_success = 0;
+
+/* silence todos and skips above this threshold */
+int winetest_mute_threshold = 42;
+
+/* use ANSI escape codes for output coloring */
+int winetest_color = 0;
 
 /* passing arguments around */
 static int winetest_argc;
@@ -280,11 +319,15 @@ static char** winetest_argv;
 
 static const struct test *current_test; /* test currently being run */
 
-static LONG winetest_successes;       /* number of successful tests */
-static LONG winetest_failures;        /* number of failures */
-static LONG winetest_skipped;         /* number of skipped test chunks */
-static LONG winetest_todo_successes;  /* number of successful tests inside todo block */
-static LONG winetest_todo_failures;   /* number of failures inside todo block */
+LONG winetest_successes = 0;       /* number of successful tests */
+LONG winetest_failures = 0;        /* number of failures */
+LONG winetest_flaky_failures = 0;  /* number of failures inside flaky block */
+LONG winetest_skipped = 0;         /* number of skipped test chunks */
+LONG winetest_todo_successes = 0;  /* number of successful tests inside todo block */
+LONG winetest_todo_failures = 0;   /* number of failures inside todo block */
+LONG winetest_muted_traces = 0;    /* number of silenced traces */
+LONG winetest_muted_skipped = 0;   /* same as skipped but silent */
+LONG winetest_muted_todo_successes = 0; /* same as todo_successes but silent */
 
 /* The following data must be kept track of on a per-thread basis */
 struct winetest_thread_data
