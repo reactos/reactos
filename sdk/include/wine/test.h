@@ -120,7 +120,6 @@ extern LONG winetest_get_failures(void);
 extern LONG winetest_get_successes(void);
 extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
-extern void winetest_ignore_exceptions( BOOL ignore );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
@@ -362,6 +361,11 @@ static inline void winetest_subtest( const char *name )
         data->current_file, data->current_line, name);
 }
 
+static inline void winetest_ignore_exceptions( BOOL ignore )
+{
+    winetest_print_location( "IgnoreExceptions=%d\n", ignore ? 1 : 0 );
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -472,11 +476,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-void winetest_ignore_exceptions( BOOL ignore )
-{
-    winetest_print_location( "IgnoreExceptions=%d\n", ignore ? 1 : 0 );
 }
 
 int broken( int condition )
