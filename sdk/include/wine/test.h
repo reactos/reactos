@@ -152,21 +152,13 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #endif
 
 #ifdef STANDALONE
-
 #define START_TEST(name) \
   static void func_##name(void); \
   const struct test winetest_testlist[] = { { #name, func_##name }, { 0, 0 } }; \
   static void func_##name(void)
-
-#else /* STANDALONE */
-
-#ifdef __cplusplus
-#define START_TEST(name) extern "C" void func_##name(void)
 #else
-#define START_TEST(name) void func_##name(void)
+#define START_TEST(name) EXTERN_C void func_##name(void)
 #endif
-
-#endif /* STANDALONE */
 
 extern int broken( int condition );
 extern int winetest_vok( int condition, const char *msg, va_list ap );
