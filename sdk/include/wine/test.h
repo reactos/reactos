@@ -109,7 +109,6 @@ struct winetest_thread_data
 extern struct winetest_thread_data *winetest_get_thread_data(void);
 extern int winetest_vprintf( const char *msg, va_list args );
 
-extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo(void);
@@ -351,6 +350,13 @@ static void winetest_print_context( const char *msgtype )
         fprintf( stdout, "%s: ", data->context[i] );
 }
 
+static inline void winetest_subtest( const char *name )
+{
+    struct winetest_thread_data* data = winetest_get_thread_data();
+    fprintf(stdout, __winetest_file_line_prefix ": Subtest %s\n",
+        data->current_file, data->current_line, name);
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -461,13 +467,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-void winetest_subtest(const char* name)
-{
-    struct winetest_thread_data* data = winetest_get_thread_data();
-    fprintf(stdout, __winetest_file_line_prefix ": Subtest %s\n",
-        data->current_file, data->current_line, name);
 }
 
 void winetest_ignore_exceptions( BOOL ignore )
