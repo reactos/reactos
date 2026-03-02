@@ -87,6 +87,20 @@ extern LONG winetest_muted_traces;    /* number of silenced traces */
 extern LONG winetest_muted_skipped;   /* same as skipped but silent */
 extern LONG winetest_muted_todo_successes; /* same as todo_successes but silent */
 
+/* The following data must be kept track of on a per-thread basis */
+struct winetest_thread_data
+{
+    const char* current_file;        /* file of current check */
+    int current_line;                /* line of current check */
+    unsigned int todo_level;         /* current todo nesting level */
+    unsigned int nocount_level;
+    int todo_do_loop;
+    char *str_pos;                   /* position in debug buffer */
+    char strings[2000];              /* buffer for debug strings */
+    char context[8][128];            /* data to print before messages */
+    unsigned int context_count;      /* number of context prefixes */
+};
+
 extern void winetest_set_location( const char* file, int line );
 extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
@@ -334,19 +348,6 @@ LONG winetest_muted_traces = 0;    /* number of silenced traces */
 LONG winetest_muted_skipped = 0;   /* same as skipped but silent */
 LONG winetest_muted_todo_successes = 0; /* same as todo_successes but silent */
 
-/* The following data must be kept track of on a per-thread basis */
-struct winetest_thread_data
-{
-    const char* current_file;        /* file of current check */
-    int current_line;                /* line of current check */
-    unsigned int todo_level;         /* current todo nesting level */
-    unsigned int nocount_level;
-    int todo_do_loop;
-    char *str_pos;                   /* position in debug buffer */
-    char strings[2000];              /* buffer for debug strings */
-    char context[8][128];            /* data to print before messages */
-    unsigned int context_count;      /* number of context prefixes */
-};
 static DWORD tls_index;
 
 static struct winetest_thread_data *winetest_get_thread_data(void)
