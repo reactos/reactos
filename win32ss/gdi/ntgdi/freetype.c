@@ -7449,7 +7449,7 @@ cleanup:
     return Result;
 }
 
-BOOL FASTCALL IntSelectCharmap(FT_Face face)
+static BOOL FASTCALL IntSelectFaceCharmap(FT_Face face)
 {
     if (face->charmap)
         return TRUE;
@@ -7526,7 +7526,7 @@ GreGetCharABCWidthsW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
     face = FontGDI->SharedFace->Face;
-    if (!IntSelectCharmap(face))
+    if (!IntSelectFaceCharmap(face))
     {
         TEXTOBJ_UnlockText(TextObj);
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -7632,7 +7632,7 @@ GreGetCharWidthW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
     face = FontGDI->SharedFace->Face;
-    if (!IntSelectCharmap(face))
+    if (!IntSelectFaceCharmap(face))
     {
         TEXTOBJ_UnlockText(TextObj);
         EngSetLastError(ERROR_INVALID_HANDLE);
