@@ -295,6 +295,15 @@ static inline void winetest_set_location( const char *file, int line )
     data->current_line=line;
 }
 
+static const char winetest_color_reset[] = "\x1b[0m";
+static const char winetest_color_dark_red[] = "\x1b[31m";
+static const char winetest_color_dark_purple[] = "\x1b[35m";
+static const char winetest_color_green[] = "\x1b[32m";
+static const char winetest_color_yellow[] = "\x1b[33m";
+static const char winetest_color_blue[] = "\x1b[34m";
+static const char winetest_color_bright_red[] = "\x1b[1;91m";
+static const char winetest_color_bright_purple[] = "\x1b[1;95m";
+
 /* Define WINETEST_MSVC_IDE_FORMATTING to alter the output format winetest will use for file/line numbers.
    This alternate format makes the file/line numbers clickable in visual studio, to directly jump to them. */
 #if defined(WINETEST_MSVC_IDE_FORMATTING)
@@ -1117,6 +1126,33 @@ static void usage( const char *argv0 )
     exit_process(1);
 }
 
+/* trap unhandled exceptions */
+static LONG CALLBACK exc_filter( EXCEPTION_POINTERS *ptrs )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    char elapsed[64];
+
+    winetest_print_lock();
+    if (data->current_file)
+        printf( "%s:%d: this is the last test seen before the exception\n",
+                data->current_file, data->current_line );
+    if (winetest_color) printf( winetest_color_bright_red );
+    printf( "%04x:%s:%s unhandled exception %08x at %p\n",
+            (UINT)GetCurrentProcessId(), current_test->name, winetest_elapsed( elapsed ),
+            (UINT)ptrs->ExceptionRecord->ExceptionCode, ptrs->ExceptionRecord->ExceptionAddress );
+    if (winetest_color) printf( winetest_color_reset );
+    fflush( stdout );
+    winetest_print_unlock();
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+/* check if we're running under wine */
+static BOOL running_under_wine(void)
+{
+    HMODULE module = GetModuleHandleA( "ntdll.dll" );
+    if (!module) return FALSE;
+    return (GetProcAddress( module, "wine_server_call" ) != NULL);
+}
 
 /* main function */
 int main( int argc, char **argv )
