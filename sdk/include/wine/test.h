@@ -109,9 +109,6 @@ struct winetest_thread_data
 extern struct winetest_thread_data *winetest_get_thread_data(void);
 extern int winetest_vprintf( const char *msg, va_list args );
 
-extern void winetest_start_todo( int is_todo );
-extern int winetest_loop_todo(void);
-extern void winetest_end_todo(void);
 extern void winetest_start_nocount(unsigned int flags);
 extern int winetest_loop_nocount(void);
 extern void winetest_end_nocount(void);
@@ -518,6 +515,34 @@ static inline void winetest_win_skip( const char *msg, ... )
     va_end(valist);
 }
 
+/* If is_todo is true, indicates that the next test is expected to fail on this
+ * platform. This is used to identify tests that are known to fail in Wine.
+ *
+ * Remarks:
+ * - is_todo should never be true on Windows. To ensure this, always use
+ *   todo_wine_if().
+ */
+static inline void winetest_start_todo( int is_todo )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    data->todo_level = (data->todo_level << 1) | (is_todo != 0);
+    data->todo_do_loop=1;
+}
+
+static inline int winetest_loop_todo(void)
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    int do_loop=data->todo_do_loop;
+    data->todo_do_loop=0;
+    return do_loop;
+}
+
+static inline void winetest_end_todo(void)
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    data->todo_level >>= 1;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -639,27 +664,6 @@ void winetest_print(const char* msg, ...)
     va_start(valist, msg);
     vfprintf(stdout, msg, valist);
     va_end(valist);
-}
-
-void winetest_start_todo( int is_todo )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    data->todo_level = (data->todo_level << 1) | (is_todo != 0);
-    data->todo_do_loop=1;
-}
-
-int winetest_loop_todo(void)
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    int do_loop=data->todo_do_loop;
-    data->todo_do_loop=0;
-    return do_loop;
-}
-
-void winetest_end_todo(void)
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    data->todo_level >>= 1;
 }
 
 void winetest_start_nocount(unsigned int flags)
