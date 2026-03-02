@@ -1566,7 +1566,7 @@ typedef union {
     /// [Bit 3] AVX512_4FMAPS. (Intel Xeon Phi only.)
     ///
     UINT32    AVX512_4FMAPS                           : 1;
-    UINT32    Reserved                                : 4;
+    UINT32    Reserved2                               : 4;
     ///
     /// [Bit 8] AVX512_VP2INTERSECT.
     ///
@@ -1574,7 +1574,7 @@ typedef union {
     ///
     /// [Bit 14:9] Reserved.
     ///
-    UINT32    Reserved4                               : 6;
+    UINT32    Reserved3                               : 6;
     ///
     /// [Bit 15] Hybrid. If 1, the processor is identified as a hybrid part.
     ///
@@ -1582,7 +1582,7 @@ typedef union {
     ///
     /// [Bit 22:16] Reserved.
     ///
-    UINT32    Reserved                                : 7;
+    UINT32    Reserved4                               : 7;
     ///
     /// [Bit 23] AVX512_FP16.
     ///
