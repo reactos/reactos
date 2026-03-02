@@ -84,7 +84,7 @@ CPortFilterWaveRT::NewIrpTarget(
         m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount ==
             m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount)
     {
-        // no pins available
+        // No pins available
         return STATUS_UNSUCCESSFUL;
     }
 

@@ -114,7 +114,7 @@ PcAddAdapterDevice(
 
     if (!NT_SUCCESS(status))
     {
-        DPRINT("IoCreateDevice() failed with status 0x%08lx\n", status);
+        DPRINT1("IoCreateDevice() failed with status 0x%08lx\n", status);
         return status;
     }
 
@@ -142,9 +142,9 @@ PcAddAdapterDevice(
     KeInitializeSpinLock(&portcls_ext->TimerListLock);
     // initialize timer list
     InitializeListHead(&portcls_ext->TimerList);
-    // initialize power notify list
+    // Initialize power notify list
     InitializeListHead(&portcls_ext->PowerNotifyList);
-    //initialize power notify list lock
+    // Initialize power notify list lock
     KeInitializeSpinLock(&portcls_ext->PowerNotifyListLock);
 
     // initialize io timer
@@ -162,7 +162,7 @@ PcAddAdapterDevice(
     // did we succeed
     if (!NT_SUCCESS(status))
     {
-        DPRINT("KsAllocateDeviceHeader failed with %x\n", status);
+        DPRINT1("KsAllocateDeviceHeader failed with %x\n", status);
         goto cleanup;
     }
 
@@ -177,7 +177,7 @@ PcAddAdapterDevice(
     }
     else
     {
-        DPRINT("IoAttachDevice failed\n");
+        DPRINT1("IoAttachDevice failed\n");
         // return error code
         status = STATUS_UNSUCCESSFUL;
         goto cleanup;
@@ -204,7 +204,7 @@ cleanup:
 
     // delete created fdo
     IoDeleteDevice(fdo);
-    DPRINT("PcAddAdapterDevice completed failed with %x\n", status);
+    DPRINT1("PcAddAdapterDevice completed failed with %x\n", status);
 
     return status;
 }
