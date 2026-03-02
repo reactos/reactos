@@ -54,7 +54,7 @@ extern "C" {
 /* debug level */
 extern int winetest_debug;
 
-extern int report_success;
+extern int winetest_report_success;
 
 /* running in interactive mode? */
 extern int winetest_interactive;
@@ -272,7 +272,7 @@ int winetest_interactive = 0;
 const char *winetest_platform = "windows";
 
 /* report successful tests (BOOL) */
-int report_success = 0;
+int winetest_report_success = 0;
 
 /* passing arguments around */
 static int winetest_argc;
@@ -280,11 +280,11 @@ static char** winetest_argv;
 
 static const struct test *current_test; /* test currently being run */
 
-static LONG successes;       /* number of successful tests */
-static LONG failures;        /* number of failures */
-static LONG skipped;         /* number of skipped test chunks */
-static LONG todo_successes;  /* number of successful tests inside todo block */
-static LONG todo_failures;   /* number of failures inside todo block */
+static LONG winetest_successes;       /* number of successful tests */
+static LONG winetest_failures;        /* number of failures */
+static LONG winetest_skipped;         /* number of skipped test chunks */
+static LONG winetest_todo_successes;  /* number of successful tests inside todo block */
+static LONG winetest_todo_failures;   /* number of failures inside todo block */
 
 /* The following data must be kept track of on a per-thread basis */
 typedef struct
@@ -448,7 +448,7 @@ int winetest_vok( int condition, const char *msg, va_list args )
             winetest_print_context( "Test succeeded inside todo block: " );
             vfprintf(stdout, msg, args);
             if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&todo_failures);
+            InterlockedIncrement(&winetest_todo_failures);
             return 0;
         }
         else
@@ -460,7 +460,7 @@ int winetest_vok( int condition, const char *msg, va_list args )
                 vfprintf(stdout, msg, args);
             }
             if ((data->nocount_level & 1) == 0)
-            InterlockedIncrement(&todo_successes);
+            InterlockedIncrement(&winetest_todo_successes);
             return 1;
         }
     }
@@ -471,17 +471,17 @@ int winetest_vok( int condition, const char *msg, va_list args )
             winetest_print_context( "Test failed: " );
             vfprintf(stdout, msg, args);
             if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&failures);
+            InterlockedIncrement(&winetest_failures);
             return 0;
         }
         else
         {
-            if (report_success && (data->nocount_level & 1) == 0)
+            if (winetest_report_success && (data->nocount_level & 1) == 0)
             {
                 winetest_printf("Test succeeded\n");
             }
             if ((data->nocount_level & 1) == 0)
-            InterlockedIncrement(&successes);
+            InterlockedIncrement(&winetest_successes);
             return 1;
         }
     }
@@ -524,7 +524,7 @@ void winetest_vskip( const char *msg, va_list args )
 {
     winetest_print_context( "Tests skipped: " );
     vfprintf(stdout, msg, args);
-    skipped++;
+    winetest_skipped++;
 }
 
 void winetest_skip( const char *msg, ... )
@@ -630,18 +630,18 @@ int winetest_get_mainargs( char*** pargv )
 
 LONG winetest_get_failures(void)
 {
-    return failures;
+    return winetest_failures;
 }
 
 LONG winetest_get_successes(void)
 {
-    return successes;
+    return winetest_successes;
 }
 
 void winetest_add_failures( LONG new_failures )
 {
     while (new_failures-- > 0)
-        InterlockedIncrement( &failures );
+        InterlockedIncrement( &winetest_failures );
 }
 
 void winetest_wait_child_process( HANDLE process )
@@ -658,14 +658,14 @@ void winetest_wait_child_process( HANDLE process )
         if (exit_code > 255)
         {
             fprintf( stdout, "%s: exception 0x%08x in child process\n", current_test->name, (unsigned)exit_code );
-            InterlockedIncrement( &failures );
+            InterlockedIncrement( &winetest_failures );
         }
         else
         {
             fprintf( stdout, "%s: %u failures in child process\n",
                      current_test->name, (unsigned)exit_code );
             while (exit_code-- > 0)
-                InterlockedIncrement(&failures);
+                InterlockedIncrement(&winetest_failures);
         }
     }
 }
@@ -897,7 +897,7 @@ static int run_test( const char *name )
         fprintf( stdout, "Fatal: test '%s' does not exist.\n", name );
         exit_process(1);
     }
-    successes = failures = todo_successes = todo_failures = 0;
+    winetest_successes = winetest_failures = winetest_todo_successes = winetest_todo_failures = 0;
     tls_index=TlsAlloc();
     current_test = test;
     test->func();
@@ -906,12 +906,12 @@ static int run_test( const char *name )
     /*if (winetest_debug)*/
     {
         fprintf( stdout, "\n%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
-                 test->name, (int)(successes + failures + todo_successes + todo_failures),
-                 (int)todo_successes, (int)(failures + todo_failures),
-                 (failures + todo_failures != 1) ? "failures" : "failure",
-                 (int)skipped );
+                 test->name, (int)(winetest_successes + winetest_failures + winetest_todo_successes + winetest_todo_failures),
+                 (int)winetest_todo_successes, (int)(winetest_failures + winetest_todo_failures),
+                 (winetest_failures + winetest_todo_failures != 1) ? "failures" : "failure",
+                 (int)winetest_skipped );
     }
-    status = (failures + todo_failures < 255) ? failures + todo_failures : 255;
+    status = (winetest_failures + winetest_todo_failures < 255) ? winetest_failures + winetest_todo_failures : 255;
     return status;
 }
 
@@ -941,7 +941,7 @@ int main( int argc, char **argv )
     if (GetEnvironmentVariableA( "WINETEST_PLATFORM", p, sizeof(p) )) winetest_platform = _strdup(p);
     if (GetEnvironmentVariableA( "WINETEST_DEBUG", p, sizeof(p) )) winetest_debug = atoi(p);
     if (GetEnvironmentVariableA( "WINETEST_INTERACTIVE", p, sizeof(p) )) winetest_interactive = atoi(p);
-    if (GetEnvironmentVariableA( "WINETEST_REPORT_SUCCESS", p, sizeof(p) )) report_success = atoi(p);
+    if (GetEnvironmentVariableA( "WINETEST_REPORT_SUCCESS", p, sizeof(p) )) winetest_report_success = atoi(p);
 
     if (!winetest_interactive) SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX );
 
