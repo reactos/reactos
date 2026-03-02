@@ -167,7 +167,6 @@ extern void winetest_vskip( const char *msg, va_list ap );
 
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
-extern void winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
@@ -177,7 +176,6 @@ extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
 # define __WINE_PRINTF_ATTR(fmt,args)
-extern void winetest_ok( int condition, const char *msg, ... );
 extern void winetest_skip( const char *msg, ... );
 extern void winetest_win_skip( const char *msg, ... );
 extern void winetest_trace( const char *msg, ... );
@@ -453,6 +451,18 @@ static int winetest_vok( int condition, const char *msg, va_list args )
     }
 }
 
+void winetest_ok( int condition, const char *msg, ... ) __WINE_PRINTF_ATTR(2,3);
+#ifdef STANDALONE
+void winetest_ok( int condition, const char *msg, ... )
+{
+    va_list valist;
+
+    va_start(valist, msg);
+    winetest_vok(condition, msg, valist);
+    va_end(valist);
+}
+#endif // STANDALONE
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -563,15 +573,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-void winetest_ok( int condition, const char *msg, ... )
-{
-    va_list valist;
-
-    va_start(valist, msg);
-    winetest_vok(condition, msg, valist);
-    va_end(valist);
 }
 
 void winetest_trace( const char *msg, ... )
