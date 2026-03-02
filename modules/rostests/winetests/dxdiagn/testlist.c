@@ -1,6 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
 #define STANDALONE
+#include <oleauto.h>
 #include <wine/test.h>
 
 extern void func_container(void);
