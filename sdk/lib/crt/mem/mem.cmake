@@ -14,6 +14,18 @@ if(ARCH STREQUAL "i386")
     #list(APPEND CRT_MEM_ASM_SOURCE
     #    ${LIBCNTPR_MEM_ASM_SOURCE}
     #)
+elseif(ARCH STREQUAL "amd64" AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    list(APPEND LIBCNTPR_MEM_ASM_SOURCE
+        mem/amd64/memcpy_asm.S
+        mem/amd64/memmove_asm.S
+        mem/amd64/memset_asm.S
+    )
+    list(APPEND LIBCNTPR_MEM_SOURCE
+        mem/memchr.c
+    )
+    list(APPEND CRT_MEM_ASM_SOURCE
+        ${LIBCNTPR_MEM_ASM_SOURCE}
+    )
 else()
     list(APPEND LIBCNTPR_MEM_SOURCE
         mem/memchr.c
