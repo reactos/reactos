@@ -103,7 +103,6 @@ struct winetest_thread_data
 
 extern struct winetest_thread_data *winetest_get_thread_data(void);
 
-extern void winetest_set_location( const char* file, int line );
 extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
 extern int winetest_loop_todo(void);
@@ -282,6 +281,29 @@ extern void winetest_pop_context(void);
 # define S5(x) (x)
 #endif
 
+/* Records the location of the next check.
+ * See the xxx_(file, line) macros.
+ *
+ * Parameters:
+ *   - file - source file name of the check
+ *   - line - source line number of the check
+ */
+static inline void winetest_set_location( const char *file, int line )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+#if defined(WINETEST_MSVC_IDE_FORMATTING)
+    data->current_file = file;
+#else
+    data->current_file=strrchr(file,'/');
+    if (data->current_file==NULL)
+        data->current_file=strrchr(file,'\\');
+    if (data->current_file==NULL)
+        data->current_file=file;
+    else
+        data->current_file++;
+#endif
+    data->current_line=line;
+}
 
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
@@ -393,24 +415,6 @@ static void exit_process( int code )
 {
     fflush( stdout );
     ExitProcess( code );
-}
-
-
-void winetest_set_location( const char* file, int line )
-{
-    struct winetest_thread_data* data = winetest_get_thread_data();
-#if defined(WINETEST_MSVC_IDE_FORMATTING)
-    data->current_file = file;
-#else
-    data->current_file=strrchr(file,'/');
-    if (data->current_file==NULL)
-        data->current_file=strrchr(file,'\\');
-    if (data->current_file==NULL)
-        data->current_file=file;
-    else
-        data->current_file++;
-#endif
-    data->current_line=line;
 }
 
 #ifdef __GNUC__
