@@ -45,7 +45,7 @@ GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imagea
         {
             remap_tables[i].enabled = TRUE;
             remap_tables[i].mapsize = imageattr->colorremaptables[i].mapsize;
-            remap_tables[i].colormap = heap_alloc(sizeof(ColorMap) * remap_tables[i].mapsize);
+            remap_tables[i].colormap = malloc(sizeof(ColorMap) * remap_tables[i].mapsize);
 
             if (remap_tables[i].colormap)
             {
@@ -73,7 +73,7 @@ GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imagea
     if (stat != Ok)
     {
         for (i=0; i<ColorAdjustTypeCount; i++)
-            heap_free(remap_tables[i].colormap);
+            free(remap_tables[i].colormap);
     }
 
     return stat;
@@ -84,8 +84,8 @@ GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
     if(!imageattr)
         return InvalidParameter;
 
-    *imageattr = heap_alloc_zero(sizeof(GpImageAttributes));
-    if(!*imageattr)    return OutOfMemory;
+    *imageattr = calloc(1, sizeof(GpImageAttributes));
+    if(!*imageattr) return OutOfMemory;
 
     (*imageattr)->wrap = WrapModeClamp;
 
@@ -104,9 +104,9 @@ GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes *imageattr)
         return InvalidParameter;
 
     for (i=0; i<ColorAdjustTypeCount; i++)
-        heap_free(imageattr->colorremaptables[i].colormap);
+        free(imageattr->colorremaptables[i].colormap);
 
-    heap_free(imageattr);
+    free(imageattr);
 
     return Ok;
 }
@@ -129,7 +129,7 @@ GpStatus WINGDIPAPI GdipGetImageAttributesAdjustedPalette(GpImageAttributes *ima
 GpStatus WINGDIPAPI GdipSetImageAttributesColorKeys(GpImageAttributes *imageattr,
     ColorAdjustType type, BOOL enableFlag, ARGB colorLow, ARGB colorHigh)
 {
-    TRACE("(%p,%u,%i,%08x,%08x)\n", imageattr, type, enableFlag, colorLow, colorHigh);
+    TRACE("(%p,%u,%i,%08lx,%08lx)\n", imageattr, type, enableFlag, colorLow, colorHigh);
 
     if(!imageattr || type >= ColorAdjustTypeCount)
         return InvalidParameter;
@@ -176,7 +176,7 @@ GpStatus WINGDIPAPI GdipSetImageAttributesColorMatrix(GpImageAttributes *imageat
 GpStatus WINGDIPAPI GdipSetImageAttributesWrapMode(GpImageAttributes *imageAttr,
     WrapMode wrap, ARGB argb, BOOL clamp)
 {
-    TRACE("(%p,%u,%08x,%i)\n", imageAttr, wrap, argb, clamp);
+    TRACE("(%p,%u,%08lx,%i)\n", imageAttr, wrap, argb, clamp);
 
     if(!imageAttr || wrap > WrapModeClamp)
         return InvalidParameter;
@@ -271,21 +271,21 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
         if(!map || !mapSize)
 	    return InvalidParameter;
 
-        new_map = heap_alloc_zero(sizeof(*map) * mapSize);
+        new_map = malloc(sizeof(*map) * mapSize);
 
         if (!new_map)
             return OutOfMemory;
 
         memcpy(new_map, map, sizeof(*map) * mapSize);
 
-        heap_free(imageAttr->colorremaptables[type].colormap);
+        free(imageAttr->colorremaptables[type].colormap);
 
         imageAttr->colorremaptables[type].mapsize = mapSize;
         imageAttr->colorremaptables[type].colormap = new_map;
     }
     else
     {
-        heap_free(imageAttr->colorremaptables[type].colormap);
+        free(imageAttr->colorremaptables[type].colormap);
         imageAttr->colorremaptables[type].colormap = NULL;
     }
 
