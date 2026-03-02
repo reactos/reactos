@@ -22,6 +22,10 @@ extern "C" {
 //
 DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xD9B257FC, 0x684E, 0x4DCB, 0xAB, 0x79, 0x03, 0xCF, 0xA2, 0xF6, 0xB7, 0x50);
 
+/* ReactOS-specific: device interface class for the boot ramdisk device. */
+DEFINE_GUID(GUID_DEVINTERFACE_REACTOS_BOOT_RAMDISK,
+            0x9C0A4A90, 0x8E57, 0x4C8F, 0xB9, 0x3F, 0x2E, 0x41, 0x27, 0xF5, 0x33, 0x10);
+
 //
 // This guid identifies a RAM disk bus
 // {9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}
