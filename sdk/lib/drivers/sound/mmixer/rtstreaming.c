@@ -9,7 +9,6 @@
 #include "precomp.h"
 
 // #define NDEBUG
-#define YDEBUG
 #include <debug.h>
 
 const GUID KSPROPSETID_RTAudio = {0xa855a48c, 0x2f78, 0x4729, {0x90, 0x51, 0x19, 0x68, 0x74, 0x6b, 0x9e, 0xef}};
@@ -44,14 +43,14 @@ MMixerInitializeRTStreamingBuffer(
     Status = MixerContext->Control(
         PinHandle, IOCTL_KS_PROPERTY, &Property, sizeof(KSRTAUDIO_BUFFER_PROPERTY_WITH_NOTIFICATION), &OutData,
         sizeof(KSRTAUDIO_BUFFER), &Length);
-    DPRINT1("Status %x\n", Status);
+    DPRINT("Status %x\n", Status);
     if (Status == MM_STATUS_SUCCESS)
     {
-        // return result
+        /* Return result */
         *RTStreamingBuffer = OutData.BufferAddress;
         *RTStreamingBufferLength = OutData.ActualBufferSize;
     }
-    DPRINT1("MMixerInitializeRTStreamingBuffer status %x\n", Status);
+    DPRINT("MMixerInitializeRTStreamingBuffer status %x\n", Status);
     return Status;
 }
 

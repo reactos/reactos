@@ -480,43 +480,7 @@ PcAddToPropertyTable(
     else
     {
         // property set item handler already present
-        // now replace initialize property item
-#if 0
-        DPRINT1("Replacing existing handler\n");
-        FilterPropertyItem = (PKSPROPERTY_ITEM)&SubDeviceDescriptor->FilterPropertySet[PropertySetIndex]
-                                 .PropertyItem[PropertySetItemIndex];
-        // are any set operations supported
-        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_SET)
-        {
-            // setup handler
-            FilterPropertyItem->SetPropertyHandler = PropertyItemDispatch;
-        }
-
-        // are get operations supported
-        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
-        {
-            // setup handler
-            FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
-        }
-
-        // are basic support operations supported
-        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_BASICSUPPORT)
-        {
-            // setup handler
-            FilterPropertyItem->SupportHandler = PropertyItemDispatch;
-        }
-
-        if (bNode)
-        {
-            // filter & pin properties should not be exposed on a node
-            ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations == NULL);
-        }
-        else
-        {
-            // node properties should not be exposed on a filter & pin
-            ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations != NULL);
-        }
-#endif
+        DPRINT("Property set item handler is already present\n");
     }
 
     // done
@@ -771,7 +735,7 @@ PcCreateSubdeviceDescriptor(
     InitializeListHead(&Descriptor->SymbolicLinkList);
     InitializeListHead(&Descriptor->PhysicalConnectionList);
 
-    // add driver category guids
+    // Add driver category guids
     Descriptor->Interfaces = (GUID*)AllocateItem(NonPagedPool, sizeof(GUID) * (InterfaceCount + FilterDescription->CategoryCount), TAG_PORTCLASS);
     if (!Descriptor->Interfaces)
         goto cleanup;
