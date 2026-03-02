@@ -334,6 +334,18 @@ static int winetest_printf( const char *msg, ... )
     return ret;
 }
 
+static void winetest_print_location( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
+static void winetest_print_location( const char *msg, ... )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    va_list valist;
+
+    winetest_printf( "%s:%d ", data->current_file, data->current_line );
+    va_start( valist, msg );
+    winetest_vprintf( msg, valist );
+    va_end( valist );
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -444,17 +456,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-static void winetest_print_location( const char *msg, ... )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    va_list valist;
-
-    winetest_printf( "%s:%d ", data->current_file, data->current_line );
-    va_start( valist, msg );
-    winetest_vprintf( msg, valist );
-    va_end( valist );
 }
 
 static void winetest_print_context( const char *msgtype )
