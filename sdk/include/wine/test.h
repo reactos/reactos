@@ -113,9 +113,7 @@ extern void winetest_start_nocount(unsigned int flags);
 extern int winetest_loop_nocount(void);
 extern void winetest_end_nocount(void);
 extern int winetest_get_mainargs( char*** pargv );
-extern LONG winetest_get_failures(void);
 extern LONG winetest_get_successes(void);
-extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
@@ -583,6 +581,17 @@ static inline void winetest_pop_context(void)
         --data->context_count;
 }
 
+static inline LONG winetest_get_failures(void)
+{
+    return winetest_failures;
+}
+
+static inline void winetest_add_failures( LONG new_failures )
+{
+    while (new_failures-- > 0) InterlockedIncrement( &winetest_failures );
+}
+
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -740,20 +749,9 @@ int winetest_get_mainargs( char*** pargv )
     return winetest_argc;
 }
 
-LONG winetest_get_failures(void)
-{
-    return winetest_failures;
-}
-
 LONG winetest_get_successes(void)
 {
     return winetest_successes;
-}
-
-void winetest_add_failures( LONG new_failures )
-{
-    while (new_failures-- > 0)
-        InterlockedIncrement( &winetest_failures );
 }
 
 void winetest_wait_child_process( HANDLE process )
