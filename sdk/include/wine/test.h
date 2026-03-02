@@ -163,7 +163,6 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #define START_TEST(name) EXTERN_C void func_##name(void)
 #endif
 
-extern int winetest_vok( int condition, const char *msg, va_list ap );
 extern void winetest_vskip( const char *msg, va_list ap );
 
 #ifdef __GNUC__
@@ -398,6 +397,67 @@ static LONG winetest_add_line( void )
     return count;
 }
 
+/*
+ * Checks that a condition has the expected value, that is true except if
+ * preceded by a todo indicating the check is expected to fail.
+ *
+ * Parameters:
+ *   - condition - true if the check succeeded, false otherwise;
+ *   - msg - failure message format;
+ *   - args - arguments for the failure message
+ * Return:
+ *   0 if condition does not have the expected value, 1 otherwise
+ */
+static int winetest_vok( int condition, const char *msg, va_list args )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+
+    if (data->todo_level)
+    {
+        if (condition)
+        {
+            winetest_print_context( "Test succeeded inside todo block: " );
+            vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
+            InterlockedIncrement(&winetest_todo_failures);
+            return 0;
+        }
+        else
+        {
+            /* show todos even if traces are disabled*/
+            /*if (winetest_debug > 0)*/
+            {
+                winetest_print_context( "Test marked todo: " );
+                vfprintf(stdout, msg, args);
+            }
+            if ((data->nocount_level & 1) == 0)
+            InterlockedIncrement(&winetest_todo_successes);
+            return 1;
+        }
+    }
+    else
+    {
+        if (!condition)
+        {
+            winetest_print_context( "Test failed: " );
+            vfprintf(stdout, msg, args);
+            if ((data->nocount_level & 2) == 0)
+            InterlockedIncrement(&winetest_failures);
+            return 0;
+        }
+        else
+        {
+            if (winetest_report_success && (data->nocount_level & 1) == 0)
+            {
+                winetest_printf("Test succeeded\n");
+            }
+            if ((data->nocount_level & 1) == 0)
+            InterlockedIncrement(&winetest_successes);
+            return 1;
+        }
+    }
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -508,66 +568,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-/*
- * Checks condition.
- * Parameters:
- *   - condition - condition to check;
- *   - msg test description;
- *   - file - test application source code file name of the check
- *   - line - test application source code file line number of the check
- * Return:
- *   0 if condition does not have the expected value, 1 otherwise
- */
-int winetest_vok( int condition, const char *msg, va_list args )
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-
-    if (data->todo_level)
-    {
-        if (condition)
-        {
-            winetest_print_context( "Test succeeded inside todo block: " );
-            vfprintf(stdout, msg, args);
-            if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&winetest_todo_failures);
-            return 0;
-        }
-        else
-        {
-            /* show todos even if traces are disabled*/
-            /*if (winetest_debug > 0)*/
-            {
-                winetest_print_context( "Test marked todo: " );
-                vfprintf(stdout, msg, args);
-            }
-            if ((data->nocount_level & 1) == 0)
-            InterlockedIncrement(&winetest_todo_successes);
-            return 1;
-        }
-    }
-    else
-    {
-        if (!condition)
-        {
-            winetest_print_context( "Test failed: " );
-            vfprintf(stdout, msg, args);
-            if ((data->nocount_level & 2) == 0)
-            InterlockedIncrement(&winetest_failures);
-            return 0;
-        }
-        else
-        {
-            if (winetest_report_success && (data->nocount_level & 1) == 0)
-            {
-                winetest_printf("Test succeeded\n");
-            }
-            if ((data->nocount_level & 1) == 0)
-            InterlockedIncrement(&winetest_successes);
-            return 1;
-        }
-    }
 }
 
 void winetest_ok( int condition, const char *msg, ... )
