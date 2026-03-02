@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Japanese resource translation
- * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2018-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
@@ -76,10 +76,10 @@ BEGIN
     IDS_CANTCREATEZIP "圧縮フォルダ '%s' を作るのに失敗しました (エラーコード: %d) 。"
     IDS_CANTREADFILE "ファイル '%s' が読めません。"
     IDS_EXTRACTING "展開中..."
-    IDS_CANTEXTRACTFILE "Cannot extract file '%1'."
-    IDS_DECOMPRESSERROR "Unsupported compression method %d. Do you want to continue?"
-    IDS_UNKNOWNERROR "Unknown error 0x%08x."
-    IDS_CANTDELETEFILE "Failed to delete the file(s)."
+    IDS_CANTEXTRACTFILE "ファイル '%1' を抽出できません。"
+    IDS_DECOMPRESSERROR "圧縮方式 %d はサポートされていません。続行しますか?"
+    IDS_UNKNOWNERROR "不明なエラー 0x%08x。"
+    IDS_CANTDELETEFILE "ファイルの削除に失敗しました。"
 
     IDS_WIZ_TITLE "展開ウィザード"
     IDS_WIZ_DEST_TITLE "展開先を選んで下さい"
@@ -91,7 +91,7 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "'%1'という名前のファイルがフォルダ内に既に存在します。\n置き換えしますか?"
     IDS_PASSWORD_FILE_TEXT "ファイル '%1' はパスワードで保護されています。パスワードを入力下さい。"
     IDS_PASSWORD_ZIP_TEXT "この zip ファイルを展開するときに使うパスワードを指定して下さい。"
-    IDS_CONFIRMDELETE_TEXT "Do you want to delete the file(s)?"
+    IDS_CONFIRMDELETE_TEXT "ファイルを削除しますか?"
 
     IDS_MENUITEM "すべて展開(&A)..."
     IDS_HELPTEXT "フォルダ内容の展開"

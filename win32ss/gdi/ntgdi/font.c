@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MAX_TEXT_BUFFER 0x2710000
+
 HFONT APIENTRY
 HfontCreate(
     _In_ const ENUMLOGFONTEXDVW *pelfw,
@@ -1308,4 +1310,63 @@ NtGdiHfontCreate(
   }
 
   return HfontCreate(&SafeLogfont, cjElfw, lft, fl, pvCliData);
+}
+
+
+/* This function is called from GetCharWidthA/W/I, GetCharWidth32A/W, and GetCharWidthFloatA/W. */
+BOOL NTAPI
+NtGdiGetCharWidthW(
+    _In_ HDC hDC,
+    _In_ UINT FirstChar,
+    _In_ UINT Count,
+    _In_reads_opt_(Count) PCWCH UnSafepwc,
+    _In_ FLONG fl,
+    _Out_writes_bytes_(Count * sizeof(INT)) PVOID Buffer)
+{
+    BOOL ret = FALSE;
+    PVOID pTmpBuffer = NULL;
+    PWCHAR pSafePwc = NULL;
+    NTSTATUS Status;
+    WCHAR StackPwc[40];
+    INT StackBuffer[40];
+
+    if (!Count || Count > MAX_TEXT_BUFFER / sizeof(INT))
+        return FALSE;
+
+    if (UnSafepwc)
+    {
+        if (Count <= _countof(StackPwc))
+            pSafePwc = StackPwc;
+        else
+            pSafePwc = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), GDITAG_TEXT);
+
+        if (!pSafePwc)
+            return FALSE;
+
+        Status = MmCopyFromCaller(pSafePwc, UnSafepwc, Count * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
+    }
+
+    if (Count <= _countof(StackBuffer))
+        pTmpBuffer = StackBuffer;
+    else
+        pTmpBuffer = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), GDITAG_TEXT);
+
+    if (!pTmpBuffer)
+        goto Cleanup;
+
+    ret = GreGetCharWidthW(hDC, FirstChar, Count, pSafePwc, fl, pTmpBuffer);
+    if (ret)
+    {
+        Status = MmCopyToCaller(Buffer, pTmpBuffer, Count * sizeof(INT));
+        ret = NT_SUCCESS(Status);
+    }
+
+Cleanup:
+    if (pTmpBuffer && pTmpBuffer != StackBuffer)
+        ExFreePoolWithTag(pTmpBuffer, GDITAG_TEXT);
+    if (pSafePwc && pSafePwc != StackPwc)
+        ExFreePoolWithTag(pSafePwc, GDITAG_TEXT);
+    return ret;
 }

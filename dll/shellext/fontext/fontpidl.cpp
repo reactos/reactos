@@ -24,7 +24,6 @@ PITEMID_CHILD _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
         return NULL;
     }
 
-    // SECURITY: Check string length
     HRESULT hr;
     size_t cbName, cbFileName;
     hr = StringCbLengthW(lpName, min(MAXWORD - 1, STRSAFE_MAX_CCH) * sizeof(WCHAR), &cbName);
@@ -58,7 +57,6 @@ PITEMID_CHILD _ILCreate(LPCWSTR lpName, LPCWSTR lpFileName)
     pidl->ibName = (WORD)ibName;
     pidl->ibFileName = (WORD)ibFileName;
 
-    // SECURITY: Copy strings
     hr = StringCbCopyW(pidl->Name(), cbName, lpName);
     if (FAILED_UNEXPECTEDLY(hr))
     {
@@ -89,7 +87,6 @@ const FontPidlEntry* _FontFromIL(PCITEMID_CHILD pidl)
         return NULL;
 
     // The function gets an arbitrary PIDL here. Security is important.
-    // SECURITY: Check ibName and ibFileName
     if (fontEntry->ibName < sizeof(FontPidlEntry) || fontEntry->ibFileName < sizeof(FontPidlEntry) ||
         fontEntry->ibName >= fontEntry->cb || fontEntry->ibFileName >= fontEntry->cb ||
         fontEntry->ibName % sizeof(WCHAR) != 0 || fontEntry->ibFileName % sizeof(WCHAR) != 0)
@@ -99,7 +96,6 @@ const FontPidlEntry* _FontFromIL(PCITEMID_CHILD pidl)
         return NULL;
     }
 
-    // SECURITY: Check null termination
     size_t cbName, cbNameMax = fontEntry->cb - fontEntry->ibName;
     if (FAILED_UNEXPECTEDLY(StringCbLengthW(fontEntry->Name(), cbNameMax, &cbName)))
         return NULL;

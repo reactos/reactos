@@ -39,7 +39,6 @@ BEGIN
     IDS_COL_SIZE "Mărime"
     IDS_COL_MODIFIED "Modificat"
     IDS_COL_ATTR "Atribuții"
-    IDS_COL_ATTR_LETTERS "RHSAC"
 END
 
 

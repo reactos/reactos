@@ -16,7 +16,6 @@
 #define IDS_COL_SIZE            305
 #define IDS_COL_MODIFIED        306
 #define IDS_COL_ATTR            307
-#define IDS_COL_ATTR_LETTERS    308
 
 #define IDS_FONT_PREVIEW        401
 

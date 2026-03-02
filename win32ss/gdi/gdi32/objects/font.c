@@ -706,7 +706,6 @@ GetCharABCWidthsFloatW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -716,7 +715,8 @@ GetCharWidthFloatW(HDC hdc,
                    PFLOAT pxBuffer)
 {
     DPRINT("GetCharWidthsFloatW\n");
-    if ((!pxBuffer) || (iFirstChar > iLastChar))
+    if ((!pxBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -731,7 +731,6 @@ GetCharWidthFloatW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -741,7 +740,8 @@ GetCharWidthW(HDC hdc,
               LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsW\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -756,7 +756,6 @@ GetCharWidthW(HDC hdc,
 
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -766,7 +765,8 @@ GetCharWidth32W(HDC hdc,
                 LPINT lpBuffer)
 {
     DPRINT("GetCharWidths32W\n");
-    if ((!lpBuffer) || (iFirstChar > iLastChar))
+    if ((!lpBuffer) || (iFirstChar > iLastChar) || HIWORD(iLastChar) ||
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -779,10 +779,8 @@ GetCharWidth32W(HDC hdc,
                                lpBuffer);
 }
 
-
 /*
  * @implemented
- *
  */
 BOOL
 WINAPI
@@ -812,10 +810,9 @@ BOOL
 WINAPI
 GetCharWidthA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -823,6 +820,12 @@ GetCharWidthA(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsA\n");
+
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -855,10 +858,9 @@ BOOL
 WINAPI
 GetCharWidth32A(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    LPINT	lpBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    LPINT lpBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -866,6 +868,12 @@ GetCharWidth32A(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidths32A\n");
+
+    if (!lpBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -898,10 +906,9 @@ BOOL
 APIENTRY
 GetCharWidthFloatA(
     HDC	hdc,
-    UINT	iFirstChar,
-    UINT	iLastChar,
-    PFLOAT	pxBuffer
-)
+    UINT iFirstChar,
+    UINT iLastChar,
+    PFLOAT pxBuffer)
 {
     INT wlen, count = 0;
     LPSTR str;
@@ -909,6 +916,12 @@ GetCharWidthFloatA(
     BOOL ret = TRUE;
 
     DPRINT("GetCharWidthsFloatA\n");
+
+    if (!pxBuffer || (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC) || !GdiValidateHandle(hdc))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     str = FONT_GetCharsByRangeA(hdc, iFirstChar, iLastChar, &count);
     if (!str)
@@ -1037,16 +1050,19 @@ GetCharWidthI(HDC hdc,
               UINT giFirst,
               UINT cgi,
               LPWORD pgi,
-              LPINT lpBuffer
-             )
+              LPINT lpBuffer)
 {
     DPRINT("GetCharWidthsI\n");
-    if (!lpBuffer || (!pgi && (giFirst == MAXUSHORT))) // Cannot be at max.
+
+    if (!lpBuffer || (!pgi && HIWORD(giFirst)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    if (!cgi) return TRUE;
+
+    if (!cgi)
+        return TRUE;
+
     return NtGdiGetCharWidthW( hdc,
                                giFirst,
                                cgi,

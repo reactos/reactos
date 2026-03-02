@@ -616,6 +616,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping",,0x00000012
 
 ; Global Console settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console","EnableConImeOnSystemProcess",0x00010003,0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\Nls","00000409",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\TrueTypeFont","0",2,"Lucida Console"
 

@@ -440,10 +440,7 @@ HRESULT DoPreviewFontFiles(HWND hwnd, IDataObject* pDataObj)
 {
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
-    {
-        ERR("Invalid IDataObject\n");
         return E_FAIL;
-    }
 
     for (UINT iItem = 0; iItem < cida->cidl; ++iItem)
     {
@@ -541,9 +538,8 @@ HRESULT DoDeleteFontFiles(HWND hwnd, IDataObject* pDataObj)
         return hr;
     }
 
-    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts",
-                        SMTO_ABORTIFHUNG, 1000, NULL);
-    SendMessageTimeoutW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, NULL);
+    PostMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"fonts");
+    PostMessageW(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     return S_OK;
 }
 
