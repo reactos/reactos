@@ -163,7 +163,6 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #define START_TEST(name) EXTERN_C void func_##name(void)
 #endif
 
-extern int broken( int condition );
 extern int winetest_vok( int condition, const char *msg, va_list ap );
 extern void winetest_vskip( const char *msg, va_list ap );
 
@@ -366,6 +365,15 @@ static inline void winetest_ignore_exceptions( BOOL ignore )
     winetest_print_location( "IgnoreExceptions=%d\n", ignore ? 1 : 0 );
 }
 
+static inline int broken( int condition )
+{
+    return ((strcmp(winetest_platform, "windows") == 0)
+#ifndef USE_WINE_TODOS
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    ) && condition;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -476,15 +484,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-int broken( int condition )
-{
-    return ((strcmp(winetest_platform, "windows") == 0)
-#ifndef USE_WINE_TODOS
-    || (strcmp(winetest_platform, "reactos") == 0)
-#endif
-    ) && condition;
 }
 
 /*
