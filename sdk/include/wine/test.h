@@ -107,6 +107,7 @@ struct winetest_thread_data
 };
 
 extern struct winetest_thread_data *winetest_get_thread_data(void);
+extern int winetest_vprintf( const char *msg, va_list args );
 
 extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
@@ -432,13 +433,12 @@ static void exit_process( int code )
     ExitProcess( code );
 }
 
-static void winetest_vprintf(const char* msg, va_list valist);
-static void winetest_vprintf(const char *msg, va_list valist)
+int winetest_vprintf( const char *msg, va_list args )
 {
     struct winetest_thread_data *data = winetest_get_thread_data();
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
-    vfprintf(stdout, msg, valist);
+    return vfprintf(stdout, msg, args);
 }
 
 static void winetest_print_location( const char *msg, ... )
