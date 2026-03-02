@@ -26,7 +26,7 @@ typedef PVOID PDEVICE_OBJECT;
 #define DPRINT1(...) do { if (0) { trace(__VA_ARGS__); } } while (0)
 #define KeStallExecutionProcessor(MicroSeconds)
 
-FORCEINLINE
+static inline
 PVOID
 ExAllocatePoolWithTag(ULONG PoolType, SIZE_T NumberOfBytes, ULONG Tag)
 {
@@ -40,7 +40,7 @@ ExAllocatePoolWithTag(ULONG PoolType, SIZE_T NumberOfBytes, ULONG Tag)
     return (PVOID)(Mem + 2);
 }
 
-FORCEINLINE
+static inline
 PVOID
 ExAllocatePoolZero(ULONG PoolType, SIZE_T NumberOfBytes, ULONG Tag)
 {
@@ -52,7 +52,7 @@ ExAllocatePoolZero(ULONG PoolType, SIZE_T NumberOfBytes, ULONG Tag)
     return Result;
 }
 
-FORCEINLINE
+static inline
 VOID
 ExFreePoolWithTag(PVOID MemPtr, ULONG Tag)
 {
@@ -63,7 +63,7 @@ ExFreePoolWithTag(PVOID MemPtr, ULONG Tag)
     HeapFree(GetProcessHeap(), 0, Mem);
 }
 
-FORCEINLINE
+static inline
 SIZE_T
 GetPoolAllocSize(PVOID MemPtr)
 {
