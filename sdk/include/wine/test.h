@@ -110,6 +110,7 @@ extern struct winetest_thread_data *winetest_get_thread_data(void);
 extern void winetest_print_lock(void);
 extern void winetest_print_unlock(void);
 extern int winetest_vprintf( const char *msg, va_list args );
+extern int winetest_get_time(void);
 
 extern void winetest_start_nocount(unsigned int flags);
 extern int winetest_loop_nocount(void);
@@ -311,6 +312,16 @@ static int winetest_printf( const char *msg, ... )
     va_end( valist );
 
     return ret;
+}
+
+static const char *winetest_elapsed( char *buffer )
+{
+    int now;
+
+    if (!winetest_time) return "";
+    winetest_last_time = now = winetest_get_time();
+    sprintf( buffer, "%.3f", (now - winetest_start_time) / 1000.0 );
+    return buffer;
 }
 
 static void winetest_print_location( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
@@ -768,6 +779,11 @@ void winetest_end_nocount(void)
 {
     struct winetest_thread_data *data = winetest_get_thread_data();
     data->nocount_level >>= 2;
+}
+
+int winetest_get_time(void)
+{
+    return GetTickCount();
 }
 
 int winetest_get_mainargs( char*** pargv )
