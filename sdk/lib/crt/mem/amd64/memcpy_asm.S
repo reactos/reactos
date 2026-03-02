@@ -1,8 +1,8 @@
 /*
- * PROJECT:           ReactOS C Runtime Library
- * LICENSE:           MIT (https://spdx.org/licenses/MIT)
- * PURPOSE:           memcpy implementation for amd64
- * COPYRIGHT:         Copyright 2026 Ahmed Arif <arif.ing@outlook.com>
+ * PROJECT:     ReactOS C Runtime Library
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     memcpy implementation for amd64
+ * COPYRIGHT:   Copyright 2026 Ahmed Arif <arif.ing@outlook.com>
  */
 
 .intel_syntax noprefix
