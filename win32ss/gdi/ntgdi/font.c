@@ -1414,14 +1414,14 @@ NtGdiGetCharABCWidthsW(
     else
         SafeBuff = ExAllocatePoolWithTag(PagedPool, cbABCs, GDITAG_TEXT);
 
-    if (SafeBuff)
+    if (!SafeBuff)
+        goto Cleanup;
+
+    ret = GreGetCharABCWidthsW(hDC, FirstChar, Count, Safepwch, fl, SafeBuff);
+    if (ret)
     {
-        ret = GreGetCharABCWidthsW(hDC, FirstChar, Count, Safepwch, fl, SafeBuff);
-        if (ret)
-        {
-            Status = MmCopyToCaller(Buffer, SafeBuff, cbABCs);
-            ret = NT_SUCCESS(Status);
-        }
+        Status = MmCopyToCaller(Buffer, SafeBuff, cbABCs);
+        ret = NT_SUCCESS(Status);
     }
 
 Cleanup:
