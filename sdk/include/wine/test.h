@@ -163,14 +163,10 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
-extern void winetest_push_context( const char *fmt, ... ) __attribute__((format(printf, 1, 2)));
-extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
 # define __WINE_PRINTF_ATTR(fmt,args)
 extern void winetest_print(const char* msg, ...);
-extern void winetest_push_context( const char *fmt, ... );
-extern void winetest_pop_context(void);
 
 #endif /* __GNUC__ */
 
@@ -538,6 +534,55 @@ static inline void winetest_end_todo(void)
     data->todo_level >>= 1;
 }
 
+/* Adds a string to be prepended to the test traces and failure messages.
+ * This must be paired with a winetest_pop_context() call.
+ *
+ * Parameters:
+ *   - msg - failure message format;
+ *   - args - arguments for the failure message
+ *
+ * Remarks:
+ * - Failure messages must always make it possible to figure out what was being
+ *   tested. While not ideal the line number can usually be used for that
+ *   purpose except when the test loops on a list of test parameters. In such
+ *   cases either the test parameters or the loop index should be added to the
+ *   context.
+ *
+ * Example:
+ *
+ *   for (i = 0; i < ARRAY_SIZE(test_parameters); i++)
+ *   {
+ *       winetest_push_context("%d", i);
+ *       ...
+ *       ok(WinAPI(test_parameters[i]), ...);
+ *       ...
+ *       winetest_pop_context();
+ *   }
+ */
+static void winetest_push_context( const char *fmt, ... ) __WINE_PRINTF_ATTR(1, 2);
+static inline void winetest_push_context( const char *fmt, ... )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    va_list valist;
+
+    if (data->context_count < ARRAY_SIZE(data->context))
+    {
+        va_start(valist, fmt);
+        vsnprintf( data->context[data->context_count], sizeof(data->context[data->context_count]), fmt, valist );
+        va_end(valist);
+        data->context[data->context_count][sizeof(data->context[data->context_count]) - 1] = 0;
+    }
+    ++data->context_count;
+}
+
+static inline void winetest_pop_context(void)
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+
+    if (data->context_count)
+        --data->context_count;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -687,29 +732,6 @@ void winetest_end_nocount(void)
 {
     struct winetest_thread_data *data = winetest_get_thread_data();
     data->nocount_level >>= 2;
-}
-
-void winetest_push_context(const char* fmt, ...)
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-    va_list valist;
-
-    if (data->context_count < ARRAY_SIZE(data->context))
-    {
-        va_start(valist, fmt);
-        vsnprintf(data->context[data->context_count], sizeof(data->context[data->context_count]), fmt, valist);
-        va_end(valist);
-        data->context[data->context_count][sizeof(data->context[data->context_count]) - 1] = 0;
-    }
-    ++data->context_count;
-}
-
-void winetest_pop_context(void)
-{
-    struct winetest_thread_data *data = winetest_get_thread_data();
-
-    if (data->context_count)
-        --data->context_count;
 }
 
 int winetest_get_mainargs( char*** pargv )
