@@ -7451,7 +7451,7 @@ cleanup:
 
 BOOL FASTCALL IntSelectCharmap(FT_Face face)
 {
-    if (face->charmap != NULL)
+    if (face->charmap)
         return TRUE;
 
     FT_CharMap charmap, found = NULL;
