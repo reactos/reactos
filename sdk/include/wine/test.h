@@ -163,8 +163,6 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #define START_TEST(name) EXTERN_C void func_##name(void)
 #endif
 
-extern void winetest_vskip( const char *msg, va_list ap );
-
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
@@ -477,6 +475,13 @@ void winetest_trace( const char *msg, ... )
 }
 #endif // STANDALONE
 
+static void winetest_vskip( const char *msg, va_list args )
+{
+    winetest_print_context( "Tests skipped: " );
+    vfprintf(stdout, msg, args);
+    winetest_skipped++;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -598,13 +603,6 @@ void winetest_print(const char* msg, ...)
     va_start(valist, msg);
     vfprintf(stdout, msg, valist);
     va_end(valist);
-}
-
-void winetest_vskip( const char *msg, va_list args )
-{
-    winetest_print_context( "Tests skipped: " );
-    vfprintf(stdout, msg, args);
-    winetest_skipped++;
 }
 
 void winetest_skip( const char *msg, ... )
