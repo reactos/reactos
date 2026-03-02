@@ -21,12 +21,6 @@
 #include <disk.h>
 #include <arch/archwsup.h>
 
-#ifdef UEFIBOOT
-/* Stubs: BGRT logo functions not available in this tree */
-static inline BOOLEAN UefiVideoDisplayBootLogo(VOID) { return FALSE; }
-static inline BOOLEAN UefiVideoIsBootLogoDrawn(VOID) { return FALSE; }
-#endif
-
 #if defined(__GNUC__)
 extern VOID
 AddReactOSArcDiskInfo(
@@ -74,25 +68,6 @@ VOID FatFlushCacheStub(VOID)
 #include <ramdisk_fatwrite.h>
 #include <ramdisk_signature.h>
 #include "../ntldr/ntldropts.h"
-
-#if defined(__GNUC__)
-extern ULONG ArcGetRelativeTime(VOID) __attribute__((weak));
-#endif
-
-#if defined(__GNUC__)
-__attribute__((weak)) SIZE_T DiskReadBufferSize = 0;
-#elif defined(_MSC_VER)
-extern SIZE_T DiskReadBufferSize;
-__declspec(selectany) SIZE_T DiskReadBufferSizeStub = 0;
-
-#if defined(_M_IX86)
-#pragma comment(linker, "/alternatename:_DiskReadBufferSize=_DiskReadBufferSizeStub")
-#else
-#pragma comment(linker, "/alternatename:DiskReadBufferSize=DiskReadBufferSizeStub")
-#endif
-#else
-extern SIZE_T DiskReadBufferSize;
-#endif
 
 DBG_DEFAULT_CHANNEL(DISK);
 
@@ -302,18 +277,6 @@ RamDiskWritableAllocationLimit(VOID)
     return RAMDISK_LOW_ALLOC_MAX;
 }
 
-static VOID
-RamDiskReleaseMemory(PVOID Base,
-                     ULONGLONG Size)
-{
-    if (!Base)
-        return;
-
-    (void)Size;
-
-    MmFreeMemory(Base);
-}
-
 #define ISO_SECTOR_SIZE 2048
 #define ISO_DIRECTORY_MAX_SIZE    (32 * 1024 * 1024)
 #define ISO_NAME_BUFFER_SIZE      256
@@ -358,10 +321,7 @@ static
 ULONG
 RamDiskGetRelativeTime(VOID)
 {
-    if (ArcGetRelativeTime)
-        return ArcGetRelativeTime();
-
-    return 0;
+    return ArcGetRelativeTime();
 }
 
 static
@@ -1492,7 +1452,7 @@ RamDiskBuildWritableImage(
 
     if (!RamDiskFormatFat32(WritableBase, WritableSize, &Layout))
     {
-        RamDiskReleaseMemory(WritableBase, WritableSize);
+        MmFreeMemory(WritableBase);
         return FALSE;
     }
 
@@ -1506,7 +1466,7 @@ RamDiskBuildWritableImage(
         VolumeOffset = (ULONGLONG)Layout.HiddenSectors * Layout.BytesPerSector;
         if (VolumeOffset >= WritableSize)
         {
-            RamDiskReleaseMemory(WritableBase, WritableSize);
+            MmFreeMemory(WritableBase);
             return FALSE;
         }
 
@@ -1518,7 +1478,7 @@ RamDiskBuildWritableImage(
                                        Source,
                                        &Layout))
         {
-            RamDiskReleaseMemory(WritableBase, WritableSize);
+            MmFreeMemory(WritableBase);
             return FALSE;
         }
 
@@ -1750,7 +1710,7 @@ RamDiskReserveWritableBuffer(ULONGLONG RequestedSize, BOOLEAN OptionalRamDisk)
 
     if (RamDiskWritableBase)
     {
-        RamDiskReleaseMemory(RamDiskWritableBase, RamDiskWritableSize);
+        MmFreeMemory(RamDiskWritableBase);
         RamDiskWritableBase = NULL;
         RamDiskWritableSize = 0;
     }
@@ -1792,7 +1752,7 @@ RamDiskReserveWritableBuffer(ULONGLONG RequestedSize, BOOLEAN OptionalRamDisk)
              Base,
              (PVOID)(ULONG_PTR)((ULONG_PTR)Base + (ULONG_PTR)AllocationSize),
              (PVOID)(ULONG_PTR)AllocationLimit);
-        RamDiskReleaseMemory(Base, AllocationSize);
+        MmFreeMemory(Base);
         if (!RamDiskErrorShown && !OptionalRamDisk)
         {
             UiMessageBox("Unable to allocate low-memory buffer for writable RAM disk.");
@@ -1996,14 +1956,7 @@ RamDiskLoadVirtualFile(
     LARGE_INTEGER Position;
 
     /* Display progress */
-#ifdef UEFIBOOT
-    if (!UefiVideoIsBootLogoDrawn())
-    {
-        UiDrawProgressBarCenter("Loading RamDisk...");
-    }
-#else
     UiDrawProgressBarCenter("Loading RamDisk...");
-#endif
 
     /*
      * If the firmware or a previous boot stage already provided the ramdisk
@@ -2141,7 +2094,7 @@ RamDiskLoadVirtualFile(
     Status = ArcSeek(RamFileId, &Position, SeekAbsolute);
     if (Status != ESUCCESS)
     {
-        RamDiskReleaseMemory(RamDiskBase, RamDiskFileSize);
+        MmFreeMemory(RamDiskBase);
         RamDiskBase = NULL;
         RamDiskFileSize = 0;
         ArcClose(RamFileId);
@@ -2193,7 +2146,7 @@ RamDiskLoadVirtualFile(
         /* Check for success */
         if ((Status != ESUCCESS) || (Count != CurrentChunk))
         {
-            RamDiskReleaseMemory(RamDiskBase, RamDiskFileSize);
+            MmFreeMemory(RamDiskBase);
             RamDiskBase = NULL;
             RamDiskFileSize = 0;
             ArcClose(RamFileId);
@@ -2223,25 +2176,11 @@ RamDiskInitialize(
 
     TRACE("RamDiskInitialize: Begin (Init=%s)\n", InitRamDisk ? "true" : "false");
 
-#ifdef UEFIBOOT
-    /* Display BGRT splash once right at the start of ramdisk init. */
-    static BOOLEAN BgrtLogoShown = FALSE;
-    TRACE("RamDiskInitialize: BGRT logo shown=%s\n", BgrtLogoShown ? "yes" : "no");
-    if (!BgrtLogoShown)
-    {
-        BOOLEAN LogoResult = UefiVideoDisplayBootLogo();
-        TRACE("RamDiskInitialize: BGRT logo request result=%s\n",
-              LogoResult ? "success" : "failure");
-        if (LogoResult)
-            BgrtLogoShown = TRUE;
-    }
-#endif
-
     /* Reset the RAMDISK device */
     if (RamDiskBase && RamDiskBase != gInitRamDiskBase)
     {
         /* This is not the initial Ramdisk, so we can free the allocated memory */
-        RamDiskReleaseMemory(RamDiskBase, RamDiskFileSize);
+        MmFreeMemory(RamDiskBase);
     }
     RamDiskBase = NULL;
     RamDiskFileSize = 0;
@@ -2565,7 +2504,7 @@ RamDiskInitialize(
             if ((OriginalBase != gInitRamDiskBase) &&
                 (OriginalBase != WritableBase))
             {
-                RamDiskReleaseMemory(OriginalBase, RamDiskFileSize);
+                MmFreeMemory(OriginalBase);
             }
 
             RamDiskBase = WritableBase;
