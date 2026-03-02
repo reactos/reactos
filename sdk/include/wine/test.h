@@ -107,6 +107,8 @@ struct winetest_thread_data
 };
 
 extern struct winetest_thread_data *winetest_get_thread_data(void);
+extern void winetest_print_lock(void);
+extern void winetest_print_unlock(void);
 extern int winetest_vprintf( const char *msg, va_list args );
 
 extern void winetest_start_nocount(unsigned int flags);
@@ -642,6 +644,8 @@ int winetest_mute_threshold = 42;
 /* use ANSI escape codes for output coloring */
 int winetest_color = 0;
 
+static HANDLE winetest_mutex;
+
 /* passing arguments around */
 static int winetest_argc;
 static char** winetest_argv;
@@ -699,6 +703,24 @@ static void exit_process( int code )
 {
     fflush( stdout );
     ExitProcess( code );
+}
+
+void winetest_print_lock(void)
+{
+    UINT ret;
+
+    if (!winetest_mutex) return;
+    ret = WaitForSingleObject( winetest_mutex, 30000 );
+    if (ret != WAIT_OBJECT_0 && ret != WAIT_ABANDONED)
+    {
+        winetest_print_location( "could not get the print lock: %u\n", ret );
+        winetest_mutex = 0;
+    }
+}
+
+void winetest_print_unlock(void)
+{
+    if (winetest_mutex) ReleaseMutex( winetest_mutex );
 }
 
 int winetest_vprintf( const char *msg, va_list args )
@@ -1049,6 +1071,7 @@ int main( int argc, char **argv )
     char p[128];
 
     setvbuf (stdout, NULL, _IONBF, 0);
+    winetest_mutex = CreateMutexA(NULL, FALSE, "winetest_print_mutex");
 
     winetest_argc = argc;
     winetest_argv = argv;
