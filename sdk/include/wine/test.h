@@ -369,6 +369,30 @@ static inline int broken( int condition )
     ) && condition;
 }
 
+static LONG winetest_add_line( void )
+{
+    /* counts how many times a given line printed a message */
+    static LONG line_counters[16384];
+
+    struct winetest_thread_data *data;
+    int index, count;
+
+    if (winetest_debug > 1)
+        return 0;
+
+    data = winetest_get_thread_data();
+    index = data->current_line % ARRAY_SIZE(line_counters);
+    count = InterlockedIncrement(line_counters + index) - 1;
+    if (count == winetest_mute_threshold)
+    {
+        //winetest_print_lock();
+        winetest_print_location( "Line has been silenced after %d occurrences\n", winetest_mute_threshold );
+        //winetest_print_unlock();
+    }
+
+    return count;
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
