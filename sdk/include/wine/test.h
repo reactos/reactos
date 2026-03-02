@@ -101,6 +101,8 @@ struct winetest_thread_data
     unsigned int context_count;      /* number of context prefixes */
 };
 
+extern struct winetest_thread_data *winetest_get_thread_data(void);
+
 extern void winetest_set_location( const char* file, int line );
 extern void winetest_subtest(const char* name);
 extern void winetest_start_todo( int is_todo );
@@ -350,7 +352,7 @@ LONG winetest_muted_todo_successes = 0; /* same as todo_successes but silent */
 
 static DWORD tls_index;
 
-static struct winetest_thread_data *winetest_get_thread_data(void)
+struct winetest_thread_data *winetest_get_thread_data(void)
 {
     struct winetest_thread_data* data;
     DWORD last_error;
