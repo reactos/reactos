@@ -97,6 +97,8 @@ struct winetest_thread_data
 {
     const char* current_file;        /* file of current check */
     int current_line;                /* line of current check */
+    unsigned int flaky_level;        /* current flaky nesting level */
+    int flaky_do_loop;
     unsigned int todo_level;         /* current todo nesting level */
     unsigned int nocount_level;
     int todo_do_loop;
@@ -196,6 +198,13 @@ extern void winetest_print(const char* msg, ...);
 #define win_skip win_skip_(__FILE__, __LINE__)
 #define trace    trace_(__FILE__, __LINE__)
 #define wait_child_process wait_child_process_(__FILE__, __LINE__)
+
+#define flaky_if(is_flaky) for (winetest_start_flaky(is_flaky); \
+                                winetest_loop_flaky(); \
+                                winetest_end_flaky())
+#define flaky                   flaky_if(TRUE)
+#define flaky_wine              flaky_if(winetest_platform_is_wine)
+#define flaky_wine_if(is_flaky) flaky_if((is_flaky) && winetest_platform_is_wine)
 
 #define todo_if(is_todo) for (winetest_start_todo(is_todo); \
                               winetest_loop_todo(); \
@@ -515,6 +524,39 @@ static inline void winetest_win_skip( const char *msg, ... )
     else
         winetest_vok(0, msg, valist);
     va_end(valist);
+}
+
+/* If is_flaky is true, indicates that the next test may occasionally fail due
+ * to unavoidable outside race conditions. Such failures will be flagged as
+ * flaky so they can be ignored by automated testing tools.
+ *
+ * Remarks:
+ * - This is not meant to paper over race conditions within the test itself.
+ *   Those are bugs and should be fixed.
+ * - This is not meant to be used for tests that normally succeed but
+ *   systematically fail on a specific platform or locale.
+ * - The failures should be rare to start with. If a test fails 25% of the time
+ *   it is probably wrong.
+ */
+static inline void winetest_start_flaky( int is_flaky )
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    data->flaky_level = (data->flaky_level << 1) | (is_flaky != 0);
+    data->flaky_do_loop = 1;
+}
+
+static inline int winetest_loop_flaky(void)
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    int do_flaky = data->flaky_do_loop;
+    data->flaky_do_loop = 0;
+    return do_flaky;
+}
+
+static inline void winetest_end_flaky(void)
+{
+    struct winetest_thread_data *data = winetest_get_thread_data();
+    data->flaky_level >>= 1;
 }
 
 /* If is_todo is true, indicates that the next test is expected to fail on this
