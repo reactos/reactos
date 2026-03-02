@@ -7449,6 +7449,37 @@ cleanup:
     return Result;
 }
 
+BOOL FASTCALL IntSelectCharmap(FT_Face face)
+{
+    if (face->charmap != NULL)
+        return TRUE;
+
+    FT_CharMap charmap, found = NULL;
+    for (INT i = 0; i < (UINT)face->num_charmaps; i++)
+    {
+        charmap = face->charmaps[i];
+        if (charmap->encoding != 0)
+        {
+            found = charmap;
+            break;
+        }
+    }
+
+    if (!found && FT_IS_SFNT(face)) // Not found and (TrueType or OpenType)?
+    {
+        DPRINT1("WARNING: Could not find desired charmap!\n");
+        return FALSE;
+    }
+
+    if (found)
+    {
+        IntLockFreeType();
+        FT_Set_Charmap(face, found);
+        IntUnLockFreeType();
+    }
+
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -7469,7 +7500,6 @@ GreGetCharABCWidthsW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index;
     HFONT hFont = NULL;
     PLOGFONTW plf;
@@ -7496,21 +7526,11 @@ GreGetCharABCWidthsW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
     face = FontGDI->SharedFace->Face;
-    if (face->charmap == NULL)
+    if (!IntSelectCharmap(face))
     {
-        IntLockFreeType();
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-        if (found)
-            FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
+        TEXTOBJ_UnlockText(TextObj);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
@@ -7585,7 +7605,6 @@ GreGetCharWidthW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index;
     HFONT hFont = 0;
     LOGFONTW *plf;
@@ -7613,33 +7632,11 @@ GreGetCharWidthW(
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
     face = FontGDI->SharedFace->Face;
-    if (face->charmap == NULL)
+    if (!IntSelectCharmap(face))
     {
-        // FIXME: Select better charmap
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-
-        if (!found && FT_IS_SFNT(face)) // Not found and (TrueType or OpenType)?
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            TEXTOBJ_UnlockText(TextObj);
-            return FALSE;
-        }
-
-        if (found)
-        {
-            IntLockFreeType();
-            FT_Set_Charmap(face, found);
-            IntUnLockFreeType();
-        }
+        TEXTOBJ_UnlockText(TextObj);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
