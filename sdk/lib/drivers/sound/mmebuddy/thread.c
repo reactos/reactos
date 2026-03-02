@@ -79,7 +79,7 @@ CallSoundThread(
     VALIDATE_MMSYS_PARAMETER( RequestHandler );
 
     Thread = SoundDeviceInstance->Thread;
-    if ( ! Thread)
+    if (!Thread)
     {
         SND_TRACE("Thread already destroyed\n");
         return MMSYSERR_NOTSUPPORTED;
