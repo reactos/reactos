@@ -165,14 +165,12 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 
 #ifdef __GNUC__
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
-extern void winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
 extern void winetest_push_context( const char *fmt, ... ) __attribute__((format(printf, 1, 2)));
 extern void winetest_pop_context(void);
 
 #else /* __GNUC__ */
 # define __WINE_PRINTF_ATTR(fmt,args)
-extern void winetest_win_skip( const char *msg, ... );
 extern void winetest_print(const char* msg, ...);
 extern void winetest_push_context( const char *fmt, ... );
 extern void winetest_pop_context(void);
@@ -499,6 +497,22 @@ void winetest_skip( const char *msg, ... )
 }
 #endif // STANDALONE
 
+static void winetest_win_skip( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
+static inline void winetest_win_skip( const char *msg, ... )
+{
+    va_list valist;
+    va_start(valist, msg);
+    if ((strcmp(winetest_platform, "windows") == 0)
+#if !defined(USE_WINE_TODOS) || defined(USE_WIN_SKIP)
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    )
+        winetest_vskip(msg, valist);
+    else
+        winetest_vok(0, msg, valist);
+    va_end(valist);
+}
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -619,21 +633,6 @@ void winetest_print(const char* msg, ...)
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     va_start(valist, msg);
     vfprintf(stdout, msg, valist);
-    va_end(valist);
-}
-
-void winetest_win_skip( const char *msg, ... )
-{
-    va_list valist;
-    va_start(valist, msg);
-    if ((strcmp(winetest_platform, "windows") == 0)
-#if !defined(USE_WINE_TODOS) || defined(USE_WIN_SKIP)
-    || (strcmp(winetest_platform, "reactos") == 0)
-#endif
-    )
-        winetest_vskip(msg, valist);
-    else
-        winetest_vok(0, msg, valist);
     va_end(valist);
 }
 
