@@ -169,7 +169,6 @@ extern void winetest_vskip( const char *msg, va_list ap );
 # define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
 extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
-extern void winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_print(const char* msg, ...) __attribute__((format(printf, 1, 2)));
 extern void winetest_push_context( const char *fmt, ... ) __attribute__((format(printf, 1, 2)));
 extern void winetest_pop_context(void);
@@ -178,7 +177,6 @@ extern void winetest_pop_context(void);
 # define __WINE_PRINTF_ATTR(fmt,args)
 extern void winetest_skip( const char *msg, ... );
 extern void winetest_win_skip( const char *msg, ... );
-extern void winetest_trace( const char *msg, ... );
 extern void winetest_print(const char* msg, ...);
 extern void winetest_push_context( const char *fmt, ... );
 extern void winetest_pop_context(void);
@@ -463,6 +461,22 @@ void winetest_ok( int condition, const char *msg, ... )
 }
 #endif // STANDALONE
 
+void winetest_trace( const char *msg, ... ) __WINE_PRINTF_ATTR(1,2);
+#ifdef STANDALONE
+void winetest_trace( const char *msg, ... )
+{
+    va_list valist;
+
+    if (winetest_debug > 0)
+    {
+        winetest_print_context( "" );
+        va_start(valist, msg);
+        vfprintf(stdout, msg, valist);
+        va_end(valist);
+    }
+}
+#endif // STANDALONE
+
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
  * directly into the generated testlist.c file.
@@ -573,19 +587,6 @@ int winetest_vprintf( const char *msg, va_list args )
 
     fprintf(stdout, __winetest_file_line_prefix ": ", data->current_file, data->current_line);
     return vfprintf(stdout, msg, args);
-}
-
-void winetest_trace( const char *msg, ... )
-{
-    va_list valist;
-
-    if (winetest_debug > 0)
-    {
-        winetest_print_context( "" );
-        va_start(valist, msg);
-        vfprintf(stdout, msg, valist);
-        va_end(valist);
-    }
 }
 
 void winetest_print(const char* msg, ...)
