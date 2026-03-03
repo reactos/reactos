@@ -996,11 +996,10 @@ KsPinAttemptProcessing(
     IN PKSPIN  Pin,
     IN BOOLEAN  Asynchronous)
 {
-    NTSTATUS Status;
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
     if (!Asynchronous)
     {
-        Status = This->Pin.Descriptor->Dispatch->Process(&This->Pin);
+        This->Pin.Descriptor->Dispatch->Process(&This->Pin);
     }
     else
     {
