@@ -940,9 +940,6 @@ ProbeMdl:
             goto ProbeMdl;
     }
 
-    // HACK for MS portcls
-    HeaderSize = Length;
-
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -2064,9 +2061,6 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
-
-    // HACK for MS portcls
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
 
     switch ( MajorFunction )
     {
