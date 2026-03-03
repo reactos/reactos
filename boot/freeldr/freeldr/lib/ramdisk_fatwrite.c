@@ -576,6 +576,26 @@ Fat32FindFreeSlots(
             Writer->Fat0[PrevCluster] = NewCluster;
             if (Writer->Fat1)
                 Writer->Fat1[PrevCluster] = NewCluster;
+
+            /*
+             * Convert any trailing 0x00 (end-of-directory) entries in the
+             * previous cluster to 0xE5 (deleted).  Per the FAT specification,
+             * a 0x00 entry means "no more entries follow", so the FAT driver
+             * would stop scanning at that point and never see entries written
+             * in the newly chained cluster.  Changing them to 0xE5 lets the
+             * scan continue through the entire cluster chain.
+             */
+            {
+                PDIRENTRY PrevEntries = (PDIRENTRY)Fat32ClusterToPointer(Writer, PrevCluster);
+                ULONG PrevCount = Writer->BytesPerCluster / sizeof(DIRENTRY);
+                ULONG j;
+
+                for (j = 0; j < PrevCount; j++)
+                {
+                    if ((UCHAR)PrevEntries[j].FileName[0] == 0x00)
+                        PrevEntries[j].FileName[0] = (CHAR)0xE5;
+                }
+            }
         }
 
         /* The new cluster FAT entry is already set to 0x0FFFFFFF by Fat32AllocateClusters */
