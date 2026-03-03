@@ -66,6 +66,14 @@ typedef struct _VF_SETTINGS {
 #define VF_VIOLATION_DEVICE_NODE              0x12
 #define VF_VIOLATION_FIRMWARE_BIOS            0x13
 
+/* ============================================================ 
+   SUBCODES (win-compatible 0xC4 subcodes)
+   ============================================================ */
+#define VF_SUBCODE_POOL_NOT_FREED_ON_UNLOAD 0x62
+#define VF_SUBCODE_WRONG_POOL_TAG           0x16
+#define VF_SUBCODE_WRONG_POOL_TYPE          0x17
+#define VF_SUBCODE_INVALID_FREE             0x1A
+
 #if defined(_MSC_VER)
 #define UNUSED
 #else

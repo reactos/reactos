@@ -170,9 +170,10 @@ UNUSED static VOID VfFailInternal(
         if (FailureClass == VfPoolOverflow)
         {
             KeBugCheckEx(VF_BUGCHECK_POOL_TAG_VIOLATION,
+                         VF_SUBCODE_WRONG_POOL_TAG,
                          (ULONG_PTR)ParamFormat,
                          (ULONG_PTR)ObjectType,
-                         0, 0);
+                         0);
         }
         else if (FailureClass == VfIrqlViolation)
         {
@@ -681,13 +682,11 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
 
             if (Alloc->PoolType != PoolType)
             {
-                KeBugCheckEx(
-                    VF_BUGCHECK_POOL_TYPE_VIOLATION,
+                KeBugCheckEx(VF_BUGCHECK_POOL_TYPE_VIOLATION,
+                    VF_SUBCODE_WRONG_POOL_TYPE,
                     (ULONG_PTR)Address,
                     (ULONG_PTR)Alloc->PoolType,
-                    (ULONG_PTR)PoolType,
-                    0
-                );
+                    (ULONG_PTR)PoolType);
             }
 
             /*
@@ -712,7 +711,10 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     }
 
     KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-    KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, (ULONG_PTR)Address, 0, 0, 0);
+    KeBugCheckEx(VF_BUGCHECK_INVALID_FREE,
+                VF_SUBCODE_INVALID_FREE,
+                (ULONG_PTR)Address, 
+                0, 0);
 }
 
 /* ============================================================
@@ -1642,8 +1644,9 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
     if (!IsListEmpty(&Driver->PoolList))
     {
         KeBugCheckEx(VF_BUGCHECK_MEMORY_LEAK,
+                     VF_SUBCODE_POOL_NOT_FREED_ON_UNLOAD,
                      (ULONG_PTR)DriverObject,
-                     0, 0, 0);
+                     0, 0);
     }
 
     if (Driver->OriginalUnload)
