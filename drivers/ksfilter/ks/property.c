@@ -246,7 +246,7 @@ KspPropertyHandler(
             {
                 _SEH2_TRY
                 {
-                    /* probe buffer for writing */
+                    /* Probe buffer for writing */
                     ProbeForWrite(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, 1);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

@@ -52,7 +52,7 @@ KspCreatePDO(
     if (!NT_SUCCESS(Status))
     {
         /* failed to create pdo */
-        DPRINT("KspCreatePDO failed with %x\n", Status);
+        DPRINT1("KspCreatePDO failed with %x\n", Status);
         return Status;
     }
 
@@ -1930,11 +1930,11 @@ KsServiceBusEnumCreateRequest(
 
     DPRINT1("KsServiceBusEnumCreateRequest IRP %p Name %wZ\n", Irp, &IoStack->FileObject->FileName);
 
-    /* scan the bus for new devices */
+    /* Scan the bus for new devices */
     Status = KspScanBus(BusDeviceExtension);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("KsServiceBusEnumCreateRequest failed to scan bus %x\n", Status);
+        DPRINT1("KsServiceBusEnumCreateRequest failed to scan bus %x\n", Status);
         Irp->IoStatus.Status = Status;
         return Status;
     }
@@ -2114,13 +2114,13 @@ KsServiceBusEnumPnpRequest(
             /* complete pending irps */
             KspCompletePendingIrps(DeviceEntry, STATUS_DEVICE_REMOVED);
 
-            /* free device extension */
+            /* Free device extension */
             FreeItem(ChildDeviceExtension);
 
             /* FIXME this should only be done while installing the drivers */
-            /* lets recreate the PDO */
+            /* Lets recreate the PDO */
             Status = KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
-            /* restart enumeration */
+            /* Restart enumeration */
             IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
             /* done */
             Status = STATUS_SUCCESS;

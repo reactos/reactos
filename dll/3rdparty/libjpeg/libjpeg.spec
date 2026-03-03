@@ -12,4 +12,3 @@
 @ cdecl jpeg_read_scanlines(ptr ptr long)
 @ cdecl jpeg_finish_decompress(ptr)
 @ cdecl jpeg_resync_to_restart(ptr long)
-@ cdecl jpeg_mem_src(ptr ptr long)

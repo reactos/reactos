@@ -1393,9 +1393,9 @@ KsPinGetLeadingEdgeStreamPointer(
 
     This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
 
-    //DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x Count %lu Offset %lu\n", Pin, State,
-    //       This->LeadingEdgeStreamPointer.Length,
-    //       This->LeadingEdgeStreamPointer.Offset);
+    DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x Count %lu Offset %lu\n", Pin, State,
+           This->LeadingEdgeStreamPointer.Length,
+           This->LeadingEdgeStreamPointer.Offset);
 
     /* sanity check */
     ASSERT(State == KSSTREAM_POINTER_STATE_LOCKED);
@@ -1409,7 +1409,7 @@ KsPinGetLeadingEdgeStreamPointer(
                 return NULL;
         }
 
-        //DPRINT("KsPinGetLeadingEdgeStreamPointer NewOffset %lu TotalLength %lu\n", This->LeadingEdgeStreamPointer.Offset, This->LeadingEdgeStreamPointer.Length);
+        DPRINT("KsPinGetLeadingEdgeStreamPointer NewOffset %lu TotalLength %lu\n", This->LeadingEdgeStreamPointer.Offset, This->LeadingEdgeStreamPointer.Length);
     }
 
      return &This->LeadingEdgeStreamPointer.StreamPointer;
@@ -1473,7 +1473,7 @@ KsStreamPointerUnlock(
     PIRP Irp = Pointer->Irp;
     if (Irp)
     {
-        /* get stream header */
+        /* Get stream header */
         if (Pointer->Irp->RequestorMode == UserMode)
             Header = (PKSSTREAM_HEADER)Pointer->Irp->AssociatedIrp.SystemBuffer;
         else
@@ -1521,7 +1521,7 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
 
     KeAcquireSpinLock(&Pointer->Lock, &OldLevel);
 
-    /* get stream header */
+    /* Get stream header */
     if (Pointer->Irp->RequestorMode == UserMode)
         Header = (PKSSTREAM_HEADER)Pointer->Irp->AssociatedIrp.SystemBuffer;
     else
@@ -1573,7 +1573,7 @@ KsStreamPointerDelete(
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
     DPRINT("KsStreamPointerDelete %p\n", Pointer);
-    DbgBreakPoint();
+
     This = (IKsPinImpl*)CONTAINING_RECORD(Pointer->StreamPointer.Pin, IKsPinImpl, Pin);
 
     /* point to first stream pointer */
@@ -1989,7 +1989,6 @@ IKsPin_DispatchKsStream(
     /* FIXME support multiple stream headers */
     ASSERT(NumHeaders == 1);
 
- #if 0
     if (Irp->RequestorMode == UserMode)
     {
         /* prepare header */
@@ -2005,8 +2004,6 @@ IKsPin_DispatchKsStream(
         }
 
     }
-#endif
-
 
     if (This->Pin.Descriptor->Dispatch->Process)
     {
@@ -2028,7 +2025,7 @@ IKsPin_DispatchKsStream(
 
         if ((This->Pin.Descriptor->Flags & (KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSPIN_FLAG_INITIATE_PROCESSING_ON_EVERY_ARRIVAL)))
         {
-            /* start the processing loop */
+            /* Start the processing loop */
             KsIncrementCountedWorker(This->PinWorker);
         }
         Status = STATUS_PENDING;
