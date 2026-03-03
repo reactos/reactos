@@ -74,6 +74,15 @@ typedef struct _VF_SETTINGS {
 #define VF_SUBCODE_WRONG_POOL_TYPE          0x17
 #define VF_SUBCODE_INVALID_FREE             0x1A
 
+/* ============================================================ 
+   KEY AND ZW
+   ============================================================ */
+#define VF_REG_KEY L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\" \
+                   L"Control\\Session Manager\\Memory Management"
+#define VF_DEFAULT_LEVEL (VF_FLAG_POOL_TRACKING | VF_FLAG_IRQL_CHECKING | \
+                          VF_FLAG_SPECIAL_POOL | VF_FLAG_DMA_FAULT_INJECTION)
+#define VF_DEFAULT_DRIVERS L"*"
+
 #if defined(_MSC_VER)
 #define UNUSED
 #else

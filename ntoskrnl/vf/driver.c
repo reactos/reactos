@@ -104,9 +104,171 @@ VfGetDriverByAddress(PVOID Address)
     return NULL;
 }
 
+static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    UNICODE_STRING DriverName;
+    PWCHAR List, Token, End;
+
+    /* NULL or empty buffer means verify all */
+    if (!VfGlobal.VerifyDriverList.Buffer ||
+        VfGlobal.VerifyDriverList.Length == 0)
+        return TRUE;
+
+    /* * means verify all */
+    if (VfGlobal.VerifyDriverList.Length == sizeof(WCHAR) &&
+        VfGlobal.VerifyDriverList.Buffer[0] == L'*')
+        return TRUE;
+
+    /* get driver filename from LdrEntry */
+    LdrEntry = (PLDR_DATA_TABLE_ENTRY)DriverObject->DriverSection;
+    if (!LdrEntry)
+        return TRUE;
+
+    DriverName = LdrEntry->BaseDllName;
+
+    /* walk space-separated list */
+    List = VfGlobal.VerifyDriverList.Buffer;
+    while (*List)
+    {
+        /* skip spaces */
+        while (*List == L' ') List++;
+        if (!*List) break;
+
+        Token = List;
+        End = List;
+        while (*End && *End != L' ') End++;
+
+        UNICODE_STRING Entry;
+        Entry.Buffer = Token;
+        Entry.Length = (USHORT)((End - Token) * sizeof(WCHAR));
+        Entry.MaximumLength = Entry.Length;
+
+        if (RtlEqualUnicodeString(&DriverName, &Entry, TRUE))
+            return TRUE;
+
+        List = End;
+    }
+
+    return FALSE;
+}
 /* ============================================================
    INIT
    ============================================================ */
+static VOID VfInitializeRegistry(VOID)
+{
+    OBJECT_ATTRIBUTES ObjAttrs;
+    UNICODE_STRING KeyPath;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    ULONG Disposition;
+    ULONG Level = VF_DEFAULT_LEVEL;
+
+    /* 8 byte buffer for header + ULONG data */
+    UCHAR LevelBuf[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
+    /* buffer for VerifyDrivers string */
+    UCHAR DriversBuf[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 512 * sizeof(WCHAR)];
+    PKEY_VALUE_PARTIAL_INFORMATION Info;
+    ULONG ResultLen;
+
+    RtlInitUnicodeString(&KeyPath, VF_REG_KEY);
+    InitializeObjectAttributes(&ObjAttrs,
+                                &KeyPath,
+                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                NULL,
+                                NULL);
+
+    Status = ZwCreateKey(&KeyHandle,
+                         KEY_READ | KEY_WRITE,
+                         &ObjAttrs,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         &Disposition);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("VF: Failed to create/open registry key (0x%lx), using defaults\n", Status);
+        VfGlobal.GlobalFlags = VF_DEFAULT_LEVEL;
+        return;
+    }
+
+    /* ---- VerifyDriverLevel ---- */
+    RtlInitUnicodeString(&ValueName, L"VerifyDriverLevel");
+    Info = (PKEY_VALUE_PARTIAL_INFORMATION)LevelBuf;
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             Info,
+                             sizeof(LevelBuf),
+                             &ResultLen);
+
+    if (NT_SUCCESS(Status) && Info->Type == REG_DWORD && Info->DataLength == sizeof(ULONG))
+    {
+        /* key existed, read it */
+        Level = *(PULONG)Info->Data;
+        DPRINT1("VF: VerifyDriverLevel = 0x%lx\n", Level);
+    }
+    else
+    {
+        /* key missing, create with default */
+        Status = ZwSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_DWORD,
+                               &Level,
+                               sizeof(ULONG));
+        if (!NT_SUCCESS(Status))
+            DPRINT1("VF: Failed to write VerifyDriverLevel (0x%lx)\n", Status);
+        DPRINT1("VF: VerifyDriverLevel defaulting to 0x%lx\n", Level);
+    }
+
+    VfGlobal.GlobalFlags = Level;
+
+    /* ---- VerifyDrivers ---- */
+    RtlInitUnicodeString(&ValueName, L"VerifyDrivers");
+    Info = (PKEY_VALUE_PARTIAL_INFORMATION)DriversBuf;
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             Info,
+                             sizeof(DriversBuf),
+                             &ResultLen);
+
+    if (NT_SUCCESS(Status) && Info->Type == REG_SZ && Info->DataLength > 0)
+    {
+        /* copy into VfGlobal.VerifyDriverList */
+        ULONG ByteLen = min(Info->DataLength, 511 * sizeof(WCHAR));
+        PWCHAR Buf = ExAllocatePoolWithTag(NonPagedPool,
+                                           ByteLen + sizeof(WCHAR),
+                                           TAG_VFDRV);
+        if (Buf)
+        {
+            RtlCopyMemory(Buf, Info->Data, ByteLen);
+            Buf[ByteLen / sizeof(WCHAR)] = UNICODE_NULL;
+            RtlInitUnicodeString(&VfGlobal.VerifyDriverList, Buf);
+            DPRINT1("VF: VerifyDrivers = %wZ\n", &VfGlobal.VerifyDriverList);
+        }
+    }
+    else
+    {
+        /* key missing, create with default * */
+        Status = ZwSetValueKey(KeyHandle,
+                               &ValueName,
+                               0,
+                               REG_SZ,
+                               VF_DEFAULT_DRIVERS,
+                               sizeof(VF_DEFAULT_DRIVERS));
+        if (!NT_SUCCESS(Status))
+            DPRINT1("VF: Failed to write VerifyDrivers (0x%lx)\n", Status);
+        DPRINT1("VF: VerifyDrivers defaulting to *\n");
+        /* NULL buffer means verify all */
+        VfGlobal.VerifyDriverList.Buffer = NULL;
+        VfGlobal.VerifyDriverList.Length = 0;
+    }
+
+    ZwClose(KeyHandle);
+}
 
 VOID NTAPI VfInitialize(VOID)
 {
@@ -136,8 +298,8 @@ VOID NTAPI VfInitialize(VOID)
 
     ExpPoolFlags |= POOL_FLAG_VERIFIER;
 
-    /* TODO: read registry HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Verifier
-     * in future commit / when os adds it. */
+    VfInitializeRegistry();
+
     DPRINT1("VF: Driver Verifier initialized\n");
 }
 
@@ -222,6 +384,9 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
     VF_DRIVER_ENTRY* Entry;
     KIRQL OldIrql;
 
+    if (!VfShouldVerifyDriver(DriverObject))
+        return;
+
     if (!VfGlobal.Enabled)
         return;
 
@@ -237,6 +402,8 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
     InitializeListHead(&Entry->PoolList);
     KeInitializeSpinLock(&Entry->PoolLock);
     Entry->OriginalUnload = DriverObject->DriverUnload;
+    Entry->VerifierFlags = VfGlobal.GlobalFlags ? VfGlobal.GlobalFlags :
+                           (VF_FLAG_POOL_TRACKING | VF_FLAG_IRQL_CHECKING | VF_FLAG_SPECIAL_POOL);
 
     KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
     InsertTailList(&VfDriverList, &Entry->ListEntry);
