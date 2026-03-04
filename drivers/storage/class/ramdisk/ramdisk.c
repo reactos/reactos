@@ -156,7 +156,7 @@ typedef struct _RAMDISK_DRIVE_EXTENSION
     LARGE_INTEGER DiskLength;
     LONG DiskOffset;
     WCHAR DriveLetter;
-    ULONG BasePage;
+    ULONG_PTR BasePage;
     ULONG DiskNumber;
 
     /* Data we get from the disk */
@@ -1611,7 +1611,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
                         IN BOOLEAN ValidateOnly,
                         OUT PRAMDISK_DRIVE_EXTENSION *NewDriveExtension)
 {
-    ULONG BasePage, DiskType, Length;
+    ULONG_PTR BasePage;
+    ULONG DiskType, Length;
     //ULONG ViewCount;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT DeviceObject;
@@ -5118,9 +5119,9 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
 
                 if (DriveExtension->DiskType == RAMDISK_BOOT_DISK)
                 {
-                    /* Expose a dedicated boot-ramdisk device interface for kernel binding. */
+                    /* Register as a standard volume so Windows apps/drivers can discover it. */
                     Status = IoRegisterDeviceInterface(DeviceObject,
-                                                       &GUID_DEVINTERFACE_REACTOS_BOOT_RAMDISK,
+                                                       &GUID_DEVINTERFACE_VOLUME,
                                                        NULL,
                                                        &DriveExtension->DriveDeviceName);
                 }
