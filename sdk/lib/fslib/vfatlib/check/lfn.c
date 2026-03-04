@@ -26,6 +26,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef __REACTOS__
+#include <pshpack1.h>
+#endif
+
 typedef struct {
     uint8_t id;			/* sequence number for slot */
     uint8_t name0_4[10];	/* first 5 characters in name */
@@ -36,6 +40,10 @@ typedef struct {
     uint16_t start;		/* starting cluster number, 0 in long slots */
     uint8_t name11_12[4];	/* last 2 characters in name */
 } LFN_ENT;
+
+#ifdef __REACTOS__
+#include <poppack.h>
+#endif
 
 #define LFN_ID_START	0x40
 #define LFN_ID_SLOTMASK	0x1f
