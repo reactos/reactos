@@ -31,7 +31,7 @@ VOID VideoFreeOffScreenBuffer(VOID)
     if (!VideoOffScreenBuffer)
         return;
 
-    MmFreeMemory(VideoOffScreenBuffer);
+    MmFreeMemoryWithType(VideoOffScreenBuffer, LoaderFirmwareTemporary);
     VideoOffScreenBuffer = NULL;
 }
 
