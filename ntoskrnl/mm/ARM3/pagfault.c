@@ -102,6 +102,14 @@ MiCheckForUserStackOverflow(IN PVOID Address,
         {
             /* Success! */
             Teb->NtTib.StackLimit = NextStackAddress;
+            
+#ifdef _WIN64
+            /* Update WOW64 32-bit TEB stack limit */
+            if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+            {
+                ((PTEB32)(ROUND_TO_PAGES(Teb + 1)))->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
+            }
+#endif
         }
         else
         {
@@ -116,6 +124,14 @@ MiCheckForUserStackOverflow(IN PVOID Address,
 
     /* Update the stack limit */
     Teb->NtTib.StackLimit = (PVOID)((ULONG_PTR)NextStackAddress + GuaranteedSize);
+
+#ifdef _WIN64
+    /* Update WOW64 32-bit TEB stack limit */
+    if (CurrentThread->ThreadsProcess->Wow64Process != NULL)
+    {
+        ((PTEB32)(ROUND_TO_PAGES(Teb + 1)))->NtTib.StackLimit = PtrToUlong(Teb->NtTib.StackLimit);
+    }
+#endif
 
     /* Now move the guard page to the next page */
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
