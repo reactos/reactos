@@ -289,6 +289,12 @@ class CFunctionGroupNode
     }
     virtual ~CFunctionGroupNode()
     {
+        while (!IsListEmpty(&m_Nodes))
+        {
+            PLIST_ENTRY Entry = RemoveHeadList(&m_Nodes);
+            PNODE_CONTEXT NodeContext = CONTAINING_RECORD(Entry, NODE_CONTEXT, ListEntry);
+            ExFreePoolWithTag(NodeContext, TAG_HDAUDIO);
+        }
     }
 
     NTSTATUS NTAPI QueryWidgetCount();

@@ -16,34 +16,59 @@ NTSTATUS
 NTAPI
 PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
 {
+    const ULONG JackDescriptionSize = sizeof(KSMULTIPLE_ITEM) + sizeof(KSJACK_DESCRIPTION);
+
     if (PropertyRequest->ValueSize == 0)
     {
-        PropertyRequest->ValueSize = sizeof(KSMULTIPLE_ITEM) + sizeof(KSJACK_DESCRIPTION);
+        PropertyRequest->ValueSize = JackDescriptionSize;
         return STATUS_BUFFER_OVERFLOW;
+    }
+
+    if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
+    {
+        if (PropertyRequest->ValueSize < sizeof(ULONG))
+        {
+            PropertyRequest->ValueSize = sizeof(ULONG);
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        PULONG AccessFlags = (PULONG)PropertyRequest->Value;
+        *AccessFlags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_GET;
+        PropertyRequest->ValueSize = sizeof(ULONG);
+        return STATUS_SUCCESS;
+    }
+
+    if (!(PropertyRequest->Verb & KSPROPERTY_TYPE_GET))
+        return STATUS_NOT_SUPPORTED;
+
+    if (PropertyRequest->ValueSize < JackDescriptionSize)
+    {
+        PropertyRequest->ValueSize = JackDescriptionSize;
+        return STATUS_BUFFER_TOO_SMALL;
     }
 
     PUNKNOWN UnknownMiniport = (PUNKNOWN)PropertyRequest->MajorTarget;
     if (!UnknownMiniport)
         return STATUS_INVALID_PARAMETER;
 
-    CMiniportTopology *Miniport;
+    CMiniportTopology *Miniport = NULL;
     NTSTATUS Status = UnknownMiniport->QueryInterface(IID_IMiniportTopology, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status) || !Miniport)
         return Status;
 
     CFunctionGroupNode *Node = (CFunctionGroupNode*)Miniport->GetNode();
     if (!Node)
-        return STATUS_INVALID_PARAMETER;
-
-    if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
-        PIN_CONFIGURATION_DEFAULT PinConfiguration;
-        Status = Node->GetPinConfigurationDefault(Node->GetStartNodeId(), &PinConfiguration);
-        if (!NT_SUCCESS(Status))
-            return Status;
+        Miniport->Release();
+        return STATUS_INVALID_PARAMETER;
+    }
 
+    PIN_CONFIGURATION_DEFAULT PinConfiguration;
+    Status = Node->GetPinConfigurationDefault(Node->GetStartNodeId(), &PinConfiguration);
+    if (NT_SUCCESS(Status))
+    {
         PKSMULTIPLE_ITEM MultipleItem = (PKSMULTIPLE_ITEM)PropertyRequest->Value;
-        MultipleItem->Size = sizeof(KSMULTIPLE_ITEM) + sizeof(KSJACK_DESCRIPTION);
+        MultipleItem->Size = JackDescriptionSize;
         MultipleItem->Count = 1;
         PKSJACK_DESCRIPTION JackDescription = (PKSJACK_DESCRIPTION)(MultipleItem + 1);
         JackDescription->ChannelMapping = KSAUDIO_SPEAKER_STEREO; // FIXME
@@ -53,16 +78,10 @@ PropertyHandler_JackDescription(IN PPCPROPERTY_REQUEST PropertyRequest)
         JackDescription->GenLocation = (EPcxGenLocation)(PinConfiguration.Location << 4);
         JackDescription->PortConnection = (EPxcPortConnection)PinConfiguration.PortConnectivity;
         JackDescription->IsConnected = TRUE;
-        return STATUS_SUCCESS;
     }
-    else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
-    {
-        PULONG AccessFlags = (PULONG)PropertyRequest->Value;
-        *AccessFlags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_GET;
-        PropertyRequest->ValueSize = sizeof(KSMULTIPLE_ITEM) + sizeof(KSJACK_DESCRIPTION);
-        return STATUS_SUCCESS;
-    }
-    return STATUS_NOT_SUPPORTED;
+
+    Miniport->Release();
+    return Status;
 }
 
 NTSTATUS
@@ -79,25 +98,31 @@ PropertyHandler_ChannelConfig(IN PPCPROPERTY_REQUEST PropertyRequest)
     if (!UnknownMiniport)
         return STATUS_INVALID_PARAMETER;
 
-    CMiniportWaveRT *Miniport;
+    CMiniportWaveRT *Miniport = NULL;
     NTSTATUS Status = UnknownMiniport->QueryInterface(IID_IMiniportWaveRT, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status) || !Miniport)
         return Status;
 
     CFunctionGroupNode *Node = (CFunctionGroupNode*)Miniport->GetNode();
     if (!Node)
+    {
+        Miniport->Release();
         return STATUS_INVALID_PARAMETER;
+    }
 
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
     {
         *(PLONG)PropertyRequest->Value = KSAUDIO_SPEAKER_STEREO;
+        Miniport->Release();
         return STATUS_SUCCESS;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
     {
         UNIMPLEMENTED;
+        Miniport->Release();
         return STATUS_SUCCESS;
     }
+    Miniport->Release();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -138,19 +163,25 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
     if (!UnknownMiniport)
         return STATUS_INVALID_PARAMETER;
 
-    CMiniportTopology *Miniport;
+    CMiniportTopology *Miniport = NULL;
     NTSTATUS Status = UnknownMiniport->QueryInterface(IID_IMiniportTopology, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status) || !Miniport)
         return Status;
 
     CFunctionGroupNode *Node = (CFunctionGroupNode*)Miniport->GetNode();
     if (!Node)
+    {
+        Miniport->Release();
         return STATUS_INVALID_PARAMETER;
+    }
 
     AMPLIFIER_CAPABILITIES AmplifierDetails;
     Status = Node->GetAmplifierDetails(Node->GetStartNodeId(), FALSE /* FIXME */, &AmplifierDetails);
     if (!NT_SUCCESS(Status))
+    {
+        Miniport->Release();
         return Status;
+    }
 
     PLONG Value = (PLONG)PropertyRequest->Value;
     if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET)
@@ -159,6 +190,7 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
         UCHAR Direct;
         Status = Node->GetVolume(Node->GetStartNodeId(), &Direct, &Volume);
         *Value = AmplifierDetails.Offset - AmplifierDetails.Steps * Volume;
+        Miniport->Release();
         return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET)
@@ -169,6 +201,7 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
         if (Volume < AmplifierDetails.Offset - AmplifierDetails.Steps * AmplifierDetails.NumSteps)
             Volume = AmplifierDetails.Offset - AmplifierDetails.Steps * AmplifierDetails.NumSteps;
         Status = Node->SetVolume(Node->GetStartNodeId(), 1 /* FIXME */, Volume);
+        Miniport->Release();
         return Status;
     }
     else if (PropertyRequest->Verb & KSPROPERTY_TYPE_BASICSUPPORT)
@@ -176,8 +209,10 @@ PropertyHandler_Volume(IN PPCPROPERTY_REQUEST PropertyRequest)
         PULONG AccessFlags = (PULONG)PropertyRequest->Value;
         *AccessFlags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET;
         PropertyRequest->ValueSize = sizeof(LONG);
+        Miniport->Release();
         return STATUS_SUCCESS;
     }
+    Miniport->Release();
     return STATUS_NOT_SUPPORTED;
 }
 
