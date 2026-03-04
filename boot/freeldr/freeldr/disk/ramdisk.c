@@ -2067,18 +2067,9 @@ RamDiskLoadVirtualFile(
         }
 
         /* Use LoaderXIPRom for unique identification by IopStartRamdisk */
-        if (OptionalRamDisk)
-        {
-            RamDiskBase = MmAllocateHighestMemoryBelowAddressOptional((SIZE_T)RamDiskFileSize,
-                                                                      (PVOID)(ULONG_PTR)AllocationLimit,
-                                                                      LoaderXIPRom);
-        }
-        else
-        {
-            RamDiskBase = MmAllocateHighestMemoryBelowAddress((SIZE_T)RamDiskFileSize,
-                                                              (PVOID)(ULONG_PTR)AllocationLimit,
-                                                              LoaderXIPRom);
-        }
+        RamDiskBase = MmAllocateHighestMemoryBelowAddress((SIZE_T)RamDiskFileSize,
+                                                          (PVOID)(ULONG_PTR)AllocationLimit,
+                                                          LoaderXIPRom);
         if (!RamDiskBase)
         {
             RamDiskFileSize = 0;
