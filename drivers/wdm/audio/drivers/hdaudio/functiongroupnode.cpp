@@ -812,6 +812,7 @@ HDAUDIO_EnumFunctionGroupWidgets(
     if (!NT_SUCCESS(Status))
     {
         // failed to get widget count
+        delete Node;
         return Status;
     }
 
@@ -820,6 +821,7 @@ HDAUDIO_EnumFunctionGroupWidgets(
     if (!NT_SUCCESS(Status))
     {
         // failed to enum widgets
+        delete Node;
         return Status;
     }
     // now enum connections;
@@ -827,6 +829,7 @@ HDAUDIO_EnumFunctionGroupWidgets(
     if (!NT_SUCCESS(Status))
     {
         // failed to enum widget connections
+        delete Node;
         return Status;
     }
 

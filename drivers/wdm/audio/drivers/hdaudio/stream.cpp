@@ -20,7 +20,7 @@ CMiniportWaveRTStream::QueryInterface(IN REFIID refiid, OUT PVOID *Output)
     if (IsEqualGUIDAligned(refiid, IID_IMiniportWaveRTStreamNotification) || IsEqualGUIDAligned(refiid, IID_IUnknown) ||
         IsEqualGUIDAligned(refiid, IID_IMiniportWaveRTStream))
     {
-        *Output = PVOID(PMINIPORTWAVERT(this));
+        *Output = PVOID(PMINIPORTWAVERTSTREAM(this));
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
@@ -43,9 +43,17 @@ CMiniportWaveRTStream::AllocateAudioBuffer(
     ULONG* OffsetFromFirstPage,
     MEMORY_CACHING_TYPE* CacheType)
 {
-    return m_Interface.AllocateDmaBufferWithNotification(
-        m_Interface.Context, m_DmaEngine, 1, RequestedBufferSize, AudioBufferMdl, (PSIZE_T)ActualSize, (PSIZE_T)OffsetFromFirstPage,
+    SIZE_T AllocatedSize = 0;
+    SIZE_T PageOffset = 0;
+    NTSTATUS Status = m_Interface.AllocateDmaBufferWithNotification(
+        m_Interface.Context, m_DmaEngine, 1, RequestedBufferSize, AudioBufferMdl, &AllocatedSize, &PageOffset,
         &m_StreamId, &m_FifoSize);
+    if (NT_SUCCESS(Status))
+    {
+        *ActualSize = (ULONG)AllocatedSize;
+        *OffsetFromFirstPage = (ULONG)PageOffset;
+    }
+    return Status;
 }
 
 NTSTATUS
@@ -113,27 +121,27 @@ NTAPI
 CMiniportWaveRTStream::SetState(
     IN KSSTATE State)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     HANDLE Handles[1] = {m_DmaEngine};
     if (State == KSSTATE_ACQUIRE)
     {
         Status = m_Interface.SetDmaEngineState(m_Interface.Context, ResetState, 1, Handles);
     }
-    if (State == KSSTATE_PAUSE || State == KSSTATE_STOP)
+    else if (State == KSSTATE_PAUSE || State == KSSTATE_STOP)
     {
         Status = m_Interface.SetDmaEngineState(m_Interface.Context, PauseState, 1, Handles);
     }
-    if (State == KSSTATE_RUN)
+    else if (State == KSSTATE_RUN)
     {
         for (ULONG Index = 0; Index < m_NodeCount; Index++)
         {
-            Status = m_OutNode->SetStreamFormat(m_Nodes[Index], m_Converter.ConverterFormat); 
-            DPRINT1("Node %u SetStreamFormat Status %\n", m_Nodes[Index], Status);
+            Status = m_OutNode->SetStreamFormat(m_Nodes[Index], m_Converter.ConverterFormat);
+            DPRINT1("Node %u SetStreamFormat Status %x\n", m_Nodes[Index], Status);
         }
         for (ULONG Index = 0; Index < m_NodeCount; Index++)
         {
             Status = m_OutNode->SetConverterStream(m_Nodes[Index], m_StreamId);
-            DPRINT1("Node %u SetConverterStream Status %\n", m_Nodes[Index], Status);
+            DPRINT1("Node %u SetConverterStream Status %x\n", m_Nodes[Index], Status);
         }
         Status = m_Interface.SetDmaEngineState(m_Interface.Context, RunState, 1, Handles);
     }
@@ -150,9 +158,17 @@ CMiniportWaveRTStream::AllocateBufferWithNotification(
     ULONG* OffsetFromFirstPage,
     MEMORY_CACHING_TYPE* CacheType)
 {
-    return m_Interface.AllocateDmaBufferWithNotification(
-        m_Interface.Context, m_DmaEngine, NotificationCount, RequestedBufferSize, AudioBufferMdl, (PSIZE_T)ActualSize,
-        (PSIZE_T)OffsetFromFirstPage, &m_StreamId, &m_FifoSize);
+    SIZE_T AllocatedSize = 0;
+    SIZE_T PageOffset = 0;
+    NTSTATUS Status = m_Interface.AllocateDmaBufferWithNotification(
+        m_Interface.Context, m_DmaEngine, NotificationCount, RequestedBufferSize, AudioBufferMdl, &AllocatedSize,
+        &PageOffset, &m_StreamId, &m_FifoSize);
+    if (NT_SUCCESS(Status))
+    {
+        *ActualSize = (ULONG)AllocatedSize;
+        *OffsetFromFirstPage = (ULONG)PageOffset;
+    }
+    return Status;
 }
 
 NTSTATUS
@@ -292,12 +308,19 @@ HDAUDIO_AllocateStream(
             &hDmaEngine,
             &Converter);
     }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: Failed to allocate DMA engine Status %x\n", Status);
+        return Status;
+    }
 
     CMiniportWaveRTStream *This = new (NonPagedPool, TAG_HDAUDIO)
         CMiniportWaveRTStream(NULL, Adapter, Node, Pin, Capture, &StreamFormat, &Converter, hDmaEngine, NodeCount, Nodes, FilterDescription);
     if (!This)
     {
         // out of memory
+        if (hDmaEngine)
+            Interface.FreeDmaEngine(Interface.Context, hDmaEngine);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 

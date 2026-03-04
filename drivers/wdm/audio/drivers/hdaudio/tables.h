@@ -413,7 +413,7 @@ static PCFILTER_DESCRIPTOR TopoOutFilterDescription[] =
     2,                                  // PinCount
     TopoOutPins,                        // Pins
     sizeof(PCNODE_DESCRIPTOR),          // NodeSize
-    3,                                  // NodeCount
+    2,                                  // NodeCount
     TopoOutNodes,                       // Nodes
     3,                                  // ConnectionCount
     TopoOutConnections,                 // Connections

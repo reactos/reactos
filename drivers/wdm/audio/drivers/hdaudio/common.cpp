@@ -24,13 +24,15 @@ operator new(size_t Size, POOL_TYPE PoolType, ULONG Tag)
 void __cdecl
 operator delete(PVOID ptr)
 {
-    ExFreePool(ptr);
+    if (ptr)
+        ExFreePool(ptr);
 }
 
 void __cdecl
 operator delete(PVOID ptr, UINT_PTR Unused)
 {
-    ExFreePool(ptr);
+    if (ptr)
+        ExFreePool(ptr);
 }
 
 NTSTATUS
@@ -154,12 +156,12 @@ CAdapterCommon::ReadRegistryKey(
     OUT PVOID Value)
 {
     NTSTATUS Status;
-    PREGISTRYKEY RegKey, SubKey;
+    PREGISTRYKEY RegKey = NULL, SubKey = NULL;
     UNICODE_STRING Name, SubKeyNameString;
     ULONG Index, ResultLength;
     PKEY_BASIC_INFORMATION BasicInformation;
-    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
-    LPWSTR SubKeyName;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation = NULL;
+    LPWSTR SubKeyName = NULL;
 
     // construct registry key
     Status = PcNewRegistryKey(&RegKey, NULL, DriverRegistryKey, GENERIC_READ, DeviceObject, NULL, NULL, 0, NULL);
@@ -175,6 +177,10 @@ CAdapterCommon::ReadRegistryKey(
     Index = 0;
     do
     {
+        SubKey = NULL;
+        SubKeyName = NULL;
+        PartialInformation = NULL;
+
         Status = RegKey->EnumerateKey(Index, KeyBasicInformation, NULL, 0, &ResultLength);
         if (Status == STATUS_NO_MORE_ENTRIES)
         {
@@ -189,7 +195,7 @@ CAdapterCommon::ReadRegistryKey(
         Status = RegKey->EnumerateKey(Index, KeyBasicInformation, (PVOID)BasicInformation, ResultLength, &ResultLength);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("HDAUDIO: EnumerateKey failed with %x\n");
+            DPRINT1("HDAUDIO: EnumerateKey failed with %x\n", Status);
             RegKey->Release();
             ExFreePool(BasicInformation);
             return Status;
@@ -237,12 +243,18 @@ CAdapterCommon::ReadRegistryKey(
                 {
                     RtlCopyMemory(Value, PartialInformation->Data, PartialInformation->DataLength);
                 }
+                ExFreePool(PartialInformation);
+                ExFreePool(SubKeyName);
                 RegKey->Release();
                 return STATUS_SUCCESS;
             }
+            ExFreePool(PartialInformation);
         }
+        SubKey->Release();
+        ExFreePool(SubKeyName);
         Index++;
     } while (TRUE);
+    RegKey->Release();
     return STATUS_NOT_FOUND;
 }
 
@@ -282,7 +294,7 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
     }
     for (Index = 0; Index < NumVerbs; Index++)
     {
-        RtlStringCchPrintfW(Buffer, sizeof(Buffer), L"%04d", Index);
+        RtlStringCchPrintfW(Buffer, RTL_NUMBER_OF(Buffer), L"%04d", Index);
         RtlInitUnicodeString(&KeyName, Buffer);
 
         // read key
@@ -292,6 +304,11 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
         {
             PKEY_VALUE_PARTIAL_INFORMATION PartialInformation =
                 (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolZero(PagedPool, ResultLength, TAG_HDAUDIO);
+            if (!PartialInformation)
+            {
+                Key->Release();
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
             Status = Key->QueryValueKey(
                 &KeyName, KeyValuePartialInformation, PartialInformation, ResultLength, &ResultLength);
             if (NT_SUCCESS(Status))
@@ -363,11 +380,11 @@ CAdapterCommon::ChooseSubdeviceName(UCHAR DefaultDevice, UCHAR Wave, OUT LPWSTR 
 
     if (Wave)
     {
-        RtlStringCchPrintfW(Buffer, sizeof(Buffer), L"%s%s", DeviceTypes[DefaultDevice], L"Wave");
+        RtlStringCchPrintfW(Buffer, RTL_NUMBER_OF(Buffer), L"%s%s", DeviceTypes[DefaultDevice], L"Wave");
     }
     else
     {
-        RtlStringCchPrintfW(Buffer, sizeof(Buffer), L"%s%s", DeviceTypes[DefaultDevice], L"Topo");
+        RtlStringCchPrintfW(Buffer, RTL_NUMBER_OF(Buffer), L"%s%s", DeviceTypes[DefaultDevice], L"Topo");
     }
     LPWSTR Name = (LPWSTR)ExAllocatePoolZero(NonPagedPool, (wcslen(Buffer) + 1) * sizeof(WCHAR), TAG_HDAUDIO);
     if (!Name)
@@ -797,12 +814,15 @@ CAdapterCommon::BuildWaveOutFormat(
         }
     }
     DPRINT1("Total I/O Nodes Found %u\n", SubNodeCount);
+    NTSTATUS Result;
     if (SubNodeCount == 0)
     {
-        return BuildWaveFormat(Node, AssociatedPinCount, AssociatedPins);
+        Result = BuildWaveFormat(Node, AssociatedPinCount, AssociatedPins);
     } else {
-        return BuildWaveFormat(Node, SubNodeCount, TargetWidgets);
+        Result = BuildWaveFormat(Node, SubNodeCount, TargetWidgets);
     }
+    ExFreePoolWithTag(TargetWidgets, TAG_HDAUDIO);
+    return Result;
 }
 
 VOID NTAPI
@@ -1393,6 +1413,7 @@ CAdapterCommon::BuildInstallFilter(
                 Status = InstallDevice(
                     DeviceObject, Irp, SubdeviceWave, FALSE, CLSID_PortWaveRT, ResourceList, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
                     bOutput ? WaveOutFilterDescription : WaveInFilterDescription, bOutput ? &m_WaveRTOutPortUnknown : &m_WaveRTInPortUnknown);
+                ExFreePoolWithTag(SubdeviceWave, TAG_HDAUDIO);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
@@ -1408,6 +1429,7 @@ CAdapterCommon::BuildInstallFilter(
                     Status = InstallDevice(
                         DeviceObject, Irp, SubdeviceTopology, TRUE, CLSID_PortTopology, NULL, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
                         bOutput ? TopoOutFilterDescription : TopoInFilterDescription, bOutput ? &m_TopoOutPortUnknown : &m_TopoInPortUnknown);
+                    ExFreePoolWithTag(SubdeviceTopology, TAG_HDAUDIO);
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
@@ -1455,6 +1477,8 @@ CAdapterCommon::AssociatePins(
                 ClearRef(AssociatedPins[PinCount], PinNodeCount, PinNodes);
             }
         }
+        if (AssociatedPins)
+            ExFreePoolWithTag(AssociatedPins, TAG_HDAUDIO);
     }
     return Status;
 }
