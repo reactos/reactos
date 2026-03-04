@@ -30,7 +30,7 @@ HDAUDIO_Pnp(
         DeviceExtension = (PHDAUDIO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
         if (DeviceExtension->AdapterCommon)
         {
-            delete DeviceExtension->AdapterCommon;
+            DeviceExtension->AdapterCommon->Release();
             DeviceExtension->AdapterCommon = NULL;
         }
     }
@@ -162,5 +162,5 @@ DriverEntry(
         DriverObject->MajorFunction[IRP_MJ_PNP] = HDAUDIO_Pnp;
         DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = HDAUDIO_DeviceControl;
     }
-    return STATUS_SUCCESS;
+    return Status;
 }
