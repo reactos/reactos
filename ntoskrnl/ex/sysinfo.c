@@ -2526,7 +2526,34 @@ QSI_DEF(SystemNumaAvailableMemory)
 /* Class 62 - Emulation Basic Information */
 QSI_DEF(SystemEmulationBasicInformation)
 {
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+    PSYSTEM_BASIC_INFORMATION Sbi = (PSYSTEM_BASIC_INFORMATION)Buffer;
+
+    *ReqSize = sizeof(SYSTEM_BASIC_INFORMATION);
+
+    /* Check user buffer's size */
+    if (Size != sizeof(SYSTEM_BASIC_INFORMATION))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    RtlZeroMemory(Sbi, Size);
+    Sbi->Reserved = 0;
+    Sbi->TimerResolution = KeMaximumIncrement;
+    Sbi->PageSize = PAGE_SIZE;
+    Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+    Sbi->LowestPhysicalPageNumber = (ULONG)MmLowestPhysicalPage;
+    Sbi->HighestPhysicalPageNumber = (ULONG)MmHighestPhysicalPage;
+    Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
+    Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
+    Sbi->MaximumUserModeAddress = (ULONG_PTR)0xFFFFFFFF; /* FIXME */
+    Sbi->ActiveProcessorsAffinityMask = KeActiveProcessors;
+    Sbi->NumberOfProcessors = KeNumberProcessors;
+
+    return STATUS_SUCCESS;
+#else
     return QSISystemBasicInformation(Buffer, Size, ReqSize);
+#endif
 }
 
 /* Class 63 - Emulation Processor Information */
