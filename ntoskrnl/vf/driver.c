@@ -110,6 +110,9 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
     UNICODE_STRING DriverName;
     PWCHAR List, Token, End;
 
+    DPRINT1("VF: ShouldVerify: list='%wZ' driver='%wZ'\n",
+            &VfGlobal.VerifyDriverList, &DriverName);
+
     /* NULL or empty buffer means verify all */
     if (!VfGlobal.VerifyDriverList.Buffer ||
         VfGlobal.VerifyDriverList.Length == 0)
@@ -252,7 +255,7 @@ static VOID VfInitializeRegistry(VOID)
     }
     else
     {
-        /* key missing, create with default * */
+        /* key missing, create with default "*" */
         Status = ZwSetValueKey(KeyHandle,
                                &ValueName,
                                0,
@@ -385,7 +388,10 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
     KIRQL OldIrql;
 
     if (!VfShouldVerifyDriver(DriverObject))
+    {
+        DPRINT1("VF: Skipping driver %p (not in verify list)\n", DriverObject);
         return;
+    }
 
     if (!VfGlobal.Enabled)
         return;
@@ -803,7 +809,7 @@ TrackAllocation:
     return Address;
 }
 
-VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag, POOL_TYPE PoolType)
+VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag)
 {
     VF_DRIVER_ENTRY* Driver = VfFindDriver(DriverObject);
     VF_POOL_ALLOCATION* Alloc;
@@ -811,7 +817,8 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     KIRQL OldIrql;
 
     if (!Driver)
-        KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, (ULONG_PTR)Address, 0, 0, 0);
+        KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, VF_SUBCODE_INVALID_FREE,
+                     (ULONG_PTR)Address, 0, 0);
 
     KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
 
@@ -820,17 +827,14 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
         Alloc = CONTAINING_RECORD(Link, VF_POOL_ALLOCATION, ListEntry);
         if (Alloc->Address == Address)
         {
-            /* tag misuse */
             if (Alloc->Tag != PoolTag)
             {
                 KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-                KeBugCheckEx(
-                    VF_BUGCHECK_POOL_TAG_VIOLATION,
-                    (ULONG_PTR)Address,
-                    (ULONG_PTR)Alloc->Tag,
-                    (ULONG_PTR)PoolTag,
-                    0
-                );
+                KeBugCheckEx(VF_BUGCHECK_POOL_TAG_VIOLATION,
+                             VF_SUBCODE_WRONG_POOL_TAG,
+                             (ULONG_PTR)Address,
+                             (ULONG_PTR)Alloc->Tag,
+                             (ULONG_PTR)PoolTag);
             }
 
             RemoveEntryList(&Alloc->ListEntry);
@@ -847,20 +851,6 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
                                  (ULONG_PTR)Address);
             }
 
-            if (Alloc->PoolType != PoolType)
-            {
-                KeBugCheckEx(VF_BUGCHECK_POOL_TYPE_VIOLATION,
-                    VF_SUBCODE_WRONG_POOL_TYPE,
-                    (ULONG_PTR)Address,
-                    (ULONG_PTR)Alloc->PoolType,
-                    (ULONG_PTR)PoolType);
-            }
-
-            /*
-             * free the memory. if SpecialPool is true but Mdl is null it means
-             * we fell back to plain ExAllocatePoolWithTag,
-             * so just call ExFreePool
-             */
             if (Alloc->SpecialPool && Alloc->Mdl != NULL)
             {
                 MmUnmapLockedPages(Alloc->Address, Alloc->Mdl);
@@ -878,10 +868,8 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     }
 
     KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-    KeBugCheckEx(VF_BUGCHECK_INVALID_FREE,
-                VF_SUBCODE_INVALID_FREE,
-                (ULONG_PTR)Address, 
-                0, 0);
+    KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, VF_SUBCODE_INVALID_FREE,
+                 (ULONG_PTR)Address, 0, 0);
 }
 
 /* ============================================================

@@ -2509,6 +2509,19 @@ ExFreePoolWithTag(IN PVOID P,
     PEPROCESS Process;
 
     //
+    // check if Driver Verifier is enabled and owns this allocation
+    //
+    if (ExpPoolFlags & POOL_FLAG_VERIFIER)
+    {
+        PDRIVER_OBJECT Driver = VfGetDriverByAddress(_ReturnAddress());
+        if (Driver)
+        {
+            VfFreePool(Driver, P, TagToFree);
+            return;
+        }
+    }
+
+    //
     // Check if any of the debug flags are enabled
     //
     if (ExpPoolFlags & (POOL_FLAG_CHECK_TIMERS |
