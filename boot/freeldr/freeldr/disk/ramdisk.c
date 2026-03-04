@@ -122,7 +122,7 @@ static PVOID     RamDiskWritableBase = NULL;
 static ULONGLONG RamDiskWritableSize = 0;
 static BOOLEAN   RamDiskErrorShown = FALSE;
 
-#if defined(_M_AMD64) || defined(__x86_64__) || defined(_M_ARM64) || defined(__aarch64__)
+#if defined(_M_AMD64) || defined(__x86_64__)
 #ifndef MM_MAX_PAGE_LOADER_MAPPED
 #define MM_MAX_PAGE_LOADER_MAPPED MM_MAX_PAGE_LOADER
 #endif
@@ -147,6 +147,7 @@ RamDiskComputeMbrMetadata(IN PVOID BaseAddress,
     ULONG Sum = 0;
     ULONG WordCount;
     PULONG Words;
+    ULONG Index;
 
     if (!BaseAddress || DiskSize < sizeof(MASTER_BOOT_RECORD))
         return FALSE;
@@ -157,7 +158,7 @@ RamDiskComputeMbrMetadata(IN PVOID BaseAddress,
 
     WordCount = (ULONG)(sizeof(MASTER_BOOT_RECORD) / sizeof(ULONG));
     Words = (PULONG)MasterBootRecord;
-    for (ULONG Index = 0; Index < WordCount; ++Index)
+    for (Index = 0; Index < WordCount; ++Index)
     {
         Sum += Words[Index];
     }
@@ -168,7 +169,7 @@ RamDiskComputeMbrMetadata(IN PVOID BaseAddress,
 
         /* Recalculate the checksum after updating the signature. */
         Sum = 0;
-        for (ULONG Index = 0; Index < WordCount; ++Index)
+        for (Index = 0; Index < WordCount; ++Index)
         {
             Sum += Words[Index];
         }
@@ -183,10 +184,12 @@ RamDiskComputeMbrMetadata(IN PVOID BaseAddress,
     if (ValidPartition)
     {
         BOOLEAN Found = FALSE;
+        ULONG EntryIndex;
+        const PARTITION_TABLE_ENTRY *Entry;
 
-        for (ULONG EntryIndex = 0; EntryIndex < RTL_NUMBER_OF(MasterBootRecord->PartitionTable); ++EntryIndex)
+        for (EntryIndex = 0; EntryIndex < RTL_NUMBER_OF(MasterBootRecord->PartitionTable); ++EntryIndex)
         {
-            const PARTITION_TABLE_ENTRY *Entry = &MasterBootRecord->PartitionTable[EntryIndex];
+            Entry = &MasterBootRecord->PartitionTable[EntryIndex];
 
             if (Entry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
                 Entry->PartitionSectorCount != 0)
@@ -1670,9 +1673,6 @@ RamDiskGetVolumeOffset(VOID)
     return RamDiskVolumeOffset;
 }
 
-#if defined(__GNUC__)
-__attribute__((unused))
-#endif
 static
 BOOLEAN
 RamDiskReserveWritableBuffer(ULONGLONG RequestedSize, BOOLEAN OptionalRamDisk)
@@ -2211,6 +2211,9 @@ RamDiskInitialize(
         ARC_STATUS Status;
         CHAR FileName[MAX_PATH] = "";
         PVOID OriginalBase;
+        BOOLEAN StreamingSucceeded = FALSE;
+        ULONGLONG StreamIsoSize = 0;
+        BOOLEAN OptionalRamDisk;
 
         /* If we don't have any load options, initialize an empty Ramdisk */
         if (LoadOptions)
@@ -2264,9 +2267,7 @@ RamDiskInitialize(
             }
         }
 
-        BOOLEAN StreamingSucceeded = FALSE;
-        ULONGLONG StreamIsoSize = 0;
-        BOOLEAN OptionalRamDisk = (RamDiskRequestedSize != 0 && !*FileName);
+        OptionalRamDisk = (RamDiskRequestedSize != 0 && !*FileName);
 
         if (RamDiskRequestedSize != 0)
         {
@@ -2300,7 +2301,8 @@ RamDiskInitialize(
                     /* BIOS/legacy fallback: if opening by file/path failed (e.g. DefaultPath
                      * is 'ramdisk(0)' or not a real ISO path), try raw firmware CD devices. */
                     static const PCSTR CdCandidates[] = { "cdrom(0)", "cdrom(1)", NULL };
-                    for (int i = 0; CdCandidates[i]; ++i)
+                    ULONG i;
+                    for (i = 0; CdCandidates[i]; ++i)
                     {
                         StreamStatus = RamDiskOpenIsoSource(CdCandidates[i],
                                                             NULL,
@@ -2443,15 +2445,18 @@ RamDiskInitialize(
             return Status;
 
         OriginalBase = RamDiskBase;
-            if (RamDiskRequestedSize != 0)
-            {
+        if (RamDiskRequestedSize != 0)
+        {
+            PVOID WritableBase;
+            ULONGLONG WritableSize;
+            PVOID IsoImageBase;
+            ULONGLONG IsoImageLength;
+            ISO_SOURCE MemorySource;
+            ULONGLONG ExtraBytes;
+            ULONGLONG TotalTarget;
+
             TRACE("RamDiskInitialize: expanding to writable RAMFS (extra %llu bytes requested)\n",
                   RamDiskRequestedSize);
-                PVOID WritableBase;
-                ULONGLONG WritableSize;
-                PVOID IsoImageBase;
-                ULONGLONG IsoImageLength;
-                ISO_SOURCE MemorySource;
 
             IsoImageBase = (PVOID)((ULONG_PTR)OriginalBase + RamDiskImageOffset);
             IsoImageLength = RamDiskFileSize - RamDiskImageOffset;
@@ -2466,30 +2471,28 @@ RamDiskInitialize(
             MemorySource.ArcPosition = 0;
 
             /* New semantics: total target = ISO length + extra (>=64MiB) */
-            {
-                ULONGLONG ExtraBytes = RamDiskRequestedSize;
-                if (ExtraBytes < RAMDISK_MINIMUM_EXTRA_SPACE)
-                    ExtraBytes = RAMDISK_MINIMUM_EXTRA_SPACE;
-                ULONGLONG TotalTarget = MemorySource.Size + ExtraBytes;
+            ExtraBytes = RamDiskRequestedSize;
+            if (ExtraBytes < RAMDISK_MINIMUM_EXTRA_SPACE)
+                ExtraBytes = RAMDISK_MINIMUM_EXTRA_SPACE;
+            TotalTarget = MemorySource.Size + ExtraBytes;
 
-                if (!RamDiskBuildWritableImage(&MemorySource,
-                                               TotalTarget,
-                                               &WritableBase,
-                                               &WritableSize,
-                                               OptionalRamDisk))
+            if (!RamDiskBuildWritableImage(&MemorySource,
+                                           TotalTarget,
+                                           &WritableBase,
+                                           &WritableSize,
+                                           OptionalRamDisk))
+            {
+                if (!RamDiskErrorShown && !OptionalRamDisk)
                 {
-                    if (!RamDiskErrorShown && !OptionalRamDisk)
-                    {
-                        UiMessageBox("Failed to expand LiveCD into writable RAM.");
-                        RamDiskErrorShown = TRUE;
-                    }
-                    RamDiskRequestedSize = 0;
-                    TRACE("RamDiskInitialize: continuing with read-only ISO because writable buffer allocation failed\n");
-                    RamDiskBase = OriginalBase;
-                    RamDiskVolumeOffset = 0;
-                    RamDiskVolumeLength = 0;
-                    goto WritableFallback;
+                    UiMessageBox("Failed to expand LiveCD into writable RAM.");
+                    RamDiskErrorShown = TRUE;
                 }
+                RamDiskRequestedSize = 0;
+                TRACE("RamDiskInitialize: continuing with read-only ISO because writable buffer allocation failed\n");
+                RamDiskBase = OriginalBase;
+                RamDiskVolumeOffset = 0;
+                RamDiskVolumeLength = 0;
+                goto WritableFallback;
             }
 
             if ((OriginalBase != gInitRamDiskBase) &&

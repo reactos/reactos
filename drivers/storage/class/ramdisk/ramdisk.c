@@ -3152,35 +3152,6 @@ RamdiskReadWriteReal(IN PIRP Irp,
             Source = CurrentBase;
             RtlCopyMemory(Destination, Source, CopyLength);
 
-#if defined(_M_ARM64)
-            /*
-             * ARM64 Cache Coherency: Flush after ramdisk write
-             *
-             * After writing data to the ramdisk buffer, we must flush the cache
-             * to ensure coherency. The cache manager (CcMapData) may later map
-             * the same physical memory through a different virtual address.
-             * Without flushing here, CcMapData might read stale cached data.
-             *
-             * This is the correct architectural layer for cache maintenance:
-             * - The ramdisk driver knows when data changes (write operation)
-             * - Flush happens once per write, not on every read
-             * - Follows Windows pattern for device drivers using KeFlushIoBuffers
-             *
-             * KeFlushIoBuffers will:
-             * - Clean (DC CVAC) cache lines to write data to Point of Coherency
-             * - Ensure subsequent mappings see the updated data
-             * - Use proper cache line alignment and memory barriers
-             *
-             * Parameters:
-             * - Mdl: The IRP's MDL containing the write buffer
-             * - ReadOperation: FALSE (this is a write, memory-to-device)
-             * - DmaOperation: FALSE (ramdisk is not a real DMA device)
-             */
-            if (Mdl != NULL)
-            {
-                KeFlushIoBuffers(Mdl, FALSE, FALSE);
-            }
-#endif
         }
         else
         {

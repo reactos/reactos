@@ -155,6 +155,8 @@ FormatFat32Volume(IN PUCHAR VolumeBase,
         return FALSE;
 
     ByteSize = (SIZE_T)VolumeSize;
+    /* Zero the entire volume to prevent information leaks from prior boot
+     * memory contents and to ensure all FAT/directory regions start clean. */
     RtlZeroMemory(VolumeBase, ByteSize);
 
     BootSector = (PFAT32_BOOTSECTOR)VolumeBase;
@@ -213,7 +215,8 @@ FormatFat32Volume(IN PUCHAR VolumeBase,
 
     /* Initialize both FATs. */
     Buffer = VolumeBase + (ReservedSectors * BytesPerSector);
-    for (ULONG FatIndex = 0; FatIndex < NumberOfFats; ++FatIndex)
+    ULONG FatIndex;
+    for (FatIndex = 0; FatIndex < NumberOfFats; ++FatIndex)
     {
         FatTable = (PULONG)(Buffer + ((ULONGLONG)FatIndex * FatSize * BytesPerSector));
         RtlZeroMemory(FatTable, (ULONGLONG)FatSize * BytesPerSector);

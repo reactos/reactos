@@ -38,7 +38,9 @@ Fat32ClusterToPointer(
     _In_ PFAT32_WRITER Writer,
     _In_ ULONG Cluster)
 {
-    ULONGLONG Offset = ((ULONGLONG)Writer->FirstDataSector +
+    ULONGLONG Offset;
+    ASSERT(Cluster >= 2);
+    Offset = ((ULONGLONG)Writer->FirstDataSector +
                        (ULONGLONG)(Cluster - 2) * Writer->SectorsPerCluster) *
                        Writer->BytesPerSector;
     return Writer->VolumeBase + Offset;
