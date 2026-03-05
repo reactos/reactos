@@ -134,7 +134,15 @@ TestMmAllocatePagesForMdl(VOID)
                                                 FALSE,
                                                 NormalPagePriority);
 #ifdef _M_IX86
-        ok(SystemVa == NULL, "MmMapLockedPagesSpecifyCache succeeded for 2 GB\n");
+        /*
+         * MmAllocatePagesForMdl is allowed to return fewer pages than requested.
+         * Only enforce the x86 mapping expectation if we actually got ~2GB.
+         */
+        if (MmGetMdlByteCount(Mdl) >= (1UL << 31))
+            ok(SystemVa == NULL, "MmMapLockedPagesSpecifyCache succeeded for 2 GB\n");
+        else
+            trace("Skipping 2GB mapping expectation (allocated %lu bytes)\n",
+                  MmGetMdlByteCount(Mdl));
 #endif
         if (SystemVa != NULL)
             MmUnmapLockedPages(SystemVa, Mdl);
@@ -173,7 +181,7 @@ TestMmAllocatePagesForMdl(VOID)
             trace("MmMapLockedPagesSpecifyCache failed with i = %lu\n", i);
             break;
         }
-        ok(MmGetMdlByteCount(Mdls[i]) == 32 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdls[i]));
+        ok(MmGetMdlByteCount(Mdls[i]) <= 32 * 1024 * 1024, "Byte count: %lu\n", MmGetMdlByteCount(Mdls[i]));
         ok(MmGetMdlVirtualAddress(Mdls[i]) == NULL, "Virtual address: %p, System VA: %p\n", MmGetMdlVirtualAddress(Mdls[i]), SystemVas[i]);
         ok(Mdls[i]->MappedSystemVa == SystemVas[i], "MappedSystemVa: %p\n", Mdls[i]->MappedSystemVa, SystemVas[i]);
         ok((Mdls[i]->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA), "MdlFlags: %lx\n", Mdls[i]->MdlFlags);
