@@ -20,6 +20,8 @@
 UNICODE_STRING BaseUnicodeCommandLine;
 ANSI_STRING BaseAnsiCommandLine;
 UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
+UNICODE_STRING BasePathExtVariableName = RTL_CONSTANT_STRING(L"PATHEXT");
+UNICODE_STRING BasePathExtDefaultValue = RTL_CONSTANT_STRING(L".COM;.EXE;.BAT;.CMD");
 PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
 BOOLEAN g_AppCertInitialized;
 BOOLEAN g_HaveAppCerts;
@@ -2076,6 +2078,263 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
 #define RemoveFromHandle(x,y)  ((x) = (HANDLE)((ULONG_PTR)(x) & ~(y)))
 C_ASSERT(PROCESS_PRIORITY_CLASS_REALTIME == (PROCESS_PRIORITY_CLASS_HIGH + 1));
 
+/**
+ * Helper function to determine the file extension (including the dot) of a path/filename.
+ *
+ * @param FileName
+ * Path/file name
+ *
+ * @return
+ * Returns a pointer to the location in `FileName` where the extension begins
+ * (e.g., L".exe"), or NULL if no extension is present.
+ */
+static
+PCWSTR
+Proc_GetFileExt(IN PCWSTR FileName)
+{
+    if (!FileName)
+        return NULL;
+
+    SIZE_T Length = wcslen(FileName);
+    if (Length == 0)
+        return NULL;
+
+    /* Backward iteration with pointer arithmetic from the end of the string to the beginning. */
+    PWCHAR FirstChar = (PWCHAR)FileName;
+    PWCHAR CurrentChar = (PWCHAR)(FileName + Length - 1);
+
+    /* Special case: if the name ends with a dot, this is not considered an extension. */
+    if (*CurrentChar == L'.')
+        return NULL;
+
+    while (CurrentChar > FirstChar)
+    {
+        switch (*CurrentChar)
+        {
+            case L'.':
+                /* Point found (not at the end) -> Extension begins here */
+                return CurrentChar;
+            case L'\\':
+            case L'/':
+            case L':':
+                return NULL;
+        }
+        --CurrentChar;
+    }
+
+    return NULL;
+}
+
+/**
+ * This helper function converts the passed semicolon-separated Unicode
+ * string (in-place) into a null-separated list with double null
+ * end-of-string markers.
+ *
+ * @param List
+ * Pointer to the UNICODE_STRING containing the semicolon-separated list
+ * to be converted and the conversion result.
+ *
+ * @return
+ * Conversion success. GetLastError returns the actual cause for
+ * the value FALSE.
+ *
+ * @attention
+ * This function does not enlarge the passed buffer. The caller must
+ * ensure that there is enough space for all characters plus the double
+ * null terminator.
+ */
+static
+BOOL
+Proc_ListConvertInPlace(IN OUT UNICODE_STRING *List)
+{
+    if (!List || !List->Buffer)
+        return FALSE;
+
+    SIZE_T Length = List->Length / sizeof(WCHAR);
+    SIZE_T CapacityWords = (SIZE_T)(List->MaximumLength / sizeof(WCHAR));
+
+    /* Required capacity: szLen characters + 2 terminating NULLs */
+    SIZE_T Needed = Length + 2;
+    if (CapacityWords < Needed)
+    {
+        /* Do not enlarge the buffer here - caller must provide enough space */
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
+
+    PWCHAR CurrentChar = List->Buffer;
+    PWCHAR EndChar = CurrentChar + Length;
+    while (CurrentChar < EndChar)
+    {
+        if (*CurrentChar == L';')
+            *CurrentChar = L'\0';
+        ++CurrentChar;
+    }
+
+    /* set end mark */
+    *EndChar = L'\0';
+    *(EndChar + 1) = L'\0';
+
+    return TRUE;
+}
+
+/**
+ * This helper function reads an environment variable from the process environment
+ * using native NT functions (RtlQueryEnvironmentVariable_U).
+ *
+ * @param Name
+ * Pointer to a UNICODE_STRING containing the name of the environment variable
+ *
+ * @param Value
+ * Pointer to a UNICODE_STRING to store the value of the environment variable with
+ * sufficient reserved memory. If this argument is set to NULL, the number of
+ * characters in the value of the environment variable is returned.
+ *
+ * @return
+ * Number of characters in the environment variable value or 0 if the variable is
+ * not found or is empty. GetLastError returns the actual cause for the value 0.
+ */
+static
+DWORD
+Proc_GetEnvUnicodeString(IN UNICODE_STRING *Name, IN OUT OPTIONAL UNICODE_STRING *Value)
+{
+    if (!Name)
+        return 0;
+
+    /* If caller passed Out == NULL, query required size and return it
+        (in wchar_t units, including terminating NUL). */
+    if (Value == NULL)
+    {
+        UNICODE_STRING NullValue = { 0, 0, NULL };
+
+        NTSTATUS Status = RtlQueryEnvironmentVariable_U(NULL, Name, &NullValue);
+        if (NT_SUCCESS(Status))
+        {
+            /* empty Value or fits in zero buffer */
+            return (DWORD)(NullValue.Length / sizeof(WCHAR));
+        }
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+        {
+            SetLastError(ERROR_ENVVAR_NOT_FOUND);
+            return 0;
+        }
+        if (Status == STATUS_BUFFER_TOO_SMALL || Status == STATUS_BUFFER_OVERFLOW)
+        {
+            size_t neededWords = (NullValue.Length / sizeof(WCHAR)) + 1; /* incl. terminating NUL */
+            return (DWORD)neededWords;
+        }
+        SetLastError(RtlNtStatusToDosError(Status));
+        return 0;
+    }
+
+    /* Caller provided Out; use it but do not allocate more memory here. */
+    UNICODE_STRING ProcValue = *Value;
+
+    NTSTATUS status = RtlQueryEnvironmentVariable_U(NULL, Name, &ProcValue);
+    if (NT_SUCCESS(status))
+    {
+        Value->Length = ProcValue.Length;
+        return (DWORD)(ProcValue.Length / sizeof(WCHAR));
+    }
+
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        /* Variable does not exist */
+        SetLastError(ERROR_ENVVAR_NOT_FOUND);
+        return 0;
+    }
+
+    if (status == STATUS_BUFFER_TOO_SMALL || status == STATUS_BUFFER_OVERFLOW)
+    {
+        /* Do not allocate here; signal caller that the provided buffer
+            is too small. Provide a standard error code. */
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    /* Other error */
+    SetLastError(RtlNtStatusToDosError(status));
+    return 0;
+}
+
+/**
+ * This helper function searches for an executable file with the
+ * specified base name using the PATHEXT list.
+ *
+ * @param BaseName
+ * Name of the executable file with or without extension.
+ *
+ * @param SearchPath
+ * List of directories in which to search for the executable file.
+ *
+ * @param PathextMultiSz
+ * Null-separated list of file extensions from PATHEXT.
+ *
+ * @param OutPath
+ * Pointer to line memory for storing the search result.
+ *
+ * @param OutPathChars
+ * Maximum number of characters that the return memory can hold.
+ *
+ * @return
+ * Success of the search
+ */
+static
+BOOL
+Proc_FindProgramWithPathext(IN PCWSTR BaseName,
+                            IN PCWSTR SearchPath,
+                            IN PCWSTR PathextMultiSz,
+                            OUT PWSTR OutPath,
+                            IN const DWORD OutPathChars)
+{
+    PWSTR FullName;
+    DWORD Result;
+
+    if (!BaseName || !SearchPath || !OutPath || !PathextMultiSz)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* First try directly (if BaseName already contains an extension) */
+    if (Proc_GetFileExt(BaseName))
+    {
+        Result = SearchPathW(SearchPath, BaseName, NULL, OutPathChars, OutPath, NULL);
+        if (Result > 0 && Result < OutPathChars)
+            return TRUE;
+    }
+
+    FullName = RtlAllocateHeap(RtlGetProcessHeap(),
+                               0,
+                               MAX_PATH * sizeof(WCHAR));
+    if (!FullName)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    RtlStringCbCopyW(FullName, (SIZE_T)MAX_PATH, BaseName);
+    PWSTR ExtPos = FullName + wcslen(BaseName);
+
+    SIZE_T RestBufferSize = (SIZE_T)(MAX_PATH - (ExtPos - FullName));
+    PCWSTR ExtVal = PathextMultiSz;
+    /* Loop over the list of extensions (PATHEXT) */
+    while (*ExtVal)
+    {
+        RtlStringCbCopyW(ExtPos, RestBufferSize, ExtVal);
+        Result = SearchPathW(SearchPath, FullName, NULL, OutPathChars, OutPath, NULL);
+        if (Result > 0 && Result < OutPathChars)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FullName);
+            return TRUE;
+        }
+        ExtVal += wcslen(ExtVal) + 1;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FullName);
+    return FALSE;
+}
+
 /*
  * @implemented
  */
@@ -2168,10 +2427,10 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     //
     // Variables used for path conversion (and partially Fusion/SxS)
     //
-    PWCHAR FilePart, PathBuffer, FreeBuffer;
+    PWCHAR FilePart, PathBuffer, PathExtBuffer, FreeBuffer;
     BOOLEAN TranslationStatus;
     RTL_RELATIVE_NAME_U SxsWin32RelativePath;
-    UNICODE_STRING PathBufferString, SxsWin32ExePath;
+    UNICODE_STRING PathBufferString, PathExtBufferString, SxsWin32ExePath;
 
     //
     // Variables used by Application Compatibility (and partially Fusion/SxS)
@@ -2220,6 +2479,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Zero out initial parsing variables -- others are initialized later */
     DebuggerCmdLine = NULL;
     PathBuffer = NULL;
+    PathExtBuffer = NULL;
     SearchPath = NULL;
     NullBuffer = NULL;
     FreeBuffer = NULL;
@@ -2539,13 +2799,68 @@ StartScan:
             goto Quickie;
         }
 
-        /* And search for the executable in the search path */
-        Length = SearchPathW(SearchPath,
-                             lpApplicationName,
-                             L".exe",
-                             MAX_PATH,
-                             NameBuffer,
-                             NULL);
+        /* get count of characters of value of environment variable PATHEXT */
+        Length = Proc_GetEnvUnicodeString(&BasePathExtVariableName, NULL);
+        if (Length)
+        {
+            PathExtBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            0,
+                                            (Length + 2) * sizeof(WCHAR));
+            if (!PathExtBuffer)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                Result = FALSE;
+                goto Quickie;
+            }
+            PathExtBufferString.Length = Length * sizeof(WCHAR);
+            PathExtBufferString.MaximumLength = (Length + 2) * sizeof(WCHAR);
+            PathExtBufferString.Buffer = PathExtBuffer;
+            /* get value of environment variable PATHEXT */
+            Length = Proc_GetEnvUnicodeString(&BasePathExtVariableName, &PathExtBufferString);
+        }
+
+        /* Does the environment variable PATHEXT not exist or is it empty? */
+        if (Length == 0)
+        {
+            if (PathExtBuffer)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, PathExtBuffer);
+                PathExtBuffer = NULL;
+            }
+            Length = 25;
+            PathExtBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            0,
+                                            (Length * sizeof(WCHAR)));
+            if (!PathExtBuffer)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                Result = FALSE;
+                goto Quickie;
+            }
+            PathExtBufferString.MaximumLength = Length;
+            PathExtBufferString.Buffer = PathExtBuffer;
+            RtlCopyUnicodeString(&PathExtBufferString, &BasePathExtDefaultValue);
+        }
+
+        if (Proc_ListConvertInPlace(&PathExtBufferString))
+        {
+            if(Proc_FindProgramWithPathext(lpApplicationName,
+                                           SearchPath,
+                                           PathExtBuffer,
+                                           NameBuffer,
+                                           MAX_PATH))
+            {
+                Length = wcslen(NameBuffer);
+            }
+            else
+            {
+                Length = 0;
+            }
+        }
+        else
+        {
+            Length = 0;
+        }
 
         /* Did we find it? */
         if ((Length) && (Length < MAX_PATH))
@@ -2567,7 +2882,7 @@ StartScan:
 
         DPRINT("Length: %lu Buffer: %S\n", Length, NameBuffer);
 
-        /* Check if there was a failure in SearchPathW */
+        /* Check whether an error has occurred in file search. */
         if ((Length) && (Length < MAX_PATH))
         {
             /* Everything looks good, restore the name */
