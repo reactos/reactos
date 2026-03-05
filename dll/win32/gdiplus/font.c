@@ -25,7 +25,6 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
 
@@ -107,7 +106,7 @@ typedef struct
 #define GET_BE_DWORD(x) (x)
 #else
 #define GET_BE_WORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define GET_BE_DWORD(x) MAKELONG(GET_BE_WORD(HIWORD(x)), GET_BE_WORD(LOWORD(x)));
+#define GET_BE_DWORD(x) MAKELONG(GET_BE_WORD(HIWORD(x)), GET_BE_WORD(LOWORD(x)))
 #endif
 
 #define MS_MAKE_TAG(ch0, ch1, ch2, ch3) \
@@ -116,9 +115,16 @@ typedef struct
 #define MS_OS2_TAG MS_MAKE_TAG('O','S','/','2')
 #define MS_HHEA_TAG MS_MAKE_TAG('h','h','e','a')
 
-static GpStatus clone_font_family(const GpFontFamily *, GpFontFamily **);
-
 static GpFontCollection installedFontCollection = {0};
+
+static CRITICAL_SECTION font_cs;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &font_cs,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": font_cs") }
+};
+static CRITICAL_SECTION font_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 /*******************************************************************************
  * GdipCreateFont [GDIPLUS.@]
@@ -162,11 +168,12 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
     stat = GdipGetFamilyName(fontFamily, lfw.lfFaceName, LANG_NEUTRAL);
     if (stat != Ok) return stat;
 
-    lfw.lfHeight = -units_to_pixels(emSize, unit, fontFamily->dpi);
+    lfw.lfHeight = -units_to_pixels(emSize, unit, fontFamily->dpi, FALSE);
     lfw.lfWeight = style & FontStyleBold ? FW_BOLD : FW_REGULAR;
     lfw.lfItalic = style & FontStyleItalic;
     lfw.lfUnderline = style & FontStyleUnderline;
     lfw.lfStrikeOut = style & FontStyleStrikeout;
+    lfw.lfCharSet = DEFAULT_CHARSET;
 
     hfont = CreateFontIndirectW(&lfw);
     hdc = CreateCompatibleDC(0);
@@ -178,19 +185,13 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
 
     if (!ret) return NotTrueTypeFont;
 
-    *font = heap_alloc_zero(sizeof(GpFont));
+    *font = calloc(1, sizeof(GpFont));
     if (!*font) return OutOfMemory;
 
     (*font)->unit = unit;
     (*font)->emSize = emSize;
     (*font)->otm = otm;
-
-    stat = clone_font_family(fontFamily, &(*font)->family);
-    if (stat != Ok)
-    {
-        heap_free(*font);
-        return stat;
-    }
+    GdipCloneFontFamily((GpFontFamily*)fontFamily, &(*font)->family);
 
     TRACE("<-- %p\n", *font);
 
@@ -224,17 +225,18 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
 
     if (!ret) return NotTrueTypeFont;
 
-    *font = heap_alloc_zero(sizeof(GpFont));
+    *font = calloc(1, sizeof(GpFont));
     if (!*font) return OutOfMemory;
 
     (*font)->unit = UnitWorld;
-    (*font)->emSize = otm.otmTextMetrics.tmAscent;
+    (*font)->emSize = otm.otmTextMetrics.tmHeight - otm.otmTextMetrics.tmInternalLeading;
     (*font)->otm = otm;
 
     stat = GdipCreateFontFamilyFromName(facename, NULL, &(*font)->family);
     if (stat != Ok)
     {
-        heap_free(*font);
+        free(*font);
+        *font = NULL;
         return NotTrueTypeFont;
     }
 
@@ -275,7 +277,7 @@ GpStatus WINGDIPAPI GdipDeleteFont(GpFont* font)
         return InvalidParameter;
 
     GdipDeleteFontFamily(font->family);
-    heap_free(font);
+    free(font);
 
     return Ok;
 }
@@ -354,7 +356,7 @@ GpStatus WINGDIPAPI GdipGetFontSize(GpFont *font, REAL *size)
     if (!(font && size)) return InvalidParameter;
 
     *size = get_font_size(font);
-    TRACE("%s,%d => %f\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *size);
+    TRACE("%s,%ld => %f\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *size);
 
     return Ok;
 }
@@ -398,7 +400,7 @@ GpStatus WINGDIPAPI GdipGetFontStyle(GpFont *font, INT *style)
         return InvalidParameter;
 
     *style = get_font_style(font);
-    TRACE("%s,%d => %d\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *style);
+    TRACE("%s,%ld => %d\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *style);
 
     return Ok;
 }
@@ -421,7 +423,7 @@ GpStatus WINGDIPAPI GdipGetFontUnit(GpFont *font, Unit *unit)
     if (!(font && unit)) return InvalidParameter;
 
     *unit = font->unit;
-    TRACE("%s,%d => %d\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *unit);
+    TRACE("%s,%ld => %d\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *unit);
 
     return Ok;
 }
@@ -456,7 +458,6 @@ GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics, LOGFONTW
 {
     REAL angle, rel_height, height;
     GpMatrix matrix;
-    GpPointF pt[3];
 
     TRACE("(%p, %p, %p)\n", font, graphics, lf);
 
@@ -467,49 +468,31 @@ GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics, LOGFONTW
 
     if (font->unit == UnitPixel || font->unit == UnitWorld)
     {
-        height = units_to_pixels(font->emSize, graphics->unit, graphics->yres);
+        height = units_to_pixels(font->emSize, graphics->unit, graphics->yres, graphics->printer_display);
         if (graphics->unit != UnitDisplay)
             GdipScaleMatrix(&matrix, graphics->scale, graphics->scale, MatrixOrderAppend);
     }
     else
     {
         if (graphics->unit == UnitDisplay || graphics->unit == UnitPixel)
-            height = units_to_pixels(font->emSize, font->unit, graphics->xres);
+            height = units_to_pixels(font->emSize, font->unit, graphics->xres, graphics->printer_display);
         else
-            height = units_to_pixels(font->emSize, font->unit, graphics->yres);
+            height = units_to_pixels(font->emSize, font->unit, graphics->yres, graphics->printer_display);
     }
 
-    pt[0].X = 0.0;
-    pt[0].Y = 0.0;
-    pt[1].X = 1.0;
-    pt[1].Y = 0.0;
-    pt[2].X = 0.0;
-    pt[2].Y = 1.0;
-    GdipTransformMatrixPoints(&matrix, pt, 3);
-    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
-    rel_height = sqrt((pt[2].Y - pt[0].Y) * (pt[2].Y - pt[0].Y)+
-                      (pt[2].X - pt[0].X) * (pt[2].X - pt[0].X));
+    GdipMultiplyMatrix(&matrix, &graphics->gdi_transform, MatrixOrderAppend);
+    transform_properties(graphics, &matrix, FALSE, NULL, &rel_height, &angle);
+    get_log_fontW(font, graphics, lf);
 
     lf->lfHeight = -gdip_round(height * rel_height);
-    lf->lfWidth = 0;
     lf->lfEscapement = lf->lfOrientation = gdip_round((angle / M_PI) * 1800.0);
     if (lf->lfEscapement < 0)
     {
         lf->lfEscapement += 3600;
         lf->lfOrientation += 3600;
     }
-    lf->lfWeight = font->otm.otmTextMetrics.tmWeight;
-    lf->lfItalic = font->otm.otmTextMetrics.tmItalic ? 1 : 0;
-    lf->lfUnderline = font->otm.otmTextMetrics.tmUnderlined ? 1 : 0;
-    lf->lfStrikeOut = font->otm.otmTextMetrics.tmStruckOut ? 1 : 0;
-    lf->lfCharSet = font->otm.otmTextMetrics.tmCharSet;
-    lf->lfOutPrecision = OUT_DEFAULT_PRECIS;
-    lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lf->lfQuality = DEFAULT_QUALITY;
-    lf->lfPitchAndFamily = 0;
-    strcpyW(lf->lfFaceName, font->family->FamilyName);
 
-    TRACE("=> %s,%d\n", debugstr_w(lf->lfFaceName), lf->lfHeight);
+    TRACE("=> %s,%ld\n", debugstr_w(lf->lfFaceName), lf->lfHeight);
 
     return Ok;
 }
@@ -519,21 +502,16 @@ GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics, LOGFONTW
  */
 GpStatus WINGDIPAPI GdipCloneFont(GpFont *font, GpFont **cloneFont)
 {
-    GpStatus stat;
-
     TRACE("(%p, %p)\n", font, cloneFont);
 
     if(!font || !cloneFont)
         return InvalidParameter;
 
-    *cloneFont = heap_alloc_zero(sizeof(GpFont));
-    if(!*cloneFont)    return OutOfMemory;
+    *cloneFont = calloc(1, sizeof(GpFont));
+    if(!*cloneFont) return OutOfMemory;
 
     **cloneFont = *font;
-    stat = GdipCloneFontFamily(font->family, &(*cloneFont)->family);
-    if (stat != Ok) heap_free(*cloneFont);
-
-    return stat;
+    return Ok;
 }
 
 /*******************************************************************************
@@ -566,7 +544,7 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
     if (!graphics)
     {
         *height = font_height;
-        TRACE("%s,%d => %f\n",
+        TRACE("%s,%ld => %f\n",
               debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *height);
         return Ok;
     }
@@ -574,9 +552,9 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
     stat = GdipGetDpiY((GpGraphics *)graphics, &dpi);
     if (stat != Ok) return stat;
 
-    *height = pixels_to_units(font_height, graphics->unit, dpi);
+    *height = pixels_to_units(font_height, graphics->unit, dpi, graphics->printer_display);
 
-    TRACE("%s,%d(unit %d) => %f\n",
+    TRACE("%s,%ld(unit %d) => %f\n",
           debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, graphics->unit, *height);
     return Ok;
 }
@@ -608,7 +586,7 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
     TRACE("%p (%s), %f, %p\n", font,
             debugstr_w(font->family->FamilyName), dpi, height);
 
-    font_size = units_to_pixels(get_font_size(font), font->unit, dpi);
+    font_size = units_to_pixels(get_font_size(font), font->unit, dpi, FALSE);
     style = get_font_style(font);
     stat = GdipGetLineSpacing(font->family, style, &line_spacing);
     if (stat != Ok) return stat;
@@ -617,7 +595,7 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
 
     *height = (REAL)line_spacing * font_size / (REAL)em_height;
 
-    TRACE("%s,%d => %f\n",
+    TRACE("%s,%ld => %f\n",
           debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *height);
 
     return Ok;
@@ -700,29 +678,6 @@ static BOOL get_font_metrics(HDC hdc, struct font_metrics *fm)
     return TRUE;
 }
 
-static GpStatus find_installed_font(const WCHAR *name, struct font_metrics *fm)
-{
-    LOGFONTW lf;
-    HDC hdc = CreateCompatibleDC(0);
-    GpStatus ret = FontFamilyNotFound;
-
-    if(!EnumFontFamiliesW(hdc, name, is_font_installed_proc, (LPARAM)&lf))
-    {
-        HFONT hfont, old_font;
-
-        strcpyW(fm->facename, lf.lfFaceName);
-
-        hfont = CreateFontIndirectW(&lf);
-        old_font = SelectObject(hdc, hfont);
-        ret = get_font_metrics(hdc, fm) ? Ok : NotTrueTypeFont;
-        SelectObject(hdc, old_font);
-        DeleteObject(hfont);
-    }
-
-    DeleteDC(hdc);
-    return ret;
-}
-
 /*******************************************************************************
  * GdipCreateFontFamilyFromName [GDIPLUS.@]
  *
@@ -744,48 +699,44 @@ static GpStatus find_installed_font(const WCHAR *name, struct font_metrics *fm)
  */
 
 GpStatus WINGDIPAPI GdipCreateFontFamilyFromName(GDIPCONST WCHAR *name,
-                                        GpFontCollection *fontCollection,
-                                        GpFontFamily **FontFamily)
+                                        GpFontCollection *collection,
+                                        GpFontFamily **family)
 {
-    GpStatus stat;
-    GpFontFamily* ffamily;
-    struct font_metrics fm;
+    HDC hdc;
+    LOGFONTW lf;
+    GpStatus status;
+    int i;
 
-    TRACE("%s, %p %p\n", debugstr_w(name), fontCollection, FontFamily);
+    TRACE("%s, %p %p\n", debugstr_w(name), collection, family);
 
-    if (!(name && FontFamily))
+    if (!name || !family)
         return InvalidParameter;
-    if (fontCollection)
-        FIXME("No support for FontCollections yet!\n");
 
-    stat = find_installed_font(name, &fm);
-    if (stat != Ok) return stat;
+    if (!collection)
+    {
+        status = GdipNewInstalledFontCollection(&collection);
+        if (status != Ok) return status;
+    }
 
-    ffamily = heap_alloc_zero(sizeof (GpFontFamily));
-    if (!ffamily) return OutOfMemory;
+    status = FontFamilyNotFound;
 
-    lstrcpyW(ffamily->FamilyName, fm.facename);
-    ffamily->em_height = fm.em_height;
-    ffamily->ascent = fm.ascent;
-    ffamily->descent = fm.descent;
-    ffamily->line_spacing = fm.line_spacing;
-    ffamily->dpi = fm.dpi;
+    hdc = CreateCompatibleDC(0);
 
-    *FontFamily = ffamily;
+    if (!EnumFontFamiliesW(hdc, name, is_font_installed_proc, (LPARAM)&lf))
+    {
+        for (i = 0; i < collection->count; i++)
+        {
+            if (!wcsicmp(lf.lfFaceName, collection->FontFamilies[i]->FamilyName))
+            {
+                status = GdipCloneFontFamily(collection->FontFamilies[i], family);
+                TRACE("<-- %p\n", *family);
+                break;
+            }
+        }
+    }
 
-    TRACE("<-- %p\n", ffamily);
-
-    return Ok;
-}
-
-static GpStatus clone_font_family(const GpFontFamily *family, GpFontFamily **clone)
-{
-    *clone = heap_alloc_zero(sizeof(GpFontFamily));
-    if (!*clone) return OutOfMemory;
-
-    **clone = *family;
-
-    return Ok;
+    DeleteDC(hdc);
+    return status;
 }
 
 /*******************************************************************************
@@ -800,19 +751,17 @@ static GpStatus clone_font_family(const GpFontFamily *family, GpFontFamily **clo
  * RETURNS
  *  SUCCESS: Ok
  */
-GpStatus WINGDIPAPI GdipCloneFontFamily(GpFontFamily* FontFamily, GpFontFamily** clonedFontFamily)
+GpStatus WINGDIPAPI GdipCloneFontFamily(GpFontFamily *family, GpFontFamily **clone)
 {
-    GpStatus status;
+    if (!family || !clone)
+        return InvalidParameter;
 
-    if (!(FontFamily && clonedFontFamily)) return InvalidParameter;
+    TRACE("%p (%s), %p\n", family, debugstr_w(family->FamilyName), clone);
 
-    TRACE("%p (%s), %p\n", FontFamily,
-            debugstr_w(FontFamily->FamilyName), clonedFontFamily);
+    *clone = family;
 
-    status = clone_font_family(FontFamily, clonedFontFamily);
-    if (status != Ok) return status;
-
-    TRACE("<-- %p\n", *clonedFontFamily);
+    if (!family->installed)
+        InterlockedIncrement(&family->ref);
 
     return Ok;
 }
@@ -832,17 +781,20 @@ GpStatus WINGDIPAPI GdipCloneFontFamily(GpFontFamily* FontFamily, GpFontFamily**
  *  FAILURE: InvalidParameter if family is NULL
  *
  * NOTES
- *   If name is a NULL ptr, then both XP and Vista will crash (so we do as well)
+ *   If name is NULL, XP and Vista crash but not Windows 7+
  */
 GpStatus WINGDIPAPI GdipGetFamilyName (GDIPCONST GpFontFamily *family,
                                        WCHAR *name, LANGID language)
 {
     static int lang_fixme;
 
+    TRACE("%p, %p, %d\n", family, name, language);
+
     if (family == NULL)
          return InvalidParameter;
 
-    TRACE("%p, %p, %d\n", family, name, language);
+    if (name == NULL)
+         return Ok;
 
     if (language != LANG_NEUTRAL && !lang_fixme++)
         FIXME("No support for handling of multiple languages!\n");
@@ -870,9 +822,11 @@ GpStatus WINGDIPAPI GdipDeleteFontFamily(GpFontFamily *FontFamily)
 {
     if (!FontFamily)
         return InvalidParameter;
-    TRACE("Deleting %p (%s)\n", FontFamily, debugstr_w(FontFamily->FamilyName));
 
-    heap_free (FontFamily);
+    if (!FontFamily->installed && !InterlockedDecrement(&FontFamily->ref))
+    {
+        free(FontFamily);
+    }
 
     return Ok;
 }
@@ -998,30 +952,31 @@ GpStatus WINGDIPAPI GdipIsStyleAvailable(GDIPCONST GpFontFamily* family,
 /*****************************************************************************
  * GdipGetGenericFontFamilyMonospace [GDIPLUS.@]
  *
- * Obtains a serif family (Courier New on Windows)
+ * Obtains a monospace family (Courier New on Windows)
  *
  * PARAMS
- *  **nativeFamily         [I] Where the font will be stored
+ *  **nativeFamily         [O] Where the font will be stored
  *
  * RETURNS
  *  InvalidParameter if nativeFamily is NULL.
+ *  FontFamilyNotFound if unable to get font.
  *  Ok otherwise.
  */
 GpStatus WINGDIPAPI GdipGetGenericFontFamilyMonospace(GpFontFamily **nativeFamily)
 {
-    static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
-    static const WCHAR LiberationMono[] = {'L','i','b','e','r','a','t','i','o','n',' ','M','o','n','o','\0'};
     GpStatus stat;
+
+    TRACE("(%p)\n", nativeFamily);
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    stat = GdipCreateFontFamilyFromName(CourierNew, NULL, nativeFamily);
+    stat = GdipCreateFontFamilyFromName(L"Courier New", NULL, nativeFamily);
 
     if (stat == FontFamilyNotFound)
-        stat = GdipCreateFontFamilyFromName(LiberationMono, NULL, nativeFamily);
+        stat = GdipCreateFontFamilyFromName(L"Liberation Mono", NULL, nativeFamily);
 
     if (stat == FontFamilyNotFound)
-        ERR("Missing 'Courier New' font\n");
+        stat = GdipCreateFontFamilyFromName(L"Courier", NULL, nativeFamily);
 
     return stat;
 }
@@ -1032,29 +987,28 @@ GpStatus WINGDIPAPI GdipGetGenericFontFamilyMonospace(GpFontFamily **nativeFamil
  * Obtains a serif family (Times New Roman on Windows)
  *
  * PARAMS
- *  **nativeFamily         [I] Where the font will be stored
+ *  **nativeFamily         [O] Where the font will be stored
  *
  * RETURNS
  *  InvalidParameter if nativeFamily is NULL.
+ *  FontFamilyNotFound if unable to get font.
  *  Ok otherwise.
  */
 GpStatus WINGDIPAPI GdipGetGenericFontFamilySerif(GpFontFamily **nativeFamily)
 {
-    static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
-    static const WCHAR LiberationSerif[] = {'L','i','b','e','r','a','t','i','o','n',' ','S','e','r','i','f','\0'};
     GpStatus stat;
 
     TRACE("(%p)\n", nativeFamily);
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    stat = GdipCreateFontFamilyFromName(TimesNewRoman, NULL, nativeFamily);
+    stat = GdipCreateFontFamilyFromName(L"Times New Roman", NULL, nativeFamily);
 
     if (stat == FontFamilyNotFound)
-        stat = GdipCreateFontFamilyFromName(LiberationSerif, NULL, nativeFamily);
+        stat = GdipCreateFontFamilyFromName(L"Liberation Serif", NULL, nativeFamily);
 
     if (stat == FontFamilyNotFound)
-        ERR("Missing 'Times New Roman' font\n");
+        stat = GdipGetGenericFontFamilySansSerif(nativeFamily);
 
     return stat;
 }
@@ -1062,36 +1016,40 @@ GpStatus WINGDIPAPI GdipGetGenericFontFamilySerif(GpFontFamily **nativeFamily)
 /*****************************************************************************
  * GdipGetGenericFontFamilySansSerif [GDIPLUS.@]
  *
- * Obtains a serif family (Microsoft Sans Serif on Windows)
+ * Obtains a sans serif family (Microsoft Sans Serif or Arial on Windows)
  *
  * PARAMS
- *  **nativeFamily         [I] Where the font will be stored
+ *  **nativeFamily         [O] Where the font will be stored
  *
  * RETURNS
  *  InvalidParameter if nativeFamily is NULL.
+ *  FontFamilyNotFound if unable to get font.
  *  Ok otherwise.
  */
 GpStatus WINGDIPAPI GdipGetGenericFontFamilySansSerif(GpFontFamily **nativeFamily)
 {
     GpStatus stat;
-    static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
-    static const WCHAR Tahoma[] = {'T','a','h','o','m','a','\0'};
 
     TRACE("(%p)\n", nativeFamily);
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    stat = GdipCreateFontFamilyFromName(MicrosoftSansSerif, NULL, nativeFamily);
+    stat = GdipCreateFontFamilyFromName(L"Microsoft Sans Serif", NULL, nativeFamily);
 
     if (stat == FontFamilyNotFound)
-        /* FIXME: Microsoft Sans Serif is not installed on Wine. */
-        stat = GdipCreateFontFamilyFromName(Tahoma, NULL, nativeFamily);
+        stat = GdipCreateFontFamilyFromName(L"Tahoma", NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        stat = GdipCreateFontFamilyFromName(L"Arial", NULL, nativeFamily);
+
+    if (stat == FontFamilyNotFound)
+        stat = GdipCreateFontFamilyFromName(L"Liberation Sans", NULL, nativeFamily);
 
     return stat;
 }
 
 /*****************************************************************************
- * GdipGetGenericFontFamilySansSerif [GDIPLUS.@]
+ * GdipNewPrivateFontCollection [GDIPLUS.@]
  */
 GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection** fontCollection)
 {
@@ -1100,7 +1058,7 @@ GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection** fontCollecti
     if (!fontCollection)
         return InvalidParameter;
 
-    *fontCollection = heap_alloc_zero(sizeof(GpFontCollection));
+    *fontCollection = calloc(1, sizeof(GpFontCollection));
     if (!*fontCollection) return OutOfMemory;
 
     (*fontCollection)->FontFamilies = NULL;
@@ -1124,9 +1082,9 @@ GpStatus WINGDIPAPI GdipDeletePrivateFontCollection(GpFontCollection **fontColle
     if (!fontCollection)
         return InvalidParameter;
 
-    for (i = 0; i < (*fontCollection)->count; i++) heap_free((*fontCollection)->FontFamilies[i]);
-    heap_free((*fontCollection)->FontFamilies);
-    heap_free(*fontCollection);
+    for (i = 0; i < (*fontCollection)->count; i++) GdipDeleteFontFamily((*fontCollection)->FontFamilies[i]);
+    free((*fontCollection)->FontFamilies);
+    free(*fontCollection);
 
     return Ok;
 }
@@ -1145,7 +1103,7 @@ GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection *collection, GDIPCON
 
     if (!collection || !name) return InvalidParameter;
 
-    file = CreateFileW(name, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    file = CreateFileW(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (file == INVALID_HANDLE_VALUE) return InvalidParameter;
 
     if (!GetFileSizeEx(file, &size) || size.u.HighPart)
@@ -1185,13 +1143,15 @@ GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection *collection, GDIPCON
 #define NAME_ID_FULL_FONT_NAME  4
 
 typedef struct {
-    USHORT major_version;
-    USHORT minor_version;
+    ULONG version;
     USHORT tables_no;
     USHORT search_range;
     USHORT entry_selector;
     USHORT range_shift;
 } tt_header;
+
+#define TT_HEADER_VERSION_1 0x00010000
+#define TT_HEADER_VERSION_CFF 0x4f54544f
 
 typedef struct {
     char tag[4];        /* table name */
@@ -1312,8 +1272,8 @@ static const LANGID mac_langid_table[] =
     0,                                                       /* TT_MAC_LANGID_RUANDA */
     0,                                                       /* TT_MAC_LANGID_RUNDI */
     0,                                                       /* TT_MAC_LANGID_CHEWA */
-    MAKELANGID(LANG_MALAGASY,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_MALAGASY */
-    MAKELANGID(LANG_ESPERANTO,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ESPERANTO */
+    0,                                                       /* TT_MAC_LANGID_MALAGASY */
+    0,                                                       /* TT_MAC_LANGID_ESPERANTO */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,       /* 95-111 */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          /* 112-127 */
     MAKELANGID(LANG_WELSH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_WELSH */
@@ -1333,7 +1293,7 @@ static const LANGID mac_langid_table[] =
     MAKELANGID(LANG_BRETON,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BRETON */
     MAKELANGID(LANG_INUKTITUT,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_INUKTITUT */
     MAKELANGID(LANG_SCOTTISH_GAELIC,SUBLANG_DEFAULT),        /* TT_MAC_LANGID_SCOTTISH_GAELIC */
-    MAKELANGID(LANG_MANX_GAELIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_MANX_GAELIC */
+    0,                                                       /* TT_MAC_LANGID_MANX_GAELIC */
     MAKELANGID(LANG_IRISH,SUBLANG_IRISH_IRELAND),            /* TT_MAC_LANGID_IRISH_GAELIC */
     0,                                                       /* TT_MAC_LANGID_TONGAN */
     0,                                                       /* TT_MAC_LANGID_GREEK_POLYTONIC */
@@ -1405,7 +1365,7 @@ static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *da
     {
     case TT_PLATFORM_APPLE_UNICODE:
     case TT_PLATFORM_MICROSOFT:
-        ret = heap_alloc((name_len / 2 + 1) * sizeof(WCHAR));
+        ret = malloc((name_len / 2 + 1) * sizeof(WCHAR));
         for (len = 0; len < name_len / 2; len++)
             ret[len] = (data[len * 2] << 8) | data[len * 2 + 1];
         ret[len] = 0;
@@ -1415,7 +1375,7 @@ static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *da
         len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, NULL, 0 ) + 1;
         if (!len)
             return NULL;
-        ret = heap_alloc(len * sizeof(WCHAR));
+        ret = malloc(len * sizeof(WCHAR));
         len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, ret, len - 1 );
         ret[len] = 0;
         return ret;
@@ -1425,19 +1385,21 @@ static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *da
 
 static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id )
 {
+    static const WORD platform_id_table[] = {TT_PLATFORM_MICROSOFT, TT_PLATFORM_MACINTOSH, TT_PLATFORM_APPLE_UNICODE};
     LANGID lang = GetSystemDefaultLangID();
     const tt_header *header;
     const tt_name_table *name_table;
-    const tt_name_record *name_record;
-    DWORD pos, ofs, count;
-    int i, res, best_lang = 0, best_index = -1;
+    const tt_name_record *name_record_table, *name_record;
+    DWORD pos, ofs = 0, count;
+    int i, j, res, best_lang = 0, best_index = -1;
 
     if (sizeof(tt_header) > size)
         return NULL;
     header = (const tt_header*)mem;
     count = GET_BE_WORD(header->tables_no);
 
-    if (GET_BE_WORD(header->major_version) != 1 || GET_BE_WORD(header->minor_version) != 0)
+    if (GET_BE_DWORD(header->version) != TT_HEADER_VERSION_1 &&
+        GET_BE_DWORD(header->version) != TT_HEADER_VERSION_CFF)
         return NULL;
 
     pos = sizeof(*header);
@@ -1460,26 +1422,33 @@ static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id )
     if (pos > size)
         return NULL;
     name_table = (const tt_name_table*)&mem[ofs];
+    name_record_table = (const tt_name_record *)&mem[pos];
     count =  GET_BE_WORD(name_table->count);
     if (GET_BE_WORD(name_table->string_offset) >= size - ofs) return NULL;
     ofs += GET_BE_WORD(name_table->string_offset);
-    for (i=0; i<count; i++)
+    for (i = 0; i < ARRAY_SIZE(platform_id_table); i++)
     {
-        name_record = (const tt_name_record*)&mem[pos];
-        pos += sizeof(*name_record);
-        if (pos > size)
-            return NULL;
-
-        if (GET_BE_WORD(name_record->name_id) != id) continue;
-        if (GET_BE_WORD(name_record->offset) >= size - ofs) return NULL;
-        if (GET_BE_WORD(name_record->length) > size - ofs - GET_BE_WORD(name_record->offset)) return NULL;
-
-        res = match_name_table_language( name_record, lang );
-        if (res > best_lang)
+        for (j = 0; j < count; j++)
         {
-            best_lang = res;
-            best_index = i;
+            name_record = name_record_table + j;
+            if ((const BYTE *)name_record - mem > size)
+                return NULL;
+
+            if (GET_BE_WORD(name_record->platform_id) != platform_id_table[i]) continue;
+            if (GET_BE_WORD(name_record->name_id) != id) continue;
+            if (GET_BE_WORD(name_record->offset) >= size - ofs) return NULL;
+            if (GET_BE_WORD(name_record->length) > size - ofs - GET_BE_WORD(name_record->offset)) return NULL;
+
+            res = match_name_table_language(name_record, lang);
+            if (res > best_lang)
+            {
+                best_lang = res;
+                best_index = j;
+            }
         }
+
+        if (best_index != -1)
+            break;
     }
 
     if (best_lang)
@@ -1499,6 +1468,7 @@ struct add_font_param
     GpFontCollection *collection;
     BOOL is_system;
     GpStatus stat;
+    HDC hdc;
 };
 
 static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm, DWORD type, LPARAM lParam);
@@ -1523,16 +1493,15 @@ GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
         return OutOfMemory;
 
     font = AddFontMemResourceEx((void*)memory, length, NULL, &count);
-    TRACE("%s: %p/%u\n", debugstr_w(name), font, count);
+    TRACE("%s: %p/%lu\n", debugstr_w(name), font, count);
     if (!font || !count)
         ret = InvalidParameter;
     else
     {
         struct add_font_param param;
-        HDC hdc;
         LOGFONTW lfw;
 
-        hdc = CreateCompatibleDC(0);
+        param.hdc = CreateCompatibleDC(0);
 
         /* Truncate name if necessary, GDI32 can't deal with long names */
         if(lstrlenW(name) > LF_FACESIZE - 1)
@@ -1544,12 +1513,12 @@ GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
 
         param.collection = fontCollection;
         param.is_system = FALSE;
-        if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)&param, 0))
+        if (!EnumFontFamiliesExW(param.hdc, &lfw, add_font_proc, (LPARAM)&param, 0))
             ret = param.stat;
 
-        DeleteDC(hdc);
+        DeleteDC(param.hdc);
     }
-    heap_free(name);
+    free(name);
     return ret;
 }
 
@@ -1576,7 +1545,6 @@ GpStatus WINGDIPAPI GdipGetFontCollectionFamilyList(
         GpFontFamily* gpfamilies[], INT* numFound)
 {
     INT i;
-    GpStatus stat=Ok;
 
     TRACE("%p, %d, %p, %p\n", fontCollection, numSought, gpfamilies, numFound);
 
@@ -1585,31 +1553,25 @@ GpStatus WINGDIPAPI GdipGetFontCollectionFamilyList(
 
     memset(gpfamilies, 0, sizeof(*gpfamilies) * numSought);
 
-    for (i = 0; i < numSought && i < fontCollection->count && stat == Ok; i++)
+    for (i = 0; i < numSought && i < fontCollection->count; i++)
     {
-        stat = GdipCloneFontFamily(fontCollection->FontFamilies[i], &gpfamilies[i]);
+        /* caller is responsible for cloning these if it keeps references */
+        gpfamilies[i] = fontCollection->FontFamilies[i];
     }
 
-    if (stat == Ok)
-        *numFound = i;
-    else
-    {
-        int numToFree=i;
-        for (i=0; i<numToFree; i++)
-        {
-            GdipDeleteFontFamily(gpfamilies[i]);
-            gpfamilies[i] = NULL;
-        }
-    }
+    *numFound = i;
 
-    return stat;
+    return Ok;
 }
 
 void free_installed_fonts(void)
 {
-    while (installedFontCollection.count)
-        GdipDeleteFontFamily(installedFontCollection.FontFamilies[--installedFontCollection.count]);
-    heap_free(installedFontCollection.FontFamilies);
+    INT i;
+
+    for (i = 0; i < installedFontCollection.count; i++)
+        free(installedFontCollection.FontFamilies[i]);
+    free(installedFontCollection.FontFamilies);
+
     installedFontCollection.FontFamilies = NULL;
     installedFontCollection.allocated = 0;
 }
@@ -1619,8 +1581,9 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
 {
     struct add_font_param *param = (struct add_font_param *)lParam;
     GpFontCollection *fonts = param->collection;
-    GpFontFamily* family;
-    GpStatus stat;
+    GpFontFamily *family;
+    HFONT hfont, old_hfont;
+    struct font_metrics fm;
     int i;
 
     param->stat = Ok;
@@ -1632,13 +1595,13 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
     if (lfw->lfFaceName[0] == '@')
         return 1;
 
-    if (fonts->count && strcmpiW(lfw->lfFaceName, fonts->FontFamilies[fonts->count-1]->FamilyName) == 0)
+    if (fonts->count && wcsicmp(lfw->lfFaceName, fonts->FontFamilies[fonts->count-1]->FamilyName) == 0)
         return 1;
 
     if (fonts->allocated == fonts->count)
     {
         INT new_alloc_count = fonts->allocated+50;
-        GpFontFamily** new_family_list = heap_alloc(new_alloc_count*sizeof(void*));
+        GpFontFamily** new_family_list = malloc(new_alloc_count * sizeof(void*));
 
         if (!new_family_list)
         {
@@ -1647,29 +1610,56 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
         }
 
         memcpy(new_family_list, fonts->FontFamilies, fonts->count*sizeof(void*));
-        heap_free(fonts->FontFamilies);
+        free(fonts->FontFamilies);
         fonts->FontFamilies = new_family_list;
         fonts->allocated = new_alloc_count;
     }
 
-    if ((stat = GdipCreateFontFamilyFromName(lfw->lfFaceName, NULL, &family)) != Ok)
+    family = malloc(sizeof(*family));
+    if (!family)
     {
-        WARN("Failed to create font family for %s, status %d.\n", debugstr_w(lfw->lfFaceName), stat);
         if (param->is_system)
             return 1;
-        param->stat = stat;
+
+        param->stat = OutOfMemory;
         return 0;
     }
 
     /* skip duplicates */
     for (i=0; i<fonts->count; i++)
     {
-        if (strcmpiW(family->FamilyName, fonts->FontFamilies[i]->FamilyName) == 0)
+        if (wcsicmp(lfw->lfFaceName, fonts->FontFamilies[i]->FamilyName) == 0)
         {
-            GdipDeleteFontFamily(family);
+            free(family);
             return 1;
         }
     }
+
+    hfont = CreateFontIndirectW(lfw);
+    old_hfont = SelectObject(param->hdc, hfont);
+
+    if (!get_font_metrics(param->hdc, &fm))
+    {
+        SelectObject(param->hdc, old_hfont);
+        DeleteObject(hfont);
+
+        free(family);
+        param->stat = OutOfMemory;
+        return 0;
+    }
+
+    SelectObject(param->hdc, old_hfont);
+    DeleteObject(hfont);
+
+    family->em_height = fm.em_height;
+    family->ascent = fm.ascent;
+    family->descent = fm.descent;
+    family->line_spacing = fm.line_spacing;
+    family->dpi = fm.dpi;
+    family->installed = param->is_system;
+    family->ref = 1;
+
+    lstrcpyW(family->FamilyName, lfw->lfFaceName);
 
     fonts->FontFamilies[fonts->count++] = family;
 
@@ -1684,13 +1674,13 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
     if (!fontCollection)
         return InvalidParameter;
 
+    EnterCriticalSection( &font_cs );
     if (installedFontCollection.count == 0)
     {
         struct add_font_param param;
-        HDC hdc;
         LOGFONTW lfw;
 
-        hdc = CreateCompatibleDC(0);
+        param.hdc = CreateCompatibleDC(0);
 
         lfw.lfCharSet = DEFAULT_CHARSET;
         lfw.lfFaceName[0] = 0;
@@ -1698,15 +1688,17 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
 
         param.collection = &installedFontCollection;
         param.is_system = TRUE;
-        if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)&param, 0))
+        if (!EnumFontFamiliesExW(param.hdc, &lfw, add_font_proc, (LPARAM)&param, 0))
         {
             free_installed_fonts();
-            DeleteDC(hdc);
+            DeleteDC(param.hdc);
+            LeaveCriticalSection( &font_cs );
             return param.stat;
         }
 
-        DeleteDC(hdc);
+        DeleteDC(param.hdc);
     }
+    LeaveCriticalSection( &font_cs );
 
     *fontCollection = &installedFontCollection;
 

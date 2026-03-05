@@ -77,9 +77,10 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
     switch(brush->bt){
         case BrushTypeSolidColor:
         {
-            *clone = heap_alloc_zero(sizeof(GpSolidFill));
-            if (!*clone) return OutOfMemory;
-            memcpy(*clone, brush, sizeof(GpSolidFill));
+            GpSolidFill *dest = malloc(sizeof(*dest));
+            if (!dest) return OutOfMemory;
+            memcpy(dest, brush, sizeof(*dest));
+            *clone = &dest->brush;
             break;
         }
         case BrushTypeHatchFill:
@@ -93,18 +94,17 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             INT count, pcount;
             GpStatus stat;
 
-            *clone = heap_alloc_zero(sizeof(GpPathGradient));
-            if (!*clone) return OutOfMemory;
+            dest = malloc(sizeof(*dest));
+            if (!dest) return OutOfMemory;
 
-            src = (GpPathGradient*) brush,
-            dest = (GpPathGradient*) *clone;
+            src = (GpPathGradient*) brush;
 
             memcpy(dest, src, sizeof(GpPathGradient));
 
             stat = GdipClonePath(src->path, &dest->path);
 
             if(stat != Ok){
-                heap_free(dest);
+                free(dest);
                 return stat;
             }
 
@@ -113,25 +113,25 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             /* blending */
             count = src->blendcount;
             dest->blendcount = count;
-            dest->blendfac = heap_alloc_zero(count * sizeof(REAL));
-            dest->blendpos = heap_alloc_zero(count * sizeof(REAL));
-            dest->surroundcolors = heap_alloc_zero(dest->surroundcolorcount * sizeof(ARGB));
+            dest->blendfac = malloc(count * sizeof(REAL));
+            dest->blendpos = malloc(count * sizeof(REAL));
+            dest->surroundcolors = malloc(dest->surroundcolorcount * sizeof(ARGB));
             pcount = dest->pblendcount;
             if (pcount)
             {
-                dest->pblendcolor = heap_alloc_zero(pcount * sizeof(ARGB));
-                dest->pblendpos = heap_alloc_zero(pcount * sizeof(REAL));
+                dest->pblendcolor = malloc(pcount * sizeof(ARGB));
+                dest->pblendpos = malloc(pcount * sizeof(REAL));
             }
 
             if(!dest->blendfac || !dest->blendpos || !dest->surroundcolors ||
                (pcount && (!dest->pblendcolor || !dest->pblendpos))){
                 GdipDeletePath(dest->path);
-                heap_free(dest->blendfac);
-                heap_free(dest->blendpos);
-                heap_free(dest->surroundcolors);
-                heap_free(dest->pblendcolor);
-                heap_free(dest->pblendpos);
-                heap_free(dest);
+                free(dest->blendfac);
+                free(dest->blendpos);
+                free(dest->surroundcolors);
+                free(dest->pblendcolor);
+                free(dest->pblendpos);
+                free(dest);
                 return OutOfMemory;
             }
 
@@ -145,37 +145,38 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
                 memcpy(dest->pblendpos, src->pblendpos, pcount * sizeof(REAL));
             }
 
+            *clone = &dest->brush;
             break;
         }
         case BrushTypeLinearGradient:{
             GpLineGradient *dest, *src;
             INT count, pcount;
 
-            dest = heap_alloc_zero(sizeof(GpLineGradient));
-            if(!dest)    return OutOfMemory;
+            dest = malloc(sizeof(GpLineGradient));
+            if(!dest) return OutOfMemory;
 
             src = (GpLineGradient*)brush;
 
             memcpy(dest, src, sizeof(GpLineGradient));
 
             count = dest->blendcount;
-            dest->blendfac = heap_alloc_zero(count * sizeof(REAL));
-            dest->blendpos = heap_alloc_zero(count * sizeof(REAL));
+            dest->blendfac = malloc(count * sizeof(REAL));
+            dest->blendpos = malloc(count * sizeof(REAL));
             pcount = dest->pblendcount;
             if (pcount)
             {
-                dest->pblendcolor = heap_alloc_zero(pcount * sizeof(ARGB));
-                dest->pblendpos = heap_alloc_zero(pcount * sizeof(REAL));
+                dest->pblendcolor = malloc(pcount * sizeof(ARGB));
+                dest->pblendpos = malloc(pcount * sizeof(REAL));
             }
 
             if (!dest->blendfac || !dest->blendpos ||
                 (pcount && (!dest->pblendcolor || !dest->pblendpos)))
             {
-                heap_free(dest->blendfac);
-                heap_free(dest->blendpos);
-                heap_free(dest->pblendcolor);
-                heap_free(dest->pblendpos);
-                heap_free(dest);
+                free(dest->blendfac);
+                free(dest->blendpos);
+                free(dest->pblendcolor);
+                free(dest->pblendpos);
+                free(dest);
                 return OutOfMemory;
             }
 
@@ -226,40 +227,65 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
     return Ok;
 }
 
-static const char HatchBrushes[][8] = {
-    { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00 }, /* HatchStyleHorizontal */
-    { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleVertical */
-    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 }, /* HatchStyleForwardDiagonal */
-    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 }, /* HatchStyleBackwardDiagonal */
-    { 0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleCross */
-    { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81 }, /* HatchStyleDiagonalCross */
+/* The first 8 items per entry are bitmaps for each row of the hatch style.
+ * The 9th item of the entry is a flag indicating anti-aliasing. */
+static const unsigned char HatchBrushes[][9] = {
+    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff }, /* HatchStyleHorizontal */
+    { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80 }, /* HatchStyleVertical */
+    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, TRUE }, /* HatchStyleForwardDiagonal */
+    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, TRUE }, /* HatchStyleBackwardDiagonal */
+    { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xff }, /* HatchStyleCross */
+    { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81, TRUE }, /* HatchStyleDiagonalCross */
     { 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x80 }, /* HatchStyle05Percent */
-    { 0x00, 0x02, 0x00, 0x88, 0x00, 0x20, 0x00, 0x88 }, /* HatchStyle10Percent */
-    { 0x00, 0x22, 0x00, 0xcc, 0x00, 0x22, 0x00, 0xcc }, /* HatchStyle20Percent */
-    { 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc }, /* HatchStyle25Percent */
-    { 0x00, 0xcc, 0x04, 0xcc, 0x00, 0xcc, 0x40, 0xcc }, /* HatchStyle30Percent */
-    { 0x44, 0xcc, 0x22, 0xcc, 0x44, 0xcc, 0x22, 0xcc }, /* HatchStyle40Percent */
-    { 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc }, /* HatchStyle50Percent */
-    { 0x55, 0xcd, 0x55, 0xee, 0x55, 0xdc, 0x55, 0xee }, /* HatchStyle60Percent */
-    { 0x55, 0xdd, 0x55, 0xff, 0x55, 0xdd, 0x55, 0xff }, /* HatchStyle70Percent */
-    { 0x55, 0xff, 0x55, 0xff, 0x55, 0xff, 0x55, 0xff }, /* HatchStyle75Percent */
-    { 0x55, 0xff, 0x59, 0xff, 0x55, 0xff, 0x99, 0xff }, /* HatchStyle80Percent */
-    { 0x77, 0xff, 0xdd, 0xff, 0x77, 0xff, 0xfd, 0xff }, /* HatchStyle90Percent */
+    { 0x00, 0x08, 0x00, 0x80, 0x00, 0x08, 0x00, 0x80 }, /* HatchStyle10Percent */
+    { 0x00, 0x22, 0x00, 0x88, 0x00, 0x22, 0x00, 0x88 }, /* HatchStyle20Percent */
+    { 0x22, 0x88, 0x22, 0x88, 0x22, 0x88, 0x22, 0x88 }, /* HatchStyle25Percent */
+    { 0x11, 0xaa, 0x44, 0xaa, 0x11, 0xaa, 0x44, 0xaa }, /* HatchStyle30Percent */
+    { 0x15, 0xaa, 0x55, 0xaa, 0x51, 0xaa, 0x55, 0xaa }, /* HatchStyle40Percent */
+    { 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa }, /* HatchStyle50Percent */
+    { 0x55, 0xbb, 0x55, 0xee, 0x55, 0xbb, 0x55, 0xee }, /* HatchStyle60Percent */
+    { 0xdd, 0x77, 0xdd, 0x77, 0xdd, 0x77, 0xdd, 0x77 }, /* HatchStyle70Percent */
+    { 0xff, 0xdd, 0xff, 0x77, 0xff, 0xdd, 0xff, 0x77 }, /* HatchStyle75Percent */
+    { 0xff, 0xfe, 0xff, 0xef, 0xff, 0xfe, 0xff, 0xef }, /* HatchStyle80Percent */
+    { 0x7f, 0xff, 0xff, 0xff, 0xf7, 0xff, 0xff, 0xff }, /* HatchStyle90Percent */
     { 0x11, 0x22, 0x44, 0x88, 0x11, 0x22, 0x44, 0x88 }, /* HatchStyleLightDownwardDiagonal */
     { 0x88, 0x44, 0x22, 0x11, 0x88, 0x44, 0x22, 0x11 }, /* HatchStyleLightUpwardDiagonal */
     { 0x99, 0x33, 0x66, 0xcc, 0x99, 0x33, 0x66, 0xcc }, /* HatchStyleDarkDownwardDiagonal */
-    { 0xcc, 0x66, 0x33, 0x99, 0xcc, 0x66, 0x33, 0x99 }, /* HatchStyleDarkUpwardDiagonal */
-    { 0xc1, 0x83, 0x07, 0x0e, 0x1c, 0x38, 0x70, 0xe0 }, /* HatchStyleWideDownwardDiagonal */
-    { 0xe0, 0x70, 0x38, 0x1c, 0x0e, 0x07, 0x83, 0xc1 }, /* HatchStyleWideUpwardDiagonal */
+    { 0x99, 0xcc, 0x66, 0x33, 0x99, 0xcc, 0x66, 0x33 }, /* HatchStyleDarkUpwardDiagonal */
+    { 0x83, 0x07, 0x0e, 0x1c, 0x38, 0x70, 0xe0, 0xc1 }, /* HatchStyleWideDownwardDiagonal */
+    { 0xc1, 0xe0, 0x70, 0x38, 0x1c, 0x0e, 0x07, 0x83 }, /* HatchStyleWideUpwardDiagonal */
     { 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88 }, /* HatchStyleLightVertical */
     { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff }, /* HatchStyleLightHorizontal */
-    { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa }, /* HatchStyleNarrowVertical */
+    { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 }, /* HatchStyleNarrowVertical */
     { 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff }, /* HatchStyleNarrowHorizontal */
     { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc }, /* HatchStyleDarkVertical */
     { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff }, /* HatchStyleDarkHorizontal */
+    { 0x00, 0x00, 0x11, 0x22, 0x44, 0x88, 0x00, 0x00 }, /* HatchStyleDashedDownwardDiagonal */
+    { 0x00, 0x00, 0x88, 0x44, 0x22, 0x11, 0x00, 0x00 }, /* HatchStyleDashedUpwardDiagonal */
+    { 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0xf0 }, /* HatchStyleDashedHorizontal */
+    { 0x08, 0x08, 0x08, 0x08, 0x80, 0x80, 0x80, 0x80 }, /* HatchStyleDashedVertical */
+    { 0x04, 0x20, 0x01, 0x10, 0x02, 0x40, 0x08, 0x80 }, /* HatchStyleSmallConfetti */
+    { 0x8d, 0x0c, 0xc0, 0xd8, 0x1b, 0x03, 0x30, 0xb1 }, /* HatchStyleLargeConfetti */
+    { 0x18, 0x24, 0x42, 0x81, 0x18, 0x24, 0x42, 0x81 }, /* HatchStyleZigZag */
+    { 0xc0, 0x25, 0x18, 0x00, 0xc0, 0x25, 0x18, 0x00 }, /* HatchStyleWave */
+    { 0x81, 0x42, 0x24, 0x18, 0x08, 0x04, 0x02, 0x01 }, /* HatchStyleDiagonalBrick */
+    { 0x08, 0x08, 0x08, 0xff, 0x80, 0x80, 0x80, 0xff }, /* HatchStyleHorizontalBrick */
+    { 0x51, 0x22, 0x14, 0x88, 0x45, 0x22, 0x54, 0x88 }, /* HatchStyleWeave */
+    { 0xf0, 0xf0, 0xf0, 0xf0, 0x55, 0xaa, 0x55, 0xaa }, /* HatchStylePlaid */
+    { 0x80, 0x01, 0x80, 0x00, 0x10, 0x08, 0x10, 0x00 }, /* HatchStyleDivot */
+    { 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0xaa }, /* HatchStyleDottedGrid */
+    { 0x00, 0x22, 0x00, 0x08, 0x00, 0x22, 0x00, 0x80 }, /* HatchStyleDottedDiamond */
+    { 0x01, 0x01, 0x02, 0x0c, 0x30, 0x48, 0x84, 0x03 }, /* HatchStyleShingle */
+    { 0x99, 0xff, 0x66, 0xff, 0x99, 0xff, 0x66, 0xff }, /* HatchStyleTrellis */
+    { 0xf8, 0xf8, 0x98, 0x77, 0x8f, 0x8f, 0x89, 0x77 }, /* HatchStyleSphere */
+    { 0x88, 0x88, 0x88, 0xff, 0x88, 0x88, 0x88, 0xff }, /* HatchStyleSmallGrid */
+    { 0x99, 0x66, 0x66, 0x99, 0x99, 0x66, 0x66, 0x99 }, /* HatchStyleSmallCheckerBoard */
+    { 0x0f, 0x0f, 0x0f, 0x0f, 0xf0, 0xf0, 0xf0, 0xf0 }, /* HatchStyleLargeCheckerBoard */
+    { 0x01, 0x82, 0x44, 0x28, 0x10, 0x28, 0x44, 0x82 }, /* HatchStyleOutlinedDiamond */
+    { 0x00, 0x10, 0x38, 0x7c, 0xfe, 0x7c, 0x38, 0x10 }, /* HatchStyleSolidDiamond */
 };
 
-GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result)
+GpStatus get_hatch_data(GpHatchStyle hatchstyle, const unsigned char **result)
 {
     if (hatchstyle < ARRAY_SIZE(HatchBrushes))
     {
@@ -275,14 +301,14 @@ GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result)
  */
 GpStatus WINGDIPAPI GdipCreateHatchBrush(GpHatchStyle hatchstyle, ARGB forecol, ARGB backcol, GpHatch **brush)
 {
-    TRACE("(%d, %d, %d, %p)\n", hatchstyle, forecol, backcol, brush);
+    TRACE("(%d, %ld, %ld, %p)\n", hatchstyle, forecol, backcol, brush);
 
     if(!brush)  return InvalidParameter;
 
     if(hatchstyle < HatchStyleMin || hatchstyle > HatchStyleMax)
         return InvalidParameter;
 
-    *brush = heap_alloc_zero(sizeof(GpHatch));
+    *brush = calloc(1, sizeof(GpHatch));
     if (!*brush) return OutOfMemory;
 
     (*brush)->brush.bt = BrushTypeHatchFill;
@@ -297,7 +323,7 @@ GpStatus WINGDIPAPI GdipCreateHatchBrush(GpHatchStyle hatchstyle, ARGB forecol, 
 static GpStatus create_line_brush(const GpRectF *rect, ARGB startcolor, ARGB endcolor,
     GpWrapMode wrap, GpLineGradient **line)
 {
-    *line = heap_alloc_zero(sizeof(GpLineGradient));
+    *line = calloc(1, sizeof(GpLineGradient));
     if(!*line)  return OutOfMemory;
 
     (*line)->brush.bt = BrushTypeLinearGradient;
@@ -307,14 +333,14 @@ static GpStatus create_line_brush(const GpRectF *rect, ARGB startcolor, ARGB end
     (*line)->gamma = FALSE;
     (*line)->rect = *rect;
     (*line)->blendcount = 1;
-    (*line)->blendfac = heap_alloc_zero(sizeof(REAL));
-    (*line)->blendpos = heap_alloc_zero(sizeof(REAL));
+    (*line)->blendfac = malloc(sizeof(REAL));
+    (*line)->blendpos = malloc(sizeof(REAL));
 
     if (!(*line)->blendfac || !(*line)->blendpos)
     {
-        heap_free((*line)->blendfac);
-        heap_free((*line)->blendpos);
-        heap_free(*line);
+        free((*line)->blendfac);
+        free((*line)->blendpos);
+        free(*line);
         *line = NULL;
         return OutOfMemory;
     }
@@ -376,7 +402,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     GpStatus stat;
     GpRectF rect;
 
-    TRACE("(%s, %s, %x, %x, %d, %p)\n", debugstr_pointf(startpoint),
+    TRACE("(%s, %s, %lx, %lx, %d, %p)\n", debugstr_pointf(startpoint),
           debugstr_pointf(endpoint), startcolor, endcolor, wrap, line);
 
     if(!line || !startpoint || !endpoint || wrap == WrapModeClamp)
@@ -419,7 +445,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushI(GDIPCONST GpPoint* startpoint,
     GpPointF stF;
     GpPointF endF;
 
-    TRACE("(%p, %p, %x, %x, %d, %p)\n", startpoint, endpoint,
+    TRACE("(%p, %p, %lx, %lx, %d, %p)\n", startpoint, endpoint,
           startcolor, endcolor, wrap, line);
 
     if(!startpoint || !endpoint)
@@ -439,7 +465,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
 {
     float angle;
 
-    TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
+    TRACE("(%s, %lx, %lx, %d, %d, %p)\n", debugstr_rectf(rect), startcolor, endcolor, mode,
           wrap, line);
 
     if(!line || !rect)
@@ -472,14 +498,10 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
 {
     GpRectF rectF;
 
-    TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
+    TRACE("(%p, %lx, %lx, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
           wrap, line);
 
-    rectF.X      = (REAL) rect->X;
-    rectF.Y      = (REAL) rect->Y;
-    rectF.Width  = (REAL) rect->Width;
-    rectF.Height = (REAL) rect->Height;
-
+    set_rect(&rectF, rect->X, rect->Y, rect->Width, rect->Height);
     return GdipCreateLineBrushFromRect(&rectF, startcolor, endcolor, mode, wrap, line);
 }
 
@@ -495,7 +517,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect
     REAL sin_angle, cos_angle, sin_cos_angle;
     GpPointF start, end;
 
-    TRACE("(%p, %x, %x, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
+    TRACE("(%s, %lx, %lx, %.2f, %d, %d, %p)\n", debugstr_rectf(rect), startcolor, endcolor, angle, isAngleScalable,
           wrap, line);
 
     if (!rect || !line || wrap == WrapModeClamp)
@@ -594,7 +616,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect
     ARGB startcolor, ARGB endcolor, REAL angle, BOOL isAngleScalable, GpWrapMode wrap,
     GpLineGradient **line)
 {
-    TRACE("(%p, %x, %x, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
+    TRACE("(%p, %lx, %lx, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
           wrap, line);
 
     return GdipCreateLineBrushFromRectI(rect, startcolor, endcolor, LinearGradientModeForwardDiagonal,
@@ -603,7 +625,8 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect
 
 static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradient **grad)
 {
-    GpRectF bounds;
+    INT i;
+    REAL sum_x = 0, sum_y = 0;
 
     if(!path || !grad)
         return InvalidParameter;
@@ -611,9 +634,7 @@ static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradi
     if (path->pathdata.Count < 2)
         return OutOfMemory;
 
-    GdipGetPathWorldBounds(path, &bounds, NULL, NULL);
-
-    *grad = heap_alloc_zero(sizeof(GpPathGradient));
+    *grad = calloc(1, sizeof(GpPathGradient));
     if (!*grad)
     {
         return OutOfMemory;
@@ -621,14 +642,14 @@ static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradi
 
     GdipSetMatrixElements(&(*grad)->transform, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
 
-    (*grad)->blendfac = heap_alloc_zero(sizeof(REAL));
-    (*grad)->blendpos = heap_alloc_zero(sizeof(REAL));
-    (*grad)->surroundcolors = heap_alloc_zero(sizeof(ARGB));
+    (*grad)->blendfac = malloc(sizeof(REAL));
+    (*grad)->blendpos = malloc(sizeof(REAL));
+    (*grad)->surroundcolors = malloc(sizeof(ARGB));
     if(!(*grad)->blendfac || !(*grad)->blendpos || !(*grad)->surroundcolors){
-        heap_free((*grad)->blendfac);
-        heap_free((*grad)->blendpos);
-        heap_free((*grad)->surroundcolors);
-        heap_free(*grad);
+        free((*grad)->blendfac);
+        free((*grad)->blendpos);
+        free((*grad)->surroundcolors);
+        free(*grad);
         *grad = NULL;
         return OutOfMemory;
     }
@@ -642,9 +663,14 @@ static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradi
     (*grad)->centercolor = centercolor;
     (*grad)->wrap = WrapModeClamp;
     (*grad)->gamma = FALSE;
-    /* FIXME: this should be set to the "centroid" of the path by default */
-    (*grad)->center.X = bounds.X + bounds.Width / 2;
-    (*grad)->center.Y = bounds.Y + bounds.Height / 2;
+    for (i=0; i<path->pathdata.Count; i++)
+    {
+        sum_x += path->pathdata.Points[i].X;
+        sum_y += path->pathdata.Points[i].Y;
+    }
+    (*grad)->center.X = sum_x / path->pathdata.Count;
+    (*grad)->center.Y = sum_y / path->pathdata.Count;
+
     (*grad)->focus.X = 0.0;
     (*grad)->focus.Y = 0.0;
     (*grad)->surroundcolors[0] = 0xffffffff;
@@ -756,11 +782,11 @@ GpStatus WINGDIPAPI GdipCreatePathGradientFromPath(GDIPCONST GpPath* path,
  */
 GpStatus WINGDIPAPI GdipCreateSolidFill(ARGB color, GpSolidFill **sf)
 {
-    TRACE("(%x, %p)\n", color, sf);
+    TRACE("(%lx, %p)\n", color, sf);
 
     if(!sf)  return InvalidParameter;
 
-    *sf = heap_alloc_zero(sizeof(GpSolidFill));
+    *sf = calloc(1, sizeof(GpSolidFill));
     if (!*sf) return OutOfMemory;
 
     (*sf)->brush.bt = BrushTypeSolidColor;
@@ -869,7 +895,7 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
     if (status != Ok)
         return status;
 
-    *texture = heap_alloc_zero(sizeof(GpTexture));
+    *texture = calloc(1, sizeof(GpTexture));
     if (!*texture){
         status = OutOfMemory;
         goto exit;
@@ -903,7 +929,7 @@ exit:
         if (*texture)
         {
             GdipDisposeImageAttributes((*texture)->imageattributes);
-            heap_free(*texture);
+            free(*texture);
             *texture = NULL;
         }
         GdipDisposeImage(new_image);
@@ -1000,29 +1026,29 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
     switch(brush->bt)
     {
         case BrushTypePathGradient:
-            GdipDeletePath(((GpPathGradient*) brush)->path);
-            heap_free(((GpPathGradient*) brush)->blendfac);
-            heap_free(((GpPathGradient*) brush)->blendpos);
-            heap_free(((GpPathGradient*) brush)->surroundcolors);
-            heap_free(((GpPathGradient*) brush)->pblendcolor);
-            heap_free(((GpPathGradient*) brush)->pblendpos);
+            GdipDeletePath(((GpPathGradient*)brush)->path);
+            free(((GpPathGradient*)brush)->blendfac);
+            free(((GpPathGradient*)brush)->blendpos);
+            free(((GpPathGradient*)brush)->surroundcolors);
+            free(((GpPathGradient*)brush)->pblendcolor);
+            free(((GpPathGradient*)brush)->pblendpos);
             break;
         case BrushTypeLinearGradient:
-            heap_free(((GpLineGradient*)brush)->blendfac);
-            heap_free(((GpLineGradient*)brush)->blendpos);
-            heap_free(((GpLineGradient*)brush)->pblendcolor);
-            heap_free(((GpLineGradient*)brush)->pblendpos);
+            free(((GpLineGradient*)brush)->blendfac);
+            free(((GpLineGradient*)brush)->blendpos);
+            free(((GpLineGradient*)brush)->pblendcolor);
+            free(((GpLineGradient*)brush)->pblendpos);
             break;
         case BrushTypeTextureFill:
             GdipDisposeImage(((GpTexture*)brush)->image);
             GdipDisposeImageAttributes(((GpTexture*)brush)->imageattributes);
-            heap_free(((GpTexture*)brush)->bitmap_bits);
+            free(((GpTexture*)brush)->bitmap_bits);
             break;
         default:
             break;
     }
 
-    heap_free(brush);
+    free(brush);
 
     return Ok;
 }
@@ -1300,7 +1326,7 @@ GpStatus WINGDIPAPI GdipGetTextureImage(GpTexture *brush, GpImage **image)
  */
 GpStatus WINGDIPAPI GdipGetTextureTransform(GpTexture *brush, GpMatrix *matrix)
 {
-    TRACE("(%p, %p)\n", brush, matrix);
+    TRACE("(%p, %s)\n", brush, debugstr_matrix(matrix));
 
     if(!brush || !matrix)
         return InvalidParameter;
@@ -1331,7 +1357,7 @@ GpStatus WINGDIPAPI GdipGetTextureWrapMode(GpTexture *brush, GpWrapMode *wrapmod
 GpStatus WINGDIPAPI GdipMultiplyTextureTransform(GpTexture* brush,
     GDIPCONST GpMatrix *matrix, GpMatrixOrder order)
 {
-    TRACE("(%p, %p, %d)\n", brush, matrix, order);
+    TRACE("(%p, %s, %d)\n", brush, debugstr_matrix(matrix), order);
 
     if(!brush || !matrix)
         return InvalidParameter;
@@ -1377,21 +1403,21 @@ GpStatus WINGDIPAPI GdipSetLineBlend(GpLineGradient *brush,
        (count >= 2 && (positions[0] != 0.0f || positions[count-1] != 1.0f)))
         return InvalidParameter;
 
-    new_blendfac = heap_alloc_zero(count * sizeof(REAL));
-    new_blendpos = heap_alloc_zero(count * sizeof(REAL));
+    new_blendfac = malloc(count * sizeof(REAL));
+    new_blendpos = malloc(count * sizeof(REAL));
 
     if (!new_blendfac || !new_blendpos)
     {
-        heap_free(new_blendfac);
-        heap_free(new_blendpos);
+        free(new_blendfac);
+        free(new_blendpos);
         return OutOfMemory;
     }
 
     memcpy(new_blendfac, factors, count * sizeof(REAL));
     memcpy(new_blendpos, positions, count * sizeof(REAL));
 
-    heap_free(brush->blendfac);
-    heap_free(brush->blendpos);
+    free(brush->blendfac);
+    free(brush->blendpos);
 
     brush->blendcount = count;
     brush->blendfac = new_blendfac;
@@ -1522,21 +1548,21 @@ GpStatus WINGDIPAPI GdipSetPathGradientBlend(GpPathGradient *brush, GDIPCONST RE
        (count >= 2 && (pos[0] != 0.0f || pos[count-1] != 1.0f)))
         return InvalidParameter;
 
-    new_blendfac = heap_alloc_zero(count * sizeof(REAL));
-    new_blendpos = heap_alloc_zero(count * sizeof(REAL));
+    new_blendfac = malloc(count * sizeof(REAL));
+    new_blendpos = malloc(count * sizeof(REAL));
 
     if (!new_blendfac || !new_blendpos)
     {
-        heap_free(new_blendfac);
-        heap_free(new_blendpos);
+        free(new_blendfac);
+        free(new_blendpos);
         return OutOfMemory;
     }
 
     memcpy(new_blendfac, blend, count * sizeof(REAL));
     memcpy(new_blendpos, pos, count * sizeof(REAL));
 
-    heap_free(brush->blendfac);
-    heap_free(brush->blendpos);
+    free(brush->blendfac);
+    free(brush->blendpos);
 
     brush->blendcount = count;
     brush->blendfac = new_blendfac;
@@ -1591,20 +1617,20 @@ GpStatus WINGDIPAPI GdipSetPathGradientPresetBlend(GpPathGradient *brush,
         return InvalidParameter;
     }
 
-    new_color = heap_alloc_zero(count * sizeof(ARGB));
-    new_pos = heap_alloc_zero(count * sizeof(REAL));
+    new_color = malloc(count * sizeof(ARGB));
+    new_pos = malloc(count * sizeof(REAL));
     if (!new_color || !new_pos)
     {
-        heap_free(new_color);
-        heap_free(new_pos);
+        free(new_color);
+        free(new_pos);
         return OutOfMemory;
     }
 
     memcpy(new_color, blend, sizeof(ARGB) * count);
     memcpy(new_pos, pos, sizeof(REAL) * count);
 
-    heap_free(brush->pblendcolor);
-    heap_free(brush->pblendpos);
+    free(brush->pblendcolor);
+    free(brush->pblendpos);
 
     brush->pblendcolor = new_color;
     brush->pblendpos = new_pos;
@@ -1656,7 +1682,7 @@ GpStatus WINGDIPAPI GdipGetPathGradientPresetBlendCount(GpPathGradient *brush,
 GpStatus WINGDIPAPI GdipSetPathGradientCenterColor(GpPathGradient *grad,
     ARGB argb)
 {
-    TRACE("(%p, %x)\n", grad, argb);
+    TRACE("(%p, %lx)\n", grad, argb);
 
     if(!grad || grad->brush.bt != BrushTypePathGradient)
         return InvalidParameter;
@@ -1815,13 +1841,13 @@ GpStatus WINGDIPAPI GdipSetPathGradientSurroundColorsWithCount(GpPathGradient
             num_colors = 1;
     }
 
-    new_surroundcolors = heap_alloc_zero(num_colors * sizeof(ARGB));
+    new_surroundcolors = malloc(num_colors * sizeof(ARGB));
     if (!new_surroundcolors)
         return OutOfMemory;
 
     memcpy(new_surroundcolors, argb, num_colors * sizeof(ARGB));
 
-    heap_free(grad->surroundcolors);
+    free(grad->surroundcolors);
 
     grad->surroundcolors = new_surroundcolors;
     grad->surroundcolorcount = num_colors;
@@ -1845,7 +1871,7 @@ GpStatus WINGDIPAPI GdipSetPathGradientWrapMode(GpPathGradient *grad,
 GpStatus WINGDIPAPI GdipSetPathGradientTransform(GpPathGradient *grad,
     GpMatrix *matrix)
 {
-    TRACE("(%p,%p)\n", grad, matrix);
+    TRACE("(%p,%s)\n", grad, debugstr_matrix(matrix));
 
     if (!grad || !matrix || grad->brush.bt != BrushTypePathGradient)
         return InvalidParameter;
@@ -1858,7 +1884,7 @@ GpStatus WINGDIPAPI GdipSetPathGradientTransform(GpPathGradient *grad,
 GpStatus WINGDIPAPI GdipGetPathGradientTransform(GpPathGradient *grad,
     GpMatrix *matrix)
 {
-    TRACE("(%p,%p)\n", grad, matrix);
+    TRACE("(%p,%s)\n", grad, debugstr_matrix(matrix));
 
     if (!grad || !matrix || grad->brush.bt != BrushTypePathGradient)
         return InvalidParameter;
@@ -1871,7 +1897,7 @@ GpStatus WINGDIPAPI GdipGetPathGradientTransform(GpPathGradient *grad,
 GpStatus WINGDIPAPI GdipMultiplyPathGradientTransform(GpPathGradient *grad,
     GDIPCONST GpMatrix *matrix, GpMatrixOrder order)
 {
-    TRACE("(%p,%p,%i)\n", grad, matrix, order);
+    TRACE("(%p,%s,%i)\n", grad, debugstr_matrix(matrix), order);
 
     if (!grad || grad->brush.bt != BrushTypePathGradient)
         return InvalidParameter;
@@ -1924,7 +1950,7 @@ GpStatus WINGDIPAPI GdipTranslatePathGradientTransform(GpPathGradient *grad,
 
 GpStatus WINGDIPAPI GdipSetSolidFillColor(GpSolidFill *sf, ARGB argb)
 {
-    TRACE("(%p, %x)\n", sf, argb);
+    TRACE("(%p, %lx)\n", sf, argb);
 
     if(!sf)
         return InvalidParameter;
@@ -1939,7 +1965,7 @@ GpStatus WINGDIPAPI GdipSetSolidFillColor(GpSolidFill *sf, ARGB argb)
 GpStatus WINGDIPAPI GdipSetTextureTransform(GpTexture *texture,
     GDIPCONST GpMatrix *matrix)
 {
-    TRACE("(%p, %p)\n", texture, matrix);
+    TRACE("(%p, %s)\n", texture, debugstr_matrix(matrix));
 
     if(!texture || !matrix)
         return InvalidParameter;
@@ -1969,7 +1995,7 @@ GpStatus WINGDIPAPI GdipSetTextureWrapMode(GpTexture *brush, GpWrapMode wrapmode
 GpStatus WINGDIPAPI GdipSetLineColors(GpLineGradient *brush, ARGB color1,
     ARGB color2)
 {
-    TRACE("(%p, %x, %x)\n", brush, color1, color2);
+    TRACE("(%p, %lx, %lx)\n", brush, color1, color2);
 
     if(!brush || brush->brush.bt != BrushTypeLinearGradient)
         return InvalidParameter;
@@ -2052,20 +2078,20 @@ GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient *brush,
         return InvalidParameter;
     }
 
-    new_color = heap_alloc_zero(count * sizeof(ARGB));
-    new_pos = heap_alloc_zero(count * sizeof(REAL));
+    new_color = malloc(count * sizeof(ARGB));
+    new_pos = malloc(count * sizeof(REAL));
     if (!new_color || !new_pos)
     {
-        heap_free(new_color);
-        heap_free(new_pos);
+        free(new_color);
+        free(new_pos);
         return OutOfMemory;
     }
 
     memcpy(new_color, blend, sizeof(ARGB) * count);
     memcpy(new_pos, positions, sizeof(REAL) * count);
 
-    heap_free(brush->pblendcolor);
-    heap_free(brush->pblendpos);
+    free(brush->pblendcolor);
+    free(brush->pblendpos);
 
     brush->pblendcolor = new_color;
     brush->pblendpos = new_pos;
@@ -2116,7 +2142,7 @@ GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient *brush)
 GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
     GDIPCONST GpMatrix *matrix)
 {
-    TRACE("(%p,%p)\n", brush,  matrix);
+    TRACE("(%p,%s)\n", brush,  debugstr_matrix(matrix));
 
     if(!brush || !matrix)
         return InvalidParameter;
@@ -2128,7 +2154,7 @@ GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
 
 GpStatus WINGDIPAPI GdipGetLineTransform(GpLineGradient *brush, GpMatrix *matrix)
 {
-    TRACE("(%p,%p)\n", brush, matrix);
+    TRACE("(%p,%s)\n", brush, debugstr_matrix(matrix));
 
     if(!brush || !matrix)
         return InvalidParameter;
@@ -2152,7 +2178,7 @@ GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient *brush, REAL sx, REAL 
 GpStatus WINGDIPAPI GdipMultiplyLineTransform(GpLineGradient *brush,
     GDIPCONST GpMatrix *matrix, GpMatrixOrder order)
 {
-    TRACE("(%p,%p,%u)\n", brush, matrix, order);
+    TRACE("(%p,%s,%u)\n", brush, debugstr_matrix(matrix), order);
 
     if(!brush)
         return InvalidParameter;
