@@ -93,6 +93,10 @@ static inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_dbg
 static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
 static inline const char *wine_dbgstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
+#if defined(__oaidl_h__) && defined(V_VT)
+extern const char *wine_dbgstr_variant(const VARIANT *var);
+static inline const char *debugstr_variant( const VARIANT *v ) { return wine_dbgstr_variant( v ); }
+#endif
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
  * builds under Windows, so we reimplement it under a different name. */
@@ -864,6 +868,36 @@ const char *wine_dbgstr_longlong( ULONGLONG ll )
         sprintf( res, "%lx", (unsigned long)ll );
     release_temp_buffer( res, strlen(res) + 1 );
     return res;
+}
+#endif
+
+#if defined(__oaidl_h__) && defined(V_VT)
+const char *wine_dbgstr_variant(const VARIANT *var)
+{
+    static char buf[400];
+
+    if (!var)
+        return "(null)";
+
+    switch (V_VT(var))
+    {
+    case VT_EMPTY:
+        return "{VT_EMPTY}";
+    case VT_BSTR:
+        sprintf(buf, "{VT_BSTR: %s}", wine_dbgstr_w(V_BSTR(var)));
+        break;
+    case VT_BOOL:
+        sprintf(buf, "{VT_BOOL: %x}", V_BOOL(var));
+        break;
+    case VT_UI4:
+        sprintf(buf, "{VT_UI4: %u}", V_UI4(var));
+        break;
+    default:
+        sprintf(buf, "{vt %d}", V_VT(var));
+        break;
+    }
+
+    return buf;
 }
 #endif
 
