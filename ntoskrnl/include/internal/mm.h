@@ -1814,6 +1814,9 @@ VOID
 NTAPI
 MiInitializeWorkingSetList(_Inout_ PMMSUPPORT WorkingSet);
 
+/* Pool **********************************************************************/
+extern ULONG  ExpPoolFlags;
+
 #ifdef __cplusplus
 } // extern "C"
 
