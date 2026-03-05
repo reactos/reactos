@@ -1464,4 +1464,19 @@ typedef struct _tagKSJACK_DESCRIPTION2 {
                                          SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | \
                                          SPEAKER_FRONT_LEFT_OF_CENTER | SPEAKER_FRONT_RIGHT_OF_CENTER)
 
+//===========================================================================
+// Video DATAFORMATs
+//===========================================================================
+
+typedef struct tagKS_DATAFORMAT_VIDEOINFOHEADER {
+    KSDATAFORMAT            DataFormat;
+    KS_VIDEOINFOHEADER      VideoInfoHeader;
+} KS_DATAFORMAT_VIDEOINFOHEADER, *PKS_DATAFORMAT_VIDEOINFOHEADER;
+
+// FORMAT_VideoInfo
+#define STATIC_KSDATAFORMAT_SPECIFIER_VIDEOINFO\
+    0x05589f80L, 0xc356, 0x11ce, { 0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}
+DEFINE_GUIDSTRUCT("05589f80-c356-11ce-bf01-00aa0055595a", KSDATAFORMAT_SPECIFIER_VIDEOINFO);
+#define KSDATAFORMAT_SPECIFIER_VIDEOINFO DEFINE_GUIDNAMED(KSDATAFORMAT_SPECIFIER_VIDEOINFO)
+
 #endif
