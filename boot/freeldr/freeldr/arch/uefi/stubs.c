@@ -17,12 +17,6 @@ DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 #endif
 
 VOID
-StallExecutionProcessor(ULONG Microseconds)
-{
-
-}
-
-VOID
 UefiVideoGetFontsFromFirmware(PULONG RomFontPointers)
 {
 
@@ -45,10 +39,4 @@ VOID
 UefiPcBeep(VOID)
 {
     /* Not possible on UEFI, for now */
-}
-
-VOID
-UefiHwIdle(VOID)
-{
-
 }
