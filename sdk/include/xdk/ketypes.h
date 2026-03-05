@@ -91,10 +91,10 @@ typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
 } LOGICAL_PROCESSOR_RELATIONSHIP;
 
 typedef struct _PROCESSOR_RELATIONSHIP {
-  UCHAR Flags;
-  UCHAR EfficiencyClass;
-  UCHAR Reserved[20];
-  USHORT GroupCount;
+  $UCHAR Flags;
+  $UCHAR EfficiencyClass;
+  $UCHAR Reserved[20];
+  $USHORT GroupCount;
   _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
 } PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
 
