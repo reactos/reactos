@@ -15,20 +15,25 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
-INT gLanguageToggleKeyState = 0;
+static INT gLanguageToggleKeyState = 0;
 DWORD gdwLanguageToggleKey = 1;
-INT gLayoutToggleKeyState = 0;
+static INT gLayoutToggleKeyState = 0;
 DWORD gdwLayoutToggleKey = 2;
+
+#include <cjkcode.h>
 
 /* State for Alt+Numpad character entry */
 static enum _ALTNUM_STATE
 {
     ALTNUM_INACTIVE,
-    ALTNUM_OEM,
-    ALTNUM_ACP
+    ALTNUM_OEM,     // Alt  xxx
+    ALTNUM_ACP,     // Alt 0xxx
+    ALTNUM_HEX_ACP, // Alt .xxx
+    ALTNUM_HEX_UTF  // Alt +xxx
 } gAltNumPadState = ALTNUM_INACTIVE;
 
 static ULONG gAltNumPadValue = 0;
+BOOL gbEnableHexNumpad = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -914,32 +919,70 @@ IntHandleAltNumpad(
     _In_ DWORD dwTime /*,
     _In_ PUSER_MESSAGE_QUEUE pFocusQueue */)
 {
-    // TODO: Handle Unicode characters.
     if (bIsDown &&
         IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
         !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
     {
         TRACE("VK_MENU && !VK_CONTROL - wVk: 0x%04x\n", wVk);
 
-        /* Check if the incoming key is a numpad digit */
-        if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
+        /* Initialize the Alt+Numpad state if necessary */
+        if (gAltNumPadState == ALTNUM_INACTIVE)
         {
-            UINT uDigit = wVk - VK_NUMPAD0;
-
-            /* Initialize the Alt+Numpad state if necessary */
-            if (gAltNumPadState == ALTNUM_INACTIVE)
-                gAltNumPadState = (uDigit == 0) ? ALTNUM_ACP : ALTNUM_OEM;
-
-            /* Build the decimal value; the value can overflow
-             * and be truncated (same behaviour as on Windows) */
-            gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
-
-            return TRUE; /* No key processing needs to be done */
+            if (gbEnableHexNumpad && (wVk == VK_DECIMAL)) // || (wVk == VK_OEM_PERIOD)
+                gAltNumPadState = ALTNUM_HEX_ACP, wVk = VK_NUMPAD0; // Replace '.' by '0'
+            else if (gbEnableHexNumpad && (wVk == VK_ADD)) // || (wVk == VK_OEM_PLUS)
+                gAltNumPadState = ALTNUM_HEX_UTF, wVk = VK_NUMPAD0; // Replace '+' by '0'
+            else if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9) // || (wVk >= '0' && wVk <= '9')
+                gAltNumPadState = (wVk == VK_NUMPAD0) ? ALTNUM_ACP : ALTNUM_OEM;
+            else
+                return FALSE; /* Unhandled, do regular key processing */
         }
-        /* Check if the incoming key is not the menu key itself/alone */
-        else if (wVk != VK_MENU)
+
+        /* Check the incoming key */
+        switch (gAltNumPadState)
         {
-            /* Reset the Alt+Numpad state */
+            case ALTNUM_OEM: case ALTNUM_ACP:
+            {
+                UINT uDigit;
+
+                /* Check if it is a numpad digit */
+                if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
+                    uDigit = wVk - VK_NUMPAD0;
+                // else if (wVk >= '0' && wVk <= '9')
+                //     uDigit = wVk - '0';
+                else
+                    break;
+
+                /* Build the decimal value; the value can overflow
+                 * and be truncated (same behaviour as on Windows) */
+                gAltNumPadValue = (gAltNumPadValue * 10) + uDigit;
+                return TRUE; /* No key processing needs to be done */
+            }
+            case ALTNUM_HEX_ACP: case ALTNUM_HEX_UTF:
+            {
+                UINT uDigit;
+
+                /* Check if it represents a valid hexadecimal digit */
+                if (wVk >= VK_NUMPAD0 && wVk <= VK_NUMPAD9)
+                    uDigit = wVk - VK_NUMPAD0;
+                else if (wVk >= '0' && wVk <= '9')
+                    uDigit = wVk - '0';
+                else if (wVk >= 'A' && wVk <= 'F')
+                    uDigit = wVk - 'A' + 10;
+                else
+                    break;
+
+                /* Build the hexadecimal value; the value can overflow
+                 * and be truncated (same behaviour as on Windows) */
+                gAltNumPadValue = (gAltNumPadValue * 16) + uDigit;
+                return TRUE; /* No key processing needs to be done */
+            }
+            DEFAULT_UNREACHABLE;
+        }
+
+        /* If the incoming key is not the ALT key, reset the Alt+Numpad state */
+        if (wVk != VK_MENU)
+        {
             gAltNumPadState = ALTNUM_INACTIVE;
             gAltNumPadValue = 0;
         }
@@ -947,7 +990,7 @@ IntHandleAltNumpad(
     TRACE("gAltNumPadState: %lu, gAltNumPadValue: %lu\n",
           gAltNumPadState, gAltNumPadValue);
 
-    /* Check for the end of an Alt+Numpad sequence, triggered by the release of the ALT key */
+    /* Check for the end of an Alt+Numpad sequence, triggered by the ALT key release */
     if ((gAltNumPadState != ALTNUM_INACTIVE) && !bIsDown && (wVk == VK_MENU))
     {
         PUSER_MESSAGE_QUEUE pFocusQueue = IntGetFocusMessageQueue();
@@ -957,35 +1000,79 @@ IntHandleAltNumpad(
         {
             NTSTATUS Status;
             WCHAR wchUnicodeChar;
-            /*
-             * NOTE: the input value is considered modulo 256, because it
-             * is stored to a 1-byte CHAR. Other applications that hook and
-             * reimplement the Alt+Numpad system (e.g. WordPad, ...) store
-             * the value instead in a 2-byte WORD, hence they consider the
-             * value modulo 65536.
-             * See: https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951
-             */
-            CHAR cAnsiChar = (CHAR)(gAltNumPadValue & 0xFF);
 
-            /* Convert the input character value to Unicode */
-            if (gAltNumPadState == ALTNUM_OEM)
+            /* Convert the input codepoint value to UTF-16 */
+            if (gAltNumPadState == ALTNUM_HEX_UTF)
             {
-                /* Use the OEM->Unicode function */
-                Status = RtlOemToUnicodeN(&wchUnicodeChar,
+                /* Convert the Unicode codepoint to UTF-16 */
+                // FIXME: We currently support only the Basic Multilingual Plane
+                // (equivalent to UCS-2) and don't exclude the surrogate range
+                // (U+D800 to U+DFFF). In the future, we should handle all the
+                // valid values, generating two UTF-16 code units if necessary
+                // so as to support the other Unicode planes.
+                // See https://en.wikipedia.org/wiki/UTF-16#Description
+                wchUnicodeChar = (WCHAR)(gAltNumPadValue & 0xFFFF);
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                NTSTATUS (NTAPI* pRtlCPToUnicodeN)(
+                    _Out_writes_bytes_to_(MaxBytesInUnicodeString, *BytesInUnicodeString) PWCH UnicodeString,
+                    _In_ ULONG MaxBytesInUnicodeString,
+                    _Out_opt_ PULONG BytesInUnicodeString,
+                    _In_reads_bytes_(BytesInString) PCCH String,
+                    _In_ ULONG BytesInString);
+
+                USHORT AnsiCP, OemCP, wCodePage, mbChar;
+
+                /* Check the current codepage and select a conversion function.
+                 * NOTE: Windows WIN32K invokes the ClientCharToWchar
+                 * USER32 callback to perform the conversion. */
+                RtlGetDefaultCodePage(&AnsiCP, &OemCP);
+                if (gAltNumPadState == ALTNUM_OEM)
+                {
+                    // TODO: Handle console where we do not know its active
+                    // OEM codepage. In this case we need to directly send
+                    // the raw OEM numpad value, OR'ed with ALTNUMPAD_BIT.
+                    // For more details, see:
+                    // https://github.com/microsoft/terminal/blob/e20e1f7bf92b61580baea69483a74a7f4578a586/src/host/stream.cpp#L170
+
+                    /* Use the current OEM codepage -> Unicode function */
+                    wCodePage = OemCP;
+                    pRtlCPToUnicodeN = RtlOemToUnicodeN;
+                }
+                else // if ((gAltNumPadState == ALTNUM_ACP) ||
+                     //     (gAltNumPadState == ALTNUM_HEX_ACP))
+                {
+                    /* Use the current ANSI codepage (ACP) MultiByte -> Unicode function */
+                    wCodePage = AnsiCP;
+                    pRtlCPToUnicodeN = RtlMultiByteToUnicodeN;
+                }
+
+                /* For CJK codepages, keep the input value on 2 bytes,
+                 * otherwise truncate it to 1 byte for legacy behaviour. */
+                if (IsCJKCodePage(wCodePage))
+                {
+                    mbChar = (USHORT)(gAltNumPadValue & 0xFFFF);
+                }
+                else
+                {
+                    /*
+                     * NOTE: the input value is considered modulo 256 as it is
+                     * stored in a 1-byte CHAR. Other input systems that hook and
+                     * re-implement the Alt+Numpad system (e.g. RichEdit, ...)
+                     * store instead the value in a 2-byte WORD, i.e. consider
+                     * the value modulo 65536.
+                     * See: https://devblogs.microsoft.com/oldnewthing/20240702-00/?p=109951
+                     */
+                    mbChar = (USHORT)(gAltNumPadValue & 0xFF);
+                }
+
+                Status = pRtlCPToUnicodeN(&wchUnicodeChar,
                                           sizeof(wchUnicodeChar),
                                           NULL,
-                                          &cAnsiChar,
-                                          sizeof(cAnsiChar));
-            }
-            else if (gAltNumPadState == ALTNUM_ACP)
-            {
-                /* The sequence started with '0', use the ANSI codepage
-                 * (ACP)-aware MultiByte->Unicode function */
-                Status = RtlMultiByteToUnicodeN(&wchUnicodeChar,
-                                                sizeof(wchUnicodeChar),
-                                                NULL,
-                                                &cAnsiChar,
-                                                sizeof(cAnsiChar));
+                                          (PCCH)&mbChar,
+                                          sizeof(mbChar));
             }
 
             /* Post the Unicode character to the focused message queue if conversion succeeded */
