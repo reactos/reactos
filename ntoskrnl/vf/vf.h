@@ -166,6 +166,24 @@ typedef struct _VF_DRIVER_ENTRY
     PDRIVER_UNLOAD OriginalUnload;
     SIZE_T PoolUsage;
     SIZE_T PoolQuota;
+
+    /* stats for SystemVerifierInformation */
+    ULONG AllocationsAttempted;
+    ULONG AllocationsSucceeded;
+    ULONG AllocationsSucceededSpecialPool;
+    ULONG AllocationsWithNoTag;
+    ULONG AllocationsFailed;
+    ULONG AllocationsFailedDeliberately;
+    ULONG Loads;
+    ULONG Unloads;
+    ULONG CurrentPagedPoolAllocations;
+    ULONG CurrentNonPagedPoolAllocations;
+    ULONG PeakPagedPoolAllocations;
+    ULONG PeakNonPagedPoolAllocations;
+    SIZE_T PagedPoolUsageInBytes;
+    SIZE_T NonPagedPoolUsageInBytes;
+    SIZE_T PeakPagedPoolUsageInBytes;
+    SIZE_T PeakNonPagedPoolUsageInBytes;
 } VF_DRIVER_ENTRY;
 
 typedef struct _VF_IRP_TRACK
@@ -315,7 +333,8 @@ VOID VfHookDriverUnload(
 VOID NTAPI VfFreePool(
     PDRIVER_OBJECT DriverObject,
     PVOID Address,
-    ULONG PoolTag
+    ULONG PoolTag,
+    POOL_TYPE PoolType
 );
 
 VOID

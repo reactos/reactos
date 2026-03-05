@@ -2516,7 +2516,15 @@ ExFreePoolWithTag(IN PVOID P,
         PDRIVER_OBJECT Driver = VfGetDriverByAddress(_ReturnAddress());
         if (Driver)
         {
-            VfFreePool(Driver, P, TagToFree);
+            POOL_TYPE FreePoolType;
+            if (PAGE_ALIGN(P) == P)
+                FreePoolType = MmDeterminePoolType(P);
+            else
+            {
+                PPOOL_HEADER Entry = (PPOOL_HEADER)P - 1;
+                FreePoolType = (Entry->PoolType - 1) & BASE_POOL_TYPE_MASK;
+            }
+            VfFreePool(Driver, P, TagToFree, FreePoolType);
             return;
         }
     }

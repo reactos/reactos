@@ -110,8 +110,10 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
     UNICODE_STRING DriverName;
     PWCHAR List, Token, End;
 
-    DPRINT1("VF: ShouldVerify: list='%wZ' driver='%wZ'\n",
-            &VfGlobal.VerifyDriverList, &DriverName);
+    DPRINT1("VF: ShouldVerify: list='%wZ' driver='%.*ws'\\n",
+            &VfGlobal.VerifyDriverList,
+            DriverName.Length / sizeof(WCHAR),
+            DriverName.Buffer);
 
     /* NULL or empty buffer means verify all */
     if (!VfGlobal.VerifyDriverList.Buffer ||
@@ -125,10 +127,13 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
 
     /* get driver filename from LdrEntry */
     LdrEntry = (PLDR_DATA_TABLE_ENTRY)DriverObject->DriverSection;
-    if (!LdrEntry)
+    if (!LdrEntry || !LdrEntry->BaseDllName.Buffer || !LdrEntry->BaseDllName.Length)
         return TRUE;
-
+    
     DriverName = LdrEntry->BaseDllName;
+    /* clamp length to avoid reading garbage past the buffer */
+    if (DriverName.Length > DriverName.MaximumLength)
+        DriverName.Length = DriverName.MaximumLength;
 
     /* walk space-separated list */
     List = VfGlobal.VerifyDriverList.Buffer;
@@ -809,7 +814,7 @@ TrackAllocation:
     return Address;
 }
 
-VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag)
+VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag, POOL_TYPE PoolType)
 {
     VF_DRIVER_ENTRY* Driver = VfFindDriver(DriverObject);
     VF_POOL_ALLOCATION* Alloc;
@@ -849,6 +854,15 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag)
                                  Alloc->AllocateIrql,
                                  (ULONG_PTR)DriverObject,
                                  (ULONG_PTR)Address);
+            }
+
+            if (Alloc->PoolType != PoolType)
+            {
+                KeBugCheckEx(VF_BUGCHECK_POOL_TYPE_VIOLATION,
+                             VF_SUBCODE_WRONG_POOL_TYPE,
+                             (ULONG_PTR)Address,
+                             (ULONG_PTR)Alloc->PoolType,
+                             (ULONG_PTR)PoolType);
             }
 
             if (Alloc->SpecialPool && Alloc->Mdl != NULL)
