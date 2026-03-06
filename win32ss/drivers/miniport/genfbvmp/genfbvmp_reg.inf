@@ -14,14 +14,26 @@
 ;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\ACPI#CLS_0003&SUBCLS_0001","Service",0x00000000,"GenericFramebuffer"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\ACPI#CLS_0003&SUBCLS_0001","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
 
-
+HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","DisplayName",0x00000000,"%GENFB_DISPLAYNAME%"
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","ErrorControl",0x00010001,0x00000000
+;;"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","ImagePath",0x00020000,"system32\drivers\genfbvmp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","Tag",0x00010001,0x00000000
+;; HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer","BootDriver",0x00010003,1
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer\Video","Service",0x00000000,"GenericFramebuffer"
 
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer\Device0","Device Description",0x00000000,"Generic Framebuffer Miniport Driver"
 HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
-HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer\Device0","VgaCompatible",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Services\GenericFramebuffer\Device0","VgaCompatible",0x00010001,0
+
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\GenericFramebuffer","EventMessageFile",0x00020002,"%SystemRoot%\System32\IoLogMsg.dll" ;; ";%SystemRoot%\System32\drivers\genfbvmp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\GenericFramebuffer","TypesSupported",0x00010003,7
+
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\genfbvmp.sys","",0x00000000,"Driver"
+HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\genfbvmp.sys","",0x00000000,"Driver"
+
+[Strings]
+GENFB_DISPLAYNAME="Generic Framebuffer Miniport Adapter"
