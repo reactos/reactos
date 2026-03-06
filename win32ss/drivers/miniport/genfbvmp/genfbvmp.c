@@ -19,6 +19,8 @@
 #include <video.h>
 #include <devioctl.h>
 
+#include <stdio.h> // <ntstrsafe.h>
+
 #include <section_attribs.h>
 
 #include <debug.h>
@@ -31,6 +33,12 @@
 //#include <drivers/bootvid/framebuf.h>
 #include <drivers/bootvid/framebuf.c>
 
+// Define if the driver must behave as a legacy driver.
+#define DRIVER_LEGACY   1
+// Define if the driver must behave as a PnP driver.
+#define DRIVER_PNP      2
+#define DRIVER_MODE     DRIVER_PNP // (DRIVER_LEGACY | DRIVER_PNP)
+
 /********************************** Globals ***********************************/
 
 /**
@@ -39,7 +47,7 @@
  * for "HardwareInformation.AdapterString", "HardwareInformation.BiosString",
  * "HardwareInformation.ChipType", and "HardwareInformation.DacType".
  **/
-static const WCHAR AdapterString[]   = L"Generic Framebuffer"; // "Basic Display Driver"
+static const WCHAR AdapterString[]   = L"Generic Framebuffer";
 static const WCHAR AdapterChipType[] = L"Framebuffer";
 static const WCHAR AdapterDacType[]  = L"Internal";
 
@@ -84,14 +92,18 @@ typedef struct _GENFB_DEVICE_EXTENSION
     VIDEO_MODE_INFORMATION CurrentVideoMode;
 } GENFB_DEVICE_EXTENSION, *PGENFB_DEVICE_EXTENSION;
 
-
 /* The unique boot-time display available */
 GENFB_DISPLAY_INFO gBootDisplay = {0};
 BOOLEAN gbBootDisplayFound = FALSE;
+/**/BOOLEAN gbBootDisplayReported = FALSE;/**/
 
 
 /********************************** Private ***********************************/
 
+/**
+ * @brief
+ * Maps the video RAM and framebuffer to the requested preferred address.
+ **/
 static VP_STATUS
 GenFbVmpMapVideoMemory(
     _In_ PVOID HwDeviceExtension,
@@ -105,8 +117,6 @@ GenFbVmpMapVideoMemory(
     ULONG InIoSpace;
     VP_STATUS Status;
 
-    /* Map the video RAM (set up by the firmware) to the
-     * preferred address the user requests, if possible. */
     CapturedLength = *Length;
     InIoSpace = VIDEO_MEMORY_SPACE_MEMORY | VIDEO_MEMORY_SPACE_P6CACHE;
     if (ProcessHandle)
@@ -117,6 +127,8 @@ GenFbVmpMapVideoMemory(
     }
     else
     {
+        /* Map the video RAM (set up by the firmware) to the
+         * preferred address the user requests, if possible. */
         RequestedVirtualAddress = *VirtualAddress;
     }
     Status = VideoPortMapMemory(HwDeviceExtension,
@@ -126,6 +138,8 @@ GenFbVmpMapVideoMemory(
                                 &RequestedVirtualAddress);
     if (Status != NO_ERROR)
     {
+        /* The underlying call to MmMapIoSpace failed, this may be because
+         * MmWriteCombined isn't supported, so try again with MmNonCached */
         CapturedLength = *Length;
         InIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
         if (ProcessHandle)
@@ -155,65 +169,6 @@ GenFbVmpMapVideoMemory(
     return Status;
 }
 
-#if 0
-/**
- * @brief
- * Maps the video RAM and framebuffer to the requested preferred address.
- **/
-static VP_STATUS
-GenFbVmpMapVideoMemory(
-    _In_ PGENFB_DEVICE_EXTENSION DeviceExtension,
-    _In_ PVIDEO_MEMORY RequestedAddress,
-    _Out_ PVIDEO_MEMORY_INFORMATION MapInformation,
-    _Out_ PSTATUS_BLOCK StatusBlock)
-{
-    VP_STATUS Status;
-    PGENFB_DISPLAY_INFO DisplayInfo = &DeviceExtension->DisplayInfo;
-    ULONG InIoSpace;
-
-    /* Map the video RAM (set up by the firmware) to the
-     * preferred address the user requests, if possible. */
-    MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-    MapInformation->VideoRamLength = DisplayInfo->VramSize;
-    InIoSpace = VIDEO_MEMORY_SPACE_MEMORY | VIDEO_MEMORY_SPACE_P6CACHE;
-    Status = VideoPortMapMemory(DeviceExtension,
-                                DisplayInfo->VramAddress,
-                                &MapInformation->VideoRamLength,
-                                &InIoSpace,
-                                &MapInformation->VideoRamBase);
-    if (Status != NO_ERROR)
-    {
-        MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-        MapInformation->VideoRamLength = DisplayInfo->VramSize;
-        InIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
-        Status = VideoPortMapMemory(DeviceExtension,
-                                    DisplayInfo->VramAddress,
-                                    &MapInformation->VideoRamLength,
-                                    &InIoSpace,
-                                    &MapInformation->VideoRamBase);
-    }
-    if (Status != NO_ERROR)
-    {
-        DPRINT1("Failed to map video RAM 0x%I64X (%lu bytes)\n",
-                DisplayInfo->VramAddress.QuadPart, DisplayInfo->VramSize);
-        return Status;
-    }
-
-    /* The framebuffer starts at a given offset from the VideoRamBase */
-    MapInformation->FrameBufferBase =
-        MapInformation->VideoRamBase + DisplayInfo->VideoConfigData.FrameBufferOffset;
-    MapInformation->FrameBufferLength = DisplayInfo->FrameBufferSize;
-
-    DPRINT1("Video RAM 0x%I64X mapped to 0x%p (%lu bytes) - FrameBuffer at 0x%p (%lu bytes)\n",
-            DisplayInfo->VramAddress.QuadPart,
-            MapInformation->VideoRamBase, MapInformation->VideoRamLength,
-            MapInformation->FrameBufferBase, MapInformation->FrameBufferLength);
-
-    StatusBlock->Information = sizeof(*MapInformation);
-    return Status;
-}
-#endif
-
 /**
  * @brief
  * Releases the mapping between the virtual address space
@@ -236,6 +191,7 @@ GenFbVmpSetupCurrentMode(
     PGENFB_DISPLAY_INFO DisplayInfo   = &DeviceExtension->DisplayInfo;
     PCM_FRAMEBUF_DEVICE_DATA VideoData  = &DisplayInfo->VideoConfigData;
     PCM_MONITOR_DEVICE_DATA MonitorData = &DisplayInfo->MonitorConfigData;
+    ULONG RegValue;
     // ULONG BytesPerScanLine;
     // UCHAR BytesPerPixel;
 
@@ -350,11 +306,85 @@ GenFbVmpSetupCurrentMode(
 
     VideoMode->DriverSpecificAttributeFlags = 0;
 
+    /*
+     * At startup, win32k.sys tries to select the best video mode by reading
+     * the "DefaultSettings...." values in the video device hardware registry
+     * key, then attempts to match it with all the modes supported by all
+     * the different active video drivers (including the fallback VGA one on
+     * supported machines) for the current adapter, trying to find the exact
+     * or the closest suitable mode. If needed, another video driver, that
+     * supports some other video mode than the one we want, can be activated
+     * instead.
+     * Since we can handle the only one single boot video mode, and want to
+     * be activated instead, we *MUST* override the video mode cached in the
+     * registry, so that win32k.sys will instead try to match it against ours.
+     *
+     * See also:
+     * https://www.betaarchive.com/wiki/index.php/Microsoft_KB_Archive/102992#Video_Device_Driver_Entries
+     */
+
+    RegValue = VideoMode->VisScreenWidth;
+    VideoPortSetRegistryParameters(DeviceExtension,
+                                   L"DefaultSettings.XResolution",
+                                   &RegValue, sizeof(RegValue));
+
+    RegValue = VideoMode->VisScreenHeight;
+    VideoPortSetRegistryParameters(DeviceExtension,
+                                   L"DefaultSettings.YResolution",
+                                   &RegValue, sizeof(RegValue));
+
+    RegValue = VideoMode->BitsPerPlane /* * VideoMode->NumberOfPlanes */; // VideoData->BitsPerPixel;
+    VideoPortSetRegistryParameters(DeviceExtension,
+                                   L"DefaultSettings.BitsPerPel",
+                                   &RegValue, sizeof(RegValue));
+
+    // TODO: hbelusca - Add these two also during setup.
+    RegValue = VideoMode->Frequency;
+    VideoPortSetRegistryParameters(DeviceExtension,
+                                   L"DefaultSettings.VRefresh",
+                                   &RegValue, sizeof(RegValue));
+
+    RegValue = !!(VideoMode->AttributeFlags & VIDEO_MODE_INTERLACED);
+    VideoPortSetRegistryParameters(DeviceExtension,
+                                   L"DefaultSettings.Interlaced",
+                                   &RegValue, sizeof(RegValue));
+
+#if 0
+    // L"Attach.RelativeX", pdm->dmPosition.x;
+    // L"Attach.RelativeY", pdm->dmPosition.y;
+    // L"Attach.PrimaryDevice"
+    // L"Attach.ToDesktop"
+    // L"DefaultSettings.BitsPerPel", pdm->dmBitsPerPel;
+    // L"DefaultSettings.XResolution", pdm->dmPelsWidth;
+    // L"DefaultSettings.YResolution", pdm->dmPelsHeight;
+    // L"DefaultSettings.Flags", pdm->dmDisplayFlags;
+    // L"DefaultSettings.VRefresh", pdm->dmDisplayFrequency;
+    // L"DefaultSettings.XPanning", pdm->dmPanningWidth;
+    // L"DefaultSettings.YPanning", pdm->dmPanningHeight;
+    // L"DefaultSettings.Orientation", pdm->dmDisplayOrientation;
+    // L"DefaultSettings.FixedOutput", pdm->dmDisplayFixedOutput;
+#endif
+
     return TRUE;
 }
 
 
 /*********************************** Public ***********************************/
+
+/*
+ * From a (VIDEO|MONITOR)_HARDWARE_CONFIGURATION_DATA structure, retrieve
+ * where the actual legacy data starts from, based from the fact that the
+ * first two fields, InterfaceType and BusNumber, are common with the
+ * CM_FULL_RESOURCE_DESCRIPTOR header, and the actual data starts where
+ * the CM_FULL_RESOURCE_DESCRIPTOR::PartialResourceList member would start.
+ */
+#define GET_LEGACY_DATA(fullConfigData) \
+    ((PVOID)&(((PCM_FULL_RESOURCE_DESCRIPTOR)fullConfigData)->PartialResourceList))
+
+#define GET_LEGACY_DATA_LEN(fullConfigDataLen) \
+    ((fullConfigDataLen >= FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList)) \
+   ? (fullConfigDataLen  - FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList)) \
+   : 0)
 
 /**
  * @brief
@@ -527,7 +557,8 @@ GenFbVmpConfigureAdapter(
     PCM_FRAMEBUF_DEVICE_DATA VideoData  = &DisplayInfo->VideoConfigData;
     PCM_MONITOR_DEVICE_DATA MonitorData = &DisplayInfo->MonitorConfigData;
     VIDEO_ACCESS_RANGE accessRanges[1];
-    ULONG VRamInMB;
+    ULONGLONG VramSizeULL;
+    ULONG VramSizeUL;
     VP_STATUS status;
 
 #if 1 // TODO: Keep it here?
@@ -640,7 +671,7 @@ GenFbVmpConfigureAdapter(
         return ERROR_INVALID_PARAMETER;
     }
 
-    DPRINT1("GenFbVmpConfigureAdapter: Mapped framebuffer 0x%I64x to 0x%p - size %lu\n",
+    DPRINT1("GenFbVmpConfigureAdapter: Mapped framebuffer 0x%I64X to 0x%p - size %lu\n",
             accessRanges[0].RangeStart,
             DeviceExtension->DisplayInfo.FrameAddress,
             accessRanges[0].RangeLength);
@@ -674,24 +705,28 @@ GenFbVmpConfigureAdapter(
     /* Chipset information */
     VideoPortSetRegistryParameters(HwDeviceExtension,
                                    L"HardwareInformation.AdapterString",
-                                   (PVOID)AdapterString,
-                                   sizeof(AdapterString));
+                                   (PVOID)AdapterString, sizeof(AdapterString));
     // L"HardwareInformation.BiosString"
     VideoPortSetRegistryParameters(HwDeviceExtension,
                                    L"HardwareInformation.ChipType",
-                                   (PVOID)AdapterChipType,
-                                   sizeof(AdapterChipType));
+                                   (PVOID)AdapterChipType, sizeof(AdapterChipType));
     VideoPortSetRegistryParameters(HwDeviceExtension,
                                    L"HardwareInformation.DacType",
-                                   (PVOID)AdapterDacType,
-                                   sizeof(AdapterDacType));
+                                   (PVOID)AdapterDacType, sizeof(AdapterDacType));
 
-    /* Video Memory in *MB* */
-    VRamInMB = DisplayInfo->VramSize / (1024 * 1024);
+    /* Video Memory - Contrary to what MSDN says, this value is in *bytes* and not in megabytes */
+    VramSizeUL = DisplayInfo->VramSize;
     VideoPortSetRegistryParameters(HwDeviceExtension,
                                    L"HardwareInformation.MemorySize",
-                                   &VRamInMB,
-                                   sizeof(VRamInMB));
+                                   &VramSizeUL, sizeof(VramSizeUL));
+
+    /* New Windows 8+ value, checked by 3rd-party tools:
+     * report the memory size in a 64-bit value for graphics cards
+     * that report more than 4GB of available VRAM. */
+    VramSizeULL = (ULONGLONG)DisplayInfo->VramSize;
+    VideoPortSetRegistryParameters(HwDeviceExtension,
+                                   L"HardwareInformation.qwMemorySize",
+                                   &VramSizeULL, sizeof(VramSizeULL));
 
     /* Note: Don't use VideoMode->Frequency since that value is
      * the regularized one, and not the original reported one. */
@@ -700,8 +735,7 @@ GenFbVmpConfigureAdapter(
         ULONG VideoClock = VideoData->VideoClock;
         VideoPortSetRegistryParameters(HwDeviceExtension,
                                        L"HardwareInformation.CurrentChipClockSpeed",
-                                       &VideoClock,
-                                       sizeof(VideoClock));
+                                       &VideoClock, sizeof(VideoClock));
 
         // Other undocumented speed indicators:
         // L"HardwareInformation.CurrentMemClockSpeed"
@@ -711,6 +745,7 @@ GenFbVmpConfigureAdapter(
     return NO_ERROR;
 }
 
+#if (DRIVER_MODE & DRIVER_PNP)
 CODE_SEG("PAGE")
 VP_STATUS NTAPI
 GenFbVmpFindAdapter(
@@ -721,7 +756,6 @@ GenFbVmpFindAdapter(
     _In_ PUCHAR Again)
 {
     PGENFB_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
-    // PGENFB_DISPLAY_INFO DisplayInfo = &DeviceExtension->DisplayInfo;
 
     PAGED_CODE();
 
@@ -730,14 +764,41 @@ GenFbVmpFindAdapter(
 
     *Again = FALSE;
 
-    if (ConfigInfo->Length < sizeof(VIDEO_PORT_CONFIG_INFO))
+    if (ConfigInfo->Length < sizeof(*ConfigInfo))
         return ERROR_INVALID_PARAMETER;
+
+__debugbreak();
 
     //
     // TODO: Detect whether this is the detection for the boot-time console
     // that has been searched for during initialization. If we are in PnP mode
     // just skip the detection.
     //
+
+    /// TEMP HACK: Do the check differently
+    if (gbBootDisplayFound &&
+        (gBootDisplay.Interface == ConfigInfo->AdapterInterfaceType) &&
+        (gBootDisplay.BusNumber == ConfigInfo->SystemIoBusNumber))
+    {
+        if (gbBootDisplayReported)
+        {
+            DPRINT1("GenFbVmpFindAdapter (PnP): Boot display was already reported on Interface %lu, Bus %lu\n",
+                    gBootDisplay.Interface, gBootDisplay.BusNumber);
+            return ERROR_DEV_NOT_EXIST;
+        }
+        else
+        {
+            DPRINT1("GenFbVmpFindAdapter (PnP): Boot display found on Interface %lu, Bus %lu\n",
+                    gBootDisplay.Interface, gBootDisplay.BusNumber);
+            /* We do the reporting below */
+            gbBootDisplayReported = TRUE;
+        }
+    }
+    else
+    {
+        /* The boot display controller is not on this bus */
+        return ERROR_DEV_NOT_EXIST;
+    }
 
 #if 0 // TODO: Reconsider this.
     /*
@@ -751,7 +812,7 @@ GenFbVmpFindAdapter(
     if (VideoPortGetDeviceData(HwDeviceExtension,
                                VpControllerData,
                                GenFbGetDeviceDataCallback,
-                               ConfigInfo) != NO_ERROR)
+                               NULL /*&DeviceExtension->DisplayInfo*/) != NO_ERROR)
     {
         DPRINT1("GenFbVmp: Getting controller info failed\n");
         return ERROR_DEV_NOT_EXIST;
@@ -763,16 +824,22 @@ GenFbVmpFindAdapter(
     if (VideoPortGetDeviceData(HwDeviceExtension,
                                VpMonitorData,
                                GenFbGetDeviceDataCallback,
-                               ConfigInfo) != NO_ERROR)
+                                   NULL /*&DeviceExtension->DisplayInfo*/) != NO_ERROR)
     {
         /* Ignore if no monitor data is given */
         DPRINT1("GenFbVmp: Optional monitor info not found\n");
     }
 #endif
 
+    /* Copy the boot display data for the device extension,
+     * and configure the video adapter */
+    VideoPortMoveMemory(&DeviceExtension->DisplayInfo,
+                        &gBootDisplay, sizeof(gBootDisplay));
     return GenFbVmpConfigureAdapter(HwDeviceExtension, ConfigInfo);
 }
+#endif // DRIVER_PNP
 
+#if (DRIVER_MODE & DRIVER_LEGACY)
 /**
  * @brief
  * Find the video adapter corresponding to the detected boot display.
@@ -794,11 +861,9 @@ GenFbVmpFindBootDisplayAdapter(
     DPRINT1("GenFbVmpFindBootDisplayAdapter(0x%p, 0x%p, %s, 0x%p, 0x%p)\n",
         HwDeviceExtension, HwContext, ArgumentString, ConfigInfo, Again);
 
-    ASSERT(gbBootDisplayFound);
-
     *Again = FALSE;
 
-    if (ConfigInfo->Length < sizeof(VIDEO_PORT_CONFIG_INFO))
+    if (ConfigInfo->Length < sizeof(*ConfigInfo))
         return ERROR_INVALID_PARAMETER;
 
     //
@@ -905,12 +970,15 @@ DPRINT1("ConfigInfo->AdapterInterfaceType: %lu; ConfigInfo->SystemIoBusNumber: %
     }
 #endif
 
+    gbBootDisplayReported = TRUE;
+
     /* Copy the boot display data for the device extension,
      * and configure the video adapter */
     VideoPortMoveMemory(&DeviceExtension->DisplayInfo,
                         &gBootDisplay, sizeof(gBootDisplay));
     return GenFbVmpConfigureAdapter(HwDeviceExtension, ConfigInfo);
 }
+#endif // DRIVER_LEGACY
 
 CODE_SEG("PAGE")
 BOOLEAN NTAPI
@@ -921,10 +989,7 @@ GenFbVmpInitialize(
 
     PAGED_CODE();
 
-    DPRINT1("GenFbVmpInitialize(%p)\n", HwDeviceExtension);
-
     /* Zero the frame buffer */
-    PVIDEO_MODE_INFORMATION VideoMode = &DeviceExtension->CurrentVideoMode;
     //VideoPortZeroDeviceMemory(DeviceExtension->DisplayInfo.FrameAddress,
     //                          DeviceExtension->DisplayInfo.FrameBufferSize);
     RtlFillMemoryUlong(DeviceExtension->DisplayInfo.FrameAddress, // FIXME: Testing purposes!
@@ -935,14 +1000,16 @@ GenFbVmpInitialize(
 
 #if DBG
 CODE_SEG("PAGE")
-static VOID
-GenFbVmpShowIOControl(
+static PCSTR
+GenFbVmpIOControlName(
     _In_ ULONG IoControlCode)
 {
+    static CHAR UnknownIOCTL[sizeof("Unknown IOCTL 0xFFFFFFFF")];
+
     PAGED_CODE();
 
 #define DBG_IOCTL(ioctl) \
-    case ioctl: DPRINT1("GenFbVmpStartIO: %s\n", #ioctl); break
+    case ioctl: return #ioctl
 
     switch (IoControlCode)
     {
@@ -1002,8 +1069,8 @@ GenFbVmpShowIOControl(
     DBG_IOCTL(IOCTL_VIDEO_SET_DISPLAY_BRIGHTNESS);
 
     default:
-        DPRINT1("GenFbVmpStartIO: Unknown IOCTL 0x%x\n", IoControlCode);
-        break;
+        sprintf/*RtlStringCbPrintfA*/(UnknownIOCTL/*, sizeof(UnknownIOCTL)*/, "Unknown IOCTL 0x%lx", IoControlCode);
+        return UnknownIOCTL;
     }
 #undef DBG_IOCTL
 }
@@ -1029,13 +1096,15 @@ GenFbVmpStartIO(
     _In_ PVOID HwDeviceExtension,
     _Inout_ PVIDEO_REQUEST_PACKET RequestPacket)
 {
+    PGENFB_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
+    PGENFB_DISPLAY_INFO DisplayInfo = &DeviceExtension->DisplayInfo;
     PSTATUS_BLOCK StatusBlock = RequestPacket->StatusBlock;
     VP_STATUS Status = ERROR_INVALID_PARAMETER;
 
     PAGED_CODE();
 
 #if DBG
-    GenFbVmpShowIOControl(RequestPacket->IoControlCode);
+    DPRINT1("GenFbVmpStartIO: %s\n", GenFbVmpIOControlName(RequestPacket->IoControlCode));
 #endif
     switch (RequestPacket->IoControlCode)
     {
@@ -1044,7 +1113,7 @@ GenFbVmpStartIO(
 
         case IOCTL_VIDEO_SET_CURRENT_MODE:
         {
-            PVIDEO_MODE RequestedMode;
+            PVIDEO_MODE RequestedMode = (PVIDEO_MODE)RequestPacket->InputBuffer;
             ULONG RequestedModeNum;
 
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_MODE))
@@ -1053,7 +1122,6 @@ GenFbVmpStartIO(
                 break;
             }
 
-            RequestedMode = (PVIDEO_MODE)RequestPacket->InputBuffer;
             RequestedModeNum = RequestedMode->RequestedMode &
                 ~(VIDEO_MODE_NO_ZERO_MEMORY | VIDEO_MODE_MAP_MEM_LINEAR);
 
@@ -1067,15 +1135,15 @@ GenFbVmpStartIO(
             /* We only support linear framebuffer memory format */
             if (RequestedMode->RequestedMode & ~VIDEO_MODE_MAP_MEM_LINEAR)
             {
-                Status = ERROR_INVALID_PARAMETER; // ERROR_INVALID_FUNCTION;
+                Status = ERROR_INVALID_PARAMETER;
                 break;
             }
+
+            // TODO: Introduce and invoke a hardware callback to reset the adapter state.
 
             /* Zero the frame buffer if requested */
             if (!(RequestedMode->RequestedMode & VIDEO_MODE_NO_ZERO_MEMORY))
             {
-                PGENFB_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
-                PVIDEO_MODE_INFORMATION VideoMode = &DeviceExtension->CurrentVideoMode;
                 VideoPortZeroDeviceMemory(DeviceExtension->DisplayInfo.FrameAddress,
                                           DeviceExtension->DisplayInfo.FrameBufferSize);
             }
@@ -1086,24 +1154,15 @@ GenFbVmpStartIO(
 
         case IOCTL_VIDEO_MAP_VIDEO_MEMORY:
         {
-            if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION) ||
-                RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
+            PVIDEO_MEMORY RequestedAddress = (PVIDEO_MEMORY)RequestPacket->InputBuffer;
+            PVIDEO_MEMORY_INFORMATION MapInformation = (PVIDEO_MEMORY_INFORMATION)RequestPacket->OutputBuffer;
+
+            if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY) ||
+                RequestPacket->OutputBufferLength < sizeof(VIDEO_MEMORY_INFORMATION))
             {
                 Status = ERROR_INSUFFICIENT_BUFFER;
                 break;
             }
-
-#if 0
-            Status = GenFbVmpMapVideoMemory(
-                        (PGENFB_DEVICE_EXTENSION)HwDeviceExtension,
-                        (PVIDEO_MEMORY)RequestPacket->InputBuffer,
-                        (PVIDEO_MEMORY_INFORMATION)RequestPacket->OutputBuffer,
-                        StatusBlock);
-#else
-            PGENFB_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
-            PGENFB_DISPLAY_INFO DisplayInfo = &DeviceExtension->DisplayInfo;
-            PVIDEO_MEMORY RequestedAddress = (PVIDEO_MEMORY)RequestPacket->InputBuffer;
-            PVIDEO_MEMORY_INFORMATION MapInformation = (PVIDEO_MEMORY_INFORMATION)RequestPacket->OutputBuffer;
 
             /* Map the video RAM (set up by the firmware) to the
              * preferred address the user requests, if possible. */
@@ -1134,39 +1193,36 @@ GenFbVmpStartIO(
                     MapInformation->FrameBufferBase, MapInformation->FrameBufferLength);
 
             StatusBlock->Information = sizeof(*MapInformation);
-#endif
             break;
         }
 
         case IOCTL_VIDEO_UNMAP_VIDEO_MEMORY:
         {
+            PVIDEO_MEMORY VideoMemory = (PVIDEO_MEMORY)RequestPacket->InputBuffer;
+
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY))
             {
                 Status = ERROR_INSUFFICIENT_BUFFER;
                 break;
             }
 
-            PVIDEO_MEMORY VideoMemory = (PVIDEO_MEMORY)RequestPacket->InputBuffer;
             Status = GenFbVmpUnmapVideoMemory(
-                        (PGENFB_DEVICE_EXTENSION)HwDeviceExtension,
+                        HwDeviceExtension,
                         VideoMemory->RequestedVirtualAddress, NULL);
             break;
         }
 
         case IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
         {
-            if (RequestPacket->OutputBufferLength < sizeof(VIDEO_SHARE_MEMORY_INFORMATION) ||
-                RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY))
+            PVIDEO_SHARE_MEMORY VideoShareMemory = (PVIDEO_SHARE_MEMORY)RequestPacket->InputBuffer;
+            PVIDEO_SHARE_MEMORY_INFORMATION VideoShareMemoryInfo = (PVIDEO_SHARE_MEMORY_INFORMATION)RequestPacket->OutputBuffer;
+
+            if (RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY) ||
+                RequestPacket->OutputBufferLength < sizeof(VIDEO_SHARE_MEMORY_INFORMATION))
             {
                 Status = ERROR_INSUFFICIENT_BUFFER;
                 break;
             }
-
-            PGENFB_DEVICE_EXTENSION DeviceExtension = HwDeviceExtension;
-            PGENFB_DISPLAY_INFO DisplayInfo = &DeviceExtension->DisplayInfo;
-
-            PVIDEO_SHARE_MEMORY VideoShareMemory = (PVIDEO_SHARE_MEMORY)RequestPacket->InputBuffer;
-            PVIDEO_SHARE_MEMORY_INFORMATION VideoShareMemoryInfo = (PVIDEO_SHARE_MEMORY_INFORMATION)RequestPacket->OutputBuffer;
 
             PHYSICAL_ADDRESS FrameBuffer;
 
@@ -1185,7 +1241,7 @@ GenFbVmpStartIO(
             /*
              * Remarks:
              * VideoShareMemory->ViewOffset is *NOT* used as input for the mapping.
-             * VideoShareMemory->RequestedVirtualAddress is *UNUSED* by this IOCTL.
+             * VideoShareMemory->RequestedVirtualAddress *CANNOT BE USED* by this IOCTL.
              */
 
             // TODO: Sample codes mention "the input buffer and the output buffer
@@ -1194,33 +1250,6 @@ GenFbVmpStartIO(
             // this case and cache the input data.
 
             PVOID VirtualAddress;
-#if 0
-            ULONG InIoSpace;
-
-            VirtualAddress = (PVOID)VideoShareMemory->ProcessHandle;
-            VideoShareMemoryInfo->SharedViewSize = VideoShareMemory->ViewSize;
-            InIoSpace = VIDEO_MEMORY_SPACE_MEMORY | VIDEO_MEMORY_SPACE_P6CACHE;
-            if (VideoShareMemory->ProcessHandle)
-                InIoSpace |= VIDEO_MEMORY_SPACE_USER_MODE;
-            Status = VideoPortMapMemory(DeviceExtension,
-                                        FrameBuffer,
-                                        &VideoShareMemoryInfo->SharedViewSize,
-                                        &InIoSpace,
-                                        &VirtualAddress);
-            if (Status != NO_ERROR)
-            {
-                VirtualAddress = (PVOID)VideoShareMemory->ProcessHandle;
-                VideoShareMemoryInfo->SharedViewSize = VideoShareMemory->ViewSize;
-                InIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
-                if (VideoShareMemory->ProcessHandle)
-                    InIoSpace |= VIDEO_MEMORY_SPACE_USER_MODE;
-                Status = VideoPortMapMemory(DeviceExtension,
-                                            FrameBuffer,
-                                            &VideoShareMemoryInfo->SharedViewSize,
-                                            &InIoSpace,
-                                            &VirtualAddress);
-            }
-#else
             VideoShareMemoryInfo->SharedViewSize = VideoShareMemory->ViewSize;
             VirtualAddress = NULL; // VideoShareMemory->RequestedVirtualAddress;
             Status = GenFbVmpMapVideoMemory(DeviceExtension,
@@ -1228,7 +1257,6 @@ GenFbVmpStartIO(
                                             FrameBuffer,
                                             &VideoShareMemoryInfo->SharedViewSize,
                                             &VirtualAddress);
-#endif
             if (Status != NO_ERROR)
             {
                 DPRINT1("Failed to map video RAM 0x%I64X (%lu bytes)\n",
@@ -1242,26 +1270,26 @@ GenFbVmpStartIO(
              * https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddvdeo/ns-ntddvdeo-_video_share_memory_information#remarks
              */
             VideoShareMemoryInfo->SharedViewOffset = VideoShareMemory->ViewOffset;
-            // VideoShareMemoryInfo->SharedViewSize;
+            // VideoShareMemoryInfo->SharedViewSize; // Retrieved above.
             VideoShareMemoryInfo->VirtualAddress = VirtualAddress;
 
             StatusBlock->Information = sizeof(*VideoShareMemoryInfo);
-            Status = NO_ERROR;
             break;
         }
 
         case IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY:
         {
+            PVIDEO_SHARE_MEMORY VideoShareMemory = (PVIDEO_SHARE_MEMORY)RequestPacket->InputBuffer;
+
             if (RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY))
             {
                 Status = ERROR_INSUFFICIENT_BUFFER;
                 break;
             }
 
-            PVIDEO_SHARE_MEMORY VideoShareMemory = (PVIDEO_SHARE_MEMORY)RequestPacket->InputBuffer;
-            /* ViewOffset, ViewSize are unused in this IOCTL */
+            /* ViewOffset, ViewSize, are unused in this IOCTL */
             Status = GenFbVmpUnmapVideoMemory(
-                        (PGENFB_DEVICE_EXTENSION)HwDeviceExtension,
+                        HwDeviceExtension,
                         VideoShareMemory->RequestedVirtualAddress,
                         VideoShareMemory->ProcessHandle);
             break;
@@ -1269,15 +1297,18 @@ GenFbVmpStartIO(
 
         case IOCTL_VIDEO_RESET_DEVICE:
         {
-            /* Nothing to be done here */
-            // TODO: Maybe zero memory the framebuffer?
+            /* Zero the frame buffer */
+__debugbreak();
+            VideoPortZeroDeviceMemory(DeviceExtension->DisplayInfo.FrameAddress,
+                                      DeviceExtension->DisplayInfo.FrameBufferSize);
+            /* Nothing more to be done here */
             Status = NO_ERROR;
             break;
         }
 
         case IOCTL_VIDEO_QUERY_NUM_AVAIL_MODES:
         {
-            PVIDEO_NUM_MODES Modes;
+            PVIDEO_NUM_MODES Modes = (PVIDEO_NUM_MODES)RequestPacket->OutputBuffer;
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_NUM_MODES))
             {
@@ -1286,7 +1317,6 @@ GenFbVmpStartIO(
             }
 
             /* We only support one single mode set at boot time */
-            Modes = (PVIDEO_NUM_MODES)RequestPacket->OutputBuffer;
             Modes->NumModes = 1;
             Modes->ModeInformationLength = sizeof(VIDEO_MODE_INFORMATION);
             StatusBlock->Information = sizeof(*Modes);
@@ -1299,8 +1329,7 @@ GenFbVmpStartIO(
              * only that mode that is also the active one. */
         case IOCTL_VIDEO_QUERY_CURRENT_MODE:
         {
-            PGENFB_DEVICE_EXTENSION DeviceExtension = (PGENFB_DEVICE_EXTENSION)HwDeviceExtension;
-            PVIDEO_MODE_INFORMATION VideoMode;
+            PVIDEO_MODE_INFORMATION VideoMode = (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer;
 
             if (RequestPacket->OutputBufferLength < sizeof(VIDEO_MODE_INFORMATION))
             {
@@ -1309,7 +1338,6 @@ GenFbVmpStartIO(
             }
 
             /* Copy back our existing current mode */
-            VideoMode = (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer;
             VideoPortMoveMemory(VideoMode,
                                 &DeviceExtension->CurrentVideoMode,
                                 sizeof(*VideoMode));
@@ -1318,13 +1346,28 @@ GenFbVmpStartIO(
             break;
         }
 
+#if (DRIVER_MODE & DRIVER_PNP)
         case IOCTL_VIDEO_GET_CHILD_STATE:
         {
+            // PULONG pChildIndex, pChildState;
+
+            if (RequestPacket->InputBufferLength < sizeof(ULONG) ||
+                RequestPacket->OutputBufferLength < sizeof(ULONG))
+            {
+                Status = ERROR_INSUFFICIENT_BUFFER;
+                break;
+            }
+
+            // pChildIndex = RequestPacket->InputBuffer;
+            // pChildState = RequestPacket->OutputBuffer;
+
+            /* Always say the child is active */
             *((ULONG *)RequestPacket->OutputBuffer) = VIDEO_CHILD_ACTIVE;
             StatusBlock->Information = sizeof(ULONG);
             Status = NO_ERROR;
             break;
         }
+#endif // DRIVER_PNP
 
         /* Obsolete in Win2000+; just call the HwGetPowerState handler */
         case IOCTL_VIDEO_GET_POWER_MANAGEMENT:
@@ -1367,7 +1410,10 @@ GenFbVmpStartIO(
 
         default:
         {
-            DPRINT1("GenFbVmpStartIO: 0x%x not implemented\n", RequestPacket->IoControlCode);
+            // DPRINT1("GenFbVmpStartIO: Unhandled IOCTL 0x%x\n", RequestPacket->IoControlCode);
+#if DBG
+            DPRINT1("GenFbVmpStartIO: %s\n", GenFbVmpIOControlName(RequestPacket->IoControlCode));
+#endif
             StatusBlock->Information = 0;
             Status = ERROR_INVALID_FUNCTION;
             break;
@@ -1378,6 +1424,9 @@ GenFbVmpStartIO(
     return TRUE;
 }
 
+/**
+ * @brief   Set the device power state.
+ **/
 CODE_SEG("PAGE")
 VP_STATUS NTAPI
 GenFbVmpSetPowerState(
@@ -1390,9 +1439,12 @@ GenFbVmpSetPowerState(
     /* Unused */
     DPRINT1("GenFbVmpSetPowerState(%p)\n", HwDeviceExtension);
     __debugbreak();
-    return ERROR_INVALID_FUNCTION; // NO_ERROR;
+    return NO_ERROR;
 }
 
+/**
+ * @brief   Validate support for a requested power state.
+ **/
 CODE_SEG("PAGE")
 VP_STATUS NTAPI
 GenFbVmpGetPowerState(
@@ -1405,9 +1457,14 @@ GenFbVmpGetPowerState(
     /* Unused */
     DPRINT1("GenFbVmpGetPowerState(%p)\n", HwDeviceExtension);
     __debugbreak();
-    return ERROR_INVALID_FUNCTION; // NO_ERROR; // ERROR_DEVICE_REINITIALIZATION_NEEDED;
+    return ERROR_DEVICE_REINITIALIZATION_NEEDED; // NO_ERROR;
 }
 
+#if (DRIVER_MODE & DRIVER_PNP)
+/**
+ * @brief
+ * Return child device descriptors. In this case just a single monitor.
+ **/
 CODE_SEG("PAGE")
 VP_STATUS NTAPI
 GenFbVmpGetVideoChildDescriptor(
@@ -1424,15 +1481,39 @@ GenFbVmpGetVideoChildDescriptor(
     DPRINT1("GenFbVmpGetVideoChildDescriptor(%p)\n", HwDeviceExtension);
     __debugbreak();
 
+    if (ChildEnumInfo->Size < sizeof(*ChildEnumInfo))
+        return ERROR_INVALID_PARAMETER; // VIDEO_ENUM_NO_MORE_DEVICES; // VIDEO_ENUM_INVALID_DEVICE;
+
+    *pUnused = 0;
+
+// https://git.reactos.org/?p=reactos.git;a=blob;f=win32ss/drivers/miniport/bochs/bochsmp.c;hb=b03c40f440b1d6b4a0dc7025230d4e5798ca323e#l700
+// https://git.reactos.org/?p=reactos.git;a=blob;f=win32ss/drivers/miniport/vbe/edid.c;hb=b03c40f440b1d6b4a0dc7025230d4e5798ca323e#l229
+
+// If ChildIndex is set to zero, the driver should use the value specified in ACPIHwId as the ID of the device being enumerated.
+
     /*
-     * Case 0 is used to enumerate devices found by the ACPI firmware.
-     * We do not currently support ACPI devices.
+     * ChildIndex set to 0 is used to enumerate devices found by the ACPI firmware,
+     * which we do not currently support. Treat ChildIndex >= 1 as the monitor(s).
      */
+    if (ChildEnumInfo->ChildIndex == DISPLAY_ADAPTER_HW_ID)
+    {
+        *VideoChildType = VideoChip;
+        return VIDEO_ENUM_MORE_DEVICES;
+    }
+    else if (ChildEnumInfo->ChildIndex > 0)
+    {
+        /* Only support one attached monitor */
+        if (ChildEnumInfo->ChildIndex <= /*pExt->NumMonitors*/ 1)
+        {
+            *VideoChildType = Monitor;
+            *UId = ChildEnumInfo->ChildIndex; // Use the index as the ID.
+            return VIDEO_ENUM_MORE_DEVICES;
+        }
+    }
 
-    /* Treat index 1 as the monitor */
-
-    return NO_ERROR; // FIXME: Should return VIDEO_ENUM_NO_MORE_DEVICES;
+    return VIDEO_ENUM_NO_MORE_DEVICES;
 }
+#endif // DRIVER_PNP
 
 CODE_SEG("INIT")
 ULONG NTAPI
@@ -1444,7 +1525,6 @@ DriverEntry(
     ULONG OsMajorVersion = 0, OsMinorVersion = 0, OsBuildNumber = 0;
     NTSTATUS Status;
 
-    VideoDebugPrint((Info, "GenFbVmp: DriverEntry\n"));
     __debugbreak();
 
     /* Get operating system version.
@@ -1467,6 +1547,12 @@ DriverEntry(
         DPRINT1("No boot framebuffer detected.\n");
     else
         DPRINT1("Boot framebuffer detected.\n");
+
+#if !(DRIVER_MODE & DRIVER_PNP)
+    /* Legacy-only driver: if we haven't found the boot display, just bail out right now */
+    if (!gbBootDisplayFound)
+        return (ULONG)Status;
+#endif
 
     /* Set up the initialization data structure; support older NT versions */
     VideoPortZeroMemory(&VideoInitData, sizeof(VideoInitData));
@@ -1502,13 +1588,14 @@ DriverEntry(
     // VideoInitData.HwInterrupt = NULL;
     VideoInitData.HwStartIO = GenFbVmpStartIO;
     VideoInitData.HwDeviceExtensionSize = sizeof(GENFB_DEVICE_EXTENSION);
-    // VideoInitData.HwResetHw = NULL;
+    // VideoInitData.HwResetHw = NULL; // TODO
     // VideoInitData.HwTimer = NULL;
     // VideoInitData.HwStartDma = NULL;
 
     /* Start with parameters for Device0 */
     VideoInitData.StartingDeviceNumber = 0;
 
+#if (DRIVER_MODE & DRIVER_LEGACY)
     /* Register, if any, the single boot-time framebuffer display controller
      * available on the system. Don't register ourselves as PnP for this call. */
     if (gbBootDisplayFound)
@@ -1518,7 +1605,7 @@ DriverEntry(
 
         /* If the interface on which the boot-time display controller
          * is unknown, loop on all the supported buses to initialize.
-         * Otherwise if the interface is known, just call VideoPrt on
+         * Otherwise if the interface is known, just call VideoPort on
          * this bus. */
         if (gBootDisplay.Interface == InterfaceTypeUndefined)
         {
@@ -1538,10 +1625,14 @@ DriverEntry(
         }
     }
 
+#if (DRIVER_MODE & DRIVER_PNP)
     /* NT 3.x doesn't support PnP, so stop here */
     if (OsMajorVersion < 4)
+#endif
         return (ULONG)Status;
+#endif // DRIVER_LEGACY
 
+#if (DRIVER_MODE & DRIVER_PNP)
     /* Now register as a PnP driver for handling any other framebuffer devices
      * that may be present on the system or could appear in the future. */
     VideoInitData.HwFindAdapter = GenFbVmpFindAdapter;
@@ -1556,9 +1647,10 @@ DriverEntry(
     // VideoInitData.HwGetLegacyResources  = NULL
     // VideoInitData.AllowEarlyEnumeration = FALSE;
 
-    VideoInitData.AdapterInterfaceType = 0; // PCIBus;
+    VideoInitData.AdapterInterfaceType = 0;
     Status = VideoPortInitialize(Context1, Context2, &VideoInitData, NULL);
     return (ULONG)Status;
+#endif // DRIVER_PNP
 }
 
 /* EOF */

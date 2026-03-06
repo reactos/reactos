@@ -7,12 +7,26 @@ ClassGUID  = {4D36E97E-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
 DriverVer  = 10/11/2005,1.01.0.0
 
+[ControlFlags]
+ExcludeFromSelect = *
+
 [ClassInstall32.NT]
 AddReg = UnknownClass.NT.AddReg
 
 [UnknownClass.NT.AddReg]
-HKR, , ,               0, %UnknownClassName%
-HKR, , Icon,           0, "-18"
+HKR,, ,     0, %UnknownClassName%
+HKR,, Icon, 0, "-18"
+
+[Manufacturer]
+%UnknownMfg% = Unknown
+
+[Unknown]
+%*PNPFFFF.DeviceDesc% = UnsupportedDev, *PNPFFFF
+
+[UnsupportedDev]
+
+[UnsupportedDev.Services]
+AddService = , %SPSVCINST_ASSOCSERVICE% ; null service install
 
 ;-------------------------------- STRINGS -------------------------------
 
@@ -22,6 +36,8 @@ ReactOS = "ReactOS Project"
 
 ; Localizable
 UnknownClassName = "Other Devices"
+UnknownMfg = "Unknown"
+*PNPFFFF.DeviceDesc = "Unsupported Device"
 
 [Strings.0404]
 UnknownClassName = "其他裝置"
