@@ -25,8 +25,45 @@ extern ULONG VramSize;
 extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 
 BOOLEAN AcpiPresent = FALSE;
+static EFI_EVENT IdleTimerEvent = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+StallExecutionProcessor(ULONG Microseconds)
+{
+    GlobalSystemTable->BootServices->Stall(Microseconds);
+}
+
+VOID
+UefiHwIdle(VOID)
+{
+    UINTN Index;
+    EFI_STATUS Status;
+    EFI_BOOT_SERVICES *BootServices = GlobalSystemTable->BootServices;
+
+    /* Keep one timer event around and arm it each idle tick */
+    if (IdleTimerEvent == NULL)
+    {
+        Status = BootServices->CreateEvent(EVT_TIMER,
+                                           TPL_APPLICATION,
+                                           NULL,
+                                           NULL,
+                                           &IdleTimerEvent);
+        if (EFI_ERROR(Status))
+        {
+            StallExecutionProcessor(10000); /* 10 ms fallback */
+            return;
+        }
+    }
+
+    /* Set a 10ms (100,000 * 100ns) relative timer */
+    Status = BootServices->SetTimer(IdleTimerEvent, TimerRelative, 100000);
+    if (!EFI_ERROR(Status))
+        Status = BootServices->WaitForEvent(1, &IdleTimerEvent, &Index);
+    if (EFI_ERROR(Status))
+        StallExecutionProcessor(10000); /* 10 ms fallback */
+}
 
 BOOLEAN IsAcpiPresent(VOID)
 {
