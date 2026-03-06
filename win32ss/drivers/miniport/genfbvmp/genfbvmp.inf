@@ -1,42 +1,58 @@
-; GenericFramebuffer.inf
+; genfbvmp.inf
 ;
-; Installation file for the Intel HD 4000 display adapter
+; Installation file for the Generic Framebuffer Miniport Display Adapter
 ;
 [Version]
 Signature  = "$Windows NT$"
-LayoutFile = layout.inf
+;LayoutFile = layout.inf
 Class      = Display
 ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 2/1/2023,1.00
+DriverVer  = 02/01/2023,1.00
+
+[SourceDisksNames]
+1 = %ReactOS.Media%,,,""
+
+[SourceDisksFiles]
+genfbvmp.sys = 1
+lfbbvid.dll  = 1
+;framebuf.dll = 1
 
 [DestinationDirs]
 DefaultDestDir = 12
-GenericFramebuffer.Display_CopyFiles = 11
+GenericFramebuffer.Miniport = 12  ; system32\drivers
+GenericFramebuffer.Display  = 11  ; system32
 
 [Manufacturer]
-%GenericFramebuffer% = GenericFramebuffer
+%GenericFramebuffer% = GenericFramebufferMfg
 
-
-; Allow the driver to be loaded on VGA and XGA exposed by PCI bus and ACPI
-[GenericFramebuffer]
-; You need to replace this with your GPU you are targeting
-;; %GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\VEN_80EE&DEV_BEEF
-%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0300
-%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0301
+[GenericFramebufferMfg]
+; Allow the driver to be loaded on standard display controllers exposed by PCI bus and ACPI
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0300 ; VGA
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0301 ; XGA
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\CC_0380
 %GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0000
 %GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0001
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0003
+%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, ACPI\CLS_0003&SUBCLS_0080
+;; %GenericFramebuffer.DeviceDesc% = GenericFramebuffer, *PNP0900 ;; The PNP09xx class are for Display Adapters.
+; You need to replace this with your display video adapters you are targeting
+;%GenericFramebuffer.DeviceDesc% = GenericFramebuffer, PCI\VEN_80EE&DEV_BEEF
 
 ;---------------------------- GenericFramebuffer DRIVER ----------------------------
 
-[GenericFramebuffer]
-CopyFiles = GenericFramebuffer.Miniport_CopyFiles, GenericFramebuffer.Display_CopyFiles
+[GenericFramebuffer.NT]
+CopyFiles = GenericFramebuffer.Miniport, GenericFramebuffer.Display
+;LogConfig = GenericFramebuffer.LogConfig
 
-[GenericFramebuffer.Miniport_CopyFiles]
-genfbvmp.sys
+;[GenericFramebuffer.LogConfig]
 
-[GenericFramebuffer.Display_CopyFiles]
-framebuf.dll
+[GenericFramebuffer.Miniport]
+genfbvmp.sys,,,%COPYFLG_NOSKIP% | %COPYFLG_PROTECTED_WINDOWS_DRIVER_FILE%
+
+[GenericFramebuffer.Display]
+lfbbvid.dll,,,%COPYFLG_NOSKIP% | %COPYFLG_IN_USE_TRY_RENAME%
+;framebuf.dll ;; No need to install, it exists on regular installations; this avoids asking for the installation media.
 
 [GenericFramebuffer.SoftwareSettings]
 AddReg = GenericFramebuffer_SoftwareSettings
@@ -45,25 +61,58 @@ AddReg = GenericFramebuffer_SoftwareSettings
 HKR,, InstalledDisplayDrivers, %REG_MULTI_SZ%, framebuf
 HKR,, VgaCompatible,           %REG_DWORD%,    0
 
-[GenericFramebuffer.Services]
-AddService = GenericFramebuffer, 0x00000002, GenericFramebuffer_Service
+[GenericFramebuffer.NT.Services]
+AddService = GenericFramebuffer, \
+             %SPSVCINST_TAGTOFRONT% | %SPSVCINST_ASSOCSERVICE%, \
+             GenericFramebuffer_Service, GenericFramebuffer_EventLog
 
 [GenericFramebuffer_Service]
-ServiceType   = 1 ; %SERVICE_KERNEL_DRIVER%
-StartType     = 3 ; %SERVICE_DEMAND_START%
-ErrorControl  = 0 ; %SERVICE_ERROR_IGNORE%
-LoadOrderGroup = Video
-ServiceBinary = %12%\genfbvmp.sys
+ServiceType    = %SERVICE_KERNEL_DRIVER%
+StartType      = %SERVICE_SYSTEM_START%
+ErrorControl   = %SERVICE_ERROR_IGNORE%
+LoadOrderGroup = "Video"  ;; Video Save
+ServiceBinary  = %12%\genfbvmp.sys
+
+[GenericFramebuffer_EventLog]
+AddReg = GenericFramebuffer_EventLog_AddReg
+
+[GenericFramebuffer_EventLog_AddReg]
+HKR,, EventMessageFile, %REG_EXPAND_SZ%, "%%SystemRoot%%\System32\IoLogMsg.dll" ;; ";%%SystemRoot%%\System32\drivers\genfbvmp.sys"
+HKR,, TypesSupported,   %REG_DWORD%,     7
 
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-; Non-localizable
-ReactOS = "ReactOS Project"
-GenericFramebuffer = "Generic Framebuffer"
-
+; System constants
+SPSVCINST_TAGTOFRONT   = 0x00000001
+SPSVCINST_ASSOCSERVICE = 0x00000002
+;
+SERVICE_KERNEL_DRIVER  = 1
+;
+;SERVICE_BOOT_START     = 0
+SERVICE_SYSTEM_START   = 1
+;SERVICE_DEMAND_START   = 3
+;
+SERVICE_ERROR_IGNORE   = 0
+;SERVICE_ERROR_NORMAL   = 1
+;SERVICE_ERROR_SEVERE   = 2
+;SERVICE_ERROR_CRITICAL = 3
+;
+;REG_SZ         = 0x00000000
 REG_MULTI_SZ   = 0x00010000
+REG_EXPAND_SZ  = 0x00020000
+;REG_BINARY     = 0x00000001
 REG_DWORD      = 0x00010001
+;
+COPYFLG_NOSKIP = 0x00000002
+COPYFLG_PROTECTED_WINDOWS_DRIVER_FILE = 0x00000100
+COPYFLG_IN_USE_TRY_RENAME = 0x00004000
 
-; Localizable
+
+; Non-localizable strings
+ReactOS = "ReactOS Project"
+
+; Localizable strings
+ReactOS.Media = "ReactOS Installation Media"
+GenericFramebuffer = "Generic Framebuffer"
 GenericFramebuffer.DeviceDesc = "Generic Framebuffer Miniport Adapter"
