@@ -403,6 +403,165 @@ IntDuplicateUnicodeString(
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+IntCreateVideoSubkeys(
+    _In_ PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ PUNICODE_STRING VideoIdString)
+{
+    static UNICODE_STRING VideoSubKeyName = RTL_CONSTANT_STRING(L"Video");
+    static UNICODE_STRING ServiceValueName = RTL_CONSTANT_STRING(L"Service");
+    static UNICODE_STRING ControlVideoPathName =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Video\\");
+    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ServiceName;
+    UNICODE_STRING GuidVideoPath;
+    HANDLE ServiceVideoKey = NULL;
+    HANDLE GuidVideoKey = NULL;
+    HANDLE ServiceKey = NULL;
+    NTSTATUS Status;
+    PWCHAR LastBackslash;
+    USHORT GuidVideoPathLength;
+
+    DriverExtension = DeviceExtension->DriverExtension;
+
+    /*
+     * Extract the service name from the driver registry path.
+     * DriverExtension->RegistryPath is something like:
+     *   \Registry\Machine\System\CurrentControlSet\Services\ati2mtag
+     * We just need "ati2mtag".
+     */
+    if (DriverExtension->RegistryPath.Length == 0 ||
+        DriverExtension->RegistryPath.Buffer == NULL)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    LastBackslash = wcsrchr(DriverExtension->RegistryPath.Buffer, L'\\');
+    if (LastBackslash == NULL)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    ServiceName.Buffer = LastBackslash + 1;
+    ServiceName.Length = (USHORT)((DriverExtension->RegistryPath.Buffer +
+                         DriverExtension->RegistryPath.Length / sizeof(WCHAR)) -
+                         ServiceName.Buffer) * sizeof(WCHAR);
+    ServiceName.MaximumLength = ServiceName.Length;
+
+    if (ServiceName.Length == 0)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Create Services\<ServiceName>\Video subkey */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DriverExtension->RegistryPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&ServiceKey, KEY_CREATE_SUB_KEY, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN_(VIDEOPRT, "IntCreateVideoSubkeys: Cannot open service key '%wZ' (0x%lx)\n",
+              &DriverExtension->RegistryPath, Status);
+        goto Cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &VideoSubKeyName,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               ServiceKey,
+                               NULL);
+    Status = ZwCreateKey(&ServiceVideoKey,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_(VIDEOPRT, "IntCreateVideoSubkeys: Cannot create Services\\...\\Video (0x%lx)\n", Status);
+        goto Cleanup;
+    }
+
+    /* Write Service value */
+    Status = ZwSetValueKey(ServiceVideoKey,
+                           &ServiceValueName,
+                           0,
+                           REG_SZ,
+                           ServiceName.Buffer,
+                           ServiceName.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        WARN_(VIDEOPRT, "IntCreateVideoSubkeys: Cannot write Service value to service Video key (0x%lx)\n", Status);
+    }
+
+    INFO_(VIDEOPRT, "IntCreateVideoSubkeys: Created Services\\%wZ\\Video\n", &ServiceName);
+
+    /* Create \Registry\Machine\System\CCS\Control\Video\{GUID}\Video subkey */
+    GuidVideoPathLength = (USHORT)(ControlVideoPathName.Length + VideoIdString->Length + sizeof(L"\\Video"));
+    GuidVideoPath.Length = 0;
+    GuidVideoPath.MaximumLength = GuidVideoPathLength;
+    GuidVideoPath.Buffer = ExAllocatePoolWithTag(PagedPool, GuidVideoPathLength, TAG_VIDEO_PORT);
+    if (GuidVideoPath.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
+
+    RtlAppendUnicodeStringToString(&GuidVideoPath, &ControlVideoPathName);
+    RtlAppendUnicodeStringToString(&GuidVideoPath, VideoIdString);
+    RtlAppendUnicodeToString(&GuidVideoPath, L"\\Video");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &GuidVideoPath,
+                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateKey(&GuidVideoKey,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN_(VIDEOPRT, "IntCreateVideoSubkeys: Cannot create Control\\Video\\{GUID}\\Video (0x%lx)\n", Status);
+        ExFreePoolWithTag(GuidVideoPath.Buffer, TAG_VIDEO_PORT);
+        goto Cleanup;
+    }
+
+    /* Write Service value */
+    Status = ZwSetValueKey(GuidVideoKey,
+                           &ServiceValueName,
+                           0,
+                           REG_SZ,
+                           ServiceName.Buffer,
+                           ServiceName.Length + sizeof(UNICODE_NULL));
+    if (!NT_SUCCESS(Status))
+    {
+        WARN_(VIDEOPRT, "IntCreateVideoSubkeys: Cannot write Service value to GUID Video key (0x%lx)\n", Status);
+    }
+
+    INFO_(VIDEOPRT, "IntCreateVideoSubkeys: Created %wZ\n", &GuidVideoPath);
+
+    ExFreePoolWithTag(GuidVideoPath.Buffer, TAG_VIDEO_PORT);
+    Status = STATUS_SUCCESS;
+
+Cleanup:
+    if (GuidVideoKey)
+        ObCloseHandle(GuidVideoKey, KernelMode);
+    if (ServiceVideoKey)
+        ObCloseHandle(ServiceVideoKey, KernelMode);
+    if (ServiceKey)
+        ObCloseHandle(ServiceKey, KernelMode);
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 IntCreateNewRegistryPath(
@@ -502,6 +661,8 @@ IntCreateNewRegistryPath(
 
     /* Close the hardware key */
     ObCloseHandle(DevInstRegKey, KernelMode);
+
+    IntCreateVideoSubkeys(DeviceExtension, &VideoIdString);
 
     /* Calculate the size needed for the new registry path name */
     KeyMaxLength = ControlVideoPathName.Length +
