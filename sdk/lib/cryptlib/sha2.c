@@ -30,10 +30,8 @@
  * SUCH DAMAGE.
  */
 
-#include <config.h>
-
 #include <string.h>
-#include <assert.h>
+#include <intrin.h>
 #include "sha2.h"
 
 /*
@@ -55,6 +53,7 @@
  *   #define SHA2_UNROLL_TRANSFORM
  *
  */
+#define assert(x) do { if (!(x)) __int2c(); } while (0)
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
 /* NOTE: Most of these are in sha2.h */
