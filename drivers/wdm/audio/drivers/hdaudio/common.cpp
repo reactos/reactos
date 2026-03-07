@@ -1413,7 +1413,6 @@ CAdapterCommon::BuildInstallFilter(
                 Status = InstallDevice(
                     DeviceObject, Irp, SubdeviceWave, FALSE, CLSID_PortWaveRT, ResourceList, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
                     bOutput ? WaveOutFilterDescription : WaveInFilterDescription, bOutput ? &m_WaveRTOutPortUnknown : &m_WaveRTInPortUnknown);
-                ExFreePoolWithTag(SubdeviceWave, TAG_HDAUDIO);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
@@ -1429,7 +1428,6 @@ CAdapterCommon::BuildInstallFilter(
                     Status = InstallDevice(
                         DeviceObject, Irp, SubdeviceTopology, TRUE, CLSID_PortTopology, NULL, AssociatedPinCount, AssociatedPins, (PVOID)OutNode,
                         bOutput ? TopoOutFilterDescription : TopoInFilterDescription, bOutput ? &m_TopoOutPortUnknown : &m_TopoInPortUnknown);
-                    ExFreePoolWithTag(SubdeviceTopology, TAG_HDAUDIO);
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("HDAUDIO: InstallDevice failed with %x\n", Status);
@@ -1477,8 +1475,6 @@ CAdapterCommon::AssociatePins(
                 ClearRef(AssociatedPins[PinCount], PinNodeCount, PinNodes);
             }
         }
-        if (AssociatedPins)
-            ExFreePoolWithTag(AssociatedPins, TAG_HDAUDIO);
     }
     return Status;
 }
