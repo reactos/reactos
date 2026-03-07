@@ -96,6 +96,7 @@ UefiInitializeBootDevices(VOID);
 
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(
+    _In_ USHORT OperatingSystemVersion,
     _In_opt_ PCSTR Options);
 
 VOID
