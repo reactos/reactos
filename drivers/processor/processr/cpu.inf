@@ -92,6 +92,9 @@ HKR, , Icon,           0, "-28"
 %AMDK8Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_15
 %AMDPHENProcessor.DeviceDesc% = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_16
 %AMDQProcessor.DeviceDesc%    = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_17
+%AMDProcessor.DeviceDesc% = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_23
+%AMDProcessor.DeviceDesc% = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_25
+%AMDProcessor.DeviceDesc% = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_26
 %AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_x86
 
 [AMD.NTAMD64]
