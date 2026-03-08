@@ -1244,8 +1244,10 @@ SetClassId(
     ULONG ret = 0;
     WCHAR szFriendlyName[MAX_PATH];
     WCHAR szKeyName[256];
+    WCHAR szUnicodeAdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
     MIB_IFROW mibEntry;
     HKEY hKey;
+    DHCP_PNP_EVENT PnpEvent;
 
     ConResPrintf(StdOut, IDS_HEADER);
 
@@ -1313,8 +1315,31 @@ SetClassId(
         if (pszClassId == NULL)
             pszClassId = L"";
 
-        RegSetValueExW(hKey, L"DhcpClassId", 0, REG_SZ, (LPBYTE)pszClassId, (wcslen(pszClassId) + 1) * sizeof(WCHAR));
+        ret = RegSetValueExW(hKey, L"DhcpClassId", 0, REG_SZ, (LPBYTE)pszClassId, (wcslen(pszClassId) + 1) * sizeof(WCHAR));
         RegCloseKey(hKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            ConResPrintf(StdOut, IDS_DHCPSETIDERROR, szFriendlyName);
+            DoFormatMessage(ret);
+            goto done;
+        }
+
+        mbstowcs(szUnicodeAdapterName, pFoundAdapter->AdapterName, strlen(pFoundAdapter->AdapterName) + 1);
+
+        ZeroMemory(&PnpEvent, sizeof(PnpEvent));
+        PnpEvent.Unknown5 = 1;
+
+        ret = DhcpHandlePnPEvent(0,
+                                 1,
+                                 szUnicodeAdapterName,
+                                 &PnpEvent,
+                                 0);
+        if (ret != ERROR_SUCCESS)
+        {
+            ConResPrintf(StdOut, IDS_DHCPSETIDERROR, szFriendlyName);
+            DoFormatMessage(ret);
+            goto done;
+        }
 
         ConResPrintf(StdOut, IDS_DHCPSETIDSUCCESS, szFriendlyName);
     }

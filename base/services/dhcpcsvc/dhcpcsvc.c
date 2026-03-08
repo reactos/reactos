@@ -8,6 +8,7 @@
 
 #include <rosdhcp.h>
 #include <winsvc.h>
+#include <dhcpcapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -168,11 +169,15 @@ DhcpHandlePnPEvent(
     _In_ DWORD Unknown1,
     _In_ DWORD Unknown2,
     _In_ PWSTR AdapterName,
-    _In_ DWORD Unknown4,
+    _In_ PDHCP_PNP_EVENT PnpEvent,
     _In_ DWORD Unknown5)
 {
-    DPRINT1("DhcpHandlePnPEvent(%lx %lx %S %lx %lx)\n",
-            Unknown1, Unknown2, AdapterName, Unknown4, Unknown5);
+    DPRINT1("DhcpHandlePnPEvent(%lx %lx %S %p %lx)\n",
+            Unknown1, Unknown2, AdapterName, PnpEvent, Unknown5);
+
+    if ((Unknown1 != 0) || (Unknown2 != 1) || (PnpEvent == NULL) || (Unknown5 != 0))
+        return ERROR_INVALID_PARAMETER;
+
     return 0;
 }
 
