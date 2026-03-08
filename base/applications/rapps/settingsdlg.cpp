@@ -150,7 +150,8 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
     {
         LVFINDINFOW FindInfo = { LVFI_PARAM, NULL, Map[i].Id };
         int Idx = ListView_FindItem(hWndList, -1, &FindInfo);
-        if (Idx >= 0) {
+        if (Idx >= 0)
+        {
             if (Load)
             {
                 ListView_SetCheckState(hWndList, Idx, *Map[i].Setting);
