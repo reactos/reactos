@@ -477,11 +477,11 @@ IntVideoPortFindAdapter(
     // FIXME: Check the adapter key and update VideoDebugLevel variable.
 
     /*
-     * Call miniport HwVidFindAdapter entry point to detect if
-     * particular device is present. There are two possible code
-     * paths. The first one is for Legacy drivers (NT4) and cases
-     * when we don't have information about what bus we're on. The
-     * second case is the standard one for Plug & Play drivers.
+     * Call the miniport HwVidFindAdapter entry point to detect if this
+     * particular device is present. There are two possible code paths.
+     * The first one is for Legacy drivers (NT4) and cases when we don't
+     * have information about what bus we're on. The second case is the
+     * standard one for Plug & Play drivers.
      */
     if (DeviceExtension->PhysicalDeviceObject == NULL)
     {
@@ -541,13 +541,9 @@ IntVideoPortFindAdapter(
                          &Again);
 
             if (vpStatus == ERROR_DEV_NOT_EXIST)
-            {
                 continue;
-            }
             else
-            {
                 break;
-            }
         }
     }
     else
@@ -1035,8 +1031,7 @@ VideoPortInitialize(
     }
 
     /*
-     * NOTE:
-     * The driver extension can be already allocated in case that we were
+     * NOTE: The driver extension can be already allocated in case we were
      * called by legacy driver and failed detecting device. Some miniport
      * drivers in that case adjust parameters and call VideoPortInitialize
      * again.
@@ -1047,7 +1042,7 @@ VideoPortInitialize(
         Status = IoAllocateDriverObjectExtension(DriverObject,
                                                  DriverObject,
                                                  sizeof(VIDEO_PORT_DRIVER_EXTENSION),
-                                                 (PVOID *)&DriverExtension);
+                                                 (PVOID*)&DriverExtension);
         if (!NT_SUCCESS(Status))
         {
             ERR_(VIDEOPRT, "IoAllocateDriverObjectExtension failed 0x%x\n", Status);
@@ -1091,12 +1086,11 @@ VideoPortInitialize(
         }
     }
 
-    /* Copy the correct miniport initialization data to the device extension. */
+    /* Copy the correct miniport initialization data to the device extension */
     RtlCopyMemory(&DriverExtension->InitializationData,
                   HwInitializationData,
                   HwInitializationData->HwInitDataSize);
-    if (HwInitializationData->HwInitDataSize <
-            sizeof(VIDEO_HW_INITIALIZATION_DATA))
+    if (HwInitializationData->HwInitDataSize < sizeof(VIDEO_HW_INITIALIZATION_DATA))
     {
         RtlZeroMemory((PVOID)((ULONG_PTR)&DriverExtension->InitializationData +
                               HwInitializationData->HwInitDataSize),
