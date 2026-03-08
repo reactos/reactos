@@ -269,7 +269,7 @@ CompleteIO(
 
     // AUDIO-BRANCH DIFF
     // completion callback is performed in a thread
-    if (SoundDeviceInstance->LegacyStreaming &&
+    if (SoundDeviceInstance->RTStreamingEnabled == FALSE &&
         SoundDeviceInstance->bPaused == FALSE &&
         SoundDeviceInstance->bClosed == FALSE)
     {

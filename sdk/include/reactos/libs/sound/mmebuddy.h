@@ -315,7 +315,6 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hStopEvent;
     HANDLE hResetEvent;
     BOOL bClosed;
-    BOOL LegacyStreaming;
     BOOL RTStreamingEnabled;
     BOOL RTStreamingStarted;
     HANDLE hRTStreamingThread;
