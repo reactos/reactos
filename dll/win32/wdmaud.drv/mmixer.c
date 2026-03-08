@@ -19,7 +19,6 @@
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-//#define LEGACY_STREAMING
 BOOL MMixerLibraryInitialized = FALSE;
 
 DWORD
@@ -504,7 +503,7 @@ WdmAudSetWaveDeviceFormatByMMixer(
 
     if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
     {
-#ifndef LEGACY_STREAMING
+        Instance->RTStreamingEnabled = FALSE;
         MIXER_STATUS MixerStatus = MMixerInitializeRTStreamingBuffer(
             &MixerContext,
             Instance->Handle,
@@ -518,7 +517,6 @@ WdmAudSetWaveDeviceFormatByMMixer(
             Instance->RTStreamingBuffer,
             Instance->RTStreamingBufferLength);
 
-            Instance->LegacyStreaming = FALSE;
             // clear buffer
             RtlZeroMemory(Instance->RTStreamingBuffer, Instance->RTStreamingBufferLength);
             // set offset
@@ -556,11 +554,6 @@ WdmAudSetWaveDeviceFormatByMMixer(
                 DPRINT("RT Audio Stream enabled\n");
             }
         }
-        else
-        {
-            Instance->LegacyStreaming = TRUE;
-        }
-#endif
 
         if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
@@ -897,17 +890,16 @@ WdmAudGetWavePositionByMMixer(
 
     if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-#ifndef LEGACY_STREAMING
-    if (SoundDeviceInstance->RTStreamingEnabled)
-    {
-        /* Store position */
-        Time->wType = TIME_BYTES;
-        Time->u.cb = SoundDeviceInstance->RTStreamingBufferBytesWritten;
+        if (SoundDeviceInstance->RTStreamingEnabled)
+        {
+            /* Store position */
+            Time->wType = TIME_BYTES;
+            Time->u.cb = SoundDeviceInstance->RTStreamingBufferBytesWritten;
 
-        /* Completed successfully */
-        return MMSYSERR_NOERROR;
-    }
-#endif
+            /* Completed successfully */
+            return MMSYSERR_NOERROR;
+        }
+
         Status = MMixerGetWavePosition(&MixerContext, SoundDeviceInstance->Handle, &Position);
         if (Status == MM_STATUS_SUCCESS)
         {
@@ -1063,7 +1055,7 @@ WINAPI
 RTStreamingThreadProc(
     LPVOID Parameter)
 {
-    NTSTATUS Status;
+    DWORD WaitStatus;
     PVOID WaitObjects[2];
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
@@ -1087,8 +1079,8 @@ RTStreamingThreadProc(
     DPRINT("RTStreamingThreadProc entered %p\n", SoundDeviceInstance);
     while (SoundDeviceInstance->RTStreamingEnabled)
     {
-        Status = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
-        if (Status == STATUS_WAIT_0)
+        WaitStatus = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
+        if (WaitStatus == WAIT_OBJECT_0)
         {
             DPRINT("RTStreamingThreadProc StopEvent\n");
             break;
@@ -1150,7 +1142,7 @@ RTStreamingThreadProc(
             InterlockedCompareExchange(&SoundDeviceInstance->RTStreamingBufferOffset, 0, SoundDeviceInstance->RTStreamingBufferLength);
         }
     }
-    //RtlZeroMemory(SoundDeviceInstance->RTStreamingBuffer, SoundDeviceInstance->RTStreamingBufferLength);
+    RtlZeroMemory(SoundDeviceInstance->RTStreamingBuffer, SoundDeviceInstance->RTStreamingBufferLength);
     DPRINT("Exiting thread\n");
     SoundDeviceInstance->RTStreamingStarted = FALSE;
     return 0;
@@ -1169,7 +1161,7 @@ WINAPI
 RTStreamingCompletionThreadProc(
     IN  PVOID Parameter)
 {
-    NTSTATUS Status;
+    DWORD WaitStatus;
     PVOID WaitObjects[2];
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     PCOMPLETION_CONTEXT Context;
@@ -1183,13 +1175,13 @@ RTStreamingCompletionThreadProc(
     while (SoundDeviceInstance->RTStreamingEnabled)
     {
         SoundDeviceInstance->RTStreamingCompletionStarted = TRUE;
-        Status = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
-        if (Status == STATUS_WAIT_0)
+        WaitStatus = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
+        if (WaitStatus == WAIT_OBJECT_0)
         {
             DPRINT("RTStreamingCompletionThreadProc StopEvent\n");
             break;
         }
-        else if (Status == WAIT_OBJECT_0 + 1)
+        else if (WaitStatus == WAIT_OBJECT_0 + 1)
         {
             Context = (PCOMPLETION_CONTEXT)SoundDeviceInstance->RTStreamingCompletionContext;
             ASSERT(Context);
@@ -1298,7 +1290,7 @@ WdmAudCommitWaveBufferByMMixer(
         WaitForSingleObject(SoundDeviceInstance->hNotifyRTStreamingCompletionFinishEvent, INFINITE);
         return MMSYSERR_NOERROR;
     }
-    else if (SoundDeviceInstance->LegacyStreaming)
+    else
     {
         lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
         if (!lpHeader)

@@ -295,7 +295,7 @@ EnqueueWaveHeader(
             DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
             /* Only do wave streaming when the stream has not been paused */
-            if ( SoundDeviceInstance->LegacyStreaming && SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE )
+            if ( SoundDeviceInstance->RTStreamingEnabled == FALSE && SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE )
             {
                 DoWaveStreaming(SoundDeviceInstance);
             }
