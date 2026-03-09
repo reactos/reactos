@@ -1039,16 +1039,15 @@ NdisMRegisterIoPortRange(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called - InitialPort 0x%x, NumberOfPorts 0x%x\n", InitialPort, NumberOfPorts));
 
-  memset(&PortAddress, 0, sizeof(PortAddress));
-
   /*
    * FIXME: NDIS 5+ completely ignores the InitialPort parameter, but
    * we don't have a way to get the I/O base address yet (see
    * NDIS_MINIPORT_BLOCK->AllocatedResources and
    * NDIS_MINIPORT_BLOCK->AllocatedResourcesTranslated).
    */
+  PortAddress.QuadPart = 0ULL;
   if(InitialPort)
-      PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
+      PortAddress.QuadPart = (ULONGLONG)InitialPort;
   else
       ASSERT(FALSE);
 
@@ -1104,7 +1103,7 @@ NdisMDeregisterIoPortRange(IN  NDIS_HANDLE MiniportAdapterHandle,
  */
 {
     PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
-    PHYSICAL_ADDRESS PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
+    PHYSICAL_ADDRESS PortAddress = RTL_CONSTANT_LARGE_INTEGER((ULONGLONG)InitialPort);
     PHYSICAL_ADDRESS TranslatedAddress;
     ULONG AddressSpace = 1;
 

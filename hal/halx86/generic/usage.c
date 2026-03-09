@@ -130,7 +130,7 @@ HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
 
             /* Interrupt goes by level */
             *Scale = 0;
-            *Value = RtlConvertUlongToLargeInteger(Descriptor->u.Interrupt.Level);
+            Value->QuadPart = (LONGLONG)Descriptor->u.Interrupt.Level;
             break;
 
         case CmResourceTypePort:
@@ -151,7 +151,7 @@ HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
 
             /* Anything else */
             *Scale = 4;
-            *Value = RtlConvertUlongToLargeInteger(0);
+            Value->QuadPart = 0LL;
             break;
     }
 }
