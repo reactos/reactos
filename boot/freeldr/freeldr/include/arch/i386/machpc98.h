@@ -105,36 +105,24 @@ typedef struct _PC98_DISK_DRIVE
     /* Disk geometry */
     GEOMETRY Geometry;
 
-    /* BIOS drive number */
+    /* PC-98 BIOS drive number */
     UCHAR DaUa;
 
     /* IDE driver drive number */
-    UCHAR IdeUnitNumber;
+    UCHAR AtaUnitNumber;
 
-    /* Drive type flags */
+    /* Drive type */
     UCHAR Type;
-#define DRIVE_SASI     0x00
-#define DRIVE_IDE      0x01
-#define DRIVE_SCSI     0x02
-#define DRIVE_CDROM    0x04
-#define DRIVE_FDD      0x08
-#define DRIVE_MO       0x10
-#define DRIVE_RAM      0x20
+#define DRIVE_TYPE_HDD      0
+#define DRIVE_TYPE_CDROM    1
+#define DRIVE_TYPE_FDD      2
 
-    /* TRUE when LBA access are supported */
-    BOOLEAN LBASupported;
-
-    /*
-     * 'IsRemovable' flag: TRUE when the drive is removable (e.g. floppy, CD-ROM...).
-     * In that case some of the cached information might need to be refreshed regularly.
-     */
-    BOOLEAN IsRemovable;
-
-    /*
-     * 'Initialized' flag: if TRUE then the drive has been initialized;
-     * if FALSE then the disk isn't detected by BIOS/FreeLoader.
-     */
-    BOOLEAN Initialized;
+    /* Drive flags */
+    UCHAR Flags;
+#define DRIVE_FLAGS_IDE             0x01 // IDE drive, accessed by the IDE driver
+#define DRIVE_FLAGS_LBA             0x02 // LBA access supported
+#define DRIVE_FLAGS_REMOVABLE       0x04 // The drive is removable (e.g. floppy, CD-ROM...)
+#define DRIVE_FLAGS_INITIALIZED     0x80 // The drive has been initialized
 } PC98_DISK_DRIVE, *PPC98_DISK_DRIVE;
 
 /* Platform-specific boot drive and partition numbers */
@@ -145,16 +133,36 @@ CONFIGURATION_TYPE
 DiskGetConfigType(
     _In_ UCHAR DriveNumber);
 
-LONG DiskReportError(BOOLEAN bShowError);
-BOOLEAN DiskResetController(IN PPC98_DISK_DRIVE DiskDrive);
+LONG
+DiskReportError(
+    _In_ BOOLEAN bShowError);
 
-BOOLEAN Pc98DiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN Pc98DiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
-ULONG Pc98DiskGetCacheableBlockCount(UCHAR DriveNumber);
-UCHAR Pc98GetFloppyCount(VOID);
-PPC98_DISK_DRIVE Pc98DiskDriveNumberToDrive(IN UCHAR DriveNumber);
+BOOLEAN
+Pc98DiskReadLogicalSectors(
+    _In_ UCHAR DriveNumber,
+    _In_ ULONGLONG SectorNumber,
+    _In_ ULONG SectorCount,
+    _Out_ PVOID Buffer);
 
-ULONG Pc98GetBootSectorLoadAddress(IN UCHAR DriveNumber);
+BOOLEAN
+Pc98DiskGetDriveGeometry(
+    _In_ UCHAR DriveNumber,
+    _Out_ PGEOMETRY DriveGeometry);
+
+ULONG
+Pc98DiskGetCacheableBlockCount(
+    _In_ UCHAR DriveNumber);
+
+UCHAR
+Pc98GetFloppyCount(VOID);
+
+PPC98_DISK_DRIVE
+Pc98DiskDriveNumberToDrive(
+    _In_ UCHAR DriveNumber);
+
+ULONG
+Pc98GetBootSectorLoadAddress(
+    _In_ UCHAR DriveNumber);
 
 /* hwdisk.c */
 BOOLEAN PcInitializeBootDevices(VOID);
