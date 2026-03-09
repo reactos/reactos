@@ -2518,12 +2518,12 @@ InitializeTcpipBasicDlgCtrls(
             /* set current hostmask */
             SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
         }
-    }
 
-    if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
-    {
-        /* set current gateway */
-        SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+        if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
+        {
+            /* set current gateway */
+            SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+        }
     }
 
     if (pCurSettings->AutoconfigActive)
