@@ -202,9 +202,11 @@ rmode_idtptr:
 #include "int386.inc"
 #include "relocator.inc"
 #if defined(SARCH_PC98)
-#include "helpers_pc98.inc"
+    #include "helpers_pc98.inc"
+#elif defined(SARCH_XBOX)
+    #include "helpers_xbox.inc"
 #else
-#include "helpers.inc"
+    #include "helpers.inc"
 #endif
 #include "pxe.inc"
 #include "pnp.inc"
