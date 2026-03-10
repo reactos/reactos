@@ -2,7 +2,7 @@
 include(ExternalProject)
 
 function(setup_host_tools)
-    list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le xml2sdb)
+    list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le windmc xml2sdb)
     if(NOT MSVC)
         list(APPEND HOST_TOOLS pefixup)
         if (ARCH STREQUAL "i386")
@@ -130,4 +130,6 @@ function(setup_host_tools)
         set_target_properties(native-${_module} PROPERTIES IMPORTED_LOCATION ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
         add_dependencies(native-${_module} host-tools ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
     endforeach()
+
+    set(CMAKE_MC_COMPILER native-windmc PARENT_SCOPE)
 endfunction()
