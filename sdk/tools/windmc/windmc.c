@@ -921,9 +921,9 @@ static void write_rc(const char *dir, const char *base) {
         fprintf(fp, "#pragma code_page(%d)\n", li->code_page);
         fprintf(fp, "LANGUAGE 0x%x, 0x%x\n", li->primary, li->sub);
         if (use_bin_prefix)
-            fprintf(fp, "1 MESSAGETABLE \"%s_%s.bin\"\n", output_base_name, langs[i].filename);
+            fprintf(fp, "1 11 \"%s_%s.bin\"\n", output_base_name, langs[i].filename);
         else
-            fprintf(fp, "1 MESSAGETABLE \"%s.bin\"\n", langs[i].filename);
+            fprintf(fp, "1 11 \"%s.bin\"\n", langs[i].filename);
     }
 
     free(order);
