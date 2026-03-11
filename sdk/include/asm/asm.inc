@@ -504,6 +504,13 @@ ENDM
 #define else .else
 #define elseif .elseif
 
+/* MASM expression operators to GAS equivalents.
+   Case-sensitive: only uppercase AND/OR/NOT are replaced,
+   lowercase and/or/not instructions are unaffected. */
+#define AND &
+#define OR |
+#define NOT ~
+
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc
 #define CFI_ENDPROC .cfi_endproc

@@ -39,6 +39,10 @@ add_executable(user32_winetest
     ${PCH_SKIP_SOURCE}
     resource.rc)
 
+if(CMAKE_RC_COMPILER MATCHES "llvm-(rc|windres)")
+    target_compile_definitions(user32_winetest PRIVATE USER32_WINE_RC_NO_CTRL_DATA)
+endif()
+
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
     remove_target_compile_option(user32_winetest "/we4477")

@@ -148,6 +148,8 @@ endif()
 
 if(ARCH STREQUAL "i386")
     add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer -mstackrealign)
+    add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-fno-integrated-as>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-U__clang__>")
     # FIXME: this doesn't work. CMAKE_BUILD_TYPE is always "Debug"
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-momit-leaf-frame-pointer)
@@ -428,7 +430,7 @@ function(spec2def _dllname _spec_file)
 endfunction()
 
 macro(macro_mc FLAG FILE)
-    set(COMMAND_MC native-windmc -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
+    set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
 endmacro()
 
 # PSEH lib, needed with mingw

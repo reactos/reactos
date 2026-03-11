@@ -30,6 +30,7 @@ list(APPEND SOURCE
     transport/udp/udp.c)
 
 add_library(ip OBJECT ${SOURCE} ${ip_asm})
+add_dependencies(ip bugcodes xdk)
 
 target_link_libraries(ip lwipcore)
 add_importlibs(lwipcore ntoskrnl)
