@@ -189,11 +189,13 @@ elseif(ARCH STREQUAL "arm64")
     set(LLVM_DLLTOOL_MACHINE arm64)
 endif()
 
+# GNU binutils/GCC cross packages use the target processor from the toolchain triplet
+set(_gnu_tool_triplet ${CMAKE_SYSTEM_PROCESSOR}-w64-mingw32)
+
 # GNU dlltool from binutils-mingw (needed for delay-import libs which llvm-dlltool doesn't support)
-set(_gnu_dlltool_triplet ${ARCH2}-w64-mingw32)
-find_program(GNU_DLLTOOL ${_gnu_dlltool_triplet}-dlltool)
+find_program(GNU_DLLTOOL ${_gnu_tool_triplet}-dlltool)
 if(NOT GNU_DLLTOOL)
-    message(WARNING "GNU dlltool (${_gnu_dlltool_triplet}-dlltool) not found. Delay-import libraries will fail to build.")
+    message(WARNING "GNU dlltool (${_gnu_tool_triplet}-dlltool) not found. Delay-import libraries will fail to build.")
 endif()
 
 if(SEPARATE_DBG)
@@ -582,10 +584,29 @@ endif()
 # Clang/LLVM runtime libraries
 # No mingw compiler-rt builtins available, use GCC's libgcc.a for 128-bit builtins
 # (__udivti3, __umodti3, etc.) that Clang emits but compiler-rt doesn't provide.
-find_library(_gcc_libgcc gcc
-    PATHS /usr/lib/gcc/x86_64-w64-mingw32
-    PATH_SUFFIXES 13-win32 13-posix 12-win32 12-posix
-    NO_DEFAULT_PATH)
+find_program(_mingw_gcc NAMES ${_gnu_tool_triplet}-gcc)
+find_program(_mingw_gxx NAMES ${_gnu_tool_triplet}-g++)
+
+function(_query_mingw_runtime _outvar _compiler)
+    if(NOT _compiler)
+        set(${_outvar} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    execute_process(
+        COMMAND ${_compiler} ${ARGN}
+        OUTPUT_VARIABLE _runtime_path
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+
+    if(IS_ABSOLUTE "${_runtime_path}" AND EXISTS "${_runtime_path}")
+        set(${_outvar} "${_runtime_path}" PARENT_SCOPE)
+    else()
+        set(${_outvar} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
+_query_mingw_runtime(_gcc_libgcc ${_mingw_gcc} -print-libgcc-file-name)
 add_library(libgcc INTERFACE)
 if(_gcc_libgcc)
     # Also link kernel32_vista for condition variable APIs needed by GCC's threading code
@@ -607,14 +628,8 @@ add_library(libwinpthread INTERFACE)
 
 # libsupc++ - use the real library from the GCC cross-compiler for C++ exception handling
 # (__cxa_begin_catch, __cxa_end_catch, _Unwind_Resume, std::terminate, etc.)
-find_library(_gcc_libsupc++ supc++
-    PATHS /usr/lib/gcc/x86_64-w64-mingw32
-    PATH_SUFFIXES 13-win32 13-posix 12-win32 12-posix
-    NO_DEFAULT_PATH)
-find_library(_gcc_libgcc_eh gcc_eh
-    PATHS /usr/lib/gcc/x86_64-w64-mingw32
-    PATH_SUFFIXES 13-win32 13-posix 12-win32 12-posix
-    NO_DEFAULT_PATH)
+_query_mingw_runtime(_gcc_libsupc++ ${_mingw_gxx} -print-file-name=libsupc++.a)
+_query_mingw_runtime(_gcc_libgcc_eh ${_mingw_gcc} -print-file-name=libgcc_eh.a)
 add_library(libsupc++ INTERFACE IMPORTED GLOBAL)
 if(_gcc_libsupc++)
     set(_supc++_deps stdc++compat ${_gcc_libsupc++})
@@ -628,9 +643,7 @@ else()
 endif()
 
 # libmingwex provides mingw CRT functions needed by libstdc++ (fseeko64, __mingw_strtof, etc.)
-find_file(_mingwex_lib libmingwex.a
-    PATHS /usr/x86_64-w64-mingw32/lib
-    NO_DEFAULT_PATH)
+_query_mingw_runtime(_mingwex_lib ${_mingw_gcc} -print-file-name=libmingwex.a)
 if(_mingwex_lib)
     add_library(libmingwex STATIC IMPORTED GLOBAL)
     set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${_mingwex_lib})
@@ -639,10 +652,7 @@ else()
 endif()
 
 # Use GCC's libstdc++.a for full C++ standard library support
-find_file(_gcc_libstdcxx libstdc++.a
-    PATHS /usr/lib/gcc/x86_64-w64-mingw32
-    PATH_SUFFIXES 13-win32 13-posix 12-win32 12-posix
-    NO_DEFAULT_PATH)
+_query_mingw_runtime(_gcc_libstdcxx ${_mingw_gxx} -print-file-name=libstdc++.a)
 add_library(libstdc++ STATIC IMPORTED GLOBAL)
 if(_gcc_libstdcxx)
     set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${_gcc_libstdcxx})

@@ -15,7 +15,7 @@ jobs:
           - dllver: 0x600
             config: Release
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Get RosBE build specifics
       id: get_rosbe_spec
@@ -37,13 +37,29 @@ jobs:
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
     - name: Install ccache
       run: sudo apt install ccache
-    - name: Install LLVM
+    - name: Install LLVM and MinGW
       if: ${{ matrix.compiler == 'clang' }}
       run: |
-        export LLVM_VERSION=13
-        wget https://apt.llvm.org/llvm.sh
-        chmod +x llvm.sh
-        sudo ./llvm.sh $LLVM_VERSION
+        export LLVM_VERSION=21
+        export UBUNTU_CODENAME=$(lsb_release -cs)
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates gpg wget
+        sudo mkdir -p /etc/apt/keyrings
+        wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/apt.llvm.org.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/apt.llvm.org.gpg] http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" | sudo tee /etc/apt/sources.list.d/llvm.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang-${LLVM_VERSION} \
+          lld-${LLVM_VERSION} \
+          llvm-${LLVM_VERSION} \
+          llvm-${LLVM_VERSION}-tools \
+          llvm-${LLVM_VERSION}-linker-tools \
+          binutils-mingw-w64-i686 \
+          binutils-mingw-w64-x86-64 \
+          gcc-mingw-w64-i686 \
+          gcc-mingw-w64-x86-64 \
+          g++-mingw-w64-i686 \
+          g++-mingw-w64-x86-64
         echo "D_CLANG_VERSION=-DCLANG_VERSION=$LLVM_VERSION" >> $GITHUB_ENV
     - name: Source checkout
       uses: actions/checkout@v6
