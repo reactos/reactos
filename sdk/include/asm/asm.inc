@@ -483,9 +483,12 @@ ENDM
 
 .macro UNIMPLEMENTED2 line, func, file:vararg
     jmp 4f
-1:  .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
-2:  .asciz "\func"
-3:  .asciz \file
+1:
+    .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
+2:
+    .asciz "\func"
+3:
+    .asciz \file
 4:
     sub rsp, 0x20
     lea rcx, 1b[rip]
@@ -504,12 +507,12 @@ ENDM
 #define else .else
 #define elseif .elseif
 
-/* MASM expression operators to GAS equivalents.
-   Case-sensitive: only uppercase AND/OR/NOT are replaced,
-   lowercase and/or/not instructions are unaffected. */
+#ifdef __clang__
+/* Clang's integrated assembler doesn't understand MASM-style AND/OR/NOT tokens. */
 #define AND &
 #define OR |
 #define NOT ~
+#endif
 
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc
