@@ -237,7 +237,7 @@ static
 VOID
 IopWriteAsyncUserIosb(PIRP Irp)
 {
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     PIO_STATUS_BLOCK32 Iosb32 = NULL;
 #endif
 
@@ -247,7 +247,7 @@ IopWriteAsyncUserIosb(PIRP Irp)
         /* Use SEH to make sure we don't write somewhere invalid */
         _SEH2_TRY
         {
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
             Iosb32 = (PIO_STATUS_BLOCK32)Irp->UserIosb->Pointer;
 
             /*

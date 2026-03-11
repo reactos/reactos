@@ -378,7 +378,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     /* Dereference the Device Map */
     ObDereferenceDeviceMap(Process);
     
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     /* Check if this is a WOW64 process  */
     if (Process->Wow64Process && Process->Wow64Process != (PVOID)TRUE)
     {

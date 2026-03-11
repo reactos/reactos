@@ -175,7 +175,9 @@ KiSwapContextResume(
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     PEPROCESS ENewProcess;
+#endif
 
     /* Setup ring 0 stack pointer */
     Pcr->TssBase->Rsp0 = (ULONG64)NewThread->InitialStack;
@@ -212,6 +214,7 @@ KiSwapContextResume(
        /* This will switch the usermode gs */
        __writemsr(MSR_GS_SWAP, (ULONG64)NewThread->Teb);
 
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
        ENewProcess = (PEPROCESS) NewProcess;
        if (ENewProcess->Wow64Process != NULL)
        {
@@ -225,6 +228,7 @@ KiSwapContextResume(
           CmTebEntry->Bits.BaseMiddle = (Base & 0xFF0000) >> 16;
           CmTebEntry->Bits.BaseHigh = (Base & 0xFF000000) >> 24;
        }
+#endif
     }
 
     /* Increase context switch count */

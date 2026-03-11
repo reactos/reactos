@@ -1270,7 +1270,7 @@ NtQueryInformationProcess(
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
             /* Make sure the process isn't dying */
             if (ExAcquireRundownProtection(&Process->RundownProtect))
             {

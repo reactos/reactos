@@ -35,7 +35,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     ULONG_PTR HighestAddress, RandomBase;
     ULONG AlignedSize;
     LARGE_INTEGER CurrentTime;
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     BOOLEAN IsWow64;
 #endif
     BOOLEAN IsPeb;
@@ -75,7 +75,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
 
     HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
 
-#ifdef _M_AMD64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     IsWow64 = FALSE;
 
     if (Process->SectionBaseAddress != NULL)
@@ -97,7 +97,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     /* Check if this is a PEB creation */
     if (IsPeb)
     {
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
         /* If this is a WOW64 process, allocate enough space for the 32 bit PEB */
         if (IsWow64)
         {
@@ -125,7 +125,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     }
     else
     {
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
         /* If this is a WOW64 process, allocate enough space for the 32 bit TEB */
         if (IsWow64)
         {
@@ -148,7 +148,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         goto FailPath;
     }
 
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     if (IsPeb && IsWow64)
     {
         Process->Wow64Process = (PVOID)TRUE;
@@ -178,7 +178,7 @@ MmDeleteTeb(IN PEPROCESS Process,
     /* TEB is one page */
     TebEnd = (ULONG_PTR)Teb + ROUND_TO_PAGES(sizeof(TEB)) - 1;
 
-#ifdef _WIN64
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     /* If this is a WOW64 process, the TEB is followed by a TEB32 */
     if (Process->Wow64Process)
     {

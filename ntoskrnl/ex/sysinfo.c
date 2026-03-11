@@ -2494,6 +2494,7 @@ QSI_DEF(SystemNumaAvailableMemory)
 /* Class 62 - Emulation basic information */
 QSI_DEF(SystemEmulationBasicInformation)
 {
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
     PSYSTEM_BASIC_INFORMATION Sbi
         = (PSYSTEM_BASIC_INFORMATION) Buffer;
 
@@ -2519,6 +2520,9 @@ QSI_DEF(SystemEmulationBasicInformation)
     Sbi->NumberOfProcessors = KeNumberProcessors;
 
     return STATUS_SUCCESS;
+#else
+    return QSI_USE(SystemBasicInformation)(Buffer, Size, ReqSize);
+#endif
 }
 
 /* Class 64 - Extended handle information */
