@@ -39,7 +39,7 @@ while [ $# -gt 0 ]; do
 		;;
 		clang|Clang)
 			BUILD_ENVIRONMENT=Clang
-			TOOLCHAIN_FILE=sdk/cmake/clang.cmake
+			TOOLCHAIN_FILE=toolchain-clang.cmake
 		;;
 		*)
 			usage

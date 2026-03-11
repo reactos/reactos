@@ -44,8 +44,9 @@ endif()
 # Compiler Core
 add_compile_options(-pipe -fms-extensions -fno-strict-aliasing -fno-common)
 
-# A long double is 64 bits
-add_compile_options(-mlong-double-64)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    add_compile_options(-mlong-double-64)
+endif()
 
 # Prevent Clang from searching system library include directories, but keep
 # Clang's builtin includes (intrinsics headers like xmmintrin.h, etc.)
@@ -425,7 +426,7 @@ function(spec2def _dllname _spec_file)
 endfunction()
 
 macro(macro_mc FLAG FILE)
-    set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
+    set(COMMAND_MC native-windmc -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
 endmacro()
 
 # PSEH lib, needed with mingw
@@ -657,73 +658,6 @@ add_library(cppstl ALIAS libstdc++)
 
 else() # NOT _REACTOS_CLANG_BUILD_CONFIG
 
-# =============================================================================
-# Toolchain Configuration (used as CMAKE_TOOLCHAIN_FILE)
-# =============================================================================
-
-if(DEFINED ENV{_ROSBE_ROSSCRIPTDIR})
-    set(CMAKE_SYSROOT $ENV{_ROSBE_ROSSCRIPTDIR}/$ENV{ROS_ARCH})
-endif()
-
-# pass variables necessary for the toolchain (needed for try_compile)
-set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES ARCH CLANG_VERSION)
-
-# The name of the target operating system
-set(CMAKE_SYSTEM_NAME Windows)
-
-# The processor we are targeting
-if (ARCH STREQUAL "i386")
-    set(CMAKE_SYSTEM_PROCESSOR i686)
-elseif (ARCH STREQUAL "amd64")
-    set(CMAKE_SYSTEM_PROCESSOR x86_64)
-elseif(ARCH STREQUAL "arm")
-    set(CMAKE_SYSTEM_PROCESSOR arm)
-else()
-    message(FATAL_ERROR "Unsupported ARCH: ${ARCH}")
-endif()
-
-if (DEFINED CLANG_VERSION)
-    set(CLANG_SUFFIX "-${CLANG_VERSION}")
-else()
-    set(CLANG_SUFFIX "")
-endif()
-
-# Target triplet
-set(triplet ${CMAKE_SYSTEM_PROCESSOR}-w64-mingw32)
-
-# Pure LLVM/Clang toolchain - no GCC dependency
-set(CMAKE_C_COMPILER clang${CLANG_SUFFIX})
-set(CMAKE_C_COMPILER_TARGET ${triplet})
-set(CMAKE_CXX_COMPILER clang++${CLANG_SUFFIX})
-set(CMAKE_CXX_COMPILER_TARGET ${triplet})
-set(CMAKE_ASM_COMPILER clang${CLANG_SUFFIX})
-set(CMAKE_ASM_COMPILER_TARGET ${triplet})
-set(CMAKE_ASM_COMPILER_ID Clang)
-# LLVM does not ship windmc, use the one from binutils-mingw
-set(CMAKE_MC_COMPILER ${triplet}-windmc)
-set(CMAKE_RC_COMPILER llvm-windres${CLANG_SUFFIX})
-set(CMAKE_AR llvm-ar${CLANG_SUFFIX})
-set(CMAKE_DLLTOOL llvm-dlltool${CLANG_SUFFIX})
-set(CMAKE_STRIP llvm-strip${CLANG_SUFFIX})
-set(CMAKE_OBJCOPY llvm-objcopy${CLANG_SUFFIX})
-
-# Use LLD linker
-set(CMAKE_LINKER lld${CLANG_SUFFIX})
-
-# This allows to have CMake test the compiler without linking
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> crT <TARGET> <LINK_FLAGS> <OBJECTS>")
-set(CMAKE_CXX_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
-set(CMAKE_ASM_CREATE_STATIC_LIBRARY ${CMAKE_C_CREATE_STATIC_LIBRARY})
-
-set(CMAKE_C_STANDARD_LIBRARIES "" CACHE STRING "Standard C Libraries")
-set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")
-
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nostdlib -fuse-ld=lld -Wl,--enable-auto-image-base,--disable-auto-import")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "-nostdlib -fuse-ld=lld -Wl,--enable-auto-image-base,--disable-auto-import")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-nostdlib -fuse-ld=lld -Wl,--enable-auto-image-base,--disable-auto-import")
-
-set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/../../overrides-gcc.cmake")
+message(FATAL_ERROR "Use toolchain-clang.cmake as CMAKE_TOOLCHAIN_FILE")
 
 endif() # _REACTOS_CLANG_BUILD_CONFIG
