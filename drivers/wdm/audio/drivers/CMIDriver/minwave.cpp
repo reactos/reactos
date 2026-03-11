@@ -1488,7 +1488,7 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 
 	// STOP -> ACQUIRE -> PAUSE -> PLAY -> PAUSE -> ACQUIRE -> STOP
 	if (state != NewState) {
-		switch (NewState) {
+		switch ((int)NewState) {
 			case KSSTATE_ACQUIRE:
 				DBGPRINT(("---KSSTATE_ACQUIRE: previous state: %d", state));
 				if (state == KSSTATE_PAUSE) {
@@ -1586,7 +1586,7 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 				KeReleaseMutex(&Miniport->mutex, false);
 				break;
 
-			case KSSTATE_STOP_AC3:
+			case 5: /* KSSTATE_STOP_AC3 */
 			case KSSTATE_STOP:
 				DBGPRINT(("---KSSTATE_STOP: previous state: %d", state));
 				KeWaitForSingleObject(&Miniport->mutex, Executive, KernelMode, FALSE, NULL);

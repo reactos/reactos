@@ -28,7 +28,7 @@ RtlpExecuteHandlerForUnwind PROC FRAME:RtlpExecuteHandlerForUnwindHandler
 .seh_handler RtlpExecuteHandlerForUnwindHandler, @unwind, @except
 .seh_handlerdata
 .long 0 // Count
-.seh_code
+.text
 #endif
 
     /* Save ExceptionRecord->ExceptionFlags in the home space */

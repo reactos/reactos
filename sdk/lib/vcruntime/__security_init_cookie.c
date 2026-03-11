@@ -21,6 +21,9 @@
 uintptr_t __security_cookie = DEFAULT_SECURITY_COOKIE;
 uintptr_t __security_cookie_complement = ~DEFAULT_SECURITY_COOKIE;
 
+#if defined(__clang__) && (defined(_M_IX86) || defined(_M_X64))
+__attribute__((target("rdrnd,sse2")))
+#endif
 void __security_init_cookie(void)
 {
     LARGE_INTEGER performanceCounter;

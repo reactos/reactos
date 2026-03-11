@@ -58,7 +58,9 @@
 #elif defined(_MSC_VER)
 # define __CRT_INLINE __inline
 #elif defined(__GNUC__)
-# if defined(__clang__) || ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+# if defined(__clang__)
+#  define __CRT_INLINE extern inline __attribute__((__always_inline__,__gnu_inline__,__weak__))
+# elif __MINGW_GNUC_PREREQ(4, 3) && __STDC_VERSION__ >= 199901L
 #  define __CRT_INLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
 # else
 #  define __CRT_INLINE extern __inline__ __attribute__((__always_inline__))
@@ -190,7 +192,9 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 # ifdef __cplusplus
 #  define __forceinline inline __attribute__((__always_inline__))
 # else
-#  if (( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L) || defined(__clang__))
+#  if defined(__clang__)
+#   define __forceinline extern inline __attribute__((__always_inline__,__gnu_inline__,__weak__))
+#  elif __MINGW_GNUC_PREREQ(4, 3) && __STDC_VERSION__ >= 199901L
 #   define __forceinline extern inline __attribute__((__always_inline__,__gnu_inline__))
 #  else
 #   define __forceinline extern __inline__ __attribute__((__always_inline__))
@@ -242,7 +246,11 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #endif /* DECLSPEC_HOTPATCH */
 
 #ifndef __INTRIN_INLINE
+# if defined(__clang__)
+#  define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__,__weak__))
+# else
 #  define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__,artificial))
+# endif
 #endif
 
 #ifndef HAS_BUILTIN

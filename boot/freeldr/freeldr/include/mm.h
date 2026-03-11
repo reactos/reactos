@@ -22,8 +22,13 @@
 extern char __ImageBase;
 #ifdef __GNUC__
   #ifdef _M_AMD64
+    #ifdef __clang__
+    /* LLD: .text, .rdata, .buildid, .data, .pdata, .reloc */
+    #define FREELDR_SECTION_COUNT 6
+    #else
     /* .text/.data/.rdata, and .bss */
     #define FREELDR_SECTION_COUNT 2
+    #endif
   #else
     /* .text/.data/.rdata, .edata and .bss */
     #define FREELDR_SECTION_COUNT 3

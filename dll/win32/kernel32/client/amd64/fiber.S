@@ -13,7 +13,7 @@
 PUBLIC BaseFiberStartup
 FUNC BaseFiberStartup
     .ENDPROLOG
-    UNIMPLEMENTED BaseFiberStartup
+    UNIMPLEMENTED(BaseFiberStartup)
     /* FIXME: TODO */
     ret
 
@@ -24,7 +24,7 @@ PUBLIC SwitchToFiber
 
 FUNC SwitchToFiber
     .ENDPROLOG
-    UNIMPLEMENTED BaseFiberStartup
+    UNIMPLEMENTED(BaseFiberStartup)
     /* FIXME: TODO */
     ret
 ENDFUNC

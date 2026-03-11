@@ -61,6 +61,9 @@ KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Size, UCHAR Type, UCHAR D
 
 extern ULONG64 KeFeatureBits;
 
+#ifdef __clang__
+__attribute__((target("xsave,xsaves,xsaveopt,fxsr")))
+#endif
 FORCEINLINE
 VOID
 KiSaveXState(
@@ -86,6 +89,9 @@ KiSaveXState(
     }
 }
 
+#ifdef __clang__
+__attribute__((target("xsave,xsaves,xsaveopt,fxsr")))
+#endif
 FORCEINLINE
 VOID
 KiRestoreXState(

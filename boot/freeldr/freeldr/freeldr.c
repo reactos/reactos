@@ -88,8 +88,45 @@ LaunchSecondStageLoader(VOID)
     return (*EntryPoint)();
 }
 
+#if defined(__clang__) && defined(_M_AMD64)
+/*
+ * LLD doesn't provide __bss_start__/__bss_end__ linker symbols like GNU ld.
+ * Zero the BSS area (VirtualSize > RawSize gap in each section) by parsing
+ * the PE headers. Must run before anything else touches BSS globals.
+ */
+static VOID
+FrLdrClearBss(VOID)
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_SECTION_HEADER Section;
+    USHORT i;
+
+    NtHeaders = RtlImageNtHeader(&__ImageBase);
+    if (!NtHeaders) return;
+
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
+    for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++, Section++)
+    {
+        if (Section->Misc.VirtualSize > Section->SizeOfRawData)
+        {
+            PUCHAR BssStart = (PUCHAR)&__ImageBase +
+                              Section->VirtualAddress +
+                              Section->SizeOfRawData;
+            SIZE_T BssSize = Section->Misc.VirtualSize -
+                             Section->SizeOfRawData;
+            memset(BssStart, 0, BssSize);
+        }
+    }
+}
+#endif
+
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
+#if defined(__clang__) && defined(_M_AMD64)
+    /* Zero BSS since LLD can't provide linker symbols for it */
+    FrLdrClearBss();
+#endif
+
     /* Load the default settings from the command-line */
     LoadSettings(CmdLine);
 

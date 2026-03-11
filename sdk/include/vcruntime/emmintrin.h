@@ -11,6 +11,11 @@
 #ifndef _INCLUDED_EMM
 #define _INCLUDED_EMM
 
+/* When building with Clang, use Clang's own intrinsics headers instead. */
+#if defined(__clang__) && !defined(_MSC_VER)
+#include_next <emmintrin.h>
+#else
+
 #include <vcruntime.h>
 #include <xmmintrin.h>
 
@@ -1963,4 +1968,5 @@ void _mm_pause(void);
 } // extern "C"
 #endif
 
+#endif /* !(__clang__ && !_MSC_VER) */
 #endif /* _INCLUDED_EMM */

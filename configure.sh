@@ -8,10 +8,14 @@ fi
 BUILD_ENVIRONMENT=MinGW
 ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
-REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
+TOOLCHAIN_FILE=toolchain-gcc.cmake
 
 usage() {
 	echo "Invalid parameter given."
+	echo "Usage: configure.sh [options]"
+	echo "  clang       - Use Clang/LLVM compiler (default: GCC/MinGW)"
+	echo "  makefiles   - Use Unix Makefiles generator (default: Ninja)"
+	echo "  -D<var>=<val> - Pass option to CMake"
 	exit 1
 }
 
@@ -33,12 +37,18 @@ while [ $# -gt 0 ]; do
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
 		;;
+		clang|Clang)
+			BUILD_ENVIRONMENT=Clang
+			TOOLCHAIN_FILE=sdk/cmake/clang.cmake
+		;;
 		*)
 			usage
 	esac
 
 	shift
 done
+
+REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
 
 echo "Configuring a new ReactOS build on:"
 echo $(uname -srvpio); echo
@@ -51,7 +61,7 @@ fi
 
 rm -f CMakeCache.txt host-tools/CMakeCache.txt
 
-cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
+cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=$TOOLCHAIN_FILE -DARCH:STRING=$ARCH $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 if [ $? -ne 0 ]; then
     echo "An error occurred while configuring ReactOS"
     exit 1

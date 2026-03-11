@@ -1898,7 +1898,8 @@ static void test_restore_context(void)
     EXCEPTION_RECORD rec;
     _JUMP_BUFFER buf;
     CONTEXT ctx;
-    int i, pass;
+    int i;
+    volatile LONG pass;
 
     if (!pRtlUnwindEx || !pRtlRestoreContext || !pRtlCaptureContext || !p_setjmp)
     {
@@ -1918,7 +1919,7 @@ static void test_restore_context(void)
         ok(0, "shouldn't be reached\n");
     }
     else
-        ok(pass < 4, "unexpected pass %d\n", pass);
+        ok(pass < 4, "unexpected pass %ld\n", pass);
 
     /* test with jmp using RltRestoreContext */
     pass = 0;
@@ -1962,7 +1963,7 @@ static void test_restore_context(void)
         }
     }
     else
-        ok(0, "unexpected pass %d\n", pass);
+        ok(0, "unexpected pass %ld\n", pass);
 
     /* test with jmp through RtlUnwindEx */
     pass = 0;
@@ -1982,7 +1983,7 @@ static void test_restore_context(void)
         ok(0, "shouldn't be reached\n");
     }
     else
-        ok(pass == 4, "unexpected pass %d\n", pass);
+        ok(pass == 4, "unexpected pass %ld\n", pass);
 
 
     /* test with consolidate */
@@ -2005,7 +2006,7 @@ static void test_restore_context(void)
     else if (pass == 3)
         ok(consolidate_dummy_called, "test_consolidate_dummy not called\n");
     else
-        ok(0, "unexpected pass %d\n", pass);
+        ok(0, "unexpected pass %ld\n", pass);
 }
 
 static RUNTIME_FUNCTION* CALLBACK dynamic_unwind_callback( DWORD64 pc, PVOID context )

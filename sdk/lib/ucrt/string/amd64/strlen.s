@@ -132,4 +132,4 @@ return_byte_0:
     ret
 
 LEAF_END strlen, _TEXT
-    end
+    END

@@ -103,6 +103,8 @@ foreach(_keyboard_layout ${_keyboard_layouts})
     if(MSVC)
         # Merge the .text and .rdata section into the .data section
         target_link_options(${_keyboard_layout} PRIVATE "/ignore:4254;/SECTION:.data,ER;/MERGE:.text=.data;/MERGE:.rdata=.data;/MERGE:.bss=.data;/MERGE:.edata=.data")
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # lld COFF does not support GNU linker scripts; sections stay separate
     else()
         # Use a custom linker script
         target_link_options(${_keyboard_layout} PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")

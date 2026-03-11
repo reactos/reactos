@@ -4,7 +4,7 @@
 #define IDC_STATIC  -1
 #endif
 
-#define CW_USEDEFAULT16 0x8000
+#define CW_USEDEFAULT16 (-32768)
 
 #define IDS_CALC_NAME                   1
 #define IDS_MATH_ERROR                  2

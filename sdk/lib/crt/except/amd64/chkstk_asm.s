@@ -15,13 +15,13 @@
 
 FUNC __chkstk
     .endprolog
-    UNIMPLEMENTED chkstk
+    UNIMPLEMENTED(chkstk)
     ret
 ENDFUNC
 
 FUNC __alloca_probe
     .endprolog
-    UNIMPLEMENTED alloca_probe
+    UNIMPLEMENTED(alloca_probe)
     ret
 ENDFUNC
 

@@ -229,4 +229,4 @@ strncat_exit:
 
 LEAF_END strncat, _TEXT
 
-    end
+    END
