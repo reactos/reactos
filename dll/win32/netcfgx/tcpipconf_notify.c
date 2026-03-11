@@ -2501,7 +2501,7 @@ InitializeTcpipBasicDlgCtrls(
 
     if (pCurSettings->DhcpEnabled)
     {
-        CheckDlgButton(hwndDlg, IDC_USEDHCP, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_USEDHCP);
         EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), FALSE);
@@ -2509,7 +2509,7 @@ InitializeTcpipBasicDlgCtrls(
     }
     else
     {
-        CheckDlgButton(hwndDlg, IDC_NODHCP, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_NODHCP);
 
         if (pCurSettings->Ip)
         {
@@ -2528,13 +2528,13 @@ InitializeTcpipBasicDlgCtrls(
 
     if (pCurSettings->AutoconfigActive)
     {
-        CheckDlgButton(hwndDlg, IDC_AUTODNS, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_AUTODNS, IDC_FIXEDDNS, IDC_AUTODNS);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
     }
     else
     {
-        CheckDlgButton(hwndDlg, IDC_FIXEDDNS, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_AUTODNS, IDC_FIXEDDNS, IDC_FIXEDDNS);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
         if (pCurSettings->Ns)
