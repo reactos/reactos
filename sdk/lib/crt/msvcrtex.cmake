@@ -16,10 +16,14 @@ if(DLL_EXPORT_VERSION LESS 0x600)
         stdlib/_invalid_parameter.c
         stdlib/rand_s.c
         string/strnlen.c
-        string/wcsnlen.c
-        wstring/mbrtowc.c
-        wstring/wcrtomb.c
-    )
+        string/wcsnlen.c)
+    # When using llvm-mingw stdlib, ucrtbase exports wcrtomb/mbrtowc;
+    # including local copies would conflict with import stubs (lld "was replaced" error).
+    if(NOT REACTOS_CLANG_USE_LLVM_STDLIB)
+        list(APPEND MSVCRTEX_SOURCE
+            wstring/mbrtowc.c
+            wstring/wcrtomb.c)
+    endif()
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")

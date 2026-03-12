@@ -120,6 +120,7 @@ add_compile_options(
     -Wno-format
     -Wno-error=implicit-function-declaration
     -Wno-error=incompatible-library-redeclaration
+    -Wno-error=incompatible-pointer-types
 )
 
 if(ARCH STREQUAL "arm")

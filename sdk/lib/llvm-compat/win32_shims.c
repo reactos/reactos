@@ -28,6 +28,26 @@
 
 #define LLVMCOMPAT_PRINTF_STANDARD_SNPRINTF_BEHAVIOR       (1ULL << 1)
 
+/*
+ * __ms_fwprintf is referenced by libmingwex (ucrt variant) but not defined.
+ * It's the Microsoft-format version of fwprintf. Forward to vfwprintf which
+ * already uses MS format specifiers in ReactOS/mingw context.
+ */
+typedef struct _iobuf FILE;
+int __cdecl vfwprintf(FILE *stream, const wchar_t *format, va_list ap);
+
+int
+__cdecl
+__ms_fwprintf(FILE *stream, const wchar_t *format, ...)
+{
+    int ret;
+    va_list ap;
+    va_start(ap, format);
+    ret = vfwprintf(stream, format, ap);
+    va_end(ap);
+    return ret;
+}
+
 int
 __cdecl
 __stdio_common_vsprintf(
