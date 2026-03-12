@@ -130,6 +130,4 @@ function(setup_host_tools)
         set_target_properties(native-${_module} PROPERTIES IMPORTED_LOCATION ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
         add_dependencies(native-${_module} host-tools ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
     endforeach()
-
-    set(CMAKE_MC_COMPILER native-windmc PARENT_SCOPE)
 endfunction()
