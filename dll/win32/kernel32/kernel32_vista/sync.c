@@ -126,4 +126,3 @@ BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection
     /* Success */
     return TRUE;
 }
-

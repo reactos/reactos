@@ -66,7 +66,7 @@ set_module_type(ucrtbase_winetest win32cui)
 target_link_libraries(ucrtbase_winetest wine oldnames ${PSEH_LIB} chkstk)
 if(NOT MSVC)
     # Add this manually here, so it can link to ucrtbase.dll and vcstartup
-    target_link_libraries(ucrtbase_winetest -lgcc)
+    target_link_libraries(ucrtbase_winetest libgcc)
 endif()
 
 add_importlibs(ucrtbase_winetest ucrtbase kernel32 ntdll)

@@ -46,6 +46,11 @@ if(KDBG)
 endif()
 
 add_subdirectory(rtl)
+
+if(TARGET llvmcompat)
+    add_subdirectory(llvm-compat)
+endif()
+
 add_subdirectory(scrnsave)
 add_subdirectory(skiplist)
 add_subdirectory(strmiids)

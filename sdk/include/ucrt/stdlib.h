@@ -357,7 +357,7 @@ _Check_return_ _ACRTIMP int __cdecl rand(void);
 
 
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(_LIBCPP_VERSION)
 extern "C++"
 {
     inline long abs(long const _X) throw()
@@ -380,7 +380,7 @@ extern "C++"
         return lldiv(_A1, _A2);
     }
 }
-#endif // __cplusplus
+#endif // defined(__cplusplus) && !defined(_LIBCPP_VERSION)
 
 
 

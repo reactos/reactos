@@ -24,10 +24,19 @@ endif()
 # Clang builds always use dwarf (no rsym)
 set(NO_ROSSYM TRUE)
 
-# Clang supports native SEH (__try/__except) on all architectures,
-# so PSEH3 (x86 GCC-only) is never needed.
-set(USE_PSEH3 0)
-add_compile_options(-U_USE_PSEH3)
+if(ARCH STREQUAL "i386")
+    if(NOT DEFINED USE_PSEH3)
+        set(USE_PSEH3 1)
+    endif()
+else()
+    set(USE_PSEH3 0)
+endif()
+
+if(USE_PSEH3)
+    add_definitions(-D_USE_PSEH3=1)
+else()
+    add_compile_options(-U_USE_PSEH3)
+endif()
 
 if(NOT DEFINED USE_DUMMY_PSEH)
     set(USE_DUMMY_PSEH 0)
@@ -148,8 +157,14 @@ endif()
 
 if(ARCH STREQUAL "i386")
     add_compile_options(-fno-optimize-sibling-calls -fno-omit-frame-pointer -mstackrealign)
-    add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-fno-integrated-as>")
-    add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-U__clang__>")
+    if(REACTOS_CLANG_GCC_TOOLCHAIN)
+        # llvm-mingw's triplet "as" wrappers forward back into Clang and do not
+        # accept GNU as arguments like --32. Point Clang at RosBE's real GNU as
+        # for the legacy i386 assembly that still depends on those semantics.
+        add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-fno-integrated-as>")
+        add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:-U__clang__>")
+        add_compile_options("$<$<COMPILE_LANGUAGE:ASM>:--prefix=${REACTOS_CLANG_GCC_TOOLCHAIN}/bin/${CMAKE_C_COMPILER_TARGET}->")
+    endif()
     # FIXME: this doesn't work. CMAKE_BUILD_TYPE is always "Debug"
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-momit-leaf-frame-pointer)
@@ -256,10 +271,18 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-s
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
 set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} -I${CLANG_RESOURCE_DIR}/include <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> -I${CLANG_RESOURCE_DIR}/include <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(_reactos_cppstl_pre_include_flags "")
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES>${_reactos_cppstl_pre_include_flags} -I${CLANG_RESOURCE_DIR}/include <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
-set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
+set(_rc_target_flag)
+if(ARCH STREQUAL "i386")
+    set(_rc_target_flag "--target=pe-i386")
+elseif(ARCH STREQUAL "amd64")
+    set(_rc_target_flag "--target=pe-x86-64")
+endif()
+
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${_rc_target_flag} -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 
 set(RC_PREPROCESSOR_TARGET "--preprocessor-arg=--target=${CMAKE_C_COMPILER_TARGET}")
 
@@ -578,16 +601,25 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
-# Clang uses sjlj exceptions on i386 when targeting mingw
-if(ARCH STREQUAL "i386")
-    add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
+# Clang/LLVM runtime libraries
+option(REACTOS_CLANG_USE_LLVM_STDLIB "Use llvm-mingw libc++/compiler-rt runtime for Clang builds" ON)
+if(NOT REACTOS_CLANG_USE_LLVM_STDLIB)
+    message(FATAL_ERROR
+        "GNU runtime libraries are no longer supported in the Clang path. "
+        "Use the llvm-mingw runtime from REACTOS_CLANG_LLVM_MINGW_ROOT.")
 endif()
 
-# Clang/LLVM runtime libraries
-# No mingw compiler-rt builtins available, use GCC's libgcc.a for 128-bit builtins
-# (__udivti3, __umodti3, etc.) that Clang emits but compiler-rt doesn't provide.
-find_program(_mingw_gcc NAMES ${_gnu_tool_triplet}-gcc)
-find_program(_mingw_gxx NAMES ${_gnu_tool_triplet}-g++)
+if(DLL_EXPORT_VERSION LESS 0x601)
+    add_library(llvmcompat INTERFACE)
+endif()
+if(NOT REACTOS_CLANG_LLVM_MINGW_ROOT OR
+   NOT EXISTS "${REACTOS_CLANG_LLVM_MINGW_ROOT}/${_gnu_tool_triplet}/lib/libc++.a")
+    message(FATAL_ERROR
+        "The llvm-mingw runtime for ${_gnu_tool_triplet} was not found under REACTOS_CLANG_LLVM_MINGW_ROOT.")
+endif()
+
+set(_use_llvm_mingw_runtime TRUE)
+set(_mingw_toolchain_root "${REACTOS_CLANG_LLVM_MINGW_ROOT}")
 
 function(_query_mingw_runtime _outvar _compiler)
     if(NOT _compiler)
@@ -608,62 +640,282 @@ function(_query_mingw_runtime _outvar _compiler)
     endif()
 endfunction()
 
-_query_mingw_runtime(_gcc_libgcc ${_mingw_gcc} -print-libgcc-file-name)
-add_library(libgcc INTERFACE)
-if(_gcc_libgcc)
-    # Also link kernel32_vista for condition variable APIs needed by GCC's threading code
-    target_link_libraries(libgcc INTERFACE ${_gcc_libgcc} libkernel32 libkernel32_vista)
-else()
-    target_link_libraries(libgcc INTERFACE libkernel32)
-endif()
-
-# Ensure __udivti3 and other 128-bit builtins are available for all user-mode targets.
-# GCC links libgcc automatically; Clang does not when -nostdlib is used.
-# Allow multiple definitions because ReactOS provides its own __chkstk_ms (also in libgcc).
-if(_gcc_libgcc)
-    link_libraries(${_gcc_libgcc})
-    add_link_options(-Wl,--allow-multiple-definition)
-endif()
-
-# libwinpthread - not needed with pure Clang, provide as empty interface
-add_library(libwinpthread INTERFACE)
-
-# libsupc++ - use the real library from the GCC cross-compiler for C++ exception handling
-# (__cxa_begin_catch, __cxa_end_catch, _Unwind_Resume, std::terminate, etc.)
-_query_mingw_runtime(_gcc_libsupc++ ${_mingw_gxx} -print-file-name=libsupc++.a)
-_query_mingw_runtime(_gcc_libgcc_eh ${_mingw_gcc} -print-file-name=libgcc_eh.a)
-add_library(libsupc++ INTERFACE IMPORTED GLOBAL)
-if(_gcc_libsupc++)
-    set(_supc++_deps stdc++compat ${_gcc_libsupc++})
-    if(_gcc_libgcc_eh)
-        list(APPEND _supc++_deps ${_gcc_libgcc_eh})
+function(_query_target_runtime _outvar _clang_compiler _gnu_compiler)
+    _query_mingw_runtime(_runtime_path ${_clang_compiler} --target=${_gnu_tool_triplet} ${ARGN})
+    if(NOT _runtime_path AND _gnu_compiler)
+        _query_mingw_runtime(_runtime_path ${_gnu_compiler} ${ARGN})
     endif()
-    # libsupc++ also needs libgcc for __gthr_win32_* threading functions
-    target_link_libraries(libsupc++ INTERFACE ${_supc++_deps} libgcc)
-else()
-    target_link_libraries(libsupc++ INTERFACE stdc++compat)
-endif()
+    set(${_outvar} "${_runtime_path}" PARENT_SCOPE)
+endfunction()
 
-# libmingwex provides mingw CRT functions needed by libstdc++ (fseeko64, __mingw_strtof, etc.)
-_query_mingw_runtime(_mingwex_lib ${_mingw_gcc} -print-file-name=libmingwex.a)
-if(_mingwex_lib)
+function(_find_mingw_runtime_file _outvar)
+    if(NOT _mingw_toolchain_root)
+        set(${_outvar} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    set(_candidate_paths
+        "${_mingw_toolchain_root}/${_gnu_tool_triplet}/lib"
+        "${_mingw_toolchain_root}/${_gnu_tool_triplet}/mingw/lib"
+        "${_mingw_toolchain_root}/${_gnu_tool_triplet}/sysroot/lib"
+        "${_mingw_toolchain_root}/${_gnu_tool_triplet}/sysroot/usr/${_gnu_tool_triplet}/lib"
+        "${_mingw_toolchain_root}/${_gnu_tool_triplet}/sysroot/usr/lib"
+        "${_mingw_toolchain_root}/lib"
+        "${_mingw_toolchain_root}/lib/clang/${LLVM_TOOL_VERSION}/lib/windows")
+
+    find_file(_runtime_path
+        NAMES ${ARGN}
+        PATHS ${_candidate_paths}
+        NO_DEFAULT_PATH)
+
+    if(_runtime_path)
+        set(${_outvar} "${_runtime_path}" PARENT_SCOPE)
+    else()
+        set(${_outvar} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
+if(_use_llvm_mingw_runtime)
+    if(ARCH STREQUAL "i386")
+        set(_clang_builtins_name libclang_rt.builtins-i386.a)
+    elseif(ARCH STREQUAL "amd64")
+        set(_clang_builtins_name libclang_rt.builtins-x86_64.a)
+    elseif(ARCH STREQUAL "arm")
+        set(_clang_builtins_name libclang_rt.builtins-arm.a)
+    elseif(ARCH STREQUAL "arm64")
+        set(_clang_builtins_name libclang_rt.builtins-aarch64.a)
+    else()
+        message(FATAL_ERROR "Unsupported ARCH for llvm-mingw runtime: ${ARCH}")
+    endif()
+
+    _query_target_runtime(_clang_rt_builtins ${CMAKE_C_COMPILER} "" -rtlib=compiler-rt -print-file-name=${_clang_builtins_name})
+    _query_target_runtime(_llvm_libcxx ${CMAKE_CXX_COMPILER} "" -stdlib=libc++ -print-file-name=libc++.a)
+    _query_target_runtime(_llvm_libcxxabi ${CMAKE_CXX_COMPILER} "" -stdlib=libc++ -print-file-name=libc++abi.a)
+    _query_target_runtime(_llvm_libunwind ${CMAKE_CXX_COMPILER} "" -stdlib=libc++ -unwindlib=libunwind -print-file-name=libunwind.a)
+    _query_target_runtime(_mingwex_lib ${CMAKE_C_COMPILER} "" -print-file-name=libmingwex.a)
+
+    if(NOT _clang_rt_builtins)
+        _find_mingw_runtime_file(_clang_rt_builtins ${_clang_builtins_name})
+    endif()
+    if(NOT _llvm_libcxx)
+        _find_mingw_runtime_file(_llvm_libcxx libc++.a)
+    endif()
+    if(NOT _llvm_libcxxabi)
+        _find_mingw_runtime_file(_llvm_libcxxabi libc++abi.a)
+    endif()
+    if(NOT _llvm_libunwind)
+        _find_mingw_runtime_file(_llvm_libunwind libunwind.a)
+    endif()
+    if(NOT _mingwex_lib)
+        _find_mingw_runtime_file(_mingwex_lib libmingwex.a)
+    endif()
+
+    set(_missing_target_runtime)
+    if(NOT _clang_rt_builtins)
+        list(APPEND _missing_target_runtime ${_clang_builtins_name})
+    endif()
+    if(NOT _llvm_libcxx)
+        list(APPEND _missing_target_runtime libc++.a)
+    endif()
+    if(NOT _llvm_libcxxabi)
+        list(APPEND _missing_target_runtime libc++abi.a)
+    endif()
+    if(NOT _llvm_libunwind)
+        list(APPEND _missing_target_runtime libunwind.a)
+    endif()
+    if(NOT _mingwex_lib)
+        list(APPEND _missing_target_runtime libmingwex.a)
+    endif()
+    if(_missing_target_runtime)
+        list(JOIN _missing_target_runtime ", " _missing_target_runtime_text)
+        message(FATAL_ERROR
+            "Required llvm-mingw runtime libraries not found for ${_gnu_tool_triplet}: ${_missing_target_runtime_text}. "
+            "Install a matching llvm-mingw sysroot and compiler for ${_gnu_tool_triplet}.")
+    endif()
+
+    add_library(libgcc INTERFACE)
+    target_link_libraries(libgcc INTERFACE ${_clang_rt_builtins} libkernel32)
+    link_libraries(${_clang_rt_builtins})
+    add_link_options(-Wl,--allow-multiple-definition)
+    add_compile_options(
+        "$<$<COMPILE_LANGUAGE:CXX>:-D__LARGE_MBSTATE_T>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-nostdinc++>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-nobuiltininc>")
+
+    add_library(libwinpthread INTERFACE)
+
+    add_library(libunwind STATIC IMPORTED GLOBAL)
+    set_target_properties(libunwind PROPERTIES IMPORTED_LOCATION ${_llvm_libunwind})
+    target_link_libraries(libunwind INTERFACE libkernel32)
+    if(TARGET llvmcompat)
+        target_link_libraries(libunwind INTERFACE llvmcompat)
+    endif()
+
+    add_library(libsupc++ STATIC IMPORTED GLOBAL)
+    set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${_llvm_libcxxabi})
+    target_link_libraries(libsupc++ INTERFACE libunwind ${_llvm_libcxx} libmingwex oldnames libucrtbase)
+
     add_library(libmingwex STATIC IMPORTED GLOBAL)
     set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${_mingwex_lib})
+    target_link_libraries(libmingwex INTERFACE libucrtbase libmsvcrt msvcrtex libkernel32)
+    if(TARGET llvmcompat)
+        target_link_libraries(libmingwex INTERFACE llvmcompat)
+    endif()
+
+    add_library(libstdc++ STATIC IMPORTED GLOBAL)
+    set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${_llvm_libcxx})
+    target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames libucrtbase)
+    foreach(_include_dir
+            "${_mingw_toolchain_root}/${_gnu_tool_triplet}/include/c++/v1"
+            "${_mingw_toolchain_root}/include/c++/v1")
+        if(EXISTS "${_include_dir}")
+            list(APPEND _reactos_libcxx_include_dirs "${_include_dir}")
+        endif()
+    endforeach()
+    list(REMOVE_DUPLICATES _reactos_libcxx_include_dirs)
+    if(NOT _reactos_libcxx_include_dirs)
+        message(FATAL_ERROR
+            "The llvm-mingw libc++ headers were not found for ${_gnu_tool_triplet}.")
+    endif()
+    foreach(_include_dir IN LISTS _reactos_libcxx_include_dirs)
+        string(APPEND _reactos_cppstl_pre_include_flags
+            " -I${_include_dir}")
+    endforeach()
+    if(EXISTS "${REACTOS_SOURCE_DIR}/sdk/include/ucrt")
+        target_include_directories(libstdc++ SYSTEM INTERFACE
+            "$<$<COMPILE_LANGUAGE:CXX>:${REACTOS_SOURCE_DIR}/sdk/include/ucrt>")
+    endif()
 else()
-    add_library(libmingwex INTERFACE)
+    _query_mingw_runtime(_gcc_libgcc ${_mingw_gcc} -print-libgcc-file-name)
+    _query_mingw_runtime(_gcc_libsupc++ ${_mingw_gxx} -print-file-name=libsupc++.a)
+    _query_mingw_runtime(_gcc_libgcc_eh ${_mingw_gcc} -print-file-name=libgcc_eh.a)
+    _query_mingw_runtime(_mingwex_lib ${_mingw_gcc} -print-file-name=libmingwex.a)
+    _query_mingw_runtime(_gcc_libstdcxx ${_mingw_gxx} -print-file-name=libstdc++.a)
+    _query_mingw_runtime(_winpthread_lib ${_mingw_gcc} -print-file-name=libwinpthread.a)
+
+    if(NOT _gcc_libsupc++)
+        _find_mingw_runtime_file(_gcc_libsupc++ libsupc++.a)
+    endif()
+    if(NOT _mingwex_lib)
+        _find_mingw_runtime_file(_mingwex_lib libmingwex.a)
+    endif()
+    if(NOT _gcc_libstdcxx)
+        _find_mingw_runtime_file(_gcc_libstdcxx libstdc++.a)
+    endif()
+    if(NOT _winpthread_lib)
+        _find_mingw_runtime_file(_winpthread_lib libwinpthread.a)
+    endif()
+
+    set(_missing_target_runtime)
+    if(NOT _gcc_libgcc)
+        list(APPEND _missing_target_runtime libgcc.a)
+    endif()
+    if(NOT _gcc_libsupc++)
+        list(APPEND _missing_target_runtime libsupc++.a)
+    endif()
+    if(NOT _mingwex_lib)
+        list(APPEND _missing_target_runtime libmingwex.a)
+    endif()
+    if(NOT _gcc_libstdcxx)
+        list(APPEND _missing_target_runtime libstdc++.a)
+    endif()
+    if(_missing_target_runtime)
+        list(JOIN _missing_target_runtime ", " _missing_target_runtime_text)
+        message(FATAL_ERROR
+            "Required GCC-compatible target runtime libraries not found for ${_gnu_tool_triplet}: ${_missing_target_runtime_text}. "
+            "Install a matching MinGW-w64 GCC runtime/sysroot for ${_gnu_tool_triplet}, "
+            "or use DLL_EXPORT_VERSION >= 0x601 with REACTOS_CLANG_USE_LLVM_STDLIB=ON.")
+    endif()
+
+    if(_winpthread_lib)
+        add_library(libwinpthread STATIC IMPORTED GLOBAL)
+        set_target_properties(libwinpthread PROPERTIES IMPORTED_LOCATION ${_winpthread_lib})
+        target_link_libraries(libwinpthread INTERFACE libkernel32 libmsvcrt msvcrtex)
+    else()
+        add_library(libwinpthread INTERFACE)
+    endif()
+
+    add_library(libgcc INTERFACE)
+    target_link_libraries(libgcc INTERFACE ${_gcc_libgcc} libwinpthread libkernel32)
+
+    # Ensure __udivti3 and other 128-bit builtins are available for all user-mode targets.
+    # GCC links libgcc automatically; Clang does not when -nostdlib is used.
+    # Allow multiple definitions because ReactOS provides its own __chkstk_ms (also in libgcc).
+    if(_gcc_libgcc)
+        link_libraries(${_gcc_libgcc})
+        add_link_options(-Wl,--allow-multiple-definition)
+    endif()
+
+    # libsupc++ - use the real library from the GCC cross-compiler for C++ exception handling
+    # (__cxa_begin_catch, __cxa_end_catch, _Unwind_Resume, std::terminate, etc.)
+    add_library(libsupc++ INTERFACE IMPORTED GLOBAL)
+    if(_gcc_libsupc++)
+        set(_supc++_deps stdc++compat ${_gcc_libsupc++})
+        if(_gcc_libgcc_eh)
+            list(APPEND _supc++_deps ${_gcc_libgcc_eh})
+        endif()
+        # libsupc++ also needs libgcc for __gthr_win32_* threading functions
+        target_link_libraries(libsupc++ INTERFACE ${_supc++_deps} libgcc)
+    else()
+        target_link_libraries(libsupc++ INTERFACE stdc++compat)
+    endif()
+
+    # libmingwex provides mingw CRT functions needed by libstdc++ (fseeko64, __mingw_strtof, etc.)
+    if(_mingwex_lib)
+        add_library(libmingwex STATIC IMPORTED GLOBAL)
+        set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${_mingwex_lib})
+        target_link_libraries(libmingwex INTERFACE libmsvcrt msvcrtex libkernel32)
+    else()
+        add_library(libmingwex INTERFACE)
+    endif()
+
+    # Use GCC's libstdc++.a for full C++ standard library support
+    add_library(libstdc++ STATIC IMPORTED GLOBAL)
+    if(_gcc_libstdcxx)
+        set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${_gcc_libstdcxx})
+        target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
+    else()
+        message(WARNING "libstdc++.a not found -- C++ STL targets will fail to link")
+        target_link_libraries(libstdc++ INTERFACE libsupc++ oldnames)
+    endif()
+
+    if(_mingw_toolchain_root)
+        file(GLOB _mingw_cxx_include_versions LIST_DIRECTORIES TRUE
+            "${_mingw_toolchain_root}/${_gnu_tool_triplet}/include/c++/*")
+        list(SORT _mingw_cxx_include_versions COMPARE NATURAL ORDER DESCENDING)
+        foreach(_include_dir IN LISTS _mingw_cxx_include_versions)
+            if(IS_DIRECTORY "${_include_dir}" AND EXISTS "${_include_dir}/bits")
+                set(_mingw_cxx_include_dir "${_include_dir}")
+                break()
+            endif()
+        endforeach()
+
+        set(_mingw_cxx_include_roots
+            "${_mingw_toolchain_root}/${_gnu_tool_triplet}/include"
+            "${_mingw_toolchain_root}/${_gnu_tool_triplet}/include/c++")
+        if(_mingw_cxx_include_dir)
+            list(APPEND _mingw_cxx_include_roots
+                "${_mingw_cxx_include_dir}"
+                "${_mingw_cxx_include_dir}/${_gnu_tool_triplet}"
+                "${_mingw_cxx_include_dir}/backward")
+        endif()
+        if(EXISTS "${_mingw_toolchain_root}/${_gnu_tool_triplet}/sysroot/usr/${_gnu_tool_triplet}/include")
+            list(APPEND _mingw_cxx_include_roots
+                "${_mingw_toolchain_root}/${_gnu_tool_triplet}/sysroot/usr/${_gnu_tool_triplet}/include")
+        endif()
+
+        list(REMOVE_DUPLICATES _mingw_cxx_include_roots)
+        foreach(_include_dir IN LISTS _mingw_cxx_include_roots)
+            if(EXISTS "${_include_dir}")
+                target_include_directories(libstdc++ SYSTEM INTERFACE
+                    "$<$<COMPILE_LANGUAGE:CXX>:${_include_dir}>")
+            endif()
+        endforeach()
+    endif()
+    target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
 endif()
 
-# Use GCC's libstdc++.a for full C++ standard library support
-_query_mingw_runtime(_gcc_libstdcxx ${_mingw_gxx} -print-file-name=libstdc++.a)
-add_library(libstdc++ STATIC IMPORTED GLOBAL)
-if(_gcc_libstdcxx)
-    set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${_gcc_libstdcxx})
-    target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
-else()
-    message(WARNING "libstdc++.a not found -- C++ STL targets will fail to link")
-    target_link_libraries(libstdc++ INTERFACE libsupc++ oldnames)
-endif()
-target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES>${_reactos_cppstl_pre_include_flags} -I${CLANG_RESOURCE_DIR}/include <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)

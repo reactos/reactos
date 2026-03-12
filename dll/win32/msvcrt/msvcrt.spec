@@ -1489,6 +1489,7 @@
 @ cdecl -version=0x600+ vfwprintf_s(ptr wstr ptr)
 @ cdecl vprintf(str ptr)
 @ cdecl -version=0x600+ vprintf_s(str ptr)
+@ varargs snprintf(ptr long str) _snprintf
 @ cdecl -version=0x600+ vsnprintf(ptr long str ptr) _vsnprintf
 @ cdecl vsprintf(ptr str ptr)
 @ cdecl -version=0x600+ vsprintf_s(ptr long str ptr)

@@ -29,6 +29,59 @@ BOOLEAN UserPdeFault = FALSE;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
+VOID
+NTAPI
+MiDumpUserStackFaultContext(
+    _In_ PCSTR Reason,
+    _In_ PETHREAD CurrentThread,
+    _In_ PTEB Teb,
+    _In_ PVOID Address,
+    _In_opt_ PVOID TrapInformation,
+    _In_opt_ PVOID NextStackAddress,
+    _In_ SIZE_T GuaranteedSize)
+{
+    PEPROCESS CurrentProcess;
+    PKTRAP_FRAME TrapFrame;
+    PVOID TrapPc;
+    PVOID TrapSp;
+
+    CurrentProcess = PsGetCurrentProcess();
+    TrapFrame = (PKTRAP_FRAME)TrapInformation;
+    TrapPc = NULL;
+    TrapSp = NULL;
+
+    if (TrapFrame != NULL)
+    {
+        TrapPc = (PVOID)KeGetTrapFramePc(TrapFrame);
+        TrapSp = (PVOID)KeGetTrapFrameStackRegister(TrapFrame);
+    }
+
+    DPRINT1("User stack fault: %s\n", Reason);
+    DPRINT1("  Process %s pid %p thread %p ethread %p teb %p trap %p thread-trap %p\n",
+            CurrentProcess->ImageFileName,
+            PsGetCurrentProcessId(),
+            PsGetCurrentThreadId(),
+            CurrentThread,
+            Teb,
+            TrapInformation,
+            CurrentThread->Tcb.TrapFrame);
+    DPRINT1("  User stack: fault %p base %p limit %p dealloc %p next %p guaranteed %Ix\n",
+            Address,
+            Teb->NtTib.StackBase,
+            Teb->NtTib.StackLimit,
+            Teb->DeallocationStack,
+            NextStackAddress,
+            GuaranteedSize);
+    DPRINT1("  Kernel stack: initial %p base %p limit %p current %p trap-pc %p trap-sp %p\n",
+            CurrentThread->Tcb.InitialStack,
+            CurrentThread->Tcb.StackBase,
+            (PVOID)CurrentThread->Tcb.StackLimit,
+            CurrentThread->Tcb.KernelStack,
+            TrapPc,
+            TrapSp);
+}
+
+static
 NTSTATUS
 NTAPI
 MiCheckForUserStackOverflow(IN PVOID Address,
@@ -74,6 +127,13 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     if ((Address >= StackBase) || (Address < DeallocationStack))
     {
         /* That's odd... */
+        MiDumpUserStackFaultContext("fault outside current user stack bounds",
+                                    CurrentThread,
+                                    Teb,
+                                    Address,
+                                    TrapInformation,
+                                    NULL,
+                                    GuaranteedSize);
         DPRINT1("Faulting address outside of stack bounds. Address=%p, StackBase=%p, DeallocationStack=%p\n",
                 Address, StackBase, DeallocationStack);
         return STATUS_GUARD_PAGE_VIOLATION;
@@ -86,6 +146,13 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     if (((ULONG_PTR)NextStackAddress - PAGE_SIZE) <= (ULONG_PTR)DeallocationStack)
     {
         /* We don't -- Trying to make this guard page valid now */
+        MiDumpUserStackFaultContext("stack expansion reached deallocation boundary",
+                                    CurrentThread,
+                                    Teb,
+                                    Address,
+                                    TrapInformation,
+                                    NextStackAddress,
+                                    GuaranteedSize);
         DPRINT1("Close to our death...\n");
 
         /* Calculate the next memory address */
@@ -105,6 +172,13 @@ MiCheckForUserStackOverflow(IN PVOID Address,
         }
         else
         {
+            MiDumpUserStackFaultContext("stack overflow expansion allocation failed",
+                                        CurrentThread,
+                                        Teb,
+                                        Address,
+                                        TrapInformation,
+                                        NextStackAddress,
+                                        GuaranteedSize);
             DPRINT1("Failed to allocate memory\n");
         }
 

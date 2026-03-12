@@ -30,8 +30,13 @@ extern char __ImageBase;
     #define FREELDR_SECTION_COUNT 2
     #endif
   #else
+    #ifdef __clang__
+    /* LLD: .text, .rdata, .buildid, .data, .reloc */
+    #define FREELDR_SECTION_COUNT 5
+    #else
     /* .text/.data/.rdata, .edata and .bss */
     #define FREELDR_SECTION_COUNT 3
+    #endif
   #endif
 #else
 #ifdef _M_AMD64

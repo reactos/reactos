@@ -212,7 +212,7 @@ _ACRTIMP int           __cdecl atoi(const char*);
 _ACRTIMP int           __cdecl _atoi_l(const char*,_locale_t);
 _ACRTIMP __msvcrt_long __cdecl atol(const char*);
 _ACRTIMP __int64       __cdecl atoll(const char*);
-#ifndef __i386__
+#if !defined(__i386__) || defined(__REACTOS__)
 _ACRTIMP div_t  __cdecl div(int,int);
 _ACRTIMP ldiv_t __cdecl ldiv(__msvcrt_long,__msvcrt_long);
 #endif

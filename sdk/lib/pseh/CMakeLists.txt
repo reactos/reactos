@@ -5,11 +5,13 @@ if(ARCH STREQUAL "i386")
         i386/seh_prolog.s)
 endif()
 
-if(MSVC OR ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (ARCH STREQUAL "amd64")))
+if(MSVC)
     list(APPEND SOURCE dummy.c)
     add_asm_files(pseh_asm ${ASM_SOURCE})
     add_library(pseh ${SOURCE} ${pseh_asm})
     add_dependencies(pseh asm)
+elseif((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (ARCH STREQUAL "amd64"))
+    add_library(pseh dummy.c)
 elseif((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (ARCH STREQUAL "amd64"))
     # for GCC amd64 this is just an interface library, with our home-made plugin
     add_library(pseh INTERFACE)
@@ -34,6 +36,9 @@ else()
             i386/framebased.S
             i386/framebased-gcchack.c
             i386/framebased-gcchack-asm.S)
+        if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            list(APPEND SOURCE dummy.c)
+        endif()
     endif()
 
     add_library(pseh ${SOURCE} ${ASM_SOURCE})

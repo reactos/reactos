@@ -88,3 +88,20 @@ WlxGetConsoleSwitchCredentials(
     UNIMPLEMENTED;
     return FALSE;
 }
+
+
+#ifdef __clang__
+HRESULT WINAPI
+ShellDimScreen(
+    PVOID *pUnknown,
+    HWND *hWindow)
+{
+    if (pUnknown)
+        *pUnknown = NULL;
+
+    if (hWindow)
+        *hWindow = NULL;
+
+    return E_NOTIMPL;
+}
+#endif

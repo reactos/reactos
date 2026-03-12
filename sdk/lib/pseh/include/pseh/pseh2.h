@@ -25,7 +25,7 @@
 
 #define __USE_PSEH2__
 
-#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__))
+#if !defined(_USE_PSEH3) && (defined(_USE_NATIVE_SEH) || defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__)))
 
 /*
  * Clang's SEH implementation only generates scope table entries around

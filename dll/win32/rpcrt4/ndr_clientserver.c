@@ -41,6 +41,31 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
+static void log_rpc_client_failure(const char *where, PMIDL_STUB_MESSAGE stubmsg, RPC_STATUS status,
+                                   void *caller)
+{
+  const RPC_CLIENT_INTERFACE *client_interface;
+
+  client_interface = stubmsg && stubmsg->RpcMsg ?
+                     stubmsg->RpcMsg->RpcInterfaceInformation : NULL;
+
+  if (client_interface)
+    ERR("%s failed with status %lu for interface %s v%u.%u proc %u handle %p caller %p\n",
+        where, status,
+        debugstr_guid(&client_interface->InterfaceId.SyntaxGUID),
+        client_interface->InterfaceId.SyntaxVersion.MajorVersion,
+        client_interface->InterfaceId.SyntaxVersion.MinorVersion,
+        stubmsg->RpcMsg->ProcNum & ~RPC_FLAGS_VALID_BIT,
+        stubmsg->RpcMsg->Handle,
+        caller);
+  else
+    ERR("%s failed with status %lu for unknown interface proc %u handle %p caller %p\n",
+        where, status,
+        stubmsg && stubmsg->RpcMsg ? (stubmsg->RpcMsg->ProcNum & ~RPC_FLAGS_VALID_BIT) : 0,
+        stubmsg && stubmsg->RpcMsg ? stubmsg->RpcMsg->Handle : NULL,
+        caller);
+}
+
 /************************************************************************
  *             NdrClientInitializeNew [RPCRT4.@]
  */
@@ -169,7 +194,10 @@ unsigned char *WINAPI NdrGetBuffer(PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC
 
   status = I_RpcGetBuffer(stubmsg->RpcMsg);
   if (status != RPC_S_OK)
+  {
+    log_rpc_client_failure("NdrGetBuffer", stubmsg, status, __builtin_return_address(0));
     RpcRaiseException(status);
+  }
 
   stubmsg->Buffer = stubmsg->RpcMsg->Buffer;
   stubmsg->fBufferValid = TRUE;
@@ -212,7 +240,10 @@ unsigned char *WINAPI NdrSendReceive( PMIDL_STUB_MESSAGE stubmsg, unsigned char 
   stubmsg->RpcMsg->BufferLength = buffer - (unsigned char *)stubmsg->RpcMsg->Buffer;
   status = I_RpcSendReceive(stubmsg->RpcMsg);
   if (status != RPC_S_OK)
+  {
+    log_rpc_client_failure("NdrSendReceive", stubmsg, status, __builtin_return_address(0));
     RpcRaiseException(status);
+  }
 
   stubmsg->BufferLength = stubmsg->RpcMsg->BufferLength;
   stubmsg->BufferStart = stubmsg->RpcMsg->Buffer;
