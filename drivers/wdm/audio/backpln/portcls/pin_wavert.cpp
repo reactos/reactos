@@ -373,7 +373,6 @@ CPortPinWaveRT::HandleKsProperty(
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
-    //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -525,15 +524,6 @@ CPortPinWaveRT::HandleKsProperty(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     return Status;
-
-    //RtlStringFromGUID(Property->Set, &GuidString);
-    //DPRINT("Unhanded property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    //RtlFreeUnicodeString(&GuidString);
-
-    //Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    //Irp->IoStatus.Information = 0;
-    //IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    //return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -712,15 +702,15 @@ CloseStreamRoutine(
         This->m_Format = NULL;
     }
 
-    // complete the irp
+    // Complete the irp
     Ctx->Irp->IoStatus.Information = 0;
     Ctx->Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Ctx->Irp, IO_NO_INCREMENT);
 
-    // free the work item
+    // Free the work item
     IoFreeWorkItem(Ctx->WorkItem);
 
-    // free work item ctx
+    // Free work item ctx
     FreeItem(Ctx, TAG_PORTCLASS);
 
     if (This->m_Stream)
@@ -766,7 +756,7 @@ CPortPinWaveRT::Close(
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_PENDING;
 
-        // defer work item
+        // Defer work item
         IoQueueWorkItem(Ctx->WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)Ctx);
         // Return result
         return STATUS_PENDING;
@@ -1013,7 +1003,7 @@ NewPortPinWaveRT(
 
     This->AddRef();
 
-    // store result
+    // Store result
     *OutPin = (PPORTPINWAVERT)This;
 
     return STATUS_SUCCESS;
