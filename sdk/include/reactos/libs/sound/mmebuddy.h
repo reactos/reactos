@@ -315,6 +315,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hStopEvent;
     HANDLE hResetEvent;
     BOOL bClosed;
+    BOOL LegacyStreaming;
     BOOL RTStreamingEnabled;
     BOOL RTStreamingStarted;
     HANDLE hRTStreamingThread;
@@ -656,7 +657,6 @@ MMRESULT
 WriteWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
-
 
 /*
     wave/streaming.c
