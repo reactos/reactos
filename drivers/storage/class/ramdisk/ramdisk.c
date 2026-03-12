@@ -904,6 +904,67 @@ RamdiskBuildPartitionInfo(IN PRAMDISK_DRIVE_EXTENSION DeviceExtension,
                           OUT PPARTITION_INFORMATION PartitionInfo);
 
 static
+VOID
+RamdiskQueryLogicalVolumeExtent(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
+                                OUT PLARGE_INTEGER StartingOffset,
+                                OUT PLARGE_INTEGER PartitionLength)
+{
+    PARTITION_INFORMATION PartitionInfo;
+    NTSTATUS Status;
+    ULONGLONG DiskLength;
+    ULONGLONG PartitionOffset;
+
+    StartingOffset->QuadPart = 0;
+    *PartitionLength = DriveExtension->DiskLength;
+    DiskLength = (ULONGLONG)DriveExtension->DiskLength.QuadPart;
+
+    if (DriveExtension->HiddenSectors != 0 && DriveExtension->BytesPerSector != 0)
+    {
+        PartitionOffset = (ULONGLONG)DriveExtension->HiddenSectors * DriveExtension->BytesPerSector;
+        if (PartitionOffset <= DiskLength)
+        {
+            StartingOffset->QuadPart = PartitionOffset;
+            PartitionLength->QuadPart = DiskLength - PartitionOffset;
+        }
+    }
+
+    Status = RamdiskBuildPartitionInfo(DriveExtension, &PartitionInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    if ((PartitionInfo.StartingOffset.QuadPart < 0) ||
+        (PartitionInfo.PartitionLength.QuadPart < 0))
+    {
+        return;
+    }
+
+    PartitionOffset = (ULONGLONG)PartitionInfo.StartingOffset.QuadPart;
+    if ((PartitionOffset > DiskLength) ||
+        ((ULONGLONG)PartitionInfo.PartitionLength.QuadPart > (DiskLength - PartitionOffset)))
+    {
+        return;
+    }
+
+    *StartingOffset = PartitionInfo.StartingOffset;
+    *PartitionLength = PartitionInfo.PartitionLength;
+}
+
+static
+LARGE_INTEGER
+RamdiskQueryLogicalVolumeLength(IN PRAMDISK_DRIVE_EXTENSION DriveExtension)
+{
+    LARGE_INTEGER StartingOffset;
+    LARGE_INTEGER PartitionLength;
+
+    RamdiskQueryLogicalVolumeExtent(DriveExtension,
+                                    &StartingOffset,
+                                    &PartitionLength);
+    return PartitionLength;
+}
+
+static
 ULONGLONG
 RamdiskQueryGptAttributes(IN PRAMDISK_DRIVE_EXTENSION DriveExtension)
 {
@@ -3445,7 +3506,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 GeometryEx->Geometry.MediaType = DriveExtension->DiskOptions.ExportAsCd ?
                                                    RemovableMedia :
                                                    (DriveExtension->DiskOptions.Fixed ? FixedMedia : RemovableMedia);
-                GeometryEx->DiskSize = DriveExtension->DiskLength;
+                GeometryEx->DiskSize = RamdiskQueryLogicalVolumeLength(DriveExtension);
 
                 Status = STATUS_SUCCESS;
                 Information = sizeof(DISK_GEOMETRY_EX);
@@ -3546,7 +3607,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 /* Fill it out */
-                LengthInformation->Length = DriveExtension->DiskLength;
+                LengthInformation->Length = RamdiskQueryLogicalVolumeLength(DriveExtension);
 
                 /* We are done */
                 Status = STATUS_SUCCESS;
@@ -3704,6 +3765,8 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             {
                 PVOLUME_DISK_EXTENTS Extents;
                 ULONG RequiredLength;
+                LARGE_INTEGER StartingOffset;
+                LARGE_INTEGER PartitionLength;
 
                 RequiredLength = FIELD_OFFSET(VOLUME_DISK_EXTENTS, Extents) + sizeof(DISK_EXTENT);
                 if (IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength < RequiredLength)
@@ -3714,10 +3777,13 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 Extents = Irp->AssociatedIrp.SystemBuffer;
+                RamdiskQueryLogicalVolumeExtent(DriveExtension,
+                                                &StartingOffset,
+                                                &PartitionLength);
                 Extents->NumberOfDiskExtents = 1;
                 Extents->Extents[0].DiskNumber = DriveExtension->DiskNumber;
-                Extents->Extents[0].StartingOffset.QuadPart = 0;
-                Extents->Extents[0].ExtentLength = DriveExtension->DiskLength;
+                Extents->Extents[0].StartingOffset = StartingOffset;
+                Extents->Extents[0].ExtentLength = PartitionLength;
                 Status = STATUS_SUCCESS;
                 Information = RequiredLength;
                 break;

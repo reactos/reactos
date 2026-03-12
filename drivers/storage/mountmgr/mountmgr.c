@@ -31,6 +31,7 @@
 
 /* FIXME */
 GUID MountedDevicesGuid = {0x53F5630D, 0xB6BF, 0x11D0, {0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B}};
+static const GUID MountMgrBootRamdiskGuid = {0xD9B257FC, 0x684E, 0x4DCB, {0xAB, 0x79, 0x03, 0xCF, 0xA2, 0xF6, 0xB7, 0x50}};
 
 PDEVICE_OBJECT gdeviceObject;
 KEVENT UnloadEvent;
@@ -255,7 +256,10 @@ MountMgrLoadBootRamdiskInformation(
                                                   &ValueLength);
                         if (NT_SUCCESS(Status) &&
                             ValueInfo->Type == REG_BINARY &&
-                            ValueInfo->DataLength == sizeof(GUID))
+                            ValueInfo->DataLength == sizeof(GUID) &&
+                            RtlCompareMemory(ValueInfo->Data,
+                                             &MountMgrBootRamdiskGuid,
+                                             sizeof(GUID)) == sizeof(GUID))
                         {
                             PMOUNTDEV_UNIQUE_ID UniqueId;
 
