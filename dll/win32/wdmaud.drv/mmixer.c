@@ -344,12 +344,12 @@ WdmAudInitUserModeMixer()
 
     if (MMixerLibraryInitialized)
     {
-        /* library is already initialized */
+        /* Library is already initialized */
         return TRUE;
     }
 
 
-    /* create a device list */
+    /* Create a device list */
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
                                        NULL,
@@ -357,28 +357,28 @@ WdmAudInitUserModeMixer()
 
     if (DeviceHandle == INVALID_HANDLE_VALUE)
     {
-        /* failed to create a device list */
+        /* Failed to create a device list */
         return FALSE;
     }
 
 
-    /* initialize the mixer library */
+    /* Initialize the mixer library */
     Status = MMixerInitialize(&MixerContext, Enum, (PVOID)DeviceHandle);
 
-    /* free device list */
+    /* Free device list */
     SetupDiDestroyDeviceInfoList(DeviceHandle);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        /* failed to initialize mixer library */
+        /* Failed to initialize mixer library */
         DPRINT1("Failed to initialize mixer library with %x\n", Status);
         return FALSE;
     }
 
-    /* library is now initialized */
+    /* Library is now initialized */
     MMixerLibraryInitialized = TRUE;
 
-    /* completed successfully */
+    /* Completed successfully */
     return TRUE;
 }
 
@@ -517,9 +517,9 @@ WdmAudSetWaveDeviceFormatByMMixer(
             Instance->RTStreamingBufferLength);
 
             Instance->LegacyStreaming = FALSE;
-            // clear buffer
+            /* Clear buffer */
             RtlZeroMemory(Instance->RTStreamingBuffer, Instance->RTStreamingBufferLength);
-            // set offset
+            /* Set offset */
             Instance->RTStreamingBufferOffset = 0;
             Instance->hNotifyRTStreamingEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
             Instance->hNotifyRTStreamingStopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -598,7 +598,7 @@ WdmAudGetCapabilitiesByMMixer(
     }
     else
     {
-        // not supported
+        /* Not supported */
         return MMSYSERR_ERROR;
     }
 }
@@ -635,12 +635,12 @@ WdmAudCloseSoundDeviceByMMixer(
 
     if (DeviceType == MIXER_DEVICE_TYPE)
     {
-        /* no op */
+        /* No op */
         return MMSYSERR_NOERROR;
     }
     else if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        /* make sure the pin is stopped */
+        /* Make sure the pin is stopped */
         MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
         MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
         MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
@@ -653,7 +653,7 @@ WdmAudCloseSoundDeviceByMMixer(
             do
             {
                 Sleep(1);
-            }while(SoundDeviceInstance->RTStreamingStarted || SoundDeviceInstance->RTStreamingCompletionStarted);
+            } while(SoundDeviceInstance->RTStreamingStarted || SoundDeviceInstance->RTStreamingCompletionStarted);
 
             DPRINT("closing device handling\n");
             SoundDeviceInstance->RTStreamingBuffer = NULL;
@@ -672,7 +672,7 @@ WdmAudCloseSoundDeviceByMMixer(
         return MMSYSERR_NOERROR;
     }
 
-    /* midi is not supported */
+    /* Midi is not supported */
     return MMSYSERR_ERROR;
 }
 
@@ -728,14 +728,14 @@ WdmAudQueryMixerInfoByMMixer(
             return WdmAudGetLineInfo(hMixer, MixerId, MixLine, Flags);
         case MXDM_GETLINECONTROLS:
             return WdmAudGetLineControls(hMixer, MixerId, MixControls, Flags);
-       case MXDM_SETCONTROLDETAILS:
+        case MXDM_SETCONTROLDETAILS:
             return WdmAudSetControlDetails(hMixer, MixerId, MixDetails, Flags);
-       case MXDM_GETCONTROLDETAILS:
+        case MXDM_GETCONTROLDETAILS:
             return WdmAudGetControlDetails(hMixer, MixerId, MixDetails, Flags);
-       default:
-           DPRINT1("MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
-           SND_ASSERT(0);
-           return MMSYSERR_NOTSUPPORTED;
+        default:
+            DPRINT1("MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
+            SND_ASSERT(0);
+            return MMSYSERR_NOTSUPPORTED;
     }
 }
 
@@ -872,7 +872,7 @@ WdmAudResetStreamByMMixer(
         Status = MMixerSetWaveResetState(&MixerContext, SoundDeviceInstance->Handle, bStartReset);
         if (Status == MM_STATUS_SUCCESS)
         {
-            /* completed successfully */
+            /* Completed successfully */
             return MMSYSERR_NOERROR;
         }
     }
@@ -1308,11 +1308,11 @@ WdmAudCommitWaveBufferByMMixer(
         lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
         if (!lpHeader)
         {
-            /* no memory */
+            /* No memory */
             return MMSYSERR_NOMEM;
         }
 
-        /* setup stream packet */
+        /* Setup stream packet */
         lpHeader->Size = sizeof(KSSTREAM_HEADER);
         lpHeader->PresentationTime.Numerator = 1;
         lpHeader->PresentationTime.Denominator = 1;
