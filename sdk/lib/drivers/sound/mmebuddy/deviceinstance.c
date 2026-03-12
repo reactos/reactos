@@ -209,6 +209,10 @@ CreateSoundDeviceInstance(
 
     (*SoundDeviceInstance)->LoopsRemaining = 0;
 
+    /* Initialize RT streaming members */
+    (*SoundDeviceInstance)->LegacyStreaming = FALSE;
+    (*SoundDeviceInstance)->RTStreamingEnabled = FALSE;
+
     /* Create the streaming thread (TODO - is this for wave only?) */
     Result = CreateSoundThread(&(*SoundDeviceInstance)->Thread);
     if ( ! MMSUCCESS(Result) )

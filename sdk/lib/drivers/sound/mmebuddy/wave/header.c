@@ -266,7 +266,7 @@ EnqueueWaveHeader(
                 {
                     InitiateSoundStreaming(SoundDeviceInstance);
                 }
-                else
+                else if (SoundDeviceInstance->LegacyStreaming)
                 {
                     DoWaveStreaming(SoundDeviceInstance);
                 }
@@ -278,7 +278,6 @@ EnqueueWaveHeader(
                 DoWaveStreaming(SoundDeviceInstance);
             }
         }
-
     }
     else
     {
@@ -295,7 +294,7 @@ EnqueueWaveHeader(
             DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
 
             /* Only do wave streaming when the stream has not been paused */
-            if ( SoundDeviceInstance->RTStreamingEnabled == FALSE && SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE )
+            if ( SoundDeviceInstance->LegacyStreaming && SoundDeviceInstance->bPaused == FALSE && SoundDeviceInstance->bClosed == FALSE )
             {
                 DoWaveStreaming(SoundDeviceInstance);
             }
@@ -355,7 +354,7 @@ CompleteWaveHeader(
 
         SND_TRACE(L"Relinking nodes\n");
 
-        while ( CurrHdr != Header && CurrHdr != NULL)
+        while (CurrHdr != Header && CurrHdr != NULL)
         {
             PrevHdr = CurrHdr;
             CurrHdr = CurrHdr->lpNext;
