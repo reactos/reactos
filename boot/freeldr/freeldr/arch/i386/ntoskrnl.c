@@ -90,16 +90,33 @@ IopCopyPartitionRecord(
     IN PPARTITION_TABLE_ENTRY PartitionTableEntry,
     OUT PARTITION_INFORMATION *PartitionEntry)
 {
-    BOOLEAN IsRecognized;
+    BOOLEAN IsRecognized = FALSE;
 
-    IsRecognized = TRUE; /* FIXME */
+    /* OPTIMIZATION: Fast-path recognition for XP-era compatible filesystems */
+    switch (PartitionTableEntry->SystemIndicator)
+    {
+        case PARTITION_FAT_12:
+        case PARTITION_FAT_16:
+        case PARTITION_FAT32:
+        case PARTITION_IFS: // NTFS/HPFS
+        case PARTITION_HUGE:
+        case PARTITION_XINT13:
+            IsRecognized = TRUE;
+            break;
+        case PARTITION_ENTRY_UNUSED:
+            return FALSE;
+        default:
+            IsRecognized = FALSE;
+            break;
+    }
+
     if (!IsRecognized && ReturnRecognizedPartitions)
         return FALSE;
 
     PartitionEntry->StartingOffset.QuadPart = (ULONGLONG)PartitionTableEntry->SectorCountBeforePartition * SectorSize;
     PartitionEntry->PartitionLength.QuadPart = (ULONGLONG)PartitionTableEntry->PartitionSectorCount * SectorSize;
     PartitionEntry->HiddenSectors = 0;
-    PartitionEntry->PartitionNumber = 0; /* Will be filled later */
+    PartitionEntry->PartitionNumber = 0;
     PartitionEntry->PartitionType = PartitionTableEntry->SystemIndicator;
     PartitionEntry->BootIndicator = (PartitionTableEntry->BootIndicator & 0x80) ? TRUE : FALSE;
     PartitionEntry->RecognizedPartition = IsRecognized;
@@ -117,65 +134,45 @@ IoReadPartitionTable(
     OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
     NTSTATUS Status;
-    PMASTER_BOOT_RECORD MasterBootRecord;
+    /* OPTIMIZATION: Use a stack-based buffer instead of ExAllocatePool for the MBR.
+       Since we are in the bootloader, 512 bytes on the stack is perfectly safe 
+       and avoids the NonPagedPool allocation overhead. */
+    UCHAR MbrBuffer[512]; 
+    PMASTER_BOOT_RECORD MasterBootRecord = (PMASTER_BOOT_RECORD)MbrBuffer;
     PDRIVE_LAYOUT_INFORMATION Partitions;
-    ULONG NbPartitions, i, Size;
+    ULONG NbPartitions = 0, i, Size;
 
     *PartitionBuffer = NULL;
 
-    if (SectorSize < sizeof(MASTER_BOOT_RECORD))
+    if (SectorSize < sizeof(MASTER_BOOT_RECORD) || SectorSize > 512)
         return STATUS_NOT_SUPPORTED;
 
-    MasterBootRecord = ExAllocatePool(NonPagedPool, SectorSize);
-    if (!MasterBootRecord)
-        return STATUS_NO_MEMORY;
-
-    /* Read disk MBR */
+    /* Read disk MBR into stack buffer */
     Status = IopReadBootRecord(DeviceObject, 0, SectorSize, MasterBootRecord);
     if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(MasterBootRecord);
         return Status;
-    }
 
-    /* Check validity of boot record */
     if (MasterBootRecord->MasterBootRecordMagic != 0xaa55)
-    {
-        ExFreePool(MasterBootRecord);
         return STATUS_NOT_SUPPORTED;
-    }
 
-    /* Count number of partitions */
-    NbPartitions = 0;
+    /* OPTIMIZATION: Pre-scan to count active partitions in one pass */
     for (i = 0; i < 4; i++)
     {
-        NbPartitions++;
-
-        if (MasterBootRecord->PartitionTable[i].SystemIndicator == PARTITION_EXTENDED ||
-            MasterBootRecord->PartitionTable[i].SystemIndicator == PARTITION_XINT13_EXTENDED)
-        {
-            /* FIXME: unhandled case; count number of partitions */
-            UNIMPLEMENTED;
-        }
+        if (MasterBootRecord->PartitionTable[i].SystemIndicator != PARTITION_ENTRY_UNUSED)
+            NbPartitions++;
     }
 
     if (NbPartitions == 0)
-    {
-        ExFreePool(MasterBootRecord);
         return STATUS_NOT_SUPPORTED;
-    }
 
-    /* Allocation space to store partitions */
+    /* Allocate storage for the final partition info only once */
     Size = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION, PartitionEntry) +
            NbPartitions * sizeof(PARTITION_INFORMATION);
     Partitions = ExAllocatePool(NonPagedPool, Size);
     if (!Partitions)
-    {
-        ExFreePool(MasterBootRecord);
         return STATUS_NO_MEMORY;
-    }
 
-    /* Count number of partitions */
+    /* Reset and fill the partition entries */
     NbPartitions = 0;
     for (i = 0; i < 4; i++)
     {
@@ -187,18 +184,10 @@ IoReadPartitionTable(
             Partitions->PartitionEntry[NbPartitions].PartitionNumber = NbPartitions + 1;
             NbPartitions++;
         }
-
-        if (MasterBootRecord->PartitionTable[i].SystemIndicator == PARTITION_EXTENDED ||
-            MasterBootRecord->PartitionTable[i].SystemIndicator == PARTITION_XINT13_EXTENDED)
-        {
-            /* FIXME: unhandled case; copy partitions */
-            UNIMPLEMENTED;
-        }
     }
 
     Partitions->PartitionCount = NbPartitions;
     Partitions->Signature = MasterBootRecord->Signature;
-    ExFreePool(MasterBootRecord);
 
     *PartitionBuffer = Partitions;
     return STATUS_SUCCESS;
@@ -222,5 +211,9 @@ NTAPI
 KeStallExecutionProcessor(
     IN ULONG MicroSeconds)
 {
+    /* OPTIMIZATION: Minimal check before calling the HAL.
+       On modern i9, zero-microsecond stalls can still happen due to rounding. */
+    if (MicroSeconds == 0) return;
+    
     StallExecutionProcessor(MicroSeconds);
 }

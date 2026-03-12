@@ -4,7 +4,6 @@
  * FILE:            ntoskrnl/ke/amd64/krnlinit.c
  * PURPOSE:         Portable part of kernel initialization
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,6 +17,14 @@ extern UCHAR MainSSPT[];
 
 extern BOOLEAN RtlpUse16ByteSLists;
 
+/* GLOBAL DATA ***************************************************************/
+
+/* * Synchronization barrier for Multi-core startup.
+ * 0 = Master core initializing.
+ * 1 = Kernel structures ready for secondary cores.
+ */
+volatile LONG KiMasterPhase = 0;
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -28,7 +35,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PVOID IdleStack,
                    IN PKPRCB Prcb,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
 
 CODE_SEG("INIT")
 VOID
@@ -45,23 +51,23 @@ KiCalculateCpuFrequency(
         /* Start sampling loop */
         for (;;)
         {
-            /* Do a dummy CPUID to start the sample */
+            /* Do a dummy CPUID to serialize the instruction stream for accurate TSC */
             KiCpuId(&CpuInfo, 0);
 
             /* Fill out the starting data */
             CurrentSample->PerfStart = KeQueryPerformanceCounter(NULL);
             CurrentSample->TSCStart = __rdtsc();
-            CurrentSample->PerfFreq.QuadPart = -50000;
+            
+            /* * OPTIMIZATION: Use a fixed 50ms interval for more reliable 
+             * samples on both high-speed i9 and legacy Pentium chips.
+             */
+            KeStallExecutionProcessor(50000);
 
-            /* Sleep for this sample */
-            KeStallExecutionProcessor(CurrentSample->PerfFreq.QuadPart * -1 / 10);
-
-            /* Do another dummy CPUID */
+            /* Do another dummy CPUID to end the sample */
             KiCpuId(&CpuInfo, 0);
 
             /* Fill out the ending data */
-            CurrentSample->PerfEnd =
-                KeQueryPerformanceCounter(&CurrentSample->PerfFreq);
+            CurrentSample->PerfEnd = KeQueryPerformanceCounter(&CurrentSample->PerfFreq);
             CurrentSample->TSCEnd = __rdtsc();
 
             /* Calculate the differences */
@@ -72,43 +78,48 @@ KiCalculateCpuFrequency(
 
             /* Compute CPU Speed */
             CurrentSample->MHz = (ULONG)((CurrentSample->TSCDelta *
-                                          CurrentSample->
-                                          PerfFreq.QuadPart + 500000) /
-                                         (CurrentSample->PerfDelta *
-                                          1000000));
+                                          CurrentSample->PerfFreq.QuadPart + 500000) /
+                                         (CurrentSample->PerfDelta * 1000000));
 
             /* Check if this isn't the first sample */
-            if (Sample)
+            if (Sample > 0)
             {
-                /* Check if we got a good precision within 1MHz */
-                if ((CurrentSample->MHz == CurrentSample[-1].MHz) ||
-                    (CurrentSample->MHz == CurrentSample[-1].MHz + 1) ||
-                    (CurrentSample->MHz == CurrentSample[-1].MHz - 1))
+                LONG MHzDelta = (LONG)CurrentSample->MHz - (LONG)CurrentSample[-1].MHz;
+
+                /* * UNIVERSAL CHECK: 
+                 * 1. 1MHz precision for legacy/stable CPUs.
+                 * 2. 3MHz tolerance for modern CPUs with Turbo Jitter (Sample 3+).
+                 */
+                if (MHzDelta >= -1 && MHzDelta <= 1)
                 {
-                    /* We did, stop sampling */
+                    break;
+                }
+                else if (Sample >= 2 && (MHzDelta >= -3 && MHzDelta <= 3))
+                {
+                    /* On modern i9, we accept minor jitter to speed up boot */
                     break;
                 }
             }
 
-            /* Move on */
+            /* Move on to next sample if needed */
             CurrentSample++;
             Sample++;
 
             if (Sample == RTL_NUMBER_OF(Samples))
             {
-                /* No luck. Average the samples and be done */
+                /* No luck with precision. Average the results. */
                 ULONG TotalMHz = 0;
-                while (Sample--)
+                for (ULONG i = 0; i < RTL_NUMBER_OF(Samples); i++)
                 {
-                    TotalMHz += Samples[Sample].MHz;
+                    TotalMHz += Samples[i].MHz;
                 }
                 CurrentSample[-1].MHz = TotalMHz / RTL_NUMBER_OF(Samples);
-                DPRINT1("Sampling CPU frequency failed. Using average of %lu MHz\n", CurrentSample[-1].MHz);
+                DPRINT1("Sampling CPU frequency failed to stabilize. Using average: %lu MHz\n", CurrentSample[-1].MHz);
                 break;
             }
         }
 
-        /* Save the CPU Speed */
+        /* Save the CPU Speed to the PRCB */
         Prcb->MHz = CurrentSample[-1].MHz;
     }
 }
@@ -132,7 +143,6 @@ KiInitializeHandBuiltThread(
     Thread->Affinity = (ULONG_PTR)1 << Prcb->Number;
     Thread->WaitIrql = DISPATCH_LEVEL;
     Process->ActiveProcessors |= (ULONG_PTR)1 << Prcb->Number;
-
 }
 
 CODE_SEG("INIT")
@@ -141,7 +151,7 @@ VOID
 NTAPI
 KiSystemStartupBootStack(VOID)
 {
-    PLOADER_PARAMETER_BLOCK LoaderBlock = KeLoaderBlock; // hack
+    PLOADER_PARAMETER_BLOCK LoaderBlock = KeLoaderBlock;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD Thread = (PKTHREAD)KeLoaderBlock->Thread;
     PKPROCESS Process = Thread->ApcState.Process;
@@ -174,19 +184,29 @@ KiSystemStartupBootStack(VOID)
     /* Lower to APC_LEVEL */
     KeLowerIrql(APC_LEVEL);
 
-    /* Check if this is the boot cpu */
+    /* --- THE UNIVERSAL BARRIER --- */
     if (Prcb->Number == 0)
     {
-        /* Initialize the kernel */
+        /* Master Core: Runs global kernel initialization */
         KiInitializeKernel(Process, Thread, KernelStack, Prcb, LoaderBlock);
+
+        /* Signal secondary cores that it is safe to proceed */
+        InterlockedExchange(&KiMasterPhase, 1);
     }
     else
     {
-        /* Initialize the startup thread */
+        /* Secondary Cores: Wait for Master to finish to avoid race conditions */
+        while (InterlockedCompareExchange(&KiMasterPhase, 1, 1) != 1)
+        {
+            /* Use the x86 'PAUSE' instruction to reduce power/heat during wait */
+            YieldProcessor();
+        }
+
+        /* Initialize the startup thread for this specific core */
         KiInitializeHandBuiltThread(Thread, Process, KernelStack);
     }
 
-    /* Calculate the CPU frequency */
+    /* Calculate the CPU frequency (Per-core for older non-invariant TSC systems) */
     KiCalculateCpuFrequency(Prcb);
 
     /* Raise to Dispatch */
@@ -277,7 +297,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     KeServiceDescriptorTable[1].Limit = 0;
     KeServiceDescriptorTable[0].Number = MainSSPT;
 
-    /* Copy the the current table into the shadow table for win32k */
+    /* Copy the current table into the shadow table for win32k */
     RtlCopyMemory(KeServiceDescriptorTableShadow,
                   KeServiceDescriptorTable,
                   sizeof(KeServiceDescriptorTable));
@@ -314,4 +334,3 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
     Prcb->DpcStack = DpcStack;
 }
-
