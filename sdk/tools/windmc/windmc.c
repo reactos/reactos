@@ -1345,7 +1345,8 @@ int main(int argc, char **argv) {
                             if (strcmp(rawline, ".") == 0) { pos++; break; }
 
                             int clen = (int)strlen(rawline);
-                            int need = text_len + clen + (int)lines[pos].newline_len + 1;
+                            int newline_len = lines[pos].newline_len ? 2 : 0;
+                            int need = text_len + clen + newline_len + 1;
                             if (need >= text_cap) {
                                 while (need >= text_cap) text_cap *= 2;
                                 text = xrealloc(text, text_cap);
@@ -1353,9 +1354,10 @@ int main(int argc, char **argv) {
 
                             memcpy(text + text_len, rawline, clen);
                             text_len += clen;
-                            if (lines[pos].newline_len > 0) {
-                                memcpy(text + text_len, lines[pos].newline, lines[pos].newline_len);
-                                text_len += (int)lines[pos].newline_len;
+                            if (newline_len > 0) {
+                                /* Message resources must use Windows CRLF line endings. */
+                                memcpy(text + text_len, "\r\n", 2);
+                                text_len += 2;
                             }
                             pos++;
                         }
