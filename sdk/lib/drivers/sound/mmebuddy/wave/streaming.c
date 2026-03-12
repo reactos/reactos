@@ -72,15 +72,6 @@ DoWaveStreaming(
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
             ( Header ) && SoundDeviceInstance->ResetInProgress == FALSE)
     {
-        /* Is there any work to do? */
-        Header = SoundDeviceInstance->HeadWaveHeader;
-
-        if (!Header)
-        {
-            SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
-            return;
-        }
-
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
 
@@ -211,7 +202,6 @@ CompleteIO(
 
     do
 	{
-
         /* We have an available buffer now */
         -- SoundDeviceInstance->OutstandingBuffers;
 
@@ -221,10 +211,8 @@ CompleteIO(
         {
             /* Wave buffer fully completed */
             Bytes = WaveHdr->dwBufferLength - HdrExtension->BytesCompleted;
-
             HdrExtension->BytesCompleted += Bytes;
             dwNumberOfBytesTransferred -= Bytes;
-
             CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
             SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
         }
@@ -269,7 +257,7 @@ CompleteIO(
 
     // AUDIO-BRANCH DIFF
     // completion callback is performed in a thread
-    if (SoundDeviceInstance->RTStreamingEnabled == FALSE &&
+    if (SoundDeviceInstance->LegacyStreaming &&
         SoundDeviceInstance->bPaused == FALSE &&
         SoundDeviceInstance->bClosed == FALSE)
     {
