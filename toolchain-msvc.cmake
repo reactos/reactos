@@ -55,7 +55,7 @@ else()
     set(CMAKE_CXX_COMPILER cl)
 endif()
 
-set(CMAKE_MC_COMPILER native-windmc)
+set(CMAKE_MC_COMPILER mc)
 set(CMAKE_RC_COMPILER rc)
 if(ARCH STREQUAL "amd64")
     set(CMAKE_ASM_MASM_COMPILER ml64)
