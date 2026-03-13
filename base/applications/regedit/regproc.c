@@ -41,6 +41,7 @@ static WCHAR* GetWideString(const char* strA)
         int len = MultiByteToWideChar(CP_ACP, 0, strA, -1, NULL, 0);
 
         strW = malloc(len * sizeof(WCHAR));
+        if (!strW) return NULL;
         MultiByteToWideChar(CP_ACP, 0, strA, -1, strW, len);
         return strW;
     }
@@ -59,6 +60,11 @@ static WCHAR* GetWideStringN(const char* strA, int chars, DWORD *len)
         *len = MultiByteToWideChar(CP_ACP, 0, strA, chars, NULL, 0);
 
         strW = malloc(*len * sizeof(WCHAR));
+        if (!strW)
+        {
+            *len = 0;
+            return NULL;
+        }
         MultiByteToWideChar(CP_ACP, 0, strA, chars, strW, *len);
         return strW;
     }
@@ -78,6 +84,7 @@ char* GetMultiByteString(const WCHAR* strW)
         int len = WideCharToMultiByte(CP_ACP, 0, strW, -1, NULL, 0, NULL, NULL);
 
         strA = malloc(len);
+        if (!strA) return NULL;
         WideCharToMultiByte(CP_ACP, 0, strW, -1, strA, len, NULL, NULL);
         return strA;
     }
@@ -96,6 +103,11 @@ static char* GetMultiByteStringN(const WCHAR* strW, int chars, DWORD* len)
         *len = WideCharToMultiByte(CP_ACP, 0, strW, chars, NULL, 0, NULL, NULL);
 
         strA = malloc(*len);
+        if (!strA)
+        {
+            *len = 0;
+            return NULL;
+        }
         WideCharToMultiByte(CP_ACP, 0, strW, chars, strA, *len, NULL, NULL);
         return strA;
     }
@@ -245,7 +257,12 @@ static BOOL convert_hex_csv_to_hex(struct parser *parser, WCHAR **str)
 
     /* The worst case is 1 digit + 1 comma per byte */
     size = ((lstrlenW(*str) + 1) / 2) + parser->data_size;
-    parser->data = realloc(parser->data, size);
+    {
+        void *new_data = realloc(parser->data, size);
+        if (!new_data)
+            return FALSE;
+        parser->data = new_data;
+    }
 
     s = *str;
     d = (BYTE *)parser->data + parser->data_size;
@@ -472,6 +489,12 @@ static LONG open_key(struct parser *parser, WCHAR *path)
     if (res == ERROR_SUCCESS)
     {
         parser->key_name = malloc((lstrlenW(path) + 1) * sizeof(WCHAR));
+        if (!parser->key_name)
+        {
+            RegCloseKey(parser->hkey);
+            parser->hkey = NULL;
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
         lstrcpyW(parser->key_name, path);
     }
     else
@@ -571,6 +594,11 @@ static WCHAR *header_state(struct parser *parser, WCHAR *pos)
     if (!parser->is_unicode)
     {
         header = malloc((lstrlenW(line) + 3) * sizeof(WCHAR));
+        if (!header)
+        {
+            get_line(NULL);
+            return NULL;
+        }
         header[0] = parser->two_wchars[0];
         header[1] = parser->two_wchars[1];
         lstrcpyW(header + 2, line);
@@ -727,6 +755,8 @@ static WCHAR *quoted_value_name_state(struct parser *parser, WCHAR *pos)
 
     /* copy the value name in case we need to parse multiple lines and the buffer is overwritten */
     parser->value_name = malloc((lstrlenW(val_name) + 1) * sizeof(WCHAR));
+    if (!parser->value_name)
+        goto invalid;
     lstrcpyW(parser->value_name, val_name);
 
     set_state(parser, DATA_START);
@@ -838,6 +868,8 @@ static WCHAR *dword_data_state(struct parser *parser, WCHAR *pos)
     WCHAR *line = pos;
 
     parser->data = malloc(sizeof(DWORD));
+    if (!parser->data)
+        goto invalid;
 
     if (!convert_hex_to_dword(line, parser->data))
         goto invalid;
@@ -965,6 +997,11 @@ static WCHAR *get_lineA(FILE *fp)
     {
         size = REG_VAL_BUF_SIZE;
         buf = malloc(size);
+        if (!buf)
+        {
+            size = 0;
+            return NULL;
+        }
         *buf = 0;
         next = buf;
     }
@@ -980,8 +1017,12 @@ static WCHAR *get_lineA(FILE *fp)
             memmove(buf, next, len + 1);
             if (size - len < 3)
             {
+                char *new_buf;
                 size *= 2;
-                buf = realloc(buf, size);
+                new_buf = realloc(buf, size);
+                if (!new_buf)
+                    goto cleanup;
+                buf = new_buf;
             }
             if (!(count = fread(buf + len, 1, size - len - 1, fp)))
             {
@@ -1020,6 +1061,11 @@ static WCHAR *get_lineW(FILE *fp)
     {
         size = REG_VAL_BUF_SIZE;
         buf = malloc(size * sizeof(WCHAR));
+        if (!buf)
+        {
+            size = 0;
+            return NULL;
+        }
         *buf = 0;
         next = buf;
     }
@@ -1035,8 +1081,12 @@ static WCHAR *get_lineW(FILE *fp)
             memmove(buf, next, (len + 1) * sizeof(WCHAR));
             if (size - len < 3)
             {
+                WCHAR *new_buf;
                 size *= 2;
-                buf = realloc(buf, size * sizeof(WCHAR));
+                new_buf = realloc(buf, size * sizeof(WCHAR));
+                if (!new_buf)
+                    goto cleanup;
+                buf = new_buf;
             }
             if (!(count = fread(buf + len, sizeof(WCHAR), size - len - 1, fp)))
             {
@@ -1175,6 +1225,11 @@ static WCHAR *REGPROC_escape_string(WCHAR *str, size_t str_len, size_t *line_len
     }
 
     buf = malloc((str_len + escape_count + 1) * sizeof(WCHAR));
+    if (!buf)
+    {
+        *line_len = 0;
+        return NULL;
+    }
 
     for (i = 0, pos = 0; i < str_len; i++, pos++)
     {
@@ -1218,7 +1273,19 @@ static size_t export_value_name(FILE *fp, WCHAR *name, size_t len, BOOL unicode)
     if (name && *name)
     {
         WCHAR *str = REGPROC_escape_string(name, len, &line_len);
-        WCHAR *buf = malloc((line_len + 4) * sizeof(WCHAR));
+        WCHAR *buf;
+        if (!str)
+        {
+            line_len = 0;
+            return line_len;
+        }
+        buf = malloc((line_len + 4) * sizeof(WCHAR));
+        if (!buf)
+        {
+            free(str);
+            line_len = 0;
+            return line_len;
+        }
 #ifdef __REACTOS__
         StringCchPrintfW(buf, line_len + 4, L"\"%s\"=", str);
         line_len = wcslen(buf);
@@ -1246,7 +1313,17 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
     if (size)
         len = size / sizeof(WCHAR) - 1;
     str = REGPROC_escape_string(data, len, &line_len);
+    if (!str)
+    {
+        *buf = NULL;
+        return;
+    }
     *buf = malloc((line_len + 3) * sizeof(WCHAR));
+    if (!*buf)
+    {
+        free(str);
+        return;
+    }
 #ifdef __REACTOS__
     StringCchPrintfW(*buf, line_len + 3, L"\"%s\"", str);
 #else
@@ -1258,6 +1335,7 @@ static void export_string_data(WCHAR **buf, WCHAR *data, size_t size)
 static void export_dword_data(WCHAR **buf, DWORD *data)
 {
     *buf = malloc(15 * sizeof(WCHAR));
+    if (!*buf) return;
 #ifdef __REACTOS__
     StringCchPrintfW(*buf, 15, L"dword:%08x", *data);
 #else
@@ -1278,6 +1356,7 @@ static size_t export_hex_data_type(FILE *fp, DWORD type, BOOL unicode)
     else
     {
         WCHAR *buf = malloc(15 * sizeof(WCHAR));
+        if (!buf) return line_len;
 #ifdef __REACTOS__
         StringCchPrintfW(buf, 15, L"hex(%x):", type);
         line_len = wcslen(buf);
@@ -1307,6 +1386,7 @@ static void export_hex_data(FILE *fp, WCHAR **buf, DWORD type, DWORD line_len,
 
     num_commas = size - 1;
     *buf = malloc(size * 3 * sizeof(WCHAR));
+    if (!*buf) return;
 
     for (i = 0, pos = 0; i < size; i++)
     {
@@ -1377,6 +1457,7 @@ static WCHAR *build_subkey_path(WCHAR *path, DWORD path_len, WCHAR *subkey_name,
     WCHAR *subkey_path;
 
     subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
+    if (!subkey_path) return NULL;
 #ifdef __REACTOS__
     StringCchPrintfW(subkey_path, path_len + subkey_len + 2, L"%s\\%s", path, subkey_name);
 #else
@@ -1391,6 +1472,7 @@ static void export_key_name(FILE *fp, WCHAR *name, BOOL unicode)
     WCHAR *buf;
 
     buf = malloc((lstrlenW(name) + 7) * sizeof(WCHAR));
+    if (!buf) return;
 #ifdef __REACTOS__
     StringCchPrintfW(buf, lstrlenW(name) + 7, L"\r\n[%s]\r\n", name);
 #else
@@ -1417,6 +1499,12 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
 
     value_name = malloc(max_value_len * sizeof(WCHAR));
     data = malloc(max_data_bytes);
+    if (!value_name || !data)
+    {
+        free(value_name);
+        free(data);
+        return;
+    }
 
     i = 0;
     for (;;)
@@ -1433,13 +1521,19 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
         {
             if (data_size > max_data_bytes)
             {
+                BYTE *new_data;
                 max_data_bytes = data_size;
-                data = realloc(data, max_data_bytes);
+                new_data = realloc(data, max_data_bytes);
+                if (!new_data) break;
+                data = new_data;
             }
             else
             {
+                WCHAR *new_value_name;
                 max_value_len *= 2;
-                value_name = realloc(value_name, max_value_len * sizeof(WCHAR));
+                new_value_name = realloc(value_name, max_value_len * sizeof(WCHAR));
+                if (!new_value_name) break;
+                value_name = new_value_name;
             }
         }
         else break;
@@ -1449,6 +1543,7 @@ static void export_registry_data(FILE *fp, HKEY key, WCHAR *path, BOOL unicode)
     free(value_name);
 
     subkey_name = malloc(MAX_SUBKEY_LEN * sizeof(WCHAR));
+    if (!subkey_name) return;
 
     path_len = lstrlenW(path);
 
@@ -1574,6 +1669,12 @@ static BOOL export_all(WCHAR *file_name, WCHAR *path, BOOL unicode)
         }
 
         class_name = malloc((lstrlenW(reg_class_namesW[i]) + 1) * sizeof(WCHAR));
+        if (!class_name)
+        {
+            RegCloseKey(key);
+            fclose(fp);
+            return FALSE;
+        }
         lstrcpyW(class_name, reg_class_namesW[i]);
 
         export_registry_data(fp, classes[i], class_name, unicode);
