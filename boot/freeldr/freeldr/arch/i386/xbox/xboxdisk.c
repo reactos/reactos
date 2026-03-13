@@ -42,31 +42,28 @@ static
 VOID
 XboxDiskInit(VOID)
 {
-    UCHAR DetectedCount;
-    UCHAR UnitNumber;
-    PDEVICE_UNIT DeviceUnit = NULL;
+    UCHAR DetectedCount, UnitNumber;
 
     ASSERT(!AtaInitialized);
-
     AtaInitialized = TRUE;
 
     /* Find first HDD and CD */
     AtaInit(&DetectedCount);
-    for (UnitNumber = 0; UnitNumber <= DetectedCount; UnitNumber++)
+    for (UnitNumber = 0; UnitNumber < DetectedCount; UnitNumber++)
     {
-        DeviceUnit = AtaGetDevice(UnitNumber);
-        if (DeviceUnit)
+        PDEVICE_UNIT DeviceUnit = AtaGetDevice(UnitNumber);
+        if (!DeviceUnit)
+            continue;
+
+        if (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
         {
-            if (DeviceUnit->Flags & ATA_DEVICE_ATAPI)
-            {
-                if (!CdDrive)
-                    CdDrive = DeviceUnit;
-            }
-            else
-            {
-                if (!HardDrive)
-                    HardDrive = DeviceUnit;
-            }
+            if (!CdDrive)
+                CdDrive = DeviceUnit;
+        }
+        else
+        {
+            if (!HardDrive)
+                HardDrive = DeviceUnit;
         }
     }
 }

@@ -397,6 +397,7 @@ InitScsiDrive(
         DiskDrive->Geometry.Heads = RegsOut.b.dh;
         DiskDrive->Geometry.SectorsPerTrack = RegsOut.b.dl;
         DiskDrive->Geometry.BytesPerSector = RegsOut.w.bx;
+        DiskDrive->Type = DRIVE_TYPE_HDD;
     }
     /* Other devices */
     else if (ScsiParameters != 0)
@@ -675,7 +676,7 @@ Pc98InitializeBootDevices(VOID)
      * that cannot boot from a CD-ROM and has LBA limitations.
      */
     AtaInit(&IdeDetectedCount);
-    for (i = 0; i <= IdeDetectedCount; i++)
+    for (i = 0; i < IdeDetectedCount; i++)
     {
         DiskDrive = &Pc98DiskDrive[BiosHardDriveDriveNumber];
         if (InitIdeDrive(DiskDrive, i))
