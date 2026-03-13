@@ -212,8 +212,32 @@ PVOID MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddres
     return MemPointer;
 }
 
+VOID MmFreeMemoryWithType(PVOID MemoryPointer, MEMORY_TYPE MemoryType)
+{
+    PFN_NUMBER        StartPageNumber;
+    BOOLEAN           Result;
+
+    StartPageNumber = MmGetPageNumberFromAddress(MemoryPointer);
+
+    Result = MmFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable, StartPageNumber, MemoryType, FALSE);
+    if (!Result)
+    {
+        FrLdrBugCheckWithMessage(MEMORY_MANAGER_FAILURE, __FILE__, __LINE__, "Cannot free memory at 0x%p", MemoryPointer);
+    }
+}
+
 VOID MmFreeMemory(PVOID MemoryPointer)
 {
+    PFN_NUMBER        StartPageNumber;
+    BOOLEAN           Result;
+
+    StartPageNumber = MmGetPageNumberFromAddress(MemoryPointer);
+
+    Result = MmFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable, StartPageNumber, LoaderMaximum, TRUE);
+    if (!Result)
+    {
+        FrLdrBugCheckWithMessage(MEMORY_MANAGER_FAILURE, __FILE__, __LINE__, "Cannot free memory at 0x%p", MemoryPointer);
+    }
 }
 
 #if DBG
