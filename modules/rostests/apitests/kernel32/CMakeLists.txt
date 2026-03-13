@@ -32,6 +32,7 @@ list(APPEND SOURCE
     lstrlen.c
     Mailslot.c
     MultiByteToWideChar.c
+    Pipes.c
     PrivMoveFileIdentityW.c
     QueueUserAPC.c
     SetComputerNameExW.c
