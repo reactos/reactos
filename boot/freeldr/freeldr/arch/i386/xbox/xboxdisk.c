@@ -22,43 +22,18 @@ static BOOLEAN AtaInitialized = FALSE;
 
 /* DISK IO ERROR SUPPORT *****************************************************/
 
-static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
-
-LONG DiskReportError(BOOLEAN bShowError)
+/* For disk.c!DiskError() */
+PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode)
 {
-    /* Set the reference count */
-    if (bShowError) ++lReportError;
-    else            --lReportError;
-    return lReportError;
-}
-
 #if 0 // TODO: ATA/IDE error code descriptions.
-static PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
-{
     switch (ErrorCode)
     {
-    default: return "unknown error code";
+    default: return "Unknown error code";
     }
-}
 #endif
-
-static VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
-{
-    CHAR ErrorCodeString[200];
-
-    if (lReportError < 0)
-        return;
-
-#if 0 // TODO: ATA/IDE error code descriptions.
-    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
-            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
-#else
-    UNREFERENCED_PARAMETER(ErrorCode);
-    sprintf(ErrorCodeString, "%s", ErrorString);
-#endif
-
-    ERR("%s\n", ErrorCodeString);
-    UiMessageBox(ErrorCodeString);
+    return NULL;
 }
 
 /* FUNCTIONS ******************************************************************/
