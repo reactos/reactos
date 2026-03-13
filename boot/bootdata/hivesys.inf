@@ -1118,6 +1118,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0406",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0407",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0807",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0c07",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","1007",0x00000000,"l_intl.nls" ; de-LU
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","1407",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0408",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0409",0x00000000,"l_intl.nls"
@@ -1128,6 +1129,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","1409",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","1809",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","1c09",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","2009",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","2409",0x00000000,"l_intl.nls" ; en-029
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","2809",0x00000000,"l_intl.nls" ; en-BZ
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","2c09",0x00000000,"l_intl.nls" ; en-TT
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","3009",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","3409",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","040a",0x00000000,"l_intl.nls"
@@ -1252,6 +1256,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000406",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000407",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000807",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000c07",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00001007",0x00000000,"1" ; de-LU
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00001407",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000408",0x00000000,"4"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000409",0x00000000,"1"
@@ -1262,6 +1267,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00001409",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00001809",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00001c09",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00002009",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00002409",0x00000000,"1" ; en-029
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00002809",0x00000000,"1" ; en-BZ
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00002c09",0x00000000,"1" ; en-TT
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00003009",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00003409",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000040a",0x00000000,"1"
@@ -1345,7 +1353,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000443",0x00000000,"6"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000843",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000444",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000445",0x00000000,"f"
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000845",0x00000000,"f"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000845",0x00000000,"f" ; bn-BD
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000455",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000456",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000048f",0x00000000,"1" ; tdd-Tale-CN, reserved
