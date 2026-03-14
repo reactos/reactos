@@ -1,0 +1,50 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}'
+        {
+            '1.0' = s 'UIA_wine_private'
+            {
+                '0' { win64 = s '%MODULE%\1' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{5E60162C-AB0E-4E22-A61D-3A3ACD442ABA}' = s 'IWineUiaEvent'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}' { val Version = s '1.0' }
+        }
+        '{D6DD68D1-86FD-4332-8666-9ABEDEA2D24C}' = s 'IRawElementProviderSimple'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}' { val Version = s '1.0' }
+        }
+        '{4FD82B78-A43E-46AC-9803-0A6969C7C183}' = s 'IProxyProviderWinEventSink'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}' { val Version = s '1.0' }
+        }
+        '{57865755-6C05-4522-98DF-4CA658B768EF}' = s 'IWineUiaProvider'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}' { val Version = s '1.0' }
+        }
+        '{BCCB6799-D831-4057-BD50-6425823FF1A3}' = s 'IWineUiaNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{8A9CA8EB-856B-43D9-ABD7-4A590054064F}' { val Version = s '1.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+    }
+}

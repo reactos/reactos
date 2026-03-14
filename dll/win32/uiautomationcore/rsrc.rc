@@ -1,0 +1,9 @@
+1 WINE_REGISTRY uia_classes_client_t.rgs
+2 WINE_REGISTRY uia_classes_core_t.rgs
+3 WINE_REGISTRY uia_classes_t.rgs
+
+4 TYPELIB uia_classes_client.tlb
+5 TYPELIB uia_classes_core.tlb
+6 TYPELIB uia_classes.tlb
+
+#include "wine/wine_common_ver.rc"

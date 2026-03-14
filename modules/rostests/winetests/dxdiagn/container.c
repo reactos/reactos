@@ -42,35 +42,6 @@ static const WCHAR DxDiag_SoundCaptureDevices[] = {'D','x','D','i','a','g','_','
                                                    'D','x','D','i','a','g','_','S','o','u','n','d','C','a','p','t','u','r','e',
                                                    'D','e','v','i','c','e','s',0};
 
-/* Based on debugstr_variant in dlls/jscript/jsutils.c. */
-static const char *debugstr_variant(const VARIANT *var)
-{
-    static char buf[400];
-
-    if (!var)
-        return "(null)";
-
-    switch (V_VT(var))
-    {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_BSTR:
-        sprintf(buf, "{VT_BSTR: %s}", wine_dbgstr_w(V_BSTR(var)));
-        break;
-    case VT_BOOL:
-        sprintf(buf, "{VT_BOOL: %x}", V_BOOL(var));
-        break;
-    case VT_UI4:
-        sprintf(buf, "{VT_UI4: %u}", V_UI4(var));
-        break;
-    default:
-        sprintf(buf, "{vt %d}", V_VT(var));
-        break;
-    }
-
-    return buf;
-}
-
 static BOOL create_root_IDxDiagContainer(void)
 {
     HRESULT hr;
