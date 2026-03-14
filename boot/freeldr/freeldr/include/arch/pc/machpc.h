@@ -74,6 +74,7 @@ BOOLEAN PcInitializeBootDevices(VOID);
 
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(
+    _In_ USHORT OperatingSystemVersion,
     _In_opt_ PCSTR Options);
 
 VOID PcHwIdle(VOID);

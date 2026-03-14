@@ -74,7 +74,7 @@ typedef struct tagMACHVTBL
 
     // NOTE: Not in the machine.c ...
     BOOLEAN (*InitializeBootDevices)(VOID);
-    PCONFIGURATION_COMPONENT_DATA (*HwDetect)(_In_opt_ PCSTR Options);
+    PCONFIGURATION_COMPONENT_DATA (*HwDetect)(_In_ USHORT OperatingSystemVersion, _In_opt_ PCSTR Options);
     VOID (*HwIdle)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
@@ -136,7 +136,7 @@ VOID MachInit(const char *CmdLine);
 TIMEINFO* ArcGetTime(VOID);
 ULONG ArcGetRelativeTime(VOID);
 
-PCONFIGURATION_COMPONENT_DATA MachHwDetect(_In_opt_ PCSTR Options);
+PCONFIGURATION_COMPONENT_DATA MachHwDetect(_In_ USHORT OperatingSystemVersion, _In_opt_ PCSTR Options);
 VOID MachPrepareForReactOS(VOID);
 VOID MachGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize);
 VOID MachVideoGetFontsFromFirmware(PULONG RomFontPointers);
