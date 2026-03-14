@@ -176,7 +176,6 @@ add_compile_options(-Wall -Wpointer-arith)
 
 # Disable some overzealous warnings
 add_compile_options(
-    -Wno-unknown-warning-option
     -Wno-char-subscripts
     -Wno-multichar
     -Wno-unused-value
@@ -648,6 +647,13 @@ string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
 # libsupc++ requires libgcc and stdc++compat
 target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCC_EH_LOCATION)
+string(STRIP ${LIBGCC_EH_LOCATION} LIBGCC_EH_LOCATION)
+if(EXISTS "${LIBGCC_EH_LOCATION}" AND NOT LIBGCC_EH_LOCATION STREQUAL "libgcc_eh.a")
+    # Newer MinGW-w64 GCC toolchains separate the C++ exception handling
+    # runtime into libgcc_eh.a, while older ones keep it in libgcc.a.
+    target_link_libraries(libsupc++ INTERFACE ${LIBGCC_EH_LOCATION})
+endif()
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
