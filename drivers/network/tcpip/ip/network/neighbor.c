@@ -296,6 +296,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   PNEIGHBOR_CACHE_ENTRY NCE;
   ULONG HashValue;
   KIRQL OldIrql;
+  IP_ADDRESS InternalAddress;
 
   TI_DbgPrint
       (DEBUG_NCACHE,
@@ -312,8 +313,14 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
       return NULL;
     }
 
+  RtlCopyMemory(&InternalAddress, Address, sizeof(*Address));
+
+  /* Map 127.x.x.x adresses to the loopback address (127.0.0.1) */
+  if ((InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
+    InternalAddress.Address.IPv4Address = LOOPBACK_ADDRESS_IPv4;
+
   NCE->Interface = Interface;
-  NCE->Address = *Address;
+  NCE->Address = InternalAddress;
   NCE->LinkAddressLength = LinkAddressLength;
   NCE->LinkAddress = (PVOID)&NCE[1];
   if( LinkAddress )
@@ -327,7 +334,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
 
   TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
 
-  HashValue = *(PULONG)&Address->Address;
+  HashValue = *(PULONG)&InternalAddress.Address;
   HashValue ^= HashValue >> 16;
   HashValue ^= HashValue >> 8;
   HashValue ^= HashValue >> 4;
@@ -433,10 +440,17 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
   UINT HashValue;
   KIRQL OldIrql;
   PIP_INTERFACE FirstInterface;
+  IP_ADDRESS InternalAddress;
 
   TI_DbgPrint(DEBUG_NCACHE, ("Called. Address (0x%X).\n", Address));
 
-  HashValue = *(PULONG)&Address->Address;
+  RtlCopyMemory(&InternalAddress, Address, sizeof(*Address));
+
+  /* Map 127.x.x.x adresses to the loopback address (127.0.0.1) */
+  if ((InternalAddress.Address.IPv4Address & LOOPBACK_ADDRMASK_IPv4) == (LOOPBACK_ADDRESS_IPv4 & LOOPBACK_ADDRMASK_IPv4))
+    InternalAddress.Address.IPv4Address = LOOPBACK_ADDRESS_IPv4;
+
+  HashValue = *(PULONG)&InternalAddress.Address;;
   HashValue ^= HashValue >> 16;
   HashValue ^= HashValue >> 8;
   HashValue ^= HashValue >> 4;
@@ -462,7 +476,7 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
       while (NCE != NULL)
       {
          if (NCE->Interface == Interface &&
-             AddrIsEqual(Address, &NCE->Address))
+             AddrIsEqual(&InternalAddress, &NCE->Address))
          {
              break;
          }
@@ -482,7 +496,7 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
       NCE = NeighborCache[HashValue].Cache;
       while (NCE != NULL)
       {
-         if (AddrIsEqual(Address, &NCE->Address))
+         if (AddrIsEqual(&InternalAddress, &NCE->Address))
          {
              break;
          }
