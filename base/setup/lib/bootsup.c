@@ -942,7 +942,6 @@ InstallFatBootcodeToPartition(
         return Status;
     }
 
-    /* Prepare for possibly updating 'freeldr.ini' */
     DoesFreeLdrExist = DoesFileExist_2(SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
@@ -1231,7 +1230,6 @@ InstallBtrfsBootcodeToPartition(
         return Status;
     }
 
-    /* Prepare for possibly updating 'freeldr.ini' */
     DoesFreeLdrExist = DoesFileExist_2(SystemRootPath->Buffer, L"freeldr.ini");
     if (DoesFreeLdrExist)
     {
