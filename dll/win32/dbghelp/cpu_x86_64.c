@@ -663,9 +663,20 @@ static BOOL x86_64_stack_walk(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
         union ctx newctx = *context;
 
         if (!fetch_next_frame(csw, &newctx, frame->AddrPC.Offset - deltapc, NULL))
-            goto done_err;
-        frame->AddrReturn.Mode = AddrModeFlat;
-        frame->AddrReturn.Offset = newctx.ctx.Rip;
+        {
+            /*
+             * The current frame is valid, but there is no parent frame to
+             * report (end-of-stack). Return this frame and terminate the walk
+             * on the next call, which matches Windows-observed behavior.
+             */
+            frame->AddrReturn.Mode = AddrModeFlat;
+            frame->AddrReturn.Offset = 0;
+        }
+        else
+        {
+            frame->AddrReturn.Mode = AddrModeFlat;
+            frame->AddrReturn.Offset = newctx.ctx.Rip;
+        }
     }
 
     frame->Far = TRUE;
