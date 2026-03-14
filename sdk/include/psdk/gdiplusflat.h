@@ -292,6 +292,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipDrawImage(GpGraphics *, GpImage *, REAL, REAL);
     GpStatus WINGDIPAPI
+    GdipDrawImageFX(GpGraphics *, GpImage *, GpRectF *, GpMatrix *, CGpEffect *, GpImageAttributes *, GpUnit);
+    GpStatus WINGDIPAPI
     GdipDrawImageI(GpGraphics *, GpImage *, INT, INT);
     GpStatus WINGDIPAPI
     GdipDrawImagePointRect(GpGraphics *, GpImage *, REAL, REAL, REAL, REAL, REAL, REAL, GpUnit);
@@ -603,6 +605,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipResetClip(GpGraphics *);
     GpStatus WINGDIPAPI
+    GdipResetPageTransform(GpGraphics* );
+    GpStatus WINGDIPAPI
     GdipResetWorldTransform(GpGraphics *);
     GpStatus WINGDIPAPI
     GdipRestoreGraphics(GpGraphics *, GraphicsState);
@@ -610,6 +614,8 @@ extern "C"
     GdipRotateWorldTransform(GpGraphics *, REAL, GpMatrixOrder);
     GpStatus WINGDIPAPI
     GdipSaveAdd(GpImage *, GDIPCONST EncoderParameters *);
+    GpStatus WINGDIPAPI
+    GdipSaveAddImage(GpImage *, GpImage *, GDIPCONST EncoderParameters *);
     GpStatus WINGDIPAPI
     GdipSaveGraphics(GpGraphics *, GraphicsState *);
     GpStatus WINGDIPAPI
@@ -1074,6 +1080,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipCreateMetafileFromStream(IStream *, GpMetafile **);
     GpStatus WINGDIPAPI
+    GdipGetMetafileDownLevelRasterizationLimit(GDIPCONST GpMetafile *, UINT *);
+    GpStatus WINGDIPAPI
     GdipGetHemfFromMetafile(GpMetafile *, HENHMETAFILE *);
     GpStatus WINGDIPAPI
     GdipPlayMetafileRecord(GDIPCONST GpMetafile *, EmfPlusRecordType, UINT, UINT, GDIPCONST BYTE *);
@@ -1229,6 +1237,8 @@ extern "C"
     GdipGetPenBrushFill(GpPen *, GpBrush **);
     GpStatus WINGDIPAPI
     GdipGetPenColor(GpPen *, ARGB *);
+    GpStatus WINGDIPAPI
+    GdipGetPenCompoundArray(GpPen *, REAL *, INT);
     GpStatus WINGDIPAPI
     GdipGetPenCompoundCount(GpPen *, INT *);
     GpStatus WINGDIPAPI

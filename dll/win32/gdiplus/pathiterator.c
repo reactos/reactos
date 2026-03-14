@@ -40,14 +40,14 @@ GpStatus WINGDIPAPI GdipCreatePathIter(GpPathIterator **iterator, GpPath* path)
     if(!iterator)
         return InvalidParameter;
 
-    *iterator = heap_alloc_zero(sizeof(GpPathIterator));
-    if(!*iterator)  return OutOfMemory;
+    *iterator = calloc(1, sizeof(GpPathIterator));
+    if(!*iterator) return OutOfMemory;
 
     if(path){
         size = path->pathdata.Count;
 
-        (*iterator)->pathdata.Types  = heap_alloc_zero(size);
-        (*iterator)->pathdata.Points = heap_alloc_zero(size * sizeof(PointF));
+        (*iterator)->pathdata.Types  = malloc(size);
+        (*iterator)->pathdata.Points = malloc(size * sizeof(PointF));
 
         memcpy((*iterator)->pathdata.Types, path->pathdata.Types, size);
         memcpy((*iterator)->pathdata.Points, path->pathdata.Points,size * sizeof(PointF));
@@ -73,9 +73,9 @@ GpStatus WINGDIPAPI GdipDeletePathIter(GpPathIterator *iter)
     if(!iter)
         return InvalidParameter;
 
-    heap_free(iter->pathdata.Types);
-    heap_free(iter->pathdata.Points);
-    heap_free(iter);
+    free(iter->pathdata.Types);
+    free(iter->pathdata.Points);
+    free(iter);
 
     return Ok;
 }
@@ -222,6 +222,8 @@ GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
     }
 
     *startIndex = iterator->subpath_pos;
+    /* Set new pathtype position */
+    iterator->pathtype_pos = iterator->subpath_pos;
 
     for(i = iterator->subpath_pos + 1; i < count &&
         !(iterator->pathdata.Types[i] == PathPointTypeStart); i++);
@@ -238,6 +240,7 @@ GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
 
     return Ok;
 }
+
 GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator *iterator)
 {
     TRACE("(%p)\n", iterator);
@@ -295,12 +298,36 @@ GpStatus WINGDIPAPI GdipPathIterIsValid(GpPathIterator* iterator, BOOL* valid)
 GpStatus WINGDIPAPI GdipPathIterNextPathType(GpPathIterator* iter, INT* result,
     BYTE* type, INT* start, INT* end)
 {
-    FIXME("(%p, %p, %p, %p, %p) stub\n", iter, result, type, start, end);
+    INT i, stopIndex;
+    TRACE("(%p, %p, %p, %p, %p)\n", iter, result, type, start, end);
 
-    if(!iter || !result || !type || !start || !end)
+    if (!iter || !result || !type || !start || !end)
         return InvalidParameter;
 
-    return NotImplemented;
+    i = iter->pathtype_pos;
+    stopIndex = iter->subpath_pos;
+    if (i >= stopIndex)  {
+        *result = 0;
+        return Ok;
+    }
+    if ((iter->pathdata.Types[i] & PathPointTypePathTypeMask) == PathPointTypeStart)
+        i++;
+
+    *start = i - 1;
+    if ((i < stopIndex) &&
+       ((iter->pathdata.Types[i] & PathPointTypePathTypeMask) != PathPointTypeStart))
+    {
+        *type = iter->pathdata.Types[i] & PathPointTypePathTypeMask;
+        i++;
+        for ( ; i < stopIndex; i++) {
+            if ((iter->pathdata.Types[i] & PathPointTypePathTypeMask) != *type)
+                break;
+        }
+    }
+    iter->pathtype_pos = i;
+    *end = i - 1;
+    *result = *end - *start + 1;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipPathIterNextSubpathPath(GpPathIterator* iter, INT* result,

@@ -13,6 +13,7 @@ add_library(mlang MODULE ${SOURCE} mlang.rc)
 set_module_type(mlang win32dll UNICODE)
 target_link_libraries(mlang uuid wine oldnames)
 add_delay_importlibs(mlang oleaut32)
-add_importlibs(mlang gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(mlang gdi32 kernel32_vista advapi32 msvcrt kernel32 ntdll)
+target_link_libraries(mlang wine_dll_register)
 add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)
 set_wine_module_FIXME(mlang) # CORE-5743: No ARRAY_SIZE and CONST_VTABLE

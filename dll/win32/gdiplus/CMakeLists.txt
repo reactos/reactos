@@ -3,6 +3,9 @@ add_definitions(
     -D__ROS_LONG64__
     -D_USE_MATH_DEFINES)
 
+remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
+add_definitions(-D_WIN32_WINNT=0x601 -DWINVER=0x601)
+
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -39,9 +42,9 @@ if(MSVC)
 endif()
 
 set_module_type(gdiplus win32dll)
-target_link_libraries(gdiplus wine)
+target_link_libraries(gdiplus wine oldnames)
 add_delay_importlibs(gdiplus windowscodecs)
-add_importlibs(gdiplus msvcrt shlwapi oleaut32 ole32 user32 gdi32 kernel32 ntdll)
+add_importlibs(gdiplus msvcrt shlwapi mlang oleaut32 ole32 user32 gdi32 kernel32 kernel32_vista ntdll)
 add_pch(gdiplus precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)
 
