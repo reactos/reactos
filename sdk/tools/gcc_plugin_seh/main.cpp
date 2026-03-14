@@ -91,6 +91,25 @@ get_seh_function()
     return seh_fun;
 }
 
+/*
+ * SEH handlerdata is emitted per source function by this plugin.
+ * If such a function gets inlined, GCC concatenates multiple handlerdata
+ * blocks in the caller's xdata. __C_specific_handler expects one block.
+ * Prevent inlining/cloning at the producer side to keep one canonical block.
+ */
+static
+void
+mark_seh_function_noinline(void)
+{
+    tree fndecl = current_function_decl;
+
+    if (fndecl == NULL_TREE)
+        return;
+
+    DECL_UNINLINABLE(fndecl) = 1;
+    DECL_DECLARED_INLINE_P(fndecl) = 0;
+}
+
 static
 void
 handle_seh_pragma(cpp_reader* UNUSED parser)
@@ -143,6 +162,9 @@ handle_seh_pragma(cpp_reader* UNUSED parser)
 
     /* Make sure we use a frame pointer. REACTOS' PSEH depends on this */
     cfun->machine->accesses_prev_frame = 1;
+
+    /* Keep handlerdata generation canonical: one SEH block per function. */
+    mark_seh_function_noinline();
 }
 
 static
