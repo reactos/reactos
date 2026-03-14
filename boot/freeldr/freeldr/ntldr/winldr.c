@@ -628,7 +628,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     PCSTR Option;
     ULONG OptionLength;
     PVOID KernelBase, HalBase, KdDllBase = NULL;
-    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL;
+    PLDR_DATA_TABLE_ENTRY HalDTE, KdDllDTE = NULL, BootVidDTE = NULL;
     CHAR DirPath[MAX_PATH];
     CHAR HalFileName[MAX_PATH];
     CHAR KernelFileName[MAX_PATH];
@@ -880,6 +880,17 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         }
     }
 
+#ifdef UEFIBOOT
+    /* On UEFI, load the framebuffer boot video driver instead of VGA.
+     * Override its base DLL name to "bootvid.dll" to satisfy ntoskrnl imports. */
+    LoadModule(LoaderBlock, DirPath, "lfbbvid.dll",
+               "bootvid.dll", LoaderBootDriver, &BootVidDTE, 42);
+    if (!BootVidDTE)
+    {
+        ERR("LoadModule('lfbbvid.dll') failed, falling back to bootvid.dll\n");
+    }
+#endif
+
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
     if (!Success)
@@ -902,6 +913,17 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
             goto Quit;
         }
     }
+#ifdef UEFIBOOT
+    if (BootVidDTE)
+    {
+        Success = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, BootVidDTE);
+        if (!Success)
+        {
+            UiMessageBox("Could not load lfbbvid.dll");
+            goto Quit;
+        }
+    }
+#endif
 
 Quit:
     if (!Success)
