@@ -81,11 +81,12 @@ typedef struct tagDISKCONTEXT
 
 typedef struct _INTERNAL_UEFI_DISK
 {
-    UCHAR ArcDriveNumber;
-    UCHAR NumOfPartitions;
-    ULONG UefiHandleIndex;
-    BOOLEAN IsThisTheBootDrive;
     EFI_HANDLE Handle;
+    ULONG UefiHandleIndex;
+    UCHAR ArcDriveNumber;
+    // UCHAR NumOfPartitions;
+    BOOLEAN IsThisTheBootDrive;
+    CHAR DiskIdentifier[20];
 } INTERNAL_UEFI_DISK, *PINTERNAL_UEFI_DISK;
 
 /* GLOBALS *******************************************************************/
@@ -100,15 +101,12 @@ static PVOID DiskReadBufferRaw;
 static ULONG DiskReadBufferAlignment;
 static BOOLEAN DiskReadBufferFromPool;
 static BOOLEAN DiskReadBufferFallbackPool = FALSE;
-UCHAR PcBiosDiskCount;
+static UCHAR PcBiosDiskCount;
 
 UCHAR FrldrBootDrive;
 ULONG FrldrBootPartition;
 SIZE_T DiskReadBufferSize;
 PVOID Buffer;
-
-static const CHAR Hex[] = "0123456789abcdef";
-static CHAR PcDiskIdentifier[32][20];
 
 /* UEFI-specific */
 static ULONG UefiBootRootIndex = 0;
@@ -839,91 +837,47 @@ static const DEVVTBL UefiDiskVtbl =
     UefiDiskSeek,
 };
 
-
-PCHAR
-GetHarddiskIdentifier(UCHAR DriveNumber)
+static VOID
+GetHarddiskInformation(
+    _In_ UCHAR DriveNumber)
 {
-    TRACE("GetHarddiskIdentifier: DriveNumber: %d\n", DriveNumber);
-    if (DriveNumber < FIRST_BIOS_DISK)
-        return NULL;
-    return PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
-}
+    static const CHAR Hex[] = "0123456789abcdef";
 
-static
-VOID
-GetHarddiskInformation(UCHAR DriveNumber)
-{
-    PMASTER_BOOT_RECORD Mbr;
-    PULONG Buffer;
-    ULONG i;
-    ULONG Checksum;
-    ULONG Signature;
+    ARC_STATUS Status;
+    ULONG Checksum, Signature;
     BOOLEAN ValidPartitionTable;
-    CHAR ArcName[MAX_PATH];
-    PARTITION_TABLE_ENTRY PartitionTableEntry;
     ULONG ArcDriveIndex;
     PCHAR Identifier;
+    CHAR DiskName[64];
+
+    ASSERT(InternalUefiDisk);
 
     ArcDriveIndex = DriveNumber - FIRST_BIOS_DISK;
     if (ArcDriveIndex >= 32)
         return;
 
-    Identifier = PcDiskIdentifier[ArcDriveIndex];
+    Identifier = InternalUefiDisk[ArcDriveIndex].DiskIdentifier;
 
-    /* Detect disk partition type */
-    DiskDetectPartitionType(DriveNumber);
+    RtlStringCbPrintfA(DiskName, sizeof(DiskName),
+                       "multi(0)disk(0)rdisk(%u)",
+                       ArcDriveIndex);
 
-    /* Read the MBR */
-    if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
+    DiskReportError(FALSE);
+    Status = DiskInitialize(DriveNumber, DiskName, DiskPeripheral, &UefiDiskVtbl,
+                            &Checksum, &Signature, &ValidPartitionTable);
+    DiskReportError(TRUE);
+
+    if (Status != ESUCCESS)
     {
-        ERR("Reading MBR failed\n");
-        /* We failed, use a default identifier */
-        sprintf(Identifier, "BIOSDISK%d", ArcDriveIndex);
+        /* The disk failed to be initialized, use a default identifier */
+        RtlStringCbPrintfA(Identifier, 20, "BIOSDISK%u", ArcDriveIndex + 1);
         return;
     }
 
-    Buffer = (ULONG*)DiskReadBuffer;
-    Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
-
-    Signature = Mbr->Signature;
-    TRACE("Signature: %x\n", Signature);
-
-    /* Calculate the MBR checksum */
-    Checksum = 0;
-    for (i = 0; i < 512 / sizeof(ULONG); i++)
-    {
-        Checksum += Buffer[i];
-    }
-    Checksum = ~Checksum + 1;
-    TRACE("Checksum: %x\n", Checksum);
-
-    ValidPartitionTable = (Mbr->MasterBootRecordMagic == 0xAA55);
-
-    /* Fill out the ARC disk block */
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)", ArcDriveIndex);
-    AddReactOSArcDiskInfo(ArcName, Signature, Checksum, ValidPartitionTable);
-
-    sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", ArcDriveIndex);
-    FsRegisterDevice(ArcName, &UefiDiskVtbl);
-
-    /* Add partitions */
-    i = FIRST_PARTITION;
-    DiskReportError(FALSE);
-    while (DiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
-    {
-        if (PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
-        {
-            sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(%lu)", ArcDriveIndex, i);
-            FsRegisterDevice(ArcName, &UefiDiskVtbl);
-        }
-        i++;
-    }
-    DiskReportError(TRUE);
-
-    if (ArcDriveIndex < PcBiosDiskCount && InternalUefiDisk != NULL)
-    {
-        InternalUefiDisk[ArcDriveIndex].NumOfPartitions = i;
-    }
+    // FIXME: Currently unused; if necessary, make DiskInitialize() return
+    // the number of partitions determined when initializing the disk.
+    // if (ArcDriveIndex < PcBiosDiskCount)
+    //     InternalUefiDisk[ArcDriveIndex].NumOfPartitions = numPartitions;
 
     /* Convert checksum and signature to identifier string */
     Identifier[0] = Hex[(Checksum >> 28) & 0x0F];
@@ -945,7 +899,7 @@ GetHarddiskInformation(UCHAR DriveNumber)
     Identifier[16] = Hex[Signature & 0x0F];
     Identifier[17] = '-';
     Identifier[18] = (ValidPartitionTable ? 'A' : 'X');
-    Identifier[19] = 0;
+    Identifier[19] = ANSI_NULL;
     TRACE("Identifier: %s\n", Identifier);
 }
 
@@ -1303,11 +1257,6 @@ UefiInitializeBootDevices(VOID)
     EFI_BLOCK_IO* BlockIo;
     EFI_STATUS Status;
     ULONG ArcDriveIndex;
-    PMASTER_BOOT_RECORD Mbr;
-    PULONG Buffer;
-    ULONG Checksum = 0;
-    ULONG Signature;
-    ULONG i;
 
     DiskReadBufferSize = EFI_PAGE_SIZE;
     DiskReadBuffer = NULL;
@@ -1355,32 +1304,17 @@ UefiInitializeBootDevices(VOID)
 
     if (BlockIo->Media->RemovableMedia == TRUE && BlockIo->Media->BlockSize == 2048)
     {
-        /* Read the MBR from CD-ROM (sector 16) */
-        if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, DiskReadBuffer))
-        {
-            ERR("Reading MBR from CD-ROM failed\n");
-            return FALSE;
-        }
+        ARC_STATUS Status;
 
-        Buffer = (ULONG*)DiskReadBuffer;
-        Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
+        DiskReportError(FALSE);
+        Status = DiskInitialize(FrldrBootDrive, FrLdrBootPath, CdromController,
+                                &UefiDiskVtbl, NULL, NULL, NULL);
+        DiskReportError(TRUE);
 
-        Signature = Mbr->Signature;
-        TRACE("CD-ROM Signature: %x\n", Signature);
-
-        /* Calculate the MBR checksum */
-        for (i = 0; i < 2048 / sizeof(ULONG); i++)
-        {
-            Checksum += Buffer[i];
-        }
-        Checksum = ~Checksum + 1;
-        TRACE("CD-ROM Checksum: %x\n", Checksum);
-
-        /* Fill out the ARC disk block */
-        AddReactOSArcDiskInfo(FrLdrBootPath, Signature, Checksum, TRUE);
-
-        FsRegisterDevice(FrLdrBootPath, &UefiDiskVtbl);
-        TRACE("Registered CD-ROM boot device: 0x%02X\n", (int)FrldrBootDrive);
+        if (Status == ESUCCESS)
+            TRACE("Registered CD-ROM boot device: 0x%02X\n", FrldrBootDrive);
+        else
+            ERR("CD-ROM boot device 0x%02X failed\n", FrldrBootDrive);
     }
 
     return TRUE;

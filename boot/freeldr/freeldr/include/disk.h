@@ -134,6 +134,19 @@ extern PCSTR
 DiskGetErrorCodeString(
     _In_ ULONG ErrorCode);
 
+/* See fs.h */
+struct tagDEVVTBL;
+
+ARC_STATUS
+DiskInitialize(
+    _In_ UCHAR DriveNumber, // FIXME: Arch-specific
+    _In_ PCSTR DeviceName,
+    _In_ CONFIGURATION_TYPE DeviceType,
+    _In_ const struct tagDEVVTBL* FuncTable,
+    _Out_opt_ PULONG pChecksum,
+    _Out_opt_ PULONG pSignature,
+    _Out_opt_ PBOOLEAN pValidPartitionTable);
+
 
 /*
  * Fixed Disk Partition Management Functions (partition.c)
