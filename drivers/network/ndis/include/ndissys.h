@@ -34,6 +34,8 @@
 #define MAX(value1, value2) \
     ((value1 > value2)? value1 : value2)
 
+#define RTL_CONSTANT_LARGE_INTEGER(quad_part) {{(quad_part), (quad_part) >> 32}}
+
 #define ExInterlockedRemoveEntryList(_List,_Lock) \
  { KIRQL OldIrql; \
    KeAcquireSpinLock(_Lock, &OldIrql); \

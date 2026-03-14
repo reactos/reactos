@@ -77,10 +77,11 @@ NdisAllocateMemory(
   if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
   {
       /* Allocate contiguous memory (possibly noncached) */
+      const PHYSICAL_ADDRESS ZeroAddress = RTL_CONSTANT_LARGE_INTEGER(0LL);
       *VirtualAddress = MmAllocateContiguousMemorySpecifyCache(Length,
-                                                               RtlConvertUlongToLargeInteger(0),
+                                                               ZeroAddress,
                                                                HighestAcceptableAddress,
-                                                               RtlConvertUlongToLargeInteger(0),
+                                                               ZeroAddress,
                                                                (MemoryFlags & NDIS_MEMORY_NONCACHED) ? MmNonCached : MmCached);
   }
   else if (MemoryFlags & NDIS_MEMORY_NONCACHED)
