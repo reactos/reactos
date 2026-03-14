@@ -22,8 +22,13 @@
 extern char __ImageBase;
 #ifdef __GNUC__
   #ifdef _M_AMD64
-    /* .text/.data/.rdata, and .bss */
-    #define FREELDR_SECTION_COUNT 2
+    #if (__GNUC__ >= 13)
+      /* .text, .edata and .bss */
+      #define FREELDR_SECTION_COUNT 3
+    #else
+      /* .text/.data/.rdata, and .bss */
+      #define FREELDR_SECTION_COUNT 2
+    #endif
   #else
     /* .text/.data/.rdata, .edata and .bss */
     #define FREELDR_SECTION_COUNT 3
