@@ -817,7 +817,7 @@ function(create_registry_hives)
                 FILE ${_registry_inf}
                 DESTINATION reactos
                 NO_CAB
-                FOR bootcd regtest)
+                FOR bootcd livecd regtest)
 
     # BootCD setup system hive
     add_custom_command(

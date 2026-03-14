@@ -299,6 +299,19 @@ AddSectionToCopyQueueCab(
     PCWSTR TargetDir;
     PCWSTR TargetFileName;
     WCHAR FileDstPath[MAX_PATH];
+    PCWSTR ActualCabinet = SourceCabinet;
+
+    if (SourceCabinet)
+    {
+        WCHAR CabPath[MAX_PATH];
+        CombinePaths(CabPath, ARRAYSIZE(CabPath), 2,
+                     pSetupData->SourcePath.Buffer, SourceCabinet);
+        if (!DoesFileExist(NULL, CabPath))
+        {
+            DPRINT1("Cabinet '%S' not found, copying files directly\n", CabPath);
+            ActualCabinet = NULL;
+        }
+    }
 
     /* Search for the SectionName section */
     if (!SpInfFindFirstLine(InfFile, SectionName, NULL, &FilesContext))
@@ -355,14 +368,12 @@ AddSectionToCopyQueueCab(
         UNREFERENCED_PARAMETER(Status);
         DPRINT("  --> FileDstPath = '%S'\n", FileDstPath);
 
-        INF_FreeData(TargetDir);
-
         if (!SpFileQueueCopy((HSPFILEQ)pSetupData->SetupFileQueue,
                              pSetupData->SourcePath.Buffer, // SourcePath == SourceRootPath ++ SourceRootDir
-                             NULL,
+                             ActualCabinet ? NULL : TargetDir,
                              SourceFileName,
                              NULL,
-                             SourceCabinet,
+                             ActualCabinet,
                              NULL,
                              FileDstPath,
                              TargetFileName,
@@ -372,6 +383,7 @@ AddSectionToCopyQueueCab(
             DPRINT1("SpFileQueueCopy() failed\n");
         }
 
+        INF_FreeData(TargetDir);
         INF_FreeData(TargetFileName);
         INF_FreeData(SourceFileName);
 
@@ -524,6 +536,7 @@ PrepareCopyInfFile(
         {
             DPRINT1("AddSectionToCopyQueue(%S) failed!\n", L"SourceDisksFiles." INF_ARCH);
         }
+
         /* Search in the global section */
         Success = AddSectionToCopyQueue(pSetupData, InfFile,
                                         L"SourceDisksFiles",
@@ -596,8 +609,6 @@ PrepareCopyInfFile(
     /* Get destination path */
     RtlStringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer),
                       pSetupData->DestinationPath.Buffer);
-
-    DPRINT("FullPath(1): '%S'\n", PathBuffer);
 
     /* Create the install directory */
     Status = SetupCreateDirectory(PathBuffer);
@@ -710,7 +721,6 @@ PrepareFileCopy(
     /* Prepare the copy of the common files that are not in installation cabinets */
     if (!PrepareCopyInfFile(pSetupData, pSetupData->SetupInf, NULL))
     {
-        /* FIXME: show an error dialog */
         return FALSE;
     }
 

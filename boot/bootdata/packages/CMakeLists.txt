@@ -49,4 +49,4 @@ add_cd_file(
     TARGET reactos_cab_inf
     FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
     DESTINATION reactos
-    NO_CAB FOR bootcd regtest)
+    NO_CAB FOR bootcd livecd regtest)
