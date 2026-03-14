@@ -623,6 +623,8 @@ WdmAudCloseSoundDeviceByMMixer(
     PSOUND_DEVICE SoundDevice;
     MMRESULT Result;
 
+    DPRINT("CloseSoundDeviceByMMixer\n");
+
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
     if ( ! MMSUCCESS(Result) )
