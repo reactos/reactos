@@ -73,8 +73,6 @@ typedef
 BOOLEAN
 (*FIND_PCI_BIOS)(PPCI_REGISTRY_INFO BusData);
 
-extern FIND_PCI_BIOS FindPciBios;
-
 typedef
 ULONG
 (*GET_SERIAL_PORT)(ULONG Index, PULONG Irq);
@@ -90,7 +88,11 @@ VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwpci.c */
-VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
+VOID
+DetectPciBios(
+    _In_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Inout_ PULONG BusNumber,
+    _In_ FIND_PCI_BIOS MachFindPciBios);
 
 /* i386pnp.S */
 ULONG_PTR __cdecl PnpBiosSupported(VOID);

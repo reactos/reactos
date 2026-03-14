@@ -61,7 +61,7 @@ FsGetVolumeSize(
 ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
-VOID
+BOOLEAN
 FsRegisterDevice(
     _In_ PCSTR DeviceName,
     _In_ const DEVVTBL* FuncTable);

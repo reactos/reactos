@@ -669,7 +669,7 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
     TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
-VOID
+BOOLEAN
 FsRegisterDevice(
     _In_ PCSTR DeviceName,
     _In_ const DEVVTBL* FuncTable)
@@ -682,7 +682,8 @@ FsRegisterDevice(
     Length = strlen(DeviceName) + 1;
     pNewEntry = FrLdrTempAlloc(sizeof(DEVICE) + Length, TAG_DEVICE);
     if (!pNewEntry)
-        return;
+        return FALSE;
+    RtlZeroMemory(pNewEntry, sizeof(DEVICE));
     pNewEntry->FuncTable = FuncTable;
     pNewEntry->DeviceId = INVALID_FILE_ID;
     pNewEntry->ReferenceCount = 0;
@@ -690,6 +691,7 @@ FsRegisterDevice(
     RtlCopyMemory(pNewEntry->DeviceName, DeviceName, Length);
 
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
+    return TRUE;
 }
 
 PCWSTR FsGetServiceName(ULONG FileId)

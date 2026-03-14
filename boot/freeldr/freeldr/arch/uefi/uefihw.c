@@ -11,13 +11,12 @@
 #include "../vidfb.h"
 
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(WARNING);
+DBG_DEFAULT_CHANNEL(HWDETECT);
 
 /* GLOBALS *******************************************************************/
 
 extern EFI_SYSTEM_TABLE * GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-extern UCHAR PcBiosDiskCount;
 
 /* From uefivid.c */
 extern ULONG_PTR VramAddress;

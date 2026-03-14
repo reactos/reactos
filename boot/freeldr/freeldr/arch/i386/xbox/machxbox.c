@@ -31,7 +31,7 @@ extern ULONG_PTR FrameBuffer;
 extern ULONG FrameBufferSize;
 extern PCM_FRAMEBUF_DEVICE_DATA FrameBufferData;
 
-BOOLEAN
+static BOOLEAN
 XboxFindPciBios(PPCI_REGISTRY_INFO BusData)
 {
     /* We emulate PCI BIOS here, there are 2 known working PCI buses on an original Xbox */
@@ -300,10 +300,9 @@ XboxHwDetect(
     FldrCreateSystemKey(&SystemKey, "Original Xbox (PC/AT like)");
 
     GetHarddiskConfigurationData = XboxGetHarddiskConfigurationData;
-    FindPciBios = XboxFindPciBios;
 
     /* TODO: Build actual Xbox's hardware configuration tree */
-    DetectPciBios(SystemKey, &BusNumber);
+    DetectPciBios(SystemKey, &BusNumber, XboxFindPciBios);
     DetectIsaBios(Options, SystemKey, &BusNumber);
 
     /* On XBOX, the display controller is on PCI bus #1 */
