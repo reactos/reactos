@@ -1233,7 +1233,7 @@ AtaReadLogicalSectors(
     _In_ ULONG SectorCount,
     _Out_writes_bytes_all_(SectorCount * DeviceUnit->SectorSize) PVOID Buffer)
 {
-    PHW_DEVICE_UNIT Unit = (PHW_DEVICE_UNIT)DeviceUnit;
+    PHW_DEVICE_UNIT Unit = CONTAINING_RECORD(DeviceUnit, HW_DEVICE_UNIT, P);
     ATA_DEVICE_REQUEST Request = { 0 };
 
     ASSERT(Unit);
@@ -1271,8 +1271,7 @@ AtaGetDevice(
     _In_ UCHAR UnitNumber)
 {
     if (UnitNumber < RTL_NUMBER_OF(AtapUnits))
-        return (PDEVICE_UNIT)AtapUnits[UnitNumber];
-
+        return &(AtapUnits[UnitNumber]->P);
     return NULL;
 }
 

@@ -177,9 +177,6 @@ typedef struct _ATA_DEVICE_REQUEST
 
 typedef struct _HW_DEVICE_UNIT
 {
-    /* Public data, must be the first member */
-    DEVICE_UNIT P;
-
     IDE_REGISTERS Registers;
     ULONG BytesToTransfer;
     PUCHAR DataBuffer;
@@ -187,6 +184,11 @@ typedef struct _HW_DEVICE_UNIT
     ULONG MaximumTransferLength;
     UCHAR DeviceNumber;
     UCHAR DeviceSelect;
+
+    //// TESTING **no-cast** by moving this to the middle ^^
+    /* Public data, must be the first member */
+    DEVICE_UNIT P;
+
     UCHAR CdbSize;
     UCHAR MultiSectorTransfer;
     union
