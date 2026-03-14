@@ -21,6 +21,12 @@ else()
         mem/memmove.c
         mem/memset.c
     )
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        # Prevent GCC from optimizing loops in memcpy/memmove/memset back into
+        # calls to memcpy/memmove/memset, causing infinite recursion at -O2.
+        set_source_files_properties(mem/memcpy.c mem/memmove.c mem/memset.c
+            PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribute-patterns")
+    endif()
 endif()
 
 #list(APPEND CRT_MEM_SOURCE

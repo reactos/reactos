@@ -53,6 +53,30 @@ list(APPEND UEFILDR_BOOTMGR_SOURCE
 
 add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMMON_ASM_SOURCE})
 
+list(APPEND FREELDR_NTLDR_SOURCE
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
+    ntldr/conversion.c
+    ntldr/inffile.c
+    ntldr/registry.c
+    ntldr/setupldr.c
+    ntldr/winldr.c
+    ntldr/wlmemory.c
+    ntldr/wlregistry.c)
+
+if(ARCH STREQUAL "i386")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/i386/winldr.c
+        ntldr/headless.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/amd64/winldr.c)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND FREELDR_NTLDR_SOURCE
+        ntldr/arch/arm/winldr.c)
+else()
+    #TBD
+endif()
+
 add_library(uefifreeldr_common
     ${uefifreeldr_common_asm}
     ${UEFILDR_ARC_SOURCE}
@@ -88,8 +112,6 @@ list(APPEND UEFILDR_BASE_SOURCE
     include/arch/uefi/uefildr.h
     arch/uefi/uefildr.c
     bootmgr.c
-    ntldr/setupldr.c
-    ntldr/inffile.c
     ${FREELDR_BASE_SOURCE})
 
 if(ARCH STREQUAL "i386")
@@ -132,11 +154,10 @@ endif()
 
 set_entrypoint(uefildr EfiEntry)
 
+target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr)
 if(ARCH STREQUAL "i386")
     target_link_libraries(uefildr mini_hal)
 endif()
-
-target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)

@@ -30,14 +30,6 @@ static UNICODE_STRING VideoClassName = RTL_CONSTANT_STRING(L"VIDEO");
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BOOLEAN
-IntIsVgaSaveDriver(
-    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension)
-{
-    UNICODE_STRING VgaSave = RTL_CONSTANT_STRING(L"\\Driver\\VgaSave");
-    return RtlEqualUnicodeString(&VgaSave, &DeviceExtension->DriverObject->DriverName, TRUE);
-}
-
 NTSTATUS NTAPI
 IntVideoPortGetLegacyResources(
     IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
@@ -1138,7 +1130,7 @@ VideoPortVerifyAccessRanges(
                     &ConflictDetected);
 
         /* IntIsVgaSaveDriver() will later ignore STATUS_CONFLICTING_ADDRESSES, but we still claim it */
-        if (!NT_SUCCESS(Status) && IntIsVgaSaveDriver(DeviceExtension))
+        if (!NT_SUCCESS(Status) && DeviceExtension->IsVgaDriver)
         {
             NTSTATUS fbStatus;
             BOOLEAN fbConflict = FALSE;
@@ -1171,12 +1163,11 @@ VideoPortVerifyAccessRanges(
     }
     ExFreePoolWithTag(ResourceList, TAG_VIDEO_PORT);
 
-    /* If VgaSave driver is conflicting and we don't explicitely want
+    /* If VgaSave driver is conflicting and we don't explicitly want
      * to use it, ignore the problem (because win32k will try to use
      * this driver only if all other ones are failing). */
     if ((Status == STATUS_CONFLICTING_ADDRESSES || ConflictDetected) &&
-        IntIsVgaSaveDriver(DeviceExtension) &&
-        !VpBaseVideo)
+        DeviceExtension->IsVgaDriver && !VpBaseVideo)
     {
         return NO_ERROR;
     }

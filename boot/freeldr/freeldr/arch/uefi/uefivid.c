@@ -16,6 +16,7 @@ DBG_DEFAULT_CHANNEL(UI);
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 EFI_GUID EfiGraphicsOutputProtocol = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+EFI_GUID AppleGraphInfoProtocol = APPLE_GRAPH_INFO_PROTOCOL_GUID;
 
 ULONG_PTR VramAddress;
 ULONG VramSize;
@@ -52,8 +53,9 @@ static EFI_PIXEL_BITMASK EfiPixelMasks[] =
 
 #endif /* UEFI */
 
+static
 EFI_STATUS
-UefiInitializeVideo(VOID)
+UefiInitializeGop(VOID)
 {
     EFI_STATUS Status;
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
@@ -127,6 +129,81 @@ UefiInitializeVideo(VOID)
     }
     return Status;
 }
+
+static
+EFI_STATUS
+UefiInitializeAppleGraphics(VOID)
+{
+    EFI_STATUS Status;
+    APPLE_GRAPH_INFO_PROTOCOL *AppleGraph = NULL;
+    EFI_PIXEL_BITMASK* pPixelBitmask;
+
+    UINT64 BaseAddress, FrameBufferSize;
+    UINT32 BytesPerRow, Width, Height, Depth;
+
+    Status = GlobalSystemTable->BootServices->LocateProtocol(&AppleGraphInfoProtocol, 0, (VOID**)&AppleGraph);
+    if (Status != EFI_SUCCESS)
+    {
+        ERR("Failed to find Apple Graphics Info with status %d\n", Status);
+        return Status;
+    }
+
+    Status = AppleGraph->GetInfo(AppleGraph,
+                                 &BaseAddress,
+                                 &FrameBufferSize,
+                                 &BytesPerRow,
+                                 &Width,
+                                 &Height,
+                                 &Depth);
+
+    if (Status != EFI_SUCCESS)
+    {
+        ERR("Failed to get graphics info from Apple Scren Info: %d\n", Status);
+        return Status;
+    }
+
+    /* All devices requiring Apple Graphics Info use PixelBlueGreenRedReserved8BitPerColor. */
+    pPixelBitmask = &EfiPixelMasks[PixelBlueGreenRedReserved8BitPerColor];
+
+    VramAddress = (ULONG_PTR)BaseAddress;
+    VramSize = (ULONG)FrameBufferSize;
+    if (!VidFbInitializeVideo(&FrameBufferData,
+                              VramAddress,
+                              VramSize,
+                              Width,
+                              Height,
+                              (BytesPerRow / 4),
+                              Depth,
+                              (PPIXEL_BITMASK)pPixelBitmask))
+    {
+        ERR("Couldn't initialize video framebuffer\n");
+        Status = EFI_UNSUPPORTED;
+    }
+
+    return Status;
+}
+
+EFI_STATUS
+UefiInitializeVideo(VOID)
+{
+    EFI_STATUS Status;
+
+    /* First, try GOP */
+    Status = UefiInitializeGop();
+    if (Status == EFI_SUCCESS)
+        return Status;
+
+    /* Try Apple Graphics Info if that fails */
+    TRACE("Failed to detect GOP, trying Apple Graphics Info\n");
+    Status = UefiInitializeAppleGraphics();
+    if (Status == EFI_SUCCESS)
+        return Status;
+
+    /* We didn't find GOP or Apple Graphics Info, probably a UGA-only system */
+    ERR("Cannot find framebuffer!\n");
+    return Status;
+}
+
 
 VOID
 UefiVideoClearScreen(UCHAR Attr)

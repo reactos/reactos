@@ -2207,8 +2207,6 @@ InitializeTcpipAltDlgCtrls(
     else
     {
         CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_NODHCP);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
 
         if (pCurSettings->Ip)
         {
@@ -2217,26 +2215,20 @@ InitializeTcpipAltDlgCtrls(
             /* Set current hostmask */
             SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
         }
-    }
 
-    if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
-    {
-        /* Set current gateway */
-        SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
-    }
+        if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
+        {
+            /* Set current gateway */
+            SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+        }
 
-    if (pCurSettings->Ns)
-    {
-        SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->IpAddress);
-        if (pCurSettings->Ns->Next)
-            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->Next->IpAddress);
-        else
-            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
-    }
-    else
-    {
-        SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
-        SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+        if (pCurSettings->Ns)
+        {
+            /* Set name server addresses */
+            SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->IpAddress);
+            if (pCurSettings->Ns->Next)
+                SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->Next->IpAddress);
+        }
     }
 
     return S_OK;
@@ -2280,6 +2272,8 @@ TcpipAltConfDlg(
                             SendDlgItemMessageW(hwndDlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
                             SendDlgItemMessageW(hwndDlg, IDC_SUBNETMASK, IPM_CLEARADDRESS, 0, 0);
                             SendDlgItemMessageW(hwndDlg, IDC_DEFGATEWAY, IPM_CLEARADDRESS, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
+                            SendDlgItemMessageW(hwndDlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
                         }
 
                         EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), bNoDHCP);
@@ -2501,7 +2495,7 @@ InitializeTcpipBasicDlgCtrls(
 
     if (pCurSettings->DhcpEnabled)
     {
-        CheckDlgButton(hwndDlg, IDC_USEDHCP, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_USEDHCP);
         EnableWindow(GetDlgItem(hwndDlg, IDC_IPADDR), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SUBNETMASK), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DEFGATEWAY), FALSE);
@@ -2509,7 +2503,7 @@ InitializeTcpipBasicDlgCtrls(
     }
     else
     {
-        CheckDlgButton(hwndDlg, IDC_NODHCP, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_USEDHCP, IDC_NODHCP, IDC_NODHCP);
 
         if (pCurSettings->Ip)
         {
@@ -2518,23 +2512,23 @@ InitializeTcpipBasicDlgCtrls(
             /* set current hostmask */
             SendDlgItemMessageA(hwndDlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ip->u.Subnetmask);
         }
-    }
 
-    if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
-    {
-        /* set current gateway */
-        SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+        if (pCurSettings->Gw && pCurSettings->Gw->IpAddress)
+        {
+            /* set current gateway */
+            SendDlgItemMessageA(hwndDlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Gw->IpAddress);
+        }
     }
 
     if (pCurSettings->AutoconfigActive)
     {
-        CheckDlgButton(hwndDlg, IDC_AUTODNS, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_AUTODNS, IDC_FIXEDDNS, IDC_AUTODNS);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), FALSE);
     }
     else
     {
-        CheckDlgButton(hwndDlg, IDC_FIXEDDNS, BST_CHECKED);
+        CheckRadioButton(hwndDlg, IDC_AUTODNS, IDC_FIXEDDNS, IDC_FIXEDDNS);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
         if (pCurSettings->Ns)

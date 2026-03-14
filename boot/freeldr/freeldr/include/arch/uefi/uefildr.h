@@ -16,6 +16,7 @@
 #include <LoadedImage.h>
 #include <GraphicsOutput.h>
 #include <UgaDraw.h>
+#include <AppleGraphInfo.h>
 #include <BlockIo.h>
 #include <Acpi.h>
 #include <GlobalVariable.h>

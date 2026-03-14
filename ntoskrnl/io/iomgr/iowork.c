@@ -64,7 +64,7 @@ NTAPI
 IoFreeWorkItem(IN PIO_WORKITEM IoWorkItem)
 {
     /* Free the work item */
-    ExFreePool(IoWorkItem);
+    ExFreePoolWithTag(IoWorkItem, TAG_IOWI);
 }
 
 /*

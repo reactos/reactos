@@ -10,7 +10,9 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winnls.h>
 #define NTOS_MODE_USER
+#include <ndk/kefuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <dhcpcsdk.h>
 #include <rpc.h>

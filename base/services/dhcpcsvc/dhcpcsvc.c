@@ -8,6 +8,7 @@
 
 #include <rosdhcp.h>
 #include <winsvc.h>
+#include <dhcpcapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -87,6 +88,116 @@ PDHCP_SERVER_NAME_unbind(
     }
 }
 
+static
+DWORD
+SetBinaryClassId(
+    _In_ PWSTR pszAdapterName)
+{
+    WCHAR szKeyName[256];
+    PWSTR pszUnicodeBuffer = NULL;
+    PSZ pszAnsiBuffer = NULL;
+    DWORD dwUnicodeSize = 0, dwAnsiSize = 0;
+    HKEY hKey = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("SetBinaryClassId(%S)\n", pszAdapterName);
+
+    _swprintf(szKeyName,
+              L"System\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s",
+              pszAdapterName);
+    DPRINT("KeyName %S\n", szKeyName);
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            szKeyName,
+                            0,
+                            KEY_QUERY_VALUE | KEY_SET_VALUE,
+                            &hKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error %lu\n", dwError);
+        return dwError;
+    }
+
+    RegQueryValueExW(hKey,
+                     L"DhcpClassId",
+                     NULL,
+                     NULL,
+                     NULL,
+                     &dwUnicodeSize);
+    DPRINT("UnicodeSize %lu\n", dwUnicodeSize);
+
+    pszUnicodeBuffer = HeapAlloc(GetProcessHeap(), 0, dwUnicodeSize);
+    if (pszUnicodeBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        DPRINT1("Error %lu\n", dwError);
+        goto done;
+    }
+
+    dwError = RegQueryValueExW(hKey,
+                               L"DhcpClassId",
+                               NULL,
+                               NULL,
+                               (PBYTE)pszUnicodeBuffer,
+                               &dwUnicodeSize);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error %lu\n", dwError);
+        goto done;
+    }
+
+    dwAnsiSize = WideCharToMultiByte(CP_ACP,
+                                     0,
+                                     pszUnicodeBuffer,
+                                     -1,
+                                     NULL,
+                                     0,
+                                     NULL,
+                                     NULL);
+    DPRINT("AnsiSize %lu\n", dwAnsiSize);
+
+    pszAnsiBuffer = HeapAlloc(GetProcessHeap(), 0, dwAnsiSize);
+    if (pszAnsiBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        DPRINT1("Error %lu\n", dwError);
+        goto done;
+    }
+
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        pszUnicodeBuffer,
+                        -1,
+                        pszAnsiBuffer,
+                        dwAnsiSize,
+                        NULL,
+                        NULL);
+    DPRINT("AnsiBuffer %s\n", pszAnsiBuffer);
+
+    dwError = RegSetValueExW(hKey,
+                             L"DhcpClassIdBin",
+                             0,
+                             REG_BINARY,
+                             (PBYTE)pszAnsiBuffer,
+                             strlen(pszAnsiBuffer));
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Error %lu\n", dwError);
+    }
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
+
+    if (pszAnsiBuffer)
+        HeapFree(GetProcessHeap(), 0, pszAnsiBuffer);
+
+    if (pszUnicodeBuffer)
+        HeapFree(GetProcessHeap(), 0, pszUnicodeBuffer);
+
+    return dwError;
+}
+
 /*!
  * Initializes the DHCP interface
  *
@@ -149,6 +260,25 @@ DhcpAcquireParameters(
     return ret;
 }
 
+/*!
+ * Enumerates the DHCP user classes for the given adapter
+ *
+ * \param[in] Unknown1
+ *        Unknown
+ *
+ * \param[in] AdapterName
+ *        Name (GUID) of the Adapter
+ *
+ * \param[in] Unknown3
+ *        Unknown
+ *
+ * \param[in] Unknown4
+ *        Unknown
+ *
+ * \return ERROR_SUCCESS on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
 DWORD
 APIENTRY
 DhcpEnumClasses(
@@ -162,18 +292,51 @@ DhcpEnumClasses(
     return 0;
 }
 
+/*!
+ * Enumerates the DHCP user classes for the given adapter
+ *
+ * \param[in] Unknown1
+ *        Unknown
+ *
+ * \param[in] Unknown2
+ *        Unknown
+ *
+ * \param[in] AdapterName
+ *        Name (GUID) of the Adapter
+ *
+ * \param[in] PnpEvent
+ *        Unknown
+ *
+ * \param[in] Unknown5
+ *        Unknown
+ *
+ * \return ERROR_SUCCESS on success
+ *
+ * \remarks Undocumented by Microsoft
+ */
 DWORD
 APIENTRY
 DhcpHandlePnPEvent(
     _In_ DWORD Unknown1,
     _In_ DWORD Unknown2,
     _In_ PWSTR AdapterName,
-    _In_ DWORD Unknown4,
+    _In_ PDHCP_PNP_EVENT PnpEvent,
     _In_ DWORD Unknown5)
 {
-    DPRINT1("DhcpHandlePnPEvent(%lx %lx %S %lx %lx)\n",
-            Unknown1, Unknown2, AdapterName, Unknown4, Unknown5);
-    return 0;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT1("DhcpHandlePnPEvent(%lx %lx %S %p %lx)\n",
+            Unknown1, Unknown2, AdapterName, PnpEvent, Unknown5);
+
+    if ((Unknown1 != 0) || (Unknown2 != 1) || (PnpEvent == NULL) || (Unknown5 != 0))
+        return ERROR_INVALID_PARAMETER;
+
+    if (PnpEvent->Unknown5)
+    {
+        dwError = SetBinaryClassId(AdapterName);
+    }
+
+    return dwError;
 }
 
 /*!
