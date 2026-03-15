@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS ComPort Library for NEC PC-98 series
- * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         Provides a serial port library for KDCOM, INIT, and FREELDR
- * COPYRIGHT:       Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)
+ * PROJECT:     ReactOS ComPort Library for NEC PC-98 series
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     NEC PC-98 series UART support routines
+ * COPYRIGHT:   Copyright 2020-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 /* INCLUDES *******************************************************************/
@@ -11,9 +11,7 @@
  * Some PC-98 models have a second internal COM port (2ndCCU).
  * It is a 16550-compatible UART controller with I/O port address 238-23F and IRQ5.
  */
-#define API_FUNCTION static
-#define METHOD(Name) Name##16550
-#include "cport.c"
+#include "ns16550.c"
 
 #include <drivers/pc98/serial.h>
 #include <drivers/pc98/sysport.h>
@@ -98,7 +96,7 @@ Cpi8251IsPortResponding(
 
 static
 BOOLEAN
-CpiDoesPortExist8251(
+Cpi8251DoesPortExist(
     _In_ PUCHAR IoBase)
 {
     if (Cpi8251IsPortResponding(IoBase))
@@ -133,17 +131,28 @@ CpiDoesPortExist8251(
     return FALSE;
 }
 
+BOOLEAN
+NTAPI
+CpDoesPortExist(
+    _In_ PUCHAR Address)
+{
+    if (IS_NS16550(Address))
+        return Uart16550DoesPortExist(Address);
+
+    return Cpi8251DoesPortExist(Address);
+}
+
 VOID
 NTAPI
 CpEnableFifo(
-    IN PUCHAR Address,
-    IN BOOLEAN Enable)
+    _In_ PUCHAR Address,
+    _In_ BOOLEAN Enable)
 {
     UCHAR Value;
 
     if (IS_NS16550(Address))
     {
-        CpEnableFifo16550(Address, Enable);
+        Uart16550EnableFifo(Address, Enable);
         return;
     }
 
@@ -155,21 +164,21 @@ CpEnableFifo(
     if (Enable)
         Value = SR_8251F_FCR_ENABLE | SR_8251F_FCR_RCVR_RESET | SR_8251F_FCR_TXMT_RESET;
     else
-        Value = 0;
+        Value = SR_8251F_FCR_DISABLE;
     WRITE_PORT_UCHAR((PUCHAR)SER_8251F_REG_FCR, Value);
 }
 
 VOID
 NTAPI
 CpSetBaud(
-    IN PCPPORT Port,
-    IN ULONG BaudRate)
+    _Inout_ PCPPORT Port,
+    _In_ ULONG BaudRate)
 {
     ULONG i;
 
     if (IS_NS16550(Port->Address))
     {
-        CpSetBaud16550(Port, BaudRate);
+        Uart16550SetBaud(Port, BaudRate);
         return;
     }
 
@@ -235,16 +244,59 @@ CpSetBaud(
     }
 }
 
-UCHAR
+NTSTATUS
+NTAPI
+CpInitialize(
+    _Inout_ PCPPORT Port,
+    _In_ PUCHAR Address,
+    _In_ ULONG BaudRate)
+{
+    PUCHAR DataReg;
+
+    if (IS_NS16550(Address))
+        return Uart16550Initialize(Port, Address, BaudRate);
+
+    if (Port == NULL || Address == NULL || BaudRate == 0)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!Cpi8251DoesPortExist(Address))
+        return STATUS_NOT_FOUND;
+
+    /* Initialize port data */
+    Port->Address  = Address;
+    Port->BaudRate = 0;
+    Port->Flags    = 0;
+
+    if (IS_COM1(Address))
+    {
+        IsNp21W = CpiIsNekoProject();
+        HasFifo = Cpi8251HasFifo();
+    }
+
+    /* Perform port initialization */
+    CpSetBaud(Port, BaudRate);
+    CpEnableFifo(Address, TRUE);
+
+    /* Read junk out of the data register */
+    if (IsFifoEnabled)
+        DataReg = UlongToPtr(SER_8251F_REG_RBR);
+    else
+        DataReg = Port->Address;
+    READ_PORT_UCHAR(DataReg);
+
+    return STATUS_SUCCESS;
+}
+
+static UCHAR
 NTAPI
 CpReadLsr(
-    IN PCPPORT Port,
-    IN UCHAR ExpectedValue)
+    _Inout_ PCPPORT Port,
+    _In_ UCHAR ExpectedValue)
 {
     UCHAR Lsr, Msr;
 
     if (IS_NS16550(Port->Address))
-        return CpReadLsr16550(Port, ExpectedValue);
+        return Cp16550ReadLsr(Port, ExpectedValue);
 
     if (IsFifoEnabled)
     {
@@ -281,16 +333,16 @@ CpReadLsr(
 USHORT
 NTAPI
 CpGetByte(
-    IN PCPPORT Port,
-    OUT PUCHAR Byte,
-    IN BOOLEAN Wait,
-    IN BOOLEAN Poll)
+    _Inout_ PCPPORT Port,
+    _Out_ PUCHAR Byte,
+    _In_ BOOLEAN Wait,
+    _In_ BOOLEAN Poll)
 {
     ULONG RetryCount;
     UCHAR RxReadyFlags, ErrorFlags;
 
     if (IS_NS16550(Port->Address))
-        return CpGetByte16550(Port, Byte, Wait, Poll);
+        return Uart16550GetByte(Port, Byte, Wait, Poll);
 
     /* Handle early read-before-init */
     if (!Port->Address)
@@ -364,15 +416,15 @@ CpGetByte(
 VOID
 NTAPI
 CpPutByte(
-    IN PCPPORT Port,
-    IN UCHAR Byte)
+    _Inout_ PCPPORT Port,
+    _In_ UCHAR Byte)
 {
     PUCHAR DataReg;
     UCHAR TxReadyFlags;
 
     if (IS_NS16550(Port->Address))
     {
-        CpPutByte16550(Port, Byte);
+        Uart16550PutByte(Port, Byte);
         return;
     }
 
@@ -400,58 +452,4 @@ CpPutByte(
         NOTHING;
 
     WRITE_PORT_UCHAR(DataReg, Byte);
-}
-
-NTSTATUS
-NTAPI
-CpInitialize(
-    IN PCPPORT Port,
-    IN PUCHAR Address,
-    IN ULONG BaudRate)
-{
-    PUCHAR DataReg;
-
-    if (IS_NS16550(Address))
-        return CpInitialize16550(Port, Address, BaudRate);
-
-    if (Port == NULL || Address == NULL || BaudRate == 0)
-        return STATUS_INVALID_PARAMETER;
-
-    if (!CpDoesPortExist(Address))
-        return STATUS_NOT_FOUND;
-
-    /* Initialize port data */
-    Port->Address  = Address;
-    Port->BaudRate = 0;
-    Port->Flags    = 0;
-
-    if (IS_COM1(Address))
-    {
-        IsNp21W = CpiIsNekoProject();
-        HasFifo = Cpi8251HasFifo();
-    }
-
-    /* Perform port initialization */
-    CpSetBaud(Port, BaudRate);
-    CpEnableFifo(Address, TRUE);
-
-    /* Read junk out of the data register */
-    if (IsFifoEnabled)
-        DataReg = UlongToPtr(SER_8251F_REG_RBR);
-    else
-        DataReg = Port->Address;
-    READ_PORT_UCHAR(DataReg);
-
-    return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-CpDoesPortExist(
-    IN PUCHAR Address)
-{
-    if (IS_NS16550(Address))
-        return CpDoesPortExist16550(Address);
-
-    return CpiDoesPortExist8251(Address);;
 }

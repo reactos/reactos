@@ -2,7 +2,7 @@
  * PROJECT:     NEC PC-98 series onboard hardware
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Intel 8251A-based UART header file
- * COPYRIGHT:   Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)
+ * COPYRIGHT:   Copyright 2020-2026 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
