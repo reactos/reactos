@@ -17,7 +17,37 @@
 LIST_ENTRY FIBListHead;
 KSPIN_LOCK FIBLock;
 
-void RouterDumpRoutes() {
+UINT
+ProcessAutoMetric(
+    _In_ PIP_INTERFACE Interface)
+{
+    if (Interface == Loopback)
+        return 1;
+
+    if (Interface->Metric != 0)
+        return Interface->Metric;
+
+    /* Auto metric */
+    if (Interface->Speed > 2000000000)
+        return 5;
+    else if (Interface->Speed > 200000000)
+        return 10;
+    else if (Interface->Speed > 80000000)
+        return 20;
+    else if (Interface->Speed > 20000000)
+        return 25;
+    else if (Interface->Speed > 4000000)
+        return 30;
+    else if (Interface->Speed > 500000)
+        return 40;
+    else
+        return 50;
+}
+
+
+VOID
+RouterDumpRoutes(VOID)
+{
     PLIST_ENTRY CurrentEntry;
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
@@ -422,16 +452,14 @@ PFIB_ENTRY RouterCreateRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
     PIP_ADDRESS RouterAddress,
-    PIP_INTERFACE Interface,
-    UINT Metric)
+    PIP_INTERFACE Interface)
 /*
  * FUNCTION: Creates a route with IPv4 addresses as parameters
  * ARGUMENTS:
  *     NetworkAddress = Address of network
  *     Netmask        = Netmask of network
  *     RouterAddress  = Address of router to use
- *     NTE            = Pointer to NTE to use
- *     Metric         = Cost of this route
+ *     Interface      = Network interface
  * RETURNS:
  *     Pointer to FIB entry if the route was created, NULL if not.
  *     The FIB entry references the NTE. The caller is responsible
@@ -475,7 +503,7 @@ PFIB_ENTRY RouterCreateRoute(
         return NULL;
     }
 
-    return RouterAddRoute(NetworkAddress, Netmask, NCE, Metric);
+    return RouterAddRoute(NetworkAddress, Netmask, NCE, ProcessAutoMetric(Interface));
 }
 
 
