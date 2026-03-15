@@ -55,20 +55,7 @@ typedef ULONG KSEC_MACHINE_SPECIFIC_COUNTERS, *PKSEC_MACHINE_SPECIFIC_COUNTERS;
 
 typedef struct _KSEC_ENTROPY_DATA
 {
-    HANDLE CurrentProcessId;
-    HANDLE CurrentThreadId;
-    LARGE_INTEGER TickCount;
-    LARGE_INTEGER SystemTime;
-    LARGE_INTEGER PerformanceCounter;
-    LARGE_INTEGER PerformanceFrequency;
-    UCHAR EnvironmentHash[16];
-    KSEC_MACHINE_SPECIFIC_COUNTERS MachineSpecificCounters;
-    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorPerformanceInformation;
-    SYSTEM_PERFORMANCE_INFORMATION SystemPerformanceInformation;
-    SYSTEM_EXCEPTION_INFORMATION SystemExceptionInformation;
-    SYSTEM_LOOKASIDE_INFORMATION SystemLookasideInformation;
-    SYSTEM_INTERRUPT_INFORMATION SystemInterruptInformation;
-    SYSTEM_PROCESS_INFORMATION SystemProcessInformation;
+    UCHAR Hash[64];
 } KSEC_ENTROPY_DATA, *PKSEC_ENTROPY_DATA;
 
 extern PEPROCESS KsecLsaProcess;
@@ -90,6 +77,11 @@ NTAPI
 KsecGenRandom(
     PVOID Buffer,
     SIZE_T Length);
+
+VOID
+NTAPI
+KsecInitializeGenRandomSupport(
+    VOID);
 
 VOID
 NTAPI
