@@ -21,7 +21,9 @@
 .text
 .intel_syntax noprefix
 
+#ifndef __clang__
 .func _SEH2EnterHandleTrylevel
+#endif
 .globl __SEH2EnterHandleTrylevel
 __SEH2EnterHandleTrylevel:
 	mov eax, [esp+8]
@@ -37,9 +39,13 @@ __SEH2EnterHandleTrylevel:
 
 	xor eax, eax
 	ret
+#ifndef __clang__
 .endfunc
+#endif
 
+#ifndef __clang__
 .func _SEH2EnterFrameAndHandleTrylevel
+#endif
 .globl __SEH2EnterFrameAndHandleTrylevel
 __SEH2EnterFrameAndHandleTrylevel:
 	mov eax, [esp+8]
@@ -52,9 +58,13 @@ __SEH2EnterFrameAndHandleTrylevel:
 
 .extern __SEH2EnterFrameAndTrylevel
 	jmp __SEH2EnterFrameAndTrylevel
+#ifndef __clang__
 .endfunc
+#endif
 
+#ifndef __clang__
 .func __SEH2Handle
+#endif
 .globl ___SEH2Handle
 ___SEH2Handle:
 	mov eax, [esp+4]
@@ -64,9 +74,13 @@ ___SEH2Handle:
 	mov edi, [esp+24]
 	mov esp, [esp+8]
 	jmp eax
+#ifndef __clang__
 .endfunc
+#endif
 
+#ifndef __clang__
 .func __SEH2FrameHandler
+#endif
 .globl ___SEH2FrameHandler
 ___SEH2FrameHandler:
 
@@ -74,9 +88,13 @@ ___SEH2FrameHandler:
 
 	cld
 	jmp __SEH2FrameHandler
+#ifndef __clang__
 .endfunc
+#endif
 
+#ifndef __clang__
 .func __SEH2UnwindHandler
+#endif
 .globl ___SEH2UnwindHandler
 ___SEH2UnwindHandler:
 
@@ -84,6 +102,8 @@ ___SEH2UnwindHandler:
 
 	cld
 	jmp __SEH2UnwindHandler
+#ifndef __clang__
 .endfunc
+#endif
 
 // EOF

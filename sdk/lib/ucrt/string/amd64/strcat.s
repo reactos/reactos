@@ -79,7 +79,7 @@ include ksamd64.inc
 ;*******************************************************************************
 #endif
 
-public ___entry_from_strcat_in_strcpy
+PUBLIC ___entry_from_strcat_in_strcpy
 LEAF_ENTRY_ARG2 strcat, _TEXT, dst_ptr_byte, src_ptr_byte
 
     //OPTION PROLOGUE:NONE, EPILOGUE:NONE
@@ -226,4 +226,4 @@ strcat_exit:
 
 LEAF_END strcpy, _TEXT
 
-    end
+    END

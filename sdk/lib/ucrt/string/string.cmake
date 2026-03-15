@@ -64,8 +64,9 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
         string/strnlen-sse2.cpp
     )
 
-    set_source_files_properties(string/strnlen-sse2.cpp PROPERTIES COMPILE_OPTIONS "-msse2")
-    set_source_files_properties(string/strnlen-avx2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2")
+    set_source_files_properties(string/strnlen.cpp PROPERTIES COMPILE_OPTIONS "-fno-builtin-strlen;-fno-builtin-wcslen")
+    set_source_files_properties(string/strnlen-sse2.cpp PROPERTIES COMPILE_OPTIONS "-msse2;-fno-builtin-strlen;-fno-builtin-wcslen")
+    set_source_files_properties(string/strnlen-avx2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-fno-builtin-strlen;-fno-builtin-wcslen")
 endif()
 
 if(${ARCH} STREQUAL "i386")

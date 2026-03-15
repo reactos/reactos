@@ -171,4 +171,4 @@ tail_finish:
 
 LEAF_END strncpy, _TEXT
 
-    end
+    END

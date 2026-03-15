@@ -9,6 +9,11 @@
 
 #define _INCLUDED_IMM
 
+/* When building with Clang, use Clang's own intrinsics headers instead. */
+#if defined(__clang__) && !defined(_MSC_VER)
+#include_next <immintrin.h>
+#else
+
 //#include <wmmintrin.h>
 #include <emmintrin.h>
 
@@ -356,3 +361,5 @@ __INTRIN_INLINE void _xsetbv(unsigned int __A, unsigned __int64 __V)
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#endif /* !(__clang__ && !_MSC_VER) */

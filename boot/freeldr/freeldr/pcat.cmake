@@ -112,8 +112,15 @@ if(ARCH STREQUAL "i386")
     endif()
 
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND PCATLDR_BASE_ASM_SOURCE
-        arch/i386/multiboot.S)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        # Multiboot v1 is 32-bit only and not needed for AMD64 boots.
+        # Excluding it avoids relocation types unsupported by LLD.
+        list(APPEND PCATLDR_BASE_ASM_SOURCE
+            arch/amd64/cmdline_stub.S)
+    else()
+        list(APPEND PCATLDR_BASE_ASM_SOURCE
+            arch/i386/multiboot.S)
+    endif()
 
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
@@ -206,6 +213,18 @@ if(MSVC)
     # We don't need hotpatching
     remove_target_compile_option(freeldr_pe "/hotpatch")
     remove_target_compile_option(freeldr_common "/hotpatch")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # LLD doesn't support linker scripts in PE mode.
+    # BSS is zeroed from C code (FrLdrClearBss) instead of via linker symbols.
+    target_link_options(freeldr_pe PRIVATE
+        -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200
+        -Wl,--no-gc-sections
+        -Wl,/dynamicbase:no,/nxcompat:no,/highentropyva:no)
+    # Strip everything, including rossym data
+    add_custom_command(TARGET freeldr_pe
+                    POST_BUILD
+                    COMMAND ${CMAKE_STRIP} --remove-section=.rossym $<TARGET_FILE:freeldr_pe>
+                    COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
 else()
     target_link_options(freeldr_pe PRIVATE -Wl,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200)
     add_linker_script(freeldr_pe freeldr_gcc.lds)

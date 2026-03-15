@@ -60,6 +60,7 @@ extern "C" {
   __CRT_INLINE void __cdecl _Exit(int status)
   {  _exit(status); }
 #endif
+  _CRTIMP __declspec(noreturn) void __cdecl quick_exit(_In_ int _Code);
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("abort")
 #undef abort
@@ -72,6 +73,7 @@ extern "C" {
 
   __analysis_noreturn _CRTIMP void __cdecl _cexit(void);
   __analysis_noreturn _CRTIMP void __cdecl _c_exit(void);
+  _CRTIMP int __cdecl at_quick_exit(void (__cdecl *)(void));
   _CRTIMP int __cdecl _getpid(void);
 
   _CRTIMP

@@ -189,8 +189,14 @@ typedef struct __JUMP_BUFFER {
 #define _JMP_BUF_DEFINED
 #endif
 
+#if defined(__clang__) && defined(__x86_64) && defined(USE_MINGW_SETJMP_TWO_ARGS)
+  /* Clang treats _setjmp as a 1-arg builtin on Win64. Route declarations and
+   * macro expansion through the intrinsic aliases exported by the CRT. */
+#define _setjmp __intrinsic_setjmp
+#define _setjmpex __intrinsic_setjmpex
+#endif
+
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
-#ifndef _INC_SETJMPEX
 #if defined(__x86_64)
 # define mingw_getsp() \
   ({ void* value; __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value)); value; })
@@ -198,6 +204,7 @@ typedef struct __JUMP_BUFFER {
 # define mingw_getsp() \
   ({ void* value; __asm__ __volatile__("movl %%esp, %[value]" : [value] "=r" (value)); value; })
 #endif
+#ifndef _INC_SETJMPEX
 #define setjmp(BUF) _setjmp((BUF),mingw_getsp())
   int __MINGW_NOTHROW __cdecl _setjmp(jmp_buf _Buf,void *_Ctx);
 #else /* _INC_SETJMPEX */

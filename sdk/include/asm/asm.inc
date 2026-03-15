@@ -194,6 +194,10 @@ data32 MACRO opcode:VARARG
     opcode
 ENDM
 
+io_delay MACRO
+    out 80h, al
+ENDM
+
 UNIMPLEMENTED2 MACRO file, line, func
     jmp UNIMPLEMENTED2_IMPL
 UNIMPLEMENTED_MSG: .ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!", 10, 0
@@ -210,7 +214,7 @@ UNIMPLEMENTED2_IMPL:
     add rsp, 28h
     xor eax, eax
 ENDM
-#define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
+#define UNIMPLEMENTED(func) UNIMPLEMENTED2 __FILE__, __LINE__, func
 
 absolute MACRO address
     __absolute__address__ = address
@@ -279,7 +283,9 @@ ENDM
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
+#ifndef __clang__
     .func \name
+#endif
     \name:
 #ifdef _X86_
     .cfi_startproc
@@ -296,7 +302,9 @@ ENDM
 #else
     .seh_endproc
 #endif
+#ifndef __clang__
     .endfunc
+#endif
 .endm
 #define ENDFUNC .ENDP
 
@@ -322,6 +330,13 @@ ENDM
 .macro align x
     .align x
 .endm
+
+#ifdef __clang__
+/* Clang's assembler is case-sensitive */
+.macro ALIGN x
+    .align \x
+.endm
+#endif
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
@@ -349,12 +364,18 @@ ENDM
     opcode
 .endm
 
+.macro io_delay
+    out 0x80, al
+.endm
+
+#ifndef __clang__
 .macro retf
     lret
 .endm
+#endif
 
 /* MASM compatible EXTERN */
-.macro EXTERN name
+.macro EXTERN name:vararg
 .endm
 
 /* MASM needs an END tag */
@@ -388,11 +409,16 @@ ENDM
 .endm
 
 .macro .pushframe param
-    /*
-     * FIXME. .seh_pushframe doesn't accept code argument.
-     * Patch sent.
-     */
+#ifdef __clang__
+    /* Clang's assembler uses @code instead of code */
+    .ifc \param, code
+        .seh_pushframe @code
+    .else
+        .seh_pushframe
+    .endif
+#else
     .seh_pushframe \param
+#endif
 .endm
 
 .macro .pushreg reg
@@ -415,6 +441,37 @@ ENDM
     .seh_endprologue
 .endm
 
+#ifdef __clang__
+/* Uppercase aliases for Clang's case-sensitive assembler */
+.macro .ENDPROLOG
+    .seh_endprologue
+.endm
+
+.macro .ALLOCSTACK size
+    .seh_stackalloc \size
+.endm
+
+.macro .PUSHFRAME param
+    .seh_pushframe \param
+.endm
+
+.macro .PUSHREG reg
+    .seh_pushreg \reg
+.endm
+
+.macro .SAVEREG reg, offset
+    .seh_savereg \reg, \offset
+.endm
+
+.macro .SAVEXMM128 reg, offset
+    .seh_savexmm \reg, \offset
+.endm
+
+.macro .SETFRAME reg, offset
+    .seh_setframe \reg, \offset
+.endm
+#endif /* __clang__ */
+
 .macro absolute address
     __absolute__address__ = \address
 .endm
@@ -424,11 +481,14 @@ ENDM
     __absolute__address__ = __absolute__address__ + \size
 .endm
 
-.macro UNIMPLEMENTED2 file, line, func
+.macro UNIMPLEMENTED2 line, func, file:vararg
     jmp 4f
-1:  .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
-2:  .asciz "\func"
-3:  .asciz \file
+1:
+    .ascii "Unimplemented %s (%s:%d)", CR, LF, NUL
+2:
+    .asciz "\func"
+3:
+    .asciz \file
 4:
     sub rsp, 0x20
     lea rcx, 1b[rip]
@@ -438,7 +498,7 @@ ENDM
     call DbgPrint
     add rsp, 0x20
 .endm
-#define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
+#define UNIMPLEMENTED(func) UNIMPLEMENTED2 __LINE__, func, __FILE__
 
 /* MASM/ML uses ".if" for runtime conditionals, and "if" for compile time
    conditionals. We therefore use "if", too. .if shouldn't be used at all */
@@ -446,6 +506,13 @@ ENDM
 #define endif .endif
 #define else .else
 #define elseif .elseif
+
+#ifdef __clang__
+/* Clang's integrated assembler doesn't understand MASM-style AND/OR/NOT tokens. */
+#define AND &
+#define OR |
+#define NOT ~
+#endif
 
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc

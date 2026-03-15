@@ -111,8 +111,12 @@ void __inwordstring(unsigned short, unsigned short *, unsigned long);
 void __lidt(void *);
 unsigned __int64 __ll_lshift(unsigned __int64, int);
 __int64 __ll_rshift(__int64, int);
+#ifndef __lzcnt
 unsigned int __lzcnt(unsigned int);
+#endif
+#ifndef __lzcnt16
 unsigned short __lzcnt16(unsigned short);
+#endif
 void __movsb(unsigned char *, unsigned char const *, size_t);
 void __movsd(unsigned long *, unsigned long const *, size_t);
 void __movsw(unsigned short *, unsigned short const *, size_t);
@@ -761,7 +765,9 @@ void __incgsbyte(unsigned long);
 void __incgsdword(unsigned long);
 void __incgsqword(unsigned long);
 void __incgsword(unsigned long);
+#ifndef __lzcnt64
 unsigned __int64 __lzcnt64(unsigned __int64);
+#endif
 void __movsq(unsigned long long *, unsigned long long const *, size_t);
 __int64 __mulh(__int64, __int64);
 __int64 _mul128(__int64 _Multiplier, __int64 _Multiplicand, __int64 * _HighProduct);

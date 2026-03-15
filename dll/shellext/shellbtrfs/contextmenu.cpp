@@ -493,7 +493,7 @@ static void create_snapshot(HWND hwnd, const wstring& fn) {
 
                 do {
 #ifndef __REACTOS__
-                    name = nameorig + L" (" + to_wstring(num) + L")";
+                    name = nameorig + L" (" + btrfs_to_wstring(num) + L")";
 #else
                     {
                         WCHAR buffer[32];
@@ -1050,7 +1050,7 @@ HRESULT __stdcall BtrfsContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO picia) {
 
                         do {
 #ifndef __REACTOS__
-                            name = nameorig + L" (" + to_wstring(num) + L")";
+                            name = nameorig + L" (" + btrfs_to_wstring(num) + L")";
 #else
                             {
                                 WCHAR buffer[32];

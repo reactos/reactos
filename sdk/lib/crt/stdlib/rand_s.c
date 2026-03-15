@@ -62,11 +62,11 @@ int CDECL rand_s(unsigned int *pval)
     return 0;
 }
 
-// Small hack: import stub to allow GCC's stdc++ to link
+// Provide the MinGW import symbol spellings used by COFF callers when rand_s
+// is not exported from the active msvcrt import library version.
 #if defined(__GNUC__) && (DLL_EXPORT_VERSION < 0x600)
-#ifdef WIN64
-const void* __imp_rand_s = rand_s;
-#else
+const void* __MINGW_IMP_SYMBOL(rand_s) = rand_s;
+#ifndef WIN64
 const void* _imp_rand_s = rand_s;
 #endif
 #endif

@@ -10,10 +10,17 @@
 #endif
 
 MACRO(CREATE_ALIAS, alias, target)
+#ifdef _USE_ML
     EXTERN SYM(&target):PROC
     PUBLIC SYM(&alias)
     SYM(&alias):
         jmp SYM(&target)
+#else
+    EXTERN SYM(\target)
+    PUBLIC SYM(\alias)
+    SYM(\alias):
+        jmp SYM(\target)
+#endif
 ENDM
 
     #undef _lrotl

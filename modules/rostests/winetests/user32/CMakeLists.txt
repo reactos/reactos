@@ -36,6 +36,10 @@ add_executable(user32_winetest
     ${PCH_SKIP_SOURCE}
     resource.rc)
 
+if(CMAKE_RC_COMPILER MATCHES "llvm-(rc|windres)")
+    target_compile_definitions(user32_winetest PRIVATE USER32_WINE_RC_NO_CTRL_DATA)
+endif()
+
 if(MSVC)
     target_compile_options(user32_winetest PRIVATE "/wd4005")
     target_compile_options(user32_winetest PRIVATE "/wd4024")

@@ -29,8 +29,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if((CMAKE_C_COMPILER_ID STREQUAL "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
-    # Enable xsave feature
-    add_compile_options(-mxsave)
+    # Enable xsave feature (Clang needs all xsave variants for always_inline intrinsics)
+    add_compile_options(-mxsave -mxsaves -mxsaveopt)
 endif()
 
 list(APPEND PCH_SKIP_SOURCE

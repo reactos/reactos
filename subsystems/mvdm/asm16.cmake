@@ -4,7 +4,9 @@
 # support because we are going to compile ASM files for a fixed target (16-bit x86)
 # that is different from the main target.
 
-if(NOT MSVC)
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    # add_asm16_bin is defined in clang.cmake
+elseif(NOT MSVC)
 ###
 ### For GCC
 ###
