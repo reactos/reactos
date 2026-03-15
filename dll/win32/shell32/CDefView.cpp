@@ -296,6 +296,7 @@ private:
     void _ForceStatusBarResize();
     void _DoCopyToMoveToFolder(BOOL bCopy);
     BOOL IsDesktop() const { return m_FolderSettings.fFlags & FWF_DESKTOP; }
+    BOOL _CanPaste();
 
     inline BOOL IsSpecialFolder(int &csidl) const
     {
@@ -1903,6 +1904,12 @@ HRESULT CDefView::FillEditMenu()
     if (!hmenuContents)
         return E_FAIL;
 
+    if (!_CanPaste())
+    {
+        SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERT, FALSE);
+        SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERTLINK, FALSE);
+    }
+
     Shell_MergeMenus(hEditMenu, hmenuContents, 0, 0, 0xFFFF, 0);
 
     ::DestroyMenu(hmenuContents);
@@ -2505,6 +2512,33 @@ void CDefView::_DoCopyToMoveToFolder(BOOL bCopy)
         return;
 
     InvokeContextMenuCommand(pCM, (bCopy ? "copyto" : "moveto"), NULL);
+}
+
+// Code from CDefViewBckgrndMenu::_bCanPaste() modified for this class
+BOOL CDefView::_CanPaste() {
+    // If the folder doesn't have a drop target we can't paste
+    CComPtr<IDropTarget> pdt;
+    HRESULT hr = m_pSFParent->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
+    if (FAILED(hr))
+        return FALSE;
+
+    // We can only paste if CFSTR_SHELLIDLIST is present in the clipboard
+    CComPtr<IDataObject> pDataObj;
+    hr = OleGetClipboard(&pDataObj);
+    if (FAILED(hr))
+        return FALSE;
+
+    STGMEDIUM medium;
+    FORMATETC formatetc;
+
+    // Set the FORMATETC structure
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    hr = pDataObj->GetData(&formatetc, &medium);
+    if (FAILED(hr))
+        return FALSE;
+
+    ReleaseStgMedium(&medium);
+    return TRUE;
 }
 
 LRESULT CDefView::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
