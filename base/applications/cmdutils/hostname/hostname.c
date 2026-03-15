@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <locale.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -18,6 +19,8 @@
 int wmain(int argc, WCHAR* argv[])
 {
     WCHAR Msg[100];
+
+    setlocale(LC_ALL, "");
 
     if (argc == 1)
     {
