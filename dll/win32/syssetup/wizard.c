@@ -1682,6 +1682,53 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
 }
 
 
+static BOOL
+HasDaylightSavingTime(PTIMEZONE_ENTRY Entry)
+{
+    /* If StandardDate.wMonth and DaylightDate.wMonth are zero,
+     * the timezone does not observe daylight saving time */
+    return (Entry->TimezoneInfo.StandardDate.wMonth != 0 &&
+            Entry->TimezoneInfo.DaylightDate.wMonth != 0);
+}
+
+static PTIMEZONE_ENTRY
+GetSelectedTimeZoneEntry(PSETUPDATA SetupData, DWORD dwEntryIndex)
+{
+    PTIMEZONE_ENTRY Entry;
+
+    for (Entry = SetupData->TimeZoneListHead; Entry != NULL; Entry = Entry->Next)
+    {
+        if (Entry->Index == dwEntryIndex)
+            return Entry;
+    }
+
+    return NULL;
+}
+
+static PTIMEZONE_ENTRY
+GetTimeZoneEntryByIndex(PSETUPDATA SetupData, DWORD dwComboIndex)
+{
+    PTIMEZONE_ENTRY Entry;
+    DWORD i;
+
+    for (Entry = SetupData->TimeZoneListHead, i = 0; Entry != NULL && i < dwComboIndex; i++, Entry = Entry->Next);
+
+    return Entry;
+}
+
+static VOID
+UpdateAutoDaylightCheckbox(HWND hwndDlg, PTIMEZONE_ENTRY Entry)
+{
+    BOOL bHasDST = (Entry != NULL && HasDaylightSavingTime(Entry));
+
+    /* Enable or disable the checkbox based on DST support */
+    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), bHasDST);
+
+    /* Check the checkbox only if DST is supported, otherwise uncheck it */
+    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK,
+                       (WPARAM)(bHasDST ? BST_CHECKED : BST_UNCHECKED), 0);
+}
+
 static VOID
 ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
 {
@@ -1855,6 +1902,9 @@ DateTimePageDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            DWORD dwEntryIndex;
+            PTIMEZONE_ENTRY Entry;
+
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
@@ -1866,17 +1916,31 @@ DateTimePageDlgProc(HWND hwndDlg,
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                  SetupData, SetupData->TimeZoneIndex);
 
-                if (!SetupData->DisableAutoDaylightTimeSet)
+                Entry = GetSelectedTimeZoneEntry(SetupData, SetupData->TimeZoneIndex);
+                if (!SetupData->DisableAutoDaylightTimeSet && Entry != NULL && HasDaylightSavingTime(Entry))
                 {
                     SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), TRUE);
+                }
+                else
+                {
+                    SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT), FALSE);
                 }
             }
             else
             {
+                /* Get the default time zone index from the registry */
+                dwEntryIndex = (DWORD)-1;
+                GetTimeZoneListIndex(&dwEntryIndex);
+
                 ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                  SetupData, -1);
 
-                SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                /* Set the auto-daylight checkbox based on whether
+                 * the selected timezone observes DST */
+                Entry = GetSelectedTimeZoneEntry(SetupData, dwEntryIndex);
+                UpdateAutoDaylightCheckbox(hwndDlg, Entry);
             }
             break;
         }
@@ -1892,6 +1956,16 @@ DateTimePageDlgProc(HWND hwndDlg,
             SetTimer(hwndDlg, 1, 1000 - LocalTime.wMilliseconds, NULL);
             break;
         }
+
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_TIMEZONELIST)
+            {
+                /* User changed the timezone selection */
+                DWORD dwIndex = (DWORD)SendDlgItemMessage(hwndDlg, IDC_TIMEZONELIST, CB_GETCURSEL, 0, 0);
+                PTIMEZONE_ENTRY Entry = GetTimeZoneEntryByIndex(SetupData, dwIndex);
+                UpdateAutoDaylightCheckbox(hwndDlg, Entry);
+            }
+            break;
 
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
