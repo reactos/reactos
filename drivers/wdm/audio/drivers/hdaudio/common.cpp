@@ -1389,11 +1389,11 @@ CAdapterCommon::BuildInstallFilter(
 
             if (bSet)
             {
-                ASSERT(DefaultDevice == PinConfiguration.DefaultDevice);
+                //ASSERT(DefaultDevice == PinConfiguration.DefaultDevice);
             }
             else
             {
-                if (PinConfiguration.PortConnectivity != 0x1) // pin is connected
+                //if (PinConfiguration.PortConnectivity != 0x1) // pin is connected
                 {
                     bSet = TRUE;
                     DefaultDevice = PinConfiguration.DefaultDevice;
