@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS Hostname Command
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2026 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Vypíše súčasný názov hostiteľa.\n\nhostname"
+    IDS_NOSET "hostname -s nie je podporovaný."
+    IDS_ERROR "Chyba Win32"
+END
