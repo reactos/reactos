@@ -37,35 +37,41 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     WCHAR SourceString[54];
 
     //
-    // Scan memory descriptors
+    // Scan memory descriptors.
+    // Prefer LoaderXIPRom (legacy BIOS ramdisk), fall back to the largest
+    // LoaderMemoryData descriptor (UEFI). FreeLoader tags the ramdisk as
+    // LoaderXIPRom, so the fallback is a safety net only.
     //
     MemoryDescriptor = NULL;
     ListHead = &LoaderBlock->MemoryDescriptorListHead;
     NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
     {
-        //
-        // Get the descriptor
-        //
-        MemoryDescriptor = CONTAINING_RECORD(NextEntry,
-                                             MEMORY_ALLOCATION_DESCRIPTOR,
-                                             ListEntry);
+        PMEMORY_ALLOCATION_DESCRIPTOR Current;
 
-        //
-        // Needs to be a ROM/RAM descriptor
-        //
-        if (MemoryDescriptor->MemoryType == LoaderXIPRom) break;
+        Current = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
 
-        //
-        // Keep trying
-        //
+        if (Current->MemoryType == LoaderXIPRom)
+        {
+            MemoryDescriptor = Current;
+            break;
+        }
+
+        if (Current->MemoryType == LoaderMemoryData &&
+            (!MemoryDescriptor || Current->PageCount > MemoryDescriptor->PageCount))
+        {
+            MemoryDescriptor = Current;
+        }
+
         NextEntry = NextEntry->Flink;
     }
 
     //
     // Nothing found?
     //
-    if (NextEntry == ListHead)
+    if (!MemoryDescriptor)
     {
         //
         // Bugcheck -- no data
@@ -87,7 +93,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RamdiskCreate.DiskOffset = 0;
     RamdiskCreate.DiskLength.QuadPart = MemoryDescriptor->PageCount << PAGE_SHIFT;
     RamdiskCreate.DiskGuid = RAMDISK_BOOTDISK_GUID;
-    RamdiskCreate.DriveLetter = L'C';
+    RamdiskCreate.DriveLetter = L'X';
     RamdiskCreate.Options.Fixed = TRUE;
 
     //
