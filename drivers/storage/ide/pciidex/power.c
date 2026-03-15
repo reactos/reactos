@@ -7,9 +7,6 @@
 
 #include "pciidex.h"
 
-#define NDEBUG
-#include <debug.h>
-
 static
 NTSTATUS
 PciIdeXPdoDispatchPower(
@@ -18,8 +15,6 @@ PciIdeXPdoDispatchPower(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
-
-    UNREFERENCED_PARAMETER(PdoExtension);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     switch (IoStack->MinorFunction)
@@ -48,7 +43,7 @@ PciIdeXFdoDispatchPower(
 {
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
-    return PoCallDriver(FdoExtension->Ldo, Irp);
+    return PoCallDriver(FdoExtension->Common.LowerDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -57,10 +52,24 @@ PciIdeXDispatchPower(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
-    PVOID DeviceExtension = DeviceObject->DeviceExtension;
+    PCOMMON_DEVICE_EXTENSION CommonExt = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
 
-    if (IS_FDO(DeviceExtension))
-        return PciIdeXFdoDispatchPower(DeviceExtension, Irp);
+    Status = IoAcquireRemoveLock(&CommonExt->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return Status;
+    }
+
+    if (IS_FDO(CommonExt))
+        Status = PciIdeXFdoDispatchPower((PVOID)CommonExt, Irp);
     else
-        return PciIdeXPdoDispatchPower(DeviceExtension, Irp);
+        Status = PciIdeXPdoDispatchPower((PVOID)CommonExt, Irp);
+
+    IoReleaseRemoveLock(&CommonExt->RemoveLock, Irp);
+
+    return Status;
 }
