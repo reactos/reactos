@@ -125,6 +125,16 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // DBG
 
+#define __STRING2__(x) #x
+#define __STRING__(x) __STRING2__(x)
+#define __STRLINE__ __STRING__(__LINE__)
+
+#if !defined(_MSC_VER) && !defined(__pragma)
+#define __pragma(x) _Pragma(#x)
+#endif
+#define _WARN(msg) __pragma(message("WARNING! Line " __STRLINE__ ": " msg))
+
+
 DECLSPEC_NORETURN
 void
 NTAPI

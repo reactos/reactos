@@ -1193,10 +1193,8 @@ LoadAndBootWindowsCommon(
 
     ASSERT(OperatingSystemVersion != 0);
 
-#ifdef _M_IX86
     /* Setup redirection support */
     WinLdrSetupEms(BootOptions);
-#endif
 
     /* Convert BootPath to SystemRoot */
     SystemRoot = strstr(BootPath, "\\");

@@ -47,6 +47,7 @@ VOID
 WinLdrLoadGUID(
     _Out_ PGUID SystemGuid)
 {
+#if (defined(_M_IX86) || defined(_M_AMD64)) && !defined(UEFIBOOT)
     PSYSID_UUID_ENTRY CurrentAddress;
 
     CurrentAddress = (PSYSID_UUID_ENTRY)0xE0000;
@@ -59,6 +60,9 @@ WinLdrLoadGUID(
         }
         CurrentAddress = (PSYSID_UUID_ENTRY)((ULONG_PTR)CurrentAddress + 1);
     }
+#else
+    _WARN("WinLdrLoadGUID needs SMBIOS table reading implementation on this platform!");
+#endif
 
     RtlZeroMemory(SystemGuid, SYSID_UUID_DATA_SIZE);
 }
@@ -251,11 +255,14 @@ WinLdrSetupEms(
         }
         else
         {
-            LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Option, 0, 16);
+#ifdef _WIN64
+#define strtoulptr strtoull
+#else
+#define strtoulptr strtoul
+#endif
+            LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoulptr(Option, 0, 16);
             if (LoaderRedirectionInformation.PortAddress)
-            {
                 LoaderRedirectionInformation.PortNumber = 3;
-            }
         }
     }
 
