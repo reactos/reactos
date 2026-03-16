@@ -142,8 +142,9 @@ __SEH3$_InvokeEmbeddedFilterFromRegistration:
     mov ecx, [eax + SEH3_REGISTRATION_FRAME_AllocaFrame]
     sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
 
-    /* Put the return address on the stack */
-    push offset __SEH3$_InvokeEmbeddedFilterReturnClang
+    /* Clang's COFF assembler rejects "push offset <label>" relocations. */
+    lea edx, __SEH3$_InvokeEmbeddedFilterReturnClang
+    push edx
 
     /* Save the current stack pointer in the AllocaFrame member */
     mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], esp
@@ -196,8 +197,8 @@ __SEH3$_InvokeEmbeddedFilter:
     mov ecx, [eax + SEH3_REGISTRATION_FRAME_AllocaFrame]
     sub ecx, [eax + SEH3_REGISTRATION_FRAME_Esp]
 
-    /* Put the return address on the stack */
-    push offset __SEH3$_InvokeEmbeddedFilterReturn
+    lea edx, __SEH3$_InvokeEmbeddedFilterReturn
+    push edx
 
     /* Save the current stack pointer in the AllocaFrame member */
     mov [eax + SEH3_REGISTRATION_FRAME_AllocaFrame], esp
@@ -249,4 +250,3 @@ __SEH3$_InvokeEmbeddedFilterReturn:
     pop edi
     pop ebp
     ret
-

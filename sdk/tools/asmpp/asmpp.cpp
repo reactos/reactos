@@ -515,9 +515,14 @@ translate_expression(TokenList &tokens, size_t index, const vector<string> &macr
                     printf("<<");
                     index += 1;
                 }
+                else if (iequals(tok.str(), "shr"))
+                {
+                    printf(">>");
+                    index += 1;
+                }
                 else if (iequals(tok.str(), "not"))
                 {
-                    printf("!");
+                    printf("~");
                     index += 1;
                 }
                 else
@@ -531,12 +536,50 @@ translate_expression(TokenList &tokens, size_t index, const vector<string> &macr
                 {
                     return index;
                 }
+                [[fallthrough]];
+
+            case TOKEN_TYPE::Identifier:
+                if (iequals(tok.str(), "eq"))
+                {
+                    printf("==");
+                    index += 1;
+                }
+                else if (iequals(tok.str(), "ne"))
+                {
+                    printf("!=");
+                    index += 1;
+                }
+                else if (iequals(tok.str(), "lt"))
+                {
+                    printf("<");
+                    index += 1;
+                }
+                else if (iequals(tok.str(), "le"))
+                {
+                    printf("<=");
+                    index += 1;
+                }
+                else if (iequals(tok.str(), "gt"))
+                {
+                    printf(">");
+                    index += 1;
+                }
+                else if (iequals(tok.str(), "ge"))
+                {
+                    printf(">=");
+                    index += 1;
+                }
+                else
+                {
+                    index = translate_token(tokens, index, macro_params);
+                }
+                break;
+
             case TOKEN_TYPE::WhiteSpace:
             case TOKEN_TYPE::BraceOpen:
             case TOKEN_TYPE::BraceClose:
             case TOKEN_TYPE::DecNumber:
             case TOKEN_TYPE::HexNumber:
-            case TOKEN_TYPE::Identifier:
                 index = translate_token(tokens, index, macro_params);
                 break;
 
@@ -617,14 +660,51 @@ size_t translate_instruction_param(TokenList& tokens, size_t index, const vector
                 return translate_token(tokens, index, macro_params);
 
             case TOKEN_TYPE::Identifier:
-                index = translate_token(tokens, index, macro_params);
-                if (is_mem_id(tok) &&
+            {
+                bool is_rip_relative = is_mem_id(tok) &&
                     !is_string_in_list(macro_params, tok.str()) &&
-                    !g_processing_jmp)
+                    !g_processing_jmp;
+
+                index = translate_token(tokens, index, macro_params);
+
+                if (!is_rip_relative)
                 {
-                    printf("[rip]");
+                    break;
                 }
+
+                while (index < tokens.size())
+                {
+                    Token next = tokens[index];
+                    switch (next.type())
+                    {
+                        case TOKEN_TYPE::Comment:
+                        case TOKEN_TYPE::NewLine:
+                        case TOKEN_TYPE::MemRefStart:
+                            printf("[rip]");
+                            return index;
+
+                        case TOKEN_TYPE::Operator:
+                            if (next.str() == ",")
+                            {
+                                printf("[rip]");
+                                return index;
+                            }
+                            [[fallthrough]];
+                        case TOKEN_TYPE::WhiteSpace:
+                        case TOKEN_TYPE::DecNumber:
+                        case TOKEN_TYPE::HexNumber:
+                            index = translate_token(tokens, index, macro_params);
+                            break;
+
+                        default:
+                            printf("[rip]");
+                            return index;
+                    }
+                }
+
+                printf("[rip]");
                 break;
+            }
 
             default:
                 index = translate_expression(tokens, index, macro_params);
@@ -989,7 +1069,6 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_PROC:
         {
-            printf(".func %s\n", tok.str().c_str());
             printf("%s:", tok.str().c_str());
             index += 3;
 
@@ -1009,7 +1088,11 @@ translate_identifier_construct(TokenList& tokens, size_t index, const vector<str
 
         case TOKEN_TYPE::KW_ENDP:
         {
-            printf(".seh_endproc\n.endfunc");
+#ifdef TARGET_amd64
+            printf(".seh_endproc");
+#else
+            printf(".cfi_endproc");
+#endif
             index += 3;
             break;
         }
@@ -1056,7 +1139,7 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
 #else
             printf(".code");
 #endif
-            printf(" .intel_syntax noprefix");
+            printf("\n.intel_syntax noprefix");
             index++;
             break;
 
@@ -1090,11 +1173,13 @@ translate_construct(TokenList& tokens, size_t index, const vector<string> &macro
         }
 
         case TOKEN_TYPE::KW_if:
+            printf(".if");
+            return translate_expression(tokens, index + 1, macro_params);
+
         case TOKEN_TYPE::KW_ifdef:
         case TOKEN_TYPE::KW_ifndef:
         case TOKEN_TYPE::KW_else:
         case TOKEN_TYPE::KW_endif:
-            // TODO: handle parameter differences between "if" and ".if" etc.
             printf(".");
             return complete_line(tokens, index, macro_params);
 

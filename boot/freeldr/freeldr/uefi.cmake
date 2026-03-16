@@ -148,6 +148,8 @@ endif()
 
 if(MSVC)
     set_subsystem(uefildr EFI_APPLICATION)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set_subsystem(uefildr efi_application)
 else()
     set_subsystem(uefildr 10)
 endif()

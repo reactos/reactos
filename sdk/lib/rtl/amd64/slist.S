@@ -193,7 +193,7 @@ GLOBAL_LABEL ExpInterlockedPopEntrySListFault16
     mov rcx, [r9]
 
     /* Set NewListHead.HeaderType = 1 and  NewListHead.Init = 1 */
-    or rcx, (SLIST16B_HEADERTYPE_MASK or SLIST16B_INIT_MASK)
+    or rcx, (SLIST16B_HEADERTYPE_MASK OR SLIST16B_INIT_MASK)
 
     /* Copy Depth and Sequence number and adjust Depth */
     lea rbx, [rax - SLIST16A_DEPTH_INC]
@@ -327,7 +327,7 @@ FUNC RtlInterlockedPushEntrySList16
     mov rcx, rdx
 
     /* Set NewListHead.HeaderType = 1 and NewListHead.Init = 1 */
-    or rcx, (SLIST16B_HEADERTYPE_MASK or SLIST16B_INIT_MASK)
+    or rcx, (SLIST16B_HEADERTYPE_MASK OR SLIST16B_INIT_MASK)
 
     /* Set rdx = ListHead->Region */
     mov rdx, [r8 + 8]
@@ -425,7 +425,7 @@ RtlInterlockedFlushSList16:
 
     /* Initialize an ampty NewListHead in rcx:rbx */
     xor rbx, rbx
-    mov rcx, (SLIST16B_HEADERTYPE_MASK or SLIST16B_INIT_MASK)
+    mov rcx, (SLIST16B_HEADERTYPE_MASK OR SLIST16B_INIT_MASK)
 
 RtlInterlockedFlushSListLoop16:
 

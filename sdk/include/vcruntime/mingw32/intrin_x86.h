@@ -1302,11 +1302,7 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 #endif
 
 #if defined __x86_64__
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
     unsigned long long retval;
@@ -1353,11 +1349,7 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 	just confuses it. Also we declare Bit as an int and then truncate it to
 	match Visual C++ behavior
 */
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
 	unsigned long long retval = Mask;
@@ -1986,11 +1978,7 @@ __INTRIN_INLINE void __invlpg(void *Address)
 
 
 /*** System operations ***/
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 unsigned long long __readmsr(unsigned long reg)
 {
 #ifdef __x86_64__
@@ -2004,11 +1992,7 @@ unsigned long long __readmsr(unsigned long reg)
 #endif
 }
 
-#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
-static inline __attribute__((__always_inline__))
-#else
 __INTRIN_INLINE
-#endif
 void __writemsr(unsigned long Register, unsigned long long Value)
 {
 #ifdef __x86_64__

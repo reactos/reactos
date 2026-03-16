@@ -25,11 +25,37 @@
 
 #define __USE_PSEH2__
 
-#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER)
+#if !defined(_USE_PSEH3) && (defined(_USE_NATIVE_SEH) || defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__)))
 
+/*
+ * Clang's SEH implementation only generates scope table entries around
+ * CALL instructions, not around plain memory loads/stores. This means
+ * code like:  __try { x = *(volatile int*)ptr; } __except(...) { ... }
+ * may have the memory access optimised OUTSIDE the __try scope.
+ *
+ * _SEH2_OpaqueBarrier is an opaque function call that forces Clang to
+ * emit a CALL inside the __try, extending the SEH scope to cover all
+ * code between the barriers. The actual function is a no-op defined
+ * in sdk/lib/pseh/dummy.c as a volatile function pointer (so LLVM
+ * cannot see through it and remove the call).
+ *
+ * MSVC does not have this problem; its SEH scopes cover all instructions.
+ */
+#if defined(__clang__) && !defined(_MSC_VER)
+#ifdef __cplusplus
+extern "C"
+#endif
+void _SEH2_OpaqueBarrier(void);
+
+#define _SEH2_TRY __try { _SEH2_OpaqueBarrier();
+#define _SEH2_FINALLY _SEH2_OpaqueBarrier(); } __finally
+#define _SEH2_EXCEPT(...) _SEH2_OpaqueBarrier(); } __except(__VA_ARGS__)
+#else
 #define _SEH2_TRY __try
 #define _SEH2_FINALLY __finally
 #define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
+#endif
+
 #define _SEH2_END
 #define _SEH2_GetExceptionInformation() (GetExceptionInformation())
 #define _SEH2_GetExceptionCode() (GetExceptionCode())

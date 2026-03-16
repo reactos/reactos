@@ -2294,6 +2294,11 @@ static INT_PTR CALLBACK custom_test_dialog_proc(HWND hdlg, UINT msg, WPARAM wpar
 
 static void test_dialog_custom_data(void)
 {
+#ifdef USER32_WINE_RC_NO_CTRL_DATA
+    win_skip("custom dialog creation data is not supported by the active RC compiler\n");
+    return;
+#endif
+
     DialogBoxA(g_hinst, "CUSTOM_TEST_DIALOG", NULL, custom_test_dialog_proc);
 }
 

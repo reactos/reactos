@@ -26,6 +26,48 @@ extern ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS ******************************************************************/
 
+static
+VOID
+CsrpLogClientException(IN PCSR_API_MESSAGE ReceiveMsg,
+                       IN PCSR_PROCESS CsrProcess,
+                       IN PCSR_THREAD CsrThread)
+{
+    PDBGKM_MSG DebugMessage = (PDBGKM_MSG)ReceiveMsg;
+    PEXCEPTION_RECORD ExceptionRecord = &DebugMessage->Exception.ExceptionRecord;
+    ULONG ParameterCount, i;
+
+    ParameterCount = ExceptionRecord->NumberParameters;
+    if (ParameterCount > EXCEPTION_MAXIMUM_PARAMETERS)
+    {
+        DPRINT1("CSRSS: LPC_EXCEPTION has invalid parameter count %lu, truncating to %u\n",
+                ParameterCount,
+                EXCEPTION_MAXIMUM_PARAMETERS);
+        ParameterCount = EXCEPTION_MAXIMUM_PARAMETERS;
+    }
+
+    DPRINT1("CSRSS: LPC_EXCEPTION from client %p.%p csr %p.%p handle %p api %lu first chance %lu\n",
+            ReceiveMsg->Header.ClientId.UniqueProcess,
+            ReceiveMsg->Header.ClientId.UniqueThread,
+            CsrProcess ? CsrProcess->ClientId.UniqueProcess : NULL,
+            CsrThread ? CsrThread->ClientId.UniqueThread : NULL,
+            CsrProcess ? CsrProcess->ProcessHandle : NULL,
+            DebugMessage->ApiNumber,
+            DebugMessage->Exception.FirstChance);
+    DPRINT1("CSRSS: ExceptionRecord={code=%08lx flags=%08lx address=%p record=%p params=%lu}\n",
+            ExceptionRecord->ExceptionCode,
+            ExceptionRecord->ExceptionFlags,
+            ExceptionRecord->ExceptionAddress,
+            ExceptionRecord->ExceptionRecord,
+            ExceptionRecord->NumberParameters);
+
+    for (i = 0; i < ParameterCount; ++i)
+    {
+        DPRINT1("CSRSS: ExceptionInformation[%lu]=%p\n",
+                i,
+                (PVOID)ExceptionRecord->ExceptionInformation[i]);
+    }
+}
+
 /*++
  * @name CsrCallServerFromServer
  * @implemented NT4
@@ -665,6 +707,8 @@ CsrApiRequestThread(IN PVOID Parameter)
             /* Check if this was an exception */
             if (MessageType == LPC_EXCEPTION)
             {
+                CsrpLogClientException(&ReceiveMsg, CsrProcess, CsrThread);
+
                 /* Kill the process */
                 NtTerminateProcess(CsrProcess->ProcessHandle, STATUS_ABANDONED);
 

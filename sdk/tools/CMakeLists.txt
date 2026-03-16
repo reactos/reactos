@@ -45,6 +45,7 @@ endif()
 add_subdirectory(txt2nls)
 add_subdirectory(unicode)
 add_subdirectory(widl)
+add_subdirectory(windmc)
 add_subdirectory(wpp)
 add_subdirectory(xml2sdb)
 

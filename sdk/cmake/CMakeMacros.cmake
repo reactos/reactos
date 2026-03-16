@@ -42,10 +42,14 @@ function(add_message_headers _type)
         set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})    ## ${_file_name}.mc
         utf16le_convert(${_source_file} ${_converted_file} nobom)
         macro_mc(${_flag} ${_converted_file})
+        set(_message_header_deps "${_converted_file}")
+        if(IS_ABSOLUTE "${CMAKE_MC_COMPILER}")
+            list(APPEND _message_header_deps "${CMAKE_MC_COMPILER}")
+        endif()
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
             COMMAND ${COMMAND_MC}
-            DEPENDS "${_converted_file}")
+            DEPENDS ${_message_header_deps})
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
             PROPERTIES GENERATED TRUE)

@@ -41,7 +41,8 @@ struct _timespec64
     long       tv_nsec;
 };
 
-#ifndef _CRT_NO_TIME_T
+#if !defined _CRT_NO_TIME_T && !defined _TIMESPEC_DEFINED
+    #define _TIMESPEC_DEFINED
     struct timespec
     {
         time_t tv_sec;  // Seconds - >= 0

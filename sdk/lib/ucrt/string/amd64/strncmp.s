@@ -127,4 +127,4 @@ return_not_equal:
     ret
 
 LEAF_END strncmp, _TEXT
-        end
+        END

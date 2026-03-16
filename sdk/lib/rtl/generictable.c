@@ -22,6 +22,7 @@ typedef struct _TABLE_ENTRY_HEADER
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+DECLSPEC_NOINLINE
 TABLE_SEARCH_RESULT
 NTAPI
 RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
