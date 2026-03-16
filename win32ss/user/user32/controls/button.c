@@ -157,12 +157,12 @@ const struct builtin_class_descr BUTTON_builtin_class =
 
 static inline LONG get_button_state( HWND hwnd )
 {
-    return GetWindowLongPtrW( hwnd, STATE_GWL_OFFSET );
+    return GetWindowLongW( hwnd, STATE_GWL_OFFSET );
 }
 
 static inline void set_button_state( HWND hwnd, LONG state )
 {
-    SetWindowLongPtrW( hwnd, STATE_GWL_OFFSET, state );
+    SetWindowLongW( hwnd, STATE_GWL_OFFSET, state );
 }
 
 #ifdef __REACTOS__
