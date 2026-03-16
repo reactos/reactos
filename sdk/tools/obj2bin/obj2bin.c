@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     /* Loop all sections */
     for (i = 0; i < pFileHeader->NumberOfSections; i++)
     {
-        /* Check if this is a section with the executable code */
+        /* Check if this is a section with executable code */
         if (((pSectionHeader->Characteristics & (IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE)) ==
              (IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE)) &&
             (pSectionHeader->SizeOfRawData != 0))
