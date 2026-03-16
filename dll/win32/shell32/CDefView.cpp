@@ -2515,7 +2515,9 @@ void CDefView::_DoCopyToMoveToFolder(BOOL bCopy)
 }
 
 // Code from CDefViewBckgrndMenu::_bCanPaste() modified for this class
-BOOL CDefView::_CanPaste() {
+BOOL
+CDefView::_CanPaste()
+{
     // If the folder doesn't have a drop target we can't paste
     CComPtr<IDropTarget> pdt;
     HRESULT hr = m_pSFParent->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
