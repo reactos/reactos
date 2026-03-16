@@ -13,6 +13,8 @@
 #include <cportlib/uartinfo.h>
 #include "ntldropts.h"
 
+#include <debug.h> // For _WARN()
+
 /* Note: Move these to some smbios.h header */
 #define SYSID_TYPE_UUID "_UUID_"
 #define SYSID_UUID_DATA_SIZE 16
