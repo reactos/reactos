@@ -43,7 +43,8 @@ CPPORT Port[4] =
 /* FUNCTIONS ******************************************************************/
 
 VOID
-WinLdrLoadGUID(OUT PGUID SystemGuid)
+WinLdrLoadGUID(
+    _Out_ PGUID SystemGuid)
 {
     PSYSID_UUID_ENTRY CurrentAddress;
 
@@ -62,11 +63,12 @@ WinLdrLoadGUID(OUT PGUID SystemGuid)
 }
 
 BOOLEAN
-WinLdrPortInitialize(IN ULONG BaudRate,
-                     IN ULONG PortNumber,
-                     IN PUCHAR PortAddress,
-                     IN BOOLEAN TerminalConnected,
-                     OUT PULONG PortId)
+WinLdrPortInitialize(
+    _In_ ULONG BaudRate,
+    _In_ ULONG PortNumber,
+    _In_ PUCHAR PortAddress,
+    _In_ BOOLEAN TerminalConnected,
+    _Out_ PULONG PortId)
 {
 #if defined(SARCH_PC98)
     /* Set default baud rate */
@@ -174,21 +176,24 @@ WinLdrPortInitialize(IN ULONG BaudRate,
 }
 
 VOID
-WinLdrPortPutByte(IN ULONG PortId,
-                  IN UCHAR Byte)
+WinLdrPortPutByte(
+    _In_ ULONG PortId,
+    _In_ UCHAR Byte)
 {
     CpPutByte(&Port[PortId], Byte);
 }
 
 BOOLEAN
-WinLdrPortGetByte(IN  ULONG  PortId,
-                  OUT PUCHAR Byte)
+WinLdrPortGetByte(
+    _In_ ULONG PortId,
+    _Out_ PUCHAR Byte)
 {
     return CpGetByte(&Port[PortId], Byte, TRUE, FALSE) == CP_GET_SUCCESS;
 }
 
 BOOLEAN
-WinLdrPortPollOnly(IN ULONG PortId)
+WinLdrPortPollOnly(
+    _In_ ULONG PortId)
 {
     UCHAR Dummy;
 
@@ -196,8 +201,9 @@ WinLdrPortPollOnly(IN ULONG PortId)
 }
 
 VOID
-WinLdrEnableFifo(IN ULONG PortId,
-                 IN BOOLEAN Enable)
+WinLdrEnableFifo(
+    _In_ ULONG PortId,
+    _In_ BOOLEAN Enable)
 {
     CpEnableFifo(Port[PortId].Address, Enable);
 }
@@ -299,7 +305,8 @@ WinLdrInitializeHeadlessPort(VOID)
 }
 
 VOID
-WinLdrSetupEms(IN PCSTR BootOptions)
+WinLdrSetupEms(
+    _In_ PCSTR BootOptions)
 {
     PCSTR Option;
 

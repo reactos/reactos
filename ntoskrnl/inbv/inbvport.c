@@ -25,7 +25,8 @@ CPPORT Port[4] =
 
 BOOLEAN
 NTAPI
-InbvPortPollOnly(IN ULONG PortId)
+InbvPortPollOnly(
+    _In_ ULONG PortId)
 {
     UCHAR Dummy;
 
@@ -35,8 +36,9 @@ InbvPortPollOnly(IN ULONG PortId)
 
 BOOLEAN
 NTAPI
-InbvPortGetByte(IN  ULONG  PortId,
-                OUT PUCHAR Byte)
+InbvPortGetByte(
+    _In_ ULONG PortId,
+    _Out_ PUCHAR Byte)
 {
     /* Read a byte from the port */
     return CpGetByte(&Port[PortId], Byte, TRUE, FALSE) == CP_GET_SUCCESS;
@@ -44,8 +46,9 @@ InbvPortGetByte(IN  ULONG  PortId,
 
 VOID
 NTAPI
-InbvPortPutByte(IN ULONG PortId,
-                IN UCHAR Byte)
+InbvPortPutByte(
+    _In_ ULONG PortId,
+    _In_ UCHAR Byte)
 {
     /* Send the byte */
     CpPutByte(&Port[PortId], Byte);
@@ -53,8 +56,9 @@ InbvPortPutByte(IN ULONG PortId,
 
 VOID
 NTAPI
-InbvPortEnableFifo(IN ULONG   PortId,
-                   IN BOOLEAN Enable)
+InbvPortEnableFifo(
+    _In_ ULONG PortId,
+    _In_ BOOLEAN Enable)
 {
     /* Set FIFO as requested */
     CpEnableFifo(Port[PortId].Address, Enable);
@@ -62,7 +66,8 @@ InbvPortEnableFifo(IN ULONG   PortId,
 
 VOID
 NTAPI
-InbvPortTerminate(IN ULONG PortId)
+InbvPortTerminate(
+    _In_ ULONG PortId)
 {
     /* The port is now available */
     Port[PortId].Address = NULL;
@@ -70,11 +75,12 @@ InbvPortTerminate(IN ULONG PortId)
 
 BOOLEAN
 NTAPI
-InbvPortInitialize(IN  ULONG   BaudRate,
-                   IN  ULONG   PortNumber,
-                   IN  PUCHAR  PortAddress,
-                   OUT PULONG  PortId,
-                   IN  BOOLEAN IsMMIODevice)
+InbvPortInitialize(
+    _In_ ULONG BaudRate,
+    _In_ ULONG PortNumber,
+    _In_ PUCHAR PortAddress,
+    _Out_ PULONG PortId,
+    _In_ BOOLEAN IsMMIODevice)
 {
     /* Not yet supported */
     ASSERT(IsMMIODevice == FALSE);
