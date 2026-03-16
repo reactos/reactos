@@ -1,0 +1,80 @@
+SplineFontDB: 3.0
+FontName: WineLangNamesRegular
+FullName: Wine_Lang_Names_Regular
+FamilyName: Wine_Lang_Names
+Weight: Regular
+Copyright: Copyright (c) 2020, Remi Bernon for CodeWeavers
+UComments: "2017-11-17: Created with FontForge (http://fontforge.org)"
+Version: 001.000
+ItalicAngle: 0
+UnderlinePosition: -102
+UnderlineWidth: 51
+Ascent: 819
+Descent: 205
+InvalidEm: 0
+LayerCount: 2
+Layer: 0 0 "Back" 1
+Layer: 1 0 "Fore" 0
+XUID: [1021 48 28337276 3092883]
+OS2Version: 0
+OS2_WeightWidthSlopeOnly: 0
+OS2_UseTypoMetrics: 1
+CreationTime: 1510948643
+ModificationTime: 1599738445
+OS2TypoAscent: 0
+OS2TypoAOffset: 1
+OS2TypoDescent: 0
+OS2TypoDOffset: 1
+OS2TypoLinegap: 0
+OS2WinAscent: 0
+OS2WinAOffset: 1
+OS2WinDescent: 0
+OS2WinDOffset: 1
+HheadAscent: 0
+HheadAOffset: 1
+HheadDescent: 0
+HheadDOffset: 1
+OS2Vendor: 'PfEd'
+MarkAttachClasses: 1
+DEI: 91125
+LangName: 1028 \
+    "" \
+    "Wine Lang Cond (zh-tw)" \
+    "Reg (zh-tw)" \
+    "" \
+    "Wine Lang Cond Reg (zh-tw)"
+LangName: 1041 \
+    "" \
+    "+MNUwqTDzMMhUDQAA Cond (ja)" \
+    "Reg (ja)"
+LangName: 1033 \
+    "" \
+    "Wine Lang Cond (en)" \
+    "Reg (en)"
+Encoding: ISO8859-1
+UnicodeInterp: none
+NameList: AGL For New Fonts
+DisplaySize: -48
+AntiAlias: 1
+FitToEm: 0
+WinInfo: 64 16 4
+BeginPrivate: 0
+EndPrivate
+BeginChars: 256 1
+
+StartChar: at
+Encoding: 64 64 0
+Width: 1024
+VWidth: 0
+Flags: HW
+LayerCount: 2
+Fore
+SplineSet
+259 332 m 29
+ 468 664 l 29
+ 514 332 l 29
+ 259 332 l 29
+EndSplineSet
+EndChar
+EndChars
+EndSplineFont
