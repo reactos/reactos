@@ -120,7 +120,7 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
         { IDS_CFG_SMALL_ICONS, &Info->bSmallIcons },
     };
 
-    if (Load)
+    if (ListView_GetItemCount(hWndList) == 0)
     {
         UINT ExStyle = LVS_EX_CHECKBOXES | LVS_EX_LABELTIP;
         ListView_SetExtendedListViewStyleEx(hWndList, ExStyle, ExStyle);
@@ -141,19 +141,25 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
             Name.LoadStringW(Map[i].Id);
             Item.pszText = const_cast<PWSTR>(Name.GetString());
             Item.iItem = ListView_InsertItem(hWndList, &Item);
-            ListView_SetCheckState(hWndList, Item.iItem, *Map[i].Setting);
         }
         ListView_SetItemState(hWndList, 0, -1, LVIS_FOCUSED | LVIS_SELECTED);
         AdjustListViewHeader(hWndList);
     }
-    else
+
+    for (SIZE_T i = 0; i < _countof(Map); ++i)
     {
-        for (SIZE_T i = 0; i < _countof(Map); ++i)
+        LVFINDINFOW FindInfo = { LVFI_PARAM, NULL, Map[i].Id };
+        int Idx = ListView_FindItem(hWndList, -1, &FindInfo);
+        if (Idx >= 0)
         {
-            LVFINDINFOW FindInfo = { LVFI_PARAM, NULL, Map[i].Id };
-            int Idx = ListView_FindItem(hWndList, -1, &FindInfo);
-            if (Idx >= 0)
+            if (Load)
+            {
+                ListView_SetCheckState(hWndList, Idx, *Map[i].Setting);
+            }
+            else
+            {
                 *Map[i].Setting = ListView_GetCheckState(hWndList, Idx);
+            }
         }
     }
 }
