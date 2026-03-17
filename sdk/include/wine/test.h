@@ -108,6 +108,7 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 #define GetMajorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x026C))
 #define GetMinorNTVersion() (*(ULONG*)(KUSER_SHARED_DATA_UMPTR + 0x0270))
 #define GetNTVersion() ((GetMajorNTVersion() << 8) | GetMinorNTVersion())
+#define __REACTOS__WinVer_lt(Ver) ((GetNTVersion() < (Ver)))
 #endif
 
 #ifdef STANDALONE
