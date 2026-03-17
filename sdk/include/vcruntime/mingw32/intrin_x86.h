@@ -1556,9 +1556,9 @@ __INTRIN_INLINE void __inbytestring(unsigned short Port, unsigned char * Buffer,
 {
 	__asm__ __volatile__
 	(
-		"rep; insb" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insb" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1567,9 +1567,9 @@ __INTRIN_INLINE void __inwordstring(unsigned short Port, unsigned short * Buffer
 {
 	__asm__ __volatile__
 	(
-		"rep; insw" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insw" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1578,9 +1578,9 @@ __INTRIN_INLINE void __indwordstring(unsigned short Port, unsigned long * Buffer
 {
 	__asm__ __volatile__
 	(
-		"rep; insl" :
-		[Buffer] "=D" (Buffer), [Count] "=c" (Count) :
-		"d" (Port), "[Buffer]" (Buffer), "[Count]" (Count) :
+		"rep insl" :
+		"+D" (Buffer), "+c" (Count) :
+		"d" (Port) :
 		"memory"
 	);
 }
@@ -1602,17 +1602,35 @@ __INTRIN_INLINE void __outdword(unsigned short Port, unsigned long Data)
 
 __INTRIN_INLINE void __outbytestring(unsigned short Port, unsigned char * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsb" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsb" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE void __outwordstring(unsigned short Port, unsigned short * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsw" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsw" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE void __outdwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count)
 {
-	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
+	__asm__ __volatile__
+	(
+		"rep outsl" :
+		"+S" (Buffer), "+c" (Count) :
+		"d" (Port) :
+		"memory"
+	);
 }
 
 __INTRIN_INLINE int __cdecl _inp(unsigned short Port)
