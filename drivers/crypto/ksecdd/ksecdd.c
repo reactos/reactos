@@ -53,6 +53,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = KsecDdDispatch;
 
     /* Initialize */
+    KsecInitializeGenRandomSupport();
     KsecInitializeEncryptionSupport();
 
     return STATUS_SUCCESS;

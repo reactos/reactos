@@ -16,6 +16,7 @@
 #include <md4.h>
 #include <md5.h>
 #include <rc4.h>
+#include <aes-ctr.h>
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
@@ -585,63 +586,6 @@ BOOL WINAPI SystemFunction035(LPCSTR lpszDllFilePath)
     return TRUE;
 }
 
-/******************************************************************************
- * SystemFunction036   (ADVAPI32.@)
- *
- * MSDN documents this function as RtlGenRandom and declares it in ntsecapi.h
- *
- * PARAMS
- *  pbBuffer [O] Pointer to memory to receive random bytes.
- *  dwLen    [I] Number of random bytes to fetch.
- *
- * RETURNS
- *  Always TRUE in my tests
- */
-BOOLEAN
-WINAPI
-SystemFunction036(PVOID pbBuffer, ULONG dwLen)
-{
-    ////////////////////////////////////////////////////////////////
-    //////////////////// B I G   W A R N I N G  !!! ////////////////
-    // This function will output numbers based on the tick count. //
-    // It will NOT OUTPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
-    ////////////////////////////////////////////////////////////////
-
-    DWORD dwSeed;
-    PBYTE pBuffer;
-    ULONG uPseudoRandom;
-    LARGE_INTEGER time;
-    static ULONG uCounter = 17;
-
-    if(!pbBuffer || !dwLen)
-    {
-        /* This function always returns TRUE, even if invalid parameters were passed. (verified under WinXP SP2) */
-        return TRUE;
-    }
-
-    /* Get the first seed from the performance counter */
-    QueryPerformanceCounter(&time);
-    dwSeed = time.LowPart ^ time.HighPart ^ RtlUlongByteSwap(uCounter++);
-
-    /* We will access the buffer bytewise */
-    pBuffer = (PBYTE)pbBuffer;
-
-    do
-    {
-        /* Use the pseudo random number generator RtlRandom, which outputs a 4-byte value and a new seed */
-        uPseudoRandom = RtlRandom(&dwSeed);
-
-        do
-        {
-            /* Get each byte from the pseudo random number and store it in the buffer */
-            *pBuffer = (BYTE)(uPseudoRandom >> 8 * (dwLen % 3) & 0xFF);
-            ++pBuffer;
-        } while(--dwLen % 3);
-    } while(dwLen);
-
-    return TRUE;
-}
-
 HANDLE KsecDeviceHandle;
 
 static
@@ -727,6 +671,144 @@ KsecDeviceIoControl(
                                    OutputBufferLength);
 
     return Status;
+}
+
+/* Reseed every 256 KB generated */
+#define MAX_RNG_RESEED_INTERVAL (256 * 1024)
+
+/* Generate a maximum of 1KB on each iteration */
+#define MAX_RNG_CHUNK_SIZE 1024
+
+/* Initialize the counter for instant reseed */
+static volatile LONG RngBytesGeneratedSinceReseed = MAX_RNG_RESEED_INTERVAL + 1;
+
+static AES_CTR_CTX RngContext;
+static RTL_SRWLOCK RngReseedLock = RTL_SRWLOCK_INIT;
+
+_Requires_lock_not_held_(RngReseedLock)
+static
+NTSTATUS
+RngReseedAndSetByteCount(ULONG NewByteCount)
+{
+    BYTE Seed[32];
+    NTSTATUS Status;
+
+    /* Acquire the reseed lock exclusively */
+    RtlAcquireSRWLockExclusive(&RngReseedLock);
+
+    /* Check if another thread already reseeded the PRNG and at least half is left */
+    if (RngBytesGeneratedSinceReseed < (MAX_RNG_RESEED_INTERVAL / 2))
+    {
+        Status = STATUS_SUCCESS;
+        goto Exit;
+    }
+
+    /* Get new seed data from ksecdd */
+    Status = KsecDeviceIoControl(IOCTL_KSEC_RANDOM_FILL_BUFFER, NULL, 0, Seed, sizeof(Seed));
+    if (!NT_SUCCESS(Status))
+    {
+        //ERR("Failed to get random data from ksecdd for reseeding the PRNG!\n");
+        goto Exit;
+    }
+
+    /* Reseed the PRNG */
+    AES_CTR_Init(&RngContext, Seed, sizeof(Seed));
+
+    /* Update reseed counter to the provided value */
+    RngBytesGeneratedSinceReseed = NewByteCount;
+
+    Status = STATUS_SUCCESS;
+
+Exit:
+    /* Release the reseed lock */
+    RtlReleaseSRWLockExclusive(&RngReseedLock);
+
+    /* Erase the seed data */
+    RtlSecureZeroMemory(Seed, sizeof(Seed));
+
+    return Status;
+}
+
+_Requires_shared_lock_held_(RngReseedLock)
+static
+BOOLEAN
+RngGenerateChunk(PVOID Buffer, ULONG Length)
+{
+    ASSERT(Length > 0);
+    ASSERT(Length <= MAX_RNG_CHUNK_SIZE);
+
+    /* Make sure we don't exceed the maximum number of bytes per reseed */
+    ULONG Count = InterlockedAdd(&RngBytesGeneratedSinceReseed, Length);
+    if (Count >= MAX_RNG_RESEED_INTERVAL)
+    {
+        /* Release the shared lock before acquiring the exclusive lock for reseeding */
+        RtlReleaseSRWLockShared(&RngReseedLock);
+
+        /* We have used up the maximum, reseed and reserve bytes for our need */
+        if (!RngReseedAndSetByteCount(Length))
+        {
+            return FALSE;
+        }
+
+        /* Reacquire the shared lock after reseeding */
+        RtlAcquireSRWLockShared(&RngReseedLock);
+    }
+
+    /* Generate the random data */
+    AES_CTR_GenRandomBytes(&RngContext, Buffer, Length);
+
+    return TRUE;
+}
+
+
+/******************************************************************************
+ * SystemFunction036   (ADVAPI32.@)
+ *
+ * MSDN documents this function as RtlGenRandom and declares it in ntsecapi.h
+ *
+ * PARAMS
+ *  pbBuffer [O] Pointer to memory to receive random bytes.
+ *  dwLen    [I] Number of random bytes to fetch.
+ *
+ * RETURNS
+ *  Always TRUE in my tests
+ */
+BOOLEAN
+WINAPI
+SystemFunction036(PVOID pvBuffer, ULONG dwLen)
+{
+    BOOLEAN bSuccess;
+
+    if ((pvBuffer == NULL) || (dwLen == 0))
+    {
+        return FALSE;
+    }
+
+    /* Acquire the reseed lock shared, so we can safely access the RNG state */
+    RtlAcquireSRWLockShared(&RngReseedLock);
+
+    /* Generate chunks of bytes until the buffer is filled */
+    ULONG cjRemaining = dwLen;
+    while (cjRemaining > 0)
+    {
+        ULONG cjChunkSize = min(cjRemaining, MAX_RNG_CHUNK_SIZE);
+        if (!RngGenerateChunk(pvBuffer, cjChunkSize))
+        {
+            bSuccess = FALSE;
+            goto Exit;
+        }
+
+        pvBuffer = (PBYTE)pvBuffer + cjChunkSize;
+        cjRemaining -= cjChunkSize;
+    }
+
+    bSuccess = TRUE;
+
+Exit:
+    /* Release the shared lock */
+    RtlReleaseSRWLockShared(&RngReseedLock);
+
+    return bSuccess;
 }
 
 /*
