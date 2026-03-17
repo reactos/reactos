@@ -7,6 +7,18 @@ struct _DESKTOP;
 struct _WND;
 struct tagPOPUPMENU;
 
+#ifdef _WIN32K_
+/* Kernel mode: force pointer-sized return to prevent EAX upper-bits leaking to usermode */
+#define SYSCALL_RETURN(type)       C_ASSERT(sizeof(type) == 4); type
+#define SYSCALL_RETURN_SMALL(type) C_ASSERT(sizeof(type) < 4); ULONG_PTR
+#define SYSCALL_RETURN_VOID        ULONG_PTR
+#else
+/* User mode: expose the real type for Windows ABI compatibility */
+#define SYSCALL_RETURN(type)       type
+#define SYSCALL_RETURN_SMALL(type) type
+#define SYSCALL_RETURN_VOID        VOID
+#endif
+
 #define FIRST_USER_HANDLE 0x0020 /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE 0xffef /* last possible value for low word of user handle */
 
@@ -1953,7 +1965,7 @@ NtUserDefSetText(
     HWND WindowHandle,
     PLARGE_STRING WindowText);
 
-BOOLEAN
+SYSCALL_RETURN_SMALL(BOOLEAN)
 NTAPI
 NtUserDestroyAcceleratorTable(
     HACCEL Table);
@@ -1968,7 +1980,7 @@ BOOL
 NTAPI
 NtUserDestroyInputContext(_In_ HIMC hIMC);
 
-BOOLEAN
+SYSCALL_RETURN_SMALL(BOOLEAN)
 NTAPI
 NtUserDestroyWindow(
     HWND Wnd);
@@ -2161,7 +2173,7 @@ DWORD
 NTAPI
 NtUserGetAppImeLevel(_In_ HWND hWnd);
 
-SHORT
+SYSCALL_RETURN_SMALL(SHORT)
 NTAPI
 NtUserGetAsyncKeyState(
     INT Key);
@@ -2375,7 +2387,7 @@ NtUserGetKeyNameText(
     LPWSTR lpString,
     int nSize);
 
-SHORT
+SYSCALL_RETURN_SMALL(SHORT)
 NTAPI
 NtUserGetKeyState(
     INT VirtKey);
@@ -2514,7 +2526,7 @@ NTAPI
 NtUserGetThreadState(
     DWORD Routine);
 
-BOOLEAN
+SYSCALL_RETURN_SMALL(BOOLEAN)
 NTAPI
 NtUserGetTitleBarInfo(
     HWND hwnd,
@@ -2728,7 +2740,7 @@ NtUserNotifyProcessCreate(
     ULONG dwUnknown,
     ULONG CreateFlags);
 
-VOID
+SYSCALL_RETURN_VOID
 NTAPI
 NtUserNotifyWinEvent(
     DWORD Event,
@@ -2892,7 +2904,7 @@ NtUserRedrawWindow(
     HRGN hrgnUpdate,
     UINT flags);
 
-RTL_ATOM
+SYSCALL_RETURN_SMALL(RTL_ATOM)
 NTAPI
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
@@ -3051,7 +3063,7 @@ NtUserSetClassLongPtr(
     _In_ BOOL Ansi);
 
 #endif // _WIN64
-WORD
+SYSCALL_RETURN_SMALL(WORD)
 NTAPI
 NtUserSetClassWord(
     HWND hWnd,
@@ -3359,7 +3371,7 @@ NtUserSetWindowStationUser(
     IN PSID psid OPTIONAL,
     IN DWORD size);
 
-WORD
+SYSCALL_RETURN_SMALL(WORD)
 NTAPI
 NtUserSetWindowWord(
     HWND hWnd,
