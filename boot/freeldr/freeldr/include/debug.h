@@ -146,7 +146,7 @@ FrLdrBugCheckWithMessage(
     ULONG BugCode,
     PCHAR File,
     ULONG Line,
-    PSTR Format,
+    PCSTR Format,
     ...);
 
 /* Bugcheck codes */
@@ -156,6 +156,7 @@ enum _FRLDR_BUGCHECK_CODES
     MISSING_HARDWARE_REQUIREMENTS,
     FREELDR_IMAGE_CORRUPTION,
     MEMORY_INIT_FAILURE,
+    ASSERT_FAILURE,
 #ifdef UEFIBOOT
     EXIT_BOOTSERVICES_FAILURE,
 #endif

@@ -524,9 +524,21 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
+    PCSTR Format;
+
     if (Message)
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu: %s\n",
+        Format = "Assertion \'%s\' failed at %s line %lu: %s\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber,
@@ -534,7 +546,16 @@ RtlAssert(IN PVOID FailedAssertion,
     }
     else
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu\n",
+        Format = "Assertion \'%s\' failed at %s line %lu\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber);
@@ -549,6 +570,7 @@ char *BugCodeStrings[] =
     "MISSING_HARDWARE_REQUIREMENTS",
     "FREELDR_IMAGE_CORRUPTION",
     "MEMORY_INIT_FAILURE",
+    "ASSERT_FAILURE",
 #ifdef UEFIBOOT
     "EXIT_BOOTSERVICES_FAILURE",
 #endif
