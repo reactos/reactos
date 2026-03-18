@@ -60,7 +60,7 @@ KdPortInitializeEx(
             }
             if (ComPortNumber == 0)
             {
-                HalDisplayString("\r\nKernel Debugger: No COM port found!\r\n\r\n");
+                HalDisplayString("\r\nKernel Debugger: No serial port found\r\n\r\n");
                 return FALSE;
             }
         }
@@ -75,11 +75,11 @@ KdPortInitializeEx(
     Status = CpInitialize(PortInformation,
                           (ComPortNumber == 0 ? PortInformation->Address
                                               : UlongToPtr(BaseArray[ComPortNumber])),
-                          (PortInformation->BaudRate == 0 ? DEFAULT_BAUD_RATE
+                          (PortInformation->BaudRate == 0 ? DEFAULT_DEBUG_BAUD_RATE
                                                           : PortInformation->BaudRate));
     if (!NT_SUCCESS(Status))
     {
-        HalDisplayString("\r\nKernel Debugger: Serial port not found!\r\n\r\n");
+        HalDisplayString("\r\nKernel Debugger: Serial port not available\r\n\r\n");
         return FALSE;
     }
     else
@@ -90,7 +90,7 @@ KdPortInitializeEx(
 
         /* Print message to blue screen */
         Length = snprintf(Buffer, sizeof(Buffer),
-                          "\r\nKernel Debugger: Serial port found: COM%ld (Port 0x%p) BaudRate %ld\r\n\r\n",
+                          "\r\nKernel Debugger: Using COM%lu (Port 0x%p) BaudRate %lu\r\n\r\n",
                           ComPortNumber,
                           PortInformation->Address,
                           PortInformation->BaudRate);
