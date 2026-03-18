@@ -10,6 +10,7 @@
 #include <ntoskrnl.h>
 #include "kd.h"
 #include "kdterminal.h"
+#include <cportlib/uartinfo.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -71,12 +72,10 @@ KdpGetDebugMode(
         if (*p2 != ':')
         {
             Value = (ULONG)atol(p2);
-            if (Value > 0 && Value < 5)
+            if (Value > 0 && Value <= MAX_COM_PORTS)
             {
-                /* Valid port found, enable Serial Debugging */
+                /* Valid port found, enable it and set the port to use */
                 KdpDebugMode.Serial = TRUE;
-
-                /* Set the port to use */
                 SerialPortNumber = Value;
             }
         }
@@ -85,9 +84,10 @@ KdpGetDebugMode(
             Value = strtoul(p2 + 1, NULL, 0);
             if (Value)
             {
+                /* Valid port found, enable it and set its address */
                 KdpDebugMode.Serial = TRUE;
-                SerialPortInfo.Address = UlongToPtr(Value);
                 SerialPortNumber = 0;
+                SerialPortInfo.Address = UlongToPtr(Value);
             }
         }
     }

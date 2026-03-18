@@ -44,15 +44,11 @@ ULONG DebugPort = RS232;
 
 /* Serial debug connection */
 #include <cportlib/uartinfo.h>
-ULONG BaudRate = DEFAULT_DEBUG_BAUD_RATE;
-ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
+ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
+// The COM port initializer chooses the first available port starting from COM4 down to COM1.
+PUCHAR ComPortAddress = NULL;
 
 BOOLEAN DebugStartOfLine = TRUE;
-
-#ifdef UEFIBOOT
-VOID
-ARMWriteToUART(UCHAR Data);
-#endif
 
 VOID
 DebugInit(
@@ -138,8 +134,20 @@ DebugInit(
             DebugPort |= RS232;
 
             /* Set the port to use */
-            Value = (ULONG)atol(PortString);
-            if (Value) ComPort = Value;
+            if (*PortString != ':')
+            {
+                /* Read the port and set its address */
+                Value = (ULONG)atol(PortString);
+                if (Value > 0 && Value <= MAX_COM_PORTS)
+                    ComPortAddress = UlongToPtr(BaseArray[Value]);
+            }
+            else
+            {
+                /* Retrieve and set its address */
+                Value = strtoul(PortString + 1, NULL, 0);
+                if (Value)
+                    ComPortAddress = UlongToPtr(Value);
+            }
         }
 
         PortString = strstr(PortString, "DEBUGPORT");
@@ -157,7 +165,7 @@ DebugInit(
         {
             /* Read and set it */
             Value = (ULONG)atol(BaudString + 1);
-            if (Value) BaudRate = Value;
+            if (Value) ComPortBaudRate = Value;
         }
     }
 
@@ -167,7 +175,7 @@ Done:
     /* Try to initialize the port; if it fails, remove the corresponding flag */
     if (DebugPort & RS232)
     {
-        if (!Rs232PortInitialize(ComPort, BaudRate))
+        if (!Rs232PortInitialize(ComPortAddress, ComPortBaudRate))
             DebugPort &= ~RS232;
     }
 }

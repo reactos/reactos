@@ -94,25 +94,18 @@ KdRestore(IN BOOLEAN SleepTransition)
 
 NTSTATUS
 NTAPI
-KdpPortInitialize(IN ULONG ComPortNumber,
-                  IN ULONG ComPortBaudRate)
+KdpPortInitialize(
+    _In_ PUCHAR PortAddress,
+    _In_ ULONG BaudRate)
 {
     NTSTATUS Status;
 
-    KDDBGPRINT("KdpPortInitialize, Port = COM%ld\n", ComPortNumber);
-
-    Status = CpInitialize(&KdComPort,
-                          UlongToPtr(BaseArray[ComPortNumber]),
-                          ComPortBaudRate);
+    Status = CpInitialize(&KdComPort, PortAddress, BaudRate);
     if (!NT_SUCCESS(Status))
-    {
         return STATUS_INVALID_PARAMETER;
-    }
-    else
-    {
-        KdComPortInUse = KdComPort.Address;
-        return STATUS_SUCCESS;
-    }
+
+    KdComPortInUse = KdComPort.Address;
+    return STATUS_SUCCESS;
 }
 
 /******************************************************************************
@@ -129,6 +122,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
     ULONG ComPortNumber   = DEFAULT_DEBUG_PORT;
     ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
+    PUCHAR ComPortAddress = NULL;
 
     PSTR CommandLine, PortString, BaudString;
     ULONG Value;
@@ -161,12 +155,25 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
             /* Check for a valid serial port */
             PortString += CONST_STR_LEN("COM");
-            Value = (ULONG)atol(PortString);
-            if (Value > MAX_COM_PORTS)
-                return STATUS_INVALID_PARAMETER;
-            // if (Value > 0 && Value <= MAX_COM_PORTS)
-            /* Set the port to use */
-            ComPortNumber = Value;
+            if (*PortString != ':')
+            {
+                Value = (ULONG)atol(PortString);
+                if (Value > MAX_COM_PORTS)
+                    return STATUS_INVALID_PARAMETER;
+                // if (Value > 0 && Value <= MAX_COM_PORTS)
+                /* Set the port to use */
+                ComPortNumber = Value;
+            }
+            else
+            {
+                /* Retrieve and set its address */
+                Value = strtoul(PortString + 1, NULL, 0);
+                if (Value)
+                {
+                    ComPortNumber = 0;
+                    ComPortAddress = UlongToPtr(Value);
+                }
+            }
         }
 
         /* Check if we got a baud rate */
@@ -186,6 +193,9 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         }
     }
 
+    if (!ComPortAddress)
+        ComPortAddress = UlongToPtr(BaseArray[ComPortNumber]);
+
 #ifdef KDDEBUG
     /*
      * Try to find a free COM port and use it as the KD debugging port.
@@ -197,22 +207,22 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
      * when we find a valid port. If we reach the first list element
      * (the undefined COM port), no valid port was found.
      */
+    PUCHAR Address = NULL;
     ULONG ComPort;
     for (ComPort = MAX_COM_PORTS; ComPort > 0; ComPort--)
     {
         /* Check if the port exist; skip the KD port */
-        if ((ComPort != ComPortNumber) && CpDoesPortExist(UlongToPtr(BaseArray[ComPort])))
+        Address = UlongToPtr(BaseArray[ComPort]);
+        if ((Address != ComPortAddress) && CpDoesPortExist(Address))
             break;
     }
-    if (ComPort != 0)
-        CpInitialize(&KdDebugComPort, UlongToPtr(BaseArray[ComPort]), DEFAULT_BAUD_RATE);
+    if (ComPort != 0 && Address != NULL)
+        CpInitialize(&KdDebugComPort, Address, DEFAULT_BAUD_RATE);
     }
 #endif
 
-    KDDBGPRINT("KdDebuggerInitialize0\n");
-
     /* Initialize the port */
-    return KdpPortInitialize(ComPortNumber, ComPortBaudRate);
+    return KdpPortInitialize(ComPortAddress, ComPortBaudRate);
 }
 
 /******************************************************************************
