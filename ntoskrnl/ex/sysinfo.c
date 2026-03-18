@@ -2495,8 +2495,7 @@ QSI_DEF(SystemNumaAvailableMemory)
 QSI_DEF(SystemEmulationBasicInformation)
 {
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-    PSYSTEM_BASIC_INFORMATION Sbi
-        = (PSYSTEM_BASIC_INFORMATION) Buffer;
+    PSYSTEM_BASIC_INFORMATION Sbi = (PSYSTEM_BASIC_INFORMATION) Buffer;
 
     *ReqSize = sizeof(SYSTEM_BASIC_INFORMATION);
 

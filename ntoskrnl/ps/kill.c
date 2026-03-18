@@ -383,7 +383,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     if (Process->Wow64Process && Process->Wow64Process != (PVOID)TRUE)
     {
         /* Free WOW64_PROCESS structure */
-        ExFreePool(Process->Wow64Process);
+        ExFreePoolWithTag(Process->Wow64Process, 'oWsP');
 
         PsReturnProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
     }

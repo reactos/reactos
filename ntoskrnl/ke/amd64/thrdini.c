@@ -215,7 +215,7 @@ KiSwapContextResume(
        __writemsr(MSR_GS_SWAP, (ULONG64)NewThread->Teb);
 
 #if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
-       ENewProcess = (PEPROCESS) NewProcess;
+       ENewProcess = (PEPROCESS)NewProcess;
        if (ENewProcess->Wow64Process != NULL)
        {
           ULONG_PTR Base = ROUND_TO_PAGES((ULONG_PTR)(NewThread->Teb + 1));

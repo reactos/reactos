@@ -1279,7 +1279,7 @@ NtQueryInformationProcess(
                 if (Process->Wow64Process == (PVOID)TRUE)
                 {
                     PsChargeProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
-                    Process->Wow64Process = ExAllocatePool(NonPagedPool, sizeof(WOW64_PROCESS));
+                    Process->Wow64Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(WOW64_PROCESS), 'oWsP');
                     if (!Process->Wow64Process)
                     {
                         PsReturnProcessNonPagedPoolQuota(Process, sizeof(WOW64_PROCESS));
