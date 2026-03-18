@@ -179,11 +179,6 @@ extern void winetest_wait_child_process( HANDLE process );
 #define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
 
-#define winetest_platform_is_wine !strcmp(winetest_platform, "wine")
-#define flaky_if(is_flaky)      // TODO: define me
-#define flaky                   flaky_if(TRUE)
-#define flaky_wine              flaky_if(winetest_platform_is_wine)
-
 #ifndef ARRAY_SIZE
 # define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
