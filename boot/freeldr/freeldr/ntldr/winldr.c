@@ -22,7 +22,7 @@ BOOLEAN IsAcpiPresent(VOID);
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
-extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
+extern VOID WinLdrSetupEms(_In_ PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 /**/PCWSTR BootFileSystem = NULL;/**/
@@ -1193,10 +1193,8 @@ LoadAndBootWindowsCommon(
 
     ASSERT(OperatingSystemVersion != 0);
 
-#ifdef _M_IX86
     /* Setup redirection support */
     WinLdrSetupEms(BootOptions);
-#endif
 
     /* Convert BootPath to SystemRoot */
     SystemRoot = strstr(BootPath, "\\");

@@ -43,12 +43,8 @@ static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 ULONG DebugPort = RS232;
 
 /* Serial debug connection */
-#if defined(SARCH_PC98)
-ULONG BaudRate = 9600;
-#else
-ULONG BaudRate = 115200;
-#endif
-
+#include <cportlib/uartinfo.h>
+ULONG BaudRate = DEFAULT_DEBUG_BAUD_RATE;
 ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
 ULONG PortIrq  = 0; // Not used at the moment.
 
@@ -528,9 +524,21 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
+    PCSTR Format;
+
     if (Message)
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu: %s\n",
+        Format = "Assertion \'%s\' failed at %s line %lu: %s\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber,
@@ -538,7 +546,16 @@ RtlAssert(IN PVOID FailedAssertion,
     }
     else
     {
-        DbgPrint("Assertion \'%s\' failed at %s line %lu\n",
+        Format = "Assertion \'%s\' failed at %s line %lu\n";
+
+        DbgPrint(Format,
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+
+        FrLdrBugCheckWithMessage(
+                 ASSERT_FAILURE, FileName, LineNumber,
+                 Format,
                  (PCHAR)FailedAssertion,
                  (PCHAR)FileName,
                  LineNumber);
@@ -553,6 +570,7 @@ char *BugCodeStrings[] =
     "MISSING_HARDWARE_REQUIREMENTS",
     "FREELDR_IMAGE_CORRUPTION",
     "MEMORY_INIT_FAILURE",
+    "ASSERT_FAILURE",
 #ifdef UEFIBOOT
     "EXIT_BOOTSERVICES_FAILURE",
 #endif

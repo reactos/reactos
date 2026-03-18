@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS ComPort Library
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            include/reactos/libs/cportlib/cportlib.h
- * PURPOSE:         Header for the ComPort Library
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     ReactOS ComPort Library
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Header for the ComPort Library
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -31,55 +30,42 @@ typedef struct _CPPORT
     USHORT Flags;
 } CPPORT, *PCPPORT;
 
+BOOLEAN
+NTAPI
+CpDoesPortExist(
+    _In_ PUCHAR Address);
+
 VOID
 NTAPI
 CpEnableFifo(
-    IN PUCHAR  Address,
-    IN BOOLEAN Enable
-);
+    _In_ PUCHAR Address,
+    _In_ BOOLEAN Enable);
 
 VOID
 NTAPI
 CpSetBaud(
-    IN PCPPORT Port,
-    IN ULONG   BaudRate
-);
+    _Inout_ PCPPORT Port,
+    _In_ ULONG BaudRate);
 
 NTSTATUS
 NTAPI
 CpInitialize(
-    IN PCPPORT Port,
-    IN PUCHAR  Address,
-    IN ULONG   BaudRate
-);
-
-BOOLEAN
-NTAPI
-CpDoesPortExist(
-    IN PUCHAR Address
-);
-
-UCHAR
-NTAPI
-CpReadLsr(
-    IN PCPPORT Port,
-    IN UCHAR   ExpectedValue
-);
+    _Inout_ PCPPORT Port,
+    _In_ PUCHAR Address,
+    _In_ ULONG BaudRate);
 
 USHORT
 NTAPI
 CpGetByte(
-    IN  PCPPORT Port,
-    OUT PUCHAR  Byte,
-    IN  BOOLEAN Wait,
-    IN  BOOLEAN Poll
-);
+    _Inout_ PCPPORT Port,
+    _Out_ PUCHAR Byte,
+    _In_ BOOLEAN Wait,
+    _In_ BOOLEAN Poll);
 
 VOID
 NTAPI
 CpPutByte(
-    IN PCPPORT Port,
-    IN UCHAR   Byte
-);
+    _Inout_ PCPPORT Port,
+    _In_ UCHAR Byte);
 
 /* EOF */

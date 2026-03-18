@@ -56,6 +56,7 @@ add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMM
 list(APPEND FREELDR_NTLDR_SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
     ntldr/conversion.c
+    ntldr/headless.c
     ntldr/inffile.c
     ntldr/registry.c
     ntldr/setupldr.c
@@ -65,8 +66,7 @@ list(APPEND FREELDR_NTLDR_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_NTLDR_SOURCE
-        ntldr/arch/i386/winldr.c
-        ntldr/headless.c)
+        ntldr/arch/i386/winldr.c)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/amd64/winldr.c)

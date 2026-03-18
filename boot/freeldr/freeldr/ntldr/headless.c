@@ -1,16 +1,19 @@
 /*
- * PROJECT:         ReactOS Boot Loader
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/freeldr/windows/headless.c
- * PURPOSE:         Provides support for Windows Emergency Management Services
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Boot Loader
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * PURPOSE:     Provides support for Windows Emergency Management Services
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group
+ *              Copyright 2022-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
+#include <cportlib/uartinfo.h>
 #include "ntldropts.h"
+
+#include <debug.h> // For _WARN()
 
 /* Note: Move these to some smbios.h header */
 #define SYSID_TYPE_UUID "_UUID_"
@@ -43,8 +46,10 @@ CPPORT Port[4] =
 /* FUNCTIONS ******************************************************************/
 
 VOID
-WinLdrLoadGUID(OUT PGUID SystemGuid)
+WinLdrLoadGUID(
+    _Out_ PGUID SystemGuid)
 {
+#if (defined(_M_IX86) || defined(_M_AMD64)) && !defined(UEFIBOOT)
     PSYSID_UUID_ENTRY CurrentAddress;
 
     CurrentAddress = (PSYSID_UUID_ENTRY)0xE0000;
@@ -57,113 +62,69 @@ WinLdrLoadGUID(OUT PGUID SystemGuid)
         }
         CurrentAddress = (PSYSID_UUID_ENTRY)((ULONG_PTR)CurrentAddress + 1);
     }
+#else
+    _WARN("WinLdrLoadGUID needs SMBIOS table reading implementation on this platform!");
+#endif
 
     RtlZeroMemory(SystemGuid, SYSID_UUID_DATA_SIZE);
 }
 
+/* NOTE: This function mirrors nt!inbvport.c:InbvPortInitialize() */
 BOOLEAN
-WinLdrPortInitialize(IN ULONG BaudRate,
-                     IN ULONG PortNumber,
-                     IN PUCHAR PortAddress,
-                     IN BOOLEAN TerminalConnected,
-                     OUT PULONG PortId)
+WinLdrPortInitialize(
+    _In_ ULONG BaudRate,
+    _In_ ULONG PortNumber,
+    _In_ PUCHAR PortAddress,
+    _In_ BOOLEAN TerminalConnected,
+    _Out_ PULONG PortId)
 {
-#if defined(SARCH_PC98)
-    /* Set default baud rate */
-    if (BaudRate == 0) BaudRate = 9600;
+    /* Set the default baud rate */
+    if (BaudRate == 0)
+        BaudRate = DEFAULT_BAUD_RATE;
 
-    /* Check if port or address given */
+    /* Check if the port or address is given */
     if (PortNumber)
     {
         /* Pick correct address for port */
         if (!PortAddress)
         {
-            if (PortNumber == 1)
-            {
-                PortAddress = (PUCHAR)0x30;
-            }
-            else
-            {
-                PortAddress = (PUCHAR)0x238;
-                PortNumber = 2;
-            }
+            if (PortNumber < 1 || PortNumber > MAX_COM_PORTS)
+                PortNumber = MAX_COM_PORTS;
+            PortAddress = UlongToPtr(BaseArray[PortNumber]);
         }
     }
     else
     {
         /* Pick correct port for address */
-        PortAddress = (PUCHAR)0x30;
+#if defined(SARCH_PC98)
+        static const ULONG TestPorts[] = {1, 2};
+#else
+        static const ULONG TestPorts[] = {2, 1};
+#endif
+        PortAddress = UlongToPtr(BaseArray[TestPorts[0]]);
         if (CpDoesPortExist(PortAddress))
         {
-            PortNumber = 1;
+            PortNumber = TestPorts[0];
         }
         else
         {
-            PortAddress = (PUCHAR)0x238;
+            PortAddress = UlongToPtr(BaseArray[TestPorts[1]]);
             if (!CpDoesPortExist(PortAddress))
                 return FALSE;
-
-            PortNumber = 2;
+            PortNumber = TestPorts[1];
         }
     }
-#else
-    /* Set default baud rate */
-    if (BaudRate == 0) BaudRate = 19200;
-
-    /* Check if port or address given */
-    if (PortNumber)
-    {
-        /* Pick correct address for port */
-       if (!PortAddress)
-        {
-            switch (PortNumber)
-            {
-                case 1:
-                    PortAddress = (PUCHAR)0x3F8;
-                    break;
-
-                case 2:
-                    PortAddress = (PUCHAR)0x2F8;
-                    break;
-
-                case 3:
-                    PortAddress = (PUCHAR)0x3E8;
-                    break;
-
-                default:
-                    PortNumber = 4;
-                    PortAddress = (PUCHAR)0x2E8;
-            }
-        }
-    }
-    else
-    {
-        /* Pick correct port for address */
-        PortAddress = (PUCHAR)0x2F8;
-        if (CpDoesPortExist(PortAddress))
-        {
-            PortNumber = 2;
-        }
-        else
-        {
-            PortAddress = (PUCHAR)0x3F8;
-            if (!CpDoesPortExist(PortAddress)) return FALSE;
-            PortNumber = 1;
-         }
-    }
-#endif
 
     /* Not yet supported */
     ASSERT(LoaderRedirectionInformation.IsMMIODevice == FALSE);
 
     /* Check if port exists */
-    if ((CpDoesPortExist(PortAddress)) || (CpDoesPortExist(PortAddress)))
+    if (CpDoesPortExist(PortAddress))
     {
-        /* Initialize port for first time, or re-initialize if specified */
-        if (((TerminalConnected) && (Port[PortNumber - 1].Address)) ||
-            !(Port[PortNumber - 1].Address))
+        /* Initialize port for the first time, or re-initialize if specified */
+        if (!!TerminalConnected == (Port[PortNumber - 1].Address != NULL))
         {
-            /* Initialize the port, return it */
+            /* Initialize the port and return it */
             CpInitialize(&Port[PortNumber - 1], PortAddress, BaudRate);
             *PortId = PortNumber - 1;
             return TRUE;
@@ -174,21 +135,24 @@ WinLdrPortInitialize(IN ULONG BaudRate,
 }
 
 VOID
-WinLdrPortPutByte(IN ULONG PortId,
-                  IN UCHAR Byte)
+WinLdrPortPutByte(
+    _In_ ULONG PortId,
+    _In_ UCHAR Byte)
 {
     CpPutByte(&Port[PortId], Byte);
 }
 
 BOOLEAN
-WinLdrPortGetByte(IN  ULONG  PortId,
-                  OUT PUCHAR Byte)
+WinLdrPortGetByte(
+    _In_ ULONG PortId,
+    _Out_ PUCHAR Byte)
 {
     return CpGetByte(&Port[PortId], Byte, TRUE, FALSE) == CP_GET_SUCCESS;
 }
 
 BOOLEAN
-WinLdrPortPollOnly(IN ULONG PortId)
+WinLdrPortPollOnly(
+    _In_ ULONG PortId)
 {
     UCHAR Dummy;
 
@@ -196,8 +160,9 @@ WinLdrPortPollOnly(IN ULONG PortId)
 }
 
 VOID
-WinLdrEnableFifo(IN ULONG PortId,
-                 IN BOOLEAN Enable)
+WinLdrEnableFifo(
+    _In_ ULONG PortId,
+    _In_ BOOLEAN Enable)
 {
     CpEnableFifo(Port[PortId].Address, Enable);
 }
@@ -214,16 +179,14 @@ WinLdrInitializeHeadlessPort(VOID)
     PortAddress = LoaderRedirectionInformation.PortAddress;
     BaudRate = LoaderRedirectionInformation.BaudRate;
 
-#if defined(SARCH_PC98)
     /* Pick a port address */
     if (PortNumber)
     {
         if (!PortAddress)
         {
-            if (PortNumber == 2)
-                LoaderRedirectionInformation.PortAddress = (PUCHAR)0x238;
-            else
-                LoaderRedirectionInformation.PortAddress = (PUCHAR)0x30;
+            if (PortNumber < 1 || PortNumber > MAX_COM_PORTS)
+                PortNumber = 1;
+            LoaderRedirectionInformation.PortAddress = UlongToPtr(BaseArray[PortNumber]);
         }
     }
     else
@@ -232,39 +195,6 @@ WinLdrInitializeHeadlessPort(VOID)
         WinLdrTerminalConnected = FALSE;
         return;
     }
-#else
-    /* Pick a port address */
-    if (PortNumber)
-    {
-        if (!PortAddress)
-        {
-            switch (PortNumber)
-            {
-                case 2:
-                    LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2F8;
-                    break;
-
-                case 3:
-                    LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3E8;
-                    break;
-
-                case 4:
-                    LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2E8;
-                    break;
-
-                default:
-                    LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3F8;
-                    break;
-            }
-        }
-    }
-    else
-    {
-        /* No number, so no EMS */
-        WinLdrTerminalConnected = FALSE;
-        return;
-    }
-#endif
 
     /* Call arch code to initialize the port */
     PortAddress = LoaderRedirectionInformation.PortAddress;
@@ -289,7 +219,7 @@ WinLdrInitializeHeadlessPort(VOID)
 
         WinLdrTerminalDelay = (10 * 1000 * 1000) / (BaudRate / 10) / 6;
 
-        /* Sent an ANSI reset sequence to get the terminal up and running */
+        /* Send an ANSI reset sequence to get the terminal up and running */
         for (i = 0; i < strlen(AnsiReset); i++)
         {
             WinLdrPortPutByte(WinLdrTerminalDeviceId, AnsiReset[i]);
@@ -299,7 +229,8 @@ WinLdrInitializeHeadlessPort(VOID)
 }
 
 VOID
-WinLdrSetupEms(IN PCSTR BootOptions)
+WinLdrSetupEms(
+    _In_ PCSTR BootOptions)
 {
     PCSTR Option;
 
@@ -326,11 +257,14 @@ WinLdrSetupEms(IN PCSTR BootOptions)
         }
         else
         {
-            LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Option, 0, 16);
+#ifdef _WIN64
+#define strtoulptr strtoull
+#else
+#define strtoulptr strtoul
+#endif
+            LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoulptr(Option, 0, 16);
             if (LoaderRedirectionInformation.PortAddress)
-            {
                 LoaderRedirectionInformation.PortNumber = 3;
-            }
         }
     }
 
