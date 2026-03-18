@@ -59,14 +59,14 @@ KdpGetDebugMode(
     /* Check for Screen Debugging */
     if (!_strnicmp(p2, "SCREEN", 6))
     {
-        /* Enable It */
+        /* Enable it */
         p2 += 6;
         KdpDebugMode.Screen = TRUE;
     }
     /* Check for Serial Debugging */
     else if (!_strnicmp(p2, "COM", 3))
     {
-        /* Check for a valid Serial Port */
+        /* Check for a valid serial port */
         p2 += 3;
         if (*p2 != ':')
         {
@@ -94,7 +94,7 @@ KdpGetDebugMode(
     /* Check for Debug Log Debugging */
     else if (!_strnicmp(p2, "FILE", 4))
     {
-        /* Enable It */
+        /* Enable it */
         p2 += 4;
         KdpDebugMode.File = TRUE;
         if (*p2 == ':')
@@ -139,7 +139,7 @@ KdDebuggerInitialize0(
     /* Check if we got the /DEBUGPORT parameter(s) */
     while (Port)
     {
-        /* Move past the actual string, to reach the port*/
+        /* Move past the actual string */
         Port += sizeof("DEBUGPORT") - 1;
 
         /* Now get past any spaces and skip the equal sign */

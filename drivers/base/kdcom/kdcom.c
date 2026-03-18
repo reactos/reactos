@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            drivers/base/kddll/kdcom.c
+ * FILE:            drivers/base/kdcom/kdcom.c
  * PURPOSE:         COM port functions for the kernel debugger.
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -147,7 +147,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         /* Check if we got the /DEBUGPORT parameter */
         if (PortString)
         {
-            /* Move past the actual string, to reach the port*/
+            /* Move past the actual string */
             PortString += strlen("DEBUGPORT");
 
             /* Now get past any spaces and skip the equal sign */
@@ -160,7 +160,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* Check for a valid Serial Port */
+            /* Check for a valid serial port */
             PortString += 3;
             Value = atol(PortString);
             if (Value >= sizeof(BaseArray) / sizeof(BaseArray[0]))
@@ -175,13 +175,11 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         /* Check if we got a baud rate */
         if (BaudString)
         {
-            /* Move past the actual string, to reach the rate */
+            /* Move past the actual string and any spaces */
             BaudString += strlen("BAUDRATE");
-
-            /* Now get past any spaces */
             while (*BaudString == ' ') BaudString++;
 
-            /* And make sure we have a rate */
+            /* Make sure we have a rate */
             if (*BaudString)
             {
                 /* Read and set it */
@@ -194,14 +192,13 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 #ifdef KDDEBUG
     /*
      * Try to find a free COM port and use it as the KD debugging port.
-     * NOTE: Inspired by reactos/boot/freeldr/freeldr/comm/rs232.c, Rs232PortInitialize(...)
+     * NOTE: Inspired by freeldr/comm/rs232.c, Rs232PortInitialize(...)
      */
     {
     /*
-     * Start enumerating COM ports from the last one to the first one,
-     * and break when we find a valid port.
-     * If we reach the first element of the list, the invalid COM port,
-     * then it means that no valid port was found.
+     * Enumerate COM ports from the last to the first one, and stop
+     * when we find a valid port. If we reach the first list element
+     * (the undefined COM port), no valid port was found.
      */
     ULONG ComPort;
     for (ComPort = MAX_COM_PORTS; ComPort > 0; ComPort--)

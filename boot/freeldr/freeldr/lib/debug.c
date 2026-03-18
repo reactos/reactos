@@ -109,11 +109,11 @@ DebugInit(
 
     /*
      * Check if we got /DEBUGPORT parameters.
-     * NOTE: Inspired by reactos/ntoskrnl/kd/kdinit.c, KdInitSystem(...)
+     * NOTE: Inspired by ntoskrnl/kd/kdinit.c, KdInitSystem(...)
      */
     while (PortString)
     {
-        /* Move past the actual string, to reach the port*/
+        /* Move past the actual string */
         PortString += strlen("DEBUGPORT");
 
         /* Now get past any spaces and skip the equal sign */
@@ -147,13 +147,11 @@ DebugInit(
     /* Check if we got a baud rate */
     if (BaudString)
     {
-        /* Move past the actual string, to reach the rate */
+        /* Move past the actual string and any spaces */
         BaudString += strlen("BAUDRATE");
-
-        /* Now get past any spaces */
         while (*BaudString == ' ') BaudString++;
 
-        /* And make sure we have a rate */
+        /* Make sure we have a rate */
         if (*BaudString)
         {
             /* Read and set it */

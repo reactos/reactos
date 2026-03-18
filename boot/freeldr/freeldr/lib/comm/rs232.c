@@ -57,10 +57,9 @@ BOOLEAN Rs232PortInitialize(IN ULONG ComPort,
     if (ComPort == 0)
     {
         /*
-         * Start enumerating COM ports from the last one to the first one,
-         * and break when we find a valid port.
-         * If we reach the first element of the list, the invalid COM port,
-         * then it means that no valid port was found.
+         * Enumerate COM ports from the last to the first one, and stop
+         * when we find a valid port. If we reach the first list element
+         * (the undefined COM port), no valid port was found.
          */
         for (ComPort = MAX_COM_PORTS; ComPort > 0; ComPort--)
         {
