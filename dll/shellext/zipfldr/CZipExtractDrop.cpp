@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     IDataObject for dragging/copying files out of a ZIP folder
- * COPYRIGHT:   Copyright 2024-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /*
@@ -33,12 +33,6 @@
 #include "precomp.h"
 #include "CZipExtractDrop.hpp"
 
-// --------------------------------------------------------------------------
-// Helpers
-// --------------------------------------------------------------------------
-
-// Recursively delete a directory tree (like SHFileOperation with FO_DELETE,
-// but without any UI and without depending on shell32 internals).
 static void RecursiveDeleteDirectory(PCWSTR pszDir)
 {
     WCHAR szFind[MAX_PATH];
@@ -106,9 +100,9 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
         INT cch = s.GetLength();
         CopyMemory(pszDst, s.GetString(), cch * sizeof(WCHAR));
         pszDst += cch;
-        *pszDst++ = L'\0';
+        *pszDst++ = UNICODE_NULL;
     }
-    *pszDst = L'\0'; // double NUL terminator
+    *pszDst = UNICODE_NULL; // double NUL terminator
 
     GlobalUnlock(hGlobal);
     return hGlobal;
@@ -144,10 +138,6 @@ static BOOL WriteZipEntryToFile(unzFile uf, PCWSTR pszDestFile)
     return ok;
 }
 
-// --------------------------------------------------------------------------
-// CZipExtractDrop
-// --------------------------------------------------------------------------
-
 class CZipExtractDrop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject
@@ -178,8 +168,6 @@ class CZipExtractDrop :
     };
     CAtlArray<ExtraEntry> m_extraData;
 
-    // ---------- extraction helpers ----------
-
     // Create a unique temporary directory and store it in m_tempDir.
     HRESULT CreateTempDir()
     {
@@ -204,13 +192,6 @@ class CZipExtractDrop :
     // Given the in-ZIP wide path (e.g. "src/foo/bar.c"), strip the ZipDir
     // prefix and return the part relative to the selected items, split into
     // the "top-level name" and the "rest" of the path.
-    //
-    // zip path:  "subdir/src/foo/bar.c"   ZipDir: "subdir/"
-    // rel path:  "src/foo/bar.c"
-    // top name:  "src"  (matches selected name "src/")
-    // rest:      "foo/bar.c"
-    //
-    // Returns FALSE if the entry does not belong to any selected item.
     bool MatchesSelection(const CStringW& zipRelPath,
                           CStringW& outTopName,
                           CStringW& outRest) const
@@ -218,11 +199,7 @@ class CZipExtractDrop :
         for (SIZE_T i = 0; i < m_selectedNames.GetCount(); ++i)
         {
             const CStringW& sel = m_selectedNames[i];
-            // sel may end with '/' (directory) or not (file).
-            // For files: exact match.
-            // For directories: prefix match followed by '/'.
             bool isDir = (!sel.IsEmpty() && sel[sel.GetLength() - 1] == L'/');
-
             if (isDir)
             {
                 // sel = "src/"
@@ -355,8 +332,7 @@ class CZipExtractDrop :
                     DosDateTimeToFileTime((WORD)(info.dosDate >> 16),
                                           (WORD)info.dosDate, &ftLocal);
                     LocalFileTimeToFileTime(&ftLocal, &ftUtc);
-                    HANDLE hFile = CreateFileW(destFull, GENERIC_WRITE,
-                                               FILE_SHARE_READ, NULL,
+                    HANDLE hFile = CreateFileW(destFull, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                                                OPEN_EXISTING, 0, NULL);
                     if (hFile != INVALID_HANDLE_VALUE)
                     {
@@ -460,8 +436,7 @@ public:
         ZeroMemory(pstm, sizeof(*pstm));
 
         // Handle CF_HDROP ourselves.
-        if (pfe->cfFormat == CF_HDROP &&
-            (pfe->tymed & TYMED_HGLOBAL) &&
+        if (pfe->cfFormat == CF_HDROP && (pfe->tymed & TYMED_HGLOBAL) &&
             pfe->dwAspect == DVASPECT_CONTENT)
         {
             // Extract on first request.
@@ -482,11 +457,14 @@ public:
             void* pDst = GlobalLock(hCopy);
             if (!pSrc || !pDst)
             {
-                if (pSrc) GlobalUnlock(m_hDropCache);
-                if (pDst) GlobalUnlock(hCopy);
+                if (pSrc)
+                    GlobalUnlock(m_hDropCache);
+                if (pDst)
+                    GlobalUnlock(hCopy);
                 GlobalFree(hCopy);
                 return E_OUTOFMEMORY;
             }
+
             CopyMemory(pDst, pSrc, cb);
             GlobalUnlock(m_hDropCache);
             GlobalUnlock(hCopy);
@@ -664,10 +642,7 @@ public:
     }
 };
 
-// --------------------------------------------------------------------------
 // Factory function
-// --------------------------------------------------------------------------
-
 HRESULT CZipExtractDrop_CreateInstance(
     CZipFolder*           pFolder,
     UINT                  cidl,
@@ -676,15 +651,14 @@ HRESULT CZipExtractDrop_CreateInstance(
 {
     if (!ppDataObject)
         return E_POINTER;
+
     *ppDataObject = NULL;
 
     if (!pFolder || cidl == 0 || !apidl)
         return E_INVALIDARG;
 
-    // Build the inner (PIDL-based) data object first.
     CComPtr<IDataObject> spInner;
     CIDLData_CreateFromIDArray(pFolder->GetCurDirPidl(), cidl, apidl, &spInner);
-    // Inner may legitimately fail (no PIDL); we carry on regardless.
 
     CComObject<CZipExtractDrop>* pObj = NULL;
     HRESULT hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
