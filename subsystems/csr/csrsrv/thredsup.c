@@ -316,6 +316,12 @@ CsrInsertThread(IN PCSR_PROCESS Process,
 
     /* Increase Thread Count */
     Process->ThreadCount++;
+    if (Process->NtSession)
+    {
+        CsrAcquireNtSessionLock();
+        Process->NtSession->ThreadCount++;
+        CsrReleaseNtSessionLock();
+    }
 
     /* Hash the Thread */
     i = CsrHashThread(Thread->ClientId.UniqueThread);
@@ -379,6 +385,13 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
 
     /* Decreate the thread count of the process */
     CsrThread->Process->ThreadCount--;
+    if (CsrThread->Process->NtSession)
+    {
+        CsrAcquireNtSessionLock();
+        ASSERT(CsrThread->Process->NtSession->ThreadCount != 0);
+        CsrThread->Process->NtSession->ThreadCount--;
+        CsrReleaseNtSessionLock();
+    }
 
     /* Remove it from the Hash List as well */
     if (CsrThread->HashLinks.Flink) RemoveEntryList(&CsrThread->HashLinks);
