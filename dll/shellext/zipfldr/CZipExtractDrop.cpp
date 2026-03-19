@@ -636,10 +636,12 @@ HRESULT CZipExtractDrop_CreateInstance(
         return E_INVALIDARG;
 
     CComPtr<IDataObject> spInner;
-    CIDLData_CreateFromIDArray(pFolder->GetCurDirPidl(), cidl, apidl, &spInner);
+    HRESULT hr = CIDLData_CreateFromIDArray(pFolder->GetCurDirPidl(), cidl, apidl, &spInner);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     CComObject<CZipExtractDrop>* pObj = NULL;
-    HRESULT hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
+    hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
