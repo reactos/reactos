@@ -115,7 +115,7 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, Port = NULL;
+    PSTR CommandLine, Port = NULL, BaudRate = NULL;
     ULONG i;
     BOOLEAN Success = FALSE;
 
@@ -131,8 +131,9 @@ KdDebuggerInitialize0(
             /* Get terminal settings */
             KdpGetTerminalSettings(CommandLine);
 
-            /* Get the port */
+            /* Get the port and baud rate */
             Port = strstr(CommandLine, "DEBUGPORT");
+            BaudRate = strstr(CommandLine, "BAUDRATE");
         }
     }
 
@@ -151,9 +152,25 @@ KdDebuggerInitialize0(
         Port = strstr(Port, "DEBUGPORT");
     }
 
-    /* Use serial port then */
+    /* If no debug port was set, fall back to serial port debugging */
     if (KdpDebugMode.Value == 0)
         KdpDebugMode.Serial = TRUE;
+
+    /* Check if we got a baud rate */
+    if (BaudRate)
+    {
+        /* Move past the actual string and any spaces */
+        BaudRate += CONST_STR_LEN("BAUDRATE");
+        while (*BaudRate == ' ') BaudRate++;
+
+        /* Make sure we have a rate */
+        if (*BaudRate)
+        {
+            /* Read and set it */
+            ULONG Value = (ULONG)atol(BaudRate + 1);
+            if (Value) SerialPortInfo.BaudRate = Value;
+        }
+    }
 
     /* Call the providers at Phase 0 */
     for (i = 0; i < RTL_NUMBER_OF(DispatchTable); i++)
