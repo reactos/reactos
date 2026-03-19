@@ -46,7 +46,6 @@ ULONG DebugPort = RS232;
 #include <cportlib/uartinfo.h>
 ULONG BaudRate = DEFAULT_DEBUG_BAUD_RATE;
 ULONG ComPort  = 0; // The COM port initializer chooses the first available port starting from COM4 down to COM1.
-ULONG PortIrq  = 0; // Not used at the moment.
 
 BOOLEAN DebugStartOfLine = TRUE;
 
@@ -60,7 +59,7 @@ DebugInit(
     _In_ PCSTR DebugString)
 {
     static BOOLEAN Initialized = FALSE;
-    PSTR CommandLine, PortString, BaudString, IrqString;
+    PSTR CommandLine, PortString, BaudString;
     ULONG Value;
     CHAR DbgStringBuffer[256];
 
@@ -107,7 +106,6 @@ DebugInit(
     /* Get the port and baud rate */
     PortString = strstr(CommandLine, "DEBUGPORT");
     BaudString = strstr(CommandLine, "BAUDRATE");
-    IrqString  = strstr(CommandLine, "IRQ");
 
     /*
      * Check if we got /DEBUGPORT parameters.
@@ -161,24 +159,6 @@ DebugInit(
             /* Read and set it */
             Value = atol(BaudString + 1);
             if (Value) BaudRate = Value;
-        }
-    }
-
-    /* Check Serial Port Settings [IRQ] */
-    if (IrqString)
-    {
-        /* Move past the actual string, to reach the rate */
-        IrqString += strlen("IRQ");
-
-        /* Now get past any spaces */
-        while (*IrqString == ' ') IrqString++;
-
-        /* And make sure we have an IRQ */
-        if (*IrqString)
-        {
-            /* Read and set it */
-            Value = atol(IrqString + 1);
-            if (Value) PortIrq = Value;
         }
     }
 

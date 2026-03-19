@@ -11,13 +11,9 @@
 /* Serial debug connection */
 #if defined(SARCH_PC98)
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
-#define DEFAULT_DEBUG_COM1_IRQ  4
-#define DEFAULT_DEBUG_COM2_IRQ  5
 #define DEFAULT_DEBUG_BAUD_RATE 9600
 #else
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
-#define DEFAULT_DEBUG_COM1_IRQ  4
-#define DEFAULT_DEBUG_COM2_IRQ  3
 #define DEFAULT_DEBUG_BAUD_RATE 115200
 #endif
 

@@ -17,7 +17,6 @@
 /* GLOBALS ********************************************************************/
 
 CPPORT KdComPort;
-ULONG  KdComPortIrq = 0; // Not used at the moment.
 #ifdef KDDEBUG
 CPPORT KdDebugComPort;
 #endif
@@ -123,7 +122,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
     ULONG ComPortNumber   = DEFAULT_DEBUG_PORT;
     ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
 
-    PCHAR CommandLine, PortString, BaudString, IrqString;
+    PSTR CommandLine, PortString, BaudString;
     ULONG Value;
 
     /* Check if we have a LoaderBlock */
@@ -138,7 +137,6 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         /* Get the port and baud rate */
         PortString = strstr(CommandLine, "DEBUGPORT");
         BaudString = strstr(CommandLine, "BAUDRATE");
-        IrqString  = strstr(CommandLine, "IRQ");
 
         /* Check if we got the /DEBUGPORT parameter */
         if (PortString)
@@ -183,24 +181,6 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
                 /* Read and set it */
                 Value = atol(BaudString + 1);
                 if (Value) ComPortBaudRate = Value;
-            }
-        }
-
-        /* Check Serial Port Settings [IRQ] */
-        if (IrqString)
-        {
-            /* Move past the actual string, to reach the rate */
-            IrqString += strlen("IRQ");
-
-            /* Now get past any spaces */
-            while (*IrqString == ' ') IrqString++;
-
-            /* And make sure we have an IRQ */
-            if (*IrqString)
-            {
-                /* Read and set it */
-                Value = atol(IrqString + 1);
-                if (Value) KdComPortIrq = Value;
             }
         }
     }
