@@ -46,6 +46,7 @@ static void RecursiveDeleteDirectory(PCWSTR pszDir)
         RemoveDirectoryW(pszDir);
         return;
     }
+
     do
     {
         if (wcscmp(wfd.cFileName, L".") == 0 || wcscmp(wfd.cFileName, L"..") == 0)
@@ -61,8 +62,8 @@ static void RecursiveDeleteDirectory(PCWSTR pszDir)
             DeleteFileW(szChild);
     }
     while (FindNextFileW(hFind, &wfd));
-    FindClose(hFind);
 
+    FindClose(hFind);
     RemoveDirectoryW(pszDir);
 }
 
@@ -70,15 +71,15 @@ static void RecursiveDeleteDirectory(PCWSTR pszDir)
 // HDROP layout: DROPFILES header + double-NUL-terminated list of wchar paths.
 static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
 {
-    // Calculate required buffer size.
+    // Calculate required buffer size
     SIZE_T cbPaths = 0;
     POSITION pos = paths.GetHeadPosition();
     while (pos)
         cbPaths += (paths.GetNext(pos).GetLength() + 1) * sizeof(WCHAR);
-    cbPaths += sizeof(WCHAR); // final double NUL
+    cbPaths += sizeof(UNICODE_NULL); // final double NUL
 
     SIZE_T cbTotal = sizeof(DROPFILES) + cbPaths;
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, cbTotal);
+    HGLOBAL hGlobal = GlobalAlloc(GHND, cbTotal);
     if (!hGlobal)
         return NULL;
 
@@ -142,15 +143,11 @@ class CZipExtractDrop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject
 {
-    // The ZIP folder we belong to (not AddRef'd – the shell keeps both alive).
-    CZipFolder*           m_pFolder;
-
-    // Names of the top-level items that were selected (relative to m_ZipDir).
-    CAtlArray<CStringW>   m_selectedNames;
-
-    CComPtr<IDataObject>  m_spInner; // Fallback data-object (for PIDL-based formats).
-    HGLOBAL m_hDropCache; // Cached HDROP after first extraction.
-    CStringW  m_tempDir; // Temporary directory created during extraction.
+    CZipFolder* m_pFolder; // The ZIP folder we belong to
+    CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
+    CComPtr<IDataObject> m_spInner; // Fallback data-object (for PIDL-based formats)
+    HGLOBAL m_hDropCache; // Cached HDROP after first extraction
+    CStringW  m_tempDir; // Temporary directory created during extraction
 
     // Storage for arbitrary SetData() calls (e.g. DataObjectAttributes cache
     // written by SHGetAttributesFromDataObject in shldataobject.cpp).
@@ -378,10 +375,7 @@ public:
             GlobalFree(m_extraData[i].hData);
     }
 
-    HRESULT Init(CZipFolder* pFolder,
-                 UINT cidl,
-                 PCUITEMID_CHILD_ARRAY apidl,
-                 IDataObject* pInner)
+    HRESULT Init(CZipFolder* pFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pInner)
     {
         ATLASSERT(pFolder);
         m_pFolder = pFolder;
@@ -405,13 +399,11 @@ public:
         return S_OK;
     }
 
-    // ---- IUnknown (via CComObjectRootEx) ----
     DECLARE_NOT_AGGREGATABLE(CZipExtractDrop)
     BEGIN_COM_MAP(CZipExtractDrop)
         COM_INTERFACE_ENTRY_IID(IID_IDataObject, IDataObject)
     END_COM_MAP()
 
-    // ---- IDataObject ----
     STDMETHODIMP GetData(FORMATETC* pfe, STGMEDIUM* pstm) override
     {
         if (!pfe || !pstm)
@@ -427,7 +419,7 @@ public:
             if (!m_hDropCache)
             {
                 HRESULT hr = DoExtract();
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
             }
 
@@ -509,8 +501,7 @@ public:
         if (!pfe)
             return E_INVALIDARG;
 
-        if (pfe->cfFormat == CF_HDROP &&
-            (pfe->tymed & TYMED_HGLOBAL) &&
+        if (pfe->cfFormat == CF_HDROP && (pfe->tymed & TYMED_HGLOBAL) &&
             pfe->dwAspect == DVASPECT_CONTENT)
         {
             return S_OK;
@@ -520,13 +511,13 @@ public:
         if (pfe->tymed & TYMED_HGLOBAL)
         {
             for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+            {
                 if (m_extraData[i].cfFormat == pfe->cfFormat)
                     return S_OK;
+            }
         }
 
-        if (m_spInner)
-            return m_spInner->QueryGetData(pfe);
-        return DV_E_FORMATETC;
+        return m_spInner ? m_spInner->QueryGetData(pfe) : DV_E_FORMATETC;
     }
 
     STDMETHODIMP GetCanonicalFormatEtc(FORMATETC* pfeIn, FORMATETC* pfeOut) override
@@ -563,7 +554,6 @@ public:
                 return E_OUTOFMEMORY;
             }
 
-            // Release source medium if requested.
             if (fRelease)
                 ReleaseStgMedium(pstm);
 
@@ -591,31 +581,27 @@ public:
 
     STDMETHODIMP EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppenum) override
     {
-        if (dwDirection == DATADIR_GET)
+        if (dwDirection != DATADIR_GET)
+            return E_NOTIMPL;
+
+        FORMATETC hdropFmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+
+        if (m_spInner)
         {
-            // Advertise CF_HDROP in addition to whatever the inner object offers.
-            FORMATETC hdropFmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-
-            if (m_spInner)
+            CComPtr<IEnumFORMATETC> spInnerEnum;
+            if (SUCCEEDED(m_spInner->EnumFormatEtc(DATADIR_GET, &spInnerEnum)))
             {
-                // Prepend CF_HDROP then let the inner enumerator take over.
-                // Simple approach: collect inner formats, prepend ours.
-                CComPtr<IEnumFORMATETC> spInnerEnum;
-                if (SUCCEEDED(m_spInner->EnumFormatEtc(DATADIR_GET, &spInnerEnum)))
-                {
-                    CAtlArray<FORMATETC> fmts;
-                    fmts.Add(hdropFmt);
-                    FORMATETC fe;
-                    while (spInnerEnum->Next(1, &fe, NULL) == S_OK)
-                        fmts.Add(fe);
+                CAtlArray<FORMATETC> fmts;
+                fmts.Add(hdropFmt);
+                FORMATETC fe;
+                while (spInnerEnum->Next(1, &fe, NULL) == S_OK)
+                    fmts.Add(fe);
 
-                    return SHCreateStdEnumFmtEtc((UINT)fmts.GetCount(),
-                                                  fmts.GetData(), ppenum);
-                }
+                return SHCreateStdEnumFmtEtc((UINT)fmts.GetCount(), fmts.GetData(), ppenum);
             }
-            return SHCreateStdEnumFmtEtc(1, &hdropFmt, ppenum);
         }
-        return E_NOTIMPL;
+
+        return SHCreateStdEnumFmtEtc(1, &hdropFmt, ppenum);
     }
 
     STDMETHODIMP DAdvise(FORMATETC*, DWORD, IAdviseSink*, DWORD*) override
@@ -654,12 +640,12 @@ HRESULT CZipExtractDrop_CreateInstance(
 
     CComObject<CZipExtractDrop>* pObj = NULL;
     HRESULT hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     pObj->AddRef();
     hr = pObj->Init(pFolder, cidl, apidl, spInner);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         pObj->Release();
         return hr;
