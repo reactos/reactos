@@ -117,8 +117,8 @@ static BOOL WriteZipEntryToFile(unzFile uf, PCWSTR pszDestFile)
     if (hFile == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    BYTE buf[65536];
-    int read;
+    BYTE buf[2048];
+    INT read;
     BOOL ok = TRUE;
     while ((read = unzReadCurrentFile(uf, buf, sizeof(buf))) > 0)
     {
@@ -146,17 +146,11 @@ class CZipExtractDrop :
     CZipFolder*           m_pFolder;
 
     // Names of the top-level items that were selected (relative to m_ZipDir).
-    // e.g. { L"readme.txt", L"src/" }
     CAtlArray<CStringW>   m_selectedNames;
 
-    // Fallback data-object (for PIDL-based formats).
-    CComPtr<IDataObject>  m_spInner;
-
-    // Cached HDROP after first extraction.
-    HGLOBAL               m_hDropCache;
-
-    // Temporary directory created during extraction.
-    CStringW              m_tempDir;
+    CComPtr<IDataObject>  m_spInner; // Fallback data-object (for PIDL-based formats).
+    HGLOBAL m_hDropCache; // Cached HDROP after first extraction.
+    CStringW  m_tempDir; // Temporary directory created during extraction.
 
     // Storage for arbitrary SetData() calls (e.g. DataObjectAttributes cache
     // written by SHGetAttributesFromDataObject in shldataobject.cpp).
@@ -164,7 +158,7 @@ class CZipExtractDrop :
     struct ExtraEntry
     {
         CLIPFORMAT cfFormat;
-        HGLOBAL    hData;   // owned by us
+        HGLOBAL    hData; // owned by us
     };
     CAtlArray<ExtraEntry> m_extraData;
 
@@ -176,7 +170,7 @@ class CZipExtractDrop :
             return HRESULT_FROM_WIN32(GetLastError());
 
         // Try up to 100 unique names.
-        for (int i = 0; i < 100; ++i)
+        for (INT i = 0; i < 100; ++i)
         {
             CStringW candidate;
             candidate.Format(L"%szipfldr_%08X", szTempBase, GetTickCount() + i);
@@ -233,16 +227,12 @@ class CZipExtractDrop :
             return hr;
 
         // We need a fresh unzFile because CZipFolder's handle may be in use.
-        unzFile uf = unzOpen2_64(
-            // CZipFolder exposes m_ZipFile through a public accessor; we reach
-            // it via the friend declaration added in CZipFolder.hpp.
-            m_pFolder->GetZipFilePath(),
-            &g_FFunc);
+        unzFile uf = unzOpen2_64(m_pFolder->GetZipFilePath(), &g_FFunc);
         if (!uf)
             return E_FAIL;
 
-        CAtlList<CStringW>  extractedPaths; // top-level paths added to HDROP
-        CAtlList<CStringW>  topLevelAdded;  // de-dup guard for top-level dirs
+        CAtlList<CStringW> extractedPaths; // top-level paths added to HDROP
+        CAtlList<CStringW> topLevelAdded;  // de-dup guard for top-level dirs
 
         CZipEnumerator zipEnum;
         // CZipEnumerator::Initialize wants an IZip*; CZipFolder implements IZip.
@@ -271,12 +261,10 @@ class CZipExtractDrop :
         unz_file_info64 info;
         while (zipEnum.Next(entryName, info))
         {
-            // entryName is the full path inside the ZIP (UTF-8/CP decoded).
-            // Strip the current folder prefix.
-            if (StrCmpNIW(entryName, prefix, (int)cchPrefix) != 0)
+            if (StrCmpNIW(entryName, prefix, (INT)cchPrefix) != 0)
                 continue;
 
-            CStringW relPath = entryName.Mid((int)cchPrefix);
+            CStringW relPath = entryName.Mid((INT)cchPrefix);
             if (relPath.IsEmpty())
                 continue;
 
@@ -284,10 +272,6 @@ class CZipExtractDrop :
             if (!MatchesSelection(relPath, topName, rest))
                 continue;
 
-            // Build the destination path inside m_tempDir.
-            // top-level files/dirs go directly into m_tempDir.
-            // e.g.  m_tempDir\readme.txt
-            //        m_tempDir\src\foo\bar.c
             bool isZipDir = (!entryName.IsEmpty() &&
                               entryName[entryName.GetLength() - 1] == L'/');
 
@@ -453,8 +437,7 @@ public:
             if (!hCopy)
                 return E_OUTOFMEMORY;
 
-            void* pSrc = GlobalLock(m_hDropCache);
-            void* pDst = GlobalLock(hCopy);
+            PVOID pSrc = GlobalLock(m_hDropCache), pDst = GlobalLock(hCopy);
             if (!pSrc || !pDst)
             {
                 if (pSrc)
@@ -486,13 +469,18 @@ public:
                     HGLOBAL hCopy = GlobalAlloc(GMEM_MOVEABLE, cb);
                     if (!hCopy)
                         return E_OUTOFMEMORY;
-                    void* pSrc = GlobalLock(m_extraData[i].hData);
-                    void* pDst = GlobalLock(hCopy);
+                    PVOID pSrc = GlobalLock(m_extraData[i].hData), pDst = GlobalLock(hCopy);
                     if (pSrc && pDst)
                         CopyMemory(pDst, pSrc, cb);
-                    if (pSrc) GlobalUnlock(m_extraData[i].hData);
-                    if (pDst) GlobalUnlock(hCopy);
-                    if (!pSrc || !pDst) { GlobalFree(hCopy); return E_OUTOFMEMORY; }
+                    if (pSrc)
+                        GlobalUnlock(m_extraData[i].hData);
+                    if (pDst)
+                        GlobalUnlock(hCopy);
+                    if (!pSrc || !pDst)
+                    {
+                        GlobalFree(hCopy);
+                        return E_OUTOFMEMORY;
+                    }
 
                     pstm->tymed   = TYMED_HGLOBAL;
                     pstm->hGlobal = hCopy;
@@ -562,13 +550,18 @@ public:
             if (!hCopy)
                 return E_OUTOFMEMORY;
 
-            void* pSrc = GlobalLock(pstm->hGlobal);
-            void* pDst = GlobalLock(hCopy);
+            PVOID pSrc = GlobalLock(pstm->hGlobal), pDst = GlobalLock(hCopy);
             if (pSrc && pDst)
                 CopyMemory(pDst, pSrc, cb);
-            if (pSrc) GlobalUnlock(pstm->hGlobal);
-            if (pDst) GlobalUnlock(hCopy);
-            if (!pSrc || !pDst) { GlobalFree(hCopy); return E_OUTOFMEMORY; }
+            if (pSrc)
+                GlobalUnlock(pstm->hGlobal);
+            if (pDst)
+                GlobalUnlock(hCopy);
+            if (!pSrc || !pDst)
+            {
+                GlobalFree(hCopy);
+                return E_OUTOFMEMORY;
+            }
 
             // Release source medium if requested.
             if (fRelease)
@@ -620,7 +613,6 @@ public:
                                                   fmts.GetData(), ppenum);
                 }
             }
-
             return SHCreateStdEnumFmtEtc(1, &hdropFmt, ppenum);
         }
         return E_NOTIMPL;
@@ -654,7 +646,7 @@ HRESULT CZipExtractDrop_CreateInstance(
 
     *ppDataObject = NULL;
 
-    if (!pFolder || cidl == 0 || !apidl)
+    if (!pFolder || !cidl || !apidl)
         return E_INVALIDARG;
 
     CComPtr<IDataObject> spInner;
