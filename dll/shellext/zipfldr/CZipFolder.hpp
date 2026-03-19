@@ -46,6 +46,14 @@ class CZipFolder :
     CComPtr<IDataObject> m_pDataObj;
     HWND m_hwnd = nullptr;
 
+    // Accessors used by CZipExtractDrop
+    friend class CZipExtractDrop;
+public:
+    const CStringW& GetZipFilePath() const { return m_ZipFile; }
+    const CStringW& GetZipDir()      const { return m_ZipDir; }
+    PCIDLIST_ABSOLUTE GetCurDirPidl() const { return m_CurDir; }
+private:
+
     HRESULT DeleteItems(CComPtr<IDataObject> pDataObj);
     HRESULT DoDeleteItems(CComPtr<IDataObject> pDataObj);
     HRESULT CopyZipEntry(unzFile uf, zipFile zf, unz_file_info64* info, LPCSTR nameA);

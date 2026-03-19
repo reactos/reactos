@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include "CZipExtractDrop.hpp"
 
 static FolderViewColumns g_ColumnDefs[] =
 {
@@ -468,8 +469,8 @@ STDMETHODIMP CZipFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
 
     //static DWORD dwFileAttrs = SFGAO_STREAM | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | SFGAO_CANCOPY | SFGAO_CANMOVE;
     //static DWORD dwFolderAttrs = SFGAO_FOLDER | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | SFGAO_STORAGE | SFGAO_CANCOPY | SFGAO_CANMOVE;
-    static DWORD dwFileAttrs = SFGAO_CANDELETE | SFGAO_STREAM;
-    static DWORD dwFolderAttrs = SFGAO_CANDELETE | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE | SFGAO_DROPTARGET;
+    static DWORD dwFileAttrs   = SFGAO_CANDELETE | SFGAO_CANCOPY | SFGAO_STREAM;
+    static DWORD dwFolderAttrs = SFGAO_CANDELETE | SFGAO_CANCOPY | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE | SFGAO_DROPTARGET;
 
     while (cidl > 0 && *apidl)
     {
@@ -595,7 +596,9 @@ STDMETHODIMP CZipFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHIL
     }
     else if (riid == IID_IDataObject && cidl >= 1)
     {
-        return CIDLData_CreateFromIDArray(m_CurDir, cidl, apidl, (IDataObject**)ppvOut);
+        // Return our custom IDataObject that extracts files on CF_HDROP demand.
+        // This enables dragging / copying files out of the ZIP folder.
+        return CZipExtractDrop_CreateInstance(this, cidl, apidl, (IDataObject**)ppvOut);
     }
     else if (riid == IID_IDropTarget)
     {
