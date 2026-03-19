@@ -119,6 +119,8 @@ NTSTATUS
 NTAPI
 KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
     ULONG ComPortNumber   = DEFAULT_DEBUG_PORT;
     ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
 
@@ -142,42 +144,38 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         if (PortString)
         {
             /* Move past the actual string */
-            PortString += strlen("DEBUGPORT");
+            PortString += CONST_STR_LEN("DEBUGPORT");
 
             /* Now get past any spaces and skip the equal sign */
             while (*PortString == ' ') PortString++;
             PortString++;
 
             /* Do we have a serial port? */
-            if (strncmp(PortString, "COM", 3) != 0)
-            {
+            if (_strnicmp(PortString, "COM", CONST_STR_LEN("COM")) != 0)
                 return STATUS_INVALID_PARAMETER;
-            }
 
             /* Check for a valid serial port */
-            PortString += 3;
-            Value = atol(PortString);
-            if (Value >= sizeof(BaseArray) / sizeof(BaseArray[0]))
-            {
+            PortString += CONST_STR_LEN("COM");
+            Value = (ULONG)atol(PortString);
+            if (Value > MAX_COM_PORTS)
                 return STATUS_INVALID_PARAMETER;
-            }
-
+            // if (Value > 0 && Value <= MAX_COM_PORTS)
             /* Set the port to use */
             ComPortNumber = Value;
-       }
+        }
 
         /* Check if we got a baud rate */
         if (BaudString)
         {
             /* Move past the actual string and any spaces */
-            BaudString += strlen("BAUDRATE");
+            BaudString += CONST_STR_LEN("BAUDRATE");
             while (*BaudString == ' ') BaudString++;
 
             /* Make sure we have a rate */
             if (*BaudString)
             {
                 /* Read and set it */
-                Value = atol(BaudString + 1);
+                Value = (ULONG)atol(BaudString + 1);
                 if (Value) ComPortBaudRate = Value;
             }
         }
@@ -226,7 +224,7 @@ KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
 VOID
 NTAPI
-KdpSendByte(_In_ UCHAR Byte)
+KdpSendByte(IN UCHAR Byte)
 {
     /* Send the byte */
     CpPutByte(&KdComPort, Byte);
@@ -249,7 +247,7 @@ KdpPollByte(OUT PUCHAR OutByte)
 
 KDSTATUS
 NTAPI
-KdpReceiveByte(_Out_ PUCHAR OutByte)
+KdpReceiveByte(OUT PUCHAR OutByte)
 {
     USHORT CpStatus;
 

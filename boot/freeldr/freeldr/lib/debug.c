@@ -58,6 +58,8 @@ VOID
 DebugInit(
     _In_ PCSTR DebugString)
 {
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
     static BOOLEAN Initialized = FALSE;
     PSTR CommandLine, PortString, BaudString;
     ULONG Value;
@@ -114,30 +116,30 @@ DebugInit(
     while (PortString)
     {
         /* Move past the actual string */
-        PortString += strlen("DEBUGPORT");
+        PortString += CONST_STR_LEN("DEBUGPORT");
 
         /* Now get past any spaces and skip the equal sign */
         while (*PortString == ' ') PortString++;
         PortString++;
 
         /* Check for possible ports and set the port to use */
-        if (strncmp(PortString, "SCREEN", 6) == 0)
+        if (_strnicmp(PortString, "SCREEN", CONST_STR_LEN("SCREEN")) == 0)
         {
-            PortString += 6;
+            PortString += CONST_STR_LEN("SCREEN");
             DebugPort |= SCREEN;
         }
-        else if (strncmp(PortString, "BOCHS", 5) == 0)
+        else if (_strnicmp(PortString, "BOCHS", CONST_STR_LEN("BOCHS")) == 0)
         {
-            PortString += 5;
+            PortString += CONST_STR_LEN("BOCHS");
             DebugPort |= BOCHS;
         }
-        else if (strncmp(PortString, "COM", 3) == 0)
+        else if (_strnicmp(PortString, "COM", CONST_STR_LEN("COM")) == 0)
         {
-            PortString += 3;
+            PortString += CONST_STR_LEN("COM");
             DebugPort |= RS232;
 
             /* Set the port to use */
-            Value = atol(PortString);
+            Value = (ULONG)atol(PortString);
             if (Value) ComPort = Value;
         }
 
@@ -148,14 +150,14 @@ DebugInit(
     if (BaudString)
     {
         /* Move past the actual string and any spaces */
-        BaudString += strlen("BAUDRATE");
+        BaudString += CONST_STR_LEN("BAUDRATE");
         while (*BaudString == ' ') BaudString++;
 
         /* Make sure we have a rate */
         if (*BaudString)
         {
             /* Read and set it */
-            Value = atol(BaudString + 1);
+            Value = (ULONG)atol(BaudString + 1);
             if (Value) BaudRate = Value;
         }
     }

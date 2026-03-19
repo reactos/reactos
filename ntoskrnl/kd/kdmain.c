@@ -21,12 +21,12 @@
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
 static VOID
 KdpGetTerminalSettings(
     _In_ PCSTR p1)
 {
-#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
-
     while (p1 && *p1)
     {
         /* Skip leading whitespace */
@@ -57,17 +57,17 @@ KdpGetDebugMode(
     ULONG Value;
 
     /* Check for Screen Debugging */
-    if (!_strnicmp(p2, "SCREEN", 6))
+    if (!_strnicmp(p2, "SCREEN", CONST_STR_LEN("SCREEN")))
     {
         /* Enable it */
-        p2 += 6;
+        p2 += CONST_STR_LEN("SCREEN");
         KdpDebugMode.Screen = TRUE;
     }
     /* Check for Serial Debugging */
-    else if (!_strnicmp(p2, "COM", 3))
+    else if (!_strnicmp(p2, "COM", CONST_STR_LEN("COM")))
     {
         /* Check for a valid serial port */
-        p2 += 3;
+        p2 += CONST_STR_LEN("COM");
         if (*p2 != ':')
         {
             Value = (ULONG)atol(p2);
@@ -92,10 +92,10 @@ KdpGetDebugMode(
         }
     }
     /* Check for Debug Log Debugging */
-    else if (!_strnicmp(p2, "FILE", 4))
+    else if (!_strnicmp(p2, "FILE", CONST_STR_LEN("FILE")))
     {
         /* Enable it */
-        p2 += 4;
+        p2 += CONST_STR_LEN("FILE");
         KdpDebugMode.File = TRUE;
         if (*p2 == ':')
         {
@@ -140,7 +140,7 @@ KdDebuggerInitialize0(
     while (Port)
     {
         /* Move past the actual string */
-        Port += sizeof("DEBUGPORT") - 1;
+        Port += CONST_STR_LEN("DEBUGPORT");
 
         /* Now get past any spaces and skip the equal sign */
         while (*Port == ' ') Port++;
