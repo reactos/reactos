@@ -22,6 +22,7 @@ list(APPEND SOURCE
     CZipEnumerator.hpp
     CZipEnumerator.cpp
     CZipExtract.cpp
+    CZipExtractDrop.hpp
     CZipExtractDrop.cpp
     CZipFolder.hpp
     CZipFolder.cpp
