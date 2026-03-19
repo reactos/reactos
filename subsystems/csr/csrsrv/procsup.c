@@ -126,6 +126,11 @@ CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
     /* Check if there's a session */
     if (CsrProcess->NtSession)
     {
+        CsrAcquireNtSessionLock();
+        ASSERT(CsrProcess->NtSession->ProcessCount != 0);
+        CsrProcess->NtSession->ProcessCount--;
+        CsrReleaseNtSessionLock();
+
         /* Dereference the Session */
         CsrDereferenceNtSession(CsrProcess->NtSession, STATUS_SUCCESS);
     }
@@ -592,20 +597,29 @@ CsrCreateProcess(IN HANDLE hProcess,
     ProtectHandle(hThread);
     CsrThread->Flags = 0;
 
+    /* Reference and attach the session */
+    CsrReferenceNtSession(NtSession);
+    CsrProcess->NtSession = NtSession;
+    CsrAcquireNtSessionLock();
+    CsrProcess->NtSession->ProcessCount++;
+    CsrReleaseNtSessionLock();
+
     /* Insert the Thread into the Process */
     Status = CsrInsertThread(CsrProcess, CsrThread);
     if (!NT_SUCCESS(Status))
     {
         /* Bail out */
+        CsrAcquireNtSessionLock();
+        ASSERT(CsrProcess->NtSession->ProcessCount != 0);
+        CsrProcess->NtSession->ProcessCount--;
+        CsrReleaseNtSessionLock();
+        CsrDereferenceNtSession(CsrProcess->NtSession, Status);
+        CsrProcess->NtSession = NULL;
         CsrDeallocateProcess(CsrProcess);
         CsrDeallocateThread(CsrThread);
         CsrReleaseProcessLock();
         return Status;
     }
-
-    /* Reference the session */
-    CsrReferenceNtSession(NtSession);
-    CsrProcess->NtSession = NtSession;
 
     /* Setup Process Data */
     CsrProcess->ClientId = *ClientId;
