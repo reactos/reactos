@@ -7,7 +7,7 @@
 
 #pragma once
 
-extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
+extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock, CsrNtSessionLock;
 
 #define CsrAcquireProcessLock() \
     RtlEnterCriticalSection(&CsrProcessLock);
@@ -42,7 +42,10 @@ extern HANDLE CsrApiPort;
 extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 #define NUMBER_THREAD_HASH_BUCKETS 257
+#define NUMBER_NT_SESSION_HASH_BUCKETS 37
 extern LIST_ENTRY CsrThreadHashTable[NUMBER_THREAD_HASH_BUCKETS];
+extern LIST_ENTRY CsrNtSessionList;
+extern LIST_ENTRY CsrNtSessionHashTable[NUMBER_NT_SESSION_HASH_BUCKETS];
 extern PCSR_PROCESS CsrRootProcess;
 extern UNICODE_STRING CsrDirectoryName;
 extern ULONG CsrTotalPerProcessDataLength;
@@ -167,6 +170,28 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
 NTSTATUS
 NTAPI
 CsrInitializeNtSessionList(VOID);
+
+
+PCSR_NT_SESSION
+NTAPI
+CsrCreateNtSession(IN ULONG SessionId);
+
+PCSR_NT_SESSION
+NTAPI
+CsrFindNtSession(IN ULONG SessionId);
+
+PCSR_NT_SESSION
+NTAPI
+CsrGetCurrentNtSession(VOID);
+
+BOOLEAN
+NTAPI
+CsrNtSessionExists(IN ULONG SessionId);
+
+VOID
+NTAPI
+CsrDestroyNtSession(IN PCSR_NT_SESSION Session,
+                    IN NTSTATUS ExitStatus);
 
 NTSTATUS
 NTAPI

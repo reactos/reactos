@@ -30,8 +30,21 @@ typedef struct _CSR_NT_SESSION
 {
     ULONG ReferenceCount;
     LIST_ENTRY SessionLink;
+    LIST_ENTRY SessionHashLink;
     ULONG SessionId;
+    ULONG State;
+    ULONG ProcessCount;
+    ULONG ThreadCount;
+    HANDLE ApiPort;
+    PVOID SessionDataTable;
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
+
+typedef enum _CSR_NT_SESSION_STATE
+{
+    CsrNtSessionStateInactive = 0,
+    CsrNtSessionStateActive,
+    CsrNtSessionStateTerminating
+} CSR_NT_SESSION_STATE;
 
 typedef struct _CSR_PROCESS
 {
@@ -286,6 +299,27 @@ CsrCreateProcess(IN HANDLE hProcess,
                  IN PCSR_NT_SESSION NtSession,
                  IN ULONG Flags,
                  IN PCLIENT_ID DebugCid);
+
+PCSR_NT_SESSION
+NTAPI
+CsrCreateNtSession(IN ULONG SessionId);
+
+PCSR_NT_SESSION
+NTAPI
+CsrFindNtSession(IN ULONG SessionId);
+
+PCSR_NT_SESSION
+NTAPI
+CsrGetCurrentNtSession(VOID);
+
+BOOLEAN
+NTAPI
+CsrNtSessionExists(IN ULONG SessionId);
+
+VOID
+NTAPI
+CsrDestroyNtSession(IN PCSR_NT_SESSION Session,
+                    IN NTSTATUS ExitStatus);
 
 NTSTATUS
 NTAPI

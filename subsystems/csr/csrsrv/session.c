@@ -36,152 +36,189 @@ PCHAR CsrServerSbApiName[SbpMaxApiNumber - SbpCreateSession] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+LIST_ENTRY CsrNtSessionHashTable[NUMBER_NT_SESSION_HASH_BUCKETS];
+
+static
+ULONG
+NTAPI
+CsrHashNtSession(IN ULONG SessionId)
+{
+    return (SessionId % NUMBER_NT_SESSION_HASH_BUCKETS);
+}
+
 /*++
  * @name CsrInitializeNtSessionList
- *
- * The CsrInitializeNtSessionList routine sets up support for CSR Sessions.
- *
- * @param None
- *
- * @return None
- *
- * @remarks None.
- *
- *--*/
+ */
 NTSTATUS
 NTAPI
 CsrInitializeNtSessionList(VOID)
 {
-    /* Initialize the Session List */
-    InitializeListHead(&CsrNtSessionList);
+    ULONG i;
 
-    /* Initialize the Session Lock */
+    InitializeListHead(&CsrNtSessionList);
+    for (i = 0; i < NUMBER_NT_SESSION_HASH_BUCKETS; i++)
+    {
+        InitializeListHead(&CsrNtSessionHashTable[i]);
+    }
+
     return RtlInitializeCriticalSection(&CsrNtSessionLock);
 }
 
-/*++
- * @name CsrAllocateNtSession
- *
- * The CsrAllocateNtSession routine allocates a new CSR NT Session.
- *
- * @param SessionId
- *        Session ID of the CSR NT Session to allocate.
- *
- * @return Pointer to the newly allocated CSR NT Session.
- *
- * @remarks None.
- *
- *--*/
 PCSR_NT_SESSION
 NTAPI
-CsrAllocateNtSession(IN ULONG SessionId)
+CsrCreateNtSession(IN ULONG SessionId)
 {
     PCSR_NT_SESSION NtSession;
+    ULONG i;
 
-    /* Allocate an NT Session Object */
     NtSession = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, sizeof(CSR_NT_SESSION));
-    if (NtSession)
-    {
-        /* Setup the Session Object */
-        NtSession->SessionId = SessionId;
-        NtSession->ReferenceCount = 1;
-
-        /* Insert it into the Session List */
-        CsrAcquireNtSessionLock();
-        InsertHeadList(&CsrNtSessionList, &NtSession->SessionLink);
-        CsrReleaseNtSessionLock();
-    }
-    else
+    if (!NtSession)
     {
         ASSERT(NtSession != NULL);
+        return NULL;
     }
 
-    /* Return the Session (or NULL) */
+    NtSession->SessionId = SessionId;
+    NtSession->ReferenceCount = 1;
+    NtSession->State = CsrNtSessionStateActive;
+
+    i = CsrHashNtSession(SessionId);
+
+    CsrAcquireNtSessionLock();
+    if (!IsListEmpty(&CsrNtSessionHashTable[i]))
+    {
+        PLIST_ENTRY NextEntry = CsrNtSessionHashTable[i].Flink;
+        while (NextEntry != &CsrNtSessionHashTable[i])
+        {
+            PCSR_NT_SESSION ExistingSession;
+            ExistingSession = CONTAINING_RECORD(NextEntry, CSR_NT_SESSION, SessionHashLink);
+            if (ExistingSession->SessionId == SessionId)
+            {
+                CsrReleaseNtSessionLock();
+                RtlFreeHeap(CsrHeap, 0, NtSession);
+                return NULL;
+            }
+            NextEntry = NextEntry->Flink;
+        }
+    }
+
+    InsertHeadList(&CsrNtSessionList, &NtSession->SessionLink);
+    InsertHeadList(&CsrNtSessionHashTable[i], &NtSession->SessionHashLink);
+    CsrReleaseNtSessionLock();
+
     return NtSession;
 }
 
-/*++
- * @name CsrReferenceNtSession
- *
- * The CsrReferenceNtSession increases the reference count of a CSR NT Session.
- *
- * @param Session
- *        Pointer to the CSR NT Session to reference.
- *
- * @return None.
- *
- * @remarks None.
- *
- *--*/
+PCSR_NT_SESSION
+NTAPI
+CsrFindNtSession(IN ULONG SessionId)
+{
+    PLIST_ENTRY NextEntry;
+    PLIST_ENTRY ListHead;
+    PCSR_NT_SESSION NtSession;
+
+    CsrAcquireNtSessionLock();
+
+    ListHead = &CsrNtSessionHashTable[CsrHashNtSession(SessionId)];
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        NtSession = CONTAINING_RECORD(NextEntry, CSR_NT_SESSION, SessionHashLink);
+        if (NtSession->SessionId == SessionId)
+        {
+            ASSERT(NtSession->ReferenceCount != 0);
+            NtSession->ReferenceCount++;
+            CsrReleaseNtSessionLock();
+            return NtSession;
+        }
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    CsrReleaseNtSessionLock();
+    return NULL;
+}
+
+PCSR_NT_SESSION
+NTAPI
+CsrGetCurrentNtSession(VOID)
+{
+    return CsrFindNtSession(NtCurrentPeb()->SessionId);
+}
+
+BOOLEAN
+NTAPI
+CsrNtSessionExists(IN ULONG SessionId)
+{
+    PLIST_ENTRY NextEntry;
+    PLIST_ENTRY ListHead;
+    PCSR_NT_SESSION NtSession;
+
+    CsrAcquireNtSessionLock();
+
+    ListHead = &CsrNtSessionHashTable[CsrHashNtSession(SessionId)];
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        NtSession = CONTAINING_RECORD(NextEntry, CSR_NT_SESSION, SessionHashLink);
+        if (NtSession->SessionId == SessionId)
+        {
+            CsrReleaseNtSessionLock();
+            return TRUE;
+        }
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    CsrReleaseNtSessionLock();
+    return FALSE;
+}
+
 VOID
 NTAPI
 CsrReferenceNtSession(IN PCSR_NT_SESSION Session)
 {
-    /* Acquire the lock */
     CsrAcquireNtSessionLock();
 
-    /* Sanity checks */
     ASSERT(!IsListEmpty(&Session->SessionLink));
     ASSERT(Session->SessionId != 0);
     ASSERT(Session->ReferenceCount != 0);
 
-    /* Increase the reference count */
     Session->ReferenceCount++;
 
-    /* Release the lock */
     CsrReleaseNtSessionLock();
 }
 
-/*++
- * @name CsrDereferenceNtSession
- *
- * The CsrDereferenceNtSession decreases the reference count of a
- * CSR NT Session.
- *
- * @param Session
- *        Pointer to the CSR NT Session to reference.
- *
- * @param ExitStatus
- *        If this is the last reference to the session, this argument
- *        specifies the exit status.
- *
- * @return None.
- *
- * @remarks CsrDereferenceNtSession will complete the session if
- *          the last reference to it has been closed.
- *
- *--*/
+VOID
+NTAPI
+CsrDestroyNtSession(IN PCSR_NT_SESSION Session,
+                    IN NTSTATUS ExitStatus)
+{
+    Session->State = CsrNtSessionStateTerminating;
+    SmSessionComplete(CsrSmApiPort, Session->SessionId, ExitStatus);
+    RtlFreeHeap(CsrHeap, 0, Session);
+}
+
 VOID
 NTAPI
 CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
                         IN NTSTATUS ExitStatus)
 {
-    /* Acquire the lock */
     CsrAcquireNtSessionLock();
 
-    /* Sanity checks */
     ASSERT(!IsListEmpty(&Session->SessionLink));
     ASSERT(Session->SessionId != 0);
     ASSERT(Session->ReferenceCount != 0);
 
-    /* Dereference the Session Object */
     if ((--Session->ReferenceCount) == 0)
     {
-        /* Remove it from the list */
+        RemoveEntryList(&Session->SessionHashLink);
         RemoveEntryList(&Session->SessionLink);
-
-        /* Release the lock */
         CsrReleaseNtSessionLock();
-
-        /* Tell SM that we're done here */
-        SmSessionComplete(CsrSmApiPort, Session->SessionId, ExitStatus);
-
-        /* Free the Session Object */
-        RtlFreeHeap(CsrHeap, 0, Session);
+        CsrDestroyNtSession(Session, ExitStatus);
     }
     else
     {
-        /* Release the lock, the Session is still active */
         CsrReleaseNtSessionLock();
     }
 }
@@ -215,6 +252,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     PVOID ProcessData;
     NTSTATUS Status;
     KERNEL_USER_TIMES KernelTimes;
+    PCSR_NT_SESSION NtSession;
     ULONG i;
 
     /* Save the Process and Thread Handles */
@@ -269,11 +307,33 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
         return (BOOLEAN)Status;
     }
 
+    /* Create and attach the Session */
+    NtSession = CsrCreateNtSession(CreateSession->SessionId);
+    if (!NtSession)
+    {
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+
+        ApiMessage->ReturnValue = STATUS_NO_MEMORY;
+        return TRUE;
+    }
+
+    CsrProcess->NtSession = NtSession;
+    CsrAcquireNtSessionLock();
+    CsrProcess->NtSession->ProcessCount++;
+    CsrReleaseNtSessionLock();
+
     /* Allocate a new Thread */
     CsrThread = CsrAllocateThread(CsrProcess);
     if (!CsrThread)
     {
         /* Fail the request */
+        CsrAcquireNtSessionLock();
+        ASSERT(CsrProcess->NtSession->ProcessCount != 0);
+        CsrProcess->NtSession->ProcessCount--;
+        CsrReleaseNtSessionLock();
+        CsrDereferenceNtSession(CsrProcess->NtSession, STATUS_NO_MEMORY);
+        CsrProcess->NtSession = NULL;
         CsrDeallocateProcess(CsrProcess);
         CsrReleaseProcessLock();
 
@@ -293,6 +353,12 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     if (!NT_SUCCESS(Status))
     {
         /* Bail out */
+        CsrAcquireNtSessionLock();
+        ASSERT(CsrProcess->NtSession->ProcessCount != 0);
+        CsrProcess->NtSession->ProcessCount--;
+        CsrReleaseNtSessionLock();
+        CsrDereferenceNtSession(CsrProcess->NtSession, Status);
+        CsrProcess->NtSession = NULL;
         CsrDeallocateProcess(CsrProcess);
         CsrDeallocateThread(CsrThread);
         CsrReleaseProcessLock();
@@ -304,7 +370,6 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     /* Setup Process Data */
     CsrProcess->ClientId = CreateSession->ProcessInfo.ClientId;
     CsrProcess->ProcessHandle = hProcess;
-    CsrProcess->NtSession = CsrAllocateNtSession(CreateSession->SessionId);
 
     /* Set the Process Priority */
     CsrSetBackgroundPriority(CsrProcess);
