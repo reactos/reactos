@@ -24,19 +24,19 @@ DBG_DEFAULT_CHANNEL(INIFILE);
 
 LIST_ENTRY IniFileSectionListHead = {&IniFileSectionListHead, &IniFileSectionListHead};
 BOOLEAN IniFileSectionInitialized = FALSE;
-ULONG   IniFileSectionCount = 0;
-ULONG   IniFileSettingCount = 0;
+ULONG IniFileSectionCount = 0;
+ULONG IniFileSettingCount = 0;
 
 
-BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
+BOOLEAN IniParseFile(PCSTR IniFileData, ULONG IniFileSize)
 {
-    ULONG                    CurrentOffset;
-    ULONG                    CurrentLineNumber;
-    PCHAR                IniFileLine;
-    ULONG                    IniFileLineSize;
-    ULONG                    LineLength;
-    PINI_SECTION        CurrentSection = NULL;
-    PINI_SECTION_ITEM    CurrentItem = NULL;
+    ULONG CurrentOffset;
+    ULONG CurrentLineNumber;
+    PCHAR IniFileLine;
+    ULONG IniFileLineSize;
+    ULONG LineLength;
+    PINI_SECTION CurrentSection = NULL;
+    PINI_SECTION_ITEM CurrentItem = NULL;
 
     TRACE("IniParseFile() IniFileSize: %d\n", IniFileSize);
 
@@ -50,9 +50,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
     IniFileLineSize = 80;
     IniFileLine = FrLdrTempAlloc(IniFileLineSize, TAG_INI_FILE);
     if (!IniFileLine)
-    {
         return FALSE;
-    }
 
     // Loop through each line and parse it
     CurrentLineNumber = 0;
@@ -66,9 +64,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
             FrLdrTempFree(IniFileLine, TAG_INI_FILE);
             IniFileLine = FrLdrTempAlloc(IniFileLineSize, TAG_INI_FILE);
             if (!IniFileLine)
-            {
                 return FALSE;
-            }
         }
 
         // Get the line of data
@@ -182,50 +178,44 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
     return TRUE;
 }
 
-ULONG IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
+ULONG IniGetNextLineSize(PCSTR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
 {
-    ULONG        LineCharCount = 0;
+    ULONG LineCharCount = 0;
 
-    // Loop through counting chars until we hit the end of the
-    // file or we encounter a new line char
-    for (; (CurrentOffset < IniFileSize); CurrentOffset++)
+    // Loop through counting chars until we hit the end
+    // of the file or we encounter a newline character
+    for (; (CurrentOffset < IniFileSize); ++CurrentOffset)
     {
         // Increment the line character count
-        LineCharCount++;
+        ++LineCharCount;
 
-        // Check for new line char
+        // Check for newline character
         if (IniFileData[CurrentOffset] == '\n')
-        {
             break;
-        }
     }
+    // Count the NUL-terminator
+    ++LineCharCount;
 
-    // Add one for the NULL-terminator
-    LineCharCount++;
-
-    // Send back line character count
     return LineCharCount;
 }
 
-ULONG IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
+ULONG IniGetNextLine(PCSTR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
 {
-    ULONG        Idx;
+    ULONG Idx;
 
-    // Loop through grabbing chars until we hit the end of the
-    // file or we encounter a new line char
-    for (Idx=0; (CurrentOffset < IniFileSize); CurrentOffset++)
+    // Loop through grabbing chars until we hit the end
+    // of the file or we encounter a newline character
+    for (Idx = 0; (CurrentOffset < IniFileSize); ++CurrentOffset)
     {
         // If we haven't exceeded our buffer size yet
-        // then store another char
+        // then store another character
         if (Idx < (BufferSize - 1))
-        {
             Buffer[Idx++] = IniFileData[CurrentOffset];
-        }
 
-        // Check for new line char
+        // Check for newline character
         if (IniFileData[CurrentOffset] == '\n')
         {
-            CurrentOffset++;
+            ++CurrentOffset;
             break;
         }
     }
@@ -234,338 +224,247 @@ ULONG IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG B
     Buffer[Idx] = '\0';
 
     // Get rid of newline & linefeed characters (if any)
-    while(Idx && (Buffer[--Idx] == '\n' || Buffer[Idx] == '\r'))
+    while (Idx && (Buffer[--Idx] == '\n' || Buffer[Idx] == '\r'))
         Buffer[Idx] = '\0';
 
-    // Send back new offset
     return CurrentOffset;
 }
 
-BOOLEAN IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsLineEmpty(PCSTR TextLine, ULONG TextLength)
 {
-    ULONG        Idx;
+    ULONG Idx;
 
     // Check for text (skipping whitespace)
-    for (Idx=0; Idx<TextLength; Idx++)
+    for (Idx = 0; Idx < TextLength; ++Idx)
     {
-        if ((LineOfText[Idx] == ' ') ||
-            (LineOfText[Idx] == '\t') ||
-            (LineOfText[Idx] == '\n') ||
-            (LineOfText[Idx] == '\r'))
+        if ((TextLine[Idx] == ' ') || (TextLine[Idx] == '\t') ||
+            (TextLine[Idx] == '\n') || (TextLine[Idx] == '\r'))
         {
             continue;
         }
-        else
-        {
-            return FALSE;
-        }
+        return FALSE;
     }
-
     return TRUE;
 }
 
-BOOLEAN IniIsCommentLine(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsCommentLine(PCSTR TextLine, ULONG TextLength)
 {
-    ULONG        Idx;
+    ULONG Idx;
 
     // Check the first character (skipping whitespace)
-    // and make sure that it is an opening bracket
-    for (Idx=0; Idx<TextLength; Idx++)
+    // and make sure that it is a comment character
+    for (Idx = 0; Idx < TextLength; ++Idx)
     {
-        if ((LineOfText[Idx] == ' ') ||
-            (LineOfText[Idx] == '\t'))
-        {
+        if ((TextLine[Idx] == ' ') || (TextLine[Idx] == '\t'))
             continue;
-        }
-        else if (LineOfText[Idx] == INI_FILE_COMMENT_CHAR)
-        {
-            return TRUE;
-        }
-        else
-        {
-            break;
-        }
-    }
 
+        if (TextLine[Idx] == INI_FILE_COMMENT_CHAR)
+            return TRUE;
+        break;
+    }
     return FALSE;
 }
 
-BOOLEAN IniIsSectionName(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsSectionName(PCSTR TextLine, ULONG TextLength)
 {
-    ULONG        Idx;
+    ULONG Idx;
 
     // Check the first character (skipping whitespace)
     // and make sure that it is an opening bracket
-    for (Idx=0; Idx<TextLength; Idx++)
+    for (Idx = 0; Idx < TextLength; ++Idx)
     {
-        if ((LineOfText[Idx] == ' ') ||
-            (LineOfText[Idx] == '\t'))
-        {
+        if ((TextLine[Idx] == ' ') || (TextLine[Idx] == '\t'))
             continue;
-        }
-        else if (LineOfText[Idx] == '[')
-        {
-            return TRUE;
-        }
-        else
-        {
-            break;
-        }
-    }
 
+        if (TextLine[Idx] == '[')
+            return TRUE;
+        break;
+    }
     return FALSE;
 }
 
-ULONG IniGetSectionNameSize(PCHAR SectionNameLine, ULONG LineLength)
+ULONG IniGetSectionNameSize(PCSTR SectionNameLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        NameSize;
+    ULONG Idx, NameSize;
 
     // Find the opening bracket (skipping whitespace)
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SectionNameLine[Idx] == ' ') ||
-            (SectionNameLine[Idx] == '\t'))
-        {
+        if ((SectionNameLine[Idx] == ' ') || (SectionNameLine[Idx] == '\t'))
             continue;
-        }
-        else //if (SectionNameLine[Idx] == '[')
-        {
-            break;
-        }
-    }
 
+        //if (SectionNameLine[Idx] == '[')
+        break;
+    }
     // Skip past the opening bracket
-    Idx++;
+    ++Idx;
 
     // Count the characters up until the closing bracket or EOL
-    for (NameSize=0; Idx<LineLength; Idx++)
+    for (NameSize = 0; Idx < LineLength; ++Idx)
     {
-        if ((SectionNameLine[Idx] == ']') ||
-            (SectionNameLine[Idx] == '\0'))
-        {
+        if ((SectionNameLine[Idx] == ']') || (SectionNameLine[Idx] == '\0'))
             break;
-        }
-
-        // Increment the count
-        NameSize++;
+        ++NameSize;
     }
-
-    // Add one for the NULL-terminator
-    NameSize++;
+    // Count the NUL-terminator
+    ++NameSize;
 
     return NameSize;
 }
 
-VOID IniExtractSectionName(PCHAR SectionName, PCHAR SectionNameLine, ULONG LineLength)
+VOID IniExtractSectionName(PSTR SectionName, PCSTR SectionNameLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        DestIdx;
+    ULONG Idx, DestIdx;
 
     // Find the opening bracket (skipping whitespace)
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SectionNameLine[Idx] == ' ') ||
-            (SectionNameLine[Idx] == '\t'))
-        {
+        if ((SectionNameLine[Idx] == ' ') || (SectionNameLine[Idx] == '\t'))
             continue;
-        }
-        else //if (SectionNameLine[Idx] == '[')
-        {
-            break;
-        }
-    }
 
+        //if (SectionNameLine[Idx] == '[')
+        break;
+    }
     // Skip past the opening bracket
-    Idx++;
+    ++Idx;
 
     // Count the characters up until the closing bracket or EOL
-    for (DestIdx=0; Idx<LineLength; Idx++)
+    for (DestIdx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SectionNameLine[Idx] == ']') ||
-            (SectionNameLine[Idx] == '\0'))
-        {
+        if ((SectionNameLine[Idx] == ']') || (SectionNameLine[Idx] == '\0'))
             break;
-        }
 
-        // Grab a character and increment DestIdx
+        // Copy the character
         SectionName[DestIdx] = SectionNameLine[Idx];
-        DestIdx++;
+        ++DestIdx;
     }
 
     // Terminate the string
     SectionName[DestIdx] = '\0';
 }
 
-BOOLEAN IniIsSetting(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsSetting(PCSTR TextLine, ULONG TextLength)
 {
-    ULONG        Idx;
+    ULONG Idx;
 
-    // Basically just check for an '=' equals sign
-    for (Idx=0; Idx<TextLength; Idx++)
+    // Just check for an '=' equals sign
+    for (Idx = 0; Idx < TextLength; ++Idx)
     {
-        if (LineOfText[Idx] == '=')
-        {
+        if (TextLine[Idx] == '=')
             return TRUE;
-        }
     }
-
     return FALSE;
 }
 
-ULONG IniGetSettingNameSize(PCHAR SettingNameLine, ULONG LineLength)
+ULONG IniGetSettingNameSize(PCSTR SettingNameLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        NameSize;
+    ULONG Idx, NameSize;
 
     // Skip whitespace
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingNameLine[Idx] == ' ') ||
-            (SettingNameLine[Idx] == '\t'))
-        {
+        if ((SettingNameLine[Idx] == ' ') || (SettingNameLine[Idx] == '\t'))
             continue;
-        }
-        else
-        {
-            break;
-        }
+        break;
     }
 
     // Count the characters up until the '=' equals sign or EOL
-    for (NameSize=0; Idx<LineLength; Idx++)
+    for (NameSize = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingNameLine[Idx] == '=') ||
-            (SettingNameLine[Idx] == '\0'))
-        {
+        if ((SettingNameLine[Idx] == '=') || (SettingNameLine[Idx] == '\0'))
             break;
-        }
-
-        // Increment the count
-        NameSize++;
+        ++NameSize;
     }
-
-    // Add one for the NULL-terminator
-    NameSize++;
+    // Count the NUL-terminator
+    ++NameSize;
 
     return NameSize;
 }
 
-ULONG IniGetSettingValueSize(PCHAR SettingValueLine, ULONG LineLength)
+ULONG IniGetSettingValueSize(PCSTR SettingValueLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        ValueSize;
+    ULONG Idx, ValueSize;
 
     // Skip whitespace
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingValueLine[Idx] == ' ') ||
-            (SettingValueLine[Idx] == '\t'))
-        {
+        if ((SettingValueLine[Idx] == ' ') || (SettingValueLine[Idx] == '\t'))
             continue;
-        }
-        else
-        {
-            break;
-        }
+        break;
     }
 
     // Skip the characters up until the '=' equals sign or EOL
-    for (; Idx<LineLength; Idx++)
+    for (; Idx < LineLength; ++Idx)
     {
         if (SettingValueLine[Idx] == '=')
         {
-            Idx++;
+            ++Idx;
             break;
         }
 
         // If we hit EOL then obviously the value size is zero
         if (SettingValueLine[Idx] == '\0')
-        {
             return 0;
-        }
     }
 
     // Count the characters up until the EOL
-    for (ValueSize=0; Idx<LineLength; Idx++)
+    for (ValueSize = 0; Idx < LineLength; ++Idx)
     {
         if (SettingValueLine[Idx] == '\0')
-        {
             break;
-        }
-
-        // Increment the count
-        ValueSize++;
+        ++ValueSize;
     }
-
-    // Add one for the NULL-terminator
-    ValueSize++;
+    // Count the NUL-terminator
+    ++ValueSize;
 
     return ValueSize;
 }
 
-VOID IniExtractSettingName(PCHAR SettingName, PCHAR SettingNameLine, ULONG LineLength)
+VOID IniExtractSettingName(PSTR SettingName, PCSTR SettingNameLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        DestIdx;
+    ULONG Idx, DestIdx;
 
     // Skip whitespace
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingNameLine[Idx] == ' ') ||
-            (SettingNameLine[Idx] == '\t'))
-        {
+        if ((SettingNameLine[Idx] == ' ') || (SettingNameLine[Idx] == '\t'))
             continue;
-        }
-        else
-        {
-            break;
-        }
+        break;
     }
 
     // Get the characters up until the '=' equals sign or EOL
-    for (DestIdx=0; Idx<LineLength; Idx++)
+    for (DestIdx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingNameLine[Idx] == '=') ||
-            (SettingNameLine[Idx] == '\0'))
-        {
+        if ((SettingNameLine[Idx] == '=') || (SettingNameLine[Idx] == '\0'))
             break;
-        }
 
-        // Grab a character and increment DestIdx
+        // Copy the character
         SettingName[DestIdx] = SettingNameLine[Idx];
-        DestIdx++;
+        ++DestIdx;
     }
 
     // Terminate the string
     SettingName[DestIdx] = '\0';
 }
 
-VOID IniExtractSettingValue(PCHAR SettingValue, PCHAR SettingValueLine, ULONG LineLength)
+VOID IniExtractSettingValue(PSTR SettingValue, PCSTR SettingValueLine, ULONG LineLength)
 {
-    ULONG        Idx;
-    ULONG        DestIdx;
+    ULONG Idx, DestIdx;
 
     // Skip whitespace
-    for (Idx=0; Idx<LineLength; Idx++)
+    for (Idx = 0; Idx < LineLength; ++Idx)
     {
-        if ((SettingValueLine[Idx] == ' ') ||
-            (SettingValueLine[Idx] == '\t'))
-        {
+        if ((SettingValueLine[Idx] == ' ') || (SettingValueLine[Idx] == '\t'))
             continue;
-        }
-        else
-        {
-            break;
-        }
+        break;
     }
 
     // Skip the characters up until the '=' equals sign or EOL
-    for (; Idx<LineLength; Idx++)
+    for (; Idx < LineLength; ++Idx)
     {
         if (SettingValueLine[Idx] == '=')
         {
-            Idx++;
+            ++Idx;
             break;
         }
 
@@ -578,16 +477,14 @@ VOID IniExtractSettingValue(PCHAR SettingValue, PCHAR SettingValueLine, ULONG Li
     }
 
     // Get the characters up until the EOL
-    for (DestIdx=0; Idx<LineLength; Idx++)
+    for (DestIdx = 0; Idx < LineLength; ++Idx)
     {
         if (SettingValueLine[Idx] == '\0')
-        {
             break;
-        }
 
-        // Grab a character and increment DestIdx
+        // Copy the character
         SettingValue[DestIdx] = SettingValueLine[Idx];
-        DestIdx++;
+        ++DestIdx;
     }
 
     // Terminate the string
