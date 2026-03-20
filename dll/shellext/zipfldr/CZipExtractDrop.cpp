@@ -271,10 +271,10 @@ class CZipExtractDrop :
             destRel.Replace(L'/', L'\\');
 
             // SECURITY: Reject absolute, drive-letter, or traversal components
-            if (!PathIsRelativeW(destRel) || (destRel.GetLength() >= 2 && destRel[1] == L':'))
+            if (!PathIsRelativeW(destRel) || destRel.Find(L':') >= 0)
                 continue;
-            // SECURITY: Reject ".." path components (effective for traversal)
-            if (destRel == L".." || destRel.Find(L"..\\") == 0 ||
+            // SECURITY: Reject "." and ".." path components (effective for traversal)
+            if (destRel == L"." || destRel == L".." || destRel.Find(L"..\\") == 0 ||
                 destRel.Find(L"\\..\\") >= 0 || destRel.Right(3) == L"\\..")
             {
                 continue;
