@@ -308,21 +308,19 @@ class CZipExtractDrop :
             {
                 BOOL ok = WriteZipEntryToFile(uf, destFull);
                 unzCloseCurrentFile(uf);
+                if (!ok)
+                    continue;
 
-                if (ok)
+                // Update file timestamp
+                FILETIME ftLocal, ftUtc;
+                DosDateTimeToFileTime(HIWORD(info.dosDate), LOWORD(info.dosDate), &ftLocal);
+                LocalFileTimeToFileTime(&ftLocal, &ftUtc);
+                HANDLE hFile = CreateFileW(destFull, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                           OPEN_EXISTING, 0, NULL);
+                if (hFile != INVALID_HANDLE_VALUE)
                 {
-                    // Update file timestamp
-                    FILETIME ftLocal, ftUtc;
-                    DosDateTimeToFileTime((WORD)(info.dosDate >> 16),
-                                          (WORD)info.dosDate, &ftLocal);
-                    LocalFileTimeToFileTime(&ftLocal, &ftUtc);
-                    HANDLE hFile = CreateFileW(destFull, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                                               OPEN_EXISTING, 0, NULL);
-                    if (hFile != INVALID_HANDLE_VALUE)
-                    {
-                        SetFileTime(hFile, &ftUtc, &ftUtc, &ftUtc);
-                        CloseHandle(hFile);
-                    }
+                    SetFileTime(hFile, &ftUtc, &ftUtc, &ftUtc);
+                    CloseHandle(hFile);
                 }
             }
 
