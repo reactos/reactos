@@ -49,11 +49,11 @@ KdpGetTerminalSettings(
     }
 }
 
-static PCHAR
+static PSTR
 KdpGetDebugMode(
-    _In_ PCHAR Currentp2)
+    _In_ PCSTR DebugPort)
 {
-    PCHAR p1, p2 = Currentp2;
+    PCSTR p2 = DebugPort;
     ULONG Value;
 
     /* Check for Screen Debugging */
@@ -99,15 +99,14 @@ KdpGetDebugMode(
         KdpDebugMode.File = TRUE;
         if (*p2 == ':')
         {
-            p2++;
-            p1 = p2;
-            while (*p2 != '\0' && *p2 != ' ') p2++;
+            PCSTR p1 = ++p2;
+            while (*p2 && *p2 != ' ') ++p2;
             KdpLogFileName.MaximumLength = KdpLogFileName.Length = p2 - p1;
-            KdpLogFileName.Buffer = p1;
+            KdpLogFileName.Buffer = (PSTR)p1;
         }
     }
 
-    return p2;
+    return (PSTR)p2;
 }
 
 NTSTATUS
