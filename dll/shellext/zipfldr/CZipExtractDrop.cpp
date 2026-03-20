@@ -5,33 +5,31 @@
  * COPYRIGHT:   Copyright 2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-/*
- * Design notes
- * ------------
- * When the shell asks for IDataObject from items inside a virtual folder it
- * uses CF_HDROP to actually copy/move the data to a real directory.  Because
- * ZIP entries are not real files we must extract them on-demand.
- *
- * Strategy
- * ~~~~~~~~
- * 1. CZipExtractDrop holds a list of ZipPidlEntry names (relative paths
- *    inside the ZIP) and a back-pointer to the CZipFolder (for m_ZipFile,
- *    m_ZipDir and getZip()).
- * 2. The first time GetData(CF_HDROP) is called we
- *    a. create a unique temporary directory under %TEMP%\zipfldr_XXXXXX\
- *    b. enumerate all entries whose path starts with one of the requested
- *       names (handles both single files and whole sub-trees),
- *    c. extract each one while translating its in-ZIP name via
- *       CZipEnumerator (so UTF-8 / code-page names are handled correctly),
- *    d. build an HDROP containing all extracted paths, and cache it.
- * 3. The temporary directory is removed in the destructor (recursive delete).
- * 4. All other clipboard formats are delegated to a standard
- *    CIDLData_CreateFromIDArray data-object so that shell operations that
- *    rely on PIDLs (e.g. properties) continue to work.
- */
-
 #include "precomp.h"
 #include "CZipExtractDrop.hpp"
+
+// Design notes
+// ------------
+// When the shell asks for IDataObject from items inside a virtual folder it
+// uses CF_HDROP to actually copy/move the data to a real directory.  Because
+// ZIP entries are not real files we must extract them on-demand.
+//
+// Strategy
+// ~~~~~~~~
+// 1. CZipExtractDrop holds a list of ZipPidlEntry names (relative paths
+//    inside the ZIP) and a back-pointer to the CZipFolder (for m_ZipFile,
+//    m_ZipDir and getZip()).
+// 2. The first time GetData(CF_HDROP) is called we
+//    a. create a unique temporary directory under %TEMP%\zipfldr_XXXXXX\
+//    b. enumerate all entries whose path starts with one of the requested
+//       names (handles both single files and whole sub-trees),
+//    c. extract each one while translating its in-ZIP name via
+//       CZipEnumerator (so UTF-8 / code-page names are handled correctly),
+//    d. build an HDROP containing all extracted paths, and cache it.
+// 3. The temporary directory is removed in the destructor (recursive delete).
+// 4. All other clipboard formats are delegated to a standard
+//    CIDLData_CreateFromIDArray data-object so that shell operations that
+//    rely on PIDLs (e.g. properties) continue to work.
 
 static void RecursiveDeleteDirectory(PCWSTR pszDir)
 {
