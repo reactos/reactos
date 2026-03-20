@@ -53,8 +53,8 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
  */
 
 PCSTR
-WSAAPI
-inet_ntop(INT Family, const VOID *pAddr, PSTR pStringBuf, size_t StringBufSize)
+FAR PASCAL
+inet_ntop(INT Family, const PVOID pAddr, PSTR pStringBuf, SIZE_T StringBufSize)
 {
 
 	switch (Family) {
