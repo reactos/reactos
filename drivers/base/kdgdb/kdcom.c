@@ -140,15 +140,14 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         PortString = strstr(CommandLine, "DEBUGPORT");
         BaudString = strstr(CommandLine, "BAUDRATE");
 
-        /* Check if we got the /DEBUGPORT parameter */
+        /* Check if we got the DEBUGPORT parameter */
         if (PortString)
         {
-            /* Move past the actual string */
+            /* Move past the actual string and any spaces */
             PortString += CONST_STR_LEN("DEBUGPORT");
-
-            /* Now get past any spaces and skip the equal sign */
-            while (*PortString == ' ') PortString++;
-            PortString++;
+            while (*PortString == ' ') ++PortString;
+            /* Skip the equals sign */
+            if (*PortString) ++PortString;
 
             /* Do we have a serial port? */
             if (_strnicmp(PortString, "COM", CONST_STR_LEN("COM")) != 0)
@@ -169,7 +168,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
         {
             /* Move past the actual string and any spaces */
             BaudString += CONST_STR_LEN("BAUDRATE");
-            while (*BaudString == ' ') BaudString++;
+            while (*BaudString == ' ') ++BaudString;
 
             /* Make sure we have a rate */
             if (*BaudString)

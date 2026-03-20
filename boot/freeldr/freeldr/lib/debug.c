@@ -110,17 +110,16 @@ DebugInit(
     BaudString = strstr(CommandLine, "BAUDRATE");
 
     /*
-     * Check if we got /DEBUGPORT parameters.
+     * Check if we got DEBUGPORT parameters.
      * NOTE: Inspired by ntoskrnl/kd/kdinit.c, KdInitSystem(...)
      */
     while (PortString)
     {
-        /* Move past the actual string */
+        /* Move past the actual string and any spaces */
         PortString += CONST_STR_LEN("DEBUGPORT");
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*PortString == ' ') PortString++;
-        PortString++;
+        while (*PortString == ' ') ++PortString;
+        /* Skip the equals sign */
+        if (*PortString) ++PortString;
 
         /* Check for possible ports and set the port to use */
         if (_strnicmp(PortString, "SCREEN", CONST_STR_LEN("SCREEN")) == 0)
@@ -151,7 +150,7 @@ DebugInit(
     {
         /* Move past the actual string and any spaces */
         BaudString += CONST_STR_LEN("BAUDRATE");
-        while (*BaudString == ' ') BaudString++;
+        while (*BaudString == ' ') ++BaudString;
 
         /* Make sure we have a rate */
         if (*BaudString)

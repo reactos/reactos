@@ -137,15 +137,14 @@ KdDebuggerInitialize0(
         }
     }
 
-    /* Check if we got the /DEBUGPORT parameter(s) */
+    /* Check if we got DEBUGPORT parameters */
     while (Port)
     {
-        /* Move past the actual string */
+        /* Move past the actual string and any spaces */
         Port += CONST_STR_LEN("DEBUGPORT");
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*Port == ' ') Port++;
-        Port++;
+        while (*Port == ' ') ++Port;
+        /* Skip the equals sign */
+        if (*Port) ++Port;
 
         /* Get the debug mode and wrapper */
         Port = KdpGetDebugMode(Port);
@@ -161,7 +160,7 @@ KdDebuggerInitialize0(
     {
         /* Move past the actual string and any spaces */
         BaudRate += CONST_STR_LEN("BAUDRATE");
-        while (*BaudRate == ' ') BaudRate++;
+        while (*BaudRate == ' ') ++BaudRate;
 
         /* Make sure we have a rate */
         if (*BaudRate)
