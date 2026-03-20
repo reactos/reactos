@@ -260,11 +260,8 @@ class CZipExtractDrop :
                 continue;
 
             CStringW relPath = entryName.Mid((INT)cchPrefix);
-            if (relPath.IsEmpty())
-                continue;
-
             CStringW topName, rest;
-            if (!MatchesSelection(relPath, topName, rest))
+            if (relPath.IsEmpty() || !MatchesSelection(relPath, topName, rest))
                 continue;
 
             BOOL isZipDir = (!entryName.IsEmpty() && entryName[entryName.GetLength() - 1] == L'/');
@@ -272,6 +269,16 @@ class CZipExtractDrop :
             // Construct full destination
             CStringW destRel = relPath; // "src/foo/bar.c"
             destRel.Replace(L'/', L'\\');
+
+            // SECURITY: Reject absolute, drive-letter, or traversal components
+            if (!PathIsRelativeW(destRel) || (destRel.GetLength() >= 2 && destRel[1] == L':'))
+                continue;
+            // SECURITY: Reject ".." path components (effective for traversal)
+            if (destRel == L".." || destRel.Find(L"..\\") == 0 ||
+                destRel.Find(L"\\..\\") >= 0 || destRel.Right(3) == L"\\..")
+            {
+                continue;
+            }
 
             CStringW destFull = m_tempDir + L'\\' + destRel;
 
@@ -292,8 +299,7 @@ class CZipExtractDrop :
                 {
                     PathRemoveFileSpecW(parentDir.GetBuffer(MAX_PATH));
                     parentDir.ReleaseBuffer();
-                    SHPathPrepareForWriteW(NULL, NULL, parentDir,
-                                           SHPPFW_DIRCREATE);
+                    SHPathPrepareForWriteW(NULL, NULL, parentDir, SHPPFW_DIRCREATE);
                 }
             }
 
