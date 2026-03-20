@@ -183,14 +183,12 @@ class CZipExtractDrop :
     // Given the in-ZIP wide path (e.g. "src/foo/bar.c"), strip the ZipDir
     // prefix and return the part relative to the selected items, split into
     // the "top-level name" and the "rest" of the path.
-    bool MatchesSelection(const CStringW& zipRelPath,
-                          CStringW& outTopName,
-                          CStringW& outRest) const
+    BOOL MatchesSelection(const CStringW& zipRelPath, CStringW& outTopName, CStringW& outRest) const
     {
         for (SIZE_T i = 0; i < m_selectedNames.GetCount(); ++i)
         {
             const CStringW& sel = m_selectedNames[i];
-            bool isDir = (!sel.IsEmpty() && sel[sel.GetLength() - 1] == L'/');
+            BOOL isDir = (!sel.IsEmpty() && sel[sel.GetLength() - 1] == L'/');
             if (isDir)
             {
                 // sel = "src/"
@@ -199,7 +197,7 @@ class CZipExtractDrop :
                 {
                     outTopName = sel.Left(sel.GetLength() - 1); // "src"
                     outRest    = zipRelPath.Mid(sel.GetLength()); // "foo/bar.c"
-                    return true;
+                    return TRUE;
                 }
             }
             else
@@ -208,11 +206,11 @@ class CZipExtractDrop :
                 {
                     outTopName = sel;
                     outRest    = L"";
-                    return true;
+                    return TRUE;
                 }
             }
         }
-        return false;
+        return FALSE;
     }
 
     // Do the actual extraction into m_tempDir.
@@ -269,8 +267,7 @@ class CZipExtractDrop :
             if (!MatchesSelection(relPath, topName, rest))
                 continue;
 
-            bool isZipDir = (!entryName.IsEmpty() &&
-                              entryName[entryName.GetLength() - 1] == L'/');
+            BOOL isZipDir = (!entryName.IsEmpty() && entryName[entryName.GetLength() - 1] == L'/');
 
             // Construct full destination
             CStringW destRel = relPath; // "src/foo/bar.c"
@@ -323,17 +320,17 @@ class CZipExtractDrop :
                 }
             }
 
-        next_entry:
+next_entry:
             // Add the top-level item to the HDROP list (once).
             CStringW topDest = m_tempDir + L'\\' + topName;
             // Check duplicate
-            bool found = false;
+            BOOL found = FALSE;
             POSITION pos = topLevelAdded.GetHeadPosition();
             while (pos)
             {
                 if (StrCmpIW(topLevelAdded.GetNext(pos), topName) == 0)
                 {
-                    found = true;
+                    found = TRUE;
                     break;
                 }
             }
