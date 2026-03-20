@@ -436,7 +436,16 @@ VOID IniExtractSettingName(PSTR SettingName, PCSTR SettingNameLine, ULONG LineLe
     for (DestIdx = 0; Idx < LineLength; ++Idx)
     {
         if ((SettingNameLine[Idx] == '=') || (SettingNameLine[Idx] == '\0'))
+        {
+            // Before ending, trim any trailing whitespace
+            for (; DestIdx > 0; --DestIdx)
+            {
+                if ((SettingName[DestIdx-1] == ' ') || (SettingName[DestIdx-1] == '\t'))
+                    continue;
+                break;
+            }
             break;
+        }
 
         // Copy the character
         SettingName[DestIdx] = SettingNameLine[Idx];
