@@ -596,7 +596,14 @@ public:
                 fmts.Add(hdropFmt);
                 FORMATETC fe;
                 while (spInnerEnum->Next(1, &fe, NULL) == S_OK)
+                {
+                    if (fe.ptd)
+                    {
+                        CoTaskMemFree(fe.ptd);
+                        fe.ptd = NULL;
+                    }
                     fmts.Add(fe);
+                }
 
                 return SHCreateStdEnumFmtEtc((UINT)fmts.GetCount(), fmts.GetData(), ppenum);
             }
