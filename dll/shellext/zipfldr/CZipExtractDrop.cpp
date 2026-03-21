@@ -314,7 +314,6 @@ class CZipExtractDrop :
                                            SHPPFW_DIRCREATE | SHPPFW_IGNOREFILENAME);
                     // Create the directory itself (last component).
                     CreateDirectoryW(destFull, NULL);
-                    goto next_entry;
                 }
                 else
                 {
@@ -345,7 +344,6 @@ class CZipExtractDrop :
                 }
             }
 
-next_entry:
             // Add the top-level item to the HDROP list (once).
             CStringW topDest = m_tempDir + L'\\' + topName;
             // Check duplicate
@@ -410,6 +408,7 @@ public:
                 continue;
 
             CStringW name = pEntry->Name;
+            name.Replace(L'\\', L'/');
             if (pEntry->ZipType == ZIP_PIDL_DIRECTORY)
             {
                 // Ensure trailing slash so MatchesSelection works as prefix.
