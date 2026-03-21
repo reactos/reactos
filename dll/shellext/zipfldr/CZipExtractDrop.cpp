@@ -8,31 +8,6 @@
 #include "precomp.h"
 #include "CZipExtractDrop.hpp"
 
-// Design notes
-// ------------
-// When the shell asks for IDataObject from items inside a virtual folder it
-// uses CF_HDROP to actually copy/move the data to a real directory.  Because
-// ZIP entries are not real files we must extract them on-demand.
-//
-// Strategy
-// ~~~~~~~~
-// 1. CZipExtractDrop holds a list of ZipPidlEntry names (relative paths
-//    inside the ZIP) and a back-pointer to the CZipFolder (for m_ZipFile,
-//    m_ZipDir and getZip()).
-// 2. The first time GetData(CF_HDROP) is called we
-//    a. create a unique temporary directory under %TEMP%
-//    b. enumerate all entries whose path starts with one of the requested
-//       names (handles both single files and whole sub-trees),
-//    c. extract each one while translating its in-ZIP name via
-//       CZipEnumerator (so UTF-8 / code-page names are handled correctly),
-//    d. build an HDROP containing all extracted paths, and cache it.
-// 3. The temporary directory is removed in the destructor (recursive delete).
-// 4. All other clipboard formats are delegated to a standard
-//    CIDLData_CreateFromIDArray data-object so that shell operations that
-//    rely on PIDLs (e.g. properties) continue to work.
-
-// FIXME: Use CFSTR_FILEDESCRIPTORW and CFSTR_FILECONTENTS for IDataObject
-
 static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
 {
     SIZE_T cb = GlobalSize(hSrc);
@@ -176,16 +151,6 @@ class CZipExtractDrop :
     CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
     HGLOBAL m_hDropCache; // Cached HDROP after first extraction
     CStringW  m_tempDir; // Temporary directory created during extraction
-
-    // Storage for arbitrary SetData() calls (e.g. DataObjectAttributes cache
-    // written by SHGetAttributesFromDataObject in shldataobject.cpp).
-    // Only TYMED_HGLOBAL entries are stored.
-    struct ExtraEntry
-    {
-        CLIPFORMAT cfFormat;
-        HGLOBAL    hData; // owned by us
-    };
-    CAtlArray<ExtraEntry> m_extraData;
 
     // Create a unique temporary directory and store it in m_tempDir.
     HRESULT CreateTempDir()
@@ -398,12 +363,9 @@ public:
             GlobalFree(m_hDropCache);
             m_hDropCache = NULL;
         }
-        
+
         if (!m_tempDir.IsEmpty())
             RecursiveDeleteDirectory(m_tempDir);
-        
-        for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
-            GlobalFree(m_extraData[i].hData);
     }
 
     HRESULT Init(CZipFolder* pFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
@@ -466,26 +428,6 @@ public:
             return S_OK;
         }
 
-        // Check our own extra-data store (for formats cached via SetData).
-        if (pfe->tymed & TYMED_HGLOBAL)
-        {
-            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
-            {
-                if (m_extraData[i].cfFormat != pfe->cfFormat)
-                    continue;
-
-                HGLOBAL hCopy;
-                HRESULT hr = GlobalClone(&hCopy, m_extraData[i].hData);
-                if (FAILED_UNEXPECTEDLY(hr))
-                    return hr;
-
-                pstm->tymed   = TYMED_HGLOBAL;
-                pstm->hGlobal = hCopy;
-                pstm->pUnkForRelease = NULL;
-                return S_OK;
-            }
-        }
-
         return DV_E_FORMATETC;
     }
 
@@ -503,16 +445,6 @@ public:
             pfe->dwAspect == DVASPECT_CONTENT)
         {
             return S_OK;
-        }
-
-        // Check our own extra-data store.
-        if (pfe->tymed & TYMED_HGLOBAL)
-        {
-            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
-            {
-                if (m_extraData[i].cfFormat == pfe->cfFormat)
-                    return S_OK;
-            }
         }
 
         return DV_E_FORMATETC;
@@ -553,18 +485,6 @@ public:
             if (fRelease)
                 ReleaseStgMedium(pstm);
 
-            // Update existing slot or append new one.
-            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
-            {
-                if (m_extraData[i].cfFormat == pfe->cfFormat)
-                {
-                    GlobalFree(m_extraData[i].hData);
-                    m_extraData[i].hData = hCopy;
-                    return S_OK;
-                }
-            }
-            ExtraEntry entry = { pfe->cfFormat, hCopy };
-            m_extraData.Add(entry);
             return S_OK;
         }
 

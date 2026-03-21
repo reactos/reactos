@@ -559,6 +559,8 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
         {
             if (wParam == DFM_CMD_DELETE)
                 return pThis->DoDeleteItems(pdtobj);
+            if (wParam == DFM_CMD_COPY || wParam == DFM_CMD_RENAME)
+                return E_NOTIMPL;
 
             CComQIIDPtr<I_ID(IContextMenu)> spContextMenu(psf);
             if (!spContextMenu)
