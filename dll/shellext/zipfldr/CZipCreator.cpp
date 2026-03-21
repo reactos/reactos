@@ -94,7 +94,7 @@ DoReadAllOfFile(PCWSTR filename, CComHeapPtr<BYTE>& contents, zip_fileinfo *pzi,
 
     DWORD read;
     cbBuff = GetFileSize(hFile, NULL);
-    if (cbBuff == INVALID_FILE_SIZE || !contents.AllocateBytes(cbBuff + 1) ||
+    if (cbBuff == INVALID_FILE_SIZE || !contents.AllocateBytes(cbBuff ? cbBuff : 1) ||
         !ReadFile(hFile, contents, cbBuff, &read, NULL) || cbBuff != read)
     {
         CloseHandle(hFile);
