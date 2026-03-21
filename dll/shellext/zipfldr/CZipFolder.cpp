@@ -111,7 +111,6 @@ HRESULT CZipFolder::DoDeleteItems(CComPtr<IDataObject> pDataObj)
 
 HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
 {
-
     CDataObjectHIDA cida(pDataObj);
     if (!cida || cida->cidl <= 0)
         return E_FAIL;

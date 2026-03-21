@@ -75,8 +75,7 @@ public:
         while (celt--)
         {
             if (!mEnumerator.NextUnique(m_Prefix, name, dir, info))
-                return E_FAIL;
-            ;
+                return S_FALSE;
         }
         return S_OK;
     }
@@ -91,7 +90,6 @@ public:
         return E_NOTIMPL;
     }
 
-
 public:
     DECLARE_NOT_AGGREGATABLE(CEnumZipContents)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -101,9 +99,7 @@ public:
     END_COM_MAP()
 };
 
-
 HRESULT _CEnumZipContents_CreateInstance(IZip* zip, DWORD flags, PCWSTR prefix, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CEnumZipContents>(zip, flags, prefix, riid, ppvOut);
 }
-
