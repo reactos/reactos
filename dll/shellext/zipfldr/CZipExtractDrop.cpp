@@ -31,6 +31,31 @@
 //    CIDLData_CreateFromIDArray data-object so that shell operations that
 //    rely on PIDLs (e.g. properties) continue to work.
 
+static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
+{
+    SIZE_T cb = GlobalSize(hSrc);
+    HGLOBAL hDest = GlobalAlloc(GMEM_MOVEABLE, cb);
+    if (!hDest)
+        return E_OUTOFMEMORY;
+
+    PVOID pSrc = GlobalLock(hSrc), pDest = GlobalLock(hDest);
+    if (!pSrc || !pDest)
+    {
+        if (pSrc)
+            GlobalUnlock(hSrc);
+        if (pDest)
+            GlobalUnlock(hDest);
+        GlobalFree(hDest);
+        return E_OUTOFMEMORY;
+    }
+
+    CopyMemory(pDest, pSrc, cb);
+    GlobalUnlock(hSrc);
+    GlobalUnlock(hDest);
+    *phDest = hDest;
+    return S_OK;
+}
+
 static void RecursiveDeleteDirectory(PCWSTR pszDir)
 {
     WCHAR szFind[MAX_PATH];
@@ -421,25 +446,10 @@ public:
             }
 
             // Duplicate the cached HGLOBAL.
-            SIZE_T cb = GlobalSize(m_hDropCache);
-            HGLOBAL hCopy = GlobalAlloc(GMEM_MOVEABLE, cb);
-            if (!hCopy)
+            HGLOBAL hCopy;
+            HRESULT hr = GlobalClone(&hCopy, m_hDropCache);
+            if (FAILED_UNEXPECTEDLY(hr))
                 return E_OUTOFMEMORY;
-
-            PVOID pSrc = GlobalLock(m_hDropCache), pDst = GlobalLock(hCopy);
-            if (!pSrc || !pDst)
-            {
-                if (pSrc)
-                    GlobalUnlock(m_hDropCache);
-                if (pDst)
-                    GlobalUnlock(hCopy);
-                GlobalFree(hCopy);
-                return E_OUTOFMEMORY;
-            }
-
-            CopyMemory(pDst, pSrc, cb);
-            GlobalUnlock(m_hDropCache);
-            GlobalUnlock(hCopy);
 
             pstm->tymed   = TYMED_HGLOBAL;
             pstm->hGlobal = hCopy;
@@ -452,30 +462,18 @@ public:
         {
             for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
             {
-                if (m_extraData[i].cfFormat == pfe->cfFormat)
-                {
-                    SIZE_T cb = GlobalSize(m_extraData[i].hData);
-                    HGLOBAL hCopy = GlobalAlloc(GMEM_MOVEABLE, cb);
-                    if (!hCopy)
-                        return E_OUTOFMEMORY;
-                    PVOID pSrc = GlobalLock(m_extraData[i].hData), pDst = GlobalLock(hCopy);
-                    if (pSrc && pDst)
-                        CopyMemory(pDst, pSrc, cb);
-                    if (pSrc)
-                        GlobalUnlock(m_extraData[i].hData);
-                    if (pDst)
-                        GlobalUnlock(hCopy);
-                    if (!pSrc || !pDst)
-                    {
-                        GlobalFree(hCopy);
-                        return E_OUTOFMEMORY;
-                    }
+                if (m_extraData[i].cfFormat != pfe->cfFormat)
+                    continue;
 
-                    pstm->tymed   = TYMED_HGLOBAL;
-                    pstm->hGlobal = hCopy;
-                    pstm->pUnkForRelease = NULL;
-                    return S_OK;
-                }
+                HGLOBAL hCopy;
+                HRESULT hr = GlobalClone(&hCopy, m_extraData[i].hData);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+
+                pstm->tymed   = TYMED_HGLOBAL;
+                pstm->hGlobal = hCopy;
+                pstm->pUnkForRelease = NULL;
+                return S_OK;
             }
         }
 
