@@ -31,6 +31,7 @@ CZipFolder::~CZipFolder()
 
 void CZipFolder::Close()
 {
+    CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
     if (m_UnzipFile)
         unzClose(m_UnzipFile);
     m_UnzipFile = NULL;
@@ -38,8 +39,14 @@ void CZipFolder::Close()
 
 STDMETHODIMP_(unzFile) CZipFolder::getZip()
 {
+    CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
+    if (m_UnzipFile)
+        return m_UnzipFile;
+    if (m_ZipFile.IsEmpty())
+        return NULL;
+    m_UnzipFile = unzOpen2_64(m_ZipFile, &g_FFunc);
     if (!m_UnzipFile)
-        m_UnzipFile = unzOpen2_64(m_ZipFile, &g_FFunc);
+        DPRINT1("Failed to open zip file: %ls\n", m_ZipFile.GetString());
     return m_UnzipFile;
 }
 

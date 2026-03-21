@@ -45,6 +45,7 @@ class CZipFolder :
     unzFile m_UnzipFile = nullptr;
     CComPtr<IDataObject> m_pDataObj;
     HWND m_hwnd = nullptr;
+    CComAutoCriticalSection m_csZip;
 
     // Accessors used by CZipExtractDrop
     friend class CZipExtractDrop;
