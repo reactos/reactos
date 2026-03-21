@@ -20,7 +20,7 @@
 //    inside the ZIP) and a back-pointer to the CZipFolder (for m_ZipFile,
 //    m_ZipDir and getZip()).
 // 2. The first time GetData(CF_HDROP) is called we
-//    a. create a unique temporary directory under %TEMP%\zipfldr_XXXXXX
+//    a. create a unique temporary directory under %TEMP%
 //    b. enumerate all entries whose path starts with one of the requested
 //       names (handles both single files and whole sub-trees),
 //    c. extract each one while translating its in-ZIP name via
@@ -187,20 +187,18 @@ class CZipExtractDrop :
     {
         WCHAR szTempBase[MAX_PATH];
         if (!GetTempPathW(_countof(szTempBase), szTempBase))
-            return HRESULT_FROM_WIN32(GetLastError());
+            return E_FAIL;
 
-        // Try up to 100 unique names.
-        for (INT i = 0; i < 100; ++i)
-        {
-            CStringW candidate;
-            candidate.Format(L"%szipfldr_%08X", szTempBase, GetTickCount() + i);
-            if (CreateDirectoryW(candidate, NULL))
-            {
-                m_tempDir = candidate;
-                return S_OK;
-            }
-        }
-        return E_FAIL;
+        WCHAR szTempFile[MAX_PATH];
+        if (!GetTempFileNameW(szTempBase, L"zfd", 0, szTempFile))
+            return E_FAIL;
+
+        DeleteFileW(szTempFile);
+        if (!CreateDirectoryW(szTempFile, NULL))
+            return E_FAIL;
+
+        m_tempDir = szTempFile;
+        return S_OK;
     }
 
     // Given the in-ZIP wide path (e.g. "src/foo/bar.c"), strip the ZipDir

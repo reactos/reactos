@@ -525,7 +525,10 @@ HRESULT CALLBACK CZipFolder::ZipFolderMenuCallback(
     if (!pThis)
         return E_FAIL;
 
-    pThis->m_pDataObj = pdtobj;
+    {
+        CComCritSecLock<CComAutoCriticalSection> lock(pThis->m_csDataObj);
+        pThis->m_pDataObj = pdtobj;
+    }
 
     switch (uMsg)
     {
@@ -697,12 +700,25 @@ STDMETHODIMP CZipFolder::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
             CloseHandle(hThread);
             return S_OK;
         }
+
+        // CreateThread failed: undo the refcount bump and free the BSTR that
+        // s_ExtractProc will never get to release.
+        InterlockedDecrement(&g_ModuleRefCnt);
+        SysFreeString(ZipFile);
+        return HRESULT_FROM_WIN32(GetLastError());
     }
 
     if (pici->lpVerb == MAKEINTRESOURCEA(DFM_CMD_DELETE) ||
         (!IS_INTRESOURCE(pici->lpVerb) && !strcmp(pici->lpVerb, "delete")))
     {
-        return DoDeleteItems(m_pDataObj);
+        // Snapshot m_pDataObj under the lock so we don't race with
+        // ZipFolderMenuCallback updating it from another thread.
+        CComPtr<IDataObject> pDataObj;
+        {
+            CComCritSecLock<CComAutoCriticalSection> lock(m_csDataObj);
+            pDataObj = m_pDataObj;
+        }
+        return DoDeleteItems(pDataObj);
     }
 
     return E_INVALIDARG;
@@ -858,14 +874,20 @@ STDMETHODIMP CZipFolder::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL p
     HDROP hDrop = (HDROP)GlobalLock(sm.hGlobal);
     if (hDrop)
     {
-        // Close the ZIP file before appending (it will be automatically
-        // reopened next time getZip() is called)
-        Close();
+        CStringW zipFilePath, zipDir;
+        CComHeapPtr<ITEMIDLIST> curDir;
+        {
+            CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
+            CloseNoLock();
+            zipFilePath = m_ZipFile;
+            zipDir      = m_ZipDir;
+            curDir.Attach(ILClone(m_CurDir));
+        }
 
         // Create creator
-        CZipCreator* pCreator = CZipCreator::DoCreate(m_ZipFile, m_ZipDir);
+        CZipCreator* pCreator = CZipCreator::DoCreate(zipFilePath, zipDir);
 
-        pCreator->SetNotifyPidl(m_CurDir);
+        pCreator->SetNotifyPidl(curDir);
 
         // Add dropped files
         UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);

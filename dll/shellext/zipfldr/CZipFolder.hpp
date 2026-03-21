@@ -46,6 +46,7 @@ class CZipFolder :
     CComPtr<IDataObject> m_pDataObj;
     HWND m_hwnd = nullptr;
     CComAutoCriticalSection m_csZip;
+    CComAutoCriticalSection m_csDataObj; // Protects m_pDataObj
 
     // Accessors used by CZipExtractDrop
     friend class CZipExtractDrop;
