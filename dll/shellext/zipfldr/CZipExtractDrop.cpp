@@ -116,11 +116,12 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
     pDrop->pFiles = sizeof(DROPFILES);
     pDrop->fWide  = TRUE;
 
-    WCHAR* pszDst = reinterpret_cast<WCHAR*>(pDrop + 1);
+    PWCHAR pszDst = reinterpret_cast<PWCHAR>(reinterpret_cast<PBYTE>(pDrop) + pDrop->pFiles);
     pos = paths.GetHeadPosition();
     while (pos)
     {
-        const CStringW& s = paths.GetNext(pos);
+        CStringW s = paths.GetNext(pos);
+        DPRINT1("s: '%S'\n", (PCWSTR)s);
         INT cch = s.GetLength();
         CopyMemory(pszDst, s.GetString(), cch * sizeof(WCHAR));
         pszDst += cch;
@@ -129,6 +130,11 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
     *pszDst = UNICODE_NULL; // double NUL terminator
 
     GlobalUnlock(hGlobal);
+
+    WCHAR szPath[MAX_PATH];
+    DragQueryFileW((HDROP)hGlobal, 0, szPath, _countof(szPath));
+    DPRINT1("szPath: '%S'\n", szPath);
+
     return hGlobal;
 }
 
@@ -187,17 +193,27 @@ class CZipExtractDrop :
     {
         WCHAR szTempBase[MAX_PATH];
         if (!GetTempPathW(_countof(szTempBase), szTempBase))
+        {
+            DPRINT1("!GetTempPathW\n");
             return E_FAIL;
+        }
 
         WCHAR szTempFile[MAX_PATH];
         if (!GetTempFileNameW(szTempBase, L"zfd", 0, szTempFile))
+        {
+            DPRINT1("!GetTempFileNameW\n");
             return E_FAIL;
+        }
 
         DeleteFileW(szTempFile);
         if (!CreateDirectoryW(szTempFile, NULL))
+        {
+            DPRINT1("!CreateDirectoryW\n");
             return E_FAIL;
+        }
 
         m_tempDir = szTempFile;
+        DPRINT1("m_tempDir: '%S'\n", szTempFile);
         return S_OK;
     }
 
@@ -303,7 +319,8 @@ class CZipExtractDrop :
                 continue;
             }
 
-            CStringW destFull = m_tempDir + L'\\' + destRel;
+            WCHAR destFull[MAX_PATH];
+            PathCombineW(destFull, m_tempDir, destRel);
 
             // Ensure parent directories exist
             {
@@ -347,7 +364,9 @@ class CZipExtractDrop :
             }
 
             // Add the top-level item to the HDROP list (once).
-            CStringW topDest = m_tempDir + L'\\' + topName;
+            WCHAR topDest[MAX_PATH];
+            PathCombineW(topDest, m_tempDir, topName);
+
             // Check duplicate
             BOOL found = FALSE;
             POSITION pos = topLevelAdded.GetHeadPosition();
@@ -363,6 +382,7 @@ class CZipExtractDrop :
             {
                 topLevelAdded.AddTail(topName);
                 extractedPaths.AddTail(topDest);
+                DPRINT1("topDest: %S\n", (PCWSTR)topDest);
             }
         }
 
