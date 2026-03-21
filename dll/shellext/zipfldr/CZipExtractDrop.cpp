@@ -166,7 +166,7 @@ class CZipExtractDrop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject
 {
-    CZipFolder* m_pFolder; // The ZIP folder we belong to
+    CComPtr<CZipFolder> m_pFolder; // The ZIP folder we belong to
     CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
     CComPtr<IDataObject> m_spInner; // Fallback data-object (for PIDL-based formats)
     HGLOBAL m_hDropCache; // Cached HDROP after first extraction
@@ -241,13 +241,16 @@ class CZipExtractDrop :
     HRESULT DoExtract()
     {
         HRESULT hr = CreateTempDir();
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         // We need a fresh unzFile because CZipFolder's handle may be in use.
         unzFile uf = unzOpen2_64(m_pFolder->GetZipFilePath(), &g_FFunc);
         if (!uf)
+        {
+            DPRINT1("!uf\n");
             return E_FAIL;
+        }
 
         CAtlList<CStringW> extractedPaths; // top-level paths added to HDROP
         CAtlList<CStringW> topLevelAdded;  // de-dup guard for top-level dirs
@@ -267,6 +270,7 @@ class CZipExtractDrop :
 
         if (!zipEnum.Initialize(&localZip))
         {
+            DPRINT1("!zipEnum.Initialize\n");
             unzClose(uf);
             return E_FAIL;
         }
@@ -367,7 +371,10 @@ class CZipExtractDrop :
         unzClose(uf);
 
         if (extractedPaths.IsEmpty())
+        {
+            DPRINT1("extractedPaths.IsEmpty\n");
             return E_FAIL;
+        }
 
         m_hDropCache = BuildHDrop(extractedPaths);
         return m_hDropCache ? S_OK : E_OUTOFMEMORY;
