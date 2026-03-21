@@ -87,7 +87,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
 
     if (!Thread->Tcb.InitialStack)
     {
-        /* Terminated thread ? */
+        /* Terminated thread? */
         switch (reg_name)
         {
             case ESP:
@@ -135,7 +135,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
         static PULONG Esp;
         Esp = Thread->Tcb.KernelStack;
         *size = 4;
-        switch(reg_name)
+        switch (reg_name)
         {
             case EBP: return &Esp[3];
             case ESP: return &Esp;
@@ -165,7 +165,7 @@ gdb_send_registers(void)
     if (((gdb_dbg_pid == 0) && (gdb_dbg_tid == 0)) ||
             gdb_tid_to_handle(gdb_dbg_tid) == PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread))
     {
-        for(i=0; i < 16; i++)
+        for (i = 0; i < 16; i++)
         {
             RegisterPtr = ctx_to_reg(&CurrentContext, i, &size);
             RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
@@ -193,7 +193,7 @@ gdb_send_registers(void)
             return finish_gdb_packet();
         }
 
-        for(i=0; i < 16; i++)
+        for (i = 0; i < 16; i++)
         {
             RegisterPtr = thread_to_reg(DbgThread, i, &size);
             if (RegisterPtr)
@@ -257,9 +257,7 @@ gdb_send_register(void)
     }
     else
     {
-        KDDBGPRINT("KDDBG : Sending registers as memory.\n");
+        KDDBGPRINT("KDGDB: Sending registers as memory.\n");
         return send_gdb_memory(ptr, size);
     }
 }
-
-

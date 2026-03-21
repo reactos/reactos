@@ -304,7 +304,7 @@ FirstSendHandler(
         return FALSE;
     }
 
-    KDDBGPRINT("KDGDB: START!\n");
+    KDDBGPRINT("KDGDB: START\n");
 
     Thread = (PETHREAD)(ULONG_PTR)StateChange->Thread;
 
@@ -374,7 +374,7 @@ KdReceivePacket(
     {
         static BOOLEAN ignore = 0;
         KDDBGPRINT("Debug prompt.\n");
-        /* HACK ! Debug prompt asks for break or ignore. First break, then ignore. */
+        /* HACK: Debug prompt asks for break or ignore. First break, then ignore. */
         MessageData->Length = 1;
         MessageData->Buffer[0] = ignore ? 'i' : 'b';
         ignore = !ignore;

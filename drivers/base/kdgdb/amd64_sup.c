@@ -105,7 +105,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name)
 #endif
     if (!Thread->Tcb.InitialStack)
     {
-        /* Terminated thread ? */
+        /* Terminated thread? */
         switch (reg_name)
         {
             case RSP:
@@ -119,7 +119,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name)
     }
     else
     {
-        switch(reg_name)
+        switch (reg_name)
         {
             case RSP: return &Thread->Tcb.KernelStack;
             case RIP:
@@ -189,7 +189,6 @@ gdb_send_registers(void)
             RegisterPtr = thread_to_reg(DbgThread, i);
             size = reg_size[i] * 2;
             RegisterStr[size] = 0;
-
             while (size)
             {
                 if (RegisterPtr)
@@ -255,9 +254,7 @@ gdb_send_register(void)
     }
     else
     {
-        KDDBGPRINT("KDDBG : Sending registers as memory.\n");
+        KDDBGPRINT("KDGDB: Sending registers as memory.\n");
         return send_gdb_memory(ptr, reg_size[reg_name]);
     }
 }
-
-
