@@ -31,6 +31,8 @@
 //    CIDLData_CreateFromIDArray data-object so that shell operations that
 //    rely on PIDLs (e.g. properties) continue to work.
 
+// FIXME: Use CFSTR_FILEDESCRIPTORW and CFSTR_FILECONTENTS for IDataObject
+
 static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
 {
     SIZE_T cb = GlobalSize(hSrc);
@@ -116,12 +118,11 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
     pDrop->pFiles = sizeof(DROPFILES);
     pDrop->fWide  = TRUE;
 
-    PWCHAR pszDst = reinterpret_cast<PWCHAR>(reinterpret_cast<PBYTE>(pDrop) + pDrop->pFiles);
+    PWCHAR pszDst = reinterpret_cast<PWCHAR>(pDrop + 1);
     pos = paths.GetHeadPosition();
     while (pos)
     {
         CStringW s = paths.GetNext(pos);
-        DPRINT1("s: '%S'\n", (PCWSTR)s);
         INT cch = s.GetLength();
         CopyMemory(pszDst, s.GetString(), cch * sizeof(WCHAR));
         pszDst += cch;
@@ -133,7 +134,6 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
 
     WCHAR szPath[MAX_PATH];
     DragQueryFileW((HDROP)hGlobal, 0, szPath, _countof(szPath));
-    DPRINT1("szPath: '%S'\n", szPath);
 
     return hGlobal;
 }
@@ -174,7 +174,6 @@ class CZipExtractDrop :
 {
     CComPtr<CZipFolder> m_pFolder; // The ZIP folder we belong to
     CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
-    CComPtr<IDataObject> m_spInner; // Fallback data-object (for PIDL-based formats)
     HGLOBAL m_hDropCache; // Cached HDROP after first extraction
     CStringW  m_tempDir; // Temporary directory created during extraction
 
@@ -193,27 +192,18 @@ class CZipExtractDrop :
     {
         WCHAR szTempBase[MAX_PATH];
         if (!GetTempPathW(_countof(szTempBase), szTempBase))
-        {
-            DPRINT1("!GetTempPathW\n");
             return E_FAIL;
-        }
 
         WCHAR szTempFile[MAX_PATH];
         if (!GetTempFileNameW(szTempBase, L"zfd", 0, szTempFile))
-        {
-            DPRINT1("!GetTempFileNameW\n");
             return E_FAIL;
-        }
 
         DeleteFileW(szTempFile);
         if (!CreateDirectoryW(szTempFile, NULL))
-        {
-            DPRINT1("!CreateDirectoryW\n");
             return E_FAIL;
-        }
 
+        GetLongPathNameW(szTempFile, szTempFile, _countof(szTempFile));
         m_tempDir = szTempFile;
-        DPRINT1("m_tempDir: '%S'\n", szTempFile);
         return S_OK;
     }
 
@@ -382,17 +372,13 @@ class CZipExtractDrop :
             {
                 topLevelAdded.AddTail(topName);
                 extractedPaths.AddTail(topDest);
-                DPRINT1("topDest: %S\n", (PCWSTR)topDest);
             }
         }
 
         unzClose(uf);
 
         if (extractedPaths.IsEmpty())
-        {
-            DPRINT1("extractedPaths.IsEmpty\n");
             return E_FAIL;
-        }
 
         m_hDropCache = BuildHDrop(extractedPaths);
         return m_hDropCache ? S_OK : E_OUTOFMEMORY;
@@ -412,19 +398,18 @@ public:
             GlobalFree(m_hDropCache);
             m_hDropCache = NULL;
         }
-
+        
         if (!m_tempDir.IsEmpty())
             RecursiveDeleteDirectory(m_tempDir);
-
+        
         for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
             GlobalFree(m_extraData[i].hData);
     }
 
-    HRESULT Init(CZipFolder* pFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, IDataObject* pInner)
+    HRESULT Init(CZipFolder* pFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     {
         ATLASSERT(pFolder);
         m_pFolder = pFolder;
-        m_spInner = pInner;
 
         for (UINT i = 0; i < cidl; ++i)
         {
@@ -434,7 +419,6 @@ public:
 
             CStringW name = pEntry->Name;
             name.Replace(L'\\', L'/');
-            DPRINT1("name: %S\n", (PCWSTR)name);
             if (pEntry->ZipType == ZIP_PIDL_DIRECTORY)
             {
                 // Ensure trailing slash so MatchesSelection works as prefix.
@@ -502,17 +486,11 @@ public:
             }
         }
 
-        // Delegate everything else to the inner (PIDL-based) data object.
-        if (m_spInner)
-            return m_spInner->GetData(pfe, pstm);
-
         return DV_E_FORMATETC;
     }
 
     STDMETHODIMP GetDataHere(FORMATETC* pfe, STGMEDIUM* pstm) override
     {
-        if (m_spInner)
-            return m_spInner->GetDataHere(pfe, pstm);
         return E_NOTIMPL;
     }
 
@@ -537,13 +515,11 @@ public:
             }
         }
 
-        return m_spInner ? m_spInner->QueryGetData(pfe) : DV_E_FORMATETC;
+        return DV_E_FORMATETC;
     }
 
     STDMETHODIMP GetCanonicalFormatEtc(FORMATETC* pfeIn, FORMATETC* pfeOut) override
     {
-        if (m_spInner)
-            return m_spInner->GetCanonicalFormatEtc(pfeIn, pfeOut);
         return E_NOTIMPL;
     }
 
@@ -592,10 +568,6 @@ public:
             return S_OK;
         }
 
-        // For non-HGLOBAL types, try the inner object.
-        if (m_spInner)
-            return m_spInner->SetData(pfe, pstm, fRelease);
-
         return E_NOTIMPL;
     }
 
@@ -605,29 +577,6 @@ public:
             return E_NOTIMPL;
 
         FORMATETC hdropFmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-
-        if (m_spInner)
-        {
-            CComPtr<IEnumFORMATETC> spInnerEnum;
-            if (SUCCEEDED(m_spInner->EnumFormatEtc(DATADIR_GET, &spInnerEnum)))
-            {
-                CAtlArray<FORMATETC> fmts;
-                fmts.Add(hdropFmt);
-                FORMATETC fe;
-                while (spInnerEnum->Next(1, &fe, NULL) == S_OK)
-                {
-                    if (fe.ptd)
-                    {
-                        CoTaskMemFree(fe.ptd);
-                        fe.ptd = NULL;
-                    }
-                    fmts.Add(fe);
-                }
-
-                return SHCreateStdEnumFmtEtc((UINT)fmts.GetCount(), fmts.GetData(), ppenum);
-            }
-        }
-
         return SHCreateStdEnumFmtEtc(1, &hdropFmt, ppenum);
     }
 
@@ -662,18 +611,13 @@ HRESULT CZipExtractDrop_CreateInstance(
     if (!pFolder || !cidl || !apidl)
         return E_INVALIDARG;
 
-    CComPtr<IDataObject> spInner;
-    HRESULT hr = CIDLData_CreateFromIDArray(pFolder->GetCurDirPidl(), cidl, apidl, &spInner);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
     CComObject<CZipExtractDrop>* pObj = NULL;
-    hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
+    HRESULT hr = CComObject<CZipExtractDrop>::CreateInstance(&pObj);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     pObj->AddRef();
-    hr = pObj->Init(pFolder, cidl, apidl, spInner);
+    hr = pObj->Init(pFolder, cidl, apidl);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         pObj->Release();
