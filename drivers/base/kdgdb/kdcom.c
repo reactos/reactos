@@ -147,12 +147,16 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
             /* Skip the equals sign */
             if (*PortString) ++PortString;
 
-            /* Do we have a serial port? */
-            if (_strnicmp(PortString, "COM", CONST_STR_LEN("COM")) != 0)
+            /* Do we have a serial port? Recognize both
+             * 'DEBUGPORT=GDB' and 'DEBUGPORT=COM' syntaxes. */
+            if (_strnicmp(PortString, "GDB", CONST_STR_LEN("GDB")) != 0 &&
+                _strnicmp(PortString, "COM", CONST_STR_LEN("COM")) != 0)
+            {
                 return STATUS_INVALID_PARAMETER;
+            }
 
             /* Check for a valid serial port */
-            PortString += CONST_STR_LEN("COM");
+            PortString += CONST_STR_LEN("COM"); // Same as len("GDB")
             if (*PortString != ':')
             {
                 Value = (ULONG)atol(PortString);
