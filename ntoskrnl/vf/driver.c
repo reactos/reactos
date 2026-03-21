@@ -110,11 +110,6 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
     UNICODE_STRING DriverName;
     PWCHAR List, Token, End;
 
-    DPRINT1("VF: ShouldVerify: list='%wZ' driver='%.*ws'\\n",
-            &VfGlobal.VerifyDriverList,
-            DriverName.Length / sizeof(WCHAR),
-            DriverName.Buffer);
-
     /* NULL or empty buffer means verify all */
     if (!VfGlobal.VerifyDriverList.Buffer ||
         VfGlobal.VerifyDriverList.Length == 0)
@@ -129,17 +124,20 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
     LdrEntry = (PLDR_DATA_TABLE_ENTRY)DriverObject->DriverSection;
     if (!LdrEntry || !LdrEntry->BaseDllName.Buffer || !LdrEntry->BaseDllName.Length)
         return TRUE;
-    
+
     DriverName = LdrEntry->BaseDllName;
-    /* clamp length to avoid reading garbage past the buffer */
     if (DriverName.Length > DriverName.MaximumLength)
         DriverName.Length = DriverName.MaximumLength;
+
+    DPRINT1("VF: ShouldVerify: list='%wZ' driver='%.*ws'\n",
+            &VfGlobal.VerifyDriverList,
+            DriverName.Length / sizeof(WCHAR),
+            DriverName.Buffer);
 
     /* walk space-separated list */
     List = VfGlobal.VerifyDriverList.Buffer;
     while (*List)
     {
-        /* skip spaces */
         while (*List == L' ') List++;
         if (!*List) break;
 
@@ -160,6 +158,7 @@ static BOOLEAN VfShouldVerifyDriver(PDRIVER_OBJECT DriverObject)
 
     return FALSE;
 }
+
 /* ============================================================
    INIT
    ============================================================ */
@@ -406,15 +405,15 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
                                   TAG_VFDRV);
     if (!Entry)
         return;
-
-    RtlZeroMemory(Entry, sizeof(*Entry));
+    
+    RtlZeroMemory(Entry, sizeof(VF_DRIVER_ENTRY));
     Entry->DriverObject = DriverObject;
-    Entry->VerifierFlags = VF_FLAG_POOL_TRACKING | VF_FLAG_IRQL_CHECKING | VF_FLAG_SPECIAL_POOL;
     InitializeListHead(&Entry->PoolList);
     KeInitializeSpinLock(&Entry->PoolLock);
     Entry->OriginalUnload = DriverObject->DriverUnload;
     Entry->VerifierFlags = VfGlobal.GlobalFlags ? VfGlobal.GlobalFlags :
                            (VF_FLAG_POOL_TRACKING | VF_FLAG_IRQL_CHECKING | VF_FLAG_SPECIAL_POOL);
+    Entry->Loads = 1;
 
     KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
     InsertTailList(&VfDriverList, &Entry->ListEntry);
@@ -743,25 +742,30 @@ PVOID NTAPI VfAllocatePool(
     BOOLEAN Special = FALSE;
     KIRQL OldIrql;
 
+    if (Driver)
+        Driver->AllocationsAttempted++;
+
+    if (Driver && !Tag)
+        Driver->AllocationsWithNoTag++;
+
     if (Driver && (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING))
         VfCheckIrqlForPool(PoolType, FALSE);
 
     if (Driver && Driver->PoolQuota > 0)
     {
         KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
-
         if ((Driver->PoolUsage + Size) > Driver->PoolQuota)
         {
             KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
+            Driver->AllocationsFailedDeliberately++;
+            Driver->AllocationsFailed++;
             VfFailDriver(DriverObject, "Pool quota exceeded");
             return NULL;
         }
-
         Driver->PoolUsage += Size;
         KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
     }
 
-    /* for zero size allocations we return dummy non-null pointer like windows does */
     if (Size == 0)
     {
         static UCHAR DummyZero;
@@ -773,9 +777,9 @@ PVOID NTAPI VfAllocatePool(
     {
         Address = VfAllocateSpecialPool(Size, &Mdl);
         Special = TRUE;
-
         if (!Address)
         {
+            if (Driver) Driver->AllocationsFailed++;
             VfFailDriver(DriverObject, "Special pool allocation failed");
             return NULL;
         }
@@ -785,8 +789,8 @@ PVOID NTAPI VfAllocatePool(
         Address = ExAllocatePoolWithTag(PoolType, Size, Tag);
         if (!Address)
         {
-            if (Driver)
-                VfFailDriver(DriverObject, "Pool allocation failed");
+            if (Driver) Driver->AllocationsFailed++;
+            VfFailDriver(DriverObject, "Pool allocation failed");
             return NULL;
         }
     }
@@ -794,6 +798,29 @@ PVOID NTAPI VfAllocatePool(
 TrackAllocation:
     if (!Address || !Driver)
         return Address;
+
+    Driver->AllocationsSucceeded++;
+    if (Special)
+        Driver->AllocationsSucceededSpecialPool++;
+
+    if (PoolType == PagedPool)
+    {
+        Driver->CurrentPagedPoolAllocations++;
+        Driver->PagedPoolUsageInBytes += Size;
+        if (Driver->CurrentPagedPoolAllocations > Driver->PeakPagedPoolAllocations)
+            Driver->PeakPagedPoolAllocations = Driver->CurrentPagedPoolAllocations;
+        if (Driver->PagedPoolUsageInBytes > Driver->PeakPagedPoolUsageInBytes)
+            Driver->PeakPagedPoolUsageInBytes = Driver->PagedPoolUsageInBytes;
+    }
+    else
+    {
+        Driver->CurrentNonPagedPoolAllocations++;
+        Driver->NonPagedPoolUsageInBytes += Size;
+        if (Driver->CurrentNonPagedPoolAllocations > Driver->PeakNonPagedPoolAllocations)
+            Driver->PeakNonPagedPoolAllocations = Driver->CurrentNonPagedPoolAllocations;
+        if (Driver->NonPagedPoolUsageInBytes > Driver->PeakNonPagedPoolUsageInBytes)
+            Driver->PeakNonPagedPoolUsageInBytes = Driver->NonPagedPoolUsageInBytes;
+    }
 
     Alloc = ExAllocatePoolWithTag(NonPagedPool, sizeof(VF_POOL_ALLOCATION), TAG_VFALL);
     if (!Alloc)
@@ -844,6 +871,18 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
 
             RemoveEntryList(&Alloc->ListEntry);
             Driver->PoolUsage -= Alloc->Size;
+
+            if (Alloc->PoolType == PagedPool)
+            {
+                Driver->CurrentPagedPoolAllocations--;
+                Driver->PagedPoolUsageInBytes -= Alloc->Size;
+            }
+            else
+            {
+                Driver->CurrentNonPagedPoolAllocations--;
+                Driver->NonPagedPoolUsageInBytes -= Alloc->Size;
+            }
+
             KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
 
             if (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING)
@@ -1809,6 +1848,8 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
 
     if (!Driver)
         return;
+
+    Driver->Unloads++;
 
     if (!IsListEmpty(&Driver->PoolList))
     {
