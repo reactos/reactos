@@ -338,7 +338,7 @@ UNUSED static VOID VfFailInternal(
     {
         if (FailureClass == VfPoolOverflow)
         {
-            KeBugCheckEx(VF_BUGCHECK_POOL_TAG_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          VF_SUBCODE_WRONG_POOL_TAG,
                          (ULONG_PTR)ParamFormat,
                          (ULONG_PTR)ObjectType,
@@ -346,20 +346,20 @@ UNUSED static VOID VfFailInternal(
         }
         else if (FailureClass == VfIrqlViolation)
         {
-            KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          (ULONG_PTR)ObjectType,
                          0, 0, 0);
         }
         else if (FailureClass == VfSpecialPool)
         {
-            KeBugCheckEx(VF_BUGCHECK_SPECIAL_POOL,
+            KeBugCheckEx(SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION,
                          (ULONG_PTR)ObjectType,
                          (ULONG_PTR)ParamFormat,
                          0, 0);
         }
         else
         {
-            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          (ULONG_PTR)FailureClass,
                          0, 0, (ULONG_PTR)ObjectType);
         }
@@ -472,14 +472,14 @@ VfAllocateAdapterChannel(
     if (!T)
     {
         KeReleaseSpinLock(&VfDmaLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, (ULONG_PTR)Adapter, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, 0, (ULONG_PTR)Adapter, 0, 0);
     }
 
     if (T->MapRegisterCount != 0)
     {
         KeReleaseSpinLock(&VfDmaLock, OldIrql);
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VfDmaFaultAllocateChannel,
             (ULONG_PTR)Adapter,
             T->MapRegisterCount,
@@ -537,7 +537,7 @@ VfFreeAdapterChannel(
     if (!Track || Track->MapRegisterCount <= 0)
     {
         KeReleaseSpinLock(&VfDmaLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_INVALID_DMA_ADAPTER,
                      (ULONG_PTR)Adapter,
                      Track ? Track->MapRegisterCount : 0,
@@ -571,7 +571,7 @@ VfMapTransfer(
         if (T->AdapterReleased)
         {
             KeBugCheckEx(
-                VF_BUGCHECK_DRIVER_VIOLATION,
+                DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_INVALID_DMA_ADAPTER,
                 (ULONG_PTR)Adapter,
                 0,
@@ -629,7 +629,7 @@ VfFlushAdapterBuffers(
     if (Count < 0)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VfDmaFaultFlushBuffers,
             (ULONG_PTR)Adapter,
             Count,
@@ -677,7 +677,7 @@ static VOID VfCheckIrqlForPool(POOL_TYPE PoolType, BOOLEAN IsFree)
 
     if ((PoolType & PagedPool) && (CurrentIrql > APC_LEVEL))
     {
-        KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      CurrentIrql,
                      APC_LEVEL,
                      IsFree,
@@ -685,7 +685,7 @@ static VOID VfCheckIrqlForPool(POOL_TYPE PoolType, BOOLEAN IsFree)
     }
     else if (CurrentIrql > DISPATCH_LEVEL)
     {
-        KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      CurrentIrql,
                      DISPATCH_LEVEL,
                      IsFree,
@@ -849,7 +849,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     KIRQL OldIrql;
 
     if (!Driver)
-        KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, VF_SUBCODE_INVALID_FREE,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_SUBCODE_INVALID_FREE,
                      (ULONG_PTR)Address, 0, 0);
 
     KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
@@ -862,7 +862,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
             if (Alloc->Tag != PoolTag)
             {
                 KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-                KeBugCheckEx(VF_BUGCHECK_POOL_TAG_VIOLATION,
+                KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                              VF_SUBCODE_WRONG_POOL_TAG,
                              (ULONG_PTR)Address,
                              (ULONG_PTR)Alloc->Tag,
@@ -888,7 +888,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
             if (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING)
             {
                 if (KeGetCurrentIrql() > Alloc->AllocateIrql)
-                    KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+                    KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                                  KeGetCurrentIrql(),
                                  Alloc->AllocateIrql,
                                  (ULONG_PTR)DriverObject,
@@ -897,7 +897,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
 
             if (Alloc->PoolType != PoolType)
             {
-                KeBugCheckEx(VF_BUGCHECK_POOL_TYPE_VIOLATION,
+                KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                              VF_SUBCODE_WRONG_POOL_TYPE,
                              (ULONG_PTR)Address,
                              (ULONG_PTR)Alloc->PoolType,
@@ -921,7 +921,7 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     }
 
     KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-    KeBugCheckEx(VF_BUGCHECK_INVALID_FREE, VF_SUBCODE_INVALID_FREE,
+    KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_SUBCODE_INVALID_FREE,
                  (ULONG_PTR)Address, 0, 0);
 }
 
@@ -948,7 +948,7 @@ VfTrackIrpDispatch(
         {
             KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
-                VF_BUGCHECK_DRIVER_VIOLATION,
+                DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_REUSED_IRP,
                 (ULONG_PTR)Irp,
                 (ULONG_PTR)Track->DriverObject,
@@ -966,7 +966,7 @@ VfTrackIrpDispatch(
     if (!Track)
     {
         KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, 0, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, 0, 0, 0, 0);
     }
 
     RtlZeroMemory(Track, sizeof(*Track));
@@ -1026,7 +1026,7 @@ VfIrpDispatchHook(
         Irp->CurrentLocation > Irp->StackCount)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_IRP_STATE,
             (ULONG_PTR)Irp,
             Irp->CurrentLocation,
@@ -1036,7 +1036,7 @@ VfIrpDispatchHook(
 
     if (Stack->MajorFunction > IRP_MJ_MAXIMUM_FUNCTION)
     {
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_IRQL_MISUSE,
                      Stack->MajorFunction,
                      0,
@@ -1071,7 +1071,7 @@ VfIrpDispatchHook(
         Irp->IoStatus.Status != 0)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_IRP_STATE,
             (ULONG_PTR)Irp,
             Irp->IoStatus.Status,
@@ -1082,7 +1082,7 @@ VfIrpDispatchHook(
     if (Irp->Cancel && !Irp->CancelRoutine)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_CANCEL_ROUTINE_MISSING,
             (ULONG_PTR)Irp,
             0,
@@ -1099,7 +1099,7 @@ VfIrpDispatchHook(
     if (!Track)
     {
         KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, 0, (ULONG_PTR)Irp, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, 0, (ULONG_PTR)Irp, 0, 0);
     }
 
     if (Status == STATUS_PENDING)
@@ -1108,7 +1108,7 @@ VfIrpDispatchHook(
         {
             KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
-                VF_BUGCHECK_DRIVER_VIOLATION,
+                DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_IRP_NOT_MARKED_PENDING,
                 (ULONG_PTR)Irp,
                 0,
@@ -1123,7 +1123,7 @@ VfIrpDispatchHook(
         {
             KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
             KeBugCheckEx(
-                VF_BUGCHECK_DRIVER_VIOLATION,
+                DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_INVALID_IRP_STATE,
                 (ULONG_PTR)Irp,
                 Status,
@@ -1137,7 +1137,7 @@ VfIrpDispatchHook(
     if (NT_SUCCESS(Status) && Irp->IoStatus.Status == STATUS_PENDING)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_IRP_STATE,
             (ULONG_PTR)Irp,
             Status,
@@ -1148,7 +1148,7 @@ VfIrpDispatchHook(
     if (Status == STATUS_PENDING && !Irp->PendingReturned)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_IRP_NOT_MARKED_PENDING,
             (ULONG_PTR)Irp,
             0,
@@ -1158,7 +1158,7 @@ VfIrpDispatchHook(
 
     if (Status != STATUS_PENDING && Irp->PendingReturned)
     {
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_IRQL_MISUSE,
                      (ULONG_PTR)Irp,
                      Status,
@@ -1177,7 +1177,7 @@ UNUSED static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
                                  sizeof(VF_IRP_HOOK),
                                  'hIrV');
     if (!Hook)
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_LEAKED_RESOURCES, (ULONG_PTR)DriverObject, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_VIOLATION_LEAKED_RESOURCES, (ULONG_PTR)DriverObject, 0, 0);
 
     RtlZeroMemory(Hook, sizeof(VF_IRP_HOOK));
     Hook->DriverObject = DriverObject;
@@ -1276,7 +1276,7 @@ VfIoCompleteRequest(
     if (KeGetCurrentIrql() > DISPATCH_LEVEL)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_IRQL_MISUSE,
             KeGetCurrentIrql(),
             DISPATCH_LEVEL,
@@ -1291,7 +1291,7 @@ VfIoCompleteRequest(
     {
         KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_COMPLETING_UNKNOWN_IRP,
             (ULONG_PTR)Irp,
             0,
@@ -1303,7 +1303,7 @@ VfIoCompleteRequest(
     {
         KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_DOUBLE_COMPLETE,
             (ULONG_PTR)Irp,
             0,
@@ -1376,14 +1376,14 @@ VOID VfIoDecrementRef(PIRP Irp)
     BOOLEAN WasCompleted;
 
     if (!Track)
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
 
     KeAcquireSpinLock(&VfIrpTrackLock, &OldIrql);
 
     if (InterlockedDecrement(&Track->ReferenceCount) < 0)
     {
         KeReleaseSpinLock(&VfIrpTrackLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_VIOLATION_IRQL_MISUSE, (ULONG_PTR)Irp, 0, 0);
     }
 
     ShouldFree   = (Track->ReferenceCount == 0);
@@ -1404,7 +1404,7 @@ VOID VfIoDecrementRef(PIRP Irp)
             ExFreePool(Track);
 
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_DOUBLE_COMPLETE,
             (ULONG_PTR)Irp,
             0,
@@ -1442,7 +1442,7 @@ static VF_THREAD_LOCK_STACK* VfGetThreadLockStack(VOID)
     if (!Stack)
     {
         KeReleaseSpinLock(&VfThreadLockListLock, OldIrql);
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_SPINLOCK_TRACK, 0, 0, 0);
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_VIOLATION_SPINLOCK_TRACK, 0, 0, 0);
     }
 
     RtlZeroMemory(Stack, sizeof(VF_THREAD_LOCK_STACK));
@@ -1462,7 +1462,7 @@ static VOID VfEnsureLockStackCapacity(VF_THREAD_LOCK_STACK* Stack)
         ULONG NewCapacity = Stack->Capacity ? Stack->Capacity * 2 : 16;
         PKSPIN_LOCK* NewArray = ExAllocatePoolWithTag(NonPagedPool, sizeof(PKSPIN_LOCK) * NewCapacity, 'lStV');
         if (!NewArray)
-            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION, VF_VIOLATION_RECURSIVE_LOCK, (ULONG_PTR)Stack, 0, 0);
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_VIOLATION_RECURSIVE_LOCK, (ULONG_PTR)Stack, 0, 0);
 
         if (Stack->HeldLocks)
         {
@@ -1511,7 +1511,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
 
     if (CurrentIrql > DISPATCH_LEVEL)
     {
-        KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      CurrentIrql,
                      DISPATCH_LEVEL,
                      (ULONG_PTR)SpinLock,
@@ -1522,7 +1522,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
     {
         if (Stack->HeldLocks[i] == SpinLock)
         {
-            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          VF_VIOLATION_RECURSIVE_LOCK,
                          (ULONG_PTR)SpinLock,
                          0,
@@ -1535,7 +1535,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
         PKSPIN_LOCK LastLock = Stack->HeldLocks[Stack->Count - 1];
         if (SpinLock < LastLock)
         {
-            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          VF_VIOLATION_LOCK_ORDER_INVERSION,
                          (ULONG_PTR)SpinLock,
                          (ULONG_PTR)LastLock,
@@ -1547,7 +1547,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
 
     if (VfCheckDeadlock(SpinLock, Stack))
     {
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_DEADLOCK,
                      (ULONG_PTR)SpinLock,
                      (ULONG_PTR)PsGetCurrentThread(),
@@ -1564,7 +1564,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
         if (!Edge)
         {
             KeReleaseSpinLock(&VfSpinlockDepLock, DepOldIrql);
-            KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          VF_VIOLATION_SPINLOCK_DEPENDENCY,
                          (ULONG_PTR)SpinLock,
                          0,
@@ -1590,7 +1590,7 @@ VOID VfAcquireSpinLock(PKSPIN_LOCK SpinLock, KIRQL* OldIrql)
                                                      'sIrV');
     if (!Track)
     {
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_SPINLOCK_TRACK,
                      (ULONG_PTR)SpinLock,
                      0,
@@ -1616,7 +1616,7 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
 
     if (CurrentIrql > DISPATCH_LEVEL)
     {
-        KeBugCheckEx(VF_BUGCHECK_IRQL_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      CurrentIrql,
                      DISPATCH_LEVEL,
                      (ULONG_PTR)SpinLock,
@@ -1637,7 +1637,7 @@ VOID VfReleaseSpinLock(PKSPIN_LOCK SpinLock, KIRQL OldIrql)
 
     if (!Found)
     {
-        KeBugCheckEx(VF_BUGCHECK_DRIVER_VIOLATION,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_VIOLATION_SPINLOCK_RELEASE,
                      (ULONG_PTR)SpinLock,
                      0,
@@ -1679,7 +1679,7 @@ VfPutDmaAdapter(
         if (T->MapRegisterCount != 0)
         {
             KeBugCheckEx(
-                VF_BUGCHECK_DRIVER_VIOLATION,
+                DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_LEAKED_RESOURCES,
                 (ULONG_PTR)Adapter,
                 T->MapRegisterCount,
@@ -1741,7 +1741,7 @@ VfGetDmaAdapter(
     if (!Track)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_DMA_ADAPTER,
             (ULONG_PTR)Adapter,
             0,
@@ -1773,7 +1773,7 @@ VfValidateDmaAdapter(
     if (!Adapter)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_DMA_ADAPTER,
             0,
             0,
@@ -1789,7 +1789,7 @@ VfValidateDmaAdapter(
     if (!Track || Track->AdapterReleased)
     {
         KeBugCheckEx(
-            VF_BUGCHECK_DRIVER_VIOLATION,
+            DRIVER_VERIFIER_DETECTED_VIOLATION,
             VF_VIOLATION_INVALID_DMA_ADAPTER,
             (ULONG_PTR)Adapter,
             0,
@@ -1853,7 +1853,7 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
 
     if (!IsListEmpty(&Driver->PoolList))
     {
-        KeBugCheckEx(VF_BUGCHECK_MEMORY_LEAK,
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                      VF_SUBCODE_POOL_NOT_FREED_ON_UNLOAD,
                      (ULONG_PTR)DriverObject,
                      0, 0);
@@ -1952,7 +1952,7 @@ VfFailDriver(
 #endif
 
     KeBugCheckEx(
-        VF_BUGCHECK_DRIVER_VIOLATION,
+        DRIVER_VERIFIER_DETECTED_VIOLATION,
         VF_VIOLATION_LEAKED_RESOURCES,
         (ULONG_PTR)DriverObject,
         (ULONG_PTR)_ReturnAddress(),
@@ -1977,7 +1977,7 @@ VfFailSystemBIOS(
 #endif
 
     KeBugCheckEx(
-        VF_BUGCHECK_DRIVER_VIOLATION,
+        DRIVER_VERIFIER_DETECTED_VIOLATION,
         VF_VIOLATION_FIRMWARE_BIOS,
         (ULONG_PTR)Message,
         (ULONG_PTR)_ReturnAddress(),

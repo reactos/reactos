@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Driver Verifier internal header
+ * COPYRIGHT:   Copyright 2026 ReactOS Contributors
+ */
+
 #pragma once
 
 #include <ntoskrnl.h>
@@ -30,41 +37,37 @@ typedef struct _VF_SETTINGS {
 #define TAG_VFSP   'pfSV'
 
 /* ============================================================
-   BUGCHECK CODES
- * ALWAYS 0xC4 FOR DRIVER VERIFIER MEMORY/POOL ISSUES
+   BUGCHECK CODES — use Windows-compatible names directly
    ============================================================ */
 
-#define VF_BUGCHECK_MEMORY_LEAK          0xC4
-#define VF_BUGCHECK_POOL_TAG_VIOLATION   0xC4
-#define VF_BUGCHECK_POOL_TYPE_VIOLATION  0xC4
-#define VF_BUGCHECK_DRIVER_VIOLATION     0xC9
-#define VF_BUGCHECK_SPECIAL_POOL         0xC4
-#define VF_BUGCHECK_INVALID_FREE         0xC4
-#define VF_BUGCHECK_IRQL_VIOLATION       0xC1
+/* Use DRIVER_VERIFIER_DETECTED_VIOLATION (0xC4) directly in KeBugCheckEx calls */
+/* Use SPECIAL_POOL_DETECTED_MEMORY_CORRUPTION (0xC1) for special pool issues  */
+/* Use DRIVER_VERIFIER_IOMANAGER_VIOLATION (0xC9) for I/O manager violations   */
 
 /* ============================================================
-   VERIFIER VIOLATION CODES (BUGCHECK PARAM 1)
+   VERIFIER VIOLATION CODES (BUGCHECK PARAM 1) - ReactOS-specific
+   These use high-order bits to avoid collision with MSFT-defined codes.
    ============================================================ */
 
-#define VF_VIOLATION_COMPLETING_UNKNOWN_IRP   0x01
-#define VF_VIOLATION_REUSED_IRP               0x02
-#define VF_VIOLATION_LEAKED_RESOURCES         0x03
-#define VF_VIOLATION_DOUBLE_COMPLETE          0x04
-#define VF_VIOLATION_IRP_NOT_MARKED_PENDING   0x05
-#define VF_VIOLATION_CANCEL_ROUTINE_MISSING   0x06
-#define VF_VIOLATION_INVALID_IRP_STATE        0x07
-#define VF_VIOLATION_IRQL_MISUSE              0x08
-#define VF_VIOLATION_INVALID_DMA_ADAPTER      0x09
-#define VF_VIOLATION_SPINLOCK_RELEASE         0x0A
-#define VF_VIOLATION_SPINLOCK_DEPENDENCY      0x0B
-#define VF_VIOLATION_SPINLOCK_TRACK           0x0C
-#define VF_VIOLATION_SPINLOCK_NOT_HELD        0x0D
-#define VF_VIOLATION_RECURSIVE_LOCK           0x0E
-#define VF_VIOLATION_LOCK_ORDER_INVERSION     0x0F
-#define VF_VIOLATION_DEADLOCK                 0x10
-#define VF_VIOLATION_PAGEABLE_CODE            0x11
-#define VF_VIOLATION_DEVICE_NODE              0x12
-#define VF_VIOLATION_FIRMWARE_BIOS            0x13
+#define VF_VIOLATION_COMPLETING_UNKNOWN_IRP   0x80000001
+#define VF_VIOLATION_REUSED_IRP               0x80000002
+#define VF_VIOLATION_LEAKED_RESOURCES         0x80000003
+#define VF_VIOLATION_DOUBLE_COMPLETE          0x80000004
+#define VF_VIOLATION_IRP_NOT_MARKED_PENDING   0x80000005
+#define VF_VIOLATION_CANCEL_ROUTINE_MISSING   0x80000006
+#define VF_VIOLATION_INVALID_IRP_STATE        0x80000007
+#define VF_VIOLATION_IRQL_MISUSE              0x80000008
+#define VF_VIOLATION_INVALID_DMA_ADAPTER      0x80000009
+#define VF_VIOLATION_SPINLOCK_RELEASE         0x8000000A
+#define VF_VIOLATION_SPINLOCK_DEPENDENCY      0x8000000B
+#define VF_VIOLATION_SPINLOCK_TRACK           0x8000000C
+#define VF_VIOLATION_SPINLOCK_NOT_HELD        0x8000000D
+#define VF_VIOLATION_RECURSIVE_LOCK           0x8000000E
+#define VF_VIOLATION_LOCK_ORDER_INVERSION     0x8000000F
+#define VF_VIOLATION_DEADLOCK                 0x80000010
+#define VF_VIOLATION_PAGEABLE_CODE            0x80000011
+#define VF_VIOLATION_DEVICE_NODE              0x80000012
+#define VF_VIOLATION_FIRMWARE_BIOS            0x80000013
 
 /* ============================================================ 
    SUBCODES (win-compatible 0xC4 subcodes)
@@ -138,8 +141,6 @@ extern KSPIN_LOCK VfIrpHookLock;
 extern KSPIN_LOCK VfThreadLockListLock;
 extern KSPIN_LOCK VfSpinlockDepLock;
 
-// note that all these are declared extern so it doesn't conflict with other definitions in other files.
-
 /* ============================================================
    STRUCTURES
    ============================================================ */
@@ -198,9 +199,6 @@ typedef struct _VF_IRP_TRACK
     BOOLEAN     Completed;
     BOOLEAN     CancelRoutineSet;
 } VF_IRP_TRACK, *PVF_IRP_TRACK;
-
-/* since VF_IRP_TRACK_EXT no longer exists we just use VF_IRP_TRACK everywhere */
-typedef VF_IRP_TRACK VF_IRP_TRACK_EXT;
 
 typedef struct _VF_SPINLOCK_TRACK
 {

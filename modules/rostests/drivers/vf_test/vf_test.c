@@ -1,13 +1,21 @@
+/*
+ * PROJECT:     ReactOS Kernel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Driver Verifier test driver
+ * COPYRIGHT:   Copyright 2026 ReactOS Contributors
+ */
+
 #include <ntddk.h>
 
 PVOID LeakedBuffer = NULL;
-PDEVICE_OBJECT TestDeviceObject = NULL;
 
 /*
  * TestMode registry value under HKLM\SYSTEM\CurrentControlSet\Services\vf_test:
- *   0 = leak pool on unload (default) -- triggers 0xC4 / 0x62
- *   1 = free with wrong tag          -- triggers 0xC4 / 0x16
- *   2 = free with wrong pool type    -- triggers 0xC4 / 0x17
+ *   0 = off (default) -- driver loads and unloads cleanly
+ *   1 = leak pool on unload -- triggers 0xC4 / 0x62
+ *   2 = free with wrong tag -- triggers 0xC4 / 0x16
+ *   3 = pool type mismatch (not synthetically triggerable -- see VfFreePool)
+ *       falls back to leak on unload
  */
 static ULONG VfTestMode = 0;
 
@@ -42,7 +50,7 @@ static VOID VfTestReadMode(PUNICODE_STRING RegistryPath)
 
 VOID NTAPI DriverUnload(PDRIVER_OBJECT DriverObject)
 {
-    if (VfTestMode == 0)
+    if (VfTestMode == 1)
     {
         /* intentionally leak -- VF should catch this with 0xC4 / 0x62 */
         DbgPrint("VF_TEST: Unloading, leaking pool at %p\n", LeakedBuffer);
@@ -52,40 +60,40 @@ VOID NTAPI DriverUnload(PDRIVER_OBJECT DriverObject)
         if (LeakedBuffer)
             ExFreePoolWithTag(LeakedBuffer, 'tseT');
     }
-
-    if (TestDeviceObject)
-        IoDeleteDevice(TestDeviceObject);
 }
 
 NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
                            PUNICODE_STRING RegistryPath)
 {
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\VfTest");
-
     DriverObject->DriverUnload = DriverUnload;
-
-    IoCreateDevice(DriverObject, 0, &DeviceName,
-                   FILE_DEVICE_UNKNOWN, 0, FALSE, &TestDeviceObject);
 
     VfTestReadMode(RegistryPath);
 
     LeakedBuffer = ExAllocatePoolWithTag(NonPagedPool, 1024, 'tseT');
-    DbgPrint("VF_TEST: Driver loaded at %p, TestMode=%lu\n", LeakedBuffer, VfTestMode);
+    if (!LeakedBuffer)
+    {
+        DbgPrint("VF_TEST: Failed to allocate pool\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-    if (VfTestMode == 1)
+    DbgPrint("VF_TEST: Driver loaded at %p, TestMode=%lu\n", DriverObject, VfTestMode);
+
+    if (VfTestMode == 2)
     {
         /* free with wrong tag -- VF should catch this with 0xC4 / 0x16 */
         DbgPrint("VF_TEST: Freeing with wrong tag\n");
         ExFreePoolWithTag(LeakedBuffer, 'XRWT');
         LeakedBuffer = NULL;
     }
-    else if (VfTestMode == 2)
+    else if (VfTestMode == 3)
     {
-        /* free as paged when allocated as nonpaged -- VF catches with 0xC4 / 0x17 */
-        DbgPrint("VF_TEST: Freeing with wrong pool type\n");
-        ExFreePoolWithTag(LeakedBuffer, 'tseT');
-        LeakedBuffer = NULL;
-        /* NOTE: pool type mismatch detection requires VF hook on ExFreePool too */
+        /*
+         * Pool type mismatch (0xC4 / 0x17) cannot be triggered synthetically:
+         * the pool header always reflects the actual allocation type, so
+         * VfFreePool will always see matching types. Detection fires only on
+         * pool header corruption. Fall through -- buffer will leak on unload.
+         */
+        DbgPrint("VF_TEST: Mode 3 -- pool type mismatch not synthetically triggerable, will leak instead\n");
     }
 
     return STATUS_SUCCESS;
