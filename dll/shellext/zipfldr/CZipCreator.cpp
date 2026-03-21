@@ -67,13 +67,9 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePag
 }
 
 static BOOL
-DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
-                zip_fileinfo *pzi)
+DoReadAllOfFile(PCWSTR filename, CComHeapPtr<BYTE>& contents, zip_fileinfo *pzi, DWORD& cbBuff)
 {
-    contents.RemoveAll();
-
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ,
-                               NULL, OPEN_EXISTING,
+    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                                FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -96,28 +92,16 @@ DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
         pzi->tmz_date.tm_year = st.wYear;
     }
 
-    const DWORD cbBuff = 0x7FFF;
-    LPBYTE pbBuff = reinterpret_cast<LPBYTE>(CoTaskMemAlloc(cbBuff));
-    if (!pbBuff)
+    DWORD read;
+    cbBuff = GetFileSize(hFile, NULL);
+    if (cbBuff == INVALID_FILE_SIZE || !contents.AllocateBytes(cbBuff) ||
+        !ReadFile(hFile, contents, cbBuff, &read, NULL) || cbBuff != read)
     {
-        DPRINT1("Out of memory\n");
         CloseHandle(hFile);
         return FALSE;
     }
 
-    for (;;)
-    {
-        DWORD cbRead;
-        if (!ReadFile(hFile, pbBuff, cbBuff, &cbRead, NULL) || !cbRead)
-            break;
-
-        for (DWORD i = 0; i < cbRead; ++i)
-            contents.Add(pbBuff[i]);
-    }
-
-    CoTaskMemFree(pbBuff);
     CloseHandle(hFile);
-
     return TRUE;
 }
 
@@ -312,8 +296,9 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         const CStringW& strFile = files[iFile];
 
-        CSimpleArray<BYTE> contents;
-        if (!DoReadAllOfFile(strFile, contents, &zi))
+        CComHeapPtr<BYTE> contents;
+        DWORD cbFile;
+        if (!DoReadAllOfFile(strFile, contents, &zi, cbFile))
         {
             DPRINT1("DoReadAllOfFile failed\n");
             err = CZCERR_READ;
@@ -386,7 +371,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             break;
         }
 
-        err = zipWriteInFileInZip(zf, contents.GetData(), contents.GetSize());
+        err = zipWriteInFileInZip(zf, contents, cbFile);
         if (err)
         {
             DPRINT1("zipWriteInFileInZip\n");
