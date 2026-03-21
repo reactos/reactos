@@ -458,7 +458,7 @@ public:
             HGLOBAL hCopy;
             HRESULT hr = GlobalClone(&hCopy, m_hDropCache);
             if (FAILED_UNEXPECTEDLY(hr))
-                return E_OUTOFMEMORY;
+                return hr;
 
             pstm->tymed   = TYMED_HGLOBAL;
             pstm->hGlobal = hCopy;
