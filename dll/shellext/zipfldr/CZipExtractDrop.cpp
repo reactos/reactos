@@ -20,7 +20,7 @@
 //    inside the ZIP) and a back-pointer to the CZipFolder (for m_ZipFile,
 //    m_ZipDir and getZip()).
 // 2. The first time GetData(CF_HDROP) is called we
-//    a. create a unique temporary directory under %TEMP%\zipfldr_XXXXXX\
+//    a. create a unique temporary directory under %TEMP%\zipfldr_XXXXXX
 //    b. enumerate all entries whose path starts with one of the requested
 //       names (handles both single files and whole sub-trees),
 //    c. extract each one while translating its in-ZIP name via
