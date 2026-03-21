@@ -1847,6 +1847,42 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Set maximum update to 75% */
     InbvSetProgressBarSubset(25, 75);
 
+    /* Create the MiniNT key before I/O init so that boot drivers
+     * (e.g. mountmgr) can detect WinPE mode during DriverEntry */
+    if (InitIsWinPEMode)
+    {
+        RtlInitUnicodeString(&KeyName,
+                             L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET"
+                             L"\\CONTROL");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
+        if (NT_SUCCESS(Status))
+        {
+            RtlInitUnicodeString(&KeyName, L"MiniNT");
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       KeyHandle,
+                                       NULL);
+            Status = ZwCreateKey(&OptionHandle,
+                                KEY_ALL_ACCESS,
+                                &ObjectAttributes,
+                                0,
+                                NULL,
+                                REG_OPTION_VOLATILE,
+                                &Disposition);
+            if (NT_SUCCESS(Status))
+            {
+                NtClose(OptionHandle);
+            }
+            NtClose(KeyHandle);
+        }
+    }
+
     /* Initialize the I/O Subsystem */
     if (!IoInitSystem(LoaderBlock)) KeBugCheck(IO1_INITIALIZATION_FAILED);
 
@@ -1933,49 +1969,6 @@ Phase1InitializationDiscard(IN PVOID Context)
         }
     }
 
-    /* Are we in Win PE mode? */
-    if (InitIsWinPEMode)
-    {
-        /* Open the safe control key */
-        RtlInitUnicodeString(&KeyName,
-                             L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET"
-                             L"\\CONTROL");
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Bugcheck */
-            KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 6, 0, 0);
-        }
-
-        /* Create the MiniNT key */
-        RtlInitUnicodeString(&KeyName, L"MiniNT");
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   KeyHandle,
-                                   NULL);
-        Status = ZwCreateKey(&OptionHandle,
-                             KEY_ALL_ACCESS,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             REG_OPTION_VOLATILE,
-                             &Disposition);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Bugcheck */
-            KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 6, 0, 0);
-        }
-
-        /* Close the handles */
-        NtClose(KeyHandle);
-        NtClose(OptionHandle);
-    }
 
     /* FIXME: This doesn't do anything for now */
     MmArmInitSystem(2, LoaderBlock);

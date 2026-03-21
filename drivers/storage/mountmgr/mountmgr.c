@@ -31,6 +31,7 @@
 
 /* FIXME */
 GUID MountedDevicesGuid = {0x53F5630D, 0xB6BF, 0x11D0, {0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B}};
+static const GUID MountMgrBootRamdiskGuid = {0xD9B257FC, 0x684E, 0x4DCB, {0xAB, 0x79, 0x03, 0xCF, 0xA2, 0xF6, 0xB7, 0x50}};
 
 PDEVICE_OBJECT gdeviceObject;
 KEVENT UnloadEvent;
@@ -38,6 +39,11 @@ LONG Unloading;
 
 static const WCHAR Cunc[] = L"\\??\\C:";
 #define Cunc_LETTER_POSITION 4
+
+static
+VOID
+MountMgrLoadBootRamdiskInformation(
+    _Inout_ PDEVICE_EXTENSION DeviceExtension);
 
 /**
  * @brief
@@ -121,6 +127,161 @@ MountMgrSendSyncDeviceIoCtl(
     }
 
     return Status;
+}
+
+static
+VOID
+MountMgrLoadBootRamdiskInformation(
+    _Inout_ PDEVICE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    HANDLE DisksKey;
+    ULONG Index;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyPath;
+
+    RtlInitUnicodeString(&KeyPath,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ramdisk\\Parameters\\Disks");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    Status = ZwOpenKey(&DisksKey, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    for (Index = 0; Index < 256 && DeviceExtension->DriveLetterData == NULL; Index++)
+    {
+        ULONG Length;
+        PKEY_BASIC_INFORMATION BasicInfo;
+
+        Status = ZwEnumerateKey(DisksKey,
+                                 Index,
+                                 KeyBasicInformation,
+                                 NULL,
+                                 0,
+                                 &Length);
+        if (Status == STATUS_NO_MORE_ENTRIES)
+        {
+            break;
+        }
+
+        if (Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            continue;
+        }
+
+        BasicInfo = AllocatePool(Length);
+        if (!BasicInfo)
+        {
+            break;
+        }
+
+        Status = ZwEnumerateKey(DisksKey,
+                                 Index,
+                                 KeyBasicInformation,
+                                 BasicInfo,
+                                 Length,
+                                 &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            FreePool(BasicInfo);
+            continue;
+        }
+
+        {
+            HANDLE DiskKey;
+            UNICODE_STRING SubName;
+            OBJECT_ATTRIBUTES SubAttributes;
+
+            if (BasicInfo->NameLength > MAXUSHORT - sizeof(WCHAR))
+            {
+                FreePool(BasicInfo);
+                continue;
+            }
+            SubName.MaximumLength = (USHORT)(BasicInfo->NameLength + sizeof(WCHAR));
+            SubName.Buffer = AllocatePool(SubName.MaximumLength);
+            if (!SubName.Buffer)
+            {
+                FreePool(BasicInfo);
+                break;
+            }
+
+            SubName.Length = (USHORT)BasicInfo->NameLength;
+            RtlCopyMemory(SubName.Buffer, BasicInfo->Name, BasicInfo->NameLength);
+            SubName.Buffer[SubName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            InitializeObjectAttributes(&SubAttributes,
+                                       &SubName,
+                                       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                       DisksKey,
+                                       NULL);
+
+            Status = ZwOpenKey(&DiskKey, KEY_READ, &SubAttributes);
+
+            FreePool(SubName.Buffer);
+            FreePool(BasicInfo);
+
+            if (!NT_SUCCESS(Status))
+            {
+                continue;
+            }
+
+            {
+                ULONG ValueLength;
+                PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+                UNICODE_STRING ValueName;
+
+                RtlInitUnicodeString(&ValueName, L"DiskGuid");
+                Status = ZwQueryValueKey(DiskKey,
+                                          &ValueName,
+                                          KeyValuePartialInformation,
+                                          NULL,
+                                          0,
+                                          &ValueLength);
+                if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+                {
+                    ValueInfo = AllocatePool(ValueLength);
+                    if (ValueInfo)
+                    {
+                        Status = ZwQueryValueKey(DiskKey,
+                                                  &ValueName,
+                                                  KeyValuePartialInformation,
+                                                  ValueInfo,
+                                                  ValueLength,
+                                                  &ValueLength);
+                        if (NT_SUCCESS(Status) &&
+                            ValueInfo->Type == REG_BINARY &&
+                            ValueInfo->DataLength == sizeof(GUID) &&
+                            RtlCompareMemory(ValueInfo->Data,
+                                             &MountMgrBootRamdiskGuid,
+                                             sizeof(GUID)) == sizeof(GUID))
+                        {
+                            PMOUNTDEV_UNIQUE_ID UniqueId;
+
+                            UniqueId = AllocatePool(sizeof(MOUNTDEV_UNIQUE_ID) + sizeof(GUID));
+                            if (UniqueId)
+                            {
+                                UniqueId->UniqueIdLength = sizeof(GUID);
+                                RtlCopyMemory(UniqueId->UniqueId, ValueInfo->Data, sizeof(GUID));
+                                DeviceExtension->DriveLetterData = UniqueId;
+                            }
+                        }
+
+                        FreePool(ValueInfo);
+                    }
+                }
+
+                ZwClose(DiskKey);
+            }
+        }
+    }
+
+    ZwClose(DisksKey);
 }
 
 /*
@@ -681,6 +842,7 @@ MountMgrFreeMountedDeviceInfo(IN PDEVICE_INFORMATION DeviceInformation)
     if (DeviceInformation->TargetDeviceNotificationEntry)
     {
         IoUnregisterPlugPlayNotification(DeviceInformation->TargetDeviceNotificationEntry);
+        DeviceInformation->TargetDeviceNotificationEntry = NULL;
     }
 }
 
@@ -1128,7 +1290,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
-        /* And recreate the symlink to our device */
+        /* Recreate the symlink to our device */
         Status = GlobalCreateSymbolicLink(&(SymLinks[i]), &TargetDeviceName);
         if (!NT_SUCCESS(Status))
         {
@@ -1490,6 +1652,7 @@ MountMgrMountedDeviceRemoval(IN PDEVICE_EXTENSION DeviceExtension,
         if (DeviceInformation->TargetDeviceNotificationEntry)
         {
             IoUnregisterPlugPlayNotification(DeviceInformation->TargetDeviceNotificationEntry);
+            DeviceInformation->TargetDeviceNotificationEntry = NULL;
         }
 
         /*  And leave */
@@ -1766,6 +1929,30 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RtlCopyUnicodeString(&(DeviceExtension->RegistryPath), RegistryPath);
 
     DeviceExtension->NoAutoMount = MountmgrReadNoAutoMount(&(DeviceExtension->RegistryPath));
+
+    /* In WinPE / LiveCD mode the kernel creates a volatile MiniNT key before
+     * boot drivers are loaded.  When present, force NoAutoMount so that only
+     * volumes with a pre-registered link (e.g. ramdisk X:) get a letter. */
+    if (!DeviceExtension->NoAutoMount)
+    {
+        UNICODE_STRING MiniNTKeyName = RTL_CONSTANT_STRING(
+            L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\MiniNT");
+        OBJECT_ATTRIBUTES MiniNTAttributes;
+        HANDLE MiniNTKeyHandle;
+
+        InitializeObjectAttributes(&MiniNTAttributes,
+                                   &MiniNTKeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   NULL,
+                                   NULL);
+        if (NT_SUCCESS(ZwOpenKey(&MiniNTKeyHandle, KEY_READ, &MiniNTAttributes)))
+        {
+            ZwClose(MiniNTKeyHandle);
+            DeviceExtension->NoAutoMount = TRUE;
+        }
+    }
+
+    MountMgrLoadBootRamdiskInformation(DeviceExtension);
 
     GlobalCreateSymbolicLink(&DosDevicesMount, &DeviceMount);
 
