@@ -10,6 +10,7 @@
 #include <ntoskrnl.h>
 #include "kd.h"
 #include "kdterminal.h"
+#include <cportlib/uartinfo.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -49,11 +50,11 @@ KdpGetTerminalSettings(
     }
 }
 
-static PCHAR
+static PSTR
 KdpGetDebugMode(
-    _In_ PCHAR Currentp2)
+    _In_ PCSTR DebugPort)
 {
-    PCHAR p1, p2 = Currentp2;
+    PCSTR p2 = DebugPort;
     ULONG Value;
 
     /* Check for Screen Debugging */
@@ -71,12 +72,10 @@ KdpGetDebugMode(
         if (*p2 != ':')
         {
             Value = (ULONG)atol(p2);
-            if (Value > 0 && Value < 5)
+            if (Value > 0 && Value <= MAX_COM_PORTS)
             {
-                /* Valid port found, enable Serial Debugging */
+                /* Valid port found, enable it and set the port to use */
                 KdpDebugMode.Serial = TRUE;
-
-                /* Set the port to use */
                 SerialPortNumber = Value;
             }
         }
@@ -85,9 +84,10 @@ KdpGetDebugMode(
             Value = strtoul(p2 + 1, NULL, 0);
             if (Value)
             {
+                /* Valid port found, enable it and set its address */
                 KdpDebugMode.Serial = TRUE;
-                SerialPortInfo.Address = UlongToPtr(Value);
                 SerialPortNumber = 0;
+                SerialPortInfo.Address = UlongToPtr(Value);
             }
         }
     }
@@ -99,15 +99,14 @@ KdpGetDebugMode(
         KdpDebugMode.File = TRUE;
         if (*p2 == ':')
         {
-            p2++;
-            p1 = p2;
-            while (*p2 != '\0' && *p2 != ' ') p2++;
+            PCSTR p1 = ++p2;
+            while (*p2 && *p2 != ' ') ++p2;
             KdpLogFileName.MaximumLength = KdpLogFileName.Length = p2 - p1;
-            KdpLogFileName.Buffer = p1;
+            KdpLogFileName.Buffer = (PSTR)p1;
         }
     }
 
-    return p2;
+    return (PSTR)p2;
 }
 
 NTSTATUS
@@ -137,15 +136,14 @@ KdDebuggerInitialize0(
         }
     }
 
-    /* Check if we got the /DEBUGPORT parameter(s) */
+    /* Check if we got DEBUGPORT parameters */
     while (Port)
     {
-        /* Move past the actual string */
+        /* Move past the actual string and any spaces */
         Port += CONST_STR_LEN("DEBUGPORT");
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*Port == ' ') Port++;
-        Port++;
+        while (*Port == ' ') ++Port;
+        /* Skip the equals sign */
+        if (*Port) ++Port;
 
         /* Get the debug mode and wrapper */
         Port = KdpGetDebugMode(Port);
@@ -161,7 +159,7 @@ KdDebuggerInitialize0(
     {
         /* Move past the actual string and any spaces */
         BaudRate += CONST_STR_LEN("BAUDRATE");
-        while (*BaudRate == ' ') BaudRate++;
+        while (*BaudRate == ' ') ++BaudRate;
 
         /* Make sure we have a rate */
         if (*BaudRate)

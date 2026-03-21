@@ -277,7 +277,9 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, PortString;
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
+
+    PSTR CommandLine, PortString;
     NTSTATUS Status;
 
     /* Check if we have a LoaderBlock */
@@ -293,19 +295,18 @@ KdDebuggerInitialize0(
         /* Upcase it */
         _strupr(CommandLine);
 
-        /* Check if we got the /DEBUGPORT parameter */
+        /* Check if we got the DEBUGPORT parameter */
         PortString = strstr(CommandLine, "DEBUGPORT");
         if (PortString)
         {
-            /* Move past the actual string, to reach the port*/
-            PortString += strlen("DEBUGPORT");
+            /* Move past the actual string and any spaces */
+            PortString += CONST_STR_LEN("DEBUGPORT");
+            while (*PortString == ' ') ++PortString;
+            /* Skip the equals sign */
+            if (*PortString) ++PortString;
 
-            /* Now get past any spaces and skip the equal sign */
-            while (*PortString == ' ') PortString++;
-            PortString++;
-
-            /* Do we have a serial port? */
-            if (strncmp(PortString, "VBOX", 4) != 0)
+            /* Do we have a debug port */
+            if (_strnicmp(PortString, "VBOX", CONST_STR_LEN("VBOX")) != 0)
             {
                 KDDBGPRINT("Invalid debugport: '%s'\n", CommandLine);
                 return STATUS_INVALID_PARAMETER;
@@ -358,7 +359,6 @@ KdSendPacket(
 
     do
     {
-
         RtlZeroMemory(&SendPktRequest, sizeof(SendPktRequest));
 
         SendPktRequest.PacketType = PacketType;
