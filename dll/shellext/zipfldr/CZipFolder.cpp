@@ -29,12 +29,17 @@ CZipFolder::~CZipFolder()
     Close();
 }
 
-void CZipFolder::Close()
+void CZipFolder::CloseNoLock()
 {
-    CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
     if (m_UnzipFile)
         unzClose(m_UnzipFile);
     m_UnzipFile = NULL;
+}
+
+void CZipFolder::Close()
+{
+    CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
+    CloseNoLock();
 }
 
 STDMETHODIMP_(unzFile) CZipFolder::getZip()
@@ -122,7 +127,8 @@ HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
     if (!cida || cida->cidl <= 0)
         return E_FAIL;
 
-    // Get the target paths
+    // Build the target-path list from the PIDL array.
+    // This only reads the caller-supplied PIDL data, so no lock is needed yet.
     CAtlList<CStringW> targetPaths;
     for (UINT iFile = 0; iFile < cida->cidl; ++iFile)
     {
@@ -143,14 +149,23 @@ HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
     GetTempPathW(MAX_PATH, szTempPath);
     GetTempFileNameW(szTempPath, L"ZIP", 0, szTempFile);
 
-    // Close the current handle to work with the ZIP file
-    Close();
+    CStringW zipFilePath;
+    CComHeapPtr<ITEMIDLIST> curDir;
+    {
+        CComCritSecLock<CComAutoCriticalSection> lock(m_csZip);
+
+        CloseNoLock();
+
+        // Take private copies of the members we need outside the lock.
+        zipFilePath = m_ZipFile;
+        curDir.Attach(ILClone(m_CurDir));
+    }
 
     zlib_filefunc64_def ffunc = {};
     fill_win32_filefunc64W(&ffunc);
 
     HRESULT hr = S_OK;
-    unzFile uf = unzOpen2_64(m_ZipFile, &ffunc);
+    unzFile uf = unzOpen2_64(zipFilePath, &ffunc);
     zipFile zf = zipOpen2_64(szTempFile, APPEND_STATUS_CREATE, NULL, &ffunc);
 
     if (!uf || !zf)
@@ -218,11 +233,10 @@ HRESULT CZipFolder::DeleteItems(CComPtr<IDataObject> pDataObj)
     unzClose(uf);
     zipClose(zf, NULL);
 
-    // Replace the original file with the temporary file
-    if (SUCCEEDED(hr) && ReplaceFileW(m_ZipFile, szTempFile, NULL, 0, NULL, NULL))
+    if (SUCCEEDED(hr) && ReplaceFileW(zipFilePath, szTempFile, NULL, 0, NULL, NULL))
     {
         // Notify the shell that the folder contents have changed
-        SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, m_CurDir, NULL);
+        SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, curDir, NULL);
     }
     else
     {

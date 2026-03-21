@@ -416,6 +416,7 @@ public:
 
             CStringW name = pEntry->Name;
             name.Replace(L'\\', L'/');
+            DPRINT1("name: %S\n", (PCWSTR)name);
             if (pEntry->ZipType == ZIP_PIDL_DIRECTORY)
             {
                 // Ensure trailing slash so MatchesSelection works as prefix.
