@@ -15,6 +15,7 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #define _INC_WINDOWS
+#include <winbase.h>
 #include <winsock2.h>
 
 #ifdef __cplusplus
