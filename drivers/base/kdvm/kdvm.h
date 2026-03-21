@@ -142,7 +142,7 @@ KdVmPrepareBuffer(
 
 VOID
 NTAPI
-KdVmKdVmExchangeData(
+KdVmExchangeData(
     _Out_ PVOID* ReceiveData,
     _Out_ PULONG ReceiveDataSize);
 
