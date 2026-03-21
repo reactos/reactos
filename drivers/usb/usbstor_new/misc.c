@@ -167,12 +167,16 @@ USBSTOR_GetBusInterface(
 NTSTATUS
 USBSTOR_SyncUrbRequest(
     IN PDEVICE_OBJECT DeviceObject,
-    OUT PURB UrbRequest)
+    IN PURB Urb)
 {
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
     KEVENT Event;
+    LARGE_INTEGER Timeout;
     NTSTATUS Status;
+
+    DPRINT("USBSTOR_SyncUrbRequest: %p, %p\n", DeviceObject, Urb);
+    PAGED_CODE();
 
     //
     // allocate irp
@@ -183,13 +187,14 @@ USBSTOR_SyncUrbRequest(
         //
         // no memory
         //
+        DPRINT1("USBSTOR_SyncUrbRequest: STATUS_INSUFFICIENT_RESOURCES\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     //
-    // initialize event
+    // use SynchronizationEvent for single-waiter IRP completion
     //
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     //
     // get next stack location
@@ -201,8 +206,8 @@ USBSTOR_SyncUrbRequest(
     //
     IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
-    IoStack->Parameters.Others.Argument1 = (PVOID)UrbRequest;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = UrbRequest->UrbHeader.Length;
+    IoStack->Parameters.Others.Argument1 = Urb;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = Urb->UrbHeader.Length;
     Irp->IoStatus.Status = STATUS_SUCCESS;
 
     //
@@ -221,14 +226,30 @@ USBSTOR_SyncUrbRequest(
     if (Status == STATUS_PENDING)
     {
         //
-        // wait for completion
+        // wait for completion (with timeout)
         //
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Timeout.QuadPart = (5000 * -10000); /* 5s relative timeout */
 
-        //
-        // update status
-        //
-        Status = Irp->IoStatus.Status;
+        if (KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &Timeout) == STATUS_TIMEOUT)
+        {
+            DPRINT1("USBSTOR_SyncUrbRequest: STATUS_IO_TIMEOUT (%p, %p)\n", DeviceObject, Irp);
+            Status = STATUS_IO_TIMEOUT;
+
+            //
+            // Timeout path: the IRP may still be pending.
+            // Cancel it and wait again to ensure the completion routine runs
+            // before accessing status or freeing resources.
+            //
+            IoCancelIrp(Irp);
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        }
+        else
+        {
+            //
+            // update status
+            //
+            Status = Irp->IoStatus.Status;
+        }
     }
 
     //
