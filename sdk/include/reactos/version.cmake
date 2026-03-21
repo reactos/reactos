@@ -11,10 +11,16 @@ set(KERNEL_VERSION_MINOR "4")
 set(KERNEL_VERSION_PATCH_LEVEL "16")
 set(COPYRIGHT_YEAR "2026")
 
+# KERNEL_VERSION_BUILD_TYPE is "dev" for Git builds
+# or "RC1", "RC2", "" for releases.
+set(KERNEL_VERSION_BUILD_TYPE "dev")
+
+# Build variant: "fre" (Free/Release) or "chk" (Checked/Debug),
+# used for the BuildLabEx registry string.
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(KERNEL_VERSION_BUILD_TYPE "rel")
+    set(KERNEL_BUILD_VARIANT "fre")
 else()
-    set(KERNEL_VERSION_BUILD_TYPE "dev")
+    set(KERNEL_BUILD_VARIANT "chk")
 endif()
 
 set(KERNEL_VERSION "${KERNEL_VERSION_MAJOR}.${KERNEL_VERSION_MINOR}.${KERNEL_VERSION_PATCH_LEVEL}-${WINARCH}")

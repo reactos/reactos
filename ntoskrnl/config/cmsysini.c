@@ -2313,6 +2313,20 @@ CmpSetVersionData(VOID)
                       ValueData.Length + sizeof(WCHAR));
     }
 
+    /* Set the 'BuildLabEx' value */
+    RtlInitUnicodeString(&ValueName, L"BuildLabEx");
+    RtlInitAnsiString(&TempString, NtBuildLabEx);
+    Status = RtlAnsiStringToUnicodeString(&ValueData, &TempString, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      ValueData.Buffer,
+                      ValueData.Length + sizeof(WCHAR));
+    }
+
     /* Set the 'CurrentType' value */
     RtlInitUnicodeString(&ValueName, L"CurrentType");
     RtlStringCbPrintfW(Buffer, sizeof(Buffer),

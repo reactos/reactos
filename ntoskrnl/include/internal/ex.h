@@ -53,6 +53,7 @@ extern ULONG CmNtCSDReleaseType;
 extern UNICODE_STRING CmVersionString;
 extern UNICODE_STRING CmCSDVersionString;
 extern CHAR NtBuildLab[];
+extern CHAR NtBuildLabEx[];
 
 /*
  * WinDBG Debugger Worker State Machine data (see dbgctrl.c)
