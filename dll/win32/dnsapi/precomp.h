@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <stdarg.h>
+#include <stdio.h>
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
