@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/dnsapi/dnsapi/context.c
- * PURPOSE:     DNSAPI functions built on the ADNS library.
+ * PURPOSE:     DNSAPI context handle management.
  * PROGRAMER:   Art Yerkes
  * UPDATE HISTORY:
  *              12/15/03 -- Created
@@ -14,7 +14,7 @@
 #include <debug.h>
 
 /* DnsAcquireContextHandle *************
- * Create a context handle that will allow us to open and retrieve queries.
+ * Create a context handle.
  *
  * DWORD CredentialsFlags --            TRUE  -- Unicode
  *                                      FALSE -- Ansi or UTF-8?
@@ -27,7 +27,6 @@
  *
  * RETURNS:
  * ERROR_SUCCESS or a failure code.
- * TODO: Which ones area allowed?
  */
 
 extern DNS_STATUS WINAPI DnsAcquireContextHandle_UTF8(DWORD CredentialsFlags, PVOID Credentials, HANDLE *ContextHandle);
@@ -37,35 +36,19 @@ DnsAcquireContextHandle_W(DWORD CredentialsFlags,
                           PVOID Credentials,
                           HANDLE *ContextHandle)
 {
-    if(CredentialsFlags)
+    if (CredentialsFlags)
     {
-        PWINDNS_CONTEXT Context;
-        int adns_status;
+        /* Allocate a trivial opaque token; credentials are not used yet. */
+        PVOID Context = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PVOID));
 
-        /* For now, don't worry about the user's identity. */
-        Context = (PWINDNS_CONTEXT)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WINDNS_CONTEXT));
-
-        if(!Context)
+        if (!Context)
         {
             *ContextHandle = 0;
             return ERROR_OUTOFMEMORY;
         }
 
-        /* The real work here is to create an adns_state that will help us
-         * do what we want to later. */
-        adns_status = adns_init(&Context->State, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
-
-        if(adns_status != adns_s_ok)
-        {
-            *ContextHandle = 0;
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_status);
-        }
-        else
-        {
-            *ContextHandle = (HANDLE)Context;
-            return ERROR_SUCCESS;
-        }
+        *ContextHandle = (HANDLE)Context;
+        return ERROR_SUCCESS;
     }
     else
     {
@@ -78,7 +61,7 @@ DnsAcquireContextHandle_UTF8(DWORD CredentialsFlags,
                              PVOID Credentials,
                              HANDLE *ContextHandle)
 {
-    if( CredentialsFlags )
+    if (CredentialsFlags)
     {
         return DnsAcquireContextHandle_W(CredentialsFlags, Credentials, ContextHandle);
     }
@@ -101,7 +84,7 @@ DnsAcquireContextHandle_A(DWORD CredentialFlags,
                           PVOID Credentials,
                           HANDLE *ContextHandle)
 {
-    if(CredentialFlags)
+    if (CredentialFlags)
     {
         return DnsAcquireContextHandle_W(CredentialFlags, Credentials, ContextHandle);
     }
@@ -117,8 +100,6 @@ DnsAcquireContextHandle_A(DWORD CredentialFlags,
 void WINAPI
 DnsReleaseContextHandle(HANDLE ContextHandle)
 {
-    PWINDNS_CONTEXT Context = (PWINDNS_CONTEXT)ContextHandle;
-
-    adns_finish(Context->State);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Context);
+    if (ContextHandle)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, (PVOID)ContextHandle);
 }
