@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/mmsys/lang/uk-UA.rc
  * PURPOSE:     Ukrainian Language File for Multimedia Control Panel Applet
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk, Burtoviy Ostap
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
