@@ -16,6 +16,19 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * Verbose DNS tracing.  Uncomment the define below to enable detailed
+ * diagnostic output at every significant step of the resolution path.
+ * Leave it commented out for normal (silent) builds.
+ */
+/* #define DNSAPI_VERBOSE_DEBUG */
+
+#ifdef DNSAPI_VERBOSE_DEBUG
+#define VTRACE(fmt, ...) DbgPrint("DNSAPI[%s]: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#else
+#define VTRACE(fmt, ...) ((void)0)
+#endif
+
 static
 BOOL
 ParseIpv4Address(
@@ -479,6 +492,7 @@ DnsQuery_W(LPCWSTR Name,
     DNS_STATUS Status = ERROR_SUCCESS;
 
     DPRINT("DnsQuery_W()\n");
+    VTRACE("Name='%S' Type=0x%04x Options=0x%08lx\n", Name, (unsigned)Type, (unsigned long)Options);
 
     if ((Name == NULL) ||
         (QueryResultSet == NULL))
@@ -491,6 +505,7 @@ DnsQuery_W(LPCWSTR Name,
                                        Type);
     if (pRecord != NULL)
     {
+        VTRACE("Name is a literal IP address; returning synthesised record\n");
         *QueryResultSet = (PDNS_RECORD)pRecord;
         return ERROR_SUCCESS;
     }
@@ -503,6 +518,7 @@ DnsQuery_W(LPCWSTR Name,
     if (Name[0] == L'-' || Name[0] == L'_' || Name[NameLen - 1] == L'-' ||
         Name[NameLen - 1] == L'_' || wcsstr(Name, L"..") != NULL)
     {
+        VTRACE("Name failed border/double-dot check; returning ERROR_INVALID_NAME\n");
         return ERROR_INVALID_NAME;
     }
 
@@ -514,12 +530,16 @@ DnsQuery_W(LPCWSTR Name,
               (Name[i] >= L'0' && Name[i] <= L'9') ||
               Name[i] == L'-' || Name[i] == L'_' || Name[i] == L'.'))
         {
+            VTRACE("Invalid character U+%04x at position %u; returning DNS_ERROR_INVALID_NAME_CHAR\n",
+                   (unsigned)Name[i], (unsigned)i);
             return DNS_ERROR_INVALID_NAME_CHAR;
         }
 
         i++;
     }
 
+    VTRACE("Calling R_ResolverQuery via RPC (Name='%S' Type=0x%04x Options=0x%08lx)\n",
+           Name, (unsigned)Type, (unsigned long)Options);
     RpcTryExcept
     {
         Status = R_ResolverQuery(NULL,
@@ -529,14 +549,18 @@ DnsQuery_W(LPCWSTR Name,
                                  &dwRecords,
                                  (DNS_RECORDW **)QueryResultSet);
         DPRINT("R_ResolverQuery() returned %lu\n", Status);
+        VTRACE("R_ResolverQuery returned Status=%lu dwRecords=%lu\n",
+               (unsigned long)Status, (unsigned long)dwRecords);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = RpcExceptionCode();
         DPRINT("Exception returned %lu\n", Status);
+        VTRACE("RPC exception code=%lu\n", (unsigned long)Status);
     }
     RpcEndExcept;
 
+    VTRACE("Returning Status=%lu\n", (unsigned long)Status);
     return Status;
 }
 
@@ -587,6 +611,9 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
     PIP_ADAPTER_ADDRESSES Addresses = NULL, pip;
     BOOL Found = FALSE;
 
+    VTRACE("Name='%s' HostName='%s' DomainName='%s'\n",
+           Name, network_info->HostName, network_info->DomainName);
+
     if (network_info->DomainName[0])
     {
         size_t StringLength;
@@ -605,12 +632,16 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
         TempName = RtlAllocateHeap(RtlGetProcessHeap(), 0, 1);
         TempName[0] = 0;
     }
+    VTRACE("Comparing Name='%s' against HostName='%s' and FQDN='%s'\n",
+           Name, network_info->HostName, TempName);
     Found = !_stricmp(Name, network_info->HostName) || !_stricmp(Name, TempName);
     RtlFreeHeap(RtlGetProcessHeap(), 0, TempName);
     if (!Found)
     {
+        VTRACE("Name does not match local host; not a local address\n");
         return 0;
     }
+    VTRACE("Name matches local host; enumerating adapters\n");
     /* get adapter info */
     AdapterAddressesSize = 0;
     GetAdaptersAddresses(AF_INET,
@@ -621,6 +652,7 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
                          &AdapterAddressesSize);
     if (!AdapterAddressesSize)
     {
+        VTRACE("GetAdaptersAddresses returned zero size; no adapters\n");
         return 0;
     }
     Addresses = RtlAllocateHeap(RtlGetProcessHeap(), 0, AdapterAddressesSize);
@@ -632,17 +664,26 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
                                   &AdapterAddressesSize);
     if (Status)
     {
+        VTRACE("GetAdaptersAddresses failed with status %lu\n", Status);
         RtlFreeHeap(RtlGetProcessHeap(), 0, Addresses);
         return 0;
     }
     for (pip = Addresses; pip != NULL; pip = pip->Next) {
         Address = ((LPSOCKADDR_IN)pip->FirstUnicastAddress->Address.lpSockaddr)->sin_addr.S_un.S_addr;
+        VTRACE("Adapter '%S': address 0x%08lx (loopback=0x%08lx)\n",
+               pip->FriendlyName, (unsigned long)Address,
+               (unsigned long)ntohl(INADDR_LOOPBACK));
         if (Address != ntohl(INADDR_LOOPBACK))
             break;
     }
     if (Address && Address != ntohl(INADDR_LOOPBACK))
     {
+        VTRACE("Using local address 0x%08lx\n", (unsigned long)Address);
         ret = Address;
+    }
+    else
+    {
+        VTRACE("No non-loopback address found\n");
     }
     RtlFreeHeap(RtlGetProcessHeap(), 0, Addresses);
     return ret;
@@ -758,6 +799,9 @@ Query_Main(LPCWSTR Name,
 
     *QueryResultSet = NULL;
 
+    VTRACE("Name='%S' Type=0x%04x Options=0x%08lx\n",
+           Name, (unsigned)Type, (unsigned long)Options);
+
     switch (Type)
     {
     case DNS_TYPE_A:
@@ -768,6 +812,7 @@ Query_Main(LPCWSTR Name,
             return ERROR_OUTOFMEMORY;
         WideCharToMultiByte(CP_ACP, 0, Name, -1, AnsiName, NameLen, NULL, 0);
         NameLen--;
+        VTRACE("ANSI name='%s' (len=%u)\n", AnsiName, (unsigned)NameLen);
 
         /* Get network parameters (domain name, DNS server list) */
         network_info_result = GetNetworkParams(NULL, &network_info_blen);
@@ -781,10 +826,14 @@ Query_Main(LPCWSTR Name,
         network_info_result = GetNetworkParams(network_info, &network_info_blen);
         if (network_info_result != ERROR_SUCCESS)
         {
+            VTRACE("GetNetworkParams failed with %lu\n", (unsigned long)network_info_result);
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return network_info_result;
         }
+        VTRACE("NetworkParams: HostName='%s' DomainName='%s' DNS='%s'\n",
+               network_info->HostName, network_info->DomainName,
+               network_info->DnsServerList.IpAddress.String);
 
         /* Shortcut: if the name resolves to the local machine, synthesise a
          * record without a network query. */
@@ -793,6 +842,8 @@ Query_Main(LPCWSTR Name,
                                                network_info)) != 0)
         {
             size_t TempLen = 2, StringLength = 0;
+            VTRACE("Local hostname match; returning synthesised A record (IP=0x%08lx)\n",
+                   (unsigned long)Address);
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             StringCchLengthA(network_info->HostName,
                              sizeof(network_info->HostName), &StringLength);
@@ -831,6 +882,7 @@ Query_Main(LPCWSTR Name,
 
         if ((Options & DNS_QUERY_NO_WIRE_QUERY) != 0)
         {
+            VTRACE("DNS_QUERY_NO_WIRE_QUERY set; skipping wire query\n");
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
             return ERROR_FILE_NOT_FOUND;
@@ -845,6 +897,8 @@ Query_Main(LPCWSTR Name,
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {
             unsigned long addr = inet_addr(pip->IpAddress.String);
+            VTRACE("Candidate DNS server: '%s' (addr=0x%08lx)\n",
+                   pip->IpAddress.String, addr);
             if (addr != INADDR_ANY && addr != INADDR_NONE)
             {
                 StringCchCopyA(Config.ServerAddress,
@@ -859,9 +913,11 @@ Query_Main(LPCWSTR Name,
 
         if (!bFoundServer)
         {
+            VTRACE("No usable DNS server found; returning ERROR_FILE_NOT_FOUND\n");
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return ERROR_FILE_NOT_FOUND;
         }
+        VTRACE("Using DNS server '%s' Recurse=%d\n", Config.ServerAddress, (int)bRecurse);
 
         /*
          * Follow CNAME chains.  We allow up to CNAME_LOOP_MAX hops to guard
@@ -873,6 +929,8 @@ Query_Main(LPCWSTR Name,
 
         for (CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++)
         {
+            VTRACE("CNAME iteration %u: querying '%s'\n", CNameLoop, CurrentName);
+
             /* Allocate query packet buffer */
             QueryLen = 12 + ((ULONG)strlen(CurrentName) + 2) + 4;
             QueryBuf = RtlAllocateHeap(RtlGetProcessHeap(), 0, QueryLen);
@@ -884,6 +942,8 @@ Query_Main(LPCWSTR Name,
 
             RequestID = g_DnsQueryID++;
             Query_BuildPacket(QueryBuf, CurrentName, DNS_TYPE_A, bRecurse, RequestID);
+            VTRACE("Built query packet: ID=0x%04x Len=%lu\n",
+                   (unsigned)RequestID, (unsigned long)QueryLen);
 
             /* Allocate response buffer */
             ResponseLen = 512;
@@ -896,21 +956,27 @@ Query_Main(LPCWSTR Name,
             }
 
             /* Send the query; DnsResolv_SendRequest updates ResponseLen */
+            VTRACE("Sending query to '%s'...\n", Config.ServerAddress);
             if (!DnsResolv_SendRequest(QueryBuf, QueryLen,
                                        ResponseBuf, &ResponseLen,
                                        &Config))
             {
+                VTRACE("DnsResolv_SendRequest failed (timeout or socket error)\n");
                 RtlFreeHeap(RtlGetProcessHeap(), 0, QueryBuf);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
                 Status = ERROR_FILE_NOT_FOUND;
                 break;
             }
+            VTRACE("Response received: %lu bytes\n", (unsigned long)ResponseLen);
 
             RtlFreeHeap(RtlGetProcessHeap(), 0, QueryBuf);
             QueryBuf = NULL;
 
             /* Check the response code */
             RCode = ResponseBuf[3] & 0x0F;
+            VTRACE("Response flags byte[2]=0x%02x byte[3]=0x%02x RCODE=%u (%s)\n",
+                   (unsigned)(UCHAR)ResponseBuf[2], (unsigned)(UCHAR)ResponseBuf[3],
+                   (unsigned)RCode, DnsResolv_RCodeIDtoRCodeName(RCode));
             if (RCode != 0)
             {
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
@@ -920,6 +986,8 @@ Query_Main(LPCWSTR Name,
 
             NumQuestions = ntohs(((PUSHORT)&ResponseBuf[4])[0]);
             NumAnswers   = ntohs(((PUSHORT)&ResponseBuf[6])[0]);
+            VTRACE("NumQuestions=%u NumAnswers=%u\n",
+                   (unsigned)NumQuestions, (unsigned)NumAnswers);
             rk = 12;
 
             /* Skip the question section */
@@ -949,8 +1017,20 @@ Query_Main(LPCWSTR Name,
                 TTL      = ntohl(((PULONG)&ResponseBuf[rk])[0]);   rk += 4;
                 RDLength = ntohs(((PUSHORT)&ResponseBuf[rk])[0]);  rk += 2;
 
+                VTRACE("  RR[%d]: Name='%s' Type=0x%04x (%s) TTL=%lu RDLength=%u\n",
+                       ri, RRName, (unsigned)RRType,
+                       DnsResolv_TypeIDtoTypeName(RRType),
+                       (unsigned long)TTL, (unsigned)RDLength);
+
                 if (RRType == DNS_TYPE_A && RDLength == 4)
                 {
+                    ULONG ipAddr = *(PULONG)&ResponseBuf[rk];
+                    VTRACE("    A record: IP=%u.%u.%u.%u\n",
+                           (unsigned)(ipAddr & 0xFF),
+                           (unsigned)((ipAddr >> 8) & 0xFF),
+                           (unsigned)((ipAddr >> 16) & 0xFF),
+                           (unsigned)((ipAddr >> 24) & 0xFF));
+
                     pRecord = RtlAllocateHeap(RtlGetProcessHeap(),
                                              HEAP_ZERO_MEMORY,
                                              sizeof(DNS_RECORD));
@@ -968,11 +1048,12 @@ Query_Main(LPCWSTR Name,
                     pRecord->Flags.S.Section = DnsSectionAnswer;
                     pRecord->Flags.S.CharSet = DnsCharSetUnicode;
                     pRecord->dwTtl         = TTL; /* raw TTL from the wire */
-                    pRecord->Data.A.IpAddress = *(PULONG)&ResponseBuf[rk];
+                    pRecord->Data.A.IpAddress = ipAddr;
                     pRecord->pName         = (LPSTR)DnsCToW(RRName);
 
                     if (pRecord->pName == NULL)
                     {
+                        VTRACE("    DnsCToW failed for RRName\n");
                         RtlFreeHeap(RtlGetProcessHeap(), 0, pRecord);
                         if (CNameTarget)
                             RtlFreeHeap(RtlGetProcessHeap(), 0, CNameTarget);
@@ -996,13 +1077,21 @@ Query_Main(LPCWSTR Name,
                     CHAR CNameBuf[256];
                     DnsResolv_ExtractName(ResponseBuf, CNameBuf,
                                          (USHORT)rk, (UCHAR)RDLength);
+                    VTRACE("    CNAME -> '%s'\n", CNameBuf);
                     CNameTarget = xstrsaveA(CNameBuf);
+                }
+                else
+                {
+                    VTRACE("    Skipping RR type 0x%04x\n", (unsigned)RRType);
                 }
 
                 rk += RDLength;
             }
 
             RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+
+            VTRACE("After parsing: bGotAnswer=%d CNameTarget='%s'\n",
+                   (int)bGotAnswer, CNameTarget ? CNameTarget : "(none)");
 
             if (bGotAnswer)
             {
@@ -1015,11 +1104,13 @@ Query_Main(LPCWSTR Name,
             if (CNameTarget == NULL)
             {
                 /* No A record and no CNAME to follow */
+                VTRACE("No A record and no CNAME; stopping\n");
                 Status = ERROR_FILE_NOT_FOUND;
                 break;
             }
 
             /* Follow the CNAME by re-querying */
+            VTRACE("Following CNAME to '%s'\n", CNameTarget);
             if (CurrentName != AnsiName)
                 RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
             CurrentName = CNameTarget;
@@ -1037,9 +1128,11 @@ cleanup:
             *QueryResultSet = NULL;
         }
 
+        VTRACE("Returning Status=%lu\n", (unsigned long)Status);
         return Status;
 
     default:
+        VTRACE("Unsupported query type 0x%04x\n", (unsigned)Type);
         return ERROR_OUTOFMEMORY; /* XXX arty: find a better error code. */
     }
 }
