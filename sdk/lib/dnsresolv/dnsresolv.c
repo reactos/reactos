@@ -264,11 +264,13 @@ DnsResolv_SendRequest(
     _In_    PDNS_RESOLVER_CONFIG pConfig)
 {
     int j;
+    DWORD Attempt;
     USHORT RequestID, ResponseID;
     BOOL bWait;
     SOCKET s;
     SOCKADDR_IN RecAddr, RecAddr2, SendAddr;
     int SendAddrLen = sizeof(SendAddr);
+    DWORD TimeoutMs;
 
     RtlZeroMemory(&RecAddr,  sizeof(SOCKADDR_IN));
     RtlZeroMemory(&RecAddr2, sizeof(SOCKADDR_IN));
@@ -282,54 +284,78 @@ DnsResolv_SendRequest(
     if (s == INVALID_SOCKET)
         return FALSE;
 
+    /* Apply receive timeout so recvfrom() doesn't block forever. */
+    TimeoutMs = pConfig->Timeout * 1000;
+    setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char *)&TimeoutMs, sizeof(TimeoutMs));
+
     /* Destination: the configured DNS server. */
     RecAddr.sin_family      = AF_INET;
     RecAddr.sin_port        = htons(pConfig->Port);
     RecAddr.sin_addr.s_addr = inet_addr(pConfig->ServerAddress);
 
-    /* Bind to any local port. */
+    /*
+     * Bind to any local address and an OS-assigned ephemeral port (port 0).
+     * Using port 53 here would make queries appear to originate from a DNS
+     * server, causing most routers/forwarders to reject or ignore them.
+     */
     RecAddr2.sin_family      = AF_INET;
-    RecAddr2.sin_port        = htons(pConfig->Port);
+    RecAddr2.sin_port        = 0;
     RecAddr2.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(s, (SOCKADDR *)&RecAddr2, sizeof(RecAddr2));
 
-    /* Send the DNS query. */
-    j = sendto(s,
-               pInBuffer,
-               InBufferLength,
-               0,
-               (SOCKADDR *)&RecAddr,
-               sizeof(RecAddr));
-    if (j == SOCKET_ERROR)
-    {
-        closesocket(s);
-        return FALSE;
-    }
+    j = SOCKET_ERROR;
 
-    bWait = TRUE;
-    while (bWait)
+    for (Attempt = 0; Attempt <= pConfig->Retry; Attempt++)
     {
-        /* Wait for a DNS reply. */
-        j = recvfrom(s,
-                     pOutBuffer,
-                     *pOutBufferLength,
-                     0,
-                     (SOCKADDR *)&SendAddr,
-                     &SendAddrLen);
+        /* Send the DNS query. */
+        j = sendto(s,
+                   pInBuffer,
+                   InBufferLength,
+                   0,
+                   (SOCKADDR *)&RecAddr,
+                   sizeof(RecAddr));
         if (j == SOCKET_ERROR)
         {
             closesocket(s);
             return FALSE;
         }
 
-        ResponseID = ntohs(((PSHORT)&pOutBuffer[0])[0]);
+        bWait = TRUE;
+        while (bWait)
+        {
+            /* Wait for a DNS reply. */
+            j = recvfrom(s,
+                         pOutBuffer,
+                         *pOutBufferLength,
+                         0,
+                         (SOCKADDR *)&SendAddr,
+                         &SendAddrLen);
+            if (j == SOCKET_ERROR)
+            {
+                /* On timeout, retry if we have attempts left. */
+                if (WSAGetLastError() == WSAETIMEDOUT && Attempt < pConfig->Retry)
+                    break;
 
-        /* Accept only responses that match our request ID. */
-        if (ResponseID == RequestID)
-            bWait = FALSE;
+                closesocket(s);
+                return FALSE;
+            }
+
+            ResponseID = ntohs(((PSHORT)&pOutBuffer[0])[0]);
+
+            /* Accept only responses that match our request ID. */
+            if (ResponseID == RequestID)
+                bWait = FALSE;
+        }
+
+        /* If we received a valid response, stop retrying. */
+        if (!bWait)
+            break;
     }
 
     closesocket(s);
+
+    if (j == SOCKET_ERROR)
+        return FALSE;
 
     /* Update the caller's buffer-length to the actual response size. */
     *pOutBufferLength = j;

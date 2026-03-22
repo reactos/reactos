@@ -889,7 +889,15 @@ Query_Main(LPCWSTR Name,
         }
 
         /* Build a resolver config from the first usable DNS server */
-        bRecurse = (Options & DNS_QUERY_NO_RECURSION) == 0;
+        /*
+         * Always request recursion at the wire level.  Query_Main is a stub
+         * resolver: it sends queries to a forwarder/recursive server (e.g. a
+         * home router) that MUST have the Recursion Desired (RD) bit set in
+         * order to perform recursive resolution on our behalf.  Respecting
+         * DNS_QUERY_NO_RECURSION here would cause the forwarder to return an
+         * empty or REFUSED answer for any name it is not authoritative for.
+         */
+        bRecurse = TRUE;
         DnsResolv_InitConfig(&Config);
         Config.Recurse = bRecurse;
         bFoundServer = FALSE;
