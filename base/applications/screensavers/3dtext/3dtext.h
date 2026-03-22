@@ -24,7 +24,9 @@
 #include <tchar.h>
 #include <windef.h>
 
-extern TCHAR m_Text[MAX_PATH];
+#define MAX_TEXT_LENGTH 20
+
+extern TCHAR m_Text[MAX_TEXT_LENGTH + 1];
 
 VOID LoadSettings(VOID);
 VOID SaveSettings(VOID);
