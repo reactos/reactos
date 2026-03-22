@@ -1015,6 +1015,10 @@ LoadAndBootWindows(
     {
         OperatingSystemVersion = _WIN32_WINNT_WS03;
     }
+    else if (_stricmp(ArgValue, "Windows2000") == 0)
+    {
+        OperatingSystemVersion = _WIN32_WINNT_WIN2K;
+    }
     else if (_stricmp(ArgValue, "WindowsNT40") == 0)
     {
         OperatingSystemVersion = _WIN32_WINNT_NT4;
@@ -1201,7 +1205,7 @@ LoadAndBootWindowsCommon(
 
     /* Detect hardware */
     UiUpdateProgressBar(20, "Detecting hardware...");
-    LoaderBlock->ConfigurationRoot = MachHwDetect(BootOptions);
+    LoaderBlock->ConfigurationRoot = MachHwDetect(OperatingSystemVersion, BootOptions);
 
     /* Initialize the PE loader import-DLL callback, so that we can obtain
      * feedback (for example during SOS) on the PE images that get loaded. */

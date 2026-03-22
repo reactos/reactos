@@ -41,9 +41,9 @@ ArcGetRelativeTime(VOID)
 }
 
 PCONFIGURATION_COMPONENT_DATA
-MachHwDetect(_In_opt_ PCSTR Options)
+MachHwDetect(_In_ USHORT OperatingSystemVersion, _In_opt_ PCSTR Options)
 {
-    return MachVtbl.HwDetect(Options);
+    return MachVtbl.HwDetect(OperatingSystemVersion, Options);
 }
 
 VOID MachPrepareForReactOS(VOID)

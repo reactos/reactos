@@ -289,6 +289,7 @@ XboxGetFloppyCount(VOID)
 
 PCONFIGURATION_COMPONENT_DATA
 XboxHwDetect(
+    _In_ USHORT OperatingSystemVersion,
     _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;

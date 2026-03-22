@@ -56,6 +56,7 @@ TIMEINFO* XboxGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA
 XboxHwDetect(
+    _In_ USHORT OperatingSystemVersion,
     _In_opt_ PCSTR Options);
 
 VOID XboxHwIdle(VOID);
