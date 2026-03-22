@@ -17,13 +17,10 @@
 #include <debug.h>
 
 /*
- * Verbose DNS tracing.  Uncomment the define below to enable detailed
- * diagnostic output at every significant step of the resolution path.
- * Leave it commented out for normal (silent) builds.
+ * Verbose DNS tracing.  Active whenever NDEBUG is not defined (debug builds).
+ * Disabled automatically in release builds where NDEBUG is defined above.
  */
-/* #define DNSAPI_VERBOSE_DEBUG */
-
-#ifdef DNSAPI_VERBOSE_DEBUG
+#ifndef NDEBUG
 #define VTRACE(fmt, ...) DbgPrint("DNSAPI[%s]: " fmt, __FUNCTION__, ##__VA_ARGS__)
 #else
 #define VTRACE(fmt, ...) ((void)0)
