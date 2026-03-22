@@ -405,12 +405,11 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
                                   TAG_VFDRV);
     if (!Entry)
         return;
-    
+
     RtlZeroMemory(Entry, sizeof(VF_DRIVER_ENTRY));
     Entry->DriverObject = DriverObject;
     InitializeListHead(&Entry->PoolList);
     KeInitializeSpinLock(&Entry->PoolLock);
-    Entry->OriginalUnload = DriverObject->DriverUnload;
     Entry->VerifierFlags = VfGlobal.GlobalFlags ? VfGlobal.GlobalFlags :
                            (VF_FLAG_POOL_TRACKING | VF_FLAG_IRQL_CHECKING | VF_FLAG_SPECIAL_POOL);
     Entry->Loads = 1;
@@ -418,8 +417,6 @@ VOID NTAPI VfRegisterDriver(PDRIVER_OBJECT DriverObject)
     KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
     InsertTailList(&VfDriverList, &Entry->ListEntry);
     KeReleaseSpinLock(&VfDriverListLock, OldIrql);
-
-    DriverObject->DriverUnload = VfDriverUnload;
 
     DPRINT1("VF: Registered driver %p for verification flags=0x%lx\n",
             DriverObject,
@@ -443,10 +440,6 @@ VOID VfUnregisterDriver(PDRIVER_OBJECT DriverObject)
 
     if (Entry)
     {
-        /* restore original unload (IF we hooked it) */
-        if (DriverObject->DriverUnload == VfDriverUnload)
-            DriverObject->DriverUnload = Entry->OriginalUnload;
-
         ExFreePool(Entry);
     }
 }
@@ -1168,14 +1161,6 @@ UNUSED static VOID VfHookDriverIrps(PDRIVER_OBJECT DriverObject)
     DPRINT1("VF: IRP dispatch hooks installed for driver %p\n", DriverObject);
 }
 
-VOID VfHookDriverUnload(PDRIVER_OBJECT DriverObject)
-{
-    VF_DRIVER_ENTRY* Entry = VfFindDriver(DriverObject);
-    if (!Entry) return;
-    Entry->OriginalUnload = DriverObject->DriverUnload;
-    DriverObject->DriverUnload = VfDriverUnload;
-}
-
 static
 VF_IRP_TRACK*
 VfLookupIrpLocked(
@@ -1831,9 +1816,6 @@ VOID NTAPI VfDriverUnload(PDRIVER_OBJECT DriverObject)
                      (ULONG_PTR)DriverObject,
                      0, 0);
     }
-
-    if (Driver->OriginalUnload)
-        Driver->OriginalUnload(DriverObject);
 
     KeAcquireSpinLock(&VfDriverListLock, &OldIrql);
     RemoveEntryList(&Driver->ListEntry);

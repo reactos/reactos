@@ -663,11 +663,6 @@ IopInitializeDriverModule(
         if (VfGlobalEnabled)
             VfUnregisterDriver(driverObject);
     }
-    else if (VfGlobalEnabled)
-    {
-        /* DriverEntry may have overwritten our unload hook — re-hook it */
-        VfHookDriverUnload(driverObject);
-    }
 
     /* HACK: We're going to say if we don't have any DOs from DriverEntry, then we're not legacy.
      * Other parts of the I/O manager depend on this behavior */
@@ -2089,8 +2084,14 @@ IopLoadUnloadDriverWorker(
 
     if (LoadParams->DriverObject)
     {
-        // unload request
-        LoadParams->DriverObject->DriverUnload(LoadParams->DriverObject);
+        /* notify before unload */
+        if (VfGlobalEnabled)
+            VfDriverUnload(LoadParams->DriverObject);
+
+        /* call the drivers own unload routine (if it has one) */
+        if (LoadParams->DriverObject->DriverUnload)
+            LoadParams->DriverObject->DriverUnload(LoadParams->DriverObject);
+
         LoadParams->Status = STATUS_SUCCESS;
     }
     else

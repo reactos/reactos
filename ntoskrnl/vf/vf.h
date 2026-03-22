@@ -164,7 +164,6 @@ typedef struct _VF_DRIVER_ENTRY
     ULONG VerifierFlags;
     LIST_ENTRY PoolList;
     KSPIN_LOCK PoolLock;
-    PDRIVER_UNLOAD OriginalUnload;
     SIZE_T PoolUsage;
     SIZE_T PoolQuota;
 
@@ -307,6 +306,10 @@ VOID VfUnregisterDriver(
     PDRIVER_OBJECT DriverObject
 );
 
+VOID NTAPI VfDriverUnload(
+    PDRIVER_OBJECT DriverObject
+);
+
 VOID NTAPI VfInitialize(
     VOID
 );
@@ -322,10 +325,6 @@ VfAllocatePool(
     POOL_TYPE PoolType,
     SIZE_T Size,
     ULONG Tag
-);
-
-VOID VfHookDriverUnload(
-    PDRIVER_OBJECT DriverObject
 );
 
 VOID NTAPI VfFreePool(
