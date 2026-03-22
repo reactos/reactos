@@ -75,8 +75,7 @@ public:
         while (celt--)
         {
             if (!mEnumerator.NextUnique(m_Prefix, name, dir, info))
-                return E_FAIL;
-            ;
+                return S_FALSE;
         }
         return S_OK;
     }
