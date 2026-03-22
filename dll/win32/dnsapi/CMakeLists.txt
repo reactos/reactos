@@ -10,7 +10,6 @@ add_definitions(-D_CRT_NO_POSIX_ERROR_CODES)
 spec2def(dnsapi.dll dnsapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    adns.c
     context.c
     memory.c
     names.c
