@@ -23,21 +23,7 @@ static PC98_DISK_DRIVE Pc98DiskDrive[MAX_DRIVES];
 
 /* DISK IO ERROR SUPPORT ******************************************************/
 
-static LONG lReportError = 0; /* >= 0: display errors; < 0: hide errors */
-
-LONG
-DiskReportError(
-    _In_ BOOLEAN bShowError)
-{
-    /* Set the reference count */
-    if (bShowError)
-        ++lReportError;
-    else
-        --lReportError;
-    return lReportError;
-}
-
-static
+/* For disk.c!DiskError() */
 PCSTR
 DiskGetErrorCodeString(
     _In_ ULONG ErrorCode)
@@ -71,29 +57,6 @@ DiskGetErrorCodeString(
 
         default: return "Unknown error code";
     }
-}
-
-static
-VOID
-DiskError(
-    _In_ PCSTR ErrorString,
-    _In_ ULONG ErrorCode)
-{
-    CHAR ErrorCodeString[200];
-
-    if (lReportError < 0)
-        return;
-
-    RtlStringCbPrintfA(ErrorCodeString,
-                       sizeof(ErrorCodeString),
-                       "%s\n\nError Code: 0x%lx\nError: %s",
-                       ErrorString,
-                       ErrorCode,
-                       DiskGetErrorCodeString(ErrorCode));
-
-    ERR("%s\n", ErrorCodeString);
-
-    UiMessageBox(ErrorCodeString);
 }
 
 /* FUNCTIONS ******************************************************************/
@@ -434,6 +397,7 @@ InitScsiDrive(
         DiskDrive->Geometry.Heads = RegsOut.b.dh;
         DiskDrive->Geometry.SectorsPerTrack = RegsOut.b.dl;
         DiskDrive->Geometry.BytesPerSector = RegsOut.w.bx;
+        DiskDrive->Type = DRIVE_TYPE_HDD;
     }
     /* Other devices */
     else if (ScsiParameters != 0)
@@ -712,7 +676,7 @@ Pc98InitializeBootDevices(VOID)
      * that cannot boot from a CD-ROM and has LBA limitations.
      */
     AtaInit(&IdeDetectedCount);
-    for (i = 0; i <= IdeDetectedCount; i++)
+    for (i = 0; i < IdeDetectedCount; i++)
     {
         DiskDrive = &Pc98DiskDrive[BiosHardDriveDriveNumber];
         if (InitIdeDrive(DiskDrive, i))
