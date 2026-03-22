@@ -45,7 +45,7 @@ int main(void)
     while (TRUE)
     {
         PWSTR Name = (PWSTR)((PUCHAR)Entry + sizeof(SYSTEM_VERIFIER_INFORMATION));
-        printf("Driver: %.*ws\n", Entry->DriverName.Length / sizeof(WCHAR), Name);
+        printf("Driver: %.*ws\n", (int)(Entry->DriverName.Length / sizeof(WCHAR)), Name);
         printf("  Level:                          0x%lx\n", Entry->Level);
         printf("  AllocationsAttempted:           %lu\n", Entry->AllocationsAttempted);
         printf("  AllocationsSucceeded:           %lu\n", Entry->AllocationsSucceeded);
