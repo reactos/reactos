@@ -11,6 +11,7 @@
 // FIXME: Make CFSTR_PREFERREDDROPEFFECT effective in shell32
 static const UINT g_cfPreferred = RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT);
 
+// Deep-copy an HGLOBAL block; caller owns the returned handle
 static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
 {
     SIZE_T cb = GlobalSize(hSrc);
@@ -36,6 +37,7 @@ static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
     return S_OK;
 }
 
+// Recursively delete a directory and all its contents
 static void RecursiveDeleteDirectory(PCWSTR pszDir)
 {
     WCHAR szFind[MAX_PATH];
@@ -70,16 +72,15 @@ static void RecursiveDeleteDirectory(PCWSTR pszDir)
     RemoveDirectoryW(pszDir);
 }
 
-// Build an HDROP from a list of NUL-terminated wide strings.
-// HDROP layout: DROPFILES header + double-NUL-terminated list of wchar paths.
+// Build an HDROP global memory block from a list of wide-char paths.
 static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
 {
-    // Calculate required buffer size
+    // Calculate total buffer size needed for all paths.
     SIZE_T cbPaths = 0;
     POSITION pos = paths.GetHeadPosition();
     while (pos)
         cbPaths += (paths.GetNext(pos).GetLength() + 1) * sizeof(WCHAR);
-    cbPaths += sizeof(UNICODE_NULL); // final double NUL
+    cbPaths += sizeof(UNICODE_NULL); // extra NUL for double-NUL terminator
 
     SIZE_T cbTotal = sizeof(DROPFILES) + cbPaths;
     HGLOBAL hGlobal = GlobalAlloc(GHND, cbTotal);
@@ -106,18 +107,14 @@ static HGLOBAL BuildHDrop(const CAtlList<CStringW>& paths)
         pszDst += cch;
         *pszDst++ = UNICODE_NULL;
     }
-    *pszDst = UNICODE_NULL; // double NUL terminator
+    *pszDst = UNICODE_NULL; // second NUL to terminate the list
 
     GlobalUnlock(hGlobal);
-
-    WCHAR szPath[MAX_PATH];
-    DragQueryFileW((HDROP)hGlobal, 0, szPath, _countof(szPath));
 
     return hGlobal;
 }
 
-// Write raw data from the current open zip entry to a file.
-// Returns TRUE on success.
+// Extract the current zip entry to a file; returns TRUE on success.
 static BOOL WriteZipEntryToFile(unzFile uf, PCWSTR pszDestFile)
 {
     HANDLE hFile = CreateFileW(pszDestFile, GENERIC_WRITE, 0, NULL,
@@ -138,7 +135,7 @@ static BOOL WriteZipEntryToFile(unzFile uf, PCWSTR pszDestFile)
         }
     }
     if (read < 0)
-        ok = FALSE;
+        ok = FALSE; // negative return indicates a zlib/IO error
 
     CloseHandle(hFile);
     if (!ok)
@@ -150,19 +147,17 @@ class CZipExtractDrop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject
 {
-    CComPtr<CZipFolder> m_pFolder; // The ZIP folder we belong to
-    CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
-    HGLOBAL m_hDropCache; // Cached HDROP after first extraction
-    CStringW  m_tempDir; // Temporary directory created during extraction
-    CComAutoCriticalSection m_csExtract;
+    CComPtr<CZipFolder> m_pFolder; // owning ZIP folder
+    CAtlArray<CStringW> m_selectedNames; // top-level item names relative to m_ZipDir
+    HGLOBAL m_hDropCache; // cached HDROP built on first GetData(CF_HDROP)
+    CStringW  m_tempDir; // temp directory holding extracted files
+    CComAutoCriticalSection m_csExtract; // guards lazy extraction in GetData
 
-    // Storage for arbitrary SetData() calls (e.g. DataObjectAttributes cache
-    // written by SHGetAttributesFromDataObject in shldataobject.cpp).
-    // Only TYMED_HGLOBAL entries are stored.
+    // Storage for arbitrary SetData() calls (TYMED_HGLOBAL only).
     struct ExtraEntry
     {
         CLIPFORMAT cfFormat;
-        HGLOBAL    hData; // owned by us
+        HGLOBAL    hData; // owned HGLOBAL
     };
     CAtlArray<ExtraEntry> m_extraData;
 
@@ -187,14 +182,14 @@ class CZipExtractDrop :
             GlobalFree(hEffect);
             return;
         }
-        *pdw = DROPEFFECT_COPY; // Copy is preferred, not Move!
+        *pdw = DROPEFFECT_COPY; // prefer copy, not move
         GlobalUnlock(hEffect);
 
         ExtraEntry entry = { (CLIPFORMAT)g_cfPreferred, hEffect };
         m_extraData.Add(entry);
     }
 
-    // Create a unique temporary directory and store it in m_tempDir.
+    // Create a unique temp directory and store its path in m_tempDir.
     HRESULT CreateTempDir()
     {
         WCHAR szTempBase[MAX_PATH];
@@ -214,9 +209,7 @@ class CZipExtractDrop :
         return S_OK;
     }
 
-    // Given the in-ZIP wide path (e.g. "src/foo/bar.c"), strip the ZipDir
-    // prefix and return the part relative to the selected items, split into
-    // the "top-level name" and the "rest" of the path.
+    // Check if zipRelPath belongs to the selection; split into top name and remainder.
     BOOL MatchesSelection(const CStringW& zipRelPath, CStringW& outTopName, CStringW& outRest) const
     {
         for (SIZE_T i = 0; i < m_selectedNames.GetCount(); ++i)
@@ -225,12 +218,11 @@ class CZipExtractDrop :
             BOOL isDir = (!sel.IsEmpty() && sel[sel.GetLength() - 1] == L'/');
             if (isDir)
             {
-                // sel = "src/"
-                // match if zipRelPath starts with "src/"
+                // Match if zipRelPath starts with the directory prefix.
                 if (StrCmpNIW(zipRelPath, sel, sel.GetLength()) == 0)
                 {
-                    outTopName = sel.Left(sel.GetLength() - 1); // "src"
-                    outRest    = zipRelPath.Mid(sel.GetLength()); // "foo/bar.c"
+                    outTopName = sel.Left(sel.GetLength() - 1); // strip trailing slash
+                    outRest    = zipRelPath.Mid(sel.GetLength()); // remainder under the dir
                     return TRUE;
                 }
             }
@@ -247,15 +239,14 @@ class CZipExtractDrop :
         return FALSE;
     }
 
-    // Do the actual extraction into m_tempDir.
-    // Returns S_OK and fills m_hDropCache on success.
+    // Extract selected entries to m_tempDir and populate m_hDropCache.
     HRESULT DoExtract()
     {
         HRESULT hr = CreateTempDir();
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        // We need a fresh unzFile because CZipFolder's handle may be in use.
+        // Open a fresh unzFile to avoid conflicting with CZipFolder's handle.
         unzFile uf = unzOpen2_64(m_pFolder->GetZipFilePath(), &g_FFunc);
         if (!uf)
         {
@@ -263,12 +254,11 @@ class CZipExtractDrop :
             return E_FAIL;
         }
 
-        CAtlList<CStringW> extractedPaths; // top-level paths added to HDROP
-        CAtlList<CStringW> topLevelAdded;  // de-dup guard for top-level dirs
+        CAtlList<CStringW> extractedPaths; // paths to include in the HDROP
+        CAtlList<CStringW> topLevelAdded;  // dedup list for top-level entries
 
         CZipEnumerator zipEnum;
-        // CZipEnumerator::Initialize wants an IZip*; CZipFolder implements IZip.
-        // Use a thin wrapper so we don't disturb the folder's own unzFile.
+        // CZipEnumerator needs an IZip*; wrap the local unzFile without touching CZipFolder.
         struct LocalIZip : IZip
         {
             unzFile m_uf;
@@ -286,7 +276,7 @@ class CZipExtractDrop :
             return E_FAIL;
         }
 
-        // Prefix = m_ZipDir (e.g. "" for root, "subdir/" for sub-folder view)
+        // Skip entries outside the current zip folder view prefix.
         const CStringW& prefix = m_pFolder->GetZipDir();
         SIZE_T cchPrefix = prefix.GetLength();
 
@@ -304,11 +294,11 @@ class CZipExtractDrop :
 
             BOOL isZipDir = (!entryName.IsEmpty() && entryName[entryName.GetLength() - 1] == L'/');
 
-            // Construct full destination
-            CStringW destRel = relPath; // "src/foo/bar.c"
+            // Build the destination path relative to temp dir.
+            CStringW destRel = relPath;
             destRel.Replace(L'/', L'\\');
 
-            // SECURITY: Reject absolute, drive-letter, or traversal paths
+            // Reject unsafe paths (absolute, drive letters, traversal).
             if (!PathIsRelativeW(destRel) || destRel.Find(L':') >= 0 ||
                 destRel == L"." || destRel == L".." || destRel.Find(L"..\\") == 0 ||
                 destRel.Find(L"\\..\\") >= 0 || destRel.Right(3) == L"\\..")
@@ -319,16 +309,16 @@ class CZipExtractDrop :
             WCHAR destFull[MAX_PATH];
             PathCombineW(destFull, m_tempDir, destRel);
 
-            // Ensure parent directories exist
+            // Ensure the parent directory tree exists before writing.
             {
                 CStringW parentDir = destFull;
-                // PathRemoveFileSpec won't work for dirs ending with \; handled below.
+                // Use SHPPFW_IGNOREFILENAME for dirs since PathRemoveFileSpec mishandles trailing backslash.
                 if (isZipDir)
                 {
-                    // Entry itself is a directory – just create it.
+                    // Entry is a directory; create it directly.
                     SHPathPrepareForWriteW(NULL, NULL, destFull,
                                            SHPPFW_DIRCREATE | SHPPFW_IGNOREFILENAME);
-                    // Create the directory itself (last component).
+                    // Create the final directory component.
                     CreateDirectoryW(destFull, NULL);
                 }
                 else
@@ -339,7 +329,7 @@ class CZipExtractDrop :
                 }
             }
 
-            // Open + extract the file
+            // Extract the zip entry and restore its timestamp.
             if (unzOpenCurrentFile(uf) == UNZ_OK)
             {
                 BOOL ok = WriteZipEntryToFile(uf, destFull);
@@ -347,7 +337,7 @@ class CZipExtractDrop :
                 if (!ok)
                     continue;
 
-                // Update file timestamp
+                // Restore the original file timestamp from the zip entry.
                 FILETIME ftLocal, ftUtc;
                 DosDateTimeToFileTime(HIWORD(info.dosDate), LOWORD(info.dosDate), &ftLocal);
                 LocalFileTimeToFileTime(&ftLocal, &ftUtc);
@@ -360,11 +350,11 @@ class CZipExtractDrop :
                 }
             }
 
-            // Add the top-level item to the HDROP list (once).
+            // Add the top-level destination to the HDROP list once.
             WCHAR topDest[MAX_PATH];
             PathCombineW(topDest, m_tempDir, topName);
 
-            // Check duplicate
+            // Skip if already added to avoid duplicate entries.
             BOOL found = FALSE;
             POSITION pos = topLevelAdded.GetHeadPosition();
             while (pos)
@@ -451,13 +441,13 @@ public:
 
         ZeroMemory(pstm, sizeof(*pstm));
 
-        // Handle CF_HDROP ourselves
+        // Serve CF_HDROP by extracting zip contents on demand.
         if (pfe->cfFormat == CF_HDROP && (pfe->tymed & TYMED_HGLOBAL) &&
             pfe->dwAspect == DVASPECT_CONTENT)
         {
             CComCritSecLock<CComAutoCriticalSection> lock(m_csExtract);
 
-            // Extract on first request
+            // Lazy-extract on first request.
             if (!m_hDropCache)
             {
                 HRESULT hr = DoExtract();
@@ -465,7 +455,7 @@ public:
                     return hr;
             }
 
-            // Duplicate the cached HGLOBAL
+            // Return a clone of the cached HGLOBAL.
             HGLOBAL hCopy;
             HRESULT hr = GlobalClone(&hCopy, m_hDropCache);
             if (FAILED_UNEXPECTEDLY(hr))
@@ -477,7 +467,7 @@ public:
             return S_OK;
         }
 
-        // Check our own extra-data store (for formats cached via SetData).
+        // Fall back to the extra-data store for formats set via SetData.
         if (pfe->tymed & TYMED_HGLOBAL)
         {
             for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
@@ -516,7 +506,7 @@ public:
             return S_OK;
         }
 
-        // Check our own extra-data store.
+        // Also check the extra-data store populated by SetData.
         if (pfe->tymed & TYMED_HGLOBAL)
         {
             for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
@@ -549,7 +539,7 @@ public:
             if (fRelease)
                 ReleaseStgMedium(pstm);
 
-            // Update existing slot or append new one
+            // Replace existing entry or append a new one.
             for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
             {
                 if (m_extraData[i].cfFormat == pfe->cfFormat)
