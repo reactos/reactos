@@ -16,5 +16,6 @@
 #include <winnls.h>
 #include <objbase.h>
 #include <gdiplus.h>
+#include <ole2.h>
 
 #endif /* !_GDIPLUS_WINETEST_PRECOMP_H_ */

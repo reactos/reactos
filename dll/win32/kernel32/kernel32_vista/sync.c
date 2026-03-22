@@ -19,6 +19,13 @@ AcquireSRWLockShared(PSRWLOCK Lock)
 
 VOID
 WINAPI
+TryAcquireSRWLockExclusive(PSRWLOCK Lock)
+{
+    RtlTryAcquireSRWLockExclusive((PRTL_SRWLOCK)Lock);
+}
+
+VOID
+WINAPI
 InitializeConditionVariable(PCONDITION_VARIABLE ConditionVariable)
 {
     RtlInitializeConditionVariable((PRTL_CONDITION_VARIABLE)ConditionVariable);

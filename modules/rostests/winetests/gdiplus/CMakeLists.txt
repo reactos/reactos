@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__ -D__wine_dbg_strdup=_strdup)
 add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
