@@ -10,6 +10,11 @@
 #include <tchar.h>
 #include <stdio.h>
 
+/* DNS resolver library (provides TYPE_*, CLASS_*, OPCODE_*, RCODE_* numeric
+ * constants, DnsResolv_* functions, and DNS_RESOLVER_CONFIG). */
+#include <dnsresolv.h>
+
+/* Query-type string constants (nslookup-specific, not in dnsresolv.h) */
 #define TypeA       "A"
 #define TypeAAAA    "AAAA"
 #define TypeBoth    "A+AAAA"
@@ -21,37 +26,44 @@
 #define TypeSOA     "SOA"
 #define TypeSRV     "SRV"
 
-#define TYPE_A      0x01
-#define TYPE_NS     0x02
-#define TYPE_CNAME  0x05
-#define TYPE_SOA    0x06
-#define TYPE_WKS    0x0B
-#define TYPE_PTR    0x0C
-#define TYPE_MX     0x0F
-#define TYPE_ANY    0xFF
+/* Aliases for dnsresolv type constants (keeps existing code unchanged) */
+#define TYPE_A      DNSRESOLV_TYPE_A
+#define TYPE_NS     DNSRESOLV_TYPE_NS
+#define TYPE_CNAME  DNSRESOLV_TYPE_CNAME
+#define TYPE_SOA    DNSRESOLV_TYPE_SOA
+#define TYPE_WKS    DNSRESOLV_TYPE_WKS
+#define TYPE_PTR    DNSRESOLV_TYPE_PTR
+#define TYPE_MX     DNSRESOLV_TYPE_MX
+#define TYPE_ANY    DNSRESOLV_TYPE_ANY
 
+/* Class string constants */
 #define ClassIN     "IN"
 #define ClassAny    "ANY"
 
-#define CLASS_IN    0x01
-#define CLASS_ANY   0xFF
+/* Aliases for dnsresolv class constants */
+#define CLASS_IN    DNSRESOLV_CLASS_IN
+#define CLASS_ANY   DNSRESOLV_CLASS_ANY
 
-#define OPCODE_QUERY    0x00
-#define OPCODE_IQUERY   0x01
-#define OPCODE_STATUS   0x02
+/* Aliases for dnsresolv opcode constants */
+#define OPCODE_QUERY    DNSRESOLV_OPCODE_QUERY
+#define OPCODE_IQUERY   DNSRESOLV_OPCODE_IQUERY
+#define OPCODE_STATUS   DNSRESOLV_OPCODE_STATUS
 
+/* Opcode string constants */
 #define OpcodeQuery     "QUERY"
 #define OpcodeIQuery    "IQUERY"
 #define OpcodeStatus    "STATUS"
 #define OpcodeReserved  "RESERVED"
 
-#define RCODE_NOERROR   0x00
-#define RCODE_FORMERR   0x01
-#define RCODE_FAILURE   0x02
-#define RCODE_NXDOMAIN  0x03
-#define RCODE_NOTIMP    0x04
-#define RCODE_REFUSED   0x05
+/* Aliases for dnsresolv rcode constants */
+#define RCODE_NOERROR   DNSRESOLV_RCODE_NOERROR
+#define RCODE_FORMERR   DNSRESOLV_RCODE_FORMERR
+#define RCODE_FAILURE   DNSRESOLV_RCODE_FAILURE
+#define RCODE_NXDOMAIN  DNSRESOLV_RCODE_NXDOMAIN
+#define RCODE_NOTIMP    DNSRESOLV_RCODE_NOTIMP
+#define RCODE_REFUSED   DNSRESOLV_RCODE_REFUSED
 
+/* Rcode string constants */
 #define RCodeNOERROR    "NOERROR"
 #define RCodeFORMERR    "FORMERR"
 #define RCodeFAILURE    "FAILURE"
@@ -60,8 +72,9 @@
 #define RCodeREFUSED    "REFUSED"
 #define RCodeReserved   "RESERVED"
 
-#define DEFAULT_ROOT    "A.ROOT-SERVERS.NET."
-#define ARPA_SIG        ".in-addr.arpa"
+/* Aliases for dnsresolv miscellaneous constants */
+#define DEFAULT_ROOT    DNSRESOLV_DEFAULT_ROOT
+#define ARPA_SIG        DNSRESOLV_ARPA_SIG
 
 typedef struct _STATE
 {
@@ -89,7 +102,6 @@ typedef struct _STATE
 /* nslookup.c */
 
 extern STATE    State;
-extern HANDLE   ProcessHeap;
 
 /* utility.c */
 
@@ -98,21 +110,7 @@ BOOL SendRequest( PCHAR pInBuffer,
                   PCHAR pOutBuffer,
                   PULONG pOutBufferLength );
 
-int     ExtractName( PCHAR pBuffer,
-                     PCHAR pOutput,
-                     USHORT Offset,
-                     UCHAR Limit );
-
-void    ReverseIP( PCHAR pIP, PCHAR pReturn );
-BOOL    IsValidIP( PCHAR pInput );
-int     ExtractIP( PCHAR pBuffer, PCHAR pOutput, USHORT Offset );
 void    PrintD2( PCHAR pBuffer, DWORD BufferLength );
 void    PrintDebug( PCHAR pBuffer, DWORD BufferLength );
-PCHAR   OpcodeIDtoOpcodeName( UCHAR Opcode );
-PCHAR   RCodeIDtoRCodeName( UCHAR RCode );
-PCHAR   TypeIDtoTypeName( USHORT TypeID );
-USHORT  TypeNametoTypeID( PCHAR TypeName );
-PCHAR   ClassIDtoClassName( USHORT ClassID );
-USHORT  ClassNametoClassID( PCHAR ClassName );
 
 #endif /* _NSLOOKUP_H */
