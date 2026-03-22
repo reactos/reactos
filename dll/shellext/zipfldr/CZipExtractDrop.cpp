@@ -153,6 +153,16 @@ class CZipExtractDrop :
     CStringW  m_tempDir; // Temporary directory created during extraction
     CComAutoCriticalSection m_csExtract;
 
+    // Storage for arbitrary SetData() calls (e.g. DataObjectAttributes cache
+    // written by SHGetAttributesFromDataObject in shldataobject.cpp).
+    // Only TYMED_HGLOBAL entries are stored.
+    struct ExtraEntry
+    {
+        CLIPFORMAT cfFormat;
+        HGLOBAL    hData; // owned by us
+    };
+    CAtlArray<ExtraEntry> m_extraData;
+
     // Create a unique temporary directory and store it in m_tempDir.
     HRESULT CreateTempDir()
     {
@@ -367,6 +377,9 @@ public:
 
         if (!m_tempDir.IsEmpty())
             RecursiveDeleteDirectory(m_tempDir);
+
+        for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+            GlobalFree(m_extraData[i].hData);
     }
 
     HRESULT Init(CZipFolder* pFolder, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
@@ -431,6 +444,26 @@ public:
             return S_OK;
         }
 
+        // Check our own extra-data store (for formats cached via SetData).
+        if (pfe->tymed & TYMED_HGLOBAL)
+        {
+            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+            {
+                if (m_extraData[i].cfFormat != pfe->cfFormat)
+                    continue;
+
+                HGLOBAL hCopy;
+                HRESULT hr = GlobalClone(&hCopy, m_extraData[i].hData);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return hr;
+
+                pstm->tymed   = TYMED_HGLOBAL;
+                pstm->hGlobal = hCopy;
+                pstm->pUnkForRelease = NULL;
+                return S_OK;
+            }
+        }
+
         return DV_E_FORMATETC;
     }
 
@@ -450,6 +483,16 @@ public:
             return S_OK;
         }
 
+        // Check our own extra-data store.
+        if (pfe->tymed & TYMED_HGLOBAL)
+        {
+            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+            {
+                if (m_extraData[i].cfFormat == pfe->cfFormat)
+                    return S_OK;
+            }
+        }
+
         return DV_E_FORMATETC;
     }
 
@@ -465,8 +508,26 @@ public:
 
         if (pstm->tymed == TYMED_HGLOBAL && pstm->hGlobal)
         {
+            HGLOBAL hCopy;
+            HRESULT hr = GlobalClone(&hCopy, pstm->hGlobal);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
             if (fRelease)
                 ReleaseStgMedium(pstm);
+
+            // Update existing slot or append new one
+            for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+            {
+                if (m_extraData[i].cfFormat == pfe->cfFormat)
+                {
+                    GlobalFree(m_extraData[i].hData);
+                    m_extraData[i].hData = hCopy;
+                    return S_OK;
+                }
+            }
+            ExtraEntry entry = { pfe->cfFormat, hCopy };
+            m_extraData.Add(entry);
             return S_OK;
         }
 
