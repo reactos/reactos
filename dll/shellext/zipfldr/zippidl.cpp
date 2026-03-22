@@ -33,7 +33,7 @@ LPITEMIDLIST _ILCreateZipItem(ZipPidlType Type, PCWSTR lpString, unz_file_info64
     }
 
     wcscpy(pidl->Name, lpString);
-    *(WORD*)((char*)pidl + cbData) = 0; // The end of an ITEMIDLIST
+    *(PWORD)((PBYTE)pidl + cbData) = 0; // The end of an ITEMIDLIST
 
     return (LPITEMIDLIST)pidl;
 }
