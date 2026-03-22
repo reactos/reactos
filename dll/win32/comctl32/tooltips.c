@@ -1700,7 +1700,8 @@ TOOLTIPS_SetTitleT (TOOLTIPS_INFO *infoPtr, UINT_PTR uTitleIcon, LPCWSTR pszTitl
 
     Free(infoPtr->pszTitle);
 
-    if (pszTitle)
+    /* Suppress title and icon if title is NULL or empty (MSDN, CORE-20197). */
+    if (pszTitle && (isW ? ((LPCWSTR)pszTitle)[0] : ((LPCSTR)pszTitle)[0]))
     {
         if (isW)
         {
@@ -1722,10 +1723,15 @@ TOOLTIPS_SetTitleT (TOOLTIPS_INFO *infoPtr, UINT_PTR uTitleIcon, LPCWSTR pszTitl
     else
         infoPtr->pszTitle = NULL;
 
-    if (uTitleIcon <= TTI_ERROR)
-        infoPtr->hTitleIcon = hTooltipIcons[uTitleIcon];
+    if (infoPtr->pszTitle)
+    {
+        if (uTitleIcon <= TTI_ERROR)
+            infoPtr->hTitleIcon = hTooltipIcons[uTitleIcon];
+        else
+            infoPtr->hTitleIcon = CopyIcon((HICON)uTitleIcon);
+    }
     else
-        infoPtr->hTitleIcon = CopyIcon((HICON)uTitleIcon);
+        infoPtr->hTitleIcon = NULL;
 
     TRACE("icon = %p\n", infoPtr->hTitleIcon);
 
