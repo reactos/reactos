@@ -271,6 +271,7 @@ DnsResolv_SendRequest(
     SOCKADDR_IN RecAddr, RecAddr2, SendAddr;
     int SendAddrLen = sizeof(SendAddr);
     DWORD TimeoutMs;
+    WSADATA WsaData;
 
     RtlZeroMemory(&RecAddr,  sizeof(SOCKADDR_IN));
     RtlZeroMemory(&RecAddr2, sizeof(SOCKADDR_IN));
@@ -279,10 +280,23 @@ DnsResolv_SendRequest(
     /* Pull the request ID from the outgoing buffer. */
     RequestID = ntohs(((PSHORT)&pInBuffer[0])[0]);
 
+    /*
+     * Initialise Winsock for this call.  The caller (e.g. the DNS resolver
+     * service) may not have called WSAStartup yet; without it ws2_32 returns
+     * WSANOTINITIALISED and socket() fails immediately.
+     * WSAStartup/WSACleanup are ref-counted, so calling them here is safe
+     * even if the calling process already has Winsock initialised.
+     */
+    if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
+        return FALSE;
+
     /* Create UDP socket. */
     s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (s == INVALID_SOCKET)
+    {
+        WSACleanup();
         return FALSE;
+    }
 
     /* Apply receive timeout so recvfrom() doesn't block forever. */
     TimeoutMs = pConfig->Timeout * 1000;
@@ -317,6 +331,7 @@ DnsResolv_SendRequest(
         if (j == SOCKET_ERROR)
         {
             closesocket(s);
+            WSACleanup();
             return FALSE;
         }
 
@@ -337,6 +352,7 @@ DnsResolv_SendRequest(
                     break;
 
                 closesocket(s);
+                WSACleanup();
                 return FALSE;
             }
 
@@ -353,6 +369,7 @@ DnsResolv_SendRequest(
     }
 
     closesocket(s);
+    WSACleanup();
 
     if (j == SOCKET_ERROR)
         return FALSE;
