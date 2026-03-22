@@ -88,6 +88,83 @@ DECLARE_INTERFACE_(INetCfgComponentPropertyUi, IUnknown)
 EXTERN_C const IID IID_INetCfgComponentPropertyUi;
 
 #undef  INTERFACE
+#define INTERFACE   INetCfgComponentNotifyBinding
+DECLARE_INTERFACE_(INetCfgComponentNotifyBinding, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,QueryBindingPath) (THIS_ DWORD dwChangeFlag, INetCfgBindingPath *pncbpItem) PURE;
+    STDMETHOD_(HRESULT,NotifyBindingPath) (THIS_ DWORD dwChangeFlag, INetCfgBindingPath *pncbpItem) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgComponentNotifyBinding_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgComponentNotifyBinding_AddRef(p)                   (p)->lpVtbl->AddRef(p)
+#define INetCfgComponentNotifyBinding_Release(p)                  (p)->lpVtbl->Release(p)
+#define INetCfgComponentNotifyBinding_QueryBindingPath(p,a,b)     (p)->lpVtbl->QueryBindingPath(p,a,b)
+#define INetCfgComponentNotifyBinding_NotifyBindingPath(p,a,b)    (p)->lpVtbl->NotifyBindingPath(p,a,b)
+#endif
+
+EXTERN_C const IID IID_INetCfgComponentNotifyBinding;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgComponentNotifyGlobal
+DECLARE_INTERFACE_(INetCfgComponentNotifyGlobal, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,GetSupportedNotifications) (THIS_ DWORD *pdwNotifications) PURE;
+    STDMETHOD_(HRESULT,SysQueryBindingPath) (THIS_ DWORD dwChangeFlag, INetCfgBindingPath *pncbpItem) PURE;
+    STDMETHOD_(HRESULT,SysNotifyBindingPath) (THIS_ DWORD dwChangeFlag, INetCfgBindingPath *pncbpItem) PURE;
+    STDMETHOD_(HRESULT,SysNotifyComponent) (THIS_ DWORD dwChangeFlag, INetCfgComponent *pnccItem) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgComponentNotifyGlobal_QueryInterface(p,a,b)          (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgComponentNotifyGlobal_AddRef(p)                      (p)->lpVtbl->AddRef(p)
+#define INetCfgComponentNotifyGlobal_Release(p)                     (p)->lpVtbl->Release(p)
+#define INetCfgComponentNotifyGlobal_GetSupportedNotifications(p,a) (p)->lpVtbl->GetSupportedNotifications(p,a)
+#define INetCfgComponentNotifyGlobal_SysQueryBindingPath(p,a,b)     (p)->lpVtbl->SysQueryBindingPath(p,a,b)
+#define INetCfgComponentNotifyGlobal_SysNotifyBindingPath(p,a,b)    (p)->lpVtbl->SysNotifyBindingPath(p,a,b)
+#define INetCfgComponentNotifyGlobal_SysNotifyComponent(p,a,b)      (p)->lpVtbl->SysNotifyComponent(p,a,b)
+#endif
+
+EXTERN_C const IID IID_INetCfgComponentNotifyGlobal;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgComponentSetup
+DECLARE_INTERFACE_(INetCfgComponentSetup, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT,Install) (THIS_ DWORD dwSetupFlags) PURE;
+    STDMETHOD_(HRESULT,Upgrade) (THIS_ DWORD dwSetupFlags, DWORD dwUpgradeFromBuildNo) PURE;
+    STDMETHOD_(HRESULT,ReadAnswerFile) (THIS_ LPCWSTR pszwAnswerFile, LPCWSTR pszwAnswerSections) PURE;
+    STDMETHOD_(HRESULT,Removing) (THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgComponentControl_QueryInterface(p,a,b)             (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgComponentControl_AddRef(p)                         (p)->lpVtbl->AddRef(p)
+#define INetCfgComponentControl_Release(p)                        (p)->lpVtbl->Release(p)
+#define INetCfgComponentControl_Install(p,a)                      (p)->lpVtbl->Initialize(p,a)
+#define INetCfgComponentControl_Upgrade(p,a,b)                    (p)->lpVtbl->Upgrade(p,a,b)
+#define INetCfgComponentControl_ReadAnswerFile(p,a,b)             (p)->lpVtbl->ReadAnswerFile(p,a,b)
+#define INetCfgComponentControl_Removing(p)                       (p)->lpVtbl->Removing(p)
+#endif
+
+EXTERN_C const IID IID_INetCfgComponentSetup;
+
+#undef  INTERFACE
 #define INTERFACE   INetLanConnectionUiInfo
 DECLARE_INTERFACE_(INetLanConnectionUiInfo, IUnknown)
 {
@@ -103,7 +180,7 @@ DECLARE_INTERFACE_(INetLanConnectionUiInfo, IUnknown)
 #define INetLanConnectionUiInfo_QueryInterface(p,a,b)             (p)->lpVtbl->QueryInterface(p,a,b)
 #define INetLanConnectionUiInfo_AddRef(p)                         (p)->lpVtbl->AddRef(p)
 #define INetLanConnectionUiInfo_Release(p)                        (p)->lpVtbl->Release(p)
-#define INetLanConnectionUiInfo_GetDeviceGuid(p,a)                 (p)->lpVtbl->GetDeviceGuid(p,a)
+#define INetLanConnectionUiInfo_GetDeviceGuid(p,a)                (p)->lpVtbl->GetDeviceGuid(p,a)
 #endif
 
 EXTERN_C const IID IID_INetLanConnectionUiInfo;
