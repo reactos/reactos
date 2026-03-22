@@ -3,12 +3,12 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     zip pidl handling
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
- *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2023-2026 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
 
-LPITEMIDLIST _ILCreate(ZipPidlType Type, PCWSTR lpString, unz_file_info64& info)
+LPITEMIDLIST _ILCreateZipItem(ZipPidlType Type, PCWSTR lpString, unz_file_info64& info)
 {
     size_t cbData = sizeof(ZipPidlEntry) + wcslen(lpString) * sizeof(WCHAR);
     if (cbData > MAXWORD)
