@@ -22,12 +22,12 @@
 
 #include <winreg.h>
 
-TCHAR m_Text[MAX_PATH] = _T("ReactOS Rocks!");
+TCHAR m_Text[MAX_TEXT_LENGTH + 1] = _T("ReactOS Rocks!");
 
 VOID LoadSettings(VOID)
 {
 	HKEY hkey;
-	DWORD len = MAX_PATH * sizeof(TCHAR);
+	DWORD len = (MAX_TEXT_LENGTH + 1) * sizeof(TCHAR);
 
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_READ, NULL, &hkey, NULL) == ERROR_SUCCESS)
