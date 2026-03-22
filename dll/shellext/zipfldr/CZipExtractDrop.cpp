@@ -8,6 +8,9 @@
 #include "precomp.h"
 #include "CZipExtractDrop.hpp"
 
+// FIXME: Make CFSTR_PREFERREDDROPEFFECT effective in shell32
+static const UINT g_cfPreferred = RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT);
+
 static HRESULT GlobalClone(HGLOBAL* phDest, HGLOBAL hSrc)
 {
     SIZE_T cb = GlobalSize(hSrc);
@@ -162,6 +165,34 @@ class CZipExtractDrop :
         HGLOBAL    hData; // owned by us
     };
     CAtlArray<ExtraEntry> m_extraData;
+
+    void AddPreferredDropEffect()
+    {
+        if (!g_cfPreferred)
+            return;
+
+        for (SIZE_T i = 0; i < m_extraData.GetCount(); ++i)
+        {
+            if (m_extraData[i].cfFormat == g_cfPreferred)
+                return;
+        }
+
+        HGLOBAL hEffect = GlobalAlloc(GHND, sizeof(DWORD));
+        if (!hEffect)
+            return;
+
+        DWORD* pdw = static_cast<DWORD*>(GlobalLock(hEffect));
+        if (!pdw)
+        {
+            GlobalFree(hEffect);
+            return;
+        }
+        *pdw = DROPEFFECT_COPY; // Copy is preferred, not Move!
+        GlobalUnlock(hEffect);
+
+        ExtraEntry entry = { (CLIPFORMAT)g_cfPreferred, hEffect };
+        m_extraData.Add(entry);
+    }
 
     // Create a unique temporary directory and store it in m_tempDir.
     HRESULT CreateTempDir()
@@ -403,6 +434,8 @@ public:
             }
             m_selectedNames.Add(name);
         }
+
+        AddPreferredDropEffect();
         return S_OK;
     }
 
@@ -539,8 +572,12 @@ public:
         if (dwDirection != DATADIR_GET)
             return E_NOTIMPL;
 
-        FORMATETC format[] = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-        return SHCreateStdEnumFmtEtc(1, format, ppenum);
+        FORMATETC formats[] =
+        {
+            { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
+            { (CLIPFORMAT)g_cfPreferred, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL },
+        };
+        return SHCreateStdEnumFmtEtc(_countof(formats), formats, ppenum);
     }
 
     STDMETHODIMP DAdvise(FORMATETC*, DWORD, IAdviseSink*, DWORD*) override
