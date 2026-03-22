@@ -654,16 +654,6 @@ IopGetDeviceNode(
     IN PDEVICE_OBJECT DeviceObject
 );
 
-NTSTATUS
-IoCreateDriverList(
-    VOID
-);
-
-NTSTATUS
-IoDestroyDriverList(
-    VOID
-);
-
 CODE_SEG("INIT")
 NTSTATUS
 IopInitPlugPlayEvents(VOID);
