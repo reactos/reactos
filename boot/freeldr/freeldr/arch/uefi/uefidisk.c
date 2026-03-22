@@ -10,7 +10,7 @@
 #include <uefildr.h>
 
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(WARNING);
+DBG_DEFAULT_CHANNEL(DISK);
 
 #define TAG_HW_RESOURCE_LIST    'lRwH'
 #define TAG_HW_DISK_CONTEXT     'cDwH'
@@ -118,6 +118,16 @@ static EFI_GUID BlockIoGuid = BLOCK_IO_PROTOCOL;
 static EFI_HANDLE* handles = NULL;
 static ULONG HandleCount = 0;
 
+/* FUNCTIONS *****************************************************************/
+
+/* For disk.c!DiskError() */
+PCSTR
+DiskGetErrorCodeString(
+    _In_ ULONG ErrorCode)
+{
+    return NULL;
+}
+
 static
 BOOLEAN
 UefiIsAlignedPointer(
@@ -199,30 +209,7 @@ UefiEnsureDiskReadBufferAligned(
     return TRUE;
 }
 
-/* FUNCTIONS *****************************************************************/
-
-PCHAR
-GetHarddiskIdentifier(UCHAR DriveNumber)
-{
-    TRACE("GetHarddiskIdentifier: DriveNumber: %d\n", DriveNumber);
-    if (DriveNumber < FIRST_BIOS_DISK)
-        return NULL;
-    return PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
-}
-
-static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
-
-LONG
-DiskReportError(BOOLEAN bShowError)
-{
-    /* Set the reference count */
-    if (bShowError) ++lReportError;
-    else            --lReportError;
-    return lReportError;
-}
-
-
-/* GPT Support Functions ******************************************************/
+/* GPT Support Functions *****************************************************/
 
 static
 BOOLEAN
@@ -851,6 +838,16 @@ static const DEVVTBL UefiDiskVtbl =
     UefiDiskRead,
     UefiDiskSeek,
 };
+
+
+PCHAR
+GetHarddiskIdentifier(UCHAR DriveNumber)
+{
+    TRACE("GetHarddiskIdentifier: DriveNumber: %d\n", DriveNumber);
+    if (DriveNumber < FIRST_BIOS_DISK)
+        return NULL;
+    return PcDiskIdentifier[DriveNumber - FIRST_BIOS_DISK];
+}
 
 static
 VOID

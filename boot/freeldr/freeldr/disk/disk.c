@@ -1,20 +1,55 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ *              or MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Disk devices helpers
+ * COPYRIGHT:   Copyright 2025-2026 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
+/* INCLUDES ******************************************************************/
+
 #include <freeldr.h>
+
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(DISK);
+
+/* DISK IO ERROR SUPPORT *****************************************************/
+
+static LONG lReportError = 0; // >= 0: display errors; < 0: hide errors.
+
+LONG
+DiskReportError(
+    _In_ BOOLEAN bShowError)
+{
+    /* Set the reference count */
+    if (bShowError) ++lReportError;
+    else            --lReportError;
+    return lReportError;
+}
+
+VOID
+DiskError(
+    _In_ PCSTR ErrorString,
+    _In_ ULONG ErrorCode)
+{
+    PCSTR ErrorDescription;
+    CHAR ErrorCodeString[200];
+
+    if (lReportError < 0)
+        return;
+
+    ErrorDescription = DiskGetErrorCodeString(ErrorCode);
+    if (ErrorDescription)
+    {
+        RtlStringCbPrintfA(ErrorCodeString, sizeof(ErrorCodeString),
+                           "%s\n\nError Code: 0x%lx\nError: %s",
+                           ErrorString, ErrorCode, ErrorDescription);
+    }
+    else
+    {
+        RtlStringCbCopyA(ErrorCodeString, sizeof(ErrorCodeString), ErrorString);
+    }
+
+    ERR("%s\n", ErrorCodeString);
+    UiMessageBox(ErrorCodeString);
+}
