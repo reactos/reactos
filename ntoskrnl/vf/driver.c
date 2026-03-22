@@ -671,25 +671,27 @@ VfEnableDmaFaultInjection(
    POOL TRACKING
    ============================================================ */
 
-static VOID VfCheckIrqlForPool(POOL_TYPE PoolType, BOOLEAN IsFree)
+static VOID VfCheckIrqlForPool(POOL_TYPE PoolType, SIZE_T NumberOfBytes, BOOLEAN IsFree)
 {
     KIRQL CurrentIrql = KeGetCurrentIrql();
 
     if ((PoolType & PagedPool) && (CurrentIrql > APC_LEVEL))
     {
+        /* 0x01 is caller is allocating paged pool at IRQL > APC_LEVEL */
         KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
+                     0x01,
                      CurrentIrql,
-                     APC_LEVEL,
-                     IsFree,
-                     0);
+                     PoolType,
+                     NumberOfBytes);
     }
     else if (CurrentIrql > DISPATCH_LEVEL)
     {
+        /* 0x02 is caller is allocating nonpaged pool at IRQL > DISPATCH_LEVEL */
         KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
+                     0x02,
                      CurrentIrql,
-                     DISPATCH_LEVEL,
-                     IsFree,
-                     0);
+                     PoolType,
+                     NumberOfBytes);
     }
 }
 
@@ -749,28 +751,16 @@ PVOID NTAPI VfAllocatePool(
         Driver->AllocationsWithNoTag++;
 
     if (Driver && (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING))
-        VfCheckIrqlForPool(PoolType, FALSE);
+        VfCheckIrqlForPool(PoolType, Size, FALSE);
 
-    if (Driver && Driver->PoolQuota > 0)
-    {
-        KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
-        if ((Driver->PoolUsage + Size) > Driver->PoolQuota)
-        {
-            KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-            Driver->AllocationsFailedDeliberately++;
-            Driver->AllocationsFailed++;
-            VfFailDriver(DriverObject, "Pool quota exceeded");
-            return NULL;
-        }
-        Driver->PoolUsage += Size;
-        KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-    }
-
+    /* Zero-byte allocation ---- bugcheck per Windows driver verifier behavior */
     if (Size == 0)
     {
-        static UCHAR DummyZero;
-        Address = &DummyZero;
-        goto TrackAllocation;
+        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
+                     0x00,
+                     (ULONG_PTR)DriverObject,
+                     0,
+                     0);
     }
 
     if (Driver && (Driver->VerifierFlags & VF_FLAG_SPECIAL_POOL))
@@ -780,7 +770,6 @@ PVOID NTAPI VfAllocatePool(
         if (!Address)
         {
             if (Driver) Driver->AllocationsFailed++;
-            VfFailDriver(DriverObject, "Special pool allocation failed");
             return NULL;
         }
     }
@@ -790,13 +779,11 @@ PVOID NTAPI VfAllocatePool(
         if (!Address)
         {
             if (Driver) Driver->AllocationsFailed++;
-            VfFailDriver(DriverObject, "Pool allocation failed");
             return NULL;
         }
     }
 
-TrackAllocation:
-    if (!Address || !Driver)
+    if (!Driver)
         return Address;
 
     Driver->AllocationsSucceeded++;
@@ -848,10 +835,6 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
     PLIST_ENTRY Link;
     KIRQL OldIrql;
 
-    if (!Driver)
-        KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION, VF_SUBCODE_INVALID_FREE,
-                     (ULONG_PTR)Address, 0, 0);
-
     KeAcquireSpinLock(&Driver->PoolLock, &OldIrql);
 
     for (Link = Driver->PoolList.Flink; Link != &Driver->PoolList; Link = Link->Flink)
@@ -884,16 +867,6 @@ VOID NTAPI VfFreePool(PDRIVER_OBJECT DriverObject, PVOID Address, ULONG PoolTag,
             }
 
             KeReleaseSpinLock(&Driver->PoolLock, OldIrql);
-
-            if (Driver->VerifierFlags & VF_FLAG_IRQL_CHECKING)
-            {
-                if (KeGetCurrentIrql() > Alloc->AllocateIrql)
-                    KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
-                                 KeGetCurrentIrql(),
-                                 Alloc->AllocateIrql,
-                                 (ULONG_PTR)DriverObject,
-                                 (ULONG_PTR)Address);
-            }
 
             if (Alloc->PoolType != PoolType)
             {
@@ -1671,23 +1644,23 @@ VfPutDmaAdapter(
     PDMA_ADAPTER Adapter
 )
 {
-    VF_DMA_ADAPTER_TRACK* T;
+    VF_DMA_ADAPTER_TRACK* Track;
 
-    T = VfLookupDmaAdapter(Adapter);
-    if (T)
+    Track = VfLookupDmaAdapter(Adapter);
+    if (Track)
     {
-        if (T->MapRegisterCount != 0)
+        if (Track->MapRegisterCount != 0)
         {
             KeBugCheckEx(
                 DRIVER_VERIFIER_DETECTED_VIOLATION,
                 VF_VIOLATION_LEAKED_RESOURCES,
                 (ULONG_PTR)Adapter,
-                T->MapRegisterCount,
+                Track->MapRegisterCount,
                 0
             );
         }
 
-        T->AdapterReleased = TRUE;
+        Track->AdapterReleased = TRUE;
     }
 
     Adapter->DmaOperations->PutDmaAdapter(Adapter);
@@ -1747,7 +1720,7 @@ VfGetDmaAdapter(
             0,
             0
         );
-        return NULL; /* unreachable */
+        UNREACHABLE;
     }
 
     RtlZeroMemory(Track, sizeof(*Track));
