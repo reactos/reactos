@@ -151,6 +151,7 @@ class CZipExtractDrop :
     CAtlArray<CStringW> m_selectedNames; // Names of the top-level items (relative to m_ZipDir)
     HGLOBAL m_hDropCache; // Cached HDROP after first extraction
     CStringW  m_tempDir; // Temporary directory created during extraction
+    CComAutoCriticalSection m_csExtract;
 
     // Create a unique temporary directory and store it in m_tempDir.
     HRESULT CreateTempDir()
@@ -404,11 +405,13 @@ public:
 
         ZeroMemory(pstm, sizeof(*pstm));
 
-        // Handle CF_HDROP ourselves.
+        // Handle CF_HDROP ourselves
         if (pfe->cfFormat == CF_HDROP && (pfe->tymed & TYMED_HGLOBAL) &&
             pfe->dwAspect == DVASPECT_CONTENT)
         {
-            // Extract on first request.
+            CComCritSecLock<CComAutoCriticalSection> lock(m_csExtract);
+
+            // Extract on first request
             if (!m_hDropCache)
             {
                 HRESULT hr = DoExtract();
@@ -416,7 +419,7 @@ public:
                     return hr;
             }
 
-            // Duplicate the cached HGLOBAL.
+            // Duplicate the cached HGLOBAL
             HGLOBAL hCopy;
             HRESULT hr = GlobalClone(&hCopy, m_hDropCache);
             if (FAILED_UNEXPECTEDLY(hr))
@@ -460,31 +463,10 @@ public:
         if (!pfe || !pstm)
             return E_INVALIDARG;
 
-        // We only handle HGLOBAL storage (covers DataObjectAttributes and similar).
         if (pstm->tymed == TYMED_HGLOBAL && pstm->hGlobal)
         {
-            // Copy the data into our own HGLOBAL so we own it regardless of fRelease.
-            SIZE_T cb = GlobalSize(pstm->hGlobal);
-            HGLOBAL hCopy = GlobalAlloc(GMEM_MOVEABLE, cb);
-            if (!hCopy)
-                return E_OUTOFMEMORY;
-
-            PVOID pSrc = GlobalLock(pstm->hGlobal), pDst = GlobalLock(hCopy);
-            if (pSrc && pDst)
-                CopyMemory(pDst, pSrc, cb);
-            if (pSrc)
-                GlobalUnlock(pstm->hGlobal);
-            if (pDst)
-                GlobalUnlock(hCopy);
-            if (!pSrc || !pDst)
-            {
-                GlobalFree(hCopy);
-                return E_OUTOFMEMORY;
-            }
-
             if (fRelease)
                 ReleaseStgMedium(pstm);
-
             return S_OK;
         }
 
@@ -496,8 +478,8 @@ public:
         if (dwDirection != DATADIR_GET)
             return E_NOTIMPL;
 
-        FORMATETC hdropFmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-        return SHCreateStdEnumFmtEtc(1, &hdropFmt, ppenum);
+        FORMATETC format[] = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        return SHCreateStdEnumFmtEtc(1, format, ppenum);
     }
 
     STDMETHODIMP DAdvise(FORMATETC*, DWORD, IAdviseSink*, DWORD*) override
