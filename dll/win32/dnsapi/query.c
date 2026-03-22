@@ -999,6 +999,8 @@ Query_Main(LPCWSTR Name,
             for (qi = 0; qi < (int)NumQuestions; qi++)
             {
                 CHAR dummy[256];
+                if (rk >= (int)ResponseLen)
+                    break;
                 rk += DnsResolv_ExtractName(ResponseBuf, dummy, (USHORT)rk, 0);
                 rk += 4; /* QTYPE + QCLASS */
             }
@@ -1016,6 +1018,8 @@ Query_Main(LPCWSTR Name,
                 USHORT  RDLength;
                 PDNS_RECORD pRecord;
 
+                if (rk >= (int)ResponseLen)
+                    break;
                 rk += DnsResolv_ExtractName(ResponseBuf, RRName, (USHORT)rk, 0);
                 RRType   = ntohs(((PUSHORT)&ResponseBuf[rk])[0]);  rk += 2;
                 /* Class */ rk += 2;

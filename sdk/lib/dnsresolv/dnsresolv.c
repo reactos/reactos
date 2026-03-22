@@ -186,16 +186,25 @@ DnsResolv_ExtractName(
             if (!m) c++;
             m = 1;
             d += (255 - Limit);
+            /* Cap d so we never write more than 255 chars to pOutput (which
+             * callers allocate as 256 bytes: 255 chars + null terminator). */
+            if (d > 255)
+                d = 255;
             i = pBuffer[i];
         }
         else
         {
             for (j = 0; j < l; j++)
             {
-                pOutput[k] = pBuffer[i];
+                /* Guard against output buffer overflow: pOutput is always
+                 * 256 bytes; reserve index 255 for the null terminator. */
+                if (k < 255)
+                {
+                    pOutput[k] = pBuffer[i];
+                    k++;
+                }
                 i++;
                 if (!m) c++;
-                k++;
                 d--;
             }
 
@@ -204,7 +213,8 @@ DnsResolv_ExtractName(
             if (!pBuffer[i] || (d < 1))
                 break;
 
-            pOutput[k++] = '.';
+            if (k < 255)
+                pOutput[k++] = '.';
         }
     }
 
