@@ -266,16 +266,17 @@ DnsResolv_SendRequest(
     int j;
     DWORD Attempt;
     USHORT RequestID, ResponseID;
-    BOOL bWait;
+    BOOL bGotReply;
     SOCKET s;
-    SOCKADDR_IN RecAddr, RecAddr2, SendAddr;
+    SOCKADDR_IN ServerAddr, SendAddr;
     int SendAddrLen = sizeof(SendAddr);
-    DWORD TimeoutMs;
+    fd_set ReadFds;
+    struct timeval Tv;
+    int SelectResult;
     WSADATA WsaData;
 
-    RtlZeroMemory(&RecAddr,  sizeof(SOCKADDR_IN));
-    RtlZeroMemory(&RecAddr2, sizeof(SOCKADDR_IN));
-    RtlZeroMemory(&SendAddr, sizeof(SOCKADDR_IN));
+    RtlZeroMemory(&ServerAddr, sizeof(SOCKADDR_IN));
+    RtlZeroMemory(&SendAddr,   sizeof(SOCKADDR_IN));
 
     /* Pull the request ID from the outgoing buffer. */
     RequestID = ntohs(((PSHORT)&pInBuffer[0])[0]);
@@ -298,24 +299,10 @@ DnsResolv_SendRequest(
         return FALSE;
     }
 
-    /* Apply receive timeout so recvfrom() doesn't block forever. */
-    TimeoutMs = pConfig->Timeout * 1000;
-    setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char *)&TimeoutMs, sizeof(TimeoutMs));
-
     /* Destination: the configured DNS server. */
-    RecAddr.sin_family      = AF_INET;
-    RecAddr.sin_port        = htons(pConfig->Port);
-    RecAddr.sin_addr.s_addr = inet_addr(pConfig->ServerAddress);
-
-    /*
-     * Bind to any local address and an OS-assigned ephemeral port (port 0).
-     * Using port 53 here would make queries appear to originate from a DNS
-     * server, causing most routers/forwarders to reject or ignore them.
-     */
-    RecAddr2.sin_family      = AF_INET;
-    RecAddr2.sin_port        = 0;
-    RecAddr2.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(s, (SOCKADDR *)&RecAddr2, sizeof(RecAddr2));
+    ServerAddr.sin_family      = AF_INET;
+    ServerAddr.sin_port        = htons(pConfig->Port);
+    ServerAddr.sin_addr.s_addr = inet_addr(pConfig->ServerAddress);
 
     j = SOCKET_ERROR;
 
@@ -326,8 +313,8 @@ DnsResolv_SendRequest(
                    pInBuffer,
                    InBufferLength,
                    0,
-                   (SOCKADDR *)&RecAddr,
-                   sizeof(RecAddr));
+                   (SOCKADDR *)&ServerAddr,
+                   sizeof(ServerAddr));
         if (j == SOCKET_ERROR)
         {
             closesocket(s);
@@ -335,10 +322,27 @@ DnsResolv_SendRequest(
             return FALSE;
         }
 
-        bWait = TRUE;
-        while (bWait)
+        /*
+         * Use select() to wait for a reply with a timeout.  This mirrors
+         * how ADNS waits on its non-blocking UDP socket and avoids relying
+         * on SO_RCVTIMEO, which is not reliably implemented in ReactOS.
+         */
+        bGotReply = FALSE;
+        while (!bGotReply)
         {
-            /* Wait for a DNS reply. */
+            FD_ZERO(&ReadFds);
+            FD_SET(s, &ReadFds);
+            Tv.tv_sec  = (long)pConfig->Timeout;
+            Tv.tv_usec = 0;
+
+            SelectResult = select((int)(s + 1), &ReadFds, NULL, NULL, &Tv);
+            if (SelectResult == SOCKET_ERROR || SelectResult == 0)
+            {
+                /* Error or timeout — try next attempt if available. */
+                break;
+            }
+
+            /* Socket is readable; receive the datagram. */
             j = recvfrom(s,
                          pOutBuffer,
                          *pOutBufferLength,
@@ -346,32 +350,23 @@ DnsResolv_SendRequest(
                          (SOCKADDR *)&SendAddr,
                          &SendAddrLen);
             if (j == SOCKET_ERROR)
-            {
-                /* On timeout, retry if we have attempts left. */
-                if (WSAGetLastError() == WSAETIMEDOUT && Attempt < pConfig->Retry)
-                    break;
-
-                closesocket(s);
-                WSACleanup();
-                return FALSE;
-            }
+                break;
 
             ResponseID = ntohs(((PSHORT)&pOutBuffer[0])[0]);
 
             /* Accept only responses that match our request ID. */
             if (ResponseID == RequestID)
-                bWait = FALSE;
+                bGotReply = TRUE;
         }
 
-        /* If we received a valid response, stop retrying. */
-        if (!bWait)
+        if (bGotReply)
             break;
     }
 
     closesocket(s);
     WSACleanup();
 
-    if (j == SOCKET_ERROR)
+    if (!bGotReply)
         return FALSE;
 
     /* Update the caller's buffer-length to the actual response size. */

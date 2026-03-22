@@ -138,11 +138,11 @@ DnsResolv_ExtractIP(
  * DnsResolv_SendRequest
  *
  * Sends the raw DNS query in pInBuffer to the server described by
- * pConfig and waits for a response.  The response is written to
- * pOutBuffer; *pOutBufferLength must be set to the buffer size on
- * entry and is updated to the actual response length on exit.
+ * pConfig and waits for a response using select().  The response is
+ * written to pOutBuffer; *pOutBufferLength must be set to the buffer
+ * size on entry and is updated to the actual response length on exit.
  *
- * Returns TRUE on success, FALSE on any socket error.
+ * Returns TRUE on success, FALSE on any socket error or timeout.
  */
 BOOL
 DnsResolv_SendRequest(
