@@ -12,6 +12,8 @@
 #include <iphlpapi.h>
 
 STATE   State;
+HANDLE  ProcessHeap;
+ULONG   RequestID;
 
 void PrintState()
 {
@@ -74,26 +76,161 @@ void PrintUsage()
                  " using 'server'\n") );
 }
 
-/*
- * PerformInternalLookup
- *
- * Simple wrapper around DnsResolv_Lookup.  Used to resolve the DNS
- * server's own name from its IP (or vice versa) before the main query.
- */
 BOOL PerformInternalLookup( PCHAR pAddr, PCHAR pResult )
 {
-    DNS_RESOLVER_CONFIG config;
+    /* Needed to issue DNS packets and parse them. */
+    PCHAR Buffer = NULL, RecBuffer = NULL;
+    CHAR pResolve[256];
+    ULONG BufferLength = 0, RecBufferLength = 512;
+    int i = 0, j = 0, k = 0, d = 0;
+    BOOL bOk = FALSE;
 
-    DnsResolv_InitConfig(&config);
-    strncpy(config.ServerAddress, State.DefaultServerAddress,
-            sizeof(config.ServerAddress) - 1);
-    config.ServerAddress[sizeof(config.ServerAddress) - 1] = '\0';
-    config.Port    = State.port;
-    config.Timeout = State.timeout;
-    config.Retry   = State.retry;
-    config.Recurse = State.recurse;
+    /* Makes things easier when parsing the response packet. */
+    USHORT NumQuestions;
+    USHORT Type;
 
-    return DnsResolv_Lookup(pAddr, 0, pResult, &config);
+    if( (strlen( pAddr ) + 1) > 255 ) return FALSE;
+
+    Type = TYPE_A;
+    if( IsValidIP( pAddr ) ) Type = TYPE_PTR;
+
+    /* If it's a PTR lookup then append the ARPA sig to the end. */
+    if( Type == TYPE_PTR )
+    {
+        ReverseIP( pAddr, pResolve );
+        strcat( pResolve, ARPA_SIG );
+    }
+    else
+    {
+        strcpy( pResolve, pAddr );
+    }
+
+    /* Base header length + length of QNAME + length of QTYPE and QCLASS */
+    BufferLength = 12 + (strlen( pResolve ) + 2) + 4;
+
+    /* Allocate memory for the buffer. */
+    Buffer = HeapAlloc( ProcessHeap, 0, BufferLength );
+    if( !Buffer )
+    {
+        _tprintf( _T("ERROR: Out of memory\n") );
+        goto cleanup;
+    }
+
+    /* Allocate the receiving buffer. */
+    RecBuffer = HeapAlloc( ProcessHeap, 0, RecBufferLength );
+    if( !RecBuffer )
+    {
+        _tprintf( _T("ERROR: Out of memory\n") );
+        goto cleanup;
+    }
+
+    /* Insert the ID field. */
+    ((PSHORT)&Buffer[i])[0] = htons( RequestID );
+    i += 2;
+
+    /* Bits 0-7 of the second 16 are all 0, except for when recursion is
+       desired. */
+    Buffer[i] = 0x00;
+    if( State.recurse) Buffer[i] |= 0x01;
+    i += 1;
+
+    /* Bits 8-15 of the second 16 are 0 for a query. */
+    Buffer[i] = 0x00;
+    i += 1;
+
+    /* Only 1 question. */
+    ((PSHORT)&Buffer[i])[0] = htons( 1 );
+    i += 2;
+
+    /* We aren't sending a response, so 0 out the rest of the header. */
+    Buffer[i] = 0x00;
+    Buffer[i + 1] = 0x00;
+    Buffer[i + 2] = 0x00;
+    Buffer[i + 3] = 0x00;
+    Buffer[i + 4] = 0x00;
+    Buffer[i + 5] = 0x00;
+    i += 6;
+
+    /* Walk through the query address. Split each section delimited by '.'.
+       Format of the QNAME section is length|data, etc. Last one is null */
+    j = i;
+    i += 1;
+
+    for( k = 0; k < strlen( pResolve ); k += 1 )
+    {
+        if( pResolve[k] != '.' )
+        {
+            Buffer[i] = pResolve[k];
+            i += 1;
+        }
+        else
+        {
+            Buffer[j] = (i - j) - 1;
+            j = i;
+            i += 1;
+        }
+    }
+
+    Buffer[j] = (i - j) - 1;
+    Buffer[i] = 0x00;
+    i += 1;
+
+    /* QTYPE */
+    ((PSHORT)&Buffer[i])[0] = htons( Type );
+    i += 2;
+
+    /* QCLASS */
+    ((PSHORT)&Buffer[i])[0] = htons( CLASS_IN );
+
+    /* Ship the request off to the DNS server. */
+    bOk = SendRequest( Buffer,
+                       BufferLength,
+                       RecBuffer,
+                       &RecBufferLength );
+    if( !bOk ) goto cleanup;
+
+    /* Start parsing the received packet. */
+    NumQuestions = ntohs( ((PSHORT)&RecBuffer[4])[0] );
+
+    k = 12;
+
+    /* We don't care about the questions section, blow through it. */
+    if( NumQuestions )
+    {
+        for( i = 0; i < NumQuestions; i += 1 )
+        {
+            /* Quick way to skip the domain name section. */
+            k += ExtractName( RecBuffer, pResult, k, 0 );
+            k += 4;
+        }
+    }
+
+    /* Skip the answer name. */
+    k += ExtractName( RecBuffer, pResult, k, 0 );
+
+    Type = ntohs( ((PUSHORT)&RecBuffer[k])[0] );
+    k += 8;
+
+    d = ntohs( ((PUSHORT)&RecBuffer[k])[0] );
+    k += 2;
+
+    if( TYPE_PTR == Type )
+    {
+        k += ExtractName( RecBuffer, pResult, k, d );
+    }
+    else if( TYPE_A == Type )
+    {
+        k += ExtractIP( RecBuffer, pResult, k );
+    }
+
+cleanup:
+    /* Free memory. */
+    if( Buffer ) HeapFree( ProcessHeap, 0, Buffer );
+    if( RecBuffer ) HeapFree( ProcessHeap, 0, RecBuffer );
+
+    RequestID += 1;
+
+    return bOk;
 }
 
 void PerformLookup( PCHAR pAddr )
@@ -105,7 +242,6 @@ void PerformLookup( PCHAR pAddr )
     ULONG BufferLength = 0, RecBufferLength = 512;
     int i = 0, j = 0, k = 0, d = 0;
     BOOL bOk = FALSE;
-    static ULONG RequestID = 1;
 
     /* Makes things easier when parsing the response packet. */
     UCHAR Header2;
@@ -124,15 +260,15 @@ void PerformLookup( PCHAR pAddr )
         || !strcmp( TypeBoth, State.type ) )
     {
         Type = TYPE_A;
-        if( DnsResolv_IsValidIP( pAddr ) ) Type = TYPE_PTR;
+        if( IsValidIP( pAddr ) ) Type = TYPE_PTR;
     }
     else
-        Type = DnsResolv_TypeNametoTypeID( State.type );
+        Type = TypeNametoTypeID( State.type );
 
     /* If it's a PTR lookup then append the ARPA sig to the end. */
-    if( (Type == TYPE_PTR) && DnsResolv_IsValidIP( pAddr ) )
+    if( (Type == TYPE_PTR) && IsValidIP( pAddr ) )
     {
-        DnsResolv_ReverseIP( pAddr, pResolve );
+        ReverseIP( pAddr, pResolve );
         strcat( pResolve, ARPA_SIG );
     }
     else
@@ -144,7 +280,7 @@ void PerformLookup( PCHAR pAddr )
     BufferLength = 12 + (strlen( pResolve ) + 2) + 4;
 
     /* Allocate memory for the buffer. */
-    Buffer = HeapAlloc( GetProcessHeap(), 0, BufferLength );
+    Buffer = HeapAlloc( ProcessHeap, 0, BufferLength );
     if( !Buffer )
     {
         _tprintf( _T("ERROR: Out of memory\n") );
@@ -152,7 +288,7 @@ void PerformLookup( PCHAR pAddr )
     }
 
     /* Allocate memory for the return buffer. */
-    RecBuffer = HeapAlloc( GetProcessHeap(), 0, RecBufferLength );
+    RecBuffer = HeapAlloc( ProcessHeap, 0, RecBufferLength );
     if( !RecBuffer )
     {
         _tprintf( _T("ERROR: Out of memory\n") );
@@ -160,7 +296,7 @@ void PerformLookup( PCHAR pAddr )
     }
 
     /* Insert the ID field. */
-    ((PSHORT)&Buffer[i])[0] = htons( (USHORT)RequestID );
+    ((PSHORT)&Buffer[i])[0] = htons( RequestID );
     i += 2;
 
     /* Bits 0-7 of the second 16 are all 0, except for when recursion is
@@ -191,7 +327,7 @@ void PerformLookup( PCHAR pAddr )
     j = i;
     i += 1;
 
-    for( k = 0; k < (int)strlen( pResolve ); k += 1 )
+    for( k = 0; k < strlen( pResolve ); k += 1 )
     {
         if( pResolve[k] != '.' )
         {
@@ -200,13 +336,13 @@ void PerformLookup( PCHAR pAddr )
         }
         else
         {
-            Buffer[j] = (CHAR)((i - j) - 1);
+            Buffer[j] = (i - j) - 1;
             j = i;
             i += 1;
         }
     }
 
-    Buffer[j] = (CHAR)((i - j) - 1);
+    Buffer[j] = (i - j) - 1;
     Buffer[i] = 0x00;
     i += 1;
 
@@ -215,7 +351,7 @@ void PerformLookup( PCHAR pAddr )
     i += 2;
 
     /* QCLASS */
-    ((PSHORT)&Buffer[i])[0] = htons( DnsResolv_ClassNametoClassID( State.Class ) );
+    ((PSHORT)&Buffer[i])[0] = htons( ClassNametoClassID( State.Class ) );
 
     /* Ship off the request to the DNS server. */
     bOk = SendRequest( Buffer,
@@ -259,7 +395,7 @@ void PerformLookup( PCHAR pAddr )
         /* Blow through the questions section since we don't care about it. */
         for( i = 0; i < NumQuestions; i += 1 )
         {
-            k += DnsResolv_ExtractName( RecBuffer, pResult, k, 0 );
+            k += ExtractName( RecBuffer, pResult, k, 0 );
             k += 4;
         }
     }
@@ -267,7 +403,7 @@ void PerformLookup( PCHAR pAddr )
     if( NumAnswers )
     {
         /* Skip the name. */
-        k += DnsResolv_ExtractName( RecBuffer, pResult, k, 0 );
+        k += ExtractName( RecBuffer, pResult, k, 0 );
 
         Type = ntohs( ((PUSHORT)&RecBuffer[k])[0] );
         k += 8;
@@ -277,11 +413,11 @@ void PerformLookup( PCHAR pAddr )
 
         if( TYPE_PTR == Type )
         {
-            k += DnsResolv_ExtractName( RecBuffer, pResult, k, d );
+            k += ExtractName( RecBuffer, pResult, k, d );
         }
         else if( TYPE_A == Type )
         {
-            k += DnsResolv_ExtractIP( RecBuffer, pResult, k );
+            k += ExtractIP( RecBuffer, pResult, k );
         }
     }
 
@@ -317,8 +453,8 @@ void PerformLookup( PCHAR pAddr )
 
 cleanup:
     /* Free memory. */
-    if( Buffer ) HeapFree( GetProcessHeap(), 0, Buffer );
-    if( RecBuffer ) HeapFree( GetProcessHeap(), 0, RecBuffer );
+    if( Buffer ) HeapFree( ProcessHeap, 0, Buffer );
+    if( RecBuffer ) HeapFree( ProcessHeap, 0, RecBuffer );
 
     RequestID += 1;
 }
@@ -355,7 +491,7 @@ BOOL ParseCommandLine( int argc, char* argv[] )
 
                 /* Determine which one to resolve. This is based on whether the
                    DNS server provided was an IP or an FQDN. */
-                if( DnsResolv_IsValidIP( Server ) )
+                if( IsValidIP( Server ) )
                 {
                     strncpy( State.DefaultServerAddress, Server, 16 );
 
@@ -627,6 +763,9 @@ int main( int argc, char* argv[] )
     WSADATA wsaData;
     int ret;
 
+    ProcessHeap = GetProcessHeap();
+    RequestID = 1;
+
     /* Set up the initial state. */
     State.debug = FALSE;
     State.defname = TRUE;
@@ -662,7 +801,7 @@ int main( int argc, char* argv[] )
         return -2;
     }
 
-    pNetInfo = (PFIXED_INFO)HeapAlloc( GetProcessHeap(), 0, NetBufLen );
+    pNetInfo = (PFIXED_INFO)HeapAlloc( ProcessHeap, 0, NetBufLen );
     if( pNetInfo == NULL )
     {
         _tprintf( _T("ERROR: Out of memory\n") );
@@ -676,7 +815,7 @@ int main( int argc, char* argv[] )
     {
         _tprintf( _T("Error in GetNetworkParams call\n") );
 
-        HeapFree( GetProcessHeap(), 0, pNetInfo );
+        HeapFree( ProcessHeap, 0, pNetInfo );
 
         return -2;
     }
@@ -687,7 +826,7 @@ int main( int argc, char* argv[] )
              pNetInfo->DnsServerList.IpAddress.String,
              15 );
 
-    HeapFree( GetProcessHeap(), 0, pNetInfo );
+    HeapFree( ProcessHeap, 0, pNetInfo );
 
     ret = WSAStartup( MAKEWORD(2, 2), &wsaData );
     if (ret != 0)

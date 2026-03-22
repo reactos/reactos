@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/dnsapi/dnsapi/query.c
- * PURPOSE:     DNSAPI functions built on the ADNS library.
+ * PURPOSE:     DNSAPI functions
  * PROGRAMER:   Art Yerkes
  * UPDATE HISTORY:
  *              12/15/03 -- Created
@@ -649,6 +649,71 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
 }
 
 
+/*
+ * Query_Main
+ *
+ * Direct DNS resolver using raw UDP queries (via dnsresolv).
+ * Replaces the former ADNS-based implementation so that every DNS
+ * resource record is returned with its real wire-format TTL value
+ * instead of ADNS's synthesised "expires" timestamp.
+ *
+ * CNAME chains are followed manually (up to CNAME_LOOP_MAX hops) to
+ * match the behaviour of the previous implementation.
+ */
+
+#define CNAME_LOOP_MAX 16
+
+/* Simple monotonically-increasing transaction ID.  Not thread-safe but
+ * sufficient for a stub resolver that sends one query at a time. */
+static USHORT g_DnsQueryID = 1;
+
+/*
+ * Query_BuildPacket
+ *
+ * Fills *pBuf (which must be at least 12 + strlen(Name)+2 + 4 bytes) with a
+ * single-question DNS query for <Name>/<Type>/IN.  Returns the packet length.
+ */
+static ULONG
+Query_BuildPacket(
+    _Out_ PCHAR  pBuf,
+    _In_  PCHAR  Name,
+    _In_  USHORT Type,
+    _In_  BOOL   Recurse,
+    _In_  USHORT RequestID)
+{
+    int i = 0, j, k;
+
+    /* Transaction ID */
+    ((PUSHORT)&pBuf[i])[0] = htons(RequestID);  i += 2;
+    /* Flags: QR=0 (query), OPCODE=0, RD=Recurse */
+    pBuf[i++] = Recurse ? 0x01 : 0x00;
+    pBuf[i++] = 0x00;
+    /* QDCOUNT=1, ANCOUNT=NSCOUNT=ARCOUNT=0 */
+    ((PUSHORT)&pBuf[i])[0] = htons(1);  i += 2;
+    RtlZeroMemory(&pBuf[i], 6);         i += 6;
+
+    /* QNAME: length-prefixed labels */
+    j = i++;
+    for (k = 0; k < (int)strlen(Name); k++)
+    {
+        if (Name[k] != '.')
+            pBuf[i++] = Name[k];
+        else
+        {
+            pBuf[j] = (CHAR)(i - j - 1);
+            j = i++;
+        }
+    }
+    pBuf[j]   = (CHAR)(i - j - 1);
+    pBuf[i++] = 0x00;
+
+    /* QTYPE and QCLASS=IN */
+    ((PUSHORT)&pBuf[i])[0] = htons(Type);  i += 2;
+    ((PUSHORT)&pBuf[i])[0] = htons(1);     /* IN */
+
+    return (ULONG)(i + 2);
+}
+
 DNS_STATUS
 WINAPI
 Query_Main(LPCWSTR Name,
@@ -656,21 +721,35 @@ Query_Main(LPCWSTR Name,
            DWORD Options,
            PDNS_RECORD *QueryResultSet)
 {
-    adns_state astate;
-    int quflags = (Options & DNS_QUERY_NO_RECURSION) == 0 ? adns_qf_search : 0;
-    int adns_error;
-    adns_answer *answer;
-    LPSTR CurrentName;
-    unsigned CNameLoop;
     PFIXED_INFO network_info;
     ULONG network_info_blen = 0;
     DWORD network_info_result;
     PIP_ADDR_STRING pip;
     IP4_ADDRESS Address;
-    struct in_addr addr;
     PCHAR HostWithDomainName;
     PCHAR AnsiName;
     size_t NameLen = 0;
+    /* dnsresolv config */
+    DNS_RESOLVER_CONFIG Config;
+    BOOL bRecurse;
+    BOOL bFoundServer;
+    /* CNAME-chain state */
+    PCHAR CurrentName;
+    unsigned CNameLoop;
+    PDNS_RECORD pLastRecord;
+    DNS_STATUS Status;
+    /* Per-iteration buffers */
+    PCHAR QueryBuf;
+    PCHAR ResponseBuf;
+    ULONG QueryLen;
+    ULONG ResponseLen;
+    USHORT RequestID;
+    /* Response parsing */
+    int ri, rk, qi;
+    USHORT NumQuestions, NumAnswers;
+    UCHAR RCode;
+    BOOL bGotAnswer;
+    PCHAR CNameTarget;
 
     if (Name == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -682,51 +761,44 @@ Query_Main(LPCWSTR Name,
     switch (Type)
     {
     case DNS_TYPE_A:
-        /* FIXME: how much instead of MAX_PATH? */
-        NameLen = WideCharToMultiByte(CP_ACP,
-                                      0,
-                                      Name,
-                                      -1,
-                                      NULL,
-                                      0,
-                                      NULL,
-                                      0);
+        /* Convert the name from Unicode to ANSI */
+        NameLen = WideCharToMultiByte(CP_ACP, 0, Name, -1, NULL, 0, NULL, 0);
         AnsiName = RtlAllocateHeap(RtlGetProcessHeap(), 0, NameLen);
-        if (NULL == AnsiName)
-        {
+        if (AnsiName == NULL)
             return ERROR_OUTOFMEMORY;
-        }
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            Name,
-                            -1,
-                            AnsiName,
-                            NameLen,
-                            NULL,
-                            0);
+        WideCharToMultiByte(CP_ACP, 0, Name, -1, AnsiName, NameLen, NULL, 0);
         NameLen--;
 
+        /* Get network parameters (domain name, DNS server list) */
         network_info_result = GetNetworkParams(NULL, &network_info_blen);
-        network_info = (PFIXED_INFO)RtlAllocateHeap(RtlGetProcessHeap(), 0, (size_t)network_info_blen);
-        if (NULL == network_info)
+        network_info = (PFIXED_INFO)RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                                    (size_t)network_info_blen);
+        if (network_info == NULL)
         {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return ERROR_OUTOFMEMORY;
         }
-
         network_info_result = GetNetworkParams(network_info, &network_info_blen);
         if (network_info_result != ERROR_SUCCESS)
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return network_info_result;
         }
 
-        if ((Address = CheckForCurrentHostname(NameLen != 0 ? AnsiName : network_info->HostName, network_info)) != 0)
+        /* Shortcut: if the name resolves to the local machine, synthesise a
+         * record without a network query. */
+        if ((Address = CheckForCurrentHostname(NameLen != 0 ? AnsiName
+                                                            : network_info->HostName,
+                                               network_info)) != 0)
         {
             size_t TempLen = 2, StringLength = 0;
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            StringCchLengthA(network_info->HostName, sizeof(network_info->HostName), &StringLength);
+            StringCchLengthA(network_info->HostName,
+                             sizeof(network_info->HostName), &StringLength);
             TempLen += StringLength;
-            StringCchLengthA(network_info->DomainName, sizeof(network_info->DomainName), &StringLength);
+            StringCchLengthA(network_info->DomainName,
+                             sizeof(network_info->DomainName), &StringLength);
             TempLen += StringLength;
             HostWithDomainName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), 0, TempLen);
             StringCchCopyA(HostWithDomainName, TempLen, network_info->HostName);
@@ -736,8 +808,9 @@ Query_Main(LPCWSTR Name,
                 StringCchCatA(HostWithDomainName, TempLen, network_info->DomainName);
             }
             RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
-            *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
 
+            *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                                           sizeof(DNS_RECORD));
             if (NULL == *QueryResultSet)
             {
                 RtlFreeHeap(RtlGetProcessHeap(), 0, HostWithDomainName);
@@ -749,10 +822,9 @@ Query_Main(LPCWSTR Name,
             (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
             (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
             (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
+            (*QueryResultSet)->dwTtl = 7 * 24 * 60 * 60;
             (*QueryResultSet)->Data.A.IpAddress = Address;
-
             (*QueryResultSet)->pName = (LPSTR)DnsCToW(HostWithDomainName);
-
             RtlFreeHeap(RtlGetProcessHeap(), 0, HostWithDomainName);
             return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
         }
@@ -764,121 +836,208 @@ Query_Main(LPCWSTR Name,
             return ERROR_FILE_NOT_FOUND;
         }
 
-        adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
-        if (adns_error != adns_s_ok)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
-        }
+        /* Build a resolver config from the first usable DNS server */
+        bRecurse = (Options & DNS_QUERY_NO_RECURSION) == 0;
+        DnsResolv_InitConfig(&Config);
+        Config.Recurse = bRecurse;
+        bFoundServer = FALSE;
+
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {
-            addr.s_addr = inet_addr(pip->IpAddress.String);
-            if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
-                adns_addserver(astate, addr);
+            unsigned long addr = inet_addr(pip->IpAddress.String);
+            if (addr != INADDR_ANY && addr != INADDR_NONE)
+            {
+                StringCchCopyA(Config.ServerAddress,
+                               sizeof(Config.ServerAddress),
+                               pip->IpAddress.String);
+                bFoundServer = TRUE;
+                break;
+            }
         }
-        if (network_info->DomainName[0])
-        {
-            adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
-        }
+
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
 
-        if (!adns_numservers(astate))
+        if (!bFoundServer)
         {
-            /* There are no servers to query so bail out */
-            adns_finish(astate);
             RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
             return ERROR_FILE_NOT_FOUND;
         }
 
         /*
-        * adns doesn't resolve chained CNAME records (a CNAME which points to
-        * another CNAME pointing to another... pointing to an A record), according
-        * to a mailing list thread the authors believe that chained CNAME records
-        * are invalid and the DNS entries should be fixed. That's a nice academic
-        * standpoint, but there certainly are chained CNAME records out there,
-        * even some fairly major ones (at the time of this writing
-        * download.mozilla.org is a chained CNAME). Everyone else seems to resolve
-        * these fine, so we should too. So we loop here to try to resolve CNAME
-        * chains ourselves. Of course, there must be a limit to protect against
-        * CNAME loops.
-        */
-
-#define CNAME_LOOP_MAX 16
-
+         * Follow CNAME chains.  We allow up to CNAME_LOOP_MAX hops to guard
+         * against loops in the DNS data.
+         */
         CurrentName = AnsiName;
+        pLastRecord = NULL;
+        Status      = ERROR_FILE_NOT_FOUND;
 
         for (CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++)
         {
-            adns_error = adns_synchronous(astate, CurrentName, adns_r_addr, quflags, &answer);
-
-            if (adns_error != adns_s_ok)
+            /* Allocate query packet buffer */
+            QueryLen = 12 + ((ULONG)strlen(CurrentName) + 2) + 4;
+            QueryBuf = RtlAllocateHeap(RtlGetProcessHeap(), 0, QueryLen);
+            if (QueryBuf == NULL)
             {
-                adns_finish(astate);
-
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
-
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
+                Status = ERROR_OUTOFMEMORY;
+                break;
             }
 
-            if (answer && answer->rrs.addr)
+            RequestID = g_DnsQueryID++;
+            Query_BuildPacket(QueryBuf, CurrentName, DNS_TYPE_A, bRecurse, RequestID);
+
+            /* Allocate response buffer */
+            ResponseLen = 512;
+            ResponseBuf = RtlAllocateHeap(RtlGetProcessHeap(), 0, ResponseLen);
+            if (ResponseBuf == NULL)
             {
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, QueryBuf);
+                Status = ERROR_OUTOFMEMORY;
+                break;
+            }
 
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                *QueryResultSet = (PDNS_RECORD)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DNS_RECORD));
+            /* Send the query; DnsResolv_SendRequest updates ResponseLen */
+            if (!DnsResolv_SendRequest(QueryBuf, QueryLen,
+                                       ResponseBuf, &ResponseLen,
+                                       &Config))
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, QueryBuf);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+                Status = ERROR_FILE_NOT_FOUND;
+                break;
+            }
 
-                if (NULL == *QueryResultSet)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, QueryBuf);
+            QueryBuf = NULL;
+
+            /* Check the response code */
+            RCode = ResponseBuf[3] & 0x0F;
+            if (RCode != 0)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+                Status = ERROR_FILE_NOT_FOUND;
+                break;
+            }
+
+            NumQuestions = ntohs(((PUSHORT)&ResponseBuf[4])[0]);
+            NumAnswers   = ntohs(((PUSHORT)&ResponseBuf[6])[0]);
+            rk = 12;
+
+            /* Skip the question section */
+            for (qi = 0; qi < (int)NumQuestions; qi++)
+            {
+                CHAR dummy[256];
+                rk += DnsResolv_ExtractName(ResponseBuf, dummy, (USHORT)rk, 0);
+                rk += 4; /* QTYPE + QCLASS */
+            }
+
+            /* Parse answer resource records */
+            bGotAnswer  = FALSE;
+            CNameTarget = NULL;
+            Status      = ERROR_FILE_NOT_FOUND;
+
+            for (ri = 0; ri < (int)NumAnswers; ri++)
+            {
+                CHAR    RRName[256];
+                USHORT  RRType;
+                ULONG   TTL;
+                USHORT  RDLength;
+                PDNS_RECORD pRecord;
+
+                rk += DnsResolv_ExtractName(ResponseBuf, RRName, (USHORT)rk, 0);
+                RRType   = ntohs(((PUSHORT)&ResponseBuf[rk])[0]);  rk += 2;
+                /* Class */ rk += 2;
+                TTL      = ntohl(((PULONG)&ResponseBuf[rk])[0]);   rk += 4;
+                RDLength = ntohs(((PUSHORT)&ResponseBuf[rk])[0]);  rk += 2;
+
+                if (RRType == DNS_TYPE_A && RDLength == 4)
                 {
-                    adns_finish(astate);
-                    return ERROR_OUTOFMEMORY;
+                    pRecord = RtlAllocateHeap(RtlGetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
+                                             sizeof(DNS_RECORD));
+                    if (pRecord == NULL)
+                    {
+                        if (CNameTarget)
+                            RtlFreeHeap(RtlGetProcessHeap(), 0, CNameTarget);
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+                        Status = ERROR_OUTOFMEMORY;
+                        goto cleanup;
+                    }
+
+                    pRecord->wType         = DNS_TYPE_A;
+                    pRecord->wDataLength   = sizeof(DNS_A_DATA);
+                    pRecord->Flags.S.Section = DnsSectionAnswer;
+                    pRecord->Flags.S.CharSet = DnsCharSetUnicode;
+                    pRecord->dwTtl         = TTL; /* raw TTL from the wire */
+                    pRecord->Data.A.IpAddress = *(PULONG)&ResponseBuf[rk];
+                    pRecord->pName         = (LPSTR)DnsCToW(RRName);
+
+                    if (pRecord->pName == NULL)
+                    {
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, pRecord);
+                        if (CNameTarget)
+                            RtlFreeHeap(RtlGetProcessHeap(), 0, CNameTarget);
+                        RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+                        Status = ERROR_OUTOFMEMORY;
+                        goto cleanup;
+                    }
+
+                    if (pLastRecord)
+                        pLastRecord->pNext = pRecord;
+                    else
+                        *QueryResultSet = pRecord;
+                    pLastRecord = pRecord;
+
+                    bGotAnswer = TRUE;
+                    Status     = ERROR_SUCCESS;
+                }
+                else if (RRType == DNS_TYPE_CNAME && CNameTarget == NULL)
+                {
+                    /* Remember the CNAME target in case we need to re-query */
+                    CHAR CNameBuf[256];
+                    DnsResolv_ExtractName(ResponseBuf, CNameBuf,
+                                         (USHORT)rk, (UCHAR)RDLength);
+                    CNameTarget = xstrsaveA(CNameBuf);
                 }
 
-                (*QueryResultSet)->pNext = NULL;
-                (*QueryResultSet)->wType = Type;
-                (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-                (*QueryResultSet)->Flags.S.Section = DnsSectionAnswer;
-                (*QueryResultSet)->Flags.S.CharSet = DnsCharSetUnicode;
-                (*QueryResultSet)->Data.A.IpAddress = answer->rrs.addr->addr.inet.sin_addr.s_addr;
-
-                adns_finish(astate);
-
-                (*QueryResultSet)->pName = (LPSTR)xstrsave(Name);
-
-                return (*QueryResultSet)->pName ? ERROR_SUCCESS : ERROR_OUTOFMEMORY;
+                rk += RDLength;
             }
 
-            if (NULL == answer || adns_s_prohibitedcname != answer->status || NULL == answer->cname)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ResponseBuf);
+
+            if (bGotAnswer)
             {
-                adns_finish(astate);
-
-                if (CurrentName != AnsiName)
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
-
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                return ERROR_FILE_NOT_FOUND;
+                /* Got at least one A record — we are done */
+                if (CNameTarget)
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, CNameTarget);
+                break;
             }
 
+            if (CNameTarget == NULL)
+            {
+                /* No A record and no CNAME to follow */
+                Status = ERROR_FILE_NOT_FOUND;
+                break;
+            }
+
+            /* Follow the CNAME by re-querying */
             if (CurrentName != AnsiName)
                 RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+            CurrentName = CNameTarget;
+        } /* CNAME loop */
 
-            CurrentName = (LPSTR)xstrsaveA(answer->cname);
+cleanup:
+        if (CurrentName != AnsiName)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
 
-            if (!CurrentName)
-            {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-                adns_finish(astate);
-                return ERROR_OUTOFMEMORY;
-            }
+        /* On failure, free any partially-built record list */
+        if (Status != ERROR_SUCCESS && *QueryResultSet != NULL)
+        {
+            DnsIntFreeRecordList(*QueryResultSet);
+            *QueryResultSet = NULL;
         }
 
-        adns_finish(astate);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, CurrentName);
-        return ERROR_FILE_NOT_FOUND;
+        return Status;
 
     default:
         return ERROR_OUTOFMEMORY; /* XXX arty: find a better error code. */
