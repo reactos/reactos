@@ -198,6 +198,10 @@ PUBLIC KiUserThreadStartupExit
 
     call KiSwapContextResume
 
+    /* Force reloading of FS */
+    push fs
+    pop fs
+
     /* Cleanup and return */
     add rsp, 6 * 8
     pop rbp

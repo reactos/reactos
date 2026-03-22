@@ -233,6 +233,56 @@ IopCleanupIrp(IN PIRP Irp,
     IoFreeIrp(Irp);
 }
 
+static
+VOID
+IopWriteAsyncUserIosb(PIRP Irp)
+{
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+    PIO_STATUS_BLOCK32 Iosb32 = NULL;
+#endif
+
+    /* Check for UserIos */
+    if (Irp->UserIosb != NULL)
+    {
+        /* Use SEH to make sure we don't write somewhere invalid */
+        _SEH2_TRY
+        {
+#if defined(_WIN64) && defined(BUILD_WOW64_ENABLED)
+            Iosb32 = (PIO_STATUS_BLOCK32)Irp->UserIosb->Pointer;
+
+            /*
+             * If this is a 32-bit process, and UserIosb falls within the
+             * 32-bit address space, assume UserIosb->Pointer is a 32-bit IOSB
+             * that has to be filled.
+             */
+            if (Irp->RequestorMode == UserMode &&
+                /*
+                 * This is an APC - we're running in the correct thread context,
+                 * and Irp->Tail is trashed. Don't bother with getting the thread
+                 * from the IRP then. The process mode still should be checked.
+                 */
+                IoIs32bitProcess(NULL) &&
+                Iosb32 != NULL && (PVOID)Iosb32 <= (PVOID)MAXULONG)
+            {
+                InterlockedExchangePointer(&Irp->UserIosb->Pointer, NULL);
+
+                Iosb32->Information = Irp->IoStatus.Information;
+                Iosb32->Status = Irp->IoStatus.Status;
+            }
+            else
+#endif
+            {
+                *Irp->UserIosb = Irp->IoStatus;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignore any error */
+        }
+        _SEH2_END;
+    }
+}
+
 VOID
 NTAPI
 IopCompleteRequest(IN PKAPC Apc,
@@ -340,21 +390,7 @@ IopCompleteRequest(IN PKAPC Apc,
             Key = FileObject->CompletionContext->Key;
         }
 
-        /* Check for UserIos */
-        if (Irp->UserIosb != NULL)
-        {
-            /* Use SEH to make sure we don't write somewhere invalid */
-            _SEH2_TRY
-            {
-                /*  Save the IOSB Information */
-                *Irp->UserIosb = Irp->IoStatus;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Ignore any error */
-            }
-            _SEH2_END;
-        }
+        IopWriteAsyncUserIosb(Irp);
 
         /* Check if we have an event or a file object */
         if (Irp->UserEvent)
@@ -2004,12 +2040,44 @@ IoSetTopLevelIrp(IN PIRP Irp)
 }
 
 #if defined (_WIN64)
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 IoIs32bitProcess(
     IN PIRP Irp OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PETHREAD pThread, pCurrentThread;
+    PEPROCESS pProcess;
+
+    pCurrentThread = CONTAINING_RECORD(KeGetCurrentThread(), ETHREAD, Tcb);
+
+    if (Irp == NULL)
+    {
+        pThread = pCurrentThread;
+    }
+    else
+    {
+        /* If it's a kernel mode IRP, it could not have originated from WOW64 */
+        if (Irp->RequestorMode == KernelMode ||
+            (PVOID)Irp->UserIosb > MmHighestUserAddress)
+        {
+            return FALSE;
+        }
+
+        pThread = Irp->Tail.Overlay.Thread;
+    }
+
+    pProcess = CONTAINING_RECORD(pThread->Tcb.Process, EPROCESS, Pcb);
+
+    /* FIXME: A two-part hack: delay setting Process->Wow64Process, so 64-bit
+       NTDLL can use IO to init stuff. */
+    if (pProcess->Wow64Process == (PVOID)TRUE)
+    {
+        return FALSE;
+    }
+
+    return pProcess->Wow64Process != NULL;
 }
 #endif
