@@ -8,7 +8,7 @@ fi
 BUILD_ENVIRONMENT=MinGW
 ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
-REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
+BUILD_TYPE=Debug
 
 usage() {
 	echo "Invalid parameter given."
@@ -22,6 +22,11 @@ while [ $# -gt 0 ]; do
 			shift
 			if echo "x$1" | grep 'x?*=*' > /dev/null; then
 				ROS_CMAKEOPTS=$ROS_CMAKEOPTS" -D $1"
+				case "$1" in
+					CMAKE_BUILD_TYPE=*|CMAKE_BUILD_TYPE:*=*)
+						BUILD_TYPE="${1#*=}"
+					;;
+				esac
 			else
 				usage
 			fi
@@ -29,6 +34,11 @@ while [ $# -gt 0 ]; do
 
 		-D?*=*|-D?*)
 			ROS_CMAKEOPTS=$ROS_CMAKEOPTS" $1"
+			case "$1" in
+				-DCMAKE_BUILD_TYPE=*|-DCMAKE_BUILD_TYPE:*=*)
+					BUILD_TYPE="${1#*=}"
+				;;
+			esac
 		;;
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
@@ -39,6 +49,8 @@ while [ $# -gt 0 ]; do
 
 	shift
 done
+
+REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH-$BUILD_TYPE
 
 echo "Configuring a new ReactOS build on:"
 echo $(uname -srvpio); echo

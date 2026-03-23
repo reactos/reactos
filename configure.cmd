@@ -76,6 +76,7 @@ if not defined ARCH (
 )
 
 set USE_CLANG_CL=0
+set BUILD_TYPE=Debug
 
 REM Parse command line parameters
 set CMAKE_PARAMS=
@@ -104,6 +105,9 @@ set REMAINING=%*
         ) else if /I "!PARAM:~0,2!" == "-D" (
             REM User is passing a switch to CMake
             set "CMAKE_PARAMS=%CMAKE_PARAMS% !PARAM!"
+            if /I "!PARAM:CMAKE_BUILD_TYPE=!" NEQ "!PARAM!" (
+                for /f "tokens=2 delims==" %%v in ("!PARAM!") do set "BUILD_TYPE=%%v"
+            )
         ) else (
             echo. & echo   Warning: Unrecognized switch "!PARAM!" & echo.
         )
@@ -145,6 +149,9 @@ set REMAINING=%*
         ) else if /I "!PARAM:~0,2!" == "-D" (
             REM User is passing a switch to CMake
             set "CMAKE_PARAMS=%CMAKE_PARAMS% !PARAM!"
+            if /I "!PARAM:CMAKE_BUILD_TYPE=!" NEQ "!PARAM!" (
+                for /f "tokens=2 delims==" %%v in ("!PARAM!") do set "BUILD_TYPE=%%v"
+            )
         ) else (
             echo. & echo   Warning: Unrecognized switch "!PARAM!" & echo.
         )
@@ -163,7 +170,7 @@ echo Configuring a new ReactOS build on:
 (for /f "delims=" %%x in ('ver') do @echo %%x) & echo.
 
 REM Create directories
-set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
+set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%-%BUILD_TYPE%
 
 if "%VS_SOLUTION%" == "1" (
     set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
