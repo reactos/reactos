@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/browseui/lang/uk-UA.rc
  * PURPOSE:     Ukrainian Language File
- * TRANSLATORS: Igor Paliychuk, Yaroslav Kibysh, Burtoviy Ostap
+ * TRANSLATORS: Igor Paliychuk, Yaroslav Kibysh, Ostap Burtoviy
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
