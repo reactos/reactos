@@ -1131,6 +1131,12 @@ ImmEnumInputContext(
     HIMC hIMC;
 
     TRACE("(%lu, %p, %p)\n", dwThreadId, lpfn, lParam);
+    
+    if (!IS_IMM_MODE())
+    {
+        TRACE("\n");
+        return FALSE;
+    }
 
     dwCount = Imm32BuildHimcList(dwThreadId, &phList);
     if (IS_ZERO_UNEXPECTEDLY(dwCount))
