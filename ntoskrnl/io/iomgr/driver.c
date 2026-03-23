@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 #include <mm/ARM3/miarm.h>
+#include "../vf/vf.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -647,6 +648,9 @@ IopInitializeDriverModule(
     RtlCopyUnicodeString(&driverNamePaged, &DriverName);
     driverObject->DriverName = driverNamePaged;
 
+    if (VfGlobalEnabled)
+        VfRegisterDriver(driverObject);
+
     /* Finally, call its init function */
     Status = driverObject->DriverInit(driverObject, &RegistryPath);
     *DriverEntryStatus = Status;
@@ -655,6 +659,9 @@ IopInitializeDriverModule(
         DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", &DriverName, Status);
         // return a special status value in case of failure
         Status = STATUS_FAILED_DRIVER_ENTRY;
+        /* unregister since init failed */
+        if (VfGlobalEnabled)
+            VfUnregisterDriver(driverObject);
     }
 
     /* HACK: We're going to say if we don't have any DOs from DriverEntry, then we're not legacy.
@@ -2077,8 +2084,14 @@ IopLoadUnloadDriverWorker(
 
     if (LoadParams->DriverObject)
     {
-        // unload request
-        LoadParams->DriverObject->DriverUnload(LoadParams->DriverObject);
+        /* notify before unload */
+        if (VfGlobalEnabled)
+            VfDriverUnload(LoadParams->DriverObject);
+
+        /* call the drivers own unload routine (if it has one) */
+        if (LoadParams->DriverObject->DriverUnload)
+            LoadParams->DriverObject->DriverUnload(LoadParams->DriverObject);
+
         LoadParams->Status = STATUS_SUCCESS;
     }
     else
