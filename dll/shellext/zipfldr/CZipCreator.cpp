@@ -67,13 +67,10 @@ DoGetNameInZip(const CStringW& basename, const CStringW& filename, UINT nCodePag
 }
 
 static BOOL
-DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
-                zip_fileinfo *pzi)
+DoReadAllOfFile(PCWSTR filename, CComHeapPtr<BYTE>& contents, DWORD& fileSize, zip_fileinfo *pzi)
 {
-    contents.RemoveAll();
-
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ,
-                               NULL, OPEN_EXISTING,
+    contents.Free();
+    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                                FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -96,28 +93,39 @@ DoReadAllOfFile(PCWSTR filename, CSimpleArray<BYTE>& contents,
         pzi->tmz_date.tm_year = st.wYear;
     }
 
-    const DWORD cbBuff = 0x7FFF;
-    LPBYTE pbBuff = reinterpret_cast<LPBYTE>(CoTaskMemAlloc(cbBuff));
-    if (!pbBuff)
+    LARGE_INTEGER largeFileSize;
+    if (!GetFileSizeEx(hFile, &largeFileSize))
+    {
+        DPRINT1("GetFileSizeEx failed: %ld\n", GetLastError());
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    if (largeFileSize.QuadPart > MAXLONG)
+    {
+        DPRINT1("FIXME: The file size is too large\n");
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    fileSize = largeFileSize.LowPart;
+
+    if (!contents.AllocateBytes(fileSize ? fileSize : 1))
     {
         DPRINT1("Out of memory\n");
         CloseHandle(hFile);
         return FALSE;
     }
 
-    for (;;)
+    DWORD dwRead;
+    if (fileSize && (!ReadFile(hFile, contents, fileSize, &dwRead, NULL) || fileSize != dwRead))
     {
-        DWORD cbRead;
-        if (!ReadFile(hFile, pbBuff, cbBuff, &cbRead, NULL) || !cbRead)
-            break;
-
-        for (DWORD i = 0; i < cbRead; ++i)
-            contents.Add(pbBuff[i]);
+        DPRINT1("Read error: %ld\n", GetLastError());
+        CloseHandle(hFile);
+        return FALSE;
     }
 
-    CoTaskMemFree(pbBuff);
     CloseHandle(hFile);
-
     return TRUE;
 }
 
@@ -312,8 +320,9 @@ unsigned CZipCreatorImpl::JustDoIt()
     {
         const CStringW& strFile = files[iFile];
 
-        CSimpleArray<BYTE> contents;
-        if (!DoReadAllOfFile(strFile, contents, &zi))
+        CComHeapPtr<BYTE> contents;
+        DWORD fileSize;
+        if (!DoReadAllOfFile(strFile, contents, fileSize, &zi))
         {
             DPRINT1("DoReadAllOfFile failed\n");
             err = CZCERR_READ;
@@ -386,7 +395,7 @@ unsigned CZipCreatorImpl::JustDoIt()
             break;
         }
 
-        err = zipWriteInFileInZip(zf, contents.GetData(), contents.GetSize());
+        err = zipWriteInFileInZip(zf, contents, fileSize);
         if (err)
         {
             DPRINT1("zipWriteInFileInZip\n");
