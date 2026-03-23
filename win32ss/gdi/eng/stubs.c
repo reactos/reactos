@@ -1084,23 +1084,6 @@ NtGdiGetSpoolMessage(
 /*
  * @unimplemented
  */
-DWORD
-APIENTRY
-NtGdiGetGlyphIndicesWInternal(
-    _In_ HDC hdc,
-    _In_reads_opt_(cwc) PCWCH pwc,
-    _In_ INT cwc,
-    _Out_writes_opt_(cwc) PWORD pgi,
-    _In_ DWORD iMode,
-    _In_ BOOL bSubset)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 INT
 APIENTRY
 NtGdiGetLinkedUFIs(

@@ -7704,107 +7704,47 @@ static BOOL IntGetFontDefaultChar(_In_ FT_Face Face, _Out_ PWCHAR pDefChar)
     return TRUE;
 }
 
-/*
-* @implemented
-*/
-// TODO: Move this code into NtGdiGetGlyphIndicesWInternal and wrap
-// NtGdiGetGlyphIndicesW around NtGdiGetGlyphIndicesWInternal instead.
-// NOTE: See also GreGetGlyphIndicesW.
-__kernel_entry
-W32KAPI
-DWORD
-APIENTRY
-NtGdiGetGlyphIndicesW(
+DWORD APIENTRY
+GreGetGlyphIndicesW(
     _In_ HDC hdc,
     _In_reads_opt_(cwc) PCWCH pwc,
     _In_ INT cwc,
     _Out_writes_opt_(cwc) PWORD pgi,
-    _In_ DWORD iMode)
+    _In_ DWORD iMode,
+    _In_ BOOL bSubset)
 {
-    PDC dc;
-    PDC_ATTR pdcattr;
-    PTEXTOBJ TextObj;
-    PFONTGDI FontGDI;
-    HFONT hFont = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-    INT i;
-    WCHAR DefChar = 0xffff;
-    PWORD Buffer = NULL;
-    WORD StackBuffer[40];
-    size_t pwcSize;
-    PWSTR Safepwc = NULL;
-    WCHAR pwcStack[40];
-    LPCWSTR UnSafepwc = pwc;
-    LPWORD UnSafepgi = pgi;
-    FT_Face Face;
-
-    if (cwc < 0)
-    {
-        DPRINT1("cwc < 0\n");
-        return GDI_ERROR;
-    }
-
-    if (!UnSafepwc && !UnSafepgi && cwc > 0)
-    {
-        DPRINT1("!UnSafepwc && !UnSafepgi && cwc > 0\n");
-        return GDI_ERROR;
-    }
-
-    if (!UnSafepwc != !UnSafepgi)
-    {
-        DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
-        return GDI_ERROR;
-    }
-
-    /* Get FontGDI */
-    dc = DC_LockDc(hdc);
+    // FIXME: bSubset
+    PDC dc = DC_LockDc(hdc);
     if (!dc)
-    {
-        DPRINT1("!DC_LockDC\n");
         return GDI_ERROR;
-    }
-    pdcattr = dc->pdcattr;
-    hFont = pdcattr->hlfntNew;
-    TextObj = RealizeFontInit(hFont);
+
+    PDC_ATTR pdcattr = dc->pdcattr;
+    HFONT hFont = pdcattr->hlfntNew;
+    PTEXTOBJ TextObj = RealizeFontInit(hFont);
     DC_UnlockDc(dc);
+
     if (!TextObj)
     {
         DPRINT1("!TextObj\n");
         return GDI_ERROR;
     }
-    FontGDI = ObjToGDI(TextObj->Font, FONT);
-    Face = FontGDI->SharedFace->Face;
+
+    PFONTGDI FontGDI = ObjToGDI(TextObj->Font, FONT);
+    FT_Face Face = FontGDI->SharedFace->Face;
     TEXTOBJ_UnlockText(TextObj);
 
     if (cwc == 0)
     {
-        if (!UnSafepwc && !UnSafepgi)
-            return Face->num_glyphs;
+        // Only the exceptional query case (pwc == NULL && pgi == NULL && iMode == 0)
+        // should return the number of glyphs. All other cwc == 0 cases must fail.
+        if (!pwc && !pgi && !iMode)
+            return Face->num_glyphs; // Returns number of glyphs
 
-        Status = STATUS_UNSUCCESSFUL;
-        goto ErrorRet;
+        return GDI_ERROR;
     }
 
-    // Allocate Buffer and Safepwc
-    pwcSize = cwc * sizeof(WORD);
-    if (pwcSize <= sizeof(StackBuffer) && pwcSize <= sizeof(pwcStack))
-    {
-        // Stack is faster than dynamic allocation
-        Buffer = StackBuffer;
-        Safepwc = pwcStack;
-    }
-    else // Dynamic allocation
-    {
-        Buffer = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-        Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
-        if (!Buffer || !Safepwc)
-        {
-            Status = STATUS_NO_MEMORY;
-            goto ErrorRet;
-        }
-    }
-
-    /* Get DefChar */
+    // Get default character
+    WCHAR DefChar = 0xFFFF;
     if (!(iMode & GGI_MARK_NONEXISTING_GLYPHS) && IntGetFontDefaultChar(Face, &DefChar))
     {
         IntLockFreeType();
@@ -7812,34 +7752,16 @@ NtGdiGetGlyphIndicesW(
         IntUnLockFreeType();
     }
 
-    Status = MmCopyFromCaller(Safepwc, UnSafepwc, pwcSize);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Status: %08lX\n", Status);
-        goto ErrorRet;
-    }
-
-    /* Get glyph indeces */
+    // Get glyph indices
     // NOTE: Windows GetGlyphIndices doesn't support Surrogate Pairs.
     IntLockFreeType();
-    for (i = 0; i < cwc; i++)
+    for (INT i = 0; i < cwc; i++)
     {
-        Buffer[i] = get_glyph_index(Face, Safepwc[i]);
-        if (Buffer[i] == 0)
-            Buffer[i] = DefChar;
+        pgi[i] = get_glyph_index(Face, pwc[i]);
+        if (pgi[i] == 0)
+            pgi[i] = DefChar;
     }
     IntUnLockFreeType();
 
-    Status = MmCopyToCaller(UnSafepgi, Buffer, cwc * sizeof(WORD));
-
-ErrorRet:
-    if (Buffer && Buffer != StackBuffer)
-        ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    if (Safepwc && Safepwc != pwcStack)
-        ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
-
-    if (NT_SUCCESS(Status))
-        return cwc;
-
-    return GDI_ERROR;
+    return cwc;
 }
