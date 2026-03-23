@@ -88,9 +88,14 @@ ImmGetGuideLineAW(
             }
         }
 
-        if (dwBufLen == 0 || cb == 0 || lpBuf == NULL || dwBufLen < cb)
+        if (dwBufLen == 0)
         {
             ret = cb;
+            goto Quit;
+        }
+        if (cb == 0 || lpBuf == NULL || dwBufLen < cb)
+        {
+            ret = 0; /* Error */
             goto Quit;
         }
 
@@ -149,9 +154,14 @@ ImmGetGuideLineAW(
             }
         }
 
-        if (dwBufLen == 0 || cb == 0 || lpBuf == NULL || dwBufLen < cb)
+        if (dwBufLen == 0)
         {
             ret = cb;
+            goto Quit;
+        }
+        if (cb == 0 || lpBuf == NULL || dwBufLen < cb)
+        {
+            ret = 0; /* Error */
             goto Quit;
         }
 
