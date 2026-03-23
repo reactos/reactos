@@ -437,6 +437,28 @@ ExpCheckPoolIrqlLevel(IN POOL_TYPE PoolType,
 }
 
 FORCEINLINE
+SIZE_T
+ExpNormalizePoolRequestSize(IN SIZE_T NumberOfBytes,
+                            IN ULONG Tag,
+                            IN POOL_TYPE PoolType)
+{
+    //
+    // Some broken drivers still issue zero-byte pool requests. Match NT's
+    // behavior and clamp them to a minimal allocation so the bad caller
+    // doesn't take the whole kernel down.
+    //
+    if (NumberOfBytes == 0)
+    {
+        DPRINT1("EX: zero-byte pool allocation requested for tag '%.4s', PoolType %lu\n",
+                (PCHAR)&Tag,
+                PoolType);
+        return 1;
+    }
+
+    return NumberOfBytes;
+}
+
+FORCEINLINE
 ULONG
 ExpComputeHashForTag(IN ULONG Tag,
                      IN SIZE_T BucketMask)
@@ -1919,8 +1941,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     ASSERT(Tag != 0);
     ASSERT(Tag != ' GIB');
-    ASSERT(NumberOfBytes != 0);
     ExpCheckPoolIrqlLevel(PoolType, NumberOfBytes, NULL);
+    NumberOfBytes = ExpNormalizePoolRequestSize(NumberOfBytes, Tag, PoolType);
 
     //
     // Not supported in ReactOS
@@ -2059,12 +2081,6 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         ExpInsertPoolTracker(Tag, ROUND_TO_PAGES(NumberOfBytes), OriginalType);
         return Entry;
     }
-
-    //
-    // Should never request 0 bytes from the pool, but since so many drivers do
-    // it, we'll just assume they want 1 byte, based on NT's similar behavior
-    //
-    if (!NumberOfBytes) NumberOfBytes = 1;
 
     //
     // A pool allocation is defined by its data, a linked list to connect it to
@@ -3003,6 +3019,8 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
         PoolType &= ~POOL_QUOTA_FAIL_INSTEAD_OF_RAISE;
     }
 
+    NumberOfBytes = ExpNormalizePoolRequestSize(NumberOfBytes, Tag, PoolType);
+
     //
     // Inject the pool quota mask
     //
@@ -3012,7 +3030,6 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     // Check if we have enough space to add the quota owner process, as long as
     // this isn't the system process, which never gets charged quota
     //
-    ASSERT(NumberOfBytes != 0);
     if ((NumberOfBytes <= (PAGE_SIZE - POOL_BLOCK_SIZE - sizeof(PVOID))) &&
         (Process != PsInitialSystemProcess))
     {
