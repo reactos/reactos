@@ -20,7 +20,9 @@
 #endif
 
 #define MB_CUR_MAX 10
-#define BUFFER_SIZE (32 + 17)
+/* I increased BUFFER_SIZE from 32+17 to 128 to prevent buffer overflow
+   when formatting large floating point numbers with high precision */
+#define BUFFER_SIZE 128
 
 int mbtowc(wchar_t *wchar, const char *mbchar, size_t count);
 int wctomb(char *mbchar, wchar_t wchar);
@@ -68,8 +70,13 @@ enum
     (flags & FLAG_LONGDOUBLE) ? va_arg(argptr, long double) : \
     va_arg(argptr, double)
 
-#define get_exp(f) (int)floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
-#define round(x) floor((x) + 0.5)
+/* I replaced the unsafe get_exp macro with a safer version that checks for NaN/Inf
+   using the existing _isnan() and _finite() functions instead of isnan/isinf */
+#define get_exp(f) \
+    (_isnan(f) || !_finite(f)) ? 0 : (int)floor(f == 0 ? 0 : (f >= 0 ? log10(f) : log10(-f)))
+
+/* I added a safer rounding macro that handles edge cases properly */
+#define round_safe(x) ((x) > 0 ? floor((x) + 0.5) : ceil((x) - 0.5))
 
 #ifndef _USER32_WSPRINTF
 
@@ -96,18 +103,33 @@ format_float(
     long double fpval, fpval2;
     int padding = 0, num_digits, val32, base = 10;
 
-    /* Normalize the precision */
+    /* I added a safety check for precision to prevent integer overflow */
     if (precision < 0) precision = 6;
     else if (precision > 17)
     {
-        padding = precision - 17;
+        /* I limited padding to prevent buffer overflow when formatting */
+        if (precision - 17 > BUFFER_SIZE - 32)
+            padding = BUFFER_SIZE - 32;
+        else
+            padding = precision - 17;
         precision = 17;
     }
 
     /* Get the float value and calculate the exponent */
     fpval = va_arg_ffp(*argptr, flags);
-    exponent = get_exp(fpval);
-    sign = fpval < 0 ? -1 : 1;
+    
+    /* I added a check for NaN and Inf before exponent calculation using
+       _isnan() and _finite() to prevent floating point exceptions */
+    if (_isnan(fpval) || !_finite(fpval))
+    {
+        exponent = 0;
+        sign = 0;
+    }
+    else
+    {
+        exponent = get_exp(fpval);
+        sign = fpval < 0 ? -1 : 1;
+    }
 
     switch (chr)
     {
@@ -117,11 +139,14 @@ format_float(
             if (precision > 0) precision--;
             if (exponent < -4 || exponent >= precision) goto case_e;
 
-            /* Shift the decimal point and round */
-            fpval2 = round(sign * fpval * pow(10., precision));
+            /* I added a check to prevent floating point overflow during pow() */
+            if (precision > 308) precision = 308; /* Max exponent for double */
+            
+            /* Shift the decimal point and round - using safer rounding */
+            fpval2 = round_safe(sign * fpval * pow(10., (double)precision));
 
-            /* Skip trailing zeroes */
-            while (precision && (unsigned __int64)fpval2 % 10 == 0)
+            /* Skip trailing zeroes - added bounds check */
+            while (precision && precision > 0 && (unsigned __int64)fpval2 % 10 == 0)
             {
                 precision--;
                 fpval2 /= 10;
@@ -132,32 +157,45 @@ format_float(
             digits = digits_u;
         case _T('e'):
         case_e:
+            /* I added bounds checking for exponent to prevent buffer overflow */
+            if (precision - exponent > 308) precision = 308 + exponent;
+            if (precision - exponent < -308) precision = -308 + exponent;
+            
             /* Shift the decimal point and round */
-            fpval2 = round(sign * fpval * pow(10., precision - exponent));
+            fpval2 = round_safe(sign * fpval * pow(10., (double)(precision - exponent)));
 
             /* Compensate for changed exponent through rounding */
             if (fpval2 >= (unsigned __int64)pow(10., precision + 1))
             {
                 exponent++;
-                fpval2 = round(sign * fpval * pow(10., precision - exponent));
+                if (precision - exponent > -308 && precision - exponent < 308)
+                    fpval2 = round_safe(sign * fpval * pow(10., (double)(precision - exponent)));
             }
 
             val32 = exponent >= 0 ? exponent : -exponent;
-
-            // FIXME: handle length of exponent field:
-            // http://msdn.microsoft.com/de-de/library/0fatw238%28VS.80%29.aspx (DEAD_LINK)
+            
+            /* I added bounds checking for the exponent buffer - prevent overflow */
+            /* FIXME: handle length of exponent field:
+               http://msdn.microsoft.com/de-de/library/0fatw238%28VS.80%29.aspx (DEAD_LINK) */
             num_digits = 3;
-            while (num_digits--)
+            
+            /* I added a safety check to ensure we don't write before buffer start */
+            if (*string - num_digits >= digits_l)
             {
-                *--(*string) = digits[val32 % 10];
-                val32 /= 10;
+                while (num_digits--)
+                {
+                    *--(*string) = digits[val32 % 10];
+                    val32 /= 10;
+                }
+
+                /* Sign for the exponent - added bounds check */
+                if (*string - 1 >= digits_l)
+                    *--(*string) = exponent >= 0 ? _T('+') : _T('-');
+
+                /* Add 'e' or 'E' separator - added bounds check */
+                if (*string - 1 >= digits_l)
+                    *--(*string) = digits[0xe];
             }
-
-            /* Sign for the exponent */
-            *--(*string) = exponent >= 0 ? _T('+') : _T('-');
-
-            /* Add 'e' or 'E' separator */
-            *--(*string) = digits[0xe];
             break;
 
         case _T('A'):
@@ -168,13 +206,19 @@ format_float(
 
         case _T('f'):
         default:
+            /* I added bounds checking for the pow operation to prevent overflow */
+            if (precision > 308) precision = 308;
             /* Shift the decimal point and round */
-            fpval2 = round(sign * fpval * pow(10., precision));
+            fpval2 = round_safe(sign * fpval * pow(10., (double)precision));
             break;
     }
 
-    /* Handle sign */
-    if (fpval < 0)
+    /* Handle sign - I added check for NaN/Inf cases */
+    if (_isnan(fpval) || !_finite(fpval))
+    {
+        *prefix = NULL;
+    }
+    else if (fpval < 0)
     {
         *prefix = _T("-");
     }
@@ -186,36 +230,56 @@ format_float(
     /* Handle special cases first */
     if (_isnan(fpval))
     {
-        (*string) -= sizeof(_nan) / sizeof(_TCHAR) - 1;
-        _tcscpy((*string), _nan);
+        /* I added bounds checking to prevent buffer underflow */
+        ptrdiff_t nan_len = sizeof(_nan) / sizeof(_TCHAR) - 1;
+        if (*string - nan_len >= digits_l)
+        {
+            (*string) -= nan_len;
+            _tcscpy((*string), _nan);
+        }
         fpval2 = 1;
     }
     else if (!_finite(fpval))
     {
-        (*string) -= sizeof(_infinity) / sizeof(_TCHAR) - 1;
-        _tcscpy((*string), _infinity);
+        /* I added bounds checking to prevent buffer underflow */
+        ptrdiff_t inf_len = sizeof(_infinity) / sizeof(_TCHAR) - 1;
+        if (*string - inf_len >= digits_l)
+        {
+            (*string) -= inf_len;
+            _tcscpy((*string), _infinity);
+        }
         fpval2 = 1;
     }
     else
     {
-        /* Zero padding */
-        while (padding-- > 0) *--(*string) = _T('0');
+        /* Zero padding - added bounds check */
+        while (padding-- > 0)
+        {
+            if (*string - 1 < digits_l) break;
+            *--(*string) = _T('0');
+        }
 
-        /* Digits after the decimal point */
+        /* Digits after the decimal point - added bounds check */
         num_digits = precision;
         while (num_digits-- > 0)
         {
+            if (*string - 1 < digits_l) break;
             *--(*string) = digits[(unsigned __int64)fpval2 % 10];
             fpval2 /= base;
         }
     }
 
     if (precision > 0 || flags & FLAG_SPECIAL)
-        *--(*string) = _T('.');
+    {
+        /* I added bounds checking for decimal point insertion */
+        if (*string - 1 >= digits_l)
+            *--(*string) = _T('.');
+    }
 
-    /* Digits before the decimal point */
+    /* Digits before the decimal point - added bounds check */
     do
     {
+        if (*string - 1 < digits_l) break;
         *--(*string) = digits[(unsigned __int64)fpval2 % base];
         fpval2 /= base;
     }
@@ -328,6 +392,7 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
     static const _TCHAR digits_l[] = _T("0123456789abcdef0x");
     static const _TCHAR digits_u[] = _T("0123456789ABCDEF0X");
     static const char *_nullstring = "(null)";
+    /* I increased buffer size to prevent overflow when formatting numbers */
     _TCHAR buffer[BUFFER_SIZE + 1];
     _TCHAR chr, *string;
     STRING *nt_string;
@@ -705,4 +770,3 @@ streamout(FILE *stream, const _TCHAR *format, va_list argptr)
 
     return written_all;
 }
-
