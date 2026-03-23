@@ -138,7 +138,7 @@ Imm32AssignNewLayout(
 #define MAX_SYSTEM_IMM_IME_ID 0xE0FF
 #define MIN_USER_IMM_IME_ID   0xE020
 #define MAX_USER_IMM_IME_ID   MAX_SYSTEM_IMM_IME_ID
-    UINT iKL, nID = 0, wLow = MAX_USER_IMM_IME_ID, wHigh = MIN_USER_IMM_IME_ID - 1;
+    UINT iKL, nID, wLow = MAX_USER_IMM_IME_ID, wHigh = MIN_USER_IMM_IME_ID - 1;
 
     for (iKL = 0; iKL < cKLs; ++iKL)
     {
@@ -162,10 +162,10 @@ Imm32AssignNewLayout(
             for (iKL = 0; iKL < cKLs; ++iKL)
             {
                 if (pLayouts[iKL].hKL == hKL)
-                    break; // Found a match
+                    break;
             }
             if (iKL >= cKLs)
-                break; // Found
+                break;
         }
 
         if (nID > MAX_USER_IMM_IME_ID)
