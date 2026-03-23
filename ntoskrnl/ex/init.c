@@ -63,6 +63,9 @@ UNICODE_STRING CmCSDVersionString;
 
 CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR "."
                     REACTOS_COMPILER_NAME "_" REACTOS_COMPILER_VERSION;
+CHAR NtBuildLabEx[] = KERNEL_VERSION_BUILD_STR "."
+                      REACTOS_COMPILER_NAME "_" REACTOS_COMPILER_VERSION "."
+                      KERNEL_BUILD_ARCH_STR KERNEL_BUILD_VARIANT_STR;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
