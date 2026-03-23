@@ -940,6 +940,8 @@ ImmGenerateMessage(_In_ HIMC hIMC)
         SendMessageW(hWnd, pItem->message, pItem->wParam, pItem->lParam);
     }
 
+    UNREFERENCED_PARAMETER(bAnsi);
+
 Quit:
     ImmLocalFree(pTrans);
     if (hMsgBuf)
