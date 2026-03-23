@@ -113,7 +113,7 @@ function(setup_host_tools)
             -DCMAKE_BUILD_TYPE=${HOST_BUILD_TYPE}
             ${CMAKE_HOST_TOOLS_EXTRA_ARGS}
         BUILD_ALWAYS TRUE
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E true
+        INSTALL_COMMAND ""
         BUILD_BYPRODUCTS ${HOST_TOOLS_OUTPUT}
     )
 
@@ -122,12 +122,10 @@ function(setup_host_tools)
     foreach(_tool ${HOST_TOOLS})
         add_executable(native-${_tool} IMPORTED)
         set_target_properties(native-${_tool} PROPERTIES IMPORTED_LOCATION ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_tool}${HOST_EXE_SUFFIX})
-        add_dependencies(native-${_tool} host-tools ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_tool}${HOST_EXE_SUFFIX})
     endforeach()
 
     foreach(_module ${HOST_MODULES})
         add_library(native-${_module} MODULE IMPORTED)
         set_target_properties(native-${_module} PROPERTIES IMPORTED_LOCATION ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
-        add_dependencies(native-${_module} host-tools ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
     endforeach()
 endfunction()
