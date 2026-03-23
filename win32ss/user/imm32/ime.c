@@ -675,7 +675,7 @@ ImmGetDescriptionW(
 
     TRACE("(%p, %p, %d)\n", hKL, lpszDescription, uBufLen);
 
-    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL))
+    if (!ImmGetImeInfoEx(&info, ImeInfoExKeyboardLayout, &hKL) || !IS_IME_HKL(hKL))
     {
         ERR("\n");
         return 0;
