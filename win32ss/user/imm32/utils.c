@@ -74,7 +74,7 @@ BOOL Imm32IsSystemJapaneseOrKorean(VOID)
     LCID lcid = GetSystemDefaultLCID();
     LANGID LangID = LANGIDFROMLCID(lcid);
     WORD wPrimary = PRIMARYLANGID(LangID);
-    if (wPrimary != LANG_JAPANESE || wPrimary != LANG_KOREAN)
+    if (wPrimary != LANG_JAPANESE && wPrimary != LANG_KOREAN)
     {
         TRACE("The country has no special IME support\n");
         return FALSE;
