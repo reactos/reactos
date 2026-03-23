@@ -464,18 +464,27 @@ ImmNotifyIME(
     HKL hKL;
     PIMEDPI pImeDpi;
     BOOL ret;
+    DWORD dwThreadId;
 
     TRACE("(%p, %lu, %lu, %lu)\n", hIMC, dwAction, dwIndex, dwValue);
 
     if (hIMC && IS_CROSS_THREAD_HIMC(hIMC))
         return FALSE;
 
-    hKL = GetKeyboardLayout(0);
+    if (hIMC)
+    {
+        dwThreadId = (DWORD)NtUserQueryInputContext(hIMC, QIC_INPUTTHREADID);
+        hKL = GetKeyboardLayout(dwThreadId);
+    }
+    else
+    {
+        hKL = GetKeyboardLayout(0);
+    }
+
     pImeDpi = ImmLockImeDpi(hKL);
     if (IS_NULL_UNEXPECTEDLY(pImeDpi))
         return FALSE;
 
-    TRACE("NotifyIME(%p, %lu, %lu, %p)\n", hIMC, dwAction, dwIndex, dwValue);
     ret = pImeDpi->NotifyIME(hIMC, dwAction, dwIndex, dwValue);
     if (!ret)
         WARN("NotifyIME(%p, %lu, %lu, %p) failed\n", hIMC, dwAction, dwIndex, dwValue);
