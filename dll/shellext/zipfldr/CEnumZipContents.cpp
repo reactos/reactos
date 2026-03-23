@@ -48,7 +48,7 @@ public:
         {
             if (mEnumerator.NextUnique(m_Prefix, name, dir, info))
             {
-                item = _ILCreate(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
+                item = _ILCreateZipItem(dir ? ZIP_PIDL_DIRECTORY : ZIP_PIDL_FILE, name, info);
                 if (!item)
                 {
                     hr = fetched ? S_FALSE : E_OUTOFMEMORY;

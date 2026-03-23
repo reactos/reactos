@@ -514,6 +514,7 @@ ImmInstallIMEW(
     WCHAR szImeFileName[MAX_PATH];
     PWSTR pchFileTitle;
     GetFullPathNameW(lpszIMEFileName, _countof(szImeFileName), szImeFileName, &pchFileTitle);
+    CharUpperW(szImeFileName);
     if (IS_NULL_UNEXPECTEDLY(pchFileTitle))
         return NULL;
 

@@ -1538,14 +1538,14 @@ ImmSetConversionStatus(
 {
     HKL hKL;
     LPINPUTCONTEXT pIC;
-    DWORD dwOldConversion, dwOldSentence;
+    DWORD dwOldConversion = fdwConversion, dwOldSentence = fdwSentence;
     BOOL fOpen = FALSE, fConversionChange = FALSE, fSentenceChange = FALSE, fUseCicero = FALSE;
     HWND hWnd;
 
     TRACE("(%p, 0x%lX, 0x%lX)\n", hIMC, fdwConversion, fdwSentence);
 
     hKL = GetKeyboardLayout(0);
-    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !IS_16BIT_MODE())
+    if (!IS_IME_HKL(hKL) && IS_CICERO_MODE() && !IS_16BIT_MODE() && !IS_CICERO_COMPAT_DISABLED())
         fUseCicero = TRUE;
 
     if (IS_CROSS_THREAD_HIMC(hIMC))

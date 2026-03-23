@@ -104,7 +104,7 @@ KdVmSendReceive(
     PVOID ReceiveData;
     PKDVM_RECEIVE_HEADER ReceiveHeader;
 
-    KdVmKdVmExchangeData(&ReceiveData, ReceiveDataSize);
+    KdVmExchangeData(&ReceiveData, ReceiveDataSize);
     ReceiveHeader = ReceiveData;
 
     if (*ReceiveDataSize < sizeof(*ReceiveHeader))

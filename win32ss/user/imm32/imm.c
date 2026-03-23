@@ -1139,9 +1139,12 @@ ImmEnumInputContext(
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex)
     {
         hIMC = phList[dwIndex];
-        ret = (*lpfn)(hIMC, lParam);
-        if (!ret)
-            break;
+        if (hIMC && gpsi && ValidateHandle(hIMC, TYPE_INPUTCONTEXT))
+        {
+            ret = (*lpfn)(hIMC, lParam);
+            if (!ret)
+                break;
+        }
     }
 
     ImmLocalFree(phList);

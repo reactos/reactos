@@ -1112,8 +1112,13 @@ GetGlyphIndicesA(
     WCHAR *lpstrW;
     INT countW;
 
-    lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+    if (count > 0 && (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC || !GdiValidateHandle(hdc)))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return GDI_ERROR;
+    }
 
+    lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
     if (lpstrW == NULL)
         return GDI_ERROR;
 

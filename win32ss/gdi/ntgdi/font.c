@@ -1431,3 +1431,79 @@ Cleanup:
         ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
     return ret;
 }
+
+/* This function is called from GetGlyphIndicesA/W */
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetGlyphIndicesW(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode)
+{
+    return NtGdiGetGlyphIndicesWInternal(hdc, pwc, cwc, pgi, iMode, FALSE);
+}
+
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetGlyphIndicesWInternal(
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) PCWCH pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) PWORD pgi,
+    _In_ DWORD iMode,
+    _In_ BOOL bSubset)
+{
+    if (cwc < 0)
+        return GDI_ERROR;
+
+    if (!cwc && !pwc && !pgi && !iMode)
+        return GreGetGlyphIndicesW(hdc, NULL, 0, NULL, 0, bSubset);
+
+    if (cwc == 0)
+        return GDI_ERROR;
+
+    const SIZE_T elemSize = sizeof(WORD) + sizeof(WCHAR);
+    if ((SIZE_T)cwc > (MAX_TEXT_BUFFER / elemSize))
+        return GDI_ERROR;
+
+    // Allocate a working buffer (for pgi and pwc)
+    WORD stackBuf[80];
+    PWORD workBuf = NULL;
+    if ((SIZE_T)cwc <= (sizeof(stackBuf) / elemSize))
+    {
+        workBuf = stackBuf;
+    }
+    else
+    {
+        SIZE_T workBufSize = cwc * elemSize;
+        workBuf = ExAllocatePoolWithTag(PagedPool, workBufSize, GDITAG_TEXT);
+        if (!workBuf)
+            return GDI_ERROR;
+    }
+
+    DWORD ret = GDI_ERROR;
+    PWCHAR safePwc = (PWCHAR)&workBuf[cwc];
+    NTSTATUS Status = MmCopyFromCaller(safePwc, pwc, cwc * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
+
+    ret = GreGetGlyphIndicesW(hdc, safePwc, cwc, workBuf, iMode, bSubset);
+    if (ret == GDI_ERROR)
+        goto Cleanup;
+
+    Status = MmCopyToCaller(pgi, workBuf, cwc * sizeof(WORD));
+    if (!NT_SUCCESS(Status))
+        ret = GDI_ERROR;
+
+Cleanup:
+    if (workBuf != stackBuf)
+        ExFreePoolWithTag(workBuf, GDITAG_TEXT);
+
+    return ret;
+}

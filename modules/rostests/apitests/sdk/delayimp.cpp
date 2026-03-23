@@ -1,15 +1,21 @@
 /*
- * PROJECT:         ReactOS API tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Tests for delayload
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Tests for delayload
+ * COPYRIGHT:   Copyright 2023-2025 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
+#define STANDALONE
 #include <apitest.h>
 
-#include <apitest.h>
 #include <strsafe.h>
 #include <delayimp.h>
+
+/* See CMakeLists.txt */
+#define DELAYIMP_NOHOOK      0
+#define DELAYIMP_GLOBALHOOK  1
+#define DELAYIMP_RUNTIMEHOOK 2
 
 /* Some libraries to test against */
 #include <mmsystem.h>
@@ -47,7 +53,7 @@ const char* g_ExpectedDll = NULL;
 const char* g_ExpectedName = NULL;
 char g_Target[100] = { 0 };
 
-char* target(PDelayLoadInfo pdli)
+static char* target(PDelayLoadInfo pdli)
 {
     if (g_Target[0] == '\0' && pdli)
     {
@@ -118,9 +124,14 @@ static void CheckDli_imp(unsigned dliNotify, PDelayLoadInfo pdli, BOOL ErrorHand
 static void CheckDliDone_imp()
 {
     if (!g_DliHookExpected) return;
-    winetest_ok(LAST_DLI == g_DliHookExpected[g_DliHookIndex],
+#if (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+    unsigned lastDli = 0;
+#else
+    unsigned lastDli = LAST_DLI;
+#endif
+    winetest_ok(lastDli == g_DliHookExpected[g_DliHookIndex],
         "Expected g_DliHookExpected[g_DliHookIndex] to be %u, was: %u for %s\n",
-        LAST_DLI, g_DliHookExpected[g_DliHookIndex], target(NULL));
+        lastDli, g_DliHookExpected[g_DliHookIndex], target(NULL));
     g_DliHookExpected = NULL;
     g_Target[0] = '\0';
 }
@@ -172,7 +183,6 @@ FARPROC WINAPI DliHook(unsigned dliNotify, PDelayLoadInfo pdli)
         }
     }
 
-
     if (dliNotify == dliStartProcessing)
     {
         /* Test loadlib fail */
@@ -200,7 +210,6 @@ FARPROC WINAPI DliHook(unsigned dliNotify, PDelayLoadInfo pdli)
             g_VersionDll = LoadLibraryA("version.dll");
             return (FARPROC)1;
         }
-
     }
     else if (dliNotify == dliNotePreGetProcAddress)
     {
@@ -220,7 +229,7 @@ FARPROC WINAPI DliHook(unsigned dliNotify, PDelayLoadInfo pdli)
         ok(pdli->dlp.szProcName != NULL, "Expected szProcName to be valid, was NULL for %s\n", target(pdli));
     else
         ok(pdli->dlp.dwOrdinal != 0, "Expected dwOrdinal to be valid, was NULL for %s\n", target(pdli));
-    switch(dliNotify)
+    switch (dliNotify)
     {
         case dliStartProcessing:
             ok(pdli->hmodCur == NULL, "Expected hmodCur to be NULL, was: %p for %s\n", pdli->hmodCur, target(pdli));
@@ -284,7 +293,7 @@ FARPROC WINAPI DliFailHook(unsigned dliNotify, PDelayLoadInfo pdli)
         ok(pdli->dlp.szProcName != NULL, "Expected szProcName to be valid, was NULL for %s\n", target(pdli));
     else
         ok(pdli->dlp.dwOrdinal != 0, "Expected dwOrdinal to be valid, was NULL for %s\n", target(pdli));
-    switch(dliNotify)
+    switch (dliNotify)
     {
         case dliFailLoadLib:
             ok(pdli->hmodCur == NULL, "Expected hmodCur to be NULL, was: %p for %s\n", pdli->hmodCur, target(pdli));
@@ -365,14 +374,14 @@ LONG ExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo, ULONG ExceptionCode)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-/* We register one hook the 'default' way and one manually,
-so that we can check that both fallback and registration work*/
-extern "C"
+#if (DELAYIMP_TEST == DELAYIMP_GLOBALHOOK)
+/* Register static hooks */
+ExternC
 {
-    extern PfnDliHook __pfnDliNotifyHook2;
-    //PfnDliHook __pfnDliFailureHook2 = DliFailHook;
+    PfnDliHook __pfnDliNotifyHook2  = DliHook;
+    PfnDliHook __pfnDliFailureHook2 = DliFailHook;
 }
-
+#endif
 
 bool g_UsePointers = false;
 
@@ -399,17 +408,33 @@ unsigned g_imagehlp[] = { dliStartProcessing, dliNotePreLoadLibrary, dliFailLoad
 
 
 //#define DELAYLOAD_SUPPORTS_UNLOADING
-START_TEST(delayimp)
+#if (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+START_TEST(delayimp_nohook)
+#elif (DELAYIMP_TEST == DELAYIMP_GLOBALHOOK)
+START_TEST(delayimp_globalhook)
+#else // (DELAYIMP_TEST == DELAYIMP_RUNTIMEHOOK)
+START_TEST(delayimp_runtimehook)
+#endif
 {
-    __pfnDliNotifyHook2 = DliHook;
-    /* Verify that both scenario's work */
+    /* We register hooks either the 'default' (static) way or at runtime,
+     * so that we can check that both fallback and registration work */
+#if (DELAYIMP_TEST == DELAYIMP_GLOBALHOOK)
     ok(__pfnDliNotifyHook2 == DliHook, "Expected __pfnDliNotifyHook2 to be DliHook(%p), but was: %p\n",
-        DliHook, __pfnDliNotifyHook2);
+       DliHook, __pfnDliNotifyHook2);
+    ok(__pfnDliFailureHook2 == DliFailHook, "Expected __pfnDliFailureHook2 to be DliFailHook(%p), but was: %p\n",
+       DliFailHook, __pfnDliFailureHook2);
+#elif (DELAYIMP_TEST == DELAYIMP_RUNTIMEHOOK)
+    ok(__pfnDliNotifyHook2 == NULL, "Expected __pfnDliNotifyHook2 to be NULL, but was: %p\n",
+       __pfnDliNotifyHook2);
     ok(__pfnDliFailureHook2 == NULL, "Expected __pfnDliFailureHook2 to be NULL, but was: %p\n",
-        __pfnDliFailureHook2);
+       __pfnDliFailureHook2);
 
+    /* Register hooks at runtime */
+    __pfnDliNotifyHook2  = DliHook;
     __pfnDliFailureHook2 = DliFailHook;
-
+#else // (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+    /* No hook is defined */
+#endif
 
     PIMAGE_DOS_HEADER dos = (PIMAGE_DOS_HEADER)GetModuleHandle(NULL);
 
@@ -484,14 +509,25 @@ START_TEST(delayimp)
     _SEH2_END;
     ok(err == MMSYSERR_INVALHANDLE, "Expected err to be MMSYSERR_INVALHANDLE, was 0x%lx\n", err);
     CheckDliDone();
-    ok(g_BreakFunctionName == false, "Expected the functionname to be changed\n");
+#if (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+    ok(g_BreakFunctionName == true, "Expected the function name to not be changed\n");
+#else
+    ok(g_BreakFunctionName == false, "Expected the function name to be changed\n");
+#endif
 
+    BOOL ret;
+#if (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+    /* We cannot run this test with hooks disabled. The reason is that in this case,
+     * sfc_os.dll may not export SfcIsKeyProtected() (e.g. on Windows <= 2003) and
+     * without the delay-loading hooks, we wouldn't resolve SfcIsKeyProtected(). */
+#else
     /* Make the LoadLib fail, manually load the library in the Failure Hook,
-    Respond to the dliNotePreGetProcAddress with an alternate function address */
+    respond to the dliNotePreGetProcAddress with an alternate function address */
     SetExpectedDli(g_sfc_key);
-    BOOL ret = SfcIsKeyProtected(NULL, NULL, NULL);
+    ret = SfcIsKeyProtected(NULL, NULL, NULL);
     ok(ret == 12345, "Expected ret to be 12345, was %u\n", ret);    /* The original function returns FALSE! */
     CheckDliDone();
+#endif // DELAYIMP_NOHOOK
 
     /* Show that it works with the manually returned dll */
     SetExpectedDli(g_sfc_file);
@@ -511,6 +547,9 @@ START_TEST(delayimp)
     ok(ret == FALSE, "Expected ret to be FALSE, was %u\n", ret);
     CheckDliDone();
 
+#if (DELAYIMP_TEST == DELAYIMP_NOHOOK)
+    /* This test won't run with hooks disabled */
+#else
     if (HIWORD(SymGetOptions) == NULL)
     {
         skip("SymGetOptions until CORE-6504 is fixed\n");
@@ -525,6 +564,7 @@ START_TEST(delayimp)
         ok(opt == 123, "Expected opt to be 123, was %lu\n", opt);    /* The original function returns ERROR_INVALID_HANDLE */
         CheckDliDone();
     }
+#endif // DELAYIMP_NOHOOK
 
     /* Import by ordinal */
     g_ImportByName = false;

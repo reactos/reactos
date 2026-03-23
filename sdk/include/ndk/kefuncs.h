@@ -294,9 +294,10 @@ KeSignalCallDpcSynchronize(
 );
 
 //
-// ARC Configuration Functions. Only enabled if you have ARC Support
+// ARC Configuration Functions. Only enabled if you have ARC support.
 //
 #ifdef _ARC_
+NTSYSAPI
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -304,9 +305,10 @@ KeFindConfigurationNextEntry(
     _In_ CONFIGURATION_CLASS Class,
     _In_ CONFIGURATION_TYPE Type,
     _In_opt_ PULONG ComponentKey,
-    _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
+    _Inout_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
+NTSYSAPI
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(

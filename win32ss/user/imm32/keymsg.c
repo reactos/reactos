@@ -937,11 +937,10 @@ ImmGenerateMessage(_In_ HIMC hIMC)
     pItem = pTrans;
     for (dwIndex = 0; dwIndex < dwCount; ++dwIndex, ++pItem)
     {
-        if (bAnsi)
-            SendMessageA(hWnd, pItem->message, pItem->wParam, pItem->lParam);
-        else
-            SendMessageW(hWnd, pItem->message, pItem->wParam, pItem->lParam);
+        SendMessageW(hWnd, pItem->message, pItem->wParam, pItem->lParam);
     }
+
+    UNREFERENCED_PARAMETER(bAnsi);
 
 Quit:
     ImmLocalFree(pTrans);
