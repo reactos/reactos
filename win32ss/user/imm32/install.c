@@ -132,13 +132,13 @@ static HKL
 Imm32AssignNewLayout(
     _In_ UINT cKLs,
     _In_reads_(cKLs) const REG_IME_LAYOUT *pLayouts,
-    _In_ WORD wLangID)
+    _In_ LANGID wLangID)
 {
 #define MIN_SYSTEM_IMM_IME_ID 0xE000
 #define MAX_SYSTEM_IMM_IME_ID 0xE0FF
 #define MIN_USER_IMM_IME_ID   0xE020
 #define MAX_USER_IMM_IME_ID   MAX_SYSTEM_IMM_IME_ID
-    UINT iKL, wLow = MAX_USER_IMM_IME_ID, wHigh = MIN_USER_IMM_IME_ID;
+    UINT iKL, nID = 0, wLow = MAX_USER_IMM_IME_ID, wHigh = MIN_USER_IMM_IME_ID - 1;
 
     for (iKL = 0; iKL < cKLs; ++iKL)
     {
@@ -146,41 +146,36 @@ Imm32AssignNewLayout(
         wLow = min(wLow, HIWORD(pLayouts[iKL].hKL));
     }
 
-    UINT wNextImeId = 0;
-    if (wHigh < MAX_SYSTEM_IMM_IME_ID)
+    if (!cKLs || wHigh + 1 <= MAX_SYSTEM_IMM_IME_ID)
     {
-        wNextImeId = wHigh + 1;
+        nID = wHigh + 1;
     }
-    else if (wLow > MIN_SYSTEM_IMM_IME_ID)
+    else if (wLow - 1 > MIN_SYSTEM_IMM_IME_ID)
     {
-        wNextImeId = wLow - 1;
+        nID = wLow - 1;
     }
     else
     {
-        UINT wID;
-        for (wID = MIN_USER_IMM_IME_ID; wID <= MAX_USER_IMM_IME_ID; ++wID)
+        for (nID = MIN_USER_IMM_IME_ID; nID <= MAX_USER_IMM_IME_ID; ++nID)
         {
+            HKL hKL = LongToHandle(MAKELONG(wLangID, nID));
             for (iKL = 0; iKL < cKLs; ++iKL)
             {
-                if (LOWORD(pLayouts[iKL].hKL) == wLangID && HIWORD(pLayouts[iKL].hKL) == wID)
-                    break;
+                if (pLayouts[iKL].hKL == hKL)
+                    break; // Found a match
             }
-
             if (iKL >= cKLs)
-                break;
+                break; // Found
         }
 
-        if (wID <= MAX_SYSTEM_IMM_IME_ID)
-            wNextImeId = wID;
+        if (nID > MAX_USER_IMM_IME_ID)
+        {
+            ERR("No empty room for new IME HKL\n");
+            return NULL;
+        }
     }
 
-    if (!wNextImeId)
-    {
-        ERR("No next IMM IME ID\n");
-        return NULL;
-    }
-
-    return UlongToHandle(MAKELONG(wLangID, wNextImeId));
+    return (HKL)LongToHandle(MAKELONG(wLangID, nID));
 }
 
 static UINT
