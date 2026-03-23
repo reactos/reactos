@@ -23,7 +23,7 @@ BEGIN
     PUSHBUTTON "В&идалити", IDC_REMOVE_BUTTON, 175, 125, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 145, 70, 14
     GROUPBOX "Налаштування", -1, 5, 195, 245, 30
-    PUSHBUTTON "Па&нель мов...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Мовна па&нель ...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
