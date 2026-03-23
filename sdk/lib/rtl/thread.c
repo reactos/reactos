@@ -121,7 +121,10 @@ RtlpCreateUserStack(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         GuardPageSize = 0;
-        ZwFreeVirtualMemory(ProcessHandle, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
+        ZwFreeVirtualMemory(ProcessHandle,
+                            &InitialTeb->AllocatedStackBase,
+                            &GuardPageSize,
+                            MEM_RELEASE);
         return Status;
     }
 
@@ -137,7 +140,15 @@ RtlpCreateUserStack(IN HANDLE ProcessHandle,
                                         &GuardPageSize,
                                         PAGE_GUARD | PAGE_READWRITE,
                                         &Dummy);
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status))
+        {
+            GuardPageSize = 0;
+            ZwFreeVirtualMemory(ProcessHandle,
+                                &InitialTeb->AllocatedStackBase,
+                                &GuardPageSize,
+                                MEM_RELEASE);
+            return Status;
+        }
 
         /* Update the Stack Limit keeping in mind the Guard Page */
         InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit +

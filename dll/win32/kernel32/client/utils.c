@@ -23,7 +23,6 @@
 
 UNICODE_STRING Restricted = RTL_CONSTANT_STRING(L"Restricted");
 BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
-
 PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
 PRTL_CONVERT_STRINGA BasepUnicodeStringTo8BitString = RtlUnicodeStringToAnsiString;
 PRTL_COUNT_STRING BasepUnicodeStringTo8BitSize = BasepUnicodeStringToAnsiSize;
@@ -457,7 +456,10 @@ BaseCreateStack(
     {
         DPRINT1("Failure to allocate stack\n");
         GuardPageSize = 0;
-        NtFreeVirtualMemory(hProcess, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
+        NtFreeVirtualMemory(hProcess,
+                            &InitialTeb->AllocatedStackBase,
+                            &GuardPageSize,
+                            MEM_RELEASE);
         return Status;
     }
 
@@ -476,6 +478,11 @@ BaseCreateStack(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failure to set guard page\n");
+            GuardPageSize = 0;
+            NtFreeVirtualMemory(hProcess,
+                                &InitialTeb->AllocatedStackBase,
+                                &GuardPageSize,
+                                MEM_RELEASE);
             return Status;
         }
 
