@@ -125,7 +125,7 @@ BEGIN
     AUTOCHECKBOX "Відображати тіні від меню", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19//FIXME: add accel. I used "Ві&дображати тіні від меню" for the backport
     AUTOCHECKBOX "Показати &вміст вікна під час перетягування", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
     AUTOCHECKBOX "&Приховувати покажчики виклику з клавіатури до натиснення <Alt>", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
-    AUTOCHECKBOX "Використовувати п&лоскі меню", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
+    AUTOCHECKBOX "Використовувати п&ласкі меню", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Скасувати", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "ОК", IDOK, 172, 165, 50, 14
 END
