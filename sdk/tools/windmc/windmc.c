@@ -1,6 +1,6 @@
 /*
  * PROJECT:     ReactOS windmc
- * LICENSE:     See COPYING in the top level directory
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Binutils-compatible Windows Message Compiler host tool
  * COPYRIGHT:   Copyright 2026 Ahmed ARIF <arif.ing@outlook.com>
  */
