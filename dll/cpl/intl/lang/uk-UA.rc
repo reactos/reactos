@@ -221,5 +221,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Помилка відкриття розділу: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Помилка відкриття розділу: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Не вдається запустити input.dll"
-    IDS_ERROR_UNICODE "Не вдається встановити нову мову для програм, що не підтримують Unicode!"
+    IDS_ERROR_UNICODE "Не вдається встановити нову мову для програм, що не підтримують Юнікод!"
 END
