@@ -131,7 +131,7 @@ Imm32WriteHBitmapToNode(
             break;
     }
 
-    totalNeeded = pBmih->biSizeImage + nodeExtraSize;
+    totalNeeded = nodeExtraSize + pBmih->biSizeImage;
     if ((PBYTE)pBmih + totalNeeded + sizeof(ULONG_PTR) > (PBYTE)pView + pView->dwBufferSize)
     {
         ERR("No more space\n");
@@ -141,7 +141,7 @@ Imm32WriteHBitmapToNode(
     dibBitsPtr = (PBYTE)pBmih + nodeExtraSize;
     pNode->dibBitsPtr = (ULONG_PTR)dibBitsPtr; // Absolute address; convert to relative later
 
-    hbmpTemp = CreateCompatibleBitmap(hDC, pBmih->biWidth, pBmih->biHeight);
+    hbmpTemp = CreateCompatibleBitmap(hDC, pBmih->biWidth, labs(pBmih->biHeight));
     if (!hbmpTemp)
     {
         ERR("Out of memory\n");
