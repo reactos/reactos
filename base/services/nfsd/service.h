@@ -116,7 +116,7 @@ extern "C" {
 
 
 //
-//  FUNCTION: AddToMessageLog(LPTSTR lpszMsg)
+//  FUNCTION: AddToMessageLog(LPCTSTR lpszMsg)
 //
 //  PURPOSE: Allows any thread to log an error message
 //
@@ -126,7 +126,7 @@ extern "C" {
 //  RETURN VALUE:
 //    none
 //
-   void AddToMessageLog(LPTSTR lpszMsg);
+   void AddToMessageLog(LPCTSTR lpszMsg);
 //////////////////////////////////////////////////////////////////////////////
 
 
