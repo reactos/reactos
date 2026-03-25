@@ -430,9 +430,28 @@ FUNC KiPageFault
     /* We have an error code */
     EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
 
+    /* Link this frame so nested faults can recover the previous active trap */
+    mov rax, gs:[PcCurrentThread]
+    mov rcx, [rax + ThTrapFrame]
+    mov [rbp + KTRAP_FRAME_TrapFrame], rcx
+    mov [rax + ThTrapFrame], rbp
+
     /* Save page fault address */
     mov rdx, cr2
     mov [rbp  + KTRAP_FRAME_FaultAddress], rdx
+
+    /* Nested kernel page faults on an exhausted stack will recurse forever */
+    test byte ptr [rbp + KTRAP_FRAME_SegCs], 1
+    jnz SkipStackCheck
+    test rcx, rcx
+    jz SkipStackCheck
+    cmp rcx, rbp
+    jbe KernelStackOverflow
+    sub rcx, rbp
+    cmp rcx, KTRAP_FRAME_LENGTH
+    jbe KernelStackOverflow
+
+SkipStackCheck:
 
     /* If interrupts are off, do not enable them */
     test dword ptr [rbp + KTRAP_FRAME_EFlags], EFLAGS_IF_MASK
@@ -496,12 +515,25 @@ SpecialCode:
     call InternalDispatchException
 
 PageFaultReturn:
-
     /* Disable interrupts for the return */
     cli
 
+    /* Restore the previous active trap frame */
+    mov rcx, gs:[PcCurrentThread]
+    mov rdx, [rbp + KTRAP_FRAME_TrapFrame]
+    mov [rcx + ThTrapFrame], rdx
+
     /* Return */
     ExitTrap (TF_SAVE_ALL or TF_CHECKUSERAPC)
+
+KernelStackOverflow:
+    /* Use the original faulting frame so the bugcheck points at the real cause */
+    mov rax, gs:[PcCurrentThread]
+    mov rdx, [rbp + KTRAP_FRAME_TrapFrame]
+    mov [rax + ThTrapFrame], rdx
+    mov ecx, HEX(0E)
+    call KiSystemFatalException
+    jmp $
 ENDFUNC
 
 
