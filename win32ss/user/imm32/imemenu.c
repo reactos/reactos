@@ -21,15 +21,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 // IME menu info. 95% or more compatible to Windows
 typedef struct tagIMEMENUINFO
 {
-    DWORD dwVersion;           // Must be 1
-    DWORD dwBufferSize;        // Always 0x20000 (128KB)
-    DWORD dwFlags;             // dwFlags of ImmGetImeMenuItems
-    DWORD dwType;              // dwType of ImmGetImeMenuItems
-    ULONG_PTR dwParentOffset;  // Relative offset to parent menu data (or pointer)
-    ULONG_PTR dwItemsOffset;   // Relative offset to menu items (or pointer)
-    DWORD dwCount;             // # of items
-    ULONG_PTR dwSubMenuOffset; // Relative offset to the sub-menu (or pointer)
-    ULONG_PTR dwEndOffset;     // Offset to the bottom of this data (or pointer)
+    DWORD dwVersion;              // Must be 1
+    DWORD dwBufferSize;           // Always 0x20000 (128KB)
+    DWORD dwFlags;                // dwFlags of ImmGetImeMenuItems
+    DWORD dwType;                 // dwType of ImmGetImeMenuItems
+    ULONG_PTR dwParentOffset;     // Relative offset to parent menu data (or pointer)
+    ULONG_PTR dwItemsOffset;      // Relative offset to menu items (or pointer)
+    DWORD dwCount;                // # of items
+    ULONG_PTR dwBitmapListOffset; // Relative offset to bitmap-node list head (or pointer)
+    ULONG_PTR dwEndOffset;        // Offset to the bottom of this data (or pointer)
 } IMEMENUINFO, *PIMEMENUINFO;
 
 typedef struct tagBITMAPNODE
@@ -218,7 +218,7 @@ Imm32SerializeBitmap(
     HDC hDC, hMemDC;
 
     // Check bitmap caches
-    pNode = (PBITMAPNODE)pView->dwSubMenuOffset;
+    pNode = (PBITMAPNODE)pView->dwBitmapListOffset;
     while (pNode)
     {
         if (pNode->hbmpCached == hbmp)
@@ -253,7 +253,7 @@ Imm32SerializeBitmap(
         ReleaseDC(hwndDesktop, hDC);
         return NULL;
     }
-    pListHead = (PBITMAPNODE)pView->dwSubMenuOffset;
+    pListHead = (PBITMAPNODE)pView->dwBitmapListOffset;
     pNode->dwNext = (ULONG_PTR)pListHead;
 
     pNewEnd = Imm32WriteHBitmapToNode(hMemDC, hbmp, pNode, pView);
@@ -265,13 +265,13 @@ Imm32SerializeBitmap(
     {
         ERR("No more space\n");
         pView->dwEndOffset = (ULONG_PTR)pNode;
-        pView->dwSubMenuOffset = pNode->dwNext;
+        pView->dwBitmapListOffset = pNode->dwNext;
         return NULL;
     }
 
     pNode->hbmpCached = hbmp;
     pNode->dwNext = (ULONG_PTR)pListHead;
-    pView->dwSubMenuOffset = (ULONG_PTR)pNode;
+    pView->dwBitmapListOffset = (ULONG_PTR)pNode;
     pView->dwEndOffset     = (ULONG_PTR)pNewEnd;
 
     return pNode;
@@ -390,7 +390,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         goto ConvertBack;
     }
 
-    pView->dwSubMenuOffset = 0;
+    pView->dwBitmapListOffset = 0;
 
     // Compute end of items buffer and ensure it stays within the mapped buffer
     {
@@ -476,11 +476,11 @@ ConvertBack:
         }
     }
 
-    // Convert dwSubMenuOffset to relative
-    if (pView->dwSubMenuOffset)
+    // Convert dwBitmapListOffset to relative
+    if (pView->dwBitmapListOffset)
     {
-        PBITMAPNODE pCur = (PBITMAPNODE)pView->dwSubMenuOffset;
-        pView->dwSubMenuOffset = (ULONG_PTR)pCur - (ULONG_PTR)pView;
+        PBITMAPNODE pCur = (PBITMAPNODE)pView->dwBitmapListOffset;
+        pView->dwBitmapListOffset = (ULONG_PTR)pCur - (ULONG_PTR)pView;
 
         while (pCur)
         {
@@ -524,10 +524,10 @@ Imm32DeserializeImeMenu(
     // SECURITY: Validate dwSize (ReactOS only)
     dwCount = min(dwCount, dwSize / sizeof(IMEMENUITEMINFOW));
 
-    if (pView->dwSubMenuOffset)
+    if (pView->dwBitmapListOffset)
     {
-        PBITMAPNODE pCur = (PBITMAPNODE)(pViewBase + pView->dwSubMenuOffset);
-        pView->dwSubMenuOffset = (ULONG_PTR)pCur;
+        PBITMAPNODE pCur = (PBITMAPNODE)(pViewBase + pView->dwBitmapListOffset);
+        pView->dwBitmapListOffset = (ULONG_PTR)pCur;
 
         while (pCur)
         {
