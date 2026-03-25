@@ -515,6 +515,13 @@ Imm32DeserializeImeMenu(
     if (dwCount == 0)
         return 0;
 
+    // SECURITY: Validate dwSize (ReactOS only)
+    if (dwSize / sizeof(IMEMENUITEMINFOW) > dwCount)
+    {
+        ERR("No more space\n");
+        return 0;
+    }
+
     if (pView->dwSubMenuOffset)
     {
         PBITMAPNODE pCur = (PBITMAPNODE)(pViewBase + pView->dwSubMenuOffset);
@@ -614,12 +621,6 @@ Imm32DeserializeImeMenu(
         PIMEMENUITEMINFOW pSrc =
             (PIMEMENUITEMINFOW)((PBYTE)pView->dwItemsOffset + i * sizeof(IMEMENUITEMINFOW));
         PIMEMENUITEMINFOW pDst = &lpImeMenuItems[i];
-
-        if (((PBYTE)pSrc - (PBYTE)pView) + sizeof(IMEMENUITEMINFOW) > pView->dwBufferSize)
-        {
-            ERR("No more space\n");
-            return 0;
-        }
 
         // Copy scalar fields (excluding HBITMAP fields)
         pDst->cbSize     = pSrc->cbSize;
