@@ -255,7 +255,7 @@ Imm32SerializeBitmap(
 
     pNode->hbmpCached = hbmp;
     pNode->dwNext = (ULONG_PTR)pListHead;
-    pView->dwSubMenuOffset = (DWORD)pNode;
+    pView->dwSubMenuOffset = (ULONG_PTR)pNode;
     pView->dwEndOffset     = (ULONG_PTR)pNewEnd;
 
     return pNode;
