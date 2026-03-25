@@ -149,8 +149,8 @@ Imm32WriteHBitmapToNode(
     }
 
     hbmpOld = SelectObject(hDC, hbmpTemp);
-    scanlines = GetDIBits(hDC, hbmp, 0, pBmih->biHeight, dibBitsPtr, (PBITMAPINFO)pBmih,
-                          DIB_RGB_COLORS);
+    scanlines = GetDIBits(hDC, hbmp, 0, labs(pBmih->biHeight), dibBitsPtr,
+                          (PBITMAPINFO)pBmih, DIB_RGB_COLORS);
     SelectObject(hDC, hbmpOld);
     DeleteObject(hbmpTemp);
 
