@@ -308,18 +308,18 @@ Imm32DeserializeBitmap(
     return hbmp;
 }
 
-static DWORD
+static BOOL
 Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
 {
     PIMEMENUITEMINFOW pParent, pItems, pTempBuf;
     DWORD i, dwCount, dwTempBufSize;
-    BOOL ret = FALSE;
     PBITMAPNODE pNode;
+    BOOL ret = FALSE;
 
     if (pView->dwVersion != 1)
     {
         ERR("dwVersion mismatch: 0x%08lX\n", pView->dwVersion);
-        return 0;
+        return FALSE;
     }
 
     if (pView->dwParentOffset)
@@ -329,7 +329,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if ((PBYTE)pParent < (PBYTE)pView || (PBYTE)pParent >= (PBYTE)pView + pView->dwBufferSize)
         {
             ERR("Invalid dwParentOffset\n");
-            return 0;
+            return FALSE;
         }
         pView->dwParentOffset = (ULONG_PTR)pParent;
     }
@@ -345,7 +345,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if ((PBYTE)pItems < (PBYTE)pView || (PBYTE)pItems >= (PBYTE)pView + pView->dwBufferSize)
         {
             ERR("Invalid dwItemsOffset\n");
-            return 0;
+            return FALSE;
         }
         pView->dwItemsOffset = (ULONG_PTR)pItems;
     }
@@ -362,7 +362,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if (!pTempBuf)
         {
             ERR("Out of memory\n");
-            return 0;
+            return FALSE;
         }
     }
     else
@@ -379,6 +379,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
     {
         if (pTempBuf)
             ImmLocalFree(pTempBuf);
+
         ret = TRUE;
         goto ConvertBack;
     }
@@ -451,6 +452,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
     }
 
     ret = TRUE;
+
 FreeAndCleanup:
     ImmLocalFree(pTempBuf);
 
@@ -497,7 +499,7 @@ ConvertBack:
     if (pView->dwParentOffset && (PBYTE)pView->dwParentOffset >= (PBYTE)pView)
         pView->dwParentOffset = pView->dwParentOffset - (ULONG_PTR)pView;
 
-    return pView->dwCount;
+    return ret;
 }
 
 static DWORD
@@ -725,7 +727,7 @@ Cleanup:
  * file mapping object. This function is provided for WM_IME_SYSTEM:IMS_GETIMEMENU
  * handling.
  */
-LRESULT WINAPI
+BOOL WINAPI
 ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
 {
     /* Open the existing file mapping */
@@ -733,7 +735,7 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
     if (!hMapping)
     {
         ERR("OpenFileMappingW failed\n");
-        return 0;
+        return FALSE;
     }
 
     PIMEMENUINFO pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
@@ -741,13 +743,13 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
     {
         ERR("MapViewOfFile failed\n");
         CloseHandle(hMapping);
-        return 0;
+        return FALSE;
     }
 
-    DWORD dwCount = Imm32SerializeImeMenu(hIMC, pView);
+    BOOL ret = Imm32SerializeImeMenu(hIMC, pView);
     UnmapViewOfFile(pView);
     CloseHandle(hMapping);
-    return dwCount;
+    return ret;
 }
 
 /* Absorbs the differences between ANSI and Wide */

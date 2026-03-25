@@ -257,7 +257,7 @@ DWORD WINAPI ImmGetAppCompatFlags(_In_ HIMC hIMC);
 BOOL WINAPI ImmSetActiveContext(_In_ HWND hwnd, _In_opt_ HIMC hIMC, _In_ BOOL fFlag);
 BOOL WINAPI ImmLoadIME(_In_ HKL hKL);
 DWORD WINAPI ImmProcessKey(_In_ HWND, _In_ HKL, _In_ UINT, _In_ LPARAM, _In_ DWORD);
-LRESULT WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
+BOOL WINAPI ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC);
 BOOL WINAPI ImmWINNLSGetEnableStatus(_In_opt_ HWND hWnd);
 BOOL WINAPI ImmSetActiveContextConsoleIME(_In_ HWND hwnd, _In_ BOOL fFlag);
 BOOL WINAPI ImmActivateLayout(_In_ HKL hKL);
