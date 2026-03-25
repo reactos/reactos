@@ -752,19 +752,19 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
 
     ULONG dwContentLen, dwBytesWritten, dwBytesRead, dwStatus, dwStatusLen;
     ULONG dwCurrentBytesRead = 0;
+    UINT uiLastPercent = (UINT)-1;
     BOOL bTempfile = FALSE, bCancelled = FALSE;
 
     HINTERNET hOpen = NULL;
     HINTERNET hFile = NULL;
     HANDLE hOut = INVALID_HANDLE_VALUE;
 
-    
     LPCWSTR lpszAgent = L"RApps/1.1";
     const DWORD dwUrlConnectFlags =
         INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION;
     URL_COMPONENTSW urlComponents;
     size_t urlLength;
-    unsigned char lpBuffer[4096];
+    unsigned char lpBuffer[65536];
 
     // Change caption to show the currently downloaded app
     switch (Info.DLType)
@@ -1004,6 +1004,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
     }
 
     dwCurrentBytesRead = 0;
+    uiLastPercent = (UINT)-1;
     do
     {
         bCancelled = IsCancelled();
@@ -1023,8 +1024,24 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
         }
 
         dwCurrentBytesRead += dwBytesRead;
-        UpdateProgress(dwCurrentBytesRead, dwContentLen);
-        
+
+        /* Only update the progress bar when the displayed percentage actually changes.
+         * Calling UpdateProgress on every small read causes excessive cross-thread
+         * SendMessage calls which block the download thread and can cause stalls. */
+        if (dwContentLen)
+        {
+            UINT uiCurPercent = (UINT)((ULONGLONG)dwCurrentBytesRead * 100 / dwContentLen);
+            if (uiCurPercent != uiLastPercent)
+            {
+                uiLastPercent = uiCurPercent;
+                UpdateProgress(dwCurrentBytesRead, dwContentLen);
+            }
+        }
+        else
+        {
+            UpdateProgress(dwCurrentBytesRead, dwContentLen);
+        }
+
     } while (dwBytesRead);
 
     CloseHandle(hOut);
