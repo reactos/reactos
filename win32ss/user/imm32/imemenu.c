@@ -520,11 +520,7 @@ Imm32DeserializeImeMenu(
         return 0;
 
     // SECURITY: Validate dwSize (ReactOS only)
-    if (dwSize / sizeof(IMEMENUITEMINFOW) > dwCount)
-    {
-        ERR("No more space\n");
-        return 0;
-    }
+    dwCount = min(dwCount, dwSize / sizeof(IMEMENUITEMINFOW));
 
     if (pView->dwSubMenuOffset)
     {
