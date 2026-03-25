@@ -352,7 +352,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
     if (pView->dwCount > 0)
     {
         dwTempBufSize = pView->dwCount * sizeof(IMEMENUITEMINFOW);
-        pTempBuf = ImmLocalAlloc(HEAP_ZERO_MEMORY, dwTempBufSize);
+        pTempBuf = ImmLocalAlloc(0, dwTempBufSize);
         if (!pTempBuf)
         {
             ERR("Out of memory\n");
