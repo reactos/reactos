@@ -211,7 +211,8 @@ Imm32SerializeBitmap(
 {
     PBITMAPNODE pListHead, pNode;
     PVOID pNewEnd;
-    HDC hDC;
+    HWND hwndDesktop;
+    HDC hDC, hMemDC;
 
     // Check bitmap caches
     pNode = (PBITMAPNODE)pView->dwSubMenuOffset;
@@ -231,19 +232,28 @@ Imm32SerializeBitmap(
         return NULL;
     }
 
-    hDC = GetDC(GetDesktopWindow());
+    hwndDesktop = GetDesktopWindow();
+    hDC = GetDC(hwndDesktop);
     if (!hDC)
     {
         ERR("GetDC failed\n");
         return NULL;
     }
 
+    hMemDC = CreateCompatibleDC(hDC);
+    if (!hMemDC)
+    {
+        ERR("CreateCompatibleDC failed\n");
+        ReleaseDC(hwndDesktop, hDC);
+        return NULL;
+    }
     pListHead = (PBITMAPNODE)pView->dwSubMenuOffset;
     pNode->dwNext = (ULONG_PTR)pListHead;
 
-    pNewEnd = Imm32WriteHBitmapToNode(hDC, hbmp, pNode, pView);
+    pNewEnd = Imm32WriteHBitmapToNode(hMemDC, hbmp, pNode, pView);
 
-    ReleaseDC(GetDesktopWindow(), hDC);
+    DeleteDC(hMemDC);
+    ReleaseDC(hwndDesktop, hDC);
 
     if (!pNewEnd) // Failure
     {
