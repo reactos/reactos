@@ -384,7 +384,18 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
     }
 
     pView->dwSubMenuOffset = 0;
-    pView->dwEndOffset = (ULONG_PTR)((PBYTE)pView + (dwCount + 1) * sizeof(IMEMENUITEMINFOW));
+
+    // Compute end of items buffer and ensure it stays within the mapped buffer
+    {
+        PBYTE pBufferEnd = (PBYTE)pView + pView->dwBufferSize;
+        PBYTE pItemsEnd  = (PBYTE)pItems + dwCount * sizeof(IMEMENUITEMINFOW);
+        if (pItemsEnd > pBufferEnd)
+        {
+            ret = FALSE;
+            goto FreeAndCleanup;
+        }
+        pView->dwEndOffset = (ULONG_PTR)pItemsEnd;
+    }
 
     // Serialize items
     for (i = 0; i < dwCount; i++)
