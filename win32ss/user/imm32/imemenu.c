@@ -562,9 +562,20 @@ Imm32DeserializeImeMenu(
     if (pView->dwItemsOffset)
     {
         pItemsBase = (PIMEMENUITEMINFOW)(pViewBase + pView->dwItemsOffset);
-        // Boundary check
+        // Boundary check: base pointer must be inside the view
         if ((PBYTE)pItemsBase < pViewBase || (PBYTE)pItemsBase >= pViewBase + pView->dwBufferSize)
             return 0;
+
+        // Boundary check: ensure the whole items array fits inside the view
+        if (dwCount > 0)
+        {
+            SIZE_T offsetFromBase = (SIZE_T)((PBYTE)pItemsBase - pViewBase);
+            SIZE_T available      = (SIZE_T)pView->dwBufferSize - offsetFromBase;
+            SIZE_T needed         = (SIZE_T)dwCount * sizeof(IMEMENUITEMINFOW);
+
+            if (available < needed)
+                return 0;
+        }
         pView->dwItemsOffset = (ULONG_PTR)pItemsBase;
     }
     else
