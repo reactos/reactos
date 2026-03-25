@@ -163,7 +163,7 @@ Imm32WriteHBitmapToNode(
     return (PBYTE)pBmih + nodeExtraSize + pBmih->biSizeImage;
 }
 
-static VOID
+static BOOL
 Imm32InitImeMenuView(
     PIMEMENUINFO pView,
     DWORD dwFlags,
@@ -202,6 +202,8 @@ Imm32InitImeMenuView(
         pView->dwParentOffset = 0;
         pView->dwItemsOffset  = sizeof(*pView);
     }
+
+    return pView->dwItemsOffset + pView->dwCount * sizeof(IMEMENUITEMINFOW) <= pView->dwBufferSize;
 }
 
 static PBITMAPNODE
@@ -659,7 +661,8 @@ ImmGetImeMenuItemsInterProcess(
     if (!pView)
         goto Cleanup;
 
-    Imm32InitImeMenuView(pView, dwFlags, dwType, lpImeParentMenu, lpImeMenuItems, dwSize);
+    if (!Imm32InitImeMenuView(pView, dwFlags, dwType, lpImeParentMenu, lpImeMenuItems, dwSize))
+        goto Cleanup;
 
     // WM_IME_SYSTEM:IMS_GETIMEMENU will invoke ImmPutImeMenuItemsIntoMappedFile to serialize
     if (!SendMessageW(hwndIme, WM_IME_SYSTEM, IMS_GETIMEMENU, (LPARAM)hIMC))
