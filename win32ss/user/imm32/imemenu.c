@@ -566,7 +566,7 @@ Imm32DeserializeImeMenu(
         if ((PBYTE)pItemsBase < pViewBase || (PBYTE)pItemsBase >= pViewBase + pView->dwBufferSize)
             return 0;
 
-        // Boundary check: ensure the whole items array fits inside the view
+        // Boundary check (ReactOS only): ensure the whole items array fits inside the view
         if (dwCount > 0)
         {
             SIZE_T offsetFromBase = (SIZE_T)((PBYTE)pItemsBase - pViewBase);
@@ -576,6 +576,7 @@ Imm32DeserializeImeMenu(
             if (available < needed)
                 return 0;
         }
+
         pView->dwItemsOffset = (ULONG_PTR)pItemsBase;
     }
     else
@@ -730,19 +731,19 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
     /* Open the existing file mapping */
     HANDLE hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, IMEMENUINFO_MAPPING_NAME);
     if (!hMapping)
-        return FALSE;
+        return 0;
 
     PIMEMENUINFO pView = (PIMEMENUINFO)MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
     if (!pView)
     {
         CloseHandle(hMapping);
-        return FALSE;
+        return 0;
     }
 
     BOOL ret = Imm32SerializeImeMenu(hIMC, pView);
     UnmapViewOfFile(pView);
     CloseHandle(hMapping);
-    return ret;
+    return (LRESULT)ret;
 }
 
 /* Absorbs the differences between ANSI and Wide */
