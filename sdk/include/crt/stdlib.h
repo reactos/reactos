@@ -255,6 +255,11 @@ extern "C" {
   __MINGW_EXTENSION __int64 __cdecl _abs64(__int64);
 #endif
   int __cdecl atexit(void (__cdecl *)(void));
+#if (!defined(__cplusplus) && defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)) || \
+    (defined(__cplusplus) && (__cplusplus >= 201103L))
+  __declspec(noreturn) void __cdecl quick_exit(int);
+  int __cdecl at_quick_exit(void (__cdecl *)(void));
+#endif
 
 #ifndef _CRT_ATOF_DEFINED
 #define _CRT_ATOF_DEFINED
