@@ -418,7 +418,7 @@
 
   FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdGeometry( FT_Library  library,
-                             FT_Vector   sub[3] )
+                             FT_Vector*  sub )
   {
     if ( !library )
       return FT_THROW( Invalid_Library_Handle );
