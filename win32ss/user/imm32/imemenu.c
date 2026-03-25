@@ -203,6 +203,7 @@ Imm32InitImeMenuView(
         pView->dwItemsOffset  = sizeof(*pView);
     }
 
+    // SECURITY: Validate dwCount (ReactOS only)
     return pView->dwItemsOffset + pView->dwCount * sizeof(IMEMENUITEMINFOW) <= pView->dwBufferSize;
 }
 
