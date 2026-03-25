@@ -163,7 +163,7 @@ Imm32WriteHBitmapToNode(
     return (PBYTE)pBmih + nodeExtraSize + pBmih->biSizeImage;
 }
 
-void
+static VOID
 Imm32InitImeMenuView(
     PIMEMENUINFO pView,
     DWORD dwFlags,
@@ -292,7 +292,7 @@ Imm32DeserializeBitmap(
     return hbmp;
 }
 
-BOOL
+static BOOL
 Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
 {
     PIMEMENUITEMINFOW pParent, pItems, pTempBuf;
@@ -473,7 +473,7 @@ ConvertBack:
     return ret;
 }
 
-DWORD WINAPI
+static DWORD
 Imm32DeserializeImeMenu(
     _In_ PIMEMENUINFO pView,
     _Out_opt_ PIMEMENUITEMINFOW lpImeMenuItems,
@@ -606,7 +606,7 @@ Imm32DeserializeImeMenu(
     return dwCount;
 }
 
-DWORD WINAPI
+static DWORD
 ImmGetImeMenuItemsInterProcess(
     _In_ HIMC hIMC,
     _In_ DWORD dwFlags,
