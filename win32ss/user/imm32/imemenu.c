@@ -534,9 +534,12 @@ Imm32DeserializeImeMenu(
             if (pCur->dwNext)
             {
                 pNextCur = (PBITMAPNODE)(pViewBase + pCur->dwNext);
-                if ((PBYTE)pNextCur < pViewBase ||
+                if ((PBYTE)pNextCur < pViewBase || 
                     (PBYTE)pNextCur >= pViewBase + pView->dwBufferSize)
+                {
+                    ERR("Invalid dwNext\n");
                     return 0;
+                }
                 pCur->dwNext = (ULONG_PTR)pNextCur;
                 pCur = pNextCur;
             }
@@ -573,7 +576,10 @@ Imm32DeserializeImeMenu(
         {
             PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpChecked);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
+            {
+                ERR("Invalid hbmpChecked\n");
                 return 0;
+            }
             pItem->hbmpChecked = (HBITMAP)(ULONG_PTR)pN;
         }
 
@@ -582,7 +588,10 @@ Imm32DeserializeImeMenu(
         {
             PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpUnchecked);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
+            {
+                ERR("Invalid hbmpUnchecked\n");
                 return 0;
+            }
             pItem->hbmpUnchecked = (HBITMAP)(ULONG_PTR)pN;
         }
 
@@ -591,7 +600,10 @@ Imm32DeserializeImeMenu(
         {
             PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpItem);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
+            {
+                ERR("Invalid hbmpItem\n");
                 return 0;
+            }
             pItem->hbmpItem = (HBITMAP)(ULONG_PTR)pN;
         }
     }
@@ -603,11 +615,17 @@ Imm32DeserializeImeMenu(
             (PIMEMENUITEMINFOW)((PBYTE)pView->dwItemsOffset + i * sizeof(IMEMENUITEMINFOW));
         PIMEMENUITEMINFOW pDst = &lpImeMenuItems[i];
 
+        if (((PBYTE)pSrc - (PBYTE)pView) + sizeof(IMEMENUITEMINFOW) > pView->dwBufferSize)
+        {
+            ERR("No more space\n");
+            return 0;
+        }
+
         // Copy scalar fields (excluding HBITMAP fields)
-        pDst->cbSize    = pSrc->cbSize;
-        pDst->fType     = pSrc->fType;
-        pDst->fState    = pSrc->fState;
-        pDst->wID       = pSrc->wID;
+        pDst->cbSize     = pSrc->cbSize;
+        pDst->fType      = pSrc->fType;
+        pDst->fState     = pSrc->fState;
+        pDst->wID        = pSrc->wID;
         pDst->dwItemData = pSrc->dwItemData;
 
         // Copy szString
