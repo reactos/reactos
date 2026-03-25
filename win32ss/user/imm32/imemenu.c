@@ -318,7 +318,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
 
     if (pView->dwVersion != 1)
     {
-        ERR("dwVersion mismatch: 0x%08lX", pView->dwVersion);
+        ERR("dwVersion mismatch: 0x%08lX\n", pView->dwVersion);
         return FALSE;
     }
 
