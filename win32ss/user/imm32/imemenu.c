@@ -731,11 +731,15 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
     /* Open the existing file mapping */
     HANDLE hMapping = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, IMEMENUINFO_MAPPING_NAME);
     if (!hMapping)
+    {
+        ERR("OpenFileMappingW failed\n");
         return 0;
+    }
 
-    PIMEMENUINFO pView = (PIMEMENUINFO)MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    PIMEMENUINFO pView = MapViewOfFile(hMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
     if (!pView)
     {
+        ERR("MapViewOfFile failed\n");
         CloseHandle(hMapping);
         return 0;
     }
