@@ -581,7 +581,7 @@ Imm32DeserializeImeMenu(
         // hbmpChecked
         if (pItem->hbmpChecked)
         {
-            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpChecked);
+            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (ULONG_PTR)pItem->hbmpChecked);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
             {
                 ERR("Invalid hbmpChecked\n");
@@ -593,7 +593,7 @@ Imm32DeserializeImeMenu(
         // hbmpUnchecked
         if (pItem->hbmpUnchecked)
         {
-            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpUnchecked);
+            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (ULONG_PTR)pItem->hbmpUnchecked);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
             {
                 ERR("Invalid hbmpUnchecked\n");
@@ -605,7 +605,7 @@ Imm32DeserializeImeMenu(
         // hbmpItem
         if (pItem->hbmpItem)
         {
-            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (DWORD)(ULONG_PTR)pItem->hbmpItem);
+            PBITMAPNODE pN = (PBITMAPNODE)(pViewBase + (ULONG_PTR)pItem->hbmpItem);
             if ((PBYTE)pN < pViewBase || (PBYTE)pN >= pViewBase + pView->dwBufferSize)
             {
                 ERR("Invalid hbmpItem\n");
