@@ -228,8 +228,11 @@ Imm32SerializeBitmap(
 
     // Boundary check
     pNode = (PBITMAPNODE)pView->dwEndOffset;
-    if (!pNode || (PBYTE)pNode < (PBYTE)pView ||
-        (PBYTE)pNode >= (PBYTE)pView + pView->dwBufferSize)
+    if (!pNode ||
+        (PBYTE)pNode < (PBYTE)pView ||
+        (PBYTE)pNode >= (PBYTE)pView + pView->dwBufferSize ||
+        // ReactOS only:
+        (PBYTE)pNode + sizeof(BITMAPNODE) > (PBYTE)pView + pView->dwBufferSize)
     {
         ERR("Insufficient or incorrect space\n");
         return NULL;
