@@ -308,7 +308,7 @@ Imm32DeserializeBitmap(
     return hbmp;
 }
 
-static BOOL
+static DWORD
 Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
 {
     PIMEMENUITEMINFOW pParent, pItems, pTempBuf;
@@ -319,7 +319,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
     if (pView->dwVersion != 1)
     {
         ERR("dwVersion mismatch: 0x%08lX\n", pView->dwVersion);
-        return FALSE;
+        return 0;
     }
 
     if (pView->dwParentOffset)
@@ -329,7 +329,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if ((PBYTE)pParent < (PBYTE)pView || (PBYTE)pParent >= (PBYTE)pView + pView->dwBufferSize)
         {
             ERR("Invalid dwParentOffset\n");
-            return FALSE;
+            return 0;
         }
         pView->dwParentOffset = (ULONG_PTR)pParent;
     }
@@ -345,7 +345,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if ((PBYTE)pItems < (PBYTE)pView || (PBYTE)pItems >= (PBYTE)pView + pView->dwBufferSize)
         {
             ERR("Invalid dwItemsOffset\n");
-            return FALSE;
+            return 0;
         }
         pView->dwItemsOffset = (ULONG_PTR)pItems;
     }
@@ -362,7 +362,7 @@ Imm32SerializeImeMenu(HIMC hIMC, PIMEMENUINFO pView)
         if (!pTempBuf)
         {
             ERR("Out of memory\n");
-            return FALSE;
+            return 0;
         }
     }
     else
@@ -497,7 +497,7 @@ ConvertBack:
     if (pView->dwParentOffset && (PBYTE)pView->dwParentOffset >= (PBYTE)pView)
         pView->dwParentOffset = pView->dwParentOffset - (ULONG_PTR)pView;
 
-    return ret;
+    return pView->dwCount;
 }
 
 static DWORD
@@ -744,10 +744,10 @@ ImmPutImeMenuItemsIntoMappedFile(_In_ HIMC hIMC)
         return 0;
     }
 
-    BOOL ret = Imm32SerializeImeMenu(hIMC, pView);
+    DWORD dwCount = Imm32SerializeImeMenu(hIMC, pView);
     UnmapViewOfFile(pView);
     CloseHandle(hMapping);
-    return (LRESULT)ret;
+    return dwCount;
 }
 
 /* Absorbs the differences between ANSI and Wide */
