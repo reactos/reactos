@@ -388,7 +388,7 @@ private:
     string msg;
 };
 
-#if defined(__REACTOS__) && defined(__GNUC__) && __GNUC__ < 15
+#if defined(__REACTOS__) && !(defined(__GNUC__) && __GNUC__ >= 15)
 inline wstring to_wstring(uint8_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint16_t a) { WCHAR buffer[16]; swprintf(buffer, L"%d", a); return wstring(buffer); }
 inline wstring to_wstring(uint32_t a) { WCHAR buffer[32]; swprintf(buffer, L"%ld", a); return wstring(buffer); }
