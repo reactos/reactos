@@ -112,11 +112,12 @@ VOID NTAPI MD4Update( MD4_CTX *ctx, const unsigned char *buf, unsigned int len )
  */
 VOID NTAPI MD4Final( MD4_CTX *ctx )
 {
-    unsigned int count;
+    unsigned int count, byte_pos;
     unsigned char *p;
 
     /* Compute number of bytes mod 64 */
     count = (ctx->i[0] >> 3) & 0x3F;
+    byte_pos = count;
 
     /* Set the first char of padding to 0x80.  This is safe since there is
        always at least one byte free */
@@ -153,6 +154,12 @@ VOID NTAPI MD4Final( MD4_CTX *ctx )
     byteReverse( (unsigned char *)ctx->buf, 4 );
     memcpy( ctx->digest, ctx->buf, 16 );
     memset(ctx->in, 0, sizeof(ctx->in));
+
+    /* Update bit count to reflect total padded message size */
+    count = (byte_pos < 56) ? (64 - byte_pos) : (128 - byte_pos);
+    count <<= 3;
+    if ((ctx->i[0] += count) < count)
+        ctx->i[1]++;
 }
 
 /* The three core functions */
