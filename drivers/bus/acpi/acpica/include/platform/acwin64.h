@@ -130,6 +130,7 @@
 #define ACPI_FLUSH_CPU_CACHE()  __wbinvd()
 #endif
 
+#ifndef __REACTOS__
 #define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq) \
 { \
     BOOLEAN acquired = 0xFF; \
@@ -148,7 +149,28 @@
     } \
     (Acq) = acquired; \
 }
+#else
+#define ACPI_ACQUIRE_GLOBAL_LOCK(FacsPtr, Acq) \
+{ \
+    BOOLEAN acquired = 0xFF; \
+\
+    if ((FacsPtr) != 0) \
+    { \
+        UINT32 compare, prev, newval; \
+        volatile LONG *lock = (volatile LONG *)&((FacsPtr)->GlobalLock); \
+        do \
+        { \
+            compare = (UINT32)*lock; \
+            newval = (compare & ~1) | ((compare >> 1) & 1) | 2; \
+            prev = (UINT32)InterlockedCompareExchange(lock, (LONG)newval, (LONG)compare); \
+        } while (prev != compare); \
+        acquired = ((newval & 0xFF) < 3) ? 0xFF : 0x00; \
+    } \
+    (Acq) = acquired; \
+}
+#endif
 
+#ifndef __REACTOS__
 #define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) \
 { \
     BOOLEAN pending = 0; \
@@ -159,6 +181,18 @@
     } \
     (Pnd) = pending; \
 }
+#else
+#define ACPI_RELEASE_GLOBAL_LOCK(FacsPtr, Pnd) \
+{ \
+    BOOLEAN pending = 0; \
+\
+    if ((FacsPtr) != 0) \
+    { \
+        pending = (BOOLEAN)(InterlockedAnd((volatile LONG *)&((FacsPtr)->GlobalLock), (LONG)~3) & 1); \
+    } \
+    (Pnd) = pending; \
+}
+#endif
 
 #endif /* __REACTOS__ */
 
