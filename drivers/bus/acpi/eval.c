@@ -13,7 +13,6 @@
 
 #define TAG_ACPI_PARAMETERS_LIST     'OpcA'
 #define TAG_ACPI_PACKAGE_LIST        'PpcA'
-#define TAG_ACPI_OUTPUT_ARGUMENTS    'AocA'
 
 /**
  * Null terminated ACPI name for the object.
@@ -718,10 +717,8 @@ EvalCreateOutputArguments(
     _In_ ACPI_BUFFER* ReturnBuffer)
 {
     ACPI_OBJECT* Obj;
-    PACPI_METHOD_ARGUMENT OutputArguments;
     ULONG ExtraParamLength, OutputBufSize;
     PACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
-    ULONG OutputDataLength;
     NTSTATUS Status;
     ULONG Count;
 
@@ -764,35 +761,6 @@ EvalCreateOutputArguments(
                OutputBufSize);
 
         Irp->IoStatus.Information = OutputBufSize;
-
-        /*
-         * Preserve the historical ReactOS behavior for near-fit callers:
-         * keep the output header for all overflow cases, and copy a
-         * truncated argument blob only when the caller is short by at most
-         * one trailing ULONG.
-         */
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength + sizeof(ULONG) >= OutputBufSize)
-        {
-            OutputArguments = ExAllocatePoolUninitialized(NonPagedPool,
-                                                          ExtraParamLength,
-                                                          TAG_ACPI_OUTPUT_ARGUMENTS);
-            if (OutputArguments)
-            {
-                Status = EvalConvertEvaluationResults(OutputArguments, 0, Obj);
-                if (NT_SUCCESS(Status))
-                {
-                    OutputDataLength =
-                        IoStack->Parameters.DeviceIoControl.OutputBufferLength -
-                        FIELD_OFFSET(ACPI_EVAL_OUTPUT_BUFFER, Argument);
-
-                    RtlCopyMemory(OutputBuffer->Argument,
-                                  OutputArguments,
-                                  min(OutputDataLength, ExtraParamLength));
-                }
-
-                ExFreePoolWithTag(OutputArguments, TAG_ACPI_OUTPUT_ARGUMENTS);
-            }
-        }
 
         return STATUS_BUFFER_OVERFLOW;
     }
