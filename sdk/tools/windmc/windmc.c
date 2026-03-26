@@ -36,7 +36,8 @@
 
 /* ========== Language info table ========== */
 
-typedef struct {
+typedef struct
+{
     uint16_t lang_id, primary, sub;
     int code_page;
     const char *country, *lang_name;
@@ -52,6 +53,7 @@ static const LangInfo known_langs[] = {
     { 0x0407, 0x07, 0x1, 1252, "Germany",         "German" },
     { 0x0408, 0x08, 0x1, 1253, "Greece",          "Greek" },
     { 0x0409, 0x09, 0x1, 1252, "United States",   "English" },
+    { 0x0809, 0x09, 0x2, 1252, "United Kingdom",  "English (United Kingdom)" },
     { 0x040A, 0x0A, 0x1, 1252, "Spain",           "Spanish - Traditional Sort" },
     { 0x040B, 0x0B, 0x1, 1252, "Finland",         "Finnish" },
     { 0x040C, 0x0C, 0x1, 1252, "France",          "French" },
@@ -86,7 +88,8 @@ static const LangInfo known_langs[] = {
     { 0,      0,    0,   0,    NULL,               NULL }
 };
 
-static const LangInfo *find_lang_info(uint16_t lang_id) {
+static const LangInfo *find_lang_info(uint16_t lang_id)
+{
     for (int i = 0; known_langs[i].lang_name; i++)
         if (known_langs[i].lang_id == lang_id) return &known_langs[i];
     return NULL;
@@ -101,7 +104,8 @@ typedef struct { int lang_index; char *text; } MsgLangText;
 typedef struct { char *text; char newline[3]; size_t newline_len; } InputLine;
 typedef struct { uint32_t value; const char *text; } BinMsg;
 
-typedef struct {
+typedef struct
+{
     uint32_t id, severity, facility, value;
     char symbolic_name[256];
     char type_def[64];
@@ -146,34 +150,41 @@ static char output_base_name[256] = "";
 
 /* ========== Memory helpers ========== */
 
-static void *xrealloc(void *ptr, size_t size) {
+static void *xrealloc(void *ptr, size_t size)
+{
     void *result = realloc(ptr, size);
-    if (!result) {
+    if (!result)
+    {
         fprintf(stderr, "Out of memory\n");
         exit(1);
     }
     return result;
 }
 
-static char *xstrdup(const char *s) {
+static char *xstrdup(const char *s)
+{
     char *result = strdup(s);
-    if (!result) {
+    if (!result)
+    {
         fprintf(stderr, "Out of memory\n");
         exit(1);
     }
     return result;
 }
 
-static char *xmalloc(size_t size) {
+static char *xmalloc(size_t size)
+{
     char *result = malloc(size);
-    if (!result) {
+    if (!result)
+    {
         fprintf(stderr, "Out of memory\n");
         exit(1);
     }
     return result;
 }
 
-static char *make_output_path(const char *dir, const char *base, const char *lang_file, const char *suffix) {
+static char *make_output_path(const char *dir, const char *base, const char *lang_file, const char *suffix)
+{
     size_t len = strlen(dir) + 1 + strlen(base) + strlen(suffix) + 1;
     if (lang_file)
         len += 1 + strlen(lang_file);
@@ -186,11 +197,14 @@ static char *make_output_path(const char *dir, const char *base, const char *lan
     return path;
 }
 
-static void make_dir(const char *path) {
+static void make_dir(const char *path)
+{
 #ifdef _WIN32
-    if (_mkdir(path) != 0 && errno != EEXIST) {
+    if (_mkdir(path) != 0 && errno != EEXIST)
+    {
 #else
-    if (mkdir(path, 0755) != 0 && errno != EEXIST) {
+    if (mkdir(path, 0755) != 0 && errno != EEXIST)
+    {
 #endif
         fprintf(stderr, "Cannot create directory %s: %s\n", path, strerror(errno));
         exit(1);
@@ -199,58 +213,70 @@ static void make_dir(const char *path) {
 
 /* ========== Dynamic array helpers ========== */
 
-static void ensure_messages(void) {
-    if (num_messages >= cap_messages) {
+static void ensure_messages(void)
+{
+    if (num_messages >= cap_messages)
+    {
         cap_messages = cap_messages ? cap_messages * 2 : 64;
         messages = xrealloc(messages, sizeof(Message) * cap_messages);
     }
 }
 
-static void ensure_comments(void) {
-    if (num_comments >= cap_comments) {
+static void ensure_comments(void)
+{
+    if (num_comments >= cap_comments)
+    {
         cap_comments = cap_comments ? cap_comments * 2 : 64;
         comment_strs = xrealloc(comment_strs, sizeof(char*) * cap_comments);
         comment_block_ids = xrealloc(comment_block_ids, sizeof(int) * cap_comments);
     }
 }
 
-static void ensure_header_items(void) {
-    if (num_header_items >= cap_header_items) {
+static void ensure_header_items(void)
+{
+    if (num_header_items >= cap_header_items)
+    {
         cap_header_items = cap_header_items ? cap_header_items * 2 : 128;
         header_items = xrealloc(header_items, sizeof(HeaderItem) * cap_header_items);
     }
 }
 
-static void add_comment(const char *text, int block_id) {
+static void add_comment(const char *text, int block_id)
+{
     ensure_comments();
     comment_strs[num_comments] = xstrdup(text);
     comment_block_ids[num_comments] = block_id;
     num_comments++;
 }
 
-static void add_header_comment(int ci) {
+static void add_header_comment(int ci)
+{
     ensure_header_items();
     header_items[num_header_items].is_comment = 1;
     header_items[num_header_items].index = ci;
     num_header_items++;
 }
 
-static void add_header_message(int mi) {
+static void add_header_message(int mi)
+{
     ensure_header_items();
     header_items[num_header_items].is_comment = 0;
     header_items[num_header_items].index = mi;
     num_header_items++;
 }
 
-static void add_line(const char *s, const char *newline, size_t newline_len) {
-    if (num_lines >= cap_lines) {
+static void add_line(const char *s, const char *newline, size_t newline_len)
+{
+    if (num_lines >= cap_lines)
+    {
         cap_lines = cap_lines ? cap_lines * 2 : 256;
         lines = xrealloc(lines, sizeof(InputLine) * cap_lines);
     }
     lines[num_lines].text = xstrdup(s);
     lines[num_lines].newline[0] = '\0';
     lines[num_lines].newline_len = newline_len;
-    if (newline_len > 0) {
+    if (newline_len > 0)
+    {
         memcpy(lines[num_lines].newline, newline, newline_len);
         lines[num_lines].newline[newline_len] = '\0';
     }
@@ -259,7 +285,8 @@ static void add_line(const char *s, const char *newline, size_t newline_len) {
 
 /* ========== Utilities ========== */
 
-static char *trim(char *s) {
+static char *trim(char *s)
+{
     while (*s && isspace((unsigned char)*s)) s++;
     if (*s == '\0') return s;
     char *end = s + strlen(s) - 1;
@@ -267,28 +294,37 @@ static char *trim(char *s) {
     return s;
 }
 
-static void copy_trunc(char *dst, size_t dst_size, const char *src) {
+static void copy_trunc(char *dst, size_t dst_size, const char *src)
+{
     if (dst_size == 0) return;
     snprintf(dst, dst_size, "%s", src ? src : "");
 }
 
-static void append_utf8_codepoint(char **buf, size_t *len, size_t *cap, uint32_t cp) {
+static void append_utf8_codepoint(char **buf, size_t *len, size_t *cap, uint32_t cp)
+{
     unsigned char tmp[4];
     size_t need;
 
-    if (cp <= 0x7F) {
+    if (cp <= 0x7F)
+    {
         tmp[0] = (unsigned char)cp;
         need = 1;
-    } else if (cp <= 0x7FF) {
+    }
+    else if (cp <= 0x7FF)
+    {
         tmp[0] = (unsigned char)(0xC0 | (cp >> 6));
         tmp[1] = (unsigned char)(0x80 | (cp & 0x3F));
         need = 2;
-    } else if (cp <= 0xFFFF) {
+    }
+    else if (cp <= 0xFFFF)
+    {
         tmp[0] = (unsigned char)(0xE0 | (cp >> 12));
         tmp[1] = (unsigned char)(0x80 | ((cp >> 6) & 0x3F));
         tmp[2] = (unsigned char)(0x80 | (cp & 0x3F));
         need = 3;
-    } else {
+    }
+    else
+    {
         tmp[0] = (unsigned char)(0xF0 | (cp >> 18));
         tmp[1] = (unsigned char)(0x80 | ((cp >> 12) & 0x3F));
         tmp[2] = (unsigned char)(0x80 | ((cp >> 6) & 0x3F));
@@ -296,7 +332,8 @@ static void append_utf8_codepoint(char **buf, size_t *len, size_t *cap, uint32_t
         need = 4;
     }
 
-    if (*len + need + 1 > *cap) {
+    if (*len + need + 1 > *cap)
+    {
         while (*len + need + 1 > *cap) *cap *= 2;
         *buf = xrealloc(*buf, *cap);
     }
@@ -306,7 +343,8 @@ static void append_utf8_codepoint(char **buf, size_t *len, size_t *cap, uint32_t
     (*buf)[*len] = '\0';
 }
 
-static uint32_t parse_value(const char *s) {
+static uint32_t parse_value(const char *s)
+{
     char buf[64];
     strncpy(buf, s, sizeof(buf)-1); buf[sizeof(buf)-1] = '\0';
     char *t = trim(buf);
@@ -317,13 +355,15 @@ static uint32_t parse_value(const char *s) {
 
 /* Return a trimmed copy of lines[idx]. The caller must use the result before calling again. */
 static char trim_buf[MAX_LINE];
-static char *get_trimmed(int idx) {
+static char *get_trimmed(int idx)
+{
     strncpy(trim_buf, lines[idx].text, sizeof(trim_buf)-1);
     trim_buf[sizeof(trim_buf)-1] = '\0';
     return trim(trim_buf);
 }
 
-static const char *match_assignment(const char *line, const char *key) {
+static const char *match_assignment(const char *line, const char *key)
+{
     size_t key_len = strlen(key);
     if (strncasecmp(line, key, key_len) != 0) return NULL;
     line += key_len;
@@ -336,7 +376,8 @@ static const char *match_assignment(const char *line, const char *key) {
 
 /* ========== Init ========== */
 
-static void init_defaults(void) {
+static void init_defaults(void)
+{
     strcpy(severities[0].name, "Success"); severities[0].value = 0x0; severities[0].define_name[0] = '\0';
     strcpy(severities[1].name, "Informational"); severities[1].value = 0x1; severities[1].define_name[0] = '\0';
     strcpy(severities[2].name, "Warning"); severities[2].value = 0x2; severities[2].define_name[0] = '\0';
@@ -348,13 +389,15 @@ static void init_defaults(void) {
     num_facilities = 2;
 }
 
-static uint32_t find_severity(const char *name) {
+static uint32_t find_severity(const char *name)
+{
     for (int i = 0; i < num_severities; i++)
         if (strcasecmp(severities[i].name, name) == 0) return severities[i].value;
     fprintf(stderr, "Unknown severity: %s\n", name); exit(1);
 }
 
-static uint32_t find_facility(const char *name) {
+static uint32_t find_facility(const char *name)
+{
     for (int i = 0; i < num_facilities; i++)
         if (strcasecmp(facilities[i].name, name) == 0) return facilities[i].value;
     if (strcasecmp(name, "System") == 0) return 0x0;
@@ -362,7 +405,8 @@ static uint32_t find_facility(const char *name) {
     fprintf(stderr, "Unknown facility: %s\n", name); exit(1);
 }
 
-static int find_lang_index(const char *name) {
+static int find_lang_index(const char *name)
+{
     for (int i = 0; i < num_langs; i++)
         if (strcasecmp(langs[i].name, name) == 0) return i;
     fprintf(stderr, "Unknown language: %s\n", name); exit(1);
@@ -384,7 +428,8 @@ static void parse_name_value_list_from_lines(int *pos,
     char *p = strchr(lines[*pos].text, '(');
     if (!p) { (*pos)++; free(buf); return; }
     size_t chunk_len = strlen(p + 1);
-    if (chunk_len + 1 > buf_cap) {
+    if (chunk_len + 1 > buf_cap)
+    {
         buf_cap = chunk_len + 1;
         buf = xrealloc(buf, buf_cap);
     }
@@ -392,9 +437,11 @@ static void parse_name_value_list_from_lines(int *pos,
     buf_len = chunk_len;
     (*pos)++;
 
-    while (!strchr(buf, ')') && *pos < num_lines) {
+    while (!strchr(buf, ')') && *pos < num_lines)
+    {
         chunk_len = strlen(lines[*pos].text);
-        if (buf_len + 1 + chunk_len + 1 > buf_cap) {
+        if (buf_len + 1 + chunk_len + 1 > buf_cap)
+        {
             while (buf_len + 1 + chunk_len + 1 > buf_cap) buf_cap *= 2;
             buf = xrealloc(buf, buf_cap);
         }
@@ -408,7 +455,8 @@ static void parse_name_value_list_from_lines(int *pos,
     if (p) *p = '\0';
 
     char *token = buf;
-    while (*token) {
+    while (*token)
+    {
         while (*token && isspace((unsigned char)*token)) token++;
         if (!*token) break;
         char *eq = strchr(token, '=');
@@ -429,7 +477,8 @@ static void parse_name_value_list_from_lines(int *pos,
         uint32_t value = parse_value(val_str);
 
         char define_name[128] = "";
-        if (*token == ':') {
+        if (*token == ':')
+        {
             token++; int di = 0;
             while (*token && !isspace((unsigned char)*token) && *token != ')')
                 if (di < (int)sizeof(define_name)-1) define_name[di++] = *token++;
@@ -442,9 +491,12 @@ static void parse_name_value_list_from_lines(int *pos,
     free(buf);
 }
 
-static void add_severity_cb(const char *name, uint32_t value, const char *dn) {
-    for (int i = 0; i < num_severities; i++) {
-        if (strcasecmp(severities[i].name, name) == 0) {
+static void add_severity_cb(const char *name, uint32_t value, const char *dn)
+{
+    for (int i = 0; i < num_severities; i++)
+    {
+        if (strcasecmp(severities[i].name, name) == 0)
+        {
             severities[i].value = value;
             strcpy(severities[i].define_name, dn ? dn : "");
             return;
@@ -457,7 +509,8 @@ static void add_severity_cb(const char *name, uint32_t value, const char *dn) {
     num_severities++;
 }
 
-static void add_facility_cb(const char *name, uint32_t value, const char *dn) {
+static void add_facility_cb(const char *name, uint32_t value, const char *dn)
+{
     if (num_facilities >= MAX_FACILITIES) return;
     strcpy(facilities[num_facilities].name, name);
     facilities[num_facilities].value = value;
@@ -465,7 +518,8 @@ static void add_facility_cb(const char *name, uint32_t value, const char *dn) {
     num_facilities++;
 }
 
-static void add_language_cb(const char *name, uint32_t value, const char *dn) {
+static void add_language_cb(const char *name, uint32_t value, const char *dn)
+{
     if (num_langs >= MAX_LANGS) return;
     strcpy(langs[num_langs].name, name);
     langs[num_langs].lang_id = (uint16_t)value;
@@ -488,16 +542,23 @@ static const uint16_t cp1252_80_9f[32] = {
 
 /* Convert raw bytes to UTF-16LE using Windows-1252 mapping.
    Each byte maps to one uint16_t. Returns number of uint16_t written including null. */
-static int cp1252_to_utf16le(const char *src, uint16_t *dst, int max_units) {
+static int cp1252_to_utf16le(const char *src, uint16_t *dst, int max_units)
+{
     int di = 0;
     const unsigned char *s = (const unsigned char *)src;
-    while (*s && di < max_units - 1) {
+    while (*s && di < max_units - 1)
+    {
         unsigned char c = *s++;
-        if (c < 0x80) {
+        if (c < 0x80)
+        {
             dst[di++] = c;
-        } else if (c >= 0x80 && c <= 0x9F) {
+        }
+        else if (c >= 0x80 && c <= 0x9F)
+        {
             dst[di++] = cp1252_80_9f[c - 0x80];
-        } else {
+        }
+        else
+        {
             /* 0xA0-0xFF: direct mapping to Unicode (Latin-1 Supplement) */
             dst[di++] = c;
         }
@@ -506,17 +567,22 @@ static int cp1252_to_utf16le(const char *src, uint16_t *dst, int max_units) {
     return di;
 }
 
-static int unicode_to_cp1252(uint32_t cp, unsigned char *out) {
-    if (cp < 0x80) {
+static int unicode_to_cp1252(uint32_t cp, unsigned char *out)
+{
+    if (cp < 0x80)
+    {
         *out = (unsigned char)cp;
         return 1;
     }
-    if (cp >= 0xA0 && cp <= 0xFF) {
+    if (cp >= 0xA0 && cp <= 0xFF)
+    {
         *out = (unsigned char)cp;
         return 1;
     }
-    for (int i = 0; i < 32; i++) {
-        if (cp1252_80_9f[i] == cp) {
+    for (int i = 0; i < 32; i++)
+    {
+        if (cp1252_80_9f[i] == cp)
+        {
             *out = (unsigned char)(0x80 + i);
             return 1;
         }
@@ -524,42 +590,58 @@ static int unicode_to_cp1252(uint32_t cp, unsigned char *out) {
     return 0;
 }
 
-static int utf8_to_utf16le(const char *src, uint16_t *dst, int max_units) {
+static int utf8_to_utf16le(const char *src, uint16_t *dst, int max_units)
+{
     int di = 0;
     const unsigned char *s = (const unsigned char *)src;
 
-    while (*s && di < max_units - 1) {
+    while (*s && di < max_units - 1)
+    {
         uint32_t cp;
         unsigned char c = *s++;
 
-        if (c < 0x80) {
+        if (c < 0x80)
+        {
             cp = c;
-        } else if ((c & 0xE0) == 0xC0 && s[0]) {
+        }
+        else if ((c & 0xE0) == 0xC0 && s[0])
+        {
             cp = ((uint32_t)(c & 0x1F) << 6) |
                  (uint32_t)(s[0] & 0x3F);
             s += 1;
-        } else if ((c & 0xF0) == 0xE0 && s[0] && s[1]) {
+        }
+        else if ((c & 0xF0) == 0xE0 && s[0] && s[1])
+        {
             cp = ((uint32_t)(c & 0x0F) << 12) |
                  ((uint32_t)(s[0] & 0x3F) << 6) |
                  (uint32_t)(s[1] & 0x3F);
             s += 2;
-        } else if ((c & 0xF8) == 0xF0 && s[0] && s[1] && s[2]) {
+        }
+        else if ((c & 0xF8) == 0xF0 && s[0] && s[1] && s[2])
+        {
             cp = ((uint32_t)(c & 0x07) << 18) |
                  ((uint32_t)(s[0] & 0x3F) << 12) |
                  ((uint32_t)(s[1] & 0x3F) << 6) |
                  (uint32_t)(s[2] & 0x3F);
             s += 3;
-        } else {
+        }
+        else
+        {
             cp = c;
         }
 
-        if (cp <= 0xFFFF) {
+        if (cp <= 0xFFFF)
+        {
             dst[di++] = (uint16_t)cp;
-        } else if (di < max_units - 2) {
+        }
+        else if (di < max_units - 2)
+        {
             cp -= 0x10000;
             dst[di++] = (uint16_t)(0xD800 + (cp >> 10));
             dst[di++] = (uint16_t)(0xDC00 + (cp & 0x3FF));
-        } else {
+        }
+        else
+        {
             break;
         }
     }
@@ -568,14 +650,17 @@ static int utf8_to_utf16le(const char *src, uint16_t *dst, int max_units) {
     return di;
 }
 
-static int text_to_utf16le(const char *src, uint16_t *dst, int max_units) {
+static int text_to_utf16le(const char *src, uint16_t *dst, int max_units)
+{
     if (input_is_utf8)
         return utf8_to_utf16le(src, dst, max_units);
     return cp1252_to_utf16le(src, dst, max_units);
 }
 
-static const char *codepage_to_encoding_name(int codepage) {
-    switch (codepage) {
+static const char *codepage_to_encoding_name(int codepage)
+{
+    switch (codepage)
+    {
     case 874: return "CP874";
     case 932: return "CP932";
     case 936: return "CP936";
@@ -593,7 +678,8 @@ static const char *codepage_to_encoding_name(int codepage) {
     }
 }
 
-static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, size_t *out_len) {
+static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, size_t *out_len)
+{
 #ifdef _WIN32
     int wide_len;
     int byte_len;
@@ -601,27 +687,31 @@ static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, si
     unsigned char *out_buf;
 
     wide_len = MultiByteToWideChar(CP_UTF8, 0, src, -1, NULL, 0);
-    if (wide_len <= 0) {
+    if (wide_len <= 0)
+    {
         fprintf(stderr, "Cannot convert UTF-8 input to UTF-16\n");
         exit(1);
     }
 
     wide_buf = xrealloc(NULL, sizeof(WCHAR) * (size_t)wide_len);
-    if (MultiByteToWideChar(CP_UTF8, 0, src, -1, wide_buf, wide_len) <= 0) {
+    if (MultiByteToWideChar(CP_UTF8, 0, src, -1, wide_buf, wide_len) <= 0)
+    {
         fprintf(stderr, "Cannot convert UTF-8 input to UTF-16\n");
         free(wide_buf);
         exit(1);
     }
 
     byte_len = WideCharToMultiByte((UINT)codepage, 0, wide_buf, -1, NULL, 0, NULL, NULL);
-    if (byte_len <= 0) {
+    if (byte_len <= 0)
+    {
         fprintf(stderr, "Cannot convert UTF-16 to codepage %d\n", codepage);
         free(wide_buf);
         exit(1);
     }
 
     out_buf = xrealloc(NULL, (size_t)byte_len);
-    if (WideCharToMultiByte((UINT)codepage, 0, wide_buf, -1, (char *)out_buf, byte_len, NULL, NULL) <= 0) {
+    if (WideCharToMultiByte((UINT)codepage, 0, wide_buf, -1, (char *)out_buf, byte_len, NULL, NULL) <= 0)
+    {
         fprintf(stderr, "Cannot convert UTF-16 to codepage %d\n", codepage);
         free(wide_buf);
         free(out_buf);
@@ -641,13 +731,15 @@ static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, si
     char *out_ptr;
     size_t out_left;
 
-    if (!encoding) {
+    if (!encoding)
+    {
         fprintf(stderr, "Unsupported output codepage: %d\n", codepage);
         exit(1);
     }
 
     cd = iconv_open(encoding, "UTF-8");
-    if (cd == (iconv_t)-1) {
+    if (cd == (iconv_t)-1)
+    {
         fprintf(stderr, "iconv cannot convert UTF-8 to %s\n", encoding);
         exit(1);
     }
@@ -658,10 +750,12 @@ static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, si
     out_ptr = (char *)out_buf;
     out_left = out_cap;
 
-    while (1) {
+    while (1)
+    {
         size_t rc = iconv(cd, &in_ptr, &in_left, &out_ptr, &out_left);
         if (rc != (size_t)-1) break;
-        if (errno != E2BIG) {
+        if (errno != E2BIG)
+        {
             fprintf(stderr, "iconv conversion to %s failed\n", encoding);
             iconv_close(cd);
             free(out_buf);
@@ -686,17 +780,20 @@ static unsigned char *convert_utf8_to_codepage(const char *src, int codepage, si
 
 /* ========== Binary output helpers ========== */
 
-static void write_u16le(FILE *f, uint16_t v) {
+static void write_u16le(FILE *f, uint16_t v)
+{
     unsigned char b[2] = { v & 0xFF, (v >> 8) & 0xFF };
     fwrite(b, 1, 2, f);
 }
 
-static void write_u32le(FILE *f, uint32_t v) {
+static void write_u32le(FILE *f, uint32_t v)
+{
     unsigned char b[4] = { v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF, (v >> 24) & 0xFF };
     fwrite(b, 1, 4, f);
 }
 
-static int compare_binmsg(const void *lhs, const void *rhs) {
+static int compare_binmsg(const void *lhs, const void *rhs)
+{
     const BinMsg *left = lhs;
     const BinMsg *right = rhs;
     if (left->value < right->value) return -1;
@@ -704,7 +801,8 @@ static int compare_binmsg(const void *lhs, const void *rhs) {
     return 0;
 }
 
-static int compare_lang_index(const void *lhs, const void *rhs) {
+static int compare_lang_index(const void *lhs, const void *rhs)
+{
     const int left = *(const int *)lhs;
     const int right = *(const int *)rhs;
     if (langs[left].lang_id < langs[right].lang_id) return -1;
@@ -717,7 +815,8 @@ static int comment_is_blank(const char *comment);
 
 /* ========== Write .bin file ========== */
 
-static void write_bin_file(const char *dir, int lang_idx) {
+static void write_bin_file(const char *dir, int lang_idx)
+{
     typedef struct { uint32_t low_id, high_id; int start_idx, count; } Block;
     const LangInfo *lang_info = find_lang_info(langs[lang_idx].lang_id);
     const int lang_codepage = lang_info ? lang_info->code_page : 1252;
@@ -727,7 +826,8 @@ static void write_bin_file(const char *dir, int lang_idx) {
 
     for (int i = 0; i < num_messages; i++)
         for (int j = 0; j < messages[i].num_lang_texts; j++)
-            if (messages[i].lang_texts[j].lang_index == lang_idx) {
+            if (messages[i].lang_texts[j].lang_index == lang_idx)
+            {
                 bm[bc].value = messages[i].value;
                 bm[bc].text = messages[i].lang_texts[j].text;
                 bc++; break;
@@ -742,7 +842,8 @@ static void write_bin_file(const char *dir, int lang_idx) {
     Block *blk = xrealloc(NULL, sizeof(Block) * (bc + 1));
     int nb = 1;
     blk[0] = (Block){ bm[0].value, bm[0].value, 0, 1 };
-    for (int i = 1; i < bc; i++) {
+    for (int i = 1; i < bc; i++)
+    {
         if (bm[i].value == blk[nb-1].high_id + 1) { blk[nb-1].high_id = bm[i].value; blk[nb-1].count++; }
         else { blk[nb] = (Block){ bm[i].value, bm[i].value, i, 1 }; nb++; }
     }
@@ -752,15 +853,19 @@ static void write_bin_file(const char *dir, int lang_idx) {
     unsigned char **payload = xrealloc(NULL, sizeof(unsigned char *) * (bc ? bc : 1));
     size_t *payload_len = xrealloc(NULL, sizeof(size_t) * (bc ? bc : 1));
 
-    for (int i = 0; i < bc; i++) {
+    for (int i = 0; i < bc; i++)
+    {
         const char *text = bm[i].text;
-        if (output_unicode) {
+        if (output_unicode)
+        {
             size_t tlen = strlen(text);
             uint16_t *u16 = xrealloc(NULL, sizeof(uint16_t) * (tlen * 2 + 4));
             int u16len = text_to_utf16le(text, u16, (int)(tlen * 2 + 4));
             payload[i] = (unsigned char *)u16;
             payload_len[i] = (size_t)u16len * 2;
-        } else {
+        }
+        else
+        {
             payload[i] = convert_utf8_to_codepage(text, lang_codepage, &payload_len[i]);
         }
         int total = 4 + (int)payload_len[i];
@@ -771,7 +876,8 @@ static void write_bin_file(const char *dir, int lang_idx) {
     uint32_t hsz = 4 + (uint32_t)nb * 12;
     uint32_t *boff = xrealloc(NULL, sizeof(uint32_t) * nb);
     uint32_t off = hsz;
-    for (int b = 0; b < nb; b++) {
+    for (int b = 0; b < nb; b++)
+    {
         boff[b] = off;
         for (int i = blk[b].start_idx; i < blk[b].start_idx + blk[b].count; i++) off += esz[i];
     }
@@ -785,7 +891,8 @@ static void write_bin_file(const char *dir, int lang_idx) {
     write_u32le(fp, (uint32_t)nb);
     for (int b = 0; b < nb; b++) { write_u32le(fp, blk[b].low_id); write_u32le(fp, blk[b].high_id); write_u32le(fp, boff[b]); }
 
-    for (int i = 0; i < bc; i++) {
+    for (int i = 0; i < bc; i++)
+    {
         write_u16le(fp, (uint16_t)esz[i]);
         write_u16le(fp, output_unicode ? 0x0001 : 0x0000);
         fwrite(payload[i], 1, payload_len[i], fp);
@@ -801,7 +908,8 @@ static void write_bin_file(const char *dir, int lang_idx) {
 
 /* ========== Write .h file ========== */
 
-static void write_header(const char *dir, const char *base) {
+static void write_header(const char *dir, const char *base)
+{
     char *path = make_output_path(dir, base, NULL, ".h");
     FILE *fp = fopen(path, "w");
     if (!fp) { fprintf(stderr, "Cannot create %s: %s\n", path, strerror(errno)); exit(1); }
@@ -822,7 +930,8 @@ static void write_header(const char *dir, const char *base) {
     fprintf(fp, "//      Sev  - is the severity code\n");
     fprintf(fp, "//\n");
 
-    for (int i = 0; i < num_severities; i++) {
+    for (int i = 0; i < num_severities; i++)
+    {
         fprintf(fp, "//           %s - %02x\n", severities[i].name, severities[i].value);
         if (severities[i].define_name[0])
             fprintf(fp, "#define %s 0x%x\n", severities[i].define_name, severities[i].value);
@@ -836,10 +945,12 @@ static void write_header(const char *dir, const char *base) {
     fprintf(fp, "//      Facility - is the facility code\n");
     fprintf(fp, "//\n");
 
-    if (custom_facilities) {
+    if (custom_facilities)
+    {
         int has_system = 0;
         int has_application = 0;
-        for (int i = 0; i < num_facilities; i++) {
+        for (int i = 0; i < num_facilities; i++)
+        {
             fprintf(fp, "//           %s - %04x\n", facilities[i].name, facilities[i].value);
             if (facilities[i].define_name[0])
                 fprintf(fp, "#define %s 0x%x\n", facilities[i].define_name, facilities[i].value);
@@ -850,7 +961,9 @@ static void write_header(const char *dir, const char *base) {
             fprintf(fp, "//           System - 00ff\n");
         if (!has_application)
             fprintf(fp, "//           Application - 0fff\n");
-    } else {
+    }
+    else
+    {
         /* Default facilities use fixed display strings */
         fprintf(fp, "//           System - 00ff\n");
         fprintf(fp, "//           Application - 0fff\n");
@@ -861,12 +974,15 @@ static void write_header(const char *dir, const char *base) {
     fprintf(fp, "//\n\n");
 
     int suppress_next_message_prefix = 0;
-    for (int i = 0; i < num_header_items; i++) {
-        if (header_items[i].is_comment) {
+    for (int i = 0; i < num_header_items; i++)
+    {
+        if (header_items[i].is_comment)
+        {
             int block_id = comment_block_ids[header_items[i].index];
             const char *comment = comment_strs[header_items[i].index];
             int status = write_header_comment(fp, comment);
-            if (status) {
+            if (status)
+            {
                 while (i + 1 < num_header_items &&
                        header_items[i + 1].is_comment &&
                        comment_block_ids[header_items[i + 1].index] == block_id)
@@ -876,10 +992,14 @@ static void write_header(const char *dir, const char *base) {
                        comment_is_blank(comment_strs[header_items[i + 1].index]))
                     i++;
                 suppress_next_message_prefix = (status == 2);
-            } else if (!comment_is_blank(comment)) {
+            }
+            else if (!comment_is_blank(comment))
+            {
                 suppress_next_message_prefix = 0;
             }
-        } else {
+        }
+        else
+        {
             Message *m = &messages[header_items[i].index];
             if (!suppress_next_message_prefix)
                 fprintf(fp, "//\n");
@@ -899,7 +1019,8 @@ static void write_header(const char *dir, const char *base) {
 
 /* ========== Write .rc file ========== */
 
-static void write_rc(const char *dir, const char *base) {
+static void write_rc(const char *dir, const char *base)
+{
     char *path = make_output_path(dir, base, NULL, ".rc");
     FILE *fp = fopen(path, "w");
     if (!fp) { fprintf(stderr, "Cannot create %s: %s\n", path, strerror(errno)); exit(1); }
@@ -911,7 +1032,8 @@ static void write_rc(const char *dir, const char *base) {
     for (int i = 0; i < num_langs; i++) order[i] = i;
     qsort(order, num_langs, sizeof(int), compare_lang_index);
 
-    for (int idx = 0; idx < num_langs; idx++) {
+    for (int idx = 0; idx < num_langs; idx++)
+    {
         int i = order[idx];
         const LangInfo *li = find_lang_info(langs[i].lang_id);
         if (!li) { fprintf(stderr, "Warning: unknown lang 0x%x\n", langs[i].lang_id); continue; }
@@ -932,21 +1054,27 @@ static void write_rc(const char *dir, const char *base) {
 
 /* ========== Basename extraction ========== */
 
-static void get_basename(const char *path, char *out, int sz) {
+static void get_basename(const char *path, char *out, int sz)
+{
     const char *p = strrchr(path, '/');
     if (p) p++; else p = path;
     const char *dot = strrchr(p, '.');
-    if (dot && dot > p) {
+    if (dot && dot > p)
+    {
         int len = (int)(dot - p);
         if (len >= sz) len = sz - 1;
         strncpy(out, p, len); out[len] = '\0';
-    } else {
+    }
+    else
+    {
         strncpy(out, p, sz - 1); out[sz - 1] = '\0';
     }
 }
 
-static int comment_is_blank(const char *comment) {
-    while (*comment) {
+static int comment_is_blank(const char *comment)
+{
+    while (*comment)
+    {
         if (*comment != '\r' && !isspace((unsigned char)*comment))
             return 0;
         comment++;
@@ -954,17 +1082,20 @@ static int comment_is_blank(const char *comment) {
     return 1;
 }
 
-static void read_ansi_or_utf8_lines(FILE *fp) {
+static void read_ansi_or_utf8_lines(FILE *fp)
+{
     unsigned char *data = NULL;
     size_t cap = 0;
     size_t len = 0;
     size_t line_start = 0;
 
-    for (;;) {
+    for (;;)
+    {
         unsigned char chunk[4096];
         size_t got = fread(chunk, 1, sizeof(chunk), fp);
         if (got == 0) break;
-        if (len + got > cap) {
+        if (len + got > cap)
+        {
             cap = cap ? cap * 2 : 4096;
             while (len + got > cap) cap *= 2;
             data = xrealloc(data, cap);
@@ -973,27 +1104,33 @@ static void read_ansi_or_utf8_lines(FILE *fp) {
         len += got;
     }
 
-    if (ferror(fp)) {
+    if (ferror(fp))
+    {
         fprintf(stderr, "Failed to read input\n");
         free(data);
         exit(1);
     }
 
     if (input_codepage == 65001 && len >= 3 &&
-        data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF) {
+        data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+        {
         line_start = 3;
     }
 
-    for (size_t i = line_start; i < len; i++) {
+    for (size_t i = line_start; i < len; i++)
+    {
         if (data[i] != '\n') continue;
 
-        if (i > line_start && data[i - 1] == '\r') {
+        if (i > line_start && data[i - 1] == '\r')
+        {
             char *line = xrealloc(NULL, i - line_start);
             memcpy(line, data + line_start, i - line_start - 1);
             line[i - line_start - 1] = '\0';
             add_line(line, "\r\n", 2);
             free(line);
-        } else {
+        }
+        else
+        {
             char *line = xrealloc(NULL, i - line_start + 1);
             memcpy(line, data + line_start, i - line_start);
             line[i - line_start] = '\0';
@@ -1004,7 +1141,8 @@ static void read_ansi_or_utf8_lines(FILE *fp) {
         line_start = i + 1;
     }
 
-    if (line_start < len || len == 0) {
+    if (line_start < len || len == 0)
+    {
         char *line = xrealloc(NULL, len - line_start + 1);
         memcpy(line, data + line_start, len - line_start);
         line[len - line_start] = '\0';
@@ -1015,14 +1153,16 @@ static void read_ansi_or_utf8_lines(FILE *fp) {
     free(data);
 }
 
-static void flush_utf16le_line(char **line_buf, size_t *line_len, const char *newline, size_t newline_len) {
+static void flush_utf16le_line(char **line_buf, size_t *line_len, const char *newline, size_t newline_len)
+{
     (*line_buf)[*line_len] = '\0';
     add_line(*line_buf, newline, newline_len);
     *line_len = 0;
     (*line_buf)[0] = '\0';
 }
 
-static void read_utf16le_lines(FILE *fp) {
+static void read_utf16le_lines(FILE *fp)
+{
     unsigned char *data = NULL;
     size_t cap = 0;
     size_t len = 0;
@@ -1030,11 +1170,13 @@ static void read_utf16le_lines(FILE *fp) {
     size_t line_cap = 256;
     size_t line_len = 0;
 
-    for (;;) {
+    for (;;)
+    {
         unsigned char chunk[4096];
         size_t got = fread(chunk, 1, sizeof(chunk), fp);
         if (got == 0) break;
-        if (len + got > cap) {
+        if (len + got > cap)
+        {
             cap = cap ? cap * 2 : 4096;
             while (len + got > cap) cap *= 2;
             data = xrealloc(data, cap);
@@ -1043,7 +1185,8 @@ static void read_utf16le_lines(FILE *fp) {
         len += got;
     }
 
-    if (ferror(fp)) {
+    if (ferror(fp))
+    {
         fprintf(stderr, "Failed to read UTF-16 input\n");
         free(line_buf);
         free(data);
@@ -1053,20 +1196,25 @@ static void read_utf16le_lines(FILE *fp) {
     if (len >= 2 && data[0] == 0xFF && data[1] == 0xFE)
         memmove(data, data + 2, len -= 2);
 
-    if ((len & 1) != 0) {
+    if ((len & 1) != 0)
+    {
         fprintf(stderr, "UTF-16 input length must be even\n");
         free(line_buf);
         free(data);
         exit(1);
     }
 
-    for (size_t i = 0; i < len; i += 2) {
+    for (size_t i = 0; i < len; i += 2)
+    {
         uint16_t unit = (uint16_t)(data[i] | (data[i + 1] << 8));
 
-        if (unit == 0x000D) {
-            if (i + 3 < len) {
+        if (unit == 0x000D)
+        {
+            if (i + 3 < len)
+            {
                 uint16_t next = (uint16_t)(data[i + 2] | (data[i + 3] << 8));
-                if (next == 0x000A) {
+                if (next == 0x000A)
+                {
                     flush_utf16le_line(&line_buf, &line_len, "\r\n", 2);
                     i += 2;
                     continue;
@@ -1076,14 +1224,17 @@ static void read_utf16le_lines(FILE *fp) {
             continue;
         }
 
-        if (unit == 0x000A) {
+        if (unit == 0x000A)
+        {
             flush_utf16le_line(&line_buf, &line_len, "\n", 1);
             continue;
         }
 
-        if (unit >= 0xD800 && unit <= 0xDBFF && i + 3 < len) {
+        if (unit >= 0xD800 && unit <= 0xDBFF && i + 3 < len)
+        {
             uint16_t low = (uint16_t)(data[i + 2] | (data[i + 3] << 8));
-            if (low >= 0xDC00 && low <= 0xDFFF) {
+            if (low >= 0xDC00 && low <= 0xDFFF)
+            {
                 uint32_t cp = 0x10000 + (((uint32_t)(unit - 0xD800) << 10) | (uint32_t)(low - 0xDC00));
                 append_utf8_codepoint(&line_buf, &line_len, &line_cap, cp);
                 i += 2;
@@ -1101,49 +1252,63 @@ static void read_utf16le_lines(FILE *fp) {
     free(data);
 }
 
-static int write_header_comment(FILE *fp, const char *comment) {
+static int write_header_comment(FILE *fp, const char *comment)
+{
     const unsigned char *s = (const unsigned char *)comment;
     size_t len = strlen(comment);
     int had_cr = len > 0 && comment[len - 1] == '\r';
     int had_cpp_prefix = strncmp(comment, "//", 2) == 0;
 
-    if (!input_is_utf8) {
+    if (!input_is_utf8)
+    {
         fputs(comment, fp);
         fputc('\n', fp);
         return 0;
     }
 
-    while (*s) {
+    while (*s)
+    {
         uint32_t cp;
         unsigned char byte;
 
-        if (*s < 0x80) {
+        if (*s < 0x80)
+        {
             cp = *s++;
-        } else if ((*s & 0xE0) == 0xC0 && s[1]) {
+        }
+        else if ((*s & 0xE0) == 0xC0 && s[1])
+        {
             cp = ((uint32_t)(s[0] & 0x1F) << 6) |
                  (uint32_t)(s[1] & 0x3F);
             s += 2;
-        } else if ((*s & 0xF0) == 0xE0 && s[1] && s[2]) {
+        }
+        else if ((*s & 0xF0) == 0xE0 && s[1] && s[2])
+        {
             cp = ((uint32_t)(s[0] & 0x0F) << 12) |
                  ((uint32_t)(s[1] & 0x3F) << 6) |
                  (uint32_t)(s[2] & 0x3F);
             s += 3;
-        } else if ((*s & 0xF8) == 0xF0 && s[1] && s[2] && s[3]) {
+        }
+        else if ((*s & 0xF8) == 0xF0 && s[1] && s[2] && s[3])
+        {
             cp = ((uint32_t)(s[0] & 0x07) << 18) |
                  ((uint32_t)(s[1] & 0x3F) << 12) |
                  ((uint32_t)(s[2] & 0x3F) << 6) |
                  (uint32_t)(s[3] & 0x3F);
             s += 4;
-        } else {
+        }
+        else
+        {
             break;
         }
 
-        if (cp == '\r') {
+        if (cp == '\r')
+        {
             fputc('\r', fp);
             continue;
         }
 
-        if (!unicode_to_cp1252(cp, &byte)) {
+        if (!unicode_to_cp1252(cp, &byte))
+        {
             if (had_cpp_prefix)
                 fputs("//", fp);
             if (had_cr && !had_cpp_prefix)
@@ -1160,7 +1325,8 @@ static int write_header_comment(FILE *fp, const char *comment) {
 
 /* ========== Main ========== */
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     char *header_dir = ".";
     char *resource_dir = ".";
     char *input_file = NULL;
@@ -1168,12 +1334,14 @@ int main(int argc, char **argv) {
 
     setlocale(LC_ALL, "");
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++)
+    {
         if (strcmp(argv[i], "-u") == 0) unicode_input = 1;
         else if (strcmp(argv[i], "-a") == 0) input_codepage = 1252;
         else if (strcmp(argv[i], "-A") == 0) output_unicode = 0;
         else if (strcmp(argv[i], "-b") == 0) use_bin_prefix = 1;
-        else if (strcmp(argv[i], "-C") == 0) {
+        else if (strcmp(argv[i], "-C") == 0)
+        {
             if (++i >= argc) { fprintf(stderr, "Missing -C arg\n"); return 1; }
             input_codepage = (int)parse_value(argv[i]);
         }
@@ -1188,7 +1356,8 @@ int main(int argc, char **argv) {
         else if (strcmp(argv[i], "--ascii_in") == 0) input_codepage = 1252;
         else if (strcmp(argv[i], "--unicode_in") == 0) unicode_input = 1;
         else if (strcmp(argv[i], "--unicode_out") == 0) output_unicode = 1;
-        else if (argv[i][0] == '-') {
+        else if (argv[i][0] == '-')
+        {
             fprintf(stderr, "Unsupported option: %s\n", argv[i]);
             return 1;
         }
@@ -1216,16 +1385,19 @@ int main(int argc, char **argv) {
     int comment_block_id = 0;
     int previous_was_comment = 0;
 
-    while (pos < num_lines) {
+    while (pos < num_lines)
+    {
         char *trimmed = get_trimmed(pos);
-        if (trimmed[0] == '\0') {
+        if (trimmed[0] == '\0')
+        {
             previous_was_comment = 0;
             pos++;
             continue;
         }
 
         /* Comment */
-        if (lines[pos].text[0] == ';') {
+        if (lines[pos].text[0] == ';')
+        {
             const char *ctext = lines[pos].text + 1;
             char comment_buf[MAX_LINE];
             if (!previous_was_comment)
@@ -1242,32 +1414,37 @@ int main(int argc, char **argv) {
 
         {
             const char *value = match_assignment(trimmed, "MessageIdTypedef");
-            if (value) {
+            if (value)
+            {
                 copy_trunc(current_typedef, sizeof(current_typedef), value);
                 pos++;
                 continue;
             }
         }
 
-        if (match_assignment(trimmed, "SeverityNames")) {
+        if (match_assignment(trimmed, "SeverityNames"))
+        {
             parse_name_value_list_from_lines(&pos, add_severity_cb);
             continue;
         }
 
-        if (match_assignment(trimmed, "FacilityNames")) {
+        if (match_assignment(trimmed, "FacilityNames"))
+        {
             num_facilities = 0;
             custom_facilities = 1;
             parse_name_value_list_from_lines(&pos, add_facility_cb);
             continue;
         }
 
-        if (match_assignment(trimmed, "LanguageNames")) {
+        if (match_assignment(trimmed, "LanguageNames"))
+        {
             num_langs = 0;
             parse_name_value_list_from_lines(&pos, add_language_cb);
             continue;
         }
 
-        if (match_assignment(trimmed, "MessageId")) {
+        if (match_assignment(trimmed, "MessageId"))
+        {
             /* Flush pending comments */
             for (int c = pending_comment_start; c < num_comments; c++)
                 add_header_comment(c);
@@ -1292,13 +1469,15 @@ int main(int argc, char **argv) {
             pos++;
 
             /* Read sub-directives */
-            while (pos < num_lines) {
+            while (pos < num_lines)
+            {
                 trimmed = get_trimmed(pos);
                 if (trimmed[0] == '\0') { pos++; continue; }
 
                 {
                     const char *value = match_assignment(trimmed, "Severity");
-                    if (value) {
+                    if (value)
+                    {
                         m->severity = find_severity(value);
                         pos++;
                         continue;
@@ -1306,7 +1485,8 @@ int main(int argc, char **argv) {
                 }
                 {
                     const char *value = match_assignment(trimmed, "Facility");
-                    if (value) {
+                    if (value)
+                    {
                         m->facility = find_facility(value);
                         pos++;
                         continue;
@@ -1314,7 +1494,8 @@ int main(int argc, char **argv) {
                 }
                 {
                     const char *value = match_assignment(trimmed, "SymbolicName");
-                    if (value) {
+                    if (value)
+                    {
                         copy_trunc(m->symbolic_name, sizeof(m->symbolic_name), value);
                         pos++;
                         continue;
@@ -1322,14 +1503,18 @@ int main(int argc, char **argv) {
                 }
                 {
                     const char *value = match_assignment(trimmed, "Language");
-                    if (value) {
+                    if (value)
+                    {
                         char lang_name[64];
                         copy_trunc(lang_name, sizeof(lang_name), value);
                         int li;
-                        if (num_langs == 0 && strcasecmp(lang_name, "English") == 0) {
+                        if (num_langs == 0 && strcasecmp(lang_name, "English") == 0)
+                        {
                             add_language_cb("English", 0x0409, "MSG00001");
                             li = num_langs - 1;
-                        } else {
+                        }
+                        else
+                        {
                             li = find_lang_index(lang_name);
                         }
                         pos++;
@@ -1339,21 +1524,24 @@ int main(int argc, char **argv) {
                         char *text = xrealloc(NULL, text_cap);
                         int text_len = 0;
 
-                        while (pos < num_lines) {
+                        while (pos < num_lines)
+                        {
                             char *rawline = lines[pos].text;
                             if (strcmp(rawline, ".") == 0) { pos++; break; }
 
                             int clen = (int)strlen(rawline);
                             int newline_len = lines[pos].newline_len ? 2 : 0;
                             int need = text_len + clen + newline_len + 1;
-                            if (need >= text_cap) {
+                            if (need >= text_cap)
+                            {
                                 while (need >= text_cap) text_cap *= 2;
                                 text = xrealloc(text, text_cap);
                             }
 
                             memcpy(text + text_len, rawline, clen);
                             text_len += clen;
-                            if (newline_len > 0) {
+                            if (newline_len > 0)
+                            {
                                 /* Message resources must use Windows CRLF line endings. */
                                 memcpy(text + text_len, "\r\n", 2);
                                 text_len += 2;
