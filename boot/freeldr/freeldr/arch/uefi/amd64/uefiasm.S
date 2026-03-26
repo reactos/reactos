@@ -76,11 +76,7 @@ _exituefi:
 #endif
     push HEX(10)
     push rax
-#ifdef _USE_ML
-    db HEX(48), HEX(CB)
-#else
     .byte HEX(48), HEX(CB) /* retfq */
-#endif
 
 reload_cs:
     /* Reload data segments with DS selector 0x18 */
