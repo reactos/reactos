@@ -734,6 +734,7 @@ protected:
     IShellFolder *m_pShellFolder = NULL;    // The shell folder
 
     BOOL _InitLate();
+    using CMruBase::_IsEqual;
     BOOL _IsEqual(SLOTITEMDATA *pItem, LPCVOID pvData, UINT cbData);
     DWORD _DeleteValue(LPCWSTR pszValue) override;
 

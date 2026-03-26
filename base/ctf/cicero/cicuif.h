@@ -570,6 +570,7 @@ public:
     STDMETHOD_(void, OnSetFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnKillFocus)(HWND hWnd) { }
     STDMETHOD_(void, OnNotify)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
+    using CUIFObject::OnTimer;
     STDMETHOD_(void, OnTimer)(WPARAM wParam) { }
     STDMETHOD_(void, OnSysColorChange)() { }
     STDMETHOD_(void, OnEndSession)(HWND hWnd, WPARAM wParam, LPARAM lParam) { }
