@@ -105,7 +105,8 @@ __asm__(
      */                                                                             \
 __seh2$$begin_try__:                                                                \
     {                                                                               \
-        __label__ __seh2$$leave_scope__;
+        __label__ __seh2$$leave_scope__;                                            \
+        __asm__ __volatile__ goto ("" : : : : __seh2$$leave_scope__);
 
 #define _SEH2_EXCEPT(...)                                                                       \
 __seh2$$leave_scope__: __MINGW_ATTRIB_UNUSED;                                                   \
