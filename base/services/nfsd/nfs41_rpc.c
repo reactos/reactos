@@ -68,7 +68,7 @@ static int get_client_for_netaddr(
     client = clnt_tli_create(RPC_ANYFD, nconf, addr, NFS41_RPC_PROGRAM,
         NFS41_RPC_VERSION, wsize, rsize,
         rpc ? (int (*)(void *, void *))proc_cb_compound_res : NULL,
-        rpc ? (int (*)(void *, void *, void **))nfs41_handle_callback : NULL, rpc ? rpc : NULL);
+        rpc ? nfs41_handle_callback : NULL, rpc ? rpc : NULL);
     if (client) {
         *client_out = client;
         status = NO_ERROR;

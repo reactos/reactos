@@ -26,6 +26,7 @@
 #include "rpc/rpc.h"
 #include "nfs41_types.h"
 
+struct cb_compound_res;
 
 enum nfs41_callback_proc {
     CB_NULL                 = 0,
@@ -48,7 +49,11 @@ enum nfs41_callback_op {
     OP_CB_ILLEGAL           = 10044
 };
 
-int nfs41_handle_callback(void *, void *, void *);
+#ifdef __REACTOS__
+int nfs41_handle_callback(void *, void *, void **);
+#else
+int nfs41_handle_callback(void *, void *, struct cb_compound_res **);
+#endif
 
 /* OP_CB_LAYOUTRECALL */
 struct cb_recall_file {
