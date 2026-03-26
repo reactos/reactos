@@ -13,6 +13,7 @@
 
 #define TAG_ACPI_PARAMETERS_LIST     'OpcA'
 #define TAG_ACPI_PACKAGE_LIST        'PpcA'
+#define TAG_ACPI_OUTPUT_ARGUMENTS    'AocA'
 
 /**
  * Null terminated ACPI name for the object.
@@ -296,7 +297,7 @@ EvalConvertParameterObjects(
     _Out_ ACPI_OBJECT* Arg,
     _In_ ULONG Depth,
     _In_ PACPI_METHOD_ARGUMENT Argument,
-    _In_ PIO_STACK_LOCATION IoStack,
+    _In_ ULONG BufferBoundary,
     _In_ ULONG Offset)
 {
 
@@ -311,7 +312,7 @@ EvalConvertParameterObjects(
     {
         Offset += ACPI_METHOD_ARGUMENT_LENGTH_FROM_ARGUMENT(Argument);
 
-        if (!AcpiVerifyInBuffer(IoStack, Offset))
+        if (Offset > BufferBoundary)
         {
             DPRINT1("Argument buffer outside of argument bounds\n");
             return STATUS_ACPI_INVALID_ARGTYPE;
@@ -390,7 +391,7 @@ EvalConvertParameterObjects(
                 Status = EvalConvertParameterObjects(&Arg->Package.Elements[i],
                                                      Depth + 1,
                                                      PackageArgument,
-                                                     IoStack,
+                                                     BufferBoundary,
                                                      Offset);
                 if (!NT_SUCCESS(Status))
                 {
@@ -405,8 +406,10 @@ EvalConvertParameterObjects(
 
         default:
         {
-            DPRINT1("Unknown argument type %u\n", Argument->Type);
-            return STATUS_UNSUCCESSFUL;
+            Arg->Type = ACPI_TYPE_BUFFER;
+            Arg->Buffer.Pointer = &Argument->Data[0];
+            Arg->Buffer.Length = Argument->DataLength;
+            break;
         }
     }
 
@@ -499,13 +502,19 @@ EvalCreateParametersList(
         {
             PACPI_EVAL_INPUT_BUFFER_COMPLEX ComplexBuffer;
             PACPI_METHOD_ARGUMENT Argument;
-            ULONG i, Length, Offset, ArgumentsSize;
+            ULONG i, Length, Offset, ArgumentsSize, BufferBoundary;
             NTSTATUS Status;
 
-            if (!AcpiVerifyInBuffer(IoStack, sizeof(*ComplexBuffer)))
+            if (!AcpiVerifyInBuffer(IoStack, sizeof(ACPI_EVAL_INPUT_BUFFER)))
             {
                 DPRINT1("Buffer too small\n");
                 return STATUS_INFO_LENGTH_MISMATCH;
+            }
+
+            if (!AcpiVerifyInBuffer(IoStack, FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_COMPLEX, Argument)))
+            {
+                DPRINT1("Complex buffer header is truncated\n");
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
 
             ComplexBuffer = Irp->AssociatedIrp.SystemBuffer;
@@ -534,13 +543,14 @@ EvalCreateParametersList(
 
             Argument = ComplexBuffer->Argument;
             Length = FIELD_OFFSET(ACPI_EVAL_INPUT_BUFFER_COMPLEX, Argument);
+            BufferBoundary = IoStack->Parameters.DeviceIoControl.InputBufferLength;
 
             for (i = 0; i < ParamList->Count; i++)
             {
                 Offset = Length;
                 Length += ACPI_METHOD_ARGUMENT_LENGTH_FROM_ARGUMENT(Argument);
 
-                if (!AcpiVerifyInBuffer(IoStack, Length))
+                if (Length > BufferBoundary)
                 {
                     DPRINT1("Argument buffer outside of argument bounds\n");
 
@@ -548,7 +558,11 @@ EvalCreateParametersList(
                     return STATUS_ACPI_INVALID_ARGTYPE;
                 }
 
-                Status = EvalConvertParameterObjects(Arg, 0, Argument, IoStack, Offset);
+                Status = EvalConvertParameterObjects(Arg,
+                                                     0,
+                                                     Argument,
+                                                     BufferBoundary,
+                                                     Offset);
                 if (!NT_SUCCESS(Status))
                 {
                     ExFreePoolWithTag(ParamList->Pointer, TAG_ACPI_PARAMETERS_LIST);
@@ -704,8 +718,10 @@ EvalCreateOutputArguments(
     _In_ ACPI_BUFFER* ReturnBuffer)
 {
     ACPI_OBJECT* Obj;
+    PACPI_METHOD_ARGUMENT OutputArguments;
     ULONG ExtraParamLength, OutputBufSize;
     PACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
+    ULONG OutputDataLength;
     NTSTATUS Status;
     ULONG Count;
 
@@ -748,6 +764,36 @@ EvalCreateOutputArguments(
                OutputBufSize);
 
         Irp->IoStatus.Information = OutputBufSize;
+
+        /*
+         * Preserve the historical ReactOS behavior for near-fit callers:
+         * keep the output header for all overflow cases, and copy a
+         * truncated argument blob only when the caller is short by at most
+         * one trailing ULONG.
+         */
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength + sizeof(ULONG) >= OutputBufSize)
+        {
+            OutputArguments = ExAllocatePoolUninitialized(NonPagedPool,
+                                                          ExtraParamLength,
+                                                          TAG_ACPI_OUTPUT_ARGUMENTS);
+            if (OutputArguments)
+            {
+                Status = EvalConvertEvaluationResults(OutputArguments, 0, Obj);
+                if (NT_SUCCESS(Status))
+                {
+                    OutputDataLength =
+                        IoStack->Parameters.DeviceIoControl.OutputBufferLength -
+                        FIELD_OFFSET(ACPI_EVAL_OUTPUT_BUFFER, Argument);
+
+                    RtlCopyMemory(OutputBuffer->Argument,
+                                  OutputArguments,
+                                  min(OutputDataLength, ExtraParamLength));
+                }
+
+                ExFreePoolWithTag(OutputArguments, TAG_ACPI_OUTPUT_ARGUMENTS);
+            }
+        }
+
         return STATUS_BUFFER_OVERFLOW;
     }
 
@@ -775,6 +821,13 @@ Bus_PDO_EvalMethod(
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     EvalInputBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+    /* Validate the output buffer size before processing the input */
+    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength > 0 &&
+        !AcpiVerifyOutBuffer(IoStack, sizeof(ACPI_EVAL_OUTPUT_BUFFER)))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
 
     Status = EvalCreateParametersList(Irp, IoStack, EvalInputBuffer, &ParamList);
     if (!NT_SUCCESS(Status))
