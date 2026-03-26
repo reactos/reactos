@@ -9,9 +9,12 @@ list(APPEND SOURCE
 
 if(DLL_EXPORT_VERSION LESS 0x600)
     list(APPEND SOURCE
+        fseeki64_compat.c
         mbsrtowcs_compat.c
         rand_s.c
-        snprintf_compat.c)
+        snprintf_compat.c
+        strnlen_compat.c
+        wchar_compat.c)
 endif()
 
 add_library(stdc++compat ${SOURCE})
