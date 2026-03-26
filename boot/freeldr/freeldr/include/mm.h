@@ -68,10 +68,12 @@ typedef struct _FREELDR_MEMORY_DESCRIPTOR
 #define MM_PAGE_SIZE    4096
 #define MM_PAGE_MASK    0xFFF
 #define MM_PAGE_SHIFT    12
-//HACK: ReactOS AMD64 can't handle the full memory range yet CORE-20265
+// CORE-20265: Expanded from 0x1FFFFF (8GB) to 0xFFFFFF (64GB).
+// The original 36-bit value (0xFFFFFFFFF = 262TB) produces impractically
+// large page lookup tables. 64GB is sufficient for typical VMs/hardware.
 //#define MM_MAX_PAGE        0xFFFFFFFFF /* 36 bits for the PFN */
-#define MM_MAX_PAGE        0x1FFFFF
-#define MM_MAX_PAGE_LOADER 0x3FFFF /* on x64 freeldr only maps 1 GB */
+#define MM_MAX_PAGE        0xFFFFFF
+#define MM_MAX_PAGE_LOADER 0xFFFFF /* on x64 freeldr maps 4 GB */
 
 #define MM_SIZE_TO_PAGES(a)  \
     ( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )

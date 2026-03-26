@@ -7,11 +7,15 @@
 #ifdef _M_AMD64
 #define PML4_ADDRESS        HEX(1000) /* One page PML4 page table */
 #define PDP_ADDRESS         HEX(2000) /* One page PDP page table */
-#define PD_ADDRESS          HEX(3000) /* One page PD page table */
-#endif
+#define PD_ADDRESS          HEX(3000) /* Four pages PD page tables (0x3000-0x6FFF) for 4GB identity map */
+#define BIOSCALLBUFFER      HEX(7000) /* After page tables; reuses dead TEMP* area (temporal non-overlap) */
+#define STACK16ADDR         HEX(7F00) /* The 16-bit stack top will be at 0000:7F00 */
+#define BSS_START           HEX(7F00)
+#else
 #define BIOSCALLBUFFER      HEX(4000) /* Buffer to store temporary data for any Int386() call */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
+#endif
 #define STACKLOW            HEX(8000)
 #define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
 #define FREELDR_BASE        HEX(F800)

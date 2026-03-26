@@ -204,33 +204,41 @@ BuildPageTables:
     xor di, di
 
     /* One entry in the PML4 pointing to PDP */
-    mov eax, PDP_ADDRESS
-    or eax, HEX(0F)
+    mov eax, PDP_ADDRESS + HEX(0F)
     stosd
 
-    /* clear rest */
+    /* clear rest of PML4 */
     xor eax, eax
     mov cx, 1023
     rep stosd
 
-    /* One entry in the PDP pointing to PD */
-    mov eax, PD_ADDRESS
-    or eax, HEX(0F)
+    /* Four entries in the PDP pointing to PD0 through PD3 (4GB identity map).
+     * eax upper 16 bits are 0 from the PML4 clear above. */
+    mov ax, PD_ADDRESS + HEX(0F)
+    mov cx, 4
+.FillPDP:
     stosd
+    push ax
+    xor ax, ax
+    stosd
+    pop ax
+    add ax, HEX(1000)
+    dec cx
+    jnz .FillPDP
 
-    /* clear rest */
+    /* clear rest of PDP (508 entries * 2 dwords = 1016 dwords) */
     xor eax, eax
-    mov ecx, 1023
+    mov ecx, 1016
     rep stosd
 
-    /* 512 entries in the PD, each defining a 2MB page each */
-    mov ecx, 512
+    /* 2048 entries across 4 PD pages (PD0-PD3), each defining a 2MB large page */
+    mov ecx, 2048
     mov eax, HEX(008f)
 
 .Bpt2:
     mov es:[di], eax
     mov dword ptr es:[di + 4], 0
-    add eax, 512 * 4096 // add 512 4k pages
+    add eax, 512 * 4096 // add 2MB per entry
     add di, 8
 
     /* Loop all PDEs */

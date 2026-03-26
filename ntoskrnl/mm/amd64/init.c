@@ -308,8 +308,8 @@ MiBuildNonPagedPool(VOID)
     {
         /* Start with the minimum (256 KB) and add 32 KB for each MB above 4 */
         MmSizeOfNonPagedPoolInBytes = MmMinimumNonPagedPoolSize;
-        MmSizeOfNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
-                                       256 * MmMinAdditionNonPagedPoolPerMb;
+        MmSizeOfNonPagedPoolInBytes += (SIZE_T)((MmNumberOfPhysicalPages - 1024) /
+                                       256) * MmMinAdditionNonPagedPoolPerMb;
     }
 
     /* Check if the registy setting or our dynamic calculation was too high */
@@ -334,8 +334,8 @@ MiBuildNonPagedPool(VOID)
     {
         /* Start with the default (1MB) and add 400 KB for each MB above 4 */
         MmMaximumNonPagedPoolInBytes = MmDefaultMaximumNonPagedPool;
-        MmMaximumNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
-                                         256 * MmMaxAdditionNonPagedPoolPerMb;
+        MmMaximumNonPagedPoolInBytes += (SIZE_T)((MmNumberOfPhysicalPages - 1024) /
+                                         256) * MmMaxAdditionNonPagedPoolPerMb;
     }
 
     /* Don't let the maximum go too high */
