@@ -218,6 +218,7 @@ static inline COLORREF GetViewColor(COLORREF Clr, UINT SysFallback)
 #define VID_Default ( *(const SHELLVIEWID*)&IID_CDefView )
 extern HRESULT ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid);
 extern const SHELLVIEWID* FolderViewModeToShellViewId(UINT FVM);
+extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
 
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
@@ -296,7 +297,6 @@ private:
     void _ForceStatusBarResize();
     void _DoCopyToMoveToFolder(BOOL bCopy);
     BOOL IsDesktop() const { return m_FolderSettings.fFlags & FWF_DESKTOP; }
-    BOOL _CanPaste();
 
     inline BOOL IsSpecialFolder(int &csidl) const
     {
@@ -1900,11 +1900,26 @@ HRESULT CDefView::FillEditMenu()
     if (!hEditMenu)
         return E_FAIL;
 
+    // Cleanup the items added previously
+    for (int i = GetMenuItemCount(hEditMenu) - 1; i >= 0; i--)
+    {
+        UINT id = GetMenuItemID(hEditMenu, i);
+        if (id < FCIDM_BROWSERFIRST || id > FCIDM_BROWSERLAST)
+            DeleteMenu(hEditMenu, i, MF_BYPOSITION);
+    }
+
+    // In case we still have this left over, clean it up
+    if (m_pFileMenu)
+    {
+        IUnknown_SetSite(m_pFileMenu, NULL);
+        m_pFileMenu.Release();
+    }
+
     HMENU hmenuContents = ::LoadMenuW(shell32_hInstance, L"MENU_003");
     if (!hmenuContents)
         return E_FAIL;
 
-    if (!_CanPaste())
+    if (!ShellCanPaste(m_pSFParent))
     {
         SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERT, FALSE);
         SHEnableMenuItem(hmenuContents, FCIDM_SHVIEW_INSERTLINK, FALSE);
@@ -2514,35 +2529,6 @@ void CDefView::_DoCopyToMoveToFolder(BOOL bCopy)
     InvokeContextMenuCommand(pCM, (bCopy ? "copyto" : "moveto"), NULL);
 }
 
-// Code from CDefViewBckgrndMenu::_bCanPaste() modified for this class
-BOOL
-CDefView::_CanPaste()
-{
-    // If the folder doesn't have a drop target we can't paste
-    CComPtr<IDropTarget> pdt;
-    HRESULT hr = m_pSFParent->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
-    if (FAILED(hr))
-        return FALSE;
-
-    // We can only paste if CFSTR_SHELLIDLIST is present in the clipboard
-    CComPtr<IDataObject> pDataObj;
-    hr = OleGetClipboard(&pDataObj);
-    if (FAILED(hr))
-        return FALSE;
-
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-
-    // Set the FORMATETC structure
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pDataObj->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return FALSE;
-
-    ReleaseStgMedium(&medium);
-    return TRUE;
-}
-
 LRESULT CDefView::OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     DoActivate(SVUIA_ACTIVATE_FOCUS);
@@ -3137,6 +3123,9 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     {
     case FCIDM_MENU_FILE:
         FillFileMenu();
+        break;
+    case FCIDM_MENU_EDIT:
+        FillEditMenu();
         break;
     case FCIDM_MENU_VIEW:
     case FCIDM_SHVIEW_VIEW:

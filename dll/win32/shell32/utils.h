@@ -8,11 +8,11 @@
 #pragma once
 
 #ifndef OPTIONAL_
-    #ifdef __cplusplus
-        #define OPTIONAL_(arg) = arg
-    #else
-        #define OPTIONAL_(arg)
-    #endif
+#ifdef __cplusplus
+#define OPTIONAL_(arg) = arg
+#else
+#define OPTIONAL_(arg)
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -121,32 +121,37 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
 }
 
 typedef HDSA HDCIA; // DynamicClassIdArray
-#define DCIA_Create() ( (HDCIA)DSA_Create(sizeof(CLSID), 4) )
+#define DCIA_Create() ((HDCIA)DSA_Create(sizeof(CLSID), 4))
 #define DCIA_Destroy(hDCIA) DSA_Destroy((HDSA)(hDCIA))
 #define DCIA_GetCount(hDCIA) DSA_GetItemCount((HDSA)(hDCIA))
-#define DCIA_GetEntry(hDCIA, iItem) ( (const CLSID*)DSA_GetItemPtr((HDSA)(hDCIA), (iItem)) )
-int DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId);
-void DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey);
+#define DCIA_GetEntry(hDCIA, iItem) ((const CLSID *)DSA_GetItemPtr((HDSA)(hDCIA), (iItem)))
+int
+DCIA_AddEntry(HDCIA hDCIA, REFCLSID rClsId);
+void
+DCIA_AddShellExSubkey(HDCIA hDCIA, HKEY hProgId, PCWSTR pszSubkey);
 
 #ifdef __cplusplus
 struct ClipboardViewerChain
 {
     HWND m_hWndNext = HWND_BOTTOM;
 
-    void Unhook(HWND hWnd)
+    void
+    Unhook(HWND hWnd)
     {
         if (m_hWndNext != HWND_BOTTOM)
             ChangeClipboardChain(hWnd, m_hWndNext);
         m_hWndNext = HWND_BOTTOM;
     }
 
-    void Hook(HWND hWnd)
+    void
+    Hook(HWND hWnd)
     {
         if (m_hWndNext == HWND_BOTTOM)
             m_hWndNext = SetClipboardViewer(hWnd);
     }
 
-    LRESULT HandleChangeCBChain(WPARAM wParam, LPARAM lParam)
+    LRESULT
+    HandleChangeCBChain(WPARAM wParam, LPARAM lParam)
     {
         if (m_hWndNext == (HWND)wParam)
             return (LRESULT)(m_hWndNext = (HWND)lParam);
@@ -155,7 +160,8 @@ struct ClipboardViewerChain
         return 0;
     }
 
-    LRESULT HandleDrawClipboard(WPARAM wParam, LPARAM lParam)
+    LRESULT
+    HandleDrawClipboard(WPARAM wParam, LPARAM lParam)
     {
         if (m_hWndNext && m_hWndNext != HWND_BOTTOM)
             return ::SendMessageW(m_hWndNext, WM_DRAWCLIPBOARD, wParam, lParam);
@@ -175,15 +181,27 @@ struct CCidaChildArrayHelper
         {
             m_hr = S_OK;
             for (UINT i = 0; i < pCida->cidl; ++i)
-                *(LPITEMIDLIST*)(&m_array[i]) = (LPITEMIDLIST)HIDA_GetPIDLItem(pCida, i);
+                *(LPITEMIDLIST *)(&m_array[i]) = (LPITEMIDLIST)HIDA_GetPIDLItem(pCida, i);
         }
     }
-    ~CCidaChildArrayHelper() { SHFree((LPITEMIDLIST*)m_array); }
+    ~CCidaChildArrayHelper()
+    {
+        SHFree((LPITEMIDLIST *)m_array);
+    }
 
-    HRESULT hr() const { return m_hr; }
-    PCUIDLIST_RELATIVE_ARRAY GetItems() const { return m_array; }
+    HRESULT
+    hr() const
+    {
+        return m_hr;
+    }
+    PCUIDLIST_RELATIVE_ARRAY
+    GetItems() const
+    {
+        return m_array;
+    }
 
     HRESULT m_hr;
     PCUIDLIST_RELATIVE_ARRAY m_array;
 };
+
 #endif // __cplusplus

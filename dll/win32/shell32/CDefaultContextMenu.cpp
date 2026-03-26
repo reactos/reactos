@@ -285,6 +285,9 @@ static HRESULT GetFriendlyVerb(_In_ PCWSTR pszVerb, _Out_ PWSTR pszBuf, _In_ SIZ
     return E_FAIL;
 }
 
+
+extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
+
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
@@ -538,27 +541,6 @@ void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey, UINT uFlags)
     }
 
     RegCloseKey(hShellKey);
-}
-
-static
-BOOL
-HasClipboardData()
-{
-    BOOL bRet = FALSE;
-    CComPtr<IDataObject> pDataObj;
-
-    if (SUCCEEDED(OleGetClipboard(&pDataObj)))
-    {
-        FORMATETC formatetc;
-
-        TRACE("pDataObj=%p\n", pDataObj.p);
-
-        /* Set the FORMATETC structure*/
-        InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-        bRet = SUCCEEDED(pDataObj->QueryGetData(&formatetc));
-    }
-
-    return bRet;
 }
 
 BOOL
@@ -1022,7 +1004,7 @@ CDefaultContextMenu::QueryContextMenu(
             DeleteMenu(hmenuDefault, IDM_CUT, MF_BYCOMMAND);
         if (!(rfg & SFGAO_CANCOPY))
             DeleteMenu(hmenuDefault, IDM_COPY, MF_BYCOMMAND);
-        if (!((rfg & SFGAO_FILESYSTEM) && HasClipboardData()))
+        if (!((rfg & SFGAO_FILESYSTEM) && ShellCanPaste({})))
             DeleteMenu(hmenuDefault, IDM_INSERT, MF_BYCOMMAND);
         if (!(rfg & SFGAO_CANLINK))
             DeleteMenu(hmenuDefault, IDM_CREATELINK, MF_BYCOMMAND);

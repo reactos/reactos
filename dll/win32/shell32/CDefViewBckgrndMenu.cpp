@@ -10,6 +10,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+extern BOOL ShellCanPaste(const CComPtr<IShellFolder> &pSF);
 class CDefViewBckgrndMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
@@ -24,7 +25,6 @@ class CDefViewBckgrndMenu :
         UINT m_LastFolderCMId;
 
         BOOL _bIsDesktopBrowserMenu();
-        BOOL _bCanPaste();
     public:
         CDefViewBckgrndMenu();
         ~CDefViewBckgrndMenu();
@@ -80,33 +80,6 @@ BOOL CDefViewBckgrndMenu::_bIsDesktopBrowserMenu()
         return FALSE;
 
     return ((FolderSettings.fFlags & FWF_DESKTOP) == FWF_DESKTOP);
-}
-
-BOOL CDefViewBckgrndMenu::_bCanPaste()
-{
-    /* If the folder doesn't have a drop target we can't paste */
-    CComPtr<IDropTarget> pdt;
-    HRESULT hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdt));
-    if (FAILED(hr))
-        return FALSE;
-
-    /* We can only paste if CFSTR_SHELLIDLIST is present in the clipboard */
-    CComPtr<IDataObject> pDataObj;
-    hr = OleGetClipboard(&pDataObj);
-    if (FAILED(hr))
-        return FALSE;
-
-    STGMEDIUM medium;
-    FORMATETC formatetc;
-
-    /* Set the FORMATETC structure*/
-    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-    hr = pDataObj->GetData(&formatetc, &medium);
-    if (FAILED(hr))
-        return FALSE;
-
-    ReleaseStgMedium(&medium);
-    return TRUE;
 }
 
 HRESULT
@@ -193,10 +166,10 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         }
 
         /* Disable the paste options if it is not possible */
-        if (!_bCanPaste())
+        if (!ShellCanPaste(m_psf))
         {
-            EnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERT, MF_BYCOMMAND | MF_GRAYED);
-            EnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERTLINK, MF_BYCOMMAND | MF_GRAYED);
+            SHEnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERT, FALSE);
+            SHEnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERTLINK, FALSE);
         }
 
         /* merge general background context menu in */
