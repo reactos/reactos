@@ -9,7 +9,8 @@ list(APPEND SOURCE
 
 if(DLL_EXPORT_VERSION LESS 0x600)
     list(APPEND SOURCE
-        rand_s.c)
+        rand_s.c
+        snprintf_compat.c)
 endif()
 
 add_library(stdc++compat ${SOURCE})
