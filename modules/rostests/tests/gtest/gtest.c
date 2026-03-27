@@ -22,21 +22,14 @@
  *     sub-regions.  MEM_RELEASE is only used on the whole pool at shutdown.
  */
 
-#include <stdio.h>
+#define STANDALONE
+#include <wine/test.h>
 #include <string.h>
 #include <windows.h>
 
 /* Constants from gtk-gnutella/src/lib/mingw32.c */
 #define VMM_MINSIZE     (100UL * 1024UL * 1024UL) /* 100 MiB minimum pool  */
 #define VMM_GRANULARITY (  4UL * 1024UL * 1024UL) /* 4 MiB stepping stride */
-
-static int g_passed;
-static int g_failed;
-
-#define PASS(fmt, ...) \
-    do { printf("OK   " fmt "\n", ##__VA_ARGS__); g_passed++; } while (0)
-#define FAIL(fmt, ...) \
-    do { printf("FAIL " fmt "\n", ##__VA_ARGS__); g_failed++; } while (0)
 
 /* ------------------------------------------------------------------ */
 /* State that mirrors the mingw_vmm struct in mingw32.c               */
@@ -82,11 +75,11 @@ vmm_init(void)
     if (granularity < VMM_GRANULARITY)
         granularity = VMM_GRANULARITY;
 
-    printf("  Page size                      : %lu bytes\n",
+    trace("  Page size                      : %lu bytes\n",
            (unsigned long)si.dwPageSize);
-    printf("  Allocation granularity         : %lu KiB\n",
+    trace("  Allocation granularity         : %lu KiB\n",
            (unsigned long)(granularity / 1024));
-    printf("  User address space             : %lu MiB\n",
+    trace("  User address space             : %lu MiB\n",
            (unsigned long)(total_addr_space / (1024 * 1024)));
 
     mem_size = total_addr_space;
@@ -113,14 +106,14 @@ vmm_init(void)
 
         if (mem_latersize == VMM_MINSIZE)
         {
-            FAIL("probe: VirtualAlloc(MEM_RESERVE, %lu MiB, PAGE_NOACCESS)"
-                 " failed at VMM_MINSIZE (error %lu)",
+            ok(0, "probe: VirtualAlloc(MEM_RESERVE, %lu MiB, PAGE_NOACCESS)"
+                 " failed at VMM_MINSIZE (error %lu)\n",
                  (unsigned long)(VMM_MINSIZE / (1024 * 1024)),
                  GetLastError());
             return 0;
         }
     }
-    PASS("probe: reserved %lu MiB \"later\" block at %p (PAGE_NOACCESS)",
+    ok(1, "probe: reserved %lu MiB \"later\" block at %p (PAGE_NOACCESS)\n",
          (unsigned long)(mem_latersize / (1024 * 1024)), mem_later);
 
     /*
@@ -143,11 +136,11 @@ vmm_init(void)
 
     if (g_vmm.reserved == NULL)
     {
-        FAIL("probe: could not reserve any VMM pool >= %lu MiB",
+        ok(0, "probe: could not reserve any VMM pool >= %lu MiB\n",
              (unsigned long)(VMM_MINSIZE / (1024 * 1024)));
         return 0;
     }
-    PASS("probe: reserved %lu MiB VMM pool at %p (PAGE_NOACCESS)",
+    ok(1, "probe: reserved %lu MiB VMM pool at %p (PAGE_NOACCESS)\n",
          (unsigned long)(g_vmm.size / (1024 * 1024)), g_vmm.reserved);
 
     /*
@@ -161,11 +154,11 @@ vmm_init(void)
     mem_latersize  = (SIZE_T)(0.2 * mem_available);
     g_vmm.size     = mem_available - mem_latersize;
 
-    printf("  Available to VMM               : %lu MiB\n",
+    trace("  Available to VMM               : %lu MiB\n",
            (unsigned long)(mem_available / (1024 * 1024)));
-    printf("  Final pool size (80%%)          : %lu MiB\n",
+    trace("  Final pool size (80%%)          : %lu MiB\n",
            (unsigned long)(g_vmm.size / (1024 * 1024)));
-    printf("  \"Later\" headroom (20%%)         : %lu MiB\n",
+    trace("  \"Later\" headroom (20%%)         : %lu MiB\n",
            (unsigned long)(mem_latersize / (1024 * 1024)));
 
     /*
@@ -187,8 +180,8 @@ vmm_init(void)
 
     if (g_vmm.reserved == NULL)
     {
-        FAIL("init: final VirtualAlloc(MEM_RESERVE, %lu MiB, PAGE_NOACCESS)"
-             " failed (error %lu)",
+        ok(0, "init: final VirtualAlloc(MEM_RESERVE, %lu MiB, PAGE_NOACCESS)"
+             " failed (error %lu)\n",
              (unsigned long)(g_vmm.size / (1024 * 1024)), GetLastError());
         return 0;
     }
@@ -197,7 +190,7 @@ vmm_init(void)
     g_vmm.consumed  = 0;
     g_vmm.allocated = 0;
 
-    PASS("init: final VMM pool - %lu MiB at %p (PAGE_NOACCESS)",
+    ok(1, "init: final VMM pool - %lu MiB at %p (PAGE_NOACCESS)\n",
          (unsigned long)(g_vmm.size / (1024 * 1024)), g_vmm.reserved);
     return 1;
 }
@@ -280,7 +273,7 @@ test_alloc_free(const char *label, SIZE_T size)
     p = (unsigned char *)vmm_alloc(size);
     if (p == NULL)
     {
-        FAIL("[%s] vmm_alloc(%lu KiB) failed (error %lu)",
+        ok(0, "[%s] vmm_alloc(%lu KiB) failed (error %lu)\n",
              label, (unsigned long)(size / 1024), GetLastError());
         return;
     }
@@ -294,7 +287,7 @@ test_alloc_free(const char *label, SIZE_T size)
     {
         if (p[i] != (unsigned char)(i & 0xFFu))
         {
-            FAIL("[%s] read-back mismatch at offset %lu",
+            ok(0, "[%s] read-back mismatch at offset %lu\n",
                  label, (unsigned long)i);
             vmm_free(p, size);
             return;
@@ -303,34 +296,34 @@ test_alloc_free(const char *label, SIZE_T size)
 
     if (vmm_free(p, size) != 0)
     {
-        FAIL("[%s] vmm_free(%lu KiB) failed (error %lu)",
+        ok(0, "[%s] vmm_free(%lu KiB) failed (error %lu)\n",
              label, (unsigned long)(size / 1024), GetLastError());
         return;
     }
 
-    PASS("[%s] commit %lu KiB, write, verify, MEM_DECOMMIT - OK",
+    ok(1, "[%s] commit %lu KiB, write, verify, MEM_DECOMMIT - OK\n",
          label, (unsigned long)(size / 1024));
 }
 
 /* ------------------------------------------------------------------ */
 /* Entry point                                                          */
 /* ------------------------------------------------------------------ */
-int main(void)
+START_TEST(vmm)
 {
-    printf("GTK-Gnutella VMM allocation test (CORE-15087 / mingw32.c:4780)\n");
-    printf("----------------------------------------------------------------\n\n");
+    trace("GTK-Gnutella VMM allocation test (CORE-15087 / mingw32.c:4780)\n");
+    trace("----------------------------------------------------------------\n\n");
 
     /* Phase 1-4: initialize the VMM pool using the GTK-Gnutella algorithm */
-    printf("[Phase 1-4] VMM pool initialization\n");
+    trace("[Phase 1-4] VMM pool initialization\n");
     if (!vmm_init())
     {
-        printf("\nVMM pool initialization failed - aborting.\n");
-        return 1;
+        ok(0, "VMM pool initialization failed - aborting\n");
+        return;
     }
-    printf("\n");
+    trace("\n");
 
     /* Phase 5+6: commit / decommit at various sizes within the pool */
-    printf("[Phase 5+6] Commit and decommit within the reserved pool\n");
+    trace("[Phase 5+6] Commit and decommit within the reserved pool\n");
     test_alloc_free("1 page   (4 KiB)",      4UL * 1024UL);
     test_alloc_free("16 pages (64 KiB)",     64UL * 1024UL);
     test_alloc_free("256 KiB",              256UL * 1024UL);
@@ -338,42 +331,45 @@ int main(void)
     test_alloc_free("4 MiB",           4UL * 1024UL * 1024UL);
     test_alloc_free("16 MiB",         16UL * 1024UL * 1024UL);
     test_alloc_free("64 MiB",         64UL * 1024UL * 1024UL);
-    printf("\n");
+    trace("\n");
 
     /* Multiple live allocations at the same time */
-    printf("[Phase 5+6] Multiple simultaneous live allocations\n");
+    trace("[Phase 5+6] Multiple simultaneous live allocations\n");
     {
-        void *a = vmm_alloc( 1UL * 1024UL * 1024UL);
-        void *b = vmm_alloc( 4UL * 1024UL * 1024UL);
-        void *c = vmm_alloc(16UL * 1024UL * 1024UL);
+        void *a, *b, *c;
 
-        if (a == NULL || b == NULL || c == NULL)
-        {
-            FAIL("one or more simultaneous allocations failed (error %lu)",
-                 GetLastError());
-        }
-        else
+        a = vmm_alloc(1UL * 1024UL * 1024UL);
+        ok(a != NULL, "vmm_alloc(1 MiB) failed (error %lu)\n", GetLastError());
+
+        b = vmm_alloc(4UL * 1024UL * 1024UL);
+        ok(b != NULL, "vmm_alloc(4 MiB) failed (error %lu)\n", GetLastError());
+
+        c = vmm_alloc(16UL * 1024UL * 1024UL);
+        ok(c != NULL, "vmm_alloc(16 MiB) failed (error %lu)\n", GetLastError());
+
+        if (a != NULL && b != NULL && c != NULL)
         {
             memset(a, 0xAA, 1UL * 1024UL * 1024UL);
             memset(b, 0xBB, 4UL * 1024UL * 1024UL);
             memset(c, 0xCC, 16UL * 1024UL * 1024UL);
-            PASS("3 live allocations (1+4+16 MiB) committed and written");
+            ok(1, "3 live allocations (1+4+16 MiB) committed and written\n");
 
             vmm_free(c, 16UL * 1024UL * 1024UL);
             vmm_free(b,  4UL * 1024UL * 1024UL);
             vmm_free(a,  1UL * 1024UL * 1024UL);
-            PASS("3 live allocations decommitted (MEM_DECOMMIT)");
+            ok(1, "3 live allocations decommitted (MEM_DECOMMIT)\n");
+        }
+        else
+        {
+            if (a) vmm_free(a,  1UL * 1024UL * 1024UL);
+            if (b) vmm_free(b,  4UL * 1024UL * 1024UL);
+            if (c) vmm_free(c, 16UL * 1024UL * 1024UL);
         }
     }
-    printf("\n");
+    trace("\n");
 
     /* Phase shutdown: MEM_RELEASE the whole reservation */
-    printf("[Shutdown] Release entire VMM pool (MEM_RELEASE)\n");
+    trace("[Shutdown] Release entire VMM pool (MEM_RELEASE)\n");
     vmm_shutdown();
-    PASS("VMM pool released");
-    printf("\n");
-
-    printf("----------------------------------------------------------------\n");
-    printf("Results: %d passed, %d failed.\n", g_passed, g_failed);
-    return (g_failed != 0) ? 1 : 0;
+    ok(1, "VMM pool released\n");
 }
