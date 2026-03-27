@@ -966,6 +966,9 @@ HalpInitializePciBus(VOID)
     /* Setup the PCI stub support */
     HalpInitializePciStubs();
 
+    /* Perform PCI bus hardware detection and dump */
+    HalpAcpiPciDiscovery();
+
     /* Set the NMI crash flag */
     HalpGetNMICrashFlag();
 }

@@ -38,4 +38,10 @@ HalAcpiGetTable(
     IN ULONG Signature
 );
 
+PDESCRIPTION_HEADER
+NTAPI
+HalpAcpiGetCachedTable(
+    IN ULONG Signature
+);
+
 /* EOF */

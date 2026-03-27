@@ -555,6 +555,13 @@ HalpDebugPciDumpBus(
     IN PPCI_COMMON_CONFIG PciData
 );
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpAcpiPciDiscovery(
+    VOID
+);
+
 VOID
 NTAPI
 HalpInitProcessor(
