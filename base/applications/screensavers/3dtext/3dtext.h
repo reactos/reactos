@@ -26,7 +26,7 @@
 
 #define MAX_TEXT_LENGTH 20
 
-extern TCHAR m_Text[MAX_TEXT_LENGTH + 1];
+extern TCHAR g_Text[MAX_TEXT_LENGTH + 1];
 
 VOID LoadSettings(VOID);
 VOID SaveSettings(VOID);

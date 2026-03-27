@@ -79,10 +79,10 @@ GLvoid Build3DCharacters(GLvoid)
     SelectObject(hDC, font);
 
     // Calculate the string extent
-    for (i = 0; i < _tcslen(m_Text); i++)
+    for (i = 0; i < _tcslen(g_Text); i++)
     {
         wglUseFontOutlines(hDC,                     // Select The Current DC
-                           m_Text[i],               // Starting Character
+                           g_Text[i],               // Starting Character
                            1,                       // Number Of Display Lists To Build
                            base + i,                // Starting Display Lists
                            0.0f,                    // Deviation From The True Outlines
@@ -113,11 +113,11 @@ GLvoid Delete3DCharacters(GLvoid)
 GLvoid glPrint(GLvoid)
 {
     // If there's no text, do nothing
-    if (_tcslen(m_Text) == 0)
+    if (_tcslen(g_Text) == 0)
         return;
 
     // Draws The Display List Text
-    for (int i = 0; i < _tcslen(m_Text); i++)
+    for (int i = 0; i < _tcslen(g_Text); i++)
     {
         glCallList(base + i);
     }
@@ -383,7 +383,7 @@ BOOL CALLBACK ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LP
     {
         case WM_INITDIALOG:
             LoadSettings();
-            SetDlgItemText(hDlg, IDC_MESSAGE_TEXT, m_Text);
+            SetDlgItemText(hDlg, IDC_MESSAGE_TEXT, g_Text);
             SendDlgItemMessage(hDlg, IDC_MESSAGE_TEXT, EM_LIMITTEXT, MAX_TEXT_LENGTH, 0);
             return TRUE;
 
@@ -391,7 +391,7 @@ BOOL CALLBACK ScreenSaverConfigureDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LP
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    GetDlgItemText(hDlg, IDC_MESSAGE_TEXT, m_Text, MAX_PATH);
+                    GetDlgItemText(hDlg, IDC_MESSAGE_TEXT, g_Text, MAX_PATH);
                     SaveSettings();
 
                     /* Fall through */
