@@ -321,10 +321,10 @@ int main(void)
     printf("----------------------------------------------------------------\n\n");
 
     /* Phase 1-4: initialise the VMM pool using the GTK-Gnutella algorithm */
-    printf("[Phase 1-4] VMM pool initialisation\n");
+    printf("[Phase 1-4] VMM pool initialization\n");
     if (!vmm_init())
     {
-        printf("\nVMM pool initialisation failed - aborting.\n");
+        printf("\nVMM pool initialization failed - aborting.\n");
         return 1;
     }
     printf("\n");
