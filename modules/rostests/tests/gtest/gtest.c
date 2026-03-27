@@ -18,7 +18,7 @@
  *     total available space, then make the final VMM pool reservation.
  *  5. Serve allocations by committing pages from within the reserved pool
  *     (MEM_COMMIT | PAGE_READWRITE) using a sequential base pointer.
- *  6. Free allocations with MEM_DECOMMIT only – never MEM_RELEASE on
+ *  6. Free allocations with MEM_DECOMMIT only - never MEM_RELEASE on
  *     sub-regions.  MEM_RELEASE is only used on the whole pool at shutdown.
  */
 
@@ -92,7 +92,7 @@ vmm_init(void)
     mem_size = total_addr_space;
 
     /*
-     * Step 1 – probe "later" block (mirrors the reserve_less: label).
+     * Step 1 - probe "later" block (mirrors the reserve_less: label).
      *
      * Start at mem_size, keep multiplying by 0.9 and clamp to VMM_MINSIZE.
      * This loop terminates because mem_latersize is reduced each iteration
@@ -124,7 +124,7 @@ vmm_init(void)
          (unsigned long)(mem_latersize / (1024 * 1024)), mem_later);
 
     /*
-     * Step 2 – probe VMM pool by stepping down by granularity.
+     * Step 2 - probe VMM pool by stepping down by granularity.
      */
     g_vmm.size = round_up(mem_size - mem_latersize, si.dwPageSize);
     g_vmm.reserved = NULL;
@@ -151,7 +151,7 @@ vmm_init(void)
          (unsigned long)(g_vmm.size / (1024 * 1024)), g_vmm.reserved);
 
     /*
-     * Step 3 – rebalance to 80/20 split of what we actually obtained.
+     * Step 3 - rebalance to 80/20 split of what we actually obtained.
      *
      * available = mem_latersize + g_vmm.size  (what we could reserve)
      * new later  = 20% * available
@@ -169,7 +169,7 @@ vmm_init(void)
            (unsigned long)(mem_latersize / (1024 * 1024)));
 
     /*
-     * Step 4 – release probe reservation and make the final reservation
+     * Step 4 - release probe reservation and make the final reservation
      * at the computed size so the kernel can place it optimally.
      */
     VirtualFree(g_vmm.reserved, 0, MEM_RELEASE);
@@ -197,13 +197,13 @@ vmm_init(void)
     g_vmm.consumed  = 0;
     g_vmm.allocated = 0;
 
-    PASS("init: final VMM pool — %lu MiB at %p (PAGE_NOACCESS)",
+    PASS("init: final VMM pool - %lu MiB at %p (PAGE_NOACCESS)",
          (unsigned long)(g_vmm.size / (1024 * 1024)), g_vmm.reserved);
     return 1;
 }
 
 /* ------------------------------------------------------------------ */
-/* Phase 5: mingw_valloc() — commit pages from within the pool        */
+/* Phase 5: mingw_valloc() - commit pages from within the pool        */
 /* ------------------------------------------------------------------ */
 static void *
 vmm_alloc(SIZE_T size)
@@ -235,7 +235,7 @@ vmm_alloc(SIZE_T size)
 }
 
 /* ------------------------------------------------------------------ */
-/* Phase 6: mingw_vfree_fragment() — decommit only, never MEM_RELEASE */
+/* Phase 6: mingw_vfree_fragment() - decommit only, never MEM_RELEASE */
 /* ------------------------------------------------------------------ */
 static int
 vmm_free(void *addr, SIZE_T size)
@@ -308,7 +308,7 @@ test_alloc_free(const char *label, SIZE_T size)
         return;
     }
 
-    PASS("[%s] commit %lu KiB, write, verify, MEM_DECOMMIT — OK",
+    PASS("[%s] commit %lu KiB, write, verify, MEM_DECOMMIT - OK",
          label, (unsigned long)(size / 1024));
 }
 
@@ -324,7 +324,7 @@ int main(void)
     printf("[Phase 1-4] VMM pool initialisation\n");
     if (!vmm_init())
     {
-        printf("\nVMM pool initialisation failed — aborting.\n");
+        printf("\nVMM pool initialisation failed - aborting.\n");
         return 1;
     }
     printf("\n");
