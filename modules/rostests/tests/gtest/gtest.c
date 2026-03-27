@@ -320,7 +320,7 @@ int main(void)
     printf("GTK-Gnutella VMM allocation test (CORE-15087 / mingw32.c:4780)\n");
     printf("----------------------------------------------------------------\n\n");
 
-    /* Phase 1-4: initialise the VMM pool using the GTK-Gnutella algorithm */
+    /* Phase 1-4: initialize the VMM pool using the GTK-Gnutella algorithm */
     printf("[Phase 1-4] VMM pool initialization\n");
     if (!vmm_init())
     {
