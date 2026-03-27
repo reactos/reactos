@@ -810,6 +810,7 @@ Imm32CreateInputContext(HIMC hIMC, LPINPUTCONTEXT pIC, PCLIENTIMC pClientImc, HK
             pClientImc->dwFlags |= CLIENTIMC_WIDE;
 
         cbPrivate = pImeDpi->ImeInfo.dwPrivateDataSize;
+        cbPrivate = max(cbPrivate, sizeof(DWORD)); /* ensure minimum size, like Imm32SelectInputContext does */
     }
 
     /* Create private data */
