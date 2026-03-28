@@ -37,6 +37,30 @@ DBG_DEFAULT_CHANNEL(UserDefwnd);
              (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
              (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 
+/* Snap preview animation state (used during DefWndDoSizeMove) */
+#define SNAP_ANIM_DURATION_MS 180
+#define SNAP_ANIM_STEP_DELAY_MS 10
+#define SNAP_PREVIEW_FILL_ALPHA 72
+#define SNAP_PREVIEW_BORDER_ALPHA 160
+#define SNAP_PREVIEW_BORDER_WIDTH 2
+
+typedef struct _SNAP_PREVIEW_STATE
+{
+    BOOL     bVisible;      /* Is the preview currently drawn on screen? */
+    RECT     rcCurrent;     /* Currently displayed rect */
+    RECT     rcTarget;      /* Final snap target */
+    RECT     rcOrigin;      /* Small rect at cursor where animation starts */
+    ULONG    dwStartTime;   /* EngGetTickCount32() when snap zone entered */
+    UINT     nSnapEdge;     /* HTLEFT/HTRIGHT/HTTOP or HTNOWHERE */
+    HBRUSH   hbrFill;       /* Fill brush for translucent preview */
+    HBRUSH   hbrBorder;     /* Border brush for the snap outline */
+    HDC      hdcBackground; /* Saved screen contents under rcCurrent */
+    HBITMAP  hbmBackground;
+    HBITMAP  hbmBackgroundOld;
+    HDC      hdcOverlay;    /* Scratch surface for alpha-blended fills */
+    HBITMAP  hbmOverlay;
+    HBITMAP  hbmOverlayOld;
+} SNAP_PREVIEW_STATE;
 
 VOID FASTCALL
 UserDrawWindowFrame(HDC hdc,
@@ -59,6 +83,366 @@ UserDrawMovingFrame(HDC hdc,
 {
    if (thickframe) UserDrawWindowFrame(hdc, rect, UserGetSystemMetrics(SM_CXFRAME), UserGetSystemMetrics(SM_CYFRAME));
    else UserDrawWindowFrame(hdc, rect, 1, 1);
+}
+
+/* --- Snap preview animation helpers --- */
+
+static VOID
+SnapPreviewInit(SNAP_PREVIEW_STATE *pState)
+{
+    RtlZeroMemory(pState, sizeof(*pState));
+    pState->hbrFill = IntGdiCreateSolidBrush(RGB(176, 214, 244));
+    pState->hbrBorder = IntGdiCreateSolidBrush(RGB(94, 150, 214));
+}
+
+static VOID
+SnapPreviewDestroyBuffers(SNAP_PREVIEW_STATE *pState)
+{
+    if (pState->hdcBackground)
+    {
+        if (pState->hbmBackground && pState->hbmBackgroundOld)
+            NtGdiSelectBitmap(pState->hdcBackground, pState->hbmBackgroundOld);
+        if (pState->hbmBackground)
+            GreDeleteObject(pState->hbmBackground);
+        IntGdiDeleteDC(pState->hdcBackground, FALSE);
+    }
+
+    if (pState->hdcOverlay)
+    {
+        if (pState->hbmOverlay && pState->hbmOverlayOld)
+            NtGdiSelectBitmap(pState->hdcOverlay, pState->hbmOverlayOld);
+        if (pState->hbmOverlay)
+            GreDeleteObject(pState->hbmOverlay);
+        IntGdiDeleteDC(pState->hdcOverlay, FALSE);
+    }
+
+    pState->hdcBackground = NULL;
+    pState->hbmBackground = NULL;
+    pState->hbmBackgroundOld = NULL;
+    pState->hdcOverlay = NULL;
+    pState->hbmOverlay = NULL;
+    pState->hbmOverlayOld = NULL;
+}
+
+static BOOL
+SnapPreviewCreateBuffers(HDC hdc, SNAP_PREVIEW_STATE *pState, LONG cx, LONG cy)
+{
+    if (cx <= 0 || cy <= 0 || !pState->hbrFill || !pState->hbrBorder)
+        return FALSE;
+
+    SnapPreviewDestroyBuffers(pState);
+
+    pState->hdcBackground = NtGdiCreateCompatibleDC(hdc);
+    if (!pState->hdcBackground)
+        return FALSE;
+
+    pState->hdcOverlay = NtGdiCreateCompatibleDC(hdc);
+    if (!pState->hdcOverlay)
+    {
+        SnapPreviewDestroyBuffers(pState);
+        return FALSE;
+    }
+
+    pState->hbmBackground = NtGdiCreateCompatibleBitmap(hdc, cx, cy);
+    pState->hbmOverlay = NtGdiCreateCompatibleBitmap(hdc, cx, cy);
+    if (!pState->hbmBackground || !pState->hbmOverlay)
+    {
+        SnapPreviewDestroyBuffers(pState);
+        return FALSE;
+    }
+
+    pState->hbmBackgroundOld = NtGdiSelectBitmap(pState->hdcBackground, pState->hbmBackground);
+    pState->hbmOverlayOld = NtGdiSelectBitmap(pState->hdcOverlay, pState->hbmOverlay);
+    if (!pState->hbmBackgroundOld || !pState->hbmOverlayOld)
+    {
+        SnapPreviewDestroyBuffers(pState);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL
+SnapPreviewBlendSolid(HDC hdcDst,
+                      HDC hdcSrc,
+                      HBRUSH hbr,
+                      INT xDst,
+                      INT yDst,
+                      INT cx,
+                      INT cy,
+                      BYTE Alpha,
+                      const RECT *prcExclude)
+{
+    BLENDFUNCTION Blend = { AC_SRC_OVER, 0, Alpha, 0 };
+    HBRUSH hbrOld;
+    BOOL bResult;
+    INT iSaveLevel = 0;
+
+    if (cx <= 0 || cy <= 0)
+        return TRUE;
+
+    hbrOld = NtGdiSelectBrush(hdcSrc, hbr);
+    NtGdiPatBlt(hdcSrc, 0, 0, cx, cy, PATCOPY);
+    NtGdiSelectBrush(hdcSrc, hbrOld);
+
+    if (prcExclude && !RECTL_bIsEmptyRect(prcExclude))
+    {
+        iSaveLevel = NtGdiSaveDC(hdcDst);
+        if (iSaveLevel > 0)
+        {
+            NtGdiExcludeClipRect(hdcDst,
+                                 prcExclude->left,
+                                 prcExclude->top,
+                                 prcExclude->right,
+                                 prcExclude->bottom);
+        }
+    }
+
+    bResult = NtGdiAlphaBlend(hdcDst,
+                              xDst,
+                              yDst,
+                              cx,
+                              cy,
+                              hdcSrc,
+                              0,
+                              0,
+                              cx,
+                              cy,
+                              Blend,
+                              0);
+
+    if (iSaveLevel > 0)
+        NtGdiRestoreDC(hdcDst, -1);
+
+    return bResult;
+}
+
+static BOOL
+SnapPreviewCaptureBackground(HDC hdc, SNAP_PREVIEW_STATE *pState, const RECT *prc)
+{
+    LONG cx = prc->right - prc->left;
+    LONG cy = prc->bottom - prc->top;
+
+    return NtGdiBitBlt(pState->hdcBackground,
+                       0,
+                       0,
+                       cx,
+                       cy,
+                       hdc,
+                       prc->left,
+                       prc->top,
+                       SRCCOPY,
+                       CLR_INVALID,
+                       0);
+}
+
+static VOID
+SnapPreviewRestore(HDC hdc, SNAP_PREVIEW_STATE *pState)
+{
+    LONG cx = pState->rcCurrent.right - pState->rcCurrent.left;
+    LONG cy = pState->rcCurrent.bottom - pState->rcCurrent.top;
+
+    NtGdiBitBlt(hdc,
+                pState->rcCurrent.left,
+                pState->rcCurrent.top,
+                cx,
+                cy,
+                pState->hdcBackground,
+                0,
+                0,
+                SRCCOPY,
+                CLR_INVALID,
+                0);
+}
+
+static VOID
+SnapPreviewInterpolateRect(const RECT *pOrigin, const RECT *pTarget,
+                           ULONG dwElapsed, RECT *pResult);
+
+static VOID
+SnapPreviewInterpolateCurrentRect(SNAP_PREVIEW_STATE *pState, RECT *pResult)
+{
+    ULONG dwElapsed = EngGetTickCount32() - pState->dwStartTime;
+
+    SnapPreviewInterpolateRect(&pState->rcOrigin, &pState->rcTarget,
+                               dwElapsed, pResult);
+}
+
+static BOOL
+SnapPreviewHasReachedTarget(const SNAP_PREVIEW_STATE *pState)
+{
+    return pState->rcCurrent.left   == pState->rcTarget.left  &&
+           pState->rcCurrent.top    == pState->rcTarget.top   &&
+           pState->rcCurrent.right  == pState->rcTarget.right &&
+           pState->rcCurrent.bottom == pState->rcTarget.bottom;
+}
+
+static BOOL
+SnapPreviewAdvance(HDC hdc, SNAP_PREVIEW_STATE *pState, const RECT *prcExclude)
+{
+    RECT rcNew;
+
+    if (!pState->bVisible || SnapPreviewHasReachedTarget(pState))
+        return FALSE;
+
+    SnapPreviewInterpolateCurrentRect(pState, &rcNew);
+
+    if (rcNew.left   != pState->rcCurrent.left  ||
+        rcNew.top    != pState->rcCurrent.top    ||
+        rcNew.right  != pState->rcCurrent.right  ||
+        rcNew.bottom != pState->rcCurrent.bottom)
+    {
+        LONG cx = rcNew.right - rcNew.left;
+        LONG cy = rcNew.bottom - rcNew.top;
+        LONG bw = min(SNAP_PREVIEW_BORDER_WIDTH, cx / 2);
+        LONG bh = min(SNAP_PREVIEW_BORDER_WIDTH, cy / 2);
+        LONG cyMiddle = max(0, cy - 2 * bh);
+
+        SnapPreviewRestore(hdc, pState);
+        if (!SnapPreviewCaptureBackground(hdc, pState, &rcNew))
+        {
+            pState->bVisible = FALSE;
+            return FALSE;
+        }
+
+        if (!SnapPreviewBlendSolid(hdc, pState->hdcOverlay, pState->hbrFill,
+                                   rcNew.left, rcNew.top, cx, cy,
+                                   SNAP_PREVIEW_FILL_ALPHA, prcExclude))
+        {
+            pState->bVisible = FALSE;
+            return FALSE;
+        }
+
+        SnapPreviewBlendSolid(hdc, pState->hdcOverlay, pState->hbrBorder,
+                              rcNew.left, rcNew.top, cx, bh,
+                              SNAP_PREVIEW_BORDER_ALPHA, prcExclude);
+        SnapPreviewBlendSolid(hdc, pState->hdcOverlay, pState->hbrBorder,
+                              rcNew.left, rcNew.bottom - bh, cx, bh,
+                              SNAP_PREVIEW_BORDER_ALPHA, prcExclude);
+        SnapPreviewBlendSolid(hdc, pState->hdcOverlay, pState->hbrBorder,
+                              rcNew.left, rcNew.top + bh, bw, cyMiddle,
+                              SNAP_PREVIEW_BORDER_ALPHA, prcExclude);
+        SnapPreviewBlendSolid(hdc, pState->hdcOverlay, pState->hbrBorder,
+                              rcNew.right - bw, rcNew.top + bh, bw, cyMiddle,
+                              SNAP_PREVIEW_BORDER_ALPHA, prcExclude);
+
+        pState->rcCurrent = rcNew;
+    }
+
+    return !SnapPreviewHasReachedTarget(pState);
+}
+
+static VOID
+SnapPreviewInterpolateRect(const RECT *pOrigin, const RECT *pTarget,
+                           ULONG dwElapsed, RECT *pResult)
+{
+    LONG t;
+
+    if (dwElapsed >= SNAP_ANIM_DURATION_MS)
+    {
+        *pResult = *pTarget;
+        return;
+    }
+
+    /* Fixed-point progress 0..256 */
+    t = (LONG)(dwElapsed * 256 / SNAP_ANIM_DURATION_MS);
+
+    /* Cubic ease-out for a snappier Win7-like expansion */
+    {
+        LONG inv = 256 - t;
+        LONG inv2 = inv * inv;
+        t = 256 - (inv2 * inv / 65536);
+    }
+
+    pResult->left   = pOrigin->left   + (pTarget->left   - pOrigin->left)   * t / 256;
+    pResult->top    = pOrigin->top    + (pTarget->top    - pOrigin->top)    * t / 256;
+    pResult->right  = pOrigin->right  + (pTarget->right  - pOrigin->right)  * t / 256;
+    pResult->bottom = pOrigin->bottom + (pTarget->bottom - pOrigin->bottom) * t / 256;
+}
+
+static VOID
+SnapPreviewHide(HDC hdc, SNAP_PREVIEW_STATE *pState)
+{
+    if (pState->bVisible)
+    {
+        SnapPreviewRestore(hdc, pState);
+        pState->bVisible = FALSE;
+    }
+    pState->nSnapEdge = HTNOWHERE;
+}
+
+static VOID
+SnapPreviewShow(HDC hdc, SNAP_PREVIEW_STATE *pState,
+                UINT nEdge, const RECT *pTargetRect, POINT ptCursor,
+                const RECT *prcExclude)
+{
+    if (!pState->hbrFill || !pState->hbrBorder)
+        return;
+
+    /* Same edge and same target: advance the animation */
+    if (pState->nSnapEdge == nEdge &&
+        pState->bVisible &&
+        RtlEqualMemory(&pState->rcTarget, pTargetRect, sizeof(*pTargetRect)))
+    {
+        SnapPreviewAdvance(hdc, pState, prcExclude);
+        return;
+    }
+
+    /* New edge: erase any existing preview, start fresh animation */
+    if (pState->bVisible)
+    {
+        SnapPreviewRestore(hdc, pState);
+        pState->bVisible = FALSE;
+    }
+
+    pState->nSnapEdge = nEdge;
+    pState->rcTarget = *pTargetRect;
+    pState->dwStartTime = EngGetTickCount32();
+    if (!SnapPreviewCreateBuffers(hdc,
+                                  pState,
+                                  pTargetRect->right - pTargetRect->left,
+                                  pTargetRect->bottom - pTargetRect->top))
+    {
+        pState->nSnapEdge = HTNOWHERE;
+        return;
+    }
+
+    /* Origin: small rect centered at cursor */
+    pState->rcOrigin.left   = ptCursor.x - 10;
+    pState->rcOrigin.top    = ptCursor.y - 10;
+    pState->rcOrigin.right  = ptCursor.x + 10;
+    pState->rcOrigin.bottom = ptCursor.y + 10;
+
+    pState->rcCurrent = pState->rcOrigin;
+    if (!SnapPreviewCaptureBackground(hdc, pState, &pState->rcCurrent))
+        return;
+
+    if (!SnapPreviewBlendSolid(hdc,
+                               pState->hdcOverlay,
+                               pState->hbrFill,
+                               pState->rcCurrent.left,
+                               pState->rcCurrent.top,
+                               pState->rcCurrent.right - pState->rcCurrent.left,
+                               pState->rcCurrent.bottom - pState->rcCurrent.top,
+                               SNAP_PREVIEW_FILL_ALPHA,
+                               prcExclude))
+        return;
+
+    pState->bVisible = TRUE;
+    SnapPreviewAdvance(hdc, pState, prcExclude);
+}
+
+static VOID
+SnapPreviewCleanup(HDC hdc, SNAP_PREVIEW_STATE *pState)
+{
+    SnapPreviewHide(hdc, pState);
+    SnapPreviewDestroyBuffers(pState);
+    if (pState->hbrFill)
+        GreDeleteObject(pState->hbrFill);
+    if (pState->hbrBorder)
+        GreDeleteObject(pState->hbrBorder);
+    pState->hbrFill = NULL;
+    pState->hbrBorder = NULL;
 }
 
 /***********************************************************************
@@ -267,6 +651,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    BOOL iconic;
    BOOL moved = FALSE;
    BOOL DragFullWindows = FALSE;
+   SNAP_PREVIEW_STATE snapPreview;
    PWND pWndParent = NULL;
    WPARAM syscommand = (wParam & 0xfff0);
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -369,6 +754,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
+   SnapPreviewInit(&snapPreview);
    if (iconic)
    {
        DragCursor = pwnd->pcls->spicn;
@@ -406,8 +792,20 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    for(;;)
    {
       int dx = 0, dy = 0;
+      BOOL animating = SnapPreviewAdvance(hdc, &snapPreview, &pwnd->rcWindow);
 
-      if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, TRUE)) break;
+      if (!co_IntGetPeekMessage(&msg, 0, 0, 0, PM_REMOVE, animating ? FALSE : TRUE))
+      {
+         if (animating)
+         {
+            LARGE_INTEGER Delay;
+
+            Delay.QuadPart = (LONGLONG)-SNAP_ANIM_STEP_DELAY_MS * 10000;
+            KeDelayExecutionThread(KernelMode, FALSE, &Delay);
+            continue;
+         }
+         break;
+      }
       if (IntCallMsgFilter( &msg, MSGF_SIZE )) continue;
 
       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
@@ -430,6 +828,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
             {
                 if (DragFullWindows)
                 {
+                    SnapPreviewHide(hdc, &snapPreview);
                     co_IntSnapWindow(pwnd, snapTo);
                     if (!wasSnap)
                         pwnd->InternalPos.NormalRect = origRect;
@@ -540,7 +939,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                       co_IntCalculateSnapPosition(pwnd, snapTo, &snapPreviewRect);
                       if (DragFullWindows)
                       {
-                          /* TODO: Show preview of snap */
+                          SnapPreviewShow(hdc, &snapPreview, snapTo, &snapPreviewRect, pt, &pwnd->rcWindow);
+                          continue; /* Don't move the actual window while preview is showing */
                       }
                       else
                       {
@@ -548,6 +948,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                           UserDrawMovingFrame(hdc, pFrameRect, thickframe);
                           continue;
                       }
+                  }
+                  else if (DragFullWindows && snapPreview.bVisible)
+                  {
+                      /* Cursor moved away from screen edge */
+                      SnapPreviewHide(hdc, &snapPreview);
                   }
               }
 
@@ -633,6 +1038,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    pwnd->head.pti->TIF_flags &= ~TIF_MOVESIZETRACKING;
+
+   SnapPreviewCleanup(hdc, &snapPreview);
 
    IntReleaseCapture();
 
