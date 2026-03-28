@@ -218,6 +218,12 @@ static LONG
 Imm32GetCompStrA(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
 {
+
+    /* when multiple flags get combined, Windows returns data for the lowest set bit only
+       * scalar values are not flas and mustn't be masked. */
+    if (dwIndex != GCS_CURSORPOS && dwIndex != GCS_DELTASTART)
+        dwIndex &= -(LONG)dwIndex; /* isolate the lowest set bit */
+
     if (bAnsiClient)
     {
         switch (dwIndex)
@@ -368,6 +374,12 @@ static LONG
 Imm32GetCompStrW(HIMC hIMC, const COMPOSITIONSTRING *pCS, DWORD dwIndex,
                  LPVOID lpBuf, DWORD dwBufLen, BOOL bAnsiClient, UINT uCodePage)
 {
+
+    /* when multiple flags get combined, Windows returns data for the lowest set bit only
+       * scalar values are not flas and mustn't be masked. */
+    if (dwIndex != GCS_CURSORPOS && dwIndex != GCS_DELTASTART)
+        dwIndex &= -(LONG)dwIndex; /* isolate the lowest set bit */
+
     if (bAnsiClient)
     {
         switch (dwIndex)
