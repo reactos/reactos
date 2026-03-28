@@ -1899,8 +1899,8 @@ static void test_restore_context(void)
     _JUMP_BUFFER buf;
     CONTEXT ctx;
 #ifdef __REACTOS__
-    LONG pass;
     int i;
+    LONG pass;
 #else
     int i, pass;
 #endif
