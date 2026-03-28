@@ -64,6 +64,7 @@
  * STATUS_DATATYPE_MISALIGNMENT -- Indicates the address of the buffer in memory is
  * not aligned to the required alignment set.
  */
+__attribute__((unused))
 static
 __inline
 NTSTATUS
@@ -213,6 +214,7 @@ DefaultSetInfoBufferCheck(
  * from an object. This is typically with query NT syscalls where a caller has to query the actual
  * buffer length needed to store the queried information before doing a "real" query in the first place.
  */
+__attribute__((unused))
 static
 __inline
 NTSTATUS

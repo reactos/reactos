@@ -124,6 +124,7 @@ KdbpKdbTrapFrameFromKernelStack(
 
     RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
     StackPtr = (ULONG_PTR *) KernelStack;
+    UNREFERENCED_PARAMETER(StackPtr);
 #ifdef _M_IX86
     KdbTrapFrame->Ebp = StackPtr[3];
     KdbTrapFrame->Edi = StackPtr[4];
