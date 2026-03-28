@@ -62,6 +62,8 @@
 #define APIC_FREE_VECTOR 0xFF
 #define APIC_RESERVED_VECTOR 0xFE
 
+extern UCHAR HalpVectorToIndex[256];
+
 /* The IMCR is supported by two read/writable or write-only I/O ports,
    22h and 23h, which receive address and data respectively.
    To access the IMCR, write a value of 70h to I/O port 22h, which selects the IMCR.

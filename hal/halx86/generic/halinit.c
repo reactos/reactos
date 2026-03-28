@@ -120,6 +120,11 @@ HalInitSystem(
         /* Initialize the PICs */
         HalpInitializePICs(TRUE);
 
+        /* Initialize MSI vector allocator (amd64 APIC only) */
+#ifdef _M_AMD64
+        HalpInitializeMsiVectors();
+#endif
+
         /* Initialize CMOS lock */
         KeInitializeSpinLock(&HalpSystemHardwareLock);
 
