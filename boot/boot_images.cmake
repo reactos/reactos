@@ -202,8 +202,56 @@ add_custom_target(hybridcd
     VERBATIM)
 
 
+## ReactOSImg
+# Create the file list
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "")
+# Unlike the ISO path lists, fatten -addfiles treats bare entries as
+# in-image directories, so do not prepend the host-side empty path here.
+
+set(_preinstall_partition_file ${CMAKE_CURRENT_BINARY_DIR}/partition.fat32)
+set(_preinstall_image_file ${REACTOS_BINARY_DIR}/ReactOS.img)
+set(_preinstall_partition_type 0c)
+if(DEFINED EFI_PLATFORM_ID)
+    # OVMF only auto-discovers MBR-backed FAT volumes as bootable when the
+    # partition is tagged as an EFI System Partition.
+    set(_preinstall_partition_type ef)
+endif()
+
+# Create TEMP dir
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "reactos/TEMP=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+
+# Create user profile directories
+add_allusers_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "Profiles")
+add_user_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "Profiles" "Default User")
+
+# Disk image size configuration (in MB)
+set(PREINSTALL_IMAGE_SIZE_MB 512 CACHE STRING "Pre-installed disk image size in MB")
+# Partition starts at sector 2048 (1MB alignment), rest is partition
+math(EXPR _preinstall_partition_sectors "(${PREINSTALL_IMAGE_SIZE_MB} - 1) * 2048")
+
+set(_dosmbr_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/dosmbr.bin)
+set(_fat32_file  ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat32.bin)
+
+add_custom_target(reactosimg
+    BYPRODUCTS ${_preinstall_image_file} ${_preinstall_partition_file}
+    # Step 1: Create and populate FAT32 partition image
+    COMMAND native-fatten ${_preinstall_partition_file}
+        -format ${_preinstall_partition_sectors}
+        -boot ${_fat32_file}
+        -addfiles ${CMAKE_CURRENT_BINARY_DIR}/preinstall.$<CONFIG>.lst
+    # Step 2: Assemble final disk image with MBR + partition table
+    COMMAND native-mkdiskimg
+        -o ${_preinstall_image_file}
+        -mbr ${_dosmbr_file}
+        -partition ${_preinstall_partition_file}
+        -start 2048
+        -type ${_preinstall_partition_type}
+    DEPENDS native-fatten native-mkdiskimg dosmbr fat32 freeldr
+    VERBATIM)
+
+
 if(DEFINED EFI_PLATFORM_ID)
     # For devices such as USB drives, add also the EFI boot image into efi/boot.
     add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
-    add_cd_file(TARGET uefildr DESTINATION efi/boot NO_CAB NAME_ON_CD boot${EFI_PLATFORM_ID}.efi FOR livecd hybridcd)
+    add_cd_file(TARGET uefildr DESTINATION efi/boot NO_CAB NAME_ON_CD boot${EFI_PLATFORM_ID}.efi FOR livecd hybridcd preinstall)
 endif()

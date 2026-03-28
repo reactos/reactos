@@ -6,15 +6,35 @@
  * PROGRAMMERS:     David Quintana
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
+#include <sys/stat.h>
+#if _WIN32
+#include <windows.h>
+#else
+#define DIR HOST_DIR
+#include <dirent.h>
+#undef DIR
+#endif
 #include "fatfs/ff.h"
 #include "fatfs/diskio.h"
 
 static FATFS g_Filesystem;
 static int isMounted = 0;
 static unsigned char buff[32768];
+
+#if _WIN32 && !defined(S_ISDIR)
+#define S_ISDIR(mode) (((mode) & _S_IFMT) == _S_IFDIR)
+#endif
+
+#define FAT12_16_BPB_LENGTH 59
+#define FAT32_BPB_LENGTH    87
+#define FAT32_EXTRA_SECTOR  14
+#define LIST_LINE_SIZE      16384
 
 // tool needed by fatfs
 DWORD get_fattime(void)
@@ -70,6 +90,9 @@ void print_help(const char* name)
            "            Writes a new boot sector.\n");
     printf("    -add <src path> <dst path>\n"
            "            Copies an external file or directory into the image.\n");
+    printf("    -addfiles <list file>\n"
+           "            Copies files from a newline-delimited dst=src list into the image.\n"
+           "            Bare entries create directories inside the image.\n");
     printf("    -extract <src path> <dst path>\n"
            "            Copies a file or directory from the image into an external file\n"
            "            or directory.\n");
@@ -77,10 +100,10 @@ void print_help(const char* name)
            "            Moves/renames a file or directory.\n");
     printf("    -copy <src path> <new path>\n"
            "            Copies a file or directory.\n");
-    printf("    -mkdir <src path> <new path>\n"
+    printf("    -mkdir <path>\n"
            "            Creates a directory.\n");
-    printf("    -rmdir <src path> <new path>\n"
-           "            Creates a directory.\n");
+    printf("    -delete <path>\n"
+           "            Deletes a file or empty directory.\n");
     printf("    -list [<pattern>]\n"
            "            Lists files a directory (defaults to root).\n");
 }
@@ -114,12 +137,432 @@ int need_mount(void)
     if (isMounted)
         return FR_OK;
 
-    r = f_mount(&g_Filesystem, "0:", 0);
+    r = f_mount(&g_Filesystem, "0:", 1);
+    if (r == FR_NO_FILESYSTEM)
+        r = f_mount(&g_Filesystem, "0:", 0);
     if (r)
         return r;
 
     isMounted = 1;
     return FR_OK;
+}
+
+static void invalidate_mount(void)
+{
+    f_mount(NULL, "0:", 0);
+    memset(&g_Filesystem, 0, sizeof(g_Filesystem));
+    isMounted = 0;
+}
+
+static char* duplicate_string(const char* src)
+{
+    size_t length;
+    char* copy;
+
+    if (!src)
+        return NULL;
+
+    length = strlen(src) + 1;
+    copy = malloc(length);
+    if (!copy)
+        return NULL;
+
+    memcpy(copy, src, length);
+    return copy;
+}
+
+static void normalize_separators(char* path)
+{
+    while (*path)
+    {
+        if (*path == '\\')
+            *path = '/';
+        path++;
+    }
+}
+
+static char* trim_whitespace(char* text)
+{
+    char* end;
+
+    while (*text && isspace((unsigned char)*text))
+        text++;
+
+    end = text + strlen(text);
+    while ((end > text) && isspace((unsigned char)end[-1]))
+        *--end = '\0';
+
+    return text;
+}
+
+static int host_path_is_directory(const char* path)
+{
+    struct stat st;
+    return (stat(path, &st) == 0) && S_ISDIR(st.st_mode);
+}
+
+static FRESULT create_image_dir_if_missing(const char* path)
+{
+    FILINFO info = { 0 };
+    FRESULT result;
+
+    if (!path || !*path || (strcmp(path, "/") == 0))
+        return FR_OK;
+
+    result = f_stat(path, &info);
+    if (result == FR_OK)
+        return (info.fattrib & AM_DIR) ? FR_OK : FR_EXIST;
+    if ((result != FR_NO_FILE) && (result != FR_NO_PATH))
+        return result;
+
+    result = f_mkdir(path);
+    return (result == FR_EXIST) ? FR_OK : result;
+}
+
+static FRESULT ensure_image_dir(const char* path)
+{
+    char* mutable_path;
+    char* cursor;
+    FRESULT result = FR_OK;
+
+    if (!path || !*path || (strcmp(path, "/") == 0))
+        return FR_OK;
+
+    mutable_path = duplicate_string(path);
+    if (!mutable_path)
+        return FR_NOT_ENOUGH_CORE;
+
+    normalize_separators(mutable_path);
+
+    cursor = mutable_path;
+    if (*cursor == '/')
+        cursor++;
+
+    while ((cursor = strchr(cursor, '/')) != NULL)
+    {
+        *cursor = '\0';
+        result = create_image_dir_if_missing(mutable_path);
+        if (result != FR_OK)
+            goto cleanup;
+        *cursor++ = '/';
+    }
+
+    result = create_image_dir_if_missing(mutable_path);
+
+cleanup:
+    free(mutable_path);
+    return result;
+}
+
+static FRESULT ensure_image_parent_dirs(const char* path)
+{
+    char* mutable_path;
+    char* slash;
+    FRESULT result;
+
+    mutable_path = duplicate_string(path);
+    if (!mutable_path)
+        return FR_NOT_ENOUGH_CORE;
+
+    normalize_separators(mutable_path);
+    slash = strrchr(mutable_path, '/');
+    if (!slash)
+    {
+        result = FR_OK;
+    }
+    else if (slash == mutable_path)
+    {
+        result = FR_OK;
+    }
+    else
+    {
+        *slash = '\0';
+        result = ensure_image_dir(mutable_path);
+    }
+
+    free(mutable_path);
+    return result;
+}
+
+static int copy_host_file_to_image(const char* host_path, const char* image_path)
+{
+    FILE* source;
+    FIL destination = { 0 };
+    UINT read_length = 0;
+    UINT write_length = 0;
+    FRESULT result;
+    int ret = 0;
+
+    source = fopen(host_path, "rb");
+    if (!source)
+    {
+        fprintf(stderr, "Error: Unable to open external file '%s' for reading.\n", host_path);
+        return 1;
+    }
+
+    result = ensure_image_parent_dirs(image_path);
+    if (result != FR_OK)
+    {
+        fprintf(stderr, "Error: Unable to create parent directories for '%s' (%d).\n", image_path, result);
+        fclose(source);
+        return 1;
+    }
+
+    result = f_open(&destination, image_path, FA_WRITE | FA_CREATE_ALWAYS);
+    if (result != FR_OK)
+    {
+        fprintf(stderr, "Error: Unable to open file '%s' for writing (%d).\n", image_path, result);
+        fclose(source);
+        return 1;
+    }
+
+    while ((read_length = fread(buff, 1, sizeof(buff), source)) > 0)
+    {
+        result = f_write(&destination, buff, read_length, &write_length);
+        if (result || (write_length < read_length))
+        {
+            fprintf(stderr, "Error: Unable to write '%u' bytes to disk (%d).\n", write_length, result);
+            ret = 1;
+            goto cleanup;
+        }
+    }
+
+    if (ferror(source))
+    {
+        fprintf(stderr, "Error: Unable to read external file '%s'.\n", host_path);
+        ret = 1;
+    }
+
+cleanup:
+    f_close(&destination);
+    fclose(source);
+    return ret;
+}
+
+static char* join_host_path(const char* left, const char* right)
+{
+    size_t left_length = strlen(left);
+    size_t right_length = strlen(right);
+    int need_separator = (left_length > 0) && (left[left_length - 1] != '/') && (left[left_length - 1] != '\\');
+    char* path = malloc(left_length + right_length + (need_separator ? 2 : 1));
+
+    if (!path)
+        return NULL;
+
+    memcpy(path, left, left_length);
+    if (need_separator)
+        path[left_length++] = '/';
+    memcpy(path + left_length, right, right_length + 1);
+    return path;
+}
+
+static char* join_image_path(const char* left, const char* right)
+{
+    size_t left_length = strlen(left);
+    size_t right_length = strlen(right);
+    int need_separator = (left_length > 0) && (left[left_length - 1] != '/');
+    char* path = malloc(left_length + right_length + (need_separator ? 2 : 1));
+
+    if (!path)
+        return NULL;
+
+    memcpy(path, left, left_length);
+    if (need_separator)
+        path[left_length++] = '/';
+    memcpy(path + left_length, right, right_length + 1);
+    return path;
+}
+
+static int add_host_path_to_image(const char* host_path, const char* image_path)
+{
+    FRESULT result;
+
+    if (host_path_is_directory(host_path))
+    {
+#if _WIN32
+        WIN32_FIND_DATAA find_data;
+        HANDLE handle;
+        char* pattern;
+        int ret = 0;
+
+        result = ensure_image_dir(image_path);
+        if (result != FR_OK)
+        {
+            fprintf(stderr, "Error: Unable to create directory '%s' (%d).\n", image_path, result);
+            return 1;
+        }
+
+        pattern = join_host_path(host_path, "*");
+        if (!pattern)
+        {
+            fprintf(stderr, "Error: Out of memory while walking '%s'.\n", host_path);
+            return 1;
+        }
+
+        handle = FindFirstFileA(pattern, &find_data);
+        free(pattern);
+        if (handle == INVALID_HANDLE_VALUE)
+        {
+            DWORD error = GetLastError();
+            if (error == ERROR_FILE_NOT_FOUND)
+                return 0;
+
+            fprintf(stderr, "Error: Unable to enumerate directory '%s' (%lu).\n", host_path, (unsigned long)error);
+            return 1;
+        }
+
+        do
+        {
+            char* child_host_path;
+            char* child_image_path;
+
+            if ((strcmp(find_data.cFileName, ".") == 0) || (strcmp(find_data.cFileName, "..") == 0))
+                continue;
+
+            child_host_path = join_host_path(host_path, find_data.cFileName);
+            child_image_path = join_image_path(image_path, find_data.cFileName);
+            if (!child_host_path || !child_image_path)
+            {
+                fprintf(stderr, "Error: Out of memory while walking '%s'.\n", host_path);
+                free(child_host_path);
+                free(child_image_path);
+                ret = 1;
+                break;
+            }
+
+            ret = add_host_path_to_image(child_host_path, child_image_path);
+            free(child_host_path);
+            free(child_image_path);
+            if (ret)
+                break;
+        } while (FindNextFileA(handle, &find_data));
+
+        FindClose(handle);
+        return ret;
+#else
+        HOST_DIR* dir;
+        struct dirent* entry;
+        int ret = 0;
+
+        result = ensure_image_dir(image_path);
+        if (result != FR_OK)
+        {
+            fprintf(stderr, "Error: Unable to create directory '%s' (%d).\n", image_path, result);
+            return 1;
+        }
+
+        dir = opendir(host_path);
+        if (!dir)
+        {
+            fprintf(stderr, "Error: Unable to enumerate directory '%s' (%d).\n", host_path, errno);
+            return 1;
+        }
+
+        while ((entry = readdir(dir)) != NULL)
+        {
+            char* child_host_path;
+            char* child_image_path;
+
+            if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0))
+                continue;
+
+            child_host_path = join_host_path(host_path, entry->d_name);
+            child_image_path = join_image_path(image_path, entry->d_name);
+            if (!child_host_path || !child_image_path)
+            {
+                fprintf(stderr, "Error: Out of memory while walking '%s'.\n", host_path);
+                free(child_host_path);
+                free(child_image_path);
+                ret = 1;
+                break;
+            }
+
+            ret = add_host_path_to_image(child_host_path, child_image_path);
+            free(child_host_path);
+            free(child_image_path);
+            if (ret)
+                break;
+        }
+
+        closedir(dir);
+        return ret;
+#endif
+    }
+
+    return copy_host_file_to_image(host_path, image_path);
+}
+
+static int add_files_from_list(const char* list_path)
+{
+    FILE* list_file;
+    char line[LIST_LINE_SIZE];
+    unsigned int line_number = 0;
+
+    list_file = fopen(list_path, "rb");
+    if (!list_file)
+    {
+        fprintf(stderr, "Error: Unable to open list file '%s' for reading.\n", list_path);
+        return 1;
+    }
+
+    while (fgets(line, sizeof(line), list_file) != NULL)
+    {
+        char* entry;
+        char* separator;
+        size_t line_length = strlen(line);
+        int line_complete = ((line_length > 0) && (line[line_length - 1] == '\n')) || feof(list_file);
+
+        line_number++;
+        if (!line_complete)
+        {
+            fprintf(stderr, "Error: List entry %u in '%s' exceeds %u bytes.\n", line_number, list_path, LIST_LINE_SIZE - 1);
+            fclose(list_file);
+            return 1;
+        }
+
+        entry = trim_whitespace(line);
+
+        if ((*entry == '\0') || (*entry == '#'))
+            continue;
+
+        separator = strchr(entry, '=');
+        if (separator)
+        {
+            char* image_path;
+            char* host_path;
+
+            *separator = '\0';
+            image_path = trim_whitespace(entry);
+            host_path = trim_whitespace(separator + 1);
+
+            if ((*image_path == '\0') || (*host_path == '\0'))
+            {
+                fprintf(stderr, "Error: Invalid list entry %u in '%s'.\n", line_number, list_path);
+                fclose(list_file);
+                return 1;
+            }
+
+            if (add_host_path_to_image(host_path, image_path))
+            {
+                fprintf(stderr, "Error: Failed to import list entry %u from '%s'.\n", line_number, list_path);
+                fclose(list_file);
+                return 1;
+            }
+        }
+        else
+        {
+            FRESULT result = ensure_image_dir(entry);
+            if (result != FR_OK)
+            {
+                fprintf(stderr, "Error: Unable to create directory '%s' from list entry %u (%d).\n", entry, line_number, result);
+                fclose(list_file);
+                return 1;
+            }
+        }
+    }
+
+    fclose(list_file);
+    return 0;
 }
 
 #define NEED_MOUNT() \
@@ -211,6 +654,14 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
+            invalidate_mount();
+            ret = need_mount();
+            if (ret)
+            {
+                fprintf(stderr, "Error: Could not remount disk after formatting (%d).\n", ret);
+                goto exit;
+            }
+
             // Arg 2: custom header label (optional)
             if (nargs > 1)
             {
@@ -297,6 +748,7 @@ int main(int oargc, char* oargv[])
         {
             FILE* fe;
             BYTE* temp = buff + 1024;
+            size_t boot_sector_size;
 
             NEED_PARAMS(1, 1);
 
@@ -310,7 +762,8 @@ int main(int oargc, char* oargv[])
                 goto exit;
             }
 
-            if (!fread(buff, 512, 1, fe))
+            boot_sector_size = fread(buff, 1, sizeof(buff) / 2, fe);
+            if (boot_sector_size < 512)
             {
                 fprintf(stderr, "Error: Unable to read boot sector from file '%s'.", argv[0]);
                 fclose(fe);
@@ -331,16 +784,18 @@ int main(int oargc, char* oargv[])
 
             if (g_Filesystem.fs_type == FS_FAT32)
             {
-                printf("TODO: Writing boot sectors for FAT32 images not yet supported.");
-                ret = 1;
-                goto exit;
+                if (boot_sector_size < 1024)
+                {
+                    fprintf(stderr, "Error: FAT32 boot sector '%s' must contain both reserved sectors.\n", argv[0]);
+                    ret = 1;
+                    goto exit;
+                }
+
+                memcpy(buff + 3, temp + 3, FAT32_BPB_LENGTH);
             }
             else
             {
-#define FAT16_HEADER_START 3
-#define FAT16_HEADER_END 62
-
-                memcpy(buff + FAT16_HEADER_START, temp + FAT16_HEADER_START, FAT16_HEADER_END - FAT16_HEADER_START);
+                memcpy(buff + 3, temp + 3, FAT12_16_BPB_LENGTH);
             }
 
             if (disk_write(0, buff, 0, 1))
@@ -349,49 +804,38 @@ int main(int oargc, char* oargv[])
                 ret = 1;
                 goto exit;
             }
+
+            if (g_Filesystem.fs_type == FS_FAT32)
+            {
+                if (disk_write(0, buff + 512, FAT32_EXTRA_SECTOR, 1))
+                {
+                    fprintf(stderr, "Error: Unable to write FAT32 extra boot sector to image.");
+                    ret = 1;
+                    goto exit;
+                }
+            }
         }
         else if (strcmp(parg, "add") == 0)
         {
-            FILE* fe;
-            FIL   fv = { 0 };
-            UINT rdlen = 0;
-            UINT wrlen = 0;
-
             NEED_PARAMS(2, 2);
 
             NEED_MOUNT();
 
             // Arg 1: external file to add
             // Arg 2: virtual filename
-
-            fe = fopen(argv[0], "rb");
-            if (!fe)
-            {
-                fprintf(stderr, "Error: Unable to open external file '%s' for reading.", argv[0]);
-                ret = 1;
+            ret = add_host_path_to_image(argv[0], argv[1]);
+            if (ret)
                 goto exit;
-            }
+        }
+        else if (strcmp(parg, "addfiles") == 0)
+        {
+            NEED_PARAMS(1, 1);
 
-            if (f_open(&fv, argv[1], FA_WRITE | FA_CREATE_ALWAYS))
-            {
-                fprintf(stderr, "Error: Unable to open file '%s' for writing.", argv[1]);
-                fclose(fe);
-                ret = 1;
+            NEED_MOUNT();
+
+            ret = add_files_from_list(argv[0]);
+            if (ret)
                 goto exit;
-            }
-
-            while ((rdlen = fread(buff, 1, sizeof(buff), fe)) > 0)
-            {
-                if (f_write(&fv, buff, rdlen, &wrlen) || wrlen < rdlen)
-                {
-                    fprintf(stderr, "Error: Unable to write '%d' bytes to disk.", wrlen);
-                    ret = 1;
-                    goto exit;
-                }
-            }
-
-            fclose(fe);
-            f_close(&fv);
         }
         else if (strcmp(parg, "extract") == 0)
         {
@@ -534,6 +978,8 @@ int main(int oargc, char* oargv[])
             {
                 root = argv[0];
             }
+
+            NEED_MOUNT();
 
             if (f_opendir(&dir, root))
             {

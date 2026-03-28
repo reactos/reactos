@@ -54,11 +54,13 @@ endif()
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd.ini DESTINATION root NO_CAB NOT_IN_HYBRIDCD NAME_ON_CD freeldr.ini FOR bootcd regtest)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd.ini DESTINATION root NOT_IN_HYBRIDCD NAME_ON_CD freeldr.ini FOR livecd)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hybridcd.ini DESTINATION root NAME_ON_CD freeldr.ini FOR hybridcd)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/preinstall.ini DESTINATION root NAME_ON_CD freeldr.ini FOR preinstall)
 
 # Unattend
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/unattend.inf DESTINATION reactos NO_CAB FOR regtest)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd/unattend.inf DESTINATION reactos NO_CAB FOR bootcd)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd/unattend.inf DESTINATION reactos NO_CAB FOR livecd)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/preinstall/unattend.inf DESTINATION reactos FOR preinstall)
 
 # LiveCD shortcuts
 macro(add_livecd_shortcut name app dest)
@@ -67,12 +69,12 @@ macro(add_livecd_shortcut name app dest)
     add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
                 TARGET livecd_links
                 DESTINATION ${dest}
-                FOR livecd)
+                FOR livecd preinstall)
 endmacro(add_livecd_shortcut)
 
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
-add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd)
+add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd preinstall)
 add_livecd_shortcut("Read Me" readme.txt "Profiles/All Users/Desktop")
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/All Users/Desktop")
 add_livecd_shortcut("Device Manager" devmgmt.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
