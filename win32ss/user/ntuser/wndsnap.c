@@ -336,11 +336,23 @@ SnapPreviewShow(HDC hdc, SNAP_PREVIEW_STATE *pState,
         return;
     }
 
-    /* Origin: small rect centered at cursor */
-    pState->rcOrigin.left   = ptCursor.x - 10;
-    pState->rcOrigin.top    = ptCursor.y - 10;
-    pState->rcOrigin.right  = ptCursor.x + 10;
-    pState->rcOrigin.bottom = ptCursor.y + 10;
+#if(WINVER >= 0x0600)
+    if (SPITESTPREF(UPM_UIEFFECTS) && gspv.bClientAreaAnimation)
+#else
+    if (SPITESTPREF(UPM_UIEFFECTS))
+#endif
+    {
+        /* Animated: start from small rect centered at cursor */
+        pState->rcOrigin.left   = ptCursor.x - 10;
+        pState->rcOrigin.top    = ptCursor.y - 10;
+        pState->rcOrigin.right  = ptCursor.x + 10;
+        pState->rcOrigin.bottom = ptCursor.y + 10;
+    }
+    else
+    {
+        /* No animation: appear instantly at target */
+        pState->rcOrigin = *pTargetRect;
+    }
 
     pState->rcCurrent = pState->rcOrigin;
     if (!SnapPreviewCaptureBackground(hdc, pState, &pState->rcCurrent))
