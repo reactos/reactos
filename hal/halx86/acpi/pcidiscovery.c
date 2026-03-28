@@ -742,7 +742,7 @@ HalppDumpDevice(
 CODE_SEG("INIT")
 VOID
 NTAPI
-HalpAcpiPciDiscovery(VOID)
+HalpAcpiPcieInitializeExtendedConfig(VOID)
 {
     ULONG Bus, Device, Function;
     PCI_SLOT_NUMBER PciSlot;
@@ -764,12 +764,12 @@ HalpAcpiPciDiscovery(VOID)
     /* Verify PCI configuration is ready */
     if (!HalpPCIConfigInitialized)
     {
-        DbgPrint("HAL: PCI config not initialized, skipping discovery.\n");
+        DbgPrint("HAL: PCI config not initialized, skipping PCIe extended config.\n");
         return;
     }
 
     /* Try to locate the MCFG table for PCIe ECAM access */
-    McfgHeader = HalpAcpiGetCachedTable(MCFG_SIGNATURE);
+    McfgHeader = HalAcpiGetTable(NULL, MCFG_SIGNATURE);
     if (McfgHeader)
     {
         /* MCFG layout: header + 8 reserved bytes + allocation array */
@@ -806,7 +806,7 @@ HalpAcpiPciDiscovery(VOID)
     }
 
     /* Print banner */
-    DbgPrint("\n====== PCI BUS HARDWARE DETECTION (ACPI HAL) =======\n\n");
+    DbgPrint("\n====== PCIe EXTENDED CONFIG INIT (ACPI HAL, amd64) =======\n\n");
 
     /* Enumerate all buses, devices, and functions */
     PciSlot.u.AsULONG = 0;
@@ -894,7 +894,7 @@ HalpAcpiPciDiscovery(VOID)
     }
 
     /* Print footer */
-    DbgPrint("\n====== END PCI BUS DETECTION =======\n\n");
+    DbgPrint("\n====== END PCIe EXTENDED CONFIG INIT =======\n\n");
 }
 
 /* EOF */

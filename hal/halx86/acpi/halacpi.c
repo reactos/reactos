@@ -966,8 +966,10 @@ HalpInitializePciBus(VOID)
     /* Setup the PCI stub support */
     HalpInitializePciStubs();
 
-    /* Perform PCI bus hardware detection and dump */
-    HalpAcpiPciDiscovery();
+    /* Initialize PCIe extended config via ACPI MCFG/ECAM (later we will use APIC in x86) */
+#ifdef _M_AMD64
+    HalpAcpiPcieInitializeExtendedConfig();
+#endif
 
     /* Set the NMI crash flag */
     HalpGetNMICrashFlag();
