@@ -4,7 +4,7 @@
  * FILE:        sdk/lib/dnsresolv/dnsresolv.h
  * PURPOSE:     Public header for the DNS resolver library based on nslookup
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
- *              Copyright 2024 ReactOS Contributors
+ *              Copyright 2026 ReactOS Contributors
  */
 
 #ifndef _DNSRESOLV_H

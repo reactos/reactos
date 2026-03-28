@@ -1,10 +1,10 @@
-/*
+﻿/*
  * PROJECT:     ReactOS DNS Resolver Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:        sdk/lib/dnsresolv/dnsresolv.c
  * PURPOSE:     DNS resolver functions extracted from the nslookup utility
  * COPYRIGHT:   Copyright 2009 Lucas Suggs <lucas.suggs@gmail.com>
- *              Copyright 2024 ReactOS Contributors
+ *              Copyright 2026 ReactOS Contributors
  */
 
 #include "dnsresolv.h"
