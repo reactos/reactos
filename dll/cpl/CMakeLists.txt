@@ -1,6 +1,7 @@
 
 add_subdirectory(access)
 add_subdirectory(appwiz)
+add_subdirectory(bthprops)
 add_subdirectory(console)
 add_subdirectory(desk)
 add_subdirectory(hdwwiz)
