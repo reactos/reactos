@@ -26,6 +26,7 @@ static KSPIN_LOCK HalpMsiVectorLock;
 
 /* FUNCTIONS ******************************************************************/
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalpInitializeMsiVectors(VOID)
