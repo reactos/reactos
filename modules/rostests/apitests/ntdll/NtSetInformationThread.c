@@ -127,8 +127,114 @@ Test_ThreadSetAlignmentProbe(void)
     }
 }
 
+static
+void
+Test_ThreadNameInformation(void)
+{
+    NTSTATUS Status;
+    THREAD_NAME_INFORMATION NameInfo;
+    UCHAR Buffer[sizeof(THREAD_NAME_INFORMATION) + 256 * sizeof(WCHAR)];
+    PTHREAD_NAME_INFORMATION QueryInfo = (PTHREAD_NAME_INFORMATION)Buffer;
+    ULONG ReturnLength;
+    static const WCHAR TestName[] = L"TestThreadName";
+    static const WCHAR TestName2[] = L"UpdatedName";
+
+    /* Set a thread name */
+    RtlInitUnicodeString(&NameInfo.ThreadName, TestName);
+    Status = NtSetInformationThread(GetCurrentThread(),
+                                    ThreadNameInformation,
+                                    &NameInfo,
+                                    sizeof(NameInfo));
+    ok_hex(Status, STATUS_SUCCESS);
+
+    /* Query it back */
+    RtlZeroMemory(Buffer, sizeof(Buffer));
+    Status = NtQueryInformationThread(GetCurrentThread(),
+                                      ThreadNameInformation,
+                                      Buffer,
+                                      sizeof(Buffer),
+                                      &ReturnLength);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok_long(QueryInfo->ThreadName.Length, (ULONG)(wcslen(TestName) * sizeof(WCHAR)));
+    ok(QueryInfo->ThreadName.Buffer != NULL, "Expected non-NULL buffer\n");
+    if (QueryInfo->ThreadName.Buffer)
+    {
+        ok(wcsncmp(QueryInfo->ThreadName.Buffer, TestName,
+                   QueryInfo->ThreadName.Length / sizeof(WCHAR)) == 0,
+           "Thread name mismatch: got '%.*ls'\n",
+           QueryInfo->ThreadName.Length / (int)sizeof(WCHAR),
+           QueryInfo->ThreadName.Buffer);
+    }
+
+    /* Update the name */
+    RtlInitUnicodeString(&NameInfo.ThreadName, TestName2);
+    Status = NtSetInformationThread(GetCurrentThread(),
+                                    ThreadNameInformation,
+                                    &NameInfo,
+                                    sizeof(NameInfo));
+    ok_hex(Status, STATUS_SUCCESS);
+
+    /* Query the updated name */
+    RtlZeroMemory(Buffer, sizeof(Buffer));
+    Status = NtQueryInformationThread(GetCurrentThread(),
+                                      ThreadNameInformation,
+                                      Buffer,
+                                      sizeof(Buffer),
+                                      &ReturnLength);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok_long(QueryInfo->ThreadName.Length, (ULONG)(wcslen(TestName2) * sizeof(WCHAR)));
+    if (QueryInfo->ThreadName.Buffer)
+    {
+        ok(wcsncmp(QueryInfo->ThreadName.Buffer, TestName2,
+                   QueryInfo->ThreadName.Length / sizeof(WCHAR)) == 0,
+           "Updated name mismatch\n");
+    }
+
+    /* Clear the name by setting empty string */
+    RtlInitUnicodeString(&NameInfo.ThreadName, NULL);
+    Status = NtSetInformationThread(GetCurrentThread(),
+                                    ThreadNameInformation,
+                                    &NameInfo,
+                                    sizeof(NameInfo));
+    ok_hex(Status, STATUS_SUCCESS);
+
+    /* Query - should be empty */
+    RtlZeroMemory(Buffer, sizeof(Buffer));
+    Status = NtQueryInformationThread(GetCurrentThread(),
+                                      ThreadNameInformation,
+                                      Buffer,
+                                      sizeof(Buffer),
+                                      &ReturnLength);
+    ok_hex(Status, STATUS_SUCCESS);
+    ok_long(QueryInfo->ThreadName.Length, 0);
+
+    /* Query with too-small buffer should fail with STATUS_BUFFER_TOO_SMALL */
+    RtlInitUnicodeString(&NameInfo.ThreadName, TestName);
+    Status = NtSetInformationThread(GetCurrentThread(),
+                                    ThreadNameInformation,
+                                    &NameInfo,
+                                    sizeof(NameInfo));
+    ok_hex(Status, STATUS_SUCCESS);
+
+    Status = NtQueryInformationThread(GetCurrentThread(),
+                                      ThreadNameInformation,
+                                      Buffer,
+                                      sizeof(THREAD_NAME_INFORMATION) - 1,
+                                      &ReturnLength);
+    ok_hex(Status, STATUS_BUFFER_TOO_SMALL);
+    ok_long(ReturnLength, (ULONG)(sizeof(THREAD_NAME_INFORMATION) + wcslen(TestName) * sizeof(WCHAR)));
+
+    /* Clean up */
+    RtlInitUnicodeString(&NameInfo.ThreadName, NULL);
+    NtSetInformationThread(GetCurrentThread(),
+                           ThreadNameInformation,
+                           &NameInfo,
+                           sizeof(NameInfo));
+}
+
 START_TEST(NtSetInformationThread)
 {
     Test_ThreadPriorityClass();
     Test_ThreadSetAlignmentProbe();
+    Test_ThreadNameInformation();
 }

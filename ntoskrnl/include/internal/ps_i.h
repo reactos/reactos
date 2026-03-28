@@ -563,7 +563,6 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     /* ThreadCSwitchMon */
     IQS_NONE,
 
-#if 0 // Hermes will surely fix this properly
     // Windows 7
     /* ThreadCSwitchPmu */
     IQS_NONE,
@@ -592,7 +591,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     /* ThreadContainerId */
     IQS_NONE,
     /* ThreadNameInformation */
-    IQS_NONE,
+    IQS_SAME(UNICODE_STRING, ULONG, ICIF_QUERY | ICIF_SET | ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE),
     /* ThreadSelectedCpuSets */
     IQS_NONE,
     /* ThreadSystemThreadInformation */
@@ -628,5 +627,4 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     IQS_NONE,
     /* ThreadEffectivePagePriority */
     IQS_NONE,
-#endif
 };

@@ -2861,6 +2861,84 @@ NtSetInformationThread(
             ObDereferenceObject(Thread);
             break;
 
+        case ThreadNameInformation:
+        {
+            UNICODE_STRING CapturedName;
+            PWCHAR NameBuffer;
+
+            /* Use SEH to capture the input */
+            _SEH2_TRY
+            {
+                /* Capture the UNICODE_STRING structure */
+                ProbeForRead(ThreadInformation, sizeof(UNICODE_STRING), sizeof(ULONG));
+                CapturedName = ((PTHREAD_NAME_INFORMATION)ThreadInformation)->ThreadName;
+
+                /* Validate and probe the name buffer if present */
+                if (CapturedName.Length > 0 && CapturedName.Buffer != NULL)
+                {
+                    ProbeForRead(CapturedName.Buffer, CapturedName.Length, sizeof(WCHAR));
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               THREAD_SET_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* Allocate a new name buffer if a name was provided */
+            NameBuffer = NULL;
+            if (CapturedName.Length > 0 && CapturedName.Buffer != NULL)
+            {
+                NameBuffer = ExAllocatePoolWithTag(PagedPool,
+                                                   CapturedName.Length,
+                                                   'mNhT');
+                if (!NameBuffer)
+                {
+                    ObDereferenceObject(Thread);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Copy the name from user mode */
+                _SEH2_TRY
+                {
+                    RtlCopyMemory(NameBuffer, CapturedName.Buffer, CapturedName.Length);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    ExFreePoolWithTag(NameBuffer, 'mNhT');
+                    ObDereferenceObject(Thread);
+                    Status = _SEH2_GetExceptionCode();
+                    _SEH2_YIELD(break);
+                }
+                _SEH2_END;
+            }
+
+            /* Swap in the new name, free the old one */
+            {
+                PWCHAR OldBuffer = Thread->ThreadName.Buffer;
+                Thread->ThreadName.Buffer = NameBuffer;
+                Thread->ThreadName.Length = CapturedName.Length;
+                Thread->ThreadName.MaximumLength = CapturedName.Length;
+                if (OldBuffer)
+                    ExFreePoolWithTag(OldBuffer, 'mNhT');
+            }
+
+            ObDereferenceObject(Thread);
+            break;
+        }
+
         /* Anything else */
         default:
             /* Not yet implemented */
@@ -3352,6 +3430,60 @@ NtQueryInformationThread(
             _SEH2_END;
 
             /* Dereference the thread */
+            ObDereferenceObject(Thread);
+            break;
+
+        case ThreadNameInformation:
+
+            /* Reference the thread */
+            Status = ObReferenceObjectByHandle(ThreadHandle,
+                                               THREAD_QUERY_LIMITED_INFORMATION,
+                                               PsThreadType,
+                                               PreviousMode,
+                                               (PVOID*)&Thread,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            _SEH2_TRY
+            {
+                /* Calculate required length */
+                Length = sizeof(THREAD_NAME_INFORMATION) + Thread->ThreadName.Length;
+
+                if (ThreadInformationLength < Length)
+                {
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                }
+                else
+                {
+                    /* Write the UNICODE_STRING header */
+                    PTHREAD_NAME_INFORMATION NameInfo =
+                        (PTHREAD_NAME_INFORMATION)ThreadInformation;
+
+                    NameInfo->ThreadName.Length = Thread->ThreadName.Length;
+                    NameInfo->ThreadName.MaximumLength = Thread->ThreadName.Length;
+
+                    if (Thread->ThreadName.Length > 0 && Thread->ThreadName.Buffer)
+                    {
+                        /* Name buffer follows the structure */
+                        NameInfo->ThreadName.Buffer =
+                            (PWCH)((PUCHAR)ThreadInformation + sizeof(THREAD_NAME_INFORMATION));
+                        RtlCopyMemory(NameInfo->ThreadName.Buffer,
+                                      Thread->ThreadName.Buffer,
+                                      Thread->ThreadName.Length);
+                    }
+                    else
+                    {
+                        NameInfo->ThreadName.Buffer = NULL;
+                    }
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             ObDereferenceObject(Thread);
             break;
 
