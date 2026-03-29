@@ -14,6 +14,7 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpCalibrateStallExecution(VOID)
