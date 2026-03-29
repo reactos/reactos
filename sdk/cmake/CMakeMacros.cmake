@@ -399,6 +399,7 @@ function(add_cd_file)
         # manage dependency
         if(_CD_TARGET)
             add_dependencies(reactosimg ${_CD_TARGET} registry_inf)
+            add_dependencies(reactosvhd ${_CD_TARGET} registry_inf)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)

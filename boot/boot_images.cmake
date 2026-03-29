@@ -210,6 +210,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/preinstall.cmake.lst "")
 
 set(_preinstall_partition_file ${CMAKE_CURRENT_BINARY_DIR}/partition.fat32)
 set(_preinstall_image_file ${REACTOS_BINARY_DIR}/ReactOS.img)
+set(_preinstall_vhd_file ${REACTOS_BINARY_DIR}/ReactOS.vhd)
 set(_preinstall_partition_type 0c)
 if(DEFINED EFI_PLATFORM_ID)
     # OVMF only auto-discovers MBR-backed FAT volumes as bootable when the
@@ -232,21 +233,44 @@ math(EXPR _preinstall_partition_sectors "(${PREINSTALL_IMAGE_SIZE_MB} - 1) * 204
 set(_dosmbr_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/dosmbr.bin)
 set(_fat32_file  ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat32.bin)
 
-add_custom_target(reactosimg
-    BYPRODUCTS ${_preinstall_image_file} ${_preinstall_partition_file}
-    # Step 1: Create and populate FAT32 partition image
+add_custom_command(
+    OUTPUT ${_preinstall_partition_file}
     COMMAND native-fatten ${_preinstall_partition_file}
         -format ${_preinstall_partition_sectors}
         -boot ${_fat32_file}
         -addfiles ${CMAKE_CURRENT_BINARY_DIR}/preinstall.$<CONFIG>.lst
-    # Step 2: Assemble final disk image with MBR + partition table
+    DEPENDS native-fatten fat32 freeldr
+    VERBATIM)
+
+add_custom_command(
+    OUTPUT ${_preinstall_image_file}
     COMMAND native-mkdiskimg
         -o ${_preinstall_image_file}
         -mbr ${_dosmbr_file}
         -partition ${_preinstall_partition_file}
         -start 2048
         -type ${_preinstall_partition_type}
-    DEPENDS native-fatten native-mkdiskimg dosmbr fat32 freeldr
+    DEPENDS ${_preinstall_partition_file} native-mkdiskimg dosmbr
+    VERBATIM)
+
+add_custom_command(
+    OUTPUT ${_preinstall_vhd_file}
+    COMMAND native-mkdiskimg
+        -o ${_preinstall_vhd_file}
+        -mbr ${_dosmbr_file}
+        -partition ${_preinstall_partition_file}
+        -start 2048
+        -type ${_preinstall_partition_type}
+        -vhd
+    DEPENDS ${_preinstall_partition_file} native-mkdiskimg dosmbr
+    VERBATIM)
+
+add_custom_target(reactosimg
+    DEPENDS ${_preinstall_image_file} ${_preinstall_vhd_file}
+    VERBATIM)
+
+add_custom_target(reactosvhd
+    DEPENDS ${_preinstall_vhd_file}
     VERBATIM)
 
 
