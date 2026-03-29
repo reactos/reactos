@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS api tests
- * LICENSE:         GNU GPLv2 only as published by the Free Software Foundation
+ * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for pipe (CORE-17376)
  * PROGRAMMER:      Simone Mario Lombardo <me@simonelombardo.com>
  *                  Julen Urizar Compains <julenuri@hotmail.com>
