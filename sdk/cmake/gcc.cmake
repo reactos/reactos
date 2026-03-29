@@ -676,6 +676,11 @@ string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
 # libsupc++ requires libgcc and stdc++compat
 target_link_libraries(libsupc++ INTERFACE libgcc stdc++compat)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCC_EH_LOCATION2)
+string(STRIP ${LIBGCC_EH_LOCATION2} LIBGCC_EH_LOCATION2)
+if(EXISTS "${LIBGCC_EH_LOCATION2}" AND NOT LIBGCC_EH_LOCATION2 STREQUAL "libgcc_eh.a")
+    target_link_libraries(libsupc++ INTERFACE ${LIBGCC_EH_LOCATION2})
+endif()
 
 add_library(libmingwex STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
