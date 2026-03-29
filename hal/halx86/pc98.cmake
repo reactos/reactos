@@ -34,6 +34,7 @@ list(APPEND HAL_PC98_SOURCE
     pic/processor.c)
 
 list(APPEND HAL_PC98_ASM_SOURCE
+    pc98/delay.S
     generic/trap.S
     pic/pic.S)
 
