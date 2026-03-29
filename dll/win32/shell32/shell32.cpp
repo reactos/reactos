@@ -151,6 +151,9 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
             }
             FreeEnvironmentStringsW(pCurEnv);
         }
+
+        DestroyEnvironmentBlock(pEnv);
+        *lpEnvironment = NULL;
     }
     CloseHandle(hUserToken);
     return bResult;
