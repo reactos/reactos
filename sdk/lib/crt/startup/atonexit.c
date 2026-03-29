@@ -98,3 +98,15 @@ atexit (_PVFV func)
 {
   return (_onexit((_onexit_t)func) == NULL) ? -1 : 0;
 }
+
+int __cdecl
+at_quick_exit (_PVFV func)
+{
+  return atexit(func);
+}
+
+void __cdecl
+quick_exit (int status)
+{
+  _exit(status);
+}

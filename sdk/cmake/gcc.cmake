@@ -51,8 +51,14 @@ add_compile_options(-mlong-double-64)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
+
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fno-aggressive-loop-optimizations)
+    # GCC 14+ made -Wincompatible-pointer-types and -Wint-conversion hard errors.
+    # Demote them back to warnings for compatibility with older C code.
+    if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
+        add_compile_options(-Wno-error=incompatible-pointer-types -Wno-error=int-conversion)
+    endif()
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
@@ -654,6 +660,16 @@ set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
 # libgcc needs kernel32 and winpthread (an appropriate CRT must be linked manually)
 target_link_libraries(libgcc INTERFACE libwinpthread libkernel32)
 
+add_library(libgcc_eh STATIC IMPORTED)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc_eh.a OUTPUT_VARIABLE LIBGCC_EH_LOCATION)
+string(STRIP ${LIBGCC_EH_LOCATION} LIBGCC_EH_LOCATION)
+if(EXISTS ${LIBGCC_EH_LOCATION})
+    set_target_properties(libgcc_eh PROPERTIES IMPORTED_LOCATION ${LIBGCC_EH_LOCATION})
+else()
+    # libgcc_eh.a not available (e.g. SJLJ exceptions), make it a no-op
+    set_target_properties(libgcc_eh PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
+endif()
+
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
@@ -676,6 +692,26 @@ set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATI
 target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
 # this is for our SAL annotations
 target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
+
+# Re-add C++ standard library include paths for targets that use the STL.
+# We use -nostdinc globally for C++, so we need to explicitly add back the
+# C++ headers and the system MinGW C headers (for #include_next from C++ headers).
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=include OUTPUT_VARIABLE _gcc_include)
+string(STRIP "${_gcc_include}" _gcc_include)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=include-fixed OUTPUT_VARIABLE _gcc_include_fixed)
+string(STRIP "${_gcc_include_fixed}" _gcc_include_fixed)
+execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE _gcc_target)
+string(STRIP "${_gcc_target}" _gcc_target)
+get_filename_component(_gcc_libdir "${_gcc_include}" DIRECTORY)
+get_filename_component(_gcc_sysroot "${_gcc_libdir}/../../../../${_gcc_target}" ABSOLUTE)
+set(_cxx_ver "${CMAKE_CXX_COMPILER_VERSION}")
+# Provide an interface library for the system C++ include paths
+# For C++ targets using the STL, we need to ensure that system C headers
+# (used internally by libstdc++) are not shadowed by ReactOS CRT headers.
+# We use -nostdinc to clear default paths, then re-add system C++ and C
+# paths via -isystem, and demote ReactOS CRT/vcruntime to -idirafter.
+add_library(cxx_system_includes INTERFACE)
+target_link_libraries(libstdc++ INTERFACE cxx_system_includes)
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)

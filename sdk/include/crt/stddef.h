@@ -365,6 +365,15 @@ typedef __WCHAR_TYPE__ wchar_t;
 
 #endif /* __sys_stdtypes_h */
 
+/* max_align_t for C11/C++11 compatibility */
+#if !defined(__DEFINED_max_align_t)
+#define __DEFINED_max_align_t
+typedef struct {
+  long long __max_align_ll __attribute__((__aligned__(__alignof__(long long))));
+  long double __max_align_ld __attribute__((__aligned__(__alignof__(long double))));
+} max_align_t;
+#endif
+
 #ifndef offsetof
 
 /* Offset of member MEMBER in a struct of type TYPE. */

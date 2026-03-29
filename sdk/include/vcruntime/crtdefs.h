@@ -326,4 +326,19 @@ struct __lc_time_data;
 # endif
 #endif
 
+/* Provide quick_exit/at_quick_exit declarations for compatibility with
+ * modern libstdc++ headers (GCC 15+) which expect these in <cstdlib>.
+ * The system's stdlib.h guards these behind _UCRT which ReactOS doesn't define. */
+#ifndef __REACTOS_QUICK_EXIT_DECLARED
+#define __REACTOS_QUICK_EXIT_DECLARED
+#ifdef __cplusplus
+extern "C" {
+#endif
+int __cdecl at_quick_exit(void (__cdecl *)(void));
+__declspec(noreturn) void __cdecl quick_exit(int);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 #endif /* !_INC_CRTDEFS */

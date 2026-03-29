@@ -5,10 +5,19 @@
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
-#include <stdexcept>
-#include <cstdarg>
-#include <cstring>
-#include <malloc.h>
+#include <exception>
+
+extern "C" {
+typedef __builtin_va_list va_list;
+#define va_start(v,l) __builtin_va_start(v,l)
+#define va_end(v) __builtin_va_end(v)
+typedef __SIZE_TYPE__ size_t;
+size_t strlen(const char *);
+char *strcpy(char *, const char *);
+void *malloc(size_t);
+void free(void *);
+int _vsnprintf(char *, size_t, const char *, va_list);
+}
 
 namespace std {
 

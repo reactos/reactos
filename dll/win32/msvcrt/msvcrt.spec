@@ -909,6 +909,7 @@
 @ cdecl -norelay _setjmp(ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
 @ cdecl -arch=!i386 -norelay _setjmpex(ptr ptr)
+@ cdecl -arch=!i386 -norelay __intrinsic_setjmpex(ptr ptr) _setjmpex
 @ cdecl _setmaxstdio(long)
 @ cdecl _setmbcp(long)
 @ cdecl _setmode(long long)
@@ -1352,6 +1353,7 @@
 @ cdecl iswascii(long)
 @ cdecl iswcntrl(long)
 @ cdecl iswctype(long long)
+@ cdecl wctype(str)
 @ cdecl iswdigit(long)
 @ cdecl iswgraph(long)
 @ cdecl iswlower(long)
