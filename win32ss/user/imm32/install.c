@@ -175,7 +175,7 @@ Imm32AssignNewLayout(
         }
     }
 
-    return (HKL)LongToHandle(MAKELONG(wLangID, nID));
+    return UlongToHandle(MAKELONG(wLangID, nID));
 }
 
 static UINT
