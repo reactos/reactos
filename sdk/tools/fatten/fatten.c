@@ -14,7 +14,7 @@
 #include <limits.h>
 #include <sys/stat.h>
 #if _WIN32
-#include <windows.h>
+#include <io.h>
 #else
 #define DIR HOST_DIR
 #include <dirent.h>
@@ -380,8 +380,8 @@ static int add_host_path_to_image(const char* host_path, const char* image_path)
     if (host_path_is_directory(host_path))
     {
 #if _WIN32
-        WIN32_FIND_DATAA find_data;
-        HANDLE handle;
+        struct _finddata_t find_data;
+        intptr_t handle;
         char* pattern;
         int ret = 0;
 
@@ -399,15 +399,14 @@ static int add_host_path_to_image(const char* host_path, const char* image_path)
             return 1;
         }
 
-        handle = FindFirstFileA(pattern, &find_data);
+        handle = _findfirst(pattern, &find_data);
         free(pattern);
-        if (handle == INVALID_HANDLE_VALUE)
+        if (handle == -1)
         {
-            DWORD error = GetLastError();
-            if (error == ERROR_FILE_NOT_FOUND)
+            if (errno == ENOENT)
                 return 0;
 
-            fprintf(stderr, "Error: Unable to enumerate directory '%s' (%lu).\n", host_path, (unsigned long)error);
+            fprintf(stderr, "Error: Unable to enumerate directory '%s' (%d).\n", host_path, errno);
             return 1;
         }
 
@@ -416,11 +415,11 @@ static int add_host_path_to_image(const char* host_path, const char* image_path)
             char* child_host_path;
             char* child_image_path;
 
-            if ((strcmp(find_data.cFileName, ".") == 0) || (strcmp(find_data.cFileName, "..") == 0))
+            if ((strcmp(find_data.name, ".") == 0) || (strcmp(find_data.name, "..") == 0))
                 continue;
 
-            child_host_path = join_host_path(host_path, find_data.cFileName);
-            child_image_path = join_image_path(image_path, find_data.cFileName);
+            child_host_path = join_host_path(host_path, find_data.name);
+            child_image_path = join_image_path(image_path, find_data.name);
             if (!child_host_path || !child_image_path)
             {
                 fprintf(stderr, "Error: Out of memory while walking '%s'.\n", host_path);
@@ -435,9 +434,9 @@ static int add_host_path_to_image(const char* host_path, const char* image_path)
             free(child_image_path);
             if (ret)
                 break;
-        } while (FindNextFileA(handle, &find_data));
+        } while (_findnext(handle, &find_data) == 0);
 
-        FindClose(handle);
+        _findclose(handle);
         return ret;
 #else
         HOST_DIR* dir;
@@ -842,7 +841,6 @@ int main(int oargc, char* oargv[])
             FIL   fe = { 0 };
             FILE* fv;
             UINT rdlen = 0;
-            UINT wrlen = 0;
 
             NEED_PARAMS(2, 2);
 
