@@ -70,38 +70,89 @@ EXTERN_C BOOL
 WINAPI
 RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 {
-    HANDLE hUserToken;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken))
+    HANDLE hUserToken = NULL;
+    LPVOID pEnv = NULL;
+    BOOL bResult = FALSE;
+    if (!lpEnvironment)
         return FALSE;
-
-    BOOL bResult = CreateEnvironmentBlock(lpEnvironment, hUserToken, TRUE);
-    if (!bResult || !lpEnvironment)
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_QUERY | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY,
+                          &hUserToken))
+    {
+        return FALSE;
+    }
+    if (!CreateEnvironmentBlock(&pEnv, hUserToken, TRUE))
     {
         CloseHandle(hUserToken);
         return FALSE;
     }
-
+    *lpEnvironment = pEnv;
+    bResult = TRUE;
     if (bUpdateSelf)
     {
-        LPWSTR pszz = (LPWSTR)*lpEnvironment;
-        if (!pszz)
-            return FALSE;
-
-        while (*pszz)
+        LPWSTR pszz = (LPWSTR)pEnv;
+        while (pszz && *pszz)
         {
-            size_t cch = wcslen(pszz);
-            LPWSTR pchEqual = wcschr(pszz, L'=');
-            if (pchEqual)
+            if (pszz[0] != L'=')
             {
-                CStringW strName(pszz, pchEqual - pszz);
-                SetEnvironmentVariableW(strName, pchEqual + 1);
+                LPWSTR pchEqual = wcschr(pszz, L'=');
+                if (pchEqual)
+                {
+                    *pchEqual = L'\0';
+                    SetEnvironmentVariableW(pszz, pchEqual + 1);
+                    *pchEqual = L'='; /* restore */
+                }
             }
-            pszz += cch + 1;
+            pszz += wcslen(pszz) + 1;
+        }
+
+        LPWCH pCurEnv = GetEnvironmentStringsW();
+        if (pCurEnv)
+        {
+            LPWSTR pCur = (LPWSTR)pCurEnv;
+            while (pCur && *pCur)
+            {
+                /* skip special variables starting with = */
+                if (pCur[0] != L'=')
+                {
+                    LPWSTR pchEqual = wcschr(pCur, L'=');
+                    if (pchEqual)
+                    {
+                        *pchEqual = L'\0';
+
+                        /* check if this variable exists in the new block */
+                        BOOL bFound = FALSE;
+                        LPWSTR pNew = (LPWSTR)pEnv;
+                        while (pNew && *pNew)
+                        {
+                            if (pNew[0] != L'=')
+                            {
+                                LPWSTR pNewEqual = wcschr(pNew, L'=');
+                                if (pNewEqual)
+                                {
+                                    *pNewEqual = L'\0';
+                                    if (_wcsicmp(pCur, pNew) == 0)
+                                        bFound = TRUE;
+                                    *pNewEqual = L'='; /* restore */
+                                }
+                                if (bFound)
+                                    break;
+                            }
+                            pNew += wcslen(pNew) + 1;
+                        }
+
+                        if (!bFound)
+                            SetEnvironmentVariableW(pCur, NULL); /* delete */
+
+                        *pchEqual = L'='; /* restore */
+                    }
+                }
+                pCur += wcslen(pCur) + 1;
+            }
+            FreeEnvironmentStringsW(pCurEnv);
         }
     }
-
     CloseHandle(hUserToken);
-
     return bResult;
 }
 
