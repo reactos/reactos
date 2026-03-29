@@ -117,6 +117,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
             TableSize);
 
         /* Create new bus key */
+        BiosKey = NULL;
         FldrCreateComponentKey(SystemKey,
                                AdapterClass,
                                MultiFunctionAdapter,
@@ -127,6 +128,12 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                PartialResourceList,
                                Size,
                                &BiosKey);
+        if (!BiosKey)
+        {
+            ERR("Failed to create ACPI BIOS component key\n");
+            FrLdrHeapFree(PartialResourceList, TAG_HW_RESOURCE_LIST);
+            return;
+        }
 
         /* Increment bus number */
         (*BusNumber)++;
